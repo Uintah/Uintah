@@ -2,9 +2,6 @@
 #define Uintah_Component_Arches_TemplatedSampleTask_h
 
 #include <CCA/Components/Arches/Task/TaskInterface.h>
-#include <CCA/Components/Arches/Operators/Operators.h>
-#include <spatialops/Nebo.h>
-#include <spatialops/structured/stencil/FVStaggeredOperatorTypes.h>
 
 namespace Uintah{
 
@@ -38,25 +35,21 @@ public:
 
 protected:
 
-    void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry );
+    void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const bool packed_tasks );
 
-    void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){}
+    void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const bool packed_tasks ){}
 
-    void register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep );
+    void register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks);
 
-    void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep );
+    void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks);
 
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                      SpatialOps::OperatorDatabase& opr );
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                     SpatialOps::OperatorDatabase& opr );
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                        SpatialOps::OperatorDatabase& opr ){}
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-               SpatialOps::OperatorDatabase& opr );
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
     void create_local_labels();
 
@@ -92,7 +85,8 @@ private:
 
 
   template <typename T>
-  void TemplatedSampleTask<T>::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
+  void TemplatedSampleTask<T>::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
+                                                    const bool packed_tasks ){
 
     //FUNCITON CALL     STRING NAME(VL)     TYPE       DEPENDENCY    GHOST DW     VR
     register_variable( "templated_variable", ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry );
@@ -101,21 +95,19 @@ private:
 
   //This is the work for the task.  First, get the variables. Second, do the work!
   template <typename T>
-  void TemplatedSampleTask<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                                           SpatialOps::OperatorDatabase& opr ){
+  void TemplatedSampleTask<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-    using namespace SpatialOps;
-    using SpatialOps::operator *;
-    typedef SpatialOps::SpatFldPtr<T> SVolFP;
-
-    SVolFP field = tsk_info->get_so_field<T>( "templated_variable" );
-    *field <<= 3.2;
+    T& field = *(tsk_info->get_uintah_field<T>( "templated_variable" ));
+    Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+    Uintah::parallel_for( range, [&](int i, int j, int k){
+      field(i,j,k) = 3.2;
+    });
 
   }
 
 
   template <typename T>
-  void TemplatedSampleTask<T>::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
+  void TemplatedSampleTask<T>::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){
 
     //FUNCITON CALL     STRING NAME(VL)     TYPE       DEPENDENCY    GHOST DW     VR
     register_variable( "templated_variable", ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
@@ -123,27 +115,22 @@ private:
   }
 
   template <typename T>
-  void TemplatedSampleTask<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                                     SpatialOps::OperatorDatabase& opr ){
+  void TemplatedSampleTask<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-    using namespace SpatialOps;
-    using SpatialOps::operator *;
-    typedef SpatialOps::SpatFldPtr<T> SVolFP;
-
-    SVolFP field = tsk_info->get_so_field<T>( "templated_variable" );
-
-    *field <<= 24.0;
+    T& field = *(tsk_info->get_uintah_field<T>( "templated_variable" ));
+    Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+    Uintah::parallel_for( range, [&](int i, int j, int k){
+      field(i,j,k) = 23.4;
+    });
 
   }
 
   template <typename T>
-  void TemplatedSampleTask<T>::register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
+  void TemplatedSampleTask<T>::register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){
   }
 
   template <typename T>
-  void TemplatedSampleTask<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                                            SpatialOps::OperatorDatabase& opr ){
+  void TemplatedSampleTask<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-  }
 }
 #endif

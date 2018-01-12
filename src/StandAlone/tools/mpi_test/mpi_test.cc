@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -29,7 +29,9 @@
 // Date:   Mar. 2008
 //
 
-#include <sci_defs/mpi_defs.h>
+#include <Core/Parallel/UintahMPI.h>
+#include <Core/Util/FileUtils.h>     // for testFilesystem()
+#include <Core/Util/Timers/Timers.hpp>
 
 #include <unistd.h> // for gethostname()
 
@@ -38,9 +40,6 @@
 #include <iostream>
 #include <string>
 #include <sstream>
-
-#include <Core/Util/Time.h>    // for currentSeconds()
-#include <Core/Util/FileUtils.h> // for testFilesystem()
 
 using std::stringstream;
 using std::cout;
@@ -197,22 +196,22 @@ main( int argc, char* argv[] )
       Uintah::MPI::Send( hostname, HOST_NAME_SIZE, MPI_CHAR, 0, 0, MPI_COMM_WORLD );
     }
   }
-
+ 
   // Run Point2PointASync_Test first, as it will hopefully tell us the
   // exact processor number (rank) if there is a problem...
   testme( point2pointasync_test,  "Point To Point ASync" );
 
-  testme( allreduce_test,        "Uinath::MPI::Allreduce" );
-  testme( reduce_test,           "Uinath::MPI::Reduce" );
-  testme( broadcast_test,        "Uinath::MPI::Bcast" );
-  testme( allgather_test,        "Uinath::MPI::Allgather" );
-  testme( gather_test,           "Uinath::MPI::Gather" );
+  testme( allreduce_test,        "Uintah::MPI::Allreduce" );
+  testme( reduce_test,           "Uintah::MPI::Reduce" );
+  testme( broadcast_test,        "Uintah::MPI::Bcast" );
+  testme( allgather_test,        "Uintah::MPI::Allgather" );
+  testme( gather_test,           "Uintah::MPI::Gather" );
   testme( point2pointsync_test, "Point To Point Sync" );
 
   if( args.testFileSystem ) {
     testme( fileSystem_test,       "File System" );
   }
-
+  
   Uintah::MPI::Finalize();
   return 0;
 }
@@ -225,21 +224,16 @@ testme(int (*testfunc)(void),const char* name)
     cout.flush();
   }
 
-  double startTime = -1, endTime = -1;
-  if( rank == 0) {
-    startTime = Uintah::Time::currentSeconds();
-  }
+  Timers::Simple timer;
 
+  timer.start();  
   int pass = testfunc();
-
-  if( rank == 0) {
-    endTime   = Uintah::Time::currentSeconds();
-  }
-
+  timer.stop();
+  
   int all_pass = false;
-
+  
   Uintah::MPI::Allreduce( &pass, &all_pass, 1, MPI_INT, MPI_LAND, MPI_COMM_WORLD);
-
+ 
   if( rank == 0) {
 
     if( all_pass ) {
@@ -248,9 +242,9 @@ testme(int (*testfunc)(void),const char* name)
     else {
       cout << "Failed" ;
     }
-    cout << " (Test took " << endTime - startTime << " seconds.)\n";
+    cout << " (Test took " << timer().seconds() << " seconds.)\n";
   }
-
+  
   if( !all_pass ) {
     // Sync processors so output is in sync
     Uintah::MPI::Barrier(MPI_COMM_WORLD);
@@ -277,7 +271,7 @@ allreduce_test()
     error_stream << "     rank " << rank << ": Allreduce incorrect\n";
     //cout << "     rank " << rank << ": Allreduce incorrect\n";
   }
-  return pass;
+  return pass; 
 }
 
 // Each processor broadcasts their rank
@@ -308,7 +302,7 @@ reduce_test()
   for( int p = 0; p < procs; p++ ) {
     message=rank;
     Uintah::MPI::Reduce(&rank,&message,1,MPI_INT,MPI_SUM,p,MPI_COMM_WORLD);
-
+    
     if( p == rank && message != (n*(n+1))/2 ) {
       pass = false;
       error_stream << "     rank " << rank << ": Reduce on rank " << p << " incorrect\n";
@@ -323,7 +317,7 @@ allgather_test()
 {
   int         pass = true;
   vector<int> message(procs,0);
-
+  
   Uintah::MPI::Allgather(&rank,1,MPI_INT,&message[0],1,MPI_INT,MPI_COMM_WORLD);
 
   for( int p = 0; p < procs; p++ ) {
@@ -332,7 +326,7 @@ allgather_test()
       error_stream << "     rank " << rank << ": Allgather entry from " << p << " is invalid\n";
     }
   }
-  return pass;
+  return pass; 
 }
 
 // Each Processor gathers its rank
@@ -340,10 +334,10 @@ int
 gather_test()
 {
   int pass = true;
-
+  
   for( int p=0; p < procs; p++ ) {
     vector<int> message(procs,0);
-
+    
     Uintah::MPI::Gather(&rank,1,MPI_INT,&message[0],1,MPI_INT,p,MPI_COMM_WORLD);
 
     if( rank == p ) {
@@ -355,7 +349,7 @@ gather_test()
       }
     }
   }
-  return pass;
+  return pass; 
 }
 
 // Each Processor sends its rank to each other processor
@@ -374,14 +368,14 @@ fileSystem_test()
     bool raid4 = Uintah::testFilesystem( "/usr/csafe/raid4", error_stream, rank );
     bool home  = Uintah::testFilesystem( ".",                error_stream, rank );
     pass = raid1 && raid2 && raid3 && raid4 && home;
-  }
+  } 
   else {
     // On other systems, (at least for now) just check the file system of the current dir.
     pass = Uintah::testFilesystem( ".", error_stream, rank );
   }
-
+  
   if( args.verbose ) {
-    if( rank == 0 ) {
+    if( rank == 0 ) { 
 
       cout << "\n";
       cout << "   Print outs in the form of '.name (rank).' correspond to processors that have successfully\n";
@@ -391,15 +385,14 @@ fileSystem_test()
       vector<int>    messages(procs-1);
       MPI_Request  * rrequest = new MPI_Request[ procs-1 ];
 
-      for( int proc = 1; proc < procs; proc++ ) {
+      for( int proc = 1; proc < procs; proc++ ) {    
         Uintah::MPI::Irecv( &messages[proc-1], 1, MPI_INT, proc, proc, MPI_COMM_WORLD, &rrequest[proc-1] );
       }
       bool done = false;
       int  totalCompleted = 0;
 
-      double startTime = -1, curTime = -1;
-
-      startTime = Uintah::Time::currentSeconds();
+      Timers::Simple timer;
+      timer.start();
 
       int          totalPassed = (int)pass, totalFailed = (int)(!pass);
       int          numCompleted = -1;
@@ -431,7 +424,7 @@ fileSystem_test()
             cout.flush();
           }
         }
-
+        
         totalCompleted += numCompleted;
         if( totalCompleted == (procs-1) ) {
           cout << "\n\n";
@@ -439,17 +432,21 @@ fileSystem_test()
         }
         else {
           const double secsToWait = 30.0;
-          curTime = Uintah::Time::currentSeconds();
-
-          if( curTime > (startTime + (secsToWait*generation)) ) { // Give it 'secsToWait' seconds, then print some info
-            if( rank == 0 ) {
-              cout << "\nWarning: Some processors have not responded after " << generation * secsToWait << " seconds.\n"
-                   << "           Continuing to wait...  Number of processors that have responded: "
+	    
+	  // Give it 'secsToWait' seconds, then print some info          
+	  if( timer().seconds() > secsToWait*generation ) {
+	    if( rank == 0 ) {
+              cout << "\nWarning: Some processors have not responded after "
+		   << generation * secsToWait << " seconds.\n"
+                   << "           Continuing to wait...  "
+		   << "Number of processors that have responded: " 
                    << totalPassed + totalFailed << " of " << procs-1 << ".\n";
               generation++;
             }
-          }
-          if( curTime > (startTime + totalSecsToWait) ) { // Give it 'totalSecsToWait' seconds to finish completely
+	  }
+	  
+	  // Give it 'totalSecsToWait' seconds to finish completely	
+	  if( timer().seconds() > totalSecsToWait ) {
             done = true;
           }
         }
@@ -467,7 +464,7 @@ fileSystem_test()
     }
     else {
 
-      MPI_Request request;
+      MPI_Request request;    
       // Tell rank 0 that we have succeeded or failed (-rank).
       int data = pass ? rank : -rank;
 
@@ -485,7 +482,7 @@ point2pointasync_test()
   int                 pass = true;
   vector<int>         messages(procs);
   MPI_Request * srequest, * rrequest;
-
+  
   srequest = new MPI_Request[ procs ];
   rrequest = new MPI_Request[ procs ];
 
@@ -494,12 +491,12 @@ point2pointasync_test()
   for( int p = 0; p < procs; p++ ) {
 
     //if( rank > 4 ) { // Slow things down just a little for testing purposes...
-    //  usleep( 100000 * rank );
+    //  usleep( 100000 * rank ); 
     //}
 
     //start send
     Uintah::MPI::Isend( &data, 1, MPI_INT, p, p, MPI_COMM_WORLD, &srequest[p] );
-
+    
     //start recv
     Uintah::MPI::Irecv( &messages[p], 1, MPI_INT, p, rank, MPI_COMM_WORLD, &rrequest[p] );
 
@@ -519,7 +516,7 @@ point2pointasync_test()
 
   for( int pos = 0; pos < procs; pos++ ) {
     completed[ pos ] = false;
-    // The following don't need to be initialized as they are overwritten...
+    // The following don't need to be initialized as they are overwritten... 
     // however, when debugging, it is sometimes useful to set values to
     // more easily see what has changed:
     //completedBuffer[ pos ] = -9;
@@ -531,10 +528,9 @@ point2pointasync_test()
   bool done = false;
   int  totalCompleted = 0;
 
-  double startTime = -1, curTime = -1, lastTime = -1 ;
-
-  lastTime = startTime = Uintah::Time::currentSeconds();
-
+  Timers::Simple timer;
+  timer.start();
+  
   while( !done ) {
 
     // While it is unclear in the docs, apparently the Uintah::MPI::Testsome
@@ -544,18 +540,20 @@ point2pointasync_test()
 
     //reset timer if progress is made
     if(numCompleted>0)
-      lastTime=Uintah::Time::currentSeconds();
-
-    curTime = Uintah::Time::currentSeconds();
-
+      timer.reset( true );
+    
     double secsToWait = 100.0;
-    if( curTime - lastTime > secsToWait ) { // Give it 'secsToWait' seconds to finish
-      cout << "Proc " << rank << ": No progress has been made in the last " << curTime - lastTime << " seconds.\n";
-
+    
+    // Give it 'secsToWait' seconds to finish
+    if( timer().seconds() > secsToWait ) {
+      cout << "Proc " << rank << ": No progress has been made in the last "
+	   << timer().seconds() << " seconds.\n";
+ 
       // Find out (and display) which processors did not successfully respond...
       for( int pos = 0; pos < procs; pos++ ) {
         if( completed[ pos ] == false ) {
-          cout << "Proc " << rank << ": failed to hear from processor " << pos << ".\n";
+          cout << "Proc " << rank << ": failed to hear from processor "
+	       << pos << ".\n";
           pass = false;
         }
       }
@@ -578,7 +576,7 @@ point2pointasync_test()
 
         if( messages[pos] != pos ) {
           pass = false;
-          error_stream << "     rank " << rank << ": data in point to point async message from " << pos
+          error_stream << "     rank " << rank << ": data in point to point async message from " << pos 
                        << " is invalid\n";
         }
       }

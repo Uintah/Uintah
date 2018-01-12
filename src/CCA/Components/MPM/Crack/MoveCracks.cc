@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -30,7 +30,7 @@
 ********************************************************************************/
 
 #include "Crack.h"
-#include <Core/Labels/MPMLabel.h>
+#include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <Core/Math/Matrix3.h>
 #include <Core/Math/Short27.h>
 #include <Core/Geometry/Vector.h>
@@ -44,10 +44,9 @@
 #include <Core/Grid/SimulationStateP.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Task.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
+#include <CCA/Components/MPM/Materials/MPMMaterial.h>
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/ConstitutiveModel.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Containers/StaticArray.h>
 #include <vector>
 #include <iostream>
 #include <fstream>
@@ -111,7 +110,7 @@ Crack::addComputesAndRequiresMoveCracks(Task* t,
                                         const PatchSet* /*patches*/,
                                         const MaterialSet* /*matls*/) const
 {
-  t->requires(Task::OldDW, d_sharedState->get_delt_label() );
+  t->requires(Task::OldDW, lb->delTLabel );
 
   Ghost::GhostType  gac = Ghost::AroundCells;
   int NGC=2*NGN;
@@ -150,7 +149,7 @@ Crack::MoveCracks(const ProcessorGroup*,
     double dx_min=Min(dx.x(),dx.y(),dx.z());
 
     delt_vartype delT;
-    old_dw->get(delT, d_sharedState->get_delt_label(),getLevel(patches) );
+    old_dw->get(delT, lb->delTLabel,getLevel(patches) );
 
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     for(int m = 0; m < numMPMMatls; m++){ 

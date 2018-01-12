@@ -1,25 +1,53 @@
+/*
+ * The MIT License
+ *
+ * Copyright (c) 1997-2018 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+
 #ifndef Uintah_Component_Arches_CharOxidationSmith_h
 #define Uintah_Component_Arches_CharOxidationSmith_h
-#include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Grid/SimulationStateP.h>
+
 #include <CCA/Components/Arches/CoalModels/CharOxidation.h>
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
-#include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
-#include <Core/Grid/Variables/VarTypes.h>
 #include <CCA/Components/Arches/ArchesVariables.h>
 #include <CCA/Components/Arches/Directives.h>
-#include <vector>
-#include <string>
-#include <Core/Datatypes/DenseMatrix.h>
+#include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
 
-namespace Uintah{
+#include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+
+#include <string>
+#include <vector>
+
+
+namespace Uintah {
 
 //---------------------------------------------------------------------------
 // Builder
 
 class CharOxidationSmithBuilder: public ModelBuilder
 {
-public: 
+public:
   CharOxidationSmithBuilder( const std::string          & modelName,
                                const std::vector<std::string>  & reqICLabelNames,
                                const std::vector<std::string>  & reqScalarLabelNames,
@@ -27,21 +55,21 @@ public:
                                SimulationStateP           & sharedState,
                                int qn );
 
-  ~CharOxidationSmithBuilder(); 
+  ~CharOxidationSmithBuilder();
 
-  ModelBase* build(); 
+  ModelBase* build();
 
 private:
 
-}; 
+};
 
 // End Builder
 //---------------------------------------------------------------------------
 
 class CharOxidationSmith: public CharOxidation {
-public: 
+public:
 
-  CharOxidationSmith( std::string modelName, 
+  CharOxidationSmith( std::string modelName,
                         SimulationStateP& shared_state,
                         ArchesLabel* fieldLabels,
                         std::vector<std::string> reqICLabelNames,
@@ -51,59 +79,106 @@ public:
   ~CharOxidationSmith();
 
   typedef std::map< std::string, ModelBase*> ModelMap;
-  typedef std::map< std::string, Devolatilization*> DevolModelMap; 
+  typedef std::map< std::string, Devolatilization*> DevolModelMap;
   /////////////////////////////////////////
   // Initialization methods
 
-  /** @brief Interface for the inputfile and set constants */ 
+  /** @brief Interface for the inputfile and set constants */
   void problemSetup(const ProblemSpecP& db, int qn);
 
   /** @brief Schedule the initialization of some special/local variables */
   void sched_initVars( const LevelP& level, SchedulerP& sched );
 
   /** @brief  Actually initialize some special/local variables */
-  void initVars( const ProcessorGroup * pc, 
-                 const PatchSubset    * patches, 
-                 const MaterialSubset * matls, 
-                 DataWarehouse        * old_dw, 
+  void initVars( const ProcessorGroup * pc,
+                 const PatchSubset    * patches,
+                 const MaterialSubset * matls,
+                 DataWarehouse        * old_dw,
                  DataWarehouse        * new_dw );
 
   /////////////////////////////////////////////
   // Model computation methods
 
-  /** @brief Schedule the calculation of the source term */ 
-  void sched_computeModel( const LevelP& level, SchedulerP& sched, 
+  /** @brief Schedule the calculation of the source term */
+  void sched_computeModel( const LevelP& level, SchedulerP& sched,
                            int timeSubStep );
 
-  /** @brief Actually compute the source term */ 
-  void computeModel( const ProcessorGroup* pc, 
-                     const PatchSubset* patches, 
-                     const MaterialSubset* matls, 
-                     DataWarehouse* old_dw, 
+  /** @brief Actually compute the source term */
+  void computeModel( const ProcessorGroup* pc,
+                     const PatchSubset* patches,
+                     const MaterialSubset* matls,
+                     DataWarehouse* old_dw,
                      DataWarehouse* new_dw,
                      const int timeSubStep );
   /////////////////////////////////////////////////
   // Access methods
 private:
 
-  // UDF's 
-  inline void root_function( std::vector<double> &F, std::vector<double> &rh_l, std::vector<double> &co_r, double &gas_rho, double &cg, std::vector<double> &k_r, double &MW, double &r_devol, double &p_diam, std::vector<double> &Sh, double &w, double &p_area, std::vector<double> &_D_oxid_mix_l);
-  inline void invert_2_2( DenseMatrix* &dfdrh );
+  // UDF's
+  inline void root_function( std::vector<double> &F, std::vector<double> &rh_l, std::vector<double> &co_r, double &gas_rho, double &cg, std::vector<double> &k_r, double &MW, double &r_devol, double &p_diam, std::vector<double> &Sh, double &w, double &p_area, std::vector<double> &_D_oxid_mix_l, std::vector<double> &phi_l);
+  
+  struct InversionBase {
+    virtual void invert_mat(DenseMatrix* &dfdrh)=0;
+    virtual ~InversionBase(){}
+  };
+  
+  struct invert_2_2 : InversionBase {
+    void invert_mat(DenseMatrix* &dfdrh) {
+      double a11=(*dfdrh)[0][0];
+      double a12=(*dfdrh)[0][1];
+      double a21=(*dfdrh)[1][0];
+      double a22=(*dfdrh)[1][1];
+      double det = a11*a22-a12*a21;
+      double det_inv = 1/det;
+      (*dfdrh)[0][0]=a22*det_inv;
+      (*dfdrh)[0][1]=-a12*det_inv;
+      (*dfdrh)[1][0]=-a21*det_inv;
+      (*dfdrh)[1][1]=a11*det_inv;
+    }
+    ~invert_2_2(){}
+  };
+  
+  struct invert_3_3 : InversionBase {
+    void invert_mat(DenseMatrix* &dfdrh) {
+      double a11=(*dfdrh)[0][0];
+      double a12=(*dfdrh)[0][1];
+      double a13=(*dfdrh)[0][2];
+      double a21=(*dfdrh)[1][0];
+      double a22=(*dfdrh)[1][1];
+      double a23=(*dfdrh)[1][2];
+      double a31=(*dfdrh)[2][0];
+      double a32=(*dfdrh)[2][1];
+      double a33=(*dfdrh)[2][2];
+      double det = a11*a22*a33+a21*a32*a13+a31*a12*a23-a11*a32*a23-a31*a22*a13-a21*a12*a33;
+      double det_inv = 1/det;
+      (*dfdrh)[0][0]=(a22*a33-a23*a32)*det_inv;
+      (*dfdrh)[0][1]=(a13*a32-a12*a33)*det_inv;
+      (*dfdrh)[0][2]=(a12*a23-a13*a22)*det_inv;
+      (*dfdrh)[1][0]=(a23*a31-a21*a33)*det_inv;
+      (*dfdrh)[1][1]=(a11*a33-a13*a31)*det_inv;
+      (*dfdrh)[1][2]=(a13*a21-a11*a23)*det_inv;
+      (*dfdrh)[2][0]=(a21*a32-a22*a31)*det_inv;
+      (*dfdrh)[2][1]=(a12*a31-a11*a32)*det_inv;
+      (*dfdrh)[2][2]=(a11*a22-a12*a21)*det_inv;
+    }
+    ~invert_3_3(){}
+  };
 
-  // Particle VarLabels 
+
+  // Particle VarLabels
   const VarLabel* _char_varlabel;
   const VarLabel* _RHS_source_varlabel;
-  const VarLabel* _char_birth_label; 
+  const VarLabel* _char_birth_label;
   const VarLabel* _rcmass_varlabel;
   const VarLabel* _RC_RHS_source_varlabel;
-  const VarLabel* _rawcoal_birth_label; 
+  const VarLabel* _rawcoal_birth_label;
   const VarLabel* _devolRCLabel;
   const VarLabel* _particle_temperature_varlabel;
   const VarLabel* _number_density_varlabel;
   std::vector< const VarLabel*> _weight_varlabel;
   std::vector< const VarLabel*> _length_varlabel;
   std::vector< const VarLabel*> _reaction_rate_varlabels;
-  // gas-phase VarLabels 
+  // gas-phase VarLabels
   const VarLabel* _gas_temperature_varlabel;
   const VarLabel* _MW_varlabel;
   std::vector< const VarLabel*> _species_varlabels;
@@ -111,47 +186,48 @@ private:
   double _HF_CO2; // [J/mol]
   double _HF_CO; // [J/mol]
   double _T0;
-  double _pi;
   double _R_cal; // [cal/ (K mol) ]
   double _R; // [J/ (K mol) ]
-  
+  double _gasPressure; // [ J / m^3 ] or [ N /m^2]
+
   // from input file
   double _RC_scaling_constant;   ///< Scaling factor for raw coal internal coordinate
   double _char_scaling_constant;   ///< Scaling factor for char internal coordinate
-  double _weight_scaling_constant;   ///< Scaling factor for weight 
-  double _weight_small;   ///< small weight 
-  bool _use_simple_invert;  
+  double _weight_scaling_constant;   ///< Scaling factor for weight
+  double _weight_small;   ///< small weight
+  std::vector<bool> _use_co2co_l;
   std::vector<std::string> _oxid_l;
   std::vector<double> _MW_l;
   std::vector<double> _a_l;
   std::vector<double> _e_l;
   std::vector<double> _phi_l;
-  int _NUM_reactions; // 
-  int _NUM_species; // 
+  std::vector<double> _hrxn_l;
+  int _NUM_reactions; //
+  int _NUM_species; //
   double _Mh; // 12 kg carbon / kmole carbon
   double _S;
-  double _dynamic_visc; // [kg/(m s)] 
+  double _dynamic_visc; // [kg/(m s)]
   int _nQn_part;
   std::vector<std::vector<double> > _D_mat;
   std::vector<double> _MW_species;
   std::vector<int> _oxidizer_indices;
   std::vector<int> _other_indices;
   std::vector<std::string> _species_names;
-  DenseMatrix* dfdrh;
+
   struct diffusion_terms{
     int num_species;
     double D_matrix[53][53];
     double MW_sp[53];
     std::string sp_name[53];
     diffusion_terms()
-    { 
+    {
       int num_speciess = 53;
       num_species = num_speciess;
-      std::string sp_names[53] = {"H2", "H", "O", "O2", "OH", "H2O", "HO2", "H2O2", "C", "CH", 
-                                 "CH2", "CH2(s)", "CH3", "CH4", "CO", "CO2", "HCO", "CH2O", 
-                                 "CH2OH", "CH3O", "CH3OH", "C2H", "C2H2", "C2H3", "C2H4", "C2H5", 
+      std::string sp_names[53] = {"H2", "H", "O", "O2", "OH", "H2O", "HO2", "H2O2", "C", "CH",
+                                 "CH2", "CH2(s)", "CH3", "CH4", "CO", "CO2", "HCO", "CH2O",
+                                 "CH2OH", "CH3O", "CH3OH", "C2H", "C2H2", "C2H3", "C2H4", "C2H5",
                                  "C2H6", "HCCO", "CH2CO", "HCCOH", "N", "NH", "NH2", "NH3", "NNH",
-                                 "NO", "NO2", "N2O", "HNO", "CN", "HCN", "H2CN", "HCNN", "HCNO", 
+                                 "NO", "NO2", "N2O", "HNO", "CN", "HCN", "H2CN", "HCNN", "HCNO",
                                  "HOCN", "HNCO", "NCO", "N2", "AR", "C3H7", "C3H8", "CH2CHO", "CH3CHO"};
       double MW_sps[53] = { 2.01588,   1.00794,  15.9994 ,  31.9988 ,  17.00734,  18.01528,
                            33.00674,  34.01468,  12.011  ,  13.01894,  14.02688,  14.02688,
@@ -229,7 +305,7 @@ private:
       }
       } // end constructor
   }; // end struct
-  
+
 }; // end CharOxidationSmith
 } // end namespace Uintah
 #endif

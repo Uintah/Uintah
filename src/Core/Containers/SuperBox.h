@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -33,6 +33,7 @@
 #include <Core/Exceptions/InternalError.h>
 
 #include <unordered_map>
+
 
 #ifdef SUPERBOX_DEBUGGING
 #  include <iostream>
@@ -113,11 +114,18 @@ public:
 
   struct BoxHash
   {
-    size_t operator()(const BoxP & box) const
+    size_t operator()(BoxP box) const
     { return (size_t)box; }
+#  if defined(__INTEL_COMPILER)
+    // intel compilersspecific hash map stuff
+    static const size_t bucket_size = 4;
+    static const size_t min_buckets = 8;
+    bool operator()(BoxP b1, BoxP b2) const
+    { return b1 < b2; }
+#  endif // __INTEL_COMPILER
   };
 
-  typedef std::unordered_map<BoxP, BB*, BoxHash> BoxHashMap;
+typedef std::unordered_map<BoxP, BB*, BoxHash> BoxHashMap;
 
 public:
   SuperBoxSet()

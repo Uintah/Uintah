@@ -39,8 +39,6 @@
     <MPM>
        <time_integrator>explicit</time_integrator>
        <interpolator>linear</interpolator>
-        <!--<do_grid_reset>true</do_grid_reset> -->
-       <do_grid_reset>false</do_grid_reset>
     </MPM>
 
     <PhysicalConstants>

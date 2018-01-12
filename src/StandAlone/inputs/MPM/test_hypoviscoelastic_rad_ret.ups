@@ -105,7 +105,14 @@
 	    </flow_model>
 
           </constitutive_model>
-
+          
+          <damage_model type="Threshold">
+              <failure_criteria>MaximumPrincipalStress</failure_criteria>
+              <failure_mean>    2.0e99 </failure_mean>
+              <failure_std>     0.0 </failure_std>
+              <failure_distrib>constant</failure_distrib>
+           </damage_model>
+           
           <geom_object>
             <box label="box">
               <min>[0.0, 0.0, 0.0]</min>

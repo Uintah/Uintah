@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -31,10 +31,9 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/CCVariable.h>
-#include <CCA/Components/Arches/ArchesLabel.h>
-#include <CCA/Components/Arches/TimeIntegratorLabel.h>
-#include <CCA/Components/MPMArches/MPMArchesLabel.h>
+#include <CCA/Components/Arches/ChemMix/ChemHelper.h>
 #include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Exceptions/InvalidValue.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Util/DebugStream.h>
@@ -71,8 +70,6 @@ namespace Uintah {
   // setenv SCI_DEBUG TABLE_DEBUG:+
   static DebugStream cout_tabledbg("TABLE_DEBUG",false);
 
-  class ArchesLabel;
-  class TimeIntegratorLabel;
   class MixingRxnModel{
 
   public:
@@ -89,7 +86,7 @@ namespace Uintah {
     };
     typedef std::map<std::string, ConstVarContainer> StringToCCVar;
 
-    MixingRxnModel( ArchesLabel* labels, const MPMArchesLabel* MAlabels );
+    MixingRxnModel( SimulationStateP& sharedState );
 
     virtual ~MixingRxnModel();
 
@@ -153,38 +150,61 @@ namespace Uintah {
     /** @brief Returns a boolean regarding if post mixing is used or not **/
     inline bool doesPostMix(){ return d_does_post_mixing; };
 
-    /** @brief  Insert the name of a dependent variable into the dependent variable map (dvVarMap), which maps strings to VarLabels */
-    inline void insertIntoMap( const std::string var_name ){
+    /** @brief  Insert the name of a dependent variable into the dependent variable map (dvVarMap),
+                which maps strings to VarLabels */
+    inline bool insertIntoMap( const std::string var_name ){
 
-      VarMap::iterator i = d_dvVarMap.find( var_name );
+      // Check to ensure this variable is in this table:
+      auto i_var = std::find( d_allDepVarNames.begin(), d_allDepVarNames.end(), var_name );
 
-      if ( i == d_dvVarMap.end() ) {
+      if ( i_var != d_allDepVarNames.end() ){
 
-        const VarLabel* the_label = VarLabel::create( var_name, CCVariable<double>::getTypeDescription() );
-        d_dvVarMap.insert( std::make_pair( var_name, the_label ) );
+        VarMap::iterator i = d_dvVarMap.find( var_name );
 
-        proc0cout << "    Adding ---> " << var_name << std::endl;
+        if ( i == d_dvVarMap.end() ) {
+
+          const VarLabel* the_label = VarLabel::create( var_name, CCVariable<double>::getTypeDescription() );
+          d_dvVarMap.insert( std::make_pair( var_name, the_label ) );
+
+        }
+
+        return true;
+
+      } else {
+
+        return false;
 
       }
-      return;
+
     };
 
-    /** @brief  Insert the name of a dependent variable into the dependent variable map (dvVarMap), which maps strings to VarLabels */
-    inline void insertOldIntoMap( const std::string var_name ){
+    /** @brief  Insert the name of a dependent variable into the dependent variable map (dvVarMap),
+                which maps strings to VarLabels */
+    inline bool insertOldIntoMap( const std::string var_name ){
 
-      VarMap::iterator i = d_oldDvVarMap.find( var_name );
+      // Check to ensure this variable is in this table:
+      auto i_var = std::find( d_allDepVarNames.begin(), d_allDepVarNames.end(), var_name );
 
-      if ( i == d_oldDvVarMap.end() ) {
+      if ( i_var != d_allDepVarNames.end() ){
 
-        std::string name = var_name+"_old";
+        VarMap::iterator i = d_oldDvVarMap.find( var_name );
 
-        const VarLabel* the_old_label = VarLabel::create( name, CCVariable<double>::getTypeDescription() );
-        d_oldDvVarMap.insert( std::make_pair( name, the_old_label ) );
+        if ( i == d_oldDvVarMap.end() ) {
 
-        proc0cout << "    Adding ---> " << name << std::endl;
+          std::string name = var_name+"_old";
+
+          const VarLabel* the_old_label = VarLabel::create( name, CCVariable<double>::getTypeDescription() );
+          d_oldDvVarMap.insert( std::make_pair( name, the_old_label ) );
+
+        }
+
+        return true;
+
+      } else {
+
+        return false;
 
       }
-      return;
     };
 
     inline double get_Ha( std::vector<double>& iv, double inerts ){
@@ -194,17 +214,16 @@ namespace Uintah {
 
     };
 
-    inline double get_reference_density(CCVariable<double>& density, constCCVariable<int> cell_type){
-
-      int FLOW = -1;
+    inline double get_reference_density(CCVariable<double>& density, constCCVariable<double> volFraction ){
 
       if ( d_user_ref_density ){
         return d_reference_density;
       } else {
-        if ( cell_type[d_ijk_den_ref] == FLOW ){
+        if ( volFraction[d_ijk_den_ref] > .5 ){
           return density[d_ijk_den_ref]; }
         else
-          throw InvalidValue("Error: Your reference density is in a wall. Choose another reference location.",__FILE__,__LINE__);
+          throw InvalidValue("Error: Your reference density is in a wall. Choose another reference location.",
+                             __FILE__,__LINE__);
       }
 
     };
@@ -1489,12 +1508,17 @@ namespace Uintah {
 
     };
 
-
     VarMap d_dvVarMap;         ///< Dependent variable map
     VarMap d_oldDvVarMap;      ///< Dependent variable map from previous lookup
     VarMap d_ivVarMap;         ///< Independent variable map
     doubleMap d_constants;     ///< List of constants in table header
     InertMasterMap d_inertMap; ///< List of inert streams for post table lookup mixing
+
+    const VarLabel* m_timeStepLabel;
+
+    const VarLabel* m_denRefArrayLabel;
+    const VarLabel* m_densityLabel;
+    const VarLabel* m_volFractionLabel;
 
     /** @brief Sets the mixing table's dependent variable list. */
     void setMixDVMap( const ProblemSpecP& root_params );
@@ -1502,8 +1526,8 @@ namespace Uintah {
     /** @brief Common problem setup work */
     void problemSetupCommon( const ProblemSpecP& params, MixingRxnModel* const model );
 
-    ArchesLabel* d_lab;                     ///< Arches labels
-    const MPMArchesLabel* d_MAlab;          ///< MPMArches labels
+    SimulationStateP& m_sharedState;        ///< Shared state
+    int m_matl_index;                       ///< Arches material index
 
     bool d_coldflow;                        ///< Will not compute heat loss and will not initialized ethalpy
     bool d_adiabatic;                       ///< Will not compute heat loss

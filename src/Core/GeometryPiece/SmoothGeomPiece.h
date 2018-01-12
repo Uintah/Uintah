@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -109,9 +109,23 @@ namespace Uintah {
     std::vector<double>* getTemperature();
     
     //////////////////////////////////////////////////////////////////////
-    /*! Returns the vector containing the set of particle temperatures */
+    /*! Returns the vector containing the set of particle concentrations */
     //////////////////////////////////////////////////////////////////////
     std::vector<double>* getConcentration();
+
+    //////////////////////////////////////////////////////////////////////
+    /*! Returns the vector containing the set of particle + charges     */
+    //////////////////////////////////////////////////////////////////////
+    std::vector<double>* getPosCharge();
+
+    //////////////////////////////////////////////////////////////////////
+    /*! Returns the vector containing the set of particle - charges     */
+    //////////////////////////////////////////////////////////////////////
+    std::vector<double>* getNegCharge();
+    //////////////////////////////////////////////////////////////////////
+    /*! Returns the vector containing the set of particle permittivities*/
+    //////////////////////////////////////////////////////////////////////
+    std::vector<double>* getPermittivity();
 
     //////////////////////////////////////////////////////////////////////
     /*! Returns the vector containing the set of particle colors        */
@@ -208,6 +222,9 @@ namespace Uintah {
     std::vector<double> d_volume;// CPDI or CPTI
     std::vector<double> d_temperature;
     std::vector<double> d_concentration;
+    std::vector<double> d_negcharge;
+    std::vector<double> d_poscharge;
+    std::vector<double> d_permittivity;
     std::vector<double> d_color;
     std::vector<Vector> d_forces;
     std::vector<Vector> d_fiberdirs;

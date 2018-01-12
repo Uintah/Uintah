@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -212,7 +212,7 @@ main( int argc, char *argv[] )
   for( int levIndex = 0; levIndex < grid->numLevels(); levIndex++ ) {
     LevelP level = grid->getLevel(levIndex);
 
-    for(Level::const_patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) {
+    for(Level::const_patch_iterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) {
       const Patch* patch = *iter;
       dx = patch->dCell();
       
@@ -268,7 +268,7 @@ main( int argc, char *argv[] )
     double maxDiff = -FLT_MAX;
     double minDiff = FLT_MAX;
     
-    for(Level::const_patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) {
+    for(Level::const_patch_iterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) {
       const Patch* patch = *iter;
       
       CCVariable<double> scalarVar;

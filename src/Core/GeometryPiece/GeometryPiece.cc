@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -31,17 +31,11 @@ using namespace Uintah;
 
 static DebugStream dbg( "GeometryPiece", false );
 
-GeometryPiece::GeometryPiece()
-  : RefCounted()
-  , nameSet_( false )
-  , firstOutput_( true )
-{}
-
-GeometryPiece::GeometryPiece( const GeometryPiece & gp )
-  : RefCounted()
-  , nameSet_( gp.nameSet_ )
-  , firstOutput_( gp.firstOutput_ )
-{}
+GeometryPiece::GeometryPiece() :
+  nameSet_( false ),
+  firstOutput_( true )
+{
+}
 
 GeometryPiece::~GeometryPiece()
 {

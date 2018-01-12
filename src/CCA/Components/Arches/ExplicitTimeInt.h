@@ -1,13 +1,40 @@
 #ifndef ExplicitTimeInt_h
 #define ExplicitTimeInt_h
+
+/*
+ * The MIT License
+ *
+ * Copyright (c) 1997-2018 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+
 #include <Core/Grid/LevelP.h>
-#include <CCA/Ports/SimulationInterface.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <CCA/Components/Arches/Directives.h>
-#include <spatialops/util/TimeLogger.h>
+
+#ifdef DO_TIMINGS
+#  include <spatialops/util/TimeLogger.h>
+#endif
 
 //===========================================================================
 
@@ -230,19 +257,23 @@ private:
 
       IntVector c = *iter;
 
-      if ( do_low_clip && phi[c] < ( low_clip + clip_tol ) ){
+      // Turning off clipping here. Clipping should be occuring upstream
+      // based on other clipping mechanisms.
+      // if ( do_low_clip && phi[c] < ( low_clip + clip_tol ) ){
+      //
+      //   phi[c] = low_clip * vol_fraction[c];
+      //
+      // } else if ( do_high_clip && phi[c] > ( high_clip + clip_tol ) ){
+      //
+      //   phi[c] = high_clip * vol_fraction[c];
+      //
+      // } else {
+      //
+      //   phi[c] = ssp_alpha[step] * old_phi[c] + ssp_beta[step] * phi[c];
+      //
+      // }
 
-        phi[c] = low_clip * vol_fraction[c];
-
-      } else if ( do_high_clip && phi[c] > ( high_clip + clip_tol ) ){
-
-        phi[c] = high_clip * vol_fraction[c];
-
-      } else {
-
-        phi[c] = ssp_alpha[step] * old_phi[c] + ssp_beta[step] * phi[c];
-
-      }
+      phi[c] = ssp_alpha[step] * old_phi[c] + ssp_beta[step] * phi[c];
 
     }
   }
@@ -270,23 +301,27 @@ private:
 
       IntVector c = *iter;
 
-      if (weight[c] == 0) {
-
-        phi[c] = 0.0;
-
-      } else if ( do_low_clip && phi[c]/weight[c] < ( low_clip + clip_tol ) ){
-
-        phi[c] = weight[c] * low_clip * vol_fraction[c];
-
-      } else if ( do_high_clip && phi[c]/weight[c] > ( high_clip - clip_tol ) ){
-
-        phi[c] = high_clip*weight[c] * vol_fraction[c];
-
-      } else {
-
-        phi[c] = ssp_alpha[step] * old_phi[c] + ssp_beta[step] * phi[c];
-
-      }
+      // Turning off clipping here. Clipping should be occuring upstream
+      // based on other clipping mechanisms.
+      // if (weight[c] == 0) {
+      //
+      //   phi[c] = 0.0;
+      //
+      // } else if ( do_low_clip && phi[c]/weight[c] < ( low_clip + clip_tol ) ){
+      //
+      //   phi[c] = weight[c] * low_clip * vol_fraction[c];
+      //
+      // } else if ( do_high_clip && phi[c]/weight[c] > ( high_clip - clip_tol ) ){
+      //
+      //   phi[c] = high_clip*weight[c] * vol_fraction[c];
+      //
+      // //} else {
+      //
+      //   phi[c] = ssp_alpha[step] * old_phi[c] + ssp_beta[step] * phi[c];
+      //
+      //}
+      
+      phi[c] = ssp_alpha[step] * old_phi[c] + ssp_beta[step] * phi[c];
 
     }
   }

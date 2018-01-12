@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -60,7 +60,7 @@ namespace Uintah {
                             const bool,
                             const VarLabel* varLabel,
                             const int indx,
-                            DataWarehouse* new_dw,
+                            DataWarehouse* dw,
                             const Patch* coarsePatch,
                             const Level* coarseLevel,
                             const Level* fineLevel);

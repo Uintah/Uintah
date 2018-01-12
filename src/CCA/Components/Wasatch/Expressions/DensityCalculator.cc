@@ -35,7 +35,8 @@ DensityCalculatorBase( const int neq,
 DensityCalculatorBase::~DensityCalculatorBase(){}
 
 bool DensityCalculatorBase::solve( const DoubleVec& passThrough,
-                                   DoubleVec& soln )
+                                   DoubleVec& soln,
+                                   double& relError)
 {
   unsigned niter = 0;
   double relErr = 0.0;
@@ -67,6 +68,7 @@ bool DensityCalculatorBase::solve( const DoubleVec& passThrough,
     }
     ++niter;
   } while( relErr > rtol_ && niter < maxIter_ );
+  relError = relErr;
   return niter < maxIter_;
 }
 
@@ -78,17 +80,24 @@ template< typename FieldT >
 DensFromMixfrac<FieldT>::
 DensFromMixfrac( const InterpT& rhoEval,
                  const Expr::Tag& rhoOldTag,
-                 const Expr::Tag& rhoFTag,
+                 const Expr::Tag& rhoFTag, //rhoFTag will NOT be used if weakform is true.
+                 const Expr::Tag& fTag,
+                 const bool weakForm,
                  const double rtol,
                  const unsigned maxIter)
   : Expr::Expression<FieldT>(),
     DensityCalculatorBase( 1, rtol, maxIter ),
     rhoEval_( rhoEval ),
-    bounds_( rhoEval.get_bounds()[0] )
+    bounds_ ( rhoEval.get_bounds()[0] ),
+    weak_   ( weakForm )
 {
   this->set_gpu_runnable(false);
-  rhoOld_ = this->template create_field_request<FieldT>(rhoOldTag);
-  rhoF_ = this->template create_field_request<FieldT>(rhoFTag);
+  if (weak_) {
+    f_ = this->template create_field_request<FieldT>(fTag);
+  } else {
+    rhoF_ = this->template create_field_request<FieldT>(rhoFTag);
+    rhoOld_ = this->template create_field_request<FieldT>(rhoOldTag);
+  }
 }
 
 //--------------------------------------------------------------------
@@ -105,45 +114,67 @@ void
 DensFromMixfrac<FieldT>::
 evaluate()
 {
-  typedef std::vector<FieldT*> SVolFieldVec;
+  typedef typename Expr::Expression<FieldT>::ValVec SVolFieldVec;
   SVolFieldVec& results = this->get_value_vec();
   
   // jcs: can we do the linear solve in place? We probably can. If so,
   // we would only need one field, not two...
   FieldT& rho = *results[0];
-  rho <<= rhoOld_->field_ref();
+  if (!weak_) rho <<= rhoOld_->field_ref();
   
   FieldT& badPts = *results[1];
   FieldT& drhodf = *results[2];
   badPts <<= 0.0;
-
-  const FieldT& rhoF = rhoF_->field_ref();
-  typename FieldT::const_iterator irhoF = rhoF.begin();
+  
   typename FieldT::iterator irho = rho.begin();
   typename FieldT::iterator ibad = badPts.begin();
   typename FieldT::iterator idrhodf = drhodf.begin();
   const typename FieldT::iterator irhoe = rho.end();
   size_t nbad = 0;
   DoubleVec soln(1), vals(1);
-  for( ; irho!=irhoe; ++irho, ++irhoF, ++ibad, ++idrhodf){
-    vals[0] = *irhoF;
-    soln[0] = *irhoF / *irho;   // initial guess for the mixture fraction
-    if (maxIter_ == 0) {
+  double relError = 0.0;
+  
+  if(weak_) {
+    const FieldT& f = f_->field_ref();
+    typename FieldT::const_iterator iF = f.begin();
+    for( ; irho!=irhoe; ++irho, ++iF, ++ibad, ++idrhodf){
+      vals[0] = *iF;
+      soln[0] = *iF;   // initial guess for the mixture fraction
       const double& f = soln[0];
       *irho = rhoEval_.value(&f);
       *idrhodf = rhoEval_.derivative(&f, 0);
-    } else {
-      const bool converged = this->solve( vals, soln );  // soln contains the mixture fraction
-      if( !converged ) {
-        ++nbad;
-        *ibad = 1.0;
+    }
+  } else {
+    const FieldT& rhoF = rhoF_->field_ref();
+    typename FieldT::const_iterator irhoF = rhoF.begin();
+
+    for( ; irho!=irhoe; ++irho, ++irhoF, ++ibad, ++idrhodf){
+      vals[0] = *irhoF;
+      soln[0] = *irhoF / *irho;   // initial guess for the mixture fraction
+      if (maxIter_ == 0) {
+        const double& f = soln[0];
+        *irho = rhoEval_.value(&f);
+        *idrhodf = rhoEval_.derivative(&f, 0);
+      } else {
+        const bool converged = this->solve( vals, soln, relError );  // soln contains the mixture fraction
+        if( !converged ) {
+          ++nbad;
+          *ibad = relError;
+        }
+        
+        *irho = *irhoF / soln[0];
+        
+        const double& f = soln[0];
+        if (f == 0) {
+          *irho = rhoEval_.value(&soln[0]);
+        }
+        
+        *idrhodf = rhoEval_.derivative(&f, 0);
+        
       }
-      *irho = *irhoF / soln[0];
-      
-      const double& f = soln[0];
-      *idrhodf = rhoEval_.derivative(&f, 0);
     }
   }
+  
   if( nbad>0 && maxIter_ != 0){
     std::cout << "\tConvergence failed at " << nbad << " points.\n";
   }
@@ -172,19 +203,21 @@ template< typename FieldT >
 DensFromMixfrac<FieldT>::
 Builder::Builder( const InterpT& rhoEval,
                   const Expr::TagList& resultsTag,
-                 const Expr::Tag& rhoOldTag,
+                  const Expr::Tag& rhoOldTag,
                   const Expr::Tag& rhoFTag,
-                 const double rtol,
-                 const unsigned maxIter)
+                  const Expr::Tag& fTag,
+                  const bool weakForm,
+                  const double rtol,
+                  const unsigned maxIter)
   : ExpressionBuilder( resultsTag ),
     rhoEval_  (rhoEval.clone() ),
     rhoOldTag_(rhoOldTag       ),
     rhoFTag_  (rhoFTag         ),
+    fTag_     (fTag            ),
+    weakForm_ (weakForm        ),
     rtol_     (rtol            ),
     maxIter_  (maxIter         )
 {}
-
-
 
 //===================================================================
 
@@ -240,12 +273,13 @@ evaluate()
 
   size_t nbad=0;
   DoubleVec soln(2), vals(2);
+  double relError = 0.0;
   for( ; irho!=irhoe; ++irho, ++igam, ++irhof, ++irhoh ){
     vals[0] = *irhof;
     vals[1] = *irhoh;
     soln[0] = *irhof / *irho; // mixture fraction
     soln[1] = *igam;          // heat loss
-    const bool converged = this->solve( vals, soln );
+    const bool converged = this->solve( vals, soln, relError );
     if( !converged ) ++nbad;
     *irho = *irhof / soln[0]; // set solution for density
     *igam = soln[1];          // heat loss
@@ -396,24 +430,29 @@ TwoStreamDensFromMixfr<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
-  FieldT& result = this->value();
+  
+  typename Expr::Expression<FieldT>::ValVec& results  = this->get_value_vec();
+  FieldT& rho    = *results[0];
+  FieldT& drhodf = *results[1];
+  
   const FieldT& f = mixfr_->field_ref();
   
-  result <<= 1.0 / ( f/rho1_ + (1.0-f)/rho0_ );
-  
+  rho <<= 1.0 / ( f/rho1_ + (1.0-f)/rho0_ );
   // repair bounds
-  result <<= max ( min(result, rhoMax_), rhoMin_);
+  rho <<= max ( min(rho, rhoMax_), rhoMin_);
+
+  drhodf <<= -rho0_*rho1_*(rho0_-rho1_)/( (rho0_ - rho1_)*f - rho1_ )/( (rho0_ - rho1_)*f - rho1_ );
 }
 
 //--------------------------------------------------------------------
 
 template< typename FieldT >
 TwoStreamDensFromMixfr<FieldT>::
-Builder::Builder( const Expr::Tag& resultTag,
+Builder::Builder( const Expr::TagList& resultsTagList,
                   const Expr::Tag& mixfrTag,
                   const double rho0,
                   const double rho1 )
-  : ExpressionBuilder( resultTag ),
+  : ExpressionBuilder( resultsTagList ),
     rho0_(rho0), rho1_(rho1),
     mixfrTag_( mixfrTag )
 {}

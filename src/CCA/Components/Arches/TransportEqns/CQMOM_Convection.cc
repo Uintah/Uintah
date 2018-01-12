@@ -7,7 +7,6 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Containers/StaticArray.h>
 
 
 //===========================================================================
@@ -57,15 +56,16 @@ CQMOM_Convection::problemSetup(const ProblemSpecP& params)
 
   //get internal coordinate indexes for each velocity direction
   int m = 0;
-  for ( ProblemSpecP db_name = db->findBlock("InternalCoordinate");
-       db_name != 0; db_name = db_name->findNextBlock("InternalCoordinate") ) {
+  for ( ProblemSpecP db_name = db->findBlock("InternalCoordinate"); db_name != nullptr; db_name = db_name->findNextBlock("InternalCoordinate") ) {
     string varType;
     db_name->getAttribute("type",varType);
     if (varType == "uVel") {
       uVelIndex = m;
-    } else if (varType == "vVel") {
+    }
+    else if (varType == "vVel") {
       vVelIndex = m;
-    } else if (varType == "wVel") {
+    }
+    else if (varType == "wVel") {
       wVelIndex = m;
     }
     m++;
@@ -74,8 +74,7 @@ CQMOM_Convection::problemSetup(const ProblemSpecP& params)
   nMoments = 0;
   // obtain moment index vectors
   vector<int> temp_moment_index;
-  for ( ProblemSpecP db_moments = db->findBlock("Moment");
-       db_moments != 0; db_moments = db_moments->findNextBlock("Moment") ) {
+  for ( ProblemSpecP db_moments = db->findBlock("Moment"); db_moments != nullptr; db_moments = db_moments->findNextBlock("Moment") ) {
     temp_moment_index.resize(0);
     db_moments->get("m", temp_moment_index);
 
@@ -320,8 +319,8 @@ CQMOM_Convection::solveCQMOMConvection( const ProcessorGroup* pc,
     }
 
     //get weights and abscissas
-    StaticArray <constCCVariable<double> > weights (nNodes);
-    StaticArray <constCCVariable<double> > abscissas (nNodes * M);
+    std::vector <constCCVariable<double> > weights (nNodes);
+    std::vector <constCCVariable<double> > abscissas (nNodes * M);
 
     int j = 0;
     for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
@@ -346,7 +345,7 @@ CQMOM_Convection::solveCQMOMConvection( const ProcessorGroup* pc,
     }
 
     //deal with deposition, use a placeholder value = 0.0 if deposition is off
-    StaticArray <constCCVariable<double> > fStickCC (nNodes);
+    std::vector <constCCVariable<double> > fStickCC (nNodes);
     if (d_deposition) {
       for ( int i = 0; i < nNodes; i++ ) {
         const VarLabel* tempLabel = fStickLabels[i];

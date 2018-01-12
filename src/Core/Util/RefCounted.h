@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,16 +25,13 @@
 #ifndef UINTAH_HOMEBREW_REFCOUNTED_H
 #define UINTAH_HOMEBREW_REFCOUNTED_H
 
-#include <atomic>
-#include <iostream>
-
 namespace Uintah {
+
 /**************************************
 
 CLASS
    RefCounted
-
-   Short description...
+   
 
 GENERAL INFORMATION
 
@@ -51,57 +48,33 @@ KEYWORDS
    Reference_Counted, RefCounted, Handle
 
 DESCRIPTION
-   Long description...
-
-WARNING
-
+  
+  
 ****************************************/
 
-struct RefBase {
-  virtual ~RefBase() {}
+class RefCounted {
+
+  public:
+
+    RefCounted();
+
+    virtual ~RefCounted();
+
+    void addReference() const;
+
+    bool removeReference() const;
+
+    int getReferenceCount() const { return d_refCount; }
+
+
+  private:
+
+    RefCounted& operator=(const RefCounted&);
+
+    mutable int d_refCount;
+            int d_lockIndex;
 };
 
+} // namespace Uintah
 
-class RefCounted
-  : public RefBase
-{
-public:
-  RefCounted() = default;
-
-  RefCounted( const RefCounted& ) = delete;
-  RefCounted & operator=( const RefCounted& ) = delete;
-
-  RefCounted( RefCounted&& ) = default;
-  RefCounted & operator=( RefCounted&& ) = default;
-
-  virtual ~RefCounted()
-  {
-#ifndef NDEBUG
-    if (m_refcount.load(std::memory_order_relaxed)) {
-      std::cerr << "Deleted object with non-zero reference count!" << std::endl;
-    }
-#endif
-  }
-
-  void addReference() const
-  {
-    m_refcount.fetch_add(1, std::memory_order_relaxed);
-  }
-
-  bool removeReference() const
-  {
-    return 1 == m_refcount.fetch_add(-1, std::memory_order_relaxed);
-  }
-
-  int getReferenceCount() const
-  {
-    return m_refcount.load(std::memory_order_relaxed);
-  }
-
-private:
-  mutable std::atomic<int> m_refcount{0};
-};
-
-} // End namespace Uintah
-
-#endif
+#endif // UINTAH_HOMEBREW_REFCOUNTED_H

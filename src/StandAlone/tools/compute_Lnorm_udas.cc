@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -371,7 +371,7 @@ void BuildCellToPatchMap(LevelP level,
   patchMap.resize(low, high);
   patchMap.initialize(0);
 
-  Level::const_patchIterator patch_iter;
+  Level::const_patch_iterator patch_iter;
   for(patch_iter = level->patchesBegin(); patch_iter != level->patchesEnd(); patch_iter++) {
     const Patch* patch = *patch_iter;
 
@@ -452,7 +452,6 @@ void createFile(string& filename, const int timestep)
 int
 main(int argc, char** argv)
 {
-  Uintah::Parallel::determineIfRunningUnderMPI( argc, argv );
   Uintah::Parallel::initializeManager(argc, argv);
 
   string ignoreVar = "none";
@@ -602,7 +601,7 @@ main(int argc, char** argv)
         //  This problem mainly occurs if <outputInitTimestep> has been specified.
         bool existsDA1 = true;
         bool existsDA2 = true;
-        Level::const_patchIterator iter;
+        Level::const_patch_iterator iter;
         for(iter = level1->patchesBegin(); iter != level1->patchesEnd(); iter++) {
           const Patch* patch = *iter;
           if ( ! da1->exists( var, patch, tstep ) ){
@@ -654,15 +653,14 @@ main(int argc, char** argv)
         BuildCellToPatchMap(level2, filebase2, cellToPatchMap2, time2, basis);
 
         serial_for( cellToPatchMap1.range(), [&](int i, int j, int k) {
-
           if ((cellToPatchMap1(i,j,k) == nullptr && cellToPatchMap2(i,j,k) != nullptr) ||
               (cellToPatchMap2(i,j,k) == nullptr && cellToPatchMap1(i,j,k) != nullptr)) {
             cerr << "Inconsistent patch coverage on level " << l << " at time " << time1 << endl;
-
             if (cellToPatchMap1(i,j,k) != nullptr) {
-              cerr << IntVector(i,j,k) << " is covered by " << filebase1 << " and not " << filebase2 << endl;
-            } else {
-              cerr << IntVector(i,j,k) << " is covered by " << filebase2 << " and not " << filebase1 << endl;
+              cerr << "(" << i << "," << j << "," << k << ")" << " is covered by " << filebase1 << " and not " << filebase2 << endl;
+            }
+            else {
+              cerr << "(" << i << "," << j << "," << k << ")" << " is covered by " << filebase2 << " and not " << filebase1 << endl;
             }
             abort_uncomparable();
           }
@@ -702,7 +700,7 @@ main(int argc, char** argv)
           vnorm->setNorms(  zeroV,  zeroV,  zeroV,  0);
           s7norm->setNorms( zeroS7, zeroS7, zeroS7, 0 );
 
-          Level::const_patchIterator iter;
+          Level::const_patch_iterator iter;
           for(iter = level1->patchesBegin();iter != level1->patchesEnd(); iter++) {
             const Patch* patch1 = *iter;
 

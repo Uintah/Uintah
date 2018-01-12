@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2016 The University of Utah
+ * Copyright (c) 2012-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -100,11 +100,10 @@ namespace WasatchCore {
                                           const Uintah::MaterialSet* const materials )
   {
     // hack in a task to apply boundary condition on the pressure after the pressure solve
-    Uintah::Task* task = scinew Uintah::Task( "RadiationSource: setup bndflux", this,
-                                             &RadiationSource::setup_bndflux );
+    Uintah::Task* task = scinew Uintah::Task( "RadiationSource: setup bndflux", this, &RadiationSource::setup_bndflux );
     
     task->computes(Uintah::VarLabel::find("RMCRTboundFlux"));
-    sched->addTask(task, level->eachPatch(), materials);
+    sched->addTask(task, level->eachPatch(), materials, Uintah::RMCRTCommon::TG_RMCRT);
   }
 
   //--------------------------------------------------------------------
@@ -149,52 +148,31 @@ namespace WasatchCore {
   {
     using namespace Uintah;
     
-    GridP grid = level->getGrid();
-    const bool modifiesDivQ      = true;
-    const bool includeExtraCells = false;  // domain for sigmaT4 computation
-    const int radiationCalcFreq = 5;
     // only sched on RK step 0 and on arches level
     if ( RKStage > 1 ) {
       return;
     }
     
+    rmcrt_->sched_CarryForward_FineLevelLabels ( level, sched );
+
     schedule_setup_bndflux(level, sched, materials);
+
+    GridP grid = level->getGrid();
+    const bool modifiesDivQ = true;
+
+    const LevelP& fineLevel = grid->getLevel(0);
+    const Task::WhichDW tempDW     = Task::NewDW;
+    const Task::WhichDW sigmaT4DW  = Task::NewDW;
+    const Task::WhichDW celltypeDW = Task::NewDW;
+    const Task::WhichDW notUsed    = Task::None;
+    rmcrt_->set_abskg_dw_perLevel( fineLevel, Task::NewDW );
     
-    int maxLevels = grid->numLevels();
-    {
-      const LevelP& fineLevel = grid->getLevel(0);
-      Uintah::Task::WhichDW tempDW   = Task::NewDW;
-      Uintah::Task::WhichDW abskgDW  = Task::NewDW;
-      
-      // if needed convert absorptionLabel: double -> float
-      rmcrt_->sched_DoubleToFloat( fineLevel, sched, abskgDW, radiationCalcFreq );
-      
-      rmcrt_->sched_sigmaT4( fineLevel,  sched, tempDW, 1, includeExtraCells );
-      
-      for (int l = 0; l < maxLevels; l++) {
-        const LevelP& level = grid->getLevel(l);
-        const bool modifies_abskg   = false;
-        const bool modifies_sigmaT4 = false;
-        
-        rmcrt_->sched_CoarsenAll( level, sched, modifies_abskg, modifies_sigmaT4, radiationCalcFreq );
-        
-        if(level->hasFinerLevel() || maxLevels == 1){
-          const Task::WhichDW sigmaT4DW  = Task::NewDW;
-          const Task::WhichDW celltypeDW = Task::NewDW;
-          
-          rmcrt_->sched_setBoundaryConditions( level, sched, tempDW, radiationCalcFreq, false );
-          rmcrt_->sched_rayTrace( level, sched, abskgDW, sigmaT4DW, celltypeDW, modifiesDivQ, radiationCalcFreq );
-        }
-      }
-      
-      // push divQ  to the coarser levels
-      for (int l = 0; l < maxLevels; l++) {
-        const LevelP& level = grid->getLevel(l);
-        const PatchSet* patches = level->eachPatch();
-        rmcrt_->sched_Refine_Q( sched,  patches, materials, radiationCalcFreq );
-      }
-    }
-    
+    // if needed convert absorptionLabel: double -> float
+    rmcrt_->sched_DoubleToFloat( fineLevel, sched, notUsed );
+    rmcrt_->sched_sigmaT4( fineLevel,  sched, tempDW );
+    rmcrt_->sched_setBoundaryConditions( level, sched, tempDW, false );
+
+    rmcrt_->sched_rayTrace( level, sched, notUsed, sigmaT4DW, celltypeDW, modifiesDivQ );
   }
   
   
@@ -229,7 +207,7 @@ namespace WasatchCore {
   {
     using namespace SpatialOps;
     
-    typedef std::vector<SVolField*> SVolFieldVec;
+    typedef typename Expr::Expression<SVolField>::ValVec SVolFieldVec;
     SVolFieldVec& results = this->get_value_vec();
     SVolField& radvolq = *results[1];
     radvolq <<= 0.0;

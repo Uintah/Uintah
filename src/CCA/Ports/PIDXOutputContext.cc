@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -24,6 +24,7 @@
 #include <CCA/Ports/PIDXOutputContext.h>
 
 #if HAVE_PIDX
+
 #include <Core/Util/StringUtil.h>
 #include <vector>
 
@@ -40,40 +41,37 @@ PIDXOutputContext::PIDX_flags::PIDX_flags()
   compressMap["CHUNKING"]          = PIDX_CHUNKING_ONLY;
   compressMap["PIDX_CHUNKING_ZFP"] = PIDX_CHUNKING_ZFP;
   
-  outputRawIO    = false;
-  debugOutput    = false;
-  outputPatchSize = IntVector(-9,-9,-9);
-  compressionType = PIDX_NO_COMPRESSION;
+  d_outputRawIO    = false;
+  d_debugOutput    = false;
+  d_outputPatchSize = IntVector( -9, -9, -9 );
+  d_compressionType = PIDX_NO_COMPRESSION;
 }
-
-
-PIDXOutputContext::PIDX_flags::~PIDX_flags(){};
-
 
 //______________________________________________________________________
 //  Utility:  returns the the compression type from input string
+
 unsigned int 
-PIDXOutputContext::PIDX_flags::str2CompressType( const std::string& me)
+PIDXOutputContext::PIDX_flags::str2CompressType( const std::string & type )
 {
-  string ME = string_toupper( me );  // convert to upper case  
-  if ( compressMap.count(ME) == 0){
+  string TYPE = string_toupper( type );  // convert to upper case  
+  if ( compressMap.count( TYPE ) == 0) {
     ostringstream warn;
-    warn<< "ERROR:PIDXOutput:: the compression type ("<<ME<<") is not supported."
-        << " Valid options are: NONE, CHUNKING, CHUNKING_ZFP";
-    throw Uintah::InternalError(warn.str(), __FILE__, __LINE__);
+    warn << "ERROR:PIDXOutput:: the compression type (" << TYPE << ") is not supported."
+         << " Valid options are: NONE, CHUNKING, CHUNKING_ZFP";
+    throw Uintah::InternalError( warn.str(), __FILE__, __LINE__ );
   }
-  return compressMap[ME];
+  return compressMap[ TYPE ];
 }
 
 //______________________________________________________________________
 //   Utility:  returns the name of the compression type
 std::string  
-PIDXOutputContext::PIDX_flags::getCompressTypeName( const int me )
+PIDXOutputContext::PIDX_flags::getCompressTypeName( const int type )
 {
   std::map< std::string, int >::const_iterator it;
-  std::string key = "nullptr";
+  std::string key = "NULL";
   for (it = compressMap.begin(); it!= compressMap.end(); ++it){
-    if( it->second == me){
+    if( it->second == type ) {
       key = it->first;
       return key;
     }
@@ -86,17 +84,25 @@ PIDXOutputContext::PIDX_flags::getCompressTypeName( const int me )
 void
 PIDXOutputContext::PIDX_flags::problemSetup( const ProblemSpecP& DA_ps )
 {
-  ProblemSpecP pidx_ps = DA_ps->findBlock("PIDX");
+  ProblemSpecP pidx_ps = DA_ps->findBlock( "PIDX" );
 
-  if( pidx_ps != 0 ) {
+  if( pidx_ps != nullptr ) {
   
-    string me;
-    pidx_ps->getWithDefault( "compressionType",  me, "NONE");
+    string type;
+    pidx_ps->getWithDefault( "compressionType",  type, "NONE" );
     
-    compressionType = str2CompressType( me );
-    pidx_ps->get( "debugOutput",     debugOutput );
-    pidx_ps->get( "outputRawIO",     outputRawIO );
-    pidx_ps->get( "outputPatchSize", outputPatchSize );
+    d_compressionType = str2CompressType( type );
+    pidx_ps->get( "debugOutput",     d_debugOutput );
+    pidx_ps->get( "outputRawIO",     d_outputRawIO );
+    pidx_ps->get( "outputPatchSize", d_outputPatchSize );
+  }
+  else {
+    proc0cout << "Warning: In input .ups file, the <PIDX> tag was not found in tag <DataArchiver type=\"PIDX\">. Using defaults...\n";
+
+    d_compressionType = PIDX_NO_COMPRESSION;
+    d_debugOutput = false;
+    d_outputRawIO = true;
+    d_outputPatchSize = IntVector( 64, 64, 64 );
   }
 }
 
@@ -165,7 +171,7 @@ PIDXOutputContext::computeBoxSize( const PatchSubset* patches,
   ASSERT(patches->size() != 0);
   ASSERT(patches->get(0) != 0);
     
-  const Patch* patch = patches->get(0);
+  //const Patch* patch = patches->get(0);
   const Level* level = patches->get(0)->getLevel();
 
   //__________________________________
@@ -181,8 +187,9 @@ PIDXOutputContext::computeBoxSize( const PatchSubset* patches,
   
   //__________________________________
   // logic for adjusting the box
-  IntVector box(64,64,64);    // default value
+  IntVector box( 64, 64, 64 );    // default value
   if (nPatchCells <=  cubed16) {
+    
   } else if (nPatchCells >  cubed16  && nPatchCells <= cubed32) {
     box = IntVector(32,32,32);
   } else if ( nPatchCells >  cubed32  && nPatchCells <= cubed64 ) {
@@ -195,15 +202,16 @@ PIDXOutputContext::computeBoxSize( const PatchSubset* patches,
   
   //__________________________________
   //  override the logic if user specifies somthing
-  if ( flags.outputPatchSize != IntVector(-9,-9,-9) ){
-    box = flags.outputPatchSize;
+  if ( flags.d_outputPatchSize != IntVector( -9, -9, -9 ) ) {
+    box = flags.d_outputPatchSize;
   }
   
-  if (flags.debugOutput){
-    cout << Parallel::getMPIRank() << " PIDX outputPatchSize: Level- "<< level->getIndex() << " box: " << box  
-         << " Patchsize: " << nCells << " nPatchCells: " << nPatchCells  << endl;
+  if ( flags.d_debugOutput ) {
+    cout << Parallel::getMPIRank() << " PIDX outputPatchSize: Level: "<< level->getIndex() << " box: " << box  
+         << " Patchsize: " << nCells << " nPatchCells: " << nPatchCells  << "\n";
   }
-  PIDX_set_point_5D(newBox, box.x(), box.y(), box.z(), 1, 1);
+  //PIDX_set_point( newBox, box.x(), box.y(), box.z());
+  PIDX_set_point( newBox, 64, 64, 64 );
 }
 
 
@@ -211,39 +219,42 @@ PIDXOutputContext::computeBoxSize( const PatchSubset* patches,
 //______________________________________________________________________
 //
 void
-PIDXOutputContext::initialize( string filename, 
-                               unsigned int timeStep,
-                               MPI_Comm comm,
-                               PIDX_flags flags,
-                               const PatchSubset* patches,
-                               const int typeOutput)
+PIDXOutputContext::initialize( const string       & filename, 
+                                     unsigned int   timeStep,
+                                     MPI_Comm       comm,
+                                     PIDX_flags     flags,
+                               const PatchSubset  * patches,
+			             PIDX_point     dim,
+                               const int            typeOutput )
 {
   this->filename = filename;
   this->timestep = timeStep;
-  this->comm = comm; 
   string desc = "PIDXOutputContext::initialize";
   //__________________________________
   //
   int rc = PIDX_create_access(&(this->access));
   checkReturnCode( rc, desc+" - PIDX_create_access", __FILE__, __LINE__);
   
-  if(comm != nullptr){
-    PIDX_set_mpi_access( this->access, this->comm );
+  if(comm != MPI_COMM_NULL){
+    PIDX_set_mpi_access( this->access, comm );
     checkReturnCode( rc, desc+" - PIDX_set_mpi_access", __FILE__, __LINE__);
   }
   
-  PIDX_file_create( filename.c_str(), PIDX_MODE_CREATE, access, &(this->file) );
+  PIDX_file_create( filename.c_str(), PIDX_MODE_CREATE, access, dim, &(this->file) );
   checkReturnCode( rc, desc+" - PIDX_file_create", __FILE__, __LINE__);
   
   //__________________________________
-  if ( flags.debugOutput ){
-    PIDX_debug_output( (this->file) );
+  if ( flags.d_debugOutput ){
+    //PIDX_debug_output( (this->file) );
   }
 
   //__________________________________
-  if ( flags.outputRawIO ){
-    PIDX_enable_raw_io(this->file);  //Possible performance improvement at low core counts
-    checkReturnCode( rc, desc+" - PIDX_enable_raw_io", __FILE__, __LINE__);
+  if ( flags.d_outputRawIO ){
+    PIDX_set_io_mode( this->file, PIDX_RAW_IO );
+
+    // FIXME: The 1 below represents the 1st timestep... but if we begin output on another timestep, this should be changed...
+    PIDX_set_cache_time_step( this->file, 1 );
+    checkReturnCode( rc, desc + " - PIDX_enable_idx_io", __FILE__, __LINE__ );
   }
   
   
@@ -255,10 +266,10 @@ PIDXOutputContext::initialize( string filename,
   PIDX_set_restructuring_box(file, new_box_size);
   checkReturnCode( rc, desc+" - PIDX_set_restructuring_box", __FILE__, __LINE__);
   
-  PIDX_set_block_size(this->file,  16);
+  PIDX_set_block_size(this->file,  13);
   checkReturnCode( rc, desc+" - PIDX_set_block_size", __FILE__, __LINE__);
   
-  PIDX_set_block_count(this->file, 128);
+  PIDX_set_block_count(this->file, 256);
   checkReturnCode( rc, desc+" - PIDX_set_block_count", __FILE__, __LINE__);
   //PIDX_set_resolution(this->file, 0, 2);
   
@@ -270,10 +281,11 @@ PIDXOutputContext::initialize( string filename,
   //__________________________________
   // Set compresssion settings
   if( typeOutput == CHECKPOINT){
-    PIDX_set_compression_type(this->file, PIDX_NO_COMPRESSION);
+    PIDX_set_compression_type( this->file, PIDX_NO_COMPRESSION );
     checkReturnCode( rc, desc+" - PIDX_set_compression_type", __FILE__, __LINE__);
-  } else {
-    PIDX_set_compression_type(this->file, flags.compressionType);
+  }
+  else {
+    PIDX_set_compression_type( this->file, flags.d_compressionType );
     checkReturnCode( rc, desc+" - PIDX_set_compression_type", __FILE__, __LINE__);
     //  PIDX_set_lossy_compression_bit_rate(this->file, 8);                // What to do here?
   }
@@ -285,14 +297,14 @@ PIDXOutputContext::initialize( string filename,
 //______________________________________________________________________
 //  
 void
-PIDXOutputContext::setPatchExtents( string desc, 
-                                    const Patch* patch,
-                                    const Level* level,
-                                    const IntVector& boundaryLayer,
-                                    const TypeDescription* TD,
-                                    patchExtents& pExtents,
-                                    PIDX_point& patchOffset,
-                                    PIDX_point& patchSize )
+PIDXOutputContext::setPatchExtents( const string          & desc, 
+                                    const Patch           * patch,
+                                    const Level           * level,
+                                    const IntVector       & boundaryLayer,
+                                    const TypeDescription * TD,
+                                          patchExtents    & pExtents,
+                                          PIDX_point      & patchOffset,
+                                          PIDX_point      & patchSize )
 {
 
    // compute the extents of this variable (CCVariable, SFC(*)Variable...etc)
@@ -312,26 +324,27 @@ PIDXOutputContext::setPatchExtents( string desc,
    pExtents.patchOffset   = pOffset;
    pExtents.totalCells_EC = totalCells_EC;
 
-   int rc = PIDX_set_point_5D(patchOffset,    pOffset.x(),    pOffset.y(), pOffset.z(),   0, 0);
+   int rc = PIDX_set_point(patchOffset,    pOffset.x(),    pOffset.y(), pOffset.z());
    checkReturnCode( rc, desc + " - PIDX_set_point_5D failure",__FILE__, __LINE__);
 
-   rc = PIDX_set_point_5D(patchSize, nCells_EC.x(), nCells_EC.y(), nCells_EC.z(), 1, 1);
+   rc = PIDX_set_point(patchSize, nCells_EC.x(), nCells_EC.y(), nCells_EC.z());
    checkReturnCode( rc, desc + "- PIDX_set_point_5D failure",__FILE__, __LINE__);
 }
 
 //______________________________________________________________________
 //  
+
 void
-PIDXOutputContext::setLevelExtents( string desc, 
-                                    IntVector lo,
-                                    IntVector hi,
-                                    PIDX_point& level_size )
+PIDXOutputContext::setLevelExtents( const string     & desc, 
+                                          IntVector    lo,
+                                          IntVector    hi,
+                                          PIDX_point & level_size )
 {                                                                             
   d_levelExtents[0] = hi[0] - lo[0] ;                                                                  
   d_levelExtents[1] = hi[1] - lo[1] ;                                                                  
   d_levelExtents[2] = hi[2] - lo[2] ;                                                                  
 
-  int ret = PIDX_set_point_5D(level_size, d_levelExtents[0], d_levelExtents[1], d_levelExtents[2], 1, 1);  
+  int ret = PIDX_set_point(level_size, d_levelExtents[0], d_levelExtents[1], d_levelExtents[2]);  
   checkReturnCode( ret,desc+" - PIDX_set_point_5D failure", __FILE__, __LINE__);                     
 }
 
@@ -339,24 +352,25 @@ PIDXOutputContext::setLevelExtents( string desc,
 //  
 
 void
-PIDXOutputContext::checkReturnCode( const int rc,
-                                    const string warn,
-                                    const char* file, 
-                                    int line)
+PIDXOutputContext::checkReturnCode( const int      rc,
+                                    const string   warn,
+                                    const char   * file, 
+                                    const int      line)
 {
-  if (rc != PIDX_success){
-    throw InternalError(warn, file, line);
+  if ( rc != PIDX_success ) {
+    throw InternalError( warn, file, line );
   }
 }
 
 
 //______________________________________________________________________
 //
+
 void
-PIDXOutputContext::hardWireBufferValues(unsigned char* patchBuffer, 
-                                        const patchExtents patchExts,
-                                        const size_t arraySize,
-                                        const int samples_per_value )
+PIDXOutputContext::hardWireBufferValues(       unsigned char * patchBuffer, 
+                                         const patchExtents    patchExts,
+                                         const size_t          arraySize,
+                                         const int             samples_per_value )
 { 
   IntVector lo_EC = patchExts.lo_EC;
   IntVector hi_EC = patchExts.hi_EC;  
@@ -389,17 +403,18 @@ PIDXOutputContext::hardWireBufferValues(unsigned char* patchBuffer,
 //______________________________________________________________________
 //
 void
-PIDXOutputContext::printBufferWrap( const string&   desc,
-                                    const TypeDescription::Type TD,
-                                    int             samples_per_value,
-                                    IntVector     & lo_EC,
-                                    IntVector     & hi_EC,
-                                    unsigned char * dataPIDX,
-                                    size_t          arraySize )
+PIDXOutputContext::printBufferWrap( const string                & desc,
+                                    const TypeDescription::Type   TD,
+                                    const int                     samples_per_value,
+                                    const IntVector             & lo_EC,
+                                    const IntVector             & hi_EC,
+                                    const unsigned char         * dataPIDX,
+                                    const size_t                  arraySize ) const
 {
   if (TD == TypeDescription::int_type) {
     printBuffer<int>( desc, "%3i ", samples_per_value, lo_EC, hi_EC,dataPIDX, arraySize );
-  } else {
+  }
+  else {
     printBuffer<int>( desc, "%5.3f ", samples_per_value, lo_EC, hi_EC,dataPIDX, arraySize );
   }
 }
@@ -411,13 +426,13 @@ template<class T>
 void
 PIDXOutputContext::printBuffer( const string        & desc,
                                 const string        & format,
-                                      int             samples_per_value,
-                                      IntVector     & lo_EC,
-                                      IntVector     & hi_EC,
-                                      unsigned char * dataPIDX,
-                                      size_t          arraySize )
+                                const int             samples_per_value,
+                                const IntVector     & lo_EC,
+                                const IntVector     & hi_EC,
+                                const unsigned char * dataPIDX,
+                                const size_t          arraySize ) const
 {
-  cout << "__________________________________ " << endl;
+  cout << "__________________________________\n";
   cout << desc << endl;
   T* buffer = (T*)malloc( arraySize );
   memcpy( buffer, dataPIDX, arraySize );
@@ -432,37 +447,37 @@ PIDXOutputContext::printBuffer( const string        & desc,
           c++;
         }
       }
-      printf("\n");
+      cout << "\n";
     }
-    printf("\n");
+    cout << "\n";
   }  
-  cout << "\n__________________________________ " << endl;
-  printf("\n");
-  free(buffer);
+  cout << "\n__________________________________\n";
+  cout << "\n";
+  free( buffer );
 }
 
 // explicit instantiations
-template void PIDXOutputContext::printBuffer<int>( const string& desc,
-                                                   const string& format,
-                                                   int samples_per_value,
-                                                   IntVector& lo_EC,
-                                                   IntVector& hi_EC,
-                                                   unsigned char* dataPIDX,
-                                                   size_t arraySize );
+template void PIDXOutputContext::printBuffer<int>( const string        & desc,
+                                                   const string        & format,
+                                                   const int             samples_per_value,
+                                                   const IntVector     & lo_EC,
+                                                   const IntVector     & hi_EC,
+                                                   const unsigned char * dataPIDX,
+                                                   const size_t          arraySize ) const;
 
-template void PIDXOutputContext::printBuffer<float>( const string & desc,
-                                                     const string& format,
-                                                     int samples_per_value,
-                                                     IntVector& lo_EC,
-                                                     IntVector& hi_EC,
-                                                     unsigned char* dataPIDX,
-                                                     size_t arraySize );
+template void PIDXOutputContext::printBuffer<float>( const string        & desc,
+                                                     const string        & format,
+                                                     const int             samples_per_value,
+                                                     const IntVector     & lo_EC,
+                                                     const IntVector     & hi_EC,
+                                                     const unsigned char * dataPIDX,
+                                                     const size_t          arraySize ) const;
 
-template void PIDXOutputContext::printBuffer<double>( const string & desc,
-                                                      const string& format,
-                                                      int samples_per_value,
-                                                      IntVector& lo_EC,
-                                                      IntVector& hi_EC,
-                                                      unsigned char* dataPIDX,
-                                                      size_t arraySize );
+template void PIDXOutputContext::printBuffer<double>( const string        & desc,
+                                                      const string        & format,
+                                                      const int             samples_per_value,
+                                                      const IntVector     & lo_EC,
+                                                      const IntVector     & hi_EC,
+                                                      const unsigned char * dataPIDX,
+                                                      const size_t          arraySize ) const;
 #endif

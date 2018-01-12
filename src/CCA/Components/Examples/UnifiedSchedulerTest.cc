@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -38,20 +38,22 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
-#include <sci_defs/cuda_defs.h>
 
 #ifdef HAVE_CUDA
 //#include <CCA/Components/Schedulers/GPUUtilities.h>
 #include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
 #endif
 
+#include <sci_defs/cuda_defs.h>
+
 #define BLOCKSIZE 16
 
 using namespace std;
 using namespace Uintah;
 
-UnifiedSchedulerTest::UnifiedSchedulerTest(const ProcessorGroup* myworld) :
-    UintahParallelComponent(myworld)
+UnifiedSchedulerTest::UnifiedSchedulerTest(const ProcessorGroup* myworld,
+					   const SimulationStateP sharedState) :
+  ApplicationCommon(myworld, sharedState)
 {
   phi_label = VarLabel::create("phi", NCVariable<double>::getTypeDescription());
   residual_label = VarLabel::create("residual", sum_vartype::getTypeDescription());
@@ -66,14 +68,12 @@ UnifiedSchedulerTest::~UnifiedSchedulerTest()
 //
 void UnifiedSchedulerTest::problemSetup(const ProblemSpecP& params,
                                         const ProblemSpecP& restart_prob_spec,
-                                        GridP& grid,
-                                        SimulationStateP& sharedState)
+                                        GridP& grid)
 {
-  sharedState_ = sharedState;
   ProblemSpecP unifiedSchedTest = params->findBlock("UnifiedSchedulerTest");
   unifiedSchedTest->require("delt", delt_);
   simpleMaterial_ = scinew SimpleMaterial();
-  sharedState->registerSimpleMaterial(simpleMaterial_);
+  m_sharedState->registerSimpleMaterial(simpleMaterial_);
 }
 //______________________________________________________________________
 //
@@ -85,7 +85,7 @@ void UnifiedSchedulerTest::scheduleInitialize(const LevelP& level,
   multiTask->computesWithScratchGhost(phi_label, nullptr, Uintah::Task::NormalDomain, Ghost::AroundNodes, 1);
   //multiTask->computes(phi_label);
   multiTask->computes(residual_label);
-  sched->addTask(multiTask, level->eachPatch(), sharedState_->allMaterials());
+  sched->addTask(multiTask, level->eachPatch(), m_sharedState->allMaterials());
 }
 //______________________________________________________________________
 //
@@ -95,14 +95,14 @@ void UnifiedSchedulerTest::scheduleRestartInitialize(const LevelP& level,
 }
 //______________________________________________________________________
 //
-void UnifiedSchedulerTest::scheduleComputeStableTimestep(const LevelP& level,
+void UnifiedSchedulerTest::scheduleComputeStableTimeStep(const LevelP& level,
                                                          SchedulerP& sched)
 {
-  Task* task = scinew Task("UnifiedSchedulerTest::computeStableTimestep", this, &UnifiedSchedulerTest::computeStableTimestep);
+  Task* task = scinew Task("UnifiedSchedulerTest::computeStableTimeStep", this, &UnifiedSchedulerTest::computeStableTimeStep);
 
   task->requires(Task::NewDW, residual_label);
-  task->computes(sharedState_->get_delt_label(), level.get_rep());
-  sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
+  task->computes(getDelTLabel(), level.get_rep());
+  sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
 }
 //______________________________________________________________________
 //
@@ -123,23 +123,23 @@ void UnifiedSchedulerTest::scheduleTimeAdvance(const LevelP& level,
   task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
   task->computesWithScratchGhost(phi_label, nullptr, Uintah::Task::NormalDomain, Ghost::AroundNodes, 1);
   task->computes(residual_label);
-  sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
+  sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
 }
 
 //______________________________________________________________________
 //
-void UnifiedSchedulerTest::computeStableTimestep(const ProcessorGroup* pg,
+void UnifiedSchedulerTest::computeStableTimeStep(const ProcessorGroup* pg,
                                                  const PatchSubset* patches,
                                                  const MaterialSubset* matls,
                                                  DataWarehouse* old_dw,
                                                  DataWarehouse* new_dw)
 {
-  if (pg->myrank() == 0) {
+  if (pg->myRank() == 0) {
     sum_vartype residual;
     new_dw->get(residual, residual_label);
     cerr << "Residual=" << residual << '\n';
   }
-  new_dw->put(delt_vartype(delt_), sharedState_->get_delt_label(), getLevel(patches));
+  new_dw->put(delt_vartype(delt_), getDelTLabel(), getLevel(patches));
 }
 
 //______________________________________________________________________
@@ -182,7 +182,8 @@ void UnifiedSchedulerTest::initialize(const ProcessorGroup* pg,
 
 //______________________________________________________________________
 //
-void UnifiedSchedulerTest::timeAdvanceUnified(Task::CallBackEvent event,
+void UnifiedSchedulerTest::timeAdvanceUnified(DetailedTask* task,
+                                              Task::CallBackEvent event,
                                               const ProcessorGroup* pg,
                                               const PatchSubset* patches,
                                               const MaterialSubset* matls,
@@ -299,8 +300,8 @@ void UnifiedSchedulerTest::timeAdvanceUnified(Task::CallBackEvent event,
                                        patchNodeHighIndex,
                                        domainLow,
                                        domainHigh,
-                                       ((GPUDataWarehouse*)old_TaskGpuDW)->getdevice_ptr(),
-                                       ((GPUDataWarehouse*)new_TaskGpuDW)->getdevice_ptr());
+                                       (GPUDataWarehouse*)old_TaskGpuDW,
+                                       (GPUDataWarehouse*)new_TaskGpuDW);
 
       // residual is automatically "put" with the D2H copy of the GPUReductionVariable
       // new_dw->put(sum_vartype(residual), residual_label);
@@ -396,17 +397,38 @@ void UnifiedSchedulerTest::timeAdvance1DP(const ProcessorGroup*,
 
     //__________________________________
     // 1D-Pointer Stencil
-    const int zhigh = h.z();
-    const int yhigh = h.y();
-    const int xhigh = h.x();
+    double *phi_data = (double*)phi.getWindow()->getData()->getPointer();
+    double *newphi_data = (double*)newphi.getWindow()->getData()->getPointer();
+
+    int zhigh = h.z();
+    int yhigh = h.y();
+    int xhigh = h.x();
+    int ghostLayers = 1;
+    int ystride = yhigh + ghostLayers;
+    int xstride = xhigh + ghostLayers;
+
+//    cout << "high(x,y,z): " << xhigh << "," << yhigh << "," << zhigh << endl;
+
     for (int k = l.z(); k < zhigh; k++) {
       for (int j = l.y(); j < yhigh; j++) {
         for (int i = l.x(); i < xhigh; i++) {
-          newphi(i,j,k) = (1.0/6.0) * ( phi(i-1,j,k) + phi(i+1,j,k)
-                                      + phi(i,j-1,k) + phi(i,j+1,k)
-                                      + phi(i,j,k-1) + phi(i,j,k+1) );
+          //cout << "(x,y,z): " << k << "," << j << "," << i << endl;
+          // For an array of [ A ][ B ][ C ], we can index it thus:
+          // (a * B * C) + (b * C) + (c * 1)
+          int idx = i + (j * xstride) + (k * xstride * ystride);
 
-          double diff = newphi_data(i,j,k) - phi_data(i,j,k);
+          int xminus = (i - 1) + (j * xstride) + (k * xstride * ystride);
+          int xplus = (i + 1) + (j * xstride) + (k * xstride * ystride);
+          int yminus = i + ((j - 1) * xstride) + (k * xstride * ystride);
+          int yplus = i + ((j + 1) * xstride) + (k * xstride * ystride);
+          int zminus = i + (j * xstride) + ((k - 1) * xstride * ystride);
+          int zplus = i + (j * xstride) + ((k + 1) * xstride * ystride);
+
+          newphi_data[idx] = (1. / 6)
+                             * (phi_data[xminus] + phi_data[xplus] + phi_data[yminus] + phi_data[yplus] + phi_data[zminus]
+                                + phi_data[zplus]);
+
+          double diff = newphi_data[idx] - phi_data[idx];
           residual += diff * diff;
         }
       }

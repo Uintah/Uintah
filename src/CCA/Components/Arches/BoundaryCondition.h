@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -32,6 +32,7 @@
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Grid/LevelP.h>
+#include <Core/Grid/Task.h>
 
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
@@ -84,6 +85,7 @@ class CellInformation;
 class VarLabel;
 class PhysicalConstants;
 class Properties;
+class TableLookup;
 class ArchesLabel;
 class MPMArchesLabel;
 class ProcessorGroup;
@@ -91,6 +93,7 @@ class DataWarehouse;
 class TimeIntegratorLabel;
 class IntrusionBC;
 class BoundaryCondition_new;
+class WBCHelper;
 
 class BoundaryCondition {
 
@@ -164,7 +167,7 @@ inline const FaceOffSets getFaceOffsets( const IntVector& face_normal, const Pat
 
 };
 
-inline IntrusionBC* get_intrusion_ref(){
+inline const std::map<int, IntrusionBC*> get_intrusion_ref(){
   return _intrusionBC;
 };
 
@@ -186,6 +189,10 @@ inline bool typeMatch( BC_TYPE check_type, std::vector<BC_TYPE >& type_list ){
   return found_match;
 };
 
+void prune_per_patch_bcinfo( SchedulerP& sched,
+                             const LevelP& level,
+                             WBCHelper* bcHelper );
+
 void sched_cellTypeInit( SchedulerP& sched,
                          const LevelP& level,
                          const MaterialSet* matls);
@@ -197,35 +204,24 @@ void cellTypeInit( const ProcessorGroup*,
                    DataWarehouse* new_dw,
                    IntVector lo, IntVector hi);
 
-void sched_computeBCArea( SchedulerP& sched,
-                          const LevelP& level,
-                          const MaterialSet* matls);
-
-void computeBCArea( const ProcessorGroup*,
-                    const PatchSubset* patches,
-                    const MaterialSubset*,
-                    DataWarehouse*,
-                    DataWarehouse* new_dw,
-                    const IntVector lo,
-                    const IntVector hi);
-
 void sched_setupBCInletVelocities( SchedulerP& sched,
                                    const LevelP& level,
                                    const MaterialSet* matls,
-                                   bool doing_restart );
+                                   bool doing_restart,
+                                   bool doing_regrid);
 
 void setupBCInletVelocities( const ProcessorGroup*,
                              const PatchSubset* patches,
                              const MaterialSubset*,
                              DataWarehouse*,
                              DataWarehouse* new_dw,
-                             bool doing_restart );
+                             bool doing_regrid);
 
 void setupBCInletVelocitiesHack( const ProcessorGroup*,
                                  const PatchSubset* patches,
                                  const MaterialSubset*,
                                  DataWarehouse*,
-                                 DataWarehouse* new_dw );
+                                 DataWarehouse* new_dw ){}
 
 void sched_setInitProfile( SchedulerP& sched,
                            const LevelP& level,
@@ -261,7 +257,9 @@ void setVel( const Patch* patch, const Patch::FaceType& face,
 void setTurbInlet( const Patch* patch, const Patch::FaceType& face,
                    SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel,
                    constCCVariable<double>& density,
-                   Iterator bound_iter, DigitalFilterInlet * TurbIn );
+                   Iterator bound_iter, DigitalFilterInlet * TurbIn,
+                   const int timeStep,
+                   const double simTime  );
 
 template<class d0T, class d1T, class d2T>
 void setSwirl( const Patch* patch, const Patch::FaceType& face,
@@ -319,7 +317,8 @@ void setHattedIntrusionVelocity( const Patch* p,
                                  SFCXVariable<double>& u,
                                  SFCYVariable<double>& v,
                                  SFCZVariable<double>& w,
-                                 constCCVariable<double>& density );
+                                 constCCVariable<double>& density,
+                                 bool& set_nonnormal_values );
 
 void sched_setIntrusionDensity( SchedulerP& sched,
                                 const LevelP& level,
@@ -331,10 +330,54 @@ void setIntrusionDensity( const ProcessorGroup*,
                           DataWarehouse*,
                           DataWarehouse* new_dw);
 
-void wallStress( const Patch* patch,
-                 ArchesVariables* vars,
-                 ArchesConstVariables* const_vars,
-                 constCCVariable<double>& volFraction );
+// wall closure models:
+void
+sched_wallStressConstSmag( Task::WhichDW dw, Task* tsk );
+
+void
+wallStressConstSmag( const Patch* p,
+                     DataWarehouse* dw,
+                     const double wall_C_smag,
+                     const int standoff,
+                     constSFCXVariable<double>& uvel,
+                     constSFCYVariable<double>& vvel,
+                     constSFCZVariable<double>& wvel,
+                     SFCXVariable<double>& Su,
+                     SFCYVariable<double>& Sv,
+                     SFCZVariable<double>& Sw,
+                     constCCVariable<double>& rho,
+                     constCCVariable<double>& eps );
+void
+wallStressMolecular( const Patch* p,
+                     constSFCXVariable<double>& uvel,
+                     constSFCYVariable<double>& vvel,
+                     constSFCZVariable<double>& wvel,
+                     SFCXVariable<double>& Su,
+                     SFCYVariable<double>& Sv,
+                     SFCZVariable<double>& Sw,
+                     constCCVariable<double>& eps );
+void wallStressLog( const Patch* patch,
+                    ArchesVariables* vars,
+                    ArchesConstVariables* const_vars,
+                    constCCVariable<double>& volFraction );
+
+inline void   newton_solver( const double&  , const double& , const double& , const double& ,double& );
+
+void
+wallStressDynSmag( const Patch* p,
+                   const int standoff,
+                   constCCVariable<double>& mu_t,
+                   constSFCXVariable<double>& uvel,
+                   constSFCYVariable<double>& vvel,
+                   constSFCZVariable<double>& wvel,
+                   SFCXVariable<double>& Su,
+                   SFCYVariable<double>& Sv,
+                   SFCZVariable<double>& Sw,
+                   constCCVariable<double>& rho,
+                   constCCVariable<double>& eps );
+
+/** @brief Set the address for the BC helper created in the non-linear solver **/
+void setBCHelper( std::map<int,WBCHelper*>* helper ){m_bcHelper = helper;}
 
 /** @brief Copy the temperature into a radiation temperature for use later. Also forces BCs in extra cell **/
 void sched_create_radiation_temperature( SchedulerP& sched, const LevelP& level, const MaterialSet* matls, const bool use_old_dw );
@@ -347,23 +390,18 @@ void create_radiation_temperature( const ProcessorGroup* pc,
                                    DataWarehouse* new_dw,
                                    const bool use_old_dw);
 
-////////////////////////////////////////////////////////////////////////
-// BoundaryCondition constructor used in  PSE
 BoundaryCondition(const ArchesLabel* label,
                   const MPMArchesLabel* MAlb,
                   PhysicalConstants* phys_const,
-                  Properties* props);
+                  Properties* props,
+                  TableLookup* table_lookup);
 
 
-// GROUP: Destructors:
-////////////////////////////////////////////////////////////////////////
-// Destructor
 ~BoundaryCondition();
 
-// GROUP: Problem Steup:
-////////////////////////////////////////////////////////////////////////
-// Details here
-void problemSetup(const ProblemSpecP& params);
+void problemSetup( const ProblemSpecP& params, GridP& grid );
+
+void set_bc_information( const LevelP& level );
 
 ////////////////////////////////////////////////////////////////////////
 // mm Wall boundary ID
@@ -523,6 +561,8 @@ void velRhoHatInletBC(const Patch* patch,
                       ArchesVariables* vars,
                       ArchesConstVariables* constvars,
                       const int matl_index,
+                      const int timeStep,
+                      const double simTime,
                       double time_shift);
 
 void velRhoHatOutletPressureBC( const Patch* patch,
@@ -575,8 +615,9 @@ struct BCInfo {
   // Inlets:
   Vector velocity;
   Vector partVelocity;
+  Vector unitVector;
+  Vector partUnitVector;
   double mass_flow_rate;
-  double partMassFlow_rate;
   std::string filename;
   std::map<IntVector, double> file_input;
   double swirl_no;
@@ -595,14 +636,11 @@ struct BCInfo {
   double density;
   double partDensity;
 
-  // Varlabels:
-  const VarLabel* total_area_label;
-
   DigitalFilterInlet * TurbIn;
 
- std::vector<double> vWeights;
- std::vector<std::vector<double> > vVelScalingConst;
- std::vector<std::vector<std::string> > vVelLabels;
+  std::vector<double> vWeights;
+  std::vector<std::vector<double> > vVelScalingConst;
+  std::vector<std::vector<std::string> > vVelLabels;
 
 };
 
@@ -611,25 +649,6 @@ void setStABL( const Patch* patch, const Patch::FaceType& face,
                BCInfo* bcinfo,
                Iterator bound_ptr  );
 
-void printBCInfo(){
-
-  for ( BCInfoMap::iterator bc_iter = d_bc_information.begin();
-        bc_iter != d_bc_information.end(); bc_iter++) {
-
-    std::cout << "/---------------------------------------------------------------/\n" << std::endl;
-    std::cout << "Boundary type is: " << bc_iter->second.type << std::endl;
-    std::cout << "name: " << bc_iter->second.name << std::endl;
-    std::cout << "velocity components: " << bc_iter->second.velocity[0] << ", " << bc_iter->second.velocity[1] << ", " << bc_iter->second.velocity[2] << std::endl;
-    std::cout << "mass flow rate: " << bc_iter->second.mass_flow_rate << std::endl;
-    std::cout << "file name: " << bc_iter->second.filename << std::endl;
-    std::cout << "swirl no: " << bc_iter->second.swirl_no << " and centroid = " << bc_iter->second.swirl_cent << std::endl;
-    std::cout << "enthalpy: " << bc_iter->second.enthalpy << std::endl;
-    std::cout << "density: " << bc_iter->second.density << std::endl;
-    std::cout << "area: " << bc_iter->second.total_area_label << std::endl;
-    std::cout << "/---------------------------------------------------------------/\n" << std::endl;
-
-  }
-};
 
 typedef std::map<BC_TYPE, std::string> BCNameMap;
 typedef std::map<int, BCInfo>      BCInfoMap;
@@ -639,7 +658,7 @@ void sched_setIntrusionTemperature( SchedulerP& sched,
                                     const LevelP& level,
                                     const MaterialSet* matls );
 
-BCInfoMap d_bc_information;                                 ///< Contains information about each boundary condition spec. (from UPS)
+std::map<int, BCInfoMap> d_bc_information; ///< Contains information about each boundary condition spec. (from UPS)
 
 BoundaryCondition_new* getNewBoundaryCondition(){
   return d_newBC;
@@ -647,10 +666,15 @@ BoundaryCondition_new* getNewBoundaryCondition(){
 
 private:
 
-/** @brief Setup new boundary conditions specified under the <Grid><BoundaryCondition> section */
-void setupBCs( ProblemSpecP& db );
+std::map<const std::string, const VarLabel*> m_area_labels;
+std::map<int,WBCHelper*>* m_bcHelper;
+Uintah::ProblemSpecP m_arches_spec;
 
-BCNameMap d_bc_type_to_string;                              ///< Matches the BC integer ID with the string name
+/** @brief Makes a label for the reduction of the surface area for this child **/
+void create_new_area_label( const std::string name );
+
+/** @brief Setup new boundary conditions specified under the <Grid><BoundaryCondition> section */
+void setupBCs( ProblemSpecP db, const LevelP& level );
 
 ////////////////////////////////////////////////////////////////////////
 // Call Fortran to compute u velocity BC terms
@@ -854,13 +878,14 @@ bool d_check_inlet_obstructions;
 
 bool d_ignore_invalid_celltype;
 
-IntrusionBC* _intrusionBC;
+std::map<int, IntrusionBC*> _intrusionBC;
 bool _using_new_intrusion;
 
 // used for calculating wall boundary conditions
 PhysicalConstants* d_physicalConsts;
 // used to get properties of different streams
 Properties* d_props;
+TableLookup* d_table_lookup;
 // mass flow
 double d_uvwout;
 double d_overallMB;
@@ -1030,8 +1055,11 @@ BoundaryCondition::zeroGradientBC( const Patch* patch,
   std::vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
 
-  for ( BCInfoMap::iterator bc_iter = d_bc_information.begin();
-        bc_iter != d_bc_information.end(); bc_iter++) {
+  const Level* level = patch->getLevel();
+  const int ilvl = level->getID();
+
+  for ( BCInfoMap::iterator bc_iter = d_bc_information[ilvl].begin();
+        bc_iter != d_bc_information[ilvl].end(); bc_iter++) {
 
     if ( typeMatch( bc_iter->second.type, types ) ) {
 
@@ -1087,8 +1115,11 @@ BoundaryCondition::zeroStencilDirection( const Patch* patch,
   std::vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
 
-  for ( BCInfoMap::iterator bc_iter = d_bc_information.begin();
-        bc_iter != d_bc_information.end(); bc_iter++) {
+  const Level* level = patch->getLevel();
+  const int ilvl = level->getID();
+
+  for ( BCInfoMap::iterator bc_iter = d_bc_information[ilvl].begin();
+        bc_iter != d_bc_information[ilvl].end(); bc_iter++) {
 
     if ( typeMatch( bc_iter->second.type, types ) ) {
 
@@ -1136,13 +1167,13 @@ BoundaryCondition::zeroStencilDirection( const Patch* patch,
 /** @brief Adds grad(P) to velocity on outlet or pressure boundaries */
 template <class velType> void
 BoundaryCondition::delPForOutletPressure( const Patch* patch,
-                                               int matl_index,
-                                               double dt,
-                                               Patch::FaceType mface,
-                                               Patch::FaceType pface,
-                                               velType& vel,
-                                               constCCVariable<double>& P,
-                                               constCCVariable<double>& density )
+                                          int matl_index,
+                                          double dt,
+                                          Patch::FaceType mface,
+                                          Patch::FaceType pface,
+                                          velType& vel,
+                                          constCCVariable<double>& P,
+                                          constCCVariable<double>& density )
 {
 
   std::vector<Patch::FaceType>::const_iterator bf_iter;
@@ -1150,8 +1181,11 @@ BoundaryCondition::delPForOutletPressure( const Patch* patch,
   patch->getBoundaryFaces(bf);
   Vector Dx = patch->dCell();
 
-  for ( BCInfoMap::iterator bc_iter = d_bc_information.begin();
-        bc_iter != d_bc_information.end(); bc_iter++) {
+  const Level* level = patch->getLevel();
+  const int ilvl = level->getID();
+
+  for ( BCInfoMap::iterator bc_iter = d_bc_information[ilvl].begin();
+        bc_iter != d_bc_information[ilvl].end(); bc_iter++) {
 
     if ( bc_iter->second.type == OUTLET ||
          bc_iter->second.type == PRESSURE ||

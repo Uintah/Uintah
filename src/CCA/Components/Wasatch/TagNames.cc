@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2016 The University of Utah
+ * Copyright (c) 2012-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -54,17 +54,49 @@ namespace WasatchCore{
   zzvolcoord( "ZZVOL", Expr::STATE_NONE ),
   
   // energy related variables
-  temperature        ( "Temperature"       , Expr::STATE_NONE ),
-  absorption         ( "AbsCoef"           , Expr::STATE_NONE ),
-  radiationsource    ( "RadiationSource"   , Expr::STATE_NONE ),
-  radvolq            ( "radiationVolq"     , Expr::STATE_NONE ),
-  radvrflux          ( "VRFlux"            , Expr::STATE_NONE ),
-  kineticEnergy      ("KineticEnergy",      Expr::STATE_NONE ),
+  temperature        ( "Temperature"      , Expr::STATE_NONE ),
+  absorption         ( "AbsCoef"          , Expr::STATE_NONE ),
+  radiationsource    ( "RadiationSource"  , Expr::STATE_NONE ),
+  radvolq            ( "radiationVolq"    , Expr::STATE_NONE ),
+  radvrflux          ( "VRFlux"           , Expr::STATE_NONE ),
+  enthalpy           ( "enthalpy"         , Expr::STATE_NONE ),
+  xHeatFlux          ( "HeatFlux_X"       , Expr::STATE_NONE ),
+  yHeatFlux          ( "HeatFlux_Y"       , Expr::STATE_NONE ),
+  zHeatFlux          ( "HeatFlux_Z"       , Expr::STATE_NONE ),
+  kineticEnergy      ("KineticEnergy"     , Expr::STATE_NONE ),
   totalKineticEnergy ("TotalKineticEnergy", Expr::STATE_NONE ),
   
+  // species related variables
+  mixMW( "Mixture_MW", Expr::STATE_NONE ),
+
+  // tar and soot related
+  tar                      ( "tar"                         , Expr::STATE_NONE ),
+  soot                     ( "soot"                        , Expr::STATE_NONE ),
+  sootParticleNumberDensity( "soot_particle_number_density", Expr::STATE_NONE ),
+  tarOxidationRate         ( "tar_oxidation_rate"          , Expr::STATE_NONE ),
+  sootOxidationRate        ( "soot_oxidation_rate"         , Expr::STATE_NONE ),
+  sootFormationRate        ( "soot_formation_rate"         , Expr::STATE_NONE ),
+  sootAgglomerationRate    ( "soot_agglomeration_rate"     , Expr::STATE_NONE ),
+
+  // thermochemistry related variables
+  soundspeed         ( "sound_speed"         , Expr::STATE_NONE ),
+  heatCapacity       ( "heat_capacity"       , Expr::STATE_NONE ),
+  cp                 ( "cp"                  , Expr::STATE_NONE ),
+  cv                 ( "cv"                  , Expr::STATE_NONE ),
+  thermalConductivity( "thermal_conductivity", Expr::STATE_NONE ),
+  
+  // NSCBC related vars
+  dudx( "dudx", Expr::STATE_NONE ),
+  dvdy( "dvdy", Expr::STATE_NONE ),
+  dwdz( "dwdz", Expr::STATE_NONE ),
+  dpdx( "dpdx", Expr::STATE_NONE ),
+  dpdy( "dpdy", Expr::STATE_NONE ),
+  dpdz( "dpdz", Expr::STATE_NONE ),
+
   // momentum related variables
-  pressure  ( "pressure",   Expr::STATE_NONE ),
+  pressure  ( "pressure"  , Expr::STATE_NONE ),
   dilatation( "dilatation", Expr::STATE_NONE ),
+  divrhou   ( "divrhou"   , Expr::STATE_NONE ),
   strainxx  (  "strain_xx", Expr::STATE_NONE ),
   strainxy  (  "strain_xy", Expr::STATE_NONE ),
   strainxz  (  "strain_xz", Expr::STATE_NONE ),
@@ -97,6 +129,8 @@ namespace WasatchCore{
   presponse( "p.tau",      Expr::STATE_NONE ),
   preynolds( "p.re",       Expr::STATE_NONE ),
   pdragcoef( "p.cd",       Expr::STATE_NONE ),
+  pHeatTransCoef( "p.heatTransferCoeff", Expr::STATE_NONE ),
+  pHeatCapacity(  "p.heatCapacity", Expr::STATE_NONE ),
   
   // predictor related variables
   star           ( "*"),

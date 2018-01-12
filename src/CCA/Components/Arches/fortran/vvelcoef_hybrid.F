@@ -1,7 +1,7 @@
 C
 C The MIT License
 C
-C Copyright (c) 1997-2016 The University of Utah
+C Copyright (c) 1997-2018 The University of Utah
 C
 C Permission is hereby granted, free of charge, to any person obtaining a copy
 C of this software and associated documentation files (the "Software"), to
@@ -45,13 +45,11 @@ c*********************************************************************
       double precision GE, GP, GW, GN, GSE, GS, GSW, GT, GST, GSB, GB
       double precision GSP, GNP, GUP
       double precision GWP
-      double precision CPE, CPW, GVP, CPN, CPS, CPT, CPB
       double precision VISE, VISW, VISN, VISS, VIST, VISB
       double precision DE, DW, DN, DS, DT, DB
-      double precision TEW, TNS, TTB
-      double precision REE, REW, REN, RES, RET, REB
+      double precision TE, TW, TN, TS, TT, TB
+      double precision COEFE, COEFW, COEFN, COEFS, COEFT, COEFB
       double precision AEC, AWC, ANC, ASC, ATC, ABC
-      double precision Relimit_m1
       double precision DUDYE, DUDYW
       double precision DVDYN, DVDYS
       double precision DWDYB, DWDYT
@@ -77,6 +75,7 @@ c*********************************************************************
       AREATB = dx*dy
       VOL = dx*dy*dz
 
+
       DO 220 K = KSTV,KENDV
          DO 210 J = JSTV,JENDV
             DO 200 I = ISTV,IENDV
@@ -91,6 +90,7 @@ c*********************************************************************
               EPSS = eps(I,J-2,K)
               EPST = eps(I,J,K+1)*eps(I,J-1,K+1)
               EPSB = eps(I,J,K-1)*eps(I,J-1,K-1)
+
 C-----------------------------------------------------------------------
 C     CALCULATE CONVECTION COEFFICIENTS
 C-----------------------------------------------------------------------
@@ -134,97 +134,54 @@ C-----------------------------------------------------------------------
                VISB = PT25*(VIS(I,J,K-1)+VIS(I,J-1,K-1)+
      +                VIS(I,J,K)+VIS(I,J-1,K))
 
-               DE = VISE*AREAEW/DX
-               DW = VISW*AREAEW/DX
-               DN = VISN*AREANS/DY
-               DS = VISS*AREANS/DY
-               DT = VIST*AREATB/DZ
-               DB = VISB*AREATB/DZ
+               DE = VISE*AREAEW/dx*EPSE
+               DW = VISW*AREAEW/dx*EPSW
+               DN = VISN*AREANS/dy*EPSN
+               DS = VISS*AREANS/dy*EPSS
+               DT = VIST*AREATB/dz*EPST
+               DB = VISB*AREATB/dz*EPSB
+
 
 C-----------------------------------------------------------------------
 C     CONVECTION DIFFERENCING SCHEME SELECTION
 C-----------------------------------------------------------------------
+               COEFE = DE - ABS(CE)/Relimit
+               COEFW = DW - ABS(CW)/Relimit
+               COEFN = DN - ABS(CN)/Relimit
+               COEFS = DS - ABS(CS)/Relimit
+               COEFT = DT - ABS(CT)/Relimit
+               COEFB = DB - ABS(CB)/Relimit
+               TE = 1.0D0
+               TW = 1.0D0
+               TN = 1.0D0
+               TS = 1.0D0
+               TT = 1.0D0
+               TB = 1.0D0
+               IF (COEFE.LT.0.0D0) TE = 0.0D0
+               IF (COEFW.LT.0.0D0) TW = 0.0D0
+               IF (COEFN.LT.0.0D0) TN = 0.0D0
+               IF (COEFS.LT.0.0D0) TS = 0.0D0
+               IF (COEFT.LT.0.0D0) TT = 0.0D0
+               IF (COEFB.LT.0.0D0) TB = 0.0D0
+               IF (TE.EQ.1.0D0) CVSY(I,J,K) = CVSY(I,J,K)+1.0d0/6.0d0
+               IF (TW.EQ.1.0D0) CVSY(I,J,K) = CVSY(I,J,K)+1.0d0/6.0d0
+               IF (TN.EQ.1.0D0) CVSY(I,J,K) = CVSY(I,J,K)+1.0d0/6.0d0
+               IF (TS.EQ.1.0D0) CVSY(I,J,K) = CVSY(I,J,K)+1.0d0/6.0d0
+               IF (TT.EQ.1.0D0) CVSY(I,J,K) = CVSY(I,J,K)+1.0d0/6.0d0
+               IF (TB.EQ.1.0D0) CVSY(I,J,K) = CVSY(I,J,K)+1.0d0/6.0d0
+               AEC = -PT5*CE*TE + dMAX1(0.0D0,-CE)*(1.0D0-TE)
+               AWC = PT5*CW*TW + dMAX1(0.0D0,CW)*(1.0D0-TW)
+               ANC = -PT5*CN*TN + dMAX1(0.0D0,-CN)*(1.0D0-TN)
+               ASC = PT5*CS*TS + dMAX1(0.0D0,CS)*(1.0D0-TS)
+               ATC = -PT5*CT*TT + dMAX1(0.0D0,-CT)*(1.0D0-TT)
+               ABC = PT5*CB*TB + dMAX1(0.0D0,CB)*(1.0D0-TB)
+               AE(I,J,K) = AEC + DE
+               AW(I,J,K) = AWC + DW
+               AN(I,J,K) = ANC + DN
+               AS(I,J,K) = ASC + DS
+               AT(I,J,K) = ATC + DT
+               AB(I,J,K) = ABC + DB
 
-               REE = ABS(CE)/DE
-               REW = ABS(CW)/DW
-               REN = ABS(CN)/DN
-               RES = ABS(CS)/DS
-               RET = ABS(CT)/DT
-               REB = ABS(CB)/DB
-               CVSY(I,J,K) = 0.0d0
-
-C If the current cell borders a wall (EPS < 1) then we are going to
-C upwind. 
-               IF ( EPSE .lt. PT5 ) THEN 
-                 REE = Relimit + 1
-                 REW = Relimit + 1
-                 REN = Relimit + 1
-                 RES = Relimit + 1
-                 RET = Relimit + 1
-                 REB = Relimit + 1
-               ENDIF 
-               IF ( EPSW .lt. PT5 ) THEN 
-                 REE = Relimit + 1
-                 REW = Relimit + 1
-                 REN = Relimit + 1
-                 RES = Relimit + 1
-                 RET = Relimit + 1
-                 REB = Relimit + 1
-               ENDIF 
-               IF ( EPST .lt. PT5 ) THEN 
-                 REE = Relimit + 1
-                 REW = Relimit + 1
-                 REN = Relimit + 1
-                 RES = Relimit + 1
-                 RET = Relimit + 1
-                 REB = Relimit + 1
-               ENDIF 
-               IF ( EPSB .lt. PT5 ) THEN 
-                 REE = Relimit + 1
-                 REW = Relimit + 1
-                 REN = Relimit + 1
-                 RES = Relimit + 1
-                 RET = Relimit + 1
-                 REB = Relimit + 1
-               ENDIF 
-
-C If Re < Re_min we central difference, otherwise upwind.
-               IF (REE.LT.Relimit) then
-                 CVSY(I,J,K) = CVSY(I,J,K) + 1.0d0/6.0d0
-                 AE(I,J,K) = DE - PT5*CE
-               else
-                 AE(I,J,K) = dMAX1(0.0D0,-CE)
-               endif
-               IF (REW.LT.Relimit) then
-                 CVSY(I,J,K) = CVSY(I,J,K) + 1.0d0/6.0d0
-                 AW(I,J,K) = DW + PT5*CW
-               else
-                 AW(I,J,K) = dMAX1(0.0D0,CW)
-               endif
-               IF (REN.LT.Relimit) then
-                 CVSY(I,J,K) = CVSY(I,J,K) + 1.0d0/6.0d0
-                 AN(I,J,K) = DN - PT5*CN
-               else
-                 AN(I,J,K) = dMAX1(0.0D0,-CN)
-               endif
-               IF (RES.LT.Relimit) then
-                 CVSY(I,J,K) = CVSY(I,J,K) + 1.0d0/6.0d0
-                 AS(I,J,K) = DS + PT5*CS
-               else
-                 AS(I,J,K) = dMAX1(0.0D0,CS)
-               endif
-               IF (RET.LT.Relimit) then
-                 CVSY(I,J,K) = CVSY(I,J,K) + 1.0d0/6.0d0
-                 AT(I,J,K) = DT - PT5*CT
-               else
-                 AT(I,J,K) = dMAX1(0.0D0,-CT)
-               endif
-               IF (REB.LT.Relimit) then
-                 CVSY(I,J,K) = CVSY(I,J,K) + 1.0d0/6.0d0
-                 AB(I,J,K) = DB + PT5*CB
-               else
-                 AB(I,J,K) = dMAX1(0.0D0,CB)
-               endif
 C-----------------------------------------------------------------------
 C     Compute the velocity source
 C-----------------------------------------------------------------------
@@ -263,7 +220,7 @@ C-----------------------------------------------------------------------
                 AT(I,J,K) = 0.0D0
                 AB(I,J,K) = 0.0D0
                 SU(I,J,K) = 0.0D0
-                CVSY(I,J,K) = 0.0D0 
+                CVSY(I,J,K) = 0.0d0
 
               endif 
 

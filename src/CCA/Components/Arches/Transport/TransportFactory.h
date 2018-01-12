@@ -27,17 +27,37 @@ namespace Uintah{
         return _scalar_ssp;
       } else if ( subset == "mom_rhs_builders"){
         return _momentum_builders;
-      } else if ( subset == "mom_fe_update" ){
+      } else if ( subset == "momentum_fe_update" ){
         return _momentum_update;
       } else if ( subset == "mom_ssp"){
         return _momentum_spp;
+      } else if ( subset == "momentum_construction" ){
+        return _momentum_solve;
       } else if ( subset == "scalar_psi_builders" ){
-        return _scalar_compute_psi; 
+        return _scalar_compute_psi;
+      } else if ( subset == "dqmom_psi_builders" ){
+        return _dqmom_compute_psi;
+      } else if ( subset == "momentum_psi_builders" ){
+        return _momentum_compute_psi;
+      } else if ( subset == "pressure_eqn" ){
+        return _pressure_eqn;
+      } else if ( subset == "dqmom_eqns"){
+        return _dqmom_eqns;
+      } else if ( subset == "dqmom_fe_update"){
+        return _dqmom_fe_update;
+      } else if ( subset == _all_tasks_str ){
+        return _active_tasks;
       } else {
-        throw InvalidValue("Error: Task subset not recognized for TransportFactory.",__FILE__,__LINE__);
+        throw InvalidValue("Error: Task subset not recognized for TransportFactory: "+subset,
+          __FILE__,__LINE__);
       }
 
     }
+
+    void schedule_initialization( const LevelP& level,
+                                  SchedulerP& sched,
+                                  const MaterialSet* matls,
+                                  bool doing_restart );
 
   private:
 
@@ -48,6 +68,17 @@ namespace Uintah{
     std::vector<std::string> _scalar_ssp;
     std::vector<std::string> _momentum_spp;
     std::vector<std::string> _scalar_compute_psi;
+    std::vector<std::string> _momentum_compute_psi;
+    std::vector<std::string> _pressure_eqn;
+    std::vector<std::string> _momentum_solve;
+    std::vector<std::string> _dqmom_eqns;
+    std::vector<std::string> _dqmom_compute_psi;
+    std::vector<std::string> _dqmom_fe_update;
+
+    bool m_pack_transport_construction_tasks{false};
+
+    void register_DQMOM( ProblemSpecP db );
+    void build_DQMOM( ProblemSpecP db );
 
   };
 }

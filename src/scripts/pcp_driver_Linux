@@ -3,12 +3,11 @@
 # This makefile does a parallel copy of a uda file.
 #_____________________________________________________________________.
 FILES      := $(shell cat $(PCP_FILES).$(PBS_NODENUM))
-TAR_FILES  := $(wildcard *.tar)
-          
+
 SRCS =   $(shell for i in $(FILES) ; do \
               echo $$i ;\
-          done) 
-          
+          done)
+
 DESTS := $(patsubst %,$(STAMP_DIR)/stamp/%,$(SRCS))
 
 all: $(STAMP_DIR)/stamp $(DESTS)
@@ -19,11 +18,14 @@ $(STAMP_DIR)/stamp:
            echo "making stamp directory node:$(PBS_NODENUM)";\
 	    mkdir $@;\
          fi)
-         
-$(STAMP_DIR)/stamp/./checkpoints/% : 
+
+#__________________________________
+#   CHECKPOINTS
+#
+$(STAMP_DIR)/stamp/./checkpoints/% :
 	@mkdir -p $(STAMP_DIR)/stamp/checkpoints
 	@echo  "sending checkpoints/`basename $@` node:$(PBS_NODENUM)  mode: $(METHOD)"
-       
+
        ifeq ($(METHOD),cp)
 	   @cp -a checkpoints/`basename $@` $(REMOTEDIR)/checkpoints/
        endif
@@ -33,9 +35,13 @@ $(STAMP_DIR)/stamp/./checkpoints/% :
        ifeq ($(METHOD),tar)
 	   @tar -cf - checkpoints/`basename $@` | (cd $(REMOTEDIR)/checkpoints/ && tar -xf -)
        endif
+	@echo "Finished $(METHOD) checkpoints/`basename $@`"
 	@touch $(STAMP_DIR)/stamp/checkpoints/`basename $@`
 
-$(STAMP_DIR)/stamp/% : 
+#__________________________________
+#  ALL OTHER DIRS
+#
+$(STAMP_DIR)/stamp/% :
 	@echo "sending `basename $@` node:$(PBS_NODENUM)  mode: $(METHOD)"
        ifeq ($(METHOD),cp)
 	   @cp -a `basename $@` $(REMOTEDIR)
@@ -46,6 +52,7 @@ $(STAMP_DIR)/stamp/% :
        ifeq ($(METHOD),tar)
 	   @tar -cf - `basename $@` | (cd $(REMOTEDIR) && tar -xf -)
        endif
+	@echo "Finished $(METHOD) `basename $@`"
 	@touch $(STAMP_DIR)/stamp/`basename $@`
 
 
@@ -55,5 +62,5 @@ test:
       endif
       ifeq ($(METHOD),rsync)
 	   @echo " HERE RSYNC "
-      endif      
+      endif
 

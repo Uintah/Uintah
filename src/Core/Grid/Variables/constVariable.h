@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,8 +25,9 @@
 #define UINTAH_HOMEBREW_CONSTVARIABLE_H
 
 #include <Core/Grid/Variables/constVariableBase.h>
-#include <Core/Grid/Variables/BlockRange.hpp>
 #include <Core/Util/Assert.h>
+
+#include <sci_defs/kokkos_defs.h>
 
 #ifdef UINTAH_ENABLE_KOKKOS
   #include <Core/Grid/Variables/Array3.h>
@@ -140,17 +141,13 @@ WARNING
         auto v = this->rep_.getKokkosView();
         return KokkosView3<const T>( v.m_view, v.m_i, v.m_j, v.m_k );
       }
-#endif //UINTAH_ENABLE_KOKKOS
-    
+#endif
+
     inline const T& operator()(int i, int j, int k) const
     {
       return this->rep_(i,j,k);
     }
 
-    BlockRange range() const
-    {
-      return this->rep_.range();
-    }
 
     virtual const TypeDescription* virtualGetTypeDescription() const
     { return this->rep_.virtualGetTypeDescription(); }

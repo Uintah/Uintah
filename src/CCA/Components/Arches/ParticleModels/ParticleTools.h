@@ -25,7 +25,7 @@ namespace Uintah{
 
             const ProblemSpecP db_pvar = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("EulerianParticles")->findBlock("ParticleVariables");
 
-            for ( ProblemSpecP db_var = db_pvar->findBlock("variable"); db_var != 0; db_var = db_var->findNextBlock("variable")){ 
+            for( ProblemSpecP db_var = db_pvar->findBlock("variable"); db_var != nullptr; db_var = db_var->findNextBlock("variable")){ 
 
               std::string label;
               std::string role_found; 
@@ -160,7 +160,7 @@ namespace Uintah{
 
           const ProblemSpecP db_models = arches_root->findBlock("DQMOM")->findBlock("Models"); 
 
-          for ( ProblemSpecP m_db = db_models->findBlock("model"); m_db != 0; m_db = m_db->findNextBlock("model") ) {
+          for ( ProblemSpecP m_db = db_models->findBlock("model"); m_db != nullptr; m_db = m_db->findNextBlock("model") ) {
 
             std::string curr_model_name;
             std::string curr_model_type; 
@@ -171,7 +171,8 @@ namespace Uintah{
               return curr_model_type; 
             }
           }
-        } else { 
+        }
+        else { 
           throw InvalidValue("Error: Not yet implemented for this particle method.",__FILE__,__LINE__); 
         }
         return "nullptr"; 
@@ -189,16 +190,14 @@ namespace Uintah{
               std::vector<double> scaling_const;
               params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM")->findBlock("Weights")->require("scaling_const",scaling_const);
               return scaling_const[qn];
-
-
-            } else { 
-
-              throw ProblemSetupException("Error: cannot find <weights> block in inupt file.",__FILE__,__LINE__);      
-
             }
-          } else {
-            for ( ProblemSpecP IcBlock =params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM")->findBlock("Ic"); IcBlock != 0;
-                IcBlock = IcBlock->findNextBlock("Ic") ) {
+            else { 
+              throw ProblemSetupException("Error: cannot find <weights> block in inupt file.",__FILE__,__LINE__);      
+            }
+          }
+          else {
+            for(  ProblemSpecP IcBlock =params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM")->findBlock("Ic"); IcBlock != nullptr;
+                  IcBlock = IcBlock->findNextBlock("Ic") ) {
 
               std::string tempLabelname;
               IcBlock->getAttribute("label",tempLabelname);
@@ -208,14 +207,11 @@ namespace Uintah{
                 return scaling_const[qn];
               }
             }
-
             throw ProblemSetupException("Error: couldn't find internal coordinate or weight with name: "+labelName , __FILE__, __LINE__); 
           } 
-
-        }else { 
-
+        }
+        else { 
           throw ProblemSetupException("Error: DQMOM section not found in input file.",__FILE__,__LINE__);      
-
         }
       }
 
@@ -225,7 +221,7 @@ namespace Uintah{
         const ProblemSpecP params_root = db->getRootNode();
         if(params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleModels") ){
           const ProblemSpecP params_particleModels = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleModels");
-          for ( ProblemSpecP modelBlock =params_particleModels->findBlock("model"); modelBlock != 0;
+          for ( ProblemSpecP modelBlock =params_particleModels->findBlock("model"); modelBlock != nullptr;
               modelBlock = modelBlock->findNextBlock("model") ) {
 
             std::string tempLabelName;
@@ -255,18 +251,140 @@ namespace Uintah{
         double density;
         params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")->require("density",density);
         return density;
-        } else{
+        }
+        else {
           throw ProblemSetupException("Error: cannot find <ParticleProperties> in arches block.",__FILE__,__LINE__);      
         }
 
         return false;
       }
 
+      inline static double getAshMassFraction(ProblemSpecP& db){ 
 
+        const ProblemSpecP params_root = db->getRootNode();
+        if(params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")->findBlock("ultimate_analysis")){
+          double ash_frac;
+          double C;
+          double H;
+          double O;
+          double N;
+          double S;
+          double CHAR;
+          double ASH;
+          double H2O;
+          params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")->findBlock("ultimate_analysis")->require("ASH",ASH);
+          params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")->findBlock("ultimate_analysis")->require("C",C);
+          params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")->findBlock("ultimate_analysis")->require("H",H);
+          params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")->findBlock("ultimate_analysis")->require("O",O);
+          params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")->findBlock("ultimate_analysis")->require("N",N);
+          params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")->findBlock("ultimate_analysis")->require("S",S);
+          params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")->findBlock("ultimate_analysis")->require("CHAR",CHAR);
+          params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")->findBlock("ultimate_analysis")->require("ASH",ASH);
+          params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")->findBlock("ultimate_analysis")->require("H2O",H2O);
+          ash_frac = ASH/(C+H+O+N+S+ASH+CHAR); // DRY ASH FRACTION!!!!!
+          return ash_frac;
+        } else{
+          throw ProblemSetupException("Error: cannot find <ultimate_analysis> in arches block.",__FILE__,__LINE__);      
+        }
 
+        return false;
+      }
+      
+      // This function is useful when specifying mass flow inlet of particles
+      inline static double getInletParticleSize(ProblemSpecP& db, const int qn ){ 
+
+        const ProblemSpecP params_root = db->getRootNode();
+        if(params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")->findBlock("diameter_distribution")){
+          std::vector<double> _sizes;
+          params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")->require("diameter_distribution", _sizes);
+          double initial_size = _sizes[qn];
+          return initial_size;
+        } else{
+          throw ProblemSetupException("Error: cannot find <diameter_distribution> in arches block.",__FILE__,__LINE__);      
+        }
+
+        return false;
+      }
+      
+      // This function retrieves the ash hemispherical melting temperature for use in computing the melting probability in the deposition model.
+      inline static double getAshHemisphericalTemperature(ProblemSpecP& db){ 
+
+        const ProblemSpecP params_root = db->getRootNode();
+        if(params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")->findBlock("ash_hemispherical_temperature")){
+          double T_hemisphere;
+          params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")->require("ash_hemispherical_temperature",T_hemisphere);
+          return T_hemisphere;
+        }
+        else {
+          throw ProblemSetupException("Error: cannot find <ash_hemispherical_temperature> in <ParticleProperties> in arches block.",__FILE__,__LINE__);      
+        }
+        return false;
+      }
+      
+      // This function retrieves the average temperature between the softening and fluid temperatures for use in the porosity model for ash thermal conductivity.
+      inline static double getAshPorosityTemperature(ProblemSpecP& db){ 
+
+        const ProblemSpecP params_root = db->getRootNode();
+        double T_ave;
+        double T_soft;
+        double T_fluid;
+        if(params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")->findBlock("ash_fluid_temperature")){
+          params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")->require("ash_fluid_temperature",T_fluid);
+        }
+        else {
+          throw ProblemSetupException("Error: cannot find <ash_fluid_temperature> in <ParticleProperties> in arches block.",__FILE__,__LINE__);      
+        }
+        if(params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")->findBlock("ash_softening_temperature")){
+          params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")->require("ash_softening_temperature",T_soft);
+        }
+        else {
+          throw ProblemSetupException("Error: cannot find <ash_softening_temperature> in <ParticleProperties> in arches block.",__FILE__,__LINE__);      
+        }
+        T_ave = (T_soft + T_fluid) / 2.0;
+        return T_ave;
+      }
+      
+      // This function retrieves the fluid temperature for use as the slagging temeprature in the wallHT model.
+      inline static double getAshFluidTemperature(ProblemSpecP& db){ 
+
+        const ProblemSpecP params_root = db->getRootNode();
+        if(params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")->findBlock("ash_fluid_temperature")){
+          double T_fluid;
+          params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")->require("ash_fluid_temperature",T_fluid);
+          return T_fluid;
+        }
+        else {
+          throw ProblemSetupException("Error: cannot find <ash_fluid_temperature> in <ParticleProperties> in arches block.",__FILE__,__LINE__);      
+        }
+        return false;
+      }
+      
+      // This function retrieves the fluid temperature for use as the slagging temeprature in the wallHT model.
+      inline static double getRetainedDepositFactor(ProblemSpecP& db){ 
+        const ProblemSpecP params_root = db->getRootNode();
+        bool return_flag = true;
+        if(params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources")){
+          const ProblemSpecP sources = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources");
+          for ( ProblemSpecP sourceBlock = sources->findBlock("src"); sourceBlock != nullptr;
+            sourceBlock = sourceBlock->findNextBlock("src") ) {
+            std::string tempTypeName;
+            sourceBlock->getAttribute("type",tempTypeName);
+            if (tempTypeName == "coal_gas_devol"){
+              std::string tempTypeName;
+              if(sourceBlock->findBlock("devol_BirthDeath")){
+                return 0.0;
+              }
+            }
+          }
+          if (return_flag){
+            return 1.0; //default behavior is 1.0
+          }
+        } else {
+          throw ProblemSetupException("Error: cannot find the Sources block which requries the devol source for obtaining retained_deposit_factor in arches block.",__FILE__,__LINE__);      
+        }
+        return false;
+        }
     private: 
-
-  
   }; 
 
 }

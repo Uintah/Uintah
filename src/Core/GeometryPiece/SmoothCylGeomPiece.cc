@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -394,30 +394,29 @@ SmoothCylGeomPiece::createCylPoints()
       double prevRadius = innerRad + ii*radInc;
       double r = prevRadius + radInc*0.5;
       double nextRadius = innerRad + (ii+1)*radInc;
+      double angularInc=0.0;
+      double area;
    
       if (d_discretization == "constant_particle_volumes") {
 	numAngular = (int) ((d_angle - d_arcStart)*r/radInc);
 	numAngular = max(numAngular,1);
-      }
-//      double angularInc = (d_angle - d_arcStart)/(double) numAngular;
-//      double area = 0.5*angularInc*(nextRadius*nextRadius-prevRadius*prevRadius);
-      bool tooMany=true;
-
-      double angularInc=0.0;
-      double area;
-      double redNumAng=1.;
-      while(tooMany){
-        numAngular = d_numAngular*redNumAng;
-
         angularInc = (d_angle - d_arcStart)/(double) numAngular;
-        area = 0.5*angularInc*
-                          (nextRadius*nextRadius-prevRadius*prevRadius);
-        double pvol = area*axisInc;
-        if(pvol/cell_vol < 5.e-2){
-          redNumAng*=0.9;
-          tooMany=true;
-        } else {
-          tooMany=false;
+        area = 0.5*angularInc*(nextRadius*nextRadius-prevRadius*prevRadius);
+      } else {
+        bool tooMany=true;
+        double redNumAng=1.;
+        while(tooMany){
+          numAngular = d_numAngular*redNumAng;
+  
+          angularInc = (d_angle - d_arcStart)/(double) numAngular;
+          area = 0.5*angularInc*(nextRadius*nextRadius-prevRadius*prevRadius);
+          double pvol = area*axisInc;
+          if(pvol/cell_vol < 5.e-2){
+            redNumAng*=0.9;
+            tooMany=true;
+          } else {
+            tooMany=false;
+          }
         }
       }
 

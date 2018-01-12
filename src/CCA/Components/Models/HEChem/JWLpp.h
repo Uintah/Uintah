@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -63,29 +63,28 @@ WARNING
 
   class JWLpp : public ModelInterface {
   public:
-    JWLpp(const ProcessorGroup* myworld, ProblemSpecP& params,
+    JWLpp(const ProcessorGroup* myworld,
+	  const SimulationStateP& sharedState,
+	  const ProblemSpecP& params,
           const ProblemSpecP& prob_spec);
 
     virtual ~JWLpp();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
 
-    virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
-                              ModelSetup* setup);
+    virtual void problemSetup(GridP& grid,
+                               const bool isRestart);
       
     virtual void scheduleInitialize(SchedulerP&,
-                                    const LevelP& level,
-                                    const ModelInfo*);
+                                    const LevelP& level);
 
     virtual void restartInitialize() {}
       
-    virtual void scheduleComputeStableTimestep(SchedulerP&,
-                                               const LevelP& level,
-                                               const ModelInfo*);
+    virtual void scheduleComputeStableTimeStep(SchedulerP&,
+                                               const LevelP& level);
       
     virtual void scheduleComputeModelSources(SchedulerP&,
-                                             const LevelP& level,      
-                                             const ModelInfo*);        
+                                             const LevelP& level);        
                                              
     virtual void scheduleModifyThermoTransportProperties(SchedulerP&,
                                                const LevelP&,
@@ -101,16 +100,14 @@ WARNING
 
                                              
    virtual void scheduleTestConservation(SchedulerP&,
-                                         const PatchSet* patches,
-                                         const ModelInfo* mi);
+                                         const PatchSet* patches);
 
   private:    
     void computeModelSources(const ProcessorGroup*, 
                              const PatchSubset* patches,
                              const MaterialSubset* matls,
                              DataWarehouse*,
-                             DataWarehouse* new_dw,
-                             const ModelInfo*);
+                             DataWarehouse* new_dw);
 
     JWLpp(const JWLpp&);
     JWLpp& operator=(const JWLpp&);
@@ -124,7 +121,6 @@ WARNING
     ProblemSpecP d_prob_spec;
     const Material* matl0;
     const Material* matl1;
-    SimulationStateP d_sharedState;   
 
     ICELabel* Ilb;
     MaterialSet* mymatls;

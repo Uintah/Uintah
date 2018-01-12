@@ -6,7 +6,7 @@
  *
  * The MIT License
  *
- * Copyright (c) 2013-2016 The University of Utah
+ * Copyright (c) 2013-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -39,7 +39,7 @@
  \ $$      \ $$  \ $$ \$$   \$$   \$$    \$$$$$$  \$$$$$$  \$$$$$$$$ \$$$$$$$$  \$$$$$$
  **************************************************************************************/
 
-#include "ParticlesHelper.h"
+#include <CCA/Components/Wasatch/ParticlesHelper.h>
 
 //-- Uintah Includes --//
 #include <Core/Grid/Box.h>
@@ -48,7 +48,6 @@
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
-#include <Core/Containers/StaticArray.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 
 std::vector<std::string> Uintah::ParticlesHelper::needsRelocation_;
@@ -131,6 +130,12 @@ namespace Uintah {
     pYLabel_ = nullptr;
     pZLabel_ = nullptr;
     materials_ = nullptr;
+
+    // delta t
+    VarLabel* nonconstDelT =
+      VarLabel::create(delT_name, delt_vartype::getTypeDescription() );
+    nonconstDelT->allowMultipleComputes();
+    delTLabel_ = nonconstDelT;
   }
   
   //------------------------------------------------------------------
@@ -143,13 +148,14 @@ namespace Uintah {
       Uintah::VarLabel::destroy(*it);
       ++it;
     }
+
+    VarLabel::destroy(delTLabel_);
   }
   
   //------------------------------------------------------------------
   
   void ParticlesHelper::problem_setup(Uintah::ProblemSpecP uintahSpec,
-                                      Uintah::ProblemSpecP particleEqsSpec,
-                                      Uintah::SimulationStateP sharedState)
+                                      Uintah::ProblemSpecP particleEqsSpec)
   {
     using namespace Uintah;
     
@@ -171,7 +177,6 @@ namespace Uintah {
     destroyMe_.push_back(pIDLabel_);
 
     particleEqsSpec_ = particleEqsSpec;
-    sharedState_     = sharedState;
 
     //
     // set the position varlabels
@@ -512,7 +517,7 @@ namespace Uintah {
     using namespace Uintah;
     for(int m = 0; m<matls->size(); m++){
       const int matl = matls->get(m);
-      std::map<int,ParticleSubset*>& thisMatDelSet = deleteSets_[m];
+//      std::map<int,ParticleSubset*>& thisMatDelSet = deleteSets_[m];
       for(int p=0;p<patches->size();p++){
         const Patch* patch = patches->get(p);
         ParticleSubset* pset = new_dw->getParticleSubset(matl, patch);
@@ -887,7 +892,7 @@ namespace Uintah {
     }
     task->modifies(pIDLabel_ );
     task->modifies(pPosLabel_);
-    task->requires(Task::OldDW, sharedState_->get_delt_label());
+    task->requires(Task::OldDW, delTLabel_);
     sched->addTask(task, level->eachPatch(), materials_);
   }
   
@@ -902,7 +907,7 @@ namespace Uintah {
     using namespace Uintah;
     
     delt_vartype DT;
-    old_dw->get(DT, sharedState_->get_delt_label());
+    old_dw->get(DT, delTLabel_);
     const double dt = DT;
 
     for( int m=0; m<matls->size(); ++m ){
@@ -981,8 +986,8 @@ namespace Uintah {
                 const unsigned int nVars = needsBC_.size();
                 std::vector< Uintah::VarLabel* > needsBCLabels; // vector of varlabels that need bcs
 
-                Uintah::StaticArray< ParticleVariable<double> > allVars(nVars);
-                Uintah::StaticArray< ParticleVariable<double> > tmpVars(nVars);
+		std::vector< ParticleVariable<double> > allVars(nVars);
+		std::vector< ParticleVariable<double> > tmpVars(nVars);
                 for( size_t i=0; i<needsBC_.size(); ++i ){
                   needsBCLabels.push_back( VarLabel::find(needsBC_[i]) );
                   new_dw->getModifiable( allVars[(unsigned)i], needsBCLabels[i], pset );

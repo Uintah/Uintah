@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -26,6 +26,7 @@
 #ifndef Packages_Uintah_CCA_Components_ontheflyAnalysis_MinMax_h
 #define Packages_Uintah_CCA_Components_ontheflyAnalysis_MinMax_h
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
+#include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Output.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
@@ -59,20 +60,24 @@ GENERAL INFORMATION
   class MinMax : public AnalysisModule {
   public:
 
-    MinMax(ProblemSpecP& prob_spec,
-           SimulationStateP& sharedState,
-	   Output* dataArchiver);
+    MinMax(const ProcessorGroup* myworld,
+	   const SimulationStateP sharedState,
+	   const ProblemSpecP& module_spec);
     MinMax();
                     
     virtual ~MinMax();
    
     virtual void problemSetup(const ProblemSpecP& prob_spec,
                               const ProblemSpecP& restart_prob_spec,
-                              GridP& grid,
-                              SimulationStateP& sharedState);
-                                          
+                              GridP& grid);
+                              
+    virtual void outputProblemSpec(ProblemSpecP& ps){};    
+                                  
     virtual void scheduleInitialize(SchedulerP& sched,
                                     const LevelP& level);
+                                    
+    virtual void scheduleRestartInitialize(SchedulerP& sched,
+                                           const LevelP& level){};
                                     
     virtual void restartInitialize();
                                     
@@ -135,11 +140,15 @@ GENERAL INFORMATION
     double d_startTime;
     double d_stopTime;
     
-    std::vector<SimulationState::analysisVar> d_analyzeVars;
-    
-    SimulationStateP d_sharedState;
-    Output* d_dataArchiver;
-    ProblemSpecP d_prob_spec;
+    struct varProperties {
+      VarLabel* label;
+      VarLabel* reductionMinLabel;
+      VarLabel* reductionMaxLabel;
+      int matl;
+      int level;
+    };
+     
+    std::vector<varProperties> d_analyzeVars;
     
     const Material*  d_matl;
     MaterialSet*     d_matl_set;

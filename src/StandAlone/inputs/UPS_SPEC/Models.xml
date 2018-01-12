@@ -31,17 +31,21 @@
       <algorithm                spec="OPTIONAL NO_DATA"
                                     attribute1="type REQUIRED STRING 'dataOnion RMCRT_coarseLevel singleLevel radiometerOnly'">
 
+        <coarsenExtraCells      spec="OPTIONAL BOOLEAN" need_applies_to="type RMCRT_coarseLevel, dataOnion" />
+                
         <orderOfInterpolation   spec="REQUIRED INTEGER 'positive'" need_applies_to="type RMCRT_coarseLevel" />
-        <halo                   spec="REQUIRED VECTOR  'positive'" need_applies_to="type dataOnion" />
-
+        <haloCells              spec="OPTIONAL VECTOR  'positive'" need_applies_to="type dataOnion" />
+        <haloLength             spec="OPTIONAL DOUBLE  'positive'" need_applies_to="type dataOnion" />
+        
         <ROI_extents            spec="OPTIONAL NO_DATA"
-                                  attribute1="type REQUIRED STRING 'fixed dynamic patch_based'">
+                                  attribute1="type REQUIRED STRING 'fixed dynamic patch_based boundedRayLength'">
 
           <abskg_threshold      spec="OPTIONAL DOUBLE  'positive'" need_applies_to="type dynamic"/>
           <sigmaT4_threshold    spec="OPTIONAL DOUBLE  'positive'" need_applies_to="type dynamic"/>
 
           <min                  spec="REQUIRED VECTOR" need_applies_to="type fixed"/>
           <max                  spec="REQUIRED VECTOR" need_applies_to="type fixed"/>
+          <length               spec="REQUIRED DOUBLE" need_applies_to="type boundedRayLength"/>
         </ROI_extents>
 
       </algorithm>

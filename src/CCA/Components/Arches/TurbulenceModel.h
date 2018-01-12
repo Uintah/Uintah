@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -30,23 +30,23 @@
 /**************************************
 CLASS
    TurbulenceModel
-   
+
    Class TurbulenceModel is an abstract base class
    which defines the operations needed to compute
    unresolved turbulence submodels
 
 GENERAL INFORMATION
    TurbulenceModel.h - declaration of the class
-   
+
    Author: Rajesh Rawat (rawat@crsim.utah.edu)
 
    All major modifications since 01.01.2004 done by:
    Stanislav Borodai(borodai@crsim.utah.edu)
-      
+
    Creation Date:   Mar 1, 2000
-   
-   C-SAFE 
-   
+
+   C-SAFE
+
 
 KEYWORDS
 
@@ -60,10 +60,12 @@ WARNING
    none
 ****************************************/
 
-#include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/Filter.h>
 
 namespace Uintah {
+class VarLabel;
+class ArchesLabel;
+class MPMArchesLabel;
 class TimeIntegratorLabel;
 class TurbulenceModel
 {
@@ -72,7 +74,7 @@ public:
       // GROUP: Constructors:
       ////////////////////////////////////////////////////////////////////////
       // Blank constructor for TurbulenceModel.
-      TurbulenceModel(const ArchesLabel* label, 
+      TurbulenceModel(const ArchesLabel* label,
                       const MPMArchesLabel* MAlb);
 
       // GROUP: Destructors:
@@ -114,19 +116,19 @@ public:
       // GROUP: Schedule Action :
       ///////////////////////////////////////////////////////////////////////
       // Interface for Schedule the recomputation of Turbulence Model data
-      //    [in] 
-      //        data User data needed for solve 
+      //    [in]
+      //        data User data needed for solve
       virtual void sched_reComputeTurbSubmodel(SchedulerP&,
                                                const LevelP& level,
                                                const MaterialSet* matls,
                                                const TimeIntegratorLabel* timelabels) = 0;
 
-      void sched_computeFilterVol( SchedulerP& sched, 
-                                   const LevelP& level, 
+      void sched_computeFilterVol( SchedulerP& sched,
+                                   const LevelP& level,
                                    const MaterialSet* matls );
 
-      void sched_carryForwardFilterVol( SchedulerP& sched, 
-                                        const PatchSet* patches, 
+      void sched_carryForwardFilterVol( SchedulerP& sched,
+                                        const PatchSet* patches,
                                         const MaterialSet* matls );
 
 
@@ -134,21 +136,23 @@ public:
 
       const ArchesLabel* d_lab;
       const MPMArchesLabel* d_MAlab;
+      const VarLabel* d_dissipationRateLabel;
+
 
       Filter* d_filter;
       bool d_calcVariance;
-      std::string d_mix_frac_label_name; 
+      std::string d_mix_frac_label_name;
       const VarLabel* d_mf_label;
 
-      void problemSetupCommon( const ProblemSpecP& params ); 
+      void problemSetupCommon( const ProblemSpecP& params );
 
   private:
 
     bool d_mixedModel;
 
     bool d_use_old_filter;
-    int d_filter_width; 
-    std::string d_filter_type; 
+    int d_filter_width;
+    std::string d_filter_type;
 
     void computeFilterVol( const ProcessorGroup*,
                            const PatchSubset* patches,
@@ -164,12 +168,9 @@ public:
 
 }; // End class TurbulenceModel
 } // End namespace Uintah
-  
-  
+
+
 
 #endif
 
 // $Log :$
-
-
-

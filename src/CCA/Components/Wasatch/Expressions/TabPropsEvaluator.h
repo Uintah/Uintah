@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2016 The University of Utah
+ * Copyright (c) 2012-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -161,7 +161,6 @@ public:
 };
 
 
-
 // ###################################################################
 //
 //                          Implementation
@@ -182,7 +181,7 @@ TabPropsEvaluator( const InterpT& interp,
                ? std::find( ivarNames.begin(), ivarNames.end(), derVarName ) - ivarNames.begin()
                    : ivarNames.size() )
 {
-  this->set_gpu_runnable( false ); // apply_pointwise is not GPU ready.
+  this->set_gpu_runnable( true ); // apply_pointwise is not GPU ready.
 
   if( doDerivative_ && derIndex_ == ivarNames.size() ){
     std::ostringstream msg;
@@ -210,7 +209,19 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
-
+# ifdef HAVE_CUDA
+  if (indepVars_.size() > 5) throw std::invalid_argument( "Unsupported dimensionality for interpolant in TabPropsEvaluator" );
+  
+  std::vector<const double *> indep( indepVars_.size(), NULL );
+  for( size_t i=0; i<indepVars_.size(); ++i ) indep[i] = indepVars_[i]->field_ref().field_values(GPU_INDEX);
+  
+  if( doDerivative_ ){
+    evaluator_.gpu_derivative(indep, derIndex_, result.field_values(GPU_INDEX), result.window_with_ghost().glob_npts());
+  }
+  else{
+    evaluator_.gpu_value(indep, result.field_values(GPU_INDEX), result.window_with_ghost().glob_npts());
+  }
+# else
   switch( indepVars_.size() ){
     case 1:{
       if( doDerivative_ ){
@@ -289,6 +300,7 @@ evaluate()
     default:
       throw std::invalid_argument( "Unsupported dimensionality for interpolant in TabPropsEvaluator" );
   }
+#endif
 }
 
 //--------------------------------------------------------------------

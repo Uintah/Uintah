@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2016 The University of Utah
+#  Copyright (c) 1997-2018 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -34,15 +34,13 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCS    += \
        $(SRCDIR)/ModelFactory.cc
 
-RADIATION :=
+# Generic models only -
+# Applicaion specific models are added below
+SUBDIRS :=
 
 ifeq ($(BUILD_MODELS_RADIATION),yes)
-  RADIATION += $(SRCDIR)/Radiation
+  SUBDIRS += $(SRCDIR)/Radiation
 endif
-
-
-SUBDIRS := $(SRCDIR)/FluidsBased \
-           $(RADIATION)
 
 PSELIBS :=                 \
         CCA/Ports          \
@@ -52,26 +50,34 @@ PSELIBS :=                 \
         Core/GeometryPiece \
         Core/Grid          \
         Core/IO            \
-        Core/Labels        \
         Core/Math          \
         Core/Parallel      \
         Core/ProblemSpec   \
         Core/Util          
 
-ifneq ($(BUILD_ICE),no)
-  PSELIBS += CCA/Components/ICE
+# ICE Models
+ifeq ($(BUILD_ICE),yes)
+  SUBDIRS += $(SRCDIR)/FluidsBased
+
+  PSELIBS += CCA/Components/ICE/Core      \
+	     CCA/Components/ICE/CustomBCs \
+	     CCA/Components/ICE/Materials
 endif
 
-ifneq ($(BUILD_MPM),no)
-  PSELIBS += CCA/Components/MPM
+# MPM Models
+ifeq ($(BUILD_MPM),yes)
+  PSELIBS += CCA/Components/MPM/Core      \
+	     CCA/Components/MPM/Materials
 endif
 
-ifneq ($(BUILD_MPM),no) 
-  ifneq ($(BUILD_ICE),no) 
-    PSELIBS += CCA/Components/MPMICE
-    SUBDIRS += $(SRCDIR)/HEChem
-    SUBDIRS += $(SRCDIR)/SolidReactionModel
-  endif
+# MPM - ICE Models
+ifeq ($(BUILD_MPM)$(BUILD_ICE),yesyes)
+  PSELIBS += CCA/Components/MPMICE/Core
+
+  SUBDIRS += $(SRCDIR)/HEChem             \
+             $(SRCDIR)/MultiMatlExchange  \
+             $(SRCDIR)/SolidReactionModel
+
 endif
 
 ######################################################

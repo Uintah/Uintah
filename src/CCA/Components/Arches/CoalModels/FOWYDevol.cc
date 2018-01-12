@@ -5,7 +5,6 @@
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/Directives.h>
-
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/SimulationState.h>
@@ -13,8 +12,9 @@
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Parallel/Parallel.h>
+#include <CCA/Components/Arches/Utility/InverseErrorFunction.h>
 
-#include <boost/math/special_functions/erf.hpp>
+#include <sci_defs/visit_defs.h>
 
 //===========================================================================
 
@@ -54,6 +54,7 @@ FOWYDevol::FOWYDevol( std::string modelName,
   std::string v_inf_name = ParticleTools::append_env( "v_inf", qn );
   _v_inf_label = VarLabel::create( v_inf_name, CCVariable<double>::getTypeDescription() );
   _rawcoal_birth_label = nullptr;
+
 }
 
 FOWYDevol::~FOWYDevol()
@@ -100,7 +101,7 @@ FOWYDevol::problemSetup(const ProblemSpecP& params, int qn)
 
 
   //RAW COAL get the birth term if any:
-  const std::string rawcoal_birth_name = rcmass_eqn.get_model_by_type( "SimpleBirth" );
+  const std::string rawcoal_birth_name = rcmass_eqn.get_model_by_type( "BirthDeath" );
   std::string rawcoal_birth_qn_name = ParticleTools::append_qn_env(rawcoal_birth_name, d_quadNode);
   if ( rawcoal_birth_name != "NULLSTRING" ){
     _rawcoal_birth_label = VarLabel::find( rawcoal_birth_qn_name );
@@ -131,13 +132,10 @@ FOWYDevol::problemSetup(const ProblemSpecP& params, int qn)
     db_BT->require("Ta", _Ta);
     db_BT->require("A", _A);
     db_BT->require("v_hiT", _v_hiT); // this is a
-    double b, c, d, e;
-    db_BT->require("b", b);
-    db_BT->require("c", c);
-    db_BT->require("d", d);
-    db_BT->require("e", e);
-    _C1= b + c*_v_hiT;
-    _C2= d + e*_v_hiT;
+    db_BT->require("Tbp_graphite", _Tbp_graphite); // 
+    db_BT->require("T_mu", _T_mu); // 
+    db_BT->require("T_sigma", _T_sigma); // 
+    db_BT->require("T_hardened_bond", _T_hardened_bond); // 
     db_BT->require("sigma", _sigma)  ;
 
   } else {
@@ -191,6 +189,28 @@ FOWYDevol::problemSetup(const ProblemSpecP& params, int qn)
   _weight_small = weight_eqn.getSmallClipPlusTol();
   _weight_scaling_constant = weight_eqn.getScalingConstant(d_quadNode);
 
+#ifdef HAVE_VISIT
+  static bool initialized = false;
+
+  // Running with VisIt so add in the variables that the user can
+  // modify.
+//  if( d_sharedState->getVisIt() && !initialized ) {
+    // variable 1 - Must start with the component name and have NO
+    // spaces in the var name.
+//     SimulationState::interactiveVar var;
+//     var.name     = "Arches-Devol-Ultimate-Yield";
+//     var.type     = Uintah::TypeDescription::double_type;
+//     var.value    = (void *) &( _v_hiT);
+//     var.range[0]   = -1.0e9;
+//     var.range[1]   = +1.0e9;
+//     var.modifiable = true;
+//     var.recompile  = false;
+//     var.modified   = false;
+//     d_sharedState->d_UPSVars.push_back( var );
+
+  //   initialized = true;
+  // }
+#endif
 }
 
 //---------------------------------------------------------------------------
@@ -269,18 +289,17 @@ FOWYDevol::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeS
     tsk->modifies(_v_inf_label);
     which_dw = Task::NewDW;
   }
-  tsk->requires( Task::NewDW, _particle_temperature_varlabel, gn, 0 );
+  tsk->requires( which_dw, _particle_temperature_varlabel, gn, 0 );
   tsk->requires( which_dw, _rcmass_varlabel, gn, 0 );
   tsk->requires( which_dw, _char_varlabel, gn, 0 );
   tsk->requires( which_dw, _weight_varlabel, gn, 0 );
   tsk->requires( which_dw, _rcmass_weighted_scaled_varlabel, gn, 0 );
   tsk->requires( which_dw, _charmass_weighted_scaled_varlabel, gn, 0 );
-  tsk->requires( Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label());
+  tsk->requires( Task::OldDW, d_fieldLabels->d_delTLabel);
   tsk->requires( Task::NewDW, _RHS_source_varlabel, gn, 0 );
   tsk->requires( Task::NewDW, _char_RHS_source_varlabel, gn, 0 );
-  if ( _rawcoal_birth_label != nullptr ) {
+  if ( _rawcoal_birth_label != nullptr )
     tsk->requires( Task::NewDW, _rawcoal_birth_label, gn, 0 );
-  }
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 
@@ -308,7 +327,7 @@ FOWYDevol::computeModel( const ProcessorGroup * pc,
     double vol = Dx.x()* Dx.y()* Dx.z();
 
     delt_vartype DT;
-    old_dw->get(DT, d_fieldLabels->d_sharedState->get_delt_label());
+    old_dw->get(DT, d_fieldLabels->d_delTLabel);
     double dt = DT;
 
     CCVariable<double> devol_rate;
@@ -336,7 +355,7 @@ FOWYDevol::computeModel( const ProcessorGroup * pc,
     }
 
     constCCVariable<double> temperature;
-    new_dw->get( temperature , _particle_temperature_varlabel , matlIndex , patch , gn , 0 );
+    which_dw->get( temperature , _particle_temperature_varlabel , matlIndex , patch , gn , 0 );
     constCCVariable<double> rcmass;
     which_dw->get( rcmass    , _rcmass_varlabel , matlIndex , patch , gn , 0 );
     constCCVariable<double> charmass;
@@ -360,96 +379,65 @@ FOWYDevol::computeModel( const ProcessorGroup * pc,
     }
 
 
-
-#ifdef USE_FUNCTOR
     Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
 
-    computeDevolSource doDevolSource(dt,
-                                     vol,
-                                     add_birth,
-                                     temperature,
-                                     rcmass,
-                                     charmass,
-                                     weight,
-                                     RHS_source,
-                                     char_RHS_source,
-                                     rc_weighted_scaled,
-                                     char_weighted_scaled,
-                                     rawcoal_birth,
-                                     devol_rate,
-                                     gas_devol_rate,
-                                     char_rate,
-                                     v_inf,
-                                     this);
+    Uintah::parallel_for( range, [&] (int i, int j, int k) {
+       double rcmass_init = rc_mass_init[d_quadNode];
+       double Z=0;
+   
+       if (weight(i,j,k)/_weight_scaling_constant > _weight_small) {
+   
+         double rcmassph=rcmass(i,j,k);
+         double RHS_sourceph=RHS_source(i,j,k);
+         double temperatureph=temperature(i,j,k);
+         double charmassph=charmass(i,j,k);
+         double weightph=weight(i,j,k);
+   
+         // m_init = m_residual_solid + m_h_off_gas + m_vol
+         // m_vol = m_init - m_residual_solid - m_h_off_gas
+         // but m_h_off_gas = - m_char
+         // m_vol = m_init - m_residual_solid + m_char
+   
+         double m_vol = rcmass_init - (rcmassph+charmassph);
+         //VERIFICATION
+         //std::cout << "_T_mu: " << _T_mu << std::endl;
+         //std::cout << "_T_sigma: " << _T_sigma << std::endl;
+         //std::cout << "_T_hardened_bond: " << _T_hardened_bond << std::endl;
+         //std::cout << "_Tbp_graphite: " << _Tbp_graphite << std::endl;
+         //std::cout << "_v_hiT: " << _v_hiT << std::endl;
+         //temperatureph = 300.0;
+         //std::cout << "temperatureph: " << temperatureph << std::endl;
+         double v_inf_local = 0.5*_v_hiT*(1.0 + std::erf( (temperatureph - _T_mu) / (std::sqrt(2.0) * _T_sigma)));
+         //std::cout << "v_inf_local before : " << v_inf_local << std::endl;
+         v_inf_local = std::min(1.0,(temperatureph < _T_hardened_bond) ? v_inf_local : v_inf_local + (1.0 - _v_hiT)/(_Tbp_graphite - _T_hardened_bond)*(temperatureph - _T_hardened_bond) );
+         //std::cout << "v_inf_local after : " << v_inf_local << std::endl;
+         v_inf(i,j,k) = v_inf_local; 
+         double f_drive = std::max((rcmass_init*v_inf_local - m_vol) , 0.0);
+         double zFact =std::min(std::max(f_drive/rcmass_init/_v_hiT,2.5e-5 ),1.0-2.5e-5  );
+   
+         double rateMax = 0.0; 
+         if ( add_birth ){ 
+           rateMax = std::max(f_drive/dt 
+               + (  (RHS_sourceph+char_RHS_source(i,j,k)) /vol + rawcoal_birth(i,j,k) ) / weightph
+               * _rc_scaling_constant*_weight_scaling_constant , 0.0 );
+         } else { 
+           rateMax = std::max(f_drive/dt 
+               + (  (RHS_sourceph+char_RHS_source(i,j,k)) /vol ) / weightph
+               * _rc_scaling_constant*_weight_scaling_constant , 0.0 );
+         }
+         Z = std::sqrt(2.0) * erfinv(1.0-2.0*zFact );
+         
+         double rate = std::min(_A*exp(-(_Ta + Z *_sigma)/temperatureph)*f_drive , rateMax);
+         devol_rate(i,j,k) = -rate*weightph/(_rc_scaling_constant*_weight_scaling_constant); //rate of consumption of raw coal mass
+         gas_devol_rate(i,j,k) = rate*weightph; // rate of creation of coal off gas
+         char_rate(i,j,k) = 0; // rate of creation of char
+       } else {
+         devol_rate(i,j,k) = 0;
+         gas_devol_rate(i,j,k) = 0;
+         char_rate(i,j,k) = 0;
+       }
+     } );
+//end cell loop
 
-    Uintah::parallel_for( range, doDevolSource );
-#else
-
-
-
-    double rcmass_init = rc_mass_init[d_quadNode];
-    double Z=0;
-    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-
-      IntVector c = *iter;
-      if (weight[c]/_weight_scaling_constant > _weight_small) {
-
-        double rcmassph=rcmass[c];
-        double RHS_sourceph=RHS_source[c];
-        double temperatureph=temperature[c];
-        double charmassph=charmass[c];
-        double weightph=weight[c];
-
-        //VERIFICATION
-        //rcmassph=1;
-        //temperatureph=300;
-        //charmassph=0.0;
-        //weightph=_rc_scaling_constant*_weight_scaling_constant;
-        //rcmass_init = 1;
-
-        // m_init = m_residual_solid + m_h_off_gas + m_vol
-        // m_vol = m_init - m_residual_solid - m_h_off_gas
-        // but m_h_off_gas = - m_char
-        // m_vol = m_init - m_residual_solid + m_char
-
-        double m_vol = rcmass_init - (rcmassph+charmassph);
-
-        double v_inf_local = 0.5*_v_hiT*(1.0 - tanh(_C1*(_Tig-temperatureph)/temperatureph + _C2));
-        v_inf[c] = v_inf_local;
-        double f_drive = max((rcmass_init*v_inf_local - m_vol) , 0.0);
-        double zFact =min(max(f_drive/rcmass_init/_v_hiT,2.5e-5 ),1.0-2.5e-5  );
-
-        double rateMax = 0.0;
-        if ( add_birth ){
-          rateMax = max(f_drive/dt
-              + (  (RHS_sourceph+char_RHS_source[c]) /vol + rawcoal_birth[c] ) / weightph
-              * _rc_scaling_constant*_weight_scaling_constant , 0.0 );
-        } else {
-          rateMax = max(f_drive/dt
-              + (  (RHS_sourceph+char_RHS_source[c]) /vol ) / weightph
-              * _rc_scaling_constant*_weight_scaling_constant , 0.0 );
-        }
-
-        Z = sqrt(2.0) * boost::math::erf_inv(1.0-2.0*zFact );
-
-        double rate = min(_A*exp(-(_Ta + Z *_sigma)/temperatureph)*f_drive , rateMax);
-        devol_rate[c] = -rate*weightph/(_rc_scaling_constant*_weight_scaling_constant); //rate of consumption of raw coal mass
-        gas_devol_rate[c] = rate*weightph; // rate of creation of coal off gas
-        char_rate[c] = 0; // rate of creation of char
-
-        //additional check to make sure we have positive rates when we have small amounts of rc and char..
-        if( devol_rate[c]>0.0 || ( rc_weighted_scaled[c] + char_weighted_scaled[c] )<1e-16) {
-          devol_rate[c] = 0;
-          gas_devol_rate[c] = 0;
-          char_rate[c] = 0;
-        }
-
-      } else {
-        devol_rate[c] = 0;
-        gas_devol_rate[c] = 0;
-        char_rate[c] = 0;
-      }
-    }//end cell loop
-#endif
   }//end patch loop
 }

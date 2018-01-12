@@ -1,0 +1,118 @@
+#!/bin/bash
+#______________________________________________________________________
+#  This script installs kokkos
+#     <here>/kokkos/src
+#     <here>/kokkos/build
+#__________________________________
+# usage
+printUsage(){
+  echo "build_kokkos  [options]"
+  echo "  Options:"
+  echo "       -j   number of processors used in compilation"
+  echo "       -h   help" 
+  exit -1
+}
+
+# defaults
+nProcs=1
+
+#__________________________________
+#  Parse inputs
+while [[ $# > 0 ]]
+do
+key="$1"
+case $key in
+    -j|-np)
+      nProcs="$2"
+      shift
+      ;;
+    -h)
+      printUsage
+    ;;
+    *)
+      printUsage      # unknown option
+    ;;
+esac
+shift # past argument or value
+done
+
+#__________________________________
+export CC=gcc          # this need to be generalized
+export CXX=g++
+export LINK=g++
+
+#__________________________________
+
+echo ""
+echo "______________________________________________________________________"
+echo "checkout kokkos"
+
+/bin/rm -rf kokkos
+mkdir kokkos
+mkdir -p kokkos/src
+mkdir -p kokkos/build
+
+git clone https://github.com/kokkos/kokkos.git kokkos/src
+
+if [ $? != 0 ]; then
+  echo ""
+  echo " kokkos_install ERROR: TThere was a problem downloading kokkos.  Now exiting"
+  exit -1
+fi
+
+here=`pwd`
+export INSTALL_PATH=$here/kokkos/build
+export SRC_PATH=$here/kokkos/src
+
+echo "kokkos paths"
+echo "     installation path: $INSTALL_PATH"
+echo "     source:            $SRC_PATH"
+
+
+#__________________________________
+
+echo ""
+echo "______________________________________________________________________"
+echo "configure kokkos"
+
+cd kokkos/build
+$SRC_PATH/generate_makefile.bash \
+  --prefix=$INSTALL_PATH \
+  --kokkos-path=$SRC_PATH \
+  --with-openmp \
+  --with-serial
+  
+if [ $? != 0 ]; then
+  echo ""
+  echo " kokkos_install ERROR: There was a problem generating the make file.  Now exiting"
+  exit -1
+fi
+
+#__________________________________
+
+echo ""
+echo "______________________________________________________________________"
+echo "compile kokkos with nProcs:  $nProcs"
+
+make -j $nProcs CC=$CC CXX=$CXX LINK=$LINK | tee out.kokkos.compile
+
+if [ $? != 0 ]; then
+  echo ""
+  echo " kokkos_install ERROR: There was a problem compiling.  Now exiting"
+  exit -1
+fi
+
+#__________________________________
+
+echo ""
+echo "______________________________________________________________________"
+echo "compile kokkos"
+
+make install CC=$CC CXX=$CXX LINK=$LINK 
+
+echo ""
+echo "______________________________________________________________________"
+echo " Add the following to your configure line"
+echo "  --with-kokkos=$INSTALL_PATH"
+
+exit 0

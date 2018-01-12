@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_HOMEBREW_SimulationTime_H
-#define UINTAH_HOMEBREW_SimulationTime_H
+#ifndef CORE_GRID_SIMULATIONTIME_H
+#define CORE_GRID_SIMULATIONTIME_H
 
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
@@ -32,9 +32,9 @@ namespace Uintah {
 /**************************************
       
   CLASS
+
     SimulationTime
       
-    Short Description...
       
   GENERAL INFORMATION
       
@@ -48,46 +48,54 @@ namespace Uintah {
       
       
   KEYWORDS
+
     SimulationTime
       
+
   DESCRIPTION
-    Long description...
-      
-  WARNING
+
      
 ****************************************/
     
 class SimulationTime {
+
 public:
+
   SimulationTime(const ProblemSpecP& params);
 
   void problemSetup(const ProblemSpecP& params);
-  double maxTime;
-  double initTime;
-  double max_initial_delt;
-  double initial_delt_range;
-  double delt_min;
-  double delt_max;
-  double delt_factor;
-  double max_delt_increase;
-  double override_restart_delt; 
-  double max_wall_time;
 
-  // Explicit number of timesteps to run.  Simulation runs either this
-  // number of time steps, or to maxTime, which ever comes first.
-  // if "max_Timestep" is not specified in the .ups file, then
-  // max_Timestep == INT_MAX.  
-  int    maxTimestep; 
-
-  // Clamp the length of the timestep to the next
-  // output or checkpoint if it will go over
-  bool timestep_clamping;
-  bool end_on_max_time;
-private:
-  SimulationTime(const SimulationTime&);
-  SimulationTime& operator=(const SimulationTime&);
+  // The simulation runs to either the maximum number of time steps
+  // (maxTimestep) or the maximum simulation time (maxTime), which
+  // ever comes first. If the "max_Timestep" is not specified in the .ups
+  // file, then it is set to zero.
   
-};
+  int    m_max_time_steps;           // Maximum number of time steps to run.
+  double m_max_time;                 // Maximum simulation time
+  double m_init_time;                // Initial simulation time
+  
+  double m_max_initial_delt;        // Maximum initial delta T
+  double m_initial_delt_range;      // Simulation time to use the initial delta T
+  double m_delt_min;                // Minimum delta T
+  double m_delt_max;                // Maximum delta T
+  double m_delt_factor;             // Factor for increasing delta T
+  double m_max_delt_increase;       // Maximum delta T increase.
+  double m_override_restart_delt;   // Override the restart delta T value
+
+  double m_max_wall_time;           // Maximum wall time.
+  
+  bool m_clamp_time_to_output;      // Clamp the time to the next output or checkpoint
+  bool m_end_at_max_time;           // End the simulation at exactly this time.
+  
+private:
+  
+  // eliminate copy, assignment and move
+  SimulationTime( const SimulationTime & )            = delete;
+  SimulationTime& operator=( const SimulationTime & ) = delete;
+  SimulationTime( SimulationTime && )                 = delete;
+  SimulationTime& operator=( SimulationTime && )      = delete;
+
+}; // CORE_GRID_SIMULATIONTIME_H
 
 } // End namespace Uintah
 

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,36 +25,91 @@
 #ifndef Uintah_CORE_GRID_DBGOUTPUT_H
 #define Uintah_CORE_GRID_DBGOUTPUT_H
 
-#include <Core/Util/DebugStream.h>
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/Patch.h>
+#include <Core/Util/DebugStream.h>
+#include <Core/Util/DOUT.hpp>
+
 #include <string>
 
-namespace Uintah{
+namespace Uintah {
 
-void printSchedule( const PatchSet       * patches,
-                    Uintah::DebugStream  & dbg,
-                    const std::string    & where );
+void printSchedule( const PatchSet    * patches
+                  ,       DebugStream & dbg
+                  , const std::string & where
+                  );
 
-void printSchedule( const LevelP        & level,
-                    Uintah::DebugStream & dbg,
-                    const std::string   & where );
+void printSchedule( const LevelP      & level
+                  ,       DebugStream & dbg
+                  , const std::string & where
+                  );
 
-void printTask( const PatchSubset   * patches,
-                const Patch         * patch,
-                Uintah::DebugStream & dbg,
-                const std::string   & where );
-                
-void printTask( const PatchSubset   * patches,
-                Uintah::DebugStream & dbg,
-                const std::string   & where );
+void printTask( const PatchSubset * patches
+              , const Patch       * patch
+              ,       DebugStream & dbg
+              , const std::string & where
+              );
 
-void printTask( const Patch         * patch,
-                Uintah::DebugStream & dbg,
-                const std::string   & where );
-                
-void printTask( Uintah::DebugStream & dbg,
-                const std::string   & where );
+void printTask( const PatchSubset * patches
+              ,       DebugStream & dbg
+              , const std::string & where
+              );
+
+void printTask( const Patch       * patch
+              ,       DebugStream & dbg
+              , const std::string & where
+              );
+
+void printTask(       DebugStream & dbg
+              , const std::string & where
+              );
+
+
+
+// ------------------------------------------------------------------------------------------------
+// APH - 07/14/17
+// ------------------------------------------------------------------------------------------------
+// Dout (class) versions of the above (moving away from DebugStream)
+//
+// Dout is an extremely lightweight way to provide the same functionality as DebugStream,
+// but in a fully lock-free way for both multiple threads and MPI ranks. DOut also does not
+// inherit from from the standard library (std::ostream specifically) as DebugStream does.
+// The DOUT variadic macro is then used, which is printf-based. By the POSIX standard, printf
+// must "behave" like it acquired a lock. The Dout class also defines an explicit bool() operator
+// for checking state, e.g. active or inactive.
+// ------------------------------------------------------------------------------------------------
+
+// Output the task name and the level it's executing on and each of the patches
+void printTask( Dout         & out
+              , DetailedTask * dtask
+              );
+
+void printTask( const Patch       * patch
+              ,       Dout        & out
+              , const std::string & where
+              );
+
+void printTask( const PatchSubset * patches
+              , const Patch       * patch
+              ,       Dout        & out
+              , const std::string & where
+              );
+
+// Output the task name and the level it's executing on only first patch of that level
+void printTaskLevels( const ProcessorGroup * d_myworld
+                    ,       Dout           & out
+                    ,       DetailedTask   * dtask
+                    );
+
+void printSchedule( const LevelP      & level
+                  ,       Dout        & out
+                  , const std::string & where
+                  );
+
+void printSchedule( const PatchSet    * patches
+                  ,       Dout        & out
+                  , const std::string & where
+                  );
 
 } // End namespace Uintah
 

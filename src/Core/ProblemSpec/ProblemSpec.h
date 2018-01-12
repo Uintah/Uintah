@@ -4,7 +4,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -152,6 +152,14 @@ public:
                                        const std::string & attribute ) const;
 
   //////////
+  // find the first child node with given node name, attribute and value
+  // Finds:  <Block attribute = "value">
+  ProblemSpecP                                     
+  findBlockWithAttributeValue(const std::string& name,
+                              const std::string& attribute,
+                              const std::string& value) const;
+
+  //////////
   // find the first child node with given node name and attribute 
   ProblemSpecP findBlockWithOutAttribute(const std::string& name) const;
 
@@ -179,6 +187,10 @@ public:
   // returns the next sibling node, null if none
   ProblemSpecP getNextSibling();
    
+  //////////
+  // returns the parent node, null if none
+  ProblemSpecP getParent();
+  
   //////////
   // add a comment
   void addComment(std::string comment);
@@ -271,7 +283,11 @@ public:
   /*************
      Methods involving node information
   *************/
-      
+  
+  //////////
+  // output values related to this node
+  void print();
+
   //////////
   // return the name of this node
   std::string getNodeName() const;

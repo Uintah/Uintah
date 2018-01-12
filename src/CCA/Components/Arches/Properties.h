@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -57,16 +57,15 @@ POSSIBLE REVISIONS
 
 #include <sci_defs/uintah_defs.h>
 
-#include <CCA/Components/Arches/Arches.h>
-#include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/BoundaryCondition.h>
 #include <CCA/Components/Arches/ChemMix/MixingRxnModel.h>
 #include <CCA/Components/Arches/Filter.h>
-#include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/VarLabel.h>
 
 namespace Uintah {
+class ArchesLabel;
+class MPMArchesLabel;
 class MixingModel;
 class MixingRxnTable;
 class TabPropsInterface;
@@ -146,12 +145,6 @@ public:
   inline double getCarbonContent(double f) const{
     return d_carbon_fuel*f+d_carbon_air*(1.0-f);
   }
-  inline const std::string getMixingModelType(){
-    return mixModel;
-  }
-  inline MixingRxnModel* getMixRxnModel(){
-    return d_mixingRxnTable;
-  }
 
   void addLookupSpecies( );
 
@@ -165,8 +158,6 @@ public:
                             SchedulerP& sched );
 
   void doTableMatching();
-
-protected :
 
 private:
 
@@ -211,47 +202,45 @@ private:
 
   Properties& operator=(const Properties&);
 
-private:
+  // Variable labels used by simulation controller
+  ArchesLabel* d_lab;
+  const MPMArchesLabel* d_MAlab;
+  const VarLabel* d_mf_label;
 
-      // Variable labels used by simulation controller
-      ArchesLabel* d_lab;
-      const MPMArchesLabel* d_MAlab;
-      const VarLabel* d_mf_label;
+  bool d_reactingFlow;
+  PhysicalConstants* d_physicalConsts;
+  bool d_radiationCalc;
+  bool d_DORadiationCalc;
 
-      bool d_reactingFlow;
-      PhysicalConstants* d_physicalConsts;
-      bool d_radiationCalc;
-      bool d_DORadiationCalc;
+  bool d_co_output;
+  bool d_sulfur_chem;
+  bool d_soot_precursors;
 
-      bool d_co_output;
-      bool d_sulfur_chem;
-      bool d_soot_precursors;
+  bool d_filter_drhodt;
+  bool d_first_order_drhodt;
+  int d_numMixingVars;
+  double d_opl;
+  IntVector d_denRef;
 
-      bool d_filter_drhodt;
-      bool d_first_order_drhodt;
-      int d_numMixingVars;
-      double d_opl;
-      IntVector d_denRef;
+  MixingRxnModel* d_mixingRxnTable;
 
-      MixingRxnModel* d_mixingRxnTable;
+  BoundaryCondition* d_bc;
+  bool d_empirical_soot;
+  double d_sootFactor;
+  bool d_3d_periodic;
+  bool d_inverse_density_average;
+  double d_H_air;
+  bool d_tabulated_soot;
+  double d_f_stoich, d_carbon_fuel, d_carbon_air;
+  Filter* d_filter;
+  const ProcessorGroup* d_myworld;
 
-      BoundaryCondition* d_bc;
-      bool d_empirical_soot;
-      double d_sootFactor;
-      bool d_3d_periodic;
-      bool d_inverse_density_average;
-      double d_H_air;
-      bool d_tabulated_soot;
-      double d_f_stoich, d_carbon_fuel, d_carbon_air;
-      Filter* d_filter;
-      const ProcessorGroup* d_myworld;
+  // New Table Interface Stuff:
 
-      // New Table Interface Stuff:
+  // for doing adiabatic gas with non-adiabatic particles
+  bool d_adiabGas_nonadiabPart;
 
-      // for doing adiabatic gas with non-adiabatic particles
-      bool d_adiabGas_nonadiabPart;
-
-      std::string mixModel;
+  std::string mixModel;
 
 }; // end class Properties
 } // End namespace Uintah

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -23,40 +23,40 @@
  */
 
 #include <CCA/Components/Schedulers/RuntimeStats.hpp>
-
 #include <CCA/Components/Schedulers/DetailedTasks.h>
 #include <CCA/Components/Schedulers/TaskGraph.h>
 
 #include <Core/Util/DOUT.hpp>
-#include <Core/Util/Timers/Timers.hpp>
-
-#include <mutex>
-
-#include <set>
-#include <map>
-
-#include <iomanip>
-
-#include <streambuf>
-#include <iostream>
-#include <sstream>
 
 #include <algorithm>
 #include <functional>
+#include <iomanip>
+#include <iostream>
+#include <map>
+#include <mutex>
+#include <set>
+#include <sstream>
+#include <streambuf>
+
 
 namespace Uintah {
 
 
 namespace {
 
+Dout mpi_stats{  "MPIStats",  false };
+Dout exec_times{ "ExecTimes", false };
+Dout wait_times{ "WaitTimes", false };
+Dout task_stats{ "TaskStats", false };
+
 struct ReportValue
 {
-  ReportValue() = default;
+  ReportValue()                     = default;
   ReportValue( const ReportValue &) = default;
-  ReportValue( ReportValue &&) = default;
+  ReportValue( ReportValue &&)      = default;
 
   ReportValue & operator=( const ReportValue & ) = default;
-  ReportValue & operator=( ReportValue && ) = default;
+  ReportValue & operator=( ReportValue && )      = default;
 
   ReportValue( RuntimeStats::ValueType  type
              , std::function<int64_t()> get
@@ -100,10 +100,9 @@ void RuntimeStats::register_report( Dout const& dout
                                   , std::function<void()>    clear_value
                                   )
 {
-  Dout mpi_report{ "MPIReport", false};
-  if ( mpi_report && dout) {
+  if (mpi_stats || exec_times || wait_times || task_stats) {
     std::unique_lock<std::mutex> lock(g_report_lock);
-    ReportValue value{type, get_value, clear_value };
+    ReportValue value { type, get_value, clear_value };
     g_report_values[dout][name] = value;
   }
 }
@@ -111,10 +110,7 @@ void RuntimeStats::register_report( Dout const& dout
 
 std::atomic<int64_t> * RuntimeStats::get_atomic_exec_ptr( DetailedTask const* t)
 {
-  Dout mpi_report{ "MPIReport", false};
-  Dout exec_times{ "ExecTimes", false };
-
-  if (mpi_report && exec_times) {
+  if (exec_times) {
     const size_t id = impl_get_global_id(t);
     return id < g_num_tasks ? & g_task_exec_times[ id ] : nullptr ;
   }
@@ -123,10 +119,7 @@ std::atomic<int64_t> * RuntimeStats::get_atomic_exec_ptr( DetailedTask const* t)
 
 std::atomic<int64_t> * RuntimeStats::get_atomic_wait_ptr( DetailedTask const* t)
 {
-  Dout mpi_report{ "MPIReport", false};
-  Dout wait_times{ "WaitTimes", false };
-
-  if (mpi_report && wait_times) {
+  if (wait_times) {
     const size_t id = impl_get_global_id(t);
     return id < g_num_tasks ? & g_task_wait_times[ id ] : nullptr ;
   }
@@ -135,13 +128,7 @@ std::atomic<int64_t> * RuntimeStats::get_atomic_wait_ptr( DetailedTask const* t)
 
 void RuntimeStats::initialize_timestep( std::vector<TaskGraph *> const &  graphs )
 {
-  Dout mpi_report{ "MPIReport", false};
-
-  if (!mpi_report)  return;
-
-  Dout exec_times{ "ExecTimes", false };
-  Dout wait_times{ "WaitTimes", false };
-  if (exec_times || wait_times) {
+  if (exec_times || wait_times || task_stats) {
 
     std::unique_lock<std::mutex> lock(g_report_lock);
 
@@ -257,9 +244,9 @@ void rank_sum_min_max_impl( int64_t const * in, int64_t * inout, int len )
   for (int i=0; i<size; ++i) {
     const int off = 4*i;
     inout[off+RANK] = in[off+MAX] < inout[off+MAX] ? inout[off+RANK] : in[off+RANK] ; // max_rank
-    inout[off+SUM] += in[off+SUM] ;                                           // sum
-    inout[off+MIN]  = inout[off+MIN] < in[off+MIN] ? inout[off+MIN] : in[off+MIN] ; // min
-    inout[off+MAX]  = in[off+MAX] < inout[off+MAX] ? inout[off+MAX] : in[off+MAX] ; // max
+    inout[off+SUM] += in[off+SUM] ;                                                   // sum
+    inout[off+MIN]  = inout[off+MIN] < in[off+MIN] ? inout[off+MIN] : in[off+MIN] ;   // min
+    inout[off+MAX]  = in[off+MAX] < inout[off+MAX] ? inout[off+MAX] : in[off+MAX] ;   // max
   }
 }
 
@@ -274,240 +261,199 @@ MPI_Op rank_sum_min_max_op;
 } // unnamed namespace
 
 
-void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
+void RuntimeStats::report( MPI_Comm comm )
 {
+  if (!(mpi_stats || exec_times || wait_times || task_stats)) {
+    return;
+  }
+
   {
     static bool init = false;
     if (!init) {
-      Uintah::MPI::Op_create( rank_sum_min_max, true, &rank_sum_min_max_op );
+      MPI::Op_create( rank_sum_min_max, true, &rank_sum_min_max_op );
       init = true;
     }
   }
 
-  Dout mpi_report("MPIReport", false);
-  if (!mpi_report) return;
-
-
-  Dout mpi_stats{"MPIStats", true};
   if (mpi_stats) {
+
     register_report( mpi_stats
                    , "Time: Comm"
                    , RuntimeStats::Time
-                   , []() { return Uintah::MPI::Impl::CommTimer::max(); }
-                   , []() { Uintah::MPI::Impl::CommTimer::reset_tag(); }
+                   , []() { return MPI::Impl::CommTimer::max(); }
+                   , []() { MPI::Impl::CommTimer::reset_tag(); }
                    );
     register_report( mpi_stats
                    , "Count: Comm"
                    , RuntimeStats::Count
-                   , []() { return Uintah::MPI::Impl::CommTimer::count(); }
-                   );
-    register_report( mpi_stats
-                   , "Time: OneS"
-                   , RuntimeStats::Time
-                   , []() { return Uintah::MPI::Impl::OneSidedTimer::max(); }
-                   , []() { Uintah::MPI::Impl::OneSidedTimer::reset_tag(); }
-                   );
-    register_report( mpi_stats
-                   , "Count: OneS"
-                   , RuntimeStats::Count
-                   , []() { return Uintah::MPI::Impl::OneSidedTimer::count(); }
+                   , []() { return MPI::Impl::CommTimer::count(); }
                    );
     register_report( mpi_stats
                    , "Time: Scan"
                    , RuntimeStats::Time
-                   , []() { return Uintah::MPI::Impl::ScanTimer::max(); }
-                   , []() { Uintah::MPI::Impl::ScanTimer::reset_tag(); }
+                   , []() { return MPI::Impl::ScanTimer::max(); }
+                   , []() { MPI::Impl::ScanTimer::reset_tag(); }
                    );
     register_report( mpi_stats
                    , "Count: Scan"
                    , RuntimeStats::Count
-                   , []() { return Uintah::MPI::Impl::ScanTimer::count(); }
+                   , []() { return MPI::Impl::ScanTimer::count(); }
                    );
     register_report( mpi_stats
                    , "Time: Redu"
                    , RuntimeStats::Time
-                   , []() { return Uintah::MPI::Impl::ReduceTimer::max(); }
-                   , []() { Uintah::MPI::Impl::ReduceTimer::reset_tag(); }
+                   , []() { return MPI::Impl::ReduceTimer::max(); }
+                   , []() { MPI::Impl::ReduceTimer::reset_tag(); }
                    );
     register_report( mpi_stats
                    , "Count: Redu"
                    , RuntimeStats::Count
-                   , []() { return Uintah::MPI::Impl::ReduceTimer::count(); }
+                   , []() { return MPI::Impl::ReduceTimer::count(); }
                    );
     register_report( mpi_stats
                    , "Time: Scat"
                    , RuntimeStats::Time
-                   , []() { return Uintah::MPI::Impl::ScatterTimer::max(); }
-                   , []() { Uintah::MPI::Impl::ScatterTimer::reset_tag(); }
+                   , []() { return MPI::Impl::ScatterTimer::max(); }
+                   , []() { MPI::Impl::ScatterTimer::reset_tag(); }
                    );
     register_report( mpi_stats
                    , "Count: Scat"
                    , RuntimeStats::Count
-                   , []() { return Uintah::MPI::Impl::ScatterTimer::count(); }
+                   , []() { return MPI::Impl::ScatterTimer::count(); }
                    );
     register_report( mpi_stats
                    , "Time: Gath"
                    , RuntimeStats::Time
-                   , []() { return Uintah::MPI::Impl::GatherTimer::max(); }
-                   , []() { Uintah::MPI::Impl::GatherTimer::reset_tag(); }
+                   , []() { return MPI::Impl::GatherTimer::max(); }
+                   , []() { MPI::Impl::GatherTimer::reset_tag(); }
                    );
     register_report( mpi_stats
                    , "Count: Gath"
                    , RuntimeStats::Count
-                   , []() { return Uintah::MPI::Impl::GatherTimer::count(); }
+                   , []() { return MPI::Impl::GatherTimer::count(); }
                    );
     register_report( mpi_stats
                    , "Time: Bcas"
                    , RuntimeStats::Time
-                   , []() { return Uintah::MPI::Impl::BcastTimer::max(); }
-                   , []() { Uintah::MPI::Impl::BcastTimer::reset_tag(); }
+                   , []() { return MPI::Impl::BcastTimer::max(); }
+                   , []() { MPI::Impl::BcastTimer::reset_tag(); }
                    );
     register_report( mpi_stats
                    , "Count: Bcas"
                    , RuntimeStats::Count
-                   , []() { return Uintah::MPI::Impl::BcastTimer::count(); }
+                   , []() { return MPI::Impl::BcastTimer::count(); }
                    );
     register_report( mpi_stats
                    , "Time: All2"
                    , RuntimeStats::Time
-                   , []() { return Uintah::MPI::Impl::AlltoallTimer::max(); }
-                   , []() { Uintah::MPI::Impl::AlltoallTimer::reset_tag(); }
+                   , []() { return MPI::Impl::AlltoallTimer::max(); }
+                   , []() { MPI::Impl::AlltoallTimer::reset_tag(); }
                    );
     register_report( mpi_stats
                    , "Count: All2"
                    , RuntimeStats::Count
-                   , []() { return Uintah::MPI::Impl::AlltoallTimer::count(); }
+                   , []() { return MPI::Impl::AlltoallTimer::count(); }
                    );
     register_report( mpi_stats
                    , "Time: Send"
                    , RuntimeStats::Time
-                   , []() { return Uintah::MPI::Impl::SendTimer::max(); }
-                   , []() { Uintah::MPI::Impl::SendTimer::reset_tag(); }
+                   , []() { return MPI::Impl::SendTimer::max(); }
+                   , []() { MPI::Impl::SendTimer::reset_tag(); }
                    );
     register_report( mpi_stats
                    , "Count: Send"
                    , RuntimeStats::Count
-                   , []() { return Uintah::MPI::Impl::SendTimer::count(); }
+                   , []() { return MPI::Impl::SendTimer::count(); }
                    );
     register_report( mpi_stats
                    , "Time: Recv"
                    , RuntimeStats::Time
-                   , []() { return Uintah::MPI::Impl::RecvTimer::max(); }
-                   , []() { Uintah::MPI::Impl::RecvTimer::reset_tag(); }
+                   , []() { return MPI::Impl::RecvTimer::max(); }
+                   , []() { MPI::Impl::RecvTimer::reset_tag(); }
                    );
     register_report( mpi_stats
                    , "Count: Recv"
                    , RuntimeStats::Count
-                   , []() { return Uintah::MPI::Impl::RecvTimer::count(); }
+                   , []() { return MPI::Impl::RecvTimer::count(); }
                    );
     register_report( mpi_stats
                    , "Time: Wait"
                    , RuntimeStats::Time
-                   , []() { return Uintah::MPI::Impl::WaitTimer::min(); }
-                   , []() { Uintah::MPI::Impl::WaitTimer::reset_tag(); }
+                   , []() { return MPI::Impl::WaitTimer::min(); }
+                   , []() { MPI::Impl::WaitTimer::reset_tag(); }
                    );
     register_report( mpi_stats
                    , "Count: Wait"
                    , RuntimeStats::Count
-                   , []() { return Uintah::MPI::Impl::WaitTimer::count(); }
+                   , []() { return MPI::Impl::WaitTimer::count(); }
                    );
     register_report( mpi_stats
                    , "Time: Test"
                    , RuntimeStats::Time
-                   , []() { return Uintah::MPI::Impl::TestTimer::min(); }
-                   , []() { Uintah::MPI::Impl::TestTimer::reset_tag(); }
+                   , []() { return MPI::Impl::TestTimer::min(); }
+                   , []() { MPI::Impl::TestTimer::reset_tag(); }
                    );
     register_report( mpi_stats
                    , "Count: Test"
                    , RuntimeStats::Count
-                   , []() { return Uintah::MPI::Impl::TestTimer::count(); }
+                   , []() { return MPI::Impl::TestTimer::count(); }
                    );
-
     register_report( mpi_stats
                    , "Volume Send TOTAL   "
                    , RuntimeStats::Memory
-                   , []() { return Uintah::MPI::Impl::SendVolumeStats::get(MPI::Impl::COMM_SIZE); }
-                   , []() { return Uintah::MPI::Impl::SendVolumeStats::clear(); }
+                   , []() { return MPI::Impl::SendVolumeStats::get(MPI::Impl::COMM_SIZE); }
+                   , []() { return MPI::Impl::SendVolumeStats::clear(); }
                    );
     register_report( mpi_stats
                    , "Volume Send0: <= 64B"
                    , RuntimeStats::Count
-                   , []() { return Uintah::MPI::Impl::SendVolumeStats::get(MPI::Impl::COMM_HISTOGRAM_0); }
+                   , []() { return MPI::Impl::SendVolumeStats::get(MPI::Impl::COMM_HISTOGRAM_0); }
                    );
     register_report( mpi_stats
                    , "Volume Send1: <= 4KB"
                    , RuntimeStats::Count
-                   , []() { return Uintah::MPI::Impl::SendVolumeStats::get(MPI::Impl::COMM_HISTOGRAM_1); }
+                   , []() { return MPI::Impl::SendVolumeStats::get(MPI::Impl::COMM_HISTOGRAM_1); }
                    );
     register_report( mpi_stats
                    , "Volume Send2: <= 2MB"
                    , RuntimeStats::Count
-                   , []() { return Uintah::MPI::Impl::SendVolumeStats::get(MPI::Impl::COMM_HISTOGRAM_2); }
+                   , []() { return MPI::Impl::SendVolumeStats::get(MPI::Impl::COMM_HISTOGRAM_2); }
                    );
     register_report( mpi_stats
                    , "Volume Send3: >  2MB"
                    , RuntimeStats::Count
-                   , []() { return Uintah::MPI::Impl::SendVolumeStats::get(MPI::Impl::COMM_HISTOGRAM_3); }
+                   , []() { return MPI::Impl::SendVolumeStats::get(MPI::Impl::COMM_HISTOGRAM_3); }
                    );
-
     register_report( mpi_stats
                    , "Volume Recv TOTAL   "
                    , RuntimeStats::Memory
-                   , []() { return Uintah::MPI::Impl::RecvVolumeStats::get(MPI::Impl::COMM_SIZE); }
-                   , []() { return Uintah::MPI::Impl::RecvVolumeStats::clear(); }
+                   , []() { return MPI::Impl::RecvVolumeStats::get(MPI::Impl::COMM_SIZE); }
+                   , []() { return MPI::Impl::RecvVolumeStats::clear(); }
                    );
     register_report( mpi_stats
                    , "Volume Recv0: <= 64B"
                    , RuntimeStats::Count
-                   , []() { return Uintah::MPI::Impl::RecvVolumeStats::get(MPI::Impl::COMM_HISTOGRAM_0); }
+                   , []() { return MPI::Impl::RecvVolumeStats::get(MPI::Impl::COMM_HISTOGRAM_0); }
                    );
     register_report( mpi_stats
                    , "Volume Recv1: <= 4KB"
                    , RuntimeStats::Count
-                   , []() { return Uintah::MPI::Impl::RecvVolumeStats::get(MPI::Impl::COMM_HISTOGRAM_1); }
+                   , []() { return MPI::Impl::RecvVolumeStats::get(MPI::Impl::COMM_HISTOGRAM_1); }
                    );
     register_report( mpi_stats
                    , "Volume Recv2: <= 2MB"
                    , RuntimeStats::Count
-                   , []() { return Uintah::MPI::Impl::RecvVolumeStats::get(MPI::Impl::COMM_HISTOGRAM_2); }
+                   , []() { return MPI::Impl::RecvVolumeStats::get(MPI::Impl::COMM_HISTOGRAM_2); }
                    );
     register_report( mpi_stats
                    , "Volume Recv3: >  2MB"
                    , RuntimeStats::Count
-                   , []() { return Uintah::MPI::Impl::RecvVolumeStats::get(MPI::Impl::COMM_HISTOGRAM_3); }
-                   );
-
-
-    register_report( mpi_stats
-                   , "Volume OneS TOTAL   "
-                   , RuntimeStats::Memory
-                   , []() { return Uintah::MPI::Impl::OneVolumeStats::get(MPI::Impl::COMM_SIZE); }
-                   , []() { return Uintah::MPI::Impl::OneVolumeStats::clear(); }
-                   );
-    register_report( mpi_stats
-                   , "Volume OneS0: <= 64B"
-                   , RuntimeStats::Count
-                   , []() { return Uintah::MPI::Impl::OneVolumeStats::get(MPI::Impl::COMM_HISTOGRAM_0); }
-                   );
-    register_report( mpi_stats
-                   , "Volume OneS1: <= 4KB"
-                   , RuntimeStats::Count
-                   , []() { return Uintah::MPI::Impl::OneVolumeStats::get(MPI::Impl::COMM_HISTOGRAM_1); }
-                   );
-    register_report( mpi_stats
-                   , "Volume OneS2: <= 2MB"
-                   , RuntimeStats::Count
-                   , []() { return Uintah::MPI::Impl::OneVolumeStats::get(MPI::Impl::COMM_HISTOGRAM_2); }
-                   );
-    register_report( mpi_stats
-                   , "Volume OneS3: >  2MB"
-                   , RuntimeStats::Count
-                   , []() { return Uintah::MPI::Impl::OneVolumeStats::get(MPI::Impl::COMM_HISTOGRAM_3); }
+                   , []() { return MPI::Impl::RecvVolumeStats::get(MPI::Impl::COMM_HISTOGRAM_3); }
                    );
   }
 
-  Dout task_stats{"TaskStats", true};
   if (task_stats) {
+
     register_report( task_stats
                    , "Coll"
                    , RuntimeStats::Time
@@ -546,15 +492,13 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
                    );
   }
 
-
-
   std::unique_lock<std::mutex> lock(g_report_lock);
 
   int psize;
   int prank;
 
-  Uintah::MPI::Comm_size( comm, &psize );
-  Uintah::MPI::Comm_rank( comm, &prank );
+  MPI::Comm_size( comm, &psize );
+  MPI::Comm_rank( comm, &prank );
 
   int  num_report_values = 0;
   // count
@@ -584,15 +528,15 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
         int64_t i = 4 * value.second.m_index;
         const int64_t v = value.second.m_get();
         data[i+RANK] = prank; // rank
-        data[i+SUM] = v;     // total
-        data[i+MIN] = v;     // min
-        data[i+MAX] = v;     // max
+        data[i+SUM] = v;      // total
+        data[i+MIN] = v;      // min
+        data[i+MAX] = v;      // max
       }
     }
   }
 
   global_data.resize(data_size);
-  Uintah::MPI::Allreduce( data.data(), global_data.data(), data_size, MPI_INT64_T, rank_sum_min_max_op, comm);
+  MPI::Allreduce( data.data(), global_data.data(), data_size, MPI_INT64_T, rank_sum_min_max_op, comm);
 
   std::vector<int64_t>     histograms(data_size,0);
   std::vector<int64_t>     global_histograms(data_size,0);
@@ -618,7 +562,7 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
     }
   }
 
-  Uintah::MPI::Reduce(histograms.data(), global_histograms.data(), data_size, MPI_INT64_T, MPI_SUM, 0, comm);
+  MPI::Reduce(histograms.data(), global_histograms.data(), data_size, MPI_INT64_T, MPI_SUM, 0, comm);
 
   if (prank == 0) {
 
@@ -655,7 +599,9 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
         w_desc = s < w_desc ? w_desc : s;
       }
 
-      const std::string & group_name = group.first.name();
+      const std::string & group_name = group.first.name() +
+	(group.first.active() ? ":+" : ":-");
+      
       printf("\n--------------------------------------------------------------------------------\n");
       printf("%s\n", group_name.c_str() );
       printf("--------------------------------------------------------------------------------\n");
@@ -670,7 +616,7 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
           ,w_load, "\%Load Imbalance"
       );
 
-      for (auto const& value : group.second ) {
+      for (auto const& value : group.second) {
 
         const int64_t i = 4 * value.second.m_index;
 
@@ -691,7 +637,7 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
 
         const RuntimeStats::ValueType t = value.second.m_type;
 
-        if ( total > 0) {
+        if (total > 0) {
           printf("%*s:%*s%*s%*s%*s%*d          %6.1f%6.1f%6.1f%6.1f%8.1f\n"
               , w_desc-1, value_name.c_str()
               , w_num, to_string(t, total).c_str()
@@ -706,27 +652,11 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
               , load
               );
         }
-
       }
     }
+
     printf("\n");
-
   }
-
-
-  // update SimulationState
-  stats[SimulationState::TaskExecTime]       += TripTimer< TaskExecTag >::max().seconds()
-                                                - stats[SimulationState::OutputFileIOTime]  // don't count output time or bytes
-                                                - stats[SimulationState::OutputFileIORate];
-  stats[SimulationState::TaskLocalCommTime]  += 1.0e-9 * (MPI::Impl::RecvTimer::total() + Uintah::MPI::Impl::SendTimer::total());
-  stats[SimulationState::TaskWaitCommTime]   += 1.0e-9 * (MPI::Impl::TestTimer::total() + Uintah::MPI::Impl::WaitTimer::total());
-  stats[SimulationState::TaskGlobalCommTime] += 1.0e-9 * ( Uintah::MPI::Impl::AlltoallTimer::total()
-                                                         + Uintah::MPI::Impl::BcastTimer::total()
-                                                         + Uintah::MPI::Impl::GatherTimer::total()
-                                                         + Uintah::MPI::Impl::ReduceTimer::total()
-                                                         + Uintah::MPI::Impl::ScanTimer::total()
-                                                         + Uintah::MPI::Impl::ScatterTimer::total()
-                                                         );
 
   // clear the registered report values
   g_report_values.clear();

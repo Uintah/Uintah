@@ -10,7 +10,7 @@
    <SimulationComponent type="mpm" />
 
    <Time>
-       <maxTime>0.12</maxTime>
+       <maxTime>0.18</maxTime>
        <initTime>0.0</initTime>
        <delt_min>0.00001</delt_min>
        <delt_max>0.001</delt_max>
@@ -18,6 +18,7 @@
    </Time>
    <DataArchiver>
        <filebase>disks_complex.uda</filebase>
+       <outputInitTimestep/>
        <outputInterval>.01</outputInterval>
        <save label = "KineticEnergy"/>
        <save label = "TotalMass"/>
@@ -26,7 +27,7 @@
        <save label = "TotalMomentum"/>
        <save label = "p.x" levels = "-1"/>
        <save label = "p.epsf" levels = "-1"/>
-       <save label = "p.localized" levels = "-1"/>
+       <save label = "p.localizedMPM" levels = "-1"/>
        <save label = "p.volume" levels = "-1"/>
        <save label = "p.velocity" levels = "-1"/>
        <save label = "p.color" levels = "-1"/>
@@ -40,33 +41,15 @@
    </DataArchiver>
 
    <MPM>
-       <time_integrator>explicit</time_integrator>
-       <interpolator>gimp</interpolator>
+       <time_integrator>explicit  </time_integrator>
+       <interpolator>   cpdi      </interpolator>
        <withColor>      true      </withColor>
-       <artificial_viscosity>true</artificial_viscosity>
+       <artificial_viscosity>true </artificial_viscosity>
        <artificial_viscosity_coeff1>0.3</artificial_viscosity_coeff1>
        <artificial_viscosity_coeff2>3.0</artificial_viscosity_coeff2>
        <DoExplicitHeatConduction>false</DoExplicitHeatConduction>
        <UseGradientEnhancedVelocityProjection>true</UseGradientEnhancedVelocityProjection>
-       <erosion algorithm = "ZeroStress"/>
    </MPM>
-
-<!--
-    <AMR>
-      <MPM>
-        <min_grid_level>-1</min_grid_level>
-        <max_grid_level>-1</max_grid_level>
-      </MPM>
-      <Regridder type="Tiled">
-        <max_levels>2</max_levels>
-        <cell_refinement_ratio>    [[2,2,1]]         </cell_refinement_ratio>
-        <min_patch_size>           [[8,8,1]]         </min_patch_size>
-        <cell_stability_dilation>   [1,1,0]          </cell_stability_dilation>  
-        <min_boundary_cells>       [1,1,0]           </min_boundary_cells>
-      </Regridder>
-      <useLockStep>       true  </useLockStep>
-    </AMR>
--->
 
     <PhysicalConstants>
        <gravity>[0,0,0]</gravity>
@@ -81,6 +64,8 @@
                  <he_constant_2>40000.0</he_constant_2>
                  <he_PR>.49</he_PR>
                </constitutive_model>
+               <erosion algorithm = "ZeroStress"/>
+               
               <thermal_conductivity>1.0</thermal_conductivity>
               <specific_heat>5</specific_heat>
               <geom_object>
@@ -101,12 +86,15 @@
               <constitutive_model type="cnh_damage">
                  <shear_modulus>1.2e6</shear_modulus>
                  <bulk_modulus>3.2e6</bulk_modulus>
-                 <failure_by_stress>  true         </failure_by_stress>
-                 <failure_mean> 2.0e5       </failure_mean>
-                 <failure_std>  1.0e5       </failure_std>
-                  <failure_distrib>gauss</failure_distrib>
-                  <failure_criteria>MaximumPrincipalStress</failure_criteria>
               </constitutive_model>
+              <erosion algorithm = "ZeroStress"/>
+              
+              <damage_model type="Threshold">
+                  <failure_mean> 2.0e5       </failure_mean>
+                  <failure_std>  1.0e5       </failure_std>
+                  <failure_distrib>gauss     </failure_distrib>
+                  <failure_criteria>MaximumPrincipalStress</failure_criteria>
+              </damage_model>
               <thermal_conductivity>1.0</thermal_conductivity>
               <specific_heat>5</specific_heat>
 
@@ -179,9 +167,10 @@
               <lower>[0,0,0.05]</lower>
               <upper>[1.0,1.0,.1]</upper>
               <resolution>[40,40,1]</resolution>
-              <patches>[2,2,1]</patches>
-              <extraCells> [1,1,1]            </extraCells>
+              <patches>[3,2,1]</patches>
+              <extraCells> [0,0,1]            </extraCells>
            </Box>
+           <periodic>[1,1,0]</periodic>
        </Level>
     </Grid>
     <!--____________________________________________________________________-->

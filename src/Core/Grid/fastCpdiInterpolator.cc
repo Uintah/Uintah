@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,89 +25,184 @@
 #include <Core/Grid/fastCpdiInterpolator.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Level.h>
-#include <Core/Parallel/Parallel.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>
+#include <iostream>
 
 using namespace Uintah;
+using namespace std;
 
-    
 fastCpdiInterpolator::fastCpdiInterpolator()
 {
-  d_size = 27;
+  d_size = 64;
   d_patch = 0;
+  d_lcrit = 1.e10;
 }
 
 fastCpdiInterpolator::fastCpdiInterpolator(const Patch* patch)
 {
-  d_size = 27;
+  d_size = 64;
   d_patch = patch;
+  d_lcrit = 1.e10;
 }
     
 fastCpdiInterpolator::~fastCpdiInterpolator()
 {
 }
 
+fastCpdiInterpolator::fastCpdiInterpolator(const Patch* patch,
+                                           const double lcrit)
+{
+  d_size = 64;
+  d_patch = patch;
+  d_lcrit = lcrit;
+}
+
 fastCpdiInterpolator* fastCpdiInterpolator::clone(const Patch* patch)
 {
-  return scinew fastCpdiInterpolator(patch);
+  return scinew fastCpdiInterpolator(patch, d_lcrit);
 }
     
-void fastCpdiInterpolator::findCellAndWeights(const Point& pos,
+int fastCpdiInterpolator::findCellAndWeights(const Point& pos,
                                             vector<IntVector>& ni, 
                                             vector<double>& S,
                                             const Matrix3& size,
                                             const Matrix3& defgrad)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(Point(pos));
-  double lx = size(0,0)/2.0;
-  double ly = size(1,1)/2.0;
-  double lz = size(2,2)/2.0;
 
-  vector<Vector> relative_node_reference_location(8,Vector(0.0,0.0,0.0));
-  // constuct the position vectors to each node in the reference configuration relative to the particle center:
-  relative_node_reference_location[0]=Vector(-lx,-ly,-lz); // x1    , y1    , z1
-  relative_node_reference_location[1]=Vector( lx,-ly,-lz); // x1+r1x, y1    , z1
-  relative_node_reference_location[2]=Vector( lx, ly,-lz); // x1+r1x, y1+r2y, z1
-  relative_node_reference_location[3]=Vector(-lx, ly,-lz); // x1    , y1+r2y, z1
-  relative_node_reference_location[4]=Vector(-lx,-ly, lz); // x1    , y1    , z1+r3z
-  relative_node_reference_location[5]=Vector( lx,-ly, lz); // x1+r1x, y1    , z1+r3z
-  relative_node_reference_location[6]=Vector( lx, ly, lz); // x1+r1x, y1+r2y, z1+r3z
-  relative_node_reference_location[7]=Vector(-lx, ly, lz); // x1    , y1+r2y, z1+r3z
-  
+  Matrix3 dsize=defgrad*size;
+  Vector relative_node_location[8];
+
+  relative_node_location[4]=Vector(-dsize(0,0)-dsize(0,1)+dsize(0,2),
+                                   -dsize(1,0)-dsize(1,1)+dsize(1,2),
+                                   -dsize(2,0)-dsize(2,1)+dsize(2,2))*0.5;
+  relative_node_location[5]=Vector( dsize(0,0)-dsize(0,1)+dsize(0,2),
+                                    dsize(1,0)-dsize(1,1)+dsize(1,2),
+                                    dsize(2,0)-dsize(2,1)+dsize(2,2))*0.5;
+  relative_node_location[6]=Vector( dsize(0,0)+dsize(0,1)+dsize(0,2),
+                                    dsize(1,0)+dsize(1,1)+dsize(1,2),
+                                    dsize(2,0)+dsize(2,1)+dsize(2,2))*0.5;
+  relative_node_location[7]=Vector(-dsize(0,0)+dsize(0,1)+dsize(0,2),
+                                   -dsize(1,0)+dsize(1,1)+dsize(1,2),
+                                   -dsize(2,0)+dsize(2,1)+dsize(2,2))*0.5;
+
+  double lcrit = d_lcrit;
+  double lcritsq = lcrit*lcrit;
+  Vector la = relative_node_location[6];
+  Vector lb = relative_node_location[5];
+  Vector lc = relative_node_location[7];
+  Vector ld = relative_node_location[4];
+
+// Check to see if particles need to be scaled to stay within a
+// circumscribing sphere of radius d_lcrit.  la, lb, lc, and ld
+// are the distances from the particle center to the particle corners
+// For example, for a 1 PPC case, the lN are sqrt(.5*.5+.5*.5+.5*.5)=.866
+// All measurements are normalized to cell width.
+
+// This scaling was implemented to prevent the need for arbitrary number
+// of ghost nodes in parallel calculations, but its use may also improve
+// accuracy.
+
+  int scale_flag = 0;
+  if(la.length2()>lcritsq){
+    la = la*(lcrit/la.length());
+    scale_flag = 1;
+  }
+  if(lb.length2()>lcritsq){
+    lb = lb*(lcrit/lb.length());
+    scale_flag = 1;
+  }
+  if(lc.length2()>lcritsq){
+    lc = lc*(lcrit/lc.length());
+    scale_flag = 1;
+  }
+  if(ld.length2()>lcritsq){
+    ld = ld*(lcrit/ld.length());
+    scale_flag = 1;
+  }
+
+  if(scale_flag==1){  // Don't do these calcs if the particle isn't needing to be rescaled
+    dsize(0,0)=.5*(la.x()+lb.x()-lc.x()-ld.x());
+    dsize(1,0)=.5*(la.y()+lb.y()-lc.y()-ld.y());
+    dsize(2,0)=.5*(la.z()+lb.z()-lc.z()-ld.z());
+
+    dsize(0,1)=.5*(la.x()-lb.x()+lc.x()-ld.x());
+    dsize(1,1)=.5*(la.y()-lb.y()+lc.y()-ld.y());
+    dsize(2,1)=.5*(la.z()-lb.z()+lc.z()-ld.z());
+
+    dsize(0,2)=.5*(la.x()+lb.x()+lc.x()+ld.x());
+    dsize(1,2)=.5*(la.y()+lb.y()+lc.y()+ld.y());
+    dsize(2,2)=.5*(la.z()+lb.z()+lc.z()+ld.z());
+
+
+    relative_node_location[0]=Vector(-dsize(0,0)-dsize(0,1)-dsize(0,2),
+                                     -dsize(1,0)-dsize(1,1)-dsize(1,2),
+                                     -dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
+    relative_node_location[1]=Vector( dsize(0,0)-dsize(0,1)-dsize(0,2),
+                                      dsize(1,0)-dsize(1,1)-dsize(1,2),
+                                      dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
+    relative_node_location[2]=Vector( dsize(0,0)+dsize(0,1)-dsize(0,2),
+                                      dsize(1,0)+dsize(1,1)-dsize(1,2),
+                                      dsize(2,0)+dsize(2,1)-dsize(2,2))*0.5;
+    relative_node_location[3]=Vector(-dsize(0,0)+dsize(0,1)-dsize(0,2),
+                                     -dsize(1,0)+dsize(1,1)-dsize(1,2),
+                                     -dsize(2,0)+dsize(2,1)-dsize(2,2))*0.5;
+    relative_node_location[4]=Vector(-dsize(0,0)-dsize(0,1)+dsize(0,2),
+                                     -dsize(1,0)-dsize(1,1)+dsize(1,2),
+                                     -dsize(2,0)-dsize(2,1)+dsize(2,2))*0.5;
+    relative_node_location[5]=Vector( dsize(0,0)-dsize(0,1)+dsize(0,2),
+                                      dsize(1,0)-dsize(1,1)+dsize(1,2),
+                                      dsize(2,0)-dsize(2,1)+dsize(2,2))*0.5;
+    relative_node_location[6]=Vector( dsize(0,0)+dsize(0,1)+dsize(0,2),
+                                      dsize(1,0)+dsize(1,1)+dsize(1,2),
+                                      dsize(2,0)+dsize(2,1)+dsize(2,2))*0.5;
+    relative_node_location[7]=Vector(-dsize(0,0)+dsize(0,1)+dsize(0,2),
+                                     -dsize(1,0)+dsize(1,1)+dsize(1,2),
+                                     -dsize(2,0)+dsize(2,1)+dsize(2,2))*0.5;
+  }else{ // Particle wasn't scaled, need to compute the RLN for the first 4 nodes
+    relative_node_location[0]=Vector(-dsize(0,0)-dsize(0,1)-dsize(0,2),
+                                     -dsize(1,0)-dsize(1,1)-dsize(1,2),
+                                     -dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
+    relative_node_location[1]=Vector( dsize(0,0)-dsize(0,1)-dsize(0,2),
+                                      dsize(1,0)-dsize(1,1)-dsize(1,2),
+                                      dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
+    relative_node_location[2]=Vector( dsize(0,0)+dsize(0,1)-dsize(0,2),
+                                      dsize(1,0)+dsize(1,1)-dsize(1,2),
+                                      dsize(2,0)+dsize(2,1)-dsize(2,2))*0.5;
+    relative_node_location[3]=Vector(-dsize(0,0)+dsize(0,1)-dsize(0,2),
+                                     -dsize(1,0)+dsize(1,1)-dsize(1,2),
+                                     -dsize(2,0)+dsize(2,1)-dsize(2,2))*0.5;
+  }
+
   // indices
   int i;
   int xM,yM,zM;
   int ix[8],iy[8],iz[8];
   int hash;
-  
-  Vector r1=Vector(2.0*lx,0.0,0.0);
-  Vector r2=Vector(0.0,2.0*ly,0.0);
-  Vector r3=Vector(0.0,0.0,2.0*lz);
-  r1 = defgrad*r1;
-  r2 = defgrad*r2;
-  r3 = defgrad*r3;
+  int hashMax=0;
 
   Vector current_corner_pos;
   
   // Shape function contribution variables
-  double one_over_8 = 1.0/(8.0);
   double fx;
   double fy;
   double fz;
   double fx1;
   double fy1;
   double fz1;
+  double one_over_8 = 0.125;
   double phi;
   double ccx[8],ccy[8],ccz[8];
 
   // Variables to hold minimum and maximum indicies
   int minX = 100000000, minY = 100000000, minZ = 100000000;
   
- // now  we will loop over each of these "nodes" or corners and use the deformation gradient to find the current location: 
+  // now  we will loop over each of the corners and find the current location: 
   for(i=0;i<8;i++) {
-    //    first we need to find the position vector of the ith corner of the particle with respect to the particle center:
-    current_corner_pos = Vector(cellpos) + defgrad*relative_node_reference_location[i];
+    // first we need to find the position vector of the ith corner of
+    //  the particle with respect to the particle center:
+    current_corner_pos = Vector(cellpos) + relative_node_location[i];
     ccx[i] = (current_corner_pos).x();
     ccy[i] = (current_corner_pos).y();
     ccz[i] = (current_corner_pos).z();
@@ -115,18 +210,14 @@ void fastCpdiInterpolator::findCellAndWeights(const Point& pos,
     iy[i] = Floor(ccy[i]);
     iz[i] = Floor(ccz[i]);
     
-    if(ix[i] < minX)
-      minX = ix[i];
-    if(iy[i] < minY)
-      minY = iy[i];
-    if(iz[i] < minZ)
-      minZ = iz[i];
+    if(ix[i] < minX){ minX = ix[i];}
+    if(iy[i] < minY){ minY = iy[i];}
+    if(iz[i] < minZ){ minZ = iz[i];}
   }
   
   // Initialize Values
   IntVector niVec = IntVector(minX,minY,minZ);
-  for(int i = 0; i < 27; i++)
-  {
+  for(int i = 0; i < 64; i++) {
     S[i]         = 0.0;
     ni[i]        = niVec;  // this must be set after minimum indicies are found
                            //  or index out of bound error will occur
@@ -140,13 +231,13 @@ void fastCpdiInterpolator::findCellAndWeights(const Point& pos,
     fx1 = 1-fx;
     fy1 = 1-fy;
     fz1 = 1-fz;
-   
+
     // grid offset variables so we only have to iterate over 
-    // two closes nodes each time we look at a corner 
+    // two closest nodes each time we look at a corner 
     xM = (int)(ccx[i] - minX);
     yM = (int)(ccy[i] - minY);
     zM = (int)(ccz[i] - minZ);
-   
+
     // Uses a array index system like:
     //       24---25--26
     //      /    /   / |
@@ -181,16 +272,12 @@ void fastCpdiInterpolator::findCellAndWeights(const Point& pos,
 
           // Create hash to map to unique value between [0,26]
           hash = xMjx + yMjy + 9*((zM)+jz);
-          if( hash < 0 || hash > 26 )
-          {
-             proc0cout << "\n\nHash function was out of bounds.  Particle corners span an entire cell."
-                       << "\nThis is due to the large deformation nature of your problem."
-                       << "\nUse fastCpdiInterpolator/axiCpdiInterpolator to circumvent the limitations"
-                       << "of fastCpdiInterpolator." << std::endl;
-
-             // send an exit to the program
-             exit(1);
-          }
+          hashMax=max(hash, hashMax);
+//          if( hash < 0 || hash > 26 ) {
+//             cerr << "hash = " << hash << endl;
+//             // send an exit to the program
+//             // exit(1);
+//          }
           phi  = phiX * phiY * phiZ;
           
           ni[hash]        = IntVector(curX,curY,iz[i]+jz);
@@ -199,37 +286,117 @@ void fastCpdiInterpolator::findCellAndWeights(const Point& pos,
       } // y for
     } // x for
   } // node for
-  
-
+  return hashMax+1;
 }
  
-void fastCpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
+int fastCpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
                                                      vector<IntVector>& ni,
                                                      vector<Vector>& d_S,
                                                      const Matrix3& size,
                                                      const Matrix3& defgrad)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(Point(pos));
-  double lx = size(0,0)/2.0;
-  double ly = size(1,1)/2.0;
-  double lz = size(2,2)/2.0;
+
   Vector zero = Vector(0.0,0.0,0.0);
-  vector<Vector> relative_node_reference_location(8,zero);
-  // constuct the position vectors to each node/corner of the particle in the reference configuration relative to the particle center:
-  relative_node_reference_location[0]=Vector(-lx,-ly,-lz); // x1    , y1    , z1
-  relative_node_reference_location[1]=Vector( lx,-ly,-lz); // x1+r1x, y1    , z1
-  relative_node_reference_location[2]=Vector( lx, ly,-lz); // x1+r1x, y1+r2y, z1
-  relative_node_reference_location[3]=Vector(-lx, ly,-lz); // x1    , y1+r2y, z1
-  relative_node_reference_location[4]=Vector(-lx,-ly, lz); // x1    , y1    , z1+r3z
-  relative_node_reference_location[5]=Vector( lx,-ly, lz); // x1+r1x, y1    , z1+r3z
-  relative_node_reference_location[6]=Vector( lx, ly, lz); // x1+r1x, y1+r2y, z1+r3z
-  relative_node_reference_location[7]=Vector(-lx, ly, lz); // x1    , y1+r2y, z1+r3z
+  Matrix3 dsize=defgrad*size;
+  Vector relative_node_location[8];
+
+  relative_node_location[4]=Vector(-dsize(0,0)-dsize(0,1)+dsize(0,2),
+                                   -dsize(1,0)-dsize(1,1)+dsize(1,2),
+                                   -dsize(2,0)-dsize(2,1)+dsize(2,2))*0.5;
+  relative_node_location[5]=Vector( dsize(0,0)-dsize(0,1)+dsize(0,2),
+                                    dsize(1,0)-dsize(1,1)+dsize(1,2),
+                                    dsize(2,0)-dsize(2,1)+dsize(2,2))*0.5;
+  relative_node_location[6]=Vector( dsize(0,0)+dsize(0,1)+dsize(0,2),
+                                    dsize(1,0)+dsize(1,1)+dsize(1,2),
+                                    dsize(2,0)+dsize(2,1)+dsize(2,2))*0.5;
+  relative_node_location[7]=Vector(-dsize(0,0)+dsize(0,1)+dsize(0,2),
+                                   -dsize(1,0)+dsize(1,1)+dsize(1,2),
+                                   -dsize(2,0)+dsize(2,1)+dsize(2,2))*0.5;
+
+  double lcrit = d_lcrit;
+  double lcritsq = lcrit*lcrit;
+  Vector la = relative_node_location[6];
+  Vector lb = relative_node_location[5];
+  Vector lc = relative_node_location[7];
+  Vector ld = relative_node_location[4];
+
+  int scale_flag = 0;
+  if(la.length2()>lcritsq){
+    la = la*(lcrit/la.length());
+    scale_flag = 1;
+  }
+  if(lb.length2()>lcritsq){
+    lb = lb*(lcrit/lb.length());
+    scale_flag = 1;
+  }
+  if(lc.length2()>lcritsq){
+    lc = lc*(lcrit/lc.length());
+    scale_flag = 1;
+  }
+  if(ld.length2()>lcritsq){
+    ld = ld*(lcrit/ld.length());
+    scale_flag = 1;
+  }
+
+  if(scale_flag==1){  // Don't do these calcs if the particle isn't needing to be rescaled
+    dsize(0,0)=.5*(la.x()+lb.x()-lc.x()-ld.x());
+    dsize(1,0)=.5*(la.y()+lb.y()-lc.y()-ld.y());
+    dsize(2,0)=.5*(la.z()+lb.z()-lc.z()-ld.z());
+
+    dsize(0,1)=.5*(la.x()-lb.x()+lc.x()-ld.x());
+    dsize(1,1)=.5*(la.y()-lb.y()+lc.y()-ld.y());
+    dsize(2,1)=.5*(la.z()-lb.z()+lc.z()-ld.z());
+
+    dsize(0,2)=.5*(la.x()+lb.x()+lc.x()+ld.x());
+    dsize(1,2)=.5*(la.y()+lb.y()+lc.y()+ld.y());
+    dsize(2,2)=.5*(la.z()+lb.z()+lc.z()+ld.z());
+
+    relative_node_location[0]=Vector(-dsize(0,0)-dsize(0,1)-dsize(0,2),
+                                     -dsize(1,0)-dsize(1,1)-dsize(1,2),
+                                     -dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
+    relative_node_location[1]=Vector( dsize(0,0)-dsize(0,1)-dsize(0,2),
+                                      dsize(1,0)-dsize(1,1)-dsize(1,2),
+                                      dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
+    relative_node_location[2]=Vector( dsize(0,0)+dsize(0,1)-dsize(0,2),
+                                      dsize(1,0)+dsize(1,1)-dsize(1,2),
+                                      dsize(2,0)+dsize(2,1)-dsize(2,2))*0.5;
+    relative_node_location[3]=Vector(-dsize(0,0)+dsize(0,1)-dsize(0,2),
+                                     -dsize(1,0)+dsize(1,1)-dsize(1,2),
+                                     -dsize(2,0)+dsize(2,1)-dsize(2,2))*0.5;
+    relative_node_location[4]=Vector(-dsize(0,0)-dsize(0,1)+dsize(0,2),
+                                     -dsize(1,0)-dsize(1,1)+dsize(1,2),
+                                     -dsize(2,0)-dsize(2,1)+dsize(2,2))*0.5;
+    relative_node_location[5]=Vector( dsize(0,0)-dsize(0,1)+dsize(0,2),
+                                      dsize(1,0)-dsize(1,1)+dsize(1,2),
+                                      dsize(2,0)-dsize(2,1)+dsize(2,2))*0.5;
+    relative_node_location[6]=Vector( dsize(0,0)+dsize(0,1)+dsize(0,2),
+                                      dsize(1,0)+dsize(1,1)+dsize(1,2),
+                                      dsize(2,0)+dsize(2,1)+dsize(2,2))*0.5;
+    relative_node_location[7]=Vector(-dsize(0,0)+dsize(0,1)+dsize(0,2),
+                                     -dsize(1,0)+dsize(1,1)+dsize(1,2),
+                                     -dsize(2,0)+dsize(2,1)+dsize(2,2))*0.5;
+  }else{ // Particle wasn't scaled, need to compute the RLN for the first 4 nodes
+    relative_node_location[0]=Vector(-dsize(0,0)-dsize(0,1)-dsize(0,2),
+                                     -dsize(1,0)-dsize(1,1)-dsize(1,2),
+                                     -dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
+    relative_node_location[1]=Vector( dsize(0,0)-dsize(0,1)-dsize(0,2),
+                                      dsize(1,0)-dsize(1,1)-dsize(1,2),
+                                      dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
+    relative_node_location[2]=Vector( dsize(0,0)+dsize(0,1)-dsize(0,2),
+                                      dsize(1,0)+dsize(1,1)-dsize(1,2),
+                                      dsize(2,0)+dsize(2,1)-dsize(2,2))*0.5;
+    relative_node_location[3]=Vector(-dsize(0,0)+dsize(0,1)-dsize(0,2),
+                                     -dsize(1,0)+dsize(1,1)-dsize(1,2),
+                                     -dsize(2,0)+dsize(2,1)-dsize(2,2))*0.5;
+  }
   
   // Indices
   int i;
   int xM,yM,zM;
   int ix[8],iy[8],iz[8];
   int hash;
+  int hashMax=0;
   
   Vector current_corner_pos;
 
@@ -240,60 +407,59 @@ void fastCpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
   double fx1;
   double fy1;
   double fz1;
-  double phi;
   double ccx[8],ccy[8],ccz[8];
-  
-  Vector r1=Vector(2.0*lx,0.0,0.0);
-  Vector r2=Vector(0.0,2.0*ly,0.0);
-  Vector r3=Vector(0.0,0.0,2.0*lz);
-  r1 = defgrad*r1;
-  r2 = defgrad*r2;
-  r3 = defgrad*r3;
-  double volume = Dot( Cross(r1,r2),r3);
+
+  Vector r1=Vector(dsize(0,0),dsize(1,0),dsize(2,0));
+  Vector r2=Vector(dsize(0,1),dsize(1,1),dsize(2,1));
+  Vector r3=Vector(dsize(0,2),dsize(1,2),dsize(2,2));
+
+  double volume = dsize.Determinant();
+
   double one_over_4V = 1.0/(4.0*volume);
   vector<Vector> alpha(8,zero);
+  double phi;
   
-  // now we construct the vectors necessary for the gradient calculation:
+  // construct the vectors necessary for the gradient calculation:
   alpha[0][0]   =  one_over_4V* (-r2[1]*r3[2]+r2[2]*r3[1]+r1[1]*r3[2]-r1[2]*r3[1]-r1[1]*r2[2]+r1[2]*r2[1]);
   alpha[0][1]   =  one_over_4V*(r2[0]*r3[2]-r2[2]*r3[0]-r1[0]*r3[2]+r1[2]*r3[0]+r1[0]*r2[2]-r1[2]*r2[0]);
   alpha[0][2]   =  one_over_4V* (-r2[0]*r3[1]+r2[1]*r3[0]+r1[0]*r3[1]-r1[1]*r3[0]-r1[0]*r2[1]+r1[1]*r2[0]);
-  
+
   alpha[1][0]   =  one_over_4V*(r2[1]*r3[2]-r2[2]*r3[1]+r1[1]*r3[2]-r1[2]*r3[1]-r1[1]*r2[2]+r1[2]*r2[1]);
   alpha[1][1]   =  one_over_4V*(-r2[0]*r3[2]+r2[2]*r3[0]-r1[0]*r3[2]+r1[2]*r3[0]+r1[0]*r2[2]-r1[2]*r2[0]);
   alpha[1][2]   =  one_over_4V*(r2[0]*r3[1]-r2[1]*r3[0]+r1[0]*r3[1]-r1[1]*r3[0]-r1[0]*r2[1]+r1[1]*r2[0]);
-  
+
   alpha[2][0]   =  one_over_4V*(r2[1]*r3[2]-r2[2]*r3[1]-r1[1]*r3[2]+r1[2]*r3[1]-r1[1]*r2[2]+r1[2]*r2[1]);
   alpha[2][1]   =  one_over_4V*(-r2[0]*r3[2]+r2[2]*r3[0]+r1[0]*r3[2]-r1[2]*r3[0]+r1[0]*r2[2]-r1[2]*r2[0]);
   alpha[2][2]   =  one_over_4V*(r2[0]*r3[1]-r2[1]*r3[0]-r1[0]*r3[1]+r1[1]*r3[0]-r1[0]*r2[1]+r1[1]*r2[0]);
-  
+
   alpha[3][0]   =  one_over_4V*(-r2[1]*r3[2]+r2[2]*r3[1]-r1[1]*r3[2]+r1[2]*r3[1]-r1[1]*r2[2]+r1[2]*r2[1]);
   alpha[3][1]   =  one_over_4V*(r2[0]*r3[2]-r2[2]*r3[0]+r1[0]*r3[2]-r1[2]*r3[0]+r1[0]*r2[2]-r1[2]*r2[0]);
   alpha[3][2]   =  one_over_4V*(-r2[0]*r3[1]+r2[1]*r3[0]-r1[0]*r3[1]+r1[1]*r3[0]-r1[0]*r2[1]+r1[1]*r2[0]);
-  
+
   alpha[4][0]   = one_over_4V*(-r2[1]*r3[2]+r2[2]*r3[1]+r1[1]*r3[2]-r1[2]*r3[1]+r1[1]*r2[2]-r1[2]*r2[1]);
   alpha[4][1]   =  one_over_4V*(r2[0]*r3[2]-r2[2]*r3[0]-r1[0]*r3[2]+r1[2]*r3[0]-r1[0]*r2[2]+r1[2]*r2[0]);
   alpha[4][2]   =  one_over_4V*(-r2[0]*r3[1]+r2[1]*r3[0]+r1[0]*r3[1]-r1[1]*r3[0]+r1[0]*r2[1]-r1[1]*r2[0]);
-  
+
   alpha[5][0]   =  one_over_4V*(r2[1]*r3[2]-r2[2]*r3[1]+r1[1]*r3[2]-r1[2]*r3[1]+r1[1]*r2[2]-r1[2]*r2[1]);
   alpha[5][1]   =  one_over_4V*(-r2[0]*r3[2]+r2[2]*r3[0]-r1[0]*r3[2]+r1[2]*r3[0]-r1[0]*r2[2]+r1[2]*r2[0]);
   alpha[5][2]   =  one_over_4V*(r2[0]*r3[1]-r2[1]*r3[0]+r1[0]*r3[1]-r1[1]*r3[0]+r1[0]*r2[1]-r1[1]*r2[0]);
-  
+
   alpha[6][0]   = one_over_4V* (r2[1]*r3[2]-r2[2]*r3[1]-r1[1]*r3[2]+r1[2]*r3[1]+r1[1]*r2[2]-r1[2]*r2[1]);
   alpha[6][1]   = one_over_4V* (-r2[0]*r3[2]+r2[2]*r3[0]+r1[0]*r3[2]-r1[2]*r3[0]-r1[0]*r2[2]+r1[2]*r2[0]);
   alpha[6][2]   = one_over_4V* (r2[0]*r3[1]-r2[1]*r3[0]-r1[0]*r3[1]+r1[1]*r3[0]+r1[0]*r2[1]-r1[1]*r2[0]);
-  
+
   alpha[7][0]   =  one_over_4V*(-r2[1]*r3[2]+r2[2]*r3[1]-r1[1]*r3[2]+r1[2]*r3[1]+r1[1]*r2[2]-r1[2]*r2[1]);
   alpha[7][1]   =  one_over_4V*(r2[0]*r3[2]-r2[2]*r3[0]+r1[0]*r3[2]-r1[2]*r3[0]-r1[0]*r2[2]+r1[2]*r2[0]);
   alpha[7][2]   =  one_over_4V*(-r2[0]*r3[1]+r2[1]*r3[0]-r1[0]*r3[1]+r1[1]*r3[0]+r1[0]*r2[1]-r1[1]*r2[0]);
 
-  
+
   // Variables to hold minimum and maximum indicies
   int minX = 100000000, minY = 100000000, minZ = 100000000;
 
  // now  we will loop over each of these "nodes" or corners and use the deformation gradient to find the current location: 
   for(i=0;i<8;i++){
     //    first we need to find the position vector of the ith corner of the particle with respect to the particle center:
-    current_corner_pos = Vector(cellpos) + defgrad*relative_node_reference_location[i];
+    current_corner_pos = Vector(cellpos) + relative_node_location[i];
     ccx[i] = (current_corner_pos).x();
     ccy[i] = (current_corner_pos).y();
     ccz[i] = (current_corner_pos).z();
@@ -301,21 +467,16 @@ void fastCpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
     iy[i] = Floor(ccy[i]);
     iz[i] = Floor(ccz[i]);
 
-    if(ix[i] < minX)
-      minX = ix[i];
-    if(iy[i] < minY)
-      minY = iy[i];
-    if(iz[i] < minZ)
-      minZ = iz[i];
+    if(ix[i] < minX){minX = ix[i];}
+    if(iy[i] < minY){minY = iy[i];}
+    if(iz[i] < minZ){minZ = iz[i];}
   }
     
   // Initialize Values
   IntVector niVec = IntVector(minX,minY,minZ);
-  for(int i = 0; i < 27; i++)
-  {
-    d_S[i]       = zero;
-    ni[i]        = niVec;  // this must be set after minimum indicies are found
-                           //  or index out of bound error will occur
+  for(int i = 0; i < 64; i++) {
+    d_S[i]       = zero;   // this must be set after minimum indicies are found
+    ni[i]        = niVec;  //  or index out of bound error will occur
   }
   
   // Loop over nodes
@@ -368,16 +529,12 @@ void fastCpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
           
           // Create hash to map to unique value between [0,26]
           hash = xMjx + yMjy + 9*((zM)+jz);
-          if( hash < 0 || hash > 26 )
-          {
-             proc0cout << "\n\nHash function was out of bounds.  Particle corners span an entire cell."
-                       << "\nThis is due to the large deformation nature of your problem." 
-                       << "\nUse fastCpdiInterpolator/axiCpdiInterpolator to circumvent the limitations" 
-                       << "of fastCpdiInterpolator." << std::endl;
-
-             // send an exit to the program
-             exit(1);
-          }
+          hashMax=max(hash, hashMax);
+//          if( hash < 0 || hash > 26 ) {
+//             cerr << "hash = " << hash << endl;
+//             // send an exit to the program
+//             // exit(1);
+//          }
           phi = phiX * phiY * phiZ;
           
           ni[hash]        = IntVector(curX,curY,iz[i]+jz);
@@ -388,42 +545,122 @@ void fastCpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
       } // y for
     } // x for
   } // node for
+  return hashMax+1;
 }
 
-void fastCpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
-                                                          vector<IntVector>& ni,
-                                                          vector<double>& S,
-                                                          vector<Vector>& d_S,
-                                                          const Matrix3& size,
-                                                          const Matrix3& defgrad)
+int
+fastCpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
+                                                         vector<IntVector>& ni,
+                                                         vector<double>& S,
+                                                         vector<Vector>& d_S,
+                                                         const Matrix3& size,
+                                                         const Matrix3& defgrad)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(Point(pos));
-  double lx = size(0,0)/2.0;
-  double ly = size(1,1)/2.0;
-  double lz = size(2,2)/2.0;
 
   Vector zero = Vector(0.0,0.0,0.0);
-  vector<Vector> relative_node_reference_location(8,zero);
-  // constuct the position vectors to each node in the reference configuration relative to the particle center:
-  relative_node_reference_location[0]=Vector(-lx,-ly,-lz); // x1    , y1    , z1
-  relative_node_reference_location[1]=Vector( lx,-ly,-lz); // x1+r1x, y1    , z1
-  relative_node_reference_location[2]=Vector( lx, ly,-lz); // x1+r1x, y1+r2y, z1
-  relative_node_reference_location[3]=Vector(-lx, ly,-lz); // x1    , y1+r2y, z1
-  relative_node_reference_location[4]=Vector(-lx,-ly,lz); // x1    , y1    , z1+r3z
-  relative_node_reference_location[5]=Vector( lx,-ly, lz); // x1+r1x, y1    , z1+r3z
-  relative_node_reference_location[6]=Vector( lx, ly, lz); // x1+r1x, y1+r2y, z1+r3z
-  relative_node_reference_location[7]=Vector(-lx, ly, lz); // x1    , y1+r2y, z1+r3z
+  Matrix3 dsize=defgrad*size;
+  Vector relative_node_location[8];
+
+  relative_node_location[4]=Vector(-dsize(0,0)-dsize(0,1)+dsize(0,2),
+                                   -dsize(1,0)-dsize(1,1)+dsize(1,2),
+                                   -dsize(2,0)-dsize(2,1)+dsize(2,2))*0.5;
+  relative_node_location[5]=Vector( dsize(0,0)-dsize(0,1)+dsize(0,2),
+                                    dsize(1,0)-dsize(1,1)+dsize(1,2),
+                                    dsize(2,0)-dsize(2,1)+dsize(2,2))*0.5;
+  relative_node_location[6]=Vector( dsize(0,0)+dsize(0,1)+dsize(0,2),
+                                    dsize(1,0)+dsize(1,1)+dsize(1,2),
+                                    dsize(2,0)+dsize(2,1)+dsize(2,2))*0.5;
+  relative_node_location[7]=Vector(-dsize(0,0)+dsize(0,1)+dsize(0,2),
+                                   -dsize(1,0)+dsize(1,1)+dsize(1,2),
+                                   -dsize(2,0)+dsize(2,1)+dsize(2,2))*0.5;
+  double lcrit = d_lcrit;
+  double lcritsq = lcrit*lcrit;
+  Vector la = relative_node_location[6];
+  Vector lb = relative_node_location[5];
+  Vector lc = relative_node_location[7];
+  Vector ld = relative_node_location[4];
+
+  int scale_flag = 0;
+  if(la.length2()>lcritsq){
+    la = la*(lcrit/la.length());
+    scale_flag=1;
+  }
+  if(lb.length2()>lcritsq){
+    lb = lb*(lcrit/lb.length());
+    scale_flag=1;
+  }
+  if(lc.length2()>lcritsq){
+    lc = lc*(lcrit/lc.length());
+    scale_flag=1;
+  }
+  if(ld.length2()>lcritsq){
+    ld = ld*(lcrit/ld.length());
+    scale_flag=1;
+  }
+
+  if(scale_flag==1){  // Don't do these calcs if the particle isn't needing to be rescaled
+    dsize(0,0)=.5*(la.x()+lb.x()-lc.x()-ld.x());
+    dsize(1,0)=.5*(la.y()+lb.y()-lc.y()-ld.y());
+    dsize(2,0)=.5*(la.z()+lb.z()-lc.z()-ld.z());
+
+    dsize(0,1)=.5*(la.x()-lb.x()+lc.x()-ld.x());
+    dsize(1,1)=.5*(la.y()-lb.y()+lc.y()-ld.y());
+    dsize(2,1)=.5*(la.z()-lb.z()+lc.z()-ld.z());
+
+    dsize(0,2)=.5*(la.x()+lb.x()+lc.x()+ld.x());
+    dsize(1,2)=.5*(la.y()+lb.y()+lc.y()+ld.y());
+    dsize(2,2)=.5*(la.z()+lb.z()+lc.z()+ld.z());
+
+    relative_node_location[0]=Vector(-dsize(0,0)-dsize(0,1)-dsize(0,2),
+                                     -dsize(1,0)-dsize(1,1)-dsize(1,2),
+                                     -dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
+    relative_node_location[1]=Vector( dsize(0,0)-dsize(0,1)-dsize(0,2),
+                                      dsize(1,0)-dsize(1,1)-dsize(1,2),
+                                      dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
+    relative_node_location[2]=Vector( dsize(0,0)+dsize(0,1)-dsize(0,2),
+                                      dsize(1,0)+dsize(1,1)-dsize(1,2),
+                                      dsize(2,0)+dsize(2,1)-dsize(2,2))*0.5;
+    relative_node_location[3]=Vector(-dsize(0,0)+dsize(0,1)-dsize(0,2),
+                                     -dsize(1,0)+dsize(1,1)-dsize(1,2),
+                                     -dsize(2,0)+dsize(2,1)-dsize(2,2))*0.5;
+    relative_node_location[4]=Vector(-dsize(0,0)-dsize(0,1)+dsize(0,2),
+                                     -dsize(1,0)-dsize(1,1)+dsize(1,2),
+                                     -dsize(2,0)-dsize(2,1)+dsize(2,2))*0.5;
+    relative_node_location[5]=Vector( dsize(0,0)-dsize(0,1)+dsize(0,2),
+                                      dsize(1,0)-dsize(1,1)+dsize(1,2),
+                                      dsize(2,0)-dsize(2,1)+dsize(2,2))*0.5;
+    relative_node_location[6]=Vector( dsize(0,0)+dsize(0,1)+dsize(0,2),
+                                      dsize(1,0)+dsize(1,1)+dsize(1,2),
+                                      dsize(2,0)+dsize(2,1)+dsize(2,2))*0.5;
+    relative_node_location[7]=Vector(-dsize(0,0)+dsize(0,1)+dsize(0,2),
+                                     -dsize(1,0)+dsize(1,1)+dsize(1,2),
+                                     -dsize(2,0)+dsize(2,1)+dsize(2,2))*0.5;
+  }else{ // Particle wasn't scaled, need to compute the RLN for the first 4 nodes
+    relative_node_location[0]=Vector(-dsize(0,0)-dsize(0,1)-dsize(0,2),
+                                     -dsize(1,0)-dsize(1,1)-dsize(1,2),
+                                     -dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
+    relative_node_location[1]=Vector( dsize(0,0)-dsize(0,1)-dsize(0,2),
+                                      dsize(1,0)-dsize(1,1)-dsize(1,2),
+                                      dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
+    relative_node_location[2]=Vector( dsize(0,0)+dsize(0,1)-dsize(0,2),
+                                      dsize(1,0)+dsize(1,1)-dsize(1,2),
+                                      dsize(2,0)+dsize(2,1)-dsize(2,2))*0.5;
+    relative_node_location[3]=Vector(-dsize(0,0)+dsize(0,1)-dsize(0,2),
+                                     -dsize(1,0)+dsize(1,1)-dsize(1,2),
+                                     -dsize(2,0)+dsize(2,1)-dsize(2,2))*0.5;
+  }
 
   // Indices
   int i;
   int xM,yM,zM;
   int ix[8],iy[8],iz[8];
   int hash;
+  int hashMax=0;
   
   Vector current_corner_pos;
   
   // Shape function contribution variables
-  double one_over_8 = 1.0/(8.0);
   double fx;
   double fy;
   double fz;
@@ -433,56 +670,55 @@ void fastCpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& po
   double phi;
   double ccx[8],ccy[8],ccz[8];
   
-  Vector r1=Vector(2.0*lx,0.0,0.0);
-  Vector r2=Vector(0.0,2.0*ly,0.0);
-  Vector r3=Vector(0.0,0.0,2.0*lz);
-  r1 = defgrad*r1;
-  r2 = defgrad*r2;
-  r3 = defgrad*r3;
+  Vector r1=Vector(dsize(0,0),dsize(1,0),dsize(2,0));
+  Vector r2=Vector(dsize(0,1),dsize(1,1),dsize(2,1));
+  Vector r3=Vector(dsize(0,2),dsize(1,2),dsize(2,2));
+  double volume = dsize.Determinant();
+
   //deformed volume:
-  double volume = Dot( Cross(r1,r2),r3);
   double one_over_4V = 1.0/(4.0*volume);
+  double one_over_8 = .125;
+
   vector<Vector> alpha(8,zero);
   // now we construct the vectors necessary for the gradient calculation:
   alpha[0][0]   =  one_over_4V* (-r2[1]*r3[2]+r2[2]*r3[1]+r1[1]*r3[2]-r1[2]*r3[1]-r1[1]*r2[2]+r1[2]*r2[1]);
   alpha[0][1]   =  one_over_4V*(r2[0]*r3[2]-r2[2]*r3[0]-r1[0]*r3[2]+r1[2]*r3[0]+r1[0]*r2[2]-r1[2]*r2[0]);
   alpha[0][2]   =  one_over_4V* (-r2[0]*r3[1]+r2[1]*r3[0]+r1[0]*r3[1]-r1[1]*r3[0]-r1[0]*r2[1]+r1[1]*r2[0]);
-  
+
   alpha[1][0]   =  one_over_4V*(r2[1]*r3[2]-r2[2]*r3[1]+r1[1]*r3[2]-r1[2]*r3[1]-r1[1]*r2[2]+r1[2]*r2[1]);
   alpha[1][1]   =  one_over_4V*(-r2[0]*r3[2]+r2[2]*r3[0]-r1[0]*r3[2]+r1[2]*r3[0]+r1[0]*r2[2]-r1[2]*r2[0]);
   alpha[1][2]   =  one_over_4V*(r2[0]*r3[1]-r2[1]*r3[0]+r1[0]*r3[1]-r1[1]*r3[0]-r1[0]*r2[1]+r1[1]*r2[0]);
-  
+
   alpha[2][0]   =  one_over_4V*(r2[1]*r3[2]-r2[2]*r3[1]-r1[1]*r3[2]+r1[2]*r3[1]-r1[1]*r2[2]+r1[2]*r2[1]);
   alpha[2][1]   =  one_over_4V*(-r2[0]*r3[2]+r2[2]*r3[0]+r1[0]*r3[2]-r1[2]*r3[0]+r1[0]*r2[2]-r1[2]*r2[0]);
   alpha[2][2]   =  one_over_4V*(r2[0]*r3[1]-r2[1]*r3[0]-r1[0]*r3[1]+r1[1]*r3[0]-r1[0]*r2[1]+r1[1]*r2[0]);
-  
+
   alpha[3][0]   =  one_over_4V*(-r2[1]*r3[2]+r2[2]*r3[1]-r1[1]*r3[2]+r1[2]*r3[1]-r1[1]*r2[2]+r1[2]*r2[1]);
   alpha[3][1]   =  one_over_4V*(r2[0]*r3[2]-r2[2]*r3[0]+r1[0]*r3[2]-r1[2]*r3[0]+r1[0]*r2[2]-r1[2]*r2[0]);
   alpha[3][2]   =  one_over_4V*(-r2[0]*r3[1]+r2[1]*r3[0]-r1[0]*r3[1]+r1[1]*r3[0]-r1[0]*r2[1]+r1[1]*r2[0]);
-  
+
   alpha[4][0]   =  one_over_4V*(-r2[1]*r3[2]+r2[2]*r3[1]+r1[1]*r3[2]-r1[2]*r3[1]+r1[1]*r2[2]-r1[2]*r2[1]);
   alpha[4][1]   =  one_over_4V*(r2[0]*r3[2]-r2[2]*r3[0]-r1[0]*r3[2]+r1[2]*r3[0]-r1[0]*r2[2]+r1[2]*r2[0]);
   alpha[4][2]   =  one_over_4V*(-r2[0]*r3[1]+r2[1]*r3[0]+r1[0]*r3[1]-r1[1]*r3[0]+r1[0]*r2[1]-r1[1]*r2[0]);
-  
+
   alpha[5][0]   =  one_over_4V*(r2[1]*r3[2]-r2[2]*r3[1]+r1[1]*r3[2]-r1[2]*r3[1]+r1[1]*r2[2]-r1[2]*r2[1]);
   alpha[5][1]   =  one_over_4V*(-r2[0]*r3[2]+r2[2]*r3[0]-r1[0]*r3[2]+r1[2]*r3[0]-r1[0]*r2[2]+r1[2]*r2[0]);
   alpha[5][2]   =  one_over_4V*(r2[0]*r3[1]-r2[1]*r3[0]+r1[0]*r3[1]-r1[1]*r3[0]+r1[0]*r2[1]-r1[1]*r2[0]);
-  
+
   alpha[6][0]   =  one_over_4V* (r2[1]*r3[2]-r2[2]*r3[1]-r1[1]*r3[2]+r1[2]*r3[1]+r1[1]*r2[2]-r1[2]*r2[1]);
   alpha[6][1]   =  one_over_4V* (-r2[0]*r3[2]+r2[2]*r3[0]+r1[0]*r3[2]-r1[2]*r3[0]-r1[0]*r2[2]+r1[2]*r2[0]);
   alpha[6][2]   =  one_over_4V* (r2[0]*r3[1]-r2[1]*r3[0]-r1[0]*r3[1]+r1[1]*r3[0]+r1[0]*r2[1]-r1[1]*r2[0]);
-  
+
   alpha[7][0]   =  one_over_4V*(-r2[1]*r3[2]+r2[2]*r3[1]-r1[1]*r3[2]+r1[2]*r3[1]+r1[1]*r2[2]-r1[2]*r2[1]);
   alpha[7][1]   =  one_over_4V*(r2[0]*r3[2]-r2[2]*r3[0]+r1[0]*r3[2]-r1[2]*r3[0]-r1[0]*r2[2]+r1[2]*r2[0]);
   alpha[7][2]   =  one_over_4V*(-r2[0]*r3[1]+r2[1]*r3[0]-r1[0]*r3[1]+r1[1]*r3[0]+r1[0]*r2[1]-r1[1]*r2[0]);
-  
 
   // Variables to hold minimum and maximum indicies
   int minX = 100000000, minY = 100000000, minZ = 100000000;
 
   for(i=0;i<8;i++){
     //    first we need to find the position vector of the ith corner of the particle with respect to the particle center:
-    current_corner_pos = Vector(cellpos) + defgrad*relative_node_reference_location[i];
+    current_corner_pos = Vector(cellpos) + relative_node_location[i];
     ccx[i] = (current_corner_pos).x();
     ccy[i] = (current_corner_pos).y();
     ccz[i] = (current_corner_pos).z();
@@ -491,22 +727,17 @@ void fastCpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& po
     iz[i] = Floor(ccz[i]);
    
     // Find minimum indices of the corners in each direction 
-    if(ix[i] < minX)
-      minX = ix[i];
-    if(iy[i] < minY)
-      minY = iy[i];
-    if(iz[i] < minZ)
-      minZ = iz[i];
+    if(ix[i] < minX){minX = ix[i];}
+    if(iy[i] < minY){minY = iy[i];}
+    if(iz[i] < minZ){minZ = iz[i];}
   }
   
   // Initialize Values
   IntVector niVec = IntVector(minX,minY,minZ);
-  for(int i = 0; i < 27; i++)
-  {
-    S[i]         = 0.0;
-    d_S[i]       = zero;
-    ni[i]        = niVec;  // this must be set after minimum indicies are found 
-                           //  or index out of bound error will occur
+  for(int i = 0; i < 64; i++) {
+    S[i]         = 0.0;    // this must be set after minimum indicies are found
+    d_S[i]       = zero;   // or index out of bound error will occur
+    ni[i]        = niVec;
   }
   
   // Loop over nodes
@@ -517,7 +748,7 @@ void fastCpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& po
     fx1 = 1-fx;
     fy1 = 1-fy;
     fz1 = 1-fz;
-    
+
     // grid offset variables so we only have to iterate over 
     // two closes nodes each time we look at a corner 
     xM = (int)(ccx[i] - minX);
@@ -558,16 +789,11 @@ void fastCpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& po
           
           // Create hash to map to unique value between [0,26]
           hash = xMjx + yMjy + 9*((zM)+jz);
-          if( hash < 0 || hash > 26 )
-          {
-             proc0cout << "\n\nHash function was out of bounds.  Particle corners span an entire cell."
-                       << "\nThis is due to the large deformation nature of your problem."
-                       << "\nUse fastCpdiInterpolator/axiCpdiInterpolator to circumvent the limitations"
-                       << "of fastCpdiInterpolator." << std::endl;
-
-             // send an exit to the program
-             exit(1);
-          }
+          hashMax=max(hash,hashMax);
+//          if( hash < 0 || hash > 26 ) {
+//             // send an exit to the program
+//              exit(1);
+//          }
 
           phi  = phiX * phiY * phiZ;          
 
@@ -580,6 +806,7 @@ void fastCpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& po
       } // y for
     } // x for
   } // node for
+  return hashMax+1;
 }
 
 int fastCpdiInterpolator::size()

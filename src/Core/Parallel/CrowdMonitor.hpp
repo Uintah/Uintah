@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -45,7 +45,7 @@ public:
     if (m_type == READER) {
       std::unique_lock<std::mutex>(s_mutex);
       s_count.fetch_add(1, std::memory_order_relaxed);
-          }
+    }
     else {
       s_mutex.lock();
 //       spin_wait( s_count.fetch( std::memory_order_relaxed) != 0 );

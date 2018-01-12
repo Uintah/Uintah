@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2016 The University of Utah
+ * Copyright (c) 2012-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -44,7 +44,7 @@
  */
 
 template< typename FieldT >
-class VarDen1DMMSDensity : public BoundaryConditionBase<FieldT>
+class VarDen1DMMSDensity : public WasatchCore::BoundaryConditionBase<FieldT>
 {
   typedef typename SpatialOps::SingleValueField TimeField;
   VarDen1DMMSDensity( const Expr::Tag& indepVarTag,
@@ -104,7 +104,7 @@ private:
  */
 template< typename FieldT >
 class VarDen1DMMSMixtureFraction
-: public BoundaryConditionBase<FieldT>
+: public WasatchCore::BoundaryConditionBase<FieldT>
 {
   typedef typename SpatialOps::SingleValueField TimeField;
   VarDen1DMMSMixtureFraction( const Expr::Tag& indepVarTag )
@@ -151,7 +151,7 @@ private:
  */
 template< typename FieldT >
 class VarDen1DMMSMomentum
-: public BoundaryConditionBase<FieldT>
+: public WasatchCore::BoundaryConditionBase<FieldT>
 {
   typedef typename SpatialOps::SingleValueField TimeField;
 public:
@@ -217,7 +217,7 @@ private:
  */
 template< typename FieldT >
 class VarDen1DMMSSolnVar
-: public BoundaryConditionBase<FieldT>
+: public WasatchCore::BoundaryConditionBase<FieldT>
 {
   typedef typename SpatialOps::SingleValueField TimeField;
   VarDen1DMMSSolnVar( const Expr::Tag& indepVarTag,
@@ -275,7 +275,7 @@ private:
  */
 template< typename FieldT >
 class VarDen1DMMSVelocity
-: public BoundaryConditionBase<FieldT>
+: public WasatchCore::BoundaryConditionBase<FieldT>
 {
   typedef typename SpatialOps::SingleValueField TimeField;
 public:

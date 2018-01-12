@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -143,7 +143,7 @@ namespace Uintah {
     std::list<std::string> d_vars;
     bool                   d_usePFS;
     bool                   d_useCPTI;
-    
+
     void checkFileType(std::ifstream & source, std::string& fileType, std::string& filename);
     
     bool read_line(std::istream & is, Point & xmin, Point & xmax);

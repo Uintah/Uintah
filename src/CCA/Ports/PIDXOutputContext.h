@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2013-2016 The University of Utah
+ * Copyright (c) 2013-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -30,21 +30,22 @@
 #include <Core/Exceptions/InternalError.h>
 
 #if HAVE_PIDX
-#include <Core/Disclosure/TypeDescription.h>
-#include <Core/Geometry/IntVector.h>
-#include <Core/Grid/Level.h>
-#include <Core/Grid/Patch.h>
-#include <Core/Parallel/Parallel.h>
+#  include <Core/Disclosure/TypeDescription.h>
+#  include <Core/Geometry/IntVector.h>
+#  include <Core/Grid/Level.h>
+#  include <Core/Grid/Patch.h>
+#  include <Core/Parallel/Parallel.h>
+#  include <Core/Parallel/UintahMPI.h>
 
-#include <PIDX.h>
-#include <iomanip>             // setw()
-#include <mpi.h>
-#include <iostream>
-#include <string>
-#include <vector>
-
+#  include <PIDX.h>
+#  include <iomanip>  // setw()
+#  include <iostream>
+#  include <string>
+#  include <vector>
+#endif
 
 namespace Uintah {
+
 /**************************************
 
   CLASS
@@ -74,6 +75,33 @@ namespace Uintah {
 
   ****************************************/
 
+#if !HAVE_PIDX
+
+  class  PIDXOutputContext{
+    public:
+      PIDXOutputContext();
+      ~PIDXOutputContext();
+      
+    class PIDX_flags{
+      public:
+        // ___________________________________________________
+        // Empty methods so you can compile without PIDX
+
+        PIDX_flags()  {}
+        ~PIDX_flags() {}
+        void print()  {}
+        
+        void problemSetup( const Uintah::ProblemSpecP& params ){
+          std::ostringstream warn;
+          warn << " ERROR:  To output with the PIDX file format, you must use the following in your configure line...";
+          warn << "                 --with-pidx=<path to PIDX installation>\n";
+          throw InternalError(warn.str(), __FILE__, __LINE__);
+        }
+    };
+  };
+
+#else // HAVE_PIDX
+
 class PIDXOutputContext {
   public:  
     PIDXOutputContext();
@@ -84,20 +112,20 @@ class PIDXOutputContext {
     class PIDX_flags{
       public:
         PIDX_flags();
-        ~PIDX_flags();
+        ~PIDX_flags() {}
 
-        unsigned int  compressionType;
-        bool outputRawIO;
-        bool debugOutput;
-        IntVector outputPatchSize;
+        unsigned int d_compressionType;
+        bool         d_outputRawIO;
+        bool         d_debugOutput;
+        IntVector    d_outputPatchSize;
 
         //__________________________________
         // debugging
         void print(){
           std::cout << Parallel::getMPIRank()
-                    << "PIDXFlags: " << std::setw(26) <<"outputRawIO: " <<  outputRawIO 
-                    << ", compressionType: "<< getCompressTypeName(compressionType)
-                    << ", outputPatchSize: " << outputPatchSize << std::endl;
+                    << "PIDXFlags: " << std::setw(26) <<"outputRawIO: " <<  d_outputRawIO 
+                    << ", compressionType: "<< getCompressTypeName( d_compressionType )
+                    << ", outputPatchSize: " << d_outputPatchSize << "\n";
         }  
 
         void problemSetup( const ProblemSpecP& params );
@@ -105,9 +133,9 @@ class PIDXOutputContext {
       private:
         //__________________________________
         // convert user input into compres type
-        unsigned int str2CompressType( const std::string& me );
+        unsigned int str2CompressType( const std::string & type );
         
-        std::string  getCompressTypeName( const int me );
+        std::string  getCompressTypeName( const int type );
         
         std::map<std::string, int> compressMap;
     };
@@ -126,85 +154,82 @@ class PIDXOutputContext {
       void print(std::ostream& out){
         out  << Parallel::getMPIRank()
              << " patchExtents: patchOffset: " << patchOffset << " patchSize: " << patchSize << ", totalCells_EC " << totalCells_EC 
-             << ", lo_EC: " << lo_EC << ", hi_EC: " << hi_EC << std::endl; 
+             << ", lo_EC: " << lo_EC << ", hi_EC: " << hi_EC << "\n"; 
       }
     };
     
+    void computeBoxSize( const PatchSubset * patches, 
+                         const PIDX_flags    flags,
+                               PIDX_point  & newBox );
+
+    void initialize( const std::string  & filename,
+                           unsigned int   timeStep,
+                           MPI_Comm       comm,
+                           PIDX_flags     flags,
+                     const PatchSubset  * patches,
+                           PIDX_point     dims,
+                     const int            type);
     
-    void computeBoxSize( const PatchSubset* patches, 
-                         const PIDX_flags flags,
-                         PIDX_point& newBox );
+    void setLevelExtents( const std::string & desc, 
+                                IntVector     lo,
+                                IntVector     hi,
+                                PIDX_point  & level_size );
 
-    void initialize(std::string filename,
-                    unsigned int timeStep,
-                    MPI_Comm comm,
-                    PIDX_flags flags,
-                    const PatchSubset* patches,
-                    const int type);
-    
-    void setLevelExtents( std::string desc, 
-                          IntVector lo,
-                          IntVector hi,
-                          PIDX_point& level_size );
+    void setPatchExtents( const std::string     & desc, 
+                          const Patch           * patch,
+                          const Level           * level,
+                          const IntVector       & boundaryLayer,
+                          const TypeDescription * TD,
+                                patchExtents    & pExtents,
+                                PIDX_point      & patchOffset,
+                                PIDX_point      & nPatchCells );
 
-    void setPatchExtents( std::string desc, 
-                          const Patch* patch,
-                          const Level* level,
-                          const IntVector& boundaryLayer,
-                          const TypeDescription* TD,
-                          patchExtents& pExtents,
-                          PIDX_point& patchOffset,
-                          PIDX_point& nPatchCells );
-
-    void checkReturnCode( const int rc,
-                          const std::string warn,
-                          const char* file, 
-                          int line);
+    void checkReturnCode( const int           rc,
+                          const std::string   warn,
+                          const char        * file, 
+                          const int           line );
                           
     void hardWireBufferValues(unsigned char* patchBuffer, 
                               const patchExtents patchExts,
                               const size_t arraySize,
                               const int samples_per_value );
 
-    void setOutputDoubleAsFloat( bool me){
-      d_outputDoubleAsFloat = me;
-    }
+    void setOutputDoubleAsFloat( bool me) { d_outputDoubleAsFloat = me; }
 
-    bool isOutputDoubleAsFloat(){
-      return d_outputDoubleAsFloat;
-    }
+    bool isOutputDoubleAsFloat(){ return d_outputDoubleAsFloat; }
 
 
     std::vector<TypeDescription::Type> getSupportedVariableTypes();
 
     std::string getDirectoryName(TypeDescription::Type TD);
 
-    void
-    printBufferWrap( const std::string&   desc,
-                     const TypeDescription::Type TD,
-                     int             samples_per_value,
-                     IntVector     & lo_EC,
-                     IntVector     & hi_EC,
-                     unsigned char * dataPIDX,
-                     size_t          arraySize );
+    void printBufferWrap( const std::string           & desc,
+                          const TypeDescription::Type   TD,
+                          const int                     samples_per_value,
+                          const IntVector             & lo_EC,
+                          const IntVector             & hi_EC,
+                          const unsigned char         * dataPIDX,
+                          const size_t                  arraySize ) const;
     template<class T>
-    void printBuffer(const std::string & desc,
-                     const std::string & format,
-                     int samples_per_value,
-                     Uintah::IntVector& lo_EC,
-                     Uintah::IntVector& hi_EC,
-                     unsigned char* dataPIDX,
-                     size_t arraySize );
+    void printBuffer( const std::string       & desc,
+                      const std::string       & format,
+                      const int                 samples_per_value,
+                      const Uintah::IntVector & lo_EC,
+                      const Uintah::IntVector & hi_EC,
+                      const unsigned char     * dataPIDX,
+                      const size_t              arraySize ) const;
                      
     std::string filename;
     unsigned int timestep;
     PIDX_file file;
-    MPI_Comm comm;
     PIDX_variable **varDesc;    // variable descriptor array
     PIDX_access access;
     
     // this must match what is specified in DataArchiver.cc
-    enum typeOutput { OUTPUT=0, CHECKPOINT=1, CHECKPOINT_REDUCTION=3, NONE=-9};
+    enum typeOutput { OUTPUT               =  0,
+                      CHECKPOINT           =  1,
+                      CHECKPOINT_REDUCTION =  3,
+                      NONE                 = -9 };
 
   //__________________________________
   //    
@@ -213,37 +238,15 @@ class PIDXOutputContext {
     bool d_outputDoubleAsFloat;
     int  d_levelExtents[3];
     
-    IntVector getLevelExtents(){
-      IntVector levelExtents (d_levelExtents[0],d_levelExtents[1],d_levelExtents[2]);                                                                          
+    IntVector getLevelExtents() {
+      IntVector levelExtents( d_levelExtents[0],d_levelExtents[1],d_levelExtents[2] );
       return levelExtents;                    
     };
     
   };
-} // End namespace Uintah
-//______________________________________________________________________
-//                    Empty methods so you can compile without PIDX
-#else
-namespace Uintah {
-  class  PIDXOutputContext{
-    public:
-      PIDXOutputContext();
-      ~PIDXOutputContext();
-      
-    class PIDX_flags{
-      public:
-        PIDX_flags(){};
-        ~PIDX_flags(){};
-        void print(){};
-        
-        void problemSetup( const Uintah::ProblemSpecP& params ){
-          std::ostringstream warn;
-          warn << " ERROR:  To output with the PIDX file format, you must use the following in your configure line...";
-          warn << "                 --with-pidx=<path to PIDX installation>\n";
-          throw InternalError(warn.str(), __FILE__, __LINE__);
-        
-        };
-    };
-  };
-}
+
 #endif //HAVE_PIDX
+
+} // end namespace Uintah
+
 #endif //UINTAH_HOMEBREW_PIDXOutputContext_H

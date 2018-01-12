@@ -24,7 +24,7 @@
        <save label = "p.stress"/>
        <save label = "p.externalforce"/>
        <save label = "p.mass"/>
-       <save label = "p.localized"/>
+       <save label = "p.localizedMPM"/>
        <save label = "p.particleID"/>
        <save label = "p.temperature"/>
        <save label = "p.color"/>
@@ -44,7 +44,6 @@
        <withColor>      true      </withColor>
        <InsertParticles>    true   </InsertParticles>
        <InsertParticlesFile>InsertParticles.dat </InsertParticlesFile>
-       <erosion algorithm = "RemoveMass"/>
        <use_load_curves> true </use_load_curves>
     </MPM>
     <PhysicalConstants>
@@ -154,6 +153,7 @@
              <axisymmetric_side>true</axisymmetric_side>
            </cylinder>
          </geom_object>
+         <res>[1,1,1]</res>
          <load_curve>
            <id>1</id>
            <time_point>
@@ -180,6 +180,7 @@
              <axisymmetric_end>true</axisymmetric_end>
            </cylinder>
          </geom_object>
+         <res>[1,1,1]</res>
          <load_curve>
            <id>2</id>
            <time_point>
@@ -207,6 +208,7 @@
              <axisymmetric_end>true</axisymmetric_end>
            </cylinder>
          </geom_object>
+         <res>[1,1,1]</res>
          <load_curve>
            <id>3</id>
            <time_point>

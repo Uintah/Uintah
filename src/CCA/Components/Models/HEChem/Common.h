@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -31,14 +31,14 @@
 
 namespace Uintah {
 
-    //______________________________________________________________________
-    double computeSurfaceArea(Vector &rhoGradVector, Vector &dx);
-    //______________________________________________________________________
-    //
-    Vector computeDensityGradientVector(IntVector *nodeIdx, 
-                                              constNCVariable<double> &NCsolidMass, 
-                                              constNCVariable<double> &NC_CCweight, 
-                                              Vector &dx);
- }
+  //______________________________________________________________________
+  double computeSurfaceArea(Vector &rhoGradVector, Vector &dx);
+  //______________________________________________________________________
+  //
+  Vector computeDensityGradientVector(IntVector *nodeIdx, 
+				      constNCVariable<double> &NCsolidMass, 
+				      constNCVariable<double> &NC_CCweight, 
+				      Vector &dx);
+}
 
 #endif

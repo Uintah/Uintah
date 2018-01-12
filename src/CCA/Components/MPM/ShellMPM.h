@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -50,7 +50,9 @@ public:
   //  the constructor of SerialMPM should be reflected here.*/
   //
   ///////////////////////////////////////////////////////////////////////////
-  ShellMPM(const ProcessorGroup* myworld);
+  ShellMPM(const ProcessorGroup* myworld,
+	   const SimulationStateP sharedState);
+  
   virtual ~ShellMPM();
 
   ///////////////////////////////////////////////////////////////////////////
@@ -61,7 +63,7 @@ public:
   ///////////////////////////////////////////////////////////////////////////
   virtual void problemSetup(const ProblemSpecP& params, 
                             const ProblemSpecP& restart_prob_spec, 
-                            GridP& grid,SimulationStateP&);
+                            GridP& grid);
          
 protected:
 
@@ -70,9 +72,10 @@ protected:
   /*! Setup problem -- material parameters specific to shell */
   //
   ///////////////////////////////////////////////////////////////////////////
+#if 0
   virtual void materialProblemSetup(const ProblemSpecP& prob_spec, 
-                                    SimulationStateP& sharedState,
                                     MPMLabel* lb, MPMFlags* flags);
+#endif
          
   ///////////////////////////////////////////////////////////////////////////
   //

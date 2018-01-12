@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2016 The University of Utah
+#  Copyright (c) 1997-2018 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -26,10 +26,10 @@ all: build
 build: randomNumbers
 
 randomNumbers.o: randomNumbers.cu
-	nvcc -m64 -I/usr/local/cuda-5.5/include -I.  -gencode arch=compute_30,code=sm_30 -o $@ -c $<
+	nvcc -std=c++11 -g -m64 -I/usr/local/cuda/include -I.  -gencode arch=compute_30,code=sm_30 -o $@ -c $<
 
 randomNumbers: randomNumbers.o
-	g++ -O2 -g -m64 -o $@ $+ -L/usr/local/cuda-5.5/lib64 -lcudart -lcurand
+	g++ -std=c++11 -O2 -g -m64 -o $@ $+ -L/usr/local/cuda/lib64 -lcudart -lcurand
         
 
 clean:

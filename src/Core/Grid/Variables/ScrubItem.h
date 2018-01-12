@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_HOMEBREW_ScrubItem_H
-#define UINTAH_HOMEBREW_ScrubItem_H
+#ifndef CORE_GRID_VARIABLES_SCRUBITEM_H
+#define CORE_GRID_VARIABLES_SCRUBITEM_H
 
 #include <Core/Grid/Patch.h>
 
@@ -33,28 +33,36 @@ class VarLabel;
 
 struct ScrubItem {
 
-    ScrubItem* next;
-    const VarLabel* label;
-    int matl;
-    const Patch* patch;
-    int dw;
-    size_t hash;
-    int count;
+  ScrubItem      * m_next{nullptr};
+  const VarLabel * m_label;
+  int              m_matl;
+  const Patch    * m_patch;
+  int              m_dw;
+  size_t           m_hash;
+  int              m_count;
 
-    ScrubItem(const VarLabel* l, int m, const Patch* p, int dw) :
-      label(l), matl(m), patch(p), dw(dw), count(0)
-    {
-      size_t ptr = (size_t)l;
-      hash = ptr ^ (m << 3) ^ (p->getID() << 4) ^ (dw << 2);
-    }
+  ScrubItem( const VarLabel * l
+           ,       int        m
+           , const Patch    * p
+           ,       int        dw
+           )
+      : m_label(l),
+        m_matl(m),
+        m_patch(p),
+        m_dw(dw),
+        m_count(0)
+  {
+    size_t ptr = (size_t)l;
+    m_hash = ptr ^ (m << 3) ^ (p->getID() << 4) ^ (dw << 2);
+  }
 
-    bool operator==(const ScrubItem& d)
-    {
-      return label == d.label && matl == d.matl && patch == d.patch && dw == d.dw;
-    }
+  bool operator==(const ScrubItem& d)
+  {
+    return m_label == d.m_label && m_matl == d.m_matl && m_patch == d.m_patch && m_dw == d.m_dw;
+  }
 
-};
+}; // struct ScrubItem
 
-}
+} // namespace Uintah
 
-#endif
+#endif // CORE_GRID_VARIABLES_SCRUBITEM_H

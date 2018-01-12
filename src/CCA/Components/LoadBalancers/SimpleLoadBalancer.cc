@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -23,36 +23,27 @@
  */
 
 #include <CCA/Components/LoadBalancers/SimpleLoadBalancer.h>
-#include <CCA/Components/Schedulers/DetailedTasks.h>
+
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Patch.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Grid/Grid.h>
-#include <Core/Grid/Patch.h>
-#include <Core/Grid/Level.h>
-
-#include <Core/Util/FancyAssert.h>
-#include <Core/Util/DebugStream.h>
 
 using namespace Uintah;
 
-
-SimpleLoadBalancer::SimpleLoadBalancer( const ProcessorGroup * myworld ) :
-  LoadBalancerCommon( myworld )
-{
-}
-
-SimpleLoadBalancer::~SimpleLoadBalancer()
-{
-}
+SimpleLoadBalancer::SimpleLoadBalancer( const ProcessorGroup * myworld )
+  : LoadBalancerCommon( myworld )
+{}
 
 int
 SimpleLoadBalancer::getPatchwiseProcessorAssignment( const Patch * patch )
 {
-  long long     numProcs  = d_myworld->size();
+  long long     numProcs  = d_myworld->nRanks();
   const Patch * realPatch = patch->getRealPatch();
-  int           proc      = (realPatch->getLevelIndex()*numProcs)/(long long)realPatch->getLevel()->numPatches();
+  int           proc      = (realPatch->getLevelIndex() * numProcs) / static_cast<long long>(realPatch->getLevel()->numPatches());
 
-  ASSERTRANGE( proc, 0, d_myworld->size() );
+  ASSERTRANGE(proc, 0, d_myworld->nRanks());
 
   return proc;
 }

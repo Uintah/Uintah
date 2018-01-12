@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,24 +25,25 @@
 #include <sci_defs/hypre_defs.h>
 
 #include <CCA/Components/Solvers/AMR/HypreDriver.h>
-#include <CCA/Components/Solvers/AMR/HypreDriverStruct.h>
 #include <CCA/Components/Solvers/AMR/HypreDriverSStruct.h>
+#include <CCA/Components/Solvers/AMR/HypreDriverStruct.h>
 #include <CCA/Components/Solvers/MatrixUtil.h>
+#include <CCA/Ports/LoadBalancer.h>
+#include <CCA/Ports/Scheduler.h>
+
+#include <Core/Exceptions/ConvergenceFailure.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Geometry/IntVector.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/Stencil7.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Exceptions/ConvergenceFailure.h>
+#include <Core/Math/MinMax.h>
+#include <Core/Math/MiscMath.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <CCA/Ports/Scheduler.h>
-#include <CCA/Ports/LoadBalancer.h>
-#include <Core/Geometry/IntVector.h>
-#include <Core/Math/MiscMath.h>
-#include <Core/Math/MinMax.h>
-#include <Core/Util/Time.h>
 #include <Core/Util/DebugStream.h>
+
 #include <iomanip>
 
 
@@ -51,9 +52,9 @@ using namespace Uintah;
 
 //__________________________________
 //  To turn on normal output
-//  setenv SCI_DEBUG "HYPRE_DOING_COUT:+"
+//  setenv SCI_DEBUG "SOLVER_DOING_COUT:+"
 
-static DebugStream cout_doing("HYPRE_DOING_COUT", false);
+static DebugStream cout_doing("SOLVER_DOING_COUT", false);
 static DebugStream cout_dbg("HYPRE_DBG", false);
 
 
@@ -118,8 +119,9 @@ namespace Uintah {
            which_guess_dw, params, perProcPatches, interface);
       }
     default:
-      throw InternalError("Unsupported Hypre Interface: "+interface,
-                          __FILE__, __LINE__);
+      ostringstream msg;
+      msg << "Unsupported Hypre Interface: " << interface;
+      throw InternalError( msg.str(), __FILE__, __LINE__ );
     } // end switch (interface)
   }
 
@@ -130,19 +132,20 @@ namespace Uintah {
   patchFaceSide(const Patch::FaceType& patchFace)
 
   {
-    if (patchFace == Patch::xminus || 
-        patchFace == Patch::yminus || 
-        patchFace == Patch::zminus) {
+    if ( patchFace == Patch::xminus || 
+         patchFace == Patch::yminus || 
+         patchFace == Patch::zminus ) {
       return LeftSide;
-    } else if (patchFace == Patch::xplus || 
-               patchFace == Patch::yplus || 
-               patchFace == Patch::zplus){
+    }
+    else if ( patchFace == Patch::xplus || 
+              patchFace == Patch::yplus || 
+              patchFace == Patch::zplus ) {
       return RightSide;
-    } else {
+    }
+    else {
       ostringstream msg;
-      msg << "patchFaceSide() called with invalid Patch::FaceType "
-          << patchFace;
-      throw InternalError(msg.str(),__FILE__, __LINE__);
+      msg << "patchFaceSide() called with invalid Patch::FaceType " << patchFace;
+      throw InternalError( msg.str(), __FILE__, __LINE__ );
     }
   }
 

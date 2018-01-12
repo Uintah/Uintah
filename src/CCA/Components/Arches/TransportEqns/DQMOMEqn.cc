@@ -10,7 +10,6 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Parallel/Parallel.h>
 #include <CCA/Components/Arches/ConvectionHelper.h>
-#include <CCA/Components/Arches/FunctorSwitch.h>
 
 using namespace std;
 using namespace Uintah;
@@ -89,6 +88,7 @@ DQMOMEqn::problemSetup( const ProblemSpecP& inputdb )
   ProblemSpecP db = inputdb;
 
   d_boundaryCond->problemSetup( db, d_eqnName );
+  unsigned int Nqn = ParticleTools::get_num_env( db, ParticleTools::DQMOM );
 
   ProblemSpecP db_root = db->getRootNode();
   ProblemSpecP dqmom_db = db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM");
@@ -125,23 +125,37 @@ DQMOMEqn::problemSetup( const ProblemSpecP& inputdb )
   d_addExtraSources = false;
   db->getWithDefault( "molecular_diffusivity", d_mol_diff, 0.0);
   if ( !d_weight ){
-    db->require( "nominal_values", d_nominal );
+
+    if ( db->findBlock("nominal_values") ){
+      db->require( "nominal_values", d_nominal );
+    } else {
+      d_nominal.resize(Nqn);
+      for ( auto i = d_nominal.begin(); i != d_nominal.end(); i++ ){
+        //putting a random value in here since it wasn't specified.
+        //If using birth, then this value should never be used.
+        *i = 101010101010.101010101010;
+      }
+    }
   }
 
   if ( d_convScheme == "upwind" ){
     d_which_limiter = UPWIND;
-  } else if ( d_convScheme == "super_bee" ){
+  }
+  else if ( d_convScheme == "super_bee" ){
     d_which_limiter = SUPERBEE;
-  } else if ( d_convScheme == "vanleer" ){
+  }
+  else if ( d_convScheme == "vanleer" ){
     d_which_limiter = VANLEER;
-  } else if ( d_convScheme == "roe_minmod"){
+  }
+  else if ( d_convScheme == "roe_minmod"){
     d_which_limiter = ROE;
-  } else {
+  }
+  else {
   throw InvalidValue("Error: Limiter choice not recognized for eqn: "+d_eqnName, __FILE__, __LINE__);
   }
 
   // Models (source terms):
-  for (ProblemSpecP m_db = db->findBlock("model"); m_db !=0; m_db = m_db->findNextBlock("model")){
+  for (ProblemSpecP m_db = db->findBlock("model"); m_db != nullptr; m_db = m_db->findNextBlock("model")){
     string model_name;
     string model_type;
     m_db->getAttribute("label", model_name);
@@ -212,19 +226,23 @@ DQMOMEqn::problemSetup( const ProblemSpecP& inputdb )
   }
 
   // Scaling information:
-  db->require( "scaling_const", d_scalingConstant );
-
-  unsigned int Nqn = ParticleTools::get_num_env( db, ParticleTools::DQMOM );
-
-  if ( Nqn != d_scalingConstant.size() ){
-    throw InvalidValue("Error: The number of scaling constants isn't consistent with the number of environments for: "+d_ic_name, __FILE__, __LINE__);
+  if ( db->findBlock("scaling_const") ){
+    db->require("scaling_const", d_scalingConstant );
+    if ( Nqn != d_scalingConstant.size() ){
+      throw InvalidValue("Error: The number of scaling constants isn't consistent with the number of environments for: "+d_ic_name, __FILE__, __LINE__);
+    }
+  } else {
+    d_scalingConstant.resize(Nqn);
+    for ( auto i = d_scalingConstant.begin(); i != d_scalingConstant.end(); i++ ){
+      *i = 1.;
+    }
   }
 
   // Extra Source terms (for mms and other tests):
   if (db->findBlock("src")){
     string srcname;
     d_addExtraSources = true;
-    for (ProblemSpecP src_db = db->findBlock("src"); src_db != 0; src_db = src_db->findNextBlock("src")){
+    for (ProblemSpecP src_db = db->findBlock("src"); src_db != nullptr; src_db = src_db->findNextBlock("src")){
       src_db->getAttribute("label", srcname);
       //which sources are turned on for this equation
       d_sources.push_back( srcname );
@@ -272,7 +290,7 @@ DQMOMEqn::problemSetup( const ProblemSpecP& inputdb )
 
       // Environment constant: get the value of the constants
       for( ProblemSpecP db_env_constants = db_initialValue->findBlock("env_constant");
-           db_env_constants != 0; db_env_constants = db_env_constants->findNextBlock("env_constant") ) {
+           db_env_constants != nullptr; db_env_constants = db_env_constants->findNextBlock("env_constant") ) {
 
         string s_tempQuadNode;
         db_env_constants->getAttribute("qn", s_tempQuadNode);
@@ -333,7 +351,7 @@ DQMOMEqn::problemSetup( const ProblemSpecP& inputdb )
           throw ProblemSetupException(err_msg,__FILE__,__LINE__);
         }
         for( ProblemSpecP db_env_step_value = db_initialValue->findBlock("env_step_value");
-             db_env_step_value != 0; db_env_step_value = db_env_step_value->findNextBlock("env_step_value") ) {
+             db_env_step_value != nullptr; db_env_step_value = db_env_step_value->findNextBlock("env_step_value") ) {
 
           string s_tempQuadNode;
           db_env_step_value->getAttribute("qn", s_tempQuadNode);
@@ -342,12 +360,15 @@ DQMOMEqn::problemSetup( const ProblemSpecP& inputdb )
           string s_step_value;
           db_env_step_value->getAttribute("value", s_step_value);
           double step_value = atof( s_step_value.c_str() );
-          if( i_tempQuadNode == d_quadNode )
+
+          if( i_tempQuadNode == d_quadNode ) {
             d_step_value = step_value / d_scalingConstant[d_quadNode];
+          }
         }
       }//end step_value init.
 
-    } else if (d_initFunction == "mms1") {
+    }
+    else if (d_initFunction == "mms1") {
       //currently nothing to do here.
 
     // ------------ Other initialization function --------------------
@@ -382,15 +403,7 @@ DQMOMEqn::sched_evalTransportEqn( const LevelP& level,
     sched_computeSources( level, sched, timeSubStep );
   }
 
-#ifdef USE_FUNCTOR
-  sched_computePsi( level, sched );
-#endif
-
   sched_buildTransportEqn( level, sched, timeSubStep );
-
-#ifdef USE_FUNCTOR
-  sched_buildRHS( level, sched );
-#endif
 
 }
 
@@ -583,15 +596,20 @@ DQMOMEqn::computePsi( const ProcessorGroup* pc,
     old_dw->get( af_z, d_fieldLabels->d_areaFractionFZLabel, matlIndex, patch, gac, 2 );
 
     if ( d_which_limiter == UPWIND ){
-      DQMOM_CONV(UPWIND);
+      UpwindStruct up;
+      DQMOM_CONV(up);
     } else if ( d_which_limiter == SUPERBEE ){
-      DQMOM_CONV(SUPERBEE);
+      SuperBeeStruct sb;
+      DQMOM_CONV(sb);
     } else if ( d_which_limiter == ROE ){
-      DQMOM_CONV(ROE);
+      RoeStruct roe;
+      DQMOM_CONV(roe);
     } else if ( d_which_limiter == CENTRAL ){
-      DQMOM_CONV(CENTRAL);
+      CentralStruct central;
+      DQMOM_CONV(central);
     } else if ( d_which_limiter == VANLEER ){
-      DQMOM_CONV(VANLEER);
+      VanLeerStruct vl;
+      DQMOM_CONV(vl);
     }
 
   }
@@ -722,11 +740,8 @@ DQMOMEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, const
 
   // extra srcs
   if (d_addExtraSources) {
-    SourceTermFactory& src_factory = SourceTermFactory::self();
-    for (vector<std::string>::iterator iter = d_sources.begin();
-         iter != d_sources.end(); iter++){
-      SourceTermBase& temp_src = src_factory.retrieve_source_term( *iter );
-      tsk->requires( Task::NewDW, temp_src.getSrcLabel(), Ghost::None, 0 );
+    for ( auto iter = d_sources.begin(); iter != d_sources.end(); iter++){
+      tsk->requires( Task::NewDW, VarLabel::find(*iter), Ghost::None, 0 );
     }
   }
 
@@ -752,6 +767,8 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
     Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
+    const Level* level = patch->getLevel();
+    const int ilvl = level->getID();
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
     Vector Dx = patch->dCell();
@@ -778,14 +795,6 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
     constSFCXVariable<double> uu;
     constSFCYVariable<double> vv;
     constSFCZVariable<double> ww;
-#ifdef USE_FUNCTOR
-    constSFCXVariable<double> psi_x;
-    constSFCYVariable<double> psi_y;
-    constSFCZVariable<double> psi_z;
-    SFCXVariable<double> flux_x;
-    SFCYVariable<double> flux_y;
-    SFCZVariable<double> flux_z;
-#endif
 
     ArchesLabel::PartVelMap::iterator pvel_iter = d_fieldLabels->partVel.find(d_quadNode);
     new_dw->get( partVel, pvel_iter->second, matlIndex, patch, gac, 1 );
@@ -793,15 +802,6 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
     new_dw->get( vv, d_face_pvel_y, matlIndex, patch, gac, 1 );
     new_dw->get( ww, d_face_pvel_z, matlIndex, patch, gac, 1 );
     which_dw->get(phi, d_transportVarLabel, matlIndex, patch, gac, 2);
-
-#ifdef USE_FUNCTOR
-    new_dw->getModifiable(flux_x, d_X_flux_label, matlIndex, patch);
-    new_dw->getModifiable(flux_y, d_Y_flux_label, matlIndex, patch);
-    new_dw->getModifiable(flux_z, d_Z_flux_label, matlIndex, patch);
-    new_dw->get( psi_x, d_X_psi_label, matlIndex, patch, gn, 0 );
-    new_dw->get( psi_y, d_Y_psi_label, matlIndex, patch, gn, 0 );
-    new_dw->get( psi_z, d_Z_psi_label, matlIndex, patch, gn, 0 );
-#endif
 
     old_dw->get(mu_t         ,  d_fieldLabels->d_viscosityCTSLabel  , matlIndex , patch , gac , 1);
     old_dw->get(areaFraction ,  d_fieldLabels->d_areaFractionLabel  , matlIndex , patch , gac , 2);
@@ -832,20 +832,12 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
     //----CONVECTION
     if ( d_doConv ){
 
-#ifdef USE_FUNCTOR
-      Uintah::BlockRange range(patch->getCellLowIndex(), patch->getExtraCellHighIndex());
-      ComputeConvectiveFlux< CCVariable<double> > get_flux( phi, uu, vv, ww, psi_x, psi_y, psi_z,
-                                                         flux_x, flux_y, flux_z, af_x, af_y, af_z );
-
-      Uintah::parallel_for( range, get_flux );
-#else
 
       d_disc->computeConv( patch, Fconv, phi, partVel, areaFraction, d_convScheme );
 
-#endif
 
       if ( _using_new_intrusion ) {
-        _intrusions->addScalarRHS( patch, Dx, d_eqnName, RHS );
+        _intrusions[ilvl]->addScalarRHS( patch, Dx, d_eqnName, RHS );
       }
     }
 
@@ -858,18 +850,14 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
 
       IntVector c = *iter;
 
-#ifndef USE_FUNCTOR
       RHS[c] += Fdiff[c] - Fconv[c];
-#endif
 
       if (d_addExtraSources) {
 
         // Get the factory of source terms
-        SourceTermFactory& src_factory = SourceTermFactory::self();
-        for (vector<std::string>::iterator src_iter = d_sources.begin(); src_iter != d_sources.end(); src_iter++){
+        for ( auto src_iter = d_sources.begin(); src_iter != d_sources.end(); src_iter++){
          //constCCVariable<double> extra_src;
-         SourceTermBase& temp_src = src_factory.retrieve_source_term( *src_iter );
-         new_dw->get(extra_src, temp_src.getSrcLabel(), matlIndex, patch, gn, 0);
+         new_dw->get(extra_src, VarLabel::find( *src_iter ), matlIndex, patch, gn, 0);
 
          // Add to the RHS
          RHS[c] += extra_src[c]*vol;
@@ -972,7 +960,7 @@ DQMOMEqn::sched_solveTransportEqn( const LevelP& level, SchedulerP& sched, int t
 
   //Old
   tsk->requires(Task::OldDW, d_transportVarLabel, Ghost::None, 0);
-  tsk->requires(Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label(), Ghost::None, 0 );
+  tsk->requires(Task::OldDW, d_fieldLabels->d_delTLabel, Ghost::None, 0 );
   tsk->requires(Task::OldDW, d_fieldLabels->d_volFractionLabel, Ghost::None, 0 );
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
@@ -998,7 +986,7 @@ DQMOMEqn::solveTransportEqn( const ProcessorGroup* pc,
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
     delt_vartype DT;
-    old_dw->get(DT, d_fieldLabels->d_sharedState->get_delt_label());
+    old_dw->get(DT, d_fieldLabels->d_delTLabel);
     double dt = DT;
 
     CCVariable<double> phi;    // phi @ current sub-level
@@ -1045,10 +1033,10 @@ DQMOMEqn::sched_getUnscaledValues( const LevelP& level, SchedulerP& sched )
 
   //NEW
   tsk->modifies(d_icLabel);
-  tsk->modifies(d_transportVarLabel);
+  tsk->requires( Task::NewDW,d_transportVarLabel , Ghost::None, 0 );
 
   if( !d_weight ) {
-    tsk->modifies( d_weightLabel );
+    tsk->requires( Task::NewDW,d_weightLabel , Ghost::None, 0 );
   }
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
@@ -1075,11 +1063,11 @@ DQMOMEqn::getUnscaledValues( const ProcessorGroup* pc,
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
     if( d_weight ) {
-      CCVariable<double> w;
+      constCCVariable<double> w;
       CCVariable<double> w_actual;
 
       new_dw->getModifiable(w_actual, d_icLabel, matlIndex, patch);
-      new_dw->getModifiable(w, d_transportVarLabel, matlIndex, patch);
+      new_dw->get(w, d_transportVarLabel, matlIndex, patch, Ghost::None,0);
 
       // now loop over all cells
       for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++){
@@ -1093,11 +1081,11 @@ DQMOMEqn::getUnscaledValues( const ProcessorGroup* pc,
       CCVariable<double> ic;
       new_dw->getModifiable(ic, d_icLabel, matlIndex, patch);
 
-      CCVariable<double> wa;
-      new_dw->getModifiable(wa, d_transportVarLabel, matlIndex, patch);
+      constCCVariable<double> wa;
+      new_dw->get(wa, d_transportVarLabel, matlIndex, patch, Ghost::None,0);
 
-      CCVariable<double> w;
-      new_dw->getModifiable(w, d_weightLabel, matlIndex, patch );
+      constCCVariable<double> w;
+      new_dw->get(w, d_weightLabel, matlIndex, patch, Ghost::None,0);
 
       // now loop over all cells
       if ( d_unweighted ) {

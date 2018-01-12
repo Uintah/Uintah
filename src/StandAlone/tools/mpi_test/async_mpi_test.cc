@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,9 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-
-
-#include <sci_defs/mpi_defs.h>
+#include <Core/Parallel/UintahMPI.h>
 
 #include <cstdlib>
 #include <cstdio>
@@ -33,8 +31,6 @@
 #include <queue>
 #include <unistd.h>
 #include <sys/time.h>
-
-#include <Core/Util/Time.h>
 
 #define debug_main
 #define debug_main_thread
@@ -117,7 +113,7 @@ main(int argc, char** argv)
 
   //MPI_Status status2[1];
   //int* probe_flag = new int(0);
-  //MPI::Iprobe(MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,probe_flag,status2);
+  //Uintah::MPI::Iprobe(MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,probe_flag,status2);
   //if (*probe_flag){
   //  cout<<"myid"<<myid<<" has outstading communications"<<endl;
   //}

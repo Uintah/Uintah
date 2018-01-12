@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,45 +22,113 @@
  * IN THE SOFTWARE.
  */
 
-#include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Parallel/Parallel.h>
 
+#include <cstring>
 #include <iostream>
-#include <cstdlib>
-
+#include <map>
 
 using namespace Uintah;
 
-ProcessorGroup::ProcessorGroup( const ProcessorGroup* parent,
-			                                MPI_Comm comm,
-			                                bool allmpi,
-			                                int rank,
-			                                int size,
-			                                int threads )
-  : d_parent(parent), d_rank(rank), d_size(size),  d_threads(threads),
-    d_comm(comm),  d_allmpi(allmpi)
+ProcessorGroup::ProcessorGroup( const ProcessorGroup * parent
+                              ,       MPI_Comm         comm
+                              ,       int              rank
+                              ,       int              nRanks
+                              ,       int              threads
+                              )
+  : m_rank(rank)
+  , m_nRanks(nRanks)
+  , m_threads(threads)
+  , m_comm(comm)
+  , m_parent_group(parent)
 {
+  m_node = -1;
+  m_nNodes = 0;
+
+  char my_proc_name[MPI_MAX_PROCESSOR_NAME];
+  int resultlen;
+
+  // For each rank get the processor name.
+  MPI::Get_processor_name( my_proc_name, &resultlen );
+
+  // Gather all of the processor names on the root node.
+  char all_proc_names[nRanks*MPI_MAX_PROCESSOR_NAME+1];
+  all_proc_names[nRanks*MPI_MAX_PROCESSOR_NAME] = '\0';
+  
+  MPI::Gather(my_proc_name, MPI_MAX_PROCESSOR_NAME, MPI_CHAR,
+	      all_proc_names, MPI_MAX_PROCESSOR_NAME, MPI_CHAR, 0, MPI_COMM_WORLD);
+
+  char proc_name[MPI_MAX_PROCESSOR_NAME];
+
+  // For the root node create a map that stores the unique processor
+  // name.
+  if( m_rank == 0 )
+  {
+    std::map< std::string, unsigned int > proc_name_map;
+
+    // For each rank get its processor name.
+    for( int i=0; i<nRanks; ++i )
+    {
+      // The rank's processor name.
+      unsigned int cc = i * MPI_MAX_PROCESSOR_NAME;      
+      strncpy( proc_name, &(all_proc_names[cc]), MPI_MAX_PROCESSOR_NAME);
+
+      // Find the processor name in the map.
+      if( proc_name_map.find(std::string(proc_name) ) == proc_name_map.end() )
+      {
+	// Store the name in the map for uniqueness.
+	proc_name_map[ std::string(proc_name) ] = m_nNodes;
+
+	// Store the processor name in an array for broadcasting.
+	cc = m_nNodes * MPI_MAX_PROCESSOR_NAME;
+	
+	strncpy( &(all_proc_names[cc]), proc_name, MPI_MAX_PROCESSOR_NAME);
+	
+	++m_nNodes;	
+      }	  
+    }
+  }    
+
+  // From the root node broadcast the number of unique processor names.
+  MPI::Bcast(&m_nNodes, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+  // From the root node broadcast the unique processor names.
+  MPI::Bcast(all_proc_names, m_nNodes*MPI_MAX_PROCESSOR_NAME,
+	     MPI_CHAR, 0, MPI_COMM_WORLD);
+
+  // Find the local processor name for this rank and get an associated
+  // processor name index.
+  for( int i=0; i<m_nNodes; ++i )
+  {
+    unsigned int cc = i * MPI_MAX_PROCESSOR_NAME;    
+    strncpy( proc_name, &(all_proc_names[cc]), MPI_MAX_PROCESSOR_NAME);
+
+    // Check the local processor name with the unique processor name
+    // list, if a match store the index.
+    if( std::string(my_proc_name) == std::string(proc_name) )
+    {
+      m_node = i;
+      break;
+    }
+  }
 }
 
-ProcessorGroup::~ProcessorGroup()
+void ProcessorGroup::setGlobalComm(int num_comms) const
 {
-}
-
-void ProcessorGroup::setgComm( int nComm ) const
-{
-  if (d_threads <= 1 || !d_allmpi) {
+  if (m_threads <= 1) {
     return;
   }
 
-  int curr_size = d_gComms.size();
-  if (nComm <= curr_size) {
+  int curr_size = m_global_comms.size();
+  if (num_comms <= curr_size) {
     return;
   }
 
-  d_gComms.resize(nComm);
-  for (int i = curr_size; i < nComm; i++) {
-    if (MPI::Comm_dup(d_comm, &d_gComms[i]) != MPI_SUCCESS) {
-      std::cerr << "Rank: " << d_rank << " - MPI Error in Uintah::MPI::Comm_dup\n";
+  m_global_comms.resize(num_comms);
+  for (int i = curr_size; i < num_comms; i++) {
+    if (Uintah::MPI::Comm_dup(m_comm, &m_global_comms[i]) != MPI_SUCCESS) {
+      std::cerr << "Rank: " << m_rank << " - MPI Error in Uintah::MPI::Comm_dup\n";
       Parallel::exitAll(1);
     }
   }

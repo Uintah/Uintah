@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2013-2016 The University of Utah
+ * Copyright (c) 2013-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -51,8 +51,15 @@
 #include <Core/Grid/BoundaryConditions/BCGeomBase.h>
 
 //-- Wasatch Includes --//
-#include "Operators/OperatorTypes.h"
+#include <CCA/Components/Wasatch/FieldAdaptor.h>
+#include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
 
+//-- Debug Stream --//
+#include <Core/Util/DebugStream.h>
+
+static Uintah::DebugStream dbgbc("WASATCH_BC", false);
+#define DBC_BC_ON  dbgbc.active()
+#define DBGBC  if( DBC_BC_ON  ) dbgbc
 
 /**
  * \file BCHelper.h
@@ -77,6 +84,21 @@ namespace WasatchCore {
   // Nomenclature: Boundary/Bnd/Bound designates a PHYSICAL BOUNDARY
   //               Boundary Condition/BndCond/BC designates a BOUNDARY CONDITION
 
+  //****************************************************************************
+  /**
+   *  @struct DomainInfo
+   *  @author Tony Saad
+   *  @date   Oct 2016
+   *
+   *  @brief  Stores domain information
+   */
+  //****************************************************************************
+  struct DomainInfo
+  {
+    double lx, ly, lz;
+  };
+
+  
   typedef std::map<std::string, std::set<std::string> > BCFunctorMap;
 
   //****************************************************************************
@@ -169,7 +191,7 @@ namespace WasatchCore {
     std::string      functorName; // name of the functor applied as bc
     double           value;       // boundary value for this variable
     BndCondTypeEnum  bcType;      // bc type: DIRICHLET, NEUMANN
-    BCValueTypeEnum  bcValType;   // value type: DOUBLE, FUNCTOR    
+    BCValueTypeEnum  bcValType;   // value type: DOUBLE, FUNCTOR
     
     // compare based on ALL the members of this struct
     bool operator==(const BndCondSpec& l) const;
@@ -209,6 +231,9 @@ namespace WasatchCore {
     // find the BCSpec associated with a given variable name
     const BndCondSpec* find(const std::string& varName) const;
     
+    // find all the BCSpec associated with a given variable name
+    std::vector<BndCondSpec> find_all(const std::string& varName) const;
+    
     // find the BCSpec associated with a given variable name - non-const version
     const BndCondSpec* find(const std::string& varName);
     
@@ -244,12 +269,14 @@ namespace WasatchCore {
     SpatialOps::SpatialMask<YVolField>* yvolExtraCellSpatialMask; // iterator for yvol/sfcyvar extra cells.
     SpatialOps::SpatialMask<ZVolField>* zvolExtraCellSpatialMask; // iterator for zvol/sfczvar extra cells.
 
+    SpatialOps::SpatialMask<SVolField>* svolInteriorCellSpatialMask; // iterator for svol/ccvar interior cells, adjacent to a boundary.
+    
     /**
      \brief Helper function to return the appropriate spatial mask given a field type
      */
     template<typename FieldT>
     SpatialOps::SpatialMask<FieldT>*
-    get_spatial_mask() const;
+    get_spatial_mask(bool interior=false) const; // interior is optional and returns the "interior" points adjacent to a boundary. Currently supported for SVOL fields ONLY.
 
     std::vector<SpatialOps::IntVec> interiorEdgeCells;      // iterator for interior edge (domain edges) cells
     Uintah::Iterator extraBndCellsUintah;                   // We still need the Unitah iterator
@@ -377,7 +404,8 @@ namespace WasatchCore {
      */
     template<typename FieldT>
     const SpatialOps::SpatialMask<FieldT>* get_spatial_mask( const BndSpec& myBndSpec,
-                                                            const int& patchID ) const;
+                                                             const int& patchID,
+                                                             const bool interior=false) const;
 
     /**
      \brief Returns the original Uintah boundary cell iterator.

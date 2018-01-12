@@ -81,9 +81,11 @@
           <include href="../MaterialData/VonMisesYield.xml"/>
           <include href="../MaterialData/NoStabilityCheck.xml"/>
           <include href="../MaterialData/JohnsonCookPlasticAnnCopper.xml"/>
-          <include href="../MaterialData/JohnsonCookDamageAnnCopper.xml"/>
           <include href="../MaterialData/MieGruneisenEOSAnnCopper.xml"/>
         </constitutive_model>
+
+        <include href="../MaterialData/JohnsonCookDamageAnnCopper.xml"/>
+          
         <geom_object>
           <cylinder label = "Cylinder">
             <bottom>[0.0,0.0,0.0]</bottom>

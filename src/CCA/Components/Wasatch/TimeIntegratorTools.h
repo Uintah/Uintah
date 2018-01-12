@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2016 The University of Utah
+ * Copyright (c) 2012-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -56,20 +56,21 @@ namespace WasatchCore{
     int nStages;
     double alpha[3];
     double beta[3];
+    double timeCorrection[3];
     bool hasDualTime;
     int dualTimeIterations;
     double dualTimeTolerance;
     double dualTimeds;
 
-    TimeIntegrator(TimeIntegratorEnum theTimeIntEnum)
-    : timeIntEnum(theTimeIntEnum)    
+    TimeIntegrator( const TimeIntegratorEnum theTimeIntEnum )
+    : timeIntEnum( theTimeIntEnum )
     {
       initialize();
     }
 
     TimeIntegrator(const std::string& timeIntName)
     : timeIntEnum( (timeIntName == "RK2SSP") ? RK2SSP : ( (timeIntName == "RK3SSP") ? RK3SSP : FE ) ),
-      name(timeIntName)
+      name( timeIntName )
     {
       initialize();
     }
@@ -103,10 +104,14 @@ namespace WasatchCore{
       hasDualTime        = false;
       dualTimeIterations = 100;
       dualTimeTolerance  = 1.0e-8;
+      
+      timeCorrection[0] = 0.0; // for the first rk stage, the time is t0
+      timeCorrection[1] = 1.0; // for the second rk stage, the time is t0 + dt
+      timeCorrection[2] = 0.5; // for the third rk stage, the time is t0 + 0.5*dt
     }
     
-    void has_dual_time(const bool hasDT) { hasDualTime = hasDT; }
-    bool has_dual_time(){ return hasDualTime;}
+    inline void has_dual_time( const bool hasDT ) { hasDualTime = hasDT; }
+    inline bool has_dual_time(){ return hasDualTime; }
   };
 
 } // namespace WasatchCore

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -240,7 +240,7 @@ ScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
     parent_old_dw = Task::OldDW;
   }
   
-  tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
+  tsk->requires(parent_old_dw, d_lab->d_delTLabel);
   
   // This task requires scalar and density from old time step for transient
   // calculation
@@ -359,7 +359,7 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
   }
   
   delt_vartype delT;
-  parent_old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  parent_old_dw->get(delT, d_lab->d_delTLabel );
   double delta_t = delT;
   delta_t *= timelabels->time_multiplier;
 
@@ -641,7 +641,7 @@ ScalarSolver::sched_scalarLinearSolve(SchedulerP& sched,
   Ghost::GhostType  gn  = Ghost::None;
   Task::MaterialDomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
   
-  tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
+  tsk->requires(parent_old_dw, d_lab->d_delTLabel);
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,     gac, 1);
   tsk->requires(Task::NewDW, d_lab->d_densityGuessLabel, gn,  0);
   
@@ -691,7 +691,7 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
   }
   
   delt_vartype delT;
-  parent_old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  parent_old_dw->get(delT, d_lab->d_delTLabel );
   double delta_t = delT;
   delta_t *= timelabels->time_multiplier;
 

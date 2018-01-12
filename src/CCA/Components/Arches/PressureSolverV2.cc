@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -46,10 +46,8 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Util/DebugStream.h>
-#include <Core/Containers/StaticArray.h>
 
 
 using namespace Uintah;
@@ -103,7 +101,7 @@ PressureSolver::problemSetup(ProblemSpecP& params,SimulationStateP& state)
   d_source = scinew Source(d_physicalConsts);
 
   d_hypreSolver_parameters = d_hypreSolver->readParameters(db, "pressure",
-                                                           state);
+							   state);
   d_hypreSolver_parameters->setSolveOnExtraCells(false);
 
   //force a zero setup frequency since nothing else
@@ -119,7 +117,7 @@ PressureSolver::problemSetup(ProblemSpecP& params,SimulationStateP& state)
   // allow for addition of mass source terms
   if (db->findBlock("src")){
     string srcname;
-    for (ProblemSpecP src_db = db->findBlock("src"); src_db != 0; src_db = src_db->findNextBlock("src")){
+    for( ProblemSpecP src_db = db->findBlock( "src" ); src_db != nullptr; src_db = src_db->findNextBlock( "src" ) ) {
       double weight;
       src_db->getAttribute("label", srcname);
       src_db->getWithDefault("weight", weight, 1.0);
@@ -132,7 +130,7 @@ PressureSolver::problemSetup(ProblemSpecP& params,SimulationStateP& state)
   //__________________________________
   // allow for addition of mass source terms with VarLabels
   if (db->findBlock("extra_src")){
-    for (ProblemSpecP src_db = db->findBlock("extra_src"); src_db != 0; src_db = src_db->findNextBlock("extra_src")){
+    for( ProblemSpecP src_db = db->findBlock( "extra_src" ); src_db != nullptr; src_db = src_db->findNextBlock( "extra_src" ) ) {
       string srcname;
       src_db->getAttribute("label", srcname );
 
@@ -140,9 +138,10 @@ PressureSolver::problemSetup(ProblemSpecP& params,SimulationStateP& state)
       tempLabel = VarLabel::find( srcname );
       extraSourceLabels.push_back( tempLabel );
 
-      //note: varlabel must be registered prior to problem setup
-      if (tempLabel == 0 )
+      // Note: varlabel must be registered prior to problem setup
+      if (tempLabel == 0 ) {
         throw InvalidValue("Error: Cannot find the VarLabel for the source term: " + srcname, __FILE__, __LINE__);
+      }
     }
   }
   nExtraSources = extraSourceLabels.size();
@@ -176,8 +175,8 @@ void PressureSolver::sched_solve(const LevelP& level,
 
   d_periodic_vector = level->getPeriodicBoundaries();
 
-  LoadBalancer* lb = sched->getLoadBalancer();
-  const PatchSet* perproc_patches =  lb->getPerProcessorPatchSet(level);
+  const PatchSet * perproc_patches =
+    sched->getLoadBalancer()->getPerProcessorPatchSet(level);
 
   int archIndex = 0; // only one arches material
   d_indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
@@ -243,7 +242,7 @@ PressureSolver::sched_buildLinearMatrix(SchedulerP& sched,
   Ghost::GhostType  gn  = Ghost::None;
   Ghost::GhostType  gaf = Ghost::AroundFaces;
 
-  tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
+  tsk->requires(parent_old_dw, d_lab->d_delTLabel);
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,       gac, 1);
 
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,      gac, 1);
@@ -268,12 +267,10 @@ PressureSolver::sched_buildLinearMatrix(SchedulerP& sched,
   }
 
   // add access to sources:
-  SourceTermFactory& factory = SourceTermFactory::self();
-  for (vector<std::string>::iterator iter = d_new_sources.begin();
-      iter != d_new_sources.end(); iter++){
-    SourceTermBase& src = factory.retrieve_source_term( *iter );
-    const VarLabel* srcLabel = src.getSrcLabel();
-    tsk->requires( Task::NewDW, srcLabel, gn, 0 );
+  for (auto iter = d_new_sources.begin(); iter != d_new_sources.end(); iter++){
+
+    tsk->requires( Task::NewDW, VarLabel::find( *iter ), gn, 0 );
+
   }
 
   //extra sources
@@ -308,7 +305,7 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
   }
 
   delt_vartype delT;
-  parent_old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  parent_old_dw->get(delT, d_lab->d_delTLabel );
   double delta_t = delT;
   delta_t *= timelabels->time_multiplier;
 
@@ -363,15 +360,12 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
                                           &constVars);
     Vector Dx = patch->dCell();
     double volume = Dx.x()*Dx.y()*Dx.z();
+    
     // Add other source terms to the pressure:
-    SourceTermFactory& factory = SourceTermFactory::self();
-    for (vector<std::string>::iterator iter = d_new_sources.begin();
-        iter != d_new_sources.end(); iter++){
+    for ( auto iter = d_new_sources.begin(); iter != d_new_sources.end(); iter++){
 
-      SourceTermBase& src = factory.retrieve_source_term( *iter );
-      const VarLabel* srcLabel = src.getSrcLabel();
       constCCVariable<double> src_value;
-      new_dw->get( src_value, srcLabel, d_indx, patch, gn, 0 );
+      new_dw->get( src_value, VarLabel::find( *iter ), d_indx, patch, gn, 0 );
 
       double weight = d_source_weights[*iter];
 
@@ -388,7 +382,7 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
     }
 
     //-----ADD Extra Sources
-    StaticArray <constCCVariable<double> > extraSources (nExtraSources);
+    std::vector <constCCVariable<double> > extraSources (nExtraSources);
     for ( int i = 0; i < nExtraSources; i++ ) {
       const VarLabel* tempLabel = extraSourceLabels[i];
       new_dw->get( extraSources[i], tempLabel, d_indx, patch, gn, 0);
@@ -444,6 +438,8 @@ PressureSolver::sched_setGuessForX(SchedulerP& sched,
   Task* tsk = scinew Task(taskname, this,
                           &PressureSolver::setGuessForX,
                           timelabels, extraProjection);
+
+  tsk->requires( Task::OldDW, d_lab->d_timeStepLabel );
 
   Ghost::GhostType  gn = Ghost::None;
 
@@ -517,13 +513,16 @@ PressureSolver::setGuessForX ( const ProcessorGroup* pg,
   //__________________________________
   // set outputfile name
   string desc  = timelabels->integrator_step_name;
-  int timestep = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
+
+  // int timeStep = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
+  timeStep_vartype timeStep;
+  old_dw->get( timeStep, d_lab->d_timeStepLabel );
+
   d_iteration ++;
 
   ostringstream fname;
-  fname << "." << desc.c_str() << "." << timestep << "." << d_iteration;
+  fname << "." << desc.c_str() << "." << timeStep << "." << d_iteration;
   d_hypreSolver_parameters->setOutputFileName(fname.str());
-
 }
 
 

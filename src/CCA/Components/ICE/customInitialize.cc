@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -23,12 +23,14 @@
  */
 
 #include <CCA/Components/ICE/customInitialize.h>
-#include <Core/ProblemSpec/ProblemSpecP.h>
-#include <Core/Grid/Variables/CellIterator.h>
+#include <CCA/Components/ICE/Materials/ICEMaterial.h>
+
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
+#include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/MersenneTwister.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
 using namespace std;
 
@@ -57,13 +59,12 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
     //_______________________________________________
     // multiple vortices section
     ProblemSpecP vortices_ps= c_init_ps->findBlock("vortices");    
-    if(vortices_ps) {
+    if( vortices_ps ) {
       cib->vortex_inputs = scinew vortices();
       cib->which = "vortices";
       cib->doesComputePressure = true;
       
-      for (ProblemSpecP vortex_ps = vortices_ps->findBlock("vortex"); vortex_ps != 0;
-                        vortex_ps = vortex_ps->findNextBlock("vortex")) {
+      for( ProblemSpecP vortex_ps = vortices_ps->findBlock( "vortex" ); vortex_ps != nullptr; vortex_ps = vortex_ps->findNextBlock( "vortex" ) ) {
         Point origin;
         double strength;
         double radius;

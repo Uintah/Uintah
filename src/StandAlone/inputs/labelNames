@@ -4,9 +4,10 @@
 #  This script spits out the variable names for the different components
 #   usage:    
 #     labelNames <ice/mpmice/arches/mpmarches>
+#
 #_____________________________________________________________________.
 if ( $#argv == 0) then 
-  echo "labelNames <ice/mpmice/arches/mpmarches> "
+  echo "labelNames <ice/mpmice/arches> "
   exit
 endif
 
@@ -18,10 +19,11 @@ set numHits = 0
 while ($numHits != 1 && $counter < 15)
   @ counter ++
   set buildDir = `pwd | cut -d/ -f1-$counter`
-  set numHits = `echo $buildDir|grep -c SCIRun`
+  set numHits = `echo $buildDir|grep -c src`
+
 end  
 
-set componentDir = $buildDir/src/Core/Labels
+set componentDir = $buildDir/Core/Labels
 
 #__________________________________
 # set which label files to look at
@@ -32,11 +34,8 @@ else if( $component == "mpmice" ) then
 else if( $component == "mpm" ) then
   set files = ( MPMLabel.cc)
 else if( $component == "arches" ) then
-  set componentDir = $buildDir/src/CCA/Components
+  set componentDir = $buildDir/CCA/Components
   set files = ( /Arches/ArchesLabel.cc)
-else if( $component == "mpmarches" ) then
-  set componentDir = $buildDir/src/CCA/Components
-  set files = ( /Arches/ArchesLabel.cc /MPMArches/MPMArchesLabel.cc)
 else 
   echo "\ncomponent $component not found, now exiting\n"
   exit
@@ -46,7 +45,7 @@ endif
 # find all the varLabels
 set labels = ""
 foreach file ( $files[*]:q ) 
-  echo "-----------------I'm examing $file"
+  echo "-----------------Below is a listing of all label names in: $file"
   set labelFile = $componentDir/$file
   grep "create.*" $labelFile| cut -d\" -f2 |grep -v destroy |sort
 end

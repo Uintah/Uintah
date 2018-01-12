@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -41,22 +41,22 @@
 #include <Core/Containers/Array2.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/MinMax.h>
-#include <Core/Util/Time.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Util/Timers/Timers.hpp>
 #include <iomanip>
 
 using namespace std;
 using namespace Uintah;
 //__________________________________
 //  To turn on normal output
-//  setenv SCI_DEBUG "CGSOLVER_DOING_COUT:+"
+//  setenv SCI_DEBUG "SOLVER_DOING_COUT:+"
 
-static DebugStream cout_doing("CGSOLVER_DOING_COUT", false);
+static DebugStream cout_doing("SOLVER_DOING_COUT", false);
 
 namespace Uintah {
 
 DirectSolve::DirectSolve(const ProcessorGroup* myworld)
-  : UintahParallelComponent(myworld)
+  : SolverCommon(myworld)
 {
 }
 
@@ -103,7 +103,9 @@ public:
     DataWarehouse* A_dw = new_dw->getOtherDataWarehouse(which_A_dw);
     DataWarehouse* b_dw = new_dw->getOtherDataWarehouse(which_b_dw);
     
-    double tstart = Time::currentSeconds();
+    Timers::Simple timer;
+    timer.start();
+
     long64 flops = 0, memrefs = 0;
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
@@ -236,10 +238,10 @@ public:
         X[idx] = x[row];
       }
     }
-    double dt=Time::currentSeconds()-tstart;
+    double dt = timer().seconds();    
     double mflops = (double(flops)*1.e-6)/dt;
     double memrate = (double(memrefs)*1.e-9)/dt;
-    if(pg->myrank() == 0){
+    if(pg->myRank() == 0){
       cout << "Solve of " << X_label->getName() 
 	   << " on level " << level->getIndex()
            << " completed in " << dt << " seconds (" 
@@ -260,18 +262,9 @@ private:
 };
 
 SolverParameters *
-DirectSolve::readParameters(       ProblemSpecP     & params, 
-                             const string           & varname,
-                                   SimulationStateP & state )
-{
-  DirectSolveParams* p = scinew DirectSolveParams();
-  return p;
-}
-
-
-SolverParameters *
 DirectSolve::readParameters(       ProblemSpecP & params,
-                             const string       & varname )
+                             const string       & varname,
+			     const SimulationStateP & state )
 {
   DirectSolveParams* p = scinew DirectSolveParams();
   return p;

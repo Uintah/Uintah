@@ -1,0 +1,142 @@
+<Uintah_specification>
+
+  <Meta>
+    <title>Test species transport</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+      
+  <Wasatch>
+
+    <Density method="COMPRESSIBLE">
+      <NameTag name="rho"/>
+    </Density>
+         
+    <TimeIntegrator>RK3SSP</TimeIntegrator>
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="H2"/>
+      <Constant>0.4</Constant>
+    </BasicExpression>
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="O2"/>
+      <Constant>0.2</Constant>     
+    </BasicExpression>
+    
+    <!-- Set the initial condition on temperature -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="Temperature"/>
+      <GaussianFunction amplitude="1000.0" deviation="2e-3" mean="0.0" baseline="1000.0">
+        <NameTag name="XSVOL"/>
+      </GaussianFunction>
+    </BasicExpression>
+    <!-- Set the initial condition expression for x-velocity -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="u"/>
+      <Constant>0</Constant>
+    </BasicExpression>
+    <!-- Set the initial condition expression for pressure - currently pressure has to be name pressure -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="pressure"/>
+      <Constant>101325.0</Constant>
+    </BasicExpression>
+
+    <!--                     -->
+    <!-- TRANSPORT EQUATIONS -->
+    <!--                     -->
+    
+    <!-- Momentum transport equations -->
+    <MomentumEquations>
+      <X-Velocity>u</X-Velocity>
+      <X-Momentum>x-mom</X-Momentum>
+      <Viscosity>
+        <NameTag name="viscosity"/>
+        <FromPoKiTT/>       
+      </Viscosity>    
+    </MomentumEquations>
+    <EnergyEquation>
+      <SolutionVariable>rhoet</SolutionVariable>
+      <PrimitiveVariable>et</PrimitiveVariable>
+      <ConvectiveFlux direction="X" method="CENTRAL">
+        <AdvectiveVelocity>
+          <NameTag name="u"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+      <!--
+         note that the diffusive fluxes for the energy equation will be
+         formed automatically for whatever directsions are active in the
+         species equations
+       -->
+    </EnergyEquation>
+    
+    <SpeciesTransportEquations>
+      <CanteraInputFile>inputs/Wasatch/h2.xml</CanteraInputFile>
+      <CanteraGroup>gas</CanteraGroup>
+      <DiffusiveFlux direction="X">
+        <MixtureAveraged/>
+      </DiffusiveFlux>
+      <ConvectiveFlux direction="X" method="UPWIND">
+        <AdvectiveVelocity>
+          <NameTag name="u"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+      <DetailedKinetics/>
+    </SpeciesTransportEquations>
+  </Wasatch>
+
+  <Time>
+    <maxTime>2e-7</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>1e-8</delt_min>
+    <delt_max>1e-8</delt_max>
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+  <DataArchiver>
+    <filebase>species-transport.uda</filebase>
+    <outputTimestepInterval>10</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle="2" interval="1.0e-7"/>
+    <compression>gzip</compression>
+    <save label="H2"/>
+    <save label="HO2"/>
+    <save label="H2O"/>
+    <save label="OH"/>
+    <save label="rho_OH_rhs"/>
+    <save label="O2"/>
+    <save label="O2_diffFlux_X"/>
+    <save label="O2_enthalpy"/>
+    <save label="HeatFlux_X"/>
+    <save label="N2"/>
+    <save label="Temperature"/>
+    <save label="et"/>
+    <save label="rhoet"/>
+    <save label="rhoet_rhs"/>
+    <save label="x-mom_rhs"/>
+    <save label="rho"/>
+    <save label="rho_H2"/>
+    <save label="Mixture_MW"/>
+    <save label="pressure"/>
+    <save label="viscosity"/>
+    <save label="u"/>
+  </DataArchiver>
+
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>[-1e-2,-1e-2,-1e-2]</lower>
+        <upper>[ 1e-2, 1e-2, 1e-2]</upper>
+        <resolution>[ 128, 1, 1 ]</resolution>
+        <patches>[1,1,1]</patches>
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>
+

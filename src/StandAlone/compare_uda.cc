@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -36,6 +36,7 @@
 #include <Core/DataArchive/DataArchive.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
+#include <Core/Geometry/IntVector.h>
 #include <Core/Grid/Box.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
@@ -59,6 +60,7 @@
 #include <iomanip>
 #include <iterator>
 #include <iostream>
+
 #include <sstream>
 #include <string>
 #include <vector>
@@ -108,6 +110,14 @@ usage(const std::string& badarg, const std::string& progname)
   cerr << "  -dont_sort               (Don't sort the variable names before comparing them)";
   cerr << "\nNote: The absolute and relative tolerance tests must both fail\n"
        << "      for a comparison to fail.\n\n";
+  cerr << "  Exit values:\n";
+  cerr << "    -1:      Comparison failed, variable type not supported.\n";
+  cerr << "     0:      Comparison passed.\n";
+  cerr << "     1:      Error in input parameters.\n"; 
+  cerr << "     2:      Comparison failed, tolerances exceeded. \n";
+  cerr << "     5:      The uda directories may not be compared.\n";
+
+  
   Parallel::exitAll(1);
 }
 
@@ -121,10 +131,24 @@ bool d_concise               = false; // If true (and d_tolerance_error), only p
 bool d_strict_types          = true;
 
 void
-abort_uncomparable()
+abort_uncomparable(std::ostringstream& warn)
 {
-  cerr << "\nThe uda directories may not be compared.\n";
-  Parallel::exitAll(5);
+  cerr << "\n_______________ERROR:compare_uda___________________\n";
+  
+  int error = -9;
+  if (d_tolerance_error){
+    cerr << " The differences have exceeded the tolerances to the point that the udas can no longer be compared.\n";
+    cerr << " Now exiting (2).\n";
+    error = 2;
+  } else{
+  
+    cerr << warn.str();
+    cerr << "\n  The uda directories may not be compared.\n";
+    cerr << " Now exiting (5).\n";
+    error = 5;
+  }
+  cerr << "\n_______________ERROR:compare_uda___________________\n";
+  Parallel::exitAll(error);
 }
 
 void
@@ -139,27 +163,29 @@ tolerance_failure()
 }
 
 void
-displayProblemLocation( const string& var,
+displayProblemLocation( std::ostream& out,
+                        const string& var,
                         int matl,
                         const Patch* patch,
                         double time )
 {
-  cerr << "Time: "     << time << "\n"
+  out << "Time: "     << time << "\n"
        << "Variable: " << var  << "\n"
        << "Material: " << matl << "\n";
   if (patch != 0) {
-    cerr << "Patch: " << patch->getID() << "\n";
+    out << "Patch: " << patch->getID() << "\n";
   }
 }
 
 void
-displayProblemLocation( const string& var,
+displayProblemLocation( std::ostream& out,
+                        const string& var,
                         int matl,
                         const Patch* patch,
                         const Patch* patch2,
                         double time )
 {
-  cerr << "Time: " << time << " "<<
+  out << "Time: " << time << " "<<
     "Level: " <<patch->getLevel()->getIndex() << " " <<
     "Patch1: " << patch->getID() << " " <<
     "Patch2: " << patch2->getID() << " " <<
@@ -230,6 +256,20 @@ bool
 compare( Vector a, Vector b, double abs_tolerance, double rel_tolerance )
 {
   if(std::isnan(a.length()) || std::isnan(b.length())){
+    return false;
+  }
+
+  return compare(a.x(), b.x(), abs_tolerance, rel_tolerance) &&
+         compare(a.y(), b.y(), abs_tolerance, rel_tolerance) &&
+         compare(a.z(), b.z(), abs_tolerance, rel_tolerance);
+}
+
+bool
+compare( IntVector a, IntVector b, double abs_tolerance, double rel_tolerance )
+{
+//  if(std::isnan(a.length()) || std::isnan(b.length())){
+  if(std::isnan(a.x()*a.x()+a.y()*a.y()+a.z()*a.z()) || 
+     std::isnan(b.x()*b.x()+b.y()*b.y()+b.z()*b.z())){
     return false;
   }
 
@@ -422,8 +462,9 @@ void MaterialParticleVarData::createPatchMap()
     ParticleVariable<long64>* particleID = dynamic_cast< ParticleVariable<long64>* >(d_particleVars[patch]);
 
     if (particleID == 0) {
-      cerr << "p.particleID must be a ParticleVariable<long64>\n";
-      abort_uncomparable();
+      ostringstream warn;
+      warn << "    p.particleID must be a ParticleVariable<long64>\n";
+      abort_uncomparable(warn);
     }
 
     for (int i = 0; i < count; i++) {
@@ -452,8 +493,9 @@ void MaterialParticleData::compare(MaterialParticleData& data2,
   if (!particleIDs_->compare(*data2.particleIDs_, matl_,
                              time1, time2,
                              abs_tolerance, rel_tolerance)){
-    cerr << "ParticleIDs do not match\n";
-    abort_uncomparable();
+    ostringstream warn;
+    warn << "    ParticleIDs do not match\n";
+    abort_uncomparable(warn);
   }
 
   map<string, MaterialParticleVarData>::iterator varIter  = vars_.begin();
@@ -500,8 +542,9 @@ void MaterialParticleData::sort()
     ParticleVariable<long64>* pIDs = dynamic_cast<ParticleVariable<long64>*>(particleIDs_->getParticleVars()[i]);
 
     if (pIDs == 0) {
-      cerr << "p.particleID must be a ParticleVariable<long64>\n";
-      abort_uncomparable();
+      ostringstream warn;
+      warn << "    p.particleID must be a ParticleVariable<long64>\n";
+      abort_uncomparable(warn);
     }
 
     long64* pID = (long64*)pIDs->getBasePointer();
@@ -603,6 +646,10 @@ compare(MaterialParticleVarData& data2, int matl, double time1, double time2,
       return compare(data2, dynamic_cast<ParticleVariable<Vector>*>(pvb1),
                      dynamic_cast<ParticleVariable<Vector>*>(pvb2), matl,
                      time1, time2, abs_tolerance, rel_tolerance);
+    case Uintah::TypeDescription::IntVector:
+      return compare(data2, dynamic_cast<ParticleVariable<IntVector>*>(pvb1),
+                     dynamic_cast<ParticleVariable<IntVector>*>(pvb2), matl,
+                     time1, time2, abs_tolerance, rel_tolerance);
     case Uintah::TypeDescription::Matrix3:
       return compare(data2, dynamic_cast<ParticleVariable<Matrix3>*>(pvb1),
                      dynamic_cast<ParticleVariable<Matrix3>*>(pvb2), matl,
@@ -632,13 +679,15 @@ MaterialParticleVarData::compare( MaterialParticleVarData & data2,
   ParticleSubset* pset2 = value2->getParticleSubset();
 
   if (pset1->numParticles() != pset2->numParticles()) {
-    cerr << "Inconsistent number of particles.\n";
+    ostringstream warn;
+    warn << "Inconsistent number of particles.\n";
 
-    displayProblemLocation(d_name, matl, 0, time1);
-
-    cerr << d_filebase1 << " has " << pset1->numParticles() << " particles.\n";
-    cerr << d_filebase2 << " has " << pset2->numParticles() << " particles.\n";
-    abort_uncomparable();
+    displayProblemLocation(warn, d_name, matl, 0, time1);
+    
+    
+    warn << "    " << d_filebase1 << " has " << pset1->numParticles() << " particles.\n";
+    warn << "    " << d_filebase2 << " has " << pset2->numParticles() << " particles.\n";
+    abort_uncomparable(warn);
   }
 
   // Assumes that the particleVariables are in corresponding order --
@@ -662,7 +711,7 @@ MaterialParticleVarData::compare( MaterialParticleVarData & data2,
       const Patch* patch1 = getPatch(i);
       const Patch* patch2 = data2.getPatch(i);
 
-      displayProblemLocation(d_name, matl, patch1, patch2, time1);
+      displayProblemLocation(cerr, d_name, matl, patch1, patch2, time1);
 
       cerr << d_filebase1 << ":\n" << (*value1)[i] << endl;
       cerr << d_filebase2 << ":\n" << (*value2)[i] << endl;
@@ -735,7 +784,7 @@ void addParticleData(MaterialParticleDataMap& matlParticleDataMap,
                      LevelP level,
                      int timestep)
 {
-  Level::const_patchIterator iter;
+  Level::const_patch_iterator iter;
   for(iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) {
     const Patch* patch = *iter;
 
@@ -774,6 +823,9 @@ void addParticleData(MaterialParticleDataMap& matlParticleDataMap,
             break;
           case Uintah::TypeDescription::Vector:
             pvb = scinew ParticleVariable<Vector>();
+            break;
+          case Uintah::TypeDescription::IntVector:
+            pvb = scinew ParticleVariable<IntVector>();
             break;
           case Uintah::TypeDescription::Matrix3:
             pvb = scinew ParticleVariable<Matrix3>();
@@ -814,11 +866,12 @@ compareParticles( DataArchive  * da1,
   ParticleSubset* pset2 = value2.getParticleSubset();
 
   if (pset1->numParticles() != pset2->numParticles()) {
-    cerr << "Inconsistent number of particles.\n";
-    displayProblemLocation(var, matl, patch1, time);
-    cerr << d_filebase1 << " has " << pset1->numParticles() << " particles.\n";
-    cerr << d_filebase2 << " has " << pset2->numParticles() << " particles.\n";
-    abort_uncomparable();
+    ostringstream warn;
+    warn << "Inconsistent number of particles.\n";
+    displayProblemLocation(warn, var, matl, patch1, time);
+    warn << "    " << d_filebase1 << " has " << pset1->numParticles() << " particles.\n";
+    warn << "    " << d_filebase2 << " has " << pset2->numParticles() << " particles.\n";
+    abort_uncomparable(warn);
   }
 
   ParticleSubset::iterator iter1 = pset1->begin();
@@ -827,7 +880,7 @@ compareParticles( DataArchive  * da1,
   for ( ; iter1 != pset1->end() && iter2 != pset2->end(); iter1++, iter2++) {
     if (!compare(value1[*iter1], value2[*iter2], abs_tolerance, rel_tolerance)) {
       cerr << "\nValues differ too much.\n";
-      displayProblemLocation(var, matl, patch1, time);
+      displayProblemLocation(cerr, var, matl, patch1, time);
       cerr << d_filebase1 << ":\n";
       print(cerr, value1[*iter1]);
       cerr << endl << d_filebase2 << ":\n";
@@ -1135,7 +1188,7 @@ SpecificFieldComparator<Field, Iterator>::compareFields( DataArchive            
       if (!compare(field[*iter], (*field2)[*iter], abs_tolerance, rel_tolerance)) {
 
         cerr << "DIFFERENCE " << *iter << "  ";
-        displayProblemLocation(var, matl, patch, patch2, time1);
+        displayProblemLocation(cerr, var, matl, patch, patch2, time1);
 
         cerr << d_filebase1 << " (1)\t\t" << d_filebase2 << " (2)"<<endl;
         print(cerr, field[*iter]);
@@ -1189,7 +1242,7 @@ buildPatchMap( LevelP                 level,
   patchMap.resize(low, high);
   patchMap.initialize(0);
 
-  Level::const_patchIterator iter;
+  Level::const_patch_iterator iter;
   for(iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) {
     const Patch* patch = *iter;
 
@@ -1199,8 +1252,8 @@ buildPatchMap( LevelP                 level,
     patchMap.rewindow(patch->getExtraLowIndex(basis,bl),
                       patch->getExtraHighIndex(basis,bl));
 
-    serial_for( patchMap.range(), [&]( int i, int j, int k) {
-      if ( patchMap(i,j,k) != nullptr ) {
+    serial_for( patchMap.range(), [&](int i, int j, int k) {
+      if (patchMap(i,j,k) != nullptr) {
         static ProgressiveWarning pw("Two patches on the same grid overlap", 10);
         if (pw.invoke())
           cerr << "Patches " << patch->getID() << " and "
@@ -1235,7 +1288,6 @@ buildPatchMap( LevelP                 level,
 int
 main(int argc, char** argv)
 {
-  Uintah::Parallel::determineIfRunningUnderMPI( argc, argv );
   Uintah::Parallel::initializeManager(argc, argv);
 
   double rel_tolerance  = 1e-6; // Default
@@ -1328,7 +1380,6 @@ main(int argc, char** argv)
   cerr << "Using absolute tolerance: " << abs_tolerance << endl;
   cerr << "Using relative tolerance: " << rel_tolerance << endl;
 
-
   if( udaLevels[0] != -9 ){
     cerr << "Comparing uda1: Level("<< udaLevels[0] << ") against uda2: level(" << udaLevels[1] << ")" << endl;
   }
@@ -1362,9 +1413,10 @@ main(int argc, char** argv)
     ASSERTEQ(vars2.size(), types2.size());
 
     if (vars.size() != vars2.size() && ignoreVar.size() == 0) {
-      cerr << d_filebase1 << " has " << vars.size() << " variables\n";
-      cerr << d_filebase2 << " has " << vars2.size() << " variables\n";
-      abort_uncomparable();
+      ostringstream warn;
+      warn << "    " << d_filebase1 << " has " << vars.size() << " variables\n";
+      warn << "    " << d_filebase2 << " has " << vars2.size() << " variables\n";
+      abort_uncomparable(warn);
     }
 
     vartypes1.resize(vars.size());
@@ -1403,9 +1455,10 @@ main(int argc, char** argv)
     vartypes2.resize(vars2.size());
 
     if (vartypes1.size() != vartypes2.size() )  {
-      cerr << d_filebase1 << " has " << vars.size()  << " variables\n";
-      cerr << d_filebase2 << " has " << vars2.size() << " variables\n";
-      abort_uncomparable();
+      ostringstream warn;
+      warn << "    " << d_filebase1 << " has " << vars.size()  << " variables\n";
+      warn << "    " << d_filebase2 << " has " << vars2.size() << " variables\n";
+      abort_uncomparable(warn);
     }
 
     //__________________________________
@@ -1426,16 +1479,18 @@ main(int argc, char** argv)
 
     for (unsigned int i = 0; i < vars.size(); i++) {
       if (vars[i] != vars2[i]) {
-        cerr << "Variable " << vars[i] << " in " << d_filebase1 << " does not match\n";
-        cerr << "variable " << vars2[i] << " in " << d_filebase2 << endl;
-        abort_uncomparable();
+        ostringstream warn;
+        warn << "    Variable " << vars[i] << " in " << d_filebase1 << " does not match\n";
+        warn << "    variable " << vars2[i] << " in " << d_filebase2 << "\n";
+        abort_uncomparable(warn);
       }
 
       if (types[i] != types2[i]) {
-        cerr << "Variable " << vars[i] << " does not have the same type in both uda directories.\n";
-        cerr << "In " << d_filebase1 << " its type is " << types[i]->getName() << endl;
-        cerr << "In " << d_filebase2 << " its type is " << types2[i]->getName() << endl;
-        abort_uncomparable();
+        ostringstream warn;
+        warn << "    Variable " << vars[i] << " does not have the same type in both uda directories.\n";
+        warn << "    In " << d_filebase1 << " its type is " << types[i]->getName() << endl;
+        warn << "    In " << d_filebase2 << " its type is " << types2[i]->getName() << endl;
+        abort_uncomparable(warn);
       }
     }
 
@@ -1452,9 +1507,10 @@ main(int argc, char** argv)
 
     for( unsigned long tstep = 0; tstep < times.size() && tstep < times2.size(); tstep++ ){
       if (!compare(times[tstep], times2[tstep], abs_tolerance, rel_tolerance)) {
-        cerr << "Timestep at time " << times[tstep]  << " in " << d_filebase1 << " does not match\n";
-        cerr << "timestep at time " << times2[tstep] << " in " << d_filebase2 << " within the allowable tolerance.\n";
-        abort_uncomparable();
+        ostringstream warn;
+        warn << "    Timestep at time " << times[tstep]  << " in " << d_filebase1 << " does not match\n";
+        warn << "    Timestep at time " << times2[tstep] << " in " << d_filebase2 << " within the allowable tolerance.\n";
+        abort_uncomparable(warn);
       }
 
       double time1 = times[tstep];
@@ -1480,15 +1536,17 @@ main(int argc, char** argv)
         maxLevels[1] = minLevel[1] +1;
 
         if( maxLevels[0] > grid->numLevels() || maxLevels[1] > grid2->numLevels() ) {
-          cerr << " The level(s) specified (uda:" << maxLevels[0] << " , uda2: " << maxLevels[1] << ") are invalid.\n";
-          cerr << " The maximum level index that are valid are (uda:" << grid->numLevels() << " , uda2: " << grid2->numLevels() << ").\n";
-          abort_uncomparable();
+          ostringstream warn;
+          warn << "    The level(s) specified (uda:" << maxLevels[0] << " , uda2: " << maxLevels[1] << ") are invalid.\n";
+          warn << "    The maximum level index that are valid are (uda:" << grid->numLevels() << " , uda2: " << grid2->numLevels() << ").\n";
+          abort_uncomparable(warn);
         }
 
       } else if ( maxLevels[0] != maxLevels[1] ) {
-        cerr << "Grid at time " << time1 << " in " << d_filebase1 << " has " << grid->numLevels() << " levels.\n";
-        cerr << "Grid at time " << time2 << " in " << d_filebase2 << " has " << grid2->numLevels() << " levels.\n";
-        abort_uncomparable();
+        ostringstream warn;
+        warn << "    Grid at time " << time1 << " in " << d_filebase1 << " has " << grid->numLevels() << " levels.\n";
+        warn << "    Grid at time " << time2 << " in " << d_filebase2 << " has " << grid2->numLevels() << " levels.\n";
+        abort_uncomparable(warn);
       }
 
 
@@ -1514,7 +1572,7 @@ main(int argc, char** argv)
           ConsecutiveRangeSet matls;
 
           bool first = true;
-          Level::const_patchIterator iter;
+          Level::const_patch_iterator iter;
 
           //__________________________________
           //  bulletproofing does the variable exist in both DAs on this timestep?
@@ -1534,9 +1592,10 @@ main(int argc, char** argv)
             }
           }
           if( existsDA1 != existsDA2 ) {
-            cerr << "The variable ("<< var << ") was not found on timestep (" << tstep  <<  ") in both udas. \n"
-                 << "If this occurs on timestep 0 then ("<< var<< ") was not computed in the initialization task."<<endl;
-            abort_uncomparable();
+            ostringstream warn;
+            warn << "    The variable ("<< var << ") was not found on timestep (" << index[tstep]  <<  "), Level-" << level->getIndex() << ", in both udas. \n"
+                 << "    If this occurs on timestep 0 then ("<< var<< ") was not computed in the initialization task.\n";
+            abort_uncomparable(warn);
           }
 
           //__________________________________
@@ -1548,12 +1607,13 @@ main(int argc, char** argv)
               matls = da1->queryMaterials( var, patch, tstep );
             }
             else if (matls != da1->queryMaterials( var, patch, tstep )) {
-              cerr << "The material set is not consistent for variable "
-                   << var << " across patches at time " << time1 << endl;
-              cerr << "Previously was: " << matls << endl;
-              cerr << "But on patch " << patch->getID() << ": " <<
-                da1->queryMaterials(var, patch, tstep) << endl;
-              abort_uncomparable();
+              ostringstream warn;
+              warn << "    The material set is not consistent for variable "
+                   << var << " across patches at time " << time1 << ".\n";
+              warn << "    Previously was: " << matls << endl;
+              warn << "    But on patch " << patch->getID() << ": " <<
+                     da1->queryMaterials(var, patch, tstep) << ".\n";
+              abort_uncomparable(warn);
             }
             first = false;
           }
@@ -1566,13 +1626,14 @@ main(int argc, char** argv)
             const Patch* patch = *iter;
 
             if (matls != da2->queryMaterials( var, patch, tstep )) {
-              cerr << "Inconsistent material sets for variable "
+              ostringstream warn;
+              warn << "Inconsistent material sets for variable "
                    << var << " on patch = " << patch->getID()
                    << ", time " << time1 << endl;
-              cerr << d_filebase1 << " (1) has material set: " << matls << ".\n";
-              cerr << d_filebase2 << " (2) has material set: "
+              warn << "    " << d_filebase1 << " (1) has material set: " << matls << ".\n";
+              warn << "    " << d_filebase2 << " (2) has material set: "
                    << da2->queryMaterials(var, patch, tstep) << ".\n";
-              abort_uncomparable();
+              abort_uncomparable(warn);
             }
           }
         }
@@ -1616,43 +1677,47 @@ main(int argc, char** argv)
             LevelP level2 = grid2->getLevel(l2);
 
             if (level->numPatches() != level2->numPatches()) {
-              cerr << "Inconsistent number of patches on level " << l1 << " at time " << time1 << ":" << endl;
-              cerr << d_filebase1 << " has " << level->numPatches()  << " patches.\n";
-              cerr << d_filebase2 << " has " << level2->numPatches() << " patches.\n";
-              abort_uncomparable();
+              ostringstream warn;
+              warn << "    Inconsistent number of patches on level " << l1 << " at time " << time1 << ":" << endl;
+              warn << "    " << d_filebase1 << " has " << level->numPatches()  << " patches.\n";
+              warn << "    " << d_filebase2 << " has " << level2->numPatches() << " patches.\n";
+              abort_uncomparable(warn);
             }
 
 
-            Level::const_patchIterator iter2 = level2->patchesBegin();
-            for(Level::const_patchIterator iter = level->patchesBegin();
+            Level::const_patch_iterator iter2 = level2->patchesBegin();
+            for(Level::const_patch_iterator iter = level->patchesBegin();
                 iter != level->patchesEnd(); iter++, iter2++){
 
               const Patch* patch  = *iter;
               const Patch* patch2 = *iter2;
 
               if (patch->getID() != patch2->getID()) {
-                cerr << "Inconsistent patch ids on level " << l1 << " at time " << time1 << endl;
-                cerr << d_filebase1 << " has patch id " << patch->getID() << " where\n";
-                cerr << d_filebase2 << " has patch id " << patch2->getID() << endl;
-                abort_uncomparable();
+                ostringstream warn;
+                warn << "    Inconsistent patch ids on level " << l1 << " at time " << time1 << endl;
+                warn << "    " << d_filebase1 << " has patch id " << patch->getID() << " where\n";
+                warn << "    " << d_filebase2 << " has patch id " << patch2->getID() << ".\n";
+                abort_uncomparable(warn);
               }
 
               cerr << "\t\tPatch: " << patch->getID() << "\n";
 
               if (!compare(patch->getExtraBox().lower(), patch2->getExtraBox().lower(), abs_tolerance, rel_tolerance) ||
                   !compare(patch->getExtraBox().upper(), patch2->getExtraBox().upper(), abs_tolerance, rel_tolerance)) {
+                
+                ostringstream warn;
+                warn << "    Inconsistent patch bounds on patch " << patch->getID()
+                     << " at time " << time1 << ".\n";
 
-                cerr << "Inconsistent patch bounds on patch " << patch->getID()
-                     << " at time " << time1 << endl;
-
-                cerr << d_filebase1 << " has bounds " << patch->getExtraBox().lower()
+                warn << "    " << d_filebase1 << " has bounds " << patch->getExtraBox().lower()
                      << " - " << patch->getExtraBox().upper() << ".\n";
 
-                cerr << d_filebase2 << " has bounds " << patch2->getExtraBox().lower()
+                warn << "    " << d_filebase2 << " has bounds " << patch2->getExtraBox().lower()
                      << " - " << patch2->getExtraBox().upper() << ".\n";
 
-                cerr << "Difference is: " << patch->getExtraBox().lower() - patch2->getExtraBox().lower() << " - " << patch->getExtraBox().upper() - patch2->getExtraBox().upper() << endl;
-                abort_uncomparable();
+                warn << "    " << "Difference is: " << patch->getExtraBox().lower() - patch2->getExtraBox().lower() << " - " 
+                                          << patch->getExtraBox().upper() - patch2->getExtraBox().upper() << ".\n";
+                abort_uncomparable(warn);
               }
 
               ConsecutiveRangeSet matls  = da1->queryMaterials( var, patch,  tstep );
@@ -1686,6 +1751,10 @@ main(int argc, char** argv)
                     break;
                   case Uintah::TypeDescription::Vector:
                     compareParticles<Vector>(da1, da2, var, matl, patch, patch2,
+                                             time1, tstep, abs_tolerance, rel_tolerance);
+                    break;
+                  case Uintah::TypeDescription::IntVector:
+                    compareParticles<IntVector>(da1, da2, var, matl, patch, patch2,
                                              time1, tstep, abs_tolerance, rel_tolerance);
                     break;
                   case Uintah::TypeDescription::Matrix3:
@@ -1784,8 +1853,9 @@ main(int argc, char** argv)
           difference2 = Region::difference(region1,region2);
 
           if(!difference1.empty() || !difference2.empty()){
-            cerr << "Patches on level:" << l1 << " do not cover the same area\n";
-            abort_uncomparable();
+            ostringstream warn;
+            warn << "    Patches on level:" << l1 << " do not cover the same area.\n";
+            abort_uncomparable(warn);
           }
 
           // map nodes to patches in level and level2 respectively
@@ -1799,22 +1869,23 @@ main(int argc, char** argv)
             // bulletproofing
             if ((patchMap(i,j,k)  == nullptr && patch2Map(i,j,k) != nullptr) ||
                 (patch2Map(i,j,k) == nullptr && patchMap(i,j,k) != nullptr)) {
-              cerr << "Inconsistent patch coverage on level " << l1
-                   << " at time " << time1 << endl;
+              ostringstream warn;
+              warn << "    Inconsistent patch coverage on level " << l1
+                   << " at time " << time1 << ".\n";
 
               if (patchMap(i,j,k) != nullptr) {
-                cerr << IntVector(i,j,k) << " is covered by " << d_filebase1 << endl
-                     << " and not " << d_filebase2 << endl;
+                warn << "    " << IntVector(i,j,k) << " is covered by " << d_filebase1 << endl
+                     << " and not " << d_filebase2 << ".\n";
               }
               else {
-                cerr << IntVector(i,j,k) << " is covered by " << d_filebase2 << endl
-                     << " and not " << d_filebase1 << endl;
+                warn << "    " << IntVector(i,j,k) << " is covered by " << d_filebase2 << endl
+                     << " and not " << d_filebase1 << ".\n";
               }
-              abort_uncomparable();
+              abort_uncomparable(warn);
             }
           });
 
-          Level::const_patchIterator iter;
+          Level::const_patch_iterator iter;
 
           for(iter = level->patchesBegin();iter != level->patchesEnd(); iter++) {
             const Patch* patch = *iter;
@@ -1836,10 +1907,11 @@ main(int argc, char** argv)
     //__________________________________
     //
     if (times.size() != times2.size()) {
-      cerr << endl;
-      cerr << d_filebase1 << " has " << times.size() << " timesteps\n";
-      cerr << d_filebase2 << " has " << times2.size() << " timesteps\n";
-      abort_uncomparable();
+      ostringstream warn;
+      warn << "\n";
+      warn << "    " << d_filebase1 << " has " << times.size() << " timesteps\n";
+      warn << "    " << d_filebase2 << " has " << times2.size() << " timesteps\n";
+      abort_uncomparable(warn);
     }
 
     delete da1;

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -102,6 +102,12 @@ public:
     value_[0] = x;
     value_[1] = y;
     value_[2] = z;
+  }
+
+  inline IntVector(int v) {
+    value_[0] = v;
+    value_[1] = v;
+    value_[2] = v;
   }
 
   inline IntVector operator*(const IntVector& v) const {

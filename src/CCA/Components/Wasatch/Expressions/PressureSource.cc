@@ -88,7 +88,7 @@ void PressureSource::bind_operators( const SpatialOps::OperatorDatabase& opDB )
 void PressureSource::evaluate()
 {
   using namespace SpatialOps;
-  typedef std::vector<SVolField*> SVolFieldVec;
+  typedef typename Expr::Expression<SVolField>::ValVec SVolFieldVec;
   SVolFieldVec& results = this->get_value_vec();
   
   const TimeField& dt = dt_->field_ref();

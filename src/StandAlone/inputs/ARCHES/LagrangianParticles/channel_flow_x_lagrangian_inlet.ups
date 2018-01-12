@@ -1,15 +1,11 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version='1.0' encoding='ISO-8859-1'?>
 <!-- @version: -->
 <Uintah_specification>
-
   <Meta>
     <title>Laminar Channel Flow</title>
   </Meta>
-
   <SimulationComponent type="arches"/>
-
   <Solver type="hypre"/>
-
   <Time>
     <maxTime>5.0</maxTime>
     <initTime>0.0</initTime>
@@ -18,7 +14,6 @@
     <timestep_multiplier>0.4</timestep_multiplier>
     <max_Timesteps>101</max_Timesteps>
   </Time>
-
   <DataArchiver>
     <filebase>channel_flow_x_lagrangian_inlet.uda</filebase>
     <outputInitTimestep/>
@@ -27,44 +22,36 @@
     <save label="vVelocitySPBC"/>
     <save label="wVelocitySPBC"/>
     <save label="volFraction"/>
-
     <save label="CCVelocity"/>
     <save label="densityCP"/>
     <save label="continuityResidual"/>
     <save label="pressurePS"/>
     <save label="cellType"/>
     <save label="p.x"/>
-
     <save label="p.u"/>
     <save label="p.v"/>
     <save label="p.w"/>
-
     <save label="p.px"/>
     <save label="p.py"/>
     <save label="p.pz"/>
-
     <save label="p.d"/>
-
     <save label="p.particleID"/>
     <checkpoint cycle="2" interval="0.02"/>
     <compression>gzip</compression>
   </DataArchiver>
-
   <MPM>
     <time_integrator>explicit</time_integrator>
     <interpolator>linear</interpolator>
   </MPM>
-
   <Grid>
     <BoundaryConditions>
       <DefaultMaterial>0</DefaultMaterial>
-
       <Face circle="x-" name="x- circle" radius=".1" origin="0 .5 .5">
-				<ParticleBC>
-      		<Inlet>
-      			<ParticlesPerSecond>5e2</ParticlesPerSecond>
-      	  </Inlet>
-      	</ParticleBC>
+        <ParticleBC>
+          <Inlet>
+            <ParticlesPerSecond>5e2</ParticlesPerSecond>
+          </Inlet>
+        </ParticleBC>
         <BCType label="velocity inlet" var="MassFlowInlet">
           <value>0.01</value>
         </BCType>
@@ -133,7 +120,6 @@
         </BCType>
       </Face>
     </BoundaryConditions>
-
     <Level>
       <Box label="1">
         <lower>[0,0,0]</lower>
@@ -143,25 +129,19 @@
         <patches>[1,1,1]</patches>
       </Box>
     </Level>
-
   </Grid>
-
   <PhysicalConstants>
     <gravity>[-9.8,0,0]</gravity>
     <reference_point>[-1,-1,-1]</reference_point>
     <viscosity>0.001000</viscosity>
   </PhysicalConstants>
-
   <CFD>
-
     <!-- ARCHES specification -->
     <ARCHES>
-
       <!-- TIME INTEGRATOR -->
       <TimeIntegrator>
         <ExplicitIntegrator order="first"/>
       </TimeIntegrator>
-
       <!-- SCALARS -->
       <TransportEqns>
         <Eqn label="mixture_fraction" type="CCscalar">
@@ -179,44 +159,32 @@
           </Clipping>
         </Eqn>
       </TransportEqns>
-
       <Properties>
-        <ConstantProps>
-          <density>1.0</density>
+        <table label="a_user_generated_label" type="constant">
           <temperature>298</temperature>
-        </ConstantProps>
+          <density>1.0</density>
+        </table>
       </Properties>
-
       <BoundaryConditions>
       </BoundaryConditions>
-
       <LagrangianParticles>
         <ParticlesPerCell>0</ParticlesPerCell>
         <ParticlePosition x="p.px" y="p.py" z="p.pz"/>
         <ParticleVelocity u="p.u" v="p.v" w="p.w"/>
-        <ParticleSize     label="p.d"/>
+        <ParticleSize label="p.d"/>
         <ParticleVariables/>
       </LagrangianParticles>
-
       <Initialization>
-        <task task_label="init_particles"
-              variable_label="Lx" 
-              type="random_lagrangian_particles"/>
-        <task task_label="init_velocity"
-              variable_label="Lvel" 
-              type="lagrangian_particle_velocity">
+        <task task_label="init_particles" variable_label="Lx" type="random_lagrangian_particles"/>
+        <task task_label="init_velocity" variable_label="Lvel" type="lagrangian_particle_velocity">
           <velocity_init type="as_gas_velocity"/>
         </task>
-        <task task_label="init_size"
-              variable_label="Ld" 
-              type="lagrangian_particle_size">
+        <task task_label="init_size" variable_label="Ld" type="lagrangian_particle_size">
           <size_init type="random"/>
           <max_diameter>1e-4</max_diameter>
         </task>
       </Initialization>
-
       <ExplicitSolver>
-
         <initial_dt>0.05</initial_dt>
         <PressureSolver>
           <Parameters>
@@ -227,7 +195,6 @@
             <relax_type>2</relax_type>
           </Parameters>
         </PressureSolver>
-
         <MomentumSolver>
           <convection_scheme>central</convection_scheme>
           <initialization type="constant">
@@ -235,12 +202,8 @@
             <const_v>.0</const_v>
             <const_w>.0</const_w>
           </initialization>
-
         </MomentumSolver>
-
       </ExplicitSolver>
-
     </ARCHES>
-
   </CFD>
 </Uintah_specification>

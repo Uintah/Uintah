@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2016 The University of Utah
+ * Copyright (c) 2012-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -42,11 +42,7 @@
  *         \frac{\partial \phi}{\partial x}\f$, where \f$\Gamma\f$ is located at 
  *         the same location as \f$\phi\f$.
  *
- *  \tparam FluxT the type for the diffusive flux which is actually the scalarT faces.
- *
- *  \tparam InterpT The type of operator used in interpolating
- *       \f$\Gamma\f$ from the location of \f$\phi\f$ to the location
- *       of \f$\frac{\partial \phi}{\partial x}\f$
+ *  \tparam FluxT the type for the diffusive flux which is actually the ScalarT faces.
  */
 template< typename FluxT >
 class DiffusiveFlux

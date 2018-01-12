@@ -1,13 +1,9 @@
 #include <CCA/Components/Arches/Task/TaskInterface.h>
-#include <CCA/Components/Arches/Operators/Operators.h>
+#include <Core/Grid/Variables/VarTypes.h>
 
 //Uintah Includes:
 
-//3P Includes:
-//#include <boost/foreach.hpp>
-
 using namespace Uintah;
-namespace so = SpatialOps;
 
 typedef ArchesFieldContainer::WHICH_DW WHICH_DW;
 typedef ArchesFieldContainer::VAR_DEPEND VAR_DEPEND;
@@ -22,171 +18,9 @@ TaskInterface::TaskInterface( std::string task_name, int matl_index ) :
 TaskInterface::~TaskInterface()
 {
   //destroy local labels
-  BOOST_FOREACH( const VarLabel* &ilab, _local_labels ){
-    VarLabel::destroy(ilab);
+  for ( auto ilab = _local_labels.begin(); ilab != _local_labels.end(); ilab++ ){
+    VarLabel::destroy(*ilab);
   }
-}
-
-//====================================================================================
-//
-//====================================================================================
-void
-TaskInterface::register_variable( std::string name,
-                                  VAR_DEPEND dep,
-                                  int nGhost,
-                                  WHICH_DW dw,
-                                  VariableRegistry& variable_registry,
-                                  const int time_substep ){
-
-  register_variable_work( name, dep, nGhost, dw, variable_registry, time_substep );
-
-}
-
-void
-TaskInterface::register_variable( std::string name,
-                                  VAR_DEPEND dep,
-                                  int nGhost,
-                                  WHICH_DW dw,
-                                  VariableRegistry& variable_registry ){
-
-  register_variable_work( name, dep, nGhost, dw, variable_registry, 0 );
-
-}
-
-void
-TaskInterface::register_variable( std::string name,
-                                  VAR_DEPEND dep,
-                                  VariableRegistry& variable_registry ){
-
-  WHICH_DW dw = ArchesFieldContainer::NEWDW;
-  int nGhost = 0;
-
-  register_variable_work( name, dep, nGhost, dw, variable_registry, 0 );
-
-}
-
-void
-TaskInterface::register_variable( std::string name,
-                                  VAR_DEPEND dep,
-                                  VariableRegistry& variable_registry,
-                                  const int timesubstep ){
-
-  WHICH_DW dw = ArchesFieldContainer::NEWDW;
-  int nGhost = 0;
-
-  register_variable_work( name, dep, nGhost, dw, variable_registry, timesubstep );
-
-}
-
-//====================================================================================
-//
-//====================================================================================
-void
-TaskInterface::register_variable_work( std::string name,
-                                       VAR_DEPEND dep,
-                                       int nGhost,
-                                       WHICH_DW dw,
-                                       VariableRegistry& variable_registry,
-                                       const int time_substep ){
-
-  ArchesFieldContainer::VariableInformation info;
-
-  info.name   = name;
-  info.depend = dep;
-  info.dw     = dw;
-  info.nGhost = nGhost;
-  info.local = false;
-
-  info.is_constant = false;
-  if ( dep == ArchesFieldContainer::REQUIRES ){
-    info.is_constant = true;
-  }
-
-  switch (dw) {
-
-  case ArchesFieldContainer::OLDDW:
-
-    info.uintah_task_dw = Task::OldDW;
-    break;
-
-  case ArchesFieldContainer::NEWDW:
-
-    info.uintah_task_dw = Task::NewDW;
-    break;
-
-  case ArchesFieldContainer::LATEST:
-
-    if ( time_substep == 0 ){
-      info.dw = ArchesFieldContainer::OLDDW;
-      info.uintah_task_dw = Task::OldDW;
-    } else {
-      info.dw = ArchesFieldContainer::NEWDW;
-      info.uintah_task_dw = Task::NewDW;
-    }
-    break;
-
-  default:
-
-    throw InvalidValue("Arches Task Error: Cannot determine the DW needed for variable: "+name, __FILE__, __LINE__);
-    break;
-
-  }
-
-  //check for conflicts:
-  if (dep == ArchesFieldContainer::COMPUTES && dw == ArchesFieldContainer::OLDDW) {
-    throw InvalidValue("Arches Task Error: Cannot COMPUTE (ArchesFieldContainer::COMPUTES) a variable from OldDW for variable: "+name, __FILE__, __LINE__);
-  }
-
-  if ( (dep == ArchesFieldContainer::MODIFIES && dw == ArchesFieldContainer::OLDDW) ) {
-    throw InvalidValue("Arches Task Error: Cannot MODIFY a variable from OldDW for variable: "+name, __FILE__, __LINE__);
-  }
-
-  if ( dep == ArchesFieldContainer::COMPUTES || dep == ArchesFieldContainer::MODIFIES ){
-
-    if ( nGhost > 0 ) {
-
-      std::cout << "Arches Task Warning: A variable COMPUTE/MODIFIES found that is requesting ghosts for: "+name+" Nghosts set to zero!" << std::endl;
-      info.nGhost = 0;
-
-    }
-  }
-
-  const VarLabel* the_label = nullptr;
-  the_label = VarLabel::find( name );
-
-  if ( the_label == nullptr ){
-    throw InvalidValue("Error: The variable named: "+name+" does not exist for task:"+_task_name,__FILE__,__LINE__);
-  } else {
-    info.label = the_label;
-  }
-
-  const Uintah::TypeDescription* type_desc = the_label->typeDescription();
-
-  if ( dep == ArchesFieldContainer::REQUIRES ) {
-
-    if ( nGhost == 0 ){
-      info.ghost_type = Ghost::None;
-    } else {
-      if ( type_desc == CCVariable<int>::getTypeDescription() ) {
-          info.ghost_type = Ghost::AroundCells;
-      } else if ( type_desc == CCVariable<double>::getTypeDescription() ) {
-          info.ghost_type = Ghost::AroundCells;
-      } else if ( type_desc == CCVariable<Vector>::getTypeDescription() ) {
-          info.ghost_type = Ghost::AroundCells;
-      } else if ( type_desc == SFCXVariable<double>::getTypeDescription() ) {
-          info.ghost_type = Ghost::AroundFaces;
-      } else if ( type_desc == SFCYVariable<double>::getTypeDescription() ) {
-          info.ghost_type = Ghost::AroundFaces;
-      } else if ( type_desc == SFCZVariable<double>::getTypeDescription() ) {
-          info.ghost_type = Ghost::AroundFaces;
-      } else {
-        throw InvalidValue("Error: No coverage yet for this type of variable.", __FILE__,__LINE__);
-      }
-    }
-  }
-
-  variable_registry.push_back( info );
-
 }
 
 //====================================================================================
@@ -202,19 +36,23 @@ void TaskInterface::schedule_task( const LevelP& level,
 
   Task* tsk;
 
+  const bool packed_tasks = false;
+
   if ( task_type == STANDARD_TASK ){
-    register_timestep_eval( variable_registry, time_substep );
+    register_timestep_eval( variable_registry, time_substep , packed_tasks);
     tsk = scinew Task( _task_name, this, &TaskInterface::do_task, variable_registry, time_substep );
   } else if ( task_type == BC_TASK ) {
-    register_compute_bcs( variable_registry, time_substep );
+    register_compute_bcs( variable_registry, time_substep , packed_tasks);
     tsk = scinew Task( _task_name+"_bc_task", this, &TaskInterface::do_bcs, variable_registry, time_substep );
   } else
     throw InvalidValue("Error: Task type not recognized.",__FILE__,__LINE__);
 
   int counter = 0;
-  BOOST_FOREACH( ArchesFieldContainer::VariableInformation &ivar, variable_registry ){
+  for ( auto pivar = variable_registry.begin(); pivar != variable_registry.end(); pivar++ ){
 
     counter++;
+
+    ArchesFieldContainer::VariableInformation& ivar = *pivar;
 
     switch(ivar.depend) {
     case ArchesFieldContainer::COMPUTES:
@@ -233,18 +71,47 @@ void TaskInterface::schedule_task( const LevelP& level,
     default:
       throw InvalidValue("Arches Task Error: Cannot schedule task becuase of incomplete variable dependency: "+_task_name, __FILE__, __LINE__);
       break;
-
     }
   }
 
   //other variables:
-  tsk->requires(Task::OldDW, VarLabel::find("delT"));
 
-  if ( counter > 0 )
+  // This method is called at both initialization and otherwise. At
+  // initialization the old DW, i.e. DW(0) will not exist so require
+  // the value from the new DW.  Otherwise for a normal time step get
+  // the time step from the old DW.
+
+  if( sched->get_dw(0) ) {
+    if( sched->get_dw(0)->exists( VarLabel::find(timeStep_name) ) )
+      tsk->requires(Task::OldDW, VarLabel::find(timeStep_name));
+
+    if( sched->get_dw(0)->exists( VarLabel::find(simTime_name) ) )
+      tsk->requires(Task::OldDW, VarLabel::find(simTime_name));
+
+    if( sched->get_dw(0)->exists( VarLabel::find(delT_name) ) )
+      tsk->requires(Task::OldDW, VarLabel::find(delT_name));
+  }
+
+  // Initialization only.
+  else if( sched->get_dw(1) ) {
+    if( sched->get_dw(1)->exists( VarLabel::find(timeStep_name) ) )
+      tsk->requires(Task::OldDW, VarLabel::find(timeStep_name));
+
+    if( sched->get_dw(1)->exists( VarLabel::find(simTime_name) ) )
+      tsk->requires(Task::NewDW, VarLabel::find(simTime_name));
+
+    // Do not check for delta T being in the warehouse as it is will
+    // not yet be written.
+    // if( sched->get_dw(1)->exists( VarLabel::find(delT_name) ) )
+      tsk->requires(Task::NewDW, VarLabel::find(delT_name));
+  }
+
+  if ( counter > 0 ) {
     sched->addTask( tsk, level->eachPatch(), matls );
-  else
+  }
+  else {
     delete tsk;
-
+  }
 }
 
 //====================================================================================
@@ -253,14 +120,17 @@ void TaskInterface::schedule_task( const LevelP& level,
 void TaskInterface::schedule_init( const LevelP& level,
                                    SchedulerP& sched,
                                    const MaterialSet* matls,
-                                   const bool is_restart ){
+                                   const bool is_restart,
+                                   const bool reinitialize ){
 
   VariableRegistry variable_registry;
 
+  const bool packed_tasks = false;
+
   if ( is_restart ) {
-    register_restart_initialize( variable_registry );
+    register_restart_initialize( variable_registry , packed_tasks);
   } else {
-    register_initialize( variable_registry );
+    register_initialize( variable_registry, packed_tasks );
   }
 
   Task* tsk;
@@ -272,15 +142,23 @@ void TaskInterface::schedule_init( const LevelP& level,
 
   int counter = 0;
 
-  BOOST_FOREACH( ArchesFieldContainer::VariableInformation &ivar, variable_registry ){
+  for ( auto pivar = variable_registry.begin(); pivar != variable_registry.end(); pivar++ ){
 
     counter++;
+
+    ArchesFieldContainer::VariableInformation& ivar = *pivar;
 
     switch(ivar.depend) {
 
     case ArchesFieldContainer::COMPUTES:
-      tsk->computes( ivar.label );
+    {
+      if ( reinitialize ){
+        tsk->modifies( ivar.label );
+      } else {
+        tsk->computes( ivar.label );
+      }
       break;
+    }
     case ArchesFieldContainer::MODIFIES:
       tsk->modifies( ivar.label );
       break;
@@ -288,17 +166,20 @@ void TaskInterface::schedule_init( const LevelP& level,
       tsk->requires( ivar.uintah_task_dw, ivar.label, ivar.ghost_type, ivar.nGhost );
       break;
     default:
-      throw InvalidValue("Arches Task Error: Cannot schedule task becuase of incomplete variable dependency: "+_task_name, __FILE__, __LINE__);
+      throw InvalidValue("Arches Task Error: Cannot schedule task because of incomplete variable dependency: "+_task_name, __FILE__, __LINE__);
       break;
-
     }
   }
+
+  //other variables:
+  tsk->requires(Task::NewDW, VarLabel::find(timeStep_name));
+  tsk->requires(Task::NewDW, VarLabel::find(simTime_name));
+  tsk->requires(Task::NewDW, VarLabel::find(delT_name));
 
   if ( counter > 0 )
     sched->addTask( tsk, level->eachPatch(), matls );
   else
     delete tsk;
-
 }
 
 //====================================================================================
@@ -310,15 +191,19 @@ void TaskInterface::schedule_timestep_init( const LevelP& level,
 
   VariableRegistry variable_registry;
 
-  register_timestep_init( variable_registry );
+  const bool packed_tasks = false;
+
+  register_timestep_init( variable_registry, packed_tasks );
 
   Task* tsk = scinew Task( _task_name+"_timestep_initialize", this, &TaskInterface::do_timestep_init, variable_registry );
 
   int counter = 0;
 
-  BOOST_FOREACH( ArchesFieldContainer::VariableInformation &ivar, variable_registry ){
+  for ( auto pivar = variable_registry.begin(); pivar != variable_registry.end(); pivar++ ){
 
     counter++;
+
+    ArchesFieldContainer::VariableInformation& ivar = *pivar;
 
     switch(ivar.depend) {
 
@@ -334,18 +219,18 @@ void TaskInterface::schedule_timestep_init( const LevelP& level,
     default:
       throw InvalidValue("Arches Task Error: Cannot schedule task becuase of incomplete variable dependency: "+_task_name, __FILE__, __LINE__);
       break;
-
     }
   }
 
   //other variables:
-  tsk->requires(Task::OldDW, VarLabel::find("delT"));
+  tsk->requires(Task::OldDW, VarLabel::find(timeStep_name));
+  tsk->requires(Task::OldDW, VarLabel::find(simTime_name));
+  tsk->requires(Task::OldDW, VarLabel::find(delT_name));
 
   if ( counter > 0 )
     sched->addTask( tsk, level->eachPatch(), matls );
   else
     delete tsk;
-
 }
 
 //====================================================================================
@@ -359,20 +244,26 @@ void TaskInterface::do_task( const ProcessorGroup* pc,
                              VariableRegistry variable_registry,
                              int time_substep ){
 
+  // Get the current simTime and delT.
+  timeStep_vartype timeStep;
+  old_dw->get(timeStep, VarLabel::find(timeStep_name));
+    
+  simTime_vartype simTime;
+  old_dw->get(simTime, VarLabel::find(simTime_name));
+    
+  delt_vartype delT;
+  old_dw->get(delT, VarLabel::find(delT_name));
+
   for (int p = 0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
 
-    const WasatchCore::AllocInfo ainfo( old_dw, new_dw, _matl_index, patch, pc );
-
-    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(ainfo, patch, _matl_index, variable_registry, old_dw, new_dw);
+    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(patch, _matl_index, variable_registry, old_dw, new_dw);
 
     SchedToTaskInfo info;
-
-    //get the current dt
-    delt_vartype DT;
-    old_dw->get(DT, VarLabel::find("delT"));
-    info.dt = DT;
+    info.time = timeStep;
+    info.time = simTime;
+    info.dt = delT;
     info.time_substep = time_substep;
 
     ArchesTaskInfoManager* tsk_info_mngr = scinew ArchesTaskInfoManager(variable_registry, patch, info);
@@ -380,11 +271,7 @@ void TaskInterface::do_task( const ProcessorGroup* pc,
     //this makes the "getting" of the grid variables easier from the user side (ie, only need a string name )
     tsk_info_mngr->set_field_container( field_container );
 
-    //get the operator DB for this patch
-    Operators& opr = Operators::self();
-    Operators::PatchInfoMap::iterator i_opr = opr.patch_info_map.find(patch->getID());
-
-    eval( patch, tsk_info_mngr, i_opr->second._sodb );
+    eval( patch, tsk_info_mngr );
 
     //clean up
     delete tsk_info_mngr;
@@ -400,23 +287,40 @@ void TaskInterface::do_bcs( const ProcessorGroup* pc,
                             VariableRegistry variable_registry,
                             int time_substep ){
 
+  // This method is called at both initialization and otherwise. At
+  // initialization the old DW will not exist so get the value from
+  // the new DW.  Otherwise for a normal time step get the time step
+  // from the old DW.
+
+  // Get the current simTime and delT.
+  timeStep_vartype timeStep(0);
+  if( old_dw && old_dw->exists( VarLabel::find(timeStep_name) ) )
+    old_dw->get( timeStep, VarLabel::find(timeStep_name) );
+  else if( new_dw && new_dw->exists( VarLabel::find(timeStep_name) ) )
+    new_dw->get( timeStep, VarLabel::find(timeStep_name) );
+
+  simTime_vartype simTime(0);
+  if( old_dw && old_dw->exists( VarLabel::find(simTime_name) ) )
+    old_dw->get( simTime, VarLabel::find(simTime_name) );
+  else if( new_dw && new_dw->exists( VarLabel::find(simTime_name) ) )
+    new_dw->get( simTime, VarLabel::find(simTime_name) );
+
+  delt_vartype delT(0);
+  if( old_dw && old_dw->exists( VarLabel::find(delT_name) ) )
+    old_dw->get( delT, VarLabel::find(delT_name) );
+  else if( new_dw && new_dw->exists( VarLabel::find(delT_name) ) )
+    new_dw->get( delT, VarLabel::find(delT_name) );
+    
   for (int p = 0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
 
-    const WasatchCore::AllocInfo ainfo( old_dw, new_dw, _matl_index, patch, pc );
-
-    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(ainfo, patch, _matl_index, variable_registry, old_dw, new_dw);
+    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(patch, _matl_index, variable_registry, old_dw, new_dw);
 
     SchedToTaskInfo info;
-
-    //These lines don't work because we are applying the BC in scheduleInitialize.
-    // During that phase, there is no valid DT. Need to work on this?
-    /// @TODO: Work on getting DT to the BC task.
-    //get the current dt
-    // delt_vartype DT;
-    // old_dw->get(DT, VarLabel::find("delT"));
-    // info.dt = DT;
+    info.time = timeStep;
+    info.time = simTime;
+    info.dt = delT;
     info.time_substep = time_substep;
 
     ArchesTaskInfoManager* tsk_info_mngr = scinew ArchesTaskInfoManager(variable_registry, patch, info);
@@ -424,11 +328,7 @@ void TaskInterface::do_bcs( const ProcessorGroup* pc,
     //this makes the "getting" of the grid variables easier from the user side (ie, only need a string name )
     tsk_info_mngr->set_field_container( field_container );
 
-    //get the operator DB for this patch
-    Operators& opr = Operators::self();
-    Operators::PatchInfoMap::iterator i_opr = opr.patch_info_map.find(patch->getID());
-
-    compute_bcs( patch, tsk_info_mngr, i_opr->second._sodb );
+    compute_bcs( patch, tsk_info_mngr );
 
     //clean up
     delete tsk_info_mngr;
@@ -443,17 +343,26 @@ void TaskInterface::do_init( const ProcessorGroup* pc,
                              DataWarehouse* new_dw,
                              VariableRegistry variable_registry ){
 
+  // Get the current simTime and delT.
+  timeStep_vartype timeStep;
+  new_dw->get(timeStep, VarLabel::find(timeStep_name));
+    
+  simTime_vartype simTime;
+  new_dw->get(simTime, VarLabel::find(simTime_name));
+
+  // No delta T on initialization.
+  // delt_vartype delT;
+  // new_dw->get(delT, VarLabel::find(delT_name));
+
   for (int p = 0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
 
-    const WasatchCore::AllocInfo ainfo( old_dw, new_dw, _matl_index, patch, pc );
-
-    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(ainfo, patch, _matl_index, variable_registry, old_dw, new_dw);
+    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(patch, _matl_index, variable_registry, old_dw, new_dw);
 
     SchedToTaskInfo info;
-
-    //get the current dt
+    info.timeStep = timeStep;
+    info.time = simTime;
     info.dt = 0;
     info.time_substep = 0;
 
@@ -462,11 +371,7 @@ void TaskInterface::do_init( const ProcessorGroup* pc,
     //this makes the "getting" of the grid variables easier from the user side (ie, only need a string name )
     tsk_info_mngr->set_field_container( field_container );
 
-    //get the operator DB for this patch
-    Operators& opr = Operators::self();
-    Operators::PatchInfoMap::iterator i_opr = opr.patch_info_map.find(patch->getID());
-
-    initialize( patch, tsk_info_mngr, i_opr->second._sodb );
+    initialize( patch, tsk_info_mngr );
 
     //clean up
     delete tsk_info_mngr;
@@ -481,18 +386,26 @@ void TaskInterface::do_restart_init( const ProcessorGroup* pc,
                                      DataWarehouse* new_dw,
                                      VariableRegistry variable_registry ){
 
+  // Get the current simTime and delT.
+  timeStep_vartype timeStep;
+  new_dw->get(timeStep, VarLabel::find(timeStep_name));
+    
+  simTime_vartype simTime;
+  new_dw->get(simTime, VarLabel::find(simTime_name));
+    
+  delt_vartype delT;
+  new_dw->get(delT, VarLabel::find(delT_name));
+
   for (int p = 0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
 
-    const WasatchCore::AllocInfo ainfo( old_dw, new_dw, _matl_index, patch, pc );
-
-    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(ainfo, patch, _matl_index, variable_registry, old_dw, new_dw );
+    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(patch, _matl_index, variable_registry, old_dw, new_dw );
 
     SchedToTaskInfo info;
-
-    //get the current dt
-    info.dt = 0;
+    info.timeStep = timeStep;
+    info.time = simTime;
+    info.dt = delT;
     info.time_substep = 0;
 
     ArchesTaskInfoManager* tsk_info_mngr = scinew ArchesTaskInfoManager(variable_registry, patch, info);
@@ -500,11 +413,7 @@ void TaskInterface::do_restart_init( const ProcessorGroup* pc,
     //this makes the "getting" of the grid variables easier from the user side (ie, only need a string name )
     tsk_info_mngr->set_field_container( field_container );
 
-    //get the operator DB for this patch
-    Operators& opr = Operators::self();
-    Operators::PatchInfoMap::iterator i_opr = opr.patch_info_map.find(patch->getID());
-
-    restart_initialize( patch, tsk_info_mngr, i_opr->second._sodb );
+    restart_initialize( patch, tsk_info_mngr );
 
     //clean up
     delete tsk_info_mngr;
@@ -519,20 +428,26 @@ void TaskInterface::do_timestep_init( const ProcessorGroup* pc,
                                       DataWarehouse* new_dw,
                                       VariableRegistry variable_registry ){
 
+  // Get the current simTime and delT.
+  timeStep_vartype timeStep;
+  old_dw->get(timeStep, VarLabel::find(timeStep_name));
+    
+  simTime_vartype simTime;
+  old_dw->get(simTime, VarLabel::find(simTime_name));
+    
+  delt_vartype delT;
+  old_dw->get(delT, VarLabel::find(delT_name));
+
   for (int p = 0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
 
-    const WasatchCore::AllocInfo ainfo( old_dw, new_dw, _matl_index, patch, pc );
-
-    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(ainfo, patch, _matl_index, variable_registry, old_dw, new_dw );
+    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(patch, _matl_index, variable_registry, old_dw, new_dw );
 
     SchedToTaskInfo info;
-
-    //get the current dt
-    delt_vartype DT;
-    old_dw->get(DT, VarLabel::find("delT"));
-    info.dt = DT;
+    info.timeStep = timeStep;
+    info.time = simTime;
+    info.dt = delT;
     info.time_substep = 0;
 
     ArchesTaskInfoManager* tsk_info_mngr = scinew ArchesTaskInfoManager(variable_registry, patch, info);
@@ -540,15 +455,10 @@ void TaskInterface::do_timestep_init( const ProcessorGroup* pc,
     //this makes the "getting" of the grid variables easier from the user side (ie, only need a string name )
     tsk_info_mngr->set_field_container( field_container );
 
-    //get the operator DB for this patch
-    Operators& opr = Operators::self();
-    Operators::PatchInfoMap::iterator i_opr = opr.patch_info_map.find(patch->getID());
-
-    timestep_init( patch, tsk_info_mngr, i_opr->second._sodb );
+    timestep_init( patch, tsk_info_mngr );
 
     //clean up
     delete tsk_info_mngr;
     delete field_container;
-
   }
 }

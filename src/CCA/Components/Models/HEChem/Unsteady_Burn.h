@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -67,18 +67,20 @@ WARNING
 
   class Unsteady_Burn : public ModelInterface {
   public:
-    Unsteady_Burn(const ProcessorGroup* myworld, ProblemSpecP& params,
+    Unsteady_Burn(const ProcessorGroup* myworld,
+		  const SimulationStateP& sharedState,
+		  const ProblemSpecP& params,
                   const ProblemSpecP& prob_spec);
+    
     virtual ~Unsteady_Burn();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
     
-    virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
-                              ModelSetup* setup);
+    virtual void problemSetup(GridP& grid,
+                               const bool isRestart);
     
     virtual void scheduleInitialize(SchedulerP&,
-                                    const LevelP& level,
-                                    const ModelInfo*);
+                                    const LevelP& level);
     
     virtual void initialize(const ProcessorGroup*,
                             const PatchSubset*,
@@ -88,13 +90,12 @@ WARNING
     
     virtual void restartInitialize() {}
     
-    virtual void scheduleComputeStableTimestep(SchedulerP&,
-                                               const LevelP& level,
-                                               const ModelInfo*);
+    virtual void scheduleComputeStableTimeStep(SchedulerP&,
+                                               const LevelP& level);
     
     virtual void scheduleComputeModelSources(SchedulerP&,
-                                             const LevelP& level,
-                                             const ModelInfo*);
+                                             const LevelP& level);
+    
     virtual void scheduleModifyThermoTransportProperties(SchedulerP&,
                                                          const LevelP&,
                                                          const MaterialSet*);
@@ -108,14 +109,15 @@ WARNING
                                        SchedulerP& sched);
     
     virtual void scheduleTestConservation(SchedulerP&,
-                                          const PatchSet* patches,
-                                          const ModelInfo* mi); 
+                                          const PatchSet* patches); 
     
  
   private:    
-    void computeModelSources(const ProcessorGroup*, const PatchSubset*,
-                             const MaterialSubset*, DataWarehouse*, 
-                             DataWarehouse*, const ModelInfo*);
+    void computeModelSources(const ProcessorGroup*,
+			     const PatchSubset*,
+                             const MaterialSubset*,
+			     DataWarehouse*, 
+                             DataWarehouse*);
 
     double computeBurnedMass(double To, double P, double Vc, double surfArea, double delT,
                              double solidMass, double& beta, double& Ts, Vector& dx);
@@ -135,7 +137,6 @@ WARNING
     ProblemSpecP d_prob_spec;
     const Material* matl0;
     const Material* matl1;
-    SimulationStateP d_sharedState;   
     
     MPMICELabel* MIlb;
     ICELabel* Ilb;

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -30,18 +30,18 @@ using std::cerr;
 
 using namespace Uintah;
 
-ThermalContact* ThermalContactFactory::create(const ProblemSpecP& ps,
-                                              SimulationStateP& d_sS, 
-                                              MPMLabel* lb,MPMFlags* flag)
+ThermalContact*
+ThermalContactFactory::create( const ProblemSpecP     & ps,
+                                     SimulationStateP & d_sS, 
+                                     MPMLabel         * lb,
+                                     MPMFlags         * flag )
 {
-   ProblemSpecP mpm_ps = 
-     ps->findBlockWithOutAttribute("MaterialProperties")->findBlock("MPM");
+   ProblemSpecP mpm_ps = ps->findBlockWithOutAttribute( "MaterialProperties" )->findBlock( "MPM" );
 
-   for( ProblemSpecP child = mpm_ps->findBlock("thermal_contact"); child != 0;
-                child = child->findNextBlock("thermal_contact")) {
+   for( ProblemSpecP child = mpm_ps->findBlock( "thermal_contact" ); child != nullptr; child = child->findNextBlock( "thermal_contact" ) ) {
      return( scinew STThermalContact(child,d_sS,lb,flag) );
    }
 
    ProblemSpecP child; 
-   return( scinew NullThermalContact(child,d_sS,lb,flag) );
+   return( scinew NullThermalContact( child, d_sS, lb, flag ) );
 }

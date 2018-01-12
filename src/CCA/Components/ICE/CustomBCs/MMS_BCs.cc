@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -23,7 +23,7 @@
  */
 
 #include <CCA/Components/ICE/CustomBCs/MMS_BCs.h>
-#include <CCA/Components/ICE/ICEMaterial.h>
+#include <CCA/Components/ICE/Materials/ICEMaterial.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Grid.h>
@@ -61,16 +61,14 @@ bool read_MMS_BC_inputs(const ProblemSpecP& prob_spec,
   bool usingMMS = false;
   lvb->whichMMS = "none";
   
-  for (ProblemSpecP face_ps = bc_ps->findBlock("Face");face_ps != 0; 
-                    face_ps=face_ps->findNextBlock("Face")) {
+  for( ProblemSpecP face_ps = bc_ps->findBlock( "Face" ); face_ps != nullptr; face_ps=face_ps->findNextBlock( "Face" ) ) {
     map<string,string> face;
     face_ps->getAttributes(face);
     bool is_a_MMS_face = false;
     
-    for(ProblemSpecP bc_iter = face_ps->findBlock("BCType"); bc_iter != 0;
-                     bc_iter = bc_iter->findNextBlock("BCType")){
+    for( ProblemSpecP bc_iter = face_ps->findBlock( "BCType" ); bc_iter != nullptr; bc_iter = bc_iter->findNextBlock( "BCType" ) ) {
       map<string,string> bc_type;
-      bc_iter->getAttributes(bc_type);
+      bc_iter->getAttributes( bc_type );
 
       if (bc_type["var"] == "MMS_1" && !is_a_MMS_face) {
         usingMMS = true;
@@ -194,8 +192,9 @@ int set_MMS_Velocity_BC(const Patch* patch,
     if(bc_kind == "MMS_1") {
       double nu = gv->viscosity;
       double A =  gv->A;
-      double t  = sharedState->getElapsedTime();
-      t += lv->delT;
+      double t = lv->simTime + lv->delT;
+      // double t  = sharedState->getElapsedSimTime();
+      // t += lv->delT;
       
       for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
         IntVector c = *bound_ptr;
@@ -273,9 +272,10 @@ int set_MMS_press_BC(const Patch* patch,
   if(bc_kind == "MMS_1") {
     double nu = gv->viscosity;
     double A =  gv->A;
-    double t =  sharedState->getElapsedTime();
+    double t = lv->simTime + lv->delT;
+    // double t =  sharedState->getElapsedSimTime();
+    // t += lv->delT;
     double p_ref = 101325;
-    t += lv->delT;
 
     for (bound_ptr.reset(); !bound_ptr.done();bound_ptr++) {
       IntVector c = *bound_ptr;

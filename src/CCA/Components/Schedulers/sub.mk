@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2016 The University of Utah
+#  Copyright (c) 1997-2018 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -29,24 +29,23 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR := CCA/Components/Schedulers
 
 SRCS += \
-        $(SRCDIR)/CommRecMPI.cc               \
+        $(SRCDIR)/DependencyBatch.cc          \
         $(SRCDIR)/DependencyException.cc      \
+        $(SRCDIR)/DetailedDependency.cc       \
+        $(SRCDIR)/DetailedTask.cc             \
         $(SRCDIR)/DetailedTasks.cc            \
         $(SRCDIR)/DynamicMPIScheduler.cc      \
-        $(SRCDIR)/IncorrectAllocation.cc      \
+        $(SRCDIR)/KokkosOpenMPScheduler.cc    \
         $(SRCDIR)/MemoryLog.cc                \
         $(SRCDIR)/MPIScheduler.cc             \
         $(SRCDIR)/OnDemandDataWarehouse.cc    \
         $(SRCDIR)/Relocate.cc                 \
+        $(SRCDIR)/RuntimeStats.cc             \
         $(SRCDIR)/SchedulerCommon.cc          \
         $(SRCDIR)/SchedulerFactory.cc         \
         $(SRCDIR)/SendState.cc                \
-        $(SRCDIR)/SingleProcessorScheduler.cc \
         $(SRCDIR)/TaskGraph.cc                \
-        $(SRCDIR)/UnifiedScheduler.cc         \
-        $(SRCDIR)/Util.cc                     \
-        \
-        $(SRCDIR)/templates.cc
+        $(SRCDIR)/UnifiedScheduler.cc
         
 ifeq ($(HAVE_CUDA),yes)
   SRCS += $(SRCDIR)/GPUDataWarehouse.cu         \

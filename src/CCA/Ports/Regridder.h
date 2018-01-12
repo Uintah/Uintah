@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,18 +25,22 @@
 #ifndef UINTAH_HOMEBREW_REGRIDDER_H
 #define UINTAH_HOMEBREW_REGRIDDER_H
 
-#include <Core/Geometry/IntVector.h>
 #include <Core/Parallel/UintahParallelPort.h>
+
+#include <Core/Geometry/IntVector.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
-#include <CCA/Ports/SchedulerP.h>
-#include <vector>
 
+#include <vector>
 
 namespace Uintah {
 
+  class UintahParallelComponent;
+  class VarLabel;
+  
 /**************************************
 
 CLASS
@@ -71,6 +75,13 @@ WARNING
     Regridder();
     virtual ~Regridder();
 
+    virtual std::string getName() = 0;
+
+    // Methods for managing the components attached via the ports.
+    virtual void setComponents( UintahParallelComponent *comp ) = 0;
+    virtual void getComponents() = 0;
+    virtual void releaseComponents() = 0;
+
     //! Initialize with regridding parameters from ups file
     virtual void problemSetup(const ProblemSpecP& params, const GridP&,
                               const SimulationStateP& state) = 0;
@@ -78,8 +89,7 @@ WARNING
     virtual void switchInitialize(const ProblemSpecP& params) = 0;
 
     //! Asks if we need to recompile the task graph.
-    virtual bool needRecompile(double time, double delt,
-                               const GridP& grid) = 0;
+    virtual bool needRecompile(const GridP& grid) = 0;
 
     //! Do we need to regrid this timestep?
     virtual bool needsToReGrid(const GridP&) = 0;
@@ -103,7 +113,8 @@ WARNING
     virtual void scheduleInitializeErrorEstimate(const LevelP& level) = 0;
 
     //! Schedules task to dilate existing error flags
-    virtual void scheduleDilation(const LevelP& level) = 0;
+    virtual void scheduleDilation(const LevelP& level,
+				  const bool isLockstepAMR) = 0;
 
     //! Asks if we are going to do regridding
     virtual bool flaggedCellsOnFinestLevel(const GridP& grid) = 0;
@@ -112,7 +123,7 @@ WARNING
     virtual int maxLevels() = 0;
 
     //! Create a new Grid
-    virtual Grid* regrid(Grid* oldGrid) = 0;
+    virtual Grid* regrid(Grid* oldGrid, const int timeStep) = 0;
 
     //! If the Regridder set up the load balance in the process of Regridding
     virtual bool isLoadBalanced() { return false; }
@@ -120,6 +131,15 @@ WARNING
     virtual bool useDynamicDilation() = 0;
 
     virtual std::vector<Uintah::IntVector> getMinPatchSize() = 0;
+
+    virtual void setOverheadAverage(double val) = 0;
+    
+    virtual const MaterialSubset* refineFlagMaterials() const = 0;
+    
+    virtual const VarLabel* getRefineFlagLabel() const = 0;
+    virtual const VarLabel* getOldRefineFlagLabel() const = 0;
+    virtual const VarLabel* getRefinePatchFlagLabel() const = 0;
+    
   private:
     Regridder(const Regridder&);
     Regridder& operator=(const Regridder&);

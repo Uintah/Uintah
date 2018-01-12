@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -26,7 +26,7 @@
 #define UINTAH_HOMEBREW_AMRMPM_H
 
 // make uintah CXX=/usr/bin/iwyu
-#include <CCA/Components/MPM/MPMFlags.h>      // for MPMFlags
+#include <CCA/Components/MPM/Core/MPMFlags.h>      // for MPMFlags
 #include <CCA/Components/MPM/SerialMPM.h>     // for SerialMPM, etc
 #include <CCA/Ports/SchedulerP.h>             // for SchedulerP
 #include <Core/Geometry/Vector.h>             // for Vector
@@ -34,7 +34,6 @@
 #include <Core/Grid/Level.h>                  // for Level, Level::selectType
 #include <Core/Grid/LevelP.h>                 // for LevelP
 #include <Core/Grid/Patch.h>                  // for Patch, Patch::FaceType, etc
-#include <Core/Grid/SimulationStateP.h>       // for SimulationStateP
 #include <Core/Grid/Variables/ComputeSet.h>   // for PatchSubset, etc
 #include <Core/Grid/Variables/NCVariable.h>   // for constNCVariable
 #include <Core/Grid/Variables/constVariable.h>  // for constVariable
@@ -48,18 +47,20 @@ namespace Uintah {
 
 class GeometryObject;
 class SDInterfaceModel;
+class FluxBCModel;
 
 class AMRMPM : public SerialMPM {
 
 public:
-  AMRMPM(const ProcessorGroup* myworld);
+  AMRMPM(const ProcessorGroup* myworld,
+	 const SimulationStateP sharedState);
+  
   virtual ~AMRMPM();
-  SDInterfaceModel* sdInterfaceModel;
+  SDInterfaceModel* d_sdInterfaceModel;
 
   virtual void problemSetup(const ProblemSpecP& params, 
                             const ProblemSpecP& restart_prob_spec,
-                            GridP&,
-                            SimulationStateP&);
+                            GridP&);
 
   virtual void outputProblemSpec(ProblemSpecP& ps);
          
@@ -69,7 +70,7 @@ public:
   void schedulePrintParticleCount(const LevelP& level, 
                                   SchedulerP& sched);
 
-  virtual void scheduleComputeStableTimestep(const LevelP& level,
+  virtual void scheduleComputeStableTimeStep(const LevelP& level,
                                              SchedulerP&);
          
   virtual void scheduleTimeAdvance(const LevelP& level, 
@@ -77,6 +78,9 @@ public:
 
   virtual void scheduleFinalizeTimestep(const LevelP& level,
                                         SchedulerP&);
+
+  virtual void scheduleAnalysis(const LevelP& level,
+				SchedulerP&);
 
   virtual void scheduleRefine(const PatchSet* patches, 
                               SchedulerP& scheduler);
@@ -95,21 +99,17 @@ public:
   /// Schedule to mark initial flags for AMR regridding
   void scheduleInitialErrorEstimate(const LevelP& coarseLevel, SchedulerP& sched);
 
-
-//  void setMPMLabel(MPMLabel* Mlb) {
-//    delete lb;
-//    lb = Mlb;
-//  };
-
 //  enum IntegratorType {
 //    Explicit,
 //    Implicit,
 //  };
 
-  //Inherit this from the SerialMPM base class
-  //SimulationStateP d_sharedState;
-
 protected:
+  friend class ESMPM;
+  friend class ESMPM2;
+
+  FluxBCModel* d_fluxbc;
+
   enum coarsenFlag{
     coarsenData,
     zeroData,
@@ -132,21 +132,6 @@ protected:
                            DataWarehouse* dw,
                            int dwi, 
                            const Patch* patch);
-
-  void scheduleInitializeScalarFluxBCs(const LevelP& level, SchedulerP&);
-
-  void countMaterialPointsPerFluxLoadCurve(const ProcessorGroup*,
-                                           const PatchSubset* patches,
-                                           const MaterialSubset* matls,
-                                           DataWarehouse* old_dw,
-                                           DataWarehouse* new_dw);
-
-  void initializeScalarFluxBC(const ProcessorGroup*,
-                              const PatchSubset* patches,
-                              const MaterialSubset* matls,
-                              DataWarehouse* old_dw,
-                              DataWarehouse* new_dw);
-
 
   void actuallyComputeStableTimestep(const ProcessorGroup*,
                                      const PatchSubset* patches,
@@ -211,12 +196,6 @@ protected:
                                    DataWarehouse* old_dw,
                                    DataWarehouse* new_dw);
 
-  void updateErosionParameter(const ProcessorGroup*,
-                              const PatchSubset* patches,
-                              const MaterialSubset* ,
-                              DataWarehouse* old_dw,
-                              DataWarehouse* new_dw);
-
   virtual void computeInternalForce(const ProcessorGroup*,
                                     const PatchSubset* patches,  
                                     const MaterialSubset* matls, 
@@ -243,11 +222,7 @@ protected:
                                  DataWarehouse* old_dw,
                                  DataWarehouse* new_dw);
 
-  void applyExternalScalarFlux(const ProcessorGroup*,
-                               const PatchSubset* patches,
-                               const MaterialSubset* ,
-                               DataWarehouse* old_dw,
-                               DataWarehouse* new_dw);
+
 
   // Compute Vel. Grad and Def Grad
   void computeLAndF(const ProcessorGroup*,
@@ -359,10 +334,6 @@ protected:
   virtual void scheduleComputeStressTensor(SchedulerP&, 
                                            const PatchSet*,
                                            const MaterialSet*);
-  
-  void scheduleUpdateErosionParameter(SchedulerP& sched,
-                                      const PatchSet* patches,
-                                      const MaterialSet* matls);
 
   virtual void scheduleComputeInternalForce(SchedulerP&, 
                                             const PatchSet*,
@@ -379,8 +350,7 @@ protected:
   void scheduleSetGridBoundaryConditions(SchedulerP&, const PatchSet*,
                                          const MaterialSet* matls);
 
-  void scheduleApplyExternalScalarFlux(SchedulerP&, const PatchSet*,
-                                       const MaterialSet*);
+
 
   void scheduleComputeLAndF(SchedulerP&, const PatchSet*, const MaterialSet*);
 
@@ -464,7 +434,6 @@ protected:
   const VarLabel* RefineFlagZMinLabel;
 
   std::vector<MPMPhysicalBC*> d_physicalBCs;
-  IntegratorType d_integrator;
 
   SwitchingCriteria* d_switchCriteria;
 private:
@@ -537,9 +506,10 @@ private:
                                     std::vector<IntVector>& ni,
                                     std::vector<Vector>& d_S,
                                     const double* oodx,
-                                    constNCVariable<Vector>& gVelocity)
+                                    constNCVariable<Vector>& gVelocity,
+                                    const int NN)
   {
-    for(int k = 0; k < flags->d_8or27; k++) {
+    for(int k = 0; k < NN; k++) {
       const Vector& gvel = gVelocity[ni[k]];
       for (int j = 0; j<3; j++){
         double d_SXoodx = d_S[k][j]*oodx[j];
@@ -560,6 +530,10 @@ private:
                                   const MaterialSubset* matls,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw);
+
+  virtual void scheduleConcInterpolated(SchedulerP& sched,
+                                        const PatchSet* patches,
+                                        const MaterialSet* matls);
 
   virtual void scheduleComputeFlux(SchedulerP&,
                                    const PatchSet*, const MaterialSet*);
@@ -587,6 +561,39 @@ private:
                                      const MaterialSubset* matls,
                                      DataWarehouse* old_dw,
                                      DataWarehouse* new_dw);
+
+  virtual void scheduleDiffusionInterfaceDiv(SchedulerP& sched,
+                                             const PatchSet* patches,
+                                             const MaterialSet* matls);
+
+  /*
+   * Scalar Flux Boundary Conditions have been moved to the FluxBCModel
+   *
+   *
+   *
+  void scheduleInitializeScalarFluxBCs(const LevelP& level, SchedulerP&);
+
+  void initializeScalarFluxBC(const ProcessorGroup*,
+                                const PatchSubset* patches,
+                                const MaterialSubset* matls,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw);
+
+  void scheduleApplyExternalScalarFlux(SchedulerP&, const PatchSet*,
+                                         const MaterialSet*);
+
+  void applyExternalScalarFlux(const ProcessorGroup*,
+                                 const PatchSubset* patches,
+                                 const MaterialSubset* ,
+                                 DataWarehouse* old_dw,
+                                 DataWarehouse* new_dw);
+
+  void countMaterialPointsPerFluxLoadCurve(const ProcessorGroup*,
+                                             const PatchSubset* patches,
+                                             const MaterialSubset* matls,
+                                             DataWarehouse* old_dw,
+                                             DataWarehouse* new_dw);
+  */
 };
 
 } // end namespace Uintah

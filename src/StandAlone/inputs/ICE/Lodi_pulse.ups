@@ -156,11 +156,11 @@
     <!--____________________________________________________________________-->
        <Level>
            <Box label="1">
-              <lower>        [0,    0,    0]    </lower>
-              <upper>        [1, 1 , 0.01]    </upper>
+              <lower>        [0, 0, 0]       </lower>
+              <upper>        [1, 1, 0.01]    </upper>
               <extraCells>   [1,1,1]         </extraCells>
-              <patches>      [1,1,1]         </patches>
-              <resolution>   [100,100,1]       </resolution>
+              <patches>      [4,4,1]         </patches>
+              <resolution>   [100,100,1]     </resolution>
            </Box>
        </Level>
     </Grid>    
@@ -169,7 +169,7 @@
     <!--____________________________________________________________________-->
    <DataArchiver>
       <filebase>pulse_Lodi_2d.uda</filebase>
-      <outputTimestepInterval>1</outputTimestepInterval>
+      <outputInterval> 0.01</outputInterval>
       <save label="vel_CC"/>
       <save label="temp_CC"/>
       <save label="rho_CC"/>
@@ -182,6 +182,7 @@
       <save label="eng_L_ME_CC"/>
       <save label="Li1"/>
       <save label="Li5"/>
+      <checkpoint interval="0.015" cycle="1"/>
    </DataArchiver>
 
     <!--____________________________________________________________________-->
@@ -194,22 +195,23 @@
         
         <customInitialization>
           <gaussianTemperature>
-            <origin>   [0.5,0.5,0]  </origin>
-            <amplitude> 8      </amplitude>
-            <spread_x>  0.1  </spread_x>
-            <spread_y>  0.1 </spread_y>
+            <origin>     [0.5,0.5,0]  </origin>
+            <amplitude>  8            </amplitude>
+            <spread_x>   0.1          </spread_x>
+            <spread_y>   0.1          </spread_y>
           </gaussianTemperature>
         </customInitialization>
         
         <TimeStepControl>
           <Scheme_for_delT_calc> aggressive   </Scheme_for_delT_calc>
-          <knob_for_speedSound> 0.0 </knob_for_speedSound>
+          <knob_for_speedSound> 0.01 </knob_for_speedSound>
         </TimeStepControl>
 
         <ImplicitSolver>
-           <max_outer_iterations>      20       </max_outer_iterations>
-           <outer_iteration_tolerance> 1e-6     </outer_iteration_tolerance>
-           <iters_before_timestep_restart> 15   </iters_before_timestep_restart>
+           <max_outer_iterations>           20    </max_outer_iterations>
+           <outer_iteration_tolerance>      1e-6  </outer_iteration_tolerance>
+           <iters_before_timestep_restart>  15    </iters_before_timestep_restart>
+
            <Parameters variable="implicitPressure">
              <!-- Common options -->
               <tolerance>1.e-8    </tolerance>
@@ -245,22 +247,22 @@
        <ICE>
          <material name="atmosphere">
            <EOS type = "ideal_gas">                     </EOS>
-           
-           
-           <dynamic_viscosity>      0.0                   </dynamic_viscosity>
-           <thermal_conductivity>   0.0                   </thermal_conductivity>
-           <specific_heat>          652.9                 </specific_heat>
-           <gamma>                  1.289                 </gamma>
+          <dynamic_viscosity>     0.0    </dynamic_viscosity>
+          <thermal_conductivity>  0.0    </thermal_conductivity>
+          <specific_heat>         652.9  </specific_heat>
+          <gamma>                 1.289  </gamma>
+
            <geom_object>
-               <box label="Whole grid">                       
-                   <min>[ -2.0, -2.0, -2.0 ]           </min> 
-                   <max>[  2.0,  2.0,  2.0 ]              </max> 
-               </box>                                         
-               <res>                 [2,2,2]                  </res>
-               <velocity>      [0.0,0.0,0.0]            </velocity>
-               <density>       1.7899909957225715000    </density>
-               <pressure>      101325.0                 </pressure>
-               <temperature>   300.0                    </temperature>
+             <box label="Whole grid">                       
+               <min>  [-2.0,-2.0,-2.0]  </min>
+               <max>  [2.0,2.0,2.0]     </max>
+             </box>                                         
+             <res>          [2,2,2]                </res>
+             <velocity>     [0.0,0.0,0.0]          </velocity>
+             <density>      1.7899909957225715000  </density>
+             <pressure>     101325.0               </pressure>
+             <temperature>  300.0                  </temperature>
+
            </geom_object>
          </material>
       </ICE>

@@ -178,15 +178,11 @@ for(ts = 1:nDumps )
       %____________________________
       %  velocity
       if plotVel
-        c5  = sprintf('lineextract -v vel_CC -l %i -cellCoords -timestep %i %s -o vel_tmp1 -m %i  -uda %s',level,ts1,S_E,mat,uda1);
-        c5a = sprintf('lineextract -v vel_CC -l %i -cellCoords -timestep %i %s -o vel_tmp2 -m %i  -uda %s',level,ts2,S_E,mat,uda2);
+        c5  = sprintf('lineextract -v vel_CC -l %i -cellCoords -timestep %i %s -o vel1 -m %i  -uda %s',level,ts1,S_E,mat,uda1);
+        c5a = sprintf('lineextract -v vel_CC -l %i -cellCoords -timestep %i %s -o vel2 -m %i  -uda %s',level,ts2,S_E,mat,uda2);
         [s5, r5]  =unix(c5);
         [s5a, r5a]=unix(c5a);
-        % rip out [ ] from velocity data
-        c6  = sprintf('sed ''s/\\[//g'' vel_tmp1 | sed ''s/\\]//g'' >vel1');
-        c6a = sprintf('sed ''s/\\[//g'' vel_tmp2 | sed ''s/\\]//g'' >vel2');
-        [s6, r6]    = unix(c6);
-        [s6a, r6a]  = unix(c6a);
+        
         vel1{1,L} = importdata('vel1');
         vel2{1,L} = importdata('vel2');
         

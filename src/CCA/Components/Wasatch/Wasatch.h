@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2010-2016 The University of Utah
+ * Copyright (c) 2010-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -106,10 +106,7 @@
 #include <set>
 
 //-- Uintah Framework Includes --//
-#include <Core/Parallel/UintahParallelComponent.h>
-#include <CCA/Ports/SimulationInterface.h>
-#include <Core/Grid/SimulationStateP.h>
-#include <CCA/Ports/SolverInterface.h>
+#include <CCA/Components/Application/ApplicationCommon.h>
 
 //-- Wasatch includes --//
 #include "PatchInfo.h"
@@ -174,8 +171,7 @@ namespace WasatchCore{
    *
    */
   class Wasatch :
-    public Uintah::UintahParallelComponent,
-    public Uintah::SimulationInterface
+    public Uintah::ApplicationCommon
   {
 
   public:
@@ -185,8 +181,9 @@ namespace WasatchCore{
     // we need a dual time integrator per patch since each of the RHS trees will need a dual time integrator for the patch it is working on
     typedef std::map< int, Expr::DualTime::BDFDualTimeIntegrator* > DTIntegratorMapT; //<<< PatchID, DualTimeIntegrator >>>
     
-    Wasatch( const Uintah::ProcessorGroup* myworld );
-
+    Wasatch( const Uintah::ProcessorGroup* myworld,
+	     const Uintah::SimulationStateP sharedState );
+    
     ~Wasatch();
 
     /**
@@ -208,8 +205,7 @@ namespace WasatchCore{
      */
     void problemSetup( const Uintah::ProblemSpecP& params,
                        const Uintah::ProblemSpecP& restart_prob_spec,
-                       Uintah::GridP& grid,
-                       Uintah::SimulationStateP& );
+                       Uintah::GridP& grid );
 
     /**
      *  \brief Set up initial condition task(s)
@@ -251,7 +247,7 @@ namespace WasatchCore{
     /**
      *  \brief Set up the Uintah::Task that will calculate the timestep.
      */
-    void scheduleComputeStableTimestep( const Uintah::LevelP& level,
+    void scheduleComputeStableTimeStep( const Uintah::LevelP& level,
                                         Uintah::SchedulerP& );
 
     /**
@@ -269,10 +265,12 @@ namespace WasatchCore{
 
     void scheduleUpdateCurrentTime( const Uintah::LevelP& level,
                              Uintah::SchedulerP&, const int rkStage );
+    
+    void scheduleSetInitialTime( const Uintah::LevelP& level,
+                                   Uintah::SchedulerP& );
 
     void preGridProblemSetup(const Uintah::ProblemSpecP& params,
-                             Uintah::GridP& grid,
-                             Uintah::SimulationStateP& state);
+                             Uintah::GridP& grid);
 
     //__________________________________
     //  AMR
@@ -282,6 +280,8 @@ namespace WasatchCore{
     virtual void scheduleRefineInterface(const Uintah::LevelP& /*fineLevel*/,
                                          Uintah::SchedulerP& /*scheduler*/,
                                          bool, bool);
+
+    virtual int computeTaskGraphIndex( const int timeStep );
 
     const EquationAdaptors& equation_adaptors() const{ return adaptors_; }
     GraphCategories& graph_categories(){ return graphCategories_; }
@@ -301,12 +301,12 @@ namespace WasatchCore{
     const Uintah::MaterialSet* get_wasatch_materials() const{ return materials_; }
     const Uintah::ProblemSpecP get_wasatch_spec(){return wasatchSpec_;}
 
-    static void set_flow_treatment(FlowTreatment treat) { flowTreatment_ = treat;}
-    static void set_flow_treatment(std::string treat)
+    static void set_flow_treatment( const FlowTreatment treat ){ flowTreatment_ = treat; }
+    static void set_flow_treatment( const std::string treat )
     {
       flowTreatment_ = INCOMPRESSIBLE;
-      if (treat == "LOWMACH") flowTreatment_ = LOWMACH;
-      else if (treat == "COMPRESSIBLE") flowTreatment_ = COMPRESSIBLE;
+      if      ( treat == "LOWMACH"      ) flowTreatment_ = LOWMACH;
+      else if ( treat == "COMPRESSIBLE" ) flowTreatment_ = COMPRESSIBLE;
     }
     static FlowTreatment flow_treatment(){return flowTreatment_;}
 
@@ -320,9 +320,10 @@ namespace WasatchCore{
     bool buildTimeIntegrator_;   ///< used for Wasatch-Arches coupling
     bool buildWasatchMaterial_;  ///< used for Wasatch-Arches coupling
     bool isRestarting_;
-    int nRKStages_;
+    int  nRKStages_;
     bool isPeriodic_;
     bool doRadiation_;
+    int  radCalcFrequency_;
     bool doParticles_;
     unsigned long totalDualTimeIterations_;
     
@@ -331,7 +332,6 @@ namespace WasatchCore{
     DTIntegratorMapT dualTimeIntegrators_;
     
     std::set<std::string> persistentFields_;   ///< prevent the ExpressionTree from reclaiming memory on these fields.
-    Uintah::SimulationStateP sharedState_; ///< access to some common things like the current timestep.
     const Uintah::MaterialSet* materials_;
     Uintah::ProblemSpecP wasatchSpec_;
 
@@ -353,8 +353,6 @@ namespace WasatchCore{
 
     TimeStepper* timeStepper_;  ///< The TimeStepper used to advance equations registered here.
 
-    Uintah::SolverInterface* linSolver_;
-
     Uintah::Ray* rmcrt_; // RMCRT solver. needed to pass along to other tasks and expressions...
     CellType* cellType_;
     
@@ -370,6 +368,8 @@ namespace WasatchCore{
     Uintah::SchedulerP subsched_; // needed for dualtime
     bool dualTime_;
     bool compileDualTimeSched_;
+    
+    Uintah::VarLabel *dtLabel_, *tLabel_, *tStepLabel_, *rkStageLabel_;
     
     Wasatch( const Wasatch& );            // disallow copying
     Wasatch& operator=( const Wasatch& ); // disallow assignment
@@ -420,7 +420,14 @@ namespace WasatchCore{
                         Uintah::DataWarehouse* const oldDW,
                         Uintah::DataWarehouse* const newDW,
                         const int rkStage );
-    
+
+    void
+    set_initial_time( const Uintah::ProcessorGroup* const pg,
+                        const Uintah::PatchSubset* const patches,
+                        const Uintah::MaterialSubset* const materials,
+                        Uintah::DataWarehouse* const oldDW,
+                        Uintah::DataWarehouse* const newDW );
+
     enum PatchsetSelector{
       USE_FOR_TASKS,
       USE_FOR_OPERATORS

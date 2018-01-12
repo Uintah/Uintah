@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -32,6 +32,7 @@
 #define ALL_CELLS 268435455 /*= MAX_INT/8*/
 
 namespace Uintah {
+
    /**************************************
      
      CLASS
@@ -70,7 +71,15 @@ namespace Uintah {
          AroundFacesY,
          AroundFacesZ,
          AroundFaces,
-         numGhostTypes // 7
+         xpypzp,   // 7
+         xpypzm,   // 8
+         xpymzp,   // 9
+         xpymzm,   // 10
+         xmypzp,   // 11
+         xmypzm,   // 12
+         xmymzp,   // 13
+         xmymzm,   // 14
+         numGhostTypes // 15
       };
 
      static Uintah::IntVector getGhostTypeDir(Ghost::GhostType gtype)
@@ -93,12 +102,6 @@ namespace Uintah {
 
      static Uintah::IntVector directions[numGhostTypes];
      static std::string names[numGhostTypes];
-#ifdef __GNUG__
-   public:
-      // Keep gcc quiet, to avoid:
-      // warning: all member functions in class `Packages/Uintah::Ghost' are private
-      Ghost(Ghost*);
-#endif
    };
 } // End namespace Uintah
 

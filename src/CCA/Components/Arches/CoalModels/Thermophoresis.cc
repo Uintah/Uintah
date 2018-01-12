@@ -224,8 +224,8 @@ Thermophoresis::sched_computeModel( const LevelP& level, SchedulerP& sched, int 
     tsk->modifies(d_modelLabel);
     which_dw = Task::NewDW;
   }
-  tsk->requires( Task::NewDW, _particle_temperature_varlabel, gn, 0 );
-  tsk->requires( Task::NewDW, _particle_density_varlabel, gn, 0 );
+  tsk->requires( which_dw, _particle_temperature_varlabel, gn, 0 );
+  tsk->requires( which_dw, _particle_density_varlabel, gn, 0 );
   tsk->requires( Task::OldDW, _volFraction_varlabel, gac, 1 );
   tsk->requires( which_dw, _gas_temperature_varlabel, gac, 1 );
   tsk->requires( which_dw, _length_varlabel, gn, 0 );
@@ -281,9 +281,9 @@ Thermophoresis::computeModel( const ProcessorGroup * pc,
     constCCVariable<double> volFraction;
     old_dw->get( volFraction , _volFraction_varlabel , matlIndex , patch , gac , 1 );
     constCCVariable<double> pT;
-    new_dw->get( pT , _particle_temperature_varlabel , matlIndex , patch , gn , 0 );
+    which_dw->get( pT , _particle_temperature_varlabel , matlIndex , patch , gn , 0 );
     constCCVariable<double> particle_density;
-    new_dw->get( particle_density , _particle_density_varlabel , matlIndex , patch , gn , 0 );
+    which_dw->get( particle_density , _particle_density_varlabel , matlIndex , patch , gn , 0 );
     constCCVariable<double> diam;
     which_dw->get( diam    , _length_varlabel , matlIndex , patch , gn , 0 );
     constCCVariable<double> scaled_weight;
@@ -313,11 +313,11 @@ Thermophoresis::computeModel( const ProcessorGroup * pc,
         // dT_dn = __________________
         //              2 * delta_n
         // (2) cp is a wall:
-        //         gasT[cp]          gasT[c] - gasT[cm]
+        //         gasT[cp]          gasT[c] + gasT[cm]
         // dT_dn = _________   _      ________________
         //          delta_n             2 * delta_n
         // (3) cm is a wall:
-        //         gasT[cp] - gasT[c]              gasT[cm]
+        //         gasT[cp] + gasT[c]              gasT[cm]
         // dT_dn = __________________     _      _____________
         //          2 * delta_n                     delta_n
         // (4) cm and cp are walls:
@@ -328,12 +328,12 @@ Thermophoresis::computeModel( const ProcessorGroup * pc,
         if (volFraction[cp] < 1.0){
           f_T_p=gasT[cp];
         } else {
-          f_T_p = (gasT[cp]-gasT[c])/2;
+          f_T_p = (gasT[cp]+gasT[c])/2;
         }
         if (volFraction[cm] < 1.0){
           f_T_m=gasT[cm];
         } else {
-          f_T_m = (gasT[c]-gasT[cm])/2;
+          f_T_m = (gasT[c]+gasT[cm])/2;
         }
         dT_dn = (f_T_p - f_T_m) / delta_n;
         // The thermophoretic force can be computed using the following equation:
@@ -345,10 +345,10 @@ Thermophoresis::computeModel( const ProcessorGroup * pc,
         mu = _visc; // dynamic viscosity of the gas kg/(m s)
         rkp = _rkp; // thermal conductvity of the particles [=] W / (m K)
         rkg = props(gasT[c], pT[c]); // [=] J/s/m/K
-        umol = pow(8.0*101325/(_pi*gas_density[c]),0.5); // [=] m/s
+        umol = pow(8*8.314*gasT[c]/_pi/0.03,0.5); // [=] m/s assuming the average molar mass(0.03 kg/mol)
         fpl = 2.0*mu/(gas_density[c]*umol); // [=] m
         K_n = 2.0*fpl/diam[c]; // [=] m/m
-        Ft = ( 3 * _pi * mu * pow(diam[c],2) * K_n * _C_tm  * (( rkg/rkp + _C_t*K_n)*(1+1.3333*_Adep*_C_m*K_n)-1.3333*_Adep*_C_m*K_n) * dT_dn )/
+        Ft = - ( 3 * _pi * mu * pow(diam[c],2) * K_n * _C_tm  * (( rkg/rkp + _C_t*K_n)*(1+1.3333*_Adep*_C_m*K_n)-1.3333*_Adep*_C_m*K_n) * dT_dn )/
             ( (1+3*_C_m*K_n)*(1+2*rkg/rkp+2*_C_t*K_n) ); // kg m / s^2
         at = Ft / (particle_density[c]*(_pi/6)*pow(diam[c],3.0));// thermophoretic acceleration [=] m/(s^2)
         thp_rate[c]=scaled_weight[c]*at/_vel_scaling_constant; // [=] #/m^3 * m/(s^2) = #/(m^2 * s^2)

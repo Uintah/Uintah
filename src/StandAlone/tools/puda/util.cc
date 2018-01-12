@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -21,8 +21,10 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+
 #include <StandAlone/tools/puda/util.h>
 #include <Core/Parallel/Parallel.h>
+
 
 #include <cstdlib>
 #include <iostream>
@@ -30,7 +32,7 @@
 using namespace std;
 
 void
-Uintah::findTimestep_loopLimits( const bool tslow_set,
+Uintah::findTimestep_loopLimits( const bool tslow_set, 
                                  const bool tsup_set,
                                  const vector<double> times,
                                  unsigned long & time_step_lower,
@@ -43,7 +45,7 @@ Uintah::findTimestep_loopLimits( const bool tslow_set,
     cerr << "\n";
     cerr << "ERROR: 'timesteplow' must be between 0 and " << times.size()-1 << ".  You had " << time_step_lower << ".\n";
     cerr << "\n";
-    Parallel::exitAll( 2 );
+    Uintah::Parallel::exitAll( 2 );
   }
   if( !tsup_set ) {
     time_step_upper = times.size() - 1;
@@ -52,6 +54,6 @@ Uintah::findTimestep_loopLimits( const bool tslow_set,
     cerr << "\n";
     cerr << "Error: 'timestephigh' must be between 0 and " << times.size()-1 << ".  You had " << time_step_upper << ".\n";
     cerr << "\n";
-    Parallel::exitAll( 2 );
+    Uintah::Parallel::exitAll( 2 );
   }
 }

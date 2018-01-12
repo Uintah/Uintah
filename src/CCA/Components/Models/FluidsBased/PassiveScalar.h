@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -26,7 +26,8 @@
 #ifndef Packages_Uintah_CCA_Components_Examples_PassiveScalar_h
 #define Packages_Uintah_CCA_Components_Examples_PassiveScalar_h
 
-#include <CCA/Ports/ModelInterface.h>
+#include <CCA/Components/Models/FluidsBased/FluidsBasedModel.h>
+
 #include <Core/GeometryPiece/GeometryPiece.h>
 #include <Core/Grid/Variables/VarTypes.h>
 
@@ -35,7 +36,6 @@
 
 namespace Uintah {
   
-
 /**************************************
 
 CLASS
@@ -64,31 +64,29 @@ WARNING
   
 ****************************************/
   class ICELabel;
-  class PassiveScalar :public ModelInterface {
+  class PassiveScalar :public FluidsBasedModel {
   public:
     PassiveScalar(const ProcessorGroup* myworld, 
-                   ProblemSpecP& params,
-                  const bool doAMR);
+		  const SimulationStateP& sharedState,
+		  const ProblemSpecP& params);
+    
     virtual ~PassiveScalar();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
     
-    virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
-                              ModelSetup* setup);
+    virtual void problemSetup(GridP& grid,
+                               const bool isRestart);
     
     virtual void scheduleInitialize(SchedulerP&,
-                                    const LevelP& level,
-                                    const ModelInfo*);
+                                    const LevelP& level);
 
     virtual void restartInitialize() {}
       
-    virtual void scheduleComputeStableTimestep(SchedulerP&,
-                                               const LevelP& level,
-                                               const ModelInfo*);
+    virtual void scheduleComputeStableTimeStep(SchedulerP&,
+                                               const LevelP& level);
                                   
     virtual void scheduleComputeModelSources(SchedulerP&,
-                                             const LevelP& level,
-                                             const ModelInfo*);
+                                             const LevelP& level);
                                             
    virtual void scheduleModifyThermoTransportProperties(SchedulerP&,
                                                         const LevelP&,
@@ -103,11 +101,10 @@ WARNING
                                       SchedulerP& sched);
                                       
    virtual void scheduleTestConservation(SchedulerP&,
-                                         const PatchSet* patches,
-                                         const ModelInfo* mi);
+                                         const PatchSet* patches);
                                       
   private:
-    ICELabel* lb;
+    ICELabel* Ilb;
                                                 
    void modifyThermoTransportProperties(const ProcessorGroup*, 
                                         const PatchSubset* patches,        
@@ -125,15 +122,13 @@ WARNING
                              const PatchSubset* patches,
                              const MaterialSubset*,
                              DataWarehouse* old_dw,
-                             DataWarehouse* new_dw,
-                             const ModelInfo* mi);
+                             DataWarehouse* new_dw);
                              
     void testConservation(const ProcessorGroup*, 
                           const PatchSubset* patches,
                           const MaterialSubset*,
                           DataWarehouse* old_dw,
-                          DataWarehouse* new_dw,
-                          const ModelInfo* mi);
+                          DataWarehouse* new_dw);
                                                        
     void errorEstimate(const ProcessorGroup* pg,
                        const PatchSubset* patches,
@@ -145,7 +140,7 @@ WARNING
     PassiveScalar(const PassiveScalar&);
     PassiveScalar& operator=(const PassiveScalar&);
 
-    ProblemSpecP params;
+    ProblemSpecP d_params;
 
     const Material* d_matl;
     MaterialSet* d_matl_set;
@@ -213,11 +208,9 @@ WARNING
     
     PassiveScalarLabel* Slb;
     Scalar* d_scalar;
-    SimulationStateP d_sharedState;
-    
+
     //__________________________________
     // global constants
-    bool d_doAMR;
     bool d_test_conservation;
   };
 }

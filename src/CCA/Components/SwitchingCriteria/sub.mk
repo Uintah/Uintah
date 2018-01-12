@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2016 The University of Utah
+#  Copyright (c) 1997-2018 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -34,11 +34,8 @@ SRCDIR := CCA/Components/SwitchingCriteria
 SRCS += \
         $(SRCDIR)/SwitchingCriteriaFactory.cc \
         $(SRCDIR)/None.cc                     \
-        $(SRCDIR)/TimestepNumber.cc           \
-        $(SRCDIR)/SimpleBurn.cc               \
-        $(SRCDIR)/SteadyBurn.cc               \
         $(SRCDIR)/SteadyState.cc              \
-        $(SRCDIR)/DDT1.cc                     
+        $(SRCDIR)/TimestepNumber.cc
 
 PSELIBS := \
         CCA/Ports        \
@@ -46,11 +43,29 @@ PSELIBS := \
         Core/Exceptions  \
         Core/Geometry    \
         Core/Grid        \
-        Core/Labels      \
         Core/Math        \
         Core/Parallel    \
         Core/ProblemSpec \
         Core/Util        
+
+ifeq ($(BUILD_ICE),yes)
+  PSELIBS += CCA/Components/ICE/Core \
+             CCA/Components/ICE/Materials
+endif
+
+ifeq ($(BUILD_MPM),yes)
+  PSELIBS += CCA/Components/MPM/Core \
+             CCA/Components/MPM/Materials
+endif
+
+ifeq ($(BUILD_MPM)$(BUILD_ICE),yesyes)
+  SRCS += \
+        $(SRCDIR)/SimpleBurn.cc \
+        $(SRCDIR)/SteadyBurn.cc \
+        $(SRCDIR)/DDT1.cc
+
+  PSELIBS += CCA/Components/MPMICE/Core
+endif
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY)
 

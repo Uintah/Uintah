@@ -13,8 +13,6 @@
 
 //===========================================================================
 
-#include <CCA/Components/Arches/FunctorSwitch.h>
-
 using namespace std;
 using namespace Uintah;
 
@@ -193,7 +191,6 @@ MomentumDragSrc::computeSource( const ProcessorGroup* pc,
         old_dw->get( gas_zdrag, tempLabel, matlIndex, patch, gn, 0);
       }
 
-#ifdef USE_FUNCTOR
   Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
 
   sumGasDrag doSumGas(_base_x_drag,
@@ -205,22 +202,6 @@ MomentumDragSrc::computeSource( const ProcessorGroup* pc,
                       dragSrc);
 
   Uintah::parallel_for(range, doSumGas);
-#else
-      for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-        IntVector c = *iter;
-
-        gas_drag = Vector(0.0, 0.0, 0.0);
-        if ( _base_x_drag != "none" )
-          gas_drag += Vector( gas_xdrag[c], 0.0, 0.0);
-        if ( _base_y_drag != "none" )
-          gas_drag += Vector( 0.0, gas_ydrag[c], 0.0);
-        if ( _base_z_drag != "none" )
-          gas_drag += Vector( 0.0, 0.0, gas_zdrag[c]);
-
-        dragSrc[c] += gas_drag;
-
-      }
-#endif
     }
   }
 }

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -26,7 +26,6 @@
 #define UINTAH_SMAGORINSKYMODEL_H
 
 #include <CCA/Components/ICE/TurbulenceModel/Turbulence.h>
-#include <Core/Containers/StaticArray.h>
 #include <cmath>
 
 namespace Uintah {
@@ -69,7 +68,7 @@ namespace Uintah {
                            const int indx,
                            SimulationStateP&  d_sharedState,
                            DataWarehouse* new_dw,
-                           StaticArray<CCVariable<double> >& SIJ);
+                           std::vector<CCVariable<double> >& SIJ);
                            
     void computeVariance(const ProcessorGroup*, 
                          const PatchSubset* patch,  

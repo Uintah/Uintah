@@ -6,7 +6,7 @@
  *
  * The MIT License
  *
- * Copyright (c) 2013-2016 The University of Utah
+ * Copyright (c) 2013-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -27,7 +27,7 @@
  * IN THE SOFTWARE.
  */
 
-#include "WasatchParticlesHelper.h"
+#include <CCA/Components/Wasatch/WasatchParticlesHelper.h>
 
 //-- Wasatch includes --//
 #include <CCA/Components/Wasatch/Wasatch.h>
@@ -108,7 +108,7 @@ namespace WasatchCore {
     bool hasGeom = false;
     bool bounded=false;
     for( ProblemSpecP exprParams = wasatch_->get_wasatch_spec()->findBlock("BasicExpression");
-        exprParams != 0;
+        exprParams != nullptr;
         exprParams = exprParams->findNextBlock("BasicExpression") )
     {
       // look for ParticlePositionIC xml Blocks (initial condition). These specify the kind of
@@ -140,7 +140,7 @@ namespace WasatchCore {
           geomBasedSpec->getAttribute("seed",seed);
           // parse all intrusions
           for( ProblemSpecP intrusionParams = geomBasedSpec->findBlock("geom_object");
-              intrusionParams != 0;
+              intrusionParams != nullptr;
               intrusionParams = intrusionParams->findNextBlock("geom_object") )
           {
             GeometryPieceFactory::create(intrusionParams, geomObjects);

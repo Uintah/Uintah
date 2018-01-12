@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2016 The University of Utah
+ * Copyright (c) 2012-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -23,7 +23,7 @@
  */
 
 #include <CCA/Components/Wasatch/Expressions/PostProcessing/InterpolateExpression.h>
-#include <spatialops/particles/ParticleOperatorsImplementation.h>
+#include <spatialops/particles/ParticleOperators.h>
 #include <spatialops/OperatorDatabase.h>
 #include <spatialops/structured/SpatialFieldStore.h>
 
@@ -126,12 +126,12 @@ InterpolateParticleExpression( const Expr::Tag& srctag,
                               const Expr::TagList& particlePositionTags)
 : Expr::Expression<DestT>()
 {
-  this->set_gpu_runnable( false );
-   src_ = this->template create_field_request<ParticleField>(srctag);
-   psize_ = this->template create_field_request<ParticleField>(particleSizeTag);
-   px_ = this->template create_field_request<ParticleField>(particlePositionTags[0]);
-   py_ = this->template create_field_request<ParticleField>(particlePositionTags[1]);
-   pz_ = this->template create_field_request<ParticleField>(particlePositionTags[2]);
+  this->set_gpu_runnable(false);  // waiting for GPU-enabled particle interpolants
+  src_   = this->template create_field_request<ParticleField>(srctag                 );
+  psize_ = this->template create_field_request<ParticleField>(particleSizeTag        );
+  px_    = this->template create_field_request<ParticleField>(particlePositionTags[0]);
+  py_    = this->template create_field_request<ParticleField>(particlePositionTags[1]);
+  pz_    = this->template create_field_request<ParticleField>(particlePositionTags[2]);
 }
 
 //--------------------------------------------------------------------

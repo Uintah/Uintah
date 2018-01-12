@@ -111,7 +111,6 @@ private:
 
   Vector _gravity;
   double _kvisc;
-  double _pi;
 
   int _dir;
 

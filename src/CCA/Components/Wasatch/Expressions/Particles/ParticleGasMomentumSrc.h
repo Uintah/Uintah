@@ -3,7 +3,7 @@
 
 #include <expression/Expression.h>
 #include <spatialops/particles/ParticleFieldTypes.h>
-#include <spatialops/particles/ParticleOperatorsImplementation.h>
+#include <spatialops/particles/ParticleOperators.h>
 //====================================================================
 
 
@@ -85,13 +85,14 @@ ParticleGasMomentumSrc( const Expr::Tag& particleDragTag,
                        const Expr::TagList& particlePositionTags)
 : Expr::Expression<GasVelT>()
 {
-   this->set_gpu_runnable(true);
-   pDrag_ = this->template create_field_request<ParticleField>(particleDragTag);
-   pSize_ = this->template create_field_request<ParticleField>(particleSizeTag);
-   pMass_ = this->template create_field_request<ParticleField>(particleMassTag);
-   px_    = this->template create_field_request<ParticleField>(particlePositionTags[0]);
-   py_    = this->template create_field_request<ParticleField>(particlePositionTags[1]);
-   pz_    = this->template create_field_request<ParticleField>(particlePositionTags[2]);
+  this->set_gpu_runnable(false);  // waiting for GPU-enabled particle interpolants
+
+  pDrag_ = this->template create_field_request<ParticleField>(particleDragTag);
+  pSize_ = this->template create_field_request<ParticleField>(particleSizeTag);
+  pMass_ = this->template create_field_request<ParticleField>(particleMassTag);
+  px_    = this->template create_field_request<ParticleField>(particlePositionTags[0]);
+  py_    = this->template create_field_request<ParticleField>(particlePositionTags[1]);
+  pz_    = this->template create_field_request<ParticleField>(particlePositionTags[2]);
 }
 
 //--------------------------------------------------------------------
@@ -124,8 +125,7 @@ evaluate()
   const ParticleField& py = py_->field_ref();
   const ParticleField& pz = pz_->field_ref();
 
-  
-  SpatFldPtr<GasVelT     >  gasmomsrc = SpatialFieldStore::get<GasVelT     >( result );
+    SpatFldPtr<GasVelT     >  gasmomsrc = SpatialFieldStore::get<GasVelT     >( result );
   SpatFldPtr<ParticleField> pforcetmp = SpatialFieldStore::get<ParticleField>( px );
   
   *pforcetmp <<= pdrag * pmass; // multiply by mass

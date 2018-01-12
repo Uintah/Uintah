@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2015 The University of Utah
+ * Copyright (c) 2015-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -21,7 +21,10 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditions.h>
+#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditionsOneSided.h>
 
+#include <sci_defs/wasatch_defs.h>
 #include <CCA/Components/Wasatch/TagNames.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <CCA/Components/Wasatch/Transport/TransportEquation.h>
@@ -32,10 +35,101 @@
 #include <CCA/Components/Wasatch/Expressions/Turbulence/TurbulenceParameters.h>
 #include <CCA/Components/Wasatch/Expressions/EmbeddedGeometry/EmbeddedGeometryHelper.h>
 
+#ifdef HAVE_POKITT
+#include <pokitt/MixtureMolWeight.h>
+#include <pokitt/thermo/Density.h>
+#endif
 
 namespace WasatchCore{
 
-  
+
+
+  template< typename FaceT, typename GradT >
+  struct ContinuityBoundaryTyper
+  {
+    typedef SpatialOps::SVolField CellT;
+    typedef SpatialOps::Divergence DivT;
+
+    typedef typename SpatialOps::OperatorTypeBuilder<GradT, CellT, CellT>::type CellNeumannT;
+    typedef typename SpatialOps::OperatorTypeBuilder<DivT, FaceT, CellT>::type FaceNeumannT;
+
+    typedef typename SpatialOps::NeboBoundaryConditionBuilder<CellNeumannT> CellNeumannBCOpT;
+    typedef typename SpatialOps::NeboBoundaryConditionBuilder<FaceNeumannT> FaceNeumannBCOpT;
+
+    typedef typename ConstantBCNew<CellT,CellNeumannBCOpT>::Builder ConstantCellNeumannBC;
+    typedef typename ConstantBCNew<FaceT,FaceNeumannBCOpT>::Builder ConstantFaceNeumannBC;
+  };
+  //----------------------------------------------------------------------------
+
+  /**
+   *  \class Density_IC
+   *  \author James C. Sutherland
+   *  \date November, 2015
+   *
+   *  \brief Calculates initial condition for the density given an initial pressure and temperature.
+   */
+  template< typename FieldT >
+  class Density_IC : public Expr::Expression<FieldT>
+  {
+    double gasConstant_;
+    DECLARE_FIELDS( FieldT, temperature_, pressure_, mixMW_ )
+
+    Density_IC( const Expr::Tag& temperatureTag,
+                const Expr::Tag& pressureTag,
+                const Expr::Tag& mixMWTag,
+                Uintah::ProblemSpecP wasatchSpec )
+    : Expr::Expression<FieldT>(),
+      gasConstant_( 8314.459848 ) // gas constant J/(kmol K)
+    {
+      this->set_gpu_runnable(true);
+      temperature_ = this->template create_field_request<FieldT>( temperatureTag );
+      pressure_    = this->template create_field_request<FieldT>( pressureTag    );
+      mixMW_       = this->template create_field_request<FieldT>( mixMWTag       );
+
+#ifdef HAVE_POKITT
+      Uintah::ProblemSpecP speciesParams = wasatchSpec->findBlock("SpeciesTransportEquations");
+      if( speciesParams ){
+        gasConstant_ = CanteraObjects::gas_constant();
+      }
+#endif
+    }
+
+  public:
+
+    class Builder : public Expr::ExpressionBuilder
+    {
+      const Expr::Tag temperatureTag_, pressureTag_, mixMWTag_;
+      Uintah::ProblemSpecP wasatchSpec_;
+    public:
+      /**
+       *  @brief Build a Density_IC expression
+       *  @param resultTag the tag for the value that this expression computes
+       */
+      Builder( const Expr::Tag& resultTag,
+               const Expr::Tag& temperatureTag,
+               const Expr::Tag& pressureTag,
+               const Expr::Tag& mixMWTag,
+               Uintah::ProblemSpecP wasatchSpec,
+               const int nghost = DEFAULT_NUMBER_OF_GHOSTS )
+      : ExpressionBuilder( resultTag, nghost ),
+        temperatureTag_( temperatureTag ),
+        pressureTag_   ( pressureTag    ),
+        mixMWTag_      ( mixMWTag       ),
+        wasatchSpec_( wasatchSpec )
+      {}
+
+      Expr::ExpressionBase* build() const{
+        return new Density_IC<FieldT>( temperatureTag_,pressureTag_,mixMWTag_,wasatchSpec_ );
+      }
+    };  /* end of Builder class */
+
+    ~Density_IC(){}
+
+    void evaluate(){
+      this->value() <<= ( pressure_->field_ref() * mixMW_->field_ref() )/( gasConstant_ * temperature_->field_ref() );
+    }
+  };
+
   //============================================================================
   
   /**
@@ -48,28 +142,28 @@ namespace WasatchCore{
    */
   class ContinuityTransportEquation : public TransportEquation
   {
-    typedef SpatialOps::SVolField  FieldT;
+    typedef SpatialOps::SVolField  MyFieldT;
     
     const Expr::Tag xVelTag_, yVelTag_, zVelTag_;
     const Expr::Tag densTag_, temperatureTag_, pressureTag_, mixMWTag_;
-    const double gasConstant_;
+    Uintah::ProblemSpecP wasatchSpec_;
   public:
     ContinuityTransportEquation( const Expr::Tag densityTag,
                                  const Expr::Tag temperatureTag,
                                  const Expr::Tag mixMWTag,
-                                 const double gasConstant,
                                  GraphCategories& gc,
                                  const Expr::Tag xvel,
                                  const Expr::Tag yvel,
-                                 const Expr::Tag zvel )
+                                 const Expr::Tag zvel,
+                                 Uintah::ProblemSpecP wasatchSpec )
     : TransportEquation( gc, densityTag.name(), NODIR, false /* variable density */ ),
-    xVelTag_( xvel ),
-    yVelTag_( yvel ),
-    zVelTag_( zvel ),
-    densTag_       ( densityTag     ),
-    temperatureTag_( temperatureTag ),
-    mixMWTag_      ( mixMWTag       ),
-    gasConstant_( gasConstant )
+      xVelTag_( xvel ),
+      yVelTag_( yvel ),
+      zVelTag_( zvel ),
+      densTag_       ( densityTag     ),
+      temperatureTag_( temperatureTag ),
+      mixMWTag_      ( mixMWTag       ),
+      wasatchSpec_   ( wasatchSpec    )
     {
       setup();
     }
@@ -79,11 +173,53 @@ namespace WasatchCore{
     void setup_boundary_conditions( WasatchBCHelper& bcHelper,
                                    GraphCategories& graphCat )
     {
+      Expr::ExpressionFactory& advSlnFactory = *(graphCat[ADVANCE_SOLUTION]->exprFactory);
+      Expr::ExpressionFactory& initFactory   = *(graphCat[INITIALIZATION  ]->exprFactory);
+
+      // set up the species mass density field that will be computed with primitives on which BCs have been set, for nonreflecting inflow boundaries
+      const Expr::Tag temporaryRhoTag( "temporary_rho_for_bcs", Expr::STATE_NONE ); // requires the rho temporary field that continuity must build
+      const Expr::Tag temporaryPTag( "temporary_pressure_for_bcs", Expr::STATE_NONE );
+      const Expr::Tag temporaryTemperatureTag( "temporary_Temperature_for_bcs", Expr::STATE_NONE );
+      const Expr::Tag temporaryMMWTag( "temporary_mmw_for_bcs", Expr::STATE_NONE );
+
+      if( !( advSlnFactory.have_entry( temporaryRhoTag ) ) ){
+#ifdef HAVE_POKITT
+        const TagNames& tagNames = TagNames::self();
+        typedef pokitt::Density<SVolField>::Builder Density;
+        advSlnFactory.register_expression( new Density( temporaryRhoTag, temporaryTemperatureTag, temporaryPTag, temporaryMMWTag ) );
+#else
+        const TagNames& tagNames = TagNames::self();
+        typedef Density_IC<SVolField>::Builder Density;
+        advSlnFactory.register_expression( new Density( temporaryRhoTag, temporaryTemperatureTag, temporaryPTag, temporaryMMWTag, wasatchSpec_ ) );
+#endif
+      }
+      if( !( initFactory.have_entry( temporaryRhoTag ) ) ){
+#ifdef HAVE_POKITT
+        const TagNames& tagNames = TagNames::self();
+        typedef pokitt::Density<SVolField>::Builder Density;
+        initFactory.register_expression( new Density( temporaryRhoTag, temporaryTemperatureTag, temporaryPTag, temporaryMMWTag ) );
+#else
+        const TagNames& tagNames = TagNames::self();
+        typedef Density_IC<SVolField>::Builder Density;
+        initFactory.register_expression( new Density( temporaryRhoTag, temporaryTemperatureTag, temporaryPTag, temporaryMMWTag, wasatchSpec_ ) );
+#endif
+      }
+
       // make logical decisions based on the specified boundary types
       BOOST_FOREACH( const BndMapT::value_type& bndPair, bcHelper.get_boundary_information() ){
         const std::string& bndName = bndPair.first;
         const BndSpec& myBndSpec = bndPair.second;
         
+        // a lambda to make decorated tags for boundary condition expressions
+        //
+        // param: exprName: a string, the name of the field on which we will impose the boundary condition
+        // param: description: a string describing the boundary condition, such as "neumann-zero-for-outflow" or "dirichlet-for-inflow"
+        // param: direction: a string for the direction of the boundary face, such as "X", "Y", or "Z"
+        auto get_decorated_tag = [&myBndSpec](const std::string exprName, const std::string description, const std::string direction) -> Expr::Tag
+        {
+          return Expr::Tag( exprName + "_STATE_NONE_" + description + "_bc_" + myBndSpec.name + "_" + direction + "dir", Expr::STATE_NONE );
+        };
+
         switch ( myBndSpec.type ){
           case WALL:
           {
@@ -105,32 +241,134 @@ namespace WasatchCore{
             bcHelper.add_boundary_condition(bndName, rhoRHSBCSpec);
           }
             break;
-          case VELOCITY:
+
           case OUTFLOW:
           case OPEN:{
-            // for constant density problems, on all types of boundary conditions, set the scalar rhs
-            // to zero. The variable density case requires setting the scalar rhs to zero ALL the time
-            // and is handled in the code above.
-            if( isConstDensity_ ){
-              if( myBndSpec.has_field(rhs_name()) ){
-                std::ostringstream msg;
-                msg << "ERROR: You cannot specify scalar rhs boundary conditions unless you specify USER "
-                << "as the type for the boundary condition. Please revise your input file. "
-                << "This error occured while trying to analyze boundary " << bndName
-                << std::endl;
-                throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+            // tags for modifier expressions and strings for BC spec names, will depend on boundary face
+            std::string normalConvectiveFluxName;
+            Expr::Tag neumannZeroConvectiveFluxTag,
+                      neumannZeroDensityTag,
+                      bcCopiedRhoTag;
+
+            // build boundary conditions for x, y, and z faces
+            switch( myBndSpec.face ){
+              case Uintah::Patch::xplus:
+              case Uintah::Patch::xminus:
+              {
+                std::string dir = "X";
+                typedef ContinuityBoundaryTyper<SpatialOps::SSurfXField, SpatialOps::GradientX> BCTypes;
+                BCTypes bcTypes;
+
+                normalConvectiveFluxName = this->solnVarName_ + TagNames::self().convectiveflux + dir;
+
+                neumannZeroConvectiveFluxTag = get_decorated_tag( this->solnVarName_      , "neumann-zero", dir );
+                neumannZeroDensityTag        = get_decorated_tag( normalConvectiveFluxName, "neumann-zero", dir );
+
+                if( !advSlnFactory.have_entry( neumannZeroConvectiveFluxTag ) ) advSlnFactory.register_expression( new typename BCTypes::ConstantFaceNeumannBC( neumannZeroConvectiveFluxTag, 0.0 ) );
+                if( !advSlnFactory.have_entry( neumannZeroDensityTag        ) ) advSlnFactory.register_expression( new typename BCTypes::ConstantCellNeumannBC( neumannZeroDensityTag       , 0.0 ) );
+                if( !initFactory  .have_entry( neumannZeroDensityTag        ) ) initFactory  .register_expression( new typename BCTypes::ConstantCellNeumannBC( neumannZeroDensityTag       , 0.0 ) );
               }
-              const BndCondSpec rhsBCSpec = {rhs_name(), "none", 0.0, DIRICHLET, DOUBLE_TYPE };
-              bcHelper.add_boundary_condition(bndName, rhsBCSpec);
+              break;
+              case Uintah::Patch::yminus:
+              case Uintah::Patch::yplus:
+              {
+                std::string dir = "Y";
+                typedef ContinuityBoundaryTyper<SpatialOps::SSurfYField, SpatialOps::GradientY> BCTypes;
+                BCTypes bcTypes;
+
+                normalConvectiveFluxName = this->solnVarName_ + TagNames::self().convectiveflux + dir;
+
+                neumannZeroConvectiveFluxTag = get_decorated_tag( this->solnVarName_      , "neumann-zero", dir );
+                neumannZeroDensityTag        = get_decorated_tag( normalConvectiveFluxName, "neumann-zero", dir );
+
+                if( !advSlnFactory.have_entry( neumannZeroConvectiveFluxTag ) ) advSlnFactory.register_expression( new typename BCTypes::ConstantFaceNeumannBC( neumannZeroConvectiveFluxTag, 0.0 ) );
+                if( !advSlnFactory.have_entry( neumannZeroDensityTag        ) ) advSlnFactory.register_expression( new typename BCTypes::ConstantCellNeumannBC( neumannZeroDensityTag       , 0.0 ) );
+                if( !initFactory  .have_entry( neumannZeroDensityTag        ) ) initFactory  .register_expression( new typename BCTypes::ConstantCellNeumannBC( neumannZeroDensityTag       , 0.0 ) );
+              }
+              break;
+              case Uintah::Patch::zminus:
+              case Uintah::Patch::zplus:
+              {
+                std::string dir = "Z";
+                typedef ContinuityBoundaryTyper<SpatialOps::SSurfZField, SpatialOps::GradientZ> BCTypes;
+                BCTypes bcTypes;
+
+                normalConvectiveFluxName = this->solnVarName_ + TagNames::self().convectiveflux + dir;
+
+                neumannZeroConvectiveFluxTag = get_decorated_tag( this->solnVarName_      , "neumann-zero", dir );
+                neumannZeroDensityTag        = get_decorated_tag( normalConvectiveFluxName, "neumann-zero", dir );
+
+                if( !advSlnFactory.have_entry( neumannZeroConvectiveFluxTag ) ) advSlnFactory.register_expression( new typename BCTypes::ConstantFaceNeumannBC( neumannZeroConvectiveFluxTag, 0.0 ) );
+                if( !advSlnFactory.have_entry( neumannZeroDensityTag        ) ) advSlnFactory.register_expression( new typename BCTypes::ConstantCellNeumannBC( neumannZeroDensityTag       , 0.0 ) );
+                if( !initFactory  .have_entry( neumannZeroDensityTag        ) ) initFactory  .register_expression( new typename BCTypes::ConstantCellNeumannBC( neumannZeroDensityTag       , 0.0 ) );
+              }
+              break;
+              default:
+                break;
             }
-            
-            break;
+
+            // make boundary condition specifications, connecting the name of the field (first) and the name of the modifier expression (second)
+            BndCondSpec convFluxSpec = {normalConvectiveFluxName, neumannZeroConvectiveFluxTag.name(), 0.0, NEUMANN, FUNCTOR_TYPE};
+            BndCondSpec densitySpec  = {this->solnVarTag_.name(), neumannZeroDensityTag.name()       , 0.0, NEUMANN, FUNCTOR_TYPE};
+
+            // add boundary condition specifications to this boundary
+            bcHelper.add_boundary_condition( bndName, convFluxSpec );
+            bcHelper.add_boundary_condition( bndName, densitySpec );
           }
+          break;
+
+          case VELOCITY:
+          {
+            Expr::Tag bcCopiedRhoTag;
+
+            // build boundary conditions for x, y, and z faces
+            switch( myBndSpec.face ){
+              case Uintah::Patch::xplus:
+              case Uintah::Patch::xminus:
+              {
+                std::string dir = "X";
+                typedef typename BCCopier<SVolField>::Builder CopiedCellBC;
+                bcCopiedRhoTag = get_decorated_tag( this->solnVarTag_.name(), "bccopy-for-inflow", dir );
+                if( !initFactory  .have_entry( bcCopiedRhoTag ) ) initFactory  .register_expression( new CopiedCellBC( bcCopiedRhoTag, temporaryRhoTag ) );
+                if( !advSlnFactory.have_entry( bcCopiedRhoTag ) ) advSlnFactory.register_expression( new CopiedCellBC( bcCopiedRhoTag, temporaryRhoTag ) );
+              }
+              break;
+              case Uintah::Patch::yminus:
+              case Uintah::Patch::yplus:
+              {
+                std::string dir = "Y";
+                typedef typename BCCopier<SVolField>::Builder CopiedCellBC;
+                bcCopiedRhoTag = get_decorated_tag( this->solnVarTag_.name(), "bccopy-for-inflow", dir );
+                if( !initFactory  .have_entry( bcCopiedRhoTag ) ) initFactory  .register_expression( new CopiedCellBC( bcCopiedRhoTag, temporaryRhoTag ) );
+                if( !advSlnFactory.have_entry( bcCopiedRhoTag ) ) advSlnFactory.register_expression( new CopiedCellBC( bcCopiedRhoTag, temporaryRhoTag ) );
+              }
+              break;
+              case Uintah::Patch::zminus:
+              case Uintah::Patch::zplus:
+              {
+                std::string dir = "Z";
+                typedef typename BCCopier<SVolField>::Builder CopiedCellBC;
+                bcCopiedRhoTag = get_decorated_tag( this->solnVarTag_.name(), "bccopy-for-inflow", dir );
+                if( !initFactory  .have_entry( bcCopiedRhoTag ) ) initFactory  .register_expression( new CopiedCellBC( bcCopiedRhoTag, temporaryRhoTag ) );
+                if( !advSlnFactory.have_entry( bcCopiedRhoTag ) ) advSlnFactory.register_expression( new CopiedCellBC( bcCopiedRhoTag, temporaryRhoTag ) );
+              }
+              break;
+              default:
+                break;
+            }
+
+            // make boundary condition specifications, connecting the name of the field (first) and the name of the modifier expression (second)
+            BndCondSpec rhoDirichletBC = {this->solnVarTag_.name(), bcCopiedRhoTag.name(), 0.0, DIRICHLET, FUNCTOR_TYPE};
+
+            // add boundary condition specifications to this boundary
+            bcHelper.add_boundary_condition( bndName, rhoDirichletBC );
+          }
+          break;
+
           case USER:{
             // parse through the list of user specified BCs that are relevant to this transport equation
             break;
           }
-            
           default:
             break;
         }
@@ -144,8 +382,11 @@ namespace WasatchCore{
     {
       const Category taskCat = INITIALIZATION;
       // apply velocity boundary condition, if specified
-      bcHelper.apply_boundary_condition<FieldT>(this->initial_condition_tag(), taskCat);
-      
+      bcHelper.apply_boundary_condition<MyFieldT>(this->initial_condition_tag(), taskCat);
+
+      // bcs for hard inflow - set primitive and conserved variables
+      const Expr::Tag temporaryYTag( "temporary_rho_for_bcs", Expr::STATE_NONE );
+      bcHelper.apply_boundary_condition<MyFieldT>( temporaryYTag, taskCat, true );
     }
     
     //----------------------------------------------------------------------------
@@ -154,10 +395,23 @@ namespace WasatchCore{
                                    WasatchBCHelper& bcHelper )
     {
       const Category taskCat = ADVANCE_SOLUTION;
-      // set bcs for momentum - use the TIMEADVANCE expression
-      bcHelper.apply_boundary_condition<FieldT>( this->solnvar_np1_tag(), taskCat );
-      // set bcs for velocity
-      bcHelper.apply_boundary_condition<FieldT>( this->rhs_tag(), taskCat, true );
+
+      bcHelper.apply_boundary_condition<MyFieldT>( this->solnvar_np1_tag(), taskCat );
+
+      bcHelper.apply_boundary_condition<MyFieldT>( this->rhs_tag(), taskCat, true );
+      
+      std::string convFluxName = this->solnVarName_ + TagNames::self().convectiveflux + "X";
+      bcHelper.apply_boundary_condition<SpatialOps::SSurfXField>( Expr::Tag(convFluxName, Expr::STATE_NONE), taskCat );
+      convFluxName = this->solnVarName_ + TagNames::self().convectiveflux + "Y";
+      bcHelper.apply_boundary_condition<SpatialOps::SSurfYField>( Expr::Tag(convFluxName, Expr::STATE_NONE), taskCat );
+      convFluxName = this->solnVarName_ + TagNames::self().convectiveflux + "Z";
+      bcHelper.apply_boundary_condition<SpatialOps::SSurfZField>( Expr::Tag(convFluxName, Expr::STATE_NONE), taskCat );
+
+      bcHelper.apply_nscbc_boundary_condition(this->rhs_tag(), NSCBC::DENSITY, taskCat);
+
+      // bcs for hard inflow - set primitive and conserved variables
+      const Expr::Tag temporaryYTag( "temporary_rho_for_bcs", Expr::STATE_NONE );
+      bcHelper.apply_boundary_condition<MyFieldT>( temporaryYTag, taskCat, true );
     }
     
     void setup_diffusive_flux( FieldTagInfo& rhsInfo ){}
@@ -168,7 +422,7 @@ namespace WasatchCore{
     Expr::ExpressionID setup_rhs( FieldTagInfo& info, const Expr::TagList& srcTags )
     {
       
-      typedef ScalarRHS<FieldT>::Builder RHSBuilder;
+      typedef ScalarRHS<MyFieldT>::Builder RHSBuilder;
       Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
       
       info[PRIMITIVE_VARIABLE] = solnVarTag_;
@@ -181,21 +435,21 @@ namespace WasatchCore{
     void setup_convective_flux( FieldTagInfo& rhsInfo )
     {
       if( xVelTag_ != Expr::Tag() )
-        setup_convective_flux_expression<FieldT>( "X", densTag_,
+        setup_convective_flux_expression<MyFieldT>( "X", densTag_,
                                                  Expr::Tag(), /* default tag name for conv. flux */
                                                  CENTRAL,
                                                  xVelTag_,
                                                  *gc_[ADVANCE_SOLUTION]->exprFactory,
                                                  rhsInfo );
       if( yVelTag_ != Expr::Tag() )
-        setup_convective_flux_expression<FieldT>( "Y", densTag_,
+        setup_convective_flux_expression<MyFieldT>( "Y", densTag_,
                                                  Expr::Tag(), /* default tag name for conv. flux */
                                                  CENTRAL,
                                                  yVelTag_,
                                                  *gc_[ADVANCE_SOLUTION]->exprFactory,
                                                  rhsInfo );
       if( zVelTag_ != Expr::Tag() )
-        setup_convective_flux_expression<FieldT>( "Z", densTag_,
+        setup_convective_flux_expression<MyFieldT>( "Z", densTag_,
                                                  Expr::Tag(), /* default tag name for conv. flux */
                                                  CENTRAL,
                                                  zVelTag_,
@@ -219,18 +473,19 @@ namespace WasatchCore{
    *
    */
   template <typename MomDirT>
-  class CompressibleMomentumTransportEquation : public WasatchCore::MomentumTransportEquationBase<SVolField>
+  class CompressibleMomentumTransportEquation : public MomentumTransportEquationBase<SVolField>
   {
     typedef SpatialOps::SVolField FieldT;
 
   public:
-    CompressibleMomentumTransportEquation( const Direction momComponent,
+    CompressibleMomentumTransportEquation( Uintah::ProblemSpecP wasatchSpec,
+                                           const Direction momComponent,
                                            const std::string velName,
                                            const std::string momName,
                                            const Expr::Tag densityTag,
                                            const Expr::Tag temperatureTag,
                                            const Expr::Tag mixMWTag,
-                                           const double gasConstant,
+                                           const Expr::Tag e0Tag, // total internal energy tag
                                            const Expr::Tag bodyForceTag,
                                            const Expr::Tag srcTermTag,
                                            GraphCategories& gc,
@@ -240,13 +495,13 @@ namespace WasatchCore{
     ~CompressibleMomentumTransportEquation();
 
     void setup_boundary_conditions( WasatchBCHelper& bcHelper,
-                                   GraphCategories& graphCat );
+                                    GraphCategories& graphCat );
 
     void apply_initial_boundary_conditions( const GraphHelper& graphHelper,
-                                           WasatchBCHelper& bcHelper );
+                                            WasatchBCHelper& bcHelper );
 
     void apply_boundary_conditions( const GraphHelper& graphHelper,
-                                   WasatchBCHelper& bcHelper );
+                                    WasatchBCHelper& bcHelper );
 
     Expr::ExpressionID initial_condition( Expr::ExpressionFactory& icFactory )
     {
@@ -263,8 +518,8 @@ namespace WasatchCore{
         const Expr::Tag rhoTag(this->densityTag_.name(), Expr::STATE_NONE);
         const Expr::TagList theTagList( tag_list( this->thisVelTag_, rhoTag ) );
         icFactory.register_expression( new ExprAlgbr::Builder( this->initial_condition_tag(),
-                                                                       theTagList,
-                                                                       ExprAlgbr::PRODUCT ) );
+                                                               theTagList,
+                                                               ExprAlgbr::PRODUCT ) );
       }
       
       // multiply the initial condition by the volume fraction for embedded geometries
@@ -275,9 +530,9 @@ namespace WasatchCore{
         const Expr::TagList theTagList( tag_list( this->thisVolFracTag_ ) );
         Expr::Tag modifierTag = Expr::Tag( this->solution_variable_name() + "_init_cond_modifier", Expr::STATE_NONE );
         icFactory.register_expression( new ExprAlgbr::Builder( modifierTag,
-                                                                       theTagList,
-                                                                       ExprAlgbr::PRODUCT,
-                                                                       true ) );
+                                                               theTagList,
+                                                               ExprAlgbr::PRODUCT,
+                                                               true ) );
         icFactory.attach_modifier_expression( modifierTag, this->initial_condition_tag() );
       }
       return icFactory.get_id( this->initial_condition_tag() );
@@ -285,6 +540,8 @@ namespace WasatchCore{
 
   protected:
 
+    Uintah::ProblemSpecP wasatchSpec_;
+    const Expr::Tag temperatureTag_, mixMWTag_, e0Tag_;
     void setup_diffusive_flux( FieldTagInfo& ){}
     void setup_convective_flux( FieldTagInfo& ){}
     void setup_source_terms( FieldTagInfo&, Expr::TagList& ){}

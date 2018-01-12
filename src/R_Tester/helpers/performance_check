@@ -1,5 +1,12 @@
 #!/bin/bash
+#______________________________________________________________________
+#  This script compares the simulation time against the gold standards and reports
+#  the percent change.  It also generates a plot so the user can look for slow "creep" in 
+#  the run time over long periods of time.  If the simulation is faster then the GS will be automatically
+#  updated if allowed.
+#______________________________________________________________________
 
+ 
 test=$1            # name of test
 makeplots=$2       # switch: 1 or 0
 test_timefile=$3   # filename
@@ -14,16 +21,23 @@ gs_dir="$compare_root/$test"
 #__________________________________
 # bulletproofing
 if [ ! -f $test_timefile ]; then
-    echo "No performance output ($test_timefile) found.  Can't do performance test."
-    exit 5
+  echo "No performance output ($test_timefile) found.  Can't do performance test."
+  exit 5
+fi
+
+#__________________________________
+# bulletproof the inputs
+if [ "AUTO_UPDATE_PERF_GS" = "" ]; then
+  echo "ERROR: performance_check  One of the environmental variables (AUTO_UPDATE_PERF_GS) has not been set"
+  exit -1
 fi
 
 if [ ! -f $comparison_timefile ]; then
-    echo "No previous performance output.  Storing results."
-    cp $test_timefile $comparison_timefile
-    chgrp $COMMON_GROUP $comparison_timefile
-    chmod g+rw $comparison_timefile
-    exit -1
+  echo "No previous performance output.  Storing results."
+  cp $test_timefile $comparison_timefile
+  chgrp $COMMON_GROUP $comparison_timefile
+  chmod g+rw $comparison_timefile
+  exit -1
 fi
 
 error=0
@@ -73,33 +87,37 @@ fi
 #__________________________________
 echo "Performing performance check"
 if [ $percent -gt "10" ]; then
-    echo "***Performance test failed"
-    echo " -- Time increased by %$percent" > performance_shortmessage.txt
-    error=2
+  echo "***Performance test failed"                                        
+  echo " -- Time increased by %$percent" > performance_shortmessage.txt    
+  error=2                                                                  
 elif [ $percent -gt "0" ]; then
-    echo " -- Time increased by %$percent" > performance_shortmessage.txt
+  echo " -- Time increased by %$percent" > performance_shortmessage.txt
 elif [ $percent -lt "0" ]; then
-    let percent_improvement=-$percent;
-    
-    if [ $percent -lt "-5" ]; then
-	echo "Preformance passed with some improvement!!"
-	echo " -- Performance improved by %$percent_improvement, replacing timestamp" > performance_shortmessage.txt
-	cp $test_timefile $comparison_timefile
-       
-       # keep around the old output for analysis
-       mv $gs_dir/$sus_output* $gs_dir/oldOutput/ >/dev/null 2>&1
-       
-       me="$sus_output.$svn_revision"
-       cp $sus_output $gs_dir/$me
-       
-	chgrp -R $COMMON_GROUP $gs_dir
-	chmod -R g+rw $gs_dir
-    else
-	echo " -- Performance improved by %$percent_improvement" > performance_shortmessage.txt
+  let percent_improvement=-$percent;
+
+  if [ $percent -lt "-5" ]; then
+
+    echo " -- Performance improved by %$percent_improvement," > performance_shortmessage.txt
+
+    if [ $AUTO_UPDATE_PERF_GS = "yes" ]; then 
+      echo " -- Performance improved by %$percent_improvement, replacing gold standard timestamp" > performance_shortmessage.txt
+      cp $test_timefile $comparison_timefile
+
+      # keep around the old output for analysis
+      mv $gs_dir/$sus_output* $gs_dir/oldOutput/ >/dev/null 2>&1
+
+      me="$sus_output.$svn_revision"
+      cp $sus_output $gs_dir/$me
+
+      chgrp -R $COMMON_GROUP $gs_dir
+      chmod -R g+rw $gs_dir
     fi
+  else
+     echo " -- Performance improved by %$percent_improvement" > performance_shortmessage.txt
+  fi
 else
-    echo "" > performance_shortmessage.txt
-    echo "Performance check passed!"
+  echo "" > performance_shortmessage.txt
+  echo "Performance check passed!"
 fi
 
 exit $error

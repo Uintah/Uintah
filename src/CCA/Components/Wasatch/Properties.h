@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2016 The University of Utah
+ * Copyright (c) 2012-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -47,7 +47,7 @@ namespace WasatchCore{
    *  \param [inout] persistentFields the fields that should be persistent (not
    *         scratch/temporary).  These will be managed by Uintah.
    */
-  void setup_property_evaluation( Uintah::ProblemSpecP& params,
+  void setup_property_evaluation( Uintah::ProblemSpecP& wasatchSpec,
                                   GraphCategories& gc,
                                   std::set<std::string>& persistentFields );
 

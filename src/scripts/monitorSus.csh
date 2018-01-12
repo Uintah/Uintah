@@ -1,4 +1,6 @@
-#!/bin/csh
+#!/bin/csh -f
+
+# Don't source .cshrc file.  Modules may be swapped/loaded confusing the batch scheduler
 
 #______________________________________________________________________
 #  monitorSus
@@ -65,10 +67,10 @@ while (1)
   set minutes = $interval"m"
   sleep $minutes
   
-  @ ts = `grep timestep $out | tr -d '[:punct:]' | awk 'END {print $3}'`
+  @ ts = `grep Timestep $out | tr -d '[:punct:]' | awk 'END {print $2}'`
   if $ts == $ts_old then
     date
-    echo "Now killing job $jid on timestep $ts_old"
+    echo "  MonitorSus.csh: Now killing job $jid on timestep $ts_old"
     qdel $jid
     
     exit(1)

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -94,7 +94,12 @@ public:
   virtual ~DataWarehouse();
       
   virtual bool exists(const VarLabel*, int matlIndex, const Patch*) const = 0;
+  virtual bool exists(const VarLabel*, int matlIndex, const Level*) const = 0;
 
+  virtual ReductionVariableBase* getReductionVariable( const VarLabel*,
+						       int matlIndex,
+						       const Level* ) const = 0;
+  
   // Returns a (const) pointer to the grid.  This pointer can then be
   // used to (for example) get the number of levels in the grid.
   virtual const Grid * getGrid() = 0;
@@ -243,8 +248,21 @@ public:
 
   // Move stuff to a different data Warehouse
   virtual void transferFrom(DataWarehouse*, const VarLabel*,
+          const PatchSubset*, const MaterialSubset*) = 0;
+
+  virtual void transferFrom(DataWarehouse*, const VarLabel*,
+          const PatchSubset*, const MaterialSubset*,
+                            bool replace) = 0;
+
+  virtual void transferFrom(DataWarehouse*, const VarLabel*,
 			    const PatchSubset*, const MaterialSubset*,
-                            bool replace = false, const PatchSubset* = 0) = 0;
+                            bool replace, const PatchSubset*) = 0;
+
+  //An overloaded version of transferFrom.  GPU transfers need a stream, and a
+  //stream is found in a detailedTask object.
+  virtual void transferFrom(DataWarehouse*, const VarLabel*,
+                            const PatchSubset*, const MaterialSubset*, void * detailedTask,
+                            bool replace, const PatchSubset*) = 0;
 
   virtual size_t emit(OutputContext&, const VarLabel* label,
 		    int matlIndex, const Patch* patch) = 0;

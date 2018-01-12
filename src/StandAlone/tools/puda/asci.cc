@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -93,7 +93,7 @@ Uintah::asci( DataArchive *   da,
       GridP grid = da->queryGrid(t);
       int l=0;
       LevelP level = grid->getLevel(l);
-      Level::const_patchIterator iter = level->patchesBegin();
+      Level::const_patch_iterator iter = level->patchesBegin();
       const Patch* patch = *iter;
 		
 		

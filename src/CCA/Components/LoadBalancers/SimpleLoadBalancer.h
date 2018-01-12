@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,58 +22,69 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_HOMEBREW_SimpleLoadBalancer_H
-#define UINTAH_HOMEBREW_SimpleLoadBalancer_H
+#ifndef CCA_COMPONENTS_LOADBALANCERS_SIMPLELOADBALANCER_H
+#define CCA_COMPONENTS_LOADBALANCERS_SIMPLELOADBALANCER_H
 
 #include <CCA/Components/LoadBalancers/LoadBalancerCommon.h>
-#include <Core/Parallel/UintahParallelComponent.h>
-#include <set>
 
 namespace Uintah {
-   /**************************************
-     
-     CLASS
-       SimpleLoadBalancer
-      
-       Short Description...
-      
-     GENERAL INFORMATION
-      
-       SimpleLoadBalancer.h
-      
-       Steven G. Parker
-       Department of Computer Science
-       University of Utah
-      
-       Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-      
-             
-     KEYWORDS
-       SimpleLoadBalancer
-      
-     DESCRIPTION
-       Long description...
-      
-     WARNING
-      
-     ****************************************/
-    
-  class SimpleLoadBalancer : public LoadBalancerCommon {
-  public:
-    SimpleLoadBalancer(const ProcessorGroup* myworld);
-    ~SimpleLoadBalancer();
-    
-    virtual int getPatchwiseProcessorAssignment( const Patch * patch );
 
-    //! The old processor is the same as the current for this load balancer.
-    virtual int getOldProcessorAssignment(       const Patch * patch ) { return getPatchwiseProcessorAssignment( patch ); }
-  private:
-    SimpleLoadBalancer(const SimpleLoadBalancer&);
-    SimpleLoadBalancer& operator=(const SimpleLoadBalancer&);
-    
-   };
-} // End namespace Uintah
+/**************************************
+
+ CLASS
+   SimpleLoadBalancer
 
 
-#endif
+ GENERAL INFORMATION
+
+ SimpleLoadBalancer.h
+
+ Steven G. Parker
+ Department of Computer Science
+ University of Utah
+
+ Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
+
+
+ KEYWORDS
+   SimpleLoadBalancer
+
+ DESCRIPTION
+
+ ****************************************/
+
+class Patch;
+class ProcessorGroup;
+
+class SimpleLoadBalancer : public LoadBalancerCommon {
+
+public:
+
+  SimpleLoadBalancer(const ProcessorGroup* myworld);
+
+  virtual ~SimpleLoadBalancer() {};
+
+  virtual int getPatchwiseProcessorAssignment(const Patch * patch);
+
+  //! The old processor is the same as the current for this load balancer.
+  virtual int getOldProcessorAssignment(const Patch * patch)
+  {
+    return getPatchwiseProcessorAssignment(patch);
+  }
+
+  virtual bool needRecompile( const GridP& ) { return false; };
+
+private:
+
+  // eliminate copy, assignment and move
+  SimpleLoadBalancer( const SimpleLoadBalancer & )            = delete;
+  SimpleLoadBalancer& operator=( const SimpleLoadBalancer & ) = delete;
+  SimpleLoadBalancer( SimpleLoadBalancer && )                 = delete;
+  SimpleLoadBalancer& operator=( SimpleLoadBalancer && )      = delete;
+
+};
+
+}  // End namespace Uintah
+
+#endif // CCA_COMPONENTS_LOADBALANCERS_SIMPLELOADBALANCER_H
 

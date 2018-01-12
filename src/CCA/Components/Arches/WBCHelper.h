@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2013-2016 The University of Utah
+ * Copyright (c) 2013-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -34,6 +34,10 @@
 #ifndef WBC_HELPER
 #define WBC_HELPER
 
+//-- Arches Includes --//
+#include <CCA/Components/Arches/Task/TaskInterface.h>
+#include <CCA/Components/Arches/BoundaryConditions/BoundaryFunctorHelper.h>
+
 //-- C++ Includes --//
 #include <map>
 #include <set>
@@ -43,6 +47,10 @@
 //-- Uintah Includes --//
 #include <Core/Grid/Variables/ComputeSet.h> // used for Uintah::PatchSet
 #include <Core/Grid/BoundaryConditions/BCGeomBase.h>
+#include <CCA/Ports/Scheduler.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
 /**
  * \file WBCHelper.h
@@ -65,7 +73,7 @@
 // Nomenclature: Boundary/Bnd/Bound designates a PHYSICAL BOUNDARY
 //               Boundary Condition/BndCond/BC designates a BOUNDARY CONDITION
 
-typedef std::map<std::string, std::set<std::string> > BCFunctorMap;
+//typedef std::map<std::string, std::set<std::string> > BCFunctorMap;
 
 //****************************************************************************
 /**
@@ -77,14 +85,26 @@ typedef std::map<std::string, std::set<std::string> > BCFunctorMap;
  We support Dirichlet and Neumnann conditions on the boundary.
  */
 //****************************************************************************
+
 enum BndCondTypeEnum
 {
   DIRICHLET,
   NEUMANN,
-  UNSUPPORTED
+  CUSTOM
 };
 
-BndCondTypeEnum   select_bc_type_enum( const std::string& bcTypeStr );
+/**
+* @enum BndEdgeType
+* @brief If EDGE, then the boundary is defined as a FACE type. If INTERIOR, then
+*        the boundary condition is INTERIORFACE type.
+*
+**/
+enum BndEdgeType{
+  EDGE,
+  INTERIOR
+};
+
+BndCondTypeEnum select_bc_type_enum( const std::string& bcTypeStr );
 std::string bc_type_enum_to_string( const BndCondTypeEnum bcTypeEnum );
 
 template<typename OST>
@@ -112,11 +132,11 @@ OST& operator<<( OST& os, const BndCondTypeEnum bcTypeEnum );
 //****************************************************************************
 enum BndTypeEnum
 {
-  WALL,     ///< Stationary wall BC. Zero velocity (and momentum).
-  VELOCITY, ///< Velocity specification: can be used for inlets or moving walls.
-  OPEN,     ///< OPEN boundary condition. a bit complicated to explain but namely mimics a boundary open to the atmosphere.
-  OUTFLOW,  ///< OUTFLOW boundary condition. encourages the flow to exit and reduces reflections.
-  USER,     ///< User specified bc. The user can specify BCs on any quantity they desire, as long as Wasatch calls apply_boundary_condition on that quantity.
+  WALL,      ///< Stationary wall BC. Zero velocity (and momentum).
+  INLET,     ///< Inlet boundary condition
+  OUTLET,    ///< Outlet boundary condition
+  PRESSURE,  ///< Pressure boundary condition
+  USER,      ///< User specified
   INVALID
 };
 
@@ -139,6 +159,7 @@ enum BCValueTypeEnum
 {
   DOUBLE_TYPE,
   FUNCTOR_TYPE, // string
+  VECTOR_TYPE,
   INVALID_TYPE
 };
 
@@ -153,7 +174,7 @@ enum BCValueTypeEnum
 //****************************************************************************
 struct BndCondSpec
 {
-  std::string      varName;     // mame of the variable on which we want to apply a BC
+  std::string      varName;     // name of the variable on which we want to apply a BC
   std::string      functorName; // name of the functor applied as bc
   double           value;       // boundary value for this variable
   BndCondTypeEnum  bcType;      // bc type: DIRICHLET, NEUMANN
@@ -186,6 +207,8 @@ struct BndSpec
   std::string              name;      // name of the boundary
   Uintah::Patch::FaceType  face;      // x-minus, x-plus, y-minus, y-plus, z-minus, z-plus
   BndTypeEnum              type;      // Wall, inlet, etc...
+  BndEdgeType              edge_type; // Face or interior
+  double                   area;      // discrete area of this boundary
   std::vector<int>         patchIDs;  // List of patch IDs that this boundary lives on.
                                       //Note that a boundary is typically split between several patches.
   Uintah::BCGeomBase::ParticleBndSpec particleBndSpec;
@@ -198,7 +221,7 @@ struct BndSpec
   const BndCondSpec* find(const std::string& varName) const;
 
   // find the BCSpec associated with a given variable name - non-const version
-  const BndCondSpec* find(const std::string& varName);
+  BndCondSpec* find_to_edit(const std::string& varName);
 
   // check whether this boundary has any bcs specified for varName
   bool has_field(const std::string& varName) const;
@@ -269,11 +292,13 @@ struct BoundaryIterators
  *  the boundaries specified by the user.
  */
 //****************************************************************************
-namespace Uintah{
+
+namespace Uintah {
 
 class WBCHelper {
 
 protected:
+
   typedef std::map <int, BoundaryIterators            > PatchIDBndItrMapT;  // temporary typedef map that stores boundary iterators per patch id: Patch ID -> Bnd Iterators
   typedef std::map <std::string, PatchIDBndItrMapT    > MaskMapT         ;  // boundary name -> (patch ID -> Boundary iterators )
 
@@ -289,12 +314,17 @@ protected:
   // map is indexed by the (unique) boundary name.
   BndMapT                    bndNameBndSpecMap_;
 
+  // The generic functor information
+  // MAP< VAR_NAME, MAP< FACE_NAME, BC_INFORMATION> >
+  std::map<std::string, ArchesCore::BoundaryFunctorInformation > m_boundary_functor_info_map;
+
   // Add a new boundary to the list of boundaries specified for this problem. If the boundary
   // already exists, this means that this boundary is shared by several patches. In that case,
   // add the new patchID to the list of patches that this boundary lives on
   void add_boundary( const std::string&      bndName,
                      Uintah::Patch::FaceType face,
                      const BndTypeEnum&      bndType,
+                     const BndEdgeType&      bndEdgeType,
                      const int               patchID,
                      const Uintah::BCGeomBase::ParticleBndSpec);
 
@@ -308,17 +338,46 @@ protected:
   void add_auxiliary_boundary_condition( const std::string& srcVarName,
                                          BndCondSpec targetBCSpec );
 
+  std::map<std::string, const VarLabel*> m_area_labels;
 
+  void create_new_area_label( const std::string name );
+
+  ProblemSpecP m_arches_spec;
 
 public:
+
+  void delete_area_labels();
 
   enum Direction {XDIR, YDIR, ZDIR};
 
   WBCHelper( const Uintah::LevelP& level,
             Uintah::SchedulerP& sched,
-            const Uintah::MaterialSet* const materials );
+            const Uintah::MaterialSet* const materials,
+            ProblemSpecP arches_spec );
 
   ~WBCHelper();
+
+  void sched_computeBCAreaHelper( SchedulerP& sched,
+                                  const LevelP& level,
+                                  const MaterialSet* matls );
+
+  void computeBCAreaHelper( const ProcessorGroup*,
+                            const PatchSubset* patches,
+                            const MaterialSubset*,
+                            DataWarehouse* old_dw,
+                            DataWarehouse* new_dw,
+                            const IntVector lo,
+                            const IntVector hi );
+
+  void sched_bindBCAreaHelper( SchedulerP& sched,
+                                  const LevelP& level,
+                                  const MaterialSet* matls );
+
+  void bindBCAreaHelper( const ProcessorGroup*,
+                         const PatchSubset* patches,
+                         const MaterialSubset*,
+                         DataWarehouse* old_dw,
+                         DataWarehouse* new_dw );
 
   /**
    \brief Returns the original Uintah boundary cell iterator.
@@ -328,7 +387,7 @@ public:
 
   // Parse boundary conditions specified through the input file. This function does NOT need
   // an input file since Uintah already parsed and processed most of this information.
-  void parse_boundary_conditions();
+  void parse_boundary_conditions(const int ilvl);
 
 
   /**
@@ -370,6 +429,12 @@ public:
   const BndMapT& get_boundary_information() const;
 
   /**
+   *  \brief Retrieve a reference to the boundary and boundary condition information stored in this
+   *  WBCHelper for editing
+   */
+  BndMapT& get_for_edit_boundary_information();
+
+  /**
    *  \brief Returns true of the WBCHelper on this patch has any physical boundaries
    */
   bool has_boundaries() const;
@@ -382,5 +447,4 @@ public:
 
 }; // class WBCHelper
 } //namespace Uintah
-
 #endif /* defined(WBC_HELPER) */

@@ -1,12 +1,10 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version='1.0' encoding='ISO-8859-1'?>
 <!-- @version: -->
 <Uintah_specification>
   <Meta>
     <title>Pipe Emitting Heptane</title>
   </Meta>
-
   <SimulationComponent type="arches"/>
-
   <Solver type="hypre"/>
   <Time>
     <maxTime>2.0</maxTime>
@@ -16,7 +14,6 @@
     <timestep_multiplier>0.4</timestep_multiplier>
     <max_Timesteps>25</max_Timesteps>
   </Time>
-
   <DataArchiver>
     <filebase>heptane_pipe.uda</filebase>
     <outputTimestepInterval>2</outputTimestepInterval>
@@ -26,12 +23,12 @@
     <save label="enthalpy"/>
     <save label="volFraction"/>
     <save label="cellType"/>
-<!-- Table Variables -->
-<!-- iv's -->
+    <!-- Table Variables -->
+    <!-- iv's -->
     <save label="mixture_fraction"/>
     <save label="scalar_var"/>
     <save label="heat_loss"/>
-<!-- dv's -->
+    <!-- dv's -->
     <save label="radiation_temperature"/>
     <save label="density" table_lookup="true"/>
     <save label="CO2" table_lookup="true"/>
@@ -41,21 +38,15 @@
     <save label="NC7H16" table_lookup="true"/>
     <save label="sensibleenthalpy" table_lookup="true"/>
     <save label="adiabaticenthalpy" table_lookup="true"/>
-
     <save label="surf_out_normX"/>
     <save label="surf_out_normY"/>
     <save label="surf_out_normZ"/>
-
     <save label="surf_in_normX"/>
     <save label="surf_in_normY"/>
     <save label="surf_in_normZ"/>
-
-    <save label="gas_solid_interface"/>
-
     <checkpoint cycle="2" interval="0.02"/>
     <compression>gzip</compression>
   </DataArchiver>
-
   <Grid>
     <BoundaryConditions>
       <DefaultMaterial>0</DefaultMaterial>
@@ -81,8 +72,8 @@
         <BCType label="radiation_temperature" var="Dirichlet">
           <value>298.0</value>
         </BCType>
-        <BCType  label= "abskg"              var="ForcedDirichlet">
-                            <value> 1.0 </value>
+        <BCType label="abskg" var="ForcedDirichlet">
+          <value> 1.0 </value>
         </BCType>
       </Face>
       <Face side="x+" name="x+ wall">
@@ -107,8 +98,8 @@
         <BCType label="radiation_temperature" var="Dirichlet">
           <value>298.0</value>
         </BCType>
-        <BCType  label= "abskg"              var="ForcedDirichlet">
-                            <value> 1.0 </value>
+        <BCType label="abskg" var="ForcedDirichlet">
+          <value> 1.0 </value>
         </BCType>
       </Face>
       <Face side="y-" name="y- wall">
@@ -133,8 +124,8 @@
         <BCType label="radiation_temperature" var="Dirichlet">
           <value>298.</value>
         </BCType>
-        <BCType  label= "abskg"              var="ForcedDirichlet">
-                            <value> 1.0 </value>
+        <BCType label="abskg" var="ForcedDirichlet">
+          <value> 1.0 </value>
         </BCType>
       </Face>
       <Face side="y+" name="y+ wall">
@@ -159,8 +150,8 @@
         <BCType label="radiation_temperature" var="Dirichlet">
           <value>298</value>
         </BCType>
-        <BCType  label= "abskg"              var="ForcedDirichlet">
-                            <value> 1.0 </value>
+        <BCType label="abskg" var="ForcedDirichlet">
+          <value> 1.0 </value>
         </BCType>
       </Face>
       <Face side="z-" name="z- wall">
@@ -185,8 +176,8 @@
         <BCType label="radiation_temperature" var="Dirichlet">
           <value>298</value>
         </BCType>
-        <BCType  label= "abskg"              var="ForcedDirichlet">
-                            <value> 1.0 </value>
+        <BCType label="abskg" var="ForcedDirichlet">
+          <value> 1.0 </value>
         </BCType>
       </Face>
       <Face side="z+" name="z+ wall">
@@ -211,12 +202,11 @@
         <BCType label="radiation_temperature" var="Dirichlet">
           <value>298</value>
         </BCType>
-        <BCType  label= "abskg"              var="ForcedDirichlet">
-                            <value> 1.0 </value>
+        <BCType label="abskg" var="ForcedDirichlet">
+          <value> 1.0 </value>
         </BCType>
       </Face>
     </BoundaryConditions>
-
     <Level>
       <Box label="1">
         <lower>[0,0,0]</lower>
@@ -227,23 +217,19 @@
       </Box>
     </Level>
   </Grid>
-
   <PhysicalConstants>
     <gravity>[-9.8,0,0]</gravity>
     <reference_point>[-1,-1,-1]</reference_point>
     <viscosity>0.000020</viscosity>
   </PhysicalConstants>
-
   <CFD>
-<!-- ARCHES specification -->
+    <!-- ARCHES specification -->
     <ARCHES>
-
-<!-- TIME INTEGRATOR -->
+      <!-- TIME INTEGRATOR -->
       <TimeIntegrator>
         <ExplicitIntegrator order="first"/>
       </TimeIntegrator>
-
-<!-- SCALARS -->
+      <!-- SCALARS -->
       <TransportEqns>
         <Eqn label="mixture_fraction" type="CCscalar">
           <doDiff>true</doDiff>
@@ -265,7 +251,6 @@
             <high>1.0</high>
           </Clipping>
         </Eqn>
-
         <Eqn label="enthalpy" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
@@ -276,13 +261,12 @@
           </initialization>
           <src label="divQ"/>
         </Eqn>
-
         <Sources>
           <src label="divQ" type="do_radiation">
             <calc_frequency>5</calc_frequency>
             <calc_on_all_RKsteps>false</calc_on_all_RKsteps>
-            <abskg label="abskg"/>
-            <DORadiationModel>
+            <abskt label="abskg"/>
+            <DORadiationModel type="linearSolve">
               <LinearSolver type="hypre">
                 <res_tol>1.0e-10</res_tol>
                 <ksptype>gmres</ksptype>
@@ -292,22 +276,11 @@
             </DORadiationModel>
           </src>
         </Sources>
-
       </TransportEqns>
-
       <PropertyModels>
-        <model type="radiation_properties" label="abskg">
-          <initialization type="constant">
-            <constant>0.0</constant>
-          </initialization>
-          <calculator type="hottel_sarofim">
-            <abskg label="gas_abskg"/>
-            <opl>3.0</opl>
-          </calculator>
-        </model>
         <model type="heat_loss" label="heat_loss">
           <initialization type="constant">
-            <constant>0</constant> 
+            <constant>0</constant>
           </initialization>
           <enthalpy_label>enthalpy</enthalpy_label>
         </model>
@@ -317,7 +290,7 @@
           </initialization>
           <mixture_fraction_label>mixture_fraction</mixture_fraction_label>
           <density_label>density</density_label>
-          <variance_coefficient>0.14</variance_coefficient> 
+          <variance_coefficient>0.14</variance_coefficient>
         </model>
         <model type="cc_constant" label="soot">
           <initialization type="constant">
@@ -326,21 +299,25 @@
           <constant>0.0</constant>
         </model>
       </PropertyModels>
-
+      <PropertyModelsV2>
+        <model type="gasRadProperties" label="gas_abskg">
+          <calculator type="hottel_sarofim">
+            <opl>3.0</opl>
+          </calculator>
+        </model>
+      </PropertyModelsV2>
       <Turbulence model="smagorinsky">
         <cf>0.17</cf>
         <fac_mesh>1.0</fac_mesh>
         <filterl>0.000001</filterl>
       </Turbulence>
-
       <Properties>
-        <ClassicTable>
-          <inputfile>inputs/ARCHES/ClassicMixingTables/heptane/C7H16_flmlt_nonadiabatic.mix.gz</inputfile>
-          <standard_flamelet f_label="mixture_fraction" var_label="scalar_var" hl_label="heat_loss"/>
+        <table label="a_user_generated_label" type="classic">
           <reference_state f="0.0" var="0.0" hl="0.0"/>
-        </ClassicTable>
+          <standard_flamelet f_label="mixture_fraction" var_label="scalar_var" hl_label="heat_loss"/>
+          <inputfile>inputs/ARCHES/ClassicMixingTables/heptane/C7H16_flmlt_nonadiabatic.mix.gz</inputfile>
+        </table>
       </Properties>
-
       <BoundaryConditions>
         <suppress_corner_recirculation/>
         <intrusions>
@@ -373,11 +350,9 @@
                 <constant>0.25</constant>
               </scalar>
             </scalars>
-
           </intrusion>
         </intrusions>
       </BoundaryConditions>
-
       <ExplicitSolver>
         <restartOnNegativeDensityGuess>false</restartOnNegativeDensityGuess>
         <PressureSolver>
@@ -388,14 +363,12 @@
             <maxiterations>   250   </maxiterations>
           </Parameters>
         </PressureSolver>
-
         <MomentumSolver>
+          <wall_closure type="molecular">
+          </wall_closure>
           <convection_scheme>upwind</convection_scheme>
         </MomentumSolver>
-
       </ExplicitSolver>
     </ARCHES>
-
   </CFD>
-
 </Uintah_specification>

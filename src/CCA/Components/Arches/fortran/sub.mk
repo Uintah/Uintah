@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2016 The University of Utah
+#  Copyright (c) 1997-2018 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -27,10 +27,9 @@
 # 
 # Makefile fragment for this subdirectory 
 
-
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := CCA/Components/Arches/fortran
+SRCDIR := CCA/Components/Arches/fortran
 
 SRCS += \
         $(SRCDIR)/arrass.F \
@@ -43,11 +42,11 @@ SRCS += \
         $(SRCDIR)/prescoef_var.F \
         $(SRCDIR)/pressrcpred.F \
         $(SRCDIR)/pressrcpred_var.F \
-				$(SRCDIR)/uvelcoef.F \
-				$(SRCDIR)/uvelcoef_central.F \
-				$(SRCDIR)/uvelcoef_upwind.F \
-				$(SRCDIR)/uvelcoef_mixed.F \
-				$(SRCDIR)/uvelcoef_hybrid.F \
+        $(SRCDIR)/uvelcoef.F \
+        $(SRCDIR)/uvelcoef_central.F \
+        $(SRCDIR)/uvelcoef_upwind.F \
+        $(SRCDIR)/uvelcoef_mixed.F \
+        $(SRCDIR)/uvelcoef_hybrid.F \
         $(SRCDIR)/uvelsrc.F \
         $(SRCDIR)/vvelcoef.F \
         $(SRCDIR)/vvelcoef_central.F \

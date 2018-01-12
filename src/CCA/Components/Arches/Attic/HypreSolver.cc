@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -27,12 +27,12 @@
 #include <fstream> // work around compiler bug with RHEL 3
 
 #include <CCA/Components/Arches/HypreSolver.h>
-#include <Core/Util/Time.h>
 #include <CCA/Components/Arches/Arches.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Util/Timers/Timers.hpp>
 
 #include "_hypre_utilities.h"
 #include "HYPRE_struct_ls.h"
@@ -120,7 +120,7 @@ HypreSolver::problemSetup(const ProblemSpecP& params)
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);    
   }
   
-  if(solver != "cg" && preconditioner != "-9" && d_myworld->myrank() == 0 ){
+  if(solver != "cg" && preconditioner != "-9" && d_myworld->myRank() == 0 ){
     cout << "-----------------------------------------------\n";
     cout << " WARNING: Linear solver options \n";
     cout << " The preconditioner ("<<preconditioner<< ") only works with the cg solver\n";
@@ -419,9 +419,10 @@ HypreSolver::pressLinearSolve()
   skip = 1;
   HYPRE_StructSolver solver, precond;
 
-  int me = d_myworld->myrank();
-  double start_time = Time::currentSeconds();
-  
+  int me = d_myworld->myRank();
+  Timers::Simple timer;
+  timer.start();
+
   if (d_solverType == "0") {
     /*Solve the system using SMG*/
     HYPRE_StructSMGCreate(MPI_COMM_WORLD, &solver);
@@ -536,7 +537,7 @@ HypreSolver::pressLinearSolve()
   }
   if(me == 0) {
     final_res_norm *= sum_b;          
-    cerr << "hypre: final_res_norm: " << final_res_norm << ", iterations: " << num_iterations << ", solver time: " << Time::currentSeconds()-start_time << " seconds\n";
+    cerr << "hypre: final_res_norm: " << final_res_norm << ", iterations: " << num_iterations << ", solver time: " << timer().seconds() << " seconds\n";
     cerr << "Init Norm: " << init_norm << " Error reduced by: " <<  final_res_norm/(init_norm+1.0e-20) << endl;
     cerr << "Sum of RHS vector: " << sum_b << endl;
   }

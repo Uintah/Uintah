@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef RADIOMETER_H
-#define RADIOMETER_H
+#ifndef CCA_COMPONENTS_MODELS_RADIATION_RMCRT_RADIOMETER_H
+#define CCA_COMPONENTS_MODELS_RADIATION_RMCRT_RADIOMETER_H
 
 #include <CCA/Components/Models/Radiation/RMCRT/RMCRTCommon.h>
 
@@ -35,6 +35,7 @@
  *
  *
  */
+
 class MTRand;
 
 namespace Uintah{
@@ -44,6 +45,7 @@ namespace Uintah{
     public:
 
       Radiometer(const TypeDescription::Type FLT_DBL );         // This class can use sigmaT4 & abskg Float or Double;
+
       ~Radiometer();
 
       //__________________________________
@@ -52,7 +54,6 @@ namespace Uintah{
       void  problemSetup( const ProblemSpecP& prob_spec,
                           const ProblemSpecP& rmcrt_ps,
                           const GridP& grid,
-                          SimulationStateP& sharedState,
                           const bool getExtraInputs );
 
       /** @brief Algorithm for tracing rays from radiometer location*/
@@ -60,49 +61,47 @@ namespace Uintah{
                              SchedulerP& sched,
                              Task::WhichDW abskg_dw,
                              Task::WhichDW sigma_dw,
-                             Task::WhichDW celltype_dw,
-                             const int radCalc_freq );
+                             Task::WhichDW celltype_dw );
 
       void sched_initializeRadVars( const LevelP& level,
-                                    SchedulerP& sched,
-                                    const int radCalc_freq );
+                                    SchedulerP& sched );
+
       template < class T >
       void initializeRadVars( const ProcessorGroup*,
                               const PatchSubset* patches,
-                              const MaterialSubset* ,
+                              const MaterialSubset* matls,
                               DataWarehouse* old_dw,
-                              DataWarehouse* new_dw,
-                              const int radCalc_freq );
+                              DataWarehouse* new_dw );
 
       //__________________________________
       //  FUNCTIONS
       template< class T >
-      void radiometerFlux(  const Patch* patch,
-                            const Level* level,
-                            DataWarehouse* new_dw,
-                            MTRand& mTwister,
-                            constCCVariable< T > sigmaT4OverPi,
-                            constCCVariable< T > abskg,
-                            constCCVariable<int> celltype,
-                            const bool modifiesFlux );
+      void radiometerFlux( const Patch* patch,
+                           const Level* level,
+                           DataWarehouse* new_dw,
+                           MTRand& mTwister,
+                           constCCVariable< T > sigmaT4OverPi,
+                           constCCVariable< T > abskg,
+                           constCCVariable<int> celltype,
+                           const bool modifiesFlux );
 
-      std::vector<const Patch*> getPatchSet( SchedulerP& sched,
-                                             const LevelP& level );
+      void getPatchSet( SchedulerP& sched,
+                        const LevelP& level,
+                        PatchSet* ps);
       
-
-      const VarLabel* getRadiometerLabel() const {
+      inline const VarLabel* getRadiometerLabel() const {
         return d_VRFluxLabel;
       }
 
     private:
 
       // Virtual Radiometer parameters
-      int  d_nRadRays;                     // number of rays per radiometer used to compute radiative flux
-      double d_viewAng;
-      Point d_VRLocationsMin;
-      Point d_VRLocationsMax;
+      int    d_nRadRays{1000};                     // number of rays per radiometer used to compute radiative flux
+      double d_viewAng{180.0};
+      Point  d_VRLocationsMin;
+      Point  d_VRLocationsMax;
 
-      struct VR_variables{
+      struct VR_variables {
         double thetaRot;
         double phiRot;
         double psiRot;
@@ -110,8 +109,9 @@ namespace Uintah{
         double range;
         double sldAngl;
       };
+
       VR_variables d_VR;
-      const VarLabel* d_VRFluxLabel;      // computed radiometer flux
+      const VarLabel* d_VRFluxLabel{nullptr};      // computed radiometer flux
 
       //__________________________________
       //
@@ -123,9 +123,7 @@ namespace Uintah{
                        DataWarehouse* new_dw,
                        Task::WhichDW which_abskg_dw,
                        Task::WhichDW whichd_sigmaT4_dw,
-                       Task::WhichDW which_celltype_dw,
-                       const int radCalc_freq,
-                       const bool hadRadiometers );
+                       Task::WhichDW which_celltype_dw );
 
       //__________________________________
       //
@@ -140,4 +138,4 @@ namespace Uintah{
 
 } // namespace Uintah
 
-#endif
+#endif // CCA_COMPONENTS_MODELS_RADIATION_RMCRT_RADIOMETER_H

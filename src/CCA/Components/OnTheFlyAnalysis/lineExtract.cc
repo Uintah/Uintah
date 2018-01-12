@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -41,7 +41,6 @@
 #include <Core/Parallel/UintahParallelComponent.h>
 
 #include <Core/Exceptions/InternalError.h>
-#include <Core/Containers/StaticArray.h>
 #include <Core/OS/Dir.h> // for MKDIR
 #include <Core/Util/FileUtils.h>
 #include <Core/Util/DebugStream.h>
@@ -59,15 +58,12 @@ using namespace std;
 //  setenv SCI_DEBUG "LINEEXTRACT_DBG_COUT:+" 
 static DebugStream cout_doing("LINEEXTRACT_DOING_COUT", false);
 static DebugStream cout_dbg("LINEEXTRACT_DBG_COUT", false);
-//______________________________________________________________________              
-lineExtract::lineExtract(ProblemSpecP& module_spec,
-                         SimulationStateP& sharedState,
-                         Output* dataArchiver)
-  : AnalysisModule(module_spec, sharedState, dataArchiver)
+//______________________________________________________________________
+lineExtract::lineExtract(const ProcessorGroup* myworld,
+			 const SimulationStateP sharedState,
+			 const ProblemSpecP& module_spec )
+  : AnalysisModule(myworld, sharedState, module_spec)
 {
-  d_sharedState = sharedState;
-  d_prob_spec = module_spec;
-  d_dataArchiver = dataArchiver;
   d_matl_set = 0;
   d_zero_matl = 0;
   ps_lb = scinew lineExtractLabel();
@@ -97,17 +93,13 @@ lineExtract::~lineExtract()
 
 //______________________________________________________________________
 //     P R O B L E M   S E T U P
-void lineExtract::problemSetup(const ProblemSpecP& prob_spec,
+void lineExtract::problemSetup(const ProblemSpecP& ,
                                const ProblemSpecP& ,
-                               GridP& grid,
-                               SimulationStateP& sharedState)
+                               GridP& grid)
 {
   cout_doing << "Doing problemSetup \t\t\t\tlineExtract" << endl;
   
-  int numMatls  = d_sharedState->getNumMatls();
-  if(!d_dataArchiver){
-    throw InternalError("lineExtract:couldn't get output port", __FILE__, __LINE__);
-  }
+  int numMatls  = m_sharedState->getNumMatls();
                                
   ps_lb->lastWriteTimeLabel =  VarLabel::create("lastWriteTime_lineE", 
                                             max_vartype::getTypeDescription());
@@ -117,11 +109,11 @@ void lineExtract::problemSetup(const ProblemSpecP& prob_spec,
                                             
   //__________________________________
   //  Read in timing information
-  d_prob_spec->require("samplingFrequency", d_writeFreq);
-  d_prob_spec->require("timeStart",         d_startTime);            
-  d_prob_spec->require("timeStop",          d_stopTime);
+  m_module_spec->require("samplingFrequency", d_writeFreq);
+  m_module_spec->require("timeStart",         d_startTime);            
+  m_module_spec->require("timeStop",          d_stopTime);
 
-  ProblemSpecP vars_ps = d_prob_spec->findBlock("Variables");
+  ProblemSpecP vars_ps = m_module_spec->findBlock("Variables");
   if (!vars_ps){
     throw ProblemSetupException("lineExtract: Couldn't find <Variables> tag", __FILE__, __LINE__);    
   } 
@@ -131,14 +123,14 @@ void lineExtract::problemSetup(const ProblemSpecP& prob_spec,
   // The user can use either 
   //  <material>   atmosphere </material>
   //  <materialIndex> 1 </materialIndex>
-  if(d_prob_spec->findBlock("material") ){
-    d_matl = d_sharedState->parseAndLookupMaterial(d_prob_spec, "material");
-  } else if (d_prob_spec->findBlock("materialIndex") ){
+  if(m_module_spec->findBlock("material") ){
+    d_matl = m_sharedState->parseAndLookupMaterial(m_module_spec, "material");
+  } else if (m_module_spec->findBlock("materialIndex") ){
     int indx;
-    d_prob_spec->get("materialIndex", indx);
-    d_matl = d_sharedState->getMaterial(indx);
+    m_module_spec->get("materialIndex", indx);
+    d_matl = m_sharedState->getMaterial(indx);
   } else {
-    d_matl = d_sharedState->getMaterial(0);
+    d_matl = m_sharedState->getMaterial(0);
   }
   
   int defaultMatl = d_matl->getDWIndex();
@@ -153,17 +145,16 @@ void lineExtract::problemSetup(const ProblemSpecP& prob_spec,
   d_matl_set = scinew MaterialSet();
   map<string,string> attribute;
     
-  for (ProblemSpecP var_spec = vars_ps->findBlock("analyze"); var_spec != 0; 
-                    var_spec = var_spec->findNextBlock("analyze")) {
+  for( ProblemSpecP var_spec = vars_ps->findBlock( "analyze" ); var_spec != nullptr; var_spec = var_spec->findNextBlock( "analyze" ) ) {
     var_spec->getAttributes(attribute);
    
     int matl = defaultMatl;
-    if (attribute["matl"].empty() == false){
+    if( !attribute["matl"].empty() ) {
       matl = atoi(attribute["matl"].c_str());
     }
     
-    // bulletproofing
-    if(matl < 0 || matl > numMatls){
+    // Bulletproofing
+    if( matl < 0 || matl > numMatls ){
       throw ProblemSetupException("lineExtract: analyze: Invalid material index specified for a variable", __FILE__, __LINE__);
     }
     
@@ -188,15 +179,13 @@ void lineExtract::problemSetup(const ProblemSpecP& prob_spec,
   
   //__________________________________
   //  Read in variables label names                
-  for (ProblemSpecP var_spec = vars_ps->findBlock("analyze"); var_spec != 0; 
-                    var_spec = var_spec->findNextBlock("analyze")) {
+  for (ProblemSpecP var_spec = vars_ps->findBlock("analyze"); var_spec != nullptr; var_spec = var_spec->findNextBlock("analyze")) {
     var_spec->getAttributes(attribute);
     
     string name = attribute["label"];
-    VarLabel* label = VarLabel::find(name);
-    if(label == nullptr){
-      throw ProblemSetupException("lineExtract: analyze label not found: "
-                           + name , __FILE__, __LINE__);
+    VarLabel* label = VarLabel::find( name );
+    if( label == nullptr ){
+      throw ProblemSetupException("lineExtract: analyze label not found: " + name , __FILE__, __LINE__);
     }
     
     //__________________________________
@@ -244,13 +233,12 @@ void lineExtract::problemSetup(const ProblemSpecP& prob_spec,
   
   //__________________________________
   //  Read in lines
-  ProblemSpecP lines_ps = d_prob_spec->findBlock("lines"); 
+  ProblemSpecP lines_ps = m_module_spec->findBlock("lines"); 
   if (!lines_ps){
     throw ProblemSetupException("\n ERROR:lineExtract: Couldn't find <lines> tag \n", __FILE__, __LINE__);    
   }        
              
-  for (ProblemSpecP line_spec = lines_ps->findBlock("line"); line_spec != 0; 
-                    line_spec = line_spec->findNextBlock("line")) {
+  for (ProblemSpecP line_spec = lines_ps->findBlock("line"); line_spec != nullptr; line_spec = line_spec->findNextBlock("line")) {
                     
     line_spec->getAttributes(attribute);
     string name = attribute["name"];
@@ -371,7 +359,7 @@ void lineExtract::initialize(const ProcessorGroup*,
     new_dw->put(fileInfo,    ps_lb->fileVarsStructLabel, 0, patch);
     
     if(patch->getGridIndex() == 0){   // only need to do this once
-      string udaDir = d_dataArchiver->getOutputLocation();
+      string udaDir = m_output->getOutputLocation();
 
       //  Bulletproofing
       DIR *check = opendir(udaDir.c_str());
@@ -403,6 +391,7 @@ void lineExtract::scheduleDoAnalysis(SchedulerP& sched,
   // do not checkpoint it.
   sched->overrideVariableBehavior("FileInfo_lineExtract", false, false, false, true, true); 
                      
+  t->requires(Task::OldDW, m_simulationTimeLabel);
   t->requires(Task::OldDW, ps_lb->lastWriteTimeLabel);
   t->requires(Task::OldDW, ps_lb->fileVarsStructLabel, d_zero_matl, Ghost::None, 0);
     
@@ -443,9 +432,6 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
                              DataWarehouse* old_dw,
                              DataWarehouse* new_dw)
 {   
-  UintahParallelComponent* DA = dynamic_cast<UintahParallelComponent*>(d_dataArchiver);
-  LoadBalancer* lb = dynamic_cast<LoadBalancer*>( DA->getPort("load balancer"));
-    
   const Level* level = getLevel(patches);
   
   // the user may want to restart from an uda that wasn't using the DA module
@@ -457,7 +443,12 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
     lastWriteTime = writeTime;
   }
 
-  double now = d_dataArchiver->getCurrentTime();
+  // double now = m_sharedState->getElapsedSimTime();
+  
+  simTime_vartype simTimeVar;
+  old_dw->get(simTimeVar, m_simulationTimeLabel);
+  double now = simTimeVar;
+
   if(now < d_startTime || now > d_stopTime){
     return;
   }
@@ -484,14 +475,16 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
       myFiles = fileInfo.get().get_rep()->files;
     }    
     
-    int proc = lb->getPatchwiseProcessorAssignment(patch);
+    int proc =
+      m_scheduler->getLoadBalancer()->getPatchwiseProcessorAssignment(patch);
+    
     cout_dbg << Parallel::getMPIRank() << "   working on patch " << patch->getID() << " which is on proc " << proc << endl;
     //__________________________________
     // write data if this processor owns this patch
     // and if it's time to write
-    if( proc == pg->myrank() && now >= nextWriteTime){
+    if( proc == pg->myRank() && now >= nextWriteTime){
     
-     cout_doing << pg->myrank() << " " 
+     cout_doing << pg->myRank() << " " 
                 << "Doing doAnalysis (lineExtract)\t\t\t\tL-"
                 << level->getIndex()
                 << " patch " << patch->getGridIndex()<< endl;
@@ -577,7 +570,7 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
       for (unsigned int l =0 ; l < d_lines.size(); l++) {
       
         // create the directory structure
-        string udaDir = d_dataArchiver->getOutputLocation();
+        string udaDir = m_output->getOutputLocation();
         string dirName = d_lines[l]->name;
         string linePath = udaDir + "/" + dirName;
         
@@ -655,12 +648,11 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
 
           // write cell position and time
           Point here = patch->cellPosition(c);
-          double time = d_dataArchiver->getCurrentTime();
-          fprintf(fp,    "%E\t %E\t %E\t %E",here.x(),here.y(),here.z(), time);
-         
-         
-           // WARNING  If you change the order that these are written out you must 
-           // also change the order that the header is written
+          fprintf(fp,    "%E\t %E\t %E\t %E",here.x(),here.y(),here.z(), now);
+                  
+           // WARNING If you change the order that these are written
+           // out you must also change the order that the header is
+           // written
            
           // write CC<int> variables      
           for (unsigned int i=0 ; i <  CC_integer_data.size(); i++) {

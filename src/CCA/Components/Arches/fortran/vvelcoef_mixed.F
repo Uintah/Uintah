@@ -1,7 +1,7 @@
 C
 C The MIT License
 C
-C Copyright (c) 1997-2016 The University of Utah
+C Copyright (c) 1997-2018 The University of Utah
 C
 C Permission is hereby granted, free of charge, to any person obtaining a copy
 C of this software and associated documentation files (the "Software"), to
@@ -148,12 +148,12 @@ C-----------------------------------------------------------------------
                VISB = PT25*(VIS(I,J,K-1)+VIS(I,J-1,K-1)+
      +                VIS(I,J,K)+VIS(I,J-1,K))
 
-               DE = VISE*AREAEW/DX
-               DW = VISW*AREAEW/DX
-               DN = VISN*AREANS/DY
-               DS = VISS*AREANS/DY
-               DT = VIST*AREATB/DZ
-               DB = VISB*AREATB/DZ
+               DE = VISE*AREAEW/dx*EPSE
+               DW = VISW*AREAEW/dx*EPSW
+               DN = VISN*AREANS/dy*EPSN
+               DS = VISS*AREANS/dy*EPSS
+               DT = VIST*AREATB/dz*EPST
+               DB = VISB*AREATB/dz*EPSB
 
                COEFE = DE - Relimit_m1*ABS(CE)
                COEFW = DW - Relimit_m1*ABS(CW)

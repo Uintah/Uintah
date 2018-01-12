@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -30,9 +30,10 @@
 // includes for Arches
 #include <CCA/Components/Arches/ChemMix/MixingRxnModel.h>
 #include <CCA/Components/Arches/Properties.h>
-#include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
+#include <CCA/Components/Arches/UPSHelper.h>
+#include <CCA/Components/Arches/GridTools.h>
 
 // includes for Uintah
 #include <Core/ProblemSpec/ProblemSpecP.h>
@@ -50,7 +51,6 @@
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
-#include <time.h>
 #include <unistd.h>
 //======================================================
 
@@ -58,10 +58,17 @@ using namespace std;
 using namespace Uintah;
 
 //---------------------------------------------------------------------------
-MixingRxnModel::MixingRxnModel( ArchesLabel* labels, const MPMArchesLabel* MAlab ):
-  d_lab(labels), d_MAlab(MAlab)
+MixingRxnModel::MixingRxnModel( SimulationStateP& sharedState ) :
+m_sharedState(sharedState)
 {
+
   d_does_post_mixing = false;
+
+  m_matl_index = 0;
+
+  // Time Step
+  m_timeStepLabel = VarLabel::create(timeStep_name, timeStep_vartype::getTypeDescription());
+
 }
 
 //---------------------------------------------------------------------------
@@ -74,6 +81,9 @@ MixingRxnModel::~MixingRxnModel()
     VarLabel::destroy( i->second );
   }
   delete _iv_transform;
+  VarLabel::destroy(m_denRefArrayLabel);
+
+  VarLabel::destroy(m_timeStepLabel);
 }
 
 //---------------------------------------------------------------------------
@@ -82,6 +92,36 @@ MixingRxnModel::problemSetupCommon( const ProblemSpecP& params, MixingRxnModel* 
 {
 
   ProblemSpecP db = params;
+
+  using namespace ArchesCore;
+
+  m_denRefArrayLabel = VarLabel::create( "denRefArray", CCVariable<double>::getTypeDescription() );
+  //resolve some common labels:
+
+  std::string density_name = parse_ups_for_role( DENSITY, db, "densityCP");
+  m_densityLabel = VarLabel::find(density_name);
+  if ( m_densityLabel == NULL ){
+    throw InvalidValue("Error: Cannot resolve density label.",__FILE__,__LINE__);
+  }
+
+  m_volFractionLabel = VarLabel::find("volFraction");
+  if ( m_volFractionLabel == NULL ){
+    GridVarMap<CCVariable<double> > varmap;
+    m_volFractionLabel = VarLabel::find(varmap.vol_frac_name);
+    if ( m_volFractionLabel == NULL ){
+      throw InvalidValue("Error: Cannot resolve volume fraction label.",__FILE__, __LINE__);
+    }
+  }
+
+  if ( m_denRefArrayLabel == NULL ){
+    throw InvalidValue("Error: ref density label not resolved by the table.", __FILE__, __LINE__ );
+  }
+  if ( m_densityLabel == NULL ){
+    throw InvalidValue("Error: density label not resolved by the table.", __FILE__, __LINE__ );
+  }
+  if ( m_volFractionLabel == NULL ){
+    throw InvalidValue("Error: vol fraction label not resolved by the table.", __FILE__, __LINE__ );
+  }
 
   db->getWithDefault("temperature_label_name", _temperature_label_name, "temperature");
 
@@ -150,7 +190,7 @@ MixingRxnModel::problemSetupCommon( const ProblemSpecP& params, MixingRxnModel* 
 
     ProblemSpecP db_inert = db->findBlock( "post_mix" );
 
-    for ( ProblemSpecP db_st = db_inert->findBlock("stream"); db_st != 0; db_st = db_st->findNextBlock("stream") ){
+    for ( ProblemSpecP db_st = db_inert->findBlock("stream"); db_st != nullptr; db_st = db_st->findNextBlock("stream") ){
 
       std::string phi;
       db_st->getAttribute("transport_label", phi);
@@ -159,8 +199,8 @@ MixingRxnModel::problemSetupCommon( const ProblemSpecP& params, MixingRxnModel* 
       var_values.clear();
       bool found_vars = false;
 
-      proc0cout << "For inert: " << phi << ", adding species: " << std::endl;
-      for ( ProblemSpecP db_var = db_st->findBlock("var"); db_var != 0; db_var = db_var->findNextBlock("var") ){
+      proc0cout << "For inert: " << phi << ", adding species:\n";
+      for ( ProblemSpecP db_var = db_st->findBlock("var"); db_var != nullptr; db_var = db_var->findNextBlock("var") ){
 
         std::string label;
         double value;
@@ -171,7 +211,7 @@ MixingRxnModel::problemSetupCommon( const ProblemSpecP& params, MixingRxnModel* 
         doubleMap::iterator iter = var_values.find( label );
         if ( iter == var_values.end() ){
           var_values.insert( std::make_pair( label, value ) );
-          proc0cout << " Adding ---> " << label << ", " << value << std::endl;
+          proc0cout << " Adding ---> " << label << ", " << value << "\n";
           found_vars = true;
         }
 
@@ -188,7 +228,7 @@ MixingRxnModel::problemSetupCommon( const ProblemSpecP& params, MixingRxnModel* 
 
       } else {
 
-        proc0cout << "Warning: Intert stream " << phi << " was not added because no species were found in UPS file!" << std::endl;
+        proc0cout << "Warning: Intert stream " << phi << " was not added because no species were found in UPS file!\n";
 
       }
 
@@ -201,9 +241,9 @@ MixingRxnModel::problemSetupCommon( const ProblemSpecP& params, MixingRxnModel* 
         //check if it uses a density guess (which it should)
         //if it isn't set properly, then do it automagically for the user
         if (!eqn.getDensityGuessBool() && !ignoreDensityCheck ){
-          proc0cout << " Warning: For equation named " << phi << endl
-            << "     Density guess must be used for this equation because it determines properties." << endl
-            << "     Automatically setting density guess = true. " << endl;
+          proc0cout << " Warning: For equation named " << phi << "\n"
+            << "     Density guess must be used for this equation because it determines properties.\n"
+            << "     Automatically setting density guess = true.\n";
           eqn.setDensityGuessBool( true );
         }
       } else {
@@ -240,10 +280,9 @@ MixingRxnModel::setMixDVMap( const ProblemSpecP& root_params )
 
   if (db_vars) {
 
-    proc0cout << "  The following table variables are requested by the user: " << endl;
+    proc0cout << "  The following table variables are requested by the user:\n";
 
-    for (ProblemSpecP db_dv = db_vars->findBlock("save");
-          db_dv !=0; db_dv = db_dv->findNextBlock("save")){
+    for( ProblemSpecP db_dv = db_vars->findBlock("save"); db_dv != nullptr; db_dv = db_dv->findNextBlock("save") ) {
 
       table_lookup = "false";
       var_name     = "false";
@@ -251,31 +290,54 @@ MixingRxnModel::setMixDVMap( const ProblemSpecP& root_params )
       db_dv->getAttribute( "table_lookup", table_lookup );
       db_dv->getAttribute( "label", var_name );
 
-      if ( table_lookup == "true" )
-        insertIntoMap( var_name );
-
+      if ( table_lookup == "true" ) {
+        bool test = insertIntoMap( var_name );
+        if ( !test ) {
+          throw InvalidValue( "Error: Could not insert the following into the table lookup: " + var_name, __FILE__, __LINE__ );
+        }
+      }
     }
   }
 
   // Add a few extra variables to the dependent variable map that are required by the algorithm
   // NOTE: These are required FOR NOW by the algorithm while NewStaticMixingTable still lives.
   //       They will be removed once the conversion to TabProps is complete.
-  proc0cout << "    (below required by the CFD algorithm)" << endl;
+  proc0cout << "    (below required by the CFD algorithm)\n";
   var_name = "density";
-  insertIntoMap( var_name );
+  bool test = insertIntoMap( var_name );
+  if ( !test ){
+    throw InvalidValue("Error: Could not insert the following into the table lookup: "+var_name,
+                       __FILE__,__LINE__);
+  }
   if ( !d_coldflow ){
     var_name = "temperature";
-    insertIntoMap( var_name );
+    test = insertIntoMap( var_name );
+    if ( !test ){
+      throw InvalidValue("Error: Could not insert the following into the table lookup: "+var_name,
+                         __FILE__,__LINE__);
+    }
     //var_name = "heat_capacity";
     var_name = "specificheat";
-    insertIntoMap( var_name );
+    test = insertIntoMap( var_name );
+    if ( !test ){
+      throw InvalidValue("Error: Could not insert the following into the table lookup: "+var_name,
+                         __FILE__,__LINE__);
+    }
     var_name = "CO2";
-    insertIntoMap( var_name );
+    test = insertIntoMap( var_name );
+    if ( !test ){
+     throw InvalidValue("Error: Could not insert the following into the table lookup: "+var_name,
+                        __FILE__,__LINE__);
+    }
     var_name = "H2O";
-    insertIntoMap( var_name );
+    test = insertIntoMap( var_name );
+    if ( !test ){
+     throw InvalidValue("Error: Could not insert the following into the table lookup: "+var_name,
+                        __FILE__,__LINE__);
+    }
   }
 
-  proc0cout << endl;
+  proc0cout << "\n";
 }
 //---------------------------------------------------------------------------
 // Add Additional Table Lookup Variables
@@ -283,10 +345,14 @@ MixingRxnModel::setMixDVMap( const ProblemSpecP& root_params )
 void
 MixingRxnModel::addAdditionalDV( std::vector<string>& vars )
 {
-  proc0cout << "  Adding these additional variables for table lookup: " << endl;
+  proc0cout << "  Adding these additional variables for table lookup:\n";
   for ( std::vector<string>::iterator ivar = vars.begin(); ivar != vars.end(); ivar++ ) {
 
-    insertIntoMap( *ivar );
+    bool test = insertIntoMap( *ivar );
+    if ( !test ){
+     throw InvalidValue("Error: Could not insert the following into the table lookup: "+*ivar,
+                        __FILE__,__LINE__);
+    }
 
   }
 }
@@ -296,34 +362,32 @@ MixingRxnModel::sched_checkTableBCs( const LevelP& level, SchedulerP& sched )
 {
   string taskname = "MixingRxnModel::checkTableBCs";
   Task* tsk = scinew Task(taskname, this, &MixingRxnModel::checkTableBCs);
-  sched->addTask( tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials() );
+  sched->addTask( tsk, level->eachPatch(), m_sharedState->allArchesMaterials()  );
 }
 void
 MixingRxnModel::checkTableBCs( const ProcessorGroup* pc,
-    const PatchSubset* patches,
-    const MaterialSubset* matls,
-    DataWarehouse* old_dw,
-    DataWarehouse* new_dw )
+                               const PatchSubset* patches,
+                               const MaterialSubset* matls,
+                               DataWarehouse* old_dw,
+                               DataWarehouse* new_dw )
 {
   for (int p=0; p < patches->size(); p++){
 
     //Ghost::GhostType gn = Ghost::None;
     const Patch* patch = patches->get(p);
-    int archIndex = 0;
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
     vector<Patch::FaceType> bf;
     vector<Patch::FaceType>::const_iterator bf_iter;
     patch->getBoundaryFaces(bf);
 
-    int totalIVs = d_allIndepVarNames.size();
+    //int totalIVs = d_allIndepVarNames.size();
     // Loop over all boundary faces on this patch
     for (bf_iter = bf.begin(); bf_iter != bf.end(); bf_iter++){
 
       Patch::FaceType face = *bf_iter;
       IntVector insideCellDir = patch->faceDirection(face);
 
-      int numChildren = patch->getBCDataArray(face)->getNumberChildren(matlIndex);
+      int numChildren = patch->getBCDataArray(face)->getNumberChildren(m_matl_index);
       for (int child = 0; child < numChildren; child++){
 
         // look to make sure every variable has a BC set:
@@ -338,14 +402,14 @@ MixingRxnModel::checkTableBCs( const ProcessorGroup* pc,
           std::string face_name;
           Iterator bound_ptr;
 
-          getBCKind( patch, face, child, variable_name, matlIndex, bc_kind, face_name );
+          getBCKind( patch, face, child, variable_name, m_matl_index, bc_kind, face_name );
 
           if ( bc_kind == "FromFile" ){
             foundIterator =
-              getIteratorBCValue<std::string>( patch, face, child, variable_name, matlIndex, bc_s_value, bound_ptr );
+              getIteratorBCValue<std::string>( patch, face, child, variable_name, m_matl_index, bc_s_value, bound_ptr );
           } else {
             foundIterator =
-              getIteratorBCValue<double>( patch, face, child, variable_name, matlIndex, bc_value, bound_ptr );
+              getIteratorBCValue<double>( patch, face, child, variable_name, m_matl_index, bc_value, bound_ptr );
           }
           if ( !foundIterator ){
             throw InvalidValue( "Error: Table Independent variable missing a boundary condition spec: "+variable_name+" on face: "+face_name, __FILE__, __LINE__);

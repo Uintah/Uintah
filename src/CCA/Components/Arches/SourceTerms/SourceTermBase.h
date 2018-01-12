@@ -36,7 +36,7 @@
 namespace Uintah {
 
 class BoundaryCondition;
-class Properties;
+class TableLookup;
 
 class SourceTermBase{
 
@@ -74,11 +74,7 @@ public:
   virtual void sched_restartInitialize( const LevelP& level, SchedulerP& sched ){};
 
   /** @brief Work to be performed after properties are setup */
-  virtual void extraSetup( GridP& grid, BoundaryCondition* bc, Properties* prop ){ }
-
-  /** @brief Returns the source label **/
-  inline const VarLabel* getSrcLabel(){
-    return _src_label; }
+  virtual void extraSetup( GridP& grid, BoundaryCondition* bc, TableLookup* table_lookup ){ }
 
   /** @brief Returns a list of any extra local labels this source may compute **/
   inline const std::vector<const VarLabel*> getExtraLocalLabels(){
@@ -89,9 +85,6 @@ public:
 
   /** @brief Return the type of source (constant, do_radation, etc... ) **/
   inline std::string getSourceType(){ return _type; }
-
-  /** @brief Return the list of table lookup species needed for this source term **/
-  inline ChemHelper::TableLookup* get_tablelookup_species(){ return _table_lookup_species; };
 
   /** @brief Return an int indicating the stage this source should be executed **/
   int stage_compute() const { return _stage; }
@@ -114,19 +107,27 @@ public:
       std::string _type;
   };
 
+  /** @brief In the case where a source base returns multiple sources, this returns that list.
+              This is a limiting case with the current abstraction. **/
+  std::vector<std::string>& get_all_src_names(){ return _mult_srcs; }
+
+
 protected:
 
   std::string _src_name;                                  ///< User assigned source name
+  std::vector<std::string> _mult_srcs;                    ///< If a source produces multiple labels, this vector holds the name of each.
   std::string _init_type;                                 ///< Initialization type.
   std::string _type;                                      ///< Source type (eg, constant, westbrook dryer, .... )
   bool _compute_me;                                       ///< To indicate if calculating this source is needed or has already been computed.
   const VarLabel* _src_label;                             ///< Source varlabel
+  const VarLabel* _simulationTimeLabel;
   int _stage;                                             ///< At which stage should this be computed: 0) before table lookup 1) after table lookup 2) after RK ave
   SimulationStateP& _shared_state;                        ///< Local copy of sharedState
   std::vector<std::string> _required_labels;              ///< Vector of required labels
   std::vector<const VarLabel*> _extra_local_labels;       ///< Extra labels that might be useful for storage
-  ChemHelper::TableLookup* _table_lookup_species;         ///< List of table lookup species
   MY_GRID_TYPE _source_grid_type;                         ///< Source grid type
+  TableLookup* _table_lookup;
+
 }; // end SourceTermBase
 }  // end namespace Uintah
 

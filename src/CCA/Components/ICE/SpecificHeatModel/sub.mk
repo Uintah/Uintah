@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2016 The University of Utah
+#  Copyright (c) 1997-2018 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -27,24 +27,26 @@
 # 
 # Makefile fragment for this subdirectory 
 
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
+
 SRCDIR   := CCA/Components/ICE/SpecificHeatModel
 
 SRCS     += $(SRCDIR)/SpecificHeatFactory.cc    \
-	        $(SRCDIR)/SpecificHeat.cc           \
+	    $(SRCDIR)/SpecificHeat.cc           \
             $(SRCDIR)/Debye.cc                  \
             $(SRCDIR)/Component.cc              \
             $(SRCDIR)/NASAPolynomial.cc         \
             $(SRCDIR)/Polynomial.cc       
 
 PSELIBS := \
-	CCA/Ports       \
-	Core/Grid       \
-	Core/Parallel   \
-	Core/Exceptions \
-	Core/Math       \
-	Core/Exceptions \
-	Core/Geometry 
+	Core/Disclosure     \
+	Core/Exceptions     \
+	Core/Geometry       \
+	Core/GeometryPiece  \
+	Core/Grid           \
+	Core/Math           \
+	Core/Parallel       \
+	Core/ProblemSpec    \
+	Core/Util           
 
-LIBS	:= 
-
-
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

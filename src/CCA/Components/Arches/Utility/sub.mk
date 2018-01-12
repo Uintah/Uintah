@@ -1,29 +1,16 @@
 # Makefile fragment for this subdirectory
 
-SRCDIR   := CCA/Components/Arches/Utility
+SRCDIR := CCA/Components/Arches/Utility
 
 ########################################################################
 #
 # CUDA_ENABLED_SRCS are files that if CUDA is enabled (via configure), must be
 # compiled using the nvcc compiler.
 #
-# WARNING: If you add a file to the list of CUDA_SRCS, you must add a
-# corresponding rule at the end of this file!
+# Do not put the .cc on the file name as the .cc or .cu will be added automatically
+# as needed.
 #
-# Also, do not put the .cc on this list of files as the .cc or .cu
-# will be added automatically as needed.
-#
-CUDA_ENABLED_SRCS =                      \
-          GridInfo                       \
-          InitializeFactory              \
-          InitLagrangianParticleSize     \
-          InitLagrangianParticleVelocity \
-          RandParticleLoc                \
-          SurfaceNormals                 \
-          TaskAlgebra                    \
-          UtilityFactory                 \
-          BoundaryInfo                   \
-          WaveFormInit                   
+CUDA_ENABLED_SRCS :=
 
 ifeq ($(HAVE_CUDA),yes)
    # CUDA enabled files, listed here (and with a rule at the end of
@@ -39,34 +26,32 @@ endif
 ########################################################################
 # Add normal source files:
 
-# SRCS += ???
+SRCS += \
+          $(SRCDIR)/BoundaryInfo.cc                   \
+          $(SRCDIR)/GridInfo.cc                       \
+          $(SRCDIR)/InitializeFactory.cc              \
+          $(SRCDIR)/InitLagrangianParticleSize.cc     \
+          $(SRCDIR)/InitLagrangianParticleVelocity.cc \
+          $(SRCDIR)/RandParticleLoc.cc                \
+          $(SRCDIR)/SurfaceNormals.cc                 \
+          $(SRCDIR)/TaskAlgebra.cc                    \
+          $(SRCDIR)/SurfaceVolumeFractionCalc.cc      \
+          $(SRCDIR)/UtilityFactory.cc                 \
+          $(SRCDIR)/WaveFormInit.cc                   \
+          $(SRCDIR)/ShunnMMS.cc                       \
+          $(SRCDIR)/ShunnMMSP3.cc                       \
+          $(SRCDIR)/TaylorGreen3D.cc                  \
+          $(SRCDIR)/AlmgrenMMS.cc                   
 
 ########################################################################
 #
-# Rules to copy CUDA enabled source (.cc) files to the binary build tree
-# and rename with a .cu extension.
+# Automatically create rules to copy CUDA enabled source (.cc) files
+# to the binary build tree and rename with a .cu extension.
 #
 
 ifeq ($(HAVE_CUDA),yes)
-  # Copy the 'original' .cc files into the binary tree and rename as .cu
 
-  $(OBJTOP_ABS)/$(SRCDIR)/GridInfo.cu : $(SRCTOP_ABS)/$(SRCDIR)/GridInfo.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/InitializeFactory.cu : $(SRCTOP_ABS)/$(SRCDIR)/InitializeFactory.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/InitLagrangianParticleSize.cu : $(SRCTOP_ABS)/$(SRCDIR)/InitLagrangianParticleSize.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/InitLagrangianParticleVelocity.cu : $(SRCTOP_ABS)/$(SRCDIR)/InitLagrangianParticleVelocity.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/RandParticleLoc.cu : $(SRCTOP_ABS)/$(SRCDIR)/RandParticleLoc.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/SurfaceNormals.cu : $(SRCTOP_ABS)/$(SRCDIR)/SurfaceNormals.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/TaskAlgebra.cu : $(SRCTOP_ABS)/$(SRCDIR)/TaskAlgebra.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/UtilityFactory.cu : $(SRCTOP_ABS)/$(SRCDIR)/UtilityFactory.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/WaveFormInit.cu : $(SRCTOP_ABS)/$(SRCDIR)/WaveFormInit.cc
-	cp $< $@
+  # Call the make-cuda-target function on each of the CUDA_ENABLED_SRCS:
+  $(foreach file,$(CUDA_ENABLED_SRCS),$(eval $(call make-cuda-target,$(file))))
 
 endif

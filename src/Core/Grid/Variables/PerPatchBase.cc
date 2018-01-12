@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -35,6 +35,13 @@ PerPatchBase::~PerPatchBase()
 
 PerPatchBase::PerPatchBase()
 {
+}
+
+
+RefCounted*
+PerPatchBase::getRefCounted()
+{
+  SCI_THROW(InternalError("getRefCounted not implemented for PerPatch", __FILE__, __LINE__));
 }
 
 const Uintah::TypeDescription* PerPatchBase::virtualGetTypeDescription() const

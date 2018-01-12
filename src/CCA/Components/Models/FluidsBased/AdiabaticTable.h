@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -26,7 +26,7 @@
 #ifndef Packages_Uintah_CCA_Components_Examples_AdiabaticTable_h
 #define Packages_Uintah_CCA_Components_Examples_AdiabaticTable_h
 
-#include <CCA/Ports/ModelInterface.h>
+#include <CCA/Components/Models/FluidsBased/FluidsBasedModel.h>
 
 #include <Core/GeometryPiece/GeometryPiece.h>
 #include <Core/Grid/Variables/ComputeSet.h>
@@ -36,6 +36,7 @@
 #include <vector>
 
 namespace Uintah {
+
   class ICELabel;
   class TableInterface;
 
@@ -67,32 +68,29 @@ WARNING
   
 ****************************************/
 
-  class AdiabaticTable :public ModelInterface {
+  class AdiabaticTable :public FluidsBasedModel {
   public:
     AdiabaticTable(const ProcessorGroup* myworld, 
-                   ProblemSpecP& params,
-                   const bool doAMR);
+		   const SimulationStateP& sharedState,
+                   const ProblemSpecP& params);
                    
     virtual ~AdiabaticTable();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
     
-    virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
-                              ModelSetup* setup);
+    virtual void problemSetup(GridP& grid,
+                               const bool isRestart);
     
     virtual void scheduleInitialize(SchedulerP&,
-                                    const LevelP& level,
-                                    const ModelInfo*);
+                                    const LevelP& level);
 
     virtual void restartInitialize() {}
       
-    virtual void scheduleComputeStableTimestep(SchedulerP&,
-                                               const LevelP& level,
-                                               const ModelInfo*);
+    virtual void scheduleComputeStableTimeStep(SchedulerP&,
+                                               const LevelP& level);
                                   
     virtual void scheduleComputeModelSources(SchedulerP&,
-                                                   const LevelP& level,
-                                                   const ModelInfo*);
+                                                   const LevelP& level);
                                             
    virtual void scheduleModifyThermoTransportProperties(SchedulerP&,
                                                 const LevelP&,
@@ -107,10 +105,9 @@ WARNING
                                       SchedulerP& sched);
                                       
    virtual void scheduleTestConservation(SchedulerP&,
-                                         const PatchSet* patches,
-                                         const ModelInfo* mi);
+                                         const PatchSet* patches);
   private:
-    ICELabel* lb;
+    ICELabel* Ilb;
                                                 
     void modifyThermoTransportProperties(const ProcessorGroup*, 
                                          const PatchSubset* patches,        
@@ -128,34 +125,32 @@ WARNING
                              const PatchSubset* patches,
                              const MaterialSubset*,
                              DataWarehouse* old_dw,
-                             DataWarehouse* new_dw,
-                             const ModelInfo* mi);
+                             DataWarehouse* new_dw);
                              
     void testConservation(const ProcessorGroup*, 
                           const PatchSubset* patches,
                           const MaterialSubset*,
                           DataWarehouse* old_dw,
-                          DataWarehouse* new_dw,
-                          const ModelInfo* mi);
+                          DataWarehouse* new_dw);
 
     void computeScaledVariance(const Patch* Patch,
-                               DataWarehouse* new_dw,                                 
-                               const int indx,                                        
-                               constCCVariable<double> f_old,                         
+                               DataWarehouse* new_dw,
+                               const int indx,
+                               constCCVariable<double> f_old,
                                std::vector<constCCVariable<double> >& ind_vars);
                                
     void  errorEstimate(const ProcessorGroup*,
-                           const PatchSubset* patches,
-                           const MaterialSubset*,
-                           DataWarehouse*,
-                           DataWarehouse* new_dw,
+			const PatchSubset* patches,
+			const MaterialSubset*,
+			DataWarehouse*,
+			DataWarehouse* new_dw,
                         bool);    
 
     //__________________________________
     AdiabaticTable(const AdiabaticTable&);
     AdiabaticTable& operator=(const AdiabaticTable&);
 
-    ProblemSpecP params;
+    ProblemSpecP d_params {nullptr};
 
     const Material* d_matl;
     MaterialSet* d_matl_set;
@@ -197,9 +192,6 @@ WARNING
     VarLabel* cumulativeEnergyReleased_CCLabel;
     VarLabel* cumulativeEnergyReleased_src_CCLabel;
     
-    SimulationStateP d_sharedState;
-    Output* dataArchiver;
-
     TableInterface* table;
     struct TableValue {
       void outputProblemSpec(ProblemSpecP& ps)
@@ -215,7 +207,6 @@ WARNING
     
     //__________________________________
     // global constants
-    bool d_doAMR;
     std::vector<Vector> d_probePts;
     std::vector<std::string> d_probePtsNames;
     bool d_usingProbePts;

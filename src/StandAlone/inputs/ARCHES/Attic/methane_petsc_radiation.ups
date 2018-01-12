@@ -163,7 +163,7 @@
           <convection_scheme>central-upwind</convection_scheme>
           <radiationCalcFreq>1</radiationCalcFreq>
           <radCalcForAllRKSteps>false</radCalcForAllRKSteps>
-          <DORadiationModel>
+          <DORadiationModel type="linearSolve">
             <opl>3.0</opl>
             <const_wall_temperature/>
             <LinearSolver type="petsc">

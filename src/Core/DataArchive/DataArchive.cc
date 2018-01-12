@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -33,9 +33,9 @@
 #  include <CCA/Ports/PIDXOutputContext.h>
 #endif
 
+#include <Core/Containers/OffsetArray1.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Containers/OffsetArray1.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/UnknownVariable.h>
@@ -43,14 +43,16 @@
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Parallel/Parallel.h>
-#include <Core/Util/Time.h>
 #include <Core/Util/Assert.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Util/StringUtil.h>
 #include <Core/Util/XMLUtils.h>
+
 #include <libxml/xmlreader.h>
 
 #include <iostream>
 #include <sstream>
+
 #include <iomanip>
 #include <fstream>
 #include <fcntl.h>
@@ -74,7 +76,6 @@ DataArchive::DataArchive( const string & filebase,
                           const int      processor     /* = 0 */,
                           const int      numProcessors /* = 1 */,
                           const bool     verbose       /* = true */ ) :
-  ref_cnt(0),
   timestep_cache_size(10),
   default_cache_size(10),
   d_filebase(filebase),
@@ -94,7 +95,7 @@ DataArchive::DataArchive( const string & filebase,
 #endif  
 
   if( d_filebase == "" ) {
-    throw InternalError("DataArchive::DataArchive 'filebase' cannot be empty (\"\").", __FILE__, __LINE__);
+    throw InternalError( "DataArchive::DataArchive 'filebase' cannot be empty (\"\").", __FILE__, __LINE__ );
   }
 
   while( d_filebase[ d_filebase.length() - 1 ] == '/' ) {
@@ -177,12 +178,13 @@ DataArchive::queryOutputFormat( FILE * doc )
     else if( line.compare( 0, 14, "<outputFormat>" ) == 0 ) {
       vector<string> pieces = UintahXML::splitXMLtag( line );
 
-      if( pieces[1] == "PIDX" || pieces[1] == "pidx" ){
+      const string format = string_tolower( pieces[1] );
+
+      if( format == "pidx" ) {
         d_outputFileFormat = PIDX;
-        //proc0cout << "Restart UDA format:     PIDX \n";
-      } else {
+      }
+      else {
         d_outputFileFormat = UDA;
-        //proc0cout << "Restart UDA format:     uda\n";
       }
       return;
     }
@@ -224,7 +226,9 @@ void
 DataArchive::queryTimesteps( vector<int>    & index,
                              vector<double> & times )
 {
-  double start = Time::currentSeconds();
+  Timers::Simple timer;
+  timer.start();
+
   if( d_timeData.size() == 0 ){
     d_lock.lock();
 
@@ -251,7 +255,7 @@ DataArchive::queryTimesteps( vector<int>    & index,
           ts_doc.getAttributes( attributes );
           string tsfile = attributes[ "href" ];
           if( tsfile == "" ) {
-            throw InternalError("DataArchive::queryTimesteps:timestep href not found", __FILE__, __LINE__);
+            throw InternalError( "DataArchive::queryTimesteps:timestep href not found", __FILE__, __LINE__ );
           }
 
           int          timestepNumber;
@@ -261,7 +265,7 @@ DataArchive::queryTimesteps( vector<int>    & index,
           ProblemSpecP timestepDoc = 0;
 
 	  string::size_type deliminator_index = tsfile.find("/");
-	  string tnumber(tsfile,0,deliminator_index);
+	  string tnumber( tsfile, 0, deliminator_index );
 	  // Usually '.../grid.xml'
 	  string       grid_path_and_filename = d_filebase + "/" + tnumber + "/" + "grid.xml";
 
@@ -287,15 +291,18 @@ DataArchive::queryTimesteps( vector<int>    & index,
 
           d_ts_indices.push_back( timestepNumber );
           d_ts_times.push_back( currentTime );
-          d_timeData.push_back( TimeData( this, ts_path_and_filename,grid_path_and_filename ) );
+          d_timeData.push_back( TimeData( this, ts_path_and_filename ) );
         }
       } // end while
     }
     d_lock.unlock();
   }
+
   index = d_ts_indices;
   times = d_ts_times;
-  dbg << "DataArchive::queryTimesteps completed in " << Time::currentSeconds()-start << " seconds\n";
+
+  dbg << "DataArchive::queryTimesteps completed in " << timer().seconds()
+      << " seconds\n";
 }
 //______________________________________________________________________
 //
@@ -349,8 +356,11 @@ DataArchive::queryPatchwiseProcessor( const Patch * patch, const int index )
 //______________________________________________________________________
 //
 GridP
-DataArchive::queryGrid( int index, const ProblemSpecP & ups /* = nullptr */, bool assignBCs )
+DataArchive::queryGrid( int index, const ProblemSpecP & ups /* = nullptr */, bool assignBCs /* = true */ )
 {
+  Timers::Simple timer;
+  timer.start();
+
   // The following variable along with d_cell_scale is necessary to allow the
   // UdaScale module work.  Small domains are a problem for the SCIRun widgets
   // so UdaScale allows the user increase the domain by setting the
@@ -360,38 +370,59 @@ DataArchive::queryGrid( int index, const ProblemSpecP & ups /* = nullptr */, boo
 
   d_lock.lock();
 
-  double     start    = Time::currentSeconds();
   TimeData & timedata = getTimeData( index );
 
-  FILE* fp = 0;
-  FILE* fp_grid = fopen( timedata.d_grid_path_and_filename.c_str(), "r" );
+  //  FILE* fp = 0;
+
+  // Based on the timestep path and file name (eg: .../timestep.xml), we need
+  // to cut off the associated path so that we can find the path to grid.xml.
+  string::size_type path_length = timedata.d_ts_path_and_filename.rfind( "/" ) + 1;
+  string path( timedata.d_ts_path_and_filename, 0, path_length );
+  string grid_filename = path + "grid.xml";
+
+  FILE * fp_grid = fopen( grid_filename.c_str(), "r" );
 
   // Check if the grid.xml is present, and use that, if it isn't, then use the grid information
   // that is stored in timestep.xml.
 
-  if (fp_grid == nullptr) {
-    fp = fopen( timedata.d_ts_path_and_filename.c_str(), "r" );
-  } else {
+  bool grid_xml_is_binary = false;
+  if ( fp_grid == nullptr ) {
+    // Could not open grid.xml, just go with timestep.xml.
+    fp_grid = fopen( timedata.d_ts_path_and_filename.c_str(), "r" );
+  }
+  else {
+    // Determine if the grid is written in ASCII xml, or in binary.
+    unsigned int marker = -1;
+    fread( &marker, sizeof( marker ), 1, fp_grid );
 
-    fp = fp_grid;
+    if( marker == GRID_MAGIC_NUMBER ) {
+      grid_xml_is_binary = true;
+    }
+    else {
+      // FIXME: do we need to reset the file pointer here?
+    }
   }
 
-  if( fp == nullptr ) {
-    throw InternalError("DataArchive::queryGrid() failed to open input file.\n", __FILE__, __LINE__);
+  if( fp_grid == nullptr ) {
+    throw InternalError( "DataArchive::queryGrid() failed to open input file.\n", __FILE__, __LINE__ );
   }
 
-  GridP grid = scinew Grid;
-
+  GridP                 grid = scinew Grid();
   vector< vector<int> > procMap; // One vector<int> per level.
 
-  grid->readLevelsFromFile( fp, procMap );
+  if( grid_xml_is_binary ) {
+    grid->readLevelsFromFileBinary( fp_grid, procMap );
+  }
+  else {
+    grid->readLevelsFromFile( fp_grid, procMap );
+  }
 
-  fclose( fp );
+  fclose( fp_grid );
 
   // Check to see if the grid has already been reconstructed and that
   // the cell scaling has not changed. Cell scale check can be removed
   // if SCIRun is no longer used for visualization
-  if (timedata.d_grid != 0  &&  old_cell_scale == d_cell_scale) {
+  if (timedata.d_grid != nullptr  &&  old_cell_scale == d_cell_scale) {
     d_lock.unlock();
     return timedata.d_grid;
   }
@@ -402,7 +433,7 @@ DataArchive::queryGrid( int index, const ProblemSpecP & ups /* = nullptr */, boo
     old_cell_scale = d_cell_scale;
   }
 
-  if( ups && assignBCs) { // 'ups' is non-null only for restarts.
+  if( ups && assignBCs ) { // 'ups' is non-null only for restarts.
 
     ProblemSpecP grid_ps = ups->findBlock( "Grid" );
     grid->assignBCS( grid_ps, nullptr );
@@ -436,10 +467,13 @@ DataArchive::queryGrid( int index, const ProblemSpecP & ups /* = nullptr */, boo
 
   timedata.d_grid = grid;
 
-  dbg << "DataArchive::queryGrid completed in " << Time::currentSeconds()-start << " seconds\n";
+  dbg << "DataArchive::queryGrid completed in " << timer().seconds()
+      << " seconds\n";
 
   return grid;
-}
+
+} // end queryGrid()
+
 //______________________________________________________________________
 //
 void
@@ -462,19 +496,24 @@ void
 DataArchive::queryVariables( vector<string>                         & names,
                              vector<const Uintah::TypeDescription*> & types )
 {
-  double start = Time::currentSeconds();
+  Timers::Simple timer;
+  timer.start();
+
   d_lock.lock();
 
   rewind( d_indexFile ); // Start at beginning of file.
   bool found = ProblemSpec::findBlock( "<variables>", d_indexFile );
 
   if( !found ) {
-    throw InternalError("DataArchive::queryVariables:variables section not found\n", __FILE__, __LINE__);
+    throw InternalError( "DataArchive::queryVariables:variables section not found", __FILE__, __LINE__ );
   }
+
   queryVariables( d_indexFile, names, types );
 
   d_lock.unlock();
-  dbg << "DataArchive::queryVariables completed in " << Time::currentSeconds()-start << " seconds\n";
+
+  dbg << "DataArchive::queryVariables completed in " << timer().seconds()
+      << " seconds\n";
 }
 //______________________________________________________________________
 //
@@ -482,7 +521,8 @@ void
 DataArchive::queryGlobals( vector<string>                         & names,
                            vector<const Uintah::TypeDescription*> & types )
 {
-  double start = Time::currentSeconds();
+  Timers::Simple timer;
+  timer.start();
 
   d_lock.lock();
 
@@ -491,13 +531,16 @@ DataArchive::queryGlobals( vector<string>                         & names,
   bool result = ProblemSpec::findBlock( "<globals>", d_indexFile );
 
   if( !result ) {
+    d_lock.unlock();
     return;
   }
+
   queryVariables( d_indexFile, names, types, true );
 
   d_lock.unlock();
 
-  dbg << "DataArchive::queryGlobals completed in " << Time::currentSeconds()-start << " seconds\n";
+  dbg << "DataArchive::queryGlobals completed in " << timer().seconds()
+      << " seconds\n";
 }
 //______________________________________________________________________
 //
@@ -531,7 +574,7 @@ DataArchive::queryVariables( FILE                                   * fp,
       ts_doc.getAttributes( attributes );
       string the_type = attributes[ "type" ];
       if( the_type == "" ) {
-        throw InternalError("DataArchive::queryVariables() - 'type' not found", __FILE__, __LINE__);
+        throw InternalError( "DataArchive::queryVariables() - 'type' not found", __FILE__, __LINE__ );
       }
 
       const TypeDescription* td = TypeDescription::lookupType( the_type );
@@ -566,7 +609,8 @@ DataArchive::query(       Variable     & var,
                     const int            timeIndex,
                           DataFileInfo * dfi /* = 0 */ )
 {
-  double tstart = Time::currentSeconds();
+  Timers::Simple timer;
+  timer.start();
 
 #if !defined( DISABLE_SCI_MALLOC )
   const char* tag = AllocatorSetDefaultTag("QUERY");
@@ -579,7 +623,7 @@ DataArchive::query(       Variable     & var,
   ASSERT(timedata.d_initialized);
   // make sure info for this patch gets parsed from p*****.xml.
   d_lock.lock();
-  timedata.parsePatch(patch);
+  timedata.parsePatch( patch );
   d_lock.unlock();
 
   VarData & varinfo = timedata.d_varInfo[name];
@@ -617,13 +661,21 @@ DataArchive::query(       Variable     & var,
   if( !dfi ) {
     // If this is a virtual patch, grab the real patch, but only do that here - in the next query, we want
     // the data to be returned in the virtual coordinate space.
-    if (!timedata.d_datafileInfo.lookup(VarnameMatlPatch(name, matlIndex, patchid), datafileinfo)) {
-      cerr << "VARIABLE NOT FOUND: " << name << ", material index " << matlIndex << ", patch " << patch->getID() << ", time index " << timeIndex << "\nPlease make sure the correct material index is specified\n";
+
+    vector<VarnameMatlPatch>::iterator iter = std::find( timedata.d_datafileInfoIndex.begin(), timedata.d_datafileInfoIndex.end(), VarnameMatlPatch(name, matlIndex, patchid ) );
+    if( iter == timedata.d_datafileInfoIndex.end() ) { // Previously used the hashmap lookup( timedata.d_datafileInfo.lookup() )
+      cerr << "VARIABLE NOT FOUND: " << name 
+           << ", material index " << matlIndex 
+           << ", Level " << patch->getLevel()->getIndex() 
+           << ", patch " << patch->getID() 
+           << ", time index " << timeIndex << "\n";
+
       throw InternalError("DataArchive::query:Variable not found", __FILE__, __LINE__);
     }
-    dfi = &datafileinfo;
+    
+    int pos = std::distance( timedata.d_datafileInfoIndex.begin(), iter );
+    dfi = &timedata.d_datafileInfoValue[ pos ];
   }
-
 
   const TypeDescription* td = var.virtualGetTypeDescription();
   ASSERT(td->getName() == varinfo.type);
@@ -636,8 +688,8 @@ DataArchive::query(       Variable     & var,
       throw InternalError( "DataArchive::query:Cannot get numParticles", __FILE__, __LINE__ );
     }
     if (patch->isVirtual()) {
-      throw InternalError("DataArchive::query: Particle query on virtual patches "
-                          "not finished.  We need to adjust the particle positions to virtual space...", __FILE__, __LINE__);
+      throw InternalError( "DataArchive::query: Particle query on virtual patches "
+                           "not finished.  We need to adjust the particle positions to virtual space...", __FILE__, __LINE__ );
     }
 
     psetDBType::key_type   key( matlIndex, patch );
@@ -659,6 +711,8 @@ DataArchive::query(       Variable     & var,
     }
     (static_cast<ParticleVariableBase*>(&var))->allocate(psubset);
 //      (dynamic_cast<ParticleVariableBase*>(&var))->allocate(psubset);
+  }
+  else if (td->getType() == TypeDescription::PerPatch) {
   }
   else if (td->getType() != TypeDescription::ReductionVariable) {
     var.allocate( patch, varinfo.boundaryLayer );
@@ -683,11 +737,15 @@ DataArchive::query(       Variable     & var,
 
     // read in the variable
     InputContext ic( fd, data_filename.c_str(), dfi->start );
-    double starttime = Time::currentSeconds();
+
+    Timers::Simple read_timer;
+    timer.start();
 
     var.read( ic, dfi->end, timedata.d_swapBytes, timedata.d_nBytes, varinfo.compression );
 
-    dbg << "DataArchive::query: time to read raw data: "<<Time::currentSeconds() - starttime<<endl;
+    dbg << "DataArchive::query: time to read raw data: "
+	<< read_timer().seconds() << " seconds\n";
+
     ASSERTEQ( dfi->end, ic.cur );
 
     int result = close( fd );
@@ -700,11 +758,11 @@ DataArchive::query(       Variable     & var,
   //__________________________________
   //  bulletproofing
   if( isPIDXEnabled() == false && d_outputFileFormat == PIDX ){
-    ostringstream warn;
-    warn << "\nERROR DataArchive::query()\n"
-         << "The uda you are trying to open was written using the PIDX file format.\n"
-         << "You must configure and compile with PIDX enabled.\n";
-    throw InternalError(warn.str() , __FILE__, __LINE__);
+    ostringstream error;
+    error << "\nERROR DataArchive::query()\n"
+          << "The uda you are trying to open was written using the PIDX file format.\n"
+          << "You must configure and compile with PIDX enabled.";
+    throw InternalError( error.str() , __FILE__, __LINE__ );
   }
 
 
@@ -755,15 +813,16 @@ DataArchive::query(       Variable     & var,
     string idxFilename = (levelPath.str() + varinfo.filename );               // be careful, the patch.datafilename != varinfo.filename
                                                                               // varinfo.filename == <CCVars.idx, SFC*Vars.idx....>
     PIDX_file idxFile;      // IDX file descriptor
+    PIDX_point global_size;
 
-    int ret = PIDX_file_open(idxFilename.c_str(), PIDX_MODE_RDONLY, access, &idxFile);
+    int ret = PIDX_file_open(idxFilename.c_str(), PIDX_MODE_RDONLY, access, global_size, &idxFile);
     pidx.checkReturnCode( ret,"DataArchive::query() - PIDX_file_open failure", __FILE__, __LINE__);
 
     //__________________________________
     //  Extra Calls that _MAY_ be needed
-    PIDX_point global_size;
-    ret = PIDX_get_dims(idxFile, global_size);          // returns the levelSize  Is this needed?
-    pidx.checkReturnCode( ret,"DataArchive::query() - PIDX_get_dims failure", __FILE__, __LINE__);
+    //PIDX_point global_size;
+    //ret = PIDX_get_dims(idxFile, global_size);          // returns the levelSize  Is this needed?
+    //pidx.checkReturnCode( ret,"DataArchive::query() - PIDX_get_dims failure", __FILE__, __LINE__);
 
     int variable_count = 0;             ///< Number of fields in PIDX file
     ret = PIDX_get_variable_count(idxFile, &variable_count);
@@ -789,7 +848,7 @@ DataArchive::query(       Variable     & var,
     ret = PIDX_get_current_variable(idxFile, &varDesc);
     pidx.checkReturnCode(ret, "DataArchive::query() - PIDX_get_current_variable failure", __FILE__, __LINE__);
 
-    int values_per_sample = varDesc->values_per_sample;
+    int values_per_sample = varDesc->vps;
 
     int bits_per_sample = 0;
     ret = PIDX_default_bits_per_datatype(varDesc->type_name, &bits_per_sample);
@@ -814,7 +873,7 @@ DataArchive::query(       Variable     & var,
                 << "    " << varDesc->var_name
                 << " type_name: " << varDesc->type_name
                 << " varIndex: " << varIndex
-                << " values_per_sample: " << varDesc->values_per_sample
+                << " values_per_sample: " << varDesc->vps
                 << " bits_per_sample: "<< bits_per_sample
                 << " arraySize " << arraySize << endl;
     }
@@ -836,7 +895,7 @@ DataArchive::query(       Variable     & var,
     if (dbg.active() ){
       pidx.printBufferWrap("DataArchive::query    AFTER  close",
                            td->getSubType()->getType(),
-                           varDesc->values_per_sample,
+                           varDesc->vps,
                            patchExts.lo_EC, patchExts.hi_EC,
                            dataPIDX,
                            arraySize );
@@ -851,7 +910,9 @@ DataArchive::query(       Variable     & var,
 #if !defined( DISABLE_SCI_MALLOC )
   AllocatorSetDefaultTag(tag);
 #endif
-  dbg << "DataArchive::query() completed in " << Time::currentSeconds()-tstart << " seconds\n";
+
+  dbg << "DataArchive::query() completed in " << timer().seconds()
+      << " seconds\n";
 }
 //______________________________________________________________________
 //
@@ -871,7 +932,7 @@ DataArchive::query(       Variable       & var,
     d_lock.lock();
     TimeData & td = getTimeData( timeIndex );
     d_lock.unlock();
-    td.parsePatch(patch); // make sure vars is actually populated
+    td.parsePatch( patch ); // make sure vars is actually populated
     if (td.d_varInfo.find(name) != td.d_varInfo.end()) {
       VarData& varinfo = td.d_varInfo[name];
       const TypeDescription* type = TypeDescription::lookupType(varinfo.type);
@@ -880,9 +941,12 @@ DataArchive::query(       Variable       & var,
       queryRegion(var, name, matlIndex, patch->getLevel(), timeIndex, low, high);
     }
     else {
-      cerr << "VARIABLE NOT FOUND: " << name << ", material index " << matlIndex << ", patch " << patch->getID() << ", time index "
-           << timeIndex << "\nPlease make sure the correct material index is specified\n";
-      throw InternalError("DataArchive::query:Variable not found", __FILE__, __LINE__);
+      cerr << "VARIABLE NOT FOUND: " << name 
+           << ", material index " << matlIndex 
+           << ", Level " << patch->getLevel()->getIndex() 
+           << ", patch " << patch->getID() 
+           << ", time index " << timeIndex << "\n";
+      throw InternalError( "DataArchive::query:Variable not found", __FILE__, __LINE__ );
     }
   }
 }
@@ -911,11 +975,11 @@ DataArchive::queryRegion(       Variable  & var,
   Patch::selectType patches;
 
   level->selectPatches( low, high, patches );
-  for(int i=0;i<patches.size();i++){
+  for(unsigned int i=0;i<patches.size();i++){
     const Patch* patch = patches[i];
 
     if (type == 0) {
-      td.parsePatch(patch); // make sure varInfo is loaded
+      td.parsePatch( patch ); // make sure varInfo is loaded
       VarData& varinfo = td.d_varInfo[name];
       type = TypeDescription::lookupType(varinfo.type);
       basis = Patch::translateTypeToBasis(type->getType(), false);
@@ -983,7 +1047,7 @@ DataArchive::findPatchAndIndex( const GridP            grid,
 //     const LevelP level = grid->getLevel(level_nr);
     const LevelP level = grid->getLevel(levelIndex);
 
-    for (Level::const_patchIterator iter = level->patchesBegin();
+    for (Level::const_patch_iterator iter = level->patchesBegin();
          (iter != level->patchesEnd()) && (patch == nullptr); iter++) {
       if( *iter == local ) continue;
       ParticleVariable<long64> var;
@@ -1007,11 +1071,11 @@ DataArchive::findPatchAndIndex( const GridP            grid,
 //______________________________________________________________________
 //
 void
-DataArchive::restartInitialize( const int             index,
-                                const GridP         & grid,
-                                      DataWarehouse * dw,
-                                      LoadBalancer  * lb,
-                                      double        * pTime )
+DataArchive::restartInitialize( const int                index,
+                                const GridP            & grid,
+                                      DataWarehouse    * dw,
+                                      LoadBalancer * lb,
+                                      double           * pTime )
 {
   vector<int>    ts_indices;
   vector<double> times;
@@ -1069,13 +1133,17 @@ DataArchive::restartInitialize( const int             index,
   // Iterate through all entries in the VarData hash table, and load the
   // variables if that data belongs on this processor.
 
-  VarHashMapIterator iter( &timedata.d_datafileInfo );
 
-  for( ; iter.ok(); ++iter ) {
-    VarnameMatlPatch & key  = iter.get_key();
-    DataFileInfo     & data = iter.get_data();
+  //VarHashMapIterator iter( &timedata.d_datafileInfo );
+  vector<VarnameMatlPatch>::iterator iter;
 
-    // get the Patch from the Patch ID (ID of -1 = nullptr - for reduction vars)
+  for( iter = timedata.d_datafileInfoIndex.begin(); iter != timedata.d_datafileInfoIndex.end(); ++iter ) {
+
+    int pos = std::distance( timedata.d_datafileInfoIndex.begin(), iter );
+    VarnameMatlPatch & key  = *iter;
+    DataFileInfo     & data = timedata.d_datafileInfoValue[ pos ];
+
+    // Get the Patch from the Patch ID (ID of -1 = nullptr - for reduction vars)
     const Patch* patch = key.patchid_ == -1 ? nullptr : grid->getPatchByID( key.patchid_, 0 );
     int matl = key.matlIndex_;
 
@@ -1109,14 +1177,14 @@ DataArchive::restartInitialize( const int             index,
 
 //______________________________________________________________________
 //  This method is a specialization of restartInitialize().
-//  It's only used by the reduceUda component
+//  It's only used by the postProcessUda component
 void
-DataArchive::reduceUda_ReadUda( const ProcessorGroup * pg,
-                                const int              timeIndex,
-                                const GridP          & grid,
-                                const PatchSubset    * patches,
-                                      DataWarehouse  * dw,
-                                      LoadBalancer   * lb )
+DataArchive::postProcess_ReadUda( const ProcessorGroup   * pg,
+                                  const int                timeIndex,
+                                  const GridP            & grid,
+                                  const PatchSubset      * patches,
+                                        DataWarehouse    * dw,
+                                        LoadBalancer * lb )
 {
   vector<int>    timesteps;
   vector<double> times;
@@ -1139,13 +1207,11 @@ DataArchive::reduceUda_ReadUda( const ProcessorGroup * pg,
 
     varMap[names[i]] = vl;
   }
+  dw->setID( timeIndex );
+  
+  proc0cout << "   DataArchive:postProcess_ReadUda: udaTimestep " << timesteps[timeIndex] << " timeIndex: " << timeIndex << " dw ID: " << dw->getID() << endl;
 
   TimeData& timedata = getTimeData( timeIndex );
-
-  // set here instead of the SimCont because we need the DW ID to be set
-  // before saving particle subsets
-  dw->setID( timesteps[timeIndex] );
-
   // make sure to load all the data so we can iterate through it
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -1155,24 +1221,25 @@ DataArchive::reduceUda_ReadUda( const ProcessorGroup * pg,
   //__________________________________
   // Iterate through all entries in the VarData hash table, and load the variables.
 
-  for( VarHashMapIterator iter(&timedata.d_datafileInfo); iter.ok(); ++iter) {
-    VarnameMatlPatch& key = iter.get_key();
-    DataFileInfo& data    = iter.get_data();
+  for( vector<VarnameMatlPatch>::iterator iter = timedata.d_datafileInfoIndex.begin(); iter != timedata.d_datafileInfoIndex.end(); ++iter ) {
 
-    // get the Patch from the Patch ID (ID of -1 = nullptr - for reduction vars)
+    int                pos  = std::distance( timedata.d_datafileInfoIndex.begin(), iter );
+    VarnameMatlPatch & key  = *iter;
+    DataFileInfo     & data = timedata.d_datafileInfoValue[ pos ];
+
+    // Get the Patch from the Patch ID (ID of -1 = nullptr - for reduction vars)
     const Patch* patch = key.patchid_ == -1 ? nullptr : grid->getPatchByID(key.patchid_, 0);
     int matl = key.matlIndex_;
 
     VarLabel* label = varMap[ key.name_ ];
 
-    if (label == 0) {
+    if ( label == nullptr ) {
       continue;
     }
 
-    // If this proc does not own this patch
-    // then ignore the variable
+    // If this process does not own this patch, then ignore the variable...
     int proc = lb->getPatchwiseProcessorAssignment(patch);
-    if ( proc != pg->myrank() ) {
+    if ( proc != pg->myRank() ) {
       continue;
     }
 
@@ -1180,6 +1247,7 @@ DataArchive::reduceUda_ReadUda( const ProcessorGroup * pg,
     Variable* var = label->typeDescription()->createInstance();
     query( *var, key.name_, matl, patch, timeIndex, &data );
 
+    // particles
     ParticleVariableBase* particles;
     if ( (particles = dynamic_cast<ParticleVariableBase*>(var)) ) {
       if ( !dw->haveParticleSubset(matl, patch) ) {
@@ -1188,12 +1256,12 @@ DataArchive::reduceUda_ReadUda( const ProcessorGroup * pg,
         ASSERTEQ( dw->getParticleSubset(matl, patch), particles->getParticleSubset() );
       }
     }
-
+    
     dw->put( var, label, matl, patch );
     delete var;
   }
 
-} // end reduceUda_ReadUda()
+} // end postProcess_ReadUda()
 
 //______________________________________________________________________
 //
@@ -1241,7 +1309,7 @@ DataArchive::queryRestartTimestep( int & timestep )
     restart_ps->getAttributes( attributes );
     string ts_num_str = attributes[ "timestep" ];
     if( ts_num_str == "" ) {
-      throw InternalError("DataArchive::queryVariables() - 'timestep' not found", __FILE__, __LINE__);
+      throw InternalError( "DataArchive::queryVariables() - 'timestep' not found", __FILE__, __LINE__ );
     }
     timestep = atoi( ts_num_str.c_str() );
     delete restart_ps;
@@ -1297,10 +1365,8 @@ DataArchive::setTimestepCacheSize( int new_size ) {
 }
 
 
-DataArchive::TimeData::TimeData( DataArchive* da, const string& timestepPathAndFilename,
-				 const string& gridPathAndFilename) :
-  d_initialized( false ), d_ts_path_and_filename( timestepPathAndFilename ),
-  d_grid_path_and_filename( gridPathAndFilename ), d_parent_da( da )
+DataArchive::TimeData::TimeData( DataArchive * da, const string & timestepPathAndFilename ) :
+  d_initialized( false ), d_ts_path_and_filename( timestepPathAndFilename ), d_parent_da( da )
 {
   d_ts_directory = timestepPathAndFilename.substr( 0, timestepPathAndFilename.find_last_of('/') + 1 );
 }
@@ -1318,8 +1384,7 @@ DataArchive::TimeData::init()
 
   // Pull the list of data xml files from the timestep.xml file.
 
-  FILE * ts_file = fopen( d_ts_path_and_filename.c_str(), "r" );
-  FILE * grid_file = fopen( d_grid_path_and_filename.c_str(), "r" );
+  FILE * ts_file   = fopen( d_ts_path_and_filename.c_str(), "r" );
 
   if( ts_file == nullptr ) {
     // FIXME: add more info to exception.
@@ -1340,105 +1405,40 @@ DataArchive::TimeData::init()
   d_swapBytes = endianness != string(Uintah::endianness());
   d_nBytes    = numbits / 8;
 
-#if 0
-
-    fclose( ts_file );
-
-
-    //// Use the xmlTextReader to parse the file
-  xmlTextReaderPtr reader;
-  reader = xmlNewTextReaderFilename(d_grid_path_and_filename.c_str());
-
-  // If the grid.xml file is not found, then use the timestep.xml file
-  if (reader == nullptr)
-    reader = xmlNewTextReaderFilename(d_ts_path_and_filename.c_str());
-
-  int ret;
-  if (reader != nullptr) {
-    while (xmlTextReaderRead(reader)) {
-      string node_name((char *)xmlTextReaderName(reader));
-
-      printf("%d %d %s %s %d %d\n",
-	     xmlTextReaderDepth(reader),
-	     xmlTextReaderNodeType(reader),
-	     node_name.c_str(),
-	     xmlTextReaderValue(reader),
-	     xmlTextReaderHasAttributes(reader),
-	     xmlTextReaderIsEmptyElement(reader));
-
-      // Find the <Data> node
-      if (node_name == "Data" && xmlTextReaderNodeType(reader) != 15) {
-	cout << "Found the <Data> node" << endl;
-	cout << "Search for the <Datafile> node" << endl;
-	while (xmlTextReaderRead(reader) ) {
-	  string datafile_name((char *)xmlTextReaderName(reader));
-	  cout << "datafile_name = " << datafile_name << endl;
-	  if (datafile_name == "Datafile") {
-	    cout << "Found the <Datafile> node" << endl;
-	    while (xmlTextReaderMoveToNextAttribute(reader) ) {
-	      string attribute_name ((char *)xmlTextReaderName(reader));
-	      string attribute_value ((char *)xmlTextReaderValue(reader));
-	      cout << "attribute name = " << attribute_name << " value = "
-		   << attribute_value << endl;
-
-	      if (attribute_value == "global.xml") {
-		parseFile( d_ts_directory + "global.xml", -1, -1 );
-	      } else {
-
-		// Get the level info out of the xml file: should be lX/pxxxxx.xml.
-		unsigned level = 0;
-		string::size_type start =
-		  attribute_value.find_first_of("l",0,attribute_value.length()-3);
-		string::size_type end = attribute_value.find_first_of("/");
-		if (start != string::npos && end != string::npos && end > start && end-start <= 2) {
-		  level = atoi(attribute_value.substr(start+1, end-start).c_str());
-		}
-
-		if( level >= d_xmlFilenames.size() ) {
-		  d_xmlFilenames.resize( level +1 );
-		  d_xmlParsed.resize(    level + 1 );
-		}
-
-		string filename = d_ts_directory + attribute_value;
-		d_xmlFilenames[ level ].push_back( filename );
-		d_xmlParsed[    level ].push_back( false );
-	      }
-
-	    } // End of search through attributes
-	  }
-	}
-      }
-
-    }
-    xmlFreeTextReader(reader);
-  } else {
-    printf("Unable to open %s\n", d_grid_path_and_filename.c_str());
-  }
-
-#endif
-
-#if 1
   bool found = false;
-  string data_file_name = "";
-  if (grid_file != nullptr) {
-    found = ProblemSpec::findBlock( "<Data>", grid_file );
-    data_file_name = d_grid_path_and_filename;
-  } else {
+
+  // Based on the timestep path and file name (eg: .../timestep.xml), we need
+  // to cut off the associated path so that we can find the path to data.xml.
+  string::size_type path_length = d_ts_path_and_filename.rfind( "/" ) + 1;
+  string path( d_ts_path_and_filename, 0, path_length );
+  string data_filename = path + "data.xml";
+
+  FILE * data_file = fopen( data_filename.c_str(), "r" );
+
+  string looked_in = data_filename;
+
+  if ( data_file != nullptr ) {
+    // If the data.xml file exists, look in it.
+    found = ProblemSpec::findBlock( "<Data>", data_file );
+  }
+  else {
+    // Otherwise, look in the original timestep.xml file.
     found = ProblemSpec::findBlock( "<Data>", ts_file );
-    data_file_name = d_ts_path_and_filename;
+    looked_in = d_ts_path_and_filename;
   }
 
   if( !found ) {
-    throw InternalError( "Cannot find <Data> in " + data_file_name, __FILE__, __LINE__ );
+    throw InternalError( "Cannot find <Data> in " + looked_in, __FILE__, __LINE__ );
   }
 
   bool done = false;
   while( !done ) {
 
     string line = "";
-    if (grid_file != nullptr) {
-      line = UintahXML::getLine( grid_file );
-    } else {
+    if ( data_file != nullptr ) {
+      line = UintahXML::getLine( data_file );
+    }
+    else {
       line = UintahXML::getLine( ts_file );
     }
     if( line == "" || line == "</Data>" ) {
@@ -1452,7 +1452,7 @@ DataArchive::TimeData::init()
       ts_doc.getAttributes( attributes );
       string datafile = attributes[ "href" ];
       if( datafile == "" ) {
-        throw InternalError("DataArchive::TimeData::init() - 'href' not found", __FILE__, __LINE__);
+        throw InternalError( "DataArchive::TimeData::init() - 'href' not found", __FILE__, __LINE__ );
       }
       string proc = attributes["proc"];
 
@@ -1469,8 +1469,7 @@ DataArchive::TimeData::init()
           }
       */
       if( datafile == "global.xml" ) {
-        // Assuming that global.xml will always be small and thus using normal
-        // xml lib parsing...
+        // Assuming that global.xml will always be small and thus using normal xml lib parsing...
         parseFile( d_ts_directory + datafile, -1, -1 );
       }
       else {
@@ -1494,14 +1493,15 @@ DataArchive::TimeData::init()
       }
     }
     else {
-      throw InternalError("DataArchive::TimeData::init() - bad line in <Data> block...", __FILE__, __LINE__);
+      throw InternalError( "DataArchive::TimeData::init() - bad line in <Data> block...", __FILE__, __LINE__ );
     }
   } // end while()
 
   fclose( ts_file );
-  if (grid_file)
-    fclose( grid_file );
-#endif
+
+  if ( data_file ) {
+    fclose( data_file );
+  }
 
 } // end init()
 //______________________________________________________________________
@@ -1511,7 +1511,9 @@ DataArchive::TimeData::purgeCache()
 {
   d_grid = 0;
 
-  d_datafileInfo.remove_all();
+  d_datafileInfoIndex.clear();
+  d_datafileInfoValue.clear();
+  
   d_patchInfo.clear();
   d_varInfo.clear();
   d_xmlFilenames.clear();
@@ -1530,21 +1532,21 @@ DataArchive::TimeData::parseFile( const string & filename, int levelNum, int bas
   // Materials are the same for all patches on a level - only parse them from one file.
   bool addMaterials = levelNum >= 0 && d_matlInfo[levelNum].size() == 0;
 
-  for( ProblemSpecP vnode = top->getFirstChild(); vnode != 0; vnode=vnode->getNextSibling() ){
+  for( ProblemSpecP vnode = top->getFirstChild(); vnode != nullptr; vnode=vnode->getNextSibling() ){
     if(vnode->getNodeName() == "Variable") {
       string varname;
       if( !vnode->get("variable", varname) ) {
-        throw InternalError("Cannot get variable name", __FILE__, __LINE__);
+        throw InternalError( "Cannot get variable name", __FILE__, __LINE__ );
       }
 
       int patchid;
       if(!vnode->get("patch", patchid) && !vnode->get("region", patchid)) {
-        throw InternalError("Cannot get patch id", __FILE__, __LINE__);
+        throw InternalError( "Cannot get patch id", __FILE__, __LINE__ );
       }
 
       int index;
       if(!vnode->get("index", index)) {
-        throw InternalError("Cannot get index", __FILE__, __LINE__);
+        throw InternalError( "Cannot get index", __FILE__, __LINE__ );
       }
 
       if (addMaterials) {
@@ -1560,19 +1562,19 @@ DataArchive::TimeData::parseFile( const string & filename, int levelNum, int bas
 
       string type = attributes["type"];
       if( type == "" ) {
-        throw InternalError("DataArchive::query:Variable doesn't have a type", __FILE__, __LINE__);
+        throw InternalError( "DataArchive::query:Variable doesn't have a type", __FILE__, __LINE__ );
       }
       long start;
       if( !vnode->get("start", start) ) {
-        throw InternalError("DataArchive::query:Cannot get start", __FILE__, __LINE__);
+        throw InternalError( "DataArchive::query:Cannot get start", __FILE__, __LINE__ );
       }
       long end;
       if( !vnode->get("end", end) ) {
-        throw InternalError("DataArchive::query:Cannot get end", __FILE__, __LINE__);
+        throw InternalError( "DataArchive::query:Cannot get end", __FILE__, __LINE__ );
       }
       string filename;
       if( !vnode->get("filename", filename) ) {
-        throw InternalError("DataArchive::query:Cannot get filename", __FILE__, __LINE__);
+        throw InternalError( "DataArchive::query:Cannot get filename", __FILE__, __LINE__ );
       }
 
       // Not required
@@ -1611,7 +1613,7 @@ DataArchive::TimeData::parseFile( const string & filename, int levelNum, int bas
         d_globaldata = filename;
       }
       else {
-        ASSERTRANGE(patchid-basePatch, 0, (int)d_patchInfo[levelNum].size());
+        ASSERTRANGE( patchid-basePatch, 0, (int)d_patchInfo[levelNum].size() );
 
         PatchData& patchinfo = d_patchInfo[levelNum][patchid-basePatch];
         if (!patchinfo.parsed) {
@@ -1622,12 +1624,13 @@ DataArchive::TimeData::parseFile( const string & filename, int levelNum, int bas
       VarnameMatlPatch vmp(varname, index, patchid);
       DataFileInfo     dummy;
 
-      if (d_datafileInfo.lookup(vmp, dummy) == 1) {
-        //cerr << "Duplicate variable name: " << name << endl;
+      if( std::find( d_datafileInfoIndex.begin(), d_datafileInfoIndex.end(), vmp ) != d_datafileInfoIndex.end() ) {
+        // cerr << "Duplicate variable name: " << name << endl;
       }
       else {
-        DataFileInfo dfi(start, end, numParticles);
-        d_datafileInfo.insert(vmp, dfi);
+        DataFileInfo dfi( start, end, numParticles );
+        d_datafileInfoIndex.push_back( vmp );
+        d_datafileInfoValue.push_back( dfi );
       }
     }
     else if( vnode->getNodeType() != ProblemSpec::TEXT_NODE ) {
@@ -1641,7 +1644,8 @@ DataArchive::TimeData::parseFile( const string & filename, int levelNum, int bas
 void
 DataArchive::TimeData::parsePatch( const Patch * patch )
 {
-  ASSERT(d_grid != 0);
+  ASSERT( d_grid != nullptr );
+
   if( !patch ) {
     proc0cout << "parsePatch called with null patch....\n";
     return;
@@ -1656,30 +1660,49 @@ DataArchive::TimeData::parsePatch( const Patch * patch )
   int patchIndex       = real_patch->getLevelIndex();
 
   PatchData & patchinfo = d_patchInfo[levelIndex][patchIndex];
+
   if( patchinfo.parsed ) {
     return;
   }
 
-  // If this is a newer uda, the patch info in the grid will store the processor where the data is.
+  // If this is a newer uda, the patch info in the grid will store the
+  // processor where the data is.
   if( patchinfo.proc != -1 ) {
     ostringstream file;
     file << d_ts_directory << "l" << (int) real_patch->getLevel()->getIndex() << "/p" << setw(5) << setfill('0') << (int) patchinfo.proc << ".xml";
     parseFile( file.str(), levelIndex, levelBasePatchID );
+
+    // ARS - Commented out because the failure occurs regardless if
+    // the l0 refence is present or not.
+    
+    // if( !patchinfo.parsed )
+    // {
+    //   throw InternalError( "DataArchive::parsePatch() - found patch processor "
+    // 			   "id but could find the data in the coresponding "
+    // 			   "processor data file. Check for zero length "
+    // 			   "processor data files and remove their reference "
+    // 			   "from the timestep.xml via this script: "
+    // 			   "sed -i.bak '/Datafile href=\"l0/d' t*/timestep.xml.",
+    // 			   __FILE__, __LINE__ );
+    // }
   }
+  else
+  {
+    // Try making a guess as to the processor.  First go is to try the
+    // processor of the same index as the patch.  Many datasets have
+    // only one patch per processor, so this is a reasonable first
+    // attempt.  Future attemps could perhaps be smarter.
+    if (!patchinfo.parsed && patchIndex < (int)d_xmlParsed[levelIndex].size() && !d_xmlParsed[levelIndex][patchIndex]) {
+      parseFile( d_xmlFilenames[levelIndex][patchIndex], levelIndex, levelBasePatchID );
+      d_xmlParsed[levelIndex][patchIndex] = true;
+    }
 
-  // Try making a guess as to the processor.  First go is to try the processor of the same index as the patch.  Many datasets
-  // have only one patch per processor, so this is a reasonable first attempt.  Future attemps could perhaps be smarter.
-
-  if (!patchinfo.parsed && patchIndex < (int)d_xmlParsed[levelIndex].size() && !d_xmlParsed[levelIndex][patchIndex]) {
-    parseFile( d_xmlFilenames[levelIndex][patchIndex], levelIndex, levelBasePatchID );
-    d_xmlParsed[levelIndex][patchIndex] = true;
-  }
-
-  // failed the guess - parse the entire dataset for this level
-  if (!patchinfo.parsed) {
-    for (unsigned proc = 0; proc < d_xmlFilenames[levelIndex].size(); proc++) {
-      parseFile(d_xmlFilenames[levelIndex][proc], levelIndex, levelBasePatchID);
-      d_xmlParsed[levelIndex][proc] = true;
+    // Failed the guess - parse the entire dataset for this level
+    if ( !patchinfo.parsed ) {
+      for (unsigned proc = 0; proc < d_xmlFilenames[levelIndex].size(); proc++) {
+	parseFile( d_xmlFilenames[levelIndex][proc], levelIndex, levelBasePatchID );
+	d_xmlParsed[levelIndex][proc] = true;
+      }
     }
   }
 }
@@ -1693,7 +1716,7 @@ DataArchive::getOldDelt( int restart_index )
   TimeData& timedata = getTimeData( restart_index );
   FILE * fp = fopen( timedata.d_ts_path_and_filename.c_str(), "r" );
   if( fp == nullptr ) {
-    throw InternalError("DataArchive::setOldDelt() failed open datafile.", __FILE__, __LINE__);
+    throw InternalError( "DataArchive::setOldDelt() failed open datafile.", __FILE__, __LINE__ );
   }
   // Note, old UDAs had a <delt> flag, but that was deprecated long ago in favor of the <oldDelt>
   // flag which is what we are going to look for here.
@@ -1704,7 +1727,7 @@ DataArchive::getOldDelt( int restart_index )
 
     if( line == "" ) {
       fclose( fp );
-      throw InternalError("DataArchive::setOldDelt() failed to find <oldDelt>.", __FILE__, __LINE__);
+      throw InternalError( "DataArchive::setOldDelt() failed to find <oldDelt>.", __FILE__, __LINE__ );
     }
     else if( line.compare( 0, 9, "<oldDelt>" ) == 0 ) {
       vector<string> pieces = UintahXML::splitXMLtag( line );
@@ -1721,16 +1744,17 @@ DataArchive::getOldDelt( int restart_index )
 // is in the correct order - in other words, anything after </Data> is component related,
 // and everything before it can be removed.
 //
-// Now that we are using the grid.xml for <Grid> and <Data> sections, this function is altered
-// slightly.  Read in from the beginning of the <Uintah_timestep> including the <Meta> section.
+// Now that we are using grid.xml for the <Grid> and data.xml for the <Data> sections, this function is
+// altered slightly.  Read in from the beginning of the <Uintah_timestep> including the <Meta> section.
+//
 ProblemSpecP
 DataArchive::getTimestepDocForComponent( int restart_index )
 {
-  TimeData& timedata = getTimeData( restart_index );
-  FILE * fp = fopen( timedata.d_ts_path_and_filename.c_str(), "r" );
+  TimeData & timedata = getTimeData( restart_index );
+  FILE     * fp       = fopen( timedata.d_ts_path_and_filename.c_str(), "r" );
 
   if( fp == nullptr ) {
-    throw InternalError("DataArchive::getTimespecDocForComponent() failed open datafile.", __FILE__, __LINE__);
+    throw InternalError( "DataArchive::getTimespecDocForComponent() failed open datafile.", __FILE__, __LINE__ );
   }
 
 #if 0
@@ -1741,7 +1765,7 @@ DataArchive::getTimestepDocForComponent( int restart_index )
   }
 
   if( !found ) {
-    throw InternalError("DataArchive::getTimespecDocForComponent() failed to find </Data>.", __FILE__, __LINE__);
+    throw InternalError( "DataArchive::getTimespecDocForComponent() failed to find </Data>.", __FILE__, __LINE__ );
   }
 #endif
 
@@ -1772,11 +1796,13 @@ DataArchive::queryMaterials( const string & varname,
                              const Patch  * patch,
                                    int      index )
 {
-  double start = Time::currentSeconds();
+  Timers::Simple timer;
+  timer.start();
+
   d_lock.lock();
 
   TimeData& timedata = getTimeData( index );
-  timedata.parsePatch(patch);
+  timedata.parsePatch( patch );
 
   ConsecutiveRangeSet matls;
 
@@ -1785,13 +1811,15 @@ DataArchive::queryMaterials( const string & varname,
     VarnameMatlPatch vmp(varname, i-1, patch->getRealPatch()->getID());
     DataFileInfo dummy;
 
-    if (timedata.d_datafileInfo.lookup(vmp, dummy) == 1) {
+    if( std::find( timedata.d_datafileInfoIndex.begin(), timedata.d_datafileInfoIndex.end(), vmp ) != timedata.d_datafileInfoIndex.end() ) {
       matls.addInOrder(i-1);
     }
   }
 
   d_lock.unlock();
-  dbg << "DataArchive::queryMaterials completed in " << Time::currentSeconds()-start << " seconds\n";
+
+  dbg << "DataArchive::queryMaterials completed in " << timer().seconds()
+      << " seconds\n";
 
   return matls;
 }
@@ -1800,13 +1828,14 @@ DataArchive::queryMaterials( const string & varname,
 int
 DataArchive::queryNumMaterials(const Patch* patch, int index)
 {
-  double start = Time::currentSeconds();
+  Timers::Simple timer;
+  timer.start();
 
   d_lock.lock();
 
   TimeData& timedata = getTimeData( index );
 
-  timedata.parsePatch(patch);
+  timedata.parsePatch( patch );
 
   int numMatls = -1;
 
@@ -1816,9 +1845,11 @@ DataArchive::queryNumMaterials(const Patch* patch, int index)
     }
   }
 
-  dbg << "DataArchive::queryNumMaterials completed in " << Time::currentSeconds()-start << " seconds\n";
-
   d_lock.unlock();
+
+  dbg << "DataArchive::queryNumMaterials completed in " << timer().seconds()
+      << " seconds\n";
+
   return numMatls;
 }
 
@@ -1833,7 +1864,7 @@ DataArchive::exists( const string& varname,
   d_lock.lock();
 
   TimeData& timedata = getTimeData(timeStep);
-  timedata.parsePatch(patch);
+  timedata.parsePatch( patch );
 
   int levelIndex = patch->getLevel()->getIndex();
 
@@ -1842,11 +1873,12 @@ DataArchive::exists( const string& varname,
     VarnameMatlPatch vmp( varname, i-1, patch->getRealPatch()->getID() );
     DataFileInfo dummy;
 
-    if (timedata.d_datafileInfo.lookup(vmp, dummy) == 1){
+    if( std::find( timedata.d_datafileInfoIndex.begin(), timedata.d_datafileInfoIndex.end(), vmp ) != timedata.d_datafileInfoIndex.end() ) {
       d_lock.unlock();
       return true;
     }
   }
+
   d_lock.unlock();
 
   return false;

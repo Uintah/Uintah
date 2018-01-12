@@ -3,7 +3,7 @@
 <!--     This contains the grid variables used for all 3 phases         -->
 <!--____________________________________________________________________-->
 <Uintah_Include>
-  <Grid>
+  <Grid doAMR="true">
     <BoundaryConditions>
       <!--______________LEFT____________________-->
       <Face side = "x-">

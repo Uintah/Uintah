@@ -1,29 +1,17 @@
 #include <CCA/Components/Arches/Task/SampleTask.h>
-#include <CCA/Components/Arches/Operators/Operators.h>
-
-#include <spatialops/Nebo.h>
-#include <spatialops/structured/stencil/FVStaggeredOperatorTypes.h>
-
 
 using namespace Uintah;
-using namespace SpatialOps;
-using SpatialOps::operator *;
-typedef SVolField   SVolF;
-typedef SSurfXField SurfX;
-typedef SSurfYField SurfY;
-typedef SSurfZField SurfZ;
-typedef SpatialOps::SpatFldPtr<SVolF> SVolFP;
-typedef SpatialOps::SpatFldPtr<SurfX> SurfXP;
-typedef SpatialOps::SpatFldPtr<SurfY> SurfYP;
-typedef SpatialOps::SpatFldPtr<SurfZ> SurfZP;
 
+//--------------------------------------------------------------------------------------------------
 SampleTask::SampleTask( std::string task_name, int matl_index ) :
 TaskInterface( task_name, matl_index ) {
 }
 
+//--------------------------------------------------------------------------------------------------
 SampleTask::~SampleTask(){
 }
 
+//--------------------------------------------------------------------------------------------------
 void
 SampleTask::problemSetup( ProblemSpecP& db ){
 
@@ -32,123 +20,88 @@ SampleTask::problemSetup( ProblemSpecP& db ){
 
 }
 
+//--------------------------------------------------------------------------------------------------
 void
-SampleTask::create_local_labels(){
-
-  register_new_variable<CCVariable<double> >( "a_sample_variable" );
-  register_new_variable<CCVariable<double> >( "a_result_variable" );
-
+SampleTask::register_timestep_init(
+  std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
+  const bool packed_tasks ){
 }
 
-//
-//------------------------------------------------
-//-------------- INITIALIZATION ------------------
-//------------------------------------------------
-//
-
+//--------------------------------------------------------------------------------------------------
 void
-SampleTask::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
+SampleTask::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
+
+//--------------------------------------------------------------------------------------------------
+void
+SampleTask::register_initialize(
+  std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
+  const bool packed_tasks ){
+
+  typedef ArchesFieldContainer AFC;
 
   //FUNCITON CALL     STRING NAME(VL)     TYPE       DEPENDENCY    GHOST DW     VR
-  register_variable( "a_sample_variable", ArchesFieldContainer::COMPUTES, variable_registry );
-  register_variable( "a_result_variable", ArchesFieldContainer::COMPUTES, variable_registry );
+  register_variable( "a_sample_field", AFC::REQUIRES, 0, AFC::NEWDW,  variable_registry );
+  register_variable( "a_result_field", AFC::COMPUTES, 0, AFC::NEWDW,  variable_registry );
 
 }
 
+//--------------------------------------------------------------------------------------------------
 void
-SampleTask::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                        SpatialOps::OperatorDatabase& opr ){
+SampleTask::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
+  CCVariable<double>& field  = *(tsk_info->get_uintah_field<CCVariable<double> >( "a_sample_field" ));
+  CCVariable<double>& result = *(tsk_info->get_uintah_field<CCVariable<double> >( "a_result_field" ));
 
-  using namespace SpatialOps;
-  using SpatialOps::operator *;
-
-  SVolFP field  = tsk_info->get_so_field<SVolF>( "a_sample_variable" );
-  SVolFP result = tsk_info->get_so_field<SVolF>( "a_result_variable" );
-
-  *field  <<= 1.1;
-  *result <<= 2.1;
-
-}
-//
-//------------------------------------------------
-//------------- TIMESTEP INIT --------------------
-//------------------------------------------------
-//
-void
-SampleTask::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
+  Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+  Uintah::parallel_for( range, [&](int i, int j, int k){
+    field(i,j,k) = 1.1;
+    result(i,j,k) = 2.1;
+  });
 }
 
-void
-SampleTask::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                          SpatialOps::OperatorDatabase& opr ){
-
-}
-
-
-
-//
-//------------------------------------------------
-//------------- TIMESTEP WORK --------------------
-//------------------------------------------------
-//
-
+//--------------------------------------------------------------------------------------------------
 //Register all variables both local and those needed from elsewhere that are required for this task.
 void
-SampleTask::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
+SampleTask::register_timestep_eval(
+  std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
+  const int time_substep, const bool packed_tasks ){
+
+  typedef ArchesFieldContainer AFC;
 
   //FUNCITON CALL     STRING NAME(VL)     TYPE       DEPENDENCY    GHOST DW     VR
-  register_variable( "a_sample_variable", ArchesFieldContainer::COMPUTES, variable_registry, time_substep );
-  register_variable( "a_result_variable", ArchesFieldContainer::COMPUTES, variable_registry, time_substep );
-  register_variable( "density",           ArchesFieldContainer::REQUIRES,       1, ArchesFieldContainer::LATEST, variable_registry, time_substep );
-  register_variable( "uVelocitySPBC",     ArchesFieldContainer::REQUIRES,       1, ArchesFieldContainer::LATEST, variable_registry, time_substep );
-  register_variable( "vVelocitySPBC",     ArchesFieldContainer::REQUIRES,       2, ArchesFieldContainer::LATEST, variable_registry, time_substep );
-  register_variable( "wVelocitySPBC",     ArchesFieldContainer::REQUIRES,       2, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+  register_variable( "a_sample_field", AFC::COMPUTES, variable_registry, time_substep );
+  register_variable( "a_result_field", AFC::COMPUTES, variable_registry, time_substep );
+  register_variable( "density",        AFC::REQUIRES, 1, AFC::LATEST, variable_registry, time_substep );
+
+  register_variable( "A", AFC::COMPUTES, variable_registry, time_substep );
 
 }
 
+//--------------------------------------------------------------------------------------------------
 //This is the work for the task.  First, get the variables. Second, do the work!
 void
-SampleTask::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                  SpatialOps::OperatorDatabase& opr ){
+SampleTask::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  using namespace SpatialOps;
-  using SpatialOps::operator *;
+  CCVariable<double>& field   = tsk_info->get_uintah_field_add<CCVariable<double> >( "a_sample_field" );
+  CCVariable<double>& result  = tsk_info->get_uintah_field_add<CCVariable<double> >( "a_result_field" );
+  CCVariable<double>& density = tsk_info->get_uintah_field_add<CCVariable<double> >( "density" );
 
-  //typedef SpatialOps::BasicOpTypes<SVolF>::GradX GradX;
-  //const GradX* const gradx = opr.retrieve_operator<GradX>();
+  //Three ways to get variables:
+  // Note that there are 'const' versions of these access calls to tsk_info as well. Just use a
+  // tsk_info->get_const_*
+  // By reference
+  //CCVariable<double>& A_ref = tsk_info->get_uintah_field_add<CCVariable<double> >("A");
+  // Pointer
+  //CCVariable<double>* A_ptr = tsk_info->get_uintah_field<CCVariable<double> >("A");
+  // Traditional Uintah Style
+  // But, in this case you lose some of the convenient feature of the Arches Task Interface
+  // which may or may not be important to you.
+  //CCVariable<double> A_trad;
+  //tsk_info->get_unmanaged_uintah_field<CCVariable<double> >("A", A_trad);
 
-  //Get uintah fields for work:
-  //CCVariable<double>*      field  = get_uintah_grid_var<CCVariable<double> >("a_sample_variable", var_map);
-  //CCVariable<double>*      result = get_uintah_grid_var<CCVariable<double> >("a_result_variable", var_map);
-  //constSFCXVariable<double>*    u = get_uintah_grid_var<constSFCXVariable<double> >("uVelocitySPBC", const_var_map);
-  //constSFCYVariable<double>*    v = get_uintah_grid_var<constSFCYVariable<double> >("vVelocitySPBC", const_var_map);
-
-  //Get spatialops variables for work:
-  SVolFP field   = tsk_info->get_so_field<SVolF>( "a_sample_variable" );
-  SVolFP result  = tsk_info->get_so_field<SVolF>( "a_result_variable" );
-  SVolFP const density = tsk_info->get_so_field<SVolF>( "density" );
-  SurfXP const u      = tsk_info->get_so_field<SurfX>("uVelocitySPBC" );
-  SurfYP const v      = tsk_info->get_so_field<SurfY>("vVelocitySPBC" );
-  SurfZP const w      = tsk_info->get_so_field<SurfZ>("wVelocitySPBC" );
-
-  *field <<= _value*(*density);
-
-  *result <<= (*field)*(*field);
-
-}
-//
-//------------------------------------------------
-//------------- BOUNDARY CONDITIONS --------------
-//------------------------------------------------
-//
-
-void
-SampleTask::register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
-}
-
-void
-SampleTask::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                        SpatialOps::OperatorDatabase& opr ){
-
+  Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
+  Uintah::parallel_for( range, [&](int i, int j, int k){
+    field(i,j,k) = _value * ( density(i,j,k));
+    result(i,j,k) = field(i,j,k)*field(i,j,k);
+  });
 }

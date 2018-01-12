@@ -64,7 +64,6 @@
      <artificial_damping_coeff>    0.0      </artificial_damping_coeff>
      <artificial_viscosity>        false    </artificial_viscosity>
      <use_load_curves>             false    </use_load_curves>
-     <erosion algorithm = "none"/>
    </MPM>
 
    <PhysicalConstants>

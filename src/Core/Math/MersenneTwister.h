@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -88,6 +88,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <math.h>
+#include <random>
 
 //#define FIXED_RANDOM_NUM
 
@@ -221,7 +222,7 @@ inline MTRand::uint32 MTRand::randInt()
         if( left == 0 ) reload();
         --left;
                 
-        register uint32 s1;
+        uint32 s1;
         s1 = *pNext++;
         s1 ^= (s1 >> 11);
         s1 ^= (s1 <<  7) & 0x9d2c5680UL;
@@ -266,9 +267,9 @@ inline void MTRand::seed( uint32 *const bigSeed, const uint32 seedLength )
         // in each element are discarded.
         // Just call seed() if you want to get array from /dev/urandom
         initialize(19650218UL);
-        register int i = 1;
-        register uint32 j = 0;
-        register int k = ( N > seedLength ? N : seedLength );
+        int i = 1;
+        uint32 j = 0;
+        int k = ( N > seedLength ? N : seedLength );
         for( ; k; --k )
         {
                 state[i] =
@@ -313,17 +314,25 @@ inline void MTRand::seed()
         if( urandom )
         {
                 uint32 bigSeed[N];
-                register uint32 *s = bigSeed;
-                register int i = N;
-                register bool success = true;
+                uint32 *s = bigSeed;
+                int i = N;
+                bool success = true;
                 while( success && i-- )
                         success = fread( s++, sizeof(uint32), 1, urandom );
                 fclose(urandom);
                 if( success ) { seed( bigSeed, N );  return; }
         }
 #endif  
-        // Was not successful, so use time() and clock() instead
-        seed( hash( time(nullptr), clock() ) );
+#if 0
+        //C++11 gives us a useful random number generator.  It replaces the above code.  It's
+        //also thread safe, meaning that two threads won't get the same random number at the same time
+        //Note that this has limited entropy, so seed shouldn't be called many, many times in quick succession.
+        std::random_device r;
+        seed (r());
+#endif
+        // Use this seed until we can confirm that the merge is correct. 06/05/17 -Todd
+        seed( hash( time(nullptr),clock() ) );
+
 }
 
 
@@ -333,9 +342,9 @@ inline void MTRand::initialize( const uint32 seed )
         // See Knuth TAOCP Vol 2, 3rd Ed, p.106 for multiplier.
         // In previous versions, most significant bits (MSBs) of the seed affect
         // only MSBs of the state array.  Modified 9 Jan 2002 by Makoto Matsumoto.
-        register uint32 *s = state;
-        register uint32 *r = state;
-        register int i = 1;
+        uint32 *s = state;
+        uint32 *r = state;
+        int i = 1;
         *s++ = seed & 0xffffffffUL;
         for( ; i < N; ++i )
         {
@@ -349,8 +358,8 @@ inline void MTRand::reload()
 {
         // Generate N new values in state
         // Made clearer and faster by Matthew Bellew (matthew.bellew@home.com)
-        register uint32 *p = state;
-        register int i;
+        uint32 *p = state;
+        int i;
         for( i = N - M; i--; ++p )
                 *p = twist( p[M], p[0], p[1] );
         for( i = M; --i; ++p )
@@ -389,9 +398,9 @@ inline MTRand::uint32 MTRand::hash( time_t t, clock_t c )
 
 inline void MTRand::save( uint32* saveArray ) const
 {
-        register uint32 *sa = saveArray;
-        register const uint32 *s = state;
-        register int i = N;
+        uint32 *sa = saveArray;
+        const uint32 *s = state;
+        int i = N;
         for( ; i--; *sa++ = *s++ ) {}
         *sa = left;
 }
@@ -399,9 +408,9 @@ inline void MTRand::save( uint32* saveArray ) const
 
 inline void MTRand::load( uint32 *const loadArray )
 {
-        register uint32 *s = state;
-        register uint32 *la = loadArray;
-        register int i = N;
+        uint32 *s = state;
+        uint32 *la = loadArray;
+        int i = N;
         for( ; i--; *s++ = *la++ ) {}
         left = *la;
         pNext = &state[N-left];
@@ -410,8 +419,8 @@ inline void MTRand::load( uint32 *const loadArray )
 
 inline std::ostream& operator<<( std::ostream& os, const MTRand& mtrand )
 {
-        register const MTRand::uint32 *s = mtrand.state;
-        register int i = mtrand.N;
+        const MTRand::uint32 *s = mtrand.state;
+        int i = mtrand.N;
         for( ; i--; os << *s++ << "\t" ) {}
         return os << mtrand.left;
 }
@@ -419,8 +428,8 @@ inline std::ostream& operator<<( std::ostream& os, const MTRand& mtrand )
 
 inline std::istream& operator>>( std::istream& is, MTRand& mtrand )
 {
-        register MTRand::uint32 *s = mtrand.state;
-        register int i = mtrand.N;
+        MTRand::uint32 *s = mtrand.state;
+        int i = mtrand.N;
         for( ; i--; is >> *s++ ) {}
         is >> mtrand.left;
         mtrand.pNext = &mtrand.state[mtrand.N-mtrand.left];

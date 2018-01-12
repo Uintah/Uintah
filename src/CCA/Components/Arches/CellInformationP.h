@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -26,12 +26,36 @@
 #ifndef UINTAH_HOMEBREW_CellInformationP_H
 #define UINTAH_HOMEBREW_CellInformationP_H
 
+#include <CCA/Components/Arches/CellInformation.h>
+#include <Core/Exceptions/InternalError.h>
+#include <Core/Grid/Variables/PerPatch.h>
+#include <Core/Util/Handle.h>
+
 namespace Uintah {
 
 template<class T> class Handle;
 class CellInformation;
 typedef Handle<CellInformation> CellInformationP;
 
+  template<>
+  inline void PerPatch<CellInformationP>::readNormal(std::istream& in, bool swapBytes)
+  {
+    // Note if swap bytes for CellInformationP is implemente then this
+    // template specialization can be deleted as the general template
+    // will work.
+    SCI_THROW(InternalError("Swap bytes for CellInformationP is not implemented", __FILE__, __LINE__));
+
+    ssize_t linesize = (ssize_t)(sizeof(CellInformationP));
+    
+    CellInformationP val;
+    
+    in.read((char*) &val, linesize);
+    
+    // if (swapBytes)
+    //   Uintah::swapbytes(val);
+    
+    value = std::make_shared<CellInformationP>(val);
+  }
 } // End namespace Uintah
 
 #endif

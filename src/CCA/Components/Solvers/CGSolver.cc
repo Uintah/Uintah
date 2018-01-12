@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -44,17 +44,17 @@
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/MinMax.h>
-#include <Core/Util/Time.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Util/Timers/Timers.hpp>
 #include <iomanip>
 
 using namespace std;
 using namespace Uintah;
 //__________________________________
 //  To turn on normal output
-//  setenv SCI_DEBUG "CGSOLVER_DOING_COUT:+"
+//  setenv SCI_DEBUG "SOLVER_DOING_COUT:+"
 
-static DebugStream cout_doing("CGSOLVER_DOING_COUT", false);
+static DebugStream cout_doing("SOLVER_DOING_COUT", false);
 
 void Mult(Array3<double>& B, const Array3<Stencil7>& A,
           const Array3<double>& X, CellIterator iter,
@@ -220,7 +220,7 @@ void ScMult_Add(Array3<double>& r, double s,
 namespace Uintah {
 
 CGSolver::CGSolver(const ProcessorGroup* myworld)
-  : UintahParallelComponent(myworld)
+  : SolverCommon(myworld)
 {
 }
 
@@ -660,7 +660,10 @@ public:
   {
     if(cout_doing.active())
       cout_doing << "CGSolver::solve" << endl;
-    double tstart = Time::currentSeconds();
+
+    Timers::Simple timer;
+    timer.start();
+
     SchedulerP subsched = sched->createSubScheduler();
     DataWarehouse::ScrubMode old_dw_scrubmode = old_dw->setScrubbing(DataWarehouse::ScrubNone);
     DataWarehouse::ScrubMode new_dw_scrubmode = new_dw->setScrubbing(DataWarehouse::ScrubNone);
@@ -879,10 +882,10 @@ public:
     old_dw->setScrubbing(old_dw_scrubmode);
     new_dw->setScrubbing(new_dw_scrubmode);
 
-    double dt=Time::currentSeconds()-tstart;
+    double dt = timer().seconds();
     double mflops = (double(flops)*1.e-6)/dt;
     double memrate = (double(memrefs)*1.e-9)/dt;
-    if(pg->myrank() == 0){
+    if(pg->myRank() == 0){
       if(niter < params->maxiterations) {
         cout << "Solve of " << X_label->getName()
               << " on level " << level->getIndex()
@@ -939,17 +942,16 @@ private:
 //
 SolverParameters* CGSolver::readParameters(ProblemSpecP& params,
                                            const string& varname,
-                                           SimulationStateP& state)
+					   const SimulationStateP & state)
 {
 
   CGSolverParams* p = new CGSolverParams();
   if(params){
-    for(ProblemSpecP param = params->findBlock("Parameters"); param != 0;
-        param = param->findNextBlock("Parameters")) {
+    for(ProblemSpecP param = params->findBlock("Parameters"); param != nullptr; param = param->findNextBlock("Parameters")) {
       string variable;
-      if(param->getAttribute("variable", variable) && variable != varname)
+      if(param->getAttribute("variable", variable) && variable != varname) {
         continue;
-
+      }
       param->get("initial_tolerance", p->initial_tolerance);
       param->get("tolerance", p->tolerance);
       param->getWithDefault ("maxiterations",   p->maxiterations,  75);
@@ -1065,12 +1067,15 @@ void CGSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
 
   task->requires(which_b_dw, b, Ghost::None, 0);
   task->hasSubScheduler();
-  LoadBalancer* lb = sched->getLoadBalancer();
-  const PatchSet* perproc_patches = lb->getPerProcessorPatchSet(level);
+
+  LoadBalancer * lb              = sched->getLoadBalancer();
+  const PatchSet   * perproc_patches = lb->getPerProcessorPatchSet( level );
+
   sched->addTask(task, perproc_patches, matls);
 }
 
-string CGSolver::getName(){
+string
+CGSolver::getName() {
   return "CGSolver";
 }
 

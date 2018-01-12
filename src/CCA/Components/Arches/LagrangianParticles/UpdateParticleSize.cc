@@ -1,14 +1,7 @@
 #include <CCA/Components/Arches/LagrangianParticles/UpdateParticleSize.h>
-#include <CCA/Components/Arches/Operators/Operators.h>
 #include <CCA/Components/Arches/ArchesParticlesHelper.h>
 
-#include <spatialops/Nebo.h>
-#include <spatialops/structured/stencil/FVStaggeredOperatorTypes.h>
-
-
-using namespace Uintah;
-using namespace SpatialOps;
-using SpatialOps::operator *;
+namespace Uintah{
 
 UpdateParticleSize::UpdateParticleSize( std::string task_name, int matl_index ) :
 TaskInterface( task_name, matl_index ) {
@@ -43,55 +36,11 @@ UpdateParticleSize::problemSetup( ProblemSpecP& db ){
 
 }
 
-//
-//------------------------------------------------
-//-------------- INITIALIZATION ------------------
-//------------------------------------------------
-//
-
-void
-UpdateParticleSize::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
-
-}
-
-void
-UpdateParticleSize::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                        SpatialOps::OperatorDatabase& opr ){
-
-
-  using namespace SpatialOps;
-  using SpatialOps::operator *;
-
-
-}
-
-
-//
-//------------------------------------------------
-//------------- TIMESTEP INIT --------------------
-//------------------------------------------------
-//
-void
-UpdateParticleSize::register_timestep_init(
-  std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
-}
-
-void
-UpdateParticleSize::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                          SpatialOps::OperatorDatabase& opr ){
-}
-
-
-//
-//------------------------------------------------
-//------------- TIMESTEP WORK --------------------
-//------------------------------------------------
-//
-
+//--------------------------------------------------------------------------------------------------
 void
 UpdateParticleSize::register_timestep_eval(
   std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
-  const int time_substep ){
+  const int time_substep, const bool packed_tasks ){
 
   register_variable( _size_name, ArchesFieldContainer::COMPUTES, variable_registry );
 
@@ -102,17 +51,19 @@ UpdateParticleSize::register_timestep_eval(
 
 //This is the work for the task.  First, get the variables. Second, do the work!
 void
-UpdateParticleSize::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                  SpatialOps::OperatorDatabase& opr ){
+UpdateParticleSize::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  using namespace SpatialOps;
-  using SpatialOps::operator *;
-  typedef SpatialOps::SpatFldPtr<Particle::ParticleField> Pptr;
+  ParticleTuple pd_t = tsk_info->get_uintah_particle_field( _size_name );
+  ParticleVariable<double>& pd = *(std::get<0>(pd_t));
+  ParticleSubset* p_subset = std::get<1>(pd_t);
 
-  Pptr pd = tsk_info->get_particle_field( _size_name );
+  ConstParticleTuple old_pd_t = tsk_info->get_const_uintah_particle_field( _size_name );
+  constParticleVariable<double>& old_pd = *(std::get<0>(old_pd_t));
 
-  Pptr old_pd = tsk_info->get_const_particle_field( _size_name );
-
-  *pd <<= *old_pd;
+  for (auto iter = p_subset->begin(); iter != p_subset->end(); iter++){
+    particleIndex i = *iter;
+    pd[i] = old_pd[i];
+  }
 
 }
+} //namespace Uintah

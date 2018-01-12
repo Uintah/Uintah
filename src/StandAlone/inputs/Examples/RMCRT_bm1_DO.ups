@@ -23,7 +23,7 @@
   <!--____________________________________________________________________-->
   <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
   <!--____________________________________________________________________-->
-  <Grid>
+  <Grid doAMR="true">
     <BoundaryConditions>
       <Face side = "x-">
         <BCType id = "0"   label = "color"     var = "Dirichlet"> 
@@ -125,9 +125,9 @@
   -->
   </Grid>
   <!--__________________________________-->
-  <AMR>
+  <AMR type="StaticGridML" >
     <useLockStep> true </useLockStep>
-  </AMR>    
+  </AMR>
   <!--__________________________________-->
   <DataArchiver>
   <filebase>RMCRT_bm1_DO.uda</filebase>
@@ -138,7 +138,9 @@
       <save label = "abskg"/>             <!-- doubles -->
       <save label = "color"          levels="-1"/>
       <save label = "divQ"           levels="-1"/>
+<!--      <save label = "Ray_PPTimer"    levels="-1"/>  -->
       <save label = "cellType" />
+
 <!--
       <save label = "mag_grad_abskg"   levels="-1"/>
       <save label = "mag_grad_sigmaT4" levels="-1"/>
@@ -161,7 +163,8 @@
     <StefanBoltzmann>   5.67051e-8  </StefanBoltzmann>
 
     <algorithm type='dataOnion'>
-      <halo>           [4,4,4]      </halo>
+      <haloCells>          [4,4,4]  </haloCells> 
+ <!--     <haloLength>          .1      </haloLength> -->
            
       <ROI_extents type='patch_based'/>
 <!--       

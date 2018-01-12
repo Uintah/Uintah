@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -214,7 +214,7 @@ void printParticleID(DataArchive* da, int mat,
     LevelP level = grid->getLevel(l);
 
     // Loop thru all the patches
-    Level::const_patchIterator iter = level->patchesBegin(); 
+    Level::const_patch_iterator iter = level->patchesBegin(); 
     int patchIndex = 0;
     for(; iter != level->patchesEnd(); iter++){
       const Patch* patch = *iter;

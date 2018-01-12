@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -62,7 +62,7 @@ cpdiInterpolator* cpdiInterpolator::clone(const Patch* patch)
   return scinew cpdiInterpolator(patch, d_lcrit);
 }
     
-void cpdiInterpolator::findCellAndWeights(const Point& pos,
+int cpdiInterpolator::findCellAndWeights(const Point& pos,
                                             vector<IntVector>& ni, 
                                             vector<double>& S,
                                             const Matrix3& size,
@@ -92,6 +92,16 @@ void cpdiInterpolator::findCellAndWeights(const Point& pos,
   Vector lb = relative_node_location[5];
   Vector lc = relative_node_location[7];
   Vector ld = relative_node_location[4];
+
+// Check to see if particles need to be scaled to stay within a
+// circumscribing sphere of radius d_lcrit.  la, lb, lc, and ld
+// are the distances from the particle center to the particle corners
+// For example, for a 1 PPC case, the lN are sqrt(.5*.5+.5*.5+.5*.5)=.866
+// All measurements are normalized to cell width.
+
+// This scaling was implemented to prevent the need for arbitrary number
+// of ghost nodes in parallel calculations, but its use may also improve
+// accuracy.
 
   int scale_flag = 0;
   if(la.length2()>lcritsq){
@@ -226,9 +236,10 @@ void cpdiInterpolator::findCellAndWeights(const Point& pos,
     S[i86] = one_over_8*phi[6];
     S[i87] = one_over_8*phi[7];
   }
+  return 64;
 }
  
-void cpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
+int cpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
                                                    vector<IntVector>& ni,
                                                    vector<Vector>& d_S,
                                                    const Matrix3& size,
@@ -454,9 +465,10 @@ void cpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
     d_S[i87][1] = alpha[i][1]*phi[7];
     d_S[i87][2] = alpha[i][2]*phi[7];
   }
+  return 64;
 }
 
-void cpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
+int cpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
                                                          vector<IntVector>& ni,
                                                          vector<double>& S,
                                                          vector<Vector>& d_S,
@@ -565,7 +577,6 @@ void cpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
   double fy1;
   double fz1;
 
-
   int ix,iy,iz;
   Vector r1=Vector(dsize(0,0),dsize(1,0),dsize(2,0));
   Vector r2=Vector(dsize(0,1),dsize(1,1),dsize(2,1));
@@ -592,7 +603,7 @@ void cpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
   alpha[3][1]   =  one_over_4V*(r2[0]*r3[2]-r2[2]*r3[0]+r1[0]*r3[2]-r1[2]*r3[0]+r1[0]*r2[2]-r1[2]*r2[0]);
   alpha[3][2]   =  one_over_4V*(-r2[0]*r3[1]+r2[1]*r3[0]-r1[0]*r3[1]+r1[1]*r3[0]-r1[0]*r2[1]+r1[1]*r2[0]);
 
-  alpha[4][0]   = one_over_4V*(-r2[1]*r3[2]+r2[2]*r3[1]+r1[1]*r3[2]-r1[2]*r3[1]+r1[1]*r2[2]-r1[2]*r2[1]);
+  alpha[4][0]   =  one_over_4V*(-r2[1]*r3[2]+r2[2]*r3[1]+r1[1]*r3[2]-r1[2]*r3[1]+r1[1]*r2[2]-r1[2]*r2[1]);
   alpha[4][1]   =  one_over_4V*(r2[0]*r3[2]-r2[2]*r3[0]-r1[0]*r3[2]+r1[2]*r3[0]-r1[0]*r2[2]+r1[2]*r2[0]);
   alpha[4][2]   =  one_over_4V*(-r2[0]*r3[1]+r2[1]*r3[0]+r1[0]*r3[1]-r1[1]*r3[0]+r1[0]*r2[1]-r1[1]*r2[0]);
 
@@ -600,9 +611,9 @@ void cpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
   alpha[5][1]   =  one_over_4V*(-r2[0]*r3[2]+r2[2]*r3[0]-r1[0]*r3[2]+r1[2]*r3[0]-r1[0]*r2[2]+r1[2]*r2[0]);
   alpha[5][2]   =  one_over_4V*(r2[0]*r3[1]-r2[1]*r3[0]+r1[0]*r3[1]-r1[1]*r3[0]+r1[0]*r2[1]-r1[1]*r2[0]);
 
-  alpha[6][0]   = one_over_4V* (r2[1]*r3[2]-r2[2]*r3[1]-r1[1]*r3[2]+r1[2]*r3[1]+r1[1]*r2[2]-r1[2]*r2[1]);
-  alpha[6][1]   = one_over_4V* (-r2[0]*r3[2]+r2[2]*r3[0]+r1[0]*r3[2]-r1[2]*r3[0]-r1[0]*r2[2]+r1[2]*r2[0]);
-  alpha[6][2]   = one_over_4V* (r2[0]*r3[1]-r2[1]*r3[0]-r1[0]*r3[1]+r1[1]*r3[0]+r1[0]*r2[1]-r1[1]*r2[0]);
+  alpha[6][0]   =  one_over_4V* (r2[1]*r3[2]-r2[2]*r3[1]-r1[1]*r3[2]+r1[2]*r3[1]+r1[1]*r2[2]-r1[2]*r2[1]);
+  alpha[6][1]   =  one_over_4V* (-r2[0]*r3[2]+r2[2]*r3[0]+r1[0]*r3[2]-r1[2]*r3[0]-r1[0]*r2[2]+r1[2]*r2[0]);
+  alpha[6][2]   =  one_over_4V* (r2[0]*r3[1]-r2[1]*r3[0]-r1[0]*r3[1]+r1[1]*r3[0]+r1[0]*r2[1]-r1[1]*r2[0]);
 
   alpha[7][0]   =  one_over_4V*(-r2[1]*r3[2]+r2[2]*r3[1]-r1[1]*r3[2]+r1[2]*r3[1]+r1[1]*r2[2]-r1[2]*r2[1]);
   alpha[7][1]   =  one_over_4V*(r2[0]*r3[2]-r2[2]*r3[0]+r1[0]*r3[2]-r1[2]*r3[0]-r1[0]*r2[2]+r1[2]*r2[0]);
@@ -690,6 +701,7 @@ void cpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
     d_S[i87][1] = alpha[i][1]*phi[7];
     d_S[i87][2] = alpha[i][2]*phi[7];
   }
+  return 64;
 }
 
 int cpdiInterpolator::size()

@@ -251,7 +251,7 @@
      </MPM>
    </PhysicalBC>
 
-   <Grid>
+   <Grid doAMR="true">
      <Level>
        <Box label = "1">
          <lower>        [-.4,-.4,0.0]    </lower>

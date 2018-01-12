@@ -37,7 +37,6 @@
        <time_integrator>implicit</time_integrator>
        <dynamic>false</dynamic>
        <interpolator>linear</interpolator>
-       <do_grid_reset>false</do_grid_reset>
        <solver>petsc</solver>
        <iters_before_timestep_restart>15</iters_before_timestep_restart>
        <num_iters_to_decrease_delT>12</num_iters_to_decrease_delT>

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -31,6 +31,8 @@
 #include <iostream>
 #include <map>
 #include <mutex>
+#include <string>
+#include <sstream>
 #include <vector>
 
 using namespace Uintah;
@@ -99,9 +101,8 @@ TypeDescription::deleteAll()
   }
 
   killed = true;
-  std::vector<const TypeDescription*>::iterator iter = typelist_g->begin();
 
-  for(;iter != typelist_g->end();iter++) {
+  for(auto iter = typelist_g->begin(); iter != typelist_g->end();iter++) {
     delete *iter;
   }
 
@@ -115,8 +116,9 @@ TypeDescription::deleteAll()
 void
 TypeDescription::register_type()
 {
-  register_monitor register_write_lock{ Uintah::CrowdMonitor<TypeDescription::register_tag>::WRITER };
   {
+    register_monitor register_write_lock{ Uintah::CrowdMonitor<TypeDescription::register_tag>::WRITER };
+
     if (!types_g) {
       ASSERT(!killed);
       ASSERT(!typelist_g)
@@ -125,8 +127,7 @@ TypeDescription::register_type()
       typelist_g = scinew std::vector<const TypeDescription*>;
     }
 
-    std::map<std::string, const TypeDescription*>::iterator iter = types_g->find(getName());
-
+    auto iter = types_g->find(getName());
     if (iter == types_g->end()) {
       (*types_g)[getName()] = this;
     }
@@ -157,15 +158,18 @@ TypeDescription::getFileName() const
 const TypeDescription *
 TypeDescription::lookupType( const std::string & t )
 {
-  lookup_monitor lookup_read_lock{ Uintah::CrowdMonitor<TypeDescription::lookup_tag>::READER };
   {
+    lookup_monitor lookup_read_lock{ Uintah::CrowdMonitor<TypeDescription::lookup_tag>::READER };
+
     if (!types_g) {
       return 0;
     }
-    std::map<std::string, const TypeDescription*>::iterator iter = types_g->find(t);
+
+    auto iter = types_g->find(t);
     if (iter == types_g->end()) {
       return 0;
     }
+
     return iter->second;
   }
 }
@@ -174,18 +178,23 @@ MPI_Datatype
 TypeDescription::getMPIType() const
 {
   if (d_mpitype == MPI_Datatype(-1)) {
-    std::lock_guard<std::mutex> guard(get_mpi_type_lock);
+		// scope the lock_guard
     {
+      std::lock_guard<std::mutex> guard(get_mpi_type_lock);
       if (d_mpitype == MPI_Datatype(-1)) {
         if (d_mpitypemaker) {
           d_mpitype = (*d_mpitypemaker)();
-        } else {
-          throw InternalError("MPI Datatype requested, but do not know how to make it", __FILE__, __LINE__);
+        }
+        else {
+          throw InternalError( "MPI Datatype requested, but do not know how to make it", __FILE__, __LINE__ );
         }
       }
     }
+
   }
+
   ASSERT(d_mpitype != MPI_Datatype(-2));
+
   return d_mpitype;
 }
 
@@ -193,7 +202,44 @@ Variable *
 TypeDescription::createInstance() const
 {
   if (!d_maker) {
-    throw InternalError("Do not know how to create instance for type: " + getName(), __FILE__, __LINE__);
+    throw InternalError( "Do not know how to create instance for type: " + getName(), __FILE__, __LINE__ );
   }
+
   return (*d_maker)();
+}
+
+std::string
+TypeDescription::toString( Type type )
+{
+  switch( type ) {
+    case CCVariable:          return "CCVariable";
+    case NCVariable:          return "NCVariable";
+    case SFCXVariable:        return "SFCXVariable";
+    case SFCYVariable:        return "SFCYVariable";
+    case SFCZVariable:        return "SFCZVariable";
+    case ParticleVariable:    return "ParticleVariable";
+    case PerPatch:            return "PerPatch";
+    case Point:               return "Point";
+    case Vector:              return "Vector";
+    case Matrix3:             return "Matrix3";
+    case ReductionVariable:   return "ReductionVariable";
+    case SoleVariable:        return "SoleVariable";
+    case double_type:         return "double_type";
+    case float_type:          return "float_type";
+    case bool_type:           return "bool_type";
+    case int_type:            return "int_type";
+    case short_int_type:      return "short_int_type";
+    case long_type:           return "long_type";
+    case long64_type:         return "long64_type";
+    case Short27:             return "Short27";
+    case Stencil4:            return "Stencil4";
+    case Stencil7:            return "Stencil7";
+    case IntVector:           return "IntVector";
+    case Unknown:             return "Unknown";
+    case Other:               return "Other";
+    default:
+      std::stringstream msg;
+      msg << "Invalid type: " << type;
+      throw InternalError( msg.str(), __FILE__, __LINE__);
+  }
 }

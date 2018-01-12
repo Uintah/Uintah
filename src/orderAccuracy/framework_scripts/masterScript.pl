@@ -113,8 +113,8 @@ $ENV{"PATH"} = "$orgPath:$postProcessCmd_path:$sus_path:$scripts_path:$extraScri
 print "----------------------   \n";
 print "Using the following commands:\n";
 system("which sus") == 0               || die("\nCannot find the command sus $@");
-system("which octave")  == 0           || die("\nCannot find the command octave $@");
-system("which gnuplot") == 0           || die("\nCannot find the command gnuplot $@");
+#system("which octave")  == 0           || die("\nCannot find the command octave.  You may want to comment this out if you're not using octave $@");
+#system("which gnuplot") == 0           || die("\nCannot find the command gnuplot.  You may want to comment this out if you're not using octave  $@");
 system("which mpirun")  == 0           || die("\nCannot find the command mpirun $@");
 system("which xmlstarlet")  == 0       || die("\nCannot find the command xmlstarlet $@");
 system("which replace_XML_line")  == 0 || die("\nCannot find the command replace_XML_line $@");
@@ -226,6 +226,10 @@ system("which findReplace")       == 0 || die("\nCannot find the command findRep
        }
      }
      
+     # Bulletproofing
+     print "\t Checking that the tst file is a properly formatted xml file  \n";
+     system("xmlstarlet val --err $tstFile") == 0 ||  die("\nERROR: $tstFile, contains errors.\n");
+     
      # clean out any comment in the TST file
      system("xmlstarlet c14n --without-comments $tstFile > $tstFile.clean 2>&1");
      $tstFile = "$tstFile.clean";
@@ -235,7 +239,7 @@ system("which findReplace")       == 0 || die("\nCannot find the command findRep
      # run the tests
      print "\n\nLaunching: run_tests.pl $testing_path/$tstFile\n\n";
      my @args = (" $scripts_path/run_tests.pl","$testing_path/$tstFile", "$fw_path");
-     system("@args")==0  or die("ERROR(masterScript.pl): \tFailed running: (@args) \n");
+     system("@args")==0  or die("ERROR(masterScript.pl): \tFailed running: (@args) \n\n");
 
      chdir("..");
    }

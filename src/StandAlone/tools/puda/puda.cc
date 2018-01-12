@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -57,8 +57,6 @@
 #include <StandAlone/tools/puda/jacquie.h>
 #include <StandAlone/tools/puda/jim1.h>
 #include <StandAlone/tools/puda/jim2.h>
-#include <StandAlone/tools/puda/monica1.h>
-#include <StandAlone/tools/puda/monica2.h>
 #include <StandAlone/tools/puda/PIC.h>
 #include <StandAlone/tools/puda/POL.h>
 #include <StandAlone/tools/puda/pressure.h>
@@ -110,8 +108,6 @@ usage( const std::string& badarg, const std::string& progname )
   cerr << "  -ICE_momentum        ( momentum control volume analysis) \n";
   cerr << "  -jacquie             (finds burn rate vs pressure)\n";
   cerr << "  -pressure            (finds  pressure)\n";
-  cerr << "  -monica1             (Finds the maximum pressure in the domain.)\n";
-  cerr << "  -monica2             (Finds the sum of the cell centered kinetic energy in the domain.)\n";
   cerr << "  -AA_MMS_1            (1D periodic bar MMS)\n";
   cerr << "  -AA_MMS_2            (3D Axis aligned MMS)\n";
   cerr << "  -GV_MMS              (GeneralizedVortex MMS)\n"; //MMS
@@ -148,7 +144,7 @@ usage( const std::string& badarg, const std::string& progname )
        << "are used in conjuntion with -PTvar.\n\n";
     
   cerr << "USAGE IS NOT FINISHED\n\n";
-  exit(1);
+  exit( 1 );
 }
 
 void
@@ -203,7 +199,7 @@ gridstats( DataArchive* da,
       cout << "Total Number of Cells:" << hi-lo << "\n";
       cout << "dx:                   " << level->dCell() << "\n";
 
-      for(Level::const_patchIterator iter = level->patchesBegin();
+      for(Level::const_patch_iterator iter = level->patchesBegin();
           iter != level->patchesEnd(); iter++){
         const Patch* patch = *iter;
         cout << *patch << "\n"; 
@@ -219,7 +215,6 @@ gridstats( DataArchive* da,
 int
 main(int argc, char** argv)
 {
-  Uintah::Parallel::determineIfRunningUnderMPI( argc, argv );
   Uintah::Parallel::initializeManager(argc, argv);
 
   if (argc <= 1) {
@@ -265,11 +260,7 @@ main(int argc, char** argv)
       clf.do_varsummary = true;
     } else if(s == "-brief" ) {
       clf.be_brief = true;
-    } else if(s == "-monica1"){
-      clf.do_monica1 = true;
-    }else if(s == "-monica2"){
-      clf.do_monica2 = true;
-      } else if(s == "-jacquie"){
+    } else if(s == "-jacquie"){
       clf.do_jacquie = true;
     } else if(s == "-pressure"){
       clf.do_pressure = true;
@@ -287,7 +278,6 @@ main(int argc, char** argv)
       if(i+3 >= argc)
       {
          usage("-pic", argv[0]);
-         return 0;
       } 
 
       cellx = strtoul(argv[++i],(char**)nullptr,10);
@@ -297,7 +287,6 @@ main(int argc, char** argv)
       if(i+3 >= argc)
       {
          usage("-pol", argv[0]);
-         return 0;
       } 
 
 
@@ -347,7 +336,6 @@ main(int argc, char** argv)
       if(i+1 >= argc)
       {
         usage("-partvar",argv[0]);
-        return 0;
       }
       clf.particleVariable = argv[++i]; 
       if (clf.particleVariable[0] == '-') {
@@ -404,7 +392,6 @@ main(int argc, char** argv)
       if(i+1 >= argc)
       {
          usage("-mat", argv[0]);
-         return 0;
       }
       clf.matl = strtoul(argv[++i],(char**)nullptr,10);
       clf.do_material = true;
@@ -418,7 +405,6 @@ main(int argc, char** argv)
       if(i+1 >= argc)
       {
          usage("-timesteplow", argv[0]);
-         return 0;
       }
       clf.time_step_lower = strtoul(argv[++i],(char**)nullptr,10);
       clf.tslow_set = true;
@@ -428,7 +414,6 @@ main(int argc, char** argv)
       if(i+1 >= argc)
       {
          usage("-timestephigh", argv[0]);
-         return 0;
       }
       clf.time_step_upper = strtoul(argv[++i],(char**)nullptr,10);
       clf.tsup_set = true;
@@ -438,7 +423,6 @@ main(int argc, char** argv)
       if(i+1 >= argc)
       {
          usage("-timestepinc", argv[0]);
-         return 0;
       }
       clf.time_step_inc = strtoul(argv[++i],(char**)nullptr,10);
     } else if( (s == "-help") || (s == "-h") ) {
@@ -449,7 +433,8 @@ main(int argc, char** argv)
         usage( s, argv[0]);
       }
       clf.filebase = argv[i];
-    } else {
+    } 
+    else {
       usage( s, argv[0]);
     }
   }
@@ -529,14 +514,6 @@ main(int argc, char** argv)
 
     if( clf.do_pressure ){
       pressure( da, clf );
-    }
-
-    if( clf.do_monica1 ){
-      monica1( da, clf );
-    }
-
-    if( clf.do_monica2 ){
-      monica2( da, clf );
     }
 
     if( clf.do_jim1 ){
@@ -642,7 +619,7 @@ main(int argc, char** argv)
 	    cout << "\tVariable: " << var << ", type " << td->getName() << "\n";
 	    for(int l=0;l<grid->numLevels();l++){
 	      LevelP level = grid->getLevel(l);
-	      for(Level::const_patchIterator iter = level->patchesBegin();
+	      for(Level::const_patch_iterator iter = level->patchesBegin();
 		  iter != level->patchesEnd(); iter++){
 		const Patch* patch = *iter;
 		cout << "\t\tPatch: " << patch->getID() << "\n";
@@ -719,6 +696,9 @@ main(int argc, char** argv)
     cerr << "Caught unknown exception\n";
     abort();
   }
+
+  return 0;
+
 } // end main()
 
 ////////////////////////////////////////////////////////////////////////////
@@ -767,7 +747,7 @@ printParticleVariable( DataArchive* da,
       LevelP level = grid->getLevel(l);
 
       // Loop thru all the patches
-      Level::const_patchIterator iter = level->patchesBegin(); 
+      Level::const_patch_iterator iter = level->patchesBegin(); 
       int patchIndex = 0;
       for(; iter != level->patchesEnd(); iter++){
 	const Patch* patch = *iter;

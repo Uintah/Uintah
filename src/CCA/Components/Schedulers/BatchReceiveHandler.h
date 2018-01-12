@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,25 +22,38 @@
  * IN THE SOFTWARE.
  */
 
+#ifndef CCA_COMPONENTS_SCHEDULERS_BATCHRECEIVEHANDLER_H
+#define CCA_COMPONENTS_SCHEDULERS_BATCHRECEIVEHANDLER_H
+
+#include <CCA/Components/Schedulers/DependencyBatch.h>
 #include <CCA/Components/Schedulers/DetailedTasks.h>
-#include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 
 namespace Uintah {
 
 class BatchReceiveHandler {
 
 public:
-  BatchReceiveHandler(DependencyBatch* batch)
-    : batch_(batch) {}
 
-  BatchReceiveHandler(const BatchReceiveHandler& copy)
-    : batch_(copy.batch_) {}
+  BatchReceiveHandler( DependencyBatch * batch )
+    : m_dep_batch(batch)
+  {}
+
+  BatchReceiveHandler( const BatchReceiveHandler & copy )
+    : m_dep_batch(copy.m_dep_batch)
+  {}
+
+  void finishedCommunication( const ProcessorGroup * pg )
+  {
+    m_dep_batch->received(pg);
+  }
+
   
-  void finishedCommunication(const ProcessorGroup* pg)
-  { batch_->received(pg); }
-
 private:
-  DependencyBatch* batch_;
   
+  DependencyBatch * m_dep_batch;
+
 };
-}
+
+}  // namespace Uintah
+
+#endif // CCA_COMPONENTS_SCHEDULERS_BATCHRECEIVEHANDLER_H

@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2016 The University of Utah
+#  Copyright (c) 1997-2018 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -42,15 +42,19 @@ SRCS   += \
           $(SRCDIR)/InvalidGrid.cc             \
           $(SRCDIR)/InvalidState.cc            \
           $(SRCDIR)/InvalidValue.cc            \
-          $(SRCDIR)/PapiInitializationError.cc \
           $(SRCDIR)/ParameterNotFound.cc       \
           $(SRCDIR)/ProblemSetupException.cc   \
           $(SRCDIR)/TypeMismatchException.cc   \
           $(SRCDIR)/UintahPetscError.cc        \
           $(SRCDIR)/VariableNotFoundInGrid.cc  
+          
+ifeq ($(HAVE_PAPI),yes)
+  SRCS += $(SRCDIR)/PapiInitializationError.cc
+endif
 
-PSELIBS := 
-LIBS := $(DL_LIBRARY)
+PSELIBS :=
+
+LIBS := $(DL_LIBRARY) $(Z_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

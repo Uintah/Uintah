@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,25 +25,25 @@
 #ifndef Packages_Uintah_CCA_Components_OnTheFlyAnalysis_Factory_h
 #define Packages_Uintah_CCA_Components_OnTheFlyAnalysis_Factory_h
 
-#include <Core/ProblemSpec/ProblemSpecP.h>
-#include <Core/Grid/SimulationStateP.h>
 #include <CCA/Ports/Output.h>
+#include <Core/Grid/SimulationStateP.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
 
 namespace Uintah {
   class AnalysisModule;
   
-  class AnalysisModuleFactory{
-    private:
-      AnalysisModuleFactory();
-      ~AnalysisModuleFactory();
-          
-    public:      
-      static
-       std::vector< AnalysisModule*> 
-        create(const ProblemSpecP& prob_spec,
-               SimulationStateP& sharedState,
-               Output* dataArchiever);
+  class AnalysisModuleFactory {
+
+  private:
+    AnalysisModuleFactory();
+    ~AnalysisModuleFactory();
+    
+  public:      
+    static
+    std::vector< AnalysisModule*> create( const ProcessorGroup* myworld,
+					  const SimulationStateP sharedState,
+					  const ProblemSpecP& prob_spec );
   };
 }
 

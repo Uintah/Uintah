@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2016 The University of Utah
+#  Copyright (c) 1997-2018 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -28,25 +28,22 @@ SRCDIR  := StandAlone/tools/puda
 PROGRAM := StandAlone/tools/puda/puda
 
 SRCS := \
-        $(SRCDIR)/asci.cc        \
-        $(SRCDIR)/jacquie.cc     \
-        $(SRCDIR)/pressure.cc    \
-        $(SRCDIR)/monica1.cc     \
-        $(SRCDIR)/monica2.cc     \
-        $(SRCDIR)/jim1.cc        \
-        $(SRCDIR)/jim2.cc        \
-        $(SRCDIR)/jim3.cc        \
-        $(SRCDIR)/PIC.cc         \
-        $(SRCDIR)/POL.cc         \
-        $(SRCDIR)/AA_MMS.cc      \
-        $(SRCDIR)/util.cc        \
-        $(SRCDIR)/varsummary.cc  \
-        $(SRCDIR)/puda.cc        \
-        $(SRCDIR)/GV_MMS.cc      \
-        $(SRCDIR)/ER_MMS.cc      \
-        $(SRCDIR)/todd1.cc       \
-        $(SRCDIR)/ICE_momentum.cc
-        
+        $(SRCDIR)/AA_MMS.cc       \
+        $(SRCDIR)/asci.cc         \
+        $(SRCDIR)/ER_MMS.cc       \
+        $(SRCDIR)/GV_MMS.cc       \
+        $(SRCDIR)/ICE_momentum.cc \
+        $(SRCDIR)/jacquie.cc      \
+        $(SRCDIR)/jim1.cc         \
+        $(SRCDIR)/jim2.cc         \
+        $(SRCDIR)/jim3.cc         \
+        $(SRCDIR)/PIC.cc          \
+        $(SRCDIR)/POL.cc          \
+        $(SRCDIR)/pressure.cc     \
+        $(SRCDIR)/puda.cc         \
+        $(SRCDIR)/todd1.cc        \
+        $(SRCDIR)/util.cc         \
+        $(SRCDIR)/varsummary.cc   
 
 ifeq ($(IS_STATIC_BUILD),yes)
   PSELIBS := $(ALL_STATIC_PSE_LIBS)
@@ -69,8 +66,23 @@ ifeq ($(IS_STATIC_BUILD),yes)
 else
   LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)  \
           $(F_LIBRARY) $(BLAS_LIBRARY)                 \
-          $(THREAD_LIBRARY) $(CUDA_LIBRARY) $(PIDX_LIBRARY)
+          $(CUDA_LIBRARY) $(PIDX_LIBRARY)
 endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
+
+###########################################################
+#
+# grid_reader
+#
+# Program used to display a binary grid.xml file in human readable (XML) format.
+#
+LIBS := 
+PSELIBS :=
+
+SRCS    := $(SRCDIR)/grid_reader.cc
+PROGRAM := StandAlone/tools/puda/grid_reader
+
+include $(SCIRUN_SCRIPTS)/program.mk
+
 

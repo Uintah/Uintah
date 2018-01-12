@@ -38,7 +38,7 @@
        <save label = "p.yield"/>
        <save label = "p.drag"/>
        <save label = "p.backstress"/>
-       <save label = "p.localized"/>
+       <save label = "p.localizedMPM"/>
        <save label = "p.varf"/>
        <save label = "g.mass"/>
        <save label = "g.stressFS"/>

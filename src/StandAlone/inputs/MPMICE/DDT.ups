@@ -122,7 +122,6 @@
       <create_new_particles>           false      </create_new_particles>
       <DoThermalExpansion>             false      </DoThermalExpansion>
       <testForNegTemps_mpm>            false      </testForNegTemps_mpm>
-      <erosion algorithm = "ZeroStress"/>
     </MPM>
 
     <!--____________________________________________________________________-->
@@ -130,14 +129,14 @@
     <!--____________________________________________________________________-->
     <MaterialProperties>
        <MPM>
-         <material name = "PBX9501">
-         <density>              1832.0 </density>
-        <thermal_conductivity> 0.452  </thermal_conductivity>
-        <specific_heat>        996.0  </specific_heat>
-        <C_p>                  996.0  </C_p>
-        <room_temp>            294.0  </room_temp>
-        <melt_temp>            688.0  </melt_temp>
-           <constitutive_model type = "visco_scram">
+          <material name = "PBX9501">
+          <density>              1832.0 </density>
+          <thermal_conductivity> 0.452  </thermal_conductivity>
+          <specific_heat>        996.0  </specific_heat>
+          <C_p>                  996.0  </C_p>
+          <room_temp>            294.0  </room_temp>
+          <melt_temp>            688.0  </melt_temp>
+          <constitutive_model type = "visco_scram">
              <PR>                     0.3      </PR>
              <CoeffThermalExpansion>  12.5e-5   </CoeffThermalExpansion>
              <CrackParameterA>        1.0e-3   </CrackParameterA>
@@ -185,6 +184,7 @@
              <useObjectiveRate>              false </useObjectiveRate>
              <useModifiedEOS>               true </useModifiedEOS>
            </constitutive_model>
+           <erosion algorithm = "ZeroStress"/>
            
            <geom_object>
               <box label="wholeDomain">

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -24,60 +24,70 @@
 
 #include <CCA/Components/LoadBalancers/LoadBalancerFactory.h>
 #include <CCA/Components/LoadBalancers/DynamicLoadBalancer.h>
+#include <CCA/Components/LoadBalancers/ParticleLoadBalancer.h>
 #include <CCA/Components/LoadBalancers/RoundRobinLoadBalancer.h>
 #include <CCA/Components/LoadBalancers/SimpleLoadBalancer.h>
-#include <CCA/Components/LoadBalancers/SingleProcessorLoadBalancer.h>
-#include <CCA/Components/LoadBalancers/ParticleLoadBalancer.h>
-#include <Core/Parallel/ProcessorGroup.h>
+
 #include <Core/Parallel/Parallel.h>
+#include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
+
+#include <string>
 #include <iostream>
 
-using namespace std;
 using namespace Uintah;
 
-LoadBalancerCommon* LoadBalancerFactory::create(ProblemSpecP& ps, 
-                                                const ProcessorGroup* world)
+
+LoadBalancerCommon*
+LoadBalancerFactory::create( const ProblemSpecP   & ps
+                           , const ProcessorGroup * world
+                           )
 {
-  LoadBalancerCommon* bal = 0;
-  string loadbalancer = "";
-  IntVector layout(1,1,1);
-  
+  LoadBalancerCommon* bal  = nullptr;
+  std::string loadbalancer = "";
+  IntVector layout(1, 1, 1);
+
   ProblemSpecP lb_ps = ps->findBlock("LoadBalancer");
-  if (lb_ps)
-    lb_ps->getAttribute("type",loadbalancer);
-
-  // Default settings
-  if (Uintah::Parallel::usingMPI()) {
-    if (loadbalancer == "")
-      loadbalancer = "SimpleLoadBalancer";
+  if (lb_ps) {
+    lb_ps->getAttribute("type", loadbalancer);
   }
-  else // No MPI
-    if (loadbalancer == "")
-      loadbalancer = "SingleProcessorLoadBalancer";
 
+  /////////////////////////////////////////////////////////////////////
+  // Default setting - nothing specified in the input file
+  if (loadbalancer == "") {
+    loadbalancer = "Simple";
+  }
 
-  if (world->myrank() == 0)
-    cout << "Load Balancer: \t\t" << loadbalancer << endl;
-
-  if(loadbalancer == "SingleProcessorLoadBalancer"){
-    bal = scinew SingleProcessorLoadBalancer(world);
-  } else if(loadbalancer == "RoundRobinLoadBalancer" || 
-            loadbalancer == "RoundRobin" || 
-            loadbalancer == "roundrobin"){
-    bal = scinew RoundRobinLoadBalancer(world);
-  } else if(loadbalancer == "SimpleLoadBalancer") {
+  /////////////////////////////////////////////////////////////////////
+  // Check for specific load balancer request from the input file
+  // TODO: Replace all remaining input file usage of SimpleLoadBalancer-->Simple then fix this and corresponding XML spec - APH 09/17/16
+  //        This is a few ARCHES input files, including 8-corner case that use this for outputNthproc, etc
+  if (loadbalancer == "Simple" || loadbalancer == "simple" || loadbalancer == "SimpleLoadBalancer") {
     bal = scinew SimpleLoadBalancer(world);
-  } else if(loadbalancer == "DLB") {
-    bal = scinew DynamicLoadBalancer(world);
-  } else if(loadbalancer == "PLB") {
-    bal = scinew ParticleLoadBalancer(world);
-  } else {
-    bal = 0;   
-    throw ProblemSetupException("Unknown load balancer", __FILE__, __LINE__);
   }
-  
-  return bal;
 
+  else if (loadbalancer == "RoundRobin") {
+    bal = scinew RoundRobinLoadBalancer(world);
+  }
+
+  else if (loadbalancer == "DLB") {
+    bal = scinew DynamicLoadBalancer(world);
+  }
+
+  else if (loadbalancer == "PLB") {
+    bal = scinew ParticleLoadBalancer(world);
+  }
+  else {
+    bal = nullptr;
+
+    std::ostringstream msg;
+    msg << "\nERROR<Loadbalancer>: Unknown load balancer : " << loadbalancer << ".\n";
+    throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
+  }
+
+  // Output which LOAD BALANCER will be used
+  proc0cout << "Load Balancer: \t\t" << loadbalancer << std::endl;
+
+  return bal;
 }

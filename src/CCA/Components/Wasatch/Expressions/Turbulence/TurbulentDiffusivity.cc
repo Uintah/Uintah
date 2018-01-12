@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2016 The University of Utah
+ * Copyright (c) 2012-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -47,8 +47,8 @@ TurbulentDiffusivity( const Expr::Tag rhoTag,
   tSchmidt_ ( tSchmidt )
 {
   this->set_gpu_runnable(true);
-   rho_ = create_field_request<SVolField>(rhoTag);
-   tVisc_ = create_field_request<SVolField>(tViscTag);
+  rho_ = create_field_request<SVolField>(rhoTag);
+  tVisc_ = create_field_request<SVolField>(tViscTag);
 }
 
 //--------------------------------------------------------------------

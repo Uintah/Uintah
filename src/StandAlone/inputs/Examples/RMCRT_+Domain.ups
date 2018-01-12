@@ -16,7 +16,7 @@
     <initTime>      0.0       </initTime>
     <delt_min>      0.00001   </delt_min>
     <delt_max>      1         </delt_max>
-    <max_Timesteps> 1         </max_Timesteps>
+    <max_Timesteps> 10         </max_Timesteps>
     <timestep_multiplier>  1  </timestep_multiplier>
   </Time>
 
@@ -98,72 +98,61 @@
            <lower>        [ 0.0, 0.45, 0.45]    </lower>
            <upper>        [ 0.45, 0.55, 0.55]   </upper>
            <extraCells>   [1,1,1]               </extraCells>
-           <patches>      [1,1,1]               </patches>
-           <resolution>   [45,10,10]            </resolution>
+           <patches>      [2,1,1]               </patches>
+           <resolution>   [72,16,16]            </resolution>
         </Box>
         <Box label = "Right horizontalLeg">
            <lower>        [ 0.55, 0.45, 0.45]   </lower>
            <upper>        [ 1.0, 0.55, 0.55]    </upper>
            <extraCells>   [1,1,1]               </extraCells>
-           <patches>      [1,1,1]               </patches>
-           <resolution>   [45,10,10]            </resolution>
+           <patches>      [2,1,1]               </patches>
+           <resolution>   [72,16,16]            </resolution>
         </Box>
         <Box label = "center patch">
            <lower>        [ 0.45, 0.45, 0.45]   </lower>
            <upper>        [ 0.55, 0.55, 0.55]   </upper>
            <extraCells>   [1,1,1]               </extraCells>
            <patches>      [1,1,1]               </patches>
-           <resolution>   [10,10,10]            </resolution>
+           <resolution>   [16,16,16]            </resolution>
         </Box>        
         
         <Box label = "Lower verticalLeg">
            <lower>        [ 0.45, 0.0, 0.45]    </lower>
            <upper>        [ 0.55, 0.45, 0.55]   </upper>
            <extraCells>   [1,1,1]               </extraCells>
-           <patches>      [1,1,1]               </patches>
-           <resolution>   [10,45,10]            </resolution>
+           <patches>      [1,2,1]               </patches>
+           <resolution>   [16,72,16]            </resolution>
         </Box>
-<!--
+
         <Box label = "Upper verticalLeg">
            <lower>        [ 0.45, 0.55, 0.45]   </lower>
            <upper>        [ 0.55, 1.0, 0.55]    </upper>
            <extraCells>   [1,1,1]               </extraCells>
-           <patches>      [1,1,1]               </patches>
-           <resolution>   [10,45,10]            </resolution>
+           <patches>      [1,2,1]               </patches>
+           <resolution>   [16,72,16]            </resolution>
         </Box>
         <Box label = "back Leg">
            <lower>        [ 0.45, 0.45, 0.0]    </lower>
            <upper>        [ 0.55, 0.55, 0.45]   </upper>
            <extraCells>   [1,1,1]               </extraCells>
-           <patches>      [1,1,1]               </patches>
-           <resolution>   [10,10,45]            </resolution>
+           <patches>      [1,1,2]               </patches>
+           <resolution>   [16,16,72]            </resolution>
         </Box>
 
         <Box label = "Front Leg">
            <lower>        [ 0.45, 0.45, 0.55]   </lower>
            <upper>        [ 0.55, 0.55, 1.0]    </upper>
            <extraCells>   [1,1,1]               </extraCells>
-           <patches>      [1,1,1]               </patches>
-           <resolution>   [10,10,45]            </resolution>
+           <patches>      [1,1,2]               </patches>
+           <resolution>   [16,16,72]            </resolution>
         </Box>
--->
     </Level>
 
- <!--   
-    <Level>
-      <Box label = "0">                              
-         <lower>      [0,0,0]     </lower>         
-         <upper>      [1, 1, 1]   </upper>         
-         <resolution> [32,32,32]  </resolution>    
-         <patches>    [3,3,3]     </patches> 
-         <extraCells> [1,1,1]     </extraCells>
-      </Box>
-    </Level>
--->
+
   </Grid>
   <!--__________________________________-->
   <DataArchiver>
-  <filebase>rmcrt_+_domain.uda</filebase>
+  <filebase>RMCRT_+_domain.uda</filebase>
       <outputTimestepInterval>1</outputTimestepInterval>
       <save label = "color"   />
       <save label = "divQ"    />
@@ -180,11 +169,18 @@
   <calc_frequency>    1          </calc_frequency>
     
   <RMCRT type = "double">
-    <randomSeed>         true     </randomSeed>
+    <randomSeed>         false     </randomSeed>
     <nDivQRays>          10          </nDivQRays>
     <Threshold>         0.05       </Threshold>
     <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
     <solveBoundaryFlux> false      </solveBoundaryFlux>
     <CCRays>            false      </CCRays>
+    
+    <algorithm type='singleLevel'>
+      <ROI_extents type='boundedRayLength'>
+        <length>    0.1     </length>
+      </ROI_extents>
+    </algorithm>
+
   </RMCRT>
 </Uintah_specification>

@@ -9,7 +9,7 @@
  *  this will effectively convect a volume of fluctuations through the inlet, and repeat
  *  if necessary
  *  -In the future adding a table generation to .ups file might be done,
- *  but dealing with a inlet generation across multiple patches 
+ *  but dealing with a inlet generation across multiple patches
  */
 
 #include <CCA/Components/Arches/DigitalFilter/DigitalFilterInlet.h>
@@ -36,7 +36,7 @@ DigitalFilterInlet::DigitalFilterInlet()
 }
 
 //Destructor
-DigitalFilterInlet::~DigitalFilterInlet( ) 
+DigitalFilterInlet::~DigitalFilterInlet( )
 {}
 
 //____________________________________________
@@ -52,14 +52,14 @@ int DigitalFilterInlet::getTimeIndex( int timestep, double elapTime )
       timestep -= NT*period;
     }
     t_index = timestep/period;
-  
+
   } else {
     while (elapTime >= NT*timePeriod) {
       elapTime -= NT*timePeriod;
     }
     t_index = (int)(elapTime/timePeriod);
   }
-    
+
   return t_index;
 }
 
@@ -70,27 +70,27 @@ void DigitalFilterInlet::problemSetup( const ProblemSpecP& params )
 {
   string fileName;
   string timeIntegrator;
-  
+
   ProblemSpecP bcParams = params;
   bcParams->getWithDefault("period",period,1);
-  
+
   if (bcParams->findBlock("timeperiod") ) {
     bcParams->get("timeperiod",timePeriod);
     period = 0;
   }
 
   bcParams->get("inputfile",fileName);
-  
+
   gzFile gzFp = gzopen( fileName.c_str(), "r" );
-  
+
   if( gzFp == nullptr ) {
     proc0cout << "Error opening file for Turbulent Inlet: " << fileName << endl;
     throw ProblemSetupException("Unable to open the given input file: " + fileName, __FILE__, __LINE__);
   }
-  
+
   // get the face direction
   getString(gzFp);
-  
+
   NT = getInt(gzFp);
   jSize = getInt(gzFp);
   kSize = getInt(gzFp);
@@ -99,11 +99,11 @@ void DigitalFilterInlet::problemSetup( const ProblemSpecP& params )
   minC[0] = getInt(gzFp);
   minC[1] = getInt(gzFp);
   minC[2] = getInt(gzFp);
-  
+
   uFluct.resize(NT*jSize*kSize);
   vFluct.resize(NT*jSize*kSize);
   wFluct.resize(NT*jSize*kSize);
-  
+
   int indexCt;
   int nPts;
   nPts = getInt(gzFp);
@@ -112,19 +112,20 @@ void DigitalFilterInlet::problemSetup( const ProblemSpecP& params )
   // to properly parse the digitalFilter input and not skip/assign wrong lines
   double spacing;
   spacing = getDouble(gzFp);
-  
+  spacing = spacing + 1. - 1.; //this silences the unused variable warning. 
+
   for ( int n = 0; n<nPts; n++) {
-    int tt = getInt(gzFp); int jj = getInt(gzFp); int kk = getInt(gzFp); 
+    int tt = getInt(gzFp); int jj = getInt(gzFp); int kk = getInt(gzFp);
     double u = getDouble(gzFp);
     double v = getDouble(gzFp);
     double w = getDouble(gzFp);
     indexCt = NT*jSize* kk + NT* jj + tt;
-    
+
     uFluct[indexCt] = u;
     vFluct[indexCt] = v;
     wFluct[indexCt] = w;
   }
-  
+
   if (period != 0) {
     proc0cout << "Digital filter setup period = " << period << endl;
   } else {
@@ -140,7 +141,7 @@ void DigitalFilterInlet::problemSetup( const ProblemSpecP& params )
 vector<double> DigitalFilterInlet::getVelocityVector( int t, int j, int k )
 {
  //need to subtract offset vector based on face side
-  
+
   int indexCt = NT*jSize* k + NT* j + t;
   vector<double> velocity (3, 0);
   if (j>=0 && k >=0 && j<jSize && k<kSize) {
@@ -155,30 +156,30 @@ vector<double> DigitalFilterInlet::getVelocityVector( int t, int j, int k )
 //______________________
 // find smallest value in the bc ptr to shift the lookup - debug/sanity check
 //______________________
-void DigitalFilterInlet::findOffsetVector( const Patch* patch, const Patch::FaceType& face, 
+void DigitalFilterInlet::findOffsetVector( const Patch* patch, const Patch::FaceType& face,
                                               Iterator bound_ptr )
 {
   vector<int> minCellTest (3);
   IntVector c = *bound_ptr;
-  minCellTest[0] = c.x(); 
+  minCellTest[0] = c.x();
   minCellTest[1] = c.y();
   minCellTest[2] = c.z();
-  
+
   for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
     IntVector c = *bound_ptr;
-    
-    if (c.x() < minCellTest[0] ) 
+
+    if (c.x() < minCellTest[0] )
       minCellTest[0] = c.x();
-    if (c.y() < minCellTest[1] ) 
+    if (c.y() < minCellTest[1] )
       minCellTest[1] = c.y();
-    if (c.z() < minCellTest[2] ) 
+    if (c.z() < minCellTest[2] )
       minCellTest[2] = c.z();
   }
   c = IntVector(minCellTest[0], minCellTest[1], minCellTest[2] );
   cout << "min vec " << c << "  checking boundary cell layout- smallest value should match table header value" << endl;
 }
 
-//___________ 
+//___________
 // return the int vector
 IntVector DigitalFilterInlet::getOffsetVector( )
 {

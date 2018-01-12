@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -24,9 +24,12 @@
 
 #include <CCA/Components/LoadBalancers/CostProfiler.h>
 #include <CCA/Components/Schedulers/DetailedTasks.h>
+
 #include <Core/Util/DebugStream.h>
+
 using namespace Uintah;
 using namespace std;
+
 //______________________________________________________________________
 //
 void
@@ -47,8 +50,8 @@ CostProfiler::addContribution( DetailedTask *task, double cost )
   for(int p=0;p<patches->size();p++)
   {
     const Patch* patch=patches->get(p);
-    if(d_lb->getPatchwiseProcessorAssignment(patch)!=d_myworld->myrank())
-      cout << d_myworld->myrank() << " error patch is owned by processor:" << d_lb->getPatchwiseProcessorAssignment(patch) << " for task:" << task->getName() << endl;
+    if(d_lb->getPatchwiseProcessorAssignment(patch)!=d_myworld->myRank())
+      cout << d_myworld->myRank() << " error patch is owned by processor:" << d_lb->getPatchwiseProcessorAssignment(patch) << " for task:" << task->getName() << endl;
   }
 #endif
   d_profiler.addContribution( task->getPatches(), cost );

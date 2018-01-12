@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -243,7 +243,7 @@ Variable::readPIDX( unsigned char* pidx_buffer,
   // push the istringstream into an Array3 variable
   readNormal(instream, swapBytes);
 
-} // end read()
+} // end readPIDX()
 
 #endif
 //______________________________________________________________________

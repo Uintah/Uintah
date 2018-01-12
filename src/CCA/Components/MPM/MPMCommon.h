@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,7 +25,9 @@
 #ifndef UINTAH_HOMEBREW_MPM_COMMON_H
 #define UINTAH_HOMEBREW_MPM_COMMON_H
 
-#include <CCA/Components/MPM/MPMFlags.h>
+#include <CCA/Components/Application/ApplicationCommon.h>
+
+#include <CCA/Ports/DataWarehouseP.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/SimulationStateP.h>
@@ -36,23 +38,38 @@
 namespace Uintah {
 
   class ProcessorGroup;
+
+  class MPMFlags;
+  class MPMLabel;
   
-  class MPMCommon {
-
+  class MPMCommon : public ApplicationCommon
+  {
   public:
+    MPMCommon(const ProcessorGroup* myworld, SimulationStateP sharedState);
 
-    MPMCommon(const ProcessorGroup* myworld);
     virtual ~MPMCommon();
 
     virtual void materialProblemSetup(const ProblemSpecP& prob_spec,
-                                      SimulationStateP& sharedState,
-                                      MPMFlags* flags);
+                                      MPMFlags* flags, bool isRestart);
 
     virtual void cohesiveZoneProblemSetup(const ProblemSpecP& prob_spec,
-                                          SimulationStateP& sharedState,
                                           MPMFlags* flags);
-   protected:
-    const ProcessorGroup* d_myworld;
+                                          
+    void scheduleUpdateStress_DamageErosionModels(SchedulerP        & sched,
+                                                  const PatchSet    * patches,
+                                                  const MaterialSet * matls );
+  protected:
+    MPMLabel* lb {nullptr};
+  private:
+    MPMFlags*             d_flags       = nullptr;
+    
+  protected:
+    /*! update the stress field due to damage & erosion*/
+    void updateStress_DamageErosionModels(const ProcessorGroup  *,
+                                          const PatchSubset     * patches,
+                                          const MaterialSubset  * ,
+                                          DataWarehouse         * old_dw,
+                                          DataWarehouse         * new_dw );
   };
 }
 

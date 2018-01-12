@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2016 The University of Utah
+#  Copyright (c) 1997-2018 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -29,14 +29,34 @@
 
 SRCDIR := testprograms/SFCTest
 
-LIBS := $(MPI_LIBRARY) 
-
 PROGRAM := $(SRCDIR)/sfctest
 SRCS := $(SRCDIR)/sfctest.cc
-PSELIBS := CCA/Ports \
-           Core/Parallel
 
-LIBS := $(M_LIBRARY) $(MPI_LIBRARY)
+ifeq ($(IS_STATIC_BUILD),yes)
+  PSELIBS := $(ALL_STATIC_PSE_LIBS)
+else # Non-static build
+  PSELIBS := $(ALL_PSE_LIBS)
+endif
+
+PSELIBS := $(GPU_EXTRA_LINK) $(PSELIBS)
+
+ifeq ($(IS_STATIC_BUILD),yes)
+  LIBS := $(CORE_STATIC_LIBS)   \
+          $(BOOST_LIBRARY)      \
+          $(EXPRLIB_LIBRARY)    \
+          $(SPATIALOPS_LIBRARY) \
+          $(TABPROPS_LIBRARY)   \
+          $(RADPROPS_LIBRARY)   \
+          $(PAPI_LIBRARY)       \
+          $(M_LIBRARY)
+
+else
+  LIBS := $(LAPACK_LIBRARY) \
+          $(BLAS_LIBRARY)   \
+	        $(MPI_LIBRARY)    \
+	        $(XML2_LIBRARY)   \
+	        $(CUDA_LIBRARY)
+endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
 

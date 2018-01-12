@@ -35,7 +35,6 @@
    <MPM>
         <time_integrator>implicit</time_integrator>
         <dynamic>false</dynamic>
-        <do_grid_reset>true</do_grid_reset> <!--if false, make p.xx first -->
         <solver>petsc</solver>
         <convergence_criteria_disp>1.e-3</convergence_criteria_disp>
         <convergence_criteria_energy>4.e-3</convergence_criteria_energy>

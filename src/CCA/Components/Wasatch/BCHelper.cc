@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2013-2016 The University of Utah
+ * Copyright (c) 2013-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -39,25 +39,18 @@
 #include <Core/Grid/BoundaryConditions/BCGeomBase.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BoundCondBase.h>
-#include <CCA/Components/Wasatch/Expressions/Pressure.h>
-#include <CCA/Components/Wasatch/Expressions/NullExpression.h>
 
 //-- SpatialOps includes --//
 #include <spatialops/OperatorDatabase.h>
 
 //-- Wasatch Includes --//
 #include <CCA/Components/Wasatch/FieldTypes.h>
+#include <CCA/Components/Wasatch/FieldAdaptor.h>
 #include <CCA/Components/Wasatch/ParseTools.h>
 #include <CCA/Components/Wasatch/ParticlesHelper.h>
+#include <CCA/Components/Wasatch/Expressions/Pressure.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditions.h>
-#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditionBase.h>
 
-//-- Debug Stream --//
-#include <Core/Util/DebugStream.h>
-
-static Uintah::DebugStream dbgbc("WASATCH_BC", false);
-#define DBC_BC_ON  dbgbc.active()
-#define DBGBC  if( DBC_BC_ON  ) dbgbc
 
 /**
  * \file    BCHelper.cc
@@ -224,6 +217,16 @@ namespace WasatchCore {
       return nullptr;
     }
   }
+  
+  // find all the BCSpec associated with a given variable name
+  std::vector<BndCondSpec> BndSpec::find_all(const std::string& varName) const
+  {
+    std::vector<BndCondSpec> matches;
+    for (auto i = bcSpecVec.begin(), toofar = bcSpecVec.end(); i != toofar; ++i)
+      if (*i == varName)
+        matches.push_back(*i);
+    return matches;
+  }
 
   // find the BCSpec associated with a given variable name - non-const version
   const BndCondSpec* BndSpec::find(const std::string& varName)
@@ -279,6 +282,7 @@ namespace WasatchCore {
     std::vector<IntVec>& intBndSOIter          = myBndIters.interiorBndCells;
     std::vector<IntVec>& extraPlusBndCells     = myBndIters.extraPlusBndCells;
     
+    std::vector<IntVec> neboInteriorBndSOIter;
     std::vector<IntVec> neboExtraBndSOIter;
 
     std::vector<IntVec>& intEdgeSOIter         = myBndIters.interiorEdgeCells;
@@ -339,9 +343,13 @@ namespace WasatchCore {
         edgePoint -= patchCellOffset;
         intEdgeSOIter.push_back( IntVec(bcPointIJK[0], bcPointIJK[1], bcPointIJK[2]) );
       }
+      
       bcPointIJK -= unitNormal;
       intBndSOIter.push_back(IntVec(bcPointIJK.x(), bcPointIJK.y(), bcPointIJK.z()));
-
+      
+      bcPointIJK = *bndIter - interiorPatchCellOffset - unitNormal;
+      neboInteriorBndSOIter.push_back(IntVec(bcPointIJK.x(), bcPointIJK.y(), bcPointIJK.z()));
+      
       bcPointIJK = *bndIter - interiorPatchCellOffset;
       neboExtraBndSOIter.push_back(IntVec(bcPointIJK.x(), bcPointIJK.y(), bcPointIJK.z()));
     }
@@ -358,30 +366,38 @@ namespace WasatchCore {
     const int ng = get_n_ghost<SVolField>();
     SpatialOps::IntVec bcMinus, bcPlus;
     WasatchCore::get_bc_logicals( patch, bcMinus, bcPlus );
-    SpatialOps::BoundaryCellInfo bcInfo = SpatialOps::BoundaryCellInfo::build<SVolField>(bcPlus);
-    SpatialOps::GhostData gd(ng);
+    const SpatialOps::BoundaryCellInfo bcInfo = SpatialOps::BoundaryCellInfo::build<SVolField>(bcMinus,bcPlus);
+    const SpatialOps::GhostData gd(ng);
     const SpatialOps::MemoryWindow window = WasatchCore::get_memory_window_for_masks<SVolField>( patch );
+    
+    // pack the interior-cells spatial mask
+    myBndIters.svolInteriorCellSpatialMask = new SpatialOps::SpatialMask<SVolField>(window, bcInfo, gd, neboInteriorBndSOIter);
+#   ifdef HAVE_CUDA
+    myBndIters.svolInteriorCellSpatialMask->add_consumer(GPU_INDEX);
+#   endif
+    
+    // pack the extra-cells spatial mask
     myBndIters.svolExtraCellSpatialMask = new SpatialOps::SpatialMask<SVolField>(window, bcInfo, gd, neboExtraBndSOIter);
 #   ifdef HAVE_CUDA
     myBndIters.svolExtraCellSpatialMask->add_consumer(GPU_INDEX);
 #   endif
     
     const SpatialOps::MemoryWindow xwindow = WasatchCore::get_memory_window_for_masks<XVolField>( patch );
-    SpatialOps::BoundaryCellInfo xBCInfo = SpatialOps::BoundaryCellInfo::build<XVolField>(bcPlus);
+    const SpatialOps::BoundaryCellInfo xBCInfo = SpatialOps::BoundaryCellInfo::build<XVolField>(bcMinus,bcPlus);
     myBndIters.xvolExtraCellSpatialMask = new SpatialOps::SpatialMask<XVolField>(xwindow, xBCInfo, gd, neboExtraBndSOIter);
 #   ifdef HAVE_CUDA
     myBndIters.xvolExtraCellSpatialMask->add_consumer(GPU_INDEX);
 #   endif
     
     const SpatialOps::MemoryWindow ywindow = WasatchCore::get_memory_window_for_masks<YVolField>( patch );
-    SpatialOps::BoundaryCellInfo yBCInfo = SpatialOps::BoundaryCellInfo::build<YVolField>(bcPlus);
+    const SpatialOps::BoundaryCellInfo yBCInfo = SpatialOps::BoundaryCellInfo::build<YVolField>(bcMinus,bcPlus);
     myBndIters.yvolExtraCellSpatialMask = new SpatialOps::SpatialMask<YVolField>(ywindow, yBCInfo, gd, neboExtraBndSOIter);
 #   ifdef HAVE_CUDA
     myBndIters.yvolExtraCellSpatialMask->add_consumer(GPU_INDEX);
 #   endif
     
     const SpatialOps::MemoryWindow zwindow = WasatchCore::get_memory_window_for_masks<ZVolField>( patch );
-    SpatialOps::BoundaryCellInfo zBCInfo = SpatialOps::BoundaryCellInfo::build<ZVolField>(bcPlus);
+    const SpatialOps::BoundaryCellInfo zBCInfo = SpatialOps::BoundaryCellInfo::build<ZVolField>(bcMinus,bcPlus);
     myBndIters.zvolExtraCellSpatialMask = new SpatialOps::SpatialMask<ZVolField>(zwindow, zBCInfo, gd, neboExtraBndSOIter);
 #   ifdef HAVE_CUDA
     myBndIters.zvolExtraCellSpatialMask->add_consumer(GPU_INDEX);
@@ -393,7 +409,7 @@ namespace WasatchCore {
   // Template specialization for the BoundaryIterators get_spatial_mask function
   template<typename FieldT>
   SpatialOps::SpatialMask<FieldT>*
-  BoundaryIterators::get_spatial_mask() const
+  BoundaryIterators::get_spatial_mask(bool interior) const
   {
     // should never request a spatial_mask of an unsupported type. Supported types are SVol, X-Y-ZVol
     std::ostringstream msg;
@@ -405,35 +421,57 @@ namespace WasatchCore {
 
   template<>
   SpatialOps::SpatialMask<SVolField>*
-  BoundaryIterators::get_spatial_mask() const
+  BoundaryIterators::get_spatial_mask(bool interior) const
   {
+    if (interior) return svolInteriorCellSpatialMask;
     return svolExtraCellSpatialMask;
   }
   
   template<>
+  SpatialOps::SpatialMask<SpatialOps::SSurfXField>*
+  BoundaryIterators::get_spatial_mask(bool interior) const
+  {
+    return nullptr;
+  }
+
+  template<>
+  SpatialOps::SpatialMask<SpatialOps::SSurfYField>*
+  BoundaryIterators::get_spatial_mask(bool interior) const
+  {
+    return nullptr;
+  }
+
+  template<>
+  SpatialOps::SpatialMask<SpatialOps::SSurfZField>*
+  BoundaryIterators::get_spatial_mask(bool interior) const
+  {
+    return nullptr;
+  }
+
+  template<>
   SpatialOps::SpatialMask<XVolField>*
-  BoundaryIterators::get_spatial_mask() const
+  BoundaryIterators::get_spatial_mask(bool interior) const
   {
     return xvolExtraCellSpatialMask;
   }
   
   template<>
   SpatialOps::SpatialMask<YVolField>*
-  BoundaryIterators::get_spatial_mask() const
+  BoundaryIterators::get_spatial_mask(bool interior) const
   {
     return yvolExtraCellSpatialMask;
   }
   
   template<>
   SpatialOps::SpatialMask<ZVolField>*
-  BoundaryIterators::get_spatial_mask() const
+  BoundaryIterators::get_spatial_mask(bool interior) const
   {
     return zvolExtraCellSpatialMask;
   }
   
   template<>
   SpatialOps::SpatialMask<ParticleField>*
-  BoundaryIterators::get_spatial_mask() const
+  BoundaryIterators::get_spatial_mask(bool interior) const
   {
     return nullptr;
   }
@@ -714,7 +752,8 @@ namespace WasatchCore {
   template<typename FieldT>
   const SpatialOps::SpatialMask<FieldT>*
   BCHelper::get_spatial_mask( const BndSpec& myBndSpec,
-                                  const int& patchID ) const
+                              const int& patchID,
+                              const bool interior) const
   {
     const std::string bndName = myBndSpec.name;
     
@@ -722,7 +761,7 @@ namespace WasatchCore {
       const PatchIDBndItrMapT& myMap = (*bndNamePatchIDMaskMap_.find(bndName)).second;
       if ( myMap.find(patchID) != myMap.end() ) {
         const BoundaryIterators& myIters = (*myMap.find(patchID)).second;
-        return myIters.get_spatial_mask<FieldT>();
+        return myIters.get_spatial_mask<FieldT>(interior);
       }
     }
     
@@ -738,7 +777,8 @@ namespace WasatchCore {
   template<>
   const SpatialOps::SpatialMask<ParticleField>*
   BCHelper::get_spatial_mask( const BndSpec& myBndSpec,
-                             const int& patchID ) const
+                              const int& patchID,
+                              const bool interior) const
   {
     return nullptr;
   }
@@ -773,7 +813,8 @@ namespace WasatchCore {
           BOOST_FOREACH( const Uintah::Patch* const patch, patches->getVector() ) {
             
             const int patchID = patch->getID();
-            DBGBC << "Patch ID = " << patchID << std::endl;
+            DBGBC << "*************************************************\n";            
+            DBGBC << "Patch ID = " << patchID << " | On Rank: " << Uintah::Parallel::getMPIRank() << std::endl;
             
             std::vector<Uintah::Patch::FaceType> bndFaces;
             patch->getBoundaryFaces(bndFaces);
@@ -1022,12 +1063,16 @@ namespace WasatchCore {
     typedef SpatialOps::IntVec IntVecT; \
     template const std::vector<IntVecT>* BCHelper::get_extra_bnd_mask< VOLT >( const BndSpec& myBndSpec, const int& patchID ) const;\
     template const std::vector<IntVecT>* BCHelper::get_interior_bnd_mask< VOLT >( const BndSpec& myBndSpec,const int& patchID ) const;\
-    template const SpatialOps::SpatialMask<VOLT>* BCHelper::get_spatial_mask< VOLT >( const BndSpec& myBndSpec,const int& patchID ) const;
+    template const SpatialOps::SpatialMask<VOLT>* BCHelper::get_spatial_mask< VOLT >( const BndSpec& myBndSpec,const int& patchID, const bool interior ) const;
 
   INSTANTIATE_MASK_TYPES(SpatialOps::SVolField);
+  INSTANTIATE_MASK_TYPES(SpatialOps::SSurfXField);
+  INSTANTIATE_MASK_TYPES(SpatialOps::SSurfYField);
+  INSTANTIATE_MASK_TYPES(SpatialOps::SSurfZField);
+  
   INSTANTIATE_MASK_TYPES(SpatialOps::XVolField);
   INSTANTIATE_MASK_TYPES(SpatialOps::YVolField);
   INSTANTIATE_MASK_TYPES(SpatialOps::ZVolField);
 
-  template const SpatialOps::SpatialMask<ParticleField>* BCHelper::get_spatial_mask< ParticleField >( const BndSpec& myBndSpec,const int& patchID ) const;
+  template const SpatialOps::SpatialMask<ParticleField>* BCHelper::get_spatial_mask< ParticleField >( const BndSpec& myBndSpec,const int& patchID, const bool interior ) const;
 } // class BCHelper

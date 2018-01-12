@@ -15,52 +15,43 @@ echo
 if test "$MACHINE" = ""; then
    echo "Please set the env var MACHINE to:"
    echo ""
-   echo "  At Utah: Ember, Ash, or Baja"
+   echo "  At Utah: Albion, Anasazi, Ash, Aurora, Baja, Cyrus, or Ember"
    echo "  At LLNL: Vulcan, Cab, Surface, or Syrah"
    echo "  At LANL: Mustang, Mapache, or Wolf"
-   echo "  At ORNL: titan"
+   echo "  At ORNL: Titan"
+   echo "  At Argonne: Mira"
    echo ""
    exit
 fi
 
 if ! test "$DATE"; then
-  echo "Error, please set env var DATE for install dir suffix!"
+  echo "ERROR: Please set env var DATE for install dir suffix!"
   echo "   Something like: setenv DATE Dec_12_2015"
   exit
 fi
 
 if test "$COMPILER" = ""; then
-   echo "Please set the env var COMPILER to icc, gcc, or xlc!"
+   echo "Make sure that the compiler specified in checkEvn.sh for your machine is set correctly - then setenv COMPILER to 'checked'."
    echo
    exit
 fi
 
-if test "$COMPILER" = "icc"; then
-   echo "  Building with ICC"
-   CC=`which icc`
-   CXX=`which icpc`
-   COMP=icc14.0.4
-else
-   if test "$COMPILER" = "gcc"; then
-      echo "  Building with GCC"
-      CC=`which gcc`
-      CXX=`which g++`
-      COMP=gcc-4.4.7
-   else
-      if test "$COMPILER" = "xlc"; then
-         echo "  Building with xlc"
-         CC=`which xlc`
-         CXX=`which xlC`
-         COMP=xlc-12.1
-      else
-         echo "ERROR: Env var COMPILER was set to '$COMPILER', but must be set to 'icc', 'gcc', or 'xlc'"
-         echo
-         exit
-      fi
-   fi
+TPI=Thirdparty-Install
+
+if test "$BUILD_CUDA" = ""; then
+  echo "ERROR: Please set BUILD_CUDA to 'yes' or 'no'."
+  echo
+  exit
 fi
 
-TPI=Thirdparty-Install
+if test "$BUILD_CUDA" = "yes"; then
+  echo "Building with CUDA."
+  CUDA_DIR_EXT="cuda"
+else
+  echo "NOT building with CUDA.  To turn CUDA on, set environment var BUILD_CUDA to 'yes'"
+  CUDA_DIR_EXT="no_cuda"
+fi
+sleep 1
 
 echo
 echo "  Building for $MACHINE"
@@ -105,12 +96,15 @@ if test "$MACHINE" = "Ash"; then
      echo "ERROR: hostname did not return ash... Goodbye."
      exit
   fi
-  #COMP=icc-16.0.0
+  #COMP=icc-16.0.2
   COMP=gcc-4.9.2
+  CC=`which mpicc`
+  CXX=`which mpic++`
   NAME="ash.peaks"
   NAME2="Ash"
   TPI=thirdparty-install
   INSTALL_BASE=/uufs/$NAME/sys/pkg/uintah/$TPI$PHOENIXEXT/$NAME2/Wasatch3P
+  #BOOST_LOC=/uufs/ash.peaks/sys/pkg/uintah/thirdparty-install/Boost/v1_60_0/icc16.0.2
   BOOST_LOC=/uufs/chpc.utah.edu/sys/installdir/boost/1.59.0-4.9.2g
 else
 if test "$MACHINE" = "Mapache"; then
@@ -169,10 +163,41 @@ if test "$MACHINE" = "Baja"; then
      echo "Error: hostname did not return baja*... Goodbye."
      exit
   fi
+  CC=`which gcc`
+  CXX=`which g++`
   COMP=gcc4.9.2
   NAME2="Baja"
   INSTALL_BASE=/home/dav/thirdparty-install/$NAME2/Wasatch3P
   BOOST_LOC=/usr
+else
+if test "$MACHINE" = "Aurora"; then
+  if [[ $host != aurora* ]]; then
+     echo "Error: hostname did not return aurora*... Goodbye."
+     exit
+  fi
+  CC=`which gcc`
+  CXX=`which g++`
+  COMP=gcc5.3.1
+  NAME2="Aurora"
+  INSTALL_BASE=/uufs/chpc.utah.edu/common/home/u0080076/Thirdparty-Install/$NAME2/Wasatch3P
+  BOOST_LOC=/usr
+else
+if test "$MACHINE" = "Anasazi"; then
+  if [[ $host != anasazi* ]]; then
+     echo "Error: hostname did not return anasazi*... Goodbye."
+     exit
+  fi
+  # These don't work, but in order to see the path to boost I had to use them:
+  #
+  #    module load gcc/4.9.2
+  #    module load boost
+  #
+  CC=`which gcc`
+  CXX=`which g++`
+  COMP=gcc4.9.2
+  NAME2="Anasazi"
+  INSTALL_BASE=/uufs/chpc.utah.edu/common/home/u0080076/Thirdparty-Install/$NAME2/Wasatch3P
+  BOOST_LOC=/uufs/chpc.utah.edu/sys/installdir/boost/1.59.0-4.9.2g
 else
 if test "$MACHINE" = "Vulcan"; then
   if [[ $host != vulcanlac* ]]; then
@@ -205,31 +230,84 @@ if test "$MACHINE" = "Syrah"; then
      echo "Error: hostname did not return syrah*... Goodbye."
      exit
   fi
-  CC=`which mpigcc`
-  CXX=`which mpig++`
-  COMP=gcc-4.4.7
+  CC=`which mpicc`
+  CXX=`which mpic++`
+  COMP=icc-16.0.1
 
   NAME2="Syrah"
   INSTALL_BASE=/usr/gapps/uintah/Thirdparty-install/syrah/Wasatch3P
-  BOOST_LOC=/usr/gapps/uintah/Thirdparty-install/syrah/Boost/v1_55_0/mpigcc4.7.7-mvapich2.gnu.1.7
+  BOOST_LOC=/usr/gapps/uintah/Thirdparty-install/syrah/Boost/v1_60_0/intel16
 else
-if test "$MACHINE" = "titan"; then
+if test "$MACHINE" = "Titan"; then
   
   if [[ $host != titan* ]]; then
      echo "Error: hostname did not return titan*... Goodbye."
      exit
   fi
-  CC=/opt/cray/craype/2.4.0/bin/cc
-  CXX=/opt/cray/craype/2.4.0/bin/CC
-  COMP=cc-4.8.2
+  CC=`which cc`
+  CXX=`which CC`
+  COMP=cc-4.9.3
   NAME2="titan"
   INSTALL_BASE=/ccs/proj/csc188/utah/thirdparty-install/titan/Wasatch3P
   BOOST_LOC=$BOOST_ROOT
+  #BOOST_LOC=/ccs/proj/csc188/utah/thirdparty-install/titan/Boost/v1_57_0/cc4.9.0-mpich7.2.5
+else
+if test "$MACHINE" = "Mira"; then
+  
+  if [[ $host != mira* ]]; then
+     echo "Error: hostname did not return mira*... Goodbye."
+     exit
+  fi
+ CC=`which mpicc`
+ CXX=`which mpic++`
+# COMP=bgclang3.9
+# BOOST_LOC=/soft/libraries/boost/1.61.0/cnk-bgclang++11/current
+
+#  CC=/soft/compilers/wrappers/gcc/mpicc
+#  CXX=/soft/compilers/wrappers/gcc/mpic++
+#  COMP=xlc-12.1
+#  BOOST_LOC=/soft/libraries/boost/1.55.0/cnk-xl/current
+
+  BOOST_LOC=/soft/libraries/boost/1.61.0/cnk-gcc-4.7.2/current
+  COMP=gcc-4.8.4
+
+  NAME2="Mira"
+  INSTALL_BASE=/gpfs/mira-fs1/projects/SoPE_2/utah/pkgs/gcc/Wasatch3P
+else
+if test "$MACHINE" = "Albion"; then
+  
+  if [[ $host != albion* ]]; then
+     echo "Error: hostname did not return albion*... Goodbye."
+     exit
+  fi
+  CC=/usr/bin/gcc
+  CXX=/usr/bin/g++
+  COMP=gcc-4.9.2
+  NAME2="albion"
+  INSTALL_BASE=/home/dav/thirdparty-install/$NAME2/Wasatch3P
+  BOOST_LOC=/usr/local/boost
+else
+if test "$MACHINE" = "Cyrus"; then
+  if [[ $host != cyrus* ]]; then
+     echo "Error: hostname did not return cyrus*... Goodbye."
+     exit
+  fi
+  CC=/usr/bin/gcc
+  CXX=/usr/bin/g++
+  COMP=gcc-4.8.4
+  NAME2="cyrus"
+  INSTALL_BASE=/raid/home/harman/thirdparty-install/$NAME2/Wasatch3P
+  BOOST_LOC=/usr
 else
   echo ""
   echo "$MACHINE not supported yet... add it."
   echo ""
   exit
+fi
+fi
+fi
+fi
+fi
 fi
 fi
 fi
@@ -274,7 +352,7 @@ echo "  CXX:   $CXX"
 echo "  COMP:  $COMP"
 echo "  BOOST: $BOOST_LOC"
 
-export INSTALL_BASE=$INSTALL_BASE/build-$DATE
+export INSTALL_BASE=$INSTALL_BASE/build-$DATE-$CUDA_DIR_EXT
 
 echo 
 

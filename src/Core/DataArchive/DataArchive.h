@@ -1,7 +1,10 @@
+#ifndef UINTAH_HOMEBREW_DataArchive_H
+#define UINTAH_HOMEBREW_DataArchive_H
+
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,27 +25,24 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_HOMEBREW_DataArchive_H
-#define UINTAH_HOMEBREW_DataArchive_H
-
-#include <Core/Grid/Variables/ParticleVariable.h>
-#include <Core/Grid/Variables/NCVariable.h>
+#include <Core/Containers/ConsecutiveRangeSet.h>
+//#include <Core/Containers/HashTable.h>
+#include <Core/Exceptions/VariableNotFoundInGrid.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/GridP.h>
+#include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/NCVariable.h>
+#include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
-#include <Core/Grid/Level.h>
-#include <Core/Grid/Grid.h>
-#include <Core/Grid/GridP.h>
 #include <Core/Grid/Variables/VarnameMatlPatch.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Util/Handle.h>
-#include <Core/Exceptions/VariableNotFoundInGrid.h>
-#include <Core/Util/Time.h>
 #include <Core/Util/DebugStream.h>
-#include <Core/Containers/ConsecutiveRangeSet.h>
-#include <Core/Containers/HashTable.h>
+#include <Core/Util/Handle.h>
+#include <Core/Util/Timers/Timers.hpp>
 
 #include <list>
 #include <mutex>
@@ -53,7 +53,6 @@
 #include <unistd.h>
 
 namespace Uintah {
-
 
 class VarLabel;
 class DataWarehouse;
@@ -113,22 +112,22 @@ public:
   std::string getParticlePositionName() const { return d_particlePositionName; }
 
   //! Set up data arachive for restarting a Uintah simulation
-  void restartInitialize( const int             timestep,
-                          const GridP         & grid,
+  void restartInitialize( const int       timestep,
+                          const GridP   & grid,
                           DataWarehouse * dw,
                           LoadBalancer  * lb,
                           double        * pTime /* passed back */ );
 
 
   //__________________________________
-  //  This is used by reduceUda component.  Iit reads in the data and puts it into the DW.
+  //  This is used by postProcessUda component.  It reads in the data and puts it into the DW.
   //  This is a specialization of restartInitialize().
-  void reduceUda_ReadUda( const ProcessorGroup * pg,
-                          const int              timestep,
-                          const GridP          & grid,
-                          const PatchSubset    * patches,
-                          DataWarehouse  * dw,
-                          LoadBalancer   * lb ); 
+  void postProcess_ReadUda( const ProcessorGroup * pg,
+                            const int              timestep,
+                            const GridP          & grid,
+                            const PatchSubset    * patches,
+                            DataWarehouse        * dw,
+                            LoadBalancer         * lb ); 
 
   static void queryEndiannessAndBits( ProblemSpecP doc, std::string & endianness, int & numBits );
 
@@ -275,11 +274,6 @@ public:
   // corresponding documentation.
   void setTimestepCacheSize(int new_size);
 
-  // These are here for the LockingHandle interface.  The names should
-  // match those found in Core/Datatypes/Datatype.h.
-  int ref_cnt;
-  std::mutex lock{};
-
   // This is added to allow simple geometric scaling of the entire domain
   void setCellScale( Vector& s ){ d_cell_scale = s; }
   // This is added so that particles can see if the domain has been scaled
@@ -299,6 +293,9 @@ public:
   // This will be the default number of timesteps cached, determined
   // by the number of processors.
   int default_cache_size;
+
+  // Used as the first byte of the grid.xml file to designate/verify that it is stored in binary format.
+  static const unsigned int GRID_MAGIC_NUMBER{ 0xdeadbeef };
 
 protected:
   DataArchive();
@@ -331,15 +328,14 @@ private:
     std::string datafilename;
   };
 
-  typedef Uintah::HashTable<VarnameMatlPatch, DataFileInfo> VarHashMap;
-  typedef Uintah::HashTableIter<VarnameMatlPatch, DataFileInfo> VarHashMapIterator;
+  //  typedef Uintah::HashTable<VarnameMatlPatch, DataFileInfo> VarHashMap;
+  //  typedef Uintah::HashTableIter<VarnameMatlPatch, DataFileInfo> VarHashMapIterator;
 
   //! Top of DataArchive structure for storing hash maps of variable data
   //! - containing data for each time step.
   class TimeData {
   public:    
-    TimeData( DataArchive * da, const std::string & timestepPathAndFilename,
-              const std::string & gridPathAndFilename);
+    TimeData( DataArchive * da, const std::string & timestepPathAndFilename );
     ~TimeData();
     VarData& findVariableInfo(const std::string& name, const Patch* patch, int matl);
 
@@ -359,7 +355,10 @@ private:
     // nested class of DataArchive...
 
     // Info in the data file about the patch-matl-var.
-    VarHashMap d_datafileInfo;
+    // Replaced the "VarHashMap d_datafileInfo;" with the two vectors (below) in order to
+    // keep the variables in a defined order.  This occurred after svn revision r56540.
+    std::vector<VarnameMatlPatch> d_datafileInfoIndex;
+    std::vector<DataFileInfo>     d_datafileInfoValue;
 
     // Patch info (separate by levels) - proc, whether parsed, datafile, etc.
     // Gets expanded and proc is set during queryGrid.  Other fields are set
@@ -386,7 +385,6 @@ private:
 
     ProblemSpecP  d_timestep_ps_for_component;    // timestep.xml's xml for components.
     std::string   d_ts_path_and_filename;         // Path to timestep.xml.
-    std::string   d_grid_path_and_filename;       // Path to grid.xml.
     std::string   d_ts_directory;                 // Directory that contains timestep.xml.
     bool          d_swapBytes;
     int           d_nBytes;
@@ -441,7 +439,7 @@ private:
   int d_processor;
   int d_numProcessors;
 
-  std::mutex d_lock{};
+  std::mutex d_lock;
     
   std::string d_particlePositionName;
 
@@ -487,17 +485,18 @@ private:
   template<class T>
   void
   DataArchive::query(       std::vector<T> & values,
-                            const std::string    & name,
+                      const std::string    & name,
                             int              matlIndex,
                             long64           particleID,
                             int              levelIndex,
                             double           startTime,
                             double           endTime ) {
-    double call_start = Uintah::Time::currentSeconds();
+    Timers::Simple timer;
+    timer.start();
 
     std::vector<int> index;
     std::vector<double> times;
-    queryTimesteps(index, times); // build timesteps if not already done
+    queryTimesteps( index, times ); // build timesteps if not already done
 
     // figure out what kind of variable we're looking for
     std::vector<std::string> type_names;
@@ -515,10 +514,10 @@ private:
         type = *type_iter;
       }
     }
-    if (type == nullptr) {
+    if( type == nullptr ) {
       throw InternalError("Unable to determine variable type", __FILE__, __LINE__);
     }
-    if (type->getType() != TypeDescription::ParticleVariable) {
+    if( type->getType() != TypeDescription::ParticleVariable ) {
       throw InternalError("Variable type is not ParticleVariable", __FILE__, __LINE__);
     }
     // find the first timestep
@@ -534,11 +533,11 @@ private:
       // nothing prevents this from changing between timesteps, so we have to
       // do this every time -- if that can't actually happen we might be able
       // to speed this up.
-      Patch* patch = nullptr;
-      GridP grid = queryGrid( ts);
-      findPatchAndIndex(grid, patch, idx, particleID, matlIndex, levelIndex, ts);
-      //    std::cerr <<" Patch = 0x"<<hex<<patch<<dec<<", index = "<<idx;
-      if (patch == nullptr) {
+      Patch * patch = nullptr;
+      GridP   grid  = queryGrid( ts );
+      findPatchAndIndex( grid, patch, idx, particleID, matlIndex, levelIndex, ts );
+
+      if( patch == nullptr ) {
         throw VariableNotFoundInGrid( name, particleID, matlIndex, "DataArchive::query", __FILE__, __LINE__ );
       }
 
@@ -547,22 +546,24 @@ private:
       // Now find the index that corresponds to the particleID
       // std::cerr <<" time = "<<t<<",  value = "<<var[idx]<<std::endl;
       values.push_back(var[idx]);
-
     }
-    dbg << "DataArchive::query(values) completed in " << (Uintah::Time::currentSeconds() - call_start) << " seconds\n";
+
+    dbg << "DataArchive::query(values) completed in " << timer().seconds()
+	<< " seconds\n";
   }  
   //______________________________________________________________________
   //
   template<class T>
   void
   DataArchive::query(       std::vector<T> & values,
-                            const std::string    & name,
+                      const std::string    & name,
                             int              matlIndex,
                             IntVector        loc,
                             double           startTime,
                             double           endTime,
                             int              levelIndex /* = -1 */ ) {
-    double call_start = Uintah::Time::currentSeconds();
+    Timers::Simple timer;
+    timer.start();
 
     std::vector<int> index;
     std::vector<double> times;
@@ -580,8 +581,8 @@ private:
         type = *type_iter;
       }
     }
-    if (type == nullptr) {
-      throw InternalError("Unable to determine variable type", __FILE__, __LINE__);
+    if ( type == nullptr ) {
+      throw InternalError( "Unable to determine variable type", __FILE__, __LINE__ );
     }
 
     // Find the first timestep.
@@ -595,8 +596,8 @@ private:
       // nothing prevents this from changing between timesteps, so we have to
       // do this every time -- if that can't actually happen we might be able
       // to speed this up.
-      Patch* patch = nullptr;
-      GridP grid = queryGrid(ts);
+      Patch * patch = nullptr;
+      GridP   grid  = queryGrid( ts );
 
       // which levels to query between.
       int startLevel, endLevel;
@@ -614,7 +615,7 @@ private:
 
         switch (type->getType()) {
         case TypeDescription::CCVariable:
-          for (Level::const_patchIterator iter = level->patchesBegin();
+          for (Level::const_patch_iterator iter = level->patchesBegin();
                (iter != level->patchesEnd()) && (patch == nullptr); iter++) {
             if ((*iter)->containsCell(loc)) {
               patch = *iter;
@@ -625,7 +626,7 @@ private:
           break;
 
         case TypeDescription::NCVariable:
-          for (Level::const_patchIterator iter = level->patchesBegin();
+          for (Level::const_patch_iterator iter = level->patchesBegin();
                (iter != level->patchesEnd()) && (patch == nullptr); iter++) {
             if ((*iter)->containsNode(loc)) {
               patch = *iter;
@@ -634,7 +635,7 @@ private:
           }
           break;
         case TypeDescription::SFCXVariable:
-          for (Level::const_patchIterator iter = level->patchesBegin();
+          for (Level::const_patch_iterator iter = level->patchesBegin();
                (iter != level->patchesEnd()) && (patch == nullptr); iter++) {
             if ((*iter)->containsSFCX(loc)) {
               patch = *iter;
@@ -643,7 +644,7 @@ private:
           }
           break;
         case TypeDescription::SFCYVariable:
-          for (Level::const_patchIterator iter = level->patchesBegin();
+          for (Level::const_patch_iterator iter = level->patchesBegin();
                (iter != level->patchesEnd()) && (patch == nullptr); iter++) {
             if ((*iter)->containsSFCY(loc)) {
               patch = *iter;
@@ -652,7 +653,7 @@ private:
           }
           break;
         case TypeDescription::SFCZVariable:
-          for (Level::const_patchIterator iter = level->patchesBegin();
+          for (Level::const_patch_iterator iter = level->patchesBegin();
                (iter != level->patchesEnd()) && (patch == nullptr); iter++) {
             if ((*iter)->containsSFCZ(loc)) {
               patch = *iter;
@@ -708,8 +709,8 @@ private:
       //std::cerr << "DataArchive::query:data extracted" << std::endl;
     }
 
-    dbg << "DataArchive::query(values) completed in "
-        << (Uintah::Time::currentSeconds() - call_start) << " seconds\n";
+    dbg << "DataArchive::query(values) completed in " << timer().seconds()
+        << " seconds\n";
   }
   
 } // end namespace Uintah

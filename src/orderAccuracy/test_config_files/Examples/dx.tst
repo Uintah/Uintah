@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <start>
-<upsFile>RMCRT_test_1L.ups</upsFile>
+<upsFile>RMCRT_bm1_1L.ups</upsFile>
 <gnuplot>
   <script>plotScript_dx.gp</script>s
   <title> Double:CPU:RMCRT Order-Of-Accuracy \\n Burns and Christon Benchmark \\n 1 timestep (100 Rays per cell), Random Seed</title>

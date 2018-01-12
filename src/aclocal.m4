@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2016 The University of Utah
+#  Copyright (c) 1997-2018 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -387,7 +387,7 @@ for inc in $4; do
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
-     AC_MSG_ERROR(Please do not specify /usr/include as the location for $1 include files.)
+     AC_MSG_ERROR(Please do not specify /usr as the location for $1 files.)
   fi
 
   # Make sure it doesn't have any thing but -I
@@ -803,7 +803,7 @@ if test \( "$cuda_gencode" != "30" \) -a \( "$cuda_gencode" != "35" \) -a \( "$c
   AC_MSG_ERROR( [The specified value provided: "--enable-gencode=$cuda_gencode" is invalid, must be: 3.0, 3.5, 5.0, 5.2] )
 fi  
   
-NVCC_CXXFLAGS="-arch=sm_$cuda_gencode "
+NVCC_CXXFLAGS="$NVCC_CXXFLAGS -arch=sm_$cuda_gencode"
 
 # set up the -Xcompiler flag so that NVCC can pass CXXFLAGS to the host C++ compiler
 #  NOTE: -std=c++11 flag is a valid option for CUDA >=7.0, so pass it directly to NVCC
@@ -923,8 +923,8 @@ _sci_libs=''
 AC_DEFUN(SCI_CHECK_VERSION,
   [
     ##  SCI_CHECK_VERSION
-    _SCI_CORRECT_='echo $echo_n "$echo_c"'
-    _SCI_NOTCORRECT_='echo $echo_n "$echo_c"'
+    _SCI_CORRECT_='echo $ECHO_N "$ECHO_C"'
+    _SCI_NOTCORRECT_='echo $ECHO_N "$ECHO_C"'
     _SCI_VER_1_="0"
     _SCI_VER_2_="$3"
     _CUR_1_=""
@@ -932,7 +932,7 @@ AC_DEFUN(SCI_CHECK_VERSION,
 
     eval _NAME_=`basename $1`
 
-    AC_MSG_CHECKING(for $_NAME_ version $3)
+    AC_MSG_CHECKING(for $_NAME_ with minimum version of $3)
 
     if test "$4"; then
       _SCI_CORRECT_='$4'
@@ -973,10 +973,10 @@ AC_DEFUN(SCI_CHECK_VERSION,
     done
 
     if test "$_SCI_BIGGER_" = "yes"; then
-      AC_MSG_RESULT(yes ($_SCI_REPORT_))
+      AC_MSG_RESULT(yes (found version: $_SCI_REPORT_))
       eval $_SCI_CORRECT_
     else
-      AC_MSG_RESULT(no ($_SCI_REPORT_))
+      AC_MSG_RESULT(no (found version: $_SCI_REPORT_))
       eval $_SCI_NOTCORRECT_
     fi
   ])
@@ -1103,8 +1103,8 @@ AC_DEFUN(SCI_REMOVE_MINUS_L,
 AC_DEFUN(SCI_CHECK_VAR_VERSION,
   [
     ##  SCI_CHECK_VAR_VERSION
-    _SCI_CORRECT_='echo $echo_n "$echo_c"'
-    _SCI_NOTCORRECT_='echo $echo_n "$echo_c"'
+    _SCI_CORRECT_='echo $ECHO_N "$ECHO_C"'
+    _SCI_NOTCORRECT_='echo $ECHO_N "$ECHO_C"'
     _SCI_VER_1_="0"
     _SCI_VER_2_="$3"
     _CUR_1_=""
@@ -1171,8 +1171,8 @@ AC_DEFUN(SCI_CHECK_OS_VERSION,
   [
     ##  SCI_CHECK_OS_VERSION
 
-    _SCI_CORRECT_='echo $echo_n "$echo_c"'
-    _SCI_NOTCORRECT_='echo $echo_n "$echo_c"'
+    _SCI_CORRECT_='echo $ECHO_N "$ECHO_C"'
+    _SCI_NOTCORRECT_='echo $ECHO_N "$ECHO_C"'
     _SCI_VER_1_="0"
     _SCI_VER_2_="$1"
     _CUR_1_=""
@@ -1227,23 +1227,76 @@ AC_DEFUN(SCI_CHECK_OS_VERSION,
   ])
 
 ##
-##  SCI_ARG_WITH(arg-string, usage-string, if-used, if-not-used)
+##  SCI_ARG_WITH(arg-string, usage-string, if-used, if-not-used, directory-or-file, without-is-valid )
 ##
-##    if an arg is provide to the "with", the arg must be a directory
-##    or a file.  If not, a configure error is raised.  This will avoid
-##    the problem of mis-typing the name of the "--with" dir/file.
+##    If an arg is provide to the "with", the arg must be a directory
+##    (or a file(s) - see below).  If not, a configure error is raised.  This will avoid
+##    the problem of mis-typing the name of the "--with" dir/file.  SCI_ARG_WITH
+##    defaults to checking for a directory.  If you wish to enforce that a file
+##    is specified, set non-dir to "yes".
 ##
-##    does the same thing as AC_ARG_WITH (infact, it uses it), but
+##    directory-or-file must be set to one of: DIR, FILE, or FILES.
+##
+##    If FILES are supported, they must be ";" (semicolon) separated.
+##
+##    Does the same thing as AC_ARG_WITH (infact, it uses it), but
 ##    also appends arg-string to the master list of arg-strings
 ##
 
 AC_DEFUN([SCI_ARG_WITH], [
   AC_ARG_WITH($1, $2, $3, $4)
   sci_arg_with_list="$sci_arg_with_list --with-$1 --without-$1"
-  if test -n "$$1" -a ! -e "$$1"; then 
-    AC_MSG_ERROR(The file or directory parameter ($$1) specified for --with-$1 does not exist!  Please verify that the path and file are correct.)
-  fi
+  if test "$with_$1" != NOT_SET; then
 
+    # Check that params 5 and 6 have valid values
+    if test "$5" != "DIR" -a "$5" != "FILE" -a "$5" != "FILES" ; then
+      AC_MSG_ERROR(Internal Uintah configure error for '--with-$1': invalid value of '$5' used for 5th parameter - should be DIR, FILE, or FILES.  Please report.)
+    fi
+    if test "$6" != "WITHOUT-IS-VALID" -a "$6" != "WITHOUT-IS-NOT-VALID" ; then
+      AC_MSG_ERROR(Internal Uintah configure error for '--with-$1': invalid value of '$6' used for 6th parameter - should be WITHOUT-IS[-NOT]-VALID.  Please report.)
+    fi
+
+    # Verify --without is valid
+    if test "$with_$1" = "no" ; then
+      if test "$6" != "WITHOUT-IS-VALID"; then
+        AC_MSG_ERROR('--without-$1' is not supported!)
+      fi
+    fi
+
+    # Verify tha a DIR or FILE was provided.
+    if test "$with_$1" = "yes" ; then 
+      if test "$5" = "FILE" ; then 
+        AC_MSG_ERROR(When using '--with-$1' you must specify the appropriate file.)
+      else
+        AC_MSG_ERROR(When using '--with-$1' you must specify the appropriate directory.)
+      fi
+    fi
+    if test "$with_$1" != "built-in" -a "$with_$1" != NOT_SET -a "$with_$1" != "no"; then 
+      if test "$5" = "FILE"; then
+        # Verify that it is a regular file (or a symbolic link).
+        if test ! -f "$with_$1" ; then 
+          AC_MSG_ERROR([The parameter "$with_$1" provided to --with-$1 is not a file!  Please verify that the path and file are correct.])
+        fi
+      else
+        if test "$5" = "FILES"; then  
+          # Verify that valid files are listed...
+          the_files=$(echo $with_$1 | tr "," "\n")
+          AC_MSG_WARN( the files are $the_files )
+          for the_file in $the_files; do
+            if test ! -f "$the_file"; then  
+              AC_MSG_ERROR([The parameter "$the_file" provided to --with-$1 is not a file!  Please verify that the path and file are correct.])
+            fi
+          done
+        elif test ! -d "$with_$1"; then 
+          # Verify that a valid directory is listed...
+          AC_MSG_ERROR([The parameter "$with_$1" provided to --with-$1 is not a directory!  Please verify that the path is correct.])
+        else
+	  # Is a directory... remove trailing / (if any)
+          with_$1=${with_$1%/}
+        fi
+      fi
+    fi
+  fi
 ])
 
 ##

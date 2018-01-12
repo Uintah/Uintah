@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2016 The University of Utah
+ * Copyright (c) 2012-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -88,8 +88,7 @@ namespace WasatchCore{
     // define the primitive variable and solution variable tags and trap errors
     std::string form = "strong"; // default to strong form
     // get attribute for form. if none provided, then use default    
-    if (params->findAttribute("form"))
-      params->getAttribute("form",form);
+    if( params->findAttribute("form") ) params->getAttribute("form",form);
 
     isStrong_ = (form == "strong") ? true : false;
     const bool existPrimVar = params->findBlock("PrimitiveVariable");
@@ -114,8 +113,10 @@ namespace WasatchCore{
       }
       else if( !isStrong_ && existPrimVar ){
         std::ostringstream msg;
-        msg << "ERROR: For solving the transport equations in weak form, the primitive variable will be the same as the solution variable. So, you don't need to specify it. Please remove the \"PrimitiveVariable\" block from the \"TransportEquation\" block in your input file." << endl;
+        msg << "ERROR: When solving a transport equation in weak form, the primitive variable will be the same as the solution variable. So, you don't need to specify it. Please remove the \"PrimitiveVariable\" block from the \"TransportEquation\" block in your input file." << endl;
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      } else {
+        primVarTag_ = solution_variable_tag();
       }
     }
     assert( primVarTag_ != Expr::Tag() );
@@ -140,12 +141,17 @@ namespace WasatchCore{
 
     if( !isConstDensity_ ){
       for( Uintah::ProblemSpecP diffFluxParams=params_->findBlock("DiffusiveFlux");
-           diffFluxParams != 0;
-           diffFluxParams=diffFluxParams->findNextBlock("DiffusiveFlux") )
-      {
-        const Expr::Tag densityTag = Expr::Tag(densityTag_.name(), Expr::STATE_NONE);
-        const Expr::Tag primVarTag = Expr::Tag(primVarTag_.name(), Expr::STATE_NONE);
-
+           diffFluxParams != nullptr;
+           diffFluxParams=diffFluxParams->findNextBlock("DiffusiveFlux") ) {
+        Expr::Tag densityTag, primVarTag;
+        if (is_strong_form()) {
+          densityTag = Expr::Tag(densityTag_.name(), Expr::STATE_NONE);
+          primVarTag = Expr::Tag(primVarTag_.name(), Expr::STATE_NONE);
+        } else {
+          densityTag = densityTag_;
+          primVarTag = primVarTag_;
+        }
+        
         setup_diffusive_flux_expression<FieldT>( diffFluxParams,
                                                  densityTag,
                                                  primVarTag,
@@ -171,9 +177,8 @@ namespace WasatchCore{
     }
     else{ // constant density
       for( Uintah::ProblemSpecP diffVelParams=params_->findBlock("DiffusiveFlux");
-          diffVelParams != 0;
-          diffVelParams=diffVelParams->findNextBlock("DiffusiveFlux") )
-      {
+           diffVelParams != nullptr;
+           diffVelParams=diffVelParams->findNextBlock("DiffusiveFlux") ) {
         setup_diffusive_velocity_expression<FieldT>( diffVelParams,
                                                      primVarTag_,
                                                      turbDiffTag_,
@@ -192,9 +197,8 @@ namespace WasatchCore{
     Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
     const Expr::Tag solnVarTag( solnVarName_, Expr::STATE_DYNAMIC );
     for( Uintah::ProblemSpecP convFluxParams=params_->findBlock("ConvectiveFlux");
-        convFluxParams != 0;
-        convFluxParams=convFluxParams->findNextBlock("ConvectiveFlux") )
-    {
+         convFluxParams != nullptr;
+         convFluxParams=convFluxParams->findNextBlock("ConvectiveFlux") ) {
       setup_convective_flux_expression<FieldT>( convFluxParams, solnVarTag, factory, info );
     }
   }
@@ -207,9 +211,8 @@ namespace WasatchCore{
                                                        Expr::TagList& srcTags )
   {
     for( Uintah::ProblemSpecP sourceTermParams=params_->findBlock("SourceTermExpression");
-         sourceTermParams != 0;
-         sourceTermParams=sourceTermParams->findNextBlock("SourceTermExpression") )
-    {
+         sourceTermParams != nullptr;
+         sourceTermParams=sourceTermParams->findNextBlock("SourceTermExpression") ) {
       srcTags.push_back( parse_nametag( sourceTermParams->findBlock("NameTag") ) );
     }
   }
@@ -265,7 +268,7 @@ namespace WasatchCore{
       }
     }
 
-    return factory.register_expression( scinew RHSBuilder( rhsTag_, info, srcTags, densityTag_, isConstDensity_, isStrong_, tagNames.drhodt ) );
+    return factory.register_expression( scinew RHSBuilder( rhsTag_, info, srcTags, densityTag_, isConstDensity_, isStrong_, tagNames.divrhou ) );
   }
 
   //------------------------------------------------------------------
@@ -320,12 +323,12 @@ namespace WasatchCore{
         // for variable density problems, we must ALWAYS guarantee proper boundary conditions for
         // rhof_{n+1}. Since we apply bcs on rhof at the bottom of the graph, we can't apply
         // the same bcs on rhof (time advanced). Hence, we set rhof_rhs to zero always :)
-        if( !myBndSpec.has_field(rhs_name()) ){
+        if( !myBndSpec.has_field(rhs_name()) ){ // if nothing has been specified for the RHS
           const BndCondSpec rhsBCSpec = {rhs_name(), "none", 0.0, DIRICHLET, DOUBLE_TYPE };
           bcHelper.add_boundary_condition(bndName, rhsBCSpec);
         }
       }
-      
+
       switch ( myBndSpec.type ){
         case WALL:
         case VELOCITY:
@@ -367,11 +370,11 @@ namespace WasatchCore{
   void ScalarTransportEquation<FieldT>::
   apply_boundary_conditions( const GraphHelper& graphHelper,
                              WasatchBCHelper& bcHelper )
-  {            
+  {
     const Category taskCat = ADVANCE_SOLUTION;
     bcHelper.apply_boundary_condition<FieldT>( solution_variable_tag(), taskCat );
     bcHelper.apply_boundary_condition<FieldT>( rhs_tag(), taskCat, true ); // apply the rhs bc directly inside the extra cell
-  
+
     if( !isConstDensity_ && hasConvection_ ){
       // set bcs for solnVar_*
       const TagNames& tagNames = TagNames::self();

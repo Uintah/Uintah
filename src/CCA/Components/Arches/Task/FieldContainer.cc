@@ -2,13 +2,12 @@
 
 using namespace Uintah;
 
-ArchesFieldContainer::ArchesFieldContainer( const WasatchCore::AllocInfo& alloc_info,
-                                            const Patch* patch,
+ArchesFieldContainer::ArchesFieldContainer( const Patch* patch,
                                             const int matl_index,
                                             const VariableRegistry variable_reg,
                                             DataWarehouse* old_dw,
                                             DataWarehouse* new_dw )
-  : _wasatch_ainfo(alloc_info),
+  :
     _patch(patch),
     _matl_index(matl_index),
     _old_dw(old_dw),

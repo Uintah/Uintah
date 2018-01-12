@@ -9,18 +9,21 @@ echo "Building Wasatch 3P libraries."
 
 source HelperBuildScripts/checkEnv.sh
 
-for dir in SpatialOps ExprLib TabProps RadProps
+export GIT_SSL_NO_VERIFY=true 
+
+for dir in SpatialOps ExprLib TabProps RadProps NSCBC
 do
 
   echo "--- Building $dir ---"
   echo
 
   if ! test -d "$dir"; then
-    echo "Error, there is no $dir directory!"
-    exit
+    echo "WARNING: W3P source directory $dir does not appear to be 'git'ed yet. Downloading it now:"
+    echo
+    git clone --depth 1 http://gitlab.multiscale.utah.edu/common/$dir.git
   fi
 
-  echo "----- Updating GIT files ---"
+  echo "----- Updating GIT files for $dir ---"
   echo
 
   cd $dir
@@ -32,10 +35,15 @@ do
   fi
 
   echo
-  echo "----- Installing ---"
+  echo "----- Installing $dir -----"
   echo
   cd ../$dir-build
+
   ./doit
+
+  if test $? != 0; then
+      exit -1
+  fi
 
   cd ..
 

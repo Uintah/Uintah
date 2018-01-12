@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -26,7 +26,8 @@
 #ifndef Packages_Uintah_CCA_Components_Examples_MassMomEng_src_h
 #define Packages_Uintah_CCA_Components_Examples_MassMomEng_src_h
 
-#include <CCA/Ports/ModelInterface.h>
+#include <CCA/Components/Models/FluidsBased/FluidsBasedModel.h>
+
 #include <Core/Grid/Variables/ComputeSet.h>
 
 namespace Uintah {
@@ -60,29 +61,29 @@ WARNING
   
 ****************************************/
 
-  class MassMomEng_src : public ModelInterface {
+  class MassMomEng_src : public FluidsBasedModel {
   public:
-    MassMomEng_src(const ProcessorGroup* myworld, ProblemSpecP& params);
+    MassMomEng_src(const ProcessorGroup* myworld,
+		   const SimulationStateP& sharedState,
+		   const ProblemSpecP& params);
+    
     virtual ~MassMomEng_src();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
 
-    virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
-                              ModelSetup* setup);
+    virtual void problemSetup(GridP& grid,
+                               const bool isRestart);
       
     virtual void scheduleInitialize(SchedulerP&,
-                                        const LevelP& level,
-                                        const ModelInfo*);
+                                        const LevelP& level);
 
     virtual void restartInitialize() {}
       
-    virtual void scheduleComputeStableTimestep(SchedulerP&,
-                                                   const LevelP& level,
-                                                   const ModelInfo*);
+    virtual void scheduleComputeStableTimeStep(SchedulerP&,
+                                                   const LevelP& level);
       
     virtual void scheduleComputeModelSources(SchedulerP&,
-                                                const LevelP& level,
-                                                const ModelInfo*);
+                                                const LevelP& level);
                                              
     virtual void scheduleModifyThermoTransportProperties(SchedulerP&,
                                                          const LevelP&,
@@ -97,21 +98,19 @@ WARNING
                                       SchedulerP& sched);
                                       
    virtual void scheduleTestConservation(SchedulerP&,
-                                         const PatchSet* patches,
-                                         const ModelInfo* mi);
+                                         const PatchSet* patches);
 
   private:    
     void computeModelSources(const ProcessorGroup*, 
                              const PatchSubset* patches,
-                               const MaterialSubset* matls, 
+			     const MaterialSubset* matls, 
                              DataWarehouse*, 
-                               DataWarehouse* new_dw, 
-                             const ModelInfo*);
+			     DataWarehouse* new_dw);
 
     MassMomEng_src(const MassMomEng_src&);
     MassMomEng_src& operator=(const MassMomEng_src&);
 
-    ProblemSpecP params;
+    ProblemSpecP d_params;
     ICELabel* Ilb;
     MaterialSet* mymatls;
     Material* d_matl;
@@ -128,7 +127,6 @@ WARNING
     const VarLabel* totalMass_srcLabel;
     const VarLabel* totalMom_srcLabel;
     const VarLabel* totalEng_srcLabel;
-    SimulationStateP d_sharedState;
   };
 }
 

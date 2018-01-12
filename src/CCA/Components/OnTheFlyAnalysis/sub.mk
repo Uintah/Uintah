@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2016 The University of Utah
+#  Copyright (c) 1997-2018 The University of Utah
 #
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -32,34 +32,56 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR := CCA/Components/OnTheFlyAnalysis
 
+# Generic analysis modules only -
+# Applicaion specific analysis modules are addd below
 SRCS += \
-        $(SRCDIR)/AnalysisModuleFactory.cc   \
-        $(SRCDIR)/AnalysisModule.cc          \
-        $(SRCDIR)/1stLawThermo.cc            \
-        $(SRCDIR)/containerExtract.cc        \
-        $(SRCDIR)/flatPlate_heatFlux.cc      \
-        $(SRCDIR)/lineExtract.cc             \
-        $(SRCDIR)/MinMax.cc                  \
-        $(SRCDIR)/momentumAnalysis.cc        \
-        $(SRCDIR)/particleExtract.cc         \
-        $(SRCDIR)/planeExtract.cc            \
-        $(SRCDIR)/radiometer.cc              \
-        $(SRCDIR)/vorticity.cc
-
+        $(SRCDIR)/AnalysisModuleFactory.cc \
+        $(SRCDIR)/AnalysisModule.cc        \
+        $(SRCDIR)/lineExtract.cc           \
+        $(SRCDIR)/MinMax.cc                \
+        $(SRCDIR)/momentumAnalysis.cc      \
+        $(SRCDIR)/planeExtract.cc          \
+        $(SRCDIR)/radiometer.cc            \
+        $(SRCDIR)/statistics.cc
 
 PSELIBS := \
-        CCA/Ports                \
-        Core/Disclosure          \
-        Core/Exceptions          \
-        Core/Geometry            \
-        Core/GeometryPiece       \
-        Core/Grid                \
-        Core/Labels              \
-        Core/Math                \
-        Core/OS                  \
-        Core/Parallel            \
-        Core/ProblemSpec         \
+	CCA/Ports               \
+        Core/Disclosure         \
+        Core/Exceptions         \
+        Core/Geometry           \
+        Core/GeometryPiece      \
+        Core/Grid               \
+        Core/Math               \
+        Core/OS                 \
+        Core/Parallel           \
+        Core/ProblemSpec        \
         Core/Util
+
+# ICE analysis modules
+ifeq ($(BUILD_ICE),yes)
+  SRCS += \
+        $(SRCDIR)/containerExtract.cc \
+        $(SRCDIR)/vorticity.cc
+
+  PSELIBS += CCA/Components/ICE/Core \
+             CCA/Components/ICE/Materials
+endif
+
+# MPM analysis modules
+ifeq ($(BUILD_MPM),yes)
+  SRCS += \
+        $(SRCDIR)/flatPlate_heatFlux.cc \
+        $(SRCDIR)/particleExtract.cc
+
+  PSELIBS += CCA/Components/MPM/Core \
+             CCA/Components/MPM/Materials
+endif
+
+# MPM-ICE analysis modules
+ifeq ($(BUILD_MPM)$(BUILD_ICE),yesyes)
+  SRCS += \
+        $(SRCDIR)/1stLawThermo.cc
+endif
 
 LIBS := $(XML_LIBRARY) $(MPI_LIBRARY)
 

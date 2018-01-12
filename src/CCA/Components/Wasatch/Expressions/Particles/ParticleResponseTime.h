@@ -2,7 +2,7 @@
 #define ParticleResponseTime_Expr_h
 
 #include <expression/Expression.h>
-#include <spatialops/particles/ParticleOperatorsImplementation.h>
+#include <spatialops/particles/ParticleOperators.h>
 
 //==================================================================
 
@@ -88,7 +88,7 @@ ParticleResponseTime( const Expr::Tag& particleDensityTag,
                       const Expr::TagList& particlePositionTags )
   : Expr::Expression<ParticleField>()
 {
-  this->set_gpu_runnable( true );
+  this->set_gpu_runnable(false);  // waiting for GPU-enabled particle interpolants
 
   pdensity_ = this->template create_field_request<ParticleField>(particleDensityTag);
   psize_ = this->template create_field_request<ParticleField>(particleSizeTag);

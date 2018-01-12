@@ -1,12 +1,9 @@
 #include <CCA/Components/Arches/PropertyModelsV2/WallHFVariable.h>
-#include <CCA/Components/Arches/Operators/Operators.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-
-#include <spatialops/structured/FVStaggered.h>
 
 #define SMALLNUM 1e-100
 
-using namespace Uintah;
+namespace Uintah{
 
 WallHFVariable::WallHFVariable( std::string task_name, int matl_index, SimulationStateP shared_state ) :
   TaskInterface( task_name, matl_index ), _shared_state(shared_state) {
@@ -53,7 +50,7 @@ WallHFVariable::create_local_labels(){
 //
 
 void
-WallHFVariable::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
+WallHFVariable::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool pack_tasks){
 
   register_variable( _flux_x, ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( _flux_y, ArchesFieldContainer::COMPUTES, variable_registry );
@@ -65,32 +62,29 @@ WallHFVariable::register_initialize( std::vector<ArchesFieldContainer::VariableI
 }
 
 void
-WallHFVariable::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                            SpatialOps::OperatorDatabase& opr ){
+WallHFVariable::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  using namespace SpatialOps;
-  using SpatialOps::operator *;
-  typedef SpatialOps::SVolField SVolF;
-  typedef SpatialOps::SpatFldPtr<SVolF> SVolFP;
+  CCVariable<double>& flux_x = *(tsk_info->get_uintah_field<CCVariable<double> >(_flux_x));
+  CCVariable<double>& flux_y = *(tsk_info->get_uintah_field<CCVariable<double> >(_flux_y));
+  CCVariable<double>& flux_z = *(tsk_info->get_uintah_field<CCVariable<double> >(_flux_z));
+  CCVariable<double>& power  = *(tsk_info->get_uintah_field<CCVariable<double> >(_net_power));
+  CCVariable<double>& total  = *(tsk_info->get_uintah_field<CCVariable<double> >(_task_name));
+  CCVariable<double>& area   = *(tsk_info->get_uintah_field<CCVariable<double> >(_area));
 
-  SVolFP flux_x = tsk_info->get_so_field<SVolF>(_flux_x);
-  SVolFP flux_y = tsk_info->get_so_field<SVolF>(_flux_y);
-  SVolFP flux_z = tsk_info->get_so_field<SVolF>(_flux_z);
-  SVolFP power  = tsk_info->get_so_field<SVolF>(_net_power);
-  SVolFP total  = tsk_info->get_so_field<SVolF>(_task_name);
-  SVolFP area   = tsk_info->get_so_field<SVolF>(_area);
-
-  *flux_x <<= 0.0;
-  *flux_y <<= 0.0;
-  *flux_z <<= 0.0;
-  *power <<= 0.0;
-  *total <<= 0.0;
-  *area <<= 0.0;
+  Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+  Uintah::parallel_for( range, [&](int i, int j, int k){
+    flux_x(i,j,k) = 0.0;
+    flux_y(i,j,k) = 0.0;
+    flux_z(i,j,k) = 0.0;
+    power(i,j,k) = 0.0;
+    total(i,j,k) = 0.0;
+    area(i,j,k)= 0.0;
+  });
 
 }
 
 void
-WallHFVariable::register_restart_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
+WallHFVariable::register_restart_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){
 
   if ( _new_variables ) {
 
@@ -106,27 +100,24 @@ WallHFVariable::register_restart_initialize( std::vector<ArchesFieldContainer::V
 }
 
 void
-WallHFVariable::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                                    SpatialOps::OperatorDatabase& opr ){
+WallHFVariable::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  using namespace SpatialOps;
-  using SpatialOps::operator *;
-  typedef SpatialOps::SVolField SVolF;
-  typedef SpatialOps::SpatFldPtr<SVolF> SVolFP;
+  CCVariable<double>& flux_x = *(tsk_info->get_uintah_field<CCVariable<double> >(_flux_x));
+  CCVariable<double>& flux_y = *(tsk_info->get_uintah_field<CCVariable<double> >(_flux_y));
+  CCVariable<double>& flux_z = *(tsk_info->get_uintah_field<CCVariable<double> >(_flux_z));
+  CCVariable<double>& power  = *(tsk_info->get_uintah_field<CCVariable<double> >(_net_power));
+  CCVariable<double>& total  = *(tsk_info->get_uintah_field<CCVariable<double> >(_task_name));
+  CCVariable<double>& area   = *(tsk_info->get_uintah_field<CCVariable<double> >(_area));
 
-  SVolFP flux_x = tsk_info->get_so_field<SVolF>(_flux_x);
-  SVolFP flux_y = tsk_info->get_so_field<SVolF>(_flux_y);
-  SVolFP flux_z = tsk_info->get_so_field<SVolF>(_flux_z);
-  SVolFP power  = tsk_info->get_so_field<SVolF>(_net_power);
-  SVolFP total  = tsk_info->get_so_field<SVolF>(_task_name);
-  SVolFP area   = tsk_info->get_so_field<SVolF>(_area);
-
-  *flux_x <<= 0.0;
-  *flux_y <<= 0.0;
-  *flux_z <<= 0.0;
-  *power <<= 0.0;
-  *total <<= 0.0;
-  *area <<= 0.0;
+  Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+  Uintah::parallel_for( range, [&](int i, int j, int k){
+    flux_x(i,j,k) = 0.0;
+    flux_y(i,j,k) = 0.0;
+    flux_z(i,j,k) = 0.0;
+    power(i,j,k) = 0.0;
+    total(i,j,k) = 0.0;
+    area(i,j,k)= 0.0;
+  });
 
 }
 
@@ -137,7 +128,7 @@ WallHFVariable::restart_initialize( const Patch* patch, ArchesTaskInfoManager* t
 //
 
 void
-WallHFVariable::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
+WallHFVariable::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){
 
   register_variable( _flux_x, ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( _flux_y, ArchesFieldContainer::COMPUTES, variable_registry );
@@ -145,14 +136,14 @@ WallHFVariable::register_timestep_eval( std::vector<ArchesFieldContainer::Variab
   register_variable( _net_power, ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( _task_name, ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( _area, ArchesFieldContainer::COMPUTES, variable_registry );
-  register_variable( "radiationFluxE", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW, variable_registry );
-  register_variable( "radiationFluxW", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW, variable_registry );
-  register_variable( "radiationFluxN", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW, variable_registry );
-  register_variable( "radiationFluxS", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW, variable_registry );
-  register_variable( "radiationFluxT", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW, variable_registry );
-  register_variable( "radiationFluxB", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW, variable_registry );
-  register_variable( "volFraction", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW, variable_registry );
-  register_variable( "radiation_temperature", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW, variable_registry );
+  register_variable( "radiationFluxE", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry );
+  register_variable( "radiationFluxW", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry );
+  register_variable( "radiationFluxN", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry );
+  register_variable( "radiationFluxS", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry );
+  register_variable( "radiationFluxT", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry );
+  register_variable( "radiationFluxB", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry );
+  register_variable( "volFraction", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry );
+  register_variable( "radiation_temperature", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry );
   register_variable( _flux_x, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
   register_variable( _flux_y, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
   register_variable( _flux_z, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
@@ -163,8 +154,7 @@ WallHFVariable::register_timestep_eval( std::vector<ArchesFieldContainer::Variab
 }
 
 void
-WallHFVariable::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                      SpatialOps::OperatorDatabase& opr ){
+WallHFVariable::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   double sigma=5.67e-8;  //  w / m^2 k^4
 
@@ -193,10 +183,11 @@ WallHFVariable::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
 
   Vector DX = patch->dCell();
 
-  int timestep = _shared_state->getCurrentTopLevelTimeStep();
-
-  //if ( ( timestep )%_f + 1 == 1 ){
-  if ( ( timestep )%_f  == 0 ) {
+//   int timeStep = _shared_state->getCurrentTopLevelTimeStep();
+  int timeStep = tsk_info->get_timeStep();
+ 
+  //if ( ( timeStep )%_f + 1 == 1 ){
+  if ( ( timeStep )%_f  == 0 ) {
 
     for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ) {
 
@@ -343,3 +334,4 @@ WallHFVariable::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
 
   }
 }
+} //namspace Uintah

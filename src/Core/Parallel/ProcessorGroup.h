@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,96 +22,103 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef CCA_COMPONENTS_SCHEDULERS_PROCESSORGROUP_H
-#define CCA_COMPONENTS_SCHEDULERS_PROCESSORGROUP_H
+#ifndef CORE_PARALLEL_PROCESSORGROUP_H
+#define CORE_PARALLEL_PROCESSORGROUP_H
 
-#include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
+#include <Core/Parallel/UintahMPI.h>
+
 #include <vector>
 
 namespace Uintah {
+
 /**************************************
 
-CLASS
-   ProcessorGroup
-   
-
-GENERAL INFORMATION
-
-   ProcessorGroup.h
-
-   Steven G. Parker
-   Department of Computer Science
-   University of Utah
-
-   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-  
-
-KEYWORDS
-   Processor_Group
+ CLASS
+ ProcessorGroup
 
 
-DESCRIPTION
-  
+ GENERAL INFORMATION
 
-WARNING
-  
-****************************************/
+ ProcessorGroup.h
+
+ Steven G. Parker
+ Department of Computer Science
+ University of Utah
+
+ Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
+
+
+ KEYWORDS
+ Processor_Group
+
+
+ DESCRIPTION
+
+
+ WARNING
+
+ ****************************************/
 
 class Parallel;
 
 class ProcessorGroup {
 
-  public:
+public:
 
-    ~ProcessorGroup();
+  ~ProcessorGroup(){};
 
-    int size() const { return d_size; }
 
-    int myrank() const { return d_rank; }
+  int nNodes() const { return m_nNodes; } // Returns the total number of nodes this MPI session is running on.
+  int myNode() const { return m_node; }
+  int nRanks() const { return m_nRanks; } // Returns the total number of MPI ranks in this MPI session.
+  int myRank() const { return m_rank; }
 
-    MPI_Comm getComm() const
-    {
-      return d_comm;
+  MPI_Comm getComm() const { return m_comm; }
+
+  MPI_Comm getGlobalComm( int comm_idx ) const
+  {
+    if (comm_idx == -1 || m_threads < 1) {
+      return m_comm;
+    } else {
+      return m_global_comms[comm_idx];
     }
+  }
 
-    MPI_Comm getgComm( int i ) const
-    {
-      if (d_threads < 1 || i == -1) {
-        return d_comm;
-      }
-      else {
-        return d_gComms[i];
-      }
-    }
+  void setGlobalComm( int num_comms ) const;
 
-    void setgComm( int i ) const;
 
-  private:
+private:
 
-    const ProcessorGroup* d_parent;
+  // can only be called from Parallel
+  ProcessorGroup( const ProcessorGroup * parent
+                ,       MPI_Comm         comm
+                ,       int              rank
+                ,       int              size
+                ,       int              threads
+                );
 
-    friend class Parallel;
+  // eliminate copy, assignment and move
+  ProcessorGroup( const ProcessorGroup & )            = delete;
+  ProcessorGroup& operator=( const ProcessorGroup & ) = delete;
+  ProcessorGroup( ProcessorGroup && )                 = delete;
+  ProcessorGroup& operator=( ProcessorGroup && )      = delete;
 
-    ProcessorGroup( const ProcessorGroup* parent,
-                          MPI_Comm        comm,
-                          bool            allmpi,
-                          int             rank,
-                          int             size,
-                          int             threads );
+  int  m_node;   // Node this rank is executing on.
+  int  m_nNodes; // Total number of nodes this MPI session is running on.
 
-    int                           d_rank;
-    int                           d_size;
-    int                           d_threads;
-    MPI_Comm                      d_comm;
-    mutable std::vector<MPI_Comm> d_gComms;
-    bool                          d_allmpi;
+  int  m_rank;   // MPI rank of this process.
+  int  m_nRanks; // Total number of MPI Ranks.
 
-    // disable copy and assignment
-    ProcessorGroup(const ProcessorGroup&);
-    ProcessorGroup& operator=(const ProcessorGroup&);
+  int  m_threads;
+
+  MPI_Comm                        m_comm;
+  mutable std::vector<MPI_Comm>   m_global_comms;
+  const ProcessorGroup          * m_parent_group;
+
+  friend class Parallel;
+
 };
 
-} // End namespace Uintah
+}  // namespace Uintah
 
-
-#endif // end CCA_COMPONENTS_SCHEDULERS_PROCESSORGROUP_H
+#endif // end CORE_PARALLEL_PROCESSORGROUP_H

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2016 The University of Utah
+ * Copyright (c) 2012-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -67,29 +67,33 @@ namespace WasatchCore{
     temperature,
     absorption,
     radiationsource, radvolq, radvrflux,
-    e0, rhoE0,
     enthalpy,
     xHeatFlux, yHeatFlux, zHeatFlux,
     kineticEnergy, totalKineticEnergy;
     
     // species related variables
     const Expr::Tag
-    species,
-    rhoyi,
-    xSpeciesDiffFlux, ySpeciesDiffFlux, zSpeciesDiffFlux,
-    mixtureFraction;
+    mixMW;
     
+    // tar and soot related
+    const Expr::Tag
+    tar, soot,         sootParticleNumberDensity,
+    tarOxidationRate,  sootOxidationRate,
+    sootFormationRate, sootAgglomerationRate;
+
     // thermochemistry related variables
     const Expr::Tag
-    heatCapacity,
-    thermalConductivity,
-    viscosity;
+    soundspeed,
+    heatCapacity, cp, cv,
+    thermalConductivity,    
+    dudx, dvdy, dwdz,
+    dpdx, dpdy, dpdz;
     
     // momentum related variables
     const Expr::Tag
     xvel, yvel, zvel,
     xmom, ymom, zmom,
-    pressure, dilatation,
+    pressure, dilatation, divrhou,
     strainxx, strainxy, strainxz,
     strainyx, strainyy, strainyz,
     strainzx, strainzy, strainzz;
@@ -105,7 +109,8 @@ namespace WasatchCore{
     pdragx, pdragy, pdragz,
     pbodyx, pbodyy, pbodyz,
     pmomsrcx, pmomsrcy, pmomsrcz,
-    presponse, preynolds, pdragcoef;
+    presponse, preynolds, pdragcoef,
+    pHeatTransCoef, pHeatCapacity;
 
     // varden
     const std::string

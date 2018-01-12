@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -51,7 +51,7 @@
 #include <Core/Grid/Variables/Array3.h>
 #include <Core/Parallel/ProcessorGroup.h>
 
-#include <Core/Util/Time.h>
+#include <Core/Util/Timers/Timers.hpp>
 #include <Core/Math/MinMax.h>
 #include <Core/Math/MiscMath.h>
 
@@ -457,6 +457,8 @@ CompLocalDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
                             timelabels);
 
     // Requires
+    tsk->requires( Task::OldDW, d_lab->d_timeStepLabel );
+    
     // Assuming one layer of ghost cells
     // initialize with the value of zero at the physical bc's
     // construct a stress tensor and stored as an array with the following order
@@ -1465,7 +1467,6 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
                                         DataWarehouse* new_dw,
                                         const TimeIntegratorLabel* timelabels)
 {
-  //int nofTimeSteps=d_lab->d_sharedState->getCurrentTopLevelTimeStep();
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
@@ -1913,8 +1914,9 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
 
     IntVector indexLow = patch->getFortranCellLowIndex();
     IntVector indexHigh = patch->getFortranCellHighIndex();
-    double start_turbTime = Time::currentSeconds();
-
+    Timers::Simple timer;
+    timer.start();
+    
 #ifdef PetscFilter
     d_filter->applyFilter<Array3<double> >(pc, patch, rhoU, filterRhoU);
     d_filter->applyFilter<Array3<double> >(pc, patch, rhoV, filterRhoV);
@@ -1957,9 +1959,9 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
       }
     }  
 
-    if (pc->myrank() == 0)
+    if (pc->myRank() == 0)
       cerr << "Time for the Filter operation in Turbulence Model: " << 
-        Time::currentSeconds()-start_turbTime << " seconds\n";
+        timer().seconds() << " seconds\n";
 #endif
 #ifdef use_fortran
     fort_comp_dynamic_2loop(cellinfo->sew,cellinfo->sns,cellinfo->stb,
@@ -2226,7 +2228,12 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
                                               DataWarehouse* new_dw,
                                               const TimeIntegratorLabel* timelabels)
 {
-  int nofTimeSteps=d_lab->d_sharedState->getCurrentTopLevelTimeStep();
+  timeStep_vartype timeStep;
+  old_dw->get( timeStep, d_lab->d_timeStepLabel );
+
+  int nofTimeSteps = timeStep;
+  // int nofTimeSteps=d_lab->d_sharedState->getCurrentTopLevelTimeStep();
+
   int initialTimeStep=2;
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -81,7 +81,7 @@ void
 TurbulenceModelPlaceholder::problemSetup(const ProblemSpecP& params)
 {
   d_turbPrNo = 0.4;
-  problemSetupCommon( params ); 
+  problemSetupCommon( params );
 }
 
 //****************************************************************************
@@ -98,31 +98,27 @@ TurbulenceModelPlaceholder::sched_reComputeTurbSubmodel( SchedulerP& sched,
   Task* tsk = scinew Task(taskname, this,
                           &TurbulenceModelPlaceholder::reComputeTurbSubmodel,
                           timelabels);
-  
+
   // Requires
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gn = Ghost::None;
-  
+
   tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel,  gn);
   //tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, gn, 0);
-  
+
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,       gac, 1);
   // for multimaterial
   if (d_MAlab){
     tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, gn, 0);
   }
-  
+
   tsk->modifies(d_lab->d_viscosityCTSLabel);
   tsk->modifies(d_lab->d_turbViscosLabel);
-  
+
   sched->addTask(tsk, level->eachPatch(), matls);
 }
 
 
-//****************************************************************************
-// Actual recompute - in fact, grab the turbulent viscosity from Wasatch where
-// it is being computed
-//****************************************************************************
 void
 TurbulenceModelPlaceholder::reComputeTurbSubmodel(const ProcessorGroup*,
                                         const PatchSubset* patches,
@@ -131,52 +127,50 @@ TurbulenceModelPlaceholder::reComputeTurbSubmodel(const ProcessorGroup*,
                                         DataWarehouse* new_dw,
                                         const TimeIntegratorLabel* timelabels)
 {
-  //  double time = d_lab->d_sharedState->getElapsedTime();
-  
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
     //constCCVariable<double> density;
-    
+
     CCVariable<double> viscosity; // this is the total viscosity that arches uses
     CCVariable<double> turbViscosity;
 
-    
+
     constCCVariable<double> voidFraction;
     constCCVariable<int> cellType;
     // Get the velocity, density and viscosity from the old data warehouse
     Ghost::GhostType  gac = Ghost::AroundCells;
     Ghost::GhostType  gn = Ghost::None;
-    
-    
+
+
     new_dw->getModifiable(viscosity,     d_lab->d_viscosityCTSLabel,indx, patch);
     new_dw->getModifiable(turbViscosity, d_lab->d_turbViscosLabel, indx, patch );
-    
+
 //    new_dw->get(density,     d_lab->d_densityCPLabel,      indx, patch, gn,  0);
-    
+
     if (d_MAlab){
       new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, indx, patch,gn, 0);
     }
     new_dw->get(cellType, d_lab->d_cellTypeLabel, indx, patch, gac, 1);
-    
+
     // get physical constants
     double mol_viscos; // molecular viscosity
     mol_viscos = d_physicalConsts->getMolecularViscosity();
-    
+
     // Get the patch and variable details
     // compatible with fortran index
     IntVector idxLo = patch->getFortranCellLowIndex();
     IntVector idxHi = patch->getFortranCellHighIndex();
-    
+
     viscosity.initialize(0.0);
-    
+
     turbViscosity.copyData(viscosity);
     for ( CellIterator iter=patch->getCellIterator(); !iter.done(); ++iter ){
       IntVector c = *iter;
       viscosity[c] = viscosity[c] + mol_viscos;
     }
-    
+
     //__________________________________
     // boundary conditions
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
@@ -185,14 +179,14 @@ TurbulenceModelPlaceholder::reComputeTurbSubmodel(const ProcessorGroup*,
     bool yplus =  patch->getBCType(Patch::yplus)  != Patch::Neighbor;
     bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
     bool zplus =  patch->getBCType(Patch::zplus)  != Patch::Neighbor;
-    
+
     int wall_celltypeval = d_boundaryCondition->wallCellType();
     if (xminus) {         // xminus
       int colX = idxLo.x();
       for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
         for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
           IntVector currCell(colX-1, colY, colZ);
-          
+
           if (cellType[currCell] != wall_celltypeval){
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
             turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
@@ -207,7 +201,7 @@ TurbulenceModelPlaceholder::reComputeTurbSubmodel(const ProcessorGroup*,
       for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
         for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
           IntVector currCell(colX+1, colY, colZ);
-          
+
           if (cellType[currCell] != wall_celltypeval){
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
             turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
@@ -222,7 +216,7 @@ TurbulenceModelPlaceholder::reComputeTurbSubmodel(const ProcessorGroup*,
       for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
         for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
           IntVector currCell(colX, colY-1, colZ);
-          
+
           if (cellType[currCell] != wall_celltypeval){
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
             turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
@@ -236,7 +230,7 @@ TurbulenceModelPlaceholder::reComputeTurbSubmodel(const ProcessorGroup*,
       int colY = idxHi.y();
       for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
         for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-          
+
           IntVector currCell(colX, colY+1, colZ);
           if (cellType[currCell] != wall_celltypeval){
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
@@ -252,7 +246,7 @@ TurbulenceModelPlaceholder::reComputeTurbSubmodel(const ProcessorGroup*,
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
         for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
           IntVector currCell(colX, colY, colZ-1);
-          
+
           if (cellType[currCell] != wall_celltypeval){
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
             turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
@@ -267,7 +261,7 @@ TurbulenceModelPlaceholder::reComputeTurbSubmodel(const ProcessorGroup*,
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
         for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
           IntVector currCell(colX, colY, colZ+1);
-          
+
           if (cellType[currCell] != wall_celltypeval){
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
             turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
@@ -277,7 +271,7 @@ TurbulenceModelPlaceholder::reComputeTurbSubmodel(const ProcessorGroup*,
         }
       }
     }
-    
+
     if (d_MAlab) {
       IntVector indexLow = patch->getExtraCellLowIndex();
       IntVector indexHigh = patch->getExtraCellHighIndex();
@@ -294,4 +288,3 @@ TurbulenceModelPlaceholder::reComputeTurbSubmodel(const ProcessorGroup*,
     }
   }
 }
-

@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2016 The University of Utah
+#  Copyright (c) 1997-2018 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -27,9 +27,11 @@
 # 
 # Makefile fragment for this subdirectory 
 
-SRCDIR   := CCA/Components/ICE/EOS
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCS     += $(SRCDIR)/EquationOfState.cc    \
+SRCDIR := CCA/Components/ICE/EOS
+
+SRCS += $(SRCDIR)/EquationOfState.cc        \
 	$(SRCDIR)/EquationOfStateFactory.cc \
 	$(SRCDIR)/IdealGas.cc               \
 	$(SRCDIR)/HardSphereGas.cc          \
@@ -45,14 +47,15 @@ SRCS     += $(SRCDIR)/EquationOfState.cc    \
 	$(SRCDIR)/BirchMurnaghan.cc
 
 PSELIBS := \
-	CCA/Ports       \
-	Core/Grid       \
-	Core/Parallel   \
-	Core/Exceptions \
-	Core/Math       \
-	Core/Exceptions \
-	Core/Geometry 
+	Core/Disclosure     \
+	Core/Exceptions     \
+	Core/Geometry       \
+	Core/GeometryPiece  \
+	Core/Grid           \
+	Core/Math           \
+	Core/Parallel       \
+	Core/ProblemSpec    \
+	Core/Util           
 
-LIBS	:= 
-
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

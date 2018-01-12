@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -23,68 +23,72 @@
  *//*
  MMS.cc -  Supports three manufactured solutions
 
-	   1) Axis Aligned MMS : Already was a part of Uintah. 
-	   Paper : An evaluation of explicit time integration schemes for use with the generalized interpolation material point method ",
-	   Volume 227, pp.9628Ã¢ÂÂ9642 2008
-	   2) Generalized Vortex : Newly added
-	   Paper : Establishing Credibility of Particle Methods through Verification testing. 
-	   Particles 2011 II International Conference on Particle-based methods Fundamentals and Applications.
-	   3) Expanding Ring : Newly added
-	   Paper : An evaluation of explicit time integration schemes for use with the generalized interpolation material point method ",
-	   Volume 227, pp.9628Ã¢ÂÂ9642 2008
+     1) Axis Aligned MMS : Already was a part of Uintah. 
+     Paper : An evaluation of explicit time integration schemes for use with the generalized interpolation material point method ",
+     Volume 227, pp.9628Ã¢ÂÂ9642 2008
+     2) Generalized Vortex : Newly added
+     Paper : Establishing Credibility of Particle Methods through Verification testing. 
+     Particles 2011 II International Conference on Particle-based methods Fundamentals and Applications.
+     3) Expanding Ring : Newly added
+     Paper : An evaluation of explicit time integration schemes for use with the generalized interpolation material point method ",
+     Volume 227, pp.9628Ã¢ÂÂ9642 2008
 
 
 
 Member Functions :
 
 initializeParticleForMMS : Initilaizes the Particle data at t = 0 ; Some MMS have intial velocity/displacement/stress. 
-			   For initial stress state, look at cnh_mms.cc 
+         For initial stress state, look at cnh_mms.cc 
 
 computeExternalForceForMMS : Computes the analytically determined body force for the pre-determined deformation. 
-			     Look at the papers mentioned above for more information.
+           Look at the papers mentioned above for more information.
 
 
-		Author : Krishna Kamojjala
-			 Department of Mechanical Engineering
-			 University of Utah.
-		Date   : 110824
+    Author : Krishna Kamojjala
+       Department of Mechanical Engineering
+       University of Utah.
+    Date   : 110824
 
 */
 
+#include <Core/Grid/Variables/ParticleVariable.h>
 
 #ifndef __MMS_H__
 #define __MMS_H__
 
-#include <CCA/Components/MPM/SerialMPM.h>
 #include <cmath>
 #include <iostream>
 
 namespace Uintah {
 
+  class MPMFlags;
+  class MPMLabel;
+  class DataWarehouse;
+  
   class MMS {
 
-	public :
-	
-	void initializeParticleForMMS(ParticleVariable<Point> &position,
-				      ParticleVariable<Vector> &pvelocity,
-                                      ParticleVariable<Matrix3> &psize,
-                                      ParticleVariable<Vector> &pdisp,
-                                      ParticleVariable<double> &pmass,
-                                      ParticleVariable<double> &pvolume ,
-                                      Point p, 
-                                      Vector dxcc, 
-                                      Matrix3 size , 
-                                      const Patch* patch,
-				      MPMFlags* flags,
-				      particleIndex i );
+  public :
+  
+  void initializeParticleForMMS(ParticleVariable<Point> &position,
+                                ParticleVariable<Vector> &pvelocity,
+                                ParticleVariable<Matrix3> &psize,
+                                ParticleVariable<Vector> &pdisp,
+                                ParticleVariable<double> &pmass,
+                                ParticleVariable<double> &pvolume ,
+                                Point p, 
+                                Vector dxcc, 
+                                Matrix3 size , 
+                                const Patch* patch,
+                                MPMFlags* flags,
+                                particleIndex i );
 
         void computeExternalForceForMMS(DataWarehouse* old_dw,
-					DataWarehouse* new_dw, 
-					double time, 
-					ParticleSubset* pset, 
-					MPMLabel* lb, 
-					MPMFlags* flags , 
-					ParticleVariable<Vector> &ExtForce);
+          DataWarehouse* new_dw, 
+          double time, 
+          ParticleSubset* pset, 
+          MPMLabel* lb, 
+          MPMFlags* flags , 
+          ParticleVariable<Vector> &ExtForce);
 
 };
 

@@ -3,6 +3,7 @@
 #define Uintah_Component_Arches_ManifoldRxn_h
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/SimulationStateP.h>
+#include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 #include <CCA/Components/Arches/TransportEqns/Discretization_new.h>
@@ -13,8 +14,8 @@ class ManifoldRxn: public SourceTermBase {
 
 public: 
 
-  ManifoldRxn( std::string srcName, SimulationStateP& shared_state, 
-                std::vector<std::string> reqLabelNames, std::string type );
+  ManifoldRxn( std::string srcName,  ArchesLabel* field_labels,
+	       std::vector<std::string> reqLabelNames, std::string type );
 
   ~ManifoldRxn();
   /** @brief Interface for the inputfile and set constants */ 
@@ -39,30 +40,33 @@ public:
                    DataWarehouse* new_dw );
 
   class Builder
-    : public SourceTermBase::Builder { 
+    : public SourceTermBase::Builder {
 
-    public: 
+    public:
 
-      Builder( std::string name, std::vector<std::string> required_label_names, SimulationStateP& shared_state )
-        : _name(name), _shared_state(shared_state), _required_label_names(required_label_names){ 
+      Builder( std::string name, std::vector<std::string> required_label_names, ArchesLabel* field_labels )
+        : _name(name), _field_labels(field_labels), _required_label_names(required_label_names){
           _type = "constant_src"; 
         };
-      ~Builder(){}; 
+      ~Builder(){};
 
       ManifoldRxn* build()
-      { return scinew ManifoldRxn( _name, _shared_state, _required_label_names, _type ); };
+      { return scinew ManifoldRxn( _name, _field_labels, _required_label_names, _type ); };
 
-    private: 
+    private:
 
-      std::string _name; 
-      SimulationStateP& _shared_state; 
+      std::string _name;
+      std::string _type;
+      ArchesLabel* _field_labels;
       std::vector<std::string> _required_label_names;
 
-  }; // class Builder 
+  }; // Builder
 
 private:
 
-  Discretization_new* _disc;   
+  ArchesLabel* _field_labels;
+
+  Discretization_new* _disc;
 
   std::string _manifold_var_name; 
   std::string _conv_scheme; 

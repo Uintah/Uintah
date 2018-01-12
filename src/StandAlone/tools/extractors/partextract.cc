@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -45,7 +45,7 @@
 #include <Core/Grid/Box.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
-#include <Core/Grid/Variables/ShareAssignParticleVariable.h>
+//#include <Core/Grid/Variables/ShareAssignParticleVariable.h>
 #include <Core/Math/Matrix3.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Math/SymmMatrix3.h>
@@ -93,7 +93,6 @@ void printCauchyStress(const Matrix3& stress);
 int
 main( int argc, char** argv )
 {
-  Uintah::Parallel::determineIfRunningUnderMPI( argc, argv );
   Uintah::Parallel::initializeManager(argc, argv);
 
   /*
@@ -355,7 +354,7 @@ getParticleStrains(DataArchive* da, int mat, long64 particleID, string flag,
       LevelP level = grid->getLevel(l);
 
       // Loop thru all the patches
-      Level::const_patchIterator iter = level->patchesBegin(); 
+      Level::const_patch_iterator iter = level->patchesBegin(); 
       int patchIndex = 0;
       for(; iter != level->patchesEnd(); iter++){
         const Patch* patch = *iter;
@@ -612,7 +611,7 @@ getParticleStresses(DataArchive* da, int mat, long64 particleID, string flag,
       LevelP level = grid->getLevel(l);
 
       // Loop thru all the patches
-      Level::const_patchIterator iter = level->patchesBegin(); 
+      Level::const_patch_iterator iter = level->patchesBegin(); 
       int patchIndex = 0;
       for(; iter != level->patchesEnd(); iter++){
         const Patch* patch = *iter;
@@ -825,7 +824,7 @@ void printParticleVariable(DataArchive* da,
       LevelP level = grid->getLevel(l);
 
       // Loop thru all the patches
-      Level::const_patchIterator iter = level->patchesBegin(); 
+      Level::const_patch_iterator iter = level->patchesBegin(); 
       int patchIndex = 0;
       for(; iter != level->patchesEnd(); iter++){
         const Patch* patch = *iter;

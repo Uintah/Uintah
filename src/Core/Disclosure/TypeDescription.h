@@ -1,7 +1,10 @@
+#ifndef CORE_DISCLOSURE_TYPEDESCRIPTION_H
+#define CORE_DISCLOSURE_TYPEDESCRIPTION_H
+
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,13 +25,9 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef CORE_DISCLOSURE_TYPEDESCRIPTION_H
-#define CORE_DISCLOSURE_TYPEDESCRIPTION_H
-
-#include <sci_defs/mpi_defs.h>
+#include <Core/Parallel/UintahMPI.h>
 
 #include <string>
-
 
 namespace Uintah {
 
@@ -85,9 +84,13 @@ public:
   ,  Short27   // for Fracture
   ,  Stencil4
   ,  Stencil7
+  ,  IntVector
   ,  Unknown
   ,  Other
   };
+
+  // Coverts the 'type' enum to a string.
+  static std::string toString( Type type );
 
   TypeDescription( Type type, const std::string& name, bool isFlat, MPI_Datatype (*make_mpitype)() );
 
@@ -132,8 +135,7 @@ public:
   struct Register {
     Register( const TypeDescription* )
     {
-      // Actual registration of the Variable Type happens when of the 'td' variable
-      // is originally created.
+      // Actual registration of Variable Type happens when the 'td' variable is originally created.
     }
     ~Register(){};
   };
@@ -152,10 +154,6 @@ private:
   TypeDescription( TypeDescription && )                 = delete;
   TypeDescription& operator=( TypeDescription && )      = delete;
 
-  MPI_Datatype (*d_mpitypemaker)(){nullptr};
-
-  Variable* (*d_maker)(){nullptr};
-
   void register_type();
 
   Type                    d_type{};
@@ -163,6 +161,9 @@ private:
   std::string             d_name{};
   bool                    d_isFlat{false};
   mutable MPI_Datatype    d_mpitype{};
+
+  MPI_Datatype (*d_mpitypemaker)(){nullptr};
+  Variable* (*d_maker)(){nullptr};
 
 };
 

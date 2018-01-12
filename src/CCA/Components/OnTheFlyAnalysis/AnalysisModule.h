@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,40 +25,60 @@
 #ifndef Packages_Uintah_CCA_Ports_AnalysisModule_h
 #define Packages_Uintah_CCA_Ports_AnalysisModule_h
 
-#include <CCA/Ports/DataWarehouse.h>
-#include <CCA/Ports/Output.h>
-#include <CCA/Ports/SimulationInterface.h>
-#include <Core/Grid/GridP.h>
-#include <Core/Grid/Patch.h>
-#include <Core/Grid/SimulationStateP.h>
-#include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Parallel/UintahParallelComponent.h>
 
-#include <Core/Geometry/Vector.h>
+#include <CCA/Ports/SchedulerP.h>
+
+#include <Core/Grid/GridP.h>
+#include <Core/Grid/LevelP.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/SimulationStateP.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
 
-  class DataWarehouse;
-  class ICELabel;
+  class ApplicationInterface;
+  class Output;
+  class Scheduler;
+
   class Material;
-  class Patch;
-  
+  class VarLabel;
 
-  class AnalysisModule {
-
+  class AnalysisModule : public UintahParallelComponent {
   public:
     
-    AnalysisModule();
-    AnalysisModule(ProblemSpecP& prob_spec, SimulationStateP& sharedState, Output* dataArchiver);
+    // Other stats that can be used by individual components.
+    // enum OtherStat
+    // {
+    //   OnTheFlyAnalysisMinMaxTime = 0,
+    //   MAX_OTHER_STATS
+    // };
+    
+    AnalysisModule(const ProcessorGroup* myworld,
+		   const SimulationStateP sharedState,
+		   const ProblemSpecP& module_spec);
+    
     virtual ~AnalysisModule();
 
-    virtual void problemSetup(const ProblemSpecP& params,
+    // Methods for managing the components attached via the ports.
+    virtual void setComponents( UintahParallelComponent *comp ) {};
+    virtual void setComponents( ApplicationInterface *comp );
+    virtual void getComponents();
+    virtual void releaseComponents();
+
+    virtual void problemSetup(const ProblemSpecP& prob_spec,
                               const ProblemSpecP& restart_prob_spec,
-                              GridP& grid,
-                              SimulationStateP& state) = 0;
-                              
+                              GridP& grid) = 0;
+
+    virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
+                                                            
                               
     virtual void scheduleInitialize(SchedulerP& sched,
                                     const LevelP& level) =0;
+                                    
+    virtual void scheduleRestartInitialize(SchedulerP& sched,
+                                           const LevelP& level) =0;
     
     virtual void restartInitialize() = 0;
     
@@ -67,6 +87,20 @@ namespace Uintah {
     
     virtual void scheduleDoAnalysis_preReloc(SchedulerP& sched,
                                     const LevelP& level) =0;
+
+    virtual const VarLabel* getDelTLabel() const { return m_delTLabel; }
+
+  protected:
+    Output*    m_output    {nullptr};
+    Scheduler* m_scheduler {nullptr};
+
+    SimulationStateP m_sharedState {nullptr};
+    
+    ProblemSpecP m_module_spec {nullptr};
+
+    const VarLabel* m_timeStepLabel {nullptr};
+    const VarLabel* m_simulationTimeLabel {nullptr};
+    const VarLabel* m_delTLabel {nullptr};
   };
 }
 

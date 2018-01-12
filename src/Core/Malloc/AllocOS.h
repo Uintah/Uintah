@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -34,27 +34,32 @@
  *
  */
 
-#ifndef Malloc_AllocOS_h
-#define Malloc_AllocOS_h 1
+#ifndef CORE_MALLOC_ALLOCOS_H
+#define CORE_MALLOC_ALLOCOS_H
 
 #include <cstdlib>
 
 namespace Uintah {
-  struct Allocator;
-struct OSHunk {
-    static OSHunk* alloc(size_t size, bool returnable, Allocator* allocator);
-    static void free(OSHunk*);
-    void* data;
-    OSHunk* next;
 
-    int ninuse;
-    size_t spaceleft;
-    void* curr;
-    size_t len;
-    size_t alloc_len;
-    bool returnable;
+struct Allocator;
+
+struct OSHunk {
+
+  static OSHunk* alloc( size_t size, bool returnable, Allocator* allocator );
+
+  static void free( OSHunk* );
+
+  void* data;
+  OSHunk* next;
+
+  int      ninuse;
+  size_t   spaceleft;
+  void   * curr;
+  size_t   len;
+  size_t   alloc_len;
+  bool     returnable;
 };
 
 } // End namespace Uintah
 
-#endif
+#endif // CORE_MALLOC_ALLOCOS_H

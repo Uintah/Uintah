@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,29 +22,35 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_HOMEBREW_LoadBalancerCommon_H
-#define UINTAH_HOMEBREW_LoadBalancerCommon_H
+#ifndef CCA_COMPONENTS_LOADBALANCERS_LOADBALANCERCOMMON_H
+#define CCA_COMPONENTS_LOADBALANCERS_LOADBALANCERCOMMON_H
 
 #include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/SFC.h>
 
+#include <CCA/Components/SimulationController/RunTimeStatsEnums.h>
+
+#include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Parallel/UintahParallelComponent.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Util/InfoMapper.h>
 
 #include <set>
 #include <string>
+#include <vector>
 
 namespace Uintah {
 
+class ApplicationInterface;
+
 /**************************************
 
-    CLASS
+CLASS
     LoadBalancerCommon
 
-    Short Description...
-
-    GENERAL INFORMATION
+GENERAL INFORMATION
 
     LoadBalancerCommon.h
 
@@ -55,36 +61,44 @@ namespace Uintah {
     Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
 
     
-    KEYWORDS
+KEYWORDS
     LoadBalancerCommon
 
-    DESCRIPTION
-    Long description...
-
-    WARNING
+DESCRIPTION
 
 ****************************************/
 
 struct PatchInfo {
-  PatchInfo(int i, int n) {id = i; numParticles = n;}
-  PatchInfo() {}
 
-  int id;
-  int numParticles;
+  PatchInfo(int id, int num_particles)
+    : m_id{id}
+    , m_num_particles{num_particles}
+  {}
+
+  PatchInfo() = default;
+
+  int m_id{0};
+  int m_num_particles{0};
 };
 
+
 class ParticleCompare {
+
 public:
+
   inline bool operator()(const PatchInfo& p1, const PatchInfo& p2) const {
-    return p1.numParticles < p2.numParticles || 
-      ( p1.numParticles == p2.numParticles && p1.id < p2.id);
+    return p1.m_num_particles < p2.m_num_particles ||
+      ( p1.m_num_particles == p2.m_num_particles && p1.m_id < p2.m_id);
   }
 };
 
+
 class PatchCompare {
+
 public:
+
   inline bool operator()(const PatchInfo& p1, const PatchInfo& p2) const {
-    return p1.id < p2.id;
+    return p1.m_id < p2.m_id;
   }
 };
 
@@ -93,15 +107,26 @@ public:
 /// apart is getPatchwiseProcessorAssignment - how it determines which patch
 /// to assign on which procesor.
 class LoadBalancerCommon : public LoadBalancer, public UintahParallelComponent {
-public:
-  LoadBalancerCommon(const ProcessorGroup* myworld);
-  ~LoadBalancerCommon();
 
+public:
+
+  LoadBalancerCommon( const ProcessorGroup * myworld );
+
+  virtual ~LoadBalancerCommon();
+
+  // Methods for managing the components attached via the ports.
+  virtual void setComponents( UintahParallelComponent *comp ) {};
+  virtual void getComponents();
+  virtual void releaseComponents();
+
+  //! Returns the MPI rank of the process on which the patch is to be executed.
   virtual int getPatchwiseProcessorAssignment( const Patch * patch );
 
   //! The implementation in LoadBalancerCommon.cc is for dynamice load balancers.
   //! The Simple and SingleProcessor override this function with default implementations.
-  virtual int getOldProcessorAssignment(       const Patch * patch );
+  virtual int getOldProcessorAssignment( const Patch * patch );
+
+  virtual bool needRecompile( const GridP& ) = 0;
 
   /// Goes through the Detailed tasks and assigns each to its own processor.
   virtual void assignResources( DetailedTasks & tg );
@@ -109,23 +134,27 @@ public:
   /// Creates the Load Balancer's Neighborhood.  This is a vector of patches 
   /// that represent any patch that this load balancer will potentially have to 
   /// receive data from.
-  virtual void createNeighborhood( const GridP& grid, const GridP& oldGrid );
+  virtual void createNeighborhoods( const GridP& grid, const GridP& oldGrid,  const bool hasDistalReqs = false);
 
-  const std::set<int>& getNeighborhoodProcessors() { return d_neighborProcessors; }
+  virtual const std::set<int>& getNeighborhoodProcessors() { return m_neighborhood_processors; }
+
+  virtual const std::set<int>& getDistalNeighborhoodProcessors() { return m_distal_neighborhood_processors; }
 
   /// Asks the load balancer if a patch in the patch subset is in the neighborhood.
-  virtual bool inNeighborhood(const PatchSubset*);
+  virtual bool inNeighborhood( const PatchSubset * pss, const bool hasDistalReqs = false );
 
   /// Asks the load balancer if patch is in the neighborhood.
-  virtual bool inNeighborhood(const Patch*);
+  virtual bool inNeighborhood( const Patch * patch, const bool hasDistalReqs = false );
 
   /// Reads the problem spec file for the LoadBalancer section, and looks 
   /// for entries such as outputNthProc, dynamicAlgorithm, and interval.
-  virtual void problemSetup(ProblemSpecP& pspec, GridP& grid, SimulationStateP& state);
+  virtual void problemSetup( ProblemSpecP & pspec,
+			     GridP & grid,
+			     const SimulationStateP & state );
 
   // for DynamicLoadBalancer mostly, but if we're called then it also means the 
   // grid might have changed and need to create a new perProcessorPatchSet
-  virtual bool possiblyDynamicallyReallocate(const GridP&, int state);
+  virtual bool possiblyDynamicallyReallocate( const GridP &, int state );
 
   // Cost profiling functions
   // Update the contribution for this patch.
@@ -135,65 +164,56 @@ public:
   virtual void finalizeContributions( const GridP & currentGrid );
 
   // Initializes the regions in the new level that are not in the old level.
-  virtual void initializeWeights( const Grid* oldgrid, const Grid* newgrid );
+  virtual void initializeWeights( const Grid * oldgrid, const Grid * newgrid );
 
   // Resets the profiler counters to zero
   virtual void resetCostForecaster();
 
   //! Returns n - data gets output every n procs.
-  virtual int getNthProc() { return d_outputNthProc; }
+  virtual int  getNthRank() { return m_output_Nth_proc; }
+  virtual void setNthRank( int nth ) { m_output_Nth_proc = nth; }
 
-  //! Returns the processor the patch will be output on (not patchwiseProcessor
-  //! if outputNthProc is set)
-  virtual int getOutputProc(const Patch* patch) { return (getPatchwiseProcessorAssignment(patch)/d_outputNthProc)*d_outputNthProc; }
+  //! Returns the MPI rank of the process that the patch will be output on (it will different from
+  //! the patchwise processor assignment if outputNthProc is greater than 1).
+  virtual int getOutputRank( const Patch * patch ) {
+    return ( getPatchwiseProcessorAssignment( patch ) / m_output_Nth_proc ) * m_output_Nth_proc;
+  }
 
   //! Returns the patchset of all patches that have work done on this processor.
-  virtual const PatchSet* getPerProcessorPatchSet(const LevelP& level) { 
-    return d_levelPerProcPatchSets[level->getIndex()].get_rep(); 
+  virtual const PatchSet* getPerProcessorPatchSet( const LevelP & level ) {
+    return m_level_perproc_patchsets[level->getIndex()].get_rep();
   }
-  virtual const PatchSet* getPerProcessorPatchSet(const GridP& grid) { 
-    return d_gridPerProcPatchSet.get_rep(); 
+
+  virtual const PatchSet* getPerProcessorPatchSet( const GridP & grid ) {
+    return m_grid_perproc_patchsets.get_rep();
   }
   
-  virtual const PatchSet* getOutputPerProcessorPatchSet(const LevelP& level) { 
-    return d_outputPatchSets[level->getIndex()].get_rep(); 
+  virtual const PatchSet* getOutputPerProcessorPatchSet( const LevelP & level ) {
+    return m_output_patchsets[level->getIndex()].get_rep();
   };
 
   //! Assigns the patches to the processors they ended up on in the previous
   //! Simulation.  Returns true if we need to re-load balance (if we have a 
   //! different number of procs than were saved to disk
-  virtual void restartInitialize(       DataArchive  * archive,
-                                  const int            time_index,
-                                  const std::string  & tsurl,
-                                  const GridP        & grid );
+  virtual void restartInitialize(       DataArchive  * archive
+                                , const int            time_index
+                                , const std::string  & tsurl
+                                , const GridP        & grid
+                                );
    
-private:
-  LoadBalancerCommon(const LoadBalancerCommon&);
-  LoadBalancerCommon& operator=(const LoadBalancerCommon&);
+  int  getNumDims() const { return m_numDims; };
+  int* getActiveDims() { return m_activeDims; };
+  void setDimensionality(bool x, bool y, bool z);
+
+  void setRunTimeStats( ReductionInfoMapper< RunTimeStatsEnum, double > *runTimeStats) { d_runTimeStats = runTimeStats; };     
 
 protected:
 
-  // Calls space-filling curve on level, and stores results in pre-allocated output
-  void useSFC(const LevelP& level, int* output);
-    
-  double d_lastLbTime;
-
-  double d_lbInterval;
+  ApplicationInterface* m_application{nullptr};
   
-  bool   d_checkAfterRestart;
-
-  // The assignment vectors are stored 0-n.  This stores the start patch number so we can
-  // detect if something has gone wrong when we go to look up what proc a patch is on.
-  int    d_assignmentBasePatch;   
-  int    d_oldAssignmentBasePatch;
-
-  std::vector<int> d_processorAssignment; ///< stores which proc each patch is on
-  std::vector<int> d_oldAssignment;       ///< stores which proc each patch used to be on
-  std::vector<int> d_tempAssignment;      ///< temp storage for checking to reallocate
-
-  SFC <double> d_sfc;
-  bool         d_doSpaceCurve;
-
+  // Calls space-filling curve on level, and stores results in pre-allocated output
+  void useSFC( const LevelP & level, int * output) ;
+    
   /// Creates a patchset of all patches that have work done on each processor.
   //    - There are two versions of this function.  The first works on a per level
   //      basis.  The second works on the entire grid and will provide a PatchSet
@@ -203,25 +223,68 @@ protected:
   //      - Version 1 (for Level 1) will create {{3},{6}}
   //      - Version 2 (for all levels) will create {{1,2,3},{4,5,6}}
   virtual const PatchSet* createPerProcessorPatchSet( const LevelP & level );
-  virtual const PatchSet* createPerProcessorPatchSet( const GridP  & grid );
+  virtual const PatchSet* createPerProcessorPatchSet( const GridP  & grid  );
   virtual const PatchSet* createOutputPatchSet(       const LevelP & level );
 
-  SimulationStateP d_sharedState;     ///< to keep track of timesteps
-  Scheduler* d_scheduler;             ///< store the scheduler to not have to keep passing it in
-  std::set<const Patch*> d_neighbors; ///< the neighborhood.  See createNeighborhood
-  std::set<int> d_neighborProcessors; //a list of processors that are in this processors neighborhood
+  int    m_lb_timeStep_interval{0};
+  int    m_last_lb_timeStep{0};
+
+  double m_lb_interval{0.0};
+  double m_last_lb_simTime{0.0};
+  bool   m_check_after_restart{false};
+
+  // The assignment vectors are stored 0-n.  This stores the start patch number so we can
+  // detect if something has gone wrong when we go to look up what proc a patch is on.
+  int m_assignment_base_patch{-1};
+  int m_old_assignment_base_patch{-1};
+
+  std::vector<int> m_processor_assignment; ///< stores which proc each patch is on
+  std::vector<int> m_old_assignment;       ///< stores which proc each patch used to be on
+  std::vector<int> m_temp_assignment;      ///< temp storage for checking to reallocate
+
+  SFC <double> m_sfc;
+  bool         m_do_space_curve{false};
+
+  SimulationStateP          m_sharedState;            ///< to keep track of timesteps
+  Scheduler               * m_scheduler {nullptr};     ///< store the scheduler to not have to keep passing it in
+  std::set<const Patch*>    m_neighbors;               ///< the neighborhood.  See createNeighborhood
+  std::set<int>             m_neighborhood_processors; ///< a list of processors that are in this processors neighborhood
   
+  std::set<const Patch*>    m_distal_neighbors;               ///< the wide-area, or global neighborhood.  See createNeighborhood
+  std::set<int>             m_distal_neighborhood_processors; ///< a list of wider-area processors that are in this processors neighborhood
+
   //! output on every nth processor.  This variable needs to be shared 
   //! with the DataArchiver as well, but we keep it here because the lb
   //! needs it to assign the processor resource.
-  int d_outputNthProc;
+  int m_output_Nth_proc{1};
 
-  std::vector< Handle<const PatchSet> > d_levelPerProcPatchSets;
-  Handle< const PatchSet >              d_gridPerProcPatchSet;
-  std::vector< Handle<const PatchSet> > d_outputPatchSets;
+  std::vector< Handle<const PatchSet> > m_level_perproc_patchsets;
+  Handle< const PatchSet >              m_grid_perproc_patchsets;
+  std::vector< Handle<const PatchSet> > m_output_patchsets;
 
+  // Which dimensions are active.  Get the number of dimensions, and
+  // then that many indices of activeDims are set to which dimensions
+  // are being used.
+  int m_numDims{0};
+  int m_activeDims[3];
+
+  ReductionInfoMapper< RunTimeStatsEnum, double > *d_runTimeStats;
+
+private:
+
+  // eliminate copy, assignment and move
+  LoadBalancerCommon( const LoadBalancerCommon & )            = delete;
+  LoadBalancerCommon& operator=( const LoadBalancerCommon & ) = delete;
+  LoadBalancerCommon( LoadBalancerCommon && )                 = delete;
+  LoadBalancerCommon& operator=( LoadBalancerCommon && )      = delete;
+
+  void addPatchesAndProcsToNeighborhood( const Level * const level,
+                                         const IntVector& low,
+                                         const IntVector& high,
+                                         std::set<const Patch*>& neighbors,
+                                         std::set<int>& processors);
 };
 
-} // End namespace Uintah
+} // namespace Uintah
 
-#endif
+#endif // CCA_COMPONENTS_LOADBALANCERS_LOADBALANCERCOMMON_H

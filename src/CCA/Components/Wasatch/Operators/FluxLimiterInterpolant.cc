@@ -1,7 +1,7 @@
 /*
  * The MIT Liceestnse
  *
- * Copyright (c) 2012-2016 The University of Utah
+ * Copyright (c) 2012-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -324,7 +324,7 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest )
   }
 
   // now do interior
-  destExtent = wdest.extent() - unitNormal_*3 - dest.boundary_info().has_bc()*unitNormal_;
+  destExtent = wdest.extent() - unitNormal_*3 - dest.boundary_info().has_bc(PLUS_SIDE)*unitNormal_;
   const IntVec destBaseOffset = wdest.offset() + unitNormal_*2;
   const MemoryWindow wd( wdest.glob_dim(), destBaseOffset, destExtent );
 

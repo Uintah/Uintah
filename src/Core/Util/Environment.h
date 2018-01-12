@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 /*
-  Environment.h: Interface to setting environemnt variables and parsing .rc files
+  Environment.h: Interface to setting environment variables and parsing .rc files
 
   Written by:
     McKay Davis
@@ -41,8 +41,6 @@
 namespace Uintah {
 
   void create_sci_environment(char **env, char *execname, bool beSilent = false );
-
-  void copy_and_parse_scirunrc();
 
   // Use the following functions to get/put environment variables.
   void sci_putenv( const std::string & key, const std::string & val );

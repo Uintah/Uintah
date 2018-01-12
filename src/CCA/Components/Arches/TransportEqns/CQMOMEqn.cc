@@ -8,7 +8,6 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Parallel/Parallel.h>
 #include <CCA/Components/Arches/ParticleModels/CQMOMSourceWrapper.h>
-#include <Core/Containers/StaticArray.h>
 
 using namespace std;
 using namespace Uintah;
@@ -125,22 +124,23 @@ CQMOMEqn::problemSetup(const ProblemSpecP& inputdb)
 
   //get internal coordinate indexes for each direction
   int m = 0;
-  for ( ProblemSpecP db_name = cqmom_db->findBlock("InternalCoordinate");
-       db_name != 0; db_name = db_name->findNextBlock("InternalCoordinate") ) {
+  for ( ProblemSpecP db_name = cqmom_db->findBlock("InternalCoordinate"); db_name != nullptr; db_name = db_name->findNextBlock("InternalCoordinate") ) {
     string varType;
     db_name->getAttribute("type",varType);
     if (varType == "uVel") {
       uVelIndex = m;
-    } else if (varType == "vVel") {
+    }
+    else if (varType == "vVel") {
       vVelIndex = m;
-    } else if (varType == "wVel") {
+    }
+    else if (varType == "wVel") {
       wVelIndex = m;
     }
     m++;
   }
 
   string name = "m_";
-  for (int i = 0; i<M ; i++) {
+  for( int i = 0; i < M ; i++ ) {
     string node;
     std::stringstream out;
     out << momentIndex[i];
@@ -160,19 +160,18 @@ CQMOMEqn::problemSetup(const ProblemSpecP& inputdb)
   // Models (source terms):
   if ( models_db ) {
     d_addSources = true;
-    for (ProblemSpecP m_db = models_db->findBlock("model"); m_db !=0; m_db = m_db->findNextBlock("model")){
+    for (ProblemSpecP m_db = models_db->findBlock("model"); m_db != nullptr; m_db = m_db->findNextBlock("model")){
       //parse the model blocks for var label
       std::string model_name;
       std::string source_label;
       //int nIC = 0;
       std::string ic_name;
-      
+
       if ( m_db->findBlock("IC") ) {
         m_db->get("IC",ic_name);
         m = 0;
 
-        for ( ProblemSpecP db_name = cqmom_db->findBlock("InternalCoordinate");
-             db_name != 0; db_name = db_name->findNextBlock("InternalCoordinate") ) {
+        for ( ProblemSpecP db_name = cqmom_db->findBlock("InternalCoordinate"); db_name != nullptr; db_name = db_name->findNextBlock("InternalCoordinate") ) {
           std::string var_name;
           db_name->getAttribute("name",var_name);
           if ( var_name == ic_name) {
@@ -509,6 +508,8 @@ CQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
     Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
+    const Level* level = patch->getLevel();
+    const int ilvl = level->getID();
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
     Vector Dx = patch->dCell();
@@ -582,7 +583,7 @@ CQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
         d_disc->computeConv( patch, Fconv, oldPhi, uVel, vVel, wVel, areaFraction, d_convScheme );
 
         if ( _using_new_intrusion ) {
-          _intrusions->addScalarRHS( patch, Dx, d_eqnName, RHS );
+          _intrusions[ilvl]->addScalarRHS( patch, Dx, d_eqnName, RHS );
         }
       }
 
@@ -608,7 +609,7 @@ CQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
         new_dw->get( Fconv, d_FconvLabel, matlIndex, patch, gn, 0 );
 
         if ( _using_new_intrusion ) {
-          _intrusions->addScalarRHS( patch, Dx, d_eqnName, RHS );
+          _intrusions[ilvl]->addScalarRHS( patch, Dx, d_eqnName, RHS );
         }
       }
 
@@ -643,7 +644,7 @@ CQMOMEqn::sched_solveTransportEqn( const LevelP& level, SchedulerP& sched, int t
 
   //Old
   tsk->requires(Task::OldDW, d_transportVarLabel, Ghost::None, 0);
-  tsk->requires(Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label(), Ghost::None, 0 );
+  tsk->requires(Task::OldDW, d_fieldLabels->d_delTLabel, Ghost::None, 0 );
   tsk->requires(Task::OldDW, d_fieldLabels->d_volFractionLabel, Ghost::None, 0 );
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
@@ -669,7 +670,7 @@ CQMOMEqn::solveTransportEqn( const ProcessorGroup* pc,
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
     delt_vartype DT;
-    old_dw->get(DT, d_fieldLabels->d_sharedState->get_delt_label());
+    old_dw->get(DT, d_fieldLabels->d_delTLabel);
     double dt = DT;
 
     CCVariable<double> phi;    // phi @ current sub-level
@@ -777,8 +778,8 @@ CQMOMEqn::buildXConvection( const ProcessorGroup* pc,
       phiTemp[c] = phi[c]; //store phi in phiTemp, to reset it later after constructing all the fluxes
     } //cell loop
 
-    StaticArray <constCCVariable<double> > cqmomWeights ( nNodes );
-    StaticArray <constCCVariable<double> > cqmomAbscissas (nNodes * M);
+    std::vector <constCCVariable<double> > cqmomWeights ( nNodes );
+    std::vector <constCCVariable<double> > cqmomAbscissas (nNodes * M);
 
     int i = 0;
     for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
@@ -876,8 +877,8 @@ CQMOMEqn::buildYConvection( const ProcessorGroup* pc,
     new_dw->getModifiable(FconvY, d_FconvYLabel, matlIndex, patch);
     FconvY.initialize(0.0);
 
-    StaticArray <constCCVariable<double> > cqmomWeights ( nNodes );
-    StaticArray <constCCVariable<double> > cqmomAbscissas (nNodes * M);
+    std::vector <constCCVariable<double> > cqmomWeights ( nNodes );
+    std::vector <constCCVariable<double> > cqmomAbscissas (nNodes * M);
 
     int i = 0;
     for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
@@ -974,8 +975,8 @@ CQMOMEqn::buildZConvection( const ProcessorGroup* pc,
     new_dw->getModifiable(FconvZ, d_FconvZLabel, matlIndex, patch);
     FconvZ.initialize(0.0);
 
-    StaticArray <constCCVariable<double> > cqmomWeights ( nNodes );
-    StaticArray <constCCVariable<double> > cqmomAbscissas (nNodes * M);
+    std::vector <constCCVariable<double> > cqmomWeights ( nNodes );
+    std::vector <constCCVariable<double> > cqmomAbscissas (nNodes * M);
 
     int i = 0;
     for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
@@ -1066,6 +1067,8 @@ CQMOMEqn::buildSplitRHS( const ProcessorGroup* pc,
     Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
+    const Level* level = patch->getLevel();
+    const int ilvl = level->getID();
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
     Vector Dx = patch->dCell();
@@ -1120,7 +1123,7 @@ CQMOMEqn::buildSplitRHS( const ProcessorGroup* pc,
 
     // look for and add contribution from intrusions.
     if ( _using_new_intrusion ) {
-      _intrusions->addScalarRHS( patch, Dx, d_eqnName, RHS );
+      _intrusions[ilvl]->addScalarRHS( patch, Dx, d_eqnName, RHS );
     }
 
     //----DIFFUSION

@@ -7,7 +7,7 @@
   </Meta>
 
   <SimulationComponent type="wasatch"/>
-   <Solver type="hypre" />
+
   <Wasatch>
         
     <Density method="COMPRESSIBLE">
@@ -26,13 +26,13 @@
     <!-- Set the molecular weight - needed both on initial condition and advance solution -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="MW"/>
-      <Constant>0.028966</Constant>
+      <NameTag name="Mixture_MW"/>
+      <Constant>28.966</Constant>
     </BasicExpression>
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="MW"/>
-      <Constant>0.028966</Constant>
+      <NameTag name="Mixture_MW"/>
+      <Constant>28.966</Constant>
     </BasicExpression>
 
     <!-- Set the initial condition expression for mixture fraction -->
@@ -60,7 +60,7 @@
 
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="f012" state="STATE_NONE"/>
+      <NameTag name="f012"/>
       <ExprAlgebra algebraicOperation="PRODUCT">
         <!-- specify the list of tags of the source expressions -->
         <NameTag name="f0"/>
@@ -75,11 +75,11 @@
     </BasicExpression>
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="T" state="STATE_NONE"/>
+      <NameTag name="Temperature"/>
       <ExprAlgebra algebraicOperation="SUM">
         <!-- specify the list of tags of the source expressions -->
-        <NameTag name="f012" state="STATE_NONE"/>
-        <NameTag name="f3" state="STATE_NONE"/>
+        <NameTag name="f012"/>
+        <NameTag name="f3"/>
       </ExprAlgebra>
     </BasicExpression>
 
@@ -112,30 +112,6 @@
     
     <!-- Momentum transport equations -->
     <MomentumEquations>
-      <EnergyEquation>
-        <SolutionVariable>rhoet</SolutionVariable>
-        <PrimitiveVariable>et</PrimitiveVariable>
-        <Temperature><NameTag name="T"/></Temperature>
-        <MolecularWeight>
-          <NameTag name="MW"/>
-        </MolecularWeight>
-        <DiffusiveFlux direction="XYZ" coefficient="0.024"/>
-        <ConvectiveFlux direction="X" method="VANLEER">
-          <AdvectiveVelocity>
-            <NameTag name="u"/>
-          </AdvectiveVelocity>
-        </ConvectiveFlux>
-        <ConvectiveFlux direction="Y" method="VANLEER">
-          <AdvectiveVelocity>
-            <NameTag name="v"/>
-          </AdvectiveVelocity>
-        </ConvectiveFlux>
-        <ConvectiveFlux direction="Z" method="VANLEER">
-          <AdvectiveVelocity>
-            <NameTag name="w"/>
-          </AdvectiveVelocity>
-        </ConvectiveFlux>        
-      </EnergyEquation>
       <X-Velocity>u</X-Velocity>
       <X-Momentum>x-mom</X-Momentum>
       <Y-Velocity>v</Y-Velocity>
@@ -146,6 +122,27 @@
         <NameTag name="viscosity"/>
       </Viscosity>      
     </MomentumEquations>
+
+    <EnergyEquation>
+      <SolutionVariable>rhoet</SolutionVariable>
+      <PrimitiveVariable>et</PrimitiveVariable>
+      <DiffusiveFlux direction="XYZ" coefficient="0.024"/>
+      <ConvectiveFlux direction="X" method="VANLEER">
+        <AdvectiveVelocity>
+          <NameTag name="u"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+      <ConvectiveFlux direction="Y" method="VANLEER">
+        <AdvectiveVelocity>
+          <NameTag name="v"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+      <ConvectiveFlux direction="Z" method="VANLEER">
+        <AdvectiveVelocity>
+          <NameTag name="w"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>        
+    </EnergyEquation>
   </Wasatch>
 
   <Time>
@@ -166,7 +163,7 @@
     <save label="x-mom"/>
     <save label="y-mom"/>
     <save label="u"/>
-    <save label="T"/>
+    <save label="Temperature"/>
     <save label="v"/>
     <save label="density"/>
     <save label="rhoet_rhs"/>

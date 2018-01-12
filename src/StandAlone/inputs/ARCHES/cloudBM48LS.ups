@@ -1,0 +1,240 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<!-- @version: -->
+<Uintah_specification>
+  <!--Cloud radiation benchmark, should be ran at 81^3 or more for good results-->
+  <Meta>
+    <title>"rmcrt benchmark 1 "</title>
+  </Meta>
+  <SimulationComponent type="arches"/>
+  <Solver type="hypre"/>
+  <Time>
+    <maxTime>5.0</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>1.0e-6</delt_min>
+    <delt_max>0.1</delt_max>
+    <timestep_multiplier>0.4</timestep_multiplier>
+    <max_Timesteps>2</max_Timesteps>
+  </Time>
+  <DataArchiver>
+    <!--cloud benchmark, 48 rays, level symmetric quadrature-->
+    <filebase>cloudBM48LS.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <save label="uVelocitySPBC"/>
+    <save label="vVelocitySPBC"/>
+    <save label="wVelocitySPBC"/>
+    <save label="mixture_f"/>
+    <save label="divQ"/>
+    <save label="temperature"/>
+    <save label="radiation_temperature"/>
+    <save label="radiationVolq"/>
+    <save label="radiationFluxN"/>
+    <save label="radiationFluxS"/>
+    <save label="radiationFluxB"/>
+    <save label="radiationFluxT"/>
+    <save label="radiationFluxE"/>
+    <save label="radiationFluxW"/>
+    <save label="Intensity0000_00"/>
+    <checkpoint cycle="2" timestepInterval="1"/>
+  </DataArchiver>
+  <Grid>
+    <BoundaryConditions>
+      <DefaultMaterial>0</DefaultMaterial>
+      <Face side="x-" name="X-">
+        <BCType label="x- wall" var="WallBC">
+          <value>0</value>
+        </BCType>
+        <BCType label="mixture_f" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="enthalpy" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="radiation_temperature" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="abskg" var="ForcedDirichlet">
+          <value>1.0</value>
+        </BCType>
+      </Face>
+      <Face side="x+" name="X+">
+        <BCType label="x+ wall" var="WallBC">
+          <value>0</value>
+        </BCType>
+        <BCType label="mixture_f" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="enthalpy" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="radiation_temperature" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="abskg" var="ForcedDirichlet">
+          <value>1.0</value>
+        </BCType>
+      </Face>
+      <Face side="y-" name="Y-">
+        <BCType label="y- wall" var="WallBC">
+          <value>0</value>
+        </BCType>
+        <BCType label="mixture_f" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="enthalpy" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="radiation_temperature" var="Dirichlet">
+          <value> 0.0</value>
+        </BCType>
+        <BCType label="abskg" var="ForcedDirichlet">
+          <value>1.0</value>
+        </BCType>
+      </Face>
+      <Face side="y+" name="Y+">
+        <BCType label="y+ wall" var="WallBC">
+          <value>0</value>
+        </BCType>
+        <BCType label="mixture_f" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="enthalpy" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="radiation_temperature" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="abskg" var="ForcedDirichlet">
+          <value>1.0</value>
+        </BCType>
+      </Face>
+      <Face side="z-" name="Z-">
+        <BCType label="z- wall" var="WallBC">
+          <value>0</value>
+        </BCType>
+        <BCType label="mixture_f" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="enthalpy" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="radiation_temperature" var="Dirichlet">
+          <value> 0.0</value>
+        </BCType>
+        <BCType label="abskg" var="ForcedDirichlet">
+          <value>1.0</value>
+        </BCType>
+      </Face>
+      <Face side="z+" name="Z+">
+        <BCType label="z+ wall" var="WallBC">
+          <value>0</value>
+        </BCType>
+        <BCType label="mixture_f" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="enthalpy" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="radiation_temperature" var="Dirichlet">
+          <value> 0.0</value>
+        </BCType>
+        <BCType label="abskg" var="ForcedDirichlet">
+          <value>1.0</value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+    <Level>
+      <Box label="0">
+        <lower>      [0,0,0]     </lower>
+        <upper>      [1, 1, 1]   </upper>
+        <resolution> [27,27,27]  </resolution>
+        <patches>    [2,2,2]     </patches>
+        <extraCells> [1,1,1]     </extraCells>
+      </Box>
+    </Level>
+  </Grid>
+  <AMR type="StaticGridML" >
+    <useLockStep> true </useLockStep>
+  </AMR>
+  <PhysicalConstants>
+    <gravity>[0,0,0]</gravity>
+    <reference_point>[-1,-1,-1]</reference_point>
+    <viscosity>0.</viscosity>
+  </PhysicalConstants>
+  <CFD>
+    <!-- ARCHES specification -->
+    <ARCHES>
+      <BoundaryConditions/>
+      <!-- TIME INTEGRATOR -->
+      <TimeIntegrator>
+        <ExplicitIntegrator order="second"/>
+      </TimeIntegrator>
+      <!-- SCALARS -->
+      <TransportEqns>
+        <Eqn label="mixture_f" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <conv_scheme>super_bee</conv_scheme>
+          <initialization type="constant">
+            <constant>0.00</constant>
+          </initialization>
+          <Clipping>
+            <low>0.0</low>
+            <high>1.0</high>
+          </Clipping>
+        </Eqn>
+        <Eqn label="enthalpy" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <conv_scheme>super_bee</conv_scheme>
+          <initialization type="constant">
+            <constant>0.0</constant>
+          </initialization>
+          <src label="divQ"/>
+        </Eqn>
+        <Sources>
+          <src label="divQ" type="do_radiation">
+            <calc_frequency>1</calc_frequency>
+            <abskt label="abskg"/>
+            <DORadiationModel type="linearSolve">
+              <ordinates>6</ordinates>
+              <LinearSolver type="hypre">
+                <res_tol>1.0e-8</res_tol>
+                <ksptype>gmres</ksptype>
+                <pctype>jacobi</pctype>
+                <max_iter>1500</max_iter>
+              </LinearSolver>
+              <initialGuess>prevRadSolve</initialGuess>
+              <ScatteringOn>false</ScatteringOn>
+              <QuadratureSet>LevelSymmetric</QuadratureSet>
+            </DORadiationModel>
+            <calc_on_all_RKsteps>false</calc_on_all_RKsteps>
+            <checkForMissingIntensities>false</checkForMissingIntensities>
+          </src>
+        </Sources>
+      </TransportEqns>
+      <PropertyModelsV2>
+        <model type="cloudBenchmark" label="abskg">
+        </model>
+      </PropertyModelsV2>
+      <Properties>
+        <table label="a_user_generated_label" type="constant">
+          <density>1.18</density>
+        </table>
+      </Properties>
+      <ExplicitSolver>
+        <initial_dt>0.05</initial_dt>
+        <PressureSolver>
+          <Parameters>
+            <tolerance>1.0e-10</tolerance>
+            <solver>cg</solver>
+            <preconditioner>jacobi</preconditioner>
+            <maxiterations>250</maxiterations>
+          </Parameters>
+        </PressureSolver>
+        <MomentumSolver>
+          <convection_scheme>central</convection_scheme>
+        </MomentumSolver>
+      </ExplicitSolver>
+    </ARCHES>
+  </CFD>
+</Uintah_specification>

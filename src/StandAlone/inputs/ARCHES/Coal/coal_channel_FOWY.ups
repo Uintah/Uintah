@@ -1,19 +1,16 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='ISO-8859-1'?>
 <Uintah_specification>
-<!--A Channel flow of particles in a 1m^3 box. -->
-<!--The particles enter at 300K.  The domain is filled -->
-<!-- gas initialized at temperature 775K-->
-<!--This case is the same as Coal_channel_FOWY,-->
-<!--except it uses RadProps for particle radiation properties-->
-<!--This case also uses first order time integration-->
+  <!--A Channel flow of particles in a 1m^3 box. -->
+  <!--The particles enter at 300K.  The domain is filled -->
+  <!-- gas initialized at temperature 775K-->
+  <!--This case is the same as Coal_channel_FOWY,-->
+  <!--except it uses RadProps for particle radiation properties-->
+  <!--This case also uses first order time integration-->
   <Meta>
     <title>DQMOM_coal</title>
   </Meta>
   <SimulationComponent type="arches"/>
   <Solver type="hypre"/>
-  <Scheduler type="DynamicMPI">
-    <small_messages>true</small_messages>
-  </Scheduler>
   <Time>
     <maxTime>50.0</maxTime>
     <initTime>0.0</initTime>
@@ -820,23 +817,21 @@
   </PhysicalConstants>
   <CFD>
     <ARCHES>
-      <PropertyModels>
-        <model label="abskg" type="radiation_properties">
-          <initialization type="constant">
-            <constant>0.0</constant>
-          </initialization>
+      <PropertyModelsV2>
+        <model type="gasRadProperties" label="gas_abskg">
           <calculator type="hottel_sarofim">
-            <opl>.432</opl>
-            <abskg label="gas_abskg"/>
-            <particles type="basic">
-              <abskp label="Julien_abskp"/>
-              <part_temp_label>temperature_coal</part_temp_label>
-              <part_size_label>length</part_size_label>
-              <radiateAtGasTemp>true</radiateAtGasTemp>
-              <Qabs>0.80000000000000004</Qabs>
-            </particles>
+            <opl>0.432</opl>
           </calculator>
         </model>
+        <model type="partRadProperties" label="Julien_abskp">
+          <subModel>basic</subModel>
+          <Qabs>0.8</Qabs>
+          <part_temp_label>temperature_coal</part_temp_label>
+          <part_size_label>length</part_size_label>
+          <radiateAtGasTemp>true</radiateAtGasTemp>
+        </model>
+      </PropertyModelsV2>
+      <PropertyModels>
         <model label="heat_loss" type="heat_loss">
           <initialization type="constant">
             <constant>0.890</constant>
@@ -884,10 +879,10 @@
           <Tig>590</Tig>
           <A>19724227.36</A>
           <Ta>1.113e4</Ta>
-          <b>14.258</b>
-          <c>-10.5698</c>
-          <d>3.1935</d>
-          <e>-1.23</e>
+          <Tbp_graphite>3e3</Tbp_graphite>
+          <T_mu>1100.0</T_mu>
+          <T_sigma>250.0</T_sigma>
+          <T_hardened_bond>1800.0</T_hardened_bond>
           <sigma>8.258e2</sigma>
         </FOWYDevol>
         <ShaddixChar>
@@ -915,15 +910,14 @@
       </EulerianParticles>
       <ParticleModels>
         <model label="rho_coal" type="coal_density">
-          <const_size>true</const_size>
+          <model_type>constant_volume_dqmom</model_type>
         </model>
         <model label="temperature_coal" type="coal_temperature">
           <const_size>true</const_size>
         </model>
-        <model label="clip_coal" type="coal_mass_clip"/>
         <model label="number_density" type="total_number_density"/>
         <model label="length" type="constant">
-          <grid dependent_type="svol" independent_type="svol"/>
+          <grid dependent_type="CC" independent_type="CC"/>
           <constant>[1.5e-05,5.0e-05,1.5e-04]</constant>
         </model>
       </ParticleModels>
@@ -1022,12 +1016,15 @@
         <Sources>
           <src label="res_source" type="constant_src">
             <constant>1</constant>
-            <density_weighted/>
+            <multiply_by_variable>
+              <variable_string_name>density</variable_string_name>
+              <NewDW_only>true</NewDW_only>
+            </multiply_by_variable>
           </src>
           <src label="divQ" type="do_radiation">
             <calc_frequency>6</calc_frequency>
-            <abskg label="abskg"/>
-            <DORadiationModel>
+            <abskt label="abskg"/>
+            <DORadiationModel type="linearSolve">
               <ordinates>2</ordinates>
               <LinearSolver type="hypre">
                 <res_tol>1.0e-10</res_tol>
@@ -1058,17 +1055,17 @@
         <filter_cs_squared>false</filter_cs_squared>
       </Turbulence>
       <Properties>
-        <ClassicTable>
-          <enthalpy_label>enthalpy</enthalpy_label>
-          <inputfile>inputs/ARCHES/ClassicMixingTables/coal/OFC_ben.mix.gz</inputfile>
-          <coal eta_label="coal_gas_mix_frac" fp_label="mixture_fraction_2" hl_label="heat_loss"/>
-          <cold_flow>false</cold_flow>
-          <temperature_label_name>temperature</temperature_label_name>
-          <reference_state eta="0.15976" fp="0.42469" hl="0.766"/>
-        </ClassicTable>
-        <filter_drhodt>false</filter_drhodt>
-        <first_order_drhodt>true</first_order_drhodt>
         <inverse_density_average>false</inverse_density_average>
+        <first_order_drhodt>true</first_order_drhodt>
+        <filter_drhodt>false</filter_drhodt>
+        <table label="a_user_generated_label" type="classic">
+          <reference_state eta="0.15976" fp="0.42469" hl="0.766"/>
+          <temperature_label_name>temperature</temperature_label_name>
+          <cold_flow>false</cold_flow>
+          <coal eta_label="coal_gas_mix_frac" fp_label="mixture_fraction_2" hl_label="heat_loss"/>
+          <inputfile>inputs/ARCHES/ClassicMixingTables/coal/OFC_ben.mix.gz</inputfile>
+          <enthalpy_label>enthalpy</enthalpy_label>
+        </table>
       </Properties>
       <DQMOM type="weightedAbs">
         <LinearSolver>
@@ -1090,39 +1087,39 @@
           <model label="zdragforce" type="Drag">
             <direction>z</direction>
           </model>
-          <model label="devol" type="FOWYDevol"> 
+          <model label="devol" type="FOWYDevol">
           </model>
           <model label="heat" type="EnthalpyShaddix">
             <low_clip>9.9999999999999995e-07</low_clip>
             <high_clip>999999</high_clip>
           </model>
-          <model label="char" type="CharOxidationShaddix"> 
+          <model label="char" type="CharOxidationShaddix">
           </model>
-          <model label="RCmass_os_src" type="SimpleBirth">
+          <model label="RCmass_os_src" type="BirthDeath">
             <abscissa label="RCmass"/>
             <small_weight>1e-15</small_weight>
           </model>
-          <model label="Charmass_os_src" type="SimpleBirth">
+          <model label="Charmass_os_src" type="BirthDeath">
             <abscissa label="Charmass"/>
             <small_weight>1e-15</small_weight>
           </model>
-          <model label="pE_os_src" type="SimpleBirth">
+          <model label="pE_os_src" type="BirthDeath">
             <abscissa label="pE"/>
             <small_weight>1e-15</small_weight>
           </model>
-          <model label="ux_os_src" type="SimpleBirth">
+          <model label="ux_os_src" type="BirthDeath">
             <abscissa label="ux"/>
             <small_weight>1e-15</small_weight>
           </model>
-          <model label="uy_os_src" type="SimpleBirth">
+          <model label="uy_os_src" type="BirthDeath">
             <abscissa label="uy"/>
             <small_weight>1e-15</small_weight>
           </model>
-          <model label="uz_os_src" type="SimpleBirth">
+          <model label="uz_os_src" type="BirthDeath">
             <abscissa label="uz"/>
             <small_weight>1e-15</small_weight>
           </model>
-          <model label="weight_os_src" type="SimpleBirth">
+          <model label="weight_os_src" type="BirthDeath">
             <small_weight>1e-15</small_weight>
             <is_weight/>
           </model>
@@ -1267,7 +1264,6 @@
         <save_moments>false</save_moments>
       </DQMOM>
       <BoundaryConditions>
-        <wall_csmag>0.0</wall_csmag>
       </BoundaryConditions>
       <ExplicitSolver>
         <initial_dt>1</initial_dt>
@@ -1297,6 +1293,9 @@
           <do_only_last_projection>false</do_only_last_projection>
         </PressureSolver>
         <MomentumSolver>
+          <wall_closure type="constant_coefficient">
+            <wall_csmag>0.4</wall_csmag>
+          </wall_closure>
           <convection_scheme>wall_upwind</convection_scheme>
           <src label="coal_gas_momentum"/>
           <Re_limit>2</Re_limit>

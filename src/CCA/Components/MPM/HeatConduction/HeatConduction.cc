@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -23,13 +23,13 @@
  */
 
 #include <CCA/Components/MPM/HeatConduction/HeatConduction.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/NodeIterator.h>
-#include <CCA/Components/MPM/MPMBoundCond.h>
-#include <CCA/Components/MPM/MPMFlags.h>
+#include <CCA/Components/MPM/Core/MPMBoundCond.h>
+#include <CCA/Components/MPM/Core/MPMFlags.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Labels/MPMLabel.h>
+#include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <Core/Grid/Task.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/SimulationState.h>
@@ -149,7 +149,7 @@ void HeatConduction::scheduleIntegrateTemperatureRate(SchedulerP& sched,
 
   const MaterialSubset* mss = matls->getUnion();
 
-  t->requires(Task::OldDW, d_sharedState->get_delt_label() );
+  t->requires(Task::OldDW, d_lb->delTLabel );
 
   t->requires(Task::NewDW, d_lb->gTemperatureLabel,     Ghost::None);
   t->requires(Task::NewDW, d_lb->gTemperatureNoBCLabel, Ghost::None);
@@ -222,8 +222,8 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
         particleIndex idx = *iter;
   
         // Get the node indices that surround the cell
-        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],
-                                                  deformationGradient[idx]);
+        int NN = interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,
+                                          psize[idx], deformationGradient[idx]);
 
         // Calculate k/(rho*Cv)
         double alpha = kappa*pvol[idx]/Cv; 
@@ -233,7 +233,7 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
 
         // TODO:  get this division by mass OUT OF HERE!  This is
         // creating a lot more divisions than are necessary
-        for (int k = 0; k < d_flag->d_8or27; k++){
+        for (int k = 0; k < NN; k++){
           node = ni[k];
           if(patch->containsNode(node)){
            Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],d_S[k].z()*oodx[2]);
@@ -333,10 +333,10 @@ void HeatConduction::computeNodalHeatFlux(const ProcessorGroup*,
         particleIndex idx = *iter;
         pdTdx[idx] = Vector(0,0,0);
         
-        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],
-                                                  deformationGradient[idx]);
+        int NN = interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,
+                                           psize[idx],deformationGradient[idx]);
 
-        for (int k = 0; k < d_flag->d_8or27; k++){
+        for (int k = 0; k < NN; k++){
           for (int j = 0; j<3; j++) {
             pdTdx[idx][j] += gTemperature[ni[k]] * d_S[k][j] * oodx[j];
           } 
@@ -349,12 +349,12 @@ void HeatConduction::computeNodalHeatFlux(const ProcessorGroup*,
         particleIndex idx = *iter;
 
         // Get the node indices that surround the cell
-        interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],
+        int NN = interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],
                                          deformationGradient[idx]);
                                                             
         Vector pdTdx_massWt = pdTdx[idx] * pMass[idx];
         
-        for (int k = 0; k < d_flag->d_8or27; k++){
+        for (int k = 0; k < NN; k++){
           if(patch->containsNode(ni[k])){
             gpdTdx[ni[k]] +=  (pdTdx_massWt*S[k]);        
           } 
@@ -442,7 +442,7 @@ void HeatConduction::integrateTemperatureRate(const ProcessorGroup*,
       constNCVariable<double> temp_old,temp_oldNoBC;
       NCVariable<double> temp_rate,tempStar;
       delt_vartype delT;
-      old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
+      old_dw->get(delT, d_lb->delTLabel, getLevel(patches) );
  
       new_dw->get(temp_old,    d_lb->gTemperatureLabel,     dwi,patch,gnone,0);
       new_dw->get(temp_oldNoBC,d_lb->gTemperatureNoBCLabel, dwi,patch,gnone,0);

@@ -5,7 +5,7 @@
     <title>explode</title>
   </Meta>
   <SimulationComponent type="mpmice"/>
-  <doAMR>true</doAMR>
+
   <!--____________________________________________________________________-->
   <!--   T  I  M  E     V  A  R  I  A  B  L  E  S                         -->
   <!--____________________________________________________________________-->
@@ -21,78 +21,78 @@
   <!--____________________________________________________________________-->
   <!--   G  R  I  D     V  A  R  I  A  B  L  E  S                         -->
   <!--____________________________________________________________________-->
-  <Grid>
+  <Grid doAMR="true">
     <BoundaryConditions>
       <!--______________LEFT____________________-->
       <Face side="x-">
         <BCType id="0" label="Pressure" var="Dirichlet">
-          <value> 101325.0   </value>
+                           <value> 101325.0   </value>
         </BCType>
         <BCType id="all" label="Velocity" var="Neumann">
-          <value> [0.,0.,0.] </value>
+                           <value> [0.,0.,0.] </value>
         </BCType>
         <BCType id="all" label="Temperature" var="Neumann">
-          <value> 0.0  </value>
+                           <value> 0.0  </value>
         </BCType>
         <BCType id="all" label="Density" var="Neumann">
-          <value> 0.0  </value>
+                           <value> 0.0  </value>
         </BCType>
         <BCType id="all" label="SpecificVol" var="computeFromDensity">
-          <value> 0.0  </value>
+                           <value> 0.0  </value>
         </BCType>
       </Face>
       <!--______________RIGHT____________________-->
       <Face side="x+">
         <BCType id="0" label="Pressure" var="Dirichlet">
-          <value> 101325.0   </value>
+                           <value> 101325.0   </value>
         </BCType>
         <BCType id="all" label="Velocity" var="Neumann">
-          <value> [0.,0.,0.] </value>
+                           <value> [0.,0.,0.] </value>
         </BCType>
         <BCType id="all" label="Temperature" var="Neumann">
-          <value> 0.0  </value>
+                           <value> 0.0  </value>
         </BCType>
         <BCType id="all" label="Density" var="Neumann">
-          <value> 0.0  </value>
+                           <value> 0.0  </value>
         </BCType>
         <BCType id="all" label="SpecificVol" var="computeFromDensity">
-          <value> 0.0  </value>
+                           <value> 0.0  </value>
         </BCType>
       </Face>
       <!--______________BOTTOM____________-->
       <Face side="y-">
         <BCType id="0" label="Pressure" var="Dirichlet">
-          <value> 101325.0   </value>
+                           <value> 101325.0   </value>
         </BCType>
         <BCType id="all" label="Velocity" var="Neumann">
-          <value> [0.,0.0,0.] </value>
+                           <value> [0.,0.0,0.] </value>
         </BCType>
         <BCType id="all" label="Temperature" var="Neumann">
-          <value> 0.0  </value>
+                           <value> 0.0  </value>
         </BCType>
         <BCType id="all" label="Density" var="Neumann">
-          <value> 0.0  </value>
+                           <value> 0.0  </value>
         </BCType>
         <BCType id="all" label="SpecificVol" var="computeFromDensity">
-          <value> 0.0  </value>
+                           <value> 0.0  </value>
         </BCType>
       </Face>
       <!--______________TOP____________________-->
       <Face side="y+">
         <BCType id="0" label="Pressure" var="Dirichlet">
-          <value> 101325.0   </value>
+                           <value> 101325.0   </value>
         </BCType>
         <BCType id="all" label="Velocity" var="Neumann">
-          <value> [0.,0.,0.] </value>
+                           <value> [0.,0.,0.] </value>
         </BCType>
         <BCType id="all" label="Temperature" var="Neumann">
-          <value> 0.0  </value>
+                           <value> 0.0  </value>
         </BCType>
         <BCType id="all" label="Density" var="Neumann">
-          <value> 0.0  </value>
+                           <value> 0.0  </value>
         </BCType>
         <BCType id="all" label="SpecificVol" var="computeFromDensity">
-          <value> 0.0  </value>
+                           <value> 0.0  </value>
         </BCType>
       </Face>
       <!--______________BACK____________________-->
@@ -158,7 +158,7 @@
       <orderOfInterpolation>1        </orderOfInterpolation>
       <ClampSpecificVolume>true</ClampSpecificVolume>
       <Refinement_Criteria_Thresholds>
-        </Refinement_Criteria_Thresholds>
+      </Refinement_Criteria_Thresholds>
       <orderOf_CFI_Interpolation>1</orderOf_CFI_Interpolation>
     </ICE>
     <MPM>
@@ -212,7 +212,6 @@
     <DoPressureStabilization>false</DoPressureStabilization>
     <computeNodalHeatFlux>false</computeNodalHeatFlux>
     <DoThermalExpansion>false</DoThermalExpansion>
-    <do_grid_reset>true</do_grid_reset>
     <minimum_particle_mass>3.0000000000000001e-12</minimum_particle_mass>
     <minimum_mass_for_acc>0</minimum_mass_for_acc>
     <maximum_particle_velocity>1000</maximum_particle_velocity>
@@ -220,7 +219,6 @@
     <InsertParticles>false</InsertParticles>
     <do_contact_friction_heating>true</do_contact_friction_heating>
     <delete_rogue_particles>false</delete_rogue_particles>
-    <erosion algorithm="ZeroStress"/>
     <boundary_traction_faces>[]</boundary_traction_faces>
     <UseMomentumForm>false</UseMomentumForm>
     <testForNegTemps_mpm>false</testForNegTemps_mpm>
@@ -265,15 +263,6 @@
             <T_r>298</T_r>
             <T_m>1793</T_m>
           </flow_model>
-          <damage_model type="johnson_cook">
-            <D1>0.050000000000000003</D1>
-            <D2>3.4399999999999999</D2>
-            <D3>-2.1200000000000001</D3>
-            <D4>0.002</D4>
-            <D5>0.60999999999999999</D5>
-            <D0>0</D0>
-            <Dc>0.69999999999999996</Dc>
-          </damage_model>
           <equation_of_state type="mie_gruneisen">
             <C_0>3574</C_0>
             <Gamma_0>1.6899999999999999</Gamma_0>
@@ -300,12 +289,23 @@
           <meanstrain_nucleation>0.29999999999999999</meanstrain_nucleation>
           <stddevstrain_nucleation>0.10000000000000001</stddevstrain_nucleation>
           <initial_porosity_distrib>gauss</initial_porosity_distrib>
-          <evolve_damage>true</evolve_damage>
+        </constitutive_model>
+        <erosion algorithm="ZeroStress"/>
+            
+        <damage_model type="johnson_cook">
           <initial_mean_scalar_damage>0.0050000000000000001</initial_mean_scalar_damage>
           <initial_std_scalar_damage>0.001</initial_std_scalar_damage>
-          <critical_scalar_damage>1</critical_scalar_damage>
+          <critical_scalar_damage>1e-10</critical_scalar_damage>
           <initial_scalar_damage_distrib>gauss</initial_scalar_damage_distrib>
-        </constitutive_model>
+          <D1>0.050000000000000003</D1>
+          <D2>3.4399999999999999</D2>
+          <D3>-2.1200000000000001</D3>
+          <D4>0.002</D4>
+          <D5>0.60999999999999999</D5>
+          <D0>0</D0>
+          <Dc>0.69999999999999996</Dc>
+        </damage_model>
+
         <geom_object>
           <difference>
             <cylinder label="outer steel cylinder 1">
@@ -367,6 +367,7 @@
           <C1>6.5</C1>
           <C2>120</C2>
         </constitutive_model>
+        <erosion algorithm="ZeroStress"/>
         <geom_object>
           <cylinder label="inner steel cylinder 1"/>
           <temperature>300</temperature>

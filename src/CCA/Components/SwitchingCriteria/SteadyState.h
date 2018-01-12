@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,11 +25,11 @@
 #ifndef Packages_Uintah_CCA_Components_Switching_SteadyState_h
 #define Packages_Uintah_CCA_Components_Switching_SteadyState_h
 
-#include <Core/ProblemSpec/ProblemSpecP.h>
 #include <CCA/Ports/SwitchingCriteria.h>
+
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/SimulationState.h>
-
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
 
@@ -38,7 +38,7 @@ namespace Uintah {
   class VarLabel;
 
   class SteadyState : public SwitchingCriteria
-    {
+  {
     public:
       // this function has a switch for all known SwitchingCriteria
     
@@ -64,17 +64,17 @@ namespace Uintah {
       void dummy(const ProcessorGroup*, const PatchSubset* patches,
                       const MaterialSubset* matls, DataWarehouse* old_dw,
                       DataWarehouse* new_dw);
-
-
-
+      
     private:
-      unsigned int d_material;
-      unsigned int d_numSteps;
-      const VarLabel* heatRate_CCLabel;
-      const VarLabel* heatFluxSumLabel;
-      const VarLabel* heatFluxSumTimeDerivativeLabel;
-      SimulationStateP d_sharedState; 
-    };
+      unsigned int m_material;
+      unsigned int m_numSteps;
+      const VarLabel* m_heatRate_CCLabel;
+      const VarLabel* m_heatFluxSumLabel;
+      const VarLabel* m_heatFluxSumTimeDerivativeLabel;
+      const VarLabel* m_delTLabel;
+      
+      SimulationStateP m_sharedState; 
+  };
 } // End namespace Uintah
 
 #endif 

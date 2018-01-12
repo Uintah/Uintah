@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -56,34 +56,43 @@ KEYWORDS
    Uintah_Parallel_Dataflow/Component, Dataflow/Component
 
 DESCRIPTION
-   Long description...
-  
-WARNING
   
 ****************************************/
 
-   class UintahParallelComponent {
-      struct PortRecord {
-	 PortRecord(UintahParallelPort* conn);
-	 std::vector<UintahParallelPort*> connections;
-      };
-      std::map<std::string, PortRecord*> portmap;
-   public:
-      UintahParallelComponent(const ProcessorGroup* myworld);
-      virtual ~UintahParallelComponent();
-      
-      //////////
-      // Insert Documentation Here:
-      void attachPort(const std::string& name, UintahParallelPort* port);
-      
-      UintahParallelPort* getPort(const std::string& name);
-      UintahParallelPort* getPort(const std::string& name, unsigned int i);
-      void releasePort(const std::string& name);
-      unsigned int numConnections(const std::string& name);
-      
-   protected:
-      const ProcessorGroup* d_myworld;
-   };
+class UintahParallelComponent {
+
+  struct PortRecord {
+    PortRecord( UintahParallelPort* conn );
+    std::vector<UintahParallelPort*> connections;
+  };
+  std::map<std::string, PortRecord*> portmap;
+
+
+public:
+  
+  UintahParallelComponent( const ProcessorGroup* myworld );
+  virtual ~UintahParallelComponent();
+
+  //////////
+  // Insert Documentation Here:
+  void attachPort( const std::string& name,
+                   UintahParallelPort* port );
+
+  UintahParallelPort* getPort( const std::string& name );
+  UintahParallelPort* getPort( const std::string& name,
+                               unsigned int i );
+  void releasePort( const std::string& name );
+  unsigned int numConnections( const std::string& name );
+
+  // Methods for managing the components attached via the ports.
+  virtual void setComponents( UintahParallelComponent *comp ) = 0;
+  virtual void getComponents() = 0;
+  virtual void releaseComponents() = 0;
+
+protected:
+
+  const ProcessorGroup* d_myworld;
+};
 } // End namespace Uintah
    
 #endif

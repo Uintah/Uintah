@@ -2,6 +2,8 @@
 #define Uintah_Component_Arches_CoalHelper_h
 
 #include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <vector>
 
 namespace Uintah{
 
@@ -68,7 +70,7 @@ namespace Uintah{
 
           std::string particleType;
           db_coal_props->getAttribute("type",particleType);
-          if ( particleType == "coal" ){ 
+          if ( particleType == "coal" ){
 
             db_coal_props->require("density",_coal_db.rhop_o);
             db_coal_props->require("diameter_distribution", _coal_db.sizes);

@@ -102,7 +102,7 @@ $gpData = $data->{gnuplot}[0];
 $gpFile = $gpData->{script}[0];        # if a user provides a gnuplot file
 
 
-if ( $gpFile ne "") {
+if ( length $gpFile ) {
 
   # modify the plot script
   $title = $gpData->{title}[0];

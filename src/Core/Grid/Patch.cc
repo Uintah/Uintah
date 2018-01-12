@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -34,15 +34,14 @@
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 #include <Core/Grid/BoundaryConditions/BoundCondFactory.h>
-#include <Core/Containers/StaticArray.h>
 #include <Core/Math/MiscMath.h>
 
 #include <atomic>
-#include <mutex>
 #include <iostream>
 #include <sstream>
 #include <cstdio>
 #include <map>
+#include <mutex>
 
 using namespace std;
 using namespace Uintah;
@@ -51,7 +50,7 @@ using namespace Uintah;
 static std::atomic<int32_t> ids{0};
 static std::mutex ids_init{};
 
-extern std::mutex coutLock; // Used to sync (when output by multiple threads)
+extern std::mutex coutLock; // Used to sync cout when output by multiple ranks
 
 Patch::Patch(const Level* level,
              const IntVector& lowIndex, const IntVector& highIndex,
@@ -63,11 +62,13 @@ Patch::Patch(const Level* level,
 {
   
   if(d_id == -1){
-    d_id = ids.fetch_add(1, std::memory_order_relaxed);
+    d_id = ids.fetch_add(1, memory_order_relaxed);
 
-  } else {
-    if(d_id >= ids)
-      ids.store(d_id+1, std::memory_order_relaxed);
+  }
+  else {
+    if(d_id >= ids) {
+      ids.store(d_id+1, memory_order_relaxed);
+    }
   }
    
   // DON'T call setBCType here     
@@ -102,7 +103,7 @@ Patch::Patch(const Patch* realPatch, const IntVector& virtualOffset)
   //set the level index
   d_patchState.levelIndex=realPatch->d_patchState.levelIndex;
 
-  for (Level::const_patchIterator iter = getLevel()->allPatchesBegin(); iter != getLevel()->allPatchesEnd(); iter++) {
+  for (Level::const_patch_iterator iter = getLevel()->allPatchesBegin(); iter != getLevel()->allPatchesEnd(); iter++) {
     if ((*iter)->d_realPatch == d_realPatch) {
       ++index;
       if (++numVirtualPatches >= 27)
@@ -210,19 +211,18 @@ void Patch::findCellNodes27(const Point& pos, IntVector ni[27]) const
 }
 
 
-    /**
-     *  \author  Derek Harris
-     *  \date    September, 2015
-     *  Allows a component to add a boundary condition, if it doesn't already exist.
-     */
-  void Patch::possiblyAddBC(const Patch::FaceType face, // face
-                     const int child,   // child (each child is only applicable to one face)
-                     const std::string &desc, // new field label (label) 
-                     int mat_id,        // material 
-                     const double bc_value,   // value of boundary condition
-                     const std::string &bc_kind, // bc type, dirichlet or neumann
-                     const std::string &bcFieldName, // identifier field variable Name (var)
-                     const std::string &faceName)  const  //  
+/**
+ *  Allows a component to add a boundary condition, if it doesn't already exist.
+ */
+void
+Patch::possiblyAddBC( const Patch::FaceType face,             // face
+                      const int             child,            // child (each child is only applicable to one face)
+                      const string        & desc,             // new field label (label) 
+                            int             mat_id,           // material 
+                      const double          bc_value,         // value of boundary condition
+                      const string        & bc_kind,          // bc type, dirichlet or neumann
+                      const string        & bcFieldName,      // identifier field variable Name (var)
+                      const string        & faceName ) const  //  
 {
     // avoid adding duplicate boundary conditions 
   if (getModifiableBCDataArray(face)->checkForBoundCondData(mat_id,bcFieldName,child)  ){  // avoid adding duplicate boundary conditions 
@@ -239,24 +239,27 @@ void Patch::findCellNodes27(const Point& pos, IntVector ni[27]) const
   }
 }
 
-
-
 /**
  * Returns the position of the node idx in domain coordinates.
  */
-Point Patch::nodePosition(const IntVector& idx) const {
+Point
+Patch::nodePosition(const IntVector& idx) const
+{
   return getLevel()->getNodePosition(idx);
 }
 
 /**
  * Returns the position of the cell idx in domain coordinates.
  */
-Point Patch::cellPosition(const IntVector& idx) const {
+Point
+Patch::cellPosition(const IntVector& idx) const
+{
   return getLevel()->getCellPosition(idx);
 }
 
-void Patch::findCellsFromNode( const IntVector& nodeIndex,
-                               IntVector cellIndex[8]) 
+void
+Patch::findCellsFromNode( const IntVector & nodeIndex,
+                               IntVector    cellIndex[8] )
 {
    int ix = nodeIndex.x();
    int iy = nodeIndex.y();
@@ -272,8 +275,9 @@ void Patch::findCellsFromNode( const IntVector& nodeIndex,
    cellIndex[7] = IntVector(ix-1, iy-1, iz-1);
 }
 
-void Patch::findNodesFromCell( const IntVector& cellIndex,
-                               IntVector nodeIndex[8])
+void
+Patch::findNodesFromCell( const IntVector & cellIndex,
+                                IntVector   nodeIndex[8] )
 {
    int ix = cellIndex.x();
    int iy = cellIndex.y();
@@ -1182,68 +1186,78 @@ IntVector Patch::getSFCZFORTHighIndex__Old() const
    return h;
 }
 
-/**
- * For AMR.  When there are weird patch configurations, sometimes patches can overlap.
- * Find the intersection betwen the patch and the desired dependency, and then remove the intersection.
+//______________________________________________________________________
+/*
+ * Needed for AMR inside corner patch configurations where patches can overlap.
+ * Find the intersection between the patches and remove the intersecting extra cells.
  * If the overlap IS the intersection, set the low to be equal to the high.
  */
-void Patch::cullIntersection(VariableBasis basis, IntVector bl, const Patch* neighbor,
-                             IntVector& region_low, IntVector& region_high) const
+void Patch::cullIntersection(VariableBasis basis, 
+                             IntVector bl, 
+                             const Patch* neighbor,
+                             IntVector& region_low, 
+                             IntVector& region_high) const
 {
-  // on certain AMR grid configurations, with extra cells, patches can overlap
-  // such that the extra cell of one patch overlaps a normal cell of another
-  // in such conditions, we shall exclude that extra cell from MPI communication
-  // Also disclude overlapping extra cells just to be safe
+  /*
+   On inside corner patch configurations, with extra cells, patches can overlap and the
+   extra cells of one patch overlap the normal cell of another patch.  This method removes the
+   overlapping extra cells.
 
-  // follow this heuristic - if one dimension of neighbor overlaps "this" with 2 cells
-  //   then prune it back to its interior cells
-  //   if two or more, throw it out entirely.  If there are 2+ different, the patches share only a line or point
-  //   and the patch's boundary conditions are basically as though there were no patch there
+   If a dimension of a neighbor's patch overlaps this patch by extra cells then prune it back
+   to its interior cells. If two or more cells overlap throw it out entirely.  If there are 2+
+   different, the patches share only a line or point and the patch's boundary conditions are
+   basically as though there were no patch there
+   */
 
+  if( neighbor == this ){
+    return;
+  }
   // use the cell-based interior to compare patch positions, but use the basis-specific one when culling the intersection
-  IntVector p_int_low(getLowIndex(Patch::CellBased)), p_int_high(getHighIndex(Patch::CellBased));
-  IntVector n_int_low(neighbor->getLowIndex(Patch::CellBased)), n_int_high(neighbor->getHighIndex(Patch::CellBased));
+  IntVector p_int_low(  getLowIndex(Patch::CellBased) );
+  IntVector p_int_high( getHighIndex(Patch::CellBased) );
+  IntVector n_int_low(  neighbor->getLowIndex(Patch::CellBased) );
+  IntVector n_int_high( neighbor->getHighIndex(Patch::CellBased) );
 
   // actual patch intersection
-  IntVector diff = Abs(Max(getExtraLowIndex(Patch::CellBased, bl), neighbor->getExtraLowIndex(Patch::CellBased, bl)) -
-                       Min(getExtraHighIndex(Patch::CellBased, bl), neighbor->getExtraHighIndex(Patch::CellBased, bl)));
+  IntVector overlapCells = Abs( Max( getExtraLowIndex(Patch::CellBased, bl), neighbor->getExtraLowIndex(Patch::CellBased, bl) ) -
+                                Min( getExtraHighIndex(Patch::CellBased, bl), neighbor->getExtraHighIndex(Patch::CellBased, bl) ) );
 
-  // go through each dimension, and determine where the neighor patch is relative to this
-  // if it is above or below, clamp it to the interior of the neighbor patch
-  // based on the current grid constraints, it is reasonable to assume that the patches
-  // line up at least in corners.
-  int bad_diffs = 0;
+  // Go through each dimension and determine if there is overlap.
+  // Clamp it to the interior of the neighbor patch based.  It is
+  // assumed that the patches line up at least in corners.
+  int counter = 0;
+  
   for (int dim = 0; dim < 3; dim++) {
-    //if the length of the side is not equal to zero,
-    //is equal to 2 times the number of extra cells,
-    //and the patches are adjacent on this dimension
-      //then increment the bad_diffs counter
-    if (diff[dim]!=0 && diff[dim] == 2*getExtraCells()[dim] 
-        && (p_int_low[dim]==n_int_high[dim] || n_int_low[dim]==p_int_high[dim]) ) 
-      bad_diffs++;
+    // If the number of overlapping cells is a) not equal to zero, b) is equal to 2 
+    // extra cells, and c) the patches are adjacent on this dimension then increment counter.
 
-    // depending on the region, cull away the portion of the region that in 'this'
+    if ( overlapCells[dim] != 0 && overlapCells[dim] == 2*getExtraCells()[dim] && ( p_int_low[dim] == n_int_high[dim] || n_int_low[dim] == p_int_high[dim] ) ) {
+      counter++;
+    }
+
+    // take the intersection
     if (n_int_high[dim] == p_int_low[dim]) {
-      region_high[dim] = Min(region_high[dim], neighbor->getHighIndex(basis)[dim]);
+      region_high[dim] = Min( region_high[dim], neighbor->getHighIndex(basis)[dim] );
     }
     else if (n_int_low[dim] == p_int_high[dim]) {
-      region_low[dim] = Max(region_low[dim], neighbor->getLowIndex(basis)[dim]);
+      region_low[dim] = Max( region_low[dim], neighbor->getLowIndex(basis)[dim] );
     }
   }
   
-  // prune it back if heuristic met or if already empty
-    //if bad_diffs is >=2 then we have a bad corner/edge that needs to be pruned
+  // if counter is >=2 then we have a bad corner/edge 
   IntVector region_diff = region_high - region_low;
-  if (bad_diffs >= 2 || region_diff.x() * region_diff.y() * region_diff.z() == 0)
+  int nRegionCells = region_diff.x() * region_diff.y() * region_diff.z();
+  if (counter >= 2 || nRegionCells == 0){
     region_low = region_high;  // caller will check for this case
+  }
 
 }
-
+//______________________________________________________________________
+//
 void Patch::getGhostOffsets(VariableBasis basis, Ghost::GhostType gtype,
                             int numGhostCells,
                             IntVector& lowOffset, IntVector& highOffset)
 {
-  MALLOC_TRACE_TAG_SCOPE("Patch::getGhostOffsets");
   // This stuff works by assuming there are no neighbors.  If there are
   // neighbors, it can simply cut back appropriately later (no neighbor
   // essentially means no ghost cell on that side).
@@ -1256,12 +1270,14 @@ void Patch::getGhostOffsets(VariableBasis basis, Ghost::GhostType gtype,
     SCI_THROW(InternalError("ghost cells should not be specified with Ghost::None", __FILE__, __LINE__));
 
   if (basis == CellBased) {
-    if (gtype == Ghost::AroundCells) {
-      // Cells around cells
-      lowOffset = highOffset = g;
-    }
-    else {
       // cells around nodes/faces
+    if (gtype == Ghost::AroundCells) {
+      lowOffset = highOffset = g;
+    }else if (gtype > Ghost::AroundFaces  ){
+      IntVector aroundDir = Ghost::getGhostTypeDir(gtype);
+      lowOffset = g * (IntVector(1,1,1)-aroundDir);
+      highOffset =g * aroundDir;
+    }else {
       IntVector aroundDir = Ghost::getGhostTypeDir(gtype);
       lowOffset = g * aroundDir;
       highOffset = lowOffset - aroundDir;
@@ -1354,7 +1370,147 @@ void Patch::computeExtents(VariableBasis basis,
   high = origHighIndex + neighborsHigh()*highOffset;
 }
 
+
+/*______________________________________________________________________
+
+                                                    +-------+-------+
+                                                    |       |       |  Level Hi
+                                        +***************14*****+15  |
+                                        *           |       |  *    |
+ExtraCells not drawn             Region of interest +----------*----+
+                                        *           |       |  *    |
+                                        *    void   |   12  |  *13  |
+                                        *           |       |  *    |
+                    +-------+-------+---*---+------------------*----+
+                    |       |       |   *   |       |       |  *    |
+                    |   6   |   7   |   +*******9*******10*****+11  |
+                    |       |       |       |       |       |       |
+                    +-----------------------------------------------+
+                    |       |       |       |       |       |       |
+        Patches     |   0   |   1   |   2   |   3   |   4   |   5   |
+                    |       |       |       |       |       |       |
+                    +-------+-------+-------+-------+-------+-------+
+                    
+This will return the low and high cell index of the region of interest in non-cubic computational domains.
+Note the low and high point encompasses the void region show above.  This just
+adds a clamp so the low and high indices don't exceed the level's extents.
+This is almost identical to the patch::computeExtents
+               
+//______________________________________________________________________*/
+void Patch::computeVariableExtentsWithBoundaryCheck(Uintah::TypeDescription::Type basis,
+                                                    const IntVector& boundaryLayer,
+                                                    Ghost::GhostType gtype, 
+                                                    int numGhostCells,
+                                                    IntVector& low, 
+                                                    IntVector& high) const
+{
+  // This ignores virtual patches because we don't want to "clamp" this
+  // extents of periodic boundary conditions to the level's extents.
+ 
+  if ( getLevel()->isNonCubic() && numGhostCells >=1 && !isVirtual()) {
+
+    bool basisMustExist = (gtype != Ghost::None);
+    VariableBasis vbasis = translateTypeToBasis(basis, basisMustExist); 
+
+    low  = getExtraLowIndex(vbasis, boundaryLayer);
+    high = getExtraHighIndex(vbasis, boundaryLayer);
+ 
+    //__________________________________
+    // adjust the variable extents to include ghost cells EVEN when there are 
+    // no neighboring patches.  This will extend outside the domain's extents,
+    // which is OK. This is the key difference between computeExtents.
+    IntVector ghostLowOffset, ghostHighOffset;    
+    getGhostOffsets(basis, gtype, numGhostCells, ghostLowOffset, ghostHighOffset);
+
+    IntVector ghostLow  = low  - ghostLowOffset;
+    IntVector ghostHigh = high + ghostHighOffset;
+                                         
+    //__________________________________
+    // get extents over entire level including extra cells
+    
+    //TODO: getLevel()->computeVariableExtents doesn't return extra cells for
+    //NCVariables, so this receives back incorrect levelLow and levelHigh. (My guess is
+    //that Level.cc's computeVariableExtents shouldn't be ignoring extra cells as 
+    //it currently does).  Brad P. - 10/13/16
+    IntVector levelLow, levelHigh;
+    
+    this->getLevel()->computeVariableExtents(basis, levelLow, levelHigh);
+    
+    
+    //__________________________________
+    //  Clamp the a valid extent
+    low  = Uintah::Max( ghostLow, levelLow);
+    high = Uintah::Min( ghostHigh, levelHigh);
+  } else {
+    //Do it the usual way 
+    computeVariableExtents( basis, boundaryLayer, gtype, numGhostCells, low, high);
+  } 
+}
+
+//______________________________________________________________________
+// d
 void Patch::getOtherLevelPatches(int levelOffset,
+                                 Patch::selectType& selected_patches,
+                                 int nPaddingCells /*=0*/) const
+{
+  ASSERT(levelOffset !=0);
+
+  // include the padding cells in the final low/high indices
+  IntVector pc(nPaddingCells, nPaddingCells, nPaddingCells);
+  const LevelP& otherLevel = getLevel()->getRelativeLevel(levelOffset);
+  Level::selectType patches;
+  IntVector low(-9,-9,-9);
+  IntVector high(-9,-9,-9);
+
+  if (levelOffset < 0) {
+    Point lowPt = getLevel()->getCellPosition(getExtraCellLowIndex());
+    Point hiPt  = getLevel()->getCellPosition(getExtraCellHighIndex());
+    low  = otherLevel->getCellIndex(lowPt);
+    high = otherLevel->getCellIndex(hiPt);
+
+    // we don't grab enough in the high direction if the fine extra cell
+    // is on the other side of a coarse boundary
+
+    // refinement ratio between the two levels
+    IntVector crr = IntVector(1,1,1);
+    for (int i=1;i<=(-levelOffset);i++){
+      crr = crr * otherLevel->getRelativeLevel(i)->getRefinementRatio();
+    }
+    IntVector highIndex = getExtraCellHighIndex();
+    IntVector offset((highIndex.x() % crr.x()) == 0 ? 0 : 1,
+                     (highIndex.y() % crr.y()) == 0 ? 0 : 1,
+                     (highIndex.z() % crr.z()) == 0 ? 0 : 1);
+    high += offset;
+  }else if (levelOffset > 0) {
+    //Going from coarse to fine.
+    Point lowPt = getLevel()->getNodePosition(getExtraCellLowIndex()); //getNodePosition is a way to get us the bottom/left/close corner coordinate.
+    Point hiPt = getLevel()->getNodePosition(getExtraCellHighIndex()); //Need to add (1,1,1) to get the upper/right/far corner coordinate.
+    low  = otherLevel->getCellIndex(lowPt);
+    high = otherLevel->getCellIndex(hiPt);
+    //Note, if extra cells were used, then the computed low and high will go too far.
+    //For example, a coarse to fine refinement ratio of 2 means that if the coarse had 1 layer of extra cells,
+    //then trying to find the low from the coarses (-1, -1, -1) will result in the answer (-2,-2,-2).
+    //That's fine, it's a perfect projection of what it would be.
+  }
+
+  //std::cout << "  Patch:Golp: " << low-pc << " " << high+pc << std::endl;
+  otherLevel->selectPatches(low-pc, high+pc, patches); 
+  
+  // based on the expanded range above to search for extra cells, we might
+  // have grabbed more patches than we wanted, so refine them here
+  for (size_t i = 0; i < patches.size(); i++) {
+    IntVector lo = patches[i]->getExtraCellLowIndex();
+    IntVector hi = patches[i]->getExtraCellHighIndex();
+    bool intersect = doesIntersect(low-pc, high+pc, lo, hi );
+    if (levelOffset < 0 || intersect) {
+      selected_patches.push_back(patches[i]);
+    }
+  }
+}
+
+// This is being put in until the other getOtherLevelPatches can be
+// made to work with both AMRMPM and Arches
+void Patch::getOtherLevelPatches55902(int levelOffset,
                                  Patch::selectType& selected_patches,
                                  int nPaddingCells /*=0*/) const
 {
@@ -1403,7 +1559,7 @@ void Patch::getOtherLevelPatches(int levelOffset,
   
   // based on the expanded range above to search for extra cells, we might
   // have grabbed more patches than we wanted, so refine them here
-  for (int i = 0; i < patches.size(); i++) {
+  for (size_t i = 0; i < patches.size(); i++) {
     IntVector lo = patches[i]->getExtraCellLowIndex();
     IntVector hi = patches[i]->getExtraCellHighIndex();
     bool intersect = doesIntersect(low-pc, high+pc, lo, hi );
@@ -1463,7 +1619,7 @@ void Patch::getOtherLevelPatchesNB(int levelOffset,
   
   // based on the expanded range above to search for extra cells, we might
   // have grabbed more patches than we wanted, so refine them here
-  for (int i = 0; i < patches.size(); i++) {
+  for (size_t i = 0; i < patches.size(); i++) {
     IntVector lo = patches[i]->getExtraNodeLowIndex();
     IntVector hi = patches[i]->getExtraNodeHighIndex();
     bool intersect = doesIntersect(low-pc, high+pc, lo, hi );
@@ -1495,6 +1651,7 @@ Patch::VariableBasis Patch::translateTypeToBasis(Uintah::TypeDescription::Type t
     return ZFaceBased;
   case TypeDescription::ParticleVariable:
   case TypeDescription::PerPatch:
+  case TypeDescription::SoleVariable:
     return CellBased;
   default:
     if (mustExist)
@@ -1549,7 +1706,7 @@ IntVector Patch::neighborsHigh() const
 /**
 * Returns the low index for a variable of type basis with extraCells or
 * the boundaryLayer specified in boundaryLayer.  Boundary layers take 
-* precidence over extra cells.
+* precedence over extra cells.
 */
 IntVector Patch::getExtraLowIndex(VariableBasis basis,
                              const IntVector& boundaryLayer) const
@@ -1602,7 +1759,7 @@ IntVector Patch::getExtraLowIndex(VariableBasis basis,
  
 /**
 * Returns the high index for a variable of type basis with extraCells or
-* the boundaryLayer specified in boundaryLayer.  Boundary layers take precidence 
+* the boundaryLayer specified in boundaryLayer.  Boundary layers take precedence 
 * over extra cells.
 */
 IntVector Patch::getExtraHighIndex(VariableBasis basis,
@@ -1898,7 +2055,7 @@ void Patch::getFinestRegionsOnPatch(vector<Region>& difference) const
     const LevelP& fineLevel = getLevel()->getFinerLevel(); 
     
     //add overlapping fine patches to finePatch_q                                                       
-    for(int fp=0;fp<finePatches.size();fp++){
+    for(size_t fp=0;fp<finePatches.size();fp++){
       IntVector lo = fineLevel->mapCellToCoarser(finePatches[fp]->getCellLowIndex() );
       IntVector hi = fineLevel->mapCellToCoarser(finePatches[fp]->getCellHighIndex());                              
       finePatch_q.push_back(Region(lo, hi));                        

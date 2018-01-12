@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -132,7 +132,7 @@ void fineToCoarseOperator(CCVariable<T>& q_CC,
                           const bool computesAve,
                           const VarLabel* varLabel,
                           const int indx,
-                          DataWarehouse* new_dw,
+                          DataWarehouse* dw,
                           const Patch* coarsePatch,
                           const Level* coarseLevel,
                           const Level* fineLevel)
@@ -140,7 +140,7 @@ void fineToCoarseOperator(CCVariable<T>& q_CC,
   Level::selectType finePatches;
   coarsePatch->getFineLevelPatches(finePatches);
                           
-  for(int i=0;i<finePatches.size();i++){
+  for(size_t i=0;i<finePatches.size();i++){
     const Patch* finePatch = finePatches[i];
 
     IntVector cl, ch, fl, fh;
@@ -151,8 +151,8 @@ void fineToCoarseOperator(CCVariable<T>& q_CC,
     }
     
     constCCVariable<T> fine_q_CC;
-    new_dw->getRegion(fine_q_CC,  varLabel, indx, fineLevel, fl, fh, false);
-
+    dw->getRegion(fine_q_CC,  varLabel, indx, fineLevel, fl, fh, false);
+    
     cout_dbg << " fineToCoarseOperator: finePatch "<< fl << " " << fh 
              << " coarsePatch "<< cl << " " << ch << endl;
              

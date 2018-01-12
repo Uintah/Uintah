@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -94,10 +94,12 @@ namespace Uintah {
     void reset();
     //returns true if profiling data exists
     bool hasData() {return d_profiler.hasData();}
+
   private:
-    LoadBalancer *d_lb;
-    const ProcessorGroup* d_myworld;
-    ProfileDriver d_profiler;
+
+    LoadBalancer     * d_lb;
+    const ProcessorGroup * d_myworld;
+    ProfileDriver          d_profiler;
 
   };
 } // End namespace Uintah

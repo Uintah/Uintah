@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,18 +25,20 @@
 #ifndef CCA_COMPONENTS_SCHEDULERS_RUNTIME_STATS_HPP
 #define CCA_COMPONENTS_SCHEDULERS_RUNTIME_STATS_HPP
 
-#include <Core/Util/DOUT.hpp>
-#include <Core/Util/Timers/Timers.hpp>
-#include <Core/Util/InfoMapper.h>
 #include <Core/Grid/SimulationState.h>
+#include <Core/Util/DOUT.hpp>
+#include <Core/Util/InfoMapper.h>
+#include <Core/Util/Timers/Timers.hpp>
+
+#include <CCA/Components/SimulationController/RunTimeStatsEnums.h>
 
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 
-#include <string>
-#include <vector>
-#include <memory>
 #include <atomic>
 #include <functional>
+#include <memory>
+#include <string>
+#include <vector>
 
 
 namespace Uintah {
@@ -63,7 +65,7 @@ public:
   // used to declare timers
   template <typename Tag> using TripTimer = Timers::ThreadTrip< Tag >;
 
-  using InfoStats = InfoMapper< SimulationState::RunTimeStat, double >;
+  using InfoStats = InfoMapper< RunTimeStatsEnum, double >;
 
   // NOT THREAD SAFE -- should only be called from the master thread
   // by the parent scheduler
@@ -71,7 +73,7 @@ public:
 
   // NOT THREAD SAFE -- should only be called from the master thread
   // by the parent scheduler
-  static void report( MPI_Comm comm, InfoStats & info_stats );
+  static void report( MPI_Comm comm );
 
   struct TaskExecTag {};       // Total Task Exec
   struct TaskWaitTag {};       // Total Task Wait
@@ -83,7 +85,6 @@ public:
   struct WaitTag {};       // Total Wait
 
   // RAII timer types
-
   using CollectiveTimer = TripTimer< CollectiveTag >;
   using RecvTimer       = TripTimer< RecvTag >;
   using SendTimer       = TripTimer< SendTag >;
@@ -157,4 +158,4 @@ public:
 
 } // namespace Uintah
 
-#endif //CCA_COMPONENTS_SCHEDULERS_RUNTIME_STATS_HPP
+#endif // CCA_COMPONENTS_SCHEDULERS_RUNTIME_STATS_HPP

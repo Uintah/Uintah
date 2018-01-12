@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -56,7 +56,6 @@ WARNING
    none
 ****************************************/
 
-#include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/NonlinearSolver.h>
 #include <CCA/Components/Arches/MomentumSolver.h>
 #include <CCA/Ports/DataWarehouseP.h>
@@ -72,6 +71,7 @@ class ExtraScalarSolver;
 class TurbulenceModel;
 class ScaleSimilarityModel;
 class Properties;
+class TableLookup;
 class BoundaryCondition;
 class PhysicalConstants;
 class PartVel;
@@ -83,6 +83,8 @@ class EfficiencyCalculator;
 class WallModelDriver;
 class RadPropertyCalculator;
 class ExplicitTimeInt;
+class WBCHelper;
+class ArchesParticlesHelper;
 class ExplicitSolver: public NonlinearSolver {
 
 public:
@@ -95,15 +97,15 @@ public:
     Builder( SimulationStateP& sharedState,
              const MPMArchesLabel* MAlb,
              PhysicalConstants* physConst,
-             std::map<std::string,
-             boost::shared_ptr<TaskFactoryBase> >& task_factory_map,
              const ProcessorGroup* myworld,
+             ArchesParticlesHelper* particle_helper,
              SolverInterface* hypreSolver ) :
              _sharedState(sharedState),
              _MAlb(MAlb),
              _physConst(physConst),
-             _task_factory_map(task_factory_map),
-             _myworld(myworld), _hypreSolver(hypreSolver)
+             _myworld(myworld),
+             _particle_helper(particle_helper),
+             _hypreSolver(hypreSolver)
     { }
 
     ~Builder(){}
@@ -112,20 +114,18 @@ public:
       return scinew ExplicitSolver( _sharedState,
                                     _MAlb,
                                     _physConst,
-                                    _task_factory_map,
                                     _myworld,
-                                    _hypreSolver
-                                  );
+                                    _particle_helper,
+                                    _hypreSolver);
     }
 
   private:
 
     SimulationStateP& _sharedState;
-    ArchesLabel* _label;
     const MPMArchesLabel* _MAlb;
     PhysicalConstants* _physConst;
-    std::map<std::string,boost::shared_ptr<TaskFactoryBase> >& _task_factory_map;
     const ProcessorGroup* _myworld;
+    ArchesParticlesHelper* _particle_helper;
     SolverInterface* _hypreSolver;
 
   };
@@ -133,8 +133,8 @@ public:
   ExplicitSolver( SimulationStateP& sharedState,
                   const MPMArchesLabel* MAlb,
                   PhysicalConstants* physConst,
-                  std::map<std::string, boost::shared_ptr<TaskFactoryBase> >& task_factory_map,
                   const ProcessorGroup* myworld,
+                  ArchesParticlesHelper* particle_helper,
                   SolverInterface* hypreSolver );
 
   virtual ~ExplicitSolver();
@@ -274,11 +274,11 @@ public:
   virtual void sched_getCCVelocities(const LevelP& level,
                                      SchedulerP&);
 
-  inline double recomputeTimestep(double current_dt) {
-    return current_dt/2;
+  inline double recomputeDelT(const double delT) {
+    return delT / 2.0;
   }
 
-  inline bool restartableTimesteps() {
+  inline bool restartableTimeSteps() {
     return true;
   }
 
@@ -356,12 +356,12 @@ public:
                       const TimeIntegratorLabel* timelabels);
 
   void computeDensityLag(const ProcessorGroup*,
-                      const PatchSubset* patches,
-                      const MaterialSubset* matls,
-                      DataWarehouse* old_dw,
-                      DataWarehouse* new_dw,
-                      const TimeIntegratorLabel* timelabels,
-                      bool after_average);
+                         const PatchSubset* patches,
+                         const MaterialSubset* matls,
+                         DataWarehouse* old_dw,
+                         DataWarehouse* new_dw,
+                         const TimeIntegratorLabel* timelabels,
+                         bool after_average);
 
   void getDensityGuess(const ProcessorGroup*,
                       const PatchSubset* patches,
@@ -371,31 +371,47 @@ public:
                       const TimeIntegratorLabel* timelabels);
 
   void checkDensityGuess(const ProcessorGroup*,
-                      const PatchSubset* patches,
-                      const MaterialSubset* matls,
-                      DataWarehouse* old_dw,
-                      DataWarehouse* new_dw,
-                      const TimeIntegratorLabel* timelabels);
+                         const PatchSubset* patches,
+                         const MaterialSubset* matls,
+                         DataWarehouse* old_dw,
+                         DataWarehouse* new_dw,
+                         const TimeIntegratorLabel* timelabels);
 
   void checkDensityLag(const ProcessorGroup*,
-                      const PatchSubset* patches,
-                      const MaterialSubset* matls,
-                      DataWarehouse* old_dw,
-                      DataWarehouse* new_dw,
-                      const TimeIntegratorLabel* timelabels,
-                      bool after_average);
+                       const PatchSubset* patches,
+                       const MaterialSubset* matls,
+                       DataWarehouse* old_dw,
+                       DataWarehouse* new_dw,
+                       const TimeIntegratorLabel* timelabels,
+                       bool after_average);
 
   void updateDensityGuess(const ProcessorGroup*,
-                      const PatchSubset* patches,
-                      const MaterialSubset* matls,
-                      DataWarehouse* old_dw,
-                      DataWarehouse* new_dw,
-                      const TimeIntegratorLabel* timelabels);
+                          const PatchSubset* patches,
+                          const MaterialSubset* matls,
+                          DataWarehouse* old_dw,
+                          DataWarehouse* new_dw,
+                          const TimeIntegratorLabel* timelabels);
 
-  void allocateAndInitializeToZero( const VarLabel* label,
-                                    DataWarehouse* dw,
-                                    const int index,
-                                    const Patch* patch );
+  void allocateAndInitializeToC( const VarLabel* label,
+                                 DataWarehouse* dw,
+                                 const int index,
+                                 const Patch* patch, const double C );
+
+  void setupBoundaryConditions( const LevelP& level,
+                                SchedulerP& sched,
+                                const bool doing_restart );
+
+  int getTaskGraphIndex(const int time_step ) {
+    if (d_num_taskgraphs==1){  
+      return 0;
+    }else{
+      return ((time_step % d_rad_calc_frequency == 0));
+    }
+  }
+
+  int taskGraphsRequested() {
+  return d_num_taskgraphs;
+  }
 
   void registerModels( ProblemSpecP& db );
   void registerTransportEqns( ProblemSpecP& db );
@@ -405,11 +421,15 @@ public:
   // const VarLabel*
   ArchesLabel* d_lab;
 
+  // problemspec for Arches
+  Uintah::ProblemSpecP _arches_spec;
+
   // Total number of nonlinear iterates
   int d_nonlinear_its;
   // for probing data for debuging or plotting
   // properties...solves density, temperature and specie concentrations
   Properties* d_props;
+  TableLookup* d_tabulated_properties; 
   // Boundary conditions
   BoundaryCondition* d_boundaryCondition;
   // Turbulence Model
@@ -425,7 +445,8 @@ public:
   PhysicalConstants* d_physicalConsts;     ///< Physical constants
 
   //NEW TASK INTERFACE STUFF:
-  std::map<std::string, boost::shared_ptr<TaskFactoryBase> >& _task_factory_map;
+  std::map<std::string, std::shared_ptr<TaskFactoryBase> > _task_factory_map;
+  bool _doLagrangianParticles;
 
   std::vector<TimeIntegratorLabel* > d_timeIntegratorLabels;
   TimeIntegratorLabel* nosolve_timelabels;
@@ -473,6 +494,8 @@ public:
   CQMOM_Convection* d_cqmomConvect;
   CQMOMSourceWrapper* d_cqmomSource;
 
+  ArchesParticlesHelper* _particlesHelper;
+
   // Pressure Eqn Solver
   PressureSolver* d_pressSolver;
   SolverInterface* d_hypreSolver;             // infrastructure hypre solver
@@ -491,7 +514,10 @@ public:
   const VarLabel* d_rho_label;
   const VarLabel* d_celltype_label;
   int d_archesLevelIndex;
+  int d_rad_calc_frequency{1};
+  int d_num_taskgraphs{1};
 
+  std::map<int,WBCHelper*> m_bcHelper;
 
 }; // End class ExplicitSolver
 } // End namespace Uintah

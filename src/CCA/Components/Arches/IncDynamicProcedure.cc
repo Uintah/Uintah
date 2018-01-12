@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,6 +25,7 @@
 //----- IncDynamicProcedure.cc --------------------------------------------------
 
 #include <CCA/Components/Arches/IncDynamicProcedure.h>
+#include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/PhysicalConstants.h>
 #include <CCA/Components/Arches/BoundaryCondition.h>
 #include <CCA/Components/Arches/CellInformation.h>
@@ -48,7 +49,7 @@
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/VariableNotFoundInGrid.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Util/Time.h>
+#include <Core/Util/Timers/Timers.hpp>
 
 using namespace std;
 using namespace Uintah;
@@ -189,6 +190,7 @@ IncDynamicProcedure::sched_reComputeTurbSubmodel( SchedulerP& sched,
                     timelabels);
 
   // Requires
+  tsk->requires(Task::OldDW, d_lab->d_simulationTimeLabel);
   // Assuming one layer of ghost cells
   // initialize with the value of zero at the physical bc's
   // construct a stress tensor and stored as an array with the following order
@@ -855,7 +857,9 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     filterWVel.initialize(0.0);
     IntVector indexLow = patch->getFortranCellLowIndex();
     IntVector indexHigh = patch->getFortranCellHighIndex();
-    double start_turbTime = Time::currentSeconds();
+
+    Timers::Simple timer;
+    timer.start();
 
     d_filter->applyFilter_noPetsc(pc, patch, ccVel, filterVolume, cellType, filterUVel, 0);
     d_filter->applyFilter_noPetsc(pc, patch, ccVel, filterVolume, cellType, filterVVel, 1);
@@ -873,7 +877,7 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     }
 
     string msg = "Time for the Filter operation in Turbulence Model: ";
-    proc0cerr << msg << Time::currentSeconds() - start_turbTime << " seconds\n";
+    proc0cerr << msg << timer().seconds() << " seconds\n";
 
     for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
@@ -1205,11 +1209,14 @@ void
 IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
                                         const PatchSubset* patches,
                                         const MaterialSubset*,
-                                        DataWarehouse*,
+                                        DataWarehouse* old_dw,
                                         DataWarehouse* new_dw,
                                         const TimeIntegratorLabel* timelabels)
 {
-//  double time = d_lab->d_sharedState->getElapsedTime();
+//  double simTime = d_lab->d_sharedState->getElapsedSimTime();
+  simTime_vartype simTime;
+  old_dw->get( simTime, d_lab->d_simulationTimeLabel );
+
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
@@ -1305,8 +1312,8 @@ IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
 
     double factor = 1.0;
 #if 0
-    if (time < 2.0)
-      factor = (time+0.000001)*0.5;
+    if (simTime < 2.0)
+      factor = (simTime+0.000001)*0.5;
 #endif
 
     if (d_MAlab) {

@@ -64,9 +64,9 @@ namespace Uintah {
 class SimulationController;
 
 /* Simulation Mode */
-//#define VISIT_SIMMODE_UNKNOWN  0
-//#define VISIT_SIMMODE_RUNNING  1
-//#define VISIT_SIMMODE_STOPPED  2
+#define VISIT_SIMMODE_UNKNOWN  0
+#define VISIT_SIMMODE_RUNNING  1
+#define VISIT_SIMMODE_STOPPED  2
 
 #define VISIT_SIMMODE_STEP       3
 #define VISIT_SIMMODE_FINISHED   4
@@ -86,13 +86,13 @@ typedef struct
   double time;
   double delt;
   double delt_next;
-  double elapsedt;
 
-  int blocking;
-
+  // UDA archive variables.
   bool useExtraCells;
-  bool nodeCentered;
   bool forceMeshReload;
+  std::string mesh_for_patch_data;
+  
+  int blocking;
 
   // Simulation control members
   int  runMode;  // What the libsim is doing.
@@ -101,6 +101,8 @@ typedef struct
   int  rank;
   bool isProc0;
 
+  bool first;
+  
   bool timeRange;
   int timeStart;
   int timeStep;
@@ -115,10 +117,16 @@ typedef struct
   int  stopAtTimeStep;
   bool stopAtLastTimeStep;
 
-  std::string stripChartNames[5];
+  // The first row is the strip chart name.
+  std::string stripChartNames[5][5];
   
-} visit_simulation_data;
+  // Container for storing modiied variables - gets passed to the
+  // DataArchiver so they are stored in the index.xml file.  
 
+  //   map< VarName           pair<oldValue,    newValue> >
+  std::map< std::string, std::pair<std::string, std::string> > modifiedVars;
+
+} visit_simulation_data;
 
 void visit_LibSimArguments(int argc, char **argv);
 void visit_InitLibSim(visit_simulation_data *sim);
@@ -127,8 +135,9 @@ bool visit_CheckState(visit_simulation_data *sim);
 
 void visit_UpdateSimData( visit_simulation_data *sim, 
                           GridP currentGrid,
-                          double time, double delt, double delt_next,
-                          double wallTime, bool last );
+			  double time,  unsigned int cycle,
+			  double delt,  double delt_next,
+                          bool first, bool last );
 
 void visit_Initialize( visit_simulation_data *sim );
   

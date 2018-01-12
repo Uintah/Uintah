@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2016 The University of Utah
+ * Copyright (c) 2012-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -154,10 +154,10 @@ Pressure::schedule_set_pressure_bcs( const Uintah::LevelP& level,
                                            &Pressure::process_bcs);
   const Uintah::Ghost::GhostType gt = get_uintah_ghost_type<SVolField>();
   const int ng = get_n_ghost<SVolField>();
-  task->requires(Uintah::Task::NewDW,pressureLabel_, gt, ng);
-  //task->modifies(pressureLabel_);
-  Uintah::LoadBalancer* lb = sched->getLoadBalancer();
-  sched->addTask(task, lb->getPerProcessorPatchSet(level), materials);
+  task->requires( Uintah::Task::NewDW,pressureLabel_, gt, ng );
+  //task->modifies( pressureLabel_);
+  Uintah::LoadBalancer * lb = sched->getLoadBalancer();
+  sched->addTask( task, lb->getPerProcessorPatchSet( level ), materials );
 }
 
 //--------------------------------------------------------------------
@@ -404,7 +404,7 @@ Pressure::evaluate()
 {
   using namespace SpatialOps;
 
-  typedef std::vector<SVolField*> SVolFieldVec;
+  typedef typename Expr::Expression<SVolField>::ValVec SVolFieldVec;
   SVolFieldVec& results = this->get_value_vec();
 
   // jcs: can we do the linear solve in place? We probably can. If so,

@@ -22,7 +22,7 @@
   <!--____________________________________________________________________-->
   <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
   <!--____________________________________________________________________-->
-  <Grid>
+  <Grid doAMR="true">
     <BoundaryConditions>
       <Face side = "x-">
         <BCType id = "0"   label = "color"     var = "Dirichlet"> 
@@ -124,13 +124,13 @@
   -->
   </Grid>
   <!--__________________________________-->
-  <AMR>
+  <AMR type="StaticGridML">
     <useLockStep> true </useLockStep>
   </AMR>    
   <!--__________________________________-->
   <DataArchiver>
   <filebase>RMCRT_DO_perf.uda</filebase>
-      <outputTimestepInterval>1</outputTimestepInterval>
+      <outputTimestepInterval>0</outputTimestepInterval>
   </DataArchiver>
   
   
@@ -147,7 +147,7 @@
     <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
 
     <algorithm type='dataOnion'>
-      <halo>           [4,4,4]     </halo>
+      <haloCells>           [4,4,4]     </haloCells>
            
       <ROI_extents type='patch_based'/>
 <!--       

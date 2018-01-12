@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2016 The University of Utah
+ * Copyright (c) 2012-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -38,8 +38,8 @@
 template< typename VelT >
 DiffusiveVelocity<VelT>::
 DiffusiveVelocity( const Expr::Tag& turbDiffTag,
-                    const Expr::Tag& phiTag,
-                    const Expr::Tag& coefTag )
+                   const Expr::Tag& phiTag,
+                   const Expr::Tag& coefTag )
   : Expr::Expression<VelT>(),
     isTurbulent_( turbDiffTag != Expr::Tag() ),
     isConstCoef_( false       ),
@@ -57,8 +57,8 @@ DiffusiveVelocity( const Expr::Tag& turbDiffTag,
 template< typename VelT >
 DiffusiveVelocity<VelT>::
 DiffusiveVelocity( const Expr::Tag& turbDiffTag,
-                    const Expr::Tag& phiTag,
-                    const double coefVal )
+                   const Expr::Tag& phiTag,
+                   const double coefVal )
   : Expr::Expression<VelT>(),
     isTurbulent_( turbDiffTag != Expr::Tag() ),
     isConstCoef_( true        ),

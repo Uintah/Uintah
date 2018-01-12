@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -38,7 +38,6 @@
 #define SCI_Containers_Array2_h 1
 
 #include <Core/Util/Assert.h>
-#include <sci_defs/template_defs.h>
 
 namespace Uintah {
 

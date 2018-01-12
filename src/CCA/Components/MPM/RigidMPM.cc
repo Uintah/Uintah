@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -23,9 +23,11 @@
  */
 
 #include <CCA/Components/MPM/RigidMPM.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <CCA/Components/MPM/MPMFlags.h>
-#include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
+#include <CCA/Components/MPM/Materials/MPMMaterial.h>
+#include <CCA/Components/MPM/Core/MPMFlags.h>
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/ConstitutiveModel.h>
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/PlasticityModels/DamageModel.h>
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/PlasticityModels/ErosionModel.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <CCA/Components/MPM/PhysicalBC/ForceBC.h>
 #include <CCA/Components/MPM/PhysicalBC/PressureBC.h>
@@ -41,12 +43,11 @@
 #include <Core/Grid/Variables/NodeIterator.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/SimulationState.h>
-#include <Core/Grid/Variables/SoleVariable.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#include <CCA/Components/MPM/MPMBoundCond.h>
+#include <CCA/Components/MPM/Core/MPMBoundCond.h>
 
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
@@ -55,17 +56,21 @@
 
 #include <iostream>
 #include <fstream>
+#include <mutex>
 
 using namespace Uintah;
-
 using namespace std;
 
 #undef INTEGRAL_TRACTION
 
 static DebugStream cout_doing("RIGID_MPM", false);
 
-RigidMPM::RigidMPM(const ProcessorGroup* myworld) :
-  SerialMPM(myworld)
+// Used for syncing cerr'ing so it is easier to read.
+extern std::mutex cerrLock;
+
+RigidMPM::RigidMPM(const ProcessorGroup* myworld,
+		   const SimulationStateP sharedState) :
+  SerialMPM(myworld, sharedState)
 {
 }
 
@@ -75,12 +80,12 @@ RigidMPM::~RigidMPM()
 
 void RigidMPM::problemSetup(const ProblemSpecP& prob_spec, 
                             const ProblemSpecP& restart_prob_spec, 
-                            GridP& grid, SimulationStateP& sharedState)
+                            GridP& grid)
 {
 
-  SerialMPM::problemSetup(prob_spec, restart_prob_spec,grid, sharedState);
+  SerialMPM::problemSetup(prob_spec, restart_prob_spec, grid);
   ProblemSpecP cfd_ps = prob_spec->findBlock("CFD");
-  if(cfd_ps && UintahParallelComponent::d_myworld->myrank() == 0){
+  if(cfd_ps && d_myworld->myRank() == 0){
     cout << "\n__________________________________"<< endl;
     cout << "  W A R N I N G :  " << endl;
     cout << "  You must use stiff MPM material properties" << endl;
@@ -98,10 +103,13 @@ void RigidMPM::computeStressTensor(const ProcessorGroup*,
   if (cout_doing.active())
     cout_doing <<"Doing computeStressTensor " <<"\t\t\t\t RigidMPM"<< endl;
 
-  for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+  for(int m = 0; m < m_sharedState->getNumMPMMatls(); m++){
+    MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     cm->carryForward(patches, mpm_matl, old_dw, new_dw);
+    
+    DamageModel* dm = mpm_matl->getDamageModel();
+    dm->carryForward(patches, mpm_matl, old_dw, new_dw);
   }
 
   new_dw->put(delt_vartype(999.0), lb->delTLabel, getLevel(patches));
@@ -116,7 +124,7 @@ void RigidMPM::scheduleComputeInternalForce(SchedulerP& sched,
                            getLevel(patches)->getGrid()->numLevels()))
     return;
 
-  Task* t = scinew Task("MPM::computeInternalForce",
+  Task* t = scinew Task("RigidMPM::computeInternalForce",
                     this, &RigidMPM::computeInternalForce);
 
   // require pStress so it will be saved in a checkpoint, 
@@ -151,12 +159,12 @@ void RigidMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
                            getLevel(patches)->getGrid()->numLevels()))
     return;
 
-  printSchedule(patches,cout_doing,"MPM::scheduleComputeAndIntegrateAcceleration");
+  printSchedule(patches,cout_doing,"RigidMPM::scheduleComputeAndIntegrateAcceleration");
 
-  Task* t = scinew Task("MPM::computeAndIntegrateAcceleration",
+  Task* t = scinew Task("RigidMPM::computeAndIntegrateAcceleration",
                         this, &RigidMPM::computeAndIntegrateAcceleration);
 
-  t->requires(Task::OldDW, d_sharedState->get_delt_label() );
+  t->requires(Task::OldDW, lb->delTLabel );
 
   t->requires(Task::NewDW, lb->gVelocityLabel,          Ghost::None);
 
@@ -177,8 +185,8 @@ void RigidMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
     printTask(patches, patch,cout_doing,"Doing computeAndIntegrateAcceleration");
 
     Ghost::GhostType  gnone = Ghost::None;
-    for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+    for(int m = 0; m < m_sharedState->getNumMPMMatls(); m++){
+      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
 
       // Get required variables for this patch
@@ -201,6 +209,158 @@ void RigidMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
   }
 }
 
+void RigidMPM::scheduleComputeParticleGradients(SchedulerP& sched,
+                                                const PatchSet* patches,
+                                                const MaterialSet* matls)
+{
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+                           getLevel(patches)->getGrid()->numLevels()))
+    return;
+
+  printSchedule(patches,cout_doing,"RigidMPM::scheduleComputeParticleGradient");
+
+  Task* t=scinew Task("RigidMPM::computeParticleGradients",
+                      this, &RigidMPM::computeParticleGradients);
+
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  Ghost::GhostType  gnone = Ghost::None;
+//  t->requires(Task::NewDW, lb->gVelocityStarLabel,              gac,NGN);
+  if (flags->d_doExplicitHeatConduction){
+    t->requires(Task::NewDW, lb->gTemperatureStarLabel,         gac,NGN);
+  }
+  t->requires(Task::OldDW, lb->pXLabel,                         gnone);
+  t->requires(Task::OldDW, lb->pMassLabel,                      gnone);
+  t->requires(Task::NewDW, lb->pMassLabel_preReloc,             gnone);
+  t->requires(Task::OldDW, lb->pSizeLabel,                      gnone);
+  t->requires(Task::OldDW, lb->pVolumeLabel,                    gnone);
+  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,        gnone);
+//  t->requires(Task::OldDW, lb->pLocalizedMPMLabel,              gnone);
+
+  t->computes(lb->pVolumeLabel_preReloc);
+  t->computes(lb->pVelGradLabel_preReloc);
+  t->computes(lb->pDeformationMeasureLabel_preReloc);
+  t->computes(lb->pTemperatureGradientLabel_preReloc);
+
+  if(flags->d_reductionVars->volDeformed){
+    t->computes(lb->TotalVolumeDeformedLabel);
+  }
+
+  sched->addTask(t, patches, matls);
+}
+
+
+void RigidMPM::computeParticleGradients(const ProcessorGroup*,
+                                        const PatchSubset* patches,
+                                        const MaterialSubset* ,
+                                        DataWarehouse* old_dw,
+                                        DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches, patch,cout_doing,
+              "Doing computeParticleGradients");
+
+    ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
+    vector<IntVector> ni(interpolator->size());
+    vector<double> S(interpolator->size());
+    vector<Vector> d_S(interpolator->size());
+    Vector dx = patch->dCell();
+    double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
+
+    double partvoldef = 0.;
+
+    int numMPMMatls=m_sharedState->getNumMPMMatls();
+    for(int m = 0; m < numMPMMatls; m++){
+      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
+      Ghost::GhostType  gac = Ghost::AroundCells;
+      // Get the arrays of particle values to be changed
+      constParticleVariable<Point> px;
+      constParticleVariable<Matrix3> psize,pFOld;
+      constParticleVariable<double> pVolumeOld;
+      constParticleVariable<int> pLocalized;
+      ParticleVariable<double> pvolume,pTempNew;
+      ParticleVariable<Vector> pTempGrad;
+      ParticleVariable<Matrix3> pVelGrad,pFNew;
+
+      // Get the arrays of grid data on which the new part. values depend
+      constNCVariable<double>  gTempStar;
+
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+
+      old_dw->get(px,           lb->pXLabel,                         pset);
+      old_dw->get(psize,        lb->pSizeLabel,                      pset);
+      old_dw->get(pFOld,        lb->pDeformationMeasureLabel,        pset);
+      old_dw->get(pVolumeOld,   lb->pVolumeLabel,                    pset);
+      old_dw->get(pLocalized,   lb->pLocalizedMPMLabel,              pset);
+
+      new_dw->allocateAndPut(pvolume,    lb->pVolumeLabel_preReloc,       pset);
+      new_dw->allocateAndPut(pVelGrad,   lb->pVelGradLabel_preReloc,      pset);
+      new_dw->allocateAndPut(pTempGrad,  lb->pTemperatureGradientLabel_preReloc,
+                                                                          pset);
+      new_dw->allocateAndPut(pFNew,      lb->pDeformationMeasureLabel_preReloc,
+                                                                          pset);
+
+      if (flags->d_doExplicitHeatConduction){
+        new_dw->get(gTempStar,     lb->gTemperatureStarLabel,dwi,patch,gac,NGP);
+      }
+
+      pvolume.copyData(pVolumeOld);
+
+      // Compute velocity gradient and deformation gradient on every particle
+      // This can/should be combined into the loop above, once it is working
+      Matrix3 Identity;
+      Identity.Identity();
+      for(ParticleSubset::iterator iter = pset->begin();
+          iter != pset->end(); iter++){
+        particleIndex idx = *iter;
+
+        pVelGrad[idx]=Matrix3(0.0);
+        pTempGrad[idx] = Vector(0.0,0.0,0.0);
+        pFNew[idx] = Identity;
+        partvoldef += pvolume[idx];
+      }
+
+      if (flags->d_doExplicitHeatConduction){
+        for(ParticleSubset::iterator iter = pset->begin();
+            iter != pset->end(); iter++){
+          particleIndex idx = *iter;
+  
+          int NN=flags->d_8or27;
+          if(!flags->d_axisymmetric){
+           // Get the node indices that surround the cell
+           NN =interpolator->findCellAndShapeDerivatives(px[idx],ni,
+                                                    d_S,psize[idx],pFOld[idx]);
+           for (int k = 0; k < NN; k++){
+            for (int j = 0; j<3; j++) {
+              pTempGrad[idx][j] += gTempStar[ni[k]] * d_S[k][j]*oodx[j];
+            }
+           } // Loop over local node
+          } else {  // axi-symmetric kinematics
+           // Get the node indices that surround the cell
+           cout << "Fix the pTempGradient calc for axisymmetry" << endl;
+//           NN =interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,
+//                                                 S,d_S,psize[idx],pFOld[idx]);
+          }
+        }
+      } // Explicit Heat Conduction
+
+      //__________________________________
+      //  Apply Erosion
+//      ErosionModel* em = mpm_matl->getErosionModel();
+//      em->updateVariables_Erosion( pset, pLocalized, pFOld, pFNew, pVelGrad );
+    }  // for materials
+
+    if(flags->d_reductionVars->volDeformed){
+      new_dw->put(sum_vartype(partvoldef),     lb->TotalVolumeDeformedLabel);
+    }
+
+    delete interpolator;
+  }
+}
+
+
+
 void RigidMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
                                                        const PatchSet* patches,
                                                        const MaterialSet* matls)
@@ -210,10 +370,10 @@ void RigidMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
                            getLevel(patches)->getGrid()->numLevels()))
     return;
 
-  Task* t=scinew Task("MPM::interpolateToParticlesAndUpdate",
+  Task* t=scinew Task("RigidMPM::interpolateToParticlesAndUpdate",
                       this, &RigidMPM::interpolateToParticlesAndUpdate);
 
-  t->requires(Task::OldDW, d_sharedState->get_delt_label() );
+  t->requires(Task::OldDW, lb->delTLabel );
 
   Ghost::GhostType  gac = Ghost::AroundCells;
   t->requires(Task::NewDW, lb->gTemperatureRateLabel,  gac,NGN);
@@ -234,19 +394,14 @@ void RigidMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
     t->requires(Task::NewDW, lb->dTdt_NCLabel,         gac,NGN);
   }
 
+  t->computes(lb->pXLabel_preReloc);
+  t->computes(lb->pMassLabel_preReloc);
+  t->computes(lb->pSizeLabel_preReloc);
   t->computes(lb->pDispLabel_preReloc);
   t->computes(lb->pVelocityLabel_preReloc);
-  t->computes(lb->pXLabel_preReloc);
   t->computes(lb->pParticleIDLabel_preReloc);
   t->computes(lb->pTemperatureLabel_preReloc);
   t->computes(lb->pTempPreviousLabel_preReloc); // for thermal stress 
-  t->computes(lb->pMassLabel_preReloc);
-  t->computes(lb->pVolumeLabel_preReloc);
-  t->computes(lb->pSizeLabel_preReloc);
-  t->computes(lb->pVelGradLabel_preReloc);
-  t->computes(lb->pDeformationMeasureLabel_preReloc);
-  t->computes(lb->pTemperatureGradientLabel_preReloc);
-  t->computes(lb->pXXLabel);
 
   t->computes(lb->KineticEnergyLabel);
   t->computes(lb->ThermalEnergyLabel);
@@ -301,32 +456,27 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     Vector CMX(0.0,0.0,0.0);
     Vector total_mom(0.0,0.0,0.0);
     double ke=0;
-    int numMPMMatls=d_sharedState->getNumMPMMatls();
+    int numMPMMatls=m_sharedState->getNumMPMMatls();
     delt_vartype delT;
-    old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
+    old_dw->get(delT, lb->delTLabel, getLevel(patches) );
 
-//    double move_particles=1.;
-//    if(!flags->d_doGridReset){
-//      move_particles=0.;
-//    }
     for(int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
       // Get the arrays of particle values to be changed
       constParticleVariable<Point> px;
-      ParticleVariable<Point> pxnew,pxx;
+      ParticleVariable<Point> pxnew;
       constParticleVariable<Vector> pvelocity;
       constParticleVariable<Matrix3> psize;
       ParticleVariable<Vector> pvelocitynew;
       ParticleVariable<Matrix3> psizeNew;
-      constParticleVariable<double> pmass, pTemperature,pvolume;
+      constParticleVariable<double> pmass,pTemperature;//,pvolume;
       ParticleVariable<double> pmassNew,pTempNew,pVolNew;
       constParticleVariable<long64> pids;
       ParticleVariable<long64> pids_new;
       constParticleVariable<Vector> pdisp;
-      ParticleVariable<Vector> pdispnew,pTempGrad;
+      ParticleVariable<Vector> pdispnew;
       constParticleVariable<Matrix3> pFOld;
-      ParticleVariable<Matrix3> pFNew,pVelGrad;
 
       // for thermal stress analysis
       ParticleVariable<double> pTempPreNew;       
@@ -342,31 +492,22 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       old_dw->get(pdisp,                 lb->pDispLabel,                  pset);
       old_dw->get(pmass,                 lb->pMassLabel,                  pset);
       old_dw->get(pids,                  lb->pParticleIDLabel,            pset);
-      old_dw->get(pvolume,               lb->pVolumeLabel,                pset);
       old_dw->get(pvelocity,             lb->pVelocityLabel,              pset);
       old_dw->get(pTemperature,          lb->pTemperatureLabel,           pset);
       old_dw->get(pFOld,                 lb->pDeformationMeasureLabel,    pset);
 
-      new_dw->allocateAndPut(pvelocitynew, lb->pVelocityLabel_preReloc,   pset);
       new_dw->allocateAndPut(pxnew,        lb->pXLabel_preReloc,          pset);
-      new_dw->allocateAndPut(pxx,          lb->pXXLabel,                  pset);
       new_dw->allocateAndPut(pdispnew,     lb->pDispLabel_preReloc,       pset);
       new_dw->allocateAndPut(pmassNew,     lb->pMassLabel_preReloc,       pset);
-      new_dw->allocateAndPut(pVolNew,      lb->pVolumeLabel_preReloc,     pset);
+      new_dw->allocateAndPut(pvelocitynew, lb->pVelocityLabel_preReloc,   pset);
       new_dw->allocateAndPut(pids_new,     lb->pParticleIDLabel_preReloc, pset);
       new_dw->allocateAndPut(pTempNew,     lb->pTemperatureLabel_preReloc,pset);
       new_dw->allocateAndPut(pTempPreNew, lb->pTempPreviousLabel_preReloc,pset);
-      new_dw->allocateAndPut(pVelGrad,    lb->pVelGradLabel_preReloc,     pset);
-      new_dw->allocateAndPut(pFNew,       lb->pDeformationMeasureLabel_preReloc,
-                                                                          pset);
-      new_dw->allocateAndPut(pTempGrad,   lb->pTemperatureGradientLabel_preReloc,
-                                                                          pset);
 
       pids_new.copyData(pids);
       old_dw->get(psize,               lb->pSizeLabel,                 pset);
       new_dw->allocateAndPut(psizeNew, lb->pSizeLabel_preReloc,        pset);
       psizeNew.copyData(psize);
-      pVolNew.copyData(pvolume);
 
       //Carry forward NC_CCweight
       constNCVariable<double> NC_CCweight;
@@ -391,13 +532,7 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         dTdt = dTdt_create;                         // reference created data
       }
 
-      // Get the constitutive model (needed for plastic temperature
-      // update) and get the plastic temperature from the plasticity
-      // model
-      // For RigidMPM, this isn't done
-
       double Cp=mpm_matl->getSpecificHeat();
-      Matrix3 Identity; Identity.Identity();
 
       // Loop over particles
       for(ParticleSubset::iterator iter = pset->begin();
@@ -405,17 +540,17 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         particleIndex idx = *iter;
 
         // Get the node indices that surround the cell
-        interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
+        int NN = 
+           interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
                                                          psize[idx],pFOld[idx]);
 
         double tempRate = 0.0;
         Vector acc(0.0,0.0,0.0);
-        pTempGrad[idx] = Vector(0.0,0.0,0.0);
 
         // Accumulate the contribution from each surrounding vertex
         // All we care about is the temperature field, everything else
         // should be zero.
-        for (int k = 0; k < flags->d_8or27; k++) {
+        for (int k = 0; k < NN; k++) {
           tempRate += (gTemperatureRate[ni[k]] + dTdt[ni[k]])   * S[k];
           acc      += gacceleration[ni[k]]   * S[k];
         }
@@ -428,11 +563,7 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         pxnew[idx]           = px[idx] + pvelocity[idx]*delT;
         pdispnew[idx]        = pvelocity[idx]*delT;
         pmassNew[idx]        = pmass[idx];
-        // pxx is only useful if we're not in normal grid resetting mode.
-        pxx[idx]             = px[idx];
         pTempPreNew[idx]     = pTemperature[idx]; // for thermal stress
-        pVelGrad[idx]        = Matrix3(0.);
-        pFNew[idx]           = Identity;
 
         thermal_energy += pTempNew[idx] * pmass[idx] * Cp;
         ke += .5*pmass[idx]*pvelocitynew[idx].length2();

@@ -1,3 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- @version: -->
+
 <Uintah_specification>
 
   <Meta>
@@ -6,9 +9,7 @@
 
   <SimulationComponent type="wasatch"/>
 
-  <doAMR>true</doAMR>
-
-  <AMR>
+  <AMR type="StaticGridML" >
     <useLockStep> true </useLockStep>
   </AMR>
 
@@ -138,7 +139,7 @@
     <save label="phi4 source term"/>
   </DataArchiver>
 
-  <Grid>
+  <Grid doAMR="true">
   
     <Level>
       <Box label="0">

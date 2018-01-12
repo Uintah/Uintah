@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -31,16 +31,18 @@
 #include <Core/Grid/Material.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Labels/ICELabel.h>
+#include <CCA/Components/ICE/Core/ICELabel.h>
 
 using namespace Uintah;
 using namespace std;
 
-MassMomEng_src::MassMomEng_src(const ProcessorGroup* myworld, ProblemSpecP& params)
-  : ModelInterface(myworld), params(params)
+MassMomEng_src::MassMomEng_src(const ProcessorGroup* myworld,
+                               const SimulationStateP& sharedState,
+                               const ProblemSpecP& params)
+  : FluidsBasedModel(myworld, sharedState), d_params(params)
 {
   mymatls = 0;
-  Ilb  = scinew ICELabel();
+  Ilb = scinew ICELabel();
   totalMass_srcLabel = 0;
   totalEng_srcLabel = 0;
   d_src = scinew src();
@@ -66,12 +68,11 @@ MassMomEng_src::~MassMomEng_src()
 }
 
 //______________________________________________________________________
-void MassMomEng_src::problemSetup(GridP&, SimulationStateP& sharedState,
-                                  ModelSetup* )
+void MassMomEng_src::problemSetup(GridP&, const bool isRestart )
 {
-  d_sharedState = sharedState;
-  ProblemSpecP src_ps = params->findBlock("MassMomEng_src");
-  d_matl = sharedState->parseAndLookupMaterial(src_ps, "material");
+  ProblemSpecP src_ps = d_params->findBlock("MassMomEng_src");
+  d_matl = m_sharedState->parseAndLookupMaterial(src_ps, "material");
+
   src_ps->require("momentum_src", d_src->mom_src_rate);
   src_ps->require("mass_src",     d_src->mass_src_rate);
   src_ps->require("energy_src",   d_src->eng_src_rate);
@@ -107,33 +108,31 @@ void MassMomEng_src::outputProblemSpec(ProblemSpecP& ps)
  
 //______________________________________________________________________
 void MassMomEng_src::scheduleInitialize(SchedulerP&,
-                                   const LevelP& level,
-                                   const ModelInfo*)
+                                   const LevelP& level)
 {
   // None necessary...
 }
 
 //______________________________________________________________________     
-void MassMomEng_src::scheduleComputeStableTimestep(SchedulerP&,
-                                              const LevelP&,
-                                              const ModelInfo*)
+void MassMomEng_src::scheduleComputeStableTimeStep(SchedulerP&,
+                                              const LevelP&)
 {
   // None necessary...
 }
 
 //__________________________________      
 void MassMomEng_src::scheduleComputeModelSources(SchedulerP& sched,
-                                                const LevelP& level,
-                                                const ModelInfo* mi)
+                                                const LevelP& level)
 { 
   Task* t = scinew Task("MassMomEng_src::computeModelSources",this, 
-                        &MassMomEng_src::computeModelSources, mi);
-  t->modifies(mi->modelMass_srcLabel);
-  t->modifies(mi->modelMom_srcLabel);
-  t->modifies(mi->modelEng_srcLabel);
-  t->modifies(mi->modelVol_srcLabel);
+                        &MassMomEng_src::computeModelSources);
+  t->modifies(Ilb->modelMass_srcLabel);
+  t->modifies(Ilb->modelMom_srcLabel);
+  t->modifies(Ilb->modelEng_srcLabel);
+  t->modifies(Ilb->modelVol_srcLabel);
   
-  t->requires(Task::OldDW, mi->delT_Label,        level.get_rep());
+  t->requires(Task::OldDW, Ilb->simulationTimeLabel);
+  t->requires(Task::OldDW, Ilb->delTLabel,        level.get_rep());
   t->requires(Task::NewDW, Ilb->sp_vol_CCLabel,   Ghost::None,0);
   t->requires(Task::NewDW, Ilb->vol_frac_CCLabel, Ghost::None,0);
   
@@ -147,14 +146,17 @@ void MassMomEng_src::scheduleComputeModelSources(SchedulerP& sched,
 
 //__________________________________
 void MassMomEng_src::computeModelSources(const ProcessorGroup*, 
-                                            const PatchSubset* patches,
-                                            const MaterialSubset* matls,
-                                            DataWarehouse* old_dw,
-                                            DataWarehouse* new_dw,
-                                            const ModelInfo* mi)
+                                         const PatchSubset* patches,
+                                         const MaterialSubset* matls,
+                                         DataWarehouse* old_dw,
+                                         DataWarehouse* new_dw)
 {
+  simTime_vartype simTimeVar;
+  old_dw->get(simTimeVar, Ilb->simulationTimeLabel);
+  double simTime = simTimeVar;
+
   delt_vartype delT;
-  old_dw->get(delT, mi->delT_Label,getLevel(patches));
+  old_dw->get(delT, Ilb->delTLabel,getLevel(patches));
   double dt = delT;
 
   int indx = d_matl->getDWIndex();
@@ -162,13 +164,12 @@ void MassMomEng_src::computeModelSources(const ProcessorGroup*,
   double totalEng_src = 0.0;
   Vector totalMom_src(0,0,0);
 
-  double time= d_sharedState->getElapsedTime();
-
+  // double simTime = m_sharedState->getElapsedSimTime();
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);  
     
-    if(time>d_src->d_mme_src_t_start && time <=d_src->d_mme_src_t_final){
+    if(simTime>d_src->d_mme_src_t_start && simTime <=d_src->d_mme_src_t_final){
       Vector dx = patch->dCell();
       double vol = dx.x()*dx.y()*dx.z();
 
@@ -179,10 +180,10 @@ void MassMomEng_src::computeModelSources(const ProcessorGroup*,
       constCCVariable<double> sp_vol_CC;
       constCCVariable<double> vol_frac;
     
-      new_dw->getModifiable(mass_src, mi->modelMass_srcLabel, indx, patch);
-      new_dw->getModifiable(mom_src,  mi->modelMom_srcLabel,  indx, patch);
-      new_dw->getModifiable(eng_src,  mi->modelEng_srcLabel,  indx, patch);
-      new_dw->getModifiable(vol_src,  mi->modelVol_srcLabel,  indx, patch);
+      new_dw->getModifiable(mass_src, Ilb->modelMass_srcLabel, indx, patch);
+      new_dw->getModifiable(mom_src,  Ilb->modelMom_srcLabel,  indx, patch);
+      new_dw->getModifiable(eng_src,  Ilb->modelEng_srcLabel,  indx, patch);
+      new_dw->getModifiable(vol_src,  Ilb->modelVol_srcLabel,  indx, patch);
       new_dw->get(sp_vol_CC,          Ilb->sp_vol_CCLabel,    indx, patch, Ghost::None,0);
       new_dw->get(vol_frac,           Ilb->vol_frac_CCLabel,  indx, patch, Ghost::None,0);
     
@@ -243,8 +244,7 @@ void MassMomEng_src::scheduleErrorEstimate(const LevelP&,
 }
 //__________________________________
 void MassMomEng_src::scheduleTestConservation(SchedulerP&,
-                                         const PatchSet*,
-                                         const ModelInfo*)
+                                         const PatchSet*)
 {
   // Not implemented yet
 }

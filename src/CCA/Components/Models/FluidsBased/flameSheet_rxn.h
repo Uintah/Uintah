@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -26,7 +26,8 @@
 #ifndef Packages_Uintah_CCA_Components_Examples_flameSheet_rxn_h
 #define Packages_Uintah_CCA_Components_Examples_flameSheet_rxn_h
 
-#include <CCA/Ports/ModelInterface.h>
+#include <CCA/Components/Models/FluidsBased/FluidsBasedModel.h>
+
 #include <Core/GeometryPiece/GeometryPiece.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/CCVariable.h>
@@ -67,29 +68,29 @@ WARNING
   
 ****************************************/
   class ICELabel;
-  class flameSheet_rxn : public ModelInterface {
+  class flameSheet_rxn : public FluidsBasedModel {
   public:
-    flameSheet_rxn(const ProcessorGroup* myworld, ProblemSpecP& params);
+    flameSheet_rxn(const ProcessorGroup* myworld,
+		   const SimulationStateP& sharedState,
+		   const ProblemSpecP& params);
+    
     virtual ~flameSheet_rxn();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
     
-    virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
-                              ModelSetup* setup);
+    virtual void problemSetup(GridP& grid,
+                               const bool isRestart);
     
     virtual void scheduleInitialize(SchedulerP&,
-                                    const LevelP& level,
-                                    const ModelInfo*);
+                                    const LevelP& level);
 
     virtual void restartInitialize() {}
       
-    virtual void scheduleComputeStableTimestep(SchedulerP&,
-                                               const LevelP& level,
-                                               const ModelInfo*);
+    virtual void scheduleComputeStableTimeStep(SchedulerP&,
+                                               const LevelP& level);
       
     virtual void scheduleComputeModelSources(SchedulerP&,
-                                                   const LevelP& level,
-                                                   const ModelInfo*);
+                                                   const LevelP& level);
                                              
     virtual void scheduleModifyThermoTransportProperties(SchedulerP&,
                                                const LevelP&,
@@ -104,11 +105,10 @@ WARNING
                                       SchedulerP& sched);
                                       
    virtual void scheduleTestConservation(SchedulerP&,
-                                         const PatchSet* patches,
-                                         const ModelInfo* mi);           
+                                         const PatchSet* patches);           
 
   private:
-    ICELabel* lb;
+    ICELabel* Ilb;
     
     void initialize(const ProcessorGroup*, 
                     const PatchSubset* patches,
@@ -120,20 +120,18 @@ WARNING
                           const PatchSubset* patches,
                           const MaterialSubset*,
                           DataWarehouse* old_dw,
-                          DataWarehouse* new_dw,
-                          const ModelInfo* mi);   
+                          DataWarehouse* new_dw);   
    
     void computeModelSources(const ProcessorGroup*, 
                              const PatchSubset* patches,
-                              const MaterialSubset* matls, 
+			     const MaterialSubset* matls, 
                              DataWarehouse*, 
-                              DataWarehouse* new_dw, 
-                             const ModelInfo*);
+			     DataWarehouse* new_dw);
 
     flameSheet_rxn(const flameSheet_rxn&);
     flameSheet_rxn& operator=(const flameSheet_rxn&);
 
-    ProblemSpecP params;
+    ProblemSpecP d_params;
 
     const Material* d_matl;
     MaterialSet* d_matl_set;
@@ -165,7 +163,6 @@ WARNING
     double d_diffusivity;
     int  d_smear_initialDistribution_knob;
     bool d_test_conservation;
-    SimulationStateP d_sharedState;
   };
 }
 

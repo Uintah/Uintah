@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -42,7 +42,7 @@
  * clamp the averaged data.
  *
  *
- * This utility depends on libtiff4, libtiff4-dev, & libtiffxx0c2, please
+ * This utility depends on libtiffxx5 & libtiff5-dev please
  * verify that they are installed on your system before configuring and compiling.
  *
  *  Written by:
@@ -68,11 +68,12 @@
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
-#include <Core/Grid/Variables/ShareAssignParticleVariable.h>
+//#include <Core/Grid/Variables/ShareAssignParticleVariable.h>
 #include <Core/Math/Matrix3.h>
 #include <Core/Math/MinMax.h>
 #include <Core/OS/Dir.h>
 #include <Core/Parallel/Parallel.h>
+#include <Core/Util/FileUtils.h>
 
 #include <algorithm>
 #include <cstdio>
@@ -82,6 +83,9 @@
 #include <sstream>
 #include <string>
 #include <vector>
+
+#include <stdint.h>
+#include <tiffio.h>
 
 using namespace std;
 using namespace Uintah;
@@ -504,7 +508,7 @@ void write_tiff_volume(const tiffFlags* flags,
   // Open the TIFF file
   TIFF *out;
   if((out = TIFFOpen(tname.str().c_str(), "w")) == nullptr){
-    cout << "Could not open " << tname << " for writing\n";
+    cout << "Could not open " << tname.str() << " for writing\n";
     exit(1);
   }
 
@@ -594,7 +598,7 @@ void write_tiff_slices(const tiffFlags* flags,
     // Open the TIFF file
     TIFF *out;
     if((out = TIFFOpen(sliceName.str().c_str(), "w")) == nullptr){
-      cout << "Could not open " << sliceName << " for writing\n";
+      cout << "Could not open " << sliceName.str() << " for writing\n";
       exit(1);
     }
   
@@ -1002,7 +1006,6 @@ void readCellIndicies(const string& filename, vector<IntVector>& cells)
 int
 main( int argc, char** argv )
 {
-  Uintah::Parallel::determineIfRunningUnderMPI( argc, argv );
   Uintah::Parallel::initializeManager(argc, argv);
 
   //__________________________________
@@ -1344,7 +1347,7 @@ main( int argc, char** argv )
         if(timestep_dir.exists() ) {
           cout << "  Created directory: "<<tname.str()<<"\n";
         }else{
-          cout << "Failed creating  base output directory: "<<tname<<"\n";
+          cout << "Failed creating  base output directory: "<<tname.str()<<"\n";
           exit(1);
         }
         

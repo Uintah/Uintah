@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -59,7 +59,7 @@ bool
 ProcessInfo::isSupported ( int info_type )
 {
 
-#if defined( __linux ) || defined( __APPLE__ )
+#if defined( __linux ) || defined( __APPLE__ ) || defined( __bgq__ )
 
   switch ( info_type ) {
     case MEM_SIZE: return true;

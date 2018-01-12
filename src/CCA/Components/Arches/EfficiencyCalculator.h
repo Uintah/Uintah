@@ -286,7 +286,7 @@ namespace Uintah {
             tsk->requires( Task::NewDW, _a_labs->d_uVelocitySPBCLabel, Ghost::None, 0 ); 
             tsk->requires( Task::NewDW, _a_labs->d_vVelocitySPBCLabel, Ghost::None, 0 ); 
             tsk->requires( Task::NewDW, _a_labs->d_wVelocitySPBCLabel, Ghost::None, 0 ); 
-            tsk->requires( Task::OldDW, _a_labs->d_sharedState->get_delt_label(), Ghost::None, 0);
+            tsk->requires( Task::OldDW, _a_labs->d_delTLabel, Ghost::None, 0);
             tsk->requires( Task::NewDW, _a_labs->d_cellTypeLabel, Ghost::None, 0 );
 
             if ( !_no_species ){
@@ -311,6 +311,8 @@ namespace Uintah {
             for (int p = 0; p < patches->size(); p++) {
 
               const Patch* patch = patches->get(p);
+              const Level* level = patch->getLevel(); 
+              const int ilvl = level->getID(); 
               int archIndex = 0; // only one arches material
               int indx = _a_labs->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
@@ -332,7 +334,7 @@ namespace Uintah {
               old_dw->get( old_rho, _a_labs->d_densityCPLabel, indx, patch, Ghost::None, 0 ); 
 
               delt_vartype DT;
-              old_dw->get(DT, _a_labs->d_sharedState->get_delt_label());
+              old_dw->get(DT, _a_labs->d_delTLabel);
               double dt = DT; 
 
               if ( !_no_species ){
@@ -381,8 +383,8 @@ namespace Uintah {
                 }
               }
 
-              for ( BoundaryCondition::BCInfoMap::const_iterator bc_iter = _bcs->d_bc_information.begin(); 
-                    bc_iter != _bcs->d_bc_information.end(); bc_iter++){
+              for ( auto bc_iter = _bcs->d_bc_information[ilvl]->begin(); 
+                    bc_iter != _bcs->d_bc_information[ilvl]->end(); bc_iter++){
 
                 if ( bc_iter->second.type != BoundaryCondition::WALL ){ 
 
@@ -874,6 +876,8 @@ namespace Uintah {
             for (int p = 0; p < patches->size(); p++) {
 
               const Patch* patch = patches->get(p);
+              const Level* level = patch->getLevel(); 
+              const int ilvl = level->getID(); 
               int archIndex = 0; // only one arches material
               int indx = _a_labs->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
@@ -905,8 +909,8 @@ namespace Uintah {
               double sum_num = 0.0;
               double sum_den = 0.0; 
 
-              for ( BoundaryCondition::BCInfoMap::const_iterator bc_iter = _bcs->d_bc_information.begin(); 
-                    bc_iter != _bcs->d_bc_information.end(); bc_iter++){
+              for ( BoundaryCondition::BCInfoMap::const_iterator bc_iter = _bcs->d_bc_information[ilvl].begin(); 
+                    bc_iter != _bcs->d_bc_information[ilvl].end(); bc_iter++){
 
                 if ( bc_iter->second.type == BoundaryCondition::OUTLET || 
                      bc_iter->second.type == BoundaryCondition::PRESSURE ){ 

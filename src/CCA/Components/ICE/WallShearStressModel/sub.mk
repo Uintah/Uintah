@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2016 The University of Utah
+#  Copyright (c) 1997-2018 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -27,14 +27,25 @@
 # 
 # Makefile fragment for this subdirectory 
 
-SRCDIR   := CCA/Components/ICE/WallShearStressModel
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCS     += $(SRCDIR)/WallShearStressFactory.cc    \
-	     $(SRCDIR)/WallShearStress.cc           \
-            $(SRCDIR)/logLawModel.cc               \
-            $(SRCDIR)/smoothWall.cc
+SRCDIR := CCA/Components/ICE/WallShearStressModel
 
-PSELIBS :=  
-LIBS	:= 
+SRCS += $(SRCDIR)/WallShearStressFactory.cc \
+	$(SRCDIR)/WallShearStress.cc        \
+        $(SRCDIR)/logLawModel.cc            \
+        $(SRCDIR)/smoothWall.cc
 
+PSELIBS := \
+	Core/Disclosure     \
+	Core/Exceptions     \
+	Core/Geometry       \
+	Core/GeometryPiece  \
+	Core/Grid           \
+	Core/Math           \
+	Core/Parallel       \
+	Core/ProblemSpec    \
+	Core/Util           
+
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

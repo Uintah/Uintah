@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -26,6 +26,7 @@
 #ifndef MOMENTUM_ANALYSIS_H
 #define MOMENTUM_ANALYSIS_H
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
+#include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Output.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/GridP.h>
@@ -64,9 +65,9 @@ WARNING
 ****************************************/
   class momentumAnalysis : public AnalysisModule {
   public:
-    momentumAnalysis(ProblemSpecP& prob_spec,
-                     SimulationStateP& sharedState,
-		       Output* dataArchiver);
+    momentumAnalysis(const ProcessorGroup* myworld,
+		     const SimulationStateP sharedState,
+		     const ProblemSpecP& module_spec);
 
     momentumAnalysis();
 
@@ -74,12 +75,15 @@ WARNING
 
     virtual void problemSetup(const ProblemSpecP& prob_spec,
                               const ProblemSpecP& restart_prob_spec,
-                              GridP& grid,
-                              SimulationStateP& sharedState);
+                              GridP& grid);
 
+    virtual void outputProblemSpec(ProblemSpecP& ps){};
 
     virtual void scheduleInitialize(SchedulerP& sched,
                                     const LevelP& level);
+                                    
+    virtual void scheduleRestartInitialize(SchedulerP& sched,
+                                           const LevelP& level){};
 
     virtual void restartInitialize();
 
@@ -199,10 +203,6 @@ WARNING
 
     //__________________________________
     // global constants
-    SimulationStateP d_sharedState;
-    Output* d_dataArchiver;
-    ProblemSpecP d_prob_spec;
-
     MaterialSubset* d_zeroMatl;
     MaterialSubset* d_pressMatl;
     MaterialSet* d_zeroMatlSet;

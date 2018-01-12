@@ -11,11 +11,12 @@
    <SimulationComponent type="mpm" />
 
    <Time>
-       <maxTime>            50.0         </maxTime>
+       <maxTime>            50.0        </maxTime>
        <initTime>           0.0         </initTime>
        <delt_min>           0.0         </delt_min>
-       <delt_max>           0.01724        </delt_max>
+       <delt_max>           0.01724     </delt_max>
        <delt_init>          1.0e-9      </delt_init>
+       <max_Timesteps>        500       </max_Timesteps>
        <timestep_multiplier>0.5         </timestep_multiplier>
    </Time>    
 
@@ -39,7 +40,7 @@
       <save label = "p.volume"/>
       <save label = "p.temperature"/>
       <save label = "p.epsf"/>
-      <save label = "p.localized"/> 
+      <save label = "p.localizedMPM"/> 
       <save label = "p.stress"/>
       <save label = "p.deformationMeasure"/>
       <save label = "p.velocity"/>
@@ -52,7 +53,8 @@
       <save label = "g.temperature"/>
       <save label = "g.stressFS"/>
       <save label = "g.velocity"/>
-      <checkpoint cycle = "2" interval = "25.0"/>
+<!--      <checkpoint cycle = "2" interval = "25.0"/>  -->
+      <checkpoint cycle = "2" interval = "1.0"/>
    </DataArchiver>
 
    <MPM>
@@ -63,7 +65,6 @@
      <artificial_damping_coeff> 0.0 </artificial_damping_coeff>
      <artificial_viscosity> false </artificial_viscosity>
      <use_load_curves> true </use_load_curves>
-     <erosion algorithm = "ZeroStress"/>
      <boundary_traction_faces>[xminus,xplus,yminus,yplus,zplus,zminus]</boundary_traction_faces>
      <use_CBDI_boundary_condition>true</use_CBDI_boundary_condition>
    </MPM>
@@ -74,22 +75,25 @@
 
    <MaterialProperties>
      <MPM>
-       <material name="T91">
+        <material name="T91">
 	 <density>8e6</density>
 	 <constitutive_model type="UCNH"> 
 	   <bulk_modulus>166.7e4</bulk_modulus>
 	   <shear_modulus>76.9e4</shear_modulus>
 
 	   <usePlasticity>false</usePlasticity>
-
-	   <useDamage>true</useDamage>
-	   <failure_criteria>MohrColoumb</failure_criteria>
-	   <friction_angle>0.0</friction_angle>
-	   <tensile_cutoff_fraction_of_cohesion>1.e10</tensile_cutoff_fraction_of_cohesion>
-	   <failure_distrib>constant</failure_distrib>
-	   <failure_mean> 0.1512e4 </failure_mean>
-
 	 </constitutive_model>
+        <erosion algorithm = "ZeroStress"/>
+        
+        <damage_model type="Threshold">
+	   <failure_criteria>  MohrColoumb  </failure_criteria>
+	   <friction_angle>    0.0          </friction_angle>
+	   <tensile_cutoff_fraction_of_cohesion>1.e10</tensile_cutoff_fraction_of_cohesion>
+	   <failure_distrib>  constant      </failure_distrib>
+	   <failure_mean>     0.1512e4      </failure_mean>
+          <failure_std>       0.0          </failure_std>
+        </damage_model>
+          
 	 <thermal_conductivity>1.0</thermal_conductivity>
 	 <specific_heat>5</specific_heat>
          <geom_object>

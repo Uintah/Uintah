@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -30,21 +30,21 @@
 /**************************************
 CLASS
    CompDynamicProcedure
-   
+
    Class CompDynamicProcedure is an LES model for
    computing sub-grid scale turbulent viscosity.
 
 
 GENERAL INFORMATION
    CompDynamicProcedure.h - declaration of the class
-   
+
    Author: Stanislav Borodai (borodai@crsim.utah.edu), developed based on
    IncDynamicProcedure
-      
+
    Creation Date:   Mar 1, 2000
-   
-   C-SAFE 
-   
+
+   C-SAFE
+
 
 KEYWORDS
 
@@ -58,7 +58,6 @@ WARNING
    none
 ****************************************/
 
-#include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/TurbulenceModel.h>
 #include <iostream>
 
@@ -67,11 +66,11 @@ namespace Uintah {
 class PhysicalConstants;
 class BoundaryCondition;
 
-class CompDynamicProcedure: public TurbulenceModel {
+class CompDynamicProcedure : public TurbulenceModel {
 
 public:
-  
-  CompDynamicProcedure(const ArchesLabel* label, 
+
+  CompDynamicProcedure(const ArchesLabel* label,
                        const MPMArchesLabel* MAlb,
                        PhysicalConstants* phyConsts,
                        BoundaryCondition* bndryCondition);
@@ -80,13 +79,13 @@ public:
 
   virtual void problemSetup(const ProblemSpecP& db);
 
-  virtual void sched_reComputeTurbSubmodel(SchedulerP&, 
+  virtual void sched_reComputeTurbSubmodel(SchedulerP&,
                                            const LevelP& level,
                                            const MaterialSet* matls,
                                            const TimeIntegratorLabel* timelabels);
 
 
-  double getMolecularViscosity() const; 
+  double getMolecularViscosity() const;
 
   double getSmagorinskyConst() const {
     std::cerr << "There is no Smagorinsky constant in CompDynamic Procedure" << std::endl;
@@ -137,8 +136,10 @@ private:
   bool d_filter_cs_squared; //option for filtering Cs^2 in CompDynamic Procedure
   bool d_3d_periodic;
 
-  void apply_zero_neumann( const Patch* patch, CCVariable<double>& var, 
-                           CCVariable<double>& var2, constCCVariable<double> vol_fraction ){ 
+  const VarLabel* d_denRefArrayLabel;
+
+  void apply_zero_neumann( const Patch* patch, CCVariable<double>& var,
+                           CCVariable<double>& var2, constCCVariable<double> vol_fraction ){
 
     std::vector<Patch::FaceType> bf;
     patch->getBoundaryFaces(bf);
@@ -164,10 +165,9 @@ private:
 
  }; // End class CompDynamicProcedure
 } // End namespace Uintah
-  
-  
+
+
 
 #endif
 
 // $Log : $
-

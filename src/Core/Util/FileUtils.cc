@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -28,7 +28,6 @@
 #include <Core/Util/Assert.h>
 #include <Core/Util/Environment.h>
 #include <Core/Util/FileUtils.h>
-#include <Core/Util/sci_system.h>
 #include <Core/Util/StringUtil.h>
 
 #include <iostream>
@@ -37,7 +36,6 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <time.h>
 
 #include <sys/stat.h>
 #include <unistd.h>
@@ -517,7 +515,7 @@ copyFile( const string & src, const string & dest)
 {
   string cpCmd = "cp -f ";
   string cmd = cpCmd + src + " " + dest;
-  int code = sci_system(cmd.c_str());
+  int code = std::system(cmd.c_str());
   if (code) {
     cerr << "Error executing: " << cmd << "\n";
   }
@@ -529,7 +527,7 @@ moveFile( const string & src, const string & dest )
 {
   string mvCmd = "mv -f ";
   string cmd = mvCmd + src + " " + dest;
-  int code = sci_system(cmd.c_str());
+  int code = std::system(cmd.c_str());
   if (code) {
     cerr << "Error executing: " << cmd << "\n";
   }
@@ -541,7 +539,7 @@ deleteFile( const string & filename )
 {
   string rmCmd = "rm -f ";
   string cmd = rmCmd + filename;
-  int code = sci_system(cmd.c_str());
+  int code = std::system(cmd.c_str());
   if (code) {
     cerr << "Error executing: " << cmd << "\n";
   }
@@ -553,7 +551,7 @@ copyDir( const string & src, const string & dest )
 {
   string cpCmd = "cp -fr ";
   string cmd = cpCmd + src + " " + dest;
-  int code = sci_system(cmd.c_str());
+  int code = std::system(cmd.c_str());
   if (code) {
     cerr << "Error executing: " << cmd << "\n";
   }
@@ -564,7 +562,7 @@ int deleteDir(string filename)
 {
   string rmCmd = "rm -rf ";
   string cmd = rmCmd + filename;
-  int code = sci_system(cmd.c_str());
+  int code = std::system(cmd.c_str());
   if (code) {
     cerr << "Error executing: " << cmd << "\n";
   }

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -26,38 +26,41 @@
 #ifndef UINTAH_HOMEBREW_ICE_H
 #define UINTAH_HOMEBREW_ICE_H
 
-#include <Core/Grid/Variables/Stencil7.h>
+// NOTE: SOMETHING IS FUBAR IN THE DEFINITION OF fflux AS IT RELATES TO
+// swapbytes. AS SUCH, Advector.h MUST BE CALLED BEFORE ApplicationCommon.h
+
 #include <CCA/Components/ICE/Advection/Advector.h>
+#include <CCA/Components/Application/ApplicationCommon.h>
+
+#include <CCA/Components/ICE/Core/ExchangeCoefficients.h>
 #include <CCA/Components/ICE/customInitialize.h>
 #include <CCA/Components/ICE/CustomBCs/LODI2.h>
-#include <CCA/Components/ICE/BoundaryCond.h>
+#include <CCA/Components/ICE/CustomBCs/BoundaryCond.h>
 #include <CCA/Components/ICE/TurbulenceModel/Turbulence.h>
-#include <CCA/Components/ICE/ExchangeCoefficients.h>
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
+
 #include <CCA/Ports/ModelInterface.h>
-#include <CCA/Ports/Output.h>
-#include <CCA/Ports/SolverInterface.h>
-#include <CCA/Ports/SimulationInterface.h>
+
+#include <Core/Geometry/Vector.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
+#include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
-#include <Core/Grid/Variables/SoleVariable.h>
+#include <Core/Grid/Variables/Stencil7.h>
 #include <Core/Grid/Variables/Utils.h>
-#include <Core/Labels/ICELabel.h>
-#include <Core/Labels/MPMICELabel.h>
-#include <Core/Parallel/UintahParallelComponent.h>
-#include <Core/ProblemSpec/ProblemSpecP.h>
+
+#include <CCA/Components/ICE/Core/ICELabel.h>
 #include <Core/Math/FastMatrix.h>
 #include <Core/Math/UintahMiscMath.h>
-#include <Core/Grid/Variables/CellIterator.h>
-#include <Core/Containers/StaticArray.h>
-#include <Core/Geometry/Vector.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+
 #include <vector>
 #include <string>
+
 #include <sci_defs/hypre_defs.h>
 
 #ifdef HAVE_CUDA
@@ -89,12 +92,14 @@ void launchIceEquilibrationKernelUnified(dim3 dimGrid,
 
 namespace Uintah {
 
-  class ModelInfo;
   class ModelInterface;
   class Turbulence;
+  class WallShearStress;
   class AnalysisModule;
 
-    // The following two structs are used by computeEquilibrationPressure to store debug information:
+  class MPMICELabel;
+
+  // The following two structs are used by computeEquilibrationPressure to store debug information:
     //
     struct  EqPress_dbgMatl{
       int    mat;
@@ -114,24 +119,25 @@ namespace Uintah {
     };
 
 
-    class ICE : public UintahParallelComponent, public SimulationInterface {
+    class ICE : public ApplicationCommon {
     public:
-      ICE(const ProcessorGroup* myworld, const bool doAMR = false);
+      ICE(const ProcessorGroup* myworld,
+	  const SimulationStateP sharedState);
+      
       virtual ~ICE();
 
-      virtual bool restartableTimesteps();
+      virtual bool restartableTimeSteps();
 
-      virtual double recomputeTimestep(double current_dt);
+      virtual double recomputeDelT(const double delT);
 
       virtual void problemSetup(const ProblemSpecP& params,
                                 const ProblemSpecP& restart_prob_spec,
-                                GridP& grid, SimulationStateP&);
+                                GridP& grid);
 
       virtual void outputProblemSpec(ProblemSpecP& ps);
 
       virtual void updateExchangeCoefficients(const ProblemSpecP& params,
-                                              GridP& grid,
-                                              SimulationStateP&);
+                                              GridP& grid);
 
       virtual void scheduleInitialize(const LevelP& level,
                                       SchedulerP&);
@@ -141,7 +147,7 @@ namespace Uintah {
 
       virtual void restartInitialize();
 
-      virtual void scheduleComputeStableTimestep(const LevelP&,
+      virtual void scheduleComputeStableTimeStep(const LevelP&,
                                                 SchedulerP&);
 
       virtual void scheduleTimeAdvance( const LevelP& level,
@@ -149,6 +155,7 @@ namespace Uintah {
 
       virtual void scheduleFinalizeTimestep(const LevelP& level, SchedulerP&);
 
+      virtual void scheduleAnalysis(const LevelP& level, SchedulerP&);
 
       void scheduleComputePressure(SchedulerP&,
                                    const PatchSet*,
@@ -475,11 +482,11 @@ namespace Uintah {
                                        int numMatls,
                                        FastMatrix & K,
                                        double delT,
-                                       StaticArray<constCCVariable<double> >& vol_frac_CC,
-                                       StaticArray<constCCVariable<double> >& sp_vol_CC,
-                                       StaticArray< constSFC >& vel_FC,
-                                       StaticArray< SFC > & sp_vol_FC,
-                                       StaticArray< SFC > & vel_FCME);
+                                       std::vector<constCCVariable<double> >& vol_frac_CC,
+                                       std::vector<constCCVariable<double> >& sp_vol_CC,
+                                       std::vector< constSFC >& vel_FC,
+                                       std::vector< SFC > & sp_vol_FC,
+                                       std::vector< SFC > & vel_FCME);
 
 
       void addExchangeContributionToFCVel(const ProcessorGroup*,
@@ -841,7 +848,7 @@ namespace Uintah {
       void getVariableExchangeCoefficients( FastMatrix& ,
                                            FastMatrix& H,
                                            IntVector & c,
-                                           StaticArray<constCCVariable<double> >& mass  );
+                                           std::vector<constCCVariable<double> >& mass  );
 
       IntVector upwindCell_X(const IntVector& c,
                              const double& var,
@@ -854,9 +861,6 @@ namespace Uintah {
       IntVector upwindCell_Z(const IntVector& c,
                              const double& var,
                              double is_logical_R_face );
-
-      virtual bool needRecompile(double time, double dt,
-                                 const GridP& grid);
 
       double getRefPress() const {
         return d_ref_press;
@@ -872,11 +876,9 @@ namespace Uintah {
       std::vector<IntVector>d_dbgIndices;
 
       // flags
-      bool d_doAMR;
       bool d_doRefluxing;
       int  d_surroundingMatl_indx;
       bool d_impICE;
-      bool d_recompile;
       bool d_with_mpm;
       bool d_with_rigid_mpm;
       bool d_viscousFlow;
@@ -993,8 +995,6 @@ namespace Uintah {
 
       ICELabel* lb;
       MPMICELabel* MIlb;
-      SimulationStateP d_sharedState;
-      Output* dataArchiver;
       SchedulerP d_subsched;
 
       bool   d_recompileSubsched;
@@ -1041,51 +1041,11 @@ namespace Uintah {
       ICE(const ICE&);
       ICE& operator=(const ICE&);
 
-      SolverInterface* d_solver;
       SolverParameters* d_solver_parameters;
 
       //______________________________________________________________________
       //        models
       std::vector<ModelInterface*> d_models;
-      ModelInfo* d_modelInfo;
-
-      struct TransportedVariable {
-       const MaterialSubset* matls;
-       const MaterialSet* matlSet;
-       const VarLabel* var;
-       const VarLabel* src;
-       const VarLabel* var_Lagrangian;
-       const VarLabel* var_adv;
-      };
-      struct AMR_refluxVariable {
-       const MaterialSubset* matls;
-       const MaterialSet* matlSet;
-       const VarLabel* var;
-       const VarLabel* var_adv;
-       const VarLabel* var_X_FC_flux;
-       const VarLabel* var_Y_FC_flux;
-       const VarLabel* var_Z_FC_flux;
-
-       const VarLabel* var_X_FC_corr;
-       const VarLabel* var_Y_FC_corr;
-       const VarLabel* var_Z_FC_corr;
-      };
-
-      class ICEModelSetup : public ModelSetup {
-      public:
-       ICEModelSetup();
-       virtual ~ICEModelSetup();
-       virtual void registerTransportedVariable(const MaterialSet* matlSet,
-                                           const VarLabel* var,
-                                           const VarLabel* src);
-
-       virtual void registerAMR_RefluxVariable(const MaterialSet* matls,
-						     const VarLabel* var);
-
-       std::vector<TransportedVariable*> tvars;
-       std::vector<AMR_refluxVariable*> d_reflux_vars;
-      };
-      ICEModelSetup* d_modelSetup;
 
       //______________________________________________________________________
       //      FUNCTIONS

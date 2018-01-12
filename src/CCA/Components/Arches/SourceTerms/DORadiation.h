@@ -56,6 +56,10 @@ public:
   void problemSetup(const ProblemSpecP& db);
   void sched_computeSource( const LevelP& level, SchedulerP& sched, 
                             int timeSubStep );
+
+  void sched_computeSourceSweep( const LevelP& level, SchedulerP& sched, 
+                                 int timeSubStep );
+
   void computeSource( const ProcessorGroup* pc, 
                       const PatchSubset* patches, 
                       const MaterialSubset* matls, 
@@ -69,6 +73,45 @@ public:
                    DataWarehouse* old_dw, 
                    DataWarehouse* new_dw );
 
+
+//-------- Functiosn relevant to sweeps ----//
+void init_all_intensities( const ProcessorGroup* pc, 
+                         const PatchSubset* patches, 
+                         const MaterialSubset* matls, 
+                         DataWarehouse* old_dw, 
+                         DataWarehouse* new_dw );
+
+// chains requires->modifies tasks to facilitate communication.   spatial scheduling for task work, but not communication
+void doSweepAdvanced(  const ProcessorGroup* pc, 
+                         const PatchSubset* patches, 
+                         const MaterialSubset* matls, 
+                         DataWarehouse* old_dw, 
+                         DataWarehouse* new_dw ,
+                         const int ix, int intensity_iter );
+
+// computes fluxes and divQ and volQ, by integrating intensities over the solid angle
+void computeFluxDivQ( const ProcessorGroup* pc, 
+                         const PatchSubset* patches, 
+                         const MaterialSubset* matls, 
+                         DataWarehouse* old_dw, 
+                         DataWarehouse* new_dw );
+
+// initialize and set boundary conditions for intensities
+void setIntensityBC( const ProcessorGroup* pc, 
+                         const PatchSubset* patches, 
+                         const MaterialSubset* matls, 
+                         DataWarehouse* old_dw, 
+                         DataWarehouse* new_dw,
+                         int ix );
+
+
+void TransferRadFieldsFromOldDW( const ProcessorGroup* pc, 
+                                 const PatchSubset* patches, 
+                                 const MaterialSubset* matls, 
+                                 DataWarehouse* old_dw, 
+                                 DataWarehouse* new_dw);
+
+//---End of Functiosn relevant to sweeps ----//
   class Builder
     : public SourceTermBase::Builder { 
 
@@ -98,18 +141,44 @@ public:
 
   }; // class Builder 
 
-private:
 
+// Table search, nothing fancy linear search
+  int getSweepPatchIndex( double patchMid, std::vector<double>& indep_var );
+
+private:
+      enum DORadType {enum_linearSolve, enum_sweepSpatiallyParallel};
+  int _nDir;
+  int _nphase;
+  int _nstage;
+
+  bool _multiBox; 
+  std::vector<std::vector<double> > _xyzPatch_boundary;/// all patch boundaries (approximate), needed for multi-box weeps, 
+
+  std::vector< std::vector < std::vector < bool > > > _doesPatchExist;
+  std::vector<const PatchSubset*> _RelevantPatchesXpYpZp;   /// Some redundancy here, since XpYpZp = XmYmZm [ end : start ]
+  std::vector<const PatchSubset*> _RelevantPatchesXpYpZm;   /// only need four sets...
+  std::vector<const PatchSubset*> _RelevantPatchesXpYmZp;  
+  std::vector<const PatchSubset*> _RelevantPatchesXpYmZm;  
+  std::vector<const PatchSubset*> _RelevantPatchesXmYpZp;  
+  std::vector<const PatchSubset*> _RelevantPatchesXmYpZm;  
+  std::vector<const PatchSubset*> _RelevantPatchesXmYmZp;  
+  std::vector<const PatchSubset*> _RelevantPatchesXmYmZm;  
+
+  IntVector _patchIntVector;
   int _radiation_calc_freq; 
   int _nQn_part; 
 
   bool _all_rk; 
   bool _using_prop_calculator; 
   bool _checkForMissingIntensities;
+  int _sweepMethod;
+  std::vector <std::vector< std::vector<int> > > _directional_phase_adjustment;
 
   std::string _T_label_name; 
   std::string _abskt_label_name; 
   std::string _abskg_label_name; 
+  //std::vector<std::string> _abskg_label_name{1}; 
+  int d_nbands{1};
 
   DORadiationModel* _DO_model; 
   ArchesLabel*    _labels; 
@@ -136,7 +205,15 @@ private:
   const VarLabel* _radiationFluxBLabel;
   const VarLabel* _radiationVolqLabel;
   const PatchSet* _perproc_patches;
+  std::vector< std::vector < std::vector < Ghost::GhostType > > >   _gv;
+
+      std::vector<const VarLabel*>  _radIntSource;
+      std::vector<std::string> _radIntSource_names;
+
   std::vector< const VarLabel*> _IntensityLabels;
+  std::vector< const VarLabel*> _emiss_plus_scat_source_label; 
+
+  std::vector< std::vector< const VarLabel*> > _patchIntensityLabels; 
 
 }; // end DORadiation
 } // end namespace Uintah

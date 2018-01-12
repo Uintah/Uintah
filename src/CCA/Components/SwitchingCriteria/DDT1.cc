@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -24,20 +24,21 @@
  
 
 #include <CCA/Components/SwitchingCriteria/DDT1.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
+#include <CCA/Components/ICE/Core/ICELabel.h>
+#include <CCA/Components/MPM/Core/MPMLabel.h>
+#include <CCA/Components/MPMICE/Core/MPMICELabel.h>
+#include <CCA/Components/MPM/Materials/MPMMaterial.h>
+
+#include <CCA/Ports/Scheduler.h>
+
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <CCA/Ports/Scheduler.h>
-#include <Core/Labels/MPMLabel.h>
-#include <Core/Labels/MPMICELabel.h>
 #include <Core/Grid/Variables/CellIterator.h>
-#include <Core/Parallel/Parallel.h>
-#include <Core/Containers/StaticArray.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 
 #include <string>
 #include <iostream>
@@ -103,7 +104,7 @@ void DDT1Criteria::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
     t->requires(Task::OldDW, Mlb->NC_CCweightLabel, one_matl,  gan,2);
   }
   
-  t->computes(d_sharedState->get_switch_label());
+  t->computes(d_switch_label);
 
   sched->addTask(t, level->eachPatch(),d_sharedState->allMaterials());
 
@@ -138,9 +139,9 @@ void DDT1Criteria::switchTest(const ProcessorGroup* group,
       // mpm matls
       constNCVariable<double> NC_CCweight;
       constNCVariable<double> gTempAllMatls;
-      StaticArray<constNCVariable<double> > gmass(numMPMMatls);
-      StaticArray<CCVariable<double> >      temp_CC_mpm(numAllMatls);
-      StaticArray<constCCVariable<double> > vol_frac_mpm(numAllMatls);
+      std::vector<constNCVariable<double> > gmass(numMPMMatls);
+      std::vector<CCVariable<double> >      temp_CC_mpm(numAllMatls);
+      std::vector<constCCVariable<double> > vol_frac_mpm(numAllMatls);
 
       Ghost::GhostType  gac = Ghost::AroundCells;
       Ghost::GhostType  gan = Ghost::AroundNodes;
@@ -244,5 +245,5 @@ void DDT1Criteria::switchTest(const ProcessorGroup* group,
   max_vartype switch_condition(timeToSwitch);
 
   const Level* allLevels = 0;
-  new_dw->put(switch_condition,d_sharedState->get_switch_label(),allLevels);
+  new_dw->put(switch_condition,d_switch_label,allLevels);
 }

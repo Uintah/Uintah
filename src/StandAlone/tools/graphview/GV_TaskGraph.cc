@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -36,8 +36,11 @@
 using namespace std;
 using namespace Uintah;
 
-float safePercent(double num, double denom)
-{ return (denom != 0) ? num / denom: 0; }
+float
+safePercent(double num, double denom)
+{
+  return (denom != 0) ? num / denom: 0; 
+}
 
 GV_Task::GV_Task(string name, double duration, GV_TaskGraph* owner)
   : m_name(name), m_duration(duration),
@@ -150,8 +153,7 @@ GV_TaskGraph::GV_TaskGraph()
 void GV_TaskGraph::readNodes(ProblemSpecP xmlDoc)
 {
   ProblemSpecP nodes = xmlDoc->findBlock("Nodes");
-  for (ProblemSpecP node = nodes->findBlock("node"); node != 0;
-       node = node->findNextBlock("node")) {
+  for( ProblemSpecP node = nodes->findBlock("node"); node != nullptr; node = node->findNextBlock("node") ) {
     string task_name;
     double task_duration;
     node->get("name", task_name);
@@ -172,11 +174,11 @@ void GV_TaskGraph::readNodes(ProblemSpecP xmlDoc)
   }
 }
 
-void GV_TaskGraph::readEdges(ProblemSpecP xmlDoc)
+void
+GV_TaskGraph::readEdges(ProblemSpecP xmlDoc)
 {
   ProblemSpecP edges = xmlDoc->findBlock("Edges");
-  for (ProblemSpecP node = edges->findBlock("edge"); node != 0;
-       node = node->findNextBlock("edge")) {
+  for( ProblemSpecP node = edges->findBlock("edge"); node != nullptr;  node = node->findNextBlock("edge") ) {
     string source;
     string target;
     node->get("source", source);
@@ -193,25 +195,28 @@ void GV_TaskGraph::readEdges(ProblemSpecP xmlDoc)
       }
     }
     else {
-      if (sourceTask == nullptr)
+      if (sourceTask == nullptr) {
 	cerr << "ERROR: Undefined task, '" << source << "'" << endl;
-      if (targetTask == nullptr) 
+      }
+      if (targetTask == nullptr) {
 	cerr << "ERROR: Undefined task, '" << target << "'" << endl;
+      }
     }
   }
 }
 
 GV_TaskGraph::~GV_TaskGraph()
 {
-  for (list<GV_Task*>::iterator iter = m_tasks.begin();
-       iter != m_tasks.end(); iter++)
+  for (list<GV_Task*>::iterator iter = m_tasks.begin(); iter != m_tasks.end(); iter++) {
     delete *iter;
-  for (list<Edge*>::iterator iter = m_edges.begin();
-       iter != m_edges.end(); iter++)
+  }
+  for (list<Edge*>::iterator iter = m_edges.begin(); iter != m_edges.end(); iter++) {
     delete *iter;
+  }
 }
 
-void GV_TaskGraph::topologicallySortEdges()
+void
+GV_TaskGraph::topologicallySortEdges()
 {
   list<GV_Task*>::iterator iter;
   for( iter = m_tasks.begin(); iter != m_tasks.end(); iter++ ) {

@@ -1,21 +1,52 @@
-#include <CCA/Components/Arches/TransportEqns/ScalarEqn.h>
-#include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
+/*
+ * The MIT License
+ *
+ * Copyright (c) 1997-2018 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+
+#include <CCA/Components/Arches/Directives.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
+#include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
+#include <CCA/Components/Arches/TransportEqns/ScalarEqn.h>
 #include <CCA/Ports/Scheduler.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
+
+#include <Core/Exceptions/InvalidValue.h>
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Exceptions/InvalidValue.h>
 #include <Core/Parallel/Parallel.h>
-#include <Core/Containers/StaticArray.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+
+#ifdef DO_TIMINGS
+#  include <spatialops/util/TimeLogger.h>
+#endif
+
 #include <fstream>
-#include <CCA/Components/Arches/DiscretizationTools.h>
-#include <CCA/Components/Arches/Directives.h>
-#include <spatialops/util/TimeLogger.h>
 
 using namespace std;
 using namespace Uintah;
+
 static DebugStream dbg("ARCHES", false);
 
 //---------------------------------------------------------------------------
@@ -119,15 +150,11 @@ ScalarEqn::problemSetup(const ProblemSpecP& inputdb)
 
   }
 
-
-  SourceTermFactory& factory = SourceTermFactory::self();
-  factory.commonSrcProblemSetup( db );
-
   // Source terms:
   if (db->findBlock("src")){
 
     string srcname;
-    for (ProblemSpecP src_db = db->findBlock("src"); src_db != 0; src_db = src_db->findNextBlock("src")){
+    for (ProblemSpecP src_db = db->findBlock("src"); src_db != nullptr; src_db = src_db->findNextBlock("src")){
 
       SourceContainer this_src;
       double weight;
@@ -145,7 +172,7 @@ ScalarEqn::problemSetup(const ProblemSpecP& inputdb)
 
   //extra src terms which only require a VarLabel
   if ( db->findBlock("extra_src") ) {
-    for (ProblemSpecP src_db = db->findBlock("extra_src"); src_db != 0; src_db = src_db->findNextBlock("extra_src")){
+    for (ProblemSpecP src_db = db->findBlock("extra_src"); src_db != nullptr; src_db = src_db->findNextBlock("extra_src")){
       string srcname;
       src_db->getAttribute("label", srcname );
 
@@ -351,11 +378,17 @@ ScalarEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, cons
   tsk->requires(Task::NewDW, d_prNo_label, Ghost::None, 0);
 
   // srcs
-  SourceTermFactory& src_factory = SourceTermFactory::self();
   for (vector<SourceContainer>::iterator iter = d_sources.begin();
        iter != d_sources.end(); iter++){
-    SourceTermBase& temp_src = src_factory.retrieve_source_term( iter->name );
-    tsk->requires( Task::NewDW, temp_src.getSrcLabel(), Ghost::None, 0 );
+
+    iter->label = VarLabel::find( iter->name );
+
+    if ( iter->label == 0 ){
+      throw InvalidValue("Error: Source Label not found: "+iter->name, __FILE__, __LINE__);
+    }
+
+    tsk->requires( Task::NewDW, iter->label, Ghost::None, 0 );
+
   }
 
   //extra sources
@@ -397,6 +430,8 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
     Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
+    const Level* level = patch->getLevel();
+    const int ilvl = level->getID();
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
@@ -457,17 +492,15 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
     new_dw->getModifiable(Fconv, d_FconvLabel, matlIndex, patch);
     new_dw->getModifiable(RHS, d_RHSLabel, matlIndex, patch);
     vector<constCCVarWrapper> sourceVars;
-    SourceTermFactory& src_factory = SourceTermFactory::self();
     for (vector<SourceContainer>::iterator src_iter = d_sources.begin(); src_iter != d_sources.end(); src_iter++){
       constCCVarWrapper temp_var;  // Outside of this scope src is no longer available
-      SourceTermBase& temp_src = src_factory.retrieve_source_term( src_iter->name );
-      new_dw->get(temp_var.data, temp_src.getSrcLabel(), matlIndex, patch, gn, 0);
+      new_dw->get(temp_var.data, src_iter->label, matlIndex, patch, gn, 0);
       temp_var.sign = (*src_iter).weight;
       sourceVars.push_back(temp_var);
     }
 
     //put extra sources into static array
-    StaticArray <constCCVariable<double> > extraSources (nExtraSources);
+    std::vector <constCCVariable<double> > extraSources (nExtraSources);
     for ( int i = 0; i < nExtraSources; i++ ) {
       const VarLabel* tempLabel = extraSourceLabels[i];
       new_dw->get( extraSources[i], tempLabel, matlIndex, patch, gn, 0);
@@ -487,7 +520,7 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
       d_disc->computeConv( patch, Fconv, phi, uVel, vVel, wVel, den, areaFraction, d_convScheme );
       // look for and add contribution from intrusions.
       if ( _using_new_intrusion ) {
-        _intrusions->addScalarRHS( patch, Dx, d_eqnName, RHS, den );
+        _intrusions[ilvl]->addScalarRHS( patch, Dx, d_eqnName, RHS, den );
       }
     }
 
@@ -545,7 +578,7 @@ ScalarEqn::sched_solveTransportEqn( const LevelP& level, SchedulerP& sched, int 
   tsk->requires(Task::NewDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
 
   //Old
-  tsk->requires(Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label(), Ghost::None, 0);
+  tsk->requires(Task::OldDW, d_fieldLabels->d_delTLabel, Ghost::None, 0);
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 }
@@ -570,7 +603,7 @@ ScalarEqn::solveTransportEqn( const ProcessorGroup* pc,
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
     delt_vartype DT;
-    old_dw->get(DT, d_fieldLabels->d_sharedState->get_delt_label());
+    old_dw->get(DT, d_fieldLabels->d_delTLabel);
     double dt = DT;
 
     CCVariable<double> phi;
@@ -622,7 +655,7 @@ ScalarEqn::sched_timeAve( const LevelP& level, SchedulerP& sched, int timeSubSte
   //Old
   tsk->requires(Task::OldDW, d_transportVarLabel, Ghost::None, 0);
   tsk->requires(Task::OldDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
-  tsk->requires(Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label(), Ghost::None, 0);
+  tsk->requires(Task::OldDW, d_fieldLabels->d_delTLabel, Ghost::None, 0);
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 }

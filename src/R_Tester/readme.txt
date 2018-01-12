@@ -71,7 +71,6 @@ __________________________________
 multiple GPUs
 
 # needed for GPU test
-export SCI_DEBUG=SingleDevice:+
 export CUDA_VISIBLE_DEVICES=0
 
 

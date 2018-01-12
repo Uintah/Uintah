@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -34,7 +34,7 @@ NonlinearSolver::NonlinearSolver(const ProcessorGroup* myworld)
 NonlinearSolver::~NonlinearSolver()
 {}
 
-void 
+void
 NonlinearSolver::commonProblemSetup( ProblemSpecP db ){
 
   //The underflow uses a different method to compute the CFL
@@ -46,5 +46,7 @@ NonlinearSolver::commonProblemSetup( ProblemSpecP db ){
   }
 
   db->getWithDefault("initial_dt",d_initial_dt,1.0);
+
+  m_arches_spec = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES");
 
 }

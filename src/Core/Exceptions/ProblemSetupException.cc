@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -33,7 +33,14 @@ ProblemSetupException::ProblemSetupException(const std::string& msg, const char*
     : Exception(ignoreWait), d_msg(msg) 
 {
   std::ostringstream s;
-  s << "ProblemSetupException thrown: " << file << ", line: " << line << "\n" << d_msg;
+  s << "\n"
+    << "!! WARNING: Your .ups file did not parse successfully...\n"
+    << "!!          Fix your .ups file or update the ups_spec.xml\n"
+    << "!!          specification.  Reason for failure is:\n"
+    << "\n"
+    << "ProblemSetupException thrown: " << file << ", line: " << line << "\n"
+    << d_msg
+    << "\n";
   d_msg = s.str();
 
 #ifdef EXCEPTIONS_CRASH

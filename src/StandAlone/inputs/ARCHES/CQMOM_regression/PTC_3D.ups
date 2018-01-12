@@ -1,11 +1,9 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version='1.0' encoding='ISO-8859-1'?>
 <Uintah_specification>
   <Meta>
     <title>CQMOM Particle Trajectory Crossing 3D</title>
   </Meta>
-
   <SimulationComponent type="arches"/>
-
   <Solver type="hypre"/>
   <Time>
     <max_Timesteps> 5 </max_Timesteps>
@@ -15,45 +13,41 @@
     <delt_max>        0.001        </delt_max>
     <timestep_multiplier> 0.7     </timestep_multiplier>
   </Time>
-
   <DataArchiver>
     <outputInitTimestep/>
     <filebase> PTC_3D.uda </filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <save label="cellType"/>
-    
-    <save label="m_000" />
-    <save label="m_100" />
-    <save label="m_010" />
-    <save label="m_001" />
-    <save label="m_003" />
-    <save label="m_030" />
-    <save label="m_300" />
-    
-    <save label="w_0" />
-    <save label="w_1" />
-    <save label="w_2" />
-    <save label="w_3" />
-    <save label="w_4" />
-    <save label="w_5" />
-    <save label="w_6" />
-    <save label="w_7" />
-    <save label="partUVel_0" />
-    <save label="partUVel_1" />
-    <save label="partUVel_2" />
-    <save label="partUVel_3" />
-    <save label="partVVel_0" />
-    <save label="partVVel_1" />
-    <save label="partVVel_2" />
-    <save label="partVVel_3" />
-    <save label="partWVel_0" />
-    <save label="partWVel_1" />
-    <save label="partWVel_2" />
-    <save label="partWVel_3" />
- <!--save label="mixture_fraction"/-->    
+    <save label="m_000"/>
+    <save label="m_100"/>
+    <save label="m_010"/>
+    <save label="m_001"/>
+    <save label="m_003"/>
+    <save label="m_030"/>
+    <save label="m_300"/>
+    <save label="w_0"/>
+    <save label="w_1"/>
+    <save label="w_2"/>
+    <save label="w_3"/>
+    <save label="w_4"/>
+    <save label="w_5"/>
+    <save label="w_6"/>
+    <save label="w_7"/>
+    <save label="partUVel_0"/>
+    <save label="partUVel_1"/>
+    <save label="partUVel_2"/>
+    <save label="partUVel_3"/>
+    <save label="partVVel_0"/>
+    <save label="partVVel_1"/>
+    <save label="partVVel_2"/>
+    <save label="partVVel_3"/>
+    <save label="partWVel_0"/>
+    <save label="partWVel_1"/>
+    <save label="partWVel_2"/>
+    <save label="partWVel_3"/>
+    <!--save label="mixture_fraction"/-->
     <checkpoint cycle="2" interval="0.001"/>
   </DataArchiver>
-
   <Grid>
     <Level>
       <Box label="1">
@@ -137,9 +131,8 @@
           <value> 0.0 </value>
         </BCType>
       </Face>
-
       <Face rectangle="x-" lower="0 .2 .2" upper="0 .4 .4">
-        <BCType  label = "inletx" var = "VelocityInlet">
+        <BCType label="inletx" var="VelocityInlet">
           <value> [0,0,0] </value>
         </BCType>
         <BCType label="mixture_fraction" var="Dirichlet">
@@ -212,9 +205,8 @@
           <value> 1.03 </value>
         </BCType>
       </Face>
-
       <Face rectangle="x-" lower="0 .6 .6" upper="0 .8 .8">
-        <BCType  label = "inletx2" var = "VelocityInlet">
+        <BCType label="inletx2" var="VelocityInlet">
           <value> [0,0,0] </value>
         </BCType>
         <BCType label="mixture_fraction" var="Dirichlet">
@@ -287,9 +279,8 @@
           <value> 1.03 </value>
         </BCType>
       </Face>
- 
       <Face side="x+">
-        <BCType  label = "outletx" var = "OutletBC">
+        <BCType label="outletx" var="OutletBC">
           <value> 0.0 </value>
         </BCType>
         <BCType label="mixture_fraction" var="Neumann">
@@ -363,9 +354,8 @@
           <value> 0.0 </value>
         </BCType>
       </Face>
-
-        <Face side="y-">
-        <BCType  label = "ymout" var = "OutletBC">
+      <Face side="y-">
+        <BCType label="ymout" var="OutletBC">
           <value> 0.0 </value>
         </BCType>
         <BCType label="mixture_fraction" var="Neumann">
@@ -438,9 +428,8 @@
           <value> 0.0 </value>
         </BCType>
       </Face>
-
       <Face side="y+">
-        <BCType  label = "ypout" var = "OutletBC">
+        <BCType label="ypout" var="OutletBC">
           <value> 0.0 </value>
         </BCType>
         <BCType label="mixture_fraction" var="Neumann">
@@ -513,9 +502,8 @@
           <value> 0.0 </value>
         </BCType>
       </Face>
-
       <Face side="z-">
-        <BCType  label = "zmout" var = "OutletBC">
+        <BCType label="zmout" var="OutletBC">
           <value> 0.0 </value>
         </BCType>
         <BCType label="mixture_fraction" var="Neumann">
@@ -588,9 +576,8 @@
           <value> 0.0 </value>
         </BCType>
       </Face>
-
       <Face side="z+">
-        <BCType  label = "zpout" var = "OutletBC">
+        <BCType label="zpout" var="OutletBC">
           <value> 0.0 </value>
         </BCType>
         <BCType label="mixture_fraction" var="Neumann">
@@ -662,38 +649,29 @@
         <BCType label="m_113" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-      </Face>    
-
+      </Face>
     </BoundaryConditions>
-
   </Grid>
-
   <PhysicalConstants>
     <gravity>         [-9.8,0,0]    </gravity>
     <reference_point>       [-1,-1,-1]    </reference_point>
     <viscosity>       0.001      </viscosity>
   </PhysicalConstants>
-   
   <CFD>
     <ARCHES>
-
       <TimeIntegrator>
         <ExplicitIntegrator order="first"/>
       </TimeIntegrator>
-
       <Turbulence model="none"/>
-
       <Properties>
-        <ConstantProps>
-          <density>1.0</density>
+        <table label="a_user_generated_label" type="constant">
           <temperature>298</temperature>
-        </ConstantProps>
+          <density>1.0</density>
+        </table>
       </Properties>
-
       <BoundaryConditions>
         <suppress_corner_recirculation/>
       </BoundaryConditions>
-
       <TransportEqns>
         <Eqn label="mixture_fraction" type="CCscalar">
           <doDiff>true</doDiff>
@@ -708,7 +686,7 @@
           </Clipping>
         </Eqn>
       </TransportEqns>
-<!--__________________________________-->
+      <!--__________________________________-->
       <ExplicitSolver>
         <initial_dt>0.05</initial_dt>
         <PressureSolver>
@@ -720,20 +698,17 @@
             <skip>           1       </skip>
           </Parameters>
         </PressureSolver>
-
         <MomentumSolver>
           <convection_scheme>central</convection_scheme>
         </MomentumSolver>
-
       </ExplicitSolver>
-      
       <CQMOM partvel="true">
         <!-- base information-->
         <NumberInternalCoordinates> 3 </NumberInternalCoordinates>
         <QuadratureNodes> [2,2,2] </QuadratureNodes>
-        <InternalCoordinate name="partUVel" type="uVel"/> 
-        <InternalCoordinate name="partVVel" type="vVel"/> 
-        <InternalCoordinate name="partWVel" type="wVel"/> 
+        <InternalCoordinate name="partUVel" type="uVel"/>
+        <InternalCoordinate name="partVVel" type="vVel"/>
+        <InternalCoordinate name="partWVel" type="wVel"/>
         <CutOff> 1.0e-3 </CutOff>
         <Adaptive> true </Adaptive>
         <WeightRatio> 1.0e-5 </WeightRatio>
@@ -743,55 +718,74 @@
         <conv_scheme> first </conv_scheme>
         <turbulentPrandtlNumber> 0.4 </turbulentPrandtlNumber>
         <molecular_diffusivity> 0.0 </molecular_diffusivity>
-        
         <!-- moment eqns-->
-        <Moment> <m> [0,0,0] </m> </Moment>
-        
-        <Moment> <m> [1,0,0] </m> </Moment>
-        
-        <Moment> <m> [2,0,0] </m> </Moment>
-        
-        <Moment> <m> [3,0,0] </m> </Moment>
-        
-        <Moment> <m> [0,1,0] </m> </Moment>
-        
-        <Moment> <m> [0,2,0] </m> </Moment>
-        
-        <Moment> <m> [0,3,0] </m> </Moment>
-        
-        <Moment> <m> [1,1,0] </m> </Moment>
-        
-        <Moment> <m> [1,2,0] </m> </Moment>
-        
-        <Moment> <m> [1,3,0] </m> </Moment>
-        
-        <Moment> <m> [0,0,1] </m> </Moment>
-
-        <Moment> <m> [0,0,2] </m> </Moment>
-
-        <Moment> <m> [0,0,3] </m> </Moment>
-
-        <Moment> <m> [1,0,1] </m> </Moment>
-
-        <Moment> <m> [1,0,2] </m> </Moment>
-
-        <Moment> <m> [1,0,3] </m> </Moment>
-
-        <Moment> <m> [0,1,1] </m> </Moment>
-
-        <Moment> <m> [0,1,2] </m> </Moment>
-
-        <Moment> <m> [0,1,3] </m> </Moment>
-
-        <Moment> <m> [1,1,1] </m> </Moment>
-
-        <Moment> <m> [1,1,2] </m> </Moment>
-
-        <Moment> <m> [1,1,3] </m> </Moment>
-        
+        <Moment>
+          <m> [0,0,0] </m>
+        </Moment>
+        <Moment>
+          <m> [1,0,0] </m>
+        </Moment>
+        <Moment>
+          <m> [2,0,0] </m>
+        </Moment>
+        <Moment>
+          <m> [3,0,0] </m>
+        </Moment>
+        <Moment>
+          <m> [0,1,0] </m>
+        </Moment>
+        <Moment>
+          <m> [0,2,0] </m>
+        </Moment>
+        <Moment>
+          <m> [0,3,0] </m>
+        </Moment>
+        <Moment>
+          <m> [1,1,0] </m>
+        </Moment>
+        <Moment>
+          <m> [1,2,0] </m>
+        </Moment>
+        <Moment>
+          <m> [1,3,0] </m>
+        </Moment>
+        <Moment>
+          <m> [0,0,1] </m>
+        </Moment>
+        <Moment>
+          <m> [0,0,2] </m>
+        </Moment>
+        <Moment>
+          <m> [0,0,3] </m>
+        </Moment>
+        <Moment>
+          <m> [1,0,1] </m>
+        </Moment>
+        <Moment>
+          <m> [1,0,2] </m>
+        </Moment>
+        <Moment>
+          <m> [1,0,3] </m>
+        </Moment>
+        <Moment>
+          <m> [0,1,1] </m>
+        </Moment>
+        <Moment>
+          <m> [0,1,2] </m>
+        </Moment>
+        <Moment>
+          <m> [0,1,3] </m>
+        </Moment>
+        <Moment>
+          <m> [1,1,1] </m>
+        </Moment>
+        <Moment>
+          <m> [1,1,2] </m>
+        </Moment>
+        <Moment>
+          <m> [1,1,3] </m>
+        </Moment>
       </CQMOM>
     </ARCHES>
-
   </CFD>
-
 </Uintah_specification>

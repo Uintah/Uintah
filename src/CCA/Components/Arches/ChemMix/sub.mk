@@ -6,20 +6,14 @@ SRCDIR := CCA/Components/Arches/ChemMix
 # CUDA_ENABLED_SRCS are files that if CUDA is enabled (via configure), must be
 # compiled using the nvcc compiler.
 #
-# WARNING: If you add a file to the list of CUDA_SRCS, you must add a
-# corresponding rule at the end of this file!
+# Do not put the .cc on the file name as the .cc or .cu will be added automatically
+# as needed.
 #
-# Also, do not put the .cc on this list of files as the .cc or .cu
-# will be added automatically as needed.
-#
-CUDA_ENABLED_SRCS =          \
-      ClassicTableInterface  \
-      ColdFlow               \
-      MixingRxnModel
+CUDA_ENABLED_SRCS :=          
 
-ifeq ($(HAVE_TABPROPS),yes)
-   CUDA_ENABLED_SRCS += TabPropsInterface
-endif
+#ifeq ($(HAVE_TABPROPS),yes)
+#   CUDA_ENABLED_SRCS += TabPropsInterface
+#endif
 
 ifeq ($(HAVE_CUDA),yes)
    # CUDA enabled files, listed here (and with a rule at the end of
@@ -33,7 +27,12 @@ else
 endif
 
 SRCS += \
-        $(SRCDIR)/ConstantProps.cc         
+      $(SRCDIR)/TabPropsInterface.cc      \
+      $(SRCDIR)/TableLookup.cc            \
+      $(SRCDIR)/ClassicTableInterface.cc  \
+      $(SRCDIR)/ColdFlow.cc               \
+      $(SRCDIR)/MixingRxnModel.cc         \
+      $(SRCDIR)/ConstantProps.cc         
 
 PSELIBS := $(PSELIBS) Core/IO
 
@@ -44,15 +43,8 @@ PSELIBS := $(PSELIBS) Core/IO
 #
 
 ifeq ($(HAVE_CUDA),yes)
-  # If Copy the 'original' .cc files into the binary tree and rename as .cu
 
-  $(OBJTOP_ABS)/$(SRCDIR)/ClassicTableInterface.cu : $(SRCTOP_ABS)/$(SRCDIR)/ClassicTableInterface.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/ColdFlow.cu : $(SRCTOP_ABS)/$(SRCDIR)/ColdFlow.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/MixingRxnModel.cu : $(SRCTOP_ABS)/$(SRCDIR)/MixingRxnModel.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/TabPropsInterface.cu : $(SRCTOP_ABS)/$(SRCDIR)/TabPropsInterface.cc
-	cp $< $@
+  # Call the make-cuda-target function on each of the CUDA_ENABLED_SRCS:
+  $(foreach file,$(CUDA_ENABLED_SRCS),$(eval $(call make-cuda-target,$(file))))
 
 endif

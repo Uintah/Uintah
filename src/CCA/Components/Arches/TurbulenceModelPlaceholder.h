@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -28,7 +28,6 @@
 #define Uintah_Components_Arches_TurbulenceModelPlaceholder_h
 
 
-#include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/TurbulenceModel.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
@@ -36,51 +35,53 @@
 #include <Core/Grid/Variables/CCVariable.h>
 
 namespace Uintah {
+  class ArchesLabel;
+  class MPMArchesLabel;
   class PhysicalConstants;
   class BoundaryCondition;
-  
+
   /**
    *  \class  TurbulenceModelPlaceholder
    *  \author Tony Saad
    *  \date   October, 2012
    *
-   *  \brief Allow Arches to use Wasatch's turbulence models.
+   *  \brief Allow Arches to have an empty turbulence model.
    *
    */
-  
+
   class TurbulenceModelPlaceholder: public TurbulenceModel {
-    
+
   public:
-    
+
     TurbulenceModelPlaceholder(const ArchesLabel* label,
                      const MPMArchesLabel* MAlb,
                      PhysicalConstants* phyConsts,
                      BoundaryCondition* bndryCondition);
-    
+
     ~TurbulenceModelPlaceholder();
-    
+
     void problemSetup(const ProblemSpecP& db);
-    
+
     void sched_reComputeTurbSubmodel(SchedulerP&,
                                      const LevelP& level,
                                      const MaterialSet* matls,
                                      const TimeIntegratorLabel* timelabels);
-    
-        
+
+
     void sched_computeScalarVariance(SchedulerP&,
                                      const PatchSet* patches,
                                      const MaterialSet* matls,
                                      const TimeIntegratorLabel* timelabels)
     {}
-    
+
     void sched_computeScalarDissipation(SchedulerP&,
                                         const PatchSet* patches,
                                         const MaterialSet* matls,
                                         const TimeIntegratorLabel* timelabels)
     {}
-    
+
     double getMolecularViscosity() const;
-    
+
     double getSmagorinskyConst() const {
       return d_CF;
     }
@@ -94,13 +95,13 @@ namespace Uintah {
     inline bool getDynScalarModel() const {
       return false;
     }
-    
+
   protected:
     PhysicalConstants* d_physicalConsts;
     BoundaryCondition* d_boundaryCondition;
-    
+
   private:
-    
+
     TurbulenceModelPlaceholder();
 
     void reComputeTurbSubmodel(const ProcessorGroup*,
@@ -108,15 +109,14 @@ namespace Uintah {
                                const MaterialSubset* matls,
                                DataWarehouse* old_dw,
                                DataWarehouse* new_dw,
-                               const TimeIntegratorLabel* timelabels);        
+                               const TimeIntegratorLabel* timelabels);
   protected:
     double d_CF; //model constant
     double d_CFVar; // model constant for mixture fraction variance
-    double d_turbPrNo; // turbulent prandtl number    
+    double d_turbPrNo; // turbulent prandtl number
   }; // End class TurbulenceModelPlaceholder
 } // End namespace Uintah
 
 
 
 #endif // Uintah_Components_Arches_TurbulenceModelPlaceholder_h
-

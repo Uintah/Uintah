@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2016 The University of Utah
+#  Copyright (c) 1997-2018 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -33,29 +33,30 @@ include $(SCIRUN_SCRIPTS)/largeso_prologue.mk
 SRCDIR := Core
 
 SUBDIRS := \
-	$(SRCDIR)/Containers \
-	$(SRCDIR)/DataArchive \
-	$(SRCDIR)/Datatypes \
-	$(SRCDIR)/Disclosure \
-	$(SRCDIR)/Exceptions \
-	$(SRCDIR)/Geometry \
-	$(SRCDIR)/GeometryPiece \
-	$(SRCDIR)/Grid \
-	$(SRCDIR)/Labels \
-	$(SRCDIR)/IO \
-	$(SRCDIR)/Malloc \
-	$(SRCDIR)/Math \
-	$(SRCDIR)/OS \
-	$(SRCDIR)/Parallel \
-	$(SRCDIR)/ProblemSpec \
-	$(SRCDIR)/Util
+	$(SRCDIR)/Containers     \
+	$(SRCDIR)/DataArchive    \
+	$(SRCDIR)/Datatypes      \
+	$(SRCDIR)/Disclosure     \
+	$(SRCDIR)/Exceptions     \
+	$(SRCDIR)/Geometry       \
+	$(SRCDIR)/GeometryPiece  \
+	$(SRCDIR)/Grid           \
+	$(SRCDIR)/IO             \
+	$(SRCDIR)/Malloc         \
+	$(SRCDIR)/Math           \
+	$(SRCDIR)/OS             \
+	$(SRCDIR)/Parallel       \
+	$(SRCDIR)/ProblemSpec    \
+	$(SRCDIR)/Util           \
+
 
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
 PSELIBS := 
-LIBS := $(THREAD_LIBRARY) \
-	    $(M_LIBRARY) 
+
+LIBS := $(M_LIBRARY) 
+
 
 include $(SCIRUN_SCRIPTS)/largeso_epilogue.mk
 

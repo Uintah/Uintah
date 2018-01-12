@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -26,6 +26,7 @@
 #ifndef Packages_Uintah_CCA_Components_ontheflyAnalysis_vorticity_h
 #define Packages_Uintah_CCA_Components_ontheflyAnalysis_vorticity_h
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
+#include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Output.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
@@ -37,6 +38,7 @@
 
 namespace Uintah {
   
+  class ICELabel;
 
 /**************************************
 
@@ -65,9 +67,9 @@ WARNING
 ****************************************/
   class vorticity : public AnalysisModule {
   public:
-    vorticity(ProblemSpecP& prob_spec,
-              SimulationStateP& sharedState,
-		Output* dataArchiver);
+    vorticity(const ProcessorGroup* myworld,
+	      const SimulationStateP sharedState,
+	      const ProblemSpecP& module_spec);
               
     vorticity();
                     
@@ -75,12 +77,15 @@ WARNING
    
     virtual void problemSetup(const ProblemSpecP& prob_spec,
                               const ProblemSpecP& restart_prob_spec,
-                              GridP& grid,
-                              SimulationStateP& sharedState);
+                              GridP& grid);
    
-                              
+    virtual void outputProblemSpec(ProblemSpecP& ps){};
+                                  
     virtual void scheduleInitialize(SchedulerP& sched,
                                     const LevelP& level);
+
+    virtual void scheduleRestartInitialize(SchedulerP& sched,
+                                           const LevelP& level){};
                                     
     virtual void restartInitialize();
                                     
@@ -116,12 +121,11 @@ WARNING
        
     //__________________________________
     // global constants
-    SimulationStateP d_sharedState;
-    Output* d_dataArchiver;
-    ProblemSpecP d_prob_spec;
     const Material* d_matl;
     MaterialSet* d_matl_set;
     const MaterialSubset* d_matl_sub;
+
+    bool required;
   };
 }
 

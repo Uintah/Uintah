@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -39,21 +39,18 @@
 using namespace Uintah;
 using namespace std;
 
-//#define USE_RADIOMETER
+//#define USE_RADIOMETER   // Circular dependency on OSX.  Disable so we can compile on bigmac
 /*______________________________________________________________________
           TO DO
       - Clean up the hardwiring in the problem setup
 ______________________________________________________________________*/
 static DebugStream cout_doing("radiometer", false);
 
-OnTheFly_radiometer::OnTheFly_radiometer(ProblemSpecP& module_spec,
-                                         SimulationStateP& sharedState,
-                                         Output* dataArchiver)
-  : AnalysisModule(module_spec, sharedState, dataArchiver)
+OnTheFly_radiometer::OnTheFly_radiometer(const ProcessorGroup* myworld,
+					 const SimulationStateP sharedState,
+					 const ProblemSpecP& module_spec)
+  : AnalysisModule(myworld, sharedState, module_spec)
 {
-  d_sharedState = sharedState;
-  d_module_ps   = module_spec;
-  d_dataArchiver = dataArchiver;
 }
 
 //__________________________________
@@ -70,8 +67,7 @@ OnTheFly_radiometer::~OnTheFly_radiometer()
 //______________________________________________________________________
 void OnTheFly_radiometer::problemSetup(const ProblemSpecP& ,
                                        const ProblemSpecP& ,
-                                       GridP& grid,
-                                       SimulationStateP& sharedState)
+                                       GridP& grid)
 {
 
 #ifdef USE_RADIOMETER
@@ -85,11 +81,11 @@ void OnTheFly_radiometer::problemSetup(const ProblemSpecP& ,
  
   Material* matl;
  
-  if( d_module_ps->findBlock("material") ){
-    matl = d_sharedState->parseAndLookupMaterial( d_module_ps, "material" );
-  } else if ( d_module_ps->findBlock("materialIndex") ){
+  if( m_module_spec->findBlock("material") ){
+    matl = d_sharedState->parseAndLookupMaterial( m_module_spec, "material" );
+  } else if ( m_module_spec->findBlock("materialIndex") ){
     int indx;
-    d_module_ps->get("materialIndex", indx);
+    m_module_spec->get("materialIndex", indx);
     matl = d_sharedState->getMaterial(indx);
   } else {
     matl = d_sharedState->getMaterial(0);
@@ -97,7 +93,7 @@ void OnTheFly_radiometer::problemSetup(const ProblemSpecP& ,
 
   int matl_index = matl->getDWIndex();
   
-  ProblemSpecP rad_ps = d_module_ps->findBlock("Radiometer");
+  ProblemSpecP rad_ps = m_module_spec->findBlock("Radiometer");
   if (!rad_ps){
     throw ProblemSetupException("ERROR Radiometer: Couldn't find <Radiometer> xml node", __FILE__, __LINE__);    
   }
@@ -156,11 +152,10 @@ void OnTheFly_radiometer::problemSetup(const ProblemSpecP& ,
                                    cellTypeLabel,
                                    notUsed);
 
-  d_module_ps->getWithDefault( "radiometerCalc_freq", d_radiometerCalc_freq, 1 );
   bool getExtraInputs = true;
   d_radiometer->problemSetup(rad_ps, rad_ps, grid, d_sharedState, getExtraInputs);
   
-  if(!d_dataArchiver->isLabelSaved( "VRFlux" ) ){
+  if(!d_output->isLabelSaved( "VRFlux" ) ){
     throw ProblemSetupException("\nERROR:  You've activated the radiometer but your not saving the variable (VRFlux)\n",__FILE__, __LINE__);
   }
 #endif  
@@ -200,14 +195,17 @@ void OnTheFly_radiometer::scheduleDoAnalysis(SchedulerP& sched,
   Task::WhichDW sigmaT4_dw  = Task::NewDW;
   Task::WhichDW celltype_dw = Task::NewDW;
   bool includeEC = true;
+
+  // carry forward if it is time
+  d_radiometer->sched_CarryForward_Var ( level, sched, d_radiometer->d_sigmaT4Label, RMCRTCommon::TG_CARRY_FORWARD);
  
-  d_radiometer->sched_initializeRadVars( level, sched, d_radiometerCalc_freq );
+  d_radiometer->sched_initializeRadVars( level, sched );
   
   // convert abskg:dbl -> abskg:flt if needed
-  d_radiometer->sched_DoubleToFloat( level, sched, abskg_dw, d_radiometerCalc_freq );
+  d_radiometer->sched_DoubleToFloat( level, sched, abskg_dw );
   
-  d_radiometer->sched_sigmaT4( level, sched, temp_dw, d_radiometerCalc_freq, includeEC );
+  d_radiometer->sched_sigmaT4( level, sched, temp_dw, includeEC );
 
-  d_radiometer->sched_radiometer( level, sched, abskg_dw, sigmaT4_dw, celltype_dw, d_radiometerCalc_freq );
+  d_radiometer->sched_radiometer( level, sched, abskg_dw, sigmaT4_dw, celltype_dw );
 #endif
 }

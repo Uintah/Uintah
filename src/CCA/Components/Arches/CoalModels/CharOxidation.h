@@ -68,10 +68,14 @@ public:
 
   inline const VarLabel* getPO2surfLabel() {
     return d_PO2surfLabel; };
+  
+  inline const VarLabel* getParticleSizeSourceLabel() {
+    return d_particleSizeLabel; };
 
 protected:
 
   const VarLabel* d_particletempLabel;
+  const VarLabel* d_particleSizeLabel;
   const VarLabel* d_surfacerateLabel;
   const VarLabel* d_PO2surfLabel;
   double d_w_scaling_constant; 

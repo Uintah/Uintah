@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2016 The University of Utah
+ * Copyright (c) 2012-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,7 +25,6 @@
 #ifndef Wasatch_ParseEquations_h
 #define Wasatch_ParseEquations_h
 
-#include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <CCA/Ports/SolverInterface.h>
 
@@ -59,10 +58,10 @@ namespace WasatchCore{
    */
   EqnTimestepAdaptorBase*
   parse_scalar_equation( Uintah::ProblemSpecP params,
-                          TurbulenceParameters turbParams,
-                          const Expr::Tag densityTag,
-                          const bool isConstDensity,
-                          GraphCategories& gc );
+                         TurbulenceParameters turbParams,
+                         const Expr::Tag densityTag,
+                         const bool isConstDensity,
+                         GraphCategories& gc );
 
   /**
    *  \brief Build the momentum equation specified by "params"
@@ -117,6 +116,19 @@ namespace WasatchCore{
                                Uintah::SimulationStateP& sharedState,
                                std::set<std::string>& persistentFields );
 
+  std::vector<EqnTimestepAdaptorBase*>
+  parse_species_equations( Uintah::ProblemSpecP params,
+                           Uintah::ProblemSpecP wasatchSpec,
+                           Uintah::ProblemSpecP momentumParams,
+                           const TurbulenceParameters& turbParams,
+                           const Expr::Tag& densityTag,
+                           GraphCategories& gc );
+
+  std::vector<EqnTimestepAdaptorBase*>
+  parse_tar_and_soot_equations( Uintah::ProblemSpecP params,
+                                const TurbulenceParameters& turbParams,
+                                const Expr::Tag& densityTag,
+                                GraphCategories& gc );
 
   /**
    *  \brief Build mms source terms and parse them properly to the RHS's

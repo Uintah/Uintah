@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -34,4 +34,18 @@ std::string Ghost::names[numGhostTypes] =
 IntVector Ghost::directions[numGhostTypes] =
 { IntVector(0,0,0), IntVector(1,1,1), IntVector(1,1,1),
   IntVector(1,0,0), IntVector(0,1,0), IntVector(0,0,1),
-  IntVector(1,1,1) };
+  IntVector(1,1,1),
+  // One sided ghosts
+  IntVector(1,1,1),
+  IntVector(1,1,0),
+  IntVector(1,0,1),
+  IntVector(1,0,0),
+  IntVector(0,1,1),
+  IntVector(0,1,0),
+  IntVector(0,0,1),
+  IntVector(0,0,0)  
+  };
+
+
+
+

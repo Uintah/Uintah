@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -23,10 +23,11 @@
  */
 
 //----- ExplicitSolver.cc ----------------------------------------------
+#include <CCA/Components/Arches/ArchesParticlesHelper.h>
+#include <CCA/Components/Arches/ParticleModels/CoalHelper.h>
+#include <CCA/Components/Arches/BoundaryConditions/BoundaryFunctors.h>
 #include <CCA/Components/Arches/ChemMix/MixingRxnModel.h>
 #include <CCA/Components/Arches/ChemMix/ClassicTableInterface.h>
-#include <CCA/Components/Arches/Radiation/RadPropertyCalculator.h>
-#include <CCA/Components/Arches/EfficiencyCalculator.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
@@ -49,6 +50,24 @@
 #include <CCA/Components/Arches/IncDynamicProcedure.h>
 #include <CCA/Components/Arches/CompDynamicProcedure.h>
 #include <CCA/Components/Arches/SmagorinskyModel.h>
+#include <CCA/Components/Arches/WBCHelper.h>
+#include <CCA/Components/Arches/ChemMix/TableLookup.h>
+
+//------------------ New Task Interface (start) --------------------------------------------------
+#include <CCA/Components/Arches/Task/TaskController.h>
+#include <CCA/Components/Arches/Task/TaskFactoryHelper.h>
+#include <CCA/Components/Arches/TurbulenceModels/TurbulenceModelFactory.h>
+#include <CCA/Components/Arches/Utility/UtilityFactory.h>
+#include <CCA/Components/Arches/Utility/InitializeFactory.h>
+#include <CCA/Components/Arches/Transport/TransportFactory.h>
+#include <CCA/Components/Arches/Task/TaskFactoryBase.h>
+#include <CCA/Components/Arches/ParticleModels/ParticleModelFactory.h>
+#include <CCA/Components/Arches/LagrangianParticles/LagrangianParticleFactory.h>
+#include <CCA/Components/Arches/PropertyModelsV2/PropertyModelFactoryV2.h>
+#include <CCA/Components/Arches/BoundaryConditions/BoundaryConditionFactory.h>
+#include <CCA/Components/Arches/SourceTermsV2/SourceTermFactoryV2.h>
+#include <CCA/Components/Arches/Task/TaskInterface.h>
+//------------------ New Task Interface (end) --------------------------------------------------
 
 #include <CCA/Components/Arches/CoalModels/PartVel.h>
 #include <CCA/Components/Arches/CoalModels/ConstantModel.h>
@@ -57,29 +76,30 @@
 #include <CCA/Components/Arches/CoalModels/KobayashiSarofimDevol.h>
 #include <CCA/Components/Arches/CoalModels/RichardsFletcherDevol.h>
 #include <CCA/Components/Arches/CoalModels/FOWYDevol.h>
-#include <CCA/Components/Arches/CoalModels/SimpleBirth.h>
+#include <CCA/Components/Arches/CoalModels/BirthDeath.h>
 #include <CCA/Components/Arches/CoalModels/YamamotoDevol.h>
 #include <CCA/Components/Arches/CoalModels/HeatTransfer.h>
 #include <CCA/Components/Arches/CoalModels/EnthalpyShaddix.h>
 #include <CCA/Components/Arches/CoalModels/MaximumTemperature.h>
 #include <CCA/Components/Arches/CoalModels/Thermophoresis.h>
+#include <CCA/Components/Arches/CoalModels/LinearSwelling.h>
+#include <CCA/Components/Arches/CoalModels/ShrinkageRate.h>
 #include <CCA/Components/Arches/CoalModels/Deposition.h>
 #include <CCA/Components/Arches/CoalModels/CharOxidationShaddix.h>
 #include <CCA/Components/Arches/CoalModels/CharOxidationSmith.h>
+#include <CCA/Components/Arches/CoalModels/CharOxidationSmith2016.h>
 #include <CCA/Components/Arches/CoalModels/DragModel.h>
 #include <CCA/Components/Arches/PropertyModels/PropertyModelBase.h>
 #include <CCA/Components/Arches/PropertyModels/PropertyModelFactory.h>
 #include <CCA/Components/Arches/PropertyModels/ConstProperty.h>
 #include <CCA/Components/Arches/PropertyModels/ExtentRxn.h>
 #include <CCA/Components/Arches/PropertyModels/TabStripFactor.h>
-#include <CCA/Components/Arches/PropertyModels/fvSootFromYsoot.h>
 #include <CCA/Components/Arches/PropertyModels/EmpSoot.h>
 #include <CCA/Components/Arches/PropertyModels/AlgebraicScalarDiss.h>
 #include <CCA/Components/Arches/PropertyModels/HeatLoss.h>
 #include <CCA/Components/Arches/PropertyModels/ScalarVarianceScaleSim.h>
 #include <CCA/Components/Arches/PropertyModels/NormScalarVariance.h>
 #include <CCA/Components/Arches/PropertyModels/ScalarDissipation.h>
-#include <CCA/Components/Arches/PropertyModels/RadProperties.h>
 #include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
@@ -89,17 +109,7 @@
 #include <CCA/Components/Arches/TransportEqns/CQMOM_Convection.h>
 #include <CCA/Components/Arches/ParticleModels/CQMOMSourceWrapper.h>
 
-//NEW TASK STUFF
-#include <CCA/Components/Arches/ArchesBCHelper.h>
-#include <CCA/Components/Arches/Task/TaskInterface.h>
-#include <CCA/Components/Arches/Task/SampleTask.h>
-#include <CCA/Components/Arches/Task/TemplatedSampleTask.h>
-#include <CCA/Components/Arches/Task/TaskFactoryBase.h>
-//END NEW TASK STUFF
-
 #include <CCA/Components/Arches/ExplicitSolver.h>
-#include <Core/Containers/StaticArray.h>
-#include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/Arches/BoundaryCondition.h>
@@ -127,9 +137,9 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Math/MiscMath.h>
 #include <CCA/Components/Arches/Filter.h>
+
 #include <cmath>
 #include <mutex>
-
 
 using namespace std;
 using namespace Uintah;
@@ -145,14 +155,14 @@ ExplicitSolver::
 ExplicitSolver(SimulationStateP& sharedState,
                const MPMArchesLabel* MAlb,
                PhysicalConstants* physConst,
-               std::map<std::string, boost::shared_ptr<TaskFactoryBase> >& task_factory_map,
                const ProcessorGroup* myworld,
+               ArchesParticlesHelper* particle_helper,
                SolverInterface* hypreSolver):
                NonlinearSolver(myworld),
                d_sharedState(sharedState),
                d_MAlab(MAlb),
                d_physicalConsts(physConst),
-               _task_factory_map(task_factory_map),
+               _particlesHelper( particle_helper ),
                d_hypreSolver(hypreSolver)
 {
 
@@ -195,16 +205,16 @@ ExplicitSolver(SimulationStateP& sharedState,
 // ****************************************************************************
 ExplicitSolver::~ExplicitSolver()
 {
+
   delete d_lab;
   delete d_props;
+  delete d_tabulated_properties;
   delete d_turbModel;
   delete d_scaleSimilarityModel;
   delete d_boundaryCondition;
   delete d_pressSolver;
   delete d_momSolver;
-  delete d_eff_calculator;
   delete d_timeIntegrator;
-  delete d_rad_prop_calc;
   if (d_doDQMOM) {
     delete d_dqmomSolver;
     delete d_partVel;
@@ -223,6 +233,11 @@ ExplicitSolver::~ExplicitSolver()
   if ( d_wall_ht_models != 0 ){
     delete d_wall_ht_models;
   }
+
+  for (auto i = m_bcHelper.begin(); i != m_bcHelper.end(); i++){
+    delete i->second;
+  }
+  m_bcHelper.clear();
 }
 
 // ****************************************************************************
@@ -234,6 +249,30 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
                               GridP& grid )
 {
 
+  ArchesCore::TaskController& tsk_controller = ArchesCore::TaskController::self();
+  tsk_controller.parse_task_controller(params);
+
+  // check to see what radiation calc frequency is (default is 1)
+  ProblemSpecP transport_ps = params->findBlock("TransportEqns");
+  if (transport_ps) {
+    ProblemSpecP sources_ps = transport_ps->findBlock("Sources");
+    if (sources_ps) {
+      ProblemSpecP rad_src_ps = sources_ps->findBlock("src");
+      // find the "divQ" src block for the radiation calculation frequency
+      while ( rad_src_ps !=nullptr) {
+        std::string src_type = "";
+        rad_src_ps->getAttribute("type", src_type);
+        if (src_type == "do_radiation" || src_type == "rmcrt_radiation" ){
+          rad_src_ps->require("calc_frequency", d_rad_calc_frequency);
+          d_num_taskgraphs=2;
+          break;
+        }
+        rad_src_ps = rad_src_ps->findNextBlock("src");
+      }
+    }
+  }
+
+
   ProblemSpecP db_es = params->findBlock("ExplicitSolver");
   ProblemSpecP db = params;
 
@@ -242,6 +281,69 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
   d_archesLevelIndex = grid->numLevels()-1; // this is the finest level
 
   //------------------------------------------------------------------------------------------------
+  //Look for coal information
+  if( db->findBlock("ParticleProperties") ) {
+    string particle_type;
+    db->findBlock("ParticleProperties")->getAttribute("type", particle_type);
+    if ( particle_type == "coal" ) {
+      CoalHelper& coal_helper = CoalHelper::self();
+      coal_helper.parse_for_coal_info( db );
+    } else {
+      throw InvalidValue("Error: Particle type not recognized. Current types supported: coal",__FILE__,__LINE__);
+    }
+  }
+
+  //------------------ New Task Interface (start) --------------------------------------------------
+
+  //build the factories
+  std::shared_ptr<UtilityFactory> UtilF(scinew UtilityFactory());
+  std::shared_ptr<TransportFactory> TransF(scinew TransportFactory());
+  std::shared_ptr<InitializeFactory> InitF(scinew InitializeFactory());
+  std::shared_ptr<ParticleModelFactory> PartModF(scinew ParticleModelFactory());
+  std::shared_ptr<LagrangianParticleFactory> LagF(scinew LagrangianParticleFactory());
+  std::shared_ptr<PropertyModelFactoryV2> PropModelsF(scinew PropertyModelFactoryV2());
+  std::shared_ptr<TurbulenceModelFactory> TurbModelF(scinew TurbulenceModelFactory());
+  std::shared_ptr<BoundaryConditionFactory> BCF(scinew BoundaryConditionFactory());
+  std::shared_ptr<SourceTermFactoryV2> SourceTermV2F(scinew SourceTermFactoryV2());
+
+  _task_factory_map.clear();
+  _task_factory_map.insert(std::make_pair("utility_factory",UtilF));
+  _task_factory_map.insert(std::make_pair("transport_factory",TransF));
+  _task_factory_map.insert(std::make_pair("initialize_factory",InitF));
+  _task_factory_map.insert(std::make_pair("particle_model_factory",PartModF));
+  _task_factory_map.insert(std::make_pair("lagrangian_factory",LagF));
+  _task_factory_map.insert(std::make_pair("turbulence_model_factory", TurbModelF));
+  _task_factory_map.insert(std::make_pair("boundary_condition_factory", BCF));
+  _task_factory_map.insert(std::make_pair("property_models_factory", PropModelsF));
+  _task_factory_map.insert(std::make_pair("source_term_factory",SourceTermV2F));
+
+  typedef std::map<std::string, std::shared_ptr<TaskFactoryBase> > BFM;
+  proc0cout << "\n Registering Tasks For: " << std::endl;
+  for ( BFM::iterator i = _task_factory_map.begin(); i != _task_factory_map.end(); i++ ) {
+
+    proc0cout << "   " << i->first << std::endl;
+    i->second->set_shared_state(d_sharedState);
+    i->second->register_all_tasks(db);
+
+  }
+
+  proc0cout << "\n Building Tasks For: " << std::endl;
+
+  for ( BFM::iterator i = _task_factory_map.begin(); i != _task_factory_map.end(); i++ ) {
+
+    proc0cout << "   " << i->first << std::endl;
+    i->second->build_all_tasks(db);
+
+  }
+
+  proc0cout << endl;
+
+  //Checking for lagrangian particles:
+  _doLagrangianParticles = m_arches_spec->findBlock("LagrangianParticles");
+
+  //------------------ New Task Interface (end) ----------------------------------------------------
+
+
   //create a time integrator.
   d_timeIntegrator = scinew ExplicitTimeInt(d_lab);
   ProblemSpecP time_db = db->findBlock("TimeIntegrator");
@@ -278,7 +380,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
     // Go through eqns and intialize all defined eqns and call their respective
     // problem setup
     EqnFactory& eqn_factory = EqnFactory::self();
-    for (ProblemSpecP eqn_db = transportEqn_db->findBlock("Eqn"); eqn_db != 0; eqn_db = eqn_db->findNextBlock("Eqn")) {
+    for (ProblemSpecP eqn_db = transportEqn_db->findBlock("Eqn"); eqn_db != nullptr; eqn_db = eqn_db->findNextBlock("Eqn")) {
 
       std::string eqnname;
       eqn_db->getAttribute("label", eqnname);
@@ -299,42 +401,19 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
 
       SourceTermFactory& src_factory = SourceTermFactory::self();
 
-      for (ProblemSpecP eqn_db = transportEqn_db->findBlock("Eqn"); eqn_db != 0; eqn_db = eqn_db->findNextBlock("Eqn")) {
-
-        for (ProblemSpecP src_db = eqn_db->findBlock("src"); src_db != 0; src_db = src_db->findNextBlock("src")) {
-
-          std::string srcname;
-          src_db->getAttribute("label", srcname);
-
-          for ( ProblemSpecP found_src_db = transportEqn_db->findBlock("Sources")->findBlock("src"); found_src_db != 0;
-                found_src_db = found_src_db->findNextBlock("src")) {
-
-            string check_label;
-            found_src_db->getAttribute("label",check_label);
-
-            if ( check_label == srcname ) {
-
-              vector<string>::iterator it = find( used_sources.begin(), used_sources.end(), srcname);
-
-              if ( it == used_sources.end() ) {
-                used_sources.push_back( srcname );
-
-                SourceTermBase& a_src = src_factory.retrieve_source_term( srcname );
-                a_src.problemSetup( found_src_db );
-
-                //Add any table lookup species to the table lookup list:
-                ChemHelper::TableLookup*  tbl_lookup = a_src.get_tablelookup_species();
-                if ( tbl_lookup != nullptr )
-                  d_lab->add_species_struct( tbl_lookup );
-
-              }
-            }
-          }
-        }
+      for ( ProblemSpecP src_db = sources_db->findBlock("src"); src_db != nullptr; src_db = src_db->findNextBlock("src") ){
+        std::string label;
+        src_db->getAttribute("label", label);
+        SourceTermBase& the_src = src_factory.retrieve_source_term( label );
+        the_src.problemSetup( src_db );
       }
+
+      src_factory.commonSrcProblemSetup( sources_db );
+
     }
 
-  } else {
+  }
+  else {
 
     proc0cout << "No defined transport equations found." << endl;
 
@@ -345,8 +424,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
     ProblemSpecP propmodels_db = db->findBlock("PropertyModels");
     PropertyModelFactory& prop_factory = PropertyModelFactory::self();
     ExplicitSolver::registerPropertyModels( propmodels_db );
-    for ( ProblemSpecP prop_db = propmodels_db->findBlock("model");
-          prop_db != 0; prop_db = prop_db->findNextBlock("model") ) {
+    for ( ProblemSpecP prop_db = propmodels_db->findBlock("model"); prop_db != nullptr; prop_db = prop_db->findNextBlock("model") ) {
 
       std::string model_name;
       prop_db->getAttribute("label", model_name);
@@ -359,17 +437,11 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
     }
   }
 
-  //Radiation Properties:
-  ProblemSpecP rad_properties_db = db->findBlock("RadiationProperties");
-  int matl_index = d_lab->d_sharedState->getArchesMaterial(0)->getDWIndex();
-  d_rad_prop_calc = scinew RadPropertyCalculator(matl_index);
-  if ( rad_properties_db ) {
-    d_rad_prop_calc->problemSetup(rad_properties_db);
-  }
-
   // read properties
   // d_MAlab = multimaterial arches common labels
   d_props = scinew Properties(d_lab, d_MAlab, d_physicalConsts, d_myworld);
+  d_tabulated_properties = scinew TableLookup( d_lab->d_sharedState );
+  d_tabulated_properties->problemSetup( db );
 
   d_props->problemSetup(db);
 
@@ -381,9 +453,9 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
 
     PropertyModelBase* prop_model = iprop->second;
     if ( prop_model->getPropType() == "heat_loss" ) {
-      MixingRxnModel* mixing_table = d_props->getMixRxnModel();
+      MixingRxnModel* mixing_table = d_tabulated_properties->get_table();
       std::map<string,double> table_constants = mixing_table->getAllConstants();
-      if (d_props->getMixingModelType() == "ClassicTable" ) {
+      if ( d_tabulated_properties->get_table_type() == TableLookup::CLASSIC ) {
 
         ClassicTableInterface* classic_table = dynamic_cast<ClassicTableInterface*>(mixing_table);
         std::vector<double> hl_bounds;
@@ -409,13 +481,12 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
 
   // read boundary condition information
   d_boundaryCondition = scinew BoundaryCondition(d_lab, d_MAlab, d_physicalConsts,
-                                                 d_props );
+                                                 d_props, d_tabulated_properties );
 
   // send params, boundary type defined at the level of Grid
-  d_boundaryCondition->problemSetup(db);
+  d_boundaryCondition->problemSetup(db,  grid);
 
   std::string whichTurbModel = "none";
-
   if ( db->findBlock("Turbulence") ) {
     db->findBlock("Turbulence")->getAttribute("model",whichTurbModel);
   }
@@ -434,7 +505,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
     d_turbModel = scinew TurbulenceModelPlaceholder(d_lab, d_MAlab, d_physicalConsts,
                                                     d_boundaryCondition);
   } else {
-    proc0cout << "\n Notice: No Turbulence model found. \n" << endl;
+    proc0cout << "\n Notice: No (old interface) Turbulence model was found. \n" << endl;
   }
 
   d_turbModel->problemSetup(db);
@@ -451,8 +522,6 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
   d_props->setBC(d_boundaryCondition);
 
   // ----- DQMOM STUFF:
-
-
   ProblemSpecP dqmom_db = db->findBlock("DQMOM");
   if (dqmom_db) {
 
@@ -461,7 +530,8 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
 
     // require that we have weighted or unweighted explicitly specified as an attribute to DQMOM
     // type = "unweightedAbs" or type = "weighedAbs"
-    dqmom_db->getAttribute( "type", d_which_dqmom );
+    //dqmom_db->getAttribute( "type", d_which_dqmom );
+    d_which_dqmom = "weighedAbs";
 
     ProblemSpecP db_linear_solver = dqmom_db->findBlock("LinearSolver");
     if( db_linear_solver ) {
@@ -512,7 +582,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
     }
 
     // loop for all ic's
-    for (ProblemSpecP ic_db = dqmom_db->findBlock("Ic"); ic_db != 0; ic_db = ic_db->findNextBlock("Ic")) {
+    for (ProblemSpecP ic_db = dqmom_db->findBlock("Ic"); ic_db != nullptr; ic_db = ic_db->findNextBlock("Ic")) {
       std::string ic_name;
       ic_db->getAttribute("label", ic_name);
       //loop for all quad nodes for this internal coordinate
@@ -536,7 +606,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
     // their respective problemSetup
     ProblemSpecP models_db = dqmom_db->findBlock("Models");
     if (models_db) {
-      for (ProblemSpecP m_db = models_db->findBlock("model"); m_db != 0; m_db = m_db->findNextBlock("model")) {
+      for (ProblemSpecP m_db = models_db->findBlock("model"); m_db != nullptr; m_db = m_db->findNextBlock("model")) {
         std::string model_name;
         m_db->getAttribute("label", model_name);
         for (int iqn = 0; iqn < numQuadNodes; iqn++) {
@@ -583,8 +653,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
     int M;
     cqmom_db->get("NumberInternalCoordinates",M);
     vector<int> temp_moment_index;
-    for ( ProblemSpecP db_moments = cqmom_db->findBlock("Moment");
-          db_moments != 0; db_moments = db_moments->findNextBlock("Moment") ) {
+    for ( ProblemSpecP db_moments = cqmom_db->findBlock("Moment"); db_moments != nullptr; db_moments = db_moments->findNextBlock("Moment") ) {
       temp_moment_index.resize(0);
       db_moments->get("m", temp_moment_index);
       proc0cout << "Index " << temp_moment_index << " ";
@@ -626,14 +695,15 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
 
 
   // do any last setup operations on the active source terms:
-  src_factory.extraSetup( grid, d_boundaryCondition, d_props );
+  src_factory.extraSetup( grid, d_boundaryCondition, d_tabulated_properties );
 
   // Add extra species to table lookup as required by models
-  d_props->addLookupSpecies();
+  //d_props->addLookupSpecies();
+  d_tabulated_properties->addLookupSpecies();
 
   // Add new intrusion stuff:
   // get a reference to the intrusions
-  IntrusionBC* intrusion_ref = d_boundaryCondition->get_intrusion_ref();
+  const std::map<int, IntrusionBC*> intrusion_ref = d_boundaryCondition->get_intrusion_ref();
   bool using_new_intrusions = d_boundaryCondition->is_using_new_intrusion();
 
   if(d_doDQMOM)
@@ -667,7 +737,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
     eqn->set_intrusion_bool( using_new_intrusions );
 
     //send a reference of the mixing/rxn table to the eqn for initializiation
-    MixingRxnModel* d_mixingTable = d_props->getMixRxnModel();
+    MixingRxnModel* d_mixingTable = d_tabulated_properties->get_table();
     eqn->set_table( d_mixingTable );
 
     //look for an set any tabulated bc's
@@ -699,9 +769,10 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
 
   d_momSolver = scinew MomentumSolver(d_lab, d_MAlab,
                                       d_turbModel, d_boundaryCondition,
-                                      d_physicalConsts);
+                                      d_physicalConsts,
+                                      &_task_factory_map );
 
-  d_momSolver->problemSetup(db_es);
+  d_momSolver->problemSetup(db_es, state);
 
   const ProblemSpecP params_root = db->getRootNode();
   std::string t_order;
@@ -709,8 +780,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
   db_time_int->findBlock("ExplicitIntegrator")->getAttribute("order", t_order);
 
   ProblemSpecP db_vars  = params_root->findBlock("DataArchiver");
-  for (ProblemSpecP db_dv = db_vars->findBlock("save");
-        db_dv !=0; db_dv = db_dv->findNextBlock("save")){
+  for( ProblemSpecP db_dv = db_vars->findBlock("save"); db_dv != nullptr; db_dv = db_dv->findNextBlock("save") ){
 
     std::string var_name;
     db_dv->getAttribute( "label", var_name );
@@ -723,11 +793,14 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
   //translate order to the older code:
   if ( t_order == "first" ){
     d_timeIntegratorType = "FE";
-  } else if ( t_order == "second" ){
+  }
+  else if ( t_order == "second" ){
     d_timeIntegratorType = "RK2SSP";
-  } else if ( t_order == "third" ) {
+  }
+  else if ( t_order == "third" ) {
     d_timeIntegratorType = "RK3SSP";
-  } else {
+  }
+  else {
     throw InvalidValue("Error: <ExplicitIntegrator> order attribute must be one of: first, second, third!  Please fix input file.",__FILE__, __LINE__);
   }
 
@@ -791,20 +864,12 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
 
   d_mixedModel=d_turbModel->getMixedModel();
 
-  bool check_calculator;
-  d_eff_calculator = scinew EfficiencyCalculator( d_boundaryCondition, d_lab );
-  check_calculator = d_eff_calculator->problemSetup( db );
-
-  if ( !check_calculator ){
-    proc0cout << "Notice: No efficiency calculators found." << endl;
-  }
-
   //__________________________________
   // allow for addition of mass source terms
   if (db_es->findBlock("PressureSolver")->findBlock("src")){
     ProblemSpecP db_p = db_es->findBlock("PressureSolver");
     string srcname;
-    for (ProblemSpecP src_db = db_p->findBlock("src"); src_db != 0; src_db = src_db->findNextBlock("src")){
+    for (ProblemSpecP src_db = db_p->findBlock("src"); src_db != nullptr; src_db = src_db->findNextBlock("src")){
       src_db->getAttribute("label", srcname);
       d_mass_sources.push_back( srcname );
     }
@@ -848,7 +913,7 @@ ExplicitSolver::computeTimestep(const LevelP& level, SchedulerP& sched)
     tsk->requires(Task::NewDW, d_celltype_label,  gac, 1);
   }
 
-  tsk->computes(d_sharedState->get_delt_label(),level.get_rep());
+  tsk->computes(d_lab->d_delTLabel,level.get_rep());
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 
 }
@@ -938,7 +1003,7 @@ ExplicitSolver::computeStableTimeStep(const ProcessorGroup*,
             double tmp_time;
 
 //            if (d_MAlab) {
-            int flag = 1;
+            int flag = true;
             int colXm = colX - 1;
             int colXp = colX + 1;
             int colYm = colY - 1;
@@ -964,13 +1029,13 @@ ExplicitSolver::computeStableTimeStep(const ProcessorGroup*,
             if (den[xMinusCell] < 1.0e-12) uvel=uVelocity[xPlusCell];
             if (den[yMinusCell] < 1.0e-12) vvel=vVelocity[yPlusCell];
             if (den[zMinusCell] < 1.0e-12) wvel=wVelocity[zPlusCell];
-            if (den[currCell] < 1.0e-12) flag = 0;
-            if ((den[xMinusCell] < 1.0e-12)&&(den[xPlusCell] < 1.0e-12)) flag = 0;
-            if ((den[yMinusCell] < 1.0e-12)&&(den[yPlusCell] < 1.0e-12)) flag = 0;
-            if ((den[zMinusCell] < 1.0e-12)&&(den[zPlusCell] < 1.0e-12)) flag = 0;
+            if (den[currCell] < 1.0e-12) flag = false;
+            if ((den[xMinusCell] < 1.0e-12)&&(den[xPlusCell] < 1.0e-12)) flag = false;
+            if ((den[yMinusCell] < 1.0e-12)&&(den[yPlusCell] < 1.0e-12)) flag = false;
+            if ((den[zMinusCell] < 1.0e-12)&&(den[zPlusCell] < 1.0e-12)) flag = false;
 
             tmp_time=1.0;
-            if (flag != 0) {
+            if (flag != false) {
               tmp_time=Abs(uvel)/(DX.x())+
                         Abs(vvel)/(DX.y())+
                         Abs(wvel)/(DX.z())+
@@ -1023,223 +1088,215 @@ ExplicitSolver::computeStableTimeStep(const ProcessorGroup*,
 
 
       delta_t = delta_t2;
-      new_dw->put(delt_vartype(delta_t),  d_sharedState->get_delt_label(), level);
+      new_dw->put(delt_vartype(delta_t), d_lab->d_delTLabel, level);
 
     }
   } else { // if not on the arches level
 
-    new_dw->put(delt_vartype(9e99),  d_sharedState->get_delt_label(),level);
+    new_dw->put(delt_vartype(9e99), d_lab->d_delTLabel,level);
 
   }
 }
 
 void
-ExplicitSolver::initialize( const LevelP& level,
-                            SchedulerP& sched,
-                            const bool doing_restart )
+ExplicitSolver::initialize( const LevelP     & level,
+                                  SchedulerP & sched,
+                            const bool         doing_restart )
 {
 
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
 
-  //formerly known as paramInit
-  sched_initializeVariables( level, sched );
+  setupBoundaryConditions( level, sched, false );
 
-  //check the sanity of the momentum BCs
-  d_boundaryCondition->sched_checkMomBCs( sched, level, matls );
+  d_tabulated_properties->set_bcHelper( m_bcHelper[level->getIndex()] );
 
-  //initialize cell type
-  d_boundaryCondition->sched_cellTypeInit( sched, level, matls );
+  if ( level->getIndex() == d_archesLevelIndex ){
 
-  // compute the cell area fraction
-  d_boundaryCondition->sched_setAreaFraction( sched, level, matls, 0, true );
+    //formerly known as paramInit
+    sched_initializeVariables( level, sched );
 
-  // setup intrusion cell type
-  d_boundaryCondition->sched_setupNewIntrusionCellType( sched, level, matls, false );
+    //------------------ New Task Interface (start) ------------------------------------------------
 
-  //AF must be called again to account for intrusions (can this be the ONLY call?)
-  d_boundaryCondition->sched_setAreaFraction( sched, level, matls, 1, true );
+    typedef std::map<std::string, std::shared_ptr<TaskFactoryBase> > BFM;
+    BFM::iterator i_util_fac = _task_factory_map.find("utility_factory");
+    BFM::iterator i_trans_fac = _task_factory_map.find("transport_factory");
+    BFM::iterator i_init_fac = _task_factory_map.find("initialize_factory");
+    BFM::iterator i_partmod_fac = _task_factory_map.find("particle_model_factory");
+    BFM::iterator i_lag_fac = _task_factory_map.find("lagrangian_factory");
+    BFM::iterator i_property_models_fac = _task_factory_map.find("property_models_factory");
+    BFM::iterator i_turb_model_fac = _task_factory_map.find("turbulence_model_factory");
 
-  d_turbModel->sched_computeFilterVol( sched, level, matls );
+    i_trans_fac->second->set_bcHelper( m_bcHelper[level->getID()] );
 
-  typedef std::map<std::string, boost::shared_ptr<TaskFactoryBase> > BFM;
-  BFM::iterator i_util_fac = _task_factory_map.find("utility_factory");
-  BFM::iterator i_trans_fac = _task_factory_map.find("transport_factory");
-  BFM::iterator i_init_fac = _task_factory_map.find("initialize_factory");
-  BFM::iterator i_partmod_fac = _task_factory_map.find("particle_model_factory");
-  BFM::iterator i_lag_fac = _task_factory_map.find("lagrangian_factory");
-  BFM::iterator i_property_models_fac = _task_factory_map.find("property_models_factory");
+    bool is_restart = false;
+    const bool dont_pack_tasks = false;
+    TaskFactoryBase::TaskMap all_tasks;
 
-  bool is_restart = false;
-  //utility factory
-  TaskFactoryBase::TaskMap all_tasks = i_util_fac->second->retrieve_all_tasks();
-  for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++) {
-    i->second->schedule_init(level, sched, matls, is_restart);
-  }
+    //utility factory
+    _task_factory_map["utility_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
 
-  //transport factory
-  all_tasks.clear();
-  all_tasks = i_trans_fac->second->retrieve_all_tasks();
-  for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++) {
-    i->second->schedule_init(level, sched, matls, is_restart);
-    i->second->schedule_task(level, sched, matls, TaskInterface::BC_TASK, 0);
-  }
+    //transport factory
+    //  initialize
+    _task_factory_map["transport_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
+    //  apply BCs
+    _task_factory_map["transport_factory"]->schedule_task_group( "all_tasks", TaskInterface::BC, dont_pack_tasks, level, sched, matls );
 
-  //Sets the helper to the factory and assigns it to each active task
-  i_trans_fac->second->set_bchelper( _bcHelperMap );
+    // boundary condition factory
+    _task_factory_map["boundary_condition_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
 
-  //initialize factory
-  all_tasks.clear();
-  all_tasks = i_init_fac->second->retrieve_all_tasks();
-  for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++) {
-    if ( i->first == "Lx" || i->first == "Lvel" || i->first == "Ld") {
-      std::cout << "Delaying particle calc..." << std::endl;
-    } else {
-      i->second->schedule_init(level, sched, matls, is_restart);
+    //initialize factory
+    all_tasks.clear();
+    all_tasks = i_init_fac->second->retrieve_all_tasks();
+    for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++) {
+      if ( i->first == "Lx" || i->first == "Lvel" || i->first == "Ld") {
+        std::cout << "Delaying particle calc..." << std::endl;
+      } else {
+        i->second->schedule_init(level, sched, matls, is_restart);
+      }
     }
-  }
-  //have to delay and order these specific tasks...clean this up later...
-  TaskFactoryBase::TaskMap::iterator iLX = all_tasks.find("Lx");
-  if ( iLX != all_tasks.end() ) iLX->second->schedule_init(level, sched, matls, is_restart);
-  TaskFactoryBase::TaskMap::iterator iLD = all_tasks.find("Ld");
-  if ( iLD != all_tasks.end() ) iLD->second->schedule_init(level, sched, matls, is_restart);
-  TaskFactoryBase::TaskMap::iterator iLV = all_tasks.find("Lvel");
-  if ( iLV != all_tasks.end() ) iLV->second->schedule_init(level, sched, matls, is_restart);
 
-  //lagrangian particles
-  all_tasks.clear();
-  all_tasks = i_lag_fac->second->retrieve_all_tasks();
-  for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++) {
-    i->second->schedule_init(level, sched, matls, is_restart );
-  }
+    //have to delay and order these specific tasks...clean this up later...
+    TaskFactoryBase::TaskMap::iterator iLX = all_tasks.find("Lx");
+    if ( iLX != all_tasks.end() ) iLX->second->schedule_init(level, sched, matls, is_restart);
+    TaskFactoryBase::TaskMap::iterator iLD = all_tasks.find("Ld");
+    if ( iLD != all_tasks.end() ) iLD->second->schedule_init(level, sched, matls, is_restart);
+    TaskFactoryBase::TaskMap::iterator iLV = all_tasks.find("Lvel");
+    if ( iLV != all_tasks.end() ) iLV->second->schedule_init(level, sched, matls, is_restart);
 
-  sched_scalarInit(level, sched);
+    //lagrangian particles
+    all_tasks.clear();
+    all_tasks = i_lag_fac->second->retrieve_all_tasks();
+    for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++) {
+      i->second->schedule_init(level, sched, matls, is_restart );
+    }
 
-  //property models
-  all_tasks.clear();
-  all_tasks = i_property_models_fac->second->retrieve_all_tasks();
-  for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++) {
-    i->second->schedule_init(level, sched, matls, is_restart );
-  }
+    //turbulence models
+    i_turb_model_fac->second->schedule_initialization( level, sched, matls, is_restart );
 
-  // Property model initialization
-  PropertyModelFactory& propFactory = PropertyModelFactory::self();
-  PropertyModelFactory::PropMap& all_prop_models = propFactory.retrieve_all_property_models();
-  for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin();
-        iprop != all_prop_models.end(); iprop++) {
+    //------------------ New Task Interface (end) ------------------------------------------------
 
-    PropertyModelBase* prop_model = iprop->second;
-    prop_model->sched_initialize( level, sched );
-  }
+    sched_scalarInit( level, sched );
 
-  IntVector periodic_vector = level->getPeriodicBoundaries();
-  bool d_3d_periodic = (periodic_vector == IntVector(1,1,1));
-  d_turbModel->set3dPeriodic(d_3d_periodic);
-  d_props->set3dPeriodic(d_3d_periodic);
+    //------------------ New Task Interface (start) ------------------------------------------------
+    //property models v2
+    i_property_models_fac->second->schedule_initialization( level, sched, matls, false );
+    //------------------ New Task Interface (end) ------------------------------------------------
 
-  // Table Lookup
-  bool initialize_it = true;
-  bool modify_ref_den = true;
-  int time_substep = 0; //no meaning here, but is required to be zero for
-                        //variables to be properly allocated.
-                        //
-  d_props->doTableMatching();
-  d_props->sched_checkTableBCs( level, sched );
-  d_props->sched_computeProps( level, sched, initialize_it, modify_ref_den, time_substep );
+    //(old) Property model initialization
+    PropertyModelFactory& propFactory = PropertyModelFactory::self();
+    PropertyModelFactory::PropMap& all_prop_models = propFactory.retrieve_all_property_models();
+    for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin();
+          iprop != all_prop_models.end(); iprop++) {
 
-  d_init_timelabel = scinew TimeIntegratorLabel(d_lab, TimeIntegratorStepType::FE);
+      PropertyModelBase* prop_model = iprop->second;
+      prop_model->sched_initialize( level, sched );
+    }
 
-  for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin();
-        iprop != all_prop_models.end(); iprop++) {
-    PropertyModelBase* prop_model = iprop->second;
-    if ( prop_model->initType()=="physical" )
-      prop_model->sched_computeProp( level, sched, 1 );
-  }
+    IntVector periodic_vector = level->getPeriodicBoundaries();
+    bool d_3d_periodic = (periodic_vector == IntVector(1,1,1));
+    d_turbModel->set3dPeriodic(d_3d_periodic);
+    d_props->set3dPeriodic(d_3d_periodic);
 
-  //Setup BC areas
-  d_boundaryCondition->sched_computeBCArea( sched, level, matls );
+    // Table Lookup
+    bool initialize_it = true;
+    bool modify_ref_den = true;
+    int time_substep = 0; //no meaning here, but is required to be zero for
+                          //variables to be properly allocated.
 
-  //For debugging
-  //d_boundaryCondition->printBCInfo();
+    d_tabulated_properties->sched_checkTableBCs( level, sched );
+    d_tabulated_properties->sched_getState( level, sched, initialize_it, modify_ref_den, time_substep );
 
-  //Setup initial inlet velocities
-  d_boundaryCondition->sched_setupBCInletVelocities( sched, level, matls, doing_restart );
+    d_init_timelabel = scinew TimeIntegratorLabel(d_lab, TimeIntegratorStepType::FE);
 
-  //Set the initial profiles
-  d_boundaryCondition->sched_setInitProfile( sched, level, matls );
+    for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin();
+          iprop != all_prop_models.end(); iprop++) {
+      PropertyModelBase* prop_model = iprop->second;
+      if ( prop_model->initType()=="physical" )
+        prop_model->sched_computeProp( level, sched, 1 );
+    }
 
-  //Setup the intrusions.
-  d_boundaryCondition->sched_setupNewIntrusions( sched, level, matls );
+    //For debugging
+    //d_boundaryCondition->printBCInfo();
 
-  sched_setInitVelCond( level, sched, matls );
+    //Setup initial inlet velocities
+    d_boundaryCondition->sched_setupBCInletVelocities( sched, level, matls, doing_restart,false );
 
-  sched_getCCVelocities(level, sched);
+    //Set the initial profiles
+    d_boundaryCondition->sched_setInitProfile( sched, level, matls );
 
-  d_turbModel->sched_reComputeTurbSubmodel(sched, level, matls, d_init_timelabel);
+    //Setup the intrusions.
+    d_boundaryCondition->sched_setupNewIntrusions( sched, level, matls );
 
-  //----------------------
-  //DQMOM initialization
-  if(d_doDQMOM)
-  {
-    sched_weightInit(level, sched);
-    sched_weightedAbsInit(level, sched);
+    sched_setInitVelCond( level, sched, matls );
 
-    // check to make sure that all dqmom equations have BCs set.
-    DQMOMEqnFactory& dqmom_factory = DQMOMEqnFactory::self();
-    DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmom_factory.retrieve_all_eqns();
-    for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++) {
+    sched_getCCVelocities(level, sched);
+
+    d_turbModel->sched_reComputeTurbSubmodel(sched, level, matls, d_init_timelabel);
+
+    //----------------------
+    //DQMOM initialization
+    if(d_doDQMOM)
+    {
+      sched_weightInit(level, sched);
+      sched_weightedAbsInit(level, sched);
+
+      // check to make sure that all dqmom equations have BCs set.
+      DQMOMEqnFactory& dqmom_factory = DQMOMEqnFactory::self();
+      DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmom_factory.retrieve_all_eqns();
+      for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++) {
+        EqnBase* eqn = ieqn->second;
+        eqn->sched_checkBCs( level, sched, false );
+        //as needed for the coal propery models
+        DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(ieqn->second);
+        dqmom_eqn->sched_getUnscaledValues( level, sched );
+      }
+      d_partVel->schedInitPartVel(level, sched);
+    }
+
+    //----------------------
+    //CQMOM initialization
+    if(d_doCQMOM)
+    {
+      sched_momentInit( level, sched );
+
+      // check to make sure that all cqmom equations have BCs set.
+      CQMOMEqnFactory& cqmom_factory = CQMOMEqnFactory::self();
+      CQMOMEqnFactory::EqnMap& cqmom_eqns = cqmom_factory.retrieve_all_eqns();
+      for (CQMOMEqnFactory::EqnMap::iterator ieqn=cqmom_eqns.begin(); ieqn != cqmom_eqns.end(); ieqn++) {
+        EqnBase* eqn = ieqn->second;
+        eqn->sched_checkBCs( level, sched,false );
+      }
+      //call the cqmom inversion so weights and abscissas are calculated at the start
+      d_cqmomSolver->sched_solveCQMOMInversion( level, sched, 0 );
+    }
+
+    //------------------ New Task Interface (start) ------------------------------------------------
+    //particle models
+    all_tasks.clear();
+    all_tasks = i_partmod_fac->second->retrieve_all_tasks();
+    for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++) {
+      i->second->schedule_init(level, sched, matls, is_restart );
+    }
+    //------------------ New Task Interface (end) ------------------------------------------------
+
+    // check to make sure that all the scalar variables have BCs set and set intrusions:
+    EqnFactory& eqnFactory = EqnFactory::self();
+    EqnFactory::EqnMap& scalar_eqns = eqnFactory.retrieve_all_eqns();
+    for (EqnFactory::EqnMap::iterator ieqn=scalar_eqns.begin(); ieqn != scalar_eqns.end(); ieqn++) {
       EqnBase* eqn = ieqn->second;
-      eqn->sched_checkBCs( level, sched );
-      //as needed for the coal propery models
-      DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(ieqn->second);
-      dqmom_eqn->sched_getUnscaledValues( level, sched );
+      eqn->sched_checkBCs( level, sched,false );
+
+      // also, do table initialization here since all scalars should be initialized by now
+      if (eqn->does_table_initialization()) {
+        eqn->sched_tableInitialization( level, sched );
+      }
     }
-    d_partVel->schedInitPartVel(level, sched);
+
+    d_boundaryCondition->sched_setIntrusionTemperature( sched, level, matls );
+
+    d_boundaryCondition->sched_create_radiation_temperature( sched, level, matls, false );
+
   }
-
-  //----------------------
-  //CQMOM initialization
-  if(d_doCQMOM)
-  {
-    sched_momentInit( level, sched );
-
-    // check to make sure that all cqmom equations have BCs set.
-    CQMOMEqnFactory& cqmom_factory = CQMOMEqnFactory::self();
-    CQMOMEqnFactory::EqnMap& cqmom_eqns = cqmom_factory.retrieve_all_eqns();
-    for (CQMOMEqnFactory::EqnMap::iterator ieqn=cqmom_eqns.begin(); ieqn != cqmom_eqns.end(); ieqn++) {
-      EqnBase* eqn = ieqn->second;
-      eqn->sched_checkBCs( level, sched );
-    }
-    //call the cqmom inversion so weights and abscissas are calculated at the start
-    d_cqmomSolver->sched_solveCQMOMInversion( level, sched, 0 );
-  }
-
-  //=================================================================================
-  //NEW TASK INTERFACE
-  //
-  //particle models
-  all_tasks.clear();
-  all_tasks = i_partmod_fac->second->retrieve_all_tasks();
-  for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++) {
-    i->second->schedule_init(level, sched, matls, is_restart );
-  }
-  //=================================================================================
-
-  // check to make sure that all the scalar variables have BCs set and set intrusions:
-  EqnFactory& eqnFactory = EqnFactory::self();
-  EqnFactory::EqnMap& scalar_eqns = eqnFactory.retrieve_all_eqns();
-  for (EqnFactory::EqnMap::iterator ieqn=scalar_eqns.begin(); ieqn != scalar_eqns.end(); ieqn++) {
-    EqnBase* eqn = ieqn->second;
-    eqn->sched_checkBCs( level, sched );
-
-    // also, do table initialization here since all scalars should be initialized by now
-    if (eqn->does_table_initialization()) {
-      eqn->sched_tableInitialization( level, sched );
-    }
-  }
-
-  d_boundaryCondition->sched_setIntrusionTemperature( sched, level, matls );
-
-  d_boundaryCondition->sched_create_radiation_temperature( sched, level, matls, false );
 
 }
 
@@ -1248,7 +1305,7 @@ ExplicitSolver::sched_initializeVariables( const LevelP& level,
                                            SchedulerP& sched )
 {
 
-  Task* tsk = scinew Task( "ExplicitSolver", this, &ExplicitSolver::initializeVariables);
+  Task* tsk = scinew Task( "ExplicitSolver::initializeVariables", this, &ExplicitSolver::initializeVariables);
 
   tsk->computes(d_lab->d_cellInfoLabel);
   tsk->computes(d_lab->d_uVelocitySPBCLabel);
@@ -1284,6 +1341,18 @@ ExplicitSolver::sched_initializeVariables( const LevelP& level,
 
   if ( VarLabel::find("deposit_thickness"))
     tsk->computes(VarLabel::find("deposit_thickness"));
+  if ( VarLabel::find("deposit_thickness_sb_s"))
+    tsk->computes(VarLabel::find("deposit_thickness_sb_s"));
+  if ( VarLabel::find("deposit_thickness_sb_l"))
+    tsk->computes(VarLabel::find("deposit_thickness_sb_l"));
+  if ( VarLabel::find("emissivity"))
+    tsk->computes(VarLabel::find("emissivity"));
+  if ( VarLabel::find("thermal_cond_en"))
+    tsk->computes(VarLabel::find("thermal_cond_en"));
+  if ( VarLabel::find("thermal_cond_sb_s"))
+    tsk->computes(VarLabel::find("thermal_cond_sb_s"));
+  if ( VarLabel::find("thermal_cond_sb_l"))
+    tsk->computes(VarLabel::find("thermal_cond_sb_l"));
 
 sched->addTask(tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials());
 
@@ -1293,23 +1362,70 @@ void
 ExplicitSolver::sched_restartInitialize( const LevelP& level, SchedulerP& sched )
 {
 
-  //bool doingRestart = true;
-  //__________________________________
-  //  initialize src terms
-  SourceTermFactory& srcFactory = SourceTermFactory::self();
-  SourceTermFactory::SourceMap& sources = srcFactory.retrieve_all_sources();
-  for (SourceTermFactory::SourceMap::iterator isrc=sources.begin(); isrc !=sources.end(); isrc++){
-    SourceTermBase* src = isrc->second;
-    src->sched_restartInitialize(level, sched);
+  bool doingRestart = true;
+
+  const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
+
+  typedef std::map<std::string, std::shared_ptr<TaskFactoryBase> > BFM;
+  BFM::iterator i_property_models_fac = _task_factory_map.find("property_models_factory");
+  TaskFactoryBase::TaskMap all_prop_tasks = i_property_models_fac->second->retrieve_all_tasks();
+  for ( TaskFactoryBase::TaskMap::iterator i = all_prop_tasks.begin(); i != all_prop_tasks.end(); i++) {
+
+    i->second->schedule_init( level, sched, matls, doingRestart );
+
   }
 
-  //__________________________________
-  //  initialize property models
-  PropertyModelFactory& propFactory = PropertyModelFactory::self();
-  PropertyModelFactory::PropMap& properties = propFactory.retrieve_all_property_models();
-  for (PropertyModelFactory::PropMap::iterator iprop=properties.begin(); iprop !=properties.end(); iprop++){
-    PropertyModelBase* prop = iprop->second;
-    prop->sched_restartInitialize(level, sched);
+  setupBoundaryConditions( level, sched, doingRestart );
+
+  d_tabulated_properties->set_bcHelper( m_bcHelper[level->getIndex()]);
+
+  //Arches only currently solves on the finest level
+  if ( !level->hasFinerLevel() ){
+
+    d_boundaryCondition->sched_setupBCInletVelocities( sched, level, matls, doingRestart ,false);
+
+    //__________________________________
+    //  initialize src terms
+    SourceTermFactory& srcFactory = SourceTermFactory::self();
+    SourceTermFactory::SourceMap& sources = srcFactory.retrieve_all_sources();
+    for (SourceTermFactory::SourceMap::iterator isrc=sources.begin(); isrc !=sources.end(); isrc++){
+      SourceTermBase* src = isrc->second;
+      src->sched_restartInitialize(level, sched);
+    }
+
+    //__________________________________
+    //  initialize property models
+    PropertyModelFactory& propFactory = PropertyModelFactory::self();
+    PropertyModelFactory::PropMap& properties = propFactory.retrieve_all_property_models();
+    for (PropertyModelFactory::PropMap::iterator iprop=properties.begin(); iprop !=properties.end(); iprop++){
+      PropertyModelBase* prop = iprop->second;
+      prop->sched_restartInitialize(level, sched);
+    }
+
+    EqnFactory& eqnFactory = EqnFactory::self();
+    EqnFactory::EqnMap& scalar_eqns = eqnFactory.retrieve_all_eqns();
+    for (EqnFactory::EqnMap::iterator ieqn=scalar_eqns.begin(); ieqn != scalar_eqns.end(); ieqn++) {
+      EqnBase* eqn = ieqn->second;
+      eqn->sched_checkBCs( level, sched,false );
+    }
+
+    // check to make sure that all dqmom equations have BCs set.
+    DQMOMEqnFactory& dqmom_factory = DQMOMEqnFactory::self();
+    DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmom_factory.retrieve_all_eqns();
+    for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++) {
+      EqnBase* eqn = ieqn->second;
+      eqn->sched_checkBCs( level, sched,false );
+    }
+
+    checkMomBCs( sched, level, matls );
+
+    d_boundaryCondition->sched_setupNewIntrusionCellType( sched, level, matls, doingRestart );
+
+    d_boundaryCondition->sched_setupNewIntrusions( sched, level, matls );
+
+    //turbulence models
+    _task_factory_map["turbulence_model_factory"]->schedule_initialization( level, sched, matls, doingRestart );
+
   }
 
 }
@@ -1318,17 +1434,16 @@ void
 ExplicitSolver::sched_restartInitializeTimeAdvance( const LevelP& level, SchedulerP& sched )
 {
 
-  bool doingRestart = true;
+  bool doingRegrid  = true;
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
 
-  d_boundaryCondition->sched_computeBCArea( sched, level, matls );
-  d_boundaryCondition->sched_setupBCInletVelocities( sched, level, matls, doingRestart );
+  d_boundaryCondition->sched_setupBCInletVelocities( sched, level, matls, false, doingRegrid);
 
   EqnFactory& eqnFactory = EqnFactory::self();
   EqnFactory::EqnMap& scalar_eqns = eqnFactory.retrieve_all_eqns();
   for (EqnFactory::EqnMap::iterator ieqn=scalar_eqns.begin(); ieqn != scalar_eqns.end(); ieqn++) {
     EqnBase* eqn = ieqn->second;
-    eqn->sched_checkBCs( level, sched );
+    eqn->sched_checkBCs( level, sched,doingRegrid );
   }
 
   // check to make sure that all dqmom equations have BCs set.
@@ -1336,15 +1451,13 @@ ExplicitSolver::sched_restartInitializeTimeAdvance( const LevelP& level, Schedul
   DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmom_factory.retrieve_all_eqns();
   for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++) {
     EqnBase* eqn = ieqn->second;
-    eqn->sched_checkBCs( level, sched );
+    eqn->sched_checkBCs( level, sched ,doingRegrid);
   }
 
   checkMomBCs( sched, level, matls );
 
-  d_boundaryCondition->sched_setupNewIntrusionCellType( sched, level, matls, doingRestart );
-  d_boundaryCondition->sched_setupNewIntrusions( sched, level, matls );
-
 }
+
 
 void
 ExplicitSolver::initializeVariables(const ProcessorGroup* ,
@@ -1360,6 +1473,7 @@ ExplicitSolver::initializeVariables(const ProcessorGroup* ,
   for (int p = 0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
+    //const Level* level = patch->getLevel();
     int archIndex = 0; // only one arches material
     int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
@@ -1371,38 +1485,70 @@ ExplicitSolver::initializeVariables(const ProcessorGroup* ,
     //total KE:
     new_dw->put( sum_vartype(0.0), d_lab->d_totalKineticEnergyLabel );
 
-    allocateAndInitializeToZero( d_lab->d_densityGuessLabel, new_dw, indx, patch );
-    allocateAndInitializeToZero( d_lab->d_uVelRhoHatLabel, new_dw, indx, patch );
-    allocateAndInitializeToZero( d_lab->d_uVelocitySPBCLabel, new_dw, indx, patch );
-    allocateAndInitializeToZero( d_lab->d_vVelRhoHatLabel, new_dw, indx, patch );
-    allocateAndInitializeToZero( d_lab->d_vVelocitySPBCLabel, new_dw, indx, patch );
-    allocateAndInitializeToZero( d_lab->d_wVelRhoHatLabel, new_dw, indx, patch );
-    allocateAndInitializeToZero( d_lab->d_wVelocitySPBCLabel, new_dw, indx, patch );
-    allocateAndInitializeToZero( d_lab->d_CCUVelocityLabel, new_dw, indx, patch );
-    allocateAndInitializeToZero( d_lab->d_CCVVelocityLabel, new_dw, indx, patch );
-    allocateAndInitializeToZero( d_lab->d_CCWVelocityLabel, new_dw, indx, patch );
-    allocateAndInitializeToZero( d_lab->d_CCVelocityLabel, new_dw, indx, patch );
-    allocateAndInitializeToZero( d_lab->d_kineticEnergyLabel, new_dw, indx, patch );
-    allocateAndInitializeToZero( d_lab->d_pressurePSLabel, new_dw, indx, patch );
-    allocateAndInitializeToZero( d_lab->d_pressurePredLabel, new_dw, indx, patch );
-    allocateAndInitializeToZero( d_lab->d_pressureIntermLabel, new_dw, indx, patch );
-    allocateAndInitializeToZero( d_lab->d_densityCPLabel, new_dw, indx, patch );
-    allocateAndInitializeToZero( d_lab->d_viscosityCTSLabel, new_dw, indx, patch );
-    allocateAndInitializeToZero( d_lab->d_turbViscosLabel, new_dw, indx, patch );
-    allocateAndInitializeToZero( d_lab->d_conv_scheme_x_Label, new_dw, indx, patch );
-    allocateAndInitializeToZero( d_lab->d_conv_scheme_y_Label, new_dw, indx, patch );
-    allocateAndInitializeToZero( d_lab->d_conv_scheme_z_Label, new_dw, indx, patch );
+    //---------------------------------------------------------------------------------------------
+    //test the bc stuff:
+    // const BndMapT& my_map = m_bcHelper[level->getID()]->get_boundary_information();
+    //
+    // for ( auto i_map = my_map.begin(); i_map != my_map.end(); i_map++ ){
+    //
+    //   std::cout << "Getting an iterator for bc: " << i_map->first << std::endl;
+    //   BndSpec a_spec = i_map->second;
+    //   std::cout << "    the type  =  " << a_spec.type << std::endl;
+    //   Uintah::Iterator my_iter = m_bcHelper[level->getID()]->get_uintah_extra_bnd_mask(a_spec, patch->getID());
+    //   ////this is how you would retrieve a specific variable
+    //   //const BndCondSpec* test_var_find = a_spec.find("mixture_fraction");
+    //   //this is how you would loop over the iterator
+    //   for (my_iter.reset(); !my_iter.done(); my_iter++ ){
+    //     std::cout << " iter = " << *my_iter << std::endl;
+    //   }
+    //
+    // }
+    //---------------------------------------------------------------------------------------------
+
+    allocateAndInitializeToC( d_lab->d_densityGuessLabel  , new_dw, indx, patch, 0.0 );
+    allocateAndInitializeToC( d_lab->d_uVelRhoHatLabel    , new_dw, indx, patch, 0.0 );
+    allocateAndInitializeToC( d_lab->d_uVelocitySPBCLabel , new_dw, indx, patch, 0.0 );
+    allocateAndInitializeToC( d_lab->d_vVelRhoHatLabel    , new_dw, indx, patch, 0.0 );
+    allocateAndInitializeToC( d_lab->d_vVelocitySPBCLabel , new_dw, indx, patch, 0.0 );
+    allocateAndInitializeToC( d_lab->d_wVelRhoHatLabel    , new_dw, indx, patch, 0.0 );
+    allocateAndInitializeToC( d_lab->d_wVelocitySPBCLabel , new_dw, indx, patch, 0.0 );
+    allocateAndInitializeToC( d_lab->d_CCUVelocityLabel   , new_dw, indx, patch, 0.0 );
+    allocateAndInitializeToC( d_lab->d_CCVVelocityLabel   , new_dw, indx, patch, 0.0 );
+    allocateAndInitializeToC( d_lab->d_CCWVelocityLabel   , new_dw, indx, patch, 0.0 );
+    allocateAndInitializeToC( d_lab->d_CCVelocityLabel    , new_dw, indx, patch, 0.0 );
+    allocateAndInitializeToC( d_lab->d_kineticEnergyLabel , new_dw, indx, patch, 0.0 );
+    allocateAndInitializeToC( d_lab->d_pressurePSLabel    , new_dw, indx, patch, 0.0 );
+    allocateAndInitializeToC( d_lab->d_pressurePredLabel  , new_dw, indx, patch, 0.0 );
+    allocateAndInitializeToC( d_lab->d_pressureIntermLabel, new_dw, indx, patch, 0.0 );
+    allocateAndInitializeToC( d_lab->d_densityCPLabel     , new_dw, indx, patch, 0.0 );
+    allocateAndInitializeToC( d_lab->d_viscosityCTSLabel  , new_dw, indx, patch, 0.0 );
+    allocateAndInitializeToC( d_lab->d_turbViscosLabel    , new_dw, indx, patch, 0.0 );
+    allocateAndInitializeToC( d_lab->d_conv_scheme_x_Label, new_dw, indx, patch, 0.0 );
+    allocateAndInitializeToC( d_lab->d_conv_scheme_y_Label, new_dw, indx, patch, 0.0 );
+    allocateAndInitializeToC( d_lab->d_conv_scheme_z_Label, new_dw, indx, patch, 0.0 );
 
     if ( VarLabel::find("true_wall_temperature")){
-      allocateAndInitializeToZero( VarLabel::find("true_wall_temperature"), new_dw, indx, patch );
+      allocateAndInitializeToC( VarLabel::find("true_wall_temperature"), new_dw, indx, patch, 0.0 );
     }
 
     if ( VarLabel::find("deposit_thickness"))
-      allocateAndInitializeToZero( VarLabel::find("deposit_thickness"), new_dw, indx, patch );
+      allocateAndInitializeToC( VarLabel::find("deposit_thickness"), new_dw, indx, patch, 0.0 );
+    if ( VarLabel::find("deposit_thickness_sb_s"))
+      allocateAndInitializeToC( VarLabel::find("deposit_thickness_sb_s"), new_dw, indx, patch, 0.0 );
+    if ( VarLabel::find("deposit_thickness_sb_l"))
+      allocateAndInitializeToC( VarLabel::find("deposit_thickness_sb_l"), new_dw, indx, patch, 0.0 );
+    if ( VarLabel::find("emissivity"))
+      allocateAndInitializeToC( VarLabel::find("emissivity"), new_dw, indx, patch, 1.0 );
+    if ( VarLabel::find("thermal_cond_en"))
+      allocateAndInitializeToC( VarLabel::find("thermal_cond_en"), new_dw, indx, patch, 1.0 );
+    if ( VarLabel::find("thermal_cond_sb_s"))
+      allocateAndInitializeToC( VarLabel::find("thermal_cond_sb_s"), new_dw, indx, patch, 1.0 );
+    if ( VarLabel::find("thermal_cond_sb_l"))
+      allocateAndInitializeToC( VarLabel::find("thermal_cond_sb_l"), new_dw, indx, patch, 1.0 );
 
     if ( d_MAlab ){
-      allocateAndInitializeToZero( d_lab->d_pressPlusHydroLabel, new_dw, indx, patch );
-      allocateAndInitializeToZero( d_lab->d_mmgasVolFracLabel, new_dw, indx, patch );
+      allocateAndInitializeToC( d_lab->d_pressPlusHydroLabel, new_dw, indx, patch, 0.0 );
+      allocateAndInitializeToC( d_lab->d_mmgasVolFracLabel, new_dw, indx, patch, 0.0 );
     }
 
     CCVariable<double> viscosity;
@@ -1414,21 +1560,21 @@ ExplicitSolver::initializeVariables(const ProcessorGroup* ,
 }
 
 void
-ExplicitSolver::allocateAndInitializeToZero( const VarLabel* label,
-                                             DataWarehouse* dw,
-                                             const int index,
-                                             const Patch* patch ){
+ExplicitSolver::allocateAndInitializeToC( const VarLabel* label,
+                                          DataWarehouse* dw,
+                                          const int index,
+                                          const Patch* patch, const double C ){
 
   const Uintah::TypeDescription* type_desc = label->typeDescription();
 
   if ( type_desc == CCVariable<double>::getTypeDescription() ){
     CCVariable<double> var;
     dw->allocateAndPut( var, label, index, patch );
-    var.initialize(0.0);
+    var.initialize(C);
   } else if ( type_desc == CCVariable<int>::getTypeDescription() ){
     CCVariable<int> var;
     dw->allocateAndPut( var, label, index, patch );
-    var.initialize(0);
+    var.initialize(C);
   } else if ( type_desc == CCVariable<Vector>::getTypeDescription() ){
     CCVariable<Vector> var;
     dw->allocateAndPut( var, label, index, patch );
@@ -1467,7 +1613,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                    SchedulerP& sched)
 {
 
-  typedef std::vector<std::string> SVec;
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
   IntVector periodic_vector = level->getPeriodicBoundaries();
@@ -1505,99 +1650,73 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
   //copy the temperature into a radiation temperature variable:
   d_boundaryCondition->sched_create_radiation_temperature( sched, level, matls, true );
 
-  if ( d_wall_ht_models != 0 ){
+  if ( d_wall_ht_models != nullptr ){
     d_wall_ht_models->sched_doWallHT( level, sched, 0 );
   }
 
-  //========NEW STUFF =================================
-  //TIMESTEP INIT:
-  //UtilityFactory
-  typedef std::map<std::string, boost::shared_ptr<TaskFactoryBase> > BFM;
+  //------------------ New Task Interface (start) --------------------------------------------------
+
+  typedef std::map<std::string, std::shared_ptr<TaskFactoryBase> > BFM;
+  const bool dont_pack_tasks = false;
+
   BFM::iterator i_util = _task_factory_map.find("utility_factory");
-  TaskFactoryBase::TaskMap init_all_tasks = i_util->second->retrieve_all_tasks();
-  for ( TaskFactoryBase::TaskMap::iterator i = init_all_tasks.begin(); i != init_all_tasks.end(); i++){
-    i->second->schedule_timestep_init(level, sched, matls);
-  }
+  i_util->second->schedule_task_group( "all_tasks", TaskInterface::TIMESTEP_INITIALIZE, dont_pack_tasks, level, sched,
+    matls );
 
   BFM::iterator i_transport = _task_factory_map.find("transport_factory");
-  SVec scalar_rhs_builders = i_transport->second->retrieve_task_subset("scalar_rhs_builders");
-  for ( SVec::iterator i = scalar_rhs_builders.begin(); i != scalar_rhs_builders.end(); i++){
-    TaskInterface* tsk = i_transport->second->retrieve_task(*i);
-    tsk->schedule_timestep_init(level, sched, matls);
-  }
-  SVec mom_rhs_builders = i_transport->second->retrieve_task_subset("mom_rhs_builders");
-  for ( SVec::iterator i = mom_rhs_builders.begin(); i != mom_rhs_builders.end(); i++){
-    TaskInterface* tsk = i_transport->second->retrieve_task(*i);
-    tsk->schedule_timestep_init(level, sched, matls);
-  }
+  i_transport->second->schedule_task_group( "all_tasks", TaskInterface::TIMESTEP_INITIALIZE, dont_pack_tasks, level, sched,
+    matls );
+
   BFM::iterator i_property_models = _task_factory_map.find("property_models_factory");
-  TaskFactoryBase::TaskMap all_property_models = i_property_models->second->retrieve_all_tasks();
-  for ( TaskFactoryBase::TaskMap::iterator i = all_property_models.begin(); i != all_property_models.end(); i++){
-    i->second->schedule_timestep_init(level, sched, matls);
-  }
+  i_property_models->second->schedule_task_group( "all_tasks", TaskInterface::TIMESTEP_INITIALIZE, dont_pack_tasks, level, sched,
+    matls );
+
   BFM::iterator i_particle_models = _task_factory_map.find("particle_model_factory");
-  TaskFactoryBase::TaskMap all_particle_models = i_particle_models->second->retrieve_all_tasks();
-  for ( TaskFactoryBase::TaskMap::iterator i = all_particle_models.begin(); i != all_particle_models.end(); i++){
-    i->second->schedule_timestep_init(level, sched, matls);
-  }
-  //===================END NEW STUFF=======================
+  i_particle_models->second->schedule_task_group( "all_tasks", TaskInterface::TIMESTEP_INITIALIZE, dont_pack_tasks, level, sched,
+    matls );
+
+  _task_factory_map["turbulence_model_factory"]->schedule_task_group( "all_tasks", TaskInterface::TIMESTEP_INITIALIZE, dont_pack_tasks, level, sched,
+    matls );
+
+  BFM::iterator i_bc_fac = _task_factory_map.find("boundary_condition_factory");
+
+  //------------------ New Task Interface (end) --------------------------------------------------
 
   // --------> START RK LOOP <---------
   for (int curr_level = 0; curr_level < numTimeIntegratorLevels; curr_level ++)
   {
 
-    //================ NEW TASK STUFF=============================
+    //------------------ New Task Interface (start) ------------------------------------------------
 
-    //Build RHS
+    using namespace ArchesCore;
+    TaskController& tsk_controller = TaskController::self();
+    const TaskController::Packing& packed_info = tsk_controller.get_packing_info();
 
-    //These are all utility tasks. They probably shouldn't be scheduled like this...
-    // for ( TaskFactoryBase::TaskMap::iterator i = init_all_tasks.begin(); i != init_all_tasks.end(); i++){
-    //   i->second->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, curr_level);
-    // }
+    _task_factory_map["property_models_factory"]->schedule_task_group( "pre_update_property_models",
+      TaskInterface::TIMESTEP_EVAL, dont_pack_tasks, level, sched, matls, curr_level );
 
-    //(scalars)
-    for ( SVec::iterator i = scalar_rhs_builders.begin(); i != scalar_rhs_builders.end(); i++){
-      TaskInterface* tsk = i_transport->second->retrieve_task(*i);
-      tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, curr_level);
-      tsk->schedule_task(level, sched, matls, TaskInterface::BC_TASK, curr_level);
-    }
+    i_transport->second->schedule_task_group("scalar_psi_builders",
+      TaskInterface::TIMESTEP_EVAL, dont_pack_tasks, level, sched, matls, curr_level );
 
-    //(momentum)
-    for ( SVec::iterator i = mom_rhs_builders.begin(); i != mom_rhs_builders.end(); i++){
-      TaskInterface* tsk = i_transport->second->retrieve_task(*i);
-      tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, curr_level);
-    }
+    i_transport->second->schedule_task_group("scalar_rhs_builders",
+      TaskInterface::TIMESTEP_EVAL, dont_pack_tasks, level, sched, matls, curr_level );
 
-    //ParticleModels before any update has occured
-    std::vector<std::string> pre_update_part_tasks
-      = i_particle_models->second->retrieve_task_subset("pre_update_particle_models");
-    for ( std::vector<std::string>::iterator itsk = pre_update_part_tasks.begin(); itsk != pre_update_part_tasks.end(); itsk++ ){
-      TaskInterface* tsk = i_particle_models->second->retrieve_task(*itsk);
-      tsk->schedule_task( level, sched, matls, TaskInterface::STANDARD_TASK, curr_level );
-    }
+    i_transport->second->schedule_task_group("scalar_rhs_builders",
+      TaskInterface::BC, dont_pack_tasks, level, sched, matls, curr_level );
 
-    //Property Models before any update has occured
-    std::vector<std::string> pre_update_prop_tasks
-      = i_property_models->second->retrieve_task_subset("pre_update_property_models");
-    for ( std::vector<std::string>::iterator itsk = pre_update_prop_tasks.begin(); itsk != pre_update_prop_tasks.end(); itsk++ ){
-      TaskInterface* tsk = i_property_models->second->retrieve_task(*itsk);
-      tsk->schedule_task( level, sched, matls, TaskInterface::STANDARD_TASK, curr_level );
-    }
+    i_transport->second->schedule_task_group( "momentum_construction", TaskInterface::TIMESTEP_EVAL,
+      dont_pack_tasks, level, sched, matls, curr_level );
 
-    //FE update
-    SVec scalar_fe_up = i_transport->second->retrieve_task_subset("scalar_fe_update");
-    SVec mom_fe_up = i_transport->second->retrieve_task_subset("mom_fe_update");
+    i_transport->second->schedule_task_group( "momentum_fe_update", TaskInterface::TIMESTEP_EVAL,
+      dont_pack_tasks, level, sched, matls, curr_level );
 
-    for ( SVec::iterator i = scalar_fe_up.begin(); i != scalar_fe_up.end(); i++){
-      TaskInterface* tsk = i_transport->second->retrieve_task(*i);
-      tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, curr_level);
-    }
-    for ( SVec::iterator i = mom_fe_up.begin(); i != mom_fe_up.end(); i++){
-      TaskInterface* tsk = i_transport->second->retrieve_task(*i);
-      tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, curr_level);
-    }
+    i_transport->second->schedule_task_group("scalar_rhs_builders",
+      TaskInterface::BC, packed_info.global, level, sched, matls, curr_level );
+    // bc factory tasks
+    i_bc_fac->second->schedule_task_group("all_tasks",
+      TaskInterface::BC, packed_info.global, level, sched, matls, curr_level );
 
-    //============== END NEW TASK STUFF ==============================
+    //------------------ New Task Interface (end) ------------------------------------------------
 
     // Create this timestep labels for properties
     PropertyModelFactory& propFactory = PropertyModelFactory::self();
@@ -1611,6 +1730,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
         prop_model->sched_timeStepInit( level, sched );
 
     }
+
     if (d_doDQMOM) {
 
       CoalModelFactory& modelFactory = CoalModelFactory::self();
@@ -1676,13 +1796,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       if( saveMoments ) {
         // schedule DQMOM moment calculation
         d_dqmomSolver->sched_calculateMoments( level, sched, curr_level );
-      }
-
-      //final clipping
-      std::vector<std::string> clipping_tasks = i_particle_models->second->retrieve_task_subset("post_update_coal");
-      for ( std::vector<std::string>::iterator itsk = clipping_tasks.begin(); itsk != clipping_tasks.end(); itsk++ ){
-        TaskInterface* tsk = i_particle_models->second->retrieve_task(*itsk);
-        tsk->schedule_task( level, sched, matls, TaskInterface::STANDARD_TASK, curr_level );
       }
 
     }
@@ -1780,8 +1893,17 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       }
     }
 
+    //ParticleModels evaluated after the RK averaging.
+    //All particle transport should draw from the "latest" DW (old for rk = 0, new for rk > 0)
+    std::vector<std::string> post_update_part_tasks
+      = i_particle_models->second->retrieve_task_subset("post_update_particle_models");
+    for ( std::vector<std::string>::iterator itsk = post_update_part_tasks.begin(); itsk != post_update_part_tasks.end(); itsk++ ){
+      TaskInterface* tsk = i_particle_models->second->retrieve_task(*itsk);
+      tsk->schedule_task( level, sched, matls, TaskInterface::STANDARD_TASK, curr_level );
+    }
+
+
     // STAGE 0
-    //d_rad_prop_calc->sched_compute_radiation_properties( level, sched, matls, curr_level, false );
 
     SourceTermFactory& src_factory = SourceTermFactory::self();
 
@@ -1792,8 +1914,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     sched_getDensityGuess(sched, patches, matls,
                                       d_timeIntegratorLabels[curr_level]);
 
-    //====== NEW TASK STUFF ============
-    //get the density predictor task(s) and schedule it(them):
+    //------------------ New Task Interface (start) ------------------------------------------------
     const TaskFactoryBase::TypeToTaskMap& den_guess_tasks = i_property_models->second->retrieve_type_to_tasks();
     TaskFactoryBase::TypeToTaskMap::const_iterator i_den_guess = den_guess_tasks.find("density_predictor");
     if ( i_den_guess != den_guess_tasks.end() ){
@@ -1803,7 +1924,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
         tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, curr_level);
       }
     }
-    //======= END NEW TASK STUFF =======
+    //------------------ New Task Interface (end) ------------------------------------------------
 
 
     sched_checkDensityGuess(sched, patches, matls,
@@ -1834,44 +1955,28 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     }
 
-    if ( hl_model != 0 )
+    if ( hl_model != nullptr )
       hl_model->sched_computeProp( level, sched, curr_level );
 
-    //======= NEW TASK STUFF =======
+    //------------------ New Task Interface (start) ------------------------------------------------
     std::vector<std::string> pre_table_props
     = i_property_models->second->retrieve_task_subset("pre_table_post_iv_update");
     for ( std::vector<std::string>::iterator itsk = pre_table_props.begin(); itsk != pre_table_props.end(); itsk++ ){
       TaskInterface* tsk = i_property_models->second->retrieve_task(*itsk);
       tsk->schedule_task( level, sched, matls, TaskInterface::STANDARD_TASK, curr_level );
     }
-    //======= END NEW TASK STUFF =======
+    //------------------ New Task Interface (end) ------------------------------------------------
 
 
     //1st TABLE LOOKUP
     bool initialize_it  = false;
     bool modify_ref_den = false;
     if ( curr_level == 0 ) initialize_it = true;
-    d_props->sched_computeProps( level, sched, initialize_it, modify_ref_den, curr_level );
+    //d_props->sched_computeProps( level, sched, initialize_it, modify_ref_den, curr_level );
+
+    d_tabulated_properties->sched_getState( level, sched, initialize_it, modify_ref_den, curr_level );
 
     d_boundaryCondition->sched_setIntrusionTemperature( sched, level, matls );
-
-    //==================NEW TASK STUFF =========================
-    //this is updating the scalar with the latest density from the table lookup
-    SVec scalar_ssp = i_transport->second->retrieve_task_subset("scalar_ssp");
-    SVec mom_ssp = i_transport->second->retrieve_task_subset("mom_ssp");
-
-    for ( SVec::iterator i = scalar_ssp.begin(); i != scalar_ssp.end(); i++){
-      TaskInterface* tsk = i_transport->second->retrieve_task(*i);
-      if ( curr_level > 0 )
-        tsk->schedule_task( level, sched, matls, TaskInterface::STANDARD_TASK, curr_level );
-    }
-
-    for ( SVec::iterator i = mom_ssp.begin(); i != mom_ssp.end(); i++){
-      TaskInterface* tsk = i_transport->second->retrieve_task(*i);
-      if ( curr_level > 0 )
-        tsk->schedule_task( level, sched, matls, TaskInterface::STANDARD_TASK, curr_level );
-    }
-    //============= END NEW TASK STUFF===============================
 
     // STAGE 1
 
@@ -1907,7 +2012,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     // linearizes and solves pressure eqn
     // first computes, hatted velocities and then computes
     // the pressure poisson equation
-    d_momSolver->solveVelHat(level, sched, d_timeIntegratorLabels[curr_level] );
+    d_momSolver->solveVelHat(level, sched, d_timeIntegratorLabels[curr_level], curr_level );
 
     for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
       EqnBase* eqn = iter->second;
@@ -1943,17 +2048,17 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
         }
 
       }
-      if ( hl_model != 0 )
+      if ( hl_model != nullptr ) {
         hl_model->sched_computeProp( level, sched, curr_level );
-
+      }
       //TABLE LOOKUP #2
       bool initialize_it  = false;
       bool modify_ref_den = false;
-      d_props->sched_computeProps( level, sched, initialize_it, modify_ref_den, curr_level );
+      //d_props->sched_computeProps( level, sched, initialize_it, modify_ref_den, curr_level );
+      d_tabulated_properties->sched_getState( level, sched, initialize_it, modify_ref_den, curr_level );
 
       // Property models after table lookup
-      for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin();
-            iprop != all_prop_models.end(); iprop++){
+      for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin(); iprop != all_prop_models.end(); iprop++){
 
         PropertyModelBase* prop_model = iprop->second;
         if ( !prop_model->beforeTableLookUp() )
@@ -1983,7 +2088,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       //TABLE LOOKUP #3
       initialize_it  = false;
       modify_ref_den = false;
-      d_props->sched_computeProps( level, sched, initialize_it, modify_ref_den, curr_level );
+      //d_props->sched_computeProps( level, sched, initialize_it, modify_ref_den, curr_level );
+      d_tabulated_properties->sched_getState( level, sched, initialize_it, modify_ref_den, curr_level );
     }
 
     if ((curr_level>0)&&(!((d_timeIntegratorType == "RK2")||(d_timeIntegratorType == "BEEmulation")))) {
@@ -2003,6 +2109,10 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     d_boundaryCondition->sched_setIntrusionTemperature( sched, level, matls );
 
+    if ( d_wall_ht_models != nullptr ){
+      d_wall_ht_models->sched_copyWallTintoT( level, sched );
+    }
+
     d_boundaryCondition->sched_setIntrusionDensity( sched, level, matls );
 
     d_props->sched_computeDrhodt(sched, patches, matls,
@@ -2016,13 +2126,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                        d_timeIntegratorLabels[curr_level], false);
 
 
-
-    if ( d_timeIntegratorLabels[curr_level]->integrator_last_step) {
-      // this is the new efficiency calculator
-      d_eff_calculator->sched_computeAllScalarEfficiencies( level, sched );
-    }
-
-
     // Schedule an interpolation of the face centered velocity data
     sched_interpolateFromFCToCC(sched, patches, matls, d_timeIntegratorLabels[curr_level], curr_level);
 
@@ -2031,34 +2134,41 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                                            d_timeIntegratorLabels[curr_level]);
     }
 
-    d_turbCounter = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
+    // d_turbCounter = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
+    timeStep_vartype timeStep(0);
+    if( sched->get_dw(0) && sched->get_dw(0)->exists( d_lab->d_timeStepLabel ) )
+      sched->get_dw(0)->get( timeStep, d_lab->d_timeStepLabel );
+    else if( sched->get_dw(1) && sched->get_dw(1)->exists( d_lab->d_timeStepLabel ) )
+      sched->get_dw(1)->get( timeStep, d_lab->d_timeStepLabel );
+
+    d_turbCounter = timeStep;
+    
     if ((d_turbCounter%d_turbModelCalcFreq == 0)&&
         ((curr_level==0)||((!(curr_level==0))&&d_turbModelRKsteps)))
       d_turbModel->sched_reComputeTurbSubmodel(sched, level, matls,
                                                d_timeIntegratorLabels[curr_level]);
 
-  }
+    TaskFactoryBase::TaskMap all_turb_models =
+      _task_factory_map["turbulence_model_factory"]->retrieve_all_tasks();
+    for ( TaskFactoryBase::TaskMap::iterator i = all_turb_models.begin(); i != all_turb_models.end(); i++){
+      i->second->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, curr_level);
+    }
 
-  if ( d_wall_ht_models != 0 ){
-    d_wall_ht_models->sched_copyWallTintoT( level, sched );
-  }
+
+  } // END OF RK LOOP
 
   //variable math:
-  const std::vector<std::string> math_tasks =
-    i_util->second->retrieve_tasks_by_type("variable_math");
+  const std::vector<std::string> math_tasks = i_util->second->retrieve_tasks_by_type("variable_math");
 
-  for (std::vector<std::string>::const_iterator i = math_tasks.begin();
-       i != math_tasks.end(); i++ ){
+  for( std::vector<std::string>::const_iterator i = math_tasks.begin(); i != math_tasks.end(); i++ ) {
     TaskInterface* tsk = i_util->second->retrieve_task(*i);
     //time substep??
     tsk->schedule_task( level, sched, matls, TaskInterface::STANDARD_TASK, 0 );
   }
 
   //Property Models before starting over
-  std::vector<std::string> final_prop_tasks
-    = i_property_models->second->retrieve_task_subset("final_property_models");
-  for ( std::vector<std::string>::iterator itsk = final_prop_tasks.begin();
-        itsk != final_prop_tasks.end(); itsk++ ){
+  std::vector<std::string> final_prop_tasks = i_property_models->second->retrieve_task_subset("final_property_models");
+  for ( std::vector<std::string>::iterator itsk = final_prop_tasks.begin(); itsk != final_prop_tasks.end(); itsk++ ){
 
     TaskInterface* tsk = i_property_models->second->retrieve_task(*itsk);
     //passing in curr_level > 0 because we are at the end of the time step
@@ -2066,11 +2176,14 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
   }
 
+  std::vector<std::string> wall_hf_tasks =
+    i_property_models->second->retrieve_tasks_by_type("wall_heatflux_variable");
+  i_property_models->second->schedule_task_group(
+    "wall_heatflux_tasks", wall_hf_tasks, TaskInterface::TIMESTEP_EVAL, false, level, sched, matls );
+
   //Variable stats stuff
-  std::vector<std::string> stats_tasks
-    = i_property_models->second->retrieve_task_subset("variable_stat_models");
-  for ( std::vector<std::string>::iterator itsk = stats_tasks.begin();
-        itsk != stats_tasks.end(); itsk++ ){
+  std::vector<std::string> stats_tasks = i_property_models->second->retrieve_task_subset("variable_stat_models");
+  for ( std::vector<std::string>::iterator itsk = stats_tasks.begin(); itsk != stats_tasks.end(); itsk++ ){
 
     TaskInterface* tsk = i_property_models->second->retrieve_task(*itsk);
     //passing in curr_level > 0 because we are at the end of the time step
@@ -2083,7 +2196,31 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
    sched_printTotalKE( sched, patches, matls );
   }
 
-  return(0);
+  if ( _doLagrangianParticles ) {
+
+    typedef std::map<std::string, std::shared_ptr<TaskFactoryBase> > BFM;
+    BFM::iterator i_lag_fac = _task_factory_map.find("lagrangian_factory");
+    TaskFactoryBase::TaskMap all_tasks = i_lag_fac->second->retrieve_all_tasks();
+
+    TaskFactoryBase::TaskMap::iterator i_part_size_update = all_tasks.find("update_particle_size");
+    TaskFactoryBase::TaskMap::iterator i_part_pos_update = all_tasks.find("update_particle_position");
+    TaskFactoryBase::TaskMap::iterator i_part_vel_update = all_tasks.find("update_particle_velocity");
+
+    //UPDATE SIZE
+    i_part_size_update->second->schedule_task( level, sched, d_sharedState->allArchesMaterials(), TaskInterface::STANDARD_TASK, 0);
+    //UPDATE POSITION
+    i_part_pos_update->second->schedule_task( level, sched, d_sharedState->allArchesMaterials(), TaskInterface::STANDARD_TASK, 0);
+    //UPDATE VELOCITY
+    i_part_vel_update->second->schedule_task( level, sched, d_sharedState->allArchesMaterials(), TaskInterface::STANDARD_TASK, 0);
+
+    _particlesHelper->schedule_sync_particle_position(level,sched);
+    _particlesHelper->schedule_transfer_particle_ids(level,sched);
+    _particlesHelper->schedule_relocate_particles(level,sched);
+    _particlesHelper->schedule_add_particles(level, sched);
+
+  }
+
+  return 0;
 
 }
 
@@ -2091,14 +2228,13 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 // Schedule initialize
 // ****************************************************************************
 void
-ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
-                                      const PatchSet* patches,
-                                      const MaterialSet* matls)
+ExplicitSolver::sched_setInitialGuess(       SchedulerP  & sched,
+                                       const PatchSet    * patches,
+                                       const MaterialSet * matls )
 {
   //copies old db to new_db and then uses non-linear
   //solver to compute new values
-  Task* tsk = scinew Task( "ExplicitSolver::setInitialGuess",this,
-                           &ExplicitSolver::setInitialGuess);
+  Task* tsk = scinew Task( "ExplicitSolver::setInitialGuess",this, &ExplicitSolver::setInitialGuess);
 
   Ghost::GhostType  gn = Ghost::None;
   tsk->requires(Task::OldDW, d_lab->d_cellTypeLabel,      gn, 0);
@@ -2180,7 +2316,7 @@ ExplicitSolver::sched_interpolateFromFCToCC(SchedulerP& sched,
     tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 1);
     tsk->requires(Task::NewDW, d_lab->d_filterdrhodtLabel,  gn,  0);
     tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,     gac, 1);
-    tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
+    tsk->requires(Task::OldDW, d_lab->d_delTLabel);
 
     if ( d_solvability ){
       std::stringstream strRKStage;
@@ -2206,12 +2342,9 @@ ExplicitSolver::sched_interpolateFromFCToCC(SchedulerP& sched,
     }
 
     // add access to sources:
-    SourceTermFactory& factory = SourceTermFactory::self();
     for (vector<std::string>::iterator iter = d_mass_sources.begin();
         iter != d_mass_sources.end(); iter++){
-      SourceTermBase& src = factory.retrieve_source_term( *iter );
-      const VarLabel* srcLabel = src.getSrcLabel();
-      tsk->requires( Task::NewDW, srcLabel, gn, 0 );
+      tsk->requires( Task::NewDW, VarLabel::find( *iter ), gn, 0 );
     }
 
     sched->addTask(tsk, patches, matls);
@@ -2287,7 +2420,7 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
     IntVector idxHi = patch->getFortranCellHighIndex();
 
     delt_vartype delT;
-    old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+    old_dw->get(delT, d_lab->d_delTLabel );
     double dt = delT;
 
     // Get the PerPatch CellInformation data
@@ -2497,17 +2630,14 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
       }
     }
 
-    StaticArray<constCCVariable<double> > mass_srcs(d_mass_sources.size());
+    std::vector<constCCVariable<double> > mass_srcs(d_mass_sources.size());
     // Add other source terms to the continuity
     int m=0;
-    SourceTermFactory& factory = SourceTermFactory::self();
-    for (vector<std::string>::iterator iter = d_mass_sources.begin();
-        iter != d_mass_sources.end(); iter++){
+    for (auto iter = d_mass_sources.begin(); iter != d_mass_sources.end(); iter++){
 
-      SourceTermBase& src = factory.retrieve_source_term( *iter );
-      const VarLabel* srcLabel = src.getSrcLabel();
-      new_dw->get( mass_srcs[m], srcLabel, indx, patch, gn, 0 );
+      new_dw->get( mass_srcs[m], VarLabel::find(*iter), indx, patch, gn, 0 );
       m++;
+
     }
 
     for (int kk = idxLo.z(); kk <= idxHi.z(); ++kk) {
@@ -2776,7 +2906,7 @@ ExplicitSolver::printTotalKE( const ProcessorGroup* ,
   new_dw->get( tke, d_lab->d_totalKineticEnergyLabel );
   double total_kin_energy = tke;
 
-  proc0cout << "Total kinetic energy: " << total_kin_energy << std::endl;
+  proc0cout << "Total kinetic energy: " << total_kin_energy << "\n";
 
 }
 
@@ -2841,13 +2971,15 @@ ExplicitSolver::sched_getDensityGuess(SchedulerP& sched,
                           &ExplicitSolver::getDensityGuess,
                           timelabels);
 
+  tsk->requires( Task::OldDW, d_lab->d_timeStepLabel );
+
   Task::WhichDW parent_old_dw;
   if (timelabels->recursion){
     parent_old_dw = Task::ParentOldDW;
   }else{
     parent_old_dw = Task::OldDW;
   }
-  tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
+  tsk->requires(parent_old_dw, d_lab->d_delTLabel);
 
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gaf = Ghost::AroundFaces;
@@ -2880,17 +3012,13 @@ ExplicitSolver::sched_getDensityGuess(SchedulerP& sched,
   // extra mass source terms
   std::vector<std::string> extra_sources;
   extra_sources = d_pressSolver->get_pressure_source_ref();
-  SourceTermFactory& factory = SourceTermFactory::self();
-  for (vector<std::string>::iterator iter = extra_sources.begin();
-      iter != extra_sources.end(); iter++){
 
-    SourceTermBase& src = factory.retrieve_source_term( *iter );
-    const VarLabel* srcLabel = src.getSrcLabel();
+  for ( auto iter = extra_sources.begin(); iter != extra_sources.end(); iter++){
 
     if ( timelabels->integrator_step_number == TimeIntegratorStepNumber::First ){
-      tsk->requires( Task::OldDW, srcLabel, gn, 0 );
+      tsk->requires( Task::OldDW, VarLabel::find( *iter ), gn, 0 );
     } else {
-      tsk->requires( Task::NewDW, srcLabel, gn, 0 );
+      tsk->requires( Task::NewDW, VarLabel::find( *iter ), gn, 0 );
     }
   }
 
@@ -2907,6 +3035,10 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
                                 DataWarehouse* new_dw,
                                 const TimeIntegratorLabel* timelabels)
 {
+  // int timeStep = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
+  timeStep_vartype timeStep;
+  old_dw->get( timeStep, d_lab->d_timeStepLabel );
+
   DataWarehouse* parent_old_dw;
   if (timelabels->recursion){
     parent_old_dw = new_dw->getOtherDataWarehouse(Task::ParentOldDW);
@@ -2915,7 +3047,7 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
   }
 
   delt_vartype delT;
-  parent_old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  parent_old_dw->get(delT, d_lab->d_delTLabel );
   double delta_t = delT;
   delta_t *= timelabels->time_multiplier;
 
@@ -2970,17 +3102,14 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
     std::vector<constCCVariable<double> > src_values;
     bool have_extra_srcs = false;
 
-    for (std::vector<std::string>::iterator iter = extra_sources.begin();
-        iter != extra_sources.end(); iter++){
+    for ( auto iter = extra_sources.begin(); iter != extra_sources.end(); iter++){
 
-      SourceTermBase& src = factory.retrieve_source_term( *iter );
-      const VarLabel* srcLabel = src.getSrcLabel();
       constCCVariable<double> src_value;
 
       if ( timelabels->integrator_step_number == TimeIntegratorStepNumber::First ){
-       old_dw->get( src_value, srcLabel, indx, patch, gn, 0 );
+       old_dw->get( src_value, VarLabel::find( *iter ), indx, patch, gn, 0 );
       } else {
-       new_dw->get( src_value, srcLabel, indx, patch, gn, 0 );
+       new_dw->get( src_value, VarLabel::find( *iter ), indx, patch, gn, 0 );
       }
 
       src_values.push_back( src_value );
@@ -2990,8 +3119,7 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
     }
 
 // Need to skip first timestep since we start with unprojected velocities
-//    int currentTimeStep=d_lab->d_sharedState->getCurrentTopLevelTimeStep();
-//    if (currentTimeStep > 1) {
+//    if (timeStep > 1) {
 //
       if ( have_extra_srcs ){
 
@@ -3152,12 +3280,12 @@ ExplicitSolver::checkDensityGuess(const ProcessorGroup* pc,
     new_dw->getModifiable(densityGuess, d_lab->d_densityGuessLabel, indx, patch);
     if (negativeDensityGuess > 0.0) {
       if (d_restart_on_negative_density_guess) {
-        proc0cout << "NOTICE: Negative density guess(es) occured. Timestep restart has been requested under this condition by the user. Restarting timestep." << endl;
+        proc0cout << "NOTICE: Negative density guess(es) occurred. Timestep restart has been requested under this condition by the user. Restarting timestep." << endl;
         new_dw->abortTimestep();
         new_dw->restartTimestep();
       }
       else {
-        proc0cout << "NOTICE: Negative density guess(es) occured. Reverting to old density." << endl;
+        proc0cout << "NOTICE: Negative density guess(es) occurred. Reverting to old density." << endl;
         old_values_dw->copyOut(densityGuess, d_lab->d_densityCPLabel, indx, patch);
       }
     }
@@ -3346,7 +3474,7 @@ ExplicitSolver::checkDensityLag(const ProcessorGroup* pc,
   for (int p = 0; p < patches->size(); p++) {
 
     if (densityLag > d_maxDensityLag) {
-        if (pc->myrank() == 0)
+        if (pc->myRank() == 0)
           proc0cout << "WARNING: density lag " << densityLag
                << " exceeding maximium "<< d_maxDensityLag
                << " specified. Restarting timestep." << endl;
@@ -3773,19 +3901,19 @@ ExplicitSolver::momentInit( const ProcessorGroup*,
 //___________________________________________________________________________
 //
 void
-ExplicitSolver::sched_scalarInit( const LevelP& level,
-                          SchedulerP& sched )
+ExplicitSolver::sched_scalarInit( const LevelP     & level,
+                                        SchedulerP & sched )
 {
-  Task* tsk = scinew Task( "ExplicitSolver::scalarInit",
-                           this, &ExplicitSolver::scalarInit);
+  Task* tsk = scinew Task( "ExplicitSolver::scalarInit", this, &ExplicitSolver::scalarInit );
 
   EqnFactory& eqnFactory = EqnFactory::self();
   EqnFactory::EqnMap& scalar_eqns = eqnFactory.retrieve_all_eqns();
-  for (EqnFactory::EqnMap::iterator ieqn=scalar_eqns.begin(); ieqn != scalar_eqns.end(); ieqn++) {
+
+  for( EqnFactory::EqnMap::iterator ieqn = scalar_eqns.begin(); ieqn != scalar_eqns.end(); ieqn++ ) {
 
     EqnBase* eqn = ieqn->second;
 
-    eqn->sched_checkBCs( level, sched );
+    eqn->sched_checkBCs( level, sched, false );
 
     const VarLabel* tempVar = eqn->getTransportEqnLabel();
     tsk->computes( tempVar );
@@ -3799,9 +3927,9 @@ ExplicitSolver::sched_scalarInit( const LevelP& level,
   //  initialize src terms
   SourceTermFactory& srcFactory = SourceTermFactory::self();
   SourceTermFactory::SourceMap& sources = srcFactory.retrieve_all_sources();
-  for (SourceTermFactory::SourceMap::iterator isrc=sources.begin(); isrc !=sources.end(); isrc++) {
+  for( SourceTermFactory::SourceMap::iterator isrc=sources.begin(); isrc !=sources.end(); isrc++ ) {
     SourceTermBase* src = isrc->second;
-    src->sched_initialize(level, sched);
+    src->sched_initialize( level, sched );
   }
 }
 
@@ -3809,13 +3937,14 @@ ExplicitSolver::sched_scalarInit( const LevelP& level,
 //
 void
 ExplicitSolver::scalarInit( const ProcessorGroup*,
-                    const PatchSubset* patches,
-                    const MaterialSubset*,
-                    DataWarehouse* old_dw,
-                    DataWarehouse* new_dw )
+                            const PatchSubset* patches,
+                            const MaterialSubset*,
+                            DataWarehouse* old_dw,
+                            DataWarehouse* new_dw )
 {
   coutLock.lock();
-  proc0cout << "Initializing all scalar equations and sources..." << std::endl;
+  proc0cout << "Initializing all scalar equations and sources...\n";
+  coutLock.unlock();
   for (int p = 0; p < patches->size(); p++) {
     //assume only one material for now
     int archIndex = 0;
@@ -3846,7 +3975,6 @@ ExplicitSolver::scalarInit( const ProcessorGroup*,
 
     }
   }
-  coutLock.unlock();
 }
 
 // ****************************************************************************
@@ -3963,11 +4091,6 @@ ExplicitSolver::getCCVelocities(const ProcessorGroup*,
       Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
       CellIterator iter=patch->getFaceIterator(face, MEC);
 
-      IntVector lo = iter.begin();
-      int i = lo.x();
-      int j = lo.y();
-      int k = lo.z();
-
       Vector one_or_zero = Vector(1,1,1) - Abs(f_dir.asVector());
       // one_or_zero: faces x-+   (0,1,1)
       //                    y-+   (1,0,1)
@@ -3975,6 +4098,10 @@ ExplicitSolver::getCCVelocities(const ProcessorGroup*,
 
       for(; !iter.done(); iter++) {
         IntVector c = *iter;
+
+        int i = c.x();
+        int j = c.y();
+        int k = c.z();
 
         IntVector idxU(i+1,j,k);
         IntVector idxV(i,j+1,k);
@@ -4039,7 +4166,7 @@ void ExplicitSolver::registerModels(ProblemSpecP& db)
   //  which would require some kind of map in ArchesLabel.h...)
 
   if (models_db) {
-    for (ProblemSpecP model_db = models_db->findBlock("model"); model_db != 0; model_db = model_db->findNextBlock("model")) {
+    for (ProblemSpecP model_db = models_db->findBlock("model"); model_db != nullptr; model_db = model_db->findNextBlock("model")) {
       std::string model_name;
       model_db->getAttribute("label", model_name);
       std::string model_type;
@@ -4057,8 +4184,7 @@ void ExplicitSolver::registerModels(ProblemSpecP& db)
       if ( icvar_db ) {
         proc0cout << "Requires the following internal coordinates: " << endl;
         // These variables are only those that are specifically defined from the input file
-        for (ProblemSpecP var = icvar_db->findBlock("variable");
-             var !=0; var = var->findNextBlock("variable")) {
+        for( ProblemSpecP var = icvar_db->findBlock("variable"); var != nullptr; var = var->findNextBlock("variable") ) {
 
           std::string label_name;
           var->getAttribute("label", label_name);
@@ -4067,7 +4193,8 @@ void ExplicitSolver::registerModels(ProblemSpecP& db)
           // This map hold the labels that are required to compute this model term.
           requiredICVarLabels.push_back(label_name);
         }
-      } else {
+      }
+      else {
         proc0cout << "Model does not require any internal coordinates. " << endl;
       }
 
@@ -4080,9 +4207,8 @@ void ExplicitSolver::registerModels(ProblemSpecP& db)
       ProblemSpecP scalarvar_db = model_db->findBlock("scalarVars");
 
       if ( scalarvar_db ) {
-        proc0cout << "Requires the following scalar variables: " << endl;
-        for (ProblemSpecP var = scalarvar_db->findBlock("variable");
-             var != 0; var = var->findNextBlock("variable") ) {
+        proc0cout << "Requires the following scalar variables:\n";
+        for (ProblemSpecP var = scalarvar_db->findBlock("variable"); var != nullptr; var = var->findNextBlock("variable") ) {
           std::string label_name;
           var->getAttribute("label", label_name);
 
@@ -4122,13 +4248,17 @@ void ExplicitSolver::registerModels(ProblemSpecP& db)
           ModelBuilder* modelBuilder = scinew FOWYDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "YamamotoDevol" ) {
-          ModelBuilder* modelBuilder = scinew YamamotoDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
-          model_factory.register_model( temp_model_name, modelBuilder );
+          //ModelBuilder* modelBuilder = scinew YamamotoDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          //model_factory.register_model( temp_model_name, modelBuilder );
+          throw InvalidValue("Error: YamamotoDevol is not currently supported. The model needs to be updated/fixed. See FOWYDevol as an example.", __FILE__,__LINE__);
         } else if ( model_type == "CharOxidationShaddix" ) {
           ModelBuilder* modelBuilder = scinew CharOxidationShaddixBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "CharOxidationSmith" ) {
           ModelBuilder* modelBuilder = scinew CharOxidationSmithBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          model_factory.register_model( temp_model_name, modelBuilder );
+        } else if ( model_type == "CharOxidationSmith2016" ) {
+          ModelBuilder* modelBuilder = scinew CharOxidationSmith2016Builder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "EnthalpyShaddix" ) {
           ModelBuilder* modelBuilder = scinew EnthalpyShaddixBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, d_props, iqn);
@@ -4139,11 +4269,17 @@ void ExplicitSolver::registerModels(ProblemSpecP& db)
         } else if ( model_type == "Thermophoresis" ) {
           ModelBuilder* modelBuilder = scinew ThermophoresisBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
+        } else if ( model_type == "LinearSwelling" ) {
+          ModelBuilder* modelBuilder = scinew LinearSwellingBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          model_factory.register_model( temp_model_name, modelBuilder );
+        } else if ( model_type == "ShrinkageRate" ) {
+          ModelBuilder* modelBuilder = scinew ShrinkageRateBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "Drag" ) {
           ModelBuilder* modelBuilder = scinew DragModelBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
-        } else if ( model_type == "SimpleBirth" ) {
-          ModelBuilder* modelBuilder = scinew SimpleBirthBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+        } else if ( model_type == "BirthDeath" ) {
+          ModelBuilder* modelBuilder = scinew BirthDeathBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "Deposition" ) {
           ModelBuilder* modelBuilder = scinew DepositionBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
@@ -4173,9 +4309,9 @@ void ExplicitSolver::registerTransportEqns(ProblemSpecP& db)
   if (eqns_db) {
 
     proc0cout << "\n";
-    proc0cout << "******* Equation Registration ********" << endl;
+    proc0cout << "******* Equation Registration ********\n";
 
-    for (ProblemSpecP eqn_db = eqns_db->findBlock("Eqn"); eqn_db != 0; eqn_db = eqn_db->findNextBlock("Eqn")) {
+    for (ProblemSpecP eqn_db = eqns_db->findBlock("Eqn"); eqn_db != nullptr; eqn_db = eqn_db->findNextBlock("Eqn")) {
       std::string eqn_name;
       eqn_db->getAttribute("label", eqn_name);
       std::string eqn_type;
@@ -4213,10 +4349,9 @@ void ExplicitSolver::registerPropertyModels(ProblemSpecP& db)
   if ( propmodels_db ) {
 
     proc0cout << "\n";
-    proc0cout << "******* Property Model Registration *******" << endl;
+    proc0cout << "******* Property Model Registration *******\n";
 
-    for ( ProblemSpecP prop_db = propmodels_db->findBlock("model");
-          prop_db != 0; prop_db = prop_db->findNextBlock("model") ) {
+    for ( ProblemSpecP prop_db = propmodels_db->findBlock("model"); prop_db != nullptr; prop_db = prop_db->findNextBlock("model") ) {
 
       std::string prop_name;
       prop_db->getAttribute("label", prop_name);
@@ -4255,12 +4390,6 @@ void ExplicitSolver::registerPropertyModels(ProblemSpecP& db)
         PropertyModelBase::Builder* the_builder = new EmpSoot::Builder( prop_name, d_lab->d_sharedState );
         prop_factory.register_property_model( prop_name, the_builder );
 
-      } else if ( prop_type == "fv_soot" ) {
-
-        // Computes the soot volume fraction from the soot mass fraction (which is assumed transported)
-        PropertyModelBase::Builder* the_builder = new fvSootFromYsoot::Builder( prop_name, d_lab->d_sharedState );
-        prop_factory.register_property_model( prop_name, the_builder );
-
       } else if ( prop_type == "algebraic_scalar_diss" ) {
 
         // Algebraic scalar dissipation rate
@@ -4289,12 +4418,6 @@ void ExplicitSolver::registerPropertyModels(ProblemSpecP& db)
 
         //Scalar dissipation based on the transported squared gradient of mixture fraction for 2-eqn scalar var model
         PropertyModelBase::Builder* the_builder = new ScalarDissipation::Builder( prop_name, d_lab->d_sharedState );
-        prop_factory.register_property_model( prop_name, the_builder );
-
-      } else if ( prop_type == "radiation_properties" ) {
-
-        //Radiation properties as computed through the RadPropertyCalculator
-        PropertyModelBase::Builder* the_builder = new RadProperties::Builder( prop_name, d_lab->d_sharedState, d_lab );
         prop_factory.register_property_model( prop_name, the_builder );
 
       } else {
@@ -4328,11 +4451,10 @@ void ExplicitSolver::registerCQMOMEqns(ProblemSpecP& db)
     cqmom_db->get("NumberInternalCoordinates",M);
 
     proc0cout << "# IC = " << M << endl;
-    proc0cout << "******* CQMOM Equation Registration ********" << endl;
+    proc0cout << "******* CQMOM Equation Registration ********\n";
     // Make the moment transport equations
     vector<int> temp_moment_index;
-    for ( ProblemSpecP db_moments = cqmom_db->findBlock("Moment");
-          db_moments != 0; db_moments = db_moments->findNextBlock("Moment") ) {
+    for ( ProblemSpecP db_moments = cqmom_db->findBlock("Moment"); db_moments != nullptr; db_moments = db_moments->findNextBlock("Moment") ) {
       temp_moment_index.resize(0);
       db_moments->get("m", temp_moment_index);
 
@@ -4365,5 +4487,62 @@ void ExplicitSolver::registerCQMOMEqns(ProblemSpecP& db)
     cqmom_eqnFactory.set_number_moments( nMoments );
 
     //register internal coordinate names in a way to know which are velocities
+  }
+}
+
+void
+ExplicitSolver::setupBoundaryConditions( const LevelP& level,
+                                         SchedulerP& sched,
+                                         const bool doingRestart ){
+
+  //calls setupBCs which is setting up d_bcinformation in BoundaryCondition.cc
+  // as parsed from the input file
+  d_boundaryCondition->set_bc_information(level);
+
+  //set a reference to BChelper map
+  d_boundaryCondition->setBCHelper( &m_bcHelper );
+
+  const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
+
+  //this is creating a WBCHelper for this specific Level (need one/level)
+  //the check ensures that, in the case of multiple patches/core, we only
+  //create one of them.
+  auto iter_check = m_bcHelper.find(level->getID());
+  if ( iter_check == m_bcHelper.end() ){
+    m_bcHelper.insert(std::make_pair(level->getID(), scinew WBCHelper( level, sched, matls, m_arches_spec )));
+  }
+
+  //computes the area for each inlet using reduction variables
+  m_bcHelper[level->getID()]->sched_computeBCAreaHelper( sched, level, matls );
+
+  //copies the reduction area variable information on area to a double in the BndCond spec
+  m_bcHelper[level->getID()]->sched_bindBCAreaHelper( sched, level, matls );
+
+  //delete non-patch-local information on the old BC object
+  d_boundaryCondition->prune_per_patch_bcinfo( sched, level, m_bcHelper[level->getID()] );
+
+  if ( level->getIndex() == d_archesLevelIndex ){
+
+     //check the sanity of the momentum BCs
+    d_boundaryCondition->sched_checkMomBCs( sched, level, matls );
+
+    //for RMCRT (why not on all levels?) compute cellType
+    // using the BCInfoMap
+    d_boundaryCondition->sched_cellTypeInit( sched, level, matls );
+
+    // compute the cell area fraction
+    d_boundaryCondition->sched_setAreaFraction( sched, level, matls, 0, true );
+
+    // setup intrusion cell type
+    // computes area and volume fractions for those cells that are intrusions
+    // also sets a cell type in the same cell
+    // also is computing an iterator(s) that is stored in the intrusion
+    d_boundaryCondition->sched_setupNewIntrusionCellType( sched, level, matls, false );
+
+    //AF must be called again to account for intrusions (can this be the ONLY call?)
+    d_boundaryCondition->sched_setAreaFraction( sched, level, matls, 1, true );
+
+    d_turbModel->sched_computeFilterVol( sched, level, matls );
+
   }
 }

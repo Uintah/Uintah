@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -23,25 +23,27 @@
  */
 
 #include <sci_defs/hypre_defs.h>
+
 #include <CCA/Components/Solvers/AMR/AMRSolver.h>
 #include <CCA/Components/Solvers/AMR/HypreDriver.h>
 #include <CCA/Components/Solvers/AMR/HypreSolverParams.h>
 #include <CCA/Components/Solvers/MatrixUtil.h>
+#include <CCA/Ports/LoadBalancer.h>
+#include <CCA/Ports/Scheduler.h>
+
+#include <Core/Exceptions/ConvergenceFailure.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Geometry/IntVector.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/Stencil7.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Exceptions/ConvergenceFailure.h>
+#include <Core/Math/MinMax.h>
+#include <Core/Math/MiscMath.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <CCA/Ports/Scheduler.h>
-#include <CCA/Ports/LoadBalancer.h>
-#include <Core/Geometry/IntVector.h>
-#include <Core/Math/MiscMath.h>
-#include <Core/Math/MinMax.h>
-#include <Core/Util/Time.h>
 #include <Core/Util/DebugStream.h>
+
 #include <iomanip>
 
 using std::string;
@@ -49,14 +51,14 @@ using namespace Uintah;
 
 //__________________________________
 //  To turn on normal output
-//  setenv SCI_DEBUG "HYPRE_DOING_COUT:+"
+//  setenv SCI_DEBUG "SOLVER_DOING_COUT:+"
 
-static DebugStream cout_doing("HYPRE_DOING_COUT", false);
-static DebugStream cout_dbg("HYPRE_DBG", false);
+static DebugStream cout_doing("SOLVER_DOING_COUT", false);
+static DebugStream cout_dbg("SOLVER_DBG", false);
 
 
 AMRSolver::AMRSolver(const ProcessorGroup* myworld)
-  : UintahParallelComponent(myworld) {}
+  : SolverCommon(myworld) {}
   
 AMRSolver::~AMRSolver() {}
 
@@ -67,19 +69,18 @@ AMRSolver::~AMRSolver() {}
 SolverParameters*
 AMRSolver::readParameters(ProblemSpecP& params,
                           const string& varname,
-                          SimulationStateP& state)
-  
+                          const SimulationStateP& state)
 {
   HypreSolverParams* p = new HypreSolverParams();
   bool found=false;
 
   /* Scan and set parameters */
   if(params){
-    for(ProblemSpecP param = params->findBlock("Parameters"); param != 0;
-        param = param->findNextBlock("Parameters")) {
+    for( ProblemSpecP param = params->findBlock("Parameters"); param != nullptr; param = param->findNextBlock("Parameters") ) {
       string variable;
-      if(param->getAttribute("variable", variable) && variable != varname)
+      if( param->getAttribute("variable", variable) && variable != varname ) {
         continue;
+      }
       param->getWithDefault("solver", p->solverTitle, "smg");
       param->getWithDefault("preconditioner", p->precondTitle, "diagonal");
       param->getWithDefault("tolerance", p->tolerance, 1.e-10);
@@ -95,54 +96,7 @@ AMRSolver::readParameters(ProblemSpecP& params,
   }
 
   /* Default parameter values */
-  if(!found){
-    p->solverTitle = "smg";
-    p->precondTitle = "diagonal";
-    p->tolerance = 1.e-10;
-    p->maxIterations = 75;
-    p->nPre = 1;
-    p->nPost = 1;
-    p->skip = 0;
-    p->jump = 0;
-    p->logging = 0;
-  }
-  p->symmetric = false;
-  //  p->symmetric=true;
-  p->restart=false;
-  //  p->restart=true;
-
-  return p;
-}
-
-SolverParameters*
-AMRSolver::readParameters(ProblemSpecP& params,const string& varname)
-{
-  HypreSolverParams* p = new HypreSolverParams();
-  bool found=false;
-
-  /* Scan and set parameters */
-  if(params){
-    for(ProblemSpecP param = params->findBlock("Parameters"); param != 0;
-        param = param->findNextBlock("Parameters")) {
-      string variable;
-      if(param->getAttribute("variable", variable) && variable != varname)
-        continue;
-      param->getWithDefault("solver", p->solverTitle, "smg");
-      param->getWithDefault("preconditioner", p->precondTitle, "diagonal");
-      param->getWithDefault("tolerance", p->tolerance, 1.e-10);
-      param->getWithDefault("maxiterations", p->maxIterations, 75);
-      param->getWithDefault("npre", p->nPre, 1);
-      param->getWithDefault("npost", p->nPost, 1);
-      param->getWithDefault("skip", p->skip, 0);
-      param->getWithDefault("jump", p->jump, 0);
-      param->getWithDefault("logging", p->logging, 0);
-      param->getWithDefault("outputEquations", p->printSystem,false);
-      found=true;
-    }
-  }
-
-  /* Default parameter values */
-  if(!found){
+  if( !found ){
     p->solverTitle = "smg";
     p->precondTitle = "diagonal";
     p->tolerance = 1.e-10;
@@ -193,8 +147,8 @@ AMRSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
     interface = HypreSStruct;   /* A uniform grid */
   }
 
-  LoadBalancer* lb = sched->getLoadBalancer();
-  const PatchSet* perProcPatches = lb->getPerProcessorPatchSet(level->getGrid());
+  LoadBalancer * lb             = sched->getLoadBalancer();
+  const PatchSet   * perProcPatches = lb->getPerProcessorPatchSet(level->getGrid());
   
   HypreDriver* that = newHypreDriver(interface,level.get_rep(), matls, A, which_A_dw,x, modifies_x, b, which_b_dw, guess, which_guess_dw, dparams, perProcPatches);
   Handle<HypreDriver > handle = that;

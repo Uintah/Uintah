@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -294,7 +294,7 @@ OdtClosure::reComputeTurbSubmodel(const ProcessorGroup* pc,
     int archIndex = 0; // only one arches material
     int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     delt_vartype delT;
-    new_dw->get(delT, d_lab->d_sharedState->get_delt_label(), getLevel(patches));
+    new_dw->get(delT, d_lab->d_delTLabel, getLevel(patches));
     double deltaT_les = delT;
     double deltaT_odt=Min(0.001,deltaT_les/10);
     

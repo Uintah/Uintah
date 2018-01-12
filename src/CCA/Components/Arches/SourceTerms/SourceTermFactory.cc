@@ -11,14 +11,14 @@
 #include <CCA/Components/Arches/SourceTerms/CoalGasMomentum.h>
 #include <CCA/Components/Arches/SourceTerms/WestbrookDryer.h>
 #include <CCA/Components/Arches/SourceTerms/BowmanNOx.h>
-#include <CCA/Components/Arches/SourceTerms/BrownSootFormation_rhoYs.h>
-#include <CCA/Components/Arches/SourceTerms/BrownSootFormation_nd.h>
-#include <CCA/Components/Arches/SourceTerms/SootMassBalance.h>
-#include <CCA/Components/Arches/SourceTerms/BrownSootFormation_Tar.h>
+#include <CCA/Components/Arches/SourceTerms/BrownSoot.h>
 #include <CCA/Components/Arches/SourceTerms/Inject.h>
 #include <CCA/Components/Arches/SourceTerms/IntrusionInlet.h>
 #include <CCA/Components/Arches/SourceTerms/DORadiation.h>
 #include <CCA/Components/Arches/SourceTerms/RMCRT.h>
+#include <CCA/Components/Arches/SourceTerms/HTConvection.h>
+#include <CCA/Components/Arches/SourceTerms/ZZNoxSolid.h>
+#include <CCA/Components/Arches/SourceTerms/psNox.h>
 #include <CCA/Components/Arches/SourceTerms/PCTransport.h>
 #include <CCA/Components/Arches/SourceTerms/SecondMFMoment.h>
 #include <CCA/Components/Arches/SourceTerms/DissipationSource.h>
@@ -28,7 +28,7 @@
 #include <CCA/Components/Arches/SourceTerms/ShunnMoinMMSCont.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/BoundaryCondition.h>
-#include <CCA/Components/Arches/Properties.h>
+#include <CCA/Components/Arches/ChemMix/TableLookup.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
@@ -59,7 +59,7 @@ SourceTermFactory::~SourceTermFactory()
 }
 
 //---------------------------------------------------------------------------
-// Method: Return a reference to itself. 
+// Method: Return a reference to itself.
 //---------------------------------------------------------------------------
 SourceTermFactory&
 SourceTermFactory::self()
@@ -88,14 +88,29 @@ SourceTermFactory::register_source_term( const std::string name,
   }
 }
 //---------------------------------------------------------------------------
-// Method: Retrieve a source term from the map. 
+// Method: Retrieve a source term from the map.
 //---------------------------------------------------------------------------
 SourceTermBase&
 SourceTermFactory::retrieve_source_term( const std::string name )
 {
   const SourceMap::iterator isource= _sources.find( name );
 
-  if( isource != _sources.end() ) return *(isource->second);
+  if( isource != _sources.end() ) {
+    return *(isource->second);
+  } else {
+    // **assuming it has been built upstream**
+    // check for the source by using the multiple_src information
+    // This is slower. If the src hasn't been built, this should
+    // thrown an error when parsing the builders.
+    for ( auto i = _sources.begin(); i != _sources.end(); i++ ){
+      std::vector<std::string>& src_names = i->second->get_all_src_names();
+      for ( auto i_src = src_names.begin(); i_src != src_names.end(); i_src++ ){
+        if ( name == *i_src ){
+          return *(i->second);
+        }
+      }
+    }
+  }
 
   const BuildMap::iterator ibuilder = _builders.find( name );
 
@@ -116,44 +131,39 @@ SourceTermFactory::retrieve_source_term( const std::string name )
 //---------------------------------------------------------------------------
 void SourceTermFactory::commonSrcProblemSetup( const ProblemSpecP& db )
 {
-  for (ProblemSpecP src_db = db->findBlock("src"); src_db != 0; src_db = src_db->findNextBlock("src")){
+  for (ProblemSpecP src_db = db->findBlock("src"); src_db != nullptr; src_db = src_db->findNextBlock("src")){
 
-    SourceContainer this_src; 
-    double weight; 
-
+    SourceContainer this_src;
     src_db->getAttribute(  "label",  this_src.name   );
-    src_db->getWithDefault("weight", weight, 1.0);    // by default, add the source to the RHS
-
-    this_src.weight = weight; 
 
     //which sources are turned on for this equation
-    //only add them if they haven't already been added. 
-    bool add_me = true; 
+    //only add them if they haven't already been added.
+    bool add_me = true;
     for ( vector<SourceContainer>::iterator iter = _active_sources.begin(); iter != _active_sources.end(); iter++ ){
-      if ( iter->name == this_src.name ){ 
-        add_me = false; 
-      } 
+      if ( iter->name == this_src.name ){
+        add_me = false;
+      }
     }
 
-    if ( add_me ){ 
-      _active_sources.push_back( this_src ); 
+    if ( add_me ){
+      _active_sources.push_back( this_src );
     }
 
   }
 }
 
-void SourceTermFactory::extraSetup( GridP& grid, BoundaryCondition* bc, Properties* prop )
-{ 
-  for ( std::vector<SourceContainer>::iterator iter = _active_sources.begin();iter != _active_sources.end(); iter++ ){ 
+void SourceTermFactory::extraSetup( GridP& grid, BoundaryCondition* bc, TableLookup* table_lookup )
+{
+  for ( std::vector<SourceContainer>::iterator iter = _active_sources.begin();iter != _active_sources.end(); iter++ ){
 
-    SourceTermBase& src  = this->retrieve_source_term( iter->name ); 
-    src.extraSetup( grid, bc, prop); 
+    SourceTermBase& src  = this->retrieve_source_term( iter->name );
+    src.extraSetup( grid, bc, table_lookup);
 
   }
 }
 
 //---------------------------------------------------------------------------
-// Method: Find if a property model is included in the map. 
+// Method: Find if a property model is included in the map.
 //---------------------------------------------------------------------------
 bool
 SourceTermFactory::source_term_exists( const std::string name )
@@ -175,16 +185,16 @@ bool
 SourceTermFactory::source_type_exists( const std::string type )
 {
 
-  for ( SourceMap::iterator iter = _sources.begin(); iter != _sources.end(); iter++){ 
-  
-    string my_type = iter->second->getSourceType(); 
+  for ( SourceMap::iterator iter = _sources.begin(); iter != _sources.end(); iter++){
+
+    string my_type = iter->second->getSourceType();
 
     if ( my_type == type )
-      return true; 
+      return true;
 
   }
 
-  return false; 
+  return false;
 
 }
 
@@ -196,10 +206,10 @@ void SourceTermFactory::registerUDSources(ProblemSpecP& db, ArchesLabel* lab, Bo
   // Get reference to the source factory
   SourceTermFactory& factory = SourceTermFactory::self();
 
-  SimulationStateP& shared_state = (*lab).d_sharedState; 
+  SimulationStateP& shared_state = (*lab).d_sharedState;
 
   if (srcs_db) {
-    for (ProblemSpecP source_db = srcs_db->findBlock("src"); source_db != 0; source_db = source_db->findNextBlock("src")){
+    for (ProblemSpecP source_db = srcs_db->findBlock("src"); source_db != nullptr; source_db = source_db->findNextBlock("src")){
       std::string src_name;
       source_db->getAttribute("label", src_name);
       std::string src_type;
@@ -215,7 +225,7 @@ void SourceTermFactory::registerUDSources(ProblemSpecP& db, ArchesLabel* lab, Bo
 
       if ( var_db ) {
         // You may not have any labels that this source term depends on...hence the 'if' statement
-        for (ProblemSpecP var = var_db->findBlock("variable"); var !=0; var = var_db->findNextBlock("variable")){
+        for (ProblemSpecP var = var_db->findBlock("variable"); var != nullptr; var = var_db->findNextBlock("variable")){
 
           std::string label_name;
           var->getAttribute("label", label_name);
@@ -249,7 +259,7 @@ void SourceTermFactory::registerUDSources(ProblemSpecP& db, ArchesLabel* lab, Bo
         // Sums up the devol. model terms * weights
         SourceTermBase::Builder* src_builder = scinew CoalGasOxi::Builder(src_name, required_varLabels, shared_state);
         factory.register_source_term( src_name, src_builder );
-      
+
       } else if (src_type == "coal_gas_oxi_mom"){
         // Sums up the devol. model terms * weights
         SourceTermBase::Builder* src_builder = scinew CoalGasOxiMom::Builder(src_name, required_varLabels, lab, shared_state);
@@ -274,20 +284,20 @@ void SourceTermFactory::registerUDSources(ProblemSpecP& db, ArchesLabel* lab, Bo
         SourceTermBase::Builder* srcBuilder = scinew BowmanNOx::Builder(src_name, required_varLabels, lab);
         factory.register_source_term( src_name, srcBuilder );
 
-      } else if (src_type == "BrownSootFormation_rhoYs") {
-        SourceTermBase::Builder* srcBuilder = scinew BrownSootFormation_rhoYs::Builder(src_name, required_varLabels, lab);
+      } else if (src_type == "brown_soot") {
+        SourceTermBase::Builder* srcBuilder = scinew BrownSoot::Builder(src_name, required_varLabels, lab);
         factory.register_source_term( src_name, srcBuilder );
 
-      } else if (src_type == "BrownSootFormation_nd") {
-        SourceTermBase::Builder* srcBuilder = scinew BrownSootFormation_nd::Builder(src_name, required_varLabels, lab);
+      } else if (src_type == "ht_convection") {
+        SourceTermBase::Builder* srcBuilder = scinew HTConvection::Builder(src_name, required_varLabels, lab);
+        factory.register_source_term( src_name, srcBuilder );
+      
+      } else if (src_type == "zzNox_Solid") {
+        SourceTermBase::Builder* srcBuilder = scinew ZZNoxSolid::Builder(src_name, required_varLabels, lab);
         factory.register_source_term( src_name, srcBuilder );
 
-      } else if (src_type == "BrownSootFormation_Tar") {
-        SourceTermBase::Builder* srcBuilder = scinew BrownSootFormation_Tar::Builder(src_name, required_varLabels, lab);
-        factory.register_source_term( src_name, srcBuilder );
-
-      } else if (src_type == "SootMassBalance") {
-        SourceTermBase::Builder* srcBuilder = scinew SootMassBalance::Builder(src_name, required_varLabels, lab);
+      } else if (src_type == "psNox") {
+        SourceTermBase::Builder* srcBuilder = scinew psNox::Builder(src_name, required_varLabels, lab);
         factory.register_source_term( src_name, srcBuilder );
 
       } else if (src_type == "mms1"){
@@ -341,7 +351,7 @@ void SourceTermFactory::registerUDSources(ProblemSpecP& db, ArchesLabel* lab, Bo
         factory.register_source_term( src_name, srcBuilder );
 
       } else if ( src_type == "do_radiation" ) {
-      
+
         SourceTermBase::Builder* srcBuilder = scinew DORadiation::Builder( src_name, required_varLabels, lab, my_world );
         factory.register_source_term( src_name, srcBuilder );
 
@@ -349,36 +359,36 @@ void SourceTermFactory::registerUDSources(ProblemSpecP& db, ArchesLabel* lab, Bo
 
         SourceTermBase::Builder* srcBuilder = scinew RMCRT_Radiation::Builder( src_name, required_varLabels, lab, my_world );
         factory.register_source_term( src_name, srcBuilder );
-      
-      } else if ( src_type == "pc_transport" ) { 
 
-        SourceTermBase::Builder* srcBuilder = scinew PCTransport::Builder( src_name, required_varLabels, shared_state ); 
+      } else if ( src_type == "pc_transport" ) {
+
+        SourceTermBase::Builder* srcBuilder = scinew PCTransport::Builder( src_name, required_varLabels, shared_state );
         factory.register_source_term( src_name, srcBuilder );
 
       } else if ( src_type == "moment2_mixture_fraction_src" ) {
         SourceTermBase::Builder* srcBuilder = scinew SecondMFMoment::Builder(src_name, required_varLabels, shared_state );
         factory.register_source_term( src_name, srcBuilder );
-        
+
       } else if ( src_type == "dissipation_src" ) {
         SourceTermBase::Builder* srcBuilder = scinew DissipationSource::Builder(src_name, required_varLabels, shared_state );
         factory.register_source_term( src_name, srcBuilder );
 
-      } else if ( src_type == "manifold_rxn" ) { 
-        SourceTermBase::Builder* srcBuilder = scinew ManifoldRxn::Builder(src_name, required_varLabels, shared_state );
+      } else if ( src_type == "manifold_rxn" ) {
+        SourceTermBase::Builder* srcBuilder = scinew ManifoldRxn::Builder(src_name, required_varLabels, lab);
         factory.register_source_term( src_name, srcBuilder );
-        
+
       } else if ( src_type == "momentum_drag_src" ) {
         SourceTermBase::Builder* srcBuilder = scinew MomentumDragSrc::Builder(src_name, required_varLabels, shared_state );
         factory.register_source_term( src_name, srcBuilder );
-        
+
       } else if ( src_type == "shunn_moin_mf_mms" ) {
         SourceTermBase::Builder* srcBuilder = scinew ShunnMoinMMSMF::Builder(src_name, required_varLabels, shared_state );
         factory.register_source_term( src_name, srcBuilder );
-        
+
       } else if ( src_type == "shunn_moin_cont_mms" ) {
         SourceTermBase::Builder* srcBuilder = scinew ShunnMoinMMSCont::Builder(src_name, required_varLabels, shared_state );
         factory.register_source_term( src_name, srcBuilder );
-        
+
       } else {
         proc0cout << "For source term named: " << src_name << endl;
         proc0cout << "with type: " << src_type << endl;
@@ -398,7 +408,7 @@ void SourceTermFactory::registerSources( ArchesLabel* lab, const bool do_dqmom, 
   //
   // Get reference to the source factory
   SourceTermFactory& factory = SourceTermFactory::self();
-  SimulationStateP& shared_state = (*lab).d_sharedState; 
+  SimulationStateP& shared_state = (*lab).d_sharedState;
 
   // Unweighted abscissa src term
   if ( do_dqmom ) {
@@ -429,11 +439,11 @@ void SourceTermFactory::registerSources( ArchesLabel* lab, const bool do_dqmom, 
 }
 
 void SourceTermFactory::sched_computeSources( const LevelP& level, SchedulerP& sched, int timeSubStep, const int stage )
-{ 
+{
   for (vector<SourceContainer>::iterator iter = _active_sources.begin(); iter != _active_sources.end(); iter++){
 
     SourceTermBase& temp_src = retrieve_source_term( iter->name );
-    const int check = temp_src.stage_compute(); 
+    const int check = temp_src.stage_compute();
 
     if ( check > 2 ){
       throw InvalidValue("Error: The following source term has a problem with the stage: "+iter->name, __FILE__, __LINE__);
@@ -443,4 +453,4 @@ void SourceTermFactory::sched_computeSources( const LevelP& level, SchedulerP& s
       temp_src.sched_computeSource( level, sched, timeSubStep );
     }
   }
-} 
+}

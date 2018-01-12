@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -23,7 +23,8 @@
  */
 
 #include <CCA/Components/ICE/CustomBCs/inletVelocity.h>
-#include <CCA/Components/ICE/ICEMaterial.h>
+#include <CCA/Components/ICE/Materials/ICEMaterial.h>
+#include <Core/Math/MersenneTwister.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Variables/CellIterator.h>
@@ -50,14 +51,12 @@ bool read_inletVel_BC_inputs(const ProblemSpecP& prob_spec,
   bool usingBC = false;
   string whichProfile; 
   
-  for (ProblemSpecP face_ps = bc_ps->findBlock("Face"); face_ps != 0; 
-                    face_ps=face_ps->findNextBlock("Face")) {
+  for( ProblemSpecP face_ps = bc_ps->findBlock( "Face" ); face_ps != nullptr; face_ps=face_ps->findNextBlock( "Face" ) ) {
     map<string,string> face;
     face_ps->getAttributes(face);
     bool setThisFace = false;
     
-    for(ProblemSpecP bc_iter = face_ps->findBlock("BCType"); bc_iter != 0;
-                     bc_iter = bc_iter->findNextBlock("BCType")){
+    for( ProblemSpecP bc_iter = face_ps->findBlock( "BCType" ); bc_iter != nullptr; bc_iter = bc_iter->findNextBlock( "BCType" ) ) {
       map<string,string> bc_type;
       bc_iter->getAttributes(bc_type);
       

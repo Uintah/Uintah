@@ -98,21 +98,21 @@ populate_reduction_variable( const Uintah::ProcessorGroup* const pg,
   for( int ip=0; ip<patches->size(); ++ip ){
     const Uintah::Patch* const patch = patches->get(ip);
     for( int im=0; im<materials->size(); ++im ){
-      Uintah::PerPatch< double* > val;
+      Uintah::PerPatch<double> val;
       if( newDW->exists(thisVarLabel_,im,patch) ){
-        newDW->get( val, thisVarLabel_, im, patch );
-        dbg_red << this->get_tag().name() << " patch " << patch->getID() << " val = " << *val << std::endl;
-        Uintah::ReductionVariableBase* redcVar = nullptr;
+        newDW->get( val, thisVarLabel_, im, patch );        
+        dbg_red << this->get_tag().name() << " patch " << patch->getID() << " val = " << val.get() << std::endl;
+        Uintah::ReductionVariableBase* redcVar = NULL;
         
         switch (reductionName_) {
-          case ReduceMin: redcVar = scinew UintahReduceMin(*val); break;
-          case ReduceMax: redcVar = scinew UintahReduceMax(*val); break;
-          case ReduceSum: redcVar = scinew UintahReduceSum(*val); break;
+          case ReduceMin: redcVar = scinew UintahReduceMin(val.get()); break;
+          case ReduceMax: redcVar = scinew UintahReduceMax(val.get()); break;
+          case ReduceSum: redcVar = scinew UintahReduceSum(val.get()); break;
           default: break;
         }
         
         if (redcVar) {
-            newDW->put(*redcVar,rkRedVarLbls_[RKStage - 1]);
+          newDW->put(*redcVar,rkRedVarLbls_[RKStage - 1]);
           delete redcVar;
         }
         
@@ -134,7 +134,7 @@ get_reduction_variable( const Uintah::ProcessorGroup* const pg,
                         Uintah::DataWarehouse* const newDW,
                         const int RKStage)
 {
-  double reducedValue = 0;
+  double reducedValue = 3.3;
   dbg_red << "getting reduction variables \n";
   // grab the reduced variable
   switch (reductionName_) {
@@ -170,9 +170,10 @@ get_reduction_variable( const Uintah::ProcessorGroup* const pg,
       
       if (newDW->exists(thisVarLabel_,im,patch)) {
         // now put the reduced variable back into this expression
-        Uintah::PerPatch< double* > perPatchVal;
+        Uintah::PerPatch<double> perPatchVal;
         newDW->get(perPatchVal, thisVarLabel_, im, patch );
-        *perPatchVal = reducedValue;
+        perPatchVal.setData(reducedValue);
+        //*( (double *) perPatchVal.getBasePointer()) = reducedValue;
         dbg_red << this->get_tag().name() << " expression value on patch " << patch->getID() << " after reduction = " << this->value()[0] << std::endl;
       } else {
         std::cout << "variable not found \n";

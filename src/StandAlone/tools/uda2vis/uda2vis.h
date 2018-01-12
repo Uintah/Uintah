@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -23,7 +23,7 @@
  */
 
 /*
- *  uda2vis.cc: Provides an interface between VisIt's libsim and Uintah.
+ *  uda2vis.h: Provides an interface between VisIt's libsim and Uintah.
  *
  *  Written by:
  *   Department of Computer Science
@@ -41,30 +41,29 @@
 #include <CCA/Ports/SchedulerP.h>
 #include <Core/Grid/GridP.h>
 
+// Define these for the in-situ usage.
+
 namespace Uintah {
 
-TimeStepInfo* getTimeStepInfo2(SchedulerP schedulerP,
-			       GridP grid,
-			       int timestep,
-			       bool useExtraCells);
+TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
+			      GridP grid,
+			      bool useExtraCells);
 
-GridDataRaw* getGridData2(SchedulerP schedulerP,
-			  GridP gridP,
-			  int level_i,
-			  int patch_i,
-			  std::string variable_name,
-			  int material,
-			  int timestep,
-			  int low[3],
-			  int high[3]);
+GridDataRaw* getGridData(SchedulerP schedulerP,
+			 GridP gridP,
+			 int level_i,
+			 int patch_i,
+			 std::string variable_name,
+			 int material,
+			 int low[3],
+			 int high[3]);
 
-ParticleDataRaw* getParticleData2(SchedulerP schedulerP,
-				  GridP gridP,
-				  int level_i,
-				  int patch_i,
-				  std::string variable_name,
-				  int material,
-				  int timestep);
+ParticleDataRaw* getParticleData(SchedulerP schedulerP,
+				 GridP gridP,
+				 int level_i,
+				 int patch_i,
+				 std::string variable_name,
+				 int material);
 
 void GetLevelAndLocalPatchNumber(TimeStepInfo* stepInfo,
 				 int global_patch, 
@@ -73,12 +72,8 @@ void GetLevelAndLocalPatchNumber(TimeStepInfo* stepInfo,
 int GetGlobalDomainNumber(TimeStepInfo* stepInfo,
 			  int level, int local_patch);
 
-void getBounds(int low[3], int high[3],
-	       const std::string meshName,
-	       const LevelInfo &levelInfo,
-	       int patch_id=-1);
-
-void CheckNaNs(int num, double *data, int level, int patch);
+void CheckNaNs(double *data, const int num,
+	       const char* varname, const int level, const int patch);
 }
 
 #endif //UINTAH_UDA2VIS_H

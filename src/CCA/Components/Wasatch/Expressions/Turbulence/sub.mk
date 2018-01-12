@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 2010-2016 The University of Utah
+#  Copyright (c) 2010-2018 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -27,14 +27,14 @@
 # 
 # Makefile fragment for this subdirectory 
 
-SRCDIR   := CCA/Components/Wasatch/Expressions/Turbulence
+SRCDIR := CCA/Components/Wasatch/Expressions/Turbulence
 
 #
 # These are files that if CUDA is enabled (via configure), must be
 # compiled using the nvcc compiler.
 #
-# WARNING: If you add a file to the list of CUDA_SRCS, you must add a
-# corresponding rule at the end of this file!
+# Do not put the .cc on the file name as the .cc or .cu will be added automatically
+# as needed.
 #
 CUDA_ENABLED_SRCS =       \
      StrainTensorMagnitude     
@@ -68,14 +68,14 @@ SRCS +=                                        \
 
 ########################################################################
 #
-# Rules to copy CUDA enabled source (.cc) files to the binary build tree
-# and rename with a .cu extension.
+# Create rules to copy CUDA enabled source (.cc) files to the binary build tree
+# and rename them with a .cu extension so they can be compiled by the NVCC
+# compiler.
 #
 
 ifeq ($(HAVE_CUDA),yes)
-  # If Copy the 'original' .cc files into the binary tree and rename as .cu
 
-  $(OBJTOP_ABS)/$(SRCDIR)/StrainTensorMagnitude.cu : $(SRCTOP_ABS)/$(SRCDIR)/StrainTensorMagnitude.cc
-	cp $< $@
+  # Call the make-cuda-target function on each of the CUDA_ENABLED_SRCS:
+  $(foreach file,$(CUDA_ENABLED_SRCS),$(eval $(call make-cuda-target,$(file))))
 
 endif

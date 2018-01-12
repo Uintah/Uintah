@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -38,19 +38,15 @@
 //#include <CCA/Components/Arches/Mixing/Common.h>
 #include <CCA/Components/Arches/BoundaryCondition.h>
 #include <Core/Exceptions/InternalError.h>
-#include <Core/Util/Time.h>
 
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#include <cmath>
 #include <Core/Math/MiscMath.h>
+#include <Core/Util/Timers/Timers.hpp>
 
-
-using namespace std;
-using namespace Uintah;
 
 #include <CCA/Components/Arches/Radiation/fortran/rordr_fort.h>
 //#include <CCA/Components/Arches/Radiation/fortran/rordrss_fort.h>
@@ -67,6 +63,12 @@ using namespace Uintah;
 #include <CCA/Components/Arches/Radiation/fortran/rdomvolq_fort.h>
 #include <CCA/Components/Arches/Radiation/fortran/rshsolve_fort.h>
 #include <CCA/Components/Arches/Radiation/fortran/rshresults_fort.h>
+
+#include <cmath>
+
+using namespace std;
+using namespace Uintah;
+
 //****************************************************************************
 // Default constructor for DORadiationModel
 //****************************************************************************
@@ -347,7 +349,9 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
                                  ArchesConstVariables* constvars, 
                                  int wall_type )
 {
-  double solve_start = Time::currentSeconds();
+  Timers::Simple timer;
+  time.start();
+
    rgamma.resize(1,29);
    sd15.resize(1,481);
    sd.resize(1,2257);
@@ -459,10 +463,10 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
                        vars->qfluxn, vars->qfluxs,
                        vars->qfluxt, vars->qfluxb, d_opl);
 
-        //      double timeSetMat = Time::currentSeconds();
+        //      double timeSetMat = timer().seconds();
         d_linearSolver->setMatrix(pg ,patch, vars, plusX, plusY, 
                                   plusZ, su, ab, as, aw, ap, ae, an, at);
-        //      timeRadMatrix += Time::currentSeconds() - timeSetMat;
+        //      timeRadMatrix += timer().seconds() - timeSetMat;
         bool converged =  d_linearSolver->radLinearSolve();
         if (converged) {
           d_linearSolver->copyRadSoln(patch, vars);
@@ -481,8 +485,8 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
       fort_rdomsrc(idxLo, idxHi, vars->ABSKG, vars->ESRCG,vars->volq, vars->src);
     }  // bands loop
     
-    if(d_myworld->myrank() == 0) {
-      cerr << "Total Radiation Solve Time: " << Time::currentSeconds()-solve_start << " seconds\n";
+    if(d_myworld->myRank() == 0) {
+      cerr << "Total Radiation Solve Time: " << timer().seconds() << " seconds\n";
     }
     /*
     fort_rdombmcalc(idxLo, idxHi, constvars->cellType, ffield, cellinfo->xx, cellinfo->zz, cellinfo->sew, cellinfo->sns, cellinfo->stb, volume, areaew, arean, areatb, srcbm, qfluxbbm, vars->src, vars->qfluxe, vars->qfluxw, vars->qfluxn, vars->qfluxs, vars->qfluxt, vars->qfluxb, lprobone, lprobtwo, lprobthree, srcpone, volq, srcsum);
@@ -496,7 +500,8 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
   //
   if(d_SHRadiationCalc){
 
-    double solve_start = Time::currentSeconds();
+    Timers::Simple timer;
+    time.start();
 
     for (int bands =1; bands <=lambda; bands++){
 
@@ -532,10 +537,10 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
                     volume, su, ae, aw, an, as, at, ab, ap,
                     areaew, arean, areatb, vars->volq, vars->src, plusX, plusY, plusZ, fraction, fractiontwo, bands);
 
-      //      double timeSetMat = Time::currentSeconds();
+      //      double timeSetMat = timer().seconds();
       d_linearSolver->setMatrix(pg ,patch, vars, plusX, plusY, 
                                 plusZ, su, ab, as, aw, ap, ae, an, at);
-      //      timeRadMatrix += Time::currentSeconds() - timeSetMat;
+      //      timeRadMatrix += timer().seconds() - timeSetMat;
       bool converged =  d_linearSolver->radLinearSolve();
       if (converged) {
         d_linearSolver->copyRadSoln(patch, vars);
@@ -554,8 +559,8 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
                       vars->ABSKG, vars->shgamma, vars->ESRCG, vars->src, fraction, fractiontwo, bands);
     }  // bands loop
 
-    if(d_myworld->myrank() == 0) {
-      cerr << "Total Radiation Solve Time: " << Time::currentSeconds()-solve_start << " seconds\n";
+    if(d_myworld->myRank() == 0) {
+      cerr << "Total Radiation Solve Time: " << timer().seconds() << " seconds\n";
     }
     /*
      fort_rdombmcalc(idxLo, idxHi, constvars->cellType, ffield, cellinfo->xx, cellinfo->zz, cellinfo->sew, cellinfo->sns, cellinfo->stb, volume, areaew, arean, areatb, srcbm, qfluxbbm, vars->src, vars->qfluxe, vars->qfluxw, vars->qfluxn, vars->qfluxs, vars->qfluxt, vars->qfluxb, lprobone, lprobtwo, lprobthree, srcpone, volq, srcsum);

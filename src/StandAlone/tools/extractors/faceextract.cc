@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -45,7 +45,7 @@
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/NodeIterator.h>
 #include <Core/Grid/Variables/CellIterator.h>
-#include <Core/Grid/Variables/ShareAssignParticleVariable.h>
+//#include <Core/Grid/Variables/ShareAssignParticleVariable.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
@@ -134,7 +134,7 @@ void printData(DataArchive* archive, string& variable_name,
   out.setf(ios::scientific,ios::floatfield);
   out.precision(16);
   
-  bool cellNotFound = false;
+  // bool cellNotFound = false;
   //__________________________________
   
   if (verbose)
@@ -187,7 +187,7 @@ void printData(DataArchive* archive, string& variable_name,
 
     // query all the data up front
     vector<Variable*> vars(patches.size());
-    for (int p = 0; p < patches.size(); p++) {
+    for (unsigned int p = 0; p < patches.size(); p++) {
       switch (variable_type->getType()) {
       case Uintah::TypeDescription::CCVariable:
         vars[p] = scinew CCVariable<T>;
@@ -225,7 +225,7 @@ void printData(DataArchive* archive, string& variable_name,
 
       // find out which patch it's on (to keep the printing in sorted order.
       // alternatively, we could just iterate through the patches)
-      int p = 0;
+      unsigned int p = 0;
       for (; p < patches.size(); p++) {
         IntVector low = patches[p]->getExtraCellLowIndex();
         IntVector high = patches[p]->getExtraCellHighIndex();
@@ -234,10 +234,10 @@ void printData(DataArchive* archive, string& variable_name,
           break;
       }
       if (p == patches.size()) {
-        cellNotFound = true;
+        // cellNotFound = true;
         continue;
       }
-      int p_xm = 0;
+      unsigned int p_xm = 0;
       for (; p_xm < patches.size(); p_xm++) {
         IntVector low = patches[p_xm]->getExtraCellLowIndex();
         IntVector high = patches[p_xm]->getExtraCellHighIndex();
@@ -246,10 +246,10 @@ void printData(DataArchive* archive, string& variable_name,
           break;
       }
       if (p_xm == patches.size()) {
-        cellNotFound = true;
+        // cellNotFound = true;
         continue;
       }
-      int p_ym = 0;
+      unsigned int p_ym = 0;
       for (; p_ym < patches.size(); p_ym++) {
         IntVector low = patches[p_ym]->getExtraCellLowIndex();
         IntVector high = patches[p_ym]->getExtraCellHighIndex();
@@ -258,10 +258,10 @@ void printData(DataArchive* archive, string& variable_name,
           break;
       }
       if (p_ym == patches.size()) {
-        cellNotFound = true;
+        // cellNotFound = true;
         continue;
       }
-      int p_zm = 0;
+      unsigned int p_zm = 0;
       for (; p_zm < patches.size(); p_zm++) {
         IntVector low = patches[p_zm]->getExtraCellLowIndex();
         IntVector high = patches[p_zm]->getExtraCellHighIndex();
@@ -270,10 +270,10 @@ void printData(DataArchive* archive, string& variable_name,
           break;
       }
       if (p_zm == patches.size()) {
-        cellNotFound = true;
+        // cellNotFound = true;
         continue;
       }
-      int p_xp = 0;
+      unsigned int p_xp = 0;
       for (; p_xp < patches.size(); p_xp++) {
         IntVector low = patches[p_xp]->getExtraCellLowIndex();
         IntVector high = patches[p_xp]->getExtraCellHighIndex();
@@ -282,10 +282,10 @@ void printData(DataArchive* archive, string& variable_name,
           break;
       }
       if (p_xp == patches.size()) {
-        cellNotFound = true;
+        // cellNotFound = true;
         continue;
       }
-      int p_yp = 0;
+      unsigned int p_yp = 0;
       for (; p_yp < patches.size(); p_yp++) {
         IntVector low = patches[p_yp]->getExtraCellLowIndex();
         IntVector high = patches[p_yp]->getExtraCellHighIndex();
@@ -294,10 +294,10 @@ void printData(DataArchive* archive, string& variable_name,
           break;
       }
       if (p_yp == patches.size()) {
-        cellNotFound = true;
+        // cellNotFound = true;
         continue;
       }
-      int p_zp = 0;
+      unsigned int p_zp = 0;
       for (; p_zp < patches.size(); p_zp++) {
         IntVector low = patches[p_zp]->getExtraCellLowIndex();
         IntVector high = patches[p_zp]->getExtraCellHighIndex();
@@ -306,7 +306,7 @@ void printData(DataArchive* archive, string& variable_name,
           break;
       }
       if (p_zp == patches.size()) {
-        cellNotFound = true;
+        // cellNotFound = true;
         continue;
       }
           
@@ -505,7 +505,6 @@ void printData(DataArchive* archive, string& variable_name,
 int
 main( int argc, char** argv )
 {
-  Uintah::Parallel::determineIfRunningUnderMPI( argc, argv );
   Uintah::Parallel::initializeManager(argc, argv);
 
   //__________________________________

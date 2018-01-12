@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,7 +25,6 @@
 #ifndef Uintah_Component_Arches_NonlinearSolver_h
 #define Uintah_Component_Arches_NonlinearSolver_h
 
-#include <CCA/Components/Arches/Arches.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
@@ -75,15 +74,19 @@ public:
 
   virtual void computeTimestep( const LevelP& level, SchedulerP& sched ) = 0;
 
-  virtual double recomputeTimestep(double current_dt) = 0;
+  virtual double recomputeDelT(const double delT) = 0;
 
-  virtual bool restartableTimesteps() = 0;
+  virtual bool restartableTimeSteps() = 0;
 
   virtual void initialize( const LevelP& lvl, SchedulerP& sched, const bool doing_restart ) = 0;
 
   virtual void sched_restartInitialize( const LevelP& level, SchedulerP& sched ) = 0;
 
   virtual void sched_restartInitializeTimeAdvance( const LevelP& level, SchedulerP& sched ) = 0;
+
+  virtual int getTaskGraphIndex(const int timeStep ) = 0;
+
+  virtual int taskGraphsRequested() = 0;
 
   class NLSolverBuilder {
 
@@ -103,9 +106,6 @@ public:
   /** @brief Return the initial dt **/
   inline double get_initial_dt(){ return d_initial_dt; }
 
-  /** @brief Set the helper **/
-  void set_bchelper( std::map< int, ArchesBCHelper* >* helper ){ _bcHelperMap = helper; }
-
 protected:
 
    const ProcessorGroup * d_myworld;
@@ -116,6 +116,8 @@ protected:
 
    typedef std::map< int, ArchesBCHelper* >* BCHelperMapT;
    BCHelperMapT _bcHelperMap;
+
+   ProblemSpecP m_arches_spec;
 
 private:
 

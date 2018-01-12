@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -36,12 +36,15 @@
 #include <CCA/Components/Arches/Filter.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 #include <CCA/Components/Arches/Task/TaskInterface.h>
+#include <CCA/Components/Arches/WBCHelper.h>
+#include <CCA/Components/Arches/BoundaryConditions/BoundaryFunctors.h>
 
 #include <CCA/Components/Arches/ArchesVariables.h>
 #include <CCA/Components/Arches/ArchesConstVariables.h>
 #include <CCA/Components/Arches/TimeIntegratorLabel.h>
 #include <CCA/Components/Arches/PhysicalConstants.h>
 #include <CCA/Components/Arches/Properties.h>
+#include <CCA/Components/Arches/ChemMix/TableLookup.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
 
@@ -83,16 +86,17 @@ using namespace Uintah;
 BoundaryCondition::BoundaryCondition(const ArchesLabel* label,
                                      const MPMArchesLabel* MAlb,
                                      PhysicalConstants* phys_const,
-                                     Properties* props ) :
+                                     Properties* props,
+                                     TableLookup* table_lookup ) :
   d_lab(label), d_MAlab(MAlb),
   d_physicalConsts(phys_const),
-  d_props(props)
+  d_props(props),
+  d_table_lookup(table_lookup)
 {
 
   MM_CUTOFF_VOID_FRAC = 0.5;
   _using_new_intrusion  = false;
   d_calcEnergyExchange  = false;
-  d_slip = false;
 
   // x-direction
   index_map[0][0] = 0;
@@ -111,6 +115,8 @@ BoundaryCondition::BoundaryCondition(const ArchesLabel* label,
 
   d_radiation_temperature_label = VarLabel::create("radiation_temperature", CCVariable<double>::getTypeDescription());
 
+  d_temperature_label = VarLabel::find("temperature");
+
 }
 
 
@@ -119,33 +125,41 @@ BoundaryCondition::BoundaryCondition(const ArchesLabel* label,
 //****************************************************************************
 BoundaryCondition::~BoundaryCondition()
 {
+
   delete d_newBC;
-  for ( BCInfoMap::iterator bc_iter = d_bc_information.begin();
-        bc_iter != d_bc_information.end(); bc_iter++) {
 
-    VarLabel::destroy( bc_iter->second.total_area_label );
+  for ( auto i = d_bc_information.begin(); i != d_bc_information.end(); i++ ){
+    for ( auto j = (i->second).begin(); j != (i->second).end(); j++ ){
 
-    if (bc_iter->second.type ==  TURBULENT_INLET ) {
-      delete bc_iter->second.TurbIn;
+      if ( j->second.type == TURBULENT_INLET ){
+        delete j->second.TurbIn;
+      }
+
     }
   }
 
   if (_using_new_intrusion) {
-    delete _intrusionBC;
+    for ( auto i = _intrusionBC.begin(); i != _intrusionBC.end(); i++ ){
+      delete i->second;
+    }
   }
 
   VarLabel::destroy(d_radiation_temperature_label);
+
 }
 
 //****************************************************************************
 // Problem Setup
 //****************************************************************************
 void
-BoundaryCondition::problemSetup(const ProblemSpecP& params)
+BoundaryCondition::problemSetup( const ProblemSpecP& params,
+                                 GridP& grid )
 {
 
   ProblemSpecP db_params = params;
   ProblemSpecP db = params->findBlock("BoundaryConditions");
+
+  m_arches_spec = db_params;
 
   d_newBC = scinew BoundaryCondition_new( d_lab->d_sharedState->getArchesMaterial(0)->getDWIndex() );
 
@@ -153,23 +167,26 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
     d_check_inlet_obstructions = true;
   }
 
-  if ( db.get_rep() != 0 ) {
+  if ( db != nullptr ) {
 
-    setupBCs( db_params );
-
-    db->getWithDefault("wall_csmag",d_csmag_wall,0.0);
-    if ( db->findBlock( "wall_slip" )) {
-      d_slip = true;
-      d_csmag_wall = 0.0;
-    }
+    //setupBCs( db_params );
 
     if ( db->findBlock("intrusions") ) {
 
-      _intrusionBC = scinew IntrusionBC( d_lab, d_MAlab, d_props, BoundaryCondition::INTRUSION );
-      ProblemSpecP db_new_intrusion = db->findBlock("intrusions");
-      _using_new_intrusion = true;
+      for ( int i = 0; i < grid->numLevels(); i++ ){
+        _intrusionBC.insert(std::make_pair(i, scinew IntrusionBC( d_lab, d_MAlab, d_props,
+                                                                  d_table_lookup,
+                                                                  BoundaryCondition::INTRUSION )));
+        ProblemSpecP db_new_intrusion = db->findBlock("intrusions");
+        if (i == (grid->numLevels() - 1)){  //  Only create intrusions on the finest level.
+                                            //  In the future, we may want to create intrusions on all levels,
+                                            //  if so, we will need to resolve problems with redundant intrusion
+                                            //  names in the infrastructure.
+          _intrusionBC[i]->problemSetup( db_new_intrusion, i );
+        }
 
-      _intrusionBC->problemSetup( db_new_intrusion );
+      }
+      _using_new_intrusion = true;
 
     }
 
@@ -193,14 +210,12 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
 
     if ( db_bc ) {
 
-      for ( ProblemSpecP db_face = db_bc->findBlock("Face"); db_face != 0;
-            db_face = db_face->findNextBlock("Face") ) {
+      for ( ProblemSpecP db_face = db_bc->findBlock("Face"); db_face != nullptr; db_face = db_face->findNextBlock("Face") ) {
 
         std::string face_name = "NA";
         db_face->getAttribute("name", face_name );
 
-        for ( ProblemSpecP db_BCType = db_face->findBlock("BCType"); db_BCType != 0;
-              db_BCType = db_BCType->findNextBlock("BCType") ) {
+        for ( ProblemSpecP db_BCType = db_face->findBlock("BCType"); db_BCType != nullptr; db_BCType = db_BCType->findNextBlock("BCType") ) {
 
           std::string name;
           std::string type;
@@ -294,6 +309,11 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
     //band-aid
     throw ProblemSetupException("Error: Please insert a <BoundaryConditions/> in your <ARCHES> node of the UPS.", __FILE__, __LINE__);
   }
+}
+
+void
+BoundaryCondition::set_bc_information(const LevelP& level){
+  setupBCs(m_arches_spec, level);
 }
 
 //****************************************************************************
@@ -426,8 +446,8 @@ BoundaryCondition::sched_setIntrusionTemperature( SchedulerP& sched,
                                                   const MaterialSet* matls)
 {
   if ( _using_new_intrusion ) {
-    // Interface to new intrusions
-    _intrusionBC->sched_setIntrusionT( sched, level, matls );
+    const int ilvl = level->getID();
+    _intrusionBC[ilvl]->sched_setIntrusionT( sched, level, matls );
   }
 }
 
@@ -863,10 +883,12 @@ BoundaryCondition::velRhoHatInletBC(const Patch* patch,
                                     ArchesVariables* vars,
                                     ArchesConstVariables* constvars,
                                     const int matl_index,
+                                    const int timeStep,
+                                    const double simTime,
                                     double time_shift)
 {
-  //double time = d_lab->d_sharedState->getElapsedTime();
-  //double current_time = time + time_shift;
+  //double simTime = d_lab->d_sharedState->getElapsedSimTime();
+  //double current_time = simTime + time_shift;
   // Get the low and high index for the patch and the variables
   IntVector idxLo = patch->getFortranCellLowIndex();
   IntVector idxHi = patch->getFortranCellHighIndex();
@@ -876,8 +898,11 @@ BoundaryCondition::velRhoHatInletBC(const Patch* patch,
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
 
-  for ( BCInfoMap::iterator bc_iter = d_bc_information.begin();
-        bc_iter != d_bc_information.end(); bc_iter++) {
+  const Level* level = patch->getLevel();
+  const int ilvl = level->getID();
+
+  for ( BCInfoMap::iterator bc_iter = d_bc_information[ilvl].begin();
+        bc_iter != d_bc_information[ilvl].end(); bc_iter++) {
 
     for ( bf_iter = bf.begin(); bf_iter !=bf.end(); bf_iter++ ) {
 
@@ -925,7 +950,8 @@ BoundaryCondition::velRhoHatInletBC(const Patch* patch,
 
           } else if (bc_iter->second.type == TURBULENT_INLET) {
 
-            setTurbInlet( patch, face, vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat, constvars->new_density, bound_ptr, bc_iter->second.TurbIn );
+            setTurbInlet( patch, face, vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat, constvars->new_density, bound_ptr, bc_iter->second.TurbIn,
+                          timeStep, simTime );
 
           } else if ( bc_iter->second.type == SWIRL ) {
 
@@ -1178,7 +1204,7 @@ BoundaryCondition::velocityOutletPressureTangentBC(const Patch* patch,
   bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
   bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
 
-  for (int index = 1; index <= Arches::NDIM; ++index) {
+  for (int index = 1; index <= 3; ++index) {
     if (xminus) {
       int colX = idxLo.x();
       int maxY = idxHi.y();
@@ -1814,8 +1840,6 @@ void BoundaryCondition::sched_setAreaFraction( SchedulerP& sched,
 
   sched->addTask(tsk, level->eachPatch(), matls);
 
-  d_newBC->sched_create_masks(level, sched, matls);
-
 }
 void
 BoundaryCondition::setAreaFraction( const ProcessorGroup*,
@@ -1920,8 +1944,10 @@ BoundaryCondition::setAreaFraction( const ProcessorGroup*,
 // New Domain BCs
 //
 void
-BoundaryCondition::setupBCs( ProblemSpecP& db )
+BoundaryCondition::setupBCs( ProblemSpecP db, const LevelP& level )
 {
+
+  const int ilvl = level->getID();
 
   ProblemSpecP db_root = db->getRootNode();
   ProblemSpecP db_bc   = db_root->findBlock("Grid")->findBlock("BoundaryConditions");
@@ -1931,45 +1957,38 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
     db_root->findBlock("PhysicalConstants")->require("gravity",grav);
     if ( grav.x() != 0 ) {
       dir_grav = 0;
-    } else if ( grav.y() != 0 ) {
+    }
+    else if ( grav.y() != 0 ) {
       dir_grav = 1;
-    } else if ( grav.z() != 0 ) {
+    }
+    else if ( grav.z() != 0 ) {
       dir_grav = 2;
     }
   }
   int bc_type_index = 0;
 
-  //Map types to strings:
-  d_bc_type_to_string.insert( std::make_pair( TURBULENT_INLET, "TurbulentInlet" ) );
-  d_bc_type_to_string.insert( std::make_pair( VELOCITY_INLET, "VelocityInlet" ) );
-  d_bc_type_to_string.insert( std::make_pair( MASSFLOW_INLET, "MassFlowInlet" ) );
-  d_bc_type_to_string.insert( std::make_pair( PARTMASSFLOW_INLET, "PartMassFlowInlet" ) );
-  d_bc_type_to_string.insert( std::make_pair( VELOCITY_FILE, "VelocityFileInput" ) );
-  d_bc_type_to_string.insert( std::make_pair( PRESSURE, "PressureBC" ) );
-  d_bc_type_to_string.insert( std::make_pair( OUTLET, "OutletBC" ) );
-  d_bc_type_to_string.insert( std::make_pair( NEUTRAL_OUTLET, "NOutletBC") );
-  d_bc_type_to_string.insert( std::make_pair( SWIRL, "Swirl" ) );
-  d_bc_type_to_string.insert( std::make_pair( STABL, "StABL" ) );
-  d_bc_type_to_string.insert( std::make_pair( WALL, "WallBC" ) );
-
   // Now actually look for the boundary types
   if ( db_bc ) {
-    for ( ProblemSpecP db_face = db_bc->findBlock("Face"); db_face != 0;
-          db_face = db_face->findNextBlock("Face") ) {
+    for ( ProblemSpecP db_face = db_bc->findBlock("Face"); db_face != nullptr; db_face = db_face->findNextBlock("Face") ) {
 
       string which_face;
       int v_index=999;
       if ( db_face->getAttribute("side", which_face)) {
         db_face->getAttribute("side",which_face);
-      } else if ( db_face->getAttribute( "circle", which_face)) {
+      }
+      else if ( db_face->getAttribute( "circle", which_face)) {
         db_face->getAttribute("circle",which_face);
-      } else if ( db_face->getAttribute( "rectangle", which_face)) {
+      }
+      else if ( db_face->getAttribute( "rectangle", which_face)) {
         db_face->getAttribute("rectangle",which_face);
-      } else if ( db_face->getAttribute( "rectangulus", which_face)) {
+      }
+      else if ( db_face->getAttribute( "rectangulus", which_face)) {
         db_face->getAttribute("rectangulus",which_face);
-      } else if ( db_face->getAttribute( "annulus", which_face)) {
+      }
+      else if ( db_face->getAttribute( "annulus", which_face)) {
         db_face->getAttribute("annulus",which_face);
-      } else if ( db_face->getAttribute( "ellipse", which_face)) {
+      }
+      else if ( db_face->getAttribute( "ellipse", which_face)) {
         db_face->getAttribute("ellipse",which_face);
       }
 
@@ -1978,25 +1997,37 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
 
       //avoid the "or" in case I want to add more logic
       //re: the face normal.
+      double v_sign;
       if ( which_face =="x-") {
         v_index = 0;
-      } else if ( which_face =="x+") {
+        v_sign=-1;
+      }
+      else if ( which_face =="x+") {
         v_index = 0;
-      } else if ( which_face =="y-") {
+        v_sign=1;
+      }
+      else if ( which_face =="y-") {
         v_index = 1;
-      } else if ( which_face =="y+") {
+        v_sign=-1;
+      }
+      else if ( which_face =="y+") {
         v_index = 1;
-      } else if ( which_face =="z-") {
+        v_sign=1;
+      }
+      else if ( which_face =="z-") {
         v_index = 2;
-      } else if ( which_face =="z+") {
+        v_sign=-1;
+      }
+      else if ( which_face =="z+") {
         v_index = 2;
-      } else {
+        v_sign=1;
+      }
+      else {
         throw InvalidValue("Error: Could not identify the boundary face direction.", __FILE__, __LINE__);
       }
 
-      int numberOfMomentumBCs=0;
-      for ( ProblemSpecP db_BCType = db_face->findBlock("BCType"); db_BCType != 0;
-            db_BCType = db_BCType->findNextBlock("BCType") ) {
+      int numberOfMomentumBCs = 0;
+      for ( ProblemSpecP db_BCType = db_face->findBlock("BCType"); db_BCType != nullptr; db_BCType = db_BCType->findNextBlock("BCType") ) {
 
         std::string name;
         std::string type;
@@ -2013,14 +2044,12 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
         if ( type == "VelocityInlet" ) {
 
           my_info.type = VELOCITY_INLET;
-          my_info.total_area_label = VarLabel::create( "bc_area"+color.str()+name, ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription());
           db_BCType->require("value", my_info.velocity);
           found_bc = true;
 
         } else if ( type == "TurbulentInlet" ) {
 
           my_info.type = TURBULENT_INLET;
-          my_info.total_area_label = VarLabel::create( "bc_area"+color.str()+name, ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription());
           db_BCType->require("inputfile", my_info.filename);
           db_BCType->require("value", my_info.velocity);
           found_bc = true;
@@ -2031,16 +2060,31 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
         } else if ( type == "MassFlowInlet" ) {
 
           my_info.type = MASSFLOW_INLET;
-          my_info.total_area_label = VarLabel::create( "bc_area"+color.str()+name, ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription());
           my_info.velocity = Vector(0,0,0);
           my_info.mass_flow_rate = 0.0;
           found_bc = true;
+
+          //allows for non-normal mass flow spec.
+          Vector defaultNormalVector= Vector(0,0,0); defaultNormalVector[v_index]=-1*v_sign; // defaul normal vector
+          db_BCType->getWithDefault( "massflow_unitVector", my_info.unitVector, defaultNormalVector);
+
+          if (-v_sign*my_info.unitVector[v_index] <= 0.0) {   // defaul normal vector
+            throw InvalidValue("massflow_unitVector Error: Normal component cannot be zero or be oriented in direction outward of domain. ", __FILE__, __LINE__);
+          }
+
+          double tolly=1e-5;
+          double mag_squared=my_info.unitVector.length2();
+          if ( mag_squared < 1-tolly || mag_squared > 1.0 +tolly){    // defaul normal vector
+             proc0cout << "massflow_unitVector WARNING: unit vector nas non-unity magnitude, normalizing . \n";
+             my_info.unitVector.safe_normalize();
+          }
+
 
           // note that the mass flow rate is in the BCstruct value
 
           //compute the density:
           typedef std::vector<std::string> StringVec;
-          MixingRxnModel* mixingTable = d_props->getMixRxnModel();
+          MixingRxnModel* mixingTable = d_table_lookup->get_table();
           StringVec iv_var_names = mixingTable->getAllIndepVars();
           vector<double> iv;
 
@@ -2048,8 +2092,7 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
 
             string curr_iv = *iv_iter;
 
-            for ( ProblemSpecP db_BCType2 = db_face->findBlock("BCType"); db_BCType2 != 0;
-                  db_BCType2 = db_BCType2->findNextBlock("BCType") ) {
+            for ( ProblemSpecP db_BCType2 = db_face->findBlock("BCType"); db_BCType2 != nullptr; db_BCType2 = db_BCType2->findNextBlock("BCType") ) {
 
               string curr_var;
               db_BCType2->getAttribute("label",curr_var);
@@ -2071,10 +2114,10 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
           double density = mixingTable->getTableValue(iv,"density");
           my_info.density = density;
 
+
         } else if ( type == "VelocityFileInput" ) {
 
           my_info.type = VELOCITY_FILE;
-          my_info.total_area_label = VarLabel::create( "bc_area"+color.str()+name, ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription());
           db_BCType->require("value", my_info.filename);
           my_info.velocity = Vector(0,0,0);
           found_bc = true;
@@ -2082,11 +2125,9 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
         } else if ( type == "Swirl" ) {
 
           my_info.type = SWIRL;
-          my_info.total_area_label = VarLabel::create( "bc_area"+color.str()+name, ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription());
           my_info.velocity = Vector(0,0,0);
           my_info.mass_flow_rate = 0.0;
           db_BCType->require("swirl_no", my_info.swirl_no);
-
 
           std::string str_vec; // This block sets the default centroid to the origin unless otherwise specified by swirl_cent
           bool Luse_origin =   db_face->getAttribute("origin", str_vec);
@@ -2102,7 +2143,7 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
 
           //compute the density:
           typedef std::vector<std::string> StringVec;
-          MixingRxnModel* mixingTable = d_props->getMixRxnModel();
+          MixingRxnModel* mixingTable = d_table_lookup->get_table();
           StringVec iv_var_names = mixingTable->getAllIndepVars();
           vector<double> iv;
 
@@ -2110,8 +2151,7 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
 
             string curr_iv = *iv_iter;
 
-            for ( ProblemSpecP db_BCType2 = db_face->findBlock("BCType"); db_BCType2 != 0;
-                  db_BCType2 = db_BCType2->findNextBlock("BCType") ) {
+            for ( ProblemSpecP db_BCType2 = db_face->findBlock("BCType"); db_BCType2 != nullptr; db_BCType2 = db_BCType2->findNextBlock("BCType") ) {
 
               string curr_var;
               db_BCType2->getAttribute("label",curr_var);
@@ -2160,28 +2200,24 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
         } else if ( type == "PressureBC" ) {
 
           my_info.type = PRESSURE;
-          my_info.total_area_label = VarLabel::create( "bc_area"+color.str()+name, ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription());
           my_info.velocity = Vector(0,0,0);
           found_bc = true;
 
         } else if ( type == "OutletBC" ) {
 
           my_info.type = OUTLET;
-          my_info.total_area_label = VarLabel::create( "bc_area"+color.str()+name, ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription());
           my_info.velocity = Vector(0,0,0);
           found_bc = true;
 
         } else if ( type == "NOutletBC" ) {
 
           my_info.type = NEUTRAL_OUTLET;
-          my_info.total_area_label = VarLabel::create( "bc_area"+color.str()+name, ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription());
           my_info.velocity = Vector(0,0,0);
           found_bc = true;
 
         } else if ( type == "WallBC" ) {
 
           my_info.type = WALL;
-          my_info.total_area_label = VarLabel::create( "bc_area"+color.str()+name, ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription());
           my_info.velocity = Vector(0,0,0);
           my_info.mass_flow_rate = 0.0;
           found_bc = true;
@@ -2190,8 +2226,7 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
 
 
         if (found_bc) {
-          for ( ProblemSpecP db_BCType1 = db_face->findBlock("BCType"); db_BCType1 != 0;
-              db_BCType1 = db_BCType1->findNextBlock("BCType") ) {
+          for ( ProblemSpecP db_BCType1 = db_face->findBlock("BCType"); db_BCType1 != nullptr; db_BCType1 = db_BCType1->findNextBlock("BCType") ) {
 
             std::string type1;
             db_BCType1->getAttribute("var", type1);
@@ -2199,9 +2234,24 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
 
             if ( type1 == "PartMassFlowInlet" ) {
               db_BCType1->getAttribute("label", my_info.partName);
-              db_BCType1->require("value",my_info.partMassFlow_rate);
+              db_BCType1->require("value",my_info.mass_flow_rate);
               my_info.lHasPartMassFlow=true;
               my_info.partVelocity = Vector(0,0,0);
+              //------------------For non-orthoganol flows ------------//
+              Vector defaultNormalVector= Vector(0,0,0); defaultNormalVector[v_index]=-1*v_sign; // defaul normal vector
+              db_BCType->getWithDefault( "massflow_unitVector", my_info.unitVector, defaultNormalVector);
+
+              if (-v_sign*my_info.unitVector[v_index] <= 0.0) {   // defaul normal vector
+                throw InvalidValue("massflow_unitVector Error: Normal component cannot be zero or be oriented in direction outward of domain. ", __FILE__, __LINE__);
+              }
+
+              double tolly=1e-5;
+              double mag_squared=my_info.unitVector.length2();
+              if ( mag_squared < 1-tolly || mag_squared > 1.0 +tolly){    // defaul normal vector
+                 proc0cout << "massflow_unitVector WARNING: unit vector nas non-unity magnitude, normalizing . \n";
+                 my_info.unitVector.safe_normalize();
+              }
+              //-------------------------------------------------------//
 
               int qn_total;
               qn_total=ParticleTools::get_num_env(db_face,ParticleTools::DQMOM);
@@ -2217,8 +2267,7 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
                 // get weight BC
                 double weightScalingConstant = ParticleTools::getScalingConstant(db_BCType,"weight",qn);
                 double weight;
-                for ( ProblemSpecP db_BCType2 = db_face->findBlock("BCType"); db_BCType2 != 0;
-                    db_BCType2 = db_BCType2->findNextBlock("BCType") ) {
+                for ( ProblemSpecP db_BCType2 = db_face->findBlock("BCType"); db_BCType2 != nullptr; db_BCType2 = db_BCType2->findNextBlock("BCType") ) {
                   std::string tempLabelName;
                   db_BCType2->getAttribute("label",tempLabelName);
 
@@ -2228,7 +2277,7 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
                     break;
                   }
 
-                  if(db_BCType2 == 0  ){
+                  if( db_BCType2 == nullptr ){
                     throw ProblemSetupException("Arches was unable to find weight boundary condition", __FILE__, __LINE__);
                   }
                 }
@@ -2241,17 +2290,16 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
                 if (ParticleTools::getModelValue(db_BCType,sizeLabelName,qn,diameter)== false){
                   double diameterScalingConstant = ParticleTools::getScalingConstant(db_BCType,sizeLabelName,qn);
 
-                  for ( ProblemSpecP db_BCType2 = db_face->findBlock("BCType"); db_BCType2 != 0;
-                      db_BCType2 = db_BCType2->findNextBlock("BCType") ) {
+                  for ( ProblemSpecP db_BCType2 = db_face->findBlock("BCType"); db_BCType2 != nullptr; db_BCType2 = db_BCType2->findNextBlock("BCType") ) {
                     std::string tempLabelName;
                     db_BCType2->getAttribute("label",tempLabelName);
 
                     std::string sizeNode=ParticleTools::append_qn_env(sizeLabelName,qn);
-                    if (tempLabelName == sizeNode){
-                      db_BCType2->require("value",diameter);
+                    if( tempLabelName == sizeNode ){
+                      db_BCType2->require( "value", diameter );
                       break;
                     }
-                    if(db_BCType2 == 0  ){
+                    if( db_BCType2 == nullptr ){
                       throw ProblemSetupException("Arches was unable to find length model or boundary condition", __FILE__, __LINE__);
                     }
                   }
@@ -2273,9 +2321,8 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
                 double density = ParticleTools::getInletParticleDensity(db_face);
 
                 MassParticleDensity+=weight*M_PI*diameter*diameter*diameter/6.0*density;  // (kg/ m^3)
-
               }
-                my_info.partDensity = MassParticleDensity;
+              my_info.partDensity = MassParticleDensity;
               // note that the mass flow rate is in the BCstruct value
               break; // exit bcType spec  loop
             }
@@ -2287,17 +2334,70 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
           if (numberOfMomentumBCs > 1){
             throw ProblemSetupException("Arches found multiple gas-momentum boundary conditions.  I don't know which one to apply.", __FILE__, __LINE__);
           }
-          d_bc_information.insert( std::make_pair(bc_type_index, my_info));
+
+          auto i_bc_information = d_bc_information.find(ilvl);
+          if ( i_bc_information == d_bc_information.end()){
+            BCInfoMap tmp;
+            tmp.insert( std::make_pair( bc_type_index, my_info));
+            d_bc_information.insert(std::make_pair(ilvl, tmp));
+          } else {
+            (i_bc_information->second).insert( std::make_pair( bc_type_index, my_info));
+          }
+          //d_bc_information.insert( std::make_pair(bc_type_index, my_info));
           bc_type_index++;
+
         }
       }
     }
   }
 }
 
-//-------------------------------------------------------------
-// Set the cell Type
-//
+//--------------------------------------------------------------------------------------------------
+void
+BoundaryCondition::prune_per_patch_bcinfo( SchedulerP& sched,
+                                           const LevelP& level,
+                                           WBCHelper* bcHelper )
+{
+  BndMapT& bc_map = bcHelper->get_for_edit_boundary_information();
+  std::vector<int> matches_found;
+  const int ilvl = level->getID();
+  for ( auto j = d_bc_information[ilvl].begin(); j != d_bc_information[ilvl].end(); j++ ){
+
+    std::string check_name =  j->second.faceName;
+    bool match_found = false;
+
+    for (auto i = bc_map.begin(); i != bc_map.end(); i++ ){
+      std::string face_name = i->second.name;
+      if ( check_name == face_name ){
+        match_found = true;
+        break;
+      }
+    }
+    if ( ! match_found ){
+      matches_found.push_back(j->first);
+    }
+  }
+
+  if ( d_bc_information[ilvl].size() > 0 ){
+
+    int my_size = d_bc_information[ilvl].size();
+
+    for (int i = 0; i < my_size; i++){
+
+      auto it = std::find(matches_found.begin(), matches_found.end(), i );
+
+      if ( it != matches_found.end() ){
+        //info not on this patch:
+        if ( d_bc_information[ilvl][*it].type == TURBULENT_INLET ){
+          delete d_bc_information[ilvl][*it].TurbIn;
+        }
+        d_bc_information[ilvl].erase(*it);
+      }
+    }
+  }
+}
+
+//--------------------------------------------------------------------------------------------------
 void
 BoundaryCondition::sched_cellTypeInit(SchedulerP& sched,
                                       const LevelP& level,
@@ -2327,6 +2427,8 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
   for (int p = 0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
+    const Level* level = getLevel(patches);
+    const int ilvl = level->getID();
     int archIndex = 0;
     int matl_index = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
@@ -2347,7 +2449,6 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
 
     }
 
-    const Level* level = patch->getLevel();
     IntVector periodic = level->getPeriodicBoundaries();
 
     for ( CellIterator iter=patch->getCellIterator(); !iter.done(); iter++ ) {
@@ -2362,8 +2463,8 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
     vector<Patch::FaceType> bf;
     patch->getBoundaryFaces(bf);
 
-    for ( BCInfoMap::iterator bc_iter = d_bc_information.begin();
-          bc_iter != d_bc_information.end(); bc_iter++) {
+    for ( BCInfoMap::iterator bc_iter = d_bc_information[ilvl].begin();
+          bc_iter != d_bc_information[ilvl].end(); bc_iter++) {
 
       for (bf_iter = bf.begin(); bf_iter !=bf.end(); bf_iter++) {
 
@@ -2475,188 +2576,44 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
   }
 }
 
-//-------------------------------------------------------------
-// Compute BC Areas
-//
-void
-BoundaryCondition::sched_computeBCArea( SchedulerP& sched,
-                                        const LevelP& level,
-                                        const MaterialSet* matls)
-{
-  IntVector lo, hi;
-  level->findInteriorCellIndexRange(lo,hi);
-
-  // cell type initialization
-  Task* tsk = scinew Task("BoundaryCondition::computeBCArea",
-                          this, &BoundaryCondition::computeBCArea, lo, hi);
-
-  for ( BCInfoMap::iterator bc_iter = d_bc_information.begin();
-        bc_iter != d_bc_information.end(); bc_iter++) {
-
-    BCInfo the_info = bc_iter->second;
-    tsk->computes( the_info.total_area_label );
-
-  }
-
-  sched->addTask(tsk, level->eachPatch(), matls);
-}
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void
-BoundaryCondition::computeBCArea( const ProcessorGroup*,
-                                  const PatchSubset* patches,
-                                  const MaterialSubset*,
-                                  DataWarehouse*,
-                                  DataWarehouse* new_dw,
-                                  const IntVector lo,
-                                  const IntVector hi )
-{
-
-  for (int p = 0; p < patches->size(); p++) {
-
-    const Patch* patch = patches->get(p);
-    int archIndex = 0;
-    int matl_index = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
-
-    vector<Patch::FaceType>::const_iterator bf_iter;
-    vector<Patch::FaceType> bf;
-    patch->getBoundaryFaces(bf);
-    Vector Dx = patch->dCell();
-
-    for ( BCInfoMap::iterator bc_iter = d_bc_information.begin();
-          bc_iter != d_bc_information.end(); bc_iter++) {
-
-      double area = 0;
-
-      for (bf_iter = bf.begin(); bf_iter !=bf.end(); bf_iter++) {
-
-        //get the face
-        Patch::FaceType face = *bf_iter;
-
-        //get the number of children
-        int numChildren = patch->getBCDataArray(face)->getNumberChildren(matl_index); //assumed one material
-
-        for (int child = 0; child < numChildren; child++) {
-
-          double bc_value = 0;
-          Vector bc_v_value(0,0,0);
-          std::string bc_s_value = "NA";
-
-          string bc_kind = "NotSet";
-          Iterator bound_ptr;
-          bool foundIterator = false;
-
-          if ( bc_iter->second.type == VELOCITY_INLET || bc_iter->second.type == TURBULENT_INLET ) {
-            foundIterator =
-                    getIteratorBCValueBCKind<Vector>( patch, face, child, bc_iter->second.name, matl_index, bc_v_value, bound_ptr, bc_kind);
-          } else if ( bc_iter->second.type == VELOCITY_FILE ) {
-            foundIterator =
-                    getIteratorBCValue<std::string>( patch, face, child, bc_iter->second.name, matl_index, bc_s_value, bound_ptr);
-          } else {
-            foundIterator =
-                    getIteratorBCValueBCKind<double>( patch, face, child, bc_iter->second.name, matl_index, bc_value, bound_ptr, bc_kind);
-          }
-
-          double dx_1 = 0.0;
-          double dx_2 = 0.0;
-          IntVector shift;
-          shift = IntVector(0,0,0);
-
-          if ( foundIterator ) {
-
-            switch (face) {
-            case Patch::xminus:
-              dx_1 = Dx.y();
-              dx_2 = Dx.z();
-              shift = IntVector( 1, 0, 0);
-              break;
-            case Patch::xplus:
-              dx_1 = Dx.y();
-              dx_2 = Dx.z();
-              shift = IntVector( 1, 0, 0);
-              break;
-            case Patch::yminus:
-              dx_1 = Dx.x();
-              dx_2 = Dx.z();
-              shift = IntVector( 0, 1, 0);
-              break;
-            case Patch::yplus:
-              dx_1 = Dx.x();
-              dx_2 = Dx.z();
-              shift = IntVector( 0, 1, 0);
-              break;
-            case Patch::zminus:
-              dx_1 = Dx.y();
-              dx_2 = Dx.x();
-              shift = IntVector( 0, 0, 1);
-              break;
-            case Patch::zplus:
-              dx_1 = Dx.y();
-              dx_2 = Dx.x();
-              shift = IntVector( 0, 0, 1);
-              break;
-            default:
-              break;
-            }
-
-            for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-
-              IntVector c = *bound_ptr;
-
-              // "if" needed to ensure that extra cell contributions aren't added
-              if ( c.x() >= lo.x() - shift.x() && c.x() < hi.x() + shift.x() ) {
-                if ( c.y() >= lo.y() - shift.y() && c.y() < hi.y() + shift.y() ) {
-                  if ( c.z() >= lo.z() - shift.z() && c.z() < hi.z() + shift.z() ) {
-
-                    area += dx_1*dx_2;
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-
-      new_dw->put( sum_vartype(area), bc_iter->second.total_area_label );
-
-    }
-  }
-}
-
 //--------------------------------------------------------------------------------
 // Compute velocities from mass flow rates for bc's
 //
 void
 BoundaryCondition::sched_setupBCInletVelocities(SchedulerP& sched,
-                                                     const LevelP& level,
-                                                     const MaterialSet* matls,
-                                                     bool doing_restart )
+                                                const LevelP& level,
+                                                const MaterialSet* matls,
+                                                bool doing_restart,
+                                                bool doing_regrid = 0)
 {
   // cell type initialization
+  if ( doing_restart ) {
+// This Task helps the infrastructure to find variables in the NEWDW on a restart.
+    Task* tskh = scinew Task("BoundaryCondition::setupBCInletVelocitiesHack",
+        this, &BoundaryCondition::setupBCInletVelocitiesHack );
+    //tskh->computes(  d_lab->d_volFractionLabel );
+    tskh->computes(  d_lab->d_densityCPLabel );
+    sched->addTask(tskh, level->eachPatch(), matls);
+  }
+
   Task* tsk = scinew Task("BoundaryCondition::setupBCInletVelocities",
-                          this, &BoundaryCondition::setupBCInletVelocities, doing_restart );
+                          this, &BoundaryCondition::setupBCInletVelocities,doing_regrid);
 
-  for ( BCInfoMap::iterator bc_iter = d_bc_information.begin();
-        bc_iter != d_bc_information.end(); bc_iter++) {
-
-    BCInfo the_info = bc_iter->second;
-    tsk->requires( Task::NewDW, the_info.total_area_label );
-
-  }
-
-  if ( doing_restart ) {
+  if(doing_regrid){
     tsk->requires( Task::OldDW, d_lab->d_volFractionLabel, Ghost::None, 0 );
-  } else {
-    tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, Ghost::None, 0 );
-  }
-
-  if ( doing_restart ) {
     tsk->requires( Task::OldDW, d_lab->d_densityCPLabel, Ghost::AroundCells, 0 );
-  } else {
+  }else{
+    tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, Ghost::None, 0 );
     tsk->requires( Task::NewDW, d_lab->d_densityCPLabel, Ghost::AroundCells, 0 );
+    tsk->modifies(d_lab->d_volFractionLabel ); // to create task dependancy??  Needs further testing
+    tsk->modifies(d_lab->d_densityCPLabel );   // see sched_checkBCs for more info
   }
 
   sched->addTask(tsk, level->eachPatch(), matls);
 }
+
+
+
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void
 BoundaryCondition::setupBCInletVelocities(const ProcessorGroup*,
@@ -2664,11 +2621,13 @@ BoundaryCondition::setupBCInletVelocities(const ProcessorGroup*,
                                           const MaterialSubset*,
                                           DataWarehouse* old_dw,
                                           DataWarehouse* new_dw,
-                                          bool doing_restart )
+                                          bool doing_regrid )
 {
   for (int p = 0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
+    const LevelP level = patch->getLevelP();
+    const int ilvl = level->getID();
     int archIndex = 0;
     int matl_index = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
@@ -2679,22 +2638,29 @@ BoundaryCondition::setupBCInletVelocities(const ProcessorGroup*,
     constCCVariable<double> density;
     constCCVariable<double> volFraction;
 
-    if ( doing_restart ) {
+    if( doing_regrid ){
       old_dw->get( density, d_lab->d_densityCPLabel, matl_index, patch, Ghost::None, 0 );
       old_dw->get( volFraction, d_lab->d_volFractionLabel, matl_index, patch, Ghost::None, 0 );
-    } else {
+    }
+    else {
       new_dw->get( density, d_lab->d_densityCPLabel, matl_index, patch, Ghost::None, 0 );
       new_dw->get( volFraction, d_lab->d_volFractionLabel, matl_index, patch, Ghost::None, 0 );
     }
 
-    proc0cout << "\nDomain boundary condition summary: \n";
+    proc0cout << "\n Domain boundary condition summary: \n";
 
-    for ( BCInfoMap::iterator bc_iter = d_bc_information.begin();
-          bc_iter != d_bc_information.end(); bc_iter++) {
+    for ( BCInfoMap::iterator bc_iter = d_bc_information[ilvl].begin();
+          bc_iter != d_bc_information[ilvl].end(); bc_iter++) {
 
-      sum_vartype area_var;
-      new_dw->get( area_var, bc_iter->second.total_area_label );
-      double area = area_var;
+      double area = 0.0;
+
+      const BndMapT& my_map =(*m_bcHelper)[level->getID()]->get_boundary_information();
+      for (auto iter = my_map.begin(); iter != my_map.end(); iter++ ) {
+        BndSpec a_spec = iter->second;
+        if ( a_spec.name == bc_iter->second.faceName ){
+          area = a_spec.area;
+        }
+      }
 
       for (bf_iter = bf.begin(); bf_iter !=bf.end(); bf_iter++) {
 
@@ -2738,15 +2704,21 @@ BoundaryCondition::setupBCInletVelocities(const ProcessorGroup*,
             {
               double pm = -1.0*insideCellDir[norm];
 
-              if ( bc_iter->second.partDensity < 1e-200 &&  bc_iter->second.partMassFlow_rate > 1e-300 ) {
+              if ( bc_iter->second.partDensity < 1e-200 &&  bc_iter->second.mass_flow_rate > 1e-300 ) {
                 throw ProblemSetupException("Arches was unable to satisfy the specified mass flow inlet of particles.  Did you specify reasonable particle density and weights? ", __FILE__, __LINE__);
               }
-              if(bc_iter->second.partMassFlow_rate <= 1e-300){
-                bc_iter->second.partVelocity[norm]=0.0;
-              }else{
-                bc_iter->second.partVelocity[norm] = pm*bc_iter->second.partMassFlow_rate /
+              bc_iter->second.partVelocity[norm] = 0.0;
+              if ( bc_iter->second.mass_flow_rate > 1.e-300 ){
+                bc_iter->second.partVelocity[norm] = pm*bc_iter->second.mass_flow_rate /
                   (area * bc_iter->second.partDensity);
               }
+              //------------------For non-orthoganol flows-------------//
+              int nDim=3; // three dimensional space
+              for (int ix=0 ; ix<nDim; ix++){
+                bc_iter->second.partVelocity[ix]=bc_iter->second.partVelocity[norm]*bc_iter->second.unitVector[ix]/bc_iter->second.unitVector[norm];
+              }
+              //-------------------------------------------------------//
+
               std::string Ubc_kind = "Dirichlet"; // this must be specified for setting uintah BC
 
               int qn_total =  bc_iter->second.vWeights.size();
@@ -2766,49 +2738,57 @@ BoundaryCondition::setupBCInletVelocities(const ProcessorGroup*,
 
               IntVector c = *bound_ptr;
 
-              switch ( bc_iter->second.type ) {
+              switch (bc_iter->second.type) {
 
-              case ( VELOCITY_INLET ):
-                bc_iter->second.mass_flow_rate = bc_iter->second.velocity[norm] * area * density[*bound_ptr];
-                if ( d_check_inlet_obstructions ) {
-                  if ( volFraction[c-insideCellDir] < small ) {
-                    std::cout << "WARNING: Intrusion blocking a velocity inlet. " << std::endl;
+                case (VELOCITY_INLET) :
+                  bc_iter->second.mass_flow_rate = bc_iter->second.velocity[norm] * area * density[*bound_ptr];
+                  if (d_check_inlet_obstructions) {
+                    if (volFraction[c - insideCellDir] < small) {
+                      std::cout << "WARNING: Intrusion blocking a velocity inlet. " << std::endl;
+                    }
                   }
-                }
-                break;
-              case (TURBULENT_INLET):
-                bc_iter->second.mass_flow_rate = bc_iter->second.velocity[norm] * area * density[*bound_ptr];
-                break;
-              case ( MASSFLOW_INLET ): {
-                bc_iter->second.mass_flow_rate = bc_value;
-                double pm = -1.0*insideCellDir[norm];
-                if ( bc_iter->second.density > 0.0 ) {
-                  bc_iter->second.velocity[norm] = pm*bc_iter->second.mass_flow_rate /
-                                                   ( area * bc_iter->second.density );
-                }
+                  break;
 
-                if ( d_check_inlet_obstructions ) {
-                  if ( volFraction[c-insideCellDir] < small ) {
-                    std::stringstream msg;
-                    msg << " Error: Intrusion blocking mass flow inlet on boundary cell: " << c << std::endl;
-                    throw InvalidValue(msg.str(), __FILE__, __LINE__);
+                case (TURBULENT_INLET) :
+                  bc_iter->second.mass_flow_rate = bc_iter->second.velocity[norm] * area * density[*bound_ptr];
+                  break;
+
+                case (MASSFLOW_INLET) : {
+                  bc_iter->second.mass_flow_rate = bc_value;
+                  double pm = -1.0 * insideCellDir[norm];
+                  if (bc_iter->second.density > 0.0) {
+                    bc_iter->second.velocity[norm] = pm * bc_iter->second.mass_flow_rate / (area * bc_iter->second.density);
                   }
+
+                  int nDim=3; // three dimensional space
+                  for (int ix=0 ; ix<nDim; ix++){
+                    bc_iter->second.velocity[ix]=bc_iter->second.velocity[norm]*bc_iter->second.unitVector[ix]/bc_iter->second.unitVector[norm];
+                  }
+
+
+
+                  if (d_check_inlet_obstructions) {
+                    if (volFraction[c - insideCellDir] < small) {
+                      std::stringstream msg;
+                      msg << " Error: Intrusion blocking mass flow inlet on boundary cell: " << c << std::endl;
+                      throw InvalidValue(msg.str(), __FILE__, __LINE__);
+                    }
+                  }
+
+                  break;
                 }
 
-                break;
-              }
-              case ( SWIRL ):
-                bc_iter->second.mass_flow_rate = bc_value;
-                bc_iter->second.velocity[norm] = bc_iter->second.mass_flow_rate /
-                                                 ( area * bc_iter->second.density );
-                break;
+                case (SWIRL) :
+                  bc_iter->second.mass_flow_rate = bc_value;
+                  bc_iter->second.velocity[norm] = bc_iter->second.mass_flow_rate / (area * bc_iter->second.density);
+                  break;
 
-              case ( STABL ):
-                bc_iter->second.mass_flow_rate = 0.0;
-                break;
+                case (STABL) :
+                  bc_iter->second.mass_flow_rate = 0.0;
+                  break;
 
-              default:
-                break;
+                default :
+                  break;
 
               }
             }
@@ -2817,10 +2797,14 @@ BoundaryCondition::setupBCInletVelocities(const ProcessorGroup*,
       }
 
       proc0cout << "  ----> BC Label: " << bc_iter->second.name << std::endl;
-      proc0cout << "            area: " << area << std::endl;
-      proc0cout << "           m_dot: " << bc_iter->second.mass_flow_rate << std::endl;
-      proc0cout << "               U: " << bc_iter->second.velocity[0] << ", " << bc_iter->second.velocity[1] << ", " << bc_iter->second.velocity[2] << std::endl;
-      proc0cout << "   Particle_vel : " << bc_iter->second.partVelocity[0]<< ", " <<bc_iter->second.partVelocity[1]<< ", " <<bc_iter->second.partVelocity[2]<< std::endl;
+      if ( area < 1.e-16 ){
+        proc0cout << "            area: Area not computed because this BC type did not require it. Please use <force_area_calc> in <Arches><BoundaryCondition> to see the value." << std::endl;
+      } else {
+        proc0cout << "            area: " << area << std::endl;
+      }
+      // proc0cout << "           m_dot: " << bc_iter->second.mass_flow_rate << std::endl;
+      // proc0cout << "               U: " << bc_iter->second.velocity[0] << ", " << bc_iter->second.velocity[1] << ", " << bc_iter->second.velocity[2] << std::endl;
+      // proc0cout << "   Particle_vel : " << bc_iter->second.partVelocity[0]<< ", " <<bc_iter->second.partVelocity[1]<< ", " <<bc_iter->second.partVelocity[2]<< std::endl;
 
     }
     proc0cout << std::endl;
@@ -2838,6 +2822,9 @@ BoundaryCondition::sched_setInitProfile(SchedulerP& sched,
   Task* tsk = scinew Task("BoundaryCondition::setInitProfile",
                           this, &BoundaryCondition::setInitProfile);
 
+  tsk->requires(Task::NewDW, d_lab->d_timeStepLabel);
+  tsk->requires(Task::NewDW, d_lab->d_simulationTimeLabel);
+
   tsk->modifies(d_lab->d_uVelocitySPBCLabel);
   tsk->modifies(d_lab->d_vVelocitySPBCLabel);
   tsk->modifies(d_lab->d_wVelocitySPBCLabel);
@@ -2850,7 +2837,7 @@ BoundaryCondition::sched_setInitProfile(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_volFractionLabel, Ghost::None, 0);
 
 
-  MixingRxnModel* mixingTable = d_props->getMixRxnModel();
+  MixingRxnModel* mixingTable = d_table_lookup->get_table();
   MixingRxnModel::VarMap iv_vars = mixingTable->getIVVars();
 
   for ( MixingRxnModel::VarMap::iterator i = iv_vars.begin(); i != iv_vars.end(); i++ ) {
@@ -2869,9 +2856,17 @@ BoundaryCondition::setInitProfile(const ProcessorGroup*,
                                        DataWarehouse*,
                                        DataWarehouse* new_dw)
 {
+  timeStep_vartype timeStep;
+  new_dw->get(timeStep, d_lab->d_timeStepLabel );
+
+  simTime_vartype simTime;
+  new_dw->get(simTime, d_lab->d_simulationTimeLabel );
+
   for (int p = 0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
+    const LevelP level = patch->getLevelP();
+    const int ilvl = level->getID();
     int archIndex = 0;
     int matl_index = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
@@ -2897,7 +2892,7 @@ BoundaryCondition::setInitProfile(const ProcessorGroup*,
     new_dw->get( density, d_lab->d_densityCPLabel, matl_index, patch, Ghost::None, 0 );
     new_dw->get( volFraction, d_lab->d_volFractionLabel, matl_index, patch, Ghost::None, 0 );
 
-    MixingRxnModel* mixingTable = d_props->getMixRxnModel();
+    MixingRxnModel* mixingTable = d_table_lookup->get_table();
     MixingRxnModel::VarMap iv_vars = mixingTable->getIVVars();
 
     // Get the independent variable information for table lookup
@@ -2910,8 +2905,8 @@ BoundaryCondition::setInitProfile(const ProcessorGroup*,
       ivGridVarMap.insert( make_pair( i->first, variable));
     }
 
-    for ( BCInfoMap::iterator bc_iter = d_bc_information.begin();
-          bc_iter != d_bc_information.end(); bc_iter++) {
+    for ( BCInfoMap::iterator bc_iter = d_bc_information[ilvl].begin();
+          bc_iter != d_bc_information[ilvl].end(); bc_iter++) {
 
       for ( bf_iter = bf.begin(); bf_iter !=bf.end(); bf_iter++ ) {
 
@@ -2980,7 +2975,7 @@ BoundaryCondition::setInitProfile(const ProcessorGroup*,
 
               } else if ( bc_iter->second.type == TURBULENT_INLET ){
 
-                setTurbInlet( patch, face, uVelocity, vVelocity, wVelocity, density, bound_ptr, bc_iter->second.TurbIn );
+                setTurbInlet( patch, face, uVelocity, vVelocity, wVelocity, density, bound_ptr, bc_iter->second.TurbIn, timeStep, simTime );
 
               } else if ( bc_iter->second.type == WALL ) {
 
@@ -3003,69 +2998,6 @@ BoundaryCondition::setInitProfile(const ProcessorGroup*,
     vRhoHat.copyData( vVelocity );
     wRhoHat.copyData( wVelocity );
 
-    //delete BC information not on this patch:
-    BCInfoMap::iterator the_iter = d_bc_information.begin();
-    std::vector<BCInfoMap::iterator> delete_me;
-    while (the_iter != d_bc_information.end()){
-
-      bool i_live_on_this_patch = false;
-
-      for ( bf_iter = bf.begin(); bf_iter !=bf.end(); bf_iter++ ) {
-
-        //get the face
-        Patch::FaceType face = *bf_iter;
-        IntVector insideCellDir = patch->faceDirection(face);
-
-        //get the number of children
-        int numChildren = patch->getBCDataArray(face)->getNumberChildren(matl_index); //assumed one material
-
-        for (int child = 0; child < numChildren; child++) {
-
-          double bc_value = 0;
-          Vector bc_v_value(0,0,0);
-          std::string bc_s_value = "NA";
-
-          string bc_kind = "NotSet";
-          Iterator bound_ptr;
-          bool foundIterator = false;
-          string face_name;
-          getBCKind( patch, face, child, the_iter->second.name, matl_index, bc_kind, face_name );
-
-          if ( the_iter->second.type == VELOCITY_INLET ||
-               the_iter->second.type == TURBULENT_INLET ||
-               the_iter->second.type == STABL ) {
-            foundIterator =
-                    getIteratorBCValueBCKind<Vector>( patch, face, child, the_iter->second.name, matl_index, bc_v_value, bound_ptr, bc_kind);
-          } else if ( the_iter->second.type == VELOCITY_FILE ) {
-            foundIterator =
-                    getIteratorBCValue<std::string>( patch, face, child, the_iter->second.name, matl_index, bc_s_value, bound_ptr);
-          } else {
-            foundIterator =
-                    getIteratorBCValueBCKind<double>( patch, face, child, the_iter->second.name, matl_index, bc_value, bound_ptr, bc_kind);
-          }
-
-          if ( foundIterator ){
-            i_live_on_this_patch = true;
-          }
-
-        }
-      }
-
-      if ( !i_live_on_this_patch ){
-
-        BCInfoMap::iterator to_delete = the_iter;
-        the_iter++;
-        //potentially not thread safe.
-        //VarLabel::destroy(to_delete->second.total_area_label);
-        //d_bc_information.erase(to_delete);
-
-      } else {
-
-        the_iter++;
-
-      }
-
-    } //bc_information iterator
   } //patch iterator
 }
 
@@ -3138,14 +3070,16 @@ void BoundaryCondition::setSwirl( const Patch* patch, const Patch::FaceType& fac
 void BoundaryCondition::setTurbInlet( const Patch* patch, const Patch::FaceType& face,
                                       SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel,
                                       constCCVariable<double>& density,
-                                      Iterator bound_ptr, DigitalFilterInlet * TurbInlet )
+                                      Iterator bound_ptr, DigitalFilterInlet * TurbInlet,
+                                      const int timeStep,
+                                      const double simTime )
 {
   IntVector insideCellDir = patch->faceDirection(face);
 
   int j, k;
-  int ts = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
-  double elapTime = d_lab->d_sharedState->getElapsedTime();
-  int t = TurbInlet->getTimeIndex( ts, elapTime);
+  // int timeStep = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
+  // double simTime = d_lab->d_sharedState->getElapsedSimTime();
+  int t = TurbInlet->getTimeIndex( timeStep, simTime);
 
   IntVector shiftVec;
   shiftVec = TurbInlet->getOffsetVector( );
@@ -3435,13 +3369,13 @@ void BoundaryCondition::setVel( const Patch* patch, const Patch::FaceType& face,
     for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
 
       IntVector c  = *bound_ptr;
-      IntVector cp = *bound_ptr - insideCellDir;
+      IntVector cin = *bound_ptr - insideCellDir;
 
       uVel[c]  = value.x();
-      uVel[cp] = value.x();
+      uVel[cin] = value.x();
 
-      vVel[c] = 2.*value.y() - vVel[cp];
-      wVel[c] = 2.*value.z() - wVel[cp];
+      vVel[c] = 2.*value.y() - vVel[cin];
+      wVel[c] = 2.*value.z() - wVel[cin];
 
     }
 
@@ -3451,13 +3385,14 @@ void BoundaryCondition::setVel( const Patch* patch, const Patch::FaceType& face,
     for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
 
       IntVector c  = *bound_ptr;
-      IntVector cp = *bound_ptr - insideCellDir;
+      IntVector cec = *bound_ptr + insideCellDir;
+      IntVector cin = *bound_ptr - insideCellDir;
 
-      uVel[cp]  = value.x();
+      uVel[cec]  = value.x();
       uVel[c]   = value.x();
 
-      vVel[c] = 2.0*value.y() - vVel[cp];
-      wVel[c] = 2.0*value.z() - wVel[cp];
+      vVel[c] = 2.0*value.y() - vVel[cin];
+      wVel[c] = 2.0*value.z() - wVel[cin];
 
     }
     break;
@@ -3466,13 +3401,13 @@ void BoundaryCondition::setVel( const Patch* patch, const Patch::FaceType& face,
     for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
 
       IntVector c  = *bound_ptr;
-      IntVector cp = *bound_ptr - insideCellDir;
+      IntVector cin = *bound_ptr - insideCellDir;
 
       vVel[c] = value.y();
-      vVel[cp] = value.y();
+      vVel[cin] = value.y();
 
-      uVel[c] = 2.0 * value.x() - uVel[cp];
-      wVel[c] = 2.0 * value.z() - wVel[cp];
+      uVel[c] = 2.0 * value.x() - uVel[cin];
+      wVel[c] = 2.0 * value.z() - wVel[cin];
 
     }
     break;
@@ -3481,13 +3416,14 @@ void BoundaryCondition::setVel( const Patch* patch, const Patch::FaceType& face,
     for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
 
       IntVector c  = *bound_ptr;
-      IntVector cp = *bound_ptr - insideCellDir;
+      IntVector cec = *bound_ptr + insideCellDir;
+      IntVector cin = *bound_ptr - insideCellDir;
 
-      vVel[cp] = value.y();
+      vVel[cec] = value.y();
       vVel[c] = value.y();
 
-      uVel[c] = 2.0 * value.x() - uVel[cp];
-      wVel[c] = 2.0 * value.z() - wVel[cp];
+      uVel[c] = 2.0 * value.x() - uVel[cin];
+      wVel[c] = 2.0 * value.z() - wVel[cin];
 
     }
     break;
@@ -3496,13 +3432,13 @@ void BoundaryCondition::setVel( const Patch* patch, const Patch::FaceType& face,
     for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
 
       IntVector c  = *bound_ptr;
-      IntVector cp = *bound_ptr - insideCellDir;
+      IntVector cin = *bound_ptr - insideCellDir;
 
       wVel[c] = value.z();
-      wVel[cp] = value.z();
+      wVel[cin] = value.z();
 
-      uVel[c] = 2.0 * value.x() - uVel[cp];
-      vVel[c] = 2.0 * value.y() - vVel[cp];
+      uVel[c] = 2.0 * value.x() - uVel[cin];
+      vVel[c] = 2.0 * value.y() - vVel[cin];
 
     }
     break;
@@ -3511,13 +3447,14 @@ void BoundaryCondition::setVel( const Patch* patch, const Patch::FaceType& face,
     for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
 
       IntVector c  = *bound_ptr;
-      IntVector cp = *bound_ptr - insideCellDir;
+      IntVector cec = *bound_ptr + insideCellDir;
+      IntVector cin = *bound_ptr - insideCellDir;
 
-      wVel[cp] = value.z();
+      wVel[cec] = value.z();
       wVel[c] = value.z();
 
-      uVel[c] = 2.0 * value.x() - uVel[cp];
-      vVel[c] = 2.0 * value.y() - vVel[cp];
+      uVel[c] = 2.0 * value.x() - uVel[cin];
+      vVel[c] = 2.0 * value.y() - vVel[cin];
 
     }
     break;
@@ -3765,17 +3702,20 @@ BoundaryCondition::readInputFile( std::string file_name, BoundaryCondition::FFIn
 
 void
 BoundaryCondition::velocityOutletPressureBC( const Patch* patch,
-                                                  int matl_index,
-                                                  SFCXVariable<double>& uvel,
-                                                  SFCYVariable<double>& vvel,
-                                                  SFCZVariable<double>& wvel,
-                                                  constSFCXVariable<double>& old_uvel,
-                                                  constSFCYVariable<double>& old_vvel,
-                                                  constSFCZVariable<double>& old_wvel )
+                                             int matl_index,
+                                             SFCXVariable<double>& uvel,
+                                             SFCYVariable<double>& vvel,
+                                             SFCZVariable<double>& wvel,
+                                             constSFCXVariable<double>& old_uvel,
+                                             constSFCYVariable<double>& old_vvel,
+                                             constSFCZVariable<double>& old_wvel )
 {
+
   vector<Patch::FaceType>::const_iterator bf_iter;
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
+  const Level* level = patch->getLevel();
+  const int ilvl = level->getID();
 
   // This business is to get the outlet/pressure bcs to behave like the
   // original arches outlet/pressure bc
@@ -3789,8 +3729,8 @@ BoundaryCondition::velocityOutletPressureBC( const Patch* patch,
   IntVector idxLo = patch->getFortranCellLowIndex();
   IntVector idxHi = patch->getFortranCellHighIndex();
 
-  for ( BCInfoMap::iterator bc_iter = d_bc_information.begin();
-        bc_iter != d_bc_information.end(); bc_iter++) {
+  for ( BCInfoMap::iterator bc_iter = d_bc_information[ilvl].begin();
+        bc_iter != d_bc_information[ilvl].end(); bc_iter++) {
 
     if ( bc_iter->second.type == OUTLET || bc_iter->second.type == PRESSURE ) {
 
@@ -3966,22 +3906,22 @@ BoundaryCondition::velocityOutletPressureBC( const Patch* patch,
 
             case Patch::yminus:
 
-              neutralOutleMinus( insideCellDir, bound_ptr, uvel, old_uvel );
+              neutralOutleMinus( insideCellDir, bound_ptr, vvel, old_vvel );
               break;
 
             case Patch::yplus:
 
-              neutralOutletPlus( insideCellDir, bound_ptr, uvel, old_uvel );
+              neutralOutletPlus( insideCellDir, bound_ptr, vvel, old_vvel );
               break;
 
             case Patch::zminus:
 
-              neutralOutleMinus( insideCellDir, bound_ptr, uvel, old_uvel );
+              neutralOutleMinus( insideCellDir, bound_ptr, wvel, old_wvel );
               break;
 
             case Patch::zplus:
 
-              neutralOutletPlus( insideCellDir, bound_ptr, uvel, old_uvel );
+              neutralOutletPlus( insideCellDir, bound_ptr, wvel, old_wvel );
               break;
 
             default:
@@ -4002,10 +3942,13 @@ BoundaryCondition::setHattedIntrusionVelocity( const Patch* p,
                                                SFCXVariable<double>& u,
                                                SFCYVariable<double>& v,
                                                SFCZVariable<double>& w,
-                                               constCCVariable<double>& density )
+                                               constCCVariable<double>& density,
+                                               bool& set_nonnormal_values )
 {
   if ( _using_new_intrusion ) {
-    _intrusionBC->setHattedVelocity( p, u, v, w, density );
+    const Level* level = p->getLevel();
+    const int i = level->getID();
+    _intrusionBC[i]->setHattedVelocity( p, u, v, w, density, set_nonnormal_values );
   }
 }
 void
@@ -4015,7 +3958,8 @@ BoundaryCondition::sched_setupNewIntrusionCellType( SchedulerP& sched,
                                                     const bool doing_restart )
 {
   if ( _using_new_intrusion ) {
-    _intrusionBC->sched_setCellType( sched, level, matls, doing_restart );
+    const int i = level->getID();
+    _intrusionBC[i]->sched_setCellType( sched, level, matls, doing_restart );
   }
 }
 
@@ -4027,11 +3971,12 @@ BoundaryCondition::sched_setupNewIntrusions( SchedulerP& sched,
 {
 
   if ( _using_new_intrusion ) {
-    _intrusionBC->sched_computeBCArea( sched, level, matls );
-    _intrusionBC->sched_computeProperties( sched, level, matls );
-    _intrusionBC->sched_setIntrusionVelocities( sched, level, matls );
-    _intrusionBC->sched_gatherReductionInformation( sched, level, matls );
-    _intrusionBC->sched_printIntrusionInformation( sched, level, matls );
+    const int i = level->getID();
+    _intrusionBC[i]->sched_computeBCArea( sched, level, matls );
+    _intrusionBC[i]->sched_computeProperties( sched, level, matls );
+    _intrusionBC[i]->sched_setIntrusionVelocities( sched, level, matls );
+    _intrusionBC[i]->sched_printIntrusionInformation( sched, level, matls );
+    _intrusionBC[i]->prune_per_patch_intrusions( sched, level, matls );
   }
 
 }
@@ -4043,6 +3988,7 @@ BoundaryCondition::sched_setIntrusionDensity( SchedulerP& sched,
 {
   Task* tsk = scinew Task( "BoundaryCondition::setIntrusionDensity",
                            this, &BoundaryCondition::setIntrusionDensity);
+  tsk->requires( Task::NewDW, d_lab->d_densityCPLabel, Ghost::AroundCells, 1 );
   tsk->modifies( d_lab->d_densityCPLabel );
   sched->addTask( tsk, level->eachPatch(), matls );
 
@@ -4052,35 +3998,708 @@ void
 BoundaryCondition::setIntrusionDensity( const ProcessorGroup*,
                                         const PatchSubset* patches,
                                         const MaterialSubset*,
-                                        DataWarehouse*,
+                                        DataWarehouse* old_dw,
                                         DataWarehouse* new_dw)
 {
   for (int p = 0; p < patches->size(); p++) {
 
     if ( _using_new_intrusion ) {
+
       const Patch* patch = patches->get(p);
+      const Level* level = patch->getLevel();
+      const int ilvl = level->getID();
       int archIndex = 0; // only one arches material
       int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
       CCVariable<double> density;
+      constCCVariable<double> old_density; 
       new_dw->getModifiable( density, d_lab->d_densityCPLabel, indx, patch );
+      new_dw->get( old_density, d_lab->d_densityCPLabel, indx, patch, Ghost::AroundCells, 1 ); 
 
-      _intrusionBC->setDensity( patch, density );
+      _intrusionBC[ilvl]->setDensity( patch, density, old_density );
+
     }
   }
 }
 
 void
-BoundaryCondition::wallStress( const Patch* p,
-                               ArchesVariables* vars,
-                               ArchesConstVariables* const_vars,
-                               constCCVariable<double>& eps )
+BoundaryCondition::sched_wallStressConstSmag( Task::WhichDW dw, Task* tsk ){
+
+  tsk->requires( dw, d_lab->d_strainMagnitudeLabel, Ghost::AroundCells, 1 );
+
+}
+
+void
+BoundaryCondition::wallStressConstSmag( const Patch* p,
+                                        DataWarehouse* dw,
+                                        const double csmag_wall,
+                                        const int standoff,
+                                        constSFCXVariable<double>& uvel,
+                                        constSFCYVariable<double>& vvel,
+                                        constSFCZVariable<double>& wvel,
+                                        SFCXVariable<double>& Su,
+                                        SFCYVariable<double>& Sv,
+                                        SFCZVariable<double>& Sw,
+                                        constCCVariable<double>& rho,
+                                        constCCVariable<double>& eps )
 {
 
   Vector Dx = p->dCell();
 
-  for (CellIterator iter=p->getCellIterator(); !iter.done(); iter++) {
+  double viscos; // molecular viscosity
+  viscos = d_physicalConsts->getMolecularViscosity();
+  const double delta = std::pow( Dx.x()*Dx.y()*Dx.z(),1./3.);
+  const double area_ew = Dx.y() * Dx.z();
+  const double area_ns = Dx.z() * Dx.x();
+  const double area_tb = Dx.x() * Dx.y();
+  const double dx = Dx.x();
+  const double dy = Dx.y();
+  const double dz = Dx.z();
 
+  constCCVariable<double> IsImag;
+  const int indx = 0;
+  const Level* level = p->getLevel();
+  const int ilvl = level->getID();
+
+  if ( dw->exists( d_lab->d_strainMagnitudeLabel, indx, p ) ){
+
+    dw->get( IsImag, d_lab->d_strainMagnitudeLabel, indx, p, Ghost::AroundCells, 1 );
+
+    bool has_intrusion_inlets = false; 
+    if ( _using_new_intrusion ){ 
+      has_intrusion_inlets = _intrusionBC[ilvl]->has_intrusion_inlets();
+    }
+
+    for (CellIterator iter=p->getCellIterator(); !iter.done(); iter++) {
+      IntVector c = *iter;
+      IntVector xm = *iter - IntVector(1,0,0);
+      IntVector xp = *iter + IntVector(1,0,0);
+      IntVector ym = *iter - IntVector(0,1,0);
+      IntVector yp = *iter + IntVector(0,1,0);
+      IntVector zm = *iter - IntVector(0,0,1);
+      IntVector zp = *iter + IntVector(0,0,1);
+      IntVector xmym = *iter + IntVector(-1,-1,0);
+      IntVector xmyp = *iter + IntVector(-1,1,0);
+      IntVector xmzm = *iter + IntVector(-1,0,-1);
+      IntVector xmzp = *iter + IntVector(-1,0,1);
+      IntVector xpym = *iter + IntVector(1,-1,0);
+      IntVector xpzm = *iter + IntVector(1,0,-1);
+      IntVector ymzm = *iter + IntVector(0,-1,-1);
+      IntVector ymzp = *iter + IntVector(0,-1,1);
+      IntVector ypzm = *iter + IntVector(0,1,-1);
+      IntVector x_so = IntVector(standoff,0,0);
+      IntVector y_so = IntVector(0,standoff,0);
+      IntVector z_so = IntVector(0,0,standoff);
+      //apply u-mom bc -
+      if ( eps[xm] * eps[c] > .5 ){
+        // Y-
+        if ( eps[ym] * eps[xmym] < .5 ){
+          const double i_so = ( eps[c+y_so] * eps[xm+y_so] > .5 ) ?
+                               standoff :
+                               0;
+          const double ISI = 0.5 * ( IsImag[c+IntVector(0,i_so,0)] + IsImag[c+IntVector(-1,i_so,0)] );
+          const double mu_t = pow( csmag_wall * delta, 2.0 ) * rho[c] * ISI;
+          Vector velocity_cond(0,0,0);
+          if ( has_intrusion_inlets ){
+            bool has_condition = false;
+            _intrusionBC[ilvl]->getVelocityCondition( p, c, has_condition,
+                                                   velocity_cond );
+          }
+
+          Su[c] += 2.0 * area_ns * ( mu_t + viscos )
+                   * (velocity_cond[0] - uvel[c]) / dy;
+
+        }
+        // Y+
+        if ( eps[yp] * eps[xmyp] < .5 ){
+          const double i_so = ( eps[c-y_so] * eps[xm-y_so] > .5 ) ?
+                               standoff :
+                               0;
+          const double ISI = 0.5*(IsImag[c+IntVector(0,-i_so,0)] + IsImag[c+IntVector(-1,-i_so,0)]);
+          const double mu_t = pow( csmag_wall*delta, 2.0 ) * rho[c] * ISI;
+          Vector velocity_cond(0,0,0);
+          if ( has_intrusion_inlets ){
+            bool has_condition = false;
+            _intrusionBC[ilvl]->getVelocityCondition( p, yp, has_condition,
+                                                   velocity_cond );
+          }
+
+          Su[c] += 2.0 * area_ns * ( mu_t + viscos )
+                    * (velocity_cond[0] - uvel[c]) / dy;
+
+        }
+
+        // Z-
+        if ( eps[zm] * eps[xmzm] < .5 ){
+          const double i_so = ( eps[c+z_so] * eps[xm+z_so] > .5 ) ?
+                               standoff :
+                               0;
+          const double ISI = 0.5 * ( IsImag[c+IntVector(0,0,i_so)] + IsImag[c+IntVector(-1,0,i_so)] );
+          const double mu_t = pow( csmag_wall * delta, 2.0 ) * rho[c] * ISI;
+
+          Vector velocity_cond(0,0,0);
+          if ( has_intrusion_inlets ){
+            bool has_condition = false;
+            _intrusionBC[ilvl]->getVelocityCondition( p, c, has_condition,
+                                                   velocity_cond );
+          }
+
+          Su[c] += 2.0 * area_tb * ( mu_t + viscos )
+                   * (velocity_cond[0] - uvel[c]) / dz;
+
+        }
+
+        // Z+
+        if ( eps[zp] * eps[xmzp] < .5 ){
+          const double i_so = ( eps[c-z_so] * eps[xm-z_so] > .5 ) ?
+                               standoff :
+                               0;
+          const double ISI = 0.5*(IsImag[c+IntVector(0,0,-i_so)] + IsImag[c+IntVector(-1,0,-i_so)]);
+          const double mu_t = pow( csmag_wall*delta, 2.0 ) * rho[c] * ISI;
+
+          Vector velocity_cond(0,0,0);
+          if ( has_intrusion_inlets ){
+            bool has_condition = false;
+            _intrusionBC[ilvl]->getVelocityCondition( p, zp, has_condition,
+                                                   velocity_cond );
+          }
+
+          Su[c] += 2.0 * area_tb * ( mu_t + viscos )
+                    * (velocity_cond[0] - uvel[c]) / dz;
+
+        }
+      }
+      //apply v-mom bc -
+      if ( eps[ym] * eps[c] > 0.5 ) {
+        // X-
+        if ( eps[xm] * eps[xmym] < .5 ){
+          const double i_so = ( eps[c+x_so] * eps[ym+x_so] > .5 ) ?
+                               standoff :
+                               0;
+          const double ISI = 0.5 * ( IsImag[c+IntVector(i_so,0,0)] + IsImag[c+IntVector(i_so,-1,0)] );
+          const double mu_t = pow( csmag_wall * delta, 2.0 ) * rho[c] * ISI;
+          Vector velocity_cond(0,0,0);
+          if ( has_intrusion_inlets ){
+            bool has_condition = false;
+            _intrusionBC[ilvl]->getVelocityCondition( p, c, has_condition,
+                                                   velocity_cond );
+          }
+
+          Sv[c] += 2.0 * area_ew * ( mu_t + viscos )
+                    * (velocity_cond[1] - vvel[c] )/ dx;
+
+        }
+        // X+
+        if ( eps[xp] * eps[xpym] < .5 ){
+          const double i_so = ( eps[c-x_so] * eps[ym-x_so] > .5 ) ?
+                               standoff :
+                               0;
+          const double ISI = 0.5 * ( IsImag[c+IntVector(-i_so,0,0)] + IsImag[c+IntVector(-i_so,-1,0)] );
+          const double mu_t = pow( csmag_wall * delta, 2.0 ) * rho[c] * ISI;
+          Vector velocity_cond(0,0,0);
+          if ( has_intrusion_inlets ){
+            bool has_condition = false;
+            _intrusionBC[ilvl]->getVelocityCondition( p, xp, has_condition,
+                                                   velocity_cond );
+          }
+
+          Sv[c] += 2.0 * area_ew * ( mu_t + viscos )
+                    * (velocity_cond[1] - vvel[c] )/ dx;
+
+        }
+        // Z-
+        if ( eps[zm] * eps[ymzm] < .5 ){
+          const double i_so = ( eps[c+z_so] * eps[ym+z_so] > .5 ) ?
+                               standoff :
+                               0;
+          const double ISI = 0.5 * ( IsImag[c+IntVector(0,0,i_so)] + IsImag[c+IntVector(0,-1,i_so)] );
+          const double mu_t = pow( csmag_wall * delta, 2.0 ) * rho[c] * ISI;
+          Vector velocity_cond(0,0,0);
+          if ( has_intrusion_inlets ){
+            bool has_condition = false;
+            _intrusionBC[ilvl]->getVelocityCondition( p, c, has_condition,
+                                                   velocity_cond );
+          }
+
+          Sv[c] += 2.0 * area_tb * ( mu_t + viscos )
+            * ( velocity_cond[1] - vvel[c] ) / dz;
+
+        }
+        // Z+
+        if ( eps[zp] * eps[ymzp] < .5 ){
+          const double i_so = ( eps[c-z_so] * eps[ym-z_so] > .5 ) ?
+                               standoff :
+                               0;
+          const double ISI = 0.5 * ( IsImag[c+IntVector(0,0,-i_so)] + IsImag[c+IntVector(0,-1,-i_so)] );
+          const double mu_t = pow( csmag_wall * delta, 2.0 ) * rho[c] * ISI;
+
+          Vector velocity_cond(0,0,0);
+          if ( has_intrusion_inlets ){
+            bool has_condition = false;
+            _intrusionBC[ilvl]->getVelocityCondition( p, zp, has_condition,
+                                                   velocity_cond );
+          }
+
+          Sv[c] += 2.0 * area_tb * ( mu_t + viscos )
+            * ( velocity_cond[1] - vvel[c] ) / dz;
+
+        }
+      }
+      //apply w-mom bc -
+      if ( eps[zm] * eps[c] > 0.5 ) {
+        // X-
+        if ( eps[xm] * eps[xmzm] < .5 ){
+          const double i_so = ( eps[c+x_so] * eps[zm+x_so] > .5 ) ?
+                               standoff :
+                               0;
+          const double ISI = 0.5 * ( IsImag[c+IntVector(i_so,0,0)] + IsImag[c+IntVector(i_so,0,-1)] );
+          const double mu_t = pow( csmag_wall * delta, 2.0 ) * rho[c] * ISI;
+
+          Vector velocity_cond(0,0,0);
+          if ( has_intrusion_inlets ){
+            bool has_condition = false;
+            _intrusionBC[ilvl]->getVelocityCondition( p, c, has_condition,
+                                                   velocity_cond );
+          }
+
+          Sw[c] += 2.0 * area_ew * ( mu_t + viscos )
+            * ( velocity_cond[2] - wvel[c] ) / dx;
+
+        }
+        // X+
+        if ( eps[xp] * eps[xpzm] < .5 ){
+          const double i_so = ( eps[c-x_so] * eps[zm-x_so] > .5 ) ?
+                               standoff :
+                               0;
+          const double ISI = 0.5 * ( IsImag[c+IntVector(-i_so,0,0)] + IsImag[c+IntVector(-i_so,0,-1)] );
+          const double mu_t = pow( csmag_wall * delta, 2.0 ) * rho[c] * ISI;
+
+          Vector velocity_cond(0,0,0);
+          if ( has_intrusion_inlets ){
+            bool has_condition = false;
+            _intrusionBC[ilvl]->getVelocityCondition( p, xp, has_condition,
+                                                   velocity_cond );
+          }
+
+          Sw[c] += 2.0 * area_ew * ( mu_t + viscos )
+            * ( velocity_cond[2] - wvel[c] ) / dx;
+
+        }
+        // Y-
+        if ( eps[ym] * eps[ymzm] < .5 ){
+          const double i_so = ( eps[c+y_so] * eps[zm+y_so] > .5 ) ?
+                               standoff :
+                               0;
+          const double ISI = 0.5 * ( IsImag[c+IntVector(0,i_so,0)] + IsImag[c+IntVector(0,i_so,-1)] );
+          const double mu_t = pow( csmag_wall * delta, 2.0 ) * rho[c] * ISI;
+
+          Vector velocity_cond(0,0,0);
+          if ( has_intrusion_inlets ){
+            bool has_condition = false;
+            _intrusionBC[ilvl]->getVelocityCondition( p, c, has_condition,
+                                                   velocity_cond );
+          }
+
+          Sw[c] += 2.0 * area_ns * ( mu_t + viscos )
+            * ( velocity_cond[2] - wvel[c] ) / dy;
+
+        }
+        // Y+
+        if ( eps[yp] * eps[ypzm] < .5 ){
+          const double i_so = ( eps[c-y_so] * eps[zm-y_so] > .5 ) ?
+                               standoff :
+                               0;
+          const double ISI = 0.5*(IsImag[c+IntVector(0,-i_so,0)] + IsImag[c+IntVector(0,-i_so,-1)]);
+          const double mu_t = pow( csmag_wall*delta, 2.0 ) * rho[c] * ISI;
+
+          Vector velocity_cond(0,0,0);
+          if ( has_intrusion_inlets ){
+            bool has_condition = false;
+            _intrusionBC[ilvl]->getVelocityCondition( p, yp, has_condition,
+                                                   velocity_cond );
+          }
+
+          Sw[c] += 2.0 * area_ns * ( mu_t + viscos )
+            * ( velocity_cond[2] - wvel[c] ) / dy;
+
+        }
+      }
+    }// end cell loop
+  } // If strainRate exists
+}// end function
+
+void
+BoundaryCondition::wallStressLog( const Patch* patch,
+                               ArchesVariables* vars,
+                               ArchesConstVariables* constvars,
+                               constCCVariable<double>& volFraction )
+{
+
+  Vector Dx = patch->dCell();
+  Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
+  Uintah::parallel_for( range, [&](int i, int j, int k){
+     int flow=-1;
+     double NonLinearX =0.0;
+     double NonLinearY =0.0;
+     double NonLinearZ =0.0;
+     double yplusCrit=11.63;
+     double molvis=0.0;
+     double densityup=0.0;
+
+     constCCVariable<double > uctr=constvars->CCUVelocity;
+     constCCVariable<double > vctr=constvars->CCVVelocity;
+     constCCVariable<double > wctr=constvars->CCWVelocity;
+     constSFCXVariable<double > ufac=constvars->uVelocity;
+     constSFCYVariable<double > vfac=constvars->vVelocity;
+     constSFCZVariable<double > wfac=constvars->wVelocity;
+
+     constCCVariable<double> Gasdensity=constvars->density;
+     molvis=d_physicalConsts->getMolecularViscosity();
+     //constCCVariable<double> molvis=constvars->viscosity;
+                              // need to see it
+
+     double UMtotal=std::sqrt(uctr(i,j,k)*uctr(i,j,k)+vctr(i,j,k)*vctr(i,j,k) +wctr(i,j,k)*wctr(i,j,k));
+
+     //-------------------------X direction ----------------------------------
+     // for the log-log velocity distribution to solve the utau => wall stress
+
+    // x- direction
+
+      bool If_wallxmVd=  ( volFraction(i-1,j,k) *volFraction(i-1,j-1,k)<0.5);
+      // vcell at x- direction wall
+     if( If_wallxmVd && volFraction(i,j,k)*volFraction(i,j-1,k) > 0.5 ){
+
+       const double XmVtot=0.5*std::sqrt((uctr(i+1,j,k)+uctr(i+1,j-1,k))* (uctr(i+1,j,k)+uctr(i+1,j-1,k))
+                                       +(vctr(i+1,j,k)+vctr(i+1,j-1,k))* (vctr(i+1,j,k)+vctr(i+1,j-1,k))
+                                       +(wctr(i+1,j,k)+wctr(i+1,j-1,k))* (wctr(i+1,j,k)+wctr(i+1,j-1,k)));
+
+      densityup=0.5*Gasdensity(i+1,j,k)+0.5*Gasdensity(i+1,j-1,k);
+
+      double XmVtauGuess=yplusCrit*molvis/densityup/Dx.x();
+
+      newton_solver(XmVtot,Dx.x()*1.5,densityup, molvis, XmVtauGuess);
+
+      double tauXmVmom= ( XmVtauGuess*densityup*Dx.x()*1.5/ molvis < yplusCrit) ?     molvis*vfac(i+1,j,k)/1.5/Dx.x()      : XmVtauGuess*XmVtauGuess*(0.5*Gasdensity(i+1,j,k)+0.5*Gasdensity(i+1,j-1,k));
+
+      NonLinearY = (If_wallxmVd && constvars->cellType(i,j-1,k)== flow && XmVtot!=0) ?  NonLinearY- Dx.z() * Dx.y() * tauXmVmom* vfac(i+1,j,k)/XmVtot  : NonLinearY;
+      }
+
+
+      // wcell at x- direction wall
+      bool If_wallxmWd=  ( volFraction(i-1,j,k) *volFraction(i-1,j,k-1)<0.5);
+
+      if (If_wallxmWd && volFraction(i,j,k)*volFraction(i,j,k-1) > 0.5) {
+
+        const double XmWtot=0.5*std::sqrt((uctr(i+1,j,k)+uctr(i+1,j,k-1))* (uctr(i+1,j,k)+uctr(i+1,j,k-1))
+                                       +(vctr(i+1,j,k)+vctr(i+1,j,k-1))* (vctr(i+1,j,k)+vctr(i+1,j,k-1))
+                                       +(wctr(i+1,j,k)+wctr(i+1,j,k-1))* (wctr(i+1,j,k)+wctr(i+1,j,k-1)));
+
+      densityup=0.5*Gasdensity(i+1,j,k)+0.5*Gasdensity(i+1,j,k-1);
+
+       double    XmWtauGuess=yplusCrit*molvis/densityup/Dx.x();
+
+       newton_solver(XmWtot,Dx.x()*1.5,densityup, molvis, XmWtauGuess);
+
+      double tauXmWmom= ( XmWtauGuess*densityup*Dx.x()*1.5/ molvis < yplusCrit)   ?     molvis*wfac(i+1,j,k)/1.5/Dx.x()   : XmWtauGuess* XmWtauGuess*(0.5*Gasdensity(i+1,j,k)+0.5*Gasdensity(i+1,j,k-1));
+
+      NonLinearZ = (If_wallxmWd && constvars->cellType(i,j,k-1)== flow&& XmWtot!=0) ?  NonLinearZ- Dx.z() * Dx.y() * tauXmWmom*wfac(i+1,j,k)/XmWtot  : NonLinearZ;
+        }
+
+      // x+ -----------------------------------------------------------------------------direction
+
+      bool If_wallxpVd=  ( volFraction(i+1,j,k) *volFraction(i+1,j-1,k)<0.5);
+      // vcell at x+ direction wall
+
+      if(If_wallxpVd && volFraction(i,j,k)*volFraction(i,j-1,k) > 0.5 ){
+
+      const double XpVtot=0.5*std::sqrt((uctr(i-1,j,k)+uctr(i-1,j-1,k))* (uctr(i-1,j,k)+uctr(i-1,j-1,k))
+                                       +(vctr(i-1,j,k)+vctr(i-1,j-1,k))* (vctr(i-1,j,k)+vctr(i-1,j-1,k))
+                                       +(wctr(i-1,j,k)+wctr(i-1,j-1,k))* (wctr(i+1,j,k)+wctr(i+1,j-1,k)));
+      densityup=0.5*Gasdensity(i-1,j,k)+0.5*Gasdensity(i-1,j-1,k);
+
+      double XpVtauGuess=yplusCrit*molvis/densityup/Dx.x();
+
+      newton_solver(XpVtot,Dx.x()*1.5,densityup, molvis,XpVtauGuess);
+
+      double tauXpVmom=  ( XpVtauGuess*densityup*Dx.x()*1.5/ molvis < yplusCrit) ?     molvis*vfac(i-1,j,k)/1.5/Dx.x()        : XpVtauGuess*XpVtauGuess*(0.5*Gasdensity(i-1,j,k)+0.5*Gasdensity(i-1,j-1,k));
+
+      NonLinearY = (If_wallxpVd && constvars->cellType(i,j-1,k)== flow && XpVtot!=0) ?  NonLinearY- Dx.z() * Dx.y() * tauXpVmom* vfac(i-1,j,k)/XpVtot  : NonLinearY;
+      }
+
+      // Wcell at x+ direction wall
+      bool If_wallxpWd=  ( volFraction(i+1,j,k) *volFraction(i+1,j,k-1)<0.5);
+
+      if(If_wallxpWd && volFraction(i,j,k)*volFraction(i,j,k-1) > 0.5){
+
+      const double XpWtot=0.5*std::sqrt((uctr(i-1,j,k)+uctr(i-1,j,k-1))* (uctr(i-1,j,k)+uctr(i-1,j,k-1))
+                                       +(vctr(i-1,j,k)+vctr(i-1,j,k-1))* (vctr(i-1,j,k)+vctr(i-1,j,k-1))
+                                       +(wctr(i-1,j,k)+wctr(i-1,j,k-1))* (wctr(i-1,j,k)+wctr(i-1,j,k-1)));
+      densityup=0.5*Gasdensity(i-1,j,k)+0.5*Gasdensity(i-1,j,k-1);
+
+      double      XpWtauGuess=yplusCrit*molvis/densityup/Dx.x();
+
+      newton_solver(XpWtot,Dx.x()*1.5,densityup, molvis,XpWtauGuess);
+
+      double tauXpWmom= ( XpWtauGuess*densityup*Dx.x()*1.5/ molvis < yplusCrit) ?     molvis*wfac(i-1,j,k)/1.5/Dx.x()    : XpWtauGuess*XpWtauGuess*0.5*(Gasdensity(i-1,j,k)+0.5*Gasdensity(i-1,j,k-1));
+
+      NonLinearZ = (If_wallxpWd && constvars->cellType(i,j,k-1)== flow && XpWtot!=0) ?  NonLinearZ- Dx.z() * Dx.y() *  tauXpWmom*wfac(i-1,j,k)/XpWtot: NonLinearZ;
+      }
+
+   // y- direction
+ // ucell at y-direction
+    bool If_wallymUd= ( volFraction(i,j-1,k) *volFraction(i-1,j-1,k)<0.5);
+
+    if(If_wallymUd && volFraction(i,j,k)*volFraction(i-1,j,k) >0.5){
+
+    const double YmUtot=0.5*std::sqrt((uctr(i,j+1,k)+uctr(i-1,j+1,k))* (uctr(i,j+1,k)+uctr(i-1,j+1,k))
+                                     +(vctr(i,j+1,k)+vctr(i-1,j+1,k))* (vctr(i,j+1,k)+vctr(i-1,j+1,k))
+                                     +(wctr(i,j+1,k)+wctr(i-1,j+1,k))* (wctr(i,j+1,k)+wctr(i-1,j+1,k)));
+
+    densityup=0.5*Gasdensity(i,j+1,k)+0.5*Gasdensity(i-1,j+1,k);
+
+    double YmUtauGuess=yplusCrit*molvis/densityup/Dx.y();
+
+    newton_solver(YmUtot,Dx.y()*1.5, densityup, molvis,YmUtauGuess);
+
+    double tauYmUmom=   ( YmUtauGuess*densityup*Dx.y()*1.5/ molvis < yplusCrit) ?     molvis*ufac(i,j+1,k)/1.5/Dx.y()  :  YmUtauGuess*YmUtauGuess*(0.5*Gasdensity(i,j+1,k)+0.5*Gasdensity(i-1,j+1,k));
+
+    NonLinearX = (If_wallymUd && constvars->cellType(i-1,j,k)== flow&& YmUtot!=0) ?  NonLinearX- Dx.x() * Dx.z() *  tauYmUmom*ufac(i,j+1,k)/YmUtot : NonLinearX;
+
+
+    }
+
+
+ // wcell at y-direction
+    bool If_wallymWd= ( volFraction(i,j-1,k) *volFraction(i,j-1,k-1)<0.5);
+
+    if(If_wallymWd && volFraction(i,j,k)*volFraction(i,j,k-1) >0.5 ){
+
+    const double YmWtot=0.5*std::sqrt((uctr(i,j+1,k)+uctr(i,j+1,k-1))* (uctr(i,j+1,k)+uctr(i,j+1,k-1))
+                                     +(vctr(i,j+1,k)+vctr(i,j+1,k-1))* (vctr(i,j+1,k)+vctr(i,j+1,k-1))
+                                     +(wctr(i,j+1,k)+wctr(i,j+1,k-1))* (wctr(i,j+1,k)+wctr(i,j+1,k-1)) );
+
+    densityup=0.5*Gasdensity(i,j+1,k)+0.5*Gasdensity(i,j+1,k-1);
+
+    double     YmWtauGuess=yplusCrit*molvis/densityup/Dx.y();
+
+      newton_solver(YmWtot,Dx.y()*1.5, densityup, molvis,YmWtauGuess);
+
+    double tauYmWmom=  ( YmWtauGuess*densityup*Dx.y()*1.5/ molvis < yplusCrit) ?     molvis*wfac(i,j+1,k)/1.5/Dx.y()  :   YmWtauGuess*YmWtauGuess*(0.5*Gasdensity(i,j+1,k)+0.5*Gasdensity(i,j+1,k-1));
+
+     NonLinearZ = (If_wallymWd && constvars->cellType(i,j,k-1)== flow && YmWtot !=0 ) ?  NonLinearZ- Dx.x() * Dx.z() *  tauYmWmom*wfac(i,j+1,k)/YmWtot : NonLinearZ;
+    }
+
+    // y+ direction
+ // ucell at y+direction
+    bool If_wallypUd= ( volFraction(i,j+1,k) *volFraction(i-1,j+1,k)<0.5);
+
+    if(If_wallypUd && volFraction(i,j,k)*volFraction(i-1,j,k) >0.5 ){
+
+      const double YpUtot=0.5*std::sqrt((uctr(i,j-1,k)+uctr(i-1,j-1,k))* (uctr(i,j-1,k)+uctr(i-1,j-1,k))
+                                     +(vctr(i,j-1,k)+vctr(i-1,j-1,k))* (vctr(i,j-1,k)+vctr(i-1,j-1,k))
+                                     +(wctr(i,j-1,k)+wctr(i-1,j-1,k))* (wctr(i,j-1,k)+wctr(i-1,j-1,k)));
+
+      densityup=0.5*Gasdensity(i,j-1,k)+0.5*Gasdensity(i-1,j-1,k);
+
+    double  YpVtauGuess=yplusCrit*molvis/densityup/Dx.y();
+
+       newton_solver(YpUtot,Dx.y()*1.5, densityup,molvis,YpVtauGuess) ;
+
+     double tauYpUmom=  ( YpVtauGuess*densityup*Dx.y()*1.5/ molvis < yplusCrit) ?     molvis*ufac(i,j-1,k)/1.5/Dx.y()  :   YpVtauGuess*YpVtauGuess*(0.5*Gasdensity(i,j-1,k)+0.5*Gasdensity(i-1,j-1,k));
+
+     NonLinearX = (If_wallypUd && constvars->cellType(i-1,j,k)== flow && YpUtot !=0) ?  NonLinearX- Dx.x() * Dx.z() *  tauYpUmom*ufac(i,j-1,k)/YpUtot : NonLinearX;
+
+
+
+    }
+
+
+ // wcell at y+direction
+    bool If_wallypWd= ( volFraction(i,j+1,k) *volFraction(i,j+1,k-1)<0.5);
+
+    if(If_wallypWd && volFraction(i,j,k)*volFraction(i,j,k-1) > 0.5 ){
+
+      const double YpWtot=0.5*std::sqrt((uctr(i,j-1,k)+uctr(i,j-1,k-1))* (uctr(i,j-1,k)+uctr(i,j-1,k-1))
+                                     +(vctr(i,j-1,k)+vctr(i,j-1,k-1))* (vctr(i,j-1,k)+vctr(i,j-1,k-1))
+                                     +(wctr(i,j-1,k)+wctr(i,j-1,k-1))* (wctr(i,j-1,k)+wctr(i,j-1,k-1)) );
+
+    densityup=0.5*Gasdensity(i,j-1,k)+0.5*Gasdensity(i,j-1,k-1);
+
+    double YpWtauGuess=yplusCrit*molvis/densityup/Dx.y();
+
+    newton_solver(YpWtot,Dx.y()*1.5,densityup, molvis,YpWtauGuess) ;
+
+    double tauYpWmom=   ( YpWtauGuess*densityup*Dx.y()*1.5/ molvis < yplusCrit) ?     molvis*wfac(i,j-1,k)/1.5/Dx.y() :   YpWtauGuess*YpWtauGuess*(0.5*Gasdensity(i,j-1,k)+0.5*Gasdensity(i,j-1,k-1));
+
+     NonLinearZ = (If_wallypWd && constvars->cellType(i,j,k-1)== flow && YpWtot !=0) ?  NonLinearZ- Dx.x() * Dx.z() *  tauYpWmom*wfac(i,j-1,k)/YpWtot : NonLinearZ;
+
+
+     }
+
+
+   //-------------------------Z direction ---------------------------------
+
+   // z- direction
+   // ucell  z-direction
+   bool  If_wallzmUd=  ( volFraction(i,j,k-1) *volFraction(i-1,j,k-1)<0.5);
+
+   if(If_wallzmUd && volFraction(i,j,k)*volFraction(i-1,j,k) > 0.5){
+
+       const double ZmUtot=0.5*std::sqrt((uctr(i,j,k+1)+uctr(i-1,j,k+1))* (uctr(i,j,k+1)+uctr(i-1,j,k+1))
+                                     +(vctr(i,j,k+1)+vctr(i-1,j,k+1))* (vctr(i,j,k+1)+vctr(i-1,j,k+1))
+                                     +(wctr(i,j,k+1)+wctr(i-1,j,k+1))* (wctr(i,j,k+1)+wctr(i-1,j,k+1)));
+   densityup=0.5*Gasdensity(i,j,k+1)+0.5*Gasdensity(i-1,j,k+1);
+
+   double ZmUtauGuess=yplusCrit*molvis/densityup/Dx.z();
+
+   newton_solver(ZmUtot,Dx.z()*1.5,densityup,molvis,ZmUtauGuess) ;
+    double tauZmUmom=   ( ZmUtauGuess*densityup*Dx.z()*1.5/ molvis < yplusCrit) ?     molvis*ufac(i,j,k+1)/1.5/Dx.z() :   ZmUtauGuess*ZmUtauGuess*(0.5*Gasdensity(i,j,k+1)+0.5*Gasdensity(i-1,j,k+1));
+
+    NonLinearX = (If_wallzmUd && constvars->cellType(i-1,j,k)== flow && ZmUtot !=0) ?  NonLinearX- Dx.x() * Dx.y() *  tauZmUmom*ufac(i,j,k+1)/ZmUtot : NonLinearX;
+    }
+
+   // vcell  z-direction
+   bool  If_wallzmVd=  ( volFraction(i,j,k-1) *volFraction(i,j-1,k-1)<0.5);
+
+    if(If_wallzmVd && volFraction(i,j,k)*volFraction(i,j-1,k) > 0.5){
+
+      const double ZmVtot=0.5*std::sqrt((uctr(i,j,k+1)+uctr(i,j-1,k+1))* (uctr(i,j,k+1)+uctr(i,j-1,k+1))
+                                    +(vctr(i,j,k+1)+vctr(i,j-1,k+1))* (vctr(i,j,k+1)+vctr(i,j-1,k+1))
+                                    +(wctr(i,j,k+1)+wctr(i,j-1,k+1))* (wctr(i,j,k+1)+wctr(i,j-1,k+1)));
+
+    densityup=0.5*Gasdensity(i,j-1,k+1)+0.5*Gasdensity(i,j,k+1);
+
+    double   ZmVtauGuess=yplusCrit*molvis/densityup/Dx.z();
+
+    newton_solver(ZmVtot,Dx.z()*1.5,densityup,molvis,ZmVtauGuess) ;
+    double tauZmVmom=   ( ZmVtauGuess*densityup*Dx.z()*1.5/ molvis < yplusCrit) ?     molvis*vfac(i,j,k+1)/1.5/Dx.z() :    ZmVtauGuess*ZmVtauGuess*(0.5*Gasdensity(i,j,k+1)+0.5*Gasdensity(i,j-1,k+1));
+
+     NonLinearY = (If_wallzmVd && constvars->cellType(i,j-1,k)== flow && ZmVtot !=0) ?  NonLinearY- Dx.x() * Dx.y() *  tauZmVmom*vfac(i,j,k+1)/ZmVtot : NonLinearY;
+    }
+
+    // z+ direction
+   // ucell  z+direction
+   bool  If_wallzpUd=  ( volFraction(i,j,k+1) *volFraction(i-1,j,k+1)<0.5);
+
+   if(If_wallzpUd && volFraction(i,j,k)*volFraction(i-1,j,k) > 0.5 ){
+
+     const double ZpUtot=0.5*std::sqrt((uctr(i,j,k-1)+uctr(i-1,j,k-1))* (uctr(i,j,k-1)+uctr(i-1,j,k-1))
+                                     +(vctr(i,j,k-1)+vctr(i-1,j,k-1))* (vctr(i,j,k-1)+vctr(i-1,j,k-1))
+                                     +(wctr(i,j,k-1)+wctr(i-1,j,k-1))* (wctr(i,j,k-1)+wctr(i-1,j,k-1)));
+    densityup=0.5*Gasdensity(i,j,k-1)+0.5*Gasdensity(i-1,j,k-1);
+
+      double      ZpUtauGuess=yplusCrit*molvis/densityup/Dx.z();
+
+   newton_solver(ZpUtot,Dx.z()*1.5,densityup,molvis,ZpUtauGuess) ;
+
+    double tauZpUmom=   ( ZpUtauGuess*densityup*Dx.z()*1.5/ molvis < yplusCrit) ?     molvis*ufac(i,j,k-1)/1.5/Dx.z() :    ZpUtauGuess*ZpUtauGuess*(0.5*Gasdensity(i,j,k-1)+0.5*Gasdensity(i-1,j,k-1));
+
+    NonLinearX = (If_wallzpUd && constvars->cellType(i-1,j,k)== flow && ZpUtot !=0) ?  NonLinearX- Dx.x() * Dx.y() *  tauZpUmom*ufac(i,j,k-1)/ZpUtot : NonLinearX;
+   }
+
+   // vcell  z+direction
+   bool  If_wallzpVd=  ( volFraction(i,j,k+1) *volFraction(i,j-1,k+1)<0.5);
+
+  if(If_wallzpVd && volFraction(i,j,k)*volFraction(i,j-1,k)  > 0.5){
+
+    const double ZpVtot=0.5*std::sqrt((uctr(i,j,k-1)+uctr(i,j-1,k-1))* (uctr(i,j,k-1)+uctr(i,j-1,k-1))
+                                    +(vctr(i,j,k-1)+vctr(i,j-1,k-1))* (vctr(i,j,k-1)+vctr(i,j-1,k-1))
+                                    +(wctr(i,j,k-1)+wctr(i,j-1,k-1))* (wctr(i,j,k-1)+wctr(i,j-1,k-1)));
+
+    densityup=0.5*Gasdensity(i,j-1,k-1)+0.5*Gasdensity(i,j,k-1);
+
+    double   ZpVtauGuess=yplusCrit*molvis/densityup/Dx.z();
+
+       newton_solver(ZpVtot,Dx.z()*1.5, densityup, molvis,ZpVtauGuess) ;
+
+       double tauZpVmom=   ( ZpVtauGuess*densityup*Dx.z()*1.5/ molvis < yplusCrit) ?   molvis*vfac(i,j,k-1)/1.5/Dx.z() :    ZpVtauGuess*ZpVtauGuess*(0.5*Gasdensity(i,j,k-1)+0.5*Gasdensity(i,j-1,k-1));
+
+     NonLinearY = (If_wallzpVd && constvars->cellType(i,j-1,k)== flow && ZpVtot) ?  NonLinearY- Dx.x() * Dx.y() *  tauZpVmom*vfac(i,j,k-1)/ZpVtot : NonLinearY;
+
+
+  }
+
+
+    // combing
+
+      vars->uVelNonlinearSrc(i,j,k)=(!d_slip && constvars->cellType(i,j,k)==flow && UMtotal != 0.0) ? vars->uVelNonlinearSrc(i,j,k)+ NonLinearX :  vars->uVelNonlinearSrc(i,j,k);
+      vars->vVelNonlinearSrc(i,j,k)=(!d_slip && constvars->cellType(i,j,k)==flow && UMtotal != 0.0) ? vars->vVelNonlinearSrc(i,j,k)+ NonLinearY :  vars->vVelNonlinearSrc(i,j,k);
+      vars->wVelNonlinearSrc(i,j,k)=(!d_slip && constvars->cellType(i,j,k)==flow && UMtotal != 0.0) ? vars->wVelNonlinearSrc(i,j,k)+ NonLinearZ :  vars->wVelNonlinearSrc(i,j,k);
+
+      //if(i==20 && j== 0 && k == 8)
+    //{ std::cout<<"log-log rule:\n"<<"i="<<i<<"j="<<j<<"k="<<k<<std::scientific;
+      //std::cout<< "Is_wall "<< If_wallymUd <<"Y "<<( constvars->cellType(i,j-1,k) == WALL || constvars->cellType(i,j-1,k) == INTRUSION)<< "\n";
+      //std::cout<< "uVelcoity= "<<  constvars->uVelocity(i,j,k)<<"vVelocity="<<constvars->vVelocity(i,j,k)<<"wVelocity="<<constvars->wVelocity(i,j,k)<<"\n";
+      //std::cout<< "uVelcoity(i,j+1,k)= "<<  constvars->uVelocity(i,j+1,k)<<"vVelocity="<<constvars->vVelocity(i,j+1,k)<<"wVelocity(i,j+1,k)="<<constvars->wVelocity(i,j+1,k)<<"\n";
+      //std::cout<<" Density="<<constvars->density(i,j,k) << "Viscosity "<< constvars->viscosity(i,j,k)<< "Dy "<< Dx.y()<<"utauY="<< vtauGuess<< "\n";
+      //std::cout<< "NonLinearX "<<NonLinearX<< "NonLinearY "<<NonLinearY<< " NonLinearZ "<< NonLinearZ << "\n";
+
+
+    //}//end for std::cout
+
+
+  });
+
+}
+//----------------------------------
+void
+BoundaryCondition::newton_solver( const double& up, const double& yp, const double& density, const double& viscosity,double& utau)
+{
+  // solver constants
+  const double d_tol    = 1e-10;
+  const double E=9.8;
+  const double kappa=0.42;
+  const double A=E*density*yp/viscosity;
+  bool        converged=false;
+  double      fprime=0.0;
+  double      f=0.0;
+  double      wrk=0.0;
+  double      df=0.0;
+  double  uinit= utau;
+  // newton solve
+  for ( int iterT=0; iterT < 50; iterT++) {
+    wrk=log(A*utau);
+    fprime=-(1.0+wrk);
+    f=kappa*up-utau*wrk;
+    df=f/fprime;
+    utau=utau-df;
+     ///std::cout<< "iterT="<<iterT<<"utau="<<utau<<"A="<<A<<"\n";
+    if (std::abs(df) < d_tol){
+      converged =true;
+      break;
+      }
+    }// end for solver looping process
+
+  if (!converged && std::abs(up)> 1e-5 && density != 0.0 && viscosity !=0)
+  { std::cout<<"diverge for solving log wall stress, not converged"<<std::endl;
+    std::cout<<"up="<<up<<"yp="<<yp<<"density="<<density<<"visocisty="<<viscosity<<"utau="<<utau<< " uinit ="<< uinit<<std::endl;
+  }
+
+}
+
+void
+BoundaryCondition::wallStressMolecular( const Patch* p,
+                                        constSFCXVariable<double>& uvel,
+                                        constSFCYVariable<double>& vvel,
+                                        constSFCZVariable<double>& wvel,
+                                        SFCXVariable<double>& Su,
+                                        SFCYVariable<double>& Sv,
+                                        SFCZVariable<double>& Sw,
+                                        constCCVariable<double>& eps )
+{
+
+  Vector Dx = p->dCell();
+
+  double viscos; // molecular viscosity
+  viscos = d_physicalConsts->getMolecularViscosity();
+  const double area_ew = Dx.y() * Dx.z();
+  const double area_ns = Dx.z() * Dx.x();
+  const double area_tb = Dx.x() * Dx.y();
+  const double dx = Dx.x();
+  const double dy = Dx.y();
+  const double dz = Dx.z();
+
+  for (CellIterator iter=p->getCellIterator(); !iter.done(); iter++) {
     IntVector c = *iter;
     IntVector xm = *iter - IntVector(1,0,0);
     IntVector xp = *iter + IntVector(1,0,0);
@@ -4088,145 +4707,229 @@ BoundaryCondition::wallStress( const Patch* p,
     IntVector yp = *iter + IntVector(0,1,0);
     IntVector zm = *iter - IntVector(0,0,1);
     IntVector zp = *iter + IntVector(0,0,1);
+    IntVector xmym = *iter + IntVector(-1,-1,0);
+    IntVector xmyp = *iter + IntVector(-1,1,0);
+    IntVector xmzm = *iter + IntVector(-1,0,-1);
+    IntVector xmzp = *iter + IntVector(-1,0,1);
+    IntVector xpym = *iter + IntVector(1,-1,0);
+    IntVector xpzm = *iter + IntVector(1,0,-1);
+    IntVector ymzm = *iter + IntVector(0,-1,-1);
+    IntVector ymzp = *iter + IntVector(0,-1,1);
+    IntVector ypzm = *iter + IntVector(0,1,-1);
 
-    //WARNINGS:
-    // This isn't that stylish but it should accomplish what the MPMArches code was doing
-    //1) assumed flow cell = -1
-    //2) assumed that wall velocity = 0
-    //3) assumed a csmag = 0.17 (a la kumar)
-
-    int flow = -1;
-
-    if ( !d_slip ) {
-
-      // curr cell is a flow cell
-      if ( const_vars->cellType[c] == flow ) {
-
-        if ( const_vars->cellType[xm] == WALL || const_vars->cellType[xm] == INTRUSION ) {
-
-          //y-dir
-          if ( const_vars->cellType[ym] == flow ) {
-
-            double mu_t = pow( d_csmag_wall*Dx.x(), 2.0 ) * const_vars->density[c] * const_vars->vVelocity[c]/Dx.x();
-
-            //apply v-mom bc -
-            vars->vVelNonlinearSrc[c] -= 2.0 * Dx.y() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->vVelocity[c] / Dx.x();
-
-          }
-          if ( const_vars->cellType[zm] == flow ) {
-
-            double mu_t = pow( d_csmag_wall*Dx.x(), 2.0 ) * const_vars->density[c] * const_vars->wVelocity[c]/Dx.x();
-
-            //apply w-mom bc -
-            vars->wVelNonlinearSrc[c] -= 2.0 * Dx.y() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->wVelocity[c] / Dx.x();
-          }
-
-        }
-
-        if ( const_vars->cellType[xp] == WALL || const_vars->cellType[xp] == INTRUSION) {
-
-          //y-dir
-          if ( const_vars->cellType[ym] == flow ) {
-
-            double mu_t = pow( d_csmag_wall*Dx.x(), 2.0 ) * const_vars->density[c] * const_vars->vVelocity[c]/Dx.x();
-
-            //apply v-mom bc -
-            vars->vVelNonlinearSrc[c] -= 2.0 * Dx.y() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->vVelocity[c] / Dx.x();
-          }
-          if ( const_vars->cellType[zm] == flow ) {
-
-            double mu_t = pow( d_csmag_wall*Dx.x(), 2.0 ) * const_vars->density[c] * const_vars->wVelocity[c]/Dx.x();
-
-            //apply w-mom bc -
-            vars->wVelNonlinearSrc[c] -= 2.0 * Dx.y() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->wVelocity[c] / Dx.x();
-          }
-
-        }
-
-        if ( const_vars->cellType[ym] == WALL || const_vars->cellType[ym] == INTRUSION) {
-
-          //x-dir
-          if ( const_vars->cellType[xm] == flow ) {
-
-            double mu_t = pow( d_csmag_wall*Dx.y(), 2.0 ) * const_vars->density[c] * const_vars->uVelocity[c]/Dx.y();
-
-            //apply u-mom bc -
-            vars->uVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->uVelocity[c] / Dx.y();
-          }
-          if ( const_vars->cellType[zm] == flow ) {
-
-            double mu_t = pow( d_csmag_wall*Dx.y(), 2.0 ) * const_vars->density[c] * const_vars->wVelocity[c]/Dx.y();
-
-            //apply w-mom bc -
-            vars->wVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->wVelocity[c] / Dx.y();
-          }
-
-        }
-
-        if ( const_vars->cellType[yp] == WALL || const_vars->cellType[yp] == INTRUSION) {
-
-          //x-dir
-          if ( const_vars->cellType[xm] == flow ) {
-
-            double mu_t = pow( d_csmag_wall*Dx.y(), 2.0 ) * const_vars->density[c] * const_vars->uVelocity[c]/Dx.y();
-
-            //apply u-mom bc -
-            vars->uVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->uVelocity[c] / Dx.y();
-          }
-          if ( const_vars->cellType[zm] == flow ) {
-
-            double mu_t = pow( d_csmag_wall*Dx.y(), 2.0 ) * const_vars->density[c] * const_vars->wVelocity[c]/Dx.y();
-
-            //apply w-mom bc -
-            vars->wVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->wVelocity[c] / Dx.y();
-          }
-
-        }
-
-        if ( const_vars->cellType[zm] == WALL || const_vars->cellType[zm] == INTRUSION) {
-
-          //x-dir
-          if ( const_vars->cellType[xm] == flow ) {
-
-            double mu_t = pow( d_csmag_wall*Dx.z(), 2.0 ) * const_vars->density[c] * const_vars->uVelocity[c]/Dx.z();
-
-            //apply u-mom bc -
-            vars->uVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.y() * ( mu_t +  const_vars->viscosity[c] ) * const_vars->uVelocity[c] / Dx.z();
-          }
-          if ( const_vars->cellType[ym] == flow ) {
-
-            double mu_t = pow( d_csmag_wall*Dx.z(), 2.0 ) * const_vars->density[c] * const_vars->vVelocity[c]/Dx.z();
-
-            //apply v-mom bc -
-            vars->vVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.y() * ( mu_t + const_vars->viscosity[c] ) * const_vars->vVelocity[c] / Dx.z();
-          }
-
-        }
-
-        if ( const_vars->cellType[zp] == WALL || const_vars->cellType[zp] == INTRUSION) {
-
-          //x-dir
-          if ( const_vars->cellType[xm] == flow ) {
-
-            double mu_t = pow( d_csmag_wall*Dx.z(), 2.0 ) * const_vars->density[c] * const_vars->uVelocity[c]/Dx.z();
-
-            //apply u-mom bc -
-            vars->uVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.y() * ( mu_t + const_vars->viscosity[c] ) * const_vars->uVelocity[c] / Dx.z();
-          }
-          if ( const_vars->cellType[ym] == flow ) {
-
-            double mu_t = pow( d_csmag_wall*Dx.z(), 2.0 ) * const_vars->density[c] * const_vars->vVelocity[c]/Dx.z();
-
-            //apply v-mom bc -
-            vars->vVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.y() * ( mu_t + const_vars->viscosity[c] ) * const_vars->vVelocity[c] / Dx.z();
-          }
-
-        }
-
+    //apply u-mom bc -
+    if ( eps[xm] * eps[c] > .5 ){
+      // Y-
+      if ( eps[ym] * eps[xmym] < .5 ){
+        Su[c] -= 2.0 * area_ns * ( viscos ) * uvel[c] / dy;
+      }
+      // Y+
+      if ( eps[yp] * eps[xmyp] < .5 ){
+        Su[c] -= 2.0 * area_ns * ( viscos ) * uvel[c] / dy;
+      }
+      // Z-
+      if ( eps[zm] * eps[xmzm] < .5 ){
+        Su[c] -= 2.0 * area_tb * ( viscos ) * uvel[c] / dz;
+      }
+      // Z+
+      if ( eps[zp] * eps[xmzp] < .5 ){
+        Su[c] -= 2.0 * area_tb * ( viscos ) * uvel[c] / dy;
       }
     }
-  }
-}
+    //apply v-mom bc -
+    if ( eps[ym] * eps[c] > 0.5 ) {
+      // X-
+      if ( eps[xm] * eps[xmym] < .5 ){
+        Sv[c] -= 2.0 * area_ew * ( viscos ) * vvel[c] / dx;
+      }
+      // X+
+      if ( eps[xp] * eps[xpym] < .5 ){
+        Sv[c] -= 2.0 * area_ew * ( viscos ) * vvel[c] / dx;
+      }
+      // Z-
+      if ( eps[zm] * eps[ymzm] < .5 ){
+        Sv[c] -= 2.0 * area_tb * ( viscos ) * vvel[c] / dz;
+      }
+      // Z+
+      if ( eps[zp] * eps[ymzp] < .5 ){
+        Sv[c] -= 2.0 * area_tb * ( viscos ) * vvel[c] / dz;
+      }
+    }
+    //apply w-mom bc -
+    if ( eps[zm] * eps[c] > 0.5 ) {
+      // X-
+      if ( eps[xm] * eps[xmzm] < .5 ){
+        Sw[c] -= 2.0 * area_ew * ( viscos ) * wvel[c] / dx;
+      }
+      // X+
+      if ( eps[xp] * eps[xpzm] < .5 ){
+        Sw[c] -= 2.0 * area_ew * ( viscos ) * wvel[c] / dx;
+      }
+      // Y-
+      if ( eps[ym] * eps[ymzm] < .5 ){
+        Sw[c] -= 2.0 * area_ns * ( viscos ) * wvel[c] / dy;
+      }
+      // Y+
+      if ( eps[yp] * eps[ypzm] < .5 ){
+        Sw[c] -= 2.0 * area_ns * ( viscos ) * wvel[c] / dy;
+      }
+    }
+  }// end cell loop
+}// end function
+
+void
+BoundaryCondition::wallStressDynSmag( const Patch* p,
+                                      const int standoff,
+                                      constCCVariable<double>& mu_t,
+                                      constSFCXVariable<double>& uvel,
+                                      constSFCYVariable<double>& vvel,
+                                      constSFCZVariable<double>& wvel,
+                                      SFCXVariable<double>& Su,
+                                      SFCYVariable<double>& Sv,
+                                      SFCZVariable<double>& Sw,
+                                      constCCVariable<double>& rho,
+                                      constCCVariable<double>& eps )
+{
+
+  // mu_t coming in here has the mol visc added.
+  //
+  Vector Dx = p->dCell();
+
+  const double area_ew = Dx.y() * Dx.z();
+  const double area_ns = Dx.z() * Dx.x();
+  const double area_tb = Dx.x() * Dx.y();
+  const double dx = Dx.x();
+  const double dy = Dx.y();
+  const double dz = Dx.z();
+
+  for (CellIterator iter=p->getCellIterator(); !iter.done(); iter++) {
+    IntVector c = *iter;
+    IntVector xm = *iter - IntVector(1,0,0);
+    IntVector xp = *iter + IntVector(1,0,0);
+    IntVector ym = *iter - IntVector(0,1,0);
+    IntVector yp = *iter + IntVector(0,1,0);
+    IntVector zm = *iter - IntVector(0,0,1);
+    IntVector zp = *iter + IntVector(0,0,1);
+    IntVector xmym = *iter + IntVector(-1,-1,0);
+    IntVector xmyp = *iter + IntVector(-1,1,0);
+    IntVector xmzm = *iter + IntVector(-1,0,-1);
+    IntVector xmzp = *iter + IntVector(-1,0,1);
+    IntVector xpym = *iter + IntVector(1,-1,0);
+    IntVector xpzm = *iter + IntVector(1,0,-1);
+    IntVector ymzm = *iter + IntVector(0,-1,-1);
+    IntVector ymzp = *iter + IntVector(0,-1,1);
+    IntVector ypzm = *iter + IntVector(0,1,-1);
+    IntVector x_so = IntVector(standoff,0,0);
+    IntVector y_so = IntVector(0,standoff,0);
+    IntVector z_so = IntVector(0,0,standoff);
+    //apply u-mom bc -
+    if ( eps[xm] * eps[c] > .5 ){
+      // Y-
+      if ( eps[ym] * eps[xmym] < .5 ){
+        const double i_so = ( eps[c+y_so] * eps[xm+y_so] > .5 ) ?
+                             standoff :
+                             0;
+        const double mu = 0.5 * ( mu_t[c+IntVector(0,i_so,0)] + mu_t[c+IntVector(-1,i_so,0)] );
+        Su[c] -= 2.0 * area_ns * ( mu ) * uvel[c] / dy;
+      }
+      // Y+
+      if ( eps[yp] * eps[xmyp] < .5 ){
+        const double i_so = ( eps[c-y_so] * eps[xm-y_so] > .5 ) ?
+                             standoff :
+                             0;
+        const double mu = 0.5*(mu_t[c+IntVector(0,-i_so,0)] + mu_t[c+IntVector(-1,-i_so,0)]);
+        Su[c] -= 2.0 * area_ns * ( mu ) * uvel[c] / dy;
+      }
+      // Z-
+      if ( eps[zm] * eps[xmzm] < .5 ){
+        const double i_so = ( eps[c+z_so] * eps[xm+z_so] > .5 ) ?
+                             standoff :
+                             0;
+        const double mu = 0.5 * ( mu_t[c+IntVector(0,0,i_so)] + mu_t[c+IntVector(-1,0,i_so)] );
+        Su[c] -= 2.0 * area_tb * ( mu ) * uvel[c] / dz;
+      }
+      // Z+
+      if ( eps[zp] * eps[xmzp] < .5 ){
+        const double i_so = ( eps[c-z_so] * eps[xm-z_so] > .5 ) ?
+                             standoff :
+                             0;
+        const double mu = 0.5*(mu_t[c+IntVector(0,0,-i_so)] + mu_t[c+IntVector(-1,0,-i_so)]);
+        Su[c] -= 2.0 * area_tb * ( mu ) * uvel[c] / dy;
+      }
+    }
+    //apply v-mom bc -
+    if ( eps[ym] * eps[c] > 0.5 ) {
+      // X-
+      if ( eps[xm] * eps[xmym] < .5 ){
+        const double i_so = ( eps[c+x_so] * eps[ym+x_so] > .5 ) ?
+                             standoff :
+                             0;
+        const double mu = 0.5 * ( mu_t[c+IntVector(i_so,0,0)] + mu_t[c+IntVector(i_so,-1,0)] );
+        Sv[c] -= 2.0 * area_ew * ( mu ) * vvel[c] / dx;
+      }
+      // X+
+      if ( eps[xp] * eps[xpym] < .5 ){
+        const double i_so = ( eps[c-x_so] * eps[ym-x_so] > .5 ) ?
+                             standoff :
+                             0;
+        const double mu = 0.5 * ( mu_t[c+IntVector(-i_so,0,0)] + mu_t[c+IntVector(-i_so,-1,0)] );
+        Sv[c] -= 2.0 * area_ew * ( mu ) * vvel[c] / dx;
+      }
+      // Z-
+      if ( eps[zm] * eps[ymzm] < .5 ){
+        const double i_so = ( eps[c+z_so] * eps[ym+z_so] > .5 ) ?
+                             standoff :
+                             0;
+        const double mu = 0.5 * ( mu_t[c+IntVector(0,0,i_so)] + mu_t[c+IntVector(0,-1,i_so)] );
+        Sv[c] -= 2.0 * area_tb * ( mu ) * vvel[c] / dz;
+      }
+      // Z+
+      if ( eps[zp] * eps[ymzp] < .5 ){
+        const double i_so = ( eps[c-z_so] * eps[ym-z_so] > .5 ) ?
+                             standoff :
+                             0;
+        const double mu = 0.5 * ( mu_t[c+IntVector(0,0,-i_so)] + mu_t[c+IntVector(0,-1,-i_so)] );
+        Sv[c] -= 2.0 * area_tb * ( mu ) * vvel[c] / dz;
+      }
+    }
+    //apply w-mom bc -
+    if ( eps[zm] * eps[c] > 0.5 ) {
+      // X-
+      if ( eps[xm] * eps[xmzm] < .5 ){
+        const double i_so = ( eps[c+x_so] * eps[zm+x_so] > .5 ) ?
+                             standoff :
+                             0;
+        const double mu = 0.5 * ( mu_t[c+IntVector(i_so,0,0)] + mu_t[c+IntVector(i_so,0,-1)] );
+        Sw[c] -= 2.0 * area_ew * ( mu ) * wvel[c] / dx;
+      }
+      // X+
+      if ( eps[xp] * eps[xpzm] < .5 ){
+        const double i_so = ( eps[c-x_so] * eps[zm-x_so] > .5 ) ?
+                             standoff :
+                             0;
+        const double mu = 0.5 * ( mu_t[c+IntVector(-i_so,0,0)] + mu_t[c+IntVector(-i_so,0,-1)] );
+        Sw[c] -= 2.0 * area_ew * ( mu ) * wvel[c] / dx;
+      }
+      // Y-
+      if ( eps[ym] * eps[ymzm] < .5 ){
+        const double i_so = ( eps[c+y_so] * eps[zm+y_so] > .5 ) ?
+                             standoff :
+                             0;
+        const double mu = 0.5 * ( mu_t[c+IntVector(0,i_so,0)] + mu_t[c+IntVector(0,i_so,-1)] );
+        Sw[c] -= 2.0 * area_ns * ( mu ) * wvel[c] / dy;
+      }
+      // Y+
+      if ( eps[yp] * eps[ypzm] < .5 ){
+        const double i_so = ( eps[c-y_so] * eps[zm-y_so] > .5 ) ?
+                             standoff :
+                             0;
+        const double mu = 0.5*(mu_t[c+IntVector(0,-i_so,0)] + mu_t[c+IntVector(0,-i_so,-1)]);
+        Sw[c] -= 2.0 * area_ns * ( mu ) * wvel[c] / dy;
+      }
+    }
+  }// end cell loop
+}// end function
+
 void
 BoundaryCondition::sched_checkMomBCs( SchedulerP& sched, const LevelP& level, const MaterialSet* matls )
 {
@@ -4410,7 +5113,7 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
                   if ( !file_is_open ) {
                     file_is_open = true;
                     outputfile.open(fname.str().c_str());
-                    outputfile << "Patch Dimentions (exclusive): \n";
+                    outputfile << "Patch Dimensions (exclusive): \n";
                     outputfile << " low  = " << patch->getCellLowIndex() << "\n";
                     outputfile << " high = " << patch->getCellHighIndex() << "\n";
                     outputfile << out.str();
@@ -4693,9 +5396,6 @@ BoundaryCondition::sched_create_radiation_temperature( SchedulerP& sched, const 
   if ( radiation ) {
     string taskname = "BoundaryCondition::create_radiation_temperature";
     Task* tsk = scinew Task(taskname, this, &BoundaryCondition::create_radiation_temperature, use_old_dw );
-
-    //WARNING! HACK HERE FOR CONSTANT TEMPERATURE NAME
-    d_temperature_label = VarLabel::find("temperature");
 
     tsk->computes(d_radiation_temperature_label);
 

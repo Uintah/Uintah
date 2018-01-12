@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2016 The University of Utah
+#  Copyright (c) 1997-2018 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -65,7 +65,8 @@ SRCS += \
         $(SRCDIR)/cptiInterpolator.cc      \
         $(SRCDIR)/axiCptiInterpolator.cc   \
         $(SRCDIR)/cpdiInterpolator.cc      \
-        $(SRCDIR)/axiCpdiInterpolator.cc
+        $(SRCDIR)/axiCpdiInterpolator.cc   \
+        $(SRCDIR)/fastCpdiInterpolator.cc
 
 PSELIBS := \
         Core/Geometry    \

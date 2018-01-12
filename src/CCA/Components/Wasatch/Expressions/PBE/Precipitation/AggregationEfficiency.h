@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2016 The University of Utah
+ * Copyright (c) 2012-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -36,7 +36,7 @@
  *  this is a size dependent coefficient with one value for each absicassae combination as \f$ \psi = m1/(1+m1) \f$
  *  with \f$ m1 = L * G(r_i) / \rho \bar{d}^2 \epsilon \f$, \f$ m1 \f$ is specific to each particle combination
  *  \f$ L \f$ is a physical property, \f$ G(r_i) \f$ is the growth rate specific to that particle size,
- *  \f$ \bar{d}^2 \f$ is the average particle size of that collision and \f$ \epislon \f$ is the energy dissipation
+ *  \f$ \bar{d}^2 \f$ is the average particle size of that collision and \f$ \epsilon \f$ is the energy dissipation
  */
 template< typename FieldT >
 class AggregationEfficiency
@@ -144,10 +144,10 @@ AggregationEfficiency<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
-  typedef std::vector<FieldT*> ResultsVec;
+  typedef typename Expr::Expression<FieldT>::ValVec ResultsVec;
   ResultsVec& results = this->get_value_vec();
   const FieldT& rho = rho_->field_ref();
-  const FieldT& g0 = g0_->field_ref();
+  const FieldT& g0  = g0_->field_ref();
   const FieldT& eps = eps_->field_ref();
   SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore::get<FieldT>( *results[0] );
 

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -77,6 +77,33 @@ vector<double>*
 SmoothGeomPiece::getConcentration()
 {
   return &d_concentration;
+}
+
+//////////////////////////////////////////////////////////////////////
+/*! Returns the vector containing the set of particle + charges     */
+//////////////////////////////////////////////////////////////////////
+std::vector<double>*
+SmoothGeomPiece::getPosCharge()
+{
+  return &d_poscharge;
+}
+
+//////////////////////////////////////////////////////////////////////
+/*! Returns the vector containing the set of particle - charges     */
+//////////////////////////////////////////////////////////////////////
+std::vector<double>*
+SmoothGeomPiece::getNegCharge()
+{
+  return &d_negcharge;
+}
+
+//////////////////////////////////////////////////////////////////////
+/*! Returns the vector containing the set of particle permittivities*/
+//////////////////////////////////////////////////////////////////////
+std::vector<double>*
+SmoothGeomPiece::getPermittivity()
+{
+  return &d_permittivity;
 }
 
 //////////////////////////////////////////////////////////////////////

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2016 The University of Utah
+ * Copyright (c) 2012-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -26,7 +26,6 @@
 #include <CCA/Components/Wasatch/TimeStepper.h>
 #include <CCA/Components/Wasatch/TaskInterface.h>
 #include <CCA/Components/Wasatch/TagNames.h>
-#include <CCA/Components/Wasatch/Expressions/SetCurrentTime.h>
 #include <CCA/Components/Wasatch/TimeIntegratorTools.h>
 #include <CCA/Components/Wasatch/Expressions/TimeAdvance.h>
 
@@ -77,11 +76,9 @@ namespace WasatchCore{
   
   //==================================================================
 
-  TimeStepper::TimeStepper( Uintah::SimulationStateP sharedState,
-                            GraphCategories& graphCat,
+  TimeStepper::TimeStepper( GraphCategories& graphCat,
                             const TimeIntegrator timeInt )
-    : sharedState_        ( sharedState ),
-      solnGraphHelper_    ( graphCat[ADVANCE_SOLUTION] ),
+    : solnGraphHelper_    ( graphCat[ADVANCE_SOLUTION] ),
       postProcGraphHelper_( graphCat[POSTPROCESSING] ),
       timeInt_            ( timeInt )
   {}
@@ -143,7 +140,7 @@ namespace WasatchCore{
                                                      *(solnGraphHelper_->exprFactory),
                                                      level, sched, patches, materials,
                                                      patchInfoMap,
-                                                     rkStage, sharedState_, persistentFields );
+                                                     rkStage, persistentFields );
 
       taskInterfaceList_.push_back( rhsTask );
       rhsTask->schedule( rkStage ); // must be scheduled after coordHelper_
@@ -202,7 +199,6 @@ namespace WasatchCore{
                                                     dualTimeIntegrators_,
                                                     varNames,
                                                     rhsTags,
-                                                    sharedState_,
                                                     persistentFields );
 
       taskInterfaceList_.push_back( rhsTask );
@@ -241,10 +237,9 @@ namespace WasatchCore{
 
     typedef Expr::PlaceHolder<FieldT>  FieldExpr;
     Expr::ExpressionFactory& solnFactory = *solnGraphHelper_->exprFactory;
-    solnFactory.register_expression     ( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_N      )), true );
-    const Expr::ExpressionID np1ID = solnFactory.register_expression     ( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_DYNAMIC)), true );
-    solnFactory.register_expression     ( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_NONE   )), true );
-    postProcGraphHelper_->exprFactory->register_expression ( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_NP1    )), true );    
+    solnFactory                       .register_expression( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_N      )), true );
+    solnFactory                       .register_expression( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_DYNAMIC)), true );
+    postProcGraphHelper_->exprFactory->register_expression( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_NP1    )), true );
   }
 
   //------------------------------------------------------------------
@@ -254,7 +249,6 @@ namespace WasatchCore{
   TimeStepper::add_equations( const Expr::TagList& solnVarTags,
                               const Expr::TagList& rhsTags )
   {
-
     if( rhsTags.size() != solnVarTags.size() ){
       std::ostringstream msg;
       msg << "ERROR: Size of SolnVarTags is inconsistent with size of rhsTags" << std::endl
@@ -262,7 +256,7 @@ namespace WasatchCore{
       throw std::runtime_error( msg.str() );
     }
 
-    for ( int i = 0; i<rhsTags.size(); ++i ){
+    for( size_t i = 0; i<rhsTags.size(); ++i ){
       add_equation<FieldT>( solnVarTags[i].name(),
                             rhsTags[i] );
     }

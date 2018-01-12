@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2016 The University of Utah
+#  Copyright (c) 1997-2018 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -36,45 +36,68 @@ SRCDIR  := CCA/Components
 # do not modify...
 #
 
-
-###################################
-# We need to add Wasatch to the list of sub-dirs if
-# a) building the Watach component, or
-# b) building the arches component.
-# We have to have the following two separate 'ifeq's because gmake does not support and/or/not... sigh.
-#
-ifeq ($(BUILD_WASATCH)$(BUILD_WASATCH_FOR_ARCHES),yesno)
-  WASATCH := $(SRCDIR)/Wasatch
-endif
-ifeq ($(BUILD_WASATCH)$(BUILD_WASATCH_FOR_ARCHES),noyes)
-  WASATCH := $(SRCDIR)/Wasatch
-endif
-#
-###################################
-
-ifeq ($(BUILD_MPM),yes)
-  MPM      := $(SRCDIR)/MPM
-  ifeq ($(BUILD_ICE),yes)
-    MPMICE := $(SRCDIR)/MPMICE
-  endif
-endif
-ifeq ($(BUILD_ICE),yes)
-  ICE      := $(SRCDIR)/ICE
-endif
+# Arches
 ifeq ($(BUILD_ARCHES),yes)
   ARCHES   := $(SRCDIR)/Arches
-	ifeq ($(BUILD_MPM),yes)
-		MPMARCHES := $(SRCDIR)/MPMArches
-	endif
+endif
+
+# FVM
+ifeq ($(BUILD_FVM),yes)
+  FVM :=$(SRCDIR)/FVM
+endif
+
+# Heat
+ifeq ($(BUILD_HEAT),yes)
+  HEAT := $(SRCDIR)/Heat
+endif
+
+# ICE
+ifeq ($(BUILD_ICE),yes)
+  ICE := $(SRCDIR)/ICE
+endif
+
+# MPM
+ifeq ($(BUILD_MPM),yes)
+  MPM := $(SRCDIR)/MPM
+endif
+
+# MPM-Arches
+ifeq ($(BUILD_MPM)$(BUILD_ARCHES),yesyes)
+  MPMARCHES := $(SRCDIR)/MPMArches
+endif
+
+# MPM-FVM
+ifeq ($(BUILD_MPM)$(BUILD_FVM),yesyes)
+  MPMFVM := $(SRCDIR)/MPMFVM
+endif
+
+# MPM-ICE
+ifeq ($(BUILD_MPM)$(BUILD_ICE),yesyes)
+  MPMICE := $(SRCDIR)/MPMICE
+endif
+
+# PhaseField
+ifeq ($(BUILD_PHASEFIELD),yes)
+  PHASEFIELD := $(SRCDIR)/PhaseField
+endif
+
+# Wasatch
+ifeq ($(BUILD_WASATCH),yes)
+  WASATCH := $(SRCDIR)/Wasatch
 endif
 
 SUBDIRS := \
-        $(MPM)                         \
-        $(ICE)                         \
-        $(MPMICE)                      \
         $(ARCHES)                      \
+        $(FVM)                         \
+        $(HEAT)                        \
+        $(ICE)                         \
+        $(MPM)                         \
         $(MPMARCHES)                   \
+        $(MPMFVM)                      \
+        $(MPMICE)                      \
+        $(PHASEFIELD)                  \
         $(WASATCH)                     \
+        $(SRCDIR)/Application          \
         $(SRCDIR)/DataArchiver         \
         $(SRCDIR)/Examples             \
         $(SRCDIR)/LoadBalancers        \
@@ -82,13 +105,11 @@ SUBDIRS := \
         $(SRCDIR)/OnTheFlyAnalysis     \
         $(SRCDIR)/Parent               \
         $(SRCDIR)/ProblemSpecification \
-        $(SRCDIR)/ReduceUda            \
+        $(SRCDIR)/PostProcessUda       \
         $(SRCDIR)/Regridder            \
         $(SRCDIR)/Schedulers           \
         $(SRCDIR)/SimulationController \
         $(SRCDIR)/Solvers              \
         $(SRCDIR)/SwitchingCriteria    
 
-
 include $(SCIRUN_SCRIPTS)/recurse.mk
-

@@ -18,7 +18,6 @@
       <timestep_multiplier> 0.1 </timestep_multiplier>
   </Time>
 
-
   <!--__________________________________-->
   <DataArchiver>
     <filebase>advect_3L_3D.uda</filebase>
@@ -45,7 +44,7 @@
      <checkpoint cycle = "2" timestepInterval = "10"/>
   </DataArchiver>
    <!--__________________________________-->
-  <AMR>
+   <AMR type="StaticGridML" >
      <useLockStep> true </useLockStep>
      <MPM>
        <manualGrid> true </manualGrid>
@@ -96,7 +95,7 @@
      </MPM>
    </MaterialProperties>
 
-   <Grid>
+   <Grid doAMR="true">
       <!--__________________________________-->
       <!--       3D    -->
       <Level>

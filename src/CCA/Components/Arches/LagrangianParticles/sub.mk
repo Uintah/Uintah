@@ -1,23 +1,16 @@
 # Makefile fragment for this subdirectory
 
-SRCDIR   := CCA/Components/Arches/LagrangianParticles
+SRCDIR := CCA/Components/Arches/LagrangianParticles
 
 ########################################################################
 #
 # CUDA_ENABLED_SRCS are files that if CUDA is enabled (via configure), must be
 # compiled using the nvcc compiler.
 #
-# WARNING: If you add a file to the list of CUDA_SRCS, you must add a
-# corresponding rule at the end of this file!
+# Do not put the .cc on the file name as the .cc or .cu will be added automatically
+# as needed.
 #
-# Also, do not put the .cc on this list of files as the .cc or .cu
-# will be added automatically as needed.
-#
-CUDA_ENABLED_SRCS =                \
-         LagrangianParticleFactory \
-         UpdateParticlePosition    \
-         UpdateParticleSize        \
-         UpdateParticleVelocity
+CUDA_ENABLED_SRCS :=                
 
 ifeq ($(HAVE_CUDA),yes)
    # CUDA enabled files, listed here (and with a rule at the end of
@@ -33,23 +26,21 @@ endif
 ########################################################################
 # Normal source files:
 
-# SRCS += ???
+SRCS += \
+         $(SRCDIR)/LagrangianParticleFactory.cc \
+         $(SRCDIR)/UpdateParticlePosition.cc    \
+         $(SRCDIR)/UpdateParticleSize.cc        \
+         $(SRCDIR)/UpdateParticleVelocity.cc
 
 ########################################################################
 #
-# Rules to copy CUDA enabled source (.cc) files to the binary build tree
-# and rename with a .cu extension.
+# Automatically create rules to copy CUDA enabled source (.cc) files
+# to the binary build tree and rename with a .cu extension.
 #
 
 ifeq ($(HAVE_CUDA),yes)
-  # Copy the 'original' .cc files into the binary tree and rename as .cu
 
-  $(OBJTOP_ABS)/$(SRCDIR)/LagrangianParticleFactory.cu : $(SRCTOP_ABS)/$(SRCDIR)/LagrangianParticleFactory.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/UpdateParticlePosition.cu : $(SRCTOP_ABS)/$(SRCDIR)/UpdateParticlePosition.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/UpdateParticleSize.cu : $(SRCTOP_ABS)/$(SRCDIR)/UpdateParticleSize.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/UpdateParticleVelocity.cu : $(SRCTOP_ABS)/$(SRCDIR)/UpdateParticleVelocity.cc
-	cp $< $@
+  # Call the make-cuda-target function on each of the CUDA_ENABLED_SRCS:
+  $(foreach file,$(CUDA_ENABLED_SRCS),$(eval $(call make-cuda-target,$(file))))
+
 endif

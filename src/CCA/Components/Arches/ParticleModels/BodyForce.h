@@ -2,12 +2,8 @@
 #define Uintah_Component_Arches_BodyForce_h
 
 #include <CCA/Components/Arches/Task/TaskInterface.h>
-#include <CCA/Components/Arches/Operators/Operators.h>
-#include <spatialops/structured/FVStaggered.h>
+#include <CCA/Components/Arches/GridTools.h>
 #include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
-#ifndef PI
-#define PI 3.1415926535897932384626433832795
-#endif
 //-------------------------------------------------------
 
 /**
@@ -46,53 +42,48 @@ namespace Uintah{
     public:
 
       Builder( std::string task_name, int matl_index, std::string base_var_name, const int N ) :
-      _task_name(task_name), _matl_index(matl_index), _base_var_name(base_var_name), _N(N){}
+      _task_name(task_name), _matl_index(matl_index), m_base_var_name(base_var_name), m_N(N){}
       ~Builder(){}
 
       BodyForce* build()
-      { return scinew BodyForce<IT, DT>( _task_name, _matl_index, _base_var_name, _N ); }
+      { return scinew BodyForce<IT, DT>( _task_name, _matl_index, m_base_var_name, m_N ); }
 
     private:
 
       std::string _task_name;
       int _matl_index;
-      std::string _base_var_name;
-      const int _N;
+      std::string m_base_var_name;
+      const int m_N;
 
     };
 
   protected:
 
-    void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry );
+    void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks);
 
-    void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry );
+    void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks);
 
-    void register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep );
+    void register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks);
 
-    void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){};
+    void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){};
 
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                      SpatialOps::OperatorDatabase& opr ){};
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                    SpatialOps::OperatorDatabase& opr );
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                       SpatialOps::OperatorDatabase& opr );
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-              SpatialOps::OperatorDatabase& opr );
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
   private:
 
-    const std::string _base_var_name;
-    std::string _base_density_name;
-    std::string _gas_density_name;
-    std::string _direction;
+    const std::string m_base_var_name;
+    std::string m_base_density_name;
+    std::string m_gas_density_name;
+    std::string m_direction;
 
-    const int _N;                 //<<< The number of "environments"
-    double _g;
-    Vector gravity;
+    const int m_N;                 //<<< The number of "environments"
+    double m_gravity_component;
 
     const std::string get_name(const int i, const std::string base_name){
       std::stringstream out;
@@ -108,8 +99,8 @@ namespace Uintah{
 
   template <typename IT, typename DT>
   void BodyForce<IT,DT>::create_local_labels(){
-    for ( int i = 0; i < _N; i++ ){
-      const std::string name = get_name(i, _base_var_name);
+    for ( int i = 0; i < m_N; i++ ){
+      const std::string name = get_name(i, m_base_var_name);
       register_new_variable<DT>(name );
     }
   }
@@ -117,7 +108,7 @@ namespace Uintah{
   template <typename IT, typename DT>
   BodyForce<IT, DT>::BodyForce( std::string task_name, int matl_index,
                                 const std::string base_var_name, const int N ) :
-  TaskInterface( task_name, matl_index ), _base_var_name(base_var_name), _N(N){
+  TaskInterface( task_name, matl_index ), m_base_var_name(base_var_name), m_N(N){
   }
 
   template <typename IT, typename DT>
@@ -126,104 +117,102 @@ namespace Uintah{
 
   template <typename IT, typename DT>
   void BodyForce<IT, DT>::problemSetup( ProblemSpecP& db ){
+    proc0cout << "WARNING: ParticleModels BodyForce needs to be made consistent with DQMOM models and use correct DW, use model at your own risk."
+      << "\n" << "\n" << "\n" << "\n" << "\n" << "\n" << "\n" << "\n" << "\n" << "\n"<< std::endl;
+    m_base_density_name = ParticleTools::parse_for_role_to_label(db, "density");
 
-    _base_density_name = ParticleTools::parse_for_role_to_label(db, "density");
-    
-    db->require("direction",_direction);
-    _gas_density_name = "densityCP";
+    db->require("direction",m_direction);
+    m_gas_density_name = "densityCP";
     const ProblemSpecP params_root = db->getRootNode();
+    Vector gravity;
     if (params_root->findBlock("PhysicalConstants")) {
       ProblemSpecP db_phys = params_root->findBlock("PhysicalConstants");
       db_phys->require("gravity", gravity);
     }
 
-    if ( _direction == "x" ) {
-      _g = gravity.x();
-    } else if ( _direction == "y" ) {
-      _g = gravity.y();
-    } else if ( _direction == "z" ) {
-      _g = gravity.z();
+    if ( m_direction == "x" ) {
+      m_gravity_component = gravity.x();
+    } else if ( m_direction == "y" ) {
+      m_gravity_component = gravity.y();
+    } else if ( m_direction == "z" ) {
+      m_gravity_component = gravity.z();
     }
   }
 
   //======INITIALIZATION:
   template <typename IT, typename DT>
-  void BodyForce<IT, DT>::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
+  void BodyForce<IT, DT>::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){
 
-    for ( int i = 0; i < _N; i++ ){
-      const std::string name = get_name(i, _base_var_name);
+    for ( int i = 0; i < m_N; i++ ){
+      const std::string name = get_name(i, m_base_var_name);
       register_variable( name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry );
 
     }
   }
 
   template <typename IT, typename DT>
-  void BodyForce<IT,DT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                                         SpatialOps::OperatorDatabase& opr ){
+  void BodyForce<IT,DT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-    using namespace SpatialOps;
-    using SpatialOps::operator *;
-    typedef SpatialOps::SpatFldPtr<DT> DTptr;
+    for ( int ienv = 0; ienv < m_N; ienv++ ){
+      const std::string name = get_name(ienv, m_base_var_name);
 
-    for ( int i = 0; i < _N; i++ ){
-      const std::string name = get_name(i, _base_var_name);
-      DTptr model_value = tsk_info->get_so_field<DT>(name);
+      DT& model_value = *(tsk_info->get_uintah_field<DT>(name));
+      Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+      Uintah::parallel_for( range, [&](int i, int j, int k){
+        model_value(i,j,k) = 0.0;
+      });
 
-      *model_value <<= 0.0;
     }
   }
 
   //======TIME STEP INITIALIZATION:
   template <typename IT, typename DT>
-  void BodyForce<IT, DT>::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
+  void BodyForce<IT, DT>::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){
   }
 
   template <typename IT, typename DT>
-  void BodyForce<IT,DT>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                                            SpatialOps::OperatorDatabase& opr ){
-  }
+  void BodyForce<IT,DT>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
   //======TIME STEP EVALUATION:
   template <typename IT, typename DT>
-  void BodyForce<IT, DT>::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
+  void BodyForce<IT, DT>::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){
 
-    for ( int i = 0; i < _N; i++ ){
+    for ( int i = 0; i < m_N; i++ ){
       //dependent variables(s) or model values
-      const std::string name = get_name(i, _base_var_name);
+      const std::string name = get_name(i, m_base_var_name);
       register_variable( name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
       //independent variables
-      const std::string density_name = get_name( i, _base_density_name );
+      const std::string density_name = get_name( i, m_base_density_name );
       register_variable( density_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
     }
 
-    register_variable( _gas_density_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+    register_variable( m_gas_density_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
   }
 
   template <typename IT, typename DT>
-  void BodyForce<IT,DT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                                   SpatialOps::OperatorDatabase& opr ) {
-    using namespace SpatialOps;
-    using SpatialOps::operator *;
-    typedef SpatialOps::SpatFldPtr<DT> DTptr;
-    typedef SpatialOps::SpatFldPtr<IT> ITptr;
-    typedef typename OperatorTypeBuilder< SpatialOps::Interpolant, IT, DT >::type InterpT;
-    const InterpT* const interp = opr.retrieve_operator<InterpT>();
+  void BodyForce<IT,DT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-    ITptr rhoG = tsk_info->get_const_so_field<IT>(_gas_density_name);
+    typedef typename ArchesCore::VariableHelper<IT>::ConstType CIT;
+    typedef typename ArchesCore::VariableHelper<DT>::ConstType CDT;
 
-    for ( int i = 0; i < _N; i++ ){
+    CIT& rhoG = *(tsk_info->get_const_uintah_field<CIT>(m_gas_density_name));
 
-      const std::string name = get_name(i, _base_var_name);
-      DTptr model_value = tsk_info->get_so_field<DT>(name);
-      ITptr rhoP;
+    for ( int ienv = 0; ienv < m_N; ienv++ ){
+
+      const std::string name = get_name(ienv, m_base_var_name);
+      DT& model_value = *(tsk_info->get_uintah_field<DT>(name));
+
+      const std::string density_name = get_name( ienv, m_base_density_name );
+      CDT& rhoP = *(tsk_info->get_const_uintah_field<CDT>(density_name));
 
 
-      const std::string density_name = get_name( i, _base_density_name );
-      rhoP = tsk_info->get_const_so_field<IT>(density_name);
+      Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
+      Uintah::parallel_for( range, [&](int i, int j, int k){
 
-      //compute a rate term
-      *model_value <<= _g * ( *rhoP  - (*interp)(*rhoG) ) / (*rhoP);
+        model_value(i,j,k) = m_gravity_component * ( rhoP(i,j,k)  - rhoG(i,j,k) ) / rhoP(i,j,k);
+
+      });
 
     }
   }

@@ -173,7 +173,7 @@ void DQMOMEqnFactory::registerDQMOMEqns(ProblemSpecP& db, ArchesLabel* field_lab
 
     }
     // Make the weighted abscissa
-    for (ProblemSpecP ic_db = dqmom_db->findBlock("Ic"); ic_db != 0; ic_db = ic_db->findNextBlock("Ic")){
+    for (ProblemSpecP ic_db = dqmom_db->findBlock("Ic"); ic_db != nullptr; ic_db = ic_db->findNextBlock("Ic")){
       std::string ic_name;
       ic_db->getAttribute("label", ic_name);
       std::string eqn_type = "dqmom"; // by default

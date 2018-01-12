@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -80,19 +80,19 @@
   1.7.7).
   --------------------------------------------------------------------------*/
 
-#include <Core/Util/Time.h>
-#include <Core/Util/RefCounted.h>
-#include <Core/Grid/Task.h>
-#include <Core/Grid/Grid.h>
-#include <Core/Exceptions/ConvergenceFailure.h>
-#include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Parallel/Parallel.h>
 #include <CCA/Components/Solvers/HypreTypes.h>
 #include <CCA/Components/Solvers/MatrixUtil.h>
 #include <CCA/Components/Solvers/AMR/HypreSolvers/HypreSolverBase.h>
 #include <CCA/Components/Solvers/AMR/HyprePreconds/HyprePrecondBase.h>
-#include <Core/Util/DebugStream.h>
+#include <Core/Exceptions/ConvergenceFailure.h>
 #include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Parallel/Parallel.h>
+#include <Core/Util/DebugStream.h>
+#include <Core/Util/RefCounted.h>
+#include <Core/Util/Timers/Timers.hpp>
 
 namespace Uintah {
 
@@ -233,7 +233,7 @@ namespace Uintah {
                        Handle<HypreDriver>)
 
     {
-      DebugStream cout_doing("HYPRE_DOING_COUT", false);
+      DebugStream cout_doing("SOLVER_DOING_COUT", false);
       DebugStream cout_dbg("HYPRE_DBG", false);
       int mpiRank = Parallel::getMPIRank();
       cout_doing << mpiRank<< " HypreDriver::solve() BEGIN" << "\n";
@@ -259,11 +259,12 @@ namespace Uintah {
                             __FILE__, __LINE__);
       }
 
+      Timers::Simple timer;
+      timer.start();
+               
       for(int m = 0; m < matls->size(); m++){
         int matl = matls->get(m);
-        double tstart = Uintah::Time::currentSeconds();
-        
-       
+
         // Initialize the preconditioner and solver
         PrecondType precondType   = getPrecondType(_params->precondTitle);
         HyprePrecondBase* precond = newHyprePrecond(precondType);
@@ -291,7 +292,10 @@ namespace Uintah {
         // Solve the linear system
       
         cout_dbg << mpiRank << " Solving the linear system" << "\n";
-        double solve_start = Uintah::Time::currentSeconds();
+
+	Timers::Simple solve_timer;
+	solve_timer.start();
+
         // Setup & solve phases
         int timeSolve = hypre_InitializeTiming("Solver Setup");
         hypre_BeginTiming(timeSolve);
@@ -305,7 +309,7 @@ namespace Uintah {
         hypre_ClearTiming();
         timeSolve = 0; 
         
-        double solve_dt = Uintah::Time::currentSeconds()-solve_start;
+	solve_timer.stop();
         
         //__________________________________
         // Check if converged,
@@ -315,7 +319,7 @@ namespace Uintah {
         
         if ((finalResNorm > _params->tolerance) ||(std::isfinite(finalResNorm) == 0)) {
           if (_params->restart){
-            if(pg->myrank() == 0)
+            if(pg->myRank() == 0)
               std::cout << "AMRSolver not converged in " << numIterations 
                         << " iterations, final residual= " << finalResNorm
                         << ", requesting smaller timestep\n";
@@ -335,20 +339,24 @@ namespace Uintah {
         // Push the solution back into Uintah
         getSolution_CC(matl);
         printSolution("Solution");
-                
-        double dt = Uintah::Time::currentSeconds()-tstart;
-        if(pg->myrank() == 0){
-          std::cerr << "Solve of " << _X_label->getName() 
+
+	timer.stop();
+	  
+        if(pg->myRank() == 0) {
+          std::cerr << "Solve of " << _X_label->getName()
                     << " on level " << _level->getIndex()
-                    << " completed in " << dt 
-                    << " seconds (solve only: " << solve_dt 
+                    << " completed in " << timer().seconds()
+		    << " seconds (solve only: " << solve_timer().seconds()
                     << " seconds, " << numIterations
                     << " iterations, residual=" << finalResNorm << ")\n";
         }
           
         delete solver;
         delete precond;
+
+	timer.reset( true );
       } // for m (matls loop)
+      
       cout_doing << mpiRank<<" HypreDriver::solve() END" << "\n";
       cleanup();
     } // end solve()

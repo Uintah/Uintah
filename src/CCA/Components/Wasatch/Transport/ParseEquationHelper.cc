@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2016 The University of Utah
+ * Copyright (c) 2012-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -166,9 +166,9 @@ namespace WasatchCore{
   
   template< typename FieldT >
   void setup_convective_flux_expression( Uintah::ProblemSpecP convFluxParams,
-                                        const Expr::Tag& solnVarTag,
-                                        Expr::ExpressionFactory& factory,
-                                        FieldTagInfo& info )
+                                         const Expr::Tag& solnVarTag,
+                                         Expr::ExpressionFactory& factory,
+                                         FieldTagInfo& info )
   {
     Expr::Tag convFluxTag, advVelocityTag, advVelocityCorrectedTag;
     
@@ -187,11 +187,11 @@ namespace WasatchCore{
     if( nameTagParam ) convFluxTag = parse_nametag( nameTagParam );
     
     setup_convective_flux_expression<FieldT>( dir,
-                                             solnVarTag, convFluxTag,
-                                             get_conv_interp_method(interpMethod),
-                                             advVelocityTag,
-                                             factory,
-                                             info );
+                                              solnVarTag, convFluxTag,
+                                              get_conv_interp_method(interpMethod),
+                                              advVelocityTag,
+                                              factory,
+                                              info );
   }
   
   //-----------------------------------------------------------------
@@ -296,8 +296,7 @@ namespace WasatchCore{
           msg << "Could not build a diffusive flux expression for '" << primVarName << "'" << std::endl;
           throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
         }
-        const Expr::ExpressionID diffID = factory.register_expression( builder );
-        //        factory.cleave_from_parents(diffID);
+        factory.register_expression( builder );
         
         FieldSelector fs;
         if     ( dir=="X" ) fs=DIFFUSIVE_FLUX_X;
@@ -348,10 +347,10 @@ namespace WasatchCore{
   
   template< typename FieldT>
   void setup_diffusive_velocity_expression( Uintah::ProblemSpecP diffVelParams,
-                                           const Expr::Tag primVarTag,
-                                           const Expr::Tag turbDiffTag,
-                                           Expr::ExpressionFactory& factory,
-                                           FieldTagInfo& info )
+                                            const Expr::Tag primVarTag,
+                                            const Expr::Tag turbDiffTag,
+                                            Expr::ExpressionFactory& factory,
+                                            FieldTagInfo& info )
   {
     typedef typename FaceTypes<FieldT>::XFace XFaceT;
     typedef typename FaceTypes<FieldT>::YFace YFaceT;

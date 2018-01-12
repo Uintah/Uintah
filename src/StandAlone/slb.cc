@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -273,7 +273,6 @@ int
 main(int argc, char *argv[])
 {
   try {
-    Uintah::Parallel::determineIfRunningUnderMPI( argc, argv );
     Uintah::Parallel::initializeManager( argc, argv );
 
     int    nump;
@@ -306,13 +305,11 @@ main(int argc, char *argv[])
 
     // save and remove the extra cells before the problem setup
     ProblemSpecP g = ups->findBlock("Grid");
-    for( ProblemSpecP levelspec = g->findBlock("Level"); levelspec != 0;
-         levelspec = levelspec->findNextBlock("Level")) {
-      for (ProblemSpecP box = levelspec->findBlock("Box"); box != 0 ; 
-           box = box->findNextBlock("Box")) {
+    for( ProblemSpecP levelspec = g->findBlock("Level"); levelspec != nullptr; levelspec = levelspec->findNextBlock("Level") ) {
+      for( ProblemSpecP box = levelspec->findBlock("Box"); box != nullptr; box = box->findNextBlock("Box") ) {
         
         ProblemSpecP cells = box->findBlock("extraCells");
-        if (cells != 0) {
+        if( cells != nullptr ) {
           box->get("extraCells", extraCells);
           box->removeChild(cells);
         }
@@ -328,9 +325,9 @@ main(int argc, char *argv[])
       level->findCellIndexRange(low, high);
       IntVector diff = high-low;
       long cells = diff.x()*diff.y()*diff.z();
-      if(cells != level->totalCells())
+      if(cells != level->totalCells()) {
         throw ProblemSetupException("Currently slb can only handle square grids", __FILE__, __LINE__);
-
+      }
       Uintah::Primes::FactorType factors;
       int n = Uintah::Primes::factorize(nump, factors);
       cerr << nump << ": ";
@@ -349,27 +346,27 @@ main(int argc, char *argv[])
       // Parse the geometry from the UPS
       ProblemSpecP mp = ups->findBlockWithOutAttribute("MaterialProperties");
       ProblemSpecP mpm = mp->findBlock("MPM");
-      for (ProblemSpecP child = mpm->findBlock("material"); child != 0;
-           child = child->findNextBlock("material")) {
-        for (ProblemSpecP geom_obj_ps = child->findBlock("geom_object");
-             geom_obj_ps != 0;
-             geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
+      for( ProblemSpecP child = mpm->findBlock("material"); child != nullptr; child = child->findNextBlock("material") ) {
+        for( ProblemSpecP geom_obj_ps = child->findBlock("geom_object"); geom_obj_ps != nullptr; geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
           vector<GeometryPieceP> pieces;
           GeometryPieceFactory::create(geom_obj_ps, pieces);
           
           GeometryPieceP mainpiece;
           if(pieces.size() == 0){
             throw ProblemSetupException("No piece specified in geom_object", __FILE__, __LINE__);
-          } else if(pieces.size() > 1){
+          }
+          else if(pieces.size() > 1){
             mainpiece = scinew UnionGeometryPiece(pieces);
-          } else {
+          }
+          else {
             mainpiece = pieces[0];
           }
           
           for(CellIterator iter(low, high); !iter.done(); iter++){
             Point p = level->getCellPosition(*iter);
-            if(mainpiece->inside(p))
+            if(mainpiece->inside(p)) {
               weights[*iter] = 1;
+            }
           }
         }
       }

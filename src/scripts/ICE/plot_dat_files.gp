@@ -11,9 +11,6 @@
 #   to the ups file.
 #_________________________________________________________________________
 
-#  rip out "[" "]" from center of mass
-!sed 's/\[//g' TotalMomentum.dat | sed 's/\]//g' >TotalMom.dat
-
 # compute the relative quantities
 !awk 'NR==1 { init = $2}; NR>1 {printf("%16.15f %16.15f %16.15f\n", $1, $2, 1.0 - $2/init) }' TotalMass.dat > tmp
 !mv tmp TotalMass2.dat
@@ -79,9 +76,9 @@ set origin 0.5,0.5
 
 set ylabel "total Momentum"
 set y2label ""
-plot   'TotalMom.dat'         using 1:2 t 'x'  w lines,\
-       'TotalMom.dat'         using 1:3 t 'y'  w lines, \
-       'TotalMom.dat'         using 1:4 t 'z'  w lines
+plot   'TotalMomentum.dat'         using 1:2 t 'x'  w lines,\
+       'TotalMomentum.dat'         using 1:3 t 'y'  w lines, \
+       'TotalMomentum.dat'         using 1:4 t 'z'  w lines
        
 set nomultiplot   
 pause -1 "Hit return to continue"
@@ -93,7 +90,7 @@ exit
 
 #---------------------------------------------------------------
 #    E X C H A N G E   E R R O R   optional
-!sed 's/\[//g' mom_exch_error.dat | sed 's/\]//g' >mom_exch_error_clean.dat
+
 #__________________________________
 #   eng_exch_error
 #__________________________________
@@ -114,9 +111,9 @@ set origin 0.0,0.5
 
 set ylabel "momentum exchange error"
 set yrange[-1e-20:1e-20]
-plot   'mom_exch_error_clean.dat'         using 1:3 t 'x'  w lines,\
-       'mom_exch_error_clean.dat'         using 1:4 t 'y'  w lines, \
-       'mom_exch_error_clean.dat'         using 1:5 t 'z'  w lines
+plot   'mom_exch_error.dat'         using 1:3 t 'x'  w lines,\
+       'mom_exch_error.dat'         using 1:4 t 'y'  w lines, \
+       'mom_exch_error.dat'         using 1:5 t 'z'  w lines
 
 set nomultiplot 
 

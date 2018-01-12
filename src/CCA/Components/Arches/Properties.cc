@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -24,7 +24,6 @@
 
 //----- Properties.cc --------------------------------------------------
 #include <CCA/Components/Arches/Properties.h>
-#include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #if HAVE_TABPROPS
 # include <CCA/Components/Arches/ChemMix/TabPropsInterface.h>
@@ -51,12 +50,11 @@
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Exceptions/VariableNotFoundInGrid.h>
+#include <Core/Math/MiscMath.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 
-#include <Core/Util/Time.h>
-#include <Core/Math/MiscMath.h>
 
 #include <iostream>
 using namespace std;
@@ -95,6 +93,10 @@ Properties::problemSetup(const ProblemSpecP& params)
 
   ProblemSpecP db = params->findBlock("Properties");
 
+  if ( db == nullptr ){
+    throw ProblemSetupException("Error: Please specify a <Properties> section in <Arches>.", __FILE__, __LINE__); 
+  }
+
   db->getWithDefault("filter_drhodt",          d_filter_drhodt,          false);
   db->getWithDefault("first_order_drhodt",     d_first_order_drhodt,     true);
   db->getWithDefault("inverse_density_average",d_inverse_density_average,false);
@@ -108,42 +110,45 @@ Properties::problemSetup(const ProblemSpecP& params)
     db_dqmom->getWithDefault("adiabGas_nonadiabPart", d_adiabGas_nonadiabPart, false);
   }
 
-  // read type of mixing model
-  mixModel = "NA";
-  if (db->findBlock("ClassicTable"))
-    mixModel = "ClassicTable";
-  else if (db->findBlock("ColdFlow"))
-    mixModel = "ColdFlow";
-  else if (db->findBlock("ConstantProps"))
-    mixModel = "ConstantProps";
-#if HAVE_TABPROPS
-  else if (db->findBlock("TabProps"))
-    mixModel = "TabProps";
-#endif
-  else
-    throw InvalidValue("ERROR!: No mixing/reaction table specified! If you are attempting to use the new TabProps interface, ensure that you configured properly with TabProps and Boost libs.",__FILE__,__LINE__);
-
-  if (mixModel == "ClassicTable") {
-    // New Classic interface
-    d_mixingRxnTable = scinew ClassicTableInterface( d_lab, d_MAlab );
-    d_mixingRxnTable->problemSetup( db );
-  } else if (mixModel == "ColdFlow") {
-    d_mixingRxnTable = scinew ColdFlow( d_lab, d_MAlab );
-    d_mixingRxnTable->problemSetup( db );
-  } else if (mixModel == "ConstantProps" ) {
-    d_mixingRxnTable = scinew ConstantProps( d_lab, d_MAlab );
-    d_mixingRxnTable->problemSetup( db );
-  }
-#if HAVE_TABPROPS
-  else if (mixModel == "TabProps") {
-    // New TabPropsInterface stuff...
-    d_mixingRxnTable = scinew TabPropsInterface( d_lab, d_MAlab );
-    d_mixingRxnTable->problemSetup( db );
-  }
-#endif
-  else{
-    throw InvalidValue("Mixing Model not supported: " + mixModel, __FILE__, __LINE__);
-  }
+//   // read type of mixing model
+//   mixModel = "NA";
+//   if (db->findBlock("ClassicTable"))
+//     mixModel = "ClassicTable";
+//   else if (db->findBlock("ColdFlow"))
+//     mixModel = "ColdFlow";
+//   else if (db->findBlock("ConstantProps"))
+//     mixModel = "ConstantProps";
+// #if HAVE_TABPROPS
+//   else if (db->findBlock("TabProps"))
+//     mixModel = "TabProps";
+// #endif
+//   else
+//     throw InvalidValue("ERROR!: No mixing/reaction table specified! If you are attempting to use the new TabProps interface, ensure that you configured properly with TabProps and Boost libs.",__FILE__,__LINE__);
+//
+//   SimulationStateP& sharedState = d_lab->d_sharedState;
+//
+//   if (mixModel == "ClassicTable") {
+//
+//     // New Classic interface
+//     d_mixingRxnTable = scinew ClassicTableInterface( sharedState );
+//     d_mixingRxnTable->problemSetup( db );
+//   } else if (mixModel == "ColdFlow") {
+//     d_mixingRxnTable = scinew ColdFlow( sharedState );
+//     d_mixingRxnTable->problemSetup( db );
+//   } else if (mixModel == "ConstantProps" ) {
+//     d_mixingRxnTable = scinew ConstantProps( sharedState );
+//     d_mixingRxnTable->problemSetup( db );
+//   }
+// #if HAVE_TABPROPS
+//   else if (mixModel == "TabProps") {
+//     // New TabPropsInterface stuff...
+//     d_mixingRxnTable = scinew TabPropsInterface( sharedState );
+//     d_mixingRxnTable->problemSetup( db );
+//   }
+// #endif
+//   else{
+//     throw InvalidValue("Mixing Model not supported: " + mixModel, __FILE__, __LINE__);
+//   }
 }
 
 //****************************************************************************
@@ -298,6 +303,8 @@ Properties::sched_computeDrhodt(SchedulerP& sched,
                           &Properties::computeDrhodt,
                           timelabels);
 
+  tsk->requires( Task::OldDW, d_lab->d_timeStepLabel );
+
   Task::WhichDW parent_old_dw;
   if (timelabels->recursion){
     parent_old_dw = Task::ParentOldDW;
@@ -309,7 +316,7 @@ Properties::sched_computeDrhodt(SchedulerP& sched,
   Ghost::GhostType  ga = Ghost::AroundCells;
 
   tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
-  tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
+  tsk->requires(parent_old_dw, d_lab->d_delTLabel);
   tsk->requires(parent_old_dw, d_lab->d_oldDeltaTLabel);
 
   tsk->requires(Task::NewDW   , d_lab->d_densityCPLabel    , gn , 0);
@@ -339,6 +346,11 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
                           DataWarehouse* new_dw,
                           const TimeIntegratorLabel* timelabels)
 {
+  // int timeStep = m_sharedState->getCurrentTopLevelTimeStep();
+
+  timeStep_vartype timeStep;
+  old_dw->get( timeStep, d_lab->d_timeStepLabel );
+
   DataWarehouse* parent_old_dw;
   if (timelabels->recursion){
     parent_old_dw = new_dw->getOtherDataWarehouse(Task::ParentOldDW);
@@ -347,12 +359,11 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
   }
 
   int drhodt_1st_order = 1;
-  int current_step = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
   if (d_MAlab){
     drhodt_1st_order = 2;
   }
   delt_vartype delT, old_delT;
-  parent_old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  parent_old_dw->get(delT, d_lab->d_delTLabel );
 
 
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
@@ -412,7 +423,7 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
     drhodt.initialize(0.0);
 
     //__________________________________
-    if ((d_first_order_drhodt)||(current_step <= drhodt_1st_order)) {
+    if ((d_first_order_drhodt)||(timeStep <= (unsigned int)drhodt_1st_order)) {
 // 1st order drhodt
       for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
         for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
@@ -499,18 +510,22 @@ Properties::sched_checkTableBCs( const LevelP& level,
 void
 Properties::addLookupSpecies( ){
 
+  ChemHelper& helper = ChemHelper::self();
   std::vector<std::string> sps;
-  sps = d_lab->model_req_species;
+  sps = helper.model_req_species;
 
   if ( mixModel == "ClassicTable"  || mixModel == "TabProps"
       || "ColdFlow" || "ConstantProps" ) {
     for ( vector<string>::iterator i = sps.begin(); i != sps.end(); i++ ){
-      d_mixingRxnTable->insertIntoMap( *i );
+      bool test = d_mixingRxnTable->insertIntoMap( *i );
+      if ( !test ){
+        throw InvalidValue("Error: Cannot locate the following variable for lookup in the table: "+*i, __FILE__, __LINE__ );
+      }
     }
   }
 
   std::vector<std::string> old_sps;
-  old_sps = d_lab->model_req_old_species;
+  old_sps = helper.model_req_old_species;
   if ( mixModel == "ClassicTable"  || mixModel == "TabProps"
       || "ColdFlow" || "ConstantProps") {
     for ( vector<string>::iterator i = old_sps.begin(); i != old_sps.end(); i++ ){

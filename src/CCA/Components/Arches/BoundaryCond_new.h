@@ -7,7 +7,6 @@
 #include <Core/Grid/BoundaryConditions/BCUtils.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <CCA/Components/Arches/Task/TaskInterface.h>
-#include <boost/shared_ptr.hpp>
 
 //===========================================================================
 
@@ -60,15 +59,6 @@ public:
   /** @brief Check to make sure there is a BC spec for this variable and setup handoff
               information if needed **/
   void checkBCs( const Patch* patch, const std::string variable, const int matlIndex );
-
-  /** @brief Create spatial masks **/
-  void sched_create_masks(const LevelP& level, SchedulerP& sched, const MaterialSet* matls);
-  /** @brief see sched_create_masks **/
-  void create_masks(const ProcessorGroup* pg,
-                    const PatchSubset* patches,
-                    const MaterialSubset* matls,
-                    DataWarehouse* old_dw,
-                    DataWarehouse* new_dw);
 
   /** @brief This method sets the boundary value of a scalar to
              a value such that the interpolated value on the face results
@@ -323,125 +313,6 @@ public:
   };
 
   ScalarToBCValueMap& get_FromFileInfo(){ return scalar_bc_from_file; };
-
-  //new stuff--------------------
-
-  enum BCMaskType {BOUNDARY_CELL, BOUNDARY_FACE, FIRST_NORMAL_INTERIOR};
-
-  //copied from Tony...passes the number of ghosts
-  /** @brief Copied from Tony and added passed ghosts. This creates a memory window for mask creation. **/
-  template< typename T >
-  static SpatialOps::MemoryWindow
-  get_mem_win_for_masks( const Uintah::Patch* const patch, const int nGhost ){
-
-    SpatialOps::IntVec bcMinus, bcPlus;
-    WasatchCore::get_bc_logicals( patch, bcMinus, bcPlus );
-    const IntVector gs = patch->getCellHighIndex(0) - patch->getCellLowIndex(0);
-    const SpatialOps::IntVec glob( gs[0] + nGhost*2 + (bcPlus[0] ? T::Location::BCExtra::X : 0),
-                                   gs[1] + nGhost*2 + (bcPlus[1] ? T::Location::BCExtra::Y : 0),
-                                   gs[2] + nGhost*2 + (bcPlus[2] ? T::Location::BCExtra::Z : 0) );
-    const SpatialOps::IntVec extent = glob;
-    const SpatialOps::IntVec offset(0,0,0);
-    return SpatialOps::MemoryWindow( glob, offset, extent );
-
-  }
-
-  /** @brief For a specific boundary and field type, this struct will hold the mask **/
-  template <typename FieldT>
-  struct MaskContainer {
-
-    public:
-      typedef std::map<BCMaskType, boost::shared_ptr<SpatialOps::SpatialMask<FieldT> > > MaskStorage;
-
-      MaskContainer(){
-        _mask_storage.clear();
-      }
-
-      ~MaskContainer(){
-        _mask_storage.clear();
-      }
-
-      /** @brief Create the mask.  Note the mask is a function of the num. of ghost cells...this is going to be tricky **/
-      void create_mask( const Patch* patch, int nGhosts, const std::vector<SpatialOps::IntVec> ijk, BCMaskType bc_mask_type ){
-
-        typename MaskStorage::iterator iter = _mask_storage.find(bc_mask_type);
-
-        if ( iter == _mask_storage.end() ){
-
-          SpatialOps::IntVec bcMinus, bcPlus;
-          WasatchCore::get_bc_logicals( patch, bcMinus, bcPlus );
-          SpatialOps::BoundaryCellInfo bcInfo = SpatialOps::BoundaryCellInfo::build<FieldT>(bcPlus);
-          SpatialOps::GhostData gd(nGhosts);
-          const SpatialOps::MemoryWindow window = BoundaryCondition_new::get_mem_win_for_masks<FieldT>( patch, nGhosts );
-          //SpatialOps::SpatialMask<FieldT>* mask = new SpatialOps::SpatialMask<FieldT>(window, bcInfo, gd, ijk);
-
-          boost::shared_ptr<SpatialOps::SpatialMask<FieldT> > ptr( scinew SpatialOps::SpatialMask<FieldT>(window, bcInfo, gd, ijk));
-
-          //_mask_storage.insert(std::make_pair( bc_mask_type, ptr));
-
-        }
-
-      }
-
-      /** @brief Get the mask given the enum type.  Note that is must (?) be ghost compatable. Huh? **/
-      SpatialOps::SpatialMask<FieldT>* get_mask( BCMaskType bc_mask_type ){
-        typename MaskStorage::iterator iter = _mask_storage.find(bc_mask_type);
-        if ( iter == _mask_storage.end() ){
-          throw InvalidValue("Mask Error: Cannot find boundary condition information.", __FILE__, __LINE__);
-        }
-        return iter->second;
-      }
-
-      MaskStorage _mask_storage;
-
-  };
-
-  // maps boundary name -> mask contianer
-  typedef std::map<const std::string, MaskContainer<SpatialOps::SVolField> > NameToSVolMask;
-  // maps patchID -> list of mask containers
-  typedef std::map<const int, NameToSVolMask> PatchToSVolMasks;
-  //static PatchToSVolBoundary svol_boundary_info;
-  static PatchToSVolMasks patch_svol_masks;
-
-  /** @brief This struct contains the helper function to retrieve boundary struct **/
-  template <typename FieldT>
-  struct BCInterfaceStruct;
-
-  /** @brief Public access to the BC struct given the patch ID and a field **/
-  template <typename FieldT>
-  static MaskContainer<FieldT>& get_bc_info( const int patchID, const std::string bc_name ){
-    return BCInterfaceStruct<FieldT>::get_bc( patchID, bc_name ); }
-
-  /** @brief This struct contains the helper function to retrieve boundary struct **/
-  template <typename FieldT>
-  struct BCInterfaceStruct{
-
-    public:
-      /** @brief Generic interface. Overloading should overide this call hence the error.  **/
-      static MaskContainer<FieldT>& get_bc( ){
-        throw InvalidValue("Mask Error: No known BC struct for this variable type.", __FILE__, __LINE__);
-      };
-
-      /** @brief SVolField interface for BCBase **/
-      static MaskContainer<SpatialOps::SVolField>& get_bc( const int patchID, const std::string bc_name ){
-
-        //patch -> map with names, mask
-        PatchToSVolMasks::iterator iter = BoundaryCondition_new::patch_svol_masks.find(patchID);
-        if ( iter == BoundaryCondition_new::patch_svol_masks.end() ){
-          throw InvalidValue("Mask Error: Cannot find SVol masks from PatchToSVolMasks container.", __FILE__, __LINE__);
-        }
-
-        //name -> mask
-        NameToSVolMask::iterator name_iter = iter->second.find(bc_name);
-        if ( name_iter == iter->second.end()){
-          throw InvalidValue("Mask Error: Boundary name doesn't exist in mask map: "+bc_name, __FILE__, __LINE__);
-        }
-        return name_iter->second;
-
-      };
-  };
-
-  //------------------------------------------------------------------ end NEW --------------------
 
 private:
 

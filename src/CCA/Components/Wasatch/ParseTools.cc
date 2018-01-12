@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2016 The University of Utah
+ * Copyright (c) 2012-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -105,7 +105,7 @@ namespace WasatchCore{
     Expr::ExpressionFactory* const factory = graphCat[ADVANCE_SOLUTION]->exprFactory;
 
     for( Uintah::ProblemSpecP cleaveParams = param->findBlock("Cleave");
-        cleaveParams != 0;
+        cleaveParams != nullptr;
         cleaveParams = cleaveParams->findNextBlock("Cleave") ){
 
       const Expr::Tag tag = parse_nametag( cleaveParams->findBlock("NameTag") );
@@ -127,7 +127,7 @@ namespace WasatchCore{
                              GraphCategories& graphCat )
   {
     for( Uintah::ProblemSpecP attachParams = param->findBlock("AttachDependency");
-        attachParams != 0;
+        attachParams != nullptr;
         attachParams = attachParams->findNextBlock("AttachDependency") )
     {
       const Expr::Tag src    = parse_nametag( attachParams->findBlock("Source")->findBlock("NameTag") );

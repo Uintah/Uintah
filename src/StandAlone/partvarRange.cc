@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -141,7 +141,7 @@ int main(int argc, char** argv)
                 LevelP level = grid->getLevel(l);
 
                 // Patch loop
-                Level::const_patchIterator pIter = level->patchesBegin();
+                Level::const_patch_iterator pIter = level->patchesBegin();
                 for(; pIter != level->patchesEnd(); pIter++){
                   const Patch* patch = *pIter;
                   ConsecutiveRangeSet matls = 
@@ -190,7 +190,7 @@ int main(int argc, char** argv)
                 LevelP level = grid->getLevel(l);
 
                 // Patch loop
-                Level::const_patchIterator pIter = level->patchesBegin();
+                Level::const_patch_iterator pIter = level->patchesBegin();
                 for(; pIter != level->patchesEnd(); pIter++){
                   const Patch* patch = *pIter;
                   ConsecutiveRangeSet matls = 
@@ -239,7 +239,7 @@ int main(int argc, char** argv)
                 LevelP level = grid->getLevel(l);
 
                 // Patch loop
-                Level::const_patchIterator pIter = level->patchesBegin();
+                Level::const_patch_iterator pIter = level->patchesBegin();
                 for(; pIter != level->patchesEnd(); pIter++){
                   const Patch* patch = *pIter;
                   ConsecutiveRangeSet matls = 
@@ -288,7 +288,7 @@ int main(int argc, char** argv)
                 LevelP level = grid->getLevel(l);
 
                 // Patch loop
-                Level::const_patchIterator pIter = level->patchesBegin();
+                Level::const_patch_iterator pIter = level->patchesBegin();
                 for(; pIter != level->patchesEnd(); pIter++){
                   const Patch* patch = *pIter;
                   ConsecutiveRangeSet matls = 
@@ -338,7 +338,7 @@ int main(int argc, char** argv)
                 LevelP level = grid->getLevel(l);
 
                 // Patch loop
-                Level::const_patchIterator pIter = level->patchesBegin();
+                Level::const_patch_iterator pIter = level->patchesBegin();
                 for(; pIter != level->patchesEnd(); pIter++){
                   const Patch* patch = *pIter;
                   ConsecutiveRangeSet matls = 

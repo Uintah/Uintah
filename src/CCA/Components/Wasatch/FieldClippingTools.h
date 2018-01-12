@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2011-2016 The University of Utah
+ * Copyright (c) 2011-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -181,7 +181,7 @@ namespace WasatchCore{
     //___________________________________
     // parse and clip expressions
     for( Uintah::ProblemSpecP clipParams = parser->findBlock("FieldClipping");
-        clipParams != 0;
+        clipParams != nullptr;
         clipParams = clipParams->findNextBlock("FieldClipping") ){
       
       std::string fieldType, taskListName;      
@@ -200,7 +200,7 @@ namespace WasatchCore{
       GraphHelper* const graphHelper = gc[cat];
       
       for( Uintah::ProblemSpecP fieldParams = clipParams->findBlock("FieldExpression");
-          fieldParams != 0;
+          fieldParams != nullptr;
           fieldParams = fieldParams->findNextBlock("FieldExpression") ){
         double min, max;
         

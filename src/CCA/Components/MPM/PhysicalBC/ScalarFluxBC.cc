@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -295,7 +295,8 @@ double ScalarFluxBC::fluxPerParticle(double time, double area) const
   // Get the initial scalar flux that is applied ( t = 0.0 )
   double flux = ScalarFlux(time);
 
-  // Calculate the forec per particle
+  // Calculate dC/dt per particle -- JBH, 9/26/2017
+  // Fixme TODO Make sure area is correct!
   return flux*area;
 }
 

@@ -76,10 +76,10 @@
     <artificial_viscosity_coeff1>    0.07       </artificial_viscosity_coeff1>
     <artificial_viscosity_coeff2>    1.6        </artificial_viscosity_coeff2>
   </MPM>
+
   <!--____________________________________________________________________-->
   <!--     A M R                                                          -->
   <!--____________________________________________________________________--> 
-  <doAMR>true</doAMR>
   <AMR>
     <MPM>
       <min_grid_level>-1</min_grid_level>

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,17 +22,16 @@
  * IN THE SOFTWARE.
  */
 
-
 #include <cstdlib>
 #include <cstdio>
 #include <strings.h>
 #if defined(__sun)
-#include <cstring>
-#define bcopy(src,dest,n) memcpy(dest,src,n)
-#elif defined(__linux) || defined(__digital__) || defined __sgi || defined __APPLE__
-#include <cstring>
+#  include <cstring>
+#  define bcopy( src, dest, n ) memcpy( dest, src, n )
+#elif defined(__linux) || defined(__linux__) || defined(__digital__) || defined __sgi || defined __APPLE__
+#  include <cstring>
 #else
-#error "Need bcopy idfdef for this architecture"
+#  error "Need bcopy idfdef for this architecture"
 #endif
 
 int

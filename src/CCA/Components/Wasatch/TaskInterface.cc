@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2016 The University of Utah
+ * Copyright (c) 2012-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -39,6 +39,7 @@
 //-- Uintah includes --//
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/DataWarehouse.h>
+#include <CCA/Components/Schedulers/DetailedTasks.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Material.h>
 #include <Core/Grid/Variables/ComputeSet.h>
@@ -134,7 +135,8 @@ namespace WasatchCore{
     PatchTreeTaskMap patchTreeMap_;
 
     /** \brief main execution driver - the callback function exposed to Uintah. */
-    void execute( Uintah::Task::CallBackEvent event,
+    void execute( Uintah::DetailedTask* dtask,
+                  Uintah::Task::CallBackEvent event,
                   const Uintah::ProcessorGroup* const,
                   const Uintah::PatchSubset* const,
                   const Uintah::MaterialSubset* const,
@@ -221,7 +223,6 @@ namespace WasatchCore{
      *  \param materials - the list of materials that this task is to be associated with.
      *  \param info     - the PatchInfoMap object that holds patch-specific information (like operators).
      *  \param rkStage - the stage of the RK integrator that this is associated with
-     *  \param state
      *  \param ioFieldSet - the set of fields that are requested for IO.  This prevents these fields from being recycled internally.
      *  \param lockAllFields if true, then all fields will be marked persistent.
      *         Otherwise, memory will be reclaimed when possible.
@@ -234,7 +235,6 @@ namespace WasatchCore{
                      const Uintah::MaterialSet* const materials,
                      const PatchInfoMap& info,
                      const int rkStage,
-                     Uintah::SimulationStateP state,
                      const std::set<std::string>& ioFieldSet,
                      const bool lockAllFields=false);
 
@@ -258,7 +258,6 @@ namespace WasatchCore{
                                     const Uintah::MaterialSet* const materials,
                                     const PatchInfoMap& patchInfoMap,
                                     const int rkStage,
-                                    Uintah::SimulationStateP state,
                                     const std::set<std::string>& ioFieldSet,
                                     const bool lockAllFields )
     : scheduler_( sched ),
@@ -461,7 +460,6 @@ namespace WasatchCore{
         fieldInfo.useParentOldDataWarehouse = false;
         const bool hasDualTime = WasatchCore::Wasatch::has_dual_time();
         if( tree.computes_field( fieldTag ) ){
-
           // if the field uses dynamic allocation, then the uintah task should not be aware of this field
           if( ! tree.is_persistent(fieldTag) ){
             dbg_fields << " - field is not persistent -> hiding from Uintah." << std::endl;
@@ -526,6 +524,11 @@ namespace WasatchCore{
         case Expr::MODIFIES:
           dbg_fields << std::setw(10) << "MODIFIES";
           ASSERT( dw == Uintah::Task::NewDW );
+          // tsaad: To be able to modify ghost cells, we will need:
+          //  1. requires with ghost cells
+          //  2. a modifies
+          // To avoid pitfalls of misusing modifies in Wasatch, we use modifiesWithScratchGhost
+          // which calls both a requires and a modifies.
           task.modifiesWithScratchGhost( fieldInfo.varlabel,
                                          patches, Uintah::Task::ThisLevel,
                                          materials, Uintah::Task::NormalDomain,
@@ -581,8 +584,20 @@ namespace WasatchCore{
 
     add_fields_to_task( *task, *tree, *fml_, pss, mss, newDWFields, rkStage );
 
+    //---------------------------------------------------------------------------------------------------------------------------
+    // Added for temporal scheduling support when using RMCRT - APH 05/30/17
+    //---------------------------------------------------------------------------------------------------------------------------
+    if (tree->computes_field(TagNames::self().radiationsource)) {
+      // For RMCRT there will be 2 task graphs - put the radiation tasks in TG-1, otherwise tasks go into TG-0, or both TGs
+      //   TG-0 == carry forward and/or non-radiation timesteps
+      //   TG-1 == RMCRT radiation timestep
+      scheduler_->addTask(task, patches_, materials_, Uintah::RMCRTCommon::TG_RMCRT);
+    }
+    //---------------------------------------------------------------------------------------------------------------------------
     // jcs eachPatch vs. allPatches (gang schedule vs. independent...)
-    scheduler_->addTask( task, patches_, materials_ );
+    else {
+      scheduler_->addTask(task, patches_, materials_);
+    }
 
     if( hasPressureExpression_ && Wasatch::flow_treatment() != WasatchCore::COMPRESSIBLE && Wasatch::need_pressure_solve() ){
       Pressure& pexpr = dynamic_cast<Pressure&>( factory.retrieve_expression( TagNames::self().pressure, patchID, true ) );
@@ -626,7 +641,8 @@ namespace WasatchCore{
   //------------------------------------------------------------------
 
   void
-  TreeTaskExecute::execute( Uintah::Task::CallBackEvent event,
+  TreeTaskExecute::execute( Uintah::DetailedTask* dtask,
+                            Uintah::Task::CallBackEvent event,
                             const Uintah::ProcessorGroup* const pg,
                             const Uintah::PatchSubset* const patches,
                             const Uintah::MaterialSubset* const materials,
@@ -759,7 +775,6 @@ namespace WasatchCore{
                                DTIntegratorMapT& dualTimeIntegrators,
                                const std::vector<std::string> & varNames,
                                const std::vector<Expr::Tag>   & rhsTags,
-                               Uintah::SimulationStateP state,
                                const std::set<std::string>& ioFieldSet,
                                const bool lockAllFields)
   {
@@ -789,7 +804,7 @@ namespace WasatchCore{
       Expr::DualTime::BDFDualTimeIntegrator& dtIntegrator = *dualTimeIntegrators[patchID];
       dtIntegrator.set_dual_time_step_expression(factory.get_id(tags.ds));
 
-      for (int i=0; i<varNames.size(); i++) {
+      for( size_t i=0; i<varNames.size(); i++ ){
         dtIntegrator.add_variable<SVolField>(varNames[i], rhsTags[i]);
       }
       dtIntegrator.prepare_for_integration<SVolField>();
@@ -836,7 +851,7 @@ namespace WasatchCore{
       TreeMap& tl = tlpair.second;
       TreeTaskExecute* tskExec = scinew TreeTaskExecute( tl, tl.begin()->second->name(),
                                                         sched, patches, materials,
-                                                        info, 0, state,
+                                                        info, 0,
                                                         persistentFields, lockAllFields );
       execList_.push_back( tskExec );
       
@@ -859,7 +874,6 @@ namespace WasatchCore{
                                 const Uintah::MaterialSet* const materials,
                                 const PatchInfoMap& info,
                                 const int rkStage,
-                                Uintah::SimulationStateP state,
                                 const std::set<std::string>& ioFieldSet,
                                 const bool lockAllFields)
   {
@@ -906,7 +920,7 @@ namespace WasatchCore{
       TreeMap& tl = tlpair.second;
       execList_.push_back( scinew TreeTaskExecute( tl, tl.begin()->second->name(),
                                                    sched, patches, materials,
-                                                   info, rkStage, state,
+                                                   info, rkStage,
                                                    ioFieldSet, lockAllFields ) );
     }
 

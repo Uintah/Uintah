@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -23,7 +23,7 @@
  */
 
 #include <CCA/Components/ICE/TurbulenceModel/DynamicModel.h>
-#include <CCA/Components/ICE/BoundaryCond.h>
+#include <CCA/Components/ICE/CustomBCs/BoundaryCond.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Geometry/IntVector.h>
@@ -140,8 +140,8 @@ template void DynamicModel::applyFilter< CCVariable<double>, double >(      cons
   Purpose~ Calculate the filtered values
   -----------------------------------------------------------------------  */
 void DynamicModel::applyFilter(const Patch* patch, 
-                               StaticArray<CCVariable<double> >& var,
-                               StaticArray<CCVariable<double> >& var_hat)
+                               std::vector<CCVariable<double> >& var,
+                               std::vector<CCVariable<double> >& var_hat)
 { 
   int NGC =1;  // number of ghostCells
   for(CellIterator iter = patch->getCellIterator(NGC); !iter.done(); iter++) { 
@@ -187,8 +187,8 @@ void DynamicModel::computeSmagCoeff(DataWarehouse* new_dw,
                                     CCVariable<double>& meanSIJ)
 {
   double Cs, meanSIJ_hat;
-  StaticArray<CCVariable<double> > SIJ(6), SIJ_hat(6), LIJ(6), MIJ(6); 
-  StaticArray<CCVariable<double> > alpha(6), beta(6), beta_hat(6);
+  std::vector<CCVariable<double> > SIJ(6), SIJ_hat(6), LIJ(6), MIJ(6); 
+  std::vector<CCVariable<double> > alpha(6), beta(6), beta_hat(6);
   CCVariable<Vector> vel_CC_hat;
   CCVariable<double> vel_prod, vel_prod_hat, LM, MM; 
 
@@ -393,6 +393,7 @@ void DynamicModel::scheduleComputeVariance(SchedulerP& sched,
       Task* task = scinew Task("DynamicModel::computeVariance",this, 
                                &DynamicModel::computeVariance, s);
                                
+      task->requires(Task::OldDW, VarLabel::find( timeStep_name) );
       task->requires(Task::OldDW, s->scalar, Ghost::AroundCells, 1);
       task->computes(s->scalarVariance);
       sched->addTask(task, patches, s->matl_set);
@@ -408,6 +409,11 @@ void DynamicModel::computeVariance(const ProcessorGroup*,
                                    DataWarehouse* new_dw,
                                    FilterScalar* s)
 {
+  timeStep_vartype timeStep;
+  old_dw->get(timeStep, VarLabel::find( timeStep_name) );
+
+  bool isNotInitialTimeStep = (timeStep > 0);
+
   cout_doing << "Doing computeVariance "<< "\t\t\t DynamicModel" << endl;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -443,7 +449,7 @@ void DynamicModel::computeVariance(const ProcessorGroup*,
       }
       
       // I'm not sure if this is correct --Todd
-      setBC(fvar,s->scalarVariance->getName(),patch, d_sharedState, matl, new_dw);
+      setBC(fvar,s->scalarVariance->getName(),patch, d_sharedState, matl, new_dw, isNotInitialTimeStep);
     }
   }
 }

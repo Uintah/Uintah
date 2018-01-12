@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -29,22 +29,24 @@
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Math/MersenneTwister.h>
-#include <time.h>
+#include <Core/Util/DOUT.hpp>
 #include <fstream>
 
-#include <include/sci_defs/uintah_testdefs.h.in>
+#define DEBUG -9             // 1: divQ, 2: boundFlux, 3: scattering
+#define FIXED_RAY_DIR -9    // Sets ray direction.  1: (0.7071,0.7071, 0), 2: (0.7071, 0, 0.7071), 3: (0, 0.7071, 0.7071)
+                            //                     4: (0.7071, 0.7071, 7071), 5: (1,0,0)  6: (0, 1, 0),   7: (0,0,1)
+#define SIGN 1              // Multiply the FIXED_RAY_DIRs by value
+#define FUZZ 1e-12          // numerical fuzz
 
-#define DEBUG -9         // 1: divQ, 2: boundFlux, 3: scattering
-#define FIXED_RAY_DIR -9 // Sets ray direction.  1: (0.7071,0.7071, 0), 2: (0.7071, 0, 0.7071), 3: (0, 0.7071, 0.7071)
-
-//#define FAST_EXP       // This uses a fast approximate exp() function that is 
-                         // significantly faster.
+//#define FAST_EXP          // This uses a fast approximate exp() function that is 
+                            // significantly faster.
 
 //______________________________________________________________________
 //
 using namespace Uintah;
-using namespace std;
-static DebugStream dbg("RAY", false);
+
+// this is used externally (e.g. Radiamoter.cc), keep them visible outside this unit
+Dout g_ray_dbg("RAY", false);
 
 //______________________________________________________________________
 // Static variable declarations
@@ -53,18 +55,21 @@ static DebugStream dbg("RAY", false);
 // static variables
 //______________________________________________________________________
 
-double RMCRTCommon::d_threshold;
-double RMCRTCommon::d_sigma;
-double RMCRTCommon::d_sigmaScat;
-bool   RMCRTCommon::d_isSeedRandom;
-bool   RMCRTCommon::d_allowReflect;
-int    RMCRTCommon::d_matl;
-string RMCRTCommon::d_abskgBC_tag;
-vector<IntVector> RMCRTCommon::d_dbgCells;
+double      RMCRTCommon::d_threshold;
+double      RMCRTCommon::d_sigma;
+double      RMCRTCommon::d_sigmaScat;
+double      RMCRTCommon::d_maxRayLength;               // max ray length.
+bool        RMCRTCommon::d_isSeedRandom;
+bool        RMCRTCommon::d_allowReflect;
+int         RMCRTCommon::d_matl;
+std::string RMCRTCommon::d_abskgBC_tag;
+std::map<std::string,Task::WhichDW>    RMCRTCommon::d_abskg_dw;
 
 
+std::vector<IntVector> RMCRTCommon::d_dbgCells;
 
-MaterialSet* RMCRTCommon::d_matlSet = 0;
+MaterialSet* RMCRTCommon::d_matlSet{nullptr};
+
 const VarLabel* RMCRTCommon::d_sigmaT4Label;
 const VarLabel* RMCRTCommon::d_abskgLabel;
 const VarLabel* RMCRTCommon::d_divQLabel;
@@ -84,19 +89,20 @@ RMCRTCommon::RMCRTCommon( TypeDescription::Type FLT_DBL )
 {
   if (RMCRTCommon::d_FLT_DBL == TypeDescription::double_type){
     d_sigmaT4Label = VarLabel::create( "sigmaT4", CCVariable<double>::getTypeDescription() );
-    proc0cout << "__________________________________ USING DOUBLE VERSION OF RMCRT" << endl;
+    proc0cout << "__________________________________ USING DOUBLE VERSION OF RMCRT" << std::endl;
   } else {
     d_sigmaT4Label = VarLabel::create( "sigmaT4",    CCVariable<float>::getTypeDescription() );
     d_abskgLabel   = VarLabel::create( "abskgRMCRT", CCVariable<float>::getTypeDescription() );
-    proc0cout << "__________________________________ USING FLOAT VERSION OF RMCRT" << endl;
+    proc0cout << "__________________________________ USING FLOAT VERSION OF RMCRT" << std::endl;
   }
 
   d_boundFluxLabel     = VarLabel::create( "RMCRTboundFlux",   CCVariable<Stencil7>::getTypeDescription() );
   d_radiationVolqLabel = VarLabel::create( "radiationVolq",    CCVariable<double>::getTypeDescription() );
 
-  d_gac     = Ghost::AroundCells;
-  d_gn      = Ghost::None;
-  d_flowCell = -1; //<----HARD CODED FLOW CELL
+  d_gac          = Ghost::AroundCells;
+  d_gn           = Ghost::None;
+  d_flowCell     = -1; //<----HARD CODED FLOW CELL
+  d_maxRayLength = DBL_MAX;
   
 #ifdef FAST_EXP  
   d_fastExp.populateExp_int(-2, 2);
@@ -147,16 +153,16 @@ RMCRTCommon::registerVarLabels(int   matlIndex,
   // If using RMCRT:DBL
   const Uintah::TypeDescription* td = d_compAbskgLabel->typeDescription();
   const Uintah::TypeDescription::Type subtype = td->getSubType()->getType();
-  if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type && subtype == TypeDescription::double_type ){
+  if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type && subtype == TypeDescription::double_type ) {
     d_abskgLabel = d_compAbskgLabel;
   }
 
   //__________________________________
   //  define the materialSet
   // The constructor can be called twice, so only create matlSet once.
-  if (d_matlSet == 0) {
+  if (d_matlSet == nullptr) {
     d_matlSet = scinew MaterialSet();
-    vector<int> m;
+    std::vector<int> m;
     m.push_back(matlIndex);
     d_matlSet->addAll(m);
     d_matlSet->addReference();
@@ -172,27 +178,28 @@ RMCRTCommon::registerVarLabels(int   matlIndex,
 void
 RMCRTCommon::sched_DoubleToFloat( const LevelP& level,
                                   SchedulerP& sched,
-                                  Task::WhichDW myDW,
-                                  const int radCalc_freq )
+                                  Task::WhichDW notUsed )
 {
   const Uintah::TypeDescription* td = d_compAbskgLabel->typeDescription();
   const Uintah::TypeDescription::Type subtype = td->getSubType()->getType();
-
+  
+  int L = level->getIndex();
+  Task::WhichDW abskgDW = get_abskg_whichDW( L, d_compAbskgLabel );
+  
   // only run task if a conversion is needed.
   Task* tsk = nullptr;
   if ( RMCRTCommon::d_FLT_DBL == TypeDescription::float_type &&  subtype == TypeDescription::double_type ){
-    tsk = scinew Task( "RMCRTCommon::DoubleToFloat", this, &RMCRTCommon::DoubleToFloat, myDW, radCalc_freq);
+    tsk = scinew Task( "RMCRTCommon::DoubleToFloat", this, &RMCRTCommon::DoubleToFloat, abskgDW);
   } else {
     return;
   }
 
-  printSchedule(level, dbg, "RMCRTCommon::DoubleToFloat");
+  printSchedule(level, g_ray_dbg, "RMCRTCommon::DoubleToFloat");
 
-  tsk->requires( myDW,       d_compAbskgLabel, d_gn, 0 );
-  tsk->requires( Task::OldDW, d_abskgLabel,    d_gn, 0 );  // for carryforward
+  tsk->requires( abskgDW,       d_compAbskgLabel, d_gn, 0 );
   tsk->computes(d_abskgLabel);
 
-  sched->addTask( tsk, level->eachPatch(), d_matlSet );
+  sched->addTask( tsk, level->eachPatch(), d_matlSet);
 }
 //______________________________________________________________________
 //
@@ -203,32 +210,31 @@ RMCRTCommon::DoubleToFloat( const ProcessorGroup*,
                             const MaterialSubset* matls,
                             DataWarehouse* old_dw,
                             DataWarehouse* new_dw,
-                            Task::WhichDW which_dw,
-                            const int radCalc_freq )
+                            Task::WhichDW which_dw )
 {
   //__________________________________
-  //  Carry Forward
-  if ( doCarryForward( radCalc_freq ) ) {
-    printTask( patches, patches->get(0), dbg, "Doing RMCRTCommon::DoubleToFloat carryForward (abskgRMCRT)" );
-    new_dw->transferFrom( old_dw, d_abskgLabel, patches, matls, true );
-    return;
-  }
-
-  //__________________________________
-  for (int p=0; p < patches->size(); p++){
+  for (int p=0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
-    printTask(patches,patch,dbg,"Doing RMCRTCommon::DoubleToFloat");
+
+    printTask(patches, patch, g_ray_dbg, "Doing RMCRTCommon::DoubleToFloat");
 
     constCCVariable<double> abskg_D;
     CCVariable< float > abskg_F;
 
     DataWarehouse* myDW = new_dw->getOtherDataWarehouse(which_dw);
-    myDW->get(abskg_D,             d_compAbskgLabel, d_matl, patch, Ghost::None, 0);
+    myDW->get(abskg_D, d_compAbskgLabel, d_matl, patch, Ghost::None, 0);
     new_dw->allocateAndPut(abskg_F, d_abskgLabel, d_matl, patch);
 
     for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
       const IntVector& c = *iter;
       abskg_F[c] = (float)abskg_D[c];
+      
+      // bulletproofing
+      if (std::isinf( abskg_F[c] ) || std::isnan( abskg_F[c] ) ) {
+        std::ostringstream warn;
+        warn<< "RMCRTCommon::DoubleToFloat A non-physical abskg detected (" << abskg_F[c] << ") at cell: " << c << "\n";
+        throw InternalError( warn.str(), __FILE__, __LINE__ );
+      } 
     }
   }
 }
@@ -240,40 +246,23 @@ void
 RMCRTCommon::sched_sigmaT4( const LevelP& level,
                            SchedulerP& sched,
                            Task::WhichDW temp_dw,
-                           const int radCalc_freq,
                            const bool includeEC )
 {
   std::string taskname = "RMCRTCommon::sigmaT4";
 
   Task* tsk = nullptr;
-  if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
-    tsk = scinew Task( taskname, this, &RMCRTCommon::sigmaT4<double>, temp_dw, radCalc_freq, includeEC );
+  if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ) {
+    tsk = scinew Task( taskname, this, &RMCRTCommon::sigmaT4<double>, temp_dw, includeEC );
   } else {
-    tsk = scinew Task( taskname, this, &RMCRTCommon::sigmaT4<float>, temp_dw, radCalc_freq, includeEC );
+    tsk = scinew Task( taskname, this, &RMCRTCommon::sigmaT4<float>, temp_dw, includeEC );
   }
 
-  printSchedule(level,dbg,taskname);
-
-  //__________________________________
-  // Be careful if you modify this.  This additional logic
-  // is needed when restarting from an uda that
-  // was previously run without RMCRT.  It's further
-  // complicated when the calc_frequency >1  If you change
-  // it then test by restarting from an uda that was
-  // previously run with Arches + DO with calc_frequency > 1.
-  bool old_dwExists = false;
-  if( sched->get_dw(0) ){
-    old_dwExists = true;
-  }
-
-  if(old_dwExists){
-    tsk->requires( Task::OldDW, d_sigmaT4Label, d_gn, 0 );
-  }
+  printSchedule(level, g_ray_dbg, "RMCRTCommon::sched_sigmaT4");
 
   tsk->requires( temp_dw, d_compTempLabel,    d_gn, 0 );
   tsk->computes(d_sigmaT4Label);
 
-  sched->addTask( tsk, level->eachPatch(), d_matlSet );
+  sched->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT );
 }
 //______________________________________________________________________
 // Compute total intensity over all wave lengths (sigma * Temperature^4/pi)
@@ -281,29 +270,20 @@ RMCRTCommon::sched_sigmaT4( const LevelP& level,
 template< class T>
 void
 RMCRTCommon::sigmaT4( const ProcessorGroup*,
-                     const PatchSubset* patches,
-                     const MaterialSubset* matls,
-                     DataWarehouse* old_dw,
-                     DataWarehouse* new_dw,
-                     Task::WhichDW which_temp_dw,
-                     const int radCalc_freq,
-                     const bool includeEC )
+                      const PatchSubset* patches,
+                      const MaterialSubset* matls,
+                      DataWarehouse* old_dw,
+                      DataWarehouse* new_dw,
+                      Task::WhichDW which_temp_dw,
+                      const bool includeEC )
 {
-  //__________________________________
-  //  Carry Forward
-  if ( doCarryForward( radCalc_freq ) ) {
-    printTask( patches, patches->get(0), dbg, "Doing RMCRTCommon::sigmaT4 carryForward (sigmaT4)" );
-
-    new_dw->transferFrom( old_dw, d_sigmaT4Label, patches, matls, true );
-    return;
-  }
-
   //__________________________________
   //  do the work
   for (int p=0; p < patches->size(); p++){
 
     const Patch* patch = patches->get(p);
-    printTask(patches,patch,dbg,"Doing RMCRTCommon::sigmaT4");
+
+    printTask(patches, patch, g_ray_dbg, "Doing RMCRTCommon::sigmaT4");
 
     double sigma_over_pi = d_sigma/M_PI;
 
@@ -327,25 +307,7 @@ RMCRTCommon::sigmaT4( const ProcessorGroup*,
     }
   }
 }
-//______________________________________________________________________
-//
-//______________________________________________________________________
-void
-RMCRTCommon::findStepSize(int step[],
-                         bool sign[],
-                         const Vector& inv_direction_vector){
-  // get new step and sign
-  for ( int d= 0; d<3; d++){
-    if (inv_direction_vector[d]>0){
-      step[d] = 1;
-      sign[d] = 1;
-    }
-    else{
-      step[d] = -1;
-      sign[d] = 0;
-    }
-  }
-}
+
 
 //______________________________________________________________________
 //
@@ -386,16 +348,24 @@ RMCRTCommon::findRayDirection(MTRand& mTwister,
   direction_vector[1] = r*sin(theta);
   direction_vector[2] = plusMinus_one;
 
-/*`==========TESTING==========*/
+/*`==========DEBUGGING==========*/
 #if ( FIXED_RAY_DIR == 1)
-   direction_vector = Vector(0.70711, 0.70711, 0.);
+   direction_vector = Vector(0.707106781186548, 0.707106781186548, 0.) * Vector(SIGN);
 #elif ( FIXED_RAY_DIR == 2 )
-   direction_vector = Vector(0.70711, 0.0, 0.70711);
+   direction_vector = Vector(0.707106781186548, 0.0, 0.707106781186548) * Vector(SIGN);
 #elif ( FIXED_RAY_DIR == 3 )
-   direction_vector = Vector(0.0, 0.70711, 0.70711);
+   direction_vector = Vector(0.0, 0.707106781186548, 0.707106781186548) * Vector(SIGN);
+#elif ( FIXED_RAY_DIR == 4 )
+   direction_vector = Vector(0.707106781186548, 0.707106781186548, 0.707106781186548) * Vector(SIGN);
+#elif ( FIXED_RAY_DIR == 5 )
+   direction_vector = Vector(1, 0, 0) * Vector(SIGN);
+#elif ( FIXED_RAY_DIR == 6 )
+   direction_vector = Vector(0, 1, 0) * Vector(SIGN);
+#elif ( FIXED_RAY_DIR == 7 )
+   direction_vector = Vector(0, 0, 1) * Vector(SIGN);
 #else
 #endif
-/*===========TESTING==========`*/
+/*===========DEBUGGING==========`*/
 
   return direction_vector;
 }
@@ -409,38 +379,32 @@ RMCRTCommon::ray_Origin( MTRand& mTwister,
                          const Point  CC_pos,
                          const Vector dx,
                          const bool   useCCRays,
-                         Vector& rayOrigin)
+                         Vector& rayOrigin )
 {
   if( useCCRays == false ){
-    rayOrigin[0] =  CC_pos.x() - 0.5*dx.x()  + mTwister.rand() * dx.x(); 
-    rayOrigin[1] =  CC_pos.y() - 0.5*dx.y()  + mTwister.rand() * dx.y(); 
-    rayOrigin[2] =  CC_pos.z() - 0.5*dx.z()  + mTwister.rand() * dx.z();
+    
+    double x = mTwister.rand() * dx.x();
+    double y = mTwister.rand() * dx.y();
+    double z = mTwister.rand() * dx.z();
+    
+    Vector offset(x,y,z);  // Note you HAVE to compute the components separately to ensure that the 
+                           //  random numbers called in the x,y,z order -Todd
+       
+    if ( offset.x() > dx.x() || 
+         offset.y() > dx.y() ||
+         offset.z() > dx.z() ) {
+      std::cout << "  Warning:ray_Origin  The Mersenne twister random number generator has returned garbage (" << offset
+                << ") Now forcing the ray origin to be located at the cell-center\n" ;
+      offset = Vector( 0.5*dx.x(), 0.5*dx.y(), 0.5*dx.z() );
+    }
+    
+    rayOrigin[0] =  CC_pos.x() - 0.5*dx.x()  + offset.x(); 
+    rayOrigin[1] =  CC_pos.y() - 0.5*dx.y()  + offset.y(); 
+    rayOrigin[2] =  CC_pos.z() - 0.5*dx.z()  + offset.z();
   }else{
     rayOrigin[0] = CC_pos(0);
     rayOrigin[1] = CC_pos(1);
     rayOrigin[2] = CC_pos(2);
-  }
-}
-
-//______________________________________________________________________
-//  Compute the physical location of the ray
-//______________________________________________________________________
-void
-RMCRTCommon::ray_Origin( MTRand& mTwister,
-                         const IntVector origin,
-                         const double DyDx,
-                         const double DzDx,
-                         const bool useCCRays,
-                         Vector& rayOrigin)
-{
-  if( useCCRays == false ){
-    rayOrigin[0] =   origin[0] +  mTwister.rand() ;             // FIX ME!!! This is not the physical location of the ray.
-    rayOrigin[1] =   origin[1] +  mTwister.rand() * DyDx ;      // this is index space.
-    rayOrigin[2] =   origin[2] +  mTwister.rand() * DzDx ;
-  }else{
-    rayOrigin[0] =   origin[0] +  0.5 ;
-    rayOrigin[1] =   origin[1] +  0.5 * DyDx ;
-    rayOrigin[2] =   origin[2] +  0.5 * DzDx ;
   }
 }
 
@@ -467,30 +431,7 @@ RMCRTCommon::reflect(double& fs,
   step *= -1;                // begin stepping in opposite direction
   sign *= -1;
   ray_direction *= -1;
-  //dbg2 << " REFLECTING " << endl;
-}
-
-void
-RMCRTCommon::reflect(double& fs,
-                    IntVector& cur,
-                    IntVector& prevCell,
-                    const double abskg,
-                    bool& in_domain,
-                    int& step,
-                    bool& sign,
-                    double& ray_direction)
-{
-  fs = fs * (1 - abskg);
-
-  //put cur back inside the domain
-  cur = prevCell;
-  in_domain = true;
-
-  // apply reflection condition
-  step *= -1;                // begin stepping in opposite direction
-  sign = (sign==1) ? 0 : 1;  //  swap sign from 1 to 0 or vice versa
-  ray_direction *= -1;
-  //dbg2 << " REFLECTING " << endl;
+  //dbg2 << " REFLECTING " << std::endl;
 }
 
 //______________________________________________________________________
@@ -554,7 +495,8 @@ RMCRTCommon::updateSumI (const Level* level,
   int nReflect       = 0;                 // Number of reflections
   double optical_thickness      = 0;
   double expOpticalThick_prev   = 1.0;
-  double rayLength              = 0.0;
+  double rayLength_scatter      = 0.0;    // ray length for each scattering event
+  double rayLength              = 0.0;    // total length of the ray
   Vector ray_location           = ray_origin;
 
 
@@ -566,12 +508,14 @@ RMCRTCommon::updateSumI (const Level* level,
   double scatLength = -log(mTwister.randDblExc() ) / scatCoeff; 
 #endif
 
-  //+++++++Begin ray tracing+++++++++++++++++++
-  //Threshold while loop
-  while ( intensity > d_threshold ){
+  //______________________________________________________________________
+  
+  while ( intensity > d_threshold && (rayLength < d_maxRayLength) ){
+ 
     DIR dir = NONE;
     
-    while (in_domain){
+    while ( in_domain && (rayLength < d_maxRayLength) ){
+
 
       prevCell = cur;
       double disMin = -9;          // Represents ray segment length.
@@ -602,7 +546,14 @@ RMCRTCommon::updateSumI (const Level* level,
       disMin     = (tMax[dir] - tMax_prev);
       tMax_prev  = tMax[dir];
       tMax[dir]  = tMax[dir] + tDelta[dir];
+
+      // occassionally disMin ~ -1e-15ish
+      if( disMin > -FUZZ && disMin < FUZZ){  
+        disMin += FUZZ;
+      }
+      
       rayLength += disMin;
+      rayLength_scatter += disMin;
 
       ray_location[0] = ray_location[0] + (disMin  * ray_direction[0]);
       ray_location[1] = ray_location[1] + (disMin  * ray_direction[1]);
@@ -617,14 +568,15 @@ RMCRTCommon::updateSumI (const Level* level,
  /*`==========TESTING==========*/
 #if ( DEBUG >= 1 )
       if( isDbgCell( origin )){
-         printf( "            cur [%d,%d,%d] prev [%d,%d,%d] ", cur.x(), cur.y(), cur.z(), prevCell.x(), prevCell.y(), prevCell.z());
+         printf( "            cur [%d,%d,%d] prev [%d,%d,%d]", cur.x(), cur.y(), cur.z(), prevCell.x(), prevCell.y(), prevCell.z());
          printf( " dir %d ", dir );
          printf( "tMax [%g,%g,%g] ",tMax[0],tMax[1], tMax[2]);
          printf( "rayLoc [%g,%g,%g] ",ray_location.x(),ray_location.y(), ray_location.z());
-         printf( "disMin %g tMax[dir]: %g tMax_prev: %g, Dx[dir]: %g\n",disMin, tMax[dir], tMax_prev, Dx[dir]);
+         printf( "distanceTraveled %g tMax[dir]: %g tMax_prev: %g, Dx[dir]: %g\n",disMin, tMax[dir], tMax_prev, Dx[dir]);
+         printf( "            tDelta [%g,%g,%g] \n",tDelta.x(),tDelta.y(), tDelta.z());
 
-         printf( "            abskg[prev] %g  \t sigmaT4OverPi[prev]: %g \n",abskg[prevCell],  sigmaT4OverPi[prevCell]);
-         printf( "            abskg[cur]  %g  \t sigmaT4OverPi[cur]:  %g  \t  cellType: %i\n",abskg[cur], sigmaT4OverPi[cur], celltype[cur]);
+//         printf( "            abskg[prev] %g  \t sigmaT4OverPi[prev]: %g \n",abskg[prevCell],  sigmaT4OverPi[prevCell]);
+//         printf( "            abskg[cur]  %g  \t sigmaT4OverPi[cur]:  %g  \t  cellType: %i\n",abskg[cur], sigmaT4OverPi[cur], celltype[cur]);
          printf( "            optical_thickkness %g \t rayLength: %g\n", optical_thickness, rayLength);
       }
 #endif
@@ -669,7 +621,7 @@ RMCRTCommon::updateSumI (const Level* level,
       expOpticalThick_prev = expOpticalThick;
 
 #ifdef RAY_SCATTER
-      if (rayLength > scatLength && in_domain ){
+      if (rayLength_scatter > scatLength && in_domain ){
             
         // get new scatLength for each scattering event
         scatLength = -log(mTwister.randDblExc() ) / scatCoeff;
@@ -702,19 +654,29 @@ RMCRTCommon::updateSumI (const Level* level,
 /*`==========TESTING==========*/
 #if (DEBUG == 3)
         if( isDbgCell( origin)  ){
-          printf( "            Scatter: [%i, %i, %i], rayLength: %g, tmax: %g, %g, %g  tDelta: %g, %g, %g  ray_dir: %g, %g, %g\n",cur.x(), cur.y(), cur.z(),rayLength, tMax[0], tMax[1], tMax[2], tDelta.x(), tDelta.y() , tDelta.z(), ray_direction.x(), ray_direction.y() , ray_direction.z());
+          Vector mytDelta = tDelta / Dx;
+          Vector myrayLoc = ray_location / Dx;
+          printf( "            Scatter: [%i, %i, %i], rayLength: %g, tmax: %g, %g, %g  tDelta: %g, %g, %g  ray_dir: %g, %g, %g\n",cur.x(), cur.y(), cur.z(),rayLength, tMax[0] / Dx[0], tMax[1] / Dx[1], tMax[2] / Dx[2], mytDelta.x(), mytDelta.y() , mytDelta.z(), ray_direction.x(), ray_direction.y() , ray_direction.z());
           printf( "                    dir: %i sign: [%g, %g, %g], step [%i, %i, %i] cur: [%i, %i, %i], prevCell: [%i, %i, %i]\n", dir, sign[0], sign[1], sign[2], step[0], step[1], step[2], cur[0], cur[1], cur[2], prevCell[0], prevCell[1], prevCell[2] );
-          printf( "                    ray_location: [%g, %g, %g]\n", rayLocation[0], rayLocation[1], rayLocation[2] );
+          printf( "                    ray_location: [%g, %g, %g]\n", myrayLoc[0], myrayLoc[1], myrayLoc[2] );
 //          printf("                     rayDx         [%g, %g, %g]  CC_pos[%g, %g, %g]\n", rayDx[0], rayDx[1], rayDx[2], CC_pos.x(), CC_pos.y(), CC_pos.z());
         }
 #endif
 /*===========TESTING==========`*/
         tMax_prev = 0;
-        rayLength = 0;  // allow for multiple scattering events per ray
+        rayLength_scatter = 0;  // allow for multiple scattering events per ray
       }
 #endif
 
-    } //end domain while loop.  ++++++++++++++
+      if( rayLength < 0 || std::isnan(rayLength) || std::isinf(rayLength) ) {
+        std::ostringstream warn;
+        warn<< "ERROR:RMCRTCommon::updateSumI   The ray length is non-physical (" << rayLength << ")"
+            << " origin: " << origin << " cur: " << cur << "\n";
+        throw InternalError( warn.str(), __FILE__, __LINE__ );
+      }
+    }  //end domain while loop.  ++++++++++++++
+    //______________________________________________________________________
+
 
     T wallEmissivity = abskg[cur];
 
@@ -727,12 +689,35 @@ RMCRTCommon::updateSumI (const Level* level,
     sumI += wallEmissivity * sigmaT4OverPi[cur] * intensity;
 
     intensity = intensity * fs;
+//    //__________________________________
+//    //  BULLETPROOFING
+//    if ( std::isinf(sumI) || std::isnan(sumI) ){
+//      printf( "\n\n______________________________________________________________________\n");
+//      std::cout <<  " cur: " << cur << " prevCell: " << prevCell << "\n";
+//      std::cout <<  " dir: " << dir << " sumI: " << sumI << "\n";
+//      std::cout <<  " tMax: " << tMax  << "\n";
+//      std::cout <<  " rayLoc:    " << ray_location << "\n";
+//      std::cout <<  " tMax[dir]: " << tMax[dir] << " tMax_prev: " << tMax_prev << " Dx[dir]: " << Dx[dir] << "\n";
+//      std::cout <<  " tDelta:    " << tDelta << " \n";
+//      std::cout <<  "     abskg[prev]: " << abskg[prevCell] << " \t sigmaT4OverPi[prev]: " << sigmaT4OverPi[prevCell]  << "\n";
+//      std::cout <<  "     abskg[cur]:  " << abskg[cur]      << " \t sigmaT4OverPi[cur]:  " << sigmaT4OverPi[cur] << "\t  cellType: " <<celltype[cur] << "\n";
+//      std::cout <<  "     optical_thickkness: " <<  optical_thickness << " \t rayLength: " << rayLength << "\n";
+//
+//      IntVector l = abskg.getLowIndex();
+//      IntVector h = abskg.getHighIndex();
+//      printf( "     abskg:  [%d,%d,%d]  -> [%d,%d,%d] \n", l.x(), l.y(), l.z() , h.x(), h.y(), h.z() );
+//
+//      std::ostringstream warn;
+//        warn<< "ERROR:RMCRTCommon::updateSumI   sumI is non-physical (" << sumI << ")"
+//            << " origin: " << origin << " cur: " << cur << "\n";
+//        throw InternalError( warn.str(), __FILE__, __LINE__ );
+//    }
 
     // when a ray reaches the end of the domain, we force it to terminate.
     if(!d_allowReflect) intensity = 0;
 
 /*`==========TESTING==========*/
-#if DEBUG >0
+#if DEBUG  >= 0
 if( isDbgCell( origin)  ){
    printf( "            cur [%d,%d,%d] intensity: %g expOptThick: %g, fs: %g allowReflect: %i\n",
           cur.x(), cur.y(), cur.z(), intensity,  exp(-optical_thickness), fs, d_allowReflect );
@@ -740,84 +725,103 @@ if( isDbgCell( origin)  ){
 }
 #endif
 /*===========TESTING==========`*/
+
     //__________________________________
     //  Reflections
-    if ( (intensity > d_threshold) && d_allowReflect){
+    if ( intensity > d_threshold && d_allowReflect ){
       reflect( fs, cur, prevCell, abskg[cur], in_domain, step[dir], sign[dir], ray_direction[dir]);
       ++nReflect;
     }
   }  // threshold while loop.
+  
 } // end of updateSumI function
 
+//______________________________________________________________________
+//    Move all computed variables from old_dw -> new_dw
+//______________________________________________________________________
+void
+RMCRTCommon::sched_CarryForward_FineLevelLabels ( const LevelP& level,
+                                                  SchedulerP& sched )
+{
 
+  std::string taskname = "RMCRTCommon::sched_CarryForward_FineLevelLabels";
+  printSchedule( level, g_ray_dbg, taskname );
+
+  Task* tsk = scinew Task( taskname, this, &RMCRTCommon::carryForward_FineLevelLabels );
+
+  tsk->requires( Task::OldDW, d_divQLabel,          d_gn, 0 );
+  tsk->requires( Task::OldDW, d_boundFluxLabel,     d_gn, 0 );
+  tsk->requires( Task::OldDW, d_radiationVolqLabel, d_gn, 0 );
+  tsk->requires( Task::OldDW, d_sigmaT4Label,       d_gn, 0 );
+  
+  tsk->computes( d_divQLabel );
+  tsk->computes( d_boundFluxLabel );
+  tsk->computes( d_radiationVolqLabel );
+  tsk->computes( d_sigmaT4Label );
+  
+  sched->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_CARRY_FORWARD );
+}
+
+//______________________________________________________________________
+//
+void
+RMCRTCommon::carryForward_FineLevelLabels(DetailedTask* dtask,
+                                    Task::CallBackEvent event,
+                                    const ProcessorGroup*,
+                                    const PatchSubset* patches,
+                                    const MaterialSubset* matls,
+                                    DataWarehouse* old_dw,
+                                    DataWarehouse* new_dw,
+                                    void* old_TaskGpuDW,
+                                    void* new_TaskGpuDW,
+                                    void* stream,
+                                    int deviceID)
+{
+  printTask( patches, patches->get(0), g_ray_dbg, "Doing RMCRTCommon::carryForward_FineLevelLabels" );
+
+  bool replaceVar = true;
+  new_dw->transferFrom(old_dw, d_divQLabel,          patches, matls, dtask, replaceVar, nullptr );
+  new_dw->transferFrom(old_dw, d_boundFluxLabel,     patches, matls, dtask, replaceVar, nullptr );
+  new_dw->transferFrom(old_dw, d_radiationVolqLabel, patches, matls, dtask, replaceVar, nullptr );
+  new_dw->transferFrom(old_dw, d_sigmaT4Label,       patches, matls, dtask, replaceVar, nullptr );
+}
 
 //______________________________________________________________________
 // Utility task:  move variable from old_dw -> new_dw
 //______________________________________________________________________
 void
 RMCRTCommon::sched_CarryForward_Var ( const LevelP& level,
-                                     SchedulerP& sched,
-                                     const VarLabel* variable)
+                                      SchedulerP& sched,
+                                      const VarLabel* variable,
+                                      const int tg_num /* == -1 */)
 {
-  string taskname = "        carryForward_Var: " + variable->getName();
-  printSchedule(level, dbg, taskname);
+  std::string taskname = "        carryForward_Var: " + variable->getName();
+  printSchedule(level, g_ray_dbg, taskname);
 
-  Task* tsk = scinew Task( taskname, this, &RMCRTCommon::carryForward_Var, variable );
+  Task* task = scinew Task( taskname, this, &RMCRTCommon::carryForward_Var, variable );
 
-  tsk->requires(Task::OldDW, variable,   d_gn, 0);
-  tsk->computes(variable);
+  task->requires(Task::OldDW, variable,   d_gn, 0);
+  task->computes(variable);
 
-  sched->addTask( tsk, level->eachPatch(), d_matlSet );
+  sched->addTask( task, level->eachPatch(), d_matlSet, tg_num);
 }
 
 //______________________________________________________________________
 void
-RMCRTCommon::carryForward_Var ( const ProcessorGroup*,
-                               const PatchSubset* patches,
-                               const MaterialSubset* matls,
-                               DataWarehouse* old_dw,
-                               DataWarehouse* new_dw,
-                               const VarLabel* variable)
+RMCRTCommon::carryForward_Var ( DetailedTask* dtask,
+                                Task::CallBackEvent event,
+                                const ProcessorGroup*,
+                                const PatchSubset* patches,
+                                const MaterialSubset* matls,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw,
+                                void* old_TaskGpuDW,
+                                void* new_TaskGpuDW,
+                                void* stream,
+                                int deviceID,
+                                const VarLabel* variable )
 {
-  new_dw->transferFrom(old_dw, variable, patches, matls, true);
-}
-
-
-//______________________________________________________________________
-//  Trigger a taskgraph recompilation if the *next* timestep is a
-//  calculation timestep
-//______________________________________________________________________
-void
-RMCRTCommon::doRecompileTaskgraph( const int radCalc_freq ){
-
-  if( radCalc_freq > 1 ){
-
-    int timestep     = d_sharedState->getCurrentTopLevelTimeStep();
-    int nextTimestep = timestep + 1;
-
-    // if the _next_ timestep is a calculation timestep
-    if( nextTimestep%radCalc_freq == 0 ){
-      // proc0cout << "  RMCRT recompile taskgraph to turn on all-to-all communications" << endl;
-      d_sharedState->setRecompileTaskGraph( true );
-    }
-
-    // if the _current_ timestep is a calculation timestep
-    if( timestep%radCalc_freq == 0 ){
-      // proc0cout << "  RMCRT recompile taskgraph to turn off all-to-all communications" << endl;
-      d_sharedState->setRecompileTaskGraph( true );
-    }
-  }
-}
-
-//______________________________________________________________________
-//  Logic for determing when to carry forward
-//______________________________________________________________________
-bool
-RMCRTCommon::doCarryForward( const int radCalc_freq ){
-  int timestep = d_sharedState->getCurrentTopLevelTimeStep();
-  bool test = (timestep%radCalc_freq != 0 && timestep != 1);
-
-  return test;
+  new_dw->transferFrom(old_dw, variable, patches, matls, dtask, true, nullptr);
 }
 
 //______________________________________________________________________
@@ -826,16 +830,12 @@ RMCRTCommon::doCarryForward( const int radCalc_freq ){
 bool
 RMCRTCommon::isDbgCell( const IntVector me)
 {
-
-  if(me == IntVector(0,0,0) ){
-    return true;
-  }
   for( unsigned int i = 0; i<d_dbgCells.size(); i++) {
     if( me == d_dbgCells[i]) {
       return true;
-
     }
   }
+
   return false;
 }
 
@@ -846,9 +846,10 @@ RMCRTCommon::isDbgCell( const IntVector me)
 //  modern fisher-yates shuffle.
 //______________________________________________________________________
 void
-RMCRTCommon::randVector( vector <int> &int_array,
+RMCRTCommon::randVector( std::vector <int> &int_array,
                          MTRand& mTwister,
-                         const IntVector& cell ){
+                         const IntVector& cell )
+{
   int max= int_array.size();
 
   for (int i=0; i<max; i++){   // populate sequential array from 0 to max-1
@@ -860,11 +861,91 @@ RMCRTCommon::randVector( vector <int> &int_array,
   }
 
   for (int i=max-1; i>0; i--){  // fisher-yates shuffle starting with max-1
+
+#ifdef FIXED_RANDOM_NUM
+    int rand_int =  0.3*i;  
+#else
     int rand_int =  mTwister.randInt(i);
+#endif 
     int swap = int_array[i];
     int_array[i] = int_array[rand_int];
     int_array[rand_int] = swap;
   }
+}
+
+//______________________________________________________________________
+// For RMCRT algorithms the absorption coefficient can be required from either the old_dw or
+// new_dw depending on if RMCRT:float is specified.  On coarse levels abskg _always_ resides
+// in the newDW.  If RMCRT:float is used then abskg on the fine level resides in the new_dw.
+// This method creates a global map and the key for the  (map d_abskg_dw <string, Task::WhichDW>)
+// is the labelName_L-X, the value in the map is the old or new dw.
+//_____________________________________________________________________
+void
+RMCRTCommon::set_abskg_dw_perLevel ( const LevelP& fineLevel, 
+                                     Task::WhichDW fineLevel_abskg_dw )
+{
+  int maxLevels = fineLevel->getGrid()->numLevels();
+  printSchedule(fineLevel, g_ray_dbg, "RMCRTCommon::set_abskg_dws");
+  
+  //__________________________________
+  // fineLevel could have two entries.  One for abskg and abskgRMCRT
+  std::ostringstream key;
+  key << d_compAbskgLabel->getName() << "_L-"<< fineLevel->getIndex();
+  d_abskg_dw[key.str()] = fineLevel_abskg_dw;
+  
+  //__________________________________
+  // fineLevel: FLOAT  abskgRMCRT
+  if ( RMCRTCommon::d_FLT_DBL == TypeDescription::float_type ) {
+    std::ostringstream key1;
+    key1 << d_abskgLabel->getName() << "_L-"<< fineLevel->getIndex();
+    d_abskg_dw[key1.str()] = Task::NewDW;  
+  }
+  
+  //__________________________________
+  // coarse levels always require from the newDW
+  for(int L = 0; L<maxLevels; L++) {
+  
+    if ( L != fineLevel->getIndex() ) {
+      std::ostringstream key2;
+      key2 << d_abskgLabel->getName() << "_L-"<< L;  
+      d_abskg_dw[key2.str()] = Task::NewDW;
+    } 
+  }
+  
+#if 0             // debugging
+  for( auto iter = d_abskg_dw.begin(); iter !=  d_abskg_dw.end(); iter++ ){
+    std::cout << " key: " << (*iter).first << " value: " << (*iter).second << std::endl;
+  }
+#endif  
+}
+
+//______________________________________________________________________
+//  return the dw associated for this abskg and level
+//______________________________________________________________________
+DataWarehouse*
+RMCRTCommon::get_abskg_dw ( const int L,
+                            const VarLabel* label,
+                            DataWarehouse* new_dw)
+{  
+  Task::WhichDW dw = get_abskg_whichDW ( L, label );
+  DataWarehouse* abskg_dw = new_dw->getOtherDataWarehouse( dw );
+  
+  return abskg_dw;
+}
+
+//______________________________________________________________________
+//  return the Task::WhichDW for this abskg and level
+//______________________________________________________________________
+Task::WhichDW
+RMCRTCommon::get_abskg_whichDW ( const int L,
+                                 const VarLabel* label)
+{
+  std::ostringstream key;
+  key << label->getName() << "_L-"<< L;
+  Task::WhichDW abskgDW = d_abskg_dw[key.str()];
+
+//  std::cout << "    key: " << key.str() << " value: " << abskgDW << std::endl;
+  return abskgDW;
 }
 
 //______________________________________________________________________

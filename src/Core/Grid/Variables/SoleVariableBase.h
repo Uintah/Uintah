@@ -1,7 +1,10 @@
+#ifndef UINTAH_HOMEBREW_SOLEVARIABLEBASE_H
+#define UINTAH_HOMEBREW_SOLEVARIABLEBASE_H
+
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,15 +25,12 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_HOMEBREW_SoleVariableBase_H
-#define UINTAH_HOMEBREW_SoleVariableBase_H
-
 #include <Core/Grid/Variables/Variable.h>
+#include <Core/Parallel/UintahMPI.h>
+
 #include <iosfwd>
-#include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 
 namespace Uintah {
-
 
 /**************************************
 
@@ -89,4 +89,4 @@ WARNING
    };
 } // End namespace Uintah
 
-#endif
+#endif // UINTAH_HOMEBREW_SOLEVARIABLEBASE_H

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -36,15 +36,13 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Util/DebugStream.h>
 
-#include <sci_comp_warn_fixes.h>
-
 using namespace std;
 using namespace Uintah;
 //__________________________________
 //  To turn on normal output
-//  setenv SCI_DEBUG "HYPRE_DOING_COUT:+"
+//  setenv SCI_DEBUG "SOLVER_DOING_COUT:+"
 
-static DebugStream cout_doing("HYPRE_DOING_COUT", false);
+static DebugStream cout_doing("SOLVER_DOING_COUT", false);
 static DebugStream cout_dbg("HYPRE_DBG", false);
 
 HypreSolverBase::HypreSolverBase(HypreDriver* driver,
@@ -70,13 +68,11 @@ HypreSolverBase::assertInterface(void)
 { 
   cout_doing << Parallel::getMPIRank()<<" HypreSolverBase::assertInterface() BEGIN" << "\n";
   if (_priority.size() < 1) {
-    throw InternalError("Solver created without interface priorities",
-                        __FILE__, __LINE__);
- 
+    throw InternalError( "Solver created without interface priorities", __FILE__, __LINE__ );
   }
 
   // Intersect solver and preconditioner priorities
-  if (_precond) {
+  if ( _precond ) {
     cout_dbg << "Intersect solver, precond priorities begin" << "\n";
     Priorities newSolverPriority;
     const Priorities& precondPriority = _precond->getPriority();
@@ -104,9 +100,12 @@ HypreSolverBase::assertInterface(void)
   cout_dbg << "Check if solver requires par" << "\n";
   for (unsigned int i = 0; i < _priority.size(); i++) {
     if (_priority[i] == HypreInterfaceNA) {
-      throw InternalError("Bad Solver interface priority "+_priority[i],
-                          __FILE__, __LINE__);
-    } else if ((_priority[i] != HypreParCSR) && (_requiresPar)) {
+      ostringstream msg;
+      msg << "Bad Solver interface priority: " << _priority[i];
+
+      throw InternalError( msg.str(), __FILE__, __LINE__ );
+    } 
+    else if ((_priority[i] != HypreParCSR) && (_requiresPar)) {
       // Modify this rule if we use other Hypre interfaces in the future.
       // See HypreTypes.h.
       _requiresPar = false;
@@ -149,7 +148,7 @@ HypreSolverBase::assertInterface(void)
   if (!found) {
     ostringstream msg;
     msg << "Solver does not support Hypre interface " << interface;
-    throw InternalError(msg.str(),__FILE__, __LINE__); 
+    throw InternalError( msg.str(), __FILE__, __LINE__ ); 
   }
   cout_doing << Parallel::getMPIRank()<<" HypreSolverBase::assertInterface() END" << "\n";
 }
@@ -201,11 +200,15 @@ namespace Uintah {
         return scinew HypreSolverFAC(driver,precond);
       }
     default:
-      throw InternalError("Unsupported solver type: "+solverType,
-                          __FILE__, __LINE__);
+      ostringstream msg;
+      msg << "Unsupported solver type: " << solverType;
+
+      throw InternalError( msg.str(), __FILE__, __LINE__ );
     } // switch (solverType)
+
     cout_doing << "newHypreSolver() END (shouldn't be reached)" << "\n";
-    RETURN_0;
+
+    return nullptr;
   }
 //______________________________________________________________________
   SolverType
@@ -215,34 +218,43 @@ namespace Uintah {
     if ((solverTitle == "SMG") ||
         (solverTitle == "smg")) {
       return SMG;
-    } else if ((solverTitle == "PFMG") ||
-               (solverTitle == "pfmg")) {
+    }
+    else if ((solverTitle == "PFMG") ||
+             (solverTitle == "pfmg")) {
       return PFMG;
-    } else if ((solverTitle == "SparseMSG") ||
-               (solverTitle == "sparsemsg")) {
+    }
+    else if ((solverTitle == "SparseMSG") ||
+             (solverTitle == "sparsemsg")) {
       return SparseMSG;
-    } else if ((solverTitle == "CG") ||
-               (solverTitle == "cg") ||
-               (solverTitle == "PCG") ||
-               (solverTitle == "conjugategradient")) {
+    }
+    else if ((solverTitle == "CG") ||
+             (solverTitle == "cg") ||
+             (solverTitle == "PCG") ||
+             (solverTitle == "conjugategradient")) {
       return CG;
-    } else if ((solverTitle == "Hybrid") ||
-               (solverTitle == "hybrid")) {
+    }
+    else if ((solverTitle == "Hybrid") ||
+             (solverTitle == "hybrid")) {
       return Hybrid;
-    } else if ((solverTitle == "GMRES") ||
-               (solverTitle == "gmres")) {
+    }
+    else if ((solverTitle == "GMRES") ||
+             (solverTitle == "gmres")) {
       return GMRES;
-    } else if ((solverTitle == "AMG") ||
-               (solverTitle == "amg") ||
-               (solverTitle == "BoomerAMG") ||
-               (solverTitle == "boomeramg")) {
+    }
+    else if ((solverTitle == "AMG") ||
+             (solverTitle == "amg") ||
+             (solverTitle == "BoomerAMG") ||
+             (solverTitle == "boomeramg")) {
       return AMG;
-    } else if ((solverTitle == "FAC") ||
-               (solverTitle == "fac")) {
+    }
+    else if ((solverTitle == "FAC") ||
+             (solverTitle == "fac")) {
       return FAC;
-    } else {
-      throw InternalError("Unknown solver type: "+solverTitle,
-                          __FILE__, __LINE__);
+    }
+    else {
+      ostringstream msg;
+      msg << "Unknown solver type: " << solverTitle;
+      throw InternalError( msg.str(), __FILE__, __LINE__ );
     } // end "switch" (solverTitle)
   } // end solverFromTitle()
 

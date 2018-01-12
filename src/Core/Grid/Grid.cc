@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -37,99 +37,23 @@
 #include <Core/Math/UintahMiscMath.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Util/DOUT.hpp>
+#include <Core/Util/StringUtil.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/XMLUtils.h>
 
+#include <climits>
+#include <cfloat>
 #include <iomanip>
 #include <iostream>
-#include <sci_values.h>
 
 using namespace std;
 using namespace Uintah;
 
+Dout g_dbg("GRID", false);
 
-struct StretchSpec {
-  string shape;
-  double from;
-  double to;
-  double fromSpacing;
-  double toSpacing;
-
-  int countCells() const;
-  void fillCells(int& start, int lowCells, int highCells, OffsetArray1<double>& faces) const;
-};
-
-int StretchSpec::countCells() const
-{
-  if(shape == "uniform"){
-    return Round((to-from)/fromSpacing);
-  } else {
-    double a = Min(fromSpacing, toSpacing);
-    double b = Max(fromSpacing, toSpacing);
-    double totalDistance = to-from;
-    double nn = log(b/a) / log((totalDistance+b)/(totalDistance+a)) -1;
-    int n = (int)(nn+0.5);
-    return n;
-  }
-}
-
-static double xk(double a, double r, int k)
-{
-  if(r == 1)
-    return a*k;
-  return a*r*(1-pow(r, k))/(1-r);
-}
-
-void StretchSpec::fillCells(int& start, int lowExtra, int highExtra, OffsetArray1<double>& faces) const
-{
-  if(shape == "uniform"){
-    int n = Round((to-from)/fromSpacing);
-    for(int i=-lowExtra;i<n+highExtra;i++){
-      faces[i+start] = from + i*fromSpacing;
-    }
-    start += n;
-  } else {
-    int n = countCells();
-    double totalDistance = to-from;
-    double a = fromSpacing;
-    double b = toSpacing;
-    bool switched = false;
-    if(a > b){
-      double tmp = a;
-      a = b;
-      b = tmp;
-      switched = true;
-    }
-
-    double r = pow(b/a, 1./(n+1));
-
-    // Now adjust the rate to ensure that there are an integer number of cells
-    // We use a binary search because a newton solve doesn't alway converge very well,
-    // and this is not performance critical
-    double r1 = 1;
-    double r2 = r * r * 2;
-    for(int i=0;i<1000;i++){
-      double newr = (r1+r2)/2;
-      if(r == newr)
-        break;
-      r = newr;
-      double residual = xk(a, r, n) - totalDistance;
-      if(residual > 0)
-        r2 = r;
-      else
-        r1 = r;
-    }
-    if(switched){
-      a = a*pow(r, n+1);
-      r = 1./r;
-    }
-    for(int i=-lowExtra;i<n+highExtra;i++){
-      faces[i+start] = from + xk(a, r, i);
-    }
-    start += n;
-  }
-}
-
+//______________________________________________________________________
+//
 Grid::Grid()
 {
   // Initialize values that may be uses for the autoPatching calculations
@@ -146,7 +70,8 @@ Grid::Grid()
 Grid::~Grid()
 {
 }
-
+//______________________________________________________________________
+//
 const LevelP &
 Grid::getLevel( int l ) const
 {
@@ -154,6 +79,7 @@ Grid::getLevel( int l ) const
   return d_levels[ l ];
 }
 
+//______________________________________________________________________
 //
 // Parse in the <Patch> from the input file (most likely 'timestep.xml').  We should only need to parse
 // three tags: <id>, <proc>, <lowIndex>, <highIndex>, <interiorLowIndex>, <nnodes>, <lower>, <upper>, 
@@ -184,7 +110,8 @@ Grid::parsePatchFromFile( FILE * fp, LevelP level, vector<int> & procMapForLevel
   int       proc             = -1;
   bool      foundProc        = false;
 
-  IntVector lowIndex, highIndex;
+  IntVector lowIndex;
+  IntVector highIndex;
   bool      foundLowIndex    = false;
   bool      foundHighIndex   = false;
 
@@ -202,7 +129,6 @@ Grid::parsePatchFromFile( FILE * fp, LevelP level, vector<int> & procMapForLevel
 
   while( !doneWithPatch ) {
     string line = UintahXML::getLine( fp );
-    //    proc0cout << "4) parsing: " << line << "\n";
     
     if( line == "</Patch>" ) {
       doneWithPatch = true;
@@ -253,12 +179,11 @@ Grid::parsePatchFromFile( FILE * fp, LevelP level, vector<int> & procMapForLevel
     }
   } // end while()
 
-  if( !foundId || !foundProc || !foundHighIndex ) {
-    cout << "I am here: " << foundId << ", " << foundProc << ", " << foundHighIndex << "\n";
+  if( !foundId || !foundProc || !foundLowIndex || !foundHighIndex ) {
     throw InternalError("Grid::parsePatchFromFile() - Missing a <Patch> child tag...", __FILE__, __LINE__ );
   }
 
-  if( !foundInteriorLowIndex ) { interiorLowIndex = lowIndex; }
+  if( !foundInteriorLowIndex )  { interiorLowIndex = lowIndex; }
   if( !foundInteriorHighIndex ) { interiorHighIndex = highIndex; }
 
   level->addPatch( lowIndex, highIndex, interiorLowIndex, interiorHighIndex, this, id );
@@ -270,6 +195,7 @@ Grid::parsePatchFromFile( FILE * fp, LevelP level, vector<int> & procMapForLevel
 } // end parsePatchFromFile()
 
 
+//______________________________________________________________________
 //
 // Parse in the <Level> from the input file (most likely 'timestep.xml').  We should only need to parse
 // these tags: <numPatches>, <totalCells>, <extraCells>, <anchor>, <id>, <cellspacing>, <Patch>, and </Level>
@@ -293,7 +219,7 @@ Grid::parseLevelFromFile( FILE * fp, vector<int> & procMapForLevel )
 {
   int       numPatches       = 0;
   int       numPatchesRead   = 0;
-  int       totalCells       = -1;
+  // int       totalCells       = -1;
 
   bool      done_with_level  = false;
 
@@ -310,9 +236,7 @@ Grid::parseLevelFromFile( FILE * fp, vector<int> & procMapForLevel )
   bool      foundId          = false;
 
   IntVector extraCells(0,0,0);
-  bool      foundExtraCells  = false;
-
-  bool      foundStretch     = false;
+  // bool      foundExtraCells  = false;
 
   bool      levelCreated     = false;
 
@@ -320,7 +244,6 @@ Grid::parseLevelFromFile( FILE * fp, vector<int> & procMapForLevel )
 
   while( !done_with_level ) {
     string line = UintahXML::getLine( fp );
-    //proc0cout << "3) parsing: " << line << "\n";
     
     if( line == "</Level>" ) {
       done_with_level = true;
@@ -342,28 +265,18 @@ Grid::parseLevelFromFile( FILE * fp, vector<int> & procMapForLevel )
         // the level here as it is needed by parsePatchFromFile so that the patch
         // can be added to the level.
         //
-        
-        //if( !foundStretch ) {
-        //  dcell *= d_cell_scale;
-        //}
 
         level = this->addLevel( anchor, dcell, id );
 
         level->setExtraCells( extraCells );
-
-        //  if( foundStretch ) {
-        //    level->setStretched((Grid::Axis)0, faces[0]);
-        //    level->setStretched((Grid::Axis)1, faces[1]);
-        //    level->setStretched((Grid::Axis)2, faces[2]);
-        //  }
       }
 
       numPatchesRead++;
 
       // At this point, we should be done reading in <Level> information, so we should go ahead and
       // create the level... if for no other reason that the Patches have to be added to it...
-      if( !foundStretch && !foundCellSpacing ) {
-        throw InternalError("Grid::parseLevelFromFile() - Did not find <cellspacing> or <StretchPositions> point", __FILE__, __LINE__ );
+      if( !foundCellSpacing ) {
+        throw InternalError("Grid::parseLevelFromFile() - Did not find <cellspacing> point", __FILE__, __LINE__ );
       }
       else if( !foundAnchor ) {
         throw InternalError("Grid::parseLevelFromFile() - Did not find level anchor point", __FILE__, __LINE__ );
@@ -381,15 +294,22 @@ Grid::parseLevelFromFile( FILE * fp, vector<int> & procMapForLevel )
     }
     else {
       vector< string > pieces = UintahXML::splitXMLtag( line );
-      if( pieces[0] == "<numPatches>" ) {
+      
+/*`==========TESTING==========*/
+      if( pieces[0] == "<nonCubic>" ) {
+        // This conditional is not necessary and is here for backwards compatibility.  
+        //  Remove it after 03/2018  -Todd
+      } 
+/*===========TESTING==========`*/
+      else if( pieces[0] == "<numPatches>" ) {
         numPatches = atoi( pieces[1].c_str() );
       }
       else if( pieces[0] == "<totalCells>" ) {
-        totalCells = atoi( pieces[1].c_str() );
+        // totalCells = atoi( pieces[1].c_str() );
       }
       else if( pieces[0] == "<extraCells>" ) {
         extraCells = IntVector::fromString( pieces[1] );
-        foundExtraCells = true;
+        // foundExtraCells = true;
       }
       else if( pieces[0] == "<anchor>" ) {
         Vector v = Vector::fromString( pieces[1] );
@@ -403,12 +323,6 @@ Grid::parseLevelFromFile( FILE * fp, vector<int> & procMapForLevel )
       else if( pieces[0] == "<cellspacing>" ) {
         dcell = Vector::fromString( pieces[1] );
         foundCellSpacing = true;
-      }
-      else if( pieces[0] == "<StretchPositions>" ) {
-        foundStretch = true;
-        // FIXME - QWERTY - README - add in the code from original DataArchive.cc to handle <StretchPositions>
-
-        throw InternalError( "Grid::getLine() fail - don't know how to handle StretchPositions yet.", __FILE__, __LINE__ );
       }
       else if( pieces[0] == "<periodic>" ) {
 
@@ -441,6 +355,7 @@ Grid::parseLevelFromFile( FILE * fp, vector<int> & procMapForLevel )
 
 } // end parseLevelFromFile()
             
+//______________________________________________________________________
 //
 // Parse in the <Grid> from the input file (most likely 'timestep.xml').  We should only need to parse
 // three tags: <numLevels>, <Level>, and </Grid> as the XML should look like this (and we've already
@@ -456,8 +371,8 @@ Grid::parseLevelFromFile( FILE * fp, vector<int> & procMapForLevel )
 bool
 Grid::parseGridFromFile( FILE * fp, vector< vector<int> > & procMap )
 {
-  int  numLevelsRead  = 0;
-  int  numLevels      = 0;
+  int  num_levelsRead  = 0;
+  int  num_levels      = 0;
   bool doneWithGrid   = false;
   bool foundLevelTag  = false;
 
@@ -467,7 +382,6 @@ Grid::parseGridFromFile( FILE * fp, vector< vector<int> > & procMap )
     // we can use "done" for both while loops.
 
     string line = UintahXML::getLine( fp );
-    //proc0cout << "2) parsing: " << line << "\n";
 
     if( line == "</Grid>" ) {
       doneWithGrid = true;
@@ -476,9 +390,9 @@ Grid::parseGridFromFile( FILE * fp, vector< vector<int> > & procMap )
       foundLevelTag = true;
 
       procMap.push_back( vector<int>() );
-      vector<int> & procMapForLevel = procMap[ numLevelsRead ];
+      vector<int> & procMapForLevel = procMap[ num_levelsRead ];
  
-      numLevelsRead++;
+      num_levelsRead++;
 
       parseLevelFromFile( fp, procMapForLevel );
     }
@@ -488,7 +402,7 @@ Grid::parseGridFromFile( FILE * fp, vector< vector<int> > & procMap )
     else {
       vector< string > pieces = UintahXML::splitXMLtag( line );
       if( pieces[0] == "<numLevels>" ) {
-        numLevels = atoi( pieces[1].c_str() );
+        num_levels = atoi( pieces[1].c_str() );
       }
       else {
         ostringstream msg;
@@ -497,18 +411,99 @@ Grid::parseGridFromFile( FILE * fp, vector< vector<int> > & procMap )
       }
     }
   }
+
   if( !foundLevelTag ) {
     throw InternalError( "Grid.cc::parseGridFromFile(): Did not find '<Level>' tag in file.", __FILE__, __LINE__ );
   }
 
-  // Verify that the <numLevels> tag matches the actual number of levels that we have parsed.
-  // If not, then there is an error in the xml file (most likely it was corrupted or written out incorrectly.
-  ASSERTEQ( numLevels, numLevelsRead );
+  // Verify that the <numLevels> tag matches the actual number of
+  // levels parsed.  If not, then there is an error in the xml file
+  // Most likely it was corrupted or written out incorrectly.
+  ASSERTEQ( num_levels, num_levelsRead );
 
   return doneWithGrid;
 
 } // end parseGridFromFile()
 
+
+//______________________________________________________________________
+// Read in the grid information (from grid.xml) in binary.
+void
+Grid::readLevelsFromFileBinary( FILE * fp, vector< vector<int> > & procMap )
+{
+  int    num_levels, num_patches;
+  long   num_cells;
+  int    extra_cells[3], period[3];
+  double anchor[3], cell_spacing[3];
+  int    l_id;
+  
+  fread( & num_levels,    sizeof(int),    1, fp );
+
+  for( int lev = 0; lev < num_levels; lev++ ) {
+    fread( & num_patches,  sizeof(int),    1, fp );    // Number of Patches -  100
+    fread( & num_cells,    sizeof(long),   1, fp );    // Number of Cells   - 8000
+    fread(   extra_cells,  sizeof(int),    3, fp );    // Extra Cell Info   - [1,1,1]
+    fread(   anchor,       sizeof(double), 3, fp );    // Anchor Info       - [0,0,0]
+    fread(   period,       sizeof(int),    3, fp );    // 
+    fread( & l_id,         sizeof(int),    1, fp );    // ID of Level       -    0
+    fread(   cell_spacing, sizeof(double), 3, fp );    // Cell Spacing      - [0.1,0.1,0.1]
+
+    bool foundPeriodicBoundaries = false;
+    if( period[0] != 0 || period[1] != 0 || period[2] != 0 ) {
+      foundPeriodicBoundaries = true;
+    }
+
+    procMap.push_back( vector<int>() );
+    vector<int> & procMapForLevel = procMap[ lev ];
+
+    const Point  anchor_p( anchor[0], anchor[1], anchor[2] );
+    const Vector dcell( cell_spacing[0], cell_spacing[1], cell_spacing[2] );
+
+    LevelP level = this->addLevel( anchor_p, dcell, l_id );
+
+    const IntVector extraCells( extra_cells[0], extra_cells[1], extra_cells[2] );
+    level->setExtraCells( extraCells );
+
+    for( int patch = 0; patch < num_patches; patch++ ) {
+      int    p_id, rank, nnodes, total_cells;
+      int    low_index[3], high_index[3], i_low_index[3], i_high_index[3];
+      double lower[3], upper[3];
+     
+      fread( & p_id,         sizeof(int),    1, fp );
+      fread( & rank,         sizeof(int),    1, fp );
+      fread(   low_index,    sizeof(int),    3, fp );    // <lowIndex>[-1,-1,-1]</lowIndex>
+      fread(   high_index,   sizeof(int),    3, fp );    // <highIndex>[20,20,4]</highIndex>
+      fread(   i_low_index,  sizeof(int),    3, fp );    // <interiorLowIndex></interiorLowIndex>
+      fread(   i_high_index, sizeof(int),    3, fp );    // <interiorHighIndex>[20,20,3]</interiorHighIndex>
+      fread( & nnodes,       sizeof(int),    1, fp );    // <nnodes>2646</nnodes>
+      fread(   lower,        sizeof(double), 3, fp );    // <lower>[-0.025000000000000001,-0.025000000000000001,-0.049999999999999996]</lower>
+      fread(   upper,        sizeof(double), 3, fp );    // <upper>[0.5,0.5,0.19999999999999998]</upper>
+      fread( & total_cells,  sizeof(int),    1, fp );    // <totalCells>2205</totalCells>
+
+      const IntVector lowIndex(   low_index[0],  low_index[1],  low_index[2] );
+      const IntVector highIndex( high_index[0], high_index[1], high_index[2] );
+      const IntVector interiorLowIndex(   i_low_index[0],  i_low_index[1],  i_low_index[2] );
+      const IntVector interiorHighIndex( i_high_index[0], i_high_index[1], i_high_index[2] );
+
+      level->addPatch( lowIndex, highIndex, interiorLowIndex, interiorHighIndex, this, p_id );
+
+      procMapForLevel.push_back( rank );
+
+    } // end for patch loop
+    
+    if( foundPeriodicBoundaries ) {
+      level->finalizeLevel( period[0] != 0, period[1] != 0, period[2] != 0 );
+    }
+    else {
+      level->finalizeLevel();
+    }
+
+  } // end for level loop
+
+} // end readLevelsFromFileBinary()
+
+
+//______________________________________________________________________
 //
 // We are parsing the XML manually, line by line, because if we use the XML library function to read it into an XML tree
 // data structure, then for large number of patches, too much memory is used by that data structure.  It is unclear
@@ -524,7 +519,6 @@ Grid::readLevelsFromFile( FILE * fp, vector< vector<int> > & procMap )
   while( !done ) { // Start at the very top of the file (most likely 'timestep.xml').
 
     string line = UintahXML::getLine( fp );
-    //proc0cout << "1) parsing: " << line << "\n";
 
     if( line == "<Grid>" ) {
       foundGrid = parseGridFromFile( fp, procMap );
@@ -554,10 +548,10 @@ Grid::readLevelsFromFile( FILE * fp, vector< vector<int> > & procMap )
 } // end readLevelsFromFile()
 
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+//______________________________________________________________________
+//
 Level *
-Grid::addLevel( const Point & anchor, const Vector & dcell, int id )
+Grid::addLevel( const Point & anchor, const Vector & dcell, int id /* = -1 */ )
 {
   // Find the new level's refinement ratio.
   // This should only be called when a new grid is created, so if this level index 
@@ -576,9 +570,9 @@ Grid::addLevel( const Point & anchor, const Vector & dcell, int id )
       throw InvalidGrid(out.str().c_str(), __FILE__, __LINE__);
     }
   }
-  else
+  else {
     ratio = IntVector(1,1,1);
-
+  }
 
   Level* level = scinew Level(this, anchor, dcell, (int)d_levels.size(), ratio, id);  
 
@@ -586,8 +580,9 @@ Grid::addLevel( const Point & anchor, const Vector & dcell, int id )
   return level;
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+//______________________________________________________________________
+//
 void
 Grid::performConsistencyCheck() const
 {
@@ -670,6 +665,8 @@ Grid::performConsistencyCheck() const
 #endif
 }
 
+//______________________________________________________________________
+//
 void
 Grid::printStatistics() const
 {
@@ -682,14 +679,36 @@ Grid::printStatistics() const
   for( int i = 0; i < numLevels(); i++ ) {
     LevelP l = getLevel(i);
     cout << "Level " << i << ":\n";
-    if (l->getPeriodicBoundaries() != IntVector(0,0,0))
-      cout << "  Periodic boundaries:\t\t" << l->getPeriodicBoundaries()
-           << '\n';
+    if (l->getPeriodicBoundaries() != IntVector(0,0,0)){
+      cout << "  Periodic boundaries:\t\t" << l->getPeriodicBoundaries()<< '\n';
+    }
+    if( l->isNonCubic() ){
+      cout << "  isNonCubic:\t\t\t" << l->isNonCubic() << '\n';
+    }
     cout << "  Number of patches:\t\t" << l->numPatches() << '\n';
     totalPatches += l->numPatches();
     double ppc = double(l->totalCells())/double(l->numPatches());
     cout << "  Total number of cells:\t" << l->totalCells() << " (" << ppc << " avg. per patch)\n";
     totalCells += l->totalCells();
+
+    //__________________________________
+    //  debugging
+    if( g_dbg.active() ){
+      Level::const_patch_iterator iter;
+      printf("  patches: \n");
+      for(iter = l->patchesBegin(); iter != l->patchesEnd(); iter++) {
+        const Patch* patch = *iter;
+        ostringstream msg;
+        
+        msg << "   Patch: " << patch->getID();
+        msg << " Interior Cells " << patch->getCellLowIndex() << " " << patch->getCellHighIndex();
+        msg.width(15);
+        msg << " \tExtra Cells " << patch->getExtraCellLowIndex() << " " << patch->getExtraCellHighIndex(); 
+        printf( "%s\n", msg.str().c_str() );
+        //DOUT( true,  msg.str() );
+      }
+    }
+    
   }
   cout << "Total patches in grid:\t\t" << totalPatches << '\n';
   double ppc = double(totalCells)/double(totalPatches);
@@ -697,7 +716,7 @@ Grid::printStatistics() const
   cout << "\n";
 }
 
-//////////
+//______________________________________________________________________
 // Computes the physical boundaries for the grid
 void
 Grid::getSpatialRange( BBox & b ) const
@@ -708,7 +727,7 @@ Grid::getSpatialRange( BBox & b ) const
   }
 }
 
-////////// 
+//______________________________________________________________________
 // Returns the boundary of the grid exactly (without
 // extra cells).  The value returned is the same value
 // as found in the .ups file.
@@ -721,7 +740,7 @@ Grid::getInteriorSpatialRange( BBox & b ) const
   }
 }
 
-//__________________________________
+//______________________________________________________________________
 // Computes the length in each direction of the grid
 void
 Grid::getLength( Vector & length, const string & flag ) const
@@ -740,22 +759,24 @@ Grid::getLength( Vector & length, const string & flag ) const
   }
 }
 
+//______________________________________________________________________
+//
 void 
 Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do_amr)
 {
    ProblemSpecP grid_ps = params->findBlock("Grid");
-   if(!grid_ps)
+   if( !grid_ps ) {
       return;
-
+   }
+      
    // anchor/highpoint on the grid
    Point anchor(DBL_MAX, DBL_MAX, DBL_MAX);
 
-   // time refinement between a level and the previous one
+   // Time refinement between a level and the previous one
 
    int levelIndex = 0;
 
-   for(ProblemSpecP level_ps = grid_ps->findBlock("Level");
-       level_ps != 0; level_ps = level_ps->findNextBlock("Level")){
+   for( ProblemSpecP level_ps = grid_ps->findBlock("Level"); level_ps != nullptr; level_ps = level_ps->findNextBlock("Level") ) {
       // Make two passes through the boxes.  The first time, we
       // want to find the spacing and the lower left corner of the
       // problem domain.  Spacing can be specified with a dx,dy,dz
@@ -764,59 +785,70 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
       // the resulting grid spacing must be consistent.
 
       // anchor/highpoint on the level
-      Point levelAnchor(DBL_MAX, DBL_MAX, DBL_MAX);
+      Point levelAnchor(    DBL_MAX,  DBL_MAX,  DBL_MAX);
       Point levelHighPoint(-DBL_MAX, -DBL_MAX, -DBL_MAX);
 
       Vector spacing;
       bool have_levelspacing=false;
 
-      if(level_ps->get("spacing", spacing))
-        have_levelspacing=true;
+      if( level_ps->get( "spacing", spacing ) ) {
+        have_levelspacing = true;
+      }
       bool have_patchspacing=false;
         
 
+      //__________________________________
       // first pass - find upper/lower corner, find resolution/spacing and extraCells
       IntVector extraCells(0, 0, 0);
-      for(ProblemSpecP box_ps = level_ps->findBlock("Box");
-         box_ps != 0; box_ps = box_ps->findNextBlock("Box")){
+      for(ProblemSpecP box_ps = level_ps->findBlock("Box"); box_ps != nullptr; box_ps = box_ps->findNextBlock("Box")){
+         
+        string boxLabel = "";
+        box_ps->getAttribute("label",boxLabel);
+         
         Point lower;
         box_ps->require("lower", lower);
         Point upper;
         box_ps->require("upper", upper);
+        
         if (levelIndex == 0) {
           anchor=Min(lower, anchor);
         }
-        levelAnchor=Min(lower, levelAnchor);
-        levelHighPoint=Max(upper, levelHighPoint);
+        
+        levelAnchor   =Min( lower, levelAnchor );
+        levelHighPoint=Max( upper, levelHighPoint );
         
         IntVector resolution;
-        if(box_ps->get("resolution", resolution)){
-           if(have_levelspacing){
-              throw ProblemSetupException("Cannot specify level spacing and patch resolution", 
-                                          __FILE__, __LINE__);
-           } else {
-              // all boxes on same level must have same spacing
-              Vector newspacing = (upper-lower)/resolution;
-              if(have_patchspacing){
-                Vector diff = spacing-newspacing;
-                if(diff.length() > 1.e-14)
-                   throw ProblemSetupException("Using patch resolution, and the patch spacings are inconsistent",
-                                               __FILE__, __LINE__);
-              } else {
-                spacing = newspacing;
+        if( box_ps->get("resolution", resolution) ){
+          if( have_levelspacing ){
+            throw ProblemSetupException("Cannot specify level spacing and patch resolution" + boxLabel, 
+                                        __FILE__, __LINE__);
+          } else {
+            // all boxes on same level must have same spacing
+            Vector newspacing = (upper-lower)/resolution;
+            if( have_patchspacing ){
+              Vector diff = spacing-newspacing;
+              if( diff.length() > 1.e-14 ) {
+                ostringstream msg;
+                msg<< "\nAll boxes on same level must have same cell spacing. Box (" << boxLabel 
+                   << ") is inconsistent with the previous box by: (" << diff << ").  Box spacing is ("
+                   << newspacing << ")\n";
+                throw ProblemSetupException( msg.str(), __FILE__, __LINE__ );
               }
-              have_patchspacing=true;
-           }
-        }
+            } else {
+              spacing = newspacing;
+            }
+            have_patchspacing=true;
+          }
+        }  // resolution
         
         IntVector ec;
-        box_ps->getWithDefault("extraCells", ec, d_extraCells);
+        box_ps->getWithDefault( "extraCells", ec, d_extraCells );
         extraCells = Max(ec, extraCells);
         
         // bulletproofing
-        if(have_levelspacing || have_patchspacing){
+        if( have_levelspacing || have_patchspacing ){
           for(int dir = 0; dir<3; dir++){
-            if ((upper(dir)-lower(dir)) <= 0.0) {
+            if ( (upper(dir)-lower(dir)) <= 0.0 ) {
               ostringstream msg;
               msg<< "\nComputational Domain Input Error: Level("<< levelIndex << ")"
                  << " \n The computational domain " << lower<<", " << upper
@@ -824,7 +856,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
               throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
             }
           
-            if (spacing[dir] > (upper(dir)-lower(dir)) || spacing[dir] < 0){
+            if ( spacing[dir] > (upper(dir)-lower(dir)) || spacing[dir] < 0 ){
               ostringstream msg;
               msg<< "\nComputational Domain Input Error: Level("<< levelIndex << ")"
                  << " \n The spacing " << spacing 
@@ -835,208 +867,15 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
         }
       }  // boxes loop
 
-      if (extraCells!=d_extraCells && d_extraCells!=IntVector(0,0,0)) {
+      if ( extraCells != d_extraCells && d_extraCells != IntVector(0,0,0) ) {
         proc0cout << "Warning:: Input file overrides extraCells specification, current extraCell: " << extraCells << "\n";
       }
 
-      // Look for stretched grid info
-      vector<StretchSpec> stretch[3];
-      for(ProblemSpecP stretch_ps = level_ps->findBlock("Stretch");
-          stretch_ps != 0; stretch_ps = stretch_ps->findNextBlock("Stretch")){
-        string axisName;
-        if(!stretch_ps->getAttribute("axis", axisName))
-          throw ProblemSetupException("Error, no specified axis for Stretch section: should be x, y, or z", __FILE__, __LINE__);
-        int axis;
-        if(axisName == "x" || axisName == "X")
-          axis = 0;
-        else if(axisName == "y" || axisName == "Y")
-          axis = 1;
-        else if(axisName == "z" || axisName == "Z")
-          axis = 2;
-        else {
-          ostringstream msg;
-          msg << "Error, invalid axis in Stretch section: " << axisName << ", should be x, y, or z";
-          throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
-        }
-        if(stretch[axis].size() != 0){
-          ostringstream msg;
-          msg << "Error, stretch axis already specified: " << axisName;
-          throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
-        }
-        double begin = -DBL_MAX;
-        for(ProblemSpecP region_ps = stretch_ps->findBlock();
-            region_ps != 0; region_ps = region_ps->findNextBlock()){
-          StretchSpec spec;
-          spec.shape = region_ps->getNodeName();
-          if(spec.shape != "uniform" && region_ps->getNodeName() != "linear") {
-            ostringstream msg;
-            msg << "Error, invalid region shape in stretched grid: " << region_ps->getNodeName();
-            throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
-          }
-          if(region_ps->getAttribute("from", spec.from)){
-            if(spec.from < begin) {
-              ostringstream msg;
-              msg << "Error, stretched grid regions must be specified in ascending order";
-              throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
-            }
-          } else {
-            spec.from = DBL_MAX;
-          }
-          if(region_ps->getAttribute("to", spec.to)){
-            begin = spec.to;
-          } else {
-            spec.to = DBL_MAX;
-          }
-          if(spec.shape == "uniform"){
-            if(!region_ps->getAttribute("spacing", spec.fromSpacing))
-              spec.fromSpacing = DBL_MAX;
-            spec.toSpacing = spec.fromSpacing;
-          } else if(spec.shape == "linear"){
-            if(!region_ps->getAttribute("fromSpacing", spec.fromSpacing))
-              spec.fromSpacing = DBL_MAX;
-            if(!region_ps->getAttribute("toSpacing", spec.toSpacing))
-              spec.toSpacing = DBL_MAX;
-          }
-          stretch[axis].push_back(spec);
-          begin = spec.to;
-        }
-      }
-
-      // Check the stretched grid specification
-      int stretch_count = 0;
-      for(int axis=0;axis<3;axis++){
-        if(stretch[axis].size()){
-          stretch_count++;
-          spacing[axis] = getNan();
-        }
-        for(int i=0;i<(int)stretch[axis].size();i++){
-          StretchSpec& spec = stretch[axis][i];
-          if(spec.from == DBL_MAX){
-            if(i > 0 && stretch[axis][i-1].to != DBL_MAX){
-              spec.from = stretch[axis][i-1].to;
-            } else if(i == 0){
-              spec.from = levelAnchor(axis);
-            } else {
-              ostringstream msg;
-              msg << "Stretch region from point not specified for region " << i << '\n';
-              throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
-            }
-          }
-          if(spec.to == DBL_MAX){
-            if(i < (int)stretch[axis].size()-1 && stretch[axis][i+1].from != DBL_MAX){
-              spec.to = stretch[axis][i+1].from;
-            } else if(i == (int)stretch[axis].size()-1){
-              spec.to = levelHighPoint(axis);
-            } else {
-              ostringstream msg;
-              msg << "Stretch region to point not specified for region " << i << '\n';
-              throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
-            }
-          }
-          if(spec.fromSpacing <= 0 || spec.toSpacing <= 0){
-            ostringstream msg;
-            msg << "Grid spacing must be >= 0 (" << spec.fromSpacing << ", " << spec.toSpacing << ")";
-            throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
-          }
-
-          if(spec.shape == "linear"){
-            if(spec.fromSpacing == DBL_MAX){
-              if(i > 0 && stretch[axis][i-1].toSpacing != DBL_MAX){
-                spec.fromSpacing = stretch[axis][i-1].toSpacing;
-              } else {
-                ostringstream msg;
-                msg << "Stretch region from spacing not specified for region " << i << '\n';
-                throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
-              }
-            }
-            if(spec.toSpacing == DBL_MAX){
-              if(i < (int)stretch[axis].size()-1 && stretch[axis][i+1].fromSpacing != DBL_MAX){
-                spec.toSpacing = stretch[axis][i+1].toSpacing;
-              } else {
-                ostringstream msg;
-                msg << "Stretch region to spacing not specified";
-                throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
-              }
-            }
-          } else if(spec.shape == "uniform"){
-            if(spec.fromSpacing == DBL_MAX){
-              if(i > 0 && stretch[axis][i-1].toSpacing != DBL_MAX){
-                spec.fromSpacing = spec.toSpacing = stretch[axis][i-1].toSpacing;
-              } else {
-                ostringstream msg;
-                msg << "Stretch region uniform spacing not specified for region " << i << '\n';
-                throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
-              }
-            }
-          }
-          if(i > 0 && stretch[axis][i-1].toSpacing != spec.fromSpacing){
-            if(pg->myrank() == 0){
-              cerr << "WARNING: specifying two uniform sections with a different spacing can cause erroneous grid (" << stretch[axis][i-1].toSpacing << ", " << spec.fromSpacing << "\n";
-            }
-          }
-          if(i > 0 && stretch[axis][i-1].to != spec.from){
-            ostringstream msg;
-            msg << "Gap in strech region from: " << stretch[axis][i-1].to << " to " << spec.from;
-            throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
-          }
-          if(spec.to < spec.from) {
-            ostringstream msg;
-            msg << "Error, stretched grid to must be larger then from";
-            throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
-          }
-          if(spec.shape == "linear"){
-            // If toSpacing == fromSpacing, then convert this into a uniform section, since
-            // the grid generation numerics have a singularity at that point
-            if(spec.fromSpacing == spec.toSpacing){
-              spec.shape = "uniform";
-            }
-          }
-          if(spec.shape == "uniform"){
-            // Check that dx goes nicely into the range
-            double ncells = (spec.to - spec.from)/spec.fromSpacing;
-            if(Fraction(ncells) > 1e-4 && Fraction(ncells) < 1-1e-4){
-              ostringstream msg;
-              msg << "Error, uniform region not an integer multiple of the cell spacing";
-              throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
-            }
-            int n = Round(ncells);
-            // Recompute newdx to avoid roundoff issues
-            double newdx = (spec.to - spec.from)/n;
-            spec.toSpacing = spec.fromSpacing = newdx;
-          }
-        }
-
-        if(stretch[axis].size() > 0){
-          if(stretch[axis][0].from > levelAnchor(axis) || stretch[axis][stretch[axis].size()-1].to < levelHighPoint(axis)){
-            ostringstream msg;
-            msg << "Error, stretched grid specification does not cover entire axis";
-            throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
-          }
-        }
-      }
-
-      if(pg->myrank() == 0 && stretch_count != 0){
-        cerr << "Stretched grid information:\n";
-        for(int axis=0;axis<3;axis++){
-          if(axis == 0)
-            cerr << "x";
-          else if(axis == 1)
-            cerr << "y";
-          else
-            cerr << "z";
-          cerr << " axis\n";
-          for(int i=0;i<(int)stretch[axis].size();i++){
-            StretchSpec& spec = stretch[axis][i];
-            cerr << spec.shape << ": from " << spec.from << "(" << spec.fromSpacing << ") to " << spec.to << "(" << spec.toSpacing << "), " << spec.countCells() << " cells\n";
-          }
-        }
-        cerr << "\n";
-      }
-
-      if(!have_levelspacing && !have_patchspacing && stretch_count != 3)
+      if( !have_levelspacing && !have_patchspacing ) {
         throw ProblemSetupException("Box resolution is not specified", __FILE__, __LINE__);
+      }
 
-      LevelP level = addLevel(anchor, spacing);
+      LevelP level = addLevel( anchor, spacing );
 
       // Determine the interior cell limits.  For no extraCells, the limits
       // will be the same.  For extraCells, the interior cells will have
@@ -1044,48 +883,17 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
       // use only the interior cells instead of including the extraCell
       // limits.
       level->setExtraCells(extraCells);
+
+      IntVector anchorCell(level->getCellIndex(    levelAnchor   + Vector(1.e-14,1.e-14,1.e-14)) );
+      IntVector highPointCell(level->getCellIndex(levelHighPoint + Vector(1.e-14,1.e-14,1.e-14)) );
         
-      if(stretch_count != 0){
-        for(int axis = 0; axis < 3; axis++){
-          OffsetArray1<double> faces;
-          if(stretch[axis].size() == 0){
-            // Uniform spacing...
-            int l = -extraCells[axis];
-            double start = levelAnchor(axis);
-            double end = levelHighPoint(axis);
-            double dx = spacing[axis];
-            int ncells = Round((start-end)/dx);
-            int h = ncells + extraCells(axis);
-            faces.resize(l, h+1);
-            for(int i=l;i<=h;i++)
-              faces[i] = start + faces[i] * dx;
-          } else {
-            int count = 0;
-            for(int i=0;i<(int)stretch[axis].size();i++){
-              StretchSpec& spec = stretch[axis][i];
-              count += spec.countCells();
-            }
-            count += 2*extraCells[axis];
-            int l = -extraCells[axis];
-            faces.resize(l, count);
-            int start = 0;
-            for(int i=0;i<(int)stretch[axis].size();i++){
-              StretchSpec& spec = stretch[axis][i];
-              int lowExtra = (i == 0)? extraCells[axis] : 0;
-              int highExtra = (i == (int)stretch[axis].size() -1)? extraCells[axis]+1 : 0;
-              spec.fillCells(start, lowExtra, highExtra, faces);
-            }
-          }
-          level->setStretched((Grid::Axis)axis, faces);
-        }
-      }
-
-      IntVector anchorCell(level->getCellIndex(levelAnchor + Vector(1.e-14,1.e-14,1.e-14)));
-      IntVector highPointCell(level->getCellIndex(levelHighPoint + Vector(1.e-14,1.e-14,1.e-14)));
-
+      //______________________________________________________________________
       // second pass - set up patches and cells
-      for(ProblemSpecP box_ps = level_ps->findBlock("Box");
-         box_ps != 0; box_ps = box_ps->findNextBlock("Box")){
+      for(ProblemSpecP box_ps = level_ps->findBlock("Box"); box_ps != nullptr; box_ps = box_ps->findNextBlock("Box")){
+         
+        string boxLabel="";
+        box_ps->getAttribute( "label", boxLabel );
+         
         Point lower, upper;
         box_ps->require("lower", lower);
         box_ps->require("upper", upper);
@@ -1117,8 +925,6 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
         double epsilon = 1.e-14;
 
         Vector ep_v  = Vector( epsilon, epsilon, epsilon );
-        
-        // NEW Version
         IntVector lowCell  = level->getCellIndex( lower + Vector( fabs(lower.x())*epsilon,
                                                                   fabs(lower.y())*epsilon,
                                                                   fabs(lower.z())*epsilon ) + ep_v );
@@ -1126,8 +932,9 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
                                                                   fabs(upper.y())*epsilon,
                                                                   fabs(upper.z())*epsilon ) + ep_v );
 
-        Point lower2 = level->getNodePosition(lowCell);
-        Point upper2 = level->getNodePosition(highCell);
+        // bulletproofing
+        Point lower2 = level->getNodePosition( lowCell );
+        Point upper2 = level->getNodePosition( highCell );
         double diff_lower = (lower2-lower).length();
         double diff_upper = (upper2-upper).length();
 
@@ -1135,33 +942,38 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
         double max_component_upper = Abs(Vector(upper)).maxComponent();
 
         if( diff_lower > max_component_lower * epsilon ) {
+          cerr << " boxLabel: " << boxLabel << '\n';
           cerr << setprecision(16) << "epsilon: " << epsilon << "\n";
 
           cerr << "diff_lower: " << diff_lower << "\n";
           cerr << "max_component_lower: " << max_component_lower << "\n";
 
-          cerr << setprecision(16) << "lower=" << lower << '\n';
-          cerr << setprecision(16) << "lowCell =" << lowCell << '\n';
-          cerr << setprecision(16) << "highCell =" << highCell << '\n';
-          cerr << setprecision(16) << "lower2=" << lower2 << '\n';
-          cerr << setprecision(16) << "diff=" << diff_lower << '\n';
+          cerr << setprecision(16) << "lower    = " << lower << '\n';
+          cerr << setprecision(16) << "lowCell  = " << lowCell << '\n';
+          cerr << setprecision(16) << "highCell = " << highCell << '\n';
+          cerr << setprecision(16) << "lower2   = " << lower2 << '\n';
+          cerr << setprecision(16) << "diff     = " << diff_lower << '\n';
         
           throw ProblemSetupException("Box lower corner does not coincide with grid", __FILE__, __LINE__);
         }
 
         if( diff_upper > max_component_upper * epsilon ){
-          cerr << "upper=" << upper << '\n'
-               << "lowCell =" << lowCell << '\n'
-               << "highCell =" << highCell << '\n'
-               << "upper2=" << upper2 << '\n'
-               << "diff=" << diff_upper << '\n';
+          
+          cerr << " boxLabel: " << boxLabel << '\n'
+               << "upper    = " << upper << '\n'
+               << "lowCell  = " << lowCell << '\n'
+               << "highCell = " << highCell << '\n'
+               << "upper2   = " << upper2 << '\n'
+               << "diff     = " << diff_upper << '\n';
           throw ProblemSetupException("Box upper corner does not coincide with grid", __FILE__, __LINE__);
         }
 
-        IntVector resolution(highCell-lowCell);
+        IntVector resolution( highCell - lowCell );
         if(resolution.x() < 1 || resolution.y() < 1 || resolution.z() < 1) {
-          cerr << "highCell: " << highCell << " lowCell: " << lowCell << '\n';
-          throw ProblemSetupException("Degenerate patch", __FILE__, __LINE__);
+          ostringstream warn;
+          warn << "Resolution is negative: " << resolution
+               << " high Cell: " << highCell << " lowCell: " << lowCell << '\n';
+          throw ProblemSetupException(warn.str() , __FILE__, __LINE__);
         }
         
         // Check if autoPatch is enabled, if it is ignore the values in the
@@ -1187,7 +999,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
           box_ps->getAttributes(patchAttributes);
           proc0cout << "Automatically performing patch layout.\n";
           
-          int numProcs = pg->size();
+          int numProcs = pg->nRanks();
           int targetPatches = (int)(numProcs * autoPatchValue);
           
           Primes::FactorType factors;
@@ -1236,6 +1048,16 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
           nf_ = 0;
         }
 
+        // bulletproofing: catch patches > resolution 
+        for (int d=0; d<3; d++) {
+          if ( patches[d] > resolution[d] ){
+            ostringstream desc;
+            desc << "   ERROR: The number of patches in direction (" << d << ") is greater than the number of cells."
+                 << " (patches: " << patches << ", cells: " << resolution << ")";
+            throw InvalidGrid(desc.str(),__FILE__,__LINE__);
+          }
+        }
+
         // If the value of the norm nf_ is too high, then user chose a 
         // bad number of processors, warn them.
         if( nf_ > 3 ) {
@@ -1254,11 +1076,15 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
 
         IntVector refineRatio = level->getRefinementRatio();
         level->setPatchDistributionHint(patches);
+        
+        IntVector boxLo_cell( SHRT_MAX, SHRT_MAX, SHRT_MAX );
+        IntVector boxHi_cell(-SHRT_MAX,-SHRT_MAX,-SHRT_MAX );
+        
         for(int i=0;i<patches.x();i++){
           for(int j=0;j<patches.y();j++){
             for(int k=0;k<patches.z();k++){
-              IntVector startcell = resolution*IntVector(i,j,k)/patches+lowCell;
-              IntVector endcell = resolution*IntVector(i+1,j+1,k+1)/patches+lowCell;
+              IntVector startcell = resolution * IntVector(i,j,k)/patches + lowCell;
+              IntVector endcell   = resolution * IntVector(i+1,j+1,k+1)/patches + lowCell;
               IntVector inStartCell(startcell);
               IntVector inEndCell(endcell);
               
@@ -1276,41 +1102,49 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
               if (inStartCell.x() % refineRatio.x() || inEndCell.x() % refineRatio.x() || 
                   inStartCell.y() % refineRatio.y() || inEndCell.y() % refineRatio.y() || 
                   inStartCell.z() % refineRatio.z() || inEndCell.z() % refineRatio.z()) {
+                Vector startRatio = inStartCell.asVector()/refineRatio.asVector();
+                Vector endRatio   = inEndCell.asVector()/refineRatio.asVector();
                 ostringstream desc;
-                desc << "The finer patch boundaries (" << inStartCell << "->" << inEndCell 
-                     << ") do not coincide with a coarse cell"
-                     << "\n(i.e., they are not divisible by te refinement ratio " << refineRatio << ')';
+                desc << "Level Box: (" << boxLabel << "), the finer patch boundaries (" << inStartCell << "->" << inEndCell 
+                     << ") does not coincide with a coarse cell"
+                     << "\n(i.e., they are not divisible by the refinement ratio " << refineRatio << ')'
+                     << "\n startCell/refineRatio (" << startRatio << "), endCell/refineRatio ("<<endRatio << ")\n";
                 throw InvalidGrid(desc.str(),__FILE__,__LINE__);
               }
               level->addPatch(startcell, endcell, inStartCell, inEndCell,this);
+              
+              boxLo_cell = Uintah::Min( boxLo_cell, inStartCell );
+              boxHi_cell = Uintah::Max( boxHi_cell, inEndCell );
             }
           }
         } // end for(int i=0;i<patches.x();i++){
       } // end for(ProblemSpecP box_ps = level_ps->findBlock("Box");
 
-      if (pg->size() > 1 && (level->numPatches() < pg->size()) && !do_amr) {
+      if (pg->nRanks() > 1 && (level->numPatches() < pg->nRanks()) && !do_amr) {
         throw ProblemSetupException("Number of patches must >= the number of processes in an mpi run",
                                     __FILE__, __LINE__);
       }
       
       IntVector periodicBoundaries;
-      if(level_ps->get("periodic", periodicBoundaries)){
-       level->finalizeLevel(periodicBoundaries.x() != 0,
-                          periodicBoundaries.y() != 0,
-                          periodicBoundaries.z() != 0);
+      if( level_ps->get( "periodic", periodicBoundaries ) ) {
+        level->finalizeLevel( periodicBoundaries.x() != 0,
+                              periodicBoundaries.y() != 0,
+                              periodicBoundaries.z() != 0 );
       }
       else {
-       level->finalizeLevel();
+        level->finalizeLevel();
       }
       //level->assignBCS(grid_ps,0);
       levelIndex++;
    }
-   if(numLevels() >1 && !do_amr) {  // bullet proofing
-     throw ProblemSetupException("Grid.cc:problemSetup: Multiple levels encountered in non-AMR grid",
-                                __FILE__, __LINE__);
+
+  if(numLevels() > 1 && !do_amr) {  // bullet proofing
+     throw ProblemSetupException("Grid.cc:problemSetup: Multiple levels encountered in non-AMR grid", __FILE__, __LINE__);
    }
 } // end problemSetup()
 
+//______________________________________________________________________
+//
 namespace Uintah
 {
   ostream& operator<<(ostream& out, const Grid& grid)
@@ -1323,7 +1157,7 @@ namespace Uintah
       out << "  Level " << level->getID() 
           << ", indx: "<< level->getIndex()
           << " has " << level->numPatches() << " patch(es)" << endl;
-      for ( Level::patchIterator patchIter = level->patchesBegin(); patchIter < level->patchesEnd(); patchIter++ ) {
+      for ( Level::patch_iterator patchIter = level->patchesBegin(); patchIter < level->patchesEnd(); patchIter++ ) {
         const Patch* patch = *patchIter;
         out <<"    "<< *patch << endl;
       }
@@ -1332,6 +1166,7 @@ namespace Uintah
   }
 }
 
+//______________________________________________________________________
 // This is O(p).
 bool
 Grid::operator==( const Grid & othergrid ) const
@@ -1347,8 +1182,8 @@ Grid::operator==( const Grid & othergrid ) const
       
     // do the patches have the same number of cells and
     // cover the same physical domain?  
-    Level::const_patchIterator iter = level->patchesBegin();
-    Level::const_patchIterator otheriter = otherlevel->patchesBegin();
+    Level::const_patch_iterator iter = level->patchesBegin();
+    Level::const_patch_iterator otheriter = otherlevel->patchesBegin();
     for (; iter != level->patchesEnd(); iter++, otheriter++) {
       const Patch* patch = *iter;
       const Patch* otherpatch = *otheriter;
@@ -1373,7 +1208,8 @@ Grid::operator==( const Grid & othergrid ) const
   return true;
 
 }
-
+//______________________________________________________________________
+//
 //This seems to have performance issues when there are lots of patches. This could be 
 //partially avoided by parallelizing it.  
 bool Grid::isSimilar(const Grid& othergrid) const
@@ -1390,7 +1226,7 @@ bool Grid::isSimilar(const Grid& othergrid) const
     int a1=0,a2=0;
 
     //fill deques
-    Level::const_patchIterator iter;
+    Level::const_patch_iterator iter;
     for(iter=l1->patchesBegin(); iter!=l1->patchesEnd();iter++)
     {
       const Patch* patch=*iter;
@@ -1419,13 +1255,15 @@ bool Grid::isSimilar(const Grid& othergrid) const
   }
   return true;
 }
-
+//______________________________________________________________________
+//
 IntVector Grid::run_partition3D(list<int> primes)
 {
   partition3D(primes, 1, 1, 1);
   return IntVector(af_, bf_, cf_);
 }
-
+//______________________________________________________________________
+//
 void Grid::partition3D(list<int> primes, int a, int b, int c)
 {
   // base case: no primes left, compute the norm and store values
@@ -1458,13 +1296,15 @@ void Grid::partition3D(list<int> primes, int a, int b, int c)
 
   return;
 }
-
+//______________________________________________________________________
+//
 IntVector Grid::run_partition2D(std::list<int> primes)
 {
   partition2D(primes, 1, 1);
   return IntVector(af_, bf_, cf_);
 }
-
+//______________________________________________________________________
+//
 void Grid::partition2D(std::list<int> primes, int a, int b)
 {
   // base case: no primes left, compute the norm and store values
@@ -1489,7 +1329,8 @@ void Grid::partition2D(std::list<int> primes, int a, int b)
 
   return;
 }
-
+//______________________________________________________________________
+//
 const Patch *
 Grid::getPatchByID( int patchid, int startingLevel ) const
 {
@@ -1504,7 +1345,8 @@ Grid::getPatchByID( int patchid, int startingLevel ) const
   }
   return patch;
 }
-
+//______________________________________________________________________
+//
 void
 Grid::assignBCS( const ProblemSpecP & grid_ps, LoadBalancer * lb )
 {
@@ -1514,13 +1356,13 @@ Grid::assignBCS( const ProblemSpecP & grid_ps, LoadBalancer * lb )
     level->assignBCS( grid_ps, lb );
   }
 }
-
+//______________________________________________________________________
+//
 void
 Grid::setExtraCells( const IntVector & ex )
 {
   if( numLevels() > 0 ) {
-     throw ProblemSetupException("Cannot set extraCells after grid setup",
-                                __FILE__, __LINE__);
+     throw ProblemSetupException( "Cannot set extraCells after grid setup", __FILE__, __LINE__ );
      return;
   }
   d_extraCells = ex;

@@ -154,8 +154,7 @@ namespace Uintah{
 
       // add input file interface here 
       int num_intrusions = 0; 
-      for (ProblemSpecP intrusion_db = db->findBlock("intrusion"); 
-          intrusion_db != 0; intrusion_db = intrusion_db->findNextBlock("intrusion")){
+      for (ProblemSpecP intrusion_db = db->findBlock("intrusion"); intrusion_db != nullptr; intrusion_db = intrusion_db->findNextBlock("intrusion")){
 
         ProblemSpecP geomObj = intrusion_db->findBlock("geom_object");
         GeometryPieceFactory::create(geomObj, _geomPieces); 

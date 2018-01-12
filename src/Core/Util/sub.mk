@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2016 The University of Utah
+#  Copyright (c) 1997-2018 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -36,14 +36,14 @@ SRCS += \
         $(SRCDIR)/FileUtils.cc          \
         $(SRCDIR)/ProgressiveWarning.cc \
         $(SRCDIR)/RWS.cc                \
-        $(SRCDIR)/sci_system.cc         \
         $(SRCDIR)/SizeTypeConvert.cc    \
         $(SRCDIR)/soloader.cc           \
         $(SRCDIR)/StringUtil.cc         \
-        $(SRCDIR)/Time.cc               \
         $(SRCDIR)/XMLUtils.cc           \
         $(SRCDIR)/Util.cc
 
+
+SRCS += $(REFCOUNT_IMPL)
 
 ifeq ($(HAVE_CUDA),yes)
   SRCS += $(SRCDIR)/GPU.cu
@@ -52,6 +52,6 @@ endif
 
 PSELIBS := Core/Containers Core/Exceptions Core/Malloc
 
-LIBS := $(DL_LIBRARY) $(THREAD_LIBRARY) $(SOCKET_LIBRARY) $(CUDA_LIBRARY)
+LIBS := $(DL_LIBRARY) $(Z_LIBRARY) $(CUDA_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,7 +25,6 @@
 //----- PicardNonlinearSolver.cc ----------------------------------------------
 
 #include <CCA/Components/Arches/PicardNonlinearSolver.h>
-#include <Core/Containers/StaticArray.h>
 #include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
@@ -217,7 +216,7 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
   Ghost::GhostType  gac = Ghost::AroundCells;
   Task::MaterialDomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
   
-  tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
+  tsk->requires(Task::OldDW, d_lab->d_delTLabel);
   if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) {
     tsk->requires(Task::OldDW, d_lab->d_scalarFluxCompLabel,
                   d_lab->d_vectorMatl, oams, gn,  0);
@@ -564,7 +563,7 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
   double reactscalar_clipped = 0.0;
   double norm;
   double init_norm = 0.0;
-  int num_procs = d_myworld->size();
+  int num_procs = d_myworld->nRanks();
   
   if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) {
     subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_scalarFluxCompLabel, patches, matls); 
@@ -621,7 +620,7 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
     subsched->execute();    
     
     delt_vartype delT;
-    old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+    old_dw->get(delT, d_lab->d_delTLabel );
     
     double delta_t = delT;
     delta_t *= d_timeIntegratorLabels[curr_level]->time_multiplier;
@@ -634,7 +633,7 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
       init_norm = norm;
     }
     
-    if(pg->myrank() == 0){
+    if(pg->myRank() == 0){
      cout << "PicardSolver init norm: " << init_norm << " current norm: " << norm << endl;
     }
     max_vartype sc;
@@ -650,12 +649,12 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
           (reactscalar_clipped == 0.0));
 
   if ((nlIterations == d_nonlinear_its)&&(norm > d_resTol)){
-    if(pg->myrank() == 0)
+    if(pg->myRank() == 0)
       cout << "Maximum allowed number of iterations reached" << endl;
   }    
      
   if (norm/(init_norm+1.0e-10) > 1) {
-    if(pg->myrank() == 0){
+    if(pg->myRank() == 0){
        cout << "WARNING! Iterations diverge! Restarting timestep." << endl;
       new_dw->abortTimestep();
       new_dw->restartTimestep();
@@ -663,7 +662,7 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
   }
   
   if ((scalar_clipped > 0.0)||(reactscalar_clipped > 0.0)) {
-    if(pg->myrank() == 0){
+    if(pg->myRank() == 0){
        cout << "WARNING! Scalars got clipped! Restarting timestep." << endl;
       new_dw->abortTimestep();
       new_dw->restartTimestep();
@@ -1715,6 +1714,8 @@ PicardNonlinearSolver::sched_probeData(SchedulerP& sched,
     tsk->requires(Task::NewDW, d_MAlab->totHtFluxZLabel,  gn, 0);
   }
 
+  tsk->requires(Task::OldDW, d_lab->d_simulationTimeLabel);
+
   sched->addTask(tsk, patches, matls);
   
 }
@@ -1725,16 +1726,17 @@ void
 PicardNonlinearSolver::probeData(const ProcessorGroup* ,
                                  const PatchSubset* patches,
                                  const MaterialSubset*,
-                                 DataWarehouse*,
+                                 DataWarehouse* old_dw,
                                  DataWarehouse* new_dw)
 {
+//  double simTime = d_lab->d_sharedState->getElapsedSimTime();
+  simTime_vartype simTime;
+  old_dw->get( simTime, d_lab->d_simulationTimeLabel );
 
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-    double time = d_lab->d_sharedState->getElapsedTime();
-
     constSFCXVariable<double> newUVel;
     constSFCYVariable<double> newVVel;
     constSFCZVariable<double> newWVel;
@@ -1822,14 +1824,14 @@ PicardNonlinearSolver::probeData(const ProcessorGroup* ,
         if (d_MAlab) {
           cerr.precision(16);
           cerr << "gas vol fraction: " << gasfraction[*iter] << endl;
-          cerr << " Solid Temperature at Location " << *iter << " At time " << time << ","<< tempSolid[*iter] << endl;
-          cerr << " Total Heat Rate at Location " << *iter << " At time " << time << ","<< totalHT[*iter] << endl;
-          cerr << " Total X-Dir Heat Rate at Location " << *iter << " At time " << time << ","<< totalHT_FCX[*iter] << endl;
-          cerr << " Total Y-Dir Heat Rate at Location " << *iter << " At time " << time << ","<< totalHT_FCY[*iter] << endl;
-          cerr << " Total Z-Dir Heat Rate at Location " << *iter << " At time " << time << ","<< totalHT_FCZ[*iter] << endl;
-          cerr << " Total X-Dir Heat Flux at Location " << *iter << " At time " << time << ","<< totHtFluxX[*iter] << endl;
-          cerr << " Total Y-Dir Heat Flux at Location " << *iter << " At time " << time << ","<< totHtFluxY[*iter] << endl;
-          cerr << " Total Z-Dir Heat Flux at Location " << *iter << " At time " << time << ","<< totHtFluxZ[*iter] << endl;
+          cerr << " Solid Temperature at Location " << *iter << " At time " << simTime << ","<< tempSolid[*iter] << endl;
+          cerr << " Total Heat Rate at Location " << *iter << " At time " << simTime << ","<< totalHT[*iter] << endl;
+          cerr << " Total X-Dir Heat Rate at Location " << *iter << " At time " << simTime << ","<< totalHT_FCX[*iter] << endl;
+          cerr << " Total Y-Dir Heat Rate at Location " << *iter << " At time " << simTime << ","<< totalHT_FCY[*iter] << endl;
+          cerr << " Total Z-Dir Heat Rate at Location " << *iter << " At time " << simTime << ","<< totalHT_FCZ[*iter] << endl;
+          cerr << " Total X-Dir Heat Flux at Location " << *iter << " At time " << simTime << ","<< totHtFluxX[*iter] << endl;
+          cerr << " Total Y-Dir Heat Flux at Location " << *iter << " At time " << simTime << ","<< totHtFluxY[*iter] << endl;
+          cerr << " Total Z-Dir Heat Flux at Location " << *iter << " At time " << simTime << ","<< totHtFluxZ[*iter] << endl;
         }
 
       }
@@ -2112,7 +2114,7 @@ PicardNonlinearSolver::printTotalKE(const ProcessorGroup* ,
     new_dw->get(rhon, d_lab->d_rhoNormLabel);
   }
   double total_kin_energy = tke;
-  int me = d_myworld->myrank();
+  int me = d_myworld->myRank();
   if (me == 0){
      cerr << "Total kinetic energy " <<  total_kin_energy << endl;
   }
@@ -2212,6 +2214,8 @@ PicardNonlinearSolver::sched_getDensityGuess(SchedulerP& sched,
                           &PicardNonlinearSolver::getDensityGuess,
                           timelabels);
 
+  // tsk->requires( Task::OldDW, d_lab->d_timeStepLabel );
+
   Task::WhichDW parent_old_dw;
   if (timelabels->recursion){ 
     parent_old_dw = Task::ParentOldDW;
@@ -2219,7 +2223,6 @@ PicardNonlinearSolver::sched_getDensityGuess(SchedulerP& sched,
     parent_old_dw = Task::OldDW;
   }
   
-
   Task::WhichDW old_values_dw;
   if (timelabels->use_old_values){
     old_values_dw = parent_old_dw;
@@ -2231,7 +2234,7 @@ PicardNonlinearSolver::sched_getDensityGuess(SchedulerP& sched,
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gaf = Ghost::AroundFaces;
     
-  tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
+  tsk->requires(parent_old_dw, d_lab->d_delTLabel);
   tsk->requires(old_values_dw, d_lab->d_densityCPLabel,     gn, 0);
   tsk->requires(Task::NewDW,   d_lab->d_densityCPLabel,     gac, 1);
   tsk->requires(Task::NewDW,   d_lab->d_uVelocitySPBCLabel, gaf, 1);
@@ -2260,14 +2263,19 @@ PicardNonlinearSolver::getDensityGuess(const ProcessorGroup*,
                                        DataWarehouse* new_dw,
                                        const TimeIntegratorLabel* timelabels)
 {
+  // int timeStep = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
+  // timeStep_vartype timeStep;
+  // old_dw->get( timeStep, d_lab->d_timeStepLabel );
+
   DataWarehouse* parent_old_dw;
   if (timelabels->recursion){ 
     parent_old_dw = new_dw->getOtherDataWarehouse(Task::ParentOldDW);
   }else{
     parent_old_dw = old_dw;
   }
+
   delt_vartype delT;
-  parent_old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  parent_old_dw->get(delT, d_lab->d_delTLabel );
   double delta_t = delT;
   delta_t *= timelabels->time_multiplier;
 
@@ -2317,8 +2325,7 @@ PicardNonlinearSolver::getDensityGuess(const ProcessorGroup*,
 
     
 // Need to skip first timestep since we start with unprojected velocities
-//    int currentTimeStep=d_lab->d_sharedState->getCurrentTopLevelTimeStep();
-//    if (currentTimeStep > 1) {
+//    if (timeStep > 1) {
       IntVector idxLo = patch->getFortranCellLowIndex();
       IntVector idxHi = patch->getFortranCellHighIndex();
       for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
@@ -2526,7 +2533,7 @@ PicardNonlinearSolver::checkDensityGuess(const ProcessorGroup* pc,
     }
     new_dw->getModifiable(densityGuess, d_lab->d_densityGuessLabel,indx, patch);
     if (negativeDensityGuess > 0.0) {
-      if (pc->myrank() == 0)
+      if (pc->myRank() == 0)
         cout << "WARNING: got negative density guess. Reverting to old density" << endl;
       old_values_dw->copyOut(densityGuess, d_lab->d_densityCPLabel,indx, patch);
     }   

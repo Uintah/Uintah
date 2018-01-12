@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,73 +22,84 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_HOMEBREW_PackBufferInfo_H
-#define UINTAH_HOMEBREW_PackBufferInfo_H
+#ifndef CORE_PARALLEL_PACKBUFFERINFO_H
+#define CORE_PARALLEL_PACKBUFFERINFO_H
 
-#include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 #include <Core/Parallel/BufferInfo.h>
-#include <Core/Util/RefCounted.h>
-#include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Parallel/UintahMPI.h>
+#include <Core/Util/RefCounted.h>
 
 namespace Uintah {
+
 
 class PackedBuffer : public RefCounted {
 
 public:
-  PackedBuffer(int bytes) :
-    buf((void*)(scinew char[bytes])), bufsize(bytes) {}
   
+  PackedBuffer(int bytes) : m_buffer((void*)(scinew char[bytes])), m_buffer_size(bytes) {}
+
   ~PackedBuffer() {
-    delete[] (char*)buf;
-    buf = 0;
+    delete[] (char*)m_buffer;
+    m_buffer = nullptr;
   }
 
-  void* getBuffer() { return buf; }
+  void * getBuffer() { return m_buffer; }
 
-  int getBufSize()  { return bufsize; }
+  int getBufSize()  { return m_buffer_size; }
 
 private:
-  void*  buf;
-  int    bufsize;
+  void * m_buffer{nullptr};
+  int    m_buffer_size{0};
 };
+
 
 class PackBufferInfo : public BufferInfo {
 
   public:
+
     PackBufferInfo();
 
     ~PackBufferInfo();
 
-    void get_type( void*&,
-                   int&,
-                   MPI_Datatype&,
-                   MPI_Comm comm );
+    void get_type( void         *& out_buf
+                 , int&            out_count
+                 , MPI_Datatype  & out_datatype
+                 , MPI_Comm        comm
+                 );
 
-    void get_type( void*&,
-                   int&,
-                   MPI_Datatype& );
+    void get_type( void         *&
+                 , int           &
+                 , MPI_Datatype  &
+                 );
 
-    void pack( MPI_Comm   comm,
-               int&       out_count );
+    void pack( MPI_Comm comm, int & out_count );
 
-    void unpack( MPI_Comm     comm,
-                 MPI_Status&  status );
+    void unpack( MPI_Comm comm, MPI_Status & status );
 
     // PackBufferInfo is to be an AfterCommuncationHandler object for the
     // MPI_CommunicationRecord template in MPIScheduler.cc.  After receive
     // requests have finished, then it needs to unpack what got received.
+    void finishedCommunication( const ProcessorGroup* pg, MPI_Status& status )
+    {
+      unpack( pg->getComm(), status );
+    }
 
-    void finishedCommunication( const ProcessorGroup* pg, MPI_Status& status ) { unpack( pg->getComm(), status ); }
 
   private:
 
     // disable copy and assignment
-    PackBufferInfo(const PackBufferInfo&);
-    PackBufferInfo& operator=(const PackBufferInfo&);
+    PackedBuffer * m_packed_buffer{nullptr};
 
-    PackedBuffer* packedBuffer;
-};
+    // eliminate copy, assignment and move
+    PackBufferInfo( const PackBufferInfo & )            = delete;
+    PackBufferInfo& operator=( const PackBufferInfo & ) = delete;
+    PackBufferInfo( PackBufferInfo && )                 = delete;
+    PackBufferInfo& operator=( PackBufferInfo && )      = delete;
+
+}; // PackBufferInfo
+
 } // end namespace Uintah
 
-#endif
+#endif // CORE_PARALLEL_PACKBUFFERINFO_H

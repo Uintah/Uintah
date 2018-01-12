@@ -44,6 +44,7 @@
     <checkpoint cycle="2" interval="0.00001"/>
     <compression>gzip</compression>
     <save label="phi-scalar"/>
+    <save label="phi-scalar_rhs"/>
   </DataArchiver> 
 
   <Grid>

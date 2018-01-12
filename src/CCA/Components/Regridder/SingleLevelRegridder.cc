@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,14 +22,19 @@
  * IN THE SOFTWARE.
  */  
 
+
 #include <CCA/Components/Regridder/SingleLevelRegridder.h>
+#include <CCA/Ports/ApplicationInterface.h>
 #include <CCA/Ports/LoadBalancer.h>
+
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Parallel/ProcessorGroup.h>
-
 #include <Core/Util/DebugStream.h>
+
+#include <sci_defs/visit_defs.h>
+
 using namespace Uintah;
 using namespace std;
 
@@ -52,7 +57,7 @@ void SingleLevelRegridder::problemSetup(const ProblemSpecP& params,
 {
 
   RegridderCommon::problemSetup(params, oldGrid, state);
-  d_sharedState  = state;
+
   d_maxLevels = oldGrid->numLevels();
   
   // Compute the refinement ratio (RR).  The regridder's
@@ -111,6 +116,18 @@ void SingleLevelRegridder::problemSetup(const ProblemSpecP& params,
       problemSetup_BulletProofing(k);
     }
   }
+
+#ifdef HAVE_VISIT
+  static bool initialized = false;
+
+  // Running with VisIt so add in the variables that the user can
+  // modify.
+  if( m_application->getVisIt() && !initialized ) {
+    m_application->getDebugStreams().push_back( &grid_dbg );
+
+    initialized = true;
+  }
+#endif
 }
 
 
@@ -124,10 +141,8 @@ void SingleLevelRegridder::problemSetup_BulletProofing(const int L)
 //  Reset the patch layout on the level of interest.  The other level's
 //  grid structures will remain constant
 // 
-Grid* SingleLevelRegridder::regrid(Grid* oldGrid)
+Grid* SingleLevelRegridder::regrid(Grid* oldGrid, const int timeStep)
 {
-  MALLOC_TRACE_TAG_SCOPE("SingleLevelRegridder::regrid");
-
   vector< vector<IntVector> > tiles(min(oldGrid->numLevels()+1,d_maxLevels));
 
   //__________________________________
@@ -140,7 +155,7 @@ Grid* SingleLevelRegridder::regrid(Grid* oldGrid)
     if( l == d_level_index) {
 
       const LevelP level = oldGrid->getLevel(l);
-      const PatchSubset *patchSS=lb_->getPerProcessorPatchSet(level)->getSubset(d_myworld->myrank());
+      const PatchSubset *patchSS=m_loadBalancer->getPerProcessorPatchSet(level)->getSubset(d_myworld->myRank());
       vector<IntVector> mytiles;
 
       // For each patch I own
@@ -166,7 +181,7 @@ Grid* SingleLevelRegridder::regrid(Grid* oldGrid)
     } else {
       // Other levels:
       // The level's patch layout does not change so just copy the patches -> tiles
-      for (Level::const_patchIterator p = oldGrid->getLevel(l)->patchesBegin(); p != oldGrid->getLevel(l)->patchesEnd(); p++){
+      for (Level::const_patch_iterator p = oldGrid->getLevel(l)->patchesBegin(); p != oldGrid->getLevel(l)->patchesEnd(); p++){
         IntVector me = TiledRegridder::computeTileIndex((*p)->getCellLowIndex(), d_tileSize[l]);
         tiles[l].push_back( me );
       }
@@ -193,7 +208,7 @@ Grid* SingleLevelRegridder::regrid(Grid* oldGrid)
   TiledRegridder::OutputGridStats(newGrid);
 
   // initialize the weights on new patches
-  lb_->initializeWeights(oldGrid,newGrid);
+  m_loadBalancer->initializeWeights(oldGrid,newGrid);
 
 #if SCI_ASSERTION_LEVEL > 0
   if(! TiledRegridder::verifyGrid(newGrid) ){

@@ -5,9 +5,9 @@
 #
 #__________________________________
 # bulletproof the inputs
-if [ "$BUILDROOT" = "" -o "$COMPILE" = "" -o "$NOTESTS" = "" -o "$COMMON_GROUP"  = "" -o "$CHECKPOINTS" = "" -o "$TEST_DATA" = "" ]; then
+if [ "$BUILDROOT" = "" -o "$COMPILE" = "" -o "$BUILDONLY" = "" -o "$COMMON_GROUP"  = "" -o "$CHECKPOINTS" = "" -o "$TEST_DATA_DIR" = "" ]; then
   echo "ERROR:build_and_run  One of the environmental variables has not been set"
-  echo "BUILDROOT: $BUILDROOT, COMPILE: $COMPILE, NOTESTS: $NOTESTS, GROUP: $COMMON_GROUP, CHECKPOINTS: $CHECKPOINTS, TEST_DATA: $TEST_DATA"
+  echo "BUILDROOT: $BUILDROOT, COMPILE: $COMPILE, BUILDONLY: $BUILDONLY, GROUP: $COMMON_GROUP, CHECKPOINTS: $CHECKPOINTS, TEST_DATA_DIR: $TEST_DATA_DIR"
   exit -1
 fi
 
@@ -41,7 +41,7 @@ if [ "$COMPILE" = "no" ]; then
 fi
 
 # exit if compile failed or there no tests to run
-if [ "$didCompile" != "0" -a "$NOTESTS" = "0" ]; then
+if [ "$didCompile" != "0" -a "$BUILDONLY" = "0" ]; then
   exit $didCompile
 fi
 
@@ -80,7 +80,7 @@ fi
 if [ -d goldStandard ]; then
   rm -f goldStandard
 fi
-ln -s "${TEST_DATA}/${mode}" goldStandard
+ln -s "${TEST_DATA_DIR}/${mode}" goldStandard
 
 summary_log="${BUILDROOT}/${mode}/summary_log"
 rm -f $summary_log
@@ -88,13 +88,13 @@ touch $summary_log
 
 
 # checking for GoldStandards
-if [ ! -d "$TEST_DATA" ]; then
-  echo "TEST_DATA directory doesn't exist: $TEST_DATA"
+if [ ! -d "$TEST_DATA_DIR" ]; then
+  echo "TEST_DATA_DIR directory doesn't exist: $TEST_DATA_DIR"
   exit -1;
 fi
 
-if [ ! -d "${TEST_DATA}/${mode}" ]; then
-  mkdir "${TEST_DATA}/${mode}"
+if [ ! -d "${TEST_DATA_DIR}/${mode}" ]; then
+  mkdir "${TEST_DATA_DIR}/${mode}"
 fi
 
 

@@ -6,7 +6,7 @@
  *
  * The MIT License
  *
- * Copyright (c) 2013-2016 The University of Utah
+ * Copyright (c) 2013-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -159,7 +159,7 @@ namespace WasatchCore {
   ReductionHelper::parse_reduction_spec( Uintah::ProblemSpecP wasatchSpec )
   {    
     for( Uintah::ProblemSpecP reductionSpec=wasatchSpec->findBlock("Reduction");
-        reductionSpec != 0;
+        reductionSpec != nullptr;
         reductionSpec=reductionSpec->findNextBlock("Reduction") ) {
       
       const Category cat = parse_tasklist(reductionSpec,true);

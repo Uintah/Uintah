@@ -1,12 +1,10 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version='1.0' encoding='ISO-8859-1'?>
 <!-- @version: -->
 <Uintah_specification>
   <Meta>
     <title>Arches Methane Plume Multi Patch Run with Radiation</title>
   </Meta>
-
   <SimulationComponent type="arches"/>
-
   <Solver type="hypre"/>
   <Time>
     <maxTime>10.0</maxTime>
@@ -16,7 +14,6 @@
     <delt_max>0.1</delt_max>
     <timestep_multiplier>0.2</timestep_multiplier>
   </Time>
-
   <DataArchiver>
     <filebase>channel_WD_CO.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
@@ -56,13 +53,12 @@
     <checkpoint cycle="2" interval="0.001"/>
     <compression>gzip</compression>
   </DataArchiver>
-
   <Grid>
     <Level>
       <Box label="1">
         <lower>[0,0,0]</lower>
-        <upper>[10,0.5,0.5]</upper>
-        <resolution>[50,5,5]</resolution>
+        <upper>[2,0.5,0.5]</upper>
+        <resolution>[20,5,5]</resolution>
         <extraCells>[1,1,1]</extraCells>
         <patches>[1,1,1]</patches>
       </Box>
@@ -70,7 +66,7 @@
     <BoundaryConditions>
       <DefaultMaterial>0</DefaultMaterial>
       <Face side="x-">
-        <BCType var="WallBC"  label="y-pressure">
+        <BCType var="WallBC" label="y-pressure">
           <value>0.0</value>
         </BCType>
         <BCType var="Neumann" label="eta">
@@ -92,8 +88,8 @@
           <value>298</value>
         </BCType>
       </Face>
-      <Face rectangle="x-" lower="0.0 0.2 0.2" upper="0.0 0.4 0.4" name="fuel">
-        <BCType var="MassFlowInlet"  label="fuel inlet">
+      <Face rectangle="x-" lower="0.0 0.1 0.1" upper="0.0 0.4 0.4" name="fuel">
+        <BCType var="MassFlowInlet" label="fuel inlet">
           <value>0.0602</value>
         </BCType>
         <BCType var="Dirichlet" label="eta">
@@ -117,7 +113,7 @@
         </BCType>
       </Face>
       <Face rectangle="y-" lower="0.0 0.0 0.0" upper="0.4 0.0 0.5" name="secon_plus_tert">
-        <BCType var="MassFlowInlet"  label="secondary_plus_tertiary">
+        <BCType var="MassFlowInlet" label="secondary_plus_tertiary">
           <value>0.2225</value>
         </BCType>
         <BCType var="Dirichlet" label="eta">
@@ -140,7 +136,7 @@
         </BCType>
       </Face>
       <Face rectangle="y+" lower="0.0 0.5 0.0" upper="0.4 0.5 0.5" name="secon_plus_tert2">
-        <BCType var="MassFlowInlet"  label="secondary_plus_tertiary2">
+        <BCType var="MassFlowInlet" label="secondary_plus_tertiary2">
           <value>0.2225</value>
         </BCType>
         <BCType var="Dirichlet" label="eta">
@@ -162,8 +158,8 @@
           <value>298</value>
         </BCType>
       </Face>
-      <Face rectangle="z-" lower="0.0 0.0 0.0" upper="0.2 0.5 0.0" name="primary1">
-        <BCType var="MassFlowInlet"  label="primary inlet1">
+      <Face rectangle="z-" lower="0.0 0.0 0.0" upper="0.4 0.5 0.0" name="primary1">
+        <BCType var="MassFlowInlet" label="primary inlet1">
           <value>0.098</value>
         </BCType>
         <BCType var="Dirichlet" label="eta">
@@ -185,8 +181,8 @@
           <value>298</value>
         </BCType>
       </Face>
-      <Face rectangle="z+" lower="0.0 0.0 0.5" upper="0.2 0.5 0.5" name="primary2">
-        <BCType var="MassFlowInlet"  label="primary inlet2">
+      <Face rectangle="z+" lower="0.0 0.0 0.5" upper="0.4 0.5 0.5" name="primary2">
+        <BCType var="MassFlowInlet" label="primary inlet2">
           <value>0.098</value>
         </BCType>
         <BCType var="Dirichlet" label="eta">
@@ -209,7 +205,7 @@
         </BCType>
       </Face>
       <Face side="x+">
-        <BCType var="OutletBC"  label="the outlet">
+        <BCType var="OutletBC" label="the outlet">
           <value>0.0</value>
         </BCType>
         <BCType var="Neumann" label="eta">
@@ -232,7 +228,7 @@
         </BCType>
       </Face>
       <Face side="y-">
-        <BCType var="WallBC"  label="y-pressure">
+        <BCType var="WallBC" label="y-pressure">
           <value>0.0</value>
         </BCType>
         <BCType var="Neumann" label="eta">
@@ -255,7 +251,7 @@
         </BCType>
       </Face>
       <Face side="y+">
-        <BCType var="WallBC"  label="y+pressure">
+        <BCType var="WallBC" label="y+pressure">
           <value>0.0</value>
         </BCType>
         <BCType var="Neumann" label="eta">
@@ -278,7 +274,7 @@
         </BCType>
       </Face>
       <Face side="z-">
-        <BCType var="WallBC"  label="z-pressure">
+        <BCType var="WallBC" label="z-pressure">
           <value>0.0</value>
         </BCType>
         <BCType var="Neumann" label="eta">
@@ -301,7 +297,7 @@
         </BCType>
       </Face>
       <Face side="z+">
-        <BCType var="WallBC"  label="z+pressure">
+        <BCType var="WallBC" label="z+pressure">
           <value>0.0</value>
         </BCType>
         <BCType var="Neumann" label="eta">
@@ -325,21 +321,17 @@
       </Face>
     </BoundaryConditions>
   </Grid>
-
   <PhysicalConstants>
     <gravity>[-9.8,0,0]</gravity>
     <reference_point>[-1,-1,-1]</reference_point>
     <viscosity>0.000020</viscosity>
   </PhysicalConstants>
-
   <CFD>
-<!-- ARCHES specification -->
+    <!-- ARCHES specification -->
     <ARCHES>
-
       <TimeIntegrator>
         <ExplicitIntegrator order="first"/>
       </TimeIntegrator>
-
       <TransportEqns>
         <Eqn label="eta" type="CCscalar">
           <doDiff>true</doDiff>
@@ -355,7 +347,6 @@
           </Clipping>
           <src label="pos_source"/>
         </Eqn>
-
         <Eqn label="fp" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
@@ -372,7 +363,6 @@
             <weight>-1.0</weight>
           </src>
         </Eqn>
-
         <Eqn label="enthalpy" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
@@ -383,7 +373,6 @@
           </initialization>
           <src label="div_q"/>
         </Eqn>
-
         <Sources>
           <src label="pos_source" type="westbrook_dryer">
             <A>4e9</A>
@@ -417,8 +406,8 @@
           <src label="div_q" type="do_radiation">
             <calc_frequency>5</calc_frequency>
             <calc_on_all_RKsteps>false</calc_on_all_RKsteps>
-            <abskg label="abskg"/>
-            <DORadiationModel>
+            <abskt label="abskg"/>
+            <DORadiationModel type="linearSolve">
               <LinearSolver type="hypre">
                 <res_tol>1.0e-10</res_tol>
                 <ksptype>gmres</ksptype>
@@ -429,27 +418,15 @@
           </src>
         </Sources>
       </TransportEqns>
-
       <Turbulence model="compdynamicprocedure"/>
-
       <Properties>
-        <ClassicTable>
-          <inputfile>inputs/ARCHES/ClassicMixingTables/methane/ifrf_step1.mix.gz</inputfile>
-          <rcce eta_label = "eta" fp_label = "fp" hl_label="heat_loss"/>
+        <table label="a_user_generated_label" type="classic">
           <reference_state eta="0.0" fp="0.0" hl="0.0"/>
-        </ClassicTable>
+          <rcce eta_label="eta" fp_label="fp" hl_label="heat_loss"/>
+          <inputfile>inputs/ARCHES/ClassicMixingTables/methane/ifrf_step1.mix.gz</inputfile>
+        </table>
       </Properties>
-
       <PropertyModels>
-        <model type="radiation_properties" label="abskg">
-          <initialization type="constant">
-            <constant>0.0</constant>
-          </initialization>
-          <calculator type="hottel_sarofim">
-            <abskg label="gas_abskg"/>
-            <opl>3.0</opl>
-          </calculator>
-        </model>
         <model type="heat_loss" label="heat_loss">
           <initialization type="constant">
             <constant>0.4</constant>
@@ -473,11 +450,16 @@
           </initialization>
           <mixture_fraction_label>eta</mixture_fraction_label>
           <density_label>density</density_label>
-          <variance_coefficient>0.14</variance_coefficient> <!-- Warning: not a good default value -->
+          <variance_coefficient>0.14</variance_coefficient>
+          <!-- Warning: not a good default value -->
         </model>
       </PropertyModels>
-
       <PropertyModelsV2>
+        <model type="gasRadProperties" label="gas_abskg">
+          <calculator type="hottel_sarofim">
+            <opl>3.0</opl>
+          </calculator>
+        </model>
         <model type="CO" label="CO_model">
           <CO_defect_label>CO_d</CO_defect_label>
           <CO_rate_label>CO_model_rate</CO_rate_label>
@@ -496,51 +478,7 @@
           <Pr>0.4</Pr>
         </model>
       </PropertyModelsV2>
-
-      <BoundaryConditions>
-        <intrusions>
-    <intrusion label="box">
-      <geom_object>
-      <union>
-        <box label="box1">
-          <min>[1.0,0.0,0.0]</min>
-          <max>[1.6,0.3,0.5]</max>
-        </box>
-        <box label="box2">
-          <min>[2.0,0.2,0.0]</min>
-          <max>[2.6,0.5,0.5]</max>
-        </box>
-        <box label="box3">
-          <min>[3.0,0.0,0.0]</min>
-          <max>[3.6,0.3,0.5]</max>
-        </box>
-        <box label="box4">
-          <min>[4.0,0.2,0.0]</min>
-          <max>[4.6,0.5,0.5]</max>
-        </box>
-        <box label="box5">
-          <min>[5.0,0.0,0.0]</min>
-          <max>[5.6,0.3,0.5]</max>
-        </box>
-        <box label="box6">
-          <min>[6.0,0.2,0.0]</min>
-          <max>[6.6,0.5,0.5]</max>
-        </box>
-        <box label="box7">
-          <min>[7.0,0.0,0.0]</min>
-          <max>[7.6,0.3,0.5]</max>
-        </box>
-        <box label="box8">
-          <min>[8.0,0.2,0.0]</min>
-          <max>[8.6,0.5,0.5]</max>
-        </box>
-      </union>
-    </geom_object>
-  </intrusion>
-        </intrusions>
-        <suppress_corner_recirculation/>
-      </BoundaryConditions>
-
+      <BoundaryConditions/>
       <ExplicitSolver>
         <PressureSolver>
           <Parameters>
@@ -551,14 +489,13 @@
             <setupFrequency>1     </setupFrequency>
           </Parameters>
         </PressureSolver>
-
         <MomentumSolver>
+          <wall_closure type="constant_coefficient">
+            <wall_csmag>0.4</wall_csmag>
+          </wall_closure>
           <convection_scheme>upwind</convection_scheme>
         </MomentumSolver>
-
       </ExplicitSolver>
     </ARCHES>
-
   </CFD>
-
 </Uintah_specification>

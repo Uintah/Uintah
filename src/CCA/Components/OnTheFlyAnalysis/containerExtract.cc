@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -40,10 +40,11 @@
   *  - validate against ups_spec.xml
   **/
 
-#include <CCA/Components/ICE/ICEMaterial.h>
 #include <CCA/Components/OnTheFlyAnalysis/containerExtract.h>
+#include <CCA/Components/ICE/Materials/ICEMaterial.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
 #include <CCA/Ports/LoadBalancer.h>
+#include <CCA/Ports/Output.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -58,7 +59,6 @@
 #include <Core/Parallel/UintahParallelComponent.h>
 
 #include <Core/Exceptions/InternalError.h>
-#include <Core/Containers/StaticArray.h>
 #include <Core/OS/Dir.h> // for MKDIR
 #include <Core/Util/FileUtils.h>
 #include <Core/Util/DebugStream.h>
@@ -78,17 +78,12 @@ using namespace std;
 static DebugStream cout_doing("CONTAINEREXTRACT_DOING_COUT", false);
 static DebugStream cout_dbg("CONTAINEREXTRACT_DBG_COUT", false);
 
-
-
-//______________________________________________________________________              
-containerExtract::containerExtract(ProblemSpecP& module_spec,
-                         SimulationStateP& sharedState,
-                         Output* dataArchiver)
-  : AnalysisModule(module_spec, sharedState, dataArchiver)
+//______________________________________________________________________
+containerExtract::containerExtract( const ProcessorGroup* myworld,
+				    const SimulationStateP sharedState,
+				    const ProblemSpecP& module_spec )
+  : AnalysisModule(myworld, sharedState, module_spec)
 {
-  d_sharedState = sharedState;
-  d_prob_spec = module_spec;
-  d_dataArchiver = dataArchiver;
   d_matl_set = 0;
   ps_lb = scinew containerExtractLabel();
 }
@@ -118,24 +113,17 @@ containerExtract::~containerExtract()
     }
     delete cnt;
   }
-
-  
 }
 
 //______________________________________________________________________
 //     P R O B L E M   S E T U P
-void containerExtract::problemSetup(const ProblemSpecP& prob_spec,
-                               const ProblemSpecP& restart_prob_spec,
-                               GridP& grid,
-                               SimulationStateP& sharedState)
+void containerExtract::problemSetup(const ProblemSpecP& ,
+                               const ProblemSpecP& ,
+                               GridP& grid)
 {
   cout_doing << "Doing problemSetup \t\t\t\tcontainerExtract" << endl;
 
-  d_matl = d_sharedState->parseAndLookupMaterial(d_prob_spec, "material");
-  
-  if(!d_dataArchiver){
-    throw InternalError("containerExtract:couldn't get output port", __FILE__, __LINE__);
-  }
+  d_matl = m_sharedState->parseAndLookupMaterial(m_module_spec, "material");
   
   vector<int> m(1);
   m[0] = d_matl->getDWIndex();
@@ -148,22 +136,21 @@ void containerExtract::problemSetup(const ProblemSpecP& prob_spec,
 
   //__________________________________
   //  Read in timing information
-  d_prob_spec->require("samplingFrequency", d_writeFreq);
-  d_prob_spec->require("timeStart",         d_startTime);            
-  d_prob_spec->require("timeStop",          d_stopTime);
+  m_module_spec->require("samplingFrequency", d_writeFreq);
+  m_module_spec->require("timeStart",         d_startTime);            
+  m_module_spec->require("timeStop",          d_stopTime);
 
   
   //__________________________________
   //  Read in containers 
   map<string,string> attribute;
-  ProblemSpecP objects_ps = d_prob_spec->findBlock("objects"); 
+  ProblemSpecP objects_ps = m_module_spec->findBlock("objects"); 
   if (!objects_ps){
     throw ProblemSetupException("\n ERROR:containerExtract: Couldn't find <objects> tag \n", __FILE__, __LINE__);    
   }        
     
   /* foreach <geom_object> */
-  for (ProblemSpecP object_spec = objects_ps->findBlock("geom_object"); object_spec != 0; 
-                    object_spec = object_spec->findNextBlock("geom_object")) {
+  for( ProblemSpecP object_spec = objects_ps->findBlock("geom_object"); object_spec != nullptr; object_spec = object_spec->findNextBlock("geom_object")) {
                     
     // put input variables into the global struct
     container* c = scinew container;
@@ -173,8 +160,7 @@ void containerExtract::problemSetup(const ProblemSpecP& prob_spec,
 
     ProblemSpecP var_spec;
     /* foreach <variable> */
-    for (var_spec = object_spec->findBlock("extract"); var_spec != 0;
-         var_spec = var_spec->findNextBlock("extract") ) {
+    for( var_spec = object_spec->findBlock( "extract" ); var_spec != nullptr; var_spec = var_spec->findNextBlock("extract") ) {
       
       var_spec->getAttributes(attribute);                  
       string mode = attribute["mode"];
@@ -384,7 +370,7 @@ void containerExtract::initialize(const ProcessorGroup*,
     new_dw->put(max_vartype(tminus), ps_lb->lastWriteTimeLabel);
 
     if(patch->getGridIndex() == 0){   // only need to do this once
-      string udaDir = d_dataArchiver->getOutputLocation();
+      string udaDir = m_output->getOutputLocation();
 
       //  Bulletproofing
       DIR *check = opendir(udaDir.c_str());
@@ -566,7 +552,7 @@ void containerExtract::initialize(const ProcessorGroup*,
   // create the directory structure
   for(unsigned int i = 0; i < d_containers.size(); i++) {
     container* cnt = d_containers[i];
-    string udaDir = d_dataArchiver->getOutputLocation();
+    string udaDir = m_output->getOutputLocation();
     string dirPath = udaDir + "/" + cnt->name;
 
     ostringstream l;
@@ -601,6 +587,7 @@ void containerExtract::scheduleDoAnalysis(SchedulerP& sched,
   Task* t = scinew Task("containerExtract::doAnalysis", 
                    this,&containerExtract::doAnalysis);
                      
+  t->requires(Task::OldDW, m_simulationTimeLabel);
   t->requires(Task::OldDW, ps_lb->lastWriteTimeLabel);
   
   Ghost::GhostType gac = Ghost::AroundCells;
@@ -624,10 +611,8 @@ void containerExtract::doAnalysis(const ProcessorGroup* pg,
                              DataWarehouse* old_dw,
                              DataWarehouse* new_dw)
 {   
-  UintahParallelComponent* DA = dynamic_cast<UintahParallelComponent*>(d_dataArchiver);
-  LoadBalancer* lb = dynamic_cast<LoadBalancer*>( DA->getPort("load balancer"));
-
   const Level* level = getLevel(patches);
+  
   // the user may want to restart from an uda that wasn't using the DA module
   // This logic allows that.
   max_vartype writeTime;
@@ -637,7 +622,12 @@ void containerExtract::doAnalysis(const ProcessorGroup* pg,
     lastWriteTime = writeTime;
   }
 
-  double now = d_dataArchiver->getCurrentTime();
+  // double now = m_sharedState->getElapsedSimTime();  
+
+  simTime_vartype simTimeVar;
+  old_dw->get(simTimeVar, m_simulationTimeLabel);
+  double now = simTimeVar;
+
   if(now < d_startTime || now > d_stopTime){
     return;
   }
@@ -647,14 +637,16 @@ void containerExtract::doAnalysis(const ProcessorGroup* pg,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    int proc = lb->getPatchwiseProcessorAssignment(patch);
+    int proc =
+      m_scheduler->getLoadBalancer()->getPatchwiseProcessorAssignment(patch);
+    
     cout_dbg << Parallel::getMPIRank() << "   working on patch " << patch->getID() << " which is on proc " << proc << endl;
     //__________________________________
     // write data if this processor owns this patch
     // and if it's time to write
-    if( proc == pg->myrank() && now >= nextWriteTime){
+    if( proc == pg->myRank() && now >= nextWriteTime){
 
-      cout_doing << pg->myrank() << " " 
+      cout_doing << pg->myRank() << " " 
         << "Doing doAnalysis (containerExtract)\t\t\t\tL-"
         << level->getIndex()
         << " patch " << patch->getGridIndex()<< endl;
@@ -770,7 +762,7 @@ void containerExtract::doAnalysis(const ProcessorGroup* pg,
           IntVector c = exc->c;
           ostringstream fname;
           // create the directory structure
-          string udaDir = d_dataArchiver->getOutputLocation();
+          string udaDir = m_output->getOutputLocation();
           string dirPath = udaDir + "/" + cnt->name; 
 
           ostringstream l;
@@ -793,8 +785,7 @@ void containerExtract::doAnalysis(const ProcessorGroup* pg,
           }
 
           Point here = patch->cellPosition(c);
-          double time = d_dataArchiver->getCurrentTime();
-          fprintf(fp,    "%E\t %E\t %E\t %E",here.x(),here.y(),here.z(), time);
+          fprintf(fp,    "%E\t %E\t %E\t %E",here.x(),here.y(),here.z(), now);
 
 
           /* Find out which vector contains the variable and print it out. */

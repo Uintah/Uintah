@@ -49,14 +49,10 @@ for(ts = 1:nDumps )
   %ts = input('input timestep') 
    
   %use line extract to pull out the data
-  c1 = sprintf('lineextract -v rho_CC   -timestep %i %s -o rho      -uda %s',ts,startEnd,uda1);
-  c2 = sprintf('lineextract -v vel_CC   -timestep %i %s -o vel_tmp  -uda %s',ts,startEnd,uda1);
+  c1 = sprintf('lineextract -v rho_CC   -timestep %i %s -o rho  -uda %s',ts,startEnd,uda1);
+  c2 = sprintf('lineextract -v vel_CC   -timestep %i %s -o vel  -uda %s',ts,startEnd,uda1);
   [status1, result1]=unix(c1);
   [status2, result2]=unix(c2);
-
-  % rip out [] from velocity data
-  c3 = sprintf('sed ''s/\\[//g'' vel_tmp | sed ''s/\\]//g'' >vel');
-  [status3, result3]=unix(c3);
   
   % import the data into arrays
   rho1    = importdata('rho');

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,11 +25,11 @@
 #ifndef Packages_Uintah_CCA_Components_Examples_RMCRT_Test_h
 #define Packages_Uintah_CCA_Components_Examples_RMCRT_Test_h
 
+#include <CCA/Components/Application/ApplicationCommon.h>
+
 #include <CCA/Components/Models/Radiation/RMCRT/Ray.h>
-#include <CCA/Ports/SimulationInterface.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Grid/Patch.h>
-#include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/GeometryPiece/GeometryPiece.h>
 
@@ -70,24 +70,30 @@ WARNING
   
 ****************************************/
 
-  class RMCRT_Test: public UintahParallelComponent, public SimulationInterface {
+  class RMCRT_Test : public ApplicationCommon {
+
   public:
-    RMCRT_Test ( const ProcessorGroup* myworld );
+
+    RMCRT_Test ( const ProcessorGroup* myworld,
+		 const SimulationStateP sharedState );
+    
     virtual ~RMCRT_Test ( void );
 
     // Interface inherited from Simulation Interface
     virtual void problemSetup(const ProblemSpecP& params, 
                               const ProblemSpecP& restart_prob_spec, 
-                              GridP& grid, SimulationStateP& state );
+                              GridP& grid );
     virtual void scheduleInitialize            ( const LevelP& level, SchedulerP& scheduler );
     virtual void scheduleRestartInitialize     ( const LevelP& level, SchedulerP& scheduler );
-    virtual void scheduleComputeStableTimestep ( const LevelP& level, SchedulerP& scheduler );
+    virtual void scheduleComputeStableTimeStep ( const LevelP& level, SchedulerP& scheduler );
     virtual void scheduleTimeAdvance           ( const LevelP& level, SchedulerP& scheduler);
     virtual void scheduleInitialErrorEstimate  ( const LevelP& level, SchedulerP& scheduler );
     virtual void scheduleCoarsen               ( const LevelP& level, SchedulerP& scheduler );
     virtual void scheduleRefine                ( const PatchSet* patches, SchedulerP& scheduler );
     virtual void scheduleRefineInterface       ( const LevelP& level, SchedulerP& scheduler, bool needCoarseOld, bool needCoarseNew);
-  
+
+    virtual int computeTaskGraphIndex( const int timeStep );
+
   private:
     void initialize ( const ProcessorGroup*,
                       const PatchSubset* patches, 
@@ -101,7 +107,7 @@ WARNING
                             DataWarehouse*,
                             DataWarehouse* new_dw);
 
-    void computeStableTimestep ( const ProcessorGroup*,
+    void computeStableTimeStep ( const ProcessorGroup*,
                                  const PatchSubset* patches,
                                  const MaterialSubset* matls,
                                  DataWarehouse* old_dw, 
@@ -122,49 +128,41 @@ WARNING
     //__________________________________
     // initialize the temperature/abskg/abskp 
     void sched_initProperties( const LevelP&, 
-                               SchedulerP& sched,
-                               const int radCalc_freq );
+                               SchedulerP& sched );
 
     void initProperties( const ProcessorGroup* pc, 
                          const PatchSubset* patches, 
                          const MaterialSubset* matls, 
                          DataWarehouse* old_dw, 
-                         DataWarehouse* new_dw,
-                         const int radCalc_freq );
+                         DataWarehouse* new_dw );
     //__________________________________
     //                     
     void areGridsEqual( const GridP& uda_grid, 
                         const GridP& grid );
-    //__________________________________
-    //                      
-    bool doCarryForward( const int radCalc_freq);
 
    protected:
-    const ProcessorGroup* d_myworld;
     
-    Ray* d_RMCRT;
+    Ray* d_RMCRT{nullptr};
     
-    SimulationStateP d_sharedState;
-    SimpleMaterial*  d_material;
+    SimpleMaterial*  d_material{nullptr};
 
-    VarLabel* d_colorLabel;
-    VarLabel* d_divQLabel;
-    VarLabel* d_compAbskgLabel;
-    VarLabel* d_sigmaT4Label;
-    VarLabel* d_cellTypeLabel; 
+    VarLabel* d_colorLabel{nullptr};
+    VarLabel* d_divQLabel{nullptr};
+    VarLabel* d_compAbskgLabel{nullptr};
+    VarLabel* d_cellTypeLabel{nullptr};
     
     Ghost::GhostType d_gn;
     Ghost::GhostType d_gac;
     
-    double   d_initColor;
-    double   d_initAbskg;
+    double   d_initColor{-9.0};
+    double   d_initAbskg{-9.0};
     
-    int      d_radCalc_freq;
+    int      d_radCalc_freq{1};
     int      d_matl;
     int      d_wall_cell; 
     int      d_flow_cell;
     int      d_whichAlgo;
-    int      d_benchmark;
+    int      d_benchmark{0};
     int      d_pDir;             // principle direction used for 1D benchmark tests
 
     enum Algorithm{ dataOnion,            
@@ -184,7 +182,7 @@ WARNING
       int matl;
     };
     
-    useOldUdaData* d_old_uda;
+    useOldUdaData* d_old_uda{nullptr};
   };
 
 } // namespace Uintah

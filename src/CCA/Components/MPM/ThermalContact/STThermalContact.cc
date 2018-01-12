@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -23,14 +23,13 @@
  */
 
 #include <CCA/Components/MPM/ThermalContact/STThermalContact.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Variables/NodeIterator.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Labels/MPMLabel.h>
-#include <Core/Containers/StaticArray.h>
+#include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <vector>
 
 using namespace std;
@@ -64,14 +63,14 @@ void STThermalContact::computeHeatExchange(const ProcessorGroup*,
 
     int numMatls = d_sharedState->getNumMPMMatls();
 
-    StaticArray<constNCVariable<double> > gmass(numMatls);
-    StaticArray<constNCVariable<double> > gTemp(numMatls);
-    StaticArray<NCVariable<double> > thermalContactTemperatureRate(numMatls);
+    std::vector<constNCVariable<double> > gmass(numMatls);
+    std::vector<constNCVariable<double> > gTemp(numMatls);
+    std::vector<NCVariable<double> > thermalContactTemperatureRate(numMatls);
     vector<double> Cp(numMatls);
     // for Fracture (additional field)-----------------------------------------
-    StaticArray<constNCVariable<double> > Gmass(numMatls);
-    StaticArray<constNCVariable<double> > GTemp(numMatls);
-    StaticArray<NCVariable<double> > GthermalContactTemperatureRate(numMatls);
+    std::vector<constNCVariable<double> > Gmass(numMatls);
+    std::vector<constNCVariable<double> > GTemp(numMatls);
+    std::vector<NCVariable<double> > GthermalContactTemperatureRate(numMatls);
 
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches));

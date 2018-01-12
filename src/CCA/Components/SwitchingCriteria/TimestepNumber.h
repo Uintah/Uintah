@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,16 +25,19 @@
 #ifndef Packages_Uintah_CCA_Components_Switching_TimestepNumber_h
 #define Packages_Uintah_CCA_Components_Switching_TimestepNumber_h
 
-#include <Core/ProblemSpec/ProblemSpecP.h>
 #include <CCA/Ports/SwitchingCriteria.h>
+
+#include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/Variables/ComputeSet.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
 
   class ProcessorGroup;
   class DataWarehouse;
 
+  class VarLabel;
+  
   class TimestepNumber : public SwitchingCriteria
     {
     public:
@@ -55,8 +58,11 @@ namespace Uintah {
 
 
     private:
-      unsigned int d_timestep;
-      SimulationStateP d_sharedState; 
+      int m_timeStep {0};
+      
+      const VarLabel* m_timeStepLabel {nullptr};
+      
+      SimulationStateP m_sharedState {nullptr};
     };
 } // End namespace Uintah
 

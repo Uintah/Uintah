@@ -248,10 +248,17 @@ EqnBase::commonProblemSetup( ProblemSpecP& db ){
 }
 
 void
-EqnBase::sched_checkBCs( const LevelP& level, SchedulerP& sched )
+EqnBase::sched_checkBCs( const LevelP& level, SchedulerP& sched, bool isRegrid = 0 )
 {
   string taskname = "EqnBase::checkBCs";
   Task* tsk = scinew Task(taskname, this, &EqnBase::checkBCs);
+
+  // These dependencies may be needed for BoundaryCondition::sched_setupBCInletVelocities
+  // to be executed first, order appears to be ambigous in certain circumstances.
+  if(isRegrid==0){ // dependencies are here to ensure task occurs after bcs are set
+    tsk->requires( Task::NewDW,VarLabel::find("densityCP") , Ghost::None, 0 );
+    tsk->requires( Task::NewDW,VarLabel::find("volFraction") , Ghost::AroundCells, 0 );
+  }
 
   sched->addTask( tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials() );
 }

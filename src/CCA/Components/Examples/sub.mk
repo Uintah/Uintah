@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2016 The University of Utah
+#  Copyright (c) 1997-2018 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -32,12 +32,14 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR := CCA/Components/Examples
 
 SRCS += \
+        $(SRCDIR)/AMRHeat.cpp          \
         $(SRCDIR)/AMRWave.cc           \
         $(SRCDIR)/Benchmark.cc         \
         $(SRCDIR)/Burger.cc            \
-        $(SRCDIR)/DOSweep.cc            \
+        $(SRCDIR)/DOSweep.cc           \
         $(SRCDIR)/ExamplesLabel.cc     \
         $(SRCDIR)/Interpolator.cc      \
+        $(SRCDIR)/Heat.cpp             \
         $(SRCDIR)/ParticleTest1.cc     \
         $(SRCDIR)/Poisson1.cc          \
         $(SRCDIR)/Poisson2.cc          \
@@ -48,21 +50,23 @@ SRCS += \
         $(SRCDIR)/SolverTest1.cc       \
         $(SRCDIR)/Wave.cc              
 
+ifeq ($(HAVE_HYPRE),yes)
+  SRCS += $(SRCDIR)/SolverTest2.cc     
+endif
+
 ifeq ($(BUILD_MODELS_RADIATION),yes)
   SRCS += $(SRCDIR)/RMCRT_Test.cc       
 endif
 
-#ifeq ($(HAVE_CUDA),yes)
-#  SRCS += $(SRCDIR)/PoissonGPU1.cc                 \
-#          $(SRCDIR)/PoissonGPU1Kernel.cu           \
-#          $(SRCDIR)/UnifiedSchedulerTest.cc        \
-#          $(SRCDIR)/UnifiedSchedulerTestKernel.cu
-#  DLINK_FILES += \
-#          CCA/Components/Examples/PoissonGPU1Kernel.o           \
-#          CCA/Components/Examples/UnifiedSchedulerTestKernel.o 
-#endif
+ifeq ($(HAVE_CUDA),yes)
+  SRCS += $(SRCDIR)/UnifiedSchedulerTest.cc        \
+          $(SRCDIR)/UnifiedSchedulerTestKernel.cu
+  DLINK_FILES += \
+          CCA/Components/Examples/UnifiedSchedulerTestKernel.o 
+endif
 
 PSELIBS := \
+        CCA/Components/Application \
         CCA/Components/Models \
         CCA/Ports             \
         Core/DataArchive      \

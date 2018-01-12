@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -26,47 +26,47 @@
 #define UINTAH_CORE_UTIL_DOUT_HPP
 
 #include <cstdio>
-#include <cstring>
 #include <cstdlib>
+#include <cstring>
 
-#include <string>
 #include <sstream>
+#include <string>
 
-#include <sci_defs/mpi_defs.h>
+#include <Core/Parallel/UintahMPI.h>
 
 
-#define DOUT( cond, ... )             \
-  if (cond) {                         \
-    std::ostringstream msg;           \
-    msg << __VA_ARGS__;               \
-    printf("%s\n",msg.str().c_str()); \
+#define DOUT( cond, ... )                  \
+  if (cond) {                              \
+    std::ostringstream dout_msg;           \
+    dout_msg << __VA_ARGS__;               \
+    printf("%s\n",dout_msg.str().c_str()); \
   }
 
-#define POUT( ... )                   \
-  {                                   \
-    std::ostringstream msg;           \
-    msg << __FILE__ << ":";           \
-    msg << __LINE__ << " : ";         \
-    msg << __VA_ARGS__;               \
-    printf("%s\n",msg.str().c_str()); \
+#define POUT( ... )                        \
+  {                                        \
+    std::ostringstream dout_msg;           \
+    dout_msg << __FILE__ << ":";           \
+    dout_msg << __LINE__ << " : ";         \
+    dout_msg << __VA_ARGS__;               \
+    printf("%s\n",dout_msg.str().c_str()); \
   }
 
-#define TOUT()                            \
-  printf("TOUT:  %d  %d  %s:%d\n"         \
-      , Uintah::MPI::Impl::prank( MPI_COMM_WORLD )\
-      , Uintah::MPI::Impl::tid()                  \
-      , __FILE__                          \
-      , __LINE__                          \
+#define TOUT()                             \
+  printf("TOUT:  %d  %d  %s:%d\n"          \
+      , MPI::Impl::prank( MPI_COMM_WORLD ) \
+      , MPI::Impl::tid()                   \
+      , __FILE__                           \
+      , __LINE__                           \
       )
 
 
 #define DOUTP0( cond, ... )                                 \
-  if ( Uintah::MPI::Impl::prank( MPI_COMM_WORLD ) == 0 && cond) {   \
-    std::ostringstream msg;                                 \
-    msg << __FILE__ << ":";                                 \
-    msg << __LINE__ << " : ";                               \
-    msg << __VA_ARGS__;                                     \
-    printf("%s\n",msg.str().c_str());                       \
+  if ( MPI::Impl::prank( MPI_COMM_WORLD ) == 0 && cond) {   \
+    std::ostringstream dout_msg;                            \
+    dout_msg << __FILE__ << ":";                            \
+    dout_msg << __LINE__ << " : ";                          \
+    dout_msg << __VA_ARGS__;                                \
+    printf("%s\n",dout_msg.str().c_str());                  \
   }
 
 
@@ -86,7 +86,7 @@ public:
 
   Dout( std::string const & name, bool default_active )
     : m_active{ is_active(name, default_active) }
-    , m_name{ name + (m_active ? ":+" : ":-") }
+    , m_name{ name }
   {}
 
   explicit operator bool() const { return m_active; }
@@ -98,10 +98,14 @@ public:
     return a.m_name < b.m_name;
   }
 
+  // Note these two methods were added at the request of developers.
+  //   active() is effectively the same as operator bool() - APH, 07/14/17
+  bool active() const { return m_active; }
+  void setActive( bool active ) { m_active = active; }
 
 private:
 
-  static bool is_active( std::string const& arg_name,  bool default_active )
+  static bool is_active( std::string const& arg_name, bool default_active )
   {
     const char * sci_debug = std::getenv("SCI_DEBUG");
     const std::string tmp = "," + arg_name + ":";

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -31,15 +31,18 @@
 #include <CCA/Ports/DataWarehouse.h>
 
 #include <Core/Containers/FastHashTable.h>
-#include <Core/Grid/Variables/VarLabelMatl.h>
-#include <Core/Grid/Variables/PSPatchMatlGhost.h>
 #include <Core/Grid/Grid.h>
+#include <Core/Grid/Variables/PSPatchMatlGhost.h>
+#include <Core/Grid/Variables/VarLabelMatl.h>
+#include <Core/Parallel/UintahMPI.h>
 
 #include <iosfwd>
 #include <map>
+#include <mutex>
 #include <vector>
 
-#include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
+using Uintah::Max;
+using Uintah::FastHashTable;
 
 namespace Uintah {
 
@@ -53,18 +56,15 @@ inline const Level* getRealDomain(const Level* level)
   return level;
 }
 
-using Uintah::Max;
-using Uintah::FastHashTable;
-
 class BufferInfo;
 class DependencyBatch;
-class DetailedTasks;
 class DetailedDep;
-class TypeDescription;
+class DetailedTasks;
+class LoadBalancer;
 class Patch;
 class ProcessorGroup;
 class SendState;
-class LoadBalancer;
+class TypeDescription;
 
 /**************************************
 
@@ -97,17 +97,25 @@ class LoadBalancer;
 class OnDemandDataWarehouse : public DataWarehouse {
 
   public:
-    OnDemandDataWarehouse(const ProcessorGroup* myworld,
-                          Scheduler* scheduler,
-                          int generation,
-                          const GridP& grid,
-                          bool isInitializationDW = false);
+    OnDemandDataWarehouse( const ProcessorGroup * myworld,
+                                 Scheduler      * scheduler,
+                           const int              generation,
+                           const GridP          & grid,
+                           const bool             isInitializationDW = false );
 
     virtual ~OnDemandDataWarehouse();
 
     virtual bool exists(const VarLabel*,
                         int matIndex,
                         const Patch*) const;
+
+    virtual bool exists(const VarLabel*,
+                        int matIndex,
+                        const Level*) const;
+
+    virtual ReductionVariableBase* getReductionVariable( const VarLabel* label,
+							 int             matlIndex,
+							 const Level*    level ) const;
 
     void copyKeyDB(KeyDatabase<Patch>& varkeyDB,
                    KeyDatabase<Level>& levekeyDB);
@@ -316,6 +324,14 @@ class OnDemandDataWarehouse : public DataWarehouse {
                           int matlIndex,
                           const Level* level);
 
+    //meant for the UnifiedScheduler only.  Puts a contiguous level in the *level* database
+    //so that it doesn't need to constantly make new deep copies each time the full level
+    //is requested.
+    void putLevelDB( GridVariableBase* gridVar,
+                           const VarLabel* label,
+                           const Level* level,
+                           int matlIndex = -1 );
+
     virtual void getRegion(constGridVariableBase&,
                            const VarLabel*,
                            int matlIndex,
@@ -324,14 +340,13 @@ class OnDemandDataWarehouse : public DataWarehouse {
                            const IntVector& high,
                            bool useBoundaryCells = true);
 
-    virtual void getRegion(GridVariableBase&,
+    virtual void getRegionModifiable(GridVariableBase&,
                            const VarLabel*,
                            int matlIndex,
                            const Level* level,
                            const IntVector& low,
                            const IntVector& high,
-                           bool useBoundaryCells = true,
-                           bool onlyNeedAllocatedSpace = false);
+                           bool useBoundaryCells = true);
 
     virtual void copyOut(GridVariableBase& var,
                          const VarLabel* label,
@@ -364,16 +379,31 @@ class OnDemandDataWarehouse : public DataWarehouse {
     // For related datawarehouses
     virtual DataWarehouse* getOtherDataWarehouse(Task::WhichDW);
 
-    //! Copy a var from the parameter DW to this one.  If newPatches
-    //! is not null, then it associates the copy of the variable with
-    //! newPatches, and otherwise it uses patches (the same it finds
-    //! the variable with.
+    virtual void transferFrom(DataWarehouse*, const VarLabel*,
+            const PatchSubset*, const MaterialSubset*);
+
     virtual void transferFrom(DataWarehouse*,
                               const VarLabel*,
                               const PatchSubset* patches,
                               const MaterialSubset*,
-                              bool replace = false,
-                              const PatchSubset* newPatches = 0);
+                              bool replace);
+
+    virtual void transferFrom(DataWarehouse*,
+                              const VarLabel*,
+                              const PatchSubset* patches,
+                              const MaterialSubset*,
+                              bool replace,
+                              const PatchSubset* newPatches);
+
+
+    virtual void transferFrom(DataWarehouse*,
+                              const VarLabel*,
+                              const PatchSubset* patches,
+                              const MaterialSubset*,
+                              void * dtask,
+                              bool replace,
+                              const PatchSubset* newPatches);
+
 
     virtual bool isFinalized() const;
 
@@ -383,9 +413,9 @@ class OnDemandDataWarehouse : public DataWarehouse {
    static int getNumDevices();
    static void uintahSetCudaDevice(int deviceNum);
    static size_t getTypeDescriptionSize(const TypeDescription::Type& type);
-   static GPUGridVariableBase* createGPUGridVariable(size_t sizeOfDataType);
-   static GPUPerPatchBase* createGPUPerPatch(size_t sizeOfDataType);
-   static GPUReductionVariableBase* createGPUReductionVariable(size_t sizeOfDataType);
+   static GPUGridVariableBase* createGPUGridVariable(const TypeDescription::Type& type);
+   static GPUPerPatchBase* createGPUPerPatch(const TypeDescription::Type& type);
+   static GPUReductionVariableBase* createGPUReductionVariable(const TypeDescription::Type& type);
 
 #endif
 
@@ -397,7 +427,6 @@ class OnDemandDataWarehouse : public DataWarehouse {
                         const VarLabel* label,
                         int matlIndex,
                         const Patch* patch);
-
 #if HAVE_PIDX
      void emitPIDX(PIDXOutputContext&, 
                       const VarLabel* label, 
@@ -406,24 +435,23 @@ class OnDemandDataWarehouse : public DataWarehouse {
                       unsigned char *pidx_buffer,
                       size_t pidx_bufferSize);
 #endif
+    void exchangeParticleQuantities( DetailedTasks    * dts,
+                                     LoadBalancer * lb,
+                                     const VarLabel   * pos_var,
+                                     int              iteration );
 
+    void sendMPI( DependencyBatch       * batch,
+                  const VarLabel        * pos_var,
+                  BufferInfo            & buffer,
+                  OnDemandDataWarehouse * old_dw,
+                  const DetailedDep     * dep,
+                  LoadBalancer      * lb );
 
-    void exchangeParticleQuantities(DetailedTasks* dts,
-                                    LoadBalancer* lb,
-                                    const VarLabel* pos_var,
-                                    int iteration);
-    void sendMPI(DependencyBatch* batch,
-                 const VarLabel* pos_var,
-                 BufferInfo& buffer,
-                 OnDemandDataWarehouse* old_dw,
-                 const DetailedDep* dep,
-                 LoadBalancer* lb);
-
-    void recvMPI(DependencyBatch* batch,
-                 BufferInfo& buffer,
-                 OnDemandDataWarehouse* old_dw,
-                 const DetailedDep* dep,
-                 LoadBalancer* lb);
+    void recvMPI( DependencyBatch       * batch,
+                  BufferInfo            & buffer,
+                  OnDemandDataWarehouse * old_dw,
+                  const DetailedDep     * dep,
+                  LoadBalancer      * lb);
 
     void reduceMPI(const VarLabel* label,
                    const Level* level,
@@ -437,17 +465,17 @@ class OnDemandDataWarehouse : public DataWarehouse {
                        const Patch* patch,
                        int count);
 
-    int decrementScrubCount(const VarLabel* label,
-                            int matlIndex,
-                            const Patch* patch);
+    int decrementScrubCount( const VarLabel * label,
+                                   int        matlIndex,
+                             const Patch    * patch );
 
-    void scrub(const VarLabel* label,
-               int matlIndex,
-               const Patch* patch);
+    void scrub( const VarLabel * label,
+                      int        matlIndex,
+                const Patch    * patch);
 
-    void initializeScrubs(int dwid,
-                          const FastHashTable<ScrubItem>* scrubcounts,
-                          bool add);
+    void initializeScrubs(       int                        dwid,
+                           const FastHashTable<ScrubItem> * scrubcounts,
+                                 bool                       add );
 
     // For timestep abort/restart
     virtual bool timestepAborted();
@@ -458,10 +486,7 @@ class OnDemandDataWarehouse : public DataWarehouse {
 
     virtual void restartTimestep();
 
-    virtual void setRestarted()
-    {
-      hasRestarted_ = true;
-    }
+    virtual void setRestarted() { d_hasRestarted = true; }
 
    struct ValidNeighbors {
      GridVariableBase* validNeighbor;
@@ -470,8 +495,16 @@ class OnDemandDataWarehouse : public DataWarehouse {
      IntVector high;
 
    };
+   void getNeighborPatches(const VarLabel* label, const Patch* patch, Ghost::GhostType gtype,
+                                  int numGhostCells, std::vector<const Patch *>& adjacentNeighbors);
+
+   void getSizesForVar(const VarLabel* label, int matlIndex, const Patch* patch,
+                                         IntVector& low, IntVector& high, IntVector& dataLow,
+                                         IntVector& siz, IntVector& strides);
+
    void getValidNeighbors(const VarLabel* label, int matlIndex, const Patch* patch,
-           Ghost::GhostType gtype, int numGhostCells, std::vector<ValidNeighbors>& validNeighbors);
+           Ghost::GhostType gtype, int numGhostCells, std::vector<ValidNeighbors>& validNeighbors,
+           bool ignoreMissingNeighbors = false);
 
    void logMemoryUse(std::ostream& out,
                       unsigned long& total,
@@ -485,8 +518,8 @@ class OnDemandDataWarehouse : public DataWarehouse {
 
     // does a final check to see if gets/puts/etc. consistent with
     // requires/computes/modifies for the current task.
-    void checkTasksAccesses(const PatchSubset* patches,
-                            const MaterialSubset* matls);
+    void checkTasksAccesses(const PatchSubset    * patches,
+                            const MaterialSubset * matls);
 
     ScrubMode getScrubMode() const { return d_scrubMode; }
 
@@ -517,8 +550,8 @@ class OnDemandDataWarehouse : public DataWarehouse {
         void encompassOffsets(IntVector low,
                               IntVector high)
         {
-          lowOffset = Max(low, lowOffset);
-          highOffset = Max(high, highOffset);
+          lowOffset  = Uintah::Max( low,  lowOffset );
+          highOffset = Uintah::Max( high, highOffset );
         }
 
         AccessType accessType;
@@ -563,8 +596,7 @@ class OnDemandDataWarehouse : public DataWarehouse {
 
     inline Task::WhichDW getWhichDW(RunningTaskInfo *info);
 
-    // These will throw an exception if access is not allowed for the
-    // curent task.
+    // These will throw an exception if access is not allowed for the current task.
     inline void checkGetAccess(const VarLabel* label,
                                int matlIndex,
                                const Patch* patch,
@@ -580,8 +612,7 @@ class OnDemandDataWarehouse : public DataWarehouse {
                                   int matlIndex,
                                   const Patch* patch);
 
-    // These will return false if access is not allowed for
-    // the current task.
+    // These will return false if access is not allowed for the current task.
     inline bool hasGetAccess(const Task* runningTask,
                              const VarLabel* label,
                              int matlIndex,
@@ -675,18 +706,15 @@ class OnDemandDataWarehouse : public DataWarehouse {
 
     inline RunningTaskInfo* getCurrentTaskInfo();
 
-//    std::map<Thread*, std::list<RunningTaskInfo> > d_runningTasks;
-//    std::list<RunningTaskInfo> d_runningTasks[MAX_THREADS];
-    std::mutex m_running_tasks_lock;
-    std::map<std::thread::id, std::list<RunningTaskInfo> > d_runningTasks;
+    std::map<std::thread::id, std::list<RunningTaskInfo> > d_runningTasks; // a list of running tasks for each std::thread::id
 
     ScrubMode d_scrubMode;
 
-    bool aborted;
-    bool restart;
+    bool d_aborted;
+    bool d_restart;
 
     // Whether this (Old) DW is being used for a restarted timestep (the new DWs are cleared out)
-    bool hasRestarted_;
+    bool d_hasRestarted;
 
 }; // end class OnDemandDataWarehouse
 

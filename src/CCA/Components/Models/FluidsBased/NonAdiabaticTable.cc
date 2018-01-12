@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -28,13 +28,17 @@
 // multimaterial checks in dynamic model
 // Avoid recomputation of variance
 
-#include <CCA/Components/ICE/ConservationTest.h>
-#include <CCA/Components/ICE/BoundaryCond.h>
-#include <CCA/Components/ICE/Diffusion.h>
+#include <CCA/Components/ICE/Core/ConservationTest.h>
+#include <CCA/Components/ICE/Core/Diffusion.h>
+#include <CCA/Components/ICE/CustomBCs/BoundaryCond.h>
 #include <CCA/Components/Models/FluidsBased/NonAdiabaticTable.h>
 #include <CCA/Components/Models/FluidsBased/TableFactory.h>
 #include <CCA/Components/Models/FluidsBased/TableInterface.h>
+#include <CCA/Components/Models/FluidsBased/FluidsBasedModel.h>
+
+#include <CCA/Ports/Output.h>
 #include <CCA/Ports/Scheduler.h>
+
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/CellIterator.h>
@@ -44,11 +48,12 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Core/GeometryPiece/UnionGeometryPiece.h>
-#include <Core/Labels/ICELabel.h>
+#include <CCA/Components/ICE/Core/ICELabel.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#include <iostream>
 #include <Core/Util/DebugStream.h>
+
+#include <iostream>
 #include <cstdio>
 
 using namespace Uintah;
@@ -61,14 +66,17 @@ using namespace std;
 static DebugStream cout_doing("MODELS_DOING_COUT", false);
 static DebugStream cout_dbg("ADIABATIC_TABLE_DBG_COUT", false);
 
-//______________________________________________________________________              
+//______________________________________________________________________
 NonAdiabaticTable::NonAdiabaticTable(const ProcessorGroup* myworld, 
-                     ProblemSpecP& params)
-  : ModelInterface(myworld), params(params)
+                                     const SimulationStateP & sharedState,
+                                     const ProblemSpecP& params)
+  : FluidsBasedModel(myworld, sharedState), d_params(params)
 {
+  m_modelComputesThermoTransportProps = true;
+
   d_scalar = 0;
   d_matl_set = 0;
-  lb  = scinew ICELabel();
+  Ilb  = scinew ICELabel();
   cumulativeEnergyReleased_CCLabel = VarLabel::create("cumulativeEnergyReleased", CCVariable<double>::getTypeDescription());
   cumulativeEnergyReleased_src_CCLabel = VarLabel::create("cumulativeEnergyReleased_src", CCVariable<double>::getTypeDescription());
 }
@@ -94,7 +102,7 @@ NonAdiabaticTable::~NonAdiabaticTable()
   VarLabel::destroy(cumulativeEnergyReleased_CCLabel);
   VarLabel::destroy(cumulativeEnergyReleased_src_CCLabel);
   
-  delete lb;
+  delete Ilb;
   delete table;
   for(int i=0;i<(int)tablevalues.size();i++)
     delete tablevalues[i];
@@ -115,12 +123,12 @@ NonAdiabaticTable::Region::Region(GeometryPieceP piece, ProblemSpecP& ps)
 }
 //______________________________________________________________________
 //     P R O B L E M   S E T U P
-void NonAdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
-                        ModelSetup* setup)
+void
+NonAdiabaticTable::problemSetup( GridP &, const bool isRestart)
 {
   cout_doing << "Doing problemSetup \t\t\t\tADIABATIC_TABLE" << endl;
-  sharedState = in_state;
-  d_matl = sharedState->parseAndLookupMaterial(params, "material");
+
+  d_matl = m_sharedState->parseAndLookupMaterial( d_params, "material" );
 
   vector<int> m(1);
   m[0] = d_matl->getDWIndex();
@@ -129,20 +137,19 @@ void NonAdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
   d_matl_set->addReference();
 
   // Get parameters
-  params->getWithDefault("varianceScale", varianceScale, 0.0);
-  params->getWithDefault("varianceMax", varianceMax, 1.0);
+  d_params->getWithDefault("varianceScale", varianceScale, 0.0);
+  d_params->getWithDefault("varianceMax", varianceMax, 1.0);
   useVariance = (varianceScale != 0.0);
 
   //__________________________________
   //setup the table
   string tablename = "adiabatic";
-  table = TableFactory::readTable(params, tablename);
+  table = TableFactory::readTable(d_params, tablename);
   table->addIndependentVariable("F");
   if(useVariance)
     table->addIndependentVariable("Fvar");
   
-  for (ProblemSpecP child = params->findBlock("tableValue"); child != 0;
-       child = child->findNextBlock("tableValue")) {
+  for( ProblemSpecP child = d_params->findBlock("tableValue"); child != nullptr; child = child->findNextBlock("tableValue") ) {
     TableValue* tv = scinew TableValue;
     child->get(tv->name);
     tv->index = table->addDependentVariable(tv->name);
@@ -161,7 +168,7 @@ void NonAdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
   d_ref_gamma_index = table->addDependentVariable("reference_gamma");
   d_ref_temp_index  = table->addDependentVariable("reference_Temp");
   
-  bool cerrSwitch = (d_myworld->myrank() == 0); 
+  bool cerrSwitch = (d_myworld->myRank() == 0); 
   table->setup(cerrSwitch);
 
 #if 0
@@ -220,11 +227,10 @@ void NonAdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
                                                                   td_CCdouble);
   d_scalar->sum_scalar_fLabel   = VarLabel::create("sum_scalar_f", 
                                             sum_vartype::getTypeDescription());
-  d_modelComputesThermoTransportProps = true;
   
   //__________________________________
   // Read in the constants for the scalar
-   ProblemSpecP child = params->findBlock("scalar");
+   ProblemSpecP child = d_params->findBlock("scalar");
    if (!child){
      throw ProblemSetupException("NonAdiabaticTable: Couldn't find scalar tag", __FILE__, __LINE__);    
    }
@@ -245,32 +251,36 @@ void NonAdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
      d_scalar->scalar_src_CCLabel = 0;
 
    // Tell ICE to transport the scalar and the energy
-   setup->registerTransportedVariable(d_matl_set,
-                                      d_scalar->scalar_CCLabel,
-                                      d_scalar->scalar_src_CCLabel);
-   setup->registerTransportedVariable(d_matl_set,
-                                      cumulativeEnergyReleased_CCLabel,
-                                      cumulativeEnergyReleased_src_CCLabel);
+   registerTransportedVariable(d_matl_set,
+                               d_scalar->scalar_CCLabel,
+                               d_scalar->scalar_src_CCLabel);
+
+   registerTransportedVariable(d_matl_set,
+                               cumulativeEnergyReleased_CCLabel,
+                               cumulativeEnergyReleased_src_CCLabel);
+
   //__________________________________
   //  Read in the geometry objects for the scalar
-  for (ProblemSpecP geom_obj_ps = child->findBlock("geom_object");
-    geom_obj_ps != 0;
-    geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
+  if( !isRestart ){
+   for( ProblemSpecP geom_obj_ps = child->findBlock("geom_object"); geom_obj_ps != nullptr; geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
     vector<GeometryPieceP> pieces;
     GeometryPieceFactory::create(geom_obj_ps, pieces);
 
     GeometryPieceP mainpiece;
     if(pieces.size() == 0){
      throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
-    } else if(pieces.size() > 1){
+    }
+    else if(pieces.size() > 1){
      mainpiece = scinew UnionGeometryPiece(pieces);
-    } else {
+    }
+    else {
      mainpiece = pieces[0];
     }
 
     d_scalar->regions.push_back(scinew Region(mainpiece, geom_obj_ps));
+   }
   }
-  if(d_scalar->regions.size() == 0) {
+  if(d_scalar->regions.size() == 0 && !isRestart) {
     throw ProblemSetupException("Variable: scalar-f does not have any initial value regions", __FILE__, __LINE__);
   }
 
@@ -283,8 +293,7 @@ void NonAdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
      
     Vector location = Vector(0,0,0);
     map<string,string> attr;                    
-    for (ProblemSpecP prob_spec = probe_ps->findBlock("location"); prob_spec != 0; 
-                      prob_spec = prob_spec->findNextBlock("location")) {
+    for (ProblemSpecP prob_spec = probe_ps->findBlock("location"); prob_spec != nullptr; prob_spec = prob_spec->findNextBlock("location")) {
                       
       prob_spec->get(location);
       prob_spec->getAttributes(attr);
@@ -293,28 +302,30 @@ void NonAdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
       d_probePts.push_back(location);
       d_probePtsNames.push_back(name);
     }
-  } else {
+  }
+  else {
     d_usingProbePts = false;
   }
 }
 //______________________________________________________________________
 //      S C H E D U L E   I N I T I A L I Z E
-void NonAdiabaticTable::scheduleInitialize(SchedulerP& sched,
-                                   const LevelP& level,
-                                   const ModelInfo*)
+void
+NonAdiabaticTable::scheduleInitialize(       SchedulerP & sched,
+                                       const LevelP     & level )
 {
-  cout_doing << "ADIABATIC_TABLE::scheduleInitialize " << endl;
-  Task* t = scinew Task("NonAdiabaticTable::initialize", this, 
-                        &NonAdiabaticTable::initialize);
+  cout_doing << "ADIABATIC_TABLE::scheduleInitialize\n";
+  Task* t = scinew Task("NonAdiabaticTable::initialize", this, &NonAdiabaticTable::initialize);
 
-  t->modifies(lb->sp_vol_CCLabel);
-  t->modifies(lb->rho_micro_CCLabel);
-  t->modifies(lb->rho_CCLabel);
-  t->modifies(lb->specific_heatLabel);
-  t->modifies(lb->gammaLabel);
-  t->modifies(lb->thermalCondLabel);
-  t->modifies(lb->temp_CCLabel);
-  t->modifies(lb->viscosityLabel);
+  t->requires(Task::NewDW, Ilb->timeStepLabel );
+  
+  t->modifies(Ilb->sp_vol_CCLabel);
+  t->modifies(Ilb->rho_micro_CCLabel);
+  t->modifies(Ilb->rho_CCLabel);
+  t->modifies(Ilb->specific_heatLabel);
+  t->modifies(Ilb->gammaLabel);
+  t->modifies(Ilb->thermalCondLabel);
+  t->modifies(Ilb->temp_CCLabel);
+  t->modifies(Ilb->viscosityLabel);
   
   t->computes(d_scalar->scalar_CCLabel);
   t->computes(cumulativeEnergyReleased_CCLabel);
@@ -330,6 +341,11 @@ void NonAdiabaticTable::initialize(const ProcessorGroup*,
                            DataWarehouse*,
                            DataWarehouse* new_dw)
 {
+  timeStep_vartype timeStep;
+  new_dw->get(timeStep, VarLabel::find( timeStep_name) );
+
+  bool isNotInitialTimeStep = (timeStep > 0);
+
   cout_doing << "Doing Initialize \t\t\t\t\tADIABATIC_TABLE" << endl;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -341,14 +357,14 @@ void NonAdiabaticTable::initialize(const ProcessorGroup*,
     new_dw->allocateAndPut(f, d_scalar->scalar_CCLabel, indx, patch);
     new_dw->allocateAndPut(eReleased, cumulativeEnergyReleased_CCLabel, 
                                                               indx, patch);
-    new_dw->getModifiable(cv,          lb->specific_heatLabel,indx,patch);
-    new_dw->getModifiable(gamma,       lb->gammaLabel,        indx,patch);
-    new_dw->getModifiable(thermalCond, lb->thermalCondLabel,  indx,patch);
-    new_dw->getModifiable(viscosity,   lb->viscosityLabel,    indx,patch);
-    new_dw->getModifiable(rho_CC,      lb->rho_CCLabel,       indx,patch);
-    new_dw->getModifiable(sp_vol,      lb->sp_vol_CCLabel,    indx,patch);
-    new_dw->getModifiable(rho_micro,   lb->rho_micro_CCLabel, indx,patch);
-    new_dw->getModifiable(temp, lb->temp_CCLabel, indx, patch);
+    new_dw->getModifiable(cv,          Ilb->specific_heatLabel,indx,patch);
+    new_dw->getModifiable(gamma,       Ilb->gammaLabel,        indx,patch);
+    new_dw->getModifiable(thermalCond, Ilb->thermalCondLabel,  indx,patch);
+    new_dw->getModifiable(viscosity,   Ilb->viscosityLabel,    indx,patch);
+    new_dw->getModifiable(rho_CC,      Ilb->rho_CCLabel,       indx,patch);
+    new_dw->getModifiable(sp_vol,      Ilb->sp_vol_CCLabel,    indx,patch);
+    new_dw->getModifiable(rho_micro,   Ilb->rho_micro_CCLabel, indx,patch);
+    new_dw->getModifiable(temp, Ilb->temp_CCLabel, indx, patch);
     //__________________________________
     //  initialize the scalar field in a region
     f.initialize(0);
@@ -366,7 +382,7 @@ void NonAdiabaticTable::initialize(const ProcessorGroup*,
       } // Over cells
     } // regions
     
-    setBC(f,"scalar-f", patch, sharedState,indx, new_dw); 
+    setBC( f, "scalar-f", patch, m_sharedState, indx, new_dw, isNotInitialTimeStep );
 
     //__________________________________
     // initialize other properties
@@ -421,7 +437,7 @@ void NonAdiabaticTable::initialize(const ProcessorGroup*,
       else
         eReleased[c] = temp[c] * cp - ref_temp[c] * icp;
     }
-    setBC(eReleased,"cumulativeEnergyReleased", patch, sharedState,indx, new_dw); 
+    setBC( eReleased, "cumulativeEnergyReleased", patch, m_sharedState,indx, new_dw, isNotInitialTimeStep );
 
     //__________________________________
     //  Dump out a header for the probe point files
@@ -429,7 +445,7 @@ void NonAdiabaticTable::initialize(const ProcessorGroup*,
     if (d_usingProbePts){
       FILE *fp;
       IntVector cell;
-      string udaDir = d_dataArchiver->getOutputLocation();
+      string udaDir = m_output->getOutputLocation();
       
         for (unsigned int i =0 ; i < d_probePts.size(); i++) {
           if(patch->findCell(Point(d_probePts[i]),cell) ) {
@@ -456,10 +472,10 @@ void NonAdiabaticTable::scheduleModifyThermoTransportProperties(SchedulerP& sche
                    this,&NonAdiabaticTable::modifyThermoTransportProperties);
                    
   t->requires(Task::OldDW, d_scalar->scalar_CCLabel, Ghost::None,0);  
-  t->modifies(lb->specific_heatLabel);
-  t->modifies(lb->gammaLabel);
-  t->modifies(lb->thermalCondLabel);
-  t->modifies(lb->viscosityLabel);
+  t->modifies(Ilb->specific_heatLabel);
+  t->modifies(Ilb->gammaLabel);
+  t->modifies(Ilb->thermalCondLabel);
+  t->modifies(Ilb->viscosityLabel);
   if(useVariance){
     t->requires(Task::NewDW, d_scalar->varianceLabel, Ghost::None, 0);
     t->computes(d_scalar->scaledVarianceLabel);
@@ -489,10 +505,10 @@ void NonAdiabaticTable::modifyThermoTransportProperties(const ProcessorGroup*,
     //new_dw->allocateAndPut(diffusionCoeff, 
     //d_scalar->diffusionCoefLabel,indx, patch);  
     
-    new_dw->getModifiable(gamma,       lb->gammaLabel,        indx,patch);
-    new_dw->getModifiable(cv,          lb->specific_heatLabel,indx,patch);
-    new_dw->getModifiable(thermalCond, lb->thermalCondLabel,  indx,patch);
-    new_dw->getModifiable(viscosity,   lb->viscosityLabel,    indx,patch);
+    new_dw->getModifiable(gamma,       Ilb->gammaLabel,        indx,patch);
+    new_dw->getModifiable(cv,          Ilb->specific_heatLabel,indx,patch);
+    new_dw->getModifiable(thermalCond, Ilb->thermalCondLabel,  indx,patch);
+    new_dw->getModifiable(viscosity,   Ilb->viscosityLabel,    indx,patch);
     
     old_dw->get(f_old,  d_scalar->scalar_CCLabel,  indx, patch, Ghost::None,0);
     
@@ -583,27 +599,27 @@ void NonAdiabaticTable::computeSpecificHeat(CCVariable<double>& cv_new,
 
 //______________________________________________________________________
 void NonAdiabaticTable::scheduleComputeModelSources(SchedulerP& sched,
-                                                 const LevelP& level,
-                                                 const ModelInfo* mi)
+                                                    const LevelP& level)
 {
   cout_doing << "ADIABATIC_TABLE::scheduleComputeModelSources " << endl;
   Task* t = scinew Task("NonAdiabaticTable::computeModelSources", 
-                   this,&NonAdiabaticTable::computeModelSources, mi);
+                   this,&NonAdiabaticTable::computeModelSources);
                     
   Ghost::GhostType  gn = Ghost::None;  
   Ghost::GhostType  gac = Ghost::AroundCells;
  
   //t->requires(Task::NewDW, d_scalar->diffusionCoefLabel, gac,1);
-  t->requires(Task::OldDW, mi->delT_Label,           level.get_rep());
+  t->requires(Task::OldDW, Ilb->simulationTimeLabel);
+  t->requires(Task::OldDW, Ilb->delTLabel,           level.get_rep());
   t->requires(Task::OldDW, d_scalar->scalar_CCLabel, gac,1); 
-  t->requires(Task::OldDW, mi->rho_CCLabel,          gn);
-  t->requires(Task::OldDW, mi->temp_CCLabel,         gn);
+  t->requires(Task::OldDW, Ilb->rho_CCLabel,          gn);
+  t->requires(Task::OldDW, Ilb->temp_CCLabel,         gn);
   t->requires(Task::OldDW, cumulativeEnergyReleased_CCLabel, gn);
 
-  t->requires(Task::NewDW, lb->specific_heatLabel,   gn);
-  t->requires(Task::NewDW, lb->gammaLabel,           gn);
+  t->requires(Task::NewDW, Ilb->specific_heatLabel,   gn);
+  t->requires(Task::NewDW, Ilb->gammaLabel,           gn);
 
-  t->modifies(mi->modelEng_srcLabel);
+  t->modifies(Ilb->modelEng_srcLabel);
   t->modifies(cumulativeEnergyReleased_src_CCLabel);
   if(d_scalar->scalar_src_CCLabel){
     t->modifies(d_scalar->scalar_src_CCLabel);
@@ -622,15 +638,20 @@ void NonAdiabaticTable::scheduleComputeModelSources(SchedulerP& sched,
 
 //______________________________________________________________________
 void NonAdiabaticTable::computeModelSources(const ProcessorGroup*, 
-                                         const PatchSubset* patches,
-                                         const MaterialSubset* matls,
-                                         DataWarehouse* old_dw,
-                                         DataWarehouse* new_dw,
-                                         const ModelInfo* mi)
+                                            const PatchSubset* patches,
+                                            const MaterialSubset* matls,
+                                            DataWarehouse* old_dw,
+                                            DataWarehouse* new_dw)
 {
-  delt_vartype delT;
   const Level* level = getLevel(patches);
-  old_dw->get(delT, mi->delT_Label, level);
+
+  simTime_vartype simTimeVar;
+  old_dw->get(simTimeVar, Ilb->simulationTimeLabel);
+  double simTime = simTimeVar;
+
+  delt_vartype delT;
+  old_dw->get(delT, Ilb->delTLabel, level);
+
   Ghost::GhostType gn = Ghost::None;
     
   for(int p=0;p<patches->size();p++){
@@ -648,13 +669,13 @@ void NonAdiabaticTable::computeModelSources(const ProcessorGroup*,
       CCVariable<double> eReleased_src;
 
       old_dw->get(f_old,    d_scalar->scalar_CCLabel,   matl, patch, gn, 0);
-      old_dw->get(rho_CC,   mi->rho_CCLabel,            matl, patch, gn, 0);
-      old_dw->get(oldTemp,  mi->temp_CCLabel,           matl, patch, gn, 0);
+      old_dw->get(rho_CC,   Ilb->rho_CCLabel,            matl, patch, gn, 0);
+      old_dw->get(oldTemp,  Ilb->temp_CCLabel,           matl, patch, gn, 0);
       old_dw->get(eReleased, cumulativeEnergyReleased_CCLabel,
                                                         matl, patch, gn, 0);
-      new_dw->get(cv,       lb->specific_heatLabel,     matl, patch, gn, 0);
-      new_dw->get(gamma,    lb->gammaLabel,             matl, patch, gn, 0);
-      new_dw->getModifiable(energySource,   mi->modelEng_srcLabel,  
+      new_dw->get(cv,       Ilb->specific_heatLabel,     matl, patch, gn, 0);
+      new_dw->get(gamma,    Ilb->gammaLabel,             matl, patch, gn, 0);
+      new_dw->getModifiable(energySource,   Ilb->modelEng_srcLabel,  
                                                         matl, patch);
       new_dw->getModifiable(eReleased_src,  cumulativeEnergyReleased_src_CCLabel,
                             matl, patch);
@@ -788,12 +809,12 @@ void NonAdiabaticTable::computeModelSources(const ProcessorGroup*,
       //__________________________________
       //  dump out the probe points
       if (d_usingProbePts ) {
-        double time = d_dataArchiver->getCurrentTime();
+        // double simTime = m_sharedState->getElapsedSimTime();
         double nextDumpTime = oldProbeDumpTime + 1.0/d_probeFreq;
         
-        if (time >= nextDumpTime){        // is it time to dump the points
+        if (simTime >= nextDumpTime){        // is it time to dump the points
           FILE *fp;
-          string udaDir = d_dataArchiver->getOutputLocation();
+          string udaDir = m_output->getOutputLocation();
           IntVector cell_indx;
           
           // loop through all the points and dump if that patch contains them
@@ -801,11 +822,11 @@ void NonAdiabaticTable::computeModelSources(const ProcessorGroup*,
             if(patch->findCell(Point(d_probePts[i]),cell_indx) ) {
               string filename=udaDir + "/" + d_probePtsNames[i].c_str() + ".dat";
               fp = fopen(filename.c_str(), "a");
-              fprintf(fp, "%16.15E  %16.15E\n",time, f_old[cell_indx]);
+              fprintf(fp, "%16.15E  %16.15E\n", simTime, f_old[cell_indx]);
               fclose(fp);
             }
           }
-          oldProbeDumpTime = time;
+          oldProbeDumpTime = simTime;
         }  // time to dump
       } // if(probePts)  
       
@@ -827,22 +848,21 @@ void NonAdiabaticTable::computeModelSources(const ProcessorGroup*,
 }
 //______________________________________________________________________
 void NonAdiabaticTable::scheduleTestConservation(SchedulerP& sched,
-                                              const PatchSet* patches,
-                                              const ModelInfo* mi)
+                                              const PatchSet* patches)
 {
   if(d_test_conservation){
     cout_doing << "ADIABATICTABLE::scheduleTestConservation " << endl;
     Task* t = scinew Task("NonAdiabaticTable::testConservation", 
-                     this,&NonAdiabaticTable::testConservation, mi);
+                     this,&NonAdiabaticTable::testConservation);
 
     Ghost::GhostType  gn = Ghost::None;
     // compute sum(scalar_f * mass)
-    t->requires(Task::OldDW, mi->delT_Label, getLevel(patches));
+    t->requires(Task::OldDW, Ilb->delTLabel, getLevel(patches));
     t->requires(Task::NewDW, d_scalar->scalar_CCLabel, gn,0); 
-    t->requires(Task::NewDW, mi->rho_CCLabel,          gn,0);
-    t->requires(Task::NewDW, lb->uvel_FCMELabel,       gn,0); 
-    t->requires(Task::NewDW, lb->vvel_FCMELabel,       gn,0); 
-    t->requires(Task::NewDW, lb->wvel_FCMELabel,       gn,0); 
+    t->requires(Task::NewDW, Ilb->rho_CCLabel,          gn,0);
+    t->requires(Task::NewDW, Ilb->uvel_FCMELabel,       gn,0); 
+    t->requires(Task::NewDW, Ilb->vvel_FCMELabel,       gn,0); 
+    t->requires(Task::NewDW, Ilb->wvel_FCMELabel,       gn,0); 
     t->computes(d_scalar->sum_scalar_fLabel);
 
     sched->addTask(t, patches, d_matl_set);
@@ -854,12 +874,11 @@ void NonAdiabaticTable::testConservation(const ProcessorGroup*,
                                       const PatchSubset* patches,
                                       const MaterialSubset* /*matls*/,
                                       DataWarehouse* old_dw,
-                                      DataWarehouse* new_dw,
-                                      const ModelInfo* mi)
+                                      DataWarehouse* new_dw)
 {
   const Level* level = getLevel(patches);
   delt_vartype delT;
-  old_dw->get(delT, mi->delT_Label, level);     
+  old_dw->get(delT, Ilb->delTLabel, level);     
   Ghost::GhostType gn = Ghost::None; 
   
   for(int p=0;p<patches->size();p++){
@@ -875,10 +894,10 @@ void NonAdiabaticTable::testConservation(const ProcessorGroup*,
     constSFCZVariable<double> wvel_FC;
     int indx = d_matl->getDWIndex();
     new_dw->get(f,       d_scalar->scalar_CCLabel,indx,patch,gn,0);
-    new_dw->get(rho_CC,  mi->rho_CCLabel,         indx,patch,gn,0); 
-    new_dw->get(uvel_FC, lb->uvel_FCMELabel,      indx,patch,gn,0); 
-    new_dw->get(vvel_FC, lb->vvel_FCMELabel,      indx,patch,gn,0); 
-    new_dw->get(wvel_FC, lb->wvel_FCMELabel,      indx,patch,gn,0); 
+    new_dw->get(rho_CC,  Ilb->rho_CCLabel,         indx,patch,gn,0); 
+    new_dw->get(uvel_FC, Ilb->uvel_FCMELabel,      indx,patch,gn,0); 
+    new_dw->get(vvel_FC, Ilb->vvel_FCMELabel,      indx,patch,gn,0); 
+    new_dw->get(wvel_FC, Ilb->wvel_FCMELabel,      indx,patch,gn,0); 
     Vector dx = patch->dCell();
     double cellVol = dx.x()*dx.y()*dx.z();
 
@@ -898,9 +917,8 @@ void NonAdiabaticTable::testConservation(const ProcessorGroup*,
   }
 }
 //__________________________________      
-void NonAdiabaticTable::scheduleComputeStableTimestep(SchedulerP&,
-                                      const LevelP&,
-                                      const ModelInfo*)
+void NonAdiabaticTable::scheduleComputeStableTimeStep(SchedulerP&,
+                                                      const LevelP&)
 {
   // None necessary...
 }
@@ -909,6 +927,6 @@ void NonAdiabaticTable::scheduleComputeStableTimestep(SchedulerP&,
 //______________________________________________________________________
 //
 void NonAdiabaticTable::scheduleErrorEstimate(const LevelP&,
-                                           SchedulerP&)
+                                              SchedulerP&)
 {
 }

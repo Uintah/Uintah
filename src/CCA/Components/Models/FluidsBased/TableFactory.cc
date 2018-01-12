@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -30,20 +30,22 @@
 using namespace Uintah;
 using std::string;
 
-TableInterface* TableFactory::readTable(const ProblemSpecP& params,
-                                        const std::string& name)
+TableInterface* TableFactory::readTable( const ProblemSpecP & params,
+                                         const string       & name )
 {
-  for (ProblemSpecP child = params->findBlock("table"); child != 0;
-       child = child->findNextBlock("table")) {
+  for (ProblemSpecP child = params->findBlock("table"); child != nullptr; child = child->findNextBlock("table")) {
     string tname;
     if(child->getAttribute("name", tname) && tname == name){
       string type;
-      if(!child->getAttribute("type", type))
+      if(!child->getAttribute("type", type)) {
         throw ProblemSetupException("Cannot read table type from table", __FILE__, __LINE__);
-      if(type == "Arches")
+      }
+      if(type == "Arches") {
         return scinew ArchesTable(child);
-      else
+      }
+      else {
         throw ProblemSetupException("Unknown table type: "+type, __FILE__, __LINE__);
+      }
     }
   }
   throw ProblemSetupException("Cannot find table: "+name, __FILE__, __LINE__);

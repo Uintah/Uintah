@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,10 +25,8 @@
 #ifndef UINTAH_HOMEBREW_SERIALMPM_H
 #define UINTAH_HOMEBREW_SERIALMPM_H
 
-#include <Core/Parallel/UintahParallelComponent.h>
 #include <CCA/Ports/DataWarehouseP.h>
 #include <CCA/Ports/Output.h>
-#include <CCA/Ports/SimulationInterface.h>
 #include <CCA/Ports/SwitchingCriteria.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/GridP.h>
@@ -37,11 +35,11 @@
 // put here to avoid template problems
 #include <Core/Math/Matrix3.h>
 #include <Core/Math/Short27.h>
-#include <Core/Labels/MPMLabel.h>
-#include <CCA/Components/MPM/Contact/Contact.h>
+#include <CCA/Components/MPM/Core/MPMLabel.h>
+#include <CCA/Components/MPM/Materials/Contact/Contact.h>
 #include <CCA/Components/MPM/MPMCommon.h>
 #include <Core/Geometry/Vector.h>
-#include <CCA/Components/MPM/MPMFlags.h>
+#include <CCA/Components/MPM/Core/MPMFlags.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
 #include <CCA/Components/MPM/PhysicalBC/LoadCurve.h>
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
@@ -83,9 +81,11 @@ WARNING
   
 ****************************************/
 
-class SerialMPM : public MPMCommon, public SimulationInterface, public UintahParallelComponent {
+  class SerialMPM : public MPMCommon {
 public:
-  SerialMPM(const ProcessorGroup* myworld);
+    SerialMPM(const ProcessorGroup* myworld,
+	      const SimulationStateP sharedState);
+
   virtual ~SerialMPM();
 
   Contact*         contactModel;
@@ -95,14 +95,17 @@ public:
   //////////
   // Insert Documentation Here:
   virtual void problemSetup(const ProblemSpecP& params, 
-                            const ProblemSpecP& restart_prob_spec, GridP&,
-                            SimulationStateP&);
+                            const ProblemSpecP& restart_prob_spec,
+			    GridP&);
 
   virtual void outputProblemSpec(ProblemSpecP& ps);
 
   virtual void scheduleInitialize(const LevelP& level,
                                   SchedulerP&);
                                   
+  virtual void scheduleDeleteGeometryObjects(const LevelP& level,
+                                             SchedulerP& sched);
+
   virtual void scheduleRestartInitialize(const LevelP& level,
                                          SchedulerP& sched);
 
@@ -115,7 +118,7 @@ public:
                                  const MaterialSet* matls);
   //////////
   // Insert Documentation Here:
-  virtual void scheduleComputeStableTimestep(const LevelP& level, SchedulerP&);
+  virtual void scheduleComputeStableTimeStep(const LevelP& level, SchedulerP&);
 
   //////////
   // Insert Documentation Here:
@@ -134,13 +137,6 @@ public:
   
   /// Schedule to mark initial flags for AMR regridding
   void scheduleInitialErrorEstimate(const LevelP& coarseLevel, SchedulerP& sched);
-
-
-  void setMPMLabel(MPMLabel* Mlb)
-  {
-        delete lb;
-        lb = Mlb;
-  };
 
   void setWithICE()
   {
@@ -170,6 +166,12 @@ protected:
                                   const MaterialSubset* matls,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw);
+
+  void deleteGeometryObjects(const ProcessorGroup*,
+                             const PatchSubset* patches,
+                             const MaterialSubset* matls,
+                                   DataWarehouse* old_dw,
+                                   DataWarehouse* new_dw);
 
   void printParticleCount(const ProcessorGroup*,
                           const PatchSubset* patches,
@@ -235,6 +237,24 @@ protected:
                                           DataWarehouse* old_dw,
                                           DataWarehouse* new_dw);
 
+  virtual void computeNormals(const ProcessorGroup  *,
+                              const PatchSubset     * patches,
+                              const MaterialSubset  * ,
+                                    DataWarehouse   * old_dw,
+                                    DataWarehouse   * new_dw );
+
+  virtual void computeSSPlusVp(const ProcessorGroup*,
+                               const PatchSubset* patches,
+                               const MaterialSubset* matls,
+                               DataWarehouse* old_dw,
+                               DataWarehouse* new_dw);
+
+  virtual void computeSPlusSSPlusVp(const ProcessorGroup*,
+                                    const PatchSubset* patches,
+                                    const MaterialSubset* matls,
+                                    DataWarehouse* old_dw,
+                                    DataWarehouse* new_dw);
+
   //////////
   // Insert Documentation Here:
   virtual void addCohesiveZoneForces(const ProcessorGroup*,
@@ -250,20 +270,6 @@ protected:
                                    const MaterialSubset* matls,
                                    DataWarehouse* old_dw,
                                    DataWarehouse* new_dw);
-
-  /*! Update the erosion parameter if mass is to be removed */
-  void updateErosionParameter(const ProcessorGroup*,
-                              const PatchSubset* patches,
-                              const MaterialSubset* ,
-                              DataWarehouse* old_dw,
-                              DataWarehouse* new_dw);
-
-  /*! Find particles that should be deleted */
-  void findRogueParticles(const ProcessorGroup*,
-                          const PatchSubset* patches,
-                          const MaterialSubset* ,
-                          DataWarehouse* old_dw,
-                          DataWarehouse* new_dw);
 
   //////////
   // Compute Accumulated Strain Energy
@@ -336,6 +342,12 @@ protected:
                                                DataWarehouse* old_dw,
                                                DataWarehouse* new_dw);
 
+  virtual void computeParticleGradients(const ProcessorGroup*,
+                                        const PatchSubset* patches,
+                                        const MaterialSubset* matls,
+                                        DataWarehouse* old_dw,
+                                        DataWarehouse* new_dw);
+
   //////////
   // Insert Documentation Here:
   virtual void finalParticleUpdate(const ProcessorGroup*,
@@ -403,8 +415,18 @@ protected:
                             DataWarehouse*,
                             DataWarehouse* new_dw);
 
+  virtual void scheduleComputeNormals(SchedulerP        & sched,
+                                      const PatchSet    * patches,
+                                      const MaterialSet * matls );
+
   virtual void scheduleInterpolateParticlesToGrid(SchedulerP&, const PatchSet*,
                                                   const MaterialSet*);
+
+  virtual void scheduleComputeSSPlusVp(SchedulerP&, const PatchSet*,
+                                                    const MaterialSet*);
+
+  virtual void scheduleComputeSPlusSSPlusVp(SchedulerP&, const PatchSet*,
+                                                         const MaterialSet*);
 
   virtual void scheduleAddCohesiveZoneForces(SchedulerP&, 
                                              const PatchSet*,
@@ -420,15 +442,6 @@ protected:
 
   virtual void scheduleComputeStressTensor(SchedulerP&, const PatchSet*,
                                            const MaterialSet*);
-  
-
-  void scheduleUpdateErosionParameter(SchedulerP& sched,
-                                      const PatchSet* patches,
-                                      const MaterialSet* matls);
-
-  void scheduleFindRogueParticles(SchedulerP& sched,
-                                  const PatchSet* patches,
-                                  const MaterialSet* matls);
 
   void scheduleComputeAccStrainEnergy(SchedulerP&, const PatchSet*,
                                       const MaterialSet*);
@@ -468,6 +481,10 @@ protected:
                                                        const PatchSet*,
                                                        const MaterialSet*);
 
+  virtual void scheduleComputeParticleGradients(SchedulerP&, 
+                                                const PatchSet*,
+                                                const MaterialSet*);
+
   virtual void scheduleFinalParticleUpdate(SchedulerP&, 
                                            const PatchSet*,
                                            const MaterialSet*);
@@ -482,20 +499,6 @@ protected:
                                            const PatchSet*,
                                            const MaterialSet*);
 
-#if 0
-  virtual void scheduleInterpolateToParticlesAndUpdateMom1(SchedulerP&, 
-                                                           const PatchSet*,
-                                                           const MaterialSet*);
-
-  virtual void scheduleInterpolateToParticlesAndUpdateMom2(SchedulerP&, 
-                                                           const PatchSet*,
-                                                           const MaterialSet*);
-#endif
-
-  virtual void scheduleInterpolateParticleVelToGridMom(SchedulerP&, 
-                                                       const PatchSet*,
-                                                       const MaterialSet*);
-
   virtual void scheduleInsertParticles(SchedulerP&, 
                                        const PatchSet*,
                                        const MaterialSet*);
@@ -508,46 +511,29 @@ protected:
                                                   const PatchSet*,
                                                   const MaterialSet*);
 
-  //////////
-  // Insert Documentation Here:
-  virtual void interpolateToParticlesAndUpdateMom1(const ProcessorGroup*,
-                                                   const PatchSubset* patches,
-                                                   const MaterialSubset* matls,
-                                                   DataWarehouse* old_dw,
-                                                   DataWarehouse* new_dw);
-
-  //////////
-  // Insert Documentation Here:
-  virtual void interpolateToParticlesAndUpdateMom2(const ProcessorGroup*,
-                                                   const PatchSubset* patches,
-                                                   const MaterialSubset* matls,
-                                                   DataWarehouse* old_dw,
-                                                   DataWarehouse* new_dw);
-
-  //////////
-  // Insert Documentation Here:
-  virtual void interpolateParticleVelToGridMom(const ProcessorGroup*,
-                                               const PatchSubset* patches,
-                                               const MaterialSubset* matls,
-                                               DataWarehouse* old_dw,
-                                               DataWarehouse* new_dw);
-
-  bool needRecompile(double time, double dt,
-                     const GridP& grid);
-
   void readPrescribedDeformations(std::string filename);
 
   void readInsertParticlesFile(std::string filename);
   
   virtual void scheduleSwitchTest(const LevelP& level, SchedulerP& sched);
+
+  //__________________________________
+  // refinement criteria threshold knobs
+  struct thresholdVar {
+    std::string name;
+    int matl;
+    double value;
+  };
+  std::vector<thresholdVar> d_thresholdVars;
                    
   inline void computeVelocityGradient(Matrix3& velGrad,
                                     std::vector<IntVector>& ni,
                                     std::vector<Vector>& d_S,
                                     const double* oodx,
-                                    constNCVariable<Vector>& gVelocity)
+                                    constNCVariable<Vector>& gVelocity,
+                                    const int NN)
   {
-    for(int k = 0; k < flags->d_8or27; k++) {
+    for(int k = 0; k < NN; k++) {
       const Vector& gvel = gVelocity[ni[k]];
       for (int j = 0; j<3; j++){
         double d_SXoodx = d_S[k][j]*oodx[j];
@@ -565,10 +551,10 @@ protected:
                                            std::vector<double>& S,
                                            const double* oodx,
                                            constNCVariable<Vector>& gVelocity,
-                                           const Point& px)
+                                           const Point& px, const int NN)
   {
     // x -> r, y -> z, z -> theta
-    for(int k = 0; k < flags->d_8or27; k++) {
+    for(int k = 0; k < NN; k++) {
       Vector gvel = gVelocity[ni[k]];
       for (int j = 0; j<2; j++){
         for (int i = 0; i<2; i++) {
@@ -579,10 +565,7 @@ protected:
     }
   };
   
-  SimulationStateP d_sharedState;
-  MPMLabel* lb;
   MPMFlags* flags;
-  Output* dataArchiver;
 
   double           d_nextOutputTime;
   double           d_SMALL_NUM_MPM;
@@ -606,8 +589,7 @@ protected:
 
 
   bool             d_fracture;
-  bool             d_recompile;
-  IntegratorType   d_integrator;
+
   MaterialSubset*  d_loadCurveIndex;
   
   std::vector<AnalysisModule*> d_analysisModules;

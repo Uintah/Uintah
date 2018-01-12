@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2016 The University of Utah
+#  Copyright (c) 1997-2018 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -29,6 +29,8 @@
 
 SRCDIR   := CCA/Components/Models/SolidReactionModel
 
+ifeq ($(BUILD_MPM)$(BUILD_ICE),yesyes)
+
 SRCS	+= \
        $(SRCDIR)/SolidReactionModel.cc       \
        $(SRCDIR)/NthOrderModel.cc            \
@@ -41,3 +43,4 @@ SRCS	+= \
        $(SRCDIR)/Arrhenius.cc                \
        $(SRCDIR)/ModifiedArrhenius.cc
 
+endif

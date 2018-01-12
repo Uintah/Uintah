@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2016 The University of Utah
+ * Copyright (c) 2012-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -80,15 +80,12 @@ namespace WasatchCore{
     
     // pick up the gravity terms
     doGravity_ = false;
-    for( Uintah::ProblemSpecP gravitySpec=pMomSpec->findBlock("Gravity");
-        gravitySpec != 0;
-        gravitySpec=gravitySpec->findNextBlock("Gravity") )
-    {
+    for( Uintah::ProblemSpecP gravitySpec=pMomSpec->findBlock("Gravity"); gravitySpec != nullptr; gravitySpec = gravitySpec->findNextBlock("Gravity") ) {
       std::string gDir;
       gravitySpec->getAttribute("direction",gDir);
-      if      (gDir == "X" && dir_name() == "x") doGravity_ = true;
-      else if (gDir == "Y" && dir_name() == "y") doGravity_ = true;
-      else if (gDir == "Z" && dir_name() == "z") doGravity_ = true;
+      if     ( gDir == "X" && dir_name() == "x" ) { doGravity_ = true; }
+      else if( gDir == "Y" && dir_name() == "y" ) { doGravity_ = true; }
+      else if( gDir == "Z" && dir_name() == "z" ) { doGravity_ = true; }
     }
     
     // check if drag was disabled

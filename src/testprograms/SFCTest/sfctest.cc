@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -26,7 +26,7 @@
 
 #include <CCA/Ports/SFC.h>
 #include <Core/Parallel/Parallel.h>
-#include <Core/Util/Time.h>
+#include <Core/Util/Timers/Timers.hpp>
 
 #define depth 1000.0f
 #define height 1000.0f
@@ -34,30 +34,31 @@
 
 #define DIM 2
 #define LOCS float
+
 int main(int argc, char** argv)
 {
-	Uintah::Parallel::determineIfRunningUnderMPI( argc, argv);	
-	Uintah::Parallel::initializeManager( argc, argv, "");
-	ProcessorGroup *d_myworld=Uintah::Parallel::getRootProcessorGroup();
+	Uintah::Parallel::initializeManager( argc, argv);
+	Uintah::ProcessorGroup *d_myworld = Uintah::Parallel::getRootProcessorGroup();
   MPI_Comm Comm=d_myworld->getComm();	
-	vector<LOCS> locs, locss;
-	vector<DistributedIndex> orders, orderss;
+	std::vector<LOCS> locs, locss;
+	std::vector<Uintah::DistributedIndex> orders, orderss;
 	
 	
 	int ref=3;
-	if(argc>=2)
+	if(argc>=2) {
 		ref=atoi(argv[1]);
+	}
 
 	int div=(int)pow((float)DIM,ref);
 	
-	unsigned int P=d_myworld->size();
+	unsigned int P=d_myworld->nRanks();
 	unsigned int N=(unsigned int)pow((float)BINS,ref);
 	unsigned int n=N/P;
 	int rem=N%P;
-	int rank=d_myworld->myrank();
+	int rank=d_myworld->myRank();
 	LOCS xx,yy;
 
-  SFC<LOCS> mycurve(d_myworld);
+	Uintah::SFC<LOCS> mycurve(d_myworld);
   
 
 
@@ -123,7 +124,7 @@ int main(int argc, char** argv)
 	mycurve.SetOutputVector(&orders);
 	mycurve.SetLocations(&locs); 
   mycurve.SetMergeMode(1);
-  mycurve.SetCleanup(BATCHERS);
+  mycurve.SetCleanup(Uintah::BATCHERS);
   mycurve.SetMergeParameters(3000,500,2,.15);  //Should do this by profiling
 
   LOCS dim[3]={width,height,depth};
@@ -132,44 +133,48 @@ int main(int argc, char** argv)
   mycurve.SetCenter(center);
 
   if(rank==0)
-    cout << " Generating curve in parallel\n";
+    std::cout << " Generating curve in parallel\n";
 
-  MPI_Barrier(Comm);
+  Uintah::MPI::Barrier(Comm);
   
-  double start=Time::currentSeconds();
+  Timers::Simple timer;
+
+  timer.start();
   mycurve.GenerateCurve();
-  double finish=Time::currentSeconds();
+  timer.stop();  
   
-  cout << rank << ": Time to generate curve:" << finish-start << endl;
+  std::cout << rank << ": Time to generate curve:" << timer().seconds() << std::endl;
 
-  MPI_Barrier(Comm);
+  Uintah::MPI::Barrier(Comm);
 
   orderss.resize(N);
   mycurve.SetLocalSize(N);
   mycurve.SetOutputVector(&orderss);
   mycurve.SetLocations(&locss);
   
-  if(rank==0)
-    cout << " Generating curve in serial\n";
-  MPI_Barrier(Comm);
+  if(rank==0) {
+    std::cout << " Generating curve in serial\n";
+  }
 
-  start=Time::currentSeconds();
+  Uintah::MPI::Barrier(Comm);
+
+  timer.reset( true );
   mycurve.GenerateCurve(true);
-  finish=Time::currentSeconds();
+  timer.stop();  
   
-  cout << rank << ": Time to generate curve:" << finish-start << endl;
+  std::cout << rank << ": Time to generate curve:" << timer().seconds() << std::endl;
 
-  MPI_Barrier(Comm);
+  Uintah::MPI::Barrier(Comm);
 
   if(rank==0)
   {
-    cout << "Verifying curve\n";
+    std::cout << "Verifying curve\n";
 	  unsigned int pn=N/P;
     unsigned int j=0,r;
     unsigned int starti;
     for(unsigned int i=0;i<n;i++)
     {
-	    if(orders[i].p<rem)
+	    if(orders[i].p<(unsigned int)rem)
 	    {
 		    starti=orders[i].p*(pn+1);
 	    }
@@ -181,25 +186,24 @@ int main(int argc, char** argv)
       int index1=starti  + orders[i].i;
       int index2=orderss[j].i;
       if(index1!=index2)
-        cout << j << ": " << index1 << "!=" << index2 << "\n";
-
-      //cout << "index1:" << orders[i].p << ":" << orders[i].i << " index2:" << orderss[j].p << ":" << orderss[j].i << endl;
+        std::cout << j << ": " << index1 << "!=" << index2 << "\n";
+      // std::cout << "index1:" << orders[i].p << ":" << orders[i].i << " index2:" << orderss[j].p << ":" << orderss[j].i << std::endl;
       j++;
     }
 
-    n=N/d_myworld->size();
+    n=N/d_myworld->nRanks();
     MPI_Status status;
-    for(int p=1;p<d_myworld->size();p++)
+    for(int p=1;p<d_myworld->nRanks();p++)
     {
       if(p<rem)
         r=n+1;
       else
         r=n;
 
-      MPI_Recv(&orders[0],r*sizeof(DistributedIndex),MPI_BYTE,p,0,d_myworld->getComm(), &status);
+      Uintah::MPI::Recv(&orders[0],r*sizeof(Uintah::DistributedIndex),MPI_BYTE,p,0,d_myworld->getComm(), &status);
       for(unsigned int i=0;i<r;i++)
       {
-	      if(orders[i].p<rem)
+	      if(orders[i].p<(unsigned int)rem)
 	      {
 		      starti=orders[i].p*(pn+1);
   	    } 
@@ -211,15 +215,15 @@ int main(int argc, char** argv)
         int index1=starti  + orders[i].i;
         int index2=orderss[j].i;
         if(index1!=index2)
-          cout << j << ": " << index1 << "!=" << index2 <<  "\n";
-        //cout << "index1:" << orders[i].p << ":" << orders[i].i << " index2:" << orderss[j].p << ":" << orderss[j].i << endl;
+          std::cout << j << ": " << index1 << "!=" << index2 <<  "\n";
+        //std::cout << "index1:" << orders[i].p << ":" << orders[i].i << " index2:" << orderss[j].p << ":" << orderss[j].i << std::endl;
         j++;
       }
     }
   }
   else
   {
-    MPI_Send(&orders[0],n*sizeof(DistributedIndex),MPI_BYTE,0,0,d_myworld->getComm());
+    Uintah::MPI::Send(&orders[0],n*sizeof(Uintah::DistributedIndex),MPI_BYTE,0,0,d_myworld->getComm());
   }
 
 	Uintah::Parallel::finalizeManager();

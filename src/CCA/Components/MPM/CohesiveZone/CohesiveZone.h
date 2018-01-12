@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -86,7 +86,7 @@ namespace Uintah {
 
     ParticleVariable<Point> czposition;
     ParticleVariable<Vector> cznormal, cztang, czdisptop, czdispbottom;
-    ParticleVariable<double> czlength;
+    ParticleVariable<double> czarea;
     ParticleVariable<long64> czID;
     ParticleVariable<Vector> czSeparation, czForce;
     ParticleVariable<int> czTopMat, czBotMat;

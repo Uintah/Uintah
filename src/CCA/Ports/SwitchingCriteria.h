@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -31,16 +31,18 @@
 #include <Core/Grid/LevelP.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
-
 namespace Uintah {
 
+  class UintahParallelComponent;
+  class VarLabel;
+  
   class SwitchingCriteria : public UintahParallelPort {
     
   public:
     
     SwitchingCriteria();
     virtual ~SwitchingCriteria();
-
+  
     virtual void problemSetup(const ProblemSpecP& params,
                               const ProblemSpecP& restart_prob_spec,
                               SimulationStateP& state) = 0;
@@ -50,6 +52,15 @@ namespace Uintah {
     virtual void scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
       {};
 
+    virtual void setSwitchLabel( const VarLabel* switch_label )
+    {
+      d_switch_label = switch_label;
+    }
+    
+  protected:
+
+    const VarLabel* d_switch_label;
+    
   private:
     
     SwitchingCriteria(const SwitchingCriteria&);

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,6 +25,7 @@
 //----- Discretization.cc ----------------------------------------------
 
 #include <CCA/Components/Arches/Discretization.h>
+#include <CCA/Components/Arches/Arches.h>
 #include <Core/Geometry/Vector.h>
 #include <CCA/Components/Arches/CellInformation.h>
 #include <CCA/Components/Arches/StencilMatrix.h>
@@ -69,8 +70,6 @@ using namespace Uintah;
 #include <CCA/Components/Arches/fortran/wvelcoef_hybrid_fort.h>
 
 
-#include <CCA/Components/Arches/FunctorSwitch.h>
-
 //****************************************************************************
 // Default constructor for Discretization
 //****************************************************************************
@@ -102,7 +101,7 @@ Discretization::calculateVelocityCoeff(const Patch* patch,
                                        SFCYVariable<double>* conv_scheme_y,
                                        SFCZVariable<double>* conv_scheme_z,
                                        MOMCONV conv_scheme,
-                                       double Re_limit)
+                                       double Re_limit )
 {
    // ignore faces that lie on the edge of the computational domain
   // in the principal direction
@@ -620,7 +619,6 @@ Discretization::calculateVelDiagonal(const Patch* patch,
                                      ArchesVariables* coeff_vars)
 {
 
-#ifdef USE_FUNCTOR
   Uintah::BlockRange rangex(patch->getSFCXLowIndex(),patch->getSFCXHighIndex());
   Uintah::BlockRange rangey(patch->getSFCYLowIndex(),patch->getSFCYHighIndex());
   Uintah::BlockRange rangez(patch->getSFCZLowIndex(),patch->getSFCZHighIndex());
@@ -652,21 +650,6 @@ Discretization::calculateVelDiagonal(const Patch* patch,
   Uintah::parallel_for( rangex, doADiagonalX);
   Uintah::parallel_for( rangey, doADiagonalY);
   Uintah::parallel_for( rangez, doADiagonalZ);
-#else
-
-
-  CellIterator iter = patch->getSFCXIterator();
-  compute_Ap_stencilMatrix<SFCXVariable<double> >(iter,coeff_vars->uVelocityCoeff,
-                                                       coeff_vars->uVelLinearSrc);
-
-  iter = patch->getSFCYIterator();
-  compute_Ap_stencilMatrix<SFCYVariable<double> >(iter,coeff_vars->vVelocityCoeff,
-                                                       coeff_vars->vVelLinearSrc);
-
-  iter = patch->getSFCZIterator();
-  compute_Ap_stencilMatrix<SFCZVariable<double> >(iter,coeff_vars->wVelocityCoeff,
-                                                       coeff_vars->wVelLinearSrc);
-#endif
 }
 
 //****************************************************************************

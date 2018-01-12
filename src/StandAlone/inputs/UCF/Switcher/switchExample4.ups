@@ -25,13 +25,13 @@
       
       <SwitchCriteria type = "simpleBurn">
         <reactant_material>    1      </reactant_material>
-          <ThresholdTemperature> 350  </ThresholdTemperature>
+        <ThresholdTemperature> 350  </ThresholdTemperature>
       </SwitchCriteria>
       
       <init var = "p.acceleration"     matls = "mpm_matls" levels="-1"/>      
       <init var = "p.externalHeatFlux" matls = "mpm_matls" levels="-1"/> 
     </subcomponent>
-                            
+    
     <!--__________________________________-->
     <!-- explosion phase: mpmice -->
     <subcomponent>                                                   
@@ -47,20 +47,20 @@
     <carry_over var="NC_CCweight" />
     <carry_over var="heatRate_CC" matls="0,1" level="finest"/>
     <carry_over var="g.temperature" />
-        
+    
   </SimulationComponent>
-   
-    <!--____________________________________________________________________-->
-    <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
-    <!--____________________________________________________________________-->
-    <Time>
-       <maxTime>1000.0 </maxTime>    <!-- persistent across all subcomponents -->
-       <initTime>0.0</initTime>      <!-- ignored -->
-       <delt_min>0</delt_min>        <!-- ignored -->
-       <delt_max>0</delt_max>        <!-- ignored -->
-       <timestep_multiplier>0.0</timestep_multiplier>
-       <max_Timesteps> 100 </max_Timesteps>
-    </Time>
+  
+  <!--____________________________________________________________________-->
+  <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
+  <!--____________________________________________________________________-->
+  <Time>
+    <maxTime>1000.0 </maxTime>    <!-- persistent across all subcomponents -->
+    <initTime>0.0</initTime>      <!-- ignored -->
+    <delt_min>0</delt_min>        <!-- ignored -->
+    <delt_max>0</delt_max>        <!-- ignored -->
+    <timestep_multiplier>0.0</timestep_multiplier>
+    <max_Timesteps> 100 </max_Timesteps>
+  </Time>
 
   <!--____________________________________________________________________-->
   <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
@@ -74,24 +74,24 @@
   <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
   <!--  This is the grid used by the first sub-component                  -->
   <!--____________________________________________________________________-->
-  <Grid>
+  <Grid doAMR="true">
     <include href="inputs/UCF/Switcher/ex3_BC.xml"/>  <!-- using example 3 BCs -->
 
     <Level>
-       <Box label = "3D">                                     
-          <lower>        [-0.1,-0.1,-0.1]   </lower>          
-          <upper>        [ 0.1, 0.1, 0.1]   </upper>          
+      <Box label = "3D">                                     
+        <lower>        [-0.1,-0.1,-0.1]   </lower>          
+        <upper>        [ 0.1, 0.1, 0.1]   </upper>          
 
-          <extraCells>   [1,1,1]            </extraCells>     
-          <patches>      [1,1,1]            </patches>        
-          <resolution>   [10,10,10]          </resolution>    
-       </Box>                                                 
+        <extraCells>   [1,1,1]            </extraCells>     
+        <patches>      [1,1,1]            </patches>        
+        <resolution>   [10,10,10]          </resolution>    
+      </Box>                                                 
     </Level>
   </Grid>
+
   <!--____________________________________________________________________-->
   <!--    A M R   G R I D                                                 -->
   <!--____________________________________________________________________-->
-  <doAMR>true</doAMR>
   <AMR>
     <useLockStep> true </useLockStep>
     
@@ -103,7 +103,7 @@
       <orderOf_CFI_Interpolation> 1       </orderOf_CFI_Interpolation>
       <Refinement_Criteria_Thresholds> 
         <!-- none 
-        <Variable name = "press_CC" value = "1e6" matl = "0" />
+             <Variable name = "press_CC" value = "1e6" matl = "0" />
         -->
       </Refinement_Criteria_Thresholds>
       
@@ -114,20 +114,19 @@
     </MPM>
     
     <Regridder type="Tiled">  <!-- see user_guide.pdf for description -->
-        <max_levels>  2  </max_levels>
-        <cell_refinement_ratio>    [[2,2,2]]    </cell_refinement_ratio>
-        <cell_stability_dilation>   [2,2,2]     </cell_stability_dilation>   
-        <min_boundary_cells>       [1,1,1]      </min_boundary_cells>
-        <min_patch_size>           [[10,10,10]] </min_patch_size>
-        <patches_per_level_per_proc> 8          </patches_per_level_per_proc>
-        
-        <!-- RT: Needed so the restart grid is identical to the original grid-->        
-        <max_timestep_interval>       0       </max_timestep_interval>
-        <cell_regrid_dilation>     [0,0,0]   </cell_regrid_dilation>
-        <!-- RT: -->
-        
+      <max_levels>  2  </max_levels>
+      <cell_refinement_ratio>    [[2,2,2]]    </cell_refinement_ratio>
+      <cell_stability_dilation>   [2,2,2]     </cell_stability_dilation>   
+      <min_boundary_cells>       [1,1,1]      </min_boundary_cells>
+      <min_patch_size>           [[10,10,10]] </min_patch_size>
+      <patches_per_level_per_proc> 8          </patches_per_level_per_proc>
+      
+      <!-- RT: Needed so the restart grid is identical to the original grid-->        
+      <max_timestep_interval>       0       </max_timestep_interval>
+      <cell_regrid_dilation>     [0,0,0]   </cell_regrid_dilation>
+      <!-- RT: -->
+      
     </Regridder>
-   
-
+    
   </AMR>
 </Uintah_specification>

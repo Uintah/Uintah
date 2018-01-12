@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -29,14 +29,17 @@
 #include <vector>
 
 #include <Core/Grid/Grid.h>
-#include <Core/Grid/Region.h>
-#include <Core/Grid/Patch.h>
 #include <Core/Grid/Level.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Region.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Parallel/ProcessorGroup.h>
+
 #include <CCA/Ports/LoadBalancer.h>
+
 namespace Uintah {
+
    /**************************************
      
      CLASS
@@ -96,7 +99,7 @@ namespace Uintah {
 
     ProfileDriver( const ProcessorGroup * myworld,
                    FILTER_TYPE            type,
-                   LoadBalancer         * lb) : 
+                   LoadBalancer     * lb) : 
       d_lb(lb), d_myworld(myworld), d_timestepWindow(20), d_timesteps(0),
       d_r(4.5e-5), d_phi(.01), d_type(type)
     { updateAlpha(); }
@@ -123,7 +126,7 @@ namespace Uintah {
   private:
     void updateAlpha() { d_alpha=2.0/(d_timestepWindow+1); }
 
-    LoadBalancer         * d_lb;
+    LoadBalancer     * d_lb;
     const ProcessorGroup * d_myworld;
             
     int                    d_timestepWindow;

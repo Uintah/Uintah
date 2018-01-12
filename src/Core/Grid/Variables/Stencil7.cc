@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -23,16 +23,17 @@
  */
 
 
-#include <Core/Grid/Variables/Stencil7.h>
 #include <Core/Disclosure/TypeDescription.h>
+#include <Core/Grid/Variables/Stencil7.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Parallel/UintahMPI.h>
 #include <Core/Util/Endian.h>
 #include <Core/Util/FancyAssert.h>
-#include <Core/Malloc/Allocator.h>
-#include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 
 using namespace Uintah;
 
 namespace Uintah {
+
   static MPI_Datatype makeMPI_Stencil7()
   {
     ASSERTEQ(sizeof(Stencil7), sizeof(double)*7);

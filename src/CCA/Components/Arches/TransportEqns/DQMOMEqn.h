@@ -29,16 +29,16 @@
       low_z_adjust = IntVector(0,0,1); \
     } \
     Uintah::BlockRange range_x(low+low_x_adjust, high); \
-    GetPsi<my_limiter, SFCXVariable<double> > get_psi_x( phi, psi_x, u, af_x ); \
-    Uintah::parallel_for( range_x, get_psi_x ); \
+    GetPsi get_psi_x( phi, psi_x, u, af_x, 0 ); \
+    Uintah::parallel_for( range_x, get_psi_x, my_limiter ); \
     \
     Uintah::BlockRange range_y(low+low_y_adjust, high); \
-    GetPsi<my_limiter, SFCYVariable<double> > get_psi_y( phi, psi_y, v, af_y ); \
-    Uintah::parallel_for( range_y, get_psi_y ); \
+    GetPsi get_psi_y( phi, psi_y, v, af_y, 1 ); \
+    Uintah::parallel_for( range_y, get_psi_y, my_limiter ); \
     \
     Uintah::BlockRange range_z(low+low_z_adjust, high); \
-    GetPsi<my_limiter, SFCZVariable<double> > get_psi_z( phi, psi_z, w, af_z ); \
-    Uintah::parallel_for( range_z, get_psi_z );
+    GetPsi get_psi_z( phi, psi_z, w, af_z, 2 ); \
+    Uintah::parallel_for( range_z, get_psi_z, my_limiter );
 
 //==========================================================================
 

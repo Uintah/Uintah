@@ -2,10 +2,13 @@
 
 from sys import argv,exit
 from os import environ
-from helpers.runSusTests import runSusTests
+from helpers.runSusTests import runSusTests, inputs_root, ignorePerformanceTests, generatingGoldStandards
 
 #______________________________________________________________________
 #  Test syntax: ( "folder name", "input file", # processors, "OS", ["flags1","flag2"])
+#
+#  OS:  Linux, Darwin, or ALL
+#
 #  flags: 
 #       gpu:                    - run test if machine is gpu enabled
 #       no_uda_comparison:      - skip the uda comparisons
@@ -13,34 +16,35 @@ from helpers.runSusTests import runSusTests
 #       no_restart:             - skip the restart tests
 #       no_dbg:                 - skip all debug compilation tests
 #       no_opt:                 - skip all optimized compilation tests
+#       no_cuda:                - skip test if this is a cuda enable build
 #       do_performance_test:    - Run the performance test, log and plot simulation runtime.
 #                                 (You cannot perform uda comparsions with this flag set)
 #       doesTestRun:            - Checks if a test successfully runs
 #       abs_tolerance=[double]  - absolute tolerance used in comparisons
 #       rel_tolerance=[double]  - relative tolerance used in comparisons
 #       exactComparison         - set absolute/relative tolerance = 0  for uda comparisons
-#       startFromCheckpoint     - start test from checkpoint. (/home/csafe-tester/CheckPoints/..../testname.uda.000)
+#       postProcessRun          - start test from an existing uda in the checkpoints directory.  Compute new quantities and save them in a new uda
+#       startFromCheckpoint     - start test from checkpoint. (/home/rt/CheckPoints/..../testname.uda.000)
 #       sus_options="string"    - Additional command line options for sus command
 #
 #  Notes: 
 #  1) The "folder name" must be the same as input file without the extension.
-#  2) If the processors is > 1.0 then an mpirun command will be used
-#  3) Performance_tests are not run on a debug build.
+#  2) Performance_tests are not run on a debug build.
 #______________________________________________________________________
 
-NIGHTLYTESTS = [   ("HePlume",       "HePlume.ups",       4, "Linux",  ["exactComparison"])
+NIGHTLYTESTS = [   ("HePlume",       "HePlume.ups",       4, "All",  ["exactComparison"])
     	        ]
                
                
 # Tests that are run during local regression testing               
-LOCALTESTS   = [   ("HePlume",       "HePlume.ups",       4, "Linux",  ["exactComparison"])
+LOCALTESTS   = [   ("HePlume",       "HePlume.ups",       4, "All",  ["exactComparison"])
     	        ]
                
 DEBUGTESTS   =[]
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: LOCALTESTS DEBUGTESTS NIGHTLYTESTS
+#LIST: LOCALTESTS DEBUGTESTS NIGHTLYTESTS BUILDBOTTESTS
 #__________________________________
 
 # returns the list  
@@ -51,6 +55,8 @@ def getTestList(me) :
     TESTS = DEBUGTESTS
   elif me == "NIGHTLYTESTS":
     TESTS = NIGHTLYTESTS
+  elif me == "BUILDBOTTESTS":
+    TESTS = ignorePerformanceTests( NIGHTLYTESTS )
   else:
     print "\nERROR:Models.py  getTestList:  The test list (%s) does not exist!\n\n" % me
     exit(1)

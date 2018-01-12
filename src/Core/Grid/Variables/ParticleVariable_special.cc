@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -137,16 +137,19 @@ using namespace std;
 
   template<>
   void
-  ParticleVariable<double>::emitNormal(ostream& out, const IntVector&,
-                                  const IntVector&, ProblemSpecP varnode, bool outputDoubleAsFloat )
+  ParticleVariable<double>::emitNormal(       ostream      & out,
+                                        const IntVector    &,
+                                        const IntVector    &,
+                                              ProblemSpecP   varnode,
+                                              bool           outputDoubleAsFloat )
   {
-    const TypeDescription* td = fun_getTypeDescription((double*)0);
+    const TypeDescription* td = fun_getTypeDescription((double*)nullptr);
 
-    if (varnode->findBlock("numParticles") == 0) {
+    if ( varnode->findBlock("numParticles") == nullptr ) {
       varnode->appendElement("numParticles", d_pset->numParticles());
     }
-    if(!td->isFlat()){
-      SCI_THROW(InternalError("Cannot yet write non-flat objects!\n", __FILE__, __LINE__));
+    if( !td->isFlat() ) {
+      SCI_THROW( InternalError("Cannot yet write non-flat objects!\n", __FILE__, __LINE__) );
     }
     else {
       if (outputDoubleAsFloat) {

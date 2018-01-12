@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2016 The University of Utah
+#  Copyright (c) 1997-2018 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -33,8 +33,9 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR := CCA/Components/Solvers
 
 SRCS += \
-	$(SRCDIR)/CGSolver.cc \
-	$(SRCDIR)/DirectSolve.cc \
+	$(SRCDIR)/SolverCommon.cc  \
+	$(SRCDIR)/CGSolver.cc      \
+	$(SRCDIR)/DirectSolve.cc   \
 	$(SRCDIR)/SolverFactory.cc
 
 PSELIBS := \
@@ -57,9 +58,9 @@ ifeq ($(HAVE_HYPRE),yes)
   LIBS := $(LIBS) $(HYPRE_LIBRARY) 
 
   SRCS += $(SRCDIR)/HypreSolver.cc
-  
+
   SUBDIRS := $(SRCDIR)/AMR
-  
+
   include $(SCIRUN_SCRIPTS)/recurse.mk
 
 endif # HAVE_HYPRE

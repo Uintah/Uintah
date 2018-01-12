@@ -1,13 +1,6 @@
 #include <CCA/Components/Arches/Utility/InitLagrangianParticleSize.h>
-#include <CCA/Components/Arches/Operators/Operators.h>
 
-#include <spatialops/Nebo.h>
-#include <spatialops/structured/stencil/FVStaggeredOperatorTypes.h>
-
-
-using namespace Uintah;
-using namespace SpatialOps;
-using SpatialOps::operator *;
+namespace Uintah{
 
 InitLagrangianParticleSize::InitLagrangianParticleSize( std::string task_name, int matl_index ) :
 TaskInterface( task_name, matl_index ) {
@@ -61,30 +54,28 @@ InitLagrangianParticleSize::create_local_labels(){
 //
 
 void
-InitLagrangianParticleSize::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
+InitLagrangianParticleSize::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){
 
   register_variable( _size_label, ArchesFieldContainer::COMPUTES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
 
 }
 
 void
-InitLagrangianParticleSize::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                        SpatialOps::OperatorDatabase& opr ){
+InitLagrangianParticleSize::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-
-  using namespace SpatialOps;
-  using SpatialOps::operator *;
-
-  typedef SpatialOps::SpatFldPtr<Particle::ParticleField> Pptr;
-
-  Pptr dp = tsk_info->get_particle_field(_size_label);
+  ParticleTuple dp_t = tsk_info->get_uintah_particle_field(_size_label);
+  ParticleVariable<double>& dp = *(std::get<0>(dp_t));
+  ParticleSubset* p_subset = std::get<1>(dp_t);
 
   if ( _init_type == "fixed"){
-    *dp <<= _fixed_d;
+    for (auto iter = p_subset->begin(); iter != p_subset->end(); iter++){
+      particleIndex i = *iter;
+      dp[i] = _fixed_d;
+    }
   } else if ( _init_type == "random"){
-    ParticleField& dd = *dp;
-    for ( ParticleField::iterator iter = dd.begin(); iter != dd.end(); iter++ ){
-      *iter = ((double)std::rand()/RAND_MAX)*_max_d;
+    for (auto iter = p_subset->begin(); iter != p_subset->end(); iter++){
+      particleIndex i = *iter;
+      dp[i] = ((double)std::rand()/RAND_MAX)*_max_d;
     }
   }
 
@@ -96,14 +87,11 @@ InitLagrangianParticleSize::initialize( const Patch* patch, ArchesTaskInfoManage
 //------------------------------------------------
 //
 void
-InitLagrangianParticleSize::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
+InitLagrangianParticleSize::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){
 }
 
 void
-InitLagrangianParticleSize::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                          SpatialOps::OperatorDatabase& opr ){
-
-}
+InitLagrangianParticleSize::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
 
 //
@@ -114,12 +102,11 @@ InitLagrangianParticleSize::timestep_init( const Patch* patch, ArchesTaskInfoMan
 
 //Register all variables both local and those needed from elsewhere that are required for this task.
 void
-InitLagrangianParticleSize::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
+InitLagrangianParticleSize::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){
 }
 
 //This is the work for the task.  First, get the variables. Second, do the work!
 void
-InitLagrangianParticleSize::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                  SpatialOps::OperatorDatabase& opr ){
+InitLagrangianParticleSize::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-}
+} //namespace Uintah

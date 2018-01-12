@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -43,11 +43,11 @@
 #include <Core/Util/Environment.h>
 
 #include <CCA/Components/DataArchiver/DataArchiver.h>
-#include <CCA/Components/Parent/ComponentFactory.h>
+#include <CCA/Components/Parent/ApplicationFactory.h>
 #include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 #include <CCA/Components/SimulationController/AMRSimulationController.h>
 #include <CCA/Ports/ProblemSpecInterface.h>
-#include <CCA/Ports/SimulationInterface.h>
+#include <CCA/Ports/ApplicationInterface.h>
 #include <Core/DataArchive/DataArchive.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -123,7 +123,7 @@ main( int argc, char *argv[], char *env[] )
 
   bool thrownException = false;
   
-  Uintah::Parallel::determineIfRunningUnderMPI( argc, argv );
+  Uintah::Parallel::initializeManager(argc, argv);
 
   string new_uda_dir;
   try {
@@ -131,12 +131,14 @@ main( int argc, char *argv[], char *env[] )
     Uintah::Parallel::initializeManager(argc, argv);
     const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
 
-    UintahParallelComponent * comp = ComponentFactory::create( ups, world, false, udafile[0] );
-    SimulationInterface     * sim  = dynamic_cast<SimulationInterface*>( comp );
+    UintahParallelComponent * comp =
+      ApplicationFactory::create( ups, world, nullptr, udafile[0] );
+    ApplicationInterface    * app  =
+      dynamic_cast<ApplicationInterface*>( comp );
 
     DataArchiver out_uda(world);
-    out_uda.attachPort("sim", sim);
-    out_uda.problemSetup(ups, nullptr);
+    out_uda.attachPort("application", app);
+    out_uda.problemSetup(ups, nullptr, nullptr);
     out_uda.initializeOutput(ups);
     new_uda_dir = out_uda.getOutputLocation();
 

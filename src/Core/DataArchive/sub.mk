@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2016 The University of Utah
+#  Copyright (c) 1997-2018 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -50,6 +50,11 @@ PSELIBS := \
 	Core/Math
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY)
+
+ifeq ($(HAVE_PIDX),yes)
+        INCLUDES += ${PIDX_INCLUDE}
+        LIBS += $(PIDX_LIBRARY)
+endif
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

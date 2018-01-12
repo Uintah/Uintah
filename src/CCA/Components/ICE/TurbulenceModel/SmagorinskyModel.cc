@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -23,8 +23,8 @@
  */
 
 
-#include <CCA/Components/ICE/BoundaryCond.h>
 #include <CCA/Components/ICE/TurbulenceModel/SmagorinskyModel.h>
+#include <CCA/Components/ICE/CustomBCs/BoundaryCond.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Grid/Patch.h>
@@ -82,7 +82,7 @@ void Smagorinsky_Model::computeTurbViscosity(DataWarehouse* new_dw,
   double term = (d_model_constant * filter_width)
                *(d_model_constant * filter_width);
   
-  StaticArray<CCVariable<double> > SIJ(6);
+  std::vector<CCVariable<double> > SIJ(6);
   for (int comp = 0; comp <= 5; comp++) {
     new_dw->allocateTemporary(SIJ[comp], patch,Ghost::AroundCells,2);
     SIJ[comp].initialize(0.0);
@@ -116,7 +116,7 @@ void Smagorinsky_Model::computeStrainRate(const Patch* patch,
                                     const int indx,
                                     SimulationStateP&  d_sharedState,
                                     DataWarehouse* new_dw,
-                                    StaticArray<CCVariable<double> >& SIJ)
+                                    std::vector<CCVariable<double> >& SIJ)
 {
   Vector dx = patch->dCell();
   double delX = dx.x();
@@ -164,6 +164,7 @@ void Smagorinsky_Model::scheduleComputeVariance(SchedulerP& sched,
       Task* task = scinew Task("Smagorinsky_Model::computeVariance",this, 
                                &Smagorinsky_Model::computeVariance, s);
                                
+      task->requires(Task::OldDW, VarLabel::find( timeStep_name) );
       task->requires(Task::OldDW, s->scalar, Ghost::AroundCells, 1);
       task->computes(s->scalarVariance);
       sched->addTask(task, patches, s->matl_set);
@@ -179,6 +180,11 @@ void Smagorinsky_Model::computeVariance(const ProcessorGroup*,
                                         DataWarehouse* new_dw,
                                         FilterScalar* s)
 {
+  timeStep_vartype timeStep;
+  old_dw->get(timeStep, VarLabel::find( timeStep_name) );
+
+  bool isNotInitialTimeStep = (timeStep > 0);
+
   cout_doing << "Doing computeVariance "<< "\t\t\t Smagorinsky_Model" << endl;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -211,7 +217,7 @@ void Smagorinsky_Model::computeVariance(const ProcessorGroup*,
         df *= inv_dx;
         fvar[c] = scale * df.length2();
       }
-      setBC(fvar,s->scalarVariance->getName(),patch, d_sharedState, matl, new_dw);
+      setBC(fvar,s->scalarVariance->getName(),patch, d_sharedState, matl, new_dw, isNotInitialTimeStep);
     }
   }
 }

@@ -51,8 +51,7 @@ LagrangianParticleFactory::register_all_tasks( ProblemSpecP& db )
 
     ProblemSpecP db_lp = db->findBlock("LagrangianParticles");
 
-    for ( ProblemSpecP db_pv = db_lp->findBlock("ParticleVariables")->findBlock("variable");
-          db_pv != 0; db_pv = db_pv->findNextBlock("variable") ) {
+    for ( ProblemSpecP db_pv = db_lp->findBlock("ParticleVariables")->findBlock("variable"); db_pv != nullptr; db_pv = db_pv->findNextBlock("variable") ) {
 
       std::string label;
       db_pv->getAttribute("label", label);
@@ -89,12 +88,15 @@ LagrangianParticleFactory::build_all_tasks( ProblemSpecP& db )
     ProblemSpecP db_lp = db->findBlock("LagrangianParticles");
 
     TaskInterface* tsk = retrieve_task( "update_particle_velocity");
+    print_task_setup_info( "update_particle_velocity", "lagrangian velocity update");
     tsk->problemSetup( db_lp );
 
     tsk = retrieve_task( "update_particle_position");
+    print_task_setup_info( "update_particle_position", "lagrangian position update");
     tsk->problemSetup( db_lp );
 
     tsk = retrieve_task( "update_particle_size");
+    print_task_setup_info( "update_particle_size", "lagrangian size update");
     tsk->problemSetup( db_lp );
 
     tsk->create_local_labels();

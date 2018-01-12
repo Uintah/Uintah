@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -63,12 +63,15 @@ WARNING
   public:
     TiledRegridder(const ProcessorGroup* pg);
     virtual ~TiledRegridder();
+
+    virtual std::string getName() { return std::string("Tiled"); }
+
     //! Create a new Grid
-    virtual Grid* regrid(Grid* oldGrid);
+    virtual Grid* regrid(Grid* oldGrid, const int timeStep);
 		
     virtual void problemSetup(const ProblemSpecP& params,
-			         const GridP& grid,
-			         const SimulationStateP& state);
+			      const GridP& grid,
+			      const SimulationStateP& state);
 
     std::vector<IntVector> getMinPatchSize() {return d_minTileSize;}
 

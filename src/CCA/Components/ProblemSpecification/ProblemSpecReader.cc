@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -26,7 +26,6 @@
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Parallel/Parallel.h> // Only used for MPI cerr
 #include <Core/Parallel/ProcessorGroup.h> // process determination
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Util/DebugStream.h>
@@ -172,8 +171,8 @@ getNeed( const string & needStr )
     return MULTIPLE;
   }
   else {
-    cout << "Error: ProblemSpecReader.cc: need_e (" << needStr << ") did not parse correctly... "
-         << "should be 'REQUIRED', 'OPTIONAL', or 'MULTIPLE'.\n";
+    // cout << "Error: ProblemSpecReader.cc: need_e (" << needStr << ") did not parse correctly... "
+    //      << "should be 'REQUIRED', 'OPTIONAL', or 'MULTIPLE'.\n";
     return INVALID_NEED;
   }
 }
@@ -649,10 +648,14 @@ getNeedAndTypeAndValidValues( const string & specStr, need_e & need, type_e & ty
   vector<char> separators;
   separators.push_back( '\'' );
 
-  vector<string> specs = split_string( specStr, separators );
+  // remove leading and tailing blanks, tabs, \n, \r
+  string specStr_clean = specStr;
+  collapse( specStr_clean );
+  
+  vector<string> specs = split_string( specStr_clean, separators );
 
   if( specs.size() < 1 || specs.size() > 2 ) {
-    throw ProblemSetupException( "Error in getNeedAndTypeAndValidValues()...", __FILE__, __LINE__ );
+    throw ProblemSetupException( "Error in getNeedAndTypeAndValidValues()...(" + specStr_clean + ")", __FILE__, __LINE__ );
   }
 
   separators.clear();
@@ -715,7 +718,7 @@ getLabelAndNeedAndTypeAndValidValues( const string & specStr, string & label,
   vector<string> labelNeedType = split_string( specs[0], separators );
 
   if( labelNeedType.size() != 3 ) {
-    throw ProblemSetupException( "Error: label/need/type did not parse correctly...", __FILE__, __LINE__ );
+    throw ProblemSetupException( "Error: label/need/type did not parse correctly for: '" + specs[0] + "'...", __FILE__, __LINE__ );
   }
 
   label = labelNeedType[ 0 ];
@@ -761,8 +764,6 @@ Tag::update( TagP tag )
 void
 Tag::parseXmlTag( const xmlNode * xmlTag )
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpecReader::parseXmlTag");
-
   //  string name = to_char_ptr( xmlTag->name );
   string name = (const char *)( xmlTag->name );
   collapse( name );
@@ -983,6 +984,7 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
         else if( attrName.find( "need_applies_to") == 0 ) {  // attribute string begins with "children"
 
           string attrStr = (const char *)( child->children->content );
+          
           vector<string> strings;
           vector<char> separators;
 
@@ -1023,7 +1025,8 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
             }
 
             if( !attribute->validateString( value ) ) {
-              throw ProblemSetupException( value + " is not a valid value for attribute " + attribute->getCompleteName(),
+              throw ProblemSetupException( "("+ value + ") is not a valid value for attribute " + attribute->getCompleteName() +
+                                           "\nIf the value is wrapped in ' (single quotes) remove them.",  
                                            __FILE__, __LINE__ );
             }
 
@@ -1146,8 +1149,6 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
 void
 ProblemSpecReader::parseValidationFile()
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpecReader::parseValidationFile");
-
   dbg << "\n";
   dbg << "-------------------------------------------------------------------\n";
   dbg << "- Parsing ups_spec.xml\n";
@@ -1161,11 +1162,14 @@ ProblemSpecReader::parseValidationFile()
 
   if ( doc == 0 ) {
 
-    proc0cout << "During .ups validation: Unable to load 'ups_spec.xml' from source directory...\n" <<
-                 "Will now try current directory.  If this fails, an Exception will be raised.\n";
-    // If the UPS_SPEC can't be read from the source directory, try looking for it in the 'inputs/' directory in the current directory.
-    // This happens on some systems where you have to copy the sus executable to a different filesystem for running, and the original
-    // file system is not visible.
+    // proc0cout << "During .ups validation: Unable to load 'ups_spec.xml' from source directory...\n" <<
+    //              "Will now try current directory.  If this fails, an Exception will be raised.\n";
+
+    // If the UPS_SPEC can't be read from the source directory, try
+    // looking for it in the 'inputs/' directory in the current
+    // directory.  This happens on some systems where you have to copy
+    // the sus executable to a different filesystem for running, and
+    // the original file system is not visible.
     valFileName = "./inputs/UPS_SPEC/ups_spec.xml";
 
     doc = xmlReadFile( valFileName.c_str(), 0, XML_PARSE_PEDANTIC );
@@ -1471,7 +1475,6 @@ Tag::validate( const ProblemSpec * ps, unsigned int depth /* = 0 */ )
   indent( inc_dbg, depth );
   inc_dbg << name << "\t\t\t" << getErrorInfo( ps->getNode() ) << "\n";
 
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpecReader::validate");
   if( !uintahSpec_g ) {
     throw ProblemSetupException( "Strange, UintahSpec_g does not exist...", __FILE__, __LINE__ );
   }
@@ -1770,7 +1773,6 @@ Tag::validate( const ProblemSpec * ps, unsigned int depth /* = 0 */ )
 void
 ProblemSpecReader::validateProblemSpec( ProblemSpecP & prob_spec )
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpecReader::validateProblemSpec");
   // qwerty: fixme: this comment is no longer correct... i think... Currently, the readInputFile() (and thus this validation) is called
   // multiple times (once for the initial .ups, but then again for 
   // saving data archives and such...)  this (temporary?) hack is used
@@ -1798,15 +1800,7 @@ ProblemSpecReader::validateProblemSpec( ProblemSpecP & prob_spec )
     uintahSpec_g->validate( prob_spec.get_rep() );
   }
   catch( ProblemSetupException & pse ) {
-    if( Parallel::getMPIRank() == 0 ) {
-      cout << "\n";
-      cout << "!! WARNING: Your .ups file did not parse successfully...\n";
-      cout << "!!          Fix your .ups file or update the ups_spec.xml\n";
-      cout << "!!          specification.  Reason for failure is:\n";
-      cout << "\n";
-      cout << pse.message() << "\n";
-    }
-    throw;
+    throw(pse);
   }
 
   namedGeomPieces_g.clear();
@@ -1859,14 +1853,14 @@ validateFilename( const string & filename, const xmlNode * parent )
       char buffer[2000];
       char * str = getcwd( buffer, 2000 );
       if( str == nullptr ) {
-        proc0cout << "WARNING: Directory not returned by getcwd()...\n";
+        errorMsg += "WARNING: Directory not returned by getcwd()...\n";
       }
       else {
         fullFilename = string(buffer) + "/" + filename;
       }
       if( !validFile( fullFilename ) ) {
         filenameIsBad = true;
-        errorMsg = "Couldn't find include file: '" + filename + "' or '" + fullFilename + "'\n";
+        errorMsg += "Couldn't find include file: '" + filename + "' or '" + fullFilename + "'\n";
       }
     }
   }
@@ -1876,20 +1870,23 @@ validateFilename( const string & filename, const xmlNode * parent )
 
     if( !validFile( fullFilename ) ) {
       filenameIsBad = true;
+      errorMsg += "Bad filename: '" + fullFilename + "'\n";
     }
   }
 
   if( filenameIsBad ) {
-    if ( !getInfo( fullFilename ) ) { // Stat'ing the file failed... so let's try testing the filesystem...
-      stringstream error_stream;
+    // if ( !getInfo( fullFilename ) ) { // Stat'ing the file failed... so let's try testing the filesystem...
+    //   stringstream error_stream;
       
-      string directory = fullFilename.substr(0, fullFilename.rfind( "/" ) );
-          
-      if( !testFilesystem( directory, error_stream, Parallel::getMPIRank() ) ) {
-        cout << error_stream.str();
-        cout.flush();
-      }
-    }
+    //   string directory = fullFilename.substr(0, fullFilename.rfind( "/" ) );
+
+    //   if( !testFilesystem( directory, error_stream,
+    //                     (Parallel::usingMPI() ?
+    //                      Parallel::getMPIRank():0) ) ) {
+    //     cout << error_stream.str();
+    //     cout.flush();
+    //   }
+    // }
     string errorInfo;
     if( parent ) {
       errorInfo = getErrorInfo( parent );
@@ -1903,10 +1900,10 @@ validateFilename( const string & filename, const xmlNode * parent )
 } // end validateFilename()
 
 void
-printDoc( xmlNode * node, int depth )
+printDoc( xmlNode * node, int depth, ostream & out = std::cout )
 {
   if( depth == 0 ) {
-    cout << "PRINTING DOC\n";
+    out << "PRINTING DOC\n";
   }
 
   if( node == nullptr ) {
@@ -1916,8 +1913,8 @@ printDoc( xmlNode * node, int depth )
   if( node->type == XML_ELEMENT_NODE ) {
     string name = (char*)node->name;
 
-    indent( cout, depth );
-    cout << name << "\n";
+    indent( out, depth );
+    out << name << "\n";
   }
 
   xmlNode * child = node->children;
@@ -1925,12 +1922,12 @@ printDoc( xmlNode * node, int depth )
   while( child != 0 ) {
 
     if( child->type == XML_ELEMENT_NODE ) {
-      printDoc( child, depth+1 );
+      printDoc( child, depth+1, out );
     }
     child = child->next;
   }
   if( depth == 0 ) {
-    cout << "DONE PRINTING DOC\n";
+    out << "DONE PRINTING DOC\n";
   }
 
 } // end printDoc()
@@ -1946,8 +1943,7 @@ ProblemSpecReader::readInputFile( const string & filename, bool validate /* = fa
 ProblemSpecP
 ProblemSpecReader::readInputFile( const string & filename, const vector<int> & patches, bool validate /* = false */ )
 {
-  MALLOC_TRACE_TAG_SCOPE( "ProblemSpecReader::readInputFile" );
-  if( d_xmlData != 0 ) {
+  if( d_xmlData != nullptr ) {
     return d_xmlData;
   }
 
@@ -2063,7 +2059,7 @@ ProblemSpecReader::readInputFile( const string & filename, const vector<int> & p
 
   resolveIncludes( prob_spec->getNode()->children, prob_spec->getNode() );
 
-  if( Parallel::getMPIRank() == 0 && validate ) { // Only validate the UPS on proc 0...
+  if( validate ) {
     validateProblemSpec( prob_spec );
   }
 
@@ -2087,8 +2083,6 @@ ProblemSpecReader::findFileNamePtr( const string & filename )
 void
 ProblemSpecReader::resolveIncludes( xmlNode * child, xmlNode * parent, int depth /* = 0 */ )
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpecReader::resolveIncludes");
-
   while( child != nullptr ) {
     if( child->type == XML_ELEMENT_NODE ) {
       string name1 = (const char *)(child->name);

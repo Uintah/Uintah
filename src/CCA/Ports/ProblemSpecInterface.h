@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -26,9 +26,7 @@
 #ifndef UINTAH_HOMEBREW_ProblemSpecINTERFACE_H
 #define UINTAH_HOMEBREW_ProblemSpecINTERFACE_H
 
-#include <Core/Parallel/UintahParallelPort.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
-
 
 #include <string>
 
@@ -62,18 +60,19 @@ WARNING
   
 ****************************************/
 
-   class ProblemSpecInterface : public UintahParallelPort {
-   public:
-      ProblemSpecInterface();
-      virtual ~ProblemSpecInterface();
-
-      virtual ProblemSpecP readInputFile( const std::string & filename, bool validate = false ) = 0;
-      virtual std::string getInputFile() = 0;
-      
-   private:
-      ProblemSpecInterface( const ProblemSpecInterface & );
-      ProblemSpecInterface & operator=( const ProblemSpecInterface & );
-   };
+  class ProblemSpecInterface {
+    
+  public:
+    ProblemSpecInterface();
+    virtual ~ProblemSpecInterface();
+    
+    virtual ProblemSpecP readInputFile( const std::string & filename, bool validate = false ) = 0;
+    virtual std::string getInputFile() = 0;
+    
+  private:
+    ProblemSpecInterface( const ProblemSpecInterface & );
+    ProblemSpecInterface & operator=( const ProblemSpecInterface & );
+  };
 } // End namespace Uintah
 
 #endif

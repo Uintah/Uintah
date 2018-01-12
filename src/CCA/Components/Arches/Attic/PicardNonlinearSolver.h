@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -192,11 +192,11 @@ public:
                       const MaterialSet* matls,
                       const TimeIntegratorLabel* timelabels);
 
-  inline double recomputeTimestep(double current_dt) {
-    return current_dt/2;
+  inline double recomputeDelT(const double delT) {
+    return delT / 2.0;
   }
 
-  inline bool restartableTimesteps() {
+  inline bool restartableTimeSteps() {
     return true;
   }
 

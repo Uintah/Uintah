@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2016 The University of Utah
+ * Copyright (c) 2012-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -41,7 +41,6 @@ ExprAlgebra( const Expr::TagList srcTagList,
   isModifierExpr_( isModifierExpr )
 {
   this->set_gpu_runnable( true );
-
   this->template create_field_vector_request<FieldT>(srcTagList, srcFields_);
 }
 
@@ -66,7 +65,7 @@ evaluate()
     else                                 result <<= 0.0;
   }
 
-  for (size_t i=0; i<srcFields_.size(); ++i) {
+  for( size_t i=0; i<srcFields_.size(); ++i ){
     const FieldT& f = srcFields_[i]->field_ref();
     switch( algebraicOperation_ ){
       case SUM       : result <<= result + f;  break;

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -28,8 +28,6 @@
 #include <CCA/Components/Schedulers/MPIScheduler.h>
 
 namespace Uintah {
-
-class Task;
 
 /**************************************
 
@@ -61,25 +59,28 @@ class DynamicMPIScheduler : public MPIScheduler {
 
   public:
 
-    DynamicMPIScheduler( const ProcessorGroup* myworld, const Output* oport, DynamicMPIScheduler* parentScheduler = 0 );
+    DynamicMPIScheduler( const ProcessorGroup* myworld, DynamicMPIScheduler* parentScheduler = 0 );
 
     virtual ~DynamicMPIScheduler();
 
-    virtual void problemSetup( const ProblemSpecP& prob_spec, SimulationStateP& state );
+    virtual void problemSetup( const ProblemSpecP& prob_spec, const SimulationStateP& state );
 
     virtual SchedulerP createSubScheduler();
 
     virtual void execute( int tgnum = 0, int iteration = 0 );
     
-    virtual bool useInternalDeps() { return !d_sharedState->isCopyDataTimestep(); }
+    virtual bool useInternalDeps() { return !m_is_copy_data_timestep; }
     
+
   private:
 
-    // Disable copy and assignment
-    DynamicMPIScheduler( const DynamicMPIScheduler& );
-    DynamicMPIScheduler& operator=( const DynamicMPIScheduler& );
+    // eliminate copy, assignment and move
+    DynamicMPIScheduler( const DynamicMPIScheduler & )            = delete;
+    DynamicMPIScheduler& operator=( const DynamicMPIScheduler & ) = delete;
+    DynamicMPIScheduler( DynamicMPIScheduler && )                 = delete;
+    DynamicMPIScheduler& operator=( DynamicMPIScheduler && )      = delete;
 
-    QueueAlg taskQueueAlg_;
+    QueueAlg m_task_queue_alg { MostMessages };
 };
 
 } // End namespace Uintah

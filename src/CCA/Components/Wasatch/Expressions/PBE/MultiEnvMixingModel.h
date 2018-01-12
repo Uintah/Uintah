@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2016 The University of Utah
+ * Copyright (c) 2012-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -130,7 +130,7 @@ MultiEnvMixingModel<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
-  typedef std::vector<FieldT*> ResultsVec;
+  typedef typename Expr::Expression<FieldT>::ValVec ResultsVec;
 
   ResultsVec& results = this->get_value_vec();
 

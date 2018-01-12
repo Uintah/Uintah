@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,13 +25,13 @@
 #ifndef UINTAH_HOMEBREW_RIGIDMPM_H
 #define UINTAH_HOMEBREW_RIGIDMPM_H
 
-#include <Core/Parallel/UintahParallelComponent.h>
+#include <CCA/Components/MPM/SerialMPM.h>
+
 #include <CCA/Ports/DataWarehouseP.h>
-#include <CCA/Ports/SimulationInterface.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
-#include <CCA/Components/MPM/Contact/Contact.h>
+#include <CCA/Components/MPM/Materials/Contact/Contact.h>
 #include <CCA/Components/MPM/SerialMPM.h>
 #include <Core/Geometry/Vector.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
@@ -71,14 +71,15 @@ WARNING
 
 class RigidMPM : public SerialMPM {
 public:
-  RigidMPM(const ProcessorGroup* myworld);
+  RigidMPM(const ProcessorGroup* myworld,
+	   const SimulationStateP sharedState);
   virtual ~RigidMPM();
 
   //////////
   // Insert Documentation Here:
   virtual void problemSetup(const ProblemSpecP& params, 
                             const ProblemSpecP& restart_prob_spec, 
-                            GridP& grid, SimulationStateP&);
+                            GridP& grid);
          
   //////////
   // Insert Documentation Here:
@@ -108,7 +109,6 @@ public:
   void scheduleComputeAndIntegrateAcceleration(SchedulerP&, const PatchSet*,
                                                const MaterialSet*);
 
-
   // Insert Documentation Here:
   virtual void computeAndIntegrateAcceleration(const ProcessorGroup*,
                                                const PatchSubset* patches,
@@ -116,6 +116,15 @@ public:
                                                DataWarehouse* old_dw,
                                                DataWarehouse* new_dw);
 
+  virtual void scheduleComputeParticleGradients(SchedulerP&, 
+                                                const PatchSet*,
+                                                const MaterialSet*);
+
+  void computeParticleGradients(const ProcessorGroup*,
+                                const PatchSubset* patches,
+                                const MaterialSubset* matls,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw);
 
   void scheduleInterpolateToParticlesAndUpdate(SchedulerP&,
                                                        const PatchSet*,
