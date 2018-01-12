@@ -573,7 +573,6 @@
           <FOWYDevol                        spec="OPTIONAL NO_DATA"
                                             need_applies_to="type coal">
             <v_hiT                        spec="REQUIRED DOUBLE" />
-            <Tig                          spec="REQUIRED DOUBLE" />
             <A                            spec="REQUIRED DOUBLE" />
             <Ta                           spec="REQUIRED DOUBLE" />
             <Tbp_graphite                 spec="REQUIRED DOUBLE" />

@@ -211,7 +211,6 @@
         <RichardsFletcher_coefficients>[1.18e7, 1.46e13, 9044, 29215, 0.0309, 0.5573, -104.45, 323.46, -54.197, -0.8526, -728.01, -0.0345, 0.0, 14.590, -53.759, 126.16, -132.02, 44.477, -0.000817, 0.0]</RichardsFletcher_coefficients>
         <FOWYDevol>
           <v_hiT>6.641e-01</v_hiT>
-          <Tig>590</Tig>
           <A>19724227.36</A>
           <Ta>1.113e4</Ta>
           <Tbp_graphite>3e3</Tbp_graphite>

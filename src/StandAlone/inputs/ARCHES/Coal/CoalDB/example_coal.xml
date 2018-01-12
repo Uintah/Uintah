@@ -34,7 +34,6 @@
     <!-- A1[1/s], A2[1/s], E1[K], E2[K], Y1[volatile fraction from prox analysis], Y2[fraction devolatilzed at higher temperatures], c0_1-c5_1, c0_2-c5_2 -->
     <FOWYDevol>
       <v_hiT>0.8895</v_hiT>
-      <Tig>590</Tig>
       <A>229086765276.777</A>
       <Ta>1.991e4</Ta>
       <Tbp_graphite>3e3</Tbp_graphite>
