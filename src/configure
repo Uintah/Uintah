@@ -35,22 +35,6 @@
 # ## IN THE SOFTWARE.
 # ##
 #
-##
-## IMPORTANT!!!  Configure developers, PLEASE READ:
-##
-## The following BULLET PROOFING needs to be placed manually into
-## configure every time after autoconf is run, and before configure is
-## checked in:
-##
-## To avoid allowing invalid arguments to configure, we have to manually
-## hack the 'configure' script after it has been 'autoconf'd, and add the
-## line "enable_option_checking=fatal".  There apparently is no way to do
-## this through autoconf macros... sigh.  Manually find this entire text
-## block (comment and all) in configure, MOVE IT ALL TO THE TOP OF THE FILE
-## (just after the MIT license), and uncomment the following line:
-##
-enable_option_checking=fatal
-#
 ## -------------------- ##
 ## M4sh Initialization. ##
 ## -------------------- ##
@@ -852,24 +836,42 @@ SOFLAGS
 MAKE_ARCHIVES
 STATIC_BUILD_DEF
 ac_ct_F77
-NO_FORTRAN
-DEF_PHASEFIELD
-DEF_HEAT
-DEF_WASATCH
-DEF_MODELS_RADIATION
 DEF_NO_FORTRAN
+NO_FORTRAN
+DEF_WASATCH
+DEF_UNIT_TESTS
+DEF_STANDALONE
+DEF_SIM_CONTROLLER
+DEF_POST_PROCESS_UDA
+DEF_PHASEFIELD
+DEF_PARENT
+DEF_MODELS_RADIATION
 DEF_MPM
+DEF_MODELS
 DEF_ICE
+DEF_HEAT
 DEF_FVM
+DEF_EXAMPLES
 DEF_ARCHES
-BUILD_PHASEFIELD
-BUILD_HEAT
+DEF_APPLICATION
+DEF_ANALYSIS_MODULES
 BUILD_WASATCH
+BUILD_UNIT_TESTS
+BUILD_STANDALONE
+BUILD_SIM_CONTROLLER
+BUILD_POST_PROCESS_UDA
+BUILD_PHASEFIELD
+BUILD_PARENT
 BUILD_MPM
 BUILD_MODELS_RADIATION
+BUILD_MODELS
 BUILD_ICE
+BUILD_HEAT
 BUILD_FVM
+BUILD_EXAMPLES
 BUILD_ARCHES
+BUILD_APPLICATION
+BUILD_ANALYSIS_MODULES
 OGL_ERR_MACRO
 DEBUG
 THROW_LEVEL
@@ -932,7 +934,6 @@ infodir
 docdir
 oldincludedir
 includedir
-runstatedir
 localstatedir
 sharedstatedir
 sysconfdir
@@ -1017,13 +1018,16 @@ enable_assertion_level
 enable_scinew_line_numbers
 enable_throw_level
 enable_rpath
+enable_unit_tests
+enable_minimal
 enable_arches
+enable_examples
 enable_fvm
+enable_heat
 enable_ice
 enable_mpm
-enable_wasatch
-enable_heat
 enable_phasefield
+enable_wasatch
 enable_all_components
 '
       ac_precious_vars='build_alias
@@ -1083,7 +1087,6 @@ datadir='${datarootdir}'
 sysconfdir='${prefix}/etc'
 sharedstatedir='${prefix}/com'
 localstatedir='${prefix}/var'
-runstatedir='${localstatedir}/run'
 includedir='${prefix}/include'
 oldincludedir='/usr/include'
 docdir='${datarootdir}/doc/${PACKAGE_TARNAME}'
@@ -1336,15 +1339,6 @@ do
   | -silent | --silent | --silen | --sile | --sil)
     silent=yes ;;
 
-  -runstatedir | --runstatedir | --runstatedi | --runstated \
-  | --runstate | --runstat | --runsta | --runst | --runs \
-  | --run | --ru | --r)
-    ac_prev=runstatedir ;;
-  -runstatedir=* | --runstatedir=* | --runstatedi=* | --runstated=* \
-  | --runstate=* | --runstat=* | --runsta=* | --runst=* | --runs=* \
-  | --run=* | --ru=* | --r=*)
-    runstatedir=$ac_optarg ;;
-
   -sbindir | --sbindir | --sbindi | --sbind | --sbin | --sbi | --sb)
     ac_prev=sbindir ;;
   -sbindir=* | --sbindir=* | --sbindi=* | --sbind=* | --sbin=* \
@@ -1482,7 +1476,7 @@ fi
 for ac_var in	exec_prefix prefix bindir sbindir libexecdir datarootdir \
 		datadir sysconfdir sharedstatedir localstatedir includedir \
 		oldincludedir docdir infodir htmldir dvidir pdfdir psdir \
-		libdir localedir mandir runstatedir
+		libdir localedir mandir
 do
   eval ac_val=\$$ac_var
   # Remove trailing slashes.
@@ -1635,7 +1629,6 @@ Fine tuning of the installation directories:
   --sysconfdir=DIR        read-only single-machine data [PREFIX/etc]
   --sharedstatedir=DIR    modifiable architecture-independent data [PREFIX/com]
   --localstatedir=DIR     modifiable single-machine data [PREFIX/var]
-  --runstatedir=DIR       modifiable per-process data [LOCALSTATEDIR/run]
   --libdir=DIR            object code libraries [EPREFIX/lib]
   --includedir=DIR        C header files [PREFIX/include]
   --oldincludedir=DIR     C header files for non-gcc [/usr/include]
@@ -1699,13 +1692,16 @@ Optional Features:
                           'scinew'
 --enable-throw-level=N  Use throw level N (0-3)
 --enable-rpath          Set a default runtime library search path
+--enable-unit-tests     Turn on the unit tests.
+--enable-minimal        Do a minimal library only build
 --enable-arches         Turn on the Arches component - and Radiation Model.
+--enable-examples       Turn on the EXAMPLES component.
 --enable-fvm            Turn on the FVM component.
+--enable-heat           Turn on the Heat component.
 --enable-ice            Turn on the Ice component.
 --enable-mpm            Turn on the Mpm component.
---enable-wasatch        Turn on the Wasatch component.
---enable-heat           Turn on the Heat component.
 --enable-phasefield     Turn on the PhaseField component.
+--enable-wasatch        Turn on the Wasatch component.
 --enable-all-components Turn on the all components.
 
 Optional Packages:
@@ -3023,6 +3019,22 @@ fi
 
   sci_arg_var_list="$sci_arg_var_list NVCC_LDFLAGS"
 
+
+##
+## IMPORTANT!!!  Configure developers, PLEASE READ:
+##
+## The following BULLET PROOFING needs to be placed manually into
+## configure every time after autoconf is run, and before configure is
+## checked in:
+##
+## To avoid allowing invalid arguments to configure, we have to manually
+## hack the 'configure' script after it has been 'autoconf'd, and add the
+## line "enable_option_checking=fatal".  There apparently is no way to do
+## this through autoconf macros... sigh.  Manually find this entire text
+## block (comment and all) in configure, MOVE IT ALL TO THE TOP OF THE FILE
+## (just after the MIT license), and uncomment the following line:
+##
+# enable_option_checking=fatal
 
 # Make sure we can run config.sub.
 $SHELL "$ac_aux_dir/config.sub" sun4 >/dev/null 2>&1 ||
@@ -6209,8 +6221,30 @@ fi
   sci_arg_enable_list="$sci_arg_enable_list --enable-rpath --disable-rpath"
 
 
+
+  # Check whether --enable-unit-tests was given.
+if test "${enable_unit_tests+set}" = set; then :
+  enableval=$enable_unit_tests; BUILD_UNIT_TESTS="yes"
+else
+  BUILD_UNIT_TESTS="no"
+fi
+
+  sci_arg_enable_list="$sci_arg_enable_list --enable-unit-tests --disable-unit-tests"
+
+
+
+  # Check whether --enable-minimal was given.
+if test "${enable_minimal+set}" = set; then :
+  enableval=$enable_minimal; enable_minimal="$enableval"
+else
+  enable_minimal=${enable_minimal='no'}
+fi
+
+  sci_arg_enable_list="$sci_arg_enable_list --enable-minimal --disable-minimal"
+
+
 #
-# ---- List of --enable statements for Uintah Components ----
+# ---- List of --enable statements for Uintah Applications ----
 #
 
 
@@ -6226,6 +6260,18 @@ fi
 
 
 
+  # Check whether --enable-examples was given.
+if test "${enable_examples+set}" = set; then :
+  enableval=$enable_examples; BUILD_EXAMPLES="yes"
+else
+  BUILD_EXAMPLES="no"
+   DEF_EXAMPLES="#define NO_EXAMPLES"
+fi
+
+  sci_arg_enable_list="$sci_arg_enable_list --enable-examples --disable-examples"
+
+
+
   # Check whether --enable-fvm was given.
 if test "${enable_fvm+set}" = set; then :
   enableval=$enable_fvm; BUILD_FVM="yes"
@@ -6235,6 +6281,18 @@ else
 fi
 
   sci_arg_enable_list="$sci_arg_enable_list --enable-fvm --disable-fvm"
+
+
+
+  # Check whether --enable-heat was given.
+if test "${enable_heat+set}" = set; then :
+  enableval=$enable_heat; BUILD_HEAT="yes"
+else
+  BUILD_HEAT="no"
+   DEF_HEAT="#define NO_HEAT"
+fi
+
+  sci_arg_enable_list="$sci_arg_enable_list --enable-heat --disable-heat"
 
 
 
@@ -6262,30 +6320,6 @@ fi
 
 
 
-  # Check whether --enable-wasatch was given.
-if test "${enable_wasatch+set}" = set; then :
-  enableval=$enable_wasatch; BUILD_WASATCH="yes"
-else
-  BUILD_WASATCH="no"
-   DEF_WASATCH="#define NO_WASATCH"
-fi
-
-  sci_arg_enable_list="$sci_arg_enable_list --enable-wasatch --disable-wasatch"
-
-
-
-  # Check whether --enable-heat was given.
-if test "${enable_heat+set}" = set; then :
-  enableval=$enable_heat; BUILD_HEAT="yes"
-else
-  BUILD_HEAT="no"
-   DEF_HEAT="#define NO_HEAT"
-fi
-
-  sci_arg_enable_list="$sci_arg_enable_list --enable-heat --disable-heat"
-
-
-
   # Check whether --enable-phasefield was given.
 if test "${enable_phasefield+set}" = set; then :
   enableval=$enable_phasefield; BUILD_PHASEFIELD="yes"
@@ -6298,21 +6332,36 @@ fi
 
 
 
+  # Check whether --enable-wasatch was given.
+if test "${enable_wasatch+set}" = set; then :
+  enableval=$enable_wasatch; BUILD_WASATCH="yes"
+else
+  BUILD_WASATCH="no"
+   DEF_WASATCH="#define NO_WASATCH"
+fi
+
+  sci_arg_enable_list="$sci_arg_enable_list --enable-wasatch --disable-wasatch"
+
+
+
   # Check whether --enable-all_components was given.
 if test "${enable_all_components+set}" = set; then :
   enableval=$enable_all_components; use_all_components="yes"
    BUILD_ARCHES="yes"
+   BUILD_EXAMPLES="yes"
    BUILD_FVM="yes"
+   BUILD_HEAT="yes"
    BUILD_ICE="yes"
    BUILD_MPM="yes"
    BUILD_WASATCH="yes"
-   BUILD_HEAT="yes"
    DEF_ARCHES=
+   DEF_EXAMPLES=
    DEF_FVM=
+   DEF_HEAT=
    DEF_ICE=
    DEF_MPM=
+   DEF_UNIT_TESTS=
    DEF_WASATCH=
-   DEF_HEAT=
 
 else
   use_all_components="no"
@@ -6325,27 +6374,82 @@ fi
 # --- end list of -enable components ------
 #
 
+BUILD_ANALYSIS_MODULES=yes
+DEF_ANALYSIS_MODULES=
+
+BUILD_APPLICATION=yes
+DEF_APPLICATION=
+
+BUILD_MODELS=yes
+DEF_MODELS=
+
 BUILD_MODELS_RADIATION=yes
 DEF_MODELS_RADIATION=
 
-if test "$use_all_components" = "yes" -a          \
-        \( "$enable_arches"           = "yes" -o  \
+BUILD_PARENT=yes
+DEF_PARENT=
+
+BUILD_POST_PROCESS_UDA=yes
+DEF_POST_PROCESS_UDA=
+
+BUILD_SIM_CONTROLLER=yes
+DEF_SIM_CONTROLLER=
+
+BUILD_STANDALONE=yes
+DEF_STANDALONE=
+
+if test "$enable_minimal" = "yes" -a              \
+        \( "$use_all_components"      = "yes" -o  \
+	   "$enable_unit_tests"       = "yes" -o  \
+	   "$enable_arches"           = "yes" -o  \
+           "$enable_examples"         = "yes" -o  \
            "$enable_fvm"              = "yes" -o  \
+           "$enable_heat"             = "yes" -o  \
            "$enable_ice"              = "yes" -o  \
            "$enable_models_radiation" = "yes" -o  \
            "$enable_mpm"              = "yes" -o  \
-           "$enable_wasatch"          = "yes" -o  \
-           "$enable_heat"             = "yes" -o  \
-           "$enable_phasefield"       = "yes" \); then
-   as_fn_error $? "Please do not use both --enable-all-components and --enable-<specific-component> " "$LINENO" 5
+           "$enable_phasefield"       = "yes" -o  \
+           "$enable_wasatch"          = "yes" \); then
+   as_fn_error $? "Can not do a minimal library only build if building applications or unit tests" "$LINENO" 5
+elif test "$enable_minimal" = "yes"; then
+
+  add_important_warning "-------------------------------------------------------------------------"
+  msg="!!! MINIMAL LIBRARY ONLY BUILD REQUESTED !!!"
+  add_important_warning "$msg"
+  add_important_warning "-------------------------------------------------------------------------"
+  BUILD_ANALYSIS_MODULES=no
+  BUILD_APPLICATION=no
+  BUILD_MODELS=no
+  BUILD_PARENT=no
+  BUILD_POST_PROCESS_UDA=no
+  BUILD_SIM_CONTROLLER=no
+  BUILD_STANDALONE=no
 fi
-if test "$BUILD_ARCHES"     != "yes"           -a   \
-        "$BUILD_FVM"        != "yes"           -a   \
-        "$BUILD_ICE"        != "yes"           -a   \
-        "$BUILD_MPM"        != "yes"           -a   \
-        "$BUILD_WASATCH"    != "yes"           -a   \
-        "$BUILD_HEAT"       != "yes"           -a   \
-        "$BUILD_PHASEFIELD" != "yes" ; then
+
+if test "$use_all_components" = "yes" -a          \
+        \( "$enable_arches"           = "yes" -o  \
+           "$enable_examples"         = "yes" -o  \
+           "$enable_fvm"              = "yes" -o  \
+           "$enable_heat"             = "yes" -o  \
+           "$enable_ice"              = "yes" -o  \
+           "$enable_models_radiation" = "yes" -o  \
+           "$enable_mpm"              = "yes" -o  \
+           "$enable_phasefield"       = "yes" -o  \
+           "$enable_wasatch"          = "yes" \); then
+   as_fn_error $? "Can not use both --enable-all-components and --enable-<specific-component> " "$LINENO" 5
+fi
+
+if test "$enable_minimal"      != "yes" -a  \
+        "$BUILD_ARCHES"        != "yes" -a  \
+        "$BUILD_EXAMPLES"      != "yes" -a  \
+        "$BUILD_FVM"           != "yes" -a  \
+        "$BUILD_HEAT"          != "yes" -a  \
+        "$BUILD_ICE"           != "yes" -a  \
+        "$BUILD_MPM"           != "yes" -a  \
+        "$BUILD_PHASEFIELD"    != "yes" -a  \
+        "$BUILD_WASATCH"       != "yes" ; then
+  BUILD_ANALYSIS_MODULES=no
+  BUILD_MODELS=no
   add_important_warning "-------------------------------------------------------------------------"
   msg="!!! NO COMPONENTS WERE SPECIFIED! ONLY UTILITY PROGRAMS WILL BE BUILT !!!"
   add_important_warning "$msg"
@@ -8421,6 +8525,26 @@ if test "$with_fortran" = "no"; then
 fi
 
 # NO_FORTRAN is used in configVars.mk[.in] and DEF_NO_FORTRAN is used in uintah_testdefs.h.in
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

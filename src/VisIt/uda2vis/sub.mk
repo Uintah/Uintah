@@ -29,12 +29,9 @@
 
 include $(SCIRUN_SCRIPTS)/so_prologue.mk
 
-SRCDIR  := StandAlone/tools/uda2vis
+SRCDIR  := VisIt/uda2vis
 
-ifeq ($(LARGESOS),yes)
-  PSELIBS := Datflow Packages/Uintah
-else
-  PSELIBS := \
+PSELIBS := \
       CCA/Ports         \
       CCA/Components/ProblemSpecification \
       Core/Containers   \
@@ -49,7 +46,6 @@ else
       Core/Parallel     \
       Core/ProblemSpec  \
       Core/Util
-endif
 
 SRCS := \
 	$(SRCDIR)/uda2vis.cc

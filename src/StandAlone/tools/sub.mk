@@ -73,9 +73,7 @@ SUBDIRS := \
         $(SRCDIR)/graphview   \
         $(SRCDIR)/mpi_test    \
         $(SRCDIR)/pfs         \
-        $(SRCDIR)/puda        \
-        $(SRCDIR)/uda2vis     
-
+        $(SRCDIR)/puda
 
 #ifeq ($(HAVE_PIDX),yes)
 #  SUBDIRS += $(SRCDIR)/pidx

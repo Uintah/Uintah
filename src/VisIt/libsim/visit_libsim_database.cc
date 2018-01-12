@@ -43,8 +43,8 @@
 #include <Core/OS/ProcessInfo.h>
 #include <Core/Parallel/Parallel.h>
 
-#include "StandAlone/tools/uda2vis/udaData.h"
-#include "StandAlone/tools/uda2vis/uda2vis.h"
+#include "VisIt/uda2vis/udaData.h"
+#include "VisIt/uda2vis/uda2vis.h"
 
 #include <stdio.h>
 

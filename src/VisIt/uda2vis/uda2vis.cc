@@ -32,11 +32,12 @@
  *
  */
 
-#include <StandAlone/tools/uda2vis/uda2vis.h>
+#include <VisIt/uda2vis/uda2vis.h>
 
 #include <CCA/Components/Regridder/PerPatchVars.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/LoadBalancer.h>
+#include <CCA/Ports/Scheduler.h>
 #include <Core/DataArchive/DataArchive.h>
 #include <Core/Grid/Variables/PerPatch.h>
 

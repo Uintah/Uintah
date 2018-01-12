@@ -35,9 +35,8 @@
 #ifndef UINTAH_UDA2VIS_H
 #define UINTAH_UDA2VIS_H
 
-#include "StandAlone/tools/uda2vis/udaData.h"
+#include <VisIt/uda2vis/udaData.h>
 
-#include <CCA/Components/Schedulers/SchedulerCommon.h>
 #include <CCA/Ports/SchedulerP.h>
 #include <Core/Grid/GridP.h>
 
