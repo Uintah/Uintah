@@ -32,15 +32,16 @@
 #include <sci_defs/uintah_defs.h>
 #include <sci_defs/cuda_defs.h>
 
-#ifdef HAVE_CUDA
-#  include <CCA/Components/Examples/UnifiedSchedulerTest.h>
-#endif
-
 #ifndef NO_ARCHES
 #  include <CCA/Components/Arches/Arches.h>
 #endif
 
 #ifndef NO_EXAMPLES
+
+#ifdef HAVE_CUDA
+#  include <CCA/Components/Examples/UnifiedSchedulerTest.h>
+#endif
+
 #include <CCA/Components/Examples/AMRWave.h>
 #include <CCA/Components/Examples/AMRHeat.hpp>
 #include <CCA/Components/Examples/Benchmark.h>
@@ -500,9 +501,6 @@ ApplicationFactory::create( ProblemSpecP& prob_spec,
   }
   else
     turned_on_options += "wave ";
-#endif
-  
-  //----------------------------
 
 #ifdef HAVE_CUDA
   if (sim_comp == "unifiedschedulertest" || sim_comp == "UNIFIEDSCHEDULERTEST") {
@@ -511,6 +509,10 @@ ApplicationFactory::create( ProblemSpecP& prob_spec,
   else
     turned_on_options += "unifiedschedulertest ";
 #endif
+
+#endif
+  
+  //----------------------------
 
   throw ProblemSetupException("ERROR<Application>: Unknown simulationComponent ('" + sim_comp + "'). It must one of the follwing: " + turned_on_options + "\n"
                               "Make sure that the requested application is supported in this build.", __FILE__, __LINE__);
