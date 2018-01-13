@@ -1,3 +1,5 @@
+Uintah-specific Kokkos documentation can be found at http://uintah-build.sci.utah.edu/trac/wiki/Kokkos.
+
 Kokkos installation instructions can be found in src/build_scripts/build_kokkos.
 
 An example of Kokkos usage within Uintah can be found in src/CCA/Components/Examples/Poisson1.cc.
