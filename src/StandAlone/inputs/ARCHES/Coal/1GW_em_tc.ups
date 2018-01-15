@@ -1256,12 +1256,12 @@
         <model label="wall_HF" type="wall_heatflux_variable">
           <frequency>1</frequency>
         </model>
-        <model type="gasRadProperties"  label="gas_abskg" >
+        <model type="gasRadProperties" label="gas_abskg">
           <calculator type="hottel_sarofim">
             <opl>0.5632</opl>
           </calculator>
         </model>
-        <model type="partRadProperties" label="abskp" >
+        <model type="partRadProperties" label="abskp">
           <subModel>constantCIF</subModel>
           <part_temp_label>temperature_coal</part_temp_label>
           <part_size_label>length</part_size_label>
@@ -1296,8 +1296,8 @@
         <density>1300.0</density>
         <rho_ash_bulk>2000.0</rho_ash_bulk>
         <temperature>300.0</temperature>
-        <ash_softening_temperature>1500.0</ash_softening_temperature>     
-        <ash_hemispherical_temperature>900</ash_hemispherical_temperature> 
+        <ash_softening_temperature>1500.0</ash_softening_temperature>
+        <ash_hemispherical_temperature>900</ash_hemispherical_temperature>
         <ash_fluid_temperature>1400.0</ash_fluid_temperature>
         <ultimate_analysis>
           <C>0.5934 </C>
@@ -1317,10 +1317,10 @@
           <Tig>590</Tig>
           <A>2.3550e+07</A>
           <Ta>1.133e4</Ta>
-          <b>12.3937</b>
-          <c>-8.87596</c>
-          <d>2.25563</d>
-          <e>-0.48052</e>
+          <Tbp_graphite>3e3</Tbp_graphite>
+          <T_mu>1100.0</T_mu>
+          <T_sigma>250.0</T_sigma>
+          <T_hardened_bond>1800.0</T_hardened_bond>
           <sigma>1.189e3</sigma>
         </FOWYDevol>
         <ShaddixChar>
@@ -1407,6 +1407,9 @@
           <src label="heat_source">
             <weight>1</weight>
           </src>
+          <!--<src label="forgas_ConHT_loss">-->
+            <!--<weight>1</weight>-->
+          <!--</src>-->
         </Eqn>
         <Eqn label="coal_gas_mix_frac" type="CCscalar">
           <doDiff>true</doDiff>
@@ -1463,6 +1466,10 @@
           </src>
           <src label="heat_source" type="coal_gas_heat">
             <heat_model_name>heat</heat_model_name>
+          </src>
+          <src label="forgas_ConHT_loss" type="ht_convection">
+            <dTCorrectionFactor>2</dTCorrectionFactor>
+            <ConWallHT_src label="forwall_convht_src"/>
           </src>
           <src label="coal_gas_momentum" type="coal_gas_momentum">
           </src>
@@ -1718,7 +1725,6 @@
         <save_moments>false</save_moments>
       </DQMOM>
       <BoundaryConditions>
-        <wall_csmag>0.04</wall_csmag>
         <intrusions>
           <intrusion label="nose">
             <constant_temperature T="1200.0"/>
@@ -1793,6 +1799,9 @@
           <do_only_last_projection>false</do_only_last_projection>
         </PressureSolver>
         <MomentumSolver>
+          <wall_closure type="constant_coefficient">
+            <wall_csmag>0.4</wall_csmag>
+          </wall_closure>
           <convection_scheme>wall_upwind</convection_scheme>
           <src label="coal_gas_momentum"/>
           <Re_limit>2</Re_limit>

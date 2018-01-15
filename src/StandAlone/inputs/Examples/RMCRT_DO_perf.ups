@@ -124,7 +124,7 @@
   -->
   </Grid>
   <!--__________________________________-->
-  <AMR>
+  <AMR type="StaticGridML">
     <useLockStep> true </useLockStep>
   </AMR>    
   <!--__________________________________-->

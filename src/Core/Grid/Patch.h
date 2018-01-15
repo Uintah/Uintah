@@ -4,7 +4,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -29,7 +29,6 @@
 #include <Core/Grid/Ghost.h>
 #include <Core/Grid/Level.h>
 #include <Core/Disclosure/TypeDescription.h>
-#include <Core/Grid/fixedvector.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/NodeIterator.h>
 #include <Core/Grid/Variables/Iterator.h>
@@ -152,8 +151,9 @@ namespace Uintah {
     };
     
     static const int MAX_PATCH_SELECT = 32;
-    typedef FixedVector<const Patch*, MAX_PATCH_SELECT> selectType;
-    
+    //    typedef FixedVector<const Patch*, MAX_PATCH_SELECT> selectType;
+    typedef std::vector<const Patch*> selectType;
+
     
     /**************New Public Interaface*******************
      *
@@ -939,19 +939,16 @@ namespace Uintah {
     
     /**
      * Returns the cell spacing Vector(dx,dy,dz)
-     *  Note: This will need to change for stretched grids
      */
     inline Vector dCell() const { return getLevel()->dCell(); }
     
     /**
-     * Returns the cell volume dx*dy*dz. This will not work for stretched grids.
-     * Note: This function will throw an exception if the grid is stretched.
+     * Returns the cell volume dx*dy*dz.
      */
     inline double cellVolume() const { return getLevel()->cellVolume(); }
     
     /**
-     * Returns the cell area dx*dy. This will not work for stretched grids.
-     * Note: This function will throw an exception if the grid is stretched.
+     * Returns the cell area dx*dy.
      */
     inline double cellArea( const Patch::FaceType face ) const {
       Vector unitNormal(0,0,0);
@@ -995,8 +992,6 @@ namespace Uintah {
      */
     inline IntVector getCellIndex( const Point & pos ) const { return getLevel()->getCellIndex( pos ); }
     
-    //Below for Fracture *************************************************
-    
     /**
      * Returns the 8 nodes found around the point pos
      */
@@ -1027,7 +1022,6 @@ namespace Uintah {
       IntVector c=getLevel()->getCellIndex(p);
       return containsIndex(l,h,c);
     }
-    //Above for Fracture *************************************************
     
     static inline bool containsIndex(const IntVector &low, const IntVector &high, const IntVector &cell) {
       return low.x()  <= cell.x() &&
@@ -1035,8 +1029,7 @@ namespace Uintah {
              low.z()  <= cell.z() &&
              high.x() >  cell.x() &&
              high.y() >  cell.y() &&
-             high.z() >  cell.z();
-      
+             high.z() >  cell.z(); 
     }
     /**
      * Returns the cell that contains the point pos

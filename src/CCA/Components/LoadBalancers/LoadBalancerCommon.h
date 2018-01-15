@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,18 +25,25 @@
 #ifndef CCA_COMPONENTS_LOADBALANCERS_LOADBALANCERCOMMON_H
 #define CCA_COMPONENTS_LOADBALANCERS_LOADBALANCERCOMMON_H
 
-#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/SFC.h>
 
+#include <CCA/Components/SimulationController/RunTimeStatsEnums.h>
+
+#include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Parallel/UintahParallelComponent.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Util/InfoMapper.h>
 
 #include <set>
 #include <string>
 #include <vector>
 
 namespace Uintah {
+
+class ApplicationInterface;
 
 /**************************************
 
@@ -99,7 +106,7 @@ public:
 /// the load balancer subclasses.  The main function that sets load balancers
 /// apart is getPatchwiseProcessorAssignment - how it determines which patch
 /// to assign on which procesor.
-class LoadBalancerCommon : public LoadBalancerPort, public UintahParallelComponent {
+class LoadBalancerCommon : public LoadBalancer, public UintahParallelComponent {
 
 public:
 
@@ -107,12 +114,19 @@ public:
 
   virtual ~LoadBalancerCommon();
 
+  // Methods for managing the components attached via the ports.
+  virtual void setComponents( UintahParallelComponent *comp ) {};
+  virtual void getComponents();
+  virtual void releaseComponents();
+
   //! Returns the MPI rank of the process on which the patch is to be executed.
   virtual int getPatchwiseProcessorAssignment( const Patch * patch );
 
   //! The implementation in LoadBalancerCommon.cc is for dynamice load balancers.
   //! The Simple and SingleProcessor override this function with default implementations.
   virtual int getOldProcessorAssignment( const Patch * patch );
+
+  virtual bool needRecompile( const GridP& ) = 0;
 
   /// Goes through the Detailed tasks and assigns each to its own processor.
   virtual void assignResources( DetailedTasks & tg );
@@ -134,7 +148,9 @@ public:
 
   /// Reads the problem spec file for the LoadBalancer section, and looks 
   /// for entries such as outputNthProc, dynamicAlgorithm, and interval.
-  virtual void problemSetup( ProblemSpecP & pspec, GridP & grid, SimulationStateP & state );
+  virtual void problemSetup( ProblemSpecP & pspec,
+			     GridP & grid,
+			     const SimulationStateP & state );
 
   // for DynamicLoadBalancer mostly, but if we're called then it also means the 
   // grid might have changed and need to create a new perProcessorPatchSet
@@ -185,9 +201,16 @@ public:
                                 , const GridP        & grid
                                 );
    
+  int  getNumDims() const { return m_numDims; };
+  int* getActiveDims() { return m_activeDims; };
+  void setDimensionality(bool x, bool y, bool z);
+
+  void setRunTimeStats( ReductionInfoMapper< RunTimeStatsEnum, double > *runTimeStats) { d_runTimeStats = runTimeStats; };     
 
 protected:
 
+  ApplicationInterface* m_application{nullptr};
+  
   // Calls space-filling curve on level, and stores results in pre-allocated output
   void useSFC( const LevelP & level, int * output) ;
     
@@ -203,8 +226,11 @@ protected:
   virtual const PatchSet* createPerProcessorPatchSet( const GridP  & grid  );
   virtual const PatchSet* createOutputPatchSet(       const LevelP & level );
 
-  double m_last_lb_time{0.0};
+  int    m_lb_timeStep_interval{0};
+  int    m_last_lb_timeStep{0};
+
   double m_lb_interval{0.0};
+  double m_last_lb_simTime{0.0};
   bool   m_check_after_restart{false};
 
   // The assignment vectors are stored 0-n.  This stores the start patch number so we can
@@ -219,7 +245,7 @@ protected:
   SFC <double> m_sfc;
   bool         m_do_space_curve{false};
 
-  SimulationStateP          m_shared_state;            ///< to keep track of timesteps
+  SimulationStateP          m_sharedState;            ///< to keep track of timesteps
   Scheduler               * m_scheduler {nullptr};     ///< store the scheduler to not have to keep passing it in
   std::set<const Patch*>    m_neighbors;               ///< the neighborhood.  See createNeighborhood
   std::set<int>             m_neighborhood_processors; ///< a list of processors that are in this processors neighborhood
@@ -236,6 +262,13 @@ protected:
   Handle< const PatchSet >              m_grid_perproc_patchsets;
   std::vector< Handle<const PatchSet> > m_output_patchsets;
 
+  // Which dimensions are active.  Get the number of dimensions, and
+  // then that many indices of activeDims are set to which dimensions
+  // are being used.
+  int m_numDims{0};
+  int m_activeDims[3];
+
+  ReductionInfoMapper< RunTimeStatsEnum, double > *d_runTimeStats;
 
 private:
 

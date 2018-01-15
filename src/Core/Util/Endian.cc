@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -21,7 +21,13 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+
+/*  Endian.h is located in the build directory, not in the source tree.
+    To add something to it, you need to edit testEndian.h.in (in this directory)
+    and then reconfigure, and Endian.h will be regenerated automatically.
+*/
 #include <Core/Util/Endian.h>
+#include <Core/Geometry/IntVector.h>
 
 #include <sci_defs/bits_defs.h> // for SCI_32BITS
 #include <sci_defs/osx_defs.h>  // for OSX_SNOW_LEOPARD_OR_LATER
@@ -52,6 +58,9 @@ void swapbytes( Point &i )    { // probably dangerous, but effective
 void swapbytes( Vector &i )   { // probably dangerous, but effective
                               double* p = (double *)(&i);
                               SWAP_8(*p); SWAP_8(*++p); SWAP_8(*++p); }
+void swapbytes( IntVector &i )   { // probably dangerous, but effective
+                              int* p = (int *)(&i);
+                              SWAP_4(*p); SWAP_4(*++p); SWAP_4(*++p); }
 
 bool isBigEndian()
 {

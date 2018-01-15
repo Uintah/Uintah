@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -216,7 +216,7 @@ DetailedTask::scrub( std::vector<OnDemandDataWarehouseP> & dws )
             patch->computeVariableExtents(type, req->m_var->getBoundaryLayer(), req->m_gtype, req->m_num_ghost_cells, neighbors, low, high);
           }
 
-          for (int i = 0; i < neighbors.size(); i++) {
+          for (unsigned int i = 0; i < neighbors.size(); i++) {
             const Patch* neighbor = neighbors[i];
 
             if ( req->m_patches_dom == Task::ThisLevel && patch != neighbor ) {

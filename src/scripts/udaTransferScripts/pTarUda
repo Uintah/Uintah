@@ -30,6 +30,7 @@ unalias -a cd
 nproc="10"
 allTimesteps="Y"
 continueTarring="N"
+deleteOrgTimesteps="N"
 MAKE=make
 OS="Linux"
 FIND=find
@@ -62,6 +63,9 @@ while [ "$#" -gt 0 ]; do
   -create|--create)
       createExtract="create"
       ;;
+  -deleteOrgTimesteps|---deleteOrgTimesteps)
+      deleteOrgTimesteps="Y"
+      ;;
   -extract|--extract)
       createExtract="extract"
       recordName="pUntar_record"
@@ -86,13 +90,14 @@ if [ $show_help -ne 0 ]; then
       This script does not delete the original timestep directories. 
 
       Options:                        default
-          -np:              [int]        10       Number of processores used.
-          -allTimesteps:    [y/n]         Y       operate on all directories in uda?  If "n" then a vi window will open allowing you to edit the timesteps
-          -create           blank         X       create new archives
-          -extract          blank                 extract timestep archieves
-          -continueTarring  blank                 continue tarring if previous attempts failed
-          -uda              [dir name]            uda name
-          -help:                                  Display this option summary
+          -np:                 [int]        10       Number of processores used.
+          -allTimesteps:       [y/n]         Y       operate on all directories in uda?  If "n" then a vi window will open allowing you to edit the timesteps
+          -create              blank         X       create new archives
+          -deleteOrgTimesteps  blank                 delete  original timesteps directories after they have been tarred. 
+          -extract             blank                 extract timestep archieves
+          -continueTarring     blank                 continue tarring if previous attempts failed
+          -uda                 [dir name]            uda name
+          -help:                                     Display this option summary
 EOF
   exit 0
 fi
@@ -115,7 +120,7 @@ if test $createExtract == "create"; then
   if test "$rc" = "0"; then
     TAR="tar  --use-compress-program 'pigz' -cBf"
   else
-    TAR="tar --use-compress-program 'gzip' -cBf"
+    TAR="tar --use-compress-program 'gzip'  -cBf"
   fi
 fi
 
@@ -129,15 +134,17 @@ if test $createExtract == "extract"; then
   fi
 fi
 
-export TAR createExtract
 
-export PTAR_FILES=/tmp/ptar_files_`basename $uda`_`whoami`
+export TAR createExtract deleteOrgTimesteps
+
+export PTAR_FILES=/tmp/ptar_`basename $uda`_`whoami`
 
 echo "_____________________________________"
 echo "Inputs:"
 echo "	# processors:          $nproc"
 echo "	allDirectories:        $allTimesteps"
 echo "	create/extract:        $createExtract"
+echo "	deleteOrgTimesteps:     $deleteOrgTimesteps"
 echo "	continueTarring:       $continueTarring"
 echo "	uda:                   $uda"
 echo "	PTAR_FILES:            $PTAR_FILES"
@@ -156,7 +163,7 @@ validateTarredFilesDir()
   
   if test -d "$STAMP_DIR"; then
     echo ""
-    echo "  WARNING: The previous attempt at tarring the directores was interrupted."
+    echo "  WARNING: The previous attempt at tarring/untarring the directores was interrupted."
     echo "           The list of directories already tarred can be found at:"
     echo "                 $STAMP_DIR/stamp"
     echo ""
@@ -168,7 +175,7 @@ validateTarredFilesDir()
       return
     fi
     
-    echo "  Do you wish to continue tarring the remaining directories? (y/n)"
+    echo "  Do you wish to continue tarring/untarring the remaining directories? (y/n)"
     echo "  If not, manually remove the following directory and run this script again:"
     echo "           $STAMP_DIR"
     echo ""
@@ -181,6 +188,7 @@ validateTarredFilesDir()
       exit 1
     fi
   else
+    echo "  Making the stamp directory $STAMP_DIR"
     mkdir $STAMP_DIR
   fi
 }
@@ -239,23 +247,23 @@ echo ""                                 >> $PTAR_RECORD
 cd $uda
 
 #-------------------------------
-# make a sorted list of directories to tar
+# make a sorted list of directories to tar/untar
 # Let the user edit that file with vi
 /bin/rm -f $PTAR_FILES
 
 if test $createExtract == "create"; then
   $FIND .                -maxdepth 1 -type d  -exec basename {} \; | grep -v "\.\|t[0-9]\|checkpoints\|.tarred_files" >$PTAR_FILES
   $FIND ./t*             -maxdepth 0 -type d  -exec basename {} \; >>$PTAR_FILES
-  $FIND ./checkpoints    -maxdepth 1 -type d  >>$PTAR_FILES
+  $FIND ./checkpoints    -maxdepth 1 -type d   | sed "s|^\./||"    >>$PTAR_FILES
 fi
 if test $createExtract == "extract"; then
   $FIND .                -maxdepth 1 -name "*.gz" -exec basename {} \;  >$PTAR_FILES
-  $FIND ./checkpoints    -maxdepth 1 -name "*.gz" >>$PTAR_FILES
+  $FIND ./checkpoints    -maxdepth 1 -name "*.gz" | sed "s|^\./||"     >>$PTAR_FILES
 fi
 
 
 #remove "./checkpoints" from PTAR_FILES
-sed -i /".\/checkpoints$"/d $PTAR_FILES
+sed -i /"checkpoints$"/d $PTAR_FILES
 
 #more $PTAR_FILES
 
@@ -271,7 +279,14 @@ if test "$allTimesteps" == "N"; then
   $EDITOR $PTAR_FILES
 fi
 
-chmod ug+rw $PTAR_FILES 
+#__________________________________
+# Some uda have _hundreds_ of timesteps.
+# You must break up the list of files into smaller files
+let nLines=$nproc*10
+
+split --lines=$nLines --suffix-length=3 --numeric-suffixes $PTAR_FILES $PTAR_FILES.
+
+chmod ug+rw $PTAR_FILES* 
 
 #______________________________________________________________________ 
 # Now tar the directories
@@ -280,7 +295,11 @@ echo -n "Starting at: " | tee -a $PTAR_RECORD
 date | tee -a $PTAR_RECORD
 echo | tee -a $PTAR_RECORD
 
-/usr/bin/time -p $MAKE  -s -f $pTardir/pTarUda_driver_$OS -j $nproc | tee -a $PTAR_RECORD
+for X in $PTAR_FILES.*; do
+  PTAR_FILES_N="$X"
+  export PTAR_FILES_N
+  /usr/bin/time -p $MAKE  -s -f $pTardir/pTarUda_driver_$OS -j $nproc | tee -a $PTAR_RECORD
+done
 
 echo | tee -a $PTAR_RECORD
 echo -n "Ending at: " | tee -a $PTAR_RECORD

@@ -70,15 +70,16 @@
         <var role="density" label="density"/>
       </VarID>
       <PropertyModelsV2>
-        <model label="density" type="constant_property">
-          <grid type="CC"/>
-          <value>1.</value>
-        </model>
         <model label="gamma" type="constant_property">
           <grid type="CC"/>
           <value>1.e-4</value>
         </model>
       </PropertyModelsV2>
+      <StateProperties> 
+        <model label="density_model" type="constant">
+          <const_property label="density" value="1."/>
+        </model>
+      </StateProperties>
       <KMomentum>
         <convection scheme="central"/>
         <inviscid/>
@@ -95,12 +96,12 @@
         </PressureSolver>
       </KMomentum>
       <Initialization>
-        <task task_label="x-mom-init" variable_label="x-mom" type="almgren_mms">
+        <task task_label="uVel-init" variable_label="uVel" type="almgren_mms">
           <variable type="FX"/>
           <which_vel>u</which_vel>
           <coordinates x="ucellX" y="gridY"/>
         </task>
-        <task task_label="y-mom-init" variable_label="y-mom" type="almgren_mms">
+        <task task_label="vVel-init" variable_label="vVel" type="almgren_mms">
           <variable type="FY"/>
           <which_vel>v</which_vel>
           <coordinates x="gridX" y="vcellY"/>

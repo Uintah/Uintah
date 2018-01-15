@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,44 +22,42 @@
  * IN THE SOFTWARE.
  */
 
-
 #include <CCA/Components/FVM/ElectrostaticSolve.h>
+#include <CCA/Components/FVM/FVMLabel.h>
+#include <CCA/Components/FVM/FVMMaterial.h>
 #include <CCA/Components/FVM/FVMBoundCond.h>
-#include <CCA/Ports/LoadBalancerPort.h>
+
+#include <CCA/Ports/Scheduler.h>
+
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Grid/Variables/Stencil7.h>
-#include <Core/Grid/Variables/NCVariable.h>
+#include <Core/Geometry/IntVector.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Grid/Ghost.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
-#include <Core/Grid/Variables/SoleVariable.h>
 #include <Core/Grid/Variables/CellIterator.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Variables/Stencil7.h>
 #include <Core/Grid/Task.h>
-#include <Core/Grid/Grid.h>
-#include <Core/Grid/Level.h>
-#include <Core/Grid/Ghost.h>
-#include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Geometry/Vector.h>
-#include <CCA/Ports/Scheduler.h>
-#include <Core/Malloc/Allocator.h>
-
-#include <iostream>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
 using namespace Uintah;
 
-ElectrostaticSolve::ElectrostaticSolve(const ProcessorGroup* myworld)
-  : UintahParallelComponent(myworld)
+ElectrostaticSolve::ElectrostaticSolve(const ProcessorGroup* myworld,
+                                       const SimulationStateP sharedState)
+  : ApplicationCommon(myworld, sharedState)
 {
   d_lb = scinew FVMLabel();
 
   d_solver_parameters = 0;
   d_delt = 0;
   d_solver = 0;
-  d_shared_state = 0;
   d_with_mpm = false;
 
   d_es_matl  = scinew MaterialSubset();
@@ -89,11 +87,8 @@ ElectrostaticSolve::~ElectrostaticSolve()
 //
 void ElectrostaticSolve::problemSetup(const ProblemSpecP& prob_spec,
                                       const ProblemSpecP& restart_prob_spec,
-                                      GridP& grid,
-                                      SimulationStateP& shared_state)
+                                      GridP& grid)
 {
-  d_shared_state = shared_state;
-
   d_solver = dynamic_cast<SolverInterface*>(getPort("solver"));
   if(!d_solver) {
     throw InternalError("ST1:couldn't get solver port", __FILE__, __LINE__);
@@ -109,20 +104,39 @@ void ElectrostaticSolve::problemSetup(const ProblemSpecP& prob_spec,
 
   ProblemSpecP fvm_ps = prob_spec->findBlock("FVM");
 
+  if( !fvm_ps ) {
+    throw ProblemSetupException("ERROR: Cannot find the FVM block",
+                                __FILE__, __LINE__);
+  }
+  
   d_solver_parameters = d_solver->readParameters(fvm_ps, "electrostatic_solver",
-                                             d_shared_state);
+                                                 m_sharedState);
+
   d_solver_parameters->setSolveOnExtraCells(false);
     
   fvm_ps->require("delt", d_delt);
 
-  ProblemSpecP mat_ps = root_ps->findBlockWithOutAttribute("MaterialProperties");
-  ProblemSpecP fvm_mat_ps = mat_ps->findBlock("FVM");
-
   if( !d_with_mpm ) {
+
+    ProblemSpecP mat_ps =
+      root_ps->findBlockWithOutAttribute("MaterialProperties");
+  
+    if( !mat_ps ) {
+      throw ProblemSetupException("ERROR: Cannot find the Material Properties block",
+                                  __FILE__, __LINE__);
+    }
+
+    ProblemSpecP fvm_mat_ps = mat_ps->findBlock("FVM");
+
+    if( !fvm_mat_ps ) {
+      throw ProblemSetupException("ERROR: Cannot find the FVM Materials Properties block",
+                                  __FILE__, __LINE__);
+    }
+
     for ( ProblemSpecP ps = fvm_mat_ps->findBlock("material"); ps != nullptr; ps = ps->findNextBlock("material") ) {
 
-      FVMMaterial *mat = scinew FVMMaterial(ps, d_shared_state, FVMMaterial::ESPotential);
-      d_shared_state->registerFVMMaterial(mat);
+      FVMMaterial *mat = scinew FVMMaterial(ps, m_sharedState, FVMMaterial::ESPotential);
+      m_sharedState->registerFVMMaterial(mat);
     }
   }
 }
@@ -139,7 +153,7 @@ void
 ElectrostaticSolve::scheduleInitialize( const LevelP     & level,
                                               SchedulerP & sched )
 {
-  const MaterialSet* fvm_matls = d_shared_state->allFVMMaterials();
+  const MaterialSet* fvm_matls = m_sharedState->allFVMMaterials();
 
   Task* t = scinew Task("ElectrostaticSolve::initialize", this,
                         &ElectrostaticSolve::initialize);
@@ -157,21 +171,21 @@ void ElectrostaticSolve::scheduleRestartInitialize(const LevelP& level,
 }
 //__________________________________
 // 
-void ElectrostaticSolve::scheduleComputeStableTimestep(const LevelP& level,
+void ElectrostaticSolve::scheduleComputeStableTimeStep(const LevelP& level,
                                           SchedulerP& sched)
 {
-  Task* task = scinew Task("computeStableTimestep",this, 
-                           &ElectrostaticSolve::computeStableTimestep);
-  task->computes(d_shared_state->get_delt_label(),level.get_rep());
-  sched->addTask(task, level->eachPatch(), d_shared_state->allFVMMaterials());
+  Task* task = scinew Task("computeStableTimeStep",this, 
+                           &ElectrostaticSolve::computeStableTimeStep);
+  task->computes(getDelTLabel(),level.get_rep());
+  sched->addTask(task, level->eachPatch(), m_sharedState->allFVMMaterials());
 }
 //__________________________________
 //
 void
 ElectrostaticSolve::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
-  const MaterialSet* fvm_matls = d_shared_state->allFVMMaterials();
-  const MaterialSet* all_matls = d_shared_state->allMaterials();
+  const MaterialSet* fvm_matls = m_sharedState->allFVMMaterials();
+  // const MaterialSet* all_matls = m_sharedState->allMaterials();
 
   scheduleComputeConductivity(   sched, level, fvm_matls);
   scheduleComputeFCConductivity( sched, level, d_es_matlset);
@@ -190,12 +204,12 @@ ElectrostaticSolve::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 }
 //__________________________________
 //
-void ElectrostaticSolve::computeStableTimestep(const ProcessorGroup*,
+void ElectrostaticSolve::computeStableTimeStep(const ProcessorGroup*,
                                   const PatchSubset* pss,
                                   const MaterialSubset*,
                                   DataWarehouse*, DataWarehouse* new_dw)
 {
-  new_dw->put(delt_vartype(d_delt), d_shared_state->get_delt_label(),getLevel(pss));
+  new_dw->put(delt_vartype(d_delt), getDelTLabel(),getLevel(pss));
 }
 //__________________________________
 //
@@ -205,12 +219,12 @@ void ElectrostaticSolve::initialize(const ProcessorGroup*,
                        DataWarehouse*, DataWarehouse* new_dw)
 {
   FVMBoundCond bc;
-  int num_matls = d_shared_state->getNumFVMMatls();
+  int num_matls = m_sharedState->getNumFVMMatls();
 
   for (int p = 0; p < patches->size(); p++){
     const Patch* patch = patches->get(p);
     for(int m = 0; m < num_matls; m++){
-      FVMMaterial* fvm_matl = d_shared_state->getFVMMaterial(m);
+      FVMMaterial* fvm_matl = m_sharedState->getFVMMaterial(m);
       int idx = fvm_matl->getDWIndex();
 
       CCVariable<double> conductivity;
@@ -222,8 +236,6 @@ void ElectrostaticSolve::initialize(const ProcessorGroup*,
 
     }
   }
-
-
 }
 
 //______________________________________________________________________
@@ -250,7 +262,7 @@ void ElectrostaticSolve::computeConductivity(const ProcessorGroup* pg,
                                              DataWarehouse* old_dw,
                                              DataWarehouse* new_dw)
 {
-  int num_matls = d_shared_state->getNumFVMMatls();
+  int num_matls = m_sharedState->getNumFVMMatls();
   for (int p = 0; p < patches->size(); p++){
     const Patch* patch = patches->get(p);
 
@@ -261,7 +273,7 @@ void ElectrostaticSolve::computeConductivity(const ProcessorGroup* pg,
     grid_conductivity.initialize(0.0);
 
     for(int m = 0; m < num_matls; m++){
-      FVMMaterial* fvm_matl = d_shared_state->getFVMMaterial(m);
+      FVMMaterial* fvm_matl = m_sharedState->getFVMMaterial(m);
       int idx = fvm_matl->getDWIndex();
 
       constCCVariable<double> old_conductivty;
@@ -481,7 +493,6 @@ void ElectrostaticSolve::updateESPotential(const ProcessorGroup*, const PatchSub
                         fcx_conductivity, fcy_conductivity, fcz_conductivity);
 
   } // end patch loop
-
 }
 
 void ElectrostaticSolve::scheduleComputeCurrent(SchedulerP& sched,
@@ -537,7 +548,5 @@ void ElectrostaticSolve::computeCurrent(const ProcessorGroup*,
       current.z( cc_cond[c] * (cc_pot[c + zoffset] - cc_pot[c - zoffset])/hz2) ;
       cell_current[c] = current;
     }
-
   } // end patch loop
-
 }

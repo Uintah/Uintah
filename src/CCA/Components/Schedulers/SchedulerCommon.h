@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -30,10 +30,13 @@
 #include <CCA/Components/Schedulers/Relocate.h>
 #include <CCA/Ports/Scheduler.h>
 
+#include <CCA/Components/SimulationController/RunTimeStatsEnums.h>
+
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/Parallel/UintahParallelComponent.h>
+#include <Core/Util/Timers/Timers.hpp>
 
 #include <iosfwd>
 #include <map>
@@ -42,16 +45,17 @@
 
 namespace Uintah {
 
-
+class ApplicationInterface;
+class LoadBalancer;
 class Output;
 class DetailedTask;
 class DetailedTasks;
 class TaskGraph;
 class LocallyComputedPatchVarMap;
-
+  
 using LabelMatlMap            = std::map<const VarLabel*, MaterialSubset*, VarLabel::Compare>;
 using VarLabelMaterialListMap = std::map< std::string, std::list<int> >;
-using ReductionTasksMap       = std::map<VarLabelMatl<Level>, Task*>;
+using ReductionTasksMap       = std::map<VarLabelMatl<Level, DataWarehouse>, Task*>;
 using VarLabelList            = std::vector<std::vector<const VarLabel*> >;
 
 
@@ -84,17 +88,22 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
 
   public:
 
-    SchedulerCommon( const ProcessorGroup * myworld, const Output * oport );
+    SchedulerCommon( const ProcessorGroup * myworld );
 
     virtual ~SchedulerCommon();
 
-    virtual void problemSetup( const ProblemSpecP & prob_spec, SimulationStateP & state );
+    virtual void setComponents(  UintahParallelComponent *comp );
+    virtual void getComponents();
+    virtual void releaseComponents();
+
+    virtual void problemSetup( const ProblemSpecP     & prob_spec,
+			       const SimulationStateP & state );
 
     virtual void doEmitTaskGraphDocs();
 
     virtual void checkMemoryUse( unsigned long & memUsed,
-				 unsigned long & highwater,
-				 unsigned long & maxMemUsed );
+                                 unsigned long & highwater,
+                                 unsigned long & maxMemUsed );
 
     // sbrk memory start location (for memory tracking)
     virtual void   setStartAddr( char * start ) { start_addr = start; }
@@ -139,9 +148,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     virtual const std::set<const VarLabel*, VarLabel::Compare>& getInitialRequiredVars() const { return m_init_required_vars; }
     virtual const std::set<const VarLabel*, VarLabel::Compare>& getComputedVars()        const { return m_computed_vars; }
 
-    virtual LoadBalancerPort * getLoadBalancer();
-
-    virtual void releaseLoadBalancer();
+    virtual LoadBalancer * getLoadBalancer() { return m_loadBalancer; };
 
     virtual DataWarehouse* get_dw( int idx );
 
@@ -230,8 +237,22 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
 
     virtual void setPositionVar( const VarLabel* posLabel ) { m_reloc_new_pos_label = posLabel; }
 
-    virtual void scheduleAndDoDataCopy( const GridP & grid, SimulationInterface * sim );
+    virtual void scheduleAndDoDataCopy( const GridP & grid );
 
+    // Clear the recorded task monitoring attribute values.
+    virtual void clearTaskMonitoring();
+
+    // Schedule the recording of the task monitoring attribute values.
+    virtual void scheduleTaskMonitoring( const LevelP& level );
+    virtual void scheduleTaskMonitoring( const PatchSet* patches );
+
+    // Record the task monitoring attribute values.
+    virtual void recordTaskMonitoring(const ProcessorGroup*,  
+                                      const PatchSubset* patches,
+                                      const MaterialSubset* /*matls*/,
+                                      DataWarehouse* old_dw,
+                                      DataWarehouse* new_dw);
+  
     //! override default behavior of copying, scrubbing, and such
     virtual void overrideVariableBehavior( const std::string & var
                                          ,       bool          treatAsOld
@@ -257,7 +278,10 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
 
     int getMaxLevelOffset() { return m_max_level_offset; }
 
-    bool isCopyDataTimestep() { return m_shared_state->isCopyDataTimestep() || m_is_init_timestep; }
+    bool isCopyDataTimestep() { return m_is_copy_data_timestep; }
+      
+    bool copyTimestep() { return (m_is_copy_data_timestep ||
+				  m_is_init_timestep); }
 
     void setInitTimestep( bool isInitTimestep ) { m_is_init_timestep = isInitTimestep; }
 
@@ -267,6 +291,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
 
     const VarLabel* m_reloc_new_pos_label{nullptr};
 
+    void setRunTimeStats( ReductionInfoMapper< RunTimeStatsEnum, double > *runTimeStats) { d_runTimeStats = runTimeStats; };
 
   protected:
 
@@ -298,15 +323,22 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
       , PRINT_AFTER_EXEC  = 4
     };
 
-
     bool                                m_restartable{false};
+    // Some places need to know if this is a copy data timestep or
+    // a normal timestep.  (A copy data timestep is AMR's current 
+    // method of getting data from an old to a new grid).
+    bool                                m_is_copy_data_timestep{false};
     bool                                m_is_init_timestep{false};
     bool                                m_is_restart_init_timestep{false};
     int                                 m_current_task_graph{-1};
     int                                 m_generation{0};
     int                                 m_dwmap[Task::TotalDWs];
-    const Output*                       m_out_port{nullptr};
-    SimulationStateP                    m_shared_state{nullptr};
+
+    ApplicationInterface * m_application  {nullptr};
+    LoadBalancer         * m_loadBalancer {nullptr};
+    Output               * m_output       {nullptr};
+  
+    SimulationStateP                    m_sharedState{nullptr};
     std::vector<OnDemandDataWarehouseP> m_dws;
     std::vector<TaskGraph*>             m_task_graphs;
 
@@ -321,6 +353,20 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     std::vector<std::string>   m_tracking_vars;
     std::vector<std::string>   m_tracking_tasks;
     std::vector<Task::WhichDW> m_tracking_dws;
+
+    // Optional task monitoring.
+    MaterialSubset* m_dummy_matl{0};
+
+    bool m_monitoring{false};          // Monitoring on/off.
+    bool m_monitoring_per_cell{false}; // Record the task runtime attributes
+                                       // on a per cell basis rather than a
+                                       // per patch basis.
+    // Maps for the global or local tasks to be monitored.
+    std::map<std::string, const VarLabel *>       m_monitoring_tasks[2];
+    std::map<std::string, std::map<int, double> > m_monitoring_values[2];
+
+    // Method for summing up the task contributions.
+    void sumTaskMonitoringValues(DetailedTask * dtask);
 
     // so we can manually copy vars between AMR levels
     std::set<std::string> m_copy_data_vars;
@@ -337,8 +383,16 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     // do not checkpoint these variables
     std::set<std::string> m_no_checkpoint_vars;
 
+    ReductionInfoMapper< RunTimeStatsEnum, double > *d_runTimeStats{nullptr};
 
   private:
+
+    // helper method for primary addTask()
+    void addTask(       std::shared_ptr<Task>
+                , const PatchSet    * patches
+                , const MaterialSet * matls
+                , const int           tg_num
+                );
 
     // eliminate copy, assignment and move
     SchedulerCommon( const SchedulerCommon & )            = delete;
@@ -393,6 +447,5 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
 
   };
 } // End namespace Uintah
-
 
 #endif

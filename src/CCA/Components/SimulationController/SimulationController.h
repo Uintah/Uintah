@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,24 +22,25 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_HOMEBREW_SIMULATIONCONTROLLER_H
-#define UINTAH_HOMEBREW_SIMULATIONCONTROLLER_H
+#ifndef CCA_COMPONENTS_SIMULATIONCONTROLLER_SIMULATIONCONTROLLER_H
+#define CCA_COMPONENTS_SIMULATIONCONTROLLER_SIMULATIONCONTROLLER_H
+
+#include <CCA/Components/SimulationController/RunTimeStatsEnums.h>
 
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/SimulationStateP.h>
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Util/InfoMapper.h>
 #include <Core/Util/Timers/Timers.hpp>
 
 #include <CCA/Ports/DataWarehouseP.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/SchedulerP.h>
 
+#include <sci_defs/papi_defs.h>
 #include <sci_defs/visit_defs.h>
-#include <sci_defs/papi_defs.h> // for PAPI performance counters
 
 #ifdef HAVE_VISIT
 #  include <VisIt/libsim/visit_libsim.h>
@@ -51,32 +52,34 @@
 // Window size for the exponential moving average
 #define AVERAGE_WINDOW 10
 
+
 namespace Uintah {
 
 class  DataArchive;
-class  LoadBalancerPort;
+class  LoadBalancer;
 class  Output;
 class  Regridder;
-class  SimulationInterface;
+class  ApplicationInterface;
 class  SimulationTime;
 
 /**************************************
 
  CLASS
- WallTimer
+   WallTimer
 
  KEYWORDS
- Util, Wall Timers
+   Util, Wall Timers
 
  DESCRIPTION
- Utility class to manage the Wall Time.
+   Utility class to manage the Wall Time.
 
  ****************************************/
 
 class WallTimers {
 
 public:
-  WallTimers() { d_nSamples = 0; d_wallTimer.start(); };
+
+  WallTimers() { m_num_samples = 0; m_wall_timer.start(); };
 
 public:
 
@@ -86,37 +89,38 @@ public:
   Timers::Simple InSitu;             // In-situ time for previous time step
 
   int    getWindow( void ) { return AVERAGE_WINDOW; };
-  void resetWindow( void ) { d_nSamples = 0; };
+  void resetWindow( void ) { m_num_samples = 0; };
   
-  Timers::nanoseconds updateExpMovingAverage( void )
-  {
+  Timers::nanoseconds updateExpMovingAverage( void ) {
+
     Timers::nanoseconds laptime = TimeStep.lap();
     
-    // Ignore the first sample as that is for initalization.
-    if( d_nSamples )
-    {
-      // Calulate the exponential moving average for this time step.
+    // Ignore the first sample as that is for initialization.
+    if( m_num_samples ) {
+      // Calculate the exponential moving average for this time step.
       // Multiplier: (2 / (Time periods + 1) )
       // EMA: {current - EMA(previous)} x multiplier + EMA(previous).
       
-      double mult = 2.0 / ((double) std::min(d_nSamples, AVERAGE_WINDOW) + 1.0);
+      double mult = 2.0 / ((double) std::min(m_num_samples, AVERAGE_WINDOW) + 1.0);
       
       ExpMovingAverage = mult * laptime + (1.0-mult) * ExpMovingAverage();
     }
-    else
+    else {
       ExpMovingAverage = laptime;
+    }
       
-    ++d_nSamples;
+    ++m_num_samples;
 
     return laptime;
-  }
 
-  double GetWallTime() { return d_wallTimer().seconds(); };
+  } // end Timers::nanoseconds
+
+  double GetWallTime() { return m_wall_timer().seconds(); };
 
 private:
-  int d_nSamples;        // Number of samples for the moving average
 
-  Timers::Simple d_wallTimer;
+  int              m_num_samples;  // Number of samples for the moving average
+  Timers::Simple   m_wall_timer;
 };
 
 
@@ -142,7 +146,7 @@ private:
        Simulation_Controller
       
   DESCRIPTION
-       Abstract baseclass for the SimulationControllers.
+       Abstract base class for the SimulationControllers.
        Introduced to make the "old" SimulationController
        and the new AMRSimulationController interchangeable.
      
@@ -155,102 +159,105 @@ private:
 class SimulationController : public UintahParallelComponent {
 
 public:
-  SimulationController( const ProcessorGroup* myworld, bool doAMR, ProblemSpecP pspec );
+
+  SimulationController( const ProcessorGroup * myworld, ProblemSpecP pspec );
+
   virtual ~SimulationController();
+
+  // Methods for managing the components attached via the ports.
+  virtual void setComponents( UintahParallelComponent *comp ) {};
+  virtual void getComponents();
+  virtual void releaseComponents();
 
   //! Notifies (before calling run) the SimulationController
   //! that this is simulation is a restart.
-  void doRestart( const std::string& restartFromDir,
-                  int           timestep,
-                  bool          fromScratch,
-                  bool          removeOldDir );
+  void doRestart( const std::string & restartFromDir
+                ,       int           timeStep
+                ,       bool          fromScratch
+                ,       bool          removeOldDir
+                );
 
   //! Execute the simulation
   virtual void run() = 0;
 
   //  sets simulationController flags
-  void setReduceUdaFlags( const std::string& fromDir );
+  void setPostProcessFlags();
      
-  ProblemSpecP         getProblemSpecP() { return d_ups; }
-  ProblemSpecP         getGridProblemSpecP() { return d_grid_ps; }
-  SimulationStateP     getSimulationStateP() { return d_sharedState; }
-  SchedulerP           getSchedulerP() { return d_scheduler; }
-  LoadBalancerPort*    getLoadBalancer() { return d_lb; }
-  Output*              getOutput() { return d_output; }
-  SimulationTime*      getSimulationTime() { return d_timeinfo; }
-  SimulationInterface* getSimulationInterface() { return d_sim; }
-  Regridder*           getRegridder() { return d_regridder; }
+  ProblemSpecP          getProblemSpecP() { return m_ups; }
+  ProblemSpecP          getGridProblemSpecP() { return m_grid_ps; }
+  SchedulerP            getSchedulerP() { return m_scheduler; }
+  LoadBalancer*     getLoadBalancer() { return m_loadBalancer; }
+  Output*               getOutput() { return m_output; }
+  ApplicationInterface* getApplicationInterface() { return m_app; }
+  Regridder*            getRegridder() { return m_regridder; }
+  WallTimers*           getWallTimers() { return &m_wall_timers; }
 
-  bool                 doAMR() { return d_doAMR; }
+  bool getRecompileTaskGraph() const { return m_recompile_taskgraph; }
+  void setRecompileTaskGraph(bool val) { m_recompile_taskgraph = val; }
 
-  WallTimers*          getWallTimers() { return &walltimers; }
+  void ScheduleReportStats( bool header );
+  void ReportStats(const ProcessorGroup*,
+                   const PatchSubset*,
+                   const MaterialSubset*,
+                         DataWarehouse*,
+                         DataWarehouse*,
+                         bool header);
 
 protected:
 
-  bool isLast( void );
-  bool maybeLast( void );
-    
   void restartArchiveSetup();
   void outputSetup();
-  void schedulerSetup();
-  void simulationInterfaceSetup();
   void gridSetup();
   void regridderSetup();
   void loadBalancerSetup();
-  void outOfSyncSetup();
+  void applicationSetup();
+  void schedulerSetup();
   void timeStateSetup();
   void finalSetup();
+  void ResetStats( void );
 
-  // Get the next delta T
-  void getNextDeltaT( void );
-
-  void ReportStats( bool first );     
   void getMemoryStats( bool create = false );
   void getPAPIStats  ( );
   
-  ProblemSpecP         d_ups{nullptr};
-  ProblemSpecP         d_grid_ps{nullptr};       // Problem Spec for the Grid
-  ProblemSpecP         d_restart_ps{nullptr};    // Problem Spec for restarting
-  SimulationStateP     d_sharedState{nullptr};
-  SchedulerP           d_scheduler{nullptr};
-  LoadBalancerPort*    d_lb{nullptr};
-  Output*              d_output{nullptr};
-  SimulationTime*      d_timeinfo{nullptr};
-  SimulationInterface* d_sim{nullptr};
-  Regridder*           d_regridder{nullptr};
-  DataArchive*         d_restart_archive{nullptr};     // Only used when restarting: Data from UDA we are restarting from.
+  ProblemSpecP           m_ups{nullptr};
+  ProblemSpecP           m_grid_ps{nullptr};     // Problem Spec for the Grid
+  ProblemSpecP           m_restart_ps{nullptr};  // Problem Spec for restarting
+  SchedulerP             m_scheduler{nullptr};
+  GridP                  m_current_gridP{nullptr};
 
-  GridP                d_currentGridP;
+  LoadBalancer     * m_loadBalancer{nullptr};
+  Output               * m_output{nullptr};
+  ApplicationInterface * m_app{nullptr};
+  Regridder            * m_regridder{nullptr};
+  DataArchive          * m_restart_archive{nullptr}; // Only used when restarting: Data from checkpoint UDA.
 
-  bool d_doAMR{false};
-  bool d_do_multi_taskgraphing{false};
-  int  d_rad_calc_frequency{1};
+  bool m_do_multi_taskgraphing{false};
+    
+  WallTimers m_wall_timers;
 
-  double d_delt;
-  double d_prev_delt{0.0};
-  
-  double d_simTime;               // current sim time
-  double d_startSimTime;          // starting sim time
-  
-  WallTimers walltimers;
-
-  /* For restarting */
-  bool        d_restarting{false};
-  std::string d_fromDir;
-  int         d_restartTimestep{0};
-  int         d_restartIndex{0};
-  int         d_last_recompile_timestep{0};
-  bool        d_reduceUda{false};;
+  // Used when restarting.
+  bool        m_restarting{false};
+  std::string m_from_dir;
+  int         m_restart_timestep{0};
+  int         m_restart_index{0};
+  int         m_last_recompile_timeStep{0};
+  bool        m_post_process_uda{false};
       
-  // If d_restartFromScratch is true then don't copy or move any of
-  // the old timesteps or dat files from the old directory.  Run as
+  // If m_restart_from_scratch is true then don't copy or move any of
+  // the old time steps or dat files from the old directory.  Run as
   // as if it were running from scratch but with initial conditions
   // given by the restart checkpoint.
-  bool d_restartFromScratch{false};
+  bool m_restart_from_scratch{false};
 
-  // If !d_restartFromScratch, then this indicates whether to move
-  // or copy the old timesteps.
-  bool d_restartRemoveOldDir{false};
+  // If not m_restart_from_scratch, then this indicates whether to move
+  // or copy the old time steps.
+  bool m_restart_remove_old_dir{false};
+
+  bool m_recompile_taskgraph{false};
+  
+  // Runtime stat mappers.
+  ReductionInfoMapper< RunTimeStatsEnum, double > m_runtime_stats;
+  ReductionInfoMapper< unsigned int,     double > m_other_stat;
 
 #ifdef USE_PAPI_COUNTERS
   int         m_papi_event_set;            // PAPI event set
@@ -272,26 +279,44 @@ protected:
   std::map<int, PapiEvent>   m_papi_events;
 #endif
 
+public:
+  void ScheduleCheckInSitu( bool header );
+  void CheckInSitu(const ProcessorGroup*,
+                   const PatchSubset*,
+                   const MaterialSubset*,
+                         DataWarehouse*,
+                         DataWarehouse*,
+                         bool first);
+
 #ifdef HAVE_VISIT
-  bool CheckInSitu( visit_simulation_data *visitSimData, bool first );
-#endif     
+  void setVisIt( unsigned int val ) { m_do_visit = val; }
+  unsigned int  getVisIt() { return m_do_visit; }
+
+  const ReductionInfoMapper< RunTimeStatsEnum, double > getRunTimeStats() const
+  { return m_runtime_stats; };
+
+  const ReductionInfoMapper< unsigned int,     double > getOtherStats() const
+  { return m_other_stat; };
+
+protected:
+  unsigned int m_do_visit;
+  visit_simulation_data *m_visitSimData;
+#endif
+
 private:
+  // Percent time in overhead samples
+  double m_overhead_values[OVERHEAD_WINDOW];
+  double m_overhead_weights[OVERHEAD_WINDOW];
+  int    m_overhead_index{0}; // Next sample for writing
+  int    m_num_samples{0};
 
   // eliminate copy, assignment and move
   SimulationController( const SimulationController & )            = delete;
   SimulationController& operator=( const SimulationController & ) = delete;
   SimulationController( SimulationController && )                 = delete;
   SimulationController& operator=( SimulationController && )      = delete;
-
-  // Percent time in overhead samples
-  double overheadValues[OVERHEAD_WINDOW];
-  double overheadWeights[OVERHEAD_WINDOW];
-  int    overheadIndex; // Next sample for writing
-
-  int    d_nSamples;
-
 };
 
-} // End namespace Uintah
+} // end namespace Uintah
 
 #endif // CCA_COMPONENTS_SIMULATIONCONTROLLER_SIMULATIONCONTROLLER_H

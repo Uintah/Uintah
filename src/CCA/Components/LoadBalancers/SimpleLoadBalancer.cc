@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -39,11 +39,11 @@ SimpleLoadBalancer::SimpleLoadBalancer( const ProcessorGroup * myworld )
 int
 SimpleLoadBalancer::getPatchwiseProcessorAssignment( const Patch * patch )
 {
-  long long     numProcs  = d_myworld->size();
+  long long     numProcs  = d_myworld->nRanks();
   const Patch * realPatch = patch->getRealPatch();
   int           proc      = (realPatch->getLevelIndex() * numProcs) / static_cast<long long>(realPatch->getLevel()->numPatches());
 
-  ASSERTRANGE(proc, 0, d_myworld->size());
+  ASSERTRANGE(proc, 0, d_myworld->nRanks());
 
   return proc;
 }

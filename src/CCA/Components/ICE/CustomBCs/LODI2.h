@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -26,14 +26,13 @@
 #define Packages_Uintah_CCA_Components_Ice_LODI_h
 
 #include <CCA/Ports/DataWarehouse.h>
-#include <Core/Labels/ICELabel.h>
+#include <CCA/Components/ICE/Core/ICELabel.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
-#include <Core/Containers/StaticArray.h>
 
 #include <typeinfo>
 
@@ -65,7 +64,7 @@ namespace Uintah {
     constCCVariable<Vector> vel_CC;
     constCCVariable<double> press_CC;        
     constCCVariable<double> temp_CC;            
-    StaticArray<CCVariable<Vector> > Li;
+    std::vector<CCVariable<Vector> > Li;
 /*`==========TESTING==========*/
     double delT; 
     constCCVariable<double> rho_old;
@@ -108,7 +107,7 @@ namespace Uintah {
                     SimulationStateP& sharedState);                            
                             
 
-  void computeLi(StaticArray<CCVariable<Vector> >& L,
+  void computeLi(std::vector<CCVariable<Vector> >& L,
                  const CCVariable<double>& rho,              
                  const CCVariable<double>& press,                   
                  const CCVariable<Vector>& vel,                  
@@ -148,7 +147,7 @@ namespace Uintah {
                
   int  FacePress_LODI(const Patch* patch,
                       CCVariable<double>& press_CC,
-                      StaticArray<CCVariable<double> >& rho_micro,
+                      std::vector<CCVariable<double> >& rho_micro,
                       SimulationStateP& sharedState, 
                       Patch::FaceType face,
                       Lodi_localVars* lv);

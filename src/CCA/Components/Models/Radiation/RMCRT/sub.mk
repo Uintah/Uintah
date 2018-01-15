@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2017 The University of Utah
+#  Copyright (c) 1997-2018 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -27,9 +27,14 @@
 SRCDIR := CCA/Components/Models/Radiation/RMCRT
 
 SRCS += $(SRCDIR)/RMCRTCommon.cc \
-        $(SRCDIR)/Ray.cc \
         $(SRCDIR)/Radiometer.cc \
         $(SRCDIR)/RayGPU.cc
+
+ifeq ($(HAVE_KOKKOS),yes)
+  SRCS += $(SRCDIR)/RayKokkos.cc
+else
+  SRCS += $(SRCDIR)/Ray.cc
+endif
 
 ifneq ($(HAVE_CUDA),)
   SRCS += $(SRCDIR)/RayGPUKernel.cu

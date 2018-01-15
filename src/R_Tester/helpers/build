@@ -42,11 +42,9 @@ if [ "$OS" = "Linux" ]; then
       COMMON="      --with-mpi=built-in \\
       --with-cuda=/usr/lib/nvidia-cuda-toolkit \\
       --with-boost=/usr/ \\
-      --enable-gencode=35 \\
+      --enable-gencode=52 \\
       --enable-ray-scatter \\
       --enable-arches \\
-      --enable-ice \\
-      --enable-mpm \\
       --enable-wasatch_3p='radprops,tabprops' \\"
       # execute a script (R_tester/modifySrc) that modifies src files
       MODIFY_SRC="true"

@@ -3,7 +3,7 @@
 from sys import argv, exit
 from os import environ, system, path
 from commands import getoutput
-from helpers.runSusTests import runSusTests, inputs_root, generatingGoldStandards, build_root
+from helpers.runSusTests import runSusTests, inputs_root, ignorePerformanceTests, build_root, generatingGoldStandards
 from helpers.modUPS import modUPS
 
 the_dir = generatingGoldStandards()
@@ -121,6 +121,9 @@ decayIsotropicTurbulenceDSmag64_ups = modUPS( turbulenceDir, \
 
 #______________________________________________________________________
 #  Test syntax: ( "folder name", "input file", # processors, "OS", ["flags1","flag2"])
+#
+#  OS:  Linux, Darwin, or ALL
+#
 #  flags:
 #       gpu:                    - run test if machine is gpu enabled
 #       no_uda_comparison:      - skip the uda comparisons
@@ -135,23 +138,17 @@ decayIsotropicTurbulenceDSmag64_ups = modUPS( turbulenceDir, \
 #       abs_tolerance=[double]  - absolute tolerance used in comparisons
 #       rel_tolerance=[double]  - relative tolerance used in comparisons
 #       exactComparison         - set absolute/relative tolerance = 0  for uda comparisons
-#       startFromCheckpoint     - start test from checkpoint. (/home/csafe-tester/CheckPoints/..../testname.uda.000)
+#       postProcessRun          - start test from an existing uda in the checkpoints directory.  Compute new quantities and save them in a new uda
+#       startFromCheckpoint     - start test from checkpoint. (/home/rt/CheckPoints/..../testname.uda.000)
 #       sus_options="string"    - Additional command line options for sus command
 #
 #  Notes:
 #  1) The "folder name" must be the same as input file without the extension.
-#  2) If the processors is > 1.0 then an mpirun command will be used
-#  3) Performance_tests are not run on a debug build.
+#  2) Performance_tests are not run on a debug build.
 #______________________________________________________________________
 
 DEBUGTESTS = [
-  ("compressible-test-1d-nonreflecting-x",  "compressible-test-1d-nonreflecting-x.ups", 1,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
-  ("compressible-test-1d-nonreflecting-y",  "compressible-test-1d-nonreflecting-y.ups", 1,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
-  ("compressible-test-1d-nonreflecting-z",  "compressible-test-1d-nonreflecting-z.ups", 1,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),    
-  ("compressible-test-2d-nonreflecting-xy",  "compressible-test-2d-nonreflecting-xy.ups", 1,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
-  ("compressible-test-2d-nonreflecting-xz",  "compressible-test-2d-nonreflecting-xz.ups", 1,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
-  ("compressible-test-2d-nonreflecting-yz",  "compressible-test-2d-nonreflecting-yz.ups", 1,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),    
-  ("compressible-test-3d-nonreflecting",  "compressible-test-3d-nonreflecting.ups", 8,  "All",  ["exactComparison","no_restart","no_memoryTest"] )  
+  ("turbulent-flow-over-cavity",                         "turbulent-flow-over-cavity.ups",    8,  "All",  ["abs_tolerance=1e-8","no_restart","no_memoryTest","no_dbg"] )
   ]
 
 DUALTIMETESTS=[
@@ -339,7 +336,7 @@ PARTICLETESTS=[
 	("particle-test-free-fall-two-way-coupling-ydir", "particle-test-free-fall-two-way-coupling-ydir.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),	
 	("particle-test-free-fall-two-way-coupling-zdir", "particle-test-free-fall-two-way-coupling-zdir.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
 	("particle-test-geom-shape-icse", "particle-test-geom-shape-icse.ups",  1,  "All",   ["exactComparison","no_restart","no_memoryTest","no_dbg"] ),
-	("particle-test-geom-shape-flow-mickey-mouse", "particle-test-geom-shape-flow-mickey-mouse.ups",   1.1,  "All",   ["exactComparison","no_restart","no_memoryTest","no_dbg"] ),
+	("particle-test-geom-shape-flow-mickey-mouse", "particle-test-geom-shape-flow-mickey-mouse.ups",   1,  "All",   ["exactComparison","no_restart","no_memoryTest","no_dbg"] ),
 	("particle-test-free-fall-xdir", "particle-test-free-fall-xdir.ups",   1,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
 	("particle-test-free-fall-ydir", "particle-test-free-fall-ydir.ups",   1,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
 	("particle-test-free-fall-zdir", "particle-test-free-fall-zdir.ups",   1,  "All",   ["exactComparison","no_restart","no_memoryTest"] )
@@ -365,7 +362,7 @@ print( "HAVE_POKITT: %s" % (HAVE_POKITT) )
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: LOCALTESTS DUALTIMETESTS GPUTESTS BCTESTS COMPRESSIBLETESTS CONVECTIONTESTS DEBUGTESTS INTRUSIONTESTS MISCTESTS NIGHTLYTESTS PARTICLETESTS POKITTTESTS PROJECTIONTESTS QMOMTESTS RADIATIONTESTS RKTESTS SCALARTRANSPORTTESTS TURBULENCETESTS VARDENTESTS
+#LIST: LOCALTESTS DUALTIMETESTS GPUTESTS BCTESTS COMPRESSIBLETESTS CONVECTIONTESTS DEBUGTESTS INTRUSIONTESTS MISCTESTS NIGHTLYTESTS PARTICLETESTS POKITTTESTS PROJECTIONTESTS QMOMTESTS RADIATIONTESTS RKTESTS SCALARTRANSPORTTESTS TURBULENCETESTS VARDENTESTS BUILDBOTTESTS
 #__________________________________
 NIGHTLYTESTS = DUALTIMETESTS + RADIATIONTESTS + TURBULENCETESTS + INTRUSIONTESTS + PROJECTIONTESTS + RKTESTS + VARDENTESTS + MISCTESTS + CONVECTIONTESTS + BCTESTS + QMOMTESTS + SCALARTRANSPORTTESTS + PARTICLETESTS + COMPRESSIBLETESTS
 
@@ -411,10 +408,18 @@ def getTestList(me) :
   elif me == "DUALTIMETESTS":
     TESTS = DUALTIMETESTS           
   elif me == "POKITTTESTS":
-    TESTS = POKITTTESTS           
+    TESTS = POKITTTESTS
+  elif me == "BUILDBOTTESTS":
+    TESTS = ignorePerformanceTests( NIGHTLYTESTS )           
   else:
     print "\nERROR:Wasatch.py  getTestList:  The test list (%s) does not exist!\n\n" % me
     exit(1)
+    
+  # Limit the tests run on the nightly gpu_rt.  Brittle  
+  if environ['LOGNAME'] == "gpu_rt" and me == "NIGHTLYTESTS" :
+    print( "\nWARNING: running GPUTESTS not NIGHTLYTESTS\n" )
+    TESTS = GPUTESTS
+      
   return TESTS
 
 

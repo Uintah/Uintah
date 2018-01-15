@@ -59,7 +59,7 @@ end
 label begin
 #__________________________________
 # open dialog box for user to select which tests to replace
-set choices = (`dialog --stdout --separate-output --checklist "The following regression tests have failed.  Please select the tests which you'd like to replace" 20 50 40 $failedTestList`)
+set choices = (`dialog --stdout --separate-output --checklist "The following regression tests have failed.  Please select the tests which you'd like to replace" 40 80 80 $failedTestList`)
 if( $status != 0 ) then
   echo "cancel selected"
   exit

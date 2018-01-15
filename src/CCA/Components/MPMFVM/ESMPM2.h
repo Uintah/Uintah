@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,40 +25,40 @@
 #ifndef UINTAH_CCA_COMPONENTS_MPMFVM_ESMPM2_H
 #define UINTAH_CCA_COMPONENTS_MPMFVM_ESMPM2_H
 
-#include <CCA/Components/FVM/FVMLabel.h>
-#include <CCA/Components/FVM/GaussSolve.h>
-#include <CCA/Components/MPM/AMRMPM.h>
-#include <CCA/Components/MPM/MPMFlags.h>
-#include <CCA/Ports/DataWarehouse.h>
-#include <CCA/Ports/Output.h>
-#include <CCA/Ports/Scheduler.h>
-#include <CCA/Ports/SimulationInterface.h>
-#include <CCA/Ports/SwitchingCriteria.h>
-#include <Core/Geometry/IntVector.h>
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/Vector.h>
+#include <CCA/Components/Application/ApplicationCommon.h>
+
+#include <CCA/Ports/SchedulerP.h>
+
 #include <Core/Grid/Ghost.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/Variables/ComputeSet.h>
-#include <Core/Labels/MPMLabel.h>
-#include <Core/Parallel/UintahParallelComponent.h>
-#include <Core/Parallel/ProcessorGroup.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
-#include <vector>
 #include <string>
 
 namespace Uintah {
-  class ESMPM2 : public UintahParallelComponent, public SimulationInterface {
+
+  class AMRMPM;
+  class MPMLabel;
+  class FVMLabel;
+  class MPMFlags;
+  class GaussSolve;
+
+  class ProcessorGroup;
+  class DataWarehouse;
+  class SwitchingCriteria;
+
+  class ESMPM2 : public ApplicationCommon {
     public:
-      ESMPM2(const ProcessorGroup* myworld);
+      ESMPM2(const ProcessorGroup* myworld,
+	     const SimulationStateP sharedState);
       ~ESMPM2();
 
       virtual void problemSetup(const ProblemSpecP& prob_spec,
                                 const ProblemSpecP& restart_prob_spec,
-                                GridP& grid, SimulationStateP& state);
+                                GridP& grid);
 
       virtual void outputProblemSpec(ProblemSpecP& prob_spec);
 
@@ -68,7 +68,7 @@ namespace Uintah {
 
       virtual void restartInitialize();
 
-      virtual void scheduleComputeStableTimestep(const LevelP& level, SchedulerP& sched);
+      virtual void scheduleComputeStableTimeStep(const LevelP& level, SchedulerP& sched);
 
       virtual void scheduleTimeAdvance( const LevelP& level, SchedulerP& sched);
 
@@ -108,20 +108,17 @@ namespace Uintah {
       double d_TINY_RHO;
       std::string d_cd_model_name;
 
-      SimulationStateP d_shared_state;
-      Output* d_data_archiver;
       AMRMPM* d_amrmpm;
-      GaussSolve* d_gaufvm;
       MPMLabel* d_mpm_lb;
       FVMLabel* d_fvm_lb;
       MPMFlags* d_mpm_flags;
+      GaussSolve* d_gaufvm;
 
       MaterialSet* d_es_matlset;
       MaterialSubset* d_es_matl;
       SwitchingCriteria* d_switch_criteria;
 
       Ghost::GhostType d_gac;
-
   };
 }
 #endif

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -48,19 +48,18 @@ GENERAL INFORMATION
 #include <CCA/Components/Arches/TimeIntegratorLabel.h>
 #include <CCA/Components/Arches/ArchesVariables.h>
 #include <CCA/Components/Arches/ArchesConstVariables.h>
-#include <CCA/Components/Arches/Arches.h>
 #include <CCA/Ports/SchedulerP.h>
 #include <CCA/Ports/DataWarehouseP.h>
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/VarLabel.h>
-#include <Core/Containers/StaticArray.h>
 #include <Core/Util/Timers/Timers.hpp>
 
 
 namespace Uintah {
 
   class ArchesLabel;
+  class MPMArchesLabel;
 
 class DORadiationModel{
 
@@ -94,24 +93,18 @@ public:
                                   int wall_type, int matlIndex, DataWarehouse* new_dw, DataWarehouse* old_dw,
                                   bool old_DW_isMissingIntensities);
 
-      void intensitysolveSweep(const Patch* patch,
-                               int matlIndex,
-                               DataWarehouse* new_dw, 
-                               DataWarehouse* old_dw,
-                               int cdirecn,
-                               int phase);
-
       void intensitysolveSweepOptimized(const Patch* patch,
                                int matlIndex,
                                DataWarehouse* new_dw, 
                                DataWarehouse* old_dw,
                                int cdirecn);
 
-      void intensitysolveSweepOrigProto(const Patch* patch,
-                                       int matlIndex,
-                                       DataWarehouse* new_dw, 
-                                       DataWarehouse* old_dw,
-                                       int cdirecn);
+      void intensitysolveSweepOptimizedOLD(const Patch* patch,
+                               int matlIndex,
+                               DataWarehouse* new_dw, 
+                               DataWarehouse* old_dw,
+                               int cdirecn);
+
 
       void setExtraSweepingLabels(int nphase);
 
@@ -130,18 +123,13 @@ public:
                                   int matlIndex,  
                                   CCVariable<double>& intensity,
                                   constCCVariable<double>& radTemp,
-                                  constCCVariable<int>& cellType);
-      void
-        setIntensityBC2Orig(const Patch* patch,
-            int matlIndex,  
-            DataWarehouse* new_dw, 
-            DataWarehouse* old_dw, int ix);
+                                  constCCVariable<int>& cellType,
+                                  int iSpectralBand=0);
 
-      void
-        setIntensityBC2(const Patch* patch,
-            int matlIndex,  
-            DataWarehouse* new_dw, 
-            DataWarehouse* old_dw, int ix, int ixx);
+      void  setIntensityBC2Orig(const Patch* patch,
+                                int matlIndex,  
+                                DataWarehouse* new_dw, 
+                                DataWarehouse* old_dw, int ix);
 
       int getIntOrdinates();
 
@@ -155,7 +143,7 @@ public:
                       const VarLabel* abskt,
                       const VarLabel* T_label,
                       const VarLabel* cellType,
-                      const VarLabel* radIntSource,
+    std::vector<const VarLabel* > radIntSource,
                       const VarLabel*  FluxE,
                       const VarLabel*  FluxW,
                       const VarLabel*  FluxN,
@@ -180,16 +168,36 @@ public:
         return _nQn_part;
       }
       inline int xDir( int ix){
-        return (int) _plusX[ix];
+        return   _plusX[ix];
       }
       inline int yDir( int ix){
-        return (int) _plusY[ix];
+        return  _plusY[ix] ;
       }
       inline int zDir( int ix){
-        return (int) _plusZ[ix];
+        return  _plusZ[ix] ;
+      }
+
+      std::vector<std::string> gasAbsorptionNames(){
+        return _abskg_name_vector;
+      }
+      std::vector<std::string> gasWeightsNames(){
+        return _abswg_name_vector;
+      }
+      inline std::vector< const VarLabel*> getAbskgLabels(){
+        return _abskg_label_vector;
+      }
+
+      inline std::vector< const VarLabel*> getAbswgLabels(){
+        return _abswg_label_vector;
+      }
+
+      inline int spectralBands(){
+        return d_nbands;
       }
 
 private:
+
+      std::vector<double> _grey_reference_weight;
       double _nphase; // optical length
       double _solve_start;
       double d_opl; // optical length
@@ -204,8 +212,6 @@ private:
       void computeOrdinatesOPL();
       int d_lambda;
       const int ffield;
-
-      OffsetArray1<double> fraction;
 
       std::vector< std::vector < std::vector < Ghost::GhostType > > > _gv;
    
@@ -242,14 +248,14 @@ private:
       bool _zeroInitialGuess;
       bool _radiateAtGasTemp; // this flag is arbitrary for no particles
       int _sweepMethod;
+      int d_nbands{1};
+      bool _LspectralSolve;
 
       const VarLabel* _scatktLabel;
       const VarLabel* _asymmetryLabel;
-      const VarLabel*  _abskg_label;
       const VarLabel*  _abskt_label;
       const VarLabel*  _T_label;
       const VarLabel*  _cellTypeLabel;
-      const VarLabel*  _radIntSource;
       const VarLabel* _fluxE;
       const VarLabel* _fluxW;
       const VarLabel* _fluxN;
@@ -272,23 +278,34 @@ private:
       template<class TYPE> 
       void computeScatteringIntensities(int direction,
                                         constCCVariable<double> &scatkt,
-                                        StaticArray< TYPE > &Intensities,
+                                        std::vector< TYPE > &Intensities,
                                         CCVariable<double> &scatIntensitySource,
                                         constCCVariable<double> &asymmetryFactor,
                                         const Patch* patch);
 
 
-
       void computeIntensitySource( const Patch* patch,
-				   StaticArray <constCCVariable<double> >&abskp,
-				   StaticArray <constCCVariable<double> > &pTemp,
-				   constCCVariable<double>  &abskg,
+				   std::vector <constCCVariable<double> >&abskp,
+				   std::vector <constCCVariable<double> > &pTemp,
+				   std::vector <constCCVariable<double> > &abskg,
 				   constCCVariable<double>  &gTemp,
-				   CCVariable<double> &b_sourceArray);
+				   std::vector <CCVariable<double> >&b_sourceArray,
+				   std::vector <constCCVariable<double> >&spectral_weights);
+
+      std::vector<const VarLabel*>  _radIntSource;
+      std::vector<std::string> _radIntSource_names;
+
+
+      std::vector<std::string> _abskg_name_vector;
+      std::vector<std::string> _abswg_name_vector;
+
+      std::vector< const VarLabel*> _abskg_label_vector;
+      std::vector< const VarLabel*> _abswg_label_vector;
 
       // variables needed for particles
       std::vector<std::string> _temperature_name_vector;
       std::vector<std::string> _abskp_name_vector;
+
       std::vector< const VarLabel*> _abskp_label_vector;
       std::vector< const VarLabel*> _temperature_label_vector;
       int _nQn_part ;                                // number of quadrature nodes in DQMOM

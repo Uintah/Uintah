@@ -92,6 +92,12 @@ ARCHES_PRESS_SOLVE SCI_DEBUG    Outputs the name of each task in the pressure so
                                 scheduled and executed.
 ARCHES_TASK_VARS   SCI_DEBUG    Print the variable with associated registration requirement attributes (ArchesTaskInterface).
 
+ARCHES_BC          SCI_DEBUG    Print out more information about how the code is interpretting and setting up the BCs. 
+
+ARCHES_BC_FUNCTORS SCI_DEBUG    Print out information regarding the bc functor execution
+
+ARCHES_INTRUSION_SETUP_INFO SCI_DEBUG Print out extra information regarding the setup of intrusions. 
+
 
 MPM:
 __________________________________

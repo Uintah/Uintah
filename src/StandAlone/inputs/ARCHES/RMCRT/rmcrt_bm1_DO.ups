@@ -14,7 +14,7 @@
     <max_Timesteps> 4       </max_Timesteps>
     <timestep_multiplier>0.4</timestep_multiplier>
   </Time>
-  <AMR>
+  <AMR type="StaticGridML" >
     <useLockStep> true </useLockStep>
   </AMR>
   <!--__________________________________-->
@@ -241,7 +241,7 @@
         </Sources>
       </TransportEqns>
       <PropertyModelsV2>
-        <model type="gasRadProperties"  label="gas_abskg" >
+        <model type="gasRadProperties" label="gas_abskg">
           <calculator type="burns_christon">
           </calculator>
         </model>

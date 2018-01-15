@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -76,10 +76,8 @@ void
 Radiometer::problemSetup( const ProblemSpecP& prob_spec,
                           const ProblemSpecP& radps,
                           const GridP&        grid,
-                          SimulationStateP&   sharedState,
                           const bool getExtraInputs)
 {
-  d_sharedState = sharedState;
   ProblemSpecP rad_ps = radps;
   Vector orient;
   rad_ps->getWithDefault( "VRViewAngle"    ,    d_viewAng,         180 );              // view angle of the radiometer in degrees
@@ -300,15 +298,16 @@ Radiometer::sched_radiometer( const LevelP& level,
                               Task::WhichDW sigma_dw,
                               Task::WhichDW celltype_dw )
 {
-  int L = level->getIndex();
-  Task::WhichDW abskg_dw = d_abskg_dw[L];
-
+  
   // only schedule on the patches that contain radiometers - Spatial task scheduling
   //   we want a PatchSet like: { {19}, {22}, {25} } (singleton subsets like level->eachPatch())
   //     NOT -> { {19,22,25} }, as one proc isn't guaranteed to own the entire, 3-element subset.
   PatchSet* radiometerPatchSet = scinew PatchSet();
   radiometerPatchSet->addReference();
   getPatchSet(sched, level, radiometerPatchSet);
+
+  int L = level->getIndex();
+  Task::WhichDW abskg_dw = get_abskg_whichDW( L, d_abskgLabel );
 
   std::string taskname = "Radiometer::radiometer";
   Task *tsk;
@@ -329,8 +328,9 @@ Radiometer::sched_radiometer( const LevelP& level,
   DOUT(g_ray_dbg, "    sched_radiometer: adding requires for all-to-all variables ");
 
   Ghost::GhostType gac = Ghost::AroundCells;
-  tsk->requires(abskg_dw, d_abskgLabel, gac, SHRT_MAX);
-  tsk->requires(sigma_dw, d_sigmaT4Label, gac, SHRT_MAX);
+
+  tsk->requires(abskg_dw,    d_abskgLabel,    gac, SHRT_MAX);
+  tsk->requires(sigma_dw,    d_sigmaT4Label,  gac, SHRT_MAX);
   tsk->requires(celltype_dw, d_cellTypeLabel, gac, SHRT_MAX);
 
   tsk->modifies(d_VRFluxLabel);
@@ -527,7 +527,7 @@ Radiometer::getPatchSet( SchedulerP& sched,
   //__________________________________
   // find patches that contain radiometers
   std::vector<const Patch*> radiometer_patches;
-  LoadBalancerPort * lb = sched->getLoadBalancer();
+  LoadBalancer * lb = sched->getLoadBalancer();
   const PatchSet * procPatches = lb->getPerProcessorPatchSet(level);
 
   for (int m = 0; m < procPatches->size(); m++) {

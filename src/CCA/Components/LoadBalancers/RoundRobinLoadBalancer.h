@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -26,7 +26,6 @@
 #define CCA_COMPONENTS_LOADBALANCERS_ROUNDROBINLOADBALANCER_H
 
 #include <CCA/Components/LoadBalancers/LoadBalancerCommon.h>
-#include <Core/Parallel/UintahParallelComponent.h>
 
 namespace Uintah {
 
@@ -64,6 +63,8 @@ public:
   ~RoundRobinLoadBalancer();
 
   virtual int getPatchwiseProcessorAssignment( const Patch * patch );
+
+  virtual bool needRecompile( const GridP& ) { return false; };
 
 private:
 

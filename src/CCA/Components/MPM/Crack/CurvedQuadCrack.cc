@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -61,14 +61,14 @@ void CurvedQuadCrack::readCrack(ProblemSpecP& cquad_ps)
   
   // Characteristic points on two opposite cuvered sides
   ProblemSpecP side2_ps=cquad_ps->findBlock("points_curved_side2"); 
-  for(ProblemSpecP pt_ps=side2_ps->findBlock("point"); pt_ps!=0; 
+  for(ProblemSpecP pt_ps=side2_ps->findBlock("point"); pt_ps!=nullptr; 
       pt_ps=pt_ps->findNextBlock("point")) {  
     pt_ps->get("val",p); 
     PtsSide2.push_back(p);
   }
   
   ProblemSpecP side4_ps=cquad_ps->findBlock("points_curved_side4");
-  for(ProblemSpecP pt_ps=side4_ps->findBlock("point"); pt_ps!=0;
+  for(ProblemSpecP pt_ps=side4_ps->findBlock("point"); pt_ps!=nullptr;
       pt_ps=pt_ps->findNextBlock("point")) {
     pt_ps->get("val",p); 
     PtsSide4.push_back(p);

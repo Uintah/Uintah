@@ -18,6 +18,8 @@
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Util/DebugStream.h>
+#include <CCA/Components/Arches/HandoffHelper.h>
+#include <Core/Grid/Patch.h>
 
 #include <mutex>
 
@@ -33,36 +35,12 @@
  *         can act as any type of boundary condition for specified
  *         regions of the intrusion.
  *
- *         Input file interface looks like:
- *
- *         <IntrusionBC           spec="OPTIONAL NO_DATA">
- *          <intrusion            spec="MULTIPLE NO_DATA">
- *                                attribute1="type REQUIRED STRING 'flat_inlet'"
- *                                attribute2="label REQUIRED STRING">
- *            </geom_object>                                                   <!-- geometry object associated with this intrusion -->
- *            <boundary_direction spec="REQUIRED MULTIPLE_INTEGERS"/>          <!-- direction to apply type of BC, otherwise treated as wall -->
- *            <variable           spec="MULTIPLE NO_DATA"                      <!-- set the boundary conditions for the relevant variables -->
- *                                attribute1="label REQUIRED STRING"           <!-- note that state variables will be looked up from the table -->
- *                                attribute2="value REQUIRED DOUBLE"/>         <!-- typically need to set velocities, enthalpy, indep. table vars and extra scalars -->
- *
- *                                <!-- NOTES: -->
- *
- *                                <!-- velocity components are specified using simple [u,v,w] labels and NOT uVelocitySPBC, etc... -->
- *                                <!-- variable = mass_flow_rate is a specific variable that sets the velocity components based
- *                                on a specified mass flow rate. -->
- *                                <!-- If multiple directions are entered, then the mass flow rate is divided across
- *                                all valid face directions with non-zero velocity normal to that face. -->
- *                                <!-- Enthalpy is computed based on independ. table variables, including heat loss -->
- *
- *          </intrusion>
- *         </IntrsionBC>
- *
  */
 
 namespace Uintah{
 
   // setenv SCI_DEBUG INTRUSION_DEBUG:+
-  static DebugStream cout_intrusiondebug("INTRUSION_DEBUG",false);
+  static DebugStream cout_intrusiondebug("ARCHES_INTRUSION_SETUP_INFO",false);
 
   class VarLabel;
   class ArchesLabel;
@@ -77,10 +55,14 @@ namespace Uintah{
     public:
 
       enum INTRUSION_TYPE { INLET, SIMPLE_WALL };
+      enum INLET_TYPE { FLAT, HANDOFF, MASSFLOW, TABULATED };
 
       IntrusionBC( const ArchesLabel* lab, const MPMArchesLabel* mpmlab, Properties* props,
                    TableLookup* table_lookup, int WALL );
       ~IntrusionBC();
+
+      /** @brief Return true if there is a velocity type inlet **/
+      bool has_intrusion_inlets(){ return _has_intrusion_inlets; };
 
       /** @brief Interface to input file */
       void problemSetup( const ProblemSpecP& params, const int ilvl );
@@ -153,12 +135,8 @@ namespace Uintah{
                               SFCXVariable<double>& u,
                               SFCYVariable<double>& v,
                               SFCZVariable<double>& w,
-                              constCCVariable<double>& density );
-
-      /** @brief Set the scalar value at the boundary interface */
-      void setScalar( const int p,
-                      const std::string scalar_name,
-                      CCVariable<double>& scalar );
+                              constCCVariable<double>& density,
+                              bool& set_nonnormal_values );
 
       /** @brief Adds flux contribution to the RHS **/
       void addScalarRHS( const Patch* p,
@@ -175,7 +153,8 @@ namespace Uintah{
 
       /** @brief Sets the density in the intrusion for inlets */
       void setDensity( const Patch* patch,
-                       CCVariable<double>& density );
+                       CCVariable<double>& density, 
+                       constCCVariable<double>& old_density );
 
       /** @brief Sets the temperature field to that of the intrusion temperature */
       void sched_setIntrusionT( SchedulerP& sched,
@@ -244,16 +223,21 @@ namespace Uintah{
 
           virtual void problem_setup( ProblemSpecP& db, ProblemSpecP& db_intrusion ) = 0;
 
-          virtual void set_scalar_rhs( int dir,
+          virtual void set_scalar_rhs( const int& dir,
                                        IntVector c,
+                                       IntVector c_rel,
                                        CCVariable<double>& RHS,
-                                       double face_den,
-                                       double face_vel,
-                                       std::vector<double> area ) = 0;
+                                       const double& face_den,
+                                       const double& face_vel,
+                                       const std::vector<double>& area ) = 0;
 
-          virtual double get_scalar( const IntVector c ) = 0;
+          virtual double get_scalar( const Patch* patch, const IntVector c ) = 0;
 
           ScalarBCType get_type(){ return _type; };
+
+          virtual Vector get_relative_xyz(){ return Vector(0,0,0);}
+
+          virtual bool is_flat(){ return false; }
 
         protected:
 
@@ -263,7 +247,7 @@ namespace Uintah{
           std::vector<int>       _iHelp;
           std::vector<double>    _sHelp;
           ScalarBCType           _type;
-
+          int                    _flux_dir;     ///< In the case of handoff files, only this flux dir allowed.
 
       };
 
@@ -281,22 +265,25 @@ namespace Uintah{
 
           };
 
-          inline void set_scalar_rhs( int dir,
-                                      IntVector c,
-                                      CCVariable<double>& RHS,
-                                      double face_den,
-                                      double face_vel,
-                                      std::vector<double> area ){
+          void set_scalar_rhs( const int& dir,
+                               IntVector c,
+                               IntVector c_rel,
+                               CCVariable<double>& RHS,
+                               const double& face_den,
+                               const double& face_vel,
+                               const std::vector<double>& area ){
 
             RHS[ c ] += _sHelp[dir] * area[dir] * face_den * face_vel * _C;
 
           };
 
-          inline double get_scalar( const IntVector ){
+          double get_scalar( const Patch* patch, const IntVector ){
 
             return _C;
 
           };
+
+          bool is_flat(){ return true; }
 
         private:
 
@@ -309,7 +296,10 @@ namespace Uintah{
 
         public:
 
-          tabulatedScalar(){ _type = TABULATED; };
+          tabulatedScalar(){
+            _type = TABULATED;
+            _mapped_values.clear();
+          };
           ~tabulatedScalar(){};
 
           void problem_setup( ProblemSpecP& db, ProblemSpecP& db_intrusion ){
@@ -318,31 +308,54 @@ namespace Uintah{
 
           };
 
-          inline void set_scalar_rhs( int dir,
-                                      IntVector c,
-                                      CCVariable<double>& RHS,
-                                      double face_den,
-                                      double face_vel,
-                                      std::vector<double> area ){
+          void set_scalar_rhs( const int& dir,
+                               IntVector c,
+                               IntVector c_rel,
+                               CCVariable<double>& RHS,
+                               const double& face_den,
+                               const double& face_vel,
+                               const std::vector<double>& area ){
 
-            RHS[ c ] += _sHelp[dir] * area[dir] * face_den * face_vel * _C;
+            auto iter = _mapped_values.find(c);
+            if ( iter != _mapped_values.end() ){
+
+              RHS[ c ] += _sHelp[dir] * area[dir] * face_den * face_vel * iter->second;
+
+            } else {
+              std::stringstream msg;
+              msg << "Error: tabulated value not found at cell position: (" << c[0] << ", " <<
+              c[1] << ", " << c[2] << std::endl;
+              throw InvalidValue(msg.str(), __FILE__, __LINE__ );
+            }
 
           };
 
-          inline double get_scalar( const IntVector ){
+          double get_scalar( const Patch* patch, const IntVector c ){
 
-            return _C;
+            auto iter = _mapped_values.find(c);
+            if ( iter != _mapped_values.end() ){
+              return iter->second;
+            } else {
+              std::stringstream msg;
+              msg << "Error: tabulated value not found at cell position: (" << c[0] << ", " <<
+              c[1] << ", " << c[2] << std::endl;
+              throw InvalidValue(msg.str(), __FILE__, __LINE__ );
+            }
 
           };
 
-          void set_scalar_constant( double C ){ _C = C; };
+          void set_scalar_constant( IntVector c, double value ){
+
+            _mapped_values.insert( std::make_pair(c, value) );
+
+          };
 
           std::string get_depend_var_name(){ return _var_name; };
 
         private:
 
-          double _C;
           std::string _var_name;
+          std::map<IntVector, double> _mapped_values;
 
       };
 
@@ -351,15 +364,24 @@ namespace Uintah{
         public:
 
           typedef std::map<IntVector, double> CellToValuesMap;
-          typedef std::map<std::string, CellToValuesMap> ScalarToBCValueMap;
 
-          scalarFromInput(std::string label) : _label(label){ _type = FROMFILE; };
-          ~scalarFromInput(){};
+          scalarFromInput(std::string label) : _label(label){
+            _type = FROMFILE;
+            m_handoff_helper = scinew ArchesCore::HandoffHelper();
+          };
+          ~scalarFromInput(){
+            delete m_handoff_helper;
+          };
 
           void problem_setup( ProblemSpecP& db, ProblemSpecP& db_intrusion ){
 
             std::string inputfile;
+            Vector relative_xyz;
+
             db->require("input_file",inputfile);
+            db->require("relative_xyz",relative_xyz);
+
+            int num_flux_dir = 0; // Only allow for ONE flux direction
 
             for ( ProblemSpecP db_flux = db_intrusion->findBlock("flux_dir"); db_flux != nullptr; db_flux = db_flux->findNextBlock("flux_dir") ){
 
@@ -368,87 +390,105 @@ namespace Uintah{
               if ( my_dir == "x-" || my_dir == "X-"){
 
                 _flux_i = 0;
+                num_flux_dir += 1;
+                _zeroed_index = 0;
 
               } else if ( my_dir == "x+" || my_dir == "X+"){
 
                 _flux_i = 0;
+                num_flux_dir += 1;
+                _zeroed_index = 0;
 
               } else if ( my_dir == "y-" || my_dir == "Y-"){
 
                 _flux_i = 1;
+                num_flux_dir += 1;
+                _zeroed_index = 1;
 
               } else if ( my_dir == "y+" || my_dir == "Y+"){
 
                 _flux_i = 1;
+                num_flux_dir += 1;
+                _zeroed_index = 1;
 
               } else if ( my_dir == "z-" || my_dir == "Z-"){
 
                 _flux_i = 2;
+                num_flux_dir += 1;
+                _zeroed_index = 2;
 
               } else if ( my_dir == "z+" || my_dir == "Z+"){
 
                 _flux_i = 2;
+                num_flux_dir += 1;
+                _zeroed_index = 2;
 
               } else {
                 proc0cout << "Warning: Intrusion flux direction = " << my_dir << " not recognized.  Ignoring...\n";
               }
             }
 
-            gzFile file = gzopen( inputfile.c_str(), "r" );
-
-            if ( file == nullptr ) {
-              proc0cout << "Error opening file: " << inputfile << " for intrusion boundary conditions. Errno: " << errno << std::endl;
-              throw ProblemSetupException("Unable to open the given input file: " + inputfile, __FILE__, __LINE__);
+            if ( num_flux_dir == 0 || num_flux_dir > 1 ){
+              throw ProblemSetupException("Error: Only one flux_dir allowed for handoff files. ", __FILE__, __LINE__);
             }
 
-            int total_variables = getInt(file);
-            std::string eqn_input_file;
-            bool found_file = false;
-            for ( int i = 0; i < total_variables; i++ ){
+            m_handoff_helper->readInputFile( inputfile, -1, m_handoff_information );
 
-              std::string varname  = getString( file );
-              eqn_input_file  = getString( file );
+            m_handoff_information.relative_xyz = relative_xyz;
 
-              if ( varname == _label ){
-                found_file = true;
-                _filename = eqn_input_file;
-              }
-            }
+          };
 
-            if ( !found_file ){
-              throw ProblemSetupException("Unable to open scalar input file for: "+_label, __FILE__, __LINE__);
+          Vector get_relative_xyz(){
+            return m_handoff_information.relative_xyz;}
+
+          void set_scalar_rhs( const int& dir,
+                               IntVector c,
+                               IntVector c_rel,
+                               CCVariable<double>& RHS,
+                               const double& face_den,
+                               const double& face_vel,
+                               const std::vector<double>& area ){
+
+            c_rel[_flux_i] = 0;
+            CellToValuesMap::iterator iter = m_handoff_information.values.find( c_rel );
+
+            if ( iter != m_handoff_information.values.end() ){
+              double scalar_value = iter->second;
+              RHS[ c ] += _sHelp[dir] * area[dir] * face_den * face_vel * scalar_value;
             } else {
-
-              _bc_values = readInputFile( _filename );
-
+              std::stringstream msg;
+              msg << "Error: scalar not found in handoff file with relative position = " << c_rel[0] << ", " <<
+              c_rel[1] << ", " << c_rel[2] << ")." << std::endl <<
+              "Actual cell position is: " << c[0] << ", " <<
+              c[1] << ", " << c[2] << ")." << std::endl <<
+              "Check your relative_xyz spec in the input file OR check to see if you have a value at this position in your handoff file." << std::endl;
+              throw InvalidValue(msg.str(), __FILE__, __LINE__);
             }
-          };
-
-          inline void set_scalar_rhs( int dir,
-                                      IntVector c,
-                                      CCVariable<double>& RHS,
-                                      double face_den,
-                                      double face_vel,
-                                      std::vector<double> area ){
-
-            IntVector c_int = c;
-            c_int[_flux_i] = 0;
-            CellToValuesMap::iterator iter = _bc_values.find( c_int );
-            double scalar_value = iter->second;
-
-            RHS[ c ] += _sHelp[dir] * area[dir] * face_den * face_vel * scalar_value;
 
           };
 
-          inline double get_scalar( const IntVector c ){
+          double get_scalar( const Patch* patch, const IntVector c ){
 
-            IntVector c_int = c;
-            c_int[_flux_i] = 0;
-            CellToValuesMap::iterator iter = _bc_values.find( c_int );
-            double scalar_value = iter->second;
+            Vector relative_xyz = this->get_relative_xyz();
+            Point xyz(relative_xyz[0], relative_xyz[1], relative_xyz[2]);
+            IntVector rel_ijk = patch->getLevel()->getCellIndex( xyz );
+            IntVector c_rel = c - rel_ijk;
 
-            return scalar_value;
+            c_rel[_zeroed_index] = 0;
 
+            CellToValuesMap::iterator iter = m_handoff_information.values.find( c_rel );
+
+            if ( iter != m_handoff_information.values.end() ){
+              return iter->second;
+            } else {
+              std::stringstream msg;
+              msg << "Error: scalar not found in handoff file with relative position = " << c_rel[0] << ", " <<
+              c_rel[1] << ", " << c_rel[2] << ")." << std::endl <<
+              "Actual cell position is: " << c[0] << ", " <<
+              c[1] << ", " << c[2] << ")." << std::endl <<
+              "Check your relative_xyz spec in the input file OR check to see if you have a value at this position in your handoff file." << std::endl;
+              throw InvalidValue(msg.str(), __FILE__, __LINE__);
+            }
           };
 
         private:
@@ -457,42 +497,17 @@ namespace Uintah{
           std::string _filename;
           CellToValuesMap _bc_values;
           int _flux_i;
+          int _zeroed_index;
+          ArchesCore::HandoffHelper* m_handoff_helper;
+          ArchesCore::HandoffHelper::FFInfo m_handoff_information;
 
-          //---- read the file ---
-          std::map<IntVector, double>
-          readInputFile( std::string file_name )
-          {
-
-            gzFile file = gzopen( file_name.c_str(), "r" );
-            if ( file == nullptr ) {
-              proc0cout << "Error opening file: " << file_name << " for boundary conditions. Errno: " << errno << std::endl;
-              throw ProblemSetupException("Unable to open the given input file: " + file_name, __FILE__, __LINE__);
-            }
-
-            std::string variable = getString( file );
-            int         num_points = getInt( file );
-            std::map<IntVector, double> result;
-
-            for ( int i = 0; i < num_points; i++ ) {
-              int I = getInt( file );
-              int J = getInt( file );
-              int K = getInt( file );
-              double v = getDouble( file );
-
-              IntVector C(I,J,K);
-              C[_flux_i] = 0;
-
-              result.insert( std::make_pair( C, v ));
-
-            }
-
-            gzclose( file );
-            return result;
-
-          }
       };
+
       //------------- velocity -----------------------
       //
+      void
+      getVelocityCondition( const Patch* patch, const IntVector ijk,
+                            bool& found_value, Vector& velocity );
 
       /** @brief A base class for velocity inlet conditons **/
       class VelInletBase {
@@ -544,26 +559,29 @@ namespace Uintah{
 
           virtual void problem_setup( ProblemSpecP& db ) = 0;
 
-          virtual void set_velocity( int dir,
-                                     IntVector c,
+          virtual void set_velocity( const Patch* patch,
+                                     std::map<int, std::vector<IntVector> >::iterator iBC,
+                                     const std::vector<int>& directions,
                                      SFCXVariable<double>& u,
                                      SFCYVariable<double>& v,
                                      SFCZVariable<double>& w,
-                                     constCCVariable<double>& den,
-                                     double bc_density ) = 0;
+                                     bool& set_nonnormal_values ) = 0;
 
-          virtual Vector const get_velocity( const IntVector ) = 0;
+          virtual Vector get_velocity( const IntVector, const Patch* patch ) = 0;
+
+          virtual void get_velocity( const IntVector, const Patch* patch,
+                                     bool& found_value, Vector& velocity ) = 0;
 
           virtual void massflowrate_velocity( int d, const double value ) = 0;
 
         protected:
+          typedef std::map<int, std::vector<IntVector> > BCIterator;
 
           std::vector<IntVector> _dHelp;
           std::vector<IntVector> _faceDirHelp;
           std::vector<IntVector> _inside;
           std::vector<int>       _iHelp;
           std::vector<double>    _sHelp;
-
 
       };
 
@@ -580,7 +598,6 @@ namespace Uintah{
 
           void problem_setup( ProblemSpecP& db ){
 
-
             double u;
             double v;
             double w;
@@ -596,9 +613,11 @@ namespace Uintah{
             }
 
             if ( db_flat && !is_mass_flow_rate ) {
-              db_flat->getWithDefault("u",u,0.0);
-              db_flat->getWithDefault("v",v,0.0);
-              db_flat->getWithDefault("w",w,0.0);
+              Vector vel;
+              db_flat->require("flat_velocity", vel);
+              u = vel[0];
+              v = vel[1];
+              w = vel[2];
             } else {
               u=0.0;
               v=0.0;
@@ -611,31 +630,42 @@ namespace Uintah{
 
           };
 
-          inline void set_velocity( int dir,
-                                    IntVector c,
+          inline void set_velocity( const Patch* patch,
+                                    BCIterator::iterator iBC_iter,
+                                    const std::vector<int>& directions,
                                     SFCXVariable<double>& u,
                                     SFCYVariable<double>& v,
                                     SFCZVariable<double>& w,
-                                    constCCVariable<double>& density,
-                                    double bc_density ){
+                                    bool& set_nonnormal_values ){
 
-            if ( dir == 0 || dir == 1 ){
-
-              u[c] = _bc_velocity[0];
-
-            } else if ( dir == 2 || dir == 3 ){
-
-              v[c] = _bc_velocity[1];
-
-            } else {
-
-              w[c] = _bc_velocity[2];
-
+            for ( std::vector<IntVector>::iterator i = iBC_iter->second.begin();
+                                                   i != iBC_iter->second.end();
+                                                   i++){
+              IntVector c = *i;
+              for ( int idir = 0; idir < 6; idir++ ){
+                if ( directions[idir] != 0 ){
+                   if ( idir == 0 || idir == 1 ){
+                     u[c] = _bc_velocity[0];
+                   } else if ( idir == 2 || idir == 3 ){
+                     v[c] = _bc_velocity[1];
+                   } else {
+                     w[c] = _bc_velocity[2];
+                   }
+                }
+              }
             }
-          };
+          }
 
-          const inline Vector get_velocity( const IntVector ){
+          inline Vector get_velocity( const IntVector, const Patch* patch ){
             return _bc_velocity;
+          }
+
+          void get_velocity( const IntVector ijk, const Patch* patch,
+                             bool& found_value, Vector& velocity ){
+
+            found_value = true;
+            velocity = _bc_velocity;
+
           }
 
           void massflowrate_velocity( int d, const double v ){
@@ -655,14 +685,12 @@ namespace Uintah{
           InputFileVelocity(){};
           ~InputFileVelocity(){};
 
-          typedef std::map<IntVector, double> CellToValuesMap;
-          typedef std::map<std::string, CellToValuesMap> ScalarToBCValueMap;
-
           void problem_setup( ProblemSpecP& db ){
 
             ProblemSpecP db_v = db->findBlock("velocity");
 
-            db_v->require("input_file",_file_reference);
+            db_v->require("input_file", _file_reference);
+            db_v->require("relative_xyz", m_relative_xyz);
 
             int num_flux_dir = 0; // Only allow for ONE flux direction
 
@@ -674,31 +702,37 @@ namespace Uintah{
 
                 _flux_i = 0;
                 num_flux_dir += 1;
+                _zeroed_index = 0;
 
               } else if ( my_dir == "x+" || my_dir == "X+"){
 
-                _flux_i = 0;
+                _flux_i = 1;
                 num_flux_dir += 1;
+                _zeroed_index = 0;
 
               } else if ( my_dir == "y-" || my_dir == "Y-"){
 
-                _flux_i = 1;
+                _flux_i = 2;
                 num_flux_dir += 1;
+                _zeroed_index = 1;
 
               } else if ( my_dir == "y+" || my_dir == "Y+"){
 
-                _flux_i = 1;
+                _flux_i = 3;
                 num_flux_dir += 1;
+                _zeroed_index = 1;
 
               } else if ( my_dir == "z-" || my_dir == "Z-"){
 
-                _flux_i = 2;
+                _flux_i = 4;
                 num_flux_dir += 1;
+                _zeroed_index = 2;
 
               } else if ( my_dir == "z+" || my_dir == "Z+"){
 
-                _flux_i = 2;
+                _flux_i = 5;
                 num_flux_dir += 1;
+                _zeroed_index = 2;
 
               } else {
                 proc0cout << "Warning: Intrusion flux direction = " << my_dir << " not recognized.  Ignoring...\n";
@@ -706,154 +740,107 @@ namespace Uintah{
             }
 
             if ( num_flux_dir == 0 || num_flux_dir > 1 ){
-              throw ProblemSetupException("Error: Only one flux_dir allowed. ", __FILE__, __LINE__);
+              throw ProblemSetupException("Error: Only one flux_dir allowed for handoff files. ", __FILE__, __LINE__);
             }
 
-            //go out an load the velocity:
-            gzFile file = gzopen( _file_reference.c_str(), "r");
+            m_handoff_helper->readInputFile( _file_reference, m_handoff_information );
 
-            int total_variables;
+            std::map<IntVector, Vector> new_map;
+            new_map.clear();
 
-            if ( file == nullptr ) {
-              proc0cout << "Error opening file: " << _file_reference << " for intrusion boundary conditions. Errno: " << errno << std::endl;
-              throw ProblemSetupException("Unable to open the given input file: " + _file_reference, __FILE__, __LINE__);
-            }
+            // Now go through and zero out the zeroed index:
+            for (auto iter = m_handoff_information.vec_values.begin();
+                      iter != m_handoff_information.vec_values.end(); iter++ ){
 
-            total_variables = getInt(file);
-            std::string eqn_input_file;
-            bool found_u = false;
-            bool found_v = false;
-            bool found_w = false;
-            for ( int i = 0; i < total_variables; i++ ){
+             IntVector c = iter->first;
+             Vector value = iter->second;
 
-              std::string varname  = getString( file );
-              eqn_input_file  = getString( file );
+             c[_zeroed_index] = 0;
 
-              if ( varname == "uvel" ){
-                found_u = true;
-                _u_filename = eqn_input_file;
-              } else if ( varname == "vvel" ){
-                found_v = true;
-                _v_filename = eqn_input_file;
-              } else if ( varname == "wvel" ){
-                found_w = true;
-                _w_filename = eqn_input_file;
-              }
+             new_map.insert(std::make_pair(c,value));
 
             }
 
-            // REQUIRE that each component is explicitly specified
-            if ( !found_u ){
-              throw ProblemSetupException("Unable to open velocity input file for U direction.", __FILE__, __LINE__);
-            } else {
-              CellToValuesMap bc_values;
-              bc_values = readInputFile( _u_filename );
-
-              _velocity_map.insert(std::make_pair( "u", bc_values ));
-
-            }
-            if ( !found_v ){
-              throw ProblemSetupException("Unable to open velocity input file for V direction.", __FILE__, __LINE__);
-            } else {
-              CellToValuesMap bc_values;
-              bc_values = readInputFile( _v_filename );
-
-              _velocity_map.insert(std::make_pair( "v", bc_values ));
-
-            }
-            if ( !found_w ){
-              throw ProblemSetupException("Unable to open velocity input file for W direction.", __FILE__, __LINE__);
-            } else {
-              CellToValuesMap bc_values;
-              bc_values = readInputFile( _w_filename );
-
-              _velocity_map.insert(std::make_pair( "w", bc_values ));
-
-            }
-            gzclose( file );
-
+            m_handoff_information.vec_values = new_map;
 
           };
 
-          inline void set_velocity( int dir,
-                               IntVector c,
-                               SFCXVariable<double>& u,
-                               SFCYVariable<double>& v,
-                               SFCZVariable<double>& w,
-                               constCCVariable<double>& density,
-                               double bc_density ){
+          inline void set_velocity( const Patch* patch,
+                                    BCIterator::iterator iBC_iter,
+                                    const std::vector<int>& directions,
+                                    SFCXVariable<double>& u,
+                                    SFCYVariable<double>& v,
+                                    SFCZVariable<double>& w,
+                                    bool& set_nonnormal_values ){
 
-            IntVector c_int = c;
-            c_int[_flux_i] = 0;
+            Point xyz(m_relative_xyz[0], m_relative_xyz[1], m_relative_xyz[2]);
+            IntVector rel_ijk = patch->getLevel()->getCellIndex( xyz );
 
-            if ( dir == 0 || dir == 1 ) {
+            for ( std::vector<IntVector>::iterator i = iBC_iter->second.begin();
+                                                   i != iBC_iter->second.end();
+                                                   i++){
 
-              ScalarToBCValueMap::iterator u_storage = _velocity_map.find("u");
-              CellToValuesMap::iterator u_iter = u_storage->second.find( c_int );
-
-              if ( u_iter == u_storage->second.end() ){
-                throw InvalidValue("Error: Can't match input file u velocity with face iterator",__FILE__,__LINE__);
-              } else {
-                u[c] = u_iter->second;
+              IntVector c = *i;
+              IntVector c_rel = *i - rel_ijk; //note that this is the relative index position
+              c_rel[_zeroed_index] = 0;
+              auto iter = m_handoff_information.vec_values.find(c_rel);
+              if ( iter != m_handoff_information.vec_values.end() ){
+                Vector bc_value = m_handoff_information.vec_values[c_rel];
+                if ( _flux_i == 0  || _flux_i == 1 ){
+                  //-x, +x
+                  u[c] = bc_value[0];
+                } else if ( _flux_i == 2 || _flux_i == 3 ){
+                  //-y, +y
+                  v[c] = bc_value[1];
+                } else if ( _flux_i == 4 || _flux_i == 5){
+                  //-z, +z
+                  w[c] = bc_value[2];
+                }
               }
-
-            } else if ( dir == 2 || dir == 3 ) {
-
-              ScalarToBCValueMap::iterator v_storage = _velocity_map.find("v");
-              CellToValuesMap::iterator v_iter = v_storage->second.find( c_int );
-
-              if ( v_iter == v_storage->second.end() ){
-                throw InvalidValue("Error: Can't match input file v velocity with face iterator",__FILE__,__LINE__);
-              } else {
-                v[c] = v_iter->second;
-              }
-
-            } else {
-
-              ScalarToBCValueMap::iterator w_storage = _velocity_map.find("w");
-              CellToValuesMap::iterator w_iter = w_storage->second.find( c_int );
-
-              if ( w_iter == w_storage->second.end() ){
-                throw InvalidValue("Error: Can't match input file w velocity with face iterator",__FILE__,__LINE__);
-              } else {
-                w[c] = w_iter->second;
-              }
-
             }
-
           }
 
+          void get_velocity( const IntVector ijk, const Patch* patch,
+                             bool& found_value, Vector& velocity ){
 
-          const inline Vector get_velocity( const IntVector c ){
-            Vector vel_vec;
+            Point xyz(m_relative_xyz[0], m_relative_xyz[1], m_relative_xyz[2]);
+            IntVector rel_ijk = patch->getLevel()->getCellIndex( xyz );
 
-            IntVector c_int = c;
-            c_int[_flux_i] = 0;
-            ScalarToBCValueMap::iterator u_storage = _velocity_map.find("u");
-            CellToValuesMap::iterator u_iter = u_storage->second.find( c_int );
-            if ( u_iter == u_storage->second.end() ){
-              throw InvalidValue("Error: Can't match input file u velocity with face iterator",__FILE__,__LINE__);
+            IntVector c_rel = ijk - rel_ijk; //note that this is the relative index position
+
+            c_rel[_zeroed_index] = 0;
+
+            auto iter = m_handoff_information.vec_values.find(c_rel);
+
+            if ( iter != m_handoff_information.vec_values.end() ){
+              velocity = m_handoff_information.vec_values[c_rel];
+              found_value = true;
             } else {
-              vel_vec[0] = u_iter->second;
+              found_value = false;
             }
+          }
 
-            ScalarToBCValueMap::iterator v_storage = _velocity_map.find("v");
-            CellToValuesMap::iterator v_iter = v_storage->second.find( c_int );
-            if ( v_iter == v_storage->second.end() ){
-              throw InvalidValue("Error: Can't match input file v velocity with face iterator",__FILE__,__LINE__);
+          inline Vector get_velocity( const IntVector c, const Patch* patch ){
+
+            Point xyz(m_relative_xyz[0], m_relative_xyz[1], m_relative_xyz[2]);
+            IntVector rel_ijk = patch->getLevel()->getCellIndex( xyz );
+
+            IntVector c_rel = c - rel_ijk; //note that this is the relative index position
+
+            c_rel[_zeroed_index] = 0;
+
+            auto iter = m_handoff_information.vec_values.find(c_rel);
+
+            if ( iter != m_handoff_information.vec_values.end() ){
+              return m_handoff_information.vec_values[c_rel];
             } else {
-              vel_vec[1] = v_iter->second;
+              std::stringstream msg;
+              msg << "Error: Cannot locate handoff information for boundary intrusion for (relative) cell: (" <<
+                c_rel[0] << ", " << c_rel[1] << ", " << c_rel[2] << ")." << std::endl <<
+                "The intrusion cell boundary cell (unaltered) is: (" << c[0] << ", " << c[1] << ", " << c[2] << ")." << std::endl
+                << " This was using a cell modifier of " << rel_ijk[0]<< " " << rel_ijk[1] <<  " "<< rel_ijk[2] <<  std::endl;
+              throw InvalidValue(msg.str(), __FILE__, __LINE__ );
             }
-
-            ScalarToBCValueMap::iterator w_storage = _velocity_map.find("w");
-            CellToValuesMap::iterator w_iter = w_storage->second.find( c_int );
-            if ( w_iter == w_storage->second.end() ){
-              throw InvalidValue("Error: Can't match input file w velocity with face iterator",__FILE__,__LINE__);
-            } else {
-              vel_vec[2] = w_iter->second;
-            }
-
-            return vel_vec;
           }
 
           void massflowrate_velocity( int d, const double v ){
@@ -863,49 +850,14 @@ namespace Uintah{
         private:
 
           std::string _file_reference;
-          std::map<IntVector, double> _u;
-          std::map<IntVector, double> _v;
-          std::map<IntVector, double> _w;
+
           int _flux_i;
+          int _zeroed_index{-1};
 
-          std::string _u_filename;
-          std::string _v_filename;
-          std::string _w_filename;
+          ArchesCore::HandoffHelper* m_handoff_helper;
+          ArchesCore::HandoffHelper::FFInfo m_handoff_information;
 
-          ScalarToBCValueMap _velocity_map;
-
-          //---- read the file ---
-          std::map<IntVector, double>
-          readInputFile( std::string file_name )
-          {
-
-            gzFile file = gzopen( file_name.c_str(), "r" );
-            if ( file == nullptr ) {
-              proc0cout << "Error opening file: " << file_name << " for boundary conditions. Errno: " << errno << std::endl;
-              throw ProblemSetupException("Unable to open the given input file: " + file_name, __FILE__, __LINE__);
-            }
-
-            std::string variable = getString( file );
-            int         num_points = getInt( file );
-            std::map<IntVector, double> result;
-
-            for ( int i = 0; i < num_points; i++ ) {
-              int I = getInt( file );
-              int J = getInt( file );
-              int K = getInt( file );
-              double v = getDouble( file );
-
-              IntVector C(I,J,K);
-              C[_flux_i] = 0;
-
-              result.insert( std::make_pair( C, v ));
-
-            }
-
-            gzclose( file );
-            return result;
-          }
-
+          Vector m_relative_xyz;
       };
 
       typedef std::map<int, std::vector<IntVector> > BCIterator;
@@ -914,6 +866,8 @@ namespace Uintah{
 
         // The name of the intrusion is the key value in the map that stores all intrusions
         INTRUSION_TYPE                type;
+        INLET_TYPE                    velocity_inlet_type;
+        INLET_TYPE                    scalar_inlet_type;
         std::vector<GeometryPieceP>   geometry;
         std::vector<const VarLabel*>  labels;
         std::map<std::string, double> varnames_values_map;
@@ -927,6 +881,10 @@ namespace Uintah{
         bool                          has_been_initialized;
         Vector                        velocity;
         std::string                   name;
+
+        //Approximate thin walls:
+        bool                          thin_wall; //True: then treat intersecting thin walls as a full wall cell
+        double                        thin_wall_delta; //Fraction of dx,dy,or dz that is used as a threshold.
 
         //state space information:
         double density; // from state-space calculation
@@ -988,6 +946,7 @@ namespace Uintah{
     private:
 
       std::vector<Boundary> _intrusions;
+      bool _has_intrusion_inlets{false};
       IntrusionMap _intrusion_map;
       Uintah::PatchSet* localPatches_{nullptr};
       const ArchesLabel* _lab;

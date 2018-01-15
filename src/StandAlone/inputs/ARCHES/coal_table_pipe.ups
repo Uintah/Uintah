@@ -289,13 +289,12 @@
         </Sources>
       </TransportEqns>
       <PropertyModelsV2>
-        <model type="gasRadProperties"  label="gas_abskg" >
+        <model type="gasRadProperties" label="gas_abskg">
           <calculator type="hottel_sarofim">
             <opl>3.0</opl>
           </calculator>
         </model>
       </PropertyModelsV2>
-
       <PropertyModels>
         <model type="heat_loss" label="heat_loss">
           <initialization type="constant">
@@ -368,6 +367,8 @@
           </Parameters>
         </PressureSolver>
         <MomentumSolver>
+          <wall_closure type="molecular">
+          </wall_closure>
           <convection_scheme>upwind</convection_scheme>
         </MomentumSolver>
       </ExplicitSolver>

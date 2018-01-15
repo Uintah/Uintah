@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -30,6 +30,7 @@
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Grid/SimulationState.h>
 #include <CCA/Ports/Scheduler.h>
+#include <CCA/Ports/Regridder.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
 #include <Core/Util/DebugStream.h>
 
@@ -43,8 +44,9 @@ using namespace std;
 
 DebugStream amrwave("AMRWave", false);
 
-AMRWave::AMRWave(const ProcessorGroup* myworld)
-  : Wave(myworld)
+AMRWave::AMRWave(const ProcessorGroup* myworld,
+		 const SimulationStateP sharedState)
+  : Wave(myworld, sharedState)
 {
 }
 
@@ -56,9 +58,9 @@ AMRWave::~AMRWave()
 //
 void AMRWave::problemSetup(const ProblemSpecP& params, 
                            const ProblemSpecP& restart_prob_spec, 
-                           GridP& grid, SimulationStateP& sharedState)
+                           GridP& grid)
 {
-  Wave::problemSetup(params, restart_prob_spec,grid, sharedState);
+  Wave::problemSetup(params, restart_prob_spec,grid);
   ProblemSpecP wave = params->findBlock("Wave");
   wave->require("refine_threshold", refine_threshold);
 
@@ -90,7 +92,7 @@ void AMRWave::scheduleCoarsen(const LevelP& coarseLevel, SchedulerP& sched)
   task->modifies(phi_label);
   task->requires(Task::NewDW, pi_label, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
   task->modifies(pi_label);
-  sched->addTask(task, coarseLevel->eachPatch(), sharedState_->allMaterials());
+  sched->addTask(task, coarseLevel->eachPatch(), m_sharedState->allMaterials());
 }
 //______________________________________________________________________
 //
@@ -107,7 +109,7 @@ void AMRWave::scheduleRefine (const PatchSet* patches, SchedulerP& sched)
     task->computes(phi_label);
     task->computes(pi_label);
   }
-  sched->addTask(task, patches, sharedState_->allMaterials());
+  sched->addTask(task, patches, m_sharedState->allMaterials());
 }
 //______________________________________________________________________
 //
@@ -116,9 +118,9 @@ void AMRWave::scheduleErrorEstimate(const LevelP& coarseLevel,
 {
   Task* task = scinew Task("errorEstimate", this, &AMRWave::errorEstimate);
   task->requires(Task::NewDW, phi_label, Ghost::AroundCells, 1);
-  task->modifies(sharedState_->get_refineFlag_label(), sharedState_->refineFlagMaterials());
-  task->modifies(sharedState_->get_refinePatchFlag_label(), sharedState_->refineFlagMaterials());
-  sched->addTask(task, coarseLevel->eachPatch(), sharedState_->allMaterials());
+  task->modifies(m_regridder->getRefineFlagLabel(), m_regridder->refineFlagMaterials());
+  task->modifies(m_regridder->getRefinePatchFlagLabel(), m_regridder->refineFlagMaterials());
+  sched->addTask(task, coarseLevel->eachPatch(), m_sharedState->allMaterials());
 }
 //______________________________________________________________________
 //
@@ -149,9 +151,9 @@ void AMRWave::errorEstimate(const ProcessorGroup*,
     CCVariable<int> refineFlag;
     PerPatch<PatchFlagP> refinePatchFlag;
     
-    new_dw->getModifiable(refineFlag, sharedState_->get_refineFlag_label(),
+    new_dw->getModifiable(refineFlag, m_regridder->getRefineFlagLabel(),
                           0, patch);
-    new_dw->get(refinePatchFlag, sharedState_->get_refinePatchFlag_label(),
+    new_dw->get(refinePatchFlag, m_regridder->getRefinePatchFlagLabel(),
                 0, patch);
 
     PatchFlag* refinePatch = refinePatchFlag.get().get_rep();
@@ -357,7 +359,7 @@ void AMRWave::coarsen(const ProcessorGroup*,
       Level::selectType finePatches;
       fineLevel->selectPatches(fineLow, fineHigh, finePatches);
       
-      for (int i = 0; i < finePatches.size(); i++) {
+      for (unsigned int i = 0; i < finePatches.size(); i++) {
         const Patch* finePatch = finePatches[i];
         new_dw->get(fine_phi, phi_label, matl, finePatch, Ghost::None, 0);
         new_dw->get(fine_pi, pi_label, matl, finePatch, Ghost::None, 0);

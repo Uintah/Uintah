@@ -25,11 +25,8 @@
     <save label="y-mom"/>
     <save label="z-mom"/>
     <save label="uVel"/>
-    <save label="CCuVel"/>
     <save label="vVel"/>
-    <save label="CCvVel"/>
     <save label="wVel"/>
-    <save label="CCwVel"/>
     <save label="gamma"/>
     <save label="pressure"/>
     <save label="b_press"/>
@@ -44,7 +41,7 @@
         <upper>[0.56548668,0.56548668,0.56548668]</upper>
         <resolution>[32,32,32]</resolution>
         <extraCells>[0,0,0]</extraCells>
-        <patches>[2,2,2]</patches>
+        <patches>[1,1,1]</patches>
       </Box>
       <periodic>[1,1,1]</periodic>
     </Level>
@@ -68,53 +65,13 @@
         <var role="total_viscosity" label="gamma"/>
         <var role="density" label="density"/>
       </VarID>
-      <PropertyModelsV2>
-        <model label="density" type="constant_property">
-          <grid type="CC"/>
-          <value>1.</value>
+      <StateProperties> 
+        <model label="density_model" type="constant">
+          <const_property label="density" value="1."/>
         </model>
-        <!--model label="gamma" type="constant_property">
-          <grid type="CC"/>
-          <value>1.e-3</value>
-        </model-->
-        <model label="interpo_u" type="Interpolation_var">
-          <variable label ="uVel" type="FX"/>
-          <new_variable label ="CCuVel" type="FX"/>
-          <interpolation scheme ="central"/>
-        </model>
-        <model label="interpo_v" type="Interpolation_var">
-          <variable label ="vVel" type="FY"/>
-          <new_variable label ="CCvVel" type="FY"/>
-          <interpolation scheme ="central"/>
-        </model>
-        <model label="interpo_w" type="Interpolation_var">
-          <variable label ="wVel" type="FZ"/>
-          <new_variable label ="CCwVel" type="FZ"/>
-          <interpolation scheme ="central"/>
-        </model>
-      </PropertyModelsV2>
-      <!--src_kokkos>
-        <src label="x_mms" type="MMS_mom">
-          <variable type="FX"/>
-          <which_vel>u</which_vel>
-          <coordinates x="ucellX" y="gridY"/>
-        </src>
-        <src label="y_mms" type="MMS_mom">
-          <variable type="FY"/>
-          <which_vel>v</which_vel>
-          <coordinates x="gridX" y="vcellY"/>
-        </src>
-      </src_kokkos-->
+      </StateProperties>
       <KMomentum>
-        <!--convection scheme="upwind"/-->
         <convection scheme="central"/>
-        <!--convection scheme="f_central"/-->
-        <!--convection scheme="upwind"/-->
-        <!--src_x label = "x_mms_source"/>
-        <src_y label = "y_mms_source"/-->
-        <!--inviscid/-->
-        <!--src_x label = "x_mms_source_diff"/>
-        <src_y label = "y_mms_source_diff"/-->
         <PressureSolver>
           <Parameters>
             <normalize_pressure>true    </normalize_pressure>
@@ -129,19 +86,25 @@
         </PressureSolver>
       </KMomentum>
       <TurbulenceModels>
-       <!--model label="Mimin_sigma" type="sigma"/-->
        <model label="Csmag" type="constant_smagorinsky">
-       <CCvelocities CCuVel_label="CCuVel" CCvVel_label="CCvVel" CCwVel_label="CCwVel"/>
-       <Smagorinsky_constant Cs = "0.2" />
-       <!--use_my_name_viscosity label="viscosity_csigma"/-->
+        <Cs>0.2</Cs>
        </model>
       </TurbulenceModels>
       <Initialization>
-        <task task_label="x-mom-init" variable_label="x-mom"  type="inputFile">
-          <uVel label ="x-mom"/>
-          <vVel label ="y-mom"/>
-          <wVel label ="z-mom"/>
-          <filename>cbc32_uvw_arches.gz</filename>
+        <task task_label="uVel-init" variable_label="uVel"  type="input_file">
+          <filename>../../../periodicTurb/cbc32_uvw_arches-indexed.gz</filename>
+          <vector index="0"/>
+          <variable type="FX"/>
+        </task>
+        <task task_label="vVel-init" variable_label="vVel"  type="input_file">
+          <filename>../../../periodicTurb/cbc32_uvw_arches-indexed.gz</filename>
+          <vector index="1"/>
+          <variable type="FY"/>
+        </task>
+        <task task_label="wVel-init" variable_label="wVel"  type="input_file">
+          <filename>../../../periodicTurb/cbc32_uvw_arches-indexed.gz</filename>
+          <vector index="2"/>
+          <variable type="FZ"/>
         </task>
       </Initialization>
       <BoundaryConditions>

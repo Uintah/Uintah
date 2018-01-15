@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -42,8 +42,9 @@
 using namespace std;
 using namespace Uintah;
 
-Benchmark::Benchmark(const ProcessorGroup* myworld)
-  : UintahParallelComponent(myworld)
+Benchmark::Benchmark(const ProcessorGroup* myworld,
+		     const SimulationStateP sharedState)
+  : ApplicationCommon(myworld, sharedState)
 {
 
   phi_label = VarLabel::create("phi", 
@@ -61,17 +62,15 @@ Benchmark::~Benchmark()
 //
 void Benchmark::problemSetup(const ProblemSpecP& params, 
                             const ProblemSpecP& restart_prob_spec, 
-                            GridP& /*grid*/, 
-                            SimulationStateP& sharedState)
+                            GridP& /*grid*/)
 {
-  sharedState_ = sharedState;
   ProblemSpecP poisson = params->findBlock("Poisson");
   
   poisson->require("delt", delt_);
   
   mymat_ = scinew SimpleMaterial();
   
-  sharedState->registerSimpleMaterial(mymat_);
+  m_sharedState->registerSimpleMaterial(mymat_);
 }
 //______________________________________________________________________
 //
@@ -83,7 +82,7 @@ void Benchmark::scheduleInitialize(const LevelP& level,
                      
   task->computes(phi_label);
   task->computes(residual_label);
-  sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
+  sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
 }
 //______________________________________________________________________
 //
@@ -93,15 +92,15 @@ void Benchmark::scheduleRestartInitialize(const LevelP& level,
 }
 //______________________________________________________________________
 //
-void Benchmark::scheduleComputeStableTimestep(const LevelP& level,
+void Benchmark::scheduleComputeStableTimeStep(const LevelP& level,
                                              SchedulerP& sched)
 {
-  Task* task = scinew Task("Benchmark::computeStableTimestep",
-                     this, &Benchmark::computeStableTimestep);
+  Task* task = scinew Task("Benchmark::computeStableTimeStep",
+                     this, &Benchmark::computeStableTimeStep);
                      
   task->requires(Task::NewDW, residual_label);
-  task->computes(sharedState_->get_delt_label(),level.get_rep());
-  sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
+  task->computes(getDelTLabel(),level.get_rep());
+  sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
 }
 //______________________________________________________________________
 //
@@ -115,22 +114,22 @@ Benchmark::scheduleTimeAdvance( const LevelP& level,
   task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
   task->computes(phi_label);
   task->computes(residual_label);
-  sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
+  sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
 }
 //______________________________________________________________________
 //
-void Benchmark::computeStableTimestep(const ProcessorGroup* pg,
+void Benchmark::computeStableTimeStep(const ProcessorGroup* pg,
                                      const PatchSubset* patches,
                                      const MaterialSubset* /*matls*/,
                                      DataWarehouse*,
                                      DataWarehouse* new_dw)
 {
-  if(pg->myrank() == 0){
+  if(pg->myRank() == 0){
     sum_vartype residual;
     new_dw->get(residual, residual_label);
     cerr << "Residual=" << residual << '\n';
   }
-  new_dw->put(delt_vartype(delt_), sharedState_->get_delt_label(),getLevel(patches));
+  new_dw->put(delt_vartype(delt_), getDelTLabel(),getLevel(patches));
 }
 
 //______________________________________________________________________

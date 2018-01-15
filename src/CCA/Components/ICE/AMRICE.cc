@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -24,10 +24,12 @@
 
 
 #include <CCA/Components/ICE/AMRICE.h>
-#include <CCA/Components/ICE/ICEMaterial.h>
+#include <CCA/Components/ICE/Materials/ICEMaterial.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
+#include <CCA/Components/Models/FluidsBased/FluidsBasedModel.h>
 #include <CCA/Ports/SolverInterface.h>
 #include <CCA/Ports/Scheduler.h>
+#include <CCA/Ports/Regridder.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Grid/AMR_CoarsenRefine.h>
@@ -54,8 +56,9 @@ static DebugStream cout_doing("AMRICE_DOING_COUT", false);
 //setenv SCI_DEBUG AMR:+ you can see the new grid it creates
 
 
-AMRICE::AMRICE(const ProcessorGroup* myworld)
-  : ICE(myworld, true)
+AMRICE::AMRICE(const ProcessorGroup* myworld,
+               const SimulationStateP sharedState) :
+  ICE(myworld, sharedState)
 {
 }
 
@@ -65,12 +68,12 @@ AMRICE::~AMRICE()
 //___________________________________________________________________
 void AMRICE::problemSetup(const ProblemSpecP& params, 
                           const ProblemSpecP& restart_prob_spec, 
-                          GridP& grid, SimulationStateP& sharedState)
+                          GridP& grid)
 {
-  cout_doing << d_myworld->myrank() 
+  cout_doing << d_myworld->myRank() 
              << " Doing problemSetup  \t\t\t AMRICE" << '\n';
              
-  ICE::problemSetup(params, restart_prob_spec,grid, sharedState);
+  ICE::problemSetup(params, restart_prob_spec,grid);
   ProblemSpecP ice_ps;
   ProblemSpecP amr_ps = params->findBlock("AMR");
   
@@ -150,7 +153,7 @@ void AMRICE::problemSetup(const ProblemSpecP& params,
       printf( "WARNING: AMRICE.cc: stringstream failed...\n" );
     }
 
-    int numMatls = d_sharedState->getNumMatls();
+    int numMatls = m_sharedState->getNumMatls();
 
     //__________________________________
     //  bulletproofing    
@@ -200,8 +203,6 @@ void AMRICE::problemSetup(const ProblemSpecP& params,
   
   //__________________________________
   //manual manipulate the scheduling of copy data
-  Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
-
 
   //overrideVariableBehavior(string var, bool treatAsOld, bool copyData, bool noScrub, bool notCopyData, bool noCheckpoint)
   //                             (1)             (2)             (3)           (4)            (5)            (6)
@@ -213,51 +214,61 @@ void AMRICE::problemSetup(const ProblemSpecP& params,
   //  noCheckpoint:   do not checkpoint this variable.
   
   // we need these for AMRICE::refine
-  sched->overrideVariableBehavior("specific_heat",true, true, false, false, false);
-  sched->overrideVariableBehavior("gamma",        true, true, false, false, false);
-  sched->overrideVariableBehavior("vol_frac_CC",  true, true, false, false, false);
-  sched->overrideVariableBehavior("sp_vol_CC",    d_with_mpm, true,  false, false, false);
+  m_scheduler->overrideVariableBehavior("specific_heat",true, true, false, false, false);
+  m_scheduler->overrideVariableBehavior("gamma",        true, true, false, false, false);
+  m_scheduler->overrideVariableBehavior("vol_frac_CC",  true, true, false, false, false);
+  m_scheduler->overrideVariableBehavior("sp_vol_CC",    d_with_mpm, true,  false, false, false);
   if (d_with_mpm)
-    sched->overrideVariableBehavior("temp_CC",      true, true, false, false, false);
+    m_scheduler->overrideVariableBehavior("temp_CC",      true, true, false, false, false);
 
   //We need these variables from OldDW to use between tasks, but do not
   // schedule datacopy
   
-  sched->overrideVariableBehavior("mass_X_FC_flux",     false, false, true, false, false);
-  sched->overrideVariableBehavior("mass_Y_FC_flux",     false, false, true, false, false);
-  sched->overrideVariableBehavior("mass_Z_FC_flux",     false, false, true, false, false);
-  sched->overrideVariableBehavior("mom_X_FC_flux",      false, false, true, false, false);
-  sched->overrideVariableBehavior("mom_Y_FC_flux",      false, false, true, false, false);
-  sched->overrideVariableBehavior("mom_Z_FC_flux",      false, false, true, false, false);
-  sched->overrideVariableBehavior("sp_vol_X_FC_flux",   false, false, true, false, false);
-  sched->overrideVariableBehavior("sp_vol_Y_FC_flux",   false, false, true, false, false);
-  sched->overrideVariableBehavior("sp_vol_Z_FC_flux",   false, false, true, false, false);
-  sched->overrideVariableBehavior("int_eng_X_FC_flux",  false, false, true, false, false);
-  sched->overrideVariableBehavior("int_eng_Y_FC_flux",  false, false, true, false, false);
-  sched->overrideVariableBehavior("int_eng_Z_FC_flux",  false, false, true, false, false);
-  sched->overrideVariableBehavior("vol_frac_X_FC_flux", false, false, true, false, false);
-  sched->overrideVariableBehavior("vol_frac_Y_FC_flux", false, false, true, false, false);
-  sched->overrideVariableBehavior("vol_frac_Z_FC_flux", false, false, true, false, false);
+  m_scheduler->overrideVariableBehavior("mass_X_FC_flux",     false, false, true, false, false);
+  m_scheduler->overrideVariableBehavior("mass_Y_FC_flux",     false, false, true, false, false);
+  m_scheduler->overrideVariableBehavior("mass_Z_FC_flux",     false, false, true, false, false);
+  m_scheduler->overrideVariableBehavior("mom_X_FC_flux",      false, false, true, false, false);
+  m_scheduler->overrideVariableBehavior("mom_Y_FC_flux",      false, false, true, false, false);
+  m_scheduler->overrideVariableBehavior("mom_Z_FC_flux",      false, false, true, false, false);
+  m_scheduler->overrideVariableBehavior("sp_vol_X_FC_flux",   false, false, true, false, false);
+  m_scheduler->overrideVariableBehavior("sp_vol_Y_FC_flux",   false, false, true, false, false);
+  m_scheduler->overrideVariableBehavior("sp_vol_Z_FC_flux",   false, false, true, false, false);
+  m_scheduler->overrideVariableBehavior("int_eng_X_FC_flux",  false, false, true, false, false);
+  m_scheduler->overrideVariableBehavior("int_eng_Y_FC_flux",  false, false, true, false, false);
+  m_scheduler->overrideVariableBehavior("int_eng_Z_FC_flux",  false, false, true, false, false);
+  m_scheduler->overrideVariableBehavior("vol_frac_X_FC_flux", false, false, true, false, false);
+  m_scheduler->overrideVariableBehavior("vol_frac_Y_FC_flux", false, false, true, false, false);
+  m_scheduler->overrideVariableBehavior("vol_frac_Z_FC_flux", false, false, true, false, false);
   
   //__________________________________
-  // MODELS
-  vector<AMR_refluxVariable*>::iterator iter;
-  for( iter  = d_modelSetup->d_reflux_vars.begin();
-       iter != d_modelSetup->d_reflux_vars.end(); iter++){
-    AMR_refluxVariable* rvar = *iter;
-    string varLabelX = rvar->var_X_FC_flux->getName();
-    string varLabelY = rvar->var_Y_FC_flux->getName();
-    string varLabelZ = rvar->var_Z_FC_flux->getName();
-    sched->overrideVariableBehavior(varLabelX, false, false, true, false, false);
-    sched->overrideVariableBehavior(varLabelY, false, false, true, false, false);
-    sched->overrideVariableBehavior(varLabelZ, false, false, true, false, false);
+  // Model with reflux variables.
+  if(d_models.size()){
+    for(vector<ModelInterface*>::iterator m_iter  = d_models.begin();
+                                          m_iter != d_models.end(); m_iter++){
+      FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( *m_iter );
+            
+      if( fb_model && fb_model->d_reflux_vars.size() ){
+        vector<AMRRefluxVariable*>::iterator r_iter;
+        for(r_iter  = fb_model->d_reflux_vars.begin();
+            r_iter != fb_model->d_reflux_vars.end(); r_iter++){
+          AMRRefluxVariable* rvar = *r_iter;
+          
+          string varLabelX = rvar->var_X_FC_flux->getName();
+          string varLabelY = rvar->var_Y_FC_flux->getName();
+          string varLabelZ = rvar->var_Z_FC_flux->getName();
+          m_scheduler->overrideVariableBehavior(varLabelX, false, false, true, false, false);
+          m_scheduler->overrideVariableBehavior(varLabelY, false, false, true, false, false);
+          m_scheduler->overrideVariableBehavior(varLabelZ, false, false, true, false, false);
+        }
+      }
+    }
   } 
 }
-//___________________________________________________________________              
+//___________________________________________________________________
 void AMRICE::scheduleInitialize(const LevelP& level,
                                   SchedulerP& sched)
 {
-  cout_doing << d_myworld->myrank() 
+  cout_doing << d_myworld->myRank() 
              << " AMRICE::scheduleInitialize \t\tL-"<<level->getIndex()<< '\n';
   ICE::scheduleInitialize(level, sched);
 }
@@ -279,7 +290,7 @@ void AMRICE::scheduleRefineInterface_Variable(const LevelP& fineLevel,
                                               bool needCoarseOld,
                                               bool needCoarseNew)
 {
-  cout_doing << d_myworld->myrank() << " \t scheduleRefineInterface_Variable (" 
+  cout_doing << d_myworld->myRank() << " \t scheduleRefineInterface_Variable (" 
              << variable->getName() << ") matls: \t"<< *matls<< endl;
 
   ostringstream taskName;
@@ -331,15 +342,15 @@ void AMRICE::scheduleRefineInterface(const LevelP& fineLevel,
                                      bool needCoarseNew)
 {
   if(fineLevel->getIndex() > 0 ){
-    cout_doing << d_myworld->myrank() << " AMRICE::scheduleRefineInterface \t\t\tL-" 
+    cout_doing << d_myworld->myRank() << " AMRICE::scheduleRefineInterface \t\t\tL-" 
                << fineLevel->getIndex() 
                << " coarseOld: " << needCoarseOld 
                << " coarseNew: " << needCoarseNew << endl;
   
     Task::MaterialDomainSpec ND   = Task::NormalDomain;
     Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
-    const MaterialSet* all_matls = d_sharedState->allMaterials();
-    const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
+    const MaterialSet* all_matls = m_sharedState->allMaterials();
+    const MaterialSet* ice_matls = m_sharedState->allICEMaterials();
 
     scheduleRefineInterface_Variable(fineLevel, sched, lb->press_CCLabel, oims,d_press_matlSet, needCoarseOld, needCoarseNew);
     scheduleRefineInterface_Variable(fineLevel, sched, lb->rho_CCLabel,   ND,  ice_matls,       needCoarseOld, needCoarseNew);
@@ -348,15 +359,22 @@ void AMRICE::scheduleRefineInterface(const LevelP& fineLevel,
     scheduleRefineInterface_Variable(fineLevel, sched, lb->vel_CCLabel,   ND,  ice_matls,       needCoarseOld, needCoarseNew);
    
     //__________________________________
-    // Model Variables.
-    if(d_modelSetup && d_modelSetup->tvars.size() > 0){
-      vector<TransportedVariable*>::iterator iter;
+    // Model with transported variables.
+    if(d_models.size()){
+      for(vector<ModelInterface*>::iterator m_iter  = d_models.begin();
+                                            m_iter != d_models.end(); m_iter++){
+        FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( *m_iter );
+            
+        if( fb_model && fb_model->d_trans_vars.size() ){
+          vector<TransportedVariable*>::iterator t_iter;
+          for(t_iter  = fb_model->d_trans_vars.begin();
+              t_iter != fb_model->d_trans_vars.end(); t_iter++){
+            TransportedVariable* tvar = *t_iter;
 
-      for(iter = d_modelSetup->tvars.begin();
-         iter != d_modelSetup->tvars.end(); iter++){
-        TransportedVariable* tvar = *iter;
-        scheduleRefineInterface_Variable(fineLevel, sched, tvar->var,ND, tvar->matlSet, needCoarseOld, needCoarseNew);
-      }
+            scheduleRefineInterface_Variable(fineLevel, sched, tvar->var,ND, tvar->matlSet, needCoarseOld, needCoarseNew);
+          }
+        }
+      }   
     }  // transported Vars
   }  // finer level
 }
@@ -377,7 +395,7 @@ void AMRICE::refineCoarseFineInterface(const ProcessorGroup*,
   double subCycleProgress = getSubCycleProgress(fine_new_dw);
   const Level* fineLevel = getLevel(patches);
   if(fineLevel->getIndex() > 0){     
-    cout_doing << d_myworld->myrank() 
+    cout_doing << d_myworld->myRank() 
                << " Doing refineCoarseFineInterface("<< variable->getName() <<")\t\t\t AMRICE L-" 
                << fineLevel->getIndex() << " Patches: " << *patches << " progressVar " << subCycleProgress
                << endl;
@@ -470,7 +488,7 @@ void AMRICE::scheduleSetBC_FineLevel(const PatchSet* patches,
   int L_indx = fineLevel->getIndex();
   
   if(L_indx > 0 ){
-    cout_doing << d_myworld->myrank() << " AMRICE::scheduleSetBC_FineLevel \t\t\tL-" 
+    cout_doing << d_myworld->myRank() << " AMRICE::scheduleSetBC_FineLevel \t\t\tL-" 
                << L_indx <<" P-" << *patches << '\n';
     
     Task* t;
@@ -484,9 +502,12 @@ void AMRICE::scheduleSetBC_FineLevel(const PatchSet* patches,
     t->requires(Task::NewDW, lb->specific_heatLabel,0, Task::CoarseLevel, 0, ND, gn,0);
     t->requires(Task::NewDW, lb->vol_frac_CCLabel,  0, Task::CoarseLevel, 0, ND, gn,0);
     
-    const MaterialSubset* all_matls = d_sharedState->allMaterials()->getUnion();
+    const MaterialSubset* all_matls = m_sharedState->allMaterials()->getUnion();
 
-
+    t->requires(Task::OldDW, lb->timeStepLabel);
+    t->requires(Task::OldDW, lb->simulationTimeLabel);
+    t->requires(Task::OldDW, lb->delTLabel,getLevel(patches));     
+    
     t->modifies(lb->press_CCLabel, d_press_matl, oims);     
     t->modifies(lb->rho_CCLabel);
     t->modifies(lb->sp_vol_CCLabel);
@@ -499,17 +520,24 @@ void AMRICE::scheduleSetBC_FineLevel(const PatchSet* patches,
     t->computes(lb->vol_frac_CCLabel, all_matls, oims);
     
     //__________________________________
-    // Model Variables.
-    if(d_modelSetup && d_modelSetup->tvars.size() > 0){
-      vector<TransportedVariable*>::iterator iter;
-
-      for(iter = d_modelSetup->tvars.begin();
-         iter != d_modelSetup->tvars.end(); iter++){
-        TransportedVariable* tvar = *iter;
-        t->modifies(tvar->var);
+    // Model with transported variables.
+    if(d_models.size()){
+      for(vector<ModelInterface*>::iterator m_iter  = d_models.begin();
+                                            m_iter != d_models.end(); m_iter++){
+        FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( *m_iter );
+            
+        if( fb_model && fb_model->d_trans_vars.size() ){
+          vector<TransportedVariable*>::iterator t_iter;
+          for(t_iter  = fb_model->d_trans_vars.begin();
+              t_iter != fb_model->d_trans_vars.end(); t_iter++){
+            TransportedVariable* tvar = *t_iter;
+            
+            t->modifies(tvar->var);
+          }
+        }
       }
     }
-    sched->addTask(t, patches, d_sharedState->allICEMaterials());
+    sched->addTask(t, patches, m_sharedState->allICEMaterials());
   }
 }
 
@@ -521,28 +549,33 @@ ______________________________________________________________________*/
 void AMRICE::setBC_FineLevel(const ProcessorGroup*,
                              const PatchSubset* patches,          
                              const MaterialSubset*,               
-                             DataWarehouse* fine_old_dw,          
-                             DataWarehouse* fine_new_dw)             
+                             DataWarehouse* fine_old_dw,
+                             DataWarehouse* fine_new_dw)
 {
+  timeStep_vartype timeStep;
+  fine_old_dw->get(timeStep, lb->timeStepLabel);
+
+  bool isNotInitialTimeStep = (timeStep > 0);
+    
   const Level* fineLevel = getLevel(patches);
   const Level* coarseLevel = fineLevel->getCoarserLevel().get_rep();
   
   if(fineLevel->getIndex() > 0){     
-    cout_doing << d_myworld->myrank() 
+    cout_doing << d_myworld->myRank() 
                << " Doing setBC_FineLevel"<< "\t\t\t\t AMRICE L-" 
                << fineLevel->getIndex() << " Patches: " << *patches <<endl;
                
-    int  numICEMatls = d_sharedState->getNumICEMatls();
+    int  numICEMatls = m_sharedState->getNumICEMatls();
 //    bool dbg_onOff = cout_dbg.active();      // is cout_dbg switch on or off (turn off for threaded scheduler)
       
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
-      StaticArray<CCVariable<double> > sp_vol_CC(numICEMatls);
-      StaticArray<constCCVariable<double> > sp_vol_const(numICEMatls);
+      std::vector<CCVariable<double> > sp_vol_CC(numICEMatls);
+      std::vector<constCCVariable<double> > sp_vol_const(numICEMatls);
       
       
       for (int m = 0; m < numICEMatls; m++) {
-        ICEMaterial* matl = d_sharedState->getICEMaterial(m);
+        ICEMaterial* matl = m_sharedState->getICEMaterial(m);
         int indx = matl->getDWIndex(); 
         CCVariable<double> rho_CC, temp_CC, cv, gamma,vol_frac;
         CCVariable<Vector> vel_CC;
@@ -603,23 +636,23 @@ void AMRICE::setBC_FineLevel(const ProcessorGroup*,
         // Worry about this later
         // the problem is that you don't know have delT for the finer level at this point in the cycle
         preprocess_CustomBCs("setBC_FineLevel",fine_old_dw, fine_new_dw, lb,  patch, 999,
-                       d_BC_globalVars, BC_localVars);
+                             d_BC_globalVars, BC_localVars, isNotInitialTimeStep);
 #endif
 
         constCCVariable<double> placeHolder;
 
         
         setBC(rho_CC, "Density",  placeHolder, placeHolder,
-              patch,d_sharedState, indx, fine_new_dw, d_BC_globalVars, BC_localVars);
+              patch,m_sharedState, indx, fine_new_dw, d_BC_globalVars, BC_localVars, isNotInitialTimeStep);
 
         setBC(vel_CC, "Velocity", 
-              patch,d_sharedState, indx, fine_new_dw, d_BC_globalVars, BC_localVars);       
+              patch,m_sharedState, indx, fine_new_dw, d_BC_globalVars, BC_localVars, isNotInitialTimeStep);
 
         setBC(temp_CC,"Temperature",gamma, cv,
-              patch,d_sharedState, indx, fine_new_dw, d_BC_globalVars, BC_localVars);
+              patch,m_sharedState, indx, fine_new_dw, d_BC_globalVars, BC_localVars, isNotInitialTimeStep);
 
         setSpecificVolBC(sp_vol_CC[m], "SpecificVol", false,rho_CC,vol_frac,
-                         patch,d_sharedState, indx);
+                         patch,m_sharedState, indx);
                          
         sp_vol_const[m] = sp_vol_CC[m];  // needed by pressure BC
                          
@@ -627,19 +660,26 @@ void AMRICE::setBC_FineLevel(const ProcessorGroup*,
         delete_CustomBCs(d_BC_globalVars, BC_localVars);
 
         //__________________________________
-        //    Model Variables                     
-        if(d_modelSetup && d_modelSetup->tvars.size() > 0){
-          vector<TransportedVariable*>::iterator t_iter;
-          for( t_iter  = d_modelSetup->tvars.begin();
-               t_iter != d_modelSetup->tvars.end(); t_iter++){
-            TransportedVariable* tvar = *t_iter;
+        // Model with transported variables.
+        if(d_models.size()){
+          for(vector<ModelInterface*>::iterator m_iter  = d_models.begin();
+                                                m_iter != d_models.end(); m_iter++){
+            FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( *m_iter );
+            
+            if( fb_model && fb_model->d_trans_vars.size() ){
+              vector<TransportedVariable*>::iterator t_iter;
+              for(t_iter  = fb_model->d_trans_vars.begin();
+                  t_iter != fb_model->d_trans_vars.end(); t_iter++){
+                TransportedVariable* tvar = *t_iter;
 
-            if(tvar->matls->contains(indx)){
-              string Labelname = tvar->var->getName();
-              CCVariable<double> q_CC;
-              fine_new_dw->getModifiable(q_CC, tvar->var, indx, patch);
+                if(tvar->matls->contains(indx)){
+                  string Labelname = tvar->var->getName();
+                  CCVariable<double> q_CC;
+                  fine_new_dw->getModifiable(q_CC, tvar->var, indx, patch);
           
-              setBC(q_CC, Labelname,  patch, d_sharedState, indx, fine_new_dw);
+                  setBC(q_CC, Labelname,  patch, m_sharedState, indx, fine_new_dw, isNotInitialTimeStep);
+                }
+              }
             }
           }
         }
@@ -650,13 +690,13 @@ void AMRICE::setBC_FineLevel(const ProcessorGroup*,
       customBC_localVars* notUsed = scinew customBC_localVars();
       
       CCVariable<double> press_CC;
-      StaticArray<CCVariable<double> > placeHolder(0);
+      std::vector<CCVariable<double> > placeHolder(0);
       
       fine_new_dw->getModifiable(press_CC, lb->press_CCLabel, 0, patch);
       
       setBC(press_CC, placeHolder, sp_vol_const, d_surroundingMatl_indx,
-            "sp_vol", "Pressure", patch , d_sharedState, 0, fine_new_dw, 
-            d_BC_globalVars, notUsed);
+            "sp_vol", "Pressure", patch , m_sharedState, 0, fine_new_dw, 
+            d_BC_globalVars, notUsed, isNotInitialTimeStep);
             
       delete_CustomBCs(d_BC_globalVars, notUsed);
                   
@@ -677,7 +717,7 @@ void AMRICE::scheduleRefine(const PatchSet* patches,
   
   if(L_indx > 0 ){
     
-    cout_doing << d_myworld->myrank() 
+    cout_doing << d_myworld->myRank() 
                << " AMRICE::scheduleRefine\t\t\t\tL-" 
                <<  L_indx << " P-" << *patches << '\n';
     Task* task = scinew Task("AMRICE::refine",this, &AMRICE::refine);
@@ -703,25 +743,33 @@ void AMRICE::scheduleRefine(const PatchSet* patches,
                    0, Task::CoarseLevel, 0, Task::NormalDomain, gac,1);
     
     //__________________________________
-    // Models with transported variables
-    if(d_modelSetup && d_modelSetup->tvars.size() > 0){
-      vector<TransportedVariable*>::iterator iter;
-      
-      for(iter = d_modelSetup->tvars.begin();
-          iter != d_modelSetup->tvars.end(); iter++){
-        TransportedVariable* tvar = *iter;
-        task->requires(Task::NewDW, tvar->var,
-                       0, Task::CoarseLevel, 0, Task::NormalDomain, gac,1);
-        task->computes(tvar->var);
+    // Models with transported variables.
+    if(d_models.size()){
+      for(vector<ModelInterface*>::iterator m_iter  = d_models.begin();
+                                            m_iter != d_models.end(); m_iter++){
+        FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( *m_iter );
+
+        if( fb_model && fb_model->d_trans_vars.size() ){
+          vector<TransportedVariable*>::iterator t_iter;
+          for(t_iter  = fb_model->d_trans_vars.begin();
+              t_iter != fb_model->d_trans_vars.end(); t_iter++){
+            TransportedVariable* tvar = *t_iter;
+            
+            task->requires(Task::NewDW, tvar->var,
+                           0, Task::CoarseLevel, 0, Task::NormalDomain, gac,1);
+            task->computes(tvar->var);
+          }
+        }
       }
     }
     
-    //__________________________________
-    // Models that need to refine/initialize
-    // variables on new patches  This will call both ICE and MPMICE based models
-    for(vector<ModelInterface*>::iterator iter = d_models.begin();
-      iter != d_models.end(); iter++){
-      (*iter)->scheduleRefine(patches, sched);
+    //__________________________________    
+    // Models that need to refine/initialize variables on new patches.
+    // This will call both ICE and MPMICE based models
+    for(vector<ModelInterface*>::iterator m_iter  = d_models.begin();
+                                          m_iter != d_models.end(); m_iter++){
+      ModelInterface* model = *m_iter;
+      model->scheduleRefine(patches, sched);
     }
     
     
@@ -730,7 +778,7 @@ void AMRICE::scheduleRefine(const PatchSet* patches,
     task->computes(lb->sp_vol_CCLabel);
     task->computes(lb->temp_CCLabel);
     task->computes(lb->vel_CCLabel);
-    sched->addTask(task, patches, d_sharedState->allICEMaterials());
+    sched->addTask(task, patches, m_sharedState->allICEMaterials());
     
     //__________________________________
     // Sub Task 
@@ -755,7 +803,7 @@ void AMRICE::refine(const ProcessorGroup*,
   const Level* fineLevel = getLevel(patches);
   const Level* coarseLevel = fineLevel->getCoarserLevel().get_rep();
   
-  cout_doing << d_myworld->myrank() 
+  cout_doing << d_myworld->myRank() 
              << " Doing refine \t\t\t\t\t AMRICE L-"<< fineLevel->getIndex();
   IntVector rr(fineLevel->getRefinementRatio());
   double invRefineRatio = 1./(rr.x()*rr.y()*rr.z());
@@ -815,22 +863,29 @@ void AMRICE::refine(const ProcessorGroup*,
                          invRefineRatio, finePatch, fineLevel, coarseLevel);
 
       //__________________________________
-      //    Model Variables                     
-      if(d_modelSetup && d_modelSetup->tvars.size() > 0){
-        vector<TransportedVariable*>::iterator t_iter;
-        for( t_iter  = d_modelSetup->tvars.begin();
-             t_iter != d_modelSetup->tvars.end(); t_iter++){
-          TransportedVariable* tvar = *t_iter;
+      // Model with transported variables.
+      if(d_models.size()){
+        for(vector<ModelInterface*>::iterator m_iter  = d_models.begin();
+                                              m_iter != d_models.end(); m_iter++){
+          FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( *m_iter );
+            
+          if( fb_model && fb_model->d_trans_vars.size() ){
+            vector<TransportedVariable*>::iterator t_iter;
+            for(t_iter  = fb_model->d_trans_vars.begin();
+                t_iter != fb_model->d_trans_vars.end(); t_iter++){
+              TransportedVariable* tvar = *t_iter;
 
-          if(tvar->matls->contains(indx)){
-            CCVariable<double> q_CC;
-            new_dw->allocateAndPut(q_CC, tvar->var, indx, finePatch);
+              if(tvar->matls->contains(indx)){
+                CCVariable<double> q_CC;
+                new_dw->allocateAndPut(q_CC, tvar->var, indx, finePatch);
             
-            q_CC.initialize(d_EVIL_NUM);
+                q_CC.initialize(d_EVIL_NUM);
             
-            CoarseToFineOperator<double>(q_CC, tvar->var, indx, new_dw, 
-                       invRefineRatio, finePatch, fineLevel, coarseLevel);                 
-          } 
+                CoarseToFineOperator<double>(q_CC, tvar->var, indx, new_dw, 
+                                             invRefineRatio, finePatch, fineLevel, coarseLevel);                 
+              } 
+            }
+          }
         }
       }    
     }
@@ -858,7 +913,7 @@ void AMRICE::iteratorTest(const Patch* finePatch,
   IntVector hi(0,0,0);
   
   
-  for(int i=0;i<coarsePatches.size();i++){
+  for(size_t i=0;i<coarsePatches.size();i++){
     const Patch* coarsePatch = coarsePatches[i];
     // iterator should hit the cells over the intersection of the fine and coarse patches
 
@@ -914,7 +969,7 @@ void AMRICE::scheduleCoarsen(const LevelP& coarseLevel,
 {
   const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();    
   Ghost::GhostType  gn = Ghost::None; 
-  cout_doing << d_myworld->myrank() 
+  cout_doing << d_myworld->myRank() 
              << " AMRICE::scheduleCoarsen\t\t\t\tL-" 
              << fineLevel->getIndex()<< "->"<<coarseLevel->getIndex()<<endl; 
              
@@ -922,8 +977,8 @@ void AMRICE::scheduleCoarsen(const LevelP& coarseLevel,
 
   Task::MaterialDomainSpec ND   = Task::NormalDomain;                            
   Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.  
-  const MaterialSet* all_matls = d_sharedState->allMaterials();
-  const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
+  const MaterialSet* all_matls = m_sharedState->allMaterials();
+  const MaterialSet* ice_matls = m_sharedState->allICEMaterials();
           
   const MaterialSubset* all_matls_sub = all_matls->getUnion();
   const PatchSet* patch_set = coarseLevel->eachPatch();
@@ -946,16 +1001,23 @@ void AMRICE::scheduleCoarsen(const LevelP& coarseLevel,
                0, Task::FineLevel,  all_matls_sub,ND, gn, 0, fat);
 
   //__________________________________
-  // Model Variables.
-  if(d_modelSetup && d_modelSetup->tvars.size() > 0){
-    vector<TransportedVariable*>::iterator iter;
+  // Model with transported variables.
+  if(d_models.size()){
+    for(vector<ModelInterface*>::iterator m_iter  = d_models.begin();
+                                          m_iter != d_models.end(); m_iter++){
+      FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( *m_iter );
+            
+      if( fb_model && fb_model->d_trans_vars.size() ){
+        vector<TransportedVariable*>::iterator t_iter;
+        for(t_iter  = fb_model->d_trans_vars.begin();
+            t_iter != fb_model->d_trans_vars.end(); t_iter++){
+          TransportedVariable* tvar = *t_iter;
 
-    for(iter = d_modelSetup->tvars.begin();
-       iter != d_modelSetup->tvars.end(); iter++){
-      TransportedVariable* tvar = *iter;
-      task->requires(Task::NewDW, tvar->var_adv,
-                  0, Task::FineLevel,all_matls_sub,ND, gn, 0, fat);
-      task->modifies(tvar->var_adv, fat);
+          task->requires(Task::NewDW, tvar->var_adv,
+                         0, Task::FineLevel,all_matls_sub,ND, gn, 0, fat);
+          task->modifies(tvar->var_adv, fat);
+        }
+      }
     }
   }
   
@@ -1010,7 +1072,7 @@ void AMRICE::coarsen(const ProcessorGroup*,
   
   const Level* coarseLevel = getLevel(patches);
   const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
-  cout_doing << d_myworld->myrank()
+  cout_doing << d_myworld->myRank()
              << " Doing coarsen \t\t\t\t\t AMRICE L-" 
              <<fineLevel->getIndex()<< "->"<<coarseLevel->getIndex();
   
@@ -1064,22 +1126,28 @@ void AMRICE::coarsen(const ProcessorGroup*,
                          
                          
       //__________________________________
-      //    Model Variables                     
-      if(d_modelSetup && d_modelSetup->tvars.size() > 0){
-        vector<TransportedVariable*>::iterator t_iter;
-        for( t_iter  = d_modelSetup->tvars.begin();
-            t_iter != d_modelSetup->tvars.end(); t_iter++){
-          TransportedVariable* tvar = *t_iter;
-
-          if(tvar->matls->contains(indx)){
-            CCVariable<double> q_CC_adv;
-            new_dw->getModifiable(q_CC_adv, tvar->var_adv, indx, coarsePatch);
-            computesAve = false;
+      // Model with transported variables.
+      if(d_models.size()){
+        for(vector<ModelInterface*>::iterator m_iter  = d_models.begin();
+                                              m_iter != d_models.end(); m_iter++){
+          FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( *m_iter );
             
-            fineToCoarseOperator<double>(q_CC_adv, computesAve, 
-                               tvar->var_adv, indx, new_dw, 
-                               coarsePatch, coarseLevel, fineLevel);
-                 
+          if( fb_model && fb_model->d_trans_vars.size() ){
+            vector<TransportedVariable*>::iterator t_iter;
+            for( t_iter  = fb_model->d_trans_vars.begin();
+                 t_iter != fb_model->d_trans_vars.end(); t_iter++){
+              TransportedVariable* tvar = *t_iter;
+
+              if(tvar->matls->contains(indx)){
+                CCVariable<double> q_CC_adv;
+                new_dw->getModifiable(q_CC_adv, tvar->var_adv, indx, coarsePatch);
+                computesAve = false;
+            
+                fineToCoarseOperator<double>(q_CC_adv, computesAve, 
+                                             tvar->var_adv, indx, new_dw, 
+                                             coarsePatch, coarseLevel, fineLevel);
+              }
+            }
           }
         }
       } 
@@ -1094,7 +1162,7 @@ void AMRICE::scheduleReflux_computeCorrectionFluxes(const LevelP& coarseLevel,
                                                     SchedulerP& sched)
 {
   const Level* fineLevel = coarseLevel->getFinerLevel().get_rep(); 
-  cout_doing << d_myworld->myrank() 
+  cout_doing << d_myworld->myRank() 
              << " AMRICE::scheduleReflux_computeCorrectionFluxes\tL-" 
              << fineLevel->getIndex() << "->"<< coarseLevel->getIndex()<< endl;
              
@@ -1135,26 +1203,33 @@ void AMRICE::scheduleReflux_computeCorrectionFluxes(const LevelP& coarseLevel,
   task->requires(Task::NewDW, lb->sp_vol_Y_FC_fluxLabel,
                0,Task::FineLevel, 0, Task::NormalDomain, gy, 1, fat);
   task->requires(Task::NewDW, lb->sp_vol_Z_FC_fluxLabel,
-               0,Task::FineLevel, 0, Task::NormalDomain, gz, 1, fat);             
+               0,Task::FineLevel, 0, Task::NormalDomain, gz, 1, fat);
 
   //__________________________________
-  // Model Variables.
-  if(d_modelSetup && d_modelSetup->d_reflux_vars.size() > 0){
-    vector<AMR_refluxVariable*>::iterator iter;
-    for( iter  = d_modelSetup->d_reflux_vars.begin();
-         iter != d_modelSetup->d_reflux_vars.end(); iter++){
-      AMR_refluxVariable* rvar = *iter;
-      
-      task->requires(Task::NewDW, rvar->var_X_FC_flux,
-                  0, Task::FineLevel, 0, Task::NormalDomain, gx, 1, fat);
-      task->requires(Task::NewDW, rvar->var_Y_FC_flux,
-                  0, Task::FineLevel, 0, Task::NormalDomain, gy, 1, fat);
-      task->requires(Task::NewDW, rvar->var_Z_FC_flux,
-                  0, Task::FineLevel, 0, Task::NormalDomain, gz, 1, fat);
-                  
-      task->computes(rvar->var_X_FC_corr);
-      task->computes(rvar->var_Y_FC_corr);
-      task->computes(rvar->var_Z_FC_corr);
+  // Model with reflux variables.
+  if(d_models.size()){
+    for(vector<ModelInterface*>::iterator m_iter  = d_models.begin();
+                                          m_iter != d_models.end(); m_iter++){
+      FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( *m_iter );
+            
+      if( fb_model && fb_model->d_reflux_vars.size() ){
+        vector<AMRRefluxVariable*>::iterator r_iter;
+        for(r_iter  = fb_model->d_reflux_vars.begin();
+            r_iter != fb_model->d_reflux_vars.end(); r_iter++){
+          AMRRefluxVariable* rvar = *r_iter;
+          
+          task->requires(Task::NewDW, rvar->var_X_FC_flux,
+                         0, Task::FineLevel, 0, Task::NormalDomain, gx, 1, fat);
+          task->requires(Task::NewDW, rvar->var_Y_FC_flux,
+                         0, Task::FineLevel, 0, Task::NormalDomain, gy, 1, fat);
+          task->requires(Task::NewDW, rvar->var_Z_FC_flux,
+                         0, Task::FineLevel, 0, Task::NormalDomain, gz, 1, fat);
+          
+          task->computes(rvar->var_X_FC_corr);
+          task->computes(rvar->var_Y_FC_corr);
+          task->computes(rvar->var_Z_FC_corr);
+        }
+      }
     }
   }
 
@@ -1174,7 +1249,7 @@ void AMRICE::scheduleReflux_computeCorrectionFluxes(const LevelP& coarseLevel,
   task->computes(lb->sp_vol_Y_FC_corrLabel);
   task->computes(lb->sp_vol_Z_FC_corrLabel);
   
-  sched->addTask(task, coarseLevel->eachPatch(), d_sharedState->allICEMaterials()); 
+  sched->addTask(task, coarseLevel->eachPatch(), m_sharedState->allICEMaterials()); 
 }
 /*___________________________________________________________________
  Function~  AMRICE::Reflux_computeCorrectionFluxesFluxes--  
@@ -1188,7 +1263,7 @@ void AMRICE::reflux_computeCorrectionFluxes(const ProcessorGroup*,
   const Level* coarseLevel = getLevel(coarsePatches);
   const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
   
-  cout_doing << d_myworld->myrank() 
+  cout_doing << d_myworld->myRank() 
              << " Doing reflux_computeCorrectionFluxes \t\t\t AMRICE L-"
              <<fineLevel->getIndex()<< "->"<< coarseLevel->getIndex();
   
@@ -1208,14 +1283,14 @@ void AMRICE::reflux_computeCorrectionFluxes(const ProcessorGroup*,
       
       
       
-      for(int i=0; i < finePatches.size();i++){  
+      for(size_t i=0; i < finePatches.size();i++){  
         const Patch* finePatch = finePatches[i]; 
         
         //__________________________________
         //   compute the correction
         // one_zero:  used to increment the CFI counter.
         if(finePatch->hasCoarseFaces() ){
-          cout_doing << d_myworld->myrank()
+          cout_doing << d_myworld->myRank()
                      << "  coarsePatch " << coarsePatch->getID()
                      <<" finepatch " << finePatch->getID()<< endl;
 
@@ -1236,19 +1311,27 @@ void AMRICE::reflux_computeCorrectionFluxes(const ProcessorGroup*,
           refluxOperator_computeCorrectionFluxes<double>("int_eng", indx, 
                         coarsePatch, finePatch, coarseLevel, fineLevel,new_dw,
                         one_zero);
-          //__________________________________
-          //    Model Variables
-          if(d_modelSetup && d_modelSetup->d_reflux_vars.size() > 0){
-            vector<AMR_refluxVariable*>::iterator iter;
-            for( iter  = d_modelSetup->d_reflux_vars.begin();
-                 iter != d_modelSetup->d_reflux_vars.end(); iter++){
-              AMR_refluxVariable* r_var = *iter;
 
-              if(r_var->matls->contains(indx)){
-                string var_name = r_var->var->getName();
-                refluxOperator_computeCorrectionFluxes<double>(var_name, indx, 
-                              coarsePatch, finePatch, coarseLevel, fineLevel,new_dw,
-                              one_zero);
+          //__________________________________
+          // Model with reflux variables.
+          if(d_models.size()){
+            for(vector<ModelInterface*>::iterator m_iter  = d_models.begin();
+                                                  m_iter != d_models.end(); m_iter++){
+              FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( *m_iter );
+            
+              if( fb_model && fb_model->d_reflux_vars.size() ){
+                vector<AMRRefluxVariable*>::iterator r_iter;
+                for(r_iter  = fb_model->d_reflux_vars.begin();
+                    r_iter != fb_model->d_reflux_vars.end(); r_iter++){
+                  AMRRefluxVariable* rvar = *r_iter;
+
+                  if(rvar->matls->contains(indx)){
+                    string var_name = rvar->var->getName();
+                    refluxOperator_computeCorrectionFluxes<double>(var_name, indx, 
+                                                                   coarsePatch, finePatch, coarseLevel, fineLevel,new_dw,
+                                                                   one_zero);
+                  }
+                }
               }
             }
           }  // model
@@ -1412,7 +1495,7 @@ void AMRICE::scheduleReflux_applyCorrection(const LevelP& coarseLevel,
                                             SchedulerP& sched)
 {
   const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
-  cout_doing << d_myworld->myrank() 
+  cout_doing << d_myworld->myRank() 
              << " AMRICE::scheduleReflux_applyCorrectionFluxes\t\tL-" 
              << fineLevel->getIndex() << "->"<< coarseLevel->getIndex()<< endl;
              
@@ -1443,17 +1526,24 @@ void AMRICE::scheduleReflux_applyCorrection(const LevelP& coarseLevel,
 
 
   //__________________________________
-  // Model Variables.
-  if(d_modelSetup && d_modelSetup->d_reflux_vars.size() > 0){
-    vector<AMR_refluxVariable*>::iterator iter;
-    for( iter  = d_modelSetup->d_reflux_vars.begin();
-         iter != d_modelSetup->d_reflux_vars.end(); iter++){
-      AMR_refluxVariable* rvar = *iter;
+  // Model with reflux variables.
+  if(d_models.size()){
+    for(vector<ModelInterface*>::iterator m_iter  = d_models.begin();
+                                          m_iter != d_models.end(); m_iter++){
+      FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( *m_iter );
+            
+      if( fb_model && fb_model->d_reflux_vars.size() ){
+        vector<AMRRefluxVariable*>::iterator r_iter;
+        for(r_iter  = fb_model->d_reflux_vars.begin();
+            r_iter != fb_model->d_reflux_vars.end(); r_iter++){
+          AMRRefluxVariable* rvar = *r_iter;
       
-      task->requires(Task::NewDW, rvar->var_X_FC_corr, gac, 1);    
-      task->requires(Task::NewDW, rvar->var_Y_FC_corr, gac, 1);    
-      task->requires(Task::NewDW, rvar->var_Z_FC_corr, gac, 1);
-      task->modifies(rvar->var_adv);
+          task->requires(Task::NewDW, rvar->var_X_FC_corr, gac, 1);    
+          task->requires(Task::NewDW, rvar->var_Y_FC_corr, gac, 1);    
+          task->requires(Task::NewDW, rvar->var_Z_FC_corr, gac, 1);
+          task->modifies(rvar->var_adv);
+        }
+      }
     }
   }
 
@@ -1462,7 +1552,7 @@ void AMRICE::scheduleReflux_applyCorrection(const LevelP& coarseLevel,
   task->modifies(lb->eng_advLabel);
   task->modifies(lb->mom_advLabel);
 
-  sched->addTask(task, coarseLevel->eachPatch(), d_sharedState->allICEMaterials()); 
+  sched->addTask(task, coarseLevel->eachPatch(), m_sharedState->allICEMaterials()); 
 }
 /*___________________________________________________________________
  Function~  AMRICE::Reflux_applyCorrectionFluxes--
@@ -1476,7 +1566,7 @@ void AMRICE::reflux_applyCorrectionFluxes(const ProcessorGroup*,
   const Level* coarseLevel = getLevel(coarsePatches);
   const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
   
-  cout_doing << d_myworld->myrank() 
+  cout_doing << d_myworld->myRank() 
              << " Doing reflux_applyCorrectionFluxes \t\t\t AMRICE L-"
              <<fineLevel->getIndex()<< "->"<< coarseLevel->getIndex();
   
@@ -1500,9 +1590,9 @@ void AMRICE::reflux_applyCorrectionFluxes(const ProcessorGroup*,
       Level::selectType finePatches;
       coarsePatch->getOtherLevelPatches(1, finePatches, 1); // get with a ghost cell to make sure you get all patches 
       
-      for(int i=0; i < finePatches.size();i++){  
+      for(size_t i=0; i < finePatches.size();i++){  
         const Patch* finePatch = finePatches[i];        
-        //cout_doing << d_myworld->myrank() << "  coarsePatch " << coarsePatch->getID() <<" finepatch " << finePatch->getID()<< endl;
+        //cout_doing << d_myworld->myRank() << "  coarsePatch " << coarsePatch->getID() <<" finepatch " << finePatch->getID()<< endl;
         //__________________________________
         // Apply the correction
         // one_zero:  used to increment the CFI counter.
@@ -1524,22 +1614,30 @@ void AMRICE::reflux_applyCorrectionFluxes(const ProcessorGroup*,
           refluxOperator_applyCorrectionFluxes<double>(eng_adv,     "int_eng",indx, 
                         coarsePatch, finePatch, coarseLevel, fineLevel,new_dw,
                         one_zero);
+
           //__________________________________
-          //    Model Variables
-          if(d_modelSetup && d_modelSetup->d_reflux_vars.size() > 0){
-            vector<AMR_refluxVariable*>::iterator iter;
-            for( iter  = d_modelSetup->d_reflux_vars.begin();
-                 iter != d_modelSetup->d_reflux_vars.end(); iter++){
-              AMR_refluxVariable* r_var = *iter;
+          // Model with reflux variables.
+          if(d_models.size()){
+            for(vector<ModelInterface*>::iterator m_iter  = d_models.begin();
+                                                  m_iter != d_models.end(); m_iter++){
+              FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( *m_iter );
+            
+              if( fb_model && fb_model->d_reflux_vars.size() ){
+                vector<AMRRefluxVariable*>::iterator r_iter;
+                for(r_iter  = fb_model->d_reflux_vars.begin();
+                    r_iter != fb_model->d_reflux_vars.end(); r_iter++){
+                  AMRRefluxVariable* rvar = *r_iter;
 
-              if(r_var->matls->contains(indx)){
-                CCVariable<double> q_CC_adv;
-                string var_name = r_var->var->getName();
-                new_dw->getModifiable(q_CC_adv,  r_var->var_adv, indx, coarsePatch);
-
-                refluxOperator_applyCorrectionFluxes<double>(q_CC_adv, var_name, indx, 
-                              coarsePatch, finePatch, coarseLevel, fineLevel,new_dw,
-                              one_zero);
+                  if(rvar->matls->contains(indx)){
+                    CCVariable<double> q_CC_adv;
+                    string var_name = rvar->var->getName();
+                    new_dw->getModifiable(q_CC_adv,  rvar->var_adv, indx, coarsePatch);
+                    
+                    refluxOperator_applyCorrectionFluxes<double>(q_CC_adv, var_name, indx, 
+                                                                 coarsePatch, finePatch, coarseLevel, fineLevel,new_dw,
+                                                                 one_zero);
+                  }
+                }
               }
             }
           }
@@ -1570,11 +1668,11 @@ void AMRICE::reflux_BP_zero_CFI_cells(const ProcessorGroup*,
     Level::selectType finePatches;
     coarsePatch->getOtherLevelPatches(1, finePatches, 1);
 
-    cout_doing << d_myworld->myrank() 
+    cout_doing << d_myworld->myRank() 
              << " Doing reflux_BP_zero_CFI_cells \t\t\t AMRICE L-"
              <<fineLevel->getIndex()<< "->"<< coarseLevel->getIndex()<<endl;
              
-    for(int p=0;p<finePatches.size();p++){  
+    for(size_t p=0;p<finePatches.size();p++){  
       const Patch* finePatch = finePatches[p];
     
 
@@ -1612,11 +1710,11 @@ void AMRICE::reflux_BP_count_CFI_cells(const ProcessorGroup*,
     Level::selectType finePatches;
     coarsePatch->getOtherLevelPatches(1, finePatches, 1);
 
-    cout_doing << d_myworld->myrank() 
+    cout_doing << d_myworld->myRank() 
              << " Doing reflux_BP_count_CFI_cells \t\t\t AMRICE L-"
              <<fineLevel->getIndex()<< "->"<< coarseLevel->getIndex()<<endl;
              
-    for(int p=0;p<finePatches.size();p++){  
+    for(size_t p=0;p<finePatches.size();p++){  
       const Patch* finePatch = finePatches[p];
     
 
@@ -1674,11 +1772,11 @@ void AMRICE::reflux_BP_check_CFI_cells(const ProcessorGroup*,
     Level::selectType finePatches;
     coarsePatch->getOtherLevelPatches(1, finePatches, 1);
 
-    cout_doing << d_myworld->myrank() 
+    cout_doing << d_myworld->myRank() 
              << " Doing reflux_BP_check_CFI_cells \t\t\t AMRICE L-"
              <<fineLevel->getIndex()<< "->"<< coarseLevel->getIndex() << endl;
              
-    for(int p=0;p<finePatches.size();p++){  
+    for(size_t p=0;p<finePatches.size();p++){  
       const Patch* finePatch = finePatches[p]; 
          
       if(finePatch->hasCoarseFaces() ){
@@ -1706,7 +1804,7 @@ void AMRICE::reflux_BP_check_CFI_cells(const ProcessorGroup*,
             
             if(isRight_CP_FP_pair){
 
-              int n_ice_matls = d_sharedState->getNumICEMatls();
+              int n_ice_matls = m_sharedState->getNumICEMatls();
               int n_touched_cells = (getFaceMark(0, finePatch, patchFace) )/n_ice_matls;
               int n_CFI_cells     =  getFaceMark(1, finePatch, patchFace);
               //__________________________________
@@ -1716,7 +1814,7 @@ void AMRICE::reflux_BP_check_CFI_cells(const ProcessorGroup*,
               
               if ( n_touched_cells != n_CFI_cells && !tsr){
                 ostringstream warn;
-                warn << d_myworld->myrank() << " AMRICE:refluxing_" << description
+                warn << d_myworld->myRank() << " AMRICE:refluxing_" << description
                      << " \n CFI face: "
                      << finePatch->getFaceName(patchFace)
                      << " cells were 'touched' "<< n_touched_cells << " times"
@@ -1754,13 +1852,22 @@ ______________________________________________________________________*/
 void AMRICE::scheduleErrorEstimate(const LevelP& coarseLevel,
                                    SchedulerP& sched)
 {  
-  cout_doing << d_myworld->myrank() 
+  cout_doing << d_myworld->myRank()
              << " AMRICE::scheduleErrorEstimate \t\t\tL-" 
              << coarseLevel->getIndex() << '\n';
-  bool initial = false;             
-  if(d_sharedState->getCurrentTopLevelTimeStep() == 0){
-    initial = true;  // during initialization 
-  }
+
+  // This method is called at both initialization and otherwise. At
+  // initialization the old DW, i.e. DW(0) will not exist. As such,
+  // get the time step from the new DW, i.e. DW(1).  Otherwise for a
+  // normal time step get the time step from the new DW.
+  timeStep_vartype timeStepVar(0);
+  if( sched->get_dw(0) && sched->get_dw(0)->exists( getTimeStepLabel() ) )
+    sched->get_dw(0)->get( timeStepVar, getTimeStepLabel() );
+  else if( sched->get_dw(1) && sched->get_dw(1)->exists( getTimeStepLabel() ) )
+    sched->get_dw(1)->get( timeStepVar, getTimeStepLabel() );
+  
+  bool initial = (timeStepVar == 0); // during initialization 
+
   Task* t = scinew Task("AMRICE::errorEstimate", 
                   this, &AMRICE::errorEstimate, initial);  
   
@@ -1769,15 +1876,15 @@ void AMRICE::scheduleErrorEstimate(const LevelP& coarseLevel,
   bool  fat = true;  // possibly (F)rom (A)nother (T)askgraph
   
 
-  const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
-  const MaterialSet* all_matls = d_sharedState->allMaterials();  
+  const MaterialSet* ice_matls = m_sharedState->allICEMaterials();
+  const MaterialSet* all_matls = m_sharedState->allMaterials();  
   
   const MaterialSubset* matls_sub;
   const MaterialSubset* ice_matls_sub = ice_matls->getUnion();
   const MaterialSubset* all_matls_sub = all_matls->getUnion();  
   
-  // Only require ice_matls during initialization, we don't have *_CC variables for 
-  // mpm_matls at this point  
+  // Only require ice_matls during initialization, we don't have *_CC
+  // variables for mpm_matls at this point
   if(initial){
     matls_sub = ice_matls_sub;
   }else{
@@ -1797,22 +1904,23 @@ void AMRICE::scheduleErrorEstimate(const LevelP& coarseLevel,
   t->computes(lb->mag_grad_vol_frac_CCLabel);
   t->computes(lb->mag_grad_press_CCLabel,d_press_matl);
   
-  t->modifies(d_sharedState->get_refineFlag_label(),      d_sharedState->refineFlagMaterials(), oims);
-  t->modifies(d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials(), oims);
+  t->modifies(m_regridder->getRefineFlagLabel(),      m_regridder->refineFlagMaterials(), oims);
+  t->modifies(m_regridder->getRefinePatchFlagLabel(), m_regridder->refineFlagMaterials(), oims);
   
-  sched->addTask(t, coarseLevel->eachPatch(), d_sharedState->allMaterials());
+  sched->addTask(t, coarseLevel->eachPatch(), m_sharedState->allMaterials());
   
   //__________________________________
   // Models
-  for(vector<ModelInterface*>::iterator iter = d_models.begin();
-     iter != d_models.end(); iter++){
-    (*iter)->scheduleErrorEstimate(coarseLevel, sched);;
+  for(vector<ModelInterface*>::iterator m_iter  = d_models.begin();
+                                        m_iter != d_models.end(); m_iter++){
+    ModelInterface* model = *m_iter;
+    model->scheduleErrorEstimate(coarseLevel, sched);;
   }
 }
 
 /*_____________________________________________________________________
  Function~  AMRICE::set_refinementFlags
-______________________________________________________________________*/         
+______________________________________________________________________*/
 void AMRICE::set_refineFlags( constCCVariable<double>& mag_grad_q_CC,
                               double threshold,
                               CCVariable<int>& refineFlag,
@@ -1840,7 +1948,7 @@ AMRICE::errorEstimate(const ProcessorGroup*,
                       bool initial)
 {
   const Level* level = getLevel(patches);
-  cout_doing << d_myworld->myrank() 
+  cout_doing << d_myworld->myRank() 
              << " Doing errorEstimate \t\t\t\t\t AMRICE L-"<< level->getIndex();
              
   for(int p=0;p<patches->size();p++){
@@ -1848,8 +1956,8 @@ AMRICE::errorEstimate(const ProcessorGroup*,
     
     cout_doing << " patch " << patch->getID()<< endl;
     Ghost::GhostType  gac  = Ghost::AroundCells;
-    const VarLabel* refineFlagLabel = d_sharedState->get_refineFlag_label();
-    const VarLabel* refinePatchLabel= d_sharedState->get_refinePatchFlag_label();
+    const VarLabel* refineFlagLabel = m_regridder->getRefineFlagLabel();
+    const VarLabel* refinePatchLabel= m_regridder->getRefinePatchFlagLabel();
     
     CCVariable<int> refineFlag;
     new_dw->getModifiable(refineFlag, refineFlagLabel, 0, patch);      
@@ -1871,14 +1979,14 @@ AMRICE::errorEstimate(const ProcessorGroup*,
 
     //__________________________________
     //  initialize mag_grad for all matls
-    int numAllMatls = d_sharedState->getNumMatls();
-    StaticArray<CCVariable<double> > mag_grad_rho_CC(numAllMatls);
-    StaticArray<CCVariable<double> > mag_grad_temp_CC(numAllMatls);
-    StaticArray<CCVariable<double> > mag_grad_vol_frac_CC(numAllMatls);
-    StaticArray<CCVariable<double> > mag_div_vel_CC(numAllMatls);
+    int numAllMatls = m_sharedState->getNumMatls();
+    std::vector<CCVariable<double> > mag_grad_rho_CC(numAllMatls);
+    std::vector<CCVariable<double> > mag_grad_temp_CC(numAllMatls);
+    std::vector<CCVariable<double> > mag_grad_vol_frac_CC(numAllMatls);
+    std::vector<CCVariable<double> > mag_div_vel_CC(numAllMatls);
           
     for(int m=0;m < numAllMatls;m++){
-      Material* matl = d_sharedState->getMaterial( m );
+      Material* matl = m_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
       new_dw->allocateAndPut(mag_grad_rho_CC[indx],     
                          lb->mag_grad_rho_CCLabel,     indx,patch);
@@ -1901,18 +2009,18 @@ AMRICE::errorEstimate(const ProcessorGroup*,
     // During initialization only compute for ICE matls
     int numMatls = 0;
     if (initial){
-      numMatls = d_sharedState->getNumICEMatls();
+      numMatls = m_sharedState->getNumICEMatls();
     }else{
-      numMatls = d_sharedState->getNumMatls();
+      numMatls = m_sharedState->getNumMatls();
     }
     
     for(int m=0;m < numMatls;m++){
       
       Material* matl;
       if(initial){
-        matl = d_sharedState->getICEMaterial( m );
+        matl = m_sharedState->getICEMaterial( m );
       }else{
-        matl = d_sharedState->getMaterial( m );
+        matl = m_sharedState->getMaterial( m );
       }
       
       int indx = matl->getDWIndex();        

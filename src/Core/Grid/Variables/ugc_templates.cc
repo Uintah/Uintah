@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -23,6 +23,7 @@
  */
 
 #include <Core/Geometry/Vector.h>
+#include <Core/Geometry/IntVector.h>
 
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Variables/CCVariable.h>
@@ -33,6 +34,7 @@
 #include <Core/Grid/Variables/ReductionVariable.h>
 #include <Core/Grid/Variables/Stencil7.h>
 #include <Core/Grid/Variables/Stencil4.h>
+#include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Math/Matrix3.h>
 #include <Core/Disclosure/TypeUtils.h>
 
@@ -40,6 +42,7 @@
 
 
 template class Uintah::ParticleVariable<Uintah::Vector>;
+template class Uintah::ParticleVariable<Uintah::IntVector>;
 template class Uintah::ParticleVariable<Uintah::Matrix3>;
 template class Uintah::ParticleVariable<Uintah::Point>;
 template class Uintah::ParticleVariable<double>;
@@ -84,6 +87,9 @@ template class Uintah::SFCZVariable<double>;
 template class Uintah::SFCZVariable<float>;
 template class Uintah::SFCZVariable<int>;
 template class Uintah::SFCZVariable<Uintah::long64>;
+
+template class Uintah::PerPatch<double>;
+template class Uintah::PerPatch<int>;
 
 template class Uintah::ReductionVariable<double, Uintah::Reductions::Min<double> >;
 

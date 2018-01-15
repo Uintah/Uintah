@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -228,6 +228,47 @@ template<>
 #endif
  void
 ReductionVariable<bool, Reductions::And<bool> >
+::putMPIData(vector<char>& data, int& index)
+{
+  ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(char)));
+  char* ptr = reinterpret_cast<char*>(&data[index]);
+  value = *ptr;
+  index += sizeof(char);
+}
+
+#if !defined(__digital__) || defined(__GNUC__)
+template<>
+#endif
+
+void
+ReductionVariable<bool, Reductions::Or<bool> >
+   ::getMPIInfo(int& count, MPI_Datatype& datatype, MPI_Op& op)
+{
+   datatype = MPI_CHAR;
+   count = 1;
+   op = MPI_LOR;
+}
+
+#if !defined(__digital__) || defined(__GNUC__)
+template<>
+#endif
+
+ void
+ReductionVariable<bool, Reductions::Or<bool> >
+   ::getMPIData(vector<char>& data, int& index)
+{
+  ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(char)));
+  char* ptr = reinterpret_cast<char*>(&data[index]);
+  *ptr = value;
+  index += sizeof(char);
+}
+
+#if !defined(__digital__) || defined(__GNUC__)
+template<>
+#endif
+
+void
+ReductionVariable<bool, Reductions::Or<bool> >
 ::putMPIData(vector<char>& data, int& index)
 {
   ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(char)));

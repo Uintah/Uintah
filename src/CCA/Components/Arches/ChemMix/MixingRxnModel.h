@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -1513,6 +1513,8 @@ namespace Uintah {
     VarMap d_ivVarMap;         ///< Independent variable map
     doubleMap d_constants;     ///< List of constants in table header
     InertMasterMap d_inertMap; ///< List of inert streams for post table lookup mixing
+
+    const VarLabel* m_timeStepLabel;
 
     const VarLabel* m_denRefArrayLabel;
     const VarLabel* m_densityLabel;

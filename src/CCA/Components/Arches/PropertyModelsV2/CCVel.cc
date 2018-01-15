@@ -57,16 +57,49 @@ void CCVel::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 }
 
 //--------------------------------------------------------------------------------------------------
+void CCVel::register_timestep_init( AVarInfo& variable_registry , const bool pack_tasks){
+
+  typedef ArchesFieldContainer AFC;
+
+  register_variable( m_u_vel_name_cc, AFC::COMPUTES, variable_registry, _task_name );
+  register_variable( m_v_vel_name_cc, AFC::COMPUTES, variable_registry, _task_name );
+  register_variable( m_w_vel_name_cc, AFC::COMPUTES, variable_registry, _task_name );
+
+  register_variable( m_u_vel_name_cc, AFC::REQUIRES, 0, AFC::OLDDW, variable_registry, _task_name );
+  register_variable( m_v_vel_name_cc, AFC::REQUIRES, 0, AFC::OLDDW, variable_registry, _task_name );
+  register_variable( m_w_vel_name_cc, AFC::REQUIRES, 0, AFC::OLDDW, variable_registry, _task_name );
+  
+}
+
+//--------------------------------------------------------------------------------------------------
+void CCVel::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+
+  constCCVariable<double>& old_u_cc = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_u_vel_name_cc);
+  constCCVariable<double>& old_v_cc = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_v_vel_name_cc);
+  constCCVariable<double>& old_w_cc = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_w_vel_name_cc);
+
+  CCVariable<double>& u_cc = tsk_info->get_uintah_field_add<CCVariable<double> >(m_u_vel_name_cc);
+  CCVariable<double>& v_cc = tsk_info->get_uintah_field_add<CCVariable<double> >(m_v_vel_name_cc);
+  CCVariable<double>& w_cc = tsk_info->get_uintah_field_add<CCVariable<double> >(m_w_vel_name_cc);
+
+  u_cc.copy(old_u_cc);
+  v_cc.copy(old_v_cc);
+  w_cc.copy(old_w_cc);
+
+}
+
+//--------------------------------------------------------------------------------------------------
 void CCVel::register_timestep_eval( VIVec& variable_registry, const int time_substep , const bool packed_tasks){
 
   typedef ArchesFieldContainer AFC;
 
-  register_variable( m_u_vel_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, _task_name );
-  register_variable( m_v_vel_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, _task_name );
-  register_variable( m_w_vel_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, _task_name );
-  register_variable( m_u_vel_name_cc, AFC::COMPUTES, variable_registry, _task_name );
-  register_variable( m_v_vel_name_cc, AFC::COMPUTES, variable_registry, _task_name );
-  register_variable( m_w_vel_name_cc, AFC::COMPUTES, variable_registry, _task_name );
+  register_variable( m_u_vel_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep ,_task_name );
+  register_variable( m_v_vel_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep ,_task_name );
+  register_variable( m_w_vel_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep ,_task_name );
+
+  register_variable( m_u_vel_name_cc, AFC::MODIFIES, variable_registry, time_substep , _task_name );
+  register_variable( m_v_vel_name_cc, AFC::MODIFIES, variable_registry, time_substep , _task_name );
+  register_variable( m_w_vel_name_cc, AFC::MODIFIES, variable_registry, time_substep , _task_name );
 
 }
 

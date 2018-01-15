@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2010-2017 The University of Utah
+ * Copyright (c) 2010-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -108,8 +108,9 @@ namespace WasatchCore{
 
   //--------------------------------------------------------------------
 
-  Wasatch::Wasatch( const Uintah::ProcessorGroup* myworld )
-    : Uintah::UintahParallelComponent( myworld ),
+  Wasatch::Wasatch( const Uintah::ProcessorGroup* myworld,
+                    const Uintah::SimulationStateP sharedState )
+    : Uintah::ApplicationCommon( myworld, sharedState ),
       buildTimeIntegrator_ ( true ),
       buildWasatchMaterial_( true ),
       nRKStages_(1),
@@ -139,7 +140,6 @@ namespace WasatchCore{
 
     materials_   = nullptr;
     timeStepper_ = nullptr;
-    linSolver_   = nullptr;
 
     isRestarting_ = false;
 
@@ -357,8 +357,7 @@ namespace WasatchCore{
 
   
   void Wasatch::preGridProblemSetup(const Uintah::ProblemSpecP& uintahSpec,
-                           Uintah::GridP& grid,
-                           Uintah::SimulationStateP& state)
+                                    Uintah::GridP& grid)
   {
     Uintah::IntVector extraCells;
     check_periodicity_extra_cells( uintahSpec, extraCells, isPeriodic_);
@@ -369,8 +368,7 @@ namespace WasatchCore{
 
   void Wasatch::problemSetup( const Uintah::ProblemSpecP& uintahSpec,
                               const Uintah::ProblemSpecP& restartSpec,
-                              Uintah::GridP& grid,
-                              Uintah::SimulationStateP& sharedState )
+                              Uintah::GridP& grid )
   {
     wasatchSpec_ = uintahSpec->findBlock("Wasatch");
     if( !wasatchSpec_ ) return;
@@ -382,7 +380,7 @@ namespace WasatchCore{
     if( doParticles_ ){
       particlesHelper_ = scinew WasatchParticlesHelper();
       particlesHelper_->sync_with_wasatch(this);
-      particlesHelper_->problem_setup( uintahSpec, wasatchSpec_->findBlock("ParticleTransportEquations"), sharedState );
+      particlesHelper_->problem_setup( uintahSpec, wasatchSpec_->findBlock("ParticleTransportEquations") );
     }
 
     // setup names for all the boundary condition faces that do NOT have a name or that have duplicate names
@@ -391,10 +389,9 @@ namespace WasatchCore{
       assign_unique_boundary_names( bcProbSpec );
     }
     
-    sharedState_ = sharedState;
     // TSAAD: keep the line of code below for future use. at this time, there is no apparent use for
     // it. it doesn't do anything.
-    //    dynamic_cast<Uintah::Scheduler*>(getPort("scheduler"))->setPositionVar(pPosLabel);
+    //    m_scheduler->setPositionVar(pPosLabel);
     double deltMin, deltMax;
     uintahSpec->findBlock("Time")->require("delt_min", deltMin);
     uintahSpec->findBlock("Time")->require("delt_max", deltMax);
@@ -525,35 +522,29 @@ namespace WasatchCore{
     //
     if( buildWasatchMaterial_ ){
       Uintah::WasatchMaterial* mat= scinew Uintah::WasatchMaterial();
-      sharedState->registerWasatchMaterial(mat);
+      m_sharedState->registerWasatchMaterial(mat);
     }
 
     // we are able to get the solver port from here
-    linSolver_ = dynamic_cast<Uintah::SolverInterface*>(getPort("solver"));
-    if( !linSolver_ ){
-      throw Uintah::InternalError("Wasatch: couldn't get solver port", __FILE__, __LINE__);
-    }
-    else{
-      proc0cout << "Detected solver: " << linSolver_->getName() << std::endl;
-      const bool hasMomentum = wasatchSpec_->findBlock("MomentumEquations");
-      if( hasMomentum ){
-        std::string densMethod;
-        wasatchSpec_->findBlock("Density")->getAttribute("method",densMethod);
-        const bool isCompressible = densMethod == "COMPRESSIBLE";
-
-        bool needPressureSolve = true;
-        if( wasatchSpec_->findBlock("MomentumEquations")->findBlock("DisablePressureSolve") ) needPressureSolve = false;
-        if( isCompressible ) needPressureSolve = false;
-
-        Wasatch::need_pressure_solve( needPressureSolve );
-
-        if( needPressureSolve && (linSolver_->getName()).compare("hypre") != 0 ){
-          std::ostringstream msg;
-          msg << "  Invalid solver specified: "<< linSolver_->getName() << std::endl
-              << "  Wasatch currently works with hypre solver only. Please change your solver type." << std::endl
-              << std::endl;
-          throw std::runtime_error( msg.str() );
-        }
+    proc0cout << "Detected solver: " << m_solver->getName() << std::endl;
+    const bool hasMomentum = wasatchSpec_->findBlock("MomentumEquations");
+    if( hasMomentum ){
+      std::string densMethod;
+      wasatchSpec_->findBlock("Density")->getAttribute("method",densMethod);
+      const bool isCompressible = densMethod == "COMPRESSIBLE";
+      
+      bool needPressureSolve = true;
+      if( wasatchSpec_->findBlock("MomentumEquations")->findBlock("DisablePressureSolve") ) needPressureSolve = false;
+      if( isCompressible ) needPressureSolve = false;
+      
+      Wasatch::need_pressure_solve( needPressureSolve );
+      
+      if( needPressureSolve && (m_solver->getName()).compare("hypre") != 0 ){
+        std::ostringstream msg;
+        msg << "  Invalid solver specified: "<< m_solver->getName() << std::endl
+            << "  Wasatch currently works with hypre solver only. Please change your solver type." << std::endl
+            << std::endl;
+        throw std::runtime_error( msg.str() );
       }
     }
     
@@ -616,8 +607,9 @@ namespace WasatchCore{
     // Build species transport equations
     //
     Uintah::ProblemSpecP specEqnParams = wasatchSpec_->findBlock("SpeciesTransportEquations");
+    Uintah::ProblemSpecP momEqnParams = wasatchSpec_->findBlock("MomentumEquations");
     if( specEqnParams ){
-      EquationAdaptors specEqns = parse_species_equations( specEqnParams, turbParams, densityTag, graphCategories_ );
+      EquationAdaptors specEqns = parse_species_equations( specEqnParams, wasatchSpec_, momEqnParams, turbParams, densityTag, graphCategories_ );
       adaptors_.insert( adaptors_.end(), specEqns.begin(), specEqns.end() );
     }
 
@@ -659,8 +651,8 @@ namespace WasatchCore{
                                                                       isConstDensity,
                                                                       densityTag,
                                                                       graphCategories_,
-                                                                      *linSolver_,
-                                                                      sharedState );
+                                                                      *m_solver,
+                                                                      m_sharedState );
         adaptors_.insert( adaptors_.end(), adaptors.begin(), adaptors.end() );
       }
       catch( std::runtime_error& err ){
@@ -718,7 +710,7 @@ namespace WasatchCore{
     {
       try{
         parse_poisson_equation( poissonEqnParams, graphCategories_,
-                                *linSolver_, sharedState );
+                                *m_solver, m_sharedState );
       }
       catch( std::runtime_error& err ){
         std::ostringstream msg;
@@ -732,11 +724,11 @@ namespace WasatchCore{
     if( wasatchSpec_->findBlock("Radiation") ){
       parse_radiation_solver( wasatchSpec_->findBlock("Radiation"),
                               *graphCategories_[ADVANCE_SOLUTION],
-                              *linSolver_, sharedState, persistent_fields() );
+                              *m_solver, m_sharedState, persistent_fields() );
     }
 
     if( buildTimeIntegrator_ ){
-      timeStepper_ = scinew TimeStepper( sharedState_, graphCategories_, timeIntegrator_ );
+      timeStepper_ = scinew TimeStepper( graphCategories_, timeIntegrator_ );
     }    
     
     //
@@ -774,8 +766,7 @@ namespace WasatchCore{
       // For RMCRT there will be 2 task graphs - put the radiation tasks in TG-1, otherwise tasks go into TG-0, or both TGs
       //   TG-0 == carry forward and/or non-radiation timesteps
       //   TG-1 == RMCRT radiation timestep
-      Uintah::Scheduler* sched = dynamic_cast<Uintah::Scheduler*>(getPort("scheduler"));
-      sched->setNumTaskGraphs(2);
+      m_scheduler->setNumTaskGraphs(2);
       Uintah::ProblemSpecP radFreqSpec = uintahSpec;
       radFreqSpec->getWithDefault( "calc_frequency",  radCalcFrequency_, 1 );
       //---------------------------------------------------------------------------------------------------------------------------
@@ -825,7 +816,7 @@ namespace WasatchCore{
                                                              TagNames::self().celltype,
                                                              rmcrt_,
                                                              radSpec,
-                                                             sharedState_,
+                                                             m_sharedState,
                                                              grid ) );
       graphCategories_[ADVANCE_SOLUTION]->exprFactory->cleave_from_parents ( exprID );
       graphCategories_[ADVANCE_SOLUTION]->exprFactory->cleave_from_children( exprID );
@@ -877,7 +868,7 @@ namespace WasatchCore{
           << "with a ParticleTemperature sub-block."
           << endl;
           throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-    	}
+        }
 
         // setup coal models
         proc0cout << "Setting up coal models" << std::endl;
@@ -902,19 +893,19 @@ namespace WasatchCore{
   void Wasatch::scheduleInitialize( const Uintah::LevelP& level,
                                     Uintah::SchedulerP& sched )
   {
-    // accessing the sharedState_->allWasatchMaterials() must be done after
+    // accessing the m_sharedState->allWasatchMaterials() must be done after
     // problemSetup. The sharedstate class will create this material set
     // in postgridsetup, which is called after problemsetup. This is dictated
     // by Uintah.
     if( buildWasatchMaterial_ ){
-      set_wasatch_materials(sharedState_->allWasatchMaterials());
+      set_wasatch_materials(m_sharedState->allWasatchMaterials());
       if( doParticles_ ){
         particlesHelper_->set_materials(get_wasatch_materials());
       }
     }
     else{
       if( doParticles_ ){
-        particlesHelper_->set_materials(sharedState_->allMaterials());
+        particlesHelper_->set_materials(m_sharedState->allMaterials());
       }
     }
 
@@ -990,7 +981,6 @@ namespace WasatchCore{
                                                           materials_,
                                                           patchInfoMap_,
                                                           1,
-                                                          sharedState_,
                                                           persistentFields_ );
         //_______________________________________________________
         // create the TaskInterface and schedule this task for
@@ -1028,12 +1018,12 @@ namespace WasatchCore{
   {
     isRestarting_ = true;
 
-    // accessing the sharedState_->allWasatchMaterials() must be done after
+    // accessing the m_sharedState->allWasatchMaterials() must be done after
     // problemSetup. The sharedstate class will create this material set
     // in postgridsetup, which is called after problemsetup. This is dictated
     // by Uintah.
     if( buildWasatchMaterial_ ){
-      set_wasatch_materials( sharedState_->allWasatchMaterials() );
+      set_wasatch_materials( m_sharedState->allWasatchMaterials() );
       if( doParticles_ ){
         particlesHelper_->set_materials(get_wasatch_materials());
       }
@@ -1080,7 +1070,7 @@ namespace WasatchCore{
 
   //--------------------------------------------------------------------
 
-  void Wasatch::scheduleComputeStableTimestep( const Uintah::LevelP& level,
+  void Wasatch::scheduleComputeStableTimeStep( const Uintah::LevelP& level,
                                                Uintah::SchedulerP& sched )
   {
     GraphHelper* const tsGraphHelper = graphCategories_[ TIMESTEP_SELECTION ];
@@ -1098,18 +1088,44 @@ namespace WasatchCore{
                                                         localPatches,
                                                         materials_,
                                                         patchInfoMap_,
-                                                        1, sharedState_, persistentFields_ );
+                                                        1, persistentFields_ );
       task->schedule(1);
       taskInterfaceList_.push_back( task );
     }
     else{ // default
 
+      // int timeStep = m_sharedState->getCurrentTopLevelTimeStep();
+
+      // This method is called at both initialization and
+      // otherwise. At initialization the old DW, i.e. DW(0) will not
+      // exist. As such, get the time step from the new DW,
+      // i.e. DW(1).  Otherwise for a normal time step get the time
+      // step from the new DW.
+      Uintah::timeStep_vartype timeStep(0);
+      if( sched->get_dw(0) && sched->get_dw(0)->exists( getTimeStepLabel() ) )
+        sched->get_dw(0)->get( timeStep, getTimeStepLabel() );
+      else if( sched->get_dw(1) && sched->get_dw(1)->exists( getTimeStepLabel() ) )
+        sched->get_dw(1)->get( timeStep, getTimeStepLabel() );
+
       proc0cout << "Scheduling Task 'compute timestep' COMPUTES 'delT' in NEW data warehouse" << endl;
 
       Uintah::Task* task = scinew Uintah::Task( "compute timestep", this, &Wasatch::computeDelT );
 
+      // This method is called at both initialization and
+      // otherwise. At initialization the old DW, i.e. DW(0) will not
+      // exist so require the value from the new DW.  Otherwise for a
+      // normal time step require the time step from the old DW.
+      if(sched->get_dw(0) ) {
+        task->requires( Uintah::Task::OldDW, getTimeStepLabel() );
+        task->requires( Uintah::Task::OldDW, getSimTimeLabel() );
+      }
+      else if(sched->get_dw(1) ) {
+        task->requires( Uintah::Task::NewDW, getTimeStepLabel() );
+        task->requires( Uintah::Task::NewDW, getSimTimeLabel() );
+      }
+      
       // jcs it appears that for reduction variables we cannot specify the patches - only the materials.
-      task->computes( sharedState_->get_delt_label(),
+      task->computes( getDelTLabel(),
                       level.get_rep() );
       //              materials_->getUnion() );
       // jcs why can't we specify a material here?  It doesn't seem to be working if I do.
@@ -1119,7 +1135,8 @@ namespace WasatchCore{
       const bool useStableDT = slnGraphHelper->exprFactory->have_entry( tagNames.stableTimestep );
       // since the StableDT expression is only registered on the time_advance graph,
       // make the necessary checks before adding a requires for that
-      if( sharedState_->getCurrentTopLevelTimeStep() > 0 ){
+
+      if( timeStep > 0 ){
         if( useStableDT ){
           task->requires(Uintah::Task::NewDW, Uintah::VarLabel::find(tagNames.stableTimestep.name()),  Uintah::Ghost::None, 0);
         }
@@ -1175,8 +1192,7 @@ namespace WasatchCore{
     const Uintah::PatchSet* const localPatches = get_patchset( USE_FOR_OPERATORS, level, sched );
     const GraphHelper* advSolGraphHelper = graphCategories_[ ADVANCE_SOLUTION ];
 
-    Uintah::LoadBalancerPort * lb              = sched->getLoadBalancer();
-    const Uintah::PatchSet   * perproc_patches = lb->getPerProcessorPatchSet( level );
+    const Uintah::PatchSet * perproc_patches = m_loadBalancer->getPerProcessorPatchSet( level );
 
     if ( timeIntegrator_.has_dual_time() ) {
       subsched_ = sched->createSubScheduler();
@@ -1194,7 +1210,8 @@ namespace WasatchCore{
       dualTimeTask->hasSubScheduler();
 
       // we need the "outer" timestep for this temporary example
-      dualTimeTask->requires( Uintah::Task::OldDW, sharedState_->get_delt_label() );
+      dualTimeTask->requires( Uintah::Task::OldDW, getTimeStepLabel() );
+      dualTimeTask->requires( Uintah::Task::OldDW, getDelTLabel() );
       
       Expr::TagList timeTags;
       timeTags.push_back( TagNames::self().time     );
@@ -1249,7 +1266,7 @@ namespace WasatchCore{
       Uintah::VarLabel* convLabel = Uintah::VarLabel::create( "DualtimeResidual", Uintah::max_vartype::getTypeDescription() );
       dualTimeTask->requires( Uintah::Task::NewDW, convLabel );
       
-      sched->addTask(dualTimeTask, perproc_patches, sharedState_->allMaterials());      
+      sched->addTask(dualTimeTask, perproc_patches, m_sharedState->allMaterials());      
 
       // -----------------------------------------------------------------------
       // BOUNDARY CONDITIONS TREATMENT
@@ -1257,9 +1274,9 @@ namespace WasatchCore{
       proc0cout << "------------------------------------------------" << std::endl
       << "SETTING BOUNDARY CONDITIONS:" << std::endl;
       proc0cout << "------------------------------------------------" << std::endl;
-      
+
       typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
-      
+
       for( EquationAdaptors::const_iterator ia=adaptors_.begin(); ia!=adaptors_.end(); ++ia ){
         EqnTimestepAdaptorBase* const adaptor = *ia;
         EquationBase* transEq = adaptor->equation();
@@ -1320,7 +1337,40 @@ namespace WasatchCore{
       if( doParticles_ ){
         particlesHelper_->schedule_find_boundary_particles(level,sched);
       }
-      
+
+       // -----------------------------------------------------------------------
+       // BOUNDARY CONDITIONS TREATMENT
+       // -----------------------------------------------------------------------
+       proc0cout << "------------------------------------------------" << std::endl
+       << "SETTING BOUNDARY CONDITIONS:" << std::endl;
+       proc0cout << "------------------------------------------------" << std::endl;
+       
+       typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
+       
+       for( EquationAdaptors::const_iterator ia=adaptors_.begin(); ia!=adaptors_.end(); ++ia ){
+          EqnTimestepAdaptorBase* const adaptor = *ia;
+          EquationBase* transEq = adaptor->equation();
+          std::string eqnLabel = transEq->solution_variable_name();
+          //______________________________________________________
+          // set up boundary conditions on this transport equation
+          try{
+             // only verify boundary conditions on the first stage!
+             if( isRestarting_ ) transEq->setup_boundary_conditions(*bcHelperMap_[level->getID()], graphCategories_);
+             proc0cout << "Setting BCs for transport equation '" << eqnLabel << "'" << std::endl;
+             transEq->apply_boundary_conditions(*advSolGraphHelper, *bcHelperMap_[level->getID()]);
+          }
+          catch( std::runtime_error& e ){
+             std::ostringstream msg;
+             msg << e.what()
+             << std::endl
+             << "ERORR while setting boundary conditions on equation '" << eqnLabel << "'"
+             << std::endl;
+             throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+          }
+       }
+       proc0cout << "------------------------------------------------" << std::endl;
+
+
       for( int iStage=1; iStage<=nRKStages_; iStage++ ){
         // jcs why do we need this instead of getting the level?
         // jcs notes:
@@ -1341,39 +1391,7 @@ namespace WasatchCore{
         
         // Compute the cell type only when radiation is present. This may change in the future.
         if( doRadiation_ ) cellType_->schedule_carry_forward(allPatches,materials_,sched);
-        
-        // -----------------------------------------------------------------------
-        // BOUNDARY CONDITIONS TREATMENT
-        // -----------------------------------------------------------------------
-        proc0cout << "------------------------------------------------" << std::endl
-        << "SETTING BOUNDARY CONDITIONS:" << std::endl;
-        proc0cout << "------------------------------------------------" << std::endl;
-        
-        typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
-        
-        for( EquationAdaptors::const_iterator ia=adaptors_.begin(); ia!=adaptors_.end(); ++ia ){
-          EqnTimestepAdaptorBase* const adaptor = *ia;
-          EquationBase* transEq = adaptor->equation();
-          std::string eqnLabel = transEq->solution_variable_name();
-          //______________________________________________________
-          // set up boundary conditions on this transport equation
-          try{
-            // only verify boundary conditions on the first stage!
-            if( isRestarting_ && iStage < 2 ) transEq->setup_boundary_conditions(*bcHelperMap_[level->getID()], graphCategories_);
-            proc0cout << "Setting BCs for transport equation '" << eqnLabel << "'" << std::endl;
-            transEq->apply_boundary_conditions(*advSolGraphHelper, *bcHelperMap_[level->getID()]);
-          }
-          catch( std::runtime_error& e ){
-            std::ostringstream msg;
-            msg << e.what()
-            << std::endl
-            << "ERORR while setting boundary conditions on equation '" << eqnLabel << "'"
-            << std::endl;
-            throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-          }
-        }
-        proc0cout << "------------------------------------------------" << std::endl;
-        
+
         //
         // process clipping on fields - must be done AFTER all bcs are applied
         //
@@ -1410,7 +1428,6 @@ namespace WasatchCore{
                                                          materials_,
                                                          patchInfoMap_,
                                                          1,
-                                                         sharedState_,
                                                          persistentFields_ );
         task->schedule(1);
         taskInterfaceList_.push_back( task );
@@ -1470,7 +1487,12 @@ namespace WasatchCore{
     //  Move data from parentOldDW to subSchedNewDW.
     const std::set<const Uintah::VarLabel*, Uintah::VarLabel::Compare>& initialRequires = subsched_->getInitialRequiredVars();
     for( std::set<const Uintah::VarLabel*>::const_iterator it=initialRequires.begin(); it!=initialRequires.end(); ++it ){
-      if( !(*it)->typeDescription()->isReductionVariable() ){ // avoid reduction vars
+
+      Uintah::TypeDescription::Type vartype = (*it)->typeDescription()->getType();
+
+      // avoid reduction and sole vars
+      if (vartype != TypeDescription::ReductionVariable &&
+          vartype != TypeDescription::SoleVariable){
         subNewDW->transferFrom(parentOldDW, *it, patches, matls, true);
       }
     }
@@ -1492,7 +1514,12 @@ namespace WasatchCore{
       parNewDW = subsched_->get_dw(1);
 
       for( std::set<const Uintah::VarLabel*>::const_iterator it=initialRequires.begin(); it!=initialRequires.end(); ++it ){
-        if (!(*it)->typeDescription()->isReductionVariable() ){ // avoid reduction vars
+
+        Uintah::TypeDescription::Type vartype = (*it)->typeDescription()->getType();
+
+        // avoid reduction and sole vars
+        if (vartype != TypeDescription::ReductionVariable &&
+            vartype != TypeDescription::SoleVariable){
           subNewDW->transferFrom(subOldDW, *it, patches, matls, true);
         }
       }
@@ -1511,12 +1538,23 @@ namespace WasatchCore{
     } while(c <= timeIntegrator_.dualTimeIterations && residual >= timeIntegrator_.dualTimeTolerance);
     
     totalDualTimeIterations_ += c - 1;
-    proc0cout << " Dual time iterations = " << c-1 << ". Residual = " << residual << ". Average iterations = " << (double) totalDualTimeIterations_/sharedState_->getCurrentTopLevelTimeStep() << std::endl;
+
+    // int timeStep = m_sharedState->getCurrentTopLevelTimeStep();
+    
+    Uintah::timeStep_vartype timeStep;
+    parentOldDW->get( timeStep, getTimeStepLabel() );
+
+    proc0cout << " Dual time iterations = " << c-1 << ". Residual = " << residual << ". Average iterations = " << (double) totalDualTimeIterations_/timeStep << std::endl;
     
     // move dependencies to the parent DW
     const std::set<const Uintah::VarLabel*, Uintah::VarLabel::Compare>& computedVars = subsched_->getComputedVars();
     for (std::set<const Uintah::VarLabel*>::const_iterator it=computedVars.begin(); it!=computedVars.end(); ++it ){
-      if( !(*it)->typeDescription()->isReductionVariable() ){ // avoid reduction vars
+
+      Uintah::TypeDescription::Type vartype = (*it)->typeDescription()->getType();
+
+      // avoid reduction and sole vars
+      if (vartype != TypeDescription::ReductionVariable &&
+          vartype != TypeDescription::SoleVariable){
         std::string varname = (*it)->getName();
         if (varname == "dt" || varname == "time" || varname == "rkstage" || varname == "timestep" ) continue;
         parentNewDW->transferFrom(subNewDW, *it, patches, matls, true);
@@ -1534,8 +1572,7 @@ namespace WasatchCore{
     //________________________________________________________
     // add a task to populate a "field" with the current time.
     // This is required by the time integrator.
-    //    Uintah::LoadBalancerPort * lb = sched->getLoadBalancer();
-    //    const Uintah::PatchSet* localPatches = lb->getPerProcessorPatchSet(level);
+    //    const Uintah::PatchSet* localPatches = m_loadBalancer->getPerProcessorPatchSet(level);
     const Uintah::PatchSet* const localPatches = get_patchset( USE_FOR_TASKS, level, sched );
     {
       // add a task to update current simulation time
@@ -1543,6 +1580,9 @@ namespace WasatchCore{
       scinew Uintah::Task( "set initial time",
                            this,
                            &Wasatch::set_initial_time );
+
+      updateCurrentTimeTask->requires( Uintah::Task::NewDW, getTimeStepLabel() );
+      updateCurrentTimeTask->requires( Uintah::Task::NewDW, getSimTimeLabel() );
       
       const Uintah::TypeDescription* perPatchTD = Uintah::PerPatch<double>::getTypeDescription();
       tLabel_     = (!tLabel_      ) ? Uintah::VarLabel::create( TagNames::self().time.name(), perPatchTD )     : tLabel_    ;
@@ -1550,7 +1590,7 @@ namespace WasatchCore{
       
       updateCurrentTimeTask->computes( tLabel_     );
       updateCurrentTimeTask->computes( tStepLabel_ );
-      
+        
       sched->addTask( updateCurrentTimeTask, localPatches, materials_ );
     }
   }
@@ -1565,9 +1605,15 @@ namespace WasatchCore{
                              Uintah::DataWarehouse* const newDW )
   {
     // grab the timestep
-    const double simTime = sharedState_->getElapsedSimTime();
-    const double timeStep = sharedState_->getCurrentTopLevelTimeStep();
-    
+    // const double simTime = m_sharedState->getElapsedSimTime();
+    // const double timeStep = m_sharedState->getCurrentTopLevelTimeStep();
+
+    Uintah::timeStep_vartype timeStep(0);
+    newDW->get( timeStep, getTimeStepLabel() );
+
+    Uintah::simTime_vartype simTime(0);
+    newDW->get( simTime, getSimTimeLabel() );
+
     typedef Uintah::PerPatch<double> perPatchT;
     perPatchT tstep( timeStep );
     perPatchT time ( simTime  );
@@ -1579,7 +1625,6 @@ namespace WasatchCore{
     }
   }
   
-
   //---------------------------------------------------------------------------------
   
   void
@@ -1610,8 +1655,7 @@ namespace WasatchCore{
     //________________________________________________________
     // add a task to populate a "field" with the current time.
     // This is required by the time integrator.
-//    Uintah::LoadBalancerPort * lb = sched->getLoadBalancer();
-//    const Uintah::PatchSet* localPatches = lb->getPerProcessorPatchSet(level);
+//    const Uintah::PatchSet* localPatches =  m_loadBalancer->getPerProcessorPatchSet(level);
     const Uintah::PatchSet* const localPatches = get_patchset( USE_FOR_TASKS, level, sched );
     {
       // add a task to update current simulation time
@@ -1620,7 +1664,9 @@ namespace WasatchCore{
                            this,
                            &Wasatch::update_current_time,
                           rkStage );
-      updateCurrentTimeTask->requires( (has_dual_time() ? Uintah::Task::ParentOldDW : Uintah::Task::OldDW), sharedState_->get_delt_label() );
+      updateCurrentTimeTask->requires( (has_dual_time() ? Uintah::Task::ParentOldDW : Uintah::Task::OldDW), getTimeStepLabel() );
+      updateCurrentTimeTask->requires( (has_dual_time() ? Uintah::Task::ParentOldDW : Uintah::Task::OldDW), getSimTimeLabel() );
+      updateCurrentTimeTask->requires( (has_dual_time() ? Uintah::Task::ParentOldDW : Uintah::Task::OldDW), getDelTLabel() );
       
       const Uintah::TypeDescription* perPatchTD = Uintah::PerPatch<double>::getTypeDescription();
       dtLabel_      = (!dtLabel_     ) ? Uintah::VarLabel::create( TagNames::self().dt.name(), perPatchTD )       : dtLabel_     ;
@@ -1654,16 +1700,24 @@ namespace WasatchCore{
                                 Uintah::DataWarehouse* const newDW,
                                 const int rkStage )
   {
-    // grab the timestep
-    Uintah::delt_vartype deltat;
     Uintah::DataWarehouse* whichDW = has_dual_time() ? oldDW->getOtherDataWarehouse(Uintah::Task::ParentOldDW) : oldDW;
-    whichDW->get( deltat, sharedState_->get_delt_label() );
+
+    // grab the timestep
+    // const double simTime = m_sharedState->getElapsedSimTime();
+    // const double timeStep = m_sharedState->getCurrentTopLevelTimeStep();
+    
+    Uintah::timeStep_vartype timeStep;
+    whichDW->get( timeStep, getTimeStepLabel() );
+
+    Uintah::simTime_vartype simTime;
+    whichDW->get( simTime, getSimTimeLabel() );
+
+    Uintah::delt_vartype deltat;
+    whichDW->get( deltat, getDelTLabel() );
+
     const Expr::Tag timeTag = TagNames::self().time;
     double rks = (double) rkStage;
     double* timeCor = timeIntegrator_.timeCorrection;
-    
-    const double simTime = sharedState_->getElapsedSimTime();
-    const double timeStep = sharedState_->getCurrentTopLevelTimeStep();
     
     typedef Uintah::PerPatch<double> perPatchT;
     perPatchT dt     (deltat );
@@ -1771,23 +1825,35 @@ namespace WasatchCore{
   Wasatch::computeDelT( const Uintah::ProcessorGroup*,
                         const Uintah::PatchSubset* patches,
                         const Uintah::MaterialSubset* matls,
-                        Uintah::DataWarehouse* old_dw,
-                        Uintah::DataWarehouse* new_dw )
+                        Uintah::DataWarehouse* oldDW,
+                        Uintah::DataWarehouse* newDW )
   {
+    // int timeStep = m_sharedState->getCurrentTopLevelTimeStep();
+    
+    // This method is called at both initialization and otherwise. At
+    // initialization the old DW will not exist so get the value from
+    // the new DW.  Otherwise for a normal time step get the time step
+    // from the old DW.
+    Uintah::timeStep_vartype timeStep(0);
+    if( oldDW && oldDW->exists( getTimeStepLabel() ) )
+      oldDW->get( timeStep, getTimeStepLabel() );
+    else if( newDW && newDW->exists( getTimeStepLabel() ) )
+      newDW->get( timeStep, getTimeStepLabel() );
+
     Uintah::delt_vartype deltat = 1.0;
     double val = 9999999999999.0;
     
     const GraphHelper* slnGraphHelper = graphCategories_[ADVANCE_SOLUTION];
     const TagNames& tagNames = TagNames::self();
     const bool useStableDT = slnGraphHelper->exprFactory->have_entry( tagNames.stableTimestep );
-    if( sharedState_->getCurrentTopLevelTimeStep() > 0 ){
+    if( timeStep > 0 ){
       if( useStableDT ){
         //__________________
         // loop over patches
         for( int ip=0; ip<patches->size(); ++ip ){
           // grab the stable timestep value calculated by the StableDT expression
           Uintah::PerPatch<double> tempDtP;
-          new_dw->get(tempDtP, Uintah::VarLabel::find(tagNames.stableTimestep.name()), 0, patches->get(ip));          
+          newDW->get(tempDtP, Uintah::VarLabel::find(tagNames.stableTimestep.name()), 0, patches->get(ip));          
           val = std::min( val, tempDtP.get() );
         }
       }
@@ -1795,17 +1861,17 @@ namespace WasatchCore{
         // FOR FIXED dt: (min = max in input file)
         // if this is not the first timestep, then grab dt from the olddw.
         // This will avoid Uintah's message that it is setting dt to max dt/min dt
-        old_dw->get( deltat, sharedState_->get_delt_label() );
+        oldDW->get( deltat, getDelTLabel() );
       }
     }
     
     if( useStableDT ){
-      new_dw->put(Uintah::delt_vartype(val),sharedState_->get_delt_label(),
-                  Uintah::getLevel(patches) );
+      newDW->put(Uintah::delt_vartype(val),getDelTLabel(),
+                 Uintah::getLevel(patches) );
     }
     else{
-      new_dw->put( deltat,
-                  sharedState_->get_delt_label(),
+      newDW->put( deltat,
+                  getDelTLabel(),
                   Uintah::getLevel(patches) );
     }
   }
@@ -1820,14 +1886,14 @@ namespace WasatchCore{
     switch ( pss ) {
 
       case USE_FOR_TASKS:
-        // return sched->getLoadBalancer()->getPerProcessorPatchSet(level);
+        // return  m_loadBalancer->getPerProcessorPatchSet(level);
         return level->eachPatch();
         break;
 
       case USE_FOR_OPERATORS: {
         const int levelID = level->getID();
-        const Uintah::PatchSet* const allPatches = sched->getLoadBalancer()->getPerProcessorPatchSet(level);
-        const Uintah::PatchSubset* const localPatches = allPatches->getSubset( d_myworld->myrank() );
+        const Uintah::PatchSet* const allPatches = m_loadBalancer->getPerProcessorPatchSet(level);
+        const Uintah::PatchSubset* const localPatches = allPatches->getSubset( d_myworld->myRank() );
 
         std::map< int, const Uintah::PatchSet* >::iterator ip = patchesForOperators_.find( levelID );
 
@@ -1837,7 +1903,7 @@ namespace WasatchCore{
         // jcs: this results in "normal" scheduling and WILL NOT WORK FOR LINEAR SOLVES
         //      in that case, we need to use "gang" scheduling: addAll( localPatches )
         patches->addEach( localPatches->getVector() );
-        //     const std::set<int>& procs = sched->getLoadBalancer()->getNeighborhoodProcessors();
+        //     const std::set<int>& procs =  m_loadBalancer->getNeighborhoodProcessors();
         //     for( std::set<int>::const_iterator ip=procs.begin(); ip!=procs.end(); ++ip ){
         //       patches->addEach( allPatches->getSubset( *ip )->getVector() );
         //     }
@@ -1868,16 +1934,17 @@ namespace WasatchCore{
  }
 
  int
- Wasatch::computeTaskGraphIndex()
+ Wasatch::computeTaskGraphIndex( const int timeStep )
  {
-   // component specifies task graph index  for next timestep. SimController passes this to scheduler for execution
+   // The component specifies task graph index for next
+   // timestep. SimController passes this to scheduler for execution.
    if (doRadiation_) {
 
-     // setup the correct task graph for execution
-     int time_step = sharedState_->getCurrentTopLevelTimeStep();
-
-     // also do radiation solve on timestep 1
-     int task_graph_index = ((time_step % radCalcFrequency_ == 0) || (time_step == 1) ? Uintah::RMCRTCommon::TG_RMCRT : Uintah::RMCRTCommon::TG_CARRY_FORWARD);
+     // Setup the correct task graph for execution.
+     // Also do radiation solve on timestep 1.
+     int task_graph_index =
+       ((timeStep % radCalcFrequency_ == 0) ||
+        (timeStep == 1) ? Uintah::RMCRTCommon::TG_RMCRT : Uintah::RMCRTCommon::TG_CARRY_FORWARD);
 
      return task_graph_index;
    }

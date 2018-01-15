@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -27,7 +27,7 @@
 #include <CCA/Components/Schedulers/SchedulerCommon.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Ports/DataWarehouse.h>
-#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Ports/LoadBalancer.h>
 
 #include <Core/Containers/FastHashTable.h>
 #include <Core/Disclosure/TypeDescription.h>
@@ -78,22 +78,22 @@ TaskGraph::TaskGraph(       SchedulerCommon   * sched
   , m_type{type}
   , m_index{index}
 {
-  m_load_balancer = dynamic_cast<LoadBalancerPort*>( m_scheduler->getPort("load balancer") );
+  m_load_balancer = dynamic_cast<LoadBalancer*>( m_scheduler->getPort("load balancer") );
 
-#ifdef HAVE_VISIT
-  static bool initialized = false;
+// #ifdef HAVE_VISIT
+//   static bool initialized = false;
 
-  // Running with VisIt so add in the variables that the user can modify.
-  if (state->getVisIt() && !initialized) {
+//   // Running with VisIt so add in the variables that the user can modify.
+//   if (state->getVisIt() && !initialized) {
 
-    state->d_douts.push_back(&tgphasedbg);
-    state->d_douts.push_back(&compdbg);
-    state->d_douts.push_back(&tgdbg);
-    state->d_douts.push_back(&detaileddbg);
+//     state->d_douts.push_back(&tgphasedbg);
+//     state->d_douts.push_back(&compdbg);
+//     state->d_douts.push_back(&tgdbg);
+//     state->d_douts.push_back(&detaileddbg);
 
-    initialized = true;
-  }
-#endif
+//     initialized = true;
+//   }
+// #endif
 }
 
 //______________________________________________________________________
@@ -159,12 +159,12 @@ TaskGraph::addTask(       std::shared_ptr<Task>   task
   task->setSets( patchset, matlset );
   if ( (patchset && patchset->totalsize() == 0) || (matlset && matlset->totalsize() == 0) ) {
     task.reset();
-    DOUT(detaileddbg, "Rank-" << m_proc_group->myrank() << " Killing empty task: " << *task);
+    DOUT(detaileddbg, "Rank-" << m_proc_group->myRank() << " Killing empty task: " << *task);
   }
   else {
     m_tasks.push_back( task );
 
-    DOUT(tgdbg, "Rank-" << m_proc_group->myrank() << " TG[" << m_index << "] adding task: " << task->getName());
+    DOUT(tgdbg, "Rank-" << m_proc_group->myRank() << " TG[" << m_index << "] adding task: " << task->getName());
     task->displayAll_DOUT(tgdbg);
     
 #if 0
@@ -460,7 +460,7 @@ TaskGraph::createDetailedTasks(       bool            useInternalDeps
       // Output tasks
       else if ( task->getType() == Task::Output ) {
         // Compute rank that handles output for this process.
-        int handling_rank = (m_proc_group->myrank() / m_load_balancer->getNthRank()) * m_load_balancer->getNthRank();
+        int handling_rank = (m_proc_group->myRank() / m_load_balancer->getNthRank()) * m_load_balancer->getNthRank();
 
         // Only schedule output task for the subset involving our rank.
         const PatchSubset* pss = ps->getSubset( handling_rank );
@@ -490,7 +490,7 @@ TaskGraph::createDetailedTasks(       bool            useInternalDeps
           for (auto kv : task->m_max_ghost_cells) {
             int levelIDTemp = kv.first;
             search_distal_requires = (task->m_max_ghost_cells.at(levelIDTemp) >= MAX_HALO_DEPTH);
-            DOUT(neighbor_location, "Rank-" << m_proc_group->myrank()
+            DOUT(neighbor_location, "Rank-" << m_proc_group->myRank()
                                     << " for: " << task->getName() << " on level: " << levelIDTemp
                                     << " with task max ghost cells: " << task->m_max_ghost_cells.at(levelIDTemp)
                                     << " Seeing if patch subset: " << *pss
@@ -509,7 +509,7 @@ TaskGraph::createDetailedTasks(       bool            useInternalDeps
             }
           }
         }
-        DOUT(neighbor_location, "Rank-" << m_proc_group->myrank() << " created: " << num_dts << " tasks for: "
+        DOUT(neighbor_location, "Rank-" << m_proc_group->myRank() << " created: " << num_dts << " tasks for: "
                                 << task->getName() << " on level: " << levelID);
       }
     }
@@ -517,30 +517,37 @@ TaskGraph::createDetailedTasks(       bool            useInternalDeps
       createDetailedTask(task, nullptr, nullptr);
     }
     else if (!ps) {
-      SCI_THROW(InternalError("Task has MaterialSet, but no PatchSet", __FILE__, __LINE__));
+      if (task->getType() == Task::Reduction) {
+	for (int m = 0; m < ms->size(); m++) {
+	  const MaterialSubset* mss = ms->getSubset(m);
+	  createDetailedTask(task, nullptr, mss);
+	}
+      }
+      else
+	SCI_THROW(InternalError("Task has MaterialSet, but no PatchSet", __FILE__, __LINE__));
     }
     else {
       SCI_THROW(InternalError("Task has PatchSet, but no MaterialSet", __FILE__, __LINE__));
     }
   }
   
-  DOUT(neighbor_location, "Rank-" << m_proc_group->myrank() << " created: " << num_normal_tasks << " detailed tasks in TG: " << m_index);
+  DOUT(neighbor_location, "Rank-" << m_proc_group->myRank() << " created: " << num_normal_tasks << " detailed tasks in TG: " << m_index);
 
   m_load_balancer->assignResources(*m_detailed_tasks);
 
   // scrub counts are created via addScrubCount() through this call ( via possiblyCreateDependency() )
   createDetailedDependencies();
 
-  if (m_detailed_tasks->getExtraCommunication() > 0 && m_proc_group->myrank() == 0) {
-    std::cout << m_proc_group->myrank() << "  Warning: Extra communication.  This taskgraph on this rank overcommunicates about "
+  if (m_detailed_tasks->getExtraCommunication() > 0 && m_proc_group->myRank() == 0) {
+    std::cout << m_proc_group->myRank() << "  Warning: Extra communication.  This taskgraph on this rank overcommunicates about "
               << m_detailed_tasks->getExtraCommunication() << " cells\n";
   }
 
-  if (m_proc_group->size() > 1) {
-    m_detailed_tasks->assignMessageTags(m_proc_group->myrank());
+  if (m_proc_group->nRanks() > 1) {
+    m_detailed_tasks->assignMessageTags(m_proc_group->myRank());
   }
 
-  m_detailed_tasks->computeLocalTasks(m_proc_group->myrank());
+  m_detailed_tasks->computeLocalTasks(m_proc_group->myRank());
   m_detailed_tasks->makeDWKeyDatabase();
 
   return m_detailed_tasks;
@@ -561,7 +568,7 @@ TaskGraph::createDetailedDependencies()
     if (detaileddbg) {
       std::ostringstream message;
       message << '\n';
-      message << "Rank-" << m_proc_group->myrank() << " createDetailedDependencies (collect comps) for:\n";
+      message << "Rank-" << m_proc_group->myRank() << " createDetailedDependencies (collect comps) for:\n";
 
       for (const Task::Dependency* req = task->getTask()->getRequires(); req != nullptr; req = req->m_next) {
         message << "         requires: " << *req << '\n';
@@ -587,7 +594,7 @@ TaskGraph::createDetailedDependencies()
     DetailedTask* task = m_detailed_tasks->getTask(i);
     task->d_task->m_phase = currphase;
 
-    DOUT(tgphasedbg, "Rank-" << m_proc_group->myrank() << " Task: " << *task << " phase: " << currphase);
+    DOUT(tgphasedbg, "Rank-" << m_proc_group->myRank() << " Task: " << *task << " phase: " << currphase);
 
     if (task->d_task->getType() == Task::Reduction) {
       task->d_task->m_comm = curr_num_comms;
@@ -606,17 +613,17 @@ TaskGraph::createDetailedDependencies()
     DetailedTask* task = m_detailed_tasks->getTask(i);
 
     if (detaileddbg && (task->d_task->getRequires() != nullptr)) {
-      DOUT(true, "Rank-" << m_proc_group->myrank() << " Looking at requires of detailed task: " << *task);
+      DOUT(true, "Rank-" << m_proc_group->myRank() << " Looking at requires of detailed task: " << *task);
     }
     createDetailedDependencies(task, task->d_task->getRequires(), ct, false);
 
     if (detaileddbg && (task->d_task->getModifies() != nullptr)) {
-      DOUT(true, "Rank-" << m_proc_group->myrank() << " Looking at modifies of detailed task: " << *task);
+      DOUT(true, "Rank-" << m_proc_group->myRank() << " Looking at modifies of detailed task: " << *task);
     }
     createDetailedDependencies(task, task->d_task->getModifies(), ct, true);
   }
 
-  DOUT(detaileddbg, "Rank-" << m_proc_group->myrank() << " Done creating detailed tasks");
+  DOUT(detaileddbg, "Rank-" << m_proc_group->myRank() << " Done creating detailed tasks");
 }
 
 //______________________________________________________________________
@@ -636,7 +643,11 @@ TaskGraph::remembercomps( DetailedTask     * task
   constHandle<PatchSubset> cached_patches;
 
   for (; comp != nullptr; comp = comp->m_next) {
-    if (comp->m_var->typeDescription()->isReductionVariable()) {
+    TypeDescription::Type vartype = comp->m_var->typeDescription()->getType();
+
+    // ARS - Treat sole vars the same as reduction vars??
+    if (vartype == TypeDescription::ReductionVariable ||
+	vartype == TypeDescription::SoleVariable) {
       // this is either the task computing the var, modifying it, or the reduction itself
       ct.remembercomp(task, comp, nullptr, comp->m_matls, m_proc_group);
     }
@@ -693,7 +704,7 @@ TaskGraph::remapTaskDWs( int dwmap[] )
       levelmin = Min(levelmin, l->getIndex());
     }
   }
-  DOUT(detaileddbg, "Rank-" << m_proc_group->myrank() << " Basic mapping " << "Old " << dwmap[Task::OldDW] << " New " << dwmap[Task::NewDW]
+  DOUT(detaileddbg, "Rank-" << m_proc_group->myRank() << " Basic mapping " << "Old " << dwmap[Task::OldDW] << " New " << dwmap[Task::NewDW]
                             << " CO " << dwmap[Task::CoarseOldDW] << " CN " << dwmap[Task::CoarseNewDW] << " levelmin " << levelmin);
 
   if (m_type == Scheduler::IntermediateTaskGraph) {
@@ -725,24 +736,37 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
                                      , bool               modifies
                                      )
 {
-  int my_rank = m_proc_group->myrank();
+  int my_rank = m_proc_group->myRank();
   for (; req != nullptr; req = req->m_next) {
 
     // TODO figure if we need this, otherwise delete it - APH 06/30/17
+
+    // ARS reduction vars seem be handled below with type checks. I
+    // would say it is not not needed.
+    
 //    if(req->m_var->typeDescription()->isReductionVariable())
 //      continue;
 
+    // ARS - Should Reduction and Sole variables be treated the same??
+
     if (m_scheduler->isOldDW(req->mapDataWarehouse()) && !m_scheduler->isNewDW(req->mapDataWarehouse() + 1)) {
       continue;
-    }
-
-    DOUT(detaileddbg, "Rank-" << m_proc_group->myrank() << "  req: " << *req);
+    }    
+    
+    DOUT(detaileddbg, "Rank-" << my_rank << "  req: " << *req);
 
     constHandle<PatchSubset> patches = req->getPatchesUnderDomain(dtask->d_patches);
-    if (req->m_var->typeDescription()->isReductionVariable() && m_scheduler->isNewDW(req->mapDataWarehouse())) {
+
+    TypeDescription::Type vartype = req->m_var->typeDescription()->getType();
+
+    // ARS - Treat sole vars the same as reduction vars??
+    if ((vartype == TypeDescription::ReductionVariable ||
+	 vartype == TypeDescription::SoleVariable) &&
+	m_scheduler->isNewDW(req->mapDataWarehouse())) {
       // make sure newdw reduction variable requires link up to the reduction tasks.
       patches = nullptr;
     }
+
     constHandle<MaterialSubset> matls = req->getMaterialsUnderDomain(dtask->d_matls);
 
     bool uses_SHRT_MAX = (req->m_num_ghost_cells == SHRT_MAX);
@@ -816,7 +840,9 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
 
     if (patches && !patches->empty() && matls && !matls->empty()) {
 
-      if (req->m_var->typeDescription()->isReductionVariable()) {
+      // ARS - Treat sole vars the same as reduction vars??
+      if (vartype == TypeDescription::ReductionVariable ||
+	  vartype == TypeDescription::SoleVariable) {
         continue;
       }
 
@@ -877,10 +903,10 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
         }
 
         ASSERT(std::is_sorted(neighbors.begin(), neighbors.end(), Patch::Compare()));
-        DOUT(detaileddbg, "Rank-" << m_proc_group->myrank() << "    Creating dependency on " << neighbors.size()
+        DOUT(detaileddbg, "Rank-" << my_rank << "    Creating dependency on " << neighbors.size()
                                   << " neighbors:     Low=" << low << ", high=" << high << ", var=" << req->m_var->getName());
 
-        for (int i = 0; i < neighbors.size(); i++) {
+        for (unsigned int i = 0; i < neighbors.size(); i++) {
           const Patch* neighbor = neighbors[i];
 
           // if neighbor is not in my neighborhood just continue as its dependencies are not important to this processor
@@ -921,7 +947,7 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
           
           //__________________________________
           //
-          for (int j = 0; j < fromNeighbors.size(); j++) {
+          for (unsigned int j = 0; j < fromNeighbors.size(); j++) {
             const Patch* fromNeighbor = fromNeighbors[j];
 
             // only add the requirements if fromNeighbor is in my neighborhood
@@ -971,7 +997,8 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
               DetailedTask* creator = nullptr;
               Task::Dependency* comp = nullptr;
 
-              // look in old dw or in old TG.  Legal to modify across TG boundaries
+              // look in old dw or in old TG.  Legal to modify across
+              // TG boundaries
               int proc = -1;
               if (m_scheduler->isOldDW(req->mapDataWarehouse())) {
                 ASSERT(!modifies);
@@ -983,17 +1010,20 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
 
                 if (!ct.findcomp(req, neighbor, matl, creator, comp, m_proc_group)) {
                   if (m_type == Scheduler::IntermediateTaskGraph && req->m_look_in_old_tg) {
-                    // same stuff as above - but do the check for findcomp first, as this is a "if you don't find it here, assign it
-                    // from the old TG" dependency
+                    // same stuff as above - but do the check for
+                    // findcomp first, as this is a "if you don't find
+                    // it here, assign it from the old TG" dependency
                     proc = findVariableLocation(req, fromNeighbor, matl, 0);
                     creator = m_detailed_tasks->getOldDWSendTask(proc);
                     comp = nullptr;
                   }
                   else {
 
-                    //if neither the patch or the neighbor are on this processor then the computing task doesn't exist so just continue
-                    if (m_load_balancer->getPatchwiseProcessorAssignment(patch)    != m_proc_group->myrank() &&
-                        m_load_balancer->getPatchwiseProcessorAssignment(neighbor) != m_proc_group->myrank()) {
+                    //if neither the patch or the neighbor are on this
+                    //processor then the computing task doesn't exist
+                    //so just continue
+                    if (m_load_balancer->getPatchwiseProcessorAssignment(patch)    != my_rank &&
+                        m_load_balancer->getPatchwiseProcessorAssignment(neighbor) != my_rank) {
                       continue;
                     }
 
@@ -1011,13 +1041,15 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
 
               if (modifies && comp) {  // comp means NOT send-old-data tasks
 
-                // find the tasks that up to this point require the variable
-                // that we are modifying (i.e., the ones that use the computed
-                // variable before we modify it), and put a dependency between
-                // those tasks and this tasks
-                // i.e., the task that requires data computed by a task on this processor
-                // needs to finish its task before this task, which modifies the data
-                // computed by the same task
+                // find the tasks that up to this point require the
+                // variable that we are modifying (i.e., the ones that
+                // use the computed variable before we modify it), and
+                // put a dependency between those tasks and this tasks
+
+                // i.e., the task that requires data computed by a
+                // task on this processor needs to finish its task
+                // before this task, which modifies the data computed
+                // by the same task
                 std::list<DetailedTask*> requireBeforeModifiedTasks;
                 creator->findRequiringTasks(req->m_var, requireBeforeModifiedTasks);
 
@@ -1038,8 +1070,8 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
                       warn.invoke();
 #endif
                       if (detaileddbg.active()) {
-                        std::cout << m_proc_group->myrank() << " Task that requires with ghost cells and modifies\n";
-                        std::cout << m_proc_group->myrank() << " RGM: var: " << *req->m_var << " compute: " << *creator << " mod "
+                        std::cout << my_rank << " Task that requires with ghost cells and modifies\n";
+                        std::cout << my_rank << " RGM: var: " << *req->m_var << " compute: " << *creator << " mod "
                                     << *dtask << " PRT " << *prevReqTask << " " << from_l << " " << from_h << "\n";
                       }
                     }
@@ -1047,7 +1079,7 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
                   else {
                     // dep requires what is to be modified before it is to be modified so create a dependency between them
                     // so the modifying won't conflict with the previous require.
-                    DOUT(detaileddbg, "Rank-" << m_proc_group->myrank() << "       Requires to modifies dependency from " << prevReqTask->getName()
+                    DOUT(detaileddbg, "Rank-" << my_rank << "       Requires to modifies dependency from " << prevReqTask->getName()
                                               << " to " << dtask->getName() << " (created by " << creator->getName() << ")");
                     if (creator->getPatches() && creator->getPatches()->size() > 1) {
                       // if the creator works on many patches, then don't create links between patches that don't touch
@@ -1064,7 +1096,7 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
 
                         req_patch->getLevel()->selectPatches(low, high, n);
                         bool found = false;
-                        for (int i = 0; i < n.size(); i++) {
+                        for (unsigned int i = 0; i < n.size(); i++) {
                           if (n[i]->getID() == p->getID()) {
                             found = true;
                             break;
@@ -1090,7 +1122,7 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
                   DetailedTask* subsequentCreator = m_detailed_tasks->getOldDWSendTask(subsequentProc);
                   m_detailed_tasks->possiblyCreateDependency(subsequentCreator, comp, fromNeighbor, dtask, req, patch, matl, from_l,
                                                              from_h, DetailedDep::SubsequentIterations);
-                  DOUT(detaileddbg, "Rank-" << m_proc_group->myrank() << "   Adding condition reqs for " << *req->m_var << " task : " << *creator << "  to " << *dtask);
+                  DOUT(detaileddbg, "Rank-" << my_rank << "   Adding condition reqs for " << *req->m_var << " task : " << *creator << "  to " << *dtask);
                 }
               }
               m_detailed_tasks->possiblyCreateDependency(creator, comp, fromNeighbor, dtask, req, patch, matl, from_l, from_h, cond);
@@ -1114,31 +1146,40 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
         }
 #endif
         ct.findReductionComps(req, nullptr, matl, creators, m_proc_group);
-        // if the size is 0, that's fine.  It means that there are more procs than patches on this level,
-        // so the reducer will pick a benign value that won't affect the reduction
+        // if the size is 0, that's fine.  It means that there are
+        // more procs than patches on this level, so the reducer will
+        // pick a benign value that won't affect the reduction
 
-        ASSERTRANGE(dtask->getAssignedResourceIndex(), 0, m_proc_group->size());
+        ASSERTRANGE(dtask->getAssignedResourceIndex(), 0, m_proc_group->nRanks());
         for (unsigned i = 0; i < creators.size(); i++) {
           DetailedTask* creator = creators[i];
-          if (dtask->getAssignedResourceIndex() == creator->getAssignedResourceIndex() && dtask->getAssignedResourceIndex() == my_rank) {
+          if (dtask->getAssignedResourceIndex() == creator->getAssignedResourceIndex() && dtask->getAssignedResourceIndex() == my_rank ) {
             dtask->addInternalDependency(creator, req->m_var);
-            DOUT(detaileddbg, "Rank-" << m_proc_group->myrank() << "    Created reduction dependency between " << *dtask << " and " << *creator);
+            DOUT(detaileddbg, "Rank-" << my_rank << "    Created reduction dependency between " << *dtask << " and " << *creator);
           }
         }
       }
     }
-    else if (patches && patches->empty() && (req->m_patches_dom == Task::FineLevel || dtask->getTask()->getType() == Task::OncePerProc
-                                                                                   || dtask->getTask()->getType() == Task::Output
-                                                                                   || dtask->getTask()->getName() == "SchedulerCommon::copyDataToNewGrid")) {
-      // this is a either coarsen task where there aren't any fine patches, or a PerProcessor task where
-      // there aren't any patches on this processor.  Perfectly legal, so do nothing
+    // ARS - FIX ME
+    //else if (patches && patches->empty() &&
+    else if (patches && (patches->empty() || patches->size() <= 1 ) &&
+	     (req->m_patches_dom == Task::FineLevel ||
+	      dtask->getTask()->getType() == Task::OncePerProc ||
+	      dtask->getTask()->getType() == Task::Output ||
+	      dtask->getTask()->getName() == "SchedulerCommon::copyDataToNewGrid")) {
+      // this is a either coarsen task where there aren't any fine
+      // patches, or a PerProcessor task where there aren't any
+      // patches on this processor.  Perfectly legal, so do nothing
 
-      // another case is the copy-data-to-new-grid task, which will either compute or modify to every patch
-      // but not both.  So it will yell at you for the detailed task's patches not intersecting with the 
-      // computes or modifies... (maybe there's a better way) - bryan
+      // another case is the copy-data-to-new-grid task, which will
+      // either compute or modify to every patch but not both.  So it
+      // will yell at you for the detailed task's patches not
+      // intersecting with the computes or modifies... (maybe there's
+      // a better way) - bryan
     }
     else if ( dtask->d_matls &&  req->m_matls && dtask->d_patches &&  req->m_patches &&   patches.get_rep()->size()== 0  ) {
-       //Fields were required on a subset of the domain with ghosts.   This should be legal.
+       //Fields were required on a subset of the domain with ghosts.
+       //This should be legal.
     }
     else {
       std::ostringstream desc;
@@ -1230,12 +1271,17 @@ TaskGraph::makeVarLabelMaterialMap( Scheduler::VarLabelMaterialMap * result )
       const VarLabel* label = comp->m_var;
       std::list<int>& matls = (*result)[label->getName()];
       const MaterialSubset* msubset = comp->m_matls;
+
+      TypeDescription::Type vartype = label->typeDescription()->getType();
+
       if (msubset) {
         for (int mm = 0; mm < msubset->size(); mm++) {
           matls.push_back(msubset->get(mm));
         }
       }
-      else if (label->typeDescription()->getType() == TypeDescription::ReductionVariable) {
+      // ARS - Treat sole vars the same as reduction vars??
+      else if (vartype == TypeDescription::ReductionVariable /* ||
+								vartype == TypeDescription::SoleVariable */) {      
         // Default to material -1 (global)
         matls.push_back(-1);
       }
@@ -1260,15 +1306,28 @@ CompTable::remembercomp( Data* newData, const ProcessorGroup* pg )
 {
   if (detaileddbg) {
     std::ostringstream message;
-    message << "Rank-" << pg->myrank() << " remembercomp: " << *newData->m_comp << ", matl=" << newData->m_matl;
+    message << "Rank-" << pg->myRank() << " remembercomp: " << *newData->m_comp << ", matl=" << newData->m_matl;
     if (newData->m_patch) {
       message << ", patch=" << *newData->m_patch;
     }
     DOUT(true,message.str());
   }
 
+  TypeDescription::Type vartype = newData->m_comp->m_var->typeDescription()->getType();
+  
   // can't have two computes for the same variable (need modifies)
-  if (newData->m_comp->m_dep_type != Task::Modifies && !newData->m_comp->m_var->typeDescription()->isReductionVariable()) {
+
+  // ARS A VarLabel can have the following condition added:
+  // allowMultipleComputes that allows multiple computes. As such why
+  // do we check specifically for a ReductionVariable var and skip it?
+  // Seems like we should use the conditional that is part of the
+  // label to skip.
+
+  
+  // ARS - Treat sole vars the same as reduction vars??
+  if (newData->m_comp->m_dep_type != Task::Modifies &&
+      vartype != TypeDescription::ReductionVariable  &&
+      vartype != TypeDescription::SoleVariable ) {
     if (m_data.lookup(newData)) {
       std::cout << "Multiple compute found:\n";
       std::cout << "  matl: " << newData->m_matl << "\n";
@@ -1339,13 +1398,13 @@ CompTable::findcomp(       Task::Dependency   * req
                    ,  const ProcessorGroup    * pg
                    )
 {
-  DOUT(compdbg, "Rank-" << pg->myrank() << ": Finding comp of req: " << *req << " for task: " << *req->m_task << "/");
+  DOUT(compdbg, "Rank-" << pg->myRank() << ": Finding comp of req: " << *req << " for task: " << *req->m_task << "/");
 
   Data key(nullptr, req, patch, matlIndex);
   Data* result = nullptr;
   for (Data* p = m_data.lookup(&key); p != nullptr; p = m_data.nextMatch(&key, p)) {
 
-    DOUT(compdbg, "Rank-" << pg->myrank() << ": Examining comp from: " << p->m_comp->m_task->getName() << ", order=" << p->m_comp->m_task->getSortedOrder());
+    DOUT(compdbg, "Rank-" << pg->myRank() << ": Examining comp from: " << p->m_comp->m_task->getName() << ", order=" << p->m_comp->m_task->getSortedOrder());
 
     // TODO - fix why this assert is tripped when the gold standard,
     // MPM/ARL/NanoPillar2D_FBC_sym.ups is run using a non-optimized build.
@@ -1356,7 +1415,7 @@ CompTable::findcomp(       Task::Dependency   * req
     if (p->m_comp->m_task->getSortedOrder() < req->m_task->getSortedOrder()) {
       if (!result || p->m_comp->m_task->getSortedOrder() > result->m_comp->m_task->getSortedOrder()) {
 
-        DOUT(compdbg, "Rank-" << pg->myrank() << ": New best is comp from: " << p->m_comp->m_task->getName() << ", order=" << p->m_comp->m_task->getSortedOrder());
+        DOUT(compdbg, "Rank-" << pg->myRank() << ": New best is comp from: " << p->m_comp->m_task->getName() << ", order=" << p->m_comp->m_task->getSortedOrder());
 
         result = p;
       }
@@ -1364,7 +1423,7 @@ CompTable::findcomp(       Task::Dependency   * req
   }
   if (result) {
 
-    DOUT(compdbg, "Rank-" << pg->myrank() << ": Found comp at: " << result->m_comp->m_task->getName() << ", order=" << result->m_comp->m_task->getSortedOrder());
+    DOUT(compdbg, "Rank-" << pg->myRank() << ": Found comp at: " << result->m_comp->m_task->getName() << ", order=" << result->m_comp->m_task->getSortedOrder());
 
     dt = result->m_dtask;
     comp = result->m_comp;
@@ -1391,16 +1450,16 @@ CompTable::findReductionComps(       Task::Dependency           * req
   Data key(nullptr, req, patch, matlIndex);
   int bestSortedOrder = -1;
   for (Data* p = m_data.lookup(&key); p != nullptr; p = m_data.nextMatch(&key, p)) {
-    DOUT(detaileddbg, "Rank-" << pg->myrank() << " Examining comp from: " << p->m_comp->m_task->getName() << ", order="
+    DOUT(detaileddbg, "Rank-" << pg->myRank() << " Examining comp from: " << p->m_comp->m_task->getName() << ", order="
                               << p->m_comp->m_task->getSortedOrder() << " (" << req->m_task->getName() << " order: " << req->m_task->getSortedOrder() << ")");
 
     if (p->m_comp->m_task->getSortedOrder() < req->m_task->getSortedOrder() && p->m_comp->m_task->getSortedOrder() >= bestSortedOrder) {
       if (p->m_comp->m_task->getSortedOrder() > bestSortedOrder) {
         creators.clear();
         bestSortedOrder = p->m_comp->m_task->getSortedOrder();
-        DOUT(detaileddbg, "Rank-" << pg->myrank() << "    New best sorted order: " << bestSortedOrder);
+        DOUT(detaileddbg, "Rank-" << pg->myRank() << "    New best sorted order: " << bestSortedOrder);
       }
-        DOUT(detaileddbg, "Rank-" << pg->myrank() << " Adding comp from: " << p->m_comp->m_task->getName() << ", order=" << p->m_comp->m_task->getSortedOrder());
+        DOUT(detaileddbg, "Rank-" << pg->myRank() << " Adding comp from: " << p->m_comp->m_task->getName() << ", order=" << p->m_comp->m_task->getSortedOrder());
       creators.push_back(p->m_dtask);
     }
   }

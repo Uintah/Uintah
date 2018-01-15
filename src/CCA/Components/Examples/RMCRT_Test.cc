@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -24,7 +24,7 @@
 #include <CCA/Components/Examples/ExamplesLabel.h>
 #include <CCA/Components/Examples/RMCRT_Test.h>
 #include <CCA/Components/Models/Radiation/RMCRT/Radiometer.h>
-#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/DataArchive/DataArchive.h>
 #include <Core/Exceptions/ParameterNotFound.h>
@@ -62,7 +62,9 @@ namespace Uintah
 {
 //______________________________________________________________________
 //
-RMCRT_Test::RMCRT_Test ( const ProcessorGroup* myworld ): UintahParallelComponent( myworld )
+RMCRT_Test::RMCRT_Test ( const ProcessorGroup* myworld,
+			 const SimulationStateP sharedState) :
+  ApplicationCommon(myworld, sharedState)
 {
   d_colorLabel    = VarLabel::create( "color",    CCVariable<double>::getTypeDescription() );
   d_divQLabel     = VarLabel::create( "divQ",     CCVariable<double>::getTypeDescription() );
@@ -99,7 +101,7 @@ RMCRT_Test::~RMCRT_Test ( void )
     delete d_old_uda;
   }
 
-  DOUT(g_rmcrt_test_dbg, UintahParallelComponent::d_myworld->myrank() << " Doing: RMCRT destructor ");
+  DOUT(g_rmcrt_test_dbg, d_myworld->myRank() << " Doing: RMCRT destructor ");
 
 }
 
@@ -108,20 +110,17 @@ RMCRT_Test::~RMCRT_Test ( void )
 //______________________________________________________________________
 void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
                               const ProblemSpecP& restart_prob_spec,
-                              GridP& grid,
-                              SimulationStateP& state )
+                              GridP& grid )
 {
-  d_sharedState = state;
   d_material = scinew SimpleMaterial();
-  d_sharedState->registerSimpleMaterial( d_material );
+  m_sharedState->registerSimpleMaterial( d_material );
 
   // TG-0 = carry forward tasks
   // TG-1 = normal RMCRT computations
-  Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
-  sched->setNumTaskGraphs(RMCRTCommon::NUM_GRAPHS);
+  m_scheduler->setNumTaskGraphs(RMCRTCommon::NUM_GRAPHS);
 
   // manually manipulate the scheduling of copy data for the shootRay task
-  sched->overrideVariableBehavior("color",false, false, true, false, false);
+   m_scheduler->overrideVariableBehavior("color",false, false, true, false, false);
 
   //__________________________________
   // Read in component specific variables
@@ -150,7 +149,6 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }  
   
-
   //__________________________________
   //  RMCRT variables
   if (prob_spec->findBlock("RMCRT")){
@@ -173,7 +171,7 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
                                  d_cellTypeLabel,
                                  d_divQLabel);
     proc0cout << "__________________________________ Reading in RMCRT section of ups file" << endl;
-    d_RMCRT->problemSetup( prob_spec, rmcrt_ps, grid, d_sharedState );
+    d_RMCRT->problemSetup( prob_spec, rmcrt_ps, grid, m_sharedState );
     
     d_RMCRT->BC_bulletproofing( rmcrt_ps );
 
@@ -190,7 +188,7 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
 
         //__________________________________
         //  bulletproofing
-        if(!d_sharedState->isLockstepAMR()){
+        if(!isLockstepAMR()){
           ostringstream msg;
           msg << "\n ERROR: You must add \n"
               << " <useLockStep> true </useLockStep> \n"
@@ -328,7 +326,7 @@ void RMCRT_Test::scheduleInitialize ( const LevelP& level,
   task->computes( d_colorLabel );
   task->computes( d_compAbskgLabel );
   task->computes( d_cellTypeLabel );
-  sched->addTask( task, level->eachPatch(), d_sharedState->allMaterials() );
+  sched->addTask( task, level->eachPatch(), m_sharedState->allMaterials() );
 }
 
 //______________________________________________________________________
@@ -342,15 +340,15 @@ void RMCRT_Test::scheduleRestartInitialize(const LevelP& level,
 //______________________________________________________________________
 //
 //______________________________________________________________________
-void RMCRT_Test::scheduleComputeStableTimestep ( const LevelP& level, SchedulerP& scheduler )
+void RMCRT_Test::scheduleComputeStableTimeStep ( const LevelP& level, SchedulerP& scheduler )
 {
-  printSchedule(level, g_rmcrt_test_dbg, "RMCRT_Test::scheduleComputeStableTimestep");
+  printSchedule(level, g_rmcrt_test_dbg, "RMCRT_Test::scheduleComputeStableTimeStep");
 
-  Task* task = scinew Task( "RMCRT_Test::computeStableTimestep", this, &RMCRT_Test::computeStableTimestep );
+  Task* task = scinew Task( "RMCRT_Test::computeStableTimeStep", this, &RMCRT_Test::computeStableTimeStep );
 
-  task->computes( d_sharedState->get_delt_label(),level.get_rep() );
+  task->computes( getDelTLabel(),level.get_rep() );
 
-  scheduler->addTask( task, level->eachPatch(), d_sharedState->allMaterials() );
+  scheduler->addTask( task, level->eachPatch(), m_sharedState->allMaterials() );
 }
 
 //______________________________________________________________________
@@ -363,7 +361,7 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
     return;
   }
 
-  const MaterialSet* matls = d_sharedState->allMaterials();
+  const MaterialSet* matls = m_sharedState->allMaterials();
   GridP grid = level->getGrid();
   int maxLevels = level->getGrid()->numLevels();
 
@@ -391,7 +389,7 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
     const LevelP& fineLevel = grid->getLevel(maxLevels-1);
     
     // define per level which abskg dw
-    d_RMCRT->set_abskg_dw_perLevel (fineLevel, Task::NewDW);
+    d_RMCRT->set_abskg_dw_perLevel ( fineLevel, Task::NewDW );
     
     // convert abskg:dbl -> abskg:flt if needed
     d_RMCRT->sched_DoubleToFloat( fineLevel,sched, notUsed );
@@ -582,13 +580,13 @@ void RMCRT_Test::scheduleRefineInterface ( const LevelP&,
 //______________________________________________________________________
 //
 //______________________________________________________________________
-int RMCRT_Test::computeTaskGraphIndex()
+int RMCRT_Test::computeTaskGraphIndex( const int timeStep )
 {
-  // setup the correct task graph for execution
-  int time_step = d_sharedState->getCurrentTopLevelTimeStep();
+  // Setup the correct task graph for execution.
 
-  // also do radiation solve on timestep 1
-  int task_graph_index = ((time_step % d_radCalc_freq == 0) || (time_step == 1) ? Uintah::RMCRTCommon::TG_RMCRT : Uintah::RMCRTCommon::TG_CARRY_FORWARD);
+  // Also do radiation solve on timestep 1.
+  int task_graph_index = ((timeStep % d_radCalc_freq == 0) ||
+			  (timeStep == 1) ? Uintah::RMCRTCommon::TG_RMCRT : Uintah::RMCRTCommon::TG_CARRY_FORWARD);
 
   return task_graph_index;
 }
@@ -941,7 +939,7 @@ void RMCRT_Test::sched_initProperties( const LevelP& finestLevel,
 //______________________________________________________________________
 //
 //______________________________________________________________________
-void RMCRT_Test::computeStableTimestep (const ProcessorGroup*,
+void RMCRT_Test::computeStableTimeStep (const ProcessorGroup*,
                                         const PatchSubset* patches,
                                         const MaterialSubset* /*matls*/,
                                         DataWarehouse* /*old_dw*/,
@@ -949,7 +947,8 @@ void RMCRT_Test::computeStableTimestep (const ProcessorGroup*,
 {
   const Level* level = getLevel(patches);
   double delt = level->dCell().x();
-  new_dw->put(delt_vartype(delt), d_sharedState->get_delt_label(), level);
+
+  new_dw->put(delt_vartype(delt), getDelTLabel(), level);
 }
 
 //______________________________________________________________________

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -29,7 +29,7 @@
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/NodeIterator.h>
-#include <Core/Labels/MPMLabel.h>
+#include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/DebugStream.h>
@@ -52,14 +52,11 @@ using namespace std;
 static DebugStream cout_doing("FLATPLATE_HEATFLUX_DOING_COUT", false);
 static DebugStream cout_dbg("FLATPLATE_HEATFLUX_DBG_COUT", false);
 //______________________________________________________________________
-flatPlate_heatFlux::flatPlate_heatFlux(ProblemSpecP& module_spec,
-                                       SimulationStateP& sharedState,
-                                       Output* dataArchiver)
-  : AnalysisModule(module_spec, sharedState, dataArchiver)
+flatPlate_heatFlux::flatPlate_heatFlux(const ProcessorGroup* myworld,
+				       const SimulationStateP sharedState,
+				       const ProblemSpecP& module_spec)
+  : AnalysisModule(myworld, sharedState, module_spec)
 {
-  d_sharedState  = sharedState;
-  d_prob_spec    = module_spec;
-  d_dataArchiver = dataArchiver;
   d_matl = nullptr;
   d_matl_set = nullptr;
   d_matl_sub = nullptr;
@@ -87,22 +84,17 @@ flatPlate_heatFlux::~flatPlate_heatFlux()
 
 //______________________________________________________________________
 //     P R O B L E M   S E T U P
-void flatPlate_heatFlux::problemSetup(const ProblemSpecP& prob_spec,
-                                      const ProblemSpecP& restart_prob_spec,
-                                      GridP& grid,
-                                      SimulationStateP& sharedState)
+void flatPlate_heatFlux::problemSetup(const ProblemSpecP& ,
+                                      const ProblemSpecP& ,
+                                      GridP& grid)
 {
   cout_doing << "Doing problemSetup \t\t\t\tflatPlate_heatFlux" << endl;
-  
-  if(!d_dataArchiver){
-    throw InternalError("flatPlate_heatFlux:couldn't get output port", __FILE__, __LINE__);
-  }
   
   v_lb->total_heatRateLabel =
     VarLabel::create("total_heatRate", sum_vartype::getTypeDescription());
 
   // determine which material index to compute
-  d_matl = d_sharedState->parseAndLookupMaterial(d_prob_spec, "material");
+  d_matl = m_sharedState->parseAndLookupMaterial(m_module_spec, "material");
   
   vector<int> m(1);
   m[0] = d_matl->getDWIndex();
@@ -111,7 +103,7 @@ void flatPlate_heatFlux::problemSetup(const ProblemSpecP& prob_spec,
   d_matl_set->addReference();
   d_matl_sub = d_matl_set->getUnion();
   
-  ProblemSpecP plane_ps = d_prob_spec->findBlock("plane"); 
+  ProblemSpecP plane_ps = m_module_spec->findBlock("plane"); 
   if (!plane_ps){
     throw ProblemSetupException("\n ERROR:flatPlate_heatFlux: Couldn't find <plane> tag \n", __FILE__, __LINE__);    
   }
@@ -194,17 +186,17 @@ void flatPlate_heatFlux::problemSetup(const ProblemSpecP& prob_spec,
   p->endPt   = end;
   d_plane.push_back(p);
   
-#ifdef HAVE_VISIT
-  if( sharedState->getVisIt() ) {
-    SimulationState::analysisVar aVar;
-    aVar.name  = M_lb->gHeatFluxLabel->getName();
-    aVar.matl  = d_matl->getDWIndex();
-    aVar.level = -1;
-    aVar.labels.push_back( v_lb->total_heatRateLabel );
+// #ifdef HAVE_VISIT
+//   if( sharedState->getVisIt() ) {
+//     SimulationState::analysisVar aVar;
+//     aVar.name  = M_lb->gHeatFluxLabel->getName();
+//     aVar.matl  = d_matl->getDWIndex();
+//     aVar.level = -1;
+//     aVar.labels.push_back( v_lb->total_heatRateLabel );
     
-    d_sharedState->d_analysisVars.push_back(aVar);
-  }
-#endif
+//     m_sharedState->d_analysisVars.push_back(aVar);
+//   }
+// #endif
 }
 
 //______________________________________________________________________
@@ -258,7 +250,7 @@ void flatPlate_heatFlux::doAnalysis(const ProcessorGroup* pg,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     
-    cout_doing << pg->myrank() << " " 
+    cout_doing << pg->myRank() << " " 
                << "Doing doAnalysis (flatPlate_heatFlux)\t\t\t\tL-"
                << level->getIndex()
                << " patch " << patch->getGridIndex()<< endl;

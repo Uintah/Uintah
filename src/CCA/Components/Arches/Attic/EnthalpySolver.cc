@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -281,6 +281,8 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
                           &EnthalpySolver::buildLinearMatrix,
                           timelabels );
 
+  tsk->requires( Task::OldDW, d_lab->d_timeStepLabel );
+
   Task::WhichDW parent_old_dw;
   if (timelabels->recursion){ 
     parent_old_dw = Task::ParentOldDW;
@@ -288,7 +290,7 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
     parent_old_dw = Task::OldDW;
   }
 
-  tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
+  tsk->requires(parent_old_dw, d_lab->d_delTLabel);
   
   // This task requires enthalpy and density from old time step for transient
   // calculation
@@ -385,6 +387,9 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
                                        DataWarehouse* new_dw,
                                        const TimeIntegratorLabel* timelabels)
 {
+  // int timeStep = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
+  timeStep_vartype timeStep;
+  old_dw->get( timeStep, d_lab->d_timeStepLabel );
 
   DataWarehouse* parent_old_dw;
   if (timelabels->recursion){
@@ -393,7 +398,7 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
      parent_old_dw = old_dw;
   }
   delt_vartype delT;
-  parent_old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  parent_old_dw->get(delT, d_lab->d_delTLabel );
   double delta_t = delT;
   delta_t *= timelabels->time_multiplier;
 
@@ -560,10 +565,9 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
                                                   d_central_limiter); 
     }
 // Adiabatic enthalpy fix for first timestep only
-//    int currentTimeStep=d_lab->d_sharedState->getCurrentTopLevelTimeStep();
-//    if (currentTimeStep == 1) {
+//    if (timeStep == 1) {
     if (negativeDensityGuess > 0.0) {
-      if (pc->myrank() == 0)
+      if (pc->myRank() == 0)
         cout << "Applying old density fix for enthalpy" << endl;
         
       IntVector idxLo = patch->getFortranCellLowIndex();
@@ -686,7 +690,7 @@ EnthalpySolver::sched_enthalpyLinearSolve(SchedulerP& sched,
   Ghost::GhostType  gn = Ghost::None;
   Task::MaterialDomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
   
-  tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
+  tsk->requires(parent_old_dw, d_lab->d_delTLabel);
   
   tsk->requires(Task::NewDW,   d_lab->d_densityGuessLabel, gn, 0);
   tsk->requires(Task::NewDW,   d_lab->d_cellInfoLabel,     gn, 0);
@@ -731,7 +735,7 @@ EnthalpySolver::enthalpyLinearSolve(const ProcessorGroup* pc,
   }
   
   delt_vartype delT;
-  parent_old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  parent_old_dw->get(delT, d_lab->d_delTLabel );
   double delta_t = delT;
   delta_t *= timelabels->time_multiplier;
   Ghost::GhostType  gac = Ghost::AroundCells;

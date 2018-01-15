@@ -7,7 +7,12 @@
   </Meta>
 
   <SimulationComponent type="mpmice" />
-
+<!--
+  <LoadBalancer type="SimpleLoadBalancer">
+    <outputNthProc>     8    </outputNthProc>
+    <timestepInterval>  1000 </timestepInterval>
+  </LoadBalancer>
+-->
   <!--____________________________________________________________________-->
   <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
   <!--____________________________________________________________________-->
@@ -139,7 +144,6 @@
       </Box>
       <spacing>        [0.1,0.1,0.1]   </spacing>
     </Level>
-    <nonCubic_domain>  true            </nonCubic_domain>
   </Grid>
   
   <!--____________________________________________________________________-->

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2013-2017 The University of Utah
+ * Copyright (c) 2013-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -323,8 +323,11 @@ WBCHelper::WBCHelper( const Uintah::LevelP& level,
                       ProblemSpecP arches_spec )
 : materials_   (materials   ), m_arches_spec(arches_spec)
 {
-  const Uintah::PatchSet* const allPatches = sched->getLoadBalancer()->getPerProcessorPatchSet(level);
-  const Uintah::PatchSubset* const localPatches = allPatches->getSubset( Uintah::Parallel::getMPIRank() );
+  const Uintah::PatchSet* const allPatches =
+    sched->getLoadBalancer()->getPerProcessorPatchSet(level);
+  const Uintah::PatchSubset* const localPatches =
+    allPatches->getSubset( Uintah::Parallel::getMPIRank() );
+
   localPatches_ = new Uintah::PatchSet;
   localPatches_->addEach( localPatches->getVector() );
   const int ilvl = level->getID();
@@ -377,6 +380,7 @@ void WBCHelper::add_boundary_condition( const BndCondSpec& bcSpec )
 void WBCHelper::add_boundary( const std::string&     bndName,
                              Uintah::Patch::FaceType face,
                              const BndTypeEnum&      bndType,
+                             const BndEdgeType&      bndEdgeType,
                              const int               patchID,
                              const Uintah::BCGeomBase::ParticleBndSpec pBndSpec)
 {
@@ -397,7 +401,7 @@ void WBCHelper::add_boundary( const std::string&     bndName,
   } else {
     DBGBC << " adding new \n";
     // this is the first time that we are adding this boundary. create the necessary info to store this
-    BndSpec myBndSpec = {bndName, face, bndType, 0.0, std::vector<int>(1, patchID), myPBndSpec };
+    BndSpec myBndSpec = {bndName, face, bndType, bndEdgeType, 0.0, std::vector<int>(1, patchID), myPBndSpec };
     bndNameBndSpecMap_.insert( BndMapT::value_type(bndName, myBndSpec) );
   }
 }
@@ -589,7 +593,7 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
               DBGBC << " boundary name = " << bndName << std::endl;
               DBGBC << " geom bndtype  = " << thisGeom->getBndType() << std::endl;
               BndTypeEnum bndType = select_bnd_type_enum(thisGeom->getBndType());
-              add_boundary( bndName, face, bndType, patchID, thisGeom->getParticleBndSpec() );
+              add_boundary( bndName, face, bndType, EDGE, patchID, thisGeom->getParticleBndSpec() );
               DBGBC << " boundary type = " << bndType << std::endl;
 
               //__________________________________________________________________________________
@@ -652,7 +656,8 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
                     DBGBC << " functor name = " << functorName << std::endl;
                   } else if ( bndCondBase->getValueType() == Uintah::BoundCondBase::VECTOR_TYPE ){
 
-                    // do nothing
+                    // do nothing currently... need to evaluate?
+                    // This is added to keep the old Arches from erroring out...
 
                   } else {
                     std::ostringstream msg;
@@ -662,44 +667,6 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
                   }
                 }
 
-                // switch ( bndCondBase->getValueType() ) {
-                //
-                //   case Uintah::BoundCondBase::DOUBLE_TYPE: {
-                //     const Uintah::BoundCond<double>* const new_bc = dynamic_cast<const Uintah::BoundCond<double>*>(bndCondBase);
-                //     doubleVal = new_bc->getValue();
-                //     bcValType = DOUBLE_TYPE;
-                //     break;
-                //   }
-                //
-                //   case Uintah::BoundCondBase::STRING_TYPE: {
-                //
-                //     const Uintah::BoundCond<std::string>* const new_bc = dynamic_cast<const Uintah::BoundCond<std::string>*>(bndCondBase);
-                //     functorName = new_bc->getValue();
-                //     bcValType = FUNCTOR_TYPE;
-                //
-                //     DBGBC << " functor name = " << functorName << std::endl;
-                //
-                //     break;
-                //   }
-                //   case Uintah::BoundCondBase::VECTOR_TYPE: {
-                //
-                //     //do nothing
-                //     break;
-                //   }
-                //   case Uintah::BoundCondBase::INT_TYPE: {
-                //     // do nothing here... this is added for RMCRT support
-                //     break;
-                //   }
-                //   default:
-                //   {
-                //     std::ostringstream msg;
-                //     msg << "ERROR: It looks like you have specified an unsupported datatype value for boundary " << bndName << ". "
-                //         << "Supported datatypes are: double, vector, and string (i.e. functor name)." << std::endl;
-                //     throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-                //   }
-                //     break;
-                // }
-
                 const BndCondSpec bndCondSpec = { varName, functorName, doubleVal, atomBCTypeEnum,
                                                   bcValType };
 
@@ -708,7 +675,6 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
               }
             } // boundary child loop (note, a boundary child is what Wasatch thinks of as a boundary condition
           } // boundary faces loop
-
 
           // INTERIOR BOUNDARY CONDITIONS
           if (patch->hasInteriorBoundaryFaces()) {
@@ -744,7 +710,7 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
                 DBGBC << " boundary name = " << bndName << std::endl;
                 DBGBC << " geom bndtype  = " << thisGeom->getBndType() << std::endl;
                 BndTypeEnum bndType = select_bnd_type_enum(thisGeom->getBndType());
-                add_boundary( bndName, face_side, bndType, patchID, thisGeom->getParticleBndSpec() );
+                add_boundary( bndName, face_side, bndType, INTERIOR, patchID, thisGeom->getParticleBndSpec() );
                 DBGBC << " boundary type = " << bndType << std::endl;
 
                 //__________________________________________________________________________________
@@ -781,43 +747,41 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
                   std::string functorName="none";
                   BCValueTypeEnum bcValType=INVALID_TYPE;
 
-                  switch ( bndCondBase->getValueType() ) {
+                  if ( atomBCTypeEnum == DIRICHLET || atomBCTypeEnum == NEUMANN ){
 
-                    case Uintah::BoundCondBase::DOUBLE_TYPE: {
+                    if ( bndCondBase->getValueType() == Uintah::BoundCondBase::VECTOR_TYPE ){
+                      // This is a hack to accomidate the Velocity BC in old arches.
+                    } else {
+                      // doubles
                       const Uintah::BoundCond<double>* const new_bc = dynamic_cast<const Uintah::BoundCond<double>*>(bndCondBase);
                       doubleVal = new_bc->getValue();
                       bcValType = DOUBLE_TYPE;
-                      break;
                     }
-
-                    case Uintah::BoundCondBase::STRING_TYPE: {
-
-                      const Uintah::BoundCond<std::string>* const new_bc =
-                        dynamic_cast<const Uintah::BoundCond<std::string>*>(bndCondBase);
-                      functorName = new_bc->getValue();
+                  } else {
+                    // functors
+                    if ( bndCondBase->getValueType() == Uintah::BoundCondBase::DOUBLE_TYPE ){
+                      const Uintah::BoundCond<double>* const new_bc = dynamic_cast<const Uintah::BoundCond<double>*>(bndCondBase);
+                      functorName = new_bc->getType();
                       bcValType = FUNCTOR_TYPE;
 
                       DBGBC << " functor name = " << functorName << std::endl;
+                    } else if ( bndCondBase->getValueType() == Uintah::BoundCondBase::STRING_TYPE ){
+                      const Uintah::BoundCond<std::string>* const new_bc = dynamic_cast<const Uintah::BoundCond<std::string>*>(bndCondBase);
+                      functorName = new_bc->getType();
+                      bcValType = FUNCTOR_TYPE;
 
-                      break;
+                      DBGBC << " functor name = " << functorName << std::endl;
+                    } else if ( bndCondBase->getValueType() == Uintah::BoundCondBase::VECTOR_TYPE ){
 
-                    }
-                    case Uintah::BoundCondBase::VECTOR_TYPE: {
-                      // do nothing here... this is added for WARCHES support
-                      break;
-                    }
-                    case Uintah::BoundCondBase::INT_TYPE: {
-                      // do nothing here... this is added for RMCRT support
-                      break;
-                    }
-                    default:
-                    {
+                      // do nothing currently... need to evaluate?
+                      throw Uintah::ProblemSetupException("Error: Vector Type for BCs not recognized.", __FILE__, __LINE__);
+
+                    } else {
                       std::ostringstream msg;
                       msg << "ERROR: It looks like you have specified an unsupported datatype value for boundary " << bndName << ". "
-                          << "Supported datatypes are: double, vector, and string (i.e. functor name)." << std::endl;
+                          << "Supported datatypes are: double and string." << std::endl;
                       throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
                     }
-                      break;
                   }
 
                   const BndCondSpec bndCondSpec = { varName, functorName, doubleVal,

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,7 +25,6 @@
 #ifndef UINTAH_CCA_COMPONENTS_FVM_FVMBOUNDCOND_H
 #define UINTAH_CCA_COMPONENTS_FVM_FVMBOUNDCOND_H
 
-#include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/Stencil7.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
@@ -33,6 +32,9 @@
 #include <Core/Grid/Variables/SFCZVariable.h>
 
 namespace Uintah{
+
+  class Patch;
+  
   class FVMBoundCond{
     public:
       FVMBoundCond();
@@ -58,7 +60,6 @@ namespace Uintah{
       void setG1BoundaryConditions(const Patch* patch, int dwi,
                                    CCVariable<Stencil7>& A,
                                    CCVariable<double>& rhs);
-
   };
 }
 #endif

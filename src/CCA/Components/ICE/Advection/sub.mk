@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2017 The University of Utah
+#  Copyright (c) 1997-2018 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -27,23 +27,28 @@
 # 
 # Makefile fragment for this subdirectory 
 
-SRCDIR   := CCA/Components/ICE/Advection
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCS     += $(SRCDIR)/Advector.cc \
- 	$(SRCDIR)/FirstOrderAdvector.cc \
+SRCDIR := CCA/Components/ICE/Advection
+
+SRCS += $(SRCDIR)/Advector.cc            \
+	$(SRCDIR)/FirstOrderAdvector.cc  \
 	$(SRCDIR)/SecondOrderAdvector.cc \
- 	$(SRCDIR)/SecondOrderBase.cc \
+	$(SRCDIR)/SecondOrderBase.cc     \
 	$(SRCDIR)/AdvectionFactory.cc
-	
-PSELIBS := \
-	CCA/Ports \
-	Core/Grid \
-	Core/Parallel \
-	Core/Exceptions \
-	Core/Math \
-	Core/Exceptions \
-	Core/Geometry 
 
-LIBS	:= 
+PSELIBS := \
+	CCA/Components/ICE/Core \
+	Core/Disclosure         \
+	Core/Exceptions         \
+	Core/Geometry           \
+	Core/GeometryPiece      \
+	Core/Grid               \
+	Core/Math               \
+	Core/Parallel           \
+	Core/ProblemSpec        \
+	Core/Util           
+
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 

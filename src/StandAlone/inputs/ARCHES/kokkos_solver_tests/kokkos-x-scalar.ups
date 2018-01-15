@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='ISO-8859-1'?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!-- DOCTYPE Uintah_specification SYSTEM "input.dtd" -->
 <!-- @version: -->
 <Uintah_specification>
@@ -25,6 +25,9 @@
     <save label="cc_phi_superbee"/>
     <save label="cc_phi_central"/>
     <save label="fc_phi_upwind"/>
+    <!--save label="rho_fc_phi_upwind"/>
+    <save label="rho_fc_phi_central"/>
+    <save label="density"/-->
     <save label="fc_phi_vanleer"/>
     <save label="fc_phi_superbee"/>
     <save label="fc_phi_central"/>
@@ -44,7 +47,7 @@
     </Level>
     <BoundaryConditions>
       <DefaultMaterial>all</DefaultMaterial>
-      <Face side="x-">
+      <Face side="x-" name="Face_0">
         <BCType var="Dirichlet" label="cc_phi_upwind">
           <value>2</value>
         </BCType>
@@ -70,7 +73,7 @@
           <value>0</value>
         </BCType>
       </Face>
-      <Face side="x+">
+      <Face side="x+" name="Face_1">
         <BCType var="Neumann" label="cc_phi_upwind">
           <value>0.</value>
         </BCType>
@@ -96,7 +99,7 @@
           <value>0.</value>
         </BCType>
       </Face>
-      <Face side="y-">
+      <Face side="y-" name="Face_2">
         <BCType var="Neumann" label="cc_phi_upwind">
           <value>0.</value>
         </BCType>
@@ -122,7 +125,7 @@
           <value>0.</value>
         </BCType>
       </Face>
-      <Face side="y+">
+      <Face side="y+" name="Face_3">
         <BCType var="Neumann" label="cc_phi_upwind">
           <value>0.</value>
         </BCType>
@@ -148,7 +151,7 @@
           <value>0.</value>
         </BCType>
       </Face>
-      <Face side="z-">
+      <Face side="z-" name="Face_4">
         <BCType var="Neumann" label="cc_phi_upwind">
           <value>0.</value>
         </BCType>
@@ -174,7 +177,7 @@
           <value>0.</value>
         </BCType>
       </Face>
-      <Face side="z+">
+      <Face side="z+" name="Face_5">
         <BCType var="Neumann" label="cc_phi_upwind">
           <value>0.</value>
         </BCType>
@@ -220,10 +223,10 @@
         <var role="density" label="density"/>
       </VarID>
       <PropertyModelsV2>
-        <model label="density" type="constant_property">
+        <!--model label="density" type="constant_property">
           <grid type="CC"/>
           <value>1.</value>
-        </model>
+        </model-->
         <model label="gamma" type="constant_property">
           <grid type="CC"/>
           <value>1.e-4</value>
@@ -241,6 +244,12 @@
           <value>0.</value>
         </model>
       </PropertyModelsV2>
+      <StateProperties> 
+        <model label="density_model" type="constant">
+          <const_property label="density" value="1."/>
+        </model>
+      </StateProperties>
+
       <KScalarTransport>
         <eqn_group label="CCFields" type="CC">
           <eqn label="cc_phi_upwind">
@@ -333,7 +342,10 @@
         <force_area_calc/>
       </BoundaryConditions>
       <KokkosSolver>
+        <initial_dt>1</initial_dt>
+        <integrator>ssprk</integrator>
       </KokkosSolver>
+      <recompileTaskgraph>false</recompileTaskgraph>
     </ARCHES>
   </CFD>
 </Uintah_specification>

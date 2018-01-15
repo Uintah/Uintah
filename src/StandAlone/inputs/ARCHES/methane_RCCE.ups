@@ -350,7 +350,7 @@
           <flux_variable label="total_mass_flux"/>
           <density label="density"/>
         </model>
-        <model type="gasRadProperties"  label="gas_abskg" >
+        <model type="gasRadProperties" label="gas_abskg">
           <calculator type="hottel_sarofim">
             <opl>3.0</opl>
           </calculator>
@@ -414,6 +414,9 @@
           </Parameters>
         </PressureSolver>
         <MomentumSolver>
+          <wall_closure type="constant_coefficient">
+            <wall_csmag>0.4</wall_csmag>
+          </wall_closure>
           <convection_scheme>upwind</convection_scheme>
         </MomentumSolver>
       </ExplicitSolver>

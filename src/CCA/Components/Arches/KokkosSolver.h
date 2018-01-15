@@ -104,9 +104,9 @@ namespace Uintah{
                     DataWarehouse* old_dw,
                     DataWarehouse* new_dw );
 
-  double recomputeTimestep(double current_dt){return current_dt/2.;};
+  double recomputeDelT(const double delT) { return delT/2.0; };
 
-  inline bool restartableTimesteps() {
+  inline bool restartableTimeSteps() {
     return false;
   }
 
@@ -150,6 +150,7 @@ namespace Uintah{
     NONLINEARSOLVER m_nonlinear_solver;
 
     // Store these labels to compute a stable dt
+    const VarLabel* m_delTLabel;
     const VarLabel* m_uLabel;
     const VarLabel* m_vLabel;
     const VarLabel* m_wLabel;

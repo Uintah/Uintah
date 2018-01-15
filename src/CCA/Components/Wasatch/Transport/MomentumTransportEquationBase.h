@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2017 The University of Utah
+ * Copyright (c) 2012-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -36,22 +36,9 @@
 
 //-- Uintah includes --//
 #include <Core/ProblemSpec/ProblemSpecP.h>
-#include <Core/Parallel/UintahParallelComponent.h>
 #include <CCA/Ports/SolverInterface.h>
 
 namespace WasatchCore{
-  
-  
-  template< typename FieldT >
-  Expr::ExpressionID
-  register_strain_tensor(const Direction momComponent,
-                         const bool* const doMom,
-                         const bool isViscous,
-                         const Expr::TagList& velTags,
-                         Expr::TagList& strainTags,
-                         const Expr::Tag& dilTag,
-                         Expr::ExpressionFactory& factory );
-
 
   template< typename FaceFieldT >
   Expr::ExpressionID
@@ -199,6 +186,15 @@ namespace WasatchCore{
     Expr::TagList momTags_, oldMomTags_;  ///< TagList for the momentum expressions
     Expr::Tag     thisVolFracTag_;
     Expr::Tag     normalStrainTag_, normalConvFluxTag_;
+
+    // perpendicular strain tags
+    // ordering follows XYZXY as follows:
+    // 1. pick the momentum component, say X-momentum
+    // 2. shearStrainTag1_, shearStrainTag2_ refer to the next two variables, Y and Z for X-momentum
+    // X-momentum: 1=Y, 2=Z
+    // Y-momentum: 1=Z, 2=X
+    // Z-momentum: 1=X, 2=Y
+    Expr::Tag     shearStrainTag1_, shearStrainTag2_;
 
   private:
 

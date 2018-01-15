@@ -1,6 +1,8 @@
 #include <CCA/Components/Arches/Transport/PressureBC.h>
 
-using namespace Uintah;
+using namespace Uintah::ArchesCore;
+using namespace Uintah; 
+
 typedef ArchesFieldContainer AFC;
 
 //--------------------------------------------------------------------------------------------------
@@ -32,8 +34,6 @@ void PressureBC::register_eval( std::vector<AFC::VariableInformation>& variable_
 //--------------------------------------------------------------------------------------------------
 void PressureBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  const double dt = tsk_info->get_dt();
-  Vector DX = patch->dCell();
   CCVariable<double>& p = tsk_info->get_uintah_field_add<CCVariable<double> >( m_press );
 
   const BndMapT& bc_info = m_bcHelper->get_boundary_information();
@@ -41,7 +41,6 @@ void PressureBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     Uintah::Iterator& cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID() );
     IntVector iDir = patch->faceDirection( i_bc->second.face );
-    Patch::FaceType face = i_bc->second.face;
     BndTypeEnum my_type = i_bc->second.type;
 
     if ( my_type == WALL || my_type == INLET ){

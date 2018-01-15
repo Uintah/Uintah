@@ -4,7 +4,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -26,7 +26,7 @@
  */
 
 #include <Core/Containers/ConsecutiveRangeSet.h>
-#include <Core/Containers/HashTable.h>
+//#include <Core/Containers/HashTable.h>
 #include <Core/Exceptions/VariableNotFoundInGrid.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/GridP.h>
@@ -60,7 +60,7 @@ namespace Uintah {
 
 class VarLabel;
 class DataWarehouse;
-class LoadBalancerPort;
+class LoadBalancer;
 
 /**************************************
 
@@ -126,22 +126,22 @@ public:
   std::string getParticlePositionName() const { return d_particlePositionName; }
 
   //! Set up data arachive for restarting a Uintah simulation
-  void restartInitialize( const int          timestep,
-                          const GridP      & grid,
-                          DataWarehouse    * dw,
-                          LoadBalancerPort * lb,
-                          double           * pTime /* passed back */ );
+  void restartInitialize( const int       timestep,
+                          const GridP   & grid,
+                          DataWarehouse * dw,
+                          LoadBalancer  * lb,
+                          double        * pTime /* passed back */ );
 
 
   //__________________________________
-  //  This is used by reduceUda component.  Iit reads in the data and puts it into the DW.
+  //  This is used by postProcessUda component.  It reads in the data and puts it into the DW.
   //  This is a specialization of restartInitialize().
-  void reduceUda_ReadUda( const ProcessorGroup * pg,
-                          const int              timestep,
-                          const GridP          & grid,
-                          const PatchSubset    * patches,
-                          DataWarehouse        * dw,
-                          LoadBalancerPort     * lb ); 
+  void postProcess_ReadUda( const ProcessorGroup * pg,
+                            const int              timestep,
+                            const GridP          & grid,
+                            const PatchSubset    * patches,
+                            DataWarehouse        * dw,
+                            LoadBalancer         * lb ); 
 
   // GROUP:  Information Access
   //////////
@@ -365,8 +365,8 @@ private:
     std::string datafilename;
   };
 
-  typedef Uintah::HashTable<VarnameMatlPatch, DataFileInfo> VarHashMap;
-  typedef Uintah::HashTableIter<VarnameMatlPatch, DataFileInfo> VarHashMapIterator;
+  //  typedef Uintah::HashTable<VarnameMatlPatch, DataFileInfo> VarHashMap;
+  //  typedef Uintah::HashTableIter<VarnameMatlPatch, DataFileInfo> VarHashMapIterator;
 
   //! Top of DataArchive structure for storing hash maps of variable data
   //! - containing data for each time step.
@@ -446,7 +446,7 @@ private:
 #endif
   };
 
-  void createPIDXCommunicator( const GridP & grid, LoadBalancerPort * lb );
+  void createPIDXCommunicator( const GridP & grid, LoadBalancer * lb );
   std::vector<MPI_Comm> d_pidxComms; // Array of MPI Communicators for PIDX usage...
 
 

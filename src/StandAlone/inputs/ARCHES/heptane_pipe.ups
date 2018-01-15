@@ -300,13 +300,12 @@
         </model>
       </PropertyModels>
       <PropertyModelsV2>
-        <model type="gasRadProperties"  label="gas_abskg" >
+        <model type="gasRadProperties" label="gas_abskg">
           <calculator type="hottel_sarofim">
             <opl>3.0</opl>
           </calculator>
         </model>
       </PropertyModelsV2>
-
       <Turbulence model="smagorinsky">
         <cf>0.17</cf>
         <fac_mesh>1.0</fac_mesh>
@@ -365,6 +364,8 @@
           </Parameters>
         </PressureSolver>
         <MomentumSolver>
+          <wall_closure type="molecular">
+          </wall_closure>
           <convection_scheme>upwind</convection_scheme>
         </MomentumSolver>
       </ExplicitSolver>

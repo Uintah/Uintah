@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,41 +25,42 @@
 #ifndef UINTAH_CCA_COMPONENTS_MPMFVM_ESMPM_H
 #define UINTAH_CCA_COMPONENTS_MPMFVM_ESMPM_H
 
-#include <CCA/Components/FVM/FVMLabel.h>
-#include <CCA/Components/FVM/ElectrostaticSolve.h>
-#include <CCA/Components/MPMFVM/ESConductivityModel.h>
-#include <CCA/Components/MPM/AMRMPM.h>
-#include <CCA/Components/MPM/MPMFlags.h>
-#include <CCA/Ports/DataWarehouse.h>
-#include <CCA/Ports/Output.h>
-#include <CCA/Ports/Scheduler.h>
-#include <CCA/Ports/SimulationInterface.h>
-#include <CCA/Ports/SwitchingCriteria.h>
-#include <Core/Geometry/IntVector.h>
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/Vector.h>
+#include <CCA/Components/Application/ApplicationCommon.h>
+
+#include <CCA/Ports/SchedulerP.h>
+
 #include <Core/Grid/Ghost.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/Variables/ComputeSet.h>
-#include <Core/Labels/MPMLabel.h>
-#include <Core/Parallel/UintahParallelComponent.h>
-#include <Core/Parallel/ProcessorGroup.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
-#include <vector>
 #include <string>
 
 namespace Uintah {
-  class ESMPM : public UintahParallelComponent, public SimulationInterface {
+
+  class AMRMPM;
+  class MPMLabel;
+  class FVMLabel;
+  class MPMFlags;
+  class ESConductivityModel;
+  class ElectrostaticSolve;
+
+  class ProcessorGroup;
+  class DataWarehouse;
+  class SwitchingCriteria;
+  
+  class ESMPM : public ApplicationCommon {
     public:
-      ESMPM(const ProcessorGroup* myworld);
+      ESMPM(const ProcessorGroup* myworld,
+	    const SimulationStateP sharedState);
+    
       ~ESMPM();
 
       virtual void problemSetup(const ProblemSpecP& prob_spec,
                                 const ProblemSpecP& restart_prob_spec,
-                                GridP& grid, SimulationStateP& state);
+                                GridP& grid);
 
       virtual void outputProblemSpec(ProblemSpecP& prob_spec);
 
@@ -69,7 +70,7 @@ namespace Uintah {
 
       virtual void restartInitialize();
 
-      virtual void scheduleComputeStableTimestep(const LevelP& level, SchedulerP& sched);
+      virtual void scheduleComputeStableTimeStep(const LevelP& level, SchedulerP& sched);
 
       virtual void scheduleTimeAdvance( const LevelP& level, SchedulerP& sched);
 
@@ -82,7 +83,8 @@ namespace Uintah {
                                                    const MaterialSet* all_matls);
 
     protected:
-      virtual void initialize(const ProcessorGroup*, const PatchSubset* patches,
+      virtual void initialize(const ProcessorGroup*,
+			      const PatchSubset* patches,
                               const MaterialSubset* matls,
                               DataWarehouse*,
                               DataWarehouse* new_dw);
@@ -97,13 +99,11 @@ namespace Uintah {
       double d_TINY_RHO;
       std::string d_cd_model_name;
 
-      SimulationStateP d_shared_state;
-      Output* d_data_archiver;
       AMRMPM* d_amrmpm;
-      ElectrostaticSolve* d_esfvm;
       MPMLabel* d_mpm_lb;
       FVMLabel* d_fvm_lb;
       MPMFlags* d_mpm_flags;
+      ElectrostaticSolve* d_esfvm;
       ESConductivityModel* d_conductivity_model;
 
       MaterialSet* d_es_matlset;
@@ -111,7 +111,6 @@ namespace Uintah {
       SwitchingCriteria* d_switch_criteria;
 
       Ghost::GhostType d_gac;
-
   };
 }
 #endif

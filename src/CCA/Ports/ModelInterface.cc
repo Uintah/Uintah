@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,10 +25,16 @@
 
 #include <CCA/Ports/ModelInterface.h>
 
+#include <CCA/Ports/ApplicationInterface.h>
+#include <CCA/Ports/Regridder.h>
+#include <CCA/Ports/Scheduler.h>
+#include <CCA/Ports/Output.h>
+
 using namespace Uintah;
 
-ModelInterface::ModelInterface(const ProcessorGroup* myworld)
-  : d_modelComputesThermoTransportProps(false), d_myworld(myworld)
+ModelInterface::ModelInterface(const ProcessorGroup* myworld,
+			       const SimulationStateP sharedState)
+  : UintahParallelComponent(myworld), m_sharedState(sharedState)
 {
 }
 
@@ -36,17 +42,48 @@ ModelInterface::~ModelInterface()
 {
 }
 
-bool ModelInterface::computesThermoTransportProps() const
+void ModelInterface::setComponents( ApplicationInterface *comp )
 {
-  return d_modelComputesThermoTransportProps;
+  ApplicationInterface * parent = dynamic_cast<ApplicationInterface*>( comp );
+
+  setAMR( parent->isAMR() );
+  setDynamicRegridding( parent->isDynamicRegridding() );
+  
+  attachPort( "scheduler", parent->getScheduler() );
+  attachPort( "regridder", parent->getRegridder() );
+  attachPort( "output",    parent->getOutput() );
+
+  getComponents();
 }
 
-void ModelInterface::setMPMLabel(MPMLabel*)
+void ModelInterface::getComponents()
 {
+  m_scheduler = dynamic_cast<Scheduler*>( getPort("scheduler") );
+
+  if( !m_scheduler ) {
+    throw InternalError("dynamic_cast of 'm_regridder' failed!", __FILE__, __LINE__);
+  }
+
+  m_regridder = dynamic_cast<Regridder*>( getPort("regridder") );
+
+  if( isDynamicRegridding() && !m_regridder ) {
+    throw InternalError("dynamic_cast of 'm_regridder' failed!", __FILE__, __LINE__);
+  }
+
+  m_output = dynamic_cast<Output*>( getPort("output") );
+
+  if( !m_output ) {
+    throw InternalError("dynamic_cast of 'm_output' failed!", __FILE__, __LINE__);
+  }
 }
 
-void ModelInterface::scheduleRefine( const PatchSet* patches,
-                                     SchedulerP& sched )
+void ModelInterface::releaseComponents()
 {
-}
+  releasePort( "scheduler" );
+  releasePort( "regridder" );
+  releasePort( "output" );
 
+  m_scheduler    = nullptr;
+  m_regridder    = nullptr;
+  m_output       = nullptr;
+}

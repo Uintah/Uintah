@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -24,7 +24,6 @@
 
 //----- MomentumSolver.cc ----------------------------------------------
 
-#include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/Arches/BoundaryCondition.h>
@@ -49,7 +48,6 @@
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/SourceTerms/ConstSrcTerm.h>
-#include <Core/Containers/StaticArray.h>
 #include <sci_defs/visit_defs.h>
 
 using namespace Uintah;
@@ -105,7 +103,7 @@ MomentumSolver::~MomentumSolver()
 //****************************************************************************
 void
 MomentumSolver::problemSetup(const ProblemSpecP& params,
-			     SimulationStateP & sharedState)
+                             SimulationStateP & sharedState)
 {
   ProblemSpecP db = params->findBlock("MomentumSolver");
 
@@ -228,27 +226,47 @@ MomentumSolver::problemSetup(const ProblemSpecP& params,
 
   d_rhsSolver = scinew RHSSolver();
   d_mixedModel=d_turbModel->getMixedModel();
+
+  d_wall_closure = "molecular";
+  d_wall_const_smag_C = 0.;
+  ProblemSpecP db_wall = db->findBlock("wall_closure");
+  if ( db_wall != nullptr ){
+    db_wall->getAttribute("type", d_wall_closure );
+
+    if ( d_wall_closure == "constant_coefficient" ){
+      db_wall->getWithDefault( "wall_csmag", d_wall_const_smag_C, 0.17 );
+    }
+
+    if ( d_wall_closure == "constant_coefficient" ||
+         d_wall_closure == "dynamic" ){
+
+      db_wall->getWithDefault("standoff_index", d_standoff_index, 1);
+
+    }
+  }
+
+
 #ifdef HAVE_VISIT
   static bool initialized = false;
 
   // Running with VisIt so add in the variables that the user can
   // modify.
-  if( sharedState->getVisIt() && !initialized ) {
+//   if( sharedState->getVisIt() && !initialized ) {
     // variable 1 - Must start with the component name and have NO
     // spaces in the var name
-    SimulationState::interactiveVar var;
-    var.name     = "ARCHES-Re_limit";
-    var.type     = Uintah::TypeDescription::double_type;
-    var.value    = (void *) &d_re_limit;
-    var.range[0]   = 2;
-    var.range[1]   = 1e9;
-    var.modifiable = true;
-    var.recompile  = false;
-    var.modified   = false;
-    sharedState->d_UPSVars.push_back( var );
+//     SimulationState::interactiveVar var;
+//     var.name     = "ARCHES-Re_limit";
+//     var.type     = Uintah::TypeDescription::double_type;
+//     var.value    = (void *) &d_re_limit;
+//     var.range[0]   = 2;
+//     var.range[1]   = 1e9;
+//     var.modifiable = true;
+//     var.recompile  = false;
+//     var.modified   = false;
+//     sharedState->d_UPSVars.push_back( var );
 
-    initialized = true;
-  }
+//     initialized = true;
+//   }
 #endif
 }
 
@@ -309,6 +327,9 @@ MomentumSolver::sched_buildLinearMatrix(SchedulerP& sched,
                           this, &MomentumSolver::buildLinearMatrix,
                           timelabels, extraProjection);
 
+  tsk->requires(Task::OldDW, d_lab->d_timeStepLabel);
+  tsk->requires(Task::OldDW, d_lab->d_simulationTimeLabel);
+
   Task::WhichDW parent_old_dw;
   if (timelabels->recursion){
     parent_old_dw = Task::ParentOldDW;
@@ -318,7 +339,7 @@ MomentumSolver::sched_buildLinearMatrix(SchedulerP& sched,
 
   Ghost::GhostType  gaf = Ghost::AroundFaces;
   Ghost::GhostType  gac = Ghost::AroundCells;
-  tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
+  tsk->requires(parent_old_dw, d_lab->d_delTLabel);
   tsk->requires(Task::NewDW,   d_lab->d_cellTypeLabel,    gac, 1);
   tsk->requires(Task::NewDW,   d_lab->d_densityCPLabel,   gac, 1);
   tsk->requires(Task::NewDW,   d_lab->d_uVelRhoHatLabel,  gaf, 1);
@@ -356,6 +377,12 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
                                   const TimeIntegratorLabel* timelabels,
                                   bool extraProjection)
 {
+  timeStep_vartype timeStep;
+  old_dw->get(timeStep, d_lab->d_timeStepLabel );
+
+  simTime_vartype simTime;
+  old_dw->get(simTime, d_lab->d_simulationTimeLabel );
+  
   DataWarehouse* parent_old_dw;
   if (timelabels->recursion){
     parent_old_dw = new_dw->getOtherDataWarehouse(Task::ParentOldDW);
@@ -363,7 +390,7 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
     parent_old_dw = old_dw;
   }
   delt_vartype delT;
-  parent_old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  parent_old_dw->get(delT, d_lab->d_delTLabel );
   double delta_t = delT;
   delta_t *= timelabels->time_multiplier;
 
@@ -416,8 +443,11 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
     }
 
     //intrusions:
+    bool set_nonnormal_values = false; // Because this is post projection. Non-normal bc_values
+                                       // must be subject to the projection.
     d_boundaryCondition->setHattedIntrusionVelocity( patch, velocityVars.uVelRhoHat, velocityVars.vVelRhoHat,
-                                                     velocityVars.wVelRhoHat, constVelocityVars.density );
+                                                     velocityVars.wVelRhoHat, constVelocityVars.density,
+                                                     set_nonnormal_values );
 
     // boundary condition
     Patch::FaceType mface = Patch::xminus;
@@ -450,9 +480,7 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
     d_boundaryCondition->velRhoHatInletBC(patch,
                                           &velocityVars, &constVelocityVars,
                                           indx,
-                                          time_shift);
-
-
+                                          timeStep, simTime, time_shift);
   }
 }
 
@@ -461,7 +489,7 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 //****************************************************************************
 void MomentumSolver::solveVelHat(const LevelP& level,
                                  SchedulerP& sched,
-                                 const TimeIntegratorLabel* timelabels)
+                                 const TimeIntegratorLabel* timelabels, const int curr_level )
 {
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
@@ -489,11 +517,9 @@ void MomentumSolver::solveVelHat(const LevelP& level,
   }
 
   sched_buildLinearMatrixVelHat(sched, patches, matls,
-                                timelabels);
+                                timelabels, curr_level);
 
 }
-
-
 
 // ****************************************************************************
 // Schedule build of linear matrix
@@ -502,14 +528,17 @@ void
 MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
                                               const PatchSet* patches,
                                               const MaterialSet* matls,
-                                              const TimeIntegratorLabel* timelabels)
+                                              const TimeIntegratorLabel* timelabels,
+                                              const int curr_level )
 {
   string taskname =  "MomentumSolver::BuildCoeffVelHat" +
                      timelabels->integrator_step_name;
   Task* tsk = scinew Task(taskname,
                           this, &MomentumSolver::buildLinearMatrixVelHat,
-                          timelabels);
+                          timelabels, curr_level);
 
+  tsk->requires(Task::OldDW, d_lab->d_timeStepLabel);
+  tsk->requires(Task::OldDW, d_lab->d_simulationTimeLabel);
 
   Task::WhichDW parent_old_dw;
   if (timelabels->recursion){
@@ -518,7 +547,15 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
     parent_old_dw = Task::OldDW;
   }
 
-  tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
+  tsk->requires(parent_old_dw, d_lab->d_delTLabel);
+
+  Task::WhichDW which_dw;
+
+  if ( curr_level == 0 ){
+    which_dw = Task::OldDW;
+  } else {
+    which_dw = Task::NewDW;
+  }
 
   // Requires
   // from old_dw for time integration
@@ -532,6 +569,10 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, gac, 2);
   tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
   tsk->requires(Task::NewDW, d_lab->d_volFractionLabel, gac, 2);
+
+  if ( d_wall_closure == "constant_coefficient"){
+    d_boundaryCondition->sched_wallStressConstSmag( which_dw, tsk );
+  }
 
   if (timelabels->multiple_steps){
     tsk->requires(Task::NewDW, d_lab->d_densityTempLabel,gac, 2);
@@ -560,6 +601,11 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 2);
   tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 2);
   tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 2);
+  tsk->requires(Task::OldDW, d_lab->d_pressurePSLabel, gac, 1);
+  tsk->requires(Task::OldDW, d_lab->d_turbViscosLabel, gac, 1);
+  tsk->requires(Task::OldDW, d_lab->d_CCUVelocityLabel, gac, 1);
+  tsk->requires(Task::OldDW, d_lab->d_CCVVelocityLabel, gac, 1);
+  tsk->requires(Task::OldDW, d_lab->d_CCWVelocityLabel, gac, 1);
 
 //#ifdef divergenceconstraint
 
@@ -605,8 +651,6 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
 
 }
 
-
-
 struct sumNonlinearSources{
        sumNonlinearSources(double _vol,
                            SFCXVariable<double> &_uNonlinearSrc,
@@ -642,8 +686,15 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
                                         const MaterialSubset* /*matls*/,
                                         DataWarehouse* old_dw,
                                         DataWarehouse* new_dw,
-                                        const TimeIntegratorLabel* timelabels)
+                                        const TimeIntegratorLabel* timelabels,
+                                        const int curr_level )
 {
+  timeStep_vartype timeStep;
+  old_dw->get(timeStep, d_lab->d_timeStepLabel );
+
+  simTime_vartype simTime;
+  old_dw->get(simTime, d_lab->d_simulationTimeLabel );
+
   DataWarehouse* parent_old_dw;
   if (timelabels->recursion){
     parent_old_dw = new_dw->getOtherDataWarehouse(Task::ParentOldDW);
@@ -651,8 +702,14 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     parent_old_dw = old_dw;
   }
 
+  DataWarehouse* which_dw;
+  if ( curr_level == 0  ){
+    which_dw = old_dw;
+  } else {
+    which_dw = new_dw;
+  }
   delt_vartype delT;
-  parent_old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  parent_old_dw->get(delT, d_lab->d_delTLabel );
   double delta_t = delT;
   delta_t *= timelabels->time_multiplier;
 
@@ -700,6 +757,11 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     new_dw->get(constVelocityVars.uVelocity,   d_lab->d_uVelocitySPBCLabel, indx, patch, gaf, 2);
     new_dw->get(constVelocityVars.vVelocity,   d_lab->d_vVelocitySPBCLabel, indx, patch, gaf, 2);
     new_dw->get(constVelocityVars.wVelocity,   d_lab->d_wVelocitySPBCLabel, indx, patch, gaf, 2);
+    old_dw->get(constVelocityVars.pressure,       d_lab->d_pressurePSLabel,    indx, patch, gac, 1);
+    old_dw->get(constVelocityVars.turbViscosity,  d_lab->d_turbViscosLabel,    indx, patch, gac, 1);
+    old_dw->get(constVelocityVars.CCUVelocity,    d_lab->d_CCUVelocityLabel,   indx, patch, gac, 1);
+    old_dw->get(constVelocityVars.CCVVelocity,    d_lab->d_CCVVelocityLabel,   indx, patch, gac, 1);
+    old_dw->get(constVelocityVars.CCWVelocity,    d_lab->d_CCWVelocityLabel,   indx, patch, gac, 1);
 
 
     constCCVariable<double> old_divergence;
@@ -797,8 +859,64 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     // take of the wall shear stress
     // This adds the contribution to the nonLinearSrc of each
     // direction depending on the boundary conditions.
-    if ( !d_MAlab ){
-      d_boundaryCondition->wallStress( patch, &velocityVars, &constVelocityVars, volFraction );
+    // if ( !d_MAlab ){
+    //   d_boundaryCondition->wallStress( patch, &velocityVars, &constVelocityVars, volFraction, IsImag );
+    // }
+
+    if ( d_wall_closure == "constant_coefficient" ){
+
+      d_boundaryCondition->wallStressConstSmag(
+                                                patch,
+                                                which_dw,
+                                                d_wall_const_smag_C,
+                                                d_standoff_index,
+                                                constVelocityVars.uVelocity,
+                                                constVelocityVars.vVelocity,
+                                                constVelocityVars.wVelocity,
+                                                velocityVars.uVelNonlinearSrc,
+                                                velocityVars.vVelNonlinearSrc,
+                                                velocityVars.wVelNonlinearSrc,
+                                                constVelocityVars.density,
+                                                volFraction
+                                              );
+
+    } else if ( d_wall_closure == "dynamic" ){
+
+      d_boundaryCondition->wallStressDynSmag(
+                                                patch,
+                                                d_standoff_index,
+                                                constVelocityVars.viscosity,
+                                                constVelocityVars.uVelocity,
+                                                constVelocityVars.vVelocity,
+                                                constVelocityVars.wVelocity,
+                                                velocityVars.uVelNonlinearSrc,
+                                                velocityVars.vVelNonlinearSrc,
+                                                velocityVars.wVelNonlinearSrc,
+                                                constVelocityVars.density,
+                                                volFraction
+                                              );
+
+    } else if ( d_wall_closure == "molecular" ){
+
+      d_boundaryCondition->wallStressMolecular(
+                                                patch,
+                                                constVelocityVars.uVelocity,
+                                                constVelocityVars.vVelocity,
+                                                constVelocityVars.wVelocity,
+                                                velocityVars.uVelNonlinearSrc,
+                                                velocityVars.vVelNonlinearSrc,
+                                                velocityVars.wVelNonlinearSrc,
+                                                volFraction
+                                              );
+
+    } else if ( d_wall_closure == "log" ){
+
+      d_boundaryCondition->wallStressLog(
+                                                patch,
+                                                &velocityVars,
+                                                &constVelocityVars,
+                                                volFraction
+                                              );
     }
 
     //__________________________________
@@ -1029,27 +1147,30 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
                                        cellinfo, &velocityVars, &constVelocityVars, volFraction);
     }
 
+    bool set_nonnormal_values = true;
     d_boundaryCondition->setHattedIntrusionVelocity( patch, velocityVars.uVelRhoHat,
-                                                    velocityVars.vVelRhoHat, velocityVars.wVelRhoHat, constVelocityVars.new_density );
+                                                     velocityVars.vVelRhoHat, velocityVars.wVelRhoHat,
+                                                     constVelocityVars.new_density,
+                                                     set_nonnormal_values );
 
 
 
-    double time_shift = 0.0;
-    time_shift = delta_t * timelabels->time_position_multiplier_before_average;
+    double time_shift =
+      delta_t * timelabels->time_position_multiplier_before_average;
+    
     d_boundaryCondition->velRhoHatInletBC(patch,
                                           &velocityVars, &constVelocityVars,
                                           indx,
-                                          time_shift);
+                                          timeStep, simTime, time_shift);
 
     d_boundaryCondition->velocityOutletPressureBC( patch,
-                                                        indx,
-                                                        velocityVars.uVelRhoHat,
-                                                        velocityVars.vVelRhoHat,
-                                                        velocityVars.wVelRhoHat,
-                                                        constVelocityVars.old_uVelocity,
-                                                        constVelocityVars.old_vVelocity,
-                                                        constVelocityVars.old_wVelocity );
-
+                                                   indx,
+                                                   velocityVars.uVelRhoHat,
+                                                   velocityVars.vVelRhoHat,
+                                                   velocityVars.wVelRhoHat,
+                                                   constVelocityVars.old_uVelocity,
+                                                   constVelocityVars.old_vVelocity,
+                                                   constVelocityVars.old_wVelocity );
   }
 }
 
@@ -1104,8 +1225,7 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->
-                     getArchesMaterial(archIndex)->getDWIndex();
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
     constCCVariable<double> old_density;
     constCCVariable<double> temp_density;
@@ -1198,7 +1318,9 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
                                                         new_uvel, new_vvel, new_wvel,
                                                         old_uvel, old_vvel, old_wvel );
 
-    d_boundaryCondition->setHattedIntrusionVelocity( patch, new_uvel, new_vvel, new_wvel, new_density );
+    bool set_nonnormal_values = true;
+    d_boundaryCondition->setHattedIntrusionVelocity( patch, new_uvel, new_vvel, new_wvel,
+                                                     new_density, set_nonnormal_values );
 
   }  // patches
 }

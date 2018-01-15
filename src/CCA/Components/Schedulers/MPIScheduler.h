@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -68,11 +68,11 @@ class MPIScheduler : public SchedulerCommon {
 
   public:
 
-            MPIScheduler( const ProcessorGroup* myworld, const Output* oport, MPIScheduler* parentScheduler = 0 );
+    MPIScheduler( const ProcessorGroup* myworld, MPIScheduler* parentScheduler = 0 );
 
     virtual ~MPIScheduler();
 
-    virtual void problemSetup( const ProblemSpecP& prob_spec, SimulationStateP& state );
+    virtual void problemSetup( const ProblemSpecP& prob_spec, const SimulationStateP& state );
 
     virtual void execute( int tgnum = 0, int iteration = 0 );
 
@@ -97,7 +97,7 @@ class MPIScheduler : public SchedulerCommon {
     // Performs the reduction task. (In threaded, Unified scheduler, a single worker thread will execute this.)
     virtual void initiateReduction( DetailedTask* dtask );
 
-            void computeNetRunTimeStats(InfoMapper< SimulationState::RunTimeStat, double >& runTimeStats);
+    void computeNetRunTimeStats();
 
     // timing statistics for Uintah infrastructure overhead
     enum TimingStat {

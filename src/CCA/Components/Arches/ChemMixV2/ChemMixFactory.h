@@ -18,13 +18,16 @@ namespace Uintah{
     void build_all_tasks( ProblemSpecP& db );
 
     std::vector<std::string> retrieve_task_subset( const std::string subset ) {
-      
+
       if ( subset == _all_tasks_str ){
+
         return _active_tasks;
+
+      } else {
+
+        throw InvalidValue("Error: Accessing the base class implementation of retrieve_task_subset in CheMixFactory, which means there is no specific implementation for this factory.",__FILE__,__LINE__);
+        
       }
-
-      throw InvalidValue("Error: Accessing the base class implementation of retrieve_task_subset in BoundaryConditionFactory, which means there is no specific implementation for this factory.",__FILE__,__LINE__);
-
     }
 
     void add_task( ProblemSpecP& db );

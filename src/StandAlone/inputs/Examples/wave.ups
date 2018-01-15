@@ -45,7 +45,7 @@
        <refine_threshold>10</refine_threshold>
     </Wave>
 
-    <Grid>
+    <Grid doAMR="true">
        <Level>
            <Box label = "1">
               <lower>[-.5,-.5,-.5]</lower>

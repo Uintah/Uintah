@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -129,7 +129,8 @@ WARNING
    {
       ProblemSpecP loadCurve = ps->findBlock("load_curve");
       if (!loadCurve) 
-         throw ProblemSetupException("**ERROR** No load curve specified.", __FILE__, __LINE__);
+         throw ProblemSetupException("**ERROR** No load curve specified.", 
+                                      __FILE__, __LINE__);
       loadCurve->require("id", d_id);
       for( ProblemSpecP timeLoad = loadCurve->findBlock("time_point");
            timeLoad != nullptr;
@@ -153,9 +154,7 @@ WARNING
          time_ps->appendElement("time",d_time[i]);
          time_ps->appendElement("load",d_load[i]);
        }
-
      }
-   
 
 } // End namespace Uintah
 

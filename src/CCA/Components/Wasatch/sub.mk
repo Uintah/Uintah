@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 2010-2017 The University of Utah
+#  Copyright (c) 2010-2018 The University of Utah
 #
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -70,8 +70,9 @@ SRCS +=                                              \
         $(SRCDIR)/WasatchParticlesHelper.cc          
 
 PSELIBS :=                        \
-        CCA/Components/Schedulers \
+        CCA/Components/Application \
         CCA/Components/Models     \
+        CCA/Components/Schedulers \
         CCA/Ports                 \
         Core/Disclosure           \
         Core/Exceptions           \
@@ -125,4 +126,3 @@ endif
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
-

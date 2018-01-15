@@ -4,7 +4,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -106,9 +106,10 @@ private:
     std::string m_rho_name;
     std::string m_eps_name;
 
-    std::string m_sigmax_name; 
-    std::string m_sigmay_name; 
-    std::string m_sigmaz_name; 
+    std::string m_sigmax_name;
+    std::string m_sigmay_name;
+    std::string m_sigmaz_name;
+    std::vector<std::string> m_vel_name;
 
     std::vector<std::string> m_eqn_names;
     std::vector<bool> m_do_clip;
@@ -165,6 +166,7 @@ private:
 
     ProblemSpecP db = input_db;
     ConvectionHelper* conv_helper = scinew ConvectionHelper();
+    using namespace ArchesCore;
 
     //Convection
     if ( db->findBlock("convection")){
@@ -206,6 +208,7 @@ private:
     std::vector<SourceInfo> eqn_srcs;
     if ( my_dir == ArchesCore::XDIR ){
 
+      m_vel_name.push_back(parse_ups_for_role( UVELOCITY, db, "uVelocitySPBC" ));
       for ( ProblemSpecP src_db = db->findBlock("src_x");
             src_db != nullptr; src_db = src_db->findNextBlock("src_x") ){
 
@@ -228,6 +231,7 @@ private:
 
     } else if ( my_dir == ArchesCore::YDIR ){
 
+      m_vel_name.push_back(parse_ups_for_role( VVELOCITY, db, "vVelocitySPBC" ));
       for ( ProblemSpecP src_db = db->findBlock("src_y");
             src_db != nullptr; src_db = src_db->findNextBlock("src_y") ){
 
@@ -250,6 +254,7 @@ private:
 
     } else if ( my_dir == ArchesCore::ZDIR ){
 
+      m_vel_name.push_back(parse_ups_for_role( WVELOCITY, db, "wVelocitySPBC" ));
       for ( ProblemSpecP src_db = db->findBlock("src_z");
             src_db != nullptr; src_db = src_db->findNextBlock("src_z") ){
 
@@ -277,7 +282,6 @@ private:
 
     delete conv_helper;
 
-    using namespace ArchesCore;
 
     ArchesCore::GridVarMap<T> var_map;
     var_map.problemSetup( input_db );
@@ -291,7 +295,7 @@ private:
     m_sigmaz_name     = var_map.sigmaz_name;
 
     m_mu_name = var_map.mu_name;
-    m_rho_name = "density";
+    m_rho_name = parse_ups_for_role( DENSITY, db, "density" );
 
     if ( input_db->findBlock("velocity") ){
       // can overide the global velocity space with this:
@@ -309,6 +313,7 @@ private:
     const int istart = 0;
     int iend = m_eqn_names.size();
     for (int i = istart; i < iend; i++ ){
+      register_new_variable<T>( m_vel_name[i] );
       register_new_variable<T>( m_eqn_names[i] );
       register_new_variable<T>( m_eqn_names[i]+"_rhs" );
       register_new_variable<FXT>( m_eqn_names[i]+"_x_flux" );
@@ -327,6 +332,7 @@ private:
     const int istart = 0;
     const int iend = m_eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
+      register_variable(  m_vel_name[ieqn] , ArchesFieldContainer::COMPUTES , variable_registry );
       register_variable(  m_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry );
       register_variable(  m_eqn_names[ieqn]+"_rhs", ArchesFieldContainer::COMPUTES , variable_registry );
       register_variable(  m_eqn_names[ieqn]+"_x_flux", ArchesFieldContainer::COMPUTES , variable_registry );
@@ -345,12 +351,14 @@ private:
 
       double scalar_init_value = m_init_value[ieqn];
 
+      T& u    = tsk_info->get_uintah_field_add<T>(m_vel_name[ieqn]);
       T& phi    = tsk_info->get_uintah_field_add<T>(m_eqn_names[ieqn]);
       T& rhs    = tsk_info->get_uintah_field_add<T>(m_eqn_names[ieqn]+"_rhs");
       Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
       Uintah::parallel_for( range, [&](int i, int j, int k){
         phi(i,j,k) = scalar_init_value;
         rhs(i,j,k) = 0.0;
+        u(i,j,k)   = 0.0;
       });
 
       FXT& x_flux = tsk_info->get_uintah_field_add<FXT>(m_eqn_names[ieqn]+"_x_flux");
@@ -372,9 +380,11 @@ private:
     const int istart = 0;
     const int iend = m_eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
+      register_variable( m_vel_name[ieqn], ArchesFieldContainer::COMPUTES , variable_registry  );    
       register_variable( m_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry  );
       register_variable( m_eqn_names[ieqn]+"_rhs", ArchesFieldContainer::COMPUTES , variable_registry  );
       register_variable( m_eqn_names[ieqn], ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::OLDDW , variable_registry  );
+      register_variable( m_vel_name[ieqn], ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::OLDDW , variable_registry  );
     }
   }
 
@@ -385,12 +395,14 @@ private:
     const int istart = 0;
     const int iend = m_eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
-
-      T& phi = *(tsk_info->get_uintah_field<T>( m_eqn_names[ieqn] ));
-      T& rhs = *(tsk_info->get_uintah_field<T>( m_eqn_names[ieqn]+"_rhs" ));
-      CT& old_phi = *(tsk_info->get_const_uintah_field<CT>( m_eqn_names[ieqn] ));
+      T& u    = tsk_info->get_uintah_field_add<T>(m_vel_name[ieqn]);
+      T& phi =  tsk_info->get_uintah_field_add<T>( m_eqn_names[ieqn] );
+      T& rhs =  tsk_info->get_uintah_field_add<T>( m_eqn_names[ieqn]+"_rhs" );
+      CT& old_phi = tsk_info->get_const_uintah_field_add<CT>( m_eqn_names[ieqn] );
+      CT& old_u    = tsk_info->get_const_uintah_field_add<CT>(m_vel_name[ieqn]);
 
       phi.copyData(old_phi);
+      u.copyData(old_u);
       rhs.initialize(0.0);
 
     } //equation loop
@@ -418,7 +430,7 @@ private:
 
       typedef std::vector<SourceInfo> VS;
       for (typename VS::iterator i = m_source_info[ieqn].begin(); i != m_source_info[ieqn].end(); i++){
-        register_variable( i->name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+        register_variable( i->name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
       }
 
     }
@@ -434,8 +446,8 @@ private:
     register_variable( m_y_velocity_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::NEWDW, variable_registry, time_substep );
     register_variable( m_z_velocity_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::NEWDW, variable_registry, time_substep );
     register_variable( m_eps_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::OLDDW, variable_registry, time_substep );
-    register_variable( m_mu_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::LATEST, variable_registry, time_substep );
-    register_variable( m_rho_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::LATEST, variable_registry, time_substep );
+    register_variable( m_mu_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+    register_variable( m_rho_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
   }
 
@@ -445,6 +457,9 @@ private:
 
     Vector Dx = patch->dCell();
     double V = Dx.x()*Dx.y()*Dx.z();
+
+    Uintah::IntVector low_patch_range = patch->getCellLowIndex();
+    Uintah::IntVector high_patch_range = patch->getCellHighIndex();
 
     CFXT& u     = *(tsk_info->get_const_uintah_field<CFXT>(m_x_velocity_name));
     CFYT& v     = *(tsk_info->get_const_uintah_field<CFYT>(m_y_velocity_name));
@@ -493,11 +508,11 @@ private:
             FYT& y_psi = tsk_info->get_uintah_field_add<FYT>(m_eqn_names[ieqn]+"_y_psi");
             FZT& z_psi = tsk_info->get_uintah_field_add<FZT>(m_eqn_names[ieqn]+"_z_psi");
 
-            Uintah::ComputeConvectiveFlux<Array3<double> >
+            Uintah::ComputeConvectiveFlux<FXT, FYT, FZT >
              get_flux( phi, u_fx, v_fy, w_fz, x_psi, y_psi, z_psi,
                        x_flux, y_flux, z_flux, eps );
 
-            GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE( 1, 0 )
+            GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE( 1, 1 )
             Uintah::BlockRange x_range( low_fx_patch_range, high_fx_patch_range );
             Uintah::parallel_for( x_range, get_flux );
 
@@ -507,12 +522,13 @@ private:
             CFYT& y_psi = tsk_info->get_const_uintah_field_add<CFYT>(m_eqn_names[ieqn]+"_y_psi");
             CFZT& z_psi = tsk_info->get_const_uintah_field_add<CFZT>(m_eqn_names[ieqn]+"_z_psi");
 
-            Uintah::ComputeConvectiveFlux<const Array3<double> >
+            Uintah::ComputeConvectiveFlux<CFXT, CFYT, CFZT >
              get_flux( phi, u_fx, v_fy, w_fz, x_psi, y_psi, z_psi,
                        x_flux, y_flux, z_flux, eps );
 
-            GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE( 1, 0 )
-            Uintah::BlockRange x_range( low_fx_patch_range, high_fx_patch_range );
+
+            GET_WALL_BUFFERED_PATCH_RANGE(low_patch_range, high_patch_range,1,1,0,1,0,1);
+            Uintah::BlockRange x_range( low_patch_range, high_patch_range );
             Uintah::parallel_for( x_range, get_flux );
 
           }
@@ -525,10 +541,10 @@ private:
             FYT& y_psi = tsk_info->get_uintah_field_add<FYT>(m_eqn_names[ieqn]+"_y_psi");
             FZT& z_psi = tsk_info->get_uintah_field_add<FZT>(m_eqn_names[ieqn]+"_z_psi");
 
-            Uintah::ComputeConvectiveFlux<Array3<double> >
+            Uintah::ComputeConvectiveFlux<FXT, FYT, FZT >
               get_flux( phi, u_fx, v_fy, w_fz, x_psi, y_psi, z_psi, x_flux, y_flux, z_flux, eps );
 
-            GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE( 1, 0 )
+            GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE( 1, 1 )
             Uintah::BlockRange y_range( low_fy_patch_range, high_fy_patch_range );
             Uintah::parallel_for( y_range, get_flux );
 
@@ -538,11 +554,11 @@ private:
             CFYT& y_psi = tsk_info->get_const_uintah_field_add<CFYT>(m_eqn_names[ieqn]+"_y_psi");
             CFZT& z_psi = tsk_info->get_const_uintah_field_add<CFZT>(m_eqn_names[ieqn]+"_z_psi");
 
-            Uintah::ComputeConvectiveFlux<const Array3<double> >
+            Uintah::ComputeConvectiveFlux<CFXT, CFYT, CFZT >
               get_flux( phi, u_fx, v_fy, w_fz, x_psi, y_psi, z_psi, x_flux, y_flux, z_flux, eps );
 
-            GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE( 1, 0 )
-            Uintah::BlockRange y_range( low_fy_patch_range, high_fy_patch_range );
+            GET_WALL_BUFFERED_PATCH_RANGE(low_patch_range, high_patch_range,0,1,1,1,0,1);
+            Uintah::BlockRange y_range( low_patch_range, high_patch_range );
             Uintah::parallel_for( y_range, get_flux );
 
           }
@@ -556,10 +572,10 @@ private:
             FYT& y_psi = tsk_info->get_uintah_field_add<FYT>(m_eqn_names[ieqn]+"_y_psi");
             FZT& z_psi = tsk_info->get_uintah_field_add<FZT>(m_eqn_names[ieqn]+"_z_psi");
 
-            Uintah::ComputeConvectiveFlux<Array3<double> >
+            Uintah::ComputeConvectiveFlux<FXT, FYT, FZT >
               get_flux( phi, u_fx, v_fy, w_fz, x_psi, y_psi, z_psi, x_flux, y_flux, z_flux, eps );
 
-            GET_EXTRACELL_FZ_BUFFERED_PATCH_RANGE( 1, 0 )
+            GET_EXTRACELL_FZ_BUFFERED_PATCH_RANGE( 1, 1 )
             Uintah::BlockRange z_range( low_fz_patch_range, high_fz_patch_range );
             Uintah::parallel_for( z_range, get_flux );
 
@@ -569,11 +585,11 @@ private:
             CFYT& y_psi = tsk_info->get_const_uintah_field_add<CFYT>(m_eqn_names[ieqn]+"_y_psi");
             CFZT& z_psi = tsk_info->get_const_uintah_field_add<CFZT>(m_eqn_names[ieqn]+"_z_psi");
 
-            Uintah::ComputeConvectiveFlux<const Array3<double> >
+            Uintah::ComputeConvectiveFlux<CFXT, CFYT, CFZT >
               get_flux( phi, u_fx, v_fy, w_fz, x_psi, y_psi, z_psi, x_flux, y_flux, z_flux, eps );
 
-            GET_EXTRACELL_FZ_BUFFERED_PATCH_RANGE( 1, 0 )
-            Uintah::BlockRange z_range( low_fz_patch_range, high_fz_patch_range );
+            GET_WALL_BUFFERED_PATCH_RANGE(low_patch_range, high_patch_range,0,1,0,1,1,1);
+            Uintah::BlockRange z_range( low_patch_range, high_patch_range );
             Uintah::parallel_for( z_range, get_flux );
 
           }
@@ -593,11 +609,11 @@ private:
         constCCVariable<double>& sigma3 = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_sigmaz_name));
 
         auto stressTensor = [&] (int i, int j, int k){
-          double div_sigma1 = (sigma1(i+1,j,k) - sigma1(i,j,k))*areaEW + 
-                              (sigma2(i,j+1,k) - sigma2(i,j,k))*areaNS + 
+          double div_sigma1 = (sigma1(i+1,j,k) - sigma1(i,j,k))*areaEW +
+                              (sigma2(i,j+1,k) - sigma2(i,j,k))*areaNS +
                               (sigma3(i,j,k+1) - sigma3(i,j,k))*areaTB;
 
-          rhs(i,j,k) += div_sigma1; 
+          rhs(i,j,k) += div_sigma1;
         };
 
 
@@ -621,13 +637,27 @@ private:
 
         CT& src = *(tsk_info->get_const_uintah_field<CT>((*isrc).name));
         double weight = (*isrc).weight;
-        Uintah::BlockRange src_range(patch->getCellLowIndex(), patch->getCellHighIndex());
 
-        Uintah::parallel_for( src_range, [&](int i, int j, int k){
+        if ( my_dir == ArchesCore::XDIR ){
+          GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE(1, 0)
+          Uintah::BlockRange range_x(low_fx_patch_range, high_fx_patch_range);
+          Uintah::parallel_for( range_x, [&](int i, int j, int k){
+            rhs(i,j,k) += weight * src(i,j,k) * V;
 
-          rhs(i,j,k) += weight * src(i,j,k) * V;
-
-        });
+          });
+        } else if ( my_dir == ArchesCore::YDIR ){
+          GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE(1, 0);
+          Uintah::BlockRange range_y(low_fy_patch_range, high_fy_patch_range);
+          Uintah::parallel_for( range_y, [&](int i, int j, int k){
+            rhs(i,j,k) += weight * src(i,j,k) * V;
+          });
+        } else {
+          GET_EXTRACELL_FZ_BUFFERED_PATCH_RANGE(1, 0);
+          Uintah::BlockRange range_z(low_fz_patch_range, high_fz_patch_range);
+          Uintah::parallel_for( range_z, [&](int i, int j, int k){
+            rhs(i,j,k) += weight * src(i,j,k) * V;
+          });
+        }
       }
     } // equation loop
 #ifdef DO_TIMINGS
@@ -649,6 +679,12 @@ private:
     for ( auto i = bc_dep.begin(); i != bc_dep.end(); i++ ){
       register_variable( *i, ArchesFieldContainer::REQUIRES, 0 , ArchesFieldContainer::NEWDW,
                          variable_registry );
+    }
+
+    std::vector<std::string> bc_mod;
+    m_boundary_functors->get_bc_modifies( m_eqn_names, m_bcHelper, bc_mod );
+    for ( auto i = bc_mod.begin(); i != bc_mod.end(); i++ ){
+      register_variable( *i, ArchesFieldContainer::MODIFIES, variable_registry );
     }
 
   }

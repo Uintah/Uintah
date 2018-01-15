@@ -8,6 +8,7 @@
 #ifdef HAVE_RADPROPS
 #  include <radprops/Particles.h>
 #endif
+#include <CCA/Components/Arches/ChemMixV2/ClassicTable.h>
 
 // SEE PROPTEMPLATE.CC FOR INSTRUCTIONS
 //
@@ -145,23 +146,26 @@ namespace Uintah{
       double _constAsymmFact;
       double _Qabs;
 
+      Interp_class*  myTable;
 
-           // coal optics data members
-          double _rawCoalReal;
-          double _rawCoalImag;
-          double _charReal;
-          double _charImag;
-          double _ashReal;
-          double _ashImag;
-          std::complex<double> _complexLo;  
-          std::complex<double> _complexHi;  
-          int _ncomp;
-          
+       // coal optics data members
+      double _rawCoalReal;
+      double _rawCoalImag;
+      double _charReal;
+      double _charImag;
+      double _ashReal;
+      double _ashImag;
+      std::complex<double> _complexLo;  
+      std::complex<double> _complexHi;  
+      int _ncomp;
+      
+     int _nIVs;  /// number of independent variables for table lookup
+     int _nDVs;  /// number of dependent variables for table lookup
 
-          double _absorption_modifier;
-          double  _charAsymm;
-          double  _rawCoalAsymm;
-          double  _ashAsymm;
+      double _absorption_modifier;
+      double  _charAsymm;
+      double  _rawCoalAsymm;
+      double  _ashAsymm;
 
 
 

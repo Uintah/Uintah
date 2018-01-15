@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -28,7 +28,6 @@
 #include <CCA/Components/Models/Radiation/RMCRT/RMCRTCommon.h>
 #include <CCA/Components/Models/Radiation/RMCRT/Radiometer.h>
 #include <CCA/Ports/Scheduler.h>
-#include <Core/Containers/StaticArray.h>
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
@@ -215,6 +214,8 @@ namespace Uintah{
       std::map <int,IntVector> d_dirIndexOrder;
       std::map <int,IntVector> d_dirSignSwap;
 
+      const VarLabel* m_timeStepLabel {nullptr};
+      
       const VarLabel* d_mag_grad_abskgLabel;
       const VarLabel* d_mag_grad_sigmaT4Label;
       const VarLabel* d_flaggedCellsLabel;
@@ -251,7 +252,7 @@ namespace Uintah{
                         void* stream,
                         int deviceID,
                         bool modifies_divQ,
-                        SimulationStateP sharedState,
+                        int timeStep,
                         Task::WhichDW which_abskg_dw,
                         Task::WhichDW whichd_sigmaT4_dw,
                         Task::WhichDW which_celltype_dw);
@@ -282,7 +283,7 @@ namespace Uintah{
                                  void* stream,
                                  int deviceID,
                                  bool modifies_divQ,
-                                 SimulationStateP sharedState,
+				 int timeStep,
                                  Task::WhichDW which_abskg_dw,
                                  Task::WhichDW whichd_sigmaT4_dw,
                                  Task::WhichDW which_celltype_dw );
@@ -299,9 +300,9 @@ namespace Uintah{
                            const IntVector& fineLevel_ROI_Hi,
                            std::vector<IntVector>& regionLo,
                            std::vector<IntVector>& regionHi,
-                           StaticArray< constCCVariable< T > >& sigmaT4Pi,
-                           StaticArray< constCCVariable< T > >& abskg,
-                           StaticArray< constCCVariable< int > >& cellType,
+                           std::vector< constCCVariable< T > >& sigmaT4Pi,
+                           std::vector< constCCVariable< T > >& abskg,
+                           std::vector< constCCVariable< int > >& cellType,
                            unsigned long int& size,
                            double& sumI,
                            MTRand& mTwister);

@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2017 The University of Utah
+#  Copyright (c) 1997-2018 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -40,21 +40,23 @@ SUBDIRS := $(SRCDIR)/fortran
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
 PSELIBS := \
+	CCA/Components/Application      \
+	CCA/Components/Arches           \
+	CCA/Components/Arches/fortran   \
+	CCA/Components/MPM              \
+	CCA/Components/MPM/Core         \
+	CCA/Components/MPM/Materials    \
+	CCA/Components/OnTheFlyAnalysis \
 	CCA/Ports          \
 	Core/Grid          \
 	Core/Util          \
-	Core/Labels        \
 	Core/Disclosure    \
 	Core/Parallel      \
 	Core/ProblemSpec   \
 	Core/Exceptions    \
 	Core/Math          \
-	CCA/Components/MPM \
-	CCA/Components/Arches \
-	CCA/Components/Arches/fortran \
-  CCA/Components/OnTheFlyAnalysis \
-	Core/Exceptions \
-	Core/Util       \
+	Core/Exceptions    \
+	Core/Util          \
 	Core/Geometry   
 
 LIBS := $(XML2_LIBRARY) $(PETSC_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) \

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -24,20 +24,23 @@
 
 
 #include <CCA/Components/Models/HEChem/ZeroOrder.h>
+#include <CCA/Components/ICE/CustomBCs/BoundaryCond.h>
+#include <CCA/Components/ICE/Materials/ICEMaterial.h>
+#include <CCA/Components/MPM/Materials/MPMMaterial.h>
+
 #include <CCA/Ports/Scheduler.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Grid/Variables/CellIterator.h>
-#include <Core/Grid/Variables/CCVariable.h>
+
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Material.h>
-#include <CCA/Components/ICE/ICEMaterial.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Labels/ICELabel.h>
-#include <CCA/Components/ICE/BoundaryCond.h>
-#include <iostream>
+#include <CCA/Components/ICE/Core/ICELabel.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Util/DebugStream.h>
+
+#include <iostream>
 
 using namespace Uintah;
 using namespace std;
@@ -47,12 +50,14 @@ using namespace std;
 static DebugStream cout_doing("MODELS_DOING_COUT", false);
 
 ZeroOrder::ZeroOrder(const ProcessorGroup* myworld, 
-                     ProblemSpecP& params,
+                     const SimulationStateP& sharedState,
+                     const ProblemSpecP& params,
                      const ProblemSpecP& prob_spec)
-  : ModelInterface(myworld), d_params(params), d_prob_spec(prob_spec)
+  : ModelInterface(myworld, sharedState),
+    d_params(params), d_prob_spec(prob_spec)
 {
   mymatls = 0;
-  Ilb  = scinew ICELabel();
+  Ilb = scinew ICELabel();
   d_saveConservedVars = scinew saveConservedVars();
   
   //__________________________________
@@ -84,9 +89,9 @@ ZeroOrder::~ZeroOrder()
 }
 //______________________________________________________________________
 //
-void ZeroOrder::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup*, const bool isRestart)
+void ZeroOrder::problemSetup(GridP&,
+                              const bool isRestart)
 {
-  d_sharedState = sharedState;
   ProblemSpecP ZO_ps = d_params->findBlock("ZeroOrder");
   ZO_ps->getWithDefault("ThresholdVolFrac",d_threshold_volFrac, 0.01);
   
@@ -113,8 +118,8 @@ void ZeroOrder::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup*,
     }
   }
   
-  matl0 = sharedState->parseAndLookupMaterial(ZO_ps, "fromMaterial");
-  matl1 = sharedState->parseAndLookupMaterial(ZO_ps, "toMaterial");
+  matl0 = m_sharedState->parseAndLookupMaterial(ZO_ps, "fromMaterial");
+  matl1 = m_sharedState->parseAndLookupMaterial(ZO_ps, "toMaterial");
 
   //__________________________________
   //  define the materialSet
@@ -150,16 +155,14 @@ void ZeroOrder::outputProblemSpec(ProblemSpecP& ps)
 //______________________________________________________________________
 //     
 void ZeroOrder::scheduleInitialize(SchedulerP&,
-                                   const LevelP&,
-                                   const ModelInfo*)
+                                   const LevelP&)
 {
   // None necessary...
 }
 //______________________________________________________________________
 //      
-void ZeroOrder::scheduleComputeStableTimestep(SchedulerP&,
-                                              const LevelP&,
-                                              const ModelInfo*)
+void ZeroOrder::scheduleComputeStableTimeStep(SchedulerP&,
+                                              const LevelP&)
 {
   // None necessary...
 }
@@ -167,11 +170,10 @@ void ZeroOrder::scheduleComputeStableTimestep(SchedulerP&,
 //______________________________________________________________________
 //     
 void ZeroOrder::scheduleComputeModelSources(SchedulerP& sched,
-                                            const LevelP& level,
-                                            const ModelInfo* mi)
+                                            const LevelP& level)
 {
   Task* t = scinew Task("ZeroOrder::computeModelSources", this, 
-                        &ZeroOrder::computeModelSources, mi);
+                        &ZeroOrder::computeModelSources);
   cout_doing << "ZeroOrder::scheduleComputeModelSources "<<  endl;  
 
   Ghost::GhostType  gn  = Ghost::None;
@@ -182,7 +184,8 @@ void ZeroOrder::scheduleComputeModelSources(SchedulerP& sched,
   one_matl->addReference();
   MaterialSubset* press_matl   = one_matl;
 
-  t->requires(Task::OldDW, mi->delT_Label,         level.get_rep());
+  t->requires(Task::OldDW, Ilb->timeStepLabel );
+  t->requires(Task::OldDW, Ilb->delTLabel,         level.get_rep());
   //__________________________________
   // Products
   t->requires(Task::NewDW,  Ilb->rho_CCLabel,      prod_matl, gn);
@@ -199,10 +202,10 @@ void ZeroOrder::scheduleComputeModelSources(SchedulerP& sched,
   t->computes(reactedFractionLabel, react_matl);
   t->computes(delFLabel,            react_matl);
 
-  t->modifies(mi->modelMass_srcLabel);
-  t->modifies(mi->modelMom_srcLabel);
-  t->modifies(mi->modelEng_srcLabel);
-  t->modifies(mi->modelVol_srcLabel); 
+  t->modifies(Ilb->modelMass_srcLabel);
+  t->modifies(Ilb->modelMom_srcLabel);
+  t->modifies(Ilb->modelEng_srcLabel);
+  t->modifies(Ilb->modelVol_srcLabel); 
 
   if(d_saveConservedVars->mass ){
     t->computes(ZeroOrder::totalMassBurnedLabel);
@@ -221,12 +224,16 @@ void ZeroOrder::computeModelSources(const ProcessorGroup*,
                                     const PatchSubset* patches,
                                     const MaterialSubset*,
                                     DataWarehouse* old_dw,
-                                    DataWarehouse* new_dw,
-                                    const ModelInfo* mi)
+                                    DataWarehouse* new_dw)
 {
+  timeStep_vartype timeStep;
+  old_dw->get(timeStep, Ilb->timeStepLabel );
+
+  bool isNotInitialTimeStep = (timeStep > 0);
+
   delt_vartype delT;
   const Level* level = getLevel(patches);
-  old_dw->get(delT, mi->delT_Label, level);
+  old_dw->get(delT, Ilb->delTLabel, level);
 
   int m0 = matl0->getDWIndex(); /* reactant material */
   int m1 = matl1->getDWIndex(); /* product material */
@@ -243,15 +250,15 @@ void ZeroOrder::computeModelSources(const ProcessorGroup*,
     CCVariable<double> energy_src_0, energy_src_1;
     CCVariable<double> sp_vol_src_0, sp_vol_src_1;
 
-    new_dw->getModifiable(mass_src_0,    mi->modelMass_srcLabel,  m0,patch);
-    new_dw->getModifiable(momentum_src_0,mi->modelMom_srcLabel,   m0,patch);
-    new_dw->getModifiable(energy_src_0,  mi->modelEng_srcLabel,   m0,patch);
-    new_dw->getModifiable(sp_vol_src_0,  mi->modelVol_srcLabel,   m0,patch);
+    new_dw->getModifiable(mass_src_0,    Ilb->modelMass_srcLabel,  m0,patch);
+    new_dw->getModifiable(momentum_src_0,Ilb->modelMom_srcLabel,   m0,patch);
+    new_dw->getModifiable(energy_src_0,  Ilb->modelEng_srcLabel,   m0,patch);
+    new_dw->getModifiable(sp_vol_src_0,  Ilb->modelVol_srcLabel,   m0,patch);
 
-    new_dw->getModifiable(mass_src_1,    mi->modelMass_srcLabel,  m1,patch);
-    new_dw->getModifiable(momentum_src_1,mi->modelMom_srcLabel,   m1,patch);
-    new_dw->getModifiable(energy_src_1,  mi->modelEng_srcLabel,   m1,patch);
-    new_dw->getModifiable(sp_vol_src_1,  mi->modelVol_srcLabel,   m1,patch);
+    new_dw->getModifiable(mass_src_1,    Ilb->modelMass_srcLabel,  m1,patch);
+    new_dw->getModifiable(momentum_src_1,Ilb->modelMom_srcLabel,   m1,patch);
+    new_dw->getModifiable(energy_src_1,  Ilb->modelEng_srcLabel,   m1,patch);
+    new_dw->getModifiable(sp_vol_src_1,  Ilb->modelVol_srcLabel,   m1,patch);
 
     constCCVariable<double> press_CC, cv_reactant,rctVolFrac;
     constCCVariable<double> rctTemp,rctRho,rctSpvol,prodRho;
@@ -285,8 +292,8 @@ void ZeroOrder::computeModelSources(const ProcessorGroup*,
 
     // Get the specific heat, this is the value from the input file
     double cv_rct = -1.0; 
-    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial *>(d_sharedState->getMaterial(m0));
-    ICEMaterial* ice_matl = dynamic_cast<ICEMaterial *>(d_sharedState->getMaterial(m0));
+    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial *>(m_sharedState->getMaterial(m0));
+    ICEMaterial* ice_matl = dynamic_cast<ICEMaterial *>(m_sharedState->getMaterial(m0));
     if(mpm_matl) {
       cv_rct = mpm_matl->getSpecificHeat();
     } else if(ice_matl){
@@ -335,10 +342,10 @@ void ZeroOrder::computeModelSources(const ProcessorGroup*,
 
     //__________________________________
     //  set symetric BC
-    setBC(mass_src_0, "set_if_sym_BC",patch, d_sharedState, m0, new_dw);
-    setBC(mass_src_1, "set_if_sym_BC",patch, d_sharedState, m1, new_dw);
-    setBC(delF,       "set_if_sym_BC",patch, d_sharedState, m0, new_dw);
-    setBC(Fr,         "set_if_sym_BC",patch, d_sharedState, m0, new_dw);
+    setBC(mass_src_0, "set_if_sym_BC",patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
+    setBC(mass_src_1, "set_if_sym_BC",patch, m_sharedState, m1, new_dw, isNotInitialTimeStep);
+    setBC(delF,       "set_if_sym_BC",patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
+    setBC(Fr,         "set_if_sym_BC",patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
   }
   //__________________________________
   //save total quantities
@@ -373,8 +380,7 @@ void ZeroOrder::scheduleErrorEstimate(const LevelP&,
 }
 //__________________________________
 void ZeroOrder::scheduleTestConservation(SchedulerP&,
-                                         const PatchSet*,                      
-                                         const ModelInfo*)                     
+                                         const PatchSet*)                     
 {
   // Not implemented yet
 }

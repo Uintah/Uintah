@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,10 +25,8 @@
 #ifndef UINTAH_HOMEBREW_SERIALMPM_H
 #define UINTAH_HOMEBREW_SERIALMPM_H
 
-#include <Core/Parallel/UintahParallelComponent.h>
 #include <CCA/Ports/DataWarehouseP.h>
 #include <CCA/Ports/Output.h>
-#include <CCA/Ports/SimulationInterface.h>
 #include <CCA/Ports/SwitchingCriteria.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/GridP.h>
@@ -37,11 +35,11 @@
 // put here to avoid template problems
 #include <Core/Math/Matrix3.h>
 #include <Core/Math/Short27.h>
-#include <Core/Labels/MPMLabel.h>
-#include <CCA/Components/MPM/Contact/Contact.h>
+#include <CCA/Components/MPM/Core/MPMLabel.h>
+#include <CCA/Components/MPM/Materials/Contact/Contact.h>
 #include <CCA/Components/MPM/MPMCommon.h>
 #include <Core/Geometry/Vector.h>
-#include <CCA/Components/MPM/MPMFlags.h>
+#include <CCA/Components/MPM/Core/MPMFlags.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
 #include <CCA/Components/MPM/PhysicalBC/LoadCurve.h>
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
@@ -83,9 +81,11 @@ WARNING
   
 ****************************************/
 
-class SerialMPM : public MPMCommon, public SimulationInterface, public UintahParallelComponent {
+  class SerialMPM : public MPMCommon {
 public:
-  SerialMPM(const ProcessorGroup* myworld);
+    SerialMPM(const ProcessorGroup* myworld,
+	      const SimulationStateP sharedState);
+
   virtual ~SerialMPM();
 
   Contact*         contactModel;
@@ -95,8 +95,8 @@ public:
   //////////
   // Insert Documentation Here:
   virtual void problemSetup(const ProblemSpecP& params, 
-                            const ProblemSpecP& restart_prob_spec, GridP&,
-                            SimulationStateP&);
+                            const ProblemSpecP& restart_prob_spec,
+			    GridP&);
 
   virtual void outputProblemSpec(ProblemSpecP& ps);
 
@@ -118,7 +118,7 @@ public:
                                  const MaterialSet* matls);
   //////////
   // Insert Documentation Here:
-  virtual void scheduleComputeStableTimestep(const LevelP& level, SchedulerP&);
+  virtual void scheduleComputeStableTimeStep(const LevelP& level, SchedulerP&);
 
   //////////
   // Insert Documentation Here:
@@ -137,13 +137,6 @@ public:
   
   /// Schedule to mark initial flags for AMR regridding
   void scheduleInitialErrorEstimate(const LevelP& coarseLevel, SchedulerP& sched);
-
-
-  void setMPMLabel(MPMLabel* Mlb)
-  {
-        delete lb;
-        lb = Mlb;
-  };
 
   void setWithICE()
   {
@@ -518,9 +511,6 @@ protected:
                                                   const PatchSet*,
                                                   const MaterialSet*);
 
-  bool needRecompile(double time, double dt,
-                     const GridP& grid);
-
   void readPrescribedDeformations(std::string filename);
 
   void readInsertParticlesFile(std::string filename);
@@ -575,10 +565,7 @@ protected:
     }
   };
   
-  SimulationStateP d_sharedState;
-  MPMLabel* lb;
   MPMFlags* flags;
-  Output* dataArchiver;
 
   double           d_nextOutputTime;
   double           d_SMALL_NUM_MPM;
@@ -602,8 +589,7 @@ protected:
 
 
   bool             d_fracture;
-  bool             d_recompile;
-  IntegratorType   d_integrator;
+
   MaterialSubset*  d_loadCurveIndex;
   
   std::vector<AnalysisModule*> d_analysisModules;

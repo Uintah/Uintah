@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -26,10 +26,10 @@
 #ifndef Packages_Uintah_CCA_Components_Examples_ModelFactory_h
 #define Packages_Uintah_CCA_Components_Examples_ModelFactory_h
 
-#include <Core/Parallel/UintahParallelComponent.h>
-#include <CCA/Ports/ModelMaker.h>
+#include <Core/Grid/SimulationStateP.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 
-namespace Uintah {
+#include <vector>
 
 /**************************************
 
@@ -59,27 +59,21 @@ WARNING
   
 ****************************************/
 
-  class ModelFactory : public UintahParallelComponent, public ModelMaker {
+namespace Uintah {
+
+  class ProcessorGroup;
+  class ModelInterface;
+
+  class ModelFactory {
+
   public:
-    ModelFactory(const ProcessorGroup* myworld);
-    virtual ~ModelFactory();
-
-    std::vector<ModelInterface*> getModels();
-    void clearModels();
-    virtual void makeModels(const ProblemSpecP& orig_or_restart_ps, 
-                            const ProblemSpecP& prob_spec,
-                            GridP& grid,
-                            SimulationStateP& sharedState,
-                            const bool doAMR);
-
-    virtual void outputProblemSpec(ProblemSpecP& ps);
+    // this function has a switch for all known components
     
-  private:
-    ModelFactory(const ModelFactory&);
-    ModelFactory& operator=(const ModelFactory&);
-
-    std::vector<ModelInterface*> d_models;
-         
+    static std::vector<ModelInterface*>
+    makeModels(const ProcessorGroup   * myworld,
+	       const SimulationStateP   sharedState,
+	       const ProblemSpecP& orig_or_restart_ps, 
+	       const ProblemSpecP& prob_spec);
   };
 }
 

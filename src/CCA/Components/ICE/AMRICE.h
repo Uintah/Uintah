@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -37,14 +37,16 @@
 #define is_rightFace_variable(face,var) ( ((face == "xminus" || face == "xplus") && (var == "scalar-f" || var == "vol_frac")) ?1:0  )
 
 namespace Uintah {
-  class AMRICE : public ICE{
+  class AMRICE : public ICE {
   public:
-    AMRICE(const ProcessorGroup* myworld);
+    AMRICE(const ProcessorGroup* myworld,
+	   const SimulationStateP sharedState);
+
     virtual ~AMRICE();
     
     virtual void problemSetup(const ProblemSpecP& params, 
                               const ProblemSpecP& restart_prob_spec, 
-                              GridP& grid, SimulationStateP& sharedState);
+                              GridP& grid);
                               
     virtual void scheduleInitialize(const LevelP& level,
                                     SchedulerP& sched);
@@ -54,7 +56,7 @@ namespace Uintah {
                                          bool needCoarseOld, 
                                          bool needCoarseNew);
                                          
-    virtual void scheduleRefine (const PatchSet* patches, 
+    virtual void scheduleRefine (const PatchSet* patches,
                                  SchedulerP& sched); 
     
     virtual void scheduleCoarsen(const LevelP& coarseLevel, 
@@ -718,7 +720,7 @@ void AMRICE::refluxOperator_computeCorrectionFluxes(
   
   // number of sub cycles
   double nSubCycles = 1;
-  if(!d_sharedState->isLockstepAMR()){
+  if(!isLockstepAMR()){
     nSubCycles = (double)fineLevel->getRefinementRatioMaxDim();
   }
 

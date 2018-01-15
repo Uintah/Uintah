@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -24,7 +24,8 @@
 
 
 #include <CCA/Components/Regridder/SingleLevelRegridder.h>
-#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Ports/ApplicationInterface.h>
+#include <CCA/Ports/LoadBalancer.h>
 
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -56,7 +57,7 @@ void SingleLevelRegridder::problemSetup(const ProblemSpecP& params,
 {
 
   RegridderCommon::problemSetup(params, oldGrid, state);
-  d_sharedState  = state;
+
   d_maxLevels = oldGrid->numLevels();
   
   // Compute the refinement ratio (RR).  The regridder's
@@ -121,8 +122,8 @@ void SingleLevelRegridder::problemSetup(const ProblemSpecP& params,
 
   // Running with VisIt so add in the variables that the user can
   // modify.
-  if( d_sharedState->getVisIt() && !initialized ) {
-    d_sharedState->d_debugStreams.push_back( &grid_dbg );
+  if( m_application->getVisIt() && !initialized ) {
+    m_application->getDebugStreams().push_back( &grid_dbg );
 
     initialized = true;
   }
@@ -140,10 +141,8 @@ void SingleLevelRegridder::problemSetup_BulletProofing(const int L)
 //  Reset the patch layout on the level of interest.  The other level's
 //  grid structures will remain constant
 // 
-Grid* SingleLevelRegridder::regrid(Grid* oldGrid)
+Grid* SingleLevelRegridder::regrid(Grid* oldGrid, const int timeStep)
 {
-  MALLOC_TRACE_TAG_SCOPE("SingleLevelRegridder::regrid");
-
   vector< vector<IntVector> > tiles(min(oldGrid->numLevels()+1,d_maxLevels));
 
   //__________________________________
@@ -156,7 +155,7 @@ Grid* SingleLevelRegridder::regrid(Grid* oldGrid)
     if( l == d_level_index) {
 
       const LevelP level = oldGrid->getLevel(l);
-      const PatchSubset *patchSS=lb_->getPerProcessorPatchSet(level)->getSubset(d_myworld->myrank());
+      const PatchSubset *patchSS=m_loadBalancer->getPerProcessorPatchSet(level)->getSubset(d_myworld->myRank());
       vector<IntVector> mytiles;
 
       // For each patch I own
@@ -209,7 +208,7 @@ Grid* SingleLevelRegridder::regrid(Grid* oldGrid)
   TiledRegridder::OutputGridStats(newGrid);
 
   // initialize the weights on new patches
-  lb_->initializeWeights(oldGrid,newGrid);
+  m_loadBalancer->initializeWeights(oldGrid,newGrid);
 
 #if SCI_ASSERTION_LEVEL > 0
   if(! TiledRegridder::verifyGrid(newGrid) ){

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -28,6 +28,7 @@
 #include <CCA/Ports/InputContext.h>
 #include <CCA/Ports/DataWarehouseP.h>
 #include <CCA/Ports/DataWarehouse.h>
+#include <CCA/Ports/LoadBalancer.h>
 
 #if HAVE_PIDX
 #  include <CCA/Ports/PIDXOutputContext.h>
@@ -500,7 +501,7 @@ DataArchive::queryLifetime( double& /*min*/, double& /*max*/,
 //
 
 // PIDX hack: fix me... how to store this info correctly?
-Uintah::HashTable<string, ConsecutiveRangeSet> var_materials;
+std::unordered_map<string, ConsecutiveRangeSet> var_materials;
 
 void
 DataArchive::queryVariables( vector<string>                         & names,
@@ -530,7 +531,7 @@ DataArchive::queryVariables( vector<string>                         & names,
       for( int j = 0; j < num_matls[ i ]; j++ ) {
         set.addInOrder( j );
       }
-      var_materials.insert( names[ i ], set );
+      var_materials[ names[ i ] ] = set;
     }
   }
   // end PIDX hack.
@@ -557,6 +558,7 @@ DataArchive::queryGlobals( vector<string>                         & names,
   bool result = ProblemSpec::findBlock( "<globals>", d_indexFile );
 
   if( !result ) {
+    d_lock.unlock();
     return;
   }
 
@@ -1046,6 +1048,8 @@ DataArchive::query(       Variable     & var,
     (static_cast<ParticleVariableBase*>(&var))->allocate( psubset );
 //      (dynamic_cast<ParticleVariableBase*>(&var))->allocate(psubset);
   }
+  else if (td->getType() == TypeDescription::PerPatch) {
+  }
   else if (td->getType() != TypeDescription::ReductionVariable) {
     var.allocate( patch, varinfo.boundaryLayer );
   }
@@ -1162,7 +1166,7 @@ DataArchive::queryRegion(       Variable  & var,
   Patch::selectType patches;
 
   level->selectPatches( low, high, patches );
-  for(int i=0;i<patches.size();i++){
+  for(unsigned int i=0;i<patches.size();i++){
     const Patch* patch = patches[i];
 
     if (type == 0) {
@@ -1259,12 +1263,12 @@ DataArchive::findPatchAndIndex( const GridP            grid,
 //
 #if HAVE_PIDX
 void
-DataArchive::createPIDXCommunicator( const GridP & grid, LoadBalancerPort * lb )
+DataArchive::createPIDXCommunicator( const GridP & grid, LoadBalancer * lb )
 {
   int rank = Uintah::Parallel::getMPIRank();
   cout << rank << ": entering createPIDXCommunicator() for this: " << this << "\n";
 
-  lb->possiblyDynamicallyReallocate( grid, LoadBalancerPort::RESTART_LB );
+  lb->possiblyDynamicallyReallocate( grid, LoadBalancer::RESTART_LB );
 
   // Resize the comms back to 0...
   d_pidxComms.clear();
@@ -1303,7 +1307,7 @@ void
 DataArchive::restartInitialize( const int                timestep_index,
                                 const GridP            & grid,
                                       DataWarehouse    * dw,
-                                      LoadBalancerPort * lb,
+                                      LoadBalancer * lb,
                                       double           * pTime )
 {
   vector<int>    ts_indices;
@@ -1619,14 +1623,14 @@ DataArchive::restartInitialize( const int                timestep_index,
 
 //______________________________________________________________________
 //  This method is a specialization of restartInitialize().
-//  It's only used by the reduceUda component
+//  It's only used by the postProcessUda component
 void
-DataArchive::reduceUda_ReadUda( const ProcessorGroup   * pg,
-                                const int                timeIndex,
-                                const GridP            & grid,
-                                const PatchSubset      * patches,
-                                      DataWarehouse    * dw,
-                                      LoadBalancerPort * lb )
+DataArchive::postProcess_ReadUda( const ProcessorGroup   * pg,
+                                  const int                timeIndex,
+                                  const GridP            & grid,
+                                  const PatchSubset      * patches,
+                                        DataWarehouse    * dw,
+                                        LoadBalancer * lb )
 {
   vector<int>    timesteps;
   vector<double> times;
@@ -1650,13 +1654,11 @@ DataArchive::reduceUda_ReadUda( const ProcessorGroup   * pg,
 
     varMap[names[i]] = vl;
   }
+  dw->setID( timeIndex );
+  
+  proc0cout << "   DataArchive:postProcess_ReadUda: udaTimestep " << timesteps[timeIndex] << " timeIndex: " << timeIndex << " dw ID: " << dw->getID() << endl;
 
   TimeData& timedata = getTimeData( timeIndex );
-
-  // set here instead of the SimCont because we need the DW ID to be set
-  // before saving particle subsets
-  dw->setID( timesteps[timeIndex] );
-
   // Make sure to load all the data so we can iterate through it
   for( int p = 0; p < patches->size(); p++ ){
     const Patch* patch = patches->get( p );
@@ -1684,7 +1686,7 @@ DataArchive::reduceUda_ReadUda( const ProcessorGroup   * pg,
 
     // If this process does not own this patch, then ignore the variable...
     int proc = lb->getPatchwiseProcessorAssignment(patch);
-    if ( proc != pg->myrank() ) {
+    if ( proc != pg->myRank() ) {
       continue;
     }
 
@@ -1692,6 +1694,7 @@ DataArchive::reduceUda_ReadUda( const ProcessorGroup   * pg,
     Variable* var = label->typeDescription()->createInstance();
     query( *var, key.name_, matl, patch, timeIndex, &data );
 
+    // particles
     ParticleVariableBase* particles;
     if ( (particles = dynamic_cast<ParticleVariableBase*>(var)) ) {
       if ( !dw->haveParticleSubset(matl, patch) ) {
@@ -1700,12 +1703,12 @@ DataArchive::reduceUda_ReadUda( const ProcessorGroup   * pg,
         ASSERTEQ( dw->getParticleSubset(matl, patch), particles->getParticleSubset() );
       }
     }
-
+    
     dw->put( var, label, matl, patch );
     delete var;
   }
 
-} // end reduceUda_ReadUda()
+} // end postProcess_ReadUda()
 
 //______________________________________________________________________
 //
@@ -2249,7 +2252,7 @@ DataArchive::queryMaterials( const string & varname,
   ConsecutiveRangeSet matls;
 
   if( d_fileFormat == PIDX ) {
-    var_materials.lookup( varname, matls );
+    matls = var_materials[ varname ];
     return matls;
   }
 

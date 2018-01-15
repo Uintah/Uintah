@@ -13,11 +13,11 @@
     <delt_min>1e-5</delt_min>
     <delt_max>1e-5</delt_max>
     <delt_init>1e-1</delt_init>
-    <timestep_multiplier>0.3</timestep_multiplier>
+    <timestep_multiplier>1</timestep_multiplier>
     <max_Timesteps>3</max_Timesteps>
   </Time>
   <DataArchiver>
-    <filebase>almgren-mms.uda</filebase>
+    <filebase>almgren-mms-diff.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <!--outputInitTimestep/-->
     <save label="x-mom"/>
@@ -33,7 +33,7 @@
     <save label="gamma"/>
     <save label="pressure"/>
     <save label="b_press"/>
-    <checkpoint cycle="2" interval=".3"/>
+    <checkpoint cycle="2" interval="1e-5"/>
     <compression>gzip</compression>
   </DataArchiver>
   <Grid>
@@ -77,7 +77,7 @@
           <value>1.</value>
         </model>
       </PropertyModelsV2>
-      <src_kokkos>
+      <SourceV2>
         <src label="x_mms" type="MMS_mom">
           <variable type="FX"/>
           <which_vel>u</which_vel>
@@ -88,14 +88,8 @@
           <which_vel>v</which_vel>
           <coordinates x="gridX" y="vcellY"/>
         </src>
-      </src_kokkos>
+      </SourceV2>
       <KMomentum>
-        <!--convection scheme="central"/-->
-        <!--convection scheme="f_central"/-->
-        <!--convection scheme="upwind"/-->
-        <!--src_x label = "x_mms_source"/>
-        <src_y label = "y_mms_source"/-->
-        <!--inviscid/-->
         <src_x label = "x_mms_source_diff"/>
         <src_y label = "y_mms_source_diff"/>
         <PressureSolver>
@@ -111,12 +105,12 @@
         </PressureSolver>
       </KMomentum>
       <Initialization>
-        <task task_label="x-mom-init" variable_label="x-mom" type="almgren_mms">
+        <task task_label="uVel-init" variable_label="uVel" type="almgren_mms">
           <variable type="FX"/>
           <which_vel>u</which_vel>
           <coordinates x="ucellX" y="gridY"/>
         </task>
-        <task task_label="y-mom-init" variable_label="y-mom" type="almgren_mms">
+        <task task_label="vVel-init" variable_label="vVel" type="almgren_mms">
           <variable type="FY"/>
           <which_vel>v</which_vel>
           <coordinates x="gridX" y="vcellY"/>

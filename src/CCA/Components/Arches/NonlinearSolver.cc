@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -48,12 +48,5 @@ NonlinearSolver::commonProblemSetup( ProblemSpecP db ){
   db->getWithDefault("initial_dt",d_initial_dt,1.0);
 
   m_arches_spec = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES");
-
-  // This is a generic, global parameter for task packing.
-  // One may want logic with more fine-grained control in
-  // some cases. Default is false.
-  if ( db->findBlock("global_pack_tasks") ){
-    m_global_pack_tasks = true;
-  }
 
 }

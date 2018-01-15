@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,6 +25,9 @@
 #include <CCA/Components/Schedulers/DynamicMPIScheduler.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Components/Schedulers/TaskGraph.h>
+#include <CCA/Ports/ApplicationInterface.h>
+#include <CCA/Ports/LoadBalancer.h>
+#include <CCA/Ports/Output.h>
 
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Util/DOUT.hpp>
@@ -49,10 +52,10 @@ Dout g_queue_length( "DynamicMPI_QueueLength", false);
 
 //______________________________________________________________________
 //
-DynamicMPIScheduler::DynamicMPIScheduler( const ProcessorGroup*      myworld,
-                                          const Output*              oport,
-                                                DynamicMPIScheduler* parentScheduler )
-  : MPIScheduler( myworld, oport, parentScheduler )
+DynamicMPIScheduler::DynamicMPIScheduler( const ProcessorGroup*      myworld
+                                        ,       DynamicMPIScheduler* parentScheduler
+                                        )
+  : MPIScheduler( myworld, parentScheduler )
 {
   m_task_queue_alg =  MostMessages;
 }
@@ -67,8 +70,9 @@ DynamicMPIScheduler::~DynamicMPIScheduler()
 //______________________________________________________________________
 //
 void
-DynamicMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec,
-                                         SimulationStateP& state )
+DynamicMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec
+                                 , const SimulationStateP& state
+                                 )
 {
   std::string taskQueueAlg = "";
 
@@ -112,9 +116,9 @@ DynamicMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec,
 
   // Running with VisIt so add in the variables that the user can
   // modify.
-  if( m_shared_state->getVisIt() && !initialized ) {
-    m_shared_state->d_douts.push_back( &g_dbg );
-    m_shared_state->d_douts.push_back( &g_queue_length );
+  if( m_application->getVisIt() && !initialized ) {
+    m_application->getDouts().push_back( &g_dbg );
+    m_application->getDouts().push_back( &g_queue_length );
 
     initialized = true;
   }
@@ -126,21 +130,20 @@ DynamicMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec,
 SchedulerP
 DynamicMPIScheduler::createSubScheduler()
 {
-  UintahParallelPort  * lbp      = getPort("load balancer");
-  DynamicMPIScheduler * newsched = scinew DynamicMPIScheduler( d_myworld, m_out_port, this );
-  newsched->m_shared_state = m_shared_state;
-  newsched->attachPort( "load balancer", lbp );
-  newsched->m_shared_state = m_shared_state;
+  DynamicMPIScheduler * newsched = scinew DynamicMPIScheduler( d_myworld, this );
+  newsched->setComponents( this );
+  newsched->m_sharedState = m_sharedState;
   return newsched;
 }
 
 //______________________________________________________________________
 //
 void
-DynamicMPIScheduler::execute( int tgnum     /*=0*/,
-                              int iteration /*=0*/ )
+DynamicMPIScheduler::execute( int tgnum     /*=0*/
+                            , int iteration /*=0*/
+                            )
 {
-  if (m_shared_state->isCopyDataTimestep()) {
+  if (m_is_copy_data_timestep) {
     MPIScheduler::execute(tgnum, iteration);
     return;
   }
@@ -163,7 +166,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
   DetailedTasks* dts = tg->getDetailedTasks();
 
   if(!dts) {
-    if (d_myworld->myrank() == 0) {
+    if (d_myworld->myRank() == 0) {
       DOUT(true, "DynamicMPIScheduler skipping execute, no tasks");
     }
     return;
@@ -177,7 +180,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
     dts->localTask(i)->resetDependencyCounts();
   }
 
-  int me = d_myworld->myrank();
+  int me = d_myworld->myRank();
 
   // This only happens if "-emit_taskgraphs" is passed to sus
   makeTaskGraphDoc(dts, me);
@@ -185,12 +188,12 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
   mpi_info_.reset( 0 );
 
   if( m_reloc_new_pos_label && m_dws[m_dwmap[Task::OldDW]] != nullptr ) {
-    m_dws[m_dwmap[Task::OldDW]]->exchangeParticleQuantities(dts, getLoadBalancer(), m_reloc_new_pos_label, iteration);
+    m_dws[m_dwmap[Task::OldDW]]->exchangeParticleQuantities(dts, m_loadBalancer, m_reloc_new_pos_label, iteration);
   }
 
 #if 0
   // hook to post all the messages up front
-  if (!m_shared_state->isCopyDataTimestep()) {
+  if (!m_is_copy_data_timestep) {
     // post the receives in advance
     for (int i = 0; i < ntasks; i++) {
       initiateTask( dts->localTask(i), abort, abort_point, iteration );
@@ -238,12 +241,12 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
 
       if ((task->getTask()->getType() == Task::Reduction) || (task->getTask()->usesMPI())) {  //save the reduction task for later
         phaseSyncTask[task->getTask()->m_phase] = task;
-        DOUT(g_task_dbg, "Rank-" << d_myworld->myrank() << " Task Reduction ready " << *task << " deps needed: " << task->getExternalDepCount());
+        DOUT(g_task_dbg, "Rank-" << d_myworld->myRank() << " Task Reduction ready " << *task << " deps needed: " << task->getExternalDepCount());
       } else {
         initiateTask(task, abort, abort_point, iteration);
         task->markInitiated();
         task->checkExternalDepCount();
-        DOUT(g_task_dbg, "Rank-" << d_myworld->myrank() << " Task internal ready " << *task << " deps needed: " << task->getExternalDepCount());
+        DOUT(g_task_dbg, "Rank-" << d_myworld->myRank() << " Task internal ready " << *task << " deps needed: " << task->getExternalDepCount());
 
         // if MPI has completed, it will run on the next iteration
         pending_tasks.insert(task);
@@ -264,15 +267,15 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
       DetailedTask * task = dts->getNextExternalReadyTask();
 
       DOUT(g_task_dbg,
-           "Rank-" << d_myworld->myrank() << " Running task " << *task << "(" << dts->numExternalReadyTasks() << "/" << pending_tasks.size() << " tasks in queue)");;
+           "Rank-" << d_myworld->myRank() << " Running task " << *task << "(" << dts->numExternalReadyTasks() << "/" << pending_tasks.size() << " tasks in queue)");;
 
       pending_tasks.erase(pending_tasks.find(task));
       ASSERTEQ(task->getExternalDepCount(), 0);
       runTask(task, iteration);
       numTasksDone++;
 
-      if (g_task_order && d_myworld->myrank() == d_myworld->size() / 2) {
-        DOUT(true, d_myworld->myrank() << " Running task static order: " << task->getStaticOrder() << " , scheduled order: " << numTasksDone);
+      if (g_task_order && d_myworld->myRank() == d_myworld->nRanks() / 2) {
+        DOUT(true, d_myworld->myRank() << " Running task static order: " << task->getStaticOrder() << " , scheduled order: " << numTasksDone);
       }
       phaseTasksDone[task->getTask()->m_phase]++;
     } 
@@ -287,7 +290,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
       DetailedTask *reducetask = phaseSyncTask[currphase];
       if (reducetask->getTask()->getType() == Task::Reduction) {
         if (!abort) {
-          DOUT(g_task_dbg, "Rank-" << d_myworld->myrank() << " Running Reduce task " << reducetask->getTask()->getName());
+          DOUT(g_task_dbg, "Rank-" << d_myworld->myRank() << " Running Reduce task " << reducetask->getTask()->getName());
         }
         initiateReduction(reducetask);
       }
@@ -298,14 +301,14 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
         ASSERT(reducetask->getExternalDepCount() == 0);
         runTask(reducetask, iteration);
 
-        DOUT(g_task_dbg, "Rank-" << d_myworld->myrank() << " Running OPP task:");;
+        DOUT(g_task_dbg, "Rank-" << d_myworld->myRank() << " Running OPP task:");;
 
       }
       ASSERT(reducetask->getTask()->m_phase == currphase);
 
       numTasksDone++;
-      if (g_task_order && d_myworld->myrank() == d_myworld->size() / 2) {
-        DOUT(true, d_myworld->myrank() << " Running task static order: " << reducetask->getStaticOrder() << " , scheduled order: " << numTasksDone);
+      if (g_task_order && d_myworld->myRank() == d_myworld->nRanks() / 2) {
+        DOUT(true, d_myworld->myRank() << " Running task static order: " << reducetask->getStaticOrder() << " , scheduled order: " << numTasksDone);
       }
       phaseTasksDone[reducetask->getTask()->m_phase]++;
     }
@@ -343,7 +346,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
     float queuelength = lengthsum / totaltasks;
     float allqueuelength = 0;
     Uintah::MPI::Reduce(&queuelength, &allqueuelength, 1, MPI_FLOAT, MPI_SUM, 0, d_myworld->getComm());
-    proc0cout << "average queue length:" << allqueuelength / d_myworld->size() << std::endl;
+    proc0cout << "average queue length:" << allqueuelength / d_myworld->nRanks() << std::endl;
   }
 
   //---------------------------------------------------------------------------
@@ -385,13 +388,11 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
   m_exec_timer.stop();
 
   // compute the net timings
-  if (m_shared_state != nullptr) {
-    computeNetRunTimeStats(m_shared_state->d_runTimeStats);
-  }
+  MPIScheduler::computeNetRunTimeStats();
 
   // only do on top-level scheduler
   if ( m_parent_scheduler == nullptr ) {
-    outputTimingStats( "DynamicMPIScheduler" );
+    MPIScheduler::outputTimingStats( "DynamicMPIScheduler" );
   }
 
   RuntimeStats::report(d_myworld->getComm());

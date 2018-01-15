@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -26,15 +26,17 @@
 #define UINTAH_CCA_COMPONENTS_FVM_FVMMATERIAL_H
 
 #include <Core/Grid/Material.h>
-#include <Core/Grid/Patch.h>
-#include <Core/ProblemSpec/ProblemSpecP.h>
-#include <Core/GeometryPiece/GeometryObject.h>
+
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/Variables/CCVariable.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
 #include <vector>
 
 namespace Uintah {
+  class GeometryObject;
+  class Patch;
+  
   class FVMMaterial : public Material {
     public:
       enum FVMMethod{

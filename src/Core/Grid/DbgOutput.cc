@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -235,7 +235,7 @@ printTaskLevels( const ProcessorGroup * d_myworld
       const Patch* firstPatch = level->getPatch(0);
       if (taskPatches->contains(firstPatch)) {
         std::ostringstream msg;
-        msg << "Rank-" << d_myworld->myrank() << "   ";
+        msg << "Rank-" << d_myworld->myRank() << "   ";
         msg << std::left;
         msg.width(10);
         msg << dtask->getTask()->getName();

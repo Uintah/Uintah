@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -63,12 +63,10 @@ std::mutex g_scheduler_mutex{};        // main scheduler lock for multi-threaded
 //______________________________________________________________________
 //
 KokkosOpenMPScheduler::KokkosOpenMPScheduler( const ProcessorGroup   * myworld
-                                            , const Output           * oport
                                             ,       KokkosOpenMPScheduler * parentScheduler
                                             )
-  : MPIScheduler(myworld, oport, parentScheduler)
+  : MPIScheduler(myworld, parentScheduler)
 {
-
 }
 
 
@@ -84,7 +82,7 @@ KokkosOpenMPScheduler::~KokkosOpenMPScheduler()
 //
 void
 KokkosOpenMPScheduler::problemSetup( const ProblemSpecP     & prob_spec
-                                   ,       SimulationStateP & state
+                                   , const SimulationStateP & state
                                    )
 {
   // Default taskReadyQueueAlg
@@ -119,7 +117,7 @@ KokkosOpenMPScheduler::problemSetup( const ProblemSpecP     & prob_spec
 
   proc0cout << "   Using \"" << taskQueueAlg << "\" task queue priority algorithm" << std::endl;
 
-  if (d_myworld->myrank() == 0) {
+  if (d_myworld->myRank() == 0) {
     std::cout << "   WARNING: Kokkos-OpenMP Scheduler is EXPERIMENTAL, not all tasks are Kokkos-enabled yet." << std::endl;
   }
 
@@ -145,7 +143,7 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
 {
   // copy data timestep must be single threaded for now and
   //  also needs to run deterministically, in a static order
-  if (m_shared_state->isCopyDataTimestep()) {
+  if (m_is_copy_data_timestep) {
     MPIScheduler::execute(tgnum, iteration);
     return;
   }
@@ -181,7 +179,7 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
     m_detailed_tasks->localTask(i)->resetDependencyCounts();
   }
 
-  int my_rank = d_myworld->myrank();
+  int my_rank = d_myworld->myRank();
 
   // This only happens if "-emit_taskgraphs" is passed to sus
   makeTaskGraphDoc(m_detailed_tasks, my_rank);
@@ -193,7 +191,7 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
   m_abort_point = 987654;
 
   if( m_reloc_new_pos_label && m_dws[m_dwmap[Task::OldDW]] != nullptr ) {
-    m_dws[m_dwmap[Task::OldDW]]->exchangeParticleQuantities(m_detailed_tasks, getLoadBalancer(), m_reloc_new_pos_label, iteration);
+    m_dws[m_dwmap[Task::OldDW]]->exchangeParticleQuantities(m_detailed_tasks, m_loadBalancer, m_reloc_new_pos_label, iteration);
   }
 
   m_curr_iteration = iteration;
@@ -263,7 +261,7 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
     float allqueuelength = 0;
     Uintah::MPI::Reduce(&queuelength, &allqueuelength, 1, MPI_FLOAT, MPI_SUM, 0, d_myworld->getComm());
 
-    proc0cout << "average queue length:" << allqueuelength / d_myworld->size() << std::endl;
+    proc0cout << "average queue length:" << allqueuelength / d_myworld->nRanks() << std::endl;
   }
 
   if( m_restartable && tgnum == static_cast<int>(m_task_graphs.size()) - 1 ) {
@@ -286,9 +284,7 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
   m_exec_timer.stop();
 
   // compute the net timings
-  if ( m_shared_state != nullptr ) {
-    MPIScheduler::computeNetRunTimeStats(m_shared_state->d_runTimeStats);
-  }
+  MPIScheduler::computeNetRunTimeStats();
 
   // only do on toplevel scheduler
   if (m_parent_scheduler == nullptr) {

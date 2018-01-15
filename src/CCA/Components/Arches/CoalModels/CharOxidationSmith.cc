@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -33,7 +33,6 @@
 #include <CCA/Components/Arches/ChemMix/ChemHelper.h>
 #include <CCA/Ports/Scheduler.h>
 
-#include <Core/Containers/StaticArray.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Grid/SimulationState.h>
@@ -42,11 +41,12 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 
+#include <sci_defs/visit_defs.h>
+
 #include <iomanip>
 #include <iostream>
 #include <numeric>
 
-#include <sci_defs/visit_defs.h>
 #define SQUARE(x) x*x
 #define CUBE(x) x*x*x
 using namespace Uintah;
@@ -326,43 +326,40 @@ CharOxidationSmith::problemSetup(const ProblemSpecP& params, int qn)
     }
   }
 
-
 #ifdef HAVE_VISIT
   static bool initialized = false;
 
   // Running with VisIt so add in the variables that the user can
   // modify.
-  if( d_sharedState->getVisIt() && !initialized ) {
+//   if( d_sharedState->getVisIt() && !initialized ) {
     // variable 1 - Must start with the component name and have NO
     // spaces in the var name.
-    SimulationState::interactiveVar var;
-    var.name     = "Arches-CharOx-PreExp-Factor-O2";
-    var.type     = Uintah::TypeDescription::double_type;
-    var.value    = (void *) &(_a_l[0]);
-    var.range[0]   = -1.0e9;
-    var.range[1]   = +1.0e9;
-    var.modifiable = true;
-    var.recompile  = false;
-    var.modified   = false;
-    d_sharedState->d_UPSVars.push_back( var );
+//     SimulationState::interactiveVar var;
+//     var.name     = "Arches-CharOx-PreExp-Factor-O2";
+//     var.type     = Uintah::TypeDescription::double_type;
+//     var.value    = (void *) &(_a_l[0]);
+//     var.range[0]   = -1.0e9;
+//     var.range[1]   = +1.0e9;
+//     var.modifiable = true;
+//     var.recompile  = false;
+//     var.modified   = false;
+//     d_sharedState->d_UPSVars.push_back( var );
 
     // variable 2 - Must start with the component name and have NO
     // spaces in the var name.
-    var.name     = "Arches-CharOx-Activation-Energy-O2";
-    var.type     = Uintah::TypeDescription::double_type;
-    var.value    = (void *) &(_e_l[0]);
-    var.range[0]   = -1.0e9;
-    var.range[1]   = +1.0e9;
-    var.modifiable = true;
-    var.recompile  = false;
-    var.modified   = false;
-    d_sharedState->d_UPSVars.push_back( var );
+//     var.name     = "Arches-CharOx-Activation-Energy-O2";
+//     var.type     = Uintah::TypeDescription::double_type;
+//     var.value    = (void *) &(_e_l[0]);
+//     var.range[0]   = -1.0e9;
+//     var.range[1]   = +1.0e9;
+//     var.modifiable = true;
+//     var.recompile  = false;
+//     var.modified   = false;
+//     d_sharedState->d_UPSVars.push_back( var );
 
-    initialized = true;
-  }
+//     initialized = true;
+//   }
 #endif
-
-
 }
 
 
@@ -408,7 +405,7 @@ CharOxidationSmith::initVars( const ProcessorGroup * pc,
     CCVariable<double> particle_temp_rate;
     CCVariable<double> surface_rate;
     CCVariable<double> PO2surf_;
-    StaticArray< CCVariable<double> > reaction_rate_l(_NUM_reactions); // char reaction rate for lth reaction.
+    std::vector< CCVariable<double> > reaction_rate_l(_NUM_reactions); // char reaction rate for lth reaction.
 
     new_dw->allocateAndPut( char_rate, d_modelLabel, matlIndex, patch );
     char_rate.initialize(0.0);
@@ -511,7 +508,7 @@ CharOxidationSmith::sched_computeModel( const LevelP& level, SchedulerP& sched, 
     tsk->requires( which_dw, _species_varlabels[l], gn, 0 );
   }
   tsk->requires( which_dw, _MW_varlabel, gn, 0 );
-  tsk->requires( Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label());
+  tsk->requires( Task::OldDW, d_fieldLabels->d_delTLabel);
   tsk->requires( Task::NewDW, _RHS_source_varlabel, gn, 0 );
   tsk->requires( Task::NewDW, _RC_RHS_source_varlabel, gn, 0 );
 
@@ -548,7 +545,7 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
     double vol = Dx.x()* Dx.y()* Dx.z();
 
     delt_vartype DT;
-    old_dw->get(DT, d_fieldLabels->d_sharedState->get_delt_label());
+    old_dw->get(DT, d_fieldLabels->d_delTLabel);
     double dt = DT;
 
     CCVariable<double> char_rate;
@@ -556,7 +553,7 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
     CCVariable<double> particle_temp_rate;
     CCVariable<double> surface_rate;
     CCVariable<double> PO2surf_;
-    StaticArray< CCVariable<double> > reaction_rate_l(_NUM_reactions); // char reaction rate for lth reaction.
+    std::vector< CCVariable<double> > reaction_rate_l(_NUM_reactions); // char reaction rate for lth reaction.
 
     DenseMatrix* dfdrh = scinew DenseMatrix(_NUM_reactions,_NUM_reactions);
 
@@ -589,7 +586,7 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
       }
     }
 
-    StaticArray< constCCVariable<double> > old_reaction_rate_l(_NUM_reactions); // char reaction rate for lth reaction.
+    std::vector< constCCVariable<double> > old_reaction_rate_l(_NUM_reactions); // char reaction rate for lth reaction.
     for (int l=0; l<_NUM_reactions;l++ ){
       which_dw->get( old_reaction_rate_l[l], _reaction_rate_varlabels[l], matlIndex, patch, gn, 0 );
     }
@@ -605,8 +602,8 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
     which_dw->get( temperature , _gas_temperature_varlabel , matlIndex , patch , gn , 0 );
     constCCVariable<double> particle_temperature;
     which_dw->get( particle_temperature , _particle_temperature_varlabel , matlIndex , patch , gn , 0 );
-    StaticArray< constCCVariable<double> > length(_nQn_part);
-    StaticArray< constCCVariable<double> > weight(_nQn_part);
+    std::vector< constCCVariable<double> > length(_nQn_part);
+    std::vector< constCCVariable<double> > weight(_nQn_part);
     for (int i=0; i<_nQn_part;i++ ){
       which_dw->get( length[i], _length_varlabel[i], matlIndex, patch, gn, 0 );
       which_dw->get( weight[i], _weight_varlabel[i], matlIndex, patch, gn, 0 );
@@ -621,7 +618,7 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
     new_dw->get( RC_RHS_source , _RC_RHS_source_varlabel , matlIndex , patch , gn , 0 );
     constCCVariable<double> number_density;
     which_dw->get( number_density , _number_density_varlabel , matlIndex , patch , gn , 0 );
-    StaticArray< constCCVariable<double> > species(_NUM_species);
+    std::vector< constCCVariable<double> > species(_NUM_species);
     for (int l=0; l<_NUM_species; l++) {
       which_dw->get( species[l], _species_varlabels[l], matlIndex, patch, gn, 0 );
     }

@@ -1,6 +1,7 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <CCA/Components/Arches/SourceTerms/ManifoldRxn.h>
@@ -11,9 +12,9 @@
 using namespace std;
 using namespace Uintah;
 
-ManifoldRxn::ManifoldRxn( std::string src_name, SimulationStateP& shared_state,
-                            vector<std::string> req_label_names, std::string type )
-: SourceTermBase(src_name, shared_state, req_label_names, type)
+ManifoldRxn::ManifoldRxn( std::string src_name, ArchesLabel* field_labels,
+			  vector<std::string> req_label_names, std::string type )
+: SourceTermBase(src_name, field_labels->d_sharedState, req_label_names, type), _field_labels(field_labels)
 {
   _src_label = VarLabel::create( src_name, CCVariable<double>::getTypeDescription() );
   _conv_label = VarLabel::create( src_name+"_conv", CCVariable<double>::getTypeDescription() );
@@ -88,7 +89,7 @@ ManifoldRxn::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
   tsk->requires(Task::NewDW, VarLabel::find("density_old"), Ghost::AroundCells, 1);
   tsk->requires(Task::NewDW, VarLabel::find("density"), Ghost::None, 0);
   tsk->requires(Task::NewDW, VarLabel::find("turb_viscosity"), Ghost::AroundCells, 1);
-  tsk->requires(Task::OldDW, _shared_state->get_delt_label());
+  tsk->requires(Task::OldDW, _field_labels->d_delTLabel);
 
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
 
@@ -161,7 +162,7 @@ ManifoldRxn::computeSource( const ProcessorGroup* pc,
     double vol = Dx.x()*Dx.y()*Dx.z();
 
     delt_vartype DT;
-    old_dw->get(DT, _shared_state->get_delt_label() );
+    old_dw->get(DT, _field_labels->d_delTLabel);
     double dt = DT;
     double voldt = vol/dt;
 
@@ -173,7 +174,6 @@ ManifoldRxn::computeSource( const ProcessorGroup* pc,
 
       src[c] = accum + conv[c] - diff[c];
       src[c] /= (vol);
-
     }
   }
 }

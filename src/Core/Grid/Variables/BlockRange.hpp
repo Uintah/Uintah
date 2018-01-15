@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -24,6 +24,8 @@
 
 #ifndef UINTAH_HOMEBREW_BLOCK_RANGE_HPP
 #define UINTAH_HOMEBREW_BLOCK_RANGE_HPP
+
+#include <sci_defs/kokkos_defs.h>
 
 #ifdef UINTAH_ENABLE_KOKKOS
 #include <Kokkos_Core.hpp>

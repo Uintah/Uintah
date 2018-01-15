@@ -112,7 +112,7 @@ MMS_scalar::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   CCVariable<double>& s_t_mms = *(tsk_info->get_uintah_field<CCVariable<double> >(m_MMS_source_t_label));
   constCCVariable<double>& X  = *(tsk_info->get_const_uintah_field<constCCVariable<double > >( ind_var_name ));
 
-  double time_d      = _shared_state->getElapsedSimTime();
+  double time_d      = tsk_info->get_time(); //_shared_state->getElapsedSimTime();
   //  Vector Dx = patch->dCell();
 
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
@@ -205,8 +205,7 @@ MMS_scalar::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   constCCVariable<double>& X  = *(tsk_info->get_const_uintah_field<constCCVariable<double > >( ind_var_name ));
 
 
-  double time_d      = _shared_state->getElapsedSimTime();
-  //  double time_d      = _shared_state->getElapsedTime();
+  double time_d      = tsk_info->get_time(); //_shared_state->getElapsedSimTime();
   int   time_substep = tsk_info->get_time_substep();
   double factor      = tsk_info->get_ssp_time_factor(time_substep);
   double dt          = tsk_info->get_dt();
@@ -228,8 +227,8 @@ MMS_scalar::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     case T1:
     Uintah::parallel_for( range, [&](int i, int j, int k){
       MMS_T1(f_mms(i,j,k), s_t_mms(i,j,k), time_d );
-      /** @brief it is only for f_mms, because we need f_mms(t+dt),
-      without this we are going to get f_mms(t+0.5*dt)  **/
+      // it is only for f_mms, because we need f_mms(t+dt),
+      //without this we are going to get f_mms(t+0.5*dt)  **/
       if (time_substep==2){
         double s_t_dummy  = 0.0;
         double current_time = time_d + factor*dt;
@@ -241,8 +240,8 @@ MMS_scalar::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     Uintah::parallel_for( range, [&](int i, int j, int k){
 
       MMS_T2(f_mms(i,j,k), s_t_mms(i,j,k), time_d );
-      /** @brief it is only for f_mms, because we need f_mms(t+dt),
-      without this we are going to get f_mms(t+0.5*dt)  **/
+      //it is only for f_mms, because we need f_mms(t+dt),
+      //without this we are going to get f_mms(t+0.5*dt)  **/
       if (time_substep==2){
         double s_t_dummy  = 0.0;
         double current_time = time_d + factor*dt;
@@ -260,8 +259,8 @@ MMS_scalar::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
       f_mms(i,j,k)   += f_m;
       s_t_mms(i,j,k) += s_tm;
 
-      /** @brief it is only for f_mms, because we need f_mms(t+dt),
-      without this we are going to get f_mms(t+0.5*dt)  **/
+      // it is only for f_mms, because we need f_mms(t+dt),
+      //without this we are going to get f_mms(t+0.5*dt)  **/
       if (time_substep==2){
         double f_m   = 0.0;
         double s_t_dummy  = 0.0;
@@ -269,11 +268,6 @@ MMS_scalar::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
         MMS_T1(f_m, s_t_dummy, current_time );
         MMS_T2(f_mms(i,j,k), s_t_dummy, current_time );
         f_mms(i,j,k)   += f_m;
-      }
-
-      if ((i == 10) && (j==12) && (k==12)){
-        std::cout << "time_sub  " << time_d   << std::endl; // OD
-        std::cout << " Computed Source  " <<  s_t_mms(i,j,k) << std::endl; // OD
       }
 
 

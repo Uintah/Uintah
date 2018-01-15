@@ -2,7 +2,7 @@
 
 from os import chdir,getcwd,mkdir,system,environ
 from sys import argv,exit,platform
-from helpers.runSusTests import runSusTests, inputs_root
+from helpers.runSusTests import runSusTests, inputs_root, ignorePerformanceTests, generatingGoldStandards
 from helpers.modUPS import modUPS
 
 #______________________________________________________________________
@@ -23,30 +23,33 @@ from helpers.modUPS import modUPS
 #       abs_tolerance=[double]  - absolute tolerance used in comparisons
 #       rel_tolerance=[double]  - relative tolerance used in comparisons
 #       exactComparison         - set absolute/relative tolerance = 0  for uda comparisons
-#       startFromCheckpoint     - start test from checkpoint. (/home/csafe-tester/CheckPoints/..../testname.uda.000)
+#       postProcessRun          - start test from an existing uda in the checkpoints directory.  Compute new quantities and save them in a new uda
+#       startFromCheckpoint     - start test from checkpoint. (/home/rt/CheckPoints/..../testname.uda.000)
 #       sus_options="string"    - Additional command line options for sus command
 #
 #  Notes: 
 #  1) The "folder name" must be the same as input file without the extension.
-#  2) If the processors is > 1.0 then an mpirun command will be used
-#  3) Performance_tests are not run on a debug build.
+#  2) Performance_tests are not run on a debug build.
 #______________________________________________________________________
 
 
-NIGHTLYTESTS = [ ("ice_perf_32KPatches",  "icePerf_32KPatches.ups",            10, "Linux", ["do_performance_test"]),
+NIGHTLYTESTS = [  ("ice_perf_32KPatches",  "icePerf_32KPatches.ups",            10, "All", ["do_performance_test"]),
+                  ("PostProcessUda",       "N/A",                               8,  "All", [ "postProcessUda", "exactComparison"] )
                ]
 
-LOCALTESTS = [ ("switchExample_impm_mpm", "Switcher/switchExample_impm_mpm.ups",1, "Linux", ["no_memoryTest"]), \
-               ("switchExample3",         "Switcher/switchExample3.ups",        1, "Linux", ["no_restart","no_memoryTest"]), \
-               ("ice_perf_test",          "icePerformanceTest.ups",             1, "Linux", ["do_performance_test"]),  \
-               ("mpmice_perf_test",       "mpmicePerformanceTest.ups",          1, "Linux", ["do_performance_test"]), \
-               ("LBwoRegrid",             "LBwoRegrid.ups",                     2, "Linux", ["exactComparison"])
+LOCALTESTS = [ ("switchExample_impm_mpm", "Switcher/switchExample_impm_mpm.ups",1, "All", ["no_memoryTest"]),
+               ("switchExample3",         "Switcher/switchExample3.ups",        1, "All", ["no_restart","no_memoryTest"]),
+               ("ice_perf_test",          "icePerformanceTest.ups",             1, "All", ["do_performance_test"]), 
+               ("mpmice_perf_test",       "mpmicePerformanceTest.ups",          1, "All", ["do_performance_test"]), 
+               ("LBwoRegrid",             "LBwoRegrid.ups",                     2, "All", []),     # Cannot use exact comparison since the load balancer generates fuzz in the dat files.  It's non deterministic.                                                                               
              ]
+             
 DEBUGTESTS =[]
+
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: LOCALTESTS DEBUGTESTS NIGHTLYTESTS
+#LIST: LOCALTESTS DEBUGTESTS NIGHTLYTESTS BUILDBOTTESTS
 #___________________________________
 
 # returns the list  
@@ -57,7 +60,10 @@ def getTestList(me) :
     TESTS = DEBUGTESTS
   elif me == "NIGHTLYTESTS":
     TESTS = LOCALTESTS + NIGHTLYTESTS
+  elif me == "BUILDBOTTESTS":
+    TESTS = ignorePerformanceTests( LOCALTESTS + NIGHTLYTESTS )
   else:
+    
     print "\nERROR:UCF.py  getTestList:  The test list (%s) does not exist!\n\n" % me
     exit(1)
   return TESTS

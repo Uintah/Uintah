@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -23,10 +23,12 @@
  */
 
 #include <CCA/Components/FVM/FVMBoundCond.h>
+
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BCUtils.h>
+#include <Core/Grid/Patch.h>
+
 #include <vector>
-#include <iostream>
 #include <string>
 
 using namespace Uintah;
@@ -503,6 +505,93 @@ void FVMBoundCond::setESPotentialBC(const Patch* patch, int dwi,
                         -  es_potential[c + xoffset - yoffset2])/2;
       }
       c += zoffset;
+    }
+  }
+  if(yminus_bd && zminus_bd){
+    IntVector c(min.x(), min.y(), min.z());
+    for(int i = min.x()+1; i < max.x(); i++){
+      es_potential[c] =  es_potential[c + yoffset  + zoffset]
+                      - (es_potential[c + yoffset2 + zoffset]
+                      -  es_potential[c + zoffset]
+                      +  es_potential[c + yoffset  + zoffset2]
+                      -  es_potential[c + yoffset])/2;
+      c += xoffset;
+    }
+  }
+  if(yminus_bd && zplus_bd){
+    IntVector c(min.x(), min.y(), max.z()-1);
+    for(int i = min.x()+1; i < max.x(); i++){
+      es_potential[c] =  es_potential[c + yoffset  - zoffset]                       + (es_potential[c - zoffset]
+                      -  es_potential[c + yoffset2 - zoffset]
+                      +  es_potential[c + yoffset]
+                      -  es_potential[c + yoffset  - zoffset2])/2;
+      c += xoffset;
+    }
+  }
+  if(yplus_bd && zplus_bd){
+    IntVector c(min.x(), max.y()-1, max.z()-1);
+    for(int i = min.x()+1; i < max.x(); i++){
+      es_potential[c] = es_potential[c - yoffset - zoffset]
+                      + (es_potential[c - zoffset]
+                      -  es_potential[c - yoffset2 - zoffset]
+                      +  es_potential[c - yoffset]
+                      -  es_potential[c - yoffset - zoffset2])/2;
+      c += xoffset;
+    }
+  }
+  if(yplus_bd && zminus_bd){
+    IntVector c(min.x(), max.y()-1, min.z());
+    for(int i = min.x()+1; i < max.x(); i++){
+      es_potential[c] = es_potential[c - yoffset + zoffset]
+                      + (es_potential[c + zoffset]
+                      -  es_potential[c - yoffset2 + zoffset]
+                      -  es_potential[c - yoffset + zoffset2]
+                      +  es_potential[c - yoffset])/2;
+      c += xoffset;
+    }
+  }
+  if(zminus_bd && xminus_bd){
+    IntVector c(min.x(), min.y(), min.z());
+    for(int i = min.y()+1; i < max.y(); i++){
+      es_potential[c] =  es_potential[c + zoffset  + xoffset]
+                      - (es_potential[c + zoffset2 + xoffset]
+                      -  es_potential[c + xoffset]
+                      +  es_potential[c + zoffset  + xoffset2]
+                      -  es_potential[c + zoffset])/2;
+      c += yoffset;
+    }
+  }
+  if(zminus_bd && xplus_bd){
+    IntVector c(max.x()-1, min.y(), min.z());
+    for(int i = min.y()+1; i < max.y(); i++){
+      es_potential[c] =  es_potential[c + zoffset  - xoffset]
+                      + (es_potential[c - xoffset]
+                      -  es_potential[c + zoffset2 - xoffset]
+                      +  es_potential[c + zoffset]
+                      -  es_potential[c + zoffset  - xoffset2])/2;
+      c += yoffset;
+    }
+  }
+  if(zplus_bd && xplus_bd){
+    IntVector c(max.x()-1, min.y(), max.z()-1);
+    for(int i = min.y()+1; i < max.y(); i++){
+      es_potential[c] = es_potential[c - zoffset - xoffset]
+                      + (es_potential[c - xoffset]
+                      -  es_potential[c - zoffset2 - xoffset]
+                      +  es_potential[c - zoffset]
+                      -  es_potential[c - zoffset - xoffset2])/2;
+      c += yoffset;
+    }
+  }
+  if(zplus_bd && xminus_bd){
+    IntVector c(min.x(), min.y(), max.z()-1);
+    for(int i = min.y()+1; i < max.y(); i++){
+      es_potential[c] = es_potential[c - zoffset + xoffset]
+                      + (es_potential[c + xoffset]
+                      -  es_potential[c - zoffset2 + xoffset]
+                      -  es_potential[c - zoffset + xoffset2]
+                      +  es_potential[c - zoffset])/2;
+      c += yoffset;
     }
   }
 }

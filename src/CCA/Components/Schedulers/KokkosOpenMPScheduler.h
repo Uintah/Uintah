@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -76,17 +76,18 @@ class KokkosOpenMPScheduler : public MPIScheduler  {
 
   public:
 
-    KokkosOpenMPScheduler( const ProcessorGroup * myworld, const Output * oport, KokkosOpenMPScheduler * parentScheduler = nullptr );
+    KokkosOpenMPScheduler( const ProcessorGroup * myworld,
+			   KokkosOpenMPScheduler * parentScheduler = nullptr );
 
     virtual ~KokkosOpenMPScheduler();
     
-    virtual void problemSetup( const ProblemSpecP & prob_spec, SimulationStateP & state );
+    virtual void problemSetup( const ProblemSpecP & prob_spec, const SimulationStateP & state );
       
     virtual SchedulerP createSubScheduler();
     
     virtual void execute( int tgnum = 0, int iteration = 0 );
     
-    virtual bool useInternalDeps() { return !m_shared_state->isCopyDataTimestep(); }
+    virtual bool useInternalDeps() { return !m_is_copy_data_timestep; }
     
     void runTasks();
 

@@ -13,7 +13,6 @@
 #include <Core/Exceptions/InvalidValue.h>
 #include <CCA/Components/Arches/Directives.h>
 #include <Core/Parallel/Parallel.h>
-#include <Core/Containers/StaticArray.h>
 
 //#define cqmom_transport_dbg
 //==========================================================================
@@ -69,21 +68,21 @@ namespace Uintah{
     /** @brief Computes the x-convection term. */
     template<class fT > void
     doConvX( const Patch* p, fT& Fconv, const std::string d_convScheme, const double d_convWeightLimit,
-             StaticArray<constCCVariable<double> >& weights, StaticArray<constCCVariable<double> >& abscissas,
+             std::vector<constCCVariable<double> >& weights, std::vector<constCCVariable<double> >& abscissas,
              const int M, const int nNodes, const int uVelIndex, const std::vector<int> momentIndex, constCCVariable<int>& cellType,
              const double epW);
     
     /** @brief Computes the y-convection term. */
     template<class fT > void
     doConvY( const Patch* p, fT& Fconv, const std::string d_convScheme, const double d_convWeightLimit,
-             StaticArray<constCCVariable<double> >& weights, StaticArray<constCCVariable<double> >& abscissas,
+             std::vector<constCCVariable<double> >& weights, std::vector<constCCVariable<double> >& abscissas,
              const int M, const int nNodes, const int yVelIndex, const std::vector<int> momentIndex, constCCVariable<int>& cellType,
              const double epW);
     
     /** @brief Computes the z-convection term. */
     template<class fT > void
     doConvZ( const Patch* p, fT& Fconv, const std::string d_convScheme, const double d_convWeightLimit,
-             StaticArray<constCCVariable<double> >& weights, StaticArray<constCCVariable<double> >& abscissas,
+             std::vector<constCCVariable<double> >& weights, std::vector<constCCVariable<double> >& abscissas,
              const int M, const int nNodes, const int wVelIndex, const std::vector<int> momentIndex, constCCVariable<int>& cellType,
              const double epW);
     
@@ -382,7 +381,7 @@ namespace Uintah{
 
       
       template<class fT>
-      void do_convection( const Patch* p, fT& Fconv, StaticArray<constCCVariable<double> >& weights, StaticArray<constCCVariable<double> >& abscissas,
+      void do_convection( const Patch* p, fT& Fconv, std::vector<constCCVariable<double> >& weights, std::vector<constCCVariable<double> >& abscissas,
                          const int& M, const int& nNodes, const int& velIndex, const std::vector<int>& momentIndex, const int& dim,
                          constCCVariable<int>& cellType, const double epW, const double d_convWeightLimit, CQMOM_Convection_OpSplit* D)
       {
@@ -803,7 +802,7 @@ namespace Uintah{
   //x direction convection
   template<class fT > void
   CQMOM_Convection_OpSplit::doConvX( const Patch* p, fT& Fconv, const std::string d_convScheme, const double d_convWeightLimit,
-                                     StaticArray<constCCVariable<double> >& weights, StaticArray<constCCVariable<double> >& abscissas,
+                                     std::vector<constCCVariable<double> >& weights, std::vector<constCCVariable<double> >& abscissas,
                                      const int M, const int nNodes, const int uVelIndex, const std::vector<int> momentIndex, constCCVariable<int>& cellType,
                                      const double epW)
   {
@@ -842,7 +841,7 @@ namespace Uintah{
   //y direction convection
   template<class fT> void
   CQMOM_Convection_OpSplit::doConvY( const Patch* p, fT& Fconv, const std::string d_convScheme, const double d_convWeightLimit,
-                                     StaticArray<constCCVariable<double> >& weights, StaticArray<constCCVariable<double> >& abscissas,
+                                     std::vector<constCCVariable<double> >& weights, std::vector<constCCVariable<double> >& abscissas,
                                      const int M, const int nNodes, const int vVelIndex, const std::vector<int> momentIndex, constCCVariable<int>& cellType,
                                      const double epW)
   {
@@ -879,7 +878,7 @@ namespace Uintah{
   //z directino convection
   template<class fT> void
   CQMOM_Convection_OpSplit::doConvZ( const Patch* p, fT& Fconv, const std::string d_convScheme, const double d_convWeightLimit,
-                                     StaticArray<constCCVariable<double> >& weights, StaticArray<constCCVariable<double> >& abscissas,
+                                     std::vector<constCCVariable<double> >& weights, std::vector<constCCVariable<double> >& abscissas,
                                      const int M, const int nNodes, const int wVelIndex, const std::vector<int> momentIndex, constCCVariable<int>& cellType,
                                      const double epW)
   {

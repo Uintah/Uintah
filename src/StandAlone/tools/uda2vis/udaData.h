@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -151,14 +151,38 @@ public:
     }
   }
 
-  // getProcId
-  int getProcId() const
+  // getNumNodes
+  int getNumNodes() const
+  {
+    return num_nodes;
+  }
+
+  // setNumNodes
+  void setNumNodes(const int new_num_nodes)
+  {
+    num_nodes = new_num_nodes;
+  }
+
+  // getProcNodeId
+  int getProcNodeId() const
+  {
+    return node_id;
+  }
+
+  // setProcNodeId
+  void setProcNodeId(const int new_node_id)
+  {
+    node_id = new_node_id;
+  }
+
+  // getProcRankId
+  int getProcRankId() const
   {
     return proc_id;
   }
 
-  // setProcId
-  void setProcId(const int new_proc_id)
+  // setProcRankId
+  void setProcRankId(const int new_proc_id)
   {
     proc_id = new_proc_id;
   }
@@ -293,6 +317,8 @@ private:
 
   int patch_id;
   int proc_id;
+  int node_id;
+  unsigned int num_nodes;
 };
 
 

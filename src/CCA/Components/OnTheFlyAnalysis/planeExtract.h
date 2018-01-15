@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -26,6 +26,7 @@
 #ifndef Packages_Uintah_CCA_Components_ontheflyAnalysis_planeExtract_h
 #define Packages_Uintah_CCA_Components_ontheflyAnalysis_planeExtract_h
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
+#include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Output.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
@@ -68,17 +69,17 @@ WARNING
 ****************************************/
   class planeExtract : public AnalysisModule {
   public:
-    planeExtract(ProblemSpecP& prob_spec,
-                 SimulationStateP& sharedState,
-		   Output* dataArchiver);
+    planeExtract(const ProcessorGroup* myworld,
+		 const SimulationStateP sharedState,
+		 const ProblemSpecP& module_spec);
+    
     planeExtract();
                     
     virtual ~planeExtract();
    
     virtual void problemSetup(const ProblemSpecP& prob_spec,
                               const ProblemSpecP& restart_prob_spec,
-                              GridP& grid,
-                              SimulationStateP& sharedState);
+                              GridP& grid);
                               
     virtual void outputProblemSpec(ProblemSpecP& ps){};
                               
@@ -196,16 +197,11 @@ WARNING
     std::vector<VarLabel*> d_varLabels;
     std::vector<int> d_varMatl;
     
-    SimulationStateP d_sharedState;
     std::vector<plane*>   d_planes;
-    Output*          d_dataArchiver;
-    ProblemSpecP     d_prob_spec;
     std::set<std::string> d_isDirCreated;
     
     MaterialSet*     d_matl_set;
-    MaterialSubset* d_zero_matl;
-    
-  
+    MaterialSubset* d_zero_matl;  
   };
 }
 

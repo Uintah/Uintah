@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -23,21 +23,36 @@
  */
 
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModuleFactory.h>
-#include <CCA/Components/OnTheFlyAnalysis/1stLawThermo.h>
 #include <CCA/Components/OnTheFlyAnalysis/MinMax.h>
-#include <CCA/Components/OnTheFlyAnalysis/containerExtract.h>
-#include <CCA/Components/OnTheFlyAnalysis/flatPlate_heatFlux.h>
 #include <CCA/Components/OnTheFlyAnalysis/lineExtract.h>
 #include <CCA/Components/OnTheFlyAnalysis/momentumAnalysis.h>
-#include <CCA/Components/OnTheFlyAnalysis/particleExtract.h>
 #include <CCA/Components/OnTheFlyAnalysis/planeExtract.h>
 #include <CCA/Components/OnTheFlyAnalysis/radiometer.h>
 #include <CCA/Components/OnTheFlyAnalysis/statistics.h>
-#include <CCA/Components/OnTheFlyAnalysis/vorticity.h>
+
+#include <sci_defs/uintah_defs.h>
+
+#if !defined( NO_ICE )
+# include <CCA/Components/OnTheFlyAnalysis/containerExtract.h>
+# include <CCA/Components/OnTheFlyAnalysis/vorticity.h>
+#endif
+
+#if !defined( NO_MPM )
+#  include <CCA/Components/OnTheFlyAnalysis/flatPlate_heatFlux.h>
+#  include <CCA/Components/OnTheFlyAnalysis/particleExtract.h>
+#endif
+
+#if !defined( NO_ICE ) && !defined( NO_MPM )
+#  include <CCA/Components/OnTheFlyAnalysis/1stLawThermo.h>
+#endif
+
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/SimulationState.h>
 
-using namespace std;
+#include <string>
+#include <vector>
+#include <iostream>
+
 using namespace Uintah;
 
 AnalysisModuleFactory::AnalysisModuleFactory()
@@ -49,61 +64,75 @@ AnalysisModuleFactory::~AnalysisModuleFactory()
 }
 
 std::vector<AnalysisModule*>
-AnalysisModuleFactory::create(const ProblemSpecP& prob_spec,
-                              SimulationStateP&   sharedState,
-                              Output* dataArchiver)
+AnalysisModuleFactory::create(const ProcessorGroup* myworld,
+			      const SimulationStateP sharedState,
+			      const ProblemSpecP& prob_spec)
 {
-  string module("");
+  std::string module("");
   ProblemSpecP da_ps = prob_spec->findBlock("DataAnalysis");
 
-  vector<AnalysisModule*> modules;
+  std::vector<AnalysisModule*> modules;
  
   if (da_ps) {
   
-    for( ProblemSpecP module_ps = da_ps->findBlock( "Module" ); module_ps != nullptr; module_ps = module_ps->findNextBlock( "Module" ) ) {
+    for( ProblemSpecP module_ps = da_ps->findBlock( "Module" );
+	              module_ps != nullptr;
+	              module_ps = module_ps->findNextBlock( "Module" ) ) {
                         
       if( !module_ps ) {
-        throw ProblemSetupException( "\nERROR:<DataAnalysis>, could not find find <Module> tag \n", __FILE__, __LINE__ );
+        throw ProblemSetupException( "\nERROR<DataAnalysis>: Could not find find <Module> tag.\n", __FILE__, __LINE__ );
       }
-      map<string,string> attributes;
+      
+      std::map<std::string, std::string> attributes;
       module_ps->getAttributes(attributes);
       module = attributes["name"];
 
       if ( module == "statistics" ) {
-        modules.push_back ( scinew statistics(          module_ps, sharedState, dataArchiver) );
+        modules.push_back( scinew statistics(          myworld, sharedState, module_ps) );
       }
       else if ( module == "lineExtract" ) {
-        modules.push_back (scinew lineExtract(          module_ps, sharedState, dataArchiver ) );
+        modules.push_back(scinew lineExtract(          myworld, sharedState, module_ps ) );
       }
       else if ( module == "planeExtract" ) {
-        modules.push_back ( scinew planeExtract(        module_ps, sharedState, dataArchiver ) );
-      }
-      else if ( module == "containerExtract" ) {
-        modules.push_back ( scinew containerExtract(    module_ps, sharedState, dataArchiver ) );
+        modules.push_back( scinew planeExtract(        myworld, sharedState, module_ps ) );
       }
       else if ( module == "momentumAnalysis" ) {
-        modules.push_back ( scinew momentumAnalysis(    module_ps, sharedState, dataArchiver ) );
-      }
-      else if ( module == "particleExtract" ) {
-        modules.push_back ( scinew particleExtract(     module_ps, sharedState, dataArchiver) );
-      }
-      else if ( module == "vorticity" ) {
-        modules.push_back ( scinew vorticity(           module_ps, sharedState, dataArchiver) );
-      }
-      else if ( module == "flatPlate_heatFlux" ) {
-        modules.push_back ( scinew flatPlate_heatFlux(  module_ps, sharedState, dataArchiver) );
-      }
-      else if ( module == "firstLawThermo" ) {
-        modules.push_back ( scinew FirstLawThermo(      module_ps, sharedState, dataArchiver) );
+        modules.push_back( scinew momentumAnalysis(    myworld, sharedState, module_ps ) );
       }
       else if ( module == "minMax" ) {
-        modules.push_back ( scinew MinMax(              module_ps, sharedState, dataArchiver) );
+        modules.push_back( scinew MinMax(              myworld, sharedState, module_ps ) );
       }
       else if ( module == "radiometer" ) {
-        modules.push_back ( scinew OnTheFly_radiometer( module_ps, sharedState, dataArchiver) );
+        modules.push_back( scinew OnTheFly_radiometer( myworld, sharedState, module_ps ) );
       }
+#if !defined( NO_ICE )
+      else if ( module == "containerExtract" ) {
+        modules.push_back( scinew containerExtract(    myworld, sharedState, module_ps ) );
+      }
+      else if ( module == "vorticity" ) {
+        modules.push_back( scinew vorticity(           myworld, sharedState, module_ps ) );
+      }
+#endif
+
+#if !defined( NO_MPM )
+      else if ( module == "particleExtract" ) {
+        modules.push_back( scinew particleExtract(     myworld, sharedState, module_ps ) );
+      }
+      else if ( module == "flatPlate_heatFlux" ) {
+        modules.push_back( scinew flatPlate_heatFlux(  myworld, sharedState, module_ps ) );
+      }
+#endif
+
+#if !defined( NO_ICE ) && !defined( NO_MPM )
+      else if ( module == "firstLawThermo" ) {
+        modules.push_back( scinew FirstLawThermo(      myworld, sharedState, module_ps ) );
+      }
+#endif    
+
       else {
-        throw ProblemSetupException("\nERROR:<DataAnalysis> Unknown analysis module.  "+module,__FILE__, __LINE__);
+	std::ostringstream msg;
+	msg << "\nERROR<DataAnalysis>: Unknown analysis module : " << module << ".\n";
+	throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
       }
     } 
   }

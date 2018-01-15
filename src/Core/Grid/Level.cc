@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -362,6 +362,7 @@ Level::computeVariableExtents( const TypeDescription::Type   type
 
   switch( type ) {
     case TypeDescription::CCVariable :
+    case TypeDescription::ParticleVariable :
       lo = CCLo;
       hi = CCHi;
       break;
@@ -377,15 +378,13 @@ Level::computeVariableExtents( const TypeDescription::Type   type
       lo = CCLo;
       hi = CCHi + ( IntVector(0, 0, 1) * not_periodic );
       break;
-    case TypeDescription::ParticleVariable :
-      lo = CCLo;
-      hi = CCHi;
-      break;
     case TypeDescription::NCVariable :
-      findInteriorCellIndexRange( lo, hi );
+      // Dav's fix: findInteriorCellIndexRange( lo, hi );
+      findNodeIndexRange(lo, hi);
       break;
     default :
-      throw InternalError("  ERROR: Level::computeVariableExtents type description not supported", __FILE__, __LINE__);
+      std::string me = TypeDescription::toString( type );
+      throw InternalError("  ERROR: Level::computeVariableExtents type description (" + me + ") not supported", __FILE__, __LINE__);
   }
 }
 
@@ -407,19 +406,19 @@ Level::getTotalCellsInRegion(const IntVector& lowIndex, const IntVector& highInd
   // need to go all patches and see if they exist in this range.  If so, add up their cells.
   // This process is similar to how d_totalCells is computed in Level::finalizeLevel().
 
-  long cellsInRegion = 0;  
+  long cellsInRegion = 0;
   if (m_isNonCubicDomain == false ){
     IntVector diff( highIndex - lowIndex);
-    cellsInRegion += diff.x() * diff.y() * diff.z(); 
+    cellsInRegion += diff.x() * diff.y() * diff.z();
     return cellsInRegion;
   }
 
   for( int i = 0; i < (int)m_real_patches.size(); i++ ) {
     IntVector patchLow  =  m_real_patches[i]->getExtraCellLowIndex();
     IntVector patchHigh =  m_real_patches[i]->getExtraCellHighIndex();
-   
+
     if( doesIntersect(lowIndex, highIndex, patchLow, patchHigh) ){
-    
+
       IntVector regionLo = Uintah::Max( lowIndex,  patchLow );
       IntVector regionHi = Uintah::Min( highIndex, patchHigh );
       IntVector diff( regionHi - regionLo );
@@ -467,11 +466,7 @@ Level::getRelativeLevel( int offset ) const
 Uintah::Point
 Level::getNodePosition( const IntVector & v ) const
 {
-  if (m_stretched) {
-    return Point(m_face_position[0][v.x()], m_face_position[1][v.y()], m_face_position[2][v.z()]);
-  } else {
-    return m_anchor + m_dcell * v;
-  }
+  return m_anchor + m_dcell * v;
 }
 
 //______________________________________________________________________
@@ -480,30 +475,7 @@ Level::getNodePosition( const IntVector & v ) const
 Uintah::Point
 Level::getCellPosition( const IntVector & v ) const
 {
-  if (m_stretched) {
-    return Point( (m_face_position[0][v.x()]+m_face_position[0][v.x()+1])*0.5,
-                  (m_face_position[1][v.y()]+m_face_position[1][v.y()+1])*0.5,
-                  (m_face_position[2][v.z()]+m_face_position[2][v.z()+1])*0.5);
-  } else {
-    return m_anchor + m_dcell * v + m_dcell * 0.5;
-  }
-}
-
-//______________________________________________________________________
-//
-static
-int
-binary_search( double x, const OffsetArray1<double>& faces, int low, int high )
-{
-  while (high - low > 1) {
-    int m = (low + high) / 2;
-    if (x < faces[m]) {
-      high = m;
-    } else {
-      low = m;
-    }
-  }
-  return low;
+  return m_anchor + m_dcell * v + m_dcell * 0.5;
 }
 
 //______________________________________________________________________
@@ -511,15 +483,8 @@ binary_search( double x, const OffsetArray1<double>& faces, int low, int high )
 IntVector
 Level::getCellIndex( const Point & p ) const
 {
-  if (m_stretched) {
-    int x = binary_search(p.x(), m_face_position[0], m_face_position[0].low(), m_face_position[0].high());
-    int y = binary_search(p.y(), m_face_position[1], m_face_position[1].low(), m_face_position[1].high());
-    int z = binary_search(p.z(), m_face_position[2], m_face_position[2].low(), m_face_position[2].high());
-    return IntVector(x, y, z);
-  } else {
-    Vector v((p - m_anchor) / m_dcell);
-    return IntVector(RoundDown(v.x()), RoundDown(v.y()), RoundDown(v.z()));
-  }
+  Vector v((p - m_anchor) / m_dcell);
+  return IntVector(RoundDown(v.x()), RoundDown(v.y()), RoundDown(v.z()));
 }
 
 //______________________________________________________________________
@@ -527,34 +492,7 @@ Level::getCellIndex( const Point & p ) const
 Uintah::Point
 Level::positionToIndex( const Point & p ) const
 {
-  if(m_stretched){
-    int x = binary_search(p.x(), m_face_position[0], m_face_position[0].low(), m_face_position[0].high());
-    int y = binary_search(p.y(), m_face_position[1], m_face_position[1].low(), m_face_position[1].high());
-    int z = binary_search(p.z(), m_face_position[2], m_face_position[2].low(), m_face_position[2].high());
-
-    //#if SCI_ASSERTION_LEVEL > 0
-    //    if( ( x == d_facePosition[0].high() ) ||
-    //        ( y == d_facePosition[1].high() ) ||
-    //        ( z == d_facePosition[2].high() ) ) {
-    //      static ProgressiveWarning warn( "positionToIndex called with too large a point.", -1 );
-    //    }
-    //#endif
-
-    // If p.x() == the value of the last position in
-    // d_facePosition[0], then the binary_search returns the "high()"
-    // value... and the interpolation below segfaults due to trying to
-    // go to x+1.  The following check prevents this from happening.
-    x = std::min( x, m_face_position[0].high()-2 );
-    y = std::min( y, m_face_position[1].high()-2 );
-    z = std::min( z, m_face_position[2].high()-2 );
-
-    double xfrac = (p.x() - m_face_position[0][x]) / (m_face_position[0][x+1] - m_face_position[0][x]);
-    double yfrac = (p.y() - m_face_position[1][y]) / (m_face_position[1][y+1] - m_face_position[1][y]);
-    double zfrac = (p.z() - m_face_position[2][z]) / (m_face_position[2][z+1] - m_face_position[2][z]);
-    return Point(x+xfrac, y+yfrac, z+zfrac);
-  } else {
-    return Point((p-m_anchor)/m_dcell);
-  }
+  return Point((p-m_anchor)/m_dcell);
 }
 
 //______________________________________________________________________
@@ -620,7 +558,7 @@ void Level::selectPatches( const IntVector  & low
       // neighbors before this query
       std::vector<const Patch*>& cache = m_select_cache[std::make_pair(low, high)];
       cache.reserve(6);  // don't reserve too much to save memory, not too little to avoid too much reallocation
-      for (int i = 0; i < neighbors.size(); i++) {
+      for (unsigned int i = 0; i < neighbors.size(); i++) {
         cache.push_back(neighbors[i]);
       }
     }
@@ -654,40 +592,46 @@ bool Level::containsCell( const IntVector & idx ) const
   return patch != 0;
 }
 
-//______________________________________________________________________
-//
-void Level::setNonCubicFlag ( bool test ) 
-{ 
-  m_isNonCubicDomain = test; 
-}
-//______________________________________________________________________
-//   Add the bounding box from the ups file
-void Level::addBox_ups( const BBox &b )
+/*______________________________________________________________________
+  This method determines if a level is nonCubic or if there are any missing patches.
+  Algorithm:
+     1) The total volume of the patches must equal the volume of the level.
+     The volume of the level is defined by the bounding box.
+______________________________________________________________________*/
+void
+Level::setIsNonCubicLevel()
 {
+  double patchesVol = 0.0;
   
-  m_upsBoxes.boxes.push_back( b );
+  // loop over all patches and sum the patch's volume
+  for (int p = 0; p < (int)m_real_patches.size(); p++) {
+    const Patch* patch = m_real_patches[p];
+
+    Box box = patch->getBox();
+    Vector sides( (box.upper().x() - box.lower().x() ),
+                  (box.upper().y() - box.lower().y() ),
+                  (box.upper().z() - box.lower().z() ) );
+
+    double volume = sides.x() * sides.y() * sides.z();
+
+    patchesVol += volume;
+  }
+
+  // compute the level's volume from the bounding box
+  Point loPt = m_int_spatial_range.min();
+  Point hiPt = m_int_spatial_range.max();
+
+  Vector levelSides( ( hiPt.x() - loPt.x() ),
+                     ( hiPt.y() - loPt.y() ),
+                     ( hiPt.z() - loPt.z() ) );
+
+  double levelVol = levelSides.x() * levelSides.y() * levelSides.z();
   
-  // We are assuming that if the user has more than one box in a level the level
-  // is non-cubic.  This is obvious not always true.  -Todd
-  
-  if ( m_upsBoxes.boxes.size() > 1 ){
+  m_isNonCubicDomain = false;
+  double fuzz = 100 * DBL_EPSILON;
+  if ( std::fabs( patchesVol - levelVol ) > fuzz ) {
     m_isNonCubicDomain = true;
   }
-}
-
-//______________________________________________________________________
-//  is the cell inside of boxes specifid in ups file?
-bool Level::insideBoxes_ups( const IntVector& c ) const
-{  
-  const Point p = getCellPosition( c );
-  for( unsigned i = 0; i < m_upsBoxes.boxes.size(); i++ ) {
-    BBox box = m_upsBoxes.boxes[i];
-    
-    if( box.inside(p) ){
-      return true;
-    } 
-  }
-  return false;
 }
 
 //______________________________________________________________________
@@ -696,9 +640,9 @@ bool Level::insideBoxes_ups( const IntVector& c ) const
 void Level::setOverlappingPatches()
 { 
 
-//  if ( m_isNonCubicDomain == false ){     //The NonCubicDomain variable is not set properly for all problems.  Need to fix.  Todd
- //   return 0;
-//  }
+  if ( m_isNonCubicDomain == false ){     //  for cubic domains just return
+    return;
+  }
 
   for (unsigned i = 0; i < m_real_patches.size(); i++) {
     const Patch* patch = m_real_patches[i];
@@ -710,7 +654,7 @@ void Level::setOverlappingPatches()
     Patch::selectType neighborPatches;
     selectPatches(lowEC, highEC, neighborPatches, includeExtraCells);
     
-    for ( int j = 0; j < neighborPatches.size(); j++) {
+    for ( unsigned int j = 0; j < neighborPatches.size(); j++) {
       const Patch* neighborPatch = neighborPatches[j];
       
       if ( patch != neighborPatch){
@@ -762,10 +706,10 @@ Level::getOverlapCellsInRegion( const selectType & patches,
                                 const IntVector  & regionLow, 
                                 const IntVector  & regionHigh) const
 {
-  // cubic domains never have overlapping patches  The NonCubicDomain variable is not set properly for all problems.  Need to fix, which I'm sitting on  Todd
-//  if ( m_isNonCubicDomain == false ){
-//    return 0;
-//  }
+  // cubic domains never have overlapping patches, just return
+  if ( m_isNonCubicDomain == false ){
+    return std::make_pair( -9, -9);
+  }
 
   int minOverlapCells   = INT_MAX;
   int totalOverlapCells = 0;
@@ -812,8 +756,6 @@ Level::getOverlapCellsInRegion( const selectType & patches,
 void
 Level::finalizeLevel()
 {
-  MALLOC_TRACE_TAG_SCOPE("Level::finalizeLevel");
-
   m_each_patch = scinew PatchSet();
   m_each_patch->addReference();
 
@@ -865,6 +807,9 @@ Level::finalizeLevel()
     m_spatial_range.extend(r->getExtraBox().upper());
   }
   
+  // determine if this level is cubic
+  setIsNonCubicLevel();
+  
   // Loop through all patches and find the patches that overlap.  Needed
   // when patches layouts have inside corners.
   setOverlappingPatches();
@@ -876,8 +821,6 @@ Level::finalizeLevel()
 void
 Level::finalizeLevel( bool periodicX, bool periodicY, bool periodicZ )
 {
-  MALLOC_TRACE_TAG_SCOPE("Level::finalizeLevel(periodic)");
-
   // set each_patch and all_patches before creating virtual patches
   m_each_patch = scinew PatchSet();
   m_each_patch->addReference();
@@ -972,7 +915,9 @@ Level::finalizeLevel( bool periodicX, bool periodicY, bool periodicZ )
     m_spatial_range.extend(r->getExtraBox().upper());
   }
   
-  
+  // determine if this level is cubic
+  setIsNonCubicLevel();
+    
   // Loop through all patches and find the patches that overlap.  Needed
   // when patch layouts have inside corners.
   setOverlappingPatches();
@@ -989,8 +934,6 @@ Level::setBCTypes()
   const int nTimes = 3;
   double rtimes[ nTimes ] = { 0 };
 
-  MALLOC_TRACE_TAG_SCOPE("Level::setBCTypes");
-
   if (m_bvh != nullptr) {
     delete m_bvh;
   }
@@ -999,7 +942,7 @@ Level::setBCTypes()
 
   rtimes[0] += timer().seconds();
   timer.reset( true );
-  
+
   patch_iterator iter;
 
   ProcessorGroup *myworld = nullptr;
@@ -1010,8 +953,8 @@ Level::setBCTypes()
     // only sus uses Parallel, but anybody else who uses DataArchive
     // to read data does not
     myworld = Parallel::getRootProcessorGroup();
-    numProcs = myworld->size();
-    rank = myworld->myrank();
+    numProcs = myworld->nRanks();
+    rank = myworld->myRank();
   }
 
   std::vector<int> displacements(numProcs, 0);
@@ -1172,11 +1115,11 @@ Level::setBCTypes()
     double avg[ nTimes ] = { 0 };
     Uintah::MPI::Reduce(rtimes, avg, nTimes, MPI_DOUBLE, MPI_SUM, 0, myworld->getComm());
 
-    if (myworld->myrank() == 0) {
+    if (myworld->myRank() == 0) {
 
       std::cout << "SetBCType Avg Times: ";
       for (int i = 0; i < nTimes; i++) {
-        avg[i] /= myworld->size();
+        avg[i] /= myworld->nRanks();
         std::cout << avg[i] << " ";
       }
       std::cout << std::endl;
@@ -1185,7 +1128,7 @@ Level::setBCTypes()
     double max[nTimes] = { 0 };
     Uintah::MPI::Reduce(rtimes, max, nTimes, MPI_DOUBLE, MPI_MAX, 0, myworld->getComm());
 
-    if (myworld->myrank() == 0) {
+    if (myworld->myRank() == 0) {
       std::cout << "SetBCType Max Times: ";
       for (int i = 0; i < nTimes; i++) {
         std::cout << max[i] << " ";
@@ -1204,7 +1147,7 @@ Level::setBCTypes()
 //______________________________________________________________________
 //
 void
-Level::assignBCS( const ProblemSpecP & grid_ps, LoadBalancerPort * lb )
+Level::assignBCS( const ProblemSpecP & grid_ps, LoadBalancer * lb )
 {
   ProblemSpecP bc_ps = grid_ps->findBlock("BoundaryConditions");
   if( bc_ps == nullptr ) {
@@ -1395,7 +1338,7 @@ Level::mapCellToFiner( const IntVector & idx ) const
 //Provides the (x-,y-,z-) corner of a fine cell given a coarser coordinate
 //If any of the coordinates are negative, assume the fine cell coordiantes
 //went too far into the negative and adjust forward by 1
-//This adjusting approach means that for L-shaped domains the results are 
+//This adjusting approach means that for L-shaped domains the results are
 //not always consistent with what is expected.
 //(Note: Does this adjustment mean this only works in a 2:1 refinement ratio
 //and only on cubic domains? -- Brad P)
@@ -1427,9 +1370,9 @@ Level::mapCellToFinest( const IntVector & idx ) const
 
 //______________________________________________________________________
 //Provides the x-,y-,z- corner of a fine cell given a coarser coordinate.
-//This does not attempt to adjust the cell in the + direction if it goes 
-//negative. It is left up to the caller of this method to determine if 
-//those coordinates are too far past any level boundary.    
+//This does not attempt to adjust the cell in the + direction if it goes
+//negative. It is left up to the caller of this method to determine if
+//those coordinates are too far past any level boundary.
 IntVector
 Level::mapCellToFinestNoAdjustments( const IntVector & idx ) const
 {
@@ -1475,36 +1418,6 @@ IntVector
 Level::mapNodeToFiner( const IntVector & idx ) const
 {
   return idx * m_grid->getLevel(m_index + 1)->m_refinement_ratio;
-}
-
-//______________________________________________________________________
-//
-// Stretched grid stuff
-void
-Level::getCellWidths( Grid::Axis axis, OffsetArray1<double> & widths ) const
-{
-  const OffsetArray1<double>& faces = m_face_position[axis];
-  widths.resize(faces.low(), faces.high() - 1);
-  for (int i = faces.low(); i < faces.high() - 1; i++) {
-    widths[i] = faces[i + 1] - faces[i];
-  }
-}
-
-//______________________________________________________________________
-//
-void
-Level::getFacePositions( Grid::Axis axis, OffsetArray1<double> & faces ) const
-{
-  faces = m_face_position[axis];
-}
-
-//______________________________________________________________________
-//
-void
-Level::setStretched( Grid::Axis axis, const OffsetArray1<double> & faces )
-{
-  m_face_position[axis] = faces;
-  m_stretched = true;
 }
 
 //______________________________________________________________________

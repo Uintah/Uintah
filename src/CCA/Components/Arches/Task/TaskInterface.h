@@ -42,6 +42,24 @@ public:
     enum TASK_TYPE { STANDARD_TASK, BC_TASK, INITIALIZE, TIMESTEP_INITIALIZE, TIMESTEP_EVAL, BC,
                      RESTART_INITIALIZE };
 
+    static const std::string get_task_type_string( TASK_TYPE type ){
+      if ( type == TIMESTEP_INITIALIZE ){
+        return "Timestep Initialize";
+      } else if ( type == INITIALIZE ){
+        return "Initialize";
+      } else if ( type == TIMESTEP_EVAL ){
+        return "Timestep Evaluation";
+      } else if ( type == BC ) {
+        return "Boundary Condition Evalulation";
+      } else if ( type == RESTART_INITIALIZE ){
+        return "Restart Initialize";
+      } else {
+        std::cout << type << std::endl;
+        //return "Unknown task type. Please fix."
+        throw InvalidValue("Error: TaskType enum not valid.",__FILE__,__LINE__);
+      }
+    }
+
     typedef std::tuple<ParticleVariable<double>*, ParticleSubset*> ParticleTuple;
 
     typedef std::tuple<constParticleVariable<double>*, ParticleSubset*> ConstParticleTuple;
@@ -186,7 +204,6 @@ public:
 
     /** @brief The actual work done within the derived class for computing the boundary conditions **/
     virtual void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr ) = 0;
-
 
 protected:
 

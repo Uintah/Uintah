@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2017 The University of Utah
+#  Copyright (c) 1997-2018 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -32,16 +32,15 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := CCA/Ports
 
 SRCS += \
+        $(SRCDIR)/ApplicationInterface.cc \
         $(SRCDIR)/DataWarehouse.cc        \
-        $(SRCDIR)/LoadBalancerPort.cc     \
+        $(SRCDIR)/LoadBalancer.cc     \
         $(SRCDIR)/ModelInterface.cc       \
-        $(SRCDIR)/ModelMaker.cc           \
         $(SRCDIR)/Output.cc               \
         $(SRCDIR)/ProblemSpecInterface.cc \
         $(SRCDIR)/Regridder.cc            \
         $(SRCDIR)/Scheduler.cc            \
         $(SRCDIR)/SFC.cc                  \
-        $(SRCDIR)/SimulationInterface.cc  \
         $(SRCDIR)/SolverInterface.cc      \
         $(SRCDIR)/SwitchingCriteria.cc    
 

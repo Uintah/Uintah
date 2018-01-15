@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -54,26 +54,20 @@ WARNING
    * This interface is written for Hypre 1.9.0b (released 2005).
    --------------------------------------------------------------------------*/
 
-#include <CCA/Ports/SolverInterface.h>
-#include <Core/Parallel/UintahParallelComponent.h>
+#include <CCA/Components/Solvers/SolverCommon.h>
 
 namespace Uintah {
 
-  class AMRSolver :
-    public SolverInterface, public UintahParallelComponent { 
+  class AMRSolver : public SolverCommon { 
 
-   
   public:
 
     AMRSolver(const ProcessorGroup* myworld);
     virtual ~AMRSolver();
 
-    virtual SolverParameters* readParameters(ProblemSpecP& params,
-                                             const std::string& name,
-                                             SimulationStateP& state);
-
-    virtual SolverParameters* readParameters(ProblemSpecP& params,
-                                             const std::string& name);
+    virtual SolverParameters* readParameters(       ProblemSpecP     & params,
+                                              const std::string      & name,
+                                              const SimulationStateP & state );
 
     virtual void scheduleSolve( const LevelP           & level,
                                       SchedulerP       & sched,
@@ -92,13 +86,10 @@ namespace Uintah {
     virtual std::string getName();
     
     // AMRSolver does not require initialization... but we need an empty
-   // routine to satisfy inheritance.
+    // routine to satisfy inheritance.
     virtual void scheduleInitialize( const LevelP      & level,
                                            SchedulerP  & sched,
                                      const MaterialSet * matls ) {}
-
-  private:
-
   };
 }
 

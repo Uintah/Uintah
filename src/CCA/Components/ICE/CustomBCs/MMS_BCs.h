@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -26,7 +26,7 @@
 #define Packages_Uintah_CCA_Components_Ice_CustomBCs_MMS_BC_h
 
 #include <CCA/Ports/DataWarehouse.h>
-#include <Core/Labels/ICELabel.h>
+#include <CCA/Components/ICE/Core/ICELabel.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/SimulationStateP.h>
@@ -53,6 +53,7 @@ namespace Uintah {
     constCCVariable<double> press_CC;
     constCCVariable<double> rho_CC;
     std::string where;
+    double simTime;
     double delT;
   };
   //____________________________________________________________
@@ -140,8 +141,9 @@ int set_MMS_BCs_FC( const Patch* patch,
   // 
   double nu = gv->viscosity;
   double A =  gv->A;
-  double t  = sharedState->getElapsedSimTime();
-  t += lv->delT;
+  double t = lv->simTime + lv->delT;
+  // double t  = sharedState->getElapsedSimTime();
+  // t += lv->delT;
     
   for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
     IntVector c = *bound_ptr - oneCell;

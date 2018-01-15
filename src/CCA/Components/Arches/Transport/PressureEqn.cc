@@ -2,6 +2,8 @@
 #include <CCA/Components/Arches/GridTools.h>
 #include <CCA/Ports/SolverInterface.h>
 
+#include <Core/Grid/SimulationState.h>
+
 using namespace Uintah;
 
 typedef ArchesFieldContainer AFC;
@@ -46,7 +48,11 @@ PressureEqn::problemSetup( ProblemSpecP& db ){
   m_ymom_name = "y-mom";
   m_zmom_name = "z-mom";
 
-
+  m_drhodt_name = "drhodt"; 
+  
+  if (db->findBlock("drhodt")){
+    db->findBlock("drhodt")->getAttribute("label",m_drhodt_name);
+  }
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -59,8 +65,7 @@ PressureEqn::setup_solver( ProblemSpecP& db ){
     throw ProblemSetupException("Error: You must specify a <PressureSolver> block in the UPS file.",__FILE__,__LINE__);
   }
 
-  m_hypreSolver_parameters = m_hypreSolver->readParameters(db_pressure, "pressure",
-                                                           m_sharedState );
+  m_hypreSolver_parameters = m_hypreSolver->readParameters(db_pressure, "pressure", m_sharedState );
   m_hypreSolver_parameters->setSolveOnExtraCells(false);
 
   //force a zero setup frequency since nothing else
@@ -84,10 +89,10 @@ PressureEqn::register_initialize(
   register_variable( "b_press", AFC::COMPUTES, variable_registry );
   register_variable( m_pressure_name, AFC::COMPUTES, variable_registry );
   register_variable( "guess_press", AFC::COMPUTES, variable_registry );
-  register_variable( m_eps_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry );
-  register_variable( "x-mom", AFC::REQUIRES, 1, AFC::NEWDW, variable_registry );
-  register_variable( "y-mom", AFC::REQUIRES, 1, AFC::NEWDW, variable_registry );
-  register_variable( "z-mom", AFC::REQUIRES, 1, AFC::NEWDW, variable_registry );
+  //register_variable( m_eps_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry );
+  //register_variable( "x-mom", AFC::REQUIRES, 1, AFC::NEWDW, variable_registry );
+  //register_variable( "y-mom", AFC::REQUIRES, 1, AFC::NEWDW, variable_registry );
+  //register_variable( "z-mom", AFC::REQUIRES, 1, AFC::NEWDW, variable_registry );
 
 }
 
@@ -96,43 +101,43 @@ void
 PressureEqn::initialize( const Patch* patch, ATIM* tsk_info ){
 
   Vector DX = patch->dCell();
-  double area_EW = DX.y()*DX.z();
-  double area_NS = DX.x()*DX.z();
-  double area_TB = DX.x()*DX.y();
+  const double area_EW = DX.y()*DX.z();
+  const double area_NS = DX.x()*DX.z();
+  const double area_TB = DX.x()*DX.y();
 
   CCVariable<Stencil7>& Apress = tsk_info->get_uintah_field_add<CCVariable<Stencil7> >("A_press");
   CCVariable<double>& b = tsk_info->get_uintah_field_add<CCVariable<double> >("b_press");
   CCVariable<double>& x = tsk_info->get_uintah_field_add<CCVariable<double> >(m_pressure_name);
   CCVariable<double>& guess = tsk_info->get_uintah_field_add<CCVariable<double> >("guess_press");
   //constCCVariable<double>& eps = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_eps_name);
-  constSFCXVariable<double>& xmom = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >("x-mom");
-  constSFCYVariable<double>& ymom = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >("y-mom");
-  constSFCZVariable<double>& zmom = tsk_info->get_const_uintah_field_add<constSFCZVariable<double> >("z-mom");
+  //constSFCXVariable<double>& xmom = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >("x-mom");
+  //constSFCYVariable<double>& ymom = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >("y-mom");
+  //constSFCZVariable<double>& zmom = tsk_info->get_const_uintah_field_add<constSFCZVariable<double> >("z-mom");
 
-  for ( CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++ ){
-    IntVector c = *iter;
-    Stencil7& A = Apress[c];
+
+  b.initialize(0.0);
+  x.initialize(0.0);
+  guess.initialize(0.0);
+
+
+
+  //const double dt = tsk_info->get_dt();
+  Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+  Uintah::parallel_for( range, [&](int i, int j, int k){
+    Stencil7& A = Apress(i,j,k);
     A.e = 0.0;
     A.w = 0.0;
     A.n = 0.0;
     A.s = 0.0;
     A.t = 0.0;
     A.b = 0.0;
-  }
 
-  b.initialize(0.0);
-  x.initialize(0.0);
-  guess.initialize(0.0);
+  });
 
-  for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
+   Uintah::BlockRange range2(patch->getCellLowIndex(), patch->getCellHighIndex() );
+   Uintah::parallel_for( range2, [&](int i, int j, int k){
 
-    IntVector c = *iter;
-    IntVector E  = c + IntVector(1,0,0);
-    IntVector N  = c + IntVector(0,1,0);
-    IntVector T  = c + IntVector(0,0,1);
-
-    // A
-    Stencil7& A = Apress[c];
+   Stencil7& A = Apress(i,j,k);
 
     A.e = -area_EW/DX.x();
     A.w = -area_EW/DX.x();
@@ -143,17 +148,8 @@ PressureEqn::initialize( const Patch* patch, ATIM* tsk_info ){
 
     A.p = A.e + A.w + A.n + A.s + A.t + A.b;
     A.p *= -1;
-
-    const double dt = tsk_info->get_dt();
-
-    // b
-    b[c] = ( area_EW * ( xmom[E] - xmom[c] ) +
-             area_NS * ( ymom[N] - ymom[c] ) +
-             area_TB * ( zmom[T] - zmom[c] ) ) / dt;
-
-    b[c] *= -1.;
-
-  }
+  
+   });
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -194,11 +190,12 @@ PressureEqn::register_timestep_eval(
   std::vector<AFC::VariableInformation>& variable_registry,
   const int time_substep, const bool packed_tasks ){
 
-  register_variable( "b_press", AFC::MODIFIES, variable_registry );
-  register_variable( m_eps_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry );
-  register_variable( "x-mom", AFC::REQUIRES, 1, AFC::NEWDW, variable_registry );
-  register_variable( "y-mom", AFC::REQUIRES, 1, AFC::NEWDW, variable_registry );
-  register_variable( "z-mom", AFC::REQUIRES, 1, AFC::NEWDW, variable_registry );
+  register_variable( "b_press", AFC::MODIFIES, variable_registry, time_substep );
+  register_variable( m_eps_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep );
+  register_variable( "x-mom", AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep );
+  register_variable( "y-mom", AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep );
+  register_variable( "z-mom", AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep );
+  register_variable( m_drhodt_name, AFC::REQUIRES, 0, AFC::NEWDW, variable_registry, time_substep );
 
 }
 
@@ -207,33 +204,30 @@ void
 PressureEqn::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   Vector DX = patch->dCell();
-  double area_EW = DX.y()*DX.z();
-  double area_NS = DX.x()*DX.z();
-  double area_TB = DX.x()*DX.y();
+  const double area_EW = DX.y()*DX.z();
+  const double area_NS = DX.x()*DX.z();
+  const double area_TB = DX.x()*DX.y();
+  const double V       = DX.x()*DX.y()*DX.z();
 
   CCVariable<double>& b = tsk_info->get_uintah_field_add<CCVariable<double> >("b_press");
   constCCVariable<double>& eps = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_eps_name);
   constSFCXVariable<double>& xmom = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >("x-mom");
   constSFCYVariable<double>& ymom = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >("y-mom");
   constSFCZVariable<double>& zmom = tsk_info->get_const_uintah_field_add<constSFCZVariable<double> >("z-mom");
+  constCCVariable<double>& drhodt = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_drhodt_name);
 
   const double dt = tsk_info->get_dt();
+  Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
 
-  for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
+  Uintah::parallel_for( range, [&](int i, int j, int k){
 
-    IntVector c = *iter;
-    IntVector E  = c + IntVector(1,0,0);
-    IntVector N  = c + IntVector(0,1,0);
-    IntVector T  = c + IntVector(0,0,1);
+    b(i,j,k) = ( area_EW * ( xmom(i+1,j,k) - xmom(i,j,k) ) +
+                 area_NS * ( ymom(i,j+1,k) - ymom(i,j,k) ) +
+                 area_TB * ( zmom(i,j,k+1) - zmom(i,j,k) ) + 
+                 V*drhodt(i,j,k)  ) / dt ;
+    b(i,j,k)  *= -eps(i,j,k) ;
 
-    // b
-    b[c] = ( area_EW * ( xmom[E] - xmom[c] ) +
-             area_NS * ( ymom[N] - ymom[c] ) +
-             area_TB * ( zmom[T] - zmom[c] ) ) / dt ;
-
-    b[c] *= -eps[c];
-
-  }
+  });
 }
 
 //--------------------------------------------------------------------------------------------------

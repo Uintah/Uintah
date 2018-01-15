@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -97,7 +97,6 @@ BoundaryCondition::BoundaryCondition(const ArchesLabel* label,
   MM_CUTOFF_VOID_FRAC = 0.5;
   _using_new_intrusion  = false;
   d_calcEnergyExchange  = false;
-  d_slip = false;
 
   // x-direction
   index_map[0][0] = 0;
@@ -171,12 +170,6 @@ BoundaryCondition::problemSetup( const ProblemSpecP& params,
   if ( db != nullptr ) {
 
     //setupBCs( db_params );
-
-    db->getWithDefault("wall_csmag",d_csmag_wall,0.0);
-    if ( db->findBlock( "wall_slip" )) {
-      d_slip = true;
-      d_csmag_wall = 0.0;
-    }
 
     if ( db->findBlock("intrusions") ) {
 
@@ -890,10 +883,12 @@ BoundaryCondition::velRhoHatInletBC(const Patch* patch,
                                     ArchesVariables* vars,
                                     ArchesConstVariables* constvars,
                                     const int matl_index,
+                                    const int timeStep,
+                                    const double simTime,
                                     double time_shift)
 {
-  //double time = d_lab->d_sharedState->getElapsedSimTime();
-  //double current_time = time + time_shift;
+  //double simTime = d_lab->d_sharedState->getElapsedSimTime();
+  //double current_time = simTime + time_shift;
   // Get the low and high index for the patch and the variables
   IntVector idxLo = patch->getFortranCellLowIndex();
   IntVector idxHi = patch->getFortranCellHighIndex();
@@ -955,7 +950,8 @@ BoundaryCondition::velRhoHatInletBC(const Patch* patch,
 
           } else if (bc_iter->second.type == TURBULENT_INLET) {
 
-            setTurbInlet( patch, face, vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat, constvars->new_density, bound_ptr, bc_iter->second.TurbIn );
+            setTurbInlet( patch, face, vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat, constvars->new_density, bound_ptr, bc_iter->second.TurbIn,
+                          timeStep, simTime );
 
           } else if ( bc_iter->second.type == SWIRL ) {
 
@@ -2079,7 +2075,7 @@ BoundaryCondition::setupBCs( ProblemSpecP db, const LevelP& level )
           double tolly=1e-5;
           double mag_squared=my_info.unitVector.length2();
           if ( mag_squared < 1-tolly || mag_squared > 1.0 +tolly){    // defaul normal vector
-             proc0cout << "massflow_unitVector WARNING: unit vector nas non-unity magnitude, normalizing . \n"; 
+             proc0cout << "massflow_unitVector WARNING: unit vector nas non-unity magnitude, normalizing . \n";
              my_info.unitVector.safe_normalize();
           }
 
@@ -2252,7 +2248,7 @@ BoundaryCondition::setupBCs( ProblemSpecP db, const LevelP& level )
               double tolly=1e-5;
               double mag_squared=my_info.unitVector.length2();
               if ( mag_squared < 1-tolly || mag_squared > 1.0 +tolly){    // defaul normal vector
-                 proc0cout << "massflow_unitVector WARNING: unit vector nas non-unity magnitude, normalizing . \n"; 
+                 proc0cout << "massflow_unitVector WARNING: unit vector nas non-unity magnitude, normalizing . \n";
                  my_info.unitVector.safe_normalize();
               }
               //-------------------------------------------------------//
@@ -2769,7 +2765,7 @@ BoundaryCondition::setupBCInletVelocities(const ProcessorGroup*,
                     bc_iter->second.velocity[ix]=bc_iter->second.velocity[norm]*bc_iter->second.unitVector[ix]/bc_iter->second.unitVector[norm];
                   }
 
- 
+
 
                   if (d_check_inlet_obstructions) {
                     if (volFraction[c - insideCellDir] < small) {
@@ -2826,6 +2822,9 @@ BoundaryCondition::sched_setInitProfile(SchedulerP& sched,
   Task* tsk = scinew Task("BoundaryCondition::setInitProfile",
                           this, &BoundaryCondition::setInitProfile);
 
+  tsk->requires(Task::NewDW, d_lab->d_timeStepLabel);
+  tsk->requires(Task::NewDW, d_lab->d_simulationTimeLabel);
+
   tsk->modifies(d_lab->d_uVelocitySPBCLabel);
   tsk->modifies(d_lab->d_vVelocitySPBCLabel);
   tsk->modifies(d_lab->d_wVelocitySPBCLabel);
@@ -2857,6 +2856,12 @@ BoundaryCondition::setInitProfile(const ProcessorGroup*,
                                        DataWarehouse*,
                                        DataWarehouse* new_dw)
 {
+  timeStep_vartype timeStep;
+  new_dw->get(timeStep, d_lab->d_timeStepLabel );
+
+  simTime_vartype simTime;
+  new_dw->get(simTime, d_lab->d_simulationTimeLabel );
+
   for (int p = 0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
@@ -2970,7 +2975,7 @@ BoundaryCondition::setInitProfile(const ProcessorGroup*,
 
               } else if ( bc_iter->second.type == TURBULENT_INLET ){
 
-                setTurbInlet( patch, face, uVelocity, vVelocity, wVelocity, density, bound_ptr, bc_iter->second.TurbIn );
+                setTurbInlet( patch, face, uVelocity, vVelocity, wVelocity, density, bound_ptr, bc_iter->second.TurbIn, timeStep, simTime );
 
               } else if ( bc_iter->second.type == WALL ) {
 
@@ -3065,14 +3070,16 @@ void BoundaryCondition::setSwirl( const Patch* patch, const Patch::FaceType& fac
 void BoundaryCondition::setTurbInlet( const Patch* patch, const Patch::FaceType& face,
                                       SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel,
                                       constCCVariable<double>& density,
-                                      Iterator bound_ptr, DigitalFilterInlet * TurbInlet )
+                                      Iterator bound_ptr, DigitalFilterInlet * TurbInlet,
+                                      const int timeStep,
+                                      const double simTime )
 {
   IntVector insideCellDir = patch->faceDirection(face);
 
   int j, k;
-  int ts = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
-  double elapTime = d_lab->d_sharedState->getElapsedSimTime();
-  int t = TurbInlet->getTimeIndex( ts, elapTime);
+  // int timeStep = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
+  // double simTime = d_lab->d_sharedState->getElapsedSimTime();
+  int t = TurbInlet->getTimeIndex( timeStep, simTime);
 
   IntVector shiftVec;
   shiftVec = TurbInlet->getOffsetVector( );
@@ -3935,12 +3942,13 @@ BoundaryCondition::setHattedIntrusionVelocity( const Patch* p,
                                                SFCXVariable<double>& u,
                                                SFCYVariable<double>& v,
                                                SFCZVariable<double>& w,
-                                               constCCVariable<double>& density )
+                                               constCCVariable<double>& density,
+                                               bool& set_nonnormal_values )
 {
   if ( _using_new_intrusion ) {
     const Level* level = p->getLevel();
     const int i = level->getID();
-    _intrusionBC[i]->setHattedVelocity( p, u, v, w, density );
+    _intrusionBC[i]->setHattedVelocity( p, u, v, w, density, set_nonnormal_values );
   }
 }
 void
@@ -3980,6 +3988,7 @@ BoundaryCondition::sched_setIntrusionDensity( SchedulerP& sched,
 {
   Task* tsk = scinew Task( "BoundaryCondition::setIntrusionDensity",
                            this, &BoundaryCondition::setIntrusionDensity);
+  tsk->requires( Task::NewDW, d_lab->d_densityCPLabel, Ghost::AroundCells, 1 );
   tsk->modifies( d_lab->d_densityCPLabel );
   sched->addTask( tsk, level->eachPatch(), matls );
 
@@ -3989,12 +3998,13 @@ void
 BoundaryCondition::setIntrusionDensity( const ProcessorGroup*,
                                         const PatchSubset* patches,
                                         const MaterialSubset*,
-                                        DataWarehouse*,
+                                        DataWarehouse* old_dw,
                                         DataWarehouse* new_dw)
 {
   for (int p = 0; p < patches->size(); p++) {
 
     if ( _using_new_intrusion ) {
+
       const Patch* patch = patches->get(p);
       const Level* level = patch->getLevel();
       const int ilvl = level->getID();
@@ -4002,24 +4012,694 @@ BoundaryCondition::setIntrusionDensity( const ProcessorGroup*,
       int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
       CCVariable<double> density;
+      constCCVariable<double> old_density; 
       new_dw->getModifiable( density, d_lab->d_densityCPLabel, indx, patch );
+      new_dw->get( old_density, d_lab->d_densityCPLabel, indx, patch, Ghost::AroundCells, 1 ); 
 
-      _intrusionBC[ilvl]->setDensity( patch, density );
+      _intrusionBC[ilvl]->setDensity( patch, density, old_density );
+
     }
   }
 }
 
 void
-BoundaryCondition::wallStress( const Patch* p,
-                               ArchesVariables* vars,
-                               ArchesConstVariables* const_vars,
-                               constCCVariable<double>& eps )
+BoundaryCondition::sched_wallStressConstSmag( Task::WhichDW dw, Task* tsk ){
+
+  tsk->requires( dw, d_lab->d_strainMagnitudeLabel, Ghost::AroundCells, 1 );
+
+}
+
+void
+BoundaryCondition::wallStressConstSmag( const Patch* p,
+                                        DataWarehouse* dw,
+                                        const double csmag_wall,
+                                        const int standoff,
+                                        constSFCXVariable<double>& uvel,
+                                        constSFCYVariable<double>& vvel,
+                                        constSFCZVariable<double>& wvel,
+                                        SFCXVariable<double>& Su,
+                                        SFCYVariable<double>& Sv,
+                                        SFCZVariable<double>& Sw,
+                                        constCCVariable<double>& rho,
+                                        constCCVariable<double>& eps )
 {
 
   Vector Dx = p->dCell();
 
-  for (CellIterator iter=p->getCellIterator(); !iter.done(); iter++) {
+  double viscos; // molecular viscosity
+  viscos = d_physicalConsts->getMolecularViscosity();
+  const double delta = std::pow( Dx.x()*Dx.y()*Dx.z(),1./3.);
+  const double area_ew = Dx.y() * Dx.z();
+  const double area_ns = Dx.z() * Dx.x();
+  const double area_tb = Dx.x() * Dx.y();
+  const double dx = Dx.x();
+  const double dy = Dx.y();
+  const double dz = Dx.z();
 
+  constCCVariable<double> IsImag;
+  const int indx = 0;
+  const Level* level = p->getLevel();
+  const int ilvl = level->getID();
+
+  if ( dw->exists( d_lab->d_strainMagnitudeLabel, indx, p ) ){
+
+    dw->get( IsImag, d_lab->d_strainMagnitudeLabel, indx, p, Ghost::AroundCells, 1 );
+
+    bool has_intrusion_inlets = false; 
+    if ( _using_new_intrusion ){ 
+      has_intrusion_inlets = _intrusionBC[ilvl]->has_intrusion_inlets();
+    }
+
+    for (CellIterator iter=p->getCellIterator(); !iter.done(); iter++) {
+      IntVector c = *iter;
+      IntVector xm = *iter - IntVector(1,0,0);
+      IntVector xp = *iter + IntVector(1,0,0);
+      IntVector ym = *iter - IntVector(0,1,0);
+      IntVector yp = *iter + IntVector(0,1,0);
+      IntVector zm = *iter - IntVector(0,0,1);
+      IntVector zp = *iter + IntVector(0,0,1);
+      IntVector xmym = *iter + IntVector(-1,-1,0);
+      IntVector xmyp = *iter + IntVector(-1,1,0);
+      IntVector xmzm = *iter + IntVector(-1,0,-1);
+      IntVector xmzp = *iter + IntVector(-1,0,1);
+      IntVector xpym = *iter + IntVector(1,-1,0);
+      IntVector xpzm = *iter + IntVector(1,0,-1);
+      IntVector ymzm = *iter + IntVector(0,-1,-1);
+      IntVector ymzp = *iter + IntVector(0,-1,1);
+      IntVector ypzm = *iter + IntVector(0,1,-1);
+      IntVector x_so = IntVector(standoff,0,0);
+      IntVector y_so = IntVector(0,standoff,0);
+      IntVector z_so = IntVector(0,0,standoff);
+      //apply u-mom bc -
+      if ( eps[xm] * eps[c] > .5 ){
+        // Y-
+        if ( eps[ym] * eps[xmym] < .5 ){
+          const double i_so = ( eps[c+y_so] * eps[xm+y_so] > .5 ) ?
+                               standoff :
+                               0;
+          const double ISI = 0.5 * ( IsImag[c+IntVector(0,i_so,0)] + IsImag[c+IntVector(-1,i_so,0)] );
+          const double mu_t = pow( csmag_wall * delta, 2.0 ) * rho[c] * ISI;
+          Vector velocity_cond(0,0,0);
+          if ( has_intrusion_inlets ){
+            bool has_condition = false;
+            _intrusionBC[ilvl]->getVelocityCondition( p, c, has_condition,
+                                                   velocity_cond );
+          }
+
+          Su[c] += 2.0 * area_ns * ( mu_t + viscos )
+                   * (velocity_cond[0] - uvel[c]) / dy;
+
+        }
+        // Y+
+        if ( eps[yp] * eps[xmyp] < .5 ){
+          const double i_so = ( eps[c-y_so] * eps[xm-y_so] > .5 ) ?
+                               standoff :
+                               0;
+          const double ISI = 0.5*(IsImag[c+IntVector(0,-i_so,0)] + IsImag[c+IntVector(-1,-i_so,0)]);
+          const double mu_t = pow( csmag_wall*delta, 2.0 ) * rho[c] * ISI;
+          Vector velocity_cond(0,0,0);
+          if ( has_intrusion_inlets ){
+            bool has_condition = false;
+            _intrusionBC[ilvl]->getVelocityCondition( p, yp, has_condition,
+                                                   velocity_cond );
+          }
+
+          Su[c] += 2.0 * area_ns * ( mu_t + viscos )
+                    * (velocity_cond[0] - uvel[c]) / dy;
+
+        }
+
+        // Z-
+        if ( eps[zm] * eps[xmzm] < .5 ){
+          const double i_so = ( eps[c+z_so] * eps[xm+z_so] > .5 ) ?
+                               standoff :
+                               0;
+          const double ISI = 0.5 * ( IsImag[c+IntVector(0,0,i_so)] + IsImag[c+IntVector(-1,0,i_so)] );
+          const double mu_t = pow( csmag_wall * delta, 2.0 ) * rho[c] * ISI;
+
+          Vector velocity_cond(0,0,0);
+          if ( has_intrusion_inlets ){
+            bool has_condition = false;
+            _intrusionBC[ilvl]->getVelocityCondition( p, c, has_condition,
+                                                   velocity_cond );
+          }
+
+          Su[c] += 2.0 * area_tb * ( mu_t + viscos )
+                   * (velocity_cond[0] - uvel[c]) / dz;
+
+        }
+
+        // Z+
+        if ( eps[zp] * eps[xmzp] < .5 ){
+          const double i_so = ( eps[c-z_so] * eps[xm-z_so] > .5 ) ?
+                               standoff :
+                               0;
+          const double ISI = 0.5*(IsImag[c+IntVector(0,0,-i_so)] + IsImag[c+IntVector(-1,0,-i_so)]);
+          const double mu_t = pow( csmag_wall*delta, 2.0 ) * rho[c] * ISI;
+
+          Vector velocity_cond(0,0,0);
+          if ( has_intrusion_inlets ){
+            bool has_condition = false;
+            _intrusionBC[ilvl]->getVelocityCondition( p, zp, has_condition,
+                                                   velocity_cond );
+          }
+
+          Su[c] += 2.0 * area_tb * ( mu_t + viscos )
+                    * (velocity_cond[0] - uvel[c]) / dz;
+
+        }
+      }
+      //apply v-mom bc -
+      if ( eps[ym] * eps[c] > 0.5 ) {
+        // X-
+        if ( eps[xm] * eps[xmym] < .5 ){
+          const double i_so = ( eps[c+x_so] * eps[ym+x_so] > .5 ) ?
+                               standoff :
+                               0;
+          const double ISI = 0.5 * ( IsImag[c+IntVector(i_so,0,0)] + IsImag[c+IntVector(i_so,-1,0)] );
+          const double mu_t = pow( csmag_wall * delta, 2.0 ) * rho[c] * ISI;
+          Vector velocity_cond(0,0,0);
+          if ( has_intrusion_inlets ){
+            bool has_condition = false;
+            _intrusionBC[ilvl]->getVelocityCondition( p, c, has_condition,
+                                                   velocity_cond );
+          }
+
+          Sv[c] += 2.0 * area_ew * ( mu_t + viscos )
+                    * (velocity_cond[1] - vvel[c] )/ dx;
+
+        }
+        // X+
+        if ( eps[xp] * eps[xpym] < .5 ){
+          const double i_so = ( eps[c-x_so] * eps[ym-x_so] > .5 ) ?
+                               standoff :
+                               0;
+          const double ISI = 0.5 * ( IsImag[c+IntVector(-i_so,0,0)] + IsImag[c+IntVector(-i_so,-1,0)] );
+          const double mu_t = pow( csmag_wall * delta, 2.0 ) * rho[c] * ISI;
+          Vector velocity_cond(0,0,0);
+          if ( has_intrusion_inlets ){
+            bool has_condition = false;
+            _intrusionBC[ilvl]->getVelocityCondition( p, xp, has_condition,
+                                                   velocity_cond );
+          }
+
+          Sv[c] += 2.0 * area_ew * ( mu_t + viscos )
+                    * (velocity_cond[1] - vvel[c] )/ dx;
+
+        }
+        // Z-
+        if ( eps[zm] * eps[ymzm] < .5 ){
+          const double i_so = ( eps[c+z_so] * eps[ym+z_so] > .5 ) ?
+                               standoff :
+                               0;
+          const double ISI = 0.5 * ( IsImag[c+IntVector(0,0,i_so)] + IsImag[c+IntVector(0,-1,i_so)] );
+          const double mu_t = pow( csmag_wall * delta, 2.0 ) * rho[c] * ISI;
+          Vector velocity_cond(0,0,0);
+          if ( has_intrusion_inlets ){
+            bool has_condition = false;
+            _intrusionBC[ilvl]->getVelocityCondition( p, c, has_condition,
+                                                   velocity_cond );
+          }
+
+          Sv[c] += 2.0 * area_tb * ( mu_t + viscos )
+            * ( velocity_cond[1] - vvel[c] ) / dz;
+
+        }
+        // Z+
+        if ( eps[zp] * eps[ymzp] < .5 ){
+          const double i_so = ( eps[c-z_so] * eps[ym-z_so] > .5 ) ?
+                               standoff :
+                               0;
+          const double ISI = 0.5 * ( IsImag[c+IntVector(0,0,-i_so)] + IsImag[c+IntVector(0,-1,-i_so)] );
+          const double mu_t = pow( csmag_wall * delta, 2.0 ) * rho[c] * ISI;
+
+          Vector velocity_cond(0,0,0);
+          if ( has_intrusion_inlets ){
+            bool has_condition = false;
+            _intrusionBC[ilvl]->getVelocityCondition( p, zp, has_condition,
+                                                   velocity_cond );
+          }
+
+          Sv[c] += 2.0 * area_tb * ( mu_t + viscos )
+            * ( velocity_cond[1] - vvel[c] ) / dz;
+
+        }
+      }
+      //apply w-mom bc -
+      if ( eps[zm] * eps[c] > 0.5 ) {
+        // X-
+        if ( eps[xm] * eps[xmzm] < .5 ){
+          const double i_so = ( eps[c+x_so] * eps[zm+x_so] > .5 ) ?
+                               standoff :
+                               0;
+          const double ISI = 0.5 * ( IsImag[c+IntVector(i_so,0,0)] + IsImag[c+IntVector(i_so,0,-1)] );
+          const double mu_t = pow( csmag_wall * delta, 2.0 ) * rho[c] * ISI;
+
+          Vector velocity_cond(0,0,0);
+          if ( has_intrusion_inlets ){
+            bool has_condition = false;
+            _intrusionBC[ilvl]->getVelocityCondition( p, c, has_condition,
+                                                   velocity_cond );
+          }
+
+          Sw[c] += 2.0 * area_ew * ( mu_t + viscos )
+            * ( velocity_cond[2] - wvel[c] ) / dx;
+
+        }
+        // X+
+        if ( eps[xp] * eps[xpzm] < .5 ){
+          const double i_so = ( eps[c-x_so] * eps[zm-x_so] > .5 ) ?
+                               standoff :
+                               0;
+          const double ISI = 0.5 * ( IsImag[c+IntVector(-i_so,0,0)] + IsImag[c+IntVector(-i_so,0,-1)] );
+          const double mu_t = pow( csmag_wall * delta, 2.0 ) * rho[c] * ISI;
+
+          Vector velocity_cond(0,0,0);
+          if ( has_intrusion_inlets ){
+            bool has_condition = false;
+            _intrusionBC[ilvl]->getVelocityCondition( p, xp, has_condition,
+                                                   velocity_cond );
+          }
+
+          Sw[c] += 2.0 * area_ew * ( mu_t + viscos )
+            * ( velocity_cond[2] - wvel[c] ) / dx;
+
+        }
+        // Y-
+        if ( eps[ym] * eps[ymzm] < .5 ){
+          const double i_so = ( eps[c+y_so] * eps[zm+y_so] > .5 ) ?
+                               standoff :
+                               0;
+          const double ISI = 0.5 * ( IsImag[c+IntVector(0,i_so,0)] + IsImag[c+IntVector(0,i_so,-1)] );
+          const double mu_t = pow( csmag_wall * delta, 2.0 ) * rho[c] * ISI;
+
+          Vector velocity_cond(0,0,0);
+          if ( has_intrusion_inlets ){
+            bool has_condition = false;
+            _intrusionBC[ilvl]->getVelocityCondition( p, c, has_condition,
+                                                   velocity_cond );
+          }
+
+          Sw[c] += 2.0 * area_ns * ( mu_t + viscos )
+            * ( velocity_cond[2] - wvel[c] ) / dy;
+
+        }
+        // Y+
+        if ( eps[yp] * eps[ypzm] < .5 ){
+          const double i_so = ( eps[c-y_so] * eps[zm-y_so] > .5 ) ?
+                               standoff :
+                               0;
+          const double ISI = 0.5*(IsImag[c+IntVector(0,-i_so,0)] + IsImag[c+IntVector(0,-i_so,-1)]);
+          const double mu_t = pow( csmag_wall*delta, 2.0 ) * rho[c] * ISI;
+
+          Vector velocity_cond(0,0,0);
+          if ( has_intrusion_inlets ){
+            bool has_condition = false;
+            _intrusionBC[ilvl]->getVelocityCondition( p, yp, has_condition,
+                                                   velocity_cond );
+          }
+
+          Sw[c] += 2.0 * area_ns * ( mu_t + viscos )
+            * ( velocity_cond[2] - wvel[c] ) / dy;
+
+        }
+      }
+    }// end cell loop
+  } // If strainRate exists
+}// end function
+
+void
+BoundaryCondition::wallStressLog( const Patch* patch,
+                               ArchesVariables* vars,
+                               ArchesConstVariables* constvars,
+                               constCCVariable<double>& volFraction )
+{
+
+  Vector Dx = patch->dCell();
+  Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
+  Uintah::parallel_for( range, [&](int i, int j, int k){
+     int flow=-1;
+     double NonLinearX =0.0;
+     double NonLinearY =0.0;
+     double NonLinearZ =0.0;
+     double yplusCrit=11.63;
+     double molvis=0.0;
+     double densityup=0.0;
+
+     constCCVariable<double > uctr=constvars->CCUVelocity;
+     constCCVariable<double > vctr=constvars->CCVVelocity;
+     constCCVariable<double > wctr=constvars->CCWVelocity;
+     constSFCXVariable<double > ufac=constvars->uVelocity;
+     constSFCYVariable<double > vfac=constvars->vVelocity;
+     constSFCZVariable<double > wfac=constvars->wVelocity;
+
+     constCCVariable<double> Gasdensity=constvars->density;
+     molvis=d_physicalConsts->getMolecularViscosity();
+     //constCCVariable<double> molvis=constvars->viscosity;
+                              // need to see it
+
+     double UMtotal=std::sqrt(uctr(i,j,k)*uctr(i,j,k)+vctr(i,j,k)*vctr(i,j,k) +wctr(i,j,k)*wctr(i,j,k));
+
+     //-------------------------X direction ----------------------------------
+     // for the log-log velocity distribution to solve the utau => wall stress
+
+    // x- direction
+
+      bool If_wallxmVd=  ( volFraction(i-1,j,k) *volFraction(i-1,j-1,k)<0.5);
+      // vcell at x- direction wall
+     if( If_wallxmVd && volFraction(i,j,k)*volFraction(i,j-1,k) > 0.5 ){
+
+       const double XmVtot=0.5*std::sqrt((uctr(i+1,j,k)+uctr(i+1,j-1,k))* (uctr(i+1,j,k)+uctr(i+1,j-1,k))
+                                       +(vctr(i+1,j,k)+vctr(i+1,j-1,k))* (vctr(i+1,j,k)+vctr(i+1,j-1,k))
+                                       +(wctr(i+1,j,k)+wctr(i+1,j-1,k))* (wctr(i+1,j,k)+wctr(i+1,j-1,k)));
+
+      densityup=0.5*Gasdensity(i+1,j,k)+0.5*Gasdensity(i+1,j-1,k);
+
+      double XmVtauGuess=yplusCrit*molvis/densityup/Dx.x();
+
+      newton_solver(XmVtot,Dx.x()*1.5,densityup, molvis, XmVtauGuess);
+
+      double tauXmVmom= ( XmVtauGuess*densityup*Dx.x()*1.5/ molvis < yplusCrit) ?     molvis*vfac(i+1,j,k)/1.5/Dx.x()      : XmVtauGuess*XmVtauGuess*(0.5*Gasdensity(i+1,j,k)+0.5*Gasdensity(i+1,j-1,k));
+
+      NonLinearY = (If_wallxmVd && constvars->cellType(i,j-1,k)== flow && XmVtot!=0) ?  NonLinearY- Dx.z() * Dx.y() * tauXmVmom* vfac(i+1,j,k)/XmVtot  : NonLinearY;
+      }
+
+
+      // wcell at x- direction wall
+      bool If_wallxmWd=  ( volFraction(i-1,j,k) *volFraction(i-1,j,k-1)<0.5);
+
+      if (If_wallxmWd && volFraction(i,j,k)*volFraction(i,j,k-1) > 0.5) {
+
+        const double XmWtot=0.5*std::sqrt((uctr(i+1,j,k)+uctr(i+1,j,k-1))* (uctr(i+1,j,k)+uctr(i+1,j,k-1))
+                                       +(vctr(i+1,j,k)+vctr(i+1,j,k-1))* (vctr(i+1,j,k)+vctr(i+1,j,k-1))
+                                       +(wctr(i+1,j,k)+wctr(i+1,j,k-1))* (wctr(i+1,j,k)+wctr(i+1,j,k-1)));
+
+      densityup=0.5*Gasdensity(i+1,j,k)+0.5*Gasdensity(i+1,j,k-1);
+
+       double    XmWtauGuess=yplusCrit*molvis/densityup/Dx.x();
+
+       newton_solver(XmWtot,Dx.x()*1.5,densityup, molvis, XmWtauGuess);
+
+      double tauXmWmom= ( XmWtauGuess*densityup*Dx.x()*1.5/ molvis < yplusCrit)   ?     molvis*wfac(i+1,j,k)/1.5/Dx.x()   : XmWtauGuess* XmWtauGuess*(0.5*Gasdensity(i+1,j,k)+0.5*Gasdensity(i+1,j,k-1));
+
+      NonLinearZ = (If_wallxmWd && constvars->cellType(i,j,k-1)== flow&& XmWtot!=0) ?  NonLinearZ- Dx.z() * Dx.y() * tauXmWmom*wfac(i+1,j,k)/XmWtot  : NonLinearZ;
+        }
+
+      // x+ -----------------------------------------------------------------------------direction
+
+      bool If_wallxpVd=  ( volFraction(i+1,j,k) *volFraction(i+1,j-1,k)<0.5);
+      // vcell at x+ direction wall
+
+      if(If_wallxpVd && volFraction(i,j,k)*volFraction(i,j-1,k) > 0.5 ){
+
+      const double XpVtot=0.5*std::sqrt((uctr(i-1,j,k)+uctr(i-1,j-1,k))* (uctr(i-1,j,k)+uctr(i-1,j-1,k))
+                                       +(vctr(i-1,j,k)+vctr(i-1,j-1,k))* (vctr(i-1,j,k)+vctr(i-1,j-1,k))
+                                       +(wctr(i-1,j,k)+wctr(i-1,j-1,k))* (wctr(i+1,j,k)+wctr(i+1,j-1,k)));
+      densityup=0.5*Gasdensity(i-1,j,k)+0.5*Gasdensity(i-1,j-1,k);
+
+      double XpVtauGuess=yplusCrit*molvis/densityup/Dx.x();
+
+      newton_solver(XpVtot,Dx.x()*1.5,densityup, molvis,XpVtauGuess);
+
+      double tauXpVmom=  ( XpVtauGuess*densityup*Dx.x()*1.5/ molvis < yplusCrit) ?     molvis*vfac(i-1,j,k)/1.5/Dx.x()        : XpVtauGuess*XpVtauGuess*(0.5*Gasdensity(i-1,j,k)+0.5*Gasdensity(i-1,j-1,k));
+
+      NonLinearY = (If_wallxpVd && constvars->cellType(i,j-1,k)== flow && XpVtot!=0) ?  NonLinearY- Dx.z() * Dx.y() * tauXpVmom* vfac(i-1,j,k)/XpVtot  : NonLinearY;
+      }
+
+      // Wcell at x+ direction wall
+      bool If_wallxpWd=  ( volFraction(i+1,j,k) *volFraction(i+1,j,k-1)<0.5);
+
+      if(If_wallxpWd && volFraction(i,j,k)*volFraction(i,j,k-1) > 0.5){
+
+      const double XpWtot=0.5*std::sqrt((uctr(i-1,j,k)+uctr(i-1,j,k-1))* (uctr(i-1,j,k)+uctr(i-1,j,k-1))
+                                       +(vctr(i-1,j,k)+vctr(i-1,j,k-1))* (vctr(i-1,j,k)+vctr(i-1,j,k-1))
+                                       +(wctr(i-1,j,k)+wctr(i-1,j,k-1))* (wctr(i-1,j,k)+wctr(i-1,j,k-1)));
+      densityup=0.5*Gasdensity(i-1,j,k)+0.5*Gasdensity(i-1,j,k-1);
+
+      double      XpWtauGuess=yplusCrit*molvis/densityup/Dx.x();
+
+      newton_solver(XpWtot,Dx.x()*1.5,densityup, molvis,XpWtauGuess);
+
+      double tauXpWmom= ( XpWtauGuess*densityup*Dx.x()*1.5/ molvis < yplusCrit) ?     molvis*wfac(i-1,j,k)/1.5/Dx.x()    : XpWtauGuess*XpWtauGuess*0.5*(Gasdensity(i-1,j,k)+0.5*Gasdensity(i-1,j,k-1));
+
+      NonLinearZ = (If_wallxpWd && constvars->cellType(i,j,k-1)== flow && XpWtot!=0) ?  NonLinearZ- Dx.z() * Dx.y() *  tauXpWmom*wfac(i-1,j,k)/XpWtot: NonLinearZ;
+      }
+
+   // y- direction
+ // ucell at y-direction
+    bool If_wallymUd= ( volFraction(i,j-1,k) *volFraction(i-1,j-1,k)<0.5);
+
+    if(If_wallymUd && volFraction(i,j,k)*volFraction(i-1,j,k) >0.5){
+
+    const double YmUtot=0.5*std::sqrt((uctr(i,j+1,k)+uctr(i-1,j+1,k))* (uctr(i,j+1,k)+uctr(i-1,j+1,k))
+                                     +(vctr(i,j+1,k)+vctr(i-1,j+1,k))* (vctr(i,j+1,k)+vctr(i-1,j+1,k))
+                                     +(wctr(i,j+1,k)+wctr(i-1,j+1,k))* (wctr(i,j+1,k)+wctr(i-1,j+1,k)));
+
+    densityup=0.5*Gasdensity(i,j+1,k)+0.5*Gasdensity(i-1,j+1,k);
+
+    double YmUtauGuess=yplusCrit*molvis/densityup/Dx.y();
+
+    newton_solver(YmUtot,Dx.y()*1.5, densityup, molvis,YmUtauGuess);
+
+    double tauYmUmom=   ( YmUtauGuess*densityup*Dx.y()*1.5/ molvis < yplusCrit) ?     molvis*ufac(i,j+1,k)/1.5/Dx.y()  :  YmUtauGuess*YmUtauGuess*(0.5*Gasdensity(i,j+1,k)+0.5*Gasdensity(i-1,j+1,k));
+
+    NonLinearX = (If_wallymUd && constvars->cellType(i-1,j,k)== flow&& YmUtot!=0) ?  NonLinearX- Dx.x() * Dx.z() *  tauYmUmom*ufac(i,j+1,k)/YmUtot : NonLinearX;
+
+
+    }
+
+
+ // wcell at y-direction
+    bool If_wallymWd= ( volFraction(i,j-1,k) *volFraction(i,j-1,k-1)<0.5);
+
+    if(If_wallymWd && volFraction(i,j,k)*volFraction(i,j,k-1) >0.5 ){
+
+    const double YmWtot=0.5*std::sqrt((uctr(i,j+1,k)+uctr(i,j+1,k-1))* (uctr(i,j+1,k)+uctr(i,j+1,k-1))
+                                     +(vctr(i,j+1,k)+vctr(i,j+1,k-1))* (vctr(i,j+1,k)+vctr(i,j+1,k-1))
+                                     +(wctr(i,j+1,k)+wctr(i,j+1,k-1))* (wctr(i,j+1,k)+wctr(i,j+1,k-1)) );
+
+    densityup=0.5*Gasdensity(i,j+1,k)+0.5*Gasdensity(i,j+1,k-1);
+
+    double     YmWtauGuess=yplusCrit*molvis/densityup/Dx.y();
+
+      newton_solver(YmWtot,Dx.y()*1.5, densityup, molvis,YmWtauGuess);
+
+    double tauYmWmom=  ( YmWtauGuess*densityup*Dx.y()*1.5/ molvis < yplusCrit) ?     molvis*wfac(i,j+1,k)/1.5/Dx.y()  :   YmWtauGuess*YmWtauGuess*(0.5*Gasdensity(i,j+1,k)+0.5*Gasdensity(i,j+1,k-1));
+
+     NonLinearZ = (If_wallymWd && constvars->cellType(i,j,k-1)== flow && YmWtot !=0 ) ?  NonLinearZ- Dx.x() * Dx.z() *  tauYmWmom*wfac(i,j+1,k)/YmWtot : NonLinearZ;
+    }
+
+    // y+ direction
+ // ucell at y+direction
+    bool If_wallypUd= ( volFraction(i,j+1,k) *volFraction(i-1,j+1,k)<0.5);
+
+    if(If_wallypUd && volFraction(i,j,k)*volFraction(i-1,j,k) >0.5 ){
+
+      const double YpUtot=0.5*std::sqrt((uctr(i,j-1,k)+uctr(i-1,j-1,k))* (uctr(i,j-1,k)+uctr(i-1,j-1,k))
+                                     +(vctr(i,j-1,k)+vctr(i-1,j-1,k))* (vctr(i,j-1,k)+vctr(i-1,j-1,k))
+                                     +(wctr(i,j-1,k)+wctr(i-1,j-1,k))* (wctr(i,j-1,k)+wctr(i-1,j-1,k)));
+
+      densityup=0.5*Gasdensity(i,j-1,k)+0.5*Gasdensity(i-1,j-1,k);
+
+    double  YpVtauGuess=yplusCrit*molvis/densityup/Dx.y();
+
+       newton_solver(YpUtot,Dx.y()*1.5, densityup,molvis,YpVtauGuess) ;
+
+     double tauYpUmom=  ( YpVtauGuess*densityup*Dx.y()*1.5/ molvis < yplusCrit) ?     molvis*ufac(i,j-1,k)/1.5/Dx.y()  :   YpVtauGuess*YpVtauGuess*(0.5*Gasdensity(i,j-1,k)+0.5*Gasdensity(i-1,j-1,k));
+
+     NonLinearX = (If_wallypUd && constvars->cellType(i-1,j,k)== flow && YpUtot !=0) ?  NonLinearX- Dx.x() * Dx.z() *  tauYpUmom*ufac(i,j-1,k)/YpUtot : NonLinearX;
+
+
+
+    }
+
+
+ // wcell at y+direction
+    bool If_wallypWd= ( volFraction(i,j+1,k) *volFraction(i,j+1,k-1)<0.5);
+
+    if(If_wallypWd && volFraction(i,j,k)*volFraction(i,j,k-1) > 0.5 ){
+
+      const double YpWtot=0.5*std::sqrt((uctr(i,j-1,k)+uctr(i,j-1,k-1))* (uctr(i,j-1,k)+uctr(i,j-1,k-1))
+                                     +(vctr(i,j-1,k)+vctr(i,j-1,k-1))* (vctr(i,j-1,k)+vctr(i,j-1,k-1))
+                                     +(wctr(i,j-1,k)+wctr(i,j-1,k-1))* (wctr(i,j-1,k)+wctr(i,j-1,k-1)) );
+
+    densityup=0.5*Gasdensity(i,j-1,k)+0.5*Gasdensity(i,j-1,k-1);
+
+    double YpWtauGuess=yplusCrit*molvis/densityup/Dx.y();
+
+    newton_solver(YpWtot,Dx.y()*1.5,densityup, molvis,YpWtauGuess) ;
+
+    double tauYpWmom=   ( YpWtauGuess*densityup*Dx.y()*1.5/ molvis < yplusCrit) ?     molvis*wfac(i,j-1,k)/1.5/Dx.y() :   YpWtauGuess*YpWtauGuess*(0.5*Gasdensity(i,j-1,k)+0.5*Gasdensity(i,j-1,k-1));
+
+     NonLinearZ = (If_wallypWd && constvars->cellType(i,j,k-1)== flow && YpWtot !=0) ?  NonLinearZ- Dx.x() * Dx.z() *  tauYpWmom*wfac(i,j-1,k)/YpWtot : NonLinearZ;
+
+
+     }
+
+
+   //-------------------------Z direction ---------------------------------
+
+   // z- direction
+   // ucell  z-direction
+   bool  If_wallzmUd=  ( volFraction(i,j,k-1) *volFraction(i-1,j,k-1)<0.5);
+
+   if(If_wallzmUd && volFraction(i,j,k)*volFraction(i-1,j,k) > 0.5){
+
+       const double ZmUtot=0.5*std::sqrt((uctr(i,j,k+1)+uctr(i-1,j,k+1))* (uctr(i,j,k+1)+uctr(i-1,j,k+1))
+                                     +(vctr(i,j,k+1)+vctr(i-1,j,k+1))* (vctr(i,j,k+1)+vctr(i-1,j,k+1))
+                                     +(wctr(i,j,k+1)+wctr(i-1,j,k+1))* (wctr(i,j,k+1)+wctr(i-1,j,k+1)));
+   densityup=0.5*Gasdensity(i,j,k+1)+0.5*Gasdensity(i-1,j,k+1);
+
+   double ZmUtauGuess=yplusCrit*molvis/densityup/Dx.z();
+
+   newton_solver(ZmUtot,Dx.z()*1.5,densityup,molvis,ZmUtauGuess) ;
+    double tauZmUmom=   ( ZmUtauGuess*densityup*Dx.z()*1.5/ molvis < yplusCrit) ?     molvis*ufac(i,j,k+1)/1.5/Dx.z() :   ZmUtauGuess*ZmUtauGuess*(0.5*Gasdensity(i,j,k+1)+0.5*Gasdensity(i-1,j,k+1));
+
+    NonLinearX = (If_wallzmUd && constvars->cellType(i-1,j,k)== flow && ZmUtot !=0) ?  NonLinearX- Dx.x() * Dx.y() *  tauZmUmom*ufac(i,j,k+1)/ZmUtot : NonLinearX;
+    }
+
+   // vcell  z-direction
+   bool  If_wallzmVd=  ( volFraction(i,j,k-1) *volFraction(i,j-1,k-1)<0.5);
+
+    if(If_wallzmVd && volFraction(i,j,k)*volFraction(i,j-1,k) > 0.5){
+
+      const double ZmVtot=0.5*std::sqrt((uctr(i,j,k+1)+uctr(i,j-1,k+1))* (uctr(i,j,k+1)+uctr(i,j-1,k+1))
+                                    +(vctr(i,j,k+1)+vctr(i,j-1,k+1))* (vctr(i,j,k+1)+vctr(i,j-1,k+1))
+                                    +(wctr(i,j,k+1)+wctr(i,j-1,k+1))* (wctr(i,j,k+1)+wctr(i,j-1,k+1)));
+
+    densityup=0.5*Gasdensity(i,j-1,k+1)+0.5*Gasdensity(i,j,k+1);
+
+    double   ZmVtauGuess=yplusCrit*molvis/densityup/Dx.z();
+
+    newton_solver(ZmVtot,Dx.z()*1.5,densityup,molvis,ZmVtauGuess) ;
+    double tauZmVmom=   ( ZmVtauGuess*densityup*Dx.z()*1.5/ molvis < yplusCrit) ?     molvis*vfac(i,j,k+1)/1.5/Dx.z() :    ZmVtauGuess*ZmVtauGuess*(0.5*Gasdensity(i,j,k+1)+0.5*Gasdensity(i,j-1,k+1));
+
+     NonLinearY = (If_wallzmVd && constvars->cellType(i,j-1,k)== flow && ZmVtot !=0) ?  NonLinearY- Dx.x() * Dx.y() *  tauZmVmom*vfac(i,j,k+1)/ZmVtot : NonLinearY;
+    }
+
+    // z+ direction
+   // ucell  z+direction
+   bool  If_wallzpUd=  ( volFraction(i,j,k+1) *volFraction(i-1,j,k+1)<0.5);
+
+   if(If_wallzpUd && volFraction(i,j,k)*volFraction(i-1,j,k) > 0.5 ){
+
+     const double ZpUtot=0.5*std::sqrt((uctr(i,j,k-1)+uctr(i-1,j,k-1))* (uctr(i,j,k-1)+uctr(i-1,j,k-1))
+                                     +(vctr(i,j,k-1)+vctr(i-1,j,k-1))* (vctr(i,j,k-1)+vctr(i-1,j,k-1))
+                                     +(wctr(i,j,k-1)+wctr(i-1,j,k-1))* (wctr(i,j,k-1)+wctr(i-1,j,k-1)));
+    densityup=0.5*Gasdensity(i,j,k-1)+0.5*Gasdensity(i-1,j,k-1);
+
+      double      ZpUtauGuess=yplusCrit*molvis/densityup/Dx.z();
+
+   newton_solver(ZpUtot,Dx.z()*1.5,densityup,molvis,ZpUtauGuess) ;
+
+    double tauZpUmom=   ( ZpUtauGuess*densityup*Dx.z()*1.5/ molvis < yplusCrit) ?     molvis*ufac(i,j,k-1)/1.5/Dx.z() :    ZpUtauGuess*ZpUtauGuess*(0.5*Gasdensity(i,j,k-1)+0.5*Gasdensity(i-1,j,k-1));
+
+    NonLinearX = (If_wallzpUd && constvars->cellType(i-1,j,k)== flow && ZpUtot !=0) ?  NonLinearX- Dx.x() * Dx.y() *  tauZpUmom*ufac(i,j,k-1)/ZpUtot : NonLinearX;
+   }
+
+   // vcell  z+direction
+   bool  If_wallzpVd=  ( volFraction(i,j,k+1) *volFraction(i,j-1,k+1)<0.5);
+
+  if(If_wallzpVd && volFraction(i,j,k)*volFraction(i,j-1,k)  > 0.5){
+
+    const double ZpVtot=0.5*std::sqrt((uctr(i,j,k-1)+uctr(i,j-1,k-1))* (uctr(i,j,k-1)+uctr(i,j-1,k-1))
+                                    +(vctr(i,j,k-1)+vctr(i,j-1,k-1))* (vctr(i,j,k-1)+vctr(i,j-1,k-1))
+                                    +(wctr(i,j,k-1)+wctr(i,j-1,k-1))* (wctr(i,j,k-1)+wctr(i,j-1,k-1)));
+
+    densityup=0.5*Gasdensity(i,j-1,k-1)+0.5*Gasdensity(i,j,k-1);
+
+    double   ZpVtauGuess=yplusCrit*molvis/densityup/Dx.z();
+
+       newton_solver(ZpVtot,Dx.z()*1.5, densityup, molvis,ZpVtauGuess) ;
+
+       double tauZpVmom=   ( ZpVtauGuess*densityup*Dx.z()*1.5/ molvis < yplusCrit) ?   molvis*vfac(i,j,k-1)/1.5/Dx.z() :    ZpVtauGuess*ZpVtauGuess*(0.5*Gasdensity(i,j,k-1)+0.5*Gasdensity(i,j-1,k-1));
+
+     NonLinearY = (If_wallzpVd && constvars->cellType(i,j-1,k)== flow && ZpVtot) ?  NonLinearY- Dx.x() * Dx.y() *  tauZpVmom*vfac(i,j,k-1)/ZpVtot : NonLinearY;
+
+
+  }
+
+
+    // combing
+
+      vars->uVelNonlinearSrc(i,j,k)=(!d_slip && constvars->cellType(i,j,k)==flow && UMtotal != 0.0) ? vars->uVelNonlinearSrc(i,j,k)+ NonLinearX :  vars->uVelNonlinearSrc(i,j,k);
+      vars->vVelNonlinearSrc(i,j,k)=(!d_slip && constvars->cellType(i,j,k)==flow && UMtotal != 0.0) ? vars->vVelNonlinearSrc(i,j,k)+ NonLinearY :  vars->vVelNonlinearSrc(i,j,k);
+      vars->wVelNonlinearSrc(i,j,k)=(!d_slip && constvars->cellType(i,j,k)==flow && UMtotal != 0.0) ? vars->wVelNonlinearSrc(i,j,k)+ NonLinearZ :  vars->wVelNonlinearSrc(i,j,k);
+
+      //if(i==20 && j== 0 && k == 8)
+    //{ std::cout<<"log-log rule:\n"<<"i="<<i<<"j="<<j<<"k="<<k<<std::scientific;
+      //std::cout<< "Is_wall "<< If_wallymUd <<"Y "<<( constvars->cellType(i,j-1,k) == WALL || constvars->cellType(i,j-1,k) == INTRUSION)<< "\n";
+      //std::cout<< "uVelcoity= "<<  constvars->uVelocity(i,j,k)<<"vVelocity="<<constvars->vVelocity(i,j,k)<<"wVelocity="<<constvars->wVelocity(i,j,k)<<"\n";
+      //std::cout<< "uVelcoity(i,j+1,k)= "<<  constvars->uVelocity(i,j+1,k)<<"vVelocity="<<constvars->vVelocity(i,j+1,k)<<"wVelocity(i,j+1,k)="<<constvars->wVelocity(i,j+1,k)<<"\n";
+      //std::cout<<" Density="<<constvars->density(i,j,k) << "Viscosity "<< constvars->viscosity(i,j,k)<< "Dy "<< Dx.y()<<"utauY="<< vtauGuess<< "\n";
+      //std::cout<< "NonLinearX "<<NonLinearX<< "NonLinearY "<<NonLinearY<< " NonLinearZ "<< NonLinearZ << "\n";
+
+
+    //}//end for std::cout
+
+
+  });
+
+}
+//----------------------------------
+void
+BoundaryCondition::newton_solver( const double& up, const double& yp, const double& density, const double& viscosity,double& utau)
+{
+  // solver constants
+  const double d_tol    = 1e-10;
+  const double E=9.8;
+  const double kappa=0.42;
+  const double A=E*density*yp/viscosity;
+  bool        converged=false;
+  double      fprime=0.0;
+  double      f=0.0;
+  double      wrk=0.0;
+  double      df=0.0;
+  double  uinit= utau;
+  // newton solve
+  for ( int iterT=0; iterT < 50; iterT++) {
+    wrk=log(A*utau);
+    fprime=-(1.0+wrk);
+    f=kappa*up-utau*wrk;
+    df=f/fprime;
+    utau=utau-df;
+     ///std::cout<< "iterT="<<iterT<<"utau="<<utau<<"A="<<A<<"\n";
+    if (std::abs(df) < d_tol){
+      converged =true;
+      break;
+      }
+    }// end for solver looping process
+
+  if (!converged && std::abs(up)> 1e-5 && density != 0.0 && viscosity !=0)
+  { std::cout<<"diverge for solving log wall stress, not converged"<<std::endl;
+    std::cout<<"up="<<up<<"yp="<<yp<<"density="<<density<<"visocisty="<<viscosity<<"utau="<<utau<< " uinit ="<< uinit<<std::endl;
+  }
+
+}
+
+void
+BoundaryCondition::wallStressMolecular( const Patch* p,
+                                        constSFCXVariable<double>& uvel,
+                                        constSFCYVariable<double>& vvel,
+                                        constSFCZVariable<double>& wvel,
+                                        SFCXVariable<double>& Su,
+                                        SFCYVariable<double>& Sv,
+                                        SFCZVariable<double>& Sw,
+                                        constCCVariable<double>& eps )
+{
+
+  Vector Dx = p->dCell();
+
+  double viscos; // molecular viscosity
+  viscos = d_physicalConsts->getMolecularViscosity();
+  const double area_ew = Dx.y() * Dx.z();
+  const double area_ns = Dx.z() * Dx.x();
+  const double area_tb = Dx.x() * Dx.y();
+  const double dx = Dx.x();
+  const double dy = Dx.y();
+  const double dz = Dx.z();
+
+  for (CellIterator iter=p->getCellIterator(); !iter.done(); iter++) {
     IntVector c = *iter;
     IntVector xm = *iter - IntVector(1,0,0);
     IntVector xp = *iter + IntVector(1,0,0);
@@ -4027,145 +4707,229 @@ BoundaryCondition::wallStress( const Patch* p,
     IntVector yp = *iter + IntVector(0,1,0);
     IntVector zm = *iter - IntVector(0,0,1);
     IntVector zp = *iter + IntVector(0,0,1);
+    IntVector xmym = *iter + IntVector(-1,-1,0);
+    IntVector xmyp = *iter + IntVector(-1,1,0);
+    IntVector xmzm = *iter + IntVector(-1,0,-1);
+    IntVector xmzp = *iter + IntVector(-1,0,1);
+    IntVector xpym = *iter + IntVector(1,-1,0);
+    IntVector xpzm = *iter + IntVector(1,0,-1);
+    IntVector ymzm = *iter + IntVector(0,-1,-1);
+    IntVector ymzp = *iter + IntVector(0,-1,1);
+    IntVector ypzm = *iter + IntVector(0,1,-1);
 
-    //WARNINGS:
-    // This isn't that stylish but it should accomplish what the MPMArches code was doing
-    //1) assumed flow cell = -1
-    //2) assumed that wall velocity = 0
-    //3) assumed a csmag = 0.17 (a la kumar)
-
-    int flow = -1;
-
-    if ( !d_slip ) {
-
-      // curr cell is a flow cell
-      if ( const_vars->cellType[c] == flow ) {
-
-        if ( const_vars->cellType[xm] == WALL || const_vars->cellType[xm] == INTRUSION ) {
-
-          //y-dir
-          if ( const_vars->cellType[ym] == flow ) {
-
-            double mu_t = pow( d_csmag_wall*Dx.x(), 2.0 ) * const_vars->density[c] * const_vars->vVelocity[c]/Dx.x();
-
-            //apply v-mom bc -
-            vars->vVelNonlinearSrc[c] -= 2.0 * Dx.y() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->vVelocity[c] / Dx.x();
-
-          }
-          if ( const_vars->cellType[zm] == flow ) {
-
-            double mu_t = pow( d_csmag_wall*Dx.x(), 2.0 ) * const_vars->density[c] * const_vars->wVelocity[c]/Dx.x();
-
-            //apply w-mom bc -
-            vars->wVelNonlinearSrc[c] -= 2.0 * Dx.y() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->wVelocity[c] / Dx.x();
-          }
-
-        }
-
-        if ( const_vars->cellType[xp] == WALL || const_vars->cellType[xp] == INTRUSION) {
-
-          //y-dir
-          if ( const_vars->cellType[ym] == flow ) {
-
-            double mu_t = pow( d_csmag_wall*Dx.x(), 2.0 ) * const_vars->density[c] * const_vars->vVelocity[c]/Dx.x();
-
-            //apply v-mom bc -
-            vars->vVelNonlinearSrc[c] -= 2.0 * Dx.y() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->vVelocity[c] / Dx.x();
-          }
-          if ( const_vars->cellType[zm] == flow ) {
-
-            double mu_t = pow( d_csmag_wall*Dx.x(), 2.0 ) * const_vars->density[c] * const_vars->wVelocity[c]/Dx.x();
-
-            //apply w-mom bc -
-            vars->wVelNonlinearSrc[c] -= 2.0 * Dx.y() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->wVelocity[c] / Dx.x();
-          }
-
-        }
-
-        if ( const_vars->cellType[ym] == WALL || const_vars->cellType[ym] == INTRUSION) {
-
-          //x-dir
-          if ( const_vars->cellType[xm] == flow ) {
-
-            double mu_t = pow( d_csmag_wall*Dx.y(), 2.0 ) * const_vars->density[c] * const_vars->uVelocity[c]/Dx.y();
-
-            //apply u-mom bc -
-            vars->uVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->uVelocity[c] / Dx.y();
-          }
-          if ( const_vars->cellType[zm] == flow ) {
-
-            double mu_t = pow( d_csmag_wall*Dx.y(), 2.0 ) * const_vars->density[c] * const_vars->wVelocity[c]/Dx.y();
-
-            //apply w-mom bc -
-            vars->wVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->wVelocity[c] / Dx.y();
-          }
-
-        }
-
-        if ( const_vars->cellType[yp] == WALL || const_vars->cellType[yp] == INTRUSION) {
-
-          //x-dir
-          if ( const_vars->cellType[xm] == flow ) {
-
-            double mu_t = pow( d_csmag_wall*Dx.y(), 2.0 ) * const_vars->density[c] * const_vars->uVelocity[c]/Dx.y();
-
-            //apply u-mom bc -
-            vars->uVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->uVelocity[c] / Dx.y();
-          }
-          if ( const_vars->cellType[zm] == flow ) {
-
-            double mu_t = pow( d_csmag_wall*Dx.y(), 2.0 ) * const_vars->density[c] * const_vars->wVelocity[c]/Dx.y();
-
-            //apply w-mom bc -
-            vars->wVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->wVelocity[c] / Dx.y();
-          }
-
-        }
-
-        if ( const_vars->cellType[zm] == WALL || const_vars->cellType[zm] == INTRUSION) {
-
-          //x-dir
-          if ( const_vars->cellType[xm] == flow ) {
-
-            double mu_t = pow( d_csmag_wall*Dx.z(), 2.0 ) * const_vars->density[c] * const_vars->uVelocity[c]/Dx.z();
-
-            //apply u-mom bc -
-            vars->uVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.y() * ( mu_t +  const_vars->viscosity[c] ) * const_vars->uVelocity[c] / Dx.z();
-          }
-          if ( const_vars->cellType[ym] == flow ) {
-
-            double mu_t = pow( d_csmag_wall*Dx.z(), 2.0 ) * const_vars->density[c] * const_vars->vVelocity[c]/Dx.z();
-
-            //apply v-mom bc -
-            vars->vVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.y() * ( mu_t + const_vars->viscosity[c] ) * const_vars->vVelocity[c] / Dx.z();
-          }
-
-        }
-
-        if ( const_vars->cellType[zp] == WALL || const_vars->cellType[zp] == INTRUSION) {
-
-          //x-dir
-          if ( const_vars->cellType[xm] == flow ) {
-
-            double mu_t = pow( d_csmag_wall*Dx.z(), 2.0 ) * const_vars->density[c] * const_vars->uVelocity[c]/Dx.z();
-
-            //apply u-mom bc -
-            vars->uVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.y() * ( mu_t + const_vars->viscosity[c] ) * const_vars->uVelocity[c] / Dx.z();
-          }
-          if ( const_vars->cellType[ym] == flow ) {
-
-            double mu_t = pow( d_csmag_wall*Dx.z(), 2.0 ) * const_vars->density[c] * const_vars->vVelocity[c]/Dx.z();
-
-            //apply v-mom bc -
-            vars->vVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.y() * ( mu_t + const_vars->viscosity[c] ) * const_vars->vVelocity[c] / Dx.z();
-          }
-
-        }
-
+    //apply u-mom bc -
+    if ( eps[xm] * eps[c] > .5 ){
+      // Y-
+      if ( eps[ym] * eps[xmym] < .5 ){
+        Su[c] -= 2.0 * area_ns * ( viscos ) * uvel[c] / dy;
+      }
+      // Y+
+      if ( eps[yp] * eps[xmyp] < .5 ){
+        Su[c] -= 2.0 * area_ns * ( viscos ) * uvel[c] / dy;
+      }
+      // Z-
+      if ( eps[zm] * eps[xmzm] < .5 ){
+        Su[c] -= 2.0 * area_tb * ( viscos ) * uvel[c] / dz;
+      }
+      // Z+
+      if ( eps[zp] * eps[xmzp] < .5 ){
+        Su[c] -= 2.0 * area_tb * ( viscos ) * uvel[c] / dy;
       }
     }
-  }
-}
+    //apply v-mom bc -
+    if ( eps[ym] * eps[c] > 0.5 ) {
+      // X-
+      if ( eps[xm] * eps[xmym] < .5 ){
+        Sv[c] -= 2.0 * area_ew * ( viscos ) * vvel[c] / dx;
+      }
+      // X+
+      if ( eps[xp] * eps[xpym] < .5 ){
+        Sv[c] -= 2.0 * area_ew * ( viscos ) * vvel[c] / dx;
+      }
+      // Z-
+      if ( eps[zm] * eps[ymzm] < .5 ){
+        Sv[c] -= 2.0 * area_tb * ( viscos ) * vvel[c] / dz;
+      }
+      // Z+
+      if ( eps[zp] * eps[ymzp] < .5 ){
+        Sv[c] -= 2.0 * area_tb * ( viscos ) * vvel[c] / dz;
+      }
+    }
+    //apply w-mom bc -
+    if ( eps[zm] * eps[c] > 0.5 ) {
+      // X-
+      if ( eps[xm] * eps[xmzm] < .5 ){
+        Sw[c] -= 2.0 * area_ew * ( viscos ) * wvel[c] / dx;
+      }
+      // X+
+      if ( eps[xp] * eps[xpzm] < .5 ){
+        Sw[c] -= 2.0 * area_ew * ( viscos ) * wvel[c] / dx;
+      }
+      // Y-
+      if ( eps[ym] * eps[ymzm] < .5 ){
+        Sw[c] -= 2.0 * area_ns * ( viscos ) * wvel[c] / dy;
+      }
+      // Y+
+      if ( eps[yp] * eps[ypzm] < .5 ){
+        Sw[c] -= 2.0 * area_ns * ( viscos ) * wvel[c] / dy;
+      }
+    }
+  }// end cell loop
+}// end function
+
+void
+BoundaryCondition::wallStressDynSmag( const Patch* p,
+                                      const int standoff,
+                                      constCCVariable<double>& mu_t,
+                                      constSFCXVariable<double>& uvel,
+                                      constSFCYVariable<double>& vvel,
+                                      constSFCZVariable<double>& wvel,
+                                      SFCXVariable<double>& Su,
+                                      SFCYVariable<double>& Sv,
+                                      SFCZVariable<double>& Sw,
+                                      constCCVariable<double>& rho,
+                                      constCCVariable<double>& eps )
+{
+
+  // mu_t coming in here has the mol visc added.
+  //
+  Vector Dx = p->dCell();
+
+  const double area_ew = Dx.y() * Dx.z();
+  const double area_ns = Dx.z() * Dx.x();
+  const double area_tb = Dx.x() * Dx.y();
+  const double dx = Dx.x();
+  const double dy = Dx.y();
+  const double dz = Dx.z();
+
+  for (CellIterator iter=p->getCellIterator(); !iter.done(); iter++) {
+    IntVector c = *iter;
+    IntVector xm = *iter - IntVector(1,0,0);
+    IntVector xp = *iter + IntVector(1,0,0);
+    IntVector ym = *iter - IntVector(0,1,0);
+    IntVector yp = *iter + IntVector(0,1,0);
+    IntVector zm = *iter - IntVector(0,0,1);
+    IntVector zp = *iter + IntVector(0,0,1);
+    IntVector xmym = *iter + IntVector(-1,-1,0);
+    IntVector xmyp = *iter + IntVector(-1,1,0);
+    IntVector xmzm = *iter + IntVector(-1,0,-1);
+    IntVector xmzp = *iter + IntVector(-1,0,1);
+    IntVector xpym = *iter + IntVector(1,-1,0);
+    IntVector xpzm = *iter + IntVector(1,0,-1);
+    IntVector ymzm = *iter + IntVector(0,-1,-1);
+    IntVector ymzp = *iter + IntVector(0,-1,1);
+    IntVector ypzm = *iter + IntVector(0,1,-1);
+    IntVector x_so = IntVector(standoff,0,0);
+    IntVector y_so = IntVector(0,standoff,0);
+    IntVector z_so = IntVector(0,0,standoff);
+    //apply u-mom bc -
+    if ( eps[xm] * eps[c] > .5 ){
+      // Y-
+      if ( eps[ym] * eps[xmym] < .5 ){
+        const double i_so = ( eps[c+y_so] * eps[xm+y_so] > .5 ) ?
+                             standoff :
+                             0;
+        const double mu = 0.5 * ( mu_t[c+IntVector(0,i_so,0)] + mu_t[c+IntVector(-1,i_so,0)] );
+        Su[c] -= 2.0 * area_ns * ( mu ) * uvel[c] / dy;
+      }
+      // Y+
+      if ( eps[yp] * eps[xmyp] < .5 ){
+        const double i_so = ( eps[c-y_so] * eps[xm-y_so] > .5 ) ?
+                             standoff :
+                             0;
+        const double mu = 0.5*(mu_t[c+IntVector(0,-i_so,0)] + mu_t[c+IntVector(-1,-i_so,0)]);
+        Su[c] -= 2.0 * area_ns * ( mu ) * uvel[c] / dy;
+      }
+      // Z-
+      if ( eps[zm] * eps[xmzm] < .5 ){
+        const double i_so = ( eps[c+z_so] * eps[xm+z_so] > .5 ) ?
+                             standoff :
+                             0;
+        const double mu = 0.5 * ( mu_t[c+IntVector(0,0,i_so)] + mu_t[c+IntVector(-1,0,i_so)] );
+        Su[c] -= 2.0 * area_tb * ( mu ) * uvel[c] / dz;
+      }
+      // Z+
+      if ( eps[zp] * eps[xmzp] < .5 ){
+        const double i_so = ( eps[c-z_so] * eps[xm-z_so] > .5 ) ?
+                             standoff :
+                             0;
+        const double mu = 0.5*(mu_t[c+IntVector(0,0,-i_so)] + mu_t[c+IntVector(-1,0,-i_so)]);
+        Su[c] -= 2.0 * area_tb * ( mu ) * uvel[c] / dy;
+      }
+    }
+    //apply v-mom bc -
+    if ( eps[ym] * eps[c] > 0.5 ) {
+      // X-
+      if ( eps[xm] * eps[xmym] < .5 ){
+        const double i_so = ( eps[c+x_so] * eps[ym+x_so] > .5 ) ?
+                             standoff :
+                             0;
+        const double mu = 0.5 * ( mu_t[c+IntVector(i_so,0,0)] + mu_t[c+IntVector(i_so,-1,0)] );
+        Sv[c] -= 2.0 * area_ew * ( mu ) * vvel[c] / dx;
+      }
+      // X+
+      if ( eps[xp] * eps[xpym] < .5 ){
+        const double i_so = ( eps[c-x_so] * eps[ym-x_so] > .5 ) ?
+                             standoff :
+                             0;
+        const double mu = 0.5 * ( mu_t[c+IntVector(-i_so,0,0)] + mu_t[c+IntVector(-i_so,-1,0)] );
+        Sv[c] -= 2.0 * area_ew * ( mu ) * vvel[c] / dx;
+      }
+      // Z-
+      if ( eps[zm] * eps[ymzm] < .5 ){
+        const double i_so = ( eps[c+z_so] * eps[ym+z_so] > .5 ) ?
+                             standoff :
+                             0;
+        const double mu = 0.5 * ( mu_t[c+IntVector(0,0,i_so)] + mu_t[c+IntVector(0,-1,i_so)] );
+        Sv[c] -= 2.0 * area_tb * ( mu ) * vvel[c] / dz;
+      }
+      // Z+
+      if ( eps[zp] * eps[ymzp] < .5 ){
+        const double i_so = ( eps[c-z_so] * eps[ym-z_so] > .5 ) ?
+                             standoff :
+                             0;
+        const double mu = 0.5 * ( mu_t[c+IntVector(0,0,-i_so)] + mu_t[c+IntVector(0,-1,-i_so)] );
+        Sv[c] -= 2.0 * area_tb * ( mu ) * vvel[c] / dz;
+      }
+    }
+    //apply w-mom bc -
+    if ( eps[zm] * eps[c] > 0.5 ) {
+      // X-
+      if ( eps[xm] * eps[xmzm] < .5 ){
+        const double i_so = ( eps[c+x_so] * eps[zm+x_so] > .5 ) ?
+                             standoff :
+                             0;
+        const double mu = 0.5 * ( mu_t[c+IntVector(i_so,0,0)] + mu_t[c+IntVector(i_so,0,-1)] );
+        Sw[c] -= 2.0 * area_ew * ( mu ) * wvel[c] / dx;
+      }
+      // X+
+      if ( eps[xp] * eps[xpzm] < .5 ){
+        const double i_so = ( eps[c-x_so] * eps[zm-x_so] > .5 ) ?
+                             standoff :
+                             0;
+        const double mu = 0.5 * ( mu_t[c+IntVector(-i_so,0,0)] + mu_t[c+IntVector(-i_so,0,-1)] );
+        Sw[c] -= 2.0 * area_ew * ( mu ) * wvel[c] / dx;
+      }
+      // Y-
+      if ( eps[ym] * eps[ymzm] < .5 ){
+        const double i_so = ( eps[c+y_so] * eps[zm+y_so] > .5 ) ?
+                             standoff :
+                             0;
+        const double mu = 0.5 * ( mu_t[c+IntVector(0,i_so,0)] + mu_t[c+IntVector(0,i_so,-1)] );
+        Sw[c] -= 2.0 * area_ns * ( mu ) * wvel[c] / dy;
+      }
+      // Y+
+      if ( eps[yp] * eps[ypzm] < .5 ){
+        const double i_so = ( eps[c-y_so] * eps[zm-y_so] > .5 ) ?
+                             standoff :
+                             0;
+        const double mu = 0.5*(mu_t[c+IntVector(0,-i_so,0)] + mu_t[c+IntVector(0,-i_so,-1)]);
+        Sw[c] -= 2.0 * area_ns * ( mu ) * wvel[c] / dy;
+      }
+    }
+  }// end cell loop
+}// end function
+
 void
 BoundaryCondition::sched_checkMomBCs( SchedulerP& sched, const LevelP& level, const MaterialSet* matls )
 {

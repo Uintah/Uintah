@@ -8,7 +8,6 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Parallel/Parallel.h>
 #include <CCA/Components/Arches/ParticleModels/CQMOMSourceWrapper.h>
-#include <Core/Containers/StaticArray.h>
 
 using namespace std;
 using namespace Uintah;
@@ -645,7 +644,7 @@ CQMOMEqn::sched_solveTransportEqn( const LevelP& level, SchedulerP& sched, int t
 
   //Old
   tsk->requires(Task::OldDW, d_transportVarLabel, Ghost::None, 0);
-  tsk->requires(Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label(), Ghost::None, 0 );
+  tsk->requires(Task::OldDW, d_fieldLabels->d_delTLabel, Ghost::None, 0 );
   tsk->requires(Task::OldDW, d_fieldLabels->d_volFractionLabel, Ghost::None, 0 );
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
@@ -671,7 +670,7 @@ CQMOMEqn::solveTransportEqn( const ProcessorGroup* pc,
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
     delt_vartype DT;
-    old_dw->get(DT, d_fieldLabels->d_sharedState->get_delt_label());
+    old_dw->get(DT, d_fieldLabels->d_delTLabel);
     double dt = DT;
 
     CCVariable<double> phi;    // phi @ current sub-level
@@ -779,8 +778,8 @@ CQMOMEqn::buildXConvection( const ProcessorGroup* pc,
       phiTemp[c] = phi[c]; //store phi in phiTemp, to reset it later after constructing all the fluxes
     } //cell loop
 
-    StaticArray <constCCVariable<double> > cqmomWeights ( nNodes );
-    StaticArray <constCCVariable<double> > cqmomAbscissas (nNodes * M);
+    std::vector <constCCVariable<double> > cqmomWeights ( nNodes );
+    std::vector <constCCVariable<double> > cqmomAbscissas (nNodes * M);
 
     int i = 0;
     for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
@@ -878,8 +877,8 @@ CQMOMEqn::buildYConvection( const ProcessorGroup* pc,
     new_dw->getModifiable(FconvY, d_FconvYLabel, matlIndex, patch);
     FconvY.initialize(0.0);
 
-    StaticArray <constCCVariable<double> > cqmomWeights ( nNodes );
-    StaticArray <constCCVariable<double> > cqmomAbscissas (nNodes * M);
+    std::vector <constCCVariable<double> > cqmomWeights ( nNodes );
+    std::vector <constCCVariable<double> > cqmomAbscissas (nNodes * M);
 
     int i = 0;
     for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
@@ -976,8 +975,8 @@ CQMOMEqn::buildZConvection( const ProcessorGroup* pc,
     new_dw->getModifiable(FconvZ, d_FconvZLabel, matlIndex, patch);
     FconvZ.initialize(0.0);
 
-    StaticArray <constCCVariable<double> > cqmomWeights ( nNodes );
-    StaticArray <constCCVariable<double> > cqmomAbscissas (nNodes * M);
+    std::vector <constCCVariable<double> > cqmomWeights ( nNodes );
+    std::vector <constCCVariable<double> > cqmomAbscissas (nNodes * M);
 
     int i = 0;
     for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {

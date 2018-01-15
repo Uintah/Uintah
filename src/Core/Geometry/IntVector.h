@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -95,60 +95,50 @@ public:
     }
   }
 
-  inline bool operator!=(const IntVector& a) const {
+  inline bool operator!=( const IntVector& a ) const {
     return value_[0] != a.value_[0] || value_[1] != a.value_[1] || value_[2] != a.value_[2];
   }
 
-  inline IntVector(int x, int y, int z) {
+  inline IntVector( int x, int y, int z ) {
     value_[0] = x;
     value_[1] = y;
     value_[2] = z;
   }
 
-  inline IntVector operator*( const IntVector & v ) const {
-    return IntVector( value_[0] * v.value_[0],
-                      value_[1] * v.value_[1],
-                      value_[2] * v.value_[2] );
+  inline IntVector( int v ) {
+    value_[0] = v;
+    value_[1] = v;
+    value_[2] = v;
   }
+
+  inline IntVector operator*( const IntVector & v ) const { return IntVector( value_[0] * v.value_[0],
+                                                                              value_[1] * v.value_[1],
+                                                                              value_[2] * v.value_[2] ); }
   
-  inline IntVector operator*( const int a ) const {
-    return IntVector( a * value_[0],
-                      a * value_[1],
-                      a * value_[2] );
-  }
+  inline IntVector operator*( const int a ) const { return IntVector( a * value_[0],
+                                                                      a * value_[1],
+                                                                      a * value_[2] ); }
 
-  inline IntVector operator/( const IntVector & v ) const {
-    return IntVector( value_[0] / v.value_[0],
-                      value_[1] / v.value_[1],
-                      value_[2] / v.value_[2] );
-  }
-  inline IntVector operator+( const IntVector & v ) const {
-    return IntVector( value_[0] + v.value_[0],
-                      value_[1] + v.value_[1], 
-                      value_[2] + v.value_[2] );
-  }
-  inline IntVector operator-() const {
-    return IntVector( -value_[0], -value_[1], -value_[2] );
-  }
-  inline IntVector operator-( const IntVector & v ) const {
-    return IntVector( value_[0] - v.value_[0],
-                      value_[1] - v.value_[1],
-                      value_[2] - v.value_[2] );
-  }
+  inline IntVector operator/( const IntVector & v ) const { return IntVector( value_[0] / v.value_[0],
+                                                                              value_[1] / v.value_[1],
+                                                                              value_[2] / v.value_[2] ); }
+  inline IntVector operator+( const IntVector & v ) const { return IntVector( value_[0] + v.value_[0],
+                                                                              value_[1] + v.value_[1], 
+                                                                              value_[2] + v.value_[2] ); }
+  inline IntVector operator-() const { return IntVector( -value_[0], -value_[1], -value_[2] ); }
+  inline IntVector operator-( const IntVector & v ) const { return IntVector( value_[0] - v.value_[0],
+                                                                              value_[1] - v.value_[1],
+                                                                              value_[2] - v.value_[2] ); }
 
-  inline IntVector& operator+=( const IntVector & v ) {
-    value_[0] += v.value_[0];
-    value_[1] += v.value_[1];
-    value_[2] += v.value_[2];
-    return *this;
-  }
+  inline IntVector& operator+=( const IntVector & v ) { value_[0] += v.value_[0];
+                                                        value_[1] += v.value_[1];
+                                                        value_[2] += v.value_[2];
+                                                        return *this; }
 
-  inline IntVector& operator-=( const IntVector & v ) {
-    value_[0] -= v.value_[0];
-    value_[1] -= v.value_[1];
-    value_[2] -= v.value_[2];
-    return *this;
-  }
+  inline IntVector& operator-=( const IntVector & v ) { value_[0] -= v.value_[0];
+                                                        value_[1] -= v.value_[1];
+                                                        value_[2] -= v.value_[2];
+                                                        return *this; }
 
   // IntVector i(0)=i.x()
   //           i(1)=i.y()

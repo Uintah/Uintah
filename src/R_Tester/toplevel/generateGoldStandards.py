@@ -305,13 +305,14 @@ def generateGS() :
             print( "______________________________________________________________________" )
             print( "About to run tests for component: " + component )
 
+        nTestsFinished = 0
         for test in tests :
             if testOS( test ) != upper( OS ) and testOS( test ) != "ALL":
                 continue
              
             #  Defaults
-            sus_options     = ""
-            do_gpu          = 0    # run test if gpu is supported 
+            sus_options  = ""
+            do_gpu       = 0    # run test if gpu is supported 
             
             #__________________________________
             # parse user flags for the gpu and sus_options
@@ -387,14 +388,10 @@ def generateGS() :
             if rc == 0:
               MPIHEAD="%s -genvlist MALLOC_STATS" % MPIRUN    
       
-      
-            if np > 1.0 :
-                np = int( np )
-                my_mpirun = "%s -np %s  " % (MPIHEAD, np)
+            np = int( np )
+            my_mpirun = "%s -np %s  " % (MPIHEAD, np)
 
-                command = my_mpirun + sus + " -mpi " + SVN_FLAGS + " " + sus_options + " " + inputs + "/" + component + "/" + input( test )  + " > sus_log.txt 2>&1 " 
-            else :
-                command = sus + SVN_FLAGS + " " + sus_options + " " + inputs + "/" + component + "/" + input( test )  + " >  sus_log.txt 2>&1" 
+            command = my_mpirun + sus + " " + SVN_FLAGS + " " + sus_options + " " + inputs + "/" + component + "/" + input( test )  + " > sus_log.txt 2>&1 " 
 
             print( "Running command: " + command )
 
@@ -412,7 +409,11 @@ def generateGS() :
               print( "\nERROR: %s: Test (%s) failed to complete\n" % (component,test) )
             
             os.chdir( ".." ) # Back to the component (eg: 'ICE') directory
-
+            nTestsFinished += 1
+         
+        if nTestsFinished == 0:
+          print( "\nERROR: Zero %s regression tests ran to completion.  Hint: is the OS you're using appropriate for the component's tests?  \n" % (component) ) 
+          
         os.chdir( ".." ) # Back to the TestData directory
 
 

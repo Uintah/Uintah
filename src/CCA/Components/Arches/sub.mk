@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2017 The University of Utah
+#  Copyright (c) 1997-2018 The University of Utah
 #
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -92,6 +92,8 @@ SRCS += $(SRCDIR)/Arches.cc                    \
         $(SRCDIR)/Source.cc                    \
         $(SRCDIR)/TurbulenceModel.cc           \
         $(SRCDIR)/WBCHelper.cc                 \
+        $(SRCDIR)/GridTools.cc                 \
+        $(SRCDIR)/HandoffHelper.cc             \
         $(SRCDIR)/TurbulenceModelPlaceholder.cc
 
 ifeq ($(HAVE_CUDA),yes)
@@ -100,6 +102,7 @@ ifeq ($(HAVE_CUDA),yes)
 endif
 
 PSELIBS := \
+	CCA/Components/Application \
         CCA/Components/Arches/fortran   \
         CCA/Components/Models           \
         CCA/Components/OnTheFlyAnalysis \
@@ -134,7 +137,7 @@ ifeq ($(HAVE_HYPRE),yes)
 endif
 
 LIBS := $(LIBS) $(XML2_LIBRARY) $(F_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) \
-        $(LAPACK_LIBRARY) $(BLAS_LIBRARY) $(THREAD_LIBRARY) \
+        $(LAPACK_LIBRARY) $(BLAS_LIBRARY) \
         $(RADPROPS_LIBRARY) $(TABPROPS_LIBRARY) \
         $(BOOST_LIBRARY) $(Z_LIBRARY) \
 

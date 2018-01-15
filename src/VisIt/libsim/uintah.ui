@@ -65,7 +65,7 @@
         <string>Max Time</string>
        </property>
       </widget>
-      <widget class="QLabel" name="TimeStepLabel">
+      <widget class="QLabel" name="TimestepLabel">
        <property name="geometry">
         <rect>
          <x>10</x>
@@ -78,7 +78,7 @@
         <string>Time Step</string>
        </property>
       </widget>
-      <widget class="QLineEdit" name="TimeStep">
+      <widget class="QLineEdit" name="Timestep">
        <property name="geometry">
         <rect>
          <x>110</x>
@@ -111,7 +111,7 @@
         <string>Time</string>
        </property>
       </widget>
-      <widget class="QLabel" name="TimeStepLabel_2">
+      <widget class="QLabel" name="TimestepLabel_2">
        <property name="geometry">
         <rect>
          <x>10</x>
@@ -124,7 +124,7 @@
         <string>Max Time Step</string>
        </property>
       </widget>
-      <widget class="QLineEdit" name="MaxTimeStep">
+      <widget class="QLineEdit" name="MaxTimestep">
        <property name="geometry">
         <rect>
          <x>110</x>
@@ -160,7 +160,7 @@
         <string>Clamp time to output</string>
        </property>
       </widget>
-      <widget class="QLabel" name="StopATimeStepLabel">
+      <widget class="QLabel" name="StopATimestepLabel">
        <property name="geometry">
         <rect>
          <x>10</x>
@@ -173,7 +173,7 @@
         <string>Stop execution at time step</string>
        </property>
       </widget>
-      <widget class="QLineEdit" name="StopAtTimeStep">
+      <widget class="QLineEdit" name="StopAtTimestep">
        <property name="geometry">
         <rect>
          <x>180</x>
@@ -183,7 +183,7 @@
         </rect>
        </property>
       </widget>
-      <widget class="QCheckBox" name="StopAtLastTimeStep">
+      <widget class="QCheckBox" name="StopAtLastTimestep">
        <property name="geometry">
         <rect>
          <x>330</x>
@@ -918,14 +918,14 @@
  </widget>
  <tabstops>
   <tabstop>tabWidget</tabstop>
-  <tabstop>TimeStep</tabstop>
-  <tabstop>MaxTimeStep</tabstop>
+  <tabstop>Timestep</tabstop>
+  <tabstop>MaxTimestep</tabstop>
   <tabstop>Time</tabstop>
   <tabstop>MaxTime</tabstop>
   <tabstop>ClampTimestepsToOutput</tabstop>
   <tabstop>EndOnMaxTime</tabstop>
-  <tabstop>StopAtTimeStep</tabstop>
-  <tabstop>StopAtLastTimeStep</tabstop>
+  <tabstop>StopAtTimestep</tabstop>
+  <tabstop>StopAtLastTimestep</tabstop>
   <tabstop>DeltaTVariableTable</tabstop>
   <tabstop>WallTimesVariableTable</tabstop>
   <tabstop>UPSVariableTable</tabstop>

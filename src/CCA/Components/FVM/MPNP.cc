@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,7 +25,7 @@
 
 #include <CCA/Components/FVM/MPNP.h>
 #include <CCA/Components/FVM/FVMBoundCond.h>
-#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Ports/LoadBalancer.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/Stencil7.h>
@@ -34,7 +34,6 @@
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
-#include <Core/Grid/Variables/SoleVariable.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Task.h>
@@ -51,15 +50,15 @@
 
 using namespace Uintah;
 
-MPNP::MPNP(const ProcessorGroup* myworld)
-  : UintahParallelComponent(myworld)
+MPNP::MPNP(const ProcessorGroup* myworld,
+	   const SimulationStateP sharedState)
+  : ApplicationCommon(myworld, sharedState)
 {
   d_lb = scinew FVMLabel();
 
   d_solver_parameters = 0;
   d_delt = 0;
   d_solver = 0;
-  d_shared_state = 0;
 
   d_mpnp_matl  = scinew MaterialSubset();
   d_mpnp_matl->add(0);
@@ -89,12 +88,9 @@ MPNP::~MPNP()
 //__________________________________
 //
 void MPNP::problemSetup(const ProblemSpecP& prob_spec,
-                              const ProblemSpecP& restart_prob_spec,
-                              GridP& grid,
-                              SimulationStateP& shared_state)
+			const ProblemSpecP& restart_prob_spec,
+			GridP& grid)
 {
-  d_shared_state = shared_state;
-  
   ProblemSpecP root_ps = 0;
   if (restart_prob_spec){
     root_ps = restart_prob_spec;
@@ -106,7 +102,6 @@ void MPNP::problemSetup(const ProblemSpecP& prob_spec,
 void
 MPNP::outputProblemSpec(ProblemSpecP& ps)
 {
-
 }
 
 //__________________________________
@@ -115,21 +110,23 @@ void
 MPNP::scheduleInitialize( const LevelP     & level,
                                               SchedulerP & sched )
 {
-
 }
+
 //__________________________________
 //
 void MPNP::scheduleRestartInitialize(const LevelP& level,
                                             SchedulerP& sched)
 {
 }
+
 //__________________________________
 // 
-void MPNP::scheduleComputeStableTimestep(const LevelP& level,
+void MPNP::scheduleComputeStableTimeStep(const LevelP& level,
                                           SchedulerP& sched)
 {
 
 }
+
 //__________________________________
 //
 void
@@ -137,14 +134,14 @@ MPNP::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
 
 }
+
 //__________________________________
 //
-void MPNP::computeStableTimestep(const ProcessorGroup*,
+void MPNP::computeStableTimeStep(const ProcessorGroup*,
                                   const PatchSubset* pss,
                                   const MaterialSubset*,
                                   DataWarehouse*, DataWarehouse* new_dw)
 {
-
 }
 
 //__________________________________
@@ -154,6 +151,4 @@ void MPNP::initialize(const ProcessorGroup*,
                        const MaterialSubset* matls,
                        DataWarehouse*, DataWarehouse* new_dw)
 {
-
-
 }

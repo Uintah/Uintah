@@ -2,7 +2,7 @@
 
 from sys import argv,exit
 from os import environ, system
-from helpers.runSusTests import runSusTests, inputs_root, generatingGoldStandards
+from helpers.runSusTests import runSusTests, inputs_root, ignorePerformanceTests, generatingGoldStandards
 from helpers.modUPS import modUPS,modUPS2
 
 from os import system
@@ -60,16 +60,18 @@ RMCRT_DO_perf_GPU_ups = modUPS2( the_dir, \
 #       abs_tolerance=[double]  - absolute tolerance used in comparisons
 #       rel_tolerance=[double]  - relative tolerance used in comparisons
 #       exactComparison         - set absolute/relative tolerance = 0  for uda comparisons
-#       startFromCheckpoint     - start test from checkpoint. (/home/csafe-tester/CheckPoints/..../testname.uda.000)
+#       postProcessRun          - start test from an existing uda in the checkpoints directory.  Compute new quantities and save them in a new uda
+#       startFromCheckpoint     - start test from checkpoint. (/home/rt/CheckPoints/..../testname.uda.000)
 #       sus_options="string"    - Additional command line options for sus command
 #
 #  Notes:
 #  1) The "folder name" must be the same as uda without the extension.
-#  1) If the processors is > 1.0 then an mpirun command will be used
 #  2) Performance_tests are not run on a debug build.
 #______________________________________________________________________
-NIGHTLYTESTS = [   ("poisson1",         "poisson1.ups",                1, "ALL"),
-                   ("RMCRT_test_1L",    "RMCRT_bm1_1L.ups",            1, "ALL", ["exactComparison"]),
+
+
+# Tests that are run during local regression testing
+BASETESTS   =  [   ("RMCRT_test_1L",    "RMCRT_bm1_1L.ups",            1, "ALL", ["exactComparison"]),
                    ("RMCRT_1L_bounded",  "RMCRT_bm1_1L_bounded.ups",   8, "ALL", ["exactComparison"]),
                    ("RMCRT_bm1_DO",     "RMCRT_bm1_DO.ups",            1, "ALL", ["exactComparison"]),
                    ("RMCRT_ML",         "RMCRT_ML.ups",                8, "ALL", ["exactComparison"]),
@@ -78,47 +80,34 @@ NIGHTLYTESTS = [   ("poisson1",         "poisson1.ups",                1, "ALL")
                    ("RMCRT_isoScat",    "RMCRT_isoScat.ups",           1, "ALL", ["exactComparison"]),
                    ("RMCRT_isoScat_LHC", RMCRT_isoScat_LHC_ups,        1, "ALL", ["exactComparison"]),
                    ("RMCRT_1L_reflect", "RMCRT_1L_reflect.ups",        1, "ALL", ["exactComparison"]),
-                   ("RMCRT_udaInit",    "RMCRT_udaInit.ups",           1, "ALL", ["exactComparison","no_restart"]),
-                   ("RMCRT_1L_perf",    "RMCRT_1L_perf.ups",           1, "ALL", ["do_performance_test"]),
-                   ("RMCRT_DO_perf",    "RMCRT_DO_perf.ups",           1, "ALL", ["do_performance_test"]),
-               ]
-
-# Tests that are run during local regression testing
-LOCALTESTS   = [   ("RMCRT_test_1L",    "RMCRT_bm1_1L.ups",            1, "ALL", ["exactComparison"]),
-                   ("RMCRT_1L_bounded",  "RMCRT_bm1_1L_bounded.ups",   8, "ALL", ["exactComparison"]),
-                   ("RMCRT_bm1_DO",     "RMCRT_bm1_DO.ups",            1 , "ALL",["exactComparison"]),
-                   ("RMCRT_ML",         "RMCRT_ML.ups",                8, "ALL", ["exactComparison"]),
-                   ("RMCRT_VR",         "RMCRT_VR.ups",                1, "ALL", ["exactComparison"]),
-                   ("RMCRT_radiometer", "RMCRT_radiometer.ups",        8, "ALL", ["exactComparison"]),
-                   ("RMCRT_1L_reflect", "RMCRT_1L_reflect.ups",        1, "ALL", ["exactComparison"]),
-                   ("RMCRT_isoScat",    "RMCRT_isoScat.ups",           1, "ALL", ["exactComparison"]),
                    ("RMCRT_udaInit",    "RMCRT_udaInit.ups",           1, "ALL", ["exactComparison","no_restart"])
-               ]
+                ]
 
-FLOATTESTS    = [  ("RMCRT_FLT_test_1L", "RMCRT_FLT_bm1_1L.ups",     1.1, "ALL", ["exactComparison"]),
+FLOATTESTS    = [  ("RMCRT_FLT_test_1L", "RMCRT_FLT_bm1_1L.ups",     1,   "ALL", ["exactComparison"]),
                    ("RMCRT_FLT_ML",      "RMCRT_FLT_ML.ups",         8,   "ALL", ["exactComparison"]),
-                   ("RMCRT_FLT_bm1_DO",  "RMCRT_FLT_bm1_DO.ups",     1.1, "ALL", ["exactComparison"])
+                   ("RMCRT_FLT_bm1_DO",  "RMCRT_FLT_bm1_DO.ups",     1,   "ALL", ["exactComparison"])
                  ]
 
-THREADEDTESTS = [  ("RMCRT_test_1L_thread",           "RMCRT_bm1_1L.ups",          1.1, "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
-                   ("RMCRT_1L_bounded_threaded_2proc", "RMCRT_bm1_1L_bounded.ups", 2,   "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
-                   ("RMCRT_bm1_DO_thread",            "RMCRT_bm1_DO.ups",          1.1, "ALL", ["exactComparison", "sus_options=-nthreads 8"]),
-                   ("RMCRT_bm1_DO_thread_2proc",      "RMCRT_bm1_DO.ups",          2,   "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
-                   ("RMCRT_ML_thread",                "RMCRT_ML.ups",              1.1, "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
-                   ("RMCRT_ML_thread_2proc",          "RMCRT_ML.ups",              2,   "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
-                   ("RMCRT_+Domain_thread_2proc",     "RMCRT_+Domain.ups",         2,   "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
-                   ("RMCRT_+Domain_ML_thread_2proc",  "RMCRT_+Domain_ML.ups",      2,   "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
-                   ("RMCRT_+Domain_DO_thread_2proc",  "RMCRT_+Domain_DO.ups",      2,   "ALL", ["exactComparison", "sus_options=-nthreads 4"])
-
+THREADEDTESTS = [  ("RMCRT_test_1L_thread",            "RMCRT_bm1_1L.ups",          1,   "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
+                   ("RMCRT_1L_bounded_threaded_2proc", "RMCRT_bm1_1L_bounded.ups",  2,   "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
+                   ("RMCRT_bm1_DO_thread",             "RMCRT_bm1_DO.ups",          1,   "ALL", ["exactComparison", "sus_options=-nthreads 8"]),
+                   ("RMCRT_bm1_DO_thread_2proc",       "RMCRT_bm1_DO.ups",          2,   "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
+                   ("RMCRT_ML_thread",                 "RMCRT_ML.ups",              1,   "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
+                   ("RMCRT_ML_thread_2proc",           "RMCRT_ML.ups",              2,   "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
+                   ("RMCRT_+Domain_thread_2proc",      "RMCRT_+Domain.ups",         2,   "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
+                   ("RMCRT_+Domain_ML_thread_2proc",   "RMCRT_+Domain_ML.ups",      2,   "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
+                   ("RMCRT_+Domain_DO_thread_2proc",   "RMCRT_+Domain_DO.ups",      2,   "ALL", ["exactComparison", "sus_options=-nthreads 4"])
                  ]
 
 GPUTESTS      = [
-                   ("RMCRT_test_1L_GPU",     "RMCRT_bm1_1L.ups",          1.1, "Linux", ["gpu",  "exactComparison", "sus_options=-nthreads 4 -gpu"]),
-                   ("RMCRT_ML_GPU",          "RMCRT_ML.ups",              1.1, "Linux", ["gpu",  "exactComparison", "sus_options=-nthreads 4 -gpu"]),
-                   ("RMCRT_1L_reflect_GPU",  "RMCRT_1L_reflect.ups",      1.1, "Linux", ["gpu",  "exactComparison", "sus_options=-nthreads 4 -gpu"]),
-                   ("RMCRT_bm1_DO_GPU",      "RMCRT_bm1_DO.ups",          1.1, "Linux", ["gpu",  "exactComparison", "sus_options=-nthreads 4 -gpu"]),
-                   ("RMCRT_1L_perf_GPU",      RMCRT_1L_perf_GPU_ups,      1.1, "Linux", ["gpu",  "do_performance_test", "sus_options=-nthreads 2 -gpu"]),
-                   ("RMCRT_DO_perf_GPU",      RMCRT_DO_perf_GPU_ups,      1.1, "Linux", ["gpu",  "do_performance_test", "sus_options=-nthreads 2 -gpu"])
+                   ("RMCRT_test_1L_GPU",          "RMCRT_bm1_1L.ups",           1, "Linux", ["gpu",  "exactComparison",     "sus_options=-nthreads 4 -gpu"]),
+                   ("RMCRT_ML_GPU",               "RMCRT_ML.ups",               1, "Linux", ["gpu",  "exactComparison",     "sus_options=-nthreads 4 -gpu"]),
+                   ("RMCRT_1L_reflect_GPU",       "RMCRT_1L_reflect.ups",       1, "Linux", ["gpu",  "exactComparison",     "sus_options=-nthreads 4 -gpu"]),
+                   ("RMCRT_bm1_DO_GPU",           "RMCRT_bm1_DO.ups",           1, "Linux", ["gpu",  "exactComparison",     "sus_options=-nthreads 4 -gpu"]),
+                   ("RMCRT_1L_perf_GPU",           RMCRT_1L_perf_GPU_ups,       1, "Linux", ["gpu",  "do_performance_test", "sus_options=-nthreads 2 -gpu"]),
+                   ("RMCRT_DO_perf_GPU",           RMCRT_DO_perf_GPU_ups,       1, "Linux", ["gpu",  "do_performance_test", "sus_options=-nthreads 4 -gpu"]),
+                   ("UnifiedScheduler_GPU_1proc", "unifiedSchedulerTest.ups",   1, "Linux", ["gpu",  "exactComparison",     "sus_options=-nthreads 4 -gpu"]),
+                   ("UnifiedScheduler_GPU_2proc", "unifiedSchedulerTest.ups",   2, "Linux", ["gpu",  "exactComparison",     "sus_options=-nthreads 4 -gpu"])
                ]
 
 DOMAINTESTS   =[   ("RMCRT_+Domain",         "RMCRT_+Domain.ups",        8, "ALL", ["exactComparison"]),
@@ -128,20 +117,23 @@ DOMAINTESTS   =[   ("RMCRT_+Domain",         "RMCRT_+Domain.ups",        8, "ALL
               
 POISSON3TESTS = [ #("poisson3_2L",         "poisson3_2L.ups",             2, "All", ["exactComparison"] ),       
                   #("poisson3_3L",         "poisson3_3L.ups",             2, "All", ["exactComparison"] ),       
-                  ("poisson3_+Domain_1L", "poisson3_+Domain_1L.ups",     2, "All", ["exactComparison"] )        
+                  ("poisson3_+Domain_1L",  "poisson3_+Domain_1L.ups",     2, "All", ["exactComparison"] )        
                 ]
 DEBUGTESTS   =[]
 
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: LOCALTESTS FLOATTESTS GPUTESTS DEBUGTESTS NIGHTLYTESTS THREADEDTESTS DOMAINTESTS Poisson3_Tests
+#LIST: BASETESTS FLOATTESTS GPUTESTS DEBUGTESTS NIGHTLYTESTS THREADEDTESTS DOMAINTESTS Poisson3_Tests BUILDBOTTESTS
 #__________________________________
+
+
+NIGHTLYTESTS = BASETESTS + DOMAINTESTS + THREADEDTESTS + FLOATTESTS + GPUTESTS
 
 # returns the list
 def getTestList(me) :
   if me == "LOCALTESTS":
-    TESTS = LOCALTESTS + DOMAINTESTS + THREADEDTESTS + FLOATTESTS
+    TESTS = BASETESTS + DOMAINTESTS + THREADEDTESTS + FLOATTESTS
   elif me == "FLOATTESTS":
     TESTS = FLOATTESTS
   elif me == "GPUTESTS":
@@ -151,11 +143,13 @@ def getTestList(me) :
   elif me == "DOMAINTESTS":
     TESTS = DOMAINTESTS
   elif me == "NIGHTLYTESTS":
-    TESTS = NIGHTLYTESTS + DOMAINTESTS + THREADEDTESTS + FLOATTESTS + GPUTESTS
+    TESTS = NIGHTLYTESTS
   elif me == "THREADEDTESTS":
     TESTS = THREADEDTESTS
   elif me == "Poisson3_Tests":
     TESTS = POISSON3TESTS
+  elif me == "BUILDBOTTESTS":
+    TESTS = ignorePerformanceTests( NIGHTLYTESTS )
   else:
     print "\nERROR:Examples.py  getTestList:  The test list (%s) does not exist!\n\n" % me
     exit(1)

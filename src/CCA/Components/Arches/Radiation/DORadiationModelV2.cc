@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -485,7 +485,7 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
       fort_rdomsrc(idxLo, idxHi, vars->ABSKG, vars->ESRCG,vars->volq, vars->src);
     }  // bands loop
     
-    if(d_myworld->myrank() == 0) {
+    if(d_myworld->myRank() == 0) {
       cerr << "Total Radiation Solve Time: " << timer().seconds() << " seconds\n";
     }
     /*
@@ -559,7 +559,7 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
                       vars->ABSKG, vars->shgamma, vars->ESRCG, vars->src, fraction, fractiontwo, bands);
     }  // bands loop
 
-    if(d_myworld->myrank() == 0) {
+    if(d_myworld->myRank() == 0) {
       cerr << "Total Radiation Solve Time: " << timer().seconds() << " seconds\n";
     }
     /*

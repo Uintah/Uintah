@@ -299,7 +299,7 @@ for ($i=0;$i<=$num_of_tests;$i++){
   if ( $exitOnCrash eq "TRUE" ) {
     system("@args")==0 or die("ERROR(run_tests.pl): @args failed: $?");
   }else{
-    system("@args");
+    system("@args");
   }
   
   $fin = time()-$now;

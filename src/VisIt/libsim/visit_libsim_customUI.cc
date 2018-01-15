@@ -27,17 +27,20 @@
 #include "visit_libsim.h"
 #include "visit_libsim_customUI.h"
 
-#include <sci_defs/visit_defs.h>
+#include <CCA/Ports/ApplicationInterface.h>
+#include <CCA/Ports/Output.h>
 
 #include <CCA/Components/Schedulers/MPIScheduler.h>
 #include <CCA/Components/SimulationController/SimulationController.h>
 
 #include <Core/Grid/Material.h>
+#include <Core/Grid/SimulationTime.h>
 #include <Core/OS/ProcessInfo.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/DOUT.hpp>
 
-#include <CCA/Ports/Output.h>
+
+#include <sci_defs/visit_defs.h>
 
 #define ALL_LEVELS 99
 #define FINEST_LEVEL -1
@@ -53,16 +56,17 @@ namespace Uintah {
 //---------------------------------------------------------------------
 void visit_SetTimeValues( visit_simulation_data *sim )
 {
-  SimulationTime* simTime = sim->simController->getSimulationTime();
+  SimulationTime* simTime =
+    sim->simController->getApplicationInterface()->getSimulationTime();
 
   VisItUI_setValueI("TimeStep",      sim->cycle, 0);
-  VisItUI_setValueI("MaxTimeStep",   simTime->maxTimestep, 1);
+  VisItUI_setValueI("MaxTimeStep",   simTime->m_max_time_steps, 1);
 
   VisItUI_setValueD("Time",          sim->time, 0);
-  VisItUI_setValueD("MaxTime",       simTime->maxTime, 1);
+  VisItUI_setValueD("MaxTime",       simTime->m_max_time, 1);
 
-  VisItUI_setValueI("EndAtMaxTime",      simTime->end_at_max_time, 1);
-  VisItUI_setValueI("ClampTimeToOutput", simTime->clamp_time_to_output, 1);
+  VisItUI_setValueI("EndAtMaxTime",      simTime->m_end_at_max_time, 1);
+  VisItUI_setValueI("ClampTimeToOutput", simTime->m_clamp_time_to_output, 1);
 
   VisItUI_setValueI("StopAtTimeStep",     sim->stopAtTimeStep,     1);
   VisItUI_setValueI("StopAtLastTimeStep", sim->stopAtLastTimeStep, 1);
@@ -76,7 +80,8 @@ void visit_SetTimeValues( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetDeltaTValues( visit_simulation_data *sim )
 {
-  SimulationTime* simTime = sim->simController->getSimulationTime();
+  SimulationTime* simTime =
+    sim->simController->getApplicationInterface()->getSimulationTime();
 
   int row = 0;
 
@@ -91,31 +96,31 @@ void visit_SetDeltaTValues( visit_simulation_data *sim )
   ++row;
 
   VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "DeltaTFactor", 0);
-  VisItUI_setTableValueD("DeltaTVariableTable", row, 1, simTime->delt_factor, 1);
+  VisItUI_setTableValueD("DeltaTVariableTable", row, 1, simTime->m_delt_factor, 1);
   ++row;
 
   VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "MaxDeltaTIncrease", 0);
-  VisItUI_setTableValueD("DeltaTVariableTable", row, 1, simTime->max_delt_increase, 1);
+  VisItUI_setTableValueD("DeltaTVariableTable", row, 1, simTime->m_max_delt_increase, 1);
   ++row;
 
   VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "DeltaTMin", 0);
-  VisItUI_setTableValueD("DeltaTVariableTable", row, 1, simTime->delt_min, 1);
+  VisItUI_setTableValueD("DeltaTVariableTable", row, 1, simTime->m_delt_min, 1);
   ++row;
 
   VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "DeltaTMax", 0);
-  VisItUI_setTableValueD("DeltaTVariableTable", row, 1, simTime->delt_max, 1);
+  VisItUI_setTableValueD("DeltaTVariableTable", row, 1, simTime->m_delt_max, 1);
   ++row;
 
   VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "MaxInitialDeltaT", 0);
-  VisItUI_setTableValueD("DeltaTVariableTable", row, 1, simTime->max_initial_delt, 1);
+  VisItUI_setTableValueD("DeltaTVariableTable", row, 1, simTime->m_max_initial_delt, 1);
   ++row;
 
   VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "InitialDeltaTRange", 0);
-  VisItUI_setTableValueD("DeltaTVariableTable", row, 1, simTime->initial_delt_range, 1);
+  VisItUI_setTableValueD("DeltaTVariableTable", row, 1, simTime->m_initial_delt_range, 1);
   ++row;
 
   VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "OverrideRestartDeltaT", 0);
-  VisItUI_setTableValueD("DeltaTVariableTable", row, 1, simTime->override_restart_delt, 1);
+  VisItUI_setTableValueD("DeltaTVariableTable", row, 1, simTime->m_override_restart_delt, 1);
   ++row;
 
   visit_SetStripChartValue( sim, "DeltaT/Current", sim->delt );
@@ -129,7 +134,8 @@ void visit_SetDeltaTValues( visit_simulation_data *sim )
 void visit_SetWallTimes( visit_simulation_data *sim )
 {
   WallTimers* walltimers  = sim->simController->getWallTimers();
-  SimulationTime* simTime = sim->simController->getSimulationTime();
+  SimulationTime* simTime =
+    sim->simController->getApplicationInterface()->getSimulationTime();
 
   double time = walltimers->GetWallTime();
 
@@ -139,23 +145,23 @@ void visit_SetWallTimes( visit_simulation_data *sim )
 
   VisItUI_setTableValueS("WallTimesVariableTable", row, 0, "ExpMovingAve",  0);
   VisItUI_setTableValueD("WallTimesVariableTable", row, 1,
-			 walltimers->ExpMovingAverage().seconds(), 0);
+                         walltimers->ExpMovingAverage().seconds(), 0);
   ++row;
   VisItUI_setTableValueS("WallTimesVariableTable", row, 0, "TimeStep",  0);
   VisItUI_setTableValueD("WallTimesVariableTable", row, 1,
-			 walltimers->TimeStep().seconds(), 0);
+                         walltimers->TimeStep().seconds(), 0);
   ++row;
   VisItUI_setTableValueS("WallTimesVariableTable", row, 0, "InSitu",  0);
   VisItUI_setTableValueD("WallTimesVariableTable", row, 1,
-			 walltimers->InSitu().seconds(), 0);
+                         walltimers->InSitu().seconds(), 0);
   ++row;
   VisItUI_setTableValueS("WallTimesVariableTable", row, 0, "Total",  0);
   VisItUI_setTableValueD("WallTimesVariableTable", row, 1,
-			 time, 0);
+                         time, 0);
   ++row;
   VisItUI_setTableValueS("WallTimesVariableTable", row, 0, "Maximum",  0);
   VisItUI_setTableValueD("WallTimesVariableTable", row, 1,
-			 simTime->max_wall_time, 1);
+                         simTime->m_max_wall_time, 1);
   ++row;
 
   visit_SetStripChartValue( sim, "WallTimes/TimeStep",     walltimers->TimeStep().seconds() );
@@ -171,9 +177,12 @@ void visit_SetWallTimes( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetOutputIntervals( visit_simulation_data *sim )
 {
-  SimulationTime*  simTime    = sim->simController->getSimulationTime();
-  SimulationStateP simStateP  = sim->simController->getSimulationStateP();
-  Output          *output     = sim->simController->getOutput();
+  ApplicationInterface* simInterface =
+    sim->simController->getApplicationInterface();
+
+  SimulationTime* simTime = simInterface->getSimulationTime();
+
+  Output          *output       = sim->simController->getOutput();
 
   VisItUI_setTableValueS("OutputIntervalVariableTable",
                          -1, -1, "CLEAR_TABLE", 0);
@@ -189,14 +198,14 @@ void visit_SetOutputIntervals( visit_simulation_data *sim )
     // Output interval based on time.
     if( output->getOutputInterval() > 0 )
     {
-      name = simStateP->get_outputInterval_label()->getName();
+      name = "OutputInterval";
       val = output->getOutputInterval();
     }
-    // Output interval based on timestep.
+    // Output interval based on time step.
     else
     {
-      name = simStateP->get_outputTimestepInterval_label()->getName();
-      val = output->getOutputTimestepInterval();
+      name = "OutputTimeStepInterval";
+      val = output->getOutputTimeStepInterval();
     }
 
     // This var must be in row specified by OutputIntervalRow so
@@ -209,14 +218,14 @@ void visit_SetOutputIntervals( visit_simulation_data *sim )
     // Checkpoint interval based on times.
     if( output->getCheckpointInterval() > 0 )
     {
-      name = simStateP->get_checkpointInterval_label()->getName();
+      name = "CheckpointInterval";
       val = output->getCheckpointInterval();
     }
       // Checkpoint interval based on timestep.
     else
     {
-      name = simStateP->get_checkpointTimestepInterval_label()->getName();
-      val = output->getCheckpointTimestepInterval();
+      name = "CheckpointTimeStepInterval";
+      val = output->getCheckpointTimeStepInterval();
     }
 
     // This var must be in row specified by CheckpointIntervalRow so
@@ -237,28 +246,26 @@ void visit_SetOutputIntervals( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetAnalysisVars( visit_simulation_data *sim )
 {
-  // For some reason when starting a new simulation accessing the
-  // on-the-fly for the first time step causes a crash in both Uintah
-  // and Visit. It is not clear where the crash occurs.
-  
-  if( sim->cycle < 2 )
+  // No data for the inital setup or restart.
+  if( sim->first )
     return;
   
   const char table[] = "AnalysisVariableTable";
     
   GridP           gridP      = sim->gridP;
-  SimulationStateP simStateP = sim->simController->getSimulationStateP();
+  ApplicationInterface* simInterface =
+    sim->simController->getApplicationInterface();
   SchedulerP      schedulerP = sim->simController->getSchedulerP();
   DataWarehouse  *dw         = sim->simController->getSchedulerP()->getLastDW();
 
-  std::vector< SimulationState::analysisVar > analysisVars =
-    simStateP->d_analysisVars;
+  std::vector< ApplicationInterface::analysisVar > analysisVars =
+    simInterface->getAnalysisVars();
     
   VisItUI_setTableValueS("AnalysisVariableTable", -1, -1, "CLEAR_TABLE", 0);
 
   if( analysisVars.size() )
   {
-    int numLevels = gridP->numLevels();
+    unsigned int numLevels = gridP->numLevels();
     
     VisItUI_setValueS( "AnalysisVariableGroupBox", "SHOW_WIDGET", 1);
 
@@ -266,186 +273,192 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
 
     for( unsigned int i=0; i<analysisVars.size(); ++i )
     {
-      SimulationState::analysisVar analysisVar = analysisVars[i];
+      ApplicationInterface::analysisVar analysisVar = analysisVars[i];
 
       // Set level info
-      for (int l=0; l<numLevels; ++l)
+      for (unsigned int l=0; l<numLevels; ++l)
       {
-	// Get the correct level.
-	if( (analysisVar.level == IGNORE_LEVEL && l == 0) ||
-	    (analysisVar.level == ALL_LEVELS) ||
-	    (analysisVar.level == FINEST_LEVEL && l == numLevels - 1) ||
-	    (analysisVar.level == l) )
-	{
+        // Get the correct level.
+        if( (analysisVar.level == IGNORE_LEVEL && l == 0) ||
+            (analysisVar.level == ALL_LEVELS) ||
+            (analysisVar.level == FINEST_LEVEL && l == numLevels - 1) ||
+            (analysisVar.level == l) )
+        {
           LevelP levelP = gridP->getLevel(l);
           Level *level = levelP.get_rep();
 
-	  std::stringstream stripChartName;
-	  stripChartName << "Analysis/" << analysisVar.name;
+          std::stringstream stripChartName;
+          stripChartName << "Analysis/" << analysisVar.name;
 
-	  // Set the variable name, material, and level.
+          // Set the variable name, material, and level.
           VisItUI_setTableValueS(table, row, 0, analysisVar.name.c_str(), 0);
 
-	  if( analysisVar.matl < 0 )
-	  {
-	    VisItUI_setTableValueS(table, row, 1, "NA", 0);
-	  }
-	  else
-	  {
-	    VisItUI_setTableValueI(table, row, 1, analysisVar.matl, 0);
-	    stripChartName << "/" << analysisVar.matl;
-	  }
+          if( analysisVar.matl < 0 )
+          {
+            VisItUI_setTableValueS(table, row, 1, "NA", 0);
+          }
+          else
+          {
+            VisItUI_setTableValueI(table, row, 1, analysisVar.matl, 0);
+            stripChartName << "/" << analysisVar.matl;
+          }
 
-	  if( analysisVar.level < 0)
-	  {
-	    VisItUI_setTableValueS(table, row, 2, "NA", 0);
-	  }
-	  else
-	  {
-	    VisItUI_setTableValueI(table, row, 2, l, 0);
-	    stripChartName << "/l" << l;
-	  }
-	  
-	  // Loop through all of the variables.
-	  for( unsigned int j=0; j<analysisVar.labels.size(); ++j )
-	  {
-	    const VarLabel* label = analysisVar.labels[j];
-	    
-	    // Work on reduction variables only (for now).
-	    if( label->typeDescription()->isReductionVariable() )
-	    {
-	      // Get the reduction type.
-	      if( label->typeDescription() == min_vartype::getTypeDescription() )
-	      {
-		VisItUI_setTableValueS(table, row, 3+j*2, "Min", 0);
-		
-		min_vartype var_min;
-		if( analysisVar.level == IGNORE_LEVEL )
-		  dw->get( var_min, label );
-		else
-		  dw->get( var_min, label, level );
+          if( analysisVar.level < 0)
+          {
+            VisItUI_setTableValueS(table, row, 2, "NA", 0);
+          }
+          else
+          {
+            VisItUI_setTableValueI(table, row, 2, l, 0);
+            stripChartName << "/l" << l;
+          }
+          
+          // Loop through all of the variables.
+          for( unsigned int j=0; j<analysisVar.labels.size(); ++j )
+          {
+            const VarLabel* label = analysisVar.labels[j];
 
-		double varMin = var_min;
-            
-		VisItUI_setTableValueD(table, row, 4+j*2, varMin, 0);
+            // Work on reduction variables only (for now) and make
+            // sure they exist.
+            if( label->typeDescription()->isReductionVariable() &&
+                ( (analysisVar.level == IGNORE_LEVEL && dw->exists( label )) ||
+                  (dw->exists( label, analysisVar.matl, level )) ) )
+            {
+              // Get the reduction type.
+              if( label->typeDescription() == min_vartype::getTypeDescription() )
+              {
+                VisItUI_setTableValueS(table, row, 3+j*2, "Min", 0);
 
-	  	visit_SetStripChartValue( sim, stripChartName.str() +
-					  "/Minimum", varMin );
-	      }
-	      else if( label->typeDescription() == max_vartype::getTypeDescription() )
-	      {
-		VisItUI_setTableValueS(table, row, 3+j*2, "Max", 0);
-		
-		max_vartype var_max;
-		if( analysisVar.level == IGNORE_LEVEL )
-		  dw->get( var_max, label );
-		else
-		  dw->get( var_max, label, level );
+                min_vartype var_min;
 
-		double varMax = var_max;
+                if( analysisVar.level == IGNORE_LEVEL )
+                  dw->get( var_min, label );
+                else
+                  dw->get( var_min, label, level, analysisVar.matl );
 		
-		VisItUI_setTableValueD(table, row, 4+j*2, varMax, 0);
+                double varMin = var_min;
 
-	  	visit_SetStripChartValue( sim, stripChartName.str() +
-					  "/Maximum",
-					  varMax );
-	      }
-	      
-	      else if( label->typeDescription() == minvec_vartype::getTypeDescription() )
-	      {
-		VisItUI_setTableValueS(table, row, 3+j*2, "Min", 0);
-		
-		minvec_vartype var_min;		  
-		if( analysisVar.level == IGNORE_LEVEL )
-		  dw->get( var_min, label );
-		else
-		  dw->get( var_min, label, level );
+                VisItUI_setTableValueD(table, row, 4+j*2, varMin, 0);
 
-		double varMin = ((Vector) var_min).length();
-		  
-		VisItUI_setTableValueV(table, row, 4+j*2,
-				       ((Vector) var_min).x(),
-				       ((Vector) var_min).y(),
-				       ((Vector) var_min).z(), 0);    
-	  	visit_SetStripChartValue( sim, stripChartName.str() +
-					  "/Minimum", varMin );
-	      }
-	      else if( label->typeDescription() == maxvec_vartype::getTypeDescription() )
-	      {
-		VisItUI_setTableValueS(table, row, 3+j*2, "Max", 0);
-		
-		maxvec_vartype var_max;
-		if( analysisVar.level < 0 )
-		  dw->get( var_max, label );
-		else
-		  dw->get( var_max, label, level );
-		
-		double varMax = ((Vector) var_max).length();
-		  
-		VisItUI_setTableValueV(table, row, 4+j*2,
-				       ((Vector) var_max).x(),
-				       ((Vector) var_max).y(),
-				       ((Vector) var_max).z(), 0);
-		
-	  	visit_SetStripChartValue( sim, stripChartName.str() +
-					  "/Maximum",
-					  varMax );
-	      }
-	      else if( label->typeDescription() == sum_vartype::getTypeDescription() )
-	      {
-		VisItUI_setTableValueS(table, row, 3+j*2, "Sum", 0);
-		
-		sum_vartype var_sum;
-		if( analysisVar.level == IGNORE_LEVEL )
-		  dw->get( var_sum, label );
-		else
-		  dw->get( var_sum, label, level );
+                visit_SetStripChartValue( sim, stripChartName.str() +
+                                          "/Minimum", varMin );
+              }
+              else if( label->typeDescription() == max_vartype::getTypeDescription() )
+              {
+                VisItUI_setTableValueS(table, row, 3+j*2, "Max", 0);
 
-		double varSum = var_sum;
-		  
-		VisItUI_setTableValueD(table, row, 4+j*2, varSum, 0);
-		
-	  	visit_SetStripChartValue( sim, stripChartName.str() +
-					  "/Sum",
-					  varSum );
-	      }
-	      else if( label->typeDescription() == sumvec_vartype::getTypeDescription() )
-	      {
-		VisItUI_setTableValueS(table, row, 3+j*2, "Sum", 0);
-		
-		sumvec_vartype var_sum;
-		if( analysisVar.level == IGNORE_LEVEL )
-		  dw->get( var_sum, label );
-		else
-		  dw->get( var_sum, label, level );
-		
-		double varSum = ((Vector) var_sum).length();
-		  
-		VisItUI_setTableValueV(table, row, 4+j*2,
-				       ((Vector) var_sum).x(),
-				       ((Vector) var_sum).y(),
-				       ((Vector) var_sum).z(), 0);
-		
-	  	visit_SetStripChartValue( sim, stripChartName.str() +
-					  "/Sum",
-					  varSum );
-	      }
-	      else
-	      {
-		std::stringstream msg;
-		msg << stripChartName.str() << "  "
-		    << label->getName() << "  "
-		    << label->typeDescription()->getName() << "  "
-		    << "unknown_vartype";
-		
-		VisItUI_setValueS("SIMULATION_MESSAGE_WARNING", msg.str().c_str(), 1);
-		VisItUI_setTableValueS(table, row, 3+j*2, "Unknown", 0);
-		VisItUI_setTableValueS(table, row, 4+j*2, "NA", 0);
-	      }
-	    }
-	  }
-	  
-	  ++row;
+                max_vartype var_max;
+                if( analysisVar.level == IGNORE_LEVEL )
+                  dw->get( var_max, label );
+                else
+                  dw->get( var_max, label, level, analysisVar.matl );
+
+                double varMax = var_max;
+
+                VisItUI_setTableValueD(table, row, 4+j*2, varMax, 0);
+
+                visit_SetStripChartValue( sim, stripChartName.str() +
+                                          "/Maximum",
+                                          varMax );
+              }
+              
+              else if( label->typeDescription() == minvec_vartype::getTypeDescription() )
+              {
+                VisItUI_setTableValueS(table, row, 3+j*2, "Min", 0);
+
+                minvec_vartype var_min;
+
+                if( analysisVar.level == IGNORE_LEVEL )
+                  dw->get( var_min, label );
+                else
+                  dw->get( var_min, label, level, analysisVar.matl );
+
+                double varMin = ((Vector) var_min).length();
+
+                VisItUI_setTableValueV(table, row, 4+j*2,
+                                       ((Vector) var_min).x(),
+                                       ((Vector) var_min).y(),
+                                       ((Vector) var_min).z(), 0);    
+
+                visit_SetStripChartValue( sim, stripChartName.str() +
+                                          "/Minimum", varMin );
+              }
+              else if( label->typeDescription() == maxvec_vartype::getTypeDescription() )
+              {
+                VisItUI_setTableValueS(table, row, 3+j*2, "Max", 0);
+
+                maxvec_vartype var_max;
+                if( analysisVar.level < 0 )
+                  dw->get( var_max, label );
+                else
+                  dw->get( var_max, label, level, analysisVar.matl );
+
+                double varMax = ((Vector) var_max).length();
+
+                VisItUI_setTableValueV(table, row, 4+j*2,
+                                       ((Vector) var_max).x(),
+                                       ((Vector) var_max).y(),
+                                       ((Vector) var_max).z(), 0);
+
+                visit_SetStripChartValue( sim, stripChartName.str() +
+                                          "/Maximum",
+                                          varMax );
+              }
+              else if( label->typeDescription() == sum_vartype::getTypeDescription() )
+              {
+                VisItUI_setTableValueS(table, row, 3+j*2, "Sum", 0);
+
+                sum_vartype var_sum;
+                if( analysisVar.level == IGNORE_LEVEL )
+                  dw->get( var_sum, label );
+                else
+                  dw->get( var_sum, label, level, analysisVar.matl );
+
+                double varSum = var_sum;
+
+                VisItUI_setTableValueD(table, row, 4+j*2, varSum, 0);
+
+                visit_SetStripChartValue( sim, stripChartName.str() +
+                                          "/Sum",
+                                          varSum );
+              }
+              else if( label->typeDescription() == sumvec_vartype::getTypeDescription() )
+              {
+                VisItUI_setTableValueS(table, row, 3+j*2, "Sum", 0);
+
+                sumvec_vartype var_sum;
+                if( analysisVar.level == IGNORE_LEVEL )
+                  dw->get( var_sum, label );
+                else
+                  dw->get( var_sum, label, level, analysisVar.matl );
+
+                double varSum = ((Vector) var_sum).length();
+
+                VisItUI_setTableValueV(table, row, 4+j*2,
+                                       ((Vector) var_sum).x(),
+                                       ((Vector) var_sum).y(),
+                                       ((Vector) var_sum).z(), 0);
+
+                visit_SetStripChartValue( sim, stripChartName.str() +
+                                          "/Sum",
+                                          varSum );
+              }
+              else
+              {
+                std::stringstream msg;
+                msg << stripChartName.str() << "  "
+                    << label->getName() << "  "
+                    << label->typeDescription()->getName() << "  "
+                    << "unknown_vartype";
+
+                VisItUI_setValueS("SIMULATION_MESSAGE_WARNING", msg.str().c_str(), 1);
+                VisItUI_setTableValueS(table, row, 3+j*2, "Unknown", 0);
+                VisItUI_setTableValueS(table, row, 4+j*2, "NA", 0);
+              }
+            }
+          }
+
+          ++row;
         }
       }
     }
@@ -461,17 +474,19 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetUPSVars( visit_simulation_data *sim )
 {
-  SimulationStateP simStateP = sim->simController->getSimulationStateP();
+  ApplicationInterface* simInterface =
+    sim->simController->getApplicationInterface();
 
-  if( simStateP->d_UPSVars.size() )
+  if( simInterface->getUPSVars().size() )
   {
     VisItUI_setValueS( "UPSVariableGroupBox", "SHOW_WIDGET", 1);
 
-    std::vector< SimulationState::interactiveVar > &vars = simStateP->d_UPSVars;
+    std::vector< ApplicationInterface::interactiveVar > &vars =
+      simInterface->getUPSVars();
       
     for( unsigned int i=0; i<vars.size(); ++i )
     {
-      SimulationState::interactiveVar &var = vars[i];
+      ApplicationInterface:: interactiveVar &var = vars[i];
       
       var.modified = false;
       
@@ -481,31 +496,31 @@ void visit_SetUPSVars( visit_simulation_data *sim )
       {
         case Uintah::TypeDescription::bool_type:
         {
-	  bool *val = (bool*) var.value;
-	  VisItUI_setTableValueI("UPSVariableTable", i, 1, *val, 1);
-	}
+          bool *val = (bool*) var.value;
+          VisItUI_setTableValueI("UPSVariableTable", i, 1, *val, 1);
+        }
         break;
             
         case Uintah::TypeDescription::int_type:
-	{
-	  int *val = (int*) var.value;
-	  VisItUI_setTableValueI("UPSVariableTable", i, 1, *val, 1);
-	}
+        {
+          int *val = (int*) var.value;
+          VisItUI_setTableValueI("UPSVariableTable", i, 1, *val, 1);
+        }
         break;
             
         case Uintah::TypeDescription::double_type:
-	{
-	  double *val = (double*) var.value;
-	  VisItUI_setTableValueD("UPSVariableTable", i, 1, *val, 1);
-	}
+        {
+          double *val = (double*) var.value;
+          VisItUI_setTableValueD("UPSVariableTable", i, 1, *val, 1);
+        }
         break;
             
         case Uintah::TypeDescription::Vector:
-	{
-	  Vector *val = (Vector*) var.value;
-	  VisItUI_setTableValueV("UPSVariableTable", i, 1,
-				 val->x(), val->y(), val->z(), 1);
-	}
+        {
+          Vector *val = (Vector*) var.value;
+          VisItUI_setTableValueV("UPSVariableTable", i, 1,
+                                 val->x(), val->y(), val->z(), 1);
+        }
         break;
             
       default:
@@ -524,8 +539,9 @@ void visit_SetUPSVars( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetGridInfo( visit_simulation_data *sim )
 {
-  SimulationStateP simStateP = sim->simController->getSimulationStateP();
-  GridP           gridP      = sim->gridP;
+  ApplicationInterface* simInterface =
+    sim->simController->getApplicationInterface();
+  GridP                gridP        = sim->gridP;
 
   VisItUI_setValueS( "GridInfoGroupBox", "SHOW_WIDGET", 1);
   VisItUI_setTableValueS("GridInfoTable", -1, -1, "CLEAR_TABLE", 0);
@@ -582,10 +598,8 @@ void visit_SetGridInfo( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetRuntimeStats( visit_simulation_data *sim )
 {
-  SimulationStateP simStateP = sim->simController->getSimulationStateP();
-
-  ReductionInfoMapper< SimulationState::RunTimeStat, double > &runTimeStats =
-    simStateP->d_runTimeStats;
+  const ReductionInfoMapper< RunTimeStatsEnum, double > &runTimeStats =
+    sim->simController->getRunTimeStats();
 
   VisItUI_setValueS( "RunTimeStatsGroupBox", "SHOW_WIDGET", 1);
   VisItUI_setTableValueS("RuntimeStatsTable", -1, -1, "CLEAR_TABLE", 0);
@@ -594,7 +608,7 @@ void visit_SetRuntimeStats( visit_simulation_data *sim )
 
   for (unsigned int i=0; i<runTimeStats.size(); ++i)
   {
-    SimulationState::RunTimeStat e = (SimulationState::RunTimeStat) i;
+    RunTimeStatsEnum e = (RunTimeStatsEnum) i;
     
     std::string name  = runTimeStats.getName(e);
     std::string units = runTimeStats.getUnits(e);
@@ -642,7 +656,8 @@ void visit_SetRuntimeStats( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetMPIStats( visit_simulation_data *sim )
 {
-  SimulationStateP simStateP = sim->simController->getSimulationStateP();
+  ApplicationInterface* simInterface =
+    sim->simController->getApplicationInterface();
 
   MPIScheduler *mpiScheduler = dynamic_cast<MPIScheduler*>
     (sim->simController->getSchedulerP().get_rep());
@@ -692,10 +707,8 @@ void visit_SetMPIStats( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetOtherStats( visit_simulation_data *sim )
 {
-  SimulationStateP simStateP = sim->simController->getSimulationStateP();
-
-  ReductionInfoMapper< unsigned int, double > &otherStats =
-    simStateP->d_otherStats;
+  const ReductionInfoMapper< unsigned int, double > &otherStats =
+    sim->simController->getOtherStats();
 
   if( otherStats.size() )
   {
@@ -775,18 +788,19 @@ void visit_SetStripChartValue( visit_simulation_data *sim,
 //---------------------------------------------------------------------
 void visit_SetStateVars( visit_simulation_data *sim )
 {
-  SimulationStateP simStateP = sim->simController->getSimulationStateP();
+  ApplicationInterface* simInterface =
+    sim->simController->getApplicationInterface();
 
-  if( simStateP->d_UPSVars.size() )
+  if( simInterface->getStateVars().size() )
   {
     VisItUI_setValueS( "StateVariableGroupBox", "SHOW_WIDGET", 1);
 
-    std::vector< SimulationState::interactiveVar > &vars =
-      simStateP->d_stateVars;
+    std::vector< ApplicationInterface::interactiveVar > &vars =
+      simInterface->getStateVars();
       
     for( unsigned int i=0; i<vars.size(); ++i )
     {
-      SimulationState::interactiveVar &var = vars[i];
+      ApplicationInterface::interactiveVar &var = vars[i];
       
       var.modified = false;
       
@@ -796,31 +810,31 @@ void visit_SetStateVars( visit_simulation_data *sim )
       {
         case Uintah::TypeDescription::bool_type:
         {
-	  bool *val = (bool*) var.value;
-	  VisItUI_setTableValueI("StateVariableTable", i, 1, *val, 1);
-	}
+          bool *val = (bool*) var.value;
+          VisItUI_setTableValueI("StateVariableTable", i, 1, *val, 1);
+        }
         break;
             
         case Uintah::TypeDescription::int_type:
-	{
-	  int *val = (int*) var.value;
-	  VisItUI_setTableValueI("StateVariableTable", i, 1, *val, 1);
-	}
+        {
+          int *val = (int*) var.value;
+          VisItUI_setTableValueI("StateVariableTable", i, 1, *val, 1);
+        }
         break;
             
         case Uintah::TypeDescription::double_type:
-	{
-	  double *val = (double*) var.value;
-	  VisItUI_setTableValueD("StateVariableTable", i, 1, *val, 1);
-	}
+        {
+          double *val = (double*) var.value;
+          VisItUI_setTableValueD("StateVariableTable", i, 1, *val, 1);
+        }
         break;
             
         case Uintah::TypeDescription::Vector:
-	{
-	  Vector *val = (Vector*) var.value;
-	  VisItUI_setTableValueV("StateVariableTable", i, 1,
-				 val->x(), val->y(), val->z(), 1);
-	}
+        {
+          Vector *val = (Vector*) var.value;
+          VisItUI_setTableValueV("StateVariableTable", i, 1,
+                                 val->x(), val->y(), val->z(), 1);
+        }
         break;
             
       default:
@@ -839,30 +853,31 @@ void visit_SetStateVars( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetDebugStreams( visit_simulation_data *sim )
 {
-  SimulationStateP simStateP  = sim->simController->getSimulationStateP();
+  ApplicationInterface* simInterface =
+    sim->simController->getApplicationInterface();
 
   VisItUI_setTableValueS("DebugStreamTable",
                          -1, -1, "CLEAR_TABLE", 0);
 
-  if( simStateP->d_debugStreams.size() )
+  if( simInterface->getDebugStreams().size() )
   {
     VisItUI_setValueS( "DebugStreamGroupBox", "SHOW_WIDGET", 1);
 
-    unsigned int nStreams = simStateP->d_debugStreams.size();
+    unsigned int nStreams = simInterface->getDebugStreams().size();
     
     for( unsigned int i=0; i<nStreams; ++i )
     {
       // Add in the stream and state.
-      std::string name     = simStateP->d_debugStreams[i]->getName();
-      std::string filename = simStateP->d_debugStreams[i]->getFilename();
-      bool        active   = simStateP->d_debugStreams[i]->active();
+      std::string name     = simInterface->getDebugStreams()[i]->getName();
+      std::string filename = simInterface->getDebugStreams()[i]->getFilename();
+      bool        active   = simInterface->getDebugStreams()[i]->active();
 
       VisItUI_setTableValueS("DebugStreamTable",
-			     i, 0, name.c_str(),  0);
+                             i, 0, name.c_str(),  0);
       VisItUI_setTableValueS("DebugStreamTable",
-			     i, 1, (active ? "true":"false"), 1);
+                             i, 1, (active ? "true":"false"), 1);
       VisItUI_setTableValueS("DebugStreamTable",
-			     i, 2, filename.c_str(), 1);
+                             i, 2, filename.c_str(), 1);
     }
   }
   else
@@ -875,30 +890,31 @@ void visit_SetDebugStreams( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetDouts( visit_simulation_data *sim )
 {
-  SimulationStateP simStateP  = sim->simController->getSimulationStateP();
+  ApplicationInterface* simInterface =
+    sim->simController->getApplicationInterface();
 
   VisItUI_setTableValueS("DoutTable",
                          -1, -1, "CLEAR_TABLE", 0);
 
-  if( simStateP->d_douts.size() )
+  if( simInterface->getDouts().size() )
   {
     VisItUI_setValueS( "DoutGroupBox", "SHOW_WIDGET", 1);
 
-    unsigned int nStreams = simStateP->d_douts.size();
+    unsigned int nStreams = simInterface->getDouts().size();
     
     for( unsigned int i=0; i<nStreams; ++i )
     {
       // Add in the stream and state.
-      std::string name     = simStateP->d_douts[i]->name();
-      std::string filename = "cout"; //simStateP->d_douts[i]->getFilename();
-      bool        active   = simStateP->d_douts[i]->active();
+      std::string name     = simInterface->getDouts()[i]->name();
+      std::string filename = "cout"; //simInterface->getDouts()[i]->getFilename();
+      bool        active   = simInterface->getDouts()[i]->active();
 
       VisItUI_setTableValueS("DoutTable",
-			     i, 0, name.c_str(), 0);
+                             i, 0, name.c_str(), 0);
       VisItUI_setTableValueS("DoutTable",
-			     i, 1, (active ? "true":"false"), 1);
+                             i, 1, (active ? "true":"false"), 1);
       VisItUI_setTableValueS("DoutTable",
-			     i, 2, filename.c_str(), 0);
+                             i, 2, filename.c_str(), 0);
     }
   }
   else

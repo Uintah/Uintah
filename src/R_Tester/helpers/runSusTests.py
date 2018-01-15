@@ -41,7 +41,23 @@ def userFlags (test):
 
 def nullCallback (test, susdir, inputsdir, compare_root, dbg_opt, max_parallelism):
     pass
-#__________________________________    
+
+#______________________________________________________________________
+#  returns a list of tests, with performance tests filtered out
+def ignorePerformanceTests( TESTS ):
+  
+  myTests=[]
+  for test in TESTS:
+    
+    if len(test) == 5:
+      flags = userFlags( test )
+      
+      if not "do_performance_test" in str( flags ):
+        myTests.append( test )
+  return myTests
+        
+    
+#______________________________________________________________________    
 # Function used for checking the input files
 # skip tests that contain 
 #    <outputInitTimestep/> AND  outputTimestepInterval > 1
@@ -49,7 +65,7 @@ def isValid_inputFile( inputxml, startFrom, do_restart ):
   from xml.etree.ElementTree import ElementTree
   
   # these options are OK
-  if startFrom == "checkpoint" or do_restart == 0:
+  if startFrom == "checkpoint" or startFrom == "postProcessUda" or do_restart == 0:
     return True
 
   # load index.xml into tree
@@ -253,6 +269,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
   ran_any_tests  = 0
   failcode       = 0
   solotest_found = 0
+  nTestsFinished = 0
   comp_time0 = time()
 
   # clean up any old log files
@@ -276,17 +293,19 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     #__________________________________
     # defaults
     do_uda_comparisons = 1
-    do_memory      = 1
-    do_restart     = 1
-    do_performance = 0
+    do_memory       = 1
+    do_restart      = 1
+    do_performance  = 0
     do_debug        = 1
     do_opt          = 1
-    do_gpu          = 0    # run test if gpu is supported
-    do_cuda         = 1    # test will run if this is a cuda build
-    abs_tolerance = 1e-9   # defaults used in compare_uda
-    rel_tolerance = 1e-6
+    do_gpu          = 0           # run test if gpu is supported
+    do_cuda         = 1           # test will run if this is a cuda build
+    abs_tolerance   = 1e-9        # defaults used in compare_uda
+    rel_tolerance   = 1e-6
     sus_options     = ""
-    startFrom = "inputFile"
+    startFrom       = "inputFile"
+    create_gs0      = "no"           #create the gold standard
+    
 
     environ['SCI_DEBUG'] = ''   # reset it for each test
 
@@ -325,6 +344,11 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
           do_uda_comparisons = 0
           do_memory          = 0
           do_performance     = 0
+        if flags[i] == "postProcessUda":
+          startFrom          = "postProcessUda"
+          do_restart         = 0
+          do_memory          = 0
+          do_performance     = 0
         if flags[i] == "startFromCheckpoint":
           startFrom          = "checkpoint"
         # parse the flags for
@@ -333,14 +357,14 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
         #    sus_option=" "
         tmp = flags[i].rsplit('=')
         if tmp[0] == "sus_options":
-           sus_options = tmp[1]
+           sus_options      = tmp[1]
         if tmp[0] == "abs_tolerance":
-          abs_tolerance = tmp[1]
+          abs_tolerance     = tmp[1]
         if tmp[0] == "rel_tolerance":
-          rel_tolerance = tmp[1]
+          rel_tolerance     = tmp[1]
         if flags[i] == "exactComparison":
-          abs_tolerance = 0.0
-          rel_tolerance = 0.0
+          abs_tolerance     = 0.0
+          rel_tolerance     = 0.0
 
 
     #Warnings
@@ -401,14 +425,15 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
         print( "gold Standard being created for  (%s)" % testname )
         chdir(compare_root)
         mkdir(testname)
+        create_gs0 = "yes"
 
-    if startFrom == "checkpoint":
+    if startFrom == "checkpoint" or startFrom == "postProcessUda":
       try:
         here = "%s/CheckPoints/%s/%s/%s.uda.000/" %(startpath,ALGO,testname,testname)
         chdir(here)
       except Exception:
         print( "checkpoint uda %s does not exist" % here )
-        print( "This file must exist when using 'startFromCheckpoint' option" )
+        print( "This file must exist when using 'startFromCheckpoint' or 'PostProcessUda' option" )
         exit(1)
 
 
@@ -451,7 +476,9 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     #__________________________________
     # Run test and perform comparisons on the uda
     environ['WEBLOG'] = "%s/%s-results/%s" % (weboutputpath, ALGO, testname)
-    rc = runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallelism, tests_to_do, tolerances, startFrom, varBucket)
+    create_gs = "%s-%s" % (create_gs0, startFrom)
+    
+    rc = runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallelism, tests_to_do, tolerances, startFrom, varBucket, create_gs)
     system("rm inputs")
 
     # copy results to web server
@@ -478,7 +505,9 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
         symlink(inputpath, "inputs")
         environ['WEBLOG'] = "%s/%s-results/%s/restart" % (weboutputpath, ALGO, testname)
         startFrom = "restart"
-        rc = runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallelism, tests_to_do, tolerances, startFrom, varBucket)
+        create_gs = "%s-%s" % (create_gs0, startFrom)
+        
+        rc = runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallelism, tests_to_do, tolerances, startFrom, varBucket, create_gs)
 
         if rc > 0:
           failcode = 1
@@ -530,7 +559,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
 
   # no tests ran
   if ran_any_tests == 0:
-    print( "Didn't run any tests!" )
+    print( "\nERROR: Zero regression tests ran to completion.  Hint: is the OS you're using appropriate for the component's tests?\n" )
     exit(3)
 
   #__________________________________
@@ -557,7 +586,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
 # 3 ints stating whether to do comparison, memory, and performance tests
 # in that order
 
-def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallelism, tests_to_do, tolerances, startFrom, varBucket):
+def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallelism, tests_to_do, tolerances, startFrom, varBucket, create_gs):
   global startpath
   global helperspath
   global svn_revision
@@ -660,14 +689,8 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
   SVN_OPTIONS = "-svnStat -svnDiff"
   SVN_OPTIONS = "" # When debugging, if you don't want to spend time waiting for SVN, uncomment this line.
 
-  # set the command for sus, based on # of processors
-  # the /usr/bin/time is to tell how long it took
-  if np == 1:
-    command = "/usr/bin/time -p %s/sus %s %s" % (susdir, sus_options, SVN_OPTIONS)
-    mpimsg = ""
-  else:
-    command = "/usr/bin/time -p %s %s %s/sus %s %s -mpi" % (MPIHEAD, int(np), susdir, sus_options, SVN_OPTIONS)
-    mpimsg = " (mpi %s proc)" % (int(np))
+  command = "/usr/bin/time -p %s %s %s/sus %s %s " % (MPIHEAD, int(np), susdir, sus_options, SVN_OPTIONS)
+  mpimsg = " (mpi %s proc)" % (int(np))
 
   time0 =time()  #timer
 
@@ -686,6 +709,11 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
   if startFrom == "checkpoint":
     print( "Running test from checkpoint ---%s--- %s at %s" % (testname, mpimsg, strftime( "%I:%M:%S")) )
     susinput     = "-restart %s/CheckPoints/%s/%s/*.uda.000" %  (startpath,ALGO,testname)
+    restart_text = " "
+
+  if startFrom == "postProcessUda":
+    print( "Running test from checkpoint ---%s--- %s at %s" % (testname, mpimsg, strftime( "%I:%M:%S")) )
+    susinput     = "-postProcessUda %s/CheckPoints/%s/%s/*.uda.000" %  (startpath,ALGO,testname)
     restart_text = " "
 
   if do_memory_test == 1:
@@ -762,12 +790,13 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
 
     print( sus_log_msg )
     print( "" )
+    
     system("echo '  :%s: %s test did not run to completion' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
+    
     return_code = 1
     return return_code
   else:
     # Sus completed successfully - now run memory,compar_uda and performance tests
-
     # get the time from sus.log
     # /usr/bin/time outputs 3 lines, the one called 'real' is what we want
     # it is the third line from the bottom
@@ -798,8 +827,10 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
         print( "\tPerformance tests passed." )
         if short_message != "":
           print( "\t%s" % (short_message)     )
+      
       elif performance_RC == 5 * 256:
         print( "\t* Warning, no timestamp file created.  No performance test performed." )
+      
       elif performance_RC == 2*256:
         print( "\t*** Warning, test %s failed performance test." % (testname) )
         if short_message != "":
@@ -807,9 +838,47 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
 
         print( perf_msg )
         print( "%s" % replace_msg )
+      
       else:
         print( "\tPerformance tests passed. (Note: no previous performace stats)." )
 
+    #__________________________________
+    # Memory leak test
+    if do_memory_test == 1:
+
+      memory_RC = system("mem_leak_check %s %d %s %s %s %s> mem_leak_check.log.txt 2>&1" %
+                        (testname, do_plots, malloc_stats_file, compare_root, ".", helperspath))
+
+      try:
+        short_message_file = open("highwater_shortmessage.txt", 'r+', 500)
+        short_message = rstrip(short_message_file.readline(500))
+      except Exception:
+        short_message = ""
+
+      if memory_RC == 0:
+          print( "\tMemory leak tests passed." )
+          if short_message != "":
+            print( "\t%s" % (short_message) )
+            
+      elif memory_RC == 5 * 256:
+          print( "\t*** ERROR, missing malloc_stats files.  No memory tests performed." )
+      
+      elif memory_RC == 256:
+          print( "\t*** ERROR, test %s failed memory leak test." % (testname) )
+          print( memory_msg )
+          # check that all VarLabels were deleted
+          rc = system("mem_leak_checkVarLabels sus.log.txt >> mem_leak_check.log.txt 2>&1")
+      
+      elif memory_RC == 2*256:
+          print( "\t*** ERROR, test %s failed memory highwater test." % (testname) )
+          if short_message != "":
+            print( "\t%s" % (short_message) )
+          print( memory_msg )
+          print( "%s" % replace_msg )
+      
+      else:
+          print( "\tMemory leak tests passed. (Note: no previous memory usage stats)." )
+          
     #__________________________________
     # uda comparison
     if do_uda_comparison_test == 1:
@@ -820,7 +889,10 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
 
       abs_tol= tolerances[0]
       rel_tol= tolerances[1]
-      compUda_RC = system("compare_sus_runs %s %s %s %s %s %s> compare_sus_runs.log.txt 2>&1" % (testname, getcwd(), compare_root, susdir,abs_tol, rel_tol))
+      
+      compUda_RC = system("compare_sus_runs %s %s %s %s %s %s %s > compare_sus_runs.log.txt 2>&1" % 
+                          (testname, getcwd(), compare_root, susdir,abs_tol, rel_tol, create_gs))
+      
       if compUda_RC != 0:
         if compUda_RC == 10 * 256:
           print( "\t*** Input file(s) differs from the goldstandard" )
@@ -849,37 +921,7 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
 
       else:
         print( "\tComparison tests passed." )
-    #__________________________________
-    # Memory leak test
-    if do_memory_test == 1:
 
-      memory_RC = system("mem_leak_check %s %d %s %s %s %s> mem_leak_check.log.txt 2>&1" %
-                        (testname, do_plots, malloc_stats_file, compare_root, ".", helperspath))
-      try:
-        short_message_file = open("highwater_shortmessage.txt", 'r+', 500)
-        short_message = rstrip(short_message_file.readline(500))
-      except Exception:
-        short_message = ""
-
-      if memory_RC == 0:
-          print( "\tMemory leak tests passed." )
-          if short_message != "":
-            print( "\t%s" % (short_message)     )
-      elif memory_RC == 5 * 256:
-          print( "\t* Warning, no malloc_stats file created.  No memory leak test performed." )
-      elif memory_RC == 256:
-          print( "\t*** Warning, test %s failed memory leak test." % (testname) )
-          print( memory_msg )
-          # check that all VarLabels were deleted
-          rc = system("mem_leak_checkVarLabels sus.log.txt >> mem_leak_check.log.txt 2>&1")
-      elif memory_RC == 2*256:
-          print( "\t*** Warning, test %s failed memory highwater test." % (testname) )
-          if short_message != "":
-            print( "\t%s" % (short_message) )
-          print( memory_msg )
-          print( "%s" % replace_msg )
-      else:
-          print( "\tMemory leak tests passed. (Note: no previous memory usage stats)." )
 
     #__________________________________
     # print error codes
@@ -892,7 +934,7 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
       system("echo '  :%s: \t%s test failed performance tests' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
       return_code = 2;
 
-    if memory_RC == 1*256 or memory_RC == 2*256:
+    if memory_RC == 1*256 or memory_RC == 2*256 or memory_RC == 5*256:
       system("echo '  :%s: \t%s test failed memory tests' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
       return_code = 2;
 

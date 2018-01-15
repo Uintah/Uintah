@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -51,11 +51,11 @@ int main(int argc, char** argv)
 
 	int div=(int)pow((float)DIM,ref);
 	
-	unsigned int P=d_myworld->size();
+	unsigned int P=d_myworld->nRanks();
 	unsigned int N=(unsigned int)pow((float)BINS,ref);
 	unsigned int n=N/P;
 	int rem=N%P;
-	int rank=d_myworld->myrank();
+	int rank=d_myworld->myRank();
 	LOCS xx,yy;
 
 	Uintah::SFC<LOCS> mycurve(d_myworld);
@@ -191,9 +191,9 @@ int main(int argc, char** argv)
       j++;
     }
 
-    n=N/d_myworld->size();
+    n=N/d_myworld->nRanks();
     MPI_Status status;
-    for(int p=1;p<d_myworld->size();p++)
+    for(int p=1;p<d_myworld->nRanks();p++)
     {
       if(p<rem)
         r=n+1;

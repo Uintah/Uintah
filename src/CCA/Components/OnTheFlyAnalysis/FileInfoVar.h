@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -26,8 +26,11 @@
 #ifndef UINTAH_HOMEBREW_FileInfoVar_H
 #define UINTAH_HOMEBREW_FileInfoVar_H
 
-#include <Core/Util/RefCounted.h>
+#include <Core/Exceptions/InternalError.h>
+#include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Util/Handle.h>
+#include <Core/Util/RefCounted.h>
+
 #include <fstream>
 
 namespace Uintah {
@@ -46,12 +49,30 @@ struct FileInfo : public RefCounted {
       //std::cout << " closing file " << (*it).first << std::endl;
       fclose((*it).second);
     }
-
-  };
+  }
 };
 
-
 typedef Handle<FileInfo> FileInfoP;
+
+  template<>
+  inline void PerPatch<FileInfoP>::readNormal(std::istream& in, bool swapBytes)
+  {
+    // Note if swap bytes for FileInfoP is implemente then this
+    // template specialization can be deleted as the general template
+    // will work.
+    SCI_THROW(InternalError("Swap bytes for FileInfoP is not implemented", __FILE__, __LINE__));
+
+    ssize_t linesize = (ssize_t)(sizeof(FileInfoP));
+    
+    int val;
+    
+    in.read((char*) &val, linesize);
+    
+    // if (swapBytes)
+    //   Uintah::swapbytes(val);
+    
+    // value = std::make_shared<FileInfoP>(val);
+  }
 
 } // End namespace Uintah
 

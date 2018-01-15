@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -89,7 +89,7 @@ NaaBoxGeometryPiece::init( const Point& p1,
   p4minusP1 = p4 - p1;
 
   // p5 is the opposite corner to p1 and is used for the bounding box.
-  Point p5 = p1 + (p2minusP1 + p3minusP1 + p4minusP1);
+  // Point p5 = p1 + (p2minusP1 + p3minusP1 + p4minusP1);
 
   // Find the bounding box with the following gross code
   double lowX = min(min(min(p1.x(),p2.x()),min(p2.x(),p3.x())),p4.x());

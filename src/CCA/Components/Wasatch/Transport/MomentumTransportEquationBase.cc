@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2017 The University of Utah
+ * Copyright (c) 2012-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -326,7 +326,9 @@ namespace WasatchCore{
                           Expr::TagList& strainTags,
                           const Expr::Tag& dilTag,
                           Expr::ExpressionFactory& factory,
-                          Expr::Tag& normalStrainTag)
+                          Expr::Tag& normalStrainTag,
+                          Expr::Tag& shearStrainTag1,
+                          Expr::Tag& shearStrainTag2 )
   {
     typedef typename SpatialOps::FaceTypes<FieldT>::XFace XFace;
     typedef typename SpatialOps::FaceTypes<FieldT>::YFace YFace;
@@ -349,6 +351,8 @@ namespace WasatchCore{
         if( momComponent == XDIR ) {
           normalStrainID = strainID;
           normalStrainTag = strainXt;
+          shearStrainTag1 = strainYt;
+          shearStrainTag2 = strainZt;
         }
       }
       if( doMom[1] ){
@@ -356,6 +360,8 @@ namespace WasatchCore{
         if( momComponent == YDIR ) {
           normalStrainID = strainID;
           normalStrainTag = strainYt;
+          shearStrainTag1 = strainZt;
+          shearStrainTag2 = strainXt;
         }
       }
       if( doMom[2] ){
@@ -363,6 +369,8 @@ namespace WasatchCore{
         if( momComponent == ZDIR ) {
           normalStrainID = strainID;
           normalStrainTag = strainZt;
+          shearStrainTag1 = strainXt;
+          shearStrainTag2 = strainYt;
         }
       }
       factory.cleave_from_children( normalStrainID );
@@ -382,7 +390,9 @@ namespace WasatchCore{
                          Expr::TagList& strainTags,
                          const Expr::Tag& dilTag,
                          Expr::ExpressionFactory& factory,
-                         Expr::Tag& normalStrainTag)
+                         Expr::Tag& normalStrainTag,
+                         Expr::Tag& shearStrainTag1,
+                         Expr::Tag& shearStrainTag2 )
   {
     typedef SVolField FieldT;
     typedef SpatialOps::FaceTypes<FieldT>::XFace XFace;
@@ -406,6 +416,8 @@ namespace WasatchCore{
         if( momComponent == XDIR ) {
           normalStrainID = strainID;
           normalStrainTag = strainXt;
+          shearStrainTag1 = strainYt;
+          shearStrainTag2 = strainZt;
         }
       }
       if( doMom[1] ){
@@ -413,6 +425,8 @@ namespace WasatchCore{
         if( momComponent == YDIR ) {
           normalStrainID = strainID;
           normalStrainTag = strainYt;
+          shearStrainTag1 = strainZt;
+          shearStrainTag2 = strainXt;
         }
       }
       if( doMom[2] ){
@@ -420,6 +434,8 @@ namespace WasatchCore{
         if( momComponent == ZDIR ) {
           normalStrainID = strainID;
           normalStrainTag = strainZt;
+          shearStrainTag1 = strainXt;
+          shearStrainTag2 = strainYt;
         }
       }
       factory.cleave_from_children( normalStrainID );
@@ -472,7 +488,7 @@ namespace WasatchCore{
                                       const Expr::Tag& momTag,
                                       const Expr::Tag& volFracTag,
                                       Expr::ExpressionFactory& factory,
-                                      Expr::Tag& normalConvFluxTag)
+                                      Expr::Tag& normalConvFluxTag )
   {
     set_convflux_tags( doMom, cfTags, momTag );
     const Expr::Tag& cfxt = cfTags[0];
@@ -518,15 +534,15 @@ namespace WasatchCore{
   
   template<>
   Expr::ExpressionID
-  register_momentum_convective_fluxes<SVolField>(const Direction momComponent,
-                                                 const bool* const doMom,
-                                      const Expr::TagList& velTags,
-                                      Expr::TagList& cfTags,
-                                      ConvInterpMethods convInterpMethod,
-                                      const Expr::Tag& momTag,
-                                      const Expr::Tag& volFracTag,
-                                      Expr::ExpressionFactory& factory,
-                                      Expr::Tag& normalConvFluxTag)
+  register_momentum_convective_fluxes<SVolField>( const Direction momComponent,
+                                                  const bool* const doMom,
+                                                  const Expr::TagList& velTags,
+                                                  Expr::TagList& cfTags,
+                                                  ConvInterpMethods convInterpMethod,
+                                                  const Expr::Tag& momTag,
+                                                  const Expr::Tag& volFracTag,
+                                                  Expr::ExpressionFactory& factory,
+                                                  Expr::Tag& normalConvFluxTag )
   {
     set_convflux_tags( doMom, cfTags, momTag );
     const Expr::Tag& cfxt = cfTags[0];
@@ -675,7 +691,8 @@ namespace WasatchCore{
     //___________________________________
     // diffusive flux (strain components)
     Expr::TagList strainTags;
-    this->normalStrainID_ = register_strain_tensor<FieldT>(momComponent, doMom, this->isViscous_, this->velTags_, strainTags, dilTag, factory, this->normalStrainTag_);
+    this->normalStrainID_ = register_strain_tensor<FieldT>(momComponent, doMom, this->isViscous_, this->velTags_, strainTags, dilTag, factory,
+                                                           this->normalStrainTag_, this->shearStrainTag1_, this->shearStrainTag2_);
     
     //--------------------------------------
     // TURBULENCE
@@ -780,28 +797,29 @@ namespace WasatchCore{
                                const Expr::TagList& velTags,\
                                Expr::TagList& strainTags,\
                                const Expr::Tag& dilTag,\
-                               Expr::ExpressionFactory& factory, Expr::Tag& normalStrainTag );
+                               Expr::ExpressionFactory& factory,\
+                               Expr::Tag& normalStrainTag,\
+                               Expr::Tag& shearStrainTag1,\
+                               Expr::Tag& shearStrainTag2 );
   
-  REGISTER_STRAIN(SVolField);
-  REGISTER_STRAIN(XVolField);
-  REGISTER_STRAIN(YVolField);
-  REGISTER_STRAIN(ZVolField);
+  REGISTER_STRAIN( XVolField )
+  REGISTER_STRAIN( YVolField )
+  REGISTER_STRAIN( ZVolField )
 
-#define REGISTER_CONVECTIVE_FLUXES(VOL) \
-  template Expr::ExpressionID \
-  register_momentum_convective_fluxes<VOL> ( const Direction momComponent,\
-                                             const bool* const doMom,\
-                                             const Expr::TagList& velTags,\
-                                             Expr::TagList& cfTags,\
+#define REGISTER_CONVECTIVE_FLUXES(VOL)                                         \
+  template Expr::ExpressionID                                                   \
+  register_momentum_convective_fluxes<VOL> ( const Direction momComponent,      \
+                                             const bool* const doMom,           \
+                                             const Expr::TagList& velTags,      \
+                                             Expr::TagList& cfTags,             \
                                              ConvInterpMethods convInterpMethod,\
-                                             const Expr::Tag& momTag,\
-                                             const Expr::Tag& volFracTag,\
+                                             const Expr::Tag& momTag,           \
+                                             const Expr::Tag& volFracTag,       \
                                              Expr::ExpressionFactory& factory, Expr::Tag& normalConvFluxTag );
   
-  REGISTER_CONVECTIVE_FLUXES(SVolField);
-  REGISTER_CONVECTIVE_FLUXES(XVolField);
-  REGISTER_CONVECTIVE_FLUXES(YVolField);
-  REGISTER_CONVECTIVE_FLUXES(ZVolField);
+  REGISTER_CONVECTIVE_FLUXES( XVolField )
+  REGISTER_CONVECTIVE_FLUXES( YVolField )
+  REGISTER_CONVECTIVE_FLUXES( ZVolField )
 
   //==================================================================
 

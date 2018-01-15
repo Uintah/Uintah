@@ -31,7 +31,7 @@ SGSsigma::problemSetup( ProblemSpecP& db ){
 
   m_PI = acos(-1.0);
 
-  db->getWithDefault("Cs", m_Cs, 1.35 );
+  db->getWithDefault("Cs", m_Cs, 1.5 );
 
   const ProblemSpecP params_root = db->getRootNode();
 
@@ -108,15 +108,16 @@ SGSsigma::register_timestep_eval(
   std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
   const int time_substep, const bool packed_tasks ){
 
-  register_variable( m_u_vel_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry);
-  register_variable( m_v_vel_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry);
-  register_variable( m_w_vel_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry);
+  register_variable( m_u_vel_name, ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::LATEST, variable_registry);
+  register_variable( m_v_vel_name, ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::LATEST, variable_registry);
+  register_variable( m_w_vel_name, ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::LATEST, variable_registry);
   //register_variable( "CsLabel", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry);
-  register_variable( "density", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW, variable_registry );
-  register_variable( "volFraction", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW, variable_registry );
-  register_variable( "viscosityCTS", ArchesFieldContainer::MODIFIES, variable_registry, time_substep );
+  register_variable( "CCVelocity",      ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::LATEST, variable_registry);
+  register_variable( "density",         ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::OLDDW, variable_registry );
+  register_variable( "volFraction",     ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::OLDDW, variable_registry );
+  register_variable( "viscosityCTS",    ArchesFieldContainer::MODIFIES, variable_registry, time_substep );
   register_variable( "turb_viscosity",  ArchesFieldContainer::MODIFIES, variable_registry, time_substep );
-  register_variable( m_sigOper, ArchesFieldContainer::MODIFIES, variable_registry, time_substep );
+  register_variable( m_sigOper,         ArchesFieldContainer::MODIFIES, variable_registry, time_substep );
 
 }
 
@@ -135,6 +136,7 @@ SGSsigma::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info){
   //constCCVariable<double>& Cs_dynamic = tsk_info->get_const_uintah_field_add<constCCVariable<double> >("CsLabel");
   constCCVariable<double>& vol_fraction = tsk_info->get_const_uintah_field_add<constCCVariable<double> >("volFraction");
   constCCVariable<double>& Density_sigma = tsk_info->get_const_uintah_field_add<constCCVariable<double> >("density");
+  constCCVariable<Vector>& CCVelocity =    tsk_info->get_const_uintah_field_add<constCCVariable<Vector> >("CCVelocity");
 
   CCVariable<double>& viscosity_new = tsk_info->get_uintah_field_add<CCVariable<double> >("viscosityCTS");
   CCVariable<double>&  TurbViscosity_new = tsk_info->get_uintah_field_add<CCVariable<double> >("turb_viscosity");
@@ -152,19 +154,33 @@ SGSsigma::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info){
   Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
 
   Uintah::parallel_for( range, [&](int i, int j, int k){
-
+    // face velocity of fourth order 
+    //VelgUx=(-2.0*uVel(i+2,j,k)      +12.0*uVel(i+1,j,k)        -6.0*uVel(i,j,k)            - 4.0*uVel(i-1,j,k))/dx/12.0;
+    //VelgUy=(-CCVelocity(i,j+2,k)[0] +8.0*CCVelocity(i,j+1,k)[0]-8.0*CCVelocity(i,j-1,k)[0] + CCVelocity(i,j-2,k)[0])/dy/12.0;
+    //VelgUz=(-CCVelocity(i,j,k+2)[0] +8.0*CCVelocity(i,j,k+1)[0]-8.0*CCVelocity(i,j,k-1)[0] + CCVelocity(i,j,k-2)[0])/dz/12.0;
+                                                           
+    //VelgVx=(-CCVelocity(i+2,j,k)[1] +8.0*CCVelocity(i+1,j,k)[1]-8.0*CCVelocity(i-1,j,k)[1] + CCVelocity(i-2,j,k)[1])/dx/12.0;
+    //VelgVy=(-2.0*vVel(i,j+2,k)      +12.0*vVel(i,j+1,k)        -6.0*vVel(i,j,k)            -4.0*vVel(i,j-1,k))/dy/12.0;
+    //VelgVz=(-CCVelocity(i,j,k+2)[1] +8.0*CCVelocity(i,j,k+1)[1]-8.0*CCVelocity(i,j,k-1)[1] + CCVelocity(i,j,k-2)[1])/dz/12.0;
+                                                           
+    //VelgWx=(-CCVelocity(i+2,j,k)[2] +8.0*CCVelocity(i+1,j,k)[2]-8.0*CCVelocity(i-1,j,k)[2] + CCVelocity(i-2,j,k)[2])/dx/12.0;
+    //VelgWy=(-CCVelocity(i,j+2,k)[2] +8.0*CCVelocity(i,j+1,k)[2]-8.0*CCVelocity(i,j-1,k)[2] + CCVelocity(i,j-2,k)[2])/dy/12.0;
+    //VelgWz=(-2.0*wVel(i,j,k+2)      +12.0*wVel(i,j,k+1)        -6.0*wVel(i,j,k)            -4.0*wVel(i,j,k-1))/dz/12.0;
+    
+    // face velocity of second order-most reliable 
     VelgUx=(uVel(i+1,j,k) - uVel(i,j,k))/dx;
-    VelgUy=(uVel(i,j+1,k) - uVel(i,j,k))/dy;
-    VelgUz=(uVel(i,j,k+1) - uVel(i,j,k))/dz;
+    VelgUy=(CCVelocity(i,j+1,k)[0] - CCVelocity(i,j-1,k)[0])/dy/2.0;
+    VelgUz=(CCVelocity(i,j,k+1)[0] - CCVelocity(i,j,k-1)[0])/dz/2.0;
+                                                           
+    VelgVx=(CCVelocity(i+1,j,k)[1] - CCVelocity(i-1,j,k)[1])/dx/2.0;
+    VelgVy=(vVel(i,j+1,k) - vVel(i,j,k))/dy;
+    VelgVz=(CCVelocity(i,j,k+1)[1] - CCVelocity(i,j,k-1)[1])/dz/2.0;
+                                                           
+    VelgWx=(CCVelocity(i+1,j,k)[2] - CCVelocity(i-1,j,k)[2])/dx/2.0;
+    VelgWy=(CCVelocity(i,j+1,k)[2] - CCVelocity(i,j-1,k)[2])/dy/2.0;
+    VelgWz=(wVel(i,j,k+1)-wVel(i,j,k))/dz;
 
-    VelgVx=(vVel(i+1,j,k) -vVel(i,j,k))/dx;
-    VelgVy=(vVel(i,j+1,k) -vVel(i,j,k))/dy;
-    VelgVz=(vVel(i,j,k+1) -vVel(i,j,k))/dz;
-
-    VelgWx=(wVel(i+1,j,k) -wVel(i,j,k))/dx;
-    VelgWy=(wVel(i,j+1,k) -wVel(i,j,k))/dy;
-    VelgWz=(wVel(i,j,k+1) -wVel(i,j,k))/dz;
-
+    
     G11=VelgUx*VelgUx+VelgVx*VelgVx+VelgWx*VelgWx;
     G12=VelgUx*VelgUy+VelgVx*VelgVy+VelgWx*VelgWy;
     G13=VelgUx*VelgUz+VelgVx*VelgVz+VelgWx*VelgWz;

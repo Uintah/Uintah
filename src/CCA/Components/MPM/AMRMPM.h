@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -26,7 +26,7 @@
 #define UINTAH_HOMEBREW_AMRMPM_H
 
 // make uintah CXX=/usr/bin/iwyu
-#include <CCA/Components/MPM/MPMFlags.h>      // for MPMFlags
+#include <CCA/Components/MPM/Core/MPMFlags.h>      // for MPMFlags
 #include <CCA/Components/MPM/SerialMPM.h>     // for SerialMPM, etc
 #include <CCA/Ports/SchedulerP.h>             // for SchedulerP
 #include <Core/Geometry/Vector.h>             // for Vector
@@ -34,7 +34,6 @@
 #include <Core/Grid/Level.h>                  // for Level, Level::selectType
 #include <Core/Grid/LevelP.h>                 // for LevelP
 #include <Core/Grid/Patch.h>                  // for Patch, Patch::FaceType, etc
-#include <Core/Grid/SimulationStateP.h>       // for SimulationStateP
 #include <Core/Grid/Variables/ComputeSet.h>   // for PatchSubset, etc
 #include <Core/Grid/Variables/NCVariable.h>   // for constNCVariable
 #include <Core/Grid/Variables/constVariable.h>  // for constVariable
@@ -53,14 +52,15 @@ class FluxBCModel;
 class AMRMPM : public SerialMPM {
 
 public:
-  AMRMPM(const ProcessorGroup* myworld);
+  AMRMPM(const ProcessorGroup* myworld,
+	 const SimulationStateP sharedState);
+  
   virtual ~AMRMPM();
   SDInterfaceModel* d_sdInterfaceModel;
 
   virtual void problemSetup(const ProblemSpecP& params, 
                             const ProblemSpecP& restart_prob_spec,
-                            GridP&,
-                            SimulationStateP&);
+                            GridP&);
 
   virtual void outputProblemSpec(ProblemSpecP& ps);
          
@@ -70,7 +70,7 @@ public:
   void schedulePrintParticleCount(const LevelP& level, 
                                   SchedulerP& sched);
 
-  virtual void scheduleComputeStableTimestep(const LevelP& level,
+  virtual void scheduleComputeStableTimeStep(const LevelP& level,
                                              SchedulerP&);
          
   virtual void scheduleTimeAdvance(const LevelP& level, 
@@ -78,6 +78,9 @@ public:
 
   virtual void scheduleFinalizeTimestep(const LevelP& level,
                                         SchedulerP&);
+
+  virtual void scheduleAnalysis(const LevelP& level,
+				SchedulerP&);
 
   virtual void scheduleRefine(const PatchSet* patches, 
                               SchedulerP& scheduler);
@@ -96,19 +99,10 @@ public:
   /// Schedule to mark initial flags for AMR regridding
   void scheduleInitialErrorEstimate(const LevelP& coarseLevel, SchedulerP& sched);
 
-
-//  void setMPMLabel(MPMLabel* Mlb) {
-//    delete lb;
-//    lb = Mlb;
-//  };
-
 //  enum IntegratorType {
 //    Explicit,
 //    Implicit,
 //  };
-
-  //Inherit this from the SerialMPM base class
-  //SimulationStateP d_sharedState;
 
 protected:
   friend class ESMPM;
@@ -440,7 +434,6 @@ protected:
   const VarLabel* RefineFlagZMinLabel;
 
   std::vector<MPMPhysicalBC*> d_physicalBCs;
-  IntegratorType d_integrator;
 
   SwitchingCriteria* d_switchCriteria;
 private:

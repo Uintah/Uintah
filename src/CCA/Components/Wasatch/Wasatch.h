@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2010-2017 The University of Utah
+ * Copyright (c) 2010-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -106,10 +106,7 @@
 #include <set>
 
 //-- Uintah Framework Includes --//
-#include <Core/Parallel/UintahParallelComponent.h>
-#include <CCA/Ports/SimulationInterface.h>
-#include <Core/Grid/SimulationStateP.h>
-#include <CCA/Ports/SolverInterface.h>
+#include <CCA/Components/Application/ApplicationCommon.h>
 
 //-- Wasatch includes --//
 #include "PatchInfo.h"
@@ -174,8 +171,7 @@ namespace WasatchCore{
    *
    */
   class Wasatch :
-    public Uintah::UintahParallelComponent,
-    public Uintah::SimulationInterface
+    public Uintah::ApplicationCommon
   {
 
   public:
@@ -185,8 +181,9 @@ namespace WasatchCore{
     // we need a dual time integrator per patch since each of the RHS trees will need a dual time integrator for the patch it is working on
     typedef std::map< int, Expr::DualTime::BDFDualTimeIntegrator* > DTIntegratorMapT; //<<< PatchID, DualTimeIntegrator >>>
     
-    Wasatch( const Uintah::ProcessorGroup* myworld );
-
+    Wasatch( const Uintah::ProcessorGroup* myworld,
+	     const Uintah::SimulationStateP sharedState );
+    
     ~Wasatch();
 
     /**
@@ -208,8 +205,7 @@ namespace WasatchCore{
      */
     void problemSetup( const Uintah::ProblemSpecP& params,
                        const Uintah::ProblemSpecP& restart_prob_spec,
-                       Uintah::GridP& grid,
-                       Uintah::SimulationStateP& );
+                       Uintah::GridP& grid );
 
     /**
      *  \brief Set up initial condition task(s)
@@ -251,7 +247,7 @@ namespace WasatchCore{
     /**
      *  \brief Set up the Uintah::Task that will calculate the timestep.
      */
-    void scheduleComputeStableTimestep( const Uintah::LevelP& level,
+    void scheduleComputeStableTimeStep( const Uintah::LevelP& level,
                                         Uintah::SchedulerP& );
 
     /**
@@ -274,8 +270,7 @@ namespace WasatchCore{
                                    Uintah::SchedulerP& );
 
     void preGridProblemSetup(const Uintah::ProblemSpecP& params,
-                             Uintah::GridP& grid,
-                             Uintah::SimulationStateP& state);
+                             Uintah::GridP& grid);
 
     //__________________________________
     //  AMR
@@ -286,7 +281,7 @@ namespace WasatchCore{
                                          Uintah::SchedulerP& /*scheduler*/,
                                          bool, bool);
 
-    virtual int computeTaskGraphIndex();
+    virtual int computeTaskGraphIndex( const int timeStep );
 
     const EquationAdaptors& equation_adaptors() const{ return adaptors_; }
     GraphCategories& graph_categories(){ return graphCategories_; }
@@ -337,7 +332,6 @@ namespace WasatchCore{
     DTIntegratorMapT dualTimeIntegrators_;
     
     std::set<std::string> persistentFields_;   ///< prevent the ExpressionTree from reclaiming memory on these fields.
-    Uintah::SimulationStateP sharedState_; ///< access to some common things like the current timestep.
     const Uintah::MaterialSet* materials_;
     Uintah::ProblemSpecP wasatchSpec_;
 
@@ -358,8 +352,6 @@ namespace WasatchCore{
     PatchInfoMap patchInfoMap_; ///< Information about each patch
 
     TimeStepper* timeStepper_;  ///< The TimeStepper used to advance equations registered here.
-
-    Uintah::SolverInterface* linSolver_;
 
     Uintah::Ray* rmcrt_; // RMCRT solver. needed to pass along to other tasks and expressions...
     CellType* cellType_;

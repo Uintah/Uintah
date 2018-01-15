@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,7 +25,7 @@
 
 #ifndef Packages_Uintah_CCA_Components_ontheflyAnalysis_particleExtract_h
 #define Packages_Uintah_CCA_Components_ontheflyAnalysis_particleExtract_h
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Components/MPM/Materials/MPMMaterial.h>
 
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
 #include <CCA/Ports/Output.h>
@@ -33,7 +33,7 @@
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
-#include <Core/Labels/MPMLabel.h>
+#include <CCA/Components/MPM/Core/MPMLabel.h>
 
 #include <map>
 #include <vector>
@@ -68,19 +68,19 @@ WARNING
 ****************************************/
   class particleExtract : public AnalysisModule {
   public:
-    particleExtract(ProblemSpecP& prob_spec,
-                    SimulationStateP& sharedState,
-		      Output* dataArchiver);
+    particleExtract(const ProcessorGroup* myworld,
+		    const SimulationStateP sharedState,
+		    const ProblemSpecP& module_spec);
+    
     particleExtract();
                     
     virtual ~particleExtract();
    
     virtual void problemSetup(const ProblemSpecP& prob_spec,
                               const ProblemSpecP& restart_prob_spec,
-                              GridP& grid,
-                              SimulationStateP& sharedState);
+                              GridP& grid);
 
-    virtual void outputProblemSpec(ProblemSpecP& ps){};                              
+    virtual void outputProblemSpec(ProblemSpecP& ps){};
     
     virtual void scheduleInitialize(SchedulerP& sched,
                                     const LevelP& level);
@@ -141,14 +141,11 @@ WARNING
     double d_stopTime;
     double d_colorThreshold;
     std::vector<VarLabel*> d_varLabels;
-    SimulationStateP d_sharedState;
-    Output* d_dataArchiver;
-    ProblemSpecP d_prob_spec;
+
     const Material* d_matl;
     MaterialSet* d_matl_set;
     MaterialSubset* d_matl_subset;
-    std::set<std::string> d_isDirCreated;
-        
+    std::set<std::string> d_isDirCreated;        
   };
 }
 

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -66,20 +66,21 @@ WARNING
 
   class DDT0 : public ModelInterface {
   public:
-    DDT0(const ProcessorGroup* myworld, ProblemSpecP& params,
-                const ProblemSpecP& prob_spec);
+    DDT0(const ProcessorGroup* myworld,
+	 const SimulationStateP& sharedState,
+	 const ProblemSpecP& params,
+	 const ProblemSpecP& prob_spec);
 
     virtual ~DDT0();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
 
-    virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
-			      ModelSetup* setup, const bool isRestart);
+    virtual void problemSetup(GridP& grid,
+			       const bool isRestart);
 
       
     virtual void scheduleInitialize(SchedulerP&,
-				    const LevelP& level,
-				    const ModelInfo*);
+				    const LevelP& level);
 
     virtual void initialize(const ProcessorGroup*,
                             const PatchSubset*,
@@ -89,13 +90,11 @@ WARNING
 
     virtual void restartInitialize() {}
       
-    virtual void scheduleComputeStableTimestep(SchedulerP&,
-					       const LevelP& level,
-					       const ModelInfo*);
+    virtual void scheduleComputeStableTimeStep(SchedulerP&,
+					       const LevelP& level);
       
     virtual void scheduleComputeModelSources(SchedulerP&,
-						   const LevelP& level,
-						   const ModelInfo*);
+						   const LevelP& level);
                                              
     virtual void scheduleModifyThermoTransportProperties(SchedulerP&,
                                                const LevelP&,
@@ -111,16 +110,14 @@ WARNING
 
                                              
    virtual void scheduleTestConservation(SchedulerP&,
-                                         const PatchSet* patches,
-                                         const ModelInfo* mi);
+                                         const PatchSet* patches);
 
   private:    
     void computeModelSources(const ProcessorGroup*, 
                              const PatchSubset* patches,
                              const MaterialSubset* matls,
                              DataWarehouse*,
-                             DataWarehouse* new_dw,
-                             const ModelInfo*);
+                             DataWarehouse* new_dw);
       
     DDT0(const DDT0&);
     DDT0& operator=(const DDT0&);
@@ -138,20 +135,19 @@ WARNING
     const VarLabel* totalMassConvertedLabel;
     const VarLabel* detonatingLabel;
 
-    const VarLabel* pCrackRadiusLabel;
+    const VarLabel* pCrackRadiusLabel {nullptr};
     
-    ProblemSpecP d_prob_spec;
-    ProblemSpecP d_params;
-    const Material* d_matl0;
-    const Material* d_matl1;
-    SimulationStateP d_sharedState;   
+    ProblemSpecP d_params {nullptr};
+    ProblemSpecP d_prob_spec {nullptr};
 
-    ICELabel* Ilb;
-    MPMICELabel* MIlb;
-    MPMLabel* Mlb;
-    MaterialSet* d_mymatls;
-    MaterialSubset* d_one_matl;
-   
+    const Material* d_matl0 {nullptr};
+    const Material* d_matl1 {nullptr};
+
+    ICELabel* Ilb {nullptr};
+    MPMICELabel* MIlb {nullptr};
+    MPMLabel* Mlb {nullptr};
+    MaterialSet* d_mymatls {nullptr};
+    MaterialSubset* d_one_matl {nullptr};   
 
     std::string fromMaterial, toMaterial;
     double d_G;

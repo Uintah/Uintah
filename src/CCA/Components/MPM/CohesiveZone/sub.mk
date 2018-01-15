@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2017 The University of Utah
+#  Copyright (c) 1997-2018 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -27,13 +27,26 @@
 # 
 # Makefile fragment for this subdirectory 
 
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := CCA/Components/MPM/CohesiveZone
+SRCDIR := CCA/Components/MPM/CohesiveZone
 
-SRCS     += \
+SRCS += \
 	$(SRCDIR)/CohesiveZone.cc \
 	$(SRCDIR)/CZMaterial.cc
 
-PSELIBS := Core/Grid \
-	Core/Datatypes \
-	Core/Util
+PSELIBS := \
+	CCA/Components/MPM/Core      \
+	CCA/Components/MPM/Materials \
+	Core/Datatypes               \
+	Core/Disclosure              \
+	Core/Exceptions              \
+	Core/Geometry                \
+	Core/GeometryPiece           \
+	Core/Grid                    \
+	Core/Math                    \
+	Core/Parallel                \
+	Core/ProblemSpec             \
+	Core/Util           
+
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

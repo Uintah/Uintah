@@ -546,7 +546,7 @@
                       attribute2="intercept REQUIRED DOUBLE" >
         <NameTag      spec="REQUIRED" />
       </LinearFunction>
-
+      
       <!-- parabolic function: a x^2 + b x + c !-->
       <ParabolicFunction  spec="OPTIONAL NO_DATA"
                           attribute1="type  REQUIRED STRING 'GENERAL, CENTERED'">
@@ -648,7 +648,7 @@
 
     <!-- far field pressure -->
     <NSCBC spec="OPTIONAL NO_DATA"    
-           attribute1="pfarfield REQUIRED DOUBLE">
+           attribute1="pfarfield OPTIONAL DOUBLE">
    </NSCBC>
 
     <!-- The CommonGeometry block allows one to define geometries that can be reused in

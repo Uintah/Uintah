@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -24,6 +24,7 @@
 
 
 #include <CCA/Components/ICE/CustomBCs/C_BC_driver.h>
+
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Task.h>
@@ -70,9 +71,12 @@ void preprocess_CustomBCs(const string& where,
                           customBC_globalVars* gv,
                           customBC_localVars* lv)
 {
+  simTime_vartype simTime;
+  old_dw->get(simTime, lb->simulationTimeLabel);
+
   delt_vartype delT;
   const Level* level = patch->getLevel();
-  old_dw->get(delT, gv->sharedState->get_delt_label(),level);
+  old_dw->get(delT, lb->delTLabel, level);
    
   //__________________________________
   //   LODI
@@ -102,6 +106,7 @@ void preprocess_CustomBCs(const string& where,
   //  method of manufactured solutions boundary conditions
   if( gv->using_MMS_BCs ){  
     lv->mms = scinew mms_localVars();
+    lv->mms->simTime = (double)simTime;
     lv->mms->delT = (double)delT;
     preprocess_MMS_BCs( new_dw,old_dw, lb,indx,patch, where,
                         lv->set_MMS_BCs, 
@@ -111,8 +116,8 @@ void preprocess_CustomBCs(const string& where,
   //  Sine boundary conditions
   if( gv->using_Sine_BCs ){  
     lv->sine = scinew sine_localVars();
-    lv->sine->delT = (double)delT;
-    gv->sine->delT= (double)delT;
+    lv->sine->simTime = (double)simTime;
+    gv->sine->delT = (double)delT;
     preprocess_Sine_BCs( new_dw,old_dw, lb,indx,patch, where,
                         lv->set_Sine_BCs, 
                         lv->sine);        

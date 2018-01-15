@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -37,8 +37,7 @@
  *        <li> <b>SimulationController</b> </li>
  *        <li> <b>Regridder</b> </li>
  *        <li> <b>SolverInterface</b> </li>
- *        <li> <b>SimulationInterface and UintahParallelComponent</b> (e.g. ICE, MPM, etc) </li>
- *        <li> <b>ModelMaker</b> </li>
+ *        <li> <b>ApplicationInterface and UintahParallelComponent</b> (e.g. ICE, MPM, etc) </li>
  *        <li> <b>LoadBalancer</b> </li>
  *        <li> <b>DataArchiver</b> </li>
  *        <li> <b>Scheduler</b> and add reference (Schedulers are <b>RefCounted><b>) </li>
@@ -52,47 +51,29 @@
 #include <CCA/Components/DataArchiver/DataArchiver.h>
 #include <CCA/Components/LoadBalancers/LoadBalancerFactory.h>
 #include <CCA/Components/Models/ModelFactory.h>
-#include <CCA/Components/Parent/ComponentFactory.h>
+#include <CCA/Components/Parent/ApplicationFactory.h>
 #include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
-#include <CCA/Components/ReduceUda/UdaReducer.h>
+#include <CCA/Components/PostProcessUda/PostProcess.h>
 #include <CCA/Components/Regridder/RegridderFactory.h>
 #include <CCA/Components/Schedulers/SchedulerFactory.h>
 #include <CCA/Components/SimulationController/AMRSimulationController.h>
-#include <CCA/Components/Solvers/CGSolver.h>
-#include <CCA/Components/Solvers/DirectSolve.h>
-
-#ifdef HAVE_HYPRE
-#  include <CCA/Components/Solvers/HypreSolver.h>
-#endif
-
 #include <CCA/Components/Solvers/SolverFactory.h>
 
 #ifdef HAVE_CUDA
 #  include <CCA/Components/Schedulers/UnifiedScheduler.h>
 #endif
 
-#include <CCA/Ports/DataWarehouse.h>
-
-#include <Core/Disclosure/TypeDescription.h>
 #include <Core/Exceptions/Exception.h>
-#include <Core/Exceptions/InternalError.h>
-#include <Core/Exceptions/InvalidGrid.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/OS/ProcessInfo.h>
-#include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Parallel/UintahMPI.h>
-#include <Core/Util/DOUT.hpp>
 #include <Core/Util/Environment.h>
 #include <Core/Util/FileUtils.h>
 
+#include <sci_defs/cuda_defs.h>
 #include <sci_defs/hypre_defs.h>
 #include <sci_defs/malloc_defs.h>
 #include <sci_defs/uintah_defs.h>
 #include <sci_defs/visit_defs.h>
-#include <sci_defs/cuda_defs.h>
 
 #include <svn_info.h>
 
@@ -117,14 +98,6 @@
 #include <stdexcept>
 
 using namespace Uintah;
-
-
-#if defined( USE_LENNY_HACK )
-  // See Core/Malloc/Allocator.cc for more info.
-  namespace Uintah {
-    extern void shutdown();
-  };
-#endif
 
 
 namespace {
@@ -173,7 +146,6 @@ usage( const std::string& message, const std::string& badarg, const std::string&
     std::cerr << "Usage: " << progname << " [options] <input_file_name>\n\n";
     std::cerr << "Valid options are:\n";
     std::cerr << "-h[elp]              : This usage information\n";
-    std::cerr << "-AMR                 : use AMR simulation controller\n";
 #ifdef HAVE_CUDA
     std::cerr << "-gpu                 : use available GPU devices, requires multi-threaded Unified scheduler \n";
 #endif
@@ -184,7 +156,7 @@ usage( const std::string& message, const std::string& badarg, const std::string&
     std::cerr << "-local_filesystem    : If using MPI, use this flag if each node has a local disk.\n";
     std::cerr << "-emit_taskgraphs     : Output taskgraph information\n";
     std::cerr << "-restart             : Give the checkpointed uda directory as the input file\n";
-    std::cerr << "-reduce_uda          : Reads <uda-dir>/input.xml file and removes unwanted labels (see FAQ).\n";
+    std::cerr << "-postProcessUda      : Passes variables in an uda through post processing tasks, computing new variables and creating a new uda.\n";
     std::cerr << "-uda_suffix <number> : Make a new uda dir with <number> as the default suffix\n";
     std::cerr << "-t <timestep>        : Restart timestep (last checkpoint is default, you can use -t 0 for the first checkpoint)\n";
     std::cerr << "-svnDiff             : runs svn diff <src/...../Packages/Uintah \n";
@@ -246,10 +218,6 @@ abortCleanupFunc()
 int
 main( int argc, char *argv[], char *env[] )
 {
-#if defined( USE_LENNY_HACK )
-  atexit( Uintah::shutdown );
-#endif
-
   sanityChecks();
 
 #if HAVE_IEEEFP_H
@@ -262,11 +230,10 @@ main( int argc, char *argv[], char *env[] )
   /*
    * Default values
    */
-  bool   do_AMR              = false;
   bool   emit_graphs         = false;
   bool   local_filesystem    = false;
   bool   restart             = false;
-  bool   reduce_uda          = false;
+  bool   postProcessUda      = false;
   bool   do_svnDiff          = false;
   bool   do_svnStat          = false;
   bool   restartFromScratch  = true;
@@ -280,7 +247,7 @@ main( int argc, char *argv[], char *env[] )
 
   std::string udaDir;       // for restart
   std::string filename;     // name of the UDA directory
-  std::string solver = "";  // empty string defaults to CGSolver
+  std::string solverName = "";  // empty string defaults to CGSolver
 
 #ifdef HAVE_VISIT
   // Assume if VisIt is compiled in that the user may want to connect
@@ -297,12 +264,6 @@ main( int argc, char *argv[], char *env[] )
     std::string arg = argv[i];
     if ((arg == "-help") || (arg == "-h")) {
       usage("", "", argv[0]);
-    }
-    else if (arg == "-AMR" || arg == "-amr") {
-      if( reduce_uda ) {
-        usage( "You may not use '-amr' and '-reduce_uda' at the same time.", arg, argv[0] );
-      }
-      do_AMR = true;
     }
     else if (arg == "-nthreads") {
       if (++i == argc) {
@@ -322,7 +283,7 @@ main( int argc, char *argv[], char *env[] )
       if (++i == argc) {
         usage("You must provide a solver name for -solver", arg, argv[0]);
       }
-      solver = argv[i];
+      solverName = argv[i];
     }
     else if (arg == "-mpi") {
       // TODO: Remove all traces of the need to use "-mpi" on the command line - APH 09/16/16
@@ -406,11 +367,8 @@ main( int argc, char *argv[], char *env[] )
     else if (arg == "-do_not_validate") {
       validateUps = false;
     }
-    else if (arg == "-reduce_uda" || arg == "-reduceUda") {
-      if( do_AMR ) {
-        usage( "You may not use '-amr' and '-reduce_uda' at the same time.", arg, argv[0] );
-      }
-      reduce_uda = true;
+    else if (arg == "-postProcessUda" || arg == "-PostProcessUda") {
+      postProcessUda = true;
     }
     else if (arg == "-arches" || arg == "-ice" || arg == "-impm" || arg == "-mpm" || arg == "-mpmarches" || arg == "-mpmice"
         || arg == "-poisson1" || arg == "-poisson2" || arg == "-switcher" || arg == "-poisson4" || arg == "-benchmark"
@@ -495,7 +453,7 @@ main( int argc, char *argv[], char *env[] )
 
   //__________________________________
   //  bulletproofing
-  if ( restart || reduce_uda ) {
+  if ( restart || postProcessUda ) {
     udaDir = filename;
     filename = filename + "/input.xml";
 
@@ -655,7 +613,7 @@ main( int argc, char *argv[], char *env[] )
 	std::string title;
 	
 	if( ups->findBlock( "Meta" ) )
-	  ups->findBlock( "Meta" )->require( "title", title );
+	  ups->findBlock( "Meta" )->get( "title", title );
 	
 	if( title.size() )
 	{
@@ -685,130 +643,168 @@ main( int argc, char *argv[], char *env[] )
     }
 #endif
 
-    // If the AMR block is defined default to turning AMR on.
-    if ( !do_AMR ) {
-      ProblemSpecP grid_ps = ups->findBlock( "Grid" );
-      if( grid_ps ) {
-        grid_ps->getAttribute( "doAMR", do_AMR );
-      }
-    }
+    //______________________________________________________________________
+    // Create the components
 
+    //__________________________________
+    // Simulation controller
     const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
 
-    SimulationController* ctl = scinew AMRSimulationController( world, do_AMR, ups );
+    SimulationController* simController =
+      scinew AMRSimulationController( world, ups );
 
-    ctl->getSimulationStateP()->setUseLocalFileSystems( local_filesystem );
-
+    // Set the simulation controller flags for reduce uda
+    if ( postProcessUda ) {
+      simController->setPostProcessFlags();
+    }
+    
 #ifdef HAVE_VISIT
-    ctl->getSimulationStateP()->setVisIt( do_VisIt );
+    simController->setVisIt( do_VisIt );
 #endif
 
-    RegridderCommon* regridder = nullptr;
-    if( do_AMR ) {
-      regridder = RegridderFactory::create( ups, world );
-      if ( regridder ) {
-        ctl->attachPort( "regridder", regridder );
-      }
+    //__________________________________
+    // Component and application interface
+    UintahParallelComponent* appComp =
+      ApplicationFactory::create( ups, world, nullptr, udaDir );
+    
+    ApplicationInterface* application =
+      dynamic_cast<ApplicationInterface*>(appComp);
+
+    // Read the UPS file to get the general application details.
+    application->problemSetup( ups );
+    
+#ifdef HAVE_VISIT
+    application->setVisIt( do_VisIt );
+#endif
+
+    simController->attachPort( "application", application );
+
+    // Can not do a postProcess uda with AMR
+    if ( postProcessUda && application->isAMR() ) {
+      usage( "You may not use '-amr' and '-postProcessUda' at the same time.", "-postProcessUda", argv[0] );
     }
 
     //__________________________________
     // Solver
-    SolverInterface * solve = SolverFactory::create( ups, world, solver );
+    SolverInterface * solver = SolverFactory::create( ups, world, solverName );
 
-    proc0cout << "Implicit Solver: \t" << solve->getName() << "\n";
+    UintahParallelComponent* solverComp =
+      dynamic_cast<UintahParallelComponent*>(solver);
 
-
-    //______________________________________________________________________
-    // Create the components
-    MALLOC_TRACE_TAG("main():create components");
-
-
-    //__________________________________
-    // Component
-    // try to make it from the command line first, then look in ups file
-    UintahParallelComponent* comp = ComponentFactory::create( ups, world, do_AMR, udaDir );
-    SimulationInterface* sim = dynamic_cast<SimulationInterface*>(comp);
-
-    // set sim. controller flags for reduce uda
-    if ( reduce_uda ) {
-      ctl->setReduceUdaFlags( udaDir );
-    }
-
-    ctl->attachPort(  "sim",       sim );
-    comp->attachPort( "solver",    solve );
-    comp->attachPort( "regridder", regridder );
-    
-#ifndef NO_ICE
-    //__________________________________
-    //  Model
-    ModelMaker* modelmaker = scinew ModelFactory(world);
-    comp->attachPort("modelmaker", modelmaker);
-#endif
+    appComp->attachPort( "solver", solver );
 
     //__________________________________
     // Load balancer
-    LoadBalancerCommon* lbc = LoadBalancerFactory::create( ups, world );
-    lbc->attachPort("sim", sim);
-    if( regridder ) {
-      regridder->attachPort( "load balancer", lbc );
-      lbc->attachPort(       "regridder",     regridder );
-    }
-    
-    //__________________________________
-    // Output
-    DataArchiver * dataarchiver = scinew DataArchiver( world, udaSuffix );
-    Output       * output       = dataarchiver;
-    ctl->attachPort( "output", dataarchiver );
-    dataarchiver->attachPort( "load balancer", lbc );
-    comp->attachPort( "output", dataarchiver );
-    dataarchiver->attachPort( "sim", sim );
-    
+    LoadBalancerCommon* loadBalancer =
+      LoadBalancerFactory::create( ups, world );
+
+    loadBalancer->attachPort( "application", application );
+    simController->attachPort( "load balancer", loadBalancer );
+    appComp->attachPort( "load balancer", loadBalancer );
+
     //__________________________________
     // Scheduler
-    SchedulerCommon* sched = SchedulerFactory::create(ups, world, output);
-    sched->attachPort( "load balancer", lbc );
-    ctl->attachPort(   "scheduler",     sched );
-    lbc->attachPort(   "scheduler",     sched );
-    comp->attachPort(  "scheduler",     sched );
+    SchedulerCommon* scheduler =
+      SchedulerFactory::create(ups, world);
 
-    sched->setStartAddr( start_addr );
+    scheduler->attachPort( "load balancer", loadBalancer );
+    scheduler->attachPort( "application", application );
     
-    if ( regridder ) {
-      regridder->attachPort( "scheduler", sched );
-    }
-    sched->addReference();
+    appComp->attachPort( "scheduler", scheduler );
+    simController->attachPort( "scheduler", scheduler );
+    loadBalancer->attachPort( "scheduler", scheduler );
 
+    scheduler->setStartAddr( start_addr );
+    scheduler->addReference();
+    
     if ( emit_graphs ) {
-      sched->doEmitTaskGraphDocs();
+      scheduler->doEmitTaskGraphDocs();
     }
 
+    //__________________________________
+    // Output
+    DataArchiver * dataArchiver = scinew DataArchiver( world, udaSuffix );
+
+    dataArchiver->attachPort( "application", application );
+    dataArchiver->attachPort( "load balancer", loadBalancer );
+    
+    dataArchiver->setUseLocalFileSystems( local_filesystem );
+
+    simController->attachPort( "output", dataArchiver );
+    appComp->attachPort( "output", dataArchiver );
+    scheduler->attachPort( "output", dataArchiver );
+
+    //__________________________________
+    // Regridder - optional
+    RegridderCommon* regridder = nullptr;
+
+    if (application->isAMR()) {
+      regridder = RegridderFactory::create(ups, world);
+
+      if (regridder) {
+        regridder->attachPort("scheduler", scheduler);
+        regridder->attachPort("load balancer", loadBalancer);
+	regridder->attachPort( "application", application );
+
+        simController->attachPort("regridder", regridder);
+        appComp->attachPort("regridder", regridder);
+
+        loadBalancer->attachPort("regridder", regridder);
+      }
+    }
+
+    // Get all the components.
+    if( regridder ) {
+      regridder->getComponents();
+    }
+
+    scheduler->getComponents();
+    loadBalancer->getComponents();
+    solverComp->getComponents();
+    dataArchiver->getComponents();
+
+    appComp->getComponents();
+    simController->getComponents();
+    
     //__________________________________
     // Start the simulation controller
     if ( restart ) {
-      ctl->doRestart( udaDir, restartTimestep, restartFromScratch, restartRemoveOldDir );
+      simController->doRestart( udaDir, restartTimestep, restartFromScratch, restartRemoveOldDir );
     }
     
-    // This gives memory held by the 'ups' back before the simulation starts... Assuming
-    // no one else is holding on to it...
+    // This gives memory held by the 'ups' back before the simulation
+    // starts... Assuming no one else is holding on to it...
     ups = nullptr;
 
-    ctl->run();
-    delete ctl;
+    simController->run();
 
-    sched->removeReference();
-    delete sched;
+    // Clean up release all the components.
+    if( regridder ) {
+      regridder->releaseComponents();
+    }
+
+    dataArchiver->releaseComponents();
+    scheduler->releaseComponents();
+    loadBalancer->releaseComponents();
+    solverComp->releaseComponents();
+    appComp->releaseComponents();
+    simController->releaseComponents();
+
+    
+    scheduler->removeReference();
+
     if ( regridder ) {
       delete regridder;
     }
-    delete lbc;
-    delete sim;
-    delete solve;
-    delete output;
 
-#ifndef NO_ICE
-    delete modelmaker;
-#endif
+    delete dataArchiver;
+    delete scheduler;
+    delete loadBalancer;
+    delete solver;   
+    delete application;
+    delete simController;
   }
+  
   catch (ProblemSetupException& e) {
     // Don't show a stack trace in the case of ProblemSetupException.
     std::lock_guard<std::mutex> cerr_guard(cerr_mutex);

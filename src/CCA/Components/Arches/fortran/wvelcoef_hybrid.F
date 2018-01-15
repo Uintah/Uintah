@@ -1,7 +1,7 @@
 C
 C The MIT License
 C
-C Copyright (c) 1997-2017 The University of Utah
+C Copyright (c) 1997-2018 The University of Utah
 C
 C Permission is hereby granted, free of charge, to any person obtaining a copy
 C of this software and associated documentation files (the "Software"), to
@@ -45,11 +45,9 @@ c*********************************************************************
       double precision GUP, CPE, CPW, GVP, CPN, CPS, CPT, CPB
       double precision VISE, VISW, VISN, VISS, VIST, VISB
       double precision DE, DW, DN, DS, DT, DB
-      double precision REE, REW, REN, RES, RET, REB
       double precision COEFE, COEFW, COEFN, COEFS, COEFT, COEFB
-      double precision TEW, TNS, TTB
+      double precision TE, TW, TN, TS, TT, TB
       double precision AEC, AWC, ANC, ASC, ATC, ABC
-      double precision Relimit_m1
       double precision DUDZE, DUDZW
       double precision DVDZN, DVDZS
       double precision DWDZB, DWDZT
@@ -66,14 +64,15 @@ c*********************************************************************
       JENDW = idxHiW(2)
       KENDW = idxHiW(3)
 
-      PT5 = 0.5D0
-      PT25 = 0.25D0
-      small = 1.0D-10
 
       AREANS = dx*dz
       AREAEW = dy*dz
       AREATB = dx*dy
       VOL = dx*dy*dz
+
+      PT5 = 0.5D0
+      PT25 = 0.25D0
+      small = 1.0D-10
 
 
       DO 220 K = KSTW,KENDW
@@ -150,90 +149,47 @@ C-----------------------------------------------------------------------
                DT = VIST*AREATB/DZ*EPST
                DB = VISB*AREATB/DZ*EPSB
 
-C-----------------------------------------------------------------------
-C     CONVECTION DIFFERENCING SCHEME SELECTION
-C-----------------------------------------------------------------------
 
-               REE = ABS(CE)/DE
-               REW = ABS(CW)/DW
-               REN = ABS(CN)/DN
-               RES = ABS(CS)/DS
-               RET = ABS(CT)/DT
-               REB = ABS(CB)/DB
-               CVSZ(I,J,K) = 0.0d0
+C----------------------------------------------------------------------
+C      PROVISIONS FOR VARIOUS CONVECTION DIFFERENCING SCHEMES
+C----------------------------------------------------------------------
 
-C If the current cell borders a wall (EPS < 1) then we are going to
-C upwind. 
-               IF ( EPSE .lt. PT5 ) THEN 
-                REE = Relimit + 1
-                REW = Relimit + 1
-                REN = Relimit + 1
-                RES = Relimit + 1
-                RET = Relimit + 1
-                REB = Relimit + 1
-               ENDIF 
-               IF ( EPSW .lt. PT5 ) THEN 
-                REE = Relimit + 1
-                REW = Relimit + 1
-                REN = Relimit + 1
-                RES = Relimit + 1
-                RET = Relimit + 1
-                REB = Relimit + 1
-               ENDIF 
-               IF ( EPSN .lt. PT5 ) THEN 
-                REE = Relimit + 1
-                REW = Relimit + 1
-                REN = Relimit + 1
-                RES = Relimit + 1
-                RET = Relimit + 1
-                REB = Relimit + 1
-               ENDIF 
-               IF ( EPSS .lt. PT5 ) THEN 
-                REE = Relimit + 1
-                REW = Relimit + 1
-                REN = Relimit + 1
-                RES = Relimit + 1
-                RET = Relimit + 1
-                REB = Relimit + 1
-               ENDIF 
-
-C If Re < Re_min we central difference, otherwise upwind.
-               IF (REE.LT.Relimit) then
-                 CVSZ(I,J,K) = CVSZ(I,J,K) + 1.0d0/6.0d0
-                 AE(I,J,K) = DE - PT5*CE
-               else
-                 AE(I,J,K) = dMAX1(0.0D0,-CE)
-               endif
-               IF (REW.LT.Relimit) then
-                 CVSZ(I,J,K) = CVSZ(I,J,K) + 1.0d0/6.0d0
-                 AW(I,J,K) = DW + PT5*CW
-               else
-                 AW(I,J,K) = dMAX1(0.0D0,CW)
-               endif
-               IF (REN.LT.Relimit) then
-                 CVSZ(I,J,K) = CVSZ(I,J,K) + 1.0d0/6.0d0
-                 AN(I,J,K) = DN - PT5*CN
-               else
-                 AN(I,J,K) = dMAX1(0.0D0,-CN)
-               endif
-               IF (RES.LT.Relimit) then
-                 CVSZ(I,J,K) = CVSZ(I,J,K) + 1.0d0/6.0d0
-                 AS(I,J,K) = DS + PT5*CS
-               else
-                 AS(I,J,K) = dMAX1(0.0D0,CS)
-               endif
-               IF (RET.LT.Relimit) then
-                 CVSZ(I,J,K) = CVSZ(I,J,K) + 1.0d0/6.0d0
-                 AT(I,J,K) = DT - PT5*CT
-               else
-                 AT(I,J,K) = dMAX1(0.0D0,-CT)
-               endif
-               IF (REB.LT.Relimit) then
-                 CVSZ(I,J,K) = CVSZ(I,J,K) + 1.0d0/6.0d0
-                 AB(I,J,K) = DB + PT5*CB
-               else
-                 AB(I,J,K) = dMAX1(0.0D0,CB)
-               endif
+               COEFE = DE - ABS(CE)/Relimit
+               COEFW = DW - ABS(CW)/Relimit
+               COEFN = DN - ABS(CN)/Relimit
+               COEFS = DS - ABS(CS)/Relimit
+               COEFT = DT - ABS(CT)/Relimit
+               COEFB = DB - ABS(CB)/Relimit
+               TE = 1.0D0
+               TW = 1.0D0
+               TN = 1.0D0
+               TS = 1.0D0
+               TT = 1.0D0
+               TB = 1.0D0
+               IF (COEFE.LT.0.0D0) TE = 0.0D0
+               IF (COEFW.LT.0.0D0) TW = 0.0D0
+               IF (COEFN.LT.0.0D0) TN = 0.0D0
+               IF (COEFS.LT.0.0D0) TS = 0.0D0
+               IF (COEFT.LT.0.0D0) TT = 0.0D0
+               IF (COEFB.LT.0.0D0) TB = 0.0D0
+               IF (TE.EQ.1.0D0) CVSZ(I,J,K) = CVSZ(I,J,K)+1.0d0/6.0d0
+               IF (TW.EQ.1.0D0) CVSZ(I,J,K) = CVSZ(I,J,K)+1.0d0/6.0d0
+               IF (TN.EQ.1.0D0) CVSZ(I,J,K) = CVSZ(I,J,K)+1.0d0/6.0d0
+               IF (TS.EQ.1.0D0) CVSZ(I,J,K) = CVSZ(I,J,K)+1.0d0/6.0d0
+               IF (TT.EQ.1.0D0) CVSZ(I,J,K) = CVSZ(I,J,K)+1.0d0/6.0d0
+               IF (TB.EQ.1.0D0) CVSZ(I,J,K) = CVSZ(I,J,K)+1.0d0/6.0d0
+               AEC = -PT5*CE*TE + dMAX1(0.0D0,-CE)*(1.0D0-TE)
+               AWC = PT5*CW*TW + dMAX1(0.0D0,CW)*(1.0D0-TW)
+               ANC = -PT5*CN*TN + dMAX1(0.0D0,-CN)*(1.0D0-TN)
+               ASC = PT5*CS*TS + dMAX1(0.0D0,CS)*(1.0D0-TS)
+               ATC = -PT5*CT*TT + dMAX1(0.0D0,-CT)*(1.0D0-TT)
+               ABC = PT5*CB*TB + dMAX1(0.0D0,CB)*(1.0D0-TB)
+               AE(I,J,K) = AEC + DE
+               AW(I,J,K) = AWC + DW
+               AN(I,J,K) = ANC + DN
+               AS(I,J,K) = ASC + DS
+               AT(I,J,K) = ATC + DT
+               AB(I,J,K) = ABC + DB
 
 C----------------------------------------------------------------------
 C      Velocity source term calculation 
@@ -273,7 +229,7 @@ C----------------------------------------------------------------------
                 AT(I,J,K) = 0.0D0
                 AB(I,J,K) = 0.0D0
                 SU(I,J,K) = 0.0D0
-                CVSZ(I,J,K) = 0.0D0 
+                CVSZ(I,J,K) = 0.0d0
 
               endif 
 

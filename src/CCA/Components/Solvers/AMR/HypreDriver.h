@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -233,7 +233,7 @@ namespace Uintah {
                        Handle<HypreDriver>)
 
     {
-      DebugStream cout_doing("HYPRE_DOING_COUT", false);
+      DebugStream cout_doing("SOLVER_DOING_COUT", false);
       DebugStream cout_dbg("HYPRE_DBG", false);
       int mpiRank = Parallel::getMPIRank();
       cout_doing << mpiRank<< " HypreDriver::solve() BEGIN" << "\n";
@@ -319,7 +319,7 @@ namespace Uintah {
         
         if ((finalResNorm > _params->tolerance) ||(std::isfinite(finalResNorm) == 0)) {
           if (_params->restart){
-            if(pg->myrank() == 0)
+            if(pg->myRank() == 0)
               std::cout << "AMRSolver not converged in " << numIterations 
                         << " iterations, final residual= " << finalResNorm
                         << ", requesting smaller timestep\n";
@@ -342,7 +342,7 @@ namespace Uintah {
 
 	timer.stop();
 	  
-        if(pg->myrank() == 0) {
+        if(pg->myRank() == 0) {
           std::cerr << "Solve of " << _X_label->getName()
                     << " on level " << _level->getIndex()
                     << " completed in " << timer().seconds()

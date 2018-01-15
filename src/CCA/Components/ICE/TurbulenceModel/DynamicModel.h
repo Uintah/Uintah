@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -27,7 +27,6 @@
 
 #include <CCA/Components/ICE/TurbulenceModel/Turbulence.h>
 #include <CCA/Components/ICE/TurbulenceModel/SmagorinskyModel.h>
-#include <Core/Containers/StaticArray.h>
 
 namespace Uintah {
 
@@ -75,8 +74,8 @@ namespace Uintah {
                      CCVariable<V>& var_hat);      
        
     void applyFilter(const Patch* patch,
-                     StaticArray<CCVariable<double> >& var,           
-                     StaticArray<CCVariable<double> >& var_hat);      
+                     std::vector<CCVariable<double> >& var,           
+                     std::vector<CCVariable<double> >& var_hat);      
                                                                 
     Smagorinsky_Model d_smag;
     

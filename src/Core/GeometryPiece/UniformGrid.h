@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -38,32 +38,31 @@ namespace Uintah {
 
 
 /**************************************
-	
+
 CLASS
    UniformGrid
-	
+
    ...not sure what it does....
-	
+
 GENERAL INFORMATION
-	
+
    UniformGrid.h
-	
+
    John A. Schmidt
    Department of Mechanical Engineering
    University of Utah
-	
+
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
- 
-	
+
+
 KEYWORDS
    UniformGrid
-	
-DESCRIPTION
-	
-WARNING
-	
-****************************************/
 
+DESCRIPTION
+
+WARNING
+
+****************************************/
 
  class Tri {
 
@@ -82,9 +81,9 @@ WARNING
    Point d_points[3];
    Plane d_plane;
  };
- 
+
  class UniformGrid {
-   
+
  public:
    UniformGrid(Box& bound_box);
    ~UniformGrid();
@@ -92,12 +91,17 @@ WARNING
    UniformGrid(const UniformGrid&);
    IntVector cellID(Point point);
    void buildUniformGrid(std::list<Tri>& polygons);
-   void countIntersections(const Point& ray, int& crossings);
-      
+   /** @brief Assume the ray goes to infinity **/
+   void countIntersections(const Point& pt, int& crossings);
+   /** @brief Let the user specify the second point to define the ray (pt -> pt_away). This returns
+              the total number of crossing and the min distance from pt **/
+   void countIntersections(const Point& pt, const Point& pt_away, int& crossings, double& min_distance);
+
  private:
    Array3<std::list<Tri> > d_grid;
    Box d_bound_box;
    Vector d_max_min;
+
  };
 
 

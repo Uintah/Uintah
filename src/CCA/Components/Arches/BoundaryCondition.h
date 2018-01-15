@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -32,6 +32,7 @@
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Grid/LevelP.h>
+#include <Core/Grid/Task.h>
 
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
@@ -256,7 +257,9 @@ void setVel( const Patch* patch, const Patch::FaceType& face,
 void setTurbInlet( const Patch* patch, const Patch::FaceType& face,
                    SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel,
                    constCCVariable<double>& density,
-                   Iterator bound_iter, DigitalFilterInlet * TurbIn );
+                   Iterator bound_iter, DigitalFilterInlet * TurbIn,
+                   const int timeStep,
+                   const double simTime  );
 
 template<class d0T, class d1T, class d2T>
 void setSwirl( const Patch* patch, const Patch::FaceType& face,
@@ -314,7 +317,8 @@ void setHattedIntrusionVelocity( const Patch* p,
                                  SFCXVariable<double>& u,
                                  SFCYVariable<double>& v,
                                  SFCZVariable<double>& w,
-                                 constCCVariable<double>& density );
+                                 constCCVariable<double>& density,
+                                 bool& set_nonnormal_values );
 
 void sched_setIntrusionDensity( SchedulerP& sched,
                                 const LevelP& level,
@@ -326,10 +330,51 @@ void setIntrusionDensity( const ProcessorGroup*,
                           DataWarehouse*,
                           DataWarehouse* new_dw);
 
-void wallStress( const Patch* patch,
-                 ArchesVariables* vars,
-                 ArchesConstVariables* const_vars,
-                 constCCVariable<double>& volFraction );
+// wall closure models:
+void
+sched_wallStressConstSmag( Task::WhichDW dw, Task* tsk );
+
+void
+wallStressConstSmag( const Patch* p,
+                     DataWarehouse* dw,
+                     const double wall_C_smag,
+                     const int standoff,
+                     constSFCXVariable<double>& uvel,
+                     constSFCYVariable<double>& vvel,
+                     constSFCZVariable<double>& wvel,
+                     SFCXVariable<double>& Su,
+                     SFCYVariable<double>& Sv,
+                     SFCZVariable<double>& Sw,
+                     constCCVariable<double>& rho,
+                     constCCVariable<double>& eps );
+void
+wallStressMolecular( const Patch* p,
+                     constSFCXVariable<double>& uvel,
+                     constSFCYVariable<double>& vvel,
+                     constSFCZVariable<double>& wvel,
+                     SFCXVariable<double>& Su,
+                     SFCYVariable<double>& Sv,
+                     SFCZVariable<double>& Sw,
+                     constCCVariable<double>& eps );
+void wallStressLog( const Patch* patch,
+                    ArchesVariables* vars,
+                    ArchesConstVariables* const_vars,
+                    constCCVariable<double>& volFraction );
+
+inline void   newton_solver( const double&  , const double& , const double& , const double& ,double& );
+
+void
+wallStressDynSmag( const Patch* p,
+                   const int standoff,
+                   constCCVariable<double>& mu_t,
+                   constSFCXVariable<double>& uvel,
+                   constSFCYVariable<double>& vvel,
+                   constSFCZVariable<double>& wvel,
+                   SFCXVariable<double>& Su,
+                   SFCYVariable<double>& Sv,
+                   SFCZVariable<double>& Sw,
+                   constCCVariable<double>& rho,
+                   constCCVariable<double>& eps );
 
 /** @brief Set the address for the BC helper created in the non-linear solver **/
 void setBCHelper( std::map<int,WBCHelper*>* helper ){m_bcHelper = helper;}
@@ -516,6 +561,8 @@ void velRhoHatInletBC(const Patch* patch,
                       ArchesVariables* vars,
                       ArchesConstVariables* constvars,
                       const int matl_index,
+                      const int timeStep,
+                      const double simTime,
                       double time_shift);
 
 void velRhoHatOutletPressureBC( const Patch* patch,
@@ -838,7 +885,7 @@ bool _using_new_intrusion;
 PhysicalConstants* d_physicalConsts;
 // used to get properties of different streams
 Properties* d_props;
-TableLookup* d_table_lookup; 
+TableLookup* d_table_lookup;
 // mass flow
 double d_uvwout;
 double d_overallMB;

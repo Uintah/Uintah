@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -58,9 +58,9 @@ using namespace std;
 
 //__________________________________
 //  To turn on normal output
-//  setenv SCI_DEBUG "HYPRE_DOING_COUT:+"
+//  setenv SCI_DEBUG "SOLVER_DOING_COUT:+"
 
-static DebugStream cout_doing("HYPRE_DOING_COUT", false);
+static DebugStream cout_doing("SOLVER_DOING_COUT", false);
 static DebugStream cout_dbg("HYPRE_DBG", false);
 
 //___________________________________________________________________
@@ -216,7 +216,7 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
   ASSERTEQ(sizeof(Stencil7), 7*sizeof(double));
   //__________________________________
   // Set up the grid
-  cout_doing << _pg->myrank() << " Setting up the grid" << "\n";
+  cout_doing << _pg->myRank() << " Setting up the grid" << "\n";
   // Create an empty grid in 3 dimensions with # parts = numLevels.
   const int numDims = 3;
   const int numLevels = _level->getGrid()->numLevels();
@@ -284,7 +284,7 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
   //==================================================================
   // Setup connection graph
   //================================================================== 
-  cout_doing << _pg->myrank() << " Create the graph and stencil" << "\n";
+  cout_doing << _pg->myRank() << " Create the graph and stencil" << "\n";
   HYPRE_SStructGraphCreate(_pg->getComm(), _grid, &_graph);
   _exists[SStructGraph] = SStructCreated;
   
@@ -369,10 +369,12 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
                              _stencilSize, DoingFineToCoarse);
     }
     // Looking up
+#ifndef SKIP_COARSE_TO_FINE_CONNECTIONS // DEBUG THIS
     if (level < numLevels-1) {
       hpatch.makeConnections(_HA, _A_dw, _A_label,
                              _stencilSize, DoingCoarseToFine);
     }
+#endif
   } 
   HYPRE_SStructMatrixAssemble(_HA);
   _exists[SStructA] = SStructAssembled;
@@ -380,7 +382,7 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
   //==================================================================
   //  Create the rhs
   //==================================================================
-  cout_doing << _pg->myrank() << " Doing setup RHS vector _HB" << "\n";
+  cout_doing << _pg->myRank() << " Doing setup RHS vector _HB" << "\n";
   HYPRE_SStructVectorCreate(_pg->getComm(), _grid, &_HB);
   _exists[SStructB] = SStructCreated;
   
@@ -409,7 +411,7 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
   //==================================================================
   //  Create the solution
   //==================================================================
-  cout_doing << _pg->myrank() << " Doing setup solution vector _HX" << "\n";
+  cout_doing << _pg->myRank() << " Doing setup solution vector _HX" << "\n";
   HYPRE_SStructVectorCreate(_pg->getComm(), _grid, &_HX);
   _exists[SStructX] = SStructCreated;
   
@@ -435,7 +437,7 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
   } else {
 #if 0
     // If guess is not provided by ICE, use zero as initial guess
-    cout_doing << _pg->myrank() << " Default initial guess: zero" << "\n";
+    cout_doing << _pg->myRank() << " Default initial guess: zero" << "\n";
     for (int p = 0 ; p < _patches->size(); p++) {
       // Read Uintah patch info into our data structure, set Uintah pointers
       const Patch* patch = _patches->get(p);
@@ -456,7 +458,7 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
 
   // For solvers that require ParCSR format
   if (_requiresPar) {
-    cout_doing << _pg->myrank() << " Making ParCSR objects from SStruct objects" << "\n";
+    cout_doing << _pg->myRank() << " Making ParCSR objects from SStruct objects" << "\n";
     HYPRE_SStructMatrixGetObject(_HA, (void **) &_HA_Par);
     HYPRE_SStructVectorGetObject(_HB, (void **) &_HB_Par);
     HYPRE_SStructVectorGetObject(_HX, (void **) &_HX_Par);
@@ -541,11 +543,11 @@ HypreDriverSStruct::HyprePatch_CC::makeGraphConnections(HYPRE_SStructGraph& grap
   const IntVector& refRat = fineLevel->getRefinementRatio();
   
   //At the CFI compute the fine/coarse level indices and pass them to hypre
-  for(int i = 0; i < coarsePatches.size(); i++){  
+  for(unsigned int i = 0; i < coarsePatches.size(); i++){  
     const Patch* coarsePatch = coarsePatches[i];
     
-    for(int i = 0; i < finePatches.size(); i++){  
-      const Patch* finePatch = finePatches[i];
+    for(unsigned int j = 0; j < finePatches.size(); j++){  
+      const Patch* finePatch = finePatches[j];
 
       vector<Patch::FaceType> cf;
       finePatch->getCoarseFaces(cf);
@@ -795,11 +797,11 @@ HypreDriverSStruct::HyprePatch_CC::makeConnections(HYPRE_SStructMatrix& HA,
   const IntVector& refRat = fineLevel->getRefinementRatio();
   
   //At the CFI compute the fine/coarse level indices and pass them to hypre
-  for(int i = 0; i < coarsePatches.size(); i++){  
+  for(unsigned int i = 0; i < coarsePatches.size(); i++){  
     const Patch* coarsePatch = coarsePatches[i];
     
-    for(int i = 0; i < finePatches.size(); i++){  
-      const Patch* finePatch = finePatches[i];
+    for(unsigned int j = 0; j < finePatches.size(); j++){  
+      const Patch* finePatch = finePatches[j];
       
       //__________________________________
       // get the fine level data

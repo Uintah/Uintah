@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_HOMEBREW_AMRSIMULATIONCONTROLLER_H
-#define UINTAH_HOMEBREW_AMRSIMULATIONCONTROLLER_H
+#ifndef CCA_COMPONENTS_SIMULATIONCONTROLLER_AMRSIMULATIONCONTROLLER_H
+#define CCA_COMPONENTS_SIMULATIONCONTROLLER_AMRSIMULATIONCONTROLLER_H
 
 #include <CCA/Components/SimulationController/SimulationController.h>
 
@@ -60,73 +60,68 @@ namespace Uintah {
 //! Controls the execution of an AMR Simulation
 class AMRSimulationController : public SimulationController {
 
-   public:
-     AMRSimulationController( const ProcessorGroup * myworld
-                            ,       bool             doAMR
-                            ,       ProblemSpecP     pspec
-                            );
+public:
 
-     virtual ~AMRSimulationController(){};
-     
-     virtual void run();
-
-
-   protected:
-
-     AMRSimulationController( const AMRSimulationController& );
-
-     AMRSimulationController& operator=( const AMRSimulationController& );
-     
-     //! Set up, compile, and execute initial timestep
-     void doInitialTimestep( );
-
-     //! Execute a timestep
-     void executeTimestep( int totalFine, int tg_index );
-
-     //! If doing AMR do the regridding
-     bool doRegridding( bool initialTimestep );
-
-     //! Asks a variety of components if one of them needs the
-     //! taskgraph to recompile.
-     bool needRecompile();
-     
-     void recompile( int totalFine );
-
-     //! recursively schedule refinement, coarsening, and time advances for finer levels,
-     //! compensating for time refinement. Builds one taskgraph
-     void subCycleCompile( int startDW
-                         , int dwStride
-                         , int numLevel
-                         , int step
+  AMRSimulationController( const ProcessorGroup * myworld
+                         ,       ProblemSpecP     pspec
                          );
-     
-     //! recursively executes taskgraphs, as several were executed.
-     //! Similar to subCycleCompile, except that this executes the
-     //! recursive taskgraphs, and compile builds one taskgraph (to
-     //! exsecute once) recursively.
-     void subCycleExecute( int startDW
-                         , int dwStride
-                         , int numLevel
-                         , bool rootCycle
-                         );
-     
-     void scheduleComputeStableTimestep();
-     
-     void reduceSysVar( const ProcessorGroup *
-                      , const PatchSubset    * patches
-                      , const MaterialSubset * /*matls*/
-                      ,       DataWarehouse  * /*old_dw*/
-                      ,       DataWarehouse  * new_dw
+
+  virtual ~AMRSimulationController() {};
+
+  virtual void run();
+
+protected:
+
+
+  //! Set up, compile, and execute initial time step
+  void doInitialTimeStep( );
+
+  //! Execute a time step
+  void executeTimeStep( int totalFine );
+
+  //! If doing AMR do the regridding
+  bool doRegridding( bool initialTimeStep );
+
+  void compileTaskGraph( int totalFine );
+
+  //! Recursively schedule refinement, coarsening, and time
+  //! advances for finer levels, compensating for time
+  //! refinement. Builds one taskgraph
+  void subCycleCompile( int startDW
+                      , int dwStride
+                      , int numLevel
+                      , int step
                       );
 
-     // Optional flag for scrubbing, defaulted to true.
-     bool d_scrubDataWarehouse{true};
+  //! Recursively executes taskgraphs, as several were executed.
+  //! Similar to subCycleCompile, except that this executes the
+  //! recursive taskgraphs, and compile builds one taskgraph (to
+  //! execute once) recursively.
+  void subCycleExecute( int startDW
+                      , int dwStride
+                      , int numLevel
+                      , bool rootCycle
+                      );
 
-     // Barrier timers used when running and regridding.
-     Timers::Simple barrierTimer;
-     double barrier_times[5];
-   };
+  void scheduleComputeStableTimeStep();
 
-} // End namespace Uintah
+  // Optional flag for scrubbing, defaulted to true.
+  bool m_scrub_datawarehouse{true};
 
-#endif
+  // Barrier timers used when running and regridding.
+  Timers::Simple  m_barrier_timer;
+  double          m_barrier_times[5];
+
+private:
+
+  // eliminate copy, assignment and move
+  AMRSimulationController( const AMRSimulationController & )            = delete;
+  AMRSimulationController& operator=( const AMRSimulationController & ) = delete;
+  AMRSimulationController( AMRSimulationController && )                 = delete;
+  AMRSimulationController& operator=( AMRSimulationController && )      = delete;
+
+};
+
+} // end namespace Uintah
+
+#endif // CCA_COMPONENTS_SIMULATIONCONTROLLER_AMRSIMULATIONCONTROLLER_H

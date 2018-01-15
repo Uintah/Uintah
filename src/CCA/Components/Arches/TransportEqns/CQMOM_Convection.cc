@@ -7,7 +7,6 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Containers/StaticArray.h>
 
 
 //===========================================================================
@@ -320,8 +319,8 @@ CQMOM_Convection::solveCQMOMConvection( const ProcessorGroup* pc,
     }
 
     //get weights and abscissas
-    StaticArray <constCCVariable<double> > weights (nNodes);
-    StaticArray <constCCVariable<double> > abscissas (nNodes * M);
+    std::vector <constCCVariable<double> > weights (nNodes);
+    std::vector <constCCVariable<double> > abscissas (nNodes * M);
 
     int j = 0;
     for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
@@ -346,7 +345,7 @@ CQMOM_Convection::solveCQMOMConvection( const ProcessorGroup* pc,
     }
 
     //deal with deposition, use a placeholder value = 0.0 if deposition is off
-    StaticArray <constCCVariable<double> > fStickCC (nNodes);
+    std::vector <constCCVariable<double> > fStickCC (nNodes);
     if (d_deposition) {
       for ( int i = 0; i < nNodes; i++ ) {
         const VarLabel* tempLabel = fStickLabels[i];

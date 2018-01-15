@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,27 +22,35 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <CCA/Components/MPM/PhysicalBC/FluxBCModel.h>
-#include <CCA/Components/MPMFVM/ESConductivityModelFactory.h>
 #include <CCA/Components/MPMFVM/ESMPM.h>
 
-#include <Core/Grid/DbgOutput.h>
+#include <CCA/Components/FVM/FVMLabel.h>
+#include <CCA/Components/FVM/ElectrostaticSolve.h>
 
-#include <Core/Grid/Level.h>
+#include <CCA/Components/MPM/AMRMPM.h>
+#include <CCA/Components/MPM/Core/MPMFlags.h>
+#include <CCA/Components/MPM/Core/MPMLabel.h>
+#include <CCA/Components/MPM/Materials/MPMMaterial.h>
+#include <CCA/Components/MPM/PhysicalBC/FluxBCModel.h>
+
+#include <CCA/Components/MPMFVM/ESConductivityModel.h>
+#include <CCA/Components/MPMFVM/ESConductivityModelFactory.h>
+
+#include <CCA/Ports/DataWarehouse.h>
+#include <CCA/Ports/Scheduler.h>
+#include <CCA/Ports/SwitchingCriteria.h>
+
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/CCVariable.h>
-#include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Variables/ParticleSubset.h>
-#include <Core/Grid/Variables/SFCXVariable.h>
-#include <Core/Grid/Variables/SFCYVariable.h>
-#include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Math/MiscMath.h>
+#include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Util/DebugStream.h>
 
-#include <iostream>
-#include <string>
 #include <vector>
 
 using namespace Uintah;
@@ -52,16 +60,17 @@ static DebugStream cout_doing("ESMPM_DOING_COUT", false);
 //#define DEBUG_VEL
 #undef CBDI_FLUXBCS
 
-ESMPM::ESMPM(const ProcessorGroup* myworld) : UintahParallelComponent(myworld)
+ESMPM::ESMPM(const ProcessorGroup* myworld,
+	     const SimulationStateP sharedState) :
+  ApplicationCommon(myworld, sharedState)
 {
-  d_amrmpm = scinew AMRMPM(myworld);
-  d_esfvm = scinew ElectrostaticSolve(myworld);
+  d_amrmpm = scinew AMRMPM(myworld, m_sharedState);
+  d_esfvm = scinew ElectrostaticSolve(myworld, m_sharedState);
 
   d_mpm_lb = scinew MPMLabel();
   d_fvm_lb = scinew FVMLabel();
 
   d_mpm_flags = 0;
-  d_data_archiver = 0;
   d_switch_criteria = 0;
 
   d_TINY_RHO  = 1.e-12;
@@ -77,6 +86,9 @@ ESMPM::ESMPM(const ProcessorGroup* myworld) : UintahParallelComponent(myworld)
 
 ESMPM::~ESMPM()
 {
+  d_amrmpm->releaseComponents();
+  d_esfvm->releaseComponents();
+
   delete d_amrmpm;
   delete d_esfvm;
   delete d_mpm_lb;
@@ -85,35 +97,29 @@ ESMPM::~ESMPM()
     delete d_conductivity_model;
 }
 
-void ESMPM::problemSetup(const ProblemSpecP& prob_spec, const ProblemSpecP& restart_prob_spec,
-                         GridP& grid, SimulationStateP& shared_state)
+void ESMPM::problemSetup(const ProblemSpecP& prob_spec,
+			 const ProblemSpecP& restart_prob_spec,
+                         GridP& grid)
 {
-  d_shared_state = shared_state;
-  d_data_archiver = dynamic_cast<Output*>(getPort("output"));
-  Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
-
   //**** Start MPM Section *****
-  d_amrmpm->attachPort("output", d_data_archiver);
-  d_amrmpm->attachPort("scheduler", sched);
-  d_amrmpm->problemSetup(prob_spec, restart_prob_spec, grid, d_shared_state);
+  d_amrmpm->setComponents( this );
+  dynamic_cast<ApplicationCommon*>(d_amrmpm)->problemSetup( prob_spec );
+  
+  d_amrmpm->problemSetup(prob_spec, restart_prob_spec, grid);
 
   //**** Start FVM Section *****
-  d_esfvm->attachPort("output", d_data_archiver);
-  d_esfvm->attachPort("scheduler", sched);
-  SolverInterface* solver = dynamic_cast<SolverInterface*>(getPort("solver"));
-  if(!solver){
-    throw InternalError("ElectrostaticSolve needs a solver component to work", __FILE__, __LINE__);
-  }
-  d_esfvm->attachPort("solver", solver);
+  d_esfvm->setComponents( this );
+  dynamic_cast<ApplicationCommon*>(d_esfvm)->problemSetup( prob_spec );
 
   d_esfvm->setWithMPM(true);
+  d_esfvm->problemSetup(prob_spec, restart_prob_spec, grid);
 
-  d_esfvm->problemSetup(prob_spec, restart_prob_spec, grid, d_shared_state);
 
-  d_switch_criteria = dynamic_cast<SwitchingCriteria*>(getPort("switch_criteria"));
+  d_switch_criteria =
+    dynamic_cast<SwitchingCriteria*>(getPort("switch_criteria"));
 
   if(d_switch_criteria){
-    d_switch_criteria->problemSetup(prob_spec, restart_prob_spec, d_shared_state);
+    d_switch_criteria->problemSetup(prob_spec, restart_prob_spec, m_sharedState);
   }
 
   ProblemSpecP mpm_ps = 0;
@@ -128,9 +134,9 @@ void ESMPM::problemSetup(const ProblemSpecP& prob_spec, const ProblemSpecP& rest
   ProblemSpecP esmpm_ps = prob_spec->findBlock("ESMPM");
   esmpm_ps->require("conductivity_model", d_cd_model_name);
 
-  d_conductivity_model = ESConductivityModelFactory::create(prob_spec, d_shared_state,
-                                                      d_mpm_flags, d_mpm_lb, d_fvm_lb);
-
+  d_conductivity_model =
+    ESConductivityModelFactory::create(prob_spec, m_sharedState,
+				       d_mpm_flags, d_mpm_lb, d_fvm_lb);
 }
 
 void ESMPM::outputProblemSpec(ProblemSpecP& prob_spec)
@@ -176,9 +182,9 @@ void ESMPM::restartInitialize()
   d_amrmpm->restartInitialize();
 }
 
-void ESMPM::scheduleComputeStableTimestep(const LevelP& level, SchedulerP& sched)
+void ESMPM::scheduleComputeStableTimeStep(const LevelP& level, SchedulerP& sched)
 {
-  d_amrmpm->scheduleComputeStableTimestep(level, sched);
+  d_amrmpm->scheduleComputeStableTimeStep(level, sched);
 }
 
 void ESMPM::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
@@ -187,8 +193,8 @@ void ESMPM::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
   if(level->getIndex() > 0)
     return;
 
-  const MaterialSet* mpm_matls = d_shared_state->allMPMMaterials();
-  const MaterialSet* all_matls = d_shared_state->allMaterials();
+  const MaterialSet* mpm_matls = m_sharedState->allMPMMaterials();
+  const MaterialSet* all_matls = m_sharedState->allMaterials();
   const MaterialSubset* mpm_matlsub = mpm_matls->getUnion();
 
   int maxLevels = level->getGrid()->numLevels();
@@ -379,7 +385,7 @@ void ESMPM::interpESPotentialToPart(const ProcessorGroup*, const PatchSubset* pa
     anchor.y(anchor.y() + cell_dim.y()/2);
     anchor.z(anchor.z() + cell_dim.z()/2);
 
-    double cell_vol = cell_dim.x() * cell_dim.y() * cell_dim.z();
+    // double cell_vol = cell_dim.x() * cell_dim.y() * cell_dim.z();
     double dxinv[3] = {1/cell_dim.x(), 1/cell_dim.y(), 1/cell_dim.z()};
 
     IntVector low_idx  = patch->getCellLowIndex();
@@ -388,9 +394,9 @@ void ESMPM::interpESPotentialToPart(const ProcessorGroup*, const PatchSubset* pa
     constCCVariable<double> cc_espotential;
     new_dw->get(cc_espotential, d_fvm_lb->ccESPotential, 0, patch, d_gac, 1);
 
-    int numMatls = d_shared_state->getNumMPMMatls();
+    int numMatls = m_sharedState->getNumMPMMatls();
     for(int m = 0; m < numMatls; m++){
-      MPMMaterial* mpm_matl = d_shared_state->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
 
       constParticleVariable<Point> p_position;
@@ -415,8 +421,8 @@ void ESMPM::interpESPotentialToPart(const ProcessorGroup*, const PatchSubset* pa
         IntVector cell_idx(Floor(norm_pos.x()), Floor(norm_pos.y()),
                            Floor(norm_pos.z()));
 
-        Point cell_center = Point(cell_idx.x() + .5, cell_idx.y() + .5,
-                                  cell_idx.z() + .5);
+        // Point cell_center = Point(cell_idx.x() + .5, cell_idx.y() + .5,
+        //                           cell_idx.z() + .5);
 
         double fx = norm_pos.x() - cell_idx.x();
         double fy = norm_pos.y() - cell_idx.y();

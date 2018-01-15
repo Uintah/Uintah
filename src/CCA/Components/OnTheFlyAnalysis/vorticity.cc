@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -23,13 +23,13 @@
  */
 
 #include <CCA/Components/OnTheFlyAnalysis/vorticity.h>
-#include <CCA/Components/ICE/ICEMaterial.h>
+#include <CCA/Components/ICE/Materials/ICEMaterial.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/CellIterator.h>
-#include <Core/Labels/ICELabel.h>
+#include <CCA/Components/ICE/Core/ICELabel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 
 #include <Core/Exceptions/InternalError.h>
@@ -52,14 +52,11 @@ using namespace std;
 static DebugStream cout_doing("VORTICITY_DOING_COUT", false);
 static DebugStream cout_dbg("VORTICITY_DBG_COUT", false);
 //______________________________________________________________________
-vorticity::vorticity(ProblemSpecP& module_spec,
-                     SimulationStateP& sharedState,
-                     Output* dataArchiver)
-  : AnalysisModule(module_spec, sharedState, dataArchiver)
+vorticity::vorticity(const ProcessorGroup* myworld,
+		     const SimulationStateP sharedState,
+		     const ProblemSpecP& module_spec)
+  : AnalysisModule(myworld, sharedState, module_spec)
 {
-  d_sharedState = sharedState;
-  d_prob_spec = module_spec;
-  d_dataArchiver = dataArchiver;
   d_matl_set = 0;
   v_lb = scinew vorticityLabel();
   I_lb  = scinew ICELabel();
@@ -81,21 +78,16 @@ vorticity::~vorticity()
 
 //______________________________________________________________________
 //     P R O B L E M   S E T U P
-void vorticity::problemSetup(const ProblemSpecP& prob_spec,
+void vorticity::problemSetup(const ProblemSpecP& ,
                              const ProblemSpecP& ,
-                             GridP& grid,
-                             SimulationStateP& sharedState)
+                             GridP& grid)
 {
   cout_doing << "Doing problemSetup \t\t\t\tvorticity" << endl;
-  
-  if(!d_dataArchiver){
-    throw InternalError("vorticity:couldn't get output port", __FILE__, __LINE__);
-  }
   
   v_lb->vorticityLabel = VarLabel::create("vorticity", CCVariable<Vector>::getTypeDescription());
   
   // determine which material index to compute
-  d_matl = d_sharedState->parseAndLookupMaterial(d_prob_spec, "material");
+  d_matl = m_sharedState->parseAndLookupMaterial(m_module_spec, "material");
   
   vector<int> m(1);
   m[0] = d_matl->getDWIndex();
@@ -104,11 +96,11 @@ void vorticity::problemSetup(const ProblemSpecP& prob_spec,
   d_matl_set->addReference();
   d_matl_sub = d_matl_set->getUnion();
 
-#ifdef HAVE_VISIT
-  if( sharedState->getVisIt() ) {
-    required = true;
-  }
-#endif
+// #ifdef HAVE_VISIT
+//   if( sharedState->getVisIt() ) {
+//     required = true;
+//   }
+// #endif
 }
 
 //______________________________________________________________________
@@ -166,7 +158,7 @@ void vorticity::doAnalysis(const ProcessorGroup* pg,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     
-    cout_doing << pg->myrank() << " " 
+    cout_doing << pg->myRank() << " " 
                << "Doing doAnalysis (vorticity)\t\t\t\tL-"
                << level->getIndex()
                << " patch " << patch->getGridIndex()<< endl;

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -140,7 +140,7 @@ void fineToCoarseOperator(CCVariable<T>& q_CC,
   Level::selectType finePatches;
   coarsePatch->getFineLevelPatches(finePatches);
                           
-  for(int i=0;i<finePatches.size();i++){
+  for(size_t i=0;i<finePatches.size();i++){
     const Patch* finePatch = finePatches[i];
 
     IntVector cl, ch, fl, fh;

@@ -987,21 +987,19 @@
           <constant>0.0</constant>
         </model>
       </PropertyModels>
-
-   <PropertyModelsV2>
-     <model type="gasRadProperties"  label="gas_abskg" >
-       <calculator type="hottel_sarofim">
-         <opl>0.432</opl>
-       </calculator>
-     </model>
-     <model type="partRadProperties" label="Julien_abskp" >
-       <subModel>basic</subModel>
-       <Qabs>0.8</Qabs>
-       <part_temp_label>partTemp</part_temp_label>
-       <part_size_label>diameter</part_size_label>
-     </model>
-   </PropertyModelsV2>
-
+      <PropertyModelsV2>
+        <model type="gasRadProperties" label="gas_abskg">
+          <calculator type="hottel_sarofim">
+            <opl>0.432</opl>
+          </calculator>
+        </model>
+        <model type="partRadProperties" label="Julien_abskp">
+          <subModel>basic</subModel>
+          <Qabs>0.8</Qabs>
+          <part_temp_label>partTemp</part_temp_label>
+          <part_size_label>diameter</part_size_label>
+        </model>
+      </PropertyModelsV2>
       <ExplicitSolver>
         <initial_dt>0.005</initial_dt>
         <restartOnNegativeDensityGuess>false</restartOnNegativeDensityGuess>
@@ -1017,6 +1015,9 @@
           <src label="eta_source3"/>
         </PressureSolver>
         <MomentumSolver>
+          <wall_closure type="constant_coefficient">
+            <wall_csmag>0.4</wall_csmag>
+          </wall_closure>
           <convection_scheme>central</convection_scheme>
           <src label="mom_src"/>
         </MomentumSolver>

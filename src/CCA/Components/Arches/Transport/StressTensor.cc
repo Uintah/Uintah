@@ -106,41 +106,30 @@ void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   sigma33.initialize(0.0);
 
   Vector Dx = patch->dCell();
-  //bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
-  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
-  //bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
-  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
-  //bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
-  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
 
   IntVector low = patch->getCellLowIndex();
   IntVector high = patch->getCellHighIndex();
 
-  //x-direction:
-//  if ( xplus ) high += IntVector(1,0,0);
-  // if ( yminus ) low -= IntVector(0,1,0);
-  // if ( yplus ) high += IntVector(0,1,0);
-  // if ( zminus ) low -= IntVector(0,0,1);
-  // if ( zplus ) high += IntVector(0,0,1);
+  GET_WALL_BUFFERED_PATCH_RANGE(low, high,0,1,0,1,0,1);  
   Uintah::BlockRange x_range(low, high);
-  //double mu = 1.0 ;
-  double dudx =0.0;
-  double dudy =0.0;
-  double dudz =0.0;
-  double dvdx =0.0;
-  double dvdy =0.0;
-  double dvdz =0.0;
-  double dwdx =0.0;
-  double dwdy =0.0;
-  double dwdz =0.0;
-  double mu11 = 0.0;
-  double mu12 = 0.0;
-  double mu13 = 0.0;
-  double mu22 = 0.0;
-  double mu23 = 0.0;
-  double mu33 = 0.0;
 
   Uintah::parallel_for( x_range, [&](int i, int j, int k){
+
+    double dudx = 0.0;
+    double dudy = 0.0;
+    double dudz = 0.0;
+    double dvdx = 0.0;
+    double dvdy = 0.0;
+    double dvdz = 0.0;
+    double dwdx = 0.0;
+    double dwdy = 0.0;
+    double dwdz = 0.0;
+    double mu11 = 0.0;
+    double mu12 = 0.0;
+    double mu13 = 0.0;
+    double mu22 = 0.0;
+    double mu23 = 0.0;
+    double mu33 = 0.0;
 
     mu11 = D(i-1,j,k); // it does not need interpolation
     mu22 = D(i,j-1,k);  // it does not need interpolation

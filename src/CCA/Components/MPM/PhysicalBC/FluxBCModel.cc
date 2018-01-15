@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,13 +22,15 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Components/MPM/Core/MPMDiffusionLabel.h>
+#include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #include <CCA/Components/MPM/PhysicalBC/FluxBCModel.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <CCA/Components/MPM/PhysicalBC/ScalarFluxBC.h>
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
+#include <Core/Grid/Variables/VarTypes.h>
 
 #include <string>
 #include <iostream>
@@ -145,11 +147,12 @@ void FluxBCModel::scheduleApplyExternalScalarFlux(SchedulerP& sched, const Patch
   Task* t=scinew Task("FluxBCModel::applyExternalScalarFlux", this,
                       &FluxBCModel::applyExternalScalarFlux);
 
+  t->requires(Task::OldDW, d_mpm_lb->simulationTimeLabel);
+
   t->requires(Task::OldDW, d_mpm_lb->pXLabel,                 Ghost::None);
   t->requires(Task::OldDW, d_mpm_lb->pSizeLabel,              Ghost::None);
   if(d_mpm_flags->d_doScalarDiffusion){
-    // JBH -- Fixme -- Todo -- Move to diffusion sublabel?
-    t->requires(Task::OldDW, d_mpm_lb->diffusion->pArea,            Ghost::None);
+    t->requires(Task::OldDW, d_mpm_lb->diffusion->pArea,		Ghost::None);
   }
   t->requires(Task::OldDW, d_mpm_lb->pVolumeLabel,            Ghost::None);
   t->requires(Task::OldDW, d_mpm_lb->pDeformationMeasureLabel,Ghost::None);
@@ -171,10 +174,13 @@ void FluxBCModel::applyExternalScalarFlux(const ProcessorGroup* , const PatchSub
                                           DataWarehouse* new_dw)
 {
   // Get the current simulation time
-  double time = d_shared_state->getElapsedSimTime();
+  // double simTime = d_shared_state->getElapsedSimTime();
+
+  simTime_vartype simTime;
+  old_dw->get(simTime, d_mpm_lb->simulationTimeLabel);
 
   if (cout_doing.active())
-    cout_doing << "Current Time (applyExternalScalarFlux) = " << time << std::endl;
+    cout_doing << "Current Time (applyExternalScalarFlux) = " << simTime << std::endl;
 
   // Calculate the flux at each particle for each flux bc
   std::vector<double> fluxPerPart;
@@ -219,7 +225,6 @@ void FluxBCModel::applyExternalScalarFlux(const ProcessorGroup* , const PatchSub
 
       old_dw->get(px,    d_mpm_lb->pXLabel,    pset);
       if(d_mpm_flags->d_doScalarDiffusion){
-        // JBH -- Fixme -- todo -- move to MPMDiffusion sublabel?
         old_dw->get(parea, d_mpm_lb->diffusion->pArea, pset);
       }
       old_dw->get(pvol,  d_mpm_lb->pVolumeLabel, pset);
@@ -236,7 +241,7 @@ void FluxBCModel::applyExternalScalarFlux(const ProcessorGroup* , const PatchSub
 #endif
 
       if (d_mpm_flags->d_useLoadCurves) {
-        constParticleVariable<int> pLoadCurveID;
+        constParticleVariable<IntVector> pLoadCurveID;
         old_dw->get(pLoadCurveID, d_mpm_lb->pLoadCurveIDLabel, pset);
         bool do_FluxBCs=false;
         for (int ii = 0; ii < (int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++) {
@@ -251,26 +256,27 @@ void FluxBCModel::applyExternalScalarFlux(const ProcessorGroup* , const PatchSub
           // Iterate over the particles
           for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++){
             particleIndex idx = *iter;
-            int loadCurveID = pLoadCurveID[idx]-1;
-            if (loadCurveID < 0) {
-              pExternalScalarFlux[idx] = 0.0;
-            } else {
+            pExternalScalarFlux[idx] = 0.0;
+            for(int k = 0;k<3;k++){
+              int loadCurveID = pLoadCurveID[idx](k)-1;
+              if (loadCurveID >= 0) {
 #if 0
-              pExternalScalarFlux[idx] = fluxPerPart[loadCurveID];
+                pExternalScalarFlux[idx] = fluxPerPart[loadCurveID];
 #else
-              ScalarFluxBC* pbc = pbcP[loadCurveID];
-              double area = parea[idx].length();
-              pExternalScalarFlux[idx] = pbc->fluxPerParticle(time, area) / pvol[idx];
+                ScalarFluxBC* pbc = pbcP[loadCurveID];
+                double area = parea[idx].length();
+                pExternalScalarFlux[idx] += pbc->fluxPerParticle(simTime, area) / pvol[idx];
 #endif
 #if defined USE_FLUX_RESTRICTION
-              if(d_mpm_flags->d_doScalarDiffusion){
-                double flux_restriction = (4 + log(1-pConcentration[idx]))/4;
-                if (flux_restriction < 0.0){
-                  flux_restriction = 0.0;
+                if(d_mpm_flags->d_doScalarDiffusion){
+                  double flux_restriction = (4 + log(1-pConcentration[idx]))/4;
+                  if (flux_restriction < 0.0){
+                    flux_restriction = 0.0;
+                  }
+                  pExternalScalarFlux[idx] *= flux_restriction;
                 }
-                pExternalScalarFlux[idx] *= flux_restriction;
-              }
 #endif
+              }
             }
           }
         } else {
@@ -312,13 +318,17 @@ void FluxBCModel::countMaterialPointsPerFluxLoadCurve(const ProcessorGroup*,
           int dwi = mpm_matl->getDWIndex();
 
           ParticleSubset* pset = new_dw->getParticleSubset(dwi, patch);
-          constParticleVariable<int> pLoadCurveID;
+          constParticleVariable<IntVector> pLoadCurveID;
           new_dw->get(pLoadCurveID, d_mpm_lb->pLoadCurveIDLabel, pset);
 
           ParticleSubset::iterator iter = pset->begin();
           for(;iter != pset->end(); iter++){
             particleIndex idx = *iter;
-            if (pLoadCurveID[idx] == (nofSFBCs)) ++numPts;
+            for(int k = 0;k<3;k++){
+              if (pLoadCurveID[idx](k) == (nofSFBCs)){
+                ++numPts;
+              }
+            }
           }
         } // matl loop
         new_dw->put(sumlong_vartype(numPts),

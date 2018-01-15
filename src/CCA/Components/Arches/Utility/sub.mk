@@ -38,6 +38,9 @@ SRCS += \
           $(SRCDIR)/SurfaceVolumeFractionCalc.cc      \
           $(SRCDIR)/UtilityFactory.cc                 \
           $(SRCDIR)/WaveFormInit.cc                   \
+          $(SRCDIR)/ShunnMMS.cc                       \
+          $(SRCDIR)/ShunnMMSP3.cc                       \
+          $(SRCDIR)/TaylorGreen3D.cc                  \
           $(SRCDIR)/AlmgrenMMS.cc                   
 
 ########################################################################

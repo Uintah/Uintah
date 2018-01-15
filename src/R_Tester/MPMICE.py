@@ -2,7 +2,7 @@
 
 from sys import argv,exit
 from os import environ
-from helpers.runSusTests import runSusTests
+from helpers.runSusTests import runSusTests, inputs_root, ignorePerformanceTests, generatingGoldStandards
 
 #______________________________________________________________________
 #  Test syntax: ( "folder name", "input file", # processors, "OS", ["flags1","flag2",...])
@@ -23,17 +23,17 @@ from helpers.runSusTests import runSusTests
 #       abs_tolerance=[double]  - absolute tolerance used in comparisons
 #       rel_tolerance=[double]  - relative tolerance used in comparisons
 #       exactComparison         - set absolute/relative tolerance = 0  for uda comparisons
-#       startFromCheckpoint     - start test from checkpoint. (/home/csafe-tester/CheckPoints/..../testname.uda.000)
+#       postProcessRun          - start test from an existing uda in the checkpoints directory.  Compute new quantities and save them in a new uda
+#       startFromCheckpoint     - start test from checkpoint. (/home/rt/CheckPoints/..../testname.uda.000)
 #       sus_options="string"    - Additional command line options for sus command
 #
 #  Notes:
 #  1) The "folder name" must be the same as input file without the extension.
-#  2) If the processors is > 1.0 then an mpirun command will be used
-#  3) Performance_tests are not run on a debug build.
+#  2) Performance_tests are not run on a debug build.
 #______________________________________________________________________
 
 NIGHTLYTESTS = [
-                  ("BurnRate",                "BurnRate.ups",              1.1,"ALL", ["startFromCheckpoint"]),
+                  ("BurnRate",                "BurnRate.ups",                1, "ALL", ["startFromCheckpoint"]),
     	       ]
 
 AMRTESTS   = [
@@ -51,13 +51,15 @@ LOCALTESTS = [   ("massX",                    "massX.ups",                 1,  "
                  ("DDT",                      "DDT.ups",                   1,  "ALL", ["exactComparison","no_dbg"]),
                  ("InductionTime",            "InductionTime.ups",         1  ,"ALL", ["exactComparison","no_dbg"]),
                  ("InductionPropagation",     "InductionPropagation.ups",  1  ,"ALL", ["exactComparison","no_dbg"]),
+                 ("PBX_Cylinder_Ext_Load",    "PBX_array/oneCylinder.ups", 4  ,"ALL", ["exactComparison","no_restart","no_dbg"])
     	       ]
 DEBUGTESTS =[]
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: AMRTESTS DEBUGTESTS LOCALTESTS NIGHTLYTESTS
+#LIST: AMRTESTS DEBUGTESTS LOCALTESTS NIGHTLYTESTS BUILDBOTTESTS
 #__________________________________
+
 
 # returns the list
 def getTestList(me) :
@@ -69,6 +71,8 @@ def getTestList(me) :
     TESTS = DEBUGTESTS
   elif me == "NIGHTLYTESTS":
     TESTS = LOCALTESTS + NIGHTLYTESTS + AMRTESTS
+  elif me == "BUILDBOTTESTS":
+    TESTS = ignorePerformanceTests( LOCALTESTS + NIGHTLYTESTS + AMRTESTS )
   else:
     print "\nERROR:MPMICE.py  getTestList:  The test list (%s) does not exist!\n\n" % me
     exit(1)

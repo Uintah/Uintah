@@ -32,9 +32,11 @@
 #include <CCA/Components/SimulationController/SimulationController.h>
 #include <CCA/Components/DataArchiver/DataArchiver.h>
 #include <CCA/Ports/SchedulerP.h>
+#include <CCA/Ports/ApplicationInterface.h>
 #include <CCA/Ports/Output.h>
 
 #include <Core/Grid/Grid.h>
+#include <Core/Grid/SimulationTime.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/DOUT.hpp>
@@ -95,7 +97,7 @@ void visit_VarModifiedMessage( visit_simulation_data *sim,
   sim->modifiedVars[ name ] =
     std::pair<std::string, std::string>(oldStr.str(), newStr.str());
 
-  sim->simController->getSimulationStateP()->haveModifiedVars( true );
+  sim->simController->getApplicationInterface()->haveModifiedVars( true );
 }
 
 //---------------------------------------------------------------------
@@ -302,7 +304,7 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
       Output *output = sim->simController->getOutput();
       SchedulerP schedulerP = sim->simController->getSchedulerP();
       
-      output->outputTimestep( sim->time, sim->delt, sim->gridP, schedulerP );
+      output->outputTimeStep( sim->gridP, schedulerP );
     }
     else
       VisItUI_setValueS("SIMULATION_MESSAGE_BOX",
@@ -321,7 +323,7 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
       Output *output = sim->simController->getOutput();
       SchedulerP schedulerP = sim->simController->getSchedulerP();
       
-      output->checkpointTimestep( sim->time, sim->delt, sim->gridP, schedulerP );
+      output->checkpointTimeStep( sim->gridP, schedulerP );
     }
     else
       VisItUI_setValueS("SIMULATION_MESSAGE_BOX",
@@ -513,9 +515,10 @@ int visit_ProcessVisItCommand( visit_simulation_data *sim )
 void visit_MaxTimeStepCallback(char *val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
-  SimulationTime* simTime = sim->simController->getSimulationTime();
+  SimulationTime* simTime =
+    sim->simController->getApplicationInterface()->getSimulationTime();
 
-  int oldValue = sim->simController->getSimulationTime()->maxTimestep;
+  int oldValue = simTime->m_max_time_steps;
   int newValue = atoi(val);
   
   if( newValue <= sim->cycle )
@@ -526,11 +529,11 @@ void visit_MaxTimeStepCallback(char *val, void *cbdata)
 	<< "Resetting the value.";
     VisItUI_setValueS("SIMULATION_MESSAGE_BOX", msg.str().c_str(), 1);
 
-    VisItUI_setValueI("MaxTimeStep", simTime->maxTimestep, 1);
+    VisItUI_setValueI("MaxTimeStep", simTime->m_max_time_steps, 1);
   }
   else
   {  
-    sim->simController->getSimulationTime()->maxTimestep = newValue;
+    simTime->m_max_time_steps = newValue;
     
     visit_VarModifiedMessage( sim, "MaxTimeStep", oldValue, newValue);
   }
@@ -544,9 +547,10 @@ void visit_MaxTimeStepCallback(char *val, void *cbdata)
 void visit_MaxTimeCallback(char *val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
-  SimulationTime* simTime = sim->simController->getSimulationTime();
+  SimulationTime* simTime =
+    sim->simController->getApplicationInterface()->getSimulationTime();
 
-  float oldValue = sim->simController->getSimulationTime()->maxTime;
+  float oldValue = simTime->m_max_time;
   float newValue = atof(val);
 
   if( newValue <= sim->time )
@@ -557,11 +561,11 @@ void visit_MaxTimeCallback(char *val, void *cbdata)
 	<< "Resetting the value.";
     VisItUI_setValueS("SIMULATION_MESSAGE_BOX", msg.str().c_str(), 1);
 
-    VisItUI_setValueD("MaxTime", simTime->maxTime, 1);
+    VisItUI_setValueD("MaxTime", simTime->m_max_time, 1);
   }
   else
   {  
-    sim->simController->getSimulationTime()->maxTime = newValue;
+    simTime->m_max_time = newValue;
 
     visit_VarModifiedMessage( sim, "MaxTime", oldValue, newValue);
   }
@@ -575,9 +579,10 @@ void visit_MaxTimeCallback(char *val, void *cbdata)
 void visit_EndOnMaxTimeCallback(int val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
-  SimulationTime* simTime = sim->simController->getSimulationTime();
+  SimulationTime* simTime =
+    sim->simController->getApplicationInterface()->getSimulationTime();
 
-  simTime->end_at_max_time = val;
+  simTime->m_end_at_max_time = val;
 }
 
 
@@ -588,7 +593,12 @@ void visit_EndOnMaxTimeCallback(int val, void *cbdata)
 void visit_DeltaTVariableCallback(char *val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
-  SimulationStateP simStateP = sim->simController->getSimulationStateP();
+
+  ApplicationInterface* appInterface =
+    sim->simController->getApplicationInterface();
+
+  SimulationStateP simStateP = appInterface->getSimulationStateP();
+  SimulationTime*  simTime   = appInterface->getSimulationTime();
   DataWarehouse          *dw = sim->simController->getSchedulerP()->getLastDW();
 
   unsigned int row, column;
@@ -600,8 +610,8 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
   {
   case 1:
     {
-      double minValue = sim->simController->getSimulationTime()->delt_min;
-      double maxValue = sim->simController->getSimulationTime()->delt_max;
+      double minValue = simTime->m_delt_min;
+      double maxValue = simTime->m_delt_max;
       oldValue = sim->delt_next;
       
       if( newValue < minValue || maxValue < newValue )
@@ -615,7 +625,7 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
 	return;
       }
 
-      dw->override(delt_vartype(newValue), simStateP->get_delt_label());
+      dw->override(delt_vartype(newValue), appInterface->getDelTLabel());
       visit_VarModifiedMessage( sim, "DeltaTNext", oldValue, newValue );
     }
     break;
@@ -623,7 +633,7 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
     {
       double minValue = 1.0e-4;
       double maxValue = 1.0e+4;
-      oldValue = sim->simController->getSimulationTime()->delt_factor;
+      oldValue = simTime->m_delt_factor;
       
       if( newValue < minValue || maxValue < newValue )
       {
@@ -636,7 +646,7 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
 	return;
       }
 
-      sim->simController->getSimulationTime()->delt_factor = newValue;
+      simTime->m_delt_factor = newValue;
       visit_VarModifiedMessage( sim, "DeltaTFactor", oldValue, newValue );
     }
     break;
@@ -644,7 +654,7 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
     {
       double minValue = 0;
       double maxValue = 1.e99;
-      oldValue = sim->simController->getSimulationTime()->max_delt_increase;
+      oldValue = simTime->m_max_delt_increase;
       
       if( newValue < minValue || maxValue < newValue )
       {
@@ -657,15 +667,15 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
 	return;
       }
 
-      sim->simController->getSimulationTime()->max_delt_increase = newValue;
+      simTime->m_max_delt_increase = newValue;
       visit_VarModifiedMessage( sim, "MaxDeltaIncrease", oldValue, newValue );
     }
     break;
   case 4:
     {
       double minValue = 0;
-      double maxValue = sim->simController->getSimulationTime()->delt_max;
-      oldValue = sim->simController->getSimulationTime()->delt_min;
+      double maxValue = simTime->m_delt_max;
+      oldValue = simTime->m_delt_min;
       
       if( newValue < minValue || maxValue < newValue )
       {
@@ -678,15 +688,15 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
 	return;
       }
 
-      sim->simController->getSimulationTime()->delt_min = newValue;
+      simTime->m_delt_min = newValue;
       visit_VarModifiedMessage( sim, "DeltaTMin", oldValue, newValue );
     }
     break;
   case 5:
     {
-      double minValue = sim->simController->getSimulationTime()->delt_min;
+      double minValue = simTime->m_delt_min;
       double maxValue = 1.0e9;
-      oldValue = sim->simController->getSimulationTime()->delt_max;
+      oldValue = simTime->m_delt_max;
       
       if( newValue < minValue || maxValue < newValue )
       {
@@ -699,7 +709,7 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
 	return;
       }
 
-      sim->simController->getSimulationTime()->delt_max = newValue;
+      simTime->m_delt_max = newValue;
       visit_VarModifiedMessage( sim, "DeltaTMax", oldValue, newValue );
     }
     break;
@@ -707,7 +717,7 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
     {
       double minValue = 1.0e-99;
       double maxValue = DBL_MAX;
-      oldValue = sim->simController->getSimulationTime()->max_initial_delt;
+      oldValue = simTime->m_max_initial_delt;
       
       if( newValue < minValue || maxValue < newValue )
       {
@@ -720,7 +730,7 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
 	return;
       }
 
-      sim->simController->getSimulationTime()->max_initial_delt = newValue;
+      simTime->m_max_initial_delt = newValue;
       visit_VarModifiedMessage( sim, "MaxInitialDelta", oldValue, newValue );
     }
     break;
@@ -728,7 +738,7 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
     {
       double minValue = 0;
       double maxValue = 1.0e99;
-      oldValue = sim->simController->getSimulationTime()->initial_delt_range;
+      oldValue = simTime->m_initial_delt_range;
       
       if( newValue < minValue || maxValue < newValue )
       {
@@ -741,7 +751,7 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
 	return;
       }
 
-      sim->simController->getSimulationTime()->initial_delt_range = newValue;
+      simTime->m_initial_delt_range = newValue;
       visit_VarModifiedMessage( sim, "InitialDeltaRange", oldValue, newValue );
     }
     break;
@@ -749,7 +759,7 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
     {
       double minValue = 0;
       double maxValue = 1.0e99;
-      oldValue = sim->simController->getSimulationTime()->override_restart_delt;
+      oldValue = simTime->m_override_restart_delt;
       
       if( newValue < minValue || maxValue < newValue )
       {
@@ -762,7 +772,7 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
 	return;
       }
 
-      sim->simController->getSimulationTime()->override_restart_delt = newValue;
+      simTime->m_override_restart_delt = newValue;
       visit_VarModifiedMessage( sim, "OverrideRestartDelta", oldValue, newValue );
     }
     break;
@@ -776,6 +786,8 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
 void visit_WallTimesVariableCallback(char *val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
+  SimulationTime* simTime =
+    sim->simController->getApplicationInterface()->getSimulationTime();
 
   unsigned int row, column;
   double oldValue, newValue;
@@ -784,8 +796,8 @@ void visit_WallTimesVariableCallback(char *val, void *cbdata)
 
   if( row == 5 )
   {
-    oldValue = sim->simController->getSimulationTime()->max_wall_time;
-    sim->simController->getSimulationTime()->max_wall_time = newValue;
+    oldValue = simTime->m_max_wall_time;
+    simTime->m_max_wall_time = newValue;
     visit_VarModifiedMessage( sim, "MaxWallTime", oldValue, newValue );
   }
 }
@@ -798,16 +810,20 @@ void visit_UPSVariableCallback(char *val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-  SimulationStateP simStateP = sim->simController->getSimulationStateP();
+  ApplicationInterface* appInterface =
+    sim->simController->getApplicationInterface();
+
+  SimulationStateP simStateP = appInterface->getSimulationStateP();
 
   unsigned int row, column;
   std::string text;
 
   parseCompositeCMD( val, row, column, text);
 
-  std::vector< SimulationState::interactiveVar > &vars = simStateP->d_UPSVars;
+  std::vector< ApplicationInterface::interactiveVar > &vars =
+    appInterface->getUPSVars();
       
-  SimulationState::interactiveVar &var = vars[row];
+  ApplicationInterface::interactiveVar &var = vars[row];
 
   switch( var.type )
   {       
@@ -916,7 +932,7 @@ void visit_UPSVariableCallback(char *val, void *cbdata)
 
   // Changing this variable may require recompiling the task graph.
   if( var.recompile )
-    simStateP->setRecompileTaskGraph( true );
+    sim->simController->setRecompileTaskGraph( true );
 }
 
 //---------------------------------------------------------------------
@@ -927,7 +943,6 @@ void visit_OutputIntervalVariableCallback(char *val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-  SimulationTime*  simTime = sim->simController->getSimulationTime();
   Output *output = sim->simController->getOutput();
 
   unsigned int row, column;
@@ -940,10 +955,10 @@ void visit_OutputIntervalVariableCallback(char *val, void *cbdata)
   {
     // Output interval based on time.
     if( output->getOutputInterval() > 0 )
-      output->updateOutputInterval( value );
+      output->setOutputInterval( value );
     // Output interval based on timestep.
     else
-      output->updateOutputTimestepInterval( value );
+      output->setOutputTimeStepInterval( value );
   }
  
   // Checkpoint interval.
@@ -951,24 +966,25 @@ void visit_OutputIntervalVariableCallback(char *val, void *cbdata)
   {
     // Checkpoint interval based on times.
     if( output->getCheckpointInterval() > 0 )
-      output->updateCheckpointInterval( value );
+      output->setCheckpointInterval( value );
     // Checkpoint interval based on timestep.
     else
-      output->updateCheckpointTimestepInterval( value );
+      output->setCheckpointTimeStepInterval( value );
   }
 }
 
 
 //---------------------------------------------------------------------
-// ClampTimestepsToOutputCallback
+// ClampTimeStepsToOutputCallback
 //     Custom UI callback for a check box
 //---------------------------------------------------------------------
-void visit_ClampTimestepsToOutputCallback(int val, void *cbdata)
+void visit_ClampTimeStepsToOutputCallback(int val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
-  SimulationTime* simTime = sim->simController->getSimulationTime();
+  SimulationTime* simTime =
+    sim->simController->getApplicationInterface()->getSimulationTime();
 
-  simTime->clamp_time_to_output = val;
+  simTime->m_clamp_time_to_output = val;
 }
 
 
@@ -1085,7 +1101,7 @@ void visit_StopAtLastTimeStepCallback(int val, void *cbdata)
 }
 
 
-  //---------------------------------------------------------------------
+//---------------------------------------------------------------------
 // StateVariableCallback
 //     Custom UI callback for a table
 //---------------------------------------------------------------------
@@ -1093,17 +1109,20 @@ void visit_StateVariableCallback(char *val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-  SimulationStateP simStateP = sim->simController->getSimulationStateP();
+  ApplicationInterface* appInterface =
+    sim->simController->getApplicationInterface();
+
+  SimulationStateP simStateP = appInterface->getSimulationStateP();
 
   unsigned int row, column;
   std::string text;
 
   parseCompositeCMD( val, row, column, text);
 
-  std::vector< SimulationState::interactiveVar > &vars =
-    simStateP->d_stateVars;
+  std::vector< ApplicationInterface::interactiveVar > &vars =
+    appInterface->getStateVars();
       
-  SimulationState::interactiveVar &var = vars[row];
+  ApplicationInterface::interactiveVar &var = vars[row];
 
   switch( var.type )
   {       
@@ -1212,7 +1231,7 @@ void visit_StateVariableCallback(char *val, void *cbdata)
 
   // Changing this variable may require recompiling the task graph.
   if( var.recompile )
-    simStateP->setRecompileTaskGraph( true );
+    sim->simController->setRecompileTaskGraph( true );
 }
 
 //---------------------------------------------------------------------
@@ -1223,7 +1242,8 @@ void visit_DebugStreamCallback(char *val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-  SimulationStateP simStateP = sim->simController->getSimulationStateP();
+  ApplicationInterface* simInterface =
+    sim->simController->getApplicationInterface();
 
   unsigned int row, column;
   std::string text;
@@ -1238,46 +1258,46 @@ void visit_DebugStreamCallback(char *val, void *cbdata)
     {
       std::stringstream msg;
       msg << "Visit libsim - the value (" << text << ") for "
-	  << simStateP->d_debugStreams[row]->getName()
+	  << simInterface->getDebugStreams()[row]->getName()
 	  << " is not 'true' or 'false'. Resetting value.";
       VisItUI_setValueS("SIMULATION_MESSAGE_BOX", msg.str().c_str(), 1);
       visit_SetDebugStreams( sim );
       return;
     }
     
-    simStateP->d_debugStreams[row]->setActive( text == "TRUE" ||
+    simInterface->getDebugStreams()[row]->setActive( text == "TRUE" ||
 					       text == "True" ||
 					       text == "true" ||
 					       text == "1" );
     
-    if( simStateP->d_debugStreams[row]->m_outstream == nullptr )
+    if( simInterface->getDebugStreams()[row]->m_outstream == nullptr )
     {
-      simStateP->d_debugStreams[row]->setFilename( "cout" );
-      simStateP->d_debugStreams[row]->m_outstream = &std::cout;
+      simInterface->getDebugStreams()[row]->setFilename( "cout" );
+      simInterface->getDebugStreams()[row]->m_outstream = &std::cout;
     }
   }
   else if( column == 2 )
   {
     if( text.find("cerr") != std::string::npos )
     {
-      simStateP->d_debugStreams[row]->setFilename( "cerr" );
-      simStateP->d_debugStreams[row]->m_outstream = &std::cerr;
+      simInterface->getDebugStreams()[row]->setFilename( "cerr" );
+      simInterface->getDebugStreams()[row]->m_outstream = &std::cerr;
     }
     else if( text.find("cout") != std::string::npos )
     {
-      simStateP->d_debugStreams[row]->setFilename( "cout" );
-      simStateP->d_debugStreams[row]->m_outstream = &std::cout;
+      simInterface->getDebugStreams()[row]->setFilename( "cout" );
+      simInterface->getDebugStreams()[row]->m_outstream = &std::cout;
     }
     else
     {
-      simStateP->d_debugStreams[row]->setFilename( text );
+      simInterface->getDebugStreams()[row]->setFilename( text );
 
-      if( simStateP->d_debugStreams[row]->m_outstream &&
-	  simStateP->d_debugStreams[row]->m_outstream != &std::cerr &&
-	  simStateP->d_debugStreams[row]->m_outstream != &std::cout )
-	delete simStateP->d_debugStreams[row]->m_outstream;
+      if( simInterface->getDebugStreams()[row]->m_outstream &&
+	  simInterface->getDebugStreams()[row]->m_outstream != &std::cerr &&
+	  simInterface->getDebugStreams()[row]->m_outstream != &std::cout )
+	delete simInterface->getDebugStreams()[row]->m_outstream;
 
-      simStateP->d_debugStreams[row]->m_outstream = new std::ofstream(text);
+      simInterface->getDebugStreams()[row]->m_outstream = new std::ofstream(text);
     }
   }
 }
@@ -1291,8 +1311,9 @@ void visit_DoutCallback(char *val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-  SimulationStateP simStateP = sim->simController->getSimulationStateP();
-
+  ApplicationInterface* simInterface =
+    sim->simController->getApplicationInterface();
+  
   unsigned int row, column;
   std::string text;
 
@@ -1306,22 +1327,22 @@ void visit_DoutCallback(char *val, void *cbdata)
     {
       std::stringstream msg;
       msg << "Visit libsim - the value (" << text << ") for "
-	  << simStateP->d_douts[row]->name()
+	  << simInterface->getDouts()[row]->name()
 	  << " is not 'true' or 'false'. Resetting value.";
       VisItUI_setValueS("SIMULATION_MESSAGE_BOX", msg.str().c_str(), 1);
       visit_SetDebugStreams( sim );
       return;
     }
     
-    simStateP->d_douts[row]->setActive( text == "TRUE" ||
-					text == "True" ||
-					text == "true" ||
-					text == "1" );
+    simInterface->getDouts()[row]->setActive( text == "TRUE" ||
+					   text == "True" ||
+					   text == "true" ||
+					   text == "1" );
     
-    // if( simStateP->d_douts[row]->m_outstream == nullptr )
+    // if( simInterface->getDouts()[row]->m_outstream == nullptr )
     // {
-    //   simStateP->d_douts[row]->setFilename( "cout" );
-    //   simStateP->d_douts[row]->m_outstream = &std::cout;
+    //   simInterface->getDouts()[row]->setFilename( "cout" );
+    //   simInterface->getDouts()[row]->m_outstream = &std::cout;
     // }
   }
   // else if( column == 2 )
@@ -1330,24 +1351,24 @@ void visit_DoutCallback(char *val, void *cbdata)
 
   //   if( filename.find("cerr") != std::string::npos )
   //   {
-  //     simStateP->d_douts[row]->setFilename( "cerr" );
-  //     simStateP->d_douts[row]->m_outstream = &std::cerr;
+  //     simInterface->getDouts()[row]->setFilename( "cerr" );
+  //     simInterface->getDouts()[row]->m_outstream = &std::cerr;
   //   }
   //   else if( filename.find("cout") != std::string::npos )
   //   {
-  //     simStateP->d_douts[row]->setFilename( "cout" );
-  //     simStateP->d_douts[row]->m_outstream = &std::cout;
+  //     simInterface->getDouts()[row]->setFilename( "cout" );
+  //     simInterface->getDouts()[row]->m_outstream = &std::cout;
   //   }
   //   else
   //   {
-  //     simStateP->d_douts[row]->setFilename( filename );
+  //     simInterface->getDouts()[row]->setFilename( filename );
 
-  //     if( simStateP->d_douts[row]->m_outstream &&
-  // 	  simStateP->d_douts[row]->m_outstream != &std::cerr &&
-  // 	  simStateP->d_douts[row]->m_outstream != &std::cout )
-  // 	delete simStateP->d_douts[row]->m_outstream;
+  //     if( simInterface->getDouts()[row]->m_outstream &&
+  // 	  simInterface->getDouts()[row]->m_outstream != &std::cerr &&
+  // 	  simInterface->getDouts()[row]->m_outstream != &std::cout )
+  // 	delete simInterface->getDouts()[row]->m_outstream;
 
-  //     simStateP->d_douts[row]->m_outstream = new std::ofstream(filename);
+  //     simInterface->getDouts()[row]->m_outstream = new std::ofstream(filename);
   //   }
   // }
 }

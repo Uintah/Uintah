@@ -52,7 +52,7 @@
         <ExplicitIntegrator order="second"/>
       </TimeIntegrator>
       <Properties>
-        <table label="a_user_generated_label" type="constant">
+        <table label="constant properties" type="constant">
           <temperature>298</temperature>
           <density>1.0</density>
         </table>

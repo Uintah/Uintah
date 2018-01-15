@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -24,7 +24,6 @@
 
 //----- Properties.cc --------------------------------------------------
 #include <CCA/Components/Arches/Properties.h>
-#include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #if HAVE_TABPROPS
 # include <CCA/Components/Arches/ChemMix/TabPropsInterface.h>
@@ -93,6 +92,10 @@ Properties::problemSetup(const ProblemSpecP& params)
 {
 
   ProblemSpecP db = params->findBlock("Properties");
+
+  if ( db == nullptr ){
+    throw ProblemSetupException("Error: Please specify a <Properties> section in <Arches>.", __FILE__, __LINE__); 
+  }
 
   db->getWithDefault("filter_drhodt",          d_filter_drhodt,          false);
   db->getWithDefault("first_order_drhodt",     d_first_order_drhodt,     true);
@@ -300,6 +303,8 @@ Properties::sched_computeDrhodt(SchedulerP& sched,
                           &Properties::computeDrhodt,
                           timelabels);
 
+  tsk->requires( Task::OldDW, d_lab->d_timeStepLabel );
+
   Task::WhichDW parent_old_dw;
   if (timelabels->recursion){
     parent_old_dw = Task::ParentOldDW;
@@ -311,7 +316,7 @@ Properties::sched_computeDrhodt(SchedulerP& sched,
   Ghost::GhostType  ga = Ghost::AroundCells;
 
   tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
-  tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
+  tsk->requires(parent_old_dw, d_lab->d_delTLabel);
   tsk->requires(parent_old_dw, d_lab->d_oldDeltaTLabel);
 
   tsk->requires(Task::NewDW   , d_lab->d_densityCPLabel    , gn , 0);
@@ -341,6 +346,11 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
                           DataWarehouse* new_dw,
                           const TimeIntegratorLabel* timelabels)
 {
+  // int timeStep = m_sharedState->getCurrentTopLevelTimeStep();
+
+  timeStep_vartype timeStep;
+  old_dw->get( timeStep, d_lab->d_timeStepLabel );
+
   DataWarehouse* parent_old_dw;
   if (timelabels->recursion){
     parent_old_dw = new_dw->getOtherDataWarehouse(Task::ParentOldDW);
@@ -349,12 +359,11 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
   }
 
   int drhodt_1st_order = 1;
-  int current_step = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
   if (d_MAlab){
     drhodt_1st_order = 2;
   }
   delt_vartype delT, old_delT;
-  parent_old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  parent_old_dw->get(delT, d_lab->d_delTLabel );
 
 
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
@@ -414,7 +423,7 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
     drhodt.initialize(0.0);
 
     //__________________________________
-    if ((d_first_order_drhodt)||(current_step <= drhodt_1st_order)) {
+    if ((d_first_order_drhodt)||(timeStep <= (unsigned int)drhodt_1st_order)) {
 // 1st order drhodt
       for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
         for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {

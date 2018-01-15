@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -49,8 +49,9 @@ static DebugStream dbg("Poisson3", false);
 /* The main program */
 /********************/
 
-Poisson3::Poisson3(const ProcessorGroup* myworld)
-  : UintahParallelComponent(myworld),
+Poisson3::Poisson3(const ProcessorGroup* myworld,
+		   const SimulationStateP sharedState)
+  : ApplicationCommon(myworld, sharedState),
   interpolator_(2)
 {
   phi_label = VarLabel::create("phi", 
@@ -67,13 +68,12 @@ Poisson3::~Poisson3()
 
 void Poisson3::problemSetup(const ProblemSpecP& params, 
                             const ProblemSpecP& restart_prob_spec, 
-                            GridP&, SimulationStateP& sharedState)
+                            GridP&)
 {
-  sharedState_ = sharedState;
   ProblemSpecP poisson = params->findBlock("Poisson");
   poisson->require("delt", delt_);
   mymat_ = scinew SimpleMaterial();
-  sharedState->registerSimpleMaterial(mymat_);
+  m_sharedState->registerSimpleMaterial(mymat_);
 }
  
 void Poisson3::scheduleInitialize(const LevelP& level,
@@ -85,7 +85,7 @@ void Poisson3::scheduleInitialize(const LevelP& level,
                              this, &Poisson3::initialize);
     task->computes(phi_label);
     task->computes(residual_label, level.get_rep());
-    sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
+    sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
   } else {
     scheduleRefine(level, sched);
   }
@@ -96,14 +96,14 @@ void Poisson3::scheduleRestartInitialize(const LevelP& level,
 {
 }
  
-void Poisson3::scheduleComputeStableTimestep(const LevelP& level,
+void Poisson3::scheduleComputeStableTimeStep(const LevelP& level,
                                           SchedulerP& sched)
 {
-  Task* task = scinew Task("computeStableTimestep",
-                           this, &Poisson3::computeStableTimestep);
+  Task* task = scinew Task("computeStableTimeStep",
+                           this, &Poisson3::computeStableTimeStep);
   task->requires(Task::NewDW, residual_label, level.get_rep());
-  task->computes(sharedState_->get_delt_label(),level.get_rep());
-  sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
+  task->computes(getDelTLabel(),level.get_rep());
+  sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
 }
 
 
@@ -121,20 +121,20 @@ Poisson3::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
     task->modifies(phi_label);
   }
   task->computes(residual_label, level.get_rep());
-  sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
+  sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
 }
 
-void Poisson3::computeStableTimestep(const ProcessorGroup* pg,
+void Poisson3::computeStableTimeStep(const ProcessorGroup* pg,
                                      const PatchSubset* pss,
                                      const MaterialSubset*,
                                      DataWarehouse*, DataWarehouse* new_dw)
 {
-  if(pg->myrank() == 0){
+  if(pg->myRank() == 0){
     sum_vartype residual;
     new_dw->get(residual, residual_label, getLevel(pss));
     cout << "Level " << getLevel(pss)->getIndex() << ": Residual=" << residual << '\n';
   }
-  new_dw->put(delt_vartype(delt_), sharedState_->get_delt_label(),getLevel(pss));
+  new_dw->put(delt_vartype(delt_), getDelTLabel(),getLevel(pss));
 }
 
 void Poisson3::initialize(const ProcessorGroup*,
@@ -253,7 +253,7 @@ void Poisson3::scheduleRefine(const LevelP& fineLevel, SchedulerP& sched)
                  Ghost::AroundCells, interpolator_.getMaxSupportRefine());
   task->computes(phi_label);
   task->computes(residual_label, fineLevel.get_rep());
-  sched->addTask(task, fineLevel->eachPatch(), sharedState_->allMaterials());
+  sched->addTask(task, fineLevel->eachPatch(), m_sharedState->allMaterials());
 }
 
 void Poisson3::refine(const ProcessorGroup*,
@@ -282,7 +282,7 @@ void Poisson3::refine(const ProcessorGroup*,
       NCVariable<double> finePhi;
       newDW->allocateAndPut(finePhi, phi_label, matl, finePatch);
       // For each coarse patch, compute the overlapped region and interpolate
-      for(int i=0;i<coarsePatches.size();i++){
+      for(unsigned int i=0;i<coarsePatches.size();i++){
         const Patch* coarsePatch = coarsePatches[i];
         constNCVariable<double> coarsePhi;
         newDW->get(coarsePhi, phi_label, matl, coarsePatch,
@@ -329,7 +329,7 @@ void Poisson3::scheduleRefineInterface(const LevelP& fineLevel,
                    0, Task::NormalDomain, 
                    Ghost::AroundNodes, interpolator_.getMaxSupportRefine());
   task->computes(phi_label);
-  sched->addTask(task, fineLevel->eachPatch(), sharedState_->allMaterials());
+  sched->addTask(task, fineLevel->eachPatch(), m_sharedState->allMaterials());
 }
 
 
@@ -373,7 +373,7 @@ void Poisson3::refineInterface(const ProcessorGroup*,
 
           int total_fine = 0;
           // For each coarse patch, compute the overlapped region and interpolate
-          for(int i=0;i<coarsePatches.size();i++){
+          for(unsigned int i=0;i<coarsePatches.size();i++){
             const Patch* coarsePatch = coarsePatches[i];
             IntVector l = Max(coarseLevel->mapNodeToFiner(coarsePatch->getNodeLowIndex()),
                               low);
@@ -421,7 +421,7 @@ void Poisson3::scheduleCoarsen(const LevelP& coarseLevel, SchedulerP& sched)
                  0, Task::NormalDomain,
                  Ghost::AroundNodes, interpolator_.getMaxSupportCoarsen());
   task->modifies(phi_label);
-  sched->addTask(task, coarseLevel->eachPatch(), sharedState_->allMaterials());
+  sched->addTask(task, coarseLevel->eachPatch(), m_sharedState->allMaterials());
 }
 
 void Poisson3::coarsen(const ProcessorGroup*,
@@ -454,7 +454,7 @@ void Poisson3::coarsen(const ProcessorGroup*,
       newDW->getModifiable(coarsePhi, phi_label, matl, coarsePatch);
 
       // For each fine patch, compute the overlapped region and interpolate
-      for(int i=0;i<finePatches.size();i++){
+      for(unsigned int i=0;i<finePatches.size();i++){
         const Patch* finePatch = finePatches[i];
         constNCVariable<double> finePhi;
         newDW->get(finePhi, phi_label, matl, finePatch,

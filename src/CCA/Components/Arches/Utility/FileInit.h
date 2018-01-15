@@ -50,8 +50,8 @@ public:
 
       private:
 
-      int m_matl_index;
       std::string m_task_name;
+      int m_matl_index;
       std::string m_var_name;
 
     };

@@ -10,7 +10,7 @@
    <SimulationComponent type="mpm" />
 
    <Time>
-       <maxTime>0.12</maxTime>
+       <maxTime>0.18</maxTime>
        <initTime>0.0</initTime>
        <delt_min>0.00001</delt_min>
        <delt_max>0.001</delt_max>
@@ -41,33 +41,15 @@
    </DataArchiver>
 
    <MPM>
-       <time_integrator>explicit</time_integrator>
-       <interpolator>gimp</interpolator>
+       <time_integrator>explicit  </time_integrator>
+       <interpolator>   cpdi      </interpolator>
        <withColor>      true      </withColor>
-       <artificial_viscosity>true</artificial_viscosity>
+       <artificial_viscosity>true </artificial_viscosity>
        <artificial_viscosity_coeff1>0.3</artificial_viscosity_coeff1>
        <artificial_viscosity_coeff2>3.0</artificial_viscosity_coeff2>
        <DoExplicitHeatConduction>false</DoExplicitHeatConduction>
        <UseGradientEnhancedVelocityProjection>true</UseGradientEnhancedVelocityProjection>
-       
    </MPM>
-
-<!--
-    <AMR>
-      <MPM>
-        <min_grid_level>-1</min_grid_level>
-        <max_grid_level>-1</max_grid_level>
-      </MPM>
-      <Regridder type="Tiled">
-        <max_levels>2</max_levels>
-        <cell_refinement_ratio>    [[2,2,1]]         </cell_refinement_ratio>
-        <min_patch_size>           [[8,8,1]]         </min_patch_size>
-        <cell_stability_dilation>   [1,1,0]          </cell_stability_dilation>  
-        <min_boundary_cells>       [1,1,0]           </min_boundary_cells>
-      </Regridder>
-      <useLockStep>       true  </useLockStep>
-    </AMR>
--->
 
     <PhysicalConstants>
        <gravity>[0,0,0]</gravity>
@@ -185,9 +167,10 @@
               <lower>[0,0,0.05]</lower>
               <upper>[1.0,1.0,.1]</upper>
               <resolution>[40,40,1]</resolution>
-              <patches>[2,2,1]</patches>
-              <extraCells> [1,1,1]            </extraCells>
+              <patches>[3,2,1]</patches>
+              <extraCells> [0,0,1]            </extraCells>
            </Box>
+           <periodic>[1,1,0]</periodic>
        </Level>
     </Grid>
     <!--____________________________________________________________________-->

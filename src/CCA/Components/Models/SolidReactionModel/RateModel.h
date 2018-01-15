@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,22 +25,11 @@
 #ifndef UINTAH_HOMEBREW_RateModel_H
 #define UINTAH_HOMEBREW_RateModel_H
 
-#include <Core/Parallel/UintahParallelPort.h>
-#include <Core/Grid/Variables/ComputeSet.h>
-#include <Core/Grid/GridP.h>
-#include <Core/Grid/LevelP.h>
-#include <Core/Labels/MPMLabel.h>
-#include <Core/Grid/SimulationStateP.h>
-#include <Core/Util/Handle.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
-#include <CCA/Ports/SchedulerP.h>
-#include <CCA/Ports/Output.h>
-
-#include <Core/Grid/Variables/CCVariable.h>
-
 
 namespace Uintah {
-    /**************************************
+  
+  /**************************************
      
      CLASS
      RateModel
@@ -66,27 +55,25 @@ namespace Uintah {
      
      WARNING
      
-     ****************************************/
-    class RateModel {
-    public:
-        virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
+  ****************************************/
+  class RateModel {
+  public:
+    virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
 
-        /// @brief Get the contribution to the rate from the fraction reacted
-        /// @param fractionReactant The fraction in the volume that is reactant, i.e. m_r/(m_r+m_p)
-        /// @return a scalar for the extent of reaction
-        virtual double getDifferentialFractionChange(double fractionReactant) = 0;
+    /// @brief Get the contribution to the rate from the fraction reacted
+    /// @param fractionReactant The fraction in the volume that is reactant, i.e. m_r/(m_r+m_p)
+    /// @return a scalar for the extent of reaction
+    virtual double getDifferentialFractionChange(double fractionReactant) = 0;
      
-        // This quiets compiler warnings
-        virtual ~RateModel()
-        {
-        }
+    // This quiets compiler warnings
+    virtual ~RateModel()
+    {
+    }
    
-    private:
+  private:
         
-    };
+  };
     
 } // End namespace Uintah
-
-
 
 #endif

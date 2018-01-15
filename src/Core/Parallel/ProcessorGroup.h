@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -67,20 +67,13 @@ public:
 
   ~ProcessorGroup(){};
 
-  int size() const
-  {
-    return m_size;
-  }
 
-  int myrank() const
-  {
-    return m_rank;
-  }
+  int nNodes() const { return m_nNodes; } // Returns the total number of nodes this MPI session is running on.
+  int myNode() const { return m_node; }
+  int nRanks() const { return m_nRanks; } // Returns the total number of MPI ranks in this MPI session.
+  int myRank() const { return m_rank; }
 
-  MPI_Comm getComm() const
-  {
-    return m_comm;
-  }
+  MPI_Comm getComm() const { return m_comm; }
 
   MPI_Comm getGlobalComm( int comm_idx ) const
   {
@@ -110,8 +103,12 @@ private:
   ProcessorGroup( ProcessorGroup && )                 = delete;
   ProcessorGroup& operator=( ProcessorGroup && )      = delete;
 
-  int  m_rank;
-  int  m_size;
+  int  m_node;   // Node this rank is executing on.
+  int  m_nNodes; // Total number of nodes this MPI session is running on.
+
+  int  m_rank;   // MPI rank of this process.
+  int  m_nRanks; // Total number of MPI Ranks.
+
   int  m_threads;
 
   MPI_Comm                        m_comm;

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -28,7 +28,6 @@
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
 #include <CCA/Components/Models/Radiation/RMCRT/RMCRTCommon.h>
 #include <CCA/Components/Models/Radiation/RMCRT/Radiometer.h>
-#include <CCA/Ports/Output.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/LevelP.h>
 
@@ -51,9 +50,9 @@ namespace Uintah {
 _____________________________________________________________________*/
   class OnTheFly_radiometer : public AnalysisModule {
   public:
-    OnTheFly_radiometer(ProblemSpecP& prob_spec,
-                        SimulationStateP& sharedState,
-		          Output* dataArchiver);
+    OnTheFly_radiometer(const ProcessorGroup* myworld,
+			const SimulationStateP sharedState,
+			const ProblemSpecP& module_spec);
 
     OnTheFly_radiometer();
 
@@ -61,8 +60,7 @@ _____________________________________________________________________*/
 
     virtual void problemSetup(const ProblemSpecP& prob_spec,
                               const ProblemSpecP& restart_prob_spec,
-                              GridP& grid,
-                              SimulationStateP& sharedState);
+                              GridP& grid);
 
     virtual void outputProblemSpec(ProblemSpecP& ps){};
 
@@ -96,10 +94,6 @@ _____________________________________________________________________*/
                     DataWarehouse* new_dw);
 
     Radiometer* d_radiometer;
-
-    ProblemSpecP d_module_ps;
-    Output* d_dataArchiver;
-    SimulationStateP d_sharedState;
   };
 }
 

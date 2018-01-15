@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2017 The University of Utah
+ * Copyright (c) 2012-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -187,8 +187,7 @@ namespace WasatchCore{
 #define declare_method( FIELDT )                                              \
   template so::MemoryWindow                                                   \
   get_memory_window_for_uintah_field<FIELDT>( const Uintah::Patch* const  );  \
-  template so::MemoryWindow get_memory_window_for_masks<FIELDT>( const Uintah::Patch* const  );  \
-  template Uintah::Ghost::GhostType get_uintah_ghost_type<FIELDT>();
+  template so::MemoryWindow get_memory_window_for_masks<FIELDT>( const Uintah::Patch* const  );
 
 #define declare_variants( VOLT )                \
   declare_method( VOLT );                       \
@@ -201,7 +200,6 @@ namespace WasatchCore{
   declare_variants( so::YVolField );
   declare_variants( so::ZVolField );
 
-  declare_method( so::SingleValueField                );
   declare_method( SpatialOps::Particle::ParticleField );
 
   //------------------------------------------------------------------

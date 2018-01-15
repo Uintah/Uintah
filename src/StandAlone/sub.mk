@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2017 The University of Utah
+#  Copyright (c) 1997-2018 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -66,11 +66,12 @@ else
   LIBS := $(MPI_LIBRARY) $(XML2_LIBRARY) $(F_LIBRARY) $(HYPRE_LIBRARY)  \
           $(CANTERA_LIBRARY) $(ZOLTAN_LIBRARY)                          \
           $(PETSC_LIBRARY) $(LAPACK_LIBRARY) $(BLAS_LIBRARY)            \
-          $(M_LIBRARY) $(THREAD_LIBRARY)                                \
+          $(M_LIBRARY)                                                  \
           $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY)                      \
           $(TABPROPS_LIBRARY) $(RADPROPS_LIBRARY)                       \
           $(BOOST_LIBRARY) $(CUDA_LIBRARY)                              \
-          $(PAPI_LIBRARY) $(GPERFTOOLS_LIBRARY) $(PIDX_LIBRARY)
+          $(PAPI_LIBRARY) $(GPERFTOOLS_LIBRARY) $(PIDX_LIBRARY)         \
+          $(KOKKOS_LIBRARY)
 endif
 
 PSELIBS := $(GPU_EXTRA_LINK) $(PSELIBS)

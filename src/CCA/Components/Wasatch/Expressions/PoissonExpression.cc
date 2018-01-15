@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2017 The University of Utah
+ * Copyright (c) 2012-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -38,7 +38,7 @@
 #include <Core/Grid/Variables/VarTypes.h>  // delt_vartype
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Parallel/Parallel.h>
-#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Ports/LoadBalancer.h>
 
 //-- SpatialOps Includes --//
 #include <spatialops/OperatorDatabase.h>
@@ -126,7 +126,7 @@ namespace WasatchCore {
     const int ng = get_n_ghost<SVolField>();
     task->requires(Uintah::Task::NewDW,phiLabel_, gt, ng);
     //task->modifies(phiLabel_);
-    Uintah::LoadBalancerPort * lb = sched->getLoadBalancer();
+    Uintah::LoadBalancer * lb = sched->getLoadBalancer();
     sched->addTask( task, lb->getPerProcessorPatchSet( level ), materials );
   }
 

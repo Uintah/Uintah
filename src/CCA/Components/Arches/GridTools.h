@@ -4,7 +4,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -150,6 +150,30 @@ namespace Uintah{ namespace ArchesCore{
     if ( patch->getBCType(Patch::xplus) != Patch::Neighbor ){ \
       high_fx_patch_range += Uintah::IntVector(buffer_high,0,0);\
     }
+    
+#define GET_WALL_BUFFERED_PATCH_RANGE(low_patch_range, high_patch_range,\
+    buffer_low_x,buffer_high_x,\
+    buffer_low_y,buffer_high_y,buffer_low_z,buffer_high_z) \
+    \
+    if ( patch->getBCType(Patch::xminus) != Patch::Neighbor ){ \
+      low_patch_range += Uintah::IntVector(buffer_low_x,0,0); \
+    } \
+    if ( patch->getBCType(Patch::xplus) != Patch::Neighbor ){ \
+      high_patch_range += Uintah::IntVector(buffer_high_x,0,0);\
+    } \
+    if ( patch->getBCType(Patch::yminus) != Patch::Neighbor ){ \
+      low_patch_range += Uintah::IntVector(0,buffer_low_y,0); \
+    } \
+    if ( patch->getBCType(Patch::yplus) != Patch::Neighbor ){ \
+      high_patch_range += Uintah::IntVector(0,buffer_high_y,0);\
+    } \
+    if ( patch->getBCType(Patch::zminus) != Patch::Neighbor ){ \
+      low_patch_range += Uintah::IntVector(0,0,buffer_low_z); \
+    } \
+    if ( patch->getBCType(Patch::zplus) != Patch::Neighbor ){ \
+      high_patch_range += Uintah::IntVector(0,0,buffer_high_z);\
+    }
+
 
 /** @brief Get a low and high index for the patch where the buffer is added ONLY in the
            case that the domain edge appears on that side of the patch AND only applied to the
@@ -438,17 +462,7 @@ namespace Uintah{ namespace ArchesCore{
 
   };
 
-  static INTERPOLANT get_interpolant_from_string(const std::string value){
-
-    if ( value == "second_central" ){
-      return SECONDCENTRAL;
-    } else if ( value == "fourth_central" ){
-      return FOURTHCENTRAL;
-    } else {
-      throw InvalidValue("Error: interpolar type not recognized: "+value, __FILE__, __LINE__);
-    }
-
-  }
+  INTERPOLANT get_interpolant_from_string(const std::string value);
 
   class GridTools{
 

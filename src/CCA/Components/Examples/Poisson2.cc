@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,7 +25,7 @@
 
 #include <CCA/Components/Examples/Poisson2.h>
 #include <CCA/Components/Examples/ExamplesLabel.h>
-#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Ports/LoadBalancer.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/NodeIterator.h>
@@ -44,8 +44,9 @@
 using namespace std;
 using namespace Uintah;
 
-Poisson2::Poisson2(const ProcessorGroup* myworld)
-  : UintahParallelComponent(myworld)
+Poisson2::Poisson2(const ProcessorGroup* myworld,
+		   const SimulationStateP sharedState)
+  : ApplicationCommon(myworld, sharedState)
 {
   phi_label = VarLabel::create("phi", 
                                NCVariable<double>::getTypeDescription());
@@ -61,14 +62,13 @@ Poisson2::~Poisson2()
 
 void Poisson2::problemSetup(const ProblemSpecP& params,
                             const ProblemSpecP& restart_prob_spec,
-                            GridP&, SimulationStateP& sharedState)
+                            GridP&)
 {
-  sharedState_ = sharedState;
   ProblemSpecP poisson = params->findBlock("Poisson");
   poisson->require("delt", delt_);
   poisson->require("maxresidual", maxresidual_);
   mymat_ = scinew SimpleMaterial();
-  sharedState->registerSimpleMaterial(mymat_);
+  m_sharedState->registerSimpleMaterial(mymat_);
 }
  
 void Poisson2::scheduleInitialize(const LevelP& level,
@@ -77,7 +77,7 @@ void Poisson2::scheduleInitialize(const LevelP& level,
   Task* task = scinew Task("initialize",
                            this, &Poisson2::initialize);
   task->computes(phi_label);
-  sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
+  sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
 }
 
 void Poisson2::scheduleRestartInitialize(const LevelP& level,
@@ -85,13 +85,13 @@ void Poisson2::scheduleRestartInitialize(const LevelP& level,
 {
 }
  
-void Poisson2::scheduleComputeStableTimestep(const LevelP& level,
+void Poisson2::scheduleComputeStableTimeStep(const LevelP& level,
                                           SchedulerP& sched)
 {
-  Task* task = scinew Task("computeStableTimestep",
-                           this, &Poisson2::computeStableTimestep);
-  task->computes(sharedState_->get_delt_label(),level.get_rep());
-  sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
+  Task* task = scinew Task("computeStableTimeStep",
+                           this, &Poisson2::computeStableTimeStep);
+  task->computes(getDelTLabel(),level.get_rep());
+  sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
 }
 
 void
@@ -103,17 +103,17 @@ Poisson2::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
   task->hasSubScheduler();
   task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
   task->computes(phi_label);
-  LoadBalancerPort* lb = sched->getLoadBalancer();
-  const PatchSet* perproc_patches = lb->getPerProcessorPatchSet(level);
-  sched->addTask(task, perproc_patches, sharedState_->allMaterials());
+  const PatchSet* perproc_patches =
+    m_loadBalancer->getPerProcessorPatchSet(level);
+  sched->addTask(task, perproc_patches, m_sharedState->allMaterials());
 }
 
-void Poisson2::computeStableTimestep(const ProcessorGroup*,
+void Poisson2::computeStableTimeStep(const ProcessorGroup*,
                                   const PatchSubset* patches,
                                   const MaterialSubset*,
                                   DataWarehouse*, DataWarehouse* new_dw)
 {
-  new_dw->put(delt_vartype(delt_), sharedState_->get_delt_label(),getLevel(patches));
+  new_dw->put(delt_vartype(delt_), getDelTLabel(),getLevel(patches));
 }
 
 void Poisson2::initialize(const ProcessorGroup*,
@@ -181,7 +181,7 @@ void Poisson2::timeAdvance(const ProcessorGroup* pg,
   task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
   task->computes(phi_label);
   task->computes(residual_label);
-  subsched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
+  subsched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
 
   // Compile the scheduler
   subsched->advanceDataWarehouse(grid);
@@ -201,7 +201,7 @@ void Poisson2::timeAdvance(const ProcessorGroup* pg,
     subsched->get_dw(1)->get(residual_var, residual_label);
     residual = residual_var;
 
-    if(pg->myrank() == 0)
+    if(pg->myRank() == 0)
       cerr << "Iteration " << count++ << ", residual=" << residual << '\n';
   } while(residual > maxresidual_);
 

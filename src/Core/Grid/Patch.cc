@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -34,7 +34,6 @@
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 #include <Core/Grid/BoundaryConditions/BoundCondFactory.h>
-#include <Core/Containers/StaticArray.h>
 #include <Core/Math/MiscMath.h>
 
 #include <atomic>
@@ -1259,7 +1258,6 @@ void Patch::getGhostOffsets(VariableBasis basis, Ghost::GhostType gtype,
                             int numGhostCells,
                             IntVector& lowOffset, IntVector& highOffset)
 {
-  MALLOC_TRACE_TAG_SCOPE("Patch::getGhostOffsets");
   // This stuff works by assuming there are no neighbors.  If there are
   // neighbors, it can simply cut back appropriately later (no neighbor
   // essentially means no ghost cell on that side).
@@ -1272,12 +1270,14 @@ void Patch::getGhostOffsets(VariableBasis basis, Ghost::GhostType gtype,
     SCI_THROW(InternalError("ghost cells should not be specified with Ghost::None", __FILE__, __LINE__));
 
   if (basis == CellBased) {
-    if (gtype == Ghost::AroundCells) {
-      // Cells around cells
-      lowOffset = highOffset = g;
-    }
-    else {
       // cells around nodes/faces
+    if (gtype == Ghost::AroundCells) {
+      lowOffset = highOffset = g;
+    }else if (gtype > Ghost::AroundFaces  ){
+      IntVector aroundDir = Ghost::getGhostTypeDir(gtype);
+      lowOffset = g * (IntVector(1,1,1)-aroundDir);
+      highOffset =g * aroundDir;
+    }else {
       IntVector aroundDir = Ghost::getGhostTypeDir(gtype);
       lowOffset = g * aroundDir;
       highOffset = lowOffset - aroundDir;
@@ -1499,7 +1499,7 @@ void Patch::getOtherLevelPatches(int levelOffset,
   
   // based on the expanded range above to search for extra cells, we might
   // have grabbed more patches than we wanted, so refine them here
-  for (int i = 0; i < patches.size(); i++) {
+  for (size_t i = 0; i < patches.size(); i++) {
     IntVector lo = patches[i]->getExtraCellLowIndex();
     IntVector hi = patches[i]->getExtraCellHighIndex();
     bool intersect = doesIntersect(low-pc, high+pc, lo, hi );
@@ -1560,7 +1560,7 @@ void Patch::getOtherLevelPatches55902(int levelOffset,
   
   // based on the expanded range above to search for extra cells, we might
   // have grabbed more patches than we wanted, so refine them here
-  for (int i = 0; i < patches.size(); i++) {
+  for (size_t i = 0; i < patches.size(); i++) {
     IntVector lo = patches[i]->getExtraCellLowIndex();
     IntVector hi = patches[i]->getExtraCellHighIndex();
     bool intersect = doesIntersect(low-pc, high+pc, lo, hi );
@@ -1620,7 +1620,7 @@ void Patch::getOtherLevelPatchesNB(int levelOffset,
   
   // based on the expanded range above to search for extra cells, we might
   // have grabbed more patches than we wanted, so refine them here
-  for (int i = 0; i < patches.size(); i++) {
+  for (size_t i = 0; i < patches.size(); i++) {
     IntVector lo = patches[i]->getExtraNodeLowIndex();
     IntVector hi = patches[i]->getExtraNodeHighIndex();
     bool intersect = doesIntersect(low-pc, high+pc, lo, hi );
@@ -1652,6 +1652,7 @@ Patch::VariableBasis Patch::translateTypeToBasis(Uintah::TypeDescription::Type t
     return ZFaceBased;
   case TypeDescription::ParticleVariable:
   case TypeDescription::PerPatch:
+  case TypeDescription::SoleVariable:
     return CellBased;
   default:
     if (mustExist)
@@ -2055,7 +2056,7 @@ void Patch::getFinestRegionsOnPatch(vector<Region>& difference) const
     const LevelP& fineLevel = getLevel()->getFinerLevel(); 
     
     //add overlapping fine patches to finePatch_q                                                       
-    for(int fp=0;fp<finePatches.size();fp++){
+    for(size_t fp=0;fp<finePatches.size();fp++){
       IntVector lo = fineLevel->mapCellToCoarser(finePatches[fp]->getCellLowIndex() );
       IntVector hi = fineLevel->mapCellToCoarser(finePatches[fp]->getCellHighIndex());                              
       finePatch_q.push_back(Region(lo, hi));                        

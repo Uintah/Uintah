@@ -32,6 +32,7 @@
 
 #include <CCA/Components/SimulationController/SimulationController.h>
 #include <CCA/Components/OnTheFlyAnalysis/MinMax.h>
+#include <CCA/Ports/ApplicationInterface.h>
 #include <CCA/Ports/Output.h>
 
 #include <Core/Grid/Material.h>
@@ -506,21 +507,22 @@ bool visit_CheckState( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_UpdateSimData( visit_simulation_data *sim, 
                           GridP currentGrid,
-                          double time, double delt, double delt_next,
+			  double time,  unsigned int cycle,
+			  double delt, double delt_next,
 			  bool first, bool last )
 {
-  SimulationStateP simStateP = sim->simController->getSimulationStateP();
+  ApplicationInterface* appInterface =
+    sim->simController->getApplicationInterface();
 
-  // Update all of the simulation grid and time dependent
-  // variables.
-  sim->gridP         = currentGrid;
-  sim->time          = time;
-  sim->delt          = delt;
-  sim->delt_next     = delt_next;
+  // Update all of the simulation grid and time dependent variables.
+  sim->gridP     = currentGrid;
+
+  sim->time      = time;
+  sim->cycle     = cycle;
+  sim->delt      = delt;
+  sim->delt_next = delt_next;
   
-  sim->first         = first;
-
-  sim->cycle         = simStateP->getCurrentTopLevelTimeStep();
+  sim->first     = first;
 
   // Check to see if at the last iteration. If so stop so the
   // user can have once last chance see the data.
@@ -606,8 +608,8 @@ void visit_Initialize( visit_simulation_data *sim )
                       visit_UPSVariableCallback,             (void*) sim);
   VisItUI_cellChanged("OutputIntervalVariableTable",
                       visit_OutputIntervalVariableCallback,  (void*) sim);
-  VisItUI_valueChanged("ClampTimestepsToOutput",
-                       visit_ClampTimestepsToOutputCallback, (void*) sim);
+  VisItUI_valueChanged("ClampTimeStepsToOutput",
+                       visit_ClampTimeStepsToOutputCallback, (void*) sim);
         
   VisItUI_valueChanged("ImageGroupBox",
                        visit_ImageGenerateCallback, (void*) sim);

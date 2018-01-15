@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -46,7 +46,18 @@ using namespace std;
 //****************************************************************************
 ArchesLabel::ArchesLabel()
 {
+  // Time Step
+  d_timeStepLabel = VarLabel::create(timeStep_name, timeStep_vartype::getTypeDescription());
 
+  // Simulation Time
+  d_simulationTimeLabel = VarLabel::create(simTime_name, simTime_vartype::getTypeDescription());
+
+  // delta t
+  VarLabel* nonconstDelT =
+    VarLabel::create(delT_name, delt_vartype::getTypeDescription() );
+  nonconstDelT->allowMultipleComputes();
+  d_delTLabel = nonconstDelT;
+  
    // shortcuts
   const TypeDescription* CC_double = CCVariable<double>::getTypeDescription();
   const TypeDescription* CC_Vector = CCVariable<Vector>::getTypeDescription();
@@ -287,6 +298,10 @@ ArchesLabel::~ArchesLabel()
   for( ArchesLabel::AbscissaMap::iterator iA = CQMOMAbscissas.begin(); iA != CQMOMAbscissas.end(); ++iA ) {
     VarLabel::destroy(iA->second);
   }
+
+  VarLabel::destroy(d_timeStepLabel);
+  VarLabel::destroy(d_simulationTimeLabel);
+  VarLabel::destroy(d_delTLabel);
 
   VarLabel::destroy(d_strainMagnitudeLabel);
   VarLabel::destroy(d_strainMagnitudeMLLabel);

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -120,7 +120,7 @@ HypreSolver::problemSetup(const ProblemSpecP& params)
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);    
   }
   
-  if(solver != "cg" && preconditioner != "-9" && d_myworld->myrank() == 0 ){
+  if(solver != "cg" && preconditioner != "-9" && d_myworld->myRank() == 0 ){
     cout << "-----------------------------------------------\n";
     cout << " WARNING: Linear solver options \n";
     cout << " The preconditioner ("<<preconditioner<< ") only works with the cg solver\n";
@@ -419,7 +419,7 @@ HypreSolver::pressLinearSolve()
   skip = 1;
   HYPRE_StructSolver solver, precond;
 
-  int me = d_myworld->myrank();
+  int me = d_myworld->myRank();
   Timers::Simple timer;
   timer.start();
 

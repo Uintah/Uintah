@@ -1,7 +1,7 @@
 ##
 ## The MIT License
 ##
-## Copyright (c) 1997-2017 The University of Utah
+## Copyright (c) 1997-2018 The University of Utah
 ##
 ## Permission is hereby granted, free of charge, to any person obtaining a copy
 ## of this software and associated documentation files (the "Software"), to
@@ -54,7 +54,7 @@
 ##  --------------------------------------------------------------------
 
 ##  initialize configure 
-AC_INIT([Uintah],[2.0],[uintah-developer@gforge.sci.utah.edu])
+AC_INIT([Uintah],[2.1],[uintah-developer@gforge.sci.utah.edu])
 
 ##  require autoconf version 2.69
 ##     The reason to require the latest autoconf is to try and get everyone who
@@ -70,7 +70,7 @@ AC_COPYRIGHT(
 ##
 ## The MIT License
 ##
-## Copyright (c) 1997-2017 The University of Utah
+## Copyright (c) 1997-2018 The University of Utah
 ##
 ## Permission is hereby granted, free of charge, to any person obtaining a copy
 ## of this software and associated documentation files (the "Software"), to
@@ -390,6 +390,24 @@ SCI_ARG_WITH(hypre,
   DIR,
   WITHOUT-IS-VALID)
   
+SCI_ARG_WITH(hypre_lib,
+  AC_HELP_STRING(--with-hypre-lib=DIR,
+                 Use the hypre libraries installed in DIR),
+  [with_hypre_lib="$withval"
+   sci_required_hypre=yes],
+  [with_hypre_lib=NOT_SET],
+  DIR,
+  WITHOUT-IS-NOT-VALID)
+
+SCI_ARG_WITH(hypre_include,
+  AC_HELP_STRING(--with-hypre-include=DIR,
+                 Use the hypre include files installed in DIR),
+  [with_hypre_include="$withval"
+   sci_required_hypre=yes],
+  [with_hypre_include=NOT_SET],
+  DIR,
+  WITHOUT-IS-NOT-VALID)
+
 SCI_ARG_WITH(petsc,
   AC_HELP_STRING(--with-petsc=DIR,
                  Use the petsc installation in DIR (or set to 'built-in'). ),
@@ -498,6 +516,14 @@ SCI_ARG_WITH(gperftools,
                  Use the Google Perftools installation in DIR),
   [with_gperftools="$withval"],
   [with_gperftools=NOT_SET],
+  DIR,
+  WITHOUT-IS-NOT-VALID)
+
+SCI_ARG_WITH(kokkos,
+  AC_HELP_STRING(--with-kokkos=DIR,
+                 Use the Kokkos installation in DIR),
+  [with_kokkos="$withval"],
+  [with_kokkos=NOT_SET],
   DIR,
   WITHOUT-IS-NOT-VALID)
 
@@ -619,12 +645,6 @@ SCI_ARG_ENABLE(verbose,
                  Turn on verbose configure output),
   [verbose="yes"],
   [verbose="no"])
-  
-SCI_ARG_ENABLE(threads,
-  AC_HELP_STRING(--enable-threads,
-                 Specify a thread implementation (pthreads or irix)),
-  [threads="$enableval"],
-  [threads=${threads='unknown'}])
   
 SCI_ARG_ENABLE(debug,
   AC_HELP_STRING(--enable-debug,
@@ -750,6 +770,20 @@ SCI_ARG_ENABLE(wasatch,
   [BUILD_WASATCH="no"
    DEF_WASATCH=["#define NO_WASATCH"]])
 
+SCI_ARG_ENABLE(heat,
+  AC_HELP_STRING(--enable-heat,
+                 Turn on the Heat component.),
+  [BUILD_HEAT="yes"],
+  [BUILD_HEAT="no"
+   DEF_HEAT=["#define NO_HEAT"]])
+
+SCI_ARG_ENABLE(phasefield,
+  AC_HELP_STRING(--enable-phasefield,
+                 Turn on the PhaseField component.),
+  [BUILD_PHASEFIELD="yes"],
+  [BUILD_PHASEFIELD="no"
+   DEF_PHASEFIELD=["#define NO_PHASEFIELD"]])
+
 SCI_ARG_ENABLE(all_components,
   AC_HELP_STRING(--enable-all-components,
                  Turn on the all components.),
@@ -759,11 +793,13 @@ SCI_ARG_ENABLE(all_components,
    BUILD_ICE="yes"
    BUILD_MPM="yes"
    BUILD_WASATCH="yes"
+   BUILD_HEAT="yes"
    DEF_ARCHES=
    DEF_FVM=
    DEF_ICE=
    DEF_MPM=
    DEF_WASATCH=
+   DEF_HEAT=
   ],
   [use_all_components="no"])
 
@@ -780,14 +816,18 @@ if test "$use_all_components" = "yes" -a          \
            "$enable_ice"              = "yes" -o  \
            "$enable_models_radiation" = "yes" -o  \
            "$enable_mpm"              = "yes" -o  \
-           "$enable_wasatch"          = "yes" \); then
+           "$enable_wasatch"          = "yes" -o  \
+           "$enable_heat"             = "yes" -o  \
+           "$enable_phasefield"       = "yes" \); then
    AC_MSG_ERROR( Please do not use both --enable-all-components and --enable-<specific-component> )
 fi
-if test "$BUILD_ARCHES"  != "yes"              -a   \
-        "$BUILD_FVM"     != "yes"              -a   \
-        "$BUILD_ICE"     != "yes"              -a   \
-        "$BUILD_MPM"     != "yes"              -a   \
-        "$BUILD_WASATCH" != "yes"; then
+if test "$BUILD_ARCHES"     != "yes"           -a   \
+        "$BUILD_FVM"        != "yes"           -a   \
+        "$BUILD_ICE"        != "yes"           -a   \
+        "$BUILD_MPM"        != "yes"           -a   \
+        "$BUILD_WASATCH"    != "yes"           -a   \
+        "$BUILD_HEAT"       != "yes"           -a   \
+        "$BUILD_PHASEFIELD" != "yes" ; then
   add_important_warning "-------------------------------------------------------------------------"
   msg="!!! NO COMPONENTS WERE SPECIFIED! ONLY UTILITY PROGRAMS WILL BE BUILT !!!"
   add_important_warning "$msg"
@@ -1324,6 +1364,8 @@ AC_SUBST(BUILD_ICE)
 AC_SUBST(BUILD_MODELS_RADIATION)
 AC_SUBST(BUILD_MPM)
 AC_SUBST(BUILD_WASATCH)
+AC_SUBST(BUILD_HEAT)
+AC_SUBST(BUILD_PHASEFIELD)
 
 AC_SUBST(DEF_ARCHES)
 AC_SUBST(DEF_FVM)
@@ -1332,6 +1374,8 @@ AC_SUBST(DEF_MPM)
 AC_SUBST(DEF_NO_FORTRAN)
 AC_SUBST(DEF_MODELS_RADIATION)
 AC_SUBST(DEF_WASATCH)
+AC_SUBST(DEF_HEAT)
+AC_SUBST(DEF_PHASEFIELD)
 AC_SUBST(NO_FORTRAN)
 
 if test "$BUILD_ARCHES" = "no" -a "$with_fortran" = "no"; then
@@ -1553,10 +1597,6 @@ case $host in
     FFLAGS="$extra_cflags $FFLAGS"
     CFLAGS="$extra_cflags -D__USE_STD_IOSTREAM $CFLAGS"
     CXXFLAGS="-model ansi $extra_cflags -D__USE_STD_IOSTREAM $CXXFLAGS"
-    if test "$threads" != "none"; then
-      CFLAGS="$CFLAGS -pthread"
-      CXXFLAGS="$CXXFLAGS -pthread"
-    fi
     SOFLAGS="-warning_unresolved -update_registry \$(LIBDIR)/so_locations"
     LDFLAGS=""
     LDRUN_PREFIX="-rpath "
@@ -2128,79 +2168,8 @@ AC_SUBST(RT_LIB_FLAG)
 
 MPI_EXTRA_LIB_FLAG="$MPI_EXTRA_LIB_FLAG $RT_LIB_FLAG"
 
-##  --  check for the required thread library  ---------------------------
 
-SOCKET_LIBRARY=""
-
-case $host in
-  *)
-    if test "$threads" = "unknown"; then
-      threads=pthreads
-    elif test "$threads" != "pthreads" -a "$threads" != "none"; then
-      SCI_MSG_ERROR(unknown thread type for host $host: $threads. exiting.)
-    fi
-    ;;
-esac
-
-case $threads in
-   pthreads)
-      SCI_TRY_LINK(PTHREAD,pthread library and headers,pthread.h semaphore.h,,
-                   pthread,,,,required)
-
-      if test "$HAVE_PTHREAD" = "yes"; then
-        THREAD_LIB_FLAG="$PTHREAD_LIB_FLAG"
-        DEF_THREAD="#define SCI_PTHREAD 1"
-      fi
-
-      AC_MSG_CHECKING(for semaphore library)
-      old_LIBS="$LIBS"
-      SEMAPHORE_LIB_FLAG=unknown
-      for i in "" "$THREAD_LIB_FLAG" $RT_LIB_FLAG; do
-        LIBS="$old_LIBS $i"
-        AC_TRY_LINK([
-#include <semaphore.h>
-      ], [
-    sem_t sem;
-    sem_init(&sem, 0, 0);
-    sem_post(&sem);
-      ], [
-         SEMAPHORE_LIB_FLAG=$i
-         break
-         ])
-      done
-      if test "$SEMPAPHORE_LIB_FLAG" = unknown; then
-        AC_MSG_RESULT(not found)
-        AC_MSG_ERROR([semaphore library(sem_post, sem_wait, etc) needed for pthreads])
-      else
-        if test "$SEMAPHORE_LIB_FLAG" = "$THREAD_LIB_FLAG"; then
-          AC_MSG_RESULT(already in thread library: $THREAD_LIB_FLAG)
-          SEMAPHORE_LIB_FLAG=""
-        elif test "$SEMAPHORE_LIB_FLAG"; then
-          AC_MSG_RESULT($SEMAPHORE_LIB_FLAG)
-        else
-          AC_MSG_RESULT(none required)
-        fi
-      fi
-      LIBS="$old_LIBS"
-      ;;
-   none)
-      DEF_THREAD="#define SCI_NOTHREAD 1"
-      AC_MSG_WARN(threads disabled - software may work incorrectly)
-      ;;
-   *)
-      SCI_MSG_ERROR(unknown thread type for host $host: $threads. exiting.)
-      ;;
-esac      
-
-AC_SUBST(THREAD_LIB_FLAG)
-AC_SUBST(DEF_THREAD)
-sci_defs_files="$sci_defs_files include/sci_defs/thread_testdefs.h"
-
-AC_SUBST(SEMAPHORE_LIB_FLAG)
-
-AC_SUBST(CFLAGS)
-
-##  -- check for gcc atomic support
+##  -- check for gcc atomic support -----------------------------
 
 SCI_TRY_LINK(GCCSYNC,gcc style atomic operations ,,,,,,[ int x;   __sync_add_and_fetch(&x,1);],optional)
 if test "$HAVE_GCCSYNC" = "yes"; then
@@ -2986,7 +2955,7 @@ if test "$HAVE_BLAS" != "yes"; then
   case $host in
     *-darwin*)
        if test "$yosemite_plus" = yes; then
-          SCI_TRY_LINK(BLAS,blas and cblas libraries-darwin (yosemite+),Accelerate/Accelerate.h,
+          SCI_TRY_LINK(BLAS,blas and cblas libraries-darwin (Accelerate framework),Accelerate/Accelerate.h,
                        $_sci_inc,cblas blas,$_sci_lib,-framework Accelerate $F_LIB_DIR_FLAG $F_LIB_FLAG,[
                                                                                 float x[]={0.7f};
                                                                                 float y[]={0.8f};
@@ -3001,7 +2970,7 @@ if test "$HAVE_BLAS" != "yes"; then
              DEF_ACCELERATE="#define HAVE_ACCELERATE 1"
           fi
        else
-          SCI_TRY_LINK(BLAS,blas and cblas libraries-darwin,vecLib/cblas.h,
+          SCI_TRY_LINK(BLAS,blas and cblas libraries-darwin (veclib framework),vecLib/cblas.h,
                        $_sci_inc,cblas blas,$_sci_lib,-framework vecLib $F_LIB_DIR_FLAG $F_LIB_FLAG,[
                                                                                 float x[]={0.7f};
                                                                                 float y[]={0.8f};
@@ -3130,7 +3099,9 @@ if test "$HAVE_LAPACK" != "yes"; then
              LAPACK_LIB_FLAG="$altivec -framework vecLib"
           fi
        fi
-       SCI_TRY_LINK(LAPACK,lapack library,,,lapack,$_sci_lib,$BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
+       if test "$HAVE_LAPACK" = no ; then
+       	  SCI_TRY_LINK(LAPACK,lapack library (OSX non-framework),,,lapack,$_sci_lib,$BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
+       fi
        ;;
      *)
        SCI_TRY_LINK(LAPACK,lapack library,,,lapack,$_sci_lib,$BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
@@ -3304,7 +3275,7 @@ if test "$sci_required_mpi" = "yes" -a "$with_mpi" != "built-in"; then
         test_libs[[8]]="mpich pmpich"
         test_libs[[9]]="mpich"
         test_libs[[10]]="mpi_mt"
-	test_libs[[11]]="mpich-xl opa-xl mpl-xl pami-gcc SPI SPI_cnk rt pthread stdc++" # Vulcan@LLNL
+	      test_libs[[11]]="mpich-xl opa-xl mpl-xl pami-gcc SPI SPI_cnk rt stdc++" # Vulcan@LLNL
 
         unset other
         other[[0]]=""
@@ -3684,6 +3655,41 @@ AC_SUBST(GPERFTOOLS_LIB_FLAG)
 
 sci_defs_files="$sci_defs_files include/sci_defs/gperftools_testdefs.h"
 
+##  --  search for kokkos stuff  -------------------------------------------
+
+if test "$with_kokkos" != NOT_SET; then
+
+  _sci_optional=specific
+  _sci_lib="$with_kokkos"
+  # account for lib64 or lib32 or just lib...
+  BASE_LIB_PATH(_sci_lib,$_sci_lib)
+  _sci_inc="$with_kokkos/include"
+
+  AC_LANG(C++)
+  SCI_TRY_LINK(KOKKOS, Kokkos libraries and headers,
+               Kokkos_Core.hpp,
+               $_sci_inc,
+               kokkos,
+               $_sci_lib,
+               ,
+               [],
+               $_sci_optional)
+  AC_LANG(C)
+  
+  if test "$HAVE_KOKKOS" = "yes"; then
+     DEF_KOKKOS="#define UINTAH_ENABLE_KOKKOS"
+  fi
+
+fi
+
+AC_SUBST(HAVE_KOKKOS)
+AC_SUBST(DEF_KOKKOS)
+AC_SUBST(INC_KOKKOS_H)
+AC_SUBST(KOKKOS_LIB_DIR_FLAG)
+AC_SUBST(KOKKOS_LIB_FLAG)
+
+sci_defs_files="$sci_defs_files include/sci_defs/kokkos_testdefs.h"
+
 ##  --  search for ipm stuff  -------------------------------------------
 _sci_lib=
 _sci_inc=
@@ -3805,7 +3811,7 @@ EOF
 
   # for a static build, use the static CUDA runtime lib
   if test "$static" != "no" -o "$SO_OR_ARCHIVE_EXTENSION" = "a"; then
-     _cudart_lib="cudart_static dl pthread rt"
+     _cudart_lib="cudart_static dl rt"
   else
      _cudart_lib="cudart"
   fi
@@ -4450,7 +4456,7 @@ if test "$BUILD_ARCHES" = "yes"; then
 fi
 
 if test "$BUILD_WASATCH" = "yes" -o "$BUILD_ARCHES" = "yes"; then
-  if test "$with_hypre" = NOT_SET; then
+  if test "$with_hypre" = NOT_SET -a "$with_hypre_include" = NOT_SET; then
     AC_MSG_WARN( [ Requiring Hypre due to Arches or Wasatch...] )
     with_hypre=yes
   fi
@@ -4471,11 +4477,23 @@ else
      DEF_HYPRE="#define HAVE_HYPRE 1"
      AC_MSG_WARN(Relying on a built-in version of Hypre)
   else
-
-     if test "$with_hypre" != NOT_SET -a "$with_hypre" != "yes"; then
-        _sci_lib="$with_hypre/lib"
-        _sci_inc="$with_hypre/include"
-        _sci_optional=specific
+     if test "$with_hypre" != NOT_SET ; then
+       if test "$with_hypre_include" != NOT_SET -o "$with_hypre_lib" != NOT_SET ; then
+         AC_MSG_ERROR( You cannot use --with-hypre and --with-hypre-include/--with-hypre-library. )
+       elif test "$with_hypre" != "yes"; then
+         _sci_lib="$with_hypre/lib"
+         _sci_inc="$with_hypre/include"
+         _sci_optional=specific
+       fi
+     elif test "$with_hypre_lib" != NOT_SET -o "$with_hypre_include" != NOT_SET; then
+       if test "$with_hypre_lib" = NOT_SET -o "$with_hypre_include" = NOT_SET; then
+         AC_MSG_ERROR( You must specify both --with-hypre-include and --with-hypre-library. )
+       else
+         _sci_lib="$with_hypre_lib"
+         _sci_inc="$with_hypre_include"
+         with_hypre="yes"
+         _sci_optional=specific
+       fi
 
 	# Try to avoid accidentally allowing system libraries to shadow the specific libraries the user has requested. 
         if test "$USING_GCC" = "yes" -o "$USING_ICC" = "yes"; then

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -150,15 +150,6 @@ RMCRT_Radiation::problemSetup( const ProblemSpecP& inputdb )
       _whichAlgo = dataOnion;
       _RMCRT->setBC_onOff( true );
 
-      //__________________________________
-      //  bulletproofing
-      if(!_sharedState->isLockstepAMR()){
-        std::ostringstream msg;
-        msg << "\n ERROR: You must add \n"
-            << " <useLockStep> true </useLockStep> \n"
-            << " inside of the <AMR> section. \n";
-        throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
-      }
     } else if ( type == "RMCRT_coarseLevel" ) {   // 2 LEVEL
 
       _whichAlgo = coarseLevel;
@@ -166,7 +157,6 @@ RMCRT_Radiation::problemSetup( const ProblemSpecP& inputdb )
 
     } else if ( type == "singleLevel" ) {         // 1 LEVEL
       _whichAlgo = singleLevel;
-
     }
   }
 #if 0
@@ -568,7 +558,7 @@ RMCRT_Radiation::sched_initialize( const LevelP& level,
 
   //__________________________________
   //  initialize cellType on NON arches level
-  for (int l = 0; l < maxLevels; l++) {
+  for (int l = maxLevels - 1; l >= 0; l--) {
     const LevelP& level = grid->getLevel(l);
     if( level->getIndex() != _archesLevelIndex ){
       // Set the BC on the coarse level
@@ -657,7 +647,7 @@ RMCRT_Radiation::sched_restartInitialize( const LevelP& level,
 
   // Find the first patch, on the arches level, that this mpi rank owns.
   const Uintah::PatchSet* const ps = sched->getLoadBalancer()->getPerProcessorPatchSet(archesLevel);
-  const PatchSubset* myPatches = ps->getSubset(_my_world->myrank());
+  const PatchSubset* myPatches = ps->getSubset(_my_world->myRank());
   const Patch* firstPatch = myPatches->get(0);
 
   if (level == archesLevel) {

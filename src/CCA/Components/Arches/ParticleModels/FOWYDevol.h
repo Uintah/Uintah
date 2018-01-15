@@ -6,7 +6,7 @@
 #include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
 #include <CCA/Components/Arches/ParticleModels/CoalHelper.h>
 #include <CCA/Components/Arches/GridTools.h>
-#include <boost/math/special_functions/erf.hpp>
+#include <CCA/Components/Arches/Utility/InverseErrorFunction.h>
 
 //-------------------------------------------------------
 
@@ -98,8 +98,10 @@ namespace Uintah{
     double _Tig;
     double _A;
     double _Ta;
-    double _C1;
-    double _C2;
+    double _Tbp_graphite;
+    double _T_mu;
+    double _T_sigma;
+    double _T_hardened_bond;
     double _sigma;
 
     double _initRawCoalMassFrac;
@@ -167,13 +169,10 @@ namespace Uintah{
         db_FOWY->require("Ta", _Ta);
         db_FOWY->require("A", _A);
         db_FOWY->require("v_hiT", _v_hiT);
-        double b, c, d, e;
-        db_FOWY->require("b", b);
-        db_FOWY->require("c", c);
-        db_FOWY->require("d", d);
-        db_FOWY->require("e", e);
-        _C1 = b + c*_v_hiT;
-        _C2 = d + e*_v_hiT;
+        db_FOWY->require("Tbp_graphite", _Tbp_graphite); // 
+        db_FOWY->require("T_mu", _T_mu); // 
+        db_FOWY->require("T_sigma", _T_sigma); // 
+        db_FOWY->require("T_hardened_bond", _T_hardened_bond); // 
         db_FOWY->require("sigma", _sigma);
 
       } else {
@@ -332,7 +331,8 @@ namespace Uintah{
         const double initRawCoal = _initRawCoalMassFrac * _initRhoP * _pi / 6.0
                                     * partSize(i,j,k) * partSize(i,j,k) * partSize(i,j,k);
         const double mVol = initRawCoal - ( rawCoal(i,j,k) + charMass(i,j,k) );
-        vInf(i,j,k) = 0.5 * _v_hiT * ( 1.0 - std::tanh( _C1 * ( _Tig - partTemp(i,j,k))/ partTemp(i,j,k) + _C2));
+        vInf(i,j,k) = 0.5*_v_hiT*(1.0 + std::erf( (partTemp(i,j,k) - _T_mu) / (std::sqrt(2.0) * _T_sigma)));
+        vInf(i,j,k) += (partTemp(i,j,k) > _T_hardened_bond) ? (partTemp(i,j,k) - _T_hardened_bond)/_Tbp_graphite : 0.0; // linear contribution
         const double fDrive = std::max( initRawCoal * vInf(i,j,k) - mVol, 0.0 );
 
         const double clipVal = 0.0; //Placeholder block for adding in generic clipping
@@ -349,7 +349,7 @@ namespace Uintah{
         const double rateMax = std::max( fDrive / dt + clipVal, 0.0);
         const double zFact = std::min( std::max( fDrive/ initRawCoal/_v_hiT, 2.5e-5), 1.0-2.5e-5 );
         double einput = 1.0 - 2.0 * zFact;
-        const double z = std::sqrt(2.0) * boost::math::erf_inv( einput );
+        const double z = std::sqrt(2.0) * erfinv( einput );
 
         //rate of devolatilization dmVol/dt
         devolRate(i,j,k) = - std::min( _A * fDrive * std::exp(-(_Ta + z * _sigma)/ partTemp(i,j,k) ), rateMax );

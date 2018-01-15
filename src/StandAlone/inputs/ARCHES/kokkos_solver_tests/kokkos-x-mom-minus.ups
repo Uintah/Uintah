@@ -55,7 +55,7 @@
     </Level>
     <BoundaryConditions>
       <DefaultMaterial>all</DefaultMaterial>
-      <Face side="x-" type="Velocity">
+      <Face side="x-"  type="Inlet">
         <BCType var="Custom" label="x-mom" type="velocity">
           <value>1.3</value>
         </BCType>
@@ -159,15 +159,20 @@
         <var role="density" label="density"/>
       </VarID>
       <PropertyModelsV2>
-        <model label="density" type="constant_property">
+        <!--model label="density" type="constant_property">
           <grid type="CC"/>
           <value>1.</value>
-        </model>
+        </model-->
         <model label="gamma" type="constant_property">
           <grid type="CC"/>
           <value>1.e-4</value>
         </model>
       </PropertyModelsV2>
+      <StateProperties> 
+        <model label="my_constant_model" type="constant">
+          <const_property label="density" value="1."/>
+        </model>
+      </StateProperties>
       <KMomentum>
         <convection scheme="central"/>
         <inviscid/>

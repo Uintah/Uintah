@@ -37,10 +37,10 @@
       <Tig>590</Tig>
       <A>229086765276.777</A>
       <Ta>1.991e4</Ta>
-      <b>12.5454510</b>
-      <c>-8.98180972</c>
-      <d>2.27199071</d>
-      <e>-0.483777996</e>
+      <Tbp_graphite>3e3</Tbp_graphite>
+      <T_mu>1100.0</T_mu>
+      <T_sigma>250.0</T_sigma>
+      <T_hardened_bond>1800.0</T_hardened_bond>
       <sigma>-1.183e3</sigma>
     </FOWYDevol>
 

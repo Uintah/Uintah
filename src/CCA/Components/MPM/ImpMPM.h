@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -28,16 +28,13 @@
 
 #include <Core/Geometry/Vector.h>
 
-#include <Core/Parallel/UintahParallelComponent.h>
-#include <CCA/Ports/SimulationInterface.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/Patch.h>
-#include <Core/Labels/MPMLabel.h>
-#include <CCA/Components/MPM/ImpMPMFlags.h>
+#include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <CCA/Components/MPM/MPMCommon.h>
-#include <CCA/Components/MPM/Solver.h>
+#include <CCA/Components/MPM/Solver/Solver.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <CCA/Ports/SwitchingCriteria.h>
 
@@ -48,6 +45,8 @@
 namespace Uintah {
 
  class DataWarehouse;
+ class ImpMPMFlags;
+ class ImpMPMLabel;
  class MPMLabel;
  class ProcessorGroup;
  class VarLabel;
@@ -83,17 +82,18 @@ WARNING
   
 ****************************************/
 
-class ImpMPM : public MPMCommon, public UintahParallelComponent, 
-  public SimulationInterface {
+class ImpMPM : public MPMCommon {
 public:
-  ImpMPM(const ProcessorGroup* myworld);
+  ImpMPM(const ProcessorGroup* myworld,
+	 const SimulationStateP sharedStat);
+  
   virtual ~ImpMPM();
 
   //////////
   // Insert Documentation Here:
   virtual void problemSetup(const ProblemSpecP& params, 
                             const ProblemSpecP& mat_ps,
-                            GridP& grid, SimulationStateP&);
+                            GridP& grid);
 
   virtual void outputProblemSpec(ProblemSpecP& ps);
 
@@ -101,11 +101,11 @@ public:
 
   virtual void scheduleRestartInitialize(const LevelP& level, SchedulerP& sched);
 
-  virtual void switchInitialize(const LevelP& level, SchedulerP&);
+  virtual void scheduleSwitchInitialization(const LevelP& level, SchedulerP&);
 
   //////////
   // Insert Documentation Here:
-  virtual void scheduleComputeStableTimestep(const LevelP& level, SchedulerP&);
+  virtual void scheduleComputeStableTimeStep(const LevelP& level, SchedulerP&);
 
   //////////
   // Insert Documentation Here:
@@ -126,20 +126,11 @@ public:
   void scheduleInitialErrorEstimate(const LevelP& coarseLevel,
                                     SchedulerP& sched);
 
-  virtual bool restartableTimesteps();
-  virtual double recomputeTimestep(double new_dt);
+  virtual bool restartableTimeSteps();
+  virtual double recomputeDelT(const double delT);
 
   void scheduleSwitchTest(const LevelP& level, SchedulerP& sched);
   
-  void setSharedState(SimulationStateP& ssp);
-
-  void setMPMLabel(MPMLabel* Mlb)
-  {
-
-        delete lb;
-        lb = Mlb;
-  };
-
   enum IntegratorType {
     Explicit,
     Implicit 
@@ -513,8 +504,6 @@ private:
   ImpMPM(const ImpMPM&);
   ImpMPM& operator=(const ImpMPM&);
 
-  SimulationStateP d_sharedState;
-  MPMLabel* lb;
   ImpMPMFlags* flags;
 
   ImplicitHeatConduction* heatConductionModel;

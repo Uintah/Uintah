@@ -39,7 +39,7 @@ void sootVolumeFrac::problemSetup(  Uintah::ProblemSpecP& db )
 
 void
 sootVolumeFrac::create_local_labels(){
-  register_new_variable<CCVariable<double> >("fvSoot");
+  register_new_variable<CCVariable<double> >(_fvSoot);
 
 }
 

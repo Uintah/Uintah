@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -27,7 +27,10 @@
 
 #include <Core/Grid/SimulationState.h>
 #include <Core/Util/DOUT.hpp>
+#include <Core/Util/InfoMapper.h>
 #include <Core/Util/Timers/Timers.hpp>
+
+#include <CCA/Components/SimulationController/RunTimeStatsEnums.h>
 
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 
@@ -62,7 +65,7 @@ public:
   // used to declare timers
   template <typename Tag> using TripTimer = Timers::ThreadTrip< Tag >;
 
-  using InfoStats = InfoMapper< SimulationState::RunTimeStat, double >;
+  using InfoStats = InfoMapper< RunTimeStatsEnum, double >;
 
   // NOT THREAD SAFE -- should only be called from the master thread
   // by the parent scheduler

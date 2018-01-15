@@ -215,6 +215,9 @@
           <src label="v-martin"/>
         </PressureSolver>
         <MomentumSolver>
+          <wall_closure type="constant_coefficient">
+            <wall_csmag>0.4</wall_csmag>
+          </wall_closure>
           <convection_scheme>central</convection_scheme>
         </MomentumSolver>
       </ExplicitSolver>

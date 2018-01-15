@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -26,14 +26,16 @@
 #ifndef Packages_Uintah_CCA_Components_Models_SolidReactionModel_h
 #define Packages_Uintah_CCA_Components_Models_SolidReactionModel_h
 
-#include <CCA/Components/Models/SolidReactionModel/RateConstant.h>
-#include <CCA/Components/Models/SolidReactionModel/RateModel.h>
 #include <CCA/Ports/ModelInterface.h>
 
 namespace Uintah {
-    class ICELabel;
-    
-    /**************************************
+
+  class RateConstant;
+  class RateModel;
+  
+  class ICELabel;
+
+  /**************************************
      
      CLASS
      SolidReactionModel
@@ -64,28 +66,28 @@ namespace Uintah {
     
     class SolidReactionModel : public ModelInterface {
     public:
-        SolidReactionModel(const ProcessorGroup* d_myworld, ProblemSpecP& params,
+        SolidReactionModel(const ProcessorGroup* d_myworld,
+			   const SimulationStateP& sharedState,
+			   const ProblemSpecP& params,
                            const ProblemSpecP& prob_spec);
-        virtual ~SolidReactionModel();
+
+      virtual ~SolidReactionModel();
         
         virtual void outputProblemSpec(ProblemSpecP& ps);
         
-        virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
-                                  ModelSetup* setup, const bool isRestart);
+        virtual void problemSetup(GridP& grid,
+                                   const bool isRestart);
         
         virtual void scheduleInitialize(SchedulerP&,
-                                        const LevelP& level,
-                                        const ModelInfo*);
+                                        const LevelP& level);
         
         virtual void restartInitialize() {}
         
-        virtual void scheduleComputeStableTimestep(SchedulerP& sched,
-                                                   const LevelP& level,
-                                                   const ModelInfo*);
+        virtual void scheduleComputeStableTimeStep(SchedulerP& sched,
+                                                   const LevelP& level);
         
         virtual void scheduleComputeModelSources(SchedulerP&,
-                                                 const LevelP& level,
-                                                 const ModelInfo*);
+                                                 const LevelP& level);
         
         virtual void scheduleModifyThermoTransportProperties(SchedulerP&,
                                                              const LevelP&,
@@ -100,8 +102,7 @@ namespace Uintah {
                                            SchedulerP& sched);
         
         virtual void scheduleTestConservation(SchedulerP&,
-                                              const PatchSet* patches,
-                                              const ModelInfo* mi);    
+                                              const PatchSet* patches);    
         
     private:
 
@@ -109,18 +110,17 @@ namespace Uintah {
                                  const PatchSubset* patches,
                                  const MaterialSubset* matls,
                                  DataWarehouse*,
-                                 DataWarehouse* new_dw,
-                                 const ModelInfo*);
+                                 DataWarehouse* new_dw);
 
         // Functions
         SolidReactionModel(const SolidReactionModel&);
         SolidReactionModel& operator=(const SolidReactionModel&);
         
         // Innards
-        RateConstant *rateConstant;  // k(T)
-        RateModel    *rateModel;     // f(a)
-        const Material* reactant;
-        const Material* product;
+        RateConstant *rateConstant {nullptr};  // k(T)
+        RateModel    *rateModel {nullptr};     // f(a)
+        const Material* reactant {nullptr};
+        const Material* product {nullptr};
         std::string fromMaterial;
         std::string toMaterial;
         double d_E0;                 // Enthalpy change for reaction in J/kg
@@ -134,7 +134,6 @@ namespace Uintah {
         const VarLabel* totalMassBurnedLabel;  
         const VarLabel* totalHeatReleasedLabel;
  
-
         // flags for the conservation test
         struct saveConservedVars{
           bool onOff;
@@ -143,13 +142,9 @@ namespace Uintah {
         };
         saveConservedVars* d_saveConservedVars;
 
-
         // Some Uintah Necessities
-        ProblemSpecP d_params;
-        ProblemSpecP d_prob_spec;
-        SimulationStateP d_sharedState;
-
-
+        ProblemSpecP d_params {nullptr};
+        ProblemSpecP d_prob_spec {nullptr};
 
         #define d_SMALL_NUM 1e-100
         #define d_TINY_RHO 1e-12

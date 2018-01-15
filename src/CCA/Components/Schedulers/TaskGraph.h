@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -41,7 +41,7 @@ namespace Uintah {
   class DetailedTask;
   class DetailedTasks;
   class Patch;
-  class LoadBalancerPort;
+  class LoadBalancer;
 
 /**************************************
 
@@ -321,7 +321,7 @@ class TaskGraph {
                             );
 
     SchedulerCommon      * m_scheduler;
-    LoadBalancerPort     * m_load_balancer;
+    LoadBalancer     * m_load_balancer;
     const ProcessorGroup * m_proc_group;
     Scheduler::tgType      m_type;
     DetailedTasks        * m_detailed_tasks{nullptr};

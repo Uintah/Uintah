@@ -43,6 +43,7 @@ public:
       { return scinew WALE( _task_name, _matl_index ); }
 
       private:
+      
 
       std::string _task_name;
       int _matl_index;

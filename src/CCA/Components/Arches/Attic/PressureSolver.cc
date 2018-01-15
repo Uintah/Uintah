@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -193,7 +193,7 @@ PressureSolver::sched_buildLinearMatrix(SchedulerP& sched,
   Ghost::GhostType  gn  = Ghost::None;
   Ghost::GhostType  gaf = Ghost::AroundFaces;
   
-  tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
+  tsk->requires(parent_old_dw, d_lab->d_delTLabel);
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,       gac, 1);
   tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
 
@@ -252,7 +252,7 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
   }
   
   delt_vartype delT;
-  parent_old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  parent_old_dw->get(delT, d_lab->d_delTLabel );
   double delta_t = delT;
   delta_t *= timelabels->time_multiplier;
 
@@ -378,6 +378,8 @@ PressureSolver::sched_pressureLinearSolve(const LevelP& level,
                           d_EKTCorrection, doing_EKT_now);
 
   // Requires
+  tsk->requires( Task::OldDW, d_lab->d_timeStepLabel );
+
   // coefficient for the variable for which solve is invoked
   Ghost::GhostType  gn = Ghost::None;
   if (!((d_pressure_correction)||(extraProjection)
@@ -440,7 +442,7 @@ PressureSolver::pressureLinearSolve_all(const ProcessorGroup* pg,
   int archIndex = 0; // only one arches material
   int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
   ArchesVariables pressureVars;
-  int me = pg->myrank();
+  int me = pg->myRank();
   // initializeMatrix...
   if ( d_construct_solver_obj && !d_always_construct_A )  {
     d_linearSolver->matrixCreate(d_perproc_patches, patches);
@@ -460,7 +462,11 @@ PressureSolver::pressureLinearSolve_all(const ProcessorGroup* pg,
   //__________________________________
   //debugging
   string desc = timelabels->integrator_step_name;
-  int timestep = d_lab->d_sharedState->getCurrentTopLevelTimeStep(); 
+
+  // int timestep = d_lab->d_sharedState->getCurrentTopLevelTimeStep(); 
+  timeStep_vartype timeStep;
+  old_dw->get( timeStep, d_lab->d_timeStepLabel );
+
   d_iteration ++; 
   d_linearSolver->print(desc,timestep,d_iteration);
 #endif
@@ -472,7 +478,7 @@ PressureSolver::pressureLinearSolve_all(const ProcessorGroup* pg,
       d_linearSolver->copyPressSoln(patch, &pressureVars);
     }
   } else {
-    if (pg->myrank() == 0){
+    if (pg->myRank() == 0){
       cerr << "pressure solver not converged, using old values" << endl;
     }
     throw InternalError("pressure solver is diverging", __FILE__, __LINE__);
@@ -510,7 +516,7 @@ PressureSolver::pressureLinearSolve_all(const ProcessorGroup* pg,
     if ((timelabels->integrator_step_name == "Predictor")||
         (timelabels->integrator_step_name == "Intermediate")) {
       pressureVars.pressure.initialize(0.0);
-      if (pg->myrank() == 0){
+      if (pg->myRank() == 0){
         cout << "Projection skipped" << endl;
       }
     }else{ 

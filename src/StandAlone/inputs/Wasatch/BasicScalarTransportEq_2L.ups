@@ -9,7 +9,7 @@
 
   <SimulationComponent type="wasatch"/>
 
-  <AMR>
+  <AMR type="StaticGridML" >
     <useLockStep> true </useLockStep>
   </AMR>
 

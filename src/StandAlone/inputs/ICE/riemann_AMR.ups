@@ -13,8 +13,7 @@
   <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
   <!--____________________________________________________________________-->
   <Time>
-    <maxTime>            0.0001      </maxTime>
-    <max_Timesteps> 45 </max_Timesteps>
+    <maxTime>            0.0005      </maxTime>
     <initTime>           0.0         </initTime>
     <delt_min>           0.0         </delt_min>
     <delt_max>           1.0         </delt_max>
@@ -94,7 +93,7 @@
   <!--____________________________________________________________________-->
   <DataArchiver>
     <filebase>shockTube_AMR.uda</filebase>
-    <outputInterval> 0.000025 </outputInterval>
+    <outputInterval> 0.0005 </outputInterval>
     <save label="delP_Dilatate"/>
     <save label="press_CC"/>
     <save label="rho_CC"/>
@@ -106,7 +105,7 @@
     <save label="mag_grad_temp_CC"/>
     <save label="mag_div_vel_CC"/>
     <save label="refineFlag"/>
-    <checkpoint timestepInterval="30" cycle="2"/>
+    <checkpoint timestepInterval="75" cycle="2"/>
   </DataArchiver>
 
   <!--____________________________________________________________________-->

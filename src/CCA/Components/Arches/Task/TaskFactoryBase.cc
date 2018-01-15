@@ -8,7 +8,7 @@ using namespace Uintah;
 TaskFactoryBase::TaskFactoryBase()
 {
   _matl_index = 0; //Arches material
-  _all_tasks_str = "all_tasks";
+  _tasks.clear();
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -17,10 +17,19 @@ TaskFactoryBase::~TaskFactoryBase()
   for (BuildMap::iterator i = _builders.begin(); i != _builders.end(); i++ ){
     delete i->second;
   }
+
   for (TaskMap::iterator i = _tasks.begin(); i != _tasks.end(); i++ ){
     delete i->second;
   }
-}
+
+  for (ABuildMap::iterator i = _atomic_builders.begin(); i != _atomic_builders.end(); i++ ){
+    delete i->second;
+  }
+
+  for (ATaskMap::iterator i = _atomic_tasks.begin(); i != _atomic_tasks.end(); i++ ){
+     delete i->second;
+   }
+ }
 
 //--------------------------------------------------------------------------------------------------
 void
@@ -34,6 +43,7 @@ TaskFactoryBase::register_task(std::string task_name,
   if ( i == _builders.end() ){
 
     _builders.insert(std::make_pair(task_name, builder ));
+
     //If we are creating a builder, we assume the task is "active"
     _active_tasks.push_back(task_name);
 
@@ -258,7 +268,8 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
 
   ArchesFieldContainer::VariableRegistry variable_registry;
 
-  cout_archestaskdebug << " Scheduling task group with the following tasks: " << std::endl;
+  const std::string type_string = TaskInterface::get_task_type_string(type);
+  cout_archestaskdebug << " Scheduling the following task group with mode: "<< type_string << std::endl;
 
   for ( auto i_task = arches_tasks.begin(); i_task != arches_tasks.end(); i_task++ ){
 

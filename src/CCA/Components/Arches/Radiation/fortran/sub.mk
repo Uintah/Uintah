@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2017 The University of Utah
+#  Copyright (c) 1997-2018 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -45,11 +45,7 @@ SRCS += \
         $(SRCDIR)/radcal.F \
         $(SRCDIR)/radwsgg.F \
         $(SRCDIR)/rdombmcalc.F \
-        $(SRCDIR)/rdomflux.F \
         $(SRCDIR)/rdomsolve.F \
-        $(SRCDIR)/rdomsrc.F \
-        $(SRCDIR)/rdomsrcscattering.F \
-        $(SRCDIR)/rdomvolq.F \
         $(SRCDIR)/rordr.F \
         $(SRCDIR)/rordrss.F \
         $(SRCDIR)/rordrtn.F \
@@ -65,8 +61,4 @@ $(SRCDIR)/rordrss.$(OBJEXT): $(SRCDIR)/rordrss_fort.h
 $(SRCDIR)/rordrtn.$(OBJEXT): $(SRCDIR)/rordrtn_fort.h
 $(SRCDIR)/rdombmcalc.$(OBJEXT): $(SRCDIR)/rdombmcalc_fort.h
 $(SRCDIR)/rdomsolve.$(OBJEXT): $(SRCDIR)/rdomsolve_fort.h
-$(SRCDIR)/rdomsrc.$(OBJEXT): $(SRCDIR)/rdomsrc_fort.h
-$(SRCDIR)/rdomsrcscattering.$(OBJEXT):$(SRCDIR)/rdomsrcscattering_fort.h
-$(SRCDIR)/rdomflux.$(OBJEXT): $(SRCDIR)/rdomflux_fort.h
-$(SRCDIR)/rdomvolq.$(OBJEXT): $(SRCDIR)/rdomvolq_fort.h
 

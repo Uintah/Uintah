@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,7 +25,7 @@
 #ifndef CORE_GRID_LEVEL_H
 #define CORE_GRID_LEVEL_H
 
-#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Ports/LoadBalancer.h>
 
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Grid/GridP.h>
@@ -44,7 +44,6 @@
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/IntVector.h>
-#include <Core/Grid/fixedvector.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 #include <vector>
@@ -155,7 +154,7 @@ public:
 
   void finalizeLevel();
   void finalizeLevel( bool periodicX, bool periodicY, bool periodicZ );
-  void assignBCS( const ProblemSpecP & ps, LoadBalancerPort * lb );
+  void assignBCS( const ProblemSpecP & ps, LoadBalancer * lb );
       
   int numPatches() const;
   long totalCells() const;
@@ -166,10 +165,7 @@ public:
   void getInteriorSpatialRange( BBox & b ) const { b.extend(m_int_spatial_range); };
   
   // methods to identify if this is non-cubic level
-  void addBox_ups( const BBox &b );
-  bool insideBoxes_ups( const IntVector& d ) const;
   bool isNonCubic() const { return m_isNonCubicDomain; };
-  void setNonCubicFlag ( bool test );
   
   
   void findIndexRange(     IntVector & lowIndex, IntVector & highIndex ) const { findNodeIndexRange(lowIndex, highIndex); }
@@ -194,30 +190,18 @@ public:
   // Grid spacing
   Vector dCell() const { return m_dcell; }
 
-  // Returns the cell volume dx*dy*dz. This will not work for stretched grids.
+  // Returns the cell volume dx*dy*dz.
   double cellVolume() const {
-    if (isStretched()) {
-      throw InternalError( "Cell Volume is not unique for stretched meshes, therefore, you cannot use Patch::cellVolume() or Level::cellVolume().", __FILE__, __LINE__);
-    }
     return m_dcell.x()*m_dcell.y()*m_dcell.z();
   }
 
-  // Returns the cell area dx*dy, dx*dz, or dy*dz. This will not work for stretched grids.
+  // Returns the cell area dx*dy, dx*dz, or dy*dz.
   double cellArea( Vector unitNormal ) const {
-    if (isStretched()) {
-      throw InternalError( "Cell area is not unique for stretched meshes, therefore, you cannot use Patch::cellArea or Level::cellArea.", __FILE__, __LINE__);
-    }
     Vector areas(m_dcell.y() * m_dcell.z(), m_dcell.x() * m_dcell.z(), m_dcell.x() * m_dcell.y());
     return Dot(areas, unitNormal);
   }
 
   Point getAnchor() const { return m_anchor; }
-
-  // For stretched grids
-  bool isStretched() const { return m_stretched; }
-  void getCellWidths(    Grid::Axis axis, OffsetArray1<double> & widths ) const;
-  void getFacePositions( Grid::Axis axis, OffsetArray1<double> & faces ) const;
-  void setStretched(     Grid::Axis axis, const OffsetArray1<double> & faces );
 
   void      setExtraCells( const IntVector & ec );
   IntVector getExtraCells() const { return m_extra_cells; }
@@ -231,8 +215,9 @@ public:
   Box getBox( const IntVector &, const IntVector & ) const;
 
   static const int MAX_PATCH_SELECT = 32;
-  using selectType = FixedVector<const Patch*, MAX_PATCH_SELECT>;
-      
+  //  using selectType = FixedVector<const Patch*, MAX_PATCH_SELECT>;
+  using selectType = std::vector<const Patch*>;
+
 
   void selectPatches( const IntVector  &
                     , const IntVector  &
@@ -296,13 +281,9 @@ private:
   // The spatial range of the level.
   BBox      m_spatial_range;
   BBox      m_int_spatial_range;
-  
-  // let the component know that this is a non-cubic level
-  struct upsBoxes{
-    std::vector<BBox> boxes;                              // boxes in a level pulled from ups file                    
-  };
-  upsBoxes m_upsBoxes;
+
   bool      m_isNonCubicDomain{false};                    // is level non cubic level
+  void      setIsNonCubicLevel();
   
   bool      m_finalized{false};
   int       m_index;                                      // number of the level
@@ -321,13 +302,6 @@ private:
 
   int       m_id;
   IntVector m_refinement_ratio;
-
-  // For stretched grids
-  bool m_stretched{false};
-
-  // This is three different arrays containing the x,y,z coordinate of the face position
-  // be sized to d_idxSize[axis] + 1.  Used only for stretched grids
-  OffsetArray1<double> m_face_position[3];
 
   class IntVectorCompare {
   public:

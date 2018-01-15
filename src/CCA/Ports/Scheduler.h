@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,6 +25,8 @@
 #ifndef CCA_PORTS_SCHEDULER_H
 #define CCA_PORTS_SCHEDULER_H
 
+#include <CCA/Components/SimulationController/RunTimeStatsEnums.h>
+
 #include <Core/Parallel/UintahParallelPort.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/Variables/ComputeSet.h>
@@ -32,6 +34,7 @@
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/Task.h>
+#include <Core/Util/InfoMapper.h>
 
 #include <list>
 #include <map>
@@ -42,9 +45,9 @@
 
 namespace Uintah {
 
-  class LoadBalancerPort;
+  class UintahParallelComponent;
+  class LoadBalancer;
   class Task;
-  class SimulationInterface;
 
 /**************************************
 
@@ -79,16 +82,24 @@ class Scheduler : public UintahParallelPort {
     Scheduler();
 
     virtual ~Scheduler();
-   
+
     // Only called by the SimulationController, and only once, and only
     // if the simulation has been "restarted".
     virtual void setGeneration( int id ) = 0;
 
-    virtual void problemSetup( const ProblemSpecP& prob_spec, SimulationStateP& state ) = 0;
+    // Methods for managing the components attached via the ports.
+    virtual void setComponents( UintahParallelComponent *comp ) = 0;
+    virtual void getComponents() = 0;
+    virtual void releaseComponents() = 0;
 
-    virtual void checkMemoryUse( unsigned long & memUsed,
-				 unsigned long & highwater,
-				 unsigned long & maxMemUsed ) = 0;
+    virtual void problemSetup( const ProblemSpecP     & prob_spec
+			                       , const SimulationStateP & state
+			                       ) = 0;
+
+    virtual void checkMemoryUse( unsigned long & memUsed
+				                       , unsigned long & highwater
+				                       , unsigned long & maxMemUsed
+				                       ) = 0;
     
     virtual void setStartAddr( char * start ) = 0;  // sbrk memory start location (for memory tracking)
 
@@ -132,9 +143,7 @@ class Scheduler : public UintahParallelPort {
 
     virtual const std::set<std::string>&                        getNotCheckPointVars() const = 0;    
 
-    virtual LoadBalancerPort * getLoadBalancer() = 0;
-
-    virtual void releaseLoadBalancer() = 0;
+    virtual LoadBalancer * getLoadBalancer() = 0;
 
     virtual DataWarehouse* get_dw( int idx ) = 0;
 
@@ -190,8 +199,11 @@ class Scheduler : public UintahParallelPort {
                                            ) = 0;
 
     //! Schedule copying data to new grid after regridding
-    virtual void scheduleAndDoDataCopy( const GridP & grid, SimulationInterface * sim ) = 0;
+    virtual void scheduleAndDoDataCopy( const GridP & grid ) = 0;
 
+    virtual void clearTaskMonitoring() = 0;
+    virtual void scheduleTaskMonitoring( const LevelP& level ) = 0;
+    virtual void scheduleTaskMonitoring( const PatchSet* patches ) = 0;
 
     virtual void overrideVariableBehavior( const std::string & var
                                          ,       bool          treatAsOld
@@ -230,11 +242,15 @@ class Scheduler : public UintahParallelPort {
 
     virtual int getMaxLevelOffset() = 0;
 
+    virtual bool copyTimestep() = 0;
+
     virtual bool isCopyDataTimestep() = 0;
 
     virtual void setInitTimestep( bool ) = 0;
 
     virtual void setRestartInitTimestep( bool ) = 0;
+
+    virtual void setRunTimeStats( ReductionInfoMapper< RunTimeStatsEnum, double > *runTimeStats) = 0;
 
   private:
 

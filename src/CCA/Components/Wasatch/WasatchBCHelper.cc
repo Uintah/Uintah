@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2013-2017 The University of Utah
+ * Copyright (c) 2013-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -54,6 +54,11 @@
 #include <CCA/Components/Wasatch/TagNames.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditions.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditionBase.h>
+
+#ifdef HAVE_POKITT
+//-- PoKiTT includes --//
+#include <pokitt/CanteraObjects.h>
+#endif
 
 
 /**
@@ -137,21 +142,6 @@ namespace WasatchCore {
     }
   }
   
-  
-  // This function returns true if the boundary condition is applied in the same direction
-  // as the staggered field. For example, xminus/xplus on a XVOL field.
-  template <typename MomDirT>
-  NSCBC::Direction get_mom_dir(){}
-  
-  template<>
-  NSCBC::Direction get_mom_dir<SpatialOps::XDIR>(){return NSCBC::XDIR;}
-  
-  template<>
-  NSCBC::Direction get_mom_dir<SpatialOps::YDIR>(){return NSCBC::YDIR;}
-  
-  template<>
-  NSCBC::Direction get_mom_dir<SpatialOps::ZDIR>(){return NSCBC::ZDIR;}
-
   //============================================================================
 
   // This function returns true if the boundary condition is applied in the same direction
@@ -332,7 +322,8 @@ namespace WasatchCore {
   : BCHelper(level, sched, materials),
     patchInfoMap_(patchInfoMap),
     bcFunctorMap_(bcFunctorMap),
-    grafCat_     (grafCat)
+    grafCat_     (grafCat),
+    hasSpeciesTransportEquations_( wasatchSpec->findBlock("SpeciesTransportEquations") )
   {
     Uintah::BBox b;
     level->getInteriorSpatialRange(b);
@@ -457,8 +448,9 @@ namespace WasatchCore {
     {
       const BndSpec& myBndSpec = bndSpecPair.second;
       const BndCondSpec* myBndCondSpec = bndSpecPair.second.find(fieldName);
-      
-      if (myBndCondSpec) {        
+
+      if (myBndCondSpec) {
+
         BOOST_FOREACH( const Uintah::PatchSubset* const patches, localPatches_->getVector() )
         {
           BOOST_FOREACH( const Uintah::Patch* const patch, patches->getVector() )
@@ -749,7 +741,7 @@ namespace WasatchCore {
     Expr::ExpressionFactory& factory = *(grafCat_[ADVANCE_SOLUTION]->exprFactory);
     typedef SVolField FieldT;
     
-    bool do2, do3;
+    bool do2=false, do3=false;
     const Expr::Tag& u = nscbcTagMgr[NSCBC::U];
     const Expr::Tag& v = nscbcTagMgr[NSCBC::V];
     const Expr::Tag& w = nscbcTagMgr[NSCBC::W];
@@ -779,8 +771,18 @@ namespace WasatchCore {
         break;
     }
     
-    const double gasConstant = 8314.459848;  // universal R = J/(kmol K).
-    std::vector<double> mw = {28.966}; // we will need a vector of molecular weights---------
+    double gasConstant;
+    std::vector<double> mw;
+    if( hasSpeciesTransportEquations_ ){
+# ifdef HAVE_POKITT
+      gasConstant = CanteraObjects::gas_constant();
+      mw = CanteraObjects::molecular_weights();
+# endif
+    }
+    else{
+      gasConstant = 8314.459848;  // universal R = J/(kmol K).
+      mw = {28.966}; // air
+    }
     BOOST_FOREACH( const Uintah::PatchSubset* const patches, localPatches_->getVector() )
     {
       BOOST_FOREACH( const Uintah::Patch* const patch, patches->getVector() )
@@ -798,8 +800,8 @@ namespace WasatchCore {
                                               strPatchID,
                                               nscbcSpec_.pFar,
                                               length );
-          
-          NSCBC::BCBuilder<FieldT>* nscbcBuilder = new NSCBC::BCBuilder<FieldT>(nscbcInfo, mw, gasConstant, nscbcTagMgr, do2, do3, patchID);
+          typedef NSCBC::NonreflectingSubSwitch Nonreflecting;
+          NSCBC::BCBuilder<FieldT>* nscbcBuilder = new NSCBC::BCBuilder<FieldT>(nscbcInfo, mw, gasConstant, nscbcTagMgr, do2, do3, Nonreflecting::SUBTRACTION_OFF, patchID);
           if ( nscbcBuildersMap_.find(bndName) != nscbcBuildersMap_.end() ) {
             if (nscbcBuildersMap_.find(bndName)->second.find(patchID) == nscbcBuildersMap_.find(bndName)->second.end()) {
               nscbcBuildersMap_.find(bndName)->second.insert( pair< int, NSCBC::BCBuilder<FieldT>* > (patchID, nscbcBuilder)       );
@@ -817,13 +819,16 @@ namespace WasatchCore {
       }
     }
   }
+
   //------------------------------------------------------------------------------------------------
   
   void WasatchBCHelper::apply_nscbc_boundary_condition(const Expr::Tag& varTag,
                                                        const NSCBC::TransportVal& quantity,
-                                                       const Category& taskCat)
+                                                       const Category& taskCat,
+                                                       const int speciesNumber)
   {
     if (!do_nscbc()) return;
+
     using namespace std;
     typedef SVolField FieldT;
     const string& fieldName = varTag.name();
@@ -844,7 +849,7 @@ namespace WasatchCore {
             if( myBndSpec.has_patch(patchID) ) {
               string bndName = myBndSpec.name;
               NSCBC::BCBuilder<FieldT>* nscbc = nscbcBuildersMap_.find(bndName)->second.find(patchID)->second;
-              nscbc->attach_rhs_modifier( factory, varTag, quantity, -1 );
+              nscbc->attach_rhs_modifier( factory, varTag, quantity, speciesNumber );
             }
           }
         }

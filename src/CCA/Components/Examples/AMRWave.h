@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -62,12 +62,15 @@ WARNING
   class VarLabel;
   class AMRWave : public Wave {
   public:
-    AMRWave(const ProcessorGroup* myworld);
+    AMRWave(const ProcessorGroup* myworld,
+	    const SimulationStateP sharedState);
+    
     virtual ~AMRWave();
 
     virtual void problemSetup(const ProblemSpecP& params, 
                               const ProblemSpecP& restart_prob_spec, 
-                              GridP& grid, SimulationStateP& sharedState);
+                              GridP& grid);
+    
     virtual void scheduleRefineInterface(const LevelP& fineLevel,
                                          SchedulerP& scheduler,
                                          bool needCoarseOld, 

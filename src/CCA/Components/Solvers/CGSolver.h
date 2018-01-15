@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,11 +25,11 @@
 #ifndef Packages_Uintah_CCA_Components_Solvers_CGSolver_h
 #define Packages_Uintah_CCA_Components_Solvers_CGSolver_h
 
-#include <CCA/Ports/SolverInterface.h>
-#include <Core/Parallel/UintahParallelComponent.h>
+#include <CCA/Components/Solvers/SolverCommon.h>
 
 namespace Uintah {
-  class CGSolver : public SolverInterface, public UintahParallelComponent { 
+
+  class CGSolver : public SolverCommon { 
 
   public:
 
@@ -38,7 +38,7 @@ namespace Uintah {
 
     virtual SolverParameters* readParameters(       ProblemSpecP     & params,
                                               const std::string      & name,
-                                                    SimulationStateP & state );
+                                              const SimulationStateP & state );
 
     virtual void scheduleSolve( const LevelP           & level,
                                       SchedulerP       & sched,
@@ -61,7 +61,6 @@ namespace Uintah {
     virtual void scheduleInitialize( const LevelP      & level,
                                            SchedulerP  & sched,
                                      const MaterialSet * matls ) {}
-
   };
 
 } // end namespace Uintah

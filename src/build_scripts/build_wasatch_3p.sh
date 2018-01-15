@@ -88,11 +88,11 @@ fi
 ###########################################################################
 # GIT Hash Tags for the various libraries
 
-SPATIAL_OPS_TAG=ab3aa3d08d94c0d1d75d6efef2e59cf61c12e917
+SPATIAL_OPS_TAG=4e99f30af27c904ae6373ea40e867806a5bffeba
 TAB_PROPS_TAG=0a671fcdaf53cb517666ba760513a7ce141ecb6e
 RAD_PROPS_TAG=a2626cdccfbb97ccb7d68d43bfe085194cccf4d5
 EXPR_LIB_TAG=5e613b3ea02014ca5a568734bde2ca82f8a5f7db
-NSCBC_TAG=55942bcb2cea82055c1b83014389e4e1c8053e64
+NSCBC_TAG=406f8ee6326fd1c12a158a66c39cd8492f63de4c
 
 ############################################################################
 
@@ -170,7 +170,7 @@ if test "$BUILD_SPATIALOPS" = "yes"; then
       fi
       run "cd .."
   else
-    run "git clone https://software.crsim.utah.edu:8443/James_Research_Group/SpatialOps.git SpatialOps"
+    run "git clone http://gitlab.multiscale.utah.edu/common/SpatialOps.git SpatialOps"
     run "mkdir $BASE_BUILD_DIR/Wasatch3P/src/SpatialOps/build"
   fi
   if test ! -z $SPATIAL_OPS_TAG ; then
@@ -249,7 +249,7 @@ if test "$BUILD_EXPRLIB" = "yes"; then
       fi
       run "cd .."
   else
-      run "git clone https://software.crsim.utah.edu:8443/James_Research_Group/ExprLib.git ExprLib"
+      run "git clone http://gitlab.multiscale.utah.edu/common/ExprLib.git ExprLib"
       run "mkdir $BASE_BUILD_DIR/Wasatch3P/src/ExprLib/build"
   fi
   if test ! -z $EXPR_LIB_TAG ; then
@@ -312,7 +312,7 @@ if test "$BUILD_TABPROPS" = "yes"; then
       fi
       run "cd .."
   else
-      run "git clone https://software.crsim.utah.edu:8443/James_Research_Group/TabProps.git TabProps"
+      run "git clone http://gitlab.multiscale.utah.edu/common/TabProps.git TabProps"
       run "mkdir $BASE_BUILD_DIR/Wasatch3P/src/TabProps/build"
   fi
   if test ! -z $TAB_PROPS_TAG ; then
@@ -370,7 +370,7 @@ if test "$BUILD_RADPROPS" = "yes"; then
       fi
       run "cd .."
   else
-     run "git clone https://software.crsim.utah.edu:8443/James_Research_Group/RadProps.git RadProps"
+     run "git clone http://gitlab.multiscale.utah.edu/common/RadProps.git RadProps"
      run "mkdir $BASE_BUILD_DIR/Wasatch3P/src/RadProps/build"
   fi
   if test ! -z $RAD_PROPS_TAG ; then
@@ -431,7 +431,7 @@ if test "$BUILD_NSCBC" = "yes"; then
     fi
     run "cd .."
   else
-    run "git clone https://software.crsim.utah.edu:8443/James_Research_Group/NSCBC.git NSCBC"
+    run "git clone http://gitlab.multiscale.utah.edu/common/NSCBC.git NSCBC"
     run "mkdir $BASE_BUILD_DIR/Wasatch3P/src/NSCBC/build"
   fi
   if test ! -z $NSCBC_TAG ; then

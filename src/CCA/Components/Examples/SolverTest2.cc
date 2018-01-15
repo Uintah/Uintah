@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,15 +25,12 @@
 
 #include <CCA/Components/Examples/SolverTest2.h>
 #include <CCA/Components/Examples/ExamplesLabel.h>
-#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Ports/LoadBalancer.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/Stencil7.h>
-#include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/CCVariable.h>
-#include <Core/Grid/Variables/SoleVariable.h>
 #include <Core/Grid/Variables/CellIterator.h>
-#include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
@@ -50,12 +47,12 @@
 
 using namespace Uintah;
 
-SolverTest2::SolverTest2(const ProcessorGroup* myworld)
-  : UintahParallelComponent(myworld)
+SolverTest2::SolverTest2(const ProcessorGroup* myworld,
+			 const SimulationStateP sharedState)
+  : ApplicationCommon(myworld, sharedState)
 {
   lb_ = scinew ExamplesLabel();
 
-  shared_state_ = 0;
   delt_ = 0.0;
   mymat_ = 0;
   //solver = 0;
@@ -76,7 +73,7 @@ SolverTest2::~SolverTest2()
 //
 void SolverTest2::problemSetup(const ProblemSpecP& prob_spec,
                                const ProblemSpecP& restart_prob_spec, 
-                               GridP&, SimulationStateP& shared_state)
+                               GridP&)
 {
   //solver = dynamic_cast<SolverInterface*>(getPort("solver"));
   //if(!solver) {
@@ -88,7 +85,6 @@ void SolverTest2::problemSetup(const ProblemSpecP& prob_spec,
   //                                           shared_state);
   //solver_parameters->setSolveOnExtraCells(false);
     
-  shared_state_ = shared_state;
   st_ps->require("delt", delt_);
 
   // whether or not to do laplacian in x,y,or z direction
@@ -109,14 +105,14 @@ void SolverTest2::problemSetup(const ProblemSpecP& prob_spec,
     throw ProblemSetupException("SolverTest: Must specify one of X_Laplacian, Y_Laplacian, or Z_Laplacian",
                                 __FILE__, __LINE__);
   mymat_ = scinew SimpleMaterial();
-  shared_state->registerSimpleMaterial(mymat_);
+  m_sharedState->registerSimpleMaterial(mymat_);
 }
 //__________________________________
 // 
 void SolverTest2::scheduleInitialize(const LevelP& level,
                                SchedulerP& sched)
 {
-  //solver->scheduleInitialize(level,sched,shared_state_->allMaterials());
+  //solver->scheduleInitialize(level,sched,m_sharedState->allMaterials());
 }
 //__________________________________
 //
@@ -126,13 +122,13 @@ void SolverTest2::scheduleRestartInitialize(const LevelP& level,
 }
 //__________________________________
 // 
-void SolverTest2::scheduleComputeStableTimestep(const LevelP& level,
+void SolverTest2::scheduleComputeStableTimeStep(const LevelP& level,
                                           SchedulerP& sched)
 {
-  Task* task = scinew Task("computeStableTimestep",this, 
-                           &SolverTest2::computeStableTimestep);
-  task->computes(shared_state_->get_delt_label(),level.get_rep());
-  sched->addTask(task, level->eachPatch(), shared_state_->allMaterials());
+  Task* task = scinew Task("computeStableTimeStep",this, 
+                           &SolverTest2::computeStableTimeStep);
+  task->computes(getDelTLabel(),level.get_rep());
+  sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
 }
 //__________________________________
 //
@@ -145,9 +141,9 @@ SolverTest2::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
   task->computes(lb_->pressure_matrix);
   task->computes(lb_->pressure_rhs);
 
-  sched->addTask(task, level->eachPatch(), shared_state_->allMaterials());
+  sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
 
-  //solver->scheduleSolve(level, sched, shared_state_->allMaterials(),
+  //solver->scheduleSolve(level, sched, m_sharedState->allMaterials(),
   //                      lb_->pressure_matrix, Task::NewDW, lb_->pressure,
   //                      false, lb_->pressure_rhs, Task::NewDW, 0, Task::OldDW,
   //                      solver_parameters,false);
@@ -155,12 +151,12 @@ SolverTest2::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 }
 //__________________________________
 //
-void SolverTest2::computeStableTimestep(const ProcessorGroup*,
+void SolverTest2::computeStableTimeStep(const ProcessorGroup*,
                                   const PatchSubset* pss,
                                   const MaterialSubset*,
                                   DataWarehouse*, DataWarehouse* new_dw)
 {
-  new_dw->put(delt_vartype(delt_), shared_state_->get_delt_label(),getLevel(pss));
+  new_dw->put(delt_vartype(delt_), getDelTLabel(),getLevel(pss));
 }
 //__________________________________
 //
