@@ -9,11 +9,11 @@
       <artificial_viscosity_coeff1        spec="OPTIONAL DOUBLE" />
       <artificial_viscosity_coeff2        spec="OPTIONAL DOUBLE" />
       <refine_particles                   spec="OPTIONAL BOOLEAN" />
+      <CanAddParticles                    spec="OPTIONAL BOOLEAN" />
       <XPIC2                              spec="OPTIONAL BOOLEAN" />
       <axisymmetric                       spec="OPTIONAL BOOLEAN" />
       <AMR                                spec="OPTIONAL BOOLEAN" />
       <CanAddMPMMaterial                  spec="OPTIONAL BOOLEAN" />
-      <create_new_particles               spec="OPTIONAL BOOLEAN" />  <!-- default is false -->
       <do_contact_friction_heating        spec="OPTIONAL BOOLEAN" />
       <computeColinearNormals             spec="OPTIONAL BOOLEAN" />
       <do_grid_reset                      spec="OPTIONAL BOOLEAN" />
@@ -24,8 +24,6 @@
       <DoDefGradAveraging                 spec="OPTIONAL BOOLEAN" /> 
       <DoThermalExpansion                 spec="OPTIONAL BOOLEAN" />  <!-- FIXME: default is? -->
       <computeNodalHeatFlux               spec="OPTIONAL BOOLEAN" />
-      <delete_rogue_particles               spec="OPTIONAL BOOLEAN" />
-      <manual_new_material                spec="OPTIONAL BOOLEAN" />  <!-- default is false -->
       <num_iters_to_decrease_delT         spec="OPTIONAL INTEGER" />
       <num_iters_to_increase_delT         spec="OPTIONAL INTEGER" />
       <iters_before_timestep_restart      spec="OPTIONAL INTEGER" />
@@ -46,15 +44,21 @@
       <use_load_curves                    spec="OPTIONAL BOOLEAN" />
       <use_CBDI_boundary_condition        spec="OPTIONAL BOOLEAN" />
       <use_cohesive_zones                 spec="OPTIONAL BOOLEAN" />
+      <use_tracers                        spec="OPTIONAL BOOLEAN" />
       <use_volume_integral                spec="OPTIONAL BOOLEAN" /> 
       <UsePrescribedDeformation           spec="OPTIONAL BOOLEAN" /> 
       <PrescribedDeformationFile          spec="OPTIONAL STRING" />
       <exactDeformation                   spec="OPTIONAL BOOLEAN" /> 
+      <DoAuthigenisis                     spec="OPTIONAL BOOLEAN" /> 
+      <AuthigenisisBaseFilename           spec="OPTIONAL STRING" />
       <InsertParticles                    spec="OPTIONAL BOOLEAN" /> 
       <InsertParticlesFile                spec="OPTIONAL STRING" /> 
       <withColor                          spec="OPTIONAL BOOLEAN" />
+      <containerMaterial                  spec="OPTIONAL INTEGER 'positive'"/>
+      <containerRadius                    spec="OPTIONAL DOUBLE  'positive'"/>
+      <KEMaterial                         spec="OPTIONAL INTEGER 'positive'"/>
     
-      <!-- FIXME:  THE FOLLOW APPLY ONLY TO THE IMPLICIT MPM CODE -->
+      <!-- THE FOLLOW APPLY ONLY TO THE IMPLICIT MPM CODE -->
       <dynamic                            spec="OPTIONAL BOOLEAN" />
       <solver                             spec="OPTIONAL STRING 'petsc, simple'" />
       <convergence_criteria_disp          spec="OPTIONAL DOUBLE 'positive'"/>
@@ -100,6 +104,7 @@
             <time_point           spec="MULTIPLE NO_DATA" >
               <time               spec="REQUIRED INTEGER" />
               <load               spec="REQUIRED INTEGER" />
+              <maxKE              spec="OPTIONAL DOUBLE" />
             </time_point>
           </load_curve>
           <res                    spec="OPTIONAL VECTOR" />
@@ -151,6 +156,16 @@
         <master_material                 spec="OPTIONAL INTEGER" />
         <normal_only                     spec="OPTIONAL BOOLEAN" />
       </contact>
+
+      <dissolution                           spec="MULTIPLE NO_DATA" >
+        <rate                            spec="OPTIONAL DOUBLE 'positive'" /> 
+        <PressureThreshold               spec="OPTIONAL DOUBLE 'positive'" />
+        <separation_factor               spec="OPTIONAL DOUBLE 'positive'" />
+        <materials                       spec="OPTIONAL MULTIPLE_INTEGERS" />
+        <type                            spec="REQUIRED STRING 'null, test'" />
+        <master_material                 spec="OPTIONAL INTEGER" />
+      </dissolution>
+
       
       <material                          spec="MULTIPLE NO_DATA"
                                            attribute1="name OPTIONAL STRING" >
@@ -219,6 +234,11 @@
         <cz_filename                       spec="REQUIRED STRING" />
         <do_rotation                       spec="OPTIONAL BOOLEAN" />
       </cohesive_zone>
+      <tracer                            spec="MULTIPLE NO_DATA"
+                                           attribute1="name OPTIONAL STRING" >
+        <associated_material               spec="OPTIONAL INTEGER" />
+        <tracer_filename                   spec="REQUIRED STRING" />
+      </tracer>
       <thermal_contact                   spec="OPTIONAL NO_DATA" />
       <include href="diffusion_interface.xml" />
     </MPM>
