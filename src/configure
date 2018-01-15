@@ -854,6 +854,7 @@ STATIC_BUILD_DEF
 ac_ct_F77
 DEF_NO_FORTRAN
 NO_FORTRAN
+DEF_MINIMAL
 DEF_WASATCH
 DEF_UNIT_TESTS
 DEF_STANDALONE
@@ -871,6 +872,7 @@ DEF_EXAMPLES
 DEF_ARCHES
 DEF_APPLICATION
 DEF_ANALYSIS_MODULES
+BUILD_MINIMAL
 BUILD_WASATCH
 BUILD_UNIT_TESTS
 BUILD_STANDALONE
@@ -6251,9 +6253,9 @@ fi
 
   # Check whether --enable-minimal was given.
 if test "${enable_minimal+set}" = set; then :
-  enableval=$enable_minimal; enable_minimal="$enableval"
+  enableval=$enable_minimal; BUILD_MINIMAL="yes"
 else
-  enable_minimal=${enable_minimal='no'}
+  BUILD_MINIMAL="no"
 fi
 
   sci_arg_enable_list="$sci_arg_enable_list --enable-minimal --disable-minimal"
@@ -6414,7 +6416,7 @@ DEF_SIM_CONTROLLER=
 BUILD_STANDALONE=yes
 DEF_STANDALONE=
 
-if test "$enable_minimal" = "yes" -a              \
+if test "$BUILD_MINIMAL" = "yes" -a              \
         \( "$use_all_components"      = "yes" -o  \
 	   "$enable_unit_tests"       = "yes" -o  \
 	   "$enable_arches"           = "yes" -o  \
@@ -6427,7 +6429,7 @@ if test "$enable_minimal" = "yes" -a              \
            "$enable_phasefield"       = "yes" -o  \
            "$enable_wasatch"          = "yes" \); then
    as_fn_error $? "Can not do a minimal library only build if building applications or unit tests" "$LINENO" 5
-elif test "$enable_minimal" = "yes"; then
+elif test "$BUILD_MINIMAL" = "yes"; then
 
   add_important_warning "-------------------------------------------------------------------------"
   msg="!!! MINIMAL LIBRARY ONLY BUILD REQUESTED !!!"
@@ -6455,7 +6457,7 @@ if test "$use_all_components" = "yes" -a          \
    as_fn_error $? "Can not use both --enable-all-components and --enable-<specific-component> " "$LINENO" 5
 fi
 
-if test "$enable_minimal"      != "yes" -a  \
+if test "$BUILD_MINIMAL"       != "yes" -a  \
         "$BUILD_ARCHES"        != "yes" -a  \
         "$BUILD_EXAMPLES"      != "yes" -a  \
         "$BUILD_FVM"           != "yes" -a  \
@@ -8541,6 +8543,8 @@ if test "$with_fortran" = "no"; then
 fi
 
 # NO_FORTRAN is used in configVars.mk[.in] and DEF_NO_FORTRAN is used in uintah_testdefs.h.in
+
+
 
 
 
@@ -42278,8 +42282,10 @@ ac_config_files="$ac_config_files configVars.mk Makefile disjointPackageMakefile
 
 
 ##  Add a list of Uintah specific output files.
+if test "$NO_FORTRAN" != "yes" ; then
 ac_config_files="$ac_config_files tools/fspec.pl"
 
+fi
 
 #  ignore --no-create and --no-recursion flags
 no_create=no

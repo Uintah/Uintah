@@ -739,9 +739,9 @@ SCI_ARG_ENABLE(unit-tests,
 
 SCI_ARG_ENABLE(minimal,
   AC_HELP_STRING(--enable-minimal,
-                 Do a minimal library only build),
-  [enable_minimal="$enableval"],
-  [enable_minimal=${enable_minimal='no'}])
+                 Build a minimal set of libraries),
+  [BUILD_MINIMAL="yes"],
+  [BUILD_MINIMAL="no"])
 
 #
 # ---- List of --enable statements for Uintah Applications ---- 
@@ -853,7 +853,7 @@ DEF_SIM_CONTROLLER=
 BUILD_STANDALONE=yes
 DEF_STANDALONE=
 
-if test "$enable_minimal" = "yes" -a              \
+if test "$BUILD_MINIMAL" = "yes" -a              \
         \( "$use_all_components"      = "yes" -o  \
 	   "$enable_unit_tests"       = "yes" -o  \
 	   "$enable_arches"           = "yes" -o  \
@@ -866,7 +866,7 @@ if test "$enable_minimal" = "yes" -a              \
            "$enable_phasefield"       = "yes" -o  \
            "$enable_wasatch"          = "yes" \); then
    AC_MSG_ERROR( Can not do a minimal library only build if building applications or unit tests)
-elif test "$enable_minimal" = "yes"; then
+elif test "$BUILD_MINIMAL" = "yes"; then
 
   add_important_warning "-------------------------------------------------------------------------"
   msg="!!! MINIMAL LIBRARY ONLY BUILD REQUESTED !!!"
@@ -894,7 +894,7 @@ if test "$use_all_components" = "yes" -a          \
    AC_MSG_ERROR( Can not use both --enable-all-components and --enable-<specific-component> )
 fi
 
-if test "$enable_minimal"      != "yes" -a  \
+if test "$BUILD_MINIMAL"       != "yes" -a  \
         "$BUILD_ARCHES"        != "yes" -a  \
         "$BUILD_EXAMPLES"      != "yes" -a  \
         "$BUILD_FVM"           != "yes" -a  \
@@ -1453,6 +1453,7 @@ AC_SUBST(BUILD_SIM_CONTROLLER)
 AC_SUBST(BUILD_STANDALONE)
 AC_SUBST(BUILD_UNIT_TESTS)
 AC_SUBST(BUILD_WASATCH)
+AC_SUBST(BUILD_MINIMAL)
 
 AC_SUBST(DEF_ANALYSIS_MODULES)
 AC_SUBST(DEF_APPLICATION)
@@ -1471,6 +1472,7 @@ AC_SUBST(DEF_SIM_CONTROLLER)
 AC_SUBST(DEF_STANDALONE)
 AC_SUBST(DEF_UNIT_TESTS)
 AC_SUBST(DEF_WASATCH)
+AC_SUBST(DEF_MINIMAL)
 
 AC_SUBST(NO_FORTRAN)
 AC_SUBST(DEF_NO_FORTRAN)
@@ -4675,7 +4677,9 @@ AC_SUBST(scirun_src_dir)
 AC_CONFIG_FILES(configVars.mk Makefile disjointPackageMakefile $sci_defs_files)
 
 ##  Add a list of Uintah specific output files.
+if test "$NO_FORTRAN" != "yes" ; then
 AC_CONFIG_FILES(tools/fspec.pl)
+fi
 
 #  ignore --no-create and --no-recursion flags
 no_create=no
