@@ -27,6 +27,7 @@
 
 #include <CCA/Components/ICE/CustomBCs/BoundaryCond.h>
 #include <CCA/Components/ICE/Materials/ICEMaterial.h>
+#include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Material.h>
@@ -42,7 +43,7 @@
 #include <ostream>                         // for operator<<, basic_ostream
 #include <vector>
 
-#define d_MAX_MATLS 8
+#define MAX_MATLS 8
 
 using namespace Uintah;
 using namespace ExchangeModels;
@@ -166,10 +167,10 @@ void ScalarExch::vel_FC_exchange( CellIterator    iter,
     }
   }
   else{         // Multi-material
-    double b[d_MAX_MATLS];
-    double b_sp_vol[d_MAX_MATLS];
-    double vel[d_MAX_MATLS];
-    double tmp[d_MAX_MATLS];
+    double b[MAX_MATLS];
+    double b_sp_vol[MAX_MATLS];
+    double vel[MAX_MATLS];
+    double tmp[MAX_MATLS];
     FastMatrix a(numMatls, numMatls);
 
     for(;!iter.done(); iter++){
@@ -404,7 +405,8 @@ void ScalarExch::sched_AddExch_Vel_Temp_CC( SchedulerP           & sched,
 
   Ghost::GhostType gn  = Ghost::None;
   Ghost::GhostType gac = Ghost::AroundCells;
-
+  
+  t->requires(Task::OldDW, Ilb->timeStepLabel);
   t->requires(Task::OldDW, Ilb->delTLabel,getLevel(patches));
 
   if(d_exchCoeff->convective()){
@@ -436,9 +438,8 @@ void ScalarExch::sched_AddExch_Vel_Temp_CC( SchedulerP           & sched,
 }
 
 /*_____________________________________________________________________
- Function~  ICE::addExchangeToMomentumAndEnergy--
    This task adds the  exchange contribution to the
-   existing cell-centered momentum and internal energy
+   existing cell-centered velocity and temperature
 
                    (A)                              (X)
 | (1+b12 + b13)     -b12          -b23          |   |del_data_CC[1]  |
@@ -473,12 +474,16 @@ void ScalarExch::addExch_Vel_Temp_CC( const ProcessorGroup * pg,
                                       DataWarehouse        * new_dw,
                                       customBC_globalVars  * BC_globalVars)
 {
-#if 0
+  timeStep_vartype timeStep;
+  old_dw->get(timeStep, Ilb->timeStepLabel);
+  bool isNotInitialTimeStep = (timeStep > 0);
+  
+  
   const Level* level = getLevel(patches);
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    printTask(patches, patch, cout_doing, "Doing ICE::addExchangeToMomentumAndEnergy" );
+    printTask(patches, patch, dbgExch, "Doing ScalarExch::addExch_Vel_Temp_CC" );
 
     int numMPMMatls = d_sharedState->getNumMPMMatls();
     int numICEMatls = d_sharedState->getNumICEMatls();
@@ -486,7 +491,7 @@ void ScalarExch::addExch_Vel_Temp_CC( const ProcessorGroup * pg,
     Ghost::GhostType  gn = Ghost::None;
 
     delt_vartype delT;
-    old_dw->get(delT, lb->delTLabel, level);
+    old_dw->get(delT, Ilb->delTLabel, level);
     //Vector zero(0.,0.,0.);
 
     // Create arrays for the grid data
@@ -531,31 +536,31 @@ void ScalarExch::addExch_Vel_Temp_CC( const ProcessorGroup * pg,
 
       if(mpm_matl){                 // M P M
         CCVariable<double> oldTemp;
-        new_dw->getCopy(oldTemp,          lb->temp_CCLabel,indx,patch,gn,0);
-        new_dw->getModifiable(vel_CC[m],  lb->vel_CCLabel, indx,patch);
-        new_dw->getModifiable(Temp_CC[m], lb->temp_CCLabel,indx,patch);
+        new_dw->getCopy(oldTemp,          Ilb->temp_CCLabel,indx,patch,gn,0);
+        new_dw->getModifiable(vel_CC[m],  Ilb->vel_CCLabel, indx,patch);
+        new_dw->getModifiable(Temp_CC[m], Ilb->temp_CCLabel,indx,patch);
         old_temp[m] = oldTemp;
         cv[m].initialize(mpm_matl->getSpecificHeat());
       }
       if(ice_matl){                 // I C E
         constCCVariable<double> cv_ice;
-        old_dw->get(old_temp[m],   lb->temp_CCLabel,      indx, patch,gn,0);
-        new_dw->get(cv_ice,        lb->specific_heatLabel,indx, patch,gn,0);
-        new_dw->get(gamma[m],      lb->gammaLabel,        indx, patch,gn,0);
+        old_dw->get(old_temp[m],   Ilb->temp_CCLabel,      indx, patch,gn,0);
+        new_dw->get(cv_ice,        Ilb->specific_heatLabel,indx, patch,gn,0);
+        new_dw->get(gamma[m],      Ilb->gammaLabel,        indx, patch,gn,0);
 
         new_dw->allocateTemporary(vel_CC[m],  patch);
         new_dw->allocateTemporary(Temp_CC[m], patch);
         cv[m].copyData(cv_ice);
       }                             // A L L  M A T L S
 
-      new_dw->get(mass_L[m],        lb->mass_L_CCLabel,   indx, patch,gn, 0);
-      new_dw->get(sp_vol_CC[m],     lb->sp_vol_CCLabel,   indx, patch,gn, 0);
-      new_dw->get(mom_L[m],         lb->mom_L_CCLabel,    indx, patch,gn, 0);
-      new_dw->get(int_eng_L[m],     lb->int_eng_L_CCLabel,indx, patch,gn, 0);
-      new_dw->get(vol_frac_CC[m],   lb->vol_frac_CCLabel, indx, patch,gn, 0);
-      new_dw->allocateAndPut(Tdot[m],        lb->Tdot_CCLabel,    indx,patch);
-      new_dw->allocateAndPut(mom_L_ME[m],    lb->mom_L_ME_CCLabel,indx,patch);
-      new_dw->allocateAndPut(int_eng_L_ME[m],lb->eng_L_ME_CCLabel,indx,patch);
+      new_dw->get(mass_L[m],        Ilb->mass_L_CCLabel,   indx, patch,gn, 0);
+      new_dw->get(sp_vol_CC[m],     Ilb->sp_vol_CCLabel,   indx, patch,gn, 0);
+      new_dw->get(mom_L[m],         Ilb->mom_L_CCLabel,    indx, patch,gn, 0);
+      new_dw->get(int_eng_L[m],     Ilb->int_eng_L_CCLabel,indx, patch,gn, 0);
+      new_dw->get(vol_frac_CC[m],   Ilb->vol_frac_CCLabel, indx, patch,gn, 0);
+      new_dw->allocateAndPut(Tdot[m],        Ilb->Tdot_CCLabel,    indx,patch);
+      new_dw->allocateAndPut(mom_L_ME[m],    Ilb->mom_L_ME_CCLabel,indx,patch);
+      new_dw->allocateAndPut(int_eng_L_ME[m],Ilb->eng_L_ME_CCLabel,indx,patch);
     }
 
     // Convert momenta to velocities and internal energy to Temp
@@ -571,9 +576,9 @@ void ScalarExch::addExch_Vel_Temp_CC( const ProcessorGroup * pg,
     //
     for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
       IntVector c = *iter;
+      
       //---------- M O M E N T U M   E X C H A N G E
       //   Form BETA matrix (a), off diagonal terms
-      //   beta and (a) matrix are common to all momentum exchanges
       for(int m = 0; m < numALLMatls; m++)  {
         tmp = delT*sp_vol_CC[m][c];
         for(int n = 0; n < numALLMatls; n++) {
@@ -608,6 +613,7 @@ void ScalarExch::addExch_Vel_Temp_CC( const ProcessorGroup * pg,
       if(d_exchCoeff->d_heatExchCoeffModel != "constant"){
         d_exchCoeff->getVariableExchangeCoeff( K, H, c, mass_L);
       }
+      
       for(int m = 0; m < numALLMatls; m++) {
         tmp = delT*sp_vol_CC[m][c] / cv[m][c];
         for(int n = 0; n < numALLMatls; n++)  {
@@ -631,167 +637,172 @@ void ScalarExch::addExch_Vel_Temp_CC( const ProcessorGroup * pg,
          b[m] += beta(m,n) * (Temp_CC[n][c] - Temp_CC[m][c]);
         }
       }
+      
       //     S O L V E, Add exchange contribution to orig value
       a.destructiveSolve(b);
+      
       for(int m = 0; m < numALLMatls; m++) {
         Temp_CC[m][c] = Temp_CC[m][c] + b[m];
       }
-    }  //end CellIterator loop
+    } // end CellIterator loop
 
-  if(d_exchCoeff->convective()){
-    //  Loop over matls
-    //  if (mpm_matl)
-    //  Loop over cells
-    //  find surface and surface normals
-    //  choose adjacent cell
-    //  find mass weighted average temp in adjacent cell (T_ave)
-    //  compute a heat transfer to the container h(T-T_ave)
-    //  compute Temp_CC = Temp_CC + h_trans/(mass*cv)
-    //  end loop over cells
-    //  endif (mpm_matl)
-    //  endloop over matls
-    FastMatrix cet(2,2),ac(2,2);
-    double RHSc[2];
-    cet.zero();
-    int gm=d_exchCoeff->conv_fluid_matlindex();  // gas matl from which to get heat
-    int sm=d_exchCoeff->conv_solid_matlindex();  // solid matl that heat goes to
+    //__________________________________
+    //   C O N V E C T I V E   H E A T   T R A N S F E R
+    if(d_exchCoeff->convective()){
+      //  Loop over matls
+      //  if (mpm_matl)
+      //  Loop over cells
+      //  find surface and surface normals
+      //  choose adjacent cell
+      //  find mass weighted average temp in adjacent cell (T_ave)
+      //  compute a heat transfer to the container h(T-T_ave)
+      //  compute Temp_CC = Temp_CC + h_trans/(mass*cv)
+      //  end loop over cells
+      //  endif (mpm_matl)
+      //  endloop over matls
+      FastMatrix cet(2,2),ac(2,2);
+      double RHSc[2];
+      cet.zero();
+      int gm=d_exchCoeff->conv_fluid_matlindex();  // gas matl from which to get heat
+      int sm=d_exchCoeff->conv_solid_matlindex();  // solid matl that heat goes to
 
-    Ghost::GhostType  gac = Ghost::AroundCells;
-    constNCVariable<double> NC_CCweight, NCsolidMass;
-    old_dw->get(NC_CCweight,     MIlb->NC_CCweightLabel,  0,   patch,gac,1);
-    Vector dx = patch->dCell();
-    double dxlen = dx.length();
-    const Level* level=patch->getLevel();
+      Ghost::GhostType  gac = Ghost::AroundCells;
+      constNCVariable<double> NC_CCweight, NCsolidMass;
+      old_dw->get(NC_CCweight,     MIlb->NC_CCweightLabel,  0,   patch,gac,1);
+      Vector dx = patch->dCell();
+      double dxlen = dx.length();
+      const Level* level=patch->getLevel();
 
-    for (int m = 0; m < numALLMatls; m++)  {
-      Material* matl = d_sharedState->getMaterial( m );
-      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-      int dwindex = matl->getDWIndex();
-      if(mpm_matl && dwindex==sm){
-        new_dw->get(NCsolidMass,     MIlb->gMassLabel,   dwindex,patch,gac,1);
-        for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
-          IntVector c = *iter;
-          IntVector nodeIdx[8];
-          patch->findNodesFromCell(*iter,nodeIdx);
-          double MaxMass = d_SMALL_NUM;
-          double MinMass = 1.0/d_SMALL_NUM;
-          for (int nN=0; nN<8; nN++) {
-            MaxMass = std::max(MaxMass,NC_CCweight[nodeIdx[nN]]*
-                                       NCsolidMass[nodeIdx[nN]]);
-            MinMass = std::min(MinMass,NC_CCweight[nodeIdx[nN]]*
-                                       NCsolidMass[nodeIdx[nN]]);
-          }
-          if ((MaxMass-MinMass)/MaxMass == 1.0 && (MaxMass > d_SMALL_NUM)){
-            double gradRhoX = 0.25 *
-                   ((NCsolidMass[nodeIdx[0]]*NC_CCweight[nodeIdx[0]]+
-                     NCsolidMass[nodeIdx[1]]*NC_CCweight[nodeIdx[1]]+
-                     NCsolidMass[nodeIdx[2]]*NC_CCweight[nodeIdx[2]]+
-                     NCsolidMass[nodeIdx[3]]*NC_CCweight[nodeIdx[3]])
-                   -
-                   ( NCsolidMass[nodeIdx[4]]*NC_CCweight[nodeIdx[4]]+
-                     NCsolidMass[nodeIdx[5]]*NC_CCweight[nodeIdx[5]]+
-                     NCsolidMass[nodeIdx[6]]*NC_CCweight[nodeIdx[6]]+
-                     NCsolidMass[nodeIdx[7]]*NC_CCweight[nodeIdx[7]])) / dx.x();
-            double gradRhoY = 0.25 *
-                   ((NCsolidMass[nodeIdx[0]]*NC_CCweight[nodeIdx[0]]+
-                     NCsolidMass[nodeIdx[1]]*NC_CCweight[nodeIdx[1]]+
-                     NCsolidMass[nodeIdx[4]]*NC_CCweight[nodeIdx[4]]+
-                     NCsolidMass[nodeIdx[5]]*NC_CCweight[nodeIdx[5]])
-                   -
-                   ( NCsolidMass[nodeIdx[2]]*NC_CCweight[nodeIdx[2]]+
-                     NCsolidMass[nodeIdx[3]]*NC_CCweight[nodeIdx[3]]+
-                     NCsolidMass[nodeIdx[6]]*NC_CCweight[nodeIdx[6]]+
-                     NCsolidMass[nodeIdx[7]]*NC_CCweight[nodeIdx[7]])) / dx.y();
-            double gradRhoZ = 0.25 *
-                   ((NCsolidMass[nodeIdx[1]]*NC_CCweight[nodeIdx[1]]+
-                     NCsolidMass[nodeIdx[3]]*NC_CCweight[nodeIdx[3]]+
-                     NCsolidMass[nodeIdx[5]]*NC_CCweight[nodeIdx[5]]+
-                     NCsolidMass[nodeIdx[7]]*NC_CCweight[nodeIdx[7]])
-                  -
-                   ( NCsolidMass[nodeIdx[0]]*NC_CCweight[nodeIdx[0]]+
-                     NCsolidMass[nodeIdx[2]]*NC_CCweight[nodeIdx[2]]+
-                     NCsolidMass[nodeIdx[4]]*NC_CCweight[nodeIdx[4]]+
-                     NCsolidMass[nodeIdx[6]]*NC_CCweight[nodeIdx[6]])) / dx.z();
-
-            double absGradRho = sqrt(gradRhoX*gradRhoX +
-                                      gradRhoY*gradRhoY +
-                                      gradRhoZ*gradRhoZ );
-
-            Vector surNorm(gradRhoX/absGradRho,
-                           gradRhoY/absGradRho,
-                           gradRhoZ/absGradRho);
-
-
-            Point this_cell_pos = level->getCellPosition(c);
-            Point adja_cell_pos = this_cell_pos + .6*dxlen*surNorm;
-
-            IntVector q;
-            if(patch->findCell(adja_cell_pos, q)){
-              cet(0,0)=0.;
-              cet(0,1)=delT*vol_frac_CC[gm][q]*H(sm,gm)*sp_vol_CC[sm][c]
-                       /cv[sm][c];
-              cet(1,0)=delT*vol_frac_CC[sm][c]*H(gm,sm)*sp_vol_CC[gm][q]
-                       /cv[gm][q];
-              cet(1,1)=0.;
-
-              ac(0,1) = -cet(0,1);
-              ac(1,0) = -cet(1,0);
-
-              //   Form matrix (a) diagonal terms
-              for(int m = 0; m < 2; m++) {
-                ac(m,m) = 1.;
-                for(int n = 0; n < 2; n++)   {
-                  ac(m,m) +=  cet(m,n);
-                }
-              }
-
-              RHSc[0] = cet(0,1)*(Temp_CC[gm][q] - Temp_CC[sm][c]);
-              RHSc[1] = cet(1,0)*(Temp_CC[sm][c] - Temp_CC[gm][q]);
-              ac.destructiveSolve(RHSc);
-              Temp_CC[sm][c] += RHSc[0];
-              Temp_CC[gm][q] += RHSc[1];
+      for (int m = 0; m < numALLMatls; m++)  {
+        Material* matl = d_sharedState->getMaterial( m );
+        MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+        int dwindex = matl->getDWIndex();
+        if(mpm_matl && dwindex==sm){
+          new_dw->get(NCsolidMass,     MIlb->gMassLabel,   dwindex,patch,gac,1);
+          for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
+            IntVector c = *iter;
+            IntVector nodeIdx[8];
+            patch->findNodesFromCell(*iter,nodeIdx);
+            double MaxMass = d_SMALL_NUM;
+            double MinMass = 1.0/d_SMALL_NUM;
+            for (int nN=0; nN<8; nN++) {
+              MaxMass = std::max(MaxMass,NC_CCweight[nodeIdx[nN]]*
+                                         NCsolidMass[nodeIdx[nN]]);
+              MinMass = std::min(MinMass,NC_CCweight[nodeIdx[nN]]*
+                                         NCsolidMass[nodeIdx[nN]]);
             }
-          }  // if a surface cell
-        }    // cellIterator
-      }      // if mpm_matl
-    }        // for ALL matls
-   }
+            
+            // surface
+            if ((MaxMass-MinMass)/MaxMass == 1.0 && (MaxMass > d_SMALL_NUM)){
+              double gradRhoX = 0.25 *
+                     ((NCsolidMass[nodeIdx[0]]*NC_CCweight[nodeIdx[0]]+
+                       NCsolidMass[nodeIdx[1]]*NC_CCweight[nodeIdx[1]]+
+                       NCsolidMass[nodeIdx[2]]*NC_CCweight[nodeIdx[2]]+
+                       NCsolidMass[nodeIdx[3]]*NC_CCweight[nodeIdx[3]])
+                     -
+                     ( NCsolidMass[nodeIdx[4]]*NC_CCweight[nodeIdx[4]]+
+                       NCsolidMass[nodeIdx[5]]*NC_CCweight[nodeIdx[5]]+
+                       NCsolidMass[nodeIdx[6]]*NC_CCweight[nodeIdx[6]]+
+                       NCsolidMass[nodeIdx[7]]*NC_CCweight[nodeIdx[7]])) / dx.x();
+              double gradRhoY = 0.25 *
+                     ((NCsolidMass[nodeIdx[0]]*NC_CCweight[nodeIdx[0]]+
+                       NCsolidMass[nodeIdx[1]]*NC_CCweight[nodeIdx[1]]+
+                       NCsolidMass[nodeIdx[4]]*NC_CCweight[nodeIdx[4]]+
+                       NCsolidMass[nodeIdx[5]]*NC_CCweight[nodeIdx[5]])
+                     -
+                     ( NCsolidMass[nodeIdx[2]]*NC_CCweight[nodeIdx[2]]+
+                       NCsolidMass[nodeIdx[3]]*NC_CCweight[nodeIdx[3]]+
+                       NCsolidMass[nodeIdx[6]]*NC_CCweight[nodeIdx[6]]+
+                       NCsolidMass[nodeIdx[7]]*NC_CCweight[nodeIdx[7]])) / dx.y();
+              double gradRhoZ = 0.25 *
+                     ((NCsolidMass[nodeIdx[1]]*NC_CCweight[nodeIdx[1]]+
+                       NCsolidMass[nodeIdx[3]]*NC_CCweight[nodeIdx[3]]+
+                       NCsolidMass[nodeIdx[5]]*NC_CCweight[nodeIdx[5]]+
+                       NCsolidMass[nodeIdx[7]]*NC_CCweight[nodeIdx[7]])
+                    -
+                     ( NCsolidMass[nodeIdx[0]]*NC_CCweight[nodeIdx[0]]+
+                       NCsolidMass[nodeIdx[2]]*NC_CCweight[nodeIdx[2]]+
+                       NCsolidMass[nodeIdx[4]]*NC_CCweight[nodeIdx[4]]+
+                       NCsolidMass[nodeIdx[6]]*NC_CCweight[nodeIdx[6]])) / dx.z();
 
-    /*`==========TESTING==========*/
-    if(d_BC_globalVars->usingLodi ||
-       d_BC_globalVars->usingMicroSlipBCs){
+              double absGradRho = sqrt(gradRhoX*gradRhoX +
+                                        gradRhoY*gradRhoY +
+                                        gradRhoZ*gradRhoZ );
+
+              Vector surNorm(gradRhoX/absGradRho,
+                             gradRhoY/absGradRho,
+                             gradRhoZ/absGradRho);
+
+
+              Point this_cell_pos = level->getCellPosition(c);
+              Point adja_cell_pos = this_cell_pos + .6*dxlen*surNorm;
+
+              IntVector q;
+              if(patch->findCell(adja_cell_pos, q)){
+                cet(0,0)=0.;
+                cet(0,1)=delT * vol_frac_CC[gm][q] *H (sm,gm) * sp_vol_CC[sm][c]/cv[sm][c];
+                cet(1,0)=delT * vol_frac_CC[sm][c] * H(gm,sm) * sp_vol_CC[gm][q]/cv[gm][q];
+                cet(1,1)=0.;
+
+                ac(0,1) = -cet(0,1);
+                ac(1,0) = -cet(1,0);
+
+                //   Form matrix (a) diagonal terms
+                for(int m = 0; m < 2; m++) {
+                  ac(m,m) = 1.;
+                  for(int n = 0; n < 2; n++)   {
+                    ac(m,m) +=  cet(m,n);
+                  }
+                }
+
+                RHSc[0] = cet(0,1)*(Temp_CC[gm][q] - Temp_CC[sm][c]);
+                RHSc[1] = cet(1,0)*(Temp_CC[sm][c] - Temp_CC[gm][q]);
+                ac.destructiveSolve(RHSc);
+                Temp_CC[sm][c] += RHSc[0];
+                Temp_CC[gm][q] += RHSc[1];
+              }
+            }  // if a surface cell
+          }  // cellIterator
+        } // if mpm_matl
+      } // for ALL matls
+    } // convective heat transfer
+
+  
+    if( BC_globalVars->usingLodi || BC_globalVars->usingMicroSlipBCs){
+    
       std::vector<CCVariable<double> > temp_CC_Xchange(numALLMatls);
       std::vector<CCVariable<Vector> > vel_CC_Xchange(numALLMatls);
+    
       for (int m = 0; m < numALLMatls; m++) {
         Material* matl = d_sharedState->getMaterial(m);
         int indx = matl->getDWIndex();
-        new_dw->allocateAndPut(temp_CC_Xchange[m],lb->temp_CC_XchangeLabel,indx,patch);
-        new_dw->allocateAndPut(vel_CC_Xchange[m], lb->vel_CC_XchangeLabel, indx,patch);
+    
+        new_dw->allocateAndPut(temp_CC_Xchange[m],Ilb->temp_CC_XchangeLabel,indx,patch);
+        new_dw->allocateAndPut(vel_CC_Xchange[m], Ilb->vel_CC_XchangeLabel, indx,patch);
         vel_CC_Xchange[m].copy(vel_CC[m]);
         temp_CC_Xchange[m].copy(Temp_CC[m]);
       }
     }
-/*===========TESTING==========`*/
-
+    
+    //__________________________________
+    //  Set boundary conditions
     for (int m = 0; m < numALLMatls; m++)  {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
 
       customBC_localVars* BC_localVars   = scinew customBC_localVars();
-      preprocess_CustomBCs("CC_Exchange",old_dw, new_dw, lb, patch, indx,
-                            d_BC_globalVars, BC_localVars);
+      preprocess_CustomBCs("CC_Exchange", old_dw, new_dw, Ilb, patch, indx, BC_globalVars, BC_localVars);
 
       setBC(vel_CC[m], "Velocity",   patch, d_sharedState, indx, new_dw,
-                                                        d_BC_globalVars, BC_localVars);
+                                                        BC_globalVars, BC_localVars, isNotInitialTimeStep);
       setBC(Temp_CC[m],"Temperature",gamma[m], cv[m], patch, d_sharedState,
-                                         indx, new_dw,  d_BC_globalVars, BC_localVars);
+                                         indx, new_dw,  BC_globalVars, BC_localVars, isNotInitialTimeStep);
 #if SET_CFI_BC
 //      set_CFI_BC<Vector>(vel_CC[m],  patch);
 //      set_CFI_BC<double>(Temp_CC[m], patch);
 #endif
-      delete_CustomBCs( d_BC_globalVars, BC_localVars );
+      delete_CustomBCs( BC_globalVars, BC_localVars );
     }
-
 
     //__________________________________
     // Convert vars. primitive-> flux
@@ -804,7 +815,6 @@ void ScalarExch::addExch_Vel_Temp_CC( const ProcessorGroup * pg,
       }
     }
   } //patches
-#endif
 }
 
 //______________________________________________________________________
@@ -816,7 +826,10 @@ void ScalarExch::addExch_Vel_Temp_CC_1matl( const ProcessorGroup * pg,
                                             DataWarehouse        * new_dw,
                                             customBC_globalVars  * BC_globalVars)
 {
-#if 0
+  timeStep_vartype timeStep;
+  old_dw->get(timeStep, Ilb->timeStepLabel);
+  bool isNotInitialTimeStep = (timeStep > 0);
+  
   const Level* level = getLevel(patches);
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -884,9 +897,9 @@ void ScalarExch::addExch_Vel_Temp_CC_1matl( const ProcessorGroup * pg,
                           BC_globalVars, BC_localVars );
 
     setBC(vel_CC, "Velocity",   patch, d_sharedState,
-                                       indx, new_dw,  BC_globalVars, BC_localVars);
+                                       indx, new_dw,  BC_globalVars, BC_localVars, isNotInitialTimeStep);
     setBC(Temp_CC,"Temperature",gamma, cv, patch, d_sharedState,
-                                       indx, new_dw,  BC_globalVars, BC_localVars );
+                                       indx, new_dw,  BC_globalVars, BC_localVars, isNotInitialTimeStep );
 #if SET_CFI_BC
 //      set_CFI_BC<Vector>(vel_CC[m],  patch);
 //      set_CFI_BC<double>(Temp_CC[m], patch);
@@ -902,5 +915,4 @@ void ScalarExch::addExch_Vel_Temp_CC_1matl( const ProcessorGroup * pg,
       Tdot[c]         = (Temp_CC[c] - old_temp[c])/delT;
     }
   } //patches
-#endif
 }

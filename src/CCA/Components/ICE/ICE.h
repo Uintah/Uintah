@@ -233,13 +233,6 @@ using namespace ExchangeModels;
                                                    const MaterialSubset*,
                                                    const MaterialSet*);
 
-      void scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
-                                                  const PatchSet*,
-                                                  const MaterialSubset*,
-                                                  const MaterialSubset*,
-                                                  const MaterialSubset*,
-                                                  const MaterialSet* );
-
       void scheduleMaxMach_on_Lodi_BC_Faces(SchedulerP&,
                                             const LevelP&,
                                             const MaterialSet*);
@@ -537,18 +530,6 @@ using namespace ExchangeModels;
                                            const MaterialSubset* matls,
                                            DataWarehouse*,
                                            DataWarehouse*);
-
-      void addExchangeToMomentumAndEnergy_1matl(const ProcessorGroup*,
-                                                const PatchSubset* ,
-                                                const MaterialSubset*,
-                                                DataWarehouse* ,
-                                                DataWarehouse* );
-
-      void addExchangeToMomentumAndEnergy(const ProcessorGroup*,
-                                          const PatchSubset*,
-                                          const MaterialSubset*,
-                                          DataWarehouse*,
-                                          DataWarehouse*);
 
       template< class V, class T>
       void update_q_CC(const std::string& desc,

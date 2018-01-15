@@ -574,12 +574,13 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
     const PatchSet* ice_patches = ice_level->eachPatch();
 
     d_ice->scheduleComputeLagrangianValues(   sched, ice_patches, ice_matls);
-
-    d_ice->scheduleAddExchangeToMomentumAndEnergy(
+                                                                  
+    d_ice->d_exchModel->sched_AddExch_Vel_Temp_CC(   
                                               sched, ice_patches, ice_matls_sub,
                                                                   mpm_matls_sub,
                                                                   press_matl,
-                                                                  all_matls); 
+                                                                  all_matls,
+                                                                  d_ice->d_BC_globalVars); 
 
     d_ice->scheduleComputeLagrangianSpecificVolume(
                                               sched, ice_patches, ice_matls_sub,
