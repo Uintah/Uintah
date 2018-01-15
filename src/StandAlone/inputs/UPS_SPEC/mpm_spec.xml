@@ -13,7 +13,6 @@
       <axisymmetric                       spec="OPTIONAL BOOLEAN" />
       <AMR                                spec="OPTIONAL BOOLEAN" />
       <CanAddMPMMaterial                  spec="OPTIONAL BOOLEAN" />
-      <create_new_particles               spec="OPTIONAL BOOLEAN" />  <!-- default is false -->
       <do_contact_friction_heating        spec="OPTIONAL BOOLEAN" />
       <computeColinearNormals             spec="OPTIONAL BOOLEAN" />
       <do_grid_reset                      spec="OPTIONAL BOOLEAN" />
@@ -24,8 +23,6 @@
       <DoDefGradAveraging                 spec="OPTIONAL BOOLEAN" /> 
       <DoThermalExpansion                 spec="OPTIONAL BOOLEAN" />  <!-- FIXME: default is? -->
       <computeNodalHeatFlux               spec="OPTIONAL BOOLEAN" />
-      <delete_rogue_particles               spec="OPTIONAL BOOLEAN" />
-      <manual_new_material                spec="OPTIONAL BOOLEAN" />  <!-- default is false -->
       <num_iters_to_decrease_delT         spec="OPTIONAL INTEGER" />
       <num_iters_to_increase_delT         spec="OPTIONAL INTEGER" />
       <iters_before_timestep_restart      spec="OPTIONAL INTEGER" />

@@ -249,8 +249,6 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   mpm_flag_ps->get("computeColinearNormals",      d_computeColinearNormals);
   if (!d_do_contact_friction) d_addFrictionWork = 0.0;
 
-  mpm_flag_ps->get("delete_rogue_particles",  d_deleteRogueParticles);
-
   // Setting Scalar Diffusion
   mpm_flag_ps->get("do_scalar_diffusion", d_doScalarDiffusion);
   mpm_flag_ps->get("do_auto_cycle_bc", d_doAutoCycleBC);
@@ -444,7 +442,6 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("do_contact_friction_heating", d_do_contact_friction);
   ps->appendElement("computeNormals",   d_computeNormals);
   ps->appendElement("computeColinearNormals", d_computeColinearNormals);
-  ps->appendElement("delete_rogue_particles",d_deleteRogueParticles);
   ps->appendElement("extra_solver_flushes", d_extraSolverFlushes);
   ps->appendElement("boundary_traction_faces", d_bndy_face_txt_list);
   ps->appendElement("do_scalar_diffusion", d_doScalarDiffusion);
