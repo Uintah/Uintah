@@ -203,7 +203,6 @@
     <artificial_viscosity_coeff2>1.6000000000000001</artificial_viscosity_coeff2>
     <use_cohesive_zones>false</use_cohesive_zones>
     <ForceBC_force_increment_factor>1</ForceBC_force_increment_factor>
-    <create_new_particles>false</create_new_particles>
     <manual_new_material>false</manual_new_material>
     <CanAddMPMMaterial>false</CanAddMPMMaterial>
     <DoImplicitHeatConduction>false</DoImplicitHeatConduction>
