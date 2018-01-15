@@ -28,40 +28,13 @@
 # Makefile fragment for this subdirectory 
 
 
-include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
+SRCDIR   := CCA/Components/MPM/Materials/Dissolution
 
-SRCDIR	:= CCA/Components/MPM/Materials
-
-SRCS += $(SRCDIR)/MPMMaterial.cc
-
-SUBDIRS := \
-	$(SRCDIR)/Contact           \
-	$(SRCDIR)/Dissolution       \
-	$(SRCDIR)/ConstitutiveModel \
-	$(SRCDIR)/Diffusion         \
-	$(SRCDIR)/ParticleCreator
-
-include $(SCIRUN_SCRIPTS)/recurse.mk
-
-PSELIBS := \
-	CCA/Components/MPM/Core       \
-	CCA/Components/MPM/MMS        \
-	CCA/Components/MPM/PhysicalBC \
-	Core/Disclosure     \
-	Core/Exceptions     \
-	Core/Geometry       \
-	Core/GeometryPiece  \
-	Core/Grid           \
-	Core/Math           \
-	Core/Parallel       \
-	Core/ProblemSpec    \
-	Core/Util           
-
-LIBS := $(XML2_LIBRARY) $(VT_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) \
-	$(LAPACK_LIBRARY) $(BLAS_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY)
-
-ifneq ($(NO_FORTRAN),yes)
-  LIBS := $(LIBS) $(F_LIBRARY) 
-endif
-
-include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
+SRCS     += \
+	$(SRCDIR)/TestDissolution.cc         \
+	$(SRCDIR)/StressRateDissolution.cc   \
+	$(SRCDIR)/NullDissolution.cc         \
+	$(SRCDIR)/DissolutionFactory.cc      \
+	$(SRCDIR)/CompositeDissolution.cc    \
+	$(SRCDIR)/DissolutionMaterialSpec.cc \
+	$(SRCDIR)/Dissolution.cc

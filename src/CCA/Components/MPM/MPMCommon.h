@@ -58,9 +58,13 @@ namespace Uintah {
     void scheduleUpdateStress_DamageErosionModels(SchedulerP        & sched,
                                                   const PatchSet    * patches,
                                                   const MaterialSet * matls );
+
+    virtual void tracerProblemSetup(const ProblemSpecP& prob_spec,
+                                    MPMFlags* flags);
+
   protected:
     MPMLabel* lb {nullptr};
-  private:
+   private:
     MPMFlags*             d_flags       = nullptr;
     
   protected:

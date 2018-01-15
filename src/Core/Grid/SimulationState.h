@@ -45,6 +45,7 @@ class ArchesMaterial;
 class FVMMaterial;
 class ICEMaterial;
 class CZMaterial;
+class TracerMaterial;
 class MPMMaterial;
 class WasatchMaterial;
   
@@ -147,13 +148,22 @@ public:
 #ifndef NO_MPM
   void registerCZMaterial(CZMaterial*);
   void registerCZMaterial(CZMaterial*,unsigned int index);  
+  void registerTracerMaterial(TracerMaterial*);
+  void registerTracerMaterial(TracerMaterial*,unsigned int index);
   int getNumCZMatls() const {
     return (int)cz_matls.size();
+  }
+  int getNumTracerMatls() const {
+    return (int)tracer_matls.size();
   }
   CZMaterial* getCZMaterial(int idx) const {
     return cz_matls[idx];
   }
+  TracerMaterial* getTracerMaterial(int idx) const {
+    return tracer_matls[idx];
+  }
   const MaterialSet* allCZMaterials() const;
+  const MaterialSet* allTracerMaterials() const;
 
   void registerMPMMaterial(MPMMaterial*);
   void registerMPMMaterial(MPMMaterial*,unsigned int index);
@@ -185,13 +195,26 @@ public:
     particle_ghost_layer = ngc;
   }
 
+  bool endSim;
+
   inline void getParticleGhostLayer(Ghost::GhostType& type, int& ngc) {
     type = particle_ghost_type;
     ngc = particle_ghost_layer;
   }
 
+  inline void setEndSimulation(){
+     endSim=true;
+  }
+
+  inline bool getEndSimulation(){
+     return endSim;
+  }
+
   std::vector<std::vector<const VarLabel* > > d_particleState;
   std::vector<std::vector<const VarLabel* > > d_particleState_preReloc;
+
+  std::vector<std::vector<const VarLabel* > > d_tracerState;
+  std::vector<std::vector<const VarLabel* > > d_tracerState_preReloc;
 
   std::vector<std::vector<const VarLabel* > > d_cohesiveZoneState;
   std::vector<std::vector<const VarLabel* > > d_cohesiveZoneState_preReloc;
@@ -239,8 +262,10 @@ private:
 
 #ifndef NO_MPM
   std::vector<CZMaterial*>      cz_matls;
+  std::vector<TracerMaterial*>  tracer_matls;
   std::vector<MPMMaterial*>     mpm_matls;
   MaterialSet * all_cz_matls{nullptr};
+  MaterialSet * all_tracer_matls;
   MaterialSet * all_mpm_matls{nullptr};
 #endif
 

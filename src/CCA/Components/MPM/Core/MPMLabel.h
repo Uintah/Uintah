@@ -219,7 +219,7 @@ namespace Uintah {
       const VarLabel* KineticEnergyLabel;
       const VarLabel* ThermalEnergyLabel;
       const VarLabel* TotalMassLabel;
-      const VarLabel* NeedAddMPMMaterialLabel;
+      const VarLabel* AddedParticlesLabel;
       const VarLabel* BndyForceLabel[6];
       const VarLabel* BndyTractionLabel[6];
       const VarLabel* BndyContactAreaLabel[6];
@@ -349,7 +349,10 @@ namespace Uintah {
       const VarLabel* czFailedLabel_preReloc; 
       const VarLabel* czIDLabel; 
       const VarLabel* czIDLabel_preReloc; 
+      const VarLabel* tracerIDLabel; 
+      const VarLabel* tracerIDLabel_preReloc; 
       const VarLabel* pCellNACZIDLabel;
+      const VarLabel* pCellNATracerIDLabel;
 
       // ******* start - for temporary use only, CG
       const VarLabel* pPressureLabel_t1;

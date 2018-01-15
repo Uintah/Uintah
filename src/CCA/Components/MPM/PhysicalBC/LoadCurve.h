@@ -88,6 +88,19 @@ WARNING
          return ((index < (int) d_time.size()) ? d_load[index] : 0);
       }
 
+      // Get the maxKE associated with a given index
+      inline T getMaxKE(int index) {
+         return ((index < (int) d_time.size()) ? d_maxKE[index] : 0);
+      }
+
+      inline void setTime(int index, double newTime) {
+        d_time[index] = newTime;
+      }
+
+      inline void setLoad(int index, T newLoad) {
+        d_load[index] = newLoad;
+      }
+
       // Get the load curve id
       inline int getID() const {return d_id;}
 
@@ -107,6 +120,22 @@ WARNING
          return d_load[0];
       }
 
+      // Get the next index
+      inline int getNextIndex(double t) {
+        int ntimes = static_cast<int>(d_time.size());
+         if (t >= d_time[ntimes-1]){
+           return ntimes;
+         }
+
+         for (int ii = 1; ii < ntimes; ++ii) {
+           if (t <= d_time[ii]) {
+             return ii;
+           } 
+         }
+         return 0;
+      }
+
+
    private:
 
       // Prevent creation of empty object
@@ -120,6 +149,7 @@ WARNING
       // Load curve information 
       std::vector<double> d_time;
       std::vector<T> d_load;
+      std::vector<double> d_maxKE;
       int d_id;
    };
 
@@ -136,11 +166,14 @@ WARNING
            timeLoad != nullptr;
            timeLoad = timeLoad->findNextBlock("time_point") ) {
          double time = 0.0;
+         double maxKE = 9.9e99;
          T load;
          timeLoad->require("time", time);
          timeLoad->require("load", load);
+         timeLoad->get("maxKE", maxKE);
          d_time.push_back(time);
          d_load.push_back(load);
+         d_maxKE.push_back(maxKE);
       }
    }
 
@@ -153,6 +186,7 @@ WARNING
          ProblemSpecP time_ps = lc_ps->appendChild("time_point");
          time_ps->appendElement("time",d_time[i]);
          time_ps->appendElement("load",d_load[i]);
+         time_ps->appendElement("maxKE",d_maxKE[i]);
        }
      }
 

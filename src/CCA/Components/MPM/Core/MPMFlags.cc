@@ -64,16 +64,18 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_fracture                      =  false;
   d_minGridLevel                  =  0;
   d_maxGridLevel                  =  1000;
-  d_deleteRogueParticles          =  false;
   d_doThermalExpansion            =  true;
   d_refineParticles               =  false;
+  d_canAddParticles               =  false;
   d_XPIC2                         =  false;
   d_artificialDampCoeff           =  0.0;
   d_interpolator                  =  scinew LinearInterpolator();
   d_do_contact_friction           =  false;
   d_computeNormals                =  false;
+  d_doingDissolution              =  false;
   d_computeColinearNormals        =  true;
-  d_addFrictionWork               =  0.0;               // don't do frictional heating by default
+  d_addFrictionWork               =  0.0;
+  d_ndim                          =  3;
 
   d_extraSolverFlushes                 =  0;            // Have PETSc do more flushes to save memory
   d_doImplicitHeatConduction           =  false;
@@ -86,15 +88,23 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_prescribeDeformation               =  false;
   d_prescribedDeformationFile          =  "time_defgrad_rotation";
   d_exactDeformation                   =  false;
+  d_doAuthigenisis                     =  false;
+  d_authigenisisBaseFilename           =  "";
   d_insertParticles                    =  false;
   d_doGridReset                        =  true;
   d_min_part_mass                      =  3.e-15;
   d_min_subcycles_for_F                =  1;
-  d_min_mass_for_acceleration          =  0;            // Min mass to allow division by in computing acceleration
+  d_min_mass_for_acceleration          =  1.1e-200;            // Min mass to allow division by in computing acceleration
   d_max_vel                            =  3.e105;
   d_with_ice                           =  false;
   d_with_arches                        =  false;
   d_myworld                            =  myworld;
+  
+  // Cyberstone
+  d_containerMaterial                  = -999;
+  d_containerRadius                    =  9.e99;
+  d_KEMaterial                         = -999;
+  d_useTracers                         =  false;
   
   d_reductionVars = scinew reductionVars();
   d_reductionVars->mass             = false;
@@ -189,7 +199,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   mpm_flag_ps->get("withColor",  d_with_color);
   mpm_flag_ps->get("artificial_damping_coeff", d_artificialDampCoeff);
   mpm_flag_ps->get("artificial_viscosity",     d_artificial_viscosity);
-  mpm_flag_ps->get("refine_particles",         d_refineParticles);
+  mpm_flag_ps->get("CanAddParticles",          d_canAddParticles);
   mpm_flag_ps->get("XPIC2",                    d_XPIC2);
   if(d_artificial_viscosity){
     d_artificial_viscosity_heating=true;
@@ -233,7 +243,17 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   if(d_prescribeDeformation){
     mpm_flag_ps->get("PrescribedDeformationFile",d_prescribedDeformationFile);
   }
-//MMS
+
+  // Cyberstone
+  mpm_flag_ps->get("containerMaterial", d_containerMaterial);
+  mpm_flag_ps->get("containerRadius",   d_containerRadius);
+  mpm_flag_ps->get("KEMaterial",        d_KEMaterial);
+  mpm_flag_ps->get("use_tracers",       d_useTracers);
+
+  mpm_flag_ps->get("DoAuthigenisis",     d_doAuthigenisis);
+  mpm_flag_ps->get("AuthigenisisBaseFilename",d_authigenisisBaseFilename);
+
+  //MMS
   mpm_flag_ps->get("RunMMSProblem",d_mms_type);
   // Flag for CPTI interpolator
   if(d_interpolator_type=="cpti"){
@@ -246,10 +266,10 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
 
   mpm_flag_ps->get("do_contact_friction_heating", d_do_contact_friction);
   mpm_flag_ps->get("computeNormals",              d_computeNormals);
+  mpm_flag_ps->get("doingDissolution",            d_doingDissolution);
   mpm_flag_ps->get("computeColinearNormals",      d_computeColinearNormals);
+  mpm_flag_ps->get("d_ndim",                      d_ndim);
   if (!d_do_contact_friction) d_addFrictionWork = 0.0;
-
-  mpm_flag_ps->get("delete_rogue_particles",  d_deleteRogueParticles);
 
   // Setting Scalar Diffusion
   mpm_flag_ps->get("do_scalar_diffusion", d_doScalarDiffusion);
@@ -380,14 +400,18 @@ else{
     dbg << " Artificial Viscosity Htng   = " << d_artificial_viscosity_heating<< endl;
     dbg << " Artificial Viscosity Coeff1 = " << d_artificialViscCoeff1<< endl;
     dbg << " Artificial Viscosity Coeff2 = " << d_artificialViscCoeff2<< endl;
-    dbg << " RefineParticles             = " << d_refineParticles << endl;
+    dbg << " CanAddParticles             = " << d_canAddParticles << endl;
     dbg << " XPIC2                       = " << d_XPIC2 << endl;
-    dbg << " Delete Rogue Particles?     = " << d_deleteRogueParticles << endl;
     dbg << " Use Load Curves             = " << d_useLoadCurves << endl;
     dbg << " Use CBDI boundary condition = " << d_useCBDI << endl;
     dbg << " Use Cohesive Zones          = " << d_useCohesiveZones << endl;
     dbg << " Contact Friction Heating    = " << d_addFrictionWork << endl;
     dbg << " Extra Solver flushes        = " << d_extraSolverFlushes << endl;
+    // Cyberstone
+    dbg << " containerMaterial           = " << d_containerMaterial << endl;
+    dbg << " containerRadius             = " << d_containerRadius   << endl;
+    dbg << " KEMaterial                  = " << d_KEMaterial << endl;
+    dbg << " Use Tracers                 = " << d_useTracers << endl;
     dbg << "---------------------------------------------------------\n";
   }
 }
@@ -409,7 +433,7 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("artificial_viscosity_heating",       d_artificial_viscosity_heating);
   ps->appendElement("artificial_viscosity_coeff1",        d_artificialViscCoeff1);
   ps->appendElement("artificial_viscosity_coeff2",        d_artificialViscCoeff2);
-  ps->appendElement("refine_particles",                   d_refineParticles);
+  ps->appendElement("CanAddParticles",                    d_canAddParticles);
   ps->appendElement("XPIC2",                              d_XPIC2);
   ps->appendElement("use_cohesive_zones",                 d_useCohesiveZones);
   ps->appendElement("use_load_curves",                    d_useLoadCurves);
@@ -442,12 +466,21 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   }
 
   ps->appendElement("do_contact_friction_heating", d_do_contact_friction);
-  ps->appendElement("computeNormals",   d_computeNormals);
-  ps->appendElement("computeColinearNormals", d_computeColinearNormals);
-  ps->appendElement("delete_rogue_particles",d_deleteRogueParticles);
-  ps->appendElement("extra_solver_flushes", d_extraSolverFlushes);
-  ps->appendElement("boundary_traction_faces", d_bndy_face_txt_list);
-  ps->appendElement("do_scalar_diffusion", d_doScalarDiffusion);
+  ps->appendElement("computeNormals",              d_computeNormals);
+  ps->appendElement("doingDissolution",            d_doingDissolution);
+  ps->appendElement("computeColinearNormals",      d_computeColinearNormals);
+  ps->appendElement("extra_solver_flushes",        d_extraSolverFlushes);
+  ps->appendElement("boundary_traction_faces",     d_bndy_face_txt_list);
+  ps->appendElement("do_scalar_diffusion",         d_doScalarDiffusion);
+  ps->appendElement("d_ndim",                      d_ndim);
+
+  // Cyberstone
+  ps->appendElement("containerMaterial", d_containerMaterial);
+  ps->appendElement("containerRadius",   d_containerRadius);
+  ps->appendElement("KEMaterial",        d_KEMaterial);
+  ps->appendElement("use_tracers",       d_useTracers);
+  ps->appendElement("DoAuthigenisis",    d_doAuthigenisis);
+  ps->appendElement("AuthigenisisBaseFilename",d_authigenisisBaseFilename);
 }
 
 

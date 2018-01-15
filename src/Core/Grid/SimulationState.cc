@@ -48,6 +48,7 @@
 
 #ifndef NO_MPM
 #include <CCA/Components/MPM/CohesiveZone/CZMaterial.h>
+#include <CCA/Components/MPM/Tracer/TracerMaterial.h>
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #endif
 
@@ -254,6 +255,26 @@ const MaterialSet* SimulationState::allCZMaterials() const
 }
 //__________________________________
 //
+void SimulationState::registerTracerMaterial(TracerMaterial* matl)
+{
+  tracer_matls.push_back(matl);
+  registerMaterial(matl);
+}
+
+void SimulationState::registerTracerMaterial(TracerMaterial* matl,
+                                             unsigned int index)
+{
+  tracer_matls.push_back(matl);
+  registerMaterial(matl,index);
+}
+
+const MaterialSet* SimulationState::allTracerMaterials() const
+{
+  ASSERT(all_tracer_matls != 0);
+  return all_tracer_matls;
+}
+//__________________________________
+//
 void SimulationState::registerMPMMaterial(MPMMaterial* matl)
 {
   mpm_matls.push_back(matl);
@@ -381,6 +402,18 @@ void SimulationState::finalizeMaterials()
   }
   all_cz_matls->addAll(tmp_cz_matls);
   
+  // Tracer
+  if (all_tracer_matls && all_tracer_matls->removeReference()){
+    delete all_tracer_matls;
+  }
+  all_tracer_matls = scinew MaterialSet();
+  all_tracer_matls->addReference();
+  std::vector<int> tmp_tracer_matls(tracer_matls.size());
+  for( int i=0; i<(int)tracer_matls.size(); i++ ) {
+    tmp_tracer_matls[i] = tracer_matls[i]->getDWIndex();
+  }
+  all_tracer_matls->addAll(tmp_tracer_matls);
+
   // MPM
   if (all_mpm_matls && all_mpm_matls->removeReference()){
     delete all_mpm_matls;
@@ -462,6 +495,12 @@ void SimulationState::clearMaterials()
   }
   cz_matls.clear();
 
+  if(all_tracer_matls && all_tracer_matls->removeReference()){
+    delete all_tracer_matls;
+    all_tracer_matls     = nullptr;
+  }
+  tracer_matls.clear();
+
   if(all_mpm_matls && all_mpm_matls->removeReference()){
     delete all_mpm_matls;
     all_mpm_matls     = nullptr;
@@ -470,6 +509,9 @@ void SimulationState::clearMaterials()
   
   d_cohesiveZoneState.clear();
   d_cohesiveZoneState_preReloc.clear();
+
+  d_tracerState.clear();
+  d_tracerState_preReloc.clear();
 
   d_particleState.clear();
   d_particleState_preReloc.clear();

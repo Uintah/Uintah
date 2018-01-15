@@ -192,7 +192,7 @@ MPMLabel::MPMLabel()
 			ParticleVariable<double>::getTypeDescription() );
   
   pSurfLabel = VarLabel::create( "p.surface",
-			ParticleVariable<int>::getTypeDescription() );
+			ParticleVariable<double>::getTypeDescription() );
 
   pLastLevelLabel = VarLabel::create( "p.lastlevel",
 			ParticleVariable<int>::getTypeDescription() );
@@ -298,7 +298,7 @@ MPMLabel::MPMLabel()
 			ParticleVariable<double>::getTypeDescription() );
   
   pSurfLabel_preReloc = VarLabel::create( "p.surface+",
-			ParticleVariable<int>::getTypeDescription() );
+			ParticleVariable<double>::getTypeDescription() );
 
   pLastLevelLabel_preReloc = VarLabel::create( "p.lastlevel+",
 			ParticleVariable<int>::getTypeDescription() );
@@ -549,8 +549,9 @@ MPMLabel::MPMLabel()
   TotalMassLabel = VarLabel::create( "TotalMass",
 				 sum_vartype::getTypeDescription() );
 
-  NeedAddMPMMaterialLabel = VarLabel::create("NeedAddMPMMaterial",
+  AddedParticlesLabel = VarLabel::create("AddedParticles",
                                  sum_vartype::getTypeDescription());
+
   for(int iside=0;iside<6;iside++) {
       string label_name = Patch::getFaceName( (Patch::FaceType) iside ); // FIXME: assumes face indices
       
@@ -844,9 +845,19 @@ MPMLabel::MPMLabel()
   czIDLabel_preReloc = VarLabel::create("cz.CZID+",
 			ParticleVariable<long64>::getTypeDescription() );
 
+  tracerIDLabel = VarLabel::create("t.tracerID",
+			ParticleVariable<long64>::getTypeDescription() );
+
+  tracerIDLabel_preReloc = VarLabel::create("t.tracerID+",
+			ParticleVariable<long64>::getTypeDescription() );
+
   // for assigning particle ids
   pCellNACZIDLabel =
     VarLabel::create("cellNACZID", CCVariable<short int>::getTypeDescription());
+
+  pCellNATracerIDLabel =
+    VarLabel::create("cellNATracerID", 
+                                   CCVariable<short int>::getTypeDescription());
 
   // ******* start - for temporary use only, CG
   pPressureLabel_t1  = VarLabel::create( "p.pressure_t1",
@@ -923,6 +934,8 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pParticleIDLabel_preReloc);
   VarLabel::destroy(czIDLabel);
   VarLabel::destroy(czIDLabel_preReloc);
+  VarLabel::destroy(tracerIDLabel);
+  VarLabel::destroy(tracerIDLabel_preReloc);
   VarLabel::destroy(pPressureLabel);
   VarLabel::destroy(pScratchVecLabel);
   VarLabel::destroy(pScaleFactorLabel);
@@ -1039,9 +1052,9 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(AccStrainEnergyLabel);
   VarLabel::destroy(StrainEnergyLabel);
   VarLabel::destroy(KineticEnergyLabel);
+  VarLabel::destroy(AddedParticlesLabel);
   VarLabel::destroy(ThermalEnergyLabel);
   VarLabel::destroy(TotalMassLabel);
-  VarLabel::destroy(NeedAddMPMMaterialLabel);
   VarLabel::destroy(TotalVolumeDeformedLabel);
   for(int iside=0;iside<6;iside++) {
       VarLabel::destroy(BndyContactAreaLabel[iside]);
@@ -1055,6 +1068,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(TotalLocalizedParticleLabel);
   VarLabel::destroy(pCellNAPIDLabel);
   VarLabel::destroy(pCellNACZIDLabel);
+  VarLabel::destroy(pCellNATracerIDLabel);
 
   VarLabel::destroy(gVelocityOldLabel);
   VarLabel::destroy(dispNewLabel);

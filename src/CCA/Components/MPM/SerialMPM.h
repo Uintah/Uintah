@@ -49,6 +49,7 @@
 
 namespace Uintah {
 
+class Dissolution;
 class ThermalContact;
 class HeatConduction;
 class AnalysisModule;
@@ -89,8 +90,9 @@ public:
   virtual ~SerialMPM();
 
   Contact*         contactModel;
+  Dissolution*     dissolutionModel;
   ThermalContact*  thermalContactModel;
-  HeatConduction* heatConductionModel;
+  HeatConduction*  heatConductionModel;
  
   //////////
   // Insert Documentation Here:
@@ -243,6 +245,12 @@ protected:
                                     DataWarehouse   * old_dw,
                                     DataWarehouse   * new_dw );
 
+  virtual void findSurfaceParticles(const ProcessorGroup  *,
+                                    const PatchSubset     * patches,
+                                    const MaterialSubset  * ,
+                                          DataWarehouse   * old_dw,
+                                          DataWarehouse   * new_dw );
+
   virtual void computeSSPlusVp(const ProcessorGroup*,
                                const PatchSubset* patches,
                                const MaterialSubset* matls,
@@ -308,6 +316,12 @@ protected:
                                  const MaterialSubset* ,
                                  DataWarehouse* old_dw,
                                  DataWarehouse* new_dw);
+
+  void modifyLoadCurves(const ProcessorGroup*,
+                        const PatchSubset* patches,
+                        const MaterialSubset* ,
+                        DataWarehouse* old_dw,
+                        DataWarehouse* new_dw);
   //////////
   // This task is to be used for setting particle external force
   // and external heat rate.  I'm creating a separate task so that
@@ -366,6 +380,14 @@ protected:
 
   //////////
   // Insert Documentation Here:
+  virtual void updateTracers(const ProcessorGroup*,
+                             const PatchSubset* patches,
+                             const MaterialSubset* matls,
+                             DataWarehouse* old_dw,
+                             DataWarehouse* new_dw);
+
+  //////////
+  // Insert Documentation Here:
   virtual void setPrescribedMotion(const ProcessorGroup*,
                                    const PatchSubset* patches,
                                    const MaterialSubset* matls,
@@ -419,6 +441,10 @@ protected:
                                       const PatchSet    * patches,
                                       const MaterialSet * matls );
 
+  virtual void scheduleFindSurfaceParticles(SchedulerP        & sched,
+                                            const PatchSet    * patches,
+                                            const MaterialSet * matls );
+
   virtual void scheduleInterpolateParticlesToGrid(SchedulerP&, const PatchSet*,
                                                   const MaterialSet*);
 
@@ -471,9 +497,16 @@ protected:
   virtual void scheduleExMomIntegrated(SchedulerP&, const PatchSet*,
                                        const MaterialSet*);
 
+  virtual void scheduleComputeMassBurnFrac(SchedulerP&, const PatchSet*,
+                                           const MaterialSet*);
+
   void scheduleSetGridBoundaryConditions(SchedulerP&, const PatchSet*,
                                          const MaterialSet* matls);
                                                  
+  void scheduleModifyLoadCurves(const LevelP & level,
+                                SchedulerP& sched,
+                                const MaterialSet*);
+
   void scheduleApplyExternalLoads(SchedulerP&, const PatchSet*,
                                   const MaterialSet*);
 
@@ -494,6 +527,12 @@ protected:
                                            const MaterialSubset*,
                                            const MaterialSubset*,
                                            const MaterialSet*);
+
+  virtual void scheduleUpdateTracers(SchedulerP&, 
+                                     const PatchSet*,
+                                     const MaterialSubset*,
+                                     const MaterialSubset*,
+                                     const MaterialSet*);
 
   virtual void scheduleSetPrescribedMotion(SchedulerP&, 
                                            const PatchSet*,

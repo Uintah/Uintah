@@ -145,9 +145,10 @@ WARNING
    bool getIncludeFlowWork() const;
    double getSpecificHeat() const;
    double getThermalConductivity() const;
+   bool getNeedSurfaceParticles() const;
+   void setNeedSurfaceParticles( const bool NSP);
 
    int nullGeomObject() const;
-
 
    // For MPMICE
    double getGamma() const;
@@ -190,6 +191,7 @@ WARNING
    // for temperature dependent plasticity models
    double d_troom;
    double d_tmelt;
+   bool   d_needSurfParticles;
 
    // for implicit rigid body contact
    bool d_is_rigid;

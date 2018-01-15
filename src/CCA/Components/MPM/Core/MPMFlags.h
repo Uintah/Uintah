@@ -69,7 +69,7 @@ namespace Uintah {
     bool        d_useCBDI;                                     // Flag for using CBDI boundary condition treatment
     bool        d_useCPTI;                                     // Flag for using CPTI interpolator 
     bool        d_useCohesiveZones;                            // Flag for using cohesive zones
-    bool        d_deleteRogueParticles;                        // Flag to delete rogue particles
+    bool        d_useTracers;                                  // Flag for using tracers
     bool        d_doThermalExpansion;                          // Decide whether to do thermExp or not
     bool        d_with_color;                                  // to turn on the color variable
     bool        d_fracture;                                    // to turn on fracture
@@ -77,7 +77,8 @@ namespace Uintah {
     int         d_minGridLevel;                                // Only do MPM on this grid level
     int         d_maxGridLevel;                                // Only do MPM on this grid level
     bool        doMPMOnLevel(int level, int numLevels) const;
-    bool        d_refineParticles;                             // Refine particles, step toward AMR
+    bool        d_canAddParticles;                             // Needed to enable particle addition
+    bool        d_refineParticles;                             // Needed to enable particle addition
     bool        d_XPIC2;                                       // Use Nairn's XPIC2 algorithm
 
     double      d_artificialDampCoeff;
@@ -86,6 +87,11 @@ namespace Uintah {
     bool        d_do_contact_friction;
     double      d_addFrictionWork;                             // 1 == add , 0 == do not add
 
+    // Cyberstone
+    int         d_containerMaterial;
+    double      d_containerRadius;
+    int         d_KEMaterial;
+
     int         d_extraSolverFlushes;                          // Have PETSc flush more to save memory
     bool        d_doImplicitHeatConduction;
     bool        d_doTransientImplicitHeatConduction;
@@ -93,7 +99,9 @@ namespace Uintah {
     bool        d_deleteGeometryObjects;
     bool        d_doPressureStabilization;
     bool        d_computeNormals;
+    bool        d_doingDissolution;
     bool        d_computeColinearNormals;
+    int         d_ndim;
     bool        d_computeNodalHeatFlux;                        // compute the auxilary nodal heat flux
     bool        d_computeScaleFactor;                          // compute the scale factor for viz 
     bool        d_doGridReset;                                 // Default is true, standard MPM
@@ -108,6 +116,8 @@ namespace Uintah {
     std::string d_insertParticlesFile;                         // File containing activation plan
     bool        d_GEVelProj;                                   // Use the velocity gradient in projecting particle velocity to grid
 
+    bool        d_doAuthigenisis;
+    std::string d_authigenisisBaseFilename;                      // File containing overgrowth points
     bool        d_with_ice;
     bool        d_with_arches;
     std::string d_mms_type;                                    // MMS Flag
@@ -133,8 +143,7 @@ namespace Uintah {
      bool centerOfMass;
     };
     reductionVars* d_reductionVars;
-    
-    
+
     const ProcessorGroup* d_myworld;
 
     std::vector<std::string> d_bndy_face_txt_list; 
