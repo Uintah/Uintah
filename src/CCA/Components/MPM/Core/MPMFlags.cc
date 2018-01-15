@@ -64,7 +64,6 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_fracture                      =  false;
   d_minGridLevel                  =  0;
   d_maxGridLevel                  =  1000;
-  d_deleteRogueParticles          =  false;
   d_doThermalExpansion            =  true;
   d_refineParticles               =  false;
   d_XPIC2                         =  false;
@@ -380,7 +379,6 @@ else{
     dbg << " Artificial Viscosity Coeff2 = " << d_artificialViscCoeff2<< endl;
     dbg << " RefineParticles             = " << d_refineParticles << endl;
     dbg << " XPIC2                       = " << d_XPIC2 << endl;
-    dbg << " Delete Rogue Particles?     = " << d_deleteRogueParticles << endl;
     dbg << " Use Load Curves             = " << d_useLoadCurves << endl;
     dbg << " Use CBDI boundary condition = " << d_useCBDI << endl;
     dbg << " Use Cohesive Zones          = " << d_useCohesiveZones << endl;
