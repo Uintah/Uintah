@@ -30,7 +30,10 @@ PROGRAM := StandAlone/tools/puda/puda
 SRCS := \
         $(SRCDIR)/AA_MMS.cc       \
         $(SRCDIR)/asci.cc         \
+        $(SRCDIR)/contactStress.cc\
         $(SRCDIR)/ER_MMS.cc       \
+        $(SRCDIR)/geocosm.cc      \
+        $(SRCDIR)/geocosmtets.cc  \
         $(SRCDIR)/GV_MMS.cc       \
         $(SRCDIR)/ICE_momentum.cc \
         $(SRCDIR)/jacquie.cc      \

@@ -51,11 +51,14 @@
 
 #include <StandAlone/tools/puda/AA_MMS.h>
 #include <StandAlone/tools/puda/asci.h>
+#include <StandAlone/tools/puda/contactStress.h>
 #include <StandAlone/tools/puda/ER_MMS.h>
 #include <StandAlone/tools/puda/GV_MMS.h>
 #include <StandAlone/tools/puda/ICE_momentum.h>
 #include <StandAlone/tools/puda/jacquie.h>
 #include <StandAlone/tools/puda/jim1.h>
+#include <StandAlone/tools/puda/geocosm.h>
+#include <StandAlone/tools/puda/geocosmtets.h>
 #include <StandAlone/tools/puda/jim2.h>
 #include <StandAlone/tools/puda/PIC.h>
 #include <StandAlone/tools/puda/POL.h>
@@ -104,8 +107,11 @@ usage( const std::string& badarg, const std::string& progname )
   cerr << "  -brief               (Makes varsummary print out a subset of information.)\n";
   cerr << "  -jim1\n";
   cerr << "  -jim2\n";
+  cerr << "  -geocosm             (See geocosm.cc for details on using this option.)\n";
+  cerr << "  -geocosmtets\n";
   cerr << "  -todd1               ( 1st Law of thermo. control volume analysis) \n";
   cerr << "  -ICE_momentum        ( momentum control volume analysis) \n";
+  cerr << "  -contactStress       (reports stress at nodes in contact)\n";
   cerr << "  -jacquie             (finds burn rate vs pressure)\n";
   cerr << "  -pressure            (finds  pressure)\n";
   cerr << "  -AA_MMS_1            (1D periodic bar MMS)\n";
@@ -126,7 +132,8 @@ usage( const std::string& badarg, const std::string& progname )
   cerr << "  -verbose             (prints status of output)\n";
   cerr << "  -timesteplow <int>   (only outputs timestep from int)\n";
   cerr << "  -timestephigh <int>  (only outputs timesteps upto int)\n";
-  cerr << "  -matl,mat <int>      (only outputs data for matl)\n";
+  cerr << "  -matl,mat <int>      (matl)\n";
+  cerr << "  -m_all               (material number for \"all in one material\")\n";
   cerr << "  -pic                 (prints particle ids of all particles  in cell\n";
   cerr << "                        <i> <j> <k> [ints] on the specified timesteps)\n";
   cerr << "  -pol                 (prints out average of all particles in a cell over an\n";
@@ -262,10 +269,16 @@ main(int argc, char** argv)
       clf.be_brief = true;
     } else if(s == "-jacquie"){
       clf.do_jacquie = true;
+    } else if(s == "-contactStress"){
+      clf.do_contactStress = true;
     } else if(s == "-pressure"){
       clf.do_pressure = true;
     } else if(s == "-jim1"){
       clf.do_jim1 = true;
+    } else if(s == "-geocosm"){
+      clf.do_geocosm = true;
+    } else if(s == "-geocosmtets"){
+      clf.do_geocosmtets = true;
     } else if(s == "-jim2"){
       clf.do_jim2 = true;
     } else if(s == "-todd1"){
@@ -397,6 +410,12 @@ main(int argc, char** argv)
       clf.do_material = true;
       mat = clf.matl;
 
+    } else if (s == "-m_all") {
+      if(i+1 >= argc)
+      {
+         usage("-m_all", argv[0]);
+      }
+      clf.m_all = strtoul(argv[++i],(char**)nullptr,10);
     } else if (s == "-verbose") {
       clf.do_verbose = true;
     } else if (s == "-timesteplow" ||
@@ -520,8 +539,20 @@ main(int argc, char** argv)
       jim1( da, clf );
     }
 
+    if( clf.do_geocosm ){
+      geocosm( da, clf );
+    }
+
+    if( clf.do_geocosmtets ){
+      geocosmtets( da, clf );
+    }
+
     if( clf.do_jacquie ){
       jacquie( da, clf );
+    }
+
+    if( clf.do_contactStress ){
+      contactStress( da, clf );
     }
 
     if( clf.do_jim2 ){

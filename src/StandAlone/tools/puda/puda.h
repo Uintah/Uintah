@@ -38,7 +38,10 @@ namespace Uintah {
     bool be_brief;
     bool do_pressure;
     bool do_jacquie;
+    bool do_contactStress;
     bool do_jim1;
+    bool do_geocosm;
+    bool do_geocosmtets;
     bool do_PIC;
     bool do_POL;
     bool do_AA_MMS_1;
@@ -77,6 +80,7 @@ namespace Uintah {
     bool tsup_set;
     int tskip;
     int matl;
+    int m_all;
     std::string i_xd;
     std::string filebase;
     std::string particleVariable;
@@ -89,6 +93,8 @@ namespace Uintah {
       do_varsummary = false;
       be_brief      = false;
       do_jim1       = false;
+      do_geocosm    = false;
+      do_geocosmtets= false;
       do_AA_MMS_1   = false;
       do_AA_MMS_2   = false;
       do_GV_MMS     = false; //MMS
@@ -98,6 +104,7 @@ namespace Uintah {
       do_POL        = false;
       do_pressure   = false;
       do_jacquie    = false;
+      do_contactStress = false;
       do_partvar    = false;
       do_asci       = false;
       do_cell_stresses = false;
@@ -129,6 +136,7 @@ namespace Uintah {
       tsup_set = false;
       tskip = 1;
       matl  = 0;
+      m_all  = 0;
     }
   };
 
