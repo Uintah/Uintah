@@ -211,7 +211,6 @@
     <artificial_viscosity_coeff1>    0.07       </artificial_viscosity_coeff1>
     <artificial_viscosity_coeff2>    1.6        </artificial_viscosity_coeff2>
     <use_load_curves>                false      </use_load_curves>
-    <manual_new_material>            false      </manual_new_material>
     <DoThermalExpansion>             false      </DoThermalExpansion>
     <testForNegTemps_mpm>            false      </testForNegTemps_mpm>
   </MPM>

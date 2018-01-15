@@ -80,7 +80,6 @@
     <artificial_viscosity_coeff2>    1.6        </artificial_viscosity_coeff2>
     <turn_on_adiabatic_heating>      false      </turn_on_adiabatic_heating>
     <use_load_curves>                true       </use_load_curves>
-    <manual_new_material>            false      </manual_new_material>
     <DoThermalExpansion>             false      </DoThermalExpansion>
     <testForNegTemps_mpm>            false      </testForNegTemps_mpm>
   </MPM>
