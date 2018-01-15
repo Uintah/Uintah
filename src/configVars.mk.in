@@ -70,17 +70,6 @@ VISIT_LIBRARY  := @VISIT_LIB_DIR_FLAG@ @VISIT_LIB_FLAG@
 # These cannot be :=
 REFCOUNT_IMPL = $(SRCDIR)/@REFCOUNT_IMPL@
 
-# Subdirectories
-SUBDIRS := Core CCA VisIt
-
-ifeq ($(BUILD_STANDALONE),yes)
-SUBDIRS += StandAlone tools
-endif
-
-ifeq ($(BUILD_UNIT_TESTS),yes)
-SUBDIRS += testprograms
-endif
-
 IS_OSX := @IS_OSX@
 IS_BGQ := @IS_BGQ@
 MAKE_ARCHIVES := @MAKE_ARCHIVES@
@@ -254,7 +243,19 @@ BUILD_SIM_CONTROLLER=@BUILD_SIM_CONTROLLER@
 BUILD_STANDALONE=@BUILD_STANDALONE@
 BUILD_UNIT_TESTS=@BUILD_UNIT_TESTS@
 BUILD_WASATCH=@BUILD_WASATCH@
+
 BUILD_MINIMAL=@BUILD_MINIMAL@
+
+# Subdirectories
+SUBDIRS := Core CCA VisIt
+
+ifeq ($(BUILD_STANDALONE),yes)
+SUBDIRS += StandAlone tools
+endif
+
+ifeq ($(BUILD_UNIT_TESTS),yes)
+SUBDIRS += testprograms
+endif
 
 ################################################################
 # Variables and suffix rules for module transformation:
