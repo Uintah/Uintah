@@ -179,7 +179,7 @@ public:
   // Queries a variable for a material, patch, and index in time.
   // Optionally pass in DataFileInfo if you're iterating over
   // entries in the hash table (like restartInitialize does).
-  void query(       Variable     & var,
+  bool query(       Variable     & var,
               const std::string  & name,
               const int            matlIndex, 
               const Patch        * patch,

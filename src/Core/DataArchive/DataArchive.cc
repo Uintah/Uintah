@@ -601,7 +601,7 @@ DataArchive::queryVariables( FILE                                   * fp,
 }
 //______________________________________________________________________
 //
-void
+bool
 DataArchive::query(       Variable     & var,
                     const string       & name,
                     const int            matlIndex,
@@ -670,7 +670,8 @@ DataArchive::query(       Variable     & var,
            << ", patch " << patch->getID() 
            << ", time index " << timeIndex << "\n";
 
-      throw InternalError("DataArchive::query:Variable not found", __FILE__, __LINE__);
+//      throw InternalError("DataArchive::query:Variable not found", __FILE__, __LINE__);
+      return false;
     }
     
     int pos = std::distance( timedata.d_datafileInfoIndex.begin(), iter );
@@ -913,6 +914,8 @@ DataArchive::query(       Variable     & var,
 
   dbg << "DataArchive::query() completed in " << timer().seconds()
       << " seconds\n";
+
+  return true;
 }
 //______________________________________________________________________
 //
