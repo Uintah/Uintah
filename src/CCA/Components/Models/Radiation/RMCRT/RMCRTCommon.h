@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -223,7 +223,6 @@ namespace Uintah{
       Ghost::GhostType d_gn{Ghost::None};
       Ghost::GhostType d_gac{Ghost::AroundCells};
 
-      SimulationStateP d_sharedState;
       TypeDescription::Type d_FLT_DBL;              // Is algorithm based on doubles or floats
       
       static std::vector<IntVector> d_dbgCells;     // cells that we're interrogating when DEBUG is on

@@ -43,8 +43,8 @@
 #include <Core/OS/ProcessInfo.h>
 #include <Core/Parallel/Parallel.h>
 
-#include "StandAlone/tools/uda2vis/udaData.h"
-#include "StandAlone/tools/uda2vis/uda2vis.h"
+#include "VisIt/uda2vis/udaData.h"
+#include "VisIt/uda2vis/uda2vis.h"
 
 #include <stdio.h>
 
@@ -784,11 +784,11 @@ visit_handle visit_SimGetMetaData(void *cbdata)
 
       if(strcmp( "Save", cmd_names[i] ) == 0 )
         enabled = (!sim->first &&
-                   !sim->simController->getOutput()->isOutputTimestep());
+                   !sim->simController->getOutput()->isOutputTimeStep());
 
       else if(strcmp( "Checkpoint", cmd_names[i] ) == 0 )
         enabled = (!sim->first &&
-                   !sim->simController->getOutput()->isCheckpointTimestep());
+                   !sim->simController->getOutput()->isCheckpointTimeStep());
       else
         enabled = true;
 
@@ -1849,7 +1849,7 @@ visit_handle visit_SimGetDomainList(const char *name, void *cbdata)
     
     TimeStepInfo* &stepInfo = sim->stepInfo;
     
-    LoadBalancerPort* lb = schedulerP->getLoadBalancer();
+    LoadBalancer* lb = sim->simController->getLoadBalancer();
     
     int cc = 0;
     int totalPatches = 0;

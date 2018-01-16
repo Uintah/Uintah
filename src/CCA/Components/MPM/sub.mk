@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2017 The University of Utah
+#  Copyright (c) 1997-2018 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -37,35 +37,17 @@ SRCS += $(SRCDIR)/SerialMPM.cc    \
 	$(SRCDIR)/MPMCommon.cc    \
 	$(SRCDIR)/ImpMPM.cc       \
 	$(SRCDIR)/ShellMPM.cc     \
-	$(SRCDIR)/AMRMPM.cc       \
-	$(SRCDIR)/SimpleSolver.cc \
-	$(SRCDIR)/Solver.cc       \
-	$(SRCDIR)/MPMBoundCond.cc \
-	$(SRCDIR)/MPMFlags.cc	  \
-	$(SRCDIR)/ImpMPMFlags.cc
-
-ifeq ($(HAVE_PETSC),yes)
-  SRCS += $(SRCDIR)/PetscSolver.cc 
-  LIBS := $(LIBS) $(PETSC_LIBRARY) 
-  INCLUDES += $(PETSC_INCLUDE)
-else
-  SRCS += $(SRCDIR)/FakePetscSolver.cc
-endif
-
-SUBDIRS := \
-	$(SRCDIR)/ConstitutiveModel \
-	$(SRCDIR)/Contact           \
-	$(SRCDIR)/ThermalContact    \
-	$(SRCDIR)/PhysicalBC        \
-	$(SRCDIR)/ParticleCreator   \
-	$(SRCDIR)/CohesiveZone      \
-	$(SRCDIR)/HeatConduction    \
-	$(SRCDIR)/MMS               \
-	$(SRCDIR)/Diffusion
-
-include $(SCIRUN_SCRIPTS)/recurse.mk
+	$(SRCDIR)/AMRMPM.cc       
 
 PSELIBS := \
+	$(SRCDIR)/CohesiveZone   \
+	$(SRCDIR)/Core           \
+	$(SRCDIR)/HeatConduction \
+	$(SRCDIR)/Materials      \
+	$(SRCDIR)/MMS            \
+	$(SRCDIR)/PhysicalBC     \
+	$(SRCDIR)/Solver         \
+	$(SRCDIR)/ThermalContact \
 	CCA/Components/Application \
 	CCA/Components/OnTheFlyAnalysis \
 	CCA/Ports           \
@@ -74,14 +56,15 @@ PSELIBS := \
 	Core/Geometry       \
 	Core/GeometryPiece  \
 	Core/Grid           \
-	Core/Labels         \
 	Core/Math           \
 	Core/Parallel       \
 	Core/ProblemSpec    \
 	Core/Util           
 
+#        $(SRCDIR)/Crack             \
+
 LIBS := $(XML2_LIBRARY) $(VT_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) \
-	$(LAPACK_LIBRARY) $(BLAS_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY)
+	$(LAPACK_LIBRARY) $(BLAS_LIBRARY) $(M_LIBRARY)
 
 ifeq ($(HAVE_PETSC),yes)
   LIBS := $(LIBS) $(PETSC_LIBRARY) 
@@ -92,3 +75,19 @@ ifneq ($(NO_FORTRAN),yes)
 endif
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
+
+#### Handle subdirs that are their OWN SHARED LIBRARIES
+SUBDIRS := \
+	$(SRCDIR)/CohesiveZone      \
+	$(SRCDIR)/Core              \
+	$(SRCDIR)/HeatConduction    \
+	$(SRCDIR)/Materials         \
+	$(SRCDIR)/MMS               \
+	$(SRCDIR)/PhysicalBC        \
+        $(SRCDIR)/Solver            \
+	$(SRCDIR)/ThermalContact     
+
+#        $(SRCDIR)/Crack             \
+
+include $(SCIRUN_SCRIPTS)/recurse.mk
+#### End handle subdirs

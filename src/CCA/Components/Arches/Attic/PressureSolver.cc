@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -378,6 +378,8 @@ PressureSolver::sched_pressureLinearSolve(const LevelP& level,
                           d_EKTCorrection, doing_EKT_now);
 
   // Requires
+  tsk->requires( Task::OldDW, d_lab->d_timeStepLabel );
+
   // coefficient for the variable for which solve is invoked
   Ghost::GhostType  gn = Ghost::None;
   if (!((d_pressure_correction)||(extraProjection)
@@ -460,7 +462,11 @@ PressureSolver::pressureLinearSolve_all(const ProcessorGroup* pg,
   //__________________________________
   //debugging
   string desc = timelabels->integrator_step_name;
-  int timestep = d_lab->d_sharedState->getCurrentTopLevelTimeStep(); 
+
+  // int timestep = d_lab->d_sharedState->getCurrentTopLevelTimeStep(); 
+  timeStep_vartype timeStep;
+  old_dw->get( timeStep, d_lab->d_timeStepLabel );
+
   d_iteration ++; 
   d_linearSolver->print(desc,timestep,d_iteration);
 #endif

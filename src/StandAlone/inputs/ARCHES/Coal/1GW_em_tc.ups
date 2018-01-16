@@ -1314,7 +1314,6 @@
         <ash_enthalpy>0.0</ash_enthalpy>
         <FOWYDevol>
           <v_hiT>0.6556</v_hiT>
-          <Tig>590</Tig>
           <A>2.3550e+07</A>
           <Ta>1.133e4</Ta>
           <Tbp_graphite>3e3</Tbp_graphite>
@@ -1407,6 +1406,9 @@
           <src label="heat_source">
             <weight>1</weight>
           </src>
+          <!--<src label="forgas_ConHT_loss">-->
+            <!--<weight>1</weight>-->
+          <!--</src>-->
         </Eqn>
         <Eqn label="coal_gas_mix_frac" type="CCscalar">
           <doDiff>true</doDiff>
@@ -1463,6 +1465,10 @@
           </src>
           <src label="heat_source" type="coal_gas_heat">
             <heat_model_name>heat</heat_model_name>
+          </src>
+          <src label="forgas_ConHT_loss" type="ht_convection">
+            <dTCorrectionFactor>2</dTCorrectionFactor>
+            <ConWallHT_src label="forwall_convht_src"/>
           </src>
           <src label="coal_gas_momentum" type="coal_gas_momentum">
           </src>

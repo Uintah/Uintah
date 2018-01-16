@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,7 +25,7 @@
 #include <CCA/Components/Examples/RegridderTest.h>
 #include <CCA/Components/Examples/ExamplesLabel.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
-#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/Regridder.h>
 #include <Core/Parallel/ProcessorGroup.h>
@@ -139,7 +139,7 @@ namespace Uintah
     task->modifies( m_regridder->getOldRefineFlagLabel(), m_regridder->refineFlagMaterials() );
     task->modifies( m_regridder->getRefinePatchFlagLabel(), m_regridder->refineFlagMaterials() );
     task->computes( d_currentAngleLabel, (Level*) 0);
-    scheduler->addTask( task, scheduler->getLoadBalancer()->getPerProcessorPatchSet(level), m_sharedState->allMaterials() );
+    scheduler->addTask( task, m_loadBalancer->getPerProcessorPatchSet(level), m_sharedState->allMaterials() );
   }
 
   void RegridderTest::scheduleInitialErrorEstimate ( const LevelP& level, SchedulerP& scheduler )

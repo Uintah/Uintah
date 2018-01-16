@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -38,6 +38,7 @@
 
 namespace Uintah {
 
+  class UintahParallelComponent;
   class VarLabel;
   
 /**************************************
@@ -74,6 +75,13 @@ WARNING
     Regridder();
     virtual ~Regridder();
 
+    virtual std::string getName() = 0;
+
+    // Methods for managing the components attached via the ports.
+    virtual void setComponents( UintahParallelComponent *comp ) = 0;
+    virtual void getComponents() = 0;
+    virtual void releaseComponents() = 0;
+
     //! Initialize with regridding parameters from ups file
     virtual void problemSetup(const ProblemSpecP& params, const GridP&,
                               const SimulationStateP& state) = 0;
@@ -81,8 +89,7 @@ WARNING
     virtual void switchInitialize(const ProblemSpecP& params) = 0;
 
     //! Asks if we need to recompile the task graph.
-    virtual bool needRecompile(double time, double delt,
-                               const GridP& grid) = 0;
+    virtual bool needRecompile(const GridP& grid) = 0;
 
     //! Do we need to regrid this timestep?
     virtual bool needsToReGrid(const GridP&) = 0;
@@ -116,7 +123,7 @@ WARNING
     virtual int maxLevels() = 0;
 
     //! Create a new Grid
-    virtual Grid* regrid(Grid* oldGrid) = 0;
+    virtual Grid* regrid(Grid* oldGrid, const int timeStep) = 0;
 
     //! If the Regridder set up the load balance in the process of Regridding
     virtual bool isLoadBalanced() { return false; }

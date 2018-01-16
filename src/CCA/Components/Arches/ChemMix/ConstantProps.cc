@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -125,7 +125,15 @@ ConstantProps::sched_getState( const LevelP& level,
 
       MixingRxnModel::VarMap::iterator check_iter = d_oldDvVarMap.find( i->first + "_old");
       if ( check_iter != d_oldDvVarMap.end() ){
-        if ( m_sharedState->getCurrentTopLevelTimeStep() != 0 ){
+        // int timeStep = m_sharedState->getCurrentTopLevelTimeStep();
+
+        timeStep_vartype timeStep(0);
+        if( sched->get_dw(0) && sched->get_dw(0)->exists( m_timeStepLabel ) )
+          sched->get_dw(0)->get( timeStep, m_timeStepLabel );
+        else if( sched->get_dw(1) && sched->get_dw(1)->exists( m_timeStepLabel ) )
+          sched->get_dw(1)->get( timeStep, m_timeStepLabel );
+        
+        if ( timeStep != 0 ){
           tsk->requires( Task::OldDW, i->second, Ghost::None, 0 );
         }
       }

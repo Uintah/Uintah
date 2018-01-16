@@ -63,7 +63,6 @@
     <artificial_viscosity>           true       </artificial_viscosity>
     <use_load_curves>                false      </use_load_curves>
     <ForceBC_force_increment_factor> 1.0        </ForceBC_force_increment_factor>
-    <create_new_particles>           true       </create_new_particles>
 <!--
     
 -->

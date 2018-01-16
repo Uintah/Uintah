@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -23,10 +23,11 @@
  */
 
 
-#include <CCA/Components/ICE/ConservationTest.h>
-#include <CCA/Components/ICE/BoundaryCond.h>
-#include <CCA/Components/ICE/Diffusion.h>
+#include <CCA/Components/ICE/Core/ConservationTest.h>
+#include <CCA/Components/ICE/Core/Diffusion.h>
+#include <CCA/Components/ICE/CustomBCs/BoundaryCond.h>
 #include <CCA/Components/Models/FluidsBased/PassiveScalar.h>
+#include <CCA/Components/Models/FluidsBased/FluidsBasedModel.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/Regridder.h>
@@ -55,15 +56,16 @@ using namespace std;
 //  PASSIVE_SCALAR_DBG:  dumps out during problemSetup 
 static DebugStream cout_doing("MODELS_DOING_COUT", false);
 static DebugStream cout_dbg("PASSIVE_SCALAR_DBG_COUT", false);
-//______________________________________________________________________              
+//______________________________________________________________________
 PassiveScalar::PassiveScalar(const ProcessorGroup* myworld, 
-                             ProblemSpecP& params,
-                             const bool doAMR)
-  : ModelInterface(myworld), params(params)
+                             const SimulationStateP& sharedState,
+                             const ProblemSpecP& params)
+  : FluidsBasedModel(myworld, sharedState), d_params(params)
 {
-  d_doAMR = doAMR;
+  m_modelComputesThermoTransportProps = true;
+  
   d_matl_set = 0;
-  lb  = scinew ICELabel();
+  Ilb  = scinew ICELabel();
   Slb = scinew PassiveScalarLabel();
 }
 
@@ -80,7 +82,7 @@ PassiveScalar::~PassiveScalar()
   VarLabel::destroy( d_scalar->mag_grad_scalarLabel );
   VarLabel::destroy( Slb->sum_scalar_fLabel );
 
-  delete lb;
+  delete Ilb;
   delete Slb;
   
   // regions used during initialization
@@ -144,15 +146,12 @@ PassiveScalar::interiorRegion::interiorRegion(GeometryPieceP piece, ProblemSpecP
 
 //______________________________________________________________________
 //     P R O B L E M   S E T U P
-void PassiveScalar::problemSetup(GridP&, SimulationStateP& in_state,
-                        ModelSetup* setup, const bool isRestart)
+void PassiveScalar::problemSetup(GridP&, const bool isRestart)
 {
   cout_doing << "Doing problemSetup \t\t\t\tPASSIVE_SCALAR" << endl;
 
-  d_sharedState = in_state;
-  
-  ProblemSpecP PS_ps = params->findBlock("PassiveScalar");
-  d_matl = d_sharedState->parseAndLookupMaterial(PS_ps, "material");
+  ProblemSpecP PS_ps = d_params->findBlock("PassiveScalar");
+  d_matl = m_sharedState->parseAndLookupMaterial(PS_ps, "material");
 
   vector<int> m(1);
   m[0] = d_matl->getDWIndex();
@@ -178,17 +177,14 @@ void PassiveScalar::problemSetup(GridP&, SimulationStateP& in_state,
   
   Slb->sum_scalar_fLabel      =     VarLabel::create("sum_scalar_f",    sum_vartype::getTypeDescription());
   
-  d_modelComputesThermoTransportProps = true;
-  
-  setup->registerTransportedVariable(d_matl_set,
-                                     d_scalar->scalar_CCLabel,
-                                     d_scalar->scalar_source_CCLabel);  
+  registerTransportedVariable(d_matl_set,
+                              d_scalar->scalar_CCLabel,
+                              d_scalar->scalar_source_CCLabel);  
 
   //__________________________________
   //  register the AMRrefluxing variables                               
-  if(d_doAMR){
-    setup->registerAMR_RefluxVariable(d_matl_set,
-                                      d_scalar->scalar_CCLabel);
+  if(m_AMR){
+    registerAMRRefluxVariable(d_matl_set, d_scalar->scalar_CCLabel);
   }
   //__________________________________
   // Read in the constants for the scalar
@@ -306,13 +302,13 @@ void PassiveScalar::outputProblemSpec(ProblemSpecP& ps)
 //______________________________________________________________________
 //      S C H E D U L E   I N I T I A L I Z E
 void PassiveScalar::scheduleInitialize(SchedulerP& sched,
-                                       const LevelP& level,
-                                       const ModelInfo*)
+                                       const LevelP& level)
 {
   cout_doing << "PassiveScalar::scheduleInitialize " << endl;
   Task* t = scinew Task("PassiveScalar::initialize", 
                   this, &PassiveScalar::initialize);
   
+  t->requires(Task::NewDW, Ilb->timeStepLabel );
   t->computes(d_scalar->scalar_CCLabel);
   
   sched->addTask(t, level->eachPatch(), d_matl_set);
@@ -325,6 +321,11 @@ void PassiveScalar::initialize(const ProcessorGroup*,
                                DataWarehouse*,
                                DataWarehouse* new_dw)
 {
+  timeStep_vartype timeStep;
+  new_dw->get(timeStep, VarLabel::find( timeStep_name) );
+
+  bool isNotInitialTimeStep = (timeStep > 0);
+
   cout_doing << "Doing Initialize \t\t\t\t\tPASSIVE_SCALAR" << endl;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -462,7 +463,7 @@ void PassiveScalar::initialize(const ProcessorGroup*,
         }
       }  // sinusoidal Initialize  
     } // regions
-    setBC(f,"scalar-f", patch, d_sharedState,indx, new_dw);
+    setBC(f,"scalar-f", patch, m_sharedState,indx, new_dw, isNotInitialTimeStep); 
   }  // patches
 }
 
@@ -509,15 +510,14 @@ void PassiveScalar::computeSpecificHeat(CCVariable<double>& ,
 
 //______________________________________________________________________
 void PassiveScalar::scheduleComputeModelSources(SchedulerP& sched,
-                                                const LevelP& level,
-                                                const ModelInfo* mi)
+                                                const LevelP& level)
 {
   cout_doing << "PASSIVE_SCALAR::scheduleComputeModelSources " << endl;
   Task* t = scinew Task("PassiveScalar::computeModelSources", 
-                   this,&PassiveScalar::computeModelSources, mi);
+                   this,&PassiveScalar::computeModelSources);
                      
   Ghost::GhostType  gac = Ghost::AroundCells;
-  t->requires(Task::OldDW, mi->delT_Label, level.get_rep() );
+  t->requires(Task::OldDW, Ilb->delTLabel, level.get_rep() );
   t->requires(Task::NewDW, d_scalar->diffusionCoefLabel, gac,1);
   t->requires(Task::OldDW, d_scalar->scalar_CCLabel,     gac,1); 
   t->modifies(d_scalar->scalar_source_CCLabel);
@@ -530,12 +530,11 @@ void PassiveScalar::computeModelSources(const ProcessorGroup*,
                                         const PatchSubset* patches,
                                         const MaterialSubset* /*matls*/,
                                         DataWarehouse* old_dw,
-                                        DataWarehouse* new_dw,
-                                        const ModelInfo* mi)
+                                        DataWarehouse* new_dw)
 {
   const Level* level = getLevel(patches);
   delt_vartype delT;
-  old_dw->get(delT, mi->delT_Label, level);     
+  old_dw->get(delT, Ilb->delTLabel, level);     
   Ghost::GhostType gac = Ghost::AroundCells;
   
   for(int p=0;p<patches->size();p++){
@@ -589,16 +588,14 @@ void PassiveScalar::computeModelSources(const ProcessorGroup*,
 }
 //__________________________________      
 void PassiveScalar::scheduleComputeStableTimeStep(SchedulerP&,
-                                                  const LevelP&,
-                                                  const ModelInfo*)
+                                                  const LevelP&)
 {
   // None necessary...
 }
 
 //______________________________________________________________________
 void PassiveScalar::scheduleTestConservation(SchedulerP& sched,
-                                             const PatchSet* patches,
-                                             const ModelInfo* mi)
+                                             const PatchSet* patches)
 {
   const Level* level = getLevel(patches);
   int L = level->getIndex();
@@ -606,16 +603,16 @@ void PassiveScalar::scheduleTestConservation(SchedulerP& sched,
   if(d_test_conservation && L == 0){
     cout_doing << "PASSIVESCALAR::scheduleTestConservation " << endl;
     Task* t = scinew Task("PassiveScalar::testConservation", 
-                     this,&PassiveScalar::testConservation, mi);
+                     this,&PassiveScalar::testConservation);
 
     Ghost::GhostType  gn = Ghost::None;
     // compute sum(scalar_f * mass)
-    t->requires(Task::OldDW, mi->delT_Label, getLevel(patches) );
+    t->requires(Task::OldDW, Ilb->delTLabel, getLevel(patches) );
     t->requires(Task::NewDW, d_scalar->scalar_CCLabel, gn,0); 
-    t->requires(Task::NewDW, mi->rho_CCLabel,          gn,0);
-    t->requires(Task::NewDW, lb->uvel_FCMELabel,       gn,0); 
-    t->requires(Task::NewDW, lb->vvel_FCMELabel,       gn,0); 
-    t->requires(Task::NewDW, lb->wvel_FCMELabel,       gn,0); 
+    t->requires(Task::NewDW, Ilb->rho_CCLabel,          gn,0);
+    t->requires(Task::NewDW, Ilb->uvel_FCMELabel,       gn,0); 
+    t->requires(Task::NewDW, Ilb->vvel_FCMELabel,       gn,0); 
+    t->requires(Task::NewDW, Ilb->wvel_FCMELabel,       gn,0); 
     t->computes(Slb->sum_scalar_fLabel);
 
     sched->addTask(t, patches, d_matl_set);
@@ -627,12 +624,11 @@ void PassiveScalar::testConservation(const ProcessorGroup*,
                                      const PatchSubset* patches,
                                      const MaterialSubset* /*matls*/,
                                      DataWarehouse* old_dw,
-                                     DataWarehouse* new_dw,
-                                     const ModelInfo* mi)
+                                     DataWarehouse* new_dw)
 {
   const Level* level = getLevel(patches);
   delt_vartype delT;
-  old_dw->get(delT, mi->delT_Label, level);     
+  old_dw->get(delT, Ilb->delTLabel, level);     
   Ghost::GhostType gn = Ghost::None; 
   
   for(int p=0;p<patches->size();p++){
@@ -649,10 +645,10 @@ void PassiveScalar::testConservation(const ProcessorGroup*,
     int indx = d_matl->getDWIndex();
     
     new_dw->get(f,       d_scalar->scalar_CCLabel,indx,patch,gn,0);
-    new_dw->get(rho_CC,  mi->rho_CCLabel,         indx,patch,gn,0); 
-    new_dw->get(uvel_FC, lb->uvel_FCMELabel,      indx,patch,gn,0); 
-    new_dw->get(vvel_FC, lb->vvel_FCMELabel,      indx,patch,gn,0); 
-    new_dw->get(wvel_FC, lb->wvel_FCMELabel,      indx,patch,gn,0); 
+    new_dw->get(rho_CC,  Ilb->rho_CCLabel,         indx,patch,gn,0); 
+    new_dw->get(uvel_FC, Ilb->uvel_FCMELabel,      indx,patch,gn,0); 
+    new_dw->get(vvel_FC, Ilb->vvel_FCMELabel,      indx,patch,gn,0); 
+    new_dw->get(wvel_FC, Ilb->wvel_FCMELabel,      indx,patch,gn,0); 
     
     Vector dx = patch->dCell();
     double cellVol = dx.x()*dx.y()*dx.z();

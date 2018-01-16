@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -28,6 +28,7 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Malloc/Allocator.h>
 
+#include <string>
 #include <iostream>
 
 using namespace Uintah;
@@ -39,8 +40,9 @@ ESConductivityModel* ESConductivityModelFactory::create(const ProblemSpecP& ps,
                                                         FVMLabel* fvm_lb)
 {
   ProblemSpecP child = ps->findBlock("ESMPM");
+
   if(!child)
-    throw ProblemSetupException("Cannot find ESMPM tag", __FILE__, __LINE__);
+    throw ProblemSetupException("\nERROR<ESConductivity>: Cannot find ESMPM tag.\n", __FILE__, __LINE__);
 
   std::string model_type;
 
@@ -50,7 +52,11 @@ ESConductivityModel* ESConductivityModelFactory::create(const ProblemSpecP& ps,
     return scinew ESConductivityModel(shared_state, mpm_flags, mpm_lb, fvm_lb, model_type);
 
   else
-    throw ProblemSetupException("Unknown Conductivity Model: ("+model_type+")", __FILE__, __LINE__);
-
-  return 0;
+  {
+    std::ostringstream msg;
+    msg << "\nERROR<ESConductivity>: Unknown conductivity model : " << model_type << ".\n";
+    throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
+    
+    return nullptr;
+  }
 }

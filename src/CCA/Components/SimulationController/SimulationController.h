@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -56,7 +56,7 @@
 namespace Uintah {
 
 class  DataArchive;
-class  LoadBalancerPort;
+class  LoadBalancer;
 class  Output;
 class  Regridder;
 class  ApplicationInterface;
@@ -164,6 +164,11 @@ public:
 
   virtual ~SimulationController();
 
+  // Methods for managing the components attached via the ports.
+  virtual void setComponents( UintahParallelComponent *comp ) {};
+  virtual void getComponents();
+  virtual void releaseComponents();
+
   //! Notifies (before calling run) the SimulationController
   //! that this is simulation is a restart.
   void doRestart( const std::string & restartFromDir
@@ -181,7 +186,7 @@ public:
   ProblemSpecP          getProblemSpecP() { return m_ups; }
   ProblemSpecP          getGridProblemSpecP() { return m_grid_ps; }
   SchedulerP            getSchedulerP() { return m_scheduler; }
-  LoadBalancerPort*     getLoadBalancer() { return m_lb; }
+  LoadBalancer*     getLoadBalancer() { return m_loadBalancer; }
   Output*               getOutput() { return m_output; }
   ApplicationInterface* getApplicationInterface() { return m_app; }
   Regridder*            getRegridder() { return m_regridder; }
@@ -189,8 +194,6 @@ public:
 
   bool getRecompileTaskGraph() const { return m_recompile_taskgraph; }
   void setRecompileTaskGraph(bool val) { m_recompile_taskgraph = val; }
-
-  void releaseComponents();
 
   void ScheduleReportStats( bool header );
   void ReportStats(const ProcessorGroup*,
@@ -202,8 +205,6 @@ public:
 
 protected:
 
-  void getComponents();
-  
   void restartArchiveSetup();
   void outputSetup();
   void gridSetup();
@@ -223,7 +224,8 @@ protected:
   ProblemSpecP           m_restart_ps{nullptr};  // Problem Spec for restarting
   SchedulerP             m_scheduler{nullptr};
   GridP                  m_current_gridP{nullptr};
-  LoadBalancerPort     * m_lb{nullptr};
+
+  LoadBalancer     * m_loadBalancer{nullptr};
   Output               * m_output{nullptr};
   ApplicationInterface * m_app{nullptr};
   Regridder            * m_regridder{nullptr};
@@ -277,11 +279,7 @@ protected:
   std::map<int, PapiEvent>   m_papi_events;
 #endif
 
-#ifdef HAVE_VISIT
 public:
-  void setVisIt( unsigned int val ) { m_do_visit = val; }
-  unsigned int  getVisIt() { return m_do_visit; }
-
   void ScheduleCheckInSitu( bool header );
   void CheckInSitu(const ProcessorGroup*,
                    const PatchSubset*,
@@ -289,6 +287,10 @@ public:
                          DataWarehouse*,
                          DataWarehouse*,
                          bool first);
+
+#ifdef HAVE_VISIT
+  void setVisIt( unsigned int val ) { m_do_visit = val; }
+  unsigned int  getVisIt() { return m_do_visit; }
 
   const ReductionInfoMapper< RunTimeStatsEnum, double > getRunTimeStats() const
   { return m_runtime_stats; };

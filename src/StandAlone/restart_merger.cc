@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -43,7 +43,7 @@
 #include <Core/Util/Environment.h>
 
 #include <CCA/Components/DataArchiver/DataArchiver.h>
-#include <CCA/Components/Parent/ComponentFactory.h>
+#include <CCA/Components/Parent/ApplicationFactory.h>
 #include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 #include <CCA/Components/SimulationController/AMRSimulationController.h>
 #include <CCA/Ports/ProblemSpecInterface.h>
@@ -132,8 +132,8 @@ main( int argc, char *argv[], char *env[] )
     const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
 
     UintahParallelComponent * comp =
-      ComponentFactory::create( ups, world, nullptr, udafile[0] );
-    ApplicationInterface     * app  =
+      ApplicationFactory::create( ups, world, nullptr, udafile[0] );
+    ApplicationInterface    * app  =
       dynamic_cast<ApplicationInterface*>( comp );
 
     DataArchiver out_uda(world);

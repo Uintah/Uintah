@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -26,7 +26,8 @@
 #ifndef Packages_Uintah_CCA_Components_Examples_Mixing3_h
 #define Packages_Uintah_CCA_Components_Examples_Mixing3_h
 
-#include <CCA/Ports/ModelInterface.h>
+#include <CCA/Components/Models/FluidsBased/FluidsBasedModel.h>
+
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Containers/FastHashTable.h>
 #include <map>
@@ -67,30 +68,32 @@ WARNING
   
 ****************************************/
 
+  class ICELabel;
+
   class M3Key;
   class GeometryPiece;
-  class Mixing3 : public ModelInterface {
+  class Mixing3 : public FluidsBasedModel {
   public:
-    Mixing3(const ProcessorGroup* myworld, ProblemSpecP& params);
+    Mixing3(const ProcessorGroup* myworld,
+	    const SimulationStateP& sharedState,
+	    const ProblemSpecP& params);
+    
     virtual ~Mixing3();
     
-    virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
-                              ModelSetup* setup, const bool isRestart);
+    virtual void problemSetup(GridP& grid,
+                               const bool isRestart);
     
     virtual void scheduleInitialize(SchedulerP&,
-                                    const LevelP& level,
-                                    const ModelInfo*);
+                                    const LevelP& level);
 
     virtual void restartInitialize() {}
       
 
     virtual void scheduleComputeStableTimeStep(SchedulerP&,
-                                               const LevelP& level,
-                                               const ModelInfo*);
+                                               const LevelP& level);
                                   
     virtual void scheduleComputeModelSources(SchedulerP&,
-                                                   const LevelP& level,
-                                                   const ModelInfo*);
+                                                   const LevelP& level);
                                              
     virtual void computeSpecificHeat(CCVariable<double>&,
                                     const Patch*,
@@ -109,16 +112,17 @@ WARNING
                     
     void computeModelSources(const ProcessorGroup*, 
                              const PatchSubset* patches,
-                              const MaterialSubset* matls, 
+			     const MaterialSubset* matls, 
                              DataWarehouse*, 
-                              DataWarehouse* new_dw, 
-                             const ModelInfo*);
+			     DataWarehouse* new_dw);
 
     Mixing3(const Mixing3&);
     Mixing3& operator=(const Mixing3&);
 
-    ProblemSpecP params;
+    ProblemSpecP d_params;
 
+    ICELabel* Ilb;
+    
     const Material* matl;
     MaterialSet* mymatls;
 
@@ -133,18 +137,17 @@ WARNING
     class Stream {
     public:
       int index;
-      string name;
+      std::string name;
       VarLabel* massFraction_CCLabel;
       VarLabel* massFraction_source_CCLabel;
-      vector<Region*> regions;
+      std::vector<Region*> regions;
     };
 
-    vector<Stream*> streams;
-    map<string, Stream*> names;
+    std::vector<Stream*> streams;
+    std::map<std::string, Stream*> names;
 
     Cantera::IdealGasMix* gas;
     Cantera::Reactor* reactor;
-    SimulationStateP sharedState;
 
     double dtemp;
     double dpress;

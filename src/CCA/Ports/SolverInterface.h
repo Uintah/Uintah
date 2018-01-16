@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -40,7 +40,10 @@
 
 
 namespace Uintah {
+
+  class UintahParallelComponent;
   class VarLabel;
+  
   class SolverParameters {
   public:
     SolverParameters() : useStencil4(false),
@@ -124,8 +127,9 @@ namespace Uintah {
   };
   
   class SolverInterface : public UintahParallelPort {
+
   public:
-    SolverInterface(){}
+    SolverInterface() {}
 
     virtual ~SolverInterface()
     {
@@ -134,6 +138,11 @@ namespace Uintah {
       }
     }
 
+    // Methods for managing the components attached via the ports.
+    virtual void setComponents( UintahParallelComponent *comp ) = 0;
+    virtual void getComponents() = 0;
+    virtual void releaseComponents() = 0;
+  
     virtual SolverParameters* readParameters(       ProblemSpecP     & params,
 					      const std::string      & name,
 					      const SimulationStateP &state ) = 0;

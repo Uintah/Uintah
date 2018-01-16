@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -24,12 +24,14 @@
 
 #ifndef Packages_Uintah_CCA_Components_Ice_CustomBCs_C_BC_driver_h
 #define Packages_Uintah_CCA_Components_Ice_CustomBCs_C_BC_driver_h
-#include <CCA/Components/ICE/CustomBCs/sine.h>
-#include <CCA/Components/ICE/CustomBCs/MMS_BCs.h>
-#include <CCA/Components/ICE/CustomBCs/microSlipBCs.h>
-#include <CCA/Components/ICE/CustomBCs/LODI2.h>
+
 #include <CCA/Components/ICE/CustomBCs/inletVelocity.h>
-#include <Core/Grid/SimulationState.h>
+#include <CCA/Components/ICE/CustomBCs/LODI2.h>
+#include <CCA/Components/ICE/CustomBCs/microSlipBCs.h>
+#include <CCA/Components/ICE/CustomBCs/MMS_BCs.h>
+#include <CCA/Components/ICE/CustomBCs/sine.h>
+
+#include <Core/Grid/SimulationStateP.h>
 
 namespace Uintah {
   class DataWarehouse;

@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2017 The University of Utah
+#  Copyright (c) 1997-2018 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -34,10 +34,10 @@ SRCDIR   := CCA/Components/Solvers/AMR
 
 ifeq ($(HAVE_HYPRE),yes)
 
-  SRCS += $(SRCDIR)/AMRSolver.cc \
-	$(SRCDIR)/HypreDriver.cc \
-	$(SRCDIR)/HypreDriverStruct.cc \
-	$(SRCDIR)/HypreDriverSStruct.cc
+  SRCS += $(SRCDIR)/AMRSolver.cc         \
+	  $(SRCDIR)/HypreDriver.cc       \
+	  $(SRCDIR)/HypreDriverStruct.cc \
+	  $(SRCDIR)/HypreDriverSStruct.cc
 
   SUBDIRS := \
 	$(SRCDIR)/HypreSolvers \
@@ -48,11 +48,11 @@ ifeq ($(HAVE_HYPRE),yes)
 endif # if $(HAVE_HYPRE)
 
 PSELIBS := \
-	Core/Containers                  \
-	Core/Exceptions                  \
-	Core/Geometry                    \
-	Core/Util                        \
-	Core/Geometry                    \
+	Core/Containers  \
+	Core/Exceptions  \
+	Core/Geometry    \
+	Core/Util        \
+	Core/Geometry    \
 	CCA/Ports        \
 	Core/Exceptions  \
 	Core/Grid        \
@@ -60,7 +60,6 @@ PSELIBS := \
 	Core/Disclosure  \
 	Core/Parallel    \
 	Core/ProblemSpec \
-	\
 	Core/Math
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(LAPACK_LIBRARY) $(BLAS_LIBRARY)

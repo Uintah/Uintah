@@ -65,7 +65,7 @@ def isValid_inputFile( inputxml, startFrom, do_restart ):
   from xml.etree.ElementTree import ElementTree
   
   # these options are OK
-  if startFrom == "checkpoint" or do_restart == 0:
+  if startFrom == "checkpoint" or startFrom == "postProcessUda" or do_restart == 0:
     return True
 
   # load index.xml into tree
@@ -293,9 +293,9 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     #__________________________________
     # defaults
     do_uda_comparisons = 1
-    do_memory      = 1
-    do_restart     = 1
-    do_performance = 0
+    do_memory       = 1
+    do_restart      = 1
+    do_performance  = 0
     do_debug        = 1
     do_opt          = 1
     do_gpu          = 0           # run test if gpu is supported
@@ -344,6 +344,11 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
           do_uda_comparisons = 0
           do_memory          = 0
           do_performance     = 0
+        if flags[i] == "postProcessUda":
+          startFrom          = "postProcessUda"
+          do_restart         = 0
+          do_memory          = 0
+          do_performance     = 0
         if flags[i] == "startFromCheckpoint":
           startFrom          = "checkpoint"
         # parse the flags for
@@ -352,14 +357,14 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
         #    sus_option=" "
         tmp = flags[i].rsplit('=')
         if tmp[0] == "sus_options":
-           sus_options = tmp[1]
+           sus_options      = tmp[1]
         if tmp[0] == "abs_tolerance":
-          abs_tolerance = tmp[1]
+          abs_tolerance     = tmp[1]
         if tmp[0] == "rel_tolerance":
-          rel_tolerance = tmp[1]
+          rel_tolerance     = tmp[1]
         if flags[i] == "exactComparison":
-          abs_tolerance = 0.0
-          rel_tolerance = 0.0
+          abs_tolerance     = 0.0
+          rel_tolerance     = 0.0
 
 
     #Warnings
@@ -422,13 +427,13 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
         mkdir(testname)
         create_gs0 = "yes"
 
-    if startFrom == "checkpoint":
+    if startFrom == "checkpoint" or startFrom == "postProcessUda":
       try:
         here = "%s/CheckPoints/%s/%s/%s.uda.000/" %(startpath,ALGO,testname,testname)
         chdir(here)
       except Exception:
         print( "checkpoint uda %s does not exist" % here )
-        print( "This file must exist when using 'startFromCheckpoint' option" )
+        print( "This file must exist when using 'startFromCheckpoint' or 'PostProcessUda' option" )
         exit(1)
 
 
@@ -704,6 +709,11 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
   if startFrom == "checkpoint":
     print( "Running test from checkpoint ---%s--- %s at %s" % (testname, mpimsg, strftime( "%I:%M:%S")) )
     susinput     = "-restart %s/CheckPoints/%s/%s/*.uda.000" %  (startpath,ALGO,testname)
+    restart_text = " "
+
+  if startFrom == "postProcessUda":
+    print( "Running test from checkpoint ---%s--- %s at %s" % (testname, mpimsg, strftime( "%I:%M:%S")) )
+    susinput     = "-postProcessUda %s/CheckPoints/%s/%s/*.uda.000" %  (startpath,ALGO,testname)
     restart_text = " "
 
   if do_memory_test == 1:

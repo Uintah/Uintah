@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -40,7 +40,7 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Util/DOUT.hpp>
 
-#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Output.h>
 #include <CCA/Ports/ProblemSpecInterface.h>
 #include <CCA/Ports/Regridder.h>
@@ -308,6 +308,12 @@ SimulationController::getComponents( void )
     throw InternalError("dynamic_cast of 'm_scheduler' failed!", __FILE__, __LINE__);
   }
 
+  m_loadBalancer = dynamic_cast<LoadBalancer*>( getPort("load balancer") );
+
+  if( !m_loadBalancer ) {
+    throw InternalError("dynamic_cast of 'm_loadBalancer' failed!", __FILE__, __LINE__);
+  }
+
   m_regridder = dynamic_cast<Regridder*>( getPort("regridder") );
 
   if( m_app->isDynamicRegridding() && !m_regridder ) {
@@ -330,7 +336,7 @@ SimulationController::releaseComponents( void )
   releasePort( "load balancer" );
   releasePort( "regridder" );
   releasePort( "output" );
-
+ 
   m_app       = nullptr;
   m_scheduler = nullptr;
   m_regridder = nullptr;
@@ -524,9 +530,7 @@ void
 SimulationController::loadBalancerSetup( void )
 {
   // Set up the load balancer.
-  m_lb = m_scheduler->getLoadBalancer();
-
-  m_lb->setRunTimeStats( &m_runtime_stats );
+  m_loadBalancer->setRunTimeStats( &m_runtime_stats );
 
   //  Set the dimensionality of the problem.
   IntVector low, high, size;
@@ -534,11 +538,11 @@ SimulationController::loadBalancerSetup( void )
 
   size = high - low - m_current_gridP->getLevel(0)->getExtraCells()*IntVector(2,2,2);
   
-  m_lb->setDimensionality(size[0] > 1, size[1] > 1, size[2] > 1);
+  m_loadBalancer->setDimensionality(size[0] > 1, size[1] > 1, size[2] > 1);
  
   // In addition, do this step after regridding setup as the minimum
   // patch size that the regridder will create will be known.
-  m_lb->problemSetup( m_ups, m_current_gridP, m_app->getSimulationStateP() );
+  m_loadBalancer->problemSetup( m_ups, m_current_gridP, m_app->getSimulationStateP() );
 }
 
 //______________________________________________________________________
@@ -546,8 +550,6 @@ SimulationController::loadBalancerSetup( void )
 void
 SimulationController::applicationSetup( void )
 {
-  m_app->getComponents();
-
   // Pass the m_restart_ps to the component's problemSetup.  For
   // restarting, pull the <MaterialProperties> from the m_restart_ps.
   // If the properties are not available, then pull the properties
@@ -575,27 +577,39 @@ SimulationController::timeStateSetup()
     m_restart_archive->restartInitialize( m_restart_index,
                                           m_current_gridP,
                                           m_scheduler->get_dw(1),
-                                          m_lb,
+                                          m_loadBalancer,
                                           &simTimeStart );
 
-    // Set the time step to the restart time step.
+    // Set the time step to the restart time step which is immediately
+    // written to the DW.
     m_app->setTimeStep( m_restart_timestep );
 
-    // Set the simulation time to the restart simulation time.
+    // Set the simulation time to the restart simulation time which is
+    // immediately written to the DW.
     m_app->setSimTimeStart( simTimeStart );
 
-    // Set the next delta T. Note the old delta T is a default and
-    // normally would not be used.
+    // Set the next delta T which is immediately written to the DW.
+
+    // Note the old delta T is a default and normally would not be
+    // used.
     m_app->setNextDelT( m_restart_archive->getOldDelt( m_restart_index ) );
-    
+
     // Tell the scheduler the generation of the re-started simulation.
     // (Add +1 because the scheduler will be starting on the next
     // time step.)
     m_scheduler->setGeneration( m_restart_timestep + 1 );
-      
+
     // This delete is an enigma. If it is called then memory is not
     // leaked, but sometimes if is called, then everything segfaults.
     // delete m_restart_archive;
+  }
+  else
+  {
+    // Set the time step to 0 which is immediately written to the DW.
+    m_app->setTimeStep( 0 );
+
+    // Set the simulation time to 0 which is immediately written to the DW.
+    m_app->setSimTimeStart( 0 );
   }
 }
 
@@ -649,22 +663,21 @@ void SimulationController::ResetStats( void )
 void
 SimulationController::ScheduleReportStats( bool header )
 {
-  // ARS - FIX ME - SCHEDULE INSTEAD - comment out
-  return;
-  
-//   std::cerr << "*************" << __FUNCTION__ << "  " << __LINE__ << "  " << header << std::endl;
-
   Task* task = scinew Task("SimulationController::ReportStats",
                            this, &SimulationController::ReportStats, header);
   
   task->setType(Task::OncePerProc);
 
-  m_scheduler->addTask(task, nullptr, nullptr );
+  // Require delta T so that the task gets scheduled
+  // correctly. Otherwise the scheduler/taskgraph will toss an error :
+  // Caught std exception: map::at: key not found
+  task->requires(Task::NewDW, m_app->getDelTLabel() );
 
-  
-  // m_scheduler->addTask(task,
-  //                   m_lb->getPerProcessorPatchSet(m_current_gridP),
-  //                   m_app->getSimulationStateP()->allMaterials());
+  m_scheduler->addTask(task,
+                       m_loadBalancer->getPerProcessorPatchSet(m_current_gridP),
+                       m_app->getSimulationStateP()->allMaterials() );
+
+  // std::cerr << "*************" << __FUNCTION__ << "  " << __LINE__ << "  " << header << std::endl;
 }
 
 void
@@ -685,10 +698,11 @@ SimulationController::ReportStats(const ProcessorGroup*,
 
   // Reduce the MPI runtime stats.
   MPIScheduler * mpiScheduler = dynamic_cast<MPIScheduler*>( m_scheduler.get_rep() );
+
   if( mpiScheduler ) {
     mpiScheduler->mpi_info_.reduce( m_regridder && m_regridder->useDynamicDilation(), d_myworld );
   }
-  
+
   // Print the stats for this time step
   if( d_myworld->myRank() == 0 && header ) {
     std::ostringstream message;
@@ -1064,18 +1078,31 @@ SimulationController::getPAPIStats( )
 #endif
 }
   
-#ifdef HAVE_VISIT
 //______________________________________________________________________
 //
 void
 SimulationController::ScheduleCheckInSitu( bool first )
 {
+#ifdef HAVE_VISIT
   if( getVisIt() ) {
+
     Task* task = scinew Task("SimulationController::CheckInSitu",
                              this, &SimulationController::CheckInSitu, first);
     
-    m_scheduler->addTask(task, nullptr, nullptr );
+    task->setType(Task::OncePerProc);
+
+    // Require delta T so that the task gets scheduled
+    // correctly. Otherwise the scheduler/taskgraph will toss an error
+    // : Caught std exception: map::at: key not found
+    task->requires(Task::NewDW, m_app->getDelTLabel() );
+
+    m_scheduler->addTask(task,
+                         m_loadBalancer->getPerProcessorPatchSet(m_current_gridP),
+                         m_app->getSimulationStateP()->allMaterials() );
+
+    // std::cerr << "*************" << __FUNCTION__ << "  " << __LINE__ << "  " << first << std::endl;
   }
+#endif      
 }
 
 //______________________________________________________________________
@@ -1088,6 +1115,7 @@ SimulationController::CheckInSitu(const ProcessorGroup*,
                                         DataWarehouse*,
                                         bool first)
 {
+#ifdef HAVE_VISIT
   // If VisIt has been included into the build, check the lib sim
   // state to see if there is a connection and if so check to see if
   // anything needs to be done.
@@ -1124,15 +1152,14 @@ SimulationController::CheckInSitu(const ProcessorGroup*,
     // visit_EndLibSim( m_visitSimData );
 
     // Add the modified variable information into index.xml file.
-    getOutput()->writeto_xml_files(m_app->getTimeStep(),
-                                   m_visitSimData->modifiedVars);
+    m_output->writeto_xml_files(m_visitSimData->modifiedVars);
 
     m_wall_timers.InSitu.stop();
 
     // Note this timer is used as a laptimer.
     m_wall_timers.TimeStep.start();
   }
-}
 #endif
+}
 
 } // namespace Uintah

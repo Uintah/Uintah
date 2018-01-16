@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -28,13 +28,11 @@
 
 #include <CCA/Components/Application/ApplicationCommon.h>
 
-#include <Core/Util/RefCounted.h>
-#include <Core/Util/Handle.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/Variables/ComputeSet.h>
-#include <Core/Grid/Variables/VarLabel.h>
-#include <CCA/Ports/SolverInterface.h>
-#include <CCA/Components/FVM/FVMLabel.h>
-#include <CCA/Components/FVM/FVMMaterial.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 
 namespace Uintah {
 
@@ -55,6 +53,13 @@ DESCRIPTION
 WARNING
   
 ****************************************/
+  class FVMLabel;
+
+  class SolverInterface;
+  class SolverParameters;
+
+  class DataWarehouse;
+  class ProcessorGroup;
 
   class ElectrostaticSolve : public ApplicationCommon {
   public:
@@ -147,8 +152,7 @@ WARNING
     bool d_with_mpm;
     
     ElectrostaticSolve(const ElectrostaticSolve&);
-    ElectrostaticSolve& operator=(const ElectrostaticSolve&);
-         
+    ElectrostaticSolve& operator=(const ElectrostaticSolve&);         
   };
 }
 

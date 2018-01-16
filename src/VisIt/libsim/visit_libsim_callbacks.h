@@ -62,7 +62,7 @@ namespace Uintah {
 
   int visit_ProcessVisItCommand( visit_simulation_data *sim );
 
-  void visit_MaxTimestepCallback( char *val, void *cbdata );
+  void visit_MaxTimeStepCallback( char *val, void *cbdata );
   void visit_MaxTimeCallback    ( char *val, void *cbdata );
   void visit_EndOnMaxTimeCallback( int   val, void *cbdata );
 
@@ -71,7 +71,7 @@ namespace Uintah {
  
   void visit_UPSVariableCallback           ( char *val, void *cbdata );
   void visit_OutputIntervalVariableCallback( char *val, void *cbdata );
-  void visit_ClampTimestepsToOutputCallback( int   val, void *cbdata );
+  void visit_ClampTimeStepsToOutputCallback( int   val, void *cbdata );
 
   void visit_ImageGenerateCallback( int   val, void *cbdata );
   void visit_ImageFilenameCallback( char *val, void *cbdata );
@@ -79,8 +79,8 @@ namespace Uintah {
   void visit_ImageWidthCallback   ( char *val, void *cbdata );
   void visit_ImageFormatCallback  ( int   val, void *cbdata );
 
-  void visit_StopAtTimestepCallback    ( char *val, void *cbdata );
-  void visit_StopAtLastTimestepCallback( int   val, void *cbdata );
+  void visit_StopAtTimeStepCallback    ( char *val, void *cbdata );
+  void visit_StopAtLastTimeStepCallback( int   val, void *cbdata );
 
   void visit_StateVariableCallback( char *val, void *cbdata );
   void visit_StripChartCallback   ( char *val, void *cbdata );

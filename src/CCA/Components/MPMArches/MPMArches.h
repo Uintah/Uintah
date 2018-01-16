@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -73,7 +73,7 @@ namespace Uintah {
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/Patch.h>
 
-#include <CCA/Components/MPM/Contact/Contact.h>
+#include <CCA/Components/MPM/Materials/Contact/Contact.h>
 #include <CCA/Components/MPM/SerialMPM.h>
 #include <CCA/Components/MPM/RigidMPM.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
@@ -232,13 +232,9 @@ public:
   
 
   ///////////////////////////////////////////////////////////////////////
-    // Function to return boolean for recompiling taskgraph
-
-    virtual bool needRecompile(double time, double dt,
-			       const GridP& grid);
-      virtual double recomputeTimeStep(double current_dt);
+  virtual double recomputeDelT(const double delT);
       
-      virtual bool restartableTimeSteps();
+  virtual bool restartableTimeSteps();
 
  protected:
 
@@ -387,7 +383,6 @@ public:
   bool d_DORad;
   bool d_radiation;
   int nofTimesteps;
-  bool d_recompile;
   double prturb;
   double cpfluid;
   bool d_useCutCell;

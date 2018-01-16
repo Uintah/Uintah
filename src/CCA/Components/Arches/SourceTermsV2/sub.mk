@@ -32,6 +32,7 @@ SRCS += \
         $(SRCDIR)/MMS_mom.cc      			    \
         $(SRCDIR)/MMS_Shunn.cc      			    \
         $(SRCDIR)/MMS_ShunnP3.cc      			    \
+        $(SRCDIR)/GravityA.cc      			    \
         $(SRCDIR)/SourceTermFactoryV2.cc
 
 ########################################################################

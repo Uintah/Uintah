@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -26,9 +26,10 @@
 #include <CCA/Components/Regridder/RegridderFactory.h>
 #include <CCA/Components/Regridder/SingleLevelRegridder.h>
 #include <CCA/Components/Regridder/TiledRegridder.h>
-#include <Core/Exceptions/ProblemSetupException.h>
 
 //-- Uintah framework includes --//
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 
 using namespace Uintah;
@@ -52,9 +53,7 @@ RegridderCommon* RegridderFactory::create(       ProblemSpecP   & ps,
       std::string regridderName;
       regridderPS->getAttribute("type", regridderName);
 
-      if (world->myRank() == 0 && regridderName != "") {
-        std::cout << "Using Regridder " << regridderName << std::endl;
-      }
+      proc0cout << "Regridder: \t" << regridderName << std::endl;
 
       if (regridderName == "Tiled") {
         regridder = scinew TiledRegridder(world);
@@ -65,7 +64,7 @@ RegridderCommon* RegridderFactory::create(       ProblemSpecP   & ps,
     }
 
     if (regridder == nullptr) {
-      throw ProblemSetupException("No AMR Regridder block or type specified", __FILE__, __LINE__);
+      throw ProblemSetupException("\nERROR<Regridder>: No AMR Regridder block or type specified.\n", __FILE__, __LINE__);
     }
   }
 

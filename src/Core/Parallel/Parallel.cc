@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -257,12 +257,10 @@ Parallel::initializeManager( int& argc , char**& argv )
     MpiError(const_cast<char*>("Uintah::MPI::Comm_rank"), status);
   }
 
-
 #if ( !defined( DISABLE_SCI_MALLOC ) )
   Uintah::AllocatorSetDefaultTagMalloc(oldtag);
   Uintah::AllocatorMallocStatsAppendNumber( s_world_rank );
 #endif
-
 
 #ifdef UINTAH_ENABLE_KOKKOS
     s_root_context = scinew ProcessorGroup(nullptr, Uintah::worldComm_, s_world_rank, s_world_size, s_num_partitions);
@@ -273,7 +271,6 @@ Parallel::initializeManager( int& argc , char**& argv )
   if (s_root_context->myRank() == 0) {
     std::string plural = (s_root_context->nRanks() > 1) ? "processes" : "process";
     std::cout << "Parallel: " << s_root_context->nRanks() << " MPI " << plural << " (using MPI)\n";
-
 
 #ifdef THREADED_MPI_AVAILABLE
 

@@ -96,6 +96,8 @@ ARCHES_BC          SCI_DEBUG    Print out more information about how the code is
 
 ARCHES_BC_FUNCTORS SCI_DEBUG    Print out information regarding the bc functor execution
 
+ARCHES_INTRUSION_SETUP_INFO SCI_DEBUG Print out extra information regarding the setup of intrusions. 
+
 
 MPM:
 __________________________________

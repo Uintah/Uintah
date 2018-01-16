@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -28,6 +28,7 @@
 #include <CCA/Components/LoadBalancers/CostModelForecaster.h>
 #include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 #include <CCA/Components/Schedulers/DetailedTasks.h>
+#include <CCA/Ports/ApplicationInterface.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Regridder.h>
 #include <CCA/Ports/Scheduler.h>
@@ -67,9 +68,9 @@ DynamicLoadBalancer::DynamicLoadBalancer( const ProcessorGroup * myworld ) :
   LoadBalancerCommon(myworld), d_costForecaster(0)
 {
   m_lb_interval = 0.0;
-  m_last_lb_time = 0.0;
-  d_lbTimestepInterval = 0;
-  d_lastLbTimestep = 0;
+  m_last_lb_simTime = 0.0;
+  m_lb_timeStep_interval = 0;
+  m_last_lb_timeStep = 0;
   m_check_after_restart = false;
 
   d_dynamicAlgorithm = patch_factor_lb;  
@@ -892,39 +893,40 @@ DynamicLoadBalancer::assignPatchesCyclic(const GridP&, bool force)
 //______________________________________________________________________
 //
 bool 
-DynamicLoadBalancer::needRecompile(       double /*time*/,
-                                          double /*delt*/, 
-                                    const GridP & grid )
+DynamicLoadBalancer::needRecompile( const GridP & grid )
 {
-  double time = m_sharedState->getElapsedSimTime();
-  int timestep = m_sharedState->getCurrentTopLevelTimeStep();
+  const int timeStep   = m_application->getTimeStep();
+  const double simTime = m_application->getSimTime();
 
   bool do_check = false;
 #if 1
-  if (d_lbTimestepInterval != 0 && timestep >= d_lastLbTimestep + d_lbTimestepInterval) {
-    d_lastLbTimestep = timestep;
+  if (m_lb_timeStep_interval != 0 &&
+      timeStep >= m_last_lb_timeStep + m_lb_timeStep_interval) {
+    m_last_lb_timeStep = timeStep;
     do_check = true;
   }
-  else if (m_lb_interval != 0 && time >= m_last_lb_time + m_lb_interval) {
-    m_last_lb_time = time;
+  else if (m_lb_interval != 0 &&
+	   simTime >= m_last_lb_simTime + m_lb_interval) {
+    m_last_lb_simTime = simTime;
     do_check = true;
   }
-  else if ((time == 0 && d_collectParticles == true) || m_check_after_restart) {
-    // do AFTER initialization timestep too (no matter how much init regridding),
-    // so we can compensate for new particles
+  else if ((simTime == 0 && d_collectParticles == true) ||
+	   m_check_after_restart) {
+    // do AFTER initialization time step too (no matter how much init
+    // regridding), so we can compensate for new particles
     do_check = true;
     m_check_after_restart = false;
   }
 #endif
 
   if (dbg.active() && d_myworld->myRank() == 0){
-    dbg << d_myworld->myRank() << " DLB::NeedRecompile: do_check: " << do_check << ", timestep: " << timestep 
-        << ", LB:timestepInterval: " << d_lbTimestepInterval << ", time[s]: " << time << ", LB:Interval: " << m_lb_interval 
-        << ", Last LB timestep: " << d_lastLbTimestep << ", Last LB time[s]: " << m_last_lb_time << endl;
+    dbg << d_myworld->myRank() << " DLB::NeedRecompile: do_check: " << do_check << ", time step: " << timeStep 
+        << ", LB:timestepInterval: " << m_lb_timeStep_interval << ", time[s]: " << simTime << ", LB:Interval: " << m_lb_interval 
+        << ", Last LB time step: " << m_last_lb_timeStep << ", Last LB time[s]: " << m_last_lb_simTime << endl;
   }
   
   // if it determines we need to re-load-balance, recompile
-  if ( do_check && possiblyDynamicallyReallocate( grid, LoadBalancerPort::check ) ) {
+  if ( do_check && possiblyDynamicallyReallocate( grid, LoadBalancer::check ) ) {
     doing << d_myworld->myRank() << " DLB - scheduling recompile " <<endl;
     return true;
   }
@@ -987,8 +989,6 @@ DynamicLoadBalancer::getCosts( const Grid * grid, vector< vector<double> > & cos
 bool
 DynamicLoadBalancer::possiblyDynamicallyReallocate( const GridP & grid, int state )
 {
-  MALLOC_TRACE_TAG_SCOPE("DynamicLoadBalancer::possiblyDynamicallyReallocate");
-
   if (d_myworld->myRank() == 0) {
     dbg << d_myworld->myRank() << " In DLB, state " << state << endl;
   }
@@ -996,19 +996,22 @@ DynamicLoadBalancer::possiblyDynamicallyReallocate( const GridP & grid, int stat
   Timers::Simple timer;
   timer.start();
 
+  const int timeStep   = m_application->getTimeStep();
+  const double simTime = m_application->getSimTime();
+
   bool changed = false;
   bool force = false;
 
   // don't do on a restart unless procs changed between runs.  For restarts, this is 
   // called mainly to update the perProc Patch sets (at the bottom)
-  if (state != LoadBalancerPort::restart) {
-    if (state != LoadBalancerPort::check) {
+  if (state != LoadBalancer::restart) {
+    if (state != LoadBalancer::check) {
       force = true;
-      if (d_lbTimestepInterval != 0) {
-        d_lastLbTimestep = m_sharedState->getCurrentTopLevelTimeStep();
+      if (m_lb_timeStep_interval != 0) {
+        m_last_lb_timeStep = timeStep;
       }
       else if (m_lb_interval != 0) {
-        m_last_lb_time = m_sharedState->getElapsedSimTime();
+        m_last_lb_simTime = simTime;
       }
     }
     
@@ -1046,13 +1049,13 @@ DynamicLoadBalancer::possiblyDynamicallyReallocate( const GridP & grid, int stat
 
     //__________________________________
     //
-    if (dynamicAllocate || state != LoadBalancerPort::check) {
+    if (dynamicAllocate || state != LoadBalancer::check) {
       //d_oldAssignment = d_processorAssignment;
       changed = true;
       m_processor_assignment = m_temp_assignment;
       m_assignment_base_patch = (*grid->getLevel(0)->patchesBegin())->getID();
 
-      if (state == LoadBalancerPort::init) {
+      if (state == LoadBalancer::init) {
         // set it up so the old and new are in same place
         m_old_assignment = m_processor_assignment;
         m_old_assignment_base_patch = m_assignment_base_patch;
@@ -1086,9 +1089,9 @@ DynamicLoadBalancer::possiblyDynamicallyReallocate( const GridP & grid, int stat
   
   m_temp_assignment.resize(0);
   
-  int flag = LoadBalancerPort::check;
-  if ( changed || state == LoadBalancerPort::restart ) {
-    flag = LoadBalancerPort::regrid;
+  int flag = LoadBalancer::check;
+  if ( changed || state == LoadBalancer::restart ) {
+    flag = LoadBalancer::regrid;
   }
   
   // this must be called here (it creates the new per-proc patch sets) even if DLB does nothing.  Don't move or return earlier.
@@ -1143,17 +1146,17 @@ DynamicLoadBalancer::problemSetup( ProblemSpecP & pspec, GridP & grid, const Sim
       d_costForecaster= scinew CostModelForecaster(d_myworld,this,d_patchCost,d_cellCost,d_extraCellCost,d_particleCost);
     }
     else if(costAlgo=="Kalman") {
-      int timestepWindow;
-      p->getWithDefault("profileTimestepWindow",timestepWindow,10);
+      int timeStepWindow;
+      p->getWithDefault("profileTimeStepWindow",timeStepWindow,10);
       d_costForecaster=scinew CostProfiler(d_myworld,ProfileDriver::KALMAN,this);
-      d_costForecaster->setTimestepWindow(timestepWindow);
+      d_costForecaster->setTimestepWindow(timeStepWindow);
       d_collectParticles=false;
     }
     else if(costAlgo=="Memory") {
-      int timestepWindow;
-      p->getWithDefault("profileTimestepWindow",timestepWindow,10);
+      int timeStepWindow;
+      p->getWithDefault("profileTimeStepWindow",timeStepWindow,10);
       d_costForecaster=scinew CostProfiler(d_myworld,ProfileDriver::MEMORY,this);
-      d_costForecaster->setTimestepWindow(timestepWindow);
+      d_costForecaster->setTimestepWindow(timeStepWindow);
       d_collectParticles=false;
     }
     else if(costAlgo=="Model") {
@@ -1195,7 +1198,7 @@ DynamicLoadBalancer::problemSetup( ProblemSpecP & pspec, GridP & grid, const Sim
   }
 
   m_lb_interval = interval;
-  d_lbTimestepInterval = timestepInterval;
+  m_lb_timeStep_interval = timestepInterval;
   m_do_space_curve = spaceCurve;
   d_lbThreshold = threshold;
 
@@ -1222,20 +1225,20 @@ DynamicLoadBalancer::problemSetup( ProblemSpecP & pspec, GridP & grid, const Sim
     d_costForecaster->setMinPatchSize(mps);
   }
 
-// #ifdef HAVE_VISIT
-//   static bool initialized = false;
+#ifdef HAVE_VISIT
+  static bool initialized = false;
 
-//   // Running with VisIt so add in the variables that the user can
-//   // modify.
-//   if( m_sharedState->getVisIt() && !initialized ) {
-//     m_sharedState->d_debugStreams.push_back( &doing  );
-//     m_sharedState->d_debugStreams.push_back( &lb );
-//     m_sharedState->d_debugStreams.push_back( &dbg );
-//     m_sharedState->d_debugStreams.push_back( &stats  );
-//     m_sharedState->d_debugStreams.push_back( &times );
-//     m_sharedState->d_debugStreams.push_back( &lbout );
+  // Running with VisIt so add in the variables that the user can
+  // modify.
+  if( m_application->getVisIt() && !initialized ) {
+    m_application->getDebugStreams().push_back( &doing  );
+    m_application->getDebugStreams().push_back( &lb );
+    m_application->getDebugStreams().push_back( &dbg );
+    m_application->getDebugStreams().push_back( &stats  );
+    m_application->getDebugStreams().push_back( &times );
+    m_application->getDebugStreams().push_back( &lbout );
 
-//     initialized = true;
-//   }
-// #endif
+    initialized = true;
+  }
+#endif
 }

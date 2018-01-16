@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -178,5 +178,30 @@ void Module::allocateAndZero( DataWarehouse * new_dw,
 template void Module::allocateAndZero<float> ( DataWarehouse  *, const VarLabel *, const int matl, const Patch * );
 template void Module::allocateAndZero<double>( DataWarehouse  *, const VarLabel *, const int matl, const Patch * );
 template void Module::allocateAndZero<Vector>( DataWarehouse  *, const VarLabel *, const int matl, const Patch * );
+
+
+
+//______________________________________________________________________
+//
+Module::proc0patch0cout::proc0patch0cout( const int nPerTimestep)
+{
+  d_nTimesPerTimestep = nPerTimestep;
+}
+
+//______________________________________________________________________
+//
+void Module::proc0patch0cout::print(const Patch * patch,
+                                   std::ostringstream& msg)
+{
+  if( d_count <= d_nTimesPerTimestep ){
+    if( patch->getID() == 0 && Uintah::Parallel::getMPIRank() == 0 && Uintah::Parallel::getMainThreadID() == std::this_thread::get_id() ){
+      std::cout << msg.str();
+      d_count += 1;  
+    }
+  } 
+  else {
+    d_count = 0;
+  }
+}
 
 

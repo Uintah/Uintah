@@ -259,7 +259,7 @@ void MMS_Shunn<T>::compute_source( const Patch* patch, ArchesTaskInfoManager* ts
   
   //constCCVariable<double>& y = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_y_name);
 
-  double time_d      = _shared_state->getElapsedSimTime();
+  double time_d      = tsk_info->get_time(); //_shared_state->getElapsedSimTime();
   int   time_substep = tsk_info->get_time_substep();
   double factor      = tsk_info->get_ssp_time_factor(time_substep);
   double dt          = tsk_info->get_dt();

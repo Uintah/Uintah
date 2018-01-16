@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,7 +25,7 @@
 #ifndef UINTAH_HOMEBREW_GRID_H
 #define UINTAH_HOMEBREW_GRID_H
 
-#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Ports/LoadBalancer.h>
 
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/IntVector.h>
@@ -127,7 +127,7 @@ WARNING
     bool isSimilar( const Grid & othergrid ) const;
 
     //Assigns the boundary conditions to the grid
-    void assignBCS( const ProblemSpecP & grid_ps, Uintah::LoadBalancerPort * lb );
+    void assignBCS( const ProblemSpecP & grid_ps, Uintah::LoadBalancer * lb );
 
     void setExtraCells( const IntVector & ex );
            

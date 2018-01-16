@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -105,6 +105,8 @@ public:
             );
 
   void merge( const KeyDatabase<DomainType>& newDB );
+
+  void print( std::ostream & out, int rank ) const;
 
 private:
 
@@ -484,6 +486,24 @@ KeyDatabase<DomainType>::clear()
 {
   m_keys.clear();
   m_key_count = 0;
+}
+
+//______________________________________________________________________
+//
+template<class DomainType>
+void
+KeyDatabase<DomainType>::print( std::ostream & out, int rank ) const
+{
+  for (auto keyiter = m_keys.begin(); keyiter != m_keys.end(); keyiter++) {
+    const VarLabelMatl<DomainType>& vlm = keyiter->first;
+    const DomainType* dom = vlm.domain_;
+    if (dom) {
+      out << rank << " Name: " << vlm.label_->getName() << "  domain: " << *dom << "  matl:" << vlm.matlIndex_ << '\n';
+    }
+    else {
+      out << rank << " Name: " << vlm.label_->getName() << "  domain: N/A  matl: " << vlm.matlIndex_ << '\n';
+    }
+  }
 }
 
 //______________________________________________________________________

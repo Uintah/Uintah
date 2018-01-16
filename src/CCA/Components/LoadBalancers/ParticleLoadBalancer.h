@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -67,7 +67,7 @@ namespace Uintah {
     ~ParticleLoadBalancer();
 
     virtual void problemSetup(ProblemSpecP& pspec, GridP& grid, const SimulationStateP& state);
-    virtual bool needRecompile(double time, double delt, const GridP& grid); 
+    virtual bool needRecompile(const GridP& grid); 
 
     /// call one of the assignPatches functions.
     /// Will initially need to load balance (on first timestep), and thus  
@@ -131,17 +131,13 @@ namespace Uintah {
     //given the two cost arrays determine if the new load balance is better than the previous
     bool thresholdExceeded(const std::vector<std::vector<double> >& cellCosts, const std::vector<std::vector<double> >& particleCosts);
 
-    int d_lbTimestepInterval;
-    int d_lastLbTimestep;
-    
     ProblemSpecP d_pspec;
     
     double d_lbThreshold; //< gain threshold to exceed to require lb'ing
     
     // The weighting factor placed on particles and cells, for example if d_particleCost is 2 
     // and d_cellCost is 1 then a particle has twice as much weight as a cell.
-    double d_particleCost,d_cellCost; 
-
+    double d_particleCost,d_cellCost;
   };
 
 } // End namespace Uintah

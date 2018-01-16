@@ -138,7 +138,7 @@ Smagorinsky::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   const double delta = pow(Dx.x()*Dx.y()*Dx.z(),1./3.);
   double IsI = 0.0;
 
-  Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+  Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
   Uintah::parallel_for( range, [&](int i, int j, int k){
 
     double uep = 0.0;

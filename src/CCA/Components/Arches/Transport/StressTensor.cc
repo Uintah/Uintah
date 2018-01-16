@@ -112,23 +112,24 @@ void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   GET_WALL_BUFFERED_PATCH_RANGE(low, high,0,1,0,1,0,1);  
   Uintah::BlockRange x_range(low, high);
-  double dudx =0.0;
-  double dudy =0.0;
-  double dudz =0.0;
-  double dvdx =0.0;
-  double dvdy =0.0;
-  double dvdz =0.0;
-  double dwdx =0.0;
-  double dwdy =0.0;
-  double dwdz =0.0;
-  double mu11 = 0.0;
-  double mu12 = 0.0;
-  double mu13 = 0.0;
-  double mu22 = 0.0;
-  double mu23 = 0.0;
-  double mu33 = 0.0;
 
   Uintah::parallel_for( x_range, [&](int i, int j, int k){
+
+    double dudx = 0.0;
+    double dudy = 0.0;
+    double dudz = 0.0;
+    double dvdx = 0.0;
+    double dvdy = 0.0;
+    double dvdz = 0.0;
+    double dwdx = 0.0;
+    double dwdy = 0.0;
+    double dwdz = 0.0;
+    double mu11 = 0.0;
+    double mu12 = 0.0;
+    double mu13 = 0.0;
+    double mu22 = 0.0;
+    double mu23 = 0.0;
+    double mu33 = 0.0;
 
     mu11 = D(i-1,j,k); // it does not need interpolation
     mu22 = D(i,j-1,k);  // it does not need interpolation

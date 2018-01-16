@@ -4,7 +4,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -56,7 +56,7 @@ namespace Uintah {
 
 class VarLabel;
 class DataWarehouse;
-class LoadBalancerPort;
+class LoadBalancer;
 
 /**************************************
 
@@ -112,11 +112,11 @@ public:
   std::string getParticlePositionName() const { return d_particlePositionName; }
 
   //! Set up data arachive for restarting a Uintah simulation
-  void restartInitialize( const int          timestep,
-                          const GridP      & grid,
-                          DataWarehouse    * dw,
-                          LoadBalancerPort * lb,
-                          double           * pTime /* passed back */ );
+  void restartInitialize( const int       timestep,
+                          const GridP   & grid,
+                          DataWarehouse * dw,
+                          LoadBalancer  * lb,
+                          double        * pTime /* passed back */ );
 
 
   //__________________________________
@@ -127,7 +127,7 @@ public:
                             const GridP          & grid,
                             const PatchSubset    * patches,
                             DataWarehouse        * dw,
-                            LoadBalancerPort     * lb ); 
+                            LoadBalancer         * lb ); 
 
   static void queryEndiannessAndBits( ProblemSpecP doc, std::string & endianness, int & numBits );
 

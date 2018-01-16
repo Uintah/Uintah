@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2017 The University of Utah
+#  Copyright (c) 1997-2018 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -23,6 +23,8 @@
 # 
 # 
 # Makefile fragment for this subdirectory 
+
+ifeq ($(BUILD_UNIT_TESTS),yes)
 
 SRCDIR := testprograms
 
@@ -69,13 +71,15 @@ PSELIBS := $(GPU_EXTRA_LINK) $(PSELIBS)
 
 ifeq ($(IS_STATIC_BUILD),yes)
   LIBS := $(CORE_STATIC_LIBS) $(ZOLTAN_LIBRARY)    \
-          $(BOOST_LIBRARY)         \
+          $(BOOST_LIBRARY)                         \
           $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY) \
           $(TABPROPS_LIBRARY) $(RADPROPS_LIBRARY)  \
           $(PAPI_LIBRARY) $(M_LIBRARY)
 else
-  LIBS := $(M_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY) $(LAPACK_LIBRARY) $(BLAS_LIBRARY) \
-	  $(THREAD_LIBRARY) $(XML2_LIBRARY) $(CUDA_LIBRARY)
+  LIBS := $(M_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY) $(LAPACK_LIBRARY) \
+          $(BLAS_LIBRARY) $(XML2_LIBRARY) $(CUDA_LIBRARY)
 endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
+
+endif

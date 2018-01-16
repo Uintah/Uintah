@@ -35,10 +35,16 @@ namespace Uintah{
         return _momentum_solve;
       } else if ( subset == "scalar_psi_builders" ){
         return _scalar_compute_psi;
+      } else if ( subset == "dqmom_psi_builders" ){
+        return _dqmom_compute_psi;
       } else if ( subset == "momentum_psi_builders" ){
         return _momentum_compute_psi;
       } else if ( subset == "pressure_eqn" ){
         return _pressure_eqn;
+      } else if ( subset == "dqmom_eqns"){
+        return _dqmom_eqns;
+      } else if ( subset == "dqmom_fe_update"){
+        return _dqmom_fe_update;
       } else if ( subset == _all_tasks_str ){
         return _active_tasks;
       } else {
@@ -65,8 +71,14 @@ namespace Uintah{
     std::vector<std::string> _momentum_compute_psi;
     std::vector<std::string> _pressure_eqn;
     std::vector<std::string> _momentum_solve;
+    std::vector<std::string> _dqmom_eqns;
+    std::vector<std::string> _dqmom_compute_psi;
+    std::vector<std::string> _dqmom_fe_update;
 
-    bool m_pack_transport_construction_tasks{false}; 
+    bool m_pack_transport_construction_tasks{false};
+
+    void register_DQMOM( ProblemSpecP db );
+    void build_DQMOM( ProblemSpecP db );
 
   };
 }

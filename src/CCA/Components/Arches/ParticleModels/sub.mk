@@ -28,6 +28,7 @@ endif
 
 SRCS +=  \
          $(SRCDIR)/DepositionVelocity.cc   \
+         $(SRCDIR)/DepositionEnthalpy.cc   \
          $(SRCDIR)/RateDeposition.cc       \
          $(SRCDIR)/BodyForce.cc            \
          $(SRCDIR)/CQMOMSourceWrapper.cc   \
@@ -39,6 +40,8 @@ SRCS +=  \
          $(SRCDIR)/FOWYDevol.cc            \
          $(SRCDIR)/ParticleModelFactory.cc \
          $(SRCDIR)/ShaddixOxidation.cc     \
+         $(SRCDIR)/CharOxidationps.cc     \
+         $(SRCDIR)/PartVariablesDQMOM.cc     \
          $(SRCDIR)/TotNumDensity.cc        
 
 

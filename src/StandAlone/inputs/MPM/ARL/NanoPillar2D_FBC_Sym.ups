@@ -84,10 +84,10 @@
 
    <DataArchiver>
       <filebase>nanoPillar2D_FBC.uda</filebase>
+      <outputInterval>3.e4</outputInterval>
 <!--
       <outputTimestepInterval>1</outputTimestepInterval>
 -->
-      <outputInterval>3.e4</outputInterval>
       <save label = "p.x"/>
       <save label = "p.mass"/>
       <save label = "p.area"/>
@@ -98,6 +98,7 @@
       <save label = "p.scalefactor"/>
       <save label = "p.deformationMeasure"/>
       <save label = "p.velocity"/>
+      <save label = "p.externalforce"/>
       <save label = "p.particleID"/>
       <save label = "p.loadCurveID"/>
       <save label = "g.concentration"/>

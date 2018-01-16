@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -27,7 +27,6 @@
 
 #include <CCA/Components/Application/ApplicationCommon.h>
 
-#include <CCA/Components/MPM/MPMFlags.h>
 #include <CCA/Ports/DataWarehouseP.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/LevelP.h>
@@ -39,6 +38,9 @@
 namespace Uintah {
 
   class ProcessorGroup;
+
+  class MPMFlags;
+  class MPMLabel;
   
   class MPMCommon : public ApplicationCommon
   {
@@ -56,6 +58,8 @@ namespace Uintah {
     void scheduleUpdateStress_DamageErosionModels(SchedulerP        & sched,
                                                   const PatchSet    * patches,
                                                   const MaterialSet * matls );
+  protected:
+    MPMLabel* lb {nullptr};
   private:
     MPMFlags*             d_flags       = nullptr;
     

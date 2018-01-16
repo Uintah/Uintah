@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2013-2017 The University of Utah
+ * Copyright (c) 2013-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -819,6 +819,7 @@ namespace WasatchCore {
       }
     }
   }
+
   //------------------------------------------------------------------------------------------------
   
   void WasatchBCHelper::apply_nscbc_boundary_condition(const Expr::Tag& varTag,

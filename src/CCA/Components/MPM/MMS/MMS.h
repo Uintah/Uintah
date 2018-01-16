@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -51,16 +51,20 @@ computeExternalForceForMMS : Computes the analytically determined body force for
 
 */
 
+#include <Core/Grid/Variables/ParticleVariable.h>
 
 #ifndef __MMS_H__
 #define __MMS_H__
 
-#include <CCA/Components/MPM/SerialMPM.h>
 #include <cmath>
 #include <iostream>
 
 namespace Uintah {
 
+  class MPMFlags;
+  class MPMLabel;
+  class DataWarehouse;
+  
   class MMS {
 
   public :

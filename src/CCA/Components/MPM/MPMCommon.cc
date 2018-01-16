@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -23,9 +23,11 @@
  */
 
 #include <CCA/Components/MPM/MPMCommon.h> 
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DamageModel.h>
-#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/ErosionModel.h>
+#include <CCA/Components/MPM/Core/MPMFlags.h>
+#include <CCA/Components/MPM/Core/MPMLabel.h>
+#include <CCA/Components/MPM/Materials/MPMMaterial.h>
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/PlasticityModels/DamageModel.h>
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/PlasticityModels/ErosionModel.h>
 #include <CCA/Components/MPM/CohesiveZone/CZMaterial.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 using namespace std;
@@ -37,11 +39,14 @@ MPMCommon::MPMCommon(const ProcessorGroup* myworld,
 		     SimulationStateP sharedState) :
   ApplicationCommon(myworld, sharedState)
 {
+  lb = scinew MPMLabel();
 }
 
 MPMCommon::~MPMCommon()
 {
+  delete lb;
 }
+
 //______________________________________________________________________
 //
 void MPMCommon::materialProblemSetup(const ProblemSpecP& prob_spec, 
@@ -139,7 +144,9 @@ void MPMCommon::scheduleUpdateStress_DamageErosionModels(SchedulerP   & sched,
   
   Task* t = scinew Task("MPM::updateStress_DamageErosionModels", this, 
                         &MPMCommon::updateStress_DamageErosionModels);
-                        
+
+  t->requires(Task::OldDW, lb->simulationTimeLabel);
+  
   int numMatls = m_sharedState->getNumMPMMatls();
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial(m);

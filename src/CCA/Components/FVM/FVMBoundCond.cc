@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -23,10 +23,12 @@
  */
 
 #include <CCA/Components/FVM/FVMBoundCond.h>
+
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BCUtils.h>
+#include <Core/Grid/Patch.h>
+
 #include <vector>
-#include <iostream>
 #include <string>
 
 using namespace Uintah;

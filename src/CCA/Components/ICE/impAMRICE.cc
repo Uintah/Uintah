@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -26,10 +26,10 @@
 #include <CCA/Components/ICE/ICE.h>
 #include <CCA/Components/ICE/AMRICE.h>
 #include <CCA/Components/ICE/impAMRICE.h>
-#include <CCA/Components/ICE/ICEMaterial.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <CCA/Components/ICE/BoundaryCond.h>
-#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Components/ICE/CustomBCs/BoundaryCond.h>
+#include <CCA/Components/ICE/Materials/ICEMaterial.h>
+#include <CCA/Components/MPM/Materials/MPMMaterial.h>
+#include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Scheduler.h>
 
 #include <Core/Grid/Task.h>
@@ -117,10 +117,11 @@ impAMRICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
                                                             mpm_matls_sub, 
                                                             d_press_matl,    
                                                             all_matls);        
-
-    scheduleAddExchangeContributionToFCVel( sched, patches,ice_matls_sub,
-                                                           all_matls,
-                                                           false);
+                          
+    d_exchModel->sched_AddExch_VelFC(       sched, patches, ice_matls_sub,
+                                                            all_matls,
+                                                            d_BC_globalVars,
+                                                            false);
   }
 
 //______________________________________________________________________
@@ -210,10 +211,11 @@ impAMRICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 
     scheduleComputeLagrangianValues(        sched, patches, all_matls);
 
-    scheduleAddExchangeToMomentumAndEnergy( sched, patches, ice_matls_sub,
+    d_exchModel->sched_AddExch_Vel_Temp_CC( sched, patches, ice_matls_sub,
                                                             mpm_matls_sub,
                                                             d_press_matl,
-                                                            all_matls);
+                                                            all_matls,
+                                                            d_BC_globalVars);
 
     scheduleComputeLagrangianSpecificVolume(sched, patches, ice_matls_sub,
                                                             mpm_matls_sub, 
@@ -338,8 +340,8 @@ void impAMRICE::scheduleMultiLevelPressureSolve(  SchedulerP& sched,
     t->modifies(lb->vol_frac_Z_FC_fluxLabel, patches, all_matls_sub); 
   }
   t->setType(Task::OncePerProc);
-  LoadBalancerPort * loadBal        = sched->getLoadBalancer();
-  const PatchSet   * perprocPatches = loadBal->getPerProcessorPatchSet( grid );
+
+  const PatchSet * perprocPatches = m_loadBalancer->getPerProcessorPatchSet( grid );
 
   sched->addTask(t, perprocPatches, all_matls);
   cout << d_myworld->myRank() << " proc_patches are " << *perprocPatches << "\n";
@@ -452,7 +454,7 @@ void impAMRICE::multiLevelPressureSolve(const ProcessorGroup* pg,
       
 #else
       const PatchSet* perProcPatches = 
-      d_subsched->getLoadBalancer()->getPerProcessorPatchSet(grid);
+	m_loadBalancer->getPerProcessorPatchSet(grid);
       schedule_bogus_imp_delP(d_subsched,  perProcPatches,        d_press_matl,
                               all_matls);   
 #endif

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,9 +25,10 @@
 #ifndef UINTAH_CCA_COMPONENTS_FVM_FVMLABEL_H
 #define UINTAH_CCA_COMPONENTS_FVM_FVMLABEL_H
 
-#include <Core/Grid/Variables/VarLabel.h>
+namespace Uintah {
 
-namespace Uintah{
+  class VarLabel;
+  
   class FVMLabel {
     public:
 	    FVMLabel();

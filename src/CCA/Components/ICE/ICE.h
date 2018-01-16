@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -34,9 +34,10 @@
 
 #include <CCA/Components/ICE/customInitialize.h>
 #include <CCA/Components/ICE/CustomBCs/LODI2.h>
-#include <CCA/Components/ICE/BoundaryCond.h>
+#include <CCA/Components/ICE/CustomBCs/BoundaryCond.h>
 #include <CCA/Components/ICE/TurbulenceModel/Turbulence.h>
-#include <CCA/Components/ICE/ExchangeCoefficients.h>
+#include <CCA/Components/Models/MultiMatlExchange/ExchangeCoefficients.h>
+#include <CCA/Components/Models/MultiMatlExchange/ExchangeModel.h>
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
 
 #include <CCA/Ports/ModelInterface.h>
@@ -50,12 +51,10 @@
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
-#include <Core/Grid/Variables/SoleVariable.h>
 #include <Core/Grid/Variables/Stencil7.h>
 #include <Core/Grid/Variables/Utils.h>
 
-#include <Core/Labels/ICELabel.h>
-#include <Core/Labels/MPMICELabel.h>
+#include <CCA/Components/ICE/Core/ICELabel.h>
 #include <Core/Math/FastMatrix.h>
 #include <Core/Math/UintahMiscMath.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
@@ -93,14 +92,16 @@ void launchIceEquilibrationKernelUnified(dim3 dimGrid,
 #define MAX_MATLS 16
 
 namespace Uintah {
+using namespace ExchangeModels;
 
-  class ModelMaker;
-  class ModelInfo;
   class ModelInterface;
   class Turbulence;
+  class WallShearStress;
   class AnalysisModule;
 
-    // The following two structs are used by computeEquilibrationPressure to store debug information:
+  class MPMICELabel;
+
+  // The following two structs are used by computeEquilibrationPressure to store debug information:
     //
     struct  EqPress_dbgMatl{
       int    mat;
@@ -129,7 +130,7 @@ namespace Uintah {
 
       virtual bool restartableTimeSteps();
 
-      virtual double recomputeTimeStep(double current_dt);
+      virtual double recomputeDelT(const double delT);
 
       virtual void problemSetup(const ProblemSpecP& params,
                                 const ProblemSpecP& restart_prob_spec,
@@ -182,12 +183,6 @@ namespace Uintah {
                                       const MaterialSubset*,
                                       const MaterialSet*);
 
-      void scheduleAddExchangeContributionToFCVel(SchedulerP&,
-                                            const PatchSet*,
-                                            const MaterialSubset*,
-                                            const MaterialSet*,
-                                            bool);
-
       void scheduleComputeDelPressAndUpdatePressCC(SchedulerP&,
                                              const PatchSet*,
                                              const MaterialSubset*,
@@ -237,13 +232,6 @@ namespace Uintah {
                                                    const MaterialSubset*,
                                                    const MaterialSubset*,
                                                    const MaterialSet*);
-
-      void scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
-                                                  const PatchSet*,
-                                                  const MaterialSubset*,
-                                                  const MaterialSubset*,
-                                                  const MaterialSubset*,
-                                                  const MaterialSet* );
 
       void scheduleMaxMach_on_Lodi_BC_Faces(SchedulerP&,
                                             const LevelP&,
@@ -477,26 +465,6 @@ namespace Uintah {
                                        T& vel_FC,
                                        T& grad_dp_FC);
 
-      template<class constSFC, class SFC >
-        void add_vel_FC_exchange( CellIterator it,
-                                       IntVector adj_offset,
-                                       int numMatls,
-                                       FastMatrix & K,
-                                       double delT,
-                                       std::vector<constCCVariable<double> >& vol_frac_CC,
-                                       std::vector<constCCVariable<double> >& sp_vol_CC,
-                                       std::vector< constSFC >& vel_FC,
-                                       std::vector< SFC > & sp_vol_FC,
-                                       std::vector< SFC > & vel_FCME);
-
-
-      void addExchangeContributionToFCVel(const ProcessorGroup*,
-                                          const PatchSubset* patch,
-                                          const MaterialSubset* matls,
-                                          DataWarehouse*,
-                                          DataWarehouse*,
-                                          bool);
-
       void computeDelPressAndUpdatePressCC(const ProcessorGroup*,
                                            const PatchSubset* patches,
                                            const MaterialSubset* matls,
@@ -562,18 +530,6 @@ namespace Uintah {
                                            const MaterialSubset* matls,
                                            DataWarehouse*,
                                            DataWarehouse*);
-
-      void addExchangeToMomentumAndEnergy_1matl(const ProcessorGroup*,
-                                                const PatchSubset* ,
-                                                const MaterialSubset*,
-                                                DataWarehouse* ,
-                                                DataWarehouse* );
-
-      void addExchangeToMomentumAndEnergy(const ProcessorGroup*,
-                                          const PatchSubset*,
-                                          const MaterialSubset*,
-                                          DataWarehouse*,
-                                          DataWarehouse*);
 
       template< class V, class T>
       void update_q_CC(const std::string& desc,
@@ -843,14 +799,6 @@ namespace Uintah {
                       const CCVariable<double>& rho_micro_CC,
                       CCVariable<double>& press_CC);
 
-      void getConstantExchangeCoefficients( FastMatrix& K,
-                                    FastMatrix& H );
-
-      void getVariableExchangeCoefficients( FastMatrix& ,
-                                           FastMatrix& H,
-                                           IntVector & c,
-                                           std::vector<constCCVariable<double> >& mass  );
-
       IntVector upwindCell_X(const IntVector& c,
                              const double& var,
                              double is_logical_R_face );
@@ -862,9 +810,6 @@ namespace Uintah {
       IntVector upwindCell_Z(const IntVector& c,
                              const double& var,
                              double is_logical_R_face );
-
-      virtual bool needRecompile(double time, double dt,
-                                 const GridP& grid);
 
       double getRefPress() const {
         return d_ref_press;
@@ -883,7 +828,6 @@ namespace Uintah {
       bool d_doRefluxing;
       int  d_surroundingMatl_indx;
       bool d_impICE;
-      bool d_recompile;
       bool d_with_mpm;
       bool d_with_rigid_mpm;
       bool d_viscousFlow;
@@ -1030,8 +974,9 @@ namespace Uintah {
 
       std::string d_delT_scheme;
 
-      // exchange coefficients
+      // exchange Model
       ExchangeCoefficients* d_exchCoeff;
+      ExchangeModel* d_exchModel;
 
       // flags for the conservation test
        struct conservationTest_flags{
@@ -1051,45 +996,6 @@ namespace Uintah {
       //______________________________________________________________________
       //        models
       std::vector<ModelInterface*> d_models;
-      ModelInfo* d_modelInfo;
-
-      struct TransportedVariable {
-       const MaterialSubset* matls;
-       const MaterialSet* matlSet;
-       const VarLabel* var;
-       const VarLabel* src;
-       const VarLabel* var_Lagrangian;
-       const VarLabel* var_adv;
-      };
-      struct AMR_refluxVariable {
-       const MaterialSubset* matls;
-       const MaterialSet* matlSet;
-       const VarLabel* var;
-       const VarLabel* var_adv;
-       const VarLabel* var_X_FC_flux;
-       const VarLabel* var_Y_FC_flux;
-       const VarLabel* var_Z_FC_flux;
-
-       const VarLabel* var_X_FC_corr;
-       const VarLabel* var_Y_FC_corr;
-       const VarLabel* var_Z_FC_corr;
-      };
-
-      class ICEModelSetup : public ModelSetup {
-      public:
-       ICEModelSetup();
-       virtual ~ICEModelSetup();
-       virtual void registerTransportedVariable(const MaterialSet* matlSet,
-                                           const VarLabel* var,
-                                           const VarLabel* src);
-
-       virtual void registerAMR_RefluxVariable(const MaterialSet* matls,
-						     const VarLabel* var);
-
-       std::vector<TransportedVariable*> tvars;
-       std::vector<AMR_refluxVariable*> d_reflux_vars;
-      };
-      ICEModelSetup* d_modelSetup;
 
       //______________________________________________________________________
       //      FUNCTIONS

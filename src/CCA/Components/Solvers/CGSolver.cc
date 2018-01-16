@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -40,7 +40,7 @@
 #include <Core/Exceptions/ConvergenceFailure.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/MinMax.h>
@@ -52,9 +52,9 @@ using namespace std;
 using namespace Uintah;
 //__________________________________
 //  To turn on normal output
-//  setenv SCI_DEBUG "CGSOLVER_DOING_COUT:+"
+//  setenv SCI_DEBUG "SOLVER_DOING_COUT:+"
 
-static DebugStream cout_doing("CGSOLVER_DOING_COUT", false);
+static DebugStream cout_doing("SOLVER_DOING_COUT", false);
 
 void Mult(Array3<double>& B, const Array3<Stencil7>& A,
           const Array3<double>& X, CellIterator iter,
@@ -220,7 +220,7 @@ void ScMult_Add(Array3<double>& r, double s,
 namespace Uintah {
 
 CGSolver::CGSolver(const ProcessorGroup* myworld)
-  : UintahParallelComponent(myworld)
+  : SolverCommon(myworld)
 {
 }
 
@@ -1068,7 +1068,7 @@ void CGSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
   task->requires(which_b_dw, b, Ghost::None, 0);
   task->hasSubScheduler();
 
-  LoadBalancerPort * lb              = sched->getLoadBalancer();
+  LoadBalancer * lb              = sched->getLoadBalancer();
   const PatchSet   * perproc_patches = lb->getPerProcessorPatchSet( level );
 
   sched->addTask(task, perproc_patches, matls);

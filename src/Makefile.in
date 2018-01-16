@@ -1,6 +1,6 @@
 #  The MIT License
 #
-#  Copyright (c) 1997-2017 The University of Utah
+#  Copyright (c) 1997-2018 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -54,6 +54,8 @@ Makefile: ${SRCTOP}/Makefile.in ${OBJTOP}/config.status
 configVars.mk: ${SRCTOP}/configVars.mk.in ${OBJTOP}/config.status
 	@( Here="`pwd`" ; cd ${OBJTOP} ; Top="`pwd`" ; CONFIG_FILES=`echo $${Here} | sed -e "s%^"$${Top}"/%%" -e "s%^"$${Top}"%.%"`/configVars.mk CONFIG_HEADERS="" ./config.status )
 
+ALLTARGETS := $(ALLTARGETS) lib/libVisIt_uda2vis.$(SO_OR_A_FILE)
+
 ifeq ($(HAVE_CUDA),yes)
   GPU_EXTRA_LINK := gpu_extra_link
   ALLTARGETS := $(ALLTARGETS) lib/lib$(GPU_EXTRA_LINK).$(SO_OR_A_FILE)
@@ -70,48 +72,130 @@ endif
 
 # The following variables are used by the Fake* scripts... please
 # do not modify...
-#
-COMPONENTS      = CCA/Components
-CA              = CCA/Components/Arches
+
+COMPONENTS = CCA/Components
+
+# Analysis_Modules
+ifeq ($(BUILD_ANALYSIS_MODULES),yes)
+  ANALYSIS_MODULES_LIB = $(COMPONENTS)/OnTheFlyAnalysis
+endif
+
+# APPLICATION
+ifeq ($(BUILD_APPLICATION),yes)
+  APPLICATION_LIB = $(COMPONENTS)/Application
+endif
+
+# Arches 
 ifeq ($(BUILD_ARCHES),yes)
-  ARCHES_SUB_LIBS = $(CA)/fortran 
-  ifeq ($(BUILD_MPM),yes)
-    MPMARCHES_LIB    = $(COMPONENTS)/MPMArches
-  endif
-  ARCHES_LIBS        = $(COMPONENTS)/Arches
+  ARCHES_LIBS = $(COMPONENTS)/Arches
+  # WARNING: THESE LIBRARIES ARE LISTED IN A SPECIFIC ORDER TO SATISFY
+  #          THE NEEDS OF STATIC LINKING.  DO NOT ALPHABETIZE THEM!
+  ARCHES_DIR = $(COMPONENTS)/Arches
+  ARCHES_SUB_LIBS = $(ARCHES_DIR)/fortran 
 endif
 
+# Examples
+ifeq ($(BUILD_EXAMPLES),yes)
+  EXAMPLES_LIB = $(COMPONENTS)/Examples
+endif
+
+# FVM
 ifeq ($(BUILD_FVM),yes)
-  FVM_LIB            = CCA/Components/FVM
-  ifeq ($(BUILD_MPM),yes)
-    MPMFVM_LIB       = CCA/Components/MPMFVM
-  endif
+  FVM_LIB = $(COMPONENTS)/FVM
 endif
 
-ifeq ($(BUILD_MPM),yes)
-  MPM_LIB            = CCA/Components/MPM
-  ifeq ($(BUILD_ICE),yes)
-    MPMICE_LIB       = CCA/Components/MPMICE
-  endif
-endif
-
-ifeq ($(BUILD_ICE),yes)
-  ICE_LIB            = CCA/Components/ICE
-endif
-
-# Cover both cases when Wasatch lib should be built.
-ifeq ($(BUILD_WASATCH),yes)
-  WASATCH_LIB        = CCA/Components/Wasatch
-endif
-
+# Heat
 ifeq ($(BUILD_HEAT),yes)
-  HEAT_LIB           = CCA/Components/Heat
+  HEAT_LIB = $(COMPONENTS)/Heat
 endif
 
+# ICE
+ifeq ($(BUILD_ICE),yes)
+  ICE_LIB = $(COMPONENTS)/ICE
+  # WARNING: THESE LIBRARIES ARE LISTED IN A SPECIFIC ORDER TO SATISFY
+  #          THE NEEDS OF STATIC LINKING.  DO NOT ALPHABETIZE THEM!
+  ICE_DIR = $(COMPONENTS)/ICE
+  ICE_SUB_LIBS = \
+	$(ICE_DIR)/Materials            \
+	$(ICE_DIR)/CustomBCs            \
+	$(ICE_DIR)/Advection            \
+	$(ICE_DIR)/TurbulenceModel      \
+	$(ICE_DIR)/WallShearStressModel \
+	$(ICE_DIR)/EOS                  \
+	$(ICE_DIR)/SpecificHeatModel    \
+	$(ICE_DIR)/Core
+endif
+
+# MODELS
+ifeq ($(BUILD_MODELS),yes)
+  MODELS_LIB = $(COMPONENTS)/Models
+endif
+
+# MPM
+ifeq ($(BUILD_MPM),yes)
+  MPM_LIB = $(COMPONENTS)/MPM
+  # WARNING: THESE LIBRARIES ARE LISTED IN A SPECIFIC ORDER TO SATISFY
+  #          THE NEEDS OF STATIC LINKING.  DO NOT ALPHABETIZE THEM!
+  MPM_DIR = $(COMPONENTS)/MPM
+  MPM_SUB_LIBS = \
+	$(MPM_DIR)/HeatConduction    \
+	$(MPM_DIR)/ThermalContact    \
+	$(MPM_DIR)/CohesiveZone      \
+	$(MPM_DIR)/Materials         \
+	$(MPM_DIR)/MMS               \
+	$(MPM_DIR)/PhysicalBC        \
+        $(MPM_DIR)/Solver            \
+	$(MPM_DIR)/Core
+
+#       $(MPM_DIR)/Crack
+endif
+
+# MPM-Arches
+ifeq ($(BUILD_MPM)$(BUILD_ARCHES),yesyes)
+  MPMARCHES_LIB = $(COMPONENTS)/MPMArches
+endif
+
+# MPM-FVM
+ifeq ($(BUILD_MPM)$(BUILD_FVM),yesyes)
+  MPMFVM_LIB = $(COMPONENTS)/MPMFVM
+endif
+
+# MPM-ICE
+ifeq ($(BUILD_MPM)$(BUILD_ICE),yesyes)
+  MPMICE_LIB = $(COMPONENTS)/MPMICE
+  # WARNING: THESE LIBRARIES ARE LISTED IN A SPECIFIC ORDER TO SATISFY
+  #          THE NEEDS OF STATIC LINKING.  DO NOT ALPHABETIZE THEM!
+  MPMICE_DIR = $(COMPONENTS)/MPMICE
+  MPMICE_SUB_LIBS = \
+	$(MPMICE_DIR)/Core
+endif
+
+# Phase Field
 ifeq ($(BUILD_PHASEFIELD),yes)
-  PHASEFIELD_LIB     = CCA/Components/PhaseField
+  PHASEFIELD_LIB = $(COMPONENTS)/PhaseField
 endif
 
+# PARENT
+ifeq ($(BUILD_PARENT),yes)
+  PARENT_LIB = $(COMPONENTS)/Parent
+endif
+
+# PostProcessUda
+ifeq ($(BUILD_POST_PROCESS_UDA),yes)
+  POST_PROCESS_UDA_LIB = $(COMPONENTS)/PostProcessUda
+endif
+
+# SimController
+ifeq ($(BUILD_SIM_CONTROLLER),yes)
+  SIM_CONTROLLER_LIB = $(COMPONENTS)/SimulationController
+endif
+
+# Wasatch
+ifeq ($(BUILD_WASATCH),yes)
+  WASATCH_LIB = $(COMPONENTS)/Wasatch
+endif
+
+# All PSE libs
 ALL_PSE_CORE_LIBS =        \
         Core/Containers    \
         Core/DataArchive   \
@@ -119,8 +203,8 @@ ALL_PSE_CORE_LIBS =        \
         Core/Exceptions    \
         Core/Geometry      \
         Core/GeometryPiece \
+        Core/IO            \
         Core/Grid          \
-        Core/Labels        \
         Core/Malloc        \
         Core/Math          \
         Core/OS            \
@@ -132,36 +216,43 @@ ALL_PSE_LIBS =                              \
         $(ALL_PSE_CORE_LIBS)                \
         CCA/Ports                           \
         CCA/Components/DataArchiver         \
-        CCA/Components/Examples             \
         CCA/Components/LoadBalancers        \
-        CCA/Components/Models               \
-        CCA/Components/Parent               \
         CCA/Components/ProblemSpecification \
         CCA/Components/Regridder            \
-        CCA/Components/SimulationController \
         CCA/Components/Schedulers           \
         CCA/Components/Solvers              \
                                             \
         $(ARCHES_LIBS)                      \
         $(ARCHES_SUB_LIBS)                  \
-        $(MPMARCHES_LIB)                    \
+	$(APPLICATION_LIB)                  \
+	$(ANALYSIS_MODULES_LIB)             \
+	$(EXAMPLES_LIB)                     \
         $(FVM_LIB)                          \
-        $(MPM_LIB)                          \
-        $(ICE_LIB)                          \
-        $(MPMICE_LIB)                       \
-        $(MPMFVM_LIB)                       \
-        $(WASATCH_LIB)                      \
         $(HEAT_LIB)                         \
+        $(ICE_LIB)                          \
+        $(ICE_SUB_LIBS)                     \
+        $(MODELS_LIB)                       \
+        $(MPM_LIB)                          \
+        $(MPM_SUB_LIBS)                     \
+        $(MPMARCHES_LIB)                    \
+        $(MPMFVM_LIB)                       \
+        $(MPMICE_LIB)                       \
+        $(MPMICE_SUB_LIBS)                  \
+        $(PARENT_LIB)                       \
         $(PHASEFIELD_LIB)                   \
+	$(POST_PROCESS_UDA_LIB)             \
+        $(SIM_CONTROLLER_LIB)               \
+        $(WASATCH_LIB)
 
-  # WARNING: THESE LIBRARIES ARE LISTED IN A SPECIFIC ORDER TO SATISFY
-  #          THE NEEDS OF STATIC LINKING.  DO NOT ALPHABETIZE THEM!
+
+# WARNING: THESE LIBRARIES ARE LISTED IN A SPECIFIC ORDER TO SATISFY
+#          THE NEEDS OF STATIC LINKING.  DO NOT ALPHABETIZE THEM!
 ALL_STATIC_PSE_LIBS =                   \
-    CCA/Components/Parent               \
-    CCA/Components/Application          \
+    $(PARENT_LIB)                       \
+    $(APPLICATION_LIB)                  \
     CCA/Components/Solvers              \
     CCA/Components/DataArchiver         \
-    CCA/Components/SimulationController \
+    $(SIM_CONTROLLER_LIB)               \
     CCA/Components/Regridder            \
     CCA/Components/LoadBalancers        \
     CCA/Components/SwitchingCriteria    \
@@ -172,17 +263,20 @@ ALL_STATIC_PSE_LIBS =                   \
     $(MPMARCHES_LIB)                    \
     $(FVM_LIB)                          \
     $(MPM_LIB)                          \
+    $(MPM_SUB_LIBS)                     \
     $(ICE_LIB)                          \
+    $(ICE_SUB_LIBS)                     \
     $(MPMICE_LIB)                       \
+    $(MPMICE_SUB_LIBS)                  \
     $(MPMFVM_LIB)                       \
     $(WASATCH_LIB)                      \
     $(HEAT_LIB)                         \
     $(PHASEFIELD_LIB)                   \
                                         \
+    $(ANALYSIS_MODULES_LIB)             \
+    $(MODELS_LIB)                       \
     CCA/Components/Schedulers           \
-    CCA/Components/OnTheFlyAnalysis     \
-    CCA/Components/Models               \
-    CCA/Components/PostProcessUda       \
+    $(POST_PROCESS_UDA_LIB)             \
                                         \
     Core/Datatypes                      \
     Core/DataArchive                    \
@@ -192,7 +286,6 @@ ALL_STATIC_PSE_LIBS =                   \
     CCA/Components/ProblemSpecification \
     CCA/Ports                           \
     Core/Parallel                       \
-    Core/Labels                         \
     Core/Math                           \
     Core/Disclosure                     \
     Core/Util                           \
@@ -300,11 +393,17 @@ $(OBJTOP_ABS)/include/svn_info.h : .FORCE
 ################################################################################
 # 'uintah' target is defined in StandAlone/sub.mk
 #
-all:: prereqs packmaker $(ALLTARGETS) uintah
 
-ifeq ($(IS_STATIC_BUILD),no)
-  all:: verify_zlib
+all:: prereqs packmaker $(ALLTARGETS)
+
+ifeq ($(BUILD_STANDALONE),yes)
+  all:: uintah
+
+  ifeq ($(IS_STATIC_BUILD),no)
+    all:: verify_zlib
+  endif
 endif
+
 #
 ################################################################################
 
@@ -391,7 +490,7 @@ endif
        # Remove template instantiation files (old SGI compiler?)
 	for fname in $(patsubst %,%/ii_files, $(ALLOBJSUBDIRS)); \
 	  do if test -d $$fname; then rm -rf $$fname; fi; done
-	#
+       #
 	rm -f $(patsubst %,%/*~, $(ALLOBJSUBDIRS))
        #
        # this catches anything that slipped through
@@ -406,7 +505,6 @@ endif
 	rm -f y.output
 	rm -Rf $(LIBDIR)
 	-rm -f sciTAGS
-	rm -f Uintah/VisIt/udaReaderMTMD/*
 
 distclean:: clean
 	rm -f config.status config.log config.cache
@@ -416,10 +514,6 @@ distclean:: clean
 
 
 objs: $(CLEANOBJS)
-
-cleanVisIt:
-	@echo "Removing udaReaderMTMD directory,"
-	rm -rf VisIt/udaReaderMTMD
 
 ifeq (,$(findstring objs,$(MAKECMDGOALS)))
 # This includes all of the dependencies.  We prepend the absolute path

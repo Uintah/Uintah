@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2017 The University of Utah
+#  Copyright (c) 1997-2018 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -36,66 +36,115 @@ SRCDIR  := CCA/Components
 # do not modify...
 #
 
-ifeq ($(BUILD_WASATCH),yes)
-  WASATCH := $(SRCDIR)/Wasatch
+# Application
+ifeq ($(BUILD_APPLICATION),yes)
+  APPLICATION   := $(SRCDIR)/Application
 endif
-ifeq ($(BUILD_MPM),yes)
-  MPM      := $(SRCDIR)/MPM
-  ifeq ($(BUILD_ICE),yes)
-    MPMICE := $(SRCDIR)/MPMICE
-  endif
-endif
-ifeq ($(BUILD_ICE),yes)
-  ICE      := $(SRCDIR)/ICE
-endif
+
+# Arches
 ifeq ($(BUILD_ARCHES),yes)
   ARCHES   := $(SRCDIR)/Arches
-	ifeq ($(BUILD_MPM),yes)
-		MPMARCHES := $(SRCDIR)/MPMArches
-	endif
 endif
 
+# EXAMPLES
+ifeq ($(BUILD_EXAMPLES),yes)
+  EXAMPLES :=$(SRCDIR)/Examples
+endif
+
+# FVM
 ifeq ($(BUILD_FVM),yes)
   FVM :=$(SRCDIR)/FVM
-  ifeq ($(BUILD_MPM),yes)
-    MPMFVM := $(SRCDIR)/MPMFVM
-  endif
 endif
 
+# Heat
 ifeq ($(BUILD_HEAT),yes)
   HEAT := $(SRCDIR)/Heat
 endif
 
+# ICE
+ifeq ($(BUILD_ICE),yes)
+  ICE := $(SRCDIR)/ICE
+endif
+
+# Models
+ifeq ($(BUILD_MODELS),yes)
+  MODELS := $(SRCDIR)/Models
+endif
+
+# MPM
+ifeq ($(BUILD_MPM),yes)
+  MPM := $(SRCDIR)/MPM
+endif
+
+# MPM-Arches
+ifeq ($(BUILD_MPM)$(BUILD_ARCHES),yesyes)
+  MPMARCHES := $(SRCDIR)/MPMArches
+endif
+
+# MPM-FVM
+ifeq ($(BUILD_MPM)$(BUILD_FVM),yesyes)
+  MPMFVM := $(SRCDIR)/MPMFVM
+endif
+
+# MPM-ICE
+ifeq ($(BUILD_MPM)$(BUILD_ICE),yesyes)
+  MPMICE := $(SRCDIR)/MPMICE
+endif
+
+# OnTheFlyAnalysis
+ifeq ($(BUILD_ANALYSIS_MODULES),yes)
+  ANALYSIS_MODULES := $(SRCDIR)/OnTheFlyAnalysis
+endif
+
+# Parent
+ifeq ($(BUILD_PARENT),yes)
+  PARENT := $(SRCDIR)/Parent
+endif
+
+# PhaseField
 ifeq ($(BUILD_PHASEFIELD),yes)
   PHASEFIELD := $(SRCDIR)/PhaseField
 endif
 
+# Post Process Uda
+ifeq ($(BUILD_POST_PROCESS_UDA),yes)
+  POST_PROCESS_UDA := $(SRCDIR)/PostProcessUda
+endif
+
+# Simulation Controller
+ifeq ($(BUILD_SIM_CONTROLLER),yes)
+  SIM_CONTROLLER := $(SRCDIR)/SimulationController
+endif
+
+# Wasatch
+ifeq ($(BUILD_WASATCH),yes)
+  WASATCH := $(SRCDIR)/Wasatch
+endif
+
 SUBDIRS := \
-        $(MPM)                         \
-        $(ICE)                         \
-        $(MPMICE)                      \
+        $(ANALYSIS_MODULES)            \
+        $(APPLICATION)                 \
         $(ARCHES)                      \
-        $(MPMARCHES)                   \
-        $(WASATCH)                     \
+        $(EXAMPLES)                    \
         $(FVM)                         \
-        $(MPMFVM)                      \
         $(HEAT)                        \
+        $(ICE)                         \
+        $(MODELS)                      \
+        $(MPM)                         \
+        $(MPMARCHES)                   \
+        $(MPMFVM)                      \
+        $(MPMICE)                      \
+        $(PARENT)                      \
         $(PHASEFIELD)                  \
-        $(SRCDIR)/Application          \
+        $(POST_PROCESS_UDA)            \
+        $(SIM_CONTROLLER)              \
+        $(WASATCH)                     \
         $(SRCDIR)/DataArchiver         \
-        $(SRCDIR)/Examples             \
         $(SRCDIR)/LoadBalancers        \
-        $(SRCDIR)/Models               \
-        $(SRCDIR)/OnTheFlyAnalysis     \
-        $(SRCDIR)/Parent               \
         $(SRCDIR)/ProblemSpecification \
-        $(SRCDIR)/PostProcessUda       \
         $(SRCDIR)/Regridder            \
         $(SRCDIR)/Schedulers           \
-        $(SRCDIR)/SimulationController \
         $(SRCDIR)/Solvers              \
         $(SRCDIR)/SwitchingCriteria    
 
-
 include $(SCIRUN_SCRIPTS)/recurse.mk
-

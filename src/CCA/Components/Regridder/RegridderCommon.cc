@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,8 +25,9 @@
 //-- Uintah component includes --//
 #include <CCA/Components/Regridder/PerPatchVars.h>
 #include <CCA/Components/Regridder/RegridderCommon.h>
+#include <CCA/Ports/ApplicationInterface.h>
 #include <CCA/Ports/DataWarehouse.h>
-#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Scheduler.h>
 
 //-- Uintah framework includes --//
@@ -54,8 +55,8 @@ DebugStream rreason(    "RegridReason", false );
 //______________________________________________________________________
 //
 RegridderCommon::RegridderCommon(const ProcessorGroup* pg)
-    : Regridder(),
-      UintahParallelComponent(pg)
+  : UintahParallelComponent(pg),
+    Regridder()
 {
   rdbg << "RegridderCommon::RegridderCommon() BGN" << std::endl;
   d_filterType = FILTER_BOX;
@@ -109,13 +110,38 @@ RegridderCommon::~RegridderCommon()
 
 //______________________________________________________________________
 //
+void RegridderCommon::getComponents()
+{
+  m_scheduler = dynamic_cast< Scheduler * >( getPort( "scheduler" ) );
+
+  if( !m_scheduler ) {
+    throw InternalError("dynamic_cast of 'm_scheduler' failed!", __FILE__, __LINE__);
+  }
+
+  m_loadBalancer = dynamic_cast<LoadBalancer*>( getPort("load balancer") );
+
+  if( !m_loadBalancer ) {
+    throw InternalError("dynamic_cast of 'm_loadBalancer' failed!", __FILE__, __LINE__);
+  }
+
+  m_application = dynamic_cast<ApplicationInterface*>( getPort("application") );
+
+  if( !m_application ) {
+    throw InternalError("dynamic_cast of 'm_application' failed!", __FILE__, __LINE__);
+  }
+}
+
+//______________________________________________________________________
+//
 void RegridderCommon::releaseComponents()
 {
   releasePort( "scheduler" );
-  m_scheduler  = nullptr;
-
   releasePort( "load balancer" );
-  m_loadBalancer  = nullptr;
+  releasePort( "application" );
+
+  m_scheduler    = nullptr;
+  m_loadBalancer = nullptr;
+  m_application  = nullptr;
 
   d_sharedState = nullptr;
 }
@@ -130,13 +156,13 @@ const MaterialSubset* RegridderCommon::refineFlagMaterials() const
 //______________________________________________________________________
 //
 bool
-RegridderCommon::needRecompile(double /*time*/, double /*delt*/, const GridP& /*grid*/)
+RegridderCommon::needRecompile( const GridP& /*grid*/ )
 {
   rdbg << "RegridderCommon::needRecompile() BGN" << std::endl;
   bool retval = d_newGrid;
 
   if (d_dynamicDilation) {
-    if (d_sharedState->getCurrentTopLevelTimeStep() - d_dilationTimestep > 5)  //make sure a semi-decent sample has been taken
+    if (m_application->getTimeStep() - d_dilationTimestep > 5)  //make sure a semi-decent sample has been taken
     {
       //compute the average overhead
 
@@ -163,7 +189,7 @@ RegridderCommon::needRecompile(double /*time*/, double /*delt*/, const GridP& /*
           proc0cout << "Increasing Regrid Dilation to:" << newDilation << std::endl;
           d_cellRegridDilation = newDilation;
           //reset the dilation overhead
-          d_dilationTimestep = d_sharedState->getCurrentTopLevelTimeStep();
+          d_dilationTimestep = m_application->getTimeStep();
           retval = true;
         }
       }
@@ -184,7 +210,7 @@ RegridderCommon::needRecompile(double /*time*/, double /*delt*/, const GridP& /*
           proc0cout << "Decreasing Regrid Dilation to:" << newDilation << std::endl;
           d_cellRegridDilation = newDilation;
           //reset the dilation overhead
-          d_dilationTimestep = d_sharedState->getCurrentTopLevelTimeStep();
+          d_dilationTimestep = m_application->getTimeStep();
           retval = true;
         }
       }
@@ -202,7 +228,7 @@ RegridderCommon::needsToReGrid(const GridP &oldGrid)
 {
   rdbg << "RegridderCommon::needsToReGrid() BGN" << std::endl;
 
-  int timeStepsSinceRegrid = d_sharedState->getCurrentTopLevelTimeStep() - d_lastRegridTimestep;
+  int timeStepsSinceRegrid = m_application->getTimeStep() - d_lastRegridTimestep;
 
   int retval = false;
 
@@ -276,7 +302,7 @@ RegridderCommon::needsToReGrid(const GridP &oldGrid)
   }
 
   if (retval == true) {
-    d_lastRegridTimestep = d_sharedState->getCurrentTopLevelTimeStep();
+    d_lastRegridTimestep = m_application->getTimeStep();
   }
 
   rdbg << "RegridderCommon::needsToReGrid( " << retval << " ) END" << std::endl;
@@ -364,14 +390,12 @@ void
 RegridderCommon::problemSetup(const ProblemSpecP& params, const GridP& oldGrid, const SimulationStateP& state)
 {
   rdbg << "RegridderCommon::problemSetup() BGN" << std::endl;
+
   d_sharedState = state;
 
   grid_ps_ = params->findBlock("Grid");
 
-  m_scheduler = dynamic_cast< Scheduler * >( getPort( "scheduler" ) );
-  m_loadBalancer = dynamic_cast< LoadBalancerPort * >( getPort( "load balancer" ) );
-
-  ProblemSpecP amr_spec = params->findBlock("AMR");
+  ProblemSpecP    amr_spec = params->findBlock("AMR");
   ProblemSpecP regrid_spec = amr_spec->findBlock("Regridder");
 
   d_isAdaptive = true;  // use if "adaptive" not there
@@ -711,8 +735,6 @@ RegridderCommon::scheduleDilation(const LevelP& level, const bool isLockstepAMR)
    }
    */
 
-  const MaterialSet* all_matls = d_sharedState->allMaterials();
-
   // dilate flagged cells on this level
   Task* dilate_stability_task = scinew Task("RegridderCommon::Dilate Stability", this, &RegridderCommon::Dilate,
                                             d_dilatedCellsStabilityLabel, filters[stability_depth], stability_depth);
@@ -728,6 +750,8 @@ RegridderCommon::scheduleDilation(const LevelP& level, const bool isLockstepAMR)
 
   dilate_stability_task->requires(Task::NewDW, m_refineFlagLabel, refine_flag_matls, Ghost::AroundCells, ngc_stability);
   dilate_regrid_task->requires(Task::NewDW, m_refineFlagLabel, refine_flag_matls, Ghost::AroundCells, ngc_regrid);
+
+  const MaterialSet* all_matls = d_sharedState->allMaterials();
 
   dilate_stability_task->computes(d_dilatedCellsStabilityLabel, refine_flag_matls);
   m_scheduler->addTask(dilate_stability_task, level->eachPatch(), all_matls);

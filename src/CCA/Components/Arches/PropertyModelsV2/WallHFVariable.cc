@@ -183,10 +183,11 @@ WallHFVariable::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   Vector DX = patch->dCell();
 
-  int timestep = _shared_state->getCurrentTopLevelTimeStep();
-
-  //if ( ( timestep )%_f + 1 == 1 ){
-  if ( ( timestep )%_f  == 0 ) {
+//   int timeStep = _shared_state->getCurrentTopLevelTimeStep();
+  int timeStep = tsk_info->get_timeStep();
+ 
+  //if ( ( timeStep )%_f + 1 == 1 ){
+  if ( ( timeStep )%_f  == 0 ) {
 
     for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ) {
 

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -24,8 +24,9 @@
 
 #ifndef Packages_Uintah_CCA_Components_ontheflyAnalysis_containerExtract_h
 #define Packages_Uintah_CCA_Components_ontheflyAnalysis_containerExtract_h
+
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
-#include <CCA/Ports/Output.h>
+
 #include <Core/GeometryPiece/GeometryPiece.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
@@ -41,7 +42,8 @@
 
 namespace Uintah {
 
-
+  class DataWarehouse;
+  
   /**************************************
 
     CLASS
@@ -59,9 +61,10 @@ namespace Uintah {
    ****************************************/
   class containerExtract : public AnalysisModule {
     public:
-      containerExtract(ProblemSpecP& prob_spec,
-          SimulationStateP& sharedState,
-          Output* output);
+      containerExtract(const ProcessorGroup* myworld,
+		       const SimulationStateP sharedState,
+		       const ProblemSpecP& module_spec);
+    
       containerExtract();
 
       virtual ~containerExtract();
@@ -144,10 +147,8 @@ namespace Uintah {
       double d_startTime;
       double d_stopTime;
       std::vector<VarLabel*> d_varLabels;
-      SimulationStateP d_sharedState;
       std::vector<container*> d_containers;
-      Output* d_output;
-      ProblemSpecP d_prob_spec;
+
       const Material* d_matl;
       MaterialSet* d_matl_set;
 
@@ -166,10 +167,6 @@ namespace Uintah {
       void createFile(std::string& filename, extractCell& e);
 
       void createDirectory(std::string& lineName, std::string& levelIndex);
-
-
-
-
   };
 
 }

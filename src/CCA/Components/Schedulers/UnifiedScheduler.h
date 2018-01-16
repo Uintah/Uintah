@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -63,7 +63,7 @@ KEYWORDS
    Task Scheduler, Multi-threaded MPI, CPU, GPU
 
 DESCRIPTION
-   A multi-threaded scheduler that uses a combination of MPI + Pthreads
+   A multi-threaded scheduler that uses a combination of MPI + std::thread
    and offers support for GPU tasks. Dynamic scheduling with non-deterministic,
    out-of-order execution of tasks at runtime. One MPI rank per multi-core node.
    threads (std::thread) are pinned to individual CPU cores where these tasks are executed.
@@ -86,7 +86,8 @@ class UnifiedScheduler : public MPIScheduler  {
 
   public:
 
-    UnifiedScheduler( const ProcessorGroup * myworld, const Output * oport, UnifiedScheduler * parentScheduler = nullptr );
+    UnifiedScheduler( const ProcessorGroup * myworld,
+		      UnifiedScheduler * parentScheduler = nullptr );
 
     virtual ~UnifiedScheduler();
     
@@ -161,7 +162,6 @@ class UnifiedScheduler : public MPIScheduler  {
                                ,       OnDemandDataWarehouse * dw
                                ,       OnDemandDataWarehouse * old_dw
                                , const DetailedDep           * dep
-                               ,       LoadBalancerPort      * lb
                                ,       DeviceVarDest           des
                                );
 

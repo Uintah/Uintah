@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -26,7 +26,7 @@
 #define UINTAH_HOMEBREW_AMRMPM_H
 
 // make uintah CXX=/usr/bin/iwyu
-#include <CCA/Components/MPM/MPMFlags.h>      // for MPMFlags
+#include <CCA/Components/MPM/Core/MPMFlags.h>      // for MPMFlags
 #include <CCA/Components/MPM/SerialMPM.h>     // for SerialMPM, etc
 #include <CCA/Ports/SchedulerP.h>             // for SchedulerP
 #include <Core/Geometry/Vector.h>             // for Vector
@@ -98,12 +98,6 @@ public:
   
   /// Schedule to mark initial flags for AMR regridding
   void scheduleInitialErrorEstimate(const LevelP& coarseLevel, SchedulerP& sched);
-
-
-//  void setMPMLabel(MPMLabel* Mlb) {
-//    delete lb;
-//    lb = Mlb;
-//  };
 
 //  enum IntegratorType {
 //    Explicit,

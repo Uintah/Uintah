@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -30,7 +30,7 @@
 #include <vector>
 
 namespace Uintah {
-  class LoadBalancerPort;
+  class LoadBalancer;
   class Module;
 
 
@@ -119,21 +119,18 @@ namespace Uintah {
     std::string            d_udaDir;
     bool                   d_gridChanged;
 
-    std::vector<int>       d_timesteps;
+    std::vector<int>       d_udaTimesteps;
     std::vector<int>       d_numMatls;
-    std::vector<double>    d_times;
-    std::vector<VarLabel*> d_savedLabels;
+    std::vector<double>    d_udaTimes;
+    std::vector<VarLabel*> d_udaSavedLabels;
 
     GridP                  d_oldGrid;
     DataArchive          * d_dataArchive = nullptr;
 
-    int                    d_timeIndex = 0;
+    int                    d_simTimestep = 0;
 
-    LoadBalancerPort     * d_lb;
     const VarLabel       * delt_label;
     std::vector<Module*> d_Modules;
-
-
   };
 } // End namespace Uintah
 

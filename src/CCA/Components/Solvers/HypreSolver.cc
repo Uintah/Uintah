@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -41,7 +41,7 @@
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <CCA/Ports/Scheduler.h>
-#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Ports/LoadBalancer.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/MinMax.h>
@@ -74,9 +74,9 @@ using namespace Uintah;
 
 //__________________________________
 //  To turn on normal output
-//  setenv SCI_DEBUG "HYPRE_DOING_COUT:+"
+//  setenv SCI_DEBUG "SOLVER_DOING_COUT:+"
 
-static DebugStream cout_doing("HYPRE_DOING_COUT", false);
+static DebugStream cout_doing("SOLVER_DOING_COUT", false);
 
 namespace Uintah {
 
@@ -88,31 +88,30 @@ namespace Uintah {
   template<class Types>
   class HypreStencil7 : public RefCounted {
   public:
-    HypreStencil7( const Level              * level_in
-                 , const MaterialSet        * matlset_in
-                 , const VarLabel           * A_in
-                 ,       Task::WhichDW        which_A_dw_in
-                 , const VarLabel           * x_in
-                 ,       bool                 modifies_X_in
-                 , const VarLabel           * b_in
-                 ,       Task::WhichDW        which_b_dw_in
-                 , const VarLabel           * guess_in
-                 ,       Task::WhichDW        which_guess_dw_in
-                 , const HypreSolver2Params * params_in
-                 ,       bool                 modifies_hypre_in
-                 )
-      : level(level_in)
-      , matlset(matlset_in)
-      , A_label(A_in)
-      , which_A_dw(which_A_dw_in)
-      , X_label(x_in)
-      , modifies_X(modifies_X_in)
-      , b_label(b_in)
-      , which_b_dw(which_b_dw_in)
-      , guess_label(guess_in)
-      , which_guess_dw(which_guess_dw_in)
-      , params(params_in)
-      , modifies_hypre(modifies_hypre_in)
+    HypreStencil7(const Level              * level_in,
+                  const MaterialSet        * matlset_in,
+                  const VarLabel           * A_in,
+                        Task::WhichDW        which_A_dw_in,
+                  const VarLabel           * x_in, 
+                        bool                 modifies_X_in,
+                  const VarLabel           * b_in,
+                        Task::WhichDW        which_b_dw_in,
+                  const VarLabel           * guess_in,
+                        Task::WhichDW        which_guess_dw_in,
+                  const HypreSolver2Params * params_in,
+                        bool                 modifies_hypre_in)
+      : level(level_in),
+        matlset(matlset_in),
+        A_label(A_in),
+        which_A_dw(which_A_dw_in),
+        X_label(x_in), 
+        modifies_X(modifies_X_in),
+        b_label(b_in),
+        which_b_dw(which_b_dw_in),
+        guess_label(guess_in),
+        which_guess_dw(which_guess_dw_in),
+        params(params_in),
+        modifies_hypre(modifies_hypre_in)
     {
       // Time Step
       m_timeStepLabel = VarLabel::create(timeStep_name, timeStep_vartype::getTypeDescription() );
@@ -213,20 +212,20 @@ namespace Uintah {
       tMatVecSetup_ = hypre_InitializeTiming("Matrix + Vector setup");
       tSolveOnly_   = hypre_InitializeTiming("Solve time");
 
-      int timeStep = params->m_sharedState->getCurrentTopLevelTimeStep();
+      // int timeStep = params->m_sharedState->getCurrentTopLevelTimeStep();
 
-      // std::cerr << "**********  " << __FUNCTION__ << "  " << __LINE__ << "  "
-      //           << old_dw << "  " << new_dw << "  "
-      //           << std::endl;
+      timeStep_vartype timeStep(0);
 
-      // int timeStep = 0;
-      // simTime_vartype timeStep_var;
-      // old_dw->get(timeStep_var, m_timeStepLabel);
-      // timeStep = timeStep_var;
-
-      // std::cerr << "**********  " << __FUNCTION__ << "  " << __LINE__ << "  "
-      //           << old_dw << "  " << new_dw << "  "
-      //           << timeStep << std::endl;
+      if (new_dw->exists(m_timeStepLabel)) {
+        new_dw->get(timeStep, m_timeStepLabel);
+      }
+      else if (old_dw->exists(m_timeStepLabel)) {
+        old_dw->get(timeStep, m_timeStepLabel);
+        new_dw->put(timeStep, m_timeStepLabel);
+      }
+      else {
+        new_dw->put(timeStep, m_timeStepLabel);
+      }
 
       //________________________________________________________
       // Solve frequency
@@ -425,7 +424,9 @@ namespace Uintah {
             HYPRE_StructMatrixInitialize(*HA);
           }
 
-          // setup the coefficient matrix ONLY on the first timestep, if we are doing a restart, or if we set setupFrequency != 0, or if UpdateCoefFrequency != 0
+          // setup the coefficient matrix ONLY on the first timestep, if
+          // we are doing a restart, or if we set setupFrequency != 0,
+          // or if UpdateCoefFrequency != 0
           if ( timeStep == 1 || restart || do_setup || updateCoefs ) {
             for ( int p = 0; p < patches->size(); p++ ) {
               const Patch* patch = patches->get(p);
@@ -1070,7 +1071,7 @@ namespace Uintah {
             if ( timeStep > 2 ) {
               // alpha = 2/(N+1)
               // averaging window is 10 timesteps.
-              double alpha = 2.0/(std::min(timeStep - 2, 10) + 1);
+              double alpha = 2.0/(std::min(int(timeStep) - 2, 10) + 1);
               movingAverage_ = alpha*solve_timer().seconds() + (1-alpha)*movingAverage_;
 
               cout << "mean: " << movingAverage_ << " s, ";
@@ -1245,7 +1246,7 @@ namespace Uintah {
   //==============================================================================
 
   HypreSolver2::HypreSolver2(const ProcessorGroup* myworld)
-    : UintahParallelComponent(myworld)
+    : SolverCommon(myworld)
   {
     // Time Step
     m_timeStepLabel =
@@ -1268,7 +1269,7 @@ namespace Uintah {
 #endif
 
     hypre_solver_label.resize(m_num_hypre_threads);
-    
+
     for ( int i = 0; i < m_num_hypre_threads; i++ ) {
       std::string label_name = "hypre_solver_label" + std::to_string(i);
       hypre_solver_label[i] = VarLabel::create( label_name,
@@ -1371,7 +1372,6 @@ namespace Uintah {
     for ( int i = 0; i < m_num_hypre_threads; i++ ) {
       task->computes(hypre_solver_label[i]);
     }
-
     sched->addTask( task
                   , sched->getLoadBalancer()->getPerProcessorPatchSet(level)
                   , matls );
@@ -1518,26 +1518,24 @@ namespace Uintah {
     }
 
     task->requires(which_b_dw, b, Ghost::None, 0);
-    LoadBalancerPort * lb = sched->getLoadBalancer();
+    LoadBalancer * lb = sched->getLoadBalancer();
 
     if ( modifies_hypre ) {
       for ( int i = 0; i < m_num_hypre_threads; i++ ) {
         task->requires(Task::NewDW,hypre_solver_label[i]);
       }
+      
+      task->requires(Task::OldDW, m_timeStepLabel);
     }
     else {
       for ( int i = 0; i < m_num_hypre_threads; i++ ) {
         task->requires(Task::OldDW,hypre_solver_label[i]);
         task->computes(hypre_solver_label[i]);
       }
+      
+      task->requires(Task::OldDW,m_timeStepLabel);
+      task->computes(m_timeStepLabel);
     }
-
-    // std::cerr << "**********  " << __FUNCTION__ << "  " << __LINE__ << "  "
-    //           << sched->get_dw(0) << "  " 
-    //           << sched->get_dw(1) << "  " 
-    //           << sched->getLastDW() << std::endl;
-
-    task->requires(Task::OldDW, m_timeStepLabel);
 
     for ( int i = 0; i < m_num_hypre_threads ; i++ ) {
       sched->overrideVariableBehavior(hypre_solver_label[i]->getName(), false, false,

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -29,6 +29,7 @@
 
 #include <CCA/Ports/ModelInterface.h>
 #include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Grid/Variables/NCVariable.h>
 
 namespace Uintah {
   class ICELabel;
@@ -68,20 +69,21 @@ WARNING
 
   class DDT1 : public ModelInterface {
   public:
-    DDT1(const ProcessorGroup* myworld, ProblemSpecP& params,
-                const ProblemSpecP& prob_spec);
+    DDT1(const ProcessorGroup* myworld,
+	 const SimulationStateP& sharedState,
+	 const ProblemSpecP& params,
+	 const ProblemSpecP& prob_spec);
 
     virtual ~DDT1();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
 
-    virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
-			      ModelSetup* setup, const bool isRestart);
+    virtual void problemSetup(GridP& grid,
+			       const bool isRestart);
 
       
     virtual void scheduleInitialize(SchedulerP&,
-				    const LevelP& level,
-				    const ModelInfo*);
+				    const LevelP& level);
 
     virtual void initialize(const ProcessorGroup*,
                             const PatchSubset*,
@@ -92,13 +94,11 @@ WARNING
     virtual void restartInitialize() {}
       
     virtual void scheduleComputeStableTimeStep(SchedulerP&,
-					       const LevelP& level,
-					       const ModelInfo*);
+					       const LevelP& level);
       
  
     virtual void scheduleComputeModelSources(SchedulerP&,
-						   const LevelP& level,
-						   const ModelInfo*);
+						   const LevelP& level);
                                              
     virtual void scheduleModifyThermoTransportProperties(SchedulerP&,
                                                const LevelP&,
@@ -116,8 +116,7 @@ WARNING
                                 SchedulerP& sched );
                                              
    virtual void scheduleTestConservation(SchedulerP&,
-                                         const PatchSet* patches,
-                                         const ModelInfo* mi);
+                                         const PatchSet* patches);
 
     
   virtual bool adjustOutputInterval()     const { return d_adj_IO_Press->onOff || d_adj_IO_Det->onOff; };
@@ -134,22 +133,19 @@ WARNING
                           const PatchSubset*,
                           const MaterialSubset*, 
                           DataWarehouse*, 
-                          DataWarehouse*, 
-                          const ModelInfo*);
+                          DataWarehouse*);
                              
     void computeModelSources(const ProcessorGroup*, 
                              const PatchSubset*,
                              const MaterialSubset*, 
                              DataWarehouse*, 
-                             DataWarehouse*, 
-                             const ModelInfo*);
+                             DataWarehouse*);
       
     void computeNumPPC(const ProcessorGroup*, 
                        const PatchSubset*,
                        const MaterialSubset*, 
                        DataWarehouse*, 
-                       DataWarehouse*, 
-                       const ModelInfo*);
+                       DataWarehouse*);
       
     double computeBurnedMass(double To, 
                              double& Ts,  
@@ -204,20 +200,20 @@ WARNING
     enum typeofBurning{ NOTDEFINED, WARMINGUP, CONDUCTIVE, CONVECTIVE, ONSURFACE };
     enum {ZERO, PRESSURE_EXCEEDED, DETONATION_DETECTED};
 
-    const VarLabel* pCrackRadiusLabel;
+    const VarLabel* pCrackRadiusLabel {nullptr};
     
-    ProblemSpecP d_prob_spec;
-    ProblemSpecP d_params;
-    const Material* d_matl0;
-    const Material* d_matl1;
-    const Material* d_matl2;
-    SimulationStateP d_sharedState;   
+    ProblemSpecP d_params {nullptr};
+    ProblemSpecP d_prob_spec {nullptr};
 
-    ICELabel* Ilb;
-    MPMICELabel* MIlb;
-    MPMLabel* Mlb;
-    MaterialSet* d_mymatls;
-    MaterialSubset* d_one_matl;
+    const Material* d_matl0 {nullptr};
+    const Material* d_matl1 {nullptr};
+    const Material* d_matl2 {nullptr};
+
+    ICELabel* Ilb {nullptr};
+    MPMICELabel* MIlb {nullptr};
+    MPMLabel* Mlb {nullptr};
+    MaterialSet* d_mymatls {nullptr};
+    MaterialSubset* d_one_matl {nullptr};
    
     double d_max_initial_delt;
 

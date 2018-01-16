@@ -3,6 +3,8 @@
 #include <CCA/Components/Arches/BoundaryCond_new.h>
 #include <CCA/Components/Arches/ChemMix/ChemHelper.h>
 #include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
+#include <CCA/Components/Arches/ChemMixV2/ClassicTableUtility.h>
+// includes for Arches
 
 using namespace Uintah;
 
@@ -25,6 +27,8 @@ if (_particle_calculator_type == "constantCIF"){
 if (_particle_calculator_type == "coal"){
   delete _3Dpart_radprops;
 }
+if (_particle_calculator_type=="tablulated")
+ delete myTable;
 }
 
 
@@ -33,6 +37,7 @@ if (_particle_calculator_type == "coal"){
 //---------------------------------------------------------------------------
 void partRadProperties::problemSetup(  Uintah::ProblemSpecP& db )
 {
+
 
   ProblemSpecP db_calc = db->findBlock("calculator");
   db->getWithDefault("absorption_modifier",_absorption_modifier,1.0);
@@ -59,7 +64,36 @@ void partRadProperties::problemSetup(  Uintah::ProblemSpecP& db )
     //-------------------------------------------------------//
 
     db->require( "subModel", _particle_calculator_type);
-    if(_particle_calculator_type == "basic"){
+    if (_particle_calculator_type=="tabulated"){
+      std::string table_directory;
+      db->require("TablePath",table_directory);
+      _nIVs=2; // two independent variables, radius and tempreature
+      _nDVs= _scatteringOn ? 2 : 1; // two independent variables, radius and tempreature
+      db->getWithDefault("const_asymmFact",_constAsymmFact,0.0);
+      std::string which_model = "none";
+      db->require("model_type", which_model);
+      _p_planck_abskp = false;
+      _p_ros_abskp = false;
+      std::string prefix;
+      if ( which_model == "planck" ){
+        _p_planck_abskp = true;
+        prefix="planck";
+      } else if ( which_model == "rossland" ){
+        _p_ros_abskp = true;
+        prefix="ross";
+      } else {
+        throw InvalidValue( "Error: Particle model not recognized for abskp.",__FILE__,__LINE__);
+      }
+
+      std::vector<std::string> dep_vars;
+      dep_vars.push_back(prefix+"_abs"); // must push_back _abs first or fields will be mismatched downstream
+      if (_scatteringOn){
+        dep_vars.push_back(prefix+"_scat");
+      }
+
+      myTable = SCINEW_ClassicTable(table_directory,dep_vars);
+
+    }else if(_particle_calculator_type == "basic"){
       if (_scatteringOn){
         throw ProblemSetupException("Scattering not enabled for basic-radiative-particle-properties.  Use radprops, OR turn off scattering!",__FILE__, __LINE__);
       }
@@ -287,6 +321,7 @@ partRadProperties::register_timestep_eval( std::vector<ArchesFieldContainer::Var
 }
 
 
+
 void
 partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
@@ -319,13 +354,16 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
       sizeQuad[ix] = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(_size_name_v[ix]);
   }
 
+
   Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
   for (int ix=0; ix< _nQn_part ; ix++){
     CCVariable<double>& abskpQuad = tsk_info->get_uintah_field_add           <CCVariable<double> >(_abskp_name_vector[ix]);  // ConstCC and CC behave differently
     abskpQuad.initialize(0.0);
 
+
+
     if(_particle_calculator_type == "basic"){
-      double geomFactor=M_PI/4.0*_Qabs;
+      const double geomFactor=M_PI/4.0*_Qabs;
       Uintah::parallel_for( range,  [&](int i, int j, int k) {
         double particle_absorption=geomFactor*weightQuad[ix](i,j,k)*sizeQuad[ix](i,j,k)*sizeQuad[ix](i,j,k)*_absorption_modifier;
         abskpQuad(i,j,k)= (vol_fraction(i,j,k) > 1e-16) ? particle_absorption : 0.0;
@@ -357,6 +395,37 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
         CCVariable<double>& asymm   = tsk_info->get_uintah_field_add<CCVariable<double> >(_asymmetryParam_name);
         Uintah::parallel_for( range,  [&](int i, int j, int k) {
           double particle_scattering=_part_radprops->ross_sca_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k))*weightQuad[ix](i,j,k);
+          scatkt(i,j,k)+= (vol_fraction(i,j,k) > 1e-16) ? particle_scattering : 0.0;
+          asymm(i,j,k) =_constAsymmFact;
+        });
+      }
+    }else if(_particle_calculator_type == "tabulated"  ){
+        enum independentVariables{ en_size, en_temp};
+        enum DependentVariables{ abs_coef, sca_coef};
+        std::vector<constCCVariable<double> > IV(_nIVs);
+        IV[en_size]=  tsk_info->get_const_uintah_field_add<constCCVariable<double> >(_size_name_v[ix]);
+        IV[en_temp]=  tsk_info->get_const_uintah_field_add<constCCVariable<double> >(_temperature_name_v[ix]);
+
+        std::vector<CCVariable<double> > abs_scat_coeff(_nDVs);
+        IntVector domLo = patch->getCellLowIndex();
+        IntVector domHi = patch->getCellHighIndex();
+        for (int ix=0; ix< _nDVs; ix++){
+          abs_scat_coeff[ix].allocate(domLo,domHi);
+          abs_scat_coeff[ix].initialize(0.0);
+        }
+
+        myTable->getState(IV, abs_scat_coeff, {"diameter","temperature"}, patch);
+
+        Uintah::parallel_for( range,  [&](int i, int j, int k) {
+          double particle_absorption=abs_scat_coeff[abs_coef](i,j,k)*weightQuad[ix](i,j,k)*_absorption_modifier;
+          abskpQuad(i,j,k)= (vol_fraction(i,j,k) > 1e-16) ? particle_absorption : 0.0;
+          abskp(i,j,k)+= abskpQuad(i,j,k);
+        });
+      if (_scatteringOn){
+        CCVariable<double>& scatkt  = tsk_info->get_uintah_field_add<CCVariable<double> >(_scatkt_name);
+        CCVariable<double>& asymm   = tsk_info->get_uintah_field_add<CCVariable<double> >(_asymmetryParam_name);
+        Uintah::parallel_for( range,  [&](int i, int j, int k) {
+          double particle_scattering=abs_scat_coeff[sca_coef](i,j,k)*weightQuad[ix](i,j,k);
           scatkt(i,j,k)+= (vol_fraction(i,j,k) > 1e-16) ? particle_scattering : 0.0;
           asymm(i,j,k) =_constAsymmFact;
         });

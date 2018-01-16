@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,14 +22,13 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/Parent/ComponentFactory.h>
+#include <CCA/Components/Parent/ApplicationFactory.h>
 #include <CCA/Components/Parent/Switcher.h>
 #include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 #include <CCA/Components/Solvers/SolverFactory.h>
 #include <CCA/Components/SwitchingCriteria/None.h>
 #include <CCA/Components/SwitchingCriteria/SwitchingCriteriaFactory.h>
-#include <CCA/Ports/LoadBalancerPort.h>
-#include <CCA/Ports/ModelMaker.h>
+#include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Output.h>
 #include <CCA/Ports/Regridder.h>
 #include <CCA/Ports/Scheduler.h>
@@ -51,6 +50,8 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/OS/Dir.h>
 #include <Core/Parallel/Parallel.h>
+
+#include <sci_defs/uintah_defs.h>
 
 using namespace Uintah;
 
@@ -94,8 +95,7 @@ Switcher::Switcher( const ProcessorGroup * myworld,
   //__________________________________
   //  loop over the subcomponents
   for(; child != nullptr; child = child->findNextBlock("subcomponent")) {
-    
-    
+
     //__________________________________
     //  Read in subcomponent ups file and store the filename
     std::string input_file("");
@@ -118,14 +118,11 @@ Switcher::Switcher( const ProcessorGroup * myworld,
     //__________________________________
     // create simulation port and attach it switcher component    
     UintahParallelComponent* comp =
-      ComponentFactory::create(subCompUps, myworld, m_sharedState, "");
+      ApplicationFactory::create(subCompUps, myworld, m_sharedState, "");
 
     ApplicationInterface* app = dynamic_cast<ApplicationInterface*>(comp);
     attachPort( "application", app );
 
-    if( app->needModelMaker() )
-      setModelMaker( true );
-    
     // Create solver port and attach it to the switcher component.
     SolverInterface * solver = SolverFactory::create( subCompUps, myworld );    
     attachPort( "sub_solver", solver );
@@ -173,23 +170,25 @@ Switcher::Switcher( const ProcessorGroup * myworld,
     
     proc0cout << "\n";
   }  // loop over subcomponents
-  
-  
+
   //__________________________________
   // Bulletproofing:
   if ( simComponents.count("mpm") && simComponents.count("rmpmice") ){
     throw ProblemSetupException("Switcher: The simulation subComponents rmpmice and mpm cannot be used together", __FILE__, __LINE__);
   }
-  
-  
+
   //__________________________________
   // Bulletproofing:
   // Make sure that a switching criteria was specified.  For n subcomponents,
   // there should be n-1 switching critiera specified.
   int num_switch_criteria = 0;
   for (int i = 0; i < num_components; i++) {
-    UintahParallelComponent* comp = dynamic_cast<UintahParallelComponent*>(getPort("application",i));
-    SwitchingCriteria* sw = dynamic_cast<SwitchingCriteria*>(comp->getPort("switch_criteria"));
+    UintahParallelComponent* comp =
+      dynamic_cast<UintahParallelComponent*>(getPort("application",i));
+
+    SwitchingCriteria* sw =
+      dynamic_cast<SwitchingCriteria*>(comp->getPort("switch_criteria"));
+
     if (sw) {
       num_switch_criteria++;
     }
@@ -199,11 +198,11 @@ Switcher::Switcher( const ProcessorGroup * myworld,
     throw  ProblemSetupException( "Do not have enough switching criteria specified for the number of components.", __FILE__, __LINE__ );
   }
   
-  //__________________________________
-  // Add the "None" SwitchCriteria to the last component, so the switchFlag label
-  // is computed in the last stage.
-
-  UintahParallelComponent* last_comp = dynamic_cast<UintahParallelComponent*>(getPort("application",num_components-1));
+  //__________________________________  
+  // Add the "None" SwitchCriteria to the last component, so the
+  // switchFlag label is computed in the last stage.
+  UintahParallelComponent* last_comp =
+    dynamic_cast<UintahParallelComponent*>(getPort("application",num_components-1));
 
   SwitchingCriteria* none_switch_criteria = scinew None();
   
@@ -407,7 +406,7 @@ void Switcher::scheduleSwitchInitialization(const LevelP     & level,
 {
   if (d_doSwitching[level->getIndex()]) {
     printSchedule(level,dbg,"Switcher::scheduleSwitchInitialization");
-    d_app->switchInitialize(level,sched);
+    d_app->scheduleSwitchInitialization(level, sched);
   }
 }
 
@@ -426,7 +425,7 @@ void Switcher::scheduleSwitchTest(const LevelP     & level,
   
   // the component is responsible for determining when it is to switch.
   t->requires(Task::NewDW, d_switch_label);
-  sched->addTask(t,sched->getLoadBalancer()->getPerProcessorPatchSet(level),m_sharedState->allMaterials());
+  sched->addTask(t, m_loadBalancer->getPerProcessorPatchSet(level),m_sharedState->allMaterials());
 }
 
 //______________________________________________________________________
@@ -457,15 +456,20 @@ void Switcher::scheduleInitNewVars(const LevelP     & level,
     const MaterialSet* matls;
 
     std::string nextComp_matls = initVar->matlSetNames[i];
-    if (     nextComp_matls == "ice_matls" ){
+
+    if (nextComp_matls == "all_matls") {
+      matls = m_sharedState->allMaterials();
+    }
+#ifndef NO_ICE
+    else if (nextComp_matls == "ice_matls" ) {
       matls = m_sharedState->allICEMaterials();
     }
+#endif
+#ifndef NO_MPM
     else if (nextComp_matls == "mpm_matls" ) {
       matls = m_sharedState->allMPMMaterials();
     }
-    else if (nextComp_matls == "all_matls") {
-      matls = m_sharedState->allMaterials();
-    }
+#endif
     else {
       throw ProblemSetupException("Bad material set", __FILE__, __LINE__);
     }
@@ -539,7 +543,7 @@ void Switcher::scheduleCarryOverVars(const LevelP     & level,
         t->requires(Task::OldDW, var, matls, Ghost::None, 0);
         t->computes(var, matls);
      
-        if(UintahParallelComponent::d_myworld->myRank() == 0) {
+        if(d_myworld->myRank() == 0) {
           if (matls) {
             std::cout << d_myworld->myRank() << "  Carry over " << *var << "\t\tmatls: " << *matls << " on level " << L_indx << std::endl;
           }
@@ -819,13 +823,12 @@ void Switcher::switchApplication( const ProblemSpecP     & restart_prob_spec,
 //______________________________________________________________________
 //  This is where the actual component switching takes place.
 bool
-Switcher::needRecompile(       double   simTime,
-                               double   delT,
-                         const GridP  & grid )
+Switcher::needRecompile( const GridP & grid )
 {
   dbg << "  Doing Switcher::needRecompile " << std::endl;
   
-  bool retval  = false;
+  m_recompile  = false;
+
   d_restarting = true;
   d_doSwitching.resize(grid->numLevels());
   
@@ -846,10 +849,6 @@ Switcher::needRecompile(       double   simTime,
     // need to be done by the Switcher component...
     GeometryPieceFactory::resetFactory();
 
-    // Clean up the old models.
-    if( needModelMaker() )
-      m_modelMaker->clearModels();
-
     switchApplication( nullptr, grid );
     
     // Each application has their own init_delt specified.  On a switch
@@ -869,14 +868,15 @@ Switcher::needRecompile(       double   simTime,
 
     proc0cout << "__________________________________\n\n";
     
-    retval = true;
+    m_recompile = true;
   } 
   else {
     m_output->setSwitchState(false);
   }
-  retval |= d_app->needRecompile(simTime, delT, grid);
 
-  return retval;
+  m_recompile |= d_app->needRecompile(grid);
+
+  return m_recompile;
 }
 //______________________________________________________________________
 //
@@ -940,9 +940,9 @@ bool Switcher::restartableTimeSteps()
 
 //______________________________________________________________________
 //
-double Switcher::recomputeTimeStep(double dt)
+double Switcher::recomputeDelT(const double delT)
 {
-  return d_app->recomputeTimeStep(dt);
+  return d_app->recomputeDelT( delT );
 }
 
 //______________________________________________________________________

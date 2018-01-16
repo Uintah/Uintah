@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -32,10 +32,9 @@
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/Patch.h>
-#include <Core/Labels/MPMLabel.h>
-#include <CCA/Components/MPM/ImpMPMFlags.h>
+#include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <CCA/Components/MPM/MPMCommon.h>
-#include <CCA/Components/MPM/Solver.h>
+#include <CCA/Components/MPM/Solver/Solver.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <CCA/Ports/SwitchingCriteria.h>
 
@@ -46,6 +45,8 @@
 namespace Uintah {
 
  class DataWarehouse;
+ class ImpMPMFlags;
+ class ImpMPMLabel;
  class MPMLabel;
  class ProcessorGroup;
  class VarLabel;
@@ -100,7 +101,7 @@ public:
 
   virtual void scheduleRestartInitialize(const LevelP& level, SchedulerP& sched);
 
-  virtual void switchInitialize(const LevelP& level, SchedulerP&);
+  virtual void scheduleSwitchInitialization(const LevelP& level, SchedulerP&);
 
   //////////
   // Insert Documentation Here:
@@ -126,17 +127,10 @@ public:
                                     SchedulerP& sched);
 
   virtual bool restartableTimeSteps();
-  virtual double recomputeTimeStep(double new_dt);
+  virtual double recomputeDelT(const double delT);
 
   void scheduleSwitchTest(const LevelP& level, SchedulerP& sched);
   
-  void setMPMLabel(MPMLabel* Mlb)
-  {
-
-        delete lb;
-        lb = Mlb;
-  };
-
   enum IntegratorType {
     Explicit,
     Implicit 
@@ -510,7 +504,6 @@ private:
   ImpMPM(const ImpMPM&);
   ImpMPM& operator=(const ImpMPM&);
 
-  MPMLabel* lb;
   ImpMPMFlags* flags;
 
   ImplicitHeatConduction* heatConductionModel;

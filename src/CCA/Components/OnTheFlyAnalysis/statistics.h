@@ -26,7 +26,6 @@
 #ifndef Packages_Uintah_CCA_Components_ontheflyAnalysis_statistics_h
 #define Packages_Uintah_CCA_Components_ontheflyAnalysis_statistics_h
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
-#include <CCA/Ports/Output.h>
 #include <Core/Grid/Material.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
@@ -64,9 +63,9 @@ WARNING
 ****************************************/
   class statistics : public AnalysisModule {
   public:
-    statistics(ProblemSpecP& prob_spec,
-	       SimulationStateP& sharedState,
-	       Output* output);
+    statistics(const ProcessorGroup* myworld,
+	       const SimulationStateP sharedState,
+	       const ProblemSpecP& module_spec);
 
     statistics();
 
@@ -237,9 +236,6 @@ WARNING
     bool d_doHigherOrderStats;
     std::vector< Qstats >  d_Qstats;
 
-    SimulationStateP d_sharedState;
-    Output* d_output;
-    ProblemSpecP d_prob_spec;
     const Material* d_matl;
     MaterialSet* d_matlSet;
     const MaterialSubset* d_matSubSet;

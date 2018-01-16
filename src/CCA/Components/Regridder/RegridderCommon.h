@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -27,7 +27,6 @@
 
 //-- Uintah component includes --//
 #include <CCA/Ports/Regridder.h>
-#include <CCA/Ports/DataWarehouseP.h>
 
 //-- Uintah framework includes --//
 #include <Core/Parallel/UintahParallelComponent.h>
@@ -40,11 +39,12 @@
 
 namespace Uintah {
 
+  class ApplicationInterface;
   class DataWarehouse;
   class Patch;
   class VarLabel;
   class ProcessorGroup;
-  class LoadBalancerPort;
+  class LoadBalancer;
   class Scheduler;
 
   typedef std::vector<IntVector> SizeList;
@@ -58,13 +58,18 @@ namespace Uintah {
    *  @date    CSAFE days - circa 06/04 (updated 08/14)
    *  @brief   Parent class which takes care of common regridding functionality.
    */
-  class RegridderCommon : public Regridder, public UintahParallelComponent {
+  class RegridderCommon : public UintahParallelComponent, public Regridder {
 
   public:
 
     RegridderCommon(const ProcessorGroup* pg);
     virtual ~RegridderCommon();
 
+    virtual std::string getName() = 0;
+
+    // Methods for managing the components attached via the ports.
+    virtual void setComponents( UintahParallelComponent *comp ) {};
+    virtual void getComponents();
     virtual void releaseComponents();
 
     //! Initialize with regridding parameters from ups file
@@ -75,9 +80,9 @@ namespace Uintah {
     //! On a Switch, basically asks whether to turn off/on the Regridding
     virtual void switchInitialize(const ProblemSpecP& params);
 
-    //! Asks if we need to recompile the task graph.
-    //! Will return true if we did a regrid
-    virtual bool needRecompile(double time, double delt, const GridP& grid);
+    //! Asks if the task graph needs to be recompiled.
+    //! Returns true if a regrid operation occured.
+    virtual bool needRecompile(const GridP& grid);
 
     //! Do we need to regrid this timestep?
     virtual bool needsToReGrid(const GridP& grid);
@@ -176,9 +181,10 @@ namespace Uintah {
 
   protected:
 
-    ProblemSpecP       grid_ps_;
-    LoadBalancerPort * m_loadBalancer;
-    Scheduler        * m_scheduler;
+    ProblemSpecP           grid_ps_ {nullptr};
+    LoadBalancer     * m_loadBalancer {nullptr};
+    Scheduler            * m_scheduler    {nullptr};
+    ApplicationInterface * m_application  {nullptr};
 
     SimulationStateP d_sharedState;  ///< Shared global space, to keep track of timesteps
     bool d_isAdaptive;               ///< If false, do not regrid (stick with what you have)

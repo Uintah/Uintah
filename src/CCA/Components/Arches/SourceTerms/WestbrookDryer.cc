@@ -239,6 +239,7 @@ WestbrookDryer::sched_computeSource( const LevelP& level, SchedulerP& sched, int
 
   }
 
+  tsk->requires( Task::OldDW, _simulationTimeLabel);
   tsk->requires( Task::OldDW, _field_labels->d_delTLabel, Ghost::None, 0);
 
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
@@ -255,6 +256,10 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
                    DataWarehouse* new_dw,
                    int timeSubStep )
 {
+//  double simTime =  _field_labels->d_sharedState->getElapsedSimTime();
+  simTime_vartype simTime;
+  old_dw->get( simTime, _simulationTimeLabel );
+
   //patch loop
   for (int p=0; p < patches->size(); p++){
 
@@ -376,9 +381,8 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
 
       }
 
-      double total_time = _field_labels->d_sharedState->getElapsedSimTime();
       // Overwrite with hot spot if specified -- like a pilot light
-      if ( total_time > _start_time_hot_spot && total_time < _stop_time_hot_spot ) {
+      if ( simTime > _start_time_hot_spot && simTime < _stop_time_hot_spot ) {
 
         for (std::vector<GeometryPieceP>::iterator giter = _geom_hot_spot.begin(); giter != _geom_hot_spot.end(); giter++){
 
@@ -389,7 +393,7 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
 
             Point P = patch->cellPosition( c );
 
-            if ( g_piece->inside(P) && total_time > _start_time_hot_spot && total_time < _stop_time_hot_spot ){
+            if ( g_piece->inside(P) && simTime > _start_time_hot_spot && simTime < _stop_time_hot_spot ){
               if ( _use_T_clip ){
                 double fake_diluent = 0.0;
                 rate = getRate( _T_hot_spot, Fp[c], O2[c], fake_diluent, f, den[c], dt, vol );

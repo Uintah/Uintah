@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -66,6 +66,9 @@ m_sharedState(sharedState)
 
   m_matl_index = 0;
 
+  // Time Step
+  m_timeStepLabel = VarLabel::create(timeStep_name, timeStep_vartype::getTypeDescription());
+
 }
 
 //---------------------------------------------------------------------------
@@ -79,6 +82,8 @@ MixingRxnModel::~MixingRxnModel()
   }
   delete _iv_transform;
   VarLabel::destroy(m_denRefArrayLabel);
+
+  VarLabel::destroy(m_timeStepLabel);
 }
 
 //---------------------------------------------------------------------------

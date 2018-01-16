@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -47,9 +47,9 @@ CrackGeometry* CrackGeometryFactory::create(ProblemSpecP& ps)
     return scinew NullCrack(ps);
 
   for (ProblemSpecP crack_segment_ps = child->findBlock(); 
-       crack_segment_ps != 0; 
+       crack_segment_ps != nullptr;
        crack_segment_ps = crack_segment_ps->findNextBlock()) {
-    string crack_type = crack_segment_ps->getNodeName();
+    std::string crack_type = crack_segment_ps->getNodeName();
 
     if (crack_type == "quad")
       return scinew QuadCrack(crack_segment_ps);

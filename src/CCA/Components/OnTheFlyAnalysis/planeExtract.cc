@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -54,14 +54,11 @@ using namespace std;
 static DebugStream cout_doing("PLANEEXTRACT_DOING_COUT", false);
 static DebugStream cout_dbg("PLANEEXTRACT_DBG_COUT", false);
 //______________________________________________________________________
-planeExtract::planeExtract(ProblemSpecP& module_spec,
-                           SimulationStateP& sharedState,
-                           Output* output)
-  : AnalysisModule(module_spec, sharedState, output)
+planeExtract::planeExtract(const ProcessorGroup* myworld,
+                           const SimulationStateP sharedState,
+                           const ProblemSpecP& module_spec )
+  : AnalysisModule(myworld, sharedState, module_spec)
 {
-  d_sharedState = sharedState;
-  d_prob_spec = module_spec;
-  d_output = output;
   d_matl_set = 0;
   d_zero_matl = 0;
   ps_lb = scinew planeExtractLabel();
@@ -91,27 +88,24 @@ planeExtract::~planeExtract()
 
 //______________________________________________________________________
 //     P R O B L E M   S E T U P
-void planeExtract::problemSetup(const ProblemSpecP& prob_spec,
+void planeExtract::problemSetup(const ProblemSpecP& ,
                                 const ProblemSpecP& ,
                                 GridP& grid)
 {
   cout_doing << "Doing problemSetup \t\t\t\tplaneExtract" << endl;
   
-  int numMatls  = d_sharedState->getNumMatls();
-  if(!d_output){
-    throw InternalError("planeExtract:couldn't get output port", __FILE__, __LINE__);
-  }
+  int numMatls  = m_sharedState->getNumMatls();
                                
   ps_lb->lastWriteTimeLabel =  VarLabel::create("lastWriteTime_planeE",
                                             max_vartype::getTypeDescription());
 
   //__________________________________
   //  Read in timing information
-  d_prob_spec->require("samplingFrequency", d_writeFreq);
-  d_prob_spec->require("timeStart",         d_startTime);
-  d_prob_spec->require("timeStop",          d_stopTime);
+  m_module_spec->require("samplingFrequency", d_writeFreq);
+  m_module_spec->require("timeStart",         d_startTime);
+  m_module_spec->require("timeStop",          d_stopTime);
 
-  ProblemSpecP vars_ps = d_prob_spec->findBlock("Variables");
+  ProblemSpecP vars_ps = m_module_spec->findBlock("Variables");
   if (!vars_ps){
     throw ProblemSetupException("planeExtract: Couldn't find <Variables> tag", __FILE__, __LINE__);
   } 
@@ -124,14 +118,14 @@ void planeExtract::problemSetup(const ProblemSpecP& prob_spec,
 
   const Material* matl = nullptr;
 
-  if(d_prob_spec->findBlock("material") ){
-    matl = d_sharedState->parseAndLookupMaterial(d_prob_spec, "material");
-  } else if (d_prob_spec->findBlock("materialIndex") ){
+  if(m_module_spec->findBlock("material") ){
+    matl = m_sharedState->parseAndLookupMaterial(m_module_spec, "material");
+  } else if (m_module_spec->findBlock("materialIndex") ){
     int indx;
-    d_prob_spec->get("materialIndex", indx);
-    matl = d_sharedState->getMaterial(indx);
+    m_module_spec->get("materialIndex", indx);
+    matl = m_sharedState->getMaterial(indx);
   } else {
-    matl = d_sharedState->getMaterial(0);
+    matl = m_sharedState->getMaterial(0);
   }
   
   int defaultMatl = matl->getDWIndex();
@@ -232,7 +226,7 @@ void planeExtract::problemSetup(const ProblemSpecP& prob_spec,
   
   //__________________________________
   //  Read in planes
-  ProblemSpecP planes_ps = d_prob_spec->findBlock("planes"); 
+  ProblemSpecP planes_ps = m_module_spec->findBlock("planes"); 
   if( !planes_ps ) {
     throw ProblemSetupException("\n ERROR:planeExtract: Couldn't find <planes> tag \n", __FILE__, __LINE__);    
   }        
@@ -366,7 +360,7 @@ void planeExtract::initialize(const ProcessorGroup*,
 
     
     if(patch->getGridIndex() == 0){   // only need to do this once
-      string udaDir = d_output->getOutputLocation();
+      string udaDir = m_output->getOutputLocation();
 
       //  Bulletproofing
       DIR *check = opendir(udaDir.c_str());
@@ -394,6 +388,9 @@ void planeExtract::scheduleDoAnalysis(SchedulerP& sched,
   Task* t = scinew Task("planeExtract::doAnalysis", 
                    this,&planeExtract::doAnalysis);
                         
+  t->requires(Task::OldDW, m_timeStepLabel);
+  t->requires(Task::OldDW, m_simulationTimeLabel);
+
   t->requires(Task::OldDW, ps_lb->lastWriteTimeLabel);
   Ghost::GhostType gac = Ghost::AroundCells;
   
@@ -429,9 +426,6 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
                               DataWarehouse* old_dw,
                               DataWarehouse* new_dw)
 {   
-  UintahParallelComponent * DA = dynamic_cast<UintahParallelComponent*>( d_output );
-  LoadBalancerPort        * lb = dynamic_cast<LoadBalancerPort*>( DA->getPort("load balancer") );
-    
   const Level* level = getLevel(patches);
   
   // the user may want to restart from an uda that wasn't using the DA module
@@ -443,7 +437,11 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
     lastWriteTime = writeTime;
   }
 
-  double now = d_sharedState->getElapsedSimTime();
+  // double now = m_sharedState->getElapsedSimTime();
+
+  simTime_vartype simTimeVar;
+  old_dw->get(simTimeVar, m_simulationTimeLabel);
+  double now = simTimeVar;
   
   if(now < d_startTime || now > d_stopTime){
     new_dw->put(max_vartype(lastWriteTime), ps_lb->lastWriteTimeLabel);
@@ -456,9 +454,10 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
     const Patch* patch = patches->get(p);
     Vector dx = patch->dCell();
     
-    int proc = lb->getPatchwiseProcessorAssignment(patch);
+    int proc =
+      m_scheduler->getLoadBalancer()->getPatchwiseProcessorAssignment(patch);
     
-    //__________________________________7
+    //__________________________________
     // write data if this processor owns this patch
     // and if it's time to write
     if( proc == pg->myRank() && now >= nextWriteTime){
@@ -476,12 +475,18 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
         }
         
         // create the directory structure
-        string udaDir = d_output->getOutputLocation();
+        string udaDir = m_output->getOutputLocation();
         string dirName = d_planes[p]->name;
         string planePath = udaDir + "/" + dirName;
         
+        // int ts = m_sharedState->getCurrentTopLevelTimeStep();
+ 
+        timeStep_vartype timeStep_var;      
+        old_dw->get(timeStep_var, m_timeStepLabel);
+        int ts = timeStep_var;
+
         ostringstream tname;
-        tname << "t" << std::setw(5) << std::setfill('0') << d_sharedState->getCurrentTopLevelTimeStep();
+        tname << "t" << std::setw(5) << std::setfill('0') << ts;
         string timestep = tname.str();
         
         ostringstream li;
@@ -974,4 +979,3 @@ inline bool planeExtract::containsCellInclusive(const IntVector &low,
 
   return (testLo && testHi );
 }
-

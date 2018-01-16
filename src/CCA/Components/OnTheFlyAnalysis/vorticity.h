@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -67,9 +67,9 @@ WARNING
 ****************************************/
   class vorticity : public AnalysisModule {
   public:
-    vorticity(ProblemSpecP& prob_spec,
-              SimulationStateP& sharedState,
-	      Output* output);
+    vorticity(const ProcessorGroup* myworld,
+	      const SimulationStateP sharedState,
+	      const ProblemSpecP& module_spec);
               
     vorticity();
                     
@@ -121,9 +121,6 @@ WARNING
        
     //__________________________________
     // global constants
-    SimulationStateP d_sharedState;
-    Output* d_output;
-    ProblemSpecP d_prob_spec;
     const Material* d_matl;
     MaterialSet* d_matl_set;
     const MaterialSubset* d_matl_sub;

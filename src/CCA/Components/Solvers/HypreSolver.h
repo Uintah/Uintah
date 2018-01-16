@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -27,9 +27,8 @@
 
 //#define HYPRE_TIMING
 
-#include <CCA/Ports/SolverInterface.h>
+#include <CCA/Components/Solvers/SolverCommon.h>
 
-#include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Util/Handle.h>
 #include <Core/Util/RefCounted.h>
@@ -211,12 +210,10 @@ namespace Uintah {
 
   typedef Handle<hypre_solver_struct> hypre_solver_structP;
 
-  class HypreSolver2 : public SolverInterface, public UintahParallelComponent {
+  class HypreSolver2 : public SolverCommon {
   public:
     HypreSolver2(const ProcessorGroup* myworld);
     virtual ~HypreSolver2();
-
-    virtual void releaseComponents() {};
 
     virtual SolverParameters* readParameters(       ProblemSpecP & params,
                                               const std::string  & name,

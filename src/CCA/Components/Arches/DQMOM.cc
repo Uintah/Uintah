@@ -335,6 +335,8 @@ DQMOM::sched_solveLinearSystem( const LevelP& level, SchedulerP& sched, int time
   CoalModelFactory& model_factory = CoalModelFactory::self();
   Task::WhichDW which_dw;
 
+  tsk->requires( Task::OldDW, m_fieldLabels->d_timeStepLabel );
+
   if (timeSubStep == 0) {
     tsk->computes(m_normBLabel);
     tsk->computes(m_normXLabel);
@@ -435,6 +437,9 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 #endif
 #endif
 
+  // int timeStep = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
+  timeStep_vartype timeStep;
+  old_dw->get( timeStep, m_fieldLabels->d_timeStepLabel );
 
   CoalModelFactory& model_factory = CoalModelFactory::self();
 
@@ -652,19 +657,19 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         ColumnMatrix* XX = scinew ColumnMatrix( dimension );
         BB->zero();
 
-	tmp_timer.reset( true );
+        tmp_timer.reset( true );
         //if(m_unmweighted == true){
           constructBopt_unw( BB, m_opt_abscissas, models );
         //} else {
         //  constructBopt( BB, weights, m_opt_abscissas, models );
         //}
-	tmp_timer.stop();
+        tmp_timer.stop();
 
         total_AXBConstructionTime += tmp_timer().seconds();
 
-	tmp_timer.reset( true );
+        tmp_timer.reset( true );
         Mult( (*XX), (*m_AAopt), (*BB) );
-	tmp_timer.stop();
+        tmp_timer.stop();
 
         total_SolveTime += tmp_timer().seconds();
 
@@ -679,12 +684,12 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
             if( m_isFirstTimestep ) {
               currentTimeStep = 0;
             } else {
-              currentTimeStep = m_fieldLabels->d_sharedState->getCurrentTopLevelTimeStep();
+              currentTimeStep = timeStep;
             }
             int sizeofit;
             ofstream oStream;
 
-	    tmp_timer.reset( true );
+            tmp_timer.reset( true );
 
             // write Aopt
             sizeofit = sprintf( filename, "Aopt_%.2d.mat", currentTimeStep );
@@ -713,7 +718,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
             }
             oStream.close();
 
-	    tmp_timer.stop();
+            tmp_timer.stop();
             total_FileWriteTime += tmp_timer.seconds();
           }
           b_writefile = false;
@@ -752,34 +757,34 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 
       } else if( m_simplest == true ){
 
-	// tmp_timer.reset( true );
-	// Something to time - currently nothing constructed
-	// tmp_timer.stop();
+        // tmp_timer.reset( true );
+        // Something to time - currently nothing constructed
+        // tmp_timer.stop();
 
-	// total_AXBConstructionTime += timer().seconds();
+        // total_AXBConstructionTime += timer().seconds();
 
-	// tmp_timer.reset( true );
-	// Something to time - currently nothing solved
-	// tmp_timer.stop();
+        // tmp_timer.reset( true );
+        // Something to time - currently nothing solved
+        // tmp_timer.stop();
 
-	// total_SolveTime += timer().seconds();
+        // total_SolveTime += timer().seconds();
 
-	int z=0; // equation loop counter
-	int z2=0; // equation loop counter
+        int z=0; // equation loop counter
+        int z2=0; // equation loop counter
 
-	// Weight equations:
-	for( vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin();
-	     iEqn != weightEqns.end(); ++iEqn ) {
-	  (*(Source_weights_weightedAbscissas[z]))[c] = weight_models[z];
-	  ++z;
-	}
+        // Weight equations:
+        for( vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin();
+             iEqn != weightEqns.end(); ++iEqn ) {
+          (*(Source_weights_weightedAbscissas[z]))[c] = weight_models[z];
+          ++z;
+        }
           // Weighted abscissa equations:
-	for( vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin();
-	     iEqn != weightedAbscissaEqns.end(); ++iEqn) {
-	  (*(Source_weights_weightedAbscissas[z]))[c] = models[z2];
-	  ++z;
-	  ++z2;
-	}
+        for( vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin();
+             iEqn != weightedAbscissaEqns.end(); ++iEqn) {
+          (*(Source_weights_weightedAbscissas[z]))[c] = models[z2];
+          ++z;
+          ++z2;
+        }
       } else if( m_useLapack == false ) {
 
         ///////////////////////////////////////////////////////
@@ -791,9 +796,9 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         vector<long double> Xlong( dimension, 0.0 );
         vector<double> Resid( dimension, 0.0 );
 
-	tmp_timer.reset( true );
+        tmp_timer.reset( true );
         constructLinearSystem( A, B, weights, weightedAbscissas, models);
-	tmp_timer.stop();
+        tmp_timer.stop();
 
         total_AXBConstructionTime += tmp_timer().seconds();
 
@@ -801,10 +806,10 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         LU Aorig( A );
 
         // Solve linear system
-	tmp_timer.reset( true );
+        tmp_timer.reset( true );
         A.decompose();
         A.back_subs( &B[0], &Xdoub[0] );
-	tmp_timer.stop();
+        tmp_timer.stop();
 
         total_SolveTime += tmp_timer().seconds();
 
@@ -837,11 +842,11 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         // If there is a solution to linear system...
         } else {
 
-	  tmp_timer.reset( true );
+          tmp_timer.reset( true );
           if( do_iterative_refinement ) {
             A.iterative_refinement( Aorig, &B[0], &Xdoub[0], &Xlong[0] );
           }
-	  tmp_timer.stop();
+          tmp_timer.stop();
 
           total_SolveTime += tmp_timer().seconds();
 
@@ -890,12 +895,12 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
             if( m_isFirstTimestep ) {
               currentTimeStep = 0;
             } else {
-              currentTimeStep = m_fieldLabels->d_sharedState->getCurrentTopLevelTimeStep();
+              currentTimeStep = timeStep;
             }
             int sizeofit;
             ofstream oStream;
 
-	    tmp_timer.reset( true );
+            tmp_timer.reset( true );
 
             // write A matrix to file:
             sizeofit = sprintf( filename, "A_%.2d.mat", currentTimeStep );
@@ -933,7 +938,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
             }
             oStream.close();
 
-	    tmp_timer.stop();
+            tmp_timer.stop();
             total_FileWriteTime += tmp_timer.seconds();
           }
           b_writefile = false;
@@ -1003,9 +1008,9 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 
         do_iterative_refinement = false;
 
-	tmp_timer.reset( true );
+        tmp_timer.reset( true );
         constructLinearSystem( AA, BB, weights, weightedAbscissas, models );
-	tmp_timer.stop();
+        tmp_timer.stop();
 
         total_AXBConstructionTime += tmp_timer().seconds();
 
@@ -1034,9 +1039,9 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           ColumnMatrix* XXsvd2 = scinew ColumnMatrix( dimension );
           Sinv->zero();
 
-	  tmp_timer.reset( true );
+          tmp_timer.reset( true );
           AAsvd->svd( *U, *S, *V );
-	  tmp_timer.stop();
+          tmp_timer.stop();
           total_SolveTime += tmp_timer().seconds();
 
           conditionNumber_ = (S->a[0]/S->a[dimension-1]);
@@ -1064,12 +1069,12 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
               if( m_isFirstTimestep ) {
                 currentTimeStep = 0;
               } else {
-                currentTimeStep = m_fieldLabels->d_sharedState->getCurrentTopLevelTimeStep();
+                currentTimeStep = timeStep;
               }
               int sizeofit;
               ofstream oStream;
 
-	      tmp_timer.reset( true );
+              tmp_timer.reset( true );
 
               // write U, S, and V matrices to file
               sizeofit = sprintf( filename, "U_%.2d.mat", currentTimeStep );
@@ -1099,7 +1104,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
               }
               oStream.close();
 
-	      tmp_timer.stop();
+              tmp_timer.stop();
               total_FileWriteTime += tmp_timer().seconds();
             }
           }
@@ -1133,9 +1138,9 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
             SparseRowMatrix* S = scinew SparseRowMatrix( dimension, dimension, rows, cols, dimension, a); // makes an identity matrix
             DenseMatrix* V = scinew DenseMatrix( dimension, dimension );
 
-	    tmp_timer.reset( true );
+            tmp_timer.reset( true );
             AAsvd->svd( *U, *S, *V );
-	    tmp_timer.stop();
+            tmp_timer.stop();
 
             total_SVDTime += tmp_timer().seconds();
 
@@ -1151,13 +1156,13 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           }
 
           // Solve linear system
-	  tmp_timer.reset( true );
+          tmp_timer.reset( true );
           bool success = AA->invert();
           if (!success) {
             //proc0cout << "WARNING: Arches: DQMOM: A is singular at cell c = " << c << endl;
           }
           Mult( (*XX), (*AA), (*BB) );
-	  tmp_timer.stop();
+          tmp_timer.stop();
 
           total_SolveTime += tmp_timer().seconds();
         }
@@ -1246,12 +1251,12 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
             if( m_isFirstTimestep ) {
               currentTimeStep = 0;
             } else {
-              currentTimeStep = m_fieldLabels->d_sharedState->getCurrentTopLevelTimeStep();
+              currentTimeStep = timeStep;
             }
             int sizeofit;
             ofstream oStream;
 
-	    tmp_timer.reset( true );
+            tmp_timer.reset( true );
 
             // write A matrix to file
             sizeofit = sprintf( filename, "A_%.2d.mat", currentTimeStep );
@@ -1301,7 +1306,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
             }
             oStream.close();
 
-	    tmp_timer.stop();
+            tmp_timer.stop();
             total_FileWriteTime += tmp_timer().seconds();
           }
           b_writefile = false;

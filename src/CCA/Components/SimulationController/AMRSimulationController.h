@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -82,11 +82,7 @@ protected:
   //! If doing AMR do the regridding
   bool doRegridding( bool initialTimeStep );
 
-  //! Asks a variety of components if one of them needs the
-  //! taskgraph to recompile.
-  bool needRecompile();
-
-  void recompile( int totalFine );
+  void compileTaskGraph( int totalFine );
 
   //! Recursively schedule refinement, coarsening, and time
   //! advances for finer levels, compensating for time

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -257,7 +257,9 @@ void setVel( const Patch* patch, const Patch::FaceType& face,
 void setTurbInlet( const Patch* patch, const Patch::FaceType& face,
                    SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel,
                    constCCVariable<double>& density,
-                   Iterator bound_iter, DigitalFilterInlet * TurbIn );
+                   Iterator bound_iter, DigitalFilterInlet * TurbIn,
+                   const int timeStep,
+                   const double simTime  );
 
 template<class d0T, class d1T, class d2T>
 void setSwirl( const Patch* patch, const Patch::FaceType& face,
@@ -315,7 +317,8 @@ void setHattedIntrusionVelocity( const Patch* p,
                                  SFCXVariable<double>& u,
                                  SFCYVariable<double>& v,
                                  SFCZVariable<double>& w,
-                                 constCCVariable<double>& density );
+                                 constCCVariable<double>& density,
+                                 bool& set_nonnormal_values );
 
 void sched_setIntrusionDensity( SchedulerP& sched,
                                 const LevelP& level,
@@ -558,6 +561,8 @@ void velRhoHatInletBC(const Patch* patch,
                       ArchesVariables* vars,
                       ArchesConstVariables* constvars,
                       const int matl_index,
+                      const int timeStep,
+                      const double simTime,
                       double time_shift);
 
 void velRhoHatOutletPressureBC( const Patch* patch,

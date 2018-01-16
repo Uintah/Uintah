@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -23,20 +23,23 @@
  */
 
 // MPMICE.cc
+#include <CCA/Components/MPMICE/MPMICE.h>
+#include <CCA/Components/MPMICE/Core/MPMICELabel.h>
+
 #include <CCA/Components/ICE/AMRICE.h>
-#include <CCA/Components/ICE/BoundaryCond.h>
+#include <CCA/Components/ICE/Core/ICELabel.h>
+#include <CCA/Components/ICE/CustomBCs/BoundaryCond.h>
 #include <CCA/Components/ICE/EOS/EquationOfState.h>
 #include <CCA/Components/ICE/ICE.h>
-#include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
-#include <CCA/Components/MPMICE/MPMICE.h>
-#include <CCA/Components/MPM/MPMBoundCond.h>
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/ConstitutiveModel.h>
+#include <CCA/Components/MPM/Core/MPMLabel.h>
+#include <CCA/Components/MPM/Core/MPMBoundCond.h>
 #include <CCA/Components/MPM/RigidMPM.h>
 #include <CCA/Components/MPM/SerialMPM.h>
 #include <CCA/Components/MPM/ShellMPM.h>
 #include <CCA/Components/MPM/ThermalContact/ThermalContact.h>
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModuleFactory.h>
 
-#include <CCA/Ports/ModelMaker.h>
 #include <CCA/Ports/Output.h>
 #include <CCA/Ports/Regridder.h>
 #include <CCA/Ports/Scheduler.h>
@@ -50,13 +53,9 @@
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/NodeIterator.h>
-#include <Core/Grid/Variables/SoleVariable.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/Utils.h>
 #include <Core/Grid/DbgOutput.h>
-#include <Core/Labels/ICELabel.h>
-#include <Core/Labels/MPMICELabel.h>
-#include <Core/Labels/MPMLabel.h>
 #include <Core/Math/MiscMath.h>
 
 
@@ -92,7 +91,6 @@ MPMICE::MPMICE(const ProcessorGroup* myworld,
  
   d_rigidMPM = false;
   d_testForNegTemps_mpm = true;
-  d_recompile = false;
 
   switch(mpmtype) {
   case RIGID_MPMICE:
@@ -114,19 +112,20 @@ MPMICE::MPMICE(const ProcessorGroup* myworld,
     d_ice  = scinew ICE(myworld, m_sharedState);
   }
 
-  Ilb=d_ice->lb;
-  Mlb=d_mpm->lb;
+  d_exchModel = d_ice->d_exchModel;
+
+  Ilb = d_ice->lb;
+  Mlb = d_mpm->lb;
 
   d_SMALL_NUM = d_ice->d_SMALL_NUM;
   d_TINY_RHO  = 1.e-12;  // Note, within MPMICE, d_TINY_RHO is only applied
                          // to MPM materials, for which its value is hardcoded,
                          // unlike the situation for ice materials
 
-  setModelMaker( d_ice->needModelMaker() );
-  
   d_switchCriteria = 0;
 }
-
+//______________________________________________________________________
+//
 MPMICE::~MPMICE()
 {
   d_mpm->releaseComponents();
@@ -140,10 +139,11 @@ MPMICE::~MPMICE()
     vector<AnalysisModule*>::iterator iter;
     for( iter  = d_analysisModules.begin();
          iter != d_analysisModules.end(); iter++){
-      delete *iter;
+      AnalysisModule* am = *iter;
+      am->releaseComponents();
+      delete am;
     }
   }
-  
 }
 
 //__________________________________
@@ -153,9 +153,9 @@ bool MPMICE::restartableTimeSteps()
   return true;
 }
 
-double MPMICE::recomputeTimeStep(double current_dt)
+double MPMICE::recomputeDelT(const double delT)
 {
-  return current_dt/2;
+  return delT / 2.0;
 } 
 //______________________________________________________________________
 //
@@ -206,14 +206,6 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
   adjustOutputInterval( d_ice->adjustOutputInterval() );      
   adjustCheckpointInterval( d_ice->adjustCheckpointInterval() );
   
-  // some models may need to have access to MPMLabels
-  if(d_ice->d_models.size()){
-    for(vector<ModelInterface*>::iterator iter = d_ice->d_models.begin();
-       iter != d_ice->d_models.end(); iter++){
-      (*iter)->setMPMLabel(Mlb);
-    }
-  }
-  
   ProblemSpecP mpm_ps = 0;
   mpm_ps = prob_spec->findBlock("MPM");
   
@@ -239,13 +231,16 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
   
   //__________________________________
   //  Set up data analysis modules
-  d_analysisModules = AnalysisModuleFactory::create(prob_spec, m_sharedState, m_output);
+  d_analysisModules = AnalysisModuleFactory::create(d_myworld,
+						    m_sharedState,
+						    prob_spec);
 
   if(d_analysisModules.size() != 0){
     vector<AnalysisModule*>::iterator iter;
     for( iter  = d_analysisModules.begin();
          iter != d_analysisModules.end(); iter++){
       AnalysisModule* am = *iter;
+      am->setComponents( dynamic_cast<ApplicationInterface*>( this ) );
       am->problemSetup(prob_spec, restart_prob_spec, grid);
     }
   }  
@@ -295,6 +290,7 @@ void MPMICE::scheduleInitialize(const LevelP& level,
   const MaterialSubset* ice_matls = m_sharedState->allICEMaterials()->getUnion();
   const MaterialSubset* mpm_matls = m_sharedState->allMPMMaterials()->getUnion();
 
+  t->requires(Task::NewDW, Ilb->timeStepLabel);
   // These values are calculated for ICE materials in d_ice->actuallyInitialize(...)
   //  so they are only needed for MPM
   t->computes(MIlb->vel_CCLabel,       mpm_matls);
@@ -383,7 +379,6 @@ void MPMICE::scheduleComputeStableTimeStep(const LevelP& level,
 void
 MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
 {
-  MALLOC_TRACE_TAG_SCOPE("MPMICE::scheduleTimeAdvance()");
   // Only do scheduling on level 0 for lockstep AMR
   if(inlevel->getIndex() > 0 && isLockstepAMR())
     return;
@@ -469,11 +464,12 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
                                                                   mpm_matls_sub,
                                                                   press_matl, 
                                                                   all_matls);
-                                                               
-    d_ice->scheduleAddExchangeContributionToFCVel(
-                                              sched, ice_patches, ice_matls_sub,
+
+    d_ice->d_exchModel->sched_AddExch_VelFC(  sched, ice_patches, ice_matls_sub,
                                                                   all_matls,
-                                                                  false);  
+                                                                  d_ice->d_BC_globalVars,
+                                                                  false);
+ 
   }
   if(d_ice->d_impICE) {        //  I M P L I C I T, won't work with AMR yet
     // we should use the AMR multi-level pressure solve
@@ -578,12 +574,13 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
     const PatchSet* ice_patches = ice_level->eachPatch();
 
     d_ice->scheduleComputeLagrangianValues(   sched, ice_patches, ice_matls);
-
-    d_ice->scheduleAddExchangeToMomentumAndEnergy(
+                                                                  
+    d_ice->d_exchModel->sched_AddExch_Vel_Temp_CC(   
                                               sched, ice_patches, ice_matls_sub,
                                                                   mpm_matls_sub,
                                                                   press_matl,
-                                                                  all_matls); 
+                                                                  all_matls,
+                                                                  d_ice->d_BC_globalVars); 
 
     d_ice->scheduleComputeLagrangianSpecificVolume(
                                               sched, ice_patches, ice_matls_sub,
@@ -782,6 +779,8 @@ void MPMICE::scheduleInterpolateNCToCC_0(SchedulerP& sched,
     t->requires(Task::OldDW, Ilb->sp_vol_CCLabel,   Ghost::None, 0); 
     t->requires(Task::OldDW, MIlb->temp_CCLabel,    Ghost::None, 0);
 
+    t->requires(Task::OldDW, Ilb->timeStepLabel);
+    
     t->computes(MIlb->cMassLabel);
     t->computes(MIlb->vel_CCLabel);
     t->computes(MIlb->temp_CCLabel);
@@ -861,6 +860,8 @@ void MPMICE::scheduleComputeLagrangianValuesMPM(SchedulerP& sched,
     t->requires(Task::NewDW, MIlb->temp_CCLabel,           gn);
     t->requires(Task::NewDW, MIlb->vel_CCLabel,            gn);
 
+    t->requires(Task::NewDW, Ilb->timeStepLabel);
+    
     if(d_ice->d_models.size() > 0 && !do_mlmpmice){
       t->requires(Task::NewDW, Ilb->modelMass_srcLabel,   gn);
       t->requires(Task::NewDW, Ilb->modelMom_srcLabel,    gn);
@@ -907,6 +908,7 @@ void MPMICE::scheduleComputeCCVelAndTempRates(SchedulerP& sched,
 
   Ghost::GhostType  gn = Ghost::None;
 
+  t->requires(Task::OldDW, Ilb->timeStepLabel);
   t->requires(Task::OldDW, Ilb->delTLabel,getLevel(patches));
   t->requires(Task::NewDW, Ilb->mass_L_CCLabel,         gn);
   t->requires(Task::NewDW, Ilb->mom_L_CCLabel,          gn);  
@@ -992,6 +994,7 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
   t = scinew Task("MPMICE::computeEquilibrationPressure",
             this, &MPMICE::computeEquilibrationPressure, press_matl);
   
+  t->requires(Task::OldDW, Ilb->timeStepLabel);
   t->requires(Task::OldDW, Ilb->delTLabel,getLevel(patches));
 
                               // I C E
@@ -1052,6 +1055,11 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
                             DataWarehouse*,
                             DataWarehouse* new_dw)
 {
+  timeStep_vartype timeStep;
+  new_dw->get(timeStep, VarLabel::find( timeStep_name) );
+
+  bool isNotInitialTimeStep = (timeStep > 0);
+
   for(int p=0;p<patches->size();p++){ 
     const Patch* patch = patches->get(p);
     printTask(patches, patch, cout_doing,"Doing actuallyInitialize ");
@@ -1104,14 +1112,11 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
       mpm_matl->initializeCCVariables(rho_micro,   rho_CC,
                                       Temp_CC,     vel_CC,  
                                       vol_frac_CC, patch);
-      
-      
-      
 
-      setBC(rho_CC,    "Density",      patch, m_sharedState, indx, new_dw);    
-      setBC(rho_micro, "Density",      patch, m_sharedState, indx, new_dw);    
-      setBC(Temp_CC,   "Temperature",  patch, m_sharedState, indx, new_dw);    
-      setBC(vel_CC,    "Velocity",     patch, m_sharedState, indx, new_dw);
+      setBC(rho_CC,    "Density",      patch, m_sharedState, indx, new_dw, isNotInitialTimeStep);
+      setBC(rho_micro, "Density",      patch, m_sharedState, indx, new_dw, isNotInitialTimeStep);
+      setBC(Temp_CC,   "Temperature",  patch, m_sharedState, indx, new_dw, isNotInitialTimeStep);
+      setBC(vel_CC,    "Velocity",     patch, m_sharedState, indx, new_dw, isNotInitialTimeStep);
       for (CellIterator iter = patch->getExtraCellIterator();
                                                         !iter.done();iter++){
         IntVector c = *iter;
@@ -1290,6 +1295,11 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
                                  DataWarehouse* old_dw,
                                  DataWarehouse* new_dw)
 {
+  timeStep_vartype timeStep;
+  old_dw->get(timeStep, VarLabel::find( timeStep_name) );
+
+  bool isNotInitialTimeStep = (timeStep > 0);
+
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask(patches,patch,cout_doing,"Doing interpolateNCToCC_0");
@@ -1374,12 +1384,12 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       }
 
       //  Set BC's
-      setBC(Temp_CC, "Temperature",patch, m_sharedState, indx, new_dw);
-      setBC(rho_CC,  "Density",    patch, m_sharedState, indx, new_dw);
-      setBC(vel_CC,  "Velocity",   patch, m_sharedState, indx, new_dw);
+      setBC(Temp_CC, "Temperature",patch, m_sharedState, indx, new_dw, isNotInitialTimeStep);
+      setBC(rho_CC,  "Density",    patch, m_sharedState, indx, new_dw, isNotInitialTimeStep);
+      setBC(vel_CC,  "Velocity",   patch, m_sharedState, indx, new_dw, isNotInitialTimeStep);
       //  Set if symmetric Boundary conditions
-      setBC(cmass,    "set_if_sym_BC",patch, m_sharedState, indx, new_dw);
-      setBC(sp_vol_CC,"set_if_sym_BC",patch, m_sharedState, indx, new_dw); 
+      setBC(cmass,    "set_if_sym_BC",patch, m_sharedState, indx, new_dw, isNotInitialTimeStep);
+      setBC(sp_vol_CC,"set_if_sym_BC",patch, m_sharedState, indx, new_dw, isNotInitialTimeStep); 
 
       //---- B U L L E T   P R O O F I N G------
       // ignore BP if timestep restart has already been requested
@@ -1419,6 +1429,11 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
                                DataWarehouse* old_dw,
                                DataWarehouse* new_dw)
 {
+  timeStep_vartype timeStep;
+  old_dw->get(timeStep, VarLabel::find( timeStep_name) );
+
+  bool isNotInitialTimeStep = (timeStep > 0);
+
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask(patches,patch,cout_doing,"Doing computeLagrangianValuesMPM");
@@ -1550,8 +1565,8 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
        
        //__________________________________
        //  Set Boundary conditions
-       setBC(cmomentum, "set_if_sym_BC",patch, m_sharedState, indx, new_dw);
-       setBC(int_eng_L, "set_if_sym_BC",patch, m_sharedState, indx, new_dw);
+       setBC(cmomentum, "set_if_sym_BC",patch, m_sharedState, indx, new_dw, isNotInitialTimeStep);
+       setBC(int_eng_L, "set_if_sym_BC",patch, m_sharedState, indx, new_dw, isNotInitialTimeStep);
       
       //---- B U L L E T   P R O O F I N G------
       // ignore BP if timestep restart has already been requested
@@ -1580,6 +1595,11 @@ void MPMICE::computeCCVelAndTempRates(const ProcessorGroup*,
                             DataWarehouse* old_dw,
                             DataWarehouse* new_dw)
 { 
+  timeStep_vartype timeStep;
+  old_dw->get(timeStep, VarLabel::find( timeStep_name) );
+
+  bool isNotInitialTimeStep = (timeStep > 0);
+
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask(patches,patch,cout_doing,"Doing computeCCVelAndTempRates");
@@ -1632,8 +1652,8 @@ void MPMICE::computeCCVelAndTempRates(const ProcessorGroup*,
          double heatRte  = (eng_L_ME_CC[c] - old_int_eng_L_CC[c])/delT;
          heatRate[c] = .05*heatRte + .95*old_heatRate[c];
       }
-      setBC(dTdt_CC,    "set_if_sym_BC",patch, m_sharedState, indx, new_dw);
-      setBC(dVdt_CC,    "set_if_sym_BC",patch, m_sharedState, indx, new_dw);
+      setBC(dTdt_CC,    "set_if_sym_BC",patch, m_sharedState, indx, new_dw, isNotInitialTimeStep);
+      setBC(dVdt_CC,    "set_if_sym_BC",patch, m_sharedState, indx, new_dw, isNotInitialTimeStep);
     }
   }  //patches
 }
@@ -1744,6 +1764,11 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
                                      DataWarehouse* new_dw,
                                      const MaterialSubset* press_matl)
 {
+  timeStep_vartype timeStep;
+  old_dw->get(timeStep, Ilb->timeStepLabel );
+
+  bool isNotInitialTimeStep = (timeStep > 0);
+
   const Level* level = getLevel(patches);
   int L_indx = level->getIndex();
 
@@ -2116,7 +2141,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     
     setBC(press_new,   rho_micro, placeHolder,d_ice->d_surroundingMatl_indx,
           "rho_micro", "Pressure", patch , m_sharedState, 0, new_dw, 
-          d_ice->d_BC_globalVars, BC_localVars);
+          d_ice->d_BC_globalVars, BC_localVars, isNotInitialTimeStep);
     
     delete_CustomBCs( d_ice->d_BC_globalVars, BC_localVars );
 
@@ -2389,17 +2414,6 @@ void MPMICE::binaryPressureSearch(  std::vector<constCCVariable<double> >& Temp,
 }
 
 //______________________________________________________________________
-bool MPMICE::needRecompile(double time, double dt, const GridP& grid) {
-  if(d_recompile){
-    d_recompile = false;
-    return true;
-  }
-  else{
-    return false;
-  }
-}
-
-//______________________________________________________________________
 void MPMICE::scheduleRefineInterface(const LevelP& fineLevel,
                                      SchedulerP& scheduler,
                                      bool needOld, bool needNew)
@@ -2480,6 +2494,8 @@ void MPMICE::scheduleRefine(const PatchSet* patches,
   printSchedule(patches,cout_doing,"MPMICE::scheduleRefine");
 
   Task* task = scinew Task("MPMICE::refine", this, &MPMICE::refine);
+  
+  task->requires(Task::OldDW, Ilb->timeStepLabel);
   
   task->computes(Mlb->heatRate_CCLabel);
   task->computes(Ilb->sp_vol_CCLabel);
@@ -2573,6 +2589,8 @@ void MPMICE::scheduleErrorEstimate(const LevelP& coarseLevel,
   Ghost::GhostType  gn = Ghost::None;
   Task::MaterialDomainSpec ND   = Task::NormalDomain;
   
+  t->requires(Task::OldDW, Ilb->timeStepLabel);
+
   t->requires(Task::NewDW, variable, 0, Task::FineLevel, 0, ND,gn,0);
   
   if(coarsenMethod == "massWeighted"){
@@ -2637,9 +2655,14 @@ void
 MPMICE::refine(const ProcessorGroup*,
                const PatchSubset* patches,
                const MaterialSubset* /*matls*/,
-               DataWarehouse*,
+               DataWarehouse* old_dw,
                DataWarehouse* new_dw)
 {
+  timeStep_vartype timeStep;
+  old_dw->get(timeStep, VarLabel::find( timeStep_name) );
+
+  bool isNotInitialTimeStep = (timeStep > 0);
+
   for (int p = 0; p<patches->size(); p++) {
     const Patch* patch = patches->get(p);
     printTask(patches,patch,cout_doing,"Doing refine");
@@ -2674,9 +2697,10 @@ MPMICE::refine(const ProcessorGroup*,
                                            vol_frac_CC, patch);  
       //__________________________________
       //  Set boundary conditions                                     
-      setBC(rho_micro, "Density",      patch, m_sharedState, dwi, new_dw);    
-      setBC(Temp_CC,   "Temperature",  patch, m_sharedState, dwi, new_dw);    
-      setBC(vel_CC,    "Velocity",     patch, m_sharedState, dwi, new_dw);
+      setBC(rho_micro, "Density",      patch, m_sharedState, dwi, new_dw, isNotInitialTimeStep);
+      setBC(Temp_CC,   "Temperature",  patch, m_sharedState, dwi, new_dw, isNotInitialTimeStep);
+      setBC(vel_CC,    "Velocity",     patch, m_sharedState, dwi, new_dw, isNotInitialTimeStep);
+
       for (CellIterator iter = patch->getExtraCellIterator();
            !iter.done();iter++){
         sp_vol_CC[*iter] = 1.0/rho_micro[*iter];
@@ -2808,13 +2832,18 @@ template<typename T>
 void MPMICE::coarsenVariableCC(const ProcessorGroup*,
                                const PatchSubset* patches,
                                const MaterialSubset* matls,
-                               DataWarehouse*,
+                               DataWarehouse* old_dw,
                                DataWarehouse* new_dw,
                                const VarLabel* variable,
                                T defaultValue, 
                                bool modifies,
                                string coarsenMethod)
 {
+  timeStep_vartype timeStep;
+  old_dw->get(timeStep, Ilb->timeStepLabel );
+
+  bool isNotInitialTimeStep = (timeStep > 0);
+
   const Level* coarseLevel = getLevel(patches);
   const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
   
@@ -2875,19 +2904,19 @@ void MPMICE::coarsenVariableCC(const ProcessorGroup*,
       }  // fine patches
       // Set BCs on coarsened data.  This sucks--Steve
       if(variable->getName()=="temp_CC"){
-       setBC(coarse_q_CC, "Temperature",coarsePatch,m_sharedState,indx,new_dw);
+       setBC(coarse_q_CC, "Temperature",coarsePatch,m_sharedState,indx,new_dw, isNotInitialTimeStep);
       }
       else if(variable->getName()=="rho_CC"){
-       setBC(coarse_q_CC, "Density",    coarsePatch,m_sharedState,indx,new_dw);
+       setBC(coarse_q_CC, "Density",    coarsePatch,m_sharedState,indx,new_dw, isNotInitialTimeStep);
       }
       else if(variable->getName()=="vel_CC"){
-       setBC(coarse_q_CC, "Velocity",   coarsePatch,m_sharedState,indx,new_dw);
+       setBC(coarse_q_CC, "Velocity",   coarsePatch,m_sharedState,indx,new_dw, isNotInitialTimeStep);
       }
       else if(variable->getName()=="c.mass"       ||
               variable->getName()=="sp_vol_CC"    ||
               variable->getName()=="mom_L_CC"     ||
               variable->getName()=="int_eng_L_CC" ){
-       setBC(coarse_q_CC,"set_if_sym_BC",coarsePatch,m_sharedState,indx,new_dw);
+       setBC(coarse_q_CC,"set_if_sym_BC",coarsePatch,m_sharedState,indx,new_dw, isNotInitialTimeStep);
       }
     }  // matls
   }  // coarse level

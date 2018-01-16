@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -26,7 +26,8 @@
 #ifndef Packages_Uintah_CCA_Components_Examples_TestModel_h
 #define Packages_Uintah_CCA_Components_Examples_TestModel_h
 
-#include <CCA/Ports/ModelInterface.h>
+#include <CCA/Components/Models/FluidsBased/FluidsBasedModel.h>
+
 #include <Core/Grid/Variables/ComputeSet.h>
 
 namespace Uintah {
@@ -59,30 +60,31 @@ DESCRIPTION
 WARNING
   
 ****************************************/
-
-  class TestModel : public ModelInterface {
+  class ICELabel;
+  
+  class TestModel : public FluidsBasedModel {
   public:
-    TestModel(const ProcessorGroup* myworld, ProblemSpecP& params);
+    TestModel(const ProcessorGroup* myworld,
+	      const SimulationStateP& sharedState,
+	      const ProblemSpecP& params);
+    
     virtual ~TestModel();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
 
-    virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
-                              ModelSetup* setup, const bool isRestart);
+    virtual void problemSetup(GridP& grid,
+                               const bool isRestart);
       
     virtual void scheduleInitialize(SchedulerP&,
-                                        const LevelP& level,
-                                        const ModelInfo*);
+                                        const LevelP& level);
 
     virtual void restartInitialize() {}
       
     virtual void scheduleComputeStableTimeStep(SchedulerP&,
-                                                   const LevelP& level,
-                                                   const ModelInfo*);
+					       const LevelP& level);
       
     virtual void scheduleComputeModelSources(SchedulerP&,
-                                                const LevelP& level,
-                                                const ModelInfo*);
+					     const LevelP& level);
                                              
     virtual void scheduleModifyThermoTransportProperties(SchedulerP&,
                                                          const LevelP&,
@@ -97,23 +99,22 @@ WARNING
                                       SchedulerP& sched);
                                       
    virtual void scheduleTestConservation(SchedulerP&,
-                                         const PatchSet* patches,
-                                         const ModelInfo* mi);
+                                         const PatchSet* patches);
 
   private:    
     void computeModelSources(const ProcessorGroup*, 
                              const PatchSubset* patches,
-                               const MaterialSubset* matls, 
+			     const MaterialSubset* matls, 
                              DataWarehouse*, 
-                               DataWarehouse* new_dw, 
-                             const ModelInfo*);
+			     DataWarehouse* new_dw);
 
     TestModel(const TestModel&);
     TestModel& operator=(const TestModel&);
 
-    ProblemSpecP params;
+    ProblemSpecP d_params;
     const Material* matl0;
     const Material* matl1;
+    ICELabel* Ilb;
     MPMICELabel* MIlb;
     MaterialSet* mymatls;
     Material* d_matl;
@@ -123,7 +124,6 @@ WARNING
     
     const VarLabel* totalMassXLabel;
     const VarLabel* totalIntEngXLabel;
-    SimulationStateP d_sharedState;
   };
 }
 

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -175,8 +175,8 @@ void PressureSolver::sched_solve(const LevelP& level,
 
   d_periodic_vector = level->getPeriodicBoundaries();
 
-  LoadBalancerPort * lb              = sched->getLoadBalancer();
-  const PatchSet   * perproc_patches = lb->getPerProcessorPatchSet(level);
+  const PatchSet * perproc_patches =
+    sched->getLoadBalancer()->getPerProcessorPatchSet(level);
 
   int archIndex = 0; // only one arches material
   d_indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
@@ -439,6 +439,8 @@ PressureSolver::sched_setGuessForX(SchedulerP& sched,
                           &PressureSolver::setGuessForX,
                           timelabels, extraProjection);
 
+  tsk->requires( Task::OldDW, d_lab->d_timeStepLabel );
+
   Ghost::GhostType  gn = Ghost::None;
 
   if (!extraProjection){
@@ -511,13 +513,16 @@ PressureSolver::setGuessForX ( const ProcessorGroup* pg,
   //__________________________________
   // set outputfile name
   string desc  = timelabels->integrator_step_name;
-  int timestep = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
+
+  // int timeStep = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
+  timeStep_vartype timeStep;
+  old_dw->get( timeStep, d_lab->d_timeStepLabel );
+
   d_iteration ++;
 
   ostringstream fname;
-  fname << "." << desc.c_str() << "." << timestep << "." << d_iteration;
+  fname << "." << desc.c_str() << "." << timeStep << "." << d_iteration;
   d_hypreSolver_parameters->setOutputFileName(fname.str());
-
 }
 
 

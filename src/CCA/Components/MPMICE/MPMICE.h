@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -32,9 +32,10 @@
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <CCA/Ports/DataWarehouseP.h>
-#include <CCA/Components/ICE/ICEMaterial.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <CCA/Components/MPM/Contact/Contact.h>
+#include <CCA/Components/ICE/Materials/ICEMaterial.h>
+#include <CCA/Components/Models/MultiMatlExchange/ExchangeModel.h>
+#include <CCA/Components/MPM/Materials/MPMMaterial.h>
+#include <CCA/Components/MPM/Materials/Contact/Contact.h>
 #include <CCA/Components/MPM/SerialMPM.h>
 #include <CCA/Components/MPM/RigidMPM.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
@@ -90,7 +91,7 @@ public:
   
   virtual bool restartableTimeSteps();
 
-  virtual double recomputeTimeStep(double current_dt); 
+  virtual double recomputeDelT(const double delT); 
           
   virtual void problemSetup(const ProblemSpecP& params, 
                             const ProblemSpecP& restart_prob_spec, 
@@ -300,8 +301,6 @@ public:
                                DataWarehouse*, 
                                DataWarehouse*); 
 
-  virtual bool needRecompile(double time, double dt, const GridP& grid);
-
   virtual void scheduleSwitchTest(const LevelP& level, SchedulerP& sched);
 
   //__________________________________
@@ -410,16 +409,16 @@ protected:
   MPMICE(const MPMICE&);
   MPMICE& operator=(const MPMICE&);
 
-  MPMLabel* Mlb;
-  ICELabel* Ilb;
-  MPMICELabel* MIlb;
+  MPMLabel*        Mlb;
+  ICELabel*        Ilb;
+  MPMICELabel*     MIlb;
+  ExchangeModel*   d_exchModel;
 
   bool             d_rigidMPM;
   SerialMPM*       d_mpm;
   ICE*             d_ice;
   int              d_8or27;
   int              NGN;
-  bool             d_recompile;
   bool             d_testForNegTemps_mpm;
   bool             do_mlmpmice;
 

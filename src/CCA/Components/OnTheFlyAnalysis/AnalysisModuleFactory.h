@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -33,17 +33,17 @@
 namespace Uintah {
   class AnalysisModule;
   
-  class AnalysisModuleFactory{
-    private:
-      AnalysisModuleFactory();
-      ~AnalysisModuleFactory();
-          
-    public:      
-      static
-       std::vector< AnalysisModule*> 
-        create(const ProblemSpecP& prob_spec,
-	       SimulationStateP sharedState,
-               Output* output);
+  class AnalysisModuleFactory {
+
+  private:
+    AnalysisModuleFactory();
+    ~AnalysisModuleFactory();
+    
+  public:      
+    static
+    std::vector< AnalysisModule*> create( const ProcessorGroup* myworld,
+					  const SimulationStateP sharedState,
+					  const ProblemSpecP& prob_spec );
   };
 }
 

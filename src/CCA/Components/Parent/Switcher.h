@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -64,10 +64,11 @@ namespace Uintah {
     virtual void switchApplication( const ProblemSpecP     & restart_prob_spec,
 				    const GridP            & grid );
 
-    virtual bool needRecompile( double time, double delt, const GridP& grid );
+    virtual bool needRecompile( const GridP& grid );
     virtual void restartInitialize();
+
     virtual bool restartableTimeSteps();
-    virtual double recomputeTimeStep( double dt );
+    virtual double recomputeDelT( const double delT );
 
     // AMR
     virtual void scheduleRefineInterface( const LevelP     & fineLevel,

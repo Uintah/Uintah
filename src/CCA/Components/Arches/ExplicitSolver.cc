@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -528,7 +528,8 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
 
     // require that we have weighted or unweighted explicitly specified as an attribute to DQMOM
     // type = "unweightedAbs" or type = "weighedAbs"
-    dqmom_db->getAttribute( "type", d_which_dqmom );
+    //dqmom_db->getAttribute( "type", d_which_dqmom );
+    d_which_dqmom = "weighedAbs";
 
     ProblemSpecP db_linear_solver = dqmom_db->findBlock("LinearSolver");
     if( db_linear_solver ) {
@@ -2131,7 +2132,15 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                                            d_timeIntegratorLabels[curr_level]);
     }
 
-    d_turbCounter = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
+    // d_turbCounter = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
+    timeStep_vartype timeStep(0);
+    if( sched->get_dw(0) && sched->get_dw(0)->exists( d_lab->d_timeStepLabel ) )
+      sched->get_dw(0)->get( timeStep, d_lab->d_timeStepLabel );
+    else if( sched->get_dw(1) && sched->get_dw(1)->exists( d_lab->d_timeStepLabel ) )
+      sched->get_dw(1)->get( timeStep, d_lab->d_timeStepLabel );
+
+    d_turbCounter = timeStep;
+    
     if ((d_turbCounter%d_turbModelCalcFreq == 0)&&
         ((curr_level==0)||((!(curr_level==0))&&d_turbModelRKsteps)))
       d_turbModel->sched_reComputeTurbSubmodel(sched, level, matls,
@@ -2960,6 +2969,8 @@ ExplicitSolver::sched_getDensityGuess(SchedulerP& sched,
                           &ExplicitSolver::getDensityGuess,
                           timelabels);
 
+  tsk->requires( Task::OldDW, d_lab->d_timeStepLabel );
+
   Task::WhichDW parent_old_dw;
   if (timelabels->recursion){
     parent_old_dw = Task::ParentOldDW;
@@ -3022,6 +3033,10 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
                                 DataWarehouse* new_dw,
                                 const TimeIntegratorLabel* timelabels)
 {
+  // int timeStep = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
+  timeStep_vartype timeStep;
+  old_dw->get( timeStep, d_lab->d_timeStepLabel );
+
   DataWarehouse* parent_old_dw;
   if (timelabels->recursion){
     parent_old_dw = new_dw->getOtherDataWarehouse(Task::ParentOldDW);
@@ -3102,8 +3117,7 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
     }
 
 // Need to skip first timestep since we start with unprojected velocities
-//    int currentTimeStep=d_lab->d_sharedState->getCurrentTopLevelTimeStep();
-//    if (currentTimeStep > 1) {
+//    if (timeStep > 1) {
 //
       if ( have_extra_srcs ){
 

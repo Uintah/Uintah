@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -1763,10 +1763,11 @@ DORadiationModel::computeFluxDiv(const Patch* patch,
       }
       });
     }else{
+      Vector Dx = patch->dCell();
+      const double volume = Dx.x()* Dx.y()* Dx.z();  // have to do this because of multiplication of volume upstream, its avoided for scattering, since it has its own source terms.
       Uintah::parallel_for( range,   [&](int i, int j, int k){
       for (int iband=0; iband<d_nbands; iband++){
-         //divQ(i,j,k) += (abskt(i,j,k)+spectral_abskg[iband](i,j,k))*spectral_volQ[iband](i,j,k) - 4.0*M_PI*emissSrc[iband](i,j,k);
-         divQ(i,j,k) += (abskt(i,j,k)+spectral_abskg[iband](i,j,k))*spectral_volQ[iband](i,j,k) - 4.0*M_PI*emissSrc[iband](i,j,k);
+         divQ(i,j,k) += (abskt(i,j,k)+spectral_abskg[iband](i,j,k))*spectral_volQ[iband](i,j,k) - 4.0*M_PI*emissSrc[iband](i,j,k)/volume;
       }
       });
     }
@@ -1778,8 +1779,10 @@ DORadiationModel::computeFluxDiv(const Patch* patch,
          divQ(i,j,k)+= (abskt(i,j,k)-scatkt(i,j,k))*volQ(i,j,k) - 4.0*M_PI*emissSrc[0](i,j,k);
       });
     }else{
+      Vector Dx = patch->dCell();
+      const double volume = Dx.x()* Dx.y()* Dx.z();  // have to do this because of multiplication of volume upstream, its avoided for scattering, since it has its own source terms.
       Uintah::parallel_for( range,   [&](int i, int j, int k){
-         divQ(i,j,k)+= (abskt(i,j,k))*volQ(i,j,k) - 4.0*M_PI*emissSrc[0](i,j,k);
+         divQ(i,j,k)+= abskt(i,j,k)*volQ(i,j,k) - 4.0*M_PI*emissSrc[0](i,j,k)/volume;
       });
     }
   }

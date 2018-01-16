@@ -1,7 +1,7 @@
 ##
 ## The MIT License
 ##
-## Copyright (c) 1997-2017 The University of Utah
+## Copyright (c) 1997-2018 The University of Utah
 ##
 ## Permission is hereby granted, free of charge, to any person obtaining a copy
 ## of this software and associated documentation files (the "Software"), to
@@ -54,7 +54,7 @@
 ##  --------------------------------------------------------------------
 
 ##  initialize configure 
-AC_INIT([Uintah],[2.0],[uintah-developer@gforge.sci.utah.edu])
+AC_INIT([Uintah],[2.1],[uintah-developer@gforge.sci.utah.edu])
 
 ##  require autoconf version 2.69
 ##     The reason to require the latest autoconf is to try and get everyone who
@@ -70,7 +70,7 @@ AC_COPYRIGHT(
 ##
 ## The MIT License
 ##
-## Copyright (c) 1997-2017 The University of Utah
+## Copyright (c) 1997-2018 The University of Utah
 ##
 ## Permission is hereby granted, free of charge, to any person obtaining a copy
 ## of this software and associated documentation files (the "Software"), to
@@ -646,12 +646,6 @@ SCI_ARG_ENABLE(verbose,
   [verbose="yes"],
   [verbose="no"])
   
-SCI_ARG_ENABLE(threads,
-  AC_HELP_STRING(--enable-threads,
-                 Specify a thread implementation (pthreads or irix)),
-  [threads="$enableval"],
-  [threads=${threads='unknown'}])
-  
 SCI_ARG_ENABLE(debug,
   AC_HELP_STRING(--enable-debug,
                  Turn on debugging (default is -g) or specify your own.
@@ -737,8 +731,20 @@ SCI_ARG_ENABLE(rpath,
   [enable_rpath="$enableval"],
   [enable_rpath=${enable_rpath='yes'}])
 
+SCI_ARG_ENABLE(unit-tests,
+  AC_HELP_STRING(--enable-unit-tests,
+                 Turn on the unit tests.),
+  [BUILD_UNIT_TESTS="yes"],
+  [BUILD_UNIT_TESTS="no"])
+
+SCI_ARG_ENABLE(minimal,
+  AC_HELP_STRING(--enable-minimal,
+                 Build a minimal set of libraries),
+  [BUILD_MINIMAL="yes"],
+  [BUILD_MINIMAL="no"])
+
 #
-# ---- List of --enable statements for Uintah Components ---- 
+# ---- List of --enable statements for Uintah Applications ---- 
 #
 
 SCI_ARG_ENABLE(arches,
@@ -748,12 +754,26 @@ SCI_ARG_ENABLE(arches,
   [BUILD_ARCHES="no"
    DEF_ARCHES=["#define NO_ARCHES"]])
 
+SCI_ARG_ENABLE(examples,
+  AC_HELP_STRING(--enable-examples,
+                 Turn on the EXAMPLES component.),
+  [BUILD_EXAMPLES="yes"],
+  [BUILD_EXAMPLES="no"
+   DEF_EXAMPLES=["#define NO_EXAMPLES"]])
+
 SCI_ARG_ENABLE(fvm,
   AC_HELP_STRING(--enable-fvm,
                  Turn on the FVM component.),
   [BUILD_FVM="yes"],
   [BUILD_FVM="no"
    DEF_FVM=["#define NO_FVM"]])
+
+SCI_ARG_ENABLE(heat,
+  AC_HELP_STRING(--enable-heat,
+                 Turn on the Heat component.),
+  [BUILD_HEAT="yes"],
+  [BUILD_HEAT="no"
+   DEF_HEAT=["#define NO_HEAT"]])
 
 SCI_ARG_ENABLE(ice,
   AC_HELP_STRING(--enable-ice,
@@ -769,20 +789,6 @@ SCI_ARG_ENABLE(mpm,
   [BUILD_MPM="no"
    DEF_MPM=["#define NO_MPM"]])
 
-SCI_ARG_ENABLE(wasatch,
-  AC_HELP_STRING(--enable-wasatch,
-                 Turn on the Wasatch component.),
-  [BUILD_WASATCH="yes"],
-  [BUILD_WASATCH="no"
-   DEF_WASATCH=["#define NO_WASATCH"]])
-
-SCI_ARG_ENABLE(heat,
-  AC_HELP_STRING(--enable-heat,
-                 Turn on the Heat component.),
-  [BUILD_HEAT="yes"],
-  [BUILD_HEAT="no"
-   DEF_HEAT=["#define NO_HEAT"]])
-
 SCI_ARG_ENABLE(phasefield,
   AC_HELP_STRING(--enable-phasefield,
                  Turn on the PhaseField component.),
@@ -790,22 +796,32 @@ SCI_ARG_ENABLE(phasefield,
   [BUILD_PHASEFIELD="no"
    DEF_PHASEFIELD=["#define NO_PHASEFIELD"]])
 
+SCI_ARG_ENABLE(wasatch,
+  AC_HELP_STRING(--enable-wasatch,
+                 Turn on the Wasatch component.),
+  [BUILD_WASATCH="yes"],
+  [BUILD_WASATCH="no"
+   DEF_WASATCH=["#define NO_WASATCH"]])
+
 SCI_ARG_ENABLE(all_components,
   AC_HELP_STRING(--enable-all-components,
                  Turn on the all components.),
   [use_all_components="yes"
    BUILD_ARCHES="yes"
+   BUILD_EXAMPLES="yes"
    BUILD_FVM="yes"
+   BUILD_HEAT="yes"
    BUILD_ICE="yes"
    BUILD_MPM="yes"
    BUILD_WASATCH="yes"
-   BUILD_HEAT="yes"
    DEF_ARCHES=
+   DEF_EXAMPLES=
    DEF_FVM=
+   DEF_HEAT=
    DEF_ICE=
    DEF_MPM=
+   DEF_UNIT_TESTS=
    DEF_WASATCH=
-   DEF_HEAT=
   ],
   [use_all_components="no"])
 
@@ -813,27 +829,82 @@ SCI_ARG_ENABLE(all_components,
 # --- end list of -enable components ------
 #
 
+BUILD_ANALYSIS_MODULES=yes
+DEF_ANALYSIS_MODULES=
+
+BUILD_APPLICATION=yes
+DEF_APPLICATION=
+
+BUILD_MODELS=yes
+DEF_MODELS=
+
 BUILD_MODELS_RADIATION=yes
 DEF_MODELS_RADIATION=
 
-if test "$use_all_components" = "yes" -a          \
-        \( "$enable_arches"           = "yes" -o  \
+BUILD_PARENT=yes
+DEF_PARENT=
+
+BUILD_POST_PROCESS_UDA=yes
+DEF_POST_PROCESS_UDA=
+
+BUILD_SIM_CONTROLLER=yes
+DEF_SIM_CONTROLLER=
+
+BUILD_STANDALONE=yes
+DEF_STANDALONE=
+
+if test "$BUILD_MINIMAL" = "yes" -a              \
+        \( "$use_all_components"      = "yes" -o  \
+	   "$enable_unit_tests"       = "yes" -o  \
+	   "$enable_arches"           = "yes" -o  \
+           "$enable_examples"         = "yes" -o  \
            "$enable_fvm"              = "yes" -o  \
+           "$enable_heat"             = "yes" -o  \
            "$enable_ice"              = "yes" -o  \
            "$enable_models_radiation" = "yes" -o  \
            "$enable_mpm"              = "yes" -o  \
-           "$enable_wasatch"          = "yes" -o  \
-           "$enable_heat"             = "yes" -o  \
-           "$enable_phasefield"       = "yes" \); then
-   AC_MSG_ERROR( Please do not use both --enable-all-components and --enable-<specific-component> )
+           "$enable_phasefield"       = "yes" -o  \
+           "$enable_wasatch"          = "yes" \); then
+   AC_MSG_ERROR( Can not do a minimal library only build if building applications or unit tests)
+elif test "$BUILD_MINIMAL" = "yes"; then
+
+  add_important_warning "-------------------------------------------------------------------------"
+  msg="!!! MINIMAL LIBRARY ONLY BUILD REQUESTED !!!"
+  add_important_warning "$msg"
+  add_important_warning "-------------------------------------------------------------------------"
+  BUILD_ANALYSIS_MODULES=no
+  BUILD_APPLICATION=no
+  BUILD_MODELS=no
+  BUILD_PARENT=no
+  BUILD_POST_PROCESS_UDA=no
+  BUILD_SIM_CONTROLLER=no
+  BUILD_STANDALONE=no
 fi
-if test "$BUILD_ARCHES"     != "yes"           -a   \
-        "$BUILD_FVM"        != "yes"           -a   \
-        "$BUILD_ICE"        != "yes"           -a   \
-        "$BUILD_MPM"        != "yes"           -a   \
-        "$BUILD_WASATCH"    != "yes"           -a   \
-        "$BUILD_HEAT"       != "yes"           -a   \
-        "$BUILD_PHASEFIELD" != "yes" ; then
+
+if test "$use_all_components" = "yes" -a          \
+        \( "$enable_arches"           = "yes" -o  \
+           "$enable_examples"         = "yes" -o  \
+           "$enable_fvm"              = "yes" -o  \
+           "$enable_heat"             = "yes" -o  \
+           "$enable_ice"              = "yes" -o  \
+           "$enable_models_radiation" = "yes" -o  \
+           "$enable_mpm"              = "yes" -o  \
+           "$enable_phasefield"       = "yes" -o  \
+           "$enable_wasatch"          = "yes" \); then
+   AC_MSG_ERROR( Can not use both --enable-all-components and --enable-<specific-component> )
+fi
+
+if test "$BUILD_MINIMAL"       != "yes" -a  \
+        "$BUILD_ARCHES"        != "yes" -a  \
+        "$BUILD_EXAMPLES"      != "yes" -a  \
+        "$BUILD_FVM"           != "yes" -a  \
+        "$BUILD_HEAT"          != "yes" -a  \
+        "$BUILD_ICE"           != "yes" -a  \
+        "$BUILD_MPM"           != "yes" -a  \
+        "$BUILD_PHASEFIELD"    != "yes" -a  \
+        "$BUILD_WASATCH"       != "yes" ; then
+  BUILD_ANALYSIS_MODULES=no
+  BUILD_MODELS=no
   add_important_warning "-------------------------------------------------------------------------"
   msg="!!! NO COMPONENTS WERE SPECIFIED! ONLY UTILITY PROGRAMS WILL BE BUILT !!!"
   add_important_warning "$msg"
@@ -1364,25 +1435,47 @@ fi
 
 # NO_FORTRAN is used in configVars.mk[.in] and DEF_NO_FORTRAN is used in uintah_testdefs.h.in
 
+
+AC_SUBST(BUILD_ANALYSIS_MODULES)
+AC_SUBST(BUILD_APPLICATION)
 AC_SUBST(BUILD_ARCHES)
+AC_SUBST(BUILD_EXAMPLES)
 AC_SUBST(BUILD_FVM)
+AC_SUBST(BUILD_HEAT)
 AC_SUBST(BUILD_ICE)
+AC_SUBST(BUILD_MODELS)
 AC_SUBST(BUILD_MODELS_RADIATION)
 AC_SUBST(BUILD_MPM)
-AC_SUBST(BUILD_WASATCH)
-AC_SUBST(BUILD_HEAT)
+AC_SUBST(BUILD_PARENT)
 AC_SUBST(BUILD_PHASEFIELD)
+AC_SUBST(BUILD_POST_PROCESS_UDA)
+AC_SUBST(BUILD_SIM_CONTROLLER)
+AC_SUBST(BUILD_STANDALONE)
+AC_SUBST(BUILD_UNIT_TESTS)
+AC_SUBST(BUILD_WASATCH)
+AC_SUBST(BUILD_MINIMAL)
 
+AC_SUBST(DEF_ANALYSIS_MODULES)
+AC_SUBST(DEF_APPLICATION)
 AC_SUBST(DEF_ARCHES)
+AC_SUBST(DEF_EXAMPLES)
 AC_SUBST(DEF_FVM)
-AC_SUBST(DEF_ICE)
-AC_SUBST(DEF_MPM)
-AC_SUBST(DEF_NO_FORTRAN)
-AC_SUBST(DEF_MODELS_RADIATION)
-AC_SUBST(DEF_WASATCH)
 AC_SUBST(DEF_HEAT)
+AC_SUBST(DEF_ICE)
+AC_SUBST(DEF_MODELS)
+AC_SUBST(DEF_MPM)
+AC_SUBST(DEF_MODELS_RADIATION)
+AC_SUBST(DEF_PARENT)
 AC_SUBST(DEF_PHASEFIELD)
+AC_SUBST(DEF_POST_PROCESS_UDA)
+AC_SUBST(DEF_SIM_CONTROLLER)
+AC_SUBST(DEF_STANDALONE)
+AC_SUBST(DEF_UNIT_TESTS)
+AC_SUBST(DEF_WASATCH)
+AC_SUBST(DEF_MINIMAL)
+
 AC_SUBST(NO_FORTRAN)
+AC_SUBST(DEF_NO_FORTRAN)
 
 if test "$BUILD_ARCHES" = "no" -a "$with_fortran" = "no"; then
   sci_required_fortran=no
@@ -1603,10 +1696,6 @@ case $host in
     FFLAGS="$extra_cflags $FFLAGS"
     CFLAGS="$extra_cflags -D__USE_STD_IOSTREAM $CFLAGS"
     CXXFLAGS="-model ansi $extra_cflags -D__USE_STD_IOSTREAM $CXXFLAGS"
-    if test "$threads" != "none"; then
-      CFLAGS="$CFLAGS -pthread"
-      CXXFLAGS="$CXXFLAGS -pthread"
-    fi
     SOFLAGS="-warning_unresolved -update_registry \$(LIBDIR)/so_locations"
     LDFLAGS=""
     LDRUN_PREFIX="-rpath "
@@ -2178,79 +2267,8 @@ AC_SUBST(RT_LIB_FLAG)
 
 MPI_EXTRA_LIB_FLAG="$MPI_EXTRA_LIB_FLAG $RT_LIB_FLAG"
 
-##  --  check for the required thread library  ---------------------------
 
-SOCKET_LIBRARY=""
-
-case $host in
-  *)
-    if test "$threads" = "unknown"; then
-      threads=pthreads
-    elif test "$threads" != "pthreads" -a "$threads" != "none"; then
-      SCI_MSG_ERROR(unknown thread type for host $host: $threads. exiting.)
-    fi
-    ;;
-esac
-
-case $threads in
-   pthreads)
-      SCI_TRY_LINK(PTHREAD,pthread library and headers,pthread.h semaphore.h,,
-                   pthread,,,,required)
-
-      if test "$HAVE_PTHREAD" = "yes"; then
-        THREAD_LIB_FLAG="$PTHREAD_LIB_FLAG"
-        DEF_THREAD="#define SCI_PTHREAD 1"
-      fi
-
-      AC_MSG_CHECKING(for semaphore library)
-      old_LIBS="$LIBS"
-      SEMAPHORE_LIB_FLAG=unknown
-      for i in "" "$THREAD_LIB_FLAG" $RT_LIB_FLAG; do
-        LIBS="$old_LIBS $i"
-        AC_TRY_LINK([
-#include <semaphore.h>
-      ], [
-    sem_t sem;
-    sem_init(&sem, 0, 0);
-    sem_post(&sem);
-      ], [
-         SEMAPHORE_LIB_FLAG=$i
-         break
-         ])
-      done
-      if test "$SEMPAPHORE_LIB_FLAG" = unknown; then
-        AC_MSG_RESULT(not found)
-        AC_MSG_ERROR([semaphore library(sem_post, sem_wait, etc) needed for pthreads])
-      else
-        if test "$SEMAPHORE_LIB_FLAG" = "$THREAD_LIB_FLAG"; then
-          AC_MSG_RESULT(already in thread library: $THREAD_LIB_FLAG)
-          SEMAPHORE_LIB_FLAG=""
-        elif test "$SEMAPHORE_LIB_FLAG"; then
-          AC_MSG_RESULT($SEMAPHORE_LIB_FLAG)
-        else
-          AC_MSG_RESULT(none required)
-        fi
-      fi
-      LIBS="$old_LIBS"
-      ;;
-   none)
-      DEF_THREAD="#define SCI_NOTHREAD 1"
-      AC_MSG_WARN(threads disabled - software may work incorrectly)
-      ;;
-   *)
-      SCI_MSG_ERROR(unknown thread type for host $host: $threads. exiting.)
-      ;;
-esac      
-
-AC_SUBST(THREAD_LIB_FLAG)
-AC_SUBST(DEF_THREAD)
-sci_defs_files="$sci_defs_files include/sci_defs/thread_testdefs.h"
-
-AC_SUBST(SEMAPHORE_LIB_FLAG)
-
-AC_SUBST(CFLAGS)
-
-##  -- check for gcc atomic support
+##  -- check for gcc atomic support -----------------------------
 
 SCI_TRY_LINK(GCCSYNC,gcc style atomic operations ,,,,,,[ int x;   __sync_add_and_fetch(&x,1);],optional)
 if test "$HAVE_GCCSYNC" = "yes"; then
@@ -3036,7 +3054,7 @@ if test "$HAVE_BLAS" != "yes"; then
   case $host in
     *-darwin*)
        if test "$yosemite_plus" = yes; then
-          SCI_TRY_LINK(BLAS,blas and cblas libraries-darwin (yosemite+),Accelerate/Accelerate.h,
+          SCI_TRY_LINK(BLAS,blas and cblas libraries-darwin (Accelerate framework),Accelerate/Accelerate.h,
                        $_sci_inc,cblas blas,$_sci_lib,-framework Accelerate $F_LIB_DIR_FLAG $F_LIB_FLAG,[
                                                                                 float x[]={0.7f};
                                                                                 float y[]={0.8f};
@@ -3051,7 +3069,7 @@ if test "$HAVE_BLAS" != "yes"; then
              DEF_ACCELERATE="#define HAVE_ACCELERATE 1"
           fi
        else
-          SCI_TRY_LINK(BLAS,blas and cblas libraries-darwin,vecLib/cblas.h,
+          SCI_TRY_LINK(BLAS,blas and cblas libraries-darwin (veclib framework),vecLib/cblas.h,
                        $_sci_inc,cblas blas,$_sci_lib,-framework vecLib $F_LIB_DIR_FLAG $F_LIB_FLAG,[
                                                                                 float x[]={0.7f};
                                                                                 float y[]={0.8f};
@@ -3180,7 +3198,9 @@ if test "$HAVE_LAPACK" != "yes"; then
              LAPACK_LIB_FLAG="$altivec -framework vecLib"
           fi
        fi
-       SCI_TRY_LINK(LAPACK,lapack library,,,lapack,$_sci_lib,$BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
+       if test "$HAVE_LAPACK" = no ; then
+       	  SCI_TRY_LINK(LAPACK,lapack library (OSX non-framework),,,lapack,$_sci_lib,$BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
+       fi
        ;;
      *)
        SCI_TRY_LINK(LAPACK,lapack library,,,lapack,$_sci_lib,$BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
@@ -3354,7 +3374,7 @@ if test "$sci_required_mpi" = "yes" -a "$with_mpi" != "built-in"; then
         test_libs[[8]]="mpich pmpich"
         test_libs[[9]]="mpich"
         test_libs[[10]]="mpi_mt"
-	test_libs[[11]]="mpich-xl opa-xl mpl-xl pami-gcc SPI SPI_cnk rt pthread stdc++" # Vulcan@LLNL
+	      test_libs[[11]]="mpich-xl opa-xl mpl-xl pami-gcc SPI SPI_cnk rt stdc++" # Vulcan@LLNL
 
         unset other
         other[[0]]=""
@@ -3890,7 +3910,7 @@ EOF
 
   # for a static build, use the static CUDA runtime lib
   if test "$static" != "no" -o "$SO_OR_ARCHIVE_EXTENSION" = "a"; then
-     _cudart_lib="cudart_static dl pthread rt"
+     _cudart_lib="cudart_static dl rt"
   else
      _cudart_lib="cudart"
   fi
@@ -4657,7 +4677,9 @@ AC_SUBST(scirun_src_dir)
 AC_CONFIG_FILES(configVars.mk Makefile disjointPackageMakefile $sci_defs_files)
 
 ##  Add a list of Uintah specific output files.
+if test "$NO_FORTRAN" != "yes" ; then
 AC_CONFIG_FILES(tools/fspec.pl)
+fi
 
 #  ignore --no-create and --no-recursion flags
 no_create=no

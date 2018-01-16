@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -54,7 +54,6 @@ namespace Uintah{
       void  problemSetup( const ProblemSpecP& prob_spec,
                           const ProblemSpecP& rmcrt_ps,
                           const GridP& grid,
-                          SimulationStateP& sharedState,
                           const bool getExtraInputs );
 
       /** @brief Algorithm for tracing rays from radiometer location*/

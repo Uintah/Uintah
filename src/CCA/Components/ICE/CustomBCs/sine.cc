@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -23,7 +23,7 @@
  */
 
 #include <CCA/Components/ICE/CustomBCs/sine.h>
-#include <CCA/Components/ICE/ICEMaterial.h>
+#include <CCA/Components/ICE/Materials/ICEMaterial.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Grid.h>
@@ -198,20 +198,21 @@ int  set_Sine_Velocity_BC(const Patch* patch,
     double A       = gv->A;
     double omega   = gv->omega; 
     Vector vel_ref = gv->vel_ref;           
-    double t       = sharedState->getElapsedSimTime(); 
-    t += lv->delT;
+    double t       = lv->simTime + lv->delT;
+    // double t       = sharedState->getElapsedSimTime(); 
+    // t += lv->delT;
     double change  = A * sin(omega*t);
     
     Vector smallNum(1e-100);
-    Vector one_or_zero = vel_ref/(vel_ref + smallNum);                                 
+    Vector one_or_zero = vel_ref/(vel_ref + smallNum);
                                                       
     // only alter the velocity in the direction that the reference_velocity
     // is non-zero.       
-    for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++)   {
+    for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
       IntVector c = *bound_ptr;                                           
       vel_CC[c].x(vel_ref.x() +  one_or_zero.x() * change);
-      vel_CC[c].y(vel_ref.y() +  one_or_zero.y() * change);  
-      vel_CC[c].z(vel_ref.z() +  one_or_zero.z() * change);                                               
+      vel_CC[c].y(vel_ref.y() +  one_or_zero.y() * change);
+      vel_CC[c].z(vel_ref.z() +  one_or_zero.z() * change);
     }
     nCells += bound_ptr.size();
   }
@@ -276,8 +277,9 @@ int set_Sine_press_BC(const Patch* patch,
   double A     =  gv->A;
   double omega =  gv->omega;   
   double p_ref =  gv->p_ref;                               
-  double t     =  sharedState->getElapsedSimTime();               
-  t += lv->delT;  // delT is either 0 or delT 
+  double t     = lv->simTime + lv->delT;
+  // double t       = sharedState->getElapsedSimTime(); 
+  // t += lv->delT;  // delT is either 0 or delT 
   double change = A * sin(omega*t);                               
 
   for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {  

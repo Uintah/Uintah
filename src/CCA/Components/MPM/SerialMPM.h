@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -35,11 +35,11 @@
 // put here to avoid template problems
 #include <Core/Math/Matrix3.h>
 #include <Core/Math/Short27.h>
-#include <Core/Labels/MPMLabel.h>
-#include <CCA/Components/MPM/Contact/Contact.h>
+#include <CCA/Components/MPM/Core/MPMLabel.h>
+#include <CCA/Components/MPM/Materials/Contact/Contact.h>
 #include <CCA/Components/MPM/MPMCommon.h>
 #include <Core/Geometry/Vector.h>
-#include <CCA/Components/MPM/MPMFlags.h>
+#include <CCA/Components/MPM/Core/MPMFlags.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
 #include <CCA/Components/MPM/PhysicalBC/LoadCurve.h>
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
@@ -137,13 +137,6 @@ public:
   
   /// Schedule to mark initial flags for AMR regridding
   void scheduleInitialErrorEstimate(const LevelP& coarseLevel, SchedulerP& sched);
-
-
-  void setMPMLabel(MPMLabel* Mlb)
-  {
-        delete lb;
-        lb = Mlb;
-  };
 
   void setWithICE()
   {
@@ -518,9 +511,6 @@ protected:
                                                   const PatchSet*,
                                                   const MaterialSet*);
 
-  bool needRecompile(double time, double dt,
-                     const GridP& grid);
-
   void readPrescribedDeformations(std::string filename);
 
   void readInsertParticlesFile(std::string filename);
@@ -575,7 +565,6 @@ protected:
     }
   };
   
-  MPMLabel* lb;
   MPMFlags* flags;
 
   double           d_nextOutputTime;
@@ -600,7 +589,6 @@ protected:
 
 
   bool             d_fracture;
-  bool             d_recompile;
 
   MaterialSubset*  d_loadCurveIndex;
   

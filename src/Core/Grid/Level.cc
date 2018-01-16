@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -753,8 +753,6 @@ Level::getOverlapCellsInRegion( const selectType & patches,
 void
 Level::finalizeLevel()
 {
-  MALLOC_TRACE_TAG_SCOPE("Level::finalizeLevel");
-
   m_each_patch = scinew PatchSet();
   m_each_patch->addReference();
 
@@ -820,8 +818,6 @@ Level::finalizeLevel()
 void
 Level::finalizeLevel( bool periodicX, bool periodicY, bool periodicZ )
 {
-  MALLOC_TRACE_TAG_SCOPE("Level::finalizeLevel(periodic)");
-
   // set each_patch and all_patches before creating virtual patches
   m_each_patch = scinew PatchSet();
   m_each_patch->addReference();
@@ -934,8 +930,6 @@ Level::setBCTypes()
 
   const int nTimes = 3;
   double rtimes[ nTimes ] = { 0 };
-
-  MALLOC_TRACE_TAG_SCOPE("Level::setBCTypes");
 
   if (m_bvh != nullptr) {
     delete m_bvh;
@@ -1150,7 +1144,7 @@ Level::setBCTypes()
 //______________________________________________________________________
 //
 void
-Level::assignBCS( const ProblemSpecP & grid_ps, LoadBalancerPort * lb )
+Level::assignBCS( const ProblemSpecP & grid_ps, LoadBalancer * lb )
 {
   ProblemSpecP bc_ps = grid_ps->findBlock("BoundaryConditions");
   if( bc_ps == nullptr ) {

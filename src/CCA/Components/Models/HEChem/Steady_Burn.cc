@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -23,21 +23,31 @@
  */
 
 #include <CCA/Components/Models/HEChem/Steady_Burn.h>
+
 #include <CCA/Components/Models/HEChem/Common.h>
+
+#include <CCA/Components/ICE/Core/ICELabel.h>
+#include <CCA/Components/ICE/CustomBCs/BoundaryCond.h>
+#include <CCA/Components/MPM/Core/MPMLabel.h>
+#include <CCA/Components/MPM/Materials/MPMMaterial.h>
+#include <CCA/Components/MPMICE/Core/MPMICELabel.h>
+
 #include <CCA/Ports/Scheduler.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
+
+#include <Core/Grid/DbgOutput.h>
+#include <Core/Grid/Level.h>
 #include <Core/Grid/Material.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/CCVariable.h>
-#include <Core/Grid/Variables/ParticleVariable.h>
+#include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Labels/MPMLabel.h>
-#include <Core/Labels/ICELabel.h>
-#include <Core/Labels/MPMICELabel.h>
-#include <Core/Grid/DbgOutput.h>
-#include <CCA/Components/ICE/BoundaryCond.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Util/DebugStream.h>
+
 #include <iostream>
 
 #undef DEBUG_SCALAR
@@ -52,9 +62,12 @@ static DebugStream cout_doing("MODELS_DOING_COUT", false);
 const double Steady_Burn::EPSILON   = 1e-6;   /* stop epsilon for Bisection-Newton method */
 
 Steady_Burn::Steady_Burn(const ProcessorGroup* myworld, 
-                         ProblemSpecP& params,
+                         const  SimulationStateP& sharedState,
+                         const ProblemSpecP& params,
                          const ProblemSpecP& prob_spec)
-  : ModelInterface(myworld), d_params(params), d_prob_spec(prob_spec) { 
+  : ModelInterface(myworld, sharedState),
+    d_params(params), d_prob_spec(prob_spec)
+{ 
   mymatls = 0;
   Mlb  = scinew MPMLabel();
   Ilb  = scinew ICELabel();
@@ -93,12 +106,11 @@ Steady_Burn::~Steady_Burn(){
 }
 
 //______________________________________________________________________
-void Steady_Burn::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup*, const bool isRestart){
-  d_sharedState = sharedState;
-  
+void Steady_Burn::problemSetup(GridP&,
+                                const bool isRestart) {
   ProblemSpecP SB_ps = d_params->findBlock("Steady_Burn");
-  matl0 = sharedState->parseAndLookupMaterial(SB_ps, "fromMaterial");
-  matl1 = sharedState->parseAndLookupMaterial(SB_ps, "toMaterial");  
+  matl0 = m_sharedState->parseAndLookupMaterial(SB_ps, "fromMaterial");
+  matl1 = m_sharedState->parseAndLookupMaterial(SB_ps, "toMaterial");  
   
   SB_ps->require("IdealGasConst",     R );
   SB_ps->require("PreExpCondPh",      Ac);
@@ -173,7 +185,8 @@ void Steady_Burn::outputProblemSpec(ProblemSpecP& ps)
   SB_ps->appendElement("IgnitionTemp",      ignitionTemp);
 }
 //______________________________________________________________________
-void Steady_Burn::scheduleInitialize(SchedulerP& sched, const LevelP& level, const ModelInfo*){
+void Steady_Burn::scheduleInitialize(SchedulerP& sched,
+                                     const LevelP& level){
   printSchedule(level, cout_doing,"Steady_Burn::scheduleInitialize");
   
   Task* t = scinew Task("Steady_Burn::initialize", this, &Steady_Burn::initialize);                        
@@ -201,15 +214,15 @@ void Steady_Burn::initialize(const ProcessorGroup*,
 }
 
 //______________________________________________________________________
-void Steady_Burn::scheduleComputeStableTimeStep(SchedulerP&, const LevelP&, const ModelInfo*){
+void Steady_Burn::scheduleComputeStableTimeStep(SchedulerP&,
+                                                const LevelP&){
   // None necessary...
 }
 
 //______________________________________________________________________
 // only perform this task on the finest level
 void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched, 
-                                              const LevelP& level, 
-                                              const ModelInfo* mi){
+                                              const LevelP& level){
   
   if (level->hasFinerLevel()){
     return;  
@@ -220,10 +233,11 @@ void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched,
   const MaterialSubset* react_matl = matl0->thisMaterial();  
 
   Task* t1 = scinew Task("Steady_Burn::computeNumPPC", this, 
-                         &Steady_Burn::computeNumPPC, mi);
+                         &Steady_Burn::computeNumPPC);
 
   printSchedule(level, cout_doing,"Steady_Burn::scheduleComputeNumPPC");  
 
+  t1->requires(Task::OldDW, Ilb->timeStepLabel);
   t1->requires(Task::OldDW, Mlb->pXLabel,          react_matl, gn);
   t1->computes(numPPCLabel, react_matl);
 
@@ -232,13 +246,13 @@ void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched,
 
   //__________________________________
   Task* t = scinew Task("Steady_Burn::computeModelSources", this, 
-                        &Steady_Burn::computeModelSources, mi);
+                        &Steady_Burn::computeModelSources);
 
   printSchedule(level,cout_doing,"Steady_Burn::scheduleComputeModelSources");  
-  t->requires( Task::OldDW, mi->delT_Label, level.get_rep());
+  t->requires( Task::OldDW, Ilb->delTLabel, level.get_rep());
   
   // define material subsets  
-  const MaterialSet* all_matls = d_sharedState->allMaterials();
+  const MaterialSet* all_matls = m_sharedState->allMaterials();
   const MaterialSubset* all_matls_sub = all_matls->getUnion();
   
   MaterialSubset* one_matl     = scinew MaterialSubset();
@@ -247,6 +261,8 @@ void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched,
   
   Task::MaterialDomainSpec oms = Task::OutOfDomain;  //outside of mymatl set.
 
+  t->requires(Task::OldDW, Ilb->timeStepLabel );
+  t->requires(Task::OldDW, Ilb->delTLabel,         level.get_rep());
   t->requires(Task::OldDW, Ilb->temp_CCLabel,      all_matls_sub, oms, gac,1);
   t->requires(Task::NewDW, Ilb->vol_frac_CCLabel,  all_matls_sub, oms, gac,1);
   /*     Products     */
@@ -258,12 +274,12 @@ void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched,
   t->requires(Task::NewDW, numPPCLabel,           react_matl, gac,1);
   /*     Misc      */
   t->requires(Task::NewDW,  Ilb->press_equil_CCLabel, one_matl, gac, 1);
-  t->requires(Task::OldDW,  MIlb->NC_CCweightLabel,   one_matl, gac, 1);  
+  t->requires(Task::OldDW,  Mlb->NC_CCweightLabel,   one_matl, gac, 1);  
   
-  t->modifies(mi->modelMass_srcLabel);
-  t->modifies(mi->modelMom_srcLabel);
-  t->modifies(mi->modelEng_srcLabel);
-  t->modifies(mi->modelVol_srcLabel); 
+  t->modifies(Ilb->modelMass_srcLabel);
+  t->modifies(Ilb->modelMom_srcLabel);
+  t->modifies(Ilb->modelEng_srcLabel);
+  t->modifies(Ilb->modelVol_srcLabel); 
   
   t->computes(BurningCellLabel, react_matl);
   t->computes(TsLabel,          react_matl);
@@ -301,9 +317,13 @@ void Steady_Burn::computeNumPPC(const ProcessorGroup*,
                                 const PatchSubset* patches,
                                 const MaterialSubset* /*matls*/,
                                 DataWarehouse* old_dw,
-                                DataWarehouse* new_dw,
-                                const ModelInfo* mi)
+                                DataWarehouse* new_dw)
 {
+  timeStep_vartype timeStep;
+  old_dw->get(timeStep, Ilb->timeStepLabel );
+
+  bool isNotInitialTimeStep = (timeStep > 0);
+
   int m0 = matl0->getDWIndex(); /* reactant material */
 
   /* Patch Iteration */
@@ -330,7 +350,7 @@ void Steady_Burn::computeNumPPC(const ProcessorGroup*,
       patch->findCell(px[idx],c);
       pFlag[c] += 1.0;
     }    
-    setBC(pFlag, "zeroNeumann", patch, d_sharedState, m0, new_dw);
+    setBC(pFlag, "zeroNeumann", patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
   }
  
 }
@@ -340,11 +360,15 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
                                       const PatchSubset* patches,
                                       const MaterialSubset* /*matls*/,
                                       DataWarehouse* old_dw,
-                                      DataWarehouse* new_dw,
-                                      const ModelInfo* mi)
+                                      DataWarehouse* new_dw)
 {
+  timeStep_vartype timeStep;
+  old_dw->get(timeStep, Ilb->timeStepLabel );
+
+  bool isNotInitialTimeStep = (timeStep > 0);
+
   delt_vartype delT;
-  old_dw->get(delT, mi->delT_Label,getLevel(patches));
+  old_dw->get(delT, Ilb->delTLabel,getLevel(patches));
   
   //ASSERT(matls->size() == 2);
   int m0 = matl0->getDWIndex(); /* reactant material */
@@ -356,7 +380,7 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gp;
   int ngc_p;
-  d_sharedState->getParticleGhostLayer(gp, ngc_p);
+  m_sharedState->getParticleGhostLayer(gp, ngc_p);
   
   /* Patch Iteration */
   for(int p=0;p<patches->size();p++){
@@ -369,16 +393,16 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
     CCVariable<double> sp_vol_src_0, sp_vol_src_1;
 
     /* reactant */
-    new_dw->getModifiable(mass_src_0,     mi->modelMass_srcLabel,  m0, patch);  
-    new_dw->getModifiable(momentum_src_0, mi->modelMom_srcLabel,   m0, patch); 
-    new_dw->getModifiable(energy_src_0,   mi->modelEng_srcLabel,   m0, patch);
-    new_dw->getModifiable(sp_vol_src_0,   mi->modelVol_srcLabel,   m0, patch);
+    new_dw->getModifiable(mass_src_0,     Ilb->modelMass_srcLabel,  m0, patch);  
+    new_dw->getModifiable(momentum_src_0, Ilb->modelMom_srcLabel,   m0, patch); 
+    new_dw->getModifiable(energy_src_0,   Ilb->modelEng_srcLabel,   m0, patch);
+    new_dw->getModifiable(sp_vol_src_0,   Ilb->modelVol_srcLabel,   m0, patch);
 
     /* product */
-    new_dw->getModifiable(mass_src_1,     mi->modelMass_srcLabel,  m1, patch); 
-    new_dw->getModifiable(momentum_src_1, mi->modelMom_srcLabel,   m1, patch); 
-    new_dw->getModifiable(energy_src_1,   mi->modelEng_srcLabel,   m1, patch); 
-    new_dw->getModifiable(sp_vol_src_1,   mi->modelVol_srcLabel,   m1, patch);
+    new_dw->getModifiable(mass_src_1,     Ilb->modelMass_srcLabel,  m1, patch); 
+    new_dw->getModifiable(momentum_src_1, Ilb->modelMom_srcLabel,   m1, patch); 
+    new_dw->getModifiable(energy_src_1,   Ilb->modelEng_srcLabel,   m1, patch); 
+    new_dw->getModifiable(sp_vol_src_1,   Ilb->modelVol_srcLabel,   m1, patch);
     
     constCCVariable<double>   press_CC, solidTemp, solidMass, solidSp_vol;
     constNCVariable<double>   NC_CCweight, NCsolidMass;
@@ -396,7 +420,7 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
     /* Product Data */   
     /* Misc */
     new_dw->get(press_CC,       Ilb->press_equil_CCLabel,    0, patch, gac, 1);
-    old_dw->get(NC_CCweight,    MIlb->NC_CCweightLabel,      0, patch, gac, 1);
+    old_dw->get(NC_CCweight,    Mlb->NC_CCweightLabel,      0, patch, gac, 1);
 
     CCVariable<double> BurningCell, surfTemp;
     new_dw->allocateAndPut(BurningCell, BurningCellLabel, m0, patch, gn, 0);
@@ -405,11 +429,11 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
     surfTemp.initialize(0.0);
 
     /* All Material Data */
-    int numAllMatls = d_sharedState->getNumMatls();
+    int numAllMatls = m_sharedState->getNumMatls();
     std::vector<constCCVariable<double> >  vol_frac_CC(numAllMatls);
     std::vector<constCCVariable<double> >  temp_CC(numAllMatls);
     for (int m = 0; m < numAllMatls; m++) {
-      Material* matl = d_sharedState->getMaterial(m);
+      Material* matl = m_sharedState->getMaterial(m);
       int indx = matl->getDWIndex();
       old_dw->get(temp_CC[m],       MIlb->temp_CCLabel,    indx, patch, gac, 1);
       new_dw->get(vol_frac_CC[m],   Ilb->vol_frac_CCLabel, indx, patch, gac, 1);
@@ -516,8 +540,8 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
     }  // cell iterator
 
     /*  set symetric BC  */
-    setBC(mass_src_0, "set_if_sym_BC",patch, d_sharedState, m0, new_dw);
-    setBC(mass_src_1, "set_if_sym_BC",patch, d_sharedState, m1, new_dw); 
+    setBC(mass_src_0, "set_if_sym_BC",patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
+    setBC(mass_src_1, "set_if_sym_BC",patch, m_sharedState, m1, new_dw, isNotInitialTimeStep); 
   }
   //__________________________________
   //save total quantities
@@ -531,11 +555,13 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
  
 }
 
-void Steady_Burn::scheduleErrorEstimate(const LevelP&, SchedulerP&){
+void Steady_Burn::scheduleErrorEstimate(const LevelP&,
+                                        SchedulerP&){
   // Not implemented yet
 }
 
-void Steady_Burn::scheduleTestConservation(SchedulerP&, const PatchSet*, const ModelInfo*){
+void Steady_Burn::scheduleTestConservation(SchedulerP&,
+                                           const PatchSet*){
   // Not implemented yet
 }
 

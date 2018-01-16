@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2017 The University of Utah
+#  Copyright (c) 1997-2018 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -29,15 +29,18 @@
 
 SRCDIR   := CCA/Components/Models/HEChem
 
+ifeq ($(BUILD_MPM)$(BUILD_ICE),yesyes)
+
 SRCS	+= \
        $(SRCDIR)/Common.cc        \
-       $(SRCDIR)/Simple_Burn.cc   \
-       $(SRCDIR)/Steady_Burn.cc   \
-       $(SRCDIR)/Unsteady_Burn.cc \
        $(SRCDIR)/IandG.cc         \
        $(SRCDIR)/LightTime.cc     \
        $(SRCDIR)/JWLpp.cc         \
        $(SRCDIR)/ZeroOrder.cc     \
        $(SRCDIR)/DDT0.cc          \
        $(SRCDIR)/DDT1.cc          \
-       $(SRCDIR)/MesoBurn.cc
+       $(SRCDIR)/MesoBurn.cc      \
+       $(SRCDIR)/Simple_Burn.cc   \
+       $(SRCDIR)/Steady_Burn.cc   \
+       $(SRCDIR)/Unsteady_Burn.cc
+endif

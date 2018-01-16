@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -1258,7 +1258,6 @@ void Patch::getGhostOffsets(VariableBasis basis, Ghost::GhostType gtype,
                             int numGhostCells,
                             IntVector& lowOffset, IntVector& highOffset)
 {
-  MALLOC_TRACE_TAG_SCOPE("Patch::getGhostOffsets");
   // This stuff works by assuming there are no neighbors.  If there are
   // neighbors, it can simply cut back appropriately later (no neighbor
   // essentially means no ghost cell on that side).

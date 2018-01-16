@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2017 The University of Utah
+#  Copyright (c) 1997-2018 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -33,11 +33,10 @@ SRCDIR     := CCA/Components/Parent
 COMPONENTS := CCA/Components
 
 SRCS := $(SRCDIR)/Switcher.cc \
-        $(SRCDIR)/ComponentFactory.cc
+        $(SRCDIR)/ApplicationFactory.cc
 
-# ARCHES et. al. should have been seen by CCA/Components/sub.mk
+# ARCHES et. al. should have been defined by CCA/Components/sub.mk
 PSELIBS := \
-        CCA/Components/Application         \
         CCA/Ports                          \
         Core/Containers                    \
         Core/Disclosure                    \
@@ -49,23 +48,24 @@ PSELIBS := \
         Core/Parallel                      \
         Core/ProblemSpec                   \
         Core/Util                          \
+        $(ANALYSIS_MODULES)                \
+        $(APPLICATION)                     \
         $(ARCHES)                          \
-        $(MPMARCHES)                       \
-        $(ICE)                             \
-        $(MPM)                             \
-        $(MPMICE)                          \
+        $(EXAMPLES)                        \
         $(FVM)                             \
+        $(HEAT)                            \
+        $(ICE)                             \
+        $(MODELS)                          \
+        $(MPM)                             \
+        $(MPMARCHES)                       \
         $(MPMFVM)                          \
-        $(COMPONENTS)/Application          \
-        $(COMPONENTS)/Examples             \
-        $(COMPONENTS)/PostProcessUda       \
+        $(MPMICE)                          \
+        $(PHASEFIELD)                      \
+        $(POST_PROCESS_UDA)                \
+        $(WASATCH)                         \
         $(COMPONENTS)/ProblemSpecification \
         $(COMPONENTS)/Solvers              \
-        $(COMPONENTS)/SwitchingCriteria    \
-        $(WASATCH)                         \
-        $(HEAT)                            \
-        $(PHASEFIELD)                      \
-        $(MORE_LIBS)
+        $(COMPONENTS)/SwitchingCriteria
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(BOOST_LIBRARY)
 

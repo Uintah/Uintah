@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -1348,7 +1348,7 @@ Grid::getPatchByID( int patchid, int startingLevel ) const
 //______________________________________________________________________
 //
 void
-Grid::assignBCS( const ProblemSpecP & grid_ps, LoadBalancerPort * lb )
+Grid::assignBCS( const ProblemSpecP & grid_ps, LoadBalancer * lb )
 {
   for( int l = 0; l < numLevels(); l++ )
   {

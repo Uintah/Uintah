@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -45,9 +45,9 @@
 
 namespace Uintah {
 
-  class LoadBalancerPort;
+  class UintahParallelComponent;
+  class LoadBalancer;
   class Task;
-  class ApplicationInterface;
 
 /**************************************
 
@@ -82,10 +82,15 @@ class Scheduler : public UintahParallelPort {
     Scheduler();
 
     virtual ~Scheduler();
-   
+
     // Only called by the SimulationController, and only once, and only
     // if the simulation has been "restarted".
     virtual void setGeneration( int id ) = 0;
+
+    // Methods for managing the components attached via the ports.
+    virtual void setComponents( UintahParallelComponent *comp ) = 0;
+    virtual void getComponents() = 0;
+    virtual void releaseComponents() = 0;
 
     virtual void problemSetup( const ProblemSpecP     & prob_spec
 			                       , const SimulationStateP & state
@@ -138,9 +143,7 @@ class Scheduler : public UintahParallelPort {
 
     virtual const std::set<std::string>&                        getNotCheckPointVars() const = 0;    
 
-    virtual LoadBalancerPort * getLoadBalancer() = 0;
-
-    virtual void releaseLoadBalancer() = 0;
+    virtual LoadBalancer * getLoadBalancer() = 0;
 
     virtual DataWarehouse* get_dw( int idx ) = 0;
 
@@ -196,7 +199,7 @@ class Scheduler : public UintahParallelPort {
                                            ) = 0;
 
     //! Schedule copying data to new grid after regridding
-    virtual void scheduleAndDoDataCopy( const GridP & grid, ApplicationInterface * sim ) = 0;
+    virtual void scheduleAndDoDataCopy( const GridP & grid ) = 0;
 
     virtual void clearTaskMonitoring() = 0;
     virtual void scheduleTaskMonitoring( const LevelP& level ) = 0;

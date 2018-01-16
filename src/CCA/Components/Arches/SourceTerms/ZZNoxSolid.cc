@@ -24,7 +24,6 @@ ZZNoxSolid::ZZNoxSolid( std::string src_name, ArchesLabel* field_labels,
 }
 ZZNoxSolid::~ZZNoxSolid()
 {
-  VarLabel::destroy(_src_label);
   VarLabel::destroy(NO_src_label);
   VarLabel::destroy(HCN_src_label);
   VarLabel::destroy(NH3_src_label);
@@ -72,10 +71,10 @@ ZZNoxSolid::problemSetup(const ProblemSpecP& inputdb)
   db->getWithDefault("NO_label",             NO_name,              "NO_zz");
   db->getWithDefault("HCN_label",            HCN_name,             "HCN_zz");
   db->getWithDefault("NH3_label",            NH3_name,             "NH3_zz");
-  //read devol. & oxi. rate from coal particles 
+  //read devol. & oxi. rate from coal particles
   ProblemSpecP db_source = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources");
   for ( ProblemSpecP db_src = db_source->findBlock( "src" ); db_src != nullptr; db_src = db_src->findNextBlock("src" ) ){
-    std::string model_type; 
+    std::string model_type;
     db_src->getAttribute("type",model_type);
     if (model_type == "coal_gas_devol"){
       db_src->getAttribute("label",devol_name);
@@ -103,22 +102,22 @@ ZZNoxSolid::problemSetup(const ProblemSpecP& inputdb)
   helper.add_lookup_species( m_temperature_name);
   helper.add_lookup_species( m_density_name);
   helper.add_lookup_species( m_mix_mol_weight_name );
-  //read DQMOM Information 
+  //read DQMOM Information
   m_rcmass_root         = ParticleTools::parse_for_role_to_label(db, "raw_coal");                   //raw coal
   m_rho_coal_root       = ParticleTools::parse_for_role_to_label(db, "density");                    //coal particle density
   m_coal_temperature_root       = ParticleTools::parse_for_role_to_label(db, "temperature");        //coal particle temperature
   m_num_env             = ParticleTools::get_num_env(db, ParticleTools::DQMOM);                     //qn number
   for ( int i = 0; i < m_num_env; i++ ){                                                            //scaling constant of raw coal
-    double scaling_const = ParticleTools::getScalingConstant( db, m_rcmass_root, i ); 
-    m_rc_scaling_const.push_back(scaling_const); 
+    double scaling_const = ParticleTools::getScalingConstant( db, m_rcmass_root, i );
+    m_rc_scaling_const.push_back(scaling_const);
   }
   for ( int i = 0; i < m_num_env; i++ ){                                                            //scaling constant of weight
-    double scaling_const = ParticleTools::getScalingConstant( db, "weight", i ); 
-    m_weight_scaling_const.push_back(scaling_const); 
+    double scaling_const = ParticleTools::getScalingConstant( db, "weight", i );
+    m_weight_scaling_const.push_back(scaling_const);
   }
   for ( int i = 0; i < m_num_env; i++ ){                                                            //scaling constant of weight
-    double scaling_const = ParticleTools::getInletParticleSize( db, i ); 
-    m_particle_size.push_back(scaling_const); 
+    double scaling_const = ParticleTools::getInletParticleSize( db, i );
+    m_particle_size.push_back(scaling_const);
   }
 }
 //---------------------------------------------------------------------------
@@ -152,20 +151,20 @@ ZZNoxSolid::sched_computeSource( const LevelP& level, SchedulerP& sched, int tim
     tsk->modifies(NH3_src_label);
   }
 
-  for ( int i = 0; i < m_num_env; i++){ 
+  for ( int i = 0; i < m_num_env; i++){
     // weighted scaled variable = original variable/variable_scaling_constant * weight/weight_scaling_constant
     std::string rcmass_name;
     std::string rho_coalqn_name;
     std::string coal_temperatureqn_name;
     const std::string rcmassqn_name = ParticleTools::append_qn_env( m_rcmass_root, i );             //weighted scaled rcmass
-    tsk->requires( which_dw, VarLabel::find(rcmassqn_name), Ghost::None, 0 );       
-    rcmass_name = ParticleTools::append_env( m_rcmass_root, i );                                    //unweighted unscaled rcmass, original value of rcmass of per particle 
-    tsk->requires( which_dw, VarLabel::find(rcmass_name), Ghost::None, 0 ); 
+    tsk->requires( which_dw, VarLabel::find(rcmassqn_name), Ghost::None, 0 );
+    rcmass_name = ParticleTools::append_env( m_rcmass_root, i );                                    //unweighted unscaled rcmass, original value of rcmass of per particle
+    tsk->requires( which_dw, VarLabel::find(rcmass_name), Ghost::None, 0 );
     rho_coalqn_name = ParticleTools::append_env( m_rho_coal_root, i );                              //unweighted unscaled density of coal particle, original value of coal particle density
-    tsk->requires( which_dw, VarLabel::find(rho_coalqn_name), Ghost::None, 0 ); 
+    tsk->requires( which_dw, VarLabel::find(rho_coalqn_name), Ghost::None, 0 );
     coal_temperatureqn_name = ParticleTools::append_env( m_coal_temperature_root, i );              //unweighted unscaled coal temperature
-    tsk->requires( which_dw, VarLabel::find(coal_temperatureqn_name), Ghost::None, 0 ); 
-  }  
+    tsk->requires( which_dw, VarLabel::find(coal_temperatureqn_name), Ghost::None, 0 );
+  }
   // resolve some labels:
   oxi_label              = VarLabel::find( oxi_name);
   devol_label            = VarLabel::find( devol_name);
@@ -213,7 +212,7 @@ ZZNoxSolid::computeSource( const ProcessorGroup* pc,
     const Patch* patch = patches->get(p);
     int archIndex = 0;
     int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex();
-    //get information from table 
+    //get information from table
     CCVariable<double> NO_src;
     CCVariable<double> HCN_src;
     CCVariable<double> NH3_src;
@@ -249,11 +248,11 @@ ZZNoxSolid::computeSource( const ProcessorGroup* pc,
     which_dw->get( devol,          devol_label,            matlIndex, patch, gn, 0 );
     which_dw->get( oxi,            oxi_label,              matlIndex, patch, gn, 0 );
     which_dw->get( O2,             m_o2_label,             matlIndex, patch, gn, 0 ); //mass percentage (kg/kg)
-    which_dw->get( N2,             m_n2_label,             matlIndex, patch, gn, 0 ); 
+    which_dw->get( N2,             m_n2_label,             matlIndex, patch, gn, 0 );
     which_dw->get( CO,             m_co_label,             matlIndex, patch, gn, 0 );
     which_dw->get( H2O,            m_h2o_label,            matlIndex, patch, gn, 0 );
     which_dw->get( H2,             m_h2_label,             matlIndex, patch, gn, 0 );
-    which_dw->get( temperature,    m_temperature_label,    matlIndex, patch, gn, 0 ); 
+    which_dw->get( temperature,    m_temperature_label,    matlIndex, patch, gn, 0 );
     which_dw->get( density,        m_density_label,        matlIndex, patch, gn, 0 ); // (kg/m3)
     which_dw->get( mix_mol_weight, m_mix_mol_weight_label, matlIndex, patch, gn, 0 ); // (mol/g)
     which_dw->get( tran_NO,        m_NO_label,             matlIndex, patch, gn, 0 );
@@ -306,13 +305,13 @@ ZZNoxSolid::computeSource( const ProcessorGroup* pc,
     double rate_1,rate_2,rate_3,rate_4,rate_gr;
     //read DQMOM information
     //store sum of coal mass concentration
-    CCVariable<double> temp_coal_mass_concentration; 
+    CCVariable<double> temp_coal_mass_concentration;
     new_dw->allocateTemporary( temp_coal_mass_concentration, patch );
-    temp_coal_mass_concentration.initialize(0.0); 
+    temp_coal_mass_concentration.initialize(0.0);
     //store sum of coal mass concentration* coal temperature
-    CCVariable<double> temp_coal_mass_temperature; 
+    CCVariable<double> temp_coal_mass_temperature;
     new_dw->allocateTemporary( temp_coal_mass_temperature, patch );
-    temp_coal_mass_temperature.initialize(0.0); 
+    temp_coal_mass_temperature.initialize(0.0);
     for ( int i_env = 0; i_env < m_num_env; i_env++){
       std::string rcmass_name;
       std::string rho_coalqn_name;
@@ -322,37 +321,37 @@ ZZNoxSolid::computeSource( const ProcessorGroup* pc,
       constCCVariable<double> rho_coal;
       constCCVariable<double> coal_temperature;
       const std::string rcmassqn_name = ParticleTools::append_qn_env( m_rcmass_root, i_env );
-      which_dw->get( rcmass_weighted_scaled, VarLabel::find(rcmassqn_name), matlIndex, patch, gn, 0 );  
+      which_dw->get( rcmass_weighted_scaled, VarLabel::find(rcmassqn_name), matlIndex, patch, gn, 0 );
       rcmass_name = ParticleTools::append_env( m_rcmass_root, i_env );
-      which_dw->get( rcmass_unweighted_unscaled, VarLabel::find(rcmass_name), matlIndex, patch, gn, 0 );  
+      which_dw->get( rcmass_unweighted_unscaled, VarLabel::find(rcmass_name), matlIndex, patch, gn, 0 );
       rho_coalqn_name = ParticleTools::append_env( m_rho_coal_root, i_env );
-      which_dw->get( rho_coal, VarLabel::find(rho_coalqn_name), matlIndex, patch, gn, 0 );  
+      which_dw->get( rho_coal, VarLabel::find(rho_coalqn_name), matlIndex, patch, gn, 0 );
       coal_temperatureqn_name = ParticleTools::append_env( m_coal_temperature_root, i_env );
-      which_dw->get( coal_temperature, VarLabel::find(coal_temperatureqn_name), matlIndex, patch, gn, 0 );  
+      which_dw->get( coal_temperature, VarLabel::find(coal_temperatureqn_name), matlIndex, patch, gn, 0 );
       Uintah::parallel_for(range, [&](int i, int j, int k){
           double weight   =  0.0;
           double p_volume =  0.0;
-          weight   = rcmass_weighted_scaled(i,j,k)/rcmass_unweighted_unscaled(i,j,k)*m_rc_scaling_const[i_env]*m_weight_scaling_const[i_env]; 
+          weight   = rcmass_weighted_scaled(i,j,k)/rcmass_unweighted_unscaled(i,j,k)*m_rc_scaling_const[i_env]*m_weight_scaling_const[i_env];
           p_volume = 1.0/6.0*3.1415926*m_particle_size[i_env]*m_particle_size[i_env]*m_particle_size[i_env];
           temp_coal_mass_concentration(i,j,k) +=weight * p_volume * rho_coal(i,j,k);
           temp_coal_mass_temperature(i,j,k) +=weight * p_volume * rho_coal(i,j,k) * coal_temperature(i,j,k);
-          }); 
+          });
     }
-    //start calculation  
+    //start calculation
     //NO,HCN,NH3 source terms from solid phase
     auto ComputNOSource=[&](int i,int j,int k){
-      return  _Nit*(devol(i,j,k)*_beta1+oxi(i,j,k)*_gamma1)*_MW_NO /_MW_N;     
+      return  _Nit*(devol(i,j,k)*_beta1+oxi(i,j,k)*_gamma1)*_MW_NO /_MW_N;
     };
     auto ComputHCNSource=[&](int i,int j,int k){
-      return  _Nit*(devol(i,j,k)*_beta2+oxi(i,j,k)*_gamma2)*_MW_HCN/_MW_N;     
+      return  _Nit*(devol(i,j,k)*_beta2+oxi(i,j,k)*_gamma2)*_MW_HCN/_MW_N;
     };
     auto ComputNH3Source=[&](int i,int j,int k){
-      return  _Nit*(devol(i,j,k)*_beta3+oxi(i,j,k)*_gamma3)*_MW_NH3/_MW_N;     
+      return  _Nit*(devol(i,j,k)*_beta3+oxi(i,j,k)*_gamma3)*_MW_NH3/_MW_N;
     };
     //NO,HCN,NH3 source terms in continuum phase
     Uintah::parallel_for(range, [&](int i, int j, int k){
         if (vol_fraction(i,j,k) > 0.5) {
-        //convert mixture molecular weight     
+        //convert mixture molecular weight
         double mix_mol_weight_r = 1.0/mix_mol_weight(i,j,k)/1000.0;   //(kg/mol)
         //convert unit:  (mol concentration: mol/m3)
         double O2_m  = O2(i,j,k)       * density(i,j,k)/_MW_O2;   //(mol/m3)
@@ -382,8 +381,8 @@ ZZNoxSolid::computeSource( const ProcessorGroup* pc,
         //reaction rates from r1~r3:
         rate_f1 = Af1 * std::exp(-Ef1/temperature(i,j,k));
         rate_r1 = Ar1 * std::exp(-Er1/temperature(i,j,k));
-        rate_f2 = Af2 * std::exp(-Ef2/temperature(i,j,k))*temperature(i,j,k); 
-        rate_r2 = Ar2 * std::exp(-Er2/temperature(i,j,k))*temperature(i,j,k); 
+        rate_f2 = Af2 * std::exp(-Ef2/temperature(i,j,k))*temperature(i,j,k);
+        rate_r2 = Ar2 * std::exp(-Er2/temperature(i,j,k))*temperature(i,j,k);
         rate_f3 = Af3 * std::exp(-Ef3/temperature(i,j,k));
         rate_r3 = Ar3 * std::exp(-Er3/temperature(i,j,k));
         //calculate [O] & [OH]
@@ -396,7 +395,7 @@ ZZNoxSolid::computeSource( const ProcessorGroup* pc,
         //fuel-nox,S2
         //reaction rates from r1~r4:
         rate_1 = A1 * std::exp(-E1/_R/temperature(i,j,k)) * HCN_mp * std::pow(O2_mp,n_O2);        //(mol/mol*s-1)
-        rate_2 = A2 * std::exp(-E2/_R/temperature(i,j,k)) * HCN_mp * NO_mp;                       //(mol/mol*s-1)  
+        rate_2 = A2 * std::exp(-E2/_R/temperature(i,j,k)) * HCN_mp * NO_mp;                       //(mol/mol*s-1)
         rate_3 = A3 * std::exp(-E3/_R/temperature(i,j,k)) * NH3_mp * std::pow(O2_mp,n_O2);        //(mol/mol*s-1)
         rate_4 = A4 * std::exp(-E4/_R/temperature(i,j,k)) * NH3_mp * NO_mp;                       //(mol/mol*s-1)
         //limit the reaction rates
@@ -411,7 +410,7 @@ ZZNoxSolid::computeSource( const ProcessorGroup* pc,
           if (rate_4>0){
             rate_2=(limit_NO+rate_1+rate_3)*rate_2/(rate_2+rate_4);
             rate_4=(limit_NO+rate_1+rate_3)*rate_4/(rate_2+rate_4);
-          } 
+          }
         }
         if (rate_1+rate_2>limit_HCN){
           if (rate_2==0){
@@ -420,7 +419,7 @@ ZZNoxSolid::computeSource( const ProcessorGroup* pc,
           if (rate_2>0){
             rate_1=limit_HCN*rate_1/(rate_1+rate_2);
             rate_2=limit_HCN*rate_2/(rate_1+rate_2);
-          } 
+          }
         }
         if (rate_3+rate_4>limit_NH3){
           if (rate_4==0){
@@ -429,22 +428,22 @@ ZZNoxSolid::computeSource( const ProcessorGroup* pc,
           if (rate_4>0){
             rate_3=limit_NH3*rate_3/(rate_3+rate_4);
             rate_4=limit_NH3*rate_4/(rate_3+rate_4);
-          } 
+          }
         }
         //calculate de Soete NOx source
-        double NO_S2  = (rate_1+rate_3-rate_2-rate_4) *_MW_NO / mix_mol_weight_r*density(i,j,k);              //(kg/sm3)                          
+        double NO_S2  = (rate_1+rate_3-rate_2-rate_4) *_MW_NO / mix_mol_weight_r*density(i,j,k);              //(kg/sm3)
         double HCN_S2 = (-rate_1-rate_2)              *_MW_HCN/ mix_mol_weight_r*density(i,j,k);              //(kg/sm3)
-        double NH3_S2 = (-rate_3-rate_4)              *_MW_NH3/ mix_mol_weight_r*density(i,j,k);              //(kg/sm3)    
+        double NH3_S2 = (-rate_3-rate_4)              *_MW_NH3/ mix_mol_weight_r*density(i,j,k);              //(kg/sm3)
         //nox reduction in gas phase,S3
         rate_gr = Agr * std::exp(-Egr/_R/temperature(i,j,k)) * std::pow(NO_m,2.25) * (CO_m+H2_m);             //(mol/sm3)
         //limit the reaction rate
         limit_NO  = NO_m/delta_t  + (ComputNOSource(i,j,k)  + NO_S1 + NO_S2)/_MW_NO;
         if (rate_gr>limit_NO){
           rate_gr=limit_NO;
-        }  
-        double NO_S3     =(0-rate_gr) * _MW_NO;                                                               //(kg/sm3)                          
-        double HCN_S3    = rate_gr * _MW_HCN*0.5;                                                             //(kg/sm3)                          
-        double NH3_S3    = rate_gr * _MW_NH3*0.5;                                                             //(kg/sm3)                          
+        }
+        double NO_S3     =(0-rate_gr) * _MW_NO;                                                               //(kg/sm3)
+        double HCN_S3    = rate_gr * _MW_HCN*0.5;                                                             //(kg/sm3)
+        double NH3_S3    = rate_gr * _MW_NH3*0.5;                                                             //(kg/sm3)
         //nox reduction by particle surface,S4
         double pNO   = NO_mp*_gasPressure/101325;                                                             //(atm);
         double Tav   = (temperature(i,j,k)+temp_coal_mass_temperature(i,j,k)/temp_coal_mass_concentration(i,j,k))/2.0;
@@ -454,19 +453,19 @@ ZZNoxSolid::computeSource( const ProcessorGroup* pc,
         limit_NO  = NO_m*_MW_NO/delta_t  + (ComputNOSource(i,j,k)  + NO_S1 + NO_S2 + NO_S3);
         if (NO_red_solid>limit_NO){
           NO_red_solid=limit_NO;
-        }  
+        }
         double NO_S4 = -NO_red_solid;
         double HCN_S4=0.0;
         double NH3_S4=0.0;
         //calculate source terms in total
-        NO_src(i,j,k)  = (NO_S1+NO_S2+NO_S3+NO_S4+ComputNOSource(i,j,k))*vol_fraction(i,j,k);                 //(kg/sm3)                          
+        NO_src(i,j,k)  = (NO_S1+NO_S2+NO_S3+NO_S4+ComputNOSource(i,j,k))*vol_fraction(i,j,k);                 //(kg/sm3)
         HCN_src(i,j,k) = (HCN_S1+HCN_S2+HCN_S3+HCN_S4+ComputHCNSource(i,j,k))*vol_fraction(i,j,k);            //(kg/sm3)
         NH3_src(i,j,k) = (NH3_S1+NH3_S2+NH3_S3+NH3_S4+ComputNH3Source(i,j,k))*vol_fraction(i,j,k);            //(kg/sm3)
         } else {
-          NO_src(i,j,k)  = 0.0; //(kg/sm3)                          
+          NO_src(i,j,k)  = 0.0; //(kg/sm3)
           HCN_src(i,j,k) = 0.0; //(kg/sm3)
           NH3_src(i,j,k) = 0.0; //(kg/sm3)
-        } 
+        }
     });
   } // end for patch loop
 }

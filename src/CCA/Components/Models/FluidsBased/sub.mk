@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2017 The University of Utah
+#  Copyright (c) 1997-2018 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -37,15 +37,13 @@ ifneq ($(CANTERA_DIR),)
 endif
 
 SRCS += \
+       $(SRCDIR)/FluidsBasedModel.cc \
        $(SRCDIR)/ArchesTable.cc    \
        $(SRCDIR)/TableInterface.cc \
        $(SRCDIR)/TableFactory.cc 
 
-#       $(SRCDIR)/Mixing2.cc
-#       $(SRCDIR)/Mixing2.cc \
-#       $(SRCDIR)/Mixing3.cc
-
-ifneq ($(BUILD_ICE),no) 
+# ICE Models
+ifeq ($(BUILD_ICE),yes)
   SRCS += \
        $(SRCDIR)/AdiabaticTable.cc     \
        $(SRCDIR)/flameSheet_rxn.cc     \
@@ -54,7 +52,15 @@ ifneq ($(BUILD_ICE),no)
        $(SRCDIR)/NonAdiabaticTable.cc  \
        $(SRCDIR)/PassiveScalar.cc      \
        $(SRCDIR)/SimpleRxn.cc          \
-       $(SRCDIR)/TestModel.cc          \
        $(SRCDIR)/MassMomEng_src.cc
+
+#       $(SRCDIR)/Mixing2.cc
+#       $(SRCDIR)/Mixing3.cc
+
 endif
 
+# MPM - ICE Models
+ifeq ($(BUILD_MPM)$(BUILD_ICE),yesyes)
+  SRCS += \
+        $(SRCDIR)/TestModel.cc
+endif

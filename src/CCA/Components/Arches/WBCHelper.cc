@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2013-2017 The University of Utah
+ * Copyright (c) 2013-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -323,8 +323,11 @@ WBCHelper::WBCHelper( const Uintah::LevelP& level,
                       ProblemSpecP arches_spec )
 : materials_   (materials   ), m_arches_spec(arches_spec)
 {
-  const Uintah::PatchSet* const allPatches = sched->getLoadBalancer()->getPerProcessorPatchSet(level);
-  const Uintah::PatchSubset* const localPatches = allPatches->getSubset( Uintah::Parallel::getMPIRank() );
+  const Uintah::PatchSet* const allPatches =
+    sched->getLoadBalancer()->getPerProcessorPatchSet(level);
+  const Uintah::PatchSubset* const localPatches =
+    allPatches->getSubset( Uintah::Parallel::getMPIRank() );
+
   localPatches_ = new Uintah::PatchSet;
   localPatches_->addEach( localPatches->getVector() );
   const int ilvl = level->getID();

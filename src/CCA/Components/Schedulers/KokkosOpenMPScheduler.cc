@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -74,12 +74,10 @@ DetailedTask* g_HypreTask;
 //______________________________________________________________________
 //
 KokkosOpenMPScheduler::KokkosOpenMPScheduler( const ProcessorGroup   * myworld
-                                            , const Output           * oport
                                             ,       KokkosOpenMPScheduler * parentScheduler
                                             )
-  : MPIScheduler(myworld, oport, parentScheduler)
+  : MPIScheduler(myworld, parentScheduler)
 {
-
 }
 
 
@@ -198,7 +196,7 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
   g_num_tasks_done = 0;
 
   if( m_reloc_new_pos_label && m_dws[m_dwmap[Task::OldDW]] != nullptr ) {
-    m_dws[m_dwmap[Task::OldDW]]->exchangeParticleQuantities(m_detailed_tasks, getLoadBalancer(), m_reloc_new_pos_label, iteration);
+    m_dws[m_dwmap[Task::OldDW]]->exchangeParticleQuantities(m_detailed_tasks, m_loadBalancer, m_reloc_new_pos_label, iteration);
   }
 
   m_curr_iteration.store(iteration, std::memory_order_relaxed);

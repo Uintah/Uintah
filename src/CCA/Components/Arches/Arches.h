@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -107,16 +107,13 @@ public:
   virtual void scheduleAnalysis( const LevelP& level,
 				 SchedulerP&);
 
-  virtual bool needRecompile(double time, double dt,
-                             const GridP& grid);
-
-  virtual int computeTaskGraphIndex();
+  virtual int computeTaskGraphIndex( const int timeStep );
 
   void setMPMArchesLabel(const MPMArchesLabel* MAlb){
     m_MAlab = MAlb;
   }
 
-  virtual double recomputeTimeStep(double current_dt);
+  virtual double recomputeDelT(const double delT);
 
   virtual bool restartableTimeSteps();
 
@@ -174,7 +171,6 @@ private:
   bool m_with_mpmarches;
 
   bool m_do_lagrangian_particles;
-  bool m_recompile_taskgraph;
 
   int m_arches_level_index;
 

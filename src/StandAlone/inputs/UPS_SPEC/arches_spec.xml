@@ -6,9 +6,9 @@
     <ARCHES                             spec="OPTIONAL NO_DATA" >
 
       <!-- Arches Task Interface Task Controller Section -->
-      <TaskController                   spec="OPTIONAL NO_DATA"> 
+      <TaskController                   spec="OPTIONAL NO_DATA">
         <TaskPacking                    spec="OPTIONAL NO_DATA">
-          <!-- When any of the flags are present, the task interface tries to 
+          <!-- When any of the flags are present, the task interface tries to
                combine work into a single task. Default if no-packing.  -->
           <global                       spec="OPTIONAL NO_DATA"/>
           <turbulence                   spec="OPTIONAL NO_DATA"/>
@@ -77,11 +77,11 @@
       <TurbulenceModels                 spec="OPTIONAL NO_DATA">
          <model                         spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        attribute2="type REQUIRED STRING 'sigma, wale, constant_smagorinsky, 
+                                        attribute2="type REQUIRED STRING 'sigma, wale, constant_smagorinsky,
                                                                           dynamic_smagorinsky'">
 
            <Cs                          spec="OPTIONAL DOUBLE"
-                                        need_applies_to="type sigma, wale, constant_smagorinsky"/> <!-- default for sigma is 1.35 
+                                        need_applies_to="type sigma, wale, constant_smagorinsky"/> <!-- default for sigma is 1.35
                                                                                                         default for wale is 0.5 -->
          <filter                        spec="OPTIONAL NO_DATA"
                                         attribute1="type REQUIRED STRING 'three_points, simpson, box'"
@@ -110,8 +110,7 @@
                                                                           wall_thermal_resistance'">
 
               <absorption_modifier        spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type partRadProperties gasRadProperties spectralProperties"/> <!-- multiplicative modifier on gas or particle absorption coefficients, does not affect scattering coefficients -->
-              <subModel                   spec="REQUIRED STRING  'constantCIF, basic, Coal'"   need_applies_to="type partRadProperties" />
-
+              <subModel                   spec="REQUIRED STRING  'constantCIF, basic, Coal,tabulated'"   need_applies_to="type partRadProperties" />
 
               <density_label              spec="REQUIRED STRING"  need_applies_to="type sootVolumeFrac" />    <!--density of the gas soot mixture-->
               <Ysoot_label                spec="REQUIRED STRING"  need_applies_to="type sootVolumeFrac" />    <!--mass fraction of soot-->
@@ -120,6 +119,7 @@
               <Temperature_ref            spec="OPTIONAL DOUBLE"  need_applies_to="type spectralProperties" /> <!--Reference temperature for walls and other grey object in system (use mean temp of system)-->
               <CO2_H2OMolarRatio_ref      spec="OPTIONAL DOUBLE"  need_applies_to="type spectralProperties" /> <!--Reference CO2/H2O ratio for walls and other grey object in system (use mean ratio of system)-->
 
+              <TablePath                  spec="OPTIONAL STRING"  need_applies_to="type partRadProperties" />    <!--location of table for look-up-->
               <part_temp_label            spec="REQUIRED STRING"  need_applies_to="type partRadProperties" />    <!--base label used for particle temp in DQMOM-->
               <part_size_label            spec="REQUIRED STRING"  need_applies_to="type partRadProperties" />    <!--base label used for particle size in DQMOM-->
               <model_type                 spec="OPTIONAL STRING 'planck, rossland'" need_applies_to="type partRadProperties"/> <!-- Type of absorption coefficient model-->
@@ -127,7 +127,7 @@
               <complex_ir_imag            spec="OPTIONAL DOUBLE 'negative'" need_applies_to="type partRadProperties"/> <!-- Imaginary part of the complex index of refraction -->
               <const_asymmFact            spec="OPTIONAL DOUBLE " need_applies_to="type partRadProperties"/> <!-- assymetry parameter used  for scattering -->
               <Qabs                       spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type  partRadProperties"/> <!-- fudge parameter for partcle absorption coefficient model "basic" default is 0.8 tested for SUFCO coal -->
-              <radiateAtGasTemp           spec="OPTIONAL BOOLEAN" need_applies_to="type  partRadProperties"/> <!-- forces particles and gas temperatures to be the same, in terms of radiation -->
+              <radiateAtGasTemp           spec="OPTIONAL BOOLEAN" need_applies_to="type partRadProperties"/> <!-- forces particles and gas temperatures to be the same, in terms of radiation -->
 
 
 
@@ -573,7 +573,6 @@
           <FOWYDevol                        spec="OPTIONAL NO_DATA"
                                             need_applies_to="type coal">
             <v_hiT                        spec="REQUIRED DOUBLE" />
-            <Tig                          spec="REQUIRED DOUBLE" />
             <A                            spec="REQUIRED DOUBLE" />
             <Ta                           spec="REQUIRED DOUBLE" />
             <Tbp_graphite                 spec="REQUIRED DOUBLE" />
@@ -849,7 +848,7 @@
           -->
           <property                    spec="MULTIPLE NO_DATA"
                                        attribute1="label REQUIRED STRING"
-                                       attribute2="stream_0 REQUIRED DOUBLE" 
+                                       attribute2="stream_0 REQUIRED DOUBLE"
                                        attribute3="stream_1 REQUIRED DOUBLE"
                                        need_applies_to="type coldflow">
             <volumetric                spec="OPTIONAL NO_DATA"/> <!-- Add this if the property is kg/vol (e.g. density) -->
@@ -902,25 +901,26 @@
          <!-- NOTES: -->
          <!-- velocity components are specified using simple [u,v,w] labels and NOT uVelocitySPBC, etc... -->
          <!-- variable = mass_flow_rate is a specific variable that sets the velocity components based
-         on a specified mass flow rate. -->
+                         on a specified mass flow rate. -->
          <!-- If multiple directions are entered, then the mass flow rate is divided across
          all valid face directions with non-zero velocity normal to that face. -->
          <!-- Enthalpy is computed based on independ. table variables, including heat loss -->
+         <!-- Zero values of velocity are ignored. -->
          <intrusion                     spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING">       <!-- type = how bc is applied,
                                                                                        label= unique name for this intrusion boundary -->
            <geom_object/>                                                         <!-- geometry object associated with this intrusion -->
 
            <thin_wall                   spec="OPTIONAL NO_DATA"
-                                        attribute1="delta REQUIRED DOUBLE"/>      <!-- [false] Look for thin walls between cells. If the 
+                                        attribute1="delta REQUIRED DOUBLE"/>      <!-- [false] Look for thin walls between cells. If the
                                                                                        thin geometry cuts between, then make the cell a wall cell.
-                                                                                       This feature has a one-time startup cost that is proportional 
-                                                                                       to the numbers of grid cells/patch and the size of the triangulated 
-                                                                                       surface. 
-                                                                                       The delta attribute represents the max fraction of the distance 
-                                                                                       between the cell center and the intersecting geometry that is used 
+                                                                                       This feature has a one-time startup cost that is proportional
+                                                                                       to the numbers of grid cells/patch and the size of the triangulated
+                                                                                       surface.
+                                                                                       The delta attribute represents the max fraction of the distance
+                                                                                       between the cell center and the intersecting geometry that is used
                                                                                        to determine if the cell is a wall or not. For example, if there is a thin
-                                                                                       geometry between cell i and cell i+1 which intersects at i+2/3. If, for cell i, 
+                                                                                       geometry between cell i and cell i+1 which intersects at i+2/3. If, for cell i,
                                                                                        the delta is 0.5 (which means 0.5*dx) then the intersecting geometry is NOT picked up
                                                                                        by cell i but is picked up by cell i+1 because 0.5*dx < 2/3*dx -->
 
@@ -930,26 +930,25 @@
            <flux_dir                    spec="MULTIPLE STRING 'x-,X-,x+,X+,
                                                                y-,Y-,y+,Y+,
                                                                z-,Z-,z+,Z+"/>     <!-- direction to apply type of BC, otherwise treated as wall -->
-           <!--variable                    spec="MULTIPLE NO_DATA"
-                                        attribute1="label REQUIRED STRING"
-                                        attribute2="value REQUIRED DOUBLE"/-->      <!-- label= variable name,
-                                                                                       value= variable boundary value -->
 
            <velocity                    spec="OPTIONAL NO_DATA"
                                         attribute1="type REQUIRED STRING 'flat, from_file, massflow'">
 
-            <!-- flat velocity profile [m/s] -->
-            <u                          spec="OPTIONAL DOUBLE"
+            <!-- flat velocity profile [m/s], The code defaults to ignoring velocity components with zero value. -->
+            <flat_velocity              spec="REQUIRED VECTOR"
                                         need_applies_to="type flat"/>
-            <v                          spec="OPTIONAL DOUBLE"
-                                        need_applies_to="type flat"/>
-            <w                          spec="OPTIONAL DOUBLE"
-                                        need_applies_to="type flat"/>
-            <!-- from input file -->
+
+            <!-- Input file spec (handoff) -->
+            <!-- NOTE: default values are not supported for intrusions. -->
+            <!-- NOTE: Zero values of velocity in the input file are ignored -->
             <input_file                 spec="REQUIRED STRING"
-                                        need_applies_to="type from_file"/>
+                                        need_applies_to="type from_file"/> <!-- name (and path if appropriate) of the handoff file -->
+            <relative_xyz               spec="REQUIRED VECTOR"
+                                        need_applies_to="type from_file"/> <!-- relative position of the 0,0,0 value of the handoff plane -->
 
             <!-- mass flow [kg/sec]-->
+            <!-- NOTE: With mass flow, you must specify flat values of scalars which
+                       determine the density value. -->
             <flow_rate                  spec="REQUIRED DOUBLE"
                                         need_applies_to="type massflow"/>
 
@@ -960,12 +959,21 @@
             <scalar                     spec="MULTIPLE NO_DATA"
                                         attribute1="label OPTIONAL STRING"
                                         attribute2="type REQUIRED STRING 'flat, from_file, tabulated'">
-              <input_file               spec="OPTIONAL STRING"
-                                        need_applies_to="type from_file"/>
+              <!-- Input file spec (handoff) -->
+              <!-- NOTE: default values are not supported for intrusions. -->
+              <input_file               spec="REQUIRED STRING"
+                                        need_applies_to="type from_file"/> <!-- name (and path if appropriate) of the handoff file -->
+              <relative_xyz             spec="REQUIRED VECTOR"
+                                        need_applies_to="type from_file"/> <!-- relative position of the 0,0,0 value of the handoff plane -->
+
+              <!-- Constant Values -->
               <constant                 spec="OPTIONAL DOUBLE"
-                                        need_applies_to="type flat"/>
+                                        need_applies_to="type flat"/> <!-- Constant value of the scalar -->
+
+              <!-- Tabulated Values -->
               <depend_varname           spec="REQUIRED STRING"
-                                        need_applies_to="type tabulated"/>
+                                        need_applies_to="type tabulated"/> <!-- Name of the scalar for table lookup  (e.g., "O2") -->
+
             </scalar>
 
            </scalars>
@@ -1006,7 +1014,7 @@
           <tube_side_T                  spec="REQUIRED DOUBLE 'positive'" need_applies_to="type simple_ht"/> <!-- temperature of the fluid on the tube side (constant), [K] -->
           <T_wall_min                   spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type simple_ht"/> <!-- minimum allowed wall temperature [K]. Default = 373 -->
           <T_wall_max                   spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type simple_ht"/> <!-- maximum allowed wall temperature [K]. Default = 373 -->
-          
+
           <!-- region ht
                 Like simple_ht model but only applies the model in the geometry region as specified by the geom_object.
                 May specify several different regions, each with a unique set of properties.
@@ -1023,6 +1031,7 @@
             <geom_object/>
           </region>
           <deposit_velocity_name           spec="REQUIRED STRING" need_applies_to="type coal_region_ht"/>
+          <extra_src                       spec="MULTIPLE STRING" need_applies_to="type coal_region_ht"/> <!-- extra_src labels this will be added when computing the net heat flux. -->
           <coal_name                       spec="OPTIONAL STRING" need_applies_to="type coal_region_ht"/> <!-- this is the name corresponding to a given ash composition. -->
           <coordination_number             spec="OPTIONAL INTEGER" need_applies_to="type coal_region_ht"/> <!-- this is the coordination number for the pokluda sintering model, default is 2, int must be >=2. -->
           <emissivity_model_type           spec="OPTIONAL STRING" need_applies_to="type coal_region_ht"/> <!-- default is "constant" this uses wall_emissivity. "dynamic" will estimate the emissivity from a mie-theory based model. -->
@@ -1057,7 +1066,7 @@
 
         <integrator                     spec="OPTIONAL STRING 'ssprk, sandbox'"/> <!-- solution scheme during timestepping. Default = ssprk -->
 
-        <global_pack_tasks              spec="OPTIONAL NO_DATA"/> <!-- An experimental flag. Will pack together "certain" tasks to maximize work on a 
+        <global_pack_tasks              spec="OPTIONAL NO_DATA"/> <!-- An experimental flag. Will pack together "certain" tasks to maximize work on a
                                                                        patch for a Uintah tasks and minimize communication -->
 
       </KokkosSolver>
@@ -1087,18 +1096,18 @@
           <!-- hybrid = upwind when Re limit is met. ALWAYS upwinding tangential velocities on walls -->
           <!-- wall_upwind = upwinding tangential velocities on walls, central in all interior cells -->
           <!-- old_* = original schemes from CSAFE Arches -->
-          <!-- A word on Re_limit: The Re number is defined as Conv/Diff. When the local cell Re exceeds the limit, an upwind differencing 
+          <!-- A word on Re_limit: The Re number is defined as Conv/Diff. When the local cell Re exceeds the limit, an upwind differencing
                                    is used instead of the central scheme. If your case is experiencing high convective forces
-                                   that are not being dissipated quickly enough, you may watch your solution go unstable due to 
-                                   growing KE in your domain. The Re_limit offers a way to introduce an additional (numerical) 
-                                   diffusive term into the momentum transport, which may keep the KE bounded. This non-physical 
-                                   term can be quite effective, but sacrifices some physical accuracy. For wall_upwind, we recommend 
-                                   starting with 2 (default). For the hybrid scheme, we recommend optimizing to find a value as high 
-                                   as possible so as not to dampen KE too much. A general rule of thumb would be to start with the 
-                                   most accurate scheme: central. If that gives you trouble and you have walls in your domain, switch to 
-                                   wall_upwind, which acts as a "wall model", providing additional damping (as turbulence would) at the 
-                                   wall. If the doesn't work, switch to hybrid and try to pick an Re limit as high as possible as to 
-                                   not damped your solution artifically. Of course, this procedure might just be covering up a larger 
+                                   that are not being dissipated quickly enough, you may watch your solution go unstable due to
+                                   growing KE in your domain. The Re_limit offers a way to introduce an additional (numerical)
+                                   diffusive term into the momentum transport, which may keep the KE bounded. This non-physical
+                                   term can be quite effective, but sacrifices some physical accuracy. For wall_upwind, we recommend
+                                   starting with 2 (default). For the hybrid scheme, we recommend optimizing to find a value as high
+                                   as possible so as not to dampen KE too much. A general rule of thumb would be to start with the
+                                   most accurate scheme: central. If that gives you trouble and you have walls in your domain, switch to
+                                   wall_upwind, which acts as a "wall model", providing additional damping (as turbulence would) at the
+                                   wall. If the doesn't work, switch to hybrid and try to pick an Re limit as high as possible as to
+                                   not damped your solution artifically. Of course, this procedure might just be covering up a larger
                                    problem with your case. Use at your own risk. -->
           <convection_scheme            spec="REQUIRED STRING 'central, upwind, wall_upwind, hybrid, old_central, old_upwind'"/>
           <Re_limit                     spec="OPTIONAL DOUBLE 'positive'"/> <!-- for HYBRID and WALL_UPWIND: Upwind if Re > value, else central. Default is 2. -->
@@ -1144,18 +1153,18 @@
           </initialization>
 
           <!-- WALL CLOSURE -->
-          <!-- Current wall models include: 
+          <!-- Current wall models include:
                none: Slip wall conditions
                molecular: Uses only the molecular viscosity
-               constant_coefficient: Uses a constant coefficient smagorinsky model. Use ISI at the standoff index.  
+               constant_coefficient: Uses a constant coefficient smagorinsky model. Use ISI at the standoff index.
                dynamic: Use the dynamic viscosity at the standoff index
           -->
-          <wall_closure                 spec="OPTIONAL NO_DATA" 
+          <wall_closure                 spec="OPTIONAL NO_DATA"
                                         attribute1="type REQUIRED STRING 'none, molecular, constant_coefficient, dynamic,log'">
 
-            <wall_csmag                 spec="REQUIRED DOUBLE" need_applies_to="type constant_coefficient"/> <!-- Constant coefficient for this model. Coefficient might be 
+            <wall_csmag                 spec="REQUIRED DOUBLE" need_applies_to="type constant_coefficient"/> <!-- Constant coefficient for this model. Coefficient might be
                                                                                                                   flow dependent but typically ranges from .1-.4 -->
-            <standoff_index             spec="OPTIONAL INTEGER" need_applies_to="type constant_coefficient, dynamic"/> <!-- Indicates the distance (in cell #) from the wall from which 
+            <standoff_index             spec="OPTIONAL INTEGER" need_applies_to="type constant_coefficient, dynamic"/> <!-- Indicates the distance (in cell #) from the wall from which
                                                                                                                         turbulence info will be used. Default = 1 -->
 
           </wall_closure>
@@ -1248,7 +1257,7 @@
         <eqn_group                      spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
                                         attribute2="type REQUIRED STRING 'CC,FX,FY,FZ'"
-                                        attribute3="class OPTIONAL STRING 'density_weighted, dqmom_wa, dqmom_w, volumetric'">
+                                        attribute3="class OPTIONAL STRING 'density_weighted, dqmom, volumetric'">
           <eqn                            spec="MULTIPLE NO_DATA"
                                           attribute1="label REQUIRED STRING">
 
@@ -1263,6 +1272,9 @@
             <clip                         spec="OPTIONAL NO_DATA"
                                           attribute1="low  REQUIRED DOUBLE"
                                           attribute2="high REQUIRED DOUBLE"/>
+            <!-- Scaling constant. This produces an additional variable with the eqnname+_unscaled-->
+            <scaling                      spec="OPTIONAL NO_DATA"
+                                          attribute1="value REQUIRED DOUBLE"/>
             <!-- reference a source (defined in the <Sources> block) to add it to the RHS -->
             <src                          spec="MULTIPLE NO_DATA"
                                           attribute1="label REQUIRED STRING"/>
@@ -1270,6 +1282,9 @@
             <!-- by default, the scalar is intialized to zero. Other values may be specified -->
             <initialize                   spec="OPTIONAL NO_DATA"
                                           attribute1="value REQUIRED DOUBLE"/>
+
+            <!-- Allow one to unscale the the solution variable by a constant. The solution variable 
+                 is thus the scaled value and the unscaled value is given by the user assigned label -->
           </eqn>
 
           <!--
@@ -1402,7 +1417,7 @@
                                                                             the mms -->
           <grid                       spec="REQUIRED NO_DATA"
                                       attribute1="x REQUIRED STRING"
-                                      need_applies_to="type shunn_mms"/> 
+                                      need_applies_to="type shunn_mms"/>
 
           <!-- ALMGREN MMS -->
           <amplitude                  spec="OPTIONAL DOUBLE"
@@ -1419,11 +1434,11 @@
                                                                             the mms -->
 
           <!-- Input file -->
-          <!-- One may initialize a variable from an input file. The format should be: 
+          <!-- One may initialize a variable from an input file. The format should be:
 
-               i j k value 
+               i j k value
 
-               In the case of vectors (3-elements), the format is 
+               In the case of vectors (3-elements), the format is
 
                i j k vec[0] vec[1] vec[2]
 
@@ -1462,7 +1477,7 @@
           <src                          spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
                                         attribute2="type REQUIRED STRING  'MMS_mom, MMS_scalar, MMS_Shunn, MMS_Shunn_p3'">
-                                                                           
+
             <!-- Specs for MMS mom -->
           <variable                     spec="OPTIONAL NO_DATA"
                                         attribute1="type REQUIRED STRING 'CC,FX,FY,FZ'"
@@ -1536,11 +1551,14 @@
                                                                         coal_density,
                                                                         rate_deposition,
                                                                         deposition_velocity,
+                                                                        deposition_enthalpy,
                                                                         coal_temperature_nebo,
                                                                         coal_temperature,
                                                                         total_number_density,
                                                                         fowy_devolatilization,
                                                                         shaddix_oxidation,
+                                                                        char_oxidation_ps,
+                                                                        particle_variables_dqmom,
                                                                         shaddix_enthalpy'">
 
             <!-- The grid parameter is used for templated properties -->
@@ -1735,6 +1753,7 @@
                                                                            coal_gas_oxi_mom,
                                                                            ht_convection,
                                                                            zzNox_Solid,
+                                                                           psNox,
                                                                            coal_gas_heat,
                                                                            coal_gas_devol,
                                                                            coal_gas_devol_mom,
@@ -1761,31 +1780,46 @@
                                                                            shunn_moin_cont_mms'">
             <!-- Specs for ZZ NOx Model -->
             <A_BET                      spec="OPTIONAL STRING" need_applies_to="type zzNox_Solid"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- BET surface area of char particle m2/kg     -->
-            <NO_label                   spec="OPTIONAL STRING" need_applies_to="type zzNox_Solid"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- NO  label in ZZ NOx model -->
-            <HCN_label                  spec="OPTIONAL STRING" need_applies_to="type zzNox_Solid"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- HCN label in ZZ NOx model -->
-            <NH3_label                  spec="OPTIONAL STRING" need_applies_to="type zzNox_Solid"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- NH3 label in ZZ NOx model -->
+            <NO_label                   spec="OPTIONAL STRING" need_applies_to="type zzNox_Solid, psNox"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- NO  label in ZZ NOx model -->
+            <HCN_label                  spec="OPTIONAL STRING" need_applies_to="type zzNox_Solid, psNox"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- HCN label in ZZ NOx model -->
+            <NH3_label                  spec="OPTIONAL STRING" need_applies_to="type zzNox_Solid, psNox"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- NH3 label in ZZ NOx model -->
             <NSbeta1                    spec="OPTIONAL STRING" need_applies_to="type zzNox_Solid"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- FRACTION of volatile-N to NO -->
             <NSbeta2                    spec="OPTIONAL STRING" need_applies_to="type zzNox_Solid"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- FRACTION of volatile-N to HCN-->
             <NSbeta3                    spec="OPTIONAL STRING" need_applies_to="type zzNox_Solid"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- FRACTION of volatile-N to NH3-->
             <NSgamma1                   spec="OPTIONAL STRING" need_applies_to="type zzNox_Solid"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- FRACTION of char-N     to NO -->
             <NSgamma2                   spec="OPTIONAL STRING" need_applies_to="type zzNox_Solid"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- FRACTION of char-N     to HCN-->
             <NSgamma3                   spec="OPTIONAL STRING" need_applies_to="type zzNox_Solid"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- FRACTION of char-N     to NH3-->
+
+           <devol_to_HCN                 spec="OPTIONAL DOUBLE" need_applies_to="type psNox"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- BET surface area of char particle m2/kg     -->
+           <devol_to_NH3                 spec="OPTIONAL DOUBLE" need_applies_to="type psNox"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- NO  label in ZZ NOx model -->
+           <charOxy_to_HCN               spec="OPTIONAL DOUBLE" need_applies_to="type psNox"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- HCN label in ZZ NOx model -->
+           <charOxy_to_NH3               spec="OPTIONAL DOUBLE" need_applies_to="type psNox"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- NH3 label in ZZ NOx model -->
+           <Tar_to_HCN                   spec="OPTIONAL DOUBLE" need_applies_to="type psNox"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- FRACTION of volatile-N to NO -->
+           <Tar_to_NH3                   spec="OPTIONAL DOUBLE" need_applies_to="type psNox"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- FRACTION of volatile-N to HCN-->
+           <PreExpReburn                 spec="OPTIONAL DOUBLE" need_applies_to="type psNox"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- FRACTION of volatile-N to HCN-->
+           <ExpReburn                    spec="OPTIONAL DOUBLE" need_applies_to="type psNox"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- FRACTION of volatile-N to HCN-->
+           <Tar_src_label                spec="OPTIONAL STRING" need_applies_to="type psNox"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- NH3 label in ZZ NOx model -->
+           <Tar_fraction                 spec="OPTIONAL DOUBLE" need_applies_to="type psNox"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- NH3 label in ZZ NOx model -->
+
+
+
+
             <NO_src                     spec="REQUIRED NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        need_applies_to="type zzNox_Solid"/> <!-- SourceTerm for NO transport -->
+                                        need_applies_to="type zzNox_Solid,psNox"/> <!-- SourceTerm for NO transport -->
             <HCN_src                    spec="REQUIRED NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        need_applies_to="type zzNox_Solid"/> <!-- SourceTerm for HCN transport-->
+                                        need_applies_to="type zzNox_Solid,psNox"/> <!-- SourceTerm for HCN transport-->
             <NH3_src                    spec="REQUIRED NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        need_applies_to="type zzNox_Solid"/> <!-- SourceTerm for NH3-->
+                                        need_applies_to="type zzNox_Solid,psNox"/> <!-- SourceTerm for NH3-->
             <!-- Specs for BrownSootFormation model (type=brown_soot)-->
             <!-- mixture_fraction_label, and temperature_label are also required
                  but are listed below as they span other sources -->
             <!-- NOTE: The brown soot model assumes atmospheric pressure unless the table specifies
                        otherwise in the table header using the #KEY pressure=value pair. -->
             <tar_label                  spec="OPTIONAL STRING" need_applies_to="type brown_soot" />
-            <mix_mol_weight_label       spec="OPTIONAL STRING" need_applies_to="type brown_soot, zzNox_Solid" />
+            <mix_mol_weight_label       spec="OPTIONAL STRING" need_applies_to="type brown_soot, psNox, zzNox_Solid" />
             <Ysoot_label                spec="OPTIONAL STRING" need_applies_to="type brown_soot" />
             <Ns_label                   spec="OPTIONAL STRING" need_applies_to="type brown_soot" />
             <soot_off_gas_label       	spec="OPTIONAL STRING" need_applies_to="type brown_soot" />
@@ -1808,15 +1842,22 @@
 
             <!-- Specs for coal gas devol model -->
             <devol_model_name           spec="REQUIRED STRING" need_applies_to="type coal_gas_devol" />
+            <devol_BirthDeath           spec="OPTIONAL NO_DATA" need_applies_to="type coal_gas_devol">
+            </devol_BirthDeath>
 
             <!-- Spec for the heat transfer source -->
             <heat_model_name            spec="REQUIRED STRING" need_applies_to="type coal_gas_heat"/>
+            <heat_BirthDeath           spec="OPTIONAL NO_DATA" need_applies_to="type coal_gas_heat">
+            </heat_BirthDeath>
 
             <!-- Tabulated reaction rate -->
             <rxn_rate                   spec="REQUIRED STRING" need_applies_to="type tab_rxn_rate" />
 
              <!-- Spec for dTcorrectionFractor for the gas phase convection heat flux near the wall -->
             <dTCorrectionFactor         spec="OPTIONAL STRING" need_applies_to="type ht_convection" />
+            <ConWallHT_src                     spec="REQUIRED NO_DATA"
+                                        attribute1="label REQUIRED STRING"
+                                        need_applies_to="type ht_convection"/> <!-- Convection SourceTerm for wall heat trasnfer -->
 
             <!-- Spec for constant and multi-point constant source term model -->
             <constant                   spec="OPTIONAL DOUBLE" need_applies_to="type constant_src, fx_inject_src, fy_inject_src, fz_inject_src, cc_inject_src" />
@@ -1829,6 +1870,8 @@
 
             <!-- Spec for the char oxidation source -->
             <char_oxidation_model_name  spec="REQUIRED STRING" need_applies_to="type coal_gas_oxi" />
+            <char_BirthDeath           spec="OPTIONAL NO_DATA" need_applies_to="type coal_gas_oxi">
+            </char_BirthDeath>
 
             <!-- Multi-point constant injection -->
             <injector_region            spec="REQUIRED NO_DATA" need_applies_to="type fx_inject_src, fy_inject_src, fz_inject_src, cc_inject_src">
@@ -1983,17 +2026,17 @@
               </temperature_dependence>
 
             </flammability_limit>
-            <o2_label                   spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer, bowman_nox, brown_soot, zzNox_Solid"/> <!-- o2 label (default = O2) -->
+            <o2_label                   spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer, bowman_nox, brown_soot, psNox, zzNox_Solid"/> <!-- o2 label (default = O2) -->
             <oh_label                   spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer, bowman_nox, brown_soot"/> <!-- oh label (default = OH) -->
             <co2_label                  spec="OPTIONAL STRING" need_applies_to="type brown_soot"/> <!-- o2 label (default = O2) -->
-            <h2o_label                  spec="OPTIONAL STRING" need_applies_to="type brown_soot, zzNox_Solid"/> <!-- h2o label (default = H2O) -->
-            <n2_label                   spec="OPTIONAL STRING" need_applies_to="type bowman_nox, zzNox_Solid"/> <!-- n2 label (default = N2) -->
-            <co_label                   spec="OPTIONAL STRING" need_applies_to="type zzNox_Solid"/> <!-- co label (default = CO) -->
-            <h2_label                   spec="OPTIONAL STRING" need_applies_to="type zzNox_Solid"/> <!-- h2 label (default = H2) -->
+            <h2o_label                  spec="OPTIONAL STRING" need_applies_to="type brown_soot, psNox, zzNox_Solid"/> <!-- h2o label (default = H2O) -->
+            <n2_label                   spec="OPTIONAL STRING" need_applies_to="type bowman_nox, psNox, zzNox_Solid"/> <!-- n2 label (default = N2) -->
+            <co_label                   spec="OPTIONAL STRING" need_applies_to="type psNox, zzNox_Solid"/> <!-- co label (default = CO) -->
+            <h2_label                   spec="OPTIONAL STRING" need_applies_to="type psNox, zzNox_Solid"/> <!-- h2 label (default = H2) -->
             <temperature_label          spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer,
                                                                                      bowman_nox,
-                                                                                     brown_soot, zzNox_Solid"/> <!-- temperature label (default = temperature) -->
-            <density_label              spec="OPTIONAL STRING" need_applies_to="type moment2_mixture_fraction_src,zzNox_Solid,
+                                                                                     brown_soot, psNox, zzNox_Solid"/> <!-- temperature label (default = temperature) -->
+            <density_label              spec="OPTIONAL STRING" need_applies_to="type moment2_mixture_fraction_src, psNox, zzNox_Solid,
                                                                                      dissipation_src,
                                                                                      westbrook_dryer,
                                                                                      bowman_nox,
@@ -2038,7 +2081,20 @@
       </TransportEqns>
 
       <DQMOM                            spec="OPTIONAL NO_DATA"
-                                        attribute1="type REQUIRED STRING 'unweightedAbs, weightedAbs'">
+                                        attribute1="type OPTIONAL STRING 'unweightedAbs, weightedAbs'"> <!-- phasing out the type specification. all dqmom is weightedAbs-->
+
+        <!-- These tags are for the new DQMOM interface -->
+        <!--If this tag is present, diffusion is computed.-->
+        <diffusion                    spec="OPTIONAL NO_DATA"
+                                      attribute1="scheme REQUIRED STRING 'central'"
+                                      attribute2="D_label REQUIRED STRING"/>
+        <!-- If this tag is present, convection is computed.
+         The type refers to the scheme: upwind, central, superbee, roe_minmod.-->
+        <convection                   spec="OPTIONAL NO_DATA"
+                                      attribute1="scheme REQUIRED STRING 'central, upwind, superbee, roe, vanleer'"/>
+
+        <kokkos_translate             spec="OPTIONAL NO_DATA"/> <!-- This activates DQMOM in the new task interface. If not present, then DQMOM is ignored -->
+        <!-- End new tags for new DQMOM interface -->
 
         <!-- Tags for verification of DQMOM AX=B solution procedure -->
         <Verify_Linear_Solver           spec="OPTIONAL NO_DATA">
@@ -2196,7 +2252,7 @@
                                         attribute1="qn REQUIRED INTEGER 'positive'"
                                         attribute2="value REQUIRED DOUBLE" />     <!-- for environment (qn), step from 0 to (value) -->
           </initialization>
-          <scaling_const                spec="REQUIRED MULTIPLE_DOUBLES"/>
+          <scaling_const                spec="OPTIONAL MULTIPLE_DOUBLES"/> <!-- [Default = 1.], Scales the values of each environment with this constant. -->
           <Clipping                     spec="OPTIONAL NO_DATA">
             <low                        spec="OPTIONAL DOUBLE"/> <!-- Low clipping value for SCALED value of DQMOM internal coordinate -->
             <high                       spec="OPTIONAL DOUBLE"/> <!-- High clipping value for SCALED value of DQMOM internal coordinate -->
@@ -2224,7 +2280,9 @@
                                                                roe_minmod_wall_upwind'"/> <!-- VAN LEER not working?? -->
           <turbulentPrandtlNumber       spec="OPTIONAL DOUBLE" />
           <molecular_diffusivity        spec="OPTIONAL DOUBLE 'positive'"/>
-          <nominal_values               spec="REQUIRED MULTIPLE_DOUBLES"/> <!-- nominal values for each of the internal coordinates when the weight goes to zero -->
+          <nominal_values               spec="OPTIONAL MULTIPLE_DOUBLES"/> <!-- [Default = random number] nominal values for each of the internal coordinates
+                                                                                when the weight goes to zero. If using birth, then this value should never
+                                                                                be used.-->
 
           <!-- developer note: When you add a new descriptor here, make sure you add it in the
                enum definition and the constructor of the DQMOMEqnFactory -->
@@ -2254,7 +2312,7 @@
                                         attribute1="qn REQUIRED INTEGER 'positive'"
                                         attribute2="value REQUIRED DOUBLE" />     <!-- for environment (qn), step from 0 to (value) -->
           </initialization>
-          <scaling_const                spec="REQUIRED MULTIPLE_DOUBLES"/>
+          <scaling_const                spec="OPTIONAL MULTIPLE_DOUBLES"/> <!-- [Default = 1.0] Scale the abscissa by these values for the transported quantity -->
           <model                        spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"/>
           <Clipping                     spec="OPTIONAL NO_DATA">

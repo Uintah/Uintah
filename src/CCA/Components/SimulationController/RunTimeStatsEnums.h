@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -58,7 +58,7 @@ namespace Uintah {
   // timing statistics to test load balance
   enum RunTimeStatsEnum
   {
-    // These five enumerators are used in SimulationController::printSimulationStats to determine the overhead time.
+    // These five enumerators are used in SimulationController::ReportStats to determine the overhead time.
       CompilationTime = 0
     , RegriddingTime
     , RegriddingCompilationTime

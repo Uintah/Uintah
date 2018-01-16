@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -788,8 +788,8 @@ void printParticleVariable(DataArchive* da,
                            unsigned long time_step_lower,
                            unsigned long time_step_upper,
                            unsigned long time_step_inc,
-                           bool include_position_output){
-
+                           bool include_position_output)
+{
   // Check if the particle variable is available
   vector<string> vars;
   vector<const Uintah::TypeDescription*> types;
@@ -1096,7 +1096,13 @@ void printParticleVariable(DataArchive* da,
                       ParticleSubset::iterator iter = pset->begin();
                       for(;iter != pset->end(); iter++){
                         cout << time << " " << patchIndex << " " << matl ;
-                        cout << " " << value[*iter] << endl;
+                        cout << " " << value[*iter];
+                        if(include_position_output){
+                          cout << " " << pos[*iter].x()
+                               << " " << pos[*iter].y()
+                               << " " << pos[*iter].z();
+                        }
+                        cout <<  endl;
                       }
                     }
                   }
