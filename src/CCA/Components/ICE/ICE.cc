@@ -176,6 +176,7 @@ ICE::~ICE()
   delete lb;
   delete d_advector;
   delete d_exchCoeff;
+  delete d_exchModel;
 
   if(d_turbulence){
     delete d_turbulence;
