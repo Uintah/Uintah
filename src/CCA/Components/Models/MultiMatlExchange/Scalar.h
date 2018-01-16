@@ -21,16 +21,13 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-
 #ifndef Models_MultiMatlExchange_Scalar_h
 #define Models_MultiMatlExchange_Scalar_h
 
 #include <CCA/Components/ICE/Core/ICELabel.h>
-#include <CCA/Components/MPM/Core/MPMLabel.h>
-#include <CCA/Components/MPMICE/Core/MPMICELabel.h>
-
 #include <CCA/Components/Models/MultiMatlExchange/ExchangeCoefficients.h>
 #include <CCA/Components/Models/MultiMatlExchange/ExchangeModel.h>
+#include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/Variables/ComputeSet.h>
@@ -110,8 +107,6 @@ namespace ExchangeModels{
     ExchangeCoefficients* d_exchCoeff;
     MPMLabel* Mlb;
     ICELabel* Ilb;
-    MPMICELabel* MIlb;
-
   };
 }
 }

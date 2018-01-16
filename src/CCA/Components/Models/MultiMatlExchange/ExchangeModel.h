@@ -28,6 +28,7 @@
 
 
 #include <CCA/Components/ICE/CustomBCs/C_BC_driver.h>
+#include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/SchedulerP.h>
 #include <Core/Grid/DbgOutput.h>
@@ -81,21 +82,15 @@ namespace Uintah {
                                       DataWarehouse        * new_dw,
                                       customBC_globalVars  * BC_globalVars) = 0;
 
-
-#if 0
-    void scheduleComputeSurfaceNormal( SchedulerP           & sched,
-                                       const PatchSet       * patches,
-                                       const MaterialSubset * mpm_matls,
-                                       const MaterialSubset * press_matl,
-                                       const MaterialSet    * all_matls );
+    void schedComputeSurfaceNormal( SchedulerP           & sched,
+                                    const PatchSet       * patches,
+                                    const MaterialSubset * zero_matl );
 
     void ComputeSurfaceNormalValues( const ProcessorGroup *,
                                      const PatchSubset    * patches,
                                      const MaterialSubset *,
                                      DataWarehouse        * old_dw,
                                      DataWarehouse        * new_dw );
-
-#endif
 
     //__________________________________
     // variables & objects needed by 
@@ -107,7 +102,11 @@ namespace Uintah {
     int    d_numMatls  = -9;
     SimulationStateP  d_sharedState;
     
+  private:
+    MPMLabel* Mlb;
+    
   };
 }
 
 #endif
+ 

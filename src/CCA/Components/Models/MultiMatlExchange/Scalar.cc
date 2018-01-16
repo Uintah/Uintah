@@ -410,8 +410,8 @@ void ScalarExch::sched_AddExch_Vel_Temp_CC( SchedulerP           & sched,
   t->requires(Task::OldDW, Ilb->delTLabel,getLevel(patches));
 
   if(d_exchCoeff->convective()){
-    t->requires(Task::NewDW,MIlb->gMassLabel,       mpm_matls,  gac, 1);
-    t->requires(Task::OldDW,MIlb->NC_CCweightLabel, press_matl, gac, 1);
+    t->requires(Task::NewDW, Mlb->gMassLabel,       mpm_matls,  gac, 1);
+    t->requires(Task::OldDW, Mlb->NC_CCweightLabel, press_matl, gac, 1);
   }
                                 // I C E
   t->requires(Task::OldDW,  Ilb->temp_CCLabel,      ice_matls, gn);
@@ -668,7 +668,7 @@ void ScalarExch::addExch_Vel_Temp_CC( const ProcessorGroup * pg,
 
       Ghost::GhostType  gac = Ghost::AroundCells;
       constNCVariable<double> NC_CCweight, NCsolidMass;
-      old_dw->get(NC_CCweight,     MIlb->NC_CCweightLabel,  0,   patch,gac,1);
+      old_dw->get(NC_CCweight,     Mlb->NC_CCweightLabel,  0,   patch,gac,1);
       Vector dx = patch->dCell();
       double dxlen = dx.length();
       const Level* level=patch->getLevel();
@@ -678,7 +678,9 @@ void ScalarExch::addExch_Vel_Temp_CC( const ProcessorGroup * pg,
         MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
         int dwindex = matl->getDWIndex();
         if(mpm_matl && dwindex==sm){
-          new_dw->get(NCsolidMass,     MIlb->gMassLabel,   dwindex,patch,gac,1);
+          
+          new_dw->get(NCsolidMass,     Mlb->gMassLabel,   dwindex,patch,gac,1);
+          
           for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
             IntVector c = *iter;
             IntVector nodeIdx[8];
@@ -767,7 +769,8 @@ void ScalarExch::addExch_Vel_Temp_CC( const ProcessorGroup * pg,
       } // for ALL matls
     } // convective heat transfer
 
-  
+    //__________________________________
+    //
     if( BC_globalVars->usingLodi || BC_globalVars->usingMicroSlipBCs){
     
       std::vector<CCVariable<double> > temp_CC_Xchange(numALLMatls);

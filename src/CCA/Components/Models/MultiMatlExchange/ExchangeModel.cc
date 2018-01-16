@@ -24,6 +24,7 @@
 
 #include <CCA/Components/Models/MultiMatlExchange/ExchangeModel.h>
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
+#include <CCA/Ports/Scheduler.h>
 
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Material.h>
@@ -31,6 +32,7 @@
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/NCVariable.h>
+
 #include <Core/ProblemSpec/ProblemSpec.h>
 
 #include <ostream>                         // for operator<<, basic_ostream
@@ -48,21 +50,20 @@ ExchangeModel::ExchangeModel(const ProblemSpecP     & prob_spec,
 {
   d_sharedState = sharedState;
   d_numMatls    = sharedState->getNumMatls();
+  Mlb  = scinew MPMLabel();
 }
 
 ExchangeModel::~ExchangeModel()
 {
+  delete Mlb;
 }
 
 
-#if 0
-
 //______________________________________________________________________
 //
-void ExchangeModel::scheduleComputeSurfaceNormal( SchedulerP& sched,
-                                                  const PatchSet       * patches,
-                                                  const MaterialSubset * press_matl,
-                                                  const MaterialSet    * mpm_matls)
+void ExchangeModel::schedComputeSurfaceNormal( SchedulerP           & sched,
+                                               const PatchSet       * patches,
+                                               const MaterialSubset * zero_matl)
 {
   std::string name = "ExchangeModel::ComputeSurfaceNormalValues";
 
@@ -70,9 +71,12 @@ void ExchangeModel::scheduleComputeSurfaceNormal( SchedulerP& sched,
 
   printSchedule( patches, dbgExch, name );
 
+  const MaterialSet* mpm_matls  = d_sharedState->allMPMMaterials();
+  const MaterialSubset* mpm_mss = mpm_matls->getUnion();
+
   Ghost::GhostType  gac  = Ghost::AroundCells;
-  t->requires( Task::NewDW, MIlb->gMassLabel,       mpm_matls->getUnion,  gac, 1);
-  t->requires( Task::OldDW, MIlb->NC_CCweightLabel, press_matl, gac, 1);
+  t->requires( Task::NewDW, Mlb->gMassLabel,       mpm_mss,   gac, 1);
+  t->requires( Task::OldDW, Mlb->NC_CCweightLabel, zero_matl, gac, 1);
 
   t->computes( d_surfaceNormLabel );
 
@@ -93,29 +97,33 @@ void ExchangeModel::ComputeSurfaceNormalValues( const ProcessorGroup*,
 
     Ghost::GhostType gac = Ghost::AroundCells;
     int numMPMMatls = d_sharedState->getNumMPMMatls();
-    
+
     std::vector<CCVariable<Vector> > surfaceNorm(numMPMMatls);
     constNCVariable<double> NC_CCweight;
     constNCVariable<double> NCsolidMass;
 
-    old_dw->get(NC_CCweight, MIlb->NC_CCweightLabel, 0, patch, gac,1);
+    old_dw->get(NC_CCweight, Mlb->NC_CCweightLabel, 0, patch, gac,1);
     Vector dx = patch->dCell();
 
-    for(int m=0; m<mpm_matls->size(); m++){
-      Material* matl = d_sharedState->getMaterial(m);
+    int numMPM_matls = d_sharedState->getNumMPMMatls();
+    
+    //__________________________________
+    //
+    for(int m=0; m<numMPM_matls; m++){
+      MPMMaterial* matl = d_sharedState->getMPMMaterial(m);
       int dwindex = matl->getDWIndex();
 
       new_dw->allocateAndPut(surfaceNorm[m], d_surfaceNormLabel, dwindex, patch);
       surfaceNorm[m].initialize( Vector(0,0,0) );
 
-      new_dw->get(NCsolidMass, MIlb->gMassLabel, dwindex, patch, gac,1);
+      new_dw->get(NCsolidMass, Mlb->gMassLabel, dwindex, patch, gac,1);
 
       for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
         IntVector c = *iter;
 
         IntVector nodeIdx[8];
         patch->findNodesFromCell(*iter,nodeIdx);
-        
+
         double MaxMass = d_SMALL_NUM;
         double MinMass = 1.0/d_SMALL_NUM;
         for (int nN=0; nN<8; nN++) {
@@ -171,5 +179,3 @@ void ExchangeModel::ComputeSurfaceNormalValues( const ProcessorGroup*,
     }  // for MPM matls
   } // patches
 }
-
-#endif
