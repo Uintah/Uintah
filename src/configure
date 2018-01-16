@@ -855,41 +855,27 @@ ac_ct_F77
 DEF_NO_FORTRAN
 NO_FORTRAN
 DEF_MINIMAL
-DEF_WASATCH
+BUILD_MINIMAL
 DEF_UNIT_TESTS
-DEF_STANDALONE
-DEF_SIM_CONTROLLER
-DEF_POST_PROCESS_UDA
+BUILD_UNIT_TESTS
+DEF_WASATCH
 DEF_PHASEFIELD
-DEF_PARENT
 DEF_MODELS_RADIATION
 DEF_MPM
-DEF_MODELS
 DEF_ICE
 DEF_HEAT
 DEF_FVM
 DEF_EXAMPLES
 DEF_ARCHES
-DEF_APPLICATION
-DEF_ANALYSIS_MODULES
-BUILD_MINIMAL
 BUILD_WASATCH
-BUILD_UNIT_TESTS
-BUILD_STANDALONE
-BUILD_SIM_CONTROLLER
-BUILD_POST_PROCESS_UDA
 BUILD_PHASEFIELD
-BUILD_PARENT
 BUILD_MPM
 BUILD_MODELS_RADIATION
-BUILD_MODELS
 BUILD_ICE
 BUILD_HEAT
 BUILD_FVM
 BUILD_EXAMPLES
 BUILD_ARCHES
-BUILD_APPLICATION
-BUILD_ANALYSIS_MODULES
 OGL_ERR_MACRO
 DEBUG
 THROW_LEVEL
@@ -1711,15 +1697,16 @@ Optional Features:
 --enable-throw-level=N  Use throw level N (0-3)
 --enable-rpath          Set a default runtime library search path
 --enable-unit-tests     Turn on the unit tests.
---enable-minimal        Do a minimal library only build
+--enable-minimal        Build a minimal set of libraries
 --enable-arches         Turn on the Arches component - and Radiation Model.
---enable-examples       Turn on the EXAMPLES component.
+--enable-examples       Turn on the Examples component - and Radiation
+                          Model.
 --enable-fvm            Turn on the FVM component.
 --enable-heat           Turn on the Heat component.
 --enable-ice            Turn on the Ice component.
 --enable-mpm            Turn on the Mpm component.
 --enable-phasefield     Turn on the PhaseField component.
---enable-wasatch        Turn on the Wasatch component.
+--enable-wasatch        Turn on the Wasatch component - and Radiation Model.
 --enable-all-components Turn on the all components.
 
 Optional Packages:
@@ -6391,32 +6378,17 @@ fi
 #
 # --- end list of -enable components ------
 #
-
-BUILD_ANALYSIS_MODULES=yes
-DEF_ANALYSIS_MODULES=
-
-BUILD_APPLICATION=yes
-DEF_APPLICATION=
-
-BUILD_MODELS=yes
-DEF_MODELS=
-
-BUILD_MODELS_RADIATION=yes
+BUILD_MODELS_RADIATION=no
 DEF_MODELS_RADIATION=
 
-BUILD_PARENT=yes
-DEF_PARENT=
+if test "$use_all_components"   = "yes" -o  \
+        "$enable_arches"        = "yes" -o  \
+        "$enable_examples"      = "yes" -o  \
+        "$enable_wasatch"       = "yes" ; then
+  BUILD_MODELS_RADIATION=yes
+fi
 
-BUILD_POST_PROCESS_UDA=yes
-DEF_POST_PROCESS_UDA=
-
-BUILD_SIM_CONTROLLER=yes
-DEF_SIM_CONTROLLER=
-
-BUILD_STANDALONE=yes
-DEF_STANDALONE=
-
-if test "$BUILD_MINIMAL" = "yes" -a              \
+if test "$enable_minimal"             = "yes" -a  \
         \( "$use_all_components"      = "yes" -o  \
 	   "$enable_unit_tests"       = "yes" -o  \
 	   "$enable_arches"           = "yes" -o  \
@@ -6424,57 +6396,48 @@ if test "$BUILD_MINIMAL" = "yes" -a              \
            "$enable_fvm"              = "yes" -o  \
            "$enable_heat"             = "yes" -o  \
            "$enable_ice"              = "yes" -o  \
-           "$enable_models_radiation" = "yes" -o  \
            "$enable_mpm"              = "yes" -o  \
            "$enable_phasefield"       = "yes" -o  \
            "$enable_wasatch"          = "yes" \); then
    as_fn_error $? "Can not do a minimal library only build if building applications or unit tests" "$LINENO" 5
-elif test "$BUILD_MINIMAL" = "yes"; then
+elif test "$enable_minimal" = "yes"; then
 
   add_important_warning "-------------------------------------------------------------------------"
-  msg="!!! MINIMAL LIBRARY ONLY BUILD REQUESTED !!!"
-  add_important_warning "$msg"
+  add_important_warning "!!! Minimal library only build requested !!!"
   add_important_warning "-------------------------------------------------------------------------"
-  BUILD_ANALYSIS_MODULES=no
-  BUILD_APPLICATION=no
-  BUILD_MODELS=no
-  BUILD_PARENT=no
-  BUILD_POST_PROCESS_UDA=no
-  BUILD_SIM_CONTROLLER=no
-  BUILD_STANDALONE=no
 fi
 
-if test "$use_all_components" = "yes" -a          \
+if test "$use_all_components"         = "yes" -a  \
         \( "$enable_arches"           = "yes" -o  \
            "$enable_examples"         = "yes" -o  \
            "$enable_fvm"              = "yes" -o  \
            "$enable_heat"             = "yes" -o  \
            "$enable_ice"              = "yes" -o  \
-           "$enable_models_radiation" = "yes" -o  \
            "$enable_mpm"              = "yes" -o  \
            "$enable_phasefield"       = "yes" -o  \
            "$enable_wasatch"          = "yes" \); then
-   as_fn_error $? "Can not use both --enable-all-components and --enable-<specific-component> " "$LINENO" 5
+  add_important_warning "-------------------------------------------------------------------------"
+  add_important_warning "!!! Both --enable-all-components and --enable-<specific-component> were used. ALL Componenets will be built."
+  add_important_warning "-------------------------------------------------------------------------"
+#   AC_MSG_ERROR( Can not use both --enable-all-components and --enable-<specific-component> )
 fi
 
-if test "$BUILD_MINIMAL"       != "yes" -a  \
-        "$BUILD_ARCHES"        != "yes" -a  \
-        "$BUILD_EXAMPLES"      != "yes" -a  \
-        "$BUILD_FVM"           != "yes" -a  \
-        "$BUILD_HEAT"          != "yes" -a  \
-        "$BUILD_ICE"           != "yes" -a  \
-        "$BUILD_MPM"           != "yes" -a  \
-        "$BUILD_PHASEFIELD"    != "yes" -a  \
-        "$BUILD_WASATCH"       != "yes" ; then
-  BUILD_ANALYSIS_MODULES=no
-  BUILD_MODELS=no
+if test "$enable_minimal"       != "yes" -a  \
+        "$use_all_components"   != "yes" -a  \
+        "$enable_arches"        != "yes" -a  \
+        "$enable_examples"      != "yes" -a  \
+        "$enable_fvm"           != "yes" -a  \
+        "$enable_heat"          != "yes" -a  \
+        "$enable_ice"           != "yes" -a  \
+        "$enable_mpm"           != "yes" -a  \
+        "$enable_phasefield"    != "yes" -a  \
+        "$enable_wasatch"       != "yes" ; then
   add_important_warning "-------------------------------------------------------------------------"
-  msg="!!! NO COMPONENTS WERE SPECIFIED! ONLY UTILITY PROGRAMS WILL BE BUILT !!!"
-  add_important_warning "$msg"
+  add_important_warning "!!! No components were specified! Only utility programs will be built !!!"
   add_important_warning "-------------------------------------------------------------------------"
 fi
 
-if test "$BUILD_ICE" = "yes" -a "$BUILD_MPM" = "no"; then
+if test "$enable_ice" = "yes" -a "$enable_mpm" != "yes"; then
    as_fn_error $? "If you enable ICE, you must enable MPM too. " "$LINENO" 5
 fi
 
@@ -8543,18 +8506,6 @@ if test "$with_fortran" = "no"; then
 fi
 
 # NO_FORTRAN is used in configVars.mk[.in] and DEF_NO_FORTRAN is used in uintah_testdefs.h.in
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

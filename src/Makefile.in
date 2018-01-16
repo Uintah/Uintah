@@ -75,16 +75,6 @@ endif
 
 COMPONENTS = CCA/Components
 
-# Analysis_Modules
-ifeq ($(BUILD_ANALYSIS_MODULES),yes)
-  ANALYSIS_MODULES_LIB = $(COMPONENTS)/OnTheFlyAnalysis
-endif
-
-# APPLICATION
-ifeq ($(BUILD_APPLICATION),yes)
-  APPLICATION_LIB = $(COMPONENTS)/Application
-endif
-
 # Arches 
 ifeq ($(BUILD_ARCHES),yes)
   ARCHES_LIBS = $(COMPONENTS)/Arches
@@ -124,11 +114,6 @@ ifeq ($(BUILD_ICE),yes)
 	$(ICE_DIR)/EOS                  \
 	$(ICE_DIR)/SpecificHeatModel    \
 	$(ICE_DIR)/Core
-endif
-
-# MODELS
-ifeq ($(BUILD_MODELS),yes)
-  MODELS_LIB = $(COMPONENTS)/Models
 endif
 
 # MPM
@@ -175,25 +160,11 @@ ifeq ($(BUILD_PHASEFIELD),yes)
   PHASEFIELD_LIB = $(COMPONENTS)/PhaseField
 endif
 
-# PARENT
-ifeq ($(BUILD_PARENT),yes)
-  PARENT_LIB = $(COMPONENTS)/Parent
-endif
-
-# PostProcessUda
-ifeq ($(BUILD_POST_PROCESS_UDA),yes)
-  POST_PROCESS_UDA_LIB = $(COMPONENTS)/PostProcessUda
-endif
-
-# SimController
-ifeq ($(BUILD_SIM_CONTROLLER),yes)
-  SIM_CONTROLLER_LIB = $(COMPONENTS)/SimulationController
-endif
-
 # Wasatch
 ifeq ($(BUILD_WASATCH),yes)
   WASATCH_LIB = $(COMPONENTS)/Wasatch
 endif
+
 
 # All PSE libs
 ALL_PSE_CORE_LIBS =        \
@@ -212,47 +183,53 @@ ALL_PSE_CORE_LIBS =        \
         Core/ProblemSpec   \
         Core/Util          
 
-ALL_PSE_LIBS =                              \
-        $(ALL_PSE_CORE_LIBS)                \
+ALL_PSE_RUNTIME_LIBS =                      \
         CCA/Ports                           \
+                                            \
+        CCA/Components/Application          \
         CCA/Components/DataArchiver         \
         CCA/Components/LoadBalancers        \
+        CCA/Components/Models               \
+        CCA/Components/OnTheFlyAnalysis     \
+        CCA/Components/Parent               \
+	CCA/Components/PostProcessUda       \
         CCA/Components/ProblemSpecification \
         CCA/Components/Regridder            \
         CCA/Components/Schedulers           \
+        CCA/Components/SimulationController \
         CCA/Components/Solvers              \
+        CCA/Components/SwitchingCriteria
+
+
+ALL_PSE_LIBS =                              \
+        $(ALL_PSE_CORE_LIBS)                \
+        $(ALL_PSE_RUNTIME_LIBS)             \
                                             \
         $(ARCHES_LIBS)                      \
         $(ARCHES_SUB_LIBS)                  \
-	$(APPLICATION_LIB)                  \
-	$(ANALYSIS_MODULES_LIB)             \
 	$(EXAMPLES_LIB)                     \
         $(FVM_LIB)                          \
         $(HEAT_LIB)                         \
         $(ICE_LIB)                          \
         $(ICE_SUB_LIBS)                     \
-        $(MODELS_LIB)                       \
         $(MPM_LIB)                          \
         $(MPM_SUB_LIBS)                     \
         $(MPMARCHES_LIB)                    \
         $(MPMFVM_LIB)                       \
         $(MPMICE_LIB)                       \
         $(MPMICE_SUB_LIBS)                  \
-        $(PARENT_LIB)                       \
         $(PHASEFIELD_LIB)                   \
-	$(POST_PROCESS_UDA_LIB)             \
-        $(SIM_CONTROLLER_LIB)               \
-        $(WASATCH_LIB)
+	$(WASATCH_LIB)
 
 
 # WARNING: THESE LIBRARIES ARE LISTED IN A SPECIFIC ORDER TO SATISFY
 #          THE NEEDS OF STATIC LINKING.  DO NOT ALPHABETIZE THEM!
 ALL_STATIC_PSE_LIBS =                   \
-    $(PARENT_LIB)                       \
-    $(APPLICATION_LIB)                  \
+    CCA/Components/Parent               \
+    CCA/Components/Application          \
     CCA/Components/Solvers              \
     CCA/Components/DataArchiver         \
-    $(SIM_CONTROLLER_LIB)               \
+    CCA/Components/SimulationController \
     CCA/Components/Regridder            \
     CCA/Components/LoadBalancers        \
     CCA/Components/SwitchingCriteria    \
@@ -273,10 +250,10 @@ ALL_STATIC_PSE_LIBS =                   \
     $(HEAT_LIB)                         \
     $(PHASEFIELD_LIB)                   \
                                         \
-    $(ANALYSIS_MODULES_LIB)             \
-    $(MODELS_LIB)                       \
+    CCA/Components/OnTheFlyAnalysis     \
+    CCA/Components/Models               \
     CCA/Components/Schedulers           \
-    $(POST_PROCESS_UDA_LIB)             \
+    CCA/Components/PostProcessUda       \
                                         \
     Core/Datatypes                      \
     Core/DataArchive                    \
@@ -396,7 +373,7 @@ $(OBJTOP_ABS)/include/svn_info.h : .FORCE
 
 all:: prereqs packmaker $(ALLTARGETS)
 
-ifeq ($(BUILD_STANDALONE),yes)
+ifneq ($(BUILD_MINIMAL),yes)
   all:: uintah
 
   ifeq ($(IS_STATIC_BUILD),no)

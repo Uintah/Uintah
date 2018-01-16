@@ -102,7 +102,7 @@ ifeq ($(HAVE_CUDA),yes)
 endif
 
 PSELIBS := \
-	CCA/Components/Application \
+	CCA/Components/Application      \
         CCA/Components/Arches/fortran   \
         CCA/Components/Models           \
         CCA/Components/OnTheFlyAnalysis \
@@ -120,7 +120,7 @@ PSELIBS := \
         Core/ProblemSpec                \
         Core/Util
 
-ifneq ($(BUILD_WASATCH),no)
+ifeq ($(BUILD_WASATCH),yes)
    PSELIBS += $(WASATCH)
 endif
 

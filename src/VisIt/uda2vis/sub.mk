@@ -32,8 +32,6 @@ include $(SCIRUN_SCRIPTS)/so_prologue.mk
 SRCDIR  := VisIt/uda2vis
 
 PSELIBS := \
-      CCA/Ports         \
-      CCA/Components/ProblemSpecification \
       Core/Containers   \
       Core/DataArchive  \
       Core/Datatypes    \

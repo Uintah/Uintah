@@ -26,8 +26,6 @@
 # 
 # 
 # Makefile fragment for this subdirectory 
-ifeq ($(BUILD_STANDALONE),yes)
-
 SRCDIR := StandAlone
 
 SUBDIRS := \
@@ -275,5 +273,3 @@ compare_scalar: StandAlone/tools/compare_mms/compare_scalar
 mpi_test: StandAlone/tools/mpi_test/mpi_test
 
 fsspeed: StandAlone/tools/fsspeed/fsspeed
-
-endif
