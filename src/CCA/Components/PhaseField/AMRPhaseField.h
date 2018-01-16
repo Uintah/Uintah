@@ -27,7 +27,7 @@
 
 #include <Core/Grid/Variables/PerPatch.h>
 #include <CCA/Components/PhaseField/PhaseField.h>
-#include <CCA/Components/Regridder/PerPatchVars.h>
+#include <Core/Grid/Variables/PerPatchVars.h>
 #include <CCA/Ports/Regridder.h>
 
 #include <sci_defs/kokkos_defs.h>

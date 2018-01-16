@@ -553,20 +553,20 @@ visit_handle visit_SimGetMetaData(void *cbdata)
       for( unsigned j=0; j<2; ++j )
       {
         // Add in the processor runtime stats.
-        const ReductionInfoMapper< RunTimeStatsEnum, double > &runTimeStats =
-          sim->simController->getRunTimeStats();
+        const ReductionInfoMapper< RuntimeStatsEnum, double > &runtimeStats =
+          sim->simController->getRuntimeStats();
         
-        for( unsigned int i=0; i<runTimeStats.size(); ++i )
+        for( unsigned int i=0; i<runtimeStats.size(); ++i )
         {
           visit_handle vmd = VISIT_INVALID_HANDLE;
           
           if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
           {
             std::string stat = std::string("processor/runtime/") +
-              runTimeStats.getName( (RunTimeStatsEnum) i ) + proc_level[j];
+              runtimeStats.getName( (RuntimeStatsEnum) i ) + proc_level[j];
             
             std::string units = 
-              runTimeStats.getUnits( (RunTimeStatsEnum) i );
+              runtimeStats.getUnits( (RuntimeStatsEnum) i );
             
             VisIt_VariableMetaData_setName(vmd, stat.c_str());
             VisIt_VariableMetaData_setMeshName(vmd, mesh_for_patch_data.c_str());
@@ -598,7 +598,7 @@ visit_handle visit_SimGetMetaData(void *cbdata)
                 mpiScheduler->mpi_info_.getName( (MPIScheduler::TimingStat) i ) + proc_level[j];;
               
               std::string units = 
-                runTimeStats.getUnits( (RunTimeStatsEnum) i );
+                runtimeStats.getUnits( (RuntimeStatsEnum) i );
               
               VisIt_VariableMetaData_setName(vmd, stat.c_str());
               VisIt_VariableMetaData_setMeshName(vmd, mesh_for_patch_data.c_str());
@@ -1570,8 +1570,8 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
     MPIScheduler *mpiScheduler = dynamic_cast<MPIScheduler*>
       (sim->simController->getSchedulerP().get_rep());
 
-    const ReductionInfoMapper< RunTimeStatsEnum, double > &runTimeStats =
-      sim->simController->getRunTimeStats();
+    const ReductionInfoMapper< RuntimeStatsEnum, double > &runtimeStats =
+      sim->simController->getRuntimeStats();
 
     LevelInfo &levelInfo = stepInfo->levelInfo[level];
     PatchInfo &patchInfo = levelInfo.patchInfo[local_patch];
@@ -1648,14 +1648,14 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
 
       // Simulation State Runtime stats
       if( strncmp( varname, "processor/runtime/", 18 ) == 0 &&
-          runTimeStats.exists( varName ) )
+          runtimeStats.exists( varName ) )
       {
         double val;
 
         if( procLevelName == "node" )
-          val = runTimeStats.getSum( varName );
+          val = runtimeStats.getSum( varName );
         else // if( procLevelName == "rank" )
-          val = runTimeStats.getValue( varName );
+          val = runtimeStats.getValue( varName );
 
         for (int i=0; i<gd->num*gd->components; ++i)
           gd->data[i] = val;

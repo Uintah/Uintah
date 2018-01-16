@@ -28,7 +28,7 @@
 #include <CCA/Ports/Output.h>
 #include <CCA/Ports/PIDXOutputContext.h>
 
-#include <CCA/Components/SimulationController/RunTimeStatsEnums.h>
+#include <CCA/Components/Schedulers/RuntimeStatsEnum.h>
 
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/Grid/Level.h>
@@ -252,7 +252,7 @@ class LoadBalancer;
     void setUseLocalFileSystems(bool val) { m_useLocalFileSystems = val; };
     bool getUseLocalFileSystems() const { return m_useLocalFileSystems; };
      
-    void setRunTimeStats( ReductionInfoMapper< RunTimeStatsEnum, double > *runTimeStats) { m_runTimeStats = runTimeStats; };
+    void setRuntimeStats( ReductionInfoMapper< RuntimeStatsEnum, double > *runtimeStats) { m_runtimeStats = runtimeStats; };
      
   public:
 
@@ -591,7 +591,7 @@ class LoadBalancer;
     //! we need to redo output and Checkpoint tasks.
     int m_numLevelsInOutput {0};
 
-    ReductionInfoMapper< RunTimeStatsEnum, double > *m_runTimeStats;
+    ReductionInfoMapper< RuntimeStatsEnum, double > *m_runtimeStats;
 
 #ifdef HAVE_PIDX
     bool m_pidx_need_to_recompile {false};

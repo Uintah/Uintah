@@ -1,6 +1,3 @@
-#ifndef UINTAH_HOMEBREW_OUTPUT_H
-#define UINTAH_HOMEBREW_OUTPUT_H
-
 /*
  * The MIT License
  *
@@ -25,8 +22,11 @@
  * IN THE SOFTWARE.
  */
 
+#ifndef UINTAH_HOMEBREW_OUTPUT_H
+#define UINTAH_HOMEBREW_OUTPUT_H
+
+#include <CCA/Components/Schedulers/RuntimeStatsEnum.h>
 #include <CCA/Ports/SchedulerP.h>
-#include <CCA/Components/SimulationController/RunTimeStatsEnums.h>
 
 #include <Core/Containers/ConsecutiveRangeSet.h>
 #include <Core/Grid/GridP.h>
@@ -209,7 +209,7 @@ WARNING
     // Get the directory of the current time step for outputting info.
     virtual const std::string& getLastTimeStepOutputLocation() const = 0;
     
-    virtual void setRunTimeStats( ReductionInfoMapper< RunTimeStatsEnum, double > *runTimeStats) = 0;
+    virtual void setRuntimeStats( ReductionInfoMapper< RuntimeStatsEnum, double > *runtimeStats) = 0;
 
   private:
     

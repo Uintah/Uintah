@@ -1832,8 +1832,8 @@ DataArchiver::writeto_xml_files( const GridP& grid )
   }  // loop over baseDirs
 
   double myTime = timer().seconds();
-  (*m_runTimeStats)[XMLIOTime] += myTime;
-  (*m_runTimeStats)[TotalIOTime ] += myTime;
+  (*m_runtimeStats)[XMLIOTime] += myTime;
+  (*m_runtimeStats)[TotalIOTime ] += myTime;
 
   if (dbg.active()) {
     dbg << "  end\n";
@@ -2573,8 +2573,8 @@ DataArchiver::outputReductionVars( const ProcessorGroup *,
   }
 
   double myTime = timer().seconds();
-  (*m_runTimeStats)[ReductionIOTime] += myTime;
-  (*m_runTimeStats)[TotalIOTime ] += myTime;
+  (*m_runtimeStats)[ReductionIOTime] += myTime;
+  (*m_runtimeStats)[TotalIOTime ] += myTime;
   
   dbg << "  outputReductionVars task end\n";
 }
@@ -2971,26 +2971,26 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
   double byteToMB = 1024*1024;
 
   if (type == OUTPUT) {
-    (*m_runTimeStats)[OutputIOTime] +=
+    (*m_runtimeStats)[OutputIOTime] +=
       myTime;
-    (*m_runTimeStats)[OutputIORate] +=
+    (*m_runtimeStats)[OutputIORate] +=
       (double) totalBytes / (byteToMB * myTime);
   }
   else if (type == CHECKPOINT ) {
-    (*m_runTimeStats)[CheckpointIOTime] +=
+    (*m_runtimeStats)[CheckpointIOTime] +=
       myTime;
-    (*m_runTimeStats)[CheckpointIORate] +=
+    (*m_runtimeStats)[CheckpointIORate] +=
       (double) totalBytes / (byteToMB * myTime);
   }
     
   else /* if (type == CHECKPOINT_REDUCTION) */ {
-    (*m_runTimeStats)[CheckpointReductionIOTime] +=
+    (*m_runtimeStats)[CheckpointReductionIOTime] +=
       myTime;
-    (*m_runTimeStats)[CheckpointReducIORate] +=
+    (*m_runtimeStats)[CheckpointReducIORate] +=
       (double) totalBytes / (byteToMB * myTime);
   }
     
-  (*m_runTimeStats)[TotalIOTime ] += myTime;
+  (*m_runtimeStats)[TotalIOTime ] += myTime;
 
   if (dbg.active()) {
     dbg << "  outputVariables task end\n";

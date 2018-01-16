@@ -24,7 +24,7 @@
 
 //----- Ray.cc ----------------------------------------------
 #include <CCA/Components/Models/Radiation/RMCRT/RayKokkos.h>
-#include <CCA/Components/Regridder/PerPatchVars.h>
+#include <Core/Grid/Variables/PerPatchVars.h>
 
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -32,7 +32,6 @@
 #include <Core/Grid/AMR_CoarsenRefine.h>
 #include <Core/Grid/BoundaryConditions/BCUtils.h>
 #include <Core/Grid/DbgOutput.h>
-#include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Util/DOUT.hpp>
 #include <Core/Util/Timers/Timers.hpp>
 

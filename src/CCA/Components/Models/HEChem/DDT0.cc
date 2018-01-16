@@ -32,7 +32,6 @@
 #include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #include <CCA/Components/MPMICE/Core/MPMICELabel.h>
-#include <CCA/Components/Regridder/PerPatchVars.h>
 
 #include <CCA/Ports/Regridder.h>
 #include <CCA/Ports/Scheduler.h>

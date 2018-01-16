@@ -1,6 +1,3 @@
-#ifndef CCA_PORTS_LOADBALANCERPORT_H
-#define CCA_PORTS_LOADBALANCERPORT_H
-
 /*
  * The MIT License
  *
@@ -25,7 +22,10 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/SimulationController/RunTimeStatsEnums.h>
+#ifndef CCA_PORTS_LOADBALANCERPORT_H
+#define CCA_PORTS_LOADBALANCERPORT_H
+
+#include <CCA/Components/Schedulers/RuntimeStatsEnum.h>
 
 #include <CCA/Ports/SchedulerP.h>
 
@@ -186,7 +186,7 @@ public:
   virtual int* getActiveDims() = 0;
   virtual void setDimensionality(bool x, bool y, bool z) = 0;
 
-  virtual void setRunTimeStats( ReductionInfoMapper< RunTimeStatsEnum, double > *runTimeStats) = 0;
+  virtual void setRuntimeStats( ReductionInfoMapper< RuntimeStatsEnum, double > *runtimeStats) = 0;
 
 private:
 

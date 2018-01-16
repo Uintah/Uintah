@@ -31,7 +31,7 @@
 #include <Core/Grid/SimulationState.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/Regridder.h>
-#include <CCA/Components/Regridder/PerPatchVars.h>
+#include <Core/Grid/Variables/PerPatchVars.h>
 #include <Core/Util/DebugStream.h>
 
 // TODO:

@@ -25,7 +25,7 @@
 
 #include <CCA/Components/ICE/AMRICE.h>
 #include <CCA/Components/ICE/Materials/ICEMaterial.h>
-#include <CCA/Components/Regridder/PerPatchVars.h>
+#include <Core/Grid/Variables/PerPatchVars.h>
 #include <CCA/Components/Models/FluidsBased/FluidsBasedModel.h>
 #include <CCA/Ports/SolverInterface.h>
 #include <CCA/Ports/Scheduler.h>
