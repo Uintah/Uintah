@@ -233,7 +233,8 @@ ALL_STATIC_PSE_LIBS =                   \
     CCA/Components/Regridder            \
     CCA/Components/LoadBalancers        \
     CCA/Components/SwitchingCriteria    \
-    CCA/Components/Examples             \
+                                        \
+    $(EXAMPLES_LIB)                     \
                                         \
     $(ARCHES_LIBS)                      \
     $(ARCHES_SUB_LIBS)                  \
