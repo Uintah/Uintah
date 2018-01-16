@@ -70,7 +70,8 @@ namespace Uintah {
 
     virtual particleIndex countTracers(const Patch*, const std::string fname);
 
-    void scheduleInitialize(const LevelP& level, SchedulerP& sched);
+    void scheduleInitialize(const LevelP& level, SchedulerP& sched,
+                            TracerMaterial* trmat);
 
     void initialize(const ProcessorGroup*,
                     const PatchSubset* patches,

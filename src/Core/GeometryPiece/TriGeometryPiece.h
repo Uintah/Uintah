@@ -29,7 +29,7 @@
 #include <Core/GeometryPiece/UniformGrid.h>
 #include <Core/Grid/Box.h>
 
-#include <Core/Geometry/Point.h>
+#include <Core/Geometry/FloatPoint.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Plane.h>
 
@@ -107,19 +107,6 @@ WARNING
          void scale(const double factor);
 
          double surfaceArea() const;
-
-         inline int getNumIntersections( const Point& start, const Point& end, double& min_distance ){
-           int intersections = 0;
-           d_grid->countIntersections( start, end, intersections, min_distance );
-           return intersections;
-         }
-
-         inline int getNumIntersections( const Point& start ){
-           int intersections = 0;
-           d_grid->countIntersections( start, intersections );
-           return intersections;
-         }
-
       private:
 
          virtual void outputHelper( ProblemSpecP & ps ) const;
@@ -128,11 +115,11 @@ WARNING
          void readTri(const std::string& file);
          void makePlanes();
 //         void makeTriBoxes();
-         void insideTriangle(Point& p, int i, int& NCS, int& NES) const;
-
+         void insideTriangle(FloatPoint& p, int i, int& NCS, int& NES) const;
+         
          std::string d_file;
          Box d_box;
-         std::vector<Point>     d_points;
+         std::vector<FloatPoint>     d_points;
          std::vector<IntVector> d_tri;
          std::vector<Plane>     d_planes;
 //         std::vector<Box>       d_boxes;

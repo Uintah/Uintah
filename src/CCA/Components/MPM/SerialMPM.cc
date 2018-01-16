@@ -479,11 +479,12 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   }
 
   int numTracerM = m_sharedState->getNumTracerMatls();
-//  for(int m = 0; m < numTracerM; m++){
-  if(numTracerM>0){
-    TracerMaterial* tracer_matl = m_sharedState->getTracerMaterial(0);
+  cout << "numTracerM = " << numTracerM << endl;
+  for(int m = 0; m < numTracerM; m++){
+//  if(numTracerM>0){
+    TracerMaterial* tracer_matl = m_sharedState->getTracerMaterial(m);
     Tracer* tr = tracer_matl->getTracer();
-    tr->scheduleInitialize(level, sched);// tracer_matl);
+    tr->scheduleInitialize(level, sched, tracer_matl);
   }
 
   if (flags->d_deleteGeometryObjects) {
@@ -751,6 +752,10 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
  }
 
  if(flags->d_useTracers){
+  cout << "USING TRACERS!" << endl;
+  cout << "USING TRACERS!" << endl;
+  cout << "USING TRACERS!" << endl;
+  cout << "USING TRACERS!" << endl;
   sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc,
                                     m_sharedState->d_tracerState_preReloc,
                                     lb->pXLabel,

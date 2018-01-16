@@ -31,12 +31,12 @@ using namespace Uintah;
 using namespace std;
 
 
-Tri::Tri(Point& p1, Point& p2, Point& p3)
+Tri::Tri(FloatPoint& p1, FloatPoint& p2, FloatPoint& p3)
 {
   d_points[0] = p1;
   d_points[1] = p2;
   d_points[2] = p3;
-  d_plane = Plane(p1,p2,p3);
+  d_plane = FloatPlane(p1, p2, p3);
 }
 
 Tri::Tri()
@@ -47,23 +47,23 @@ Tri::~Tri()
 {
 }
 
-Point Tri::centroid()
+FloatPoint Tri::centroid()
 {
-  Vector cent(0.,0.,0);
+  FloatVector cent(0.,0.,0);
   for (int i = 0; i < 3; i++)
     cent += d_points[i].asVector();
 
   cent /= 3.;
 
-  return Point(cent.x(),cent.y(),cent.z());
+  return FloatPoint(cent.x(),cent.y(),cent.z());
 }
 
-Point Tri::vertex(int i)
+FloatPoint Tri::vertex(int i)
 {
   return d_points[i];
 }
 
-list<Tri> Tri::makeTriList(vector<IntVector>& tris ,vector<Point>& pts)
+list<Tri> Tri::makeTriList(vector<IntVector>& tris ,vector<FloatPoint>& pts)
 {
   list<Tri> tri_list;
   vector<IntVector>::const_iterator tri_itr;
@@ -75,10 +75,11 @@ list<Tri> Tri::makeTriList(vector<IntVector>& tris ,vector<Point>& pts)
   return tri_list;
 }
 
-bool Tri::inside(Point& pt)
+bool Tri::inside(Point& nfpt)
 {
-  Vector plane_normal = d_plane.normal();
-  Vector plane_normal_abs = Abs(plane_normal);
+  FloatPoint pt(nfpt.x(), nfpt.y(), nfpt.z());
+  FloatVector plane_normal = d_plane.normal();
+  FloatVector plane_normal_abs = Abs(plane_normal);
   double largest = plane_normal_abs.maxComponent();
   // WARNING: if dominant_coord is not 1-3, then this code breaks...
   int dominant_coord = -1;
@@ -105,7 +106,7 @@ bool Tri::inside(Point& pt)
 
   double tx = pt(x), ty = pt(y);
 
-  Point *p1 = &d_points[2], *p2 = d_points;
+  FloatPoint *p1 = &d_points[2], *p2 = d_points;
   int yflag0 = ((*p1)(y) >= ty);
 
   bool inside = false;
@@ -132,7 +133,7 @@ bool Tri::inside(Point& pt)
   return bool(inside);
 }
 
-Plane Tri::plane()
+FloatPlane Tri::plane()
 {
   return d_plane;
 }
@@ -142,7 +143,8 @@ UniformGrid::UniformGrid(Box& bound_box)
   const IntVector low(0,0,0), hi(10,10,10);
   Vector diff = Vector(hi.x(),hi.y(),hi.z()) - Vector(low.x(),low.y(),low.z());
   d_bound_box = bound_box;
-  d_max_min = (bound_box.upper().asVector()-bound_box.lower().asVector())/diff;
+  Vector dmm = (bound_box.upper().asVector()-bound_box.lower().asVector())/diff;
+  d_max_min = FloatVector(dmm.x(), dmm.y(), dmm.z());
   d_grid.resize(low,hi);
 }
 
@@ -184,10 +186,12 @@ UniformGrid::~UniformGrid()
 {
 }
 
-IntVector UniformGrid::cellID(Point point)
+IntVector UniformGrid::cellID(FloatPoint point)
 {
-  Vector pt_diff = point.asVector() - (d_bound_box.lower()).asVector();
-  Vector id = pt_diff/d_max_min;
+  Point pt(point.x(), point.y(), point.z());
+  Vector pt_diff = pt.asVector() - (d_bound_box.lower()).asVector();
+  Vector dmm = Vector(d_max_min.x(), d_max_min.y(), d_max_min.z());
+  Vector id = pt_diff/dmm;
   int i = (int)floor(id.x());
   int j = (int)floor(id.y());
   int k = (int)floor(id.z());
@@ -229,10 +233,11 @@ void UniformGrid::buildUniformGrid(list<Tri>& polygons)
 
 void UniformGrid::countIntersections(const Point& pt, int& crossings)
 {
+  // Make a ray and shoot it in the +x direction
 
-  //Assuming that the caller intends to check the intersection between pt and infinity:
-  Vector infinity = Vector(pt.x()+1e10,pt.y(),pt.z());
-  IntVector test_pt_id = cellID(pt);
+  FloatPoint fpt = FloatPoint(pt.x(), pt.y(), pt.z());
+  FloatVector infinity = FloatVector(pt.x()+1e10,pt.y(),pt.z());
+  IntVector test_pt_id = cellID(fpt);
   IntVector start = d_grid.getLowIndex();
   IntVector stop = d_grid.getHighIndex();
 
@@ -242,104 +247,32 @@ void UniformGrid::countIntersections(const Point& pt, int& crossings)
 
     IntVector curr(i,test_pt_id.y(),test_pt_id.z());
     list<Tri> tris = d_grid[curr];
-
-    for ( list<Tri>::iterator itr = tris.begin(); itr != tris.end();
-	        ++itr ) {
-
+    for (list<Tri>::iterator itr = tris.begin(); itr != tris.end(); ++itr) {
+      FloatPoint fhit;
       Point hit;
-      if ((itr->plane()).Intersect(pt,infinity,hit)) {
 
-	      Vector int_ray = hit.asVector() - pt.asVector();
-	      double cos_angle = Dot(infinity,int_ray)/
-	                         (infinity.length()*int_ray.length());
-
-
-	      if (cos_angle < 0.)
-	        continue;
-
-	      if (itr->inside(hit)) {
-
-	        double distance = int_ray.length();
-	        map<double,Tri>::const_iterator duplicate = cross_map.find(distance);
-
-	        if (duplicate == cross_map.end()) {
-
-	          cross_map[distance] = *itr;
-	          crossings++;
-
-	        }
-	      }
+      if ((itr->plane()).Intersect(fpt,infinity,fhit)) {
+        hit=Point(fhit.x(), fhit.y(), fhit.z());
+	FloatVector int_ray = fhit.asVector() - fpt.asVector();
+	double cos_angle = Dot(infinity,int_ray)/
+	  (infinity.length()*int_ray.length());
+	if (cos_angle < 0.)
+	  continue;
+	if (itr->inside(hit)) {
+#if 0
+	  cout << "Inside_new hit = " << hit << "vertices: "
+	       << itr->vertex(0) << " " << itr->vertex(1) <<  " "
+	       << itr->vertex(2) << endl;
+#endif
+	  double distance = int_ray.length();
+	  map<double,Tri>::const_iterator duplicate = cross_map.find(distance);
+	  if (duplicate == cross_map.end()) {
+	    cross_map[distance] = *itr;
+	    crossings++;
+	  }
+	}
       }
     }
   }
-
 }
-void UniformGrid::countIntersections( const Point& pt, const Point& pt_away,
-                                      int& crossings, double& min_distance )
-{
 
-  // This method doesn't assume anything about the direction in which the
-  // ray is sent out from the original point, thus we must loop over all
-  // cells in the bounding box, which makes this approach more expensive.
-  // This method does return the max number of intersections.
-  // We draw a ray from the origin (pt) to the point away (pt_away) and
-  // then attempt to intersect with the triangulated geometry inside of this cell.
-  // A crossing is only counted if the length of the intersected ray is less than
-  // or equal to the length of the distance between the two points.
-  Vector infinity = Vector( pt_away.x() - pt.x(), pt_away.y() - pt.y(), pt_away.z() - pt.z() );
-  IntVector test_pt_id = cellID(pt);
-  IntVector test_pt_away_id = cellID(pt_away);
-  IntVector start = d_grid.getLowIndex();
-  IntVector stop = d_grid.getHighIndex();
-
-  IntVector min = Min(test_pt_id, test_pt_away_id);
-  IntVector max = Max(test_pt_id, test_pt_away_id);
-
-  if ( min.x() > start.x() && min.x() < stop.x() ) start[0] = min[0];
-  if ( min.y() > start.y() && min.y() < stop.y() ) start[1] = min[1];
-  if ( min.z() > start.z() && min.z() < stop.z() ) start[2] = min[2];
-
-  if ( max.x() < stop.x() && max.x() > start.x() ) stop[0] = max[0];
-  if ( max.y() < stop.y() && max.y() > start.y() ) stop[1] = max[1];
-  if ( max.z() < stop.z() && max.z() > start.z() ) stop[2] = max[2];
-
-  //maybe the bounding boxes don't even overlap
-  if ( min.x() > stop.x() || max.x() < start.x() ) start[0] = stop[0];
-  if ( min.y() > stop.y() || max.y() < start.y() ) start[0] = stop[0];
-  if ( min.z() > stop.z() || max.z() < start.z() ) start[0] = stop[0];
-
-  map<double,Tri> cross_map;
-
-  min_distance = 1.e10;
-
-  for (int i = start.x(); i < stop.x(); i++) {
-    for (int j = start.y(); j < stop.y(); j++) {
-      for (int k = start.z(); k < stop.z(); k++) {
-
-        IntVector curr(i,j,k);
-
-        list<Tri> tris = d_grid[curr];
-
-        for (list<Tri>::iterator itr = tris.begin(); itr != tris.end();
-            ++itr) {
-          Point hit;
-          if ((itr->plane()).Intersect(pt,infinity,hit)) {
-            Vector int_ray = hit.asVector() - pt.asVector();
-            double cos_angle = Dot(infinity,int_ray)/
-                               (infinity.length()*int_ray.length());
-            if (cos_angle < 0.) continue;
-            if (itr->inside(hit)) {
-              double distance = int_ray.length();
-              if ( distance <= infinity.length() ){
-                map<double,Tri>::const_iterator duplicate = cross_map.find(distance);
-                if (duplicate == cross_map.end()) {
-                  cross_map[distance] = *itr;
-                  crossings++;
-                }
-                if ( distance < min_distance ) min_distance = distance;
-              }
-            }
-          }
-        }
-  } } }
-}

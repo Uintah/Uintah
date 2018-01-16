@@ -71,7 +71,10 @@ SRCS += \
         Core/Geometry/BBox.cc \
         Core/Geometry/IntVector.cc \
         Core/Geometry/Plane.cc \
+        Core/Geometry/FloatPlane.cc \
         Core/Geometry/Point.cc \
+        Core/Geometry/FloatPoint.cc \
+        Core/Geometry/FloatVector.cc \
         Core/Geometry/Tensor.cc \
         Core/Geometry/Vector.cc \
 	\
