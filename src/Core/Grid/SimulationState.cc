@@ -401,7 +401,7 @@ void SimulationState::finalizeMaterials()
     tmp_cz_matls[i] = cz_matls[i]->getDWIndex();
   }
   all_cz_matls->addAll(tmp_cz_matls);
-  
+
   // Tracer
   if (all_tracer_matls && all_tracer_matls->removeReference()){
     delete all_tracer_matls;

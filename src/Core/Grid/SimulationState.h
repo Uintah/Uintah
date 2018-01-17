@@ -265,7 +265,7 @@ private:
   std::vector<TracerMaterial*>  tracer_matls;
   std::vector<MPMMaterial*>     mpm_matls;
   MaterialSet * all_cz_matls{nullptr};
-  MaterialSet * all_tracer_matls;
+  MaterialSet * all_tracer_matls{nullptr};
   MaterialSet * all_mpm_matls{nullptr};
 #endif
 

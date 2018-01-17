@@ -2021,6 +2021,15 @@ SchedulerCommon::scheduleParticleRelocation( const LevelP       & level
 
     m_relocate_2.scheduleParticleRelocation(this, d_myworld, m_loadBalancer, level, old_posLabel, old_labels, new_posLabel, new_labels, particleIDLabel, matls);
   }
+
+  if (which == 3) {
+    if (m_reloc_new_pos_label) {
+      ASSERTEQ(m_reloc_new_pos_label, new_posLabel);
+    }
+    m_reloc_new_pos_label = new_posLabel;
+
+    m_relocate_3.scheduleParticleRelocation(this, d_myworld, m_loadBalancer, level, old_posLabel, old_labels, new_posLabel, new_labels, particleIDLabel, matls);
+  }
 }
 
 //______________________________________________________________________
@@ -2124,10 +2133,8 @@ SchedulerCommon::scheduleTaskMonitoring( const LevelP& level )
 
   // Ghost::GhostType gn = Ghost::None;
 
-  for (unsigned i = 0; i < 2; ++i)
-  {
-    for( const auto &it : m_monitoring_tasks[i] )
-    {
+  for (unsigned i = 0; i < 2; ++i) {
+    for( const auto &it : m_monitoring_tasks[i] ) {
       t->computes( it.second, m_dummy_matl, Task::OutOfDomain );
       
       // overrideVariableBehavior(it.second->getName(),

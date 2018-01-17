@@ -187,13 +187,7 @@ void Tracer::scheduleInitialize(const LevelP& level,
   t->computes(d_lb->tracerIDLabel);
   t->computes(d_lb->pCellNATracerIDLabel,zeroth_matl);
 
-  vector<int> m(1);
-  m[0] = trmat->getDWIndex();
-  MaterialSet* tr_matl_set = scinew MaterialSet();
-  tr_matl_set->addAll(m);
-  tr_matl_set->addReference();
-//  sched->addTask(t, level->eachPatch(), d_sharedState->allTracerMaterials());
-  sched->addTask(t, level->eachPatch(), tr_matl_set);
+  sched->addTask(t, level->eachPatch(), d_sharedState->allTracerMaterials());
 
   // The task will have a reference to zeroth_matl
   if (zeroth_matl->removeReference())
