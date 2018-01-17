@@ -139,7 +139,7 @@ const double sigT4_const =   m_sigmaT4OverPi[m_maxLevels-1](i,j,k);
          return; // No radiation in intrusions
       }
 
-          int dir = -9; // Hard-coded for NONE
+      int dir = -9; // Hard-coded for NONE
 
       for ( int iRay = 0; iRay < m_d_nDivQRays; iRay++ ) {   // BEGIN moderate skrutiny
 
@@ -200,7 +200,7 @@ const double sigT4_const =   m_sigmaT4OverPi[m_maxLevels-1](i,j,k);
 #else
 #endif
 //===========DEBUGGING==========`//
-
+/wh
         //______________________________________________________//
         //==== END findRayDirection(mTwister, origin, iRay) ====//
 
@@ -349,8 +349,6 @@ const double sigT4_const =   m_sigmaT4OverPi[m_maxLevels-1](i,j,k);
         T sigmaT4Value = m_sigmaT4OverPi[L]( cur[0], cur[1], cur[2]);
         while ( prevAbskg >= 0 ) {           ////////////////////////////////////////////// BEGIN EXTREME SKRUTINY /////////////////////////
 
-          //If sigmaT4 changes often, comment this back in
-          //T sigmaT4Value = m_sigmaT4OverPi[L]( cur[0], cur[1], cur[2]);
 
           //__________________________________
           //  Determine which cell the ray will enter next
@@ -375,13 +373,6 @@ const double sigT4_const =   m_sigmaT4OverPi[m_maxLevels-1](i,j,k);
               dir = 2; // Hard-coded for Z
             }
           }
-          double distanceTraveled = ( tMaxV[dir] - old_length );
-          //  more efficient EXP
-          double expOpticalThick = (1. - prevAbskg * distanceTraveled )*expOpticalThick_prev; // exp approximation
-          
-          sumI += sigmaT4Value * ( expOpticalThick_prev - expOpticalThick ) ;
-
-          expOpticalThick_prev = expOpticalThick;
 
           // next cell index and position
           cur[dir]  +=  step[dir];
@@ -390,6 +381,7 @@ const double sigT4_const =   m_sigmaT4OverPi[m_maxLevels-1](i,j,k);
           //  Update marching variables
             
           old_length              = tMaxV[dir];
+          double distanceTraveled = ( tMaxV[dir] - old_length );
           rayLength         += distanceTraveled;
 
           //__________________________________
@@ -397,10 +389,6 @@ const double sigT4_const =   m_sigmaT4OverPi[m_maxLevels-1](i,j,k);
           if ( m_levelParamsML[L].regionLo[dir] > cur[dir] || m_levelParamsML[L].regionHi[dir] <= cur[dir] ){
             m_levelParamsML[L].mapCellToCoarser(cur);
             L   = (L > 0) ? L - 1 : 0;                      // move to a coarser level
-            // If the cell isn't a flow cell then terminate the ray
-            prevAbskg = m_abskg[L]( cur[0], cur[1], cur[2] );
-            //in_domain =  ( m_abskg[L]( cur[0], cur[1], cur[2] ) >= 0 ); // Hard-coded for d_flowCell
-            //in_domain =  ( m_cellType[L]( cur[0], cur[1], cur[2] ) == -1 ); // Hard-coded for d_flowCell
 
             m_levelParamsML[L].getCellPosition(cur, CC_pos);
             double rayDx_Level = rayOrigin[dir] + distanceTraveled*direction_vector[dir] - ( CC_pos[dir] - 0.5 * m_levelParamsML[L].Dx[dir] );
@@ -408,19 +396,29 @@ const double sigT4_const =   m_sigmaT4OverPi[m_maxLevels-1](i,j,k);
             tMaxV[dir]        += tMax_tmp;
           } else {
             // If the cell isn't a flow cell then terminate the ray
-            prevAbskg = m_abskg[L]( cur[0], cur[1], cur[2] );
-            //in_domain =  ( m_abskg[L]( cur[0], cur[1], cur[2] ) >= 0 ); // Hard-coded for d_flowCell
-            //in_domain =  ( m_cellType[L]( cur[0], cur[1], cur[2] ) == -1 ); // Hard-coded for d_flowCell
             tMaxV[dir]              = tMaxV[dir] + tDelta[L][dir];
 
           }
+          //  more efficient EXP
+          double expOpticalThick = (1. - prevAbskg * distanceTraveled )*expOpticalThick_prev; // exp approximation
+          
+          sumI += sigmaT4Value * ( expOpticalThick_prev - expOpticalThick ) ;
+
+          expOpticalThick_prev = expOpticalThick;
+          
+          // If the cell isn't a flow cell then terminate the ray
+          prevAbskg = m_abskg[L]( cur[0], cur[1], cur[2] );
+          //in_domain =  ( m_abskg[L]( cur[0], cur[1], cur[2] ) >= 0 ); // Hard-coded for d_flowCell
+          //in_domain =  ( m_cellType[L]( cur[0], cur[1], cur[2] ) == -1 ); // Hard-coded for d_flowCell
+          //If sigmaT4 changes often, comment this back in
+          //T sigmaT4Value = m_sigmaT4OverPi[L]( cur[0], cur[1], cur[2]);
 
 
         } // end domain while loop  ++++++++++++++
 
         //______________________________________________________________________
 
-        T wallEmissivity = ( m_abskg[L]( cur[0], cur[1], cur[2] ) > 1.0 ) ? 1.0: m_abskg[L]( cur[0], cur[1], cur[2] );  // Ensure wall emissivity doesn't exceed one
+        T wallEmissivity = ( fabs(m_abskg[L]( cur[0], cur[1], cur[2] )) > 1.0 ) ? 1.0: fabs(m_abskg[L]( cur[0], cur[1], cur[2] ));  // Ensure wall emissivity doesn't exceed one
 
         sumI += wallEmissivity * m_sigmaT4OverPi[L]( cur[0], cur[1], cur[2] ) *expOpticalThick_prev;
 
