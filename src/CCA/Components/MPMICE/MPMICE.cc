@@ -578,7 +578,6 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
     d_ice->d_exchModel->sched_AddExch_Vel_Temp_CC(   
                                               sched, ice_patches, ice_matls_sub,
                                                                   mpm_matls_sub,
-                                                                  press_matl,
                                                                   all_matls,
                                                                   d_ice->d_BC_globalVars); 
 

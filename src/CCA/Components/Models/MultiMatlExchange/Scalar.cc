@@ -386,7 +386,6 @@ void ScalarExch::sched_AddExch_Vel_Temp_CC( SchedulerP           & sched,
                                             const PatchSet       * patches,
                                             const MaterialSubset * ice_matls,
                                             const MaterialSubset * mpm_matls,
-                                            const MaterialSubset * press_matl,
                                             const MaterialSet    * all_matls,
                                             customBC_globalVars  * BC_globalVars )
 {
@@ -405,13 +404,13 @@ void ScalarExch::sched_AddExch_Vel_Temp_CC( SchedulerP           & sched,
 
   Ghost::GhostType gn  = Ghost::None;
   Ghost::GhostType gac = Ghost::AroundCells;
-  
+
   t->requires(Task::OldDW, Ilb->timeStepLabel);
   t->requires(Task::OldDW, Ilb->delTLabel,getLevel(patches));
 
   if(d_exchCoeff->convective()){
-    t->requires(Task::NewDW, Mlb->gMassLabel,       mpm_matls,  gac, 1);
-    t->requires(Task::OldDW, Mlb->NC_CCweightLabel, press_matl, gac, 1);
+    t->requires(Task::NewDW, Mlb->gMassLabel,       mpm_matls,   gac, 1);
+    t->requires(Task::OldDW, Mlb->NC_CCweightLabel, d_zero_matl, gac, 1);
   }
                                 // I C E
   t->requires(Task::OldDW,  Ilb->temp_CCLabel,      ice_matls, gn);
@@ -477,8 +476,8 @@ void ScalarExch::addExch_Vel_Temp_CC( const ProcessorGroup * pg,
   timeStep_vartype timeStep;
   old_dw->get(timeStep, Ilb->timeStepLabel);
   bool isNotInitialTimeStep = (timeStep > 0);
-  
-  
+
+
   const Level* level = getLevel(patches);
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -576,7 +575,7 @@ void ScalarExch::addExch_Vel_Temp_CC( const ProcessorGroup * pg,
     //
     for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
       IntVector c = *iter;
-      
+
       //---------- M O M E N T U M   E X C H A N G E
       //   Form BETA matrix (a), off diagonal terms
       for(int m = 0; m < numALLMatls; m++)  {
@@ -613,7 +612,7 @@ void ScalarExch::addExch_Vel_Temp_CC( const ProcessorGroup * pg,
       if(d_exchCoeff->d_heatExchCoeffModel != "constant"){
         d_exchCoeff->getVariableExchangeCoeff( K, H, c, mass_L);
       }
-      
+
       for(int m = 0; m < numALLMatls; m++) {
         tmp = delT*sp_vol_CC[m][c] / cv[m][c];
         for(int n = 0; n < numALLMatls; n++)  {
@@ -637,10 +636,10 @@ void ScalarExch::addExch_Vel_Temp_CC( const ProcessorGroup * pg,
          b[m] += beta(m,n) * (Temp_CC[n][c] - Temp_CC[m][c]);
         }
       }
-      
+
       //     S O L V E, Add exchange contribution to orig value
       a.destructiveSolve(b);
-      
+
       for(int m = 0; m < numALLMatls; m++) {
         Temp_CC[m][c] = Temp_CC[m][c] + b[m];
       }
@@ -678,9 +677,9 @@ void ScalarExch::addExch_Vel_Temp_CC( const ProcessorGroup * pg,
         MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
         int dwindex = matl->getDWIndex();
         if(mpm_matl && dwindex==sm){
-          
+
           new_dw->get(NCsolidMass,     Mlb->gMassLabel,   dwindex,patch,gac,1);
-          
+
           for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
             IntVector c = *iter;
             IntVector nodeIdx[8];
@@ -693,7 +692,7 @@ void ScalarExch::addExch_Vel_Temp_CC( const ProcessorGroup * pg,
               MinMass = std::min(MinMass,NC_CCweight[nodeIdx[nN]]*
                                          NCsolidMass[nodeIdx[nN]]);
             }
-            
+
             // surface
             if ((MaxMass-MinMass)/MaxMass == 1.0 && (MaxMass > d_SMALL_NUM)){
               double gradRhoX = 0.25 *
@@ -772,21 +771,21 @@ void ScalarExch::addExch_Vel_Temp_CC( const ProcessorGroup * pg,
     //__________________________________
     //
     if( BC_globalVars->usingLodi || BC_globalVars->usingMicroSlipBCs){
-    
+
       std::vector<CCVariable<double> > temp_CC_Xchange(numALLMatls);
       std::vector<CCVariable<Vector> > vel_CC_Xchange(numALLMatls);
-    
+
       for (int m = 0; m < numALLMatls; m++) {
         Material* matl = d_sharedState->getMaterial(m);
         int indx = matl->getDWIndex();
-    
+
         new_dw->allocateAndPut(temp_CC_Xchange[m],Ilb->temp_CC_XchangeLabel,indx,patch);
         new_dw->allocateAndPut(vel_CC_Xchange[m], Ilb->vel_CC_XchangeLabel, indx,patch);
         vel_CC_Xchange[m].copy(vel_CC[m]);
         temp_CC_Xchange[m].copy(Temp_CC[m]);
       }
     }
-    
+
     //__________________________________
     //  Set boundary conditions
     for (int m = 0; m < numALLMatls; m++)  {
@@ -832,7 +831,7 @@ void ScalarExch::addExch_Vel_Temp_CC_1matl( const ProcessorGroup * pg,
   timeStep_vartype timeStep;
   old_dw->get(timeStep, Ilb->timeStepLabel);
   bool isNotInitialTimeStep = (timeStep > 0);
-  
+
   const Level* level = getLevel(patches);
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
