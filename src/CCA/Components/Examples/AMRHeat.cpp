@@ -1,5 +1,5 @@
 #include <CCA/Components/Examples/AMRHeat.hpp>
-#include <CCA/Components/Regridder/PerPatchVars.h>
+#include <Core/Grid/Variables/PerPatchVars.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/Regridder.h>
 #include <Core/ProblemSpec/ProblemSpec.h>

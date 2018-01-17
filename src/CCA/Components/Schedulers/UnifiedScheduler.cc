@@ -782,10 +782,10 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
 
     // Stats specific to this threaded scheduler - TaskRunner threads start at g_runners[1]
     for (int i = 1; i < m_num_threads; ++i) {
-      (*d_runTimeStats)[TaskWaitThreadTime] += Impl::g_runners[i]->getWaitTime();
+      (*d_runtimeStats)[TaskWaitThreadTime] += Impl::g_runners[i]->getWaitTime();
     }
 
-    MPIScheduler::computeNetRunTimeStats();
+    MPIScheduler::computeNetRuntimeStats();
   }
 
   // only do on toplevel scheduler

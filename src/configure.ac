@@ -731,8 +731,20 @@ SCI_ARG_ENABLE(rpath,
   [enable_rpath="$enableval"],
   [enable_rpath=${enable_rpath='yes'}])
 
+SCI_ARG_ENABLE(unit-tests,
+  AC_HELP_STRING(--enable-unit-tests,
+                 Turn on the unit tests.),
+  [BUILD_UNIT_TESTS="yes"],
+  [BUILD_UNIT_TESTS="no"])
+
+SCI_ARG_ENABLE(minimal,
+  AC_HELP_STRING(--enable-minimal,
+                 Build a minimal set of libraries),
+  [BUILD_MINIMAL="yes"],
+  [BUILD_MINIMAL="no"])
+
 #
-# ---- List of --enable statements for Uintah Components ---- 
+# ---- List of --enable statements for Uintah Applications ---- 
 #
 
 SCI_ARG_ENABLE(arches,
@@ -742,12 +754,26 @@ SCI_ARG_ENABLE(arches,
   [BUILD_ARCHES="no"
    DEF_ARCHES=["#define NO_ARCHES"]])
 
+SCI_ARG_ENABLE(examples,
+  AC_HELP_STRING(--enable-examples,
+                 Turn on the Examples component - and Radiation Model.),
+  [BUILD_EXAMPLES="yes"],
+  [BUILD_EXAMPLES="no"
+   DEF_EXAMPLES=["#define NO_EXAMPLES"]])
+
 SCI_ARG_ENABLE(fvm,
   AC_HELP_STRING(--enable-fvm,
                  Turn on the FVM component.),
   [BUILD_FVM="yes"],
   [BUILD_FVM="no"
    DEF_FVM=["#define NO_FVM"]])
+
+SCI_ARG_ENABLE(heat,
+  AC_HELP_STRING(--enable-heat,
+                 Turn on the Heat component.),
+  [BUILD_HEAT="yes"],
+  [BUILD_HEAT="no"
+   DEF_HEAT=["#define NO_HEAT"]])
 
 SCI_ARG_ENABLE(ice,
   AC_HELP_STRING(--enable-ice,
@@ -763,20 +789,6 @@ SCI_ARG_ENABLE(mpm,
   [BUILD_MPM="no"
    DEF_MPM=["#define NO_MPM"]])
 
-SCI_ARG_ENABLE(wasatch,
-  AC_HELP_STRING(--enable-wasatch,
-                 Turn on the Wasatch component.),
-  [BUILD_WASATCH="yes"],
-  [BUILD_WASATCH="no"
-   DEF_WASATCH=["#define NO_WASATCH"]])
-
-SCI_ARG_ENABLE(heat,
-  AC_HELP_STRING(--enable-heat,
-                 Turn on the Heat component.),
-  [BUILD_HEAT="yes"],
-  [BUILD_HEAT="no"
-   DEF_HEAT=["#define NO_HEAT"]])
-
 SCI_ARG_ENABLE(phasefield,
   AC_HELP_STRING(--enable-phasefield,
                  Turn on the PhaseField component.),
@@ -784,57 +796,98 @@ SCI_ARG_ENABLE(phasefield,
   [BUILD_PHASEFIELD="no"
    DEF_PHASEFIELD=["#define NO_PHASEFIELD"]])
 
+SCI_ARG_ENABLE(wasatch,
+  AC_HELP_STRING(--enable-wasatch,
+                 Turn on the Wasatch component - and Radiation Model.),
+  [BUILD_WASATCH="yes"],
+  [BUILD_WASATCH="no"
+   DEF_WASATCH=["#define NO_WASATCH"]])
+
 SCI_ARG_ENABLE(all_components,
   AC_HELP_STRING(--enable-all-components,
                  Turn on the all components.),
   [use_all_components="yes"
    BUILD_ARCHES="yes"
+   BUILD_EXAMPLES="yes"
    BUILD_FVM="yes"
+   BUILD_HEAT="yes"
    BUILD_ICE="yes"
    BUILD_MPM="yes"
    BUILD_WASATCH="yes"
-   BUILD_HEAT="yes"
    DEF_ARCHES=
+   DEF_EXAMPLES=
    DEF_FVM=
+   DEF_HEAT=
    DEF_ICE=
    DEF_MPM=
+   DEF_UNIT_TESTS=
    DEF_WASATCH=
-   DEF_HEAT=
   ],
   [use_all_components="no"])
 
 #
 # --- end list of -enable components ------
 #
-
-BUILD_MODELS_RADIATION=yes
+BUILD_MODELS_RADIATION=no
 DEF_MODELS_RADIATION=
 
-if test "$use_all_components" = "yes" -a          \
-        \( "$enable_arches"           = "yes" -o  \
-           "$enable_fvm"              = "yes" -o  \
-           "$enable_ice"              = "yes" -o  \
-           "$enable_models_radiation" = "yes" -o  \
-           "$enable_mpm"              = "yes" -o  \
-           "$enable_wasatch"          = "yes" -o  \
-           "$enable_heat"             = "yes" -o  \
-           "$enable_phasefield"       = "yes" \); then
-   AC_MSG_ERROR( Please do not use both --enable-all-components and --enable-<specific-component> )
+if test "$use_all_components"   = "yes" -o  \
+        "$enable_arches"        = "yes" -o  \
+        "$enable_examples"      = "yes" -o  \
+        "$enable_wasatch"       = "yes" ; then
+  BUILD_MODELS_RADIATION=yes
 fi
-if test "$BUILD_ARCHES"     != "yes"           -a   \
-        "$BUILD_FVM"        != "yes"           -a   \
-        "$BUILD_ICE"        != "yes"           -a   \
-        "$BUILD_MPM"        != "yes"           -a   \
-        "$BUILD_WASATCH"    != "yes"           -a   \
-        "$BUILD_HEAT"       != "yes"           -a   \
-        "$BUILD_PHASEFIELD" != "yes" ; then
+
+if test "$enable_minimal"             = "yes" -a  \
+        \( "$use_all_components"      = "yes" -o  \
+	   "$enable_unit_tests"       = "yes" -o  \
+	   "$enable_arches"           = "yes" -o  \
+           "$enable_examples"         = "yes" -o  \
+           "$enable_fvm"              = "yes" -o  \
+           "$enable_heat"             = "yes" -o  \
+           "$enable_ice"              = "yes" -o  \
+           "$enable_mpm"              = "yes" -o  \
+           "$enable_phasefield"       = "yes" -o  \
+           "$enable_wasatch"          = "yes" \); then
+   AC_MSG_ERROR( Can not do a minimal library only build if building applications or unit tests)
+elif test "$enable_minimal" = "yes"; then
+
   add_important_warning "-------------------------------------------------------------------------"
-  msg="!!! NO COMPONENTS WERE SPECIFIED! ONLY UTILITY PROGRAMS WILL BE BUILT !!!"
-  add_important_warning "$msg"
+  add_important_warning "!!! Minimal library only build requested !!!"
   add_important_warning "-------------------------------------------------------------------------"
 fi
 
-if test "$BUILD_ICE" = "yes" -a "$BUILD_MPM" = "no"; then
+if test "$use_all_components"         = "yes" -a  \
+        \( "$enable_arches"           = "yes" -o  \
+           "$enable_examples"         = "yes" -o  \
+           "$enable_fvm"              = "yes" -o  \
+           "$enable_heat"             = "yes" -o  \
+           "$enable_ice"              = "yes" -o  \
+           "$enable_mpm"              = "yes" -o  \
+           "$enable_phasefield"       = "yes" -o  \
+           "$enable_wasatch"          = "yes" \); then
+  add_important_warning "-------------------------------------------------------------------------"
+  add_important_warning "!!! Both --enable-all-components and --enable-<specific-component> were used. ALL Componenets will be built."
+  add_important_warning "-------------------------------------------------------------------------"
+#   AC_MSG_ERROR( Can not use both --enable-all-components and --enable-<specific-component> )
+fi
+
+if test "$enable_minimal"       != "yes" -a  \
+        "$use_all_components"   != "yes" -a  \
+        "$enable_arches"        != "yes" -a  \
+        "$enable_examples"      != "yes" -a  \
+        "$enable_fvm"           != "yes" -a  \
+        "$enable_heat"          != "yes" -a  \
+        "$enable_ice"           != "yes" -a  \
+        "$enable_mpm"           != "yes" -a  \
+        "$enable_phasefield"    != "yes" -a  \
+        "$enable_wasatch"       != "yes" ; then
+  add_important_warning "-------------------------------------------------------------------------"
+  add_important_warning "!!! No components were specified! Only utility programs will be built !!!"
+  add_important_warning "-------------------------------------------------------------------------"
+fi
+
+if test "$enable_ice" = "yes" -a "$enable_mpm" != "yes"; then
    AC_MSG_ERROR( [If you enable ICE, you must enable MPM too.] )
 fi
 
@@ -1358,25 +1411,35 @@ fi
 
 # NO_FORTRAN is used in configVars.mk[.in] and DEF_NO_FORTRAN is used in uintah_testdefs.h.in
 
+
 AC_SUBST(BUILD_ARCHES)
+AC_SUBST(BUILD_EXAMPLES)
 AC_SUBST(BUILD_FVM)
+AC_SUBST(BUILD_HEAT)
 AC_SUBST(BUILD_ICE)
 AC_SUBST(BUILD_MODELS_RADIATION)
 AC_SUBST(BUILD_MPM)
-AC_SUBST(BUILD_WASATCH)
-AC_SUBST(BUILD_HEAT)
 AC_SUBST(BUILD_PHASEFIELD)
+AC_SUBST(BUILD_WASATCH)
 
 AC_SUBST(DEF_ARCHES)
+AC_SUBST(DEF_EXAMPLES)
 AC_SUBST(DEF_FVM)
+AC_SUBST(DEF_HEAT)
 AC_SUBST(DEF_ICE)
 AC_SUBST(DEF_MPM)
-AC_SUBST(DEF_NO_FORTRAN)
 AC_SUBST(DEF_MODELS_RADIATION)
-AC_SUBST(DEF_WASATCH)
-AC_SUBST(DEF_HEAT)
 AC_SUBST(DEF_PHASEFIELD)
+AC_SUBST(DEF_WASATCH)
+
+AC_SUBST(BUILD_UNIT_TESTS)
+AC_SUBST(DEF_UNIT_TESTS)
+
+AC_SUBST(BUILD_MINIMAL)
+AC_SUBST(DEF_MINIMAL)
+
 AC_SUBST(NO_FORTRAN)
+AC_SUBST(DEF_NO_FORTRAN)
 
 if test "$BUILD_ARCHES" = "no" -a "$with_fortran" = "no"; then
   sci_required_fortran=no
@@ -4578,7 +4641,9 @@ AC_SUBST(scirun_src_dir)
 AC_CONFIG_FILES(configVars.mk Makefile disjointPackageMakefile $sci_defs_files)
 
 ##  Add a list of Uintah specific output files.
+if test "$NO_FORTRAN" != "yes" ; then
 AC_CONFIG_FILES(tools/fspec.pl)
+fi
 
 #  ignore --no-create and --no-recursion flags
 no_create=no

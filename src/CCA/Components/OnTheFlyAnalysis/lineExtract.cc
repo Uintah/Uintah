@@ -25,7 +25,7 @@
 #include <CCA/Components/OnTheFlyAnalysis/lineExtract.h>
 #include <CCA/Components/OnTheFlyAnalysis/FileInfoVar.h>
 
-#include <CCA/Components/Regridder/PerPatchVars.h>
+#include <Core/Grid/Variables/PerPatchVars.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/LoadBalancer.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -34,7 +34,6 @@
 #include <Core/Grid/Material.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/CellIterator.h>
-#include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>

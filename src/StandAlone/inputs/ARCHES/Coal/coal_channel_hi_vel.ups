@@ -906,7 +906,6 @@
         <Yamamoto_coefficients>[1.75e10,2.592280258e5,0.53,16.26759,-39.1322,61.04079,-38.3719,0.108926,0.032302]</Yamamoto_coefficients>
         <FOWYDevol>
           <v_hiT>0.55</v_hiT>
-          <Tig>590</Tig>
           <A>19724227.36</A>
           <Ta>1.113e4</Ta>
           <Tbp_graphite>3e3</Tbp_graphite>

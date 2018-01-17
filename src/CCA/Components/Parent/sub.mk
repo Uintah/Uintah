@@ -49,6 +49,7 @@ PSELIBS := \
         Core/ProblemSpec                   \
         Core/Util                          \
         $(ARCHES)                          \
+        $(EXAMPLES)                        \
         $(FVM)                             \
         $(HEAT)                            \
         $(ICE)                             \
@@ -59,11 +60,10 @@ PSELIBS := \
         $(PHASEFIELD)                      \
         $(WASATCH)                         \
         $(COMPONENTS)/Application          \
-        $(COMPONENTS)/Examples             \
         $(COMPONENTS)/PostProcessUda       \
         $(COMPONENTS)/ProblemSpecification \
-        $(COMPONENTS)/Solvers              \
-        $(COMPONENTS)/SwitchingCriteria
+	$(COMPONENTS)/SwitchingCriteria    \
+        $(COMPONENTS)/Solvers
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(BOOST_LIBRARY)
 

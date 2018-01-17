@@ -23,8 +23,6 @@
  */
 
 #include <CCA/Components/OnTheFlyAnalysis/planeExtract.h>
-
-#include <CCA/Components/Regridder/PerPatchVars.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/ProblemSetupException.h>

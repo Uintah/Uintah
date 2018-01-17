@@ -43,7 +43,7 @@
 
 #include <sci_defs/visit_defs.h>
 
-#include <StandAlone/tools/uda2vis/uda2vis.h>
+#include <VisIt/uda2vis/uda2vis.h>
 
 #include <dlfcn.h>
 

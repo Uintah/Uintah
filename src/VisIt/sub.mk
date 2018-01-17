@@ -28,12 +28,15 @@
 # 
 # Makefile fragment for this subdirectory 
 
-ifeq ($(HAVE_VISIT),yes)
-
 SRCDIR := VisIt
+
+ifeq ($(HAVE_VISIT),yes)
+  LIBSIM := $(SRCDIR)/libsim
+endif
+
 SUBDIRS := \
-	$(SRCDIR)/libsim
+	$(LIBSIM) \
+	$(SRCDIR)/uda2vis
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
-endif

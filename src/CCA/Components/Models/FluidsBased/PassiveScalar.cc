@@ -28,7 +28,7 @@
 #include <CCA/Components/ICE/CustomBCs/BoundaryCond.h>
 #include <CCA/Components/Models/FluidsBased/PassiveScalar.h>
 #include <CCA/Components/Models/FluidsBased/FluidsBasedModel.h>
-#include <CCA/Components/Regridder/PerPatchVars.h>
+#include <Core/Grid/Variables/PerPatchVars.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/Regridder.h>
 #include <Core/Exceptions/ProblemSetupException.h>

@@ -23,7 +23,7 @@
  */
 
 //-- Uintah component includes --//
-#include <CCA/Components/Regridder/PerPatchVars.h>
+#include <Core/Grid/Variables/PerPatchVars.h>
 #include <CCA/Components/Regridder/RegridderCommon.h>
 #include <CCA/Ports/ApplicationInterface.h>
 #include <CCA/Ports/DataWarehouse.h>

@@ -24,6 +24,8 @@
 # 
 # Makefile fragment for this subdirectory 
 
+ifeq ($(BUILD_UNIT_TESTS),yes)
+
 SRCDIR := testprograms
 
 SUBDIRS := \
@@ -79,3 +81,5 @@ else
 endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
+
+endif

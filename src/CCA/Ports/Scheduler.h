@@ -25,7 +25,7 @@
 #ifndef CCA_PORTS_SCHEDULER_H
 #define CCA_PORTS_SCHEDULER_H
 
-#include <CCA/Components/SimulationController/RunTimeStatsEnums.h>
+#include <CCA/Components/Schedulers/RuntimeStatsEnum.h>
 
 #include <Core/Parallel/UintahParallelPort.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
@@ -250,7 +250,7 @@ class Scheduler : public UintahParallelPort {
 
     virtual void setRestartInitTimestep( bool ) = 0;
 
-    virtual void setRunTimeStats( ReductionInfoMapper< RunTimeStatsEnum, double > *runTimeStats) = 0;
+    virtual void setRuntimeStats( ReductionInfoMapper< RuntimeStatsEnum, double > *runtimeStats) = 0;
 
   private:
 

@@ -46,7 +46,7 @@
 #include <CCA/Components/MPM/PhysicalBC/ScalarFluxBC.h>
 #include <CCA/Components/MPM/PhysicalBC/FluxBCModel.h>
 #include <CCA/Components/MPM/SerialMPM.h>                // for SerialMPM
-#include <CCA/Components/Regridder/PerPatchVars.h>       // for PatchFlagP, etc
+#include <Core/Grid/Variables/PerPatchVars.h>       // for PatchFlagP, etc
 #include <CCA/Ports/DataWarehouse.h>                     // for DataWarehouse
 #include <CCA/Ports/Output.h>                            // for Output
 #include <CCA/Ports/Scheduler.h>                         // for Scheduler

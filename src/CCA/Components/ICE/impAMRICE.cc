@@ -117,10 +117,11 @@ impAMRICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
                                                             mpm_matls_sub, 
                                                             d_press_matl,    
                                                             all_matls);        
-
-    scheduleAddExchangeContributionToFCVel( sched, patches,ice_matls_sub,
-                                                           all_matls,
-                                                           false);
+                          
+    d_exchModel->sched_AddExch_VelFC(       sched, patches, ice_matls_sub,
+                                                            all_matls,
+                                                            d_BC_globalVars,
+                                                            false);
   }
 
 //______________________________________________________________________
@@ -210,10 +211,11 @@ impAMRICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 
     scheduleComputeLagrangianValues(        sched, patches, all_matls);
 
-    scheduleAddExchangeToMomentumAndEnergy( sched, patches, ice_matls_sub,
+    d_exchModel->sched_AddExch_Vel_Temp_CC( sched, patches, ice_matls_sub,
                                                             mpm_matls_sub,
                                                             d_press_matl,
-                                                            all_matls);
+                                                            all_matls,
+                                                            d_BC_globalVars);
 
     scheduleComputeLagrangianSpecificVolume(sched, patches, ice_matls_sub,
                                                             mpm_matls_sub, 

@@ -30,7 +30,7 @@
 #include <CCA/Components/Schedulers/Relocate.h>
 #include <CCA/Ports/Scheduler.h>
 
-#include <CCA/Components/SimulationController/RunTimeStatsEnums.h>
+#include <CCA/Components/Schedulers/RuntimeStatsEnum.h>
 
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/SimulationState.h>
@@ -291,7 +291,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
 
     const VarLabel* m_reloc_new_pos_label{nullptr};
 
-    void setRunTimeStats( ReductionInfoMapper< RunTimeStatsEnum, double > *runTimeStats) { d_runTimeStats = runTimeStats; };
+    void setRuntimeStats( ReductionInfoMapper< RuntimeStatsEnum, double > *runtimeStats) { d_runtimeStats = runtimeStats; };
 
   protected:
 
@@ -383,7 +383,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     // do not checkpoint these variables
     std::set<std::string> m_no_checkpoint_vars;
 
-    ReductionInfoMapper< RunTimeStatsEnum, double > *d_runTimeStats{nullptr};
+    ReductionInfoMapper< RuntimeStatsEnum, double > *d_runtimeStats{nullptr};
 
   private:
 

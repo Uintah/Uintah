@@ -598,24 +598,24 @@ void visit_SetGridInfo( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetRuntimeStats( visit_simulation_data *sim )
 {
-  const ReductionInfoMapper< RunTimeStatsEnum, double > &runTimeStats =
-    sim->simController->getRunTimeStats();
+  const ReductionInfoMapper< RuntimeStatsEnum, double > &runtimeStats =
+    sim->simController->getRuntimeStats();
 
-  VisItUI_setValueS( "RunTimeStatsGroupBox", "SHOW_WIDGET", 1);
+  VisItUI_setValueS( "RuntimeStatsGroupBox", "SHOW_WIDGET", 1);
   VisItUI_setTableValueS("RuntimeStatsTable", -1, -1, "CLEAR_TABLE", 0);
 
   int cc = 0;
 
-  for (unsigned int i=0; i<runTimeStats.size(); ++i)
+  for (unsigned int i=0; i<runtimeStats.size(); ++i)
   {
-    RunTimeStatsEnum e = (RunTimeStatsEnum) i;
+    RuntimeStatsEnum e = (RuntimeStatsEnum) i;
     
-    std::string name  = runTimeStats.getName(e);
-    std::string units = runTimeStats.getUnits(e);
+    std::string name  = runtimeStats.getName(e);
+    std::string units = runtimeStats.getUnits(e);
 
-    double  average = runTimeStats.getAverage(e);
-    double  maximum = runTimeStats.getMaximum(e);
-    int     rank    = runTimeStats.getRank(e);
+    double  average = runtimeStats.getAverage(e);
+    double  maximum = runtimeStats.getMaximum(e);
+    int     rank    = runtimeStats.getRank(e);
 
     if( average > 0 && units == std::string("MBytes"))
     {

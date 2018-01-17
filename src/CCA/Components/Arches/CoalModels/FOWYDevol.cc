@@ -128,7 +128,6 @@ FOWYDevol::problemSetup(const ProblemSpecP& params, int qn)
   // Look for required scalars
   if (db_coal_props->findBlock("FOWYDevol")) {
     ProblemSpecP db_BT = db_coal_props->findBlock("FOWYDevol");
-    db_BT->require("Tig", _Tig);
     db_BT->require("Ta", _Ta);
     db_BT->require("A", _A);
     db_BT->require("v_hiT", _v_hiT); // this is a

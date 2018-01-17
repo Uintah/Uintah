@@ -25,11 +25,10 @@
 #ifndef Models_MultiMatlExchange_Exchange_h
 #define Models_MultiMatlExchange_Exchange_h
 
-#include <CCA/Components/ICE/Core/ICELabel.h>
-#include <CCA/Components/MPM/Core/MPMLabel.h>
-#include <CCA/Components/MPMICE/Core/MPMICELabel.h>
+
 
 #include <CCA/Components/ICE/CustomBCs/C_BC_driver.h>
+#include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/SchedulerP.h>
 #include <Core/Grid/DbgOutput.h>
@@ -73,21 +72,19 @@ namespace Uintah {
                                            const MaterialSubset * ice_matls,
                                            const MaterialSubset * mpm_matls,
                                            const MaterialSubset * press_matl,
-                                           const MaterialSet    * all_matls) = 0;
+                                           const MaterialSet    * all_matls,
+                                           customBC_globalVars  * BC_globalVars) = 0;
 
     virtual void addExch_Vel_Temp_CC( const ProcessorGroup * pg,
                                       const PatchSubset    * patches,
                                       const MaterialSubset * matls,
                                       DataWarehouse        * old_dw,
-                                      DataWarehouse        * new_dw) = 0;
+                                      DataWarehouse        * new_dw,
+                                      customBC_globalVars  * BC_globalVars) = 0;
 
-
-#if 0
-    void scheduleComputeSurfaceNormal( SchedulerP           & sched,
-                                       const PatchSet       * patches,
-                                       const MaterialSubset * mpm_matls,
-                                       const MaterialSubset * press_matl,
-                                       const MaterialSet    * all_matls );
+    void schedComputeSurfaceNormal( SchedulerP           & sched,
+                                    const PatchSet       * patches,
+                                    const MaterialSubset * zero_matl );
 
     void ComputeSurfaceNormalValues( const ProcessorGroup *,
                                      const PatchSubset    * patches,
@@ -95,15 +92,9 @@ namespace Uintah {
                                      DataWarehouse        * old_dw,
                                      DataWarehouse        * new_dw );
 
-#endif
-
     //__________________________________
     // variables & objects needed by 
     // the different exchange models.
-    MPMLabel* Mlb;
-    ICELabel* Ilb;
-    MPMICELabel* MIlb;
-
     const VarLabel* d_vel_CCTransposedLabel;
     const VarLabel* d_surfaceNormLabel;
 
@@ -111,7 +102,11 @@ namespace Uintah {
     int    d_numMatls  = -9;
     SimulationStateP  d_sharedState;
     
+  private:
+    MPMLabel* Mlb;
+    
   };
 }
 
 #endif
+ 

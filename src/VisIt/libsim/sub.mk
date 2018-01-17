@@ -44,7 +44,6 @@ else
       CCA/Ports         \
       CCA/Components/DataArchiver \
       CCA/Components/Schedulers \
-      CCA/Components/ProblemSpecification \
       Core/Containers   \
       Core/DataArchive  \
       Core/Datatypes    \
@@ -58,7 +57,7 @@ else
       Core/ProblemSpec  \
       Core/Util         \
       Core/OS           \
-      StandAlone/tools/uda2vis
+      VisIt/uda2vis
 endif
 
 LIBS := $(VISIT_LIBRARY) $(MPI_LIBRARY)

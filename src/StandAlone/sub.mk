@@ -26,7 +26,6 @@
 # 
 # 
 # Makefile fragment for this subdirectory 
-
 SRCDIR := StandAlone
 
 SUBDIRS := \
@@ -83,6 +82,7 @@ ifeq ($(HAVE_VISIT),yes)
 endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
+
 
 ##############################################
 # DigitalFilterGenerator
