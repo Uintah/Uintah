@@ -90,11 +90,11 @@ WARNING
     //////////
     // Insert Documentation Here:
     virtual void problemSetup(const ProblemSpecP& params,
-			      const ProblemSpecP& restart_prob_spec,
+                              const ProblemSpecP& restart_prob_spec,
                               const SimulationStateP& sharedState) = 0;
 
-    virtual void initializeOutput(const ProblemSpecP& params) = 0;
-    virtual void initializeOutput(const GridP& grid) = 0;
+    virtual void initializeOutput(const ProblemSpecP& params,
+                                  const GridP& grid) = 0;
     
     //////////
     // Call this when restarting from a checkpoint after calling
@@ -114,32 +114,32 @@ WARNING
     // Call this after all other tasks have been added to the scheduler
     virtual void finalizeTimeStep(const GridP      & /* grid */,
                                         SchedulerP & /* scheduler */,
-				        bool recompile = false ) = 0;
+                                        bool recompile = false ) = 0;
 
     // schedule all output tasks
     virtual void sched_allOutputTasks( const GridP      & /* grid */,
                                              SchedulerP & /* scheduler */,
-				             bool recompile = false ) = 0;
+                                             bool recompile = false ) = 0;
 
     //////////
     // Call this after a time step restart where delt is adjusted to
     // make sure there still will be output and/or checkpoint time step
     virtual void reevaluate_OutputCheckPointTimeStep(const double simTime,
-						     const double delT) = 0;
+                                                     const double delT) = 0;
 
     //////////
     // Call this after the time step has been executed to find the
     // next time step to output
     virtual void findNext_OutputCheckPointTimeStep(const bool restart,
-						   const GridP& grid) = 0;
+                                                   const GridP& grid) = 0;
     
     //////////
     // update or write to the xml files
     virtual void writeto_xml_files( const GridP& grid) = 0;
     
     virtual void writeto_xml_files( std::map< std::string,
-				    std::pair<std::string,
-				    std::string> > &modifiedVars ) = 0;
+                                    std::pair<std::string,
+                                    std::string> > &modifiedVars ) = 0;
      
     //////////
     // Insert Documentation Here:
@@ -188,10 +188,10 @@ WARNING
 
     //! Called by In-situ VisIt to force the dump of a time step's data.
     virtual void outputTimeStep( const GridP& grid,
-				 SchedulerP& sched ) = 0;
+                                 SchedulerP& sched ) = 0;
 
     virtual void checkpointTimeStep( const GridP& grid,
-				     SchedulerP& sched ) = 0;
+                                     SchedulerP& sched ) = 0;
 
     virtual void maybeLastTimeStep( bool val ) = 0;
     virtual bool maybeLastTimeStep() = 0;

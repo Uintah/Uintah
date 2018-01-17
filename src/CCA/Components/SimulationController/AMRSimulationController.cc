@@ -211,13 +211,6 @@ AMRSimulationController::run()
   AllocatorSetDefaultTagLineNumber( m_app->getTimeStep() );
 #endif
 
-  // DAV - CAN THIS BE MOVED INTO THE OTHER m_output->initializeOutput()?
-  // WHICH IS LOCATED IN SimulationController::finalSetup()  
-
-  // ARS - CAN ONE SAVE THE INITAL TIMESTEP USING PIDX???
-  // i.e SHOULD THIS COME BEFORE doInitialTimeStep???
-  m_output->initializeOutput( m_current_gridP );  
-
   // Set the timer for the main loop. This timer is sync'ed with the
   // simulation time to get a measurement of the simulation to wall time.
   m_wall_timers.TimeStep.reset( true );

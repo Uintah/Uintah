@@ -94,18 +94,16 @@ class LoadBalancer;
     //! in the simulation.  (If you only need to use DataArchiver to copy 
     //! data, then you can pass a nullptr SimulationState
     virtual void problemSetup( const ProblemSpecP    & params,
-			       const ProblemSpecP    & restart_prob_spec,
-			       const SimulationStateP& state );
+                               const ProblemSpecP    & restart_prob_spec,
+                               const SimulationStateP& state );
 
     virtual void outputProblemSpec( ProblemSpecP & root_ps );
 
     //! This function will set up the output for the simulation.  As part
     //! of this it will output the input.xml and index.xml in the uda
     //! directory.  Call after calling all problemSetups.
-    virtual void initializeOutput( const ProblemSpecP & params );
-
-    //! This function will set up the PIDX output.
-    virtual void initializeOutput( const GridP& grid );
+    virtual void initializeOutput( const ProblemSpecP & params,
+                                   const GridP& grid );
 
     //! Call this when restarting from a checkpoint after calling
     //! problemSetup.  This will copy time step directories and dat
@@ -115,11 +113,11 @@ class LoadBalancer;
     //! If time step is negative, then all time steps will get copied
     //! if they are to be copied at all (fromScratch is false).
     virtual void restartSetup( Dir    & restartFromDir,
-			       int      startTimeStep,
-			       int      timeStep,
-			       double   simTime,
-			       bool     fromScratch,
-			       bool     removeOldDir );
+                               int      startTimeStep,
+                               int      timeStep,
+                               double   simTime,
+                               bool     fromScratch,
+                               bool     removeOldDir );
 
     //! Call this after problemSetup it will copy the data and
     //! checkpoint files ignore dumping reduction variables.
@@ -136,31 +134,31 @@ class LoadBalancer;
     //! Call once per time step, and if recompiling,
     //! after all the other tasks are scheduled.
     virtual void finalizeTimeStep( const GridP      & /* grid */,
-				   SchedulerP & /* scheduler */,
-				   bool         recompile = false );
+                                   SchedulerP & /* scheduler */,
+                                   bool         recompile = false );
            
     //! schedule the output tasks if we are recompiling the taskgraph.  
     virtual void sched_allOutputTasks( const GridP      & /* grid */,
-				       SchedulerP & /* scheduler */,
-				       bool         recompile = false );
+                                       SchedulerP & /* scheduler */,
+                                       bool         recompile = false );
                                       
     //! Call this after a time step restart where delt is adjusted to
     //! make sure there still will be output and/or checkpoint time step
     virtual void reevaluate_OutputCheckPointTimeStep(const double simTime,
-						     const double delT);
+                                                     const double delT);
 
     //! Call this after the time step has been executed to find the
     //! next time step to output
     virtual void findNext_OutputCheckPointTimeStep( const bool restart,
-						    const GridP& grid );
+                                                    const GridP& grid );
 
     //! write meta data to xml files 
     //! Call after time step has completed.
     virtual void writeto_xml_files( const GridP & grid );
 
     virtual void writeto_xml_files( std::map< std::string,
-				    std::pair<std::string,
-				    std::string> > &modifiedVars );
+                                    std::pair<std::string,
+                                    std::string> > &modifiedVars );
 
     //! Returns as a string the name of the top of the output directory.
     virtual const std::string getOutputLocation() const;
@@ -175,19 +173,19 @@ class LoadBalancer;
     //! differentiates between them in the last argument.  Outputs
     //! as binary the data acquired from VarLabel in p_dir.
     void outputVariables( const ProcessorGroup *,
-			  const PatchSubset    * patch,
-			  const MaterialSubset * matls, 
-			  DataWarehouse  * old_dw,
-			  DataWarehouse  * new_dw, 
-			  int              type );
+                          const PatchSubset    * patch,
+                          const MaterialSubset * matls, 
+                          DataWarehouse  * old_dw,
+                          DataWarehouse  * new_dw, 
+                          int              type );
 
     //! Task that handles outputting non-checkpoint reduction variables.
     //! Scheduled in finalizeTimeStep.
     void outputReductionVars( const ProcessorGroup *,
-			      const PatchSubset    * patch,
-			      const MaterialSubset * matls,
-			      DataWarehouse  * old_dw,
-			      DataWarehouse  * new_dw );
+                              const PatchSubset    * patch,
+                              const MaterialSubset * matls,
+                              DataWarehouse  * old_dw,
+                              DataWarehouse  * new_dw );
 
     //! Get the time the next output will occur
     virtual double getNextOutputTime() const { return m_nextOutputTime; }
@@ -235,10 +233,10 @@ class LoadBalancer;
 
     //! Called by In-situ VisIt to force the dump of a time step's data.
     void outputTimeStep( const GridP& grid,
-			 SchedulerP& sched );
+                         SchedulerP& sched );
 
     void checkpointTimeStep( const GridP& grid,
-			     SchedulerP& sched );
+                             SchedulerP& sched );
 
     void maybeLastTimeStep( bool val ) { m_maybeLastTimeStep = val; };
     bool maybeLastTimeStep() { return m_maybeLastTimeStep; };
@@ -269,9 +267,9 @@ class LoadBalancer;
     public:
          
       void setMaterials(      int                   level, 
-			      const ConsecutiveRangeSet & matls,
-			      ConsecutiveRangeSet & prevMatls,
-			      MaterialSetP        & prevMatlSet );
+                              const ConsecutiveRangeSet & matls,
+                              ConsecutiveRangeSet & prevMatls,
+                              MaterialSetP        & prevMatlSet );
 
       MaterialSet* getMaterialSet( int level ) { return matlSet[level].get_rep(); }
            
@@ -291,26 +289,26 @@ class LoadBalancer;
     //! output the all of the saveLabels in PIDX format
     size_t
     saveLabels_PIDX( const ProcessorGroup      * pg,
-		     const PatchSubset         * patches,      
-		     DataWarehouse       * new_dw,          
-		     int                   type,
-		     std::vector< SaveItem > & saveLabels,
-		     const TypeDescription::Type TD,
-		     Dir                   ldir,        // uda/timeStep/levelIndex
-		     const std::string         & dirName,     // CCVars, SFC*Vars
-		     ProblemSpecP        & doc );
+                     const PatchSubset         * patches,      
+                     DataWarehouse       * new_dw,          
+                     int                   type,
+                     std::vector< SaveItem > & saveLabels,
+                     const TypeDescription::Type TD,
+                     Dir                   ldir,        // uda/timeStep/levelIndex
+                     const std::string         & dirName,     // CCVars, SFC*Vars
+                     ProblemSpecP        & doc );
                            
     //! returns a vector of SaveItems with a common type description
     std::vector<DataArchiver::SaveItem> 
     findAllVariableTypes( std::vector< SaveItem >& saveLabels,
-			  const TypeDescription::Type TD );
+                          const TypeDescription::Type TD );
       
     //! bulletproofing so user can't save unsupported var type
     void isVarTypeSupported( std::vector< SaveItem >& saveLabels,
-			     std::vector<TypeDescription::Type> pidxVarTypes );
+                             std::vector<TypeDescription::Type> pidxVarTypes );
            
     void createPIDX_dirs( std::vector< SaveItem >& saveLabels,
-			  Dir& levelDir );
+                          Dir& levelDir );
 
     // Writes out the <Grid> and <Data> sections into the
     // timestep.xml file by creating a DOM and then writing it out.
@@ -319,7 +317,7 @@ class LoadBalancer;
     // Writes out the <Grid> and <Data> sections (respectively) to separate files (that are associated with timestep.xml) using a XML streamer.
     void writeGridTextWriter( const bool hasGlobals, const std::string & grim_path, const GridP & grid );
     void writeDataTextWriter( const bool hasGlobals, const std::string & data_path, const GridP & grid,
-			      const std::vector< std::vector<bool> > & procOnLevel );
+                              const std::vector< std::vector<bool> > & procOnLevel );
 
     // Writes out the <Grid> section (associated with timestep.xml) to a separate binary file.
     void writeGridBinary(     const bool hasGlobals, const std::string & grim_path, const GridP & grid );
@@ -339,9 +337,9 @@ class LoadBalancer;
     //! the necessary directories and xml files to begin the 
     //! output time step.
     void makeTimeStepDirs(      Dir& dir,
-			        std::vector<SaveItem>& saveLabels,
-			  const GridP& grid,
-			        std::string* pTimeStepDir );
+                                std::vector<SaveItem>& saveLabels,
+                          const GridP& grid,
+                                std::string* pTimeStepDir );
 
     PIDXOutputContext::PIDX_flags m_PIDX_flags; // Contains the knobs & switches
 #if HAVE_PIDX       
@@ -350,16 +348,16 @@ class LoadBalancer;
        
     //! creates communicator every AMR level required for PIDX
     void createPIDXCommunicator(      std::vector<SaveItem> & saveLabels,
-				const GridP                 & grid, 
-				      SchedulerP            & sched,
-				      bool                    isThisACheckpoint);
+                                const GridP                 & grid, 
+                                      SchedulerP            & sched,
+                                      bool                    isThisACheckpoint);
 #endif
 
     //! helper for finalizeTimeStep - schedules a task for each var's output
     void scheduleOutputTimeStep(      std::vector<SaveItem> & saveLabels,
-				const GridP                 & grid, 
-				      SchedulerP            & sched,
-				      bool                    isThisCheckpoint);
+                                const GridP                 & grid, 
+                                      SchedulerP            & sched,
+                                      bool                    isThisCheckpoint);
 
     //! Helper for finalizeTimeStep - determines if, based on the current
     //! time and time step, this will be an output or checkpoint time step.
@@ -371,25 +369,25 @@ class LoadBalancer;
 
     //! helper for restartSetup - adds the restart field to index.xml
     void addRestartStamp( ProblemSpecP   indexDoc,
-			  Dir          & fromDir,
-			  int            timestep );
+                          Dir          & fromDir,
+                          int            timestep );
 
     //! helper for restartSetup - copies the time step directories AND
     //! time step entries in index.xml
     void copyTimeSteps( Dir  & fromDir,
-			Dir  & toDir,
-			int    startTimeStep,
-			int    maxTimeStep,
-			bool   removeOld,
-			bool   areCheckpoints = false );
+                        Dir  & toDir,
+                        int    startTimeStep,
+                        int    maxTimeStep,
+                        bool   removeOld,
+                        bool   areCheckpoints = false );
 
     //! helper for restartSetup - copies the reduction dat files to 
     //! new uda dir (from startTimeStep to maxTimeStep)
     void copyDatFiles( Dir & fromDir,
-		       Dir & toDir,
-		       int   startTimeStep,
-		       int   maxTimeStep,
-		       bool  removeOld );
+                       Dir & toDir,
+                       int   startTimeStep,
+                       int   maxTimeStep,
+                       bool  removeOld );
 
     //! add saved global (reduction) variables to index.xml
     void indexAddGlobals();

@@ -139,7 +139,7 @@ main( int argc, char *argv[], char *env[] )
     DataArchiver out_uda(world);
     out_uda.attachPort("application", app);
     out_uda.problemSetup(ups, nullptr, nullptr);
-    out_uda.initializeOutput(ups);
+    out_uda.initializeOutput(ups, nullptr);
     new_uda_dir = out_uda.getOutputLocation();
 
     int timestep = 0;
