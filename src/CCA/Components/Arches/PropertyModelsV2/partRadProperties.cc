@@ -21,12 +21,16 @@ partRadProperties::partRadProperties( std::string task_name, int matl_index ) : 
 partRadProperties::~partRadProperties( )
 {
   // Destroying all local VarLabels stored in _extra_local_labels:
+     
+#ifdef HAVE_RADPROPS
 if (_particle_calculator_type == "constantCIF"){
  delete _part_radprops;
 }
+
 if (_particle_calculator_type == "coal"){
   delete _3Dpart_radprops;
 }
+#endif
 if (_particle_calculator_type=="tablulated")
  delete myTable;
 }
@@ -95,10 +99,11 @@ void partRadProperties::problemSetup(  Uintah::ProblemSpecP& db )
 
     }else if(_particle_calculator_type == "basic"){
       if (_scatteringOn){
-        throw ProblemSetupException("Scattering not enabled for basic-radiative-particle-properties.  Use radprops, OR turn off scattering!",__FILE__, __LINE__);
+        throw ProblemSetupException("Scattering not enabled for basic-radiative-particle-properties.  Use radprops, a table with scattering coefficients, OR turn off scattering!",__FILE__, __LINE__);
       }
       db->getWithDefault("Qabs",_Qabs,0.8);
     }else if(_particle_calculator_type == "coal"){
+#ifdef HAVE_RADPROPS
     _isCoal = true;
       //throw ProblemSetupException("Error: The model for Coal radiation properties is incomplete, please alternative model.",__FILE__,__LINE__);
       _ncomp=2;
@@ -144,7 +149,6 @@ void partRadProperties::problemSetup(  Uintah::ProblemSpecP& db )
         throw InvalidValue( "Error: Particle model not recognized for abskp.",__FILE__,__LINE__);
       }
      _3Dpart_radprops = scinew RadProps::ParticleRadCoeffs3D( _LowComplex, _HighComplex,3, 1e-6, 3e-4, 10  );
-
      _ash_mass_v = std::vector<double>(_nQn_part);        /// particle sizes in diameters
   //--------------- Get initial ash mass -----------//
      double density;
@@ -160,8 +164,11 @@ void partRadProperties::problemSetup(  Uintah::ProblemSpecP& db )
        _ash_mass_v[i] = pow(particle_sizes[i], 3.0)/6*M_PI*density*ash_massfrac;
      }
   //------------------------------------------------//
-
+#else
+      throw ProblemSetupException("Error: Use of the Coal radiation properties model requires compilation with Radprops and TabProps.",__FILE__,__LINE__);
+#endif
     }else if(_particle_calculator_type == "constantCIF"){
+#ifdef HAVE_RADPROPS
       double realCIF;
       double imagCIF;
       db->require("complex_ir_real",realCIF);
@@ -180,6 +187,10 @@ void partRadProperties::problemSetup(  Uintah::ProblemSpecP& db )
       } else {
         throw InvalidValue( "Error: Particle model not recognized for abskp.",__FILE__,__LINE__);
       }
+#else
+      throw ProblemSetupException("Error: Use of the constCIF radiation properties model requires compilation with Radprops and TabProps.",__FILE__,__LINE__);
+#endif
+
     }else{
       throw InvalidValue("Particle radiative property model not found!! Name:"+_particle_calculator_type,__FILE__, __LINE__);
     }
@@ -369,6 +380,7 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
         abskpQuad(i,j,k)= (vol_fraction(i,j,k) > 1e-16) ? particle_absorption : 0.0;
         abskp(i,j,k)+= abskpQuad(i,j,k);
       });
+#ifdef HAVE_RADPROPS
     }else if(_particle_calculator_type == "constantCIF" &&  _p_planck_abskp ){
         Uintah::parallel_for( range,  [&](int i, int j, int k) {
           double particle_absorption=_part_radprops->planck_abs_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k))*weightQuad[ix](i,j,k)*_absorption_modifier;
@@ -399,6 +411,7 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
           asymm(i,j,k) =_constAsymmFact;
         });
       }
+#endif
     }else if(_particle_calculator_type == "tabulated"  ){
         enum independentVariables{ en_size, en_temp};
         enum DependentVariables{ abs_coef, sca_coef};
@@ -435,6 +448,7 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
 
 
+#ifdef HAVE_RADPROPS
   if(_particle_calculator_type == "coal" &&  _p_planck_abskp ){
       for (int ix=0; ix<_nQn_part; ix++){
         CCVariable<double>& abskpQuad = tsk_info->get_uintah_field_add           <CCVariable<double> >(_abskp_name_vector[ix]);  // ConstCC and CC behave differently
@@ -494,4 +508,6 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
         });
       }
   }
+#endif
+
 } // end eval
