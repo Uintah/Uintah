@@ -61,8 +61,8 @@ SlipExch::SlipExch(const ProblemSpecP     & exch_ps,
   Ilb  = scinew ICELabel();
   Mlb  = scinew MPMLabel();
 
-  d_vel_CCTransLabel = VarLabel::create("vel_CCTransposed", CCVariable<Vector>::getTypeDescription());
-  d_meanFreePathLabe = VarLabel::create("meanFreePath",     CCVariable<double>::getTypeDescription());
+  d_vel_CCTransLabel  = VarLabel::create("vel_CCTransposed", CCVariable<Vector>::getTypeDescription());
+  d_meanFreePathLabel = VarLabel::create("meanFreePath",     CCVariable<double>::getTypeDescription());
 }
 
 //______________________________________________________________________
