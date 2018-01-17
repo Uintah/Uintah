@@ -4087,7 +4087,7 @@ void SerialMPM::updateTracers(const ProcessorGroup*,
       TracerMaterial* t_matl = m_sharedState->getTracerMaterial( m );
       int dwi = t_matl->getDWIndex();
 
-      int adv_matl = t_matl->getAssociatedMaterial();
+//      int adv_matl = t_matl->getAssociatedMaterial();
 
       // Not populating the delset, but we need this to satisfy Relocate
       ParticleSubset* delset = scinew ParticleSubset(0, dwi, patch);
@@ -4124,10 +4124,14 @@ void SerialMPM::updateTracers(const ProcessorGroup*,
 
         double sumSk=0.0;
         // Accumulate the contribution from each surrounding vertex
-        for (int k = 0; k < NN; k++) {
-          IntVector node = ni[k];
-          vel   += gvelocity[adv_matl][node]*gmass[adv_matl][node]*S[k];
-          sumSk += gmass[adv_matl][node]*S[k];
+        for(int m = 0; m < numMPMMatls; m++){
+         if(m!=flags->d_containerMaterial){
+          for (int k = 0; k < NN; k++) {
+            IntVector node = ni[k];
+            vel   += gvelocity[m][node]*gmass[m][node]*S[k];
+            sumSk += gmass[m][node]*S[k];
+          }
+         }
         }
         vel/=sumSk;
 
