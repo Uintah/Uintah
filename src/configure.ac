@@ -4511,10 +4511,8 @@ if test "$BUILD_WASATCH" = "yes"; then
 fi
 
 if test "$BUILD_ARCHES" = "yes"; then
-  if test "$HAVE_BOOST"      != "yes" -o \
-          "$HAVE_TABPROPS"   != "yes" -o \
-          "$HAVE_RADPROPS"   != "yes"; then
-    AC_MSG_ERROR( [You enabled the Arches component but do not have all of the prereqs: Boost ($HAVE_BOOST), TabProps ($HAVE_TABPROPS), or RadProps ($HAVE_RADPROPS).] )
+  if test "$HAVE_BOOST"      != "yes"; then
+    AC_MSG_ERROR( [You enabled the Arches component but do not have all of the prereqs: Boost ($HAVE_BOOST).] )
   fi
 fi
 
