@@ -200,7 +200,7 @@ const double sigT4_const =   m_sigmaT4OverPi[m_maxLevels-1](i,j,k);
 #else
 #endif
 //===========DEBUGGING==========`//
-/wh
+
         //______________________________________________________//
         //==== END findRayDirection(mTwister, origin, iRay) ====//
 
@@ -342,85 +342,96 @@ const double sigT4_const =   m_sigmaT4OverPi[m_maxLevels-1](i,j,k);
         //______________________________________________________________________
         //  Threshold  loop
 
-#if (  defined(ML_DEBUG) )
-        dir = -9; // Hard-coded for NONE
-#endif
         T prevAbskg = m_abskg[L]( cur[0], cur[1], cur[2] );
         T sigmaT4Value = m_sigmaT4OverPi[L]( cur[0], cur[1], cur[2]);
-        while ( prevAbskg >= 0 ) {           ////////////////////////////////////////////// BEGIN EXTREME SKRUTINY /////////////////////////
+        T curAbskg{};
+        T curSigmaT4Value{};
+        // Move the ray ahead.  We know we can't drop a coarse level yet, we also at worst will hit a wall, and we can't go out of bounds.
+        //__________________________________
+        //  Determine which cell the ray will enter next
+        dir = tMaxV[0] < tMaxV[1] ? (tMaxV[0] < tMaxV[2] ? 0 : 2) : (tMaxV[1] < tMaxV[2] ? 1 : 2);
+        cur[dir]  +=  step[dir];
+        //if (i == 0 && j == 0 && k == 0 && iRay == 0) {
+        //  printf("cur is at (%d, %d, %d)\n", cur[0], cur[1], cur[2]);
+        //}
+        tMaxV[dir]              = tMaxV[dir] + tDelta[L][dir];
+        prevCell[0] = cur[0];
+        prevCell[1] = cur[1];
+        prevCell[2] = cur[2];
+        prevLev = L;
+        double distanceTraveled = ( tMaxV[dir] - old_length );
+        old_length  = tMaxV[dir];
+        rayLength         += distanceTraveled;
+        
+        //TODO: do while loop?
+        //TODO: std::signbit
+        while ( prevAbskg >= 0 ) {   
+          // We're not in a wall, so immediately prepare the next value by pipelining it.
+          // Note that this cur may be a wall.
+          curAbskg = m_abskg[L]( cur[0], cur[1], cur[2] );
+          //if (i == 0 && j == 0 && k == 0 && iRay == 0) {
+          //  printf("cur on level %d (%d, %d, %d) ", L, cur[0], cur[1], cur[2]);
+          //}
 
+          // Do some updated computations
+          //  more efficient EXP
+          //if (i == 0 && j == 0 && k == 0 && iRay == 0) {
+          //  printf("updating sumI ");
+          //}
+          double expOpticalThick = (1. - prevAbskg * distanceTraveled )*expOpticalThick_prev; // exp approximation
+          sumI += sigmaT4Value * ( expOpticalThick_prev - expOpticalThick ) ;
+          expOpticalThick_prev = expOpticalThick;
 
-          //__________________________________
           //  Determine which cell the ray will enter next
-#if (  defined(ML_DEBUG) )
-          dir = -9; // Hard-coded for NONE
-#endif
-
-          /// CS guys how can we speed this up?  it is just trying to find the index associated with a min value 
-          if ( tMaxV[0] < tMaxV[1] ) {    // X < Y
-            if ( tMaxV[0] < tMaxV[2] ) {  // X < Z
-              dir = 0; // Hard-coded for X
-            }
-            else {
-              dir = 2; // Hard-coded for Z
-            }
-          }
-          else {
-            if ( tMaxV[1] < tMaxV[2] ) {     // Y < Z
-              dir = 1; // Hard-coded for Y
-            }
-            else {
-              dir = 2; // Hard-coded for Z
-            }
-          }
-
-          // next cell index and position
+          //  Note, cur may alrady be at a wall, so this may go "through" the wall.  
+          dir = tMaxV[0] < tMaxV[1] ? (tMaxV[0] < tMaxV[2] ? 0 : 2) : (tMaxV[1] < tMaxV[2] ? 1 : 2);
+          //Because we may have dropped down a level, we need to update all prevCell indexes
+          prevCell[0] = cur[0];
+          prevCell[1] = cur[1];
+          prevCell[2] = cur[2];
+          prevLev = L;
           cur[dir]  +=  step[dir];
-
           //__________________________________
           //  Update marching variables
-            
+          distanceTraveled = ( tMaxV[dir] - old_length );
           old_length              = tMaxV[dir];
-          double distanceTraveled = ( tMaxV[dir] - old_length );
           rayLength         += distanceTraveled;
-
           //__________________________________
           // When moving to a coarse level tmax will change only in the direction the ray is moving
           if ( m_levelParamsML[L].regionLo[dir] > cur[dir] || m_levelParamsML[L].regionHi[dir] <= cur[dir] ){
+            
             m_levelParamsML[L].mapCellToCoarser(cur);
-            L   = (L > 0) ? L - 1 : 0;                      // move to a coarser level
-
+            L--;                     // move to a coarser level
+            if (L < 0) {
+              //if (i == 0 && j == 0 && k == 0 && iRay == 0) {
+              //  printf("Error!\n");
+              //}
+              L = 0;
+            }
+            //Don't need to update prevCell,  
             m_levelParamsML[L].getCellPosition(cur, CC_pos);
+            //if (i == 0 && j == 0 && k == 0 && iRay == 0) {
+            //  printf("Dropped to level %d - cur is at (%d, %d, %d) ", L, cur[0], cur[1], cur[2]);
+            //}
+
             double rayDx_Level = rayOrigin[dir] + distanceTraveled*direction_vector[dir] - ( CC_pos[dir] - 0.5 * m_levelParamsML[L].Dx[dir] );
             double tMax_tmp    = ( std::max((double) step[dir],0.0) * m_levelParamsML[L].Dx[dir] - rayDx_Level ) * inv_direction[dir];
             tMaxV[dir]        += tMax_tmp;
           } else {
-            // If the cell isn't a flow cell then terminate the ray
             tMaxV[dir]              = tMaxV[dir] + tDelta[L][dir];
-
           }
-          //  more efficient EXP
-          double expOpticalThick = (1. - prevAbskg * distanceTraveled )*expOpticalThick_prev; // exp approximation
-          
-          sumI += sigmaT4Value * ( expOpticalThick_prev - expOpticalThick ) ;
 
-          expOpticalThick_prev = expOpticalThick;
-          
-          // If the cell isn't a flow cell then terminate the ray
-          prevAbskg = m_abskg[L]( cur[0], cur[1], cur[2] );
-          //in_domain =  ( m_abskg[L]( cur[0], cur[1], cur[2] ) >= 0 ); // Hard-coded for d_flowCell
-          //in_domain =  ( m_cellType[L]( cur[0], cur[1], cur[2] ) == -1 ); // Hard-coded for d_flowCell
-          //If sigmaT4 changes often, comment this back in
-          //T sigmaT4Value = m_sigmaT4OverPi[L]( cur[0], cur[1], cur[2]);
-
-
+          prevAbskg = curAbskg;
+          //if (i == 0 && j == 0 && k == 0 && iRay == 0) {
+          //  printf("abskg is %g\n", prevAbskg);
+          //}
         } // end domain while loop  ++++++++++++++
 
-        //______________________________________________________________________
+        //TODO: Turn back on fabs 
+        //T wallEmissivity = ( fabs(m_abskg[prevLev]( prevCell[0], prevCell[1], prevCell[2] )) > 1.0 ) ? 1.0: fabs(m_abskg[prevLev]( prevCell[0], prevCell[1], prevCell[2] ));  // Ensure wall emissivity doesn't exceed one
+        T wallEmissivity = ( m_abskg[prevLev]( prevCell[0], prevCell[1], prevCell[2] ) > 1.0 ) ? 1.0: m_abskg[prevLev]( prevCell[0], prevCell[1], prevCell[2] );  // Ensure wall emissivity doesn't exceed one
 
-        T wallEmissivity = ( fabs(m_abskg[L]( cur[0], cur[1], cur[2] )) > 1.0 ) ? 1.0: fabs(m_abskg[L]( cur[0], cur[1], cur[2] ));  // Ensure wall emissivity doesn't exceed one
-
-        sumI += wallEmissivity * m_sigmaT4OverPi[L]( cur[0], cur[1], cur[2] ) *expOpticalThick_prev;
+        sumI += wallEmissivity * m_sigmaT4OverPi[prevLev]( prevCell[0], prevCell[1], prevCell[2] ) *expOpticalThick_prev;
 
       }  // end ray loop
 
