@@ -50,6 +50,8 @@ namespace Uintah {
     virtual ~ExchangeModel();
 
     virtual void problemSetup(const ProblemSpecP & prob_spec ) = 0;
+    
+    virtual void outputProblemSpec(ProblemSpecP & prob_spec ) = 0;
 
     virtual void sched_AddExch_VelFC(SchedulerP           & sched,
                                      const PatchSet       * patches,

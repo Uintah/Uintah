@@ -142,8 +142,6 @@ ICE::ICE(const ProcessorGroup* myworld,
   d_with_rigid_mpm          = false;
   d_clampSpecificVolume     = false;
   
-  d_exchCoeff = scinew ExchangeCoefficients();
-  
   d_conservationTest         = scinew conservationTest_flags();
   d_conservationTest->onOff = false;
 
@@ -175,9 +173,7 @@ ICE::~ICE()
   delete d_conservationTest;
   delete lb;
   delete d_advector;
-  delete d_exchCoeff;
   delete d_exchModel;
-
   if(d_turbulence){
     delete d_turbulence;
   }
@@ -427,15 +423,8 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
   } 
 
   //_________________________________
-  // Exchange Coefficients
+  // Exchange Model
   proc0cout << "numMatls " << m_sharedState->getNumMatls() << endl;
-  
-  d_exchCoeff->problemSetup( mat_ps, m_sharedState->getNumMatls() );
-  
-  if (d_exchCoeff->d_heatExchCoeffModel != "constant"){
-    proc0cout << "------------------------------Using Variable heat exchange coefficients"<< endl;
-  }
-  
   d_exchModel=ExchangeFactory::create( mat_ps, m_sharedState);
   d_exchModel->problemSetup(mat_ps);
   
@@ -675,25 +664,6 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
 }
 
 /*______________________________________________________________________
- Function~  ICE::updateExchangeCoefficients--
- Purpose~   read in the exchange coefficients after a material has been
-            dynamically added
- _____________________________________________________________________*/
-void ICE::updateExchangeCoefficients(const ProblemSpecP& prob_spec, 
-                                     GridP& /*grid*/)
-{
-  cout << "Updating Ex Coefficients" << endl;
-  ProblemSpecP mat_ps = prob_spec->findBlockWithAttribute("MaterialProperties","add");
-
-  string attr = "";
-  mat_ps->getAttribute("add",attr);
-  
-  if (attr == "true") {
-    d_exchCoeff->problemSetup( mat_ps, m_sharedState->getNumMatls() );
-  }
-}
-
-/*______________________________________________________________________
  Function~  ICE::outputProblemSpec--
  Purpose~   outputs material state
  _____________________________________________________________________*/
@@ -716,8 +686,12 @@ ICE::outputProblemSpec( ProblemSpecP & root_ps )
     ICEMaterial* mat = m_sharedState->getICEMaterial(i);
     mat->outputProblemSpec(ice_ps);
   }
-  d_exchCoeff->outputProblemSpec(mat_ps);
+  
+  
+  d_exchModel->outputProblemSpec(mat_ps);
 
+  //__________________________________
+  //
   ProblemSpecP models_ps = root->appendChild("Models");
 
   for (vector<ModelInterface*>::const_iterator m_iter  = d_models.begin();

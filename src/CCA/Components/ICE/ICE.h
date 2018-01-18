@@ -138,9 +138,6 @@ using namespace ExchangeModels;
 
       virtual void outputProblemSpec(ProblemSpecP& ps);
 
-      virtual void updateExchangeCoefficients(const ProblemSpecP& params,
-                                              GridP& grid);
-
       virtual void scheduleInitialize(const LevelP& level,
                                       SchedulerP&);
 
@@ -975,7 +972,6 @@ using namespace ExchangeModels;
       std::string d_delT_scheme;
 
       // exchange Model
-      ExchangeCoefficients* d_exchCoeff;
       ExchangeModel* d_exchModel;
 
       // flags for the conservation test

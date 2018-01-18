@@ -208,9 +208,9 @@
           <XH2                spec="OPTIONAL DOUBLE 'positive'" need_applies_to='type Component' />
 
           <MaxOrder           spec="REQUIRED INTEGER 'positive'" need_applies_to='type Polynomial NASAPolynomial'/>
-          <Tmin               spec="OPTIONAL DOUBLE" need_applies_to='type Polynomial NASAPolynomial' />
-          <Tmax               spec="OPTIONAL DOUBLE" need_applies_to='type Polynomial NASAPolynomial' />
-          <coefficient        spec="OPTIONAL MULTIPLE_DOUBLES" need_applies_to='type Polynomial NASAPolynomial'/>
+          <Tmin               spec="OPTIONAL DOUBLE"             need_applies_to='type Polynomial NASAPolynomial' />
+          <Tmax               spec="OPTIONAL DOUBLE"             need_applies_to='type Polynomial NASAPolynomial' />
+          <coefficient        spec="OPTIONAL MULTIPLE_DOUBLES"   need_applies_to='type Polynomial NASAPolynomial'/>
         </SpecificHeatModel>
         <gamma                spec="REQUIRED DOUBLE 'positive'" />
         <tiny_rho             spec="OPTIONAL DOUBLE 'positive'" />
@@ -223,24 +223,25 @@
       </material>
     </ICE>
     
+    <!--ICE and MPMICE related -->
     <exchange_properties           spec="OPTIONAL NO_DATA" >
+      <Model                          spec="OPTIONAL NO_DATA" attribute1="type REQUIRED STRING 'slip'" >
+        <solidMatlIndex               spec="REQUIRED INTEGER" />
+        <fluidMatlIndex               spec="REQUIRED INTEGER" />
+        <momentum_accommodation_coeff spec="REQUIRED DOUBLE"  />
+        <thermal_accommodation_coeff  spec="REQUIRED DOUBLE"  />
+      </Model>
+    
       <convective_fluid            spec="OPTIONAL INTEGER" /> 
       <convective_solid            spec="OPTIONAL INTEGER" /> 
-      <do_convective_heat_transfer spec="OPTIONAL BOOLEAN" /> <!-- FIXME: What is the default? -->
+      <do_convective_heat_transfer spec="OPTIONAL BOOLEAN" />
       <heatExchangeCoeff           spec="OPTIONAL STRING 'variable'" />
       
       <exchange_coefficients       spec="REQUIRED NO_DATA" >
         <momentum                  spec="REQUIRED MULTIPLE_DOUBLES" />
         <heat                      spec="OPTIONAL MULTIPLE_DOUBLES" />
       </exchange_coefficients>
-      
-      <exch_coef_after_MPM_add     spec="OPTIONAL NO_DATA" >
-        <momentum                  spec="REQUIRED MULTIPLE_DOUBLES" />
-        <heat                      spec="OPTIONAL MULTIPLE_DOUBLES" /> 
-      </exch_coef_after_MPM_add>
-      
     </exchange_properties>
-    
   </MaterialProperties>
 
 </Uintah_Include>

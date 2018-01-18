@@ -49,6 +49,8 @@ namespace ExchangeModels{
     virtual ~SlipExch();
 
     virtual void problemSetup(const ProblemSpecP & prob_spec);
+    
+    virtual void outputProblemSpec(ProblemSpecP & prob_spec );
 
     virtual void sched_AddExch_VelFC(SchedulerP           & sched,
                                      const PatchSet       * patches,

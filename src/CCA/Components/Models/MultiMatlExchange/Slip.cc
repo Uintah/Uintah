@@ -78,11 +78,12 @@ SlipExch::~SlipExch()
 
 //______________________________________________________________________
 //
-void SlipExch::problemSetup(const ProblemSpecP & exch_ps)
+void SlipExch::problemSetup(const ProblemSpecP & matl_ps)
 {
 
   // read in the exchange coefficients
-  d_exchCoeff->problemSetup( exch_ps, d_numMatls );
+  ProblemSpecP exch_ps;
+  d_exchCoeff->problemSetup( matl_ps, d_numMatls, exch_ps );
 
   ProblemSpecP model_ps = exch_ps->findBlock( "Model" );
   model_ps->require("fluidMatlIndex",               d_fluidMatlIndx);
@@ -93,6 +94,23 @@ void SlipExch::problemSetup(const ProblemSpecP & exch_ps)
 
   proc0cout << " fluidMatlIndex: " << d_fluidMatlIndx << " thermal_accommodation_coeff " << d_thermal_accommodation_coeff << endl;
 //  d_exchCoeff->problemSetup(mat_ps, d_sharedState);
+}
+
+//______________________________________________________________________
+//
+void SlipExch::outputProblemSpec(ProblemSpecP & matl_ps )
+{
+  ProblemSpecP exch_prop_ps;
+  d_exchCoeff->outputProblemSpec(matl_ps, exch_prop_ps);
+  
+  // <Model type="slip">
+  ProblemSpecP model_ps = exch_prop_ps->appendChild("Model");
+  model_ps->setAttribute("type","slip");
+  
+  model_ps->appendElement( "fluidMatlIndex", d_fluidMatlIndx );
+  model_ps->appendElement( "solidMatlIndex", d_solidMatlIndx );
+  model_ps->appendElement( "thermal_accommodation_coeff",  d_thermal_accommodation_coeff);
+  model_ps->appendElement( "momentum_accommodation_coeff", d_momentum_accommodation_coeff);
 }
 
 //______________________________________________________________________
@@ -278,8 +296,6 @@ void SlipExch::addExch_VelFC(const ProcessorGroup  * pg,
 
     delt_vartype delT;
     pOldDW->get(delT, Ilb->delTLabel, level);
-    int numICEMatls = d_sharedState->getNumICEMatls();
-    int numMPMMatls = d_sharedState->getNumMPMMatls();
 
     constCCVariable<int>    isSurfaceCell;
     constCCVariable<Vector> vel_CC;
@@ -288,8 +304,8 @@ void SlipExch::addExch_VelFC(const ProcessorGroup  * pg,
     std::vector< constCCVariable<double> > rho_CC(       d_numMatls  );
     std::vector< constCCVariable<double> > vol_frac_CC(  d_numMatls  );
 
-    std::vector< constCCVariable<double> > meanFreePath( numICEMatls );
-    std::vector< constCCVariable<Vector> > surfaceNorm(  numMPMMatls );
+    std::vector< constCCVariable<double> > meanFreePath( d_numMatls );
+    std::vector< constCCVariable<Vector> > surfaceNorm(  d_numMatls );
 
     std::vector< constSFCXVariable<double> > uvel_FC( d_numMatls );
     std::vector< constSFCYVariable<double> > vvel_FC( d_numMatls );
@@ -341,7 +357,7 @@ void SlipExch::addExch_VelFC(const ProcessorGroup  * pg,
 
       // allocate
       new_dw->allocateTemporary( notUsed[m],     patch );
-      new_dw->allocateTemporary( vel_CC_exch[m], patch );
+      new_dw->allocateTemporary( vel_CC_exch[m], patch, gac, 1 );
       new_dw->allocateAndPut( uvel_FCME[m], Ilb->uvel_FCMELabel, indx, patch );
       new_dw->allocateAndPut( vvel_FCME[m], Ilb->vvel_FCMELabel, indx, patch );
       new_dw->allocateAndPut( wvel_FCME[m], Ilb->wvel_FCMELabel, indx, patch );
@@ -608,43 +624,41 @@ void SlipExch::addExch_Vel_Temp_CC(const ProcessorGroup * pg,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    printTask(patches, patch, dbgExch,"Doing SlipExch::addExchangeToMomentumAndEnergy");
+    printTask(patches, patch, dbgExch,"Doing SlipExch::addExch_Vel_Temp_CC");
 
-    int numMPMMatls = d_sharedState->getNumMPMMatls();
-    int numICEMatls = d_sharedState->getNumICEMatls();
-    int numMatls    = numMPMMatls + numICEMatls;
-    Ghost::GhostType  gn = Ghost::None;
-
-    delt_vartype delT;
-    old_dw->get(delT, Ilb->delTLabel, level);
-
-    // Create arrays for the grid data
+    //__________________________________
+    // Declare variables
     constCCVariable<int> isSurfaceCell;
     
-    std::vector< CCVariable<double> >      cv( numMatls );
-    std::vector< CCVariable<double> >      Temp_CC( numMatls );
-    std::vector< constCCVariable<double> > gamma( numICEMatls );
-    std::vector< constCCVariable<double> > vol_frac_CC( numMatls );
-    std::vector< constCCVariable<double> > sp_vol_CC( numMatls );
-    std::vector< constCCVariable<Vector> > mom_L( numMatls );
-    std::vector< constCCVariable<double> > int_eng_L( numMatls );
-    std::vector< constCCVariable<double> > mass_L( numMatls );
-    std::vector< constCCVariable<double> > old_temp( numMatls );
+    std::vector< CCVariable<double> >      cv(          d_numMatls );
+    std::vector< CCVariable<double> >      Temp_CC(     d_numMatls );
+    std::vector< constCCVariable<double> > gamma(       d_numMatls );
+    std::vector< constCCVariable<double> > vol_frac_CC( d_numMatls );
+    std::vector< constCCVariable<double> > sp_vol_CC(   d_numMatls );
+    std::vector< constCCVariable<Vector> > mom_L(       d_numMatls );
+    std::vector< constCCVariable<double> > int_eng_L(   d_numMatls );
+    std::vector< constCCVariable<double> > mass_L(      d_numMatls );
+    std::vector< constCCVariable<double> > old_temp(    d_numMatls );
     
-    std::vector< constCCVariable<double> > meanFreePath( numICEMatls );  // This mean free path does not have viscosity in it, which is okay per how it is used in this code
-    std::vector< constCCVariable<Vector> > surfaceNorm( numMPMMatls );
+    std::vector< constCCVariable<double> > meanFreePath( d_numMatls );  // This mean free path does not have viscosity in it, which is okay per how it is used in this code
+    std::vector< constCCVariable<Vector> > surfaceNorm(  d_numMatls );
     
     // Create variables for the results
-    std::vector< CCVariable<Vector> > mom_L_ME( numMatls );
-    std::vector< CCVariable<Vector> > vel_CC( numMatls );
-    std::vector< CCVariable<double> > int_eng_L_ME( numMatls );
-    std::vector< CCVariable<double> > Tdot( numMatls );
-    std::vector< CCVariable<Vector> > vel_T_CC( numMatls );
-
-
+    std::vector< CCVariable<Vector> > mom_L_ME(     d_numMatls );
+    std::vector< CCVariable<Vector> > vel_CC(       d_numMatls );
+    std::vector< CCVariable<double> > int_eng_L_ME( d_numMatls );
+    std::vector< CCVariable<double> > Tdot(         d_numMatls );
+    std::vector< CCVariable<Vector> > vel_T_CC(     d_numMatls );
+    
+    //__________________________________
+    //  retreive data from the data warehouse
+    delt_vartype delT;
+    old_dw->get(delT, Ilb->delTLabel, level);
+    
+    Ghost::GhostType  gn = Ghost::None;
     new_dw->get( isSurfaceCell, d_isSurfaceCellLabel, 0, patch, gn, 0);
     
-    for (int m = 0; m < numMatls; m++) {
+    for (int m = 0; m < d_numMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
@@ -653,11 +667,14 @@ void SlipExch::addExch_Vel_Temp_CC(const ProcessorGroup * pg,
       new_dw->allocateTemporary(cv[m], patch);
 
       if(mpm_matl){                 // M P M
-        CCVariable<double> oldTemp;
-        new_dw->getCopy(       oldTemp,    Ilb->temp_CCLabel,indx, patch, gn,0 );
+        new_dw->get( surfaceNorm[m],     d_surfaceNormLabel, indx, patch, gn, 0);
+      
+        CCVariable<double> oldTempMPM;
+        new_dw->getCopy(       oldTempMPM, Ilb->temp_CCLabel,indx, patch, gn,0 );
         new_dw->getModifiable( vel_CC[m],  Ilb->vel_CCLabel, indx, patch, gn,0 );
         new_dw->getModifiable( Temp_CC[m], Ilb->temp_CCLabel,indx, patch, gn,0 );
-        old_temp[m] = oldTemp;
+        
+        old_temp[m] = oldTempMPM;
         cv[m].initialize(mpm_matl->getSpecificHeat());
       }
 
@@ -684,11 +701,12 @@ void SlipExch::addExch_Vel_Temp_CC(const ProcessorGroup * pg,
       new_dw->allocateAndPut( int_eng_L_ME[m], Ilb->eng_L_ME_CCLabel,indx, patch );   
       new_dw->allocateAndPut( vel_T_CC[m],     d_vel_CCTransLabel,   indx, patch );   
 
-      vel_T_CC[m].initialize(Vector(0,0,0));
+      vel_T_CC[m].initialize(Vector(0,0,0));     // diagnostic variable
     }
 
+    //__________________________________
     // Convert momenta to velocities and internal energy to Temp
-    for (int m = 0; m < numMatls; m++) {
+    for (int m = 0; m < d_numMatls; m++) {
       for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
         IntVector c = *iter;
       
@@ -697,13 +715,14 @@ void SlipExch::addExch_Vel_Temp_CC(const ProcessorGroup * pg,
       }
     }
 
-    // local variables
+    //__________________________________
+    // declare local variables
     double b[MAX_MATLS];
     FastMatrix Q(3,3);
-    FastMatrix a(numMatls, numMatls);
-    FastMatrix K(numMatls, numMatls);
-    FastMatrix h(numMatls, numMatls);
-    FastMatrix H(numMatls, numMatls);
+    FastMatrix a(d_numMatls, d_numMatls);
+    FastMatrix K(d_numMatls, d_numMatls);
+    FastMatrix h(d_numMatls, d_numMatls);
+    FastMatrix H(d_numMatls, d_numMatls);
 
     // Initialize
     K.zero();
@@ -761,11 +780,11 @@ void SlipExch::addExch_Vel_Temp_CC(const ProcessorGroup * pg,
       }  // if a surface cell
 
 
-      for(int m = 0; m < numMatls; m++) {
+      for(int m = 0; m < d_numMatls; m++) {
         double adiag = 1.0;
         b[m] = 0.0;
 
-        for(int n = 0; n < numMatls; n++) {
+        for(int n = 0; n < d_numMatls; n++) {
           a(m,n) = - delT * vol_frac_CC[m][c] * sp_vol_CC[m][c] * H(m,n) / cv[m][c];  // Here H has already been changed into Hslip, and Hslip is the same in every direction.
           adiag -= a(m,n);
           b[m]  -= a(m,n) * (Temp_CC[n][c] - Temp_CC[m][c]);
@@ -775,7 +794,7 @@ void SlipExch::addExch_Vel_Temp_CC(const ProcessorGroup * pg,
 
       a.destructiveSolve(b);
 
-      for(int m = 0; m < numMatls; m++) {
+      for(int m = 0; m < d_numMatls; m++) {
         Temp_CC[m][c] += b[m];
       }
     }  //end CellIterator loop
@@ -784,10 +803,10 @@ void SlipExch::addExch_Vel_Temp_CC(const ProcessorGroup * pg,
     //  Boundary Condition Code
     if( BC_globalVars->usingLodi || BC_globalVars->usingMicroSlipBCs){
 
-      std::vector<CCVariable<double> > temp_CC_Xchange(numMatls);
-      std::vector<CCVariable<Vector> > vel_CC_Xchange(numMatls);
+      std::vector<CCVariable<double> > temp_CC_Xchange(d_numMatls);
+      std::vector<CCVariable<Vector> > vel_CC_Xchange(d_numMatls);
 
-      for (int m = 0; m < numMatls; m++) {
+      for (int m = 0; m < d_numMatls; m++) {
         Material* matl = d_sharedState->getMaterial(m);
         int indx = matl->getDWIndex();
 
@@ -800,7 +819,7 @@ void SlipExch::addExch_Vel_Temp_CC(const ProcessorGroup * pg,
 
     //__________________________________
     //  Set boundary conditions
-    for (int m = 0; m < numMatls; m++)  {
+    for (int m = 0; m < d_numMatls; m++)  {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
 
@@ -822,7 +841,7 @@ void SlipExch::addExch_Vel_Temp_CC(const ProcessorGroup * pg,
     // Convert vars. primitive-> flux
     for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
       IntVector c = *iter;                                              // shouldn't the loop over matls be outside the cell iterator for speed. --Todd
-      for (int m = 0; m < numMatls; m++) {
+      for (int m = 0; m < d_numMatls; m++) {
         int_eng_L_ME[m][c] = Temp_CC[m][c]*cv[m][c] * mass_L[m][c];
         mom_L_ME[m][c]     = vel_CC[m][c]           * mass_L[m][c];
         Tdot[m][c]         = (Temp_CC[m][c] - old_temp[m][c])/delT;

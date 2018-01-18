@@ -72,8 +72,18 @@ ScalarExch::~ScalarExch()
 void ScalarExch::problemSetup(const ProblemSpecP & prob_spec)
 {
   // read in the exchange coefficients
-  d_exchCoeff->problemSetup( prob_spec, d_numMatls );
+  ProblemSpecP notUsed;
+  d_exchCoeff->problemSetup( prob_spec, d_numMatls, notUsed );
 }
+
+//______________________________________________________________________
+//
+void ScalarExch::outputProblemSpec(ProblemSpecP & matl_ps )
+{
+  ProblemSpecP notUsed;
+  d_exchCoeff->outputProblemSpec(matl_ps, notUsed);
+}
+
 
 //______________________________________________________________________
 //
