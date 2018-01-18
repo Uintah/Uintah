@@ -2094,6 +2094,10 @@
                                       attribute1="scheme REQUIRED STRING 'central, upwind, superbee, roe, vanleer'"/>
 
         <kokkos_translate             spec="OPTIONAL NO_DATA"/> <!-- This activates DQMOM in the new task interface. If not present, then DQMOM is ignored -->
+
+        <write_input_with_dqmom_eqns  spec="OPTIONAL STRING"/> <!-- This allows the user to see what is being added to the KScalarTransport node to 
+                                                                    generate the transport eqns. The output from this should *not* be used to run a 
+                                                                    case. The string input is the filename that is written to disk in your run directory. -->
         <!-- End new tags for new DQMOM interface -->
 
         <!-- Tags for verification of DQMOM AX=B solution procedure -->
