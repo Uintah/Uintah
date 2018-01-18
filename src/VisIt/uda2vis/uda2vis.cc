@@ -34,7 +34,7 @@
 
 #include <VisIt/uda2vis/uda2vis.h>
 
-#include <CCA/Components/Regridder/PerPatchVars.h>
+#include <Core/Grid/Variables/PerPatchVars.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Scheduler.h>
@@ -225,7 +225,6 @@ void releaseGrid(GridP *grid)
 extern "C"
 std::vector<double> getCycleTimes(DataArchive *archive)
 {
-
   // Get the times and indices.
   std::vector<int> index;
   std::vector<double> times;

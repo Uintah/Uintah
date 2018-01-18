@@ -433,7 +433,7 @@ void
 SimulationController::outputSetup( void )
 {  
   // Set up the output - needs to be done before the application is setup.
-  m_output->setRunTimeStats( &m_runtime_stats );
+  m_output->setRuntimeStats( &m_runtime_stats );
 
   m_output->problemSetup( m_ups, m_restart_ps, m_app->getSimulationStateP() );
 }
@@ -511,7 +511,7 @@ void
 SimulationController::schedulerSetup( void )
 {
   // Now that the grid is completely set up, set up the scheduler.
-  m_scheduler->setRunTimeStats( &m_runtime_stats );
+  m_scheduler->setRuntimeStats( &m_runtime_stats );
 
   m_scheduler->problemSetup( m_ups, m_app->getSimulationStateP() );
 
@@ -530,7 +530,7 @@ void
 SimulationController::loadBalancerSetup( void )
 {
   // Set up the load balancer.
-  m_loadBalancer->setRunTimeStats( &m_runtime_stats );
+  m_loadBalancer->setRuntimeStats( &m_runtime_stats );
 
   //  Set the dimensionality of the problem.
   IntVector low, high, size;
@@ -621,7 +621,7 @@ SimulationController::finalSetup()
   // This step is done after the call to m_app->problemSetup to get
   // the defaults set by the simulation interface into the input.xml,
   // which the output writes along with index.xml
-  m_output->initializeOutput(m_ups);
+  m_output->initializeOutput(m_ups, m_current_gridP );
 
   // This step is done after the output is initialized so that global
   // reduction output vars are copied to the new uda. Further, it must
@@ -786,7 +786,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
     message << "Per proc runtime performance stats" << std::endl;
 
     for (unsigned int i = 0; i < m_runtime_stats.size(); ++i) {
-      RunTimeStatsEnum e = (RunTimeStatsEnum) i;
+      RuntimeStatsEnum e = (RuntimeStatsEnum) i;
 
       if (m_runtime_stats[e] > 0) {
         message << "rank: " << d_myworld->myRank() << " "
@@ -873,7 +873,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
             << "\n";
       
       for (unsigned int i=0; i<m_runtime_stats.size(); ++i) {
-        RunTimeStatsEnum e = (RunTimeStatsEnum) i;
+        RuntimeStatsEnum e = (RuntimeStatsEnum) i;
         
         if (m_runtime_stats.getMaximum(e) > 0) {
           message << "  " << std::left

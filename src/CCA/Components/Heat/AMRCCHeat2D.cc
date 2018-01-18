@@ -27,7 +27,7 @@
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <CCA/Components/Heat/blockrange_io.h>
-#include <CCA/Components/Regridder/PerPatchVars.h>
+#include <Core/Grid/Variables/PerPatchVars.h>
 #include <CCA/Ports/Regridder.h>
 
 using namespace Uintah;

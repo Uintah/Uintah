@@ -287,12 +287,10 @@ RFElasticPlastic::addParticleState(std::vector<const VarLabel*>& from,
   from.push_back(pPlasticStrainLabel);
   from.push_back(pPlasticStrainRateLabel);
   from.push_back(pEnergyLabel);
-  from.push_back(lb->pEquivalentStress_t1);
 
   to.push_back(pPlasticStrainLabel_preReloc);
   to.push_back(pPlasticStrainRateLabel_preReloc);
   to.push_back(pEnergyLabel_preReloc);
-  to.push_back(lb->pEquivalentStress_t1_preReloc);
 
   // Add the particle state for the flow & deviatoric stress model
   d_flow     ->addParticleState(from, to);
@@ -310,7 +308,6 @@ RFElasticPlastic::addInitialComputesAndRequires(Task* task,
   task->computes(pPlasticStrainLabel, matlset);
   task->computes(pPlasticStrainRateLabel, matlset);
   task->computes(pEnergyLabel,        matlset);
-  task->computes(lb->pEquivalentStress_t1, matlset);
  
   // Add internal evolution variables computed by flow & deviatoric stress model
   d_flow     ->addInitialComputesAndRequires(task, matl, patch);
@@ -336,18 +333,15 @@ RFElasticPlastic::initializeCMData(const Patch* patch,
   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
 
   ParticleVariable<double>  pPlasticStrain, pPlasticStrainRate, pEnergy;
-  ParticleVariable<double>  pEquivalentStress;
 
   new_dw->allocateAndPut(pPlasticStrain,     pPlasticStrainLabel, pset);
   new_dw->allocateAndPut(pPlasticStrainRate, pPlasticStrainRateLabel, pset);
   new_dw->allocateAndPut(pEnergy,            pEnergyLabel, pset);
-  new_dw->allocateAndPut(pEquivalentStress,  lb->pEquivalentStress_t1, pset);
 
   for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++){
     pPlasticStrain[*iter] = 0.0;
     pPlasticStrainRate[*iter] = 0.0;
     pEnergy[*iter] = 0.;
-    pEquivalentStress[*iter] = 0.;
   }
 
   // Initialize the data for the flow model
@@ -447,9 +441,6 @@ RFElasticPlastic::addComputesAndRequires(Task* task,
   // Deviatoric stress model
   d_devStress->addComputesAndRequires(task, matl);
 
-  //******* start - temporary use, CG
-  task->computes(lb->pEquivalentStress_t1_preReloc,  matlset);
-  //******* end   - temporary use, CG
 }
 //______________________________________________________________________
 //
@@ -586,11 +577,6 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(p_q,   lb->p_qLabel_preReloc,          pset);
     new_dw->allocateAndPut(pEnergy_new, pEnergyLabel_preReloc,    pset);
 
-    //******* start - temporary use, CG
-    ParticleVariable<double>  pEquStress;
-    new_dw->allocateAndPut(pEquStress, lb->pEquivalentStress_t1_preReloc,  pset);
-    //******* end   - temporary use, CG
-    
     d_flow     ->getInternalVars(pset, old_dw);
     d_devStress->getInternalVars(pset, old_dw);
     
@@ -758,7 +744,6 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
       // the flow stress routines should be passed
       // the entire stress (not just deviatoric)
       double equivStress = sqrtThreeTwo*trialS.Norm();
-      pEquStress[idx] = equivStress;
 
       // Calculate flow stress
       double flowStress = d_flow->computeFlowStress(state, delT, d_tol, 
@@ -1319,7 +1304,6 @@ RFElasticPlastic::addSplitParticlesComputesAndRequires(Task* task,
   task->modifies(pPlasticStrainLabel_preReloc,      matlset);
   task->modifies(pPlasticStrainRateLabel_preReloc,  matlset);
   task->modifies(pEnergyLabel_preReloc,             matlset);
-  task->modifies(lb->pEquivalentStress_t1_preReloc, matlset);
 }
 
 void 
@@ -1336,31 +1320,27 @@ RFElasticPlastic::splitCMSpecificParticleData(const Patch* patch,
   ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
   ParticleVariable<double>  PlasStrain, PlasStrainRate,Energy;
-  ParticleVariable<double> pEquivStress;
   ParticleVariable<int> pLocalized;
 
   new_dw->getModifiable(PlasStrain,    pPlasticStrainLabel_preReloc,     pset);
   new_dw->getModifiable(PlasStrainRate,pPlasticStrainRateLabel_preReloc, pset);
   new_dw->getModifiable(pLocalized,    lb->pLocalizedMPMLabel_preReloc,  pset);
   new_dw->getModifiable(Energy,        pEnergyLabel_preReloc,            pset);
-  new_dw->getModifiable(pEquivStress, lb->pEquivalentStress_t1_preReloc, pset);
 
   ParticleVariable<double> PlasStrainTmp, PlasStrainRateTmp, EnergyTmp;
   ParticleVariable<int> pLocalizedTmp;
-  ParticleVariable<double> pEquivStressTmp;
 
   new_dw->allocateTemporary(PlasStrainTmp,        pset);
   new_dw->allocateTemporary(PlasStrainRateTmp,    pset);
   new_dw->allocateTemporary(pLocalizedTmp,        pset);
   new_dw->allocateTemporary(EnergyTmp,            pset);
-  new_dw->allocateTemporary(pEquivStressTmp,      pset);
+  //new_dw->allocateTemporary(pEquivStressTmp,      pset);
   // copy data from old variables for particle IDs and the position vector
   for(unsigned int pp=0; pp<oldNumPar; ++pp ){
     PlasStrainTmp[pp]     = PlasStrain[pp];
     PlasStrainRateTmp[pp] = PlasStrainRate[pp];
     pLocalizedTmp[pp]     = pLocalized[pp];
     EnergyTmp[pp]         = Energy[pp];
-    pEquivStressTmp[pp]   = pEquivStress[pp];
   }
 
   int numRefPar=0;
@@ -1377,7 +1357,6 @@ RFElasticPlastic::splitCMSpecificParticleData(const Patch* patch,
         PlasStrainRateTmp[new_index] = PlasStrainRate[idx];
         pLocalizedTmp[new_index]     = pLocalized[idx];
         EnergyTmp[new_index]         = Energy[idx];
-        pEquivStressTmp[new_index]   = pEquivStress[idx];
       }
       numRefPar++;
     }
@@ -1387,5 +1366,4 @@ RFElasticPlastic::splitCMSpecificParticleData(const Patch* patch,
   new_dw->put(PlasStrainRateTmp,  pPlasticStrainRateLabel_preReloc,   true);
   new_dw->put(pLocalizedTmp,      lb->pLocalizedMPMLabel_preReloc,    true);
   new_dw->put(EnergyTmp,          pEnergyLabel_preReloc,              true);
-  new_dw->put(pEquivStressTmp,    lb->pEquivalentStress_t1_preReloc,  true);
 }

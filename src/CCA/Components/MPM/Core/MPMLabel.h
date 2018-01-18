@@ -350,16 +350,6 @@ namespace Uintah {
       const VarLabel* czIDLabel; 
       const VarLabel* czIDLabel_preReloc; 
       const VarLabel* pCellNACZIDLabel;
-
-      // ******* start - for temporary use only, CG
-      const VarLabel* pPressureLabel_t1;
-      const VarLabel* pPressureLabel_t1_preReloc;
-      const VarLabel* pConcInterpLabel; 
-      const VarLabel* pConcInterpLabel_preReloc;
-      const VarLabel* pEquivalentStress_t1;
-      const VarLabel* pEquivalentStress_t1_preReloc;
-      // ******* end - for temporary use only, CG
-
     };
 } // End namespace Uintah
 

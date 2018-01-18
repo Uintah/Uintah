@@ -1714,14 +1714,14 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP & grid )
 
   this->compile();
 
-  (*d_runTimeStats)[RegriddingCompilationTime] += timer().seconds();
+  (*d_runtimeStats)[RegriddingCompilationTime] += timer().seconds();
 
   // save these and restore them, since the next execute will append the scheduler's, and we don't want to.
-  double exec_time   = (*d_runTimeStats)[TaskExecTime];
-  double local_time  = (*d_runTimeStats)[TaskLocalCommTime];
-  double wait_time   = (*d_runTimeStats)[TaskWaitCommTime];
-  double reduce_time = (*d_runTimeStats)[TaskReduceCommTime];
-  double thread_time = (*d_runTimeStats)[TaskWaitThreadTime];
+  double exec_time   = (*d_runtimeStats)[TaskExecTime];
+  double local_time  = (*d_runtimeStats)[TaskLocalCommTime];
+  double wait_time   = (*d_runtimeStats)[TaskWaitCommTime];
+  double reduce_time = (*d_runtimeStats)[TaskReduceCommTime];
+  double thread_time = (*d_runtimeStats)[TaskWaitThreadTime];
 
   timer.reset( true );
   this->execute();
@@ -1766,14 +1766,14 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP & grid )
 
   newDataWarehouse->refinalize();
 
-  (*d_runTimeStats)[RegriddingCopyDataTime] += timer().seconds();
+  (*d_runtimeStats)[RegriddingCopyDataTime] += timer().seconds();
 
   // restore values from before the regrid and data copy
-  (*d_runTimeStats)[TaskExecTime]       = exec_time;
-  (*d_runTimeStats)[TaskLocalCommTime]  = local_time;
-  (*d_runTimeStats)[TaskWaitCommTime]   = wait_time;
-  (*d_runTimeStats)[TaskReduceCommTime] = reduce_time;
-  (*d_runTimeStats)[TaskWaitThreadTime] = thread_time;
+  (*d_runtimeStats)[TaskExecTime]       = exec_time;
+  (*d_runtimeStats)[TaskLocalCommTime]  = local_time;
+  (*d_runtimeStats)[TaskWaitCommTime]   = wait_time;
+  (*d_runtimeStats)[TaskReduceCommTime] = reduce_time;
+  (*d_runtimeStats)[TaskWaitThreadTime] = thread_time;
 
   m_is_copy_data_timestep = false;
 }

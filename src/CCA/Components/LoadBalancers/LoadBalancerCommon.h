@@ -28,7 +28,7 @@
 #include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/SFC.h>
 
-#include <CCA/Components/SimulationController/RunTimeStatsEnums.h>
+#include <CCA/Components/Schedulers/RuntimeStatsEnum.h>
 
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
@@ -205,7 +205,7 @@ public:
   int* getActiveDims() { return m_activeDims; };
   void setDimensionality(bool x, bool y, bool z);
 
-  void setRunTimeStats( ReductionInfoMapper< RunTimeStatsEnum, double > *runTimeStats) { d_runTimeStats = runTimeStats; };     
+  void setRuntimeStats( ReductionInfoMapper< RuntimeStatsEnum, double > *runtimeStats) { d_runtimeStats = runtimeStats; };     
 
 protected:
 
@@ -268,7 +268,7 @@ protected:
   int m_numDims{0};
   int m_activeDims[3];
 
-  ReductionInfoMapper< RunTimeStatsEnum, double > *d_runTimeStats;
+  ReductionInfoMapper< RuntimeStatsEnum, double > *d_runtimeStats;
 
 private:
 

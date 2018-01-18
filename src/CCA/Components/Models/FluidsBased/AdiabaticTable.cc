@@ -36,7 +36,7 @@
 #include <CCA/Components/Models/FluidsBased/AdiabaticTable.h>
 #include <CCA/Components/Models/FluidsBased/TableFactory.h>
 #include <CCA/Components/Models/FluidsBased/TableInterface.h>
-#include <CCA/Components/Regridder/PerPatchVars.h>
+#include <Core/Grid/Variables/PerPatchVars.h>
 
 #include <CCA/Ports/Output.h>
 #include <CCA/Ports/Scheduler.h>

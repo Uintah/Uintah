@@ -388,7 +388,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/
   m_exec_timer.stop();
 
   // compute the net timings
-  MPIScheduler::computeNetRunTimeStats();
+  MPIScheduler::computeNetRuntimeStats();
 
   // only do on top-level scheduler
   if ( m_parent_scheduler == nullptr ) {

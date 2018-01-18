@@ -48,24 +48,22 @@ PSELIBS := \
         Core/Parallel                      \
         Core/ProblemSpec                   \
         Core/Util                          \
-        $(ANALYSIS_MODULES)                \
-        $(APPLICATION)                     \
         $(ARCHES)                          \
         $(EXAMPLES)                        \
         $(FVM)                             \
         $(HEAT)                            \
         $(ICE)                             \
-        $(MODELS)                          \
         $(MPM)                             \
         $(MPMARCHES)                       \
         $(MPMFVM)                          \
         $(MPMICE)                          \
         $(PHASEFIELD)                      \
-        $(POST_PROCESS_UDA)                \
         $(WASATCH)                         \
+        $(COMPONENTS)/Application          \
+        $(COMPONENTS)/PostProcessUda       \
         $(COMPONENTS)/ProblemSpecification \
-        $(COMPONENTS)/Solvers              \
-        $(COMPONENTS)/SwitchingCriteria
+	$(COMPONENTS)/SwitchingCriteria    \
+        $(COMPONENTS)/Solvers
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(BOOST_LIBRARY)
 

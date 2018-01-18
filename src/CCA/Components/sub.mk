@@ -36,11 +36,6 @@ SRCDIR  := CCA/Components
 # do not modify...
 #
 
-# Application
-ifeq ($(BUILD_APPLICATION),yes)
-  APPLICATION   := $(SRCDIR)/Application
-endif
-
 # Arches
 ifeq ($(BUILD_ARCHES),yes)
   ARCHES   := $(SRCDIR)/Arches
@@ -66,11 +61,6 @@ ifeq ($(BUILD_ICE),yes)
   ICE := $(SRCDIR)/ICE
 endif
 
-# Models
-ifeq ($(BUILD_MODELS),yes)
-  MODELS := $(SRCDIR)/Models
-endif
-
 # MPM
 ifeq ($(BUILD_MPM),yes)
   MPM := $(SRCDIR)/MPM
@@ -91,29 +81,9 @@ ifeq ($(BUILD_MPM)$(BUILD_ICE),yesyes)
   MPMICE := $(SRCDIR)/MPMICE
 endif
 
-# OnTheFlyAnalysis
-ifeq ($(BUILD_ANALYSIS_MODULES),yes)
-  ANALYSIS_MODULES := $(SRCDIR)/OnTheFlyAnalysis
-endif
-
-# Parent
-ifeq ($(BUILD_PARENT),yes)
-  PARENT := $(SRCDIR)/Parent
-endif
-
 # PhaseField
 ifeq ($(BUILD_PHASEFIELD),yes)
   PHASEFIELD := $(SRCDIR)/PhaseField
-endif
-
-# Post Process Uda
-ifeq ($(BUILD_POST_PROCESS_UDA),yes)
-  POST_PROCESS_UDA := $(SRCDIR)/PostProcessUda
-endif
-
-# Simulation Controller
-ifeq ($(BUILD_SIM_CONTROLLER),yes)
-  SIM_CONTROLLER := $(SRCDIR)/SimulationController
 endif
 
 # Wasatch
@@ -122,29 +92,40 @@ ifeq ($(BUILD_WASATCH),yes)
 endif
 
 SUBDIRS := \
-        $(ANALYSIS_MODULES)            \
-        $(APPLICATION)                 \
         $(ARCHES)                      \
         $(EXAMPLES)                    \
         $(FVM)                         \
         $(HEAT)                        \
         $(ICE)                         \
-        $(MODELS)                      \
         $(MPM)                         \
         $(MPMARCHES)                   \
         $(MPMFVM)                      \
         $(MPMICE)                      \
         $(PARENT)                      \
         $(PHASEFIELD)                  \
-        $(POST_PROCESS_UDA)            \
-        $(SIM_CONTROLLER)              \
-        $(WASATCH)                     \
+        $(WASATCH)
+
+ifeq ($(BUILD_MINIMAL),yes)
+  SUBDIRS += \
         $(SRCDIR)/DataArchiver         \
         $(SRCDIR)/LoadBalancers        \
         $(SRCDIR)/ProblemSpecification \
+        $(SRCDIR)/Schedulers
+else
+  SUBDIRS += \
+        $(SRCDIR)/Application          \
+        $(SRCDIR)/DataArchiver         \
+        $(SRCDIR)/LoadBalancers        \
+        $(SRCDIR)/Models               \
+        $(SRCDIR)/OnTheFlyAnalysis     \
+        $(SRCDIR)/Parent               \
+	$(SRCDIR)/PostProcessUda       \
+        $(SRCDIR)/ProblemSpecification \
         $(SRCDIR)/Regridder            \
         $(SRCDIR)/Schedulers           \
+        $(SRCDIR)/SimulationController \
         $(SRCDIR)/Solvers              \
-        $(SRCDIR)/SwitchingCriteria    
+        $(SRCDIR)/SwitchingCriteria
+endif
 
 include $(SCIRUN_SCRIPTS)/recurse.mk

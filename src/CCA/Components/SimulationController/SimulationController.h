@@ -25,7 +25,7 @@
 #ifndef CCA_COMPONENTS_SIMULATIONCONTROLLER_SIMULATIONCONTROLLER_H
 #define CCA_COMPONENTS_SIMULATIONCONTROLLER_SIMULATIONCONTROLLER_H
 
-#include <CCA/Components/SimulationController/RunTimeStatsEnums.h>
+#include <CCA/Components/Schedulers/RuntimeStatsEnum.h>
 
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
@@ -256,7 +256,7 @@ protected:
   bool m_recompile_taskgraph{false};
   
   // Runtime stat mappers.
-  ReductionInfoMapper< RunTimeStatsEnum, double > m_runtime_stats;
+  ReductionInfoMapper< RuntimeStatsEnum, double > m_runtime_stats;
   ReductionInfoMapper< unsigned int,     double > m_other_stat;
 
 #ifdef USE_PAPI_COUNTERS
@@ -267,10 +267,10 @@ protected:
     bool                           m_is_supported{false};
     int                            m_event_value_idx{0};
     std::string                    m_name{""};
-    SimulationState::RunTimeStat   m_sim_stat_name{};
+    SimulationState::RuntimeStat   m_sim_stat_name{};
 
     PapiEvent( const std::string                  & name
-             , const SimulationState::RunTimeStat & sim_stat_name )
+             , const SimulationState::RuntimeStat & sim_stat_name )
       : m_name(name)
       , m_sim_stat_name(sim_stat_name)
     { }
@@ -292,7 +292,7 @@ public:
   void setVisIt( unsigned int val ) { m_do_visit = val; }
   unsigned int  getVisIt() { return m_do_visit; }
 
-  const ReductionInfoMapper< RunTimeStatsEnum, double > getRunTimeStats() const
+  const ReductionInfoMapper< RuntimeStatsEnum, double > getRuntimeStats() const
   { return m_runtime_stats; };
 
   const ReductionInfoMapper< unsigned int,     double > getOtherStats() const

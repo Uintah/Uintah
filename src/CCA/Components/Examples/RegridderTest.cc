@@ -24,7 +24,7 @@
 
 #include <CCA/Components/Examples/RegridderTest.h>
 #include <CCA/Components/Examples/ExamplesLabel.h>
-#include <CCA/Components/Regridder/PerPatchVars.h>
+#include <Core/Grid/Variables/PerPatchVars.h>
 #include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/Regridder.h>

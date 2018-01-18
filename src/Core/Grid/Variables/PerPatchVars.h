@@ -27,7 +27,6 @@
 
 //-- Uintah framework includes --//
 #include <Core/Exceptions/InternalError.h>
-#include <Core/Geometry/IntVector.h>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Util/Handle.h>
 #include <Core/Util/RefCounted.h>

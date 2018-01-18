@@ -23,7 +23,6 @@
  */
 
 #include <CCA/Components/OnTheFlyAnalysis/particleExtract.h>
-#include <CCA/Components/Regridder/PerPatchVars.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/LoadBalancer.h>
 #include <Core/Exceptions/ProblemSetupException.h>

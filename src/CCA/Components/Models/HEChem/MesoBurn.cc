@@ -33,7 +33,6 @@
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/ElasticPlasticHP.h>
 #include <CCA/Components/MPMICE/Core/MPMICELabel.h>
-#include <CCA/Components/Regridder/PerPatchVars.h>
 
 #include <CCA/Ports/Regridder.h>
 #include <CCA/Ports/Scheduler.h>
