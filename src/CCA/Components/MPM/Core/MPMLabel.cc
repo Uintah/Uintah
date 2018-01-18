@@ -847,22 +847,6 @@ MPMLabel::MPMLabel()
   // for assigning particle ids
   pCellNACZIDLabel =
     VarLabel::create("cellNACZID", CCVariable<short int>::getTypeDescription());
-
-  // ******* start - for temporary use only, CG
-  pPressureLabel_t1  = VarLabel::create( "p.pressure_t1",
-			ParticleVariable<double>::getTypeDescription() );
-  pPressureLabel_t1_preReloc  = VarLabel::create( "p.pressure_t1+",
-        ParticleVariable<double>::getTypeDescription() );
-  pConcInterpLabel  = VarLabel::create( "p.concentrationInterp",
-			ParticleVariable<double>::getTypeDescription() );
-  pConcInterpLabel_preReloc  = VarLabel::create( "p.concentrationInterp+",
-        ParticleVariable<double>::getTypeDescription() );
-  pEquivalentStress_t1  = VarLabel::create( "p.equivalentStress_t1",
-			ParticleVariable<double>::getTypeDescription() );
-  pEquivalentStress_t1_preReloc  = VarLabel::create( "p.equivalentStress_t1+",
-        ParticleVariable<double>::getTypeDescription() );
-  // ******* end - for temporary use only, CG
-
 } 
 
 MPMLabel::~MPMLabel()
@@ -1169,13 +1153,4 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(czBotMatLabel_preReloc);
   VarLabel::destroy(czFailedLabel);
   VarLabel::destroy(czFailedLabel_preReloc);
-
-  // ******* start - for temporary use, CG
-  VarLabel::destroy(pPressureLabel_t1);
-  VarLabel::destroy(pPressureLabel_t1_preReloc);
-  VarLabel::destroy(pConcInterpLabel);
-  VarLabel::destroy(pConcInterpLabel_preReloc);
-  VarLabel::destroy(pEquivalentStress_t1);
-  VarLabel::destroy(pEquivalentStress_t1_preReloc);
-  // ******* end - for temporary use, CG
 }
