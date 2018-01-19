@@ -230,6 +230,7 @@
         <fluidMatlIndex               spec="REQUIRED INTEGER" />
         <momentum_accommodation_coeff spec="REQUIRED DOUBLE"  />
         <thermal_accommodation_coeff  spec="REQUIRED DOUBLE"  />
+        <useSlipCoeffs                spec="OPTIONAL BOOLEAN" />
       </Model>
     
       <convective_fluid            spec="OPTIONAL INTEGER" /> 
