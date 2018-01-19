@@ -1283,7 +1283,7 @@
             <initialize                   spec="OPTIONAL NO_DATA"
                                           attribute1="value REQUIRED DOUBLE"/>
 
-            <!-- Allow one to unscale the the solution variable by a constant. The solution variable 
+            <!-- Allow one to unscale the the solution variable by a constant. The solution variable
                  is thus the scaled value and the unscaled value is given by the user assigned label -->
           </eqn>
 
@@ -2238,12 +2238,19 @@
           <turbulentPrandtlNumber       spec="OPTIONAL DOUBLE" />
           <molecular_diffusivity        spec="OPTIONAL DOUBLE 'positive'"/>
           <initialization               spec="OPTIONAL NO_DATA"
-                                        attribute1="type REQUIRED STRING 'env_constant, constant, env_step, step'">
+                                        attribute1="type REQUIRED STRING 'env_constant, constant,
+                                                                          env_step, step, geometry_fill'">
             <!-- constant value initialization -->
             <constant                   spec="OPTIONAL DOUBLE"/>
             <env_constant               spec="MULTIPLE NO_DATA"
                                         attribute1="qn REQUIRED INTEGER 'positive'"
                                         attribute2="value REQUIRED DOUBLE" /> <!-- this is the unscaled initial value for the weight -->
+
+            <!-- geometry fill -->
+            <geom_object                spec="OPTIONAL"/> <!-- DONT GIVE THE GEOM_OBJECT A LABEL, otherwise this wont work -->
+            <constant_inside            spec="REQUIRED DOUBLE" need_applies_to="type geometry_fill"/> <!-- fills this value inside the geometry -->
+            <constant_outside           spec="OPTIONAL DOUBLE" need_applies_to="type geometry_fill"/> <!-- fills this value outside the geometry. default = 0.0 -->
+
             <!-- step function initialization -->
             <!-- Note: the only difference between 'step' and 'env_step' is the use of <step_value></step_value> or <env_step_value qn="" value=""/> -->
             <step_direction             spec="OPTIONAL STRING 'x,y,z'"/> <!-- direction in which the step occurs -->
@@ -2300,12 +2307,21 @@
                                                                <!--wvel'"/> [> This is a fix descriptor that indicates what function this IC takes <]-->
 
           <initialization               spec="OPTIONAL NO_DATA"
-                                        attribute1="type REQUIRED STRING 'env_constant, constant, env_step'">
+                                        attribute1="type REQUIRED STRING 'env_constant,
+                                                                          constant, env_step,
+                                                                          geometry_fill'">
+
             <!-- environment constant value initialization -->
             <env_constant               spec="MULTIPLE NO_DATA"
                                         attribute1="qn REQUIRED INTEGER 'positive'"
                                         attribute2="value REQUIRED DOUBLE" />
             <constant                   spec="OPTIONAL DOUBLE"/>
+
+            <!-- geometry fill -->
+            <geom_object                spec="OPTIONAL"/> <!-- DONT GIVE THE GEOM_OBJECT A LABEL, otherwise this wont work -->
+            <constant_inside            spec="REQUIRED DOUBLE" need_applies_to="type geometry_fill"/> <!-- fills this value inside the geometry -->
+            <constant_outside           spec="OPTIONAL DOUBLE" need_applies_to="type geometry_fill"/> <!-- fills this value outside the geometry. default = 0.0 -->
+
             <!-- step function initialization -->
             <step_direction             spec="OPTIONAL STRING 'x,y,z'"/> <!-- direction in which the step occurs -->
             <step_start                 spec="OPTIONAL DOUBLE"/>         <!-- physical location (in specified direction) at which the step should begin -->
