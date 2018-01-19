@@ -21,21 +21,54 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef UTILITIES_TIMERS_HPP
-#define UTILITIES_TIMERS_HPP
+#ifndef CORE_UTIL_TIMERS_TIMERS_HPP
+#define CORE_UTIL_TIMERS_TIMERS_HPP
 
-#include <chrono>
-#include <limits>
 #include <atomic>
+#include <chrono>
 #include <cstdint>
-#include <vector>
+#include <limits>
 #include <memory>
-
 #include <ostream>
 
 namespace Timers {
 
+#ifdef __bgq__
+
+#include <sys/time.h>
+
+static struct timeval start_time;
+
+class LegacyTimer {
+
+public:
+
+  LegacyTimer()  = default;
+  ~LegacyTimer() = default;
+
+  // Return the current system time, in terms of seconds.
+  // Time zero is at some arbitrary point in the past.
+  static double currentSeconds()
+  {
+    struct timeval now_time;
+    if (gettimeofday(&now_time, 0) != 0) {
+      throw std::runtime_error("gettimeofday failed: ");
+    }
+    return (now_time.tv_sec - start_time.tv_sec) + (now_time.tv_usec - start_time.tv_usec) * 1.e-6;
+  }
+};
+#endif // __bgq__
+
+
+
 //------------------------------------------------------------------------------
+
+#ifdef __bgq__
+
+  static Timers::LegacyTimer m_timer;
+
+#endif
+
 
 struct nanoseconds
 {
@@ -116,7 +149,13 @@ struct Simple
   // reset the timer
   void reset( bool running )
   {
+
+#ifdef __bgq__
+    m_start = m_finish = m_timer.currentSeconds();
+#else
     m_start = m_finish = clock_type::now();
+#endif
+
     m_offset = 0;
     m_excluded = 0;
     m_running = running;
@@ -126,8 +165,15 @@ struct Simple
   bool stop()
   {
     if (m_running) {
+
+#ifdef __bgq__
+    m_finish = m_timer.currentSeconds();
+    const double t = m_finish - m_start;
+#else
       m_finish = clock_type::now();
       const int64_t t = std::chrono::duration_cast<std::chrono::nanoseconds>(m_finish-m_start).count();
+#endif
+
       m_offset += t;
       exclude( t );
       m_running = false;
@@ -139,7 +185,12 @@ struct Simple
   // start or restart the timer
   void start()
   {
+#ifdef __bgq__
+    m_start = m_finish = m_timer.currentSeconds();
+#else
     m_start = m_finish = clock_type::now();
+#endif
+
     m_running = true;
   }
 
@@ -150,18 +201,29 @@ struct Simple
     if (stop()) {
       start();
     }
+#ifdef __bgq__
+    return 1.0e9*(m_offset - tmp);
+#else
     return m_offset - tmp;
+#endif
   }
 
   // number of nanoseconds since construction, start, or reset
   nanoseconds operator()() const
   {
+#ifdef __bgq__
+    return (1.0e9*(m_timer.currentSeconds()-m_start))
+      + m_offset
+      - m_excluded;
+#else
     return (m_running ? static_cast<int64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>( clock_type::now()-m_start).count()) : 0)
       + m_offset
       - m_excluded;
+#endif
   }
 
 private:
+
   template <typename... ExcludeTimers>
   void set_excludes(int i, Simple* e, ExcludeTimers... exclude_timers)
   {
@@ -187,8 +249,13 @@ private:
   }
 
   // member
+#ifdef __bgq__
+  double                     m_start    {0};
+  double                     m_finish   {m_start};
+#else
   time_point                 m_start    {clock_type::now()};
   time_point                 m_finish   {m_start};
+#endif
   int64_t                    m_offset   {0};
   int64_t                    m_excluded {0};
   std::unique_ptr<Simple*[]> m_excludes {};
@@ -311,19 +378,21 @@ struct ThreadTrip : public Simple
   }
 
 private:
+
   static int64_t s_total[size];
   static int64_t s_count[size];
   static bool     s_used[size];
 
 };
 
+//------------------------------------------------------------------------------
+
 template <typename Tag, int MaxThreads> int64_t ThreadTrip<Tag,MaxThreads>::s_total[size] = {};
 template <typename Tag, int MaxThreads> int64_t ThreadTrip<Tag,MaxThreads>::s_count[size] = {};
 template <typename Tag, int MaxThreads> bool    ThreadTrip<Tag,MaxThreads>::s_used[size]  = {};
 
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
 
 } // namespace Timers
 
-#endif //UTILITIES_TIMERS_HPP
+#endif // CORE_UTIL_TIMERS_TIMERS_HPP

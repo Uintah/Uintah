@@ -119,7 +119,7 @@ namespace Uintah {
     };
 
     std::vector<IntVector> d_minPatchSize;
-    CostForecasterBase *d_costForecaster;
+    CostForecasterBase * d_costForecaster{nullptr};
     enum { static_lb, cyclic_lb, random_lb, patch_factor_lb };
 
     DynamicLoadBalancer(const DynamicLoadBalancer&);
@@ -139,8 +139,8 @@ namespace Uintah {
 
     bool   d_levelIndependent;
     
-    bool   d_do_AMR;
-    ProblemSpecP d_pspec;
+    bool   d_do_AMR{false};
+    ProblemSpecP d_pspec{nullptr};
     
     double d_lbThreshold; //< gain threshold to exceed to require lb'ing
     
@@ -149,8 +149,8 @@ namespace Uintah {
     double d_particleCost;  //cost weight per particle
     double d_patchCost;     //cost weight per patch
     
-    int  d_dynamicAlgorithm;
-    bool d_collectParticles;
+    int  d_dynamicAlgorithm{patch_factor_lb};
+    bool d_collectParticles{false};
   };
 } // End namespace Uintah
 
