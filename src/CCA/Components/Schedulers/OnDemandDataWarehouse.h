@@ -34,11 +34,11 @@
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Variables/PSPatchMatlGhost.h>
 #include <Core/Grid/Variables/VarLabelMatl.h>
+#include <Core/Parallel/MasterLock.h>
 #include <Core/Parallel/UintahMPI.h>
 
 #include <iosfwd>
 #include <map>
-#include <mutex>
 #include <vector>
 
 using Uintah::Max;

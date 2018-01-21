@@ -60,8 +60,7 @@ namespace {
 Dout g_dbg(         "KokkosOMP_DBG"        , false);
 Dout g_queuelength( "KokkosOMP_QueueLength", false);
 
-using Mutex = Uintah::MasterLock;
-Mutex g_scheduler_mutex{}; // main scheduler lock for multi-threaded task selection
+Uintah::MasterLock g_scheduler_mutex{}; // main scheduler lock for multi-threaded task selection
 
 volatile int  g_num_tasks_done{0};
 
@@ -370,7 +369,7 @@ KokkosOpenMPScheduler::runTasks()
     // Part 1 (serial): Task selection
     // ----------------------------------------------------------------------------------
     {
-      std::lock_guard<Mutex> scheduler_mutex_guard(g_scheduler_mutex);
+      std::lock_guard<Uintah::MasterLock> scheduler_mutex_guard(g_scheduler_mutex);
 
       while (!havework) {
 

@@ -56,9 +56,8 @@ using namespace Uintah;
 namespace {
 
 std::atomic<int32_t> ids{0};
-using Mutex = Uintah::MasterLock;
-Mutex ids_init{};
-Mutex patch_cache_mutex{};
+Uintah::MasterLock   ids_init{};
+Uintah::MasterLock   patch_cache_mutex{};
 
 DebugStream bcout{   "BCTypes", false };
 DebugStream rgtimes{ "RGTimes", false };

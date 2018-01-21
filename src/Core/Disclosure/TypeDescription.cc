@@ -42,8 +42,7 @@ namespace {
 using register_monitor = Uintah::CrowdMonitor<TypeDescription::register_tag>;
 using lookup_monitor   = Uintah::CrowdMonitor<TypeDescription::lookup_tag>;
 
-using Mutex = Uintah::MasterLock;
-Mutex get_mpi_type_lock{};
+Uintah::MasterLock get_mpi_type_lock{};
 std::map<std::string, const TypeDescription*> * types_g     = nullptr;
 std::vector<const TypeDescription*>           * typelist_g  = nullptr;
 bool killed = false;
@@ -181,7 +180,7 @@ TypeDescription::getMPIType() const
   if (d_mpitype == MPI_Datatype(-1)) {
 		// scope the lock_guard
     {
-      std::lock_guard<Mutex> guard(get_mpi_type_lock);
+      std::lock_guard<Uintah::MasterLock> guard(get_mpi_type_lock);
       if (d_mpitype == MPI_Datatype(-1)) {
         if (d_mpitypemaker) {
           d_mpitype = (*d_mpitypemaker)();

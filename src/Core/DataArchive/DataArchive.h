@@ -439,8 +439,7 @@ private:
   int d_processor;
   int d_numProcessors;
 
-  using Mutex = Uintah::MasterLock;
-  Mutex d_lock;
+  Uintah::MasterLock d_lock;
     
   std::string d_particlePositionName;
 

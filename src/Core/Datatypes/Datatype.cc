@@ -43,8 +43,7 @@
 namespace Uintah {
 
 static std::atomic<int32_t> current_generation{1};
-using Mutex = Uintah::MasterLock;
-static Mutex init_lock{};
+static Uintah::MasterLock   init_lock{};
 
 
 int

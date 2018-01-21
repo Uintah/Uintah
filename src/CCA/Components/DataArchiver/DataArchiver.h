@@ -604,8 +604,7 @@ class LoadBalancer;
     std::vector<bool> m_checkpointCalled;
     bool m_checkpointReductionCalled {false};
 #endif
-    using Mutex = Uintah::MasterLock;
-    Mutex m_outputLock;
+    Uintah::MasterLock m_outputLock;
 
     DataArchiver(const DataArchiver&);
     DataArchiver& operator=(const DataArchiver&);      

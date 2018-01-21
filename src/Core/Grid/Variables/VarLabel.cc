@@ -43,8 +43,7 @@ namespace {
 
 Dout g_varlabel_dbg( "VarLabel", false );
 std::map<std::string, VarLabel*> g_all_labels;
-using Mutex = Uintah::MasterLock;
-Mutex g_label_mutex{};
+Uintah::MasterLock g_label_mutex{};
 
 }
 

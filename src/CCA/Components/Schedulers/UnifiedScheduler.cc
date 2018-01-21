@@ -74,10 +74,9 @@ namespace {
 Dout g_dbg(         "Unified_DBG"        , false);
 Dout g_queuelength( "Unified_QueueLength", false);
 
-using Mutex = Uintah::MasterLock;
-Mutex g_scheduler_mutex{};           // main scheduler lock for multi-threaded task selection
-Mutex g_mark_task_consumed_mutex{};  // allow only one task at a time to enter the task consumed section
-Mutex g_lb_mutex{};                  // load balancer lock
+Uintah::MasterLock g_scheduler_mutex{};           // main scheduler lock for multi-threaded task selection
+Uintah::MasterLock g_mark_task_consumed_mutex{};  // allow only one task at a time to enter the task consumed section
+Uintah::MasterLock g_lb_mutex{};                  // load balancer lock
 
 } // namespace
 
@@ -90,11 +89,11 @@ Mutex g_lb_mutex{};                  // load balancer lock
 
   namespace {
 
-  std::mutex g_GridVarSuperPatch_mutex{};   // An ugly hack to get superpatches for host levels to work.
+  Uintah::MasterLock g_GridVarSuperPatch_mutex{};   // An ugly hack to get superpatches for host levels to work.
 
   }
 
-  extern std::mutex cerrLock;
+  extern Uintah::MasterLock cerrLock;
 
 #endif
 
@@ -808,7 +807,7 @@ UnifiedScheduler::markTaskConsumed( int          & numTasksDone
                                   , DetailedTask * dtask
                                   )
 {
-  std::lock_guard<Mutex> task_consumed_guard(g_mark_task_consumed_mutex);
+  std::lock_guard<Uintah::MasterLock> task_consumed_guard(g_mark_task_consumed_mutex);
 
   // Update the count of tasks consumed by the scheduler.
   numTasksDone++;

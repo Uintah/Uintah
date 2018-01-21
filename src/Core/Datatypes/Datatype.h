@@ -47,8 +47,7 @@ class Datatype {
 public:
   //! needed for our smart pointers -- LockingHandle<T>
   int ref_cnt;
-  using Mutex = Uintah::MasterLock;
-  Mutex lock{};
+  Uintah::MasterLock lock{};
 
   //! unique id for each instance
   int generation;

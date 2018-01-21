@@ -51,12 +51,11 @@
 using namespace Uintah;
 
 // used externally in DetailedTask.cc
-using Mutex = Uintah::MasterLock;
-Mutex g_external_ready_mutex{}; // synchronizes access to the external-ready task queue
+Uintah::MasterLock g_external_ready_mutex{}; // synchronizes access to the external-ready task queue
 
 namespace {
 
-Mutex g_internal_ready_mutex{}; // synchronizes access to the internal-ready task queue
+Uintah::MasterLock g_internal_ready_mutex{}; // synchronizes access to the internal-ready task queue
 
 Dout dbg(         "DetailedTasks", false);
 Dout scrubout(    "Scrubbing",     false);
@@ -848,7 +847,7 @@ DetailedTasks::getOldDWSendTask( int proc )
 void
 DetailedTasks::internalDependenciesSatisfied( DetailedTask * dtask )
 {
-  std::lock_guard<Mutex> internal_ready_guard(g_internal_ready_mutex);
+  std::lock_guard<Uintah::MasterLock> internal_ready_guard(g_internal_ready_mutex);
 
   m_ready_tasks.push(dtask);
   atomic_readyTasks_size.fetch_add(1, std::memory_order_relaxed);
@@ -864,7 +863,7 @@ DetailedTasks::getNextInternalReadyTask()
 
   DetailedTask* nextTask = nullptr;
   if (atomic_readyTasks_size.load(std::memory_order_relaxed) > 0) {
-    std::lock_guard<Mutex> internal_ready_guard(g_internal_ready_mutex);
+    std::lock_guard<Uintah::MasterLock> internal_ready_guard(g_internal_ready_mutex);
     if (!m_ready_tasks.empty()) {
 
       nextTask = m_ready_tasks.front();
@@ -881,7 +880,7 @@ DetailedTasks::getNextInternalReadyTask()
 int
 DetailedTasks::numInternalReadyTasks()
 {
-  //std::lock_guard<Mutex> internal_ready_guard(g_internal_ready_mutex);
+  //std::lock_guard<Uintah::MasterLock> internal_ready_guard(g_internal_ready_mutex);
   //return readyTasks_.size();
   return atomic_readyTasks_size.load(std::memory_order_relaxed);
 }
@@ -895,7 +894,7 @@ DetailedTasks::getNextExternalReadyTask()
 
   DetailedTask* nextTask = nullptr;
   if (m_atomic_mpi_completed_tasks_size.load(std::memory_order_relaxed) > 0) {
-    std::lock_guard<Mutex> external_ready_guard(g_external_ready_mutex);
+    std::lock_guard<Uintah::MasterLock> external_ready_guard(g_external_ready_mutex);
     if (!m_mpi_completed_tasks.empty()) {
       nextTask = m_mpi_completed_tasks.top();
       m_atomic_mpi_completed_tasks_size.fetch_sub(1, std::memory_order_relaxed);
@@ -911,7 +910,7 @@ DetailedTasks::getNextExternalReadyTask()
 int
 DetailedTasks::numExternalReadyTasks()
 {
-  //std::lock_guard<Mutex> external_ready_guard(g_external_ready_mutex);
+  //std::lock_guard<Uintah::MasterLock> external_ready_guard(g_external_ready_mutex);
   //return mpiCompletedTasks_.size();
   return m_atomic_mpi_completed_tasks_size.load(std::memory_order_relaxed);
 }

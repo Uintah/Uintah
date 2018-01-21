@@ -73,7 +73,6 @@
 #include <iomanip>
 #include <iostream>
 #include <limits>
-#include <mutex>
 #include <string>
 #include <sstream>
 #include <vector>
@@ -103,8 +102,7 @@ using  task_access_monitor = Uintah::CrowdMonitor<task_access_tag>;
 using namespace Uintah;
 
 // Debug: Used to sync cerr/cout so it is readable when output by multiple ranks
-using Mutex = Uintah::MasterLock;
-extern Mutex cerrLock;
+extern Uintah::MasterLock cerrLock;
 
 #ifdef HAVE_CUDA
   extern DebugStream simulate_multiple_gpus;
@@ -120,7 +118,7 @@ DebugStream warn(       "OnDemandDataWarehouse_warn", true  );
 DebugStream particles(  "DWParticles",                false );
 DebugStream particles2( "DWParticles2",               false );
 
-Mutex g_running_tasks_lock{};
+Uintah::MasterLock g_running_tasks_lock{};
 
 }
 
@@ -3554,7 +3552,7 @@ void
 OnDemandDataWarehouse::pushRunningTask( const Task* task,
                                               std::vector<OnDemandDataWarehouseP>* dws )
 {
-  std::lock_guard<Mutex> push_lock(g_running_tasks_lock);
+  std::lock_guard<Uintah::MasterLock> push_lock(g_running_tasks_lock);
 
   ASSERT(task);
 
@@ -3573,7 +3571,7 @@ OnDemandDataWarehouse::pushRunningTask( const Task* task,
 void
 OnDemandDataWarehouse::popRunningTask()
 {
-  std::lock_guard<Mutex> pop_lock(g_running_tasks_lock);
+  std::lock_guard<Uintah::MasterLock> pop_lock(g_running_tasks_lock);
 
   d_runningTasks.find(std::this_thread::get_id())->second.pop_back();
 }
@@ -3583,7 +3581,7 @@ OnDemandDataWarehouse::popRunningTask()
 inline std::list<OnDemandDataWarehouse::RunningTaskInfo>*
 OnDemandDataWarehouse::getRunningTasksInfo()
 {
-  std::lock_guard<Mutex> get_running_task_lock(g_running_tasks_lock);
+  std::lock_guard<Uintah::MasterLock> get_running_task_lock(g_running_tasks_lock);
 
   if (d_runningTasks.find(std::this_thread::get_id())->second.empty()) {
     return nullptr;
@@ -3597,7 +3595,7 @@ OnDemandDataWarehouse::getRunningTasksInfo()
 inline bool
 OnDemandDataWarehouse::hasRunningTask()
 {
-  std::lock_guard<Mutex> has_running_task_lock(g_running_tasks_lock);
+  std::lock_guard<Uintah::MasterLock> has_running_task_lock(g_running_tasks_lock);
 
   if (d_runningTasks.find(std::this_thread::get_id())->second.empty()) {
     return false;
@@ -3611,7 +3609,7 @@ OnDemandDataWarehouse::hasRunningTask()
 inline OnDemandDataWarehouse::RunningTaskInfo*
 OnDemandDataWarehouse::getCurrentTaskInfo()
 {
-  std::lock_guard<Mutex> get_current_task_lock(g_running_tasks_lock);
+  std::lock_guard<Uintah::MasterLock> get_current_task_lock(g_running_tasks_lock);
 
   if( d_runningTasks.find(std::this_thread::get_id())->second.empty() ) {
     return nullptr;

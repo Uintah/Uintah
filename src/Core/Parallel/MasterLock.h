@@ -35,7 +35,7 @@ namespace Uintah {
 class MasterLock
 {
 
-  // Specific to OpenMP- and PThreads-based implementations
+  // Specific to OpenMP- and std::thread-based implementations
 
   // This lock should be used with a scoped lock guard
   // i.e. std::unique_lock<Lock>, std::lock_guard<Lock>
@@ -53,8 +53,8 @@ class MasterLock
 
 #else
 
-    void lock()       { m_mutex.lock(); }
-    void unlock()     { m_mutex.unlock(); }
+    void lock()   { m_mutex.lock(); }
+    void unlock() { m_mutex.unlock(); }
 
     MasterLock()  {}
     ~MasterLock() {}

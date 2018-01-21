@@ -46,9 +46,8 @@ using namespace Uintah;
 
 namespace {
 
-using Mutex = Uintah::MasterLock;
-Mutex dependency_map_mutex{};
-Mutex enthalpy_map_mutex{};
+Uintah::MasterLock dependency_map_mutex{};
+Uintah::MasterLock enthalpy_map_mutex{};
 
 }
 

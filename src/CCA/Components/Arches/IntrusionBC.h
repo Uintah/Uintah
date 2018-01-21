@@ -957,11 +957,10 @@ namespace Uintah{
       bool _do_energy_exchange;
       bool _mpm_energy_exchange;
 
-      using Mutex = Uintah::MasterLock;
-      Mutex _bc_face_iterator_lock{};
-      Mutex _interior_cell_iterator_lock{};
-      Mutex _bc_cell_iterator_lock{};
-      Mutex _iterator_initializer_lock{};
+      Uintah::MasterLock _bc_face_iterator_lock{};
+      Uintah::MasterLock _interior_cell_iterator_lock{};
+      Uintah::MasterLock _bc_cell_iterator_lock{};
+      Uintah::MasterLock _iterator_initializer_lock{};
 
       const VarLabel* _T_label{nullptr};
 

@@ -37,8 +37,7 @@ namespace {
 
 Dout g_received_dbg( "DependencyBatch", false );
 
-using Mutex = Uintah::MasterLock;
-Mutex g_received_mutex{};
+Uintah::MasterLock g_received_mutex{};
 
 }
 

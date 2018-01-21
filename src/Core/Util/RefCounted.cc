@@ -36,9 +36,8 @@ using namespace Uintah;
 static const int  NLOCKS      = 1024;
 static       bool initialized = false;
 
-using Mutex = Uintah::MasterLock;
-static Mutex * locks[NLOCKS];
-static Mutex   initlock{};
+static Uintah::MasterLock * locks[NLOCKS];
+static Uintah::MasterLock   initlock{};
 
 static std::atomic<long long> nextIndex{0};
 static std::atomic<long long> freeIndex{0};
@@ -51,7 +50,7 @@ RefCounted::RefCounted()
     initlock.lock();
     {
       for (int i = 0; i < NLOCKS; ++i) {
-        locks[i] = scinew Mutex();
+        locks[i] = scinew Uintah::MasterLock();
       }
       initialized = true;
     }

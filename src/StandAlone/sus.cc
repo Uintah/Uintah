@@ -65,6 +65,7 @@
 
 #include <Core/Exceptions/Exception.h>
 #include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Parallel/MasterLock.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Util/Environment.h>
 #include <Core/Util/FileUtils.h>
@@ -96,7 +97,6 @@
 #include <cstdio>
 #include <iomanip>
 #include <iostream>
-#include <mutex>
 #include <string>
 #include <vector>
 #include <stdexcept>
@@ -106,7 +106,7 @@ using namespace Uintah;
 
 namespace {
 
-std::mutex cerr_mutex{};
+Uintah::MasterLock cerr_mutex{};
 
 Dout g_stack_debug(       "ExceptionStack" , true );
 Dout g_wait_for_debugger( "WaitForDebugger", false );
@@ -842,12 +842,12 @@ main( int argc, char *argv[], char *env[] )
   
   catch (ProblemSetupException& e) {
     // Don't show a stack trace in the case of ProblemSetupException.
-    std::lock_guard<std::mutex> cerr_guard(cerr_mutex);
+    std::lock_guard<Uintah::MasterLock> cerr_guard(cerr_mutex);
     std::cerr << "\n\n(Proc: " << Uintah::Parallel::getMPIRank() << ") Caught: " << e.message() << "\n\n";
     thrownException = true;
   }
   catch (Exception& e) {
-    std::lock_guard<std::mutex> cerr_guard(cerr_mutex);
+    std::lock_guard<Uintah::MasterLock> cerr_guard(cerr_mutex);
     std::cerr << "\n\n(Proc " << Uintah::Parallel::getMPIRank() << ") Caught exception: " << e.message() << "\n\n";
     if(e.stackTrace()) {
       DOUT(g_stack_debug, "Stack trace: " << e.stackTrace());
@@ -855,32 +855,32 @@ main( int argc, char *argv[], char *env[] )
     thrownException = true;
   }
   catch (std::bad_alloc& e) {
-    std::lock_guard<std::mutex> cerr_guard(cerr_mutex);
+    std::lock_guard<Uintah::MasterLock> cerr_guard(cerr_mutex);
     std::cerr << Uintah::Parallel::getMPIRank() << " Caught std exception 'bad_alloc': " << e.what() << '\n';
     thrownException = true;
   }
   catch (std::bad_exception& e) {
-    std::lock_guard<std::mutex> cerr_guard(cerr_mutex);
+    std::lock_guard<Uintah::MasterLock> cerr_guard(cerr_mutex);
     std::cerr << Uintah::Parallel::getMPIRank() << " Caught std exception: 'bad_exception'" << e.what() << '\n';
     thrownException = true;
   }
   catch (std::ios_base::failure& e) {
-    std::lock_guard<std::mutex> cerr_guard(cerr_mutex);
+    std::lock_guard<Uintah::MasterLock> cerr_guard(cerr_mutex);
     std::cerr << Uintah::Parallel::getMPIRank() << " Caught std exception 'ios_base::failure': " << e.what() << '\n';
     thrownException = true;
   }
   catch (std::runtime_error& e) {
-    std::lock_guard<std::mutex> cerr_guard(cerr_mutex);
+    std::lock_guard<Uintah::MasterLock> cerr_guard(cerr_mutex);
     std::cerr << Uintah::Parallel::getMPIRank() << " Caught std exception 'runtime_error': " << e.what() << '\n';
     thrownException = true;
   }
   catch (std::exception& e) {
-    std::lock_guard<std::mutex> cerr_guard(cerr_mutex);
+    std::lock_guard<Uintah::MasterLock> cerr_guard(cerr_mutex);
     std::cerr << Uintah::Parallel::getMPIRank() << " Caught std exception: " << e.what() << '\n';
     thrownException = true;
   }
   catch(...) {
-    std::lock_guard<std::mutex> cerr_guard(cerr_mutex);
+    std::lock_guard<Uintah::MasterLock> cerr_guard(cerr_mutex);
     std::cerr << Uintah::Parallel::getMPIRank() << " Caught unknown exception\n";
     thrownException = true;
   }

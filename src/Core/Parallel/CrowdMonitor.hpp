@@ -32,8 +32,6 @@
 
 namespace Uintah {
 
-using Mutex = Uintah::MasterLock;
-
 template <typename Tag = void>
 class CrowdMonitor
 {
@@ -46,7 +44,7 @@ public:
     : m_type(t)
   {
     if (m_type == READER) {
-      std::unique_lock<Mutex>(s_mutex);
+      std::unique_lock<Uintah::MasterLock>(s_mutex);
       s_count.fetch_add(1, std::memory_order_relaxed);
     }
     else {
@@ -74,14 +72,14 @@ private:
   CrowdMonitor( CrowdMonitor && )                 = delete;
   CrowdMonitor& operator=( CrowdMonitor && )      = delete;
 
-  static Mutex                s_mutex;
-  static std::atomic<int>     s_count;
-  Type                        m_type;
+  static Uintah::MasterLock s_mutex;
+  static std::atomic<int>   s_count;
+  Type                      m_type;
 
 };
 
-template <typename Tag> Mutex            CrowdMonitor<Tag>::s_mutex = {};
-template <typename Tag> std::atomic<int> CrowdMonitor<Tag>::s_count = {0};
+template <typename Tag> Uintah::MasterLock CrowdMonitor<Tag>::s_mutex = {};
+template <typename Tag> std::atomic<int>   CrowdMonitor<Tag>::s_count = {0};
 
 } // end namespace Uintah
 

@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include <mutex>
+#include <Core/Parallel/MasterLock.h>
 
-std::mutex coutLock{};
-std::mutex cerrLock{};
+Uintah::MasterLock coutLock{};
+Uintah::MasterLock cerrLock{};

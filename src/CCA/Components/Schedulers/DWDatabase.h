@@ -72,9 +72,8 @@
 ****************************************/
 namespace {
 
-using Mutex = Uintah::MasterLock;
-Mutex g_keyDB_mutex{};
-Mutex g_mvars_mutex{};
+Uintah::MasterLock g_keyDB_mutex{};
+Uintah::MasterLock g_mvars_mutex{};
 
 }
 
@@ -296,7 +295,7 @@ template<class DomainType>
 void
 DWDatabase<DomainType>::cleanForeign()
 {
-  std::lock_guard<Mutex> exists_lock(g_mvars_mutex);
+  std::lock_guard<Uintah::MasterLock> exists_lock(g_mvars_mutex);
 
   for (auto iter = m_vars.begin(); iter != m_vars.end(); ++iter) {
     if (*iter && (*iter)->m_var->isForeign()) {
@@ -435,7 +434,7 @@ KeyDatabase<DomainType>::lookup( const VarLabel   * label
                                , const DomainType * dom
                                )
 {
-  std::lock_guard<Mutex> lookup_lock(g_keyDB_mutex);
+  std::lock_guard<Uintah::MasterLock> lookup_lock(g_keyDB_mutex);
 
   VarLabelMatl<DomainType> v(label, matlIndex, getRealDomain(dom));
   typename keyDBtype::const_iterator const_iter = m_keys.find(v);
@@ -530,7 +529,7 @@ DWDatabase<DomainType>::exists( const VarLabel   * label
   int idx = m_keyDB->lookup(label, matlIndex, dom);
 
   {
-    std::lock_guard<Mutex> exists_lock(g_mvars_mutex);
+    std::lock_guard<Uintah::MasterLock> exists_lock(g_mvars_mutex);
     if (idx == -1) {
       return false;
     }
@@ -558,7 +557,7 @@ DWDatabase<DomainType>::put( const VarLabel   * label
   ASSERT(matlIndex >= -1);
 
   {
-    std::lock_guard<Mutex> put_lock(g_keyDB_mutex);
+    std::lock_guard<Uintah::MasterLock> put_lock(g_keyDB_mutex);
     if (init) {
       m_keyDB->insert(label, matlIndex, dom);
       this->doReserve(m_keyDB);
@@ -600,7 +599,7 @@ DWDatabase<DomainType>::putReduce( const VarLabel              * label
   ASSERT(matlIndex >= -1);
 
   {
-    std::lock_guard<Mutex> put_reduce_lock(g_keyDB_mutex);
+    std::lock_guard<Uintah::MasterLock> put_reduce_lock(g_keyDB_mutex);
     if (init) {
       m_keyDB->insert(label, matlIndex, dom);
       this->doReserve(m_keyDB);
@@ -645,7 +644,7 @@ DWDatabase<DomainType>::putForeign( const VarLabel   * label
   ASSERT(matlIndex >= -1);
 
   {
-    std::lock_guard<Mutex> put_foreign_lock(g_keyDB_mutex);
+    std::lock_guard<Uintah::MasterLock> put_foreign_lock(g_keyDB_mutex);
     if (init) {
       m_keyDB->insert(label, matlIndex, dom);
       this->doReserve(m_keyDB);
