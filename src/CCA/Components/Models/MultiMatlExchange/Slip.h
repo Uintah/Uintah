@@ -109,8 +109,9 @@ namespace ExchangeModels{
                           std::vector< constCCVariable<double> > & vol_frac_CC,
                           std::vector< constCCVariable<double> > & sp_vol_CC,
                           std::vector< constCCVariable<double> > & meanFreePath,
+                          std::vector< constCCVariable<Vector> > & vel_CC,
                           std::vector< CCVariable<Vector> >      & vel_T_CC,
-                          std::vector< CCVariable<Vector> >      & vel_CC );
+                          std::vector< CCVariable<Vector> >      & delta_vel_exch );
 
     template<class constSFC, class SFC>
     void vel_FC_exchange( CellIterator       iter,
@@ -121,7 +122,7 @@ namespace ExchangeModels{
                           std::vector<constCCVariable<double> >& vol_frac_CC,
                           std::vector<constCCVariable<double> >& sp_vol_CC,
                           std::vector<constCCVariable<double> >& rho_CC,
-                          std::vector<CCVariable<Vector> >     & vel_CC_exch,
+                          std::vector<CCVariable<Vector> >     & delta_vel_exch,
                           std::vector< constSFC>               & vel_FC,
                           std::vector< SFC >                   & sp_vol_FC,
                           std::vector< SFC >                   & vel_FCME);
@@ -140,6 +141,7 @@ namespace ExchangeModels{
     int    d_solidMatlIndx = -9;
     double d_momentum_accommodation_coeff = -9;
     double d_thermal_accommodation_coeff  = -9;
+    bool   d_useSlipCoeffs = true;
 
   };
 }

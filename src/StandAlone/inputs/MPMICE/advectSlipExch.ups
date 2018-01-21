@@ -18,7 +18,7 @@
       <delt_min>             0.0     </delt_min>
       <delt_max>             1.0     </delt_max>
       <delt_init>            1.0e-4  </delt_init>
-      <max_Timesteps>        10      </max_Timesteps>
+      <max_Timesteps>        100      </max_Timesteps>
       <timestep_multiplier>  0.8     </timestep_multiplier>
     </Time>
 
@@ -158,6 +158,7 @@
       <save label="press_CC"/>
       <save label="mom_L_ME_CC"/>
       <save label="rho_CC"/>
+      <save label="temp_CC"/>
       <save label="vel_CC"/>
       <save label="vel_CCTransposed"/>
       <save label="meanFreePath"/>
@@ -167,6 +168,7 @@
       <save label="p.x"/>
       <save label="p.volume"/>
       <save label="p.velocity"/>
+      <save label="TotalMomentum"/>
       <checkpoint timestepInterval="3" cycle="2"/>
     </DataArchiver>
 
@@ -174,7 +176,7 @@
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
     <CFD>
-      <cfl>0.5</cfl>
+      <cfl>0.25</cfl>
       <ICE>
         <advection type = "FirstOrder" />
         <ClampSpecificVolume>false</ClampSpecificVolume>
@@ -261,6 +263,7 @@
       
       <exchange_properties>
         <Model type="slip">
+          <useSlipCoeffs>  false </useSlipCoeffs>
           <solidMatlIndex>  0  </solidMatlIndex>
           <fluidMatlIndex>  1  </fluidMatlIndex>
           <momentum_accommodation_coeff>  0.1 </momentum_accommodation_coeff>
@@ -268,8 +271,8 @@
         </Model>
 
         <exchange_coefficients>
-          <momentum>  [1e10]  </momentum>
-          <heat>      [1e10]   </heat>
+          <momentum>  [1e15]  </momentum>
+          <heat>      [1e15]   </heat>
         </exchange_coefficients>
       </exchange_properties>
     </MaterialProperties>
@@ -285,9 +288,13 @@
           <analyze label="press_CC"  matl="0"/>
           <analyze label="temp_CC"   matl="1"/>
           <analyze label="vel_CC"    matl="1"/>
+          <analyze label="uvel_FC"   matl="1"/>
+          <analyze label="vvel_FC"   matl="1"/>
+          <analyze label="wvel_FC"   matl="1"/>
           <analyze label="uvel_FCME" matl="1"/>
           <analyze label="vvel_FCME" matl="1"/>
           <analyze label="wvel_FCME" matl="1"/>
+          <analyze label="delP_Dilatate" matl="0"/>
           <analyze label="g.velocity" matl="0"/>
         </Variables>
       </Module>

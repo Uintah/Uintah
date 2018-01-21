@@ -4110,9 +4110,9 @@ if test "$with_boost" != NOT_SET; then
          # If configure specifies a boost dir, then ignore the system dirs to avoid 
          # finding the wrong version of boost.  I know that "--sysroot" works with gcc and icc...
 
-	if test "$IS_OSX" = "no"; then
-         ignore_sys_libs="--sysroot=/junk"
-	fi
+        if test "$IS_OSX" = "no" -a "$IS_BGQ" = "no"; then
+          ignore_sys_libs="--sysroot=/junk"
+	      fi
       fi
 
       BOOST_INCLUDE_DIR=$with_boost/include
