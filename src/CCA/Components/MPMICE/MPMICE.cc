@@ -185,7 +185,6 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
   d_ice->setComponents( this );
   dynamic_cast<ApplicationCommon*>(d_ice)->problemSetup( prob_spec );
 
-  d_ice->setMPMICELabel(MIlb);
   d_ice->setWithMPM();
   if(d_rigidMPM){
    d_ice->setWithRigidMPM();
