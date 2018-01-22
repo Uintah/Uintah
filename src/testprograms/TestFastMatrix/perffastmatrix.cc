@@ -32,28 +32,51 @@
 #include <cstdlib>
 #include <iostream>
 
+#define MAX_SIZE 16
 int main(int argc, char* argv[])
 {
-  int size = 5;
-  int reps = 100;
-  if(argc >= 2)
-    size=atoi(argv[1]);
-  if(argc >= 3)
+  // defaults
+  int size = 5;     // matrix size
+  int reps = 100;   // number of repetitions
+  
+  //__________________________________
+  // parse user inputs
+  if(argc >= 2){
+    size = atoi(argv[1]);
+  }
+  if(argc >= 3){
     reps = atoi(argv[2]);
+  }  
+   
+  //__________________________________
+  //  populate matrix
   Uintah::FastMatrix m(size, size);
   for(int i=0;i<size;i++){
     for(int j=0;j<size;j++){
-      m(i,j)=drand48();
+      m(i,j) = drand48();
     }
   }
+  
   Uintah::FastMatrix minv(size, size);
+  
+  //__________________________________
+  // populate right hand sides
   std::vector<double> b(size);
   std::vector<double> b2(size);
-  for(int i=0;i<size;i++)
-    b[i] = b2[i] = drand48();
+  double b_D[MAX_SIZE];
+  
+  for(int i=0;i<size;i++){
+    b[i]  = drand48();
+    b2[i] = drand48();
+    b_D[i] = drand48();
+  }
+  
+  // solution vectors
   std::vector<double> x(size);
   std::vector<double> x2(size);
 
+  //__________________________________
+  // start timer
   Timers::Simple timer;
   timer.start();
 
@@ -63,9 +86,18 @@ int main(int argc, char* argv[])
     minv.multiply(b, x);
     minv.multiply(b2, x2);
   }
-#else
+
+  // 
   for(int i=0;i<reps;i++){
     minv.destructiveSolve(&b[0], &b[1]);
+  }
+  
+  for(int i=0;i<reps;i++){
+    m.destructiveSolve(b);    // vector version
+  }  
+#else
+  for(int i=0;i<reps;i++){
+    m.destructiveSolve(b_D);   // double version
   }
 #endif
 

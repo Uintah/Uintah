@@ -38,6 +38,8 @@
 #include <ostream>                         // for operator<<, basic_ostream
 #include <vector>
 
+#define d_TINY_RHO 1e-12
+
 using namespace Uintah;
 using namespace std;
 
@@ -50,74 +52,96 @@ ExchangeModel::ExchangeModel(const ProblemSpecP     & prob_spec,
 {
   d_sharedState = sharedState;
   d_numMatls    = sharedState->getNumMatls();
+  d_zero_matl   = scinew MaterialSubset();
+  d_zero_matl->add(0);
+  d_zero_matl->addReference();
+  
   Mlb  = scinew MPMLabel();
+  
+  d_surfaceNormLabel   = VarLabel::create("surfaceNorm",   CCVariable<Vector>::getTypeDescription());
+  d_isSurfaceCellLabel = VarLabel::create("isSurfaceCell", CCVariable<int>::getTypeDescription());
 }
 
+//______________________________________________________________________
+//
 ExchangeModel::~ExchangeModel()
 {
   delete Mlb;
+ 
+  VarLabel::destroy( d_surfaceNormLabel );
+  VarLabel::destroy( d_isSurfaceCellLabel );
+  
+  if( d_zero_matl  && d_zero_matl->removeReference() ) {
+    delete d_zero_matl;
+  }
 }
 
 
 //______________________________________________________________________
 //
-void ExchangeModel::schedComputeSurfaceNormal( SchedulerP           & sched,
-                                               const PatchSet       * patches,
-                                               const MaterialSubset * zero_matl)
+void ExchangeModel::schedComputeSurfaceNormal( SchedulerP     & sched,        
+                                               const PatchSet * patches)      
 {
-  std::string name = "ExchangeModel::ComputeSurfaceNormalValues";
+  std::string name = "ExchangeModel::ComputeSurfaceNormal";
 
-  Task* t = scinew Task( name, this, &ExchangeModel::ComputeSurfaceNormalValues);
+  Task* t = scinew Task( name, this, &ExchangeModel::ComputeSurfaceNormal);
 
   printSchedule( patches, dbgExch, name );
 
-  const MaterialSet* mpm_matls  = d_sharedState->allMPMMaterials();
-  const MaterialSubset* mpm_mss = mpm_matls->getUnion();
+  const MaterialSet* mpm_ms       = d_sharedState->allMPMMaterials();
+  const MaterialSubset* mpm_matls = mpm_ms->getUnion();
 
   Ghost::GhostType  gac  = Ghost::AroundCells;
-  t->requires( Task::NewDW, Mlb->gMassLabel,       mpm_mss,   gac, 1);
-  t->requires( Task::OldDW, Mlb->NC_CCweightLabel, zero_matl, gac, 1);
+  t->requires( Task::NewDW, Mlb->gMassLabel,       mpm_matls,   gac, 1 );
+  t->requires( Task::OldDW, Mlb->NC_CCweightLabel, d_zero_matl, gac, 1 );
 
-  t->computes( d_surfaceNormLabel );
-
-  sched->addTask(t, patches, mpm_matls);
+  t->computes( d_surfaceNormLabel,   mpm_matls );
+  t->computes( d_isSurfaceCellLabel, d_zero_matl ); 
+  
+  sched->addTask(t, patches, mpm_ms );
 }
 //______________________________________________________________________
 //
-void ExchangeModel::ComputeSurfaceNormalValues( const ProcessorGroup*,
-                                                const PatchSubset* patches,
-                                                const MaterialSubset* mpm_matls,
-                                                DataWarehouse* old_dw,
-                                                DataWarehouse* new_dw )
+void ExchangeModel::ComputeSurfaceNormal( const ProcessorGroup*,
+                                          const PatchSubset* patches,           
+                                          const MaterialSubset* mpm_matls,      
+                                          DataWarehouse* old_dw,                
+                                          DataWarehouse* new_dw )               
 {
    for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    printTask(patches, patch, dbgExch, "Doing ExchangeModel::ComputeSurfaceNormalValues" );
+    printTask(patches, patch, dbgExch, "Doing ExchangeModel::ComputeSurfaceNormal" );
 
     Ghost::GhostType gac = Ghost::AroundCells;
-    int numMPMMatls = d_sharedState->getNumMPMMatls();
-
-    std::vector<CCVariable<Vector> > surfaceNorm(numMPMMatls);
+    
     constNCVariable<double> NC_CCweight;
-    constNCVariable<double> NCsolidMass;
-
     old_dw->get(NC_CCweight, Mlb->NC_CCweightLabel, 0, patch, gac,1);
+    
+    CCVariable<int> isSurfaceCell;
+    new_dw->allocateAndPut(isSurfaceCell, d_isSurfaceCellLabel, 0, patch);
+    isSurfaceCell.initialize( 0 );
+    
     Vector dx = patch->dCell();
+    double vol = dx.x() * dx.y() * dx.z();
 
+    //__________________________________
+    //    loop over MPM matls
     int numMPM_matls = d_sharedState->getNumMPMMatls();
     
-    //__________________________________
-    //
     for(int m=0; m<numMPM_matls; m++){
       MPMMaterial* matl = d_sharedState->getMPMMaterial(m);
       int dwindex = matl->getDWIndex();
 
-      new_dw->allocateAndPut(surfaceNorm[m], d_surfaceNormLabel, dwindex, patch);
-      surfaceNorm[m].initialize( Vector(0,0,0) );
+      CCVariable<Vector> surfaceNorm;
+      new_dw->allocateAndPut(surfaceNorm, d_surfaceNormLabel, dwindex, patch);
+      surfaceNorm.initialize( Vector(0,0,0) );
 
+      constNCVariable<double> NCsolidMass;
       new_dw->get(NCsolidMass, Mlb->gMassLabel, dwindex, patch, gac,1);
 
+      //__________________________________
+      //
       for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
         IntVector c = *iter;
 
@@ -134,7 +158,9 @@ void ExchangeModel::ComputeSurfaceNormalValues( const ProcessorGroup*,
                                      NCsolidMass[nodeIdx[nN]]);
         }
 
-        if ((MaxMass-MinMass)/MaxMass == 1 && (MaxMass > d_SMALL_NUM)){
+        // Surface Cell
+        if ((MaxMass-MinMass)/MaxMass == 1 && (MaxMass > (d_TINY_RHO * vol))){
+        
           double gradRhoX = 0.25 *
                  ((NCsolidMass[nodeIdx[0]]*NC_CCweight[nodeIdx[0]]+
                    NCsolidMass[nodeIdx[1]]*NC_CCweight[nodeIdx[1]]+         // xminus
@@ -170,9 +196,10 @@ void ExchangeModel::ComputeSurfaceNormalValues( const ProcessorGroup*,
                                    gradRhoY*gradRhoY +
                                    gradRhoZ*gradRhoZ );
 
-          surfaceNorm[m][c] = Vector(gradRhoX/absGradRho,
-                                     gradRhoY/absGradRho,
-                                     gradRhoZ/absGradRho);
+          surfaceNorm[c] = Vector(gradRhoX/absGradRho,
+                                  gradRhoY/absGradRho,
+                                  gradRhoZ/absGradRho);
+          isSurfaceCell[c] = 1;
 
         }  // if a surface cell
       }  // cellIterator

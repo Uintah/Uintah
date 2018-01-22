@@ -11,9 +11,6 @@ SRCDIR := CCA/Components/Arches/ChemMix
 #
 CUDA_ENABLED_SRCS :=          
 
-#ifeq ($(HAVE_TABPROPS),yes)
-#   CUDA_ENABLED_SRCS += TabPropsInterface
-#endif
 
 ifeq ($(HAVE_CUDA),yes)
    # CUDA enabled files, listed here (and with a rule at the end of
@@ -27,7 +24,6 @@ else
 endif
 
 SRCS += \
-      $(SRCDIR)/TabPropsInterface.cc      \
       $(SRCDIR)/TableLookup.cc            \
       $(SRCDIR)/ClassicTableInterface.cc  \
       $(SRCDIR)/ColdFlow.cc               \

@@ -50,6 +50,7 @@ namespace ExchangeModels{
 
     virtual void problemSetup(const ProblemSpecP & prob_spec);
 
+    virtual void outputProblemSpec(ProblemSpecP & prob_spec);
 
     virtual void sched_AddExch_VelFC(SchedulerP           & sched,
                                      const PatchSet       * patches,
@@ -71,7 +72,6 @@ namespace ExchangeModels{
                                            const PatchSet       * patches,
                                            const MaterialSubset * ice_matls,
                                            const MaterialSubset * mpm_matls,
-                                           const MaterialSubset * press_matl,
                                            const MaterialSet    * all_matls,
                                            customBC_globalVars  * BC_globalVars);
 

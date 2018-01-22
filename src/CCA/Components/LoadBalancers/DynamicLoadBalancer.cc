@@ -64,33 +64,21 @@ static DebugStream lbout( "LBOut", false );
 
 double lbtimes[5] = {0,0,0,0,0};
 
-DynamicLoadBalancer::DynamicLoadBalancer( const ProcessorGroup * myworld ) :
-  LoadBalancerCommon(myworld), d_costForecaster(0)
+DynamicLoadBalancer::DynamicLoadBalancer( const ProcessorGroup * myworld )
+  : LoadBalancerCommon(myworld)
 {
-  m_lb_interval = 0.0;
-  m_last_lb_simTime = 0.0;
-  m_lb_timeStep_interval = 0;
-  m_last_lb_timeStep = 0;
-  m_check_after_restart = false;
-
-  d_dynamicAlgorithm = patch_factor_lb;  
-  d_collectParticles = false;
-
-  d_do_AMR = false;
-  d_pspec = 0;
-
-  m_assignment_base_patch = -1;
-  m_old_assignment_base_patch = -1;
 }
+
 //______________________________________________________________________
 //
 DynamicLoadBalancer::~DynamicLoadBalancer()
 {
   if( d_costForecaster ) {
     delete d_costForecaster;
-    d_costForecaster = 0;
+    d_costForecaster = nullptr;
   }
 }
+
 //______________________________________________________________________
 //
 void
@@ -822,25 +810,26 @@ DynamicLoadBalancer::thresholdExceeded( const vector< vector<double> >& patch_co
   }
 }
 
-#include <sys/time.h>
-
 //______________________________________________________________________
 //
 bool
 DynamicLoadBalancer::assignPatchesRandom( const GridP &, bool force )
 {
+  // enabled in the UPS file with: <dynamicAlgorithm>random</dynamicAlgorithm>
+  //
   // this assigns patches in a random form - every time we re-load balance
   // We get a random seed on the first proc and send it out (so all procs
   // generate the same random numbers), and assign the patches accordingly
-  // Not a good load balancer - useful for performance comparisons
-  // because we should be able to come up with one better than this
+  //
+  // NOTE: this is not a good load balancer - useful for performance comparisons
+  // because we should be able to come up with one better than this.
 
   int seed;
 
   if (d_myworld->myRank() == 0) {
-    struct timeval time; 
-    gettimeofday(&time,NULL);
-    seed = (time.tv_sec * 1000) + (time.tv_usec / 1000);
+    auto steady_tp_now = std::chrono::steady_clock::now();
+    auto tp = std::chrono::time_point_cast<std::chrono::seconds>(steady_tp_now).time_since_epoch().count();
+    seed = (tp * 1000) + (tp / 1000);
   }
  
   Uintah::MPI::Bcast(&seed, 1, MPI_INT,0,d_myworld->getComm());
@@ -874,6 +863,7 @@ DynamicLoadBalancer::assignPatchesRandom( const GridP &, bool force )
   }
   return true;
 }
+
 //______________________________________________________________________
 //
 bool

@@ -134,11 +134,13 @@ namespace Uintah{
 
       std::vector < std::string > _composition_names;
 
+#ifdef HAVE_RADPROPS
       RadProps::ParticleRadCoeffs* _part_radprops;
       RadProps::ParticleRadCoeffs3D* _3Dpart_radprops;
-
       std::complex<double> _HighComplex;
       std::complex<double> _LowComplex;
+#endif
+
 
       bool _p_planck_abskp; 
       bool _p_ros_abskp; 
@@ -155,8 +157,6 @@ namespace Uintah{
       double _charImag;
       double _ashReal;
       double _ashImag;
-      std::complex<double> _complexLo;  
-      std::complex<double> _complexHi;  
       int _ncomp;
       
      int _nIVs;  /// number of independent variables for table lookup

@@ -419,6 +419,31 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constPhi
     } else if ( d_initFunction == "linear-x" ) {  // linear mixture fraction in x (with 0 for intercept and 1 m^-1 slope)
       phi[c] =   x ;
 
+    } else if ( d_initFunction == "geometry_fill" ){
+      
+      Box patchInteriorBox = patch->getBox();
+
+      //======= Fills a geometry piece with the value of d_constant_init ======
+      for (std::vector<GeometryPieceP>::iterator giter = d_initGeom.begin(); giter != d_initGeom.end(); giter++){
+
+        GeometryPieceP g_piece = *giter;
+        Box geomBox = g_piece->getBoundingBox();
+        Box intersectedBox = geomBox.intersect(patchInteriorBox);
+
+        if (!(intersectedBox.degenerate())){
+
+          Point P = patch->cellPosition(*iter);
+
+          if ( g_piece->inside(P) )
+            phi[c] = d_constant_in_init;
+          else
+            phi[c] = d_constant_out_init;
+
+        } else {
+          phi[c] = d_constant_out_init;
+        }
+      }
+
     // ======= add other initialization functions below here ======
     } else {
 

@@ -367,9 +367,21 @@ DQMOMEqn::problemSetup( const ProblemSpecP& inputdb )
         }
       }//end step_value init.
 
-    }
-    else if (d_initFunction == "mms1") {
+    } else if (d_initFunction == "mms1") {
       //currently nothing to do here.
+
+    } else if ( d_initFunction == "geometry_fill" ){
+
+      db_initialValue->require("constant_inside", d_constant_in_init);              //fill inside geometry
+      db_initialValue->getWithDefault( "constant_outside", d_constant_out_init, 1.e-15); //fill outside geometry
+
+      ProblemSpecP the_geometry = db_initialValue->findBlock("geom_object");
+      if (the_geometry) {
+        GeometryPieceFactory::create(the_geometry, d_initGeom);
+      } else {
+        throw ProblemSetupException("You are missing the geometry specification (<geom_object>) for the transport eqn. initialization!", __FILE__, __LINE__);
+      }
+
 
     // ------------ Other initialization function --------------------
     }

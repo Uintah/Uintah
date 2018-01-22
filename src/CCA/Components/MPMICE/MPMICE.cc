@@ -185,7 +185,6 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
   d_ice->setComponents( this );
   dynamic_cast<ApplicationCommon*>(d_ice)->problemSetup( prob_spec );
 
-  d_ice->setMPMICELabel(MIlb);
   d_ice->setWithMPM();
   if(d_rigidMPM){
    d_ice->setWithRigidMPM();
@@ -578,7 +577,6 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
     d_ice->d_exchModel->sched_AddExch_Vel_Temp_CC(   
                                               sched, ice_patches, ice_matls_sub,
                                                                   mpm_matls_sub,
-                                                                  press_matl,
                                                                   all_matls,
                                                                   d_ice->d_BC_globalVars); 
 

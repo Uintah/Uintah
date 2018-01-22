@@ -430,6 +430,13 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
 
   ProblemSpecP db_dqmom = db->findBlock("DQMOM");
 
+  std::string output_xml_name; 
+  bool print_ups_with_dqmom = false; 
+  if ( db_dqmom->findBlock("write_input_with_dqmom_eqns") ){ 
+    db_dqmom->getWithDefault("write_input_with_dqmom_eqns", output_xml_name, "your_input_with_dqmom_eqns.xml");
+    print_ups_with_dqmom = true; 
+  }
+
   ProblemSpecP db_transport;
 
   if ( db->findBlock("KScalarTransport") ){
@@ -438,10 +445,12 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
     db_transport = db->appendChild("KScalarTransport");
   }
 
-  int nQn = ParticleTools::get_num_env( db_dqmom, ParticleTools::DQMOM );
+  unsigned int nQn = ParticleTools::get_num_env( db_dqmom, ParticleTools::DQMOM );
+
+  std::string dqmom_grp_name = "dqmom_eqns"; 
 
   ProblemSpecP db_eqn_group = db_transport->appendChild("eqn_group");
-  db_eqn_group->setAttribute("label", "dqmom_eqns");
+  db_eqn_group->setAttribute("label", dqmom_grp_name);
   db_eqn_group->setAttribute("type", "CC");
   db_eqn_group->setAttribute("class", "dqmom");
 
@@ -468,7 +477,7 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
   }
 
   //Create weights
-  for ( int i = 0; i < nQn; i++ ){
+  for ( unsigned int i = 0; i < nQn; i++ ){
 
     ProblemSpecP eqn_db = db_eqn_group->appendChild("eqn");
     std::stringstream this_qn;
@@ -483,7 +492,7 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
       diff_db->setAttribute("scheme", diff_scheme );
     }
 
-    // //link the models with the Weight:
+    //link the models with the Weight:
     if ( db_weight->findBlock("model") ){
       for ( ProblemSpecP db_model = db_weight->findBlock("model"); db_model != nullptr;
             db_model = db_model->findNextBlock("model") ){
@@ -541,7 +550,7 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
     std::string ic_label;
     db_ic->getAttribute("label", ic_label);
 
-    for ( int i = 0; i < nQn; i++ ){
+    for ( unsigned int i = 0; i < nQn; i++ ){
 
       ProblemSpecP eqn_db = db_eqn_group->appendChild("eqn");
       std::stringstream this_qn;
@@ -616,6 +625,21 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
   proc0cout << "       Task: " << group_name << "  Type: " << "dqmom_fe_update" << std::endl;
   fe_tsk->problemSetup( db_eqn_group );
   fe_tsk->create_local_labels();
+
+  //Going to remove the input that I just created so that restarts work.
+  //Otherwise, the input isn't parsed properly for restart. 
+  for ( ProblemSpecP db_grp = db_transport->findBlock("eqn_group"); db_grp != nullptr;
+            db_grp = db_grp->findNextBlock("eqn_group") ){
+    std::string grp_name; 
+    db_grp->getAttribute("label", grp_name); 
+    if ( grp_name == dqmom_grp_name ){ 
+      if ( print_ups_with_dqmom ){ 
+        db_grp->output(output_xml_name.c_str()); 
+      }
+      db_transport->removeChild(db_grp); 
+      break;
+    }
+  }
 
 }
 

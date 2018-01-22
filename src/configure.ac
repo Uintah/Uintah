@@ -634,6 +634,12 @@ SCI_ARG_ENABLE(pidx,
   [build_pidx_lib="$enableval"],
   [build_pidx_lib="no"])
 
+SCI_ARG_ENABLE(kokkos,
+  AC_HELP_STRING(--enable-kokkos,
+                 Download and build the Kokkos thirdparty library),
+  [build_kokkos_lib="$enableval"],
+  [build_kokkos_lib="no"])
+
 SCI_ARG_ENABLE(static,
   AC_HELP_STRING(--enable-static,
                  Build a statically linked version of Uintah.  Set to 'full' to force full static link.),
@@ -3718,7 +3724,45 @@ AC_SUBST(GPERFTOOLS_LIB_FLAG)
 
 sci_defs_files="$sci_defs_files include/sci_defs/gperftools_testdefs.h"
 
-##  --  search for kokkos stuff  -------------------------------------------
+##  --  Handle --enable-kokkos -------------------------------
+
+if test "$build_kokkos_lib" != "no"; then
+
+  if test "$with_kokkos" != NOT_SET; then
+    AC_MSG_ERROR( Do NOT specify both --with-kokkos and --enable-kokkos )
+  fi
+
+  $path_to_src/build_scripts/build_kokkos.sh `$sci_pwd`/Kokkos
+
+  if test $? != 0; then
+    AC_MSG_ERROR( Failed to build the Kokkos library... )
+  fi
+
+  _sci_optional=specific
+  _sci_lib=`$sci_pwd`/Kokkos/build
+  # account for lib64 or lib32 or just lib...
+  BASE_LIB_PATH(_sci_lib,$_sci_lib)
+  _sci_inc=`$sci_pwd`/Kokkos/build/include
+
+  AC_LANG(C++)
+  SCI_TRY_LINK(KOKKOS, Kokkos libraries and headers,
+               Kokkos_Core.hpp,
+               $_sci_inc,
+               kokkos,
+               $_sci_lib,
+               ,
+               [],
+               $_sci_optional)
+  AC_LANG(C)
+
+fi
+
+##  --  Verify Kokkos lib dir is valid  ----------------------
+
+# Default values:
+_sci_optional=specific
+_sci_lib=
+_sci_inc=
 
 if test "$with_kokkos" != NOT_SET; then
 
@@ -3738,11 +3782,11 @@ if test "$with_kokkos" != NOT_SET; then
                [],
                $_sci_optional)
   AC_LANG(C)
-  
-  if test "$HAVE_KOKKOS" = "yes"; then
-     DEF_KOKKOS="#define UINTAH_ENABLE_KOKKOS"
-  fi
 
+fi
+
+if test "$HAVE_KOKKOS" = "yes"; then
+  DEF_KOKKOS="#define UINTAH_ENABLE_KOKKOS"
 fi
 
 AC_SUBST(HAVE_KOKKOS)
@@ -4066,9 +4110,9 @@ if test "$with_boost" != NOT_SET; then
          # If configure specifies a boost dir, then ignore the system dirs to avoid 
          # finding the wrong version of boost.  I know that "--sysroot" works with gcc and icc...
 
-	if test "$IS_OSX" = "no"; then
-         ignore_sys_libs="--sysroot=/junk"
-	fi
+        if test "$IS_OSX" = "no" -a "$IS_BGQ" = "no"; then
+          ignore_sys_libs="--sysroot=/junk"
+	      fi
       fi
 
       BOOST_INCLUDE_DIR=$with_boost/include
@@ -4511,10 +4555,8 @@ if test "$BUILD_WASATCH" = "yes"; then
 fi
 
 if test "$BUILD_ARCHES" = "yes"; then
-  if test "$HAVE_BOOST"      != "yes" -o \
-          "$HAVE_TABPROPS"   != "yes" -o \
-          "$HAVE_RADPROPS"   != "yes"; then
-    AC_MSG_ERROR( [You enabled the Arches component but do not have all of the prereqs: Boost ($HAVE_BOOST), TabProps ($HAVE_TABPROPS), or RadProps ($HAVE_RADPROPS).] )
+  if test "$HAVE_BOOST"      != "yes"; then
+    AC_MSG_ERROR( [You enabled the Arches component but do not have all of the prereqs: Boost ($HAVE_BOOST).] )
   fi
 fi
 

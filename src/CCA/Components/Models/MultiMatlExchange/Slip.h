@@ -49,6 +49,8 @@ namespace ExchangeModels{
     virtual ~SlipExch();
 
     virtual void problemSetup(const ProblemSpecP & prob_spec);
+    
+    virtual void outputProblemSpec(ProblemSpecP & prob_spec );
 
     virtual void sched_AddExch_VelFC(SchedulerP           & sched,
                                      const PatchSet       * patches,
@@ -70,7 +72,6 @@ namespace ExchangeModels{
                                            const PatchSet       * patches,
                                            const MaterialSubset * ice_matls,
                                            const MaterialSubset * mpm_matls,
-                                           const MaterialSubset * press_matl,
                                            const MaterialSet    * all_matls,
                                            customBC_globalVars  * BC_globalVars);
 
@@ -95,27 +96,52 @@ namespace ExchangeModels{
                              DataWarehouse        * old_dw,
                              DataWarehouse        * new_dw);
 
-    void computeSurfaceRotationMatrix(FastMatrix               & Q,
-                                      Vector                   & GradRho,
-                                      IntVector                *nodeIdx, 
-                                      constNCVariable<double>  &NCsolidMass, 
-                                      constNCVariable<double>  &NC_CCweight, 
-                                      Vector &dx);
+    void computeSurfaceRotationMatrix(FastMatrix   & Q,
+                                      const Vector & surfaceNorm);
 
 
+    void vel_CC_exchange( CellIterator   iter,
+                          const Patch  * patch,
+                          FastMatrix   & k_org,
+                          const double   delT,
+                          constCCVariable<int>    & isSurfaceCell,
+                          std::vector< constCCVariable<Vector> > & surfaceNorm,
+                          std::vector< constCCVariable<double> > & vol_frac_CC,
+                          std::vector< constCCVariable<double> > & sp_vol_CC,
+                          std::vector< constCCVariable<double> > & meanFreePath,
+                          std::vector< constCCVariable<Vector> > & vel_CC,
+                          std::vector< CCVariable<Vector> >      & vel_T_CC,
+                          std::vector< CCVariable<Vector> >      & delta_vel_exch );
+
+    template<class constSFC, class SFC>
+    void vel_FC_exchange( CellIterator       iter,
+                          const IntVector    adj_offset,
+                          const int          pDir,
+                          const FastMatrix & k_org,
+                          const double       delT,
+                          std::vector<constCCVariable<double> >& vol_frac_CC,
+                          std::vector<constCCVariable<double> >& sp_vol_CC,
+                          std::vector<constCCVariable<double> >& rho_CC,
+                          std::vector<CCVariable<Vector> >     & delta_vel_exch,
+                          std::vector< constSFC>               & vel_FC,
+                          std::vector< SFC >                   & sp_vol_FC,
+                          std::vector< SFC >                   & vel_FCME);
 
     //__________________________________
     //  variables local to SlipExch
     ExchangeCoefficients* d_exchCoeff;
+    
     MPMLabel* Mlb;
     ICELabel* Ilb;
-    const VarLabel* d_vel_CCTransposedLabel;
+    
+    const VarLabel* d_vel_CCTransLabel;
     const VarLabel* d_meanFreePathLabel;
 
     int    d_fluidMatlIndx = -9;
     int    d_solidMatlIndx = -9;
     double d_momentum_accommodation_coeff = -9;
     double d_thermal_accommodation_coeff  = -9;
+    bool   d_useSlipCoeffs = true;
 
   };
 }

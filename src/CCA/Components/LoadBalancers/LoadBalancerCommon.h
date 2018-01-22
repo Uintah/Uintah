@@ -268,7 +268,7 @@ protected:
   int m_numDims{0};
   int m_activeDims[3];
 
-  ReductionInfoMapper< RuntimeStatsEnum, double > *d_runtimeStats;
+  ReductionInfoMapper< RuntimeStatsEnum, double > * d_runtimeStats{nullptr};
 
 private:
 

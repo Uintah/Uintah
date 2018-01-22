@@ -257,7 +257,7 @@ protected:
   
   // Runtime stat mappers.
   ReductionInfoMapper< RuntimeStatsEnum, double > m_runtime_stats;
-  ReductionInfoMapper< unsigned int,     double > m_other_stat;
+  ReductionInfoMapper< unsigned int,     double > m_other_stats;
 
 #ifdef USE_PAPI_COUNTERS
   int         m_papi_event_set;            // PAPI event set
@@ -296,7 +296,7 @@ public:
   { return m_runtime_stats; };
 
   const ReductionInfoMapper< unsigned int,     double > getOtherStats() const
-  { return m_other_stat; };
+  { return m_other_stats; };
 
 protected:
   unsigned int m_do_visit;

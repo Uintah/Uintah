@@ -61,7 +61,7 @@ void gasRadProperties::problemSetup(  Uintah::ProblemSpecP& db )
     helper.add_lookup_species("H2O");
     _calc = scinew RadPropertyCalculator::RadPropsInterface(); 
 #else
-    throw InvalidValue("Error: You haven't configured with the RadProps library (try configuring with --enable-wasatch_3p and --with-boost=DIR.)",__FILE__,__LINE__);
+    throw InvalidValue("Error: gasRadProps requires that you compile Arches with the RadProps library (try configuring with --enable-wasatch_3p and --with-boost=DIR.)",__FILE__,__LINE__);
 #endif
   } else if ( calculator_type == "GauthamWSGG"){
     _calc = scinew RadPropertyCalculator::GauthamWSGG(); 
