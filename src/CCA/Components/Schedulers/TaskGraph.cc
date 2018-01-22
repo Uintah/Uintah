@@ -68,7 +68,7 @@ Dout detaileddbg(       "TaskGraphDetailed", false);
 //______________________________________________________________________
 //
 TaskGraph::TaskGraph(       SchedulerCommon   * sched
-		                ,       SimulationStateP  & state
+		    ,       SimulationStateP  & state
                     , const ProcessorGroup    * pg
                     ,       Scheduler::tgType   type
                     ,       int                 index
