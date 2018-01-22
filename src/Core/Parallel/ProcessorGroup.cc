@@ -112,7 +112,22 @@ ProcessorGroup::ProcessorGroup( const ProcessorGroup * parent
       break;
     }
   }
+  
+  // Create a node based communicator. The node index becomes the
+  // "color" while using the world rank which is unique for the
+  // ordering.
+  MPI::Comm_split(m_comm, m_node, m_rank, &m_node_comm);
+
+  // Get the number of ranks for this node and the rank on this node.
+  MPI::Comm_rank(m_node_comm, &m_node_rank);
+  MPI::Comm_size(m_node_comm, &m_node_nRanks);
 }
+
+ProcessorGroup::~ProcessorGroup() 
+{
+  // MPI::Comm_free( &m_node_comm );
+};
+
 
 void ProcessorGroup::setGlobalComm(int num_comms) const
 {
