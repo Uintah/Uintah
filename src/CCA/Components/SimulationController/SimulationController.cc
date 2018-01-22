@@ -822,7 +822,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
             << "Next delT="  << std::setw(12) << m_app->getNextDelT()
 
             << "Wall Time=" << std::setw(10) << m_wall_timers.GetWallTime()
-            // << "All Time steps= " << std::setw(12) << walltimers.TimeStep().seconds()
+            // << "All Time steps= " << std::setw(12) << m_wall_timers.TimeStep().seconds()
             // << "Current Time Step= " << std::setw(12) << timeStep.seconds()
             << "EMA="        << std::setw(12) << m_wall_timers.ExpMovingAverage().seconds()
            // << "In-situ Time = " << std::setw(12) << walltimers.InSitu().seconds()
@@ -890,7 +890,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
       
       // Report the overhead percentage.
       if( !std::isnan(overheadAverage) ) {
-        message << "  Percentage of time spent in overhead : " << overheadAverage * 100.0;
+        message << "  Percentage of time spent in overhead : " << overheadAverage * 100.0 << "\n";
       }
 
       if( m_other_stat.size() )
