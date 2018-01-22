@@ -72,6 +72,7 @@
 namespace {
 
 Uintah::Dout g_sim_stats(         "SimulationStats",            true  );
+Uintah::Dout g_sim_mem_stats(     "SimulationMemStats",         true  );
 Uintah::Dout g_sim_time_stats(    "SimulationTimeStats",        false );
 Uintah::Dout g_sim_ctrl_dbg(      "SimulationController",       false );
 Uintah::Dout g_comp_timings(      "ComponentTimings",           false );
@@ -642,6 +643,7 @@ SimulationController::finalSetup()
 #ifdef HAVE_VISIT
   if( getVisIt() ) {
     m_app->getDouts().push_back( &g_sim_stats );
+    m_app->getDouts().push_back( &g_sim_mem_stats );
     m_app->getDouts().push_back( &g_sim_time_stats );
     m_app->getDouts().push_back( &g_sim_ctrl_dbg );
     m_app->getDouts().push_back( &g_comp_timings );
@@ -655,7 +657,7 @@ SimulationController::finalSetup()
 void SimulationController::ResetStats( void )
 {
   m_runtime_stats.reset( 0 );
-  m_other_stat.reset( 0 );  
+  m_other_stats.reset( 0 );  
 }
 
 //______________________________________________________________________
@@ -692,42 +694,160 @@ SimulationController::ReportStats(const ProcessorGroup*,
   getMemoryStats();
   getPAPIStats();
 
-  m_runtime_stats.reduce( m_regridder && m_regridder->useDynamicDilation(), d_myworld );
+  // Reductions are only need if these are true.
+  if( (m_regridder && m_regridder->useDynamicDilation()) ||
+      g_sim_mem_stats || g_comp_timings || g_indv_comp_timings ) {
+
+    m_runtime_stats.reduce( m_regridder && m_regridder->useDynamicDilation(), d_myworld );
   
-  m_other_stat.reduce( m_regridder && m_regridder->useDynamicDilation(), d_myworld );
+    m_other_stats.reduce( m_regridder && m_regridder->useDynamicDilation(), d_myworld );
 
-  // Reduce the MPI runtime stats.
-  MPIScheduler * mpiScheduler = dynamic_cast<MPIScheduler*>( m_scheduler.get_rep() );
+    // Reduce the MPI runtime stats.
+    MPIScheduler * mpiScheduler = dynamic_cast<MPIScheduler*>( m_scheduler.get_rep() );
 
-  if( mpiScheduler ) {
-    mpiScheduler->mpi_info_.reduce( m_regridder && m_regridder->useDynamicDilation(), d_myworld );
+    if( mpiScheduler ) {
+      mpiScheduler->mpi_info_.reduce( m_regridder && m_regridder->useDynamicDilation(), d_myworld );
+    }
   }
+  
+  // Update the moving average and get the wall time for this time step.
+  Timers::nanoseconds timeStep = m_wall_timers.updateExpMovingAverage();
 
   // Print the stats for this time step
-  if( d_myworld->myRank() == 0 && header ) {
+  if( d_myworld->myRank() == 0 && g_sim_stats ) {
     std::ostringstream message;
-    message << std::endl
-            << "Simulation and run time stats are reported "
-            << "at the end of each time step" << std::endl
-            << "EMA == Wall time as an exponential moving average "
-            << "using a window of the last " << m_wall_timers.getWindow()
-            << " time steps" << std::endl;
 
-    DOUT(g_sim_stats, message.str());
+    if( header )
+      message << std::endl
+	      << "Simulation and run time stats are reported "
+	      << "at the end of each time step" << std::endl
+	      << "EMA == Wall time as an exponential moving average "
+	      << "using a window of the last " << m_wall_timers.getWindow()
+	      << " time steps" << std::endl;
 
+    message << std::left
+            << "Timestep "   << std::setw(8)  << m_app->getTimeStep()
+            << "Time="       << std::setw(12) << m_app->getSimTime()
+            // << "delT="       << std::setw(12) << m_app->getDelT()
+            << "Next delT="  << std::setw(12) << m_app->getNextDelT()
+
+            << "Wall Time=" << std::setw(10) << m_wall_timers.GetWallTime()
+            // << "All Time steps= " << std::setw(12) << m_wall_timers.TimeStep().seconds()
+            // << "Current Time Step= " << std::setw(12) << timeStep.seconds()
+            << "EMA="        << std::setw(12) << m_wall_timers.ExpMovingAverage().seconds()
+           // << "In-situ Time = " << std::setw(12) << walltimers.InSitu().seconds()
+      ;
+
+    // Report on the memory used.
+    if( g_sim_mem_stats ) {
+      // With the sum reduces, use double, since with memory it is possible that
+      // it will overflow
+      double        avg_memused      = m_runtime_stats.getAverage( SCIMemoryUsed );
+      unsigned long max_memused      = m_runtime_stats.getMaximum( SCIMemoryUsed );
+      int           max_memused_rank = m_runtime_stats.getRank(    SCIMemoryUsed );
+      
+      double        avg_highwater      = m_runtime_stats.getAverage( SCIMemoryHighwater );
+      unsigned long max_highwater      = m_runtime_stats.getMaximum( SCIMemoryHighwater );
+      int           max_highwater_rank = m_runtime_stats.getRank(    SCIMemoryHighwater );
+      
+      if (avg_memused == max_memused && avg_highwater == max_highwater) {
+	message << "Memory Use=" << std::setw(8)
+		<< ProcessInfo::toHumanUnits((unsigned long) avg_memused);
+
+	if(avg_highwater)
+	  message << "    Highwater Memory Use=" << std::setw(8)
+		  << ProcessInfo::toHumanUnits((unsigned long) avg_highwater);
+      }
+      else {
+	message << "Memory Used=" << std::setw(10)
+		<< ProcessInfo::toHumanUnits((unsigned long) avg_memused)
+		<< " (avg) " << std::setw(10)
+		<< ProcessInfo::toHumanUnits(max_memused)
+		<< " (max on rank: " << std::setw(6) << max_memused_rank << ")";
+
+	if (avg_highwater)
+	  message << "    Highwater Memory Used=" << std::setw(10)
+		  << ProcessInfo::toHumanUnits((unsigned long)avg_highwater)
+		  << " (avg) " << std::setw(10)
+		  << ProcessInfo::toHumanUnits(max_highwater)
+		  << " (max on rank: " << std::setw(6) << max_highwater_rank << ")";
+      }
+    }
+    else {
+      double  memused   = m_runtime_stats[SCIMemoryUsed];
+      double  highwater = m_runtime_stats[SCIMemoryHighwater];
+      
+      message << "Memory Use=" << std::setw(8)
+	      << ProcessInfo::toHumanUnits((unsigned long) memused );
+
+      if(highwater)
+	message << "    Highwater Memory Use=" << std::setw(8)
+		<< ProcessInfo::toHumanUnits((unsigned long) highwater);
+
+      message << " (on rank 0 only)";
+    }
+
+    DOUT(true, message.str());
     std::cout.flush();
   }
   
-  // With the sum reduces, use double, since with memory it is possible that
-  // it will overflow
-  double        avg_memused      = m_runtime_stats.getAverage( SCIMemoryUsed );
-  unsigned long max_memused      = m_runtime_stats.getMaximum( SCIMemoryUsed );
-  int           max_memused_rank = m_runtime_stats.getRank(    SCIMemoryUsed );
+  // Report on the simulation time used.
+  if( d_myworld->myRank() == 0 && g_sim_time_stats && m_num_samples )
+  {
+    // Ignore the first sample as that is for initialization.
+    std::ostringstream message;
 
-  double        avg_highwater      = m_runtime_stats.getAverage( SCIMemoryHighwater );
-  unsigned long max_highwater      = m_runtime_stats.getMaximum( SCIMemoryHighwater );
-  int           max_highwater_rank = m_runtime_stats.getRank(    SCIMemoryHighwater );
+    double realSecondsNow = timeStep.seconds() / m_app->getDelT();
+    double realSecondsAvg = m_wall_timers.TimeStep().seconds() / (m_app->getSimTime()-m_app->getSimTimeStart());
     
+    message << "1 simulation second takes ";
+    
+    message << std::left << std::showpoint << std::setprecision(3) << std::setw(4);
+    
+    if (realSecondsNow < SECONDS_PER_MINUTE) {
+      message << realSecondsNow << " seconds (now), ";
+    }
+    else if (realSecondsNow < SECONDS_PER_HOUR) {
+      message << realSecondsNow / SECONDS_PER_MINUTE << " minutes (now), ";
+    }
+    else if (realSecondsNow < SECONDS_PER_DAY) {
+      message << realSecondsNow / SECONDS_PER_HOUR << " hours (now), ";
+    }
+    else if (realSecondsNow < SECONDS_PER_WEEK) {
+      message << realSecondsNow / SECONDS_PER_DAY << " days (now), ";
+    }
+    else if (realSecondsNow < SECONDS_PER_YEAR) {
+      message << realSecondsNow / SECONDS_PER_WEEK << " weeks (now), ";
+    }
+    else {
+      message << realSecondsNow / SECONDS_PER_YEAR << " years (now), ";
+    }
+
+    message << std::setw(4);
+
+    if (realSecondsAvg < SECONDS_PER_MINUTE) {
+      message << realSecondsAvg << " seconds (avg) ";
+    }
+    else if (realSecondsAvg < SECONDS_PER_HOUR) {
+      message << realSecondsAvg / SECONDS_PER_MINUTE << " minutes (avg) ";
+    }
+    else if (realSecondsAvg < SECONDS_PER_DAY) {
+      message << realSecondsAvg / SECONDS_PER_HOUR << " hours (avg) ";
+    }
+    else if (realSecondsAvg < SECONDS_PER_WEEK) {
+      message << realSecondsAvg / SECONDS_PER_DAY << " days (avg) ";
+    }
+    else if (realSecondsAvg < SECONDS_PER_YEAR) {
+      message << realSecondsAvg / SECONDS_PER_WEEK << " weeks (avg) ";
+    }
+    else {
+      message << realSecondsAvg / SECONDS_PER_YEAR << " years (avg) ";
+    }
+
+    DOUT(true, message.str());
+    std::cout.flush();
+  }
+
   // Sum up the average time for overhead related components. These
   // same values are used in SimulationState::getOverheadTime.
   double overhead_time =
@@ -752,7 +872,8 @@ SimulationController::ReportStats(const ProcessorGroup*,
   
   double overheadAverage = 0;
 
-  // Set the overhead percentage. Ignore the first sample as that is for initialization.
+  // Set the overhead percentage. Ignore the first sample as that is
+  // for initialization.
   if (m_num_samples) {
     m_overhead_values[m_overhead_index] = percent_overhead;
 
@@ -777,199 +898,109 @@ SimulationController::ReportStats(const ProcessorGroup*,
     if( m_regridder ) {
       m_regridder->setOverheadAverage(overheadAverage);
     }
-  } 
+  }
 
-  // Output time step statistics...
+  // Per proc runtime performance stats
   if (g_indv_comp_timings) {
 
-    std::ostringstream message;
-    message << "Per proc runtime performance stats" << std::endl;
+    if (m_runtime_stats.size()) {
+      std::ostringstream message;
+      message << "Per proc runtime performance stats" << std::endl;
 
-    for (unsigned int i = 0; i < m_runtime_stats.size(); ++i) {
-      RuntimeStatsEnum e = (RuntimeStatsEnum) i;
+      for (unsigned int i = 0; i < m_runtime_stats.size(); ++i) {
+	RuntimeStatsEnum e = (RuntimeStatsEnum) i;
 
-      if (m_runtime_stats[e] > 0) {
-        message << "rank: " << d_myworld->myRank() << " "
-                      << std::left << std::setw(19) << m_runtime_stats.getName(e) << " ["
-                << m_runtime_stats.getUnits(e) << "]: " << m_runtime_stats[e] << "\n";
+	if (m_runtime_stats[e] > 0) {
+	  message << "  " << std::left
+		  << "rank: " << std::setw(5) << d_myworld->myRank() << " "
+		  << std::left << std::setw(19) << m_runtime_stats.getName(e) << " ["
+		  << m_runtime_stats.getUnits(e) << "]: " << m_runtime_stats[e] << "\n";
+	}
       }
+
+      DOUT(true, message.str());
     }
 
-    if (m_other_stat.size()) {
-      message << "Other performance stats" << std::endl;
-    }
+    if (m_other_stats.size()) {
+      std::ostringstream message;
+      message << "Other per proc performance stats" << std::endl;
 
-    for (unsigned int i = 0; i < m_other_stat.size(); ++i) {
-      if (m_other_stat[i] > 0) {
-        message << "rank: " << d_myworld->myRank() << " "
-                      << std::left << std::setw(19) << m_other_stat.getName(i) << " ["
-                << m_other_stat.getUnits(i) << "]: " << m_other_stat[i] << "\n";
+      for (unsigned int i = 0; i < m_other_stats.size(); ++i) {
+	if (m_other_stats[i] > 0) {
+	  message << "  " << std::left
+		  << "rank: " << std::setw(5) << d_myworld->myRank() << " "
+		  << std::left << std::setw(19) << m_other_stats.getName(i) << " ["
+		  << m_other_stats.getUnits(i) << "]: " << m_other_stats[i] << "\n";
+	}
       }
+      
+      DOUT(true, message.str());
     }
-    DOUT(true, message.str());
   } 
 
-  // Update the moving average and get the wall time for this time step.
-  Timers::nanoseconds timeStep = m_wall_timers.updateExpMovingAverage();
-
-  if( d_myworld->myRank() == 0 )
+  // Average proc runtime performance stats
+  if( d_myworld->myRank() == 0 && g_comp_timings && m_num_samples)
   {
-    std::ostringstream message;
-    message << std::left
-            << "Timestep "   << std::setw(8)  << m_app->getTimeStep()
-            << "Time="       << std::setw(12) << m_app->getSimTime()
-            // << "delT="       << std::setw(12) << m_app->getDelT()
-            << "Next delT="  << std::setw(12) << m_app->getNextDelT()
-
-            << "Wall Time=" << std::setw(10) << m_wall_timers.GetWallTime()
-            // << "All Time steps= " << std::setw(12) << m_wall_timers.TimeStep().seconds()
-            // << "Current Time Step= " << std::setw(12) << timeStep.seconds()
-            << "EMA="        << std::setw(12) << m_wall_timers.ExpMovingAverage().seconds()
-           // << "In-situ Time = " << std::setw(12) << walltimers.InSitu().seconds()
-      ;
-
-    // Report on the memory used.
-    if (avg_memused == max_memused && avg_highwater == max_highwater) {
-      message << "Memory Use=" << std::setw(8)
-              << ProcessInfo::toHumanUnits((unsigned long) avg_memused);
-
-      if(avg_highwater)
-        message << "    Highwater Memory Use=" << std::setw(8)
-                << ProcessInfo::toHumanUnits((unsigned long) avg_highwater);
-    }
-    else {
-      message << "Memory Used=" << std::setw(10)
-              << ProcessInfo::toHumanUnits((unsigned long) avg_memused)
-              << " (avg) " << std::setw(10)
-              << ProcessInfo::toHumanUnits(max_memused)
-              << " (max on rank: " << std::setw(6) << max_memused_rank << ")";
-
-      if (avg_highwater)
-        message << "    Highwater Memory Used=" << std::setw(10)
-                << ProcessInfo::toHumanUnits((unsigned long)avg_highwater)
-                << " (avg) " << std::setw(10)
-                << ProcessInfo::toHumanUnits(max_highwater)
-                << " (max on rank: " << std::setw(6) << max_highwater_rank << ")";
-    }
-
-    DOUT(g_sim_stats, message.str());
-
-    std::cout.flush();
-
     // Ignore the first sample as that is for initialization.
-    if (g_comp_timings&& m_num_samples) {
+    std::ostringstream message;
 
-      std::ostringstream message;
-
+    if (m_runtime_stats.size()) {
       message << "Run time performance stats" << std::endl;
       
       message << "  " << std::left
-            << std::setw(21) << "Description"
-            << std::setw(15) << "Units"
-            << std::setw(15) << "Average"
-            << std::setw(15) << "Maximum"
-            << std::setw(13) << "Rank"
-            << std::setw(13) << "100*(1-ave/max) '% load imbalance'"
-            << "\n";
-      
+	      << std::setw(21) << "Description"
+	      << std::setw(15) << "Units"
+	      << std::setw(15) << "Average"
+	      << std::setw(15) << "Maximum"
+	      << std::setw(13) << "Rank"
+	      << std::setw(13) << "100*(1-ave/max) '% load imbalance'"
+	      << "\n";
+	
       for (unsigned int i=0; i<m_runtime_stats.size(); ++i) {
-        RuntimeStatsEnum e = (RuntimeStatsEnum) i;
-        
-        if (m_runtime_stats.getMaximum(e) > 0) {
-          message << "  " << std::left
-                << std::setw(21) << m_runtime_stats.getName(e)
-                << "[" << std::setw(10) << m_runtime_stats.getUnits(e) << "]"
-                << " : " << std::setw(12) << m_runtime_stats.getAverage(e)
-                << " : " << std::setw(12) << m_runtime_stats.getMaximum(e)
-                << " : " << std::setw(10) << m_runtime_stats.getRank(e)
-                << " : " << std::setw(10)
-                << 100.0 * (1.0 - (m_runtime_stats.getAverage(e) / m_runtime_stats.getMaximum(e)))
-                << "\n";
-        }
+	RuntimeStatsEnum e = (RuntimeStatsEnum) i;
+	  
+	if (m_runtime_stats.getMaximum(e) > 0) {
+	  message << "  " << std::left
+		  << std::setw(21) << m_runtime_stats.getName(e)
+		  << "[" << std::setw(10) << m_runtime_stats.getUnits(e) << "]"
+		  << " : " << std::setw(12) << m_runtime_stats.getAverage(e)
+		  << " : " << std::setw(12) << m_runtime_stats.getMaximum(e)
+		  << " : " << std::setw(10) << m_runtime_stats.getRank(e)
+		  << " : " << std::setw(10)
+		  << 100.0 * (1.0 - (m_runtime_stats.getAverage(e) / m_runtime_stats.getMaximum(e)))
+		  << "\n";
+	}
       }
-      
-      // Report the overhead percentage.
-      if( !std::isnan(overheadAverage) ) {
-        message << "  Percentage of time spent in overhead : " << overheadAverage * 100.0 << "\n";
-      }
-
-      if( m_other_stat.size() )
-        message << "Other performance stats" << std::endl;
-      
-      for (unsigned int i=0; i<m_other_stat.size(); ++i) {
-        if (m_other_stat.getMaximum(i) > 0) {
-          message << "  " << std::left
-                << std::setw(21) << m_other_stat.getName(i)
-                << "["   << std::setw(10) << m_other_stat.getUnits(i) << "]"
-                << " : " << std::setw(12) << m_other_stat.getAverage(i)
-                << " : " << std::setw(12) << m_other_stat.getMaximum(i)
-                << " : " << std::setw(10) << m_other_stat.getRank(i)
-                << " : " << std::setw(10)
-                << 100.0 * (1.0 - (m_other_stat.getAverage(i) / m_other_stat.getMaximum(i)))
-                << "\n";
-        }
-      }
-      DOUT(true, message.str());
     }
-  
-    // Ignore the first sample as that is for initialization.
-    if (g_sim_time_stats && m_num_samples ) {
-
-      std::ostringstream message;
-
-      double realSecondsNow = timeStep.seconds() / m_app->getDelT();
-      double realSecondsAvg = m_wall_timers.TimeStep().seconds() / (m_app->getSimTime()-m_app->getSimTimeStart());
-
-      message << "1 simulation second takes ";
-
-      message << std::left << std::showpoint << std::setprecision(3) << std::setw(4);
-
-      if (realSecondsNow < SECONDS_PER_MINUTE) {
-        message << realSecondsNow << " seconds (now), ";
-      }
-      else if (realSecondsNow < SECONDS_PER_HOUR) {
-        message << realSecondsNow / SECONDS_PER_MINUTE << " minutes (now), ";
-      }
-      else if (realSecondsNow < SECONDS_PER_DAY) {
-        message << realSecondsNow / SECONDS_PER_HOUR << " hours (now), ";
-      }
-      else if (realSecondsNow < SECONDS_PER_WEEK) {
-        message << realSecondsNow / SECONDS_PER_DAY << " days (now), ";
-      }
-      else if (realSecondsNow < SECONDS_PER_YEAR) {
-        message << realSecondsNow / SECONDS_PER_WEEK << " weeks (now), ";
-      }
-      else {
-        message << realSecondsNow / SECONDS_PER_YEAR << " years (now), ";
-      }
-
-      message << std::setw(4);
-
-      if (realSecondsAvg < SECONDS_PER_MINUTE) {
-        message << realSecondsAvg << " seconds (avg) ";
-      }
-      else if (realSecondsAvg < SECONDS_PER_HOUR) {
-        message << realSecondsAvg / SECONDS_PER_MINUTE << " minutes (avg) ";
-      }
-      else if (realSecondsAvg < SECONDS_PER_DAY) {
-        message << realSecondsAvg / SECONDS_PER_HOUR << " hours (avg) ";
-      }
-      else if (realSecondsAvg < SECONDS_PER_WEEK) {
-        message << realSecondsAvg / SECONDS_PER_DAY << " days (avg) ";
-      }
-      else if (realSecondsAvg < SECONDS_PER_YEAR) {
-        message << realSecondsAvg / SECONDS_PER_WEEK << " weeks (avg) ";
-      }
-      else {
-        message << realSecondsAvg / SECONDS_PER_YEAR << " years (avg) ";
-      }
-
-      DOUT(true, message.str());
+      
+    // Report the overhead percentage.
+    if( !std::isnan(overheadAverage) ) {
+      message << "  Percentage of time spent in overhead : " << overheadAverage * 100.0 << "\n";
     }
+	
+    if( m_other_stats.size() ) {
+      message << "Other performance stats" << std::endl;
+      
+      for (unsigned int i=0; i<m_other_stats.size(); ++i) {
+	if (m_other_stats.getMaximum(i) > 0) {
+	  message << "  " << std::left
+		  << std::setw(21) << m_other_stats.getName(i)
+		  << "["   << std::setw(10) << m_other_stats.getUnits(i) << "]"
+		  << " : " << std::setw(12) << m_other_stats.getAverage(i)
+		  << " : " << std::setw(12) << m_other_stats.getMaximum(i)
+		  << " : " << std::setw(10) << m_other_stats.getRank(i)
+		  << " : " << std::setw(10)
+		  << 100.0 * (1.0 - (m_other_stats.getAverage(i) / m_other_stats.getMaximum(i)))
+		  << "\n";
+	}
+      }
+    }
+
+    DOUT(true, message.str());
   }
-
+  
   ++m_num_samples;
-
+  
 } // end printSimulationStats()
 
 //______________________________________________________________________
