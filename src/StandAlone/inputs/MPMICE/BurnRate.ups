@@ -136,7 +136,6 @@
       <artificial_viscosity_coeff2>    1.6        </artificial_viscosity_coeff2>
       <use_load_curves>                false       </use_load_curves>
       <do_contact_friction_heating>    false	</do_contact_friction_heating>
-      <create_new_particles>           false      </create_new_particles>
       <DoThermalExpansion>             false      </DoThermalExpansion>
       <testForNegTemps_mpm>            false      </testForNegTemps_mpm>
     </MPM>

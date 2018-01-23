@@ -165,7 +165,7 @@ DataArchiver::releaseComponents()
 void
 DataArchiver::problemSetup( const ProblemSpecP    & params,
                             const ProblemSpecP    & restart_prob_spec,
-			    const SimulationStateP& sharedState )
+                            const SimulationStateP& sharedState )
 {
   if (dbg.active()) {
     dbg << "Doing ProblemSetup \t\t\t\tDataArchiver\n";
@@ -198,7 +198,7 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
                << "the 'InSitu' block in the checkpoint restart timestep.xml "
                << "file to 'false'";
 
-        throw ProblemSetupException( tmpstr.str() ,__FILE__, __LINE__ );
+        throw ProblemSetupException( tmpstr.str(), __FILE__, __LINE__ );
       }
       else {
         proc0cout << "DataArchiver found previously modified vars. "
@@ -434,15 +434,15 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
   // 
   if ( m_checkpointInterval > 0 ) {
     proc0cout << "Checkpointing:" << std::setw(16) << " Every "
-	      << m_checkpointInterval << " physical seconds.\n";
+              << m_checkpointInterval << " physical seconds.\n";
   }
   if ( m_checkpointTimeStepInterval > 0 ) {
     proc0cout << "Checkpointing:" << std::setw(16)<< " Every "
-	      << m_checkpointTimeStepInterval << " timesteps.\n";
+              << m_checkpointTimeStepInterval << " timesteps.\n";
   }
   if ( m_checkpointWallTimeInterval > 0 ) {
     proc0cout << "Checkpointing:" << std::setw(16)<< " Every "
-	      << m_checkpointWallTimeInterval << " wall clock seconds,"
+              << m_checkpointWallTimeInterval << " wall clock seconds,"
               << " starting after " << m_checkpointWallTimeStart << " seconds.\n";
   }
   
@@ -487,7 +487,7 @@ DataArchiver::outputProblemSpec( ProblemSpecP & root_ps )
 //______________________________________________________________________
 //
 void
-DataArchiver::initializeOutput( const ProblemSpecP & params )
+DataArchiver::initializeOutput( const ProblemSpecP & params, const GridP& grid )
 {
   if( m_outputInterval             == 0.0 && 
       m_outputTimeStepInterval     == 0   && 
@@ -542,14 +542,13 @@ DataArchiver::initializeOutput( const ProblemSpecP & params )
 
   // Sync up before every rank can use the base dir.
   Uintah::MPI::Barrier(d_myworld->getComm());
-} // end initializeOutput()
 
-//______________________________________________________________________
-//
-void
-DataArchiver::initializeOutput( const GridP& grid )
-{
 #ifdef HAVE_PIDX
+  // StandAlone/restart_merger calls initializeOutput but has no grid.  
+  if( grid == nullptr ) {
+    throw InternalError("No grid - can not use PIDX", __FILE__, __LINE__);
+  }
+  
   // Setup for PIDX
   if( savingAsPIDX() ) {
     if( m_pidx_requested_nth_rank == -1 ) {
@@ -1134,7 +1133,7 @@ DataArchiver::sched_allOutputTasks( const GridP      & grid,
     // Output checkpoint timestep
     Task* task = scinew Task( "DataArchiver::outputVariables (CheckpointReduction)",
                               this, &DataArchiver::outputVariables, CHECKPOINT_REDUCTION );
-    
+
     for( int i = 0; i < (int) m_checkpointReductionLabels.size(); i++ ) {
       SaveItem& saveItem = m_checkpointReductionLabels[ i ];
       const VarLabel* var = saveItem.label;
@@ -1194,7 +1193,7 @@ DataArchiver::beginOutputTimeStep( const GridP& grid )
 
       // Output based on the timestep interval.
       ((m_outputTimeStepInterval > 0 &&
-	(delT != 0.0 || m_outputInitTimeStep)) &&
+        (delT != 0.0 || m_outputInitTimeStep)) &&
        (timeStep >= m_nextOutputTimeStep)) ||
       
       // Output based on the being the last timestep.
@@ -1334,7 +1333,7 @@ DataArchiver::makeTimeStepDirs(       Dir                            & baseDir,
 //
 void
 DataArchiver::reevaluate_OutputCheckPointTimeStep( const double simTime,
-						   const double delT )
+                                                   const double delT )
 {
   if (dbg.active()) {
     dbg << "  reevaluate_OutputCheckPointTimeStep() begin\n";
@@ -1373,7 +1372,7 @@ DataArchiver::reevaluate_OutputCheckPointTimeStep( const double simTime,
 //
 void
 DataArchiver::findNext_OutputCheckPointTimeStep( const bool restart,
-						 const GridP& grid )
+                                                 const GridP& grid )
 {
   if (dbg.active()) {
     dbg << "  findNext_OutputCheckPoint_TimeStep() begin\n";
@@ -1409,7 +1408,7 @@ DataArchiver::findNext_OutputCheckPointTimeStep( const bool restart,
     else if( m_checkpointTimeStepInterval > 0 ) {
       m_nextCheckpointTimeStep = ( timeStep / m_checkpointTimeStepInterval ) * m_checkpointTimeStepInterval + 1;
       while( m_nextCheckpointTimeStep <= timeStep ) {
-	m_nextCheckpointTimeStep += m_checkpointTimeStepInterval;
+        m_nextCheckpointTimeStep += m_checkpointTimeStepInterval;
       }
     }
     // Checkpoint based on the wall time.
@@ -1441,16 +1440,16 @@ DataArchiver::findNext_OutputCheckPointTimeStep( const bool restart,
     if( m_outputInterval > 0.0 ) {
       if( simTime >= m_nextOutputTime ) {
         m_nextOutputTime +=
-	  floor( (simTime - m_nextOutputTime) / m_outputInterval ) *
-	  m_outputInterval + m_outputInterval;
+          floor( (simTime - m_nextOutputTime) / m_outputInterval ) *
+          m_outputInterval + m_outputInterval;
       }
     }
     // Output based on the time step.
     else if( m_outputTimeStepInterval > 0 ) {
       if( timeStep >= m_nextOutputTimeStep )  {
         m_nextOutputTimeStep +=
-	  ( (timeStep - m_nextOutputTimeStep) / m_outputTimeStepInterval ) *
-	  m_outputTimeStepInterval + m_outputTimeStepInterval;
+          ( (timeStep - m_nextOutputTimeStep) / m_outputTimeStepInterval ) *
+          m_outputTimeStepInterval + m_outputTimeStepInterval;
       }
     }
   }
@@ -1460,17 +1459,17 @@ DataArchiver::findNext_OutputCheckPointTimeStep( const bool restart,
     if( m_checkpointInterval > 0.0 ) {
       if( simTime >= m_nextCheckpointTime ) {
         m_nextCheckpointTime +=
-	  floor( (simTime - m_nextCheckpointTime) / m_checkpointInterval ) *
-	  m_checkpointInterval + m_checkpointInterval;
+          floor( (simTime - m_nextCheckpointTime) / m_checkpointInterval ) *
+          m_checkpointInterval + m_checkpointInterval;
       }
     }
     // Checkpoint based on the time step.
     else if( m_checkpointTimeStepInterval > 0 ) {
       if( timeStep >= m_nextCheckpointTimeStep ) {
         m_nextCheckpointTimeStep +=
-	  ( (timeStep - m_nextCheckpointTimeStep) /
-	    m_checkpointTimeStepInterval ) *
-	  m_checkpointTimeStepInterval + m_checkpointTimeStepInterval;
+          ( (timeStep - m_nextCheckpointTimeStep) /
+            m_checkpointTimeStepInterval ) *
+          m_checkpointTimeStepInterval + m_checkpointTimeStepInterval;
       }
     }
 
@@ -1479,9 +1478,9 @@ DataArchiver::findNext_OutputCheckPointTimeStep( const bool restart,
 
       if( m_elapsedWallTime >= m_nextCheckpointWallTime ) {
         m_nextCheckpointWallTime +=
-	  floor( (m_elapsedWallTime - m_nextCheckpointWallTime) /
-		 m_checkpointWallTimeInterval ) *
-	  m_checkpointWallTimeInterval + m_checkpointWallTimeInterval;
+          floor( (m_elapsedWallTime - m_nextCheckpointWallTime) /
+                 m_checkpointWallTimeInterval ) *
+          m_checkpointWallTimeInterval + m_checkpointWallTimeInterval;
       }
     }
   }
@@ -1496,20 +1495,20 @@ DataArchiver::findNext_OutputCheckPointTimeStep( const bool restart,
     m_pidx_checkpointing =
       // Checkpoint based on the simulation time.
       ( (m_checkpointInterval > 0.0 &&
-	 (simTime + delT) >= m_nextCheckpointTime) ||
-	
-	// Checkpoint based on the timestep interval.
-	(m_checkpointTimeStepInterval > 0 &&
-	 timeStep >= m_nextCheckpointTimeStep) ||
-	
-	// Checkpoint based on the being the last timestep.
-	(m_checkpointLastTimeStep && m_maybeLastTimeStep) );    
+         (simTime + delT) >= m_nextCheckpointTime) ||
+        
+        // Checkpoint based on the timestep interval.
+        (m_checkpointTimeStepInterval > 0 &&
+         timeStep >= m_nextCheckpointTimeStep) ||
+        
+        // Checkpoint based on the being the last timestep.
+        (m_checkpointLastTimeStep && m_maybeLastTimeStep) );    
     
     // Checkpoint based on the being the wall time.
     if( m_checkpointWallTimeInterval > 0 ) {
       
       if( m_elapsedWallTime >= m_nextCheckpointWallTime )
-	m_pidx_checkpointing = true;	
+        m_pidx_checkpointing = true;    
     }
     
     // Checkpointing
@@ -1518,7 +1517,7 @@ DataArchiver::findNext_OutputCheckPointTimeStep( const bool restart,
       if( m_pidx_requested_nth_rank > 1 ) {
 	proc0cout << "This is a checkpoint time step (" << timeStep
 		  << ") - need to recompile with nth proc set to: "
-		  << m_pidx_requested_nth_rank << std::endl;
+		  << m_pidx_requested_nth_rank << "\n";
 	
 	m_loadBalancer->setNthRank( m_pidx_requested_nth_rank );
 	m_loadBalancer->possiblyDynamicallyReallocate( grid,
@@ -1532,24 +1531,24 @@ DataArchiver::findNext_OutputCheckPointTimeStep( const bool restart,
 
     // Output based on the simulation time.
     if( ((m_outputInterval > 0.0 &&
-	  (delT != 0.0 || m_outputInitTimeStep)) &&
-	 (simTime + delT >= m_nextOutputTime) ) ||
+          (delT != 0.0 || m_outputInitTimeStep)) &&
+         (simTime + delT >= m_nextOutputTime) ) ||
       
-	// Output based on the timestep interval.
-	((m_outputTimeStepInterval > 0 &&
-	  (delT != 0.0 || m_outputInitTimeStep)) &&
-	 (timeStep >= m_nextOutputTimeStep)) ||
-	
-	// Output based on the being the last timestep.
-	(m_outputLastTimeStep && m_maybeLastTimeStep) ) {
+        // Output based on the timestep interval.
+        ((m_outputTimeStepInterval > 0 &&
+          (delT != 0.0 || m_outputInitTimeStep)) &&
+         (timeStep >= m_nextOutputTimeStep)) ||
+        
+        // Output based on the being the last timestep.
+        (m_outputLastTimeStep && m_maybeLastTimeStep) ) {
 
       proc0cout << "This is an output time step: " << timeStep << ".  ";
 
       // If this is also a checkpoint time step postpone the output
       if( m_pidx_need_to_recompile ) {
-	postponeNextOutputTimeStep();
+        postponeNextOutputTimeStep();
 
-	proc0cout << "   Postposing as it is also a checkpoint time step.";
+        proc0cout << "   Postposing as it is also a checkpoint time step.";
       }
 
       proc0cout << std::endl;
@@ -1815,7 +1814,7 @@ DataArchiver::writeto_xml_files( const GridP& grid )
           string nodeName = ps->getNodeName();
           
           if (nodeName == "Meta" || nodeName == "Time" ||
-	      nodeName == "Grid" || nodeName == "Data") {
+              nodeName == "Grid" || nodeName == "Data") {
             continue;
           }
           
@@ -1842,8 +1841,8 @@ DataArchiver::writeto_xml_files( const GridP& grid )
   }  // loop over baseDirs
 
   double myTime = timer().seconds();
-  (*m_runTimeStats)[XMLIOTime] += myTime;
-  (*m_runTimeStats)[TotalIOTime ] += myTime;
+  (*m_runtimeStats)[XMLIOTime] += myTime;
+  (*m_runtimeStats)[TotalIOTime ] += myTime;
 
   if (dbg.active()) {
     dbg << "  end\n";
@@ -2400,7 +2399,6 @@ DataArchiver::scheduleOutputTimeStep(       vector<SaveItem> & saveLabels,
 
     //__________________________________
     //
-
     for( vector< SaveItem >::iterator saveIter = saveLabels.begin(); saveIter != saveLabels.end(); ++saveIter ) {
       const MaterialSubset* matls = saveIter->getMaterialSubset( level.get_rep() );
       
@@ -2506,6 +2504,7 @@ DataArchiver::indexAddGlobals()
     ProblemSpecP globals = indexDoc->appendChild("globals");
 
     vector< SaveItem >::iterator saveIter;
+
     for( saveIter = m_saveReductionLabels.begin(); saveIter != m_saveReductionLabels.end(); ++saveIter ) {
       SaveItem& saveItem = *saveIter;
       const VarLabel* var = saveItem.label;
@@ -2596,8 +2595,8 @@ DataArchiver::outputReductionVars( const ProcessorGroup *,
   }
 
   double myTime = timer().seconds();
-  (*m_runTimeStats)[ReductionIOTime] += myTime;
-  (*m_runTimeStats)[TotalIOTime ] += myTime;
+  (*m_runtimeStats)[ReductionIOTime] += myTime;
+  (*m_runtimeStats)[TotalIOTime ] += myTime;
   
   dbg << "  outputReductionVars task end\n";
 }
@@ -2865,7 +2864,7 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
             patch = 0;
             patchID = -1;
           }
-          else { /* if (type == OUTPUT || type == CHECKPOINT) */
+          else { // if (type == OUTPUT || type == CHECKPOINT)
             patch = patches->get( p );
             patchID = patch->getID();
           }
@@ -3018,20 +3017,21 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
   double byteToMB = 1024 * 1024;
 
   if (type == OUTPUT) {
-    (*m_runTimeStats)[ OutputIOTime ] += myTime;
-    (*m_runTimeStats)[ OutputIORate ] += (double) totalBytes / (byteToMB * myTime);
+
+    (*m_runtimeStats)[ OutputIOTime ] += myTime;
+    (*m_runtimeStats)[ OutputIORate ] += (double) totalBytes / (byteToMB * myTime);
   }
   else if (type == CHECKPOINT ) {
-    (*m_runTimeStats)[ CheckpointIOTime ] += myTime;
-    (*m_runTimeStats)[ CheckpointIORate ] += (double) totalBytes / (byteToMB * myTime);
+    (*m_runtimeStats)[ CheckpointIOTime ] += myTime;
+    (*m_runtimeStats)[ CheckpointIORate ] += (double) totalBytes / (byteToMB * myTime);
   }
     
-  else /* if (type == CHECKPOINT_REDUCTION) */ {
-    (*m_runTimeStats)[ CheckpointReductionIOTime ] += myTime;
-    (*m_runTimeStats)[ CheckpointReducIORate ] += (double) totalBytes / (byteToMB * myTime);
+  else { // if (type == CHECKPOINT_REDUCTION)
+    (*m_runtimeStats)[ CheckpointReductionIOTime ] += myTime;
+    (*m_runtimeStats)[ CheckpointReducIORate ] += (double) totalBytes / (byteToMB * myTime);
   }
     
-  (*m_runTimeStats)[TotalIOTime ] += myTime;
+  (*m_runtimeStats)[TotalIOTime ] += myTime;
 
   if (dbg.active()) {
     dbg << "  outputVariables task end\n";
@@ -3930,8 +3930,8 @@ DataArchiver::recompile( const GridP& grid )
   if( m_pidx_requested_nth_rank > 1 ) {      
     if( m_pidx_restore_nth_rank ) {
       proc0cout << "This is the time step following a checkpoint - "
-		<< "need to put the task graph back with a recompile - "
-		<< "setting nth output to 1\n";
+                << "need to put the task graph back with a recompile - "
+                << "setting nth output to 1\n";
       m_loadBalancer->setNthRank( 1 );
       m_loadBalancer->possiblyDynamicallyReallocate( grid,
 						     LoadBalancer::REGRID_LB );

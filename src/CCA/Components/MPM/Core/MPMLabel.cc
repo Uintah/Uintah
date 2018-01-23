@@ -76,32 +76,6 @@ MPMLabel::MPMLabel()
   pScratchLabel  = VarLabel::create( "p.scratch",
 			ParticleVariable<double>::getTypeDescription() );
   
-//  pExternalScalarFluxLabel = VarLabel::create( "p.externalscalarflux",
-//			ParticleVariable<double>::getTypeDescription() );
-//
-//  pExternalScalarFluxLabel_preReloc = VarLabel::create( "p.externalscalarflux+",
-//       ParticleVariable<double>::getTypeDescription() );
-//
-//  pFluxLabel = VarLabel::create("p.flux",
-//                        ParticleVariable<Vector>::getTypeDescription() );
-//
-//  pFluxLabel_preReloc = VarLabel::create("p.flux+",
-//                        ParticleVariable<Vector>::getTypeDescription() );
-//
-//  pDiffusivityLabel = VarLabel::create( "p.diffusivity",
-//			ParticleVariable<double>::getTypeDescription() );
-//
-//  pDiffusivityLabel_preReloc = VarLabel::create( "p.diffusivity+",
-//			ParticleVariable<double>::getTypeDescription() );
-
-//  pAreaLabel = VarLabel::create( "p.area",
-//      ParticleVariable<Vector>::getTypeDescription());
-//
-//  pAreaLabel_preReloc = VarLabel::create( "p.area+",
-//      ParticleVariable<Vector>::getTypeDescription());
-
-
-
   // for visualization only
   pScaleFactorLabel = VarLabel::create( "p.scalefactor",
 			ParticleVariable<Matrix3>::getTypeDescription());
@@ -218,30 +192,6 @@ MPMLabel::MPMLabel()
   pRefinedLabel_preReloc  = VarLabel::create( "p.refinedMPM+",
 			ParticleVariable<int>::getTypeDescription() );
 
-//  pConcentrationLabel       = VarLabel::create( "p.concentration",
-//			ParticleVariable<double>::getTypeDescription() );
-//
-//  pConcentrationLabel_preReloc  = VarLabel::create( "p.concentration+",
-//			ParticleVariable<double>::getTypeDescription() );
-//
-//  pConcPreviousLabel       = VarLabel::create( "p.concPrevious",
-//			ParticleVariable<double>::getTypeDescription() );
-//
-//  pConcPreviousLabel_preReloc  = VarLabel::create( "p.concPrevious+",
-//			ParticleVariable<double>::getTypeDescription() );
-//
-//  TotalConcLabel = VarLabel::create( "TotalConc",
-//      sum_vartype::getTypeDescription() );
-//
-//  MaxConcLabel = VarLabel::create( "MaxConcLabel",
-//      max_vartype::getTypeDescription() );
-//
-//  MinConcLabel = VarLabel::create( "MinConcLabel",
-//      min_vartype::getTypeDescription() );
-//
-//  pAvgConcLabel = VarLabel::create( "p.avgConc",
-//      sum_vartype::getTypeDescription() );
-
   pESPotential = VarLabel::create( "p.esPotential",
       ParticleVariable<double>::getTypeDescription());
 
@@ -312,12 +262,6 @@ MPMLabel::MPMLabel()
   pTemperatureGradientLabel_preReloc =VarLabel::create("p.temperatureGradient+",
 			ParticleVariable<Vector>::getTypeDescription() );
 
-//  pConcGradientLabel = VarLabel::create( "p.concentrationGradient",
-//			ParticleVariable<Vector>::getTypeDescription() );
-//
-//  pConcGradientLabel_preReloc =VarLabel::create("p.concentrationGradient+",
-//			ParticleVariable<Vector>::getTypeDescription() );
-
   pPosChargeLabel = VarLabel::create( "p.posCharge",
       ParticleVariable<double>::getTypeDescription() );
 
@@ -359,7 +303,6 @@ MPMLabel::MPMLabel()
 
   pNegChargeFluxLabel_preReloc = VarLabel::create("p.negChargeFlux+",
         ParticleVariable<Vector>::getTypeDescription() );
-
 
   // Node Centered Variables
   
@@ -422,24 +365,6 @@ MPMLabel::MPMLabel()
 
   gExternalHeatFluxLabel = VarLabel::create("g.externalHeatFlux",
                        NCVariable<double>::getTypeDescription());
-
-//  gConcentrationLabel = VarLabel::create( "g.concentration",
-//                        NCVariable<double>::getTypeDescription());
-//
-//  gConcentrationNoBCLabel = VarLabel::create( "g.concentrationnobc",
-//                        NCVariable<double>::getTypeDescription());
-//
-//  gConcentrationRateLabel = VarLabel::create( "g.concentrationRate",
-//                        NCVariable<double>::getTypeDescription());
-//
-//  gConcentrationStarLabel = VarLabel::create( "g.concentrationStar",
-//                        NCVariable<double>::getTypeDescription());
-//
-//  gExternalScalarFluxLabel = VarLabel::create( "g.externalscalarflux",
-//			NCVariable<double>::getTypeDescription() );
-//
-//  gHydrostaticStressLabel = VarLabel::create("g.hydrostaticStressRD",
-//            NCVariable<double>::getTypeDescription());
 
   NC_CCweightLabel     = VarLabel::create("NC_CCweight",
                      NCVariable<double>::getTypeDescription());
@@ -637,9 +562,6 @@ MPMLabel::MPMLabel()
 
   pKineticEnergyDensityLabel = VarLabel::create("p.kineticEnergyDensity",
                   ParticleVariable<double>::getTypeDescription());
-
-//  pVelGradsLabel = VarLabel::create("p.velGrads",
-//                  ParticleVariable<Matrix3>::getTypeDescription());
 
   gNumPatlsLabel = VarLabel::create("g.numPatls",
                   NCVariable<int>::getTypeDescription());
@@ -847,22 +769,6 @@ MPMLabel::MPMLabel()
   // for assigning particle ids
   pCellNACZIDLabel =
     VarLabel::create("cellNACZID", CCVariable<short int>::getTypeDescription());
-
-  // ******* start - for temporary use only, CG
-  pPressureLabel_t1  = VarLabel::create( "p.pressure_t1",
-			ParticleVariable<double>::getTypeDescription() );
-  pPressureLabel_t1_preReloc  = VarLabel::create( "p.pressure_t1+",
-        ParticleVariable<double>::getTypeDescription() );
-  pConcInterpLabel  = VarLabel::create( "p.concentrationInterp",
-			ParticleVariable<double>::getTypeDescription() );
-  pConcInterpLabel_preReloc  = VarLabel::create( "p.concentrationInterp+",
-        ParticleVariable<double>::getTypeDescription() );
-  pEquivalentStress_t1  = VarLabel::create( "p.equivalentStress_t1",
-			ParticleVariable<double>::getTypeDescription() );
-  pEquivalentStress_t1_preReloc  = VarLabel::create( "p.equivalentStress_t1+",
-        ParticleVariable<double>::getTypeDescription() );
-  // ******* end - for temporary use only, CG
-
 } 
 
 MPMLabel::~MPMLabel()
@@ -925,41 +831,23 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(czIDLabel_preReloc);
   VarLabel::destroy(pPressureLabel);
   VarLabel::destroy(pScratchVecLabel);
+  VarLabel::destroy(pScratchLabel);
   VarLabel::destroy(pScaleFactorLabel);
   VarLabel::destroy(pScaleFactorLabel_preReloc);
   VarLabel::destroy(pLocalizedMPMLabel);
   VarLabel::destroy(pLocalizedMPMLabel_preReloc);
   VarLabel::destroy(pRefinedLabel);
   VarLabel::destroy(pRefinedLabel_preReloc);
-//  VarLabel::destroy(pConcentrationLabel);
-//  VarLabel::destroy(pConcentrationLabel_preReloc);
-//  VarLabel::destroy(pConcPreviousLabel);
-//  VarLabel::destroy(pConcPreviousLabel_preReloc);
-  VarLabel::destroy(pScratchLabel);
-//  VarLabel::destroy(pExternalScalarFluxLabel);
-//  VarLabel::destroy(pExternalScalarFluxLabel_preReloc);
-//  VarLabel::destroy(pFluxLabel);
-//  VarLabel::destroy(pFluxLabel_preReloc);
   VarLabel::destroy(pSizeLabel);
   VarLabel::destroy(pSizeLabel_preReloc);
-//  VarLabel::destroy(pAreaLabel);
-//  VarLabel::destroy(pAreaLabel_preReloc);
   VarLabel::destroy(pFiberDirLabel_preReloc);
   VarLabel::destroy(pFiberDirLabel);
   VarLabel::destroy(p_qLabel);
   VarLabel::destroy(p_qLabel_preReloc);
   VarLabel::destroy(pTemperatureGradientLabel);
   VarLabel::destroy(pTemperatureGradientLabel_preReloc);
-//  VarLabel::destroy(pConcGradientLabel);
-//  VarLabel::destroy(pConcGradientLabel_preReloc);
-//  VarLabel::destroy(TotalConcLabel);
-//  VarLabel::destroy(MaxConcLabel);
-//  VarLabel::destroy(MinConcLabel);
-//  VarLabel::destroy(pAvgConcLabel);
   VarLabel::destroy(pESPotential);
   VarLabel::destroy(pESGradPotential);
-//  VarLabel::destroy(pDiffusivityLabel);
-//  VarLabel::destroy(pDiffusivityLabel_preReloc);
   VarLabel::destroy(pPartitionUnityLabel);
   VarLabel::destroy(pPosChargeLabel);
   VarLabel::destroy(pPosChargeLabel_preReloc);
@@ -1001,12 +889,6 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(gHeatFluxLabel);
   VarLabel::destroy(gExternalHeatRateLabel);
   VarLabel::destroy(gExternalHeatFluxLabel);
-//  VarLabel::destroy(gConcentrationLabel);
-//  VarLabel::destroy(gConcentrationNoBCLabel);
-//  VarLabel::destroy(gConcentrationRateLabel);
-//  VarLabel::destroy(gConcentrationStarLabel);
-//  VarLabel::destroy(gExternalScalarFluxLabel);
-//  VarLabel::destroy(gHydrostaticStressLabel);
   VarLabel::destroy(NC_CCweightLabel);
   VarLabel::destroy(gThermalContactTemperatureRateLabel);
   VarLabel::destroy(gStressForSavingLabel);
@@ -1076,8 +958,6 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pKineticEnergyDensityLabel);
 
   VarLabel::destroy(pgCodeLabel);
-//  VarLabel::destroy(pVelGradsLabel);
-
   VarLabel::destroy(gNumPatlsLabel);
   VarLabel::destroy(GNumPatlsLabel);
   VarLabel::destroy(gDisplacementLabel);
@@ -1169,13 +1049,4 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(czBotMatLabel_preReloc);
   VarLabel::destroy(czFailedLabel);
   VarLabel::destroy(czFailedLabel_preReloc);
-
-  // ******* start - for temporary use, CG
-  VarLabel::destroy(pPressureLabel_t1);
-  VarLabel::destroy(pPressureLabel_t1_preReloc);
-  VarLabel::destroy(pConcInterpLabel);
-  VarLabel::destroy(pConcInterpLabel_preReloc);
-  VarLabel::destroy(pEquivalentStress_t1);
-  VarLabel::destroy(pEquivalentStress_t1_preReloc);
-  // ******* end - for temporary use, CG
 }

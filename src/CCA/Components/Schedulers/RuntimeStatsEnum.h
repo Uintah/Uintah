@@ -30,7 +30,7 @@ namespace Uintah {
 /**************************************
       
     CLASS
-      RunTimeStats
+      RuntimeStatsEnum
       
       Short Description...
       
@@ -46,17 +46,17 @@ namespace Uintah {
       
       
     KEYWORDS
-      RunTimeStats
+      RuntimeStats
       
     DESCRIPTION
-      RunTimeStats to be used by Simulation Controller.
+      RuntimeStats to be used by Simulation Controller.
       
     WARNING
       
 ****************************************/
 
   // timing statistics to test load balance
-  enum RunTimeStatsEnum
+  enum RuntimeStatsEnum
   {
     // These five enumerators are used in SimulationController::ReportStats to determine the overhead time.
       CompilationTime = 0

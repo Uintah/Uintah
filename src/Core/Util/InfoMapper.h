@@ -322,34 +322,34 @@ public:
       m_rank_average.resize(nStats);
       m_rank_maximum.resize(nStats);
 
-      std::vector<double>      reduced( nStats );
+      // std::vector<double>      reduced( nStats );
       std::vector<double>      toReduce( nStats );
       std::vector<double_int>  toReduceMax( nStats );
 
-      // Perform the reduction acrosss each processor node.
-      for (int n = 0; n < myWorld->nNodes(); ++n) {
-        // If this rank belongs to this node then pass the value.
-        if (n == myWorld->myNode()) {
-          for (size_t i = 0; i < nStats; ++i) {
-            toReduce[i] = InfoMapper<E, T>::m_values[i];
-          }
-        }
-        // This rank is not on the current node so ignore the values.
-        else {
-          for (size_t i = 0; i < nStats; ++i) {
-            toReduce[i] = 0;
-          }
-        }
+      // // Perform the reduction acrosss each processor node.
+      // for (int n = 0; n < myWorld->nNodes(); ++n) {
+      //   // If this rank belongs to this node then pass the value.
+      //   if (n == myWorld->myNode()) {
+      //     for (size_t i = 0; i < nStats; ++i) {
+      //       toReduce[i] = InfoMapper<E, T>::m_values[i];
+      //     }
+      //   }
+      //   // This rank is not on the current node so ignore the values.
+      //   else {
+      //     for (size_t i = 0; i < nStats; ++i) {
+      //       toReduce[i] = 0;
+      //     }
+      //   }
 	
-        Uintah::MPI::Allreduce( &toReduce[0], &reduced[0], nStats, MPI_DOUBLE, MPI_SUM, myWorld->getComm() );
+      //   Uintah::MPI::Allreduce( &toReduce[0], &reduced[0], nStats, MPI_DOUBLE, MPI_SUM, myWorld->getComm() );
 
-	      // If this rank belongs to this node then save the summation values.
-        if (n == myWorld->myNode()) {
-          for (size_t i = 0; i < nStats; ++i) {
-            m_node_sum[i] = reduced[i];
-          }
-        }
-      }
+      // 	// If this rank belongs to this node then save the summation values.
+      //   if (n == myWorld->myNode()) {
+      //     for (size_t i = 0; i < nStats; ++i) {
+      //       m_node_sum[i] = reduced[i];
+      //     }
+      //   }
+      // }
 
       // Do the reductions across all ranks.
 
@@ -360,6 +360,10 @@ public:
         toReduceMax[i] = double_int(InfoMapper<E, T>::m_values[i], myWorld->myRank());
       }
 
+      // Reduction across each node.
+      // Uintah::MPI::Allreduce(&toReduce[0], &m_node_sum[0], nStats, MPI_DOUBLE, MPI_SUM, myWorld->getNodeComm());
+
+      // Reductions across all ranks.
       if (allReduce) {
         Uintah::MPI::Allreduce(&toReduce[0], &m_rank_average[0], nStats, MPI_DOUBLE, MPI_SUM, myWorld->getComm());
         Uintah::MPI::Allreduce(&toReduceMax[0], &m_rank_maximum[0], nStats, MPI_DOUBLE_INT, MPI_MAXLOC, myWorld->getComm());

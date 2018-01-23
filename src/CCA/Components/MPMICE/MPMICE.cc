@@ -112,8 +112,10 @@ MPMICE::MPMICE(const ProcessorGroup* myworld,
     d_ice  = scinew ICE(myworld, m_sharedState);
   }
 
-  Ilb=d_ice->lb;
-  Mlb=d_mpm->lb;
+  d_exchModel = d_ice->d_exchModel;
+
+  Ilb = d_ice->lb;
+  Mlb = d_mpm->lb;
 
   d_SMALL_NUM = d_ice->d_SMALL_NUM;
   d_TINY_RHO  = 1.e-12;  // Note, within MPMICE, d_TINY_RHO is only applied
@@ -122,7 +124,8 @@ MPMICE::MPMICE(const ProcessorGroup* myworld,
 
   d_switchCriteria = 0;
 }
-
+//______________________________________________________________________
+//
 MPMICE::~MPMICE()
 {
   d_mpm->releaseComponents();
@@ -182,7 +185,6 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
   d_ice->setComponents( this );
   dynamic_cast<ApplicationCommon*>(d_ice)->problemSetup( prob_spec );
 
-  d_ice->setMPMICELabel(MIlb);
   d_ice->setWithMPM();
   if(d_rigidMPM){
    d_ice->setWithRigidMPM();
@@ -461,11 +463,12 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
                                                                   mpm_matls_sub,
                                                                   press_matl, 
                                                                   all_matls);
-                                                               
-    d_ice->scheduleAddExchangeContributionToFCVel(
-                                              sched, ice_patches, ice_matls_sub,
+
+    d_ice->d_exchModel->sched_AddExch_VelFC(  sched, ice_patches, ice_matls_sub,
                                                                   all_matls,
-                                                                  false);  
+                                                                  d_ice->d_BC_globalVars,
+                                                                  false);
+ 
   }
   if(d_ice->d_impICE) {        //  I M P L I C I T, won't work with AMR yet
     // we should use the AMR multi-level pressure solve
@@ -570,12 +573,12 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
     const PatchSet* ice_patches = ice_level->eachPatch();
 
     d_ice->scheduleComputeLagrangianValues(   sched, ice_patches, ice_matls);
-
-    d_ice->scheduleAddExchangeToMomentumAndEnergy(
+                                                                  
+    d_ice->d_exchModel->sched_AddExch_Vel_Temp_CC(   
                                               sched, ice_patches, ice_matls_sub,
                                                                   mpm_matls_sub,
-                                                                  press_matl,
-                                                                  all_matls); 
+                                                                  all_matls,
+                                                                  d_ice->d_BC_globalVars); 
 
     d_ice->scheduleComputeLagrangianSpecificVolume(
                                               sched, ice_patches, ice_matls_sub,
@@ -1804,7 +1807,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     std::vector<constCCVariable<Vector> > vel_CC(numALLMatls);
     
     constCCVariable<double> press;    
-    CCVariable<double> press_new, delPress_tmp,sumKappa, TMV_CC;
+    CCVariable<double> press_new, delPress_tmp, sumKappa, TMV_CC;
     CCVariable<double> sum_imp_delP;
     CCVariable<int>  nIterations;
     

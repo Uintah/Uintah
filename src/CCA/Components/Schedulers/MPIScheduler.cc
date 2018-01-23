@@ -890,7 +890,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */
   m_exec_timer.stop();
   
   // compute the net timings
-  computeNetRunTimeStats();
+  computeNetRuntimeStats();
 
   // only do on top-level scheduler
   if ( m_parent_scheduler == nullptr ) {
@@ -1090,14 +1090,14 @@ MPIScheduler::outputTimingStats( const char* label )
 
 //______________________________________________________________________
 //  Take the various timers and compute the net results
-void MPIScheduler::computeNetRunTimeStats()
+void MPIScheduler::computeNetRuntimeStats()
 {
-  if( d_runTimeStats )
+  if( d_runtimeStats )
   {
     // don't count output time
-    (*d_runTimeStats)[TaskExecTime      ] += mpi_info_[TotalTask] - (*d_runTimeStats)[TotalIOTime];
-    (*d_runTimeStats)[TaskLocalCommTime ] += mpi_info_[TotalRecv] + mpi_info_[TotalSend];
-    (*d_runTimeStats)[TaskWaitCommTime  ] += mpi_info_[TotalWait];
-    (*d_runTimeStats)[TaskReduceCommTime] += mpi_info_[TotalReduce];
+    (*d_runtimeStats)[TaskExecTime      ] += mpi_info_[TotalTask] - (*d_runtimeStats)[TotalIOTime];
+    (*d_runtimeStats)[TaskLocalCommTime ] += mpi_info_[TotalRecv] + mpi_info_[TotalSend];
+    (*d_runtimeStats)[TaskWaitCommTime  ] += mpi_info_[TotalWait];
+    (*d_runtimeStats)[TaskReduceCommTime] += mpi_info_[TotalReduce];
   }
 }

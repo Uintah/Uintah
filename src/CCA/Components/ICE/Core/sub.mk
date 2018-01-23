@@ -32,8 +32,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR := CCA/Components/ICE/Core
 
 SRCS += $(SRCDIR)/Diffusion.cc            \
-	$(SRCDIR)/ICELabel.cc             \
-	$(SRCDIR)/ExchangeCoefficients.cc
+	$(SRCDIR)/ICELabel.cc
 
 PSELIBS := \
 	Core/Disclosure     \

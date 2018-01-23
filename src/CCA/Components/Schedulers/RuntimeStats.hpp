@@ -30,7 +30,7 @@
 #include <Core/Util/InfoMapper.h>
 #include <Core/Util/Timers/Timers.hpp>
 
-#include <CCA/Components/SimulationController/RunTimeStatsEnums.h>
+#include <CCA/Components/Schedulers/RuntimeStatsEnum.h>
 
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 
@@ -65,7 +65,7 @@ public:
   // used to declare timers
   template <typename Tag> using TripTimer = Timers::ThreadTrip< Tag >;
 
-  using InfoStats = InfoMapper< RunTimeStatsEnum, double >;
+  using InfoStats = InfoMapper< RuntimeStatsEnum, double >;
 
   // NOT THREAD SAFE -- should only be called from the master thread
   // by the parent scheduler

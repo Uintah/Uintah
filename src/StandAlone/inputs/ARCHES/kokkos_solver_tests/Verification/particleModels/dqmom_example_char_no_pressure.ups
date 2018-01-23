@@ -100,6 +100,34 @@
     <save label="char_gas_reaction0_qn4"/>
     <save label="char_gas_reaction1_qn4"/>
     <save label="char_gas_reaction2_qn4"/>
+    <save label="w_qn0"/>
+    <save label="w_qn0_unscaled"/>
+    <save label="w_qn0_rhs"/>
+    <save label="w_qn1"/>
+    <save label="w_qn1_unscaled"/>
+    <save label="w_qn1_rhs"/>
+    <save label="w_qn2"/>
+    <save label="w_qn2_unscaled"/>
+    <save label="w_qn2_rhs"/>
+    <save label="w_qn3"/>
+    <save label="w_qn3_unscaled"/>
+    <save label="w_qn3_rhs"/>
+    <save label="raw_coal_qn0"/>
+    <save label="raw_coal_qn0_rhs"/>
+    <save label="raw_coal_qn1"/>
+    <save label="raw_coal_qn1_rhs"/>
+    <save label="raw_coal_qn2"/>
+    <save label="raw_coal_qn2_rhs"/>
+    <save label="raw_coal_qn3"/>
+    <save label="raw_coal_qn3_rhs"/>
+    <save label="char_mass_qn0"/>
+    <save label="char_mass_qn0_rhs"/>
+    <save label="char_mass_qn1"/>
+    <save label="char_mass_qn1_rhs"/>
+    <save label="char_mass_qn2"/>
+    <save label="char_mass_qn2_rhs"/>
+    <save label="char_mass_qn3"/>
+    <save label="char_mass_qn3_rhs"/>
     <checkpoint cycle="2" interval="2e-3"/>
     <compression>gzip</compression>
   </DataArchiver>
@@ -309,7 +337,6 @@
         <RichardsFletcher_coefficients>[1.18e7, 1.46e13, 9044, 29215, 0.0309, 0.5573, -104.45, 323.46, -54.197, -0.8526, -728.01, -0.0345, 0.0, 14.590, -53.759, 126.16, -132.02, 44.477, -0.000817, 0.0]</RichardsFletcher_coefficients>
         <FOWYDevol>
           <v_hiT>6.641e-01</v_hiT>
-          <Tig>590</Tig>
           <A>19724227.36</A>
           <Ta>1.113e4</Ta>
           <Tbp_graphite>3e3</Tbp_graphite>

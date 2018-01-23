@@ -1144,7 +1144,6 @@
         <!--[> ash enthalpy (at inlet conditions) [J/kg] <]-->
         <FOWYDevol>
           <v_hiT>0.55</v_hiT>
-          <Tig>590</Tig>
           <A>19724227.36</A>
           <Ta>1.113e4</Ta>
           <Tbp_graphite>3e3</Tbp_graphite>

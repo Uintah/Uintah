@@ -32,11 +32,12 @@
 #include <CCA/Components/ICE/Advection/Advector.h>
 #include <CCA/Components/Application/ApplicationCommon.h>
 
-#include <CCA/Components/ICE/Core/ExchangeCoefficients.h>
 #include <CCA/Components/ICE/customInitialize.h>
 #include <CCA/Components/ICE/CustomBCs/LODI2.h>
 #include <CCA/Components/ICE/CustomBCs/BoundaryCond.h>
 #include <CCA/Components/ICE/TurbulenceModel/Turbulence.h>
+#include <CCA/Components/Models/MultiMatlExchange/ExchangeCoefficients.h>
+#include <CCA/Components/Models/MultiMatlExchange/ExchangeModel.h>
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
 
 #include <CCA/Ports/ModelInterface.h>
@@ -45,7 +46,6 @@
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/Variables/CellIterator.h>
-#include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
@@ -63,41 +63,15 @@
 
 #include <sci_defs/hypre_defs.h>
 
-#ifdef HAVE_CUDA
-#include <sci_defs/cuda_defs.h>
-#include <CCA/Components/Schedulers/GPUDataWarehouse.h>
-
-//#ifdef __cplusplus
-//extern "C" {
-//#endif
-
-void launchIceEquilibrationKernelUnified(dim3 dimGrid,
-                          dim3 dimBlock,
-                          cudaStream_t* stream,
-                          uint3 size,
-                          double d_SMALL_NUM,
-                          int d_max_iter_equilibration,
-                          double convergence_crit,
-                          int patchID,
-                          int zSliceThickness,
-                          Uintah::GPUDataWarehouse * old_gpudw,
-                          Uintah::GPUDataWarehouse * new_gpudw);
-
-//#ifdef __cplusplus
-//}
-//#endif
-#endif
-
 #define MAX_MATLS 16
 
 namespace Uintah {
+using namespace ExchangeModels;
 
   class ModelInterface;
   class Turbulence;
   class WallShearStress;
   class AnalysisModule;
-
-  class MPMICELabel;
 
   // The following two structs are used by computeEquilibrationPressure to store debug information:
     //
@@ -136,9 +110,6 @@ namespace Uintah {
 
       virtual void outputProblemSpec(ProblemSpecP& ps);
 
-      virtual void updateExchangeCoefficients(const ProblemSpecP& params,
-                                              GridP& grid);
-
       virtual void scheduleInitialize(const LevelP& level,
                                       SchedulerP&);
 
@@ -153,7 +124,8 @@ namespace Uintah {
       virtual void scheduleTimeAdvance( const LevelP& level,
                                         SchedulerP&);
 
-      virtual void scheduleFinalizeTimestep(const LevelP& level, SchedulerP&);
+      virtual void scheduleFinalizeTimestep(const LevelP& level, 
+                                            SchedulerP&);
 
       virtual void scheduleAnalysis(const LevelP& level, SchedulerP&);
 
@@ -162,11 +134,6 @@ namespace Uintah {
                                    const MaterialSubset*,
                                    const MaterialSet*);
 
-      void schedulecomputeDivThetaVel_CC(SchedulerP& sched,
-                                         const PatchSet* patches,
-                                         const MaterialSubset* ice_matls,
-                                         const MaterialSubset* mpm_matls,
-                                         const MaterialSet* all_matls);
 
       void scheduleComputeTempFC(SchedulerP&,
                                  const PatchSet*,
@@ -175,29 +142,23 @@ namespace Uintah {
                                  const MaterialSet*);
 
       void scheduleComputeVel_FC(SchedulerP&,
-                                      const PatchSet*,
-                                      const MaterialSubset*,
-                                      const MaterialSubset*,
-                                      const MaterialSubset*,
-                                      const MaterialSet*);
-
-      void scheduleAddExchangeContributionToFCVel(SchedulerP&,
-                                            const PatchSet*,
-                                            const MaterialSubset*,
-                                            const MaterialSet*,
-                                            bool);
+                                 const PatchSet*,           
+                                 const MaterialSubset*,     
+                                 const MaterialSubset*,     
+                                 const MaterialSubset*,     
+                                 const MaterialSet*);       
 
       void scheduleComputeDelPressAndUpdatePressCC(SchedulerP&,
-                                             const PatchSet*,
-                                             const MaterialSubset*,
-                                             const MaterialSubset*,
-                                             const MaterialSubset*,
-                                             const MaterialSet*);
+                                                    const PatchSet*,
+                                                    const MaterialSubset*,
+                                                    const MaterialSubset*,
+                                                    const MaterialSubset*,
+                                                    const MaterialSet*);
 
       void scheduleComputePressFC(SchedulerP&,
-                              const PatchSet*,
-                              const MaterialSubset*,
-                              const MaterialSet*);
+                                  const PatchSet*,
+                                  const MaterialSubset*,
+                                  const MaterialSet*);
 
       void scheduleComputeThermoTransportProperties(SchedulerP&,
                                                     const LevelP& level,
@@ -236,13 +197,6 @@ namespace Uintah {
                                                    const MaterialSubset*,
                                                    const MaterialSubset*,
                                                    const MaterialSet*);
-
-      void scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
-                                                  const PatchSet*,
-                                                  const MaterialSubset*,
-                                                  const MaterialSubset*,
-                                                  const MaterialSubset*,
-                                                  const MaterialSet* );
 
       void scheduleMaxMach_on_Lodi_BC_Faces(SchedulerP&,
                                             const LevelP&,
@@ -375,10 +329,6 @@ namespace Uintah {
                                                       const PatchSet* patches,
                                                       const MaterialSet*);
 
-      void setMPMICELabel(MPMICELabel* mil) {
-       MIlb = mil;
-      };
-
        void setWithMPM() {
          d_with_mpm = true;
        };
@@ -388,8 +338,6 @@ namespace Uintah {
        };
 
 
-    public:
-
       void actuallyInitialize(const ProcessorGroup*,
                               const PatchSubset* patches,
                               const MaterialSubset* matls,
@@ -397,10 +345,10 @@ namespace Uintah {
                               DataWarehouse* new_dw);
 
       void initializeSubTask_hydrostaticAdj(const ProcessorGroup*,
-                                     const PatchSubset*,
-                                     const MaterialSubset*,
-                                     DataWarehouse*,
-                                     DataWarehouse* new_dw);
+                                            const PatchSubset*,
+                                            const MaterialSubset*,
+                                            DataWarehouse*,
+                                            DataWarehouse* new_dw);
 
       void actuallyComputeStableTimestep(const ProcessorGroup*,
                                          const PatchSubset* patch,
@@ -415,17 +363,6 @@ namespace Uintah {
                                         DataWarehouse*);
 
 
-#ifdef HAVE_CUDA
-
-      void computeEquilibrationPressureUnifiedGPU(Task::CallBackEvent event,
-                                              const ProcessorGroup*,
-                                              const PatchSubset* patch,
-                                              const MaterialSubset* matls,
-                                              DataWarehouse*,
-                                              DataWarehouse*,
-                                              void* stream);
-
-#endif
       void computeEquilPressure_1_matl(const ProcessorGroup*,
                                        const PatchSubset* patches,
                                        const MaterialSubset* matls,
@@ -458,43 +395,26 @@ namespace Uintah {
                                             T& Temp_FC);
 
       template<class T> void computeVelFace(int dir, CellIterator it,
-                                       IntVector adj_offset,double dx,
-                                       double delT, double gravity,
-                                       constCCVariable<double>& rho_CC,
-                                       constCCVariable<double>& sp_vol_CC,
-                                       constCCVariable<Vector>& vel_CC,
-                                       constCCVariable<double>& press_CC,
-                                       T& vel_FC,
-                                       T& gradP_FC,
-                                       bool include_acc);
+                                            IntVector adj_offset,
+                                            double dx,
+                                            double delT, 
+                                            double gravity,
+                                            constCCVariable<double>& rho_CC,
+                                            constCCVariable<double>& sp_vol_CC,
+                                            constCCVariable<Vector>& vel_CC,
+                                            constCCVariable<double>& press_CC,
+                                            T& vel_FC,
+                                            T& gradP_FC,
+                                            bool include_acc);
 
       template<class T> void updateVelFace(int dir, CellIterator it,
-                                       IntVector adj_offset,double dx,
-                                       double delT,
-                                       constCCVariable<double>& sp_vol_CC,
-                                       constCCVariable<double>& press_CC,
-                                       T& vel_FC,
-                                       T& grad_dp_FC);
-
-      template<class constSFC, class SFC >
-        void add_vel_FC_exchange( CellIterator it,
-                                       IntVector adj_offset,
-                                       int numMatls,
-                                       FastMatrix & K,
-                                       double delT,
-                                       std::vector<constCCVariable<double> >& vol_frac_CC,
-                                       std::vector<constCCVariable<double> >& sp_vol_CC,
-                                       std::vector< constSFC >& vel_FC,
-                                       std::vector< SFC > & sp_vol_FC,
-                                       std::vector< SFC > & vel_FCME);
-
-
-      void addExchangeContributionToFCVel(const ProcessorGroup*,
-                                          const PatchSubset* patch,
-                                          const MaterialSubset* matls,
-                                          DataWarehouse*,
-                                          DataWarehouse*,
-                                          bool);
+                                            IntVector adj_offset,
+                                            double dx,
+                                            double delT,
+                                            constCCVariable<double>& sp_vol_CC,
+                                            constCCVariable<double>& press_CC,
+                                            T& vel_FC,
+                                            T& grad_dp_FC);
 
       void computeDelPressAndUpdatePressCC(const ProcessorGroup*,
                                            const PatchSubset* patches,
@@ -509,10 +429,10 @@ namespace Uintah {
                           DataWarehouse*);
 
       template<class T> void computePressFace(CellIterator it,
-                                         IntVector adj_offset,
-                                         constCCVariable<double>& sum_rho,
-                                         constCCVariable<double>& press_CC,
-                                         T& press_FC);
+                                              IntVector adj_offset,
+                                              constCCVariable<double>& sum_rho,
+                                              constCCVariable<double>& press_CC,
+                                              T& press_FC);
 
       void computeThermoTransportProperties(const ProcessorGroup*,
                                             const PatchSubset* patches,
@@ -562,27 +482,6 @@ namespace Uintah {
                                            DataWarehouse*,
                                            DataWarehouse*);
 
-      void addExchangeToMomentumAndEnergy_1matl(const ProcessorGroup*,
-                                                const PatchSubset* ,
-                                                const MaterialSubset*,
-                                                DataWarehouse* ,
-                                                DataWarehouse* );
-
-      void addExchangeToMomentumAndEnergy(const ProcessorGroup*,
-                                          const PatchSubset*,
-                                          const MaterialSubset*,
-                                          DataWarehouse*,
-                                          DataWarehouse*);
-
-      template< class V, class T>
-      void update_q_CC(const std::string& desc,
-                      CCVariable<T>& q_CC,
-                      V& q_Lagrangian,
-                      const CCVariable<T>& q_advected,
-                      const CCVariable<double>& mass_new,
-                      const CCVariable<double>& cv_new,
-                      const Patch* patch);
-
       void maxMach_on_Lodi_BC_Faces(const ProcessorGroup*,
                                     const PatchSubset* patches,
                                     const MaterialSubset* matls,
@@ -600,67 +499,6 @@ namespace Uintah {
                                      const MaterialSubset*,
                                      DataWarehouse* old_dw,
                                      DataWarehouse* new_dw);
-
-
-//__________________________________
-//   RF TASKS
-      void actuallyComputeStableTimestepRF(const ProcessorGroup*,
-                                           const PatchSubset* patch,
-                                           const MaterialSubset* matls,
-                                           DataWarehouse*,
-                                           DataWarehouse*);
-
-      void computeRateFormPressure(const ProcessorGroup*,
-                                   const PatchSubset* patch,
-                                   const MaterialSubset* matls,
-                                   DataWarehouse*,
-                                   DataWarehouse*);
-
-      void computeDivThetaVel_CC(const ProcessorGroup*,
-                                 const PatchSubset* patches,
-                                 const MaterialSubset* ,
-                                 DataWarehouse* old_dw,
-                                 DataWarehouse* new_dw);
-
-      template<class T> void vel_PressDiff_FC(
-                                       int dir,
-                                       CellIterator it,
-                                       IntVector adj_offset,double dx,
-                                       double delT, double gravity,
-                                       constCCVariable<double>& sp_vol_CC,
-                                       constCCVariable<Vector>& vel_CC,
-                                       constCCVariable<double>& vol_frac,
-                                       constCCVariable<double>& rho_CC,
-                                       constCCVariable<Vector>& D,
-                                       constCCVariable<double>& speedSound,
-                                       constCCVariable<double>& matl_press_CC,
-                                       constCCVariable<double>& press_CC,
-                                       T& vel_FC,
-                                       T& pressDiff_FC);
-
-      void computeFaceCenteredVelocitiesRF(const ProcessorGroup*,
-                                         const PatchSubset* patch,
-                                         const MaterialSubset* matls,
-                                         DataWarehouse*,
-                                         DataWarehouse*);
-
-      void accumulateEnergySourceSinks_RF(const ProcessorGroup*,
-                                          const PatchSubset* patches,
-                                          const MaterialSubset*,
-                                          DataWarehouse* old_dw,
-                                          DataWarehouse* new_dw);
-
-      void computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
-                                           const PatchSubset* patches,
-                                           const MaterialSubset* matls,
-                                           DataWarehouse*,
-                                           DataWarehouse*);
-
-      void addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
-                                          const PatchSubset*,
-                                          const MaterialSubset*,
-                                          DataWarehouse*,
-                                          DataWarehouse*);
 
 //__________________________________
 //  I M P L I C I T   I C E
@@ -786,69 +624,9 @@ namespace Uintah {
                             DataWarehouse*,
                             DataWarehouse*);
 
-      void printData_problemSetup(const ProblemSpecP& prob_spec);
-
-      void printData( int indx,
-                      const  Patch* patch,
-                      int include_GC,
-                      const std::string& message1,
-                      const std::string& message2,
-                      const  CCVariable<int>& q_CC);
-
-      void printData( int indx,
-                      const  Patch* patch,
-                      int include_GC,
-                      const std::string& message1,
-                      const std::string& message2,
-                      const  CCVariable<double>& q_CC);
-
-      void printVector( int indx,
-                        const  Patch* patch,
-                        int include_GC,
-                        const std::string& message1,
-                        const std::string& message2,
-                        int component,
-                        const CCVariable<Vector>& q_CC);
-
-      void printStencil( int matl,
-                         const Patch* patch,
-                         int include_EC,
-                         const std::string&    message1,
-                         const std::string&    message2,
-                         const CCVariable<Stencil7>& q_CC);
-
-      void adjust_dbg_indices( const int include_EC,
-                               const  Patch* patch,
-                               const IntVector d_dbgBeginIndx,
-                               const IntVector d_dbgEndIndx,
-                               IntVector& low,
-                               IntVector& high);
-
-      void createDirs( const Patch* patch,
-                        const std::string& desc,
-                        std::string& path);
-
-      void find_gnuplot_origin_And_dx(const std::string variableType,
-                                     const Patch*,
-                                     IntVector&,
-                                     IntVector&,
-                                     double *,
-                                     double *);
-
-      void readData(const Patch* patch, int include_GC, const std::string& filename,
-                  const std::string& var_name, CCVariable<double>& q_CC);
-
       void hydrostaticPressureAdjustment(const Patch* patch,
-                      const CCVariable<double>& rho_micro_CC,
-                      CCVariable<double>& press_CC);
-
-      void getConstantExchangeCoefficients( FastMatrix& K,
-                                    FastMatrix& H );
-
-      void getVariableExchangeCoefficients( FastMatrix& ,
-                                           FastMatrix& H,
-                                           IntVector & c,
-                                           std::vector<constCCVariable<double> >& mass  );
+                                         const CCVariable<double>& rho_micro_CC,
+                                         CCVariable<double>& press_CC);
 
       IntVector upwindCell_X(const IntVector& c,
                              const double& var,
@@ -941,70 +719,15 @@ namespace Uintah {
       friend class AMRICE;
       friend class impAMRICE;
 
-       void printData_FC(int indx,
-                      const  Patch* patch,
-                      int include_GC,
-                      const std::string& message1,
-                      const std::string& message2,
-                      const SFCXVariable<double>& q_FC);
-
-       void printData_FC(int indx,
-                      const  Patch* patch,
-                      int include_GC,
-                      const std::string& message1,
-                      const std::string& message2,
-                      const SFCYVariable<double>& q_FC);
-
-       void printData_FC(int indx,
-                      const  Patch* patch,
-                      int include_GC,
-                      const std::string& message1,
-                      const std::string& message2,
-                      const SFCZVariable<double>& q_FC);
-
-       template <class T>
-       void printData_driver( int indx,
-                              const  Patch* patch,
-                              int include_GC,
-                              const std::string& message1,
-                              const std::string& message2,
-                              const std::string& variableType,
-                              const  T& q_CC);
-
-      void printVector_driver( int indx,
-                               const  Patch* patch,
-                               int include_GC,
-                               const std::string& message1,
-                               const std::string& message2,
-                               int component,
-                               const CCVariable<Vector>& q_CC);
-
-       template <class T>
-       void symmetryTest_driver( int indx,
-                                 const  Patch* patch,
-                                 const IntVector& cellShift,
-                                 const std::string& message1,
-                                 const std::string& message2,
-                                 const  T& q_CC);
-
-       void symmetryTest_Vector( int indx,
-                                 const  Patch* patch,
-                                 const std::string& message1,
-                                 const std::string& message2,
-                                 const CCVariable<Vector>& q_CC);
-
       ICELabel* lb;
-      MPMICELabel* MIlb;
       SchedulerP d_subsched;
 
       bool   d_recompileSubsched;
-      bool   d_applyHydrostaticPressure;
       double d_EVIL_NUM;
       double d_SMALL_NUM;
       double d_CFL;
       double d_delT_knob;
       double d_delT_diffusionKnob;     // used to modify the diffusion constribution to delT calc.
-      int    d_max_iceMatl_indx;
       Vector d_gravity;
 
 
@@ -1025,8 +748,8 @@ namespace Uintah {
 
       std::string d_delT_scheme;
 
-      // exchange coefficients
-      ExchangeCoefficients* d_exchCoeff;
+      // exchange Model
+      ExchangeModel* d_exchModel;
 
       // flags for the conservation test
        struct conservationTest_flags{

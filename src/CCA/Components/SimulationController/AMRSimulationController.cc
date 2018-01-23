@@ -216,7 +216,7 @@ AMRSimulationController::run()
 
   // ALSO CAN ONE SAVE THE INITAL TIMESTEP USING PIDX???
   // i.e SHOULD THIS COME BEFORE doInitialTimeStep???
-  m_output->initializeOutput( m_current_gridP );  
+  //  m_output->initializeOutput( m_current_gridP );  
 
 // #ifdef HAVE_PIDX
 //   // Setup for PIDX
@@ -451,13 +451,6 @@ AMRSimulationController::run()
                               (m_regridder &&
                                m_regridder->needRecompile( m_current_gridP )) );
 
-    // DAV THIS HAS BEEN MOVED INTO needRecompile ABOVE WHICH CALLS
-    // m_output->needRecompile().
-
-// #ifdef HAVE_PIDX
-//     nr = (nr || pidx_need_to_recompile || pidx_restore_nth_rank);
-// #endif         
-
     if( m_recompile_taskgraph || first ) {
 
       // Recompile taskgraph, re-assign BCs, reset recompile flag.      
@@ -579,9 +572,7 @@ AMRSimulationController::run()
 //=======
 
 
-
     // DAV THIS HAS BEEN MOVED INTO m_output->writeto_xml_files()
-
 
     
 // #ifdef HAVE_PIDX

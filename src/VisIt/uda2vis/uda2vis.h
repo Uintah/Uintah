@@ -22,39 +22,57 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef __EXCHANGE_COEFFICIENTS_H__
-#define __EXCHANGE_COEFFICIENTS_H__
+/*
+ *  uda2vis.h: Provides an interface between VisIt's libsim and Uintah.
+ *
+ *  Written by:
+ *   Department of Computer Science
+ *   University of Utah
+ *   March 2015
+ *
+ */
 
-#include <Core/Grid/SimulationStateP.h>
-#include <Core/ProblemSpec/ProblemSpecP.h>
+#ifndef UINTAH_UDA2VIS_H
+#define UINTAH_UDA2VIS_H
 
-#include <string>
-#include <vector>
+#include <VisIt/uda2vis/udaData.h>
+
+#include <CCA/Ports/SchedulerP.h>
+#include <Core/Grid/GridP.h>
+
+// Define these for the in-situ usage.
 
 namespace Uintah {
-  class ExchangeCoefficients {
-  public:
-    ExchangeCoefficients();
-    ~ExchangeCoefficients();
 
-    void problemSetup(ProblemSpecP& ps,
-                      SimulationStateP& sharedState);
+TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
+			      GridP grid,
+			      bool useExtraCells);
 
-    void outputProblemSpec(ProblemSpecP& ps);
-    
-    bool convective();
-    int conv_fluid_matlindex();
-    int conv_solid_matlindex();
-    std::vector<double> K_mom();
-    std::vector<double> K_heat();
-    std::string d_heatExchCoeffModel;
-    
-  private:
-    std::vector<double> d_K_mom, d_K_heat;
-    bool d_convective;
-    int d_conv_fluid_matlindex;
-    int d_conv_solid_matlindex;
-  };
+GridDataRaw* getGridData(SchedulerP schedulerP,
+			 GridP gridP,
+			 int level_i,
+			 int patch_i,
+			 std::string variable_name,
+			 int material,
+			 int low[3],
+			 int high[3]);
+
+ParticleDataRaw* getParticleData(SchedulerP schedulerP,
+				 GridP gridP,
+				 int level_i,
+				 int patch_i,
+				 std::string variable_name,
+				 int material);
+
+void GetLevelAndLocalPatchNumber(TimeStepInfo* stepInfo,
+				 int global_patch, 
+				 int &level, int &local_patch);
+  
+int GetGlobalDomainNumber(TimeStepInfo* stepInfo,
+			  int level, int local_patch);
+
+void CheckNaNs(double *data, const int num,
+	       const char* varname, const int level, const int patch);
 }
 
-#endif
+#endif //UINTAH_UDA2VIS_H

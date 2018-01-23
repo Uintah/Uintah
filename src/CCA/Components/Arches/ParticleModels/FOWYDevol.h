@@ -95,7 +95,6 @@ namespace Uintah{
 
     //various rate parameters
     double _v_hiT;
-    double _Tig;
     double _A;
     double _Ta;
     double _Tbp_graphite;
@@ -165,7 +164,6 @@ namespace Uintah{
       //get devol rate params from coal
       if (db_coal_props->findBlock("FOWYDevol")) {
         ProblemSpecP db_FOWY = db_coal_props->findBlock("FOWYDevol");
-        db_FOWY->require("Tig", _Tig);
         db_FOWY->require("Ta", _Ta);
         db_FOWY->require("A", _A);
         db_FOWY->require("v_hiT", _v_hiT);

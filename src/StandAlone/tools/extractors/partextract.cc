@@ -790,8 +790,8 @@ void printParticleVariable(DataArchive* da,
                            unsigned long time_step_lower,
                            unsigned long time_step_upper,
                            unsigned long time_step_inc,
-                           bool include_position_output){
-
+                           bool include_position_output)
+{
   // Check if the particle variable is available
   vector<string> vars;
   vector<int> num_matls;
@@ -1099,7 +1099,13 @@ void printParticleVariable(DataArchive* da,
                       ParticleSubset::iterator iter = pset->begin();
                       for(;iter != pset->end(); iter++){
                         cout << time << " " << patchIndex << " " << matl ;
-                        cout << " " << value[*iter] << endl;
+                        cout << " " << value[*iter];
+                        if(include_position_output){
+                          cout << " " << pos[*iter].x()
+                               << " " << pos[*iter].y()
+                               << " " << pos[*iter].z();
+                        }
+                        cout <<  endl;
                       }
                     }
                   }

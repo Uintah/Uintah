@@ -32,11 +32,12 @@
  *
  */
 
-#include <StandAlone/tools/uda2vis/uda2vis.h>
+#include <VisIt/uda2vis/uda2vis.h>
 
-#include <CCA/Components/Regridder/PerPatchVars.h>
+#include <Core/Grid/Variables/PerPatchVars.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/LoadBalancer.h>
+#include <CCA/Ports/Scheduler.h>
 #include <Core/DataArchive/DataArchive.h>
 #include <Core/Grid/Variables/PerPatch.h>
 
@@ -224,7 +225,6 @@ void releaseGrid(GridP *grid)
 extern "C"
 std::vector<double> getCycleTimes(DataArchive *archive)
 {
-
   // Get the times and indices.
   std::vector<int> index;
   std::vector<double> times;
@@ -905,8 +905,8 @@ TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
                               GridP gridP,
                               bool useExtraCells)
 {
-  DataWarehouse    * dw = schedulerP->getLastDW();
-  LoadBalancer * lb = schedulerP->getLoadBalancer();
+  DataWarehouse * dw = schedulerP->getLastDW();
+  LoadBalancer  * lb = schedulerP->getLoadBalancer();
 
   int numLevels = gridP->numLevels();
   TimeStepInfo *stepInfo = new TimeStepInfo();

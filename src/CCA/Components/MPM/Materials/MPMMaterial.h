@@ -142,7 +142,6 @@ WARNING
 
    bool getIsRigid() const;
 
-   bool getIncludeFlowWork() const;
    double getSpecificHeat() const;
    double getThermalConductivity() const;
 
@@ -177,7 +176,6 @@ WARNING
    ParticleCreator*       d_particle_creator;
 
    double d_density;
-   bool   d_includeFlowWork;
    double d_specificHeat;
    double d_thermalConductivity;
    bool   d_pLocalizedComputed  =  false;        // set to true if any task computes pLocalizedMPM or pLocalizedMPM_preReloc

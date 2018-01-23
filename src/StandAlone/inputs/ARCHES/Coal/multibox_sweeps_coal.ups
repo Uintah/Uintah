@@ -1611,7 +1611,6 @@
          <!--high pressure fit-->
          <FOWYDevol>
            <v_hiT>0.5427</v_hiT>
-           <Tig>520</Tig>  
            <A>2.355e7</A>    
            <Ta>1.133e4</Ta>   
            <Tbp_graphite>3e3</Tbp_graphite>    
