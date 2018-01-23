@@ -148,9 +148,6 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps,
   // This is used for the autocycleflux boundary conditions
   d_do_conc_reduction = false;
   ps->get("do_conc_reduction", d_do_conc_reduction);
-   
-  d_includeFlowWork = false;
-  ps->get("includeFlowWork",d_includeFlowWork);
 
   // Step 5 -- Loop through all of the pieces in this geometry object
   //int piece_num = 0;
@@ -252,7 +249,7 @@ ProblemSpecP MPMMaterial::outputProblemSpec(ProblemSpecP& ps)
   mpm_ps->appendElement("room_temp",d_troom);
   mpm_ps->appendElement("melt_temp",d_tmelt);
   mpm_ps->appendElement("is_rigid",d_is_rigid);
-  mpm_ps->appendElement("includeFlowWork",d_includeFlowWork);
+
   d_cm->outputProblemSpec(mpm_ps);
   d_damageModel->outputProblemSpec(mpm_ps);
   d_erosionModel->outputProblemSpec(mpm_ps);
@@ -377,12 +374,6 @@ int MPMMaterial::nullGeomObject() const
 bool MPMMaterial::getIsRigid() const
 {
   return d_is_rigid;
-}
-
-
-bool MPMMaterial::getIncludeFlowWork() const
-{
-  return d_includeFlowWork;
 }
 
 double MPMMaterial::getSpecificHeat() const

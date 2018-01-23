@@ -187,7 +187,6 @@
     <MaterialProperties>
        <MPM>
           <material>
-            <includeFlowWork>       false          </includeFlowWork>
             <EOS type = "ideal_gas">
                 <gas_constant>      287             </gas_constant>
             </EOS>
