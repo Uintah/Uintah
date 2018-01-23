@@ -234,7 +234,7 @@
         <room_temp>294</room_temp>
         <melt_temp>1793</melt_temp>
         <is_rigid>false</is_rigid>
-        <includeFlowWork>false</includeFlowWork>
+
         <constitutive_model type="elastic_plastic">
           <bulk_modulus>173330000000</bulk_modulus>
           <shear_modulus>80000000000</shear_modulus>
@@ -330,7 +330,7 @@
         <room_temp>294</room_temp>
         <melt_temp>688</melt_temp>
         <is_rigid>false</is_rigid>
-        <includeFlowWork>false</includeFlowWork>
+
         <constitutive_model type="visco_scram">
           <PR>0.29999999999999999</PR>
           <CoeffThermalExpansion>0.000125</CoeffThermalExpansion>
@@ -388,7 +388,7 @@
         <dynamic_viscosity>0</dynamic_viscosity>
         <gamma>1.3999999999999999</gamma>
         <isSurroundingMatl>false</isSurroundingMatl>
-        <includeFlowWork>true</includeFlowWork>
+
         <geom_object>
           <difference>
             <box>
@@ -411,7 +411,7 @@
         <dynamic_viscosity>0</dynamic_viscosity>
         <gamma>1.3999999999999999</gamma>
         <isSurroundingMatl>false</isSurroundingMatl>
-        <includeFlowWork>true</includeFlowWork>
+
         <geom_object>
           <box>
             <min>[1, 1, 1]</min>

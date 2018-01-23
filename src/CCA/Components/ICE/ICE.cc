@@ -4052,7 +4052,7 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
     old_dw->get(delT, lb->delTLabel, level);
 
     Vector dx = patch->dCell();
-    double A, vol=dx.x()*dx.y()*dx.z();
+    double vol=dx.x()*dx.y()*dx.z();
     
     constCCVariable<double> sp_vol_CC;
     constCCVariable<double> kappa;
@@ -4080,10 +4080,9 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
 
     for(int m = 0; m < numMatls; m++) {
       Material* matl = m_sharedState->getMaterial( m );
-      ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl); 
-      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl); 
+      ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);  
 
-      int indx    = matl->getDWIndex();   
+      int indx = matl->getDWIndex();   
       CCVariable<double> int_eng_source;
       CCVariable<double> heatCond_src;
       
@@ -4113,23 +4112,16 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
           scalarDiffusionOperator(new_dw, patch, use_vol_frac, Temp_CC,
                                   vol_frac, heatCond_src, thermalCond, delT);
         }
-      }
 
-
-      //__________________________________
-      //   Compute source from volume dilatation
-      //   Exclude contribution from delP_MassX
-      bool includeFlowWork = false;
-      if (ice_matl)
-        includeFlowWork = ice_matl->getIncludeFlowWork();
-      if (mpm_matl)
-        includeFlowWork = mpm_matl->getIncludeFlowWork();
-      if(includeFlowWork){
-        for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-          IntVector c = *iter;
-          //          A = vol * vol_frac[c] * kappa[c] * press_CC[c];
-          A = TMV_CC[c] * vol_frac[c] * kappa[c] * press_CC[c];
-          int_eng_source[c] += A * delP_Dilatate[c] + heatCond_src[c];
+        //__________________________________
+        //   Compute source from volume dilatation
+        //   Exclude contribution from delP_MassX
+        if( ice_matl->getIncludeFlowWork() ){
+          for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+            IntVector c = *iter;
+            double A = TMV_CC[c] * vol_frac[c] * kappa[c] * press_CC[c];
+            int_eng_source[c] += A * delP_Dilatate[c] + heatCond_src[c];
+          }
         }
       }
     
@@ -4140,12 +4132,10 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
             simTime <= d_add_heat_t_final ) { 
         for (int i = 0; i<(int) d_add_heat_matls.size(); i++) {
           if(m == d_add_heat_matls[i] ){
-            for(CellIterator iter = patch->getCellIterator();!iter.done();
-                iter++){
+            for(CellIterator iter = patch->getCellIterator();!iter.done(); iter++){
               IntVector c = *iter;
               if ( vol_frac[c] > 0.001) {
-                int_eng_source[c] += d_add_heat_coeff[i]
-                  * delT * rho_CC[c] * vol;
+                int_eng_source[c] += d_add_heat_coeff[i] * delT * rho_CC[c] * vol;
               }
             }  // iter loop
           }  // if right matl

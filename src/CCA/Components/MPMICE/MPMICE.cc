@@ -1807,7 +1807,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     std::vector<constCCVariable<Vector> > vel_CC(numALLMatls);
     
     constCCVariable<double> press;    
-    CCVariable<double> press_new, delPress_tmp,sumKappa, TMV_CC;
+    CCVariable<double> press_new, delPress_tmp, sumKappa, TMV_CC;
     CCVariable<double> sum_imp_delP;
     CCVariable<int>  nIterations;
     
