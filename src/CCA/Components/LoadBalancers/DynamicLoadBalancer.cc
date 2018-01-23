@@ -1077,7 +1077,7 @@ DynamicLoadBalancer::possiblyDynamicallyReallocate( const GridP & grid, int stat
     } 
   }  // != restart
   
-  m_temp_assignment.resize(0);
+  m_temp_assignment.resize( 0 );
   
   int flag = LoadBalancer::CHECK_LB;
   if ( changed || state == LoadBalancer::RESTART_LB ) {
@@ -1085,7 +1085,7 @@ DynamicLoadBalancer::possiblyDynamicallyReallocate( const GridP & grid, int stat
   }
   
   // this must be called here (it creates the new per-proc patch sets) even if DLB does nothing.  Don't move or return earlier.
-  LoadBalancerCommon::possiblyDynamicallyReallocate(grid, flag);
+  LoadBalancerCommon::possiblyDynamicallyReallocate( grid, flag );
   
   (*d_runtimeStats)[LoadBalancerTime] += timer().seconds();
 
@@ -1161,7 +1161,7 @@ DynamicLoadBalancer::problemSetup( ProblemSpecP & pspec, GridP & grid, const Sim
 
 
   if( Uintah::Parallel::getMPIRank() == 0 ) {
-    cout << "Dynamic Algorithm: " << dynamicAlgo << endl;
+    cout << "Dynamic Algorithm: " << dynamicAlgo << "\n";
   }
 
   if (dynamicAlgo == "cyclic") {

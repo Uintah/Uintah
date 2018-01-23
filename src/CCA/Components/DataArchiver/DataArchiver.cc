@@ -24,8 +24,6 @@
 
 #include <CCA/Components/DataArchiver/DataArchiver.h>
 
-#include <mutex>
-
 #include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/LoadBalancer.h>
@@ -74,9 +72,6 @@
 
 #include <libxml/xmlwriter.h>
 
-
-static std::mutex pidx_mutex{};
-
 //TODO - BJW - if multilevel reduction doesn't work, fix all
 //       getMaterialSet(0)
 
@@ -89,6 +84,9 @@ static std::mutex pidx_mutex{};
 
 #define XML_TEXTWRITER 1
 #undef  XML_TEXTWRITER
+
+#include <mutex>
+static std::mutex pidx_mutex{};
 
 using namespace Uintah;
 using namespace std;
@@ -292,7 +290,7 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
     try {
       saveItem.matls = ConsecutiveRangeSet(attributes["material"]);
     }
-    catch ( const ConsecutiveRangeSetException & ) {
+    catch( const ConsecutiveRangeSetException & ) {
       throw ProblemSetupException("'" + attributes["material"] + "'" +
              " cannot be parsed as a set of material" +
              " indices for saving '" + saveItem.labelName + "'",
@@ -561,7 +559,7 @@ DataArchiver::initializeOutput( const ProblemSpecP & params, const GridP& grid )
                   << "until a checkpoint is reached." << std::endl;
         m_loadBalancer->setNthRank( 1 );
         m_loadBalancer->possiblyDynamicallyReallocate( grid,
-						       LoadBalancer::REGRID_LB );
+                                                       LoadBalancer::REGRID_LB );
         setSaveAsPIDX();
       }
     }
@@ -645,7 +643,6 @@ DataArchiver::restartSetup( Dir    & restartFromDir,
 // This is called after problemSetup. It will copy the dat &
 // checkpoint files to the new directory.  This also removes the
 // global (dat) variables from the saveLabels variables
-
 void
 DataArchiver::postProcessUdaSetup( Dir & fromDir )
 {
@@ -817,9 +814,9 @@ DataArchiver::copyTimeSteps( Dir & fromDir,
                              bool  removeOld,
                              bool  areCheckpoints /* = false */ )
 {
-   string old_iname = fromDir.getName() + "/index.xml";
-   ProblemSpecP oldIndexDoc = loadDocument(old_iname);
-   string iname = toDir.getName() + "/index.xml";
+   string       old_iname = fromDir.getName() + "/index.xml";
+   ProblemSpecP oldIndexDoc = loadDocument( old_iname );
+   string       iname = toDir.getName() + "/index.xml";
    ProblemSpecP indexDoc = loadDocument(iname);
 
    ProblemSpecP oldTimeSteps = oldIndexDoc->findBlock( "timesteps" );
@@ -851,9 +848,9 @@ DataArchiver::copyTimeSteps( Dir & fromDir,
          ts->getAttributes(attributes);
 
          string hrefNode = attributes["href"];
-         if (hrefNode == "")
-            throw InternalError("timestep href attribute not found",
-                                __FILE__, __LINE__);
+         if( hrefNode == "" ) {
+            throw InternalError("timestep href attribute not found", __FILE__, __LINE__ );
+         }
 
          string::size_type href_pos = hrefNode.find_first_of("/");
 
@@ -863,13 +860,16 @@ DataArchiver::copyTimeSteps( Dir & fromDir,
          
          //copy timestep directory
          Dir timestepDir = fromDir.getSubdir(href);
-         if (removeOld)
-            timestepDir.move(toDir);
-         else
-            timestepDir.copy(toDir);
+         if( removeOld ) {
+            timestepDir.move( toDir );
+         }
+         else {
+            timestepDir.copy( toDir );
+         }
 
-         if (areCheckpoints)
+         if( areCheckpoints ) {
             m_checkpointTimeStepDirs.push_back(toDir.getSubdir(href).getName());
+         }
          
          // add the timestep to the index.xml
          ostringstream timestep_str;
@@ -1188,7 +1188,7 @@ DataArchiver::beginOutputTimeStep( const GridP& grid )
   // Check for an output.
   m_isOutputTimeStep =
     // Output based on the simulation time.
-    ( ( ( m_outputInterval > 0.0 && (delT != 0.0 || m_outputInitTimeStep ) ) &&
+    ( ( ( m_outputInterval > 0.0 && ( delT != 0.0 || m_outputInitTimeStep ) ) &&
         ( simTime + delT >= m_nextOutputTime ) ) ||
 
       // Output based on the timestep interval.
@@ -1203,6 +1203,7 @@ DataArchiver::beginOutputTimeStep( const GridP& grid )
   if( m_isOutputTimeStep && m_outputFileFormat != PIDX ) {
     makeTimeStepDirs( m_dir, m_saveLabels, grid, &m_lastTimeStepLocation );
   }
+
   // Check for a checkpoint.
   m_isCheckpointTimeStep =
     // Checkpoint based on the simulation time.
@@ -1515,15 +1516,15 @@ DataArchiver::findNext_OutputCheckPointTimeStep( const bool restart,
     if( m_pidx_checkpointing ) {
       
       if( m_pidx_requested_nth_rank > 1 ) {
-	proc0cout << "This is a checkpoint time step (" << timeStep
-		  << ") - need to recompile with nth proc set to: "
-		  << m_pidx_requested_nth_rank << "\n";
-	
-	m_loadBalancer->setNthRank( m_pidx_requested_nth_rank );
-	m_loadBalancer->possiblyDynamicallyReallocate( grid,
-						       LoadBalancer::REGRID_LB );
-	setSaveAsUDA();
-	m_pidx_need_to_recompile = true;
+        proc0cout << "This is a checkpoint time step (" << timeStep
+                  << ") - need to recompile with nth proc set to: "
+                  << m_pidx_requested_nth_rank << "\n";
+        
+        m_loadBalancer->setNthRank( m_pidx_requested_nth_rank );
+        m_loadBalancer->possiblyDynamicallyReallocate( grid,
+                                                       LoadBalancer::REGRID_LB );
+        setSaveAsUDA();
+        m_pidx_need_to_recompile = true;
       }
     }
 
@@ -1588,8 +1589,9 @@ DataArchiver::writeto_xml_files( const GridP& grid )
   // For PIDX only save timestep.xml when checkpointing.  Normal
   // time step dumps using PIDX do not need to write the xml
   // information.      
-//  if( savingAsPIDX() && !m_pidx_checkpointing )
+//  if( savingAsPIDX() && !m_pidx_checkpointing ) {
 //    return;
+//  }
 #endif
     
   const double simTime = m_application->getSimTime();
@@ -1623,12 +1625,23 @@ DataArchiver::writeto_xml_files( const GridP& grid )
     baseDirs.push_back( &m_checkpointsDir );
   }
 
+  // When using PIDX, only save "timestep.xml" if the grid changes... (otherwise we will just point at the last one saved.)
+  bool save_timestep_xml_file = true; // <- Always save for a legacy UDA
+#if HAVE_PIDX  
+  save_timestep_xml_file = (d_lastOutputTimeStep == -1 );
+  proc0cout << "Should we save timestep.xml for timestep " << dir_timestep << "; answer is: " << save_timestep_xml_file << "\n";
+#endif
+
   ostringstream tname;
   tname << "t" << setw(5) << setfill('0') << dir_timestep;
 
+  // Loop over the directories we are going to save data in.  baseDirs contains either the base vis dump directory,
+  // or the base checkpoint directory, or both (if we doing both a checkpoint and a vis dump on the same timestep).
+  //
   for (int i = 0; i < static_cast<int>( baseDirs.size() ); ++i) {
-    // to save the list of vars. up to 2, since in checkpoints, there
-    // are two types of vars
+
+    // Used to store the list of vars to save (up to 2 lists because in checkpoints, there
+    // are two types of vars (global and normal)).
     vector< vector<SaveItem>* > savelist; 
     
     // Reference this timestep in index.xml
@@ -1689,7 +1702,7 @@ DataArchiver::writeto_xml_files( const GridP& grid )
             newElem->setAttribute( "type", TranslateVariableType( var->typeDescription()->getName(), baseDirs[i] != &m_dir ) );
             newElem->setAttribute( "name", var->getName() );
 
-            // Save number of materials associated with this variable... qwerty
+            // Save number of materials associated with this variable...
             SaveItem& saveItem = (*savelist[j])[k];
             const MaterialSubset* matls = saveItem.getMaterialSubset(0);
 
@@ -1740,105 +1753,124 @@ DataArchiver::writeto_xml_files( const GridP& grid )
         deltVal << std::setprecision(17) << delT;
         newElem->setAttribute( "oldDelt",  deltVal.str() );
       }
-     
+
       indexDoc->output( iname.c_str() );
       //indexDoc->releaseDocument();
 
-      // make a timestep.xml file for this time step we need to do it
+      // make a timestep.xml file for this timestep we need to do it
       // here in case there is a timestesp restart Break out the
       // <Grid> and <Data> section of the DOM tree into a separate
       // grid.xml file which can be created quickly and use less
       // memory using the xmlTextWriter functions (streaming output)
 
-      ProblemSpecP rootElem = ProblemSpec::createDocument( "Uintah_timestep" );
+/*      qwerty ... if grid has changed, do this... otherwise just point to the previous version...*/
 
-      // Create a metadata element to store the per-timestep endianness
-      ProblemSpecP metaElem = rootElem->appendChild("Meta");
+      if( save_timestep_xml_file ) {
+        // Create the timestep.xml file.
 
-      metaElem->appendElement("endianness", endianness().c_str());
-      metaElem->appendElement("nBits", (int)sizeof(unsigned long) * 8 );
-      metaElem->appendElement("numProcs", d_myworld->nRanks());
+        ProblemSpecP rootElem = ProblemSpec::createDocument( "Uintah_timestep" );
 
-      // TimeStep information
-      ProblemSpecP timeElem = rootElem->appendChild("Time");
-      timeElem->appendElement("timestepNumber", dir_timestep);
-      timeElem->appendElement("currentTime", simTime);// + delT);
-      timeElem->appendElement("oldDelt", delT);
+        // Create a metadata element to store the per-timestep endianness
+        ProblemSpecP metaElem = rootElem->appendChild("Meta");
 
-      //__________________________________
-      // Output grid section:
-      //
-      // With AMR, we're not guaranteed that a rank has work on a
-      // given level.  Quick check to see that, so we don't create a
-      // node that points to no data.
+        metaElem->appendElement("endianness", endianness().c_str());
+        metaElem->appendElement("nBits", (int)sizeof(unsigned long) * 8 );
+        metaElem->appendElement("numProcs", d_myworld->nRanks());
 
-      string grim_path = baseDirs[i]->getName() + "/" + tname.str() + "/";
+        // TimeStep information
+        ProblemSpecP timeElem = rootElem->appendChild("Time");
+        timeElem->appendElement("timestepNumber", dir_timestep);
+        timeElem->appendElement("currentTime", simTime);// + delT);
+        timeElem->appendElement("oldDelt", delT);
+
+        //__________________________________
+        // Output grid section:
+        //
+        // With AMR, we're not guaranteed that a rank has work on a
+        // given level.  Quick check to see that, so we don't create a
+        // node that points to no data.
+
+        string grim_path = baseDirs[i]->getName() + "/" + tname.str() + "/";
 
 #if XML_TEXTWRITER
 
-      writeGridTextWriter( hasGlobals, grim_path, grid );
+        writeGridTextWriter( hasGlobals, grim_path, grid );
 #else
-      // Original version:
-      writeGridOriginal( hasGlobals, grid, rootElem );
+        // Original version:
+        writeGridOriginal( hasGlobals, grid, rootElem );
 
-      // Binary Grid version:
-      // writeGridBinary( hasGlobals, grim_path, grid );
+        // Binary Grid version:
+        // writeGridBinary( hasGlobals, grim_path, grid );
 #endif
-      // Add the <Materials> section to the timestep.xml
-      GeometryPieceFactory::resetGeometryPiecesOutput();
+        // Add the <Materials> section to the timestep.xml
+        GeometryPieceFactory::resetGeometryPiecesOutput();
 
-      // output each components output Problem spec
-      m_application->outputProblemSpec( rootElem );
+        // output each components output Problem spec
+        m_application->outputProblemSpec( rootElem );
 
-      outputProblemSpec( rootElem );
+        outputProblemSpec( rootElem );
 
-      // write out the timestep.xml file
-      string name = baseDirs[i]->getName()+"/"+tname.str()+"/timestep.xml";
-      rootElem->output( name.c_str() );
-      //__________________________________
-      // output input.xml & input.xml.orig
+        // write out the timestep.xml file
+        string name = baseDirs[i]->getName() + "/" + tname.str() + "/timestep.xml";
+        rootElem->output( name.c_str() );
 
-      // a small convenience to the user who wants to change things
-      // when he restarts let him know that some information to change
-      // will need to be done in the timestep.xml file instead of the
-      // input.xml file.  Only do this once, though.
+        //__________________________________
+        // output input.xml & input.xml.orig
+
+        // a small convenience to the user who wants to change things
+        // when he restarts let him know that some information to change
+        // will need to be done in the timestep.xml file instead of the
+        // input.xml file.  Only do this once, though.
       
-      if (firstCheckpointTimeStep) {
-        // loop over the blocks in timestep.xml and remove them from
-        // input.xml, with some exceptions.
-        string inputname = m_dir.getName()+"/input.xml";
-        ProblemSpecP inputDoc = loadDocument(inputname);
-        inputDoc->output((inputname + ".orig").c_str());
+        if( firstCheckpointTimeStep ) {
+          // loop over the blocks in timestep.xml and remove them from
+          // input.xml, with some exceptions.
+          string inputname = m_dir.getName()+"/input.xml";
+          ProblemSpecP inputDoc = loadDocument(inputname);
+          inputDoc->output((inputname + ".orig").c_str());
 
-        for (ProblemSpecP ps = rootElem->getFirstChild(); ps != nullptr; ps = ps->getNextSibling()) {
-          string nodeName = ps->getNodeName();
+          for (ProblemSpecP ps = rootElem->getFirstChild(); ps != nullptr; ps = ps->getNextSibling()) {
+            string nodeName = ps->getNodeName();
           
-          if (nodeName == "Meta" || nodeName == "Time" ||
-              nodeName == "Grid" || nodeName == "Data") {
-            continue;
-          }
+            if (nodeName == "Meta" || nodeName == "Time" ||
+                nodeName == "Grid" || nodeName == "Data") {
+              continue;
+            }
           
-          // find and replace the node 
-          ProblemSpecP removeNode = inputDoc->findBlock(nodeName);
-          if (removeNode != nullptr) {
-            string comment = "The node " + nodeName + " has been removed.  Its original values are\n"
-              "    in input.xml.orig, and values used for restarts are in checkpoints/t*****/timestep.xml";
-            ProblemSpecP commentNode = inputDoc->makeComment(comment);
-            inputDoc->replaceChild(removeNode, commentNode);
+            // find and replace the node 
+            ProblemSpecP removeNode = inputDoc->findBlock(nodeName);
+            if (removeNode != nullptr) {
+              string comment = "The node " + nodeName + " has been removed.  Its original values are\n"
+                "    in input.xml.orig, and values used for restarts are in checkpoints/t*****/timestep.xml";
+              ProblemSpecP commentNode = inputDoc->makeComment(comment);
+              inputDoc->replaceChild(removeNode, commentNode);
+            }
           }
+          inputDoc->output(inputname.c_str());
+          //inputDoc->releaseDocument();
         }
-        inputDoc->output(inputname.c_str());
-        //inputDoc->releaseDocument();
-      }
-      //rootElem->releaseDocument();
+        //rootElem->releaseDocument();
       
-      //__________________________________
-      // copy the component sections of timestep.xml.
-      if( m_doPostProcessUda ) {
-        copy_outputProblemSpec( m_fromDir, m_dir );
+        //__________________________________
+        // copy the component sections of timestep.xml.
+        if( m_doPostProcessUda ) {
+          copy_outputProblemSpec( m_fromDir, m_dir );
+        }
       }
-    }
+      else {
+        // Grid has not changed, do not need to create a new timestep.xml file... just point at the previous one.
+        proc0cout << "create a link to previous timestep.xml file in timestep: " << d_lastOutputTimeStep << "\n";
+      }
+
+    } // end if d_writeMeta
+      
   }  // loop over baseDirs
+
+  if( save_timestep_xml_file ) {
+    proc0cout << "Saved timestep.xml for timestep " << dir_timestep << "\n";
+    // Record the fact that we just wrote the "timestep.xml" file for timestep #: dir_timestep.
+    d_lastOutputTimeStep = dir_timestep;
+  }
 
   double myTime = timer().seconds();
   (*m_runtimeStats)[XMLIOTime] += myTime;
@@ -1878,8 +1910,9 @@ DataArchiver::writeto_xml_files( std::map< std::string,
     if(iss.get_rep() == nullptr) {
       iss = indexDoc->appendChild(inSituSection.c_str());
     }
-          
+
     const int timeStep = m_application->getTimeStep();
+
     std::stringstream timeStepStr;
     timeStepStr << timeStep + 1;
       
@@ -2382,7 +2415,6 @@ DataArchiver::scheduleOutputTimeStep(       vector<SaveItem> & saveLabels,
     Task* task = scinew Task( taskName, this, &DataArchiver::outputVariables,
                            isThisCheckpoint ? CHECKPOINT : OUTPUT );
     
-
     ///// hacking: add in a dummy requirement to make the checkpoint task dependent on the IO task
     //             so that they run in a deterministic order
 #if 1
@@ -2430,7 +2462,7 @@ DataArchiver::createPIDXCommunicator(       vector<SaveItem> & saveLabels,
   m_pidxComms.clear();
 
   // Create new MPI Comms
-  m_pidxComms.resize( grid->numLevels() );
+  m_pidxComms.reserve( grid->numLevels() );
   
   for( int i = 0; i < grid->numLevels(); i++ ) {
 
@@ -2696,8 +2728,7 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
     
     dbg << " on timestep: " << timeStep << "\n";
   }
-    
-  
+
   //__________________________________
   Dir dir;
   if (type == OUTPUT) {
@@ -2779,12 +2810,14 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
       ASSERT( doc != nullptr );
       ProblemSpecP n = doc->findBlock( "Variable" );
       
-      long cur=0;
+      long cur = 0;
       while( n != nullptr ) {
         ProblemSpecP endNode = n->findBlock( "end" );
-        ASSERT(endNode != nullptr);
-        long end = atol(endNode->getNodeValue().c_str());
-        
+
+        ASSERT( endNode != nullptr );
+
+        long end = atol( endNode->getNodeValue().c_str() );
+
         if(end > cur) {
           cur = end;
         }
@@ -2864,8 +2897,8 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
             patch = 0;
             patchID = -1;
           }
-          else { // if (type == OUTPUT || type == CHECKPOINT)
-            patch = patches->get( p );
+          else { // type == OUTPUT || type == CHECKPOINT
+            patch   = patches->get( p );
             patchID = patch->getID();
           }
           
@@ -2941,7 +2974,7 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
       
       //__________________________________
       // close files and handles 
-      int s = close(fd);
+      int s = close( fd );
       if( s == -1 ) {
         cerr << "Error closing file: " << filename << ", errno=" << errno << '\n';
         throw ErrnoException("DataArchiver::output (close call)", errno, __FILE__, __LINE__ );
@@ -2999,9 +3032,8 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
 
         Dir myDir = ldir.getSubdir( dirName );
         
-        //old version: totalBytes += saveLabels_PIDX( saveTheseLabels, pg, patches, new_dw, type, TD, ldir, dirName, doc );
         totalBytes += saveLabels_PIDX( pg, patches, new_dw, type,
-				       saveTheseLabels, TD, ldir, dirName, doc );
+                                       saveTheseLabels, TD, ldir, dirName, doc );
       } 
     }
 
@@ -3016,17 +3048,15 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
   double myTime   = timer().seconds();
   double byteToMB = 1024 * 1024;
 
-  if (type == OUTPUT) {
-
+  if( type == OUTPUT ) {
     (*m_runtimeStats)[ OutputIOTime ] += myTime;
     (*m_runtimeStats)[ OutputIORate ] += (double) totalBytes / (byteToMB * myTime);
   }
-  else if (type == CHECKPOINT ) {
+  else if( type == CHECKPOINT ) {
     (*m_runtimeStats)[ CheckpointIOTime ] += myTime;
     (*m_runtimeStats)[ CheckpointIORate ] += (double) totalBytes / (byteToMB * myTime);
   }
-    
-  else { // if (type == CHECKPOINT_REDUCTION)
+  else { // type == CHECKPOINT_REDUCTION
     (*m_runtimeStats)[ CheckpointReductionIOTime ] += myTime;
     (*m_runtimeStats)[ CheckpointReducIORate ] += (double) totalBytes / (byteToMB * myTime);
   }
@@ -3053,9 +3083,7 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
                                const std::string           & dirName,     // CCVars, SFC*Vars
                                ProblemSpecP                & doc )
 {
-
   cout << Uintah::Parallel::getMPIRank() << ": " << std::this_thread::get_id() << ": calling saveLabels_PIDX()\n";
-  
 
   size_t totalBytesSaved = 0;
 #if HAVE_PIDX
@@ -3078,11 +3106,9 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
   int count = 0;
   int actual_number_of_variables = 0;
   
-  vector< SaveItem >::iterator saveIter;
-
   cout << "parsing save labels (# save items: " << nSaveItems << ") on level " << levelid << " for timestep: " << timeStep << "\n"; // DEBUG
 
-  for( saveIter = saveLabels.begin(); saveIter != saveLabels.end(); ++saveIter ) {
+  for( vector< SaveItem >::iterator saveIter = saveLabels.begin(); saveIter != saveLabels.end(); ++saveIter ) {
     const MaterialSubset* var_matls = saveIter->getMaterialSubset( level );
 
     cout << "   Looking at: " << saveIter->label->getName() << "\n"; // DEBUG
@@ -3154,10 +3180,10 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
   unsigned char ***patch_buffer;
   patch_buffer = (unsigned char***)malloc(sizeof(unsigned char**) * actual_number_of_variables);
   
-  int vc = 0;  // Variable Counter
+  int vc  = 0; // Variable Counter
   int vcm = 0; // Variable Counter Material
-  for(saveIter = saveLabels.begin(); saveIter != saveLabels.end(); saveIter++) 
-  {
+  
+  for( vector< SaveItem >::iterator saveIter = saveLabels.begin(); saveIter != saveLabels.end(); ++saveIter ) {
     const VarLabel* label = saveIter->label;
 
     const MaterialSubset* var_matls = saveIter->getMaterialSubset(level);
@@ -3213,17 +3239,13 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
 
     //__________________________________
     //  materials loop
-    for( int m = 0; m < var_matls->size(); m++ ){
+    for( int m = 0; m < var_matls->size(); m++ ) {
       int matlIndex = var_matls->get(m);
       string var_mat_name;
 
-      //      if (var_matls->size() == 1) {
-      //        var_mat_name = label->getName();
-      //      } else {
       std::ostringstream s;
       s << m;
       var_mat_name = label->getName() + "_m" + s.str();
-      //      }
     
       cout << "here: " << var_mat_name.c_str() << ", " << (varSubType_size * 8) << ", " << data_type << "\n";
 
@@ -3244,7 +3266,7 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
 
       //__________________________________
       //  patch Loop
-      for( int p=0; p<(type == CHECKPOINT_REDUCTION ? 1 : patches->size()); ++p ) {
+      for( int p = 0; p < (type == CHECKPOINT_REDUCTION ? 1 : patches->size()); ++p ) {
         const Patch* patch;
 
         if (type == CHECKPOINT_REDUCTION) {
@@ -3273,7 +3295,6 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
             patchExts.print(cout); 
           }
                     
-         
           //__________________________________
           //  Read in Array3 data to t-buffer
           size_t arraySize;
@@ -3380,8 +3401,8 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
       }  //  Patches
 
       rc = PIDX_append_and_write_variable(pidx.file, pidx.varDesc[vc][m]);
-      pidx.checkReturnCode( rc,
-                            "DataArchiver::saveLabels_PIDX - PIDX_append_and_write_variable failure", __FILE__, __LINE__ );
+      pidx.checkReturnCode( rc, "DataArchiver::saveLabels_PIDX - PIDX_append_and_write_variable failure", __FILE__, __LINE__ );
+
       vcm++;
     }  //  Materials
 
@@ -3433,7 +3454,6 @@ DataArchiver::findAllVariablesWithType( const std::vector< SaveItem > & saveLabe
   cout << "findAllVariablesWithType: " << type << "\n";
 
   std::vector< SaveItem > myItems;
-  // myItems.empty();
 
   for( vector< SaveItem >::const_iterator saveIter = saveLabels.begin(); saveIter != saveLabels.end(); ++saveIter) {
     const VarLabel* label = saveIter->label;
@@ -3684,6 +3704,7 @@ DataArchiver::initSaveLabels( SchedulerP & sched, bool initTimeStep )
       if (initTimeStep) {
         // Ignore this on the init timestep, cuz lots of vars aren't
         // computed on the init timestep.
+
         if (dbg.active()) {
           dbg << "    Ignoring var " << iter->labelName << " on initialization timestep\n";
         }
@@ -3696,14 +3717,14 @@ DataArchiver::initSaveLabels( SchedulerP & sched, bool initTimeStep )
     }
     saveItem.label = var;
     saveItem.matlSet.clear();
-    
+
     for ( ConsecutiveRangeSet::iterator crs_iter = (*iter).levels.begin(); crs_iter != (*iter).levels.end(); ++crs_iter ) {
 
       ConsecutiveRangeSet matlsToSave = ( ConsecutiveRangeSet( (*found).second ) ).intersected( ( *iter ).matls );
       saveItem.setMaterials( *crs_iter, matlsToSave, m_prevMatls, m_prevMatlSet );
 
       if (((*iter).matls != ConsecutiveRangeSet::all) && ((*iter).matls != matlsToSave)) {
-        throw ProblemSetupException((*iter).labelName + " variable not computed for all materials specified to save.", __FILE__, __LINE__);
+        throw ProblemSetupException( (*iter).labelName + " variable not computed for all materials specified to save.", __FILE__, __LINE__ );
       }
     }
 
@@ -3934,7 +3955,7 @@ DataArchiver::recompile( const GridP& grid )
                 << "setting nth output to 1\n";
       m_loadBalancer->setNthRank( 1 );
       m_loadBalancer->possiblyDynamicallyReallocate( grid,
-						     LoadBalancer::REGRID_LB );
+                                                     LoadBalancer::REGRID_LB );
       setSaveAsPIDX();
       m_pidx_restore_nth_rank = false;
     }

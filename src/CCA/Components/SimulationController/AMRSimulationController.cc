@@ -567,7 +567,7 @@ AMRSimulationController::run()
 //    {
       // If PIDX is not being used write timestep.xml for both
       // checkpoints and time step dumps.
-      m_output->writeto_xml_files( m_current_gridP );
+//      m_output->writeto_xml_files( m_current_gridP );
 //    }
 //=======
 
@@ -586,7 +586,6 @@ AMRSimulationController::run()
       //        // If PIDX is not being used write timestep.xml for both
       //        // checkpoints and time step dumps.
 //>>>>>>> .merge-right.r57621
-
 
     // ARS - CAN THIS BE SCHEDULED??
     m_output->writeto_xml_files( m_current_gridP );

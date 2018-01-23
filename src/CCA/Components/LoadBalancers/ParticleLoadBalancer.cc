@@ -768,7 +768,8 @@ void ParticleLoadBalancer::getCosts(const Grid* grid, vector<vector<double> >&pa
   }
 }
 
-bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int state)
+bool
+ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int state)
 {
   if( Uintah::Parallel::getMPIRank() == 0 ) {
     dbg << d_myworld->myRank() << " In DLB, state " << state << "\n";
@@ -816,7 +817,7 @@ bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int 
       dynamicAllocate=true;
     }
 
-    if( dynamicAllocate || state != LoadBalancer::CHECK_LB) {
+    if( dynamicAllocate || state != LoadBalancer::CHECK_LB ) {
       //d_oldAssignment = d_processorAssignment;
       changed = true;
       m_processor_assignment = m_temp_assignment;
