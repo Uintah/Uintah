@@ -823,7 +823,7 @@
   <CFD>
     <ARCHES>
       <PropertyModelsV2>
-        <model type="gasRadProperties" label="gas_abskg">
+        <model type="gasRadProperties" label="abskg">
           <calculator type="hottel_sarofim">
             <opl>0.3</opl>
           </calculator>
