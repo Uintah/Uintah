@@ -422,9 +422,9 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
         std::vector<CCVariable<double> > abs_scat_coeff(_nDVs);
         IntVector domLo = patch->getCellLowIndex();
         IntVector domHi = patch->getCellHighIndex();
-        for (int ix=0; ix< _nDVs; ix++){
-          abs_scat_coeff[ix].allocate(domLo,domHi);
-          abs_scat_coeff[ix].initialize(0.0);
+        for (int iy=0; iy< _nDVs; iy++){
+          abs_scat_coeff[iy].allocate(domLo,domHi);
+          abs_scat_coeff[iy].initialize(0.0);
         }
 
         myTable->getState(IV, abs_scat_coeff, {"diameter","temperature"}, patch);
