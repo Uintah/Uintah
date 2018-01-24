@@ -80,6 +80,9 @@ const VarLabel* RMCRTCommon::d_radiationVolqLabel;
 const VarLabel* RMCRTCommon::d_compAbskgLabel;
 const VarLabel* RMCRTCommon::d_compTempLabel;
 const VarLabel* RMCRTCommon::d_cellTypeLabel;
+#ifdef COMBINE_ABSKG_SIGMAT4_CELLTYPE
+const VarLabel* RMCRTCommon::d_abskgSigmaT4CellTypeLabel;
+#endif
 
 //______________________________________________________________________
 // Class: Constructor.
@@ -96,6 +99,10 @@ RMCRTCommon::RMCRTCommon( TypeDescription::Type FLT_DBL )
     d_abskgLabel   = VarLabel::create( "abskgRMCRT", CCVariable<float>::getTypeDescription() );
     proc0cout << "__________________________________ USING FLOAT VERSION OF RMCRT" << std::endl;
   }
+
+#ifdef COMBINE_ABSKG_SIGMAT4_CELLTYPE
+  d_abskgSigmaT4CellTypeLabel = VarLabel::create( "abskgSigmaT4CellType", CCVariable<double>::getTypeDescription() );
+#endif
 
   d_boundFluxLabel     = VarLabel::create( "RMCRTboundFlux",   CCVariable<Stencil7>::getTypeDescription() );
   d_radiationVolqLabel = VarLabel::create( "radiationVolq",    CCVariable<double>::getTypeDescription() );
@@ -123,6 +130,9 @@ RMCRTCommon::~RMCRTCommon()
   if (RMCRTCommon::d_FLT_DBL == TypeDescription::float_type){
     VarLabel::destroy( d_abskgLabel );
   }
+#ifdef COMBINE_ABSKG_SIGMAT4_CELLTYPE
+  VarLabel::destroy( d_abskgSigmaT4CellTypeLabel );
+#endif
 
   // when the radiometer class is invoked d_matlSet it deleted twice.  This prevents that.
   if( d_matlSet ) {
@@ -309,6 +319,91 @@ RMCRTCommon::sigmaT4( const ProcessorGroup*,
   }
 }
 
+#ifdef COMBINE_ABSKG_SIGMAT4_CELLTYPE
+void
+RMCRTCommon::sched_combineAbskgSigmaT4CellType( const LevelP& level,
+                           SchedulerP& sched,
+                           Task::WhichDW temp_dw,
+                           const bool includeEC )
+{
+
+  std::string taskname = "RMCRTCommon::sigmaT4";
+
+  Task* tsk = nullptr;
+  if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ) {
+    tsk = scinew Task( taskname, this, &RMCRTCommon::combineAbskgSigmaT4CellType<double>, temp_dw );
+  } else {
+    tsk = scinew Task( taskname, this, &RMCRTCommon::combineAbskgSigmaT4CellType<float>, temp_dw );
+  }
+
+  printSchedule(level, g_ray_dbg, "RMCRTCommon::sched_combineAbskgSigmaT4CellType");
+
+  tsk->requires( temp_dw, d_abskgLabel,    d_gn, 0 );
+  tsk->requires( temp_dw, d_sigmaT4Label,    d_gn, 0 );
+  tsk->requires( temp_dw, d_cellTypeLabel,    d_gn, 0 );
+
+  tsk->computes(d_abskgSigmaT4CellTypeLabel);
+  
+
+  sched->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT );
+  printf("Completed sched_combineAbskgSigmaT4CellType\n");
+}
+
+
+//______________________________________________________________________
+// Compute total intensity over all wave lengths (sigma * Temperature^4/pi)
+//______________________________________________________________________
+template< class T>
+void
+RMCRTCommon::combineAbskgSigmaT4CellType( const ProcessorGroup*,
+                      const PatchSubset* patches,
+                      const MaterialSubset* matls,
+                      DataWarehouse* old_dw,
+                      DataWarehouse* new_dw,
+                      Task::WhichDW which_temp_dw )
+{
+  //__________________________________
+  //  do the work
+  for (int p=0; p < patches->size(); p++){
+
+    const Patch* patch = patches->get(p);
+
+    printTask(patches, patch, g_ray_dbg, "Doing RMCRTCommon::combineAbskgSigmaT4CellType");
+
+    constCCVariable< T > abskg;
+    constCCVariable< T > sigmaT4;
+    constCCVariable< int> cellType;
+    CCVariable<double> abskgSigmaT4CellType;
+    
+    DataWarehouse* temp_dw = new_dw->getOtherDataWarehouse(which_temp_dw);
+    temp_dw->get(abskg,    d_abskgLabel,  d_matl, patch, Ghost::None, 0);
+    temp_dw->get(sigmaT4,  d_sigmaT4Label,  d_matl, patch, Ghost::None, 0);
+    temp_dw->get(cellType, d_cellTypeLabel,  d_matl, patch, Ghost::None, 0);
+
+    new_dw->allocateAndPut(abskgSigmaT4CellType, d_abskgSigmaT4CellTypeLabel, d_matl, patch);
+
+    // set the cell iterator
+    CellIterator iter = patch->getExtraCellIterator();
+    //CellIterator iter = patch->getCellIterator();
+    //if(includeEC){
+      iter = patch->getExtraCellIterator();
+    //}
+
+    // Pack them on in!
+    for (;!iter.done();iter++){
+      const IntVector& c = *iter;
+      struct Combined_RMCRT_Required_Vars item;
+      item.abskg = abskg[c];
+      if (cellType[c] != -1) { 
+        item.abskg = -1.0 * item.abskg;
+      }
+      item.sigmaT4 = sigmaT4[c];
+      abskgSigmaT4CellType[c] = reinterpret_cast<double&>(item);   
+    }
+  }
+}
+
+#endif
 
 //______________________________________________________________________
 //

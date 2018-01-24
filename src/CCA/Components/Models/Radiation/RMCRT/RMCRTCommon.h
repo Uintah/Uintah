@@ -56,6 +56,13 @@ class MTRand;
 
 namespace Uintah{
 
+#ifdef COMBINE_ABSKG_SIGMAT4_CELLTYPE
+      struct Combined_RMCRT_Required_Vars {
+        float abskg;    //For now, let negative cellType indicate cellType status
+        float sigmaT4;
+      };
+#endif 
+
   class RMCRTCommon  {
 
     public: 
@@ -104,6 +111,29 @@ namespace Uintah{
                     DataWarehouse* new_dw,
                     Task::WhichDW which_temp_dw,
                     const bool includeEC );
+
+#ifdef COMBINE_ABSKG_SIGMAT4_CELLTYPE
+
+      //__________________________________
+      //
+      void sched_combineAbskgSigmaT4CellType( 
+                    const LevelP& level,
+                    SchedulerP& sched,
+                    Task::WhichDW temp_dw,
+                    const bool includeEC );
+      
+      //__________________________________
+      //
+      template< class T>
+      void combineAbskgSigmaT4CellType( 
+                    const ProcessorGroup*,
+                    const PatchSubset* patches,
+                    const MaterialSubset* matls,
+                    DataWarehouse* old_dw,
+                    DataWarehouse* new_dw,
+                    Task::WhichDW which_temp_dw );
+#endif
+
       
       //__________________________________
       //
@@ -248,6 +278,9 @@ namespace Uintah{
       static const VarLabel* d_divQLabel;
       static const VarLabel* d_boundFluxLabel;
       static const VarLabel* d_radiationVolqLabel;
+#ifdef COMBINE_ABSKG_SIGMAT4_CELLTYPE
+      static const VarLabel* d_abskgSigmaT4CellTypeLabel;
+#endif
       
       // VarLabels passed to RMCRT by the component
       static const VarLabel* d_compTempLabel;       //  temperature

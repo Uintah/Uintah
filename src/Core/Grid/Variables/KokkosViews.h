@@ -54,9 +54,9 @@ struct KokkosView3
   }
 
   view_type m_view;
-  int       m_i;
-  int       m_j;
-  int       m_k;
+  int       m_i{0};
+  int       m_j{0};
+  int       m_k{0};
 };
 
 } // End namespace Uintah

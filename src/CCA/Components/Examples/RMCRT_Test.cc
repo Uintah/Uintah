@@ -70,7 +70,6 @@ RMCRT_Test::RMCRT_Test ( const ProcessorGroup* myworld,
   d_divQLabel     = VarLabel::create( "divQ",     CCVariable<double>::getTypeDescription() );
   d_compAbskgLabel= VarLabel::create( "abskg",    CCVariable<double>::getTypeDescription() );
   d_cellTypeLabel = VarLabel::create( "cellType", CCVariable<int>::getTypeDescription() );
-
   d_gac = Ghost::AroundCells;
   d_gn  = Ghost::None;
   d_matl = 0;
@@ -417,6 +416,13 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
         d_RMCRT->sched_setBoundaryConditions( level, sched, notUsed, backoutTemp );
       }
     }
+#ifdef COMBINE_ABSKG_SIGMAT4_CELLTYPE
+    //Combine vars for every level
+    for (int l = maxLevels - 1; l >= 0; l--) {
+      const LevelP& level = grid->getLevel(l);
+      d_RMCRT->sched_combineAbskgSigmaT4CellType(level, sched, temp_dw, includeExtraCells);
+    }
+#endif
 
     //__________________________________
     //  compute the extents of the rmcrt region of interest on the finest level
