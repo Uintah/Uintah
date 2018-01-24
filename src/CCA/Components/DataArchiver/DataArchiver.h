@@ -350,8 +350,13 @@ class LoadBalancer;
                                  const GridP                 & grid, 
                                        SchedulerP            & sched,
                                        bool                    isThisACheckpoint );
-    int d_lastOutputTimeStep = -1;
-    int d_lastOutputCheckpointTimeStep = -1;
+
+    // Timestep # of the last time we saved "timestep.xml". -1 == not yet saved...
+    // We only save timestep.xml as needed (ie, when a regrid occurs), otherwise
+    // a given timestep will refer (symlink) to the last time it was saved.
+    // Note, this is in reference to IO timesteps.  We always generate and
+    // save timestep.xml for Checkpoint output.
+    int m_lastOutputOfTimeStepXML = -1; 
 #endif
 
     //! helper for finalizeTimeStep - schedules a task for each var's output

@@ -1625,13 +1625,6 @@ DataArchiver::writeto_xml_files( const GridP& grid )
     baseDirs.push_back( &m_checkpointsDir );
   }
 
-  // When using PIDX, only save "timestep.xml" if the grid changes... (otherwise we will just point at the last one saved.)
-  bool save_timestep_xml_file = true; // <- Always save for a legacy UDA
-#if HAVE_PIDX  
-  save_timestep_xml_file = (d_lastOutputTimeStep == -1 );
-  proc0cout << "Should we save timestep.xml for timestep " << dir_timestep << "; answer is: " << save_timestep_xml_file << "\n";
-#endif
-
   ostringstream tname;
   tname << "t" << setw(5) << setfill('0') << dir_timestep;
 
@@ -1647,11 +1640,23 @@ DataArchiver::writeto_xml_files( const GridP& grid )
     // Reference this timestep in index.xml
     if( m_writeMeta ) {
       bool hasGlobals = false;
+      bool dumpingCheckpoint = false;
+      bool save_io_timestep_xml_file = false; // <- Always save for a legacy UDA
 
       if ( baseDirs[i] == &m_dir ) {
+        // This time through the (above for) loop, we are working on an IO timestep...
         savelist.push_back( &m_saveLabels );
+
+        cout << "is regrid timestep: " << m_application->isRegridTimeStep() << "\n";
+
+        if( m_outputFileFormat == PIDX ){
+          // When using PIDX, only save "timestep.xml" if the grid had changed... (otherwise we will just point (symlink) to the last one saved.)
+          save_io_timestep_xml_file = (m_lastOutputOfTimeStepXML == -1 || m_application->isRegridTimeStep() );
+        }
       }
       else if ( baseDirs[i] == &m_checkpointsDir ) {
+        // This time through the (above for) loop, we are working on a Checkpoint timestep...
+        dumpingCheckpoint = true;
         hasGlobals = m_checkpointReductionLabels.size() > 0;
         savelist.push_back( &m_checkpointLabels );
         savelist.push_back( &m_checkpointReductionLabels );
@@ -1659,6 +1664,8 @@ DataArchiver::writeto_xml_files( const GridP& grid )
       else {
         throw "DataArchiver::writeto_xml_files(): Unknown directory!";
       }
+
+      proc0cout << "Should we save timestep.xml for timestep " << dir_timestep << "; answer is: " << (save_io_timestep_xml_file?"yes":"no") << "\n";
 
       string iname = baseDirs[i]->getName() + "/index.xml";
       ProblemSpecP indexDoc = loadDocument( iname );
@@ -1763,9 +1770,11 @@ DataArchiver::writeto_xml_files( const GridP& grid )
       // grid.xml file which can be created quickly and use less
       // memory using the xmlTextWriter functions (streaming output)
 
-/*      qwerty ... if grid has changed, do this... otherwise just point to the previous version...*/
+/*      qwerty ... if grid has changed (or this is a checkpoint), save the timestep.xml data... otherwise just point to the previous version...*/
 
-      if( save_timestep_xml_file ) {
+      if( save_io_timestep_xml_file || dumpingCheckpoint ) {
+        proc0cout << "About to save timestep.xml for TS " << dir_timestep << " for " << (dumpingCheckpoint?"checkpoint":"io") << "\n";
+
         // Create the timestep.xml file.
 
         ProblemSpecP rootElem = ProblemSpec::createDocument( "Uintah_timestep" );
@@ -1858,19 +1867,30 @@ DataArchiver::writeto_xml_files( const GridP& grid )
         }
       }
       else {
-        // Grid has not changed, do not need to create a new timestep.xml file... just point at the previous one.
-        proc0cout << "create a link to previous timestep.xml file in timestep: " << d_lastOutputTimeStep << "\n";
+        // This is an IO timestep dump and the grid has not changed, so we do not need to create a new timestep.xml file...
+        // We will just point (symlink) to the most recently dumped "timestep.xml" file.
+        proc0cout << "create a link to previous timestep.xml file in timestep: " << m_lastOutputOfTimeStepXML << "\n";
+
+        ostringstream ts_with_xml_dirname;
+        ts_with_xml_dirname << "../t" << setw(5) << setfill('0') << m_lastOutputOfTimeStepXML << "/timestep.xml";
+
+        ostringstream ts_without_xml_dirname;
+        ts_without_xml_dirname << m_dir.getName() << "/t" << setw(5) << setfill('0') << dir_timestep << "/timestep.xml";
+
+        cout << "running this command: link " << ts_with_xml_dirname.str() << " <--to-- " << ts_without_xml_dirname.str() << "\n";
+
+        symlink( ts_with_xml_dirname.str().c_str(), ts_without_xml_dirname.str().c_str() );
       }
 
-    } // end if d_writeMeta
+      if( save_io_timestep_xml_file ) {
+        proc0cout << "Saved timestep.xml for (IO) timestep " << dir_timestep << "\n";
+        // Record the fact that we just wrote the "timestep.xml" file for timestep #: dir_timestep.
+        m_lastOutputOfTimeStepXML = dir_timestep;
+      }
+
+    } // end if m_writeMeta
       
   }  // loop over baseDirs
-
-  if( save_timestep_xml_file ) {
-    proc0cout << "Saved timestep.xml for timestep " << dir_timestep << "\n";
-    // Record the fact that we just wrote the "timestep.xml" file for timestep #: dir_timestep.
-    d_lastOutputTimeStep = dir_timestep;
-  }
 
   double myTime = timer().seconds();
   (*m_runtimeStats)[XMLIOTime] += myTime;
@@ -2694,7 +2714,7 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
   /////////////////////////////
   /// More dav debug stuff:
   if (type == CHECKPOINT_REDUCTION) {
-    dbg << "    saving checkpiont reduction\n";
+    dbg << "    saving checkpoint reduction\n";
   }
   else if (type == CHECKPOINT) {
     cout << "   saving checkpoint\n";
@@ -3637,17 +3657,21 @@ DataArchiver::makeVersionedDir()
   // Move the symbolic link to point to the new version. We need to be careful
   // not to destroy data, so we only create the link if no file/dir by that
   // name existed or if it's already a link.
+
   bool make_link = false;
   struct stat sb;
-  int rc = LSTAT(m_filebase.c_str(), &sb);
-  if ((rc != 0) && (errno == ENOENT))
+  int rc = LSTAT( m_filebase.c_str(), &sb );
+
+  if( (rc != 0) && (errno == ENOENT) ) {
     make_link = true;
+  }
   else if ((rc == 0) && (S_ISLNK(sb.st_mode))) {
     unlink(m_filebase.c_str());
     make_link = true;
   }
-  if (make_link)
+  if( make_link ) {
     symlink(dirName.c_str(), m_filebase.c_str());
+  }
 
   cout << "DataArchiver created " << dirName << "\n";
   m_dir = Dir(dirName);
