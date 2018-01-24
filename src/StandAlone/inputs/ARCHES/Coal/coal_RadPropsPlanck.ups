@@ -823,12 +823,9 @@
   <CFD>
     <ARCHES>
       <PropertyModelsV2>
-        <model type="gasRadProperties" label="abskg">
-          <calculator type="radprops">
+        <model type="gasRadProperties" label="gas_abskg">
+          <calculator type="hottel_sarofim">
             <opl>0.3</opl>
-            <grey_gas>
-              <inputfile>inputs/ARCHES/rad_tables/GreyGasOPL1_0.txt</inputfile>
-            </grey_gas>
           </calculator>
         </model>
         <model type="partRadProperties" label="abskp">
