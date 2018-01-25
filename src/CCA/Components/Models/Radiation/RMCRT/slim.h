@@ -352,8 +352,7 @@ struct SlimRayTrace_dataOnion_solveDivQFunctor {
 
         //} while ( curAbskgSigmaT4CellType.abskg > 0 );// end domain while loop 
         } while ( ! (reinterpret_cast<int&>(curAbskgSigmaT4CellType.abskg) & 0x80000000) );// end domain while loop 
-        //TODO: Turn back on fabs 
-        T wallEmissivity = ( curAbskgSigmaT4CellType.abskg > 1.0 ) ? 1.0 : curAbskgSigmaT4CellType.abskg;  // Ensure wall emissivity doesn't exceed one
+        T wallEmissivity = ( fabs(curAbskgSigmaT4CellType.abskg) > 1.0 ) ? 1.0 : fabs(curAbskgSigmaT4CellType.abskg);  // Ensure wall emissivity doesn't exceed one
         sumI += wallEmissivity * curAbskgSigmaT4CellType.sigmaT4 * expOpticalThick_prev;
       }  // end ray loop
 
