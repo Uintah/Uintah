@@ -935,6 +935,10 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
                                                           all_matls);        
 
 
+  d_exchModel->sched_PreExchangeTasks(    sched, patches, ice_matls_sub,
+                                                          all_matls);
+
+
   d_exchModel->sched_AddExch_VelFC(       sched, patches,ice_matls_sub,
                                                          all_matls,
                                                          d_BC_globalVars,
