@@ -325,6 +325,8 @@ namespace Uintah {
       const VarLabel* tracerIDLabel_preReloc; 
       const VarLabel* pCellNACZIDLabel;
       const VarLabel* pCellNATracerIDLabel;
+      const VarLabel* pModalIDLabel;
+      const VarLabel* pModalIDLabel_preReloc;
     };
 } // End namespace Uintah
 

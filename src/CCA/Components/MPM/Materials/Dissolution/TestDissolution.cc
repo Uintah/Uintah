@@ -58,17 +58,16 @@ using std::vector;
 
 TestDissolution::TestDissolution(const ProcessorGroup* myworld,
                                  ProblemSpecP& ps, SimulationStateP& d_sS, 
-                                 MPMLabel* Mlb,MPMFlags* MFlag)
-  : Dissolution(myworld, Mlb, MFlag, ps)
+                                 MPMLabel* Mlb)
+  : Dissolution(myworld, Mlb, ps)
 {
   // Constructor
   d_sharedState = d_sS;
   lb = Mlb;
-  flag = MFlag;
-  ps->require("master_material",  d_material);
-  ps->require("rate",             d_rate);
-  ps->require("PressureThreshold",d_PressThresh);
-//  d_matls.add(d_material); // always need specified material
+  ps->require("masterModalID",        d_masterModalID);
+  ps->require("InContactWithModalID", d_inContactWithModalID);
+  ps->require("rate",                 d_rate);
+  ps->require("PressureThreshold",    d_PressThresh);
 }
 
 TestDissolution::~TestDissolution()
@@ -78,12 +77,13 @@ TestDissolution::~TestDissolution()
 void TestDissolution::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP dissolution_ps = ps->appendChild("dissolution");
-  dissolution_ps->appendElement("type","test");
-  dissolution_ps->appendElement("master_material",   d_material);
-  dissolution_ps->appendElement("rate",              d_rate);
-  dissolution_ps->appendElement("PressureThreshold", d_PressThresh);
+  dissolution_ps->appendElement("type",                 "test");
+  dissolution_ps->appendElement("masterModalID",        d_masterModalID);
+  dissolution_ps->appendElement("InContactWithModalID", d_inContactWithModalID);
+  dissolution_ps->appendElement("rate",                 d_rate);
+  dissolution_ps->appendElement("PressureThreshold",    d_PressThresh);
 
-  d_matls.outputProblemSpec(dissolution_ps);
+//  d_matls.outputProblemSpec(dissolution_ps);
 }
 
 void TestDissolution::computeMassBurnFraction(const ProcessorGroup*,
@@ -94,14 +94,11 @@ void TestDissolution::computeMassBurnFraction(const ProcessorGroup*,
 {
    int numMatls = d_sharedState->getNumMPMMatls();
    ASSERTEQ(numMatls, matls->size());
-   MPMMaterial* mat = d_sharedState->getMPMMaterial(d_material);
-   mat->setNeedSurfaceParticles(true);
 
    for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     Vector dx = patch->dCell();
     double area = dx.x()*dx.y();
-//    double cellVol = area*dx.z();
 
     Ghost::GhostType  gnone = Ghost::None;
 
@@ -109,8 +106,10 @@ void TestDissolution::computeMassBurnFraction(const ProcessorGroup*,
     std::vector<constNCVariable<double> > gmass(numMatls),gvolume(numMatls);
     std::vector<constNCVariable<double> > gnormtrac(numMatls);
     std::vector<constNCVariable<Matrix3> > gStress(numMatls);
-    NCVariable<double>  massBurnRate;
+    std::vector<NCVariable<double> >  massBurnRate(numMatls);
     constNCVariable<double> NC_CCweight;
+    std::vector<bool> masterMatls(numMatls);
+    std::vector<bool> inContactWithMatls(numMatls);
     old_dw->get(NC_CCweight,  lb->NC_CCweightLabel,0, patch, gnone,0);
     for(int m=0;m<matls->size();m++){
       int dwi = matls->get(m);
@@ -118,39 +117,47 @@ void TestDissolution::computeMassBurnFraction(const ProcessorGroup*,
       new_dw->get(gvolume[m],   lb->gVolumeLabel,       dwi, patch, gnone, 0);
       new_dw->get(gStress[m],   lb->gStressLabel,       dwi, patch, gnone, 0);
       new_dw->get(gnormtrac[m], lb->gNormTractionLabel, dwi, patch, gnone, 0);
+
+      new_dw->getModifiable(massBurnRate[m], lb->massBurnFractionLabel, dwi, patch);
+      
+      MPMMaterial* mat = d_sharedState->getMPMMaterial(m);
+      if(mat->getModalID()==d_masterModalID){
+        mat->setNeedSurfaceParticles(true);
+        masterMatls[m]=true;
+      } else{
+        masterMatls[m]=false;
+      }
+
+      if(mat->getModalID()==d_inContactWithModalID && !masterMatls[m]) {
+        inContactWithMatls[m]=true;
+      } else{
+        inContactWithMatls[m]=false;
+      }
     }
 
-    int dwiMM = matls->get(d_material);
-    new_dw->getModifiable(massBurnRate, lb->massBurnFractionLabel, dwiMM,patch);
+    for(int m=0; m < numMatls; m++){
+     if(masterMatls[m]){
+      int md=m;
+      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+        IntVector c = *iter;
 
-    int md = d_material;
-    for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
-      IntVector c = *iter;
-
-      double sumMass=0.0;
-//      double sumOtherVol = 0.0;
-      for(int m = 0; m < numMatls; m++){
-        if(d_matls.requested(m) || m==md) {
-          sumMass+=gmass[m][c]; 
-//          if(m!=md){
-//            sumOtherVol = gvolume[m][c]*8.0*NC_CCweight[c];
-//          }
+        double sumMass=0.0;
+        for(int m = 0; m < numMatls; m++){
+          if(m==md || inContactWithMatls[m]) {
+            sumMass+=gmass[m][c]; 
+          }
         }
-      }
 
-//      double mdVol   = gvolume[md][c]*8.0*NC_CCweight[c];
-//      double volFrac = (mdVol+sumOtherVol)/cellVol;
-
-//      double pressure = gStress[md][c].Trace()/(-3.);
-
-      if(gmass[md][c] >  1.e-100  &&
-         gmass[md][c] != sumMass  && 
-        -gnormtrac[md][c] > d_PressThresh){ // Compressive stress is negative
-//         pressure > d_PressThresh){ // && volFrac > 0.6){
-          double rho = gmass[md][c]/gvolume[md][c];
-          massBurnRate[c] += d_rate*area*rho*2.0*NC_CCweight[c];
-      }
-    } // nodes
+        if(gmass[md][c] >  1.e-100  &&
+           gmass[md][c] != sumMass  && 
+          -gnormtrac[md][c] > d_PressThresh){ // Compressive stress is negative
+//           pressure > d_PressThresh){ // && volFrac > 0.6){
+            double rho = gmass[md][c]/gvolume[md][c];
+            massBurnRate[md][c] += d_rate*area*rho*2.0*NC_CCweight[c];
+        }
+      } // nodes
+     } // endif a masterMaterial
+    } // materials
   } // patches
 }
 

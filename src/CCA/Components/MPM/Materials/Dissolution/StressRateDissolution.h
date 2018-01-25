@@ -29,7 +29,6 @@
 
 #include <CCA/Components/MPM/Materials/Dissolution/Dissolution.h>
 #include <CCA/Components/MPM/Materials/Dissolution/DissolutionMaterialSpec.h> 
-#include <CCA/Components/MPM/Core/MPMFlags.h>
 #include <CCA/Ports/DataWarehouseP.h>
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
@@ -77,14 +76,14 @@ WARNING
          double d_rate;
          double d_PressThresh;
          // master material
-         int       d_material;
+         int    d_masterModalID;
+         int    d_inContactWithModalID;
 
       public:
          // Constructor
          StressRateDissolution(const ProcessorGroup* myworld,
-                          ProblemSpecP& ps,SimulationStateP& d_sS,MPMLabel* lb,
-                          MPMFlags* MFlag);
-         
+                          ProblemSpecP& ps,SimulationStateP& d_sS,MPMLabel* lb);
+
          // Destructor
          virtual ~StressRateDissolution();
 

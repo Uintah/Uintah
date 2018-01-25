@@ -75,9 +75,8 @@ WARNING
     public:
       // Constructor
       NullDissolution(const ProcessorGroup* myworld,
-                      SimulationStateP& ss, MPMLabel* lb,
-                      MPMFlags* MFlag);
-      
+                      SimulationStateP& ss, MPMLabel* lb);
+
       // Destructor
       virtual ~NullDissolution();
 

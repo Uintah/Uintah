@@ -131,6 +131,7 @@ WARNING
    ParticleCreator* getParticleCreator();
 
    double getInitialDensity() const;
+   int     getModalID() const;
 
    // Get the specific heats at room temperature
    double getInitialCp() const;
@@ -180,7 +181,8 @@ WARNING
    double d_specificHeat;
    double d_thermalConductivity;
    bool   d_pLocalizedComputed  =  false;        // set to true if any task computes pLocalizedMPM or pLocalizedMPM_preReloc
-
+   // For Cyberstone only
+   int    d_modalID;
 
    // Specific heats at constant pressure and constant volume
    // (values at room temperature - [273.15 + 20] K)

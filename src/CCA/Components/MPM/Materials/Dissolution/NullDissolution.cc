@@ -38,20 +38,17 @@
 #include <Core/Grid/Task.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
-#include <CCA/Components/MPM/Core/MPMFlags.h>
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
 using namespace Uintah;
 
 NullDissolution::NullDissolution(const ProcessorGroup* myworld,
                          SimulationStateP& d_sS,
-                         MPMLabel* Mlb,MPMFlags* MFlags)
-  : Dissolution(myworld, Mlb, MFlags, 0)
+                         MPMLabel* Mlb)
+  : Dissolution(myworld, Mlb, 0)
 {
   // Constructor
   d_sharedState = d_sS;
   lb = Mlb;
-  flag = MFlags;
-
 }
 
 NullDissolution::~NullDissolution()
@@ -62,7 +59,7 @@ void NullDissolution::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP dissolution_ps = ps->appendChild("dissolution");
   dissolution_ps->appendElement("type","null");
-  d_matls.outputProblemSpec(dissolution_ps);
+//  d_matls.outputProblemSpec(dissolution_ps);
 }
 
 

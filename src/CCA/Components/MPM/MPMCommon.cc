@@ -179,6 +179,23 @@ void MPMCommon::tracerProblemSetup(const ProblemSpecP& prob_spec,
     }
   }
 }
+
+void MPMCommon::dissolutionProblemSetup(const ProblemSpecP& prob_spec, 
+                                        MPMFlags* flags)
+{
+  // This is just used to determine if a dissolution block exists
+
+  // Search for the MaterialProperties block and then get the MPM section
+  ProblemSpecP mat_ps =  
+    prob_spec->findBlockWithOutAttribute("MaterialProperties");
+  ProblemSpecP mpm_mat_ps = mat_ps->findBlock("MPM");
+  for (ProblemSpecP ps = mpm_mat_ps->findBlock("dissolution"); ps != nullptr;
+       ps = ps->findNextBlock("dissolution") ) {
+
+     flags->d_doingDissolution=true;
+
+  }
+}
 //______________________________________________________________________
 //
 void MPMCommon::scheduleUpdateStress_DamageErosionModels(SchedulerP   & sched,

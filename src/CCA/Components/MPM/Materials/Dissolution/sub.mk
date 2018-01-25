@@ -36,5 +36,5 @@ SRCS     += \
 	$(SRCDIR)/NullDissolution.cc         \
 	$(SRCDIR)/DissolutionFactory.cc      \
 	$(SRCDIR)/CompositeDissolution.cc    \
-	$(SRCDIR)/DissolutionMaterialSpec.cc \
 	$(SRCDIR)/Dissolution.cc
+#	$(SRCDIR)/DissolutionMaterialSpec.cc \

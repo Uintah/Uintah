@@ -33,6 +33,8 @@
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/PlasticityModels/ErosionModel.h>
 #include <CCA/Components/MPM/Materials/ParticleCreator/ParticleCreatorFactory.h>
 #include <CCA/Components/MPM/Materials/ParticleCreator/ParticleCreator.h>
+#include <CCA/Components/MPM/Materials/Diffusion/DiffusionModels/ScalarDiffusionModel.h>
+#include <CCA/Components/MPM/Materials/Diffusion/ScalarDiffusionModelFactory.h>
 #include <Core/GeometryPiece/GeometryObject.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Grid/Box.h>
@@ -44,14 +46,10 @@
 #include <Core/GeometryPiece/NullGeometryPiece.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
-#include   <iostream>
-#include   <list>
-#include <CCA/Components/MPM/Materials/Diffusion/DiffusionModels/ScalarDiffusionModel.h>
-#include <CCA/Components/MPM/Materials/Diffusion/ScalarDiffusionModelFactory.h>
+#include <iostream>
+#include <list>
 
 #define d_TINY_RHO 1.0e-12 // also defined  ICE.cc and ICEMaterial.cc 
-
-#define OLD
 
 using namespace std;
 using namespace Uintah;
@@ -120,14 +118,15 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps,
   }else{
     d_sdm = nullptr;
   }
-  
-  
+
 
   // Step 4 -- get the general material properties
 
   ps->require("density",d_density);
   ps->require("thermal_conductivity",d_thermalConductivity);
   ps->require("specific_heat",d_specificHeat);
+  // For Cyberstone only
+  ps->getWithDefault("modalID", d_modalID, -99);
   d_needSurfParticles = false;
   
   // Assume the the centered specific heat is C_v
@@ -337,6 +336,11 @@ ParticleCreator* MPMMaterial::getParticleCreator()
 double MPMMaterial::getInitialDensity() const
 {
   return d_density;
+}
+
+int MPMMaterial::getModalID() const
+{
+  return d_modalID;
 }
 
 bool MPMMaterial::getNeedSurfaceParticles() const

@@ -272,13 +272,12 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
 
   flags->d_computeNormals=needNormals;
 
-  dissolutionModel = 
-                  DissolutionFactory::create(UintahParallelComponent::d_myworld,
-                                         restart_mat_ps,m_sharedState,lb,flags);
   thermalContactModel =
     ThermalContactFactory::create(restart_mat_ps, m_sharedState, lb,flags);
 
   heatConductionModel = scinew HeatConduction(m_sharedState,lb,flags);
+
+  dissolutionProblemSetup(restart_mat_ps, flags);
 
   materialProblemSetup(restart_mat_ps,flags, isRestart);
 
@@ -286,6 +285,9 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
 
   tracerProblemSetup(restart_mat_ps, flags);
 
+  dissolutionModel = 
+                  DissolutionFactory::create(UintahParallelComponent::d_myworld,
+                                         restart_mat_ps,m_sharedState,lb,flags);
   //__________________________________
   //  create analysis modules
   // call problemSetup
@@ -402,6 +404,7 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->pVelGradLabel);
   t->computes(lb->pTemperatureGradientLabel);
   t->computes(lb->pSizeLabel);
+  t->computes(lb->pModalIDLabel);
   t->computes(lb->diffusion->pArea);
   t->computes(lb->pLocalizedMPMLabel);
   t->computes(lb->pSurfLabel);
@@ -1280,6 +1283,7 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pXLabel,                         gnone);
   t->requires(Task::OldDW, lb->pMassLabel,                      gnone);
   t->requires(Task::OldDW, lb->pParticleIDLabel,                gnone);
+  t->requires(Task::OldDW, lb->pModalIDLabel,                   gnone);
   t->requires(Task::OldDW, lb->pTemperatureLabel,               gnone);
   t->requires(Task::OldDW, lb->pVelocityLabel,                  gnone);
   t->requires(Task::OldDW, lb->pDispLabel,                      gnone);
@@ -1300,6 +1304,7 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(lb->pVelocityLabel_preReloc);
   t->computes(lb->pXLabel_preReloc);
   t->computes(lb->pParticleIDLabel_preReloc);
+  t->computes(lb->pModalIDLabel_preReloc);
   t->computes(lb->pTemperatureLabel_preReloc);
   t->computes(lb->pTempPreviousLabel_preReloc); // for thermal stress
   t->computes(lb->pMassLabel_preReloc);
@@ -3537,11 +3542,13 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       constParticleVariable<Matrix3> psize, pFOld;
       constParticleVariable<double> pmass, pVolumeOld, pTemperature;
       constParticleVariable<long64> pids;
+      constParticleVariable<int> pModID;
       ParticleVariable<Point> pxnew;
       ParticleVariable<Vector> pvelnew, pdispnew;
       ParticleVariable<Matrix3> psizeNew;
       ParticleVariable<double> pmassNew,pTempNew;
       ParticleVariable<long64> pids_new;
+      ParticleVariable<int> pModIDNew;
       constParticleVariable<double> pSurf;
 
       // for thermal stress analysis
@@ -3577,10 +3584,13 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
       //Carry forward ParticleID and pSize
       old_dw->get(pids,                lb->pParticleIDLabel,          pset);
+      old_dw->get(pModID,              lb->pModalIDLabel,             pset);
       old_dw->get(psize,               lb->pSizeLabel,                pset);
       new_dw->allocateAndPut(pids_new, lb->pParticleIDLabel_preReloc, pset);
+      new_dw->allocateAndPut(pModIDNew,lb->pModalIDLabel_preReloc,    pset);
       new_dw->allocateAndPut(psizeNew, lb->pSizeLabel_preReloc,       pset);
       pids_new.copyData(pids);
+      pModIDNew.copyData(pModID);
 
       //Carry forward color particle (debugging label)
       if (flags->d_with_color) {

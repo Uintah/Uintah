@@ -49,7 +49,7 @@ Dissolution* DissolutionFactory::create(const ProcessorGroup* myworld,
     throw ProblemSetupException(warn, __FILE__, __LINE__);
    }
    
-   CompositeDissolution * dissolution_list = scinew CompositeDissolution(myworld, lb, flag);
+   CompositeDissolution * dissolution_list = scinew CompositeDissolution(myworld,lb);
 
    for( ProblemSpecP child = mpm_ps->findBlock( "dissolution" ); 
                      child != nullptr; 
@@ -59,16 +59,15 @@ Dissolution* DissolutionFactory::create(const ProcessorGroup* myworld,
      child->getWithDefault("type",dis_type, "null");
      
      if (dis_type == "null") {
-      dissolution_list->add(scinew NullDissolution(myworld,ss,lb,flag));
+      dissolution_list->add(scinew NullDissolution(myworld,ss,lb));
      }
 //     else if (dis_type == "stress_threshold") {
      else if (dis_type == "test") {
-      dissolution_list->add(scinew TestDissolution(myworld,child,ss,lb,flag));
+      dissolution_list->add(scinew TestDissolution(myworld,child,ss,lb));
       flag->d_doingDissolution=true;
      }
      else if (dis_type == "stress_rate") {
-      dissolution_list->add(scinew StressRateDissolution(myworld,
-                                                         child,ss,lb,flag));
+      dissolution_list->add(scinew StressRateDissolution(myworld,child,ss,lb));
       flag->d_doingDissolution=true;
      }
      else {
@@ -80,7 +79,7 @@ Dissolution* DissolutionFactory::create(const ProcessorGroup* myworld,
    // 
    if( dissolution_list->size() == 0 ) {
      proc0cout << "no dissolution - using null\n";
-     dissolution_list->add(scinew NullDissolution(myworld,ss,lb,flag));
+     dissolution_list->add(scinew NullDissolution(myworld,ss,lb));
    }
 
    return dissolution_list;

@@ -164,12 +164,15 @@
         <materials                       spec="OPTIONAL MULTIPLE_INTEGERS" />
         <type                            spec="REQUIRED STRING 'null, test'" />
         <master_material                 spec="OPTIONAL INTEGER" />
+        <masterModalID                   spec="REQUIRED INTEGER" />
+        <InContactWithModalID            spec="REQUIRED INTEGER" />
       </dissolution>
 
       
       <material                          spec="MULTIPLE NO_DATA"
                                            attribute1="name OPTIONAL STRING" >
         <density                         spec="REQUIRED DOUBLE" />
+        <modalID                         spec="OPTIONAL INTEGER" />
 
         <include href="constitutive_models.xml" />
         <!--__________________________________-->

@@ -56,8 +56,7 @@ WARNING
     class CompositeDissolution :public Dissolution {
       public:
          // Constructor
-         CompositeDissolution(const ProcessorGroup* myworld, MPMLabel* Mlb, 
-                          MPMFlags* MFlag);
+         CompositeDissolution(const ProcessorGroup* myworld, MPMLabel* Mlb);
          virtual ~CompositeDissolution();
 
          virtual void outputProblemSpec(ProblemSpecP& ps);

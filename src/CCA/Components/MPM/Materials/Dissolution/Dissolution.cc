@@ -27,8 +27,10 @@
 using namespace Uintah;
 
 Dissolution::Dissolution(const ProcessorGroup* myworld, MPMLabel* Mlb, 
-                         MPMFlags* MFlag, ProblemSpecP ps)
-                         : lb(Mlb), flag(MFlag), d_matls(ps)
+                         ProblemSpecP ps)
+                         : lb(Mlb)//, d_matls(ps)
+#if 0
+#endif
 {
 }
 

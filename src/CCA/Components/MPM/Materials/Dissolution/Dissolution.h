@@ -25,7 +25,7 @@
 #ifndef __DISSOLUTION_H__
 #define __DISSOLUTION_H__
 
-#include <CCA/Components/MPM/Materials/Dissolution/DissolutionMaterialSpec.h>
+//#include <CCA/Components/MPM/Materials/Dissolution/DissolutionMaterialSpec.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/SchedulerP.h>
@@ -35,7 +35,6 @@ namespace Uintah {
 
   class DataWarehouse;
   class MPMLabel;
-  class MPMFlags;
   class ProcessorGroup;
   class Patch;
   class VarLabel;
@@ -68,8 +67,7 @@ WARNING
   class Dissolution {
     public:
      // Constructor
-     Dissolution(const ProcessorGroup* myworld, MPMLabel* Mlb, MPMFlags* MFlag,
-             ProblemSpecP ps);
+     Dissolution(const ProcessorGroup* myworld, MPMLabel* Mlb, ProblemSpecP ps);
      virtual ~Dissolution();
 
      virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
@@ -86,9 +84,8 @@ WARNING
                                                   const MaterialSet* matls) = 0;
     protected:
      MPMLabel* lb;
-     MPMFlags* flag;
 
-     DissolutionMaterialSpec d_matls;
+//     DissolutionMaterialSpec d_matls;
     };
 
 //    inline bool compare(double num1, double num2) {

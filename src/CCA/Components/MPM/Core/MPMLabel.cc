@@ -773,6 +773,12 @@ MPMLabel::MPMLabel()
   tracerIDLabel_preReloc = VarLabel::create("t.tracerID+",
 			ParticleVariable<long64>::getTypeDescription() );
 
+  pModalIDLabel = VarLabel::create("p.modalID",
+			ParticleVariable<int>::getTypeDescription() );
+
+  pModalIDLabel_preReloc = VarLabel::create("p.modalID+",
+			ParticleVariable<int>::getTypeDescription() );
+
   // for assigning particle ids
   pCellNACZIDLabel =
     VarLabel::create("cellNACZID", CCVariable<short int>::getTypeDescription());
@@ -842,6 +848,8 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(czIDLabel_preReloc);
   VarLabel::destroy(tracerIDLabel);
   VarLabel::destroy(tracerIDLabel_preReloc);
+  VarLabel::destroy(pModalIDLabel);
+  VarLabel::destroy(pModalIDLabel_preReloc);
   VarLabel::destroy(pPressureLabel);
   VarLabel::destroy(pScratchVecLabel);
   VarLabel::destroy(pScaleFactorLabel);

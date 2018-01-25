@@ -24,14 +24,13 @@
 
 #include <CCA/Components/MPM/Materials/Dissolution/CompositeDissolution.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
-#include <CCA/Components/MPM/Core/MPMFlags.h>
 
 using namespace std;
 using namespace Uintah;
 
 CompositeDissolution::CompositeDissolution(const ProcessorGroup* myworld,
-                                           MPMLabel* Mlb,MPMFlags* MFlag)
-  : Dissolution(myworld, Mlb, MFlag, 0)
+                                           MPMLabel* Mlb)
+  : Dissolution(myworld, Mlb, 0)
 {
 }
 

@@ -62,6 +62,9 @@ namespace Uintah {
     virtual void tracerProblemSetup(const ProblemSpecP& prob_spec,
                                     MPMFlags* flags);
 
+    virtual void dissolutionProblemSetup(const ProblemSpecP& prob_spec,
+                                         MPMFlags* flags);
+
   protected:
     MPMLabel* lb {nullptr};
    private:
