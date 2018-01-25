@@ -31,7 +31,7 @@ if (_particle_calculator_type == "coal"){
   delete _3Dpart_radprops;
 }
 #endif
-if (_particle_calculator_type=="tablulated")
+if (_particle_calculator_type=="tabulated")
  delete myTable;
 }
 
