@@ -5,10 +5,13 @@
 <Uintah_specification> 
 <!--Please use a consistent set of units, (mks, cgs,...)-->
 
-   <Meta>
+    <Meta>
        <title>Rayleigh Problem</title>
-   </Meta>
-   
+    </Meta>
+    
+    <SimulationComponent type="mpmice" />
+    
+    <Solver type = "hypre"/>
     <!--____________________________________________________________________-->
     <!-- The Rayliegh problem tests the viscous shear stress terms          -->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
@@ -17,7 +20,7 @@
        <maxTime>            2e-3       </maxTime>
        <initTime>           0.0        </initTime>
        <delt_min>           0.0        </delt_min>
-       <delt_max>           3e         </delt_max> <!-- delT at a resolution of 400 -->
+       <delt_max>           3e-3         </delt_max> <!-- delT at a resolution of 400 -->
        <delt_init>          1.0e-8     </delt_init>
        <max_delt_increase>  1.0        </max_delt_increase>
        <!--<max_Timesteps>      1          </max_Timesteps> -->
@@ -106,9 +109,6 @@
   
    </DataArchiver>
 
- <Debug>
-   </Debug>
-
     <!--____________________________________________________________________-->
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
@@ -123,23 +123,19 @@
         </TimeStepControl>
         
         <ImplicitSolver>
-           <max_outer_iterations>      20    </max_outer_iterations>
-           <outer_iteration_tolerance> 1e-6  </outer_iteration_tolerance>
-           <iters_before_timestep_restart> 5 </iters_before_timestep_restart>
+           <max_outer_iterations>      20       </max_outer_iterations>
+           <outer_iteration_tolerance> 1e-8     </outer_iteration_tolerance>
+           <iters_before_timestep_restart> 15   </iters_before_timestep_restart>           
            <Parameters variable="implicitPressure">
-            <!-- CGSolver options -->
-              <norm>     LInfinity  </norm>
-              <criteria> Absolute   </criteria>
-              <initial_tolerance> 1e-22 </initial_tolerance>
-            <!-- Hypre options -->
-            <solver>         cg      </solver>
-            <preconditioner> pfmg    </preconditioner>
-            <tolerance>      1.e-22  </tolerance>
-            <maxiterations>  7500    </maxiterations>
-            <npre>           1       </npre>
-            <npost>          1       </npost>
-            <skip>           0       </skip>
-            <jump>           0       </jump>
+             <tolerance>    1.e-10     </tolerance>
+             <solver>         cg      </solver>
+             <preconditioner> pfmg    </preconditioner>
+             <maxiterations>  500     </maxiterations>
+             <npre>           1       </npre>
+             <npost>          1       </npost>
+             <skip>           1       </skip>
+             <jump>           0       </jump>
+             <relax_type>     2       </relax_type>
            </Parameters>
         </ImplicitSolver>
     
@@ -216,10 +212,20 @@
           </geom_object>
         </material>
      </ICE>
+     
      <exchange_properties> 
-         <exchange_coefficients>
-              <momentum>               [1e15]         </momentum>
-              <heat>                   [1e15]         </heat>
+<!--
+        <Model type="slip">
+          <useSlipCoeffs>  false </useSlipCoeffs>
+          <solidMatlIndex>  0  </solidMatlIndex>
+          <fluidMatlIndex>  1  </fluidMatlIndex>
+          <momentum_accommodation_coeff>  0.1 </momentum_accommodation_coeff>
+          <thermal_accommodation_coeff>   0.1 </thermal_accommodation_coeff>
+        </Model>
+-->        
+        <exchange_coefficients>
+          <momentum>               [1e15]         </momentum>
+          <heat>                   [1e15]         </heat>
         </exchange_coefficients>
      </exchange_properties> 
         
