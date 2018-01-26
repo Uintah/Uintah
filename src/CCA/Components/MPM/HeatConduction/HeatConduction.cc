@@ -80,7 +80,7 @@ void HeatConduction::scheduleComputeInternalHeatRate(SchedulerP& sched,
   t->requires(Task::OldDW, d_lb->pTemperatureGradientLabel,       gan, NGP);
   t->requires(Task::OldDW, d_lb->pDeformationMeasureLabel,        gan, NGP);
   t->requires(Task::NewDW, d_lb->gMassLabel,                      gnone);
-  t->modifies(d_sharedState->get_delt_label(), getLevel(patches));
+  t->computes(d_sharedState->get_delt_label(), getLevel(patches));
   t->computes(d_lb->gdTdtLabel);
 
   sched->addTask(t, patches, matls);
@@ -166,12 +166,13 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
                                              DataWarehouse* old_dw,
                                              DataWarehouse* new_dw)
 {
+  double minTimestep = 1e+99;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    delt_vartype curr_delt;
-    new_dw->get(curr_delt, d_lb->delTLabel, patch->getLevel());
-    double minTimestep = curr_delt;
+//    delt_vartype curr_delt;
+//    new_dw->get(curr_delt, d_lb->delTLabel, patch->getLevel());
+//    double minTimestep = curr_delt;
     if (cout_doing.active())
       cout_doing <<"Doing computeInternalHeatRate on patch " << patch->getID()<<"\t\t MPM"<< endl;
     if (cout_heat.active())

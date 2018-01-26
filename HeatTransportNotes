@@ -1,0 +1,202 @@
+Heat related calls in Serial MPM:
+
+SerialMPM::SerialMPM
+L110:  thermalContactModel = nullptr
+L111:  heatConductionModel = nullptr
+
+SerialMPM::~SerialMPM
+L127:  delete thermalContactModel
+L128:  delete heatConductionModel
+
+SerialMPM::problemSetup
+L284:  thermalContactModel = ThermalContactFactory::create(restart_mat_ps, sharedState, lb, flags)
+L287:  heatConductionModel = scinew HeatConduction(sharedState, lb, flags);
+
+SerialMPM::outputProblemSpec
+L352:  thermalContactModel->outputProblemSpec(mpm_ps);
+
+SerialMPM::scheduleInitialize
+L400: t->computes(lb->pTemperatureLabel);
+L401: t->computes(lb->pTempPreviousLabel);
+L402: t->computes(lb->pdTdtLabel);
+l409: t->computes(lb->pTemperatureGradientLabel);
+
+SerialMPM::scheduleTimeAdvance
+L712-L717:
+  if(flags->d_doExplicitHeatConduction){
+    scheduleComputeHeatExchange(          sched, patches, matls);
+    scheduleComputeInternalHeatRate(      sched, patches, matls);
+    //scheduleComputeNodalHeatFlux(       sched, patches, matls);
+    scheduleSolveHeatEquations(           sched, patches, matls);
+    scheduleIntegrateTemperatureRate(     sched, patches, matls);
+
+SerialMPM::scheduleInterpolateParticlesToGrid
+L836:  t->requires(Task::OldDW, lb->pTemperatureGradientLabel, gan, NGP);
+L840:  t->requires(Task::OldDW, lb->pTemperatureLabel,         gan, NGP);
+L875:  t->computes(lb->gTemperaturelabel, d_sharedState->getAllInOneMatl(), Task::OutOfDomain);
+L891:  t->computes(lb->gTemperatureLabel);
+L892:  t->computes(lb->gTemperatureNoBCLabel);
+L893:  t->computes(lb->gTemperatureRateLabel);
+L894:  t->computes(lb->gExternalHeatRateLabel);
+
+SerialMPM::scheduleComputeHeatExchange
+L999-1004:
+  Task* t = scinew Task("ThermalContact::computeHeatExchange",
+                        thermalContactModel,
+                        &ThermalContact::computeHeatExchange);
+
+  thermalContactModel->addComputesAndRequires(t, patches, matls);
+  sched->addTask(t, patches, matls);
+
+SerialMPM::scheduleComputeStressTensor
+(Calculated p.dTdt from the constitutive model)
+
+SerialMPM::scheduleComputeInternalHeatRate
+L1202:  heatConductionModel->scheduleComputeInternalHeatRate(sched, patches, matls);
+
+SerialMPM::scheduleComputeNodalHeatFlux
+L1213:  heatConductionModel->scheduleComputeNodalHeatFlux(sched, patches, matls);
+
+SerialMPM::scheduleSolveHeatEquations
+L1224:  heatConductionModel->scheduleSolveHeatEquations(sched, patches, matls);
+
+SerialMPM::scheduleIntegrateTemperatureRate
+L1270:  heatConductionModel->scheduleIntegrateTemperatureRate(sched, patches, matls);
+
+SerialMPM::scheduleInterpolateToParticlesAndUpdate
+L1345:  t->requires(Task::NewDW, lb->gTemperatureRateLabel, gac, NGN);
+L1346:  if (flags->d_doExplicitHeatConduction) {
+L1347:    t->requires(Task::NewDW, lb->gTemperatureStarLabel, gac, NGN);
+L1349:    t->requires(Task::NewDW, lb->fcitionalWorkLabel,    gac, NGN);
+L1357:    t->requires(Task::OldDW, lb->pTemperatureLabel, gnone);
+L1379:    t->computes(lb->pTemperatureLabel_preReloc);
+L1380:    t->computes(lb->pTempPreviousLabel_preReloc);
+L1386:    t->computes(lb->pTemperatureGradientLabel_preReloc);
+L1425-L1426:
+  if(flags->d_reductionVars->thermalEnergy){
+    t->computes(lb->ThermalEnergyLabel);
+
+SerialMPM::scheduleFinalParticleUpdate
+L1480:    t->requires(Task::NewDW, lb->pdTdtLabel, none);
+L1484:    t->modifies(lb->pTemperatureLabel_preReloc);
+
+SerialMPM::scheduleAddParticles
+L1606:    t->modifies(lb->pTemperatureLabel_preReloc);
+L1607:    t->modifies(lb->pTemperatureGradientLabel_preReloc);
+L1608:    t->modifies(lb->pTempPreviousLabel_preReloc);
+
+SerialMPM::scheduleRefine
+L1696:    t->computes(lb->pTemperatureLabel);
+L1697:    t->computes(lb->pTempPreviousLabel);
+L1698:    t->computes(lb->pdTdtLabel);
+L1701:    t->computes(lb->pTemperatureGradientLabel);
+
+SerialMPM::interpolateParticleToGrid
+L2211:        new_dw->allocateAndPut(gtempglobal, lb->gTemperatureLabel,
+                           d_sharedState->getAllInOneMatl()->get(0), patch);
+L2227:        gtempglobal.initialize(0.0);
+L2254:          old_dw->get(pTemperature,   lb->pTemperatureLabel,   pset);
+L2261:            old_dw->get(pTempGrad,    lb->pTemperatureGradientLabel, pset);
+L2306:            old_dw->get(pTempGrad,    lb->pTemperatureGradientLabel, pset);
+L2307:          new_dw->allocateAndPut(gTemperatureNoBC, lb->gTemperatureNoBCLabel,
+                             dwi,patch);
+L2309:          new_dw->allocateAndPut(gTemperatureRate, lb->gTemperatureRateLabel,
+                             dwi,patch);
+L2313:          new_dw->allocateAndPut(gexternalheatrate,lb->gExternalHeatRateLabel,
+                             dwi,patch);
+L2321-L2324:
+                gTemperature.initialize(0);
+                gTemperatureNoBC.initialize(0);
+                gTemperatureRate.initialize(0);
+                gexternalheatrate.initialize(0);
+L2364:        double ptemp_ext = pTemperature[idx];
+L2365:        total_mom += pmom;
+L2379:                  ptemp_ext = pTemperature[idx] - Dot(pTempGrad[idx],distance);
+L2397:                gTemperature[node]   += ptemp_ext * pmass[idx] * S[k];
+L2488:            gtempglobal[c]    += gTemperature[c];
+L2489:            gTemperature[c]   /= gmass[c];
+L2491:            gTemperatureNoBC[c] = gTemperature[c];
+L2507:          bc.setBoundaryCondition(patch,dwi,"Temperature",gTemperature,interp_type);
+L2525:          gtempglobal[c] /= gmassglobal[c];
+
+SerialMPM::computeStressTensor
+pdTdt is set here for internal heating
+
+SerialMPM::interpolateToParticlesAndUpdate
+L3663:          old_dw->get(pTemperature, lb->pTemperatureLabel,               pset);
+L3677:          new_dw->allocateAndPut(pTempGrad,  lb->pTemperatureGradientLabel_preReloc,
+                                                                          pset);
+L3681:          new_dw->allocateAndPut(pTempPreNew,lb->pTempPreviousLabel_preReloc, pset);
+L3682:          new_dw->allocateAndPut(pTempNew,   lb->pTemperatureLabel_preReloc,  pset);
+L3741:          new_dw->get(gTemperatureRate,lb->gTemperatureRateLabel,dwi,patch,gac,NGP);
+L3742:          if (flags->d_doExplicitHeatConduction){
+                  new_dw->get(gTempStar,     lb->gTemperatureStarLabel,dwi,patch,gac,NGP);
+L3745:          new_dw->get(frictionTempRate,lb->frictionalWorkLabel,  dwi,patch,gac,NGP);
+L3781-L3797:  (Also L3889-L3904 due to XPIC2 wonkiness)
+          double fricTempRate = 0.0;
+          double tempRate = 0.0;
+          double burnFraction = 0.0;
+          double particleHeatFlux = 0.0;
+
+          // Accumulate the contribution from each surrounding vertex
+          for (int k = 0; k < numNodes; k++) {
+            IntVector node = ni[k];
+            vel      += gvelocity_star[node]  * S[k];
+            velSSPSSP+= gvelSPSSP[node]       * S[k];
+            acc      += gacceleration[node]   * S[k];
+
+            fricTempRate = frictionTempRate[node]*flags->d_addFrictionWork;
+            tempRate += (gTemperatureRate[node] + dTdt[node] +
+                         fricTempRate)   * S[k];
+            burnFraction += massBurnFrac[node]     * S[k];
+            particleHeatFlux += (gTemperatureRate[node] + fricTempRate) * S[k];
+L3816/3916:              pTempNew[idx]    = pTemperature[idx] + tempRate*delT;
+L3817/3917:              pTempPreNew[idx] = pTemperature[idx]; // for thermal stress
+L4010-L4014:
+          for (int k = 0; k < NN; k++){
+            for (int j = 0; j<3; j++) {
+              pTempGrad[idx][j] += gTempStar[ni[k]] * d_S[k][j]*oodx[j];
+            }
+          } // Loop over local node
+
+L4138-L4140:
+    if(flags->d_reductionVars->thermalEnergy){
+      new_dw->put(sum_vartype(thermal_energy), lb->ThermalEnergyLabel);
+    }
+
+SerialMPM::finalParticleUpdate
+L4186:          new_dw->get(pdTdt,        lb->pdTdtLabel,                      pset);
+L4190:          new_dw->getModifiable(pTempNew, lb->pTemperatureLabel_preReloc,pset);
+L4196:            pTempNew[idx] += pdTdt[idx]*delT;
+
+SerialMPM::AddParticles
+L4574:          new_dw->getModifiable(ptemp,    lb->pTemperatureLabel_preReloc,  pset);
+L4575:          new_dw->getModifiable(ptempgrad,lb->pTemperatureGradientLabel_preReloc,
+                                                                       pset);
+L4577:          new_dw->getModifiable(ptempP,   lb->pTempPreviousLabel_preReloc, pset);
+L4715:          new_dw->allocateTemporary(ptemptmp, pset);
+L4716:          new_dw->allocateTemporary(ptempgtmp,pset);
+L4717:          new_dw->allocateTemporary(ptempPtmp,pset);
+L4754:            ptemptmp[pp] = ptemp[pp];
+L4755:            ptempgtmp[pp]= ptempgrad[pp];
+L4756:            ptempPtmp[pp]= ptempP[pp];
+L4943:              ptemptmp[new_index]   = ptemp[idx];
+L4944:              ptempgtmp[new_index]  = ptempgrad[idx];
+L4945:              ptempPtmp[new_index]  = ptempP[idx];
+L5005:          new_dw->put(ptemptmp, lb->pTemperatureLabel_preReloc,          true);
+L5006:          new_dw->put(ptempgtmp,lb->pTemperatureGradientLabel_preReloc,  true);
+L5007:          new_dw->put(ptempPtmp,lb->pTempPreviousLabel_preReloc,         true);
+
+SerialMPM::Refine
+L5311:            new_dw->allocateAndPut(pTempGrad,      lb->pTemperatureGradientLabel,
+                                                                        pset);
+L5313:            new_dw->allocateAndPut(pTemperature,   lb->pTemperatureLabel,   pset);
+L5314:            new_dw->allocateAndPut(pTempPrev,      lb->pTempPreviousLabel,  pset);
+
+
+
+
+
+
+
+
