@@ -117,7 +117,7 @@ void StressRateDissolution::computeMassBurnFraction(const ProcessorGroup*,
         masterMatls[m]=false;
       }
 
-      if(mat->getModalID()==d_inContactWithModalID && !masterMatls[m]) {
+      if(mat->getModalID()==d_inContactWithModalID){
         inContactWithMatls[m]=true;
       } else{
         inContactWithMatls[m]=false;
@@ -131,9 +131,9 @@ void StressRateDissolution::computeMassBurnFraction(const ProcessorGroup*,
         IntVector c = *iter;
 
         double sumMass=0.0;
-        for(int m = 0; m < numMatls; m++){
-          if(m==md || inContactWithMatls[m]) {
-            sumMass+=gmass[m][c]; 
+        for(int n = 0; n < numMatls; n++){
+          if(n==md || inContactWithMatls[n]) {
+            sumMass+=gmass[n][c]; 
           }
         }
 
