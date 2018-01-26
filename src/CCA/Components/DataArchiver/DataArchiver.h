@@ -30,6 +30,7 @@
 
 #include <CCA/Components/Schedulers/RuntimeStatsEnum.h>
 
+#include <Core/Parallel/MasterLock.h>
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/MaterialSetP.h>
@@ -38,8 +39,6 @@
 #include <Core/Util/Assert.h>
 #include <Core/OS/Dir.h>
 #include <Core/Containers/ConsecutiveRangeSet.h>
-
-#include <mutex>
 
 namespace Uintah {
 
@@ -604,7 +603,7 @@ class LoadBalancer;
     std::vector<bool> m_checkpointCalled;
     bool m_checkpointReductionCalled {false};
 #endif
-    std::mutex m_outputLock;
+    Uintah::MasterLock m_outputLock;
 
     DataArchiver(const DataArchiver&);
     DataArchiver& operator=(const DataArchiver&);      

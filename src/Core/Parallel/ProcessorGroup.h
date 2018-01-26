@@ -83,7 +83,7 @@ public:
 
   MPI_Comm getGlobalComm( int comm_idx ) const
   {
-    if (comm_idx == -1 || m_threads < 1) {
+    if (comm_idx == -1 || m_threads <= 1) {
       return m_comm;
     } else {
       return m_global_comms[comm_idx];

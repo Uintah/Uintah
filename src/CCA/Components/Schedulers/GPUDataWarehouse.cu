@@ -33,6 +33,7 @@
 #include <Core/Grid/Variables/GPUGridVariable.h>
 #include <Core/Grid/Variables/GPUReductionVariable.h>
 #include <Core/Grid/Variables/GPUPerPatch.h>
+#include <Core/Parallel/MasterLock.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Util/DebugStream.h>
@@ -46,12 +47,11 @@
   #include <string>
 #endif
 
-#include <mutex>
 #include <map>
 
 extern DebugStream gpu_stats;
 
-extern std::mutex cerrLock;
+extern Uintah::MasterLock cerrLock;
 
 
 //______________________________________________________________________
@@ -1720,8 +1720,8 @@ GPUDataWarehouse::init(int id, std::string internalName)
   d_maxdVarDBItems = 0;
   //this->placementNewBuffer = placementNewBuffer;
 
-  allocateLock     = new std::mutex{};
-  varLock          = new std::mutex{};
+  allocateLock     = new Uintah::MasterLock{};
+  varLock          = new Uintah::MasterLock{};
   varPointers      = new std::map<labelPatchMatlLevel, allVarPointersInfo>;
   contiguousArrays = new std::map<std::string, contiguousArrayInfo>;
 

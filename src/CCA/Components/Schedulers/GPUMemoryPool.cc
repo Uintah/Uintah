@@ -26,9 +26,8 @@
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Components/Schedulers/UnifiedScheduler.h>
 #include <Core/Parallel/CrowdMonitor.hpp>
+#include <Core/Parallel/MasterLock.h>
 #include <Core/Util/DebugStream.h>
-
-#include <mutex>
 
 
 std::multimap<Uintah::GPUMemoryPool::gpuMemoryPoolDevicePtrItem, Uintah::GPUMemoryPool::gpuMemoryPoolDevicePtrValue>* Uintah::GPUMemoryPool::gpuMemoryPoolInUse =
@@ -40,12 +39,12 @@ std::multimap<Uintah::GPUMemoryPool::gpuMemoryPoolDeviceSizeItem, Uintah::GPUMem
 std::map <unsigned int, std::queue<cudaStream_t*> > * Uintah::GPUMemoryPool::s_idle_streams =
     new std::map <unsigned int, std::queue<cudaStream_t*> >;
 
-extern DebugStream gpu_stats;
-extern std::mutex  cerrLock;
+extern DebugStream        gpu_stats;
+extern Uintah::MasterLock cerrLock;
 
 namespace {
 
-std::mutex idle_streams_mutex{};
+Uintah::MasterLock idle_streams_mutex{};
 
 struct pool_tag{};
 using  pool_monitor = Uintah::CrowdMonitor<pool_tag>;

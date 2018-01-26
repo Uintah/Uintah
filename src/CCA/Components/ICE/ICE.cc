@@ -61,6 +61,7 @@
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Exceptions/InvalidValue.h>
+#include <Core/Parallel/MasterLock.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 
@@ -68,7 +69,6 @@
 #include <Core/Math/Expon.h>
 #include <Core/Util/DebugStream.h>
 
-#include <mutex>
 #include <vector>
 #include <sstream>
 #include <iostream>
@@ -77,7 +77,7 @@
 #include <sci_defs/hypre_defs.h>
 #include <sci_defs/visit_defs.h>
 
-extern std::mutex cerrLock;
+extern Uintah::MasterLock cerrLock;
 
 #ifdef HAVE_HYPRE
 #  include <CCA/Components/Solvers/HypreSolver.h>

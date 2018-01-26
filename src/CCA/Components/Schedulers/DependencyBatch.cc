@@ -23,9 +23,10 @@
  */
 
 #include <CCA/Components/Schedulers/DependencyBatch.h>
+
+#include <Core/Parallel/MasterLock.h>
 #include <Core/Util/DOUT.hpp>
 
-#include <mutex>
 #include <sstream>
 
 
@@ -36,7 +37,7 @@ namespace {
 
 Dout g_received_dbg( "DependencyBatch", false );
 
-std::mutex g_received_mutex{};
+Uintah::MasterLock g_received_mutex{};
 
 }
 

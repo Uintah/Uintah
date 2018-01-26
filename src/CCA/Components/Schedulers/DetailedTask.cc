@@ -33,6 +33,7 @@
 #endif
 
 #include <Core/Containers/ConsecutiveRangeSet.h>
+#include <Core/Parallel/MasterLock.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Util/DOUT.hpp>
@@ -40,7 +41,6 @@
 #include <sci_defs/config_defs.h>
 #include <sci_defs/cuda_defs.h>
 
-#include <mutex>
 #include <sstream>
 #include <string>
 
@@ -49,13 +49,13 @@ using namespace Uintah;
 
 
 // declared in DetailedTasks.h - used in both places to protect external ready queue (hence, extern here)
-extern std::mutex g_external_ready_mutex;
+extern Uintah::MasterLock g_external_ready_mutex;
 
 
 namespace {
 
-std::mutex g_internal_dependency_mutex{};
-std::mutex g_dtask_output_mutex{};
+Uintah::MasterLock g_internal_dependency_mutex{};
+Uintah::MasterLock g_dtask_output_mutex{};
 
 Dout scrubout(    "Scrubbing",     false);
 Dout internaldbg( "InternalDeps",  false);
@@ -408,7 +408,7 @@ DetailedTask::addInternalRequires( DependencyBatch * req )
 void
 DetailedTask::checkExternalDepCount()
 {
-  std::lock_guard<std::mutex> external_ready_guard(g_external_ready_mutex);
+  std::lock_guard<Uintah::MasterLock> external_ready_guard(g_external_ready_mutex);
 
   DOUT(externaldbg, "Rank-" << Parallel::getMPIRank() << " Task " << this->getTask()->getName() << " external deps: "
                           << externalDependencyCount_.load(std::memory_order_seq_cst)
@@ -494,7 +494,7 @@ DetailedTask::done( std::vector<OnDemandDataWarehouseP> & dws )
 void
 DetailedTask::dependencySatisfied( InternalDependency * dep )
 {
-  std::lock_guard<std::mutex> internal_dependency_guard(g_internal_dependency_mutex);
+  std::lock_guard<Uintah::MasterLock> internal_dependency_guard(g_internal_dependency_mutex);
 
   ASSERT(numPendingInternalDependencies > 0);
   unsigned long currentGeneration = d_taskGroup->getCurrentDependencyGeneration();

@@ -34,11 +34,11 @@
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Variables/PSPatchMatlGhost.h>
 #include <Core/Grid/Variables/VarLabelMatl.h>
+#include <Core/Parallel/MasterLock.h>
 #include <Core/Parallel/UintahMPI.h>
 
 #include <iosfwd>
 #include <map>
-#include <mutex>
 #include <vector>
 
 using Uintah::Max;
@@ -114,8 +114,8 @@ class OnDemandDataWarehouse : public DataWarehouse {
                         const Level*) const;
 
     virtual ReductionVariableBase* getReductionVariable( const VarLabel* label,
-							 int             matlIndex,
-							 const Level*    level ) const;
+                                                         int             matlIndex,
+                                                         const Level*    level ) const;
 
     void copyKeyDB(KeyDatabase<Patch>& varkeyDB,
                    KeyDatabase<Level>& levekeyDB);
@@ -431,7 +431,7 @@ class OnDemandDataWarehouse : public DataWarehouse {
      void emitPIDX(PIDXOutputContext&, 
                       const VarLabel* label, 
                       int matlIndex,
-		        const Patch* patch, 
+                      const Patch* patch, 
                       unsigned char *pidx_buffer,
                       size_t pidx_bufferSize);
 #endif

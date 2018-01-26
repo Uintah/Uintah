@@ -35,6 +35,7 @@
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Parallel/CommunicationList.hpp>
+#include <Core/Parallel/MasterLock.h>
 #include <Core/Util/DOUT.hpp>
 #include <Core/Util/Timers/Timers.hpp>
 
@@ -51,7 +52,6 @@
 #include <atomic>
 #include <cstring>
 #include <iomanip>
-#include <mutex>
 #include <thread>
 
 
@@ -74,9 +74,9 @@ namespace {
 Dout g_dbg(         "Unified_DBG"        , false);
 Dout g_queuelength( "Unified_QueueLength", false);
 
-std::mutex g_scheduler_mutex{};           // main scheduler lock for multi-threaded task selection
-std::mutex g_mark_task_consumed_mutex{};  // allow only one task at a time to enter the task consumed section
-std::mutex g_lb_mutex{};                  // load balancer lock
+Uintah::MasterLock g_scheduler_mutex{};           // main scheduler lock for multi-threaded task selection
+Uintah::MasterLock g_mark_task_consumed_mutex{};  // allow only one task at a time to enter the task consumed section
+Uintah::MasterLock g_lb_mutex{};                  // load balancer lock
 
 } // namespace
 
@@ -89,11 +89,11 @@ std::mutex g_lb_mutex{};                  // load balancer lock
 
   namespace {
 
-  std::mutex g_GridVarSuperPatch_mutex{};   // An ugly hack to get superpatches for host levels to work.
+  Uintah::MasterLock g_GridVarSuperPatch_mutex{};   // An ugly hack to get superpatches for host levels to work.
 
   }
 
-  extern std::mutex cerrLock;
+  extern Uintah::MasterLock cerrLock;
 
 #endif
 
@@ -560,7 +560,7 @@ UnifiedScheduler::runTask( DetailedTask*         dtask
         //add my task time to the total time
         mpi_info_[TotalTask] += total_task_time;
         if (!m_is_copy_data_timestep &&
-	    dtask->getTask()->getType() != Task::Output) {
+            dtask->getTask()->getType() != Task::Output) {
           //add contribution for patchlist
           m_loadBalancer->addContribution(dtask, total_task_time);
         }
@@ -807,7 +807,7 @@ UnifiedScheduler::markTaskConsumed( int          & numTasksDone
                                   , DetailedTask * dtask
                                   )
 {
-  std::lock_guard<std::mutex> task_consumed_guard(g_mark_task_consumed_mutex);
+  std::lock_guard<Uintah::MasterLock> task_consumed_guard(g_mark_task_consumed_mutex);
 
   // Update the count of tasks consumed by the scheduler.
   numTasksDone++;

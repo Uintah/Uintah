@@ -35,18 +35,23 @@
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Parallel/CommunicationList.hpp>
+#include <Core/Parallel/MasterLock.h>
 #include <Core/Util/DOUT.hpp>
 #include <Core/Util/Timers/Timers.hpp>
 
+#include <sci_defs/kokkos_defs.h>
+
+#ifdef UINTAH_ENABLE_KOKKOS
+  #include <Kokkos_Core.hpp>
+#endif //UINTAH_ENABLE_KOKKOS
+
+#include <atomic>
 #include <cstring>
 #include <iomanip>
-#include <mutex>
-
-
-#define USE_PACKING
 
 
 using namespace Uintah;
+
 
 //______________________________________________________________________
 //
@@ -55,7 +60,9 @@ namespace {
 Dout g_dbg(         "KokkosOMP_DBG"        , false);
 Dout g_queuelength( "KokkosOMP_QueueLength", false);
 
-std::mutex g_scheduler_mutex{};        // main scheduler lock for multi-threaded task selection
+Uintah::MasterLock g_scheduler_mutex{}; // main scheduler lock for multi-threaded task selection
+
+volatile int  g_num_tasks_done{0};
 
 }
 
@@ -72,19 +79,15 @@ KokkosOpenMPScheduler::KokkosOpenMPScheduler( const ProcessorGroup   * myworld
 
 //______________________________________________________________________
 //
-KokkosOpenMPScheduler::~KokkosOpenMPScheduler()
-{
-
-}
-
-
-//______________________________________________________________________
-//
 void
 KokkosOpenMPScheduler::problemSetup( const ProblemSpecP     & prob_spec
                                    , const SimulationStateP & state
                                    )
 {
+
+  m_num_partitions        = Uintah::Parallel::getNumPartitions();
+  m_threads_per_partition = Uintah::Parallel::getThreadsPerPartition();
+
   // Default taskReadyQueueAlg
   m_task_queue_alg = MostMessages;
   std::string taskQueueAlg = "MostMessages";
@@ -186,15 +189,13 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
 
   mpi_info_.reset( 0 );
 
-  m_num_tasks_done = 0;
-  m_abort = false;
-  m_abort_point = 987654;
+  g_num_tasks_done = 0;
 
   if( m_reloc_new_pos_label && m_dws[m_dwmap[Task::OldDW]] != nullptr ) {
     m_dws[m_dwmap[Task::OldDW]]->exchangeParticleQuantities(m_detailed_tasks, m_loadBalancer, m_reloc_new_pos_label, iteration);
   }
 
-  m_curr_iteration = iteration;
+  m_curr_iteration.store(iteration, std::memory_order_relaxed);
   m_curr_phase = 0;
   m_num_phases = tg->getNumTaskPhases();
   m_phase_tasks.clear();
@@ -223,10 +224,32 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
   static int totaltasks;
 
 
+//---------------------------------------------------------------------------
 
-  //---------------------------------------------------------------------------
-  this->runTasks();
-  //---------------------------------------------------------------------------
+#ifdef UINTAH_ENABLE_KOKKOS
+
+    auto task_worker = [&] ( int partition_id, int num_partitions ) {
+
+      // Each partition created executes this block of code
+      // A task_worker can run either a serial task, e.g. threads_per_partition == 1
+      //       or a Kokkos-based data parallel task, e.g. threads_per_partition > 1
+
+      this->runTasks();
+
+    }; //end task_worker
+
+    // Executes task_workers
+    Kokkos::OpenMP::partition_master( task_worker
+                                    , m_num_partitions
+                                    , m_threads_per_partition );
+
+#else // UINTAH_ENABLE_KOKKOS
+
+    this->runTasks();
+
+#endif // UINTAH_ENABLE_KOKKOS
+
+//---------------------------------------------------------------------------
 
 
   //---------------------------------------------------------------------------
@@ -299,15 +322,15 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
 //______________________________________________________________________
 //
 void
-KokkosOpenMPScheduler::markTaskConsumed( int          & numTasksDone
-                                       , int          & currphase
-                                       , int            numPhases
-                                       , DetailedTask * dtask
+KokkosOpenMPScheduler::markTaskConsumed( volatile int          * numTasksDone
+                                       ,          int          & currphase
+                                       ,          int            numPhases
+                                       ,          DetailedTask * dtask
                                        )
 {
 
   // Update the count of tasks consumed by the scheduler.
-  numTasksDone++;
+  (*numTasksDone)++;
 
   // Update the count of this phase consumed.
   m_phase_tasks_done[dtask->getTask()->m_phase]++;
@@ -324,7 +347,7 @@ KokkosOpenMPScheduler::markTaskConsumed( int          & numTasksDone
 void
 KokkosOpenMPScheduler::runTasks()
 {
-  while( m_num_tasks_done < m_num_tasks ) {
+  while( g_num_tasks_done < m_num_tasks ) {
 
     DetailedTask* readyTask = nullptr;
     DetailedTask* initTask  = nullptr;
@@ -334,8 +357,9 @@ KokkosOpenMPScheduler::runTasks()
     // ----------------------------------------------------------------------------------
     // Part 1 (serial): Task selection
     // ----------------------------------------------------------------------------------
-    g_scheduler_mutex.lock();
     {
+      std::lock_guard<Uintah::MasterLock> scheduler_mutex_guard(g_scheduler_mutex);
+
       while (!havework) {
         /*
          * (1.1)
@@ -346,7 +370,7 @@ KokkosOpenMPScheduler::runTasks()
         if ((m_phase_sync_task[m_curr_phase] != nullptr) && (m_phase_tasks_done[m_curr_phase] == m_phase_tasks[m_curr_phase] - 1)) {
           readyTask = m_phase_sync_task[m_curr_phase];
           havework = true;
-          markTaskConsumed(m_num_tasks_done, m_curr_phase, m_num_phases, readyTask);
+          markTaskConsumed(&g_num_tasks_done, m_curr_phase, m_num_phases, readyTask);
           break;
         }
 
@@ -362,7 +386,7 @@ KokkosOpenMPScheduler::runTasks()
           readyTask = m_detailed_tasks->getNextExternalReadyTask();
           if (readyTask != nullptr) {
             havework = true;
-            markTaskConsumed(m_num_tasks_done, m_curr_phase, m_num_phases, readyTask);
+            markTaskConsumed(&g_num_tasks_done, m_curr_phase, m_num_phases, readyTask);
             break;
           }
         }
@@ -394,6 +418,7 @@ KokkosOpenMPScheduler::runTasks()
             }
           }
         }
+
         /*
          * (1.4)
          *
@@ -405,12 +430,12 @@ KokkosOpenMPScheduler::runTasks()
             break;
           }
         }
-        if (m_num_tasks_done == m_num_tasks) {
+
+        if (g_num_tasks_done == m_num_tasks) {
           break;
         }
       }  // end while (!havework)
-    }
-    g_scheduler_mutex.unlock();
+    }  // end lock_guard
 
 
 
@@ -419,19 +444,19 @@ KokkosOpenMPScheduler::runTasks()
     // ----------------------------------------------------------------------------------
 
     if (initTask != nullptr) {
-      MPIScheduler::initiateTask(initTask, m_abort, m_abort_point, m_curr_iteration);
+      MPIScheduler::initiateTask(initTask, m_abort, m_abort_point, m_curr_iteration.load(std::memory_order_relaxed));
       initTask->markInitiated();
       initTask->checkExternalDepCount();
     }
     else if (readyTask) {
 
-      DOUT(g_dbg, " Task now external ready: " << *readyTask)
+      DOUT(g_dbg, " Task now external ready: " << *readyTask);
 
       if (readyTask->getTask()->getType() == Task::Reduction) {
         MPIScheduler::initiateReduction(readyTask);
       }
       else {
-        MPIScheduler::runTask(readyTask, m_curr_iteration);
+        MPIScheduler::runTask(readyTask, m_curr_iteration.load(std::memory_order_relaxed));
       }
     }
     else {
@@ -439,7 +464,7 @@ KokkosOpenMPScheduler::runTasks()
         MPIScheduler::processMPIRecvs(TEST);
       }
     }
-  }  //end while (numTasksDone < ntasks)
-  ASSERT(m_num_tasks_done == m_num_tasks);
+  }  // end while (numTasksDone < ntasks)
+  ASSERT(g_num_tasks_done == m_num_tasks);
 }
 

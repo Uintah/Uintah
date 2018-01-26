@@ -34,10 +34,11 @@
  *
  */
 
+#include <Core/Parallel/MasterLock.h>
+
 #include <sci_defs/malloc_defs.h>
 
 #include <cstdlib>
-#include <mutex>
 
 #include <stdio.h>
 
@@ -138,7 +139,7 @@ struct Allocator {
 
   bool dying;
 
-  std::mutex m_lock{};
+  Uintah::MasterLock m_lock{};
 
 };
 

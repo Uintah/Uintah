@@ -29,10 +29,16 @@
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/UintahMPI.h>
 
+#include <sci_defs/kokkos_defs.h>
+
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
 #include <thread>
+
+#ifdef _OPENMP
+  #include <omp.h>
+#endif
 
 using namespace Uintah;
 
@@ -46,6 +52,8 @@ using namespace Uintah;
 bool             Parallel::s_initialized             = false;
 bool             Parallel::s_using_device            = false;
 int              Parallel::s_num_threads             = -1;
+int              Parallel::s_num_partitions          = -1;
+int              Parallel::s_threads_per_partition   = -1;
 int              Parallel::s_world_rank              = -1;
 int              Parallel::s_world_size              = -1;
 std::thread::id  Parallel::s_main_thread_id          = std::this_thread::get_id();
@@ -115,6 +123,22 @@ Parallel::getNumThreads()
 
 //_____________________________________________________________________________
 //
+int
+Parallel::getNumPartitions()
+{
+  return s_num_partitions;
+}
+
+//_____________________________________________________________________________
+//
+int
+Parallel::getThreadsPerPartition()
+{
+  return s_threads_per_partition;
+}
+
+//_____________________________________________________________________________
+//
 std::thread::id
 Parallel::getMainThreadID()
 {
@@ -127,6 +151,22 @@ void
 Parallel::setNumThreads( int num )
 {
   s_num_threads = num;
+}
+
+//_____________________________________________________________________________
+//
+void
+Parallel::setNumPartitions( int num )
+{
+  s_num_partitions = num;
+}
+
+//_____________________________________________________________________________
+//
+void
+Parallel::setThreadsPerPartition( int num )
+{
+  s_threads_per_partition = num;
 }
 
 //_____________________________________________________________________________
@@ -152,10 +192,33 @@ Parallel::initializeManager( int& argc , char**& argv )
     // it only displays the usage to the root process.
   }
 
+#ifdef UINTAH_ENABLE_KOKKOS
+  if ( s_num_partitions <= 0 ) {
+    const char* num_cores = getenv("HPCBIND_NUM_CORES");
+    if ( num_cores != nullptr ) {
+      s_num_partitions = atoi(num_cores);
+    }
+    else {
+#ifdef _OPENMP
+      s_num_partitions = omp_get_max_threads();
+#else
+      s_num_partitions = 1;
+#endif
+    }
+  }
+  if ( s_threads_per_partition <= 0 ) {
+#ifdef _OPENMP
+    s_threads_per_partition = omp_get_max_threads() / getNumPartitions();
+#else
+    s_threads_per_partition = 1;
+#endif
+  }
+#endif // UINTAH_ENABLE_KOKKOS
+
 #ifdef THREADED_MPI_AVAILABLE
   int provided = -1;
   int required = MPI_THREAD_SINGLE;
-  if (s_num_threads > 0) {
+  if ( s_num_threads > 0 || s_num_partitions > 0 ) {
     required = MPI_THREAD_MULTIPLE;
   }
   else {
@@ -198,15 +261,34 @@ Parallel::initializeManager( int& argc , char**& argv )
   Uintah::AllocatorSetDefaultTagMalloc(oldtag);
   Uintah::AllocatorMallocStatsAppendNumber( s_world_rank );
 #endif
-  s_root_context = scinew ProcessorGroup(nullptr, Uintah::worldComm_, s_world_rank, s_world_size, s_num_threads);
+
+#ifdef UINTAH_ENABLE_KOKKOS
+    s_root_context = scinew ProcessorGroup(nullptr, Uintah::worldComm_, s_world_rank, s_world_size, s_num_partitions);
+#else
+    s_root_context = scinew ProcessorGroup(nullptr, Uintah::worldComm_, s_world_rank, s_world_size, s_num_threads);
+#endif
 
   if (s_root_context->myRank() == 0) {
     std::string plural = (s_root_context->nRanks() > 1) ? "processes" : "process";
     std::cout << "Parallel: " << s_root_context->nRanks() << " MPI " << plural << " (using MPI)\n";
+
 #ifdef THREADED_MPI_AVAILABLE
+
+#ifdef UINTAH_ENABLE_KOKKOS
+    if ( s_num_partitions > 0 ) {
+      std::string plural = (s_num_partitions > 1) ? "partitions" : "partition";
+      std::cout << "Parallel: " << s_num_partitions << " OMP thread " << plural << " per MPI process\n";
+    }
+    if ( s_threads_per_partition > 0 ) {
+      std::string plural = (s_threads_per_partition > 1) ? "threads" : "thread";
+      std::cout << "Parallel: " << s_threads_per_partition << " OMP " << plural << " per partition\n";
+    }
+#else
     if (s_num_threads > 0) {
       std::cout << "Parallel: " << s_num_threads << " threads per MPI process\n";
     }
+#endif
+
     std::cout << "Parallel: MPI Level Required: " << required << ", provided: " << provided << "\n";
 #endif
   }

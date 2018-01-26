@@ -34,9 +34,9 @@
 #include <CCA/Components/Arches/PropertyModels/HeatLoss.h>
 #include <CCA/Components/Arches/ChemMixV2/ClassicTableUtility.h>
 
-#include <sci_defs/kokkos_defs.h>
+#include <Core/Parallel/MasterLock.h>
 
-#include <mutex>
+#include <sci_defs/kokkos_defs.h>
 
 #define OLD_TABLE 1
 #undef OLD_TABLE
@@ -46,8 +46,8 @@ using namespace Uintah;
 
 namespace {
 
-std::mutex dependency_map_mutex{};
-std::mutex enthalpy_map_mutex{};
+Uintah::MasterLock dependency_map_mutex{};
+Uintah::MasterLock enthalpy_map_mutex{};
 
 }
 

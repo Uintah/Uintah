@@ -34,6 +34,7 @@
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Parallel/MasterLock.h>
 
 #include <sci_defs/uintah_defs.h>
 #include <sci_defs/cuda_defs.h>
@@ -48,11 +49,10 @@
 
 #include <cmath>
 #include <iostream>
-#include <mutex>
 #include <string>
 #include <vector>
 
-std::mutex rand_init_mutex{};
+Uintah::MasterLock rand_init_mutex{};
 
 namespace Uintah {
 
@@ -218,7 +218,7 @@ private:
                  DataWarehouse* new_dw,
                  bool modifies_divQ,
                  Task::WhichDW which_abskg_dw,
-                 Task::WhichDW whichd_sigmaT4_dw,
+                 Task::WhichDW which_sigmaT4_dw,
                  Task::WhichDW which_celltype_dw );
 
   //__________________________________
@@ -230,7 +230,7 @@ private:
                            DataWarehouse* new_dw,
                            bool modifies_divQ,
                            Task::WhichDW which_abskg_dw,
-                           Task::WhichDW whichd_sigmaT4_dw,
+                           Task::WhichDW which_sigmaT4_dw,
                            Task::WhichDW which_celltype_dw );
 
   //__________________________________
@@ -342,7 +342,7 @@ public:
   // Initialize once within host code (synchronizes streams on GPU)
   KokkosRandom( bool seedWithTime ) {
     {
-      std::lock_guard<std::mutex> rand_init_mutex_guard(rand_init_mutex);
+      std::lock_guard<Uintah::MasterLock> rand_init_mutex_guard(rand_init_mutex);
 
       if (!seeded) {
 

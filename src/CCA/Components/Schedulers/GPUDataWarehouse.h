@@ -33,9 +33,9 @@
 #include <Core/Grid/Variables/GPUReductionVariable.h>
 #include <Core/Grid/Variables/GridVariableBase.h>
 #include <Core/Grid/Variables/GPUPerPatch.h>
+#include <Core/Parallel/MasterLock.h>
 
 #include <map> //for host code only.
-#include <mutex>
 #include <string>
 #include <vector>
 #include <memory> //for the shared_ptr code
@@ -512,8 +512,8 @@ private:
   std::map<labelPatchMatlLevel, allVarPointersInfo> *varPointers;
 
 
-  std::mutex * allocateLock;
-  std::mutex * varLock;
+  Uintah::MasterLock * allocateLock;
+  Uintah::MasterLock * varLock;
 
   char _internalName[80];
 
