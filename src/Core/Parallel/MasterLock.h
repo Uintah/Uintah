@@ -28,7 +28,10 @@
 #include <sci_defs/kokkos_defs.h>
 
 #include <mutex>
-#include <omp.h>
+
+#ifdef _OPENMP
+  #include <omp.h>
+#endif
 
 namespace Uintah {
 
@@ -42,7 +45,7 @@ class MasterLock
 
   public:
 
-#ifdef UINTAH_ENABLE_KOKKOS
+#if defined(_OPENMP) && defined(UINTAH_ENABLE_KOKKOS)
 
     // per OMP standard, a flush region without a list is implied for omp_{set/unset}_lock
     void lock()   { omp_set_lock( &m_lock ); }
@@ -69,7 +72,7 @@ class MasterLock
     MasterLock( MasterLock && )                 = delete;
     MasterLock& operator=( MasterLock && )      = delete;
 
-#ifdef UINTAH_ENABLE_KOKKOS
+#if defined(_OPENMP) && defined(UINTAH_ENABLE_KOKKOS)
     omp_lock_t m_lock;
 #else
     std::mutex m_mutex;
