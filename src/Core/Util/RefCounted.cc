@@ -25,18 +25,19 @@
 #include <Core/Util/RefCounted.h>
 
 #include <Core/Malloc/Allocator.h>
+#include <Core/Parallel/MasterLock.h>
 #include <Core/Util/Assert.h>
 #include <Core/Util/FancyAssert.h>
 
 #include <atomic>
-#include <mutex>
 
 using namespace Uintah;
 
-static const int          NLOCKS      = 1024;
-static       bool         initialized = false;
-static       std::mutex * locks[NLOCKS];
-static       std::mutex   initlock{};
+static const int  NLOCKS      = 1024;
+static       bool initialized = false;
+
+static Uintah::MasterLock * locks[NLOCKS];
+static Uintah::MasterLock   initlock{};
 
 static std::atomic<long long> nextIndex{0};
 static std::atomic<long long> freeIndex{0};
@@ -49,7 +50,7 @@ RefCounted::RefCounted()
     initlock.lock();
     {
       for (int i = 0; i < NLOCKS; ++i) {
-        locks[i] = scinew std::mutex();
+        locks[i] = scinew Uintah::MasterLock();
       }
       initialized = true;
     }

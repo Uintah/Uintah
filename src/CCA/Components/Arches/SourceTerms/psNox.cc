@@ -501,7 +501,7 @@ psNox::computeSource( const ProcessorGroup* pc,
         double OH_m = 2.129e2  * std::pow(temperature(i,j,k),-0.57) * std::sqrt(O2_m) *  std::sqrt(H2O_m)   *  std::exp(-4595.0/temperature(i,j,k));     //unit: mol/m3
 
         //calculate thermal NOx source extended zeldovich mechanism
-        //double NO_S1  = 2.0*rate_f1*O_m*N2_m*(1.0-rate_r1*rate_r2*NO_m*NO_m/rate_f1/rate_f2/N2_m/O2_m)/(1.0+rate_r1*NO_m/(rate_f2*O2_m+rate_f3*OH_m))*_MW_NO;
+        //double NO_S1  = 2.0*rate_f1*O_m*N2_m*(1.0-rate_r1*rate_r2*NO_m*NO_m/rate_f1/rate_f2/N2_m/O2_m)/(1.0+rate_r1*NO_m/(rate_f2*O2_m+rate_f3*OH_m));
         double NO_thermal_rate_const=2.0*rate_f1*O_m*N2_m/(1.0+rate_r1*NO_m/(rate_f2*O2_m+rate_f3*OH_m)); // mol of NO / m^3 / s
         double NO_S1_prod  = rate_f1*rate_f2*N2_m*O2_m*NO_thermal_rate_const;
         double NO_S1_cons  = rate_r1*rate_r2*NO_m*NO_m*NO_thermal_rate_const;

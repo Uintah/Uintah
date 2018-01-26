@@ -83,7 +83,6 @@ NIGHTLYTESTS = [
    ("methane_RCCE"                      , "methane_RCCE.ups"                                        , 1   , "All"   , ["exactComparison"])   , 
    ("channel_WD_CO"                     , "channel_WD_CO.ups"                                       , 1   , "All"   , ["exactComparison"])   , 
    ("DOM16"                             , "DOM16.ups"                                               , 3   , "All"   , ["exactComparison"     , "no_restart"]) , 
-   ("DO_RadProps"                       , "DO_RadProps.ups"                                         , 3   , "All"   , ["exactComparison"     , "no_cuda"   ])   ,   # 11/1/16 bug in radProps with cuda
    ("CQMOM_1x1"                         , "CQMOM_regression/CQMOM_1x1.ups"                          , 1   , "All"   , ["exactComparison"     , "no_restart"]) , 
    ("CQMOM_scalar_transport"            , "CQMOM_regression/CQMOM_Transport.ups"                    , 6   , "All"   , ["exactComparison"     , "no_restart"]) , 
    ("CQMOM_scalar_transport2x2x2"       , "CQMOM_regression/CQMOM_Transport_2x2x2.ups"              , 6   , "All"   , ["exactComparison"     , "no_restart"]) , 
@@ -112,6 +111,25 @@ NIGHTLYTESTS = [
    ("kokkos-x-scalar"                   , "kokkos_solver_tests/kokkos-x-scalar.ups"                 , 1   , "All"   , ["exactComparison"]), 
    ("kokkos-y-scalar"                   , "kokkos_solver_tests/kokkos-y-scalar.ups"                 , 1   , "All"   , ["exactComparison"]), 
    ("kokkos-z-scalar"                   , "kokkos_solver_tests/kokkos-z-scalar.ups"                 , 1   , "All"   , ["exactComparison"]), 
+   ("almgren-mms_conv"                  , "kokkos_solver_tests/Verification/mom/almgren-mms_conv.ups"                            , 1   , "All"   , ["exactComparison"]), 
+   ("almgren-mms_diff"                  , "kokkos_solver_tests/Verification/mom/almgren-mms_diff.ups"                            , 1   , "All"   , ["exactComparison"]), 
+   ("almgren-mmsBC"                     , "kokkos_solver_tests/Verification/mom/almgren-mmsBC.ups"                               , 1   , "All"   , ["exactComparison"]), 
+   ("kokkos-x-scalar_mms_diff"          , "kokkos_solver_tests/Verification/scalars/kokkos-x-scalar_mms_diff.ups"                , 1   , "All"   , ["exactComparison"]), 
+   ("kokkos-x-scalar_mms"               , "kokkos_solver_tests/Verification/scalars/kokkos-x-scalar_mms.ups"                     , 1   , "All"   , ["exactComparison"]), 
+   ("kokkos-x-scalar_mms_RK1"           , "kokkos_solver_tests/Verification/scalars/kokkos-x-scalar_mms_RK1.ups"                 , 1   , "All"   , ["exactComparison"]), 
+   ("kokkos-x-scalar_mms_RK2"           , "kokkos_solver_tests/Verification/scalars/kokkos-x-scalar_mms_RK2.ups"                 , 8   , "All"   , ["exactComparison"]), 
+   ("kokkos-x-scalar_mms_RK3"           , "kokkos_solver_tests/Verification/scalars/kokkos-x-scalar_mms_RK3.ups"                 , 8   , "All"   , ["exactComparison"]), 
+   ("kokkos-xy-scalar"                  , "kokkos_solver_tests/Verification/scalars/2D/kokkos-xy-scalar.ups"                     , 1   , "All"   , ["exactComparison"]), 
+   ("kokkos-xy-scalar-MMSBC"            , "kokkos_solver_tests/Verification/scalars/2D/kokkos-xy-scalar-MMSBC.ups"               , 1   , "All"   , ["exactComparison"]), 
+   # This test was having diffs on restart. It needs to be fixed:    
+   ("kokkos-xy-scalar-handoff"          , "kokkos_solver_tests/Verification/scalars/2D/kokkos-xy-scalar-handoff.ups"             , 1   , "All"   , ["exactComparison", "no_restart"]), 
+   ("problem3_Shunn_mms-x"              , "kokkos_solver_tests/Verification/variableDensity/problem3_Shunn_mms-x.ups"            , 4   , "All"   , ["exactComparison"]), 
+   ("isotropic_kokkos_wale"             , "kokkos_solver_tests/Verification/periodicTurb/isotropic_kokkos_wale.ups"              , 1   , "All"   , ["exactComparison", "no_restart"]), 
+   ("isotropic_kokkos_dynSmag_packed"   , "kokkos_solver_tests/Verification/periodicTurb/isotropic_kokkos_dynSmag_packed.ups"    , 8   , "All"   , ["exactComparison", "no_restart"]), 
+   ("isotropic_kokkos_dynSmag_unpacked" , "kokkos_solver_tests/Verification/periodicTurb/isotropic_kokkos_dynSmag_unpacked.ups"  , 8   , "All"   , ["exactComparison", "no_restart"]), 
+   ("char_modelps"                       , "kokkos_solver_tests/Verification/particleModels/char_modelps.ups"                    , 8   , "All"   , ["exactComparison"]), 
+   ("dqmom_example_char"                 , "kokkos_solver_tests/Verification/particleModels/dqmom_example_char.ups"              , 8   , "All"   , ["exactComparison", "no_restart"]), 
+   ("dqmom_example"                      , "kokkos_solver_tests/dqmom_example.ups"                                               , 1   , "All"   , ["exactComparison", "no_restart"]), 
 #__________________________________
 # THESE TESTS FAIL TO RUN TO COMPLETION ON A CUDA ENABLED BUILD   "corrupted double-linked list: 0x00000000024b8120 ***"
    ("coal_channel_hi_vel"               , "Coal/coal_channel_hi_vel.ups"                            , 1   , "All"   , ["exactComparison"     , "no_cuda"]) , 
@@ -172,7 +190,6 @@ LOCALTESTS = [
    ("scalar_var_2eqn"                   , "scalar_variance_2eqn.ups"                                , 4   , "All"  , ["exactComparison"   , "no_restart"]) , 
    ("coal_channel_FOWY"                 , "Coal/coal_channel_FOWY.ups"                              , 1   , "All"  , ["exactComparison"   , "no_restart"]) , 
    ("DOM16"                             , "DOM16.ups"                                               , 3   , "All"  , ["exactComparison"   , "no_restart"]) , 
-   ("DO_RadProps"                       , "DO_RadProps.ups"                                         , 3   , "All"  , ["exactComparison"]) , 
    ("CQMOM_1x1"                         , "CQMOM_regression/CQMOM_1x1.ups"                          , 1   , "All"  , ["exactComparison"   , "no_restart"]) , 
    ("CQMOM_scalar_transport"            , "CQMOM_regression/CQMOM_Transport.ups"                    , 6   , "All"  , ["exactComparison"   , "no_restart"]) , 
    ("CQMOM_scalar_transport2x2x2"       , "CQMOM_regression/CQMOM_Transport_2x2x2.ups"              , 6   , "All"  , ["exactComparison"   , "no_restart"]) , 
@@ -196,6 +213,24 @@ LOCALTESTS = [
    ("kokkos-x-scalar"                   , "kokkos_solver_tests/kokkos-x-scalar.ups"                 , 1   , "All"  , ["exactComparison"]), 
    ("kokkos-y-scalar"                   , "kokkos_solver_tests/kokkos-y-scalar.ups"                 , 1   , "All"  , ["exactComparison"]), 
    ("kokkos-z-scalar"                   , "kokkos_solver_tests/kokkos-z-scalar.ups"                 , 1   , "All"  , ["exactComparison"]), 
+   ("almgren-mms_conv"                  , "kokkos_solver_tests/Verification/mom/almgren-mms_conv.ups"                            , 1   , "All"   , ["exactComparison"]), 
+   ("almgren-mms_diff"                  , "kokkos_solver_tests/Verification/mom/almgren-mms_diff.ups"                            , 1   , "All"   , ["exactComparison"]), 
+   ("almgren-mmsBC"                     , "kokkos_solver_tests/Verification/mom/almgren-mmsBC.ups"                               , 1   , "All"   , ["exactComparison"]), 
+   ("kokkos-x-scalar_mms_diff"          , "kokkos_solver_tests/Verification/scalars/kokkos-x-scalar_mms_diff.ups"                , 1   , "All"   , ["exactComparison"]), 
+   ("kokkos-x-scalar_mms"               , "kokkos_solver_tests/Verification/scalars/kokkos-x-scalar_mms.ups"                     , 1   , "All"   , ["exactComparison"]), 
+   ("kokkos-x-scalar_mms_RK1"           , "kokkos_solver_tests/Verification/scalars/kokkos-x-scalar_mms_RK1.ups"                 , 1   , "All"   , ["exactComparison"]), 
+   ("kokkos-x-scalar_mms_RK2"           , "kokkos_solver_tests/Verification/scalars/kokkos-x-scalar_mms_RK2.ups"                 , 8   , "All"   , ["exactComparison"]), 
+   ("kokkos-x-scalar_mms_RK3"           , "kokkos_solver_tests/Verification/scalars/kokkos-x-scalar_mms_RK3.ups"                 , 8   , "All"   , ["exactComparison"]), 
+   ("kokkos-xy-scalar"                  , "kokkos_solver_tests/Verification/scalars/2D/kokkos-xy-scalar.ups"                     , 1   , "All"   , ["exactComparison"]), 
+   ("kokkos-xy-scalar-MMSBC"            , "kokkos_solver_tests/Verification/scalars/2D/kokkos-xy-scalar-MMSBC.ups"               , 1   , "All"   , ["exactComparison"]), 
+   ("kokkos-xy-scalar-handoff"          , "kokkos_solver_tests/Verification/scalars/2D/kokkos-xy-scalar-handoff.ups"             , 1   , "All"   , ["exactComparison"]), 
+   ("problem3_Shunn_mms-x"              , "kokkos_solver_tests/Verification/variableDensity/problem3_Shunn_mms-x.ups"            , 4   , "All"   , ["exactComparison"]), 
+   ("isotropic_kokkos_wale"             , "kokkos_solver_tests/Verification/periodicTurb/isotropic_kokkos_wale.ups"              , 1   , "All"   , ["exactComparison", "no_restart"]), 
+   ("isotropic_kokkos_dynSmag_packed"   , "kokkos_solver_tests/Verification/periodicTurb/isotropic_kokkos_dynSmag_packed.ups"    , 8   , "All"   , ["exactComparison", "no_restart"]), 
+   ("isotropic_kokkos_dynSmag_unpacked" , "kokkos_solver_tests/Verification/periodicTurb/isotropic_kokkos_dynSmag_unpacked.ups"  , 8   , "All"   , ["exactComparison", "no_restart"]), 
+   ("char_modelps"                       , "kokkos_solver_tests/Verification/particleModels/char_modelps.ups"                    , 8   , "All"   , ["exactComparison"]), 
+   ("dqmom_example_char"                 , "kokkos_solver_tests/Verification/particleModels/dqmom_example_char.ups"              , 8   , "All"   , ["exactComparison", "no_restart"]), 
+   ("dqmom_example"                      , "kokkos_solver_tests/dqmom_example.ups"                                               , 1   , "All"   , ["exactComparison", "no_restart"]), 
 #__________________________________
 # THESE TESTS FAIL TO RUN TO COMPLETION ON A CUDA ENABLED BUILD, "corrupted double-linked list: 0x00000000024b8120 ***"
    ("coal_RadPropsPlanck"               , "Coal/coal_RadPropsPlanck.ups"                            , 1   , "All"  , ["exactComparison"   , "no_cuda"]) ,
@@ -214,7 +249,6 @@ LOCALTESTS = [
 ]
 
 DEBUG = [
-   ("DO_RadProps"                       , "DO_RadProps.ups"                                         , 3 , "Linux" , ["exactComparison"])   , 
 ]
 
 SCALARTESTS = [
@@ -349,7 +383,6 @@ NORMCRT = [
    ("coal_RadPropsPlanck"               , "Coal/coal_RadPropsPlanck.ups"                            , 1   , "All"  , ["exactComparison"]), 
    ("pcoal_drag"                        , "Coal/pcoal_drag.ups"                                     , 1   , "All"  , ["exactComparison"]) , 
    ("DOM16"                             , "DOM16.ups"                                               , 3   , "All"  , ["exactComparison"   , "no_restart"]) , 
-   ("DO_RadProps"                       , "DO_RadProps.ups"                                         , 3   , "All"  , ["exactComparison"]) , 
    ("CQMOM_1x1"                         , "CQMOM_regression/CQMOM_1x1.ups"                          , 1   , "All"  , ["exactComparison"   , "no_restart"]) , 
    ("CQMOM_scalar_transport"            , "CQMOM_regression/CQMOM_Transport.ups"                    , 6   , "All"  , ["exactComparison"   , "no_restart"]) , 
    ("CQMOM_scalar_transport2x2x2"       , "CQMOM_regression/CQMOM_Transport_2x2x2.ups"              , 6   , "All"  , ["exactComparison"   , "no_restart"]) , 

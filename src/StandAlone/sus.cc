@@ -65,6 +65,7 @@
 
 #include <Core/Exceptions/Exception.h>
 #include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Parallel/MasterLock.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Util/Environment.h>
 #include <Core/Util/FileUtils.h>
@@ -76,6 +77,10 @@
 #include <sci_defs/visit_defs.h>
 
 #include <svn_info.h>
+
+#ifdef _OPENMP
+  #include <omp.h>
+#endif
 
 #ifdef HAVE_VISIT
 #  include <VisIt/libsim/visit_libsim.h>
@@ -92,7 +97,6 @@
 #include <cstdio>
 #include <iomanip>
 #include <iostream>
-#include <mutex>
 #include <string>
 #include <vector>
 #include <stdexcept>
@@ -102,7 +106,7 @@ using namespace Uintah;
 
 namespace {
 
-std::mutex cerr_mutex{};
+Uintah::MasterLock cerr_mutex{};
 
 Dout g_stack_debug(       "ExceptionStack" , true );
 Dout g_wait_for_debugger( "WaitForDebugger", false );
@@ -243,7 +247,9 @@ main( int argc, char *argv[], char *env[] )
 
   int    restartTimestep     = -1;
   int    udaSuffix           = -1;
-  int    numThreads          = 0;
+  int    numThreads          =  0;
+  int    numPartitions       =  0;
+  int    threadsPerPartition =  0;
 
   std::string udaDir;       // for restart
   std::string filename;     // name of the UDA directory
@@ -278,6 +284,35 @@ main( int argc, char *argv[], char *env[] )
                "or increase MAX_THREADS (.../src/Core/Parallel/Parallel.h) and recompile.", arg, argv[0] );
       }
       Uintah::Parallel::setNumThreads( numThreads );
+    }
+    else if (arg == "-npartitions") {
+      if (++i == argc) {
+        usage("You must provide a number of thread partitions for -npartitions", arg, argv[0]);
+      }
+      numPartitions = atoi(argv[i]);
+      if( numPartitions < 1 ) {
+        usage("Number of thread partitions is too small", arg, argv[0]);
+      }
+      else if( numPartitions > MAX_THREADS ) {
+        usage( "Number of thread partitions is out of range. Specify fewer thread partitions, "
+               "or increase MAX_THREADS (.../src/Core/Parallel/Parallel.h) and recompile.", arg, argv[0] );
+      }
+      Uintah::Parallel::setNumPartitions( numPartitions );
+    }
+    else if (arg == "-nthreadsperpartition") {
+      if (++i == argc) {
+        usage("You must provide a number of threads per partition for -nthreadsperpartition", arg, argv[0]);
+      }
+      threadsPerPartition = atoi(argv[i]);
+      if( threadsPerPartition < 1 ) {
+        usage("Number of threads per partition is too small", arg, argv[0]);
+      }
+#ifdef _OPENMP
+      if( threadsPerPartition > omp_get_max_threads() ) {
+        usage("Number of threads per partition must be <= omp_get_max_threads()", arg, argv[0]);
+      }
+#endif
+      Uintah::Parallel::setThreadsPerPartition(threadsPerPartition);
     }
     else if (arg == "-solver") {
       if (++i == argc) {
@@ -383,7 +418,7 @@ main( int argc, char *argv[], char *env[] )
         usage("You must provide file name for -visit", arg, argv[0]);
       }
       else if( do_VisIt == VISIT_SIMMODE_UNKNOWN )
-	do_VisIt = VISIT_SIMMODE_RUNNING;
+        do_VisIt = VISIT_SIMMODE_RUNNING;
     }
     else if (arg == "-visit_connect" ) {
       do_VisIt = VISIT_SIMMODE_STOPPED;
@@ -393,35 +428,35 @@ main( int argc, char *argv[], char *env[] )
         usage("You must provide a string for -visit_comment", arg, argv[0]);
       }
       else if( do_VisIt == VISIT_SIMMODE_UNKNOWN )
-	do_VisIt = VISIT_SIMMODE_RUNNING;
+        do_VisIt = VISIT_SIMMODE_RUNNING;
     }
     else if (arg == "-visit_dir" ) {
       if (++i == argc) {
         usage("You must provide a directory for -visit_dir", arg, argv[0]);
       }
       else if( do_VisIt == VISIT_SIMMODE_UNKNOWN )
-	do_VisIt = VISIT_SIMMODE_RUNNING;
+        do_VisIt = VISIT_SIMMODE_RUNNING;
     }
     else if (arg == "-visit_option" ) {
       if (++i == argc) {
         usage("You must provide a string for -visit_option", arg, argv[0]);
       }
       else if( do_VisIt == VISIT_SIMMODE_UNKNOWN )
-	do_VisIt = VISIT_SIMMODE_RUNNING;
+        do_VisIt = VISIT_SIMMODE_RUNNING;
     }
     else if (arg == "-visit_trace" ) {
       if (++i == argc) {
         usage("You must provide a file name for -visit_trace", arg, argv[0]);
       }
       else if( do_VisIt == VISIT_SIMMODE_UNKNOWN )
-	do_VisIt = VISIT_SIMMODE_RUNNING;
+        do_VisIt = VISIT_SIMMODE_RUNNING;
     }
     else if (arg == "-visit_ui" ) {
       if (++i == argc) {
         usage("You must provide a file name for -visit_ui", arg, argv[0]);
       }
       else if( do_VisIt == VISIT_SIMMODE_UNKNOWN )
-	do_VisIt = VISIT_SIMMODE_RUNNING;
+        do_VisIt = VISIT_SIMMODE_RUNNING;
     }
 #endif
     else {
@@ -599,44 +634,44 @@ main( int argc, char *argv[], char *env[] )
       {
         std::string arg = argv[i];
 
-	if (arg == "-visit_comment" ) {
-	  have_comment = true;
-	  break;
-	}
+        if (arg == "-visit_comment" ) {
+          have_comment = true;
+          break;
+        }
       }
 
       // No user defined comment so use the ups simulation meta data
       // title.
       if( !have_comment )
       {
-	// Find the meta data and the title. 
-	std::string title;
-	
-	if( ups->findBlock( "Meta" ) )
-	  ups->findBlock( "Meta" )->get( "title", title );
-	
-	if( title.size() )
-	{
-	  // Have the title so pass that into the libsim 
-	  char **new_argv = (char **) malloc((argc + 2) * sizeof(*new_argv));
-	  
-	  if (new_argv != nullptr)
-	  {
-	    memmove(new_argv, argv, sizeof(*new_argv) * argc);
-	    
-	    argv = new_argv;
-	    
-	    argv[argc] =
-	      (char*) malloc( (strlen("-visit_comment")+1) * sizeof(char) );
-	    strcpy( argv[argc], "-visit_comment" );
-	    ++argc;
-	    
-	    argv[argc] =
-	      (char*) malloc( (title.size()+1) * sizeof(char) );
-	    strcpy( argv[argc], title.c_str() );
-	    ++argc;
-	  }
-	}
+        // Find the meta data and the title.
+        std::string title;
+
+        if( ups->findBlock( "Meta" ) )
+          ups->findBlock( "Meta" )->get( "title", title );
+
+        if( title.size() )
+        {
+          // Have the title so pass that into the libsim 
+          char **new_argv = (char **) malloc((argc + 2) * sizeof(*new_argv));
+
+          if (new_argv != nullptr)
+          {
+            memmove(new_argv, argv, sizeof(*new_argv) * argc);
+
+            argv = new_argv;
+
+            argv[argc] =
+              (char*) malloc( (strlen("-visit_comment")+1) * sizeof(char) );
+            strcpy( argv[argc], "-visit_comment" );
+            ++argc;
+
+            argv[argc] =
+              (char*) malloc( (title.size()+1) * sizeof(char) );
+            strcpy( argv[argc], title.c_str() );
+            ++argc;
+          }
+        }
       }
 
       visit_LibSimArguments( argc, argv );      
@@ -744,7 +779,7 @@ main( int argc, char *argv[], char *env[] )
       if (regridder) {
         regridder->attachPort("scheduler", scheduler);
         regridder->attachPort("load balancer", loadBalancer);
-	regridder->attachPort( "application", application );
+        regridder->attachPort( "application", application );
 
         simController->attachPort("regridder", regridder);
         appComp->attachPort("regridder", regridder);
@@ -807,12 +842,12 @@ main( int argc, char *argv[], char *env[] )
   
   catch (ProblemSetupException& e) {
     // Don't show a stack trace in the case of ProblemSetupException.
-    std::lock_guard<std::mutex> cerr_guard(cerr_mutex);
+    std::lock_guard<Uintah::MasterLock> cerr_guard(cerr_mutex);
     std::cerr << "\n\n(Proc: " << Uintah::Parallel::getMPIRank() << ") Caught: " << e.message() << "\n\n";
     thrownException = true;
   }
   catch (Exception& e) {
-    std::lock_guard<std::mutex> cerr_guard(cerr_mutex);
+    std::lock_guard<Uintah::MasterLock> cerr_guard(cerr_mutex);
     std::cerr << "\n\n(Proc " << Uintah::Parallel::getMPIRank() << ") Caught exception: " << e.message() << "\n\n";
     if(e.stackTrace()) {
       DOUT(g_stack_debug, "Stack trace: " << e.stackTrace());
@@ -820,32 +855,32 @@ main( int argc, char *argv[], char *env[] )
     thrownException = true;
   }
   catch (std::bad_alloc& e) {
-    std::lock_guard<std::mutex> cerr_guard(cerr_mutex);
+    std::lock_guard<Uintah::MasterLock> cerr_guard(cerr_mutex);
     std::cerr << Uintah::Parallel::getMPIRank() << " Caught std exception 'bad_alloc': " << e.what() << '\n';
     thrownException = true;
   }
   catch (std::bad_exception& e) {
-    std::lock_guard<std::mutex> cerr_guard(cerr_mutex);
+    std::lock_guard<Uintah::MasterLock> cerr_guard(cerr_mutex);
     std::cerr << Uintah::Parallel::getMPIRank() << " Caught std exception: 'bad_exception'" << e.what() << '\n';
     thrownException = true;
   }
   catch (std::ios_base::failure& e) {
-    std::lock_guard<std::mutex> cerr_guard(cerr_mutex);
+    std::lock_guard<Uintah::MasterLock> cerr_guard(cerr_mutex);
     std::cerr << Uintah::Parallel::getMPIRank() << " Caught std exception 'ios_base::failure': " << e.what() << '\n';
     thrownException = true;
   }
   catch (std::runtime_error& e) {
-    std::lock_guard<std::mutex> cerr_guard(cerr_mutex);
+    std::lock_guard<Uintah::MasterLock> cerr_guard(cerr_mutex);
     std::cerr << Uintah::Parallel::getMPIRank() << " Caught std exception 'runtime_error': " << e.what() << '\n';
     thrownException = true;
   }
   catch (std::exception& e) {
-    std::lock_guard<std::mutex> cerr_guard(cerr_mutex);
+    std::lock_guard<Uintah::MasterLock> cerr_guard(cerr_mutex);
     std::cerr << Uintah::Parallel::getMPIRank() << " Caught std exception: " << e.what() << '\n';
     thrownException = true;
   }
   catch(...) {
-    std::lock_guard<std::mutex> cerr_guard(cerr_mutex);
+    std::lock_guard<Uintah::MasterLock> cerr_guard(cerr_mutex);
     std::cerr << Uintah::Parallel::getMPIRank() << " Caught unknown exception\n";
     thrownException = true;
   }

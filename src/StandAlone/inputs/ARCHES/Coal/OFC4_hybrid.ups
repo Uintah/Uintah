@@ -1390,13 +1390,12 @@
           </calculator>
         </model>
         <model type="partRadProperties" label="abskp">
-          <subModel>constantCIF</subModel>
+          <subModel>tabulated</subModel>
+          <TablePath>inputs/ARCHES/ClassicMixingTables/radprops/part.mix.gz</TablePath>
           <part_temp_label>temperature_coal</part_temp_label>
           <part_size_label>length</part_size_label>
           <radiateAtGasTemp>false</radiateAtGasTemp>
           <model_type>planck</model_type>
-          <complex_ir_real>2.0</complex_ir_real>
-          <complex_ir_imag>-0.6</complex_ir_imag>
           <const_asymmFact>1</const_asymmFact>
         </model>
       </PropertyModelsV2>
@@ -1453,7 +1452,6 @@
         <!-- A1[1/s], A2[1/s], E1[K], E2[K], Y1[volatile fraction from prox analysis], Y2[fraction devolatilzed at higher temperatures], c0_1-c5_1, c0_2-c5_2 -->
         <FOWYDevol>
           <v_hiT>6.641e-01</v_hiT>
-          <Tig>590</Tig>
           <A>19724227.36</A>
           <Ta>1.113e4</Ta>
           <Tbp_graphite>3e3</Tbp_graphite>

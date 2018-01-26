@@ -41,6 +41,11 @@ ifeq ($(BUILD_ARCHES),yes)
   ARCHES   := $(SRCDIR)/Arches
 endif
 
+# EXAMPLES
+ifeq ($(BUILD_EXAMPLES),yes)
+  EXAMPLES :=$(SRCDIR)/Examples
+endif
+
 # FVM
 ifeq ($(BUILD_FVM),yes)
   FVM :=$(SRCDIR)/FVM
@@ -88,6 +93,7 @@ endif
 
 SUBDIRS := \
         $(ARCHES)                      \
+        $(EXAMPLES)                    \
         $(FVM)                         \
         $(HEAT)                        \
         $(ICE)                         \
@@ -95,21 +101,31 @@ SUBDIRS := \
         $(MPMARCHES)                   \
         $(MPMFVM)                      \
         $(MPMICE)                      \
+        $(PARENT)                      \
         $(PHASEFIELD)                  \
-        $(WASATCH)                     \
+        $(WASATCH)
+
+ifeq ($(BUILD_MINIMAL),yes)
+  SUBDIRS += \
+        $(SRCDIR)/DataArchiver         \
+        $(SRCDIR)/LoadBalancers        \
+        $(SRCDIR)/ProblemSpecification \
+        $(SRCDIR)/Schedulers
+else
+  SUBDIRS += \
         $(SRCDIR)/Application          \
         $(SRCDIR)/DataArchiver         \
-        $(SRCDIR)/Examples             \
         $(SRCDIR)/LoadBalancers        \
         $(SRCDIR)/Models               \
         $(SRCDIR)/OnTheFlyAnalysis     \
         $(SRCDIR)/Parent               \
+	$(SRCDIR)/PostProcessUda       \
         $(SRCDIR)/ProblemSpecification \
-        $(SRCDIR)/PostProcessUda       \
         $(SRCDIR)/Regridder            \
         $(SRCDIR)/Schedulers           \
         $(SRCDIR)/SimulationController \
         $(SRCDIR)/Solvers              \
-        $(SRCDIR)/SwitchingCriteria    
+        $(SRCDIR)/SwitchingCriteria
+endif
 
 include $(SCIRUN_SCRIPTS)/recurse.mk

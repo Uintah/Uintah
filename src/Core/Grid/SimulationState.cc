@@ -75,9 +75,55 @@ SimulationState::~SimulationState()
     delete old_matls[i];
   }
 
+  if (all_matls && all_matls->removeReference()){
+    delete all_matls;
+  }
+
   if(orig_all_matls && orig_all_matls->removeReference()){
     delete orig_all_matls;
   }
+  if (allInOneMatl && allInOneMatl->removeReference()){
+    delete allInOneMatl;
+  }
+
+  // Arches Matls
+#ifndef NO_ARCHES
+  if (all_arches_matls && all_arches_matls->removeReference()){
+    delete all_arches_matls;
+  }
+#endif
+
+  // FVM Matls
+#ifndef NO_FVM
+  if (all_fvm_matls && all_fvm_matls->removeReference()){
+    delete all_fvm_matls;
+  }
+#endif
+
+  // ICE Matls
+#ifndef NO_ICE
+  if (all_ice_matls && all_ice_matls->removeReference()){
+    delete all_ice_matls;
+  }
+#endif
+
+#ifndef NO_MPM
+  // Cohesive Zone
+  if (all_cz_matls && all_cz_matls->removeReference()){
+    delete all_cz_matls;
+  }
+  // MPM
+  if (all_mpm_matls && all_mpm_matls->removeReference()){
+    delete all_mpm_matls;
+  }
+#endif
+
+  // Wasatch Matls
+#ifndef NO_WASATCH
+  if (all_wasatch_matls && all_wasatch_matls->removeReference()){
+    delete all_wasatch_matls;
+  }
+#endif
 }
 //__________________________________
 //
@@ -311,12 +357,14 @@ void SimulationState::finalizeMaterials()
   }
   all_matls->addAll(tmp_matls);
 
+  // Original All Matls
   if (orig_all_matls == 0) {
     orig_all_matls = scinew MaterialSet();
     orig_all_matls->addReference();
     orig_all_matls->addAll(tmp_matls);
   }
 
+  // All In One Matls
   if (allInOneMatl && allInOneMatl->removeReference()){
     delete allInOneMatl;
   }

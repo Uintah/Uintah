@@ -38,9 +38,8 @@
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Parallel/CrowdMonitor.hpp>
+#include <Core/Parallel/MasterLock.h>
 #include <Core/Util/DOUT.hpp>
-
-#include <mutex>
 
 using namespace Uintah;
 
@@ -51,7 +50,7 @@ namespace {
 struct intrustion_map_tag{};
 using  intrusion_map_monitor = Uintah::CrowdMonitor<intrustion_map_tag>;
 
-std::mutex intrusion_print_mutex{};
+Uintah::MasterLock intrusion_print_mutex{};
 
 }
 
@@ -186,11 +185,13 @@ IntrusionBC::problemSetup( const ProblemSpecP& params, const int ilvl )
         if ( vel_type == "flat" ){
 
           intrusion.type = IntrusionBC::INLET;
+          intrusion.velocity_inlet_type = IntrusionBC::FLAT;
           intrusion.velocity_inlet_generator = scinew FlatVelProf();
 
         } else if ( vel_type == "from_file" ){
 
           intrusion.type = IntrusionBC::INLET;
+          intrusion.velocity_inlet_type = IntrusionBC::HANDOFF;
           intrusion.velocity_inlet_generator = scinew InputFileVelocity();
 
         } else if ( vel_type == "massflow" ){
@@ -1064,7 +1065,7 @@ IntrusionBC::printIntrusionInformation( const ProcessorGroup*,
                                         DataWarehouse* new_dw )
 {
   // RAII-style approach to acquiring output mutex for this entire scoped block.
-  std::lock_guard<std::mutex> print_lock(intrusion_print_mutex);
+  std::lock_guard<Uintah::MasterLock> print_lock(intrusion_print_mutex);
 
   for (int p = 0; p < patches->size(); p++) {
 
@@ -1337,7 +1338,7 @@ IntrusionBC::addScalarRHS( const Patch* patch,
 //_________________________________________
 void
 IntrusionBC::setDensity( const Patch* patch,
-                         CCVariable<double>& density, 
+                         CCVariable<double>& density,
                          constCCVariable<double>& old_density )
 {
   const int p = patch->getID();

@@ -27,10 +27,13 @@
 #include <CCA/Components/OnTheFlyAnalysis/lineExtract.h>
 #include <CCA/Components/OnTheFlyAnalysis/momentumAnalysis.h>
 #include <CCA/Components/OnTheFlyAnalysis/planeExtract.h>
-#include <CCA/Components/OnTheFlyAnalysis/radiometer.h>
 #include <CCA/Components/OnTheFlyAnalysis/statistics.h>
 
 #include <sci_defs/uintah_defs.h>
+
+#if !defined( NO_ARCHES ) && !defined( NO_WASATCH ) && !defined( NO_EXAMPLES )
+#  include <CCA/Components/OnTheFlyAnalysis/radiometer.h>
+#endif
 
 #if !defined( NO_ICE )
 # include <CCA/Components/OnTheFlyAnalysis/containerExtract.h>
@@ -102,9 +105,13 @@ AnalysisModuleFactory::create(const ProcessorGroup* myworld,
       else if ( module == "minMax" ) {
         modules.push_back( scinew MinMax(              myworld, sharedState, module_ps ) );
       }
+
+#if !defined( NO_ARCHES ) && !defined( NO_WASATCH ) && !defined( NO_EXAMPLES )
       else if ( module == "radiometer" ) {
         modules.push_back( scinew OnTheFly_radiometer( myworld, sharedState, module_ps ) );
       }
+#endif
+
 #if !defined( NO_ICE )
       else if ( module == "containerExtract" ) {
         modules.push_back( scinew containerExtract(    myworld, sharedState, module_ps ) );

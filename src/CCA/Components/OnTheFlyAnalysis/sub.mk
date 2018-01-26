@@ -41,7 +41,6 @@ SRCS += \
         $(SRCDIR)/MinMax.cc                \
         $(SRCDIR)/momentumAnalysis.cc      \
         $(SRCDIR)/planeExtract.cc          \
-        $(SRCDIR)/radiometer.cc            \
         $(SRCDIR)/statistics.cc
 
 PSELIBS := \
@@ -81,6 +80,14 @@ endif
 ifeq ($(BUILD_MPM)$(BUILD_ICE),yesyes)
   SRCS += \
         $(SRCDIR)/1stLawThermo.cc
+endif
+
+# Radiation analysis modules
+ifeq ($(BUILD_MODELS_RADIATION),yes)
+  SRCS += \
+        $(SRCDIR)/radiometer.cc
+
+  PSELIBS += CCA/Components/Models
 endif
 
 LIBS := $(XML_LIBRARY) $(MPI_LIBRARY)

@@ -74,7 +74,7 @@
 #include <Core/Util/DebugStream.h>
 #include <CCA/Components/MPM/Solver/PetscSolver.h>
 #include <CCA/Components/MPM/Solver/SimpleSolver.h>
-#include <CCA/Components/Regridder/PerPatchVars.h>
+#include <Core/Grid/Variables/PerPatchVars.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Math/FastMatrix.h>
 #include <set>

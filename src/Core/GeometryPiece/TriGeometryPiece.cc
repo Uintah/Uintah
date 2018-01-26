@@ -58,6 +58,7 @@ TriGeometryPiece::TriGeometryPiece(ProblemSpecP &ps)
 
   // cout << "Triangulated surfaces read: \t" <<d_tri.size() <<endl;
 
+  // The Tri class sits inside of UniformGrid.h
   list<Tri> tri_list;
   Tri tri;
 
