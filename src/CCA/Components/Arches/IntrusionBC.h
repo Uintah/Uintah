@@ -22,7 +22,6 @@
 #include <CCA/Components/Arches/HandoffHelper.h>
 #include <Core/Grid/Patch.h>
 
-
 //============================================
 
 /**

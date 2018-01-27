@@ -226,6 +226,7 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
 
   static int totaltasks;
 
+
 //---------------------------------------------------------------------------
 
   while ( g_num_tasks_done < m_num_tasks ) {
@@ -236,7 +237,7 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
 
       // Each partition created executes this block of code
       // A task_worker can run either a serial task, e.g. threads_per_partition == 1
-      //   or a Kokkos-based data parallel task, e.g. threads_per_partition > 1
+      //       or a Kokkos-based data parallel task, e.g. threads_per_partition > 1
 
       this->runTasks();
 
@@ -247,11 +248,11 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
                                     , m_num_partitions
                                     , m_threads_per_partition );
 
-#else //UINTAH_ENABLE_KOKKOS
+#else // UINTAH_ENABLE_KOKKOS
 
     this->runTasks();
 
-#endif //UINTAH_ENABLE_KOKKOS
+#endif // UINTAH_ENABLE_KOKKOS
 
     if ( g_have_hypre_task ) {
       DOUT(g_dbg, " Exited runTasks to run a " << g_HypreTask->getTask()->getType() << " task" );
@@ -340,6 +341,7 @@ KokkosOpenMPScheduler::markTaskConsumed( volatile int          * numTasksDone
                                        ,          DetailedTask * dtask
                                        )
 {
+
   // Update the count of tasks consumed by the scheduler.
   (*numTasksDone)++;
 
@@ -493,7 +495,7 @@ KokkosOpenMPScheduler::runTasks()
         MPIScheduler::processMPIRecvs(TEST);
       }
     }
-  }  //end while (numTasksDone < ntasks)
+  }  // end while (numTasksDone < ntasks)
   ASSERT(g_num_tasks_done == m_num_tasks);
 }
 

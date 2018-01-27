@@ -600,7 +600,7 @@ void RuntimeStats::report( MPI_Comm comm )
       }
 
       const std::string & group_name = group.first.name() +
-	(group.first.active() ? ":+" : ":-");
+                                       (group.first.active() ? ":+" : ":-");
       
       printf("\n--------------------------------------------------------------------------------\n");
       printf("%s\n", group_name.c_str() );

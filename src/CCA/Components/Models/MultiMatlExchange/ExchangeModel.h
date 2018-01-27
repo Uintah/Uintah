@@ -52,6 +52,16 @@ namespace Uintah {
     virtual void problemSetup(const ProblemSpecP & prob_spec ) = 0;
     
     virtual void outputProblemSpec(ProblemSpecP & prob_spec ) = 0;
+  
+    virtual void sched_PreExchangeTasks(SchedulerP           & sched,
+                                        const PatchSet       * patches,     
+                                        const MaterialSubset * iceMatls,    
+                                        const MaterialSet    * allMatls) = 0;
+                                        
+    virtual void addExchangeModelRequires ( Task* t,
+                                            const MaterialSubset * zeroMatls,
+                                            const MaterialSubset * iceMatls,
+                                            const MaterialSubset * mpmMatls) = 0;
 
     virtual void sched_AddExch_VelFC(SchedulerP           & sched,
                                      const PatchSet       * patches,

@@ -548,10 +548,10 @@ void
 DWDatabase<DomainType>::put( const VarLabel   * label
                            ,       int          matlIndex
                            , const DomainType * dom
-				                   ,       Variable   * var
-				                   ,       bool         init
-				                   ,       bool         replace
-				                   )
+                           ,       Variable   * var
+                           ,       bool         init
+                           ,       bool         replace
+                           )
 {
 
   ASSERT(matlIndex >= -1);

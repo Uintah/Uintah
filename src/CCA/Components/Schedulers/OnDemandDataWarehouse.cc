@@ -425,14 +425,14 @@ OnDemandDataWarehouse::exists( const VarLabel* label ) const
 //
 ReductionVariableBase*
 OnDemandDataWarehouse::getReductionVariable( const VarLabel* label,
-					     int             matlIndex,
-					     const Level*    level ) const
+                                             int             matlIndex,
+                                             const Level*    level ) const
 {  
   if( d_levelDB.exists( label, matlIndex, level ) ) {
     ReductionVariableBase* var =
       dynamic_cast<ReductionVariableBase*>( d_levelDB.get( label,
-							   matlIndex,
-							   level ) );
+                                                           matlIndex,
+                                                           level ) );
     return var;
   }
   else

@@ -40,7 +40,6 @@
 #include <Core/OS/Dir.h>
 #include <Core/Containers/ConsecutiveRangeSet.h>
 
-
 namespace Uintah {
 
 class DataWarehouse;

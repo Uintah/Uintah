@@ -301,15 +301,15 @@ main( int argc, char *argv[], char *env[] )
     }
     else if (arg == "-nthreadsperpartition") {
       if (++i == argc) {
-        usage("You must provide a number of thread partitions for -nthreadsperpartition", arg, argv[0]);
+        usage("You must provide a number of threads per partition for -nthreadsperpartition", arg, argv[0]);
       }
       threadsPerPartition = atoi(argv[i]);
       if( threadsPerPartition < 1 ) {
-        usage("Number of threads per partition must be > 0", arg, argv[0]);
+        usage("Number of threads per partition is too small", arg, argv[0]);
       }
 #ifdef _OPENMP
       if( threadsPerPartition > omp_get_max_threads() ) {
-        usage("Number of threads per partition must be < omp_get_max_threads()", arg, argv[0]);
+        usage("Number of threads per partition must be <= omp_get_max_threads()", arg, argv[0]);
       }
 #endif
       Uintah::Parallel::setThreadsPerPartition(threadsPerPartition);
@@ -418,7 +418,7 @@ main( int argc, char *argv[], char *env[] )
         usage("You must provide file name for -visit", arg, argv[0]);
       }
       else if( do_VisIt == VISIT_SIMMODE_UNKNOWN )
-	do_VisIt = VISIT_SIMMODE_RUNNING;
+        do_VisIt = VISIT_SIMMODE_RUNNING;
     }
     else if (arg == "-visit_connect" ) {
       do_VisIt = VISIT_SIMMODE_STOPPED;
@@ -428,35 +428,35 @@ main( int argc, char *argv[], char *env[] )
         usage("You must provide a string for -visit_comment", arg, argv[0]);
       }
       else if( do_VisIt == VISIT_SIMMODE_UNKNOWN )
-	do_VisIt = VISIT_SIMMODE_RUNNING;
+        do_VisIt = VISIT_SIMMODE_RUNNING;
     }
     else if (arg == "-visit_dir" ) {
       if (++i == argc) {
         usage("You must provide a directory for -visit_dir", arg, argv[0]);
       }
       else if( do_VisIt == VISIT_SIMMODE_UNKNOWN )
-	do_VisIt = VISIT_SIMMODE_RUNNING;
+        do_VisIt = VISIT_SIMMODE_RUNNING;
     }
     else if (arg == "-visit_option" ) {
       if (++i == argc) {
         usage("You must provide a string for -visit_option", arg, argv[0]);
       }
       else if( do_VisIt == VISIT_SIMMODE_UNKNOWN )
-	do_VisIt = VISIT_SIMMODE_RUNNING;
+        do_VisIt = VISIT_SIMMODE_RUNNING;
     }
     else if (arg == "-visit_trace" ) {
       if (++i == argc) {
         usage("You must provide a file name for -visit_trace", arg, argv[0]);
       }
       else if( do_VisIt == VISIT_SIMMODE_UNKNOWN )
-	do_VisIt = VISIT_SIMMODE_RUNNING;
+        do_VisIt = VISIT_SIMMODE_RUNNING;
     }
     else if (arg == "-visit_ui" ) {
       if (++i == argc) {
         usage("You must provide a file name for -visit_ui", arg, argv[0]);
       }
       else if( do_VisIt == VISIT_SIMMODE_UNKNOWN )
-	do_VisIt = VISIT_SIMMODE_RUNNING;
+        do_VisIt = VISIT_SIMMODE_RUNNING;
     }
 #endif
     else {
@@ -634,44 +634,44 @@ main( int argc, char *argv[], char *env[] )
       {
         std::string arg = argv[i];
 
-	if (arg == "-visit_comment" ) {
-	  have_comment = true;
-	  break;
-	}
+        if (arg == "-visit_comment" ) {
+          have_comment = true;
+          break;
+        }
       }
 
       // No user defined comment so use the ups simulation meta data
       // title.
       if( !have_comment )
       {
-	// Find the meta data and the title. 
-	std::string title;
-	
-	if( ups->findBlock( "Meta" ) )
-	  ups->findBlock( "Meta" )->get( "title", title );
-	
-	if( title.size() )
-	{
-	  // Have the title so pass that into the libsim 
-	  char **new_argv = (char **) malloc((argc + 2) * sizeof(*new_argv));
-	  
-	  if (new_argv != nullptr)
-	  {
-	    memmove(new_argv, argv, sizeof(*new_argv) * argc);
-	    
-	    argv = new_argv;
-	    
-	    argv[argc] =
-	      (char*) malloc( (strlen("-visit_comment")+1) * sizeof(char) );
-	    strcpy( argv[argc], "-visit_comment" );
-	    ++argc;
-	    
-	    argv[argc] =
-	      (char*) malloc( (title.size()+1) * sizeof(char) );
-	    strcpy( argv[argc], title.c_str() );
-	    ++argc;
-	  }
-	}
+        // Find the meta data and the title.
+        std::string title;
+
+        if( ups->findBlock( "Meta" ) )
+          ups->findBlock( "Meta" )->get( "title", title );
+
+        if( title.size() )
+        {
+          // Have the title so pass that into the libsim 
+          char **new_argv = (char **) malloc((argc + 2) * sizeof(*new_argv));
+
+          if (new_argv != nullptr)
+          {
+            memmove(new_argv, argv, sizeof(*new_argv) * argc);
+
+            argv = new_argv;
+
+            argv[argc] =
+              (char*) malloc( (strlen("-visit_comment")+1) * sizeof(char) );
+            strcpy( argv[argc], "-visit_comment" );
+            ++argc;
+
+            argv[argc] =
+              (char*) malloc( (title.size()+1) * sizeof(char) );
+            strcpy( argv[argc], title.c_str() );
+            ++argc;
+          }
+        }
       }
 
       visit_LibSimArguments( argc, argv );      
@@ -779,7 +779,7 @@ main( int argc, char *argv[], char *env[] )
       if (regridder) {
         regridder->attachPort("scheduler", scheduler);
         regridder->attachPort("load balancer", loadBalancer);
-	regridder->attachPort( "application", application );
+        regridder->attachPort( "application", application );
 
         simController->attachPort("regridder", regridder);
         appComp->attachPort("regridder", regridder);

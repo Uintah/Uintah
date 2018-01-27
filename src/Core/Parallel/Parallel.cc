@@ -193,9 +193,9 @@ Parallel::initializeManager( int& argc , char**& argv )
   }
 
 #ifdef UINTAH_ENABLE_KOKKOS
-  if (s_num_partitions <= 0) {
+  if ( s_num_partitions <= 0 ) {
     const char* num_cores = getenv("HPCBIND_NUM_CORES");
-    if (num_cores != nullptr) {
+    if ( num_cores != nullptr ) {
       s_num_partitions = atoi(num_cores);
     }
     else {
@@ -206,14 +206,14 @@ Parallel::initializeManager( int& argc , char**& argv )
 #endif
     }
   }
-  if (s_threads_per_partition <= 0) {
+  if ( s_threads_per_partition <= 0 ) {
 #ifdef _OPENMP
     s_threads_per_partition = omp_get_max_threads() / getNumPartitions();
 #else
     s_threads_per_partition = 1;
 #endif
   }
-#endif
+#endif // UINTAH_ENABLE_KOKKOS
 
 #ifdef THREADED_MPI_AVAILABLE
   int provided = -1;

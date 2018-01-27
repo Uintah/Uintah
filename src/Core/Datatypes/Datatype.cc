@@ -35,8 +35,8 @@
  */
 
 #include <Core/Datatypes/Datatype.h>
-#include <Core/Util/Assert.h>
 #include <Core/Parallel/MasterLock.h>
+#include <Core/Util/Assert.h>
 
 #include <atomic>
 

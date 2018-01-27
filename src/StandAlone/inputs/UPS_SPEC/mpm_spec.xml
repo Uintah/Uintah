@@ -200,7 +200,6 @@
         <geom_object                     spec="MULTIPLE" />
         <is_rigid                        spec="OPTIONAL BOOLEAN" />
         <C_p                             spec="OPTIONAL DOUBLE" />
-        <includeFlowWork                 spec="OPTIONAL BOOLEAN"/>
         <melt_temp                       spec="OPTIONAL DOUBLE" /> <!--295.0 -->
         <room_temp                       spec="OPTIONAL DOUBLE" /> <!--294.0 -->
 

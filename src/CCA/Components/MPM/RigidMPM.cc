@@ -69,7 +69,7 @@ static DebugStream cout_doing("RIGID_MPM", false);
 extern Uintah::MasterLock cerrLock;
 
 RigidMPM::RigidMPM(const ProcessorGroup* myworld,
-		   const SimulationStateP sharedState) :
+                   const SimulationStateP sharedState) :
   SerialMPM(myworld, sharedState)
 {
 }

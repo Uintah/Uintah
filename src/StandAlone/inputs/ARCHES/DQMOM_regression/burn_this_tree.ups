@@ -17,7 +17,7 @@
   </Time>
   <DataArchiver>
     <filebase>birth_test.uda</filebase>
-    <outputTimestepInterval>5</outputTimestepInterval>
+    <outputTimestepInterval>1</outputTimestepInterval>
     <save label="pressurePS"/>
     <save label="CCVelocity"/>
     <save label="uVelocitySPBC"/>
@@ -32,8 +32,8 @@
     <save label="length_qn1"/>
     <save label="length_0"/>
     <save label="length_1"/>
-    <save label="mass_qn0"/>
-    <save label="mass_qn1"/>
+    <save label="raw_coal_qn0"/>
+    <save label="raw_coal_qn1"/>
     <save label="ux_0"/>
     <save label="uy_0"/>
     <save label="uz_0"/>
@@ -82,12 +82,19 @@
           <variable label="uy" role="vvel"/>
           <variable label="uz" role="wvel"/>
           <variable label="rho_part" role="density"/>
+          <variable label="raw_coal" role="raw_coal"/>
+          <variable label="char" role="char"/>
+          <variable label="temperature_part" role="temperature"/>
         </ParticleVariables>
       </EulerianParticles>
       <ParticleModels>
         <model label="rho_part" type="constant">
           <grid dependent_type="CC" independent_type="CC"/>
           <constant>[1.,1.]</constant>
+        </model>
+        <model label="temperature_part" type="constant">
+          <grid dependent_type="CC" independent_type="CC"/>
+          <constant>[500.,500.]</constant>
         </model>
       </ParticleModels>
       <!-- EXTRA SCALARS -->
@@ -97,12 +104,10 @@
           <doDiff>true</doDiff>
           <doConv>true</doConv>
           <conv_scheme>upwind</conv_scheme>
-          <initialization type="step">
-            <step_direction>x</step_direction>
-            <step_value>1.0</step_value>
-            <step_start>0</step_start>
-            <step_end>.5</step_end>
+          <initialization type="constant">
+            <constant>0.0</constant>
           </initialization>
+          <src label="eta_source"/>
         </Eqn>
         <Eqn label="scalar_1" type="CCscalar">
           <!-- non-diffusive scalar -->
@@ -116,6 +121,11 @@
             <step_end>.5</step_end>
           </initialization>
         </Eqn>
+        <Sources>
+          <src label="eta_source" type="coal_gas_devol">
+            <devol_model_name>devol</devol_model_name>
+          </src>
+        </Sources>
       </TransportEqns>
       <!-- DQMOM -->
       <DQMOM type="weightedAbs">
@@ -157,6 +167,7 @@
           <model label="zdragforce" type="Drag">
             <direction>z</direction>
           </model>
+          <model label="devol" type="FOWYDevol"/>
         </Models>
         <!-- Weights test the uniform constant initialization mechanism -->
         <Weights>
@@ -214,7 +225,33 @@
             </geom_object>
           </initialization>
         </Ic>
-        <Ic label="mass">
+        <Ic label="raw_coal">
+          <!-- l [=] m -->
+          <doDiff>false</doDiff>
+          <doConv>true</doConv>
+          <conv_scheme>super_bee</conv_scheme>
+          <nominal_values>[1, 0.5]</nominal_values>
+          <scaling_const>[1,1]</scaling_const>
+          <initialization type="geometry_fill">
+            <constant_inside>1.</constant_inside>
+            <constant_outside>1e-15</constant_outside>
+            <geom_object>
+              <union>
+                <box>
+                  <min>[.45,.0,.0]</min>
+                  <max>[.55,.5,1]</max>
+                </box>
+                <cylinder>
+                  <bottom>[ .5, 0.5, -1]</bottom>
+                  <top>   [ .5, 0.5,  1]</top>
+                  <radius>0.2</radius>
+                </cylinder>
+              </union>
+            </geom_object>
+          </initialization>
+          <model label="devol"/>
+        </Ic>
+        <Ic label="char">
           <!-- l [=] m -->
           <doDiff>false</doDiff>
           <doConv>true</doConv>
@@ -288,10 +325,61 @@
       <Turbulence model="none"/>
       <Properties>
         <table label="a_user_generated_label" type="constant">
-          <temperature>298.0</temperature>
+          <temperature>800.0</temperature>
           <density>1.0</density>
         </table>
       </Properties>
+      <ParticleProperties type="coal">
+        <diameter_distribution>[15e-6,50e-6,150e-6]</diameter_distribution>
+        <!-- [m] -->
+        <!--particle_weights>[0.574,0.263,0.163]</particle_weights-->
+        <!-- [mass fractions of each particle size] -->
+        <density>1300.0</density>
+        <!-- [kg/m^3] -->
+        <temperature>300.0</temperature>
+        <!-- initial particle temperature [K] -->
+        <ultimate_analysis>
+          <C>0.6674982537</C>
+          <H>0.0450054885</H>
+          <O>0.1357149985</O>
+          <N>0.0116754815</N>
+          <S>0.0035924558</S>
+          <CHAR>0.0000000000</CHAR>
+          <ASH>0.0786348668</ASH>
+          <H2O>0.0578784552</H2O>
+        </ultimate_analysis>
+        <raw_coal_enthalpy>-1064549.81069</raw_coal_enthalpy>
+        <!-- raw coal enthalpy (at 298.15 K) [J/kg] -->
+        <char_enthalpy>0.0</char_enthalpy>
+        <!-- char enthalpy (at inlet conditions) [J/kg] -->
+        <ash_enthalpy>-9.5686e7</ash_enthalpy>
+        <!-- ash enthalpy (at inlet conditions) [J/kg] -->
+        <Yamamoto_coefficients>[1.75e10,2.592280258e5,0.53,16.26759,-39.1322,61.04079,-38.3719,0.108926,0.032302]</Yamamoto_coefficients>
+        <!-- Yamamto 1 step rate coefficients in the following order:  -->
+        <!-- Av[1/s], Ev[J/mole], Yv[-], c0[-], c1[-], c2[-] c3[-], c4[-], c5[-]  -->
+        <KobayashiSarofim_coefficients>[8.7e7, 1.2e14, 25632.3, 49873.7, 0.357, 0.504]</KobayashiSarofim_coefficients>
+        <!-- KobayashiSarofim 2 step rate coefficients in the following order:  -->
+        <!-- A1[1/s], A2[1/s], E1[kcal/kmol], E2[kcal/kmol], Y1[volatile fraction from prox analysis], Y2[fraction devolatilzed at higher temperatures]  -->
+        <RichardsFletcher_coefficients>[1.18e7, 1.46e13, 9044, 29215, 0.0309, 0.5573, -104.45, 323.46, -54.197, -0.8526, -728.01, -0.0345, 0.0, 14.590, -53.759, 126.16, -132.02, 44.477, -0.000817, 0.0]</RichardsFletcher_coefficients>
+        <!-- RichardsFletcher 2 step rate coefficients in the following order:  -->
+        <!-- A1[1/s], A2[1/s], E1[K], E2[K], Y1[volatile fraction from prox analysis], Y2[fraction devolatilzed at higher temperatures], c0_1-c5_1, c0_2-c5_2 -->
+        <FOWYDevol>
+          <v_hiT>6.641e-01</v_hiT>
+          <A>19724227.36</A>
+          <Ta>1.113e4</Ta>
+          <Tbp_graphite>3e3</Tbp_graphite>
+          <T_mu>1100.0</T_mu>
+          <T_sigma>250.0</T_sigma>
+          <T_hardened_bond>1800.0</T_hardened_bond>
+          <sigma>8.258e2</sigma>
+        </FOWYDevol>
+        <ShaddixChar>
+          <As> 344.0 </As>
+          <Es> 45.5e3 </Es>
+          <n> 0.18 </n>
+        </ShaddixChar>
+        <ksi>1</ksi>
+      </ParticleProperties>
       <BoundaryConditions>
       </BoundaryConditions>
       <ExplicitSolver>

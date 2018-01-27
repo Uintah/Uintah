@@ -322,7 +322,7 @@ public:
       m_rank_average.resize(nStats);
       m_rank_maximum.resize(nStats);
 
-      std::vector<double>      reduced( nStats );
+      // std::vector<double>      reduced( nStats );
       std::vector<double>      toReduce( nStats );
       std::vector<double_int>  toReduceMax( nStats );
 
@@ -360,6 +360,10 @@ public:
         toReduceMax[i] = double_int(InfoMapper<E, T>::m_values[i], myWorld->myRank());
       }
 
+      // Reduction across each node.
+      // Uintah::MPI::Allreduce(&toReduce[0], &m_node_sum[0], nStats, MPI_DOUBLE, MPI_SUM, myWorld->getNodeComm());
+
+      // Reductions across all ranks.
       if (allReduce) {
         Uintah::MPI::Allreduce(&toReduce[0], &m_rank_average[0], nStats, MPI_DOUBLE, MPI_SUM, myWorld->getComm());
         Uintah::MPI::Allreduce(&toReduceMax[0], &m_rank_maximum[0], nStats, MPI_DOUBLE_INT, MPI_MAXLOC, myWorld->getComm());

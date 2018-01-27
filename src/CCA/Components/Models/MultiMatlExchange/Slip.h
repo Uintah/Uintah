@@ -49,8 +49,18 @@ namespace ExchangeModels{
     virtual ~SlipExch();
 
     virtual void problemSetup(const ProblemSpecP & prob_spec);
-    
+
     virtual void outputProblemSpec(ProblemSpecP & prob_spec );
+
+    virtual void sched_PreExchangeTasks(SchedulerP           & sched,
+                                        const PatchSet       * patches,
+                                        const MaterialSubset * iceMatls,
+                                        const MaterialSet    * allMatls);
+
+    virtual void addExchangeModelRequires ( Task* t,
+                                            const MaterialSubset * zeroMatls,
+                                            const MaterialSubset * iceMatls,
+                                            const MaterialSubset * mpmMatls);
 
     virtual void sched_AddExch_VelFC(SchedulerP           & sched,
                                      const PatchSet       * patches,
@@ -130,10 +140,10 @@ namespace ExchangeModels{
     //__________________________________
     //  variables local to SlipExch
     ExchangeCoefficients* d_exchCoeff;
-    
+
     MPMLabel* Mlb;
     ICELabel* Ilb;
-    
+
     const VarLabel* d_vel_CCTransLabel;
     const VarLabel* d_meanFreePathLabel;
 

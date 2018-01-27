@@ -61,7 +61,7 @@ static DebugStream dbg("ARCHES", false);
 
 //--------------------------------------------------------------------------------------------------
 Arches::Arches(const ProcessorGroup* myworld,
-	       const SimulationStateP sharedState) :
+               const SimulationStateP sharedState) :
   ApplicationCommon(myworld, sharedState)
 {
   m_MAlab               = 0;
@@ -169,15 +169,15 @@ Arches::problemSetup( const ProblemSpecP     & params,
     }
 
     m_analysis_modules = AnalysisModuleFactory::create(d_myworld,
-						       m_sharedState,
-						       params);
+                                                       m_sharedState,
+                                                       params);
 
     if(m_analysis_modules.size() != 0) {
       vector<AnalysisModule*>::iterator iter;
       for( iter  = m_analysis_modules.begin();
            iter != m_analysis_modules.end(); iter++) {
         AnalysisModule* am = *iter;
-	am->setComponents( dynamic_cast<ApplicationInterface*>( this ) );
+        am->setComponents( dynamic_cast<ApplicationInterface*>( this ) );
         am->problemSetup(params, materials_ps, grid);
       }
     }
@@ -297,7 +297,7 @@ Arches::scheduleTimeAdvance( const LevelP& level,
 //--------------------------------------------------------------------------------------------------
 void
 Arches::scheduleAnalysis( const LevelP& level,
-			  SchedulerP& sched)
+                          SchedulerP& sched)
 {
   // Only schedule
   if(level->getIndex() != m_arches_level_index) {

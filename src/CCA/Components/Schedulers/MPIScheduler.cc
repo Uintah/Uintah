@@ -309,7 +309,7 @@ MPIScheduler::runTask( DetailedTask * dtask
       //add my task time to the total time
       mpi_info_[TotalTask] += total_task_time;
       if (!m_is_copy_data_timestep &&
-	  dtask->getTask()->getType() != Task::Output) {
+          dtask->getTask()->getType() != Task::Output) {
         // add contribution for patchlist
         m_loadBalancer->addContribution(dtask, total_task_time);
       }

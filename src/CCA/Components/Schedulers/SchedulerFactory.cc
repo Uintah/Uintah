@@ -58,25 +58,17 @@ SchedulerFactory::create( const ProblemSpecP   & ps
 
   /////////////////////////////////////////////////////////////////////
   // Default settings - nothing specified in the input file
-
   if (scheduler == "") {
-
 #ifdef UINTAH_ENABLE_KOKKOS
-
     scheduler = "KokkosOpenMP";
-
 #else
-
     if (Uintah::Parallel::getNumThreads() > 0) {
       scheduler = "Unified";
     }
-
     else {
       scheduler = "MPI";
     }
-
-#endif
-
+#endif // UINTAH_ENABLE_KOKKOS
   }
 
   /////////////////////////////////////////////////////////////////////
@@ -92,10 +84,6 @@ SchedulerFactory::create( const ProblemSpecP   & ps
 
 #ifdef UINTAH_ENABLE_KOKKOS
 
-  else if (scheduler == "KokkosOpenMP") {
-    sch = scinew KokkosOpenMPScheduler(world, nullptr);
-  }
-
   else if (scheduler == "Unified") {
     std::string error = "\n \tTo use the Unified Scheduler, you must disable Kokkos. Build Uintah without Kokkos.";
     throw ProblemSetupException(error, __FILE__, __LINE__);
@@ -107,7 +95,11 @@ SchedulerFactory::create( const ProblemSpecP   & ps
     sch = scinew UnifiedScheduler(world, nullptr);
   }
 
-#endif
+#endif // UINTAH_ENABLE_KOKKOS
+
+  else if (scheduler == "KokkosOpenMP") {
+    sch = scinew KokkosOpenMPScheduler(world, nullptr);
+  }
 
   else {
     sch = nullptr;
@@ -146,7 +138,7 @@ SchedulerFactory::create( const ProblemSpecP   & ps
     throw ProblemSetupException(error, __FILE__, __LINE__);
   }
 
-#endif
+#endif // UINTAH_ENABLE_KOKKOS
 
   // Output which scheduler will be used
   proc0cout << "Scheduler: \t\t" << scheduler << std::endl;

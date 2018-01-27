@@ -185,7 +185,6 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
   d_ice->setComponents( this );
   dynamic_cast<ApplicationCommon*>(d_ice)->problemSetup( prob_spec );
 
-  d_ice->setMPMICELabel(MIlb);
   d_ice->setWithMPM();
   if(d_rigidMPM){
    d_ice->setWithRigidMPM();
@@ -431,6 +430,7 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
   // schedule the interpolation of mass and volume to the cell centers
   scheduleInterpolateNCToCC_0(                sched, mpm_patches, one_matl, 
                                                                   mpm_matls);
+                                                                  
   // do coarsens in reverse order, and before the other tasks
   if(do_mlmpmice){
     for (int l = inlevel->getGrid()->numLevels() - 2; l >= 0; l--) {
@@ -463,6 +463,9 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
     d_ice->scheduleComputeVel_FC(             sched, ice_patches, ice_matls_sub,
                                                                   mpm_matls_sub,
                                                                   press_matl, 
+                                                                  all_matls);
+                                                                  
+    d_ice->d_exchModel->sched_PreExchangeTasks( sched, ice_patches, ice_matls_sub,
                                                                   all_matls);
 
     d_ice->d_exchModel->sched_AddExch_VelFC(  sched, ice_patches, ice_matls_sub,
@@ -1808,7 +1811,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     std::vector<constCCVariable<Vector> > vel_CC(numALLMatls);
     
     constCCVariable<double> press;    
-    CCVariable<double> press_new, delPress_tmp,sumKappa, TMV_CC;
+    CCVariable<double> press_new, delPress_tmp, sumKappa, TMV_CC;
     CCVariable<double> sum_imp_delP;
     CCVariable<int>  nIterations;
     

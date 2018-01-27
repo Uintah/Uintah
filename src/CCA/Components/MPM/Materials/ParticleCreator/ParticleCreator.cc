@@ -186,14 +186,15 @@ ParticleCreator::createParticles(MPMMaterial* matl,
       pfiberdirs   = sgp->getFiberDirs();
       pvelocities  = sgp->getVelocity();  // gcd adds and new change name
       psizes       = sgp->getSize();
-      pareas       = sgp->getArea();
 
       if(d_with_color){
         colors      = sgp->getColors();
       }
 
       if(d_doScalarDiffusion){
-        concentrations = sgp->getConcentration();
+        concentrations  = sgp->getConcentration();
+        pareas          = sgp->getArea();
+
       }
 
       if(d_withGaussSolver){
@@ -352,7 +353,12 @@ ParticleCreator::createParticles(MPMMaterial* matl,
         }
       }
 
-      if (pareas) {
+      // JBH -- pareas is defined by default for the particles, which seems
+      //   okay.  However, we don't actually need it unless we're doing
+      //   scalar diffusion, so the memory doesn't get allocated unless
+      //   d_doScalarDiffusion is true.  Therefore, we need a logical and here
+      //   otherwise we reference memory that's not allocated.
+      if (pareas) {// && d_doScalarDiffusion) {
         // Read parea from file or get from a smooth geometry piece
         if (!pareas->empty()) {
           pvars.parea[pidx] = *areaiter;
@@ -761,9 +767,6 @@ ParticleCreator::initializeParticle(const Patch* patch,
 
     pvars.psize[i]      = size;  // Normalized by grid spacing
 
-    if (d_doScalarDiffusion) {
-      pvars.parea[i]      = area;
-    }
     pvars.pvelocity[i]  = (*obj)->getInitialData_Vector("velocity");
     if(d_flags->d_integrator_type=="explicit"){
       pvars.pvelGrad[i]  = Matrix3(0.0);
@@ -794,6 +797,7 @@ ParticleCreator::initializeParticle(const Patch* patch,
     pvars.pConcPrevious[i]  = pvars.pConcentration[i];
     pvars.pConcGrad[i]  = Vector(0.0);
     pvars.pExternalScalarFlux[i] = 0.0;
+    pvars.parea[i]      = area;
   }
   if(d_withGaussSolver){
     pvars.pPosCharge[i] = pvars.pvolume[i]
@@ -864,22 +868,23 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
       // sgp->setParticleSpacing(dx);
       numPts = sgp->createPoints();
     }
-    vector<Point>* points          = sgp->getPoints();
-    vector<double>* vols           = sgp->getVolume();
-    vector<double>* temps          = sgp->getTemperature();
-    vector<double>* colors         = sgp->getColors();
-    vector<double>* concentrations = sgp->getConcentration();
-    vector<double>* poscharges     = sgp->getPosCharge();
-    vector<double>* negcharges     = sgp->getNegCharge();
-    vector<double>* permittivities = sgp->getPermittivity();
-    vector<Vector>* pforces        = sgp->getForces();
-    vector<Vector>* pfiberdirs     = sgp->getFiberDirs();
-    vector<Vector>* pvelocities    = sgp->getVelocity();
-    vector<Matrix3>* psizes        = sgp->getSize();
-    vector<Vector>*  pareas        = sgp->getArea();
+    vector<Point>*    points          = sgp->getPoints();
+    vector<double>*   vols            = sgp->getVolume();
+    vector<double>*   temps           = sgp->getTemperature();
+    vector<double>*   colors          = sgp->getColors();
+    vector<double>*   poscharges      = sgp->getPosCharge();
+    vector<double>*   negcharges      = sgp->getNegCharge();
+    vector<double>*   permittivities  = sgp->getPermittivity();
+    vector<Vector>*   pforces         = sgp->getForces();
+    vector<Vector>*   pfiberdirs      = sgp->getFiberDirs();
+    vector<Vector>*   pvelocities     = sgp->getVelocity();
+    vector<Matrix3>*  psizes          = sgp->getSize();
+    vector<double>*   concentrations  = sgp->getConcentration();
+    vector<Vector>*   pareas          = sgp->getArea();
+
     Point p;
     IntVector cell_idx;
-    
+
     //__________________________________
     // bulletproofing for smooth geometry pieces only
     BBox compDomain;
@@ -932,7 +937,10 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
             Matrix3 psz = psizes->at(ii); 
             vars.d_object_size[obj].push_back(psz);
           }
-          if (!pareas->empty()) {
+          // JBH -- Shouldn't have the scalar diffusion flag in here, but it
+          //    makes the right things happen.  Need to work on a more
+          //    elegant solution when there is time for elegance.  FIXME
+          if (!pareas->empty() && d_doScalarDiffusion) {
             Vector psz = pareas->at(ii); 
             vars.d_object_area[obj].push_back(psz);
           }

@@ -549,7 +549,7 @@ private:
     }
 
     dbg << "DataArchive::query(values) completed in " << timer().seconds()
-	<< " seconds\n";
+        << " seconds\n";
   }  
   //______________________________________________________________________
   //

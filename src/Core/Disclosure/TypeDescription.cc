@@ -178,7 +178,7 @@ MPI_Datatype
 TypeDescription::getMPIType() const
 {
   if (d_mpitype == MPI_Datatype(-1)) {
-		// scope the lock_guard
+    // scope the lock_guard
     {
       std::lock_guard<Uintah::MasterLock> guard(get_mpi_type_lock);
       if (d_mpitype == MPI_Datatype(-1)) {

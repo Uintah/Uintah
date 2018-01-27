@@ -77,8 +77,8 @@ class KokkosOpenMPScheduler : public MPIScheduler  {
 
   public:
 
-    KokkosOpenMPScheduler( const ProcessorGroup * myworld,
-			   KokkosOpenMPScheduler * parentScheduler = nullptr );
+    KokkosOpenMPScheduler( const ProcessorGroup  * myworld,
+                           KokkosOpenMPScheduler * parentScheduler = nullptr );
 
     virtual ~KokkosOpenMPScheduler(){};
     
@@ -103,6 +103,7 @@ class KokkosOpenMPScheduler : public MPIScheduler  {
 
     void markTaskConsumed( volatile int * numTasksDone, int & currphase, int numPhases, DetailedTask * dtask );
 
+    // thread shared data, needs lock protection when accessed
     std::vector<int>             m_phase_tasks;
     std::vector<int>             m_phase_tasks_done;
     std::vector<DetailedTask*>   m_phase_sync_task;
