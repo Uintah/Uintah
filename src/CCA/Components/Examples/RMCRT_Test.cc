@@ -49,6 +49,7 @@
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
+#define COMBINE_ABSKG_SIGMAT4_CELLTYPE
 
 using namespace std;
 
@@ -60,6 +61,7 @@ namespace {
 
 namespace Uintah
 {
+#define COMBINE_ABSKG_SIGMAT4_CELLTYPE
 //______________________________________________________________________
 //
 RMCRT_Test::RMCRT_Test ( const ProcessorGroup* myworld,

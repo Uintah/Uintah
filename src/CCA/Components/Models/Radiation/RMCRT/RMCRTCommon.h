@@ -56,6 +56,8 @@ class MTRand;
 
 namespace Uintah{
 
+#define COMBINE_ABSKG_SIGMAT4_CELLTYPE
+
 #ifdef COMBINE_ABSKG_SIGMAT4_CELLTYPE
       struct Combined_RMCRT_Required_Vars {
         float abskg;    //For now, let negative cellType indicate cellType status

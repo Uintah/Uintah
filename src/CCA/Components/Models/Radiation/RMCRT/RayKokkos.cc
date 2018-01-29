@@ -62,6 +62,7 @@
 #define FUZZ 1e-12        // Numerical fuzz
 #define CUDA_PRINTF       // increase the printf buffer
 
+#define COMBINE_ABSKG_SIGMAT4_CELLTYPE
 /*______________________________________________________________________
   TO DO:
   - Add GPU-specific setup for Kokkos::CUDA
@@ -1163,6 +1164,16 @@ struct rayTrace_solveDivQFunctor {
 };  // end rayTrace_solveDivQFunctor
 
 
+#define USE_SLIM
+
+#ifdef USE_SLIM
+#include <CCA/Components/Models/Radiation/RMCRT/slim.h>
+template<typename T,const int dataSize>
+using DO_raytrace =SlimRayTrace_dataOnion_solveDivQFunctor< T, Kokkos::Random_XorShift1024_Pool<Kokkos::OpenMP>, dataSize > ;
+#else
+template<typename T, int dataSize>
+using DO_raytrace =rayTrace_dataOnion_solveDivQFunctor< T, Kokkos::Random_XorShift1024_Pool<Kokkos::OpenMP>, dataSize > ;
+#endif
 
 //---------------------------------------------------------------------------
 // Method: The actual work of the ray tracer
@@ -1496,12 +1507,13 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
       int n_Cells   = RoundUp( length );
       d_haloCells   = IntVector( n_Cells, n_Cells, n_Cells );
     }
-    if (d_haloCells < IntVector(2,2,2) ){
-      std::ostringstream warn;
-      warn << "RMCRT:DataOnion ERROR: ";
-      warn << "The number of halo cells must be > (1,1,1) ("<< d_haloCells << ")";
-      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-    }
+    //if (d_haloCells < IntVector(2,2,2) ){
+      //std::ostringstream warn;
+      //warn << "RMCRT:DataOnion ERROR: ";
+      //warn << "The number of halo cells must be > (1,1,1) ("<< d_haloCells << ")";
+      //throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+    //}
+
 
     int maxElem = Max( d_haloCells.x(), d_haloCells.y(), d_haloCells.z() );
 #ifdef COMBINE_ABSKG_SIGMAT4_CELLTYPE
@@ -1535,17 +1547,26 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
     tsk->requires( Task::NewDW, d_ROI_HiCellLabel );
   }
 
+
   // declare requires for all coarser levels
 
   //Determine halo cells from finest layer down to coarsest layer.
   int maxElem = Max( d_haloCells.x(), d_haloCells.y(), d_haloCells.z() );  // patch based Intvector specified by user is ignored, instead max value
   std::vector<int> nGhost = std::vector<int>(maxLevels,0);
-  nGhost[maxLevels-1]=maxElem;
-  for ( int l=maxLevels - 2 ; l >= 0; l--){
-    int levelRR = Max(level->getGrid()->getLevel(l)->getRefinementRatio().x(),
-                      level->getGrid()->getLevel(l)->getRefinementRatio().y(),
-                      level->getGrid()->getLevel(l)->getRefinementRatio().z()) ;
-    nGhost[l]= (nGhost[l+1] /  levelRR) + maxElem + ( (nGhost[l+1]%levelRR == 0) ?  0  : 1 );
+  //nGhost[maxLevels-1]=maxElem;
+  //for ( int l=maxLevels - 2 ; l >= 0; l--){
+    //int levelRR = Max(level->getGrid()->getLevel(l)->getRefinementRatio().x(),
+                      //level->getGrid()->getLevel(l)->getRefinementRatio().y(),
+                      //level->getGrid()->getLevel(l)->getRefinementRatio().z()) ;
+    //nGhost[l]= (nGhost[l+1] /  levelRR) + maxElem + ( (nGhost[l+1]%levelRR == 0) ?  0  : 1 );
+  //}
+
+  for ( int l=0 ; l< maxLevels; l++){
+    //int levelRR = Max(level->getGrid()->getLevel(l)->getRefinementRatio().x(),level->getGrid()->getLevel(l)->getRefinementRatio().y(),level->getGrid()->getLevel(l)->getRefinementRatio().z()) ;
+    //nGhost[maxLevels-l-1]=nGhost[maxLevels-l] /  levelRR + maxElem +  ( (nGhost[maxLevels-l]%levelRR == 0) ?  0  : 1 ); // assumes loops from coarsest -> finest, and int division rounds down
+    //nGhost[maxLevels-l-1]=nGhost[maxLevels-l] /  levelRR + maxElem/levelRR +( (maxElem%levelRR == 0) ?  0  : 1 )  +  ( (nGhost[maxLevels-l]%levelRR == 0) ?  0  : 1 ); // assumes loops from coarsest -> finest, and int division rounds down
+    nGhost[l]=maxElem; // assumes loops from coarsest -> finest, and int division rounds down
+
   }
 
   for (int l = 0; l < maxLevels; ++l) {
@@ -1600,7 +1621,6 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
 
 }
 
-#include <CCA/Components/Models/Radiation/RMCRT/slim.h>
 
 //______________________________________________________________________
 //
@@ -2329,7 +2349,8 @@ Ray::rayTrace_dataOnion( DetailedTask* dtask,
       //abskg_dw->getRegion(    abskg[fine_L],         d_abskgLabel ,   d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
       //sigmaT4_dw->getRegion(  sigmaT4OverPi[fine_L], d_sigmaT4Label,  d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
       //celltype_dw->getRegion( cellType[fine_L],      d_cellTypeLabel, d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
-      abskg_dw->getRegion(   abskgSigmaT4CellType[fine_L] , d_abskgSigmaT4CellTypeLabel   , d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
+      //abskg_dw->getRegion(   abskgSigmaT4CellType[fine_L] , d_abskgSigmaT4CellTypeLabel   , d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
+      new_dw->getRegion(   abskgSigmaT4CellType[fine_L] , d_abskgSigmaT4CellTypeLabel   , d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
 
       //Get the computable variables on the fine level
       if( modifies_divQ ){
@@ -2457,59 +2478,103 @@ Ray::rayTrace_dataOnion( DetailedTask* dtask,
 
         //
         if (maxLevels==2){
-          SlimRayTrace_dataOnion_solveDivQFunctor< T, Kokkos::Random_XorShift1024_Pool<Kokkos::OpenMP>, 2 >
+          DO_raytrace<T,2>
           functor( levelParamsML, RT_flags, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view 
-                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays);
+                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays
+#ifdef USE_SLIM
+,Max(d_haloCells[0],d_haloCells[1],d_haloCells[2])
+#endif
+);
           Uintah::parallel_reduce_1D( range, functor, size );
         } else if (maxLevels==3){
-          SlimRayTrace_dataOnion_solveDivQFunctor< T, Kokkos::Random_XorShift1024_Pool<Kokkos::OpenMP>, 3 >
+          DO_raytrace<T,3>
           functor( levelParamsML, RT_flags, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view 
-                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays);
+                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays
+#ifdef USE_SLIM
+,Max(d_haloCells[0],d_haloCells[1],d_haloCells[2])
+#endif
+);
           Uintah::parallel_reduce_1D( range, functor, size );
         } else if (maxLevels==4){
-          SlimRayTrace_dataOnion_solveDivQFunctor< T, Kokkos::Random_XorShift1024_Pool<Kokkos::OpenMP>, 4 >
+          DO_raytrace<T,4>
           functor( levelParamsML, RT_flags, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view 
-                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays);
+                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays
+#ifdef USE_SLIM
+,Max(d_haloCells[0],d_haloCells[1],d_haloCells[2])
+#endif
+);
           Uintah::parallel_reduce_1D( range, functor, size );
         } else if (maxLevels==5){
-          SlimRayTrace_dataOnion_solveDivQFunctor< T, Kokkos::Random_XorShift1024_Pool<Kokkos::OpenMP>, 5 >
+          DO_raytrace<T,5>
           functor( levelParamsML, RT_flags, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view 
-                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays);
+                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays
+#ifdef USE_SLIM
+,Max(d_haloCells[0],d_haloCells[1],d_haloCells[2])
+#endif
+);
           Uintah::parallel_reduce_1D( range, functor, size );
         } else if (maxLevels==6){
-          SlimRayTrace_dataOnion_solveDivQFunctor< T, Kokkos::Random_XorShift1024_Pool<Kokkos::OpenMP>, 6 >
+          DO_raytrace<T,6>
           functor( levelParamsML, RT_flags, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view 
-                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays);
+                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays
+#ifdef USE_SLIM
+,Max(d_haloCells[0],d_haloCells[1],d_haloCells[2])
+#endif
+);
           Uintah::parallel_reduce_1D( range, functor, size );
         } else if (maxLevels==7){
-          SlimRayTrace_dataOnion_solveDivQFunctor< T, Kokkos::Random_XorShift1024_Pool<Kokkos::OpenMP>, 7 >
+          DO_raytrace<T,7>
           functor( levelParamsML, RT_flags, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view 
-                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays);
+                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays
+#ifdef USE_SLIM
+,Max(d_haloCells[0],d_haloCells[1],d_haloCells[2])
+#endif
+);
           Uintah::parallel_reduce_1D( range, functor, size );
         } else if (maxLevels==8){
-          SlimRayTrace_dataOnion_solveDivQFunctor< T, Kokkos::Random_XorShift1024_Pool<Kokkos::OpenMP>, 8 >
+          DO_raytrace<T,8>
           functor( levelParamsML, RT_flags, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view 
-                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays);
+                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays
+#ifdef USE_SLIM
+,Max(d_haloCells[0],d_haloCells[1],d_haloCells[2])
+#endif
+);
           Uintah::parallel_reduce_1D( range, functor, size );
         } else if (maxLevels==9){
-          SlimRayTrace_dataOnion_solveDivQFunctor< T, Kokkos::Random_XorShift1024_Pool<Kokkos::OpenMP>, 9 >
+          DO_raytrace<T,9>
           functor( levelParamsML, RT_flags, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view 
-                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays);
+                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays
+#ifdef USE_SLIM
+,Max(d_haloCells[0],d_haloCells[1],d_haloCells[2])
+#endif
+);
           Uintah::parallel_reduce_1D( range, functor, size );
         } else if (maxLevels==10){
-          SlimRayTrace_dataOnion_solveDivQFunctor< T, Kokkos::Random_XorShift1024_Pool<Kokkos::OpenMP>, 10 >
+          DO_raytrace<T,10>
           functor( levelParamsML, RT_flags, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view 
-                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays);
+                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays
+#ifdef USE_SLIM
+,Max(d_haloCells[0],d_haloCells[1],d_haloCells[2])
+#endif
+);
           Uintah::parallel_reduce_1D( range, functor, size );
         } else if (maxLevels==11){
-          SlimRayTrace_dataOnion_solveDivQFunctor< T, Kokkos::Random_XorShift1024_Pool<Kokkos::OpenMP>, 11 >
+          DO_raytrace<T,11>
           functor( levelParamsML, RT_flags, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view 
-                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays);
+                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays
+#ifdef USE_SLIM
+,Max(d_haloCells[0],d_haloCells[1],d_haloCells[2])
+#endif
+);
           Uintah::parallel_reduce_1D( range, functor, size );
         } else if (maxLevels==12){
-          SlimRayTrace_dataOnion_solveDivQFunctor< T, Kokkos::Random_XorShift1024_Pool<Kokkos::OpenMP>, 12 >
+          DO_raytrace<T,12>
           functor( levelParamsML, RT_flags, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view 
-                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays);
+                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays
+#ifdef USE_SLIM
+,Max(d_haloCells[0],d_haloCells[1],d_haloCells[2])
+#endif
+);
           Uintah::parallel_reduce_1D( range, functor, size );
         } else {
           std::cout << "Too many levels requested.  Edit the code file to supply more possible levels" << std::endl;
@@ -2600,29 +2665,28 @@ Ray::computeExtents(LevelP level_0,
   // Determine the extents of the regions below the fineLevel
 
   // finest level
-  IntVector finelevel_EC = fineLevel->getExtraCells();
-  regionLo[maxLevels-1] = fineLevel_ROI_Lo + finelevel_EC;
-  regionHi[maxLevels-1] = fineLevel_ROI_Hi - finelevel_EC;
+  regionLo[maxLevels-1] = fineLevel_ROI_Lo ;
+  regionHi[maxLevels-1] = fineLevel_ROI_Hi ;
 
   // coarsest level
-  level_0->findInteriorCellIndexRange(regionLo[0], regionHi[0]);
+  level_0->findCellIndexRange(regionLo[0], regionHi[0]);
 
-  for (int L = maxLevels - 2; L > 0; L--) {
+  for (int L = maxLevels - 1; L > 1; L--) {
+
 
     LevelP level = new_dw->getGrid()->getLevel(L);
-
     if( level->hasCoarserLevel() ){
-      regionLo[L] = level->mapCellToCoarser(regionLo[L+1]) - d_haloCells;   // this ROI extent suggests a ghost cell rquirement ceil( nGhost_finer_level/ Refine_ratio)  + halo_cells
-      regionHi[L] = level->mapCellToCoarser(regionHi[L+1]) + d_haloCells; 
 
-      // region must be within a level
-      //IntVector levelLo, levelHi;
-      //level->findInteriorCellIndexRange(levelLo, levelHi);  // This over clips extents for the get region call on intermediate levels
+      regionLo[L-1] = level->mapCellToCoarser(regionLo[L]) - d_haloCells + d_haloCells/level->getRefinementRatio()+(d_haloCells[0]%level->getRefinementRatio()[0] ? 1 : 0 );   // this ROI extent suggests a constant ghost cell rquirement on all levels.
+      regionHi[L-1] = level->mapCellToCoarser(regionHi[L]-1) + d_haloCells - d_haloCells/level->getRefinementRatio()-(d_haloCells[0]%level->getRefinementRatio()[0] ? 1 : 0 )+1;  // exclusive upper limit, hence +1
 
-      //regionLo[L] = Max(regionLo[L], levelLo); 
-      //regionHi[L] = Min(regionHi[L], levelHi);
+      //regionLo[L] = level->mapCellToCoarser(regionLo[L+1]) - d_haloCells;   // this ROI extent suggests a ghost cell rquirement ceil( nGhost_finer_level/ Refine_ratio)  + halo_cells
+      //regionHi[L] = level->mapCellToCoarser(regionHi[L+1]) + d_haloCells;  // this method is bugged due to exclusive indices on the upper limit
+
     }
   }
+
+
 }
 
 

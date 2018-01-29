@@ -407,6 +407,15 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
       }
     }
 
+#define COMBINE_ABSKG_SIGMAT4_CELLTYPE
+#ifdef COMBINE_ABSKG_SIGMAT4_CELLTYPE
+    //Combine vars for every level
+    for (int l = maxLevels - 1; l >= 0; l--) {
+      const LevelP& level = grid->getLevel(l);
+      _RMCRT->sched_combineAbskgSigmaT4CellType(level, sched, temp_dw, includeExtraCells);
+    }
+#endif
+
     //__________________________________
     //  compute the extents of the RMCRT region of interest on the finest level
     _RMCRT->sched_ROI_Extents( fineLevel, sched );

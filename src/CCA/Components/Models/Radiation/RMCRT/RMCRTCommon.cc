@@ -46,6 +46,7 @@
 //
 using namespace Uintah;
 
+#define COMBINE_ABSKG_SIGMAT4_CELLTYPE
 // this is used externally (e.g. Radiamoter.cc), keep them visible outside this unit
 Dout g_ray_dbg("RAY", false);
 
