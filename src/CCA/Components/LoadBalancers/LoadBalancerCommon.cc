@@ -123,7 +123,7 @@ LoadBalancerCommon::assignResources( DetailedTasks & graph )
     DetailedTask* task = graph.getTask(i);
 
     const PatchSubset* patches = task->getPatches();
-    if (patches && patches->size() > 0 && task->getTask()->getType() != Task::OncePerProc) {
+    if (patches && patches->size() > 0 && task->getTask()->getType() != Task::OncePerProc && task->getTask()->getType() != Task::Hypre) {
       const Patch* patch = patches->get(0);
 
       int idx = getPatchwiseProcessorAssignment(patch);
@@ -167,7 +167,7 @@ LoadBalancerCommon::assignResources( DetailedTasks & graph )
         // Already assigned, do nothing
         ASSERT(task->getAssignedResourceIndex() != -1);
       }
-      else if (task->getTask()->getType() == Task::OncePerProc) {
+      else if (task->getTask()->getType() == Task::OncePerProc || task->getTask()->getType() == Task::Hypre) {
 
         // patch-less task, not execute-once, set to run on all procs
         // once per patch subset (empty or not)
@@ -176,7 +176,7 @@ LoadBalancerCommon::assignResources( DetailedTasks & graph )
           int i = (*p);
           if (patches == task->getTask()->getPatchSet()->getSubset(i)) {
             task->assignResource(i);
-            DOUT(g_lb_dbg, d_myworld->myRank() << " OncePerProc Task " << *(task->getTask()) << " put on resource " << i);
+            DOUT(g_lb_dbg, d_myworld->myRank() << " " << task->getTask()->getType() << " Task " << *(task->getTask()) << " put on resource " << i);
           }
         }
       }
@@ -231,7 +231,9 @@ LoadBalancerCommon::getOldProcessorAssignment( const Patch * patch )
 //______________________________________________________________________
 //
 void
-LoadBalancerCommon::useSFC( const LevelP & level, int * order )
+LoadBalancerCommon::useSFC( const LevelP & level
+                          ,       int    * order
+                          )
 {
   std::vector<DistributedIndex> indices; //output
   std::vector<double> positions;
@@ -296,16 +298,16 @@ LoadBalancerCommon::useSFC( const LevelP & level, int * order )
   Vector center = (high+low).asVector()/2.0;
  
   double r[3]     = {(double)range[m_activeDims[0]],
-		     (double)range[m_activeDims[1]],
-		     (double)range[m_activeDims[2]]};
+                     (double)range[m_activeDims[1]],
+                     (double)range[m_activeDims[2]]};
 
   double c[3]     = {(double)center[m_activeDims[0]],
-		     (double)center[m_activeDims[1]],
-		     (double)center[m_activeDims[2]]};
+                     (double)center[m_activeDims[1]],
+                     (double)center[m_activeDims[2]]};
 
   double delta[3] = {(double)min_patch_size[m_activeDims[0]],
-		     (double)min_patch_size[m_activeDims[1]],
-		     (double)min_patch_size[m_activeDims[2]]};
+                     (double)min_patch_size[m_activeDims[1]],
+                     (double)min_patch_size[m_activeDims[2]]};
 
   // Create SFC
   m_sfc.SetDimensions(r);
@@ -388,10 +390,10 @@ LoadBalancerCommon::useSFC( const LevelP & level, int * order )
 //______________________________________________________________________
 //
 void
-LoadBalancerCommon::restartInitialize(       DataArchive  * archive
-                                     , const int            time_index
-                                     , const std::string  & ts_url
-                                     , const GridP        & grid
+LoadBalancerCommon::restartInitialize(       DataArchive * archive
+                                     , const int           time_index
+                                     , const std::string & ts_url
+                                     , const GridP       & grid
                                      )
 {
   // Here we need to grab the uda data to reassign patch data to the processor that will get the data.
@@ -460,7 +462,9 @@ LoadBalancerCommon::restartInitialize(       DataArchive  * archive
 //______________________________________________________________________
 //
 bool
-LoadBalancerCommon::possiblyDynamicallyReallocate( const GridP & grid, int state )
+LoadBalancerCommon::possiblyDynamicallyReallocate( const GridP & grid
+                                                 ,       int     state
+                                                 )
 {
   if (state != check) {
     // Have it create a new patch set, and have the DLB version call this.
@@ -793,11 +797,13 @@ LoadBalancerCommon::createNeighborhoods( const GridP & grid
 //______________________________________________________________________
 //
 void
-LoadBalancerCommon::addPatchesAndProcsToNeighborhood(const Level * const level,
-                                       const IntVector& low,
-                                       const IntVector& high,
-                                       std::set<const Patch*>& neighbors,
-                                       std::set<int>& processors) {
+LoadBalancerCommon::addPatchesAndProcsToNeighborhood( const Level                  * const level
+                                                    , const IntVector              & low
+                                                    , const IntVector              & high
+                                                    ,       std::set<const Patch*> & neighbors
+                                                    ,       std::set<int>          & processors
+                                                    )
+{
   Patch::selectType neighborPatches;
   level->selectPatches(low, high, neighborPatches);
   for (unsigned int i = 0; i < neighborPatches.size(); i++) {
@@ -816,7 +822,9 @@ LoadBalancerCommon::addPatchesAndProcsToNeighborhood(const Level * const level,
 //______________________________________________________________________
 //
 bool
-LoadBalancerCommon::inNeighborhood( const PatchSubset * pss, const bool hasDistalReqs /* = false */ )
+LoadBalancerCommon::inNeighborhood( const PatchSubset * pss
+                                  , const bool          hasDistalReqs /* = false */
+                                  )
 {
   // accept a subset with no patches as being inNeighborhood.
   if (pss->size() == 0) {
@@ -842,7 +850,9 @@ LoadBalancerCommon::inNeighborhood( const PatchSubset * pss, const bool hasDista
 //______________________________________________________________________
 //
 bool
-LoadBalancerCommon::inNeighborhood( const Patch * patch, const bool hasDistalReqs /* = false */ )
+LoadBalancerCommon::inNeighborhood( const Patch * patch
+                                  , const bool    hasDistalReqs /* = false */
+                                  )
 {
   if (hasDistalReqs) {
     return m_distal_neighbors.find(patch) != m_distal_neighbors.end();
@@ -855,8 +865,8 @@ LoadBalancerCommon::inNeighborhood( const Patch * patch, const bool hasDistalReq
 //______________________________________________________________________
 //
 void
-LoadBalancerCommon::problemSetup( ProblemSpecP     & pspec
-                                , GridP            & grid
+LoadBalancerCommon::problemSetup(       ProblemSpecP     & pspec
+                                ,       GridP            & grid
                                 , const SimulationStateP & state
                                 )
 {
@@ -897,7 +907,10 @@ LoadBalancerCommon::problemSetup( ProblemSpecP     & pspec
 //__________________________________
 //
 void
-LoadBalancerCommon::setDimensionality(bool x, bool y, bool z)
+LoadBalancerCommon::setDimensionality( bool x
+                                     , bool y
+                                     , bool z
+                                     )
 {
   m_numDims = 0;
   
@@ -917,7 +930,9 @@ LoadBalancerCommon::setDimensionality(bool x, bool y, bool z)
 //______________________________________________________________________
 // Cost profiling functions
 void
-LoadBalancerCommon::addContribution( DetailedTask * task ,double cost )
+LoadBalancerCommon::addContribution( DetailedTask * task
+                                   , double         cost
+                                   )
 {
   static bool warned = false;
   if (!warned) {
@@ -941,7 +956,9 @@ LoadBalancerCommon::finalizeContributions( const GridP & currentGrid )
 //______________________________________________________________________
 // Initializes the regions in the new level that are not in the old level.
 void
-LoadBalancerCommon::initializeWeights( const Grid * oldgrid, const Grid * newgrid )
+LoadBalancerCommon::initializeWeights( const Grid * oldgrid
+                                     , const Grid * newgrid
+                                     )
 {
   static bool warned = false;
   if (!warned) {

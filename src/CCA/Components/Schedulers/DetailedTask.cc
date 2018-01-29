@@ -445,7 +445,7 @@ DetailedTask::resetDependencyCounts()
 //
 void
 DetailedTask::addInternalDependency(       DetailedTask * prerequisiteTask
-                                   , const VarLabel*      var
+                                   , const VarLabel     * var
                                    )
 {
   if ( d_taskGroup->mustConsiderInternalDependencies() ) {
@@ -631,7 +631,7 @@ operator<<( std::ostream & out, const DetailedTask & dtask )
         out << patches->get(i)->getID();
       }
       // a once-per-proc task is liable to have multiple levels, and thus calls to getLevel(patches) will fail
-      if (dtask.getTask()->getType() == Task::OncePerProc) {
+      if (dtask.getTask()->getType() == Task::OncePerProc || dtask.getTask()->getType() == Task::Hypre) {
         out << ", on multiple levels";
       }
       else {
@@ -704,7 +704,9 @@ DetailedTask::getCudaStreamForThisTask( unsigned int device_id ) const
 //_____________________________________________________________________________
 //
 void
-DetailedTask::setCudaStreamForThisTask( unsigned int device_id, cudaStream_t * stream )
+DetailedTask::setCudaStreamForThisTask( unsigned int   device_id
+                                      , cudaStream_t * stream
+                                      )
 {
   if (stream == nullptr) {
     printf("ERROR! - DetailedTask::setCudaStreamForThisTask() - A request was made to assign a stream at address nullptr into this task %s\n", getName().c_str());
@@ -825,7 +827,10 @@ DetailedTask::setTaskGpuDataWarehouse( const unsigned int       whichDevice
 //_____________________________________________________________________________
 //
 GPUDataWarehouse*
-DetailedTask::getTaskGpuDataWarehouse( const unsigned int whichDevice, Task::WhichDW DW ) {
+DetailedTask::getTaskGpuDataWarehouse( const unsigned int  whichDevice
+                                     ,       Task::WhichDW DW
+                                     )
+{
   auto iter = TaskGpuDWs.find(whichDevice);
   if (iter != TaskGpuDWs.end()) {
     return iter->second.TaskGpuDW[DW];
@@ -837,7 +842,8 @@ DetailedTask::getTaskGpuDataWarehouse( const unsigned int whichDevice, Task::Whi
 //_____________________________________________________________________________
 //
 void
-DetailedTask::deleteTaskGpuDataWarehouses() {
+DetailedTask::deleteTaskGpuDataWarehouses()
+{
   for (auto iter = TaskGpuDWs.begin(); iter != TaskGpuDWs.end(); ++iter) {
     for (int i = 0; i < 2; i++) {
         if (iter->second.TaskGpuDW[i] != nullptr) {
@@ -858,8 +864,8 @@ DetailedTask::deleteTaskGpuDataWarehouses() {
 //_____________________________________________________________________________
 //
 void
-DetailedTask::clearPreparationCollections() {
-
+DetailedTask::clearPreparationCollections()
+{
   deviceVars.clear();
   ghostVars.clear();
   taskVars.clear();
@@ -870,14 +876,18 @@ DetailedTask::clearPreparationCollections() {
 //_____________________________________________________________________________
 //
 void
-DetailedTask::addTempHostMemoryToBeFreedOnCompletion( void * ptr ) {
+DetailedTask::addTempHostMemoryToBeFreedOnCompletion( void * ptr )
+{
   taskHostMemoryPoolItems.push(ptr);
 }
 
 //_____________________________________________________________________________
 //
 void
-DetailedTask::addTempCudaMemoryToBeFreedOnCompletion( unsigned int device_id, void * ptr ) {
+DetailedTask::addTempCudaMemoryToBeFreedOnCompletion( unsigned int   device_id
+                                                    , void         * ptr
+                                                    )
+{
   gpuMemoryPoolDevicePtrItem gpuItem(device_id, ptr);
   taskCudaMemoryPoolItems.push_back(gpuItem);
 }
@@ -885,8 +895,8 @@ DetailedTask::addTempCudaMemoryToBeFreedOnCompletion( unsigned int device_id, vo
 //_____________________________________________________________________________
 //
 void
-DetailedTask::deleteTemporaryTaskVars() {
-
+DetailedTask::deleteTemporaryTaskVars()
+{
   // clean out the host list
   while (!taskHostMemoryPoolItems.empty()) {
     cudaHostUnregister(taskHostMemoryPoolItems.front());

@@ -199,16 +199,16 @@ Task::usesDevice(bool state, int maxStreamsPerTask /* = 1 */ )
 
 //______________________________________________________________________
 //
-void Task::requires(       WhichDW             dw
-                   , const VarLabel          * var
-                   , const PatchSubset       * patches
-                   ,       PatchDomainSpec     patches_dom
-                   ,       int                 level_offset
-                   , const MaterialSubset    * matls
-                   ,      MaterialDomainSpec   matls_dom
-                   ,      Ghost::GhostType     gtype
-                   ,      int                  numGhostCells
-                   ,      bool                 oldTG
+void Task::requires(       WhichDW              dw
+                   , const VarLabel           * var
+                   , const PatchSubset        * patches
+                   ,       PatchDomainSpec      patches_dom
+                   ,       int                  level_offset
+                   , const MaterialSubset     * matls
+                   ,       MaterialDomainSpec   matls_dom
+                   ,       Ghost::GhostType     gtype
+                   ,       int                  numGhostCells
+                   ,       bool                 oldTG
                    )
 {
   if (matls == nullptr && var->typeDescription()->isReductionVariable()) {
@@ -266,13 +266,14 @@ void Task::requires(       WhichDW              dw
 
 //______________________________________________________________________
 //
-void Task::requires(WhichDW dw,
-                    const VarLabel* var,
-                    const PatchSubset* patches,
-                    const MaterialSubset* matls,
-                    Ghost::GhostType gtype,
-                    int numGhostCells,
-                    bool oldTG)
+void Task::requires(       WhichDW            dw
+                   , const VarLabel         * var
+                   , const PatchSubset      * patches
+                   , const MaterialSubset   * matls
+                   ,       Ghost::GhostType   gtype
+                   ,       int                numGhostCells
+                   ,       bool               oldTG
+                   )
 {
   requires(dw, var, patches, ThisLevel, matls, NormalDomain, gtype, numGhostCells, oldTG);
 }
@@ -487,9 +488,9 @@ Task::computes( const VarLabel * var, const MaterialSubset * matls )
 
 //______________________________________________________________________
 //
-void Task::computes( const VarLabel            * var
-                   , const MaterialSubset      * matls
-                   ,       MaterialDomainSpec    matls_dom
+void Task::computes( const VarLabel           * var
+                   , const MaterialSubset     * matls
+                   ,       MaterialDomainSpec   matls_dom
                    )
 {
   computes(var, nullptr, ThisLevel, matls, matls_dom);
@@ -722,18 +723,18 @@ bool Task::hasRequires( const VarLabel  * var
                       ) const
 {
   DepMap depMap = m_requires;
-  
+
   if(dw == OldDW){
     depMap = m_requires_old_dw;
   }
-  
+
   Dependency* dep = isInDepMap(depMap, var, matlIndex, patch);  
-  
-    
+
+
   if (dep) {
     // make sure we are within the allowed ghost cell limit
     IntVector allowableLowOffset, allowableHighOffset;
-      
+
     Patch::getGhostOffsets(var->typeDescription()->getType(), dep->m_gtype, dep->m_num_ghost_cells,
                            allowableLowOffset, allowableHighOffset);
                            
@@ -884,7 +885,7 @@ Task::Dependency::~Dependency()
   if(m_patches != nullptr && m_patches->removeReference()){
     delete m_patches;
   }
-    
+
   if(m_matls != nullptr && m_matls->removeReference()){
     delete m_matls;
   }
@@ -1185,6 +1186,9 @@ operator <<( std::ostream & out, const Task::TaskType & tt )
       break;
     case Task::Spatial :
       out << "Spatial";
+      break;
+    case Task::Hypre :
+      out << "Hypre";
       break;
   }
   return out;
