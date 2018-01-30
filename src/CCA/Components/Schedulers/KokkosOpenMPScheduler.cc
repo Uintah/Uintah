@@ -255,8 +255,8 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
 #endif // UINTAH_ENABLE_KOKKOS
 
     if ( g_have_hypre_task ) {
-      DOUT(g_dbg, " Exited runTasks to run a " << g_HypreTask->getTask()->getType() << " task" );
-      MPIScheduler::runTask(g_HypreTask, m_curr_iteration.load(std::memory_order_relaxed));
+      DOUT( g_dbg, " Exited runTasks to run a " << g_HypreTask->getTask()->getType() << " task" );
+      MPIScheduler::runTask( g_HypreTask, m_curr_iteration.load(std::memory_order_relaxed) );
       g_have_hypre_task = false;
     }
 
@@ -373,7 +373,7 @@ KokkosOpenMPScheduler::runTasks()
     {
       std::lock_guard<Uintah::MasterLock> scheduler_mutex_guard(g_scheduler_mutex);
 
-      while (!havework) {
+      while ( !havework ) {
 
         /*
          * (1.0)

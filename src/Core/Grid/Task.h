@@ -408,7 +408,7 @@ public: // class Task
   //////////
   //
   void requires(       WhichDW
-               , const VarLabel           *
+               , const VarLabel         *
                ,       Ghost::GhostType   gtype
                ,       int                numGhostCells = 0
                ,       bool               oldTG         = false
@@ -574,10 +574,11 @@ public: // class Task
 
   //////////
   //
-  void modifies(const VarLabel*,
-                const PatchSubset* patches,
-                const MaterialSubset* matls,
-                bool oldTG = false);
+  void modifies( const VarLabel       *
+               , const PatchSubset    * patches
+               , const MaterialSubset * matls
+               ,       bool             oldTG = false
+               );
 
   //////////
   //

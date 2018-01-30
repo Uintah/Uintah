@@ -88,30 +88,31 @@ namespace Uintah {
   template<class Types>
   class HypreStencil7 : public RefCounted {
   public:
-    HypreStencil7(const Level              * level_in,
-                  const MaterialSet        * matlset_in,
-                  const VarLabel           * A_in,
-                        Task::WhichDW        which_A_dw_in,
-                  const VarLabel           * x_in, 
-                        bool                 modifies_X_in,
-                  const VarLabel           * b_in,
-                        Task::WhichDW        which_b_dw_in,
-                  const VarLabel           * guess_in,
-                        Task::WhichDW        which_guess_dw_in,
-                  const HypreSolver2Params * params_in,
-                        bool                 modifies_hypre_in)
-      : level(level_in),
-        matlset(matlset_in),
-        A_label(A_in),
-        which_A_dw(which_A_dw_in),
-        X_label(x_in), 
-        modifies_X(modifies_X_in),
-        b_label(b_in),
-        which_b_dw(which_b_dw_in),
-        guess_label(guess_in),
-        which_guess_dw(which_guess_dw_in),
-        params(params_in),
-        modifies_hypre(modifies_hypre_in)
+    HypreStencil7( const Level              * level_in
+                 , const MaterialSet        * matlset_in
+                 , const VarLabel           * A_in
+                 ,       Task::WhichDW        which_A_dw_in
+                 , const VarLabel           * x_in
+                 ,       bool                 modifies_X_in
+                 , const VarLabel           * b_in
+                 ,       Task::WhichDW        which_b_dw_in
+                 , const VarLabel           * guess_in
+                 ,       Task::WhichDW        which_guess_dw_in
+                 , const HypreSolver2Params * params_in
+                 ,       bool                 modifies_hypre_in
+                 )
+      : level(level_in)
+      , matlset(matlset_in)
+      , A_label(A_in)
+      , which_A_dw(which_A_dw_in)
+      , X_label(x_in)
+      , modifies_X(modifies_X_in)
+      , b_label(b_in)
+      , which_b_dw(which_b_dw_in)
+      , guess_label(guess_in)
+      , which_guess_dw(which_guess_dw_in)
+      , params(params_in)
+      , modifies_hypre(modifies_hypre_in)
     {
       // Time Step
       m_timeStepLabel = VarLabel::create(timeStep_name, timeStep_vartype::getTypeDescription() );
@@ -1096,7 +1097,7 @@ namespace Uintah {
                      ,       SolverType                 & precond_solver_type
                      )
     {
-                      
+
       if ( params->precondtype == "SMG" || params->precondtype == "smg" ) {
         /* use symmetric SMG as preconditioner */
         
@@ -1183,7 +1184,7 @@ namespace Uintah {
     }
     
     //---------------------------------------------------------------------------------------------
-    
+
     void destroyPrecond( HYPRE_StructSolver precond_solver )
     {
       if ( params->precondtype        == "SMG"     || params->precondtype == "smg" ) {

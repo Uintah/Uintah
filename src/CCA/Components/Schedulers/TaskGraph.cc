@@ -646,8 +646,8 @@ TaskGraph::remembercomps( DetailedTask     * task
     TypeDescription::Type vartype = comp->m_var->typeDescription()->getType();
 
     // ARS - Treat sole vars the same as reduction vars??
-    if (vartype == TypeDescription::ReductionVariable ||
-	vartype == TypeDescription::SoleVariable) {
+    if ( vartype == TypeDescription::ReductionVariable ||
+         vartype == TypeDescription::SoleVariable ) {
       // this is either the task computing the var, modifying it, or the reduction itself
       ct.remembercomp(task, comp, nullptr, comp->m_matls, m_proc_group);
     }
@@ -743,7 +743,7 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
 
     // ARS reduction vars seem be handled below with type checks. I
     // would say it is not not needed.
-    
+
 //    if(req->m_var->typeDescription()->isReductionVariable())
 //      continue;
 
@@ -751,8 +751,8 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
 
     if (m_scheduler->isOldDW(req->mapDataWarehouse()) && !m_scheduler->isNewDW(req->mapDataWarehouse() + 1)) {
       continue;
-    }    
-    
+    }
+
     DOUT(detaileddbg, "Rank-" << my_rank << "  req: " << *req);
 
     constHandle<PatchSubset> patches = req->getPatchesUnderDomain(dtask->d_patches);
@@ -761,8 +761,8 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
 
     // ARS - Treat sole vars the same as reduction vars??
     if ((vartype == TypeDescription::ReductionVariable ||
-	 vartype == TypeDescription::SoleVariable) &&
-	m_scheduler->isNewDW(req->mapDataWarehouse())) {
+         vartype == TypeDescription::SoleVariable) &&
+         m_scheduler->isNewDW(req->mapDataWarehouse())) {
       // make sure newdw reduction variable requires link up to the reduction tasks.
       patches = nullptr;
     }
@@ -842,7 +842,7 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
 
       // ARS - Treat sole vars the same as reduction vars??
       if (vartype == TypeDescription::ReductionVariable ||
-	  vartype == TypeDescription::SoleVariable) {
+          vartype == TypeDescription::SoleVariable) {
         continue;
       }
 
@@ -855,7 +855,7 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
 
         IntVector low = IntVector(-9, -9, -9);
         IntVector high = IntVector(-9, -9, -9);
-        
+
         Patch::VariableBasis basis = Patch::translateTypeToBasis(req->m_var->typeDescription()->getType(), false);
         
         if (uses_SHRT_MAX) {
@@ -864,7 +864,6 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
         else {
           patch->computeVariableExtentsWithBoundaryCheck(req->m_var->typeDescription()->getType(), req->m_var->getBoundaryLayer(),
                                                          req->m_gtype, req->m_num_ghost_cells, low, high);
-                                                         
         }
 
         if (req->m_patches_dom == Task::CoarseLevel || req->m_patches_dom == Task::FineLevel) {
@@ -875,7 +874,7 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
             // don't coarsen the extra cells
             low = patch->getExtraLowIndex(basis, req->m_var->getBoundaryLayer());
             high = patch->getExtraHighIndex(basis, req->m_var->getBoundaryLayer());
-            
+
             //low = patch->getLowIndex(basis);
             //high = patch->getHighIndex(basis);
           }
@@ -913,26 +912,26 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
           DOUT(
               neighbor_location,
               "    In detailed task: " << dtask->getName() << " checking if " << *req << " is in neighborhood on level: " << trueLevel);
-              
+
           const bool search_distal_reqs = (dtask->getTask()->m_max_ghost_cells.at(trueLevel) >= MAX_HALO_DEPTH);
           if (!m_load_balancer->inNeighborhood(neighbor->getRealPatch(), search_distal_reqs)) {
             DOUT(neighbor_location, "    No");
             continue;
           }
           DOUT(neighbor_location, "    Yes");
-          
+
           static Patch::selectType fromNeighbors;
           fromNeighbors.resize(0);
 
           IntVector l = Max(neighbor->getExtraLowIndex(basis, req->m_var->getBoundaryLayer()), low);
           IntVector h = Min(neighbor->getExtraHighIndex(basis, req->m_var->getBoundaryLayer()), high);
-          
+
           if (neighbor->isVirtual()) {
             l -= neighbor->getVirtualOffset();
             h -= neighbor->getVirtualOffset();
             neighbor = neighbor->getRealPatch();
           }
-          
+
           if (req->m_patches_dom == Task::OtherGridDomain) {
             // this is when we are copying data between two grids (currently between timesteps)
             // the grid assigned to the old dw should be the old grid.
@@ -944,7 +943,7 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
           else {
             fromNeighbors.push_back(neighbor);
           }
-          
+
           //__________________________________
           //
           for (unsigned int j = 0; j < fromNeighbors.size(); j++) {
@@ -975,12 +974,12 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
               ASSERT(Min(fromNeighbor->getExtraHighIndex(basis, req->m_var->getBoundaryLayer()), h) == h);
             }
 
-#if 0        
+#if 0
             // This intersection returned the wrong values of from_l and from_h at the inside corner
             // of the L-shaped domain, RMCRT_+_domain_DO.ups. Consider removing it  --Todd 07/19/17      
             if ( req->m_patches_dom == Task::ThisLevel) {
               // cull annoying overlapping AMR patch dependencies
-              
+
               patch->cullIntersection(basis, req->m_var->getBoundaryLayer(), fromNeighbor, from_l, from_h);
 
               if (from_l == from_h) {
@@ -1162,12 +1161,12 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
     }
     // ARS - FIX ME
     //else if (patches && patches->empty() &&
-    else if (patches && (patches->empty() || patches->size() <= 1 ) &&
-             (req->m_patches_dom == Task::FineLevel ||
-             dtask->getTask()->getType() == Task::OncePerProc ||
-             dtask->getTask()->getType() == Task::Hypre ||
-             dtask->getTask()->getType() == Task::Output ||
-             dtask->getTask()->getName() == "SchedulerCommon::copyDataToNewGrid")) {
+    else if ( patches && ( patches->empty() || patches->size() <= 1 ) &&
+              ( req->m_patches_dom          == Task::FineLevel   ||
+                dtask->getTask()->getType() == Task::OncePerProc ||
+                dtask->getTask()->getType() == Task::Hypre       ||
+                dtask->getTask()->getType() == Task::Output      ||
+                dtask->getTask()->getName() == "SchedulerCommon::copyDataToNewGrid" ) ) {
       // this is a either coarsen task where there aren't any fine
       // patches, or a PerProcessor task where there aren't any
       // patches on this processor.  Perfectly legal, so do nothing
@@ -1282,7 +1281,7 @@ TaskGraph::makeVarLabelMaterialMap( Scheduler::VarLabelMaterialMap * result )
       }
       // ARS - Treat sole vars the same as reduction vars??
       else if (vartype == TypeDescription::ReductionVariable /* ||
-								vartype == TypeDescription::SoleVariable */) {      
+               vartype == TypeDescription::SoleVariable */) {
         // Default to material -1 (global)
         matls.push_back(-1);
       }
