@@ -177,6 +177,7 @@ WallModelDriver::problemSetup( const ProblemSpecP& input_db )
       for(std::vector<string>::const_iterator i = _extra_src_flux_names.begin(); i != _extra_src_flux_names.end(); ++i) {
         _num_extra_src += 1; 
       }
+      _Nenv = ParticleTools::get_num_env( db_model, ParticleTools::DQMOM ); 
 
     } else {
 
@@ -218,12 +219,19 @@ WallModelDriver::sched_doWallHT( const LevelP& level, SchedulerP& sched, const i
   _HF_B_label     = VarLabel::find( "radiationFluxB" );
 
   if (do_coal_region){
-      for(int i=0; i<_num_extra_src; i++) {
-        VarLabel * extra_src_varlabel_temp = VarLabel::find(_extra_src_flux_names[i]);
-        _extra_src_varlabels.push_back(extra_src_varlabel_temp);
-      }
+    for(int i=0; i<_num_extra_src; i++) {
+      VarLabel * extra_src_varlabel_temp = VarLabel::find(_extra_src_flux_names[i]);
+      _extra_src_varlabels.push_back(extra_src_varlabel_temp);
+    }
     _ave_dep_vel_label = VarLabel::find(_dep_vel_name);
-    _d_vol_ave_label = VarLabel::find("d_vol_ave");
+    for(int i=0; i<_Nenv; i++) {
+      const std::string d_vol_ave_num_s = ParticleTools::append_env("d_vol_ave_num",i);
+      const std::string d_vol_ave_den_s = ParticleTools::append_env("d_vol_ave_den",i);
+      VarLabel * particle_flow_rate_d_temp = VarLabel::find(d_vol_ave_num_s);
+      VarLabel * particle_flow_rate_temp = VarLabel::find(d_vol_ave_den_s);
+      _particle_flow_rate_varlabels.push_back(particle_flow_rate_temp);
+      _particle_flow_rate_d_varlabels.push_back(particle_flow_rate_d_temp);
+    }
   }
 
   if ( !check_varlabels() ){
@@ -259,9 +267,12 @@ WallModelDriver::sched_doWallHT( const LevelP& level, SchedulerP& sched, const i
       task->requires( Task::OldDW, _thermal_cond_sb_s_label, Ghost::None, 0 );
       task->requires( Task::OldDW, _thermal_cond_sb_l_label, Ghost::None, 0 );
       task->requires( Task::OldDW, _ave_dep_vel_label, Ghost::None, 0 );
-      task->requires( Task::OldDW, _d_vol_ave_label, Ghost::None, 0 );
       for(int i=0; i<_num_extra_src; i++) {
         task->requires( Task::OldDW, _extra_src_varlabels[i] , Ghost::None, 0 );
+      }
+      for(int i=0; i<_Nenv; i++) {
+        task->requires( Task::OldDW, _particle_flow_rate_d_varlabels[i] , Ghost::None, 0 );
+        task->requires( Task::OldDW, _particle_flow_rate_varlabels[i] , Ghost::None, 0 );
       }
     }
     //task->requires( Task::OldDW , _True_T_Label   , Ghost::None , 0 );
@@ -350,12 +361,18 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
 
       if (do_coal_region){
         vars.num_extra_src = _num_extra_src;
+        vars.Nenv = _Nenv;
         vars.extra_src.resize(_num_extra_src);
+        vars.particle_flow_rate.resize(_Nenv);
+        vars.particle_flow_rate_d.resize(_Nenv);
         for(int i=0; i<_num_extra_src; i++) {
           old_dw->get( vars.extra_src[i] , _extra_src_varlabels[i], _matl_index, patch, Ghost::None, 0 ); // get all of the extra sources to add to the net flux balance. 
         }
+        for(int i=0; i<_Nenv; i++) {
+          old_dw->get( vars.particle_flow_rate_d[i] , _particle_flow_rate_d_varlabels[i], _matl_index, patch, Ghost::None, 0 ); // particle flow rate to wall * size 
+          old_dw->get( vars.particle_flow_rate[i] , _particle_flow_rate_varlabels[i], _matl_index, patch, Ghost::None, 0 ); // particle flow rate 
+        }
         old_dw->get( vars.ave_deposit_velocity , _ave_dep_vel_label, _matl_index, patch, Ghost::None, 0 ); // from particle model
-        old_dw->get( vars.d_vol_ave , _d_vol_ave_label, _matl_index, patch, Ghost::None, 0 ); // from particle model
         old_dw->get( vars.deposit_thickness_old , _deposit_thickness_label, _matl_index, patch, Ghost::None, 0 );
         old_dw->get( vars.deposit_thickness_sb_s_old , _deposit_thickness_sb_s_label, _matl_index, patch, Ghost::None, 0 );
         old_dw->get( vars.deposit_thickness_sb_l_old , _deposit_thickness_sb_l_label, _matl_index, patch, Ghost::None, 0 );
@@ -1066,7 +1083,7 @@ WallModelDriver::CoalRegionHT::problemSetup( const ProblemSpecP& input_db ){
 void
 WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars, CCVariable<double>& T ){
 
-  double residual, TW_new, T_old, net_q, net_q_radiation, rad_q, extra_src_sum, total_area_face, average_area_face, R_wall, R_en, R_sb, R_tot, Emiss, dp_arrival, tau_sint;
+  double residual, TW_new, T_old, net_q, net_q_radiation, rad_q, extra_src_sum, total_area_face, average_area_face, R_wall, R_en, R_sb, R_tot, Emiss, dp_arrival,dp_flow, tau_sint;
   double T_i, T_en, T_metal, T_sb_l, T_sb_s, dy_dep_sb_s, dy_dep_sb_l, dy_dep_sb_l_old, dy_dep_en, k_en, k_sb_s, k_sb_l, k_en_old, k_sb_s_old, k_sb_l_old;
   const std::string enamel_name = "enamel"; 
   const std::string sb_name = "sb";
@@ -1179,8 +1196,14 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
               Emiss=vars.emissivity_old[c]; 
               TW_new =  vars.T_real_old[c];
               T_old =  vars.T_real_old[c];
-                                            
-              dp_arrival=vars.d_vol_ave[c];
+              
+              dp_arrival=0.0;         
+              dp_flow=0.0;         
+              for(int i=0; i<vars.Nenv; i++) {
+                dp_arrival+=vars.particle_flow_rate_d[i][c]; 
+                dp_flow+=vars.particle_flow_rate[i][c]; 
+              }
+              dp_arrival=dp_arrival/dp_flow; // [m^3/s * m]/[m^3/s]
               tau_sint=min(dp_arrival/max(vars.ave_deposit_velocity[c],1e-50),1e10); // [s]
               dy_dep_sb_s = std::min(vars.ave_deposit_velocity[c]*wi.t_sb, wi.dy_erosion);// This includes our crude erosion model. If the deposit wants to grow above a certain size it will erode. 
 
