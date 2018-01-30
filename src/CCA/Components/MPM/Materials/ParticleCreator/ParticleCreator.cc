@@ -177,7 +177,7 @@ ParticleCreator::createParticles(MPMMaterial* matl,
     vector<Vector>* pfiberdirs     = 0;
     vector<Vector>* pvelocities    = 0;    // gcd adds and new change name
     vector<Matrix3>* psizes        = 0;
-    vector<Vector>*  pareas        = 0;
+//    vector<Vector>*  pareas        = 0;
 
     if (sgp){
       volumes      = sgp->getVolume();
@@ -186,7 +186,7 @@ ParticleCreator::createParticles(MPMMaterial* matl,
       pfiberdirs   = sgp->getFiberDirs();
       pvelocities  = sgp->getVelocity();  // gcd adds and new change name
       psizes       = sgp->getSize();
-      pareas       = sgp->getArea();
+//      pareas       = sgp->getArea();
 
       if(d_with_color){
         colors      = sgp->getColors();
@@ -247,11 +247,13 @@ ParticleCreator::createParticles(MPMMaterial* matl,
       }
     }
 
+#if 0
     // For getting particle areas (if they exist)
     vector<Vector>::const_iterator areaiter;
     if (pareas) {
       if (!pareas->empty()) areaiter = vars.d_object_area[*obj].begin();
     }
+#endif
 
     // For getting particles colors (if they exist)
     vector<double>::const_iterator coloriter;
@@ -352,6 +354,7 @@ ParticleCreator::createParticles(MPMMaterial* matl,
         }
       }
 
+#if 0
       if (pareas) {
         // Read parea from file or get from a smooth geometry piece
         if (!pareas->empty()) {
@@ -359,6 +362,7 @@ ParticleCreator::createParticles(MPMMaterial* matl,
           ++areaiter;
         }
       }
+#endif
 
       if (colors) {
         if (!colors->empty()) {
@@ -402,17 +406,21 @@ ParticleCreator::createParticles(MPMMaterial* matl,
         if (checkForSurface(piece,*itr,dxpp)) {
           Vector areacomps;
           pvars.pLoadCurveID[pidx] = getLoadCurveID(*itr, dxpp,areacomps);
+#if 0
           if (d_doScalarDiffusion) {
             pvars.parea[pidx]=Vector(pvars.parea[pidx].x()*areacomps.x(),
                                      pvars.parea[pidx].y()*areacomps.y(),
                                      pvars.parea[pidx].z()*areacomps.z());
           }
+#endif
         } else {
           pvars.pLoadCurveID[pidx] = IntVector(0,0,0);
         }
+#if 0
         if(pvars.pLoadCurveID[pidx].x()==0 && d_doScalarDiffusion) {
           pvars.parea[pidx]=Vector(0.);
         }
+#endif
       }
       count++;
     }

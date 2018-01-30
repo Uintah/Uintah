@@ -42,6 +42,7 @@
 #include <CCA/Components/MPM/Core/MPMFlags.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
 #include <CCA/Components/MPM/PhysicalBC/LoadCurve.h>
+#include <CCA/Components/MPM/PhysicalBC/BurialHistory.h>
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 
@@ -611,6 +612,7 @@ protected:
   int              NGP;      // Number of ghost particles needed.
   int              NGN;      // Number of ghost nodes     needed.
   int              d_ndim;   // Num. of dimensions, 2 or 3.  If 2, assume x-y
+  BurialHistory*   burialHistory;
   
   std::list<Patch::FaceType>  d_bndy_traction_faces; // list of xminus, xplus, yminus, ...
   std::vector<MPMPhysicalBC*> d_physicalBCs;
@@ -625,7 +627,6 @@ protected:
   std::vector<double> d_IPColor;
   std::vector<Vector> d_IPTranslate;
   std::vector<Vector> d_IPVelNew;
-
 
   bool             d_fracture;
 

@@ -40,6 +40,7 @@
 #include <CCA/Components/MPM/Materials/ParticleCreator/ParticleCreator.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <CCA/Components/MPM/PhysicalBC/PressureBC.h>
+#include <CCA/Components/MPM/PhysicalBC/BurialHistory.h>
 #include <CCA/Components/MPM/MMS/MMS.h>
 #include <CCA/Components/MPM/ThermalContact/ThermalContact.h>
 #include <CCA/Components/MPM/ThermalContact/ThermalContactFactory.h>
@@ -102,7 +103,8 @@ SerialMPM::SerialMPM( const ProcessorGroup* myworld,
 		      const SimulationStateP sharedState) :
   MPMCommon( myworld, sharedState )
 {
-  flags = scinew MPMFlags(myworld);
+  flags               = scinew MPMFlags(myworld);
+  burialHistory       = scinew BurialHistory(/*myworld*/);
 
   d_nextOutputTime=0.;
   d_SMALL_NUM_MPM=1e-200;
@@ -110,10 +112,10 @@ SerialMPM::SerialMPM( const ProcessorGroup* myworld,
   dissolutionModel    = 0;
   thermalContactModel = 0;
   heatConductionModel = 0;
+  d_loadCurveIndex    = 0;
+  d_switchCriteria    = 0;
   NGP     = 1;
   NGN     = 1;
-  d_loadCurveIndex=0;
-  d_switchCriteria = 0;
 }
 
 SerialMPM::~SerialMPM()
@@ -123,6 +125,7 @@ SerialMPM::~SerialMPM()
   delete dissolutionModel;
   delete thermalContactModel;
   delete heatConductionModel;
+  delete burialHistory;
   MPMPhysicalBCFactory::clean();
 
   if(d_analysisModules.size() != 0){
@@ -254,6 +257,10 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
     NGN=2;
   }
 
+  if(flags->d_useLoadCurves){
+    burialHistory->populate(restart_mat_ps);
+  }
+
   if (flags->d_prescribeDeformation){
     readPrescribedDeformations(flags->d_prescribedDeformationFile);
   }
@@ -351,6 +358,8 @@ void SerialMPM::outputProblemSpec(ProblemSpecP& root_ps)
     ProblemSpecP cm_ps = mat->outputProblemSpec(mpm_ps);
   }
 
+  burialHistory->outputProblemSpec(root_ps);
+
   ProblemSpecP physical_bc_ps = root->appendChild("PhysicalBC");
   ProblemSpecP mpm_ph_bc_ps = physical_bc_ps->appendChild("MPM");
   for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++) {
@@ -423,11 +432,6 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
     t->computes(lb->pColorLabel);
   }
 
-  if (flags->d_useLoadCurves) {
-    // Computes the load curve ID associated with each particle
-    t->computes(lb->pLoadCurveIDLabel);
-  }
-
   if (flags->d_reductionVars->accStrainEnergy) {
     // Computes accumulated strain energy
     t->computes(lb->AccStrainEnergyLabel);
@@ -461,6 +465,7 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
 
   if (flags->d_useLoadCurves) {
     // Schedule the initialization of pressure BCs per particle
+    t->computes(lb->pLoadCurveIDLabel);
     scheduleInitializePressureBCs(level, sched);
   }
 
@@ -482,7 +487,6 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   }
 
   int numTracerM = m_sharedState->getNumTracerMatls();
-//  for(int m = 0; m < numTracerM; m++){
   if(numTracerM>0){
     TracerMaterial* tracer_matl = m_sharedState->getTracerMaterial(0);
     Tracer* tr = tracer_matl->getTracer();
@@ -3031,6 +3035,7 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
         }
         acceleration[c]  = acc +  gravity;
         velocity_star[c] = velocity[c] + acceleration[c] * delT;
+#if 0
         if(velocity_star[c].length()*delT > 0.4*delX && c.z() >= 0){
           cout << "n = " << c << endl;
           cout << "mass = " << mass[c] << endl;
@@ -3041,6 +3046,7 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
           cout << "acceleration = " << acceleration[c] << endl << endl;
           velocity_star[c] = velocity[c];
         }
+#endif
       }
     }    // matls
   }

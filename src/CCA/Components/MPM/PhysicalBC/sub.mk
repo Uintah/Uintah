@@ -41,6 +41,7 @@ SRCS     += \
 	$(SRCDIR)/FluxBCModel.cc           \
 	$(SRCDIR)/AutoCycleFluxBC.cc       \
 	$(SRCDIR)/ArchesHeatFluxBC.cc	   \
+	$(SRCDIR)/BurialHistory.cc	   \
 	$(SRCDIR)/PolynomialData.cc		
 
 PSELIBS := \
