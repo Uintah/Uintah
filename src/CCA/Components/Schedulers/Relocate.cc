@@ -32,7 +32,6 @@
 #include <Core/Util/ProgressiveWarning.h>
 
 #include <map>
-#include <mutex>
 #include <set>
 
 #define RELOCATE_TAG            0x3fff

@@ -37,7 +37,7 @@
 #ifndef SCI_project_Datatype_h
 #define SCI_project_Datatype_h 1
 
-#include <mutex>
+#include <Core/Parallel/MasterLock.h>
 
 
 namespace Uintah {
@@ -47,7 +47,7 @@ class Datatype {
 public:
   //! needed for our smart pointers -- LockingHandle<T>
   int ref_cnt;
-  std::mutex lock{};
+  Uintah::MasterLock lock{};
 
   //! unique id for each instance
   int generation;

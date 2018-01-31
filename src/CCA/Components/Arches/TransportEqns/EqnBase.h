@@ -14,14 +14,13 @@
 #include <CCA/Components/Arches/TransportEqns/Discretization_new.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/Arches/IntrusionBC.h>
+#include <Core/Parallel/MasterLock.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <CCA/Components/Arches/Directives.h>
 
-#include <mutex>
-
-extern std::mutex cerrLock;
+extern Uintah::MasterLock cerrLock;
 
 //========================================================================
 

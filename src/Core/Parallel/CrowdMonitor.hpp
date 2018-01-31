@@ -25,8 +25,9 @@
 #ifndef CORE_PARALLEL_CROWDMONITOR_H
 #define CORE_PARALLEL_CROWDMONITOR_H
 
+#include <Core/Parallel/MasterLock.h>
+
 #include <atomic>
-#include <mutex>
 #include <thread>
 
 namespace Uintah {
@@ -43,7 +44,7 @@ public:
     : m_type(t)
   {
     if (m_type == READER) {
-      std::unique_lock<std::mutex>(s_mutex);
+      std::unique_lock<Uintah::MasterLock>(s_mutex);
       s_count.fetch_add(1, std::memory_order_relaxed);
     }
     else {
@@ -71,14 +72,14 @@ private:
   CrowdMonitor( CrowdMonitor && )                 = delete;
   CrowdMonitor& operator=( CrowdMonitor && )      = delete;
 
-  static std::mutex           s_mutex;
-  static std::atomic<int>     s_count;
-  Type                        m_type;
+  static Uintah::MasterLock s_mutex;
+  static std::atomic<int>   s_count;
+  Type                      m_type;
 
 };
 
-template <typename Tag> std::mutex       CrowdMonitor<Tag>::s_mutex = {};
-template <typename Tag> std::atomic<int> CrowdMonitor<Tag>::s_count = {0};
+template <typename Tag> Uintah::MasterLock CrowdMonitor<Tag>::s_mutex = {};
+template <typename Tag> std::atomic<int>   CrowdMonitor<Tag>::s_count = {0};
 
 } // end namespace Uintah
 

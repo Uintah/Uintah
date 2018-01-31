@@ -38,6 +38,7 @@
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Grid/Variables/VarnameMatlPatch.h>
+#include <Core/Parallel/MasterLock.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Util/DebugStream.h>
@@ -49,7 +50,6 @@
 #endif
 
 #include <list>
-#include <mutex>
 #include <string>
 #include <vector>
 
@@ -482,7 +482,7 @@ private:
   int d_processor;
   int d_numProcessors;
 
-  std::mutex d_lock;
+  Uintah::MasterLock d_lock;
     
   std::string d_particlePositionName;
 
@@ -594,7 +594,7 @@ private:
     }
 
     dbg << "DataArchive::query(values) completed in " << timer().seconds()
-	<< " seconds\n";
+        << " seconds\n";
   }  
   //______________________________________________________________________
   //

@@ -27,11 +27,11 @@
 
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Grid/Patch.h>
+#include <Core/Parallel/MasterLock.h>
 #include <Core/Util/DOUT.hpp>
 
 #include <iostream>
 #include <map>
-#include <mutex>
 #include <sstream>
 
 using namespace Uintah;
@@ -43,7 +43,7 @@ namespace {
 
 Dout g_varlabel_dbg( "VarLabel", false );
 std::map<std::string, VarLabel*> g_all_labels;
-std::mutex g_label_mutex{};
+Uintah::MasterLock g_label_mutex{};
 
 }
 

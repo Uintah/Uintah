@@ -52,11 +52,11 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Math/MinMax.h>
+#include <Core/Parallel/MasterLock.h>
 #include <Core/Util/DebugStream.h>
 
 #include <iostream>
 #include <fstream>
-#include <mutex>
 
 using namespace Uintah;
 using namespace std;
@@ -66,10 +66,10 @@ using namespace std;
 static DebugStream cout_doing("RIGID_MPM", false);
 
 // Used for syncing cerr'ing so it is easier to read.
-extern std::mutex cerrLock;
+extern Uintah::MasterLock cerrLock;
 
 RigidMPM::RigidMPM(const ProcessorGroup* myworld,
-		   const SimulationStateP sharedState) :
+                   const SimulationStateP sharedState) :
   SerialMPM(myworld, sharedState)
 {
 }

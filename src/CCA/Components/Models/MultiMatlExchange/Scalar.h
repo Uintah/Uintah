@@ -52,6 +52,16 @@ namespace ExchangeModels{
 
     virtual void outputProblemSpec(ProblemSpecP & prob_spec);
 
+    virtual void sched_PreExchangeTasks(SchedulerP           & sched,
+                                        const PatchSet       * patches,     
+                                        const MaterialSubset * iceMatls,    
+                                        const MaterialSet    * allMatls){};
+                                        
+    virtual void addExchangeModelRequires ( Task* t,
+                                            const MaterialSubset * zeroMatls,
+                                            const MaterialSubset * iceMatls,
+                                            const MaterialSubset * mpmMatls){};  
+
     virtual void sched_AddExch_VelFC(SchedulerP           & sched,
                                      const PatchSet       * patches,
                                      const MaterialSubset * iceMatls,

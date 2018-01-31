@@ -359,6 +359,7 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
   t->requires( Task::NewDW, lb->sp_vol_CCLabel,     gac,1);
   t->requires( Task::NewDW, lb->rhsLabel,            one_matl,   oims,gn,0);
   //t->requires( Task::OldDW, lb->initialGuessLabel, one_matl,   oims,gn,0);
+
   //__________________________________
   // SetupRHS
   if(d_models.size() > 0){  
@@ -384,6 +385,10 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
     
   computesRequires_CustomBCs(t, "implicitPressureSolve", lb, ice_matls,
                              d_BC_globalVars, true);
+
+  //__________________________________
+  //  For Vel_FC exchange
+  d_exchModel->addExchangeModelRequires( t, one_matl, ice_matls, mpm_matls);
 
   //__________________________________
   // ImplicitVel_FC
@@ -934,9 +939,8 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
                                 const MaterialSubset* ice_matls,
                                 const MaterialSubset* mpm_matls)
 {
-  cout_doing<<"Doing implicitPressureSolve "<<"\t\t\t\t ICE \tL-" 
-            << level->getIndex()<< endl;
-
+  printTask(patch_sub, cout_doing, "Doing implicitPressureSolve" );
+  
   //__________________________________
   // define Matl sets and subsets
   const MaterialSet* all_matls = m_sharedState->allMaterials();

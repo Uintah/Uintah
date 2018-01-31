@@ -1667,7 +1667,7 @@ DataArchiver::writeto_xml_files( const GridP& grid )
 
       proc0cout << "Should we save timestep.xml for timestep " << dir_timestep << "; answer is: " << (save_io_timestep_xml_file?"yes":"no") << "\n";
 
-      string iname = baseDirs[i]->getName() + "/index.xml";
+      string       iname    = baseDirs[i]->getName() + "/index.xml";
       ProblemSpecP indexDoc = loadDocument( iname );
 
       // If this timestep isn't already in index.xml, add it in...
@@ -1704,6 +1704,7 @@ DataArchiver::writeto_xml_files( const GridP& grid )
               }
             }
           }
+
           if( !found ) {
             ProblemSpecP newElem = vs->appendChild( "variable" );
             newElem->setAttribute( "type", TranslateVariableType( var->typeDescription()->getName(), baseDirs[i] != &m_dir ) );
@@ -1762,6 +1763,7 @@ DataArchiver::writeto_xml_files( const GridP& grid )
       }
 
       indexDoc->output( iname.c_str() );
+
       //indexDoc->releaseDocument();
 
       // make a timestep.xml file for this timestep we need to do it
@@ -3174,6 +3176,7 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
 
   //__________________________________
   // allocate memory for pidx variable descriptor array
+
   cout << "Actual_number_of_variables is " << actual_number_of_variables << "\n";
   rc = PIDX_set_variable_count( pidx.file, actual_number_of_variables );
   pidx.checkReturnCode( rc, "DataArchiver::saveLabels_PIDX -PIDX_set_variable_count failure",__FILE__, __LINE__);
@@ -3225,6 +3228,7 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
     int    the_size  = sizeof( double );
 
     std::cout << "type for " <<  label->getName() << "is: " << subtype->getType() << std::endl;
+
     switch( subtype->getType( )) {
 
     case Uintah::TypeDescription::Stencil7 : sample_per_variable = 7; break;
@@ -3268,7 +3272,6 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
       var_mat_name = label->getName() + "_m" + s.str();
     
       cout << "here: " << var_mat_name.c_str() << ", " << (varSubType_size * 8) << ", " << data_type << "\n";
-
       bool isParticle = ( label->typeDescription()->getType() == Uintah::TypeDescription::ParticleVariable );
 
       rc = PIDX_variable_create((char*) var_mat_name.c_str(),
@@ -3422,7 +3425,6 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
 
       rc = PIDX_append_and_write_variable(pidx.file, pidx.varDesc[vc][m]);
       pidx.checkReturnCode( rc, "DataArchiver::saveLabels_PIDX - PIDX_append_and_write_variable failure", __FILE__, __LINE__ );
-
       vcm++;
     }  //  Materials
 

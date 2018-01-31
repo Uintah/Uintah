@@ -35,22 +35,22 @@
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 #include <Core/Grid/BoundaryConditions/BoundCondFactory.h>
 #include <Core/Math/MiscMath.h>
+#include <Core/Parallel/MasterLock.h>
 
 #include <atomic>
 #include <iostream>
 #include <sstream>
 #include <cstdio>
 #include <map>
-#include <mutex>
 
 using namespace std;
 using namespace Uintah;
 
 
 static std::atomic<int32_t> ids{0};
-static std::mutex ids_init{};
+static Uintah::MasterLock   ids_init{};
 
-extern std::mutex coutLock; // Used to sync cout when output by multiple ranks
+extern Uintah::MasterLock coutLock; // Used to sync cout when output by multiple ranks
 
 Patch::Patch(const Level* level,
              const IntVector& lowIndex, const IntVector& highIndex,

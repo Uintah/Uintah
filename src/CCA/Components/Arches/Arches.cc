@@ -49,22 +49,19 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Math/MiscMath.h>
+#include <Core/Util/DOUT.hpp>
 
 #include <iostream>
 #include <fstream>
-#include <mutex>
 
 using namespace std;
 using namespace Uintah;
 
 static DebugStream dbg("ARCHES", false);
 
-// Used to sync std::cout when output by multiple ranks
-extern std::mutex coutLock;
-
 //--------------------------------------------------------------------------------------------------
 Arches::Arches(const ProcessorGroup* myworld,
-	       const SimulationStateP sharedState) :
+               const SimulationStateP sharedState) :
   ApplicationCommon(myworld, sharedState)
 {
   m_MAlab               = 0;
@@ -172,15 +169,15 @@ Arches::problemSetup( const ProblemSpecP     & params,
     }
 
     m_analysis_modules = AnalysisModuleFactory::create(d_myworld,
-						       m_sharedState,
-						       params);
+                                                       m_sharedState,
+                                                       params);
 
     if(m_analysis_modules.size() != 0) {
       vector<AnalysisModule*>::iterator iter;
       for( iter  = m_analysis_modules.begin();
            iter != m_analysis_modules.end(); iter++) {
         AnalysisModule* am = *iter;
-	am->setComponents( dynamic_cast<ApplicationInterface*>( this ) );
+        am->setComponents( dynamic_cast<ApplicationInterface*>( this ) );
         am->problemSetup(params, materials_ps, grid);
       }
     }
@@ -300,7 +297,7 @@ Arches::scheduleTimeAdvance( const LevelP& level,
 //--------------------------------------------------------------------------------------------------
 void
 Arches::scheduleAnalysis( const LevelP& level,
-			  SchedulerP& sched)
+                          SchedulerP& sched)
 {
   // Only schedule
   if(level->getIndex() != m_arches_level_index) {
@@ -367,10 +364,13 @@ void Arches::assign_unique_boundary_names( Uintah::ProblemSpecP bcProbSpec )
             fndInc = true;
         }
         // rename this face
-        std::cout << "WARNING: I found a duplicate face label " << faceName;
+        std::ostringstream message;
+        message << "WARNING: I found a duplicate face label " << faceName;
         faceName = faceName + "_" + Arches::number_to_string(j);
-        std::cout << " in your Boundary condition specification. I will rename it to "
-          << faceName << std::endl;
+        message << " in your Boundary condition specification. I will rename it to "
+                << faceName << "\n";
+        DOUT(true, message.str());
+
         faceSpec->replaceAttributeValue("name", faceName);
       }
     }

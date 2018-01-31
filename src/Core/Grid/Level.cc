@@ -34,6 +34,7 @@
 #include <Core/Math/MiscMath.h>
 #include <Core/OS/ProcessInfo.h> // For Memory Check
 #include <Core/Parallel/CrowdMonitor.hpp>
+#include <Core/Parallel/MasterLock.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -55,8 +56,8 @@ using namespace Uintah;
 namespace {
 
 std::atomic<int32_t> ids{0};
-std::mutex           ids_init{};
-std::mutex           patch_cache_mutex{};
+Uintah::MasterLock   ids_init{};
+Uintah::MasterLock   patch_cache_mutex{};
 
 DebugStream bcout{   "BCTypes", false };
 DebugStream rgtimes{ "RGTimes", false };

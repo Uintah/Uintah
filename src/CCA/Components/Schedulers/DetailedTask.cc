@@ -33,6 +33,7 @@
 #endif
 
 #include <Core/Containers/ConsecutiveRangeSet.h>
+#include <Core/Parallel/MasterLock.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Util/DOUT.hpp>
@@ -40,7 +41,6 @@
 #include <sci_defs/config_defs.h>
 #include <sci_defs/cuda_defs.h>
 
-#include <mutex>
 #include <sstream>
 #include <string>
 
@@ -49,13 +49,13 @@ using namespace Uintah;
 
 
 // declared in DetailedTasks.h - used in both places to protect external ready queue (hence, extern here)
-extern std::mutex g_external_ready_mutex;
+extern Uintah::MasterLock g_external_ready_mutex;
 
 
 namespace {
 
-std::mutex g_internal_dependency_mutex{};
-std::mutex g_dtask_output_mutex{};
+Uintah::MasterLock g_internal_dependency_mutex{};
+Uintah::MasterLock g_dtask_output_mutex{};
 
 Dout scrubout(    "Scrubbing",     false);
 Dout internaldbg( "InternalDeps",  false);
@@ -408,7 +408,7 @@ DetailedTask::addInternalRequires( DependencyBatch * req )
 void
 DetailedTask::checkExternalDepCount()
 {
-  std::lock_guard<std::mutex> external_ready_guard(g_external_ready_mutex);
+  std::lock_guard<Uintah::MasterLock> external_ready_guard(g_external_ready_mutex);
 
   DOUT(externaldbg, "Rank-" << Parallel::getMPIRank() << " Task " << this->getTask()->getName() << " external deps: "
                           << externalDependencyCount_.load(std::memory_order_seq_cst)
@@ -445,7 +445,7 @@ DetailedTask::resetDependencyCounts()
 //
 void
 DetailedTask::addInternalDependency(       DetailedTask * prerequisiteTask
-                                   , const VarLabel*      var
+                                   , const VarLabel     * var
                                    )
 {
   if ( d_taskGroup->mustConsiderInternalDependencies() ) {
@@ -494,7 +494,7 @@ DetailedTask::done( std::vector<OnDemandDataWarehouseP> & dws )
 void
 DetailedTask::dependencySatisfied( InternalDependency * dep )
 {
-  std::lock_guard<std::mutex> internal_dependency_guard(g_internal_dependency_mutex);
+  std::lock_guard<Uintah::MasterLock> internal_dependency_guard(g_internal_dependency_mutex);
 
   ASSERT(numPendingInternalDependencies > 0);
   unsigned long currentGeneration = d_taskGroup->getCurrentDependencyGeneration();
@@ -631,7 +631,7 @@ operator<<( std::ostream & out, const DetailedTask & dtask )
         out << patches->get(i)->getID();
       }
       // a once-per-proc task is liable to have multiple levels, and thus calls to getLevel(patches) will fail
-      if (dtask.getTask()->getType() == Task::OncePerProc) {
+      if (dtask.getTask()->getType() == Task::OncePerProc || dtask.getTask()->getType() == Task::Hypre) {
         out << ", on multiple levels";
       }
       else {
@@ -704,7 +704,9 @@ DetailedTask::getCudaStreamForThisTask( unsigned int device_id ) const
 //_____________________________________________________________________________
 //
 void
-DetailedTask::setCudaStreamForThisTask( unsigned int device_id, cudaStream_t * stream )
+DetailedTask::setCudaStreamForThisTask( unsigned int   device_id
+                                      , cudaStream_t * stream
+                                      )
 {
   if (stream == nullptr) {
     printf("ERROR! - DetailedTask::setCudaStreamForThisTask() - A request was made to assign a stream at address nullptr into this task %s\n", getName().c_str());
@@ -825,7 +827,10 @@ DetailedTask::setTaskGpuDataWarehouse( const unsigned int       whichDevice
 //_____________________________________________________________________________
 //
 GPUDataWarehouse*
-DetailedTask::getTaskGpuDataWarehouse( const unsigned int whichDevice, Task::WhichDW DW ) {
+DetailedTask::getTaskGpuDataWarehouse( const unsigned int  whichDevice
+                                     ,       Task::WhichDW DW
+                                     )
+{
   auto iter = TaskGpuDWs.find(whichDevice);
   if (iter != TaskGpuDWs.end()) {
     return iter->second.TaskGpuDW[DW];
@@ -837,7 +842,8 @@ DetailedTask::getTaskGpuDataWarehouse( const unsigned int whichDevice, Task::Whi
 //_____________________________________________________________________________
 //
 void
-DetailedTask::deleteTaskGpuDataWarehouses() {
+DetailedTask::deleteTaskGpuDataWarehouses()
+{
   for (auto iter = TaskGpuDWs.begin(); iter != TaskGpuDWs.end(); ++iter) {
     for (int i = 0; i < 2; i++) {
         if (iter->second.TaskGpuDW[i] != nullptr) {
@@ -858,8 +864,8 @@ DetailedTask::deleteTaskGpuDataWarehouses() {
 //_____________________________________________________________________________
 //
 void
-DetailedTask::clearPreparationCollections() {
-
+DetailedTask::clearPreparationCollections()
+{
   deviceVars.clear();
   ghostVars.clear();
   taskVars.clear();
@@ -870,14 +876,18 @@ DetailedTask::clearPreparationCollections() {
 //_____________________________________________________________________________
 //
 void
-DetailedTask::addTempHostMemoryToBeFreedOnCompletion( void * ptr ) {
+DetailedTask::addTempHostMemoryToBeFreedOnCompletion( void * ptr )
+{
   taskHostMemoryPoolItems.push(ptr);
 }
 
 //_____________________________________________________________________________
 //
 void
-DetailedTask::addTempCudaMemoryToBeFreedOnCompletion( unsigned int device_id, void * ptr ) {
+DetailedTask::addTempCudaMemoryToBeFreedOnCompletion( unsigned int   device_id
+                                                    , void         * ptr
+                                                    )
+{
   gpuMemoryPoolDevicePtrItem gpuItem(device_id, ptr);
   taskCudaMemoryPoolItems.push_back(gpuItem);
 }
@@ -885,8 +895,8 @@ DetailedTask::addTempCudaMemoryToBeFreedOnCompletion( unsigned int device_id, vo
 //_____________________________________________________________________________
 //
 void
-DetailedTask::deleteTemporaryTaskVars() {
-
+DetailedTask::deleteTemporaryTaskVars()
+{
   // clean out the host list
   while (!taskHostMemoryPoolItems.empty()) {
     cudaHostUnregister(taskHostMemoryPoolItems.front());

@@ -83,30 +83,31 @@ namespace Uintah {
   template<class Types>
   class HypreStencil7 : public RefCounted {
   public:
-    HypreStencil7(const Level              * level_in,
-                  const MaterialSet        * matlset_in,
-                  const VarLabel           * A_in,
-                        Task::WhichDW        which_A_dw_in,
-                  const VarLabel           * x_in, 
-                        bool                 modifies_X_in,
-                  const VarLabel           * b_in,
-                        Task::WhichDW        which_b_dw_in,
-                  const VarLabel           * guess_in,
-                        Task::WhichDW        which_guess_dw_in,
-                  const HypreSolver2Params * params_in,
-                        bool                 modifies_hypre_in)
-      : level(level_in),
-        matlset(matlset_in),
-        A_label(A_in),
-        which_A_dw(which_A_dw_in),
-        X_label(x_in), 
-        modifies_X(modifies_X_in),
-        b_label(b_in),
-        which_b_dw(which_b_dw_in),
-        guess_label(guess_in),
-        which_guess_dw(which_guess_dw_in),
-        params(params_in),
-        modifies_hypre(modifies_hypre_in)
+    HypreStencil7( const Level              * level_in
+                 , const MaterialSet        * matlset_in
+                 , const VarLabel           * A_in
+                 ,       Task::WhichDW        which_A_dw_in
+                 , const VarLabel           * x_in
+                 ,       bool                 modifies_X_in
+                 , const VarLabel           * b_in
+                 ,       Task::WhichDW        which_b_dw_in
+                 , const VarLabel           * guess_in
+                 ,       Task::WhichDW        which_guess_dw_in
+                 , const HypreSolver2Params * params_in
+                 ,       bool                 modifies_hypre_in
+                 )
+      : level(level_in)
+      , matlset(matlset_in)
+      , A_label(A_in)
+      , which_A_dw(which_A_dw_in)
+      , X_label(x_in)
+      , modifies_X(modifies_X_in)
+      , b_label(b_in)
+      , which_b_dw(which_b_dw_in)
+      , guess_label(guess_in)
+      , which_guess_dw(which_guess_dw_in)
+      , params(params_in)
+      , modifies_hypre(modifies_hypre_in)
     {
       // Time Step
       m_timeStepLabel =
@@ -127,12 +128,13 @@ namespace Uintah {
 
     //---------------------------------------------------------------------------------------------
 
-    void solve(const ProcessorGroup* pg, 
-               const PatchSubset* patches,
-               const MaterialSubset* matls,
-               DataWarehouse* old_dw, 
-               DataWarehouse* new_dw,
-               Handle<HypreStencil7<Types> >)
+    void solve( const ProcessorGroup * pg
+              , const PatchSubset    * patches
+              , const MaterialSubset * matls
+              ,       DataWarehouse  * old_dw
+              ,       DataWarehouse  * new_dw
+              ,       Handle<HypreStencil7<Types>>
+              )
     {
       typedef typename Types::sol_type sol_type;
       
@@ -166,7 +168,7 @@ namespace Uintah {
         new_dw->transferFrom(old_dw,X_label,patches,matls,true);
         return;
       }
-      
+
       //________________________________________________________
       // Matrix setup frequency - this will destroy and recreate a new Hypre matrix at the specified setupFrequency
       int suFreq = params->getSetupFrequency();
@@ -957,13 +959,15 @@ namespace Uintah {
     
     //---------------------------------------------------------------------------------------------
     
-    void setupPrecond(const ProcessorGroup* pg,
-                      HYPRE_PtrToStructSolverFcn& precond,
-                      HYPRE_PtrToStructSolverFcn& pcsetup,
-                      HYPRE_StructSolver& precond_solver,
-                      const double precond_tolerance,
-                      SolverType &precond_solver_type){
-                      
+    void setupPrecond( const ProcessorGroup             * pg
+                     ,       HYPRE_PtrToStructSolverFcn & precond
+                     ,       HYPRE_PtrToStructSolverFcn & pcsetup
+                     ,       HYPRE_StructSolver         & precond_solver
+                     , const double                       precond_tolerance
+                     ,       SolverType                 & precond_solver_type
+                     )
+    {
+
       if(params->precondtype == "SMG" || params->precondtype == "smg"){
         /* use symmetric SMG as preconditioner */
         
@@ -1044,7 +1048,8 @@ namespace Uintah {
     
     //---------------------------------------------------------------------------------------------
     
-    void destroyPrecond(HYPRE_StructSolver precond_solver){
+    void destroyPrecond( HYPRE_StructSolver precond_solver )
+    {
       if(params->precondtype        == "SMG"       || params->precondtype == "smg"){
         HYPRE_StructSMGDestroy(precond_solver);
       } else if(params->precondtype == "PFMG"      || params->precondtype == "pfmg"){
@@ -1120,9 +1125,10 @@ namespace Uintah {
 
   //---------------------------------------------------------------------------------------------
   
-  SolverParameters* HypreSolver2::readParameters(ProblemSpecP& params,
-                                                 const string& varname,
-                                                 const SimulationStateP& state)
+  SolverParameters* HypreSolver2::readParameters(       ProblemSpecP     & params
+                                                , const string           & varname
+                                                , const SimulationStateP & state
+                                                )
   {
     HypreSolver2Params* hypreSolveParams = scinew HypreSolver2Params();
     hypreSolveParams->m_sharedState = state;
@@ -1190,8 +1196,10 @@ namespace Uintah {
 
   //---------------------------------------------------------------------------------------------
   
-  void HypreSolver2::scheduleInitialize(const LevelP& level,SchedulerP& sched,
-                                        const MaterialSet* matls)
+  void HypreSolver2::scheduleInitialize( const LevelP      & level
+                                       ,       SchedulerP  & sched
+                                       , const MaterialSet * matls
+                                       )
   {
     Task* task = scinew Task("initialize_hypre", this,
                              &HypreSolver2::initialize);
@@ -1225,11 +1233,12 @@ namespace Uintah {
   //---------------------------------------------------------------------------------------------
 
   void
-  HypreSolver2::initialize( const ProcessorGroup *,
-                            const PatchSubset    * patches,
-                            const MaterialSubset * matls,
-                                  DataWarehouse  *,
-                                  DataWarehouse  * new_dw )
+  HypreSolver2::initialize( const ProcessorGroup *
+                          , const PatchSubset    * patches
+                          , const MaterialSubset * matls
+                          ,       DataWarehouse  *
+                          ,       DataWarehouse  * new_dw
+                          )
   {
     allocateHypreMatrices( new_dw );
   } 
@@ -1237,19 +1246,20 @@ namespace Uintah {
   //---------------------------------------------------------------------------------------------
 
   void
-  HypreSolver2::scheduleSolve( const LevelP           & level,
-                                     SchedulerP       & sched,
-                               const MaterialSet      * matls,
-                               const VarLabel         * A,    
-                                     Task::WhichDW      which_A_dw,  
-                               const VarLabel         * x,
-                                     bool               modifies_X,
-                               const VarLabel         * b,    
-                                     Task::WhichDW      which_b_dw,  
-                               const VarLabel         * guess,
-                                     Task::WhichDW      which_guess_dw,
-                               const SolverParameters * params,
-                                     bool               modifies_hypre /* = false */ )
+  HypreSolver2::scheduleSolve( const LevelP           & level
+                             ,       SchedulerP       & sched
+                             , const MaterialSet      * matls
+                             , const VarLabel         * A
+                             ,       Task::WhichDW      which_A_dw
+                             , const VarLabel         * x
+                             ,       bool               modifies_X
+                             , const VarLabel         * b
+                             ,       Task::WhichDW      which_b_dw
+                             , const VarLabel         * guess
+                             ,       Task::WhichDW      which_guess_dw
+                             , const SolverParameters * params
+                             ,       bool               modifies_hypre /* = false */
+                             )
   {
     printSchedule(level, cout_doing, "HypreSolver:scheduleSolve");
     
@@ -1355,7 +1365,7 @@ namespace Uintah {
     sched->overrideVariableBehavior(hypre_solver_label->getName(),false,false,
                                     false,true,true);
 
-    task->setType(Task::OncePerProc);
+    task->setType(Task::Hypre);
     sched->addTask(task, lb->getPerProcessorPatchSet(level), matls);
   }
 

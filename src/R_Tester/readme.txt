@@ -92,3 +92,16 @@ __________________________________
     setenv t_rmcrt  $RT/src/CCA/Components/Models/Radiation/RMCRT
     setenv t_dbg    $RT/dbg/
     setenv t_opt    $RT/opt/
+
+__________________________________
+-To enable core dumps (recommended for debugging) 
+edit 
+/etc/security/limints.conf
+rt               soft    core            unlimited
+rt               hard    core            unlimited
+
+OR
+(bash)  ulimit -S -c unlimited sus
+(csh/tcsh) ?????
+
+
