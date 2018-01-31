@@ -1641,20 +1641,25 @@ DataArchiver::writeto_xml_files( const GridP& grid )
     if( m_writeMeta ) {
       bool hasGlobals = false;
       bool dumpingCheckpoint = false;
-      bool save_io_timestep_xml_file = false; // <- Always save for a legacy UDA
+      bool save_io_timestep_xml_file = false;
 
       if ( baseDirs[i] == &m_dir ) {
         // This time through the (above for) loop, we are working on an IO timestep...
         savelist.push_back( &m_saveLabels );
 
-        cout << "is regrid timestep: " << m_application->isRegridTimeStep() << "\n";
+        cout << "is regrid timestep: " << m_application->isRegridTimeStep() << ", m_lastOutputOfTimeStepXML is: " << m_lastOutputOfTimeStepXML << "\n";
 
         if( m_outputFileFormat == PIDX ){
           // When using PIDX, only save "timestep.xml" if the grid had changed... (otherwise we will just point (symlink) to the last one saved.)
           save_io_timestep_xml_file = (m_lastOutputOfTimeStepXML == -1 || m_application->isRegridTimeStep() );
         }
+        else {
+          save_io_timestep_xml_file = true; // Always save for a legacy UDA
+        }
       }
       else if ( baseDirs[i] == &m_checkpointsDir ) {
+        cout << "is checkpoint timestep.  Regrid: " << m_application->isRegridTimeStep() << ", m_lastOutputOfTimeStepXML is: " << m_lastOutputOfTimeStepXML << "\n";
+
         // This time through the (above for) loop, we are working on a Checkpoint timestep...
         dumpingCheckpoint = true;
         hasGlobals = m_checkpointReductionLabels.size() > 0;
@@ -1665,7 +1670,12 @@ DataArchiver::writeto_xml_files( const GridP& grid )
         throw "DataArchiver::writeto_xml_files(): Unknown directory!";
       }
 
-      proc0cout << "Should we save timestep.xml for timestep " << dir_timestep << "; answer is: " << (save_io_timestep_xml_file?"yes":"no") << "\n";
+      if( !dumpingCheckpoint ){
+        proc0cout << "Should we save timestep.xml for IO timestep " << dir_timestep << "; answer is: " << (save_io_timestep_xml_file?"yes":"no") << "\n";
+      }
+      else {
+        proc0cout << "Should we save timestep.xml for Checkpoint timestep: yes!\n";
+      }
 
       string       iname    = baseDirs[i]->getName() + "/index.xml";
       ProblemSpecP indexDoc = loadDocument( iname );
