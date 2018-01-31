@@ -1650,8 +1650,12 @@ DataArchiver::writeto_xml_files( const GridP& grid )
         cout << "is regrid timestep: " << m_application->isRegridTimeStep() << ", m_lastOutputOfTimeStepXML is: " << m_lastOutputOfTimeStepXML << "\n";
 
         if( m_outputFileFormat == PIDX ){
+#ifdef HAVE_PIDX
           // When using PIDX, only save "timestep.xml" if the grid had changed... (otherwise we will just point (symlink) to the last one saved.)
           save_io_timestep_xml_file = (m_lastOutputOfTimeStepXML == -1 || m_application->isRegridTimeStep() );
+#else
+          throw InternalError( "DataArchiver::writeto_xml_files(): PIDX not configured!", __FILE__, __LINE__ );
+#endif          
         }
         else {
           save_io_timestep_xml_file = true; // Always save for a legacy UDA
@@ -1667,7 +1671,7 @@ DataArchiver::writeto_xml_files( const GridP& grid )
         savelist.push_back( &m_checkpointReductionLabels );
       }
       else {
-        throw "DataArchiver::writeto_xml_files(): Unknown directory!";
+        throw InternalError( "DataArchiver::writeto_xml_files(): Unknown directory!", __FILE__, __LINE__ );
       }
 
       if( !dumpingCheckpoint ){
@@ -1704,8 +1708,8 @@ DataArchiver::writeto_xml_files( const GridP& grid )
               n->getAttributes( attributes );
               string varname = attributes["name"];
           
-              if(varname == ""){
-                throw InternalError("varname not found", __FILE__, __LINE__);
+              if( varname == "" ){
+                throw InternalError( "varname not found", __FILE__, __LINE__ );
               }
               
               if(varname == var->getName()) {

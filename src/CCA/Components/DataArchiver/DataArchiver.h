@@ -355,8 +355,8 @@ class LoadBalancer;
     // a given timestep will refer (symlink) to the last time it was saved.
     // Note, this is in reference to IO timesteps.  We always generate and
     // save timestep.xml for Checkpoint output.
-    int m_lastOutputOfTimeStepXML = -1; 
 #endif
+    int m_lastOutputOfTimeStepXML = -1; 
 
     //! helper for finalizeTimeStep - schedules a task for each var's output
     void scheduleOutputTimeStep(       std::vector<SaveItem> & saveLabels,

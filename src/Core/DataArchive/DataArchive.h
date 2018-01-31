@@ -89,12 +89,14 @@ class LoadBalancer;
 
 ****************************************/
 
+#if HAVE_PIDX
 // For PIDX usage:
 struct BufferAndSizeTuple {
   BufferAndSizeTuple() { buffer = nullptr; size = -1; }
   unsigned char * buffer;
   long            size; // not unsigned so I can set to -1 for sanity checking.
 };
+#endif
   
 //! Container to hold UCF data when read in from disk.
 class DataArchive {
@@ -304,6 +306,7 @@ protected:
 
 private:
 
+#if HAVE_PIDX
   void queryPIDX(       BufferAndSizeTuple * data,
                   const PIDX_variable      & varDesc,
                   const TypeDescription    * td ,
@@ -326,6 +329,7 @@ private:
                         const int            matlIndex,
                         const Patch        * patch,
                         const int            timeIndex );
+#endif
 
   // Sets d_particlePositionName if found. Note, rewinds 'xml_fp', thus starting at the top of the file.
   void queryAndSetParticlePositionName( FILE * xml_fp ); 

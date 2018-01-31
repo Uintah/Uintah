@@ -640,6 +640,7 @@ DataArchive::queryVariables( FILE                                   * fp,
 //______________________________________________________________________
 //
 
+#if HAVE_PIDX
 // Notes: You must free() the returned "dataPIDX" when you are done with it.
 
 bool
@@ -957,6 +958,7 @@ DataArchive::queryPIDXSerial(       Variable     & var,
 
   return true;
 }
+#endif // HAVE_PIDX
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1001,8 +1003,11 @@ DataArchive::query(       Variable     & var,
   if ( patch ) {
 
     if( d_fileFormat == PIDX ) {
-      // throw InternalError( "DataArchive::query() called for PIDX UDA.", __FILE__, __LINE__ );
+#if HAVE_PIDX
       return queryPIDXSerial( var, name, matlIndex, patch, timeIndex );
+#else
+      throw InternalError( "DataArchive::query() called for PIDX UDA - but PIDX not configured.", __FILE__, __LINE__ );
+#endif
     }
 
     varType = PATCH_VAR;
@@ -1459,6 +1464,7 @@ DataArchive::restartInitialize( const int                timestep_index,
   }
   else { // Reading PIDX UDA
 
+#if HAVE_PIDX
     cout << "Here\n";
     createPIDXCommunicator( grid, lb );
 
@@ -1651,6 +1657,9 @@ DataArchive::restartInitialize( const int                timestep_index,
 
     } // end for lev_num
    
+#else
+    throw InternalError( "Asked to read a PIDX UDA, but PIDX not configured.", __FILE__, __LINE__ );    
+#endif
   } // end else Reading PIDX UDA
 
   cout << Uintah::Parallel::getMPIRank() << ": done with restartInitialize()\n";
