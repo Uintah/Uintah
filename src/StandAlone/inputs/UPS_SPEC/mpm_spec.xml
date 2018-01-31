@@ -77,16 +77,18 @@
       <with_gauss_solver                  spec="OPTIONAL BOOLEAN" />
     </MPM>
 
-    <BurialHistory                   spec="OPTIONAL NO_DATA" >
-            <time_point              spec="MULTIPLE NO_DATA" >
-              <time_Ma               spec="REQUIRED DOUBLE" />
-              <depth_m               spec="REQUIRED DOUBLE" />
-              <temperature_C         spec="REQUIRED DOUBLE" />
-              <fluidPressure_MPa     spec="REQUIRED DOUBLE" />
-              <fluidOverPressure_MPa spec="REQUIRED DOUBLE" />
-              <effectiveStress_MPa   spec="REQUIRED DOUBLE" />
-              <waterSaturation_pct   spec="REQUIRED DOUBLE" />
-            </time_point>
+    <BurialHistory             spec="OPTIONAL NO_DATA" >
+      <pressure_conversion_factor spec="OPTIONAL DOUBLE" />
+      <currentIndex            spec="OPTIONAL INTEGER" />
+      <time_point              spec="MULTIPLE NO_DATA" >
+        <time_Ma               spec="REQUIRED DOUBLE" />
+        <depth_m               spec="REQUIRED DOUBLE" />
+        <temperature_K         spec="REQUIRED DOUBLE" />
+        <fluidPressure_bar     spec="REQUIRED DOUBLE" />
+        <fluidOverPressure_bar spec="REQUIRED DOUBLE" />
+        <effectiveStress_bar   spec="REQUIRED DOUBLE" />
+        <waterSaturation_pct   spec="REQUIRED DOUBLE" />
+      </time_point>
     </BurialHistory>
 
     <PhysicalBC                   spec="OPTIONAL NO_DATA" >
@@ -113,6 +115,7 @@
           <geom_object />
           <outward_normal         spec="OPTIONAL BOOLEAN" />
           <load_curve             spec="REQUIRED NO_DATA" >
+            <use_burial_history   spec="OPTIONAL BOOLEAN" />
             <id                   spec="REQUIRED INTEGER" />
             <time_point           spec="MULTIPLE NO_DATA" >
               <time               spec="REQUIRED INTEGER" />

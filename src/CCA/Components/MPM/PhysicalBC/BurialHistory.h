@@ -57,9 +57,9 @@ DESCRIPTION
 	time_Ma			Time in units of millions of years ago
 	depth_m			Burial depth in meters
 	temp_C			Temperature in Celcius
-	fluidOverPressure_MPa	Fluid Over Pressure in MPa
-	fluidPressure_MPa	Fluid Pressure in MPa
-	effectiveStress_MPa	Effective Stress in MPa
+	fluidOverPressure_bar	Fluid Over Pressure in bar
+	fluidPressure_bar	Fluid Pressure in bar
+	effectiveStress_bar	Effective Stress in bar
 	water_Saturation_pct	Water Saturation in percent
 
 WARNING
@@ -93,26 +93,26 @@ WARNING
       }
 
       // Get the temperature associated with a given index
-      inline double getTemperature_C(int index) {
-       return ((index < (int) d_time_Ma.size()) ? d_temperature_C[index] : 0);
+      inline double getTemperature_K(int index) {
+       return ((index < (int) d_time_Ma.size()) ? d_temperature_K[index] : 0);
       }
 
       // Get the fluid pressure at a given index
-      inline double getFluidPressure_MPa(int index) {
+      inline double getFluidPressure_bar(int index) {
        return ((index < (int) d_time_Ma.size()) ?
-                                              d_fluidPressure_MPa[index] : 0);
+                                              d_fluidPressure_bar[index] : 0);
       }
 
       // Get the fluid over pressure at a given index
-      inline double getFluidOverPressure_MPa(int index) {
+      inline double getFluidOverPressure_bar(int index) {
        return ((index < (int) d_time_Ma.size()) ?
-                                          d_fluidOverPressure_MPa[index] : 0);
+                                          d_fluidOverPressure_bar[index] : 0);
       }
 
       // Get the effective stress at a given index
       inline double getEffectiveStress(int index) {
        return ((index < (int) d_time_Ma.size()) ? 
-                                            d_effectiveStress_MPa[index] : 0);
+                                            d_effectiveStress_bar[index] : 0);
       }
 
       // Get the water saturation percentage at a given index
@@ -140,6 +140,10 @@ WARNING
         return 0;
       }
 
+      inline void setCurrentIndex(int index) {
+        d_CI = index;
+      }
+
    private:
       // Prevent copying
       BurialHistory(const BurialHistory&);
@@ -147,22 +151,24 @@ WARNING
       
       // Private Data
       // Load curve information 
+      double d_pressure_conversion_factor;
+      double d_CI;
       std::vector<double> d_time_Ma;
       std::vector<double> d_depth_m;
-      std::vector<double> d_temperature_C;
-      std::vector<double> d_fluidOverPressure_MPa;
-      std::vector<double> d_fluidPressure_MPa;
-      std::vector<double> d_effectiveStress_MPa;
+      std::vector<double> d_temperature_K;
+      std::vector<double> d_fluidOverPressure_bar;
+      std::vector<double> d_fluidPressure_bar;
+      std::vector<double> d_effectiveStress_bar;
       std::vector<double> d_waterSaturation_pct;
 
 #if 0
       struct BurialPoint {
         double time_Ma;
         double depth_m;
-        double temperature_C;
-        double fluidOverPress_MPa;
-        double fluidPress_MPa;
-        double effectiveStress_MPa;
+        double temperature_K;
+        double fluidOverPress_bar;
+        double fluidPress_bar;
+        double effectiveStress_bar;
         double waterSaturation_pct;
       };
 

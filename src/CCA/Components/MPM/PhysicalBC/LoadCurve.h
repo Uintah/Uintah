@@ -137,7 +137,6 @@ WARNING
 
 
    private:
-
       // Prevent creation of empty object
       LoadCurve();
 
@@ -151,18 +150,93 @@ WARNING
       std::vector<T> d_load;
       std::vector<double> d_maxKE;
       int d_id;
+      double d_curTime;
+      bool d_UBH;
    };
 
    // Construct a load curve from the problem spec
    template<class T>
    LoadCurve<T>::LoadCurve(ProblemSpecP& ps) 
    {
-      ProblemSpecP loadCurve = ps->findBlock("load_curve");
-      if (!loadCurve) 
-         throw ProblemSetupException("**ERROR** No load curve specified.", 
-                                      __FILE__, __LINE__);
-      loadCurve->require("id", d_id);
-      for( ProblemSpecP timeLoad = loadCurve->findBlock("time_point");
+     ProblemSpecP loadCurve = ps->findBlock("load_curve");
+     if (!loadCurve) 
+        throw ProblemSetupException("**ERROR** No load curve specified.", 
+                                     __FILE__, __LINE__);
+     loadCurve->require("id", d_id);
+     loadCurve->getWithDefault("use_burial_history", d_UBH, false);
+     if(d_UBH){
+      ProblemSpecP root = ps->getRootNode();
+      ProblemSpecP TimeBlock = root->findBlock("Time");
+      TimeBlock->getWithDefault("CurrentTime", d_curTime, 0.0);
+      ProblemSpecP burHist = root->findBlock("BurialHistory");
+      if (!burHist){ 
+        throw ProblemSetupException("**ERROR** No burial history specified.", 
+                                     __FILE__, __LINE__);
+      } else {
+//        std::cout << "Found burial history" << std::endl;
+        double p_c_f;
+        int CI = 0;
+        burHist->getWithDefault("pressure_conversion_factor", p_c_f, 1.0);
+        std::vector<double> time_Ma;
+//        std::vector<double> depth_m;
+//        std::vector<double> temperature_K;
+//        std::vector<double> fluidOverPressure_bar;
+//        std::vector<double> fluidPressure_bar;
+        std::vector<double> effectiveStress_bar;
+//        std::vector<double> waterSaturation_pct;
+        for( ProblemSpecP timePoint = burHist->findBlock("time_point");
+            timePoint != nullptr;
+            timePoint = timePoint->findNextBlock("time_point") ) {
+          double time      = 0.0;
+//          double depth     = 9.9e99;
+//          double temp      = 0.0;
+//          double fluidP    = 0.0;
+//          double fluidOP   = 0.0;
+          double effStress = 0.0;
+//          double waterSat  = 0.0;
+          timePoint->require("time_Ma",               time);
+//          timePoint->require("depth_m",               depth);
+//          timePoint->require("temperature_K",         temp);
+//          timePoint->require("fluidOverPressure_bar", fluidOP);
+//          timePoint->require("fluidPressure_bar",     fluidP);
+          timePoint->require("effectiveStress_bar",   effStress);
+//          timePoint->require("waterSaturation_pct",   waterSat);
+
+          time_Ma.push_back(time);
+//          depth_m.push_back(depth);
+//          temperature_K.push_back(temp);
+//          fluidOverPressure_bar.push_back(fluidOP);
+//          fluidPressure_bar.push_back(fluidP);
+          effectiveStress_bar.push_back(effStress);
+//          waterSaturation_pct.push_back(waterSat);
+        }
+        burHist->getWithDefault("current_index", CI, time_Ma.size()-1);
+        double maxKE = 9.9e99;
+        double minKE = 2.e-6;
+        double uintahTime=0.0;
+        d_time.push_back(uintahTime);
+        d_load.push_back(-.1);
+        d_maxKE.push_back(maxKE);
+        for(int i=time_Ma.size()-2;i>=0;i--){
+          uintahTime+=5.0;
+          // ramp phase
+          d_time.push_back(uintahTime);
+          d_load.push_back(-effectiveStress_bar[i]*p_c_f);
+          d_maxKE.push_back(maxKE);
+          uintahTime+=5.0;
+          // settle down phase
+          d_time.push_back(uintahTime);
+          d_load.push_back(-effectiveStress_bar[i]*p_c_f);
+          d_maxKE.push_back(minKE);
+          uintahTime+=5.0;
+          // hold phase (maybe doing dissolution here)
+          d_time.push_back(uintahTime);
+          d_load.push_back(-effectiveStress_bar[i]*p_c_f);
+          d_maxKE.push_back(maxKE);
+        }
+      }
+     } else {
+       for( ProblemSpecP timeLoad = loadCurve->findBlock("time_point");
            timeLoad != nullptr;
            timeLoad = timeLoad->findNextBlock("time_point") ) {
          double time = 0.0;
@@ -174,7 +248,8 @@ WARNING
          d_time.push_back(time);
          d_load.push_back(load);
          d_maxKE.push_back(maxKE);
-      }
+       }
+     }
    }
 
    template<class T>
@@ -182,6 +257,7 @@ WARNING
      {
        ProblemSpecP lc_ps = ps->appendChild("load_curve");
        lc_ps->appendElement("id",d_id);
+       lc_ps->appendElement("use_burial_history",d_UBH);
        for (int i = 0; i<(int)d_time.size();i++) {
          ProblemSpecP time_ps = lc_ps->appendChild("time_point");
          time_ps->appendElement("time",d_time[i]);

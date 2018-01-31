@@ -3294,6 +3294,8 @@ void SerialMPM::modifyLoadCurves(const ProcessorGroup* ,
   old_dw->get(KE,   lb->KineticEnergyLabel);
   old_dw->get(delT, lb->delTLabel, getLevel(patches) );
 
+  burialHistory->setCurrentIndex(7);
+
   for(int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size();ii++){
     string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
     if (bcs_type == "Pressure") {
@@ -3339,8 +3341,6 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
   simTime_vartype simTimeVar;
   old_dw->get(simTimeVar, lb->simulationTimeLabel);
   double time = simTimeVar;
-
-  // double time = m_sharedState->getElapsedSimTime();
 
   if (cout_doing.active())
     cout_doing << "Current Time (applyExternalLoads) = " << time << endl;
