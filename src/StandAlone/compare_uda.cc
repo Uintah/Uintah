@@ -847,7 +847,7 @@ addParticleData( MaterialParticleDataMap                & matlParticleDataMap,
       }
     }
   }
-}
+} // end addParticleData()
 
 //__________________________________
 
@@ -1086,7 +1086,7 @@ template <class Field, class Iterator>
 void
 SpecificFieldComparator<Field, Iterator>::compareFields( DataArchive                * da1,
                                                          DataArchive                * da2,
-                                                         const string               & var,
+                                                         const string               & var_name,
                                                          ConsecutiveRangeSet          matls,
                                                          const Patch                * patch,
                                                          const Array3<const Patch*> & patch2Map,
@@ -1105,10 +1105,10 @@ SpecificFieldComparator<Field, Iterator>::compareFields( DataArchive            
     int matl = *matlIter;
 
     Field field;
-    bool found = da1->query( field, var, matl, patch, timestep );
+    bool found = da1->query( field, var_name, matl, patch, timestep );
 
     if( !found ) {
-      cout << "Skipping comparison of " << var << " as it was not found in DataArchive1.\n";
+      cout << "Skipping comparison of " << var_name << " as it was not found in DataArchive1.\n";
       continue;
     }
 
@@ -1122,14 +1122,14 @@ SpecificFieldComparator<Field, Iterator>::compareFields( DataArchive            
 
       if (findIter == patch2FieldMap.end()) {
         if (firstMatl) { // check only needs to be made the first round
-          ConsecutiveRangeSet matls2 = da2->queryMaterials(var, patch2, timestep);
+          ConsecutiveRangeSet matls2 = da2->queryMaterials( var_name, patch2, timestep );
           ASSERT(matls == matls2); // check should have been made previously
         }
         field2 = scinew Field();
         patch2FieldMap[ patch2 ] = field2;
-        found = da2->query( *field2, var, matl, patch2, timestep );
+        found = da2->query( *field2, var_name, matl, patch2, timestep );
         if( !found ) {
-          cout << "Skipping comparison of " << var << " as it was not found in DataArchive2.\n";
+          cout << "Skipping comparison of " << var_name << " as it was not found in DataArchive2.\n";
           continue;
         }
       }
@@ -1140,7 +1140,7 @@ SpecificFieldComparator<Field, Iterator>::compareFields( DataArchive            
       if (!compare(field[*iter], (*field2)[*iter], abs_tolerance, rel_tolerance)) {
 
         cerr << "DIFFERENCE " << *iter << "  ";
-        displayProblemLocation(cerr, var, matl, patch, patch2, time1);
+        displayProblemLocation( cerr, var_name, matl, patch, patch2, time1 );
 
         cerr << d_filebase1 << " (1)\t\t" << d_filebase2 << " (2)"<<endl;
         print(cerr, field[*iter]);
@@ -1237,22 +1237,10 @@ buildPatchMap( LevelP                 level,
 }
 
 //______________________________________________________________________
-int
-main(int argc, char** argv)
-{
-  // In this branch, we have updated the DataArhive to read PIDX data in parallel
-  // using PIDX correctly.  However, this file (compare_uda) has not been updated
-  // to do this.  Therefore, until it is, we need to use the compare_uda from
-  // the PIDX branch r56806.
-  //
-  cout << "\n";
-  cout << "compare_uda does not work in this branch for PIDX UDAs... you must use\n";
-  cout << "the compare_uda from the PIDX branch revision r56806 for now.\n";
-  cout << "\n";
-  Parallel::exitAll( 1 );
 
-  ///////////////////////////////////////////
-  
+int
+main( int argc, char** argv )
+{
   Uintah::Parallel::initializeManager(argc, argv);
 
   double rel_tolerance  = 1e-6; // Default

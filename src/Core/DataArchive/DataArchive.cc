@@ -660,7 +660,7 @@ DataArchive::setupQueryPIDX(       PIDX_access     & access,
     
   if( Parallel::usingMPI() ) {
     if( d_pidxComms.size() == 0 ) {
-      cout << "No pidx comms, using main comm on this: " << this << "\n";
+      // cout << "No pidx comms, using main comm on this: " << this << "\n";
       // this is a hack because createPIDXCommunicator() was not called in the case of running under (at least) compare_uda...
       // need to figure out the right way to do this.
       MPI_Comm comm = Parallel::getRootProcessorGroup()->getComm();
@@ -700,7 +700,7 @@ DataArchive::setupQueryPIDX(       PIDX_access     & access,
     
   PIDX_point global_size;
 
-  cout << Uintah::Parallel::getMPIRank() << ": open pidx file: " << idxFilename << ", looking for var: " << name << "\n";
+  //cout << Uintah::Parallel::getMPIRank() << ": open pidx file: " << idxFilename << ", looking for var: " << name << "\n";
 
   int ret = PIDX_file_open( idxFilename.c_str(), PIDX_MODE_RDONLY, access, global_size, &idxFile );
   //PIDXOutputContext::checkReturnCode( ret,"DataArchive::setupQueryPIDX() - PIDX_file_open failure", __FILE__, __LINE__ );
@@ -716,13 +716,13 @@ DataArchive::setupQueryPIDX(       PIDX_access     & access,
   //ret = PIDX_get_dims(idxFile, global_size);          // returns the levelSize  Is this needed?
   //PIDXOutputContext::checkReturnCode( ret,"DataArchive::setupQueryPIDX() - PIDX_get_dims failure", __FILE__, __LINE__);
 
-  cout << Uintah::Parallel::getMPIRank() << ": pidx get var count\n";
+  //cout << Uintah::Parallel::getMPIRank() << ": pidx get var count\n";
 
   int variable_count = 0;             ///< Number of fields in PIDX file
   ret = PIDX_get_variable_count( idxFile, &variable_count );
   PIDXOutputContext::checkReturnCode( ret,"DataArchive::setupQueryPIDX() - PIDX_get_variable_count failure", __FILE__, __LINE__);
 
-  cout << Uintah::Parallel::getMPIRank() << ": pidx var count is " << variable_count << "\n";
+  // cout << Uintah::Parallel::getMPIRank() << ": pidx var count is " << variable_count << "\n";
 
   //int me;
   //PIDX_get_current_time_step(idxFile, &me);
@@ -730,7 +730,7 @@ DataArchive::setupQueryPIDX(       PIDX_access     & access,
 
   //__________________________________
   //  set locations in PIDX file for querying variable
-  cout << Uintah::Parallel::getMPIRank() << ": pidx set time\n";
+  // cout << Uintah::Parallel::getMPIRank() << ": pidx set time\n";
   int timestep = d_ts_indices[timeIndex];
   ret = PIDX_set_current_time_step( idxFile, timestep );
   PIDXOutputContext::checkReturnCode( ret, "DataArchive::setupQueryPIDX() - PIDX_set_current_time_step failure", __FILE__, __LINE__ );
@@ -739,7 +739,7 @@ DataArchive::setupQueryPIDX(       PIDX_access     & access,
   mstr << "_m" << matlIndex; // Add _m# to name of variable.
   string full_name = name + mstr.str();
 
-  cout << Uintah::Parallel::getMPIRank() << ": setting var: " << full_name << "\n";
+  // cout << Uintah::Parallel::getMPIRank() << ": setting var: " << full_name << "\n";
   ret = PIDX_set_current_variable_by_name( idxFile, full_name.c_str() );
   // proc0cout << "ret is " << ret << ", was looking for" << name << "\n";
     
@@ -751,11 +751,11 @@ DataArchive::setupQueryPIDX(       PIDX_access     & access,
 
   //__________________________________
   // read IDX file for variable desc
-  cout << Uintah::Parallel::getMPIRank() << ": pidx get current var\n";
+  // cout << Uintah::Parallel::getMPIRank() << ": pidx get current var\n";
 
   ret = PIDX_get_current_variable( idxFile, &varDesc );
 
-  cout << Uintah::Parallel::getMPIRank() << ": PIDX GET CURRENT VAR done\n";
+  // cout << Uintah::Parallel::getMPIRank() << ": PIDX GET CURRENT VAR done\n";
 
 
   PIDXOutputContext::checkReturnCode( ret, "DataArchive::setupQueryPIDX() - PIDX_get_current_variable failure", __FILE__, __LINE__ );
@@ -771,21 +771,21 @@ DataArchive::setupQueryPIDX(       PIDX_access     & access,
 
 } // end setupQueryPIDX()
 
-bool
+void
 DataArchive::queryPIDX(       BufferAndSizeTuple * data,
-                        const PIDX_variable   & varDesc,
-                        const TypeDescription * type,
-                        const string          & name,
-                        const int               matlIndex,
-                        const Patch           * patch,
-                        const int               timeIndex )
+                        const PIDX_variable      & varDesc,
+                        const TypeDescription    * type,
+                        const string             & name,
+                        const int                  matlIndex,
+                        const Patch              * patch,
+                        const int                  timeIndex )
 {
-  cout << Uintah::Parallel::getMPIRank()
-       << ": pidx query called for VARIABLE: " << name 
-       << ", material index " << matlIndex 
-       << ", Level " << (patch ? patch->getLevel()->getIndex() : -1)
-       << ", patch " << (patch ? patch->getID() : -1)
-       << ", time index " << timeIndex << "\n";
+  // cout << Uintah::Parallel::getMPIRank()
+  //      << ": pidx query called for        VARIABLE: " << name 
+  //      << ", material index " << matlIndex 
+  //      << ", Level " << (patch ? patch->getLevel()->getIndex() : -1)
+  //      << ", patch " << (patch ? patch->getID() : -1)
+  //      << ", time index " << timeIndex << "\n";
 
   if( d_fileFormat != PIDX ){
     throw InternalError( "queryPIDX() called on non-PIDX data archive", __FILE__, __LINE__ );
@@ -815,7 +815,7 @@ DataArchive::queryPIDX(       BufferAndSizeTuple * data,
     // bullet proofing
     throw InternalError( "Error: queryPIDX() requires a non-null patch.", __FILE__, __LINE__ );
   }
-  cout << Uintah::Parallel::getMPIRank() << ": starting pidx portion of query()\n";
+  // cout << Uintah::Parallel::getMPIRank() << ": starting pidx portion of query()\n";
 
   PIDXOutputContext pidx;
   const Level* level = patch->getLevel();
@@ -877,8 +877,8 @@ DataArchive::queryPIDX(       BufferAndSizeTuple * data,
   patchOffset[1] = patchOffset[1] - lo.y() - extra_cells[1];
   patchOffset[2] = patchOffset[2] - lo.z() - extra_cells[2];
 
-  cout << Uintah::Parallel::getMPIRank() << ": level: " << level->getIndex() << ", patchoffset: " << patchOffset[0] << ", " << patchOffset[1] << ", " << patchOffset[2]
-       << ", patchsize: " << patchSize[0] << ", " << patchSize[1] << ", " << patchSize[2] << "\n";
+  // cout << Uintah::Parallel::getMPIRank() << ": level: " << level->getIndex() << ", patchoffset: " << patchOffset[0] << ", " << patchOffset[1] << ", " << patchOffset[2]
+  //      << ", patchsize: " << patchSize[0] << ", " << patchSize[1] << ", " << patchSize[2] << "\n";
 
   ret = PIDX_variable_read_data_layout( varDesc, patchOffset, patchSize, data->buffer, PIDX_row_major );
   PIDXOutputContext::checkReturnCode( ret, "DataArchive::queryPIDX() - PIDX_variable_read_data_layout failure", __FILE__, __LINE__ );
@@ -894,13 +894,10 @@ DataArchive::queryPIDX(       BufferAndSizeTuple * data,
                           arraySize );
   }
 
-  cout << Uintah::Parallel::getMPIRank() << ": ENDING pidx portion of query()\n";
-
-  return true;
+  // cout << Uintah::Parallel::getMPIRank() << ": ENDING pidx portion of query()\n";
 
 } // end queryPIDX()
 
-#if 0
 //
 // For now, wrapping the PIDX setupQueryPIDX() and queryPIDX() functions in
 // this convenience function in order to be able to read in a single variable
@@ -911,24 +908,57 @@ DataArchive::queryPIDXSerial(       Variable     & var,
                               const string       & name,
                               const int            matlIndex,
                               const Patch        * patch,
-                              const int            timeIndex ) {
+                              const int            timeIndex )
+{
+  // cout << Uintah::Parallel::getMPIRank()
+  //      << ": queryPIDXSerial() called for VARIABLE: " << name 
+  //      << ", material index " << matlIndex 
+  //      << ", Level " << (patch ? patch->getLevel()->getIndex() : -1)
+  //      << ", patch " << (patch ? patch->getID() : -1)
+  //      << ", time index " << timeIndex << "\n";
+
+  if( !isPIDXFormat() ) {
+    throw InternalError( "DataArchive::queryPIDXSerial() called on non-PIDX DataArchive...", __FILE__, __LINE__ );
+  }
 
   PIDX_file     idxFile;
   PIDX_variable varDesc;
   PIDX_access   access;
 
-  if( type->isReductionVariable() ) {
+  const LevelP                  & level = patch->getLevelP();
+  const Uintah::TypeDescription * td = var.virtualGetTypeDescription();
+  BufferAndSizeTuple            * data = new BufferAndSizeTuple();
+
+  if( td->getType() == TypeDescription::ReductionVariable) {
     // Bulletproofing
     throw InternalError( "DataArchive::queryPIDXSerial() - should never get here...", __FILE__, __LINE__ );
   }
 
-  bool found = setupQueryPIDX( access, idxFile, varDesc, level, type, var_name, matl, timestep_index );
+  bool found = setupQueryPIDX( access, idxFile, varDesc, level, td, name, matlIndex, timeIndex );
   if( !found ) { return false; }
 
+  queryPIDX( data, varDesc, td, name, matlIndex, patch, timeIndex );
+
+  int ret = PIDX_close( idxFile );
+  PIDXOutputContext::checkReturnCode( ret, "DataArchive::queryPIDXSerial() - PIDX_close failure", __FILE__, __LINE__ );
   
-  
+  ret = PIDX_close_access( access );
+  PIDXOutputContext::checkReturnCode( ret, "DataArchive::queryPIDXSerial() - PIDX_close_access failure", __FILE__, __LINE__ );
+
+  const IntVector bl( 0, 0, 0 );
+  var.allocate( patch, bl );
+
+  bool swap_bytes = false; // FIX ME this should not be hard coded!
+
+  var.readPIDX( data->buffer, data->size, swap_bytes );
+
+  free( data->buffer );
+  free( data );
+
+  return true;
 }
-#endif
+
+////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool
 DataArchive::query(       Variable     & var,
@@ -938,6 +968,13 @@ DataArchive::query(       Variable     & var,
                     const int            timeIndex,
                           DataFileInfo * dfi /* = nullptr */ )
 {
+  // cout << Uintah::Parallel::getMPIRank()
+  //      << ": query() called for           VARIABLE: " << name 
+  //      << ", material index " << matlIndex 
+  //      << ", Level " << (patch ? patch->getLevel()->getIndex() : -1)
+  //      << ", patch " << (patch ? patch->getID() : -1)
+  //      << ", time index " << timeIndex << "\n";
+
   Timers::Simple timer;
   timer.start();
 
@@ -964,8 +1001,8 @@ DataArchive::query(       Variable     & var,
   if ( patch ) {
 
     if( d_fileFormat == PIDX ) {
-      throw InternalError( "DataArchive::query() called for PIDX UDA.", __FILE__, __LINE__ );
-      //return queryPIDXSerial();
+      // throw InternalError( "DataArchive::query() called for PIDX UDA.", __FILE__, __LINE__ );
+      return queryPIDXSerial( var, name, matlIndex, patch, timeIndex );
     }
 
     varType = PATCH_VAR;
@@ -1511,7 +1548,6 @@ DataArchive::restartInitialize( const int                timestep_index,
               cout << Uintah::Parallel::getMPIRank() << ":         is my patch.\n";
 
               if( !type->isReductionVariable() ) { // Non-reduction variables:
-                bool found;
 
                 cout << Uintah::Parallel::getMPIRank() << ":         create buffer\n";
                 BufferAndSizeTuple * data = new BufferAndSizeTuple();
@@ -1519,7 +1555,7 @@ DataArchive::restartInitialize( const int                timestep_index,
                 cout << Uintah::Parallel::getMPIRank() << ": a) data->buffer is " << (data->buffer == nullptr ? "nullptr" : (void*)(data->buffer))
                      << " and size: " << data->size << "\n";
 
-                found = queryPIDX( data, varDesc, type, var_name, matl, patch, timestep_index );
+                queryPIDX( data, varDesc, type, var_name, matl, patch, timestep_index );
 
                 if( data->buffer == nullptr ) {
                   cout << Uintah::Parallel::getMPIRank() << ": b) DATA IS nullptr and size: " << data->size << "\n";
@@ -1528,11 +1564,11 @@ DataArchive::restartInitialize( const int                timestep_index,
                   cout << Uintah::Parallel::getMPIRank() << ": b) data is at " << (void*)(data->buffer) << " and size: " << data->size << "\n";
                 }
 
-                if( !found ) {
-                  proc0cout << "Warning: " << *label << " not found... skipping.\n";
-                  // delete var;
-                  continue;
-                }
+//                if( !found ) {
+//                  proc0cout << "Warning: " << *label << " not found... skipping.\n";
+//                 // delete var;
+//                  continue;
+//                }
 
                 VarnameMatlPatch vmp( label->getName(), matl, patch->getID() );
                 cout << Uintah::Parallel::getMPIRank() << ": inserting data tubple: " << data << " into dataBufferMap\n";

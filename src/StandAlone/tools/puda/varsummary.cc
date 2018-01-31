@@ -426,43 +426,7 @@ findMinMax( DataArchive         * da,
 
   if( !iter.done() ) {
 
-    bool found = false;
-    if( da->isPIDXFormat() ) {
-
-      const LevelP & level = patch->getLevelP();
-
-      PIDX_file     idxFile;
-      PIDX_variable varDesc;
-      PIDX_access   access;
-
-      PIDX_create_access( &access );
-      PIDX_set_mpi_access( access, Parallel::getRootProcessorGroup()->getComm() );
-
-      cout << Uintah::Parallel::getMPIRank() << ": call setupQueryPIDX()\n";
-      bool result = da->setupQueryPIDX( access, idxFile, varDesc, level, td, var_name, matl, timestep );
-
-      if( !result ) {
-        // Did not find this var/material... skipping...
-        cout << Uintah::Parallel::getMPIRank() << ":         not found, skipping....\n";
-        return;
-      }
-
-      BufferAndSizeTuple * data = new BufferAndSizeTuple();
-
-      found = da->queryPIDX( data, varDesc, td, var_name, matl, patch, timestep );
-
-      //Variable * var = label->typeDescription()->createInstance();
-      const IntVector bl( 0, 0, 0 );
-      var.allocate( patch, bl );
-      bool swap_bytes = false; // FIX ME this should not be hard coded!
-      var.readPIDX( data->buffer, data->size, swap_bytes );
-
-      free( data->buffer );
-      free( data );
-    }
-    else {
-      found = da->query( var, var_name, matl, patch, timestep );
-    }
+    bool found = da->query( var, var_name, matl, patch, timestep );
 
     if( !found ) {
       cout << "\t\t\t\tVar not found...\n";

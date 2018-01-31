@@ -182,27 +182,6 @@ public:
 
   int queryNumMaterials( const Patch* patch, int index );
 
-  bool setupQueryPIDX(       PIDX_access     & access,
-                             PIDX_file       & idxFile,
-                             PIDX_variable   & varDesc,
-                       const LevelP          & level,
-                       const TypeDescription * type,
-                       const std::string     & name,
-                       const int               matlIndex,
-                       const int               timeIndex );
-
-  // Queries a variable for a material, patch, and index in time.
-  // Optionally pass in DataFileInfo if you're iterating over
-  // entries in the hash table (like restartInitialize does).
-  // Returns false if the variable is not found.
-  bool queryPIDX(       BufferAndSizeTuple * data,
-                  const PIDX_variable      & varDesc,
-                  const TypeDescription    * type ,
-                  const std::string        & name,
-                  const int                  matlIndex, 
-                  const Patch              * patch,
-                  const int                  timeIndex );
-
   bool query(       Variable     & var,
               const std::string  & name,
               const int            matlIndex, 
@@ -218,7 +197,6 @@ public:
               const Ghost::GhostType   ghostType,
               const int                numGhostCells );
 
-public:
   void queryRegion(       Variable    & var,
                     const std::string & name,
                     const int           matlIndex, 
@@ -325,6 +303,29 @@ protected:
   DataArchive();
 
 private:
+
+  void queryPIDX(       BufferAndSizeTuple * data,
+                  const PIDX_variable      & varDesc,
+                  const TypeDescription    * td ,
+                  const std::string        & name,
+                  const int                  matlIndex, 
+                  const Patch              * patch,
+                  const int                  timeIndex );
+
+  bool setupQueryPIDX(       PIDX_access     & access,
+                             PIDX_file       & idxFile,
+                             PIDX_variable   & varDesc,
+                       const LevelP          & level,
+                       const TypeDescription * td,
+                       const std::string     & name,
+                       const int               matlIndex,
+                       const int               timeIndex );
+
+  bool queryPIDXSerial(       Variable     & var,
+                        const std::string  & name,
+                        const int            matlIndex,
+                        const Patch        * patch,
+                        const int            timeIndex );
 
   // Sets d_particlePositionName if found. Note, rewinds 'xml_fp', thus starting at the top of the file.
   void queryAndSetParticlePositionName( FILE * xml_fp ); 
