@@ -455,7 +455,7 @@ AMRSimulationController::doInitialTimeStep()
   if( m_restarting ) {
 
     // for dynamic lb's, set up restart patch config
-    m_loadBalancer->possiblyDynamicallyReallocate( m_current_gridP, LoadBalancer::restart );
+    m_loadBalancer->possiblyDynamicallyReallocate( m_current_gridP, LoadBalancer::RESTART_LB );
 
     // tsaad & bisaac: At this point, during a restart, a grid does
     // NOT have knowledge of the boundary conditions.  (See other
@@ -516,7 +516,7 @@ AMRSimulationController::doInitialTimeStep()
   }
   else /* if( !m_restarting ) */ {
     // for dynamic lb's, set up initial patch config
-    m_loadBalancer->possiblyDynamicallyReallocate( m_current_gridP, LoadBalancer::init );
+    m_loadBalancer->possiblyDynamicallyReallocate( m_current_gridP, LoadBalancer::INIT_LB );
     
     m_current_gridP->assignBCS( m_grid_ps, m_loadBalancer );
     m_current_gridP->performConsistencyCheck();
@@ -718,7 +718,7 @@ AMRSimulationController::doRegridding( bool initialTimeStep )
   
   m_app->setRegridTimeStep(false);
 
-  int lbstate = initialTimeStep ? LoadBalancer::init : LoadBalancer::regrid;
+  int lbstate = initialTimeStep ? LoadBalancer::INIT_LB : LoadBalancer::REGRID_LB;
 
   if (m_current_gridP != oldGrid) {
     m_app->setRegridTimeStep(true);

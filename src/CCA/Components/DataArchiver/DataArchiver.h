@@ -264,16 +264,15 @@ class LoadBalancer;
 
     class SaveItem {
     public:
-         
-      void setMaterials(      int                   level, 
-                              const ConsecutiveRangeSet & matls,
-                              ConsecutiveRangeSet & prevMatls,
-                              MaterialSetP        & prevMatlSet );
 
-      MaterialSet* getMaterialSet( int level ) { return matlSet[level].get_rep(); }
-           
-      const MaterialSubset* getMaterialSubset( const Level * level );
-           
+      void setMaterials( const int                   level, 
+                         const ConsecutiveRangeSet & matls,
+                               ConsecutiveRangeSet & prevMatls,
+                               MaterialSetP        & prevMatlSet );
+
+      const MaterialSet*    getMaterialSet( int level ) const { return matlSet.at( level ).get_rep(); }
+      const MaterialSubset* getMaterialSubset( const Level * level ) const;
+
       const VarLabel* label;
       std::map<int, MaterialSetP> matlSet;
     };
@@ -299,12 +298,12 @@ class LoadBalancer;
                            
     //! returns a vector of SaveItems with a common type description
     std::vector<DataArchiver::SaveItem> 
-    findAllVariableTypes( std::vector< SaveItem >& saveLabels,
-                          const TypeDescription::Type TD );
+    findAllVariablesWithType( const std::vector< SaveItem > & saveLabels,
+                              const TypeDescription::Type     type );
       
     //! bulletproofing so user can't save unsupported var type
-    void isVarTypeSupported( std::vector< SaveItem >& saveLabels,
-                             std::vector<TypeDescription::Type> pidxVarTypes );
+    void isVarTypeSupported( const std::vector< SaveItem >              & saveLabels,
+                             const std::vector< TypeDescription::Type > & pidxVarTypes );
            
     void createPIDX_dirs( std::vector< SaveItem >& saveLabels,
                           Dir& levelDir );
@@ -329,8 +328,8 @@ class LoadBalancer;
     //! creates the uda directory with a trailing version suffix
     void makeVersionedDir();
 
-    void initSaveLabels(  SchedulerP& sched, bool initTimeStep );
-    void initCheckpoints( SchedulerP& sched );
+    void initSaveLabels(  SchedulerP & sched, bool initTimeStep );
+    void initCheckpoints( const SchedulerP & sched );
 
     //! helper for beginOutputTimeStep - creates and writes
     //! the necessary directories and xml files to begin the 
