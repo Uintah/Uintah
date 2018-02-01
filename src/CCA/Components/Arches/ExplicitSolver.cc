@@ -135,7 +135,6 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/Parallel.h>
-#include <Core/Util/DOUT.hpp>
 #include <Core/Math/MiscMath.h>
 #include <CCA/Components/Arches/Filter.h>
 
@@ -3940,10 +3939,8 @@ ExplicitSolver::scalarInit( const ProcessorGroup*,
                             DataWarehouse* old_dw,
                             DataWarehouse* new_dw )
 {
-  std::ostringstream message;
-  message << "Initializing all scalar equations and sources...\n";
-  DOUT(true, message.str());
 
+  proc0cout << "Initializing all scalar equations and sources...\n";
   for (int p = 0; p < patches->size(); p++) {
     //assume only one material for now
     int archIndex = 0;
