@@ -24,8 +24,8 @@
 
 #include <CCA/Components/MPM/Materials/Dissolution/DissolutionFactory.h>
 #include <CCA/Components/MPM/Materials/Dissolution/NullDissolution.h>
-#include <CCA/Components/MPM/Materials/Dissolution/TestDissolution.h>
-#include <CCA/Components/MPM/Materials/Dissolution/StressRateDissolution.h>
+#include <CCA/Components/MPM/Materials/Dissolution/ContactStressIndependent.h>
+#include <CCA/Components/MPM/Materials/Dissolution/ContactStressDependent.h>
 #include <CCA/Components/MPM/Materials/Dissolution/CompositeDissolution.h>
 #include <CCA/Components/MPM/Core/MPMFlags.h>
 #include <Core/Malloc/Allocator.h>
@@ -61,13 +61,12 @@ Dissolution* DissolutionFactory::create(const ProcessorGroup* myworld,
      if (dis_type == "null") {
       dissolution_list->add(scinew NullDissolution(myworld,ss,lb));
      }
-//     else if (dis_type == "stress_threshold") {
-     else if (dis_type == "test") {
-      dissolution_list->add(scinew TestDissolution(myworld,child,ss,lb));
+     else if (dis_type == "contactStressIndependent") {
+      dissolution_list->add(scinew ContactStressIndependent(myworld,child,ss,lb));
       flag->d_doingDissolution=true;
      }
-     else if (dis_type == "stress_rate") {
-      dissolution_list->add(scinew StressRateDissolution(myworld,child,ss,lb));
+     else if (dis_type == "contactStressDependent") {
+      dissolution_list->add(scinew ContactStressDependent(myworld,child,ss,lb));
       flag->d_doingDissolution=true;
      }
      else {

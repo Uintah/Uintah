@@ -22,11 +22,10 @@
  * IN THE SOFTWARE.
  */
 
-// StressRateDissolution.cc
+// ContactStressDependent.cc
 // One of the derived Dissolution classes.
-#include <CCA/Components/MPM/Materials/Dissolution/StressRateDissolution.h>
+#include <CCA/Components/MPM/Materials/Dissolution/ContactStressDependent.h>
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
-#include <CCA/Components/MPM/Core/MPMBoundCond.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Geometry/Vector.h>
@@ -45,7 +44,7 @@ using namespace std;
 using namespace Uintah;
 using std::vector;
 
-StressRateDissolution::StressRateDissolution(const ProcessorGroup* myworld,
+ContactStressDependent::ContactStressDependent(const ProcessorGroup* myworld,
                                  ProblemSpecP& ps, SimulationStateP& d_sS, 
                                  MPMLabel* Mlb)
   : Dissolution(myworld, Mlb, ps)
@@ -55,27 +54,29 @@ StressRateDissolution::StressRateDissolution(const ProcessorGroup* myworld,
   lb = Mlb;
   ps->require("masterModalID",        d_masterModalID);
   ps->require("InContactWithModalID", d_inContactWithModalID);
+  ps->require("Ao_mol_cm2_s",         d_Ao_mol_cm2_s);
+  ps->require("Ea_kJ_mol",            d_Ea_kJ_mol);
   ps->require("rate",                 d_rate);
   ps->require("PressureThreshold",    d_PressThresh);
 }
 
-StressRateDissolution::~StressRateDissolution()
+ContactStressDependent::~ContactStressDependent()
 {
 }
 
-void StressRateDissolution::outputProblemSpec(ProblemSpecP& ps)
+void ContactStressDependent::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP dissolution_ps = ps->appendChild("dissolution");
-  dissolution_ps->appendElement("type",                 "test");
+  dissolution_ps->appendElement("type",         "contactStressDependent");
   dissolution_ps->appendElement("masterModalID",        d_masterModalID);
   dissolution_ps->appendElement("InContactWithModalID", d_inContactWithModalID);
+  dissolution_ps->appendElement("Ao_mol_cm2_s",         d_Ao_mol_cm2_s);
+  dissolution_ps->appendElement("Ea_kJ_mol",            d_Ea_kJ_mol);
   dissolution_ps->appendElement("rate",                 d_rate);
   dissolution_ps->appendElement("PressureThreshold",    d_PressThresh);
-
-//  d_matls.outputProblemSpec(dissolution_ps);
 }
 
-void StressRateDissolution::computeMassBurnFraction(const ProcessorGroup*,
+void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
                                               const PatchSubset* patches,
                                               const MaterialSubset* matls,
                                               DataWarehouse* old_dw,
@@ -153,13 +154,13 @@ void StressRateDissolution::computeMassBurnFraction(const ProcessorGroup*,
   } // patches
 }
 
-void StressRateDissolution::addComputesAndRequiresMassBurnFrac(
+void ContactStressDependent::addComputesAndRequiresMassBurnFrac(
                                                       SchedulerP & sched,
                                                       const PatchSet* patches,
                                                       const MaterialSet* ms)
 {
-  Task * t = scinew Task("StressRateDissolution::computeMassBurnFraction", 
-                      this, &StressRateDissolution::computeMassBurnFraction);
+  Task * t = scinew Task("ContactStressDependent::computeMassBurnFraction", 
+                      this, &ContactStressDependent::computeMassBurnFraction);
   
   const MaterialSubset* mss = ms->getUnion();
   MaterialSubset* z_matl = scinew MaterialSubset();

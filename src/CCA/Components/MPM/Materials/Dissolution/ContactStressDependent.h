@@ -22,14 +22,15 @@
  * IN THE SOFTWARE.
  */
 
-// TestDissolution.h
+// ContactStressDependent.h
 
-#ifndef __TEST_DISSOLUTION_H__
-#define __TEST_DISSOLUTION_H__
+#ifndef __CONTACT_STRESS_DEPENDENT
+#define __CONTACT_STRESS_DEPENDENT
 
 #include <CCA/Components/MPM/Materials/Dissolution/Dissolution.h>
 #include <CCA/Components/MPM/Materials/Dissolution/DissolutionMaterialSpec.h> 
 #include <CCA/Ports/DataWarehouseP.h>
+#include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/GridP.h>
@@ -37,25 +38,23 @@
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/Task.h>
 
-
-
 namespace Uintah {
 /**************************************
 
 CLASS
-   TestDissolution
+   ContactStressDependent
    
    Short description...
 
 GENERAL INFORMATION
 
-   TestDissolution.h
+   ContactStressDependent.h
 
    James E. Guilkey
    Laird Avenue Consulting/University of Utah
 
 KEYWORDS
-   Dissolution_Model_TestDissolution
+   Dissolution_Model_ContactStressDependent
 
 DESCRIPTION
   One of the derived Dissolution classes.
@@ -63,30 +62,32 @@ WARNING
   
 ****************************************/
 
-      class TestDissolution : public Dissolution {
+      class ContactStressDependent : public Dissolution {
       private:
          
          // Prevent copying of this class
          // copy constructor
-         TestDissolution(const TestDissolution &con);
-         TestDissolution& operator=(const TestDissolution &con);
+         ContactStressDependent(const ContactStressDependent &con);
+         ContactStressDependent& operator=(const ContactStressDependent &con);
          
          SimulationStateP    d_sharedState;
          
          // Dissolution rate
          double d_rate;
          double d_PressThresh;
+         double d_Ao_mol_cm2_s;
+         double d_Ea_kJ_mol;
          // master material
          int    d_masterModalID;
          int    d_inContactWithModalID;
 
       public:
          // Constructor
-         TestDissolution(const ProcessorGroup* myworld,
+         ContactStressDependent(const ProcessorGroup* myworld,
                           ProblemSpecP& ps,SimulationStateP& d_sS,MPMLabel* lb);
 
          // Destructor
-         virtual ~TestDissolution();
+         virtual ~ContactStressDependent();
 
          virtual void outputProblemSpec(ProblemSpecP& ps);
 
@@ -104,4 +105,4 @@ WARNING
       };
 } // End namespace Uintah
 
-#endif /* __TEST_DISSOLUTION_H__ */
+#endif /* __CONTACT_STRESS_DEPENDENT */

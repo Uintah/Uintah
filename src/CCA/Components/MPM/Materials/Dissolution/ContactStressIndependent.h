@@ -22,15 +22,14 @@
  * IN THE SOFTWARE.
  */
 
-// StressRateDissolution.h
+// ContactStressIndependent.h
 
-#ifndef __STRESSRATE_DISSOLUTION_H__
-#define __STRESSRATE_DISSOLUTION_H__
+#ifndef __CONTACT_STRESS_INDEPENDENT
+#define __CONTACT_STRESS_INDEPENDENT
 
 #include <CCA/Components/MPM/Materials/Dissolution/Dissolution.h>
 #include <CCA/Components/MPM/Materials/Dissolution/DissolutionMaterialSpec.h> 
 #include <CCA/Ports/DataWarehouseP.h>
-#include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/GridP.h>
@@ -38,23 +37,24 @@
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/Task.h>
 
+
 namespace Uintah {
 /**************************************
 
 CLASS
-   StressRateDissolution
+   ContactStressIndependent
    
    Short description...
 
 GENERAL INFORMATION
 
-   StressRateDissolution.h
+   ContactStressIndependent.h
 
    James E. Guilkey
    Laird Avenue Consulting/University of Utah
 
 KEYWORDS
-   Dissolution_Model_StressRateDissolution
+   Dissolution_Model_ContactStressIndependent
 
 DESCRIPTION
   One of the derived Dissolution classes.
@@ -62,30 +62,32 @@ WARNING
   
 ****************************************/
 
-      class StressRateDissolution : public Dissolution {
+      class ContactStressIndependent : public Dissolution {
       private:
          
          // Prevent copying of this class
          // copy constructor
-         StressRateDissolution(const StressRateDissolution &con);
-         StressRateDissolution& operator=(const StressRateDissolution &con);
+         ContactStressIndependent(const ContactStressIndependent &con);
+         ContactStressIndependent& operator=(const ContactStressIndependent &con);
          
          SimulationStateP    d_sharedState;
          
          // Dissolution rate
          double d_rate;
          double d_PressThresh;
+         double d_Ao_mol_cm2_s;
+         double d_Ea_kJ_mol;
          // master material
          int    d_masterModalID;
          int    d_inContactWithModalID;
 
       public:
          // Constructor
-         StressRateDissolution(const ProcessorGroup* myworld,
+         ContactStressIndependent(const ProcessorGroup* myworld,
                           ProblemSpecP& ps,SimulationStateP& d_sS,MPMLabel* lb);
 
          // Destructor
-         virtual ~StressRateDissolution();
+         virtual ~ContactStressIndependent();
 
          virtual void outputProblemSpec(ProblemSpecP& ps);
 
@@ -103,4 +105,4 @@ WARNING
       };
 } // End namespace Uintah
 
-#endif /* __STRESSRATE_DISSOLUTION_H__ */
+#endif /* __CONTACT_STRESS_INDEPENDENT */

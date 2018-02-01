@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-// TestDissolution.cc
+// ContactStressIndependent.cc
 // One of the derived Dissolution classes.
 //
 // This dissolution model generates a constant rate of dissolution,
@@ -35,9 +35,8 @@
 // then applied to identified surface particles in 
 // interpolateToParticlesAndUpdate
 
-#include <CCA/Components/MPM/Materials/Dissolution/TestDissolution.h>
+#include <CCA/Components/MPM/Materials/Dissolution/ContactStressIndependent.h>
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
-#include <CCA/Components/MPM/Core/MPMBoundCond.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Geometry/Vector.h>
@@ -56,7 +55,7 @@ using namespace std;
 using namespace Uintah;
 using std::vector;
 
-TestDissolution::TestDissolution(const ProcessorGroup* myworld,
+ContactStressIndependent::ContactStressIndependent(const ProcessorGroup* myworld,
                                  ProblemSpecP& ps, SimulationStateP& d_sS, 
                                  MPMLabel* Mlb)
   : Dissolution(myworld, Mlb, ps)
@@ -66,27 +65,29 @@ TestDissolution::TestDissolution(const ProcessorGroup* myworld,
   lb = Mlb;
   ps->require("masterModalID",        d_masterModalID);
   ps->require("InContactWithModalID", d_inContactWithModalID);
+  ps->require("Ao_mol_cm2_s",         d_Ao_mol_cm2_s);
+  ps->require("Ea_kJ_mol",            d_Ea_kJ_mol);
   ps->require("rate",                 d_rate);
   ps->require("PressureThreshold",    d_PressThresh);
 }
 
-TestDissolution::~TestDissolution()
+ContactStressIndependent::~ContactStressIndependent()
 {
 }
 
-void TestDissolution::outputProblemSpec(ProblemSpecP& ps)
+void ContactStressIndependent::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP dissolution_ps = ps->appendChild("dissolution");
-  dissolution_ps->appendElement("type",                 "test");
+  dissolution_ps->appendElement("type",         "contactStressIndependent");
   dissolution_ps->appendElement("masterModalID",        d_masterModalID);
   dissolution_ps->appendElement("InContactWithModalID", d_inContactWithModalID);
+  dissolution_ps->appendElement("Ao_mol_cm2_s",         d_Ao_mol_cm2_s);
+  dissolution_ps->appendElement("Ea_kJ_mol",            d_Ea_kJ_mol);
   dissolution_ps->appendElement("rate",                 d_rate);
   dissolution_ps->appendElement("PressureThreshold",    d_PressThresh);
-
-//  d_matls.outputProblemSpec(dissolution_ps);
 }
 
-void TestDissolution::computeMassBurnFraction(const ProcessorGroup*,
+void ContactStressIndependent::computeMassBurnFraction(const ProcessorGroup*,
                                               const PatchSubset* patches,
                                               const MaterialSubset* matls,
                                               DataWarehouse* old_dw,
@@ -161,12 +162,12 @@ void TestDissolution::computeMassBurnFraction(const ProcessorGroup*,
   } // patches
 }
 
-void TestDissolution::addComputesAndRequiresMassBurnFrac(SchedulerP & sched,
+void ContactStressIndependent::addComputesAndRequiresMassBurnFrac(SchedulerP & sched,
                                                       const PatchSet* patches,
                                                       const MaterialSet* ms)
 {
-  Task * t = scinew Task("TestDissolution::computeMassBurnFraction", 
-                      this, &TestDissolution::computeMassBurnFraction);
+  Task * t = scinew Task("ContactStressIndependent::computeMassBurnFraction", 
+                      this, &ContactStressIndependent::computeMassBurnFraction);
   
   const MaterialSubset* mss = ms->getUnion();
   MaterialSubset* z_matl = scinew MaterialSubset();
