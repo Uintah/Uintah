@@ -3294,7 +3294,7 @@ void SerialMPM::modifyLoadCurves(const ProcessorGroup* ,
   old_dw->get(KE,   lb->KineticEnergyLabel);
   old_dw->get(delT, lb->delTLabel, getLevel(patches) );
 
-  burialHistory->setCurrentIndex(7);
+  double currentLoad = 0.0;
 
   for(int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size();ii++){
     string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
@@ -3307,6 +3307,7 @@ void SerialMPM::modifyLoadCurves(const ProcessorGroup* ,
       int nextIndex = pbc->getLoadCurve()->getNextIndex(time);
       double nextTime = pbc->getLoadCurve()->getTime(nextIndex);
       double timeToNextLoad = nextTime-time;
+      currentLoad = pbc->getLoadCurve()->getLoad(time);
       if(timeToNextLoad < delT){
         cout << "timeToNextLoad = " << timeToNextLoad << endl;
         cout << "KE = " << KE << endl;
@@ -3329,6 +3330,10 @@ void SerialMPM::modifyLoadCurves(const ProcessorGroup* ,
       } // endif
     } // if bcs_type == "Pressure"
   }   // Loop over physical BCs
+
+  int curIndex = burialHistory->getIndexAtPressure(currentLoad);
+  burialHistory->setCurrentIndex(curIndex);
+
 }
 
 void SerialMPM::applyExternalLoads(const ProcessorGroup* ,

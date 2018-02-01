@@ -1123,6 +1123,7 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
     particle_state.push_back(d_lb->pSurfLabel);
     particle_state_preReloc.push_back(d_lb->pSurfLabel_preReloc);
   }
+
   particle_state.push_back(d_lb->pModalIDLabel);
   particle_state_preReloc.push_back(d_lb->pModalIDLabel_preReloc);
 

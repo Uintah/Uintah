@@ -140,6 +140,21 @@ WARNING
         return 0;
       }
 
+      // Get the next index
+      inline double getIndexAtPressure(double P) {
+        int ntimes = static_cast<int>(d_time_Ma.size());
+//        if (fabs(P) <= fabs(d_effectiveStress_bar[ntimes-1])){
+//          return ntimes;
+//        }
+
+        for (int ii = ntimes-1; ii > 0; ii--) {
+          if (fabs(P) <= fabs(d_effectiveStress_bar[ii])) {
+            return ii+1;
+          }
+        }
+        return 0;
+      }
+
       inline void setCurrentIndex(int index) {
         d_CI = index;
       }

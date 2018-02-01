@@ -439,6 +439,7 @@
     <override_restart_delt   spec="OPTIONAL DOUBLE  'positive'" />
     <timestep_multiplier     spec="REQUIRED DOUBLE  'positive'" />
     <max_wall_time           spec="OPTIONAL DOUBLE  'positive'" />
+    <currentTime             spec="OPTIONAL DOUBLE  'positive'" />
   </Time>
 
   <!-- NOTE: while the DataArchiver section is required, if no 'save' tags are specified,

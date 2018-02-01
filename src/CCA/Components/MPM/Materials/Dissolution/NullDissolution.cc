@@ -57,8 +57,8 @@ NullDissolution::~NullDissolution()
 
 void NullDissolution::outputProblemSpec(ProblemSpecP& ps)
 {
-  ProblemSpecP dissolution_ps = ps->appendChild("dissolution");
-  dissolution_ps->appendElement("type","null");
+//  ProblemSpecP dissolution_ps = ps->appendChild("dissolution");
+//  dissolution_ps->appendElement("type","null");
 //  d_matls.outputProblemSpec(dissolution_ps);
 }
 
