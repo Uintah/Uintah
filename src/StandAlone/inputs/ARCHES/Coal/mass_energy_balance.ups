@@ -47,7 +47,6 @@
     <save label="Charmass_os_src_qn0"/>
     <save label="Charmass_os_src_qn1"/>
     <save label="Charmass_os_src_qn2"/>
-    <save label="d_vol_ave"/>
     <save label="conv_scheme_x"/>
     <save label="conv_scheme_y"/>
     <save label="conv_scheme_z"/>
@@ -1809,13 +1808,12 @@
           <absorption_modifier>1.0</absorption_modifier>
         </model>
         <model label="abskp" type="partRadProperties">
-          <subModel>constantCIF</subModel>
+          <subModel>tabulated</subModel>
+          <TablePath>inputs/ARCHES/ClassicMixingTables/radprops/part.mix.gz</TablePath>
           <part_temp_label>temperature_coal</part_temp_label>
           <part_size_label>length</part_size_label>
           <radiateAtGasTemp>false</radiateAtGasTemp>
           <model_type>planck</model_type>
-          <complex_ir_real>2.0</complex_ir_real>
-          <complex_ir_imag>-0.6</complex_ir_imag>
           <const_asymmFact>1</const_asymmFact>
           <absorption_modifier>1.0</absorption_modifier>
         </model>

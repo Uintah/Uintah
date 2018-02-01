@@ -83,7 +83,6 @@ NIGHTLYTESTS = [
    ("methane_RCCE"                      , "methane_RCCE.ups"                                        , 1   , "All"   , ["exactComparison"])   , 
    ("channel_WD_CO"                     , "channel_WD_CO.ups"                                       , 1   , "All"   , ["exactComparison"])   , 
    ("DOM16"                             , "DOM16.ups"                                               , 3   , "All"   , ["exactComparison"     , "no_restart"]) , 
-   ("DO_RadProps"                       , "DO_RadProps.ups"                                         , 3   , "All"   , ["exactComparison"     , "no_cuda"   ])   ,   # 11/1/16 bug in radProps with cuda
    ("CQMOM_1x1"                         , "CQMOM_regression/CQMOM_1x1.ups"                          , 1   , "All"   , ["exactComparison"     , "no_restart"]) , 
    ("CQMOM_scalar_transport"            , "CQMOM_regression/CQMOM_Transport.ups"                    , 6   , "All"   , ["exactComparison"     , "no_restart"]) , 
    ("CQMOM_scalar_transport2x2x2"       , "CQMOM_regression/CQMOM_Transport_2x2x2.ups"              , 6   , "All"   , ["exactComparison"     , "no_restart"]) , 
@@ -191,7 +190,6 @@ LOCALTESTS = [
    ("scalar_var_2eqn"                   , "scalar_variance_2eqn.ups"                                , 4   , "All"  , ["exactComparison"   , "no_restart"]) , 
    ("coal_channel_FOWY"                 , "Coal/coal_channel_FOWY.ups"                              , 1   , "All"  , ["exactComparison"   , "no_restart"]) , 
    ("DOM16"                             , "DOM16.ups"                                               , 3   , "All"  , ["exactComparison"   , "no_restart"]) , 
-   ("DO_RadProps"                       , "DO_RadProps.ups"                                         , 3   , "All"  , ["exactComparison"]) , 
    ("CQMOM_1x1"                         , "CQMOM_regression/CQMOM_1x1.ups"                          , 1   , "All"  , ["exactComparison"   , "no_restart"]) , 
    ("CQMOM_scalar_transport"            , "CQMOM_regression/CQMOM_Transport.ups"                    , 6   , "All"  , ["exactComparison"   , "no_restart"]) , 
    ("CQMOM_scalar_transport2x2x2"       , "CQMOM_regression/CQMOM_Transport_2x2x2.ups"              , 6   , "All"  , ["exactComparison"   , "no_restart"]) , 
@@ -251,7 +249,6 @@ LOCALTESTS = [
 ]
 
 DEBUG = [
-   ("DO_RadProps"                       , "DO_RadProps.ups"                                         , 3 , "Linux" , ["exactComparison"])   , 
 ]
 
 SCALARTESTS = [
@@ -386,7 +383,6 @@ NORMCRT = [
    ("coal_RadPropsPlanck"               , "Coal/coal_RadPropsPlanck.ups"                            , 1   , "All"  , ["exactComparison"]), 
    ("pcoal_drag"                        , "Coal/pcoal_drag.ups"                                     , 1   , "All"  , ["exactComparison"]) , 
    ("DOM16"                             , "DOM16.ups"                                               , 3   , "All"  , ["exactComparison"   , "no_restart"]) , 
-   ("DO_RadProps"                       , "DO_RadProps.ups"                                         , 3   , "All"  , ["exactComparison"]) , 
    ("CQMOM_1x1"                         , "CQMOM_regression/CQMOM_1x1.ups"                          , 1   , "All"  , ["exactComparison"   , "no_restart"]) , 
    ("CQMOM_scalar_transport"            , "CQMOM_regression/CQMOM_Transport.ups"                    , 6   , "All"  , ["exactComparison"   , "no_restart"]) , 
    ("CQMOM_scalar_transport2x2x2"       , "CQMOM_regression/CQMOM_Transport_2x2x2.ups"              , 6   , "All"  , ["exactComparison"   , "no_restart"]) , 

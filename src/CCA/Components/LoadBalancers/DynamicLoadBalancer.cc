@@ -123,7 +123,7 @@ DynamicLoadBalancer::collectParticlesForRegrid( const Grid                     *
         // new patch - no particles yet
         recvcounts[0]++;
         totalsize++;
-        if (d_myworld->myRank() == 0) {
+        if( Uintah::Parallel::getMPIRank() == 0 ) {
           PatchInfo pi(grid_index, 0);
           subpatchParticles.push_back(pi);
         }
@@ -138,7 +138,7 @@ DynamicLoadBalancer::collectParticlesForRegrid( const Grid                     *
       if (oldPatches.size() == 0) {
         recvcounts[0]++;
         totalsize++;
-        if (d_myworld->myRank() == 0) {
+        if( Uintah::Parallel::getMPIRank() == 0 ) {
           PatchInfo pi(grid_index, 0);
           subpatchParticles.push_back(pi);
         }
@@ -915,9 +915,9 @@ DynamicLoadBalancer::needRecompile( const GridP & grid )
         << ", Last LB time step: " << m_last_lb_timeStep << ", Last LB time[s]: " << m_last_lb_simTime << endl;
   }
   
-  // if it determines we need to re-load-balance, recompile
-  if ( do_check && possiblyDynamicallyReallocate( grid, LoadBalancer::check ) ) {
-    doing << d_myworld->myRank() << " DLB - scheduling recompile " <<endl;
+  // If it determines we need to re-load-balance, recompile:
+  if ( do_check && possiblyDynamicallyReallocate( grid, LoadBalancer::CHECK_LB ) ) {
+    doing << Uintah::Parallel::getMPIRank() << " DLB - scheduling recompile\n";
     return true;
   }
   else {
@@ -966,9 +966,9 @@ DynamicLoadBalancer::getCosts( const Grid * grid, vector< vector<double> > & cos
   
   //__________________________________
   //  Debugging output
-  if (dbg.active() && d_myworld->myRank() == 0) {
-    for (unsigned l = 0; l < costs.size(); l++) {
-      for (unsigned p = 0; p < costs[l].size(); p++) {
+  if( dbg.active() && Uintah::Parallel::getMPIRank() == 0 ) {
+    for( unsigned l = 0; l < costs.size(); l++ ) {
+      for( unsigned p = 0; p < costs[l].size(); p++ ) {
         dbg << "  DLB:getCosts  L: "  << l << " P: " << p << " cost " << costs[l][p] << endl;
       }
     }
@@ -979,7 +979,7 @@ DynamicLoadBalancer::getCosts( const Grid * grid, vector< vector<double> > & cos
 bool
 DynamicLoadBalancer::possiblyDynamicallyReallocate( const GridP & grid, int state )
 {
-  if (d_myworld->myRank() == 0) {
+  if( Uintah::Parallel::getMPIRank() == 0 ) {
     dbg << d_myworld->myRank() << " In DLB, state " << state << endl;
   }
 
@@ -994,8 +994,8 @@ DynamicLoadBalancer::possiblyDynamicallyReallocate( const GridP & grid, int stat
 
   // don't do on a restart unless procs changed between runs.  For restarts, this is 
   // called mainly to update the perProc Patch sets (at the bottom)
-  if (state != LoadBalancer::restart) {
-    if (state != LoadBalancer::check) {
+  if( state != LoadBalancer::RESTART_LB ) {
+    if( state != LoadBalancer::CHECK_LB ) {
       force = true;
       if (m_lb_timeStep_interval != 0) {
         m_last_lb_timeStep = timeStep;
@@ -1039,13 +1039,13 @@ DynamicLoadBalancer::possiblyDynamicallyReallocate( const GridP & grid, int stat
 
     //__________________________________
     //
-    if (dynamicAllocate || state != LoadBalancer::check) {
+    if( dynamicAllocate || state != LoadBalancer::CHECK_LB ) {
       //d_oldAssignment = d_processorAssignment;
       changed = true;
       m_processor_assignment = m_temp_assignment;
       m_assignment_base_patch = (*grid->getLevel(0)->patchesBegin())->getID();
 
-      if (state == LoadBalancer::init) {
+      if( state == LoadBalancer::INIT_LB ) {
         // set it up so the old and new are in same place
         m_old_assignment = m_processor_assignment;
         m_old_assignment_base_patch = m_assignment_base_patch;
@@ -1077,15 +1077,15 @@ DynamicLoadBalancer::possiblyDynamicallyReallocate( const GridP & grid, int stat
     } 
   }  // != restart
   
-  m_temp_assignment.resize(0);
+  m_temp_assignment.resize( 0 );
   
-  int flag = LoadBalancer::check;
-  if ( changed || state == LoadBalancer::restart ) {
-    flag = LoadBalancer::regrid;
+  int flag = LoadBalancer::CHECK_LB;
+  if ( changed || state == LoadBalancer::RESTART_LB ) {
+    flag = LoadBalancer::REGRID_LB;
   }
   
   // this must be called here (it creates the new per-proc patch sets) even if DLB does nothing.  Don't move or return earlier.
-  LoadBalancerCommon::possiblyDynamicallyReallocate(grid, flag);
+  LoadBalancerCommon::possiblyDynamicallyReallocate( grid, flag );
   
   (*d_runtimeStats)[LoadBalancerTime] += timer().seconds();
 
@@ -1160,8 +1160,8 @@ DynamicLoadBalancer::problemSetup( ProblemSpecP & pspec, GridP & grid, const Sim
   }
 
 
-  if(d_myworld->myRank()==0) {
-    cout << "Dynamic Algorithm: " << dynamicAlgo << endl;
+  if( Uintah::Parallel::getMPIRank() == 0 ) {
+    cout << "Dynamic Algorithm: " << dynamicAlgo << "\n";
   }
 
   if (dynamicAlgo == "cyclic") {
@@ -1179,11 +1179,9 @@ DynamicLoadBalancer::problemSetup( ProblemSpecP & pspec, GridP & grid, const Sim
     d_collectParticles = true;
   }
   else {
-    if (d_myworld->myRank() == 0) {
-      cout << "Invalid Load Balancer Algorithm: " << dynamicAlgo
-        << "\nPlease select 'cyclic', 'random', 'patchFactor' (default), or 'patchFactorParticles'\n"
-        << "\nUsing 'patchFactor' load balancer\n";
-    }
+    proc0cout << "Invalid Load Balancer Algorithm: " << dynamicAlgo
+              << "\nPlease select 'cyclic', 'random', 'patchFactor' (default), or 'patchFactorParticles'\n"
+              << "\nUsing 'patchFactor' load balancer\n";
     d_dynamicAlgorithm = patch_factor_lb;
   }
 

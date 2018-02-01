@@ -35,6 +35,7 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 
 #include <sci_defs/cuda_defs.h>
+#include <sci_defs/kokkos_defs.h>
 
 #include <iostream>
 #include <string>
@@ -58,16 +59,21 @@ SchedulerFactory::create( const ProblemSpecP   & ps
   /////////////////////////////////////////////////////////////////////
   // Default settings - nothing specified in the input file
   if (scheduler == "") {
+#ifdef UINTAH_ENABLE_KOKKOS
+    scheduler = "KokkosOpenMP";
+#else
     if (Uintah::Parallel::getNumThreads() > 0) {
       scheduler = "Unified";
     }
     else {
       scheduler = "MPI";
     }
+#endif // UINTAH_ENABLE_KOKKOS
   }
 
   /////////////////////////////////////////////////////////////////////
   // Check for specific scheduler request from the input file
+
   if (scheduler == "MPI") {
     sch = scinew MPIScheduler(world, nullptr);
   }
@@ -76,9 +82,20 @@ SchedulerFactory::create( const ProblemSpecP   & ps
     sch = scinew DynamicMPIScheduler(world, nullptr);
   }
 
+#ifdef UINTAH_ENABLE_KOKKOS
+
+  else if (scheduler == "Unified") {
+    std::string error = "\n \tTo use the Unified Scheduler, you must disable Kokkos. Build Uintah without Kokkos.";
+    throw ProblemSetupException(error, __FILE__, __LINE__);
+  }
+
+#else
+
   else if (scheduler == "Unified") {
     sch = scinew UnifiedScheduler(world, nullptr);
   }
+
+#endif // UINTAH_ENABLE_KOKKOS
 
   else if (scheduler == "KokkosOpenMP") {
     sch = scinew KokkosOpenMPScheduler(world, nullptr);
@@ -93,6 +110,17 @@ SchedulerFactory::create( const ProblemSpecP   & ps
 
   //__________________________________
   //  bulletproofing
+
+#ifdef UINTAH_ENABLE_KOKKOS
+
+  // Kokkos parallel patterns are enabled, but trying to use Unified Scheduler from command line with "-nthreads"
+  if ( (scheduler == "Unified") || (Uintah::Parallel::getNumThreads() > 0) || (Uintah::Parallel::usingDevice()) ) {
+    std::string error = "\n \tTo use the Unified Scheduler, '-nthreads <n>' OR '-gpu', you must disable Kokkos. Build Uintah without Kokkos.";
+    throw ProblemSetupException(error, __FILE__, __LINE__);
+  }
+
+#else
+
   // "-nthreads" at command line, something other than "Unified" specified in UPS file (w/ -do_not_validate)
   if ((Uintah::Parallel::getNumThreads() > 0) && (scheduler != "Unified")) {
     throw ProblemSetupException("\nERROR<Scheduler>: Unified Scheduler needed for '-nthreads <n>' option.\n", __FILE__, __LINE__);
@@ -109,6 +137,8 @@ SchedulerFactory::create( const ProblemSpecP   & ps
     std::string error = "\nERROR<Scheduler>: Add '-nthreads <n>' to the sus command line if you are specifying Unified in your input file.\n";
     throw ProblemSetupException(error, __FILE__, __LINE__);
   }
+
+#endif // UINTAH_ENABLE_KOKKOS
 
   // Output which scheduler will be used
   proc0cout << "Scheduler: \t\t" << scheduler << std::endl;

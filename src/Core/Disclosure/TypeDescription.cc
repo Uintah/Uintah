@@ -26,11 +26,11 @@
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Parallel/CrowdMonitor.hpp>
+#include <Core/Parallel/MasterLock.h>
 #include <Core/Util/Assert.h>
 
 #include <iostream>
 #include <map>
-#include <mutex>
 #include <string>
 #include <sstream>
 #include <vector>
@@ -42,7 +42,7 @@ namespace {
 using register_monitor = Uintah::CrowdMonitor<TypeDescription::register_tag>;
 using lookup_monitor   = Uintah::CrowdMonitor<TypeDescription::lookup_tag>;
 
-std::mutex get_mpi_type_lock{};
+Uintah::MasterLock get_mpi_type_lock{};
 std::map<std::string, const TypeDescription*> * types_g     = nullptr;
 std::vector<const TypeDescription*>           * typelist_g  = nullptr;
 bool killed = false;
@@ -178,9 +178,9 @@ MPI_Datatype
 TypeDescription::getMPIType() const
 {
   if (d_mpitype == MPI_Datatype(-1)) {
-		// scope the lock_guard
+    // scope the lock_guard
     {
-      std::lock_guard<std::mutex> guard(get_mpi_type_lock);
+      std::lock_guard<Uintah::MasterLock> guard(get_mpi_type_lock);
       if (d_mpitype == MPI_Datatype(-1)) {
         if (d_mpitypemaker) {
           d_mpitype = (*d_mpitypemaker)();

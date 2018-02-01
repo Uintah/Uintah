@@ -135,18 +135,16 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/Parallel.h>
+#include <Core/Util/DOUT.hpp>
 #include <Core/Math/MiscMath.h>
 #include <CCA/Components/Arches/Filter.h>
 
 #include <cmath>
-#include <mutex>
 
 using namespace std;
 using namespace Uintah;
 
 static DebugStream dbg("ARCHES", false);
-
-extern std::mutex coutLock;
 
 // ****************************************************************************
 // Default constructor for ExplicitSolver
@@ -3942,9 +3940,10 @@ ExplicitSolver::scalarInit( const ProcessorGroup*,
                             DataWarehouse* old_dw,
                             DataWarehouse* new_dw )
 {
-  coutLock.lock();
-  proc0cout << "Initializing all scalar equations and sources...\n";
-  coutLock.unlock();
+  std::ostringstream message;
+  message << "Initializing all scalar equations and sources...\n";
+  DOUT(true, message.str());
+
   for (int p = 0; p < patches->size(); p++) {
     //assume only one material for now
     int archIndex = 0;

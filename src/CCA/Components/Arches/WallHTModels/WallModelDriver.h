@@ -55,6 +55,7 @@ namespace Uintah{
         double relax; // relaxation coefficient for updating surface temperature
         int em_model_type;
         int num_extra_src;
+        int Nenv;
         double delta_t;
         CCVariable<double> T;
         CCVariable<double> T_copy;
@@ -70,7 +71,8 @@ namespace Uintah{
         constCCVariable<double> deposit_velocity_old;
         constCCVariable<double> ave_deposit_velocity;
         std::vector< constCCVariable<double> > extra_src;
-        constCCVariable<double> d_vol_ave;
+        std::vector< constCCVariable<double> > particle_flow_rate;
+        std::vector< constCCVariable<double> > particle_flow_rate_d;
         constCCVariable<double> T_real_old;
         constCCVariable<double> T_old;
         constCCVariable<int> celltype;
@@ -98,6 +100,7 @@ namespace Uintah{
       std::string _dep_vel_name;
       std::vector<std::string> _extra_src_flux_names;
       int _num_extra_src;
+      int _Nenv;
       bool do_coal_region;
       int _calc_freq;                    ///< Wall heat transfer model calculation frequency
       std::string _T_label_name;         ///< Temperature label name
@@ -125,11 +128,12 @@ namespace Uintah{
       const VarLabel* _True_T_Label;
       const VarLabel* _ave_dep_vel_label;
       std::vector< const VarLabel*> _extra_src_varlabels;
+      std::vector< const VarLabel*> _particle_flow_rate_varlabels;
+      std::vector< const VarLabel*> _particle_flow_rate_d_varlabels;
       const VarLabel* _deposit_velocity_label;
       const VarLabel* _deposit_thickness_label;
       const VarLabel* _deposit_thickness_sb_s_label;
       const VarLabel* _deposit_thickness_sb_l_label;
-      const VarLabel* _d_vol_ave_label;
       const VarLabel* _emissivity_label;
       const VarLabel* _thermal_cond_en_label;
       const VarLabel* _thermal_cond_sb_s_label;
@@ -828,6 +832,7 @@ namespace Uintah{
 
           struct WallInfo {
               double T_slag;
+              double Nenv;
               double dy_erosion;
               double t_sb;
               double k; // wall
