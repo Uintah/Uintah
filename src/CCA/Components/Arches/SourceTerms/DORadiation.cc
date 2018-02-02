@@ -328,6 +328,7 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
       }
     }
 
+    // Vector of PatchSubset pointers  
    _RelevantPatchesXpYpZp=std::vector<const PatchSubset*> (0);
    _RelevantPatchesXpYpZm=std::vector<const PatchSubset*> (0);
    _RelevantPatchesXpYmZp=std::vector<const PatchSubset*> (0);
@@ -336,6 +337,17 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
    _RelevantPatchesXmYpZm=std::vector<const PatchSubset*> (0);
    _RelevantPatchesXmYmZp=std::vector<const PatchSubset*> (0);
    _RelevantPatchesXmYmZm=std::vector<const PatchSubset*> (0);
+
+    // Vector of PatchSet pointers
+   _RelevantPatchesXpYpZp2=std::vector<const PatchSet*> (0);
+   _RelevantPatchesXpYpZm2=std::vector<const PatchSet*> (0);
+   _RelevantPatchesXpYmZp2=std::vector<const PatchSet*> (0);
+   _RelevantPatchesXpYmZm2=std::vector<const PatchSet*> (0);
+   _RelevantPatchesXmYpZp2=std::vector<const PatchSet*> (0);
+   _RelevantPatchesXmYpZm2=std::vector<const PatchSet*> (0);
+   _RelevantPatchesXmYmZp2=std::vector<const PatchSet*> (0);
+   _RelevantPatchesXmYmZm2=std::vector<const PatchSet*> (0);
+
 
   }
 
@@ -884,23 +896,39 @@ DORadiation::sched_computeSourceSweep( const LevelP& level, SchedulerP& sched, i
             }
 
             PatchSubset* sweepingPatches= scinew PatchSubset(RelevantPatches);
+
+            PatchSet* sweepingPatches2= scinew PatchSet();
+
+            sweepingPatches2->addReference();
+            for (unsigned int ix2=0; ix2 < RelevantPatches.size(); ix2++){
+              sweepingPatches2->add(RelevantPatches[ix2]);
+            }
+
             sweepingPatches->sort();
-            if (idir==0 && jdir==0 && kdir==0)
+            if (idir==0 && jdir==0 && kdir==0){
               _RelevantPatchesXpYpZp.push_back(sweepingPatches);
-            if (idir==0 && jdir==0 && kdir==1)
+              _RelevantPatchesXpYpZp2.push_back(sweepingPatches2);}
+            if (idir==0 && jdir==0 && kdir==1){
               _RelevantPatchesXpYpZm.push_back(sweepingPatches);
-            if (idir==0 && jdir==1 && kdir==0)
+              _RelevantPatchesXpYpZm2.push_back(sweepingPatches2);}
+            if (idir==0 && jdir==1 && kdir==0){
               _RelevantPatchesXpYmZp.push_back(sweepingPatches);
-            if (idir==0 && jdir==1 && kdir==1)
+              _RelevantPatchesXpYmZp2.push_back(sweepingPatches2);}
+            if (idir==0 && jdir==1 && kdir==1){
               _RelevantPatchesXpYmZm.push_back(sweepingPatches);
-            if (idir==1 && jdir==0 && kdir==0)
+              _RelevantPatchesXpYmZm2.push_back(sweepingPatches2);}
+            if (idir==1 && jdir==0 && kdir==0){
               _RelevantPatchesXmYpZp.push_back(sweepingPatches);
-            if (idir==1 && jdir==0 && kdir==1)
+              _RelevantPatchesXmYpZp2.push_back(sweepingPatches2);}
+            if (idir==1 && jdir==0 && kdir==1){
               _RelevantPatchesXmYpZm.push_back(sweepingPatches);
-            if (idir==1 && jdir==1 && kdir==0)
+              _RelevantPatchesXmYpZm2.push_back(sweepingPatches2);}
+            if (idir==1 && jdir==1 && kdir==0){
               _RelevantPatchesXmYmZp.push_back(sweepingPatches);
-            if (idir==1 && jdir==1 && kdir==1)
+              _RelevantPatchesXmYmZp2.push_back(sweepingPatches2);}
+            if (idir==1 && jdir==1 && kdir==1){
               _RelevantPatchesXmYmZm.push_back(sweepingPatches);
+              _RelevantPatchesXmYmZm2.push_back(sweepingPatches2);}
           } // iphase
         } // z+ z- dir
       } // y+ y- dir
@@ -1015,31 +1043,59 @@ DORadiation::sched_computeSourceSweep( const LevelP& level, SchedulerP& sched, i
               tsk2->requires( Task::OldDW,spectral_gas_absorption[iband], gn, 0 );
             }
           }
+
+             // requires->modifies chaining to facilitate inter-patch communication.  
+             // We may be able to use wrapped requires() due to using the reduced patchset when calling addTask (True spatial scheduling)
           for (int iband=0; iband<d_nbands; iband++){
             tsk2->modifies( _IntensityLabels[intensity_iter+iband*_DO_model->getIntOrdinates()]);
             // --- Turn on and off communication depending on phase and intensity using equation:  iStage = iPhase + intensity_within_octant_x, 8 different patch subsets, due to 8 octants ---//
-            if (_DO_model->xDir(first_intensity) ==1 && _DO_model->yDir(first_intensity)==1 && _DO_model->zDir(first_intensity)==1)
+            if (_DO_model->xDir(first_intensity) ==1 && _DO_model->yDir(first_intensity)==1 && _DO_model->zDir(first_intensity)==1){
               tsk2->requires( Task::NewDW, _IntensityLabels[intensity_iter+iband*_DO_model->getIntOrdinates()] ,_RelevantPatchesXpYpZp[istage-int_x], Uintah::Task::PatchDomainSpec::ThisLevel, matlDS, Uintah::Task::MaterialDomainSpec::NormalDomain, _gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, false);
-            if (_DO_model->xDir(first_intensity) ==1 && _DO_model->yDir(first_intensity)==1 && _DO_model->zDir(first_intensity)==0)
+              if((iband+1)==d_nbands){ // Adding bands, made this logic painful. To fit the original abstraction, the bands loop should be merged with int_x loop.
+                sched->addTask(tsk2,_RelevantPatchesXpYpZp2[istage-int_x] , _shared_state->allArchesMaterials(),Radiation_TG);
+              }
+            }else if (_DO_model->xDir(first_intensity) ==1 && _DO_model->yDir(first_intensity)==1 && _DO_model->zDir(first_intensity)==0){
               tsk2->requires( Task::NewDW, _IntensityLabels[intensity_iter+iband*_DO_model->getIntOrdinates()] ,_RelevantPatchesXpYpZm[istage-int_x], Uintah::Task::PatchDomainSpec::ThisLevel, matlDS, Uintah::Task::MaterialDomainSpec::NormalDomain, _gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, false);
-            if (_DO_model->xDir(first_intensity) ==1 && _DO_model->yDir(first_intensity)==0 && _DO_model->zDir(first_intensity)==1)
+              if((iband+1)==d_nbands){
+                sched->addTask(tsk2,_RelevantPatchesXpYpZm2[istage-int_x] , _shared_state->allArchesMaterials(),Radiation_TG);
+              }
+            }else if (_DO_model->xDir(first_intensity) ==1 && _DO_model->yDir(first_intensity)==0 && _DO_model->zDir(first_intensity)==1){
               tsk2->requires( Task::NewDW, _IntensityLabels[intensity_iter+iband*_DO_model->getIntOrdinates()] ,_RelevantPatchesXpYmZp[istage-int_x], Uintah::Task::PatchDomainSpec::ThisLevel, matlDS, Uintah::Task::MaterialDomainSpec::NormalDomain, _gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, false);
-            if (_DO_model->xDir(first_intensity) ==1 && _DO_model->yDir(first_intensity)==0 && _DO_model->zDir(first_intensity)==0)
+              if((iband+1)==d_nbands){
+                sched->addTask(tsk2,_RelevantPatchesXpYmZp2[istage-int_x] , _shared_state->allArchesMaterials(),Radiation_TG);
+              }
+            }else if (_DO_model->xDir(first_intensity) ==1 && _DO_model->yDir(first_intensity)==0 && _DO_model->zDir(first_intensity)==0){
               tsk2->requires( Task::NewDW, _IntensityLabels[intensity_iter+iband*_DO_model->getIntOrdinates()] ,_RelevantPatchesXpYmZm[istage-int_x], Uintah::Task::PatchDomainSpec::ThisLevel, matlDS, Uintah::Task::MaterialDomainSpec::NormalDomain, _gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, false);
-            if (_DO_model->xDir(first_intensity) ==0 && _DO_model->yDir(first_intensity)==1 && _DO_model->zDir(first_intensity)==1)
+              if((iband+1)==d_nbands){
+                sched->addTask(tsk2,_RelevantPatchesXpYmZm2[istage-int_x] , _shared_state->allArchesMaterials(),Radiation_TG);
+              }
+            }else if (_DO_model->xDir(first_intensity) ==0 && _DO_model->yDir(first_intensity)==1 && _DO_model->zDir(first_intensity)==1){
               tsk2->requires( Task::NewDW, _IntensityLabels[intensity_iter+iband*_DO_model->getIntOrdinates()] ,_RelevantPatchesXmYpZp[istage-int_x], Uintah::Task::PatchDomainSpec::ThisLevel, matlDS, Uintah::Task::MaterialDomainSpec::NormalDomain, _gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, false);
-            if (_DO_model->xDir(first_intensity) ==0 && _DO_model->yDir(first_intensity)==1 && _DO_model->zDir(first_intensity)==0)
+              if((iband+1)==d_nbands){
+                sched->addTask(tsk2,_RelevantPatchesXmYpZp2[istage-int_x] , _shared_state->allArchesMaterials(),Radiation_TG);
+              }
+            }else if (_DO_model->xDir(first_intensity) ==0 && _DO_model->yDir(first_intensity)==1 && _DO_model->zDir(first_intensity)==0){
               tsk2->requires( Task::NewDW, _IntensityLabels[intensity_iter+iband*_DO_model->getIntOrdinates()] ,_RelevantPatchesXmYpZm[istage-int_x], Uintah::Task::PatchDomainSpec::ThisLevel, matlDS, Uintah::Task::MaterialDomainSpec::NormalDomain, _gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, false);
-            if (_DO_model->xDir(first_intensity) ==0 && _DO_model->yDir(first_intensity)==0 && _DO_model->zDir(first_intensity)==1)
+              if((iband+1)==d_nbands){
+                sched->addTask(tsk2,_RelevantPatchesXmYpZm2[istage-int_x] , _shared_state->allArchesMaterials(),Radiation_TG);
+              }
+            }else if (_DO_model->xDir(first_intensity) ==0 && _DO_model->yDir(first_intensity)==0 && _DO_model->zDir(first_intensity)==1){
               tsk2->requires( Task::NewDW, _IntensityLabels[intensity_iter+iband*_DO_model->getIntOrdinates()] ,_RelevantPatchesXmYmZp[istage-int_x], Uintah::Task::PatchDomainSpec::ThisLevel, matlDS, Uintah::Task::MaterialDomainSpec::NormalDomain, _gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, false);
-            if (_DO_model->xDir(first_intensity) ==0 && _DO_model->yDir(first_intensity)==0 && _DO_model->zDir(first_intensity)==0)
+              if((iband+1)==d_nbands){
+                sched->addTask(tsk2,_RelevantPatchesXmYmZp2[istage-int_x] , _shared_state->allArchesMaterials(),Radiation_TG);
+              }
+            }else if (_DO_model->xDir(first_intensity) ==0 && _DO_model->yDir(first_intensity)==0 && _DO_model->zDir(first_intensity)==0){
               tsk2->requires( Task::NewDW, _IntensityLabels[intensity_iter+iband*_DO_model->getIntOrdinates()] ,_RelevantPatchesXmYmZm[istage-int_x], Uintah::Task::PatchDomainSpec::ThisLevel, matlDS, Uintah::Task::MaterialDomainSpec::NormalDomain, _gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, false);
-          }
+              if((iband+1)==d_nbands){
+                sched->addTask(tsk2,_RelevantPatchesXmYmZm2[istage-int_x] , _shared_state->allArchesMaterials(),Radiation_TG);
+              }
+            }
 
-          sched->addTask(tsk2, level->eachPatch(), _shared_state->allArchesMaterials(),Radiation_TG);
-        }
-      }
-    }
+          //sched->addTask(tsk2, level->eachPatch(), _shared_state->allArchesMaterials(),Radiation_TG); // partial spatial scheduling
+        } // iband
+      } // int_x (octant intensities)
+    } // octants
+  } //istage
 
     //-----------------------------------------------------------------//
     // This task computes 6 radiative fluxes, incident radiation,
