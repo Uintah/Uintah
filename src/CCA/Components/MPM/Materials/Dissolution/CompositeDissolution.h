@@ -78,6 +78,9 @@ WARNING
                                                  const PatchSet* patches,
                                                  const MaterialSet* matls);
 
+         void setTemperature(double BHTemp);
+         void setPhase(std::string LCPhase);
+
       private: // hide
          CompositeDissolution(const CompositeDissolution &);
          CompositeDissolution& operator=(const CompositeDissolution &);

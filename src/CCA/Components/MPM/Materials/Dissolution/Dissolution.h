@@ -82,10 +82,16 @@ WARNING
      virtual void addComputesAndRequiresMassBurnFrac(SchedulerP & sched,
                                                   const PatchSet* patches,
                                                   const MaterialSet* matls) = 0;
+
+     virtual void setTemperature(double BHTemp);
+
+     virtual void setPhase(std::string LCPhase);
+
     protected:
      MPMLabel* lb;
+     double d_temperature;
+     std::string d_phase;
 
-//     DissolutionMaterialSpec d_matls;
     };
 
 //    inline bool compare(double num1, double num2) {

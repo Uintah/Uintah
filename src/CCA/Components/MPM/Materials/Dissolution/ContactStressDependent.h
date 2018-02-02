@@ -74,9 +74,10 @@ WARNING
          
          // Dissolution rate
          double d_rate;
-         double d_PressThresh;
+         double d_StressThresh;
          double d_Ao_mol_cm2_s;
          double d_Ea_kJ_mol;
+//         double d_temperature;
          // master material
          int    d_masterModalID;
          int    d_inContactWithModalID;
@@ -101,7 +102,6 @@ WARNING
          virtual void addComputesAndRequiresMassBurnFrac(SchedulerP & sched,
                                                     const PatchSet* patches,
                                                     const MaterialSet* matls);
-
       };
 } // End namespace Uintah
 

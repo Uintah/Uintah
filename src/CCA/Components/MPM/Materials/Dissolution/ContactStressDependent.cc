@@ -57,7 +57,8 @@ ContactStressDependent::ContactStressDependent(const ProcessorGroup* myworld,
   ps->require("Ao_mol_cm2_s",         d_Ao_mol_cm2_s);
   ps->require("Ea_kJ_mol",            d_Ea_kJ_mol);
   ps->require("rate",                 d_rate);
-  ps->require("PressureThreshold",    d_PressThresh);
+  ps->require("StressThreshold",      d_StressThresh);
+  ps->getWithDefault("Temperature",   d_temperature, 300.0);
 }
 
 ContactStressDependent::~ContactStressDependent()
@@ -73,7 +74,8 @@ void ContactStressDependent::outputProblemSpec(ProblemSpecP& ps)
   dissolution_ps->appendElement("Ao_mol_cm2_s",         d_Ao_mol_cm2_s);
   dissolution_ps->appendElement("Ea_kJ_mol",            d_Ea_kJ_mol);
   dissolution_ps->appendElement("rate",                 d_rate);
-  dissolution_ps->appendElement("PressureThreshold",    d_PressThresh);
+  dissolution_ps->appendElement("StressThreshold",      d_StressThresh);
+  dissolution_ps->appendElement("Temperature",          d_temperature);
 }
 
 void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
@@ -140,13 +142,15 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
 
         if(gmass[md][c] >  1.e-100  &&
            gmass[md][c] != sumMass  && 
-          -gnormtrac[md][c] > d_PressThresh){ // Compressive stress is negative
-//           pressure > d_PressThresh){ // && volFrac > 0.6){
+          -gnormtrac[md][c] > d_StressThresh){ // Compressive stress is negative
+//           pressure > d_StressThresh){ // && volFrac > 0.6){
             double rho = gmass[md][c]/gvolume[md][c];
             massBurnRate[md][c] += d_rate*area*rho*2.0*NC_CCweight[c];
-//          double pressFactor = (pressure - d_PressThresh)/d_PressThresh;
-            double pressFactor = (-gnormtrac[md][c]-d_PressThresh)/d_PressThresh;
-            massBurnRate[md][c] += d_rate*area*rho*2.0*NC_CCweight[c]*pressFactor;
+//          double pressFactor = (pressure - d_StressThresh)/d_StressThresh;
+            double pressFactor = (-gnormtrac[md][c]-d_StressThresh)
+                               / d_StressThresh;
+            massBurnRate[md][c] += d_rate*area*rho*2.0*NC_CCweight[c]
+                                         *pressFactor;
         }
       } // nodes
      } // endif a masterMaterial

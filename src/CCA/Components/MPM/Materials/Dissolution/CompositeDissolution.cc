@@ -73,3 +73,19 @@ CompositeDissolution::addComputesAndRequiresMassBurnFrac(SchedulerP & sched,
       (*mit)->addComputesAndRequiresMassBurnFrac(sched, patches, matls);
   }
 }
+
+void
+CompositeDissolution::setTemperature(double BHTemp)
+{
+  for(list<Dissolution*>::const_iterator mit(d_m.begin());mit!=d_m.end();mit++){
+      (*mit)->setTemperature(BHTemp);
+  }
+}
+
+void
+CompositeDissolution::setPhase(std::string LCPhase)
+{
+  for(list<Dissolution*>::const_iterator mit(d_m.begin());mit!=d_m.end();mit++){
+      (*mit)->setPhase(LCPhase);
+  }
+}

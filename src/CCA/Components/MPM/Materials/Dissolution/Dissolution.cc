@@ -28,12 +28,20 @@ using namespace Uintah;
 
 Dissolution::Dissolution(const ProcessorGroup* myworld, MPMLabel* Mlb, 
                          ProblemSpecP ps)
-                         : lb(Mlb)//, d_matls(ps)
-#if 0
-#endif
+                         : lb(Mlb)
 {
 }
 
 Dissolution::~Dissolution()
 {
+}
+
+void Dissolution::setTemperature(double BHTemp)
+{
+  d_temperature = BHTemp;
+}
+
+void Dissolution::setPhase(std::string LCPhase)
+{
+  d_phase = LCPhase;
 }

@@ -174,15 +174,14 @@
         <normal_only                     spec="OPTIONAL BOOLEAN" />
       </contact>
 
-      <dissolution                           spec="MULTIPLE NO_DATA" >
+      <dissolution                       spec="MULTIPLE NO_DATA" >
         <rate                            spec="OPTIONAL DOUBLE 'positive'" /> 
-        <d_Ao_mol_cm2_s                  spec="OPTIONAL DOUBLE 'positive'" /> 
-        <d_Ea_kJ_mol                     spec="OPTIONAL DOUBLE 'positive'" /> 
-        <PressureThreshold               spec="OPTIONAL DOUBLE 'positive'" />
-        <separation_factor               spec="OPTIONAL DOUBLE 'positive'" />
+        <Ao_mol_cm2_s                    spec="OPTIONAL DOUBLE 'positive'" /> 
+        <Ea_kJ_mol                       spec="OPTIONAL DOUBLE 'positive'" /> 
+        <StressThreshold                 spec="REQUIRED DOUBLE 'positive'" />
+        <Temperature                     spec="OPTIONAL DOUBLE 'positive'" />
         <materials                       spec="OPTIONAL MULTIPLE_INTEGERS" />
         <type                            spec="REQUIRED STRING 'null, contactStressDependent, contactStressIndependent'" />
-        <master_material                 spec="OPTIONAL INTEGER" />
         <masterModalID                   spec="REQUIRED INTEGER" />
         <InContactWithModalID            spec="REQUIRED INTEGER" />
       </dissolution>

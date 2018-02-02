@@ -2666,7 +2666,6 @@ void SerialMPM::computeStressTensor(const ProcessorGroup*,
   }
 }
 
-
 //______________________________________________________________________
 //
 void SerialMPM::computeContactArea(const ProcessorGroup*,
@@ -2996,8 +2995,6 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,"Doing computeAndIntegrateAcceleration");
 
-    Vector dxCell = patch->dCell();
-    double delX = dxCell.x();
     Ghost::GhostType  gnone = Ghost::None;
     Vector gravity = flags->d_gravity;
     for(int m = 0; m < m_sharedState->getNumMPMMatls(); m++){
@@ -3036,6 +3033,8 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
         acceleration[c]  = acc +  gravity;
         velocity_star[c] = velocity[c] + acceleration[c] * delT;
 #if 0
+    Vector dxCell = patch->dCell();
+    double delX = dxCell.x();
         if(velocity_star[c].length()*delT > 0.4*delX && c.z() >= 0){
           cout << "n = " << c << endl;
           cout << "mass = " << mass[c] << endl;
@@ -3295,6 +3294,7 @@ void SerialMPM::modifyLoadCurves(const ProcessorGroup* ,
   old_dw->get(delT, lb->delTLabel, getLevel(patches) );
 
   double currentLoad = 0.0;
+  std::string currentPhase;
 
   for(int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size();ii++){
     string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
@@ -3308,9 +3308,11 @@ void SerialMPM::modifyLoadCurves(const ProcessorGroup* ,
       double nextTime = pbc->getLoadCurve()->getTime(nextIndex);
       double timeToNextLoad = nextTime-time;
       currentLoad = pbc->getLoadCurve()->getLoad(time);
+      currentPhase= pbc->getLoadCurve()->getPhase(nextIndex-1);
       if(timeToNextLoad < delT){
         cout << "timeToNextLoad = " << timeToNextLoad << endl;
         cout << "KE = " << KE << endl;
+        cout << "currentPhase = " << currentPhase << endl;
         cout << "pbc->getLoadCurve()->getMaxKE(nextIndex) = "
              << pbc->getLoadCurve()->getMaxKE(nextIndex) << endl;
         if(KE > pbc->getLoadCurve()->getMaxKE(nextIndex)){
@@ -3333,6 +3335,13 @@ void SerialMPM::modifyLoadCurves(const ProcessorGroup* ,
 
   int curIndex = burialHistory->getIndexAtPressure(currentLoad);
   burialHistory->setCurrentIndex(curIndex);
+  burialHistory->setCurrentPhaseType(currentPhase);
+  int curBHIndex          = burialHistory->getCurrentIndex();
+  double curBHTemperature = burialHistory->getTemperature_K(curBHIndex);
+
+  // DISSOLUTION
+  dissolutionModel->setTemperature(curBHTemperature);
+  dissolutionModel->setPhase(currentPhase);
 
 }
 

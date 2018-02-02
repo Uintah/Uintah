@@ -92,7 +92,6 @@ WARNING
       virtual void addComputesAndRequiresMassBurnFrac(SchedulerP & sched,
                                                       const PatchSet* patches,
                                                       const MaterialSet* matls);
-
     };
 } // End namespace Uintah
     

@@ -88,6 +88,11 @@ WARNING
          return ((index < (int) d_time.size()) ? d_load[index] : 0);
       }
 
+      // Get the loading phase (ramp, settle, or hold)
+      inline std::string getPhase(int index) {
+         return ((index < (int) d_time.size()) ? d_phaseType[index] : 0);
+      }
+
       // Get the maxKE associated with a given index
       inline T getMaxKE(int index) {
          return ((index < (int) d_time.size()) ? d_maxKE[index] : 0);
@@ -149,6 +154,7 @@ WARNING
       std::vector<double> d_time;
       std::vector<T> d_load;
       std::vector<double> d_maxKE;
+      std::vector<std::string> d_phaseType;
       int d_id;
       double d_curTime;
       double d_stableKE;
@@ -201,22 +207,28 @@ WARNING
         d_load.push_back(-effectiveStress_bar[CI]*p_c_f);
         d_maxKE.push_back(maxKE);
         for(int i=CI-1;i>=0;i--){
-          uintahTime+=5.0;
           // ramp phase
+          d_phaseType.push_back("ramp");
+          uintahTime+=5.0;
           d_time.push_back(uintahTime);
           d_load.push_back(-effectiveStress_bar[i]*p_c_f);
           d_maxKE.push_back(maxKE);
-          uintahTime+=5.0;
+
           // settle down phase
+          d_phaseType.push_back("settle");
+          uintahTime+=5.0;
           d_time.push_back(uintahTime);
           d_load.push_back(-effectiveStress_bar[i]*p_c_f);
           d_maxKE.push_back(d_stableKE);
-          uintahTime+=5.0;
+
           // hold phase (maybe doing dissolution here)
+          d_phaseType.push_back("hold");
+          uintahTime+=5.0;
           d_time.push_back(uintahTime);
           d_load.push_back(-effectiveStress_bar[i]*p_c_f);
           d_maxKE.push_back(maxKE);
         }
+        d_phaseType.push_back("hold");
       }
      } else {
        for( ProblemSpecP timeLoad = loadCurve->findBlock("time_point");
@@ -224,13 +236,16 @@ WARNING
            timeLoad = timeLoad->findNextBlock("time_point") ) {
          double time = 0.0;
          double maxKE = 9.9e99;
+         std::string phaseType;
          T load;
          timeLoad->require("time", time);
          timeLoad->require("load", load);
-         timeLoad->get("maxKE", maxKE);
+         timeLoad->getWithDefault("maxKE", maxKE, 9.9e99);
+         timeLoad->getWithDefault("phaseType", phaseType, "ramp");
          d_time.push_back(time);
          d_load.push_back(load);
          d_maxKE.push_back(maxKE);
+         d_phaseType.push_back(phaseType);
        }
      }
    }

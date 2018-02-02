@@ -94,7 +94,8 @@ WARNING
 
       // Get the temperature associated with a given index
       inline double getTemperature_K(int index) {
-       return ((index < (int) d_time_Ma.size()) ? d_temperature_K[index] : 0);
+       return ((index < (int) d_time_Ma.size()) ? d_temperature_K[index] :
+                              d_temperature_K[d_time_Ma.size()]);
       }
 
       // Get the fluid pressure at a given index
@@ -125,6 +126,10 @@ WARNING
         d_time_Ma[index] = newTime;
       }
 
+      inline void setCurrentPhaseType(std::string curPhaseType) {
+        d_currentPhaseType = curPhaseType;
+      }
+
       // Get the next index
       inline int getNextIndex(double t) {
         int ntimes = static_cast<int>(d_time_Ma.size());
@@ -149,7 +154,7 @@ WARNING
 
         for (int ii = ntimes-1; ii > 0; ii--) {
           if (fabs(P) <= fabs(d_effectiveStress_bar[ii])) {
-            return ii+1;
+            return ii;
           }
         }
         return 0;
@@ -159,15 +164,19 @@ WARNING
         d_CI = index;
       }
 
+      inline int getCurrentIndex() {
+        return d_CI;
+      }
+
    private:
       // Prevent copying
       BurialHistory(const BurialHistory&);
       BurialHistory& operator=(const BurialHistory&);
       
       // Private Data
-      // Load curve information 
       double d_pressure_conversion_factor;
       double d_CI;
+      std::string d_currentPhaseType;
       std::vector<double> d_time_Ma;
       std::vector<double> d_depth_m;
       std::vector<double> d_temperature_K;
