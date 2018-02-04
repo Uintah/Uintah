@@ -4165,7 +4165,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
       MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
-      ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
+//      ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
 
       ParticleVariable<Point> px;
       ParticleVariable<Matrix3> pF,pSize,pstress,pvelgrad,pscalefac;
@@ -4635,9 +4635,10 @@ void AMRMPM::addParticles(const ProcessorGroup*,
       } // for old particles
       } // if any particles flagged for refinement
 
-      cm->splitCMSpecificParticleData(patch, dwi, fourOrEight, prefOld, pref,
-                                      oldNumPar, numNewPartNeeded,
-                                      old_dw, new_dw);
+      
+//      cm->splitCMSpecificParticleData(patch, dwi, fourOrEight, prefOld, pref,
+//                                      oldNumPar, numNewPartNeeded,
+//                                      old_dw, new_dw);
       if(flags->d_doScalarDiffusion){
         ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
         sdm->splitSDMSpecificParticleData(patch, dwi, fourOrEight, prefOld, pref,

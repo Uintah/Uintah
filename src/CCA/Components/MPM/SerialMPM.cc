@@ -258,7 +258,10 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
   }
 
   if(flags->d_useLoadCurves){
-    burialHistory->populate(restart_mat_ps);
+    int exists = burialHistory->populate(restart_mat_ps);
+    if(exists == 0){
+      burialHistory=nullptr;
+    }
   }
 
   if (flags->d_prescribeDeformation){
@@ -358,7 +361,9 @@ void SerialMPM::outputProblemSpec(ProblemSpecP& root_ps)
     ProblemSpecP cm_ps = mat->outputProblemSpec(mpm_ps);
   }
 
-  burialHistory->outputProblemSpec(root_ps);
+  if(burialHistory != nullptr){
+    burialHistory->outputProblemSpec(root_ps);
+  }
 
   ProblemSpecP physical_bc_ps = root->appendChild("PhysicalBC");
   ProblemSpecP mpm_ph_bc_ps = physical_bc_ps->appendChild("MPM");
@@ -1555,6 +1560,7 @@ void SerialMPM::scheduleAddParticles(SchedulerP& sched,
   t->requires(Task::OldDW, lb->AddedParticlesLabel );
   t->computes(lb->AddedParticlesLabel);
   t->modifies(lb->pParticleIDLabel_preReloc);
+  t->modifies(lb->pModalIDLabel_preReloc);
   t->modifies(lb->pXLabel_preReloc);
   t->modifies(lb->pVolumeLabel_preReloc);
   t->modifies(lb->pVelocityLabel_preReloc);
@@ -3333,15 +3339,20 @@ void SerialMPM::modifyLoadCurves(const ProcessorGroup* ,
     } // if bcs_type == "Pressure"
   }   // Loop over physical BCs
 
-  int curIndex = burialHistory->getIndexAtPressure(currentLoad);
-  burialHistory->setCurrentIndex(curIndex);
-  burialHistory->setCurrentPhaseType(currentPhase);
-  int curBHIndex          = burialHistory->getCurrentIndex();
-  double curBHTemperature = burialHistory->getTemperature_K(curBHIndex);
 
-  // DISSOLUTION
-  dissolutionModel->setTemperature(curBHTemperature);
-  dissolutionModel->setPhase(currentPhase);
+  if(burialHistory != nullptr){
+    int curIndex = burialHistory->getIndexAtPressure(currentLoad);
+    burialHistory->setCurrentIndex(curIndex);
+    burialHistory->setCurrentPhaseType(currentPhase);
+    int curBHIndex          = burialHistory->getCurrentIndex();
+    double curBHTemperature = burialHistory->getTemperature_K(curBHIndex);
+
+    // DISSOLUTION
+    if (flags->d_doingDissolution) {
+      dissolutionModel->setTemperature(curBHTemperature);
+      dissolutionModel->setPhase(currentPhase);
+    }
+  }
 
 }
 
@@ -4560,7 +4571,6 @@ void SerialMPM::addParticles(const ProcessorGroup*,
     vector<Point> P;
     vector<double> color;
     for(int m = 0; m < numMPMMatls; m++){
-      bool splitForAny=false;
       int numNewPartNeeded=0;
       P.clear();
       color.clear();
@@ -4579,17 +4589,13 @@ void SerialMPM::addParticles(const ProcessorGroup*,
           P.push_back(testPoint);
           color.push_back(col);
           numNewPartNeeded++;
-          splitForAny=true;
         }
        }
        is.close();
       }
-//      cout << "patchID = " << patch->getID() << endl;
+
       cout << "numNewPartNeeded = " << numNewPartNeeded << endl;
-//      for(int jim = 0; jim<numNewPartNeeded;jim++){
-//         cout << "P = " << P[jim] << endl;
-//         cout << "color = " << color[jim] << endl;
-//      }
+
       double APN = (double) numNewPartNeeded;
 
       MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
@@ -4603,9 +4609,11 @@ void SerialMPM::addParticles(const ProcessorGroup*,
       ParticleVariable<double> pvolume,pmass,ptemp,ptempP,pcolor;
       ParticleVariable<double> pESF; 
       ParticleVariable<Vector> pvelocity,pextforce,pdisp,ptempgrad;
-      ParticleVariable<int> pref,ploc,prefOld,pLoadCID;
+      ParticleVariable<int> pref,ploc,prefOld,pModID;
+      ParticleVariable<IntVector> pLoadCID;
       new_dw->getModifiable(px,       lb->pXLabel_preReloc,            pset);
       new_dw->getModifiable(pids,     lb->pParticleIDLabel_preReloc,   pset);
+      new_dw->getModifiable(pModID,   lb->pModalIDLabel_preReloc,      pset);
       new_dw->getModifiable(pmass,    lb->pMassLabel_preReloc,         pset);
       new_dw->getModifiable(pSize,    lb->pSizeLabel_preReloc,         pset);
       new_dw->getModifiable(pdisp,    lb->pDispLabel_preReloc,         pset);
@@ -4640,9 +4648,10 @@ void SerialMPM::addParticles(const ProcessorGroup*,
       ParticleVariable<long64> pidstmp;
       ParticleVariable<double> pvoltmp, pmasstmp,ptemptmp,ptempPtmp,pcolortmp;
       ParticleVariable<Vector> pveltmp,pextFtmp,pdisptmp,ptempgtmp;
-      ParticleVariable<int> preftmp,ploctmp;
+      ParticleVariable<int> preftmp,ploctmp,pMIDtmp;
       ParticleVariable<IntVector> pLoadCIDtmp;
       new_dw->allocateTemporary(pidstmp,  pset);
+      new_dw->allocateTemporary(pMIDtmp,pset);
       new_dw->allocateTemporary(pxtmp,    pset);
       new_dw->allocateTemporary(pvoltmp,  pset);
       new_dw->allocateTemporary(pveltmp,  pset);
@@ -4670,6 +4679,7 @@ void SerialMPM::addParticles(const ProcessorGroup*,
       // copy data from old variables for particle IDs and the position vector
       for( unsigned int pp=0; pp<oldNumPar; ++pp ){
         pidstmp[pp]  = pids[pp];
+        pMIDtmp[pp]  = pModID[pp];
         pxtmp[pp]    = px[pp];
         pvoltmp[pp]  = pvolume[pp];
         pveltmp[pp]  = pvelocity[pp];
@@ -4697,9 +4707,10 @@ void SerialMPM::addParticles(const ProcessorGroup*,
 
       double cellVol = dx.x()*dx.y()*dx.z();
       double rho = mpm_matl->getInitialDensity();
+      int matModalID = mpm_matl->getModalID();
       Matrix3 Id;
       Id.Identity();
-      if(splitForAny){
+      if(numNewPartNeeded>0){
         for(int i = 0;i<numNewPartNeeded;i++){
           IntVector c_orig;
           patch->findCell(P[i],c_orig);
@@ -4710,6 +4721,7 @@ void SerialMPM::addParticles(const ProcessorGroup*,
           int& myCellNAPID = NAPID_new[c_orig];
           int new_index=oldNumPar+i;
           pidstmp[new_index]    = (cellID | (long64) myCellNAPID);
+          pMIDtmp[new_index]    = matModalID;
           pxtmp[new_index]      = P[i];
           pvoltmp[new_index]    = fourthOrEighth*cellVol;
           pmasstmp[new_index]   = rho*pvoltmp[new_index];
@@ -4743,12 +4755,12 @@ void SerialMPM::addParticles(const ProcessorGroup*,
         }
       } // if any particles flagged for refinement
 
-      cm->splitCMSpecificParticleData(patch, dwi, fourOrEight, prefOld, pref,
-                                      oldNumPar, numNewPartNeeded,
-                                      old_dw, new_dw);
+      cm->addCMSpecificParticleData(patch, dwi, oldNumPar, numNewPartNeeded,
+                                    old_dw, new_dw);
 
       // put back temporary data
       new_dw->put(pidstmp,  lb->pParticleIDLabel_preReloc,           true);
+      new_dw->put(pMIDtmp,  lb->pModalIDLabel_preReloc,              true);
       new_dw->put(pxtmp,    lb->pXLabel_preReloc,                    true);
       new_dw->put(pvoltmp,  lb->pVolumeLabel_preReloc,               true);
       new_dw->put(pveltmp,  lb->pVelocityLabel_preReloc,             true);

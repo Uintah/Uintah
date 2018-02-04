@@ -231,15 +231,12 @@ namespace Uintah {
                                                       const MPMMaterial* matl,
                                                       const PatchSet* patches);
 
-    virtual void splitCMSpecificParticleData(const Patch* patch,
-                                             const int dwi,
-                                             const int fourOrEight,
-                                             ParticleVariable<int> &prefOld,
-                                             ParticleVariable<int> &prefNew,
-                                             const unsigned int oldNumPar,
-                                             const int numNewPartNeeded,
-                                             DataWarehouse* old_dw,
-                                             DataWarehouse* new_dw);
+    virtual void addCMSpecificParticleData(const Patch* patch,
+                                           const int dwi,
+                                           const unsigned int oldNumPar,
+                                           const int numNewPartNeeded,
+                                           DataWarehouse* old_dw,
+                                           DataWarehouse* new_dw);
 
   private:
     

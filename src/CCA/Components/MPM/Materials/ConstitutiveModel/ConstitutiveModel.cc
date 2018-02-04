@@ -457,15 +457,11 @@ ConstitutiveModel::addSplitParticlesComputesAndRequires(Task*,
 
 
 void
-ConstitutiveModel::splitCMSpecificParticleData(const Patch* patch,
-                                               const int dwi,
-                                               const int nDims,
-                                               ParticleVariable<int> &prefOld,
-                                               ParticleVariable<int> &prefNew,
-                                               const unsigned int oldNumPar,
-                                               const int numNewPartNeeded,
-                                               DataWarehouse* old_dw,
-                                               DataWarehouse* new_dw)
+ConstitutiveModel::addCMSpecificParticleData(const Patch* patch,
+                                             const int dwi,
+                                             const unsigned int oldNumPar,
+                                             const int numNewPartNeeded,
+                                             DataWarehouse* old_dw,
+                                             DataWarehouse* new_dw)
 {
-
 }

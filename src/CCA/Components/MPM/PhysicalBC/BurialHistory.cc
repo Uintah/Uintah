@@ -39,7 +39,7 @@ BurialHistory::~BurialHistory()
 { 
 }
 
-void BurialHistory::populate(ProblemSpecP& ps)
+int BurialHistory::populate(ProblemSpecP& ps)
 {
   ProblemSpecP root = ps->getRootNode();
   ProblemSpecP burHist = root->findBlock("BurialHistory");
@@ -79,6 +79,8 @@ void BurialHistory::populate(ProblemSpecP& ps)
    }
    burHist->getWithDefault("current_index", d_CI, d_time_Ma.size()-1);
   } // endif
+
+  return d_time_Ma.size();
 }
 
 void BurialHistory::outputProblemSpec(ProblemSpecP& ps)

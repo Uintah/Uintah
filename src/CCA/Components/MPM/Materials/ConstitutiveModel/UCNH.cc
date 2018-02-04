@@ -2034,15 +2034,12 @@ void UCNH::addSplitParticlesComputesAndRequires(Task* task,
 }
 //______________________________________________________________________
 //
-void UCNH::splitCMSpecificParticleData(const Patch* patch,
-                                       const int dwi,
-                                       const int fourOrEight,
-                                       ParticleVariable<int> &prefOld,
-                                       ParticleVariable<int> &prefNew,
-                                       const unsigned int oldNumPar,
-                                       const int numNewPartNeeded,
-                                       DataWarehouse* old_dw,
-                                       DataWarehouse* new_dw)
+void UCNH::addCMSpecificParticleData(const Patch* patch,
+                                     const int dwi,
+                                     const unsigned int oldNumPar,
+                                     const int numNewPartNeeded,
+                                     DataWarehouse* old_dw,
+                                     DataWarehouse* new_dw)
 {
   // THIS IS NOT DONE, MORE WORK NEEDED FOR INELASTIC CASES!!!
   ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
@@ -2061,9 +2058,10 @@ void UCNH::splitCMSpecificParticleData(const Patch* patch,
   }
 
   // copy data from old variables for particle IDs and the position vector
-  for(unsigned int pp=0; pp<oldNumPar; ++pp ){
+  for(int pp=0; pp<oldNumPar; ++pp ){
     bElBarTmp[pp] = bElBar[pp];
   }
+
   if(d_usePlasticity){
     for(unsigned int pp=0; pp<oldNumPar; ++pp ){
       pPlasticStrainTmp[pp]   = pPlasticStrain[pp];
@@ -2071,23 +2069,13 @@ void UCNH::splitCMSpecificParticleData(const Patch* patch,
     }
   }
 
-  int numRefPar=0;
-  for(unsigned int idx=0; idx<oldNumPar; ++idx ){
-    if(prefNew[idx]!=prefOld[idx]){  // do refinement!
-      for(int i = 0;i<fourOrEight;i++){
-        int new_index;
-        if(i==0){
-          new_index=idx;
-        } else {
-          new_index=(oldNumPar-1)+(fourOrEight-1)*numRefPar+i;
-        }
-        bElBarTmp[new_index]     = bElBar[idx];
-        if(d_usePlasticity){
-          pPlasticStrainTmp[new_index]   = pPlasticStrain[idx];
-          pYieldStressTmp[new_index]     = pYieldStress[idx];
-        }
-      }
-      numRefPar++;
+  Matrix3 Identity; Identity.Identity();
+  for(unsigned int i=0; i<numNewPartNeeded; ++i){
+    int new_index = oldNumPar+i;
+    bElBarTmp[new_index]     = Identity;
+    if(d_usePlasticity){
+      pPlasticStrainTmp[new_index]   = pPlasticStrain[oldNumPar-1];
+      pYieldStressTmp[new_index]     = pYieldStress[oldNumPar-1];
     }
   }
 

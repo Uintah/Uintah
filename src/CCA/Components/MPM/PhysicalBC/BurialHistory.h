@@ -74,7 +74,7 @@ WARNING
       // Constructor and Destructor
       BurialHistory(/*const ProcessorGroup* myworld*/);
       ~BurialHistory();
-      void populate(ProblemSpecP& ps);
+      int  populate(ProblemSpecP& ps);
       void outputProblemSpec(ProblemSpecP& ps);
 
       // Get the number of points on the load curve
