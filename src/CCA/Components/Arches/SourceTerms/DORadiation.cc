@@ -77,6 +77,33 @@ DORadiation::~DORadiation()
     for (int iband=0; iband<d_nbands; iband++){
       VarLabel::destroy(_radIntSource[iband]);
     }
+
+    for (unsigned int i=0; i<_RelevantPatchesXpYpZp2.size(); i++){
+      delete  _RelevantPatchesXpYpZp2[i];
+    }
+    for (unsigned int i=0; i<_RelevantPatchesXpYpZm2.size(); i++){
+      delete  _RelevantPatchesXpYpZm2[i];
+    }
+    for (unsigned int i=0; i<_RelevantPatchesXpYmZp2.size(); i++){
+      delete  _RelevantPatchesXpYmZp2[i];
+    }
+    for (unsigned int i=0; i<_RelevantPatchesXpYmZm2.size(); i++){
+      delete  _RelevantPatchesXpYmZm2[i];
+    }
+
+    for (unsigned int i=0; i<_RelevantPatchesXmYpZp2.size(); i++){
+      delete  _RelevantPatchesXmYpZp2[i];
+    }
+    for (unsigned int i=0; i<_RelevantPatchesXmYpZm2.size(); i++){
+      delete  _RelevantPatchesXmYpZm2[i];
+    }
+    for (unsigned int i=0; i<_RelevantPatchesXmYmZp2.size(); i++){
+      delete  _RelevantPatchesXmYmZp2[i];
+    }
+    for (unsigned int i=0; i<_RelevantPatchesXmYmZm2.size(); i++){
+      delete  _RelevantPatchesXmYmZm2[i];
+    }
+
   }
   delete _DO_model;
 
