@@ -893,7 +893,8 @@ main( int argc, char** argv )
     if (!quiet) {
       cout << vars[var_index] << ": " << types[var_index]->getName() 
            << " being extracted for material "<<material
-           <<" at index "<<var_start << " to " << var_end <<endl;
+           << ", Level: " << levelIndex
+           << ", at index "<<var_start << " to " << var_end <<endl;
     }    
     //__________________________________    
     // read in cell indices from a file

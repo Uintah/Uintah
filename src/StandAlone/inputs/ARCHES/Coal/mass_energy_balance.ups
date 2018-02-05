@@ -47,7 +47,6 @@
     <save label="Charmass_os_src_qn0"/>
     <save label="Charmass_os_src_qn1"/>
     <save label="Charmass_os_src_qn2"/>
-    <save label="d_vol_ave"/>
     <save label="conv_scheme_x"/>
     <save label="conv_scheme_y"/>
     <save label="conv_scheme_z"/>
