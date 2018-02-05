@@ -411,6 +411,14 @@ protected:
                             DataWarehouse* old_dw,
                             DataWarehouse* new_dw);
 
+  //////////
+  // Add new particles to the simulation based on criteria TBD:
+  virtual void addTracers(const ProcessorGroup*,
+                          const PatchSubset* patches,
+                          const MaterialSubset* matls,
+                          DataWarehouse* old_dw,
+                          DataWarehouse* new_dw);
+
 
   // Used to compute the particles initial physical size
   // for use in deformed particle visualization
@@ -546,6 +554,10 @@ protected:
   virtual void scheduleAddParticles(SchedulerP&, 
                                     const PatchSet*,
                                     const MaterialSet*);
+
+  virtual void scheduleAddTracers(SchedulerP&, 
+                                  const PatchSet*,
+                                  const MaterialSet*);
 
   virtual void scheduleComputeParticleScaleFactor(SchedulerP&, 
                                                   const PatchSet*,

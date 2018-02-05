@@ -736,7 +736,10 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
     scheduleComputeParticleScaleFactor(   sched, patches, matls);
   }
   if(flags->d_canAddParticles){
-    scheduleAddParticles(                  sched, patches, matls);
+    if(flags->d_useTracers){
+      scheduleAddTracers(                 sched, patches, tracer_matls);
+    }
+    scheduleAddParticles(                 sched, patches, matls);
   }
 
   if(d_analysisModules.size() != 0){
@@ -752,7 +755,7 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
                                     m_sharedState->d_particleState_preReloc,
                                     lb->pXLabel,
                                     m_sharedState->d_particleState,
-                                     lb->pParticleIDLabel, matls, 1);
+                                    lb->pParticleIDLabel, matls, 1);
 
  if(flags->d_useCohesiveZones){
   sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc,
@@ -1597,6 +1600,26 @@ void SerialMPM::scheduleAddParticles(SchedulerP& sched,
   }
 
   sched->addTask(t, patches, matls);
+}
+
+void SerialMPM::scheduleAddTracers(SchedulerP& sched,
+                                   const PatchSet* patches,
+                                   const MaterialSet* tracer_matls)
+
+{
+  if( !flags->doMPMOnLevel( getLevel(patches)->getIndex(), getLevel(patches)->getGrid()->numLevels() ) ) {
+    return;
+  }
+
+  printSchedule( patches, cout_doing, "MPM::scheduleAddTracers" );
+
+  Task * t = scinew Task("MPM::addTracers", this, &SerialMPM::addTracers );
+
+  t->requires(Task::OldDW, lb->AddedParticlesLabel );
+  t->modifies(lb->tracerIDLabel_preReloc, tracer_matls);
+  t->modifies(lb->pXLabel_preReloc,       tracer_matls);
+
+  sched->addTask(t, patches, tracer_matls);
 }
 
 void
@@ -4578,7 +4601,7 @@ void SerialMPM::addParticles(const ProcessorGroup*,
       stringstream mnum;
       mnum << m;
       string mnums = mnum.str();
-      string filename = flags->d_authigenisisBaseFilename + "." + mnums;
+      string filename=flags->d_authigenisisBaseFilename + "Particles." + mnums;
       std::ifstream is(filename.c_str());
 
       if(is) {
@@ -4785,6 +4808,108 @@ void SerialMPM::addParticles(const ProcessorGroup*,
       new_dw->put(ploctmp,  lb->pLocalizedMPMLabel_preReloc,         true);
       new_dw->put(pvgradtmp,lb->pVelGradLabel_preReloc,              true);
       new_dw->put(sum_vartype(APN),      lb->AddedParticlesLabel);
+    }  // for matls
+   }    // if doAuth && AddedNewParticles<1.0....
+  }   // for patches
+//   flags->d_doAuthigenisis = false;
+}
+
+void SerialMPM::addTracers(const ProcessorGroup*,
+                           const PatchSubset* patches,
+                           const MaterialSubset* ,
+                           DataWarehouse* old_dw,
+                           DataWarehouse* new_dw)
+{
+  sum_vartype AddedParticlesOld;
+  old_dw->get(AddedParticlesOld,   lb->AddedParticlesLabel);
+
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches, patch,cout_doing, "Doing addTracers");
+
+#if 0
+   //Carry forward CellNAPID
+   constCCVariable<int> NAPID;
+   CCVariable<int> NAPID_new;
+   Ghost::GhostType  gnone = Ghost::None;
+   old_dw->get(NAPID,               lb->pCellNAPIDLabel,    0,patch,gnone,0);
+   new_dw->allocateAndPut(NAPID_new,lb->pCellNAPIDLabel,    0,patch);
+   NAPID_new.copyData(NAPID);
+#endif
+
+   if(flags->d_doAuthigenisis && AddedParticlesOld<1.0){
+    cout << "Doing addTracers" << endl;
+
+    int numTracerMatls = m_sharedState->getNumTracerMatls();
+
+    vector<Point> P;
+    for(int m = 0; m < numTracerMatls; m++){
+      int numNewTracersNeeded=0;
+      P.clear();
+
+      TracerMaterial* tr_matl = m_sharedState->getTracerMaterial( m );
+      int dwi = tr_matl->getDWIndex();
+
+      stringstream mnum;
+      mnum << dwi;
+      string mnums = mnum.str();
+      string filename=flags->d_authigenisisBaseFilename + "Tracers." + mnums;
+      std::ifstream is(filename.c_str());
+
+      if(is) {
+       double x,y,z;
+       while(is >> x >> y >> z){
+        Point testPoint(x,y,z);
+        if(patch->containsPoint(testPoint)){
+          P.push_back(testPoint);
+          numNewTracersNeeded++;
+        }
+       }
+       is.close();
+      }
+
+      cout << "numNewTracersNeeded = " << numNewTracersNeeded << endl;
+
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+
+      ParticleVariable<Point> px;
+      ParticleVariable<long64> pids;
+      new_dw->getModifiable(px,       lb->pXLabel_preReloc,           pset);
+      new_dw->getModifiable(pids,     lb->tracerIDLabel_preReloc,     pset);
+
+      const unsigned int oldNumTr = pset->addParticles(numNewTracersNeeded);
+
+      ParticleVariable<Point> pxtmp;
+      ParticleVariable<long64> pidstmp;
+      new_dw->allocateTemporary(pidstmp,  pset);
+      new_dw->allocateTemporary(pxtmp,    pset);
+
+      // copy data from old variables
+      for( unsigned int pp=0; pp<oldNumTr; ++pp ){
+        pxtmp[pp]    = px[pp];
+        pidstmp[pp]  = pids[pp];
+      }
+
+      for(int i = 0;i<numNewTracersNeeded;i++){
+#if 0
+          IntVector c_orig;
+          patch->findCell(P[i],c_orig);
+          long64 cellID = ((long64)c_orig.x() << 16) |
+                          ((long64)c_orig.y() << 32) |
+                          ((long64)c_orig.z() << 48);
+
+          int& myCellNAPID = NAPID_new[c_orig];
+          pidstmp[new_index]    = (cellID | (long64) myCellNAPID);
+          NAPID_new[c_orig]++;
+#endif
+        int new_index=oldNumTr+i;
+        pxtmp[new_index]      = P[i];
+        pidstmp[new_index]    = 0;
+      }
+
+      // put back temporary data
+      new_dw->put(pxtmp,    lb->pXLabel_preReloc,             true);
+      new_dw->put(pidstmp,  lb->tracerIDLabel_preReloc,       true);
     }  // for matls
    }    // if doAuth && AddedNewParticles<1.0....
   }   // for patches
