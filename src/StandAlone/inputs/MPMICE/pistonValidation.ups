@@ -7,7 +7,7 @@
        <title>Piston compressing gas adiabatically</title>
    </Meta>
 
-   <SimulationComponent type="mpmice" />
+   <SimulationComponent type="rmpmice" />
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
