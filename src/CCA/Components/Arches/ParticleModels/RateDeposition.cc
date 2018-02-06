@@ -20,14 +20,16 @@ void
 RateDeposition::problemSetup( ProblemSpecP& db ){
 
   const ProblemSpecP db_root = db->getRootNode();
-  _Tmelt = ParticleTools::getAshHemisphericalTemperature(db);
+  CoalHelper& coal_helper = CoalHelper::self();
+
+  _Tmelt = coal_helper.get_coal_db().T_hemisphere; 
   db->getWithDefault("CaO",_CaO,26.49/100.0);
   db->getWithDefault("MgO",_MgO,4.47/100.0);
   db->getWithDefault("AlO",_AlO,14.99/100.0);
   db->getWithDefault("SiO",_SiO,38.9/100.0);
 
-  _ParticleTemperature_base_name  = ParticleTools::parse_for_role_to_label(db,"temperature");
-  _MaxParticleTemperature_base_name= ParticleTools::parse_for_role_to_label(db,"max_temperature");
+  _ParticleTemperature_base_name  = ArchesCore::parse_for_role_to_label(db,"temperature");
+  _MaxParticleTemperature_base_name= ArchesCore::parse_for_role_to_label(db,"max_temperature");
 
   _ProbParticleX_base_name = "ProbParticleX";
   _ProbParticleY_base_name = "ProbParticleY";
@@ -47,13 +49,13 @@ RateDeposition::problemSetup( ProblemSpecP& db ){
 
   _WallTemperature_name = "Temperature";
 
-  _xvel_base_name  = ParticleTools::parse_for_role_to_label(db,"uvel");
-  _yvel_base_name  = ParticleTools::parse_for_role_to_label(db,"vvel");
-  _zvel_base_name  = ParticleTools::parse_for_role_to_label(db,"wvel");
+  _xvel_base_name  = ArchesCore::parse_for_role_to_label(db,"uvel");
+  _yvel_base_name  = ArchesCore::parse_for_role_to_label(db,"vvel");
+  _zvel_base_name  = ArchesCore::parse_for_role_to_label(db,"wvel");
 
   _weight_base_name  = "w";
-  _rho_base_name  = ParticleTools::parse_for_role_to_label(db,"density");
-  _diameter_base_name  = ParticleTools::parse_for_role_to_label(db,"size");
+  _rho_base_name  = ArchesCore::parse_for_role_to_label(db,"density");
+  _diameter_base_name  = ArchesCore::parse_for_role_to_label(db,"size");
 
   _FluxPx_base_name  = "FluxPx";
   _FluxPy_base_name  = "FluxPy";
@@ -322,15 +324,15 @@ RateDeposition::register_timestep_eval( std::vector<AFC_VI>& variable_registry, 
 
   for(int e= 0; e< _Nenv; e++){
 
-    const std::string MaxParticleTemperature_name = ParticleTools::append_env(_MaxParticleTemperature_base_name ,e);
-    const std::string ParticleTemperature_name = ParticleTools::append_env(_ParticleTemperature_base_name ,e);
-    const std::string weight_name = ParticleTools::append_env(_weight_base_name ,e);
-    const std::string rho_name = ParticleTools::append_env(_rho_base_name ,e);
-    const std::string diameter_name = ParticleTools::append_env(_diameter_base_name ,e);
+    const std::string MaxParticleTemperature_name = ArchesCore::append_env(_MaxParticleTemperature_base_name ,e);
+    const std::string ParticleTemperature_name = ArchesCore::append_env(_ParticleTemperature_base_name ,e);
+    const std::string weight_name = ArchesCore::append_env(_weight_base_name ,e);
+    const std::string rho_name = ArchesCore::append_env(_rho_base_name ,e);
+    const std::string diameter_name = ArchesCore::append_env(_diameter_base_name ,e);
 
-    const std::string  xvel_name = ParticleTools::append_env(_xvel_base_name ,e);
-    const std::string  yvel_name = ParticleTools::append_env(_yvel_base_name ,e);
-    const std::string  zvel_name = ParticleTools::append_env(_zvel_base_name ,e);
+    const std::string  xvel_name = ArchesCore::append_env(_xvel_base_name ,e);
+    const std::string  yvel_name = ArchesCore::append_env(_yvel_base_name ,e);
+    const std::string  zvel_name = ArchesCore::append_env(_zvel_base_name ,e);
 
     const std::string ProbParticleX_name = get_env_name(e, _ProbParticleX_base_name);
     const std::string ProbParticleY_name = get_env_name(e, _ProbParticleY_base_name);
@@ -449,15 +451,15 @@ RateDeposition::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   for(int e=0; e<_Nenv; e++){
 
-    const std::string ParticleTemperature_name = ParticleTools::append_env(_ParticleTemperature_base_name ,e);
-    const std::string MaxParticleTemperature_name = ParticleTools::append_env(_MaxParticleTemperature_base_name ,e);
-    const std::string weight_name = ParticleTools::append_env(_weight_base_name ,e);
-    const std::string rho_name = ParticleTools::append_env(_rho_base_name ,e);
-    const std::string diameter_name = ParticleTools::append_env(_diameter_base_name ,e);
+    const std::string ParticleTemperature_name = ArchesCore::append_env(_ParticleTemperature_base_name ,e);
+    const std::string MaxParticleTemperature_name = ArchesCore::append_env(_MaxParticleTemperature_base_name ,e);
+    const std::string weight_name = ArchesCore::append_env(_weight_base_name ,e);
+    const std::string rho_name = ArchesCore::append_env(_rho_base_name ,e);
+    const std::string diameter_name = ArchesCore::append_env(_diameter_base_name ,e);
 
-    const std::string xvel_name = ParticleTools::append_env(_xvel_base_name ,e);
-    const std::string yvel_name = ParticleTools::append_env(_yvel_base_name ,e);
-    const std::string zvel_name = ParticleTools::append_env(_zvel_base_name ,e);
+    const std::string xvel_name = ArchesCore::append_env(_xvel_base_name ,e);
+    const std::string yvel_name = ArchesCore::append_env(_yvel_base_name ,e);
+    const std::string zvel_name = ArchesCore::append_env(_zvel_base_name ,e);
 
     const std::string ProbParticleX_name = get_env_name(e, _ProbParticleX_base_name);
     const std::string ProbParticleY_name = get_env_name(e, _ProbParticleY_base_name);

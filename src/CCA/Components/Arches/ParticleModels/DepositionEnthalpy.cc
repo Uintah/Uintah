@@ -3,6 +3,7 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <CCA/Components/Arches/BoundaryCond_new.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
+#include <CCA/Components/Arches/ParticleModels/CoalHelper.h>
 
 using namespace Uintah;
 
@@ -18,6 +19,7 @@ void
 DepositionEnthalpy::problemSetup( ProblemSpecP& db ){
 
   const ProblemSpecP db_root = db->getRootNode();
+  CoalHelper& coal_helper = CoalHelper::self();
 
   _gasT_name="temperature";
   _cellType_name="cellType";
@@ -39,28 +41,28 @@ DepositionEnthalpy::problemSetup( ProblemSpecP& db ){
   _fd.push_back(IntVector(0,0,0)); // -y face
   _fd.push_back(IntVector(0,0,1)); // +z face
   _fd.push_back(IntVector(0,0,0)); // -z face
-  _diameter_base_name = ParticleTools::parse_for_role_to_label(db, "size");
-  _temperature_base_name = ParticleTools::parse_for_role_to_label(db, "temperature");
-    
+  _diameter_base_name = ArchesCore::parse_for_role_to_label(db, "size");
+  _temperature_base_name = ArchesCore::parse_for_role_to_label(db, "temperature");
+
   // Need a density
-  _density_base_name = ParticleTools::parse_for_role_to_label(db, "density");
-  double init_particle_density = ParticleTools::getInletParticleDensity( db );
-  double ash_mass_frac = ParticleTools::getAshMassFraction( db );
+  _density_base_name = ArchesCore::parse_for_role_to_label(db, "density");
+  double init_particle_density = ArchesCore::get_inlet_particle_density( db );
+  double ash_mass_frac = coal_helper.get_coal_db().ash_mf; 
   double initial_diameter = 0.0;
   double p_volume = 0.0;
   for ( int i = 0; i < _Nenv; i++ ){
-    initial_diameter = ParticleTools::getInletParticleSize( db, i );
+    initial_diameter = ArchesCore::get_inlet_particle_size( db, i );
     p_volume = M_PI/6.*initial_diameter*initial_diameter*initial_diameter; // particle volme [m^3]
     _mass_ash.push_back(p_volume*init_particle_density*ash_mass_frac);
   }
-  
+
   if ( db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties") ){
     ProblemSpecP db_coal_props = db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties");
     db_coal_props->require("ash_enthalpy", _Ha0);
   } else {
     throw ProblemSetupException("Error: <Coal> is missing the <Properties> section.", __FILE__, __LINE__);
   }
-  
+
   DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self();
 
 }
@@ -148,7 +150,7 @@ DepositionEnthalpy::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   double flux = 0.0;
   double mp = 0.0;
   double marr = 0.0;
-  double ash_frac = 0.0; 
+  double ash_frac = 0.0;
   double d_energy = 0.0;
   double d_energy_ash = 0.0;
   double delta_H = 0.0;
@@ -264,18 +266,18 @@ DepositionEnthalpy::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
             H_arriving = -202849.0 + _Ha0 + particle_temperature * (593. + particle_temperature * 0.293); // [J/kg]
             H_deposit = -202849.0 + _Ha0 + gasT[c] * (593. + gasT[c] * 0.293); // [J/kg]
             delta_H = H_arriving - H_deposit; // J/kg
-            
+
             mp = particle_volume*particle_density; // current mass of the particle [kg]
             marr = _mass_ash[i]; // mass of ash in the particle[kg].
             ash_frac = marr/mp; // fraction of flux that is ash.
-            flux = flux*ash_frac;// arriving mass flux [kg/m^2/s] 
+            flux = flux*ash_frac;// arriving mass flux [kg/m^2/s]
             d_energy += flux*delta_H*area_face[container_flux_ind[pp]]; // [J/s]
             d_energy_ash += flux*H_arriving*area_face[container_flux_ind[pp]]; // [J/s]
             total_area_face += area_face[container_flux_ind[pp]];
           }
           // compute the current deposit velocity for each particle: d_vel [m3/s * 1/m2 = m/s]
           d_energy /= total_area_face; // energy flux
-          ash_enthalpy_flux[c] += d_energy; // [J/s/m^2] add the contribution 
+          ash_enthalpy_flux[c] += d_energy; // [J/s/m^2] add the contribution
           ash_enthalpy_src[c] += d_energy_ash/Vcell; // [J/s/m^3] for particle energy balance.
         }// if there is a deposition flux
       } // wall or intrusion cell-type

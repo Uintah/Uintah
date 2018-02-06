@@ -150,13 +150,13 @@ namespace Uintah{
     proc0cout << "WARNING: ParticleModels ShaddixEnthalpy needs to be made consistent with DQMOM models and use correct DW, use model at your own risk."
       << "\n" << "\n" << "\n" << "\n" << "\n" << "\n" << "\n" << "\n" << "\n" << "\n"<< std::endl;
     //required particle properties
-    _base_raw_coal_name = ParticleTools::parse_for_role_to_label(db, "raw_coal");
-    _base_char_mass_name = ParticleTools::parse_for_role_to_label(db, "char");
-    _base_particle_size_name = ParticleTools::parse_for_role_to_label(db, "size");
-    _base_particle_temp_name = ParticleTools::parse_for_role_to_label(db, "temperature");
-    _base_u_velocity_name = ParticleTools::parse_for_role_to_label(db, "uvel");
-    _base_v_velocity_name = ParticleTools::parse_for_role_to_label(db, "vvel");
-    _base_w_velocity_name = ParticleTools::parse_for_role_to_label(db, "wvel");
+    _base_raw_coal_name = ArchesCore::parse_for_role_to_label(db, "raw_coal");
+    _base_char_mass_name = ArchesCore::parse_for_role_to_label(db, "char");
+    _base_particle_size_name = ArchesCore::parse_for_role_to_label(db, "size");
+    _base_particle_temp_name = ArchesCore::parse_for_role_to_label(db, "temperature");
+    _base_u_velocity_name = ArchesCore::parse_for_role_to_label(db, "uvel");
+    _base_v_velocity_name = ArchesCore::parse_for_role_to_label(db, "vvel");
+    _base_w_velocity_name = ArchesCore::parse_for_role_to_label(db, "wvel");
 
     //required rates
     db->require("char_temprate_label",_base_char_oxi_temp_name);

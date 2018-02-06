@@ -44,7 +44,7 @@ CoalGasOxi::problemSetup(const ProblemSpecP& inputdb)
   if (db->findBlock("char_BirthDeath")) {
     ProblemSpecP db_bd = db->findBlock("char_BirthDeath");
     m_dest_flag = true;
-    m_charmass_root = ParticleTools::parse_for_role_to_label(db, "char");
+    m_charmass_root = ArchesCore::parse_for_role_to_label(db, "char");
   }
 
   _source_grid_type = CC_SRC;
@@ -85,11 +85,11 @@ CoalGasOxi::sched_computeSource( const LevelP& level, SchedulerP& sched, int tim
   
     if (m_dest_flag){
       // require Charmass birth/death   
-      std::string charmassqn_name = ParticleTools::append_qn_env(m_charmass_root, iqn );
+      std::string charmassqn_name = ArchesCore::append_qn_env(m_charmass_root, iqn );
       EqnBase& temp_charmass_eqn = dqmomFactory.retrieve_scalar_eqn(charmassqn_name);
       DQMOMEqn& charmass_eqn = dynamic_cast<DQMOMEqn&>(temp_charmass_eqn);
       const std::string char_birth_name = charmass_eqn.get_model_by_type( "BirthDeath" );
-      std::string char_birth_qn_name = ParticleTools::append_qn_env(char_birth_name, iqn);
+      std::string char_birth_qn_name = ArchesCore::append_qn_env(char_birth_name, iqn);
       const VarLabel* charmass_birthdeath_varlabel=VarLabel::find(char_birth_qn_name);
       tsk->requires( Task::NewDW, charmass_birthdeath_varlabel, Ghost::None, 0 );
     }
@@ -214,15 +214,15 @@ CoalGasOxi::computeSource( const ProcessorGroup* pc,
 
       if (m_dest_flag){
         // get Charmass birth death, RC scaling constant and equation handle   
-        std::string charmassqn_name = ParticleTools::append_qn_env(m_charmass_root, iqn );
+        std::string charmassqn_name = ArchesCore::append_qn_env(m_charmass_root, iqn );
         EqnBase& temp_charmass_eqn = dqmomFactory.retrieve_scalar_eqn(charmassqn_name);
         DQMOMEqn& charmass_eqn = dynamic_cast<DQMOMEqn&>(temp_charmass_eqn);
         double char_scaling_constant = charmass_eqn.getScalingConstant(iqn);
         const std::string char_birth_name = charmass_eqn.get_model_by_type( "BirthDeath" );
-        std::string char_birth_qn_name = ParticleTools::append_qn_env(char_birth_name, iqn);
+        std::string char_birth_qn_name = ArchesCore::append_qn_env(char_birth_name, iqn);
         const VarLabel* charmass_birthdeath_varlabel=VarLabel::find(char_birth_qn_name);
         // get weight scaling constant and equation handle 
-        std::string weightqn_name = ParticleTools::append_qn_env("w", iqn);
+        std::string weightqn_name = ArchesCore::append_qn_env("w", iqn);
         EqnBase& temp_weight_eqn = dqmomFactory.retrieve_scalar_eqn(weightqn_name);
         DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(temp_weight_eqn);
         double w_scaling_constant = weight_eqn.getScalingConstant(iqn);

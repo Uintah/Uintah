@@ -5,9 +5,6 @@
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/GeometryPiece/GeometryPiece.h>
-#include <Core/GeometryPiece/GeometryPieceFactory.h>
-#include <Core/GeometryPiece/UnionGeometryPiece.h>
 #include <Core/Grid/Box.h>
 #include <CCA/Components/Arches/BoundaryCond_new.h>
 #include <CCA/Components/Arches/ExplicitTimeInt.h>
@@ -419,7 +416,7 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constPhi
       phi[c] =   x ;
 
     } else if ( d_initFunction == "geometry_fill" ){
-      
+
       Box patchInteriorBox = patch->getBox();
 
       //======= Fills a geometry piece with the value of d_constant_init ======

@@ -445,7 +445,7 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
     db_transport = db->appendChild("KScalarTransport");
   }
 
-  unsigned int nQn = ParticleTools::get_num_env( db_dqmom, ParticleTools::DQMOM );
+  unsigned int nQn = ArchesCore::get_num_env( db_dqmom, ArchesCore::DQMOM_METHOD );
 
   std::string dqmom_grp_name = "dqmom_eqns"; 
 

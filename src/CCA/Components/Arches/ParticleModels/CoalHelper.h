@@ -33,6 +33,10 @@ namespace Uintah{
         double h_ch0;
         double h_a0;
         double ksi;
+        double T_hemisphere;        ///< Ash hemispherical temperature
+        double T_fluid;             ///< Ash fluid temperature
+        double T_soft;              ///< Ash softening temperature
+        double T_porosity;          ///< Ash porosity temperature
 
         std::vector<double> init_ash;
         std::vector<double> init_rawcoal;
@@ -139,6 +143,13 @@ namespace Uintah{
             } else {
               throw ProblemSetupException("Error: No <ultimate_analysis> found in input file.", __FILE__, __LINE__);
             }
+
+            //Ash temperatures:
+            db_coal_props->getWithDefault("ash_hemispherical_temperature", _coal_db.T_hemisphere, -999);
+            db_coal_props->getWithDefault("ash_fluid_temperature", _coal_db.T_fluid, -999);
+            db_coal_props->getWithDefault("ash_softening_temperature", _coal_db.T_soft, -999);
+            _coal_db.T_porosity = 0.5 * (_coal_db.T_soft + _coal_db.T_fluid);
+
           }
         }
       }

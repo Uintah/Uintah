@@ -13,10 +13,10 @@ TaskInterface( task_name, matl_index ) {
 void
 PartVariablesDQMOM::problemSetup( ProblemSpecP& db ){
 
-  m_Nenv = ParticleTools::get_num_env( db, ParticleTools::DQMOM );
+  m_Nenv = ArchesCore::get_num_env( db, ArchesCore::DQMOM_METHOD );
 
-  m_length_root = ParticleTools::parse_for_role_to_label(db, "size");
-  m_number_density_name   = ParticleTools::parse_for_role_to_label(db, "total_number_density");
+  m_length_root = ArchesCore::parse_for_role_to_label(db, "size");
+  m_number_density_name   = ArchesCore::parse_for_role_to_label(db, "total_number_density");
   m_surfAreaF_root = "surfaceAreaFraction";
 }
 
@@ -27,7 +27,7 @@ PartVariablesDQMOM::create_local_labels(){
   register_new_variable<CCVariable<double> >( m_number_density_name);
 
   for ( int ienv = 0; ienv < m_Nenv; ienv++ ){
-    const std::string surfAreaF_name = ParticleTools::append_env( m_surfAreaF_root, ienv);
+    const std::string surfAreaF_name = ArchesCore::append_env( m_surfAreaF_root, ienv);
     register_new_variable<CCVariable<double> >( surfAreaF_name );
   }
 }
@@ -41,9 +41,9 @@ PartVariablesDQMOM::register_initialize(
   register_variable( m_number_density_name, ArchesFieldContainer::COMPUTES, variable_registry );
 
   for ( int ienv = 0; ienv < m_Nenv; ienv++ ){
-    const std::string weight_name = ParticleTools::append_env( "w", ienv);
-    const std::string length_name = ParticleTools::append_env( m_length_root, ienv);
-    const std::string surfAreaF_name = ParticleTools::append_env( m_surfAreaF_root, ienv);
+    const std::string weight_name = ArchesCore::append_env( "w", ienv);
+    const std::string length_name = ArchesCore::append_env( m_length_root, ienv);
+    const std::string surfAreaF_name = ArchesCore::append_env( m_surfAreaF_root, ienv);
 
     register_variable( weight_name, ArchesFieldContainer::REQUIRES, 0,
                        ArchesFieldContainer::NEWDW, variable_registry );
@@ -71,8 +71,8 @@ PartVariablesDQMOM::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_i
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
 
   for (int ienv = 0; ienv < m_Nenv; ienv++) {
-    const std::string weight_name = ParticleTools::append_env( "w", ienv);
-    const std::string length_name = ParticleTools::append_env( m_length_root, ienv);
+    const std::string weight_name = ArchesCore::append_env( "w", ienv);
+    const std::string length_name = ArchesCore::append_env( m_length_root, ienv);
 
     constCCVariable<double>& weight =
       tsk_info->get_const_uintah_field_add<constCCVariable<double> >( weight_name );
@@ -88,9 +88,9 @@ PartVariablesDQMOM::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_i
 
   for ( int ienv = 0; ienv < m_Nenv; ienv++ ){
 
-    const std::string weight_name    = ParticleTools::append_env( "w", ienv);
-    const std::string length_name    = ParticleTools::append_env( m_length_root, ienv);
-    const std::string surfAreaF_name = ParticleTools::append_env( m_surfAreaF_root, ienv);
+    const std::string weight_name    = ArchesCore::append_env( "w", ienv);
+    const std::string length_name    = ArchesCore::append_env( m_length_root, ienv);
+    const std::string surfAreaF_name = ArchesCore::append_env( m_surfAreaF_root, ienv);
 
     constCCVariable<double>& weight =
       tsk_info->get_const_uintah_field_add<constCCVariable<double> >( weight_name );
@@ -115,9 +115,9 @@ PartVariablesDQMOM::register_timestep_eval(
   register_variable( m_number_density_name, ArchesFieldContainer::COMPUTES, variable_registry );
 
   for ( int ienv = 0; ienv < m_Nenv; ienv++ ){
-    const std::string weight_name = ParticleTools::append_env( "w", ienv);
-    const std::string length_name = ParticleTools::append_env( m_length_root, ienv);
-    const std::string surfAreaF_name = ParticleTools::append_env( m_surfAreaF_root, ienv);
+    const std::string weight_name = ArchesCore::append_env( "w", ienv);
+    const std::string length_name = ArchesCore::append_env( m_length_root, ienv);
+    const std::string surfAreaF_name = ArchesCore::append_env( m_surfAreaF_root, ienv);
 
     register_variable( weight_name, ArchesFieldContainer::REQUIRES, 0,
                        ArchesFieldContainer::NEWDW, variable_registry, time_substep);
@@ -144,8 +144,8 @@ PartVariablesDQMOM::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
 
   for (int ienv = 0; ienv < m_Nenv; ienv++) {
-    const std::string weight_name = ParticleTools::append_env( "w", ienv);
-    const std::string length_name = ParticleTools::append_env( m_length_root, ienv);
+    const std::string weight_name = ArchesCore::append_env( "w", ienv);
+    const std::string length_name = ArchesCore::append_env( m_length_root, ienv);
 
     constCCVariable<double>& weight =
       tsk_info->get_const_uintah_field_add<constCCVariable<double> >( weight_name );
@@ -161,9 +161,9 @@ PartVariablesDQMOM::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   for ( int ienv = 0; ienv < m_Nenv; ienv++ ){
 
-    const std::string weight_name    = ParticleTools::append_env( "w", ienv);
-    const std::string length_name    = ParticleTools::append_env( m_length_root, ienv);
-    const std::string surfAreaF_name = ParticleTools::append_env( m_surfAreaF_root, ienv);
+    const std::string weight_name    = ArchesCore::append_env( "w", ienv);
+    const std::string length_name    = ArchesCore::append_env( m_length_root, ienv);
+    const std::string surfAreaF_name = ArchesCore::append_env( m_surfAreaF_root, ienv);
 
     constCCVariable<double>& weight =
       tsk_info->get_const_uintah_field_add<constCCVariable<double> >( weight_name );

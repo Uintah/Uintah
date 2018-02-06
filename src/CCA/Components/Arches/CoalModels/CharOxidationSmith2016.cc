@@ -31,6 +31,7 @@
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/CoalModels/PartVel.h>
 #include <CCA/Components/Arches/ChemMix/ChemHelper.h>
+#include <CCA/Components/Arches/ParticleModels/CoalHelper.h>
 #include <CCA/Ports/Scheduler.h>
 
 #include <Core/Datatypes/DenseMatrix.h>
@@ -147,23 +148,23 @@ CharOxidationSmith2016::problemSetup(const ProblemSpecP& params, int qn)
   }
 
   // Need a particle density
-  std::string density_root = ParticleTools::parse_for_role_to_label(db, "density");
-  std::string density_name = ParticleTools::append_env( density_root, d_quadNode );
+  std::string density_root = ArchesCore::parse_for_role_to_label(db, "density");
+  std::string density_name = ArchesCore::append_env( density_root, d_quadNode );
   _p_density_varlabel = VarLabel::find(density_name);
   if(_p_density_varlabel == 0){
     throw ProblemSetupException("Error: Unable to find coal density label!!!! Looking for name: "+density_name, __FILE__, __LINE__);
   }
 
   // create raw coal mass var label
-  std::string rcmass_root = ParticleTools::parse_for_role_to_label(db, "raw_coal");
-  std::string rcmass_name = ParticleTools::append_env( rcmass_root, d_quadNode );
-  std::string rcmassqn_name = ParticleTools::append_qn_env(rcmass_root, d_quadNode );
+  std::string rcmass_root = ArchesCore::parse_for_role_to_label(db, "raw_coal");
+  std::string rcmass_name = ArchesCore::append_env( rcmass_root, d_quadNode );
+  std::string rcmassqn_name = ArchesCore::append_qn_env(rcmass_root, d_quadNode );
   _rcmass_varlabel = VarLabel::find(rcmass_name);
 
   // check for char mass and get scaling constant
-  std::string char_root = ParticleTools::parse_for_role_to_label(db, "char");
-  std::string char_name = ParticleTools::append_env( char_root, d_quadNode );
-  std::string charqn_name = ParticleTools::append_qn_env( char_root, d_quadNode );
+  std::string char_root = ArchesCore::parse_for_role_to_label(db, "char");
+  std::string char_name = ArchesCore::append_env( char_root, d_quadNode );
+  std::string charqn_name = ArchesCore::append_qn_env( char_root, d_quadNode );
   _char_varlabel = VarLabel::find(char_name);
 
   EqnBase& temp_char_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(charqn_name);
@@ -174,7 +175,7 @@ CharOxidationSmith2016::problemSetup(const ProblemSpecP& params, int qn)
 
   //CHAR get the birth term if any:
   const std::string char_birth_name = char_eqn.get_model_by_type( "BirthDeath" );
-  std::string char_birth_qn_name = ParticleTools::append_qn_env(char_birth_name, d_quadNode);
+  std::string char_birth_qn_name = ArchesCore::append_qn_env(char_birth_name, d_quadNode);
   if ( char_birth_name != "NULLSTRING" ){
     _char_birth_label = VarLabel::find( char_birth_qn_name );
   }
@@ -187,33 +188,33 @@ CharOxidationSmith2016::problemSetup(const ProblemSpecP& params, int qn)
 
   //RAW COAL get the birth term if any:
   const std::string rawcoal_birth_name = rcmass_eqn.get_model_by_type( "BirthDeath" );
-  std::string rawcoal_birth_qn_name = ParticleTools::append_qn_env(rawcoal_birth_name, d_quadNode);
+  std::string rawcoal_birth_qn_name = ArchesCore::append_qn_env(rawcoal_birth_name, d_quadNode);
   if ( rawcoal_birth_name != "NULLSTRING" ){
     _rawcoal_birth_label = VarLabel::find( rawcoal_birth_qn_name );
   }
 
   // check for particle temperature
-  std::string temperature_root = ParticleTools::parse_for_role_to_label(db, "temperature");
-  std::string temperature_name = ParticleTools::append_env( temperature_root, d_quadNode );
+  std::string temperature_root = ArchesCore::parse_for_role_to_label(db, "temperature");
+  std::string temperature_name = ArchesCore::append_env( temperature_root, d_quadNode );
   _particle_temperature_varlabel = VarLabel::find(temperature_name);
   if(_particle_temperature_varlabel == 0){
     throw ProblemSetupException("Error: Unable to find coal temperature label!!!! Looking for name: "+temperature_name, __FILE__, __LINE__);
   }
 
   // check for length
-  _nQn_part = ParticleTools::get_num_env(db,ParticleTools::DQMOM);
-  std::string length_root = ParticleTools::parse_for_role_to_label(db, "size");
+  _nQn_part = ArchesCore::get_num_env(db,ArchesCore::DQMOM_METHOD);
+  std::string length_root = ArchesCore::parse_for_role_to_label(db, "size");
   for (int i=0; i<_nQn_part;i++ ){
-    std::string length_name = ParticleTools::append_env( length_root, i );
+    std::string length_name = ArchesCore::append_env( length_root, i );
     _length_varlabel.push_back(  VarLabel::find(length_name));
   }
-  std::string length_qn_name = ParticleTools::append_qn_env( length_root, d_quadNode );
+  std::string length_qn_name = ArchesCore::append_qn_env( length_root, d_quadNode );
   std::string length_RHS = length_qn_name+"_RHS";
   _RHS_length_varlabel = VarLabel::find(length_RHS);
   EqnBase& temp_length_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(length_qn_name);
   DQMOMEqn& length_eqn = dynamic_cast<DQMOMEqn&>(temp_length_eqn);
   const std::string length_birth_name = length_eqn.get_model_by_type( "BirthDeath" );
-  std::string length_birth_qn_name = ParticleTools::append_qn_env(length_birth_name, d_quadNode);
+  std::string length_birth_qn_name = ArchesCore::append_qn_env(length_birth_name, d_quadNode);
   if ( length_birth_name != "NULLSTRING" ){
     _length_birth_varlabel = VarLabel::find( length_birth_qn_name );
   }
@@ -221,9 +222,9 @@ CharOxidationSmith2016::problemSetup(const ProblemSpecP& params, int qn)
   _weight_p_diam_varlabel = VarLabel::find(length_qn_name);
 
   // get weight scaling constant
-  std::string weightqn_name = ParticleTools::append_qn_env("w", d_quadNode);
+  std::string weightqn_name = ArchesCore::append_qn_env("w", d_quadNode);
   for (int i=0; i<_nQn_part;i++ ){
-  std::string weight_name = ParticleTools::append_env("w", i);
+  std::string weight_name = ArchesCore::append_env("w", i);
     _weight_varlabel.push_back( VarLabel::find(weight_name) );
   }
   EqnBase& temp_weight_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(weightqn_name);
@@ -233,7 +234,7 @@ CharOxidationSmith2016::problemSetup(const ProblemSpecP& params, int qn)
   std::string w_RHS = weightqn_name+"_RHS";
   _RHS_weight_varlabel = VarLabel::find(w_RHS);
 
-  std::string number_density_name = ParticleTools::parse_for_role_to_label(db, "total_number_density");
+  std::string number_density_name = ArchesCore::parse_for_role_to_label(db, "total_number_density");
   _number_density_varlabel = VarLabel::find(number_density_name);
 
   // get Char source term label and devol label from the devolatilization model
@@ -272,16 +273,24 @@ CharOxidationSmith2016::problemSetup(const ProblemSpecP& params, int qn)
   } else {
     throw ProblemSetupException("Error: CharOxidationSmith2016 requires FOWY v_hiT.", __FILE__, __LINE__);
   }
+
+  CoalHelper& coal_helper = CoalHelper::self();
+
   if (db_coal_props->findBlock("SmithChar2016")) {
+
     ProblemSpecP db_Smith = db_coal_props->findBlock("SmithChar2016");
     db_Smith->getWithDefault("Sg0",_Sg0,9.35e5); //UNCERTAIN initial specific surface area [m^2/kg], range [1e3,1e6]
     db_Smith->getWithDefault("char_MW",_Mh,12.0); // kg char / kmole char
-    _init_particle_density = ParticleTools::getInletParticleDensity( db );
-    double ash_mass_frac = ParticleTools::getAshMassFraction( db );
-    double initial_diameter = ParticleTools::getInletParticleSize( db, d_quadNode );
+    _init_particle_density = ArchesCore::get_inlet_particle_density( db );
+
+    double ash_mass_frac = coal_helper.get_coal_db().ash_mf;
+    double initial_diameter = ArchesCore::get_inlet_particle_size( db, d_quadNode );
     double p_volume = M_PI/6.*initial_diameter*initial_diameter*initial_diameter; // particle volme [m^3]
+
     _mass_ash = p_volume*_init_particle_density*ash_mass_frac;
+
     double initial_rc = (M_PI/6.0)*initial_diameter*initial_diameter*initial_diameter*_init_particle_density*(1.-ash_mass_frac);
+
     _rho_org_bulk = initial_rc / (p_volume*(1-_p_void0) - _mass_ash/_rho_ash_bulk) ; // bulk density of char [kg/m^3]
     _p_voidmin = 1. - (1/p_volume)*(initial_rc*(1.-_v_hiT)/_rho_org_bulk + _mass_ash/_rho_ash_bulk); // bulk density of char [kg/m^3]
     db_Smith->getWithDefault("surface_area_mult_factor",_S,1.0);

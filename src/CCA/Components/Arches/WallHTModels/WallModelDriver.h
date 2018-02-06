@@ -8,6 +8,7 @@
 #include <Core/GeometryPiece/GeometryPiece.h>
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
 #include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
+#include <CCA/Components/Arches/ParticleModels/CoalHelper.h>
 
 //============================================
 
@@ -110,7 +111,7 @@ namespace Uintah{
       const VarLabel* _timeStepLabel;
       const VarLabel* _simulationTimeLabel;
       const VarLabel* _delTLabel;
-    
+
       // Net heat flux var labels:
       const VarLabel* _T_copy_label;
 
@@ -212,7 +213,7 @@ namespace Uintah{
         db->require( "deposit_velocity_name", new_name );
         return new_name;
       }
-      
+
       inline static std::vector<std::string> get_extra_src_flux_names( const ProblemSpecP& input_db ){
         ProblemSpecP db = input_db;
         std::vector<std::string> new_src_names;
@@ -319,13 +320,14 @@ namespace Uintah{
 
           struct hadley_tc : ThermalCondBase {
             hadley_tc(ProblemSpecP db_model){
+              CoalHelper& coal_helper = CoalHelper::self();
               std::vector<double> default_comp = {39.36,25.49, 7.89,  10.12, 2.46, 0.0, 1.09, 4.10};
               db_model->getWithDefault( "enamel_ash_composition", en_ash_comp, default_comp);
               db_model->getWithDefault( "sb_ash_composition", sb_ash_comp, default_comp);
               db_model->getWithDefault( "enamel_deposit_porosity", en_porosity, 0.6);
               db_model->getWithDefault( "sb_deposit_porosity", sb_porosity, 0.6);
-	            //T_mid = ParticleTools::getAshPorosityTemperature(db_model);
-	            T_fluid = ParticleTools::getAshFluidTemperature(db_model);
+	            //T_mid = coal_helper.get_coal_db().T_porosity;
+	            T_fluid = coal_helper.get_coal_db().T_fluid;
               if (en_ash_comp.size() != 8 || sb_ash_comp.size() != 8){
                 throw InvalidValue("Error ash_compositions (enamel_ash_composition and sb_ash_composition) must have 8 entries: sio2, al2o3, cao, fe2o3, na2o, bao, tio2, mgo. ", __FILE__, __LINE__);
               }
@@ -526,7 +528,8 @@ namespace Uintah{
           struct pokluda_e : EmissivityBase {
             pokluda_e(ProblemSpecP db_model){
               ProblemSpecP db_root = db_model->getRootNode();
-              int Nenv = ParticleTools::get_num_env( db_root, ParticleTools::DQMOM );
+              int Nenv = ArchesCore::get_num_env( db_root, ArchesCore::DQMOM_METHOD );
+              CoalHelper& coal_helper = CoalHelper::self();
               min_p_diam = 1e16;
               double min_p = min_p_diam;
               double rho_ash_bulk;
@@ -542,9 +545,9 @@ namespace Uintah{
                   }
                   db_part_properties->getWithDefault( "rho_ash_bulk",rho_ash_bulk,2300.0);
                   db_part_properties->getWithDefault( "void_fraction",p_void0,0.3);
-                  double init_particle_density = ParticleTools::getInletParticleDensity( db_root );
-                  double ash_mass_frac = ParticleTools::getAshMassFraction( db_root );
-                  double initial_diameter = ParticleTools::getInletParticleSize( db_root, i );
+                  double init_particle_density = ArchesCore::get_inlet_particle_density( db_root );
+                  double ash_mass_frac = coal_helper.get_coal_db().ash_mf;
+                  double initial_diameter = ArchesCore::get_inlet_particle_size( db_root, i );
                   double p_volume = M_PI/6.*initial_diameter*initial_diameter*initial_diameter; // particle volme [m^3]
                   double mass_ash = p_volume*init_particle_density*ash_mass_frac;
                   double initial_rc = (M_PI/6.0)*initial_diameter*initial_diameter*initial_diameter*init_particle_density*(1.-ash_mass_frac);
@@ -559,7 +562,7 @@ namespace Uintah{
               std::string ash_type;
               db_model->getWithDefault( "coal_name", ash_type, "generic_coal");
               db_model->getWithDefault( "coordination_number", CN, 2);
-	            T_fluid = ParticleTools::getAshFluidTemperature(db_model);
+	            T_fluid = coal_helper.get_coal_db().T_fluid;
               if (ash_type == "indonesian"){
                 a_sv = -1.47871222e+04;
                 b_sv = -1.02820241e+00;

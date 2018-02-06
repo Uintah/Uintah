@@ -40,8 +40,8 @@ SampleTask::register_initialize(
   typedef ArchesFieldContainer AFC;
 
   //FUNCITON CALL     STRING NAME(VL)     TYPE       DEPENDENCY    GHOST DW     VR
-  register_variable( "a_sample_field", AFC::REQUIRES, 0, AFC::NEWDW,  variable_registry );
-  register_variable( "a_result_field", AFC::COMPUTES, 0, AFC::NEWDW,  variable_registry );
+  register_variable( "a_sample_field", AFC::MODIFIES, variable_registry );
+  register_variable( "a_result_field", AFC::COMPUTES, variable_registry );
 
 }
 
@@ -49,14 +49,43 @@ SampleTask::register_initialize(
 void
 SampleTask::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  CCVariable<double>& field  = *(tsk_info->get_uintah_field<CCVariable<double> >( "a_sample_field" ));
-  CCVariable<double>& result = *(tsk_info->get_uintah_field<CCVariable<double> >( "a_result_field" ));
+  //CCVariable<double>& field  = *(tsk_info->get_uintah_field<CCVariable<double> >( "a_sample_field" ));
+  //CCVariable<double>& result = *(tsk_info->get_uintah_field<CCVariable<double> >( "a_result_field" ));
+
+  //constCCVariable<double>& field = tsk_info->get_const_uintah_field_add<constCCVariable<double> >("a_sample_field");
+  CCVariable<double>& field  = tsk_info->get_uintah_field_add<CCVariable<double> >("a_sample_field");
+  CCVariable<double>& result = tsk_info->get_uintah_field_add<CCVariable<double> >("a_result_field");
+
+  //traditional functor:
+  struct mySpecialOper{
+    //constructor
+    mySpecialOper( CCVariable<double>& var ) : m_var(var){}
+    //operator
+    void
+    operator()(int i, int j, int k) const {
+
+      m_var(i,j,k) = 2.0;
+
+    }
+    private:
+    CCVariable<double>& m_var;
+  };
+
+  mySpecialOper actual_oper(result);
+
+  Vector DX = patch->dCell();
+  const double area_x = DX.y() * DX.z();
 
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+
+  Uintah::parallel_for( range, actual_oper );
+
+  // lambda style
   Uintah::parallel_for( range, [&](int i, int j, int k){
     field(i,j,k) = 1.1;
     result(i,j,k) = 2.1;
   });
+  
 }
 
 //--------------------------------------------------------------------------------------------------

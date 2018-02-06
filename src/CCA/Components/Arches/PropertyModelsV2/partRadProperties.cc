@@ -196,19 +196,19 @@ void partRadProperties::problemSetup(  Uintah::ProblemSpecP& db )
     }
 
     _nQn_part = 0;
-    bool doing_dqmom = ParticleTools::check_for_particle_method(db,ParticleTools::DQMOM);
-    bool doing_cqmom = ParticleTools::check_for_particle_method(db,ParticleTools::CQMOM);
+    bool doing_dqmom = ArchesCore::check_for_particle_method(db,ArchesCore::DQMOM_METHOD);
+    bool doing_cqmom = ArchesCore::check_for_particle_method(db,ArchesCore::CQMOM_METHOD);
 
     if ( doing_dqmom ){
-      _nQn_part = ParticleTools::get_num_env( db, ParticleTools::DQMOM );
+      _nQn_part = ArchesCore::get_num_env( db, ArchesCore::DQMOM_METHOD );
     } else if ( doing_cqmom ){
-      _nQn_part = ParticleTools::get_num_env( db, ParticleTools::CQMOM );
+      _nQn_part = ArchesCore::get_num_env( db, ArchesCore::CQMOM_METHOD );
     } else {
       throw ProblemSetupException("Error: This particle radiation property method only supports DQMOM/CQMOM.",__FILE__,__LINE__);
     }
 
-    std::string base_temperature_name = ParticleTools::parse_for_role_to_label( db, "temperature");
-    std::string base_size_name        = ParticleTools::parse_for_role_to_label( db, "size" );
+    std::string base_temperature_name = ArchesCore::parse_for_role_to_label( db, "temperature");
+    std::string base_size_name        = ArchesCore::parse_for_role_to_label( db, "size" );
     std::string base_weight_name      = "w"; //hard coded as w
     std::string char_name = "Charmass";
     std::string RC_names = "RCmass";
@@ -216,11 +216,11 @@ void partRadProperties::problemSetup(  Uintah::ProblemSpecP& db )
 
 
     for (int i=0; i<_nQn_part; i++){
-      _size_name_v.push_back(ParticleTools::append_env( base_size_name, i));
-      _temperature_name_v.push_back (ParticleTools::append_env( base_temperature_name, i ));
-      _weight_name_v.push_back(ParticleTools::append_env( base_weight_name, i ));
-      _RC_name_v.push_back(ParticleTools::append_env( RC_names, i ));
-      _Char_name_v.push_back (ParticleTools::append_env( char_name, i ));
+      _size_name_v.push_back(ArchesCore::append_env( base_size_name, i));
+      _temperature_name_v.push_back (ArchesCore::append_env( base_temperature_name, i ));
+      _weight_name_v.push_back(ArchesCore::append_env( base_weight_name, i ));
+      _RC_name_v.push_back(ArchesCore::append_env( RC_names, i ));
+      _Char_name_v.push_back (ArchesCore::append_env( char_name, i ));
     }
 
 

@@ -30,6 +30,7 @@
 #include <CCA/Components/Arches/UPSHelper.h>
 #include <CCA/Components/Arches/Transport/PressureEqn.h>
 #include <CCA/Components/Arches/ChemMix/TableLookup.h>
+#include <CCA/Components/Arches/ParticleModels/CoalHelper.h>
 #include <CCA/Components/Arches/Task/TaskController.h>
 //factories
 #include <CCA/Components/Arches/Task/TaskFactoryHelper.h>
@@ -117,6 +118,17 @@ KokkosSolver::problemSetup( const ProblemSpecP& input_db,
   proc0cout << " Time integrator: RK of order " << m_rk_order << "\n \n";
 
   commonProblemSetup( db_ks );
+
+  if( db->findBlock("ParticleProperties") ) {
+    std::string particle_type;
+    db->findBlock("ParticleProperties")->getAttribute("type", particle_type);
+    if ( particle_type == "coal" ) {
+      CoalHelper& coal_helper = CoalHelper::self();
+      coal_helper.parse_for_coal_info( db );
+    } else {
+      throw InvalidValue("Error: Particle type not recognized. Current types supported: coal",__FILE__,__LINE__);
+    }
+  }
 
   std::shared_ptr<UtilityFactory> UtilF(scinew UtilityFactory());
   std::shared_ptr<TransportFactory> TransF(scinew TransportFactory());

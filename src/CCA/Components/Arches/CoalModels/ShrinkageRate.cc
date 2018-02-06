@@ -82,16 +82,16 @@ ShrinkageRate::problemSetup(const ProblemSpecP& params, int qn)
   ProblemSpecP db_coal_props = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties");
 
   // Get size scaling constant
-  std::string length_root = ParticleTools::parse_for_role_to_label(db, "size");
-  std::string length_name = ParticleTools::append_env( length_root, d_quadNode );
-  std::string lengthqn_name = ParticleTools::append_qn_env( length_root, d_quadNode );
+  std::string length_root = ArchesCore::parse_for_role_to_label(db, "size");
+  std::string length_name = ArchesCore::append_env( length_root, d_quadNode );
+  std::string lengthqn_name = ArchesCore::append_qn_env( length_root, d_quadNode );
   EqnBase& temp_length_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(lengthqn_name);
   DQMOMEqn& length_eqn = dynamic_cast<DQMOMEqn&>(temp_length_eqn);
   m_scaling_const_length = length_eqn.getScalingConstant(d_quadNode);
 
 
   // get weight scaling constant
-  std::string weightqn_name = ParticleTools::append_qn_env("w", d_quadNode);
+  std::string weightqn_name = ArchesCore::append_qn_env("w", d_quadNode);
   m_weight_scaled_varlabel = VarLabel::find(weightqn_name);
 
   // Get rates from char oxidation model
