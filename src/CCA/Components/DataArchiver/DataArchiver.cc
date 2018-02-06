@@ -3123,7 +3123,7 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
                                const std::string           & dirName,     // CCVars, SFC*Vars
                                ProblemSpecP                & doc )
 {
-  cout << Uintah::Parallel::getMPIRank() << ": " << std::this_thread::get_id() << ": calling saveLabels_PIDX()\n";
+  // cout << Uintah::Parallel::getMPIRank() << ": " << std::this_thread::get_id() << ": calling saveLabels_PIDX()\n";
 
   size_t totalBytesSaved = 0;
 #if HAVE_PIDX
