@@ -3845,7 +3845,7 @@ DataArchiver::initCheckpoints( const SchedulerP & sched )
        ConsecutiveRangeSet& unionedVarMatls = label_map[ dep->m_var->getName() ][ *crs_iter ];
        unionedVarMatls = unionedVarMatls.unioned(matls);
      }
-     cout << "  Adding checkpoint var " << dep->m_var->getName() << " on levels " << levels << " for matls " << matls << "\n";
+     // cout << "  Adding checkpoint var " << dep->m_var->getName() << " on levels " << levels << " for matls " << matls << "\n";
    }
          
    m_checkpointLabels.reserve( label_map.size() );
