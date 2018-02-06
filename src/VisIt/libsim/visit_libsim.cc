@@ -572,7 +572,6 @@ void visit_Initialize( visit_simulation_data *sim )
     VisItUI_setValueS("SIMULATION_MODE", "Connected", 1);
   }
   
-
   if( Parallel::usingMPI() )
     VisItSetSlaveProcessCallback(visit_SlaveProcessCallback);
 
@@ -587,14 +586,17 @@ void visit_Initialize( visit_simulation_data *sim )
 
   /* Register data access callbacks */
   VisItSetGetMetaData(visit_SimGetMetaData, (void*) sim);
-
-  VisItSetGetMesh(visit_SimGetMesh, (void*) sim);
-
+  VisItSetGetMesh(    visit_SimGetMesh,     (void*) sim);
   VisItSetGetVariable(visit_SimGetVariable, (void*) sim);
+
+  /* Register AMR data access callbacks */
+  VisItSetGetDomainBoundaries(visit_SimGetDomainBoundaries, (void*) sim);
+  VisItSetGetDomainNesting   (visit_SimGetDomainNesting,    (void*) sim);
 
   if( Parallel::usingMPI() )
     VisItSetGetDomainList(visit_SimGetDomainList, (void*) sim);
 
+  
   VisItUI_textChanged("MaxTimeStep", visit_MaxTimeStepCallback, (void*) sim);
   VisItUI_textChanged("MaxTime",     visit_MaxTimeCallback,     (void*) sim);
   VisItUI_valueChanged("EndOnMaxTime",
