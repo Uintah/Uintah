@@ -16,7 +16,7 @@
     <timestep_multiplier>  1     </timestep_multiplier>
   </Time>
 
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>poisson3_2L.uda</filebase>
     <outputTimestepInterval>2</outputTimestepInterval>
     <save label = "phi"/>

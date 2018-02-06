@@ -15,7 +15,7 @@
     <timestep_multiplier>0.3</timestep_multiplier>
     <max_Timesteps>34</max_Timesteps>
   </Time>
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>birth_test.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <save label="pressurePS"/>

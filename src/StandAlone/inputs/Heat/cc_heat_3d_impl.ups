@@ -85,7 +85,7 @@
         </Parameters>
     </Solver>
 <!--__________________________________-->
-    <DataArchiver>
+    <DataArchiver type="PIDX">
         <filebase>cc_heat_3d_impl.uda</filebase>
         <outputTimestepInterval>1</outputTimestepInterval>
         <save label="u" />

@@ -65,7 +65,7 @@
         </BoundaryConditions>
     </Grid>
 <!--__________________________________-->
-    <DataArchiver>
+    <DataArchiver type="PIDX">
         <filebase>nc_heat_3d.uda</filebase>
         <outputTimestepInterval>1</outputTimestepInterval>
         <save label="u" />

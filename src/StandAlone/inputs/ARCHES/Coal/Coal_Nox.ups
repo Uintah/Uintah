@@ -13,7 +13,7 @@
     <delt_max>1e-3</delt_max>
     <timestep_multiplier>0.45</timestep_multiplier>
   </Time>
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>Coal_Nox.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <save label="NO_zz"/>

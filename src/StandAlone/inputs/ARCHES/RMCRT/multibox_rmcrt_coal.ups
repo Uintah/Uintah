@@ -20,7 +20,7 @@
     <delt_max>5.0e-5</delt_max>
     <timestep_multiplier>0.2</timestep_multiplier>
   </Time>
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <outputInitTimestep/>
     <filebase>multibox_RMCRT_coal.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>

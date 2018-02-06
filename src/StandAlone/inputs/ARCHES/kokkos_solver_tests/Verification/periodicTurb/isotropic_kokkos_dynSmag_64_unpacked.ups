@@ -15,7 +15,7 @@
     <delt_max>    1e-3     </delt_max>
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>K_iso_64_dynSmag_up.uda</filebase>
     <outputTimestepInterval>10</outputTimestepInterval>
     <outputInitTimestep/>

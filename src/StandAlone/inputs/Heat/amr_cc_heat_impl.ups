@@ -86,7 +86,7 @@
         </Parameters>
     </Solver>
 <!--__________________________________-->
-    <DataArchiver>
+    <DataArchiver type="PIDX">
         <filebase>amr_cc_heat_imp.uda</filebase>
         <outputTimestepInterval>1</outputTimestepInterval>
         <save label="u" />

@@ -14,7 +14,7 @@
     <delt_max>    1e-2     </delt_max>
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>kokkos_iso_32.uda</filebase>
     <outputTimestepInterval>2</outputTimestepInterval>
     <outputInitTimestep/>

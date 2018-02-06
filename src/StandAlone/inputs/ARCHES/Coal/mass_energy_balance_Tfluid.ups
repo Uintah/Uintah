@@ -13,7 +13,7 @@
     <delt_max>1e-4</delt_max>
     <timestep_multiplier>0.2</timestep_multiplier>
   </Time>
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>mass_energy_balance_Tfuild.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>

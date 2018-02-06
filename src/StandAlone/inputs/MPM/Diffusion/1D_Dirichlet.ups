@@ -14,7 +14,7 @@
      <delt_max>1.0e-1</delt_max>
      <timestep_multiplier>0.4</timestep_multiplier>
   </Time>
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>data_1D_Dirichlet</filebase>
     <outputInterval>0.1</outputInterval>
     <save label="p.x"/>

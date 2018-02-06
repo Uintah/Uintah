@@ -140,7 +140,7 @@
     <!--____________________________________________________________________-->
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
-   <DataArchiver>
+   <DataArchiver type="PIDX">
       <filebase>nozzle.uda</filebase>
       <!--<outputTimestepInterval>20</outputTimestepInterval> -->
       <outputInterval>1e-4</outputInterval>

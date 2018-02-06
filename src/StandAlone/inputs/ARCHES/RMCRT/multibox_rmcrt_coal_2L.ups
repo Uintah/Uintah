@@ -18,7 +18,7 @@
     <delt_max>5.0e-5</delt_max>
     <timestep_multiplier>0.2</timestep_multiplier>
   </Time>
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>multibox_RMCRT_coal_2L.uda</filebase>
     <outputTimestepInterval>2</outputTimestepInterval>
     <save label="residence_time" levels="-1"/>

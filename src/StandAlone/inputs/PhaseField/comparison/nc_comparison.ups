@@ -13,7 +13,7 @@
         <timestep_multiplier>1.</timestep_multiplier>
     </Time>
 <!--__________________________________-->
-    <DataArchiver>
+    <DataArchiver type="PIDX">
         <filebase>output/nc_comparison.uda</filebase>
         <outputTimestepInterval>20</outputTimestepInterval>
         <save label="psi" />

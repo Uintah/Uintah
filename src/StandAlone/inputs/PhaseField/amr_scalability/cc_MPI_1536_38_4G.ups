@@ -14,7 +14,7 @@
         <timestep_multiplier>1.</timestep_multiplier>
     </Time>
 <!--__________________________________-->
-    <DataArchiver>
+    <DataArchiver type="PIDX">
         <filebase>cc_MPI_1536_38_4G.uda</filebase>
         <outputTimestepInterval>0</outputTimestepInterval>
     </DataArchiver>

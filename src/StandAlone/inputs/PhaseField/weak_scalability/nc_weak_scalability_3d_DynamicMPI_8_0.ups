@@ -11,7 +11,7 @@
   <delt_max>1.</delt_max>                                     
   <timestep_multiplier>1.</timestep_multiplier>               
  </Time>                                                      
- <DataArchiver>                                               
+ <DataArchiver type="PIDX">                                               
   <filebase>nc_weak_scalability_3d_DynamicMPI_8_0.uda</filebase>                                 
   <outputTimestepInterval>0</outputTimestepInterval>          
  </DataArchiver>                                              

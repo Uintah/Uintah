@@ -22,7 +22,7 @@
   </Time>
   
   <!--__________________________________-->
-  <DataArchiver>
+  <DataArchiver type="PIDX">
   <filebase>unifiedtest.uda</filebase>
       <outputTimestepInterval>1</outputTimestepInterval>
       <save label = "phi"/>

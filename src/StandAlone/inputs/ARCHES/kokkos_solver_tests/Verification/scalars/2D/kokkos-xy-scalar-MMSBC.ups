@@ -16,7 +16,7 @@
     <timestep_multiplier>1</timestep_multiplier>
     <max_Timesteps>3</max_Timesteps>
   </Time>
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>xy-scalar-kokkos-test.uda</filebase>
     <!--outputInterval>0.1</outputInterval-->
     <outputTimestepInterval>1</outputTimestepInterval>

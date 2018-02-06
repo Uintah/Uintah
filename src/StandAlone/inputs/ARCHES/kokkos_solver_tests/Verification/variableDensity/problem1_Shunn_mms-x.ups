@@ -16,7 +16,7 @@
     <timestep_multiplier>1.0</timestep_multiplier>
     <max_Timesteps>3</max_Timesteps>
   </Time>
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>x-problem1_Shunn_mms.uda</filebase>
     <!--outputInterval>0.1</outputInterval-->
     <outputTimestepInterval>1</outputTimestepInterval>

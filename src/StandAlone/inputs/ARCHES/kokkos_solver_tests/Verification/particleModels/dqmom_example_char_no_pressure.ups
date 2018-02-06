@@ -16,7 +16,7 @@
     <timestep_multiplier>1</timestep_multiplier>
     <max_Timesteps>5</max_Timesteps>
   </Time>
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>dqmom_char_no_pressure.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>

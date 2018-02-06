@@ -15,7 +15,7 @@
     <delt_max>1e-3</delt_max>
     <timestep_multiplier>0.3</timestep_multiplier>
   </Time>
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>BrownSoot_spectral.uda</filebase>
     <outputTimestepInterval>2</outputTimestepInterval>
     <save label="residence_time"/>

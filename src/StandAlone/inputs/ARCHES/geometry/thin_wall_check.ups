@@ -12,7 +12,7 @@
     <max_Timesteps>   20          </max_Timesteps>
     <timestep_multiplier>0.35     </timestep_multiplier>
   </Time>
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>thin_wall_check.uda</filebase>
     <outputTimestepInterval>10</outputTimestepInterval>
     <outputInitTimestep/>

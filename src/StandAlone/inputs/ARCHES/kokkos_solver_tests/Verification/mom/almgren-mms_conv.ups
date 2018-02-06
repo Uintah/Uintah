@@ -16,7 +16,7 @@
     <timestep_multiplier>1</timestep_multiplier>
     <max_Timesteps>3</max_Timesteps>
   </Time>
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>almgren-mms-conv.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <!--outputInitTimestep/-->

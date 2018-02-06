@@ -14,7 +14,7 @@
     <timestep_multiplier>0.4</timestep_multiplier>
     <max_Timesteps>400</max_Timesteps>
   </Time>
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>hot_handoff_intrusion_test.uda</filebase>
     <outputTimestepInterval>10</outputTimestepInterval>
 

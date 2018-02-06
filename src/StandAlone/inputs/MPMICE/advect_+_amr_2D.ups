@@ -118,7 +118,7 @@
   <!--____________________________________________________________________-->
   <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
   <!--____________________________________________________________________-->
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>Advect_+_amr_2D.uda</filebase>
     <outputTimestepInterval>25</outputTimestepInterval>
     <save label = "mom_L_ME_CC"/>

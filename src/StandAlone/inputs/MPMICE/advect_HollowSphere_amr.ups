@@ -149,7 +149,7 @@
   <!--____________________________________________________________________-->
   <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
   <!--____________________________________________________________________-->
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>Advect_hollowSphere.uda</filebase>
     <outputTimestepInterval>10</outputTimestepInterval>
     <save label = "mom_L_ME_CC"/>

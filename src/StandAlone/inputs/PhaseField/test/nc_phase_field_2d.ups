@@ -12,7 +12,7 @@
         <timestep_multiplier>1.</timestep_multiplier>
     </Time>
 <!--__________________________________-->
-    <DataArchiver>
+    <DataArchiver type="PIDX">
         <filebase>nc_phasefield_2d.uda</filebase>
         <outputTimestepInterval>1</outputTimestepInterval>
         <save label="psi" />
