@@ -1647,7 +1647,7 @@ DataArchiver::writeto_xml_files( const GridP& grid )
         // This time through the (above for) loop, we are working on an IO timestep...
         savelist.push_back( &m_saveLabels );
 
-        cout << "is regrid timestep: " << m_application->isRegridTimeStep() << ", m_lastOutputOfTimeStepXML is: " << m_lastOutputOfTimeStepXML << "\n";
+        // cout << "is regrid timestep: " << m_application->isRegridTimeStep() << ", m_lastOutputOfTimeStepXML is: " << m_lastOutputOfTimeStepXML << "\n";
 
         if( m_outputFileFormat == PIDX ){
 #ifdef HAVE_PIDX
@@ -1662,7 +1662,7 @@ DataArchiver::writeto_xml_files( const GridP& grid )
         }
       }
       else if ( baseDirs[i] == &m_checkpointsDir ) {
-        cout << "is checkpoint timestep.  Regrid: " << m_application->isRegridTimeStep() << ", m_lastOutputOfTimeStepXML is: " << m_lastOutputOfTimeStepXML << "\n";
+        // cout << "is checkpoint timestep.  Regrid: " << m_application->isRegridTimeStep() << ", m_lastOutputOfTimeStepXML is: " << m_lastOutputOfTimeStepXML << "\n";
 
         // This time through the (above for) loop, we are working on a Checkpoint timestep...
         dumpingCheckpoint = true;
@@ -1674,12 +1674,14 @@ DataArchiver::writeto_xml_files( const GridP& grid )
         throw InternalError( "DataArchiver::writeto_xml_files(): Unknown directory!", __FILE__, __LINE__ );
       }
 
+#if 0
       if( !dumpingCheckpoint ){
         proc0cout << "Should we save timestep.xml for IO timestep " << dir_timestep << "; answer is: " << (save_io_timestep_xml_file?"yes":"no") << "\n";
       }
       else {
         proc0cout << "Should we save timestep.xml for Checkpoint timestep: yes!\n";
       }
+#endif
 
       string       iname    = baseDirs[i]->getName() + "/index.xml";
       ProblemSpecP indexDoc = loadDocument( iname );
@@ -1789,7 +1791,7 @@ DataArchiver::writeto_xml_files( const GridP& grid )
 /*      qwerty ... if grid has changed (or this is a checkpoint), save the timestep.xml data... otherwise just point to the previous version...*/
 
       if( save_io_timestep_xml_file || dumpingCheckpoint ) {
-        proc0cout << "About to save timestep.xml for TS " << dir_timestep << " for " << (dumpingCheckpoint?"checkpoint":"io") << "\n";
+        // proc0cout << "About to save timestep.xml for TS " << dir_timestep << " for " << (dumpingCheckpoint?"checkpoint":"io") << "\n";
 
         // Create the timestep.xml file.
 
@@ -1885,7 +1887,7 @@ DataArchiver::writeto_xml_files( const GridP& grid )
       else {
         // This is an IO timestep dump and the grid has not changed, so we do not need to create a new timestep.xml file...
         // We will just point (symlink) to the most recently dumped "timestep.xml" file.
-        proc0cout << "create a link to previous timestep.xml file in timestep: " << m_lastOutputOfTimeStepXML << "\n";
+        // proc0cout << "create a link to previous timestep.xml file in timestep: " << m_lastOutputOfTimeStepXML << "\n";
 
         ostringstream ts_with_xml_dirname;
         ts_with_xml_dirname << "../t" << setw(5) << setfill('0') << m_lastOutputOfTimeStepXML << "/timestep.xml";
@@ -1893,7 +1895,7 @@ DataArchiver::writeto_xml_files( const GridP& grid )
         ostringstream ts_without_xml_dirname;
         ts_without_xml_dirname << m_dir.getName() << "/t" << setw(5) << setfill('0') << dir_timestep << "/timestep.xml";
 
-        cout << "running this command: link " << ts_with_xml_dirname.str() << " <--to-- " << ts_without_xml_dirname.str() << "\n";
+        // cout << "running this command: link " << ts_with_xml_dirname.str() << " <--to-- " << ts_without_xml_dirname.str() << "\n";
 
         symlink( ts_with_xml_dirname.str().c_str(), ts_without_xml_dirname.str().c_str() );
       }
@@ -2679,9 +2681,9 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
                                DataWarehouse        * new_dw,
                                int                    type )
 {
-  cout << Uintah::Parallel::getMPIRank() << ": just entered outputVariables for thread " << std::this_thread::get_id() << "\n";
-  std::lock_guard<std::mutex> pidx_guard( pidx_mutex );
-  cout << Uintah::Parallel::getMPIRank() << ": past lock for outputVariables for thread: " << std::this_thread::get_id() << "\n";
+  // cout << Uintah::Parallel::getMPIRank() << ": just entered outputVariables for thread " << std::this_thread::get_id() << "\n";
+  // std::lock_guard<std::mutex> pidx_guard( pidx_mutex );
+  // cout << Uintah::Parallel::getMPIRank() << ": past lock for outputVariables for thread: " << std::this_thread::get_id() << "\n";
 
   // IMPORTANT - this function should only be called once per
   //   processor per level per type (files will be opened and closed,
@@ -2701,7 +2703,7 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
   ///////////////////
   // Dav debug stuff:
   int levelid = type != CHECKPOINT_REDUCTION ? getLevel( patches )->getIndex() : -1;
-  cout << " outputVariables task begin on level: " << levelid << "\n";
+  // cout << " outputVariables task begin on level: " << levelid << "\n";
   ////////////////////
 
   const double timeStep = m_application->getTimeStep();
@@ -2711,15 +2713,15 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
   //  int levelid = type != CHECKPOINT_REDUCTION ? getLevel( patches )->getIndex() : -1;      put back in when finished debugging
   
   if (type == OUTPUT) {
-    ASSERT(m_outputCalled[levelid] == false);
-    m_outputCalled[levelid] = true;
+    ASSERT( m_outputCalled[ levelid ] == false );
+    m_outputCalled[ levelid ] = true;
   }
-  else if (type == CHECKPOINT) {
-    ASSERT(m_checkpointCalled[levelid] == false);
-    m_checkpointCalled[levelid] = true;
+  else if( type == CHECKPOINT ) {
+    ASSERT( m_checkpointCalled[ levelid ] == false );
+    m_checkpointCalled[ levelid ] = true;
   }
   else /* if (type == CHECKPOINT_REDUCTION) */ {
-    ASSERT(m_checkpointReductionCalled == false);
+    ASSERT( m_checkpointReductionCalled == false );
     m_checkpointReductionCalled = true;
   }
 #endif
@@ -2729,15 +2731,17 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
                                                                                 m_checkpointReductionLabels );
   /////////////////////////////
   /// More dav debug stuff:
-  if (type == CHECKPOINT_REDUCTION) {
+#if 0
+  if( type == CHECKPOINT_REDUCTION ) {
     dbg << "    saving checkpoint reduction\n";
   }
-  else if (type == CHECKPOINT) {
+  else if( type == CHECKPOINT ) {
     cout << "   saving checkpoint\n";
   }
   else {
     cout << "   saving normal timestep. \n";
   }
+#endif
   /////////////////////////////
 
   //__________________________________
@@ -3058,7 +3062,7 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
 
       const TypeDescription::Type & TD = *iter;
       
-      cout << "Time to save PIDX variables of type: " << TypeDescription::toString( TD ) << "\n";
+      // cout << "Time to save PIDX variables of type: " << TypeDescription::toString( TD ) << "\n";
 
       // Find all of the variables of this type only.
       vector<SaveItem> saveTheseLabels = findAllVariablesWithType( saveLabels, TD );
@@ -3102,7 +3106,7 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
   if (dbg.active()) {
     dbg << "  outputVariables task end\n";
   }
-  cout << Uintah::Parallel::getMPIRank() << ": leaving outputVariables for thread " << std::this_thread::get_id() << "\n";
+  // cout << Uintah::Parallel::getMPIRank() << ": leaving outputVariables for thread " << std::this_thread::get_id() << "\n";
 } // end outputVariables()
 
 //______________________________________________________________________
@@ -3142,18 +3146,18 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
   int count = 0;
   int actual_number_of_variables = 0;
   
-  cout << "parsing save labels (# save items: " << nSaveItems << ") on level " << levelid << " for timestep: " << timeStep << "\n"; // DEBUG
+  // cout << "parsing save labels (# save items: " << nSaveItems << ") on level " << levelid << " for timestep: " << timeStep << "\n"; // DEBUG
 
   for( vector< SaveItem >::iterator saveIter = saveLabels.begin(); saveIter != saveLabels.end(); ++saveIter ) {
     const MaterialSubset* var_matls = saveIter->getMaterialSubset( level );
 
-    cout << "   Looking at: " << saveIter->label->getName() << "\n"; // DEBUG
+    // cout << "   Looking at: " << saveIter->label->getName() << "\n"; // DEBUG
 
     if (var_matls == nullptr) {
-      cout << "      bailing out\n"; // DEBUG
+      // cout << "      bailing out\n"; // DEBUG
       continue;
     }
-    cout << "      # matls: " << var_matls->size() << "\n"; // DEBUG
+    // cout << "      # matls: " << var_matls->size() << "\n"; // DEBUG
 
     nSaveItemMatls[ count ] = var_matls->size();
 
@@ -3191,7 +3195,7 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
   //__________________________________
   // allocate memory for pidx variable descriptor array
 
-  cout << "Actual_number_of_variables is " << actual_number_of_variables << "\n";
+  // cout << "Actual_number_of_variables is " << actual_number_of_variables << "\n";
   rc = PIDX_set_variable_count( pidx.file, actual_number_of_variables );
   pidx.checkReturnCode( rc, "DataArchiver::saveLabels_PIDX -PIDX_set_variable_count failure",__FILE__, __LINE__);
   
@@ -3241,7 +3245,7 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
     string type_name = "float64";
     int    the_size  = sizeof( double );
 
-    std::cout << "type for " <<  label->getName() << "is: " << subtype->getType() << std::endl;
+    // std::cout << "type for " <<  label->getName() << "is: " << subtype->getType() << std::endl;
 
     switch( subtype->getType( )) {
 
@@ -3285,7 +3289,7 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
       s << m;
       var_mat_name = label->getName() + "_m" + s.str();
     
-      cout << "here: " << var_mat_name.c_str() << ", " << (varSubType_size * 8) << ", " << data_type << "\n";
+      // cout << "here: " << var_mat_name.c_str() << ", " << (varSubType_size * 8) << ", " << data_type << "\n";
       bool isParticle = ( label->typeDescription()->getType() == Uintah::TypeDescription::ParticleVariable );
 
       rc = PIDX_variable_create((char*) var_mat_name.c_str(),
@@ -3401,17 +3405,20 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
           patchOffset[1] = patchOffset[1] - lo.y() - extra_cells[1];
           patchOffset[2] = patchOffset[2] - lo.z() - extra_cells[2];
 
+#if 0
           cout << Uintah::Parallel::getMPIRank() << ": level: " << level->getIndex() << ", patchoffset: " << patchOffset[0] << ", " << patchOffset[1] << ", " << patchOffset[2]
                << ", patchsize: " << patchSize[0] << ", " << patchSize[1] << ", " << patchSize[2] << ", patch #: " << patch->getID()
                << ", level size: " << level_size[0] << " - " << level_size[1] << " - " << level_size[2] << "\n";
 
           cout << Uintah::Parallel::getMPIRank() << ": lo: " << lo.x() << ", " << lo.y() << ", " << lo.z() << ", extracells: "
                << extra_cells[0] << ", " << extra_cells[1] << ", " << extra_cells[2] << "\n";
+#endif
 
-          rc = PIDX_variable_write_data_layout(pidx.varDesc[vc][m],
-                                               patchOffset, patchSize,
-                                               patch_buffer[vcm][p],
-                                               PIDX_row_major);
+          rc = PIDX_variable_write_data_layout( pidx.varDesc[ vc ][ m ],
+                                                patchOffset,
+                                                patchSize,
+                                                patch_buffer[ vcm ][ p ],
+                                                PIDX_row_major );
           
           pidx.checkReturnCode( rc,
                                 "DataArchiver::saveLabels_PIDX - PIDX_variable_write_data_layout failure",
@@ -3487,18 +3494,18 @@ std::vector<DataArchiver::SaveItem>
 DataArchiver::findAllVariablesWithType( const std::vector< SaveItem > & saveLabels,
                                         const TypeDescription::Type     type )
 {
-  cout << "findAllVariablesWithType: " << type << "\n";
+  // cout << "findAllVariablesWithType: " << type << "\n";
 
   std::vector< SaveItem > myItems;
 
   for( vector< SaveItem >::const_iterator saveIter = saveLabels.begin(); saveIter != saveLabels.end(); ++saveIter) {
     const VarLabel* label = saveIter->label;
 
-    cout << "  inspecting: " << *label << " with type: " << label->typeDescription()->getName() << "\n";
+    // cout << "  inspecting: " << *label << " with type: " << label->typeDescription()->getName() << "\n";
     TypeDescription::Type myType = label->typeDescription()->getType();
     
     if( myType == type ){
-      cout << "     adding it\n";
+      // cout << "     adding it\n";
       myItems.push_back( *saveIter );
     }
   }
@@ -3541,7 +3548,7 @@ void
 DataArchiver::createPIDX_dirs( std::vector< SaveItem >& saveLabels,
                                Dir& levelDir )
 {
-  cout << "Skipping createPIDX_dirs\n";
+  // cout << "Skipping createPIDX_dirs\n";
   return;
 
 #if HAVE_PIDX

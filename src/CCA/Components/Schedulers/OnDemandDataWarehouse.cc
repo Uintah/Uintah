@@ -1059,8 +1059,8 @@ OnDemandDataWarehouse::put( const ReductionVariableBase& var,
                             const Level*                 level,
                                   int                    matlIndex /* = -1 */ )
 {
-  proc0cout << "put called for reduction variable " << label->getName() << " on level: " << (level ? level->getID() : -1) << " (dw: " << this << " - " << getID() << ")\n";
-  proc0cout << "   matl: " << matlIndex << "\n";
+  // proc0cout << "put called for reduction variable " << label->getName() << " on level: " << (level ? level->getID() : -1) << " (dw: " << this << " - " << getID() << ")\n";
+  // proc0cout << "   matl: " << matlIndex << "\n";
 
   ASSERT( !d_finalized );
   checkPutAccess( label, matlIndex, 0,
