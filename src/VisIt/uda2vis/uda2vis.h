@@ -44,9 +44,15 @@
 
 namespace Uintah {
 
+  enum {
+    NONE    = 0,
+    CELLS   = 1,
+    PATCHES = 2,
+  } LoadExtra;
+    
 TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
                               GridP grid,
-                              bool useExtraCells);
+                              int useExtraCells);
 
 GridDataRaw* getGridData(SchedulerP schedulerP,
                          GridP gridP,
@@ -56,7 +62,7 @@ GridDataRaw* getGridData(SchedulerP schedulerP,
                          int material,
                          int low[3],
                          int high[3],
-                         bool getRegion);
+                         int useExtraCells);
 
 ParticleDataRaw* getParticleData(SchedulerP schedulerP,
                                  GridP gridP,

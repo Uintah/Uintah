@@ -1764,6 +1764,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
             << "could not be processed.";
             
         VisItUI_setValueS("SIMULATION_MESSAGE_WARNING", msg.str().c_str(), 1);
+
         gd = new GridDataRaw;
 
         int numVars = stepInfo->varInfo.size();
@@ -1793,12 +1794,16 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
           }
         }
         
-        for (int i=0; i<3; i++) {
-          gd->low[i] = plow[i];
-          gd->high[i] = phigh[i];
+        for (int i=0; i<3; i++)
+	{
+          gd->low[i]  =  plow[i] + int(nodeCentered == false);
+          gd->high[i] = phigh[i] + int(nodeCentered == false);
         }
 
-        gd->num = (phigh[0]-plow[0])*(phigh[1]-plow[1])*(phigh[2]-plow[2]);
+	gd->num = ((gd->high[0]-gd->low[0]) *
+		   (gd->high[1]-gd->low[1]) *
+		   (gd->high[2]-gd->low[2]));
+	
         gd->data = new double[gd->num*gd->components];
 
         for (int i=0; i<gd->num*gd->components; ++i)
