@@ -1374,14 +1374,14 @@ void visit_DoutCallback(char *val, void *cbdata)
 }
 
 //---------------------------------------------------------------------
-// LoadExtraCellsCallback
+// LoadExtraElementsCallback
 //     Custom UI callback for a check box
 //---------------------------------------------------------------------
-void visit_LoadExtraCellsCallback(int val, void *cbdata)
+void visit_LoadExtraElementsCallback(int val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-  sim->useExtraCells = val;
+  sim->loadExtraElements = val;
 }
 
 

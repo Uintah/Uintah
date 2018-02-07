@@ -24,7 +24,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>2</number>
     </property>
     <widget class="QWidget" name="tab">
      <attribute name="title">
@@ -800,8 +800,6 @@
          </property>
         </column>
        </widget>
-       <zorder>DebugStreamTable</zorder>
-       <zorder>OutputIntervalGroupBox</zorder>
       </widget>
       <widget class="QGroupBox" name="OutputIntervalGroupBox">
        <property name="geometry">
@@ -887,17 +885,42 @@
       <property name="title">
        <string>Database</string>
       </property>
-      <widget class="QCheckBox" name="LoadExtraCells">
+      <widget class="QComboBox" name="LoadExtraElements">
+       <property name="geometry">
+        <rect>
+         <x>140</x>
+         <y>30</y>
+         <width>105</width>
+         <height>30</height>
+        </rect>
+       </property>
+       <item>
+        <property name="text">
+         <string>None</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string notr="true">Cells</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Patches</string>
+        </property>
+       </item>
+      </widget>
+      <widget class="QLabel" name="LoadExtraElementsLabel">
        <property name="geometry">
         <rect>
          <x>10</x>
          <y>30</y>
-         <width>241</width>
-         <height>20</height>
+         <width>131</width>
+         <height>16</height>
         </rect>
        </property>
        <property name="text">
-        <string>Load extra cells</string>
+        <string>Load extra elements</string>
        </property>
       </widget>
      </widget>

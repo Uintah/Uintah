@@ -87,7 +87,7 @@ namespace Uintah {
   void visit_DebugStreamCallback  ( char *val, void *cbdata );
   void visit_DoutCallback         ( char *val, void *cbdata );
 
-  void visit_LoadExtraCellsCallback( int   val, void *cbdata );
+  void visit_LoadExtraElementsCallback( int   val, void *cbdata );
 } // End namespace Uintah
 
 #endif

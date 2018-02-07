@@ -927,7 +927,7 @@ void visit_SetDouts( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetDatabase( visit_simulation_data *sim )
 {
-  VisItUI_setValueI("LoadExtraCells", sim->useExtraCells, 1);
+  VisItUI_setValueI("LoadExtraElements", sim->loadExtraElements, 1);
 }
 
 } // End namespace Uintah

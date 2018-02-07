@@ -52,7 +52,7 @@ namespace Uintah {
     
 TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
                               GridP grid,
-                              int useExtraCells);
+                              int loadExtraElements);
 
 GridDataRaw* getGridData(SchedulerP schedulerP,
                          GridP gridP,
@@ -62,7 +62,7 @@ GridDataRaw* getGridData(SchedulerP schedulerP,
                          int material,
                          int low[3],
                          int high[3],
-                         int useExtraCells);
+                         int loadExtraElements);
 
 ParticleDataRaw* getParticleData(SchedulerP schedulerP,
                                  GridP gridP,

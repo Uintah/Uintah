@@ -244,7 +244,7 @@ extern "C"
 TimeStepInfo* getTimeStepInfo(DataArchive *archive,
                               GridP *grid,
                               int timestep,
-                              int useExtraCells)
+                              int loadExtraElements)
 {
   int numLevels = (*grid)->numLevels();
   TimeStepInfo *stepInfo = new TimeStepInfo();
@@ -306,7 +306,7 @@ TimeStepInfo* getTimeStepInfo(DataArchive *archive,
       // let VisIt believe they are part of the original data. This is
       // accomplished by setting <meshtype>_low and <meshtype>_high to
       // the extra cell boundaries so that VisIt is none the wiser.
-      if (useExtraCells == NONE)
+      if (loadExtraElements == NONE)
       {
         patchInfo.setBounds(&patch->getCellLowIndex()[0],
                             &patch->getCellHighIndex()[0], "CC_Mesh");
@@ -319,7 +319,7 @@ TimeStepInfo* getTimeStepInfo(DataArchive *archive,
         patchInfo.setBounds(&patch->getSFCZLowIndex()[0],
                             &patch->getSFCZHighIndex()[0], "SFCZ_Mesh");
       }
-      else if (useExtraCells == CELLS)
+      else if (loadExtraElements == CELLS)
       {
         patchInfo.setBounds(&patch->getExtraCellLowIndex()[0],
                             &patch->getExtraCellHighIndex()[0], "CC_Mesh");
@@ -332,7 +332,7 @@ TimeStepInfo* getTimeStepInfo(DataArchive *archive,
         patchInfo.setBounds(&patch->getExtraSFCZLowIndex()[0],
                             &patch->getExtraSFCZHighIndex()[0], "SFCZ_Mesh");
       }
-      else if (useExtraCells == PATCHES)
+      else if (loadExtraElements == PATCHES)
       {
         IntVector ilow;
         IntVector ihigh;
@@ -388,7 +388,7 @@ static GridDataRaw* readGridData(DataArchive *archive,
                                  int timestep,
                                  int low[3],
                                  int high[3],
-                                 int useExtraCells)
+                                 int loadExtraElements)
 {
   if( archive->exists( variable_name, patch, timestep ) )
   {
@@ -409,7 +409,7 @@ static GridDataRaw* readGridData(DataArchive *archive,
     VAR<T> var;
     
     // This queries just the patch
-    if( useExtraCells == NONE )
+    if( loadExtraElements == NONE )
     {
       IntVector ilow(low[0], low[1], low[2]);
       IntVector ihigh(high[0], high[1], high[2]);
@@ -418,11 +418,11 @@ static GridDataRaw* readGridData(DataArchive *archive,
                            level.get_rep(), timestep, ilow, ihigh);
     }
     // This queries the entire patch, including extra cells and boundary cells
-    else if( useExtraCells == CELLS )
+    else if( loadExtraElements == CELLS )
     {
       archive->query(var, variable_name, material, patch, timestep);
     }
-    else if( useExtraCells == PATCHES )
+    else if( loadExtraElements == PATCHES )
     {
       // IntVector ilow(low[0], low[1], low[2]);
       // IntVector ihigh(high[0], high[1], high[2]);
@@ -519,7 +519,7 @@ static GridDataRaw* readPatchData(DataArchive *archive,
                                   int timestep,
                                   int low[3],
                                   int high[3],
-                                  int useExtraCells)
+                                  int loadExtraElements)
 {
   if( archive->exists( variable_name, patch, timestep ) )
   {
@@ -588,31 +588,31 @@ GridDataRaw* getGridDataMainType(DataArchive *archive,
                                  int timestep,
                                  int low[3],
                                  int high[3],
-                                 int useExtraCells,
+                                 int loadExtraElements,
                                  const Uintah::TypeDescription *subtype)
 {
   switch (subtype->getType()) {
   case Uintah::TypeDescription::double_type:
     return readGridData<VAR, double>(archive, patch, level, variable_name,
-                                     material, timestep, low, high, useExtraCells);
+                                     material, timestep, low, high, loadExtraElements);
   case Uintah::TypeDescription::float_type:
     return readGridData<VAR, float>(archive, patch, level, variable_name,
-                                    material, timestep, low, high, useExtraCells);
+                                    material, timestep, low, high, loadExtraElements);
   case Uintah::TypeDescription::int_type:
     return readGridData<VAR, int>(archive, patch, level, variable_name,
-                                  material, timestep, low, high, useExtraCells);
+                                  material, timestep, low, high, loadExtraElements);
   case Uintah::TypeDescription::Vector:
     return readGridData<VAR, Vector>(archive, patch, level, variable_name,
-                                     material, timestep, low, high, useExtraCells);
+                                     material, timestep, low, high, loadExtraElements);
   case Uintah::TypeDescription::Stencil7:
     return readGridData<VAR, Stencil7>(archive, patch, level, variable_name,
-                                       material, timestep, low, high, useExtraCells);
+                                       material, timestep, low, high, loadExtraElements);
   case Uintah::TypeDescription::Stencil4:
     return readGridData<VAR, Stencil4>(archive, patch, level, variable_name,
-                                       material, timestep, low, high, useExtraCells);
+                                       material, timestep, low, high, loadExtraElements);
   case Uintah::TypeDescription::Matrix3:
     return readGridData<VAR, Matrix3>(archive, patch, level, variable_name,
-                                      material, timestep, low, high, useExtraCells);
+                                      material, timestep, low, high, loadExtraElements);
   case Uintah::TypeDescription::bool_type:
   case Uintah::TypeDescription::short_int_type:
   case Uintah::TypeDescription::long_type:
@@ -642,20 +642,20 @@ GridDataRaw* getPatchDataMainType(DataArchive *archive,
                                   int timestep,
                                   int low[3],
                                   int high[3],
-                                  int useExtraCells,
+                                  int loadExtraElements,
                                   const Uintah::TypeDescription *subtype)
 {
   switch (subtype->getType())
   {
   case Uintah::TypeDescription::double_type:
     return readPatchData<VAR, double>(archive, patch, level, variable_name,
-                                      material, timestep, low, high, useExtraCells);
+                                      material, timestep, low, high, loadExtraElements);
   case Uintah::TypeDescription::float_type:
     return readPatchData<VAR, float>(archive, patch, level, variable_name,
-                                     material, timestep, low, high, useExtraCells);
+                                     material, timestep, low, high, loadExtraElements);
   case Uintah::TypeDescription::int_type:
     return readPatchData<VAR, int>(archive, patch, level, variable_name,
-                                   material, timestep, low, high, useExtraCells);
+                                   material, timestep, low, high, loadExtraElements);
   case Uintah::TypeDescription::Vector:
   case Uintah::TypeDescription::Stencil7:
   case Uintah::TypeDescription::Stencil4:
@@ -690,7 +690,7 @@ GridDataRaw* getGridData(DataArchive *archive,
                          int timestep,
                          int low[3],
                          int high[3],
-                         int useExtraCells)
+                         int loadExtraElements)
 {
   LevelP level = (*grid)->getLevel(level_i);
   const Patch *patch = level->getPatch(patch_i);
@@ -726,27 +726,27 @@ GridDataRaw* getGridData(DataArchive *archive,
   case Uintah::TypeDescription::CCVariable:
     return getGridDataMainType<CCVariable>(archive, patch, level,
                                            variable_name, material, timestep,
-                                           low, high, useExtraCells, subtype);
+                                           low, high, loadExtraElements, subtype);
   case Uintah::TypeDescription::NCVariable:
     return getGridDataMainType<NCVariable>(archive, patch, level,
                                            variable_name, material, timestep,
-                                           low, high, useExtraCells, subtype);
+                                           low, high, loadExtraElements, subtype);
   case Uintah::TypeDescription::SFCXVariable:
     return getGridDataMainType<SFCXVariable>(archive, patch, level,
                                              variable_name, material, timestep,
-                                             low, high, useExtraCells, subtype);
+                                             low, high, loadExtraElements, subtype);
   case Uintah::TypeDescription::SFCYVariable:
     return getGridDataMainType<SFCYVariable>(archive, patch, level,
                                              variable_name, material, timestep,
-                                             low, high, useExtraCells, subtype);
+                                             low, high, loadExtraElements, subtype);
   case Uintah::TypeDescription::SFCZVariable:
     return getGridDataMainType<SFCZVariable>(archive, patch, level,
                                              variable_name, material, timestep,
-                                             low, high, useExtraCells, subtype);
+                                             low, high, loadExtraElements, subtype);
   case Uintah::TypeDescription::PerPatch:
     return getPatchDataMainType<PerPatch>(archive, patch, level,
                                           variable_name, material, timestep,
-                                          low, high, useExtraCells, subtype);
+                                          low, high, loadExtraElements, subtype);
   default:
     std::cerr << "Uintah::uda2vis::getGridData :"
               << "unknown subtype: " << subtype->getName()
@@ -949,7 +949,7 @@ namespace Uintah {
 // This uses the scheduler for in-situ.
 TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
                               GridP gridP,
-                              int useExtraCells)
+                              int loadExtraElements)
 {
   DataWarehouse    * dw = schedulerP->getLastDW();
   LoadBalancer * lb = schedulerP->getLoadBalancer();
@@ -1050,7 +1050,7 @@ TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
       // let VisIt believe they are part of the original data. This is
       // accomplished by setting <meshtype>_low and <meshtype>_high to
       // the extra cell boundaries so that VisIt is none the wiser.
-      if (useExtraCells == NONE)
+      if (loadExtraElements == NONE)
       {
         patchInfo.setBounds(&patch->getCellLowIndex()[0],
                             &patch->getCellHighIndex()[0], "CC_Mesh");
@@ -1063,7 +1063,7 @@ TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
         patchInfo.setBounds(&patch->getSFCZLowIndex()[0],
                             &patch->getSFCZHighIndex()[0], "SFCZ_Mesh");
       }
-      else if (useExtraCells == CELLS)
+      else if (loadExtraElements == CELLS)
       {
         patchInfo.setBounds(&patch->getExtraCellLowIndex()[0],
                             &patch->getExtraCellHighIndex()[0], "CC_Mesh");
@@ -1076,7 +1076,7 @@ TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
         patchInfo.setBounds(&patch->getExtraSFCZLowIndex()[0],
                             &patch->getExtraSFCZHighIndex()[0], "SFCZ_Mesh");
       }
-      else if (useExtraCells == PATCHES)
+      else if (loadExtraElements == PATCHES)
       {
         IntVector ilow;
         IntVector ihigh;
@@ -1259,7 +1259,7 @@ static GridDataRaw* readGridData(DataWarehouse *dw,
                                  int material,
                                  int low[3],
                                  int high[3],
-                                 int useExtraCells)
+                                 int loadExtraElements)
 {
   if( dw->exists( varLabel, material, patch ) )
   {
@@ -1280,7 +1280,7 @@ static GridDataRaw* readGridData(DataWarehouse *dw,
     VAR<T> var;
 
     // This queries just the patch
-    if( useExtraCells == NONE )
+    if( loadExtraElements == NONE )
     {
       IntVector ilow(  low[0],  low[1],  low[2]);
       IntVector ihigh(high[0], high[1], high[2]);
@@ -1288,11 +1288,11 @@ static GridDataRaw* readGridData(DataWarehouse *dw,
       dw->getRegion( var, varLabel, material, level.get_rep(), ilow, ihigh );
     }
     // This queries the entire patch, including extra cells and boundary cells
-    else if( useExtraCells == CELLS )
+    else if( loadExtraElements == CELLS )
     {
       dw->get( var, varLabel, material, patch, Ghost::None, 0 );
     }
-    else if( useExtraCells == PATCHES )
+    else if( loadExtraElements == PATCHES )
     {
       // IntVector ilow(  low[0],  low[1],  low[2]);
       // IntVector ihigh(high[0], high[1], high[2]);
@@ -1387,7 +1387,7 @@ static GridDataRaw* readPatchData(DataWarehouse *dw,
                                   int material,
                                   int low[3],
                                   int high[3],
-                                  int useExtraCells)
+                                  int loadExtraElements)
 {
   if( dw->exists( varLabel, material, patch ) )
   {
@@ -1456,32 +1456,32 @@ GridDataRaw* getGridDataMainType(DataWarehouse *dw,
                                  int material,
                                  int low[3],
                                  int high[3],
-                                 int useExtraCells,
+                                 int loadExtraElements,
                                  const Uintah::TypeDescription *subtype)
 {  
   switch (subtype->getType())
   {
   case Uintah::TypeDescription::double_type:
     return readGridData<VAR, double>(dw, patch, level, varLabel,
-                                     material, low, high, useExtraCells);
+                                     material, low, high, loadExtraElements);
   case Uintah::TypeDescription::float_type:
     return readGridData<VAR, float>(dw, patch, level, varLabel,
-                                    material, low, high, useExtraCells);
+                                    material, low, high, loadExtraElements);
   case Uintah::TypeDescription::int_type:
     return readGridData<VAR, int>(dw, patch, level, varLabel,
-                                  material, low, high, useExtraCells);
+                                  material, low, high, loadExtraElements);
   case Uintah::TypeDescription::Vector:
     return readGridData<VAR, Vector>(dw, patch, level, varLabel,
-                                     material, low, high, useExtraCells);
+                                     material, low, high, loadExtraElements);
   case Uintah::TypeDescription::Stencil7:
     return readGridData<VAR, Stencil7>(dw, patch, level, varLabel,
-                                       material, low, high, useExtraCells);
+                                       material, low, high, loadExtraElements);
   case Uintah::TypeDescription::Stencil4:
     return readGridData<VAR, Stencil4>(dw, patch, level, varLabel,
-                                       material, low, high, useExtraCells);
+                                       material, low, high, loadExtraElements);
   case Uintah::TypeDescription::Matrix3:
     return readGridData<VAR, Matrix3>(dw, patch, level, varLabel,
-                                      material, low, high, useExtraCells);
+                                      material, low, high, loadExtraElements);
   case Uintah::TypeDescription::bool_type:
   case Uintah::TypeDescription::short_int_type:
   case Uintah::TypeDescription::long_type:
@@ -1509,20 +1509,20 @@ GridDataRaw* getPatchDataMainType(DataWarehouse *dw,
                                   int material,
                                   int low[3],
                                   int high[3],
-                                  int useExtraCells,
+                                  int loadExtraElements,
                                   const Uintah::TypeDescription *subtype)
 {
   switch (subtype->getType())
   {
   case Uintah::TypeDescription::double_type:
     return readPatchData<VAR, double>(dw, patch, level, varLabel,
-                                      material, low, high, useExtraCells);
+                                      material, low, high, loadExtraElements);
   case Uintah::TypeDescription::float_type:
     return readPatchData<VAR, float>(dw, patch, level, varLabel,
-                                     material, low, high, useExtraCells);
+                                     material, low, high, loadExtraElements);
   case Uintah::TypeDescription::int_type:
     return readPatchData<VAR, int>(dw, patch, level, varLabel,
-                                   material, low, high, useExtraCells);
+                                   material, low, high, loadExtraElements);
   case Uintah::TypeDescription::Vector:
   case Uintah::TypeDescription::Stencil7:
   case Uintah::TypeDescription::Stencil4:
@@ -1555,7 +1555,7 @@ GridDataRaw* getGridData(SchedulerP schedulerP,
                          int material,
                          int low[3],
                          int high[3],
-                         int useExtraCells)
+                         int loadExtraElements)
 {
   DataWarehouse *dw = schedulerP->getLastDW();
   
@@ -1607,27 +1607,27 @@ GridDataRaw* getGridData(SchedulerP schedulerP,
   case Uintah::TypeDescription::CCVariable:
     return getGridDataMainType<constCCVariable>(dw, patch, level,
                                                 varLabel, material,
-                                                low, high, useExtraCells, subtype);
+                                                low, high, loadExtraElements, subtype);
   case Uintah::TypeDescription::NCVariable:
     return getGridDataMainType<constNCVariable>(dw, patch, level,
                                                 varLabel, material,
-                                                low, high, useExtraCells, subtype);
+                                                low, high, loadExtraElements, subtype);
   case Uintah::TypeDescription::SFCXVariable:
     return getGridDataMainType<constSFCXVariable>(dw, patch, level,
                                                   varLabel, material,
-                                                  low, high, useExtraCells, subtype);
+                                                  low, high, loadExtraElements, subtype);
   case Uintah::TypeDescription::SFCYVariable:
     return getGridDataMainType<constSFCYVariable>(dw, patch, level,
                                                   varLabel, material,
-                                                  low, high, useExtraCells, subtype);
+                                                  low, high, loadExtraElements, subtype);
   case Uintah::TypeDescription::SFCZVariable:
     return getGridDataMainType<constSFCZVariable>(dw, patch, level,
                                                   varLabel, material,
-                                                  low, high, useExtraCells, subtype);
+                                                  low, high, loadExtraElements, subtype);
   case Uintah::TypeDescription::PerPatch:
     return getPatchDataMainType<PerPatch>(dw, patch, level,
                                           varLabel, material,
-                                          low, high, useExtraCells, subtype);
+                                          low, high, loadExtraElements, subtype);
   default:
     std::cerr << "Uintah/VisIt Libsim Error: unknown type: "
               << maintype->getName() << " for variable: "

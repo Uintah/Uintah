@@ -88,7 +88,7 @@ typedef struct
   double delt_next;
 
   // UDA archive variables.
-  bool useExtraCells;
+  int  loadExtraElements;
   bool forceMeshReload;
   std::string mesh_for_patch_data;
   
