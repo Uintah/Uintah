@@ -55,7 +55,8 @@ GridDataRaw* getGridData(SchedulerP schedulerP,
 			 std::string variable_name,
 			 int material,
 			 int low[3],
-			 int high[3]);
+			 int high[3],
+			 bool getRegion);
 
 ParticleDataRaw* getParticleData(SchedulerP schedulerP,
 				 GridP gridP,

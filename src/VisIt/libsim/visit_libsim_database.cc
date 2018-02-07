@@ -1436,7 +1436,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
   SchedulerP schedulerP      = sim->simController->getSchedulerP();
   GridP gridP                = sim->gridP;
 
-  // bool &useExtraCells   = sim->useExtraCells;
+  bool &useExtraCells   = sim->useExtraCells;
   // bool &forceMeshReload = sim->forceMeshReload;
   std::string &mesh_for_patch_data = sim->mesh_for_patch_data;
   TimeStepInfo* &stepInfo = sim->stepInfo;
@@ -1750,7 +1750,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
     else
     {
       gd = getGridData(schedulerP, gridP, level, local_patch, varName,
-                       atoi(matl.c_str()), plow, phigh);
+                       atoi(matl.c_str()), plow, phigh, !useExtraCells);
 
       if( gd )
       {
