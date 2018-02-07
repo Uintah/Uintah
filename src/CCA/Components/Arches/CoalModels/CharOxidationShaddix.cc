@@ -93,19 +93,19 @@ CharOxidationShaddix::problemSetup(const ProblemSpecP& params, int qn)
     }
 
   // create raw coal mass var label
-  std::string rcmass_root = ParticleTools::parse_for_role_to_label(db, "raw_coal");
-  std::string rcmass_name = ParticleTools::append_env( rcmass_root, d_quadNode );
-  std::string rcmassqn_name = ParticleTools::append_qn_env(rcmass_root, d_quadNode );
+  std::string rcmass_root = ArchesCore::parse_for_role_to_label(db, "raw_coal");
+  std::string rcmass_name = ArchesCore::append_env( rcmass_root, d_quadNode );
+  std::string rcmassqn_name = ArchesCore::append_qn_env(rcmass_root, d_quadNode );
   _rcmass_varlabel = VarLabel::find(rcmass_name);
-  std::string rc_weighted_scaled_name = ParticleTools::append_qn_env( rcmass_root, d_quadNode );
+  std::string rc_weighted_scaled_name = ArchesCore::append_qn_env( rcmass_root, d_quadNode );
   _rcmass_weighted_scaled_varlabel = VarLabel::find(rc_weighted_scaled_name);
 
   // check for char mass and get scaling constant
-  std::string char_root = ParticleTools::parse_for_role_to_label(db, "char");
-  std::string char_name = ParticleTools::append_env( char_root, d_quadNode );
-  std::string charqn_name = ParticleTools::append_qn_env( char_root, d_quadNode );
+  std::string char_root = ArchesCore::parse_for_role_to_label(db, "char");
+  std::string char_name = ArchesCore::append_env( char_root, d_quadNode );
+  std::string charqn_name = ArchesCore::append_qn_env( char_root, d_quadNode );
   _char_varlabel = VarLabel::find(char_name);
-  std::string char_weighted_scaled_name = ParticleTools::append_qn_env( char_root, d_quadNode );
+  std::string char_weighted_scaled_name = ArchesCore::append_qn_env( char_root, d_quadNode );
   _charmass_weighted_scaled_varlabel = VarLabel::find(char_weighted_scaled_name);
 
 
@@ -117,7 +117,7 @@ CharOxidationShaddix::problemSetup(const ProblemSpecP& params, int qn)
 
   //CHAR get the birth term if any:
   const std::string char_birth_name = char_eqn.get_model_by_type( "BirthDeath" );
-  std::string char_birth_qn_name = ParticleTools::append_qn_env(char_birth_name, d_quadNode);
+  std::string char_birth_qn_name = ArchesCore::append_qn_env(char_birth_name, d_quadNode);
   if ( char_birth_name != "NULLSTRING" ){
     _char_birth_label = VarLabel::find( char_birth_qn_name );
   }
@@ -130,24 +130,24 @@ CharOxidationShaddix::problemSetup(const ProblemSpecP& params, int qn)
 
   //RAW COAL get the birth term if any:
   const std::string rawcoal_birth_name = rcmass_eqn.get_model_by_type( "BirthDeath" );
-  std::string rawcoal_birth_qn_name = ParticleTools::append_qn_env(rawcoal_birth_name, d_quadNode);
+  std::string rawcoal_birth_qn_name = ArchesCore::append_qn_env(rawcoal_birth_name, d_quadNode);
   if ( rawcoal_birth_name != "NULLSTRING" ){
     _rawcoal_birth_label = VarLabel::find( rawcoal_birth_qn_name );
   }
 
   // check for particle temperature
-  std::string temperature_root = ParticleTools::parse_for_role_to_label(db, "temperature");
-  std::string temperature_name = ParticleTools::append_env( temperature_root, d_quadNode );
+  std::string temperature_root = ArchesCore::parse_for_role_to_label(db, "temperature");
+  std::string temperature_name = ArchesCore::append_env( temperature_root, d_quadNode );
   _particle_temperature_varlabel = VarLabel::find(temperature_name);
   if(_particle_temperature_varlabel == 0){
     throw ProblemSetupException("Error: Unable to find coal temperature label!!!! Looking for name: "+temperature_name, __FILE__, __LINE__);
   }
 
   // check for length
-  _nQn_part = ParticleTools::get_num_env(db,ParticleTools::DQMOM);
-  std::string length_root = ParticleTools::parse_for_role_to_label(db, "size");
+  _nQn_part = ArchesCore::get_num_env(db,ArchesCore::DQMOM_METHOD);
+  std::string length_root = ArchesCore::parse_for_role_to_label(db, "size");
   for (int i=0; i<_nQn_part;i++ ){
-    std::string length_name = ParticleTools::append_env( length_root, i );
+    std::string length_name = ArchesCore::append_env( length_root, i );
     _length_varlabel.push_back(  VarLabel::find(length_name));
   }
 
@@ -163,9 +163,9 @@ CharOxidationShaddix::problemSetup(const ProblemSpecP& params, int qn)
   }
 
   // get weight scaling constant
-  std::string weightqn_name = ParticleTools::append_qn_env("w", d_quadNode);
+  std::string weightqn_name = ArchesCore::append_qn_env("w", d_quadNode);
   for (int i=0; i<_nQn_part;i++ ){
-  std::string weight_name = ParticleTools::append_env("w", i);
+  std::string weight_name = ArchesCore::append_env("w", i);
     _weight_varlabel.push_back( VarLabel::find(weight_name) );
   }
   EqnBase& temp_weight_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(weightqn_name);
@@ -173,7 +173,7 @@ CharOxidationShaddix::problemSetup(const ProblemSpecP& params, int qn)
   _weight_small = weight_eqn.getSmallClipPlusTol();
   _weight_scaling_constant = weight_eqn.getScalingConstant(d_quadNode);
 
-  std::string number_density_name = ParticleTools::parse_for_role_to_label(db, "total_number_density");
+  std::string number_density_name = ArchesCore::parse_for_role_to_label(db, "total_number_density");
   _number_density_varlabel = VarLabel::find(number_density_name);
 
   // get Char source term label and devol lable from the devolatilization model
@@ -519,11 +519,11 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
 
            double PO2_inf = O2ph/_WO2/MWmixph;
            double AreaSum =0;
-           for (int ix=0; ix<_nQn_part;ix++ ){ 
+           for (int ix=0; ix<_nQn_part;ix++ ){
              AreaSum+=  weight[ix](i,j,k)*length[ix](i,j,k)*length[ix](i,j,k);
            }
            double surfaceAreaFraction=weightph*lengthph*lengthph/AreaSum;
-        
+
 
 
            if((PO2_inf < 1e-12) || (rawcoal_massph+char_massph) < _small) {
@@ -547,10 +547,10 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
              CO2CO = 0.0;
              q = 0.0;
              icount = 0;
-          
+
           // Calculate O2 diffusion coefficient
-             DO2 = (CO2ph/_WCO2 + H2Oph/_WH2O + N2ph/_WN2)/(CO2ph/(_WCO2*_D1) + 
-                   H2Oph/(_WH2O*_D2) + 
+             DO2 = (CO2ph/_WCO2 + H2Oph/_WH2O + N2ph/_WN2)/(CO2ph/(_WCO2*_D1) +
+                   H2Oph/(_WH2O*_D2) +
                    N2ph/(_WN2*_D3))*(std::pow((temperatureph/_T0),1.5));
           // Concentration C = P/RT
              Conc = MWmixph*denph*1000.0;
@@ -577,7 +577,7 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
                PO2_surf_tmp = PO2_surf_old;
                PO2_surf_old=PO2_surf_new;
                PO2_surf_new=PO2_surf_tmp - (PO2_surf_new - PO2_surf_tmp)/(f1-f0) * f0;
-               PO2_surf_new = std::max(0.0, std::min(PO2_inf, PO2_surf_new));            
+               PO2_surf_new = std::max(0.0, std::min(PO2_inf, PO2_surf_new));
                if (std::abs(PO2_surf_new-PO2_surf_old) < d_tol){
                  PO2_surf=PO2_surf_new;
                  CO2CO = 0.02*(std::pow(PO2_surf,0.21))*expFactor;
@@ -598,18 +598,18 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
 
            char_production_rate_ = devolCharph;
            rc_destruction_rate_ = devolRCph;
-           double gamma1=(_WC/_WO2)*((CO2CO+1.0)/(CO2CO+0.5)); 
+           double gamma1=(_WC/_WO2)*((CO2CO+1.0)/(CO2CO+0.5));
            max_char_reaction_rate_O2_ = std::max( (O2ph*denph*gamma1*surfaceAreaFraction)/(dt*weightph) , 0.0 );
 
            double max_char_reaction_rate_ = 0.0;
 
-           if ( add_rawcoal_birth && add_char_birth ){ 
-             max_char_reaction_rate_ = std::max((rawcoal_massph+char_massph)/(dt) 
+           if ( add_rawcoal_birth && add_char_birth ){
+             max_char_reaction_rate_ = std::max((rawcoal_massph+char_massph)/(dt)
                     +( (RHS_sourceph + RC_RHS_source(i,j,k)) / (vol*weightph) + (char_production_rate_ + rc_destruction_rate_
                         +   char_birth(i,j,k) + rawcoal_birth(i,j,k) )/ weightph )
                     *_char_scaling_constant*_weight_scaling_constant, 0.0); // equation assumes RC_scaling=Char_scaling
-           } else { 
-             max_char_reaction_rate_ = std::max((rawcoal_massph+char_massph)/(dt) 
+           } else {
+             max_char_reaction_rate_ = std::max((rawcoal_massph+char_massph)/(dt)
                   +((RHS_sourceph + RC_RHS_source(i,j,k)) / (vol*weightph) + (char_production_rate_ + rc_destruction_rate_
                       )/ weightph )
                   *_char_scaling_constant*_weight_scaling_constant, 0.0); // equation assumes RC_scaling=Char_scaling
@@ -617,7 +617,7 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
 
 
            max_char_reaction_rate_ = std::min( max_char_reaction_rate_ ,max_char_reaction_rate_O2_ );
-           char_reaction_rate_ = std::min(_pi*(std::pow(lengthph,2.0))*_WC*q , max_char_reaction_rate_); // kg/(s.#)    
+           char_reaction_rate_ = std::min(_pi*(std::pow(lengthph,2.0))*_WC*q , max_char_reaction_rate_); // kg/(s.#)
 
            particle_temp_rate_ = -char_reaction_rate_/_WC/(1.0+CO2CO)*(CO2CO*_HF_CO2 + _HF_CO); // J/(s.#)
            char_rate(i,j,k) = (-char_reaction_rate_*weightph+char_production_rate_)/(_char_scaling_constant*_weight_scaling_constant);
@@ -625,7 +625,7 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
            particle_temp_rate(i,j,k) = particle_temp_rate_*weightph; // J/(s.m^3)
            surface_rate(i,j,k) = -_WC*q;  // in kg/s/m^2
            PO2surf_(i,j,k) = PO2_surf;
-        //additional check to make sure we have positive rates when we have small amounts of rc and char.. 
+        //additional check to make sure we have positive rates when we have small amounts of rc and char..
            if( char_rate(i,j,k)>0.0 ) {
              char_rate(i,j,k) = 0;
              gas_char_rate(i,j,k) = 0;

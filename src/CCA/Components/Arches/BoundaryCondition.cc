@@ -2254,7 +2254,7 @@ BoundaryCondition::setupBCs( ProblemSpecP db, const LevelP& level )
               //-------------------------------------------------------//
 
               int qn_total;
-              qn_total=ParticleTools::get_num_env(db_face,ParticleTools::DQMOM);
+              qn_total=ArchesCore::get_num_env(db_face,ArchesCore::DQMOM_METHOD);
 
               double MassParticleDensity=0;  // (kg/ m^3)
               my_info.vWeights = std::vector<double>(qn_total) ;
@@ -2265,13 +2265,13 @@ BoundaryCondition::setupBCs( ProblemSpecP db, const LevelP& level )
               //// convert #/m^3  --->  kg/m^3, we need weight, diameter, and particle density at inlet
               for (int qn=0; qn< qn_total; qn++){
                 // get weight BC
-                double weightScalingConstant = ParticleTools::getScalingConstant(db_BCType,"weight",qn);
+                double weightScalingConstant = ArchesCore::get_scaling_constant(db_BCType,"weight",qn);
                 double weight;
                 for ( ProblemSpecP db_BCType2 = db_face->findBlock("BCType"); db_BCType2 != nullptr; db_BCType2 = db_BCType2->findNextBlock("BCType") ) {
                   std::string tempLabelName;
                   db_BCType2->getAttribute("label",tempLabelName);
 
-                  std::string weightNode=ParticleTools::append_qn_env ("w",qn);
+                  std::string weightNode=ArchesCore::append_qn_env ("w",qn);
                   if (tempLabelName == weightNode){
                     db_BCType2->require("value",weight);  // read in bc for weights
                     break;
@@ -2286,15 +2286,15 @@ BoundaryCondition::setupBCs( ProblemSpecP db, const LevelP& level )
 
                 // get radius BC (radius particle model will dominate BC specification)
                 double diameter;
-                std::string sizeLabelName =ParticleTools::parse_for_role_to_label(db_BCType,"size");
-                if (ParticleTools::getModelValue(db_BCType,sizeLabelName,qn,diameter)== false){
-                  double diameterScalingConstant = ParticleTools::getScalingConstant(db_BCType,sizeLabelName,qn);
+                std::string sizeLabelName =ArchesCore::parse_for_role_to_label(db_BCType,"size");
+                if (ArchesCore::get_model_value(db_BCType,sizeLabelName,qn,diameter)== false){
+                  double diameterScalingConstant = ArchesCore::get_scaling_constant(db_BCType,sizeLabelName,qn);
 
                   for ( ProblemSpecP db_BCType2 = db_face->findBlock("BCType"); db_BCType2 != nullptr; db_BCType2 = db_BCType2->findNextBlock("BCType") ) {
                     std::string tempLabelName;
                     db_BCType2->getAttribute("label",tempLabelName);
 
-                    std::string sizeNode=ParticleTools::append_qn_env(sizeLabelName,qn);
+                    std::string sizeNode=ArchesCore::append_qn_env(sizeLabelName,qn);
                     if( tempLabelName == sizeNode ){
                       db_BCType2->require( "value", diameter );
                       break;
@@ -2309,16 +2309,16 @@ BoundaryCondition::setupBCs( ProblemSpecP db, const LevelP& level )
 
                 std::string str3D = "uvw";
                 for(unsigned int i = 0; i<str3D.length(); i++) {
-                  std::string velLabelName =ParticleTools::parse_for_role_to_label(db_BCType,std::string (1,str3D[i])+"vel");
-                  my_info.vVelScalingConst[qn][i] =  ParticleTools::getScalingConstant(db_BCType,velLabelName,qn);
-                  my_info.vVelLabels[qn][i] = ParticleTools::append_qn_env(velLabelName,qn);
+                  std::string velLabelName =ArchesCore::parse_for_role_to_label(db_BCType,std::string (1,str3D[i])+"vel");
+                  my_info.vVelScalingConst[qn][i] =  ArchesCore::get_scaling_constant(db_BCType,velLabelName,qn);
+                  my_info.vVelLabels[qn][i] = ArchesCore::append_qn_env(velLabelName,qn);
                 }
 
                 // compute actual particle density (#/m^3)
                 weight=weight*weightScalingConstant;
 
                 // get particle density
-                double density = ParticleTools::getInletParticleDensity(db_face);
+                double density = ArchesCore::get_inlet_particle_density(db_face);
 
                 MassParticleDensity+=weight*M_PI*diameter*diameter*diameter/6.0*density;  // (kg/ m^3)
               }

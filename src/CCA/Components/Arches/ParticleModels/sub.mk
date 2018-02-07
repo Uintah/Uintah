@@ -40,8 +40,9 @@ SRCS +=  \
          $(SRCDIR)/FOWYDevol.cc            \
          $(SRCDIR)/ParticleModelFactory.cc \
          $(SRCDIR)/ShaddixOxidation.cc     \
-         $(SRCDIR)/CharOxidationps.cc     \
-         $(SRCDIR)/PartVariablesDQMOM.cc     \
+         $(SRCDIR)/CharOxidationps.cc      \
+         $(SRCDIR)/PartVariablesDQMOM.cc   \
+         $(SRCDIR)/ParticleTools.cc        \
          $(SRCDIR)/TotNumDensity.cc        
 
 

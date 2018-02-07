@@ -99,36 +99,36 @@ Thermophoresis::problemSetup(const ProblemSpecP& params, int qn)
   // Need velocity scaling constant
   std::string vel_root;
   if ( _dir == 0 ){
-    vel_root = ParticleTools::parse_for_role_to_label(db, "uvel");
+    vel_root = ArchesCore::parse_for_role_to_label(db, "uvel");
   } else if ( _dir == 1){
-    vel_root = ParticleTools::parse_for_role_to_label(db, "vvel");
+    vel_root = ArchesCore::parse_for_role_to_label(db, "vvel");
   } else {
-    vel_root = ParticleTools::parse_for_role_to_label(db, "wvel");
+    vel_root = ArchesCore::parse_for_role_to_label(db, "wvel");
   }
 
-  vel_root = ParticleTools::append_qn_env( vel_root, d_quadNode );
+  vel_root = ArchesCore::append_qn_env( vel_root, d_quadNode );
   EqnBase& temp_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(vel_root);
   DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(temp_current_eqn);
   _vel_scaling_constant = current_eqn.getScalingConstant(d_quadNode);
 
   // Need a size IC:
-  std::string length_root = ParticleTools::parse_for_role_to_label(db, "size");
-  std::string length_name = ParticleTools::append_env( length_root, d_quadNode );
+  std::string length_root = ArchesCore::parse_for_role_to_label(db, "size");
+  std::string length_name = ArchesCore::append_env( length_root, d_quadNode );
   _length_varlabel = VarLabel::find(length_name);
 
   // Need a density
-  std::string density_root = ParticleTools::parse_for_role_to_label(db, "density");
-  std::string density_name = ParticleTools::append_env( density_root, d_quadNode );
+  std::string density_root = ArchesCore::parse_for_role_to_label(db, "density");
+  std::string density_name = ArchesCore::append_env( density_root, d_quadNode );
   _particle_density_varlabel = VarLabel::find(density_name);
 
   // create particle temperature label
-  std::string temperature_root = ParticleTools::parse_for_role_to_label(db, "temperature");
-  std::string temperature_name = ParticleTools::append_env( temperature_root, d_quadNode );
+  std::string temperature_root = ArchesCore::parse_for_role_to_label(db, "temperature");
+  std::string temperature_name = ArchesCore::append_env( temperature_root, d_quadNode );
   _particle_temperature_varlabel = VarLabel::find(temperature_name);
 
   // get weight scaling constant
-  std::string weightqn_name = ParticleTools::append_qn_env("w", d_quadNode);
-  std::string weight_name = ParticleTools::append_env("w", d_quadNode);
+  std::string weightqn_name = ArchesCore::append_qn_env("w", d_quadNode);
+  std::string weight_name = ArchesCore::append_env("w", d_quadNode);
   _weight_scaled_varlabel = VarLabel::find(weightqn_name);
   EqnBase& temp_weight_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(weightqn_name);
   DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(temp_weight_eqn);

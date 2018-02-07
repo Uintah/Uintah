@@ -297,7 +297,7 @@ void ICE::scheduleComputeDel_P(  SchedulerP& sched,
 
   printSchedule(level,cout_doing,"ICE::scheduleComputeDel_P");
   
-  t = scinew Task("ICE::scheduleComputeDel_P", this, &ICE::computeDel_P);
+  t = scinew Task("ICE::computeDel_P", this, &ICE::computeDel_P);
  
   t->requires(Task::NewDW, lb->sum_imp_delPLabel,    press_matl, oims, gn);     
   t->requires(Task::NewDW, lb->sumKappaLabel,        one_matl,   oims, gn);

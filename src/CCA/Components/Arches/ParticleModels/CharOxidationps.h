@@ -5,8 +5,9 @@
 #include <CCA/Components/Arches/GridTools.h>
 #include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
 #include <Core/Datatypes/DenseMatrix.h>
-#include <CCA/Components/Arches/ParticleModels/CharOxidationpsHelper.h> 
+#include <CCA/Components/Arches/ParticleModels/CharOxidationpsHelper.h>
 #include <CCA/Components/Arches/ChemMix/ChemHelper.h>
+#include <CCA/Components/Arches/ParticleModels/CoalHelper.h>
 
 #define SQUARE(x) x*x
 #define CUBE(x) x*x*x
@@ -98,17 +99,17 @@ private:
     std::vector< std::string > m_up_name;
     std::vector< std::string > m_vp_name;
     std::vector< std::string > m_wp_name;
-    std::string number_density_name; 
+    std::string number_density_name;
     // RHS
     //std::vector< std::string > m_RC_RHS;
     //std::vector< std::string > m_ic_RHS;
     //std::vector< std::string > m_w_RHS;
     //std::vector< std::string > m_length_RHS;
-    
-    // scaling constant 
+
+    // scaling constant
     double _weight_small;
     std::vector<double> m_weight_scaling_constant;
-    std::vector<double> m_char_scaling_constant; 
+    std::vector<double> m_char_scaling_constant;
     std::vector<double> m_RC_scaling_constant;
     std::vector<double> m_length_scaling_constant;
 
@@ -128,17 +129,17 @@ private:
     double _S;
     int _NUM_reactions{0}; //
 
-    double _p_void0; // 
-    double _rho_ash_bulk; // 
-    double _Sg0; // 
+    double _p_void0; //
+    double _rho_ash_bulk; //
+    double _Sg0; //
     double _Mh; // 12 kg carbon / kmole carbon
-    double _init_particle_density; // 
+    double _init_particle_density; //
     int _NUM_species; //
     std::vector<std::string> _species_names;
 
     double _ksi; // [J/mol]
-    std::vector< double > m_mass_ash; // 
-    std::vector< double > m_rho_org_bulk; // 
+    std::vector< double > m_mass_ash; //
+    std::vector< double > m_rho_org_bulk; //
     std::vector< double > m_p_voidmin;
 
     // parameter from other model
@@ -184,40 +185,40 @@ CharOxidationps<T>::problemSetup( ProblemSpecP& db ){
   //binary diffsuion at 293 K
   _T0 = 293.0;
   _tau = 1.9598;    //tortuosity
-  
-  m_nQn_part = ParticleTools::get_num_env(db,ParticleTools::DQMOM);
+
+  m_nQn_part = ArchesCore::get_num_env(db,ArchesCore::DQMOM_METHOD);
 
   // get Char source term label and devol label from the devolatilization model
-  // model  variables  
+  // model  variables
   std::string modelName = _task_name;//"char_rate";
   std::string delvol_model_name = "devol_rate";
   std::string surfAreaF_root = "surfaceAreaFraction";
-  
+
   for (int l=0; l<m_nQn_part; l++) {
     // Create a label for this model
-    m_modelLabel.push_back( ParticleTools::append_env( modelName, l));
+    m_modelLabel.push_back( ArchesCore::append_env( modelName, l));
     // Create the gas phase source term associated with this model
     std::string gasLabel_temp = modelName + "_gasSource";
-    m_gasLabel.push_back( ParticleTools::append_env( gasLabel_temp, l));
+    m_gasLabel.push_back( ArchesCore::append_env( gasLabel_temp, l));
     // Create the particle temperature source term associated with this model
     std::string particletemp_temp = modelName + "_particletempSource";
-    m_particletemp.push_back( ParticleTools::append_env( particletemp_temp, l));
+    m_particletemp.push_back( ArchesCore::append_env( particletemp_temp, l));
     // Create the particle size source term associated with this model
     std::string particleSize_temp  = modelName + "_particleSizeSource";
-    m_particleSize.push_back( ParticleTools::append_env( particleSize_temp, l));
+    m_particleSize.push_back( ArchesCore::append_env( particleSize_temp, l));
     // Create the char oxidation surface rate term associated with this model
     std::string surfacerate_temp = modelName + "_surfacerate";
-    m_surfacerate.push_back( ParticleTools::append_env( surfacerate_temp, l));
+    m_surfacerate.push_back( ArchesCore::append_env( surfacerate_temp, l));
     // Create the char oxidation PO2 surf term associated with this model
     //std::string PO2surf_temp = modelName + "_PO2surf";
-    //m_PO2surf.push_back( ParticleTools::append_env( PO2surf_temp, l));
-    m_devolRC.push_back( ParticleTools::append_env( delvol_model_name, l));
-    m_surfAreaF_name.push_back( ParticleTools::append_env( surfAreaF_root, l));
+    //m_PO2surf.push_back( ArchesCore::append_env( PO2surf_temp, l));
+    m_devolRC.push_back( ArchesCore::append_env( delvol_model_name, l));
+    m_surfAreaF_name.push_back( ArchesCore::append_env( surfAreaF_root, l));
 
   }
 
   _gasPressure=101325.; // Fix this
-  // gas variables  
+  // gas variables
   m_u_vel_name = ArchesCore::parse_ups_for_role( ArchesCore::UVELOCITY, db, "uVelocitySPBC" );
   m_v_vel_name = ArchesCore::parse_ups_for_role( ArchesCore::VVELOCITY, db, "vVelocitySPBC" );
   m_w_vel_name = ArchesCore::parse_ups_for_role( ArchesCore::WVELOCITY, db, "wVelocitySPBC" );
@@ -229,50 +230,50 @@ CharOxidationps<T>::problemSetup( ProblemSpecP& db ){
 
   m_gas_temperature_label = "temperature";
   m_MW_name = "mixture_molecular_weight";
-   
-  // particle variables 
+
+  // particle variables
 
   // check for particle temperature
-  std::string temperature_root = ParticleTools::parse_for_role_to_label(db, "temperature");
+  std::string temperature_root = ArchesCore::parse_for_role_to_label(db, "temperature");
   // check for length
-  std::string length_root      = ParticleTools::parse_for_role_to_label(db, "size");
+  std::string length_root      = ArchesCore::parse_for_role_to_label(db, "size");
   // Need a particle density
-  std::string density_root     = ParticleTools::parse_for_role_to_label(db, "density");
+  std::string density_root     = ArchesCore::parse_for_role_to_label(db, "density");
   // create raw coal mass var label
-  std::string rcmass_root      = ParticleTools::parse_for_role_to_label(db, "raw_coal");
+  std::string rcmass_root      = ArchesCore::parse_for_role_to_label(db, "raw_coal");
   // check for char mass and get scaling constant
-  std::string char_root        = ParticleTools::parse_for_role_to_label(db, "char");
-  number_density_name          = ParticleTools::parse_for_role_to_label(db, "total_number_density");
-  
+  std::string char_root        = ArchesCore::parse_for_role_to_label(db, "char");
+  number_density_name          = ArchesCore::parse_for_role_to_label(db, "total_number_density");
+
   // check for particle velocity
-  std::string up_root = ParticleTools::parse_for_role_to_label(db, "uvel");
-  std::string vp_root = ParticleTools::parse_for_role_to_label(db, "vvel");
-  std::string wp_root = ParticleTools::parse_for_role_to_label(db, "wvel");
-  
+  std::string up_root = ArchesCore::parse_for_role_to_label(db, "uvel");
+  std::string vp_root = ArchesCore::parse_for_role_to_label(db, "vvel");
+  std::string wp_root = ArchesCore::parse_for_role_to_label(db, "wvel");
+
   for (int l=0; l<m_nQn_part; l++) {
-    m_particle_temperature.push_back(ParticleTools::append_env( temperature_root, l ));
-    m_particle_length.push_back(ParticleTools::append_env( length_root, l ));
-    //m_particle_length_qn.push_back(ParticleTools::append_qn_env( length_root, l ));
-    m_particle_density.push_back(ParticleTools::append_env( density_root,l ));
-    m_rcmass.push_back(ParticleTools::append_env( rcmass_root,l ));
-    m_char_name.push_back(ParticleTools::append_env( char_root, l ));
-   
-    m_weight_name.push_back(ParticleTools::append_env("w", l));
-    m_up_name.push_back(ParticleTools::append_env(up_root, l));
-    m_vp_name.push_back(ParticleTools::append_env(vp_root, l));
-    m_wp_name.push_back(ParticleTools::append_env(wp_root, l));
+    m_particle_temperature.push_back(ArchesCore::append_env( temperature_root, l ));
+    m_particle_length.push_back(ArchesCore::append_env( length_root, l ));
+    //m_particle_length_qn.push_back(ArchesCore::append_qn_env( length_root, l ));
+    m_particle_density.push_back(ArchesCore::append_env( density_root,l ));
+    m_rcmass.push_back(ArchesCore::append_env( rcmass_root,l ));
+    m_char_name.push_back(ArchesCore::append_env( char_root, l ));
+
+    m_weight_name.push_back(ArchesCore::append_env("w", l));
+    m_up_name.push_back(ArchesCore::append_env(up_root, l));
+    m_vp_name.push_back(ArchesCore::append_env(vp_root, l));
+    m_wp_name.push_back(ArchesCore::append_env(wp_root, l));
   }
-  
+
 //  for (int l=0; l<m_nQn_part; l++) {
-    //std::string RC_RHS = ParticleTools::append_qn_env(rcmass_root,l )+"_RHS";
+    //std::string RC_RHS = ArchesCore::append_qn_env(rcmass_root,l )+"_RHS";
     //m_RC_RHS.push_back(RC_RHS);
-    //std::string ic_RHS = ParticleTools::append_qn_env(char_root, l ) +"_RHS";
+    //std::string ic_RHS = ArchesCore::append_qn_env(char_root, l ) +"_RHS";
     //m_ic_RHS.push_back(ic_RHS);
-    //std::string w_RHS = ParticleTools::append_qn_env("w", l ) + "_RHS";
+    //std::string w_RHS = ArchesCore::append_qn_env("w", l ) + "_RHS";
     //m_w_RHS.push_back(w_RHS);
-    //std::string length_RHS = ParticleTools::append_qn_env( length_root, l) + "_RHS";
+    //std::string length_RHS = ArchesCore::append_qn_env( length_root, l) + "_RHS";
     //m_length_RHS.push_back(length_RHS);
-  
+
   //}
 
   //const std::string rawcoal_birth_name = rcmass_eqn.get_model_by_type( "BirthDeath" );
@@ -280,7 +281,7 @@ CharOxidationps<T>::problemSetup( ProblemSpecP& db ){
   //const std::string rawcoal_birth_name =  "rcmass_BirthDeath" ;
   //const std::string length_birth_name  =  "length_BirthDeath" ;
 
-  // birth terms 
+  // birth terms
 
   //m_add_rawcoal_birth = false;
   //m_add_length_birth  = false;
@@ -302,24 +303,24 @@ CharOxidationps<T>::problemSetup( ProblemSpecP& db ){
  // for (int l=0; l<m_nQn_part; l++) {
 
  //   if (m_add_char_birth) {
- //     std::string char_birth_qn_name    = ParticleTools::append_qn_env(char_birth_name, l);
+ //     std::string char_birth_qn_name    = ArchesCore::append_qn_env(char_birth_name, l);
  //     m_char_birth_qn_name.push_back(char_birth_qn_name);
  //   }
 
  //   if (m_add_rawcoal_birth) {
- //     std::string rawcoal_birth_qn_name = ParticleTools::append_qn_env(rawcoal_birth_name, l);
+ //     std::string rawcoal_birth_qn_name = ArchesCore::append_qn_env(rawcoal_birth_name, l);
  //     m_rawcoal_birth_qn_name.push_back(rawcoal_birth_qn_name);
   //  }
   //  if (m_add_length_birth) {
-  //    std::string length_birth_qn_name  = ParticleTools::append_qn_env(length_birth_name, l);
+  //    std::string length_birth_qn_name  = ArchesCore::append_qn_env(length_birth_name, l);
   //    m_length_birth_qn_name.push_back(length_birth_qn_name);
   //  }
   //}
 
-  // scaling constants 
+  // scaling constants
   //_weight_small = weight_eqn.getSmallClipPlusTol();
   _weight_small = 1e-15; // fix
-  
+
   for (int l=0; l<m_nQn_part; l++) {
     //_weight_scaling_constant = weight_eqn.getScalingConstant(d_quadNode);
     //_char_scaling_constant = char_eqn.getScalingConstant(d_quadNode);
@@ -343,7 +344,7 @@ CharOxidationps<T>::problemSetup( ProblemSpecP& db ){
 
 
   const ProblemSpecP params_root = db->getRootNode();
-  // need to be fixed
+  CoalHelper& coal_helper = CoalHelper::self();
 
   if (params_root->findBlock("PhysicalConstants")) {
     ProblemSpecP db_phys = params_root->findBlock("PhysicalConstants");
@@ -379,18 +380,18 @@ CharOxidationps<T>::problemSetup( ProblemSpecP& db ){
 
   if (db_coal_props->findBlock("SmithChar2016")) {
     ProblemSpecP db_Smith = db_coal_props->findBlock("SmithChar2016");
-    db_Smith->getWithDefault("Sg0",_Sg0,9.35e5); //UNCERTAIN initial specific surface area [m^2/kg], range [1e3,1e6] 
+    db_Smith->getWithDefault("Sg0",_Sg0,9.35e5); //UNCERTAIN initial specific surface area [m^2/kg], range [1e3,1e6]
     db_Smith->getWithDefault("char_MW",_Mh,12.0); // kg char / kmole char
-    _init_particle_density = ParticleTools::getInletParticleDensity( db );
-    double ash_mass_frac = ParticleTools::getAshMassFraction( db );
+    _init_particle_density = ArchesCore::get_inlet_particle_density( db );
+    double ash_mass_frac = coal_helper.get_coal_db().ash_mf; 
 
     for (int l=0; l<m_nQn_part; l++) {
-      double initial_diameter = ParticleTools::getInletParticleSize( db, l );
+      double initial_diameter = ArchesCore::get_inlet_particle_size( db, l );
       double p_volume         = M_PI/6.*initial_diameter*initial_diameter*initial_diameter; // particle volme [m^3]
       double mass_ash         = p_volume*_init_particle_density*ash_mass_frac;
-      double initial_rc       = (M_PI/6.0)*initial_diameter*initial_diameter*initial_diameter*_init_particle_density*(1.-ash_mass_frac); 
-      double rho_org_bulk     = initial_rc / (p_volume*(1-_p_void0) - mass_ash/_rho_ash_bulk) ; // bulk density of char [kg/m^3] 
-      double p_voidmin        = 1. - (1/p_volume)*(initial_rc*(1.-_v_hiT)/rho_org_bulk + mass_ash/_rho_ash_bulk); // bulk density of char [kg/m^3] 
+      double initial_rc       = (M_PI/6.0)*initial_diameter*initial_diameter*initial_diameter*_init_particle_density*(1.-ash_mass_frac);
+      double rho_org_bulk     = initial_rc / (p_volume*(1-_p_void0) - mass_ash/_rho_ash_bulk) ; // bulk density of char [kg/m^3]
+      double p_voidmin        = 1. - (1/p_volume)*(initial_rc*(1.-_v_hiT)/rho_org_bulk + mass_ash/_rho_ash_bulk); // bulk density of char [kg/m^3]
 
       m_mass_ash.push_back(mass_ash);
       m_rho_org_bulk.push_back(rho_org_bulk);
@@ -406,7 +407,7 @@ CharOxidationps<T>::problemSetup( ProblemSpecP& db ){
       _NUM_species += 1;
     }
 
-  // reactions 
+  // reactions
 
   for ( ProblemSpecP db_reaction = db_Smith->findBlock( "reaction" ); db_reaction != nullptr; db_reaction = db_reaction->findNextBlock( "reaction" ) ){
     //get reaction rate params
@@ -432,7 +433,7 @@ CharOxidationps<T>::problemSetup( ProblemSpecP& db ){
   diffusion_terms binary_diff_terms; // this allows access to the binary diff coefficients etc, in the header file.
   int table_size;
   table_size = binary_diff_terms.num_species;
-  
+
   // find indices specified by user.
   std::vector<int> specified_indices;
   bool check_species;
@@ -448,7 +449,7 @@ CharOxidationps<T>::problemSetup( ProblemSpecP& db ){
       throw ProblemSetupException("Error: Species specified in SmithChar2016 oxidation species, not found in SmithChar2016 data-base (please add it).", __FILE__, __LINE__);
     }
   }
-  
+
   std::vector<double> temp_v;
   for (int i=0; i<_NUM_species; i++) {
     temp_v.clear();
@@ -470,7 +471,7 @@ CharOxidationps<T>::problemSetup( ProblemSpecP& db ){
 
   for (int l=0; l<m_nQn_part; l++) {
     for (int r=0; r<_NUM_reactions; r++) {
-     std::string rate_name = "char_gas_reaction" + std::to_string(r) +"_qn"+ std::to_string(l); 
+     std::string rate_name = "char_gas_reaction" + std::to_string(r) +"_qn"+ std::to_string(l);
      m_reaction_rate_names.push_back(rate_name);
     }
   }
@@ -574,7 +575,7 @@ CharOxidationps<T>::register_timestep_eval( std::vector<ArchesFieldContainer::Va
     register_variable( m_particleSize[l], ArchesFieldContainer::COMPUTES, variable_registry , time_substep );
     register_variable( m_surfacerate[l],  ArchesFieldContainer::COMPUTES, variable_registry , time_substep );
     //register_variable( m_PO2surf[l],      ArchesFieldContainer::COMPUTES, variable_registry , time_substep );
-     
+
   }
 
   //register_variable( "AreaSum",      ArchesFieldContainer::COMPUTES, variable_registry , time_substep );
@@ -586,25 +587,25 @@ CharOxidationps<T>::register_timestep_eval( std::vector<ArchesFieldContainer::Va
   }
 
 
-  // gas variables 
+  // gas variables
   register_variable( m_cc_u_vel_name,         ArchesFieldContainer::REQUIRES, 0,  ArchesFieldContainer::LATEST, variable_registry, time_substep);
   register_variable( m_cc_v_vel_name,         ArchesFieldContainer::REQUIRES, 0,  ArchesFieldContainer::LATEST, variable_registry, time_substep);
   register_variable( m_cc_w_vel_name,         ArchesFieldContainer::REQUIRES, 0,  ArchesFieldContainer::LATEST, variable_registry, time_substep);
   register_variable( m_density_gas_name,      ArchesFieldContainer::REQUIRES, 0,  ArchesFieldContainer::LATEST, variable_registry, time_substep);
   register_variable( m_gas_temperature_label, ArchesFieldContainer::REQUIRES, 0,  ArchesFieldContainer::LATEST, variable_registry, time_substep);
   register_variable( m_MW_name,               ArchesFieldContainer::REQUIRES, 0,  ArchesFieldContainer::LATEST, variable_registry, time_substep);
-  // gas species 
+  // gas species
 
   for (int ns=0; ns<_NUM_species; ns++) {
     register_variable( _species_names[ns], ArchesFieldContainer::REQUIRES, 0,  ArchesFieldContainer::LATEST, variable_registry, time_substep);
   }
 
-  // other particle variables 
+  // other particle variables
 
   register_variable( number_density_name,          ArchesFieldContainer::REQUIRES, 0,  ArchesFieldContainer::LATEST, variable_registry, time_substep);
 
   for (int l=0; l<m_nQn_part; l++) {
-    // from devol model 
+    // from devol model
     register_variable( m_devolRC[l],  ArchesFieldContainer::REQUIRES, 0,  ArchesFieldContainer::LATEST, variable_registry, time_substep);
 
     register_variable( m_surfAreaF_name[l],  ArchesFieldContainer::REQUIRES, 0,  ArchesFieldContainer::LATEST, variable_registry, time_substep);
@@ -613,7 +614,7 @@ CharOxidationps<T>::register_timestep_eval( std::vector<ArchesFieldContainer::Va
 
 //    if (m_add_char_birth) {
 //      register_variable( m_char_birth_qn_name[l],  ArchesFieldContainer::REQUIRES, 0,  ArchesFieldContainer::LATEST, variable_registry, time_substep);
-//    }   
+//    }
 //    if (m_add_rawcoal_birth) {
 //      register_variable( m_rawcoal_birth_qn_name[l],  ArchesFieldContainer::REQUIRES, 0,  ArchesFieldContainer::LATEST, variable_registry, time_substep);
 //    }
@@ -621,7 +622,7 @@ CharOxidationps<T>::register_timestep_eval( std::vector<ArchesFieldContainer::Va
 //      register_variable( m_length_birth_qn_name[l],  ArchesFieldContainer::REQUIRES, 0,  ArchesFieldContainer::LATEST, variable_registry, time_substep);
 //    }
 
-    // other models 
+    // other models
     register_variable( m_particle_temperature[l],  ArchesFieldContainer::REQUIRES, 0,  ArchesFieldContainer::LATEST, variable_registry, time_substep);
     register_variable( m_particle_length[l],       ArchesFieldContainer::REQUIRES, 0,  ArchesFieldContainer::LATEST, variable_registry, time_substep);
     //register_variable( m_particle_length_qn[l],    ArchesFieldContainer::REQUIRES, 0,  ArchesFieldContainer::LATEST, variable_registry, time_substep);
@@ -633,8 +634,8 @@ CharOxidationps<T>::register_timestep_eval( std::vector<ArchesFieldContainer::Va
     register_variable( m_up_name[l],               ArchesFieldContainer::REQUIRES, 0,  ArchesFieldContainer::LATEST, variable_registry, time_substep);
     register_variable( m_vp_name[l],               ArchesFieldContainer::REQUIRES, 0,  ArchesFieldContainer::LATEST, variable_registry, time_substep);
     register_variable( m_wp_name[l],               ArchesFieldContainer::REQUIRES, 0,  ArchesFieldContainer::LATEST, variable_registry, time_substep);
-    // RHS 
-    
+    // RHS
+
     //register_variable( m_RC_RHS[l],              ArchesFieldContainer::REQUIRES, 0,  ArchesFieldContainer::LATEST, variable_registry, time_substep);
     //register_variable( m_ic_RHS[l],              ArchesFieldContainer::REQUIRES, 0,  ArchesFieldContainer::LATEST, variable_registry, time_substep);
     //register_variable( m_w_RHS[l],               ArchesFieldContainer::REQUIRES, 0,  ArchesFieldContainer::LATEST, variable_registry, time_substep);
@@ -654,7 +655,7 @@ CharOxidationps<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
  constCCVariable<double>& temperature  = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_gas_temperature_label);
  constCCVariable<double>& MWmix        = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_MW_name);// in kmol/kg_mix
 
- typedef typename ArchesCore::VariableHelper<T>::ConstType CT; // check comment from other char model 
+ typedef typename ArchesCore::VariableHelper<T>::ConstType CT; // check comment from other char model
 
  const double dt  = tsk_info->get_dt();
  //Vector Dx = patch->dCell();
@@ -664,7 +665,7 @@ CharOxidationps<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
  for (int ns=0; ns<_NUM_species; ns++) {
    CT* species_p   = tsk_info->get_const_uintah_field< CT >(_species_names[ns]);
    species.push_back(species_p);
- } 
+ }
 
  Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
  CT& number_density = tsk_info->get_const_uintah_field_add< CT >(number_density_name); // total number density
@@ -679,7 +680,7 @@ CharOxidationps<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
  //  Uintah::parallel_for(range,  [&]( int i,  int j, int k){
  //    AreaSumF(i,j,k) +=  weight(i,j,k)*length(i,j,k)*length(i,j,k); // [#/m]
  //  }); //end cell loop
- //} 
+ //}
 
  DenseMatrix* dfdrh = scinew DenseMatrix(_NUM_reactions,_NUM_reactions);
  InversionBase* invf;
@@ -690,10 +691,10 @@ CharOxidationps<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
  } else {
    throw InvalidValue("ERROR: CharOxidationSmith2016: Matrix inversion not implemented for the number of reactions being used.",__FILE__,__LINE__);
  }
- //root function: find a better way of doing this 
+ //root function: find a better way of doing this
  RootFunctionBase* rf;
  rf = scinew root_functionB;
- 
+
  std::vector< T* > reaction_rate;
  std::vector< CT* > old_reaction_rate;
  int m = 0; // to access reaction list: try to see if I can do 2 D
@@ -705,20 +706,20 @@ CharOxidationps<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
    T& particle_temp_rate = tsk_info->get_uintah_field_add< T >(m_particletemp[l]);
    T& particle_Size_rate = tsk_info->get_uintah_field_add< T >(m_particleSize[l]);
    T& surface_rate       = tsk_info->get_uintah_field_add< T >(m_surfacerate[l]);
-   
+
    //T& PO2surf            = tsk_info->get_uintah_field_add< T >(m_PO2surf[l]);
 
-  // reaction rate 
-   for (int r=0; r<_NUM_reactions; r++) {    
+  // reaction rate
+   for (int r=0; r<_NUM_reactions; r++) {
     T* reaction_rate_p        = tsk_info->get_uintah_field< T >(m_reaction_rate_names[m]);
     CT* old_reaction_rate_p   = tsk_info->get_const_uintah_field< CT >(m_reaction_rate_names[m]);
     m += 1;
     reaction_rate.push_back(reaction_rate_p);
     old_reaction_rate.push_back(old_reaction_rate_p);
-   } 
-   // from devol model 
+   }
+   // from devol model
    CT& devolRC = tsk_info->get_const_uintah_field_add< CT >(m_devolRC[l]);
-   // particle variables from other models 
+   // particle variables from other models
    CT& particle_temperature = tsk_info->get_const_uintah_field_add< CT >(m_particle_temperature[l]);
    CT& length               = tsk_info->get_const_uintah_field_add< CT >(m_particle_length[l]);
    CT& particle_density     = tsk_info->get_const_uintah_field_add< CT >(m_particle_density[l]);
@@ -729,7 +730,7 @@ CharOxidationps<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
    CT& vp                   = tsk_info->get_const_uintah_field_add< CT >(m_vp_name[l]);
    CT& wp                   = tsk_info->get_const_uintah_field_add< CT >(m_wp_name[l]);
 
-   // birth terms 
+   // birth terms
 
    //if (m_add_rawcoal_birth) {
 //     CT& rawcoal_birth = tsk_info->get_const_uintah_field_add< CT >(m_rawcoal_birth_qn_name[l]);
@@ -775,9 +776,9 @@ CharOxidationps<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
    std::vector<double> F_delta(_NUM_reactions);
    std::vector<double> r_h_ex(_NUM_reactions);
    std::vector<double> r_h_in(_NUM_reactions);
-   
+
    Uintah::parallel_for(range,  [&]( int i,  int j, int k){
-   
+
      if (weight(i,j,k)/m_weight_scaling_constant[l] < _weight_small) {
        char_rate(i,j,k)          = 0.0;
        gas_char_rate(i,j,k)      = 0.0;
@@ -785,7 +786,7 @@ CharOxidationps<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
        particle_Size_rate(i,j,k) = 0.0;
        surface_rate(i,j,k)       = 0.0;
        for (int r=0; r<_NUM_reactions; r++) {
-         (*reaction_rate[m2 + r])(i,j,k) = 0.0; // check this 
+         (*reaction_rate[m2 + r])(i,j,k) = 0.0; // check this
        }
      } else {
        // populate the temporary variables.
@@ -813,7 +814,7 @@ CharOxidationps<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
          rh_l_new[r] = (*old_reaction_rate[m2 + r])(i,j,k);// [kg/m^3/s]
        }
 
-       for (int r = 0; r < _NUM_reactions; r++) { // check this 
+       for (int r = 0; r < _NUM_reactions; r++) { // check this
          oxid_mass_frac[r] = (*species[_oxidizer_indices[r]])(i,j,k);// [mass fraction]
        }
 
@@ -825,8 +826,8 @@ CharOxidationps<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
        double CO2onCO             = 1./CO_CO2_ratio; // [kmoles CO2 / kmoles CO]
 
        for (int r=0; r<_NUM_reactions; r++) {
-         phi_l[r]  = (_use_co2co_l[r]) ? (CO2onCO + 1)/(CO2onCO + 0.5) : _phi_l[r]; 
-         hrxn_l[r] = (_use_co2co_l[r]) ? (CO2onCO*_HF_CO2 + _HF_CO)/(1+CO2onCO) : _hrxn_l[r]; 
+         phi_l[r]  = (_use_co2co_l[r]) ? (CO2onCO + 1)/(CO2onCO + 0.5) : _phi_l[r];
+         hrxn_l[r] = (_use_co2co_l[r]) ? (CO2onCO*_HF_CO2 + _HF_CO)/(1+CO2onCO) : _hrxn_l[r];
        }
 
        double relative_velocity = std::sqrt( ( CCuVel(i,j,k) - up(i,j,k) ) * ( CCuVel(i,j,k) - up(i,j,k) ) +
@@ -840,9 +841,9 @@ CharOxidationps<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
        double p_volume = M_PI/6.*p_diam*p_diam*p_diam; // particle volme [m^3]
        double p_void   = std::max(1e-10, 1.-(1./p_volume)*((rc+ch)/m_rho_org_bulk[l] + m_mass_ash[l]/_rho_ash_bulk));    // current porosity. (-) required due to sign convention of char.
 
-       double psi = 1./(_p_void0*(1.-_p_void0));	
+       double psi = 1./(_p_void0*(1.-_p_void0));
        double Sj  =  _init_particle_density/p_rho*((1-p_void)/(1-_p_void0))*std::sqrt(1-std::min(1.0,psi*log((1-p_void)/(1-_p_void0))));
-       double rp  = 2 * p_void * (1. - p_void)/(p_rho * Sj * _Sg0); // average particle radius [m] 
+       double rp  = 2 * p_void * (1. - p_void)/(p_rho * Sj * _Sg0); // average particle radius [m]
 
 
        // Calculate oxidizer diffusion coefficient // effect diffusion through stagnant gas (see "Multicomponent Mass Transfer", Taylor and Krishna equation 6.1.14)
@@ -870,7 +871,7 @@ CharOxidationps<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
        // Newton-Raphson solve for rh_l.
        // rh_(n+1) = rh_(n) - (dF_(n)/drh_(n))^-1 * F_(n)
-       
+
        int count = 0;
        for (int it=0; it<100; it++) {
          count=count+1;
@@ -967,14 +968,14 @@ CharOxidationps<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
        double surface_rate_factor = 0.0; // this is to compute a multiplicative factor to correct for external vs interal rxn.
        //double oxi_lim             = 0.0; // max rate due to reactions
        //double rh_l_i              = 0.0;
-       
+
        double surfaceAreaFraction = surfAreaF(i,j,k);//w*p_diam*p_diam/AreaSumF(i,j,k); // [-] this is the weighted area fraction for the current particle size.
 
        for (int r=0; r<_NUM_reactions; r++) {
          (*reaction_rate[m2 + r])(i,j,k) = rh_l_new[r];// [kg/m^2/s] this is for the intial guess during the next time-step
          // check to see if reaction rate is oxidizer limited.
          double oxi_lim              = (oxid_mass_frac[r] * gas_rho * surfaceAreaFraction) / (dt * w);// [kg/s/#] // here the surfaceAreaFraction parameter is allowing us to only consume the oxidizer multiplied by the weighted area fraction for the current particle.
-         double rh_l_i               = std::min(rh_l_new[r] * p_area * x_org * (1.-p_void), oxi_lim);// [kg/s/#] 
+         double rh_l_i               = std::min(rh_l_new[r] * p_area * x_org * (1.-p_void), oxi_lim);// [kg/s/#]
          char_mass_rate      += -rh_l_i;// [kg/s/#]  negative sign because we are computing the destruction rate for the particles.
          d_mass              += rh_l_i;
          co_s[r]              = rh_l_i/(phi_l[r]*_Mh*k_r[r]*(1 + effectivenessF[r]*p_diam*p_rho*_Sg0*Sj/(6.*(1-p_void)))); //oxidizer concentration at particle surface [kmoles/m^3]
@@ -985,45 +986,45 @@ CharOxidationps<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
          d_mass2             += r_h_ex[r]*_ksi + r_h_in[r];
          surface_rate_factor += r_h_ex[r];
        }
-       h_rxn_factor /= (d_mass + 1e-50); 
-       surface_rate_factor /= (d_mass + 1e-50); 
+       h_rxn_factor /= (d_mass + 1e-50);
+       surface_rate_factor /= (d_mass + 1e-50);
        h_rxn /= (d_mass2 + 1e-50); // [J/mole]
-       
+
        // rate clipping for char_mass_rate
        //if ( m_add_rawcoal_birth && m_add_char_birth ){
-       //  char_mass_rate = std::max( char_mass_rate, - ((rc+ch)/(dt) + (RHS + RHS_v)/(vol*w) + r_devol/w + char_birth(i,j,k)/w + rawcoal_birth(i,j,k)/w )); // [kg/s/#] 
+       //  char_mass_rate = std::max( char_mass_rate, - ((rc+ch)/(dt) + (RHS + RHS_v)/(vol*w) + r_devol/w + char_birth(i,j,k)/w + rawcoal_birth(i,j,k)/w )); // [kg/s/#]
        //} else {
-       //  char_mass_rate = std::max( char_mass_rate, - ((rc+ch)/(dt) + (RHS + RHS_v)/(vol*w) + r_devol/w )); // [kg/s/#] 
+       //  char_mass_rate = std::max( char_mass_rate, - ((rc+ch)/(dt) + (RHS + RHS_v)/(vol*w) + r_devol/w )); // [kg/s/#]
        //}
 
        char_mass_rate   = std::min( 0.0, char_mass_rate); // [kg/s/#] make sure we aren't creating char.
-       
+
        // organic consumption rate
        char_rate(i,j,k) = (char_mass_rate*w)/(m_char_scaling_constant[l]*m_weight_scaling_constant[l]); // [kg/m^3/s - scaled]
-       
+
        // off-gas production rate
        gas_char_rate(i,j,k) = -char_mass_rate*w;// [kg/m^3/s] (negative sign for exchange between solid and gas)
-       
+
        // heat of reaction source term for enthalpyshaddix
        particle_temp_rate(i,j,k) = h_rxn * 1000. / _Mh * h_rxn_factor * char_mass_rate * w / _ksi; // [J/s/m^4] -- the *1000 is need to convert J/mole to J/kmole. char_mass_rate was already multiplied by x_org * (1-p_void).
                                                                                                    // note: this model is designed to work with EnthalpyShaddix. The effect of ksi has already been added to Qreaction so we divide here.
        // particle shrinkage rate
        //double updated_weight = std::max(w/m_weight_scaling_constant[l] + dt / vol * ( RHS_weight(i,j,k) ) , 1e-15);
-       //double min_p_diam = std::pow( m_mass_ash[l] * 6 / _rho_ash_bulk / (1. - m_p_voidmin[l]) / M_PI ,1./3.); 
- 
+       //double min_p_diam = std::pow( m_mass_ash[l] * 6 / _rho_ash_bulk / (1. - m_p_voidmin[l]) / M_PI ,1./3.);
+
        double max_Size_rate = 0.0;
-       
+
        //if (m_add_length_birth){
        //  max_Size_rate = ( updated_weight * min_p_diam / m_length_scaling_constant[l] - weight_p_diam(i,j,k) ) / dt - ( RHS_length(i,j,k) / vol + length_birth(i,j,k));
        //} else {
        //max_Size_rate = ( updated_weight * min_p_diam / m_length_scaling_constant[l] - weight_p_diam(i,j,k) ) / dt - ( RHS_length(i,j,k) / vol);
        //}
-       
-       double Size_rate          = (x_org < 1e-8) ? 0.0 : w/m_weight_scaling_constant[l] *
-                                   2.*x_org * surface_rate_factor * char_mass_rate / m_rho_org_bulk[l] / 
-                                   p_area / x_org / (1.-p_void) /m_length_scaling_constant[l]; // [m/s] 
 
-       particle_Size_rate(i,j,k) = std::max(max_Size_rate, Size_rate); // [m/s] -- these source terms are negative. 
+       double Size_rate          = (x_org < 1e-8) ? 0.0 : w/m_weight_scaling_constant[l] *
+                                   2.*x_org * surface_rate_factor * char_mass_rate / m_rho_org_bulk[l] /
+                                   p_area / x_org / (1.-p_void) /m_length_scaling_constant[l]; // [m/s]
+
+       particle_Size_rate(i,j,k) = std::max(max_Size_rate, Size_rate); // [m/s] -- these source terms are negative.
        surface_rate(i,j,k)       = char_mass_rate/p_area;  // in [kg/(s # m^2)]
        //PO2surf_(i,j,k) = 0.0; // multiple oxidizers, so we are leaving this empty.
 

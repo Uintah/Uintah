@@ -2,6 +2,7 @@
 #include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <CCA/Components/Arches/BoundaryCond_new.h>
+#include <CCA/Components/Arches/ParticleModels/CoalHelper.h>
 
 using namespace Uintah;
 
@@ -17,6 +18,7 @@ void
 DepositionVelocity::problemSetup( ProblemSpecP& db ){
 
   const ProblemSpecP db_root = db->getRootNode();
+  CoalHelper& coal_helper = CoalHelper::self();
 
   double p_void0;
   _ash_mass_src="AshMassSrc";
@@ -64,20 +66,37 @@ DepositionVelocity::problemSetup( ProblemSpecP& db ){
   _fd.push_back(IntVector(0,0,0)); // -y face
   _fd.push_back(IntVector(0,0,1)); // +z face
   _fd.push_back(IntVector(0,0,0)); // -z face
-  _diameter_base_name = ParticleTools::parse_for_role_to_label(db, "size");
-    
+  _diameter_base_name = ArchesCore::parse_for_role_to_label(db, "size");
+
   // Need a density
-  _density_base_name = ParticleTools::parse_for_role_to_label(db, "density");
-  double init_particle_density = ParticleTools::getInletParticleDensity( db );
-  double ash_mass_frac = ParticleTools::getAshMassFraction( db );
+  _density_base_name = ArchesCore::parse_for_role_to_label(db, "density");
+  double init_particle_density = ArchesCore::get_inlet_particle_density( db );
+  double ash_mass_frac = coal_helper.get_coal_db().ash_mf;
   double initial_diameter = 0.0;
   double p_volume = 0.0;
   for ( int n = 0; n < _Nenv; n++ ){
-    initial_diameter = ParticleTools::getInletParticleSize( db, n );
+    initial_diameter = ArchesCore::get_inlet_particle_size( db, n );
     p_volume = M_PI/6.*initial_diameter*initial_diameter*initial_diameter; // particle volme [m^3]
     _mass_ash.push_back(p_volume*init_particle_density*ash_mass_frac);
   }
-  _retained_deposit_factor = ParticleTools::getRetainedDepositFactor( db );
+  double retained_value = 1.0;
+  if(db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources")){
+    const ProblemSpecP sources = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources");
+    for ( ProblemSpecP sourceBlock = sources->findBlock("src"); sourceBlock != nullptr;
+    sourceBlock = sourceBlock->findNextBlock("src") ) {
+      std::string tempTypeName;
+      sourceBlock->getAttribute("type",tempTypeName);
+      if (tempTypeName == "coal_gas_devol"){
+        std::string tempTypeName;
+        if(sourceBlock->findBlock("devol_BirthDeath")){
+          retained_value = 0.0;
+        }
+      }
+    }
+  } else {
+    throw ProblemSetupException("Error: cannot find the Sources block which requries the devol source for obtaining retained_deposit_factor in arches block.",__FILE__,__LINE__);
+  }
+  _retained_deposit_factor = retained_value;
 }
 
 void
@@ -86,8 +105,8 @@ DepositionVelocity::create_local_labels(){
   register_new_variable<CCVariable<double> >( _task_name );
   register_new_variable<CCVariable<double> >( _ash_mass_src );
   for ( int n = 0; n < _Nenv; n++ ){
-    const std::string d_vol_ave_num_s = ParticleTools::append_env("d_vol_ave_num",n);
-    const std::string d_vol_ave_den_s = ParticleTools::append_env("d_vol_ave_den",n);
+    const std::string d_vol_ave_num_s = ArchesCore::append_env("d_vol_ave_num",n);
+    const std::string d_vol_ave_den_s = ArchesCore::append_env("d_vol_ave_den",n);
     register_new_variable<CCVariable<double> >( d_vol_ave_num_s );
     register_new_variable<CCVariable<double> >( d_vol_ave_den_s );
   }
@@ -105,8 +124,8 @@ DepositionVelocity::register_initialize( std::vector<ArchesFieldContainer::Varia
   register_variable( _task_name, ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( _ash_mass_src, ArchesFieldContainer::COMPUTES, variable_registry );
   for ( int n = 0; n < _Nenv; n++ ){
-    const std::string d_vol_ave_num_s = ParticleTools::append_env("d_vol_ave_num",n);
-    const std::string d_vol_ave_den_s = ParticleTools::append_env("d_vol_ave_den",n);
+    const std::string d_vol_ave_num_s = ArchesCore::append_env("d_vol_ave_num",n);
+    const std::string d_vol_ave_den_s = ArchesCore::append_env("d_vol_ave_den",n);
     register_variable( d_vol_ave_num_s, ArchesFieldContainer::COMPUTES, variable_registry );
     register_variable( d_vol_ave_den_s, ArchesFieldContainer::COMPUTES, variable_registry );
   }
@@ -123,8 +142,8 @@ DepositionVelocity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_i
     deposit_velocity(i,j,k)=0.0;
   });
   for ( int n = 0; n < _Nenv; n++ ){
-    const std::string d_vol_ave_num_s = ParticleTools::append_env("d_vol_ave_num",n);
-    const std::string d_vol_ave_den_s = ParticleTools::append_env("d_vol_ave_den",n);
+    const std::string d_vol_ave_num_s = ArchesCore::append_env("d_vol_ave_num",n);
+    const std::string d_vol_ave_den_s = ArchesCore::append_env("d_vol_ave_den",n);
     CCVariable<double>& d_vol_ave_num = tsk_info->get_uintah_field_add<CCVariable<double> >(d_vol_ave_num_s);
     CCVariable<double>& d_vol_ave_den = tsk_info->get_uintah_field_add<CCVariable<double> >(d_vol_ave_den_s);
     Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -146,13 +165,13 @@ DepositionVelocity::register_timestep_eval(
   register_variable( _ash_mass_src, ArchesFieldContainer::COMPUTES, variable_registry );
 
   for ( int n = 0; n < _Nenv; n++ ){
-    const std::string d_vol_ave_num_s = ParticleTools::append_env("d_vol_ave_num",n);
-    const std::string d_vol_ave_den_s = ParticleTools::append_env("d_vol_ave_den",n);
+    const std::string d_vol_ave_num_s = ArchesCore::append_env("d_vol_ave_num",n);
+    const std::string d_vol_ave_den_s = ArchesCore::append_env("d_vol_ave_den",n);
     register_variable( d_vol_ave_num_s, ArchesFieldContainer::COMPUTES, variable_registry );
     register_variable( d_vol_ave_num_s, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
     register_variable( d_vol_ave_den_s, ArchesFieldContainer::COMPUTES, variable_registry );
     register_variable( d_vol_ave_den_s, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
-    
+
     const std::string RateDepositionX = get_env_name(n, _ratedepx_name);
     const std::string RateDepositionY = get_env_name(n, _ratedepy_name);
     const std::string RateDepositionZ = get_env_name(n, _ratedepz_name);
@@ -189,7 +208,7 @@ DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   double flux = 0.0;
   double mp = 0.0;
   double marr = 0.0;
-  double ash_frac = 0.0; 
+  double ash_frac = 0.0;
   double rhoi = 0.0;
   double d_mass = 0.0;
   double d_flow = 0.0;
@@ -220,15 +239,15 @@ DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   for( int n = 0; n < _Nenv; n++ ){
 
-    const std::string d_vol_ave_num_s = ParticleTools::append_env("d_vol_ave_num",n);
-    const std::string d_vol_ave_den_s = ParticleTools::append_env("d_vol_ave_den",n);
+    const std::string d_vol_ave_num_s = ArchesCore::append_env("d_vol_ave_num",n);
+    const std::string d_vol_ave_den_s = ArchesCore::append_env("d_vol_ave_den",n);
     CCVariable<double>& d_vol_ave_num = tsk_info->get_uintah_field_add<CCVariable<double> >(d_vol_ave_num_s);
     d_vol_ave_num.initialize(0.0);
     CCVariable<double>& d_vol_ave_den = tsk_info->get_uintah_field_add<CCVariable<double> >(d_vol_ave_den_s);
     d_vol_ave_den.initialize(0.0);
     constCCVariable<double>& d_vol_ave_num_old = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(d_vol_ave_num_s));
     constCCVariable<double>& d_vol_ave_den_old = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(d_vol_ave_den_s));
-    
+
     const std::string RateDepositionX = get_env_name(n, _ratedepx_name);
     const std::string RateDepositionY = get_env_name(n, _ratedepy_name);
     const std::string RateDepositionZ = get_env_name(n, _ratedepz_name);
@@ -308,7 +327,7 @@ DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
             mo = mp - _mass_ash[n]; // current mass of organic in the particle [kg]
             marr = mo * _retained_deposit_factor + _mass_ash[n]; // mass arriving at the wall [kg].
             ash_frac = marr/mp; // correction factor to flux
-            flux = flux*ash_frac;// arriving mass flux [kg/m^2/s] 
+            flux = flux*ash_frac;// arriving mass flux [kg/m^2/s]
             rhoi = _user_specified_rho;
             d_mass += flux*area_face[container_flux_ind[pp]];// [kg/s] ash
             // volumetric flow rate for particle i:
@@ -322,7 +341,7 @@ DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
           // compute the current deposit velocity for each particle: d_vel [m3/s * 1/m2 = m/s]
           d_velocity /= total_area_face; // area weighted incoming velocity to the cell for particle i.
           d_vol_ave_num[c] = (1.0-_relaxation_coe)*d_vol_ave_num_old[c] + _relaxation_coe*env_flow_rate_d; // this is the time-averaged flow rate * d for environment i
-          d_vol_ave_den[c] = (1.0-_relaxation_coe)*d_vol_ave_den_old[c] + _relaxation_coe*env_flow_rate; // this is the time-averaged flow rate for the environment i 
+          d_vol_ave_den[c] = (1.0-_relaxation_coe)*d_vol_ave_den_old[c] + _relaxation_coe*env_flow_rate; // this is the time-averaged flow rate for the environment i
           deposit_velocity[c] += d_velocity; // add the contribution for the deposition
           ash_mass_src[c] += d_mass/Vcell; // [kg/s/m^3] for particle mass balance.
           // overall we are trying to achieve:  v_hat = (1-alpha)*v_hat_old + alpha*v_new. We initialize v_hat to v_hat_old*(1-alpha) in timestep_init (first term).

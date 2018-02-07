@@ -123,18 +123,18 @@ psNox::problemSetup(const ProblemSpecP& inputdb)
   helper.add_lookup_species( m_density_name);
   helper.add_lookup_species( m_mix_mol_weight_name );
   //read DQMOM Information 
-  m_rcmass_root         = ParticleTools::parse_for_role_to_label(db, "raw_coal");                   //raw coal
-  m_coal_temperature_root       = ParticleTools::parse_for_role_to_label(db, "temperature");        //coal particle temperature
-  m_num_env             = ParticleTools::get_num_env(db, ParticleTools::DQMOM);                     //qn number
-  length_root=(ParticleTools::parse_for_role_to_label(db, "size"));                                 // paritcle diameter root name
+  m_rcmass_root         = ArchesCore::parse_for_role_to_label(db, "raw_coal");                   //raw coal
+  m_coal_temperature_root       = ArchesCore::parse_for_role_to_label(db, "temperature");        //coal particle temperature
+  m_num_env             = ArchesCore::get_num_env(db, ArchesCore::DQMOM_METHOD);                     //qn number
+  length_root=(ArchesCore::parse_for_role_to_label(db, "size"));                                 // paritcle diameter root name
 
 
   for ( int i = 0; i < m_num_env; i++ ){                                                            //scaling constant of raw coal
-    double scaling_const = ParticleTools::getScalingConstant( db, m_rcmass_root, i ); 
+    double scaling_const = ArchesCore::get_scaling_constant( db, m_rcmass_root, i ); 
     m_rc_scaling_const.push_back(scaling_const); 
   }
   for ( int i = 0; i < m_num_env; i++ ){                                                            //scaling constant of weight
-    double scaling_const = ParticleTools::getScalingConstant( db, "weight", i ); 
+    double scaling_const = ArchesCore::get_scaling_constant( db, "weight", i ); 
     m_weight_scaling_const.push_back(scaling_const); 
   }
 }
@@ -174,14 +174,14 @@ psNox::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubS
     std::string rcmassqn_name;
     std::string rcmass_name;
     std::string coal_temperatureqn_name;
-    rcmassqn_name = ParticleTools::append_qn_env( m_rcmass_root, i );                               //weighted scaled rcmass
+    rcmassqn_name = ArchesCore::append_qn_env( m_rcmass_root, i );                               //weighted scaled rcmass
     tsk->requires( which_dw, VarLabel::find(rcmassqn_name), Ghost::None, 0 );       
-    rcmass_name = ParticleTools::append_env( m_rcmass_root, i );                                    //unweighted unscaled rcmass, original value of rcmass of per particle 
+    rcmass_name = ArchesCore::append_env( m_rcmass_root, i );                                    //unweighted unscaled rcmass, original value of rcmass of per particle 
     tsk->requires( which_dw, VarLabel::find(rcmass_name), Ghost::None, 0 ); 
-    coal_temperatureqn_name = ParticleTools::append_env( m_coal_temperature_root, i );              //unweighted unscaled coal temperature
+    coal_temperatureqn_name = ArchesCore::append_env( m_coal_temperature_root, i );              //unweighted unscaled coal temperature
     tsk->requires( which_dw, VarLabel::find(coal_temperatureqn_name), Ghost::None, 0 ); 
 
-    std::string length_name = ParticleTools::append_env( length_root, i );
+    std::string length_name = ArchesCore::append_env( length_root, i );
     m_length_label.push_back(  VarLabel::find(length_name));
     tsk->requires( which_dw, m_length_label[i], Ghost::None, 0 );
   }  
@@ -341,7 +341,7 @@ psNox::computeSource( const ProcessorGroup* pc,
     new_dw->allocateTemporary( temp_coal_mass_concentration[i_env], patch );
     temp_coal_mass_concentration[i_env].initialize(0.0); 
 
-    coal_temperatureqn_name = ParticleTools::append_env( m_coal_temperature_root, i_env );
+    coal_temperatureqn_name = ArchesCore::append_env( m_coal_temperature_root, i_env );
     which_dw->get( coal_temperature[i_env], VarLabel::find(coal_temperatureqn_name), matlIndex, patch, gn, 0 );  
 
     which_dw->get( length[i_env], m_length_label[i_env], matlIndex, patch, gn, 0 );
@@ -353,9 +353,9 @@ psNox::computeSource( const ProcessorGroup* pc,
       std::string rcmass_name;
       constCCVariable<double> rcmass_weighted_scaled;
       constCCVariable<double> rcmass_unweighted_unscaled;
-      rcmassqn_name = ParticleTools::append_qn_env( m_rcmass_root, i_env );
+      rcmassqn_name = ArchesCore::append_qn_env( m_rcmass_root, i_env );
       which_dw->get( rcmass_weighted_scaled, VarLabel::find(rcmassqn_name), matlIndex, patch, gn, 0 );  
-      rcmass_name = ParticleTools::append_env( m_rcmass_root, i_env );
+      rcmass_name = ArchesCore::append_env( m_rcmass_root, i_env );
       which_dw->get( rcmass_unweighted_unscaled, VarLabel::find(rcmass_name), matlIndex, patch, gn, 0 );  
       Uintah::parallel_for(range, [&](int i, int j, int k){
           double weight   =  0.0;

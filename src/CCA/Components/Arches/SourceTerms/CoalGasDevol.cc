@@ -43,7 +43,7 @@ CoalGasDevol::problemSetup(const ProblemSpecP& inputdb)
   if (db->findBlock("devol_BirthDeath")) {
     ProblemSpecP db_bd = db->findBlock("devol_BirthDeath");
     m_dest_flag = true;
-    m_rcmass_root = ParticleTools::parse_for_role_to_label(db, "raw_coal");
+    m_rcmass_root = ArchesCore::parse_for_role_to_label(db, "raw_coal");
   }
 
   _source_grid_type = CC_SRC;
@@ -84,11 +84,11 @@ CoalGasDevol::sched_computeSource( const LevelP& level, SchedulerP& sched, int t
   
     if (m_dest_flag){
       // require RCmass birth/death   
-      std::string rcmassqn_name = ParticleTools::append_qn_env(m_rcmass_root, iqn );
+      std::string rcmassqn_name = ArchesCore::append_qn_env(m_rcmass_root, iqn );
       EqnBase& temp_rcmass_eqn = dqmomFactory.retrieve_scalar_eqn(rcmassqn_name);
       DQMOMEqn& rcmass_eqn = dynamic_cast<DQMOMEqn&>(temp_rcmass_eqn);
       const std::string rawcoal_birth_name = rcmass_eqn.get_model_by_type( "BirthDeath" );
-      std::string rawcoal_birth_qn_name = ParticleTools::append_qn_env(rawcoal_birth_name, iqn);
+      std::string rawcoal_birth_qn_name = ArchesCore::append_qn_env(rawcoal_birth_name, iqn);
       const VarLabel* rcmass_birthdeath_varlabel=VarLabel::find(rawcoal_birth_qn_name);
       tsk->requires( Task::NewDW, rcmass_birthdeath_varlabel, Ghost::None, 0 );
     }
@@ -212,15 +212,15 @@ CoalGasDevol::computeSource( const ProcessorGroup* pc,
 
       if (m_dest_flag){
         // get RCmass birth death, RC scaling constant and equation handle   
-        std::string rcmassqn_name = ParticleTools::append_qn_env(m_rcmass_root, iqn );
+        std::string rcmassqn_name = ArchesCore::append_qn_env(m_rcmass_root, iqn );
         EqnBase& temp_rcmass_eqn = dqmomFactory.retrieve_scalar_eqn(rcmassqn_name);
         DQMOMEqn& rcmass_eqn = dynamic_cast<DQMOMEqn&>(temp_rcmass_eqn);
         double rc_scaling_constant = rcmass_eqn.getScalingConstant(iqn);
         const std::string rawcoal_birth_name = rcmass_eqn.get_model_by_type( "BirthDeath" );
-        std::string rawcoal_birth_qn_name = ParticleTools::append_qn_env(rawcoal_birth_name, iqn);
+        std::string rawcoal_birth_qn_name = ArchesCore::append_qn_env(rawcoal_birth_name, iqn);
         const VarLabel* rcmass_birthdeath_varlabel=VarLabel::find(rawcoal_birth_qn_name);
         // get weight scaling constant and equation handle 
-        std::string weightqn_name = ParticleTools::append_qn_env("w", iqn);
+        std::string weightqn_name = ArchesCore::append_qn_env("w", iqn);
         EqnBase& temp_weight_eqn = dqmomFactory.retrieve_scalar_eqn(weightqn_name);
         DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(temp_weight_eqn);
         double w_scaling_constant = weight_eqn.getScalingConstant(iqn);

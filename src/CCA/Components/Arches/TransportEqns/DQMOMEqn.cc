@@ -88,7 +88,7 @@ DQMOMEqn::problemSetup( const ProblemSpecP& inputdb )
   ProblemSpecP db = inputdb;
 
   d_boundaryCond->problemSetup( db, d_eqnName );
-  unsigned int Nqn = ParticleTools::get_num_env( db, ParticleTools::DQMOM );
+  unsigned int Nqn = ArchesCore::get_num_env( db, ArchesCore::DQMOM_METHOD );
 
   ProblemSpecP db_root = db->getRootNode();
   ProblemSpecP dqmom_db = db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM");
@@ -161,14 +161,14 @@ DQMOMEqn::problemSetup( const ProblemSpecP& inputdb )
     m_db->getAttribute("label", model_name);
 
     // now tag on the internal coordinate
-    std::string model_qn_name = ParticleTools::append_qn_env(model_name, d_quadNode);
+    std::string model_qn_name = ArchesCore::append_qn_env(model_name, d_quadNode);
 
     // put it in the list
     d_models.push_back(model_qn_name);
 
     map<string,string>::iterator icheck = d_type_to_model.find(model_type);
     if ( icheck == d_type_to_model.end() ){
-      std::string model_type = ParticleTools::get_model_type( m_db, model_name, ParticleTools::DQMOM );
+      std::string model_type = ArchesCore::get_model_type( m_db, model_name, ArchesCore::DQMOM_METHOD );
       d_type_to_model[model_type] = model_name;
     }
 
@@ -389,10 +389,10 @@ DQMOMEqn::problemSetup( const ProblemSpecP& inputdb )
 
   // need particle info for partMassFlowInlet
   d_partVelNames = std::vector<std::string>(3,"NotSet");
-  if (ParticleTools::check_for_particle_method(db, ParticleTools::DQMOM )){
+  if (ArchesCore::check_for_particle_method(db, ArchesCore::DQMOM_METHOD )){
     std::string str3D = "uvw";
     for(unsigned int i = 0; i<str3D.length(); i++) {
-      std::string velLabelName =ParticleTools::parse_for_role_to_label(db,std::string (1,str3D[i])+"vel");
+      std::string velLabelName =ArchesCore::parse_for_role_to_label(db,std::string (1,str3D[i])+"vel");
       d_partVelNames[i]=velLabelName+"_qn";
 
     }
@@ -457,11 +457,11 @@ DQMOMEqn::sched_initializeVariables( const LevelP& level, SchedulerP& sched )
   tsk->computes(d_Y_psi_label);
   tsk->computes(d_Z_psi_label);
 
-  std::string name = ParticleTools::append_env( "face_pvel_x", d_quadNode );
+  std::string name = ArchesCore::append_env( "face_pvel_x", d_quadNode );
   d_face_pvel_x = VarLabel::find(name);
-  name = ParticleTools::append_env( "face_pvel_y", d_quadNode );
+  name = ArchesCore::append_env( "face_pvel_y", d_quadNode );
   d_face_pvel_y = VarLabel::find(name);
-  name = ParticleTools::append_env( "face_pvel_z", d_quadNode );
+  name = ArchesCore::append_env( "face_pvel_z", d_quadNode );
   d_face_pvel_z = VarLabel::find(name);
 
   //Old

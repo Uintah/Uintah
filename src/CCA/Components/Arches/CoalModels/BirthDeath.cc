@@ -99,13 +99,13 @@ BirthDeath::problemSetup(const ProblemSpecP& inputdb, int qn)
         "Error: Must specify an abscissa label for this model.",__FILE__,__LINE__);
     }
 
-    std::string a_name = ParticleTools::append_qn_env( _abscissa_name, d_quadNode );
+    std::string a_name = ArchesCore::append_qn_env( _abscissa_name, d_quadNode );
     EqnBase& a_eqn = dqmomFactory.retrieve_scalar_eqn( a_name );
     _a_scale = a_eqn.getScalingConstant(d_quadNode);
 
   }
 
-  std::string w_name = ParticleTools::append_qn_env( "w", d_quadNode );
+  std::string w_name = ArchesCore::append_qn_env( "w", d_quadNode );
   EqnBase& temp_eqn = dqmomFactory.retrieve_scalar_eqn(w_name);
   _w_scale = temp_eqn.getScalingConstant(d_quadNode);
   DQMOMEqn& eqn = dynamic_cast<DQMOMEqn&>(temp_eqn);
@@ -134,21 +134,21 @@ BirthDeath::problemSetup(const ProblemSpecP& inputdb, int qn)
     std::string rate_dep_base_nameX = "RateDepositionX";
     std::string rate_dep_base_nameY = "RateDepositionY";
     std::string rate_dep_base_nameZ = "RateDepositionZ";
-    std::string rate_dep_X = ParticleTools::append_env( rate_dep_base_nameX, d_quadNode );
-    std::string rate_dep_Y = ParticleTools::append_env( rate_dep_base_nameY, d_quadNode );
-    std::string rate_dep_Z = ParticleTools::append_env( rate_dep_base_nameZ, d_quadNode );
+    std::string rate_dep_X = ArchesCore::append_env( rate_dep_base_nameX, d_quadNode );
+    std::string rate_dep_Y = ArchesCore::append_env( rate_dep_base_nameY, d_quadNode );
+    std::string rate_dep_Z = ArchesCore::append_env( rate_dep_base_nameZ, d_quadNode );
     _rate_depX_varlabel = VarLabel::find(rate_dep_X);
     _rate_depY_varlabel = VarLabel::find(rate_dep_Y);
     _rate_depZ_varlabel = VarLabel::find(rate_dep_Z);
 
     // Need a size IC:
-    std::string length_root = ParticleTools::parse_for_role_to_label(db, "size");
-    std::string length_name = ParticleTools::append_env( length_root, d_quadNode );
+    std::string length_root = ArchesCore::parse_for_role_to_label(db, "size");
+    std::string length_name = ArchesCore::append_env( length_root, d_quadNode );
     _length_varlabel = VarLabel::find(length_name);
 
     // Need a density
-    std::string density_root = ParticleTools::parse_for_role_to_label(db, "density");
-    std::string density_name = ParticleTools::append_env( density_root, d_quadNode );
+    std::string density_root = ArchesCore::parse_for_role_to_label(db, "density");
+    std::string density_name = ArchesCore::append_env( density_root, d_quadNode );
     _particle_density_varlabel = VarLabel::find(density_name);
 
   }
@@ -210,7 +210,7 @@ BirthDeath::sched_computeModel( const LevelP& level, SchedulerP& sched, int time
   Ghost::GhostType  gaf = Ghost::AroundFaces;
 
   if ( !_is_weight ){
-    std::string abscissa_name = ParticleTools::append_env( _abscissa_name, d_quadNode );
+    std::string abscissa_name = ArchesCore::append_env( _abscissa_name, d_quadNode );
     _abscissa_label = VarLabel::find(abscissa_name);
     if ( _abscissa_label == 0 )
       throw InvalidValue("Error: Abscissa not found: "+abscissa_name, __FILE__, __LINE__);

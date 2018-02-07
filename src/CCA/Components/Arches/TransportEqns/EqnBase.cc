@@ -8,6 +8,9 @@
 #include <CCA/Components/Arches/ChemMix/MixingRxnModel.h>
 #include <Core/Grid/BoundaryConditions/BCUtils.h>
 #include <CCA/Components/Arches/BoundaryCond_new.h>
+#include <Core/GeometryPiece/GeometryPiece.h>
+#include <Core/GeometryPiece/GeometryPieceFactory.h>
+#include <Core/GeometryPiece/UnionGeometryPiece.h>
 #include <ostream>
 #include <fstream>
 #include <stdlib.h>
