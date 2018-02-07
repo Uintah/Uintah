@@ -386,7 +386,7 @@ static GridDataRaw* readGridData(DataArchive *archive,
       IntVector ihigh(high[0], high[1], high[2]);
       
       archive->queryRegion(var, variable_name, material,
-			   level.get_rep(), timestep, ilow, ihigh);
+                           level.get_rep(), timestep, ilow, ihigh);
     }
     // This queries the entire patch, including extra cells and boundary cells
     else
@@ -403,7 +403,7 @@ static GridDataRaw* readGridData(DataArchive *archive,
     var.getSizes(tmplow, tmphigh, size);
     
     if(  low[0] !=  tmplow[0] ||  low[1] !=  tmplow[1] ||  low[2] !=  tmplow[2] ||
-	high[0] != tmphigh[0] || high[1] != tmphigh[1] || high[2] != tmphigh[2] )
+        high[0] != tmphigh[0] || high[1] != tmphigh[1] || high[2] != tmphigh[2] )
     {
       // std::cerr << __LINE__ << "  " << variable_name << "  "
       //           << dims[0] << "  " << dims[1] << "  " << dims[2] << "     "
@@ -419,35 +419,35 @@ static GridDataRaw* readGridData(DataArchive *archive,
       //           << std::endl;
 
       for (int i=0; i<gd->num*gd->components; ++i)
-	gd->data[i] = 0;
+        gd->data[i] = 0;
 
       int kd = 0, jd = 0, id;
       int ks = 0, js = 0, is;
     
       for (int k=0; k<dims[2]; ++k)
       {
-	ks = k * size[1] * size[0];
-	kd = k * dims[1] * dims[0];
-	
-	for (int j=0; j<dims[1]; ++j)
-	{
-	  js = ks + j * size[0];
-	  jd = kd + j * dims[0];
-	  
-	  for (int i=0; i<dims[0]; ++i)
-	  {
-	    is = js + i;
-	    id = jd + i;
-	    
-	    copyComponents<T>(&gd->data[id*gd->components], p[is]);
-	  }
-	}
+        ks = k * size[1] * size[0];
+        kd = k * dims[1] * dims[0];
+        
+        for (int j=0; j<dims[1]; ++j)
+        {
+          js = ks + j * size[0];
+          jd = kd + j * dims[0];
+          
+          for (int i=0; i<dims[0]; ++i)
+          {
+            is = js + i;
+            id = jd + i;
+            
+            copyComponents<T>(&gd->data[id*gd->components], p[is]);
+          }
+        }
       }
     }
     else
     {
       for (int i=0; i<gd->num; ++i)
-	copyComponents<T>(&gd->data[i*gd->components], p[i]);
+        copyComponents<T>(&gd->data[i*gd->components], p[i]);
     }
   }
   else
@@ -467,12 +467,12 @@ template<template <typename> class VAR, typename T>
 static GridDataRaw* readPatchData(DataArchive *archive,
                                   const Patch *patch,
                                   const LevelP level,
-				  std::string variable_name,
+                                  std::string variable_name,
                                   int material,
-				  int timestep,
+                                  int timestep,
                                   int low[3],
                                   int high[3],
-				  bool queryRegion)
+                                  bool queryRegion)
 {
   // this queries the entire patch, including extra cells and boundary cells
   GridDataRaw *gd = new GridDataRaw;
@@ -500,8 +500,8 @@ static GridDataRaw* readPatchData(DataArchive *archive,
         copyComponents<T>(&gd->data[i*gd->components], p);
     }
     else if (variable_name.find("FileInfo") == 0 ||
-	     variable_name.find("CellInformation") == 0 ||
-	     variable_name.find("CutCellInfo") == 0)
+             variable_name.find("CellInformation") == 0 ||
+             variable_name.find("CutCellInfo") == 0)
     {
       for (int i=0; i<gd->num*gd->components; ++i)
         gd->data[i] = 0;
@@ -590,12 +590,12 @@ template<template<typename> class VAR>
 GridDataRaw* getPatchDataMainType(DataArchive *archive,
                                   const Patch *patch,
                                   const LevelP level,
-				  std::string variable_name,
+                                  std::string variable_name,
                                   int material,
-				  int timestep,
+                                  int timestep,
                                   int low[3],
                                   int high[3],
-				  bool queryRegion,
+                                  bool queryRegion,
                                   const Uintah::TypeDescription *subtype)
 {
   switch (subtype->getType())
@@ -668,9 +668,9 @@ GridDataRaw* getGridData(DataArchive *archive,
   {
     std::cerr << "Uintah::uda2vis::getGridData couldn't find variable type "
               << variable_name << "  "
-	      << (maintype ? maintype->getName() : " no main type" ) << "  "
-	      << ( subtype ?  subtype->getName() : " no subtype" ) << "  "
-	      << std::endl;
+              << (maintype ? maintype->getName() : " no main type" ) << "  "
+              << ( subtype ?  subtype->getName() : " no subtype" ) << "  "
+              << std::endl;
     return nullptr;
   }
 
@@ -838,9 +838,9 @@ ParticleDataRaw* getParticleData(DataArchive *archive,
   if (!maintype || !subtype) {
     std::cerr << "Uintah::uda2vis::getGridData couldn't find variable type "
               << variable_name << "  "
-	      << (maintype ? maintype->getName() : " no main type" ) << "  "
-	      << ( subtype ?  subtype->getName() : " no subtype" ) << "  "
-	      << std::endl;
+              << (maintype ? maintype->getName() : " no main type" ) << "  "
+              << ( subtype ?  subtype->getName() : " no subtype" ) << "  "
+              << std::endl;
     return nullptr;
   }
 
@@ -865,7 +865,7 @@ ParticleDataRaw* getParticleData(DataArchive *archive,
                                     material, timestep);
   case Uintah::TypeDescription::IntVector:
     return readParticleData<IntVector>(archive, patch, variable_name,
-				       material, timestep);
+                                       material, timestep);
   case Uintah::TypeDescription::Stencil7:
     return readParticleData<Stencil7>(archive, patch, variable_name,
                                       material, timestep);
@@ -1184,7 +1184,7 @@ static GridDataRaw* readGridData(SchedulerP schedulerP,
                                  int material,
                                  int low[3],
                                  int high[3],
-				 bool getRegion)
+                                 bool getRegion)
 {
   DataWarehouse *dw = schedulerP->getLastDW();
 
@@ -1230,7 +1230,7 @@ static GridDataRaw* readGridData(SchedulerP schedulerP,
     }
   
     if(  low[0] !=  tmplow[0] ||  low[1] !=  tmplow[1] ||  low[2] !=  tmplow[2] ||
-	high[0] != tmphigh[0] || high[1] != tmphigh[1] || high[2] != tmphigh[2] )
+        high[0] != tmphigh[0] || high[1] != tmphigh[1] || high[2] != tmphigh[2] )
     {
       // std::cerr << __LINE__ << "  " << varLabel->getName() << "  "
       //           << dims[0] << "  " << dims[1] << "  " << dims[2] << "     "
@@ -1246,35 +1246,35 @@ static GridDataRaw* readGridData(SchedulerP schedulerP,
       //           << std::endl;
       
       for (int i=0; i<gd->num*gd->components; ++i)
-	gd->data[i] = 0;
+        gd->data[i] = 0;
       
       int kd = 0, jd = 0, id;
       int ks = 0, js = 0, is;
       
       for (int k=0; k<dims[2]; ++k)
       {
-	ks = k * size[1] * size[0];
-	kd = k * dims[1] * dims[0];
-	
-	for (int j=0; j<dims[1]; ++j)
-	{
-	  js = ks + j * size[0];
-	  jd = kd + j * dims[0];
-	  
-	  for (int i=0; i<dims[0]; ++i)
-	  {
-	    is = js + i;
-	    id = jd + i;
-	    
-	    copyComponents<T>(&gd->data[id*gd->components], p[is]);
-	  }
-	}
+        ks = k * size[1] * size[0];
+        kd = k * dims[1] * dims[0];
+        
+        for (int j=0; j<dims[1]; ++j)
+        {
+          js = ks + j * size[0];
+          jd = kd + j * dims[0];
+          
+          for (int i=0; i<dims[0]; ++i)
+          {
+            is = js + i;
+            id = jd + i;
+            
+            copyComponents<T>(&gd->data[id*gd->components], p[is]);
+          }
+        }
       }
     }
     else
     {
       for (int i=0; i<gd->num; ++i)
-	copyComponents<T>(&gd->data[i*gd->components], p[i]);
+        copyComponents<T>(&gd->data[i*gd->components], p[i]);
     }
   }
   else
@@ -1297,7 +1297,7 @@ static GridDataRaw* readPatchData(SchedulerP schedulerP,
                                   int material,
                                   int low[3],
                                   int high[3],
-				  bool getRegion)
+                                  bool getRegion)
 {
   DataWarehouse *dw = schedulerP->getLastDW();
 
@@ -1328,8 +1328,8 @@ static GridDataRaw* readPatchData(SchedulerP schedulerP,
     }
 
     else if (varLabel->getName().find("FileInfo") == 0 ||
-	     varLabel->getName().find("CellInformation") == 0 ||
-	     varLabel->getName().find("CutCellInfo") == 0)
+             varLabel->getName().find("CellInformation") == 0 ||
+             varLabel->getName().find("CutCellInfo") == 0)
     {
       for (int i=0; i<gd->num*gd->components; ++i)
         gd->data[i] = 0;
@@ -1368,7 +1368,7 @@ GridDataRaw* getGridDataMainType(SchedulerP schedulerP,
                                  int material,
                                  int low[3],
                                  int high[3],
-				 bool getRegion,
+                                 bool getRegion,
                                  const Uintah::TypeDescription *subtype)
 {  
   switch (subtype->getType())
@@ -1421,7 +1421,7 @@ GridDataRaw* getPatchDataMainType(SchedulerP schedulerP,
                                   int material,
                                   int low[3],
                                   int high[3],
-				  bool getRegion,
+                                  bool getRegion,
                                   const Uintah::TypeDescription *subtype)
 {
   switch (subtype->getType())
@@ -1506,9 +1506,9 @@ GridDataRaw* getGridData(SchedulerP schedulerP,
   {
     std::cerr << "Uintah/VisIt Libsim Error: couldn't find variable type "
               << variable_name << "  "
-	      << (maintype ? maintype->getName() : " no main type" ) << "  "
-	      << ( subtype ?  subtype->getName() : " no subtype" ) << "  "
-	      << std::endl;
+              << (maintype ? maintype->getName() : " no main type" ) << "  "
+              << ( subtype ?  subtype->getName() : " no subtype" ) << "  "
+              << std::endl;
     return nullptr;
   }
 
@@ -1724,9 +1724,9 @@ ParticleDataRaw* getParticleData(SchedulerP schedulerP,
   if (!maintype || !subtype) {
     std::cerr << "Uintah/VisIt Libsim Error: couldn't find variable type"
               << variable_name << "  "
-	      << (maintype ? maintype->getName() : " no main type" ) << "  "
-	      << ( subtype ?  subtype->getName() : " no subtype" ) << "  "
-	      << std::endl;
+              << (maintype ? maintype->getName() : " no main type" ) << "  "
+              << ( subtype ?  subtype->getName() : " no subtype" ) << "  "
+              << std::endl;
     return nullptr;
   }
 

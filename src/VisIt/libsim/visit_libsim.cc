@@ -345,26 +345,26 @@ bool visit_CheckState( visit_simulation_data *sim )
 
       if( blocking )
       {
-	// If blocking the run mode is not running so the simulation
-	// will not be running so change the state to allow
-	// asyncronious commands like saving a timestep or a
-	// checkpoint to happen.
-	if( sim->simMode != VISIT_SIMMODE_FINISHED )
+        // If blocking the run mode is not running so the simulation
+        // will not be running so change the state to allow
+        // asyncronious commands like saving a timestep or a
+        // checkpoint to happen.
+        if( sim->simMode != VISIT_SIMMODE_FINISHED )
         {
-	  sim->simMode = VISIT_SIMMODE_STOPPED;
-	  
-	  if(sim->isProc0)
+          sim->simMode = VISIT_SIMMODE_STOPPED;
+          
+          if(sim->isProc0)
           {
-	    VisItUI_setValueS("SIMULATION_MODE", "Stopped", 1);
+            VisItUI_setValueS("SIMULATION_MODE", "Stopped", 1);
               
-	    std::stringstream msg;
-	    msg << "Visit libsim - Stopped the simulation at "
-		<< "timestep " << sim->cycle << ",  "
-		<< "Time = " << sim->time;
+            std::stringstream msg;
+            msg << "Visit libsim - Stopped the simulation at "
+                << "timestep " << sim->cycle << ",  "
+                << "Time = " << sim->time;
             
-	    visitdbg << msg.str().c_str() << std::endl;
-	    visitdbg.flush();
-	    VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
+            visitdbg << msg.str().c_str() << std::endl;
+            visitdbg.flush();
+            VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
           }
         }
       }
@@ -435,13 +435,13 @@ bool visit_CheckState( visit_simulation_data *sim )
     {
       if( !visit_ProcessVisItCommand(sim) )
       {
-	if(sim->isProc0)
-	{
-	  VisItUI_setValueS("SIMULATION_MESSAGE_CLEAR", "NoOp", 1);
-	  VisItUI_setValueS("STRIP_CHART_CLEAR_ALL",    "NoOp", 1);
+        if(sim->isProc0)
+        {
+          VisItUI_setValueS("SIMULATION_MESSAGE_CLEAR", "NoOp", 1);
+          VisItUI_setValueS("STRIP_CHART_CLEAR_ALL",    "NoOp", 1);
 
           VisItUI_setValueS("SIMULATION_MODE", "Unknown", 1);
-	}
+        }
 
         /* Start running again if VisIt closes. */
         sim->runMode = VISIT_SIMMODE_RUNNING;
@@ -461,7 +461,7 @@ bool visit_CheckState( visit_simulation_data *sim )
 
           std::stringstream msg;          
           msg << "Visit libsim - Continuing the simulation for one time step";
-	  
+          
           // visitdbg << msg.str().c_str() << std::endl;
           // visitdbg.flush();
           VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
@@ -507,9 +507,9 @@ bool visit_CheckState( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_UpdateSimData( visit_simulation_data *sim, 
                           GridP currentGrid,
-			  double time,  unsigned int cycle,
-			  double delt, double delt_next,
-			  bool first, bool last )
+                          double time,  unsigned int cycle,
+                          double delt, double delt_next,
+                          bool first, bool last )
 {
   ApplicationInterface* appInterface =
     sim->simController->getApplicationInterface();

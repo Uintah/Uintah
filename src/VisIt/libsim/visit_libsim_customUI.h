@@ -78,8 +78,8 @@ namespace Uintah {
   void visit_SetDatabase( visit_simulation_data *sim );
 
   void visit_SetStripChartValue( visit_simulation_data *sim,
-				 std::string name,
-				 double value );
+                                 std::string name,
+                                 double value );
 } // End namespace Uintah
 
 #endif

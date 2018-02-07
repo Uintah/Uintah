@@ -58,7 +58,7 @@ namespace Uintah {
   void visit_SlaveProcessCallback();
 
   void visit_ControlCommandCallback( const char *cmd,
-				     const char *args, void *cbdata );
+                                     const char *args, void *cbdata );
 
   int visit_ProcessVisItCommand( visit_simulation_data *sim );
 
