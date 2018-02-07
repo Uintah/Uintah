@@ -250,7 +250,7 @@ TimeStepInfo* getTimeStepInfo(DataArchive *archive,
   TimeStepInfo *stepInfo = new TimeStepInfo();
   stepInfo->levelInfo.resize(numLevels);
 
-  // Get the variable information
+  // Get the variable information from the archive.
   std::vector<std::string> vars;
   std::vector<const Uintah::TypeDescription*> types;
   archive->queryVariables(vars, types);
@@ -262,10 +262,11 @@ TimeStepInfo* getTimeStepInfo(DataArchive *archive,
     varInfo.name = vars[i];
     varInfo.type = types[i]->getName();
 
-    // Query each level for material info until we find something
+    // Query each level for material info until materials are found.
     for (int l=0; l<numLevels; l++) {
       LevelP level = (*grid)->getLevel(l);
       const Patch* patch = *(level->patchesBegin());
+
       ConsecutiveRangeSet matls =
         archive->queryMaterials(vars[i], patch, timestep);
 
@@ -276,7 +277,7 @@ TimeStepInfo* getTimeStepInfo(DataArchive *archive,
              matlIter != matls.end(); matlIter++)
           varInfo.materials.push_back(*matlIter);
 
-        // Don't query on any more levels
+        // Don't query on any more levels.
         break;
       }
     }
@@ -334,23 +335,31 @@ TimeStepInfo* getTimeStepInfo(DataArchive *archive,
       }
       else if (loadExtraElements == PATCHES)
       {
-        IntVector ilow;
-        IntVector ihigh;
-        
-        for (int i=0; i<3; ++i) {
-          if( patch->getExtraCellLowIndex()[i] == patch->getCellLowIndex()[i] )
-            ilow[i] = patch->getCellLowIndex()[i];
-          else
-            ilow[i] = patch->getCellLowIndex()[i] - level->getRefinementRatio()[i];
+        IntVector ilow(patch->getCellLowIndex()[0],
+		       patch->getCellLowIndex()[1],
+		       patch->getCellLowIndex()[2]);
 
-          if( patch->getExtraCellHighIndex()[i] == patch->getCellHighIndex()[i] )
-            ihigh[i] = patch->getCellHighIndex()[i];
-          else
-            ihigh[i] = patch->getCellHighIndex()[i] + level->getRefinementRatio()[i];
+        IntVector ihigh(patch->getCellHighIndex()[0],
+			patch->getCellHighIndex()[1],
+			patch->getCellHighIndex()[2]);
+
+	// Test code to extend the patch when extra cells are
+	// present. In this case if extra cells are present instead of
+	// just adding the extra cell add in additional cells to make
+	// up a complete patch.
+        for (int i=0; i<3; ++i) {
+
+	  // Check for extra cells.
+          if( patch->getExtraCellLowIndex()[i] != patch->getCellLowIndex()[i] )
+            ilow[i] -= level->getRefinementRatio()[i];
+
+          if( patch->getExtraCellHighIndex()[i] != patch->getCellHighIndex()[i] )
+            ihigh[i] -= level->getRefinementRatio()[i];
         }
+	
         patchInfo.setBounds(&ilow[0], &ihigh[0], "CC_Mesh");
 
-        
+	// Test code not implemented for these meshes.
         patchInfo.setBounds(&patch->getExtraNodeLowIndex()[0],
                             &patch->getExtraNodeHighIndex()[0], "NC_Mesh");
         patchInfo.setBounds(&patch->getExtraSFCXLowIndex()[0],
@@ -424,12 +433,17 @@ static GridDataRaw* readGridData(DataArchive *archive,
     }
     else if( loadExtraElements == PATCHES )
     {
+      // This call does not work properly as it will return garbage
+      // where the cells do not exists.
+      
       // IntVector ilow(low[0], low[1], low[2]);
       // IntVector ihigh(high[0], high[1], high[2]);
       
       // archive->queryRegion(var, variable_name, material,
       //                      level.get_rep(), timestep, ilow, ihigh);
 
+      // This queries the entire patch, including extra cells and
+      // boundary cells which is smaller than the requeste region.
       archive->query(var, variable_name, material, patch, timestep);
     }
   
@@ -441,6 +455,7 @@ static GridDataRaw* readGridData(DataArchive *archive,
     
     var.getSizes(tmplow, tmphigh, size);
     
+    // Fail safe option if the data returned does match the data requested.
     if(  low[0] !=  tmplow[0] ||  low[1] !=  tmplow[1] ||  low[2] !=  tmplow[2] ||
         high[0] != tmphigh[0] || high[1] != tmphigh[1] || high[2] != tmphigh[2] )
     {
@@ -695,7 +710,7 @@ GridDataRaw* getGridData(DataArchive *archive,
   LevelP level = (*grid)->getLevel(level_i);
   const Patch *patch = level->getPatch(patch_i);
 
-  // figure out what the type of the variable we're querying is
+  // Get variable type from the archive.
   std::vector<std::string> vars;
   std::vector<const Uintah::TypeDescription*> types;
   archive->queryVariables(vars, types);
@@ -703,11 +718,13 @@ GridDataRaw* getGridData(DataArchive *archive,
   const Uintah::TypeDescription* maintype = nullptr;
   const Uintah::TypeDescription* subtype = nullptr;
 
+  // Loop through all of the variables in archive.
   for (unsigned int i=0; i<vars.size(); ++i)
   {
     if (vars[i] == variable_name) {
       maintype = types[i];
       subtype = maintype->getSubType();
+      break;
     }
   }
 
@@ -951,21 +968,21 @@ TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
                               GridP gridP,
                               int loadExtraElements)
 {
-  DataWarehouse    * dw = schedulerP->getLastDW();
+  DataWarehouse* dw = schedulerP->getLastDW();
   LoadBalancer * lb = schedulerP->getLoadBalancer();
 
   int numLevels = gridP->numLevels();
   TimeStepInfo *stepInfo = new TimeStepInfo();
   stepInfo->levelInfo.resize(numLevels);
 
-  // Get the material information
+  // Get the material information from the scheduler.
   Scheduler::VarLabelMaterialMap* pLabelMatlMap =
     schedulerP->makeVarLabelMaterialMap();
 
   std::set<const VarLabel*, VarLabel::Compare> varLabels;
   std::set<const VarLabel*, VarLabel::Compare>::iterator varIter;
   
-  // Loop through all of the required and computed variables
+  // Loop through all of the required and computed variables.
   for (int i=0; i<2; ++i )
   {
     if( i == 0 )
@@ -1078,23 +1095,31 @@ TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
       }
       else if (loadExtraElements == PATCHES)
       {
-        IntVector ilow;
-        IntVector ihigh;
-        
-        for (int i=0; i<3; ++i) {
-          if( patch->getExtraCellLowIndex()[i] == patch->getCellLowIndex()[i] )
-            ilow[i] = patch->getCellLowIndex()[i];
-          else
-            ilow[i] = patch->getCellLowIndex()[i] - level->getRefinementRatio()[i];
+        IntVector ilow(patch->getCellLowIndex()[0],
+		       patch->getCellLowIndex()[1],
+		       patch->getCellLowIndex()[2]);
 
-          if( patch->getExtraCellHighIndex()[i] == patch->getCellHighIndex()[i] )
-            ihigh[i] = patch->getCellHighIndex()[i];
-          else
-            ihigh[i] = patch->getCellHighIndex()[i] + level->getRefinementRatio()[i];
+        IntVector ihigh(patch->getCellHighIndex()[0],
+			patch->getCellHighIndex()[1],
+			patch->getCellHighIndex()[2]);
+
+	// Test code to extend the patch when extra cells are
+	// present. In this case if extra cells are present instead of
+	// just adding the extra cell add in additional cells to make
+	// up a complete patch.
+        for (int i=0; i<3; ++i) {
+
+	  // Check for extra cells.
+          if( patch->getExtraCellLowIndex()[i] != patch->getCellLowIndex()[i] )
+            ilow[i] -= level->getRefinementRatio()[i];
+
+          if( patch->getExtraCellHighIndex()[i] != patch->getCellHighIndex()[i] )
+            ihigh[i] -= level->getRefinementRatio()[i];
         }
+
         patchInfo.setBounds(&ilow[0], &ihigh[0], "CC_Mesh");
 
-        
+	// Test code not implemented for these meshes.        
         patchInfo.setBounds(&patch->getExtraNodeLowIndex()[0],
                             &patch->getExtraNodeHighIndex()[0], "NC_Mesh");
         patchInfo.setBounds(&patch->getExtraSFCXLowIndex()[0],
@@ -1294,10 +1319,16 @@ static GridDataRaw* readGridData(DataWarehouse *dw,
     }
     else if( loadExtraElements == PATCHES )
     {
+      // This call does not work properly as it will return garbage
+      // where the cells do not exists.
+      
       // IntVector ilow(  low[0],  low[1],  low[2]);
       // IntVector ihigh(high[0], high[1], high[2]);
 
       // dw->getRegion( var, varLabel, material, level.get_rep(), ilow, ihigh );
+
+      // This queries the entire patch, including extra cells and
+      // boundary cells which is smaller than the requeste region.
       dw->get( var, varLabel, material, patch, Ghost::None, 0 );
     }
     
@@ -1310,7 +1341,8 @@ static GridDataRaw* readGridData(DataWarehouse *dw,
     for (int i=0; i<3; ++i) {
       size[i] = tmphigh[i] - tmplow[i];
     }
-  
+
+    // Fail safe option if the data returned does match the data requested.
     if(  low[0] !=  tmplow[0] ||  low[1] !=  tmplow[1] ||  low[2] !=  tmplow[2] ||
         high[0] != tmphigh[0] || high[1] != tmphigh[1] || high[2] != tmphigh[2] )
     {
@@ -1562,7 +1594,7 @@ GridDataRaw* getGridData(SchedulerP schedulerP,
   LevelP level = gridP->getLevel(level_i);
   const Patch *patch = level->getPatch(patch_i);
 
-  // get the variable information
+  // Get variable type from the scheduler.
   const VarLabel* varLabel                = nullptr;
   const Uintah::TypeDescription* maintype = nullptr;
   const Uintah::TypeDescription* subtype  = nullptr;
@@ -1570,7 +1602,7 @@ GridDataRaw* getGridData(SchedulerP schedulerP,
   std::set<const VarLabel*, VarLabel::Compare> varLabels;
   std::set<const VarLabel*, VarLabel::Compare>::iterator varIter;
 
-  // Loop through all of the required and computed variables
+  // Loop through all of the required and computed variables.
   for (int i=0; i<2; ++i )
   {
     if( i == 0 )
@@ -1586,7 +1618,6 @@ GridDataRaw* getGridData(SchedulerP schedulerP,
       {
         maintype = varLabel->typeDescription();
         subtype = varLabel->typeDescription()->getSubType();
-        
         break;
       }
     }
