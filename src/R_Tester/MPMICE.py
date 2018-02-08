@@ -44,6 +44,8 @@ AMRTESTS   = [
              ]
 
 LOCALTESTS = [   ("massX",                    "massX.ups",                 1,  "ALL", ["exactComparison"]),
+                 ("pistonVal",                "pistonValidation.ups",      2,  "ALL", ["exactComparison"]),
+                 ("pistonVal_mks",            "pistonValidation.SI.Cu.ups",2,  "ALL", ["exactComparison"]),
                  ("guni2dRT",                 "guni2dRT.ups",              4,  "ALL", ["exactComparison"]),
                  ("SteadyBurn_2dRT",          "SteadyBurn_2dRT.ups",       4,  "ALL", ["exactComparison"]),
                  ("TBurner_2dRT",             "TBurner_2dRT.ups",          4,  "ALL", ["exactComparison"]),

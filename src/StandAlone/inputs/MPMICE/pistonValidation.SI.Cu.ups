@@ -1,5 +1,4 @@
 <?xml version='1.0' encoding='ISO-8859-1' ?>
-<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
 <Uintah_specification> 
 <!--Please use a consistent set of units, (mks, cgs,...)-->
 
@@ -7,16 +6,20 @@
        <title>Piston compressing gas adiabatically</title>
    </Meta>
 
-   <SimulationComponent type="mpmice" />
+   <SimulationComponent type="rmpmice" />
+   <Solver type="hypre"/>
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            1.0e-2   </maxTime>
+       <maxTime>            1.2e-2   </maxTime>
        <initTime>           0.0      </initTime>
        <delt_min>           0.0      </delt_min>
        <delt_max>           0.006    </delt_max>
        <delt_init>          1e-12     </delt_init>
+       
+       <max_Timesteps>      500       </max_Timesteps>   <!-- for RT -->
+       
        <timestep_multiplier>.5       </timestep_multiplier>
    </Time>
     <!--____________________________________________________________________-->
@@ -28,8 +31,8 @@
               <lower>         [ 0.0,   0.0,   0.0]    </lower>
               <upper>         [ 1.0e-2,2.5e-1,1.0e-2] </upper>
               <extraCells>    [1,1,1]                 </extraCells>
-              <patches>       [1,1,1]                 </patches>
-              <resolution>    [1,100,1]               </resolution>
+              <patches>       [1,2,1]                 </patches>
+              <resolution>    [1,200,1]               </resolution>
            </Box>
        </Level>
     <BoundaryConditions>
@@ -90,7 +93,7 @@
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
     <DataArchiver>
-      <filebase>imp_pistonVal.big.uda</filebase>
+      <filebase>imp_pistonVal_mks.uda</filebase>
       <outputInterval> 1.0e-4 </outputInterval>
       <save label = "press_CC"/>
       <save label = "vol_frac_CC"/>
@@ -105,7 +108,7 @@
       <save label = "temp_CC"/>
       <save label = "p.x"/>
       <save label = "p.volume"/>
-      <checkpoint cycle = "2" timestepInterval = "500"/>
+      <checkpoint cycle = "2" timestepInterval = "300"/>
 <!--
       <save label = "mom_source_CC"/>    
       <save label = "mom_L_CC"/>
@@ -129,16 +132,10 @@
         </TimeStepControl>
      -->   
         <ImplicitSolver>
-           <max_outer_iterations>      20    </max_outer_iterations>
+           <max_outer_iterations>      2    </max_outer_iterations>
            <outer_iteration_tolerance> 1e-8 </outer_iteration_tolerance>
            <iters_before_timestep_restart> 5 </iters_before_timestep_restart>
            <Parameters variable = "implicitPressure">
-
-            <!-- CGSolver options -->
-              <norm>     LInfinity  </norm>
-              <criteria> Absolute   </criteria>
-
-            <!-- Hypre options -->
             <solver>         cg      </solver>
             <preconditioner> pfmg    </preconditioner>
             <tolerance>      1.e-10  </tolerance>
@@ -189,7 +186,7 @@
 
            <contact>
              <type>        rigid           </type>
-             <materials>  [1,0]         </materials>
+             <materials>   [1,0]           </materials>
              <stop_time>   0.8e-2          </stop_time>
              <direction>   [0, 0, 1]       </direction>
              <velocity_after_stop>[0, 0, 0]</velocity_after_stop>
