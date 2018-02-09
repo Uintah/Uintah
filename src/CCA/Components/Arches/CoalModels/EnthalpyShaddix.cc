@@ -547,6 +547,7 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
          if (std::abs(Q_convection) > std::abs(max_Q_convection)){
          Q_convection = max_Q_convection;
          }
+         Q_convection = Q_convection*weightph;
          // Radiation part: -------------------------
          Q_radiation = 0.0;
          if ( _radiationOn) {
@@ -563,14 +564,14 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
          double hc = _Hc0 + hint * _RdMW;
          Q_reaction = charoxi_temp_sourceph;
          // This needs to be made consistant with lagrangian particles!!! - derek 12/14
-         heat_rate_ = (Q_convection*weightph + Q_radiation + _ksi*Q_reaction - (devol_gas_sourceph + chargas_sourceph)*hc)/
+         heat_rate_ = (Q_convection + Q_radiation + _ksi*Q_reaction - (devol_gas_sourceph + chargas_sourceph)*hc)/
          (_enthalpy_scaling_constant*_weight_scaling_constant);
-         gas_heat_rate_ = -weightph*Q_convection - Q_radiation - _ksi*Q_reaction + (devol_gas_sourceph+chargas_sourceph)*hc;
+         gas_heat_rate_ = -Q_convection - Q_radiation - _ksi*Q_reaction + (devol_gas_sourceph+chargas_sourceph)*hc;
          }
          heat_rate(i,j,k) = heat_rate_;
          gas_heat_rate(i,j,k) = gas_heat_rate_;
-         qconv(i,j,k) = Q_convection;
-         qrad(i,j,k) = Q_radiation;
+         qconv(i,j,k) = Q_convection; // W/m^3
+         qrad(i,j,k) = Q_radiation; // W/m^3
        } );
 
 
