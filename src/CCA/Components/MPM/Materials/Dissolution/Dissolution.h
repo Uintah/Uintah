@@ -87,11 +87,13 @@ WARNING
 
      virtual void setPhase(std::string LCPhase);
 
+     virtual void setTimeConversionFactor(const double tcf);
+
     protected:
      MPMLabel* lb;
      double d_temperature;
+     double d_timeConversionFactor;
      std::string d_phase;
-
     };
 
 //    inline bool compare(double num1, double num2) {

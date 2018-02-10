@@ -80,6 +80,7 @@ WARNING
 
          void setTemperature(double BHTemp);
          void setPhase(std::string LCPhase);
+         void setTimeConversionFactor(double tcf);
 
       private: // hide
          CompositeDissolution(const CompositeDissolution &);

@@ -3422,8 +3422,15 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
     burialHistory->setCurrentIndex(curBHIndex);
     burialHistory->setCurrentPhaseType(currentPhase);
     double curBHTemperature = burialHistory->getTemperature_K(curBHIndex);
+    double uintahDissTime = burialHistory->getUintahDissolutionTime(curBHIndex);
+    double geoInterval = burialHistory->getTime_Ma(curBHIndex) - 
+                         burialHistory->getTime_Ma(curBHIndex - 1);
+
+//    cout << "geoInterval = " << geoInterval << endl;
+//    cout << "uintahDissTime = " << uintahDissTime << endl;
 
     if(curBHIndex==0){ // shut down the simulation
+      cerr << "Reached the end of the burial history" << endl;
       m_endSimulation = true;
     } // endif
 
@@ -3431,6 +3438,7 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
     if (flags->d_doingDissolution) {
       dissolutionModel->setTemperature(curBHTemperature);
       dissolutionModel->setPhase(currentPhase);
+      dissolutionModel->setTimeConversionFactor(geoInterval/uintahDissTime);
     }
   }
 

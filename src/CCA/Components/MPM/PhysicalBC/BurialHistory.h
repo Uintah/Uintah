@@ -160,6 +160,7 @@ WARNING
         return 0;
       }
 
+#if 0
       // Get the load at time t
       inline double getTimeAtPressure(double Psign) {
 
@@ -178,6 +179,7 @@ WARNING
 
         return d_time_Ma[0];
       }
+#endif
 
       inline void setCurrentIndex(int index) {
         d_CI = index;

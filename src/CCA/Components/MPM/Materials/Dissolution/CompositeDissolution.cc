@@ -89,3 +89,11 @@ CompositeDissolution::setPhase(std::string LCPhase)
       (*mit)->setPhase(LCPhase);
   }
 }
+
+void
+CompositeDissolution::setTimeConversionFactor(double tcf)
+{
+  for(list<Dissolution*>::const_iterator mit(d_m.begin());mit!=d_m.end();mit++){
+      (*mit)->setTimeConversionFactor(tcf);
+  }
+}

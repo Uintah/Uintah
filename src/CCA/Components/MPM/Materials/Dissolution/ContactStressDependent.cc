@@ -90,6 +90,7 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
 
 //  cout << "phase = " << d_phase << endl;
 //  cout << "temperature = " << d_temperature << endl;
+//  cout << "timeConversionFactor = " << d_timeConversionFactor << endl;
 
   if(d_phase=="hold"){
    for(int p=0;p<patches->size();p++){
@@ -140,7 +141,7 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
       double rate = (0.75*M_PI)
                   * ((d_Vm*d_Vm)*d_Ao)/(d_R*d_temperature)
                   * exp(-d_Ea/(d_R*d_temperature));
-      cout << "rate = " << rate << endl;
+//      cout << "rate = " << rate << endl;
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
         IntVector c = *iter;
 
@@ -154,17 +155,17 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
         if(gmass[md][c] >  1.e-100  &&
            gmass[md][c] != sumMass  && 
           -gnormtrac[md][c] > d_StressThresh){ // Compressive stress is negative
-//           pressure > d_StressThresh){ // && volFrac > 0.6){
             double rho = gmass[md][c]/gvolume[md][c];
             double stressDiff = (-gnormtrac[md][c]-d_StressThresh);
             massBurnRate[md][c] += 2.*NC_CCweight[c]*rate*stressDiff*area*rho
-                                  *3.1536e19;
+                                  *3.1536e19*d_timeConversionFactor;
         }
       } // nodes
      } // endif a masterMaterial
     } // materials
   } // patches
  } // if hold
+//           pressure > d_StressThresh){ // && volFrac > 0.6){
 }
 
 void ContactStressDependent::addComputesAndRequiresMassBurnFrac(
