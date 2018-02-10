@@ -64,22 +64,23 @@ WARNING
 
       class ContactStressIndependent : public Dissolution {
       private:
-         
-         // Prevent copying of this class
-         // copy constructor
-         ContactStressIndependent(const ContactStressIndependent &con);
-         ContactStressIndependent& operator=(const ContactStressIndependent &con);
-         
-         SimulationStateP    d_sharedState;
-         
-         // Dissolution rate
-         double d_rate;
-         double d_StressThresh;
-         double d_Ao_mol_cm2_s;
-         double d_Ea_kJ_mol;
-         // master material
-         int    d_masterModalID;
-         int    d_inContactWithModalID;
+
+        // Prevent copying of this class
+        // copy constructor
+        ContactStressIndependent(const ContactStressIndependent &ci);
+        ContactStressIndependent& operator=(const ContactStressIndependent &ci);
+
+        SimulationStateP    d_sharedState;
+
+        // Dissolution rate
+        double d_Vm;
+        double d_R;
+        double d_StressThresh;
+        double d_Ao;
+        double d_Ea;
+        // master material
+        int    d_masterModalID;
+        int    d_inContactWithModalID;
 
       public:
          // Constructor

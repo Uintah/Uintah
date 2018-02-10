@@ -65,9 +65,10 @@ ContactStressIndependent::ContactStressIndependent(const ProcessorGroup* myworld
   lb = Mlb;
   ps->require("masterModalID",        d_masterModalID);
   ps->require("InContactWithModalID", d_inContactWithModalID);
-  ps->require("Ao_mol_cm2_s",         d_Ao_mol_cm2_s);
-  ps->require("Ea_kJ_mol",            d_Ea_kJ_mol);
-  ps->require("rate",                 d_rate);
+  ps->require("Ao_mol_cm2-us",        d_Ao);
+  ps->require("Ea_ug-cm2_us2-mol",    d_Ea);
+  ps->require("R_ug-cm2_us2-mol-K",   d_R);
+  ps->require("Vm_cm3_mol",           d_Vm);
   ps->require("StressThreshold",      d_StressThresh);
   ps->getWithDefault("Temperature",   d_temperature, 300.0);
 }
@@ -82,9 +83,10 @@ void ContactStressIndependent::outputProblemSpec(ProblemSpecP& ps)
   dissolution_ps->appendElement("type",         "contactStressIndependent");
   dissolution_ps->appendElement("masterModalID",        d_masterModalID);
   dissolution_ps->appendElement("InContactWithModalID", d_inContactWithModalID);
-  dissolution_ps->appendElement("Ao_mol_cm2_s",         d_Ao_mol_cm2_s);
-  dissolution_ps->appendElement("Ea_kJ_mol",            d_Ea_kJ_mol);
-  dissolution_ps->appendElement("rate",                 d_rate);
+  dissolution_ps->appendElement("Ao_mol_cm2-us",        d_Ao);
+  dissolution_ps->appendElement("Ea_ug-cm2_us2-mol",    d_Ea);
+  dissolution_ps->appendElement("R_ug-cm2_us2-mol-K",   d_R);
+  dissolution_ps->appendElement("Vm_cm3_mol",           d_Vm);
   dissolution_ps->appendElement("StressThreshold",      d_StressThresh);
   dissolution_ps->appendElement("Temperature",          d_temperature);
 }
@@ -157,7 +159,7 @@ void ContactStressIndependent::computeMassBurnFraction(const ProcessorGroup*,
           -gnormtrac[md][c] > d_StressThresh){ // Compressive stress is negative
 //           pressure > d_StressThresh){ // && volFrac > 0.6){
             double rho = gmass[md][c]/gvolume[md][c];
-            massBurnRate[md][c] += d_rate*area*rho*2.0*NC_CCweight[c];
+            massBurnRate[md][c] += area*rho*2.0*NC_CCweight[c];
         }
       } // nodes
      } // endif a masterMaterial

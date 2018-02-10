@@ -98,6 +98,11 @@ WARNING
          return ((index < (int) d_time.size()) ? d_maxKE[index] : 0);
       }
 
+      // Get the burial history index with a given load curve index
+      inline T getBHIndex(int index) {
+         return ((index < (int) d_time.size()) ? d_BHIndex[index] : 0);
+      }
+
       inline void setTime(int index, double newTime) {
         d_time[index] = newTime;
       }
@@ -140,7 +145,6 @@ WARNING
          return 0;
       }
 
-
    private:
       // Prevent creation of empty object
       LoadCurve();
@@ -152,9 +156,10 @@ WARNING
       // Private Data
       // Load curve information 
       std::vector<double> d_time;
-      std::vector<T> d_load;
+      std::vector<T>      d_load;
       std::vector<double> d_maxKE;
       std::vector<std::string> d_phaseType;
+      std::vector<int>    d_BHIndex;
       int d_id;
       double d_curTime;
       double d_stableKE;
@@ -186,49 +191,60 @@ WARNING
         burHist->getWithDefault("pressure_conversion_factor", p_c_f, 1.0);
         std::vector<double> time_Ma;
         std::vector<double> effectiveStress_bar;
+        std::vector<double> UintahDissolutionTime;
         for( ProblemSpecP timePoint = burHist->findBlock("time_point");
             timePoint != nullptr;
             timePoint = timePoint->findNextBlock("time_point") ) {
           double time      = 0.0;
           double effStress = 0.0;
-          timePoint->require("time_Ma",               time);
-          timePoint->require("effectiveStress_bar",   effStress);
+          double UDT       = 0.0;
+          timePoint->require("time_Ma",                      time);
+          timePoint->require("effectiveStress_bar",          effStress);
+          timePoint->getWithDefault("UintahDissolutionTime", UDT, 0);
 
           time_Ma.push_back(time);
           effectiveStress_bar.push_back(effStress);
+          UintahDissolutionTime.push_back(UDT);
         }
         int CI = 0;
         burHist->getWithDefault("current_index", CI, time_Ma.size()-1);
         double maxKE = 9.9e99;
-//        std::cout << "d_curTime = " << d_curTime << std::endl;
-//        std::cout << "currentIndex = " << CI << std::endl;
         double uintahTime=d_curTime;
+
+        // Fill up the load curve based on burial history data
         d_time.push_back(uintahTime);
         d_load.push_back(-effectiveStress_bar[CI]*p_c_f);
         d_maxKE.push_back(maxKE);
+        d_BHIndex.push_back(CI);
         for(int i=CI-1;i>=0;i--){
           // ramp phase
           d_phaseType.push_back("ramp");
-          uintahTime+=5.0;
+          uintahTime+=1.0;
           d_time.push_back(uintahTime);
           d_load.push_back(-effectiveStress_bar[i]*p_c_f);
           d_maxKE.push_back(maxKE);
+          d_BHIndex.push_back(i);
 
           // settle down phase
           d_phaseType.push_back("settle");
-          uintahTime+=5.0;
+          uintahTime+=2.0;
           d_time.push_back(uintahTime);
           d_load.push_back(-effectiveStress_bar[i]*p_c_f);
           d_maxKE.push_back(d_stableKE);
+          d_BHIndex.push_back(i);
 
           // hold phase (maybe doing dissolution here)
           d_phaseType.push_back("hold");
-          uintahTime+=5.0;
+          uintahTime+=UintahDissolutionTime[i];
           d_time.push_back(uintahTime);
           d_load.push_back(-effectiveStress_bar[i]*p_c_f);
           d_maxKE.push_back(maxKE);
+          d_BHIndex.push_back(i);
         }
         d_phaseType.push_back("hold");
+//      for(unsigned int i=0;i<d_time.size();i++){
+//        std::cout << "d_BHIndex[" << i << "] = " << d_BHIndex[i] << std::endl;
+//      }
       }
      } else {
        for( ProblemSpecP timeLoad = loadCurve->findBlock("time_point");
@@ -236,16 +252,19 @@ WARNING
            timeLoad = timeLoad->findNextBlock("time_point") ) {
          double time = 0.0;
          double maxKE = 9.9e99;
+         int BHIndex;
          std::string phaseType;
          T load;
-         timeLoad->require("time", time);
-         timeLoad->require("load", load);
-         timeLoad->getWithDefault("maxKE", maxKE, 9.9e99);
+         timeLoad->require(       "time",      time);
+         timeLoad->require(       "load",      load);
+         timeLoad->getWithDefault("maxKE",     maxKE,     9.9e99);
          timeLoad->getWithDefault("phaseType", phaseType, "ramp");
+         timeLoad->getWithDefault("BHIndex",   BHIndex,   0);
          d_time.push_back(time);
          d_load.push_back(load);
          d_maxKE.push_back(maxKE);
          d_phaseType.push_back(phaseType);
+         d_BHIndex.push_back(BHIndex);
        }
      }
    }
@@ -256,12 +275,14 @@ WARNING
        ProblemSpecP lc_ps = ps->appendChild("load_curve");
        lc_ps->appendElement("id",d_id);
        lc_ps->appendElement("stableKE",d_stableKE);
-       lc_ps->appendElement("use_burial_history",d_UBH);
+       lc_ps->appendElement("use_burial_history", false);
        for (int i = 0; i<(int)d_time.size();i++) {
          ProblemSpecP time_ps = lc_ps->appendChild("time_point");
-         time_ps->appendElement("time",d_time[i]);
-         time_ps->appendElement("load",d_load[i]);
-         time_ps->appendElement("maxKE",d_maxKE[i]);
+         time_ps->appendElement("time",      d_time[i]);
+         time_ps->appendElement("load",      d_load[i]);
+         time_ps->appendElement("maxKE",     d_maxKE[i]);
+         time_ps->appendElement("phaseType", d_phaseType[i]);
+         time_ps->appendElement("BHIndex",   d_BHIndex[i]);
        }
      }
 

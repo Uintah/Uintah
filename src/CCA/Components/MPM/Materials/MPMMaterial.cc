@@ -242,13 +242,14 @@ void MPMMaterial::deleteGeomObjects()
 ProblemSpecP MPMMaterial::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP mpm_ps = Material::outputProblemSpec(ps);
-  mpm_ps->appendElement("density",d_density);
+  mpm_ps->appendElement("density",             d_density);
   mpm_ps->appendElement("thermal_conductivity",d_thermalConductivity);
-  mpm_ps->appendElement("specific_heat",d_specificHeat);
-  mpm_ps->appendElement("C_p",d_Cp);
-  mpm_ps->appendElement("room_temp",d_troom);
-  mpm_ps->appendElement("melt_temp",d_tmelt);
-  mpm_ps->appendElement("is_rigid",d_is_rigid);
+  mpm_ps->appendElement("specific_heat",       d_specificHeat);
+  mpm_ps->appendElement("C_p",                 d_Cp);
+  mpm_ps->appendElement("room_temp",           d_troom);
+  mpm_ps->appendElement("melt_temp",           d_tmelt);
+  mpm_ps->appendElement("is_rigid",            d_is_rigid);
+  mpm_ps->appendElement("modalID",             d_modalID);
 
   d_cm->outputProblemSpec(mpm_ps);
   d_damageModel->outputProblemSpec(mpm_ps);

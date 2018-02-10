@@ -42,7 +42,6 @@
 
 using namespace std;
 using namespace Uintah;
-using std::vector;
 
 ContactStressDependent::ContactStressDependent(const ProcessorGroup* myworld,
                                  ProblemSpecP& ps, SimulationStateP& d_sS, 
@@ -54,9 +53,10 @@ ContactStressDependent::ContactStressDependent(const ProcessorGroup* myworld,
   lb = Mlb;
   ps->require("masterModalID",        d_masterModalID);
   ps->require("InContactWithModalID", d_inContactWithModalID);
-  ps->require("Ao_mol_cm2_s",         d_Ao_mol_cm2_s);
-  ps->require("Ea_kJ_mol",            d_Ea_kJ_mol);
-  ps->require("rate",                 d_rate);
+  ps->require("Ao_mol_cm2-us",        d_Ao);
+  ps->require("Ea_ug-cm2_us2-mol",    d_Ea);
+  ps->require("R_ug-cm2_us2-mol-K",   d_R);
+  ps->require("Vm_cm3_mol",           d_Vm);
   ps->require("StressThreshold",      d_StressThresh);
   ps->getWithDefault("Temperature",   d_temperature, 300.0);
 }
@@ -71,9 +71,10 @@ void ContactStressDependent::outputProblemSpec(ProblemSpecP& ps)
   dissolution_ps->appendElement("type",         "contactStressDependent");
   dissolution_ps->appendElement("masterModalID",        d_masterModalID);
   dissolution_ps->appendElement("InContactWithModalID", d_inContactWithModalID);
-  dissolution_ps->appendElement("Ao_mol_cm2_s",         d_Ao_mol_cm2_s);
-  dissolution_ps->appendElement("Ea_kJ_mol",            d_Ea_kJ_mol);
-  dissolution_ps->appendElement("rate",                 d_rate);
+  dissolution_ps->appendElement("Ao_mol_cm2-us",        d_Ao);
+  dissolution_ps->appendElement("Ea_ug-cm2_us2-mol",    d_Ea);
+  dissolution_ps->appendElement("R_ug-cm2_us2-mol-K",   d_R);
+  dissolution_ps->appendElement("Vm_cm3_mol",           d_Vm);
   dissolution_ps->appendElement("StressThreshold",      d_StressThresh);
   dissolution_ps->appendElement("Temperature",          d_temperature);
 }
@@ -84,9 +85,13 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
                                               DataWarehouse* old_dw,
                                               DataWarehouse* new_dw)
 {
-   int numMatls = d_sharedState->getNumMPMMatls();
-   ASSERTEQ(numMatls, matls->size());
+  int numMatls = d_sharedState->getNumMPMMatls();
+  ASSERTEQ(numMatls, matls->size());
 
+//  cout << "phase = " << d_phase << endl;
+//  cout << "temperature = " << d_temperature << endl;
+
+  if(d_phase=="hold"){
    for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     Vector dx = patch->dCell();
@@ -110,7 +115,8 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
       new_dw->get(gStress[m],   lb->gStressLabel,       dwi, patch, gnone, 0);
       new_dw->get(gnormtrac[m], lb->gNormTractionLabel, dwi, patch, gnone, 0);
 
-      new_dw->getModifiable(massBurnRate[m], lb->massBurnFractionLabel, dwi, patch);
+      new_dw->getModifiable(massBurnRate[m], 
+                                lb->massBurnFractionLabel, dwi, patch);
       
       MPMMaterial* mat = d_sharedState->getMPMMaterial(m);
       if(mat->getModalID()==d_masterModalID){
@@ -130,6 +136,11 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
     for(int m=0; m < numMatls; m++){
      if(masterMatls[m]){
       int md=m;
+
+      double rate = (0.75*M_PI)
+                  * ((d_Vm*d_Vm)*d_Ao)/(d_R*d_temperature)
+                  * exp(-d_Ea/(d_R*d_temperature));
+      cout << "rate = " << rate << endl;
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
         IntVector c = *iter;
 
@@ -145,17 +156,15 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
           -gnormtrac[md][c] > d_StressThresh){ // Compressive stress is negative
 //           pressure > d_StressThresh){ // && volFrac > 0.6){
             double rho = gmass[md][c]/gvolume[md][c];
-            massBurnRate[md][c] += d_rate*area*rho*2.0*NC_CCweight[c];
-//          double pressFactor = (pressure - d_StressThresh)/d_StressThresh;
-            double pressFactor = (-gnormtrac[md][c]-d_StressThresh)
-                               / d_StressThresh;
-            massBurnRate[md][c] += d_rate*area*rho*2.0*NC_CCweight[c]
-                                         *pressFactor;
+            double stressDiff = (-gnormtrac[md][c]-d_StressThresh);
+            massBurnRate[md][c] += 2.*NC_CCweight[c]*rate*stressDiff*area*rho
+                                  *3.1536e19;
         }
       } // nodes
      } // endif a masterMaterial
     } // materials
   } // patches
+ } // if hold
 }
 
 void ContactStressDependent::addComputesAndRequiresMassBurnFrac(

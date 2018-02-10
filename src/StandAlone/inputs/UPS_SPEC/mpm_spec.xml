@@ -88,6 +88,7 @@
         <fluidOverPressure_bar spec="REQUIRED DOUBLE" />
         <effectiveStress_bar   spec="REQUIRED DOUBLE" />
         <waterSaturation_pct   spec="REQUIRED DOUBLE" />
+        <UintahDissolutionTime spec="OPTIONAL DOUBLE" />
       </time_point>
     </BurialHistory>
 
@@ -175,9 +176,10 @@
       </contact>
 
       <dissolution                       spec="MULTIPLE NO_DATA" >
-        <rate                            spec="OPTIONAL DOUBLE 'positive'" /> 
-        <Ao_mol_cm2_s                    spec="OPTIONAL DOUBLE 'positive'" /> 
-        <Ea_kJ_mol                       spec="OPTIONAL DOUBLE 'positive'" /> 
+        <Vm_cm3_mol                      spec="REQUIRED DOUBLE 'positive'" /> 
+        <R_ug-cm2_us2-mol-K              spec="REQUIRED DOUBLE 'positive'" /> 
+        <Ao_mol_cm2-us                   spec="REQUIRED DOUBLE 'positive'" /> 
+        <Ea_ug-cm2_us2-mol               spec="REQUIRED DOUBLE 'positive'" /> 
         <StressThreshold                 spec="REQUIRED DOUBLE 'positive'" />
         <Temperature                     spec="OPTIONAL DOUBLE 'positive'" />
         <materials                       spec="OPTIONAL MULTIPLE_INTEGERS" />
@@ -186,7 +188,6 @@
         <InContactWithModalID            spec="REQUIRED INTEGER" />
       </dissolution>
 
-      
       <material                          spec="MULTIPLE NO_DATA"
                                            attribute1="name OPTIONAL STRING" >
         <density                         spec="REQUIRED DOUBLE" />

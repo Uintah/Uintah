@@ -316,6 +316,9 @@ WARNING
 
     bool m_recompile {false};
     
+    const VarLabel* m_endSimulationLabel;
+    bool   m_endSimulation{false};
+
   private:
     bool m_AMR {false};
     bool m_lockstepAMR {false};
@@ -340,7 +343,7 @@ WARNING
     const VarLabel* m_checkpointIntervalLabel;
     const VarLabel* m_checkpointTimeStepIntervalLabel;
 
-    const VarLabel* m_endSimulationLabel;
+//    const VarLabel* m_endSimulationLabel;
 
     SimulationTime* m_simulationTime {nullptr};
   
@@ -353,7 +356,7 @@ WARNING
     // The time step that the simulation is at.
     int    m_timeStep{0};
 
-    bool   m_endSimulation{false};
+//    bool   m_endSimulation{false};
 
   protected:    
     SimulationStateP m_sharedState{nullptr};

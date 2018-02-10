@@ -850,7 +850,9 @@ ApplicationCommon::isLastTimeStep( double walltime ) const
              m_timeStep >= m_simulationTime->m_max_time_steps ) ||
 
            ( m_simulationTime->m_max_wall_time > 0 &&
-             walltime >= m_simulationTime->m_max_wall_time ) );
+             walltime >= m_simulationTime->m_max_wall_time ));// ||
+
+//           ( m_sharedState->getEndSimulation()) );
 }
 
 //______________________________________________________________________

@@ -43,11 +43,7 @@ int BurialHistory::populate(ProblemSpecP& ps)
 {
   ProblemSpecP root = ps->getRootNode();
   ProblemSpecP burHist = root->findBlock("BurialHistory");
-/*
-  if (!burHist) 
-    throw ProblemSetupException("**ERROR** No burial history specified.", 
-                                 __FILE__, __LINE__);
-*/
+
   if (burHist){
    burHist->getWithDefault("pressure_conversion_factor", 
                           d_pressure_conversion_factor, 1.0);
@@ -61,6 +57,7 @@ int BurialHistory::populate(ProblemSpecP& ps)
      double fluidOP   = 0.0;
      double effStress = 0.0;
      double waterSat  = 0.0;
+     double UDT       = 0.0;
      timePoint->require("time_Ma",               time);
      timePoint->require("depth_m",               depth);
      timePoint->require("temperature_K",         temp);
@@ -68,6 +65,7 @@ int BurialHistory::populate(ProblemSpecP& ps)
      timePoint->require("fluidPressure_bar",     fluidP);
      timePoint->require("effectiveStress_bar",   effStress);
      timePoint->require("waterSaturation_pct",   waterSat);
+     timePoint->getWithDefault("UintahDissolutionTime", UDT, 0.0);
 
      d_time_Ma.push_back(time);
      d_depth_m.push_back(depth);
@@ -76,6 +74,7 @@ int BurialHistory::populate(ProblemSpecP& ps)
      d_fluidPressure_bar.push_back(fluidP);
      d_effectiveStress_bar.push_back(effStress);
      d_waterSaturation_pct.push_back(waterSat);
+     d_uintahDissolutionTime.push_back(UDT);
    }
    burHist->getWithDefault("current_index", d_CI, d_time_Ma.size()-1);
   } // endif
@@ -98,5 +97,6 @@ void BurialHistory::outputProblemSpec(ProblemSpecP& ps)
     time_ps->appendElement("fluidOverPressure_bar",d_fluidOverPressure_bar[i]);
     time_ps->appendElement("effectiveStress_bar",  d_effectiveStress_bar[i]);
     time_ps->appendElement("waterSaturation_pct",  d_waterSaturation_pct[i]);
+    time_ps->appendElement("UintahDissolutionTime",d_uintahDissolutionTime[i]);
   }
 }

@@ -65,22 +65,22 @@ WARNING
       class ContactStressDependent : public Dissolution {
       private:
          
-         // Prevent copying of this class
-         // copy constructor
-         ContactStressDependent(const ContactStressDependent &con);
-         ContactStressDependent& operator=(const ContactStressDependent &con);
-         
-         SimulationStateP    d_sharedState;
-         
-         // Dissolution rate
-         double d_rate;
-         double d_StressThresh;
-         double d_Ao_mol_cm2_s;
-         double d_Ea_kJ_mol;
-//         double d_temperature;
-         // master material
-         int    d_masterModalID;
-         int    d_inContactWithModalID;
+        // Prevent copying of this class
+        // copy constructor
+        ContactStressDependent(const ContactStressDependent &con);
+        ContactStressDependent& operator=(const ContactStressDependent &con);
+
+        SimulationStateP    d_sharedState;
+
+        // Dissolution rate
+        double d_Vm;
+        double d_R;
+        double d_StressThresh;
+        double d_Ao;
+        double d_Ea;
+        // master material
+        int    d_masterModalID;
+        int    d_inContactWithModalID;
 
       public:
          // Constructor

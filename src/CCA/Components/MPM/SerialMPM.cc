@@ -3149,8 +3149,6 @@ void SerialMPM::setPrescribedMotion(const ProcessorGroup*,
   old_dw->get(simTimeVar, lb->simulationTimeLabel);
   double time = simTimeVar;
 
-
-
  for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing, "Doing setPrescribedMotion");
@@ -3322,9 +3320,6 @@ void SerialMPM::modifyLoadCurves(const ProcessorGroup* ,
   old_dw->get(KE,   lb->KineticEnergyLabel);
   old_dw->get(delT, lb->delTLabel, getLevel(patches) );
 
-  double currentLoad = 0.0;
-  std::string currentPhase;
-
   for(int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size();ii++){
     string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
     if (bcs_type == "Pressure") {
@@ -3336,47 +3331,36 @@ void SerialMPM::modifyLoadCurves(const ProcessorGroup* ,
       int nextIndex = pbc->getLoadCurve()->getNextIndex(time);
       double nextTime = pbc->getLoadCurve()->getTime(nextIndex);
       double timeToNextLoad = nextTime-time;
-      currentLoad = pbc->getLoadCurve()->getLoad(time);
-      currentPhase= pbc->getLoadCurve()->getPhase(nextIndex-1);
       if(timeToNextLoad < delT){
-        cout << "timeToNextLoad = " << timeToNextLoad << endl;
-        cout << "KE = " << KE << endl;
-        cout << "currentPhase = " << currentPhase << endl;
-        cout << "pbc->getLoadCurve()->getMaxKE(nextIndex) = "
-             << pbc->getLoadCurve()->getMaxKE(nextIndex) << endl;
+//        cout << "timeToNextLoad = " << timeToNextLoad << endl;
+//        cout << "KE = " << KE << endl;
+//        cout << "pbc->getLoadCurve()->getMaxKE(nextIndex) = "
+//             << pbc->getLoadCurve()->getMaxKE(nextIndex) << endl;
         if(KE > pbc->getLoadCurve()->getMaxKE(nextIndex)){
           for(int i=nextIndex;i<numPOLC;i++){
             double loadTime = pbc->getLoadCurve()->getTime(i);
             pbc->getLoadCurve()->setTime(i,loadTime+1.0);
           }
         } // if KE
+/*
+        // This is just here so the user can confirm that this is working right
         for(int i=0; i<numPOLC; i++){
           double time = pbc->getLoadCurve()->getTime(i);
           double load = pbc->getLoadCurve()->getLoad(i);
           cout << "time, load = " << time << " " << load << endl;
         } // Loop over points on load curve
+*/
       } //if(timeToNextLoad...
       if(nextIndex>=numPOLC){ // shut down the simulation
-        m_sharedState->setEndSimulation();
+//        m_sharedState->setEndSimulation();
+        m_endSimulation = true;
       } // endif
     } // if bcs_type == "Pressure"
   }   // Loop over physical BCs
 
 
-  if(burialHistory != nullptr){
-    int curIndex = burialHistory->getIndexAtPressure(currentLoad);
-    burialHistory->setCurrentIndex(curIndex);
-    burialHistory->setCurrentPhaseType(currentPhase);
-    int curBHIndex          = burialHistory->getCurrentIndex();
-    double curBHTemperature = burialHistory->getTemperature_K(curBHIndex);
-
-    // DISSOLUTION
-    if (flags->d_doingDissolution) {
-      dissolutionModel->setTemperature(curBHTemperature);
-      dissolutionModel->setPhase(currentPhase);
-    }
-  }
-
+/*
+*/
 }
 
 void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
@@ -3396,6 +3380,12 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
   // Calculate the force vector at each particle for each pressure bc
   std::vector<double> forcePerPart;
   std::vector<PressureBC*> pbcP;
+  int curLCIndex=0;
+  int curBHIndex=0;
+  double geoTime_MYa=0.;
+  double geoTemp_K=0.;
+  std::string currentPhase;
+
   if (flags->d_useLoadCurves) {
     for (int ii = 0;ii < (int)MPMPhysicalBCFactory::mpmPhysicalBCs.size();ii++){
       string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
@@ -3405,17 +3395,42 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
           dynamic_cast<PressureBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
         pbcP.push_back(pbc);
 
+        // get the load curve time (not the ID), use that to get the BH index
+        curLCIndex = pbc->getLoadCurve()->getNextIndex(time)-1;
+        currentPhase= pbc->getLoadCurve()->getPhase(curLCIndex);
+        if(burialHistory != nullptr){
+          curBHIndex = pbc->getLoadCurve()->getBHIndex(curLCIndex);
+          geoTime_MYa = burialHistory->getTime_Ma(curBHIndex);
+          geoTemp_K   = burialHistory->getTemperature_K(curBHIndex);
+        }
         if(isProc0_macro){
           double curLoad = pbc->getLoadCurve()->getLoad(time);
           string udaDir = m_output->getOutputLocation();
           string filename=udaDir+"/TimePressure.dat";
           std::ofstream TP(filename.c_str(),ios::app);
-          TP << time << " " << curLoad << endl;
+          TP << time        << " " << curLoad   << " " 
+             << geoTime_MYa << " " << geoTemp_K << endl;
         }
 
         // Calculate the force per particle at current time
         forcePerPart.push_back(pbc->forcePerParticle(time));
       }
+    } // loop over BCs
+  } // if use load curves
+
+  if(burialHistory != nullptr){
+    burialHistory->setCurrentIndex(curBHIndex);
+    burialHistory->setCurrentPhaseType(currentPhase);
+    double curBHTemperature = burialHistory->getTemperature_K(curBHIndex);
+
+    if(curBHIndex==0){ // shut down the simulation
+      m_endSimulation = true;
+    } // endif
+
+    // DISSOLUTION
+    if (flags->d_doingDissolution) {
+      dissolutionModel->setTemperature(curBHTemperature);
+      dissolutionModel->setPhase(currentPhase);
     }
   }
 
@@ -4843,6 +4858,7 @@ void SerialMPM::addTracers(const ProcessorGroup*,
     int numTracerMatls = m_sharedState->getNumTracerMatls();
 
     vector<Point> P;
+    vector<long64> lineNum;
     for(int m = 0; m < numTracerMatls; m++){
       int numNewTracersNeeded=0;
       P.clear();
@@ -4858,10 +4874,13 @@ void SerialMPM::addTracers(const ProcessorGroup*,
 
       if(is) {
        double x,y,z;
+       int line=0;
        while(is >> x >> y >> z){
         Point testPoint(x,y,z);
+        line++;
         if(patch->containsPoint(testPoint)){
           P.push_back(testPoint);
+          lineNum.push_back(line);
           numNewTracersNeeded++;
         }
        }
@@ -4904,7 +4923,7 @@ void SerialMPM::addTracers(const ProcessorGroup*,
 #endif
         int new_index=oldNumTr+i;
         pxtmp[new_index]      = P[i];
-        pidstmp[new_index]    = 0;
+        pidstmp[new_index]    = lineNum[i];
       }
 
       // put back temporary data
