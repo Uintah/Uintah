@@ -1006,6 +1006,8 @@ WallModelDriver::CoalRegionHT::problemSetup( const ProblemSpecP& input_db ){
     m_em_model = scinew dynamic_e(db);
   } else if (emissivity_model_type == 3){
     m_em_model = scinew pokluda_e(db);
+  } else if (emissivity_model_type == 4){
+    m_em_model = scinew pokluda_v(db);
   } else {
     throw InvalidValue("ERROR: WallModelDriver: No emissivity model selected.",__FILE__,__LINE__);
   }
@@ -1086,7 +1088,9 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
 
   double residual, TW_new, T_old, net_q, net_q_radiation, rad_q, extra_src_sum, total_area_face, average_area_face, R_wall, R_en, R_sb, R_tot, Emiss, dp_arrival,dp_flow, tau_sint;
   double T_i, T_en, T_metal, T_sb_l, T_sb_s, dy_dep_sb_s, dy_dep_sb_l, dy_dep_sb_l_old, dy_dep_en, k_en, k_sb_s, k_sb_l, k_en_old, k_sb_s_old, k_sb_l_old;
-  const std::string enamel_name = "enamel";
+  std::vector<double> vdot;
+  std::vector<double> Dp_vec;
+  const std::string enamel_name = "enamel"; 
   const std::string sb_name = "sb";
   const std::string sb_l_name = "sb_liquid";
   vector<Patch::FaceType> bf;
@@ -1200,9 +1204,13 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
 
               dp_arrival=0.0;
               dp_flow=0.0;
+              vdot.clear();
+              Dp_vec.clear();
               for(int i=0; i<vars.Nenv; i++) {
-                dp_arrival+=vars.particle_flow_rate_d[i][c];
+                dp_arrival+=vars.particle_flow_rate_d[i][c]; 
                 dp_flow+=vars.particle_flow_rate[i][c];
+                vdot.push_back(vars.particle_flow_rate[i][c]); 
+                Dp_vec.push_back(vars.particle_flow_rate_d[i][c]/vars.particle_flow_rate[i][c]); 
               }
               dp_arrival=dp_arrival/dp_flow; // [m^3/s * m]/[m^3/s]
               tau_sint=min(dp_arrival/max(vars.ave_deposit_velocity[c],1e-50),1e10); // [s]
@@ -1270,7 +1278,8 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
 
               vars.T_real[c] = (1 - vars.relax) * vars.T_real_old[c] + vars.relax * TW_new; // this is the real wall temperature, vars.T_real_old is the old solution for "temperature".
               // update the net heat flux, emissivity, and thermal conductivies with the new time-averaged wall temperature and thickness
-              m_em_model->model(Emiss,wi.emissivity,vars.T_real[c],dp_arrival, tau_sint);
+              double T_lim = std::max(273.0,std::min(3500.0,vars.T_real[c]));
+              m_em_model->model(Emiss,wi.emissivity,T_lim,dp_arrival, tau_sint, Dp_vec, vdot);
               vars.emissivity[c]=Emiss;
               net_q = Emiss * (rad_q - _sigma_constant * std::pow( vars.T_real[c], 4.0 )) + extra_src_sum;
               residual = 0.0;

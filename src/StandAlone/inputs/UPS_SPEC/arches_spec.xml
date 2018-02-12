@@ -529,6 +529,8 @@
           <ash_softening_temperature             spec="OPTIONAL DOUBLE" />     <!-- Base of ash cone is equal to its height. Porosity is set to zero when T > (T_soft + T_fluid ) / 2.  -->
           <ash_hemispherical_temperature         spec="OPTIONAL DOUBLE" />     <!-- Base of ash cone is twice its height. This is the temperature at which ash particles melting probability is assumed to be 1. -->
           <ash_fluid_temperature                 spec="OPTIONAL DOUBLE" />     <!-- Ash cone has spread to a fused liquid mass. This is the slagging temperature used in the wallHT model. -->
+          <visc_pre_exponential_factor           spec="OPTIONAL DOUBLE" />     <!-- Urbain visocity pre-exponential factor. [poise/K]-->
+          <visc_activation_energy                spec="OPTIONAL DOUBLE" />     <!-- Urbain visocity activation temperature. [K]-->
 
 
         <!-- Coal Properties -->

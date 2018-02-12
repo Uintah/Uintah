@@ -37,6 +37,8 @@ namespace Uintah{
         double T_fluid;             ///< Ash fluid temperature
         double T_soft;              ///< Ash softening temperature
         double T_porosity;          ///< Ash porosity temperature
+        double visc_pre_exponential_factor; ///< Ash viscosity pre-exponential factor [poise/K] -Urbain viscosity model
+        double visc_activation_energy; ///< Ash viscosity pre-exponential factor [poise/K] -Urbain viscosity model
 
         std::vector<double> init_ash;
         std::vector<double> init_rawcoal;
@@ -148,6 +150,8 @@ namespace Uintah{
             db_coal_props->getWithDefault("ash_hemispherical_temperature", _coal_db.T_hemisphere, -999);
             db_coal_props->getWithDefault("ash_fluid_temperature", _coal_db.T_fluid, -999);
             db_coal_props->getWithDefault("ash_softening_temperature", _coal_db.T_soft, -999);
+            db_coal_props->getWithDefault("visc_pre_exponential_factor", _coal_db.visc_pre_exponential_factor, -999);
+            db_coal_props->getWithDefault("visc_activation_energy", _coal_db.visc_activation_energy, -999);
             _coal_db.T_porosity = 0.5 * (_coal_db.T_soft + _coal_db.T_fluid);
 
           }
