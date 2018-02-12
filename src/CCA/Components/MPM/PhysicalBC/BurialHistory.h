@@ -160,27 +160,6 @@ WARNING
         return 0;
       }
 
-#if 0
-      // Get the load at time t
-      inline double getTimeAtPressure(double Psign) {
-
-        double P = fabs(Psign);
-
-        int ntimes = static_cast<int>(d_time_Ma.size());
-        if (P <= d_effectiveStress_bar[ntimes-1]) return d_time_Ma[ntimes-1];
-
-        for (int ii = 1; ii < ntimes; ii++) {
-          if (P >= d_effectiveStress_bar[ii]) {
-            double s = (d_effectiveStress_bar[ii]-P)/
-                       (d_effectiveStress_bar[ii]-d_effectiveStress_bar[ii-1]);
-            return (d_time_Ma[ii-1]*s + d_time_Ma[ii]*(1.0-s));
-          } 
-        }
-
-        return d_time_Ma[0];
-      }
-#endif
-
       inline void setCurrentIndex(int index) {
         d_CI = index;
       }
@@ -200,6 +179,8 @@ WARNING
       
       // Private Data
       double d_pressure_conversion_factor;
+      double d_ramp_time;
+      double d_settle_time;
       double d_CI;
       std::string d_currentPhaseType;
       std::vector<double> d_time_Ma;
@@ -210,20 +191,6 @@ WARNING
       std::vector<double> d_effectiveStress_bar;
       std::vector<double> d_waterSaturation_pct;
       std::vector<double> d_uintahDissolutionTime;
-
-#if 0
-      struct BurialPoint {
-        double time_Ma;
-        double depth_m;
-        double temperature_K;
-        double fluidOverPress_bar;
-        double fluidPress_bar;
-        double effectiveStress_bar;
-        double waterSaturation_pct;
-      };
-
-      std::vector<BurialPoint> d_BurialPoints;
-#endif
    };
 
 } // End namespace Uintah

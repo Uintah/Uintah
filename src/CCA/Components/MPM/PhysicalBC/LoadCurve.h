@@ -187,8 +187,10 @@ WARNING
         throw ProblemSetupException("**ERROR** No burial history specified.", 
                                      __FILE__, __LINE__);
       } else {
-        double p_c_f;
-        burHist->getWithDefault("pressure_conversion_factor", p_c_f, 1.0);
+        double p_c_f,ramp_time,settle_time;
+        burHist->getWithDefault("pressure_conversion_factor", p_c_f,       1.0);
+        burHist->getWithDefault("ramp_time",                  ramp_time,   1.0);
+        burHist->getWithDefault("settle_time",                settle_time, 2.0);
         std::vector<double> time_Ma;
         std::vector<double> effectiveStress_bar;
         std::vector<double> UintahDissolutionTime;
@@ -219,7 +221,7 @@ WARNING
         for(int i=CI-1;i>=0;i--){
           // ramp phase
           d_phaseType.push_back("ramp");
-          uintahTime+=1.0;
+          uintahTime+=ramp_time;
           d_time.push_back(uintahTime);
           d_load.push_back(-effectiveStress_bar[i]*p_c_f);
           d_maxKE.push_back(maxKE);
@@ -227,7 +229,7 @@ WARNING
 
           // settle down phase
           d_phaseType.push_back("settle");
-          uintahTime+=2.0;
+          uintahTime+=settle_time;
           d_time.push_back(uintahTime);
           d_load.push_back(-effectiveStress_bar[i]*p_c_f);
           d_maxKE.push_back(d_stableKE);

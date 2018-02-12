@@ -47,6 +47,8 @@ int BurialHistory::populate(ProblemSpecP& ps)
   if (burHist){
    burHist->getWithDefault("pressure_conversion_factor", 
                           d_pressure_conversion_factor, 1.0);
+   burHist->getWithDefault("ramp_time",   d_ramp_time, 1.0);
+   burHist->getWithDefault("settle_time", d_ramp_time, 2.0);
    for( ProblemSpecP timePoint = burHist->findBlock("time_point");
        timePoint != nullptr;
        timePoint = timePoint->findNextBlock("time_point") ) {
@@ -87,6 +89,8 @@ void BurialHistory::outputProblemSpec(ProblemSpecP& ps)
   ProblemSpecP lc_ps = ps->appendChild("BurialHistory");
   lc_ps->appendElement("pressure_conversion_factor",
                       d_pressure_conversion_factor);
+  lc_ps->appendElement("ramp_time",     d_ramp_time);
+  lc_ps->appendElement("settle_time",   d_settle_time);
   lc_ps->appendElement("current_index", d_CI);
   for (int i = 0; i<(int)d_time_Ma.size();i++) {
     ProblemSpecP time_ps = lc_ps->appendChild("time_point");
