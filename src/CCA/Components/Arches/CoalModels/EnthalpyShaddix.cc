@@ -443,6 +443,7 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
       which_dw->get( radiationVolqIN, _volq_varlabel, matlIndex, patch, gn, 0);
       which_dw->get( abskp, _abskp_varlabel, matlIndex, patch, gn, 0);
       if (_radiateAtGasTemp){
+       
         which_dw->get( rad_particle_temperature, _gas_temperature_varlabel, matlIndex, patch, gn, 0 );
       }else{
         which_dw->get( rad_particle_temperature, _particle_temperature_varlabel, matlIndex, patch, gn, 0 );
@@ -476,8 +477,6 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
     constCCVariable<Vector> partVel;
     ArchesLabel::PartVelMap::const_iterator iter = d_fieldLabels->partVel.find(d_quadNode);
     new_dw->get(partVel, iter->second, matlIndex, patch, gn, 0);
-
-
   Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
       Uintah::parallel_for( range, [&](int i, int j, int k) {
          double max_Q_convection;
@@ -547,6 +546,7 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
          if (std::abs(Q_convection) > std::abs(max_Q_convection)){
          Q_convection = max_Q_convection;
          }
+         Q_convection = Q_convection*weightph;
          // Radiation part: -------------------------
          Q_radiation = 0.0;
          if ( _radiationOn) {
@@ -554,7 +554,7 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
          Eb = 4.0*_sigma*std::pow(rad_particle_temperature(i,j,k),4.0);
          FSum = radiationVolqIN(i,j,k);
          Q_radiation = abskp(i,j,k)*(FSum - Eb);
-         double Q_radMax=(std::pow( radiationVolqIN(i,j,k) / (4.0 * _sigma )  , 0.25)-rad_particle_temperature(i,j,k))/(dt)*alpha_cp;
+         double Q_radMax=(std::pow( radiationVolqIN(i,j,k) / (4.0 * _sigma )  , 0.25)-rad_particle_temperature(i,j,k))/(dt)*alpha_cp*weightph ;
          if (std::abs(Q_radMax) < std::abs(Q_radiation)){
          Q_radiation=Q_radMax;
          }
@@ -563,14 +563,14 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
          double hc = _Hc0 + hint * _RdMW;
          Q_reaction = charoxi_temp_sourceph;
          // This needs to be made consistant with lagrangian particles!!! - derek 12/14
-         heat_rate_ = (Q_convection*weightph + Q_radiation + _ksi*Q_reaction - (devol_gas_sourceph + chargas_sourceph)*hc)/
+         heat_rate_ = (Q_convection + Q_radiation + _ksi*Q_reaction - (devol_gas_sourceph + chargas_sourceph)*hc)/
          (_enthalpy_scaling_constant*_weight_scaling_constant);
-         gas_heat_rate_ = -weightph*Q_convection - Q_radiation - _ksi*Q_reaction + (devol_gas_sourceph+chargas_sourceph)*hc;
+         gas_heat_rate_ = -Q_convection - Q_radiation - _ksi*Q_reaction + (devol_gas_sourceph+chargas_sourceph)*hc;
          }
          heat_rate(i,j,k) = heat_rate_;
          gas_heat_rate(i,j,k) = gas_heat_rate_;
-         qconv(i,j,k) = Q_convection;
-         qrad(i,j,k) = Q_radiation;
+         qconv(i,j,k) = Q_convection; // W/m^3
+         qrad(i,j,k) = Q_radiation; // W/m^3
        } );
 
 
