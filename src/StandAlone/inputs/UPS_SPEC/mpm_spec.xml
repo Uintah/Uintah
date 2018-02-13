@@ -79,6 +79,8 @@
 
     <BurialHistory             spec="OPTIONAL NO_DATA" >
       <pressure_conversion_factor spec="OPTIONAL DOUBLE" />
+      <ramp_time               spec="OPTIONAL DOUBLE" />
+      <settle_time             spec="OPTIONAL DOUBLE" />
       <currentIndex            spec="OPTIONAL INTEGER" />
       <time_point              spec="MULTIPLE NO_DATA" >
         <time_Ma               spec="REQUIRED DOUBLE" />
