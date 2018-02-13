@@ -264,13 +264,13 @@ protected:
   long long * m_papi_event_values;         // PAPI event set values
 
   struct PapiEvent {
-    bool                           m_is_supported{false};
-    int                            m_event_value_idx{0};
-    std::string                    m_name{""};
-    SimulationState::RuntimeStat   m_sim_stat_name{};
+    bool                   m_is_supported{false};
+    int                    m_event_value_idx{0};
+    std::string            m_name{""};
+    RuntimeStatsEnum       m_sim_stat_name{};
 
-    PapiEvent( const std::string                  & name
-             , const SimulationState::RuntimeStat & sim_stat_name )
+    PapiEvent( const std::string      & name
+             , const RuntimeStatsEnum & sim_stat_name )
       : m_name(name)
       , m_sim_stat_name(sim_stat_name)
     { }
