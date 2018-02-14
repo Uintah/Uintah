@@ -47,14 +47,14 @@ namespace Uintah{
 
         /** @brief return the dt **/
         inline double get_dt(){ return _tsk_info.dt; };
-        
+
         /** @brief return the time step **/
         inline int get_timeStep(){ return _tsk_info.timeStep; };
-        
+
         /** @brief return the time **/
         inline double get_time(){ return _tsk_info.time; };
-        
-        /** @brief set the time **/ 
+
+        /** @brief set the time **/
         inline void set_time(const double time){ _tsk_info.time = time; };
 
         /** @brief Return a bool to indicate if this Arches Task is a subset of a larger, single
@@ -106,7 +106,7 @@ namespace Uintah{
 
         /** @brief Return a CONST UINTAH field specifying the DW **/
         template <typename T>
-        inline 
+        inline
         T*
         get_const_uintah_field( const std::string name,
           ArchesFieldContainer::WHICH_DW which_dw ){
@@ -128,7 +128,7 @@ namespace Uintah{
         template <typename T>
         inline
         T*
-        get_const_or_temp_uintah_field( const std::string name, 
+        get_const_or_temp_uintah_field( const std::string name,
                                         const bool        is_temp,
                                         const int         nGhosts = 1 ){
           if ( is_temp ){
@@ -153,7 +153,7 @@ namespace Uintah{
                    the memory. **/
         template <typename T>
         inline
-        void 
+        void
         get_const_unmanaged_uintah_field( const std::string name,
                                                 T&          field ){
           _field_container->get_const_unmanaged_field<T>( name, field );
@@ -203,6 +203,16 @@ namespace Uintah{
 
         /** @brief Get the current patch ID **/
         inline int get_patch_id(){ return _patch->getID(); }
+
+        /** @brief get NEW DW reference **/
+        DataWarehouse* getNewDW(){
+          return _field_container->getNewDW();
+        }
+
+        /** @brief get an OLD DW reference **/
+        DataWarehouse* getOldDW(){
+          return _field_container->getOldDW();
+        }
 
       private:
 
