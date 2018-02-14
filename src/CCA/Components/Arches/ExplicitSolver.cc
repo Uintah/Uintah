@@ -1124,6 +1124,7 @@ ExplicitSolver::initialize( const LevelP     & level,
     BFM::iterator i_turb_model_fac = _task_factory_map.find("turbulence_model_factory");
 
     i_trans_fac->second->set_bcHelper( m_bcHelper[level->getID()] );
+    i_util_fac->second->set_bcHelper( m_bcHelper[level->getID()] );
 
     bool is_restart = false;
     const bool dont_pack_tasks = false;
@@ -1366,6 +1367,7 @@ ExplicitSolver::sched_restartInitialize( const LevelP& level, SchedulerP& sched 
   typedef std::map<std::string, std::shared_ptr<TaskFactoryBase> > BFM;
   BFM::iterator i_property_models_fac = _task_factory_map.find("property_models_factory");
   TaskFactoryBase::TaskMap all_prop_tasks = i_property_models_fac->second->retrieve_all_tasks();
+
   for ( TaskFactoryBase::TaskMap::iterator i = all_prop_tasks.begin(); i != all_prop_tasks.end(); i++) {
 
     i->second->schedule_init( level, sched, matls, doingRestart );
@@ -1375,6 +1377,9 @@ ExplicitSolver::sched_restartInitialize( const LevelP& level, SchedulerP& sched 
   setupBoundaryConditions( level, sched, doingRestart );
 
   d_tabulated_properties->set_bcHelper( m_bcHelper[level->getIndex()]);
+
+  BFM::iterator i_util_fac = _task_factory_map.find("utility_factory");
+  i_util_fac->second->set_bcHelper( m_bcHelper[level->getIndex()]);
 
   //Arches only currently solves on the finest level
   if ( !level->hasFinerLevel() ){
@@ -2139,7 +2144,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       sched->get_dw(1)->get( timeStep, d_lab->d_timeStepLabel );
 
     d_turbCounter = timeStep;
-    
+
     if ((d_turbCounter%d_turbModelCalcFreq == 0)&&
         ((curr_level==0)||((!(curr_level==0))&&d_turbModelRKsteps)))
       d_turbModel->sched_reComputeTurbSubmodel(sched, level, matls,
