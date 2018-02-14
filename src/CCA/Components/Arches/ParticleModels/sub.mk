@@ -43,6 +43,7 @@ SRCS +=  \
          $(SRCDIR)/CharOxidationps.cc      \
          $(SRCDIR)/PartVariablesDQMOM.cc   \
          $(SRCDIR)/ParticleTools.cc        \
+         $(SRCDIR)/DQMOMNoInversion.cc     \
          $(SRCDIR)/TotNumDensity.cc        
 
 
