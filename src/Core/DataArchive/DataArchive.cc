@@ -668,9 +668,9 @@ DataArchive::setupQueryPIDX(       PIDX_access     & access,
       PIDX_set_mpi_access( access, comm );
     }
     else {
-      cout << Uintah::Parallel::getMPIRank() << ": setting up pidx comm\n";
+      // cout << Uintah::Parallel::getMPIRank() << ": setting up pidx comm\n";
       PIDX_set_mpi_access( access, d_pidxComms[ level->getIndex() ] );
-      cout << Uintah::Parallel::getMPIRank() << ": done setting up pidx comm\n";
+      // cout << Uintah::Parallel::getMPIRank() << ": done setting up pidx comm\n";
     }
   }
   //__________________________________
@@ -1308,7 +1308,7 @@ void
 DataArchive::createPIDXCommunicator( const GridP & grid, LoadBalancer * lb )
 {
   int rank = Uintah::Parallel::getMPIRank();
-  cout << rank << ": entering createPIDXCommunicator() for this: " << this << "\n";
+  // cout << rank << ": entering createPIDXCommunicator() for this: " << this << "\n";
 
   lb->possiblyDynamicallyReallocate( grid, LoadBalancer::RESTART_LB );
 
@@ -1318,7 +1318,7 @@ DataArchive::createPIDXCommunicator( const GridP & grid, LoadBalancer * lb )
   // Create new MPI Comms
   d_pidxComms.resize( grid->numLevels() );
   
-  cout << rank << ": number of levels: " << grid->numLevels() << "\n";
+  // cout << rank << ": number of levels: " << grid->numLevels() << "\n";
 
   for( int lev = 0; lev < grid->numLevels(); lev++ ) {
 
@@ -1329,7 +1329,7 @@ DataArchive::createPIDXCommunicator( const GridP & grid, LoadBalancer * lb )
     const PatchSubset*  patchsubset = patches->getSubset( rank );
 
     color = !patchsubset->empty();
-    cout << rank << ": createPIDXCommunicator() color is: " << color << "\n";
+    // cout << rank << ": createPIDXCommunicator() color is: " << color << "\n";
 
     MPI_Comm comm = Parallel::getRootProcessorGroup()->getComm();
     MPI_Comm_split( comm, color, rank, &( d_pidxComms[ lev ] ) );
@@ -1338,10 +1338,10 @@ DataArchive::createPIDXCommunicator( const GridP & grid, LoadBalancer * lb )
     if ( color == 1 ) {
       int nsize;
       MPI_Comm_size( d_pidxComms[ lev ], &nsize );
-      cout << rank << ": NewComm Size = " <<  nsize << " on level: " << lev << "\n";
+      // cout << rank << ": NewComm Size = " <<  nsize << " on level: " << lev << "\n";
     }
   }
-  cout << rank << ": leaving createPIDXCommunicator() with " << d_pidxComms.size() << " pidx comms\n";
+  // cout << rank << ": leaving createPIDXCommunicator() with " << d_pidxComms.size() << " pidx comms\n";
 }
 #endif
 
@@ -1445,7 +1445,7 @@ DataArchive::restartInitialize( const int                timestep_index,
 
         Variable * var = label->typeDescription()->createInstance();
 
-        cout << Uintah::Parallel::getMPIRank() << ": calling query\n";
+        // cout << Uintah::Parallel::getMPIRank() << ": calling query\n";
         query( *var, key.name_, matl, patch, timestep_index, &data );
 
         ParticleVariableBase* particles;
@@ -1465,7 +1465,7 @@ DataArchive::restartInitialize( const int                timestep_index,
   else { // Reading PIDX UDA
 
 #if HAVE_PIDX
-    cout << "Here\n";
+    // cout << "Here\n";
     createPIDXCommunicator( grid, lb );
 
     
@@ -1473,7 +1473,7 @@ DataArchive::restartInitialize( const int                timestep_index,
     
     for( int lev_num = 0; lev_num < grid->numLevels(); lev_num++ ) {
 
-      cout << Uintah::Parallel::getMPIRank() << ":    on level: " << lev_num << "\n";
+      // cout << Uintah::Parallel::getMPIRank() << ":    on level: " << lev_num << "\n";
 
       LevelP level = grid->getLevel( lev_num );
 
@@ -1498,15 +1498,15 @@ DataArchive::restartInitialize( const int                timestep_index,
           DataFileInfo & data = timedata.d_datafileInfoValue[ 0 ];
           bool found;
                 
-          cout << Uintah::Parallel::getMPIRank() << ": calling query() on: " << var_name << "\n";
+          // cout << Uintah::Parallel::getMPIRank() << ": calling query() on: " << var_name << "\n";
 
           found = query( *red_var, varMapIter->first, -1, nullptr, timestep_index, &data );
           if( !found ) {
-            cout << "Warning: " << *label << " (reduction var) not found... skipping.\n";
+            // cout << "Warning: " << *label << " (reduction var) not found... skipping.\n";
             delete red_var;
             continue;
           }
-          cout << Uintah::Parallel::getMPIRank() << ": putting reduction var " << var_name << " info into dw, patch info: " << lev_num << "\n";
+          // cout << Uintah::Parallel::getMPIRank() << ": putting reduction var " << var_name << " info into dw, patch info: " << lev_num << "\n";
           dw->put( red_var, label, -1, nullptr );
           delete red_var;
         }
@@ -1514,12 +1514,12 @@ DataArchive::restartInitialize( const int                timestep_index,
           number_of_materials = varNameToNumMatlsMap[ var_name ];
         }
 
-        cout << Uintah::Parallel::getMPIRank() << ": READING in var: " << *label << " with number of matls: " << number_of_materials << "\n";
+        // cout << Uintah::Parallel::getMPIRank() << ": READING in var: " << *label << " with number of matls: " << number_of_materials << "\n";
         // MATERIAL LOOP
 
         for( int matl = 0; matl < number_of_materials; matl++ ) { // FIXME CHANGE "1" TO CORRECT VALUE!!!!!!!!!!!!!!!!
 
-          cout << Uintah::Parallel::getMPIRank() << ":      looking for matl: " << matl << "\n";
+          // cout << Uintah::Parallel::getMPIRank() << ":      looking for matl: " << matl << "\n";
 
           map< VarnameMatlPatch, BufferAndSizeTuple* > dataBufferMap;
 
@@ -1528,13 +1528,13 @@ DataArchive::restartInitialize( const int                timestep_index,
           PIDX_access   access;
 
           if( !type->isReductionVariable() ) {
-            cout << Uintah::Parallel::getMPIRank() << ": calling setupQueryPIDX()\n";
+            // cout << Uintah::Parallel::getMPIRank() << ": calling setupQueryPIDX()\n";
             bool found = setupQueryPIDX( access, idxFile, varDesc, level, type, var_name, matl, timestep_index );
-            cout << Uintah::Parallel::getMPIRank() << ": done calling setupQueryPIDX()\n";
+            // cout << Uintah::Parallel::getMPIRank() << ": done calling setupQueryPIDX()\n";
 
             if( !found ) {
               // Did not find this var/material... skipping...
-              cout << Uintah::Parallel::getMPIRank() << ":         not found, skipping....\n";
+              // cout << Uintah::Parallel::getMPIRank() << ":         not found, skipping....\n";
               continue;
             }
           }
@@ -1543,7 +1543,7 @@ DataArchive::restartInitialize( const int                timestep_index,
 
           for( int patch_index = 0; patch_index < level->numPatches(); patch_index++ ) {
 
-            cout << Uintah::Parallel::getMPIRank() << ":         patch_index: " << patch_index << ".\n";
+            // cout << Uintah::Parallel::getMPIRank() << ":         patch_index: " << patch_index << ".\n";
 
             const Patch* patch = level->getPatch( patch_index );
 
@@ -1551,24 +1551,26 @@ DataArchive::restartInitialize( const int                timestep_index,
 
               // Only read in data that belongs to this processor.
 
-              cout << Uintah::Parallel::getMPIRank() << ":         is my patch.\n";
+              // cout << Uintah::Parallel::getMPIRank() << ":         is my patch.\n";
 
               if( !type->isReductionVariable() ) { // Non-reduction variables:
 
-                cout << Uintah::Parallel::getMPIRank() << ":         create buffer\n";
+                // cout << Uintah::Parallel::getMPIRank() << ":         create buffer\n";
                 BufferAndSizeTuple * data = new BufferAndSizeTuple();
 
-                cout << Uintah::Parallel::getMPIRank() << ": a) data->buffer is " << (data->buffer == nullptr ? "nullptr" : (void*)(data->buffer))
-                     << " and size: " << data->size << "\n";
+                // cout << Uintah::Parallel::getMPIRank() << ": a) data->buffer is " << (data->buffer == nullptr ? "nullptr" : (void*)(data->buffer))
+                //      << " and size: " << data->size << "\n";
 
                 queryPIDX( data, varDesc, type, var_name, matl, patch, timestep_index );
 
+#if 0
                 if( data->buffer == nullptr ) {
                   cout << Uintah::Parallel::getMPIRank() << ": b) DATA IS nullptr and size: " << data->size << "\n";
                 }
                 else {
                   cout << Uintah::Parallel::getMPIRank() << ": b) data is at " << (void*)(data->buffer) << " and size: " << data->size << "\n";
                 }
+#endif
 
 //                if( !found ) {
 //                  proc0cout << "Warning: " << *label << " not found... skipping.\n";
@@ -1577,12 +1579,12 @@ DataArchive::restartInitialize( const int                timestep_index,
 //                }
 
                 VarnameMatlPatch vmp( label->getName(), matl, patch->getID() );
-                cout << Uintah::Parallel::getMPIRank() << ": inserting data tubple: " << data << " into dataBufferMap\n";
+                // cout << Uintah::Parallel::getMPIRank() << ": inserting data tubple: " << data << " into dataBufferMap\n";
               
                 dataBufferMap[ vmp ] = data;
                 
-                cout << Uintah::Parallel::getMPIRank() << ": just put var in dw for patch: " << patch->getID() << ", size of map is: " << dataBufferMap.size()
-                     << " and map is: " << &dataBufferMap << "\n";
+                // cout << Uintah::Parallel::getMPIRank() << ": just put var in dw for patch: " << patch->getID() << ", size of map is: " << dataBufferMap.size()
+                //      << " and map is: " << &dataBufferMap << "\n";
               }
               else {
                 throw InternalError( "DataArchive - should never get here", __FILE__, __LINE__ );
@@ -1607,14 +1609,14 @@ DataArchive::restartInitialize( const int                timestep_index,
             PIDXOutputContext::checkReturnCode( ret, "DataArchive::query() - PIDX_close_access failure", __FILE__, __LINE__ );
 
             // Iterate over buffer map and put data into actual variables...
-            cout << Uintah::Parallel::getMPIRank() << ": SIZE OF MAP is now: " << dataBufferMap.size()
-                 << " and map is: " << &dataBufferMap << "\n";
+            // cout << Uintah::Parallel::getMPIRank() << ": SIZE OF MAP is now: " << dataBufferMap.size()
+            //      << " and map is: " << &dataBufferMap << "\n";
 
             for( map<VarnameMatlPatch,BufferAndSizeTuple*>::iterator iter = dataBufferMap.begin(); iter != dataBufferMap.end(); ++iter ) {
 
               BufferAndSizeTuple     * data = iter->second;
 
-              cout << Uintah::Parallel::getMPIRank() << ": the data tuple is: " << data << "\n";
+              // cout << Uintah::Parallel::getMPIRank() << ": the data tuple is: " << data << "\n";
 
               const VarnameMatlPatch & vmp  = iter->first;
 
@@ -1628,32 +1630,32 @@ DataArchive::restartInitialize( const int                timestep_index,
               //__________________________________
               // Now move the dataPIDX buffer into the array3 variable
 
-              cout << Uintah::Parallel::getMPIRank() << ": c) var: " << vmp.name_ 
-                   << ", data->buffer is " << (data->buffer == nullptr ? "nullptr" : (void*)(data->buffer)) << " and size: " << data->size << "\n";
+              // cout << Uintah::Parallel::getMPIRank() << ": c) var: " << vmp.name_ 
+              //      << ", data->buffer is " << (data->buffer == nullptr ? "nullptr" : (void*)(data->buffer)) << " and size: " << data->size << "\n";
 
 
               var->readPIDX( data->buffer, data->size, timedata.d_swapBytes );
 
-              cout << Uintah::Parallel::getMPIRank() << ": done with readPIDX\n";
+              // cout << Uintah::Parallel::getMPIRank() << ": done with readPIDX\n";
 
               free( data->buffer );
               free( data );
 
               dw->put( var, label, matl, patch ); // fixme, clean up duplicate usage - (ie, fix handling of matl)
-              proc0cout << "done with put\n";
+              // proc0cout << "done with put\n";
             } // end for dataBufferMap iteration
 
           }// end if not reduction var
 
-          cout << Uintah::Parallel::getMPIRank() << ": done with matl: " << matl << ".\n";
+          // cout << Uintah::Parallel::getMPIRank() << ": done with matl: " << matl << ".\n";
 
         } // end for matl 
 
-        cout << Uintah::Parallel::getMPIRank() << ": done with var: " << var_name << ".\n";
+        // cout << Uintah::Parallel::getMPIRank() << ": done with var: " << var_name << ".\n";
 
       } // end for varMapIter
 
-      cout << Uintah::Parallel::getMPIRank() << ": done with level: " << lev_num << ".\n";
+      // cout << Uintah::Parallel::getMPIRank() << ": done with level: " << lev_num << ".\n";
 
     } // end for lev_num
    

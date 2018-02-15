@@ -293,7 +293,7 @@ OnDemandDataWarehouse::put(       Variable* var,
                                   int       matlIndex,
                             const Patch*    patch )
 {
-  proc0cout << "generic put() called for variable " << label->getName() << " on patch: " << (patch ? patch->getID() : -1) << "\n";
+  // proc0cout << "generic put() called for variable " << label->getName() << " on patch: " << (patch ? patch->getID() : -1) << "\n";
 
   union {
       ReductionVariableBase* reduction;
@@ -317,7 +317,7 @@ OnDemandDataWarehouse::put(       Variable* var,
   else {
     SCI_THROW( InternalError("Unknown Variable type", __FILE__, __LINE__) );
   }
-  proc0cout << "end put()\n";
+  // proc0cout << "end put()\n";
 }
 
 //
