@@ -1298,6 +1298,8 @@
         <ash_softening_temperature>1500.0</ash_softening_temperature>
         <ash_hemispherical_temperature>900</ash_hemispherical_temperature>
         <ash_fluid_temperature>1400.0</ash_fluid_temperature>
+        <visc_pre_exponential_factor>1.653920826593733e-13</visc_pre_exponential_factor>
+        <visc_activation_energy>47.808431840038367</visc_activation_energy>
         <ultimate_analysis>
           <C>0.5934 </C>
           <H>0.0417</H>
