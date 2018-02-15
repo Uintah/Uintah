@@ -22,6 +22,14 @@ RateDeposition::problemSetup( ProblemSpecP& db ){
   const ProblemSpecP db_root = db->getRootNode();
   CoalHelper& coal_helper = CoalHelper::self();
 
+   T_fluid = coal_helper.get_coal_db().T_fluid;
+   FactA = coal_helper.get_coal_db().visc_pre_exponential_factor;
+   lnFactA = std::log(FactA);
+   FactB = coal_helper.get_coal_db().visc_activation_energy;
+  if (FactA==-999 || FactB==-999){
+    throw ProblemSetupException("Error: RateDeposition requires specification of ash viscosity parameters.", __FILE__, __LINE__);
+  }
+
   _Tmelt = coal_helper.get_coal_db().T_hemisphere; 
   db->getWithDefault("CaO",_CaO,26.49/100.0);
   db->getWithDefault("MgO",_MgO,4.47/100.0);
@@ -436,15 +444,15 @@ RateDeposition::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     const int shiftk = ( Norm_out_Z(i,j,k) > 0 ) ? 1 : 0;
 
     ProbSurfaceX(i,j,k) = ( Norm_out_X(i,j,k) != 0.0 ) ?
-                          compute_prob_stick( Aprepontional, Bactivational, WallTemperature(i-shifti,j,k), MaxT_temp ) :
+                          compute_prob_stick_fact( lnFactA, FactB, WallTemperature(i-shifti,j,k), MaxT_temp ) :
                           0.0;
 
     ProbSurfaceY(i,j,k) = ( Norm_out_Y(i,j,k) != 0.0 ) ?
-                          compute_prob_stick( Aprepontional, Bactivational, WallTemperature(i,j-shiftj,k), MaxT_temp ) :
+                          compute_prob_stick_fact( lnFactA, FactB, WallTemperature(i,j-shiftj,k), MaxT_temp ) :
                           0.0;
 
     ProbSurfaceZ(i,j,k) = ( Norm_out_Z(i,j,k) != 0.0 ) ?
-                          compute_prob_stick( Aprepontional, Bactivational, WallTemperature(i,j,k-shiftk), MaxT_temp ) :
+                          compute_prob_stick_fact( lnFactA, FactB, WallTemperature(i,j,k-shiftk), MaxT_temp ) :
                           0.0;
 
   });
@@ -518,7 +526,7 @@ RateDeposition::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
       // X direction
       {
         ProbParticleX(i,j,k) = ( Norm_out_X(i,j,k) != 0.0 ) ?
-                               compute_prob_stick( Aprepontional, Bactivational, ParticleTemperature(i-shifti,j,k), MaxParticleTemperature(i-shifti,j,k) ) :
+                               compute_prob_stick_fact( lnFactA, FactB, ParticleTemperature(i-shifti,j,k), MaxParticleTemperature(i-shifti,j,k) ) :
                                0.0;
         ProbDepositionX(i,j,k)= std::min(1.0, 0.5*(ProbParticleX(i,j,k)+sqrt(ProbParticleX(i,j,k)*ProbParticleX(i,j,k) +4*(1-ProbParticleX(i,j,k))*ProbSurfaceX(i,j,k))));
 
@@ -534,7 +542,7 @@ RateDeposition::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
       // Y direction
       {
         ProbParticleY(i,j,k) = ( Norm_out_Y(i,j,k) != 0.0 ) ?
-                               compute_prob_stick( Aprepontional, Bactivational, ParticleTemperature(i,j-shiftj,k), MaxParticleTemperature(i,j-shiftj,k) ) :
+                               compute_prob_stick_fact( lnFactA, FactB, ParticleTemperature(i,j-shiftj,k), MaxParticleTemperature(i,j-shiftj,k) ) :
                                0.0;
         ProbDepositionY(i,j,k)= std::min(1.0, 0.5*(ProbParticleY(i,j,k)+sqrt(ProbParticleY(i,j,k)*ProbParticleY(i,j,k) +4*(1-ProbParticleY(i,j,k))*ProbSurfaceY(i,j,k))));
 
@@ -550,7 +558,7 @@ RateDeposition::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
       // Z direction
       {
         ProbParticleZ(i,j,k) = ( Norm_out_Z(i,j,k) != 0.0 ) ?
-                               compute_prob_stick( Aprepontional, Bactivational, ParticleTemperature(i,j,k-shiftk), MaxParticleTemperature(i,j,k-shiftk) ) :
+                               compute_prob_stick_fact( lnFactA, FactB, ParticleTemperature(i,j,k-shiftk), MaxParticleTemperature(i,j,k-shiftk) ) :
                                0.0;
         ProbDepositionZ(i,j,k)= std::min(1.0, 0.5*(ProbParticleZ(i,j,k)+sqrt(ProbParticleZ(i,j,k)*ProbParticleZ(i,j,k) +4*(1-ProbParticleZ(i,j,k))*ProbSurfaceZ(i,j,k))));
 
