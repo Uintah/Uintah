@@ -1479,12 +1479,6 @@
         </table>
       </Properties>
       <DQMOM type="weightedAbs">
-        <LinearSolver>
-          <tolerance>1e-5</tolerance>
-          <type>Simplest</type>
-          <maxConditionNumber>10000000000000000</maxConditionNumber>
-          <calcConditionNumber>false</calcConditionNumber>
-        </LinearSolver>
         <number_quad_nodes>3</number_quad_nodes>
         <VelModel type="Dragforce">
         </VelModel>

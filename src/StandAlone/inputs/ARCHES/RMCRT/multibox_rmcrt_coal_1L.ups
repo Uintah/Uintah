@@ -1617,12 +1617,12 @@
          <!--high pressure fit-->
          <FOWYDevol>
            <v_hiT>0.5427   </v_hiT>
-           <A>    2.355e7  </A>    
-           <Ta>   1.133e4 </Ta>   
-           <Tbp_graphite>3e3</Tbp_graphite>    
-           <T_mu>1100.0</T_mu>    
-           <T_sigma>250.0</T_sigma>    
-           <T_hardened_bond>1800.0</T_hardened_bond>    
+           <A>    2.355e7  </A>
+           <Ta>   1.133e4 </Ta>
+           <Tbp_graphite>3e3</Tbp_graphite>
+           <T_mu>1100.0</T_mu>
+           <T_sigma>250.0</T_sigma>
+           <T_hardened_bond>1800.0</T_hardened_bond>
            <sigma>1.189e3  </sigma>
          </FOWYDevol>
 
@@ -1826,12 +1826,6 @@
         <inverse_density_average>false</inverse_density_average>
       </Properties>
       <DQMOM type="weightedAbs">
-        <LinearSolver>
-          <tolerance>1e-5</tolerance>
-          <type>Simplest</type>
-          <maxConditionNumber>10000000000000000</maxConditionNumber>
-          <calcConditionNumber>false</calcConditionNumber>
-        </LinearSolver>
         <number_quad_nodes>3</number_quad_nodes>
         <VelModel type="Dragforce"> </VelModel>
         <Models>
@@ -1849,7 +1843,7 @@
             <low_clip>9.9999999999999995e-07</low_clip>
             <high_clip>999999</high_clip>
           </model>
-          <model label="char" type="CharOxidationSmith"> 
+          <model label="char" type="CharOxidationSmith">
           </model>
           <model label="max_T_rate" type="MaximumTemperature">
           </model>

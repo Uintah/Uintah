@@ -45,7 +45,10 @@
     <save label="raw_coal_qn3"/>
     <save label="raw_coal_qn4"/>
     <save label="raw_coal_qn0_rhs"/>
-    <save label="length_qn3"/>
+    <save label="rho_coal_0"/>
+    <save label="rho_coal_1"/>
+    <save label="rho_coal_2"/>
+    <save label="rho_coal_3"/>
     <save label="up_qn0"/>
     <save label="a_model_0"/>
     <save label="w_qn0"/>
@@ -287,6 +290,46 @@
           <grid type="CC"/>
           <value>1.e-4</value>
         </model>
+        <model label="w_0" type="constant_property">
+          <grid type="CC"/>
+          <value>0.01</value>
+        </model>
+        <model label="w_1" type="constant_property">
+          <grid type="CC"/>
+          <value>1.01</value>
+        </model>
+        <model label="w_2" type="constant_property">
+          <grid type="CC"/>
+          <value>2.01</value>
+        </model>
+        <model label="w_3" type="constant_property">
+          <grid type="CC"/>
+          <value>3.01</value>
+        </model>
+        <model label="w_4" type="constant_property">
+          <grid type="CC"/>
+          <value>4.01</value>
+        </model>
+        <model label="length_0" type="constant_property">
+          <grid type="CC"/>
+          <value>50e-6</value>
+        </model>
+        <model label="length_1" type="constant_property">
+          <grid type="CC"/>
+          <value>100e-6</value>
+        </model>
+        <model label="length_2" type="constant_property">
+          <grid type="CC"/>
+          <value>150e-6</value>
+        </model>
+        <model label="length_3" type="constant_property">
+          <grid type="CC"/>
+          <value>200e-6</value>
+        </model>
+        <model label="length_4" type="constant_property">
+          <grid type="CC"/>
+          <value>250e-6</value>
+        </model>
       </PropertyModelsV2>
       <StateProperties> 
         <model label="my_constant_model" type="constant">
@@ -425,10 +468,6 @@
           <grid independent_type="CC" dependent_type="CC"/>
           <constant>[2., 2., 2., 2, 2]</constant> 
         </model>
-        <model label="w" type="constant">
-          <grid independent_type="CC" dependent_type="CC"/>
-          <constant>[0.2,0.2,0.2,0.2,0.2]</constant> 
-        </model>
         <model label="temperature_coal" type="constant">
           <grid independent_type="CC" dependent_type="CC"/>
           <constant>[1000.,1000.,2000.,1500,1500]</constant> 
@@ -445,12 +484,7 @@
           <grid independent_type="CC" dependent_type="CC"/>
           <constant>[0,0,0,0,0]</constant> 
         </model>
-        <model label="length" type="constant">
-          <grid independent_type="CC" dependent_type="CC"/>
-          <constant>[50e-6,50e-6,150e-6,200e-6,200e-6]</constant> 
-        </model>
-        <!--model label="number_density" type="total_number_density"/-->
-        <model label="dqmom_variales" type="particle_variables_dqmom"/>
+        <model label="dqmom_variables" type="particle_variables_dqmom"/>
         <model label="rho_coal" type="coal_density">
           <model_type>dynamic_dqmom</model_type>
         </model>
@@ -469,21 +503,12 @@
             <env_constant qn="3" value="3.01"/>
             <env_constant qn="4" value="4.01"/>
           </initialization>
-          <scaling_const>[2,2,2,2,2]</scaling_const>
+          <scaling_const>[1,1,1,1,1]</scaling_const>
         </Weights>
         <Ic label="raw_coal">
           <model label="a_model"/>
         </Ic>
         <Ic label="char_mass"/>
-        <Ic label="length">
-          <initialization type="env_constant">
-            <env_constant qn="0" value="0.01"/>
-            <env_constant qn="1" value="1.01"/>
-            <env_constant qn="2" value="2.01"/>
-            <env_constant qn="3" value="3.01"/>
-            <env_constant qn="4" value="4.01"/>
-          </initialization>
-        </Ic>
         <Ic label="up"/>
         <Ic label="vp"/>
         <Ic label="wp"/>

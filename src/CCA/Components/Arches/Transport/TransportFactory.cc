@@ -477,7 +477,7 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
   }
 
   //Create weights
-  for ( unsigned int i = 0; i < nQn; i++ ){
+  for ( int i = 0; i < int(nQn); i++ ){
 
     ProblemSpecP eqn_db = db_eqn_group->appendChild("eqn");
     std::stringstream this_qn;
@@ -493,18 +493,20 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
     }
 
     //link the models with the Weight:
-    if ( db_weight->findBlock("model") ){
-      for ( ProblemSpecP db_model = db_weight->findBlock("model"); db_model != nullptr;
-            db_model = db_model->findNextBlock("model") ){
+    //if ( db_weight->findBlock("model") ){
+      //for ( ProblemSpecP db_model = db_weight->findBlock("model"); db_model != nullptr;
+            //db_model = db_model->findNextBlock("model") ){
 
-        std::string label;
-        db_model->getAttribute("label", label);
+        //std::string label;
+        //db_model->getAttribute("label", label);
 
-        ProblemSpecP src_db = eqn_db->appendChild("src");
-        src_db->setAttribute( "label", label );
+        //ProblemSpecP src_db = eqn_db->appendChild("src");
+        //src_db->setAttribute( "label", label );
 
-      }
-    }
+      //}
+    //}
+    ProblemSpecP src_db = eqn_db->appendChild("src");
+    src_db->setAttribute("label", "w_qn"+this_qn.str()+"_src");
 
     ProblemSpecP db_init = db_weight->findBlock("initialization");
     if ( db_init != nullptr ){
@@ -550,7 +552,7 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
     std::string ic_label;
     db_ic->getAttribute("label", ic_label);
 
-    for ( unsigned int i = 0; i < nQn; i++ ){
+    for ( int i = 0; i < int(nQn); i++ ){
 
       ProblemSpecP eqn_db = db_eqn_group->appendChild("eqn");
       std::stringstream this_qn;
@@ -568,18 +570,20 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
       }
 
       //link the models with the Ic:
-      if ( db_ic->findBlock("model") ){
-        for ( ProblemSpecP db_model = db_ic->findBlock("model"); db_model != nullptr;
-              db_model = db_model->findNextBlock("model") ){
+      //if ( db_ic->findBlock("model") ){
+        //for ( ProblemSpecP db_model = db_ic->findBlock("model"); db_model != nullptr;
+              //db_model = db_model->findNextBlock("model") ){
 
-          std::string label;
-          db_model->getAttribute("label", label);
+          //std::string label;
+          //db_model->getAttribute("label", label);
 
-          ProblemSpecP src_db = eqn_db->appendChild("src");
-          src_db->setAttribute( "label", label+"_"+this_qn.str() );
+          //ProblemSpecP src_db = eqn_db->appendChild("src");
+          //src_db->setAttribute( "label", label+"_"+this_qn.str() );
 
-        }
-      }
+        //}
+      //}
+      ProblemSpecP src_db = eqn_db->appendChild("src");
+      src_db->setAttribute("label", ic_label+"_qn"+this_qn.str()+"_src");
 
       ProblemSpecP db_init = db_ic->findBlock("initialization");
       if ( db_init != nullptr ){

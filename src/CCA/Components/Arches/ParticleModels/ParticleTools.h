@@ -44,6 +44,9 @@ namespace Uintah{ namespace ArchesCore{
   /** @brief This function is useful when specifying mass flow inlet of particles **/
   double get_inlet_particle_size(ProblemSpecP& db, const int qn );
 
+  /** @brief Return a list of models asssociated with a particular IC **/
+  std::vector<std::string> getICModels( ProblemSpecP& db, const std::string ic_name );
+
 }} //Uintah::ArchesCore
 
 #endif

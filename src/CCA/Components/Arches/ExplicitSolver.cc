@@ -530,13 +530,15 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
     //dqmom_db->getAttribute( "type", d_which_dqmom );
     d_which_dqmom = "weighedAbs";
 
+    m_DQMOMSolverType = "No_Inversion";
+
     ProblemSpecP db_linear_solver = dqmom_db->findBlock("LinearSolver");
-    if( db_linear_solver ) {
-      string d_solverType;
-      db_linear_solver->getWithDefault("type", d_solverType, "LU");
+    if ( db_linear_solver ){
+
+      db_linear_solver->getWithDefault("type", m_DQMOMSolverType, "LU");
 
       // currently, unweighted abscissas only work with the optimized solver -- remove this check when other solvers work:
-      if( d_which_dqmom == "unweightedAbs" && d_solverType != "Optimize" ) {
+      if( d_which_dqmom == "unweightedAbs" && m_DQMOMSolverType != "Optimize" ) {
         throw ProblemSetupException("Error!: The unweighted abscissas only work with the optimized solver.", __FILE__, __LINE__);
       }
     }
@@ -1269,12 +1271,9 @@ ExplicitSolver::initialize( const LevelP     & level,
     }
 
     //------------------ New Task Interface (start) ------------------------------------------------
-    //particle models
-    all_tasks.clear();
-    all_tasks = i_partmod_fac->second->retrieve_all_tasks();
-    for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++) {
-      i->second->schedule_init(level, sched, matls, is_restart );
-    }
+    i_partmod_fac->second->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE,
+                                                dont_pack_tasks, level, sched, matls );
+
     //------------------ New Task Interface (end) ------------------------------------------------
 
     // check to make sure that all the scalar variables have BCs set and set intrusions:
@@ -1674,8 +1673,9 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     matls );
 
   BFM::iterator i_particle_models = _task_factory_map.find("particle_model_factory");
-  i_particle_models->second->schedule_task_group( "all_tasks", TaskInterface::TIMESTEP_INITIALIZE, dont_pack_tasks, level, sched,
-    matls );
+  i_particle_models->second->schedule_task_group( "all_tasks", TaskInterface::TIMESTEP_INITIALIZE,
+                                                  dont_pack_tasks, level, sched,
+                                                  matls );
 
   _task_factory_map["turbulence_model_factory"]->schedule_task_group( "all_tasks", TaskInterface::TIMESTEP_INITIALIZE, dont_pack_tasks, level, sched,
     matls );
@@ -1764,7 +1764,19 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       modelFactory.sched_coalParticleCalculation( level, sched, curr_level );// compute drag, devol, char, etc models..
 
       // schedule DQMOM linear solve
-      d_dqmomSolver->sched_solveLinearSystem( level, sched, curr_level );
+      if ( m_DQMOMSolverType != "No_Inversion"){
+
+        d_dqmomSolver->sched_solveLinearSystem( level, sched, curr_level );
+
+      } else {
+
+        i_particle_models->second->schedule_task_group( "pre_update_property_models",
+                                                        TaskInterface::TIMESTEP_EVAL,
+                                                        dont_pack_tasks, level, sched,
+                                                        matls );
+
+      }
+
 
       // Evaluate DQMOM equations
       for ( DQMOMEqnFactory::EqnMap::iterator iEqn = weights_eqns.begin();
@@ -3623,11 +3635,9 @@ ExplicitSolver::sched_weightInit( const LevelP& level,
     if (eqn->weight()) {
       const VarLabel* tempVar = eqn->getTransportEqnLabel();
       const VarLabel* tempVar_icv = eqn->getUnscaledLabel();
-      const VarLabel* tempSource = eqn->getSourceLabel();
 
       tsk->computes( tempVar );
       tsk->computes( tempVar_icv );
-      tsk->computes( tempSource );
     }
   }
 
@@ -3670,19 +3680,16 @@ ExplicitSolver::weightInit( const ProcessorGroup*,
 
       if (eqn->weight()) {
         // This is a weight equation
-        const VarLabel* sourceLabel  = eqn->getSourceLabel();
         const VarLabel* phiLabel     = eqn->getTransportEqnLabel();
         const VarLabel* phiLabel_icv = eqn->getUnscaledLabel();
 
-        CCVariable<double> source;
+        //CCVariable<double> source;
         CCVariable<double> phi;
         CCVariable<double> phi_icv;
 
-        new_dw->allocateAndPut( source,  sourceLabel,  matlIndex, patch );
         new_dw->allocateAndPut( phi,     phiLabel,     matlIndex, patch );
         new_dw->allocateAndPut( phi_icv, phiLabel_icv, matlIndex, patch );
 
-        source.initialize(0.0);
         phi.initialize(0.0);
         phi_icv.initialize(0.0);
 
@@ -3715,10 +3722,8 @@ ExplicitSolver::sched_weightedAbsInit( const LevelP& level,
     if (!eqn->weight()) {
       const VarLabel* tempVar = eqn->getTransportEqnLabel();
       const VarLabel* tempVar_icv = eqn->getUnscaledLabel();
-      const VarLabel* tempSource = eqn->getSourceLabel();
       tsk->computes( tempVar );
       tsk->computes( tempVar_icv );
-      tsk->computes( tempSource );
     } else {
       const VarLabel* tempVar = eqn->getTransportEqnLabel();
       tsk->requires( Task::NewDW, tempVar, Ghost::None, 0 );
@@ -3776,7 +3781,6 @@ ExplicitSolver::weightedAbsInit( const ProcessorGroup*,
 
       if (!eqn->weight()) {
         // This is a weighted abscissa
-        const VarLabel* sourceLabel  = eqn->getSourceLabel();
         const VarLabel* phiLabel     = eqn->getTransportEqnLabel();
         const VarLabel* phiLabel_icv = eqn->getUnscaledLabel();
         std::string weight_name;
@@ -3789,17 +3793,14 @@ ExplicitSolver::weightedAbsInit( const ProcessorGroup*,
         EqnBase& w_eqn = dqmomFactory.retrieve_scalar_eqn(weight_name);
         const VarLabel* weightLabel = w_eqn.getTransportEqnLabel();
 
-        CCVariable<double> source;
         CCVariable<double> phi;
         CCVariable<double> phi_icv;
         constCCVariable<double> weight;
 
-        new_dw->allocateAndPut( source,  sourceLabel,  matlIndex, patch );
         new_dw->allocateAndPut( phi,     phiLabel,     matlIndex, patch );
         new_dw->allocateAndPut( phi_icv, phiLabel_icv, matlIndex, patch );
         new_dw->get( weight, weightLabel, matlIndex, patch, gn, 0 );
 
-        source.initialize(0.0);
         phi.initialize(0.0);
         phi_icv.initialize(0.0);
 

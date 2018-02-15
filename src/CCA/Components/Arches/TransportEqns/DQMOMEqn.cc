@@ -56,8 +56,7 @@ EqnBase( fieldLabels, timeIntegrator, eqnName ), d_quadNode(quadNode)
   d_RHSLabel = VarLabel::create(varname,
             CCVariable<double>::getTypeDescription());
   varname = eqnName+"_src";
-  d_sourceLabel = VarLabel::create(varname,
-            CCVariable<double>::getTypeDescription());
+  d_sourceName = varname;
 
   std::string node;
   std::stringstream sqn;
@@ -73,7 +72,6 @@ DQMOMEqn::~DQMOMEqn()
   VarLabel::destroy(d_FdiffLabel);
   VarLabel::destroy(d_FconvLabel);
   VarLabel::destroy(d_RHSLabel);
-  VarLabel::destroy(d_sourceLabel);
   VarLabel::destroy(d_transportVarLabel);
   VarLabel::destroy(d_icLabel);
 }
@@ -883,6 +881,8 @@ void
 DQMOMEqn::sched_addSources( const LevelP& level, SchedulerP& sched, const int timeSubStep ){
 
   string taskname = "DQMOMEqn::addSources";
+
+  d_sourceLabel = VarLabel::find(d_sourceName); 
 
   Task* tsk = scinew Task(taskname, this, &DQMOMEqn::addSources, timeSubStep);
 

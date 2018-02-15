@@ -519,6 +519,8 @@ public:
 
   std::map<int,WBCHelper*> m_bcHelper;
 
+  std::string m_DQMOMSolverType; 
+
 }; // End class ExplicitSolver
 } // End namespace Uintah
 

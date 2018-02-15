@@ -73,9 +73,6 @@ SampleTask::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   mySpecialOper actual_oper(result);
 
-  Vector DX = patch->dCell();
-  const double area_x = DX.y() * DX.z();
-
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
 
   Uintah::parallel_for( range, actual_oper );

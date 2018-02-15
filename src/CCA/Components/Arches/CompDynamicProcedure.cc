@@ -539,7 +539,7 @@ CompDynamicProcedure::reComputeStrainRateTensors(const ProcessorGroup*,
       funp = ( 0.5 * filterRhoU[cne] /
              ( (filterRho[cn] + filterRho[cne]))
              + 0.5 * filterRhoU[cn] /
-             ( (filterRho[cn] + filterRho[IntVector(cnw)])));
+             ( (filterRho[cn] + filterRho[cnw])));
 
       fusp = ( 0.5 * filterRhoU[cse] /
              ( (filterRho[cs] + filterRho[cse]) )

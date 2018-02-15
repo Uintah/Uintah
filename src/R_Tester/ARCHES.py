@@ -268,7 +268,9 @@ DQMOMTESTS = [
    ("dqmom_test_2"               , "DQMOM_regression/dqmom_test_2.ups"           , 1   , "All"   , ["exactComparison"]) , 
    ("dqmom_test_3"               , "DQMOM_regression/dqmom_test_3.ups"           , 1   , "All"   , ["exactComparison"]) , 
    ("dqmom_test_4"               , "DQMOM_regression/dqmom_test_4.ups"           , 1   , "All"   , ["exactComparison"]) , 
-   ("dqmom_test_5"               , "DQMOM_regression/dqmom_test_5.ups"           , 1   , "All"   , ["exactComparison"]) 
+   ("dqmom_test_5"               , "DQMOM_regression/dqmom_test_5.ups"           , 1   , "All"   , ["exactComparison"]) ,
+   ("birth_test"                 , "DQMOM_regression/birth_test.ups"             , 1   , "All"   , ["exactComparison"]) , 
+   ("upwind_birth_test"          , "DQMOM_regression/upwind_birth_test.ups"      , 1   , "All"   , ["exactComparison"]) , 
 ]
 
 COALTESTS = [
@@ -286,6 +288,7 @@ COALTESTS = [
    ("Coal_Nox"                          , "Coal/Coal_Nox.ups"                    , 8   , "All"  , ["exactComparison"      , "no_cuda"]) ,  
    ("OFC4_initial_hotwall"              , "Coal/OFC4_initial_hotwall.ups"        , 3   , "All"  , ["exactComparison"   ,  "no_cuda"]) , 
    ("multibox_sweeps_coal"              , "Coal/multibox_sweeps_coal.ups"        , 46  , "All"   , ["exactComparison"]),
+   ("pcoal_drag"                        , "Coal/pcoal_drag.ups"                  , 1   , "All"   , ["exactComparison"])   , 
 ]
 
 RMCRTTESTS = [
@@ -326,9 +329,15 @@ KOKKOSTESTS = [
    ("isotropic_kokkos_wale"             , "kokkos_solver_tests/Verification/periodicTurb/isotropic_kokkos_wale.ups"              , 1   , "All"   , ["exactComparison", "no_restart"]), 
    ("isotropic_kokkos_dynSmag_packed"   , "kokkos_solver_tests/Verification/periodicTurb/isotropic_kokkos_dynSmag_packed.ups"    , 8   , "All"   , ["exactComparison", "no_restart"]), 
    ("isotropic_kokkos_dynSmag_unpacked" , "kokkos_solver_tests/Verification/periodicTurb/isotropic_kokkos_dynSmag_unpacked.ups"  , 8   , "All"   , ["exactComparison", "no_restart"]), 
-   ("char_modelps"                       , "kokkos_solver_tests/Verification/particleModels/char_modelps.ups"                    , 8   , "All"   , ["exactComparison"]), 
-   ("dqmom_example_char"                 , "kokkos_solver_tests/Verification/particleModels/dqmom_example_char.ups"              , 8   , "All"   , ["exactComparison"]), 
-   ("dqmom_example"                      , "kokkos_solver_tests/dqmom_example.ups"                                               , 1   , "All"   , ["exactComparison"]), 
+   ("char_modelps"                      , "kokkos_solver_tests/Verification/particleModels/char_modelps.ups"                    , 8   , "All"   , ["exactComparison"]), 
+   ("dqmom_example_char"                , "kokkos_solver_tests/Verification/particleModels/dqmom_example_char.ups"              , 8   , "All"   , ["exactComparison"]), 
+   ("dqmom_example"                     , "kokkos_solver_tests/dqmom_example.ups"                                               , 1   , "All"   , ["exactComparison"]), 
+]
+
+KOKKOSCOALTESTS = [
+   ("char_modelps"                      , "kokkos_solver_tests/Verification/particleModels/char_modelps.ups"                    , 8   , "All"   , ["exactComparison"]), 
+   ("dqmom_example_char"                , "kokkos_solver_tests/Verification/particleModels/dqmom_example_char.ups"              , 8   , "All"   , ["exactComparison"]), 
+   ("dqmom_example"                     , "kokkos_solver_tests/dqmom_example.ups"                                               , 1   , "All"   , ["exactComparison"]), 
 ]
 
 CQMOMTESTS = [
@@ -399,7 +408,7 @@ NORMCRT = [
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: COALTESTS CQMOMTESTS DEBUG DQMOMTESTS LOCALTESTS KOKKOSTESTS NIGHTLYTESTS  NORMCRT SCALARTESTS RMCRTTESTS BUILDBOTTESTS
+#LIST: COALTESTS CQMOMTESTS DEBUG DQMOMTESTS LOCALTESTS KOKKOSTESTS KOKKOSCOALTESTS NIGHTLYTESTS  NORMCRT SCALARTESTS RMCRTTESTS BUILDBOTTESTS
 #__________________________________
 
   
@@ -409,6 +418,8 @@ def getTestList(me) :
     TESTS = LOCALTESTS + RMCRTTESTS
   elif me == "KOKKOSTESTS": 
     TESTS = KOKKOSTESTS
+  elif me == "KOKKOSCOALTESTS": 
+    TESTS = KOKKOSCOALTESTS
   elif me == "RMCRTTESTS":
     TESTS = RMCRTTESTS
   elif me == "SCALARTESTS":

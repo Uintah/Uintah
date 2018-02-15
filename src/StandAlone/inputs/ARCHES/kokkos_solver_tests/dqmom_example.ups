@@ -47,7 +47,6 @@
     <save label="raw_coal_qn0_rhs"/>
     <save label="length_qn3"/>
     <save label="up_qn0"/>
-    <save label="a_model_0"/>
     <save label="w_qn0"/>
     <save label="w_qn0_unscaled"/>
     <save label="w_qn0_rhs"/>

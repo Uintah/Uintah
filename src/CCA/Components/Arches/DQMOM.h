@@ -214,7 +214,6 @@ private:
   bool m_useLapack;
   bool m_calcConditionNumber;
   bool m_optimize;
-  bool m_simplest;
   bool m_unmweighted;
   std::string m_which_dqmom;
   std::string m_solverType;

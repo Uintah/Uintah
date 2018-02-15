@@ -381,9 +381,6 @@ KokkosSolver::initialize( const LevelP     & level
   // set the volume fractions
   m_task_factory_map["utility_factory"]->schedule_task( "vol_fraction_calc", TaskInterface::INITIALIZE, level, sched, matls );
 
-  // particle models
-  m_task_factory_map["particle_model_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
-
   //transport factory
   m_task_factory_map["transport_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
 
@@ -416,6 +413,9 @@ KokkosSolver::initialize( const LevelP     & level
   //property factory
   m_task_factory_map["property_models_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
   m_task_factory_map["property_models_factory"]->schedule_task_group( "all_tasks", TaskInterface::BC, dont_pack_tasks, level, sched, matls );
+
+  // particle models
+  m_task_factory_map["particle_model_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
 
   // turbulence model
   m_task_factory_map["turbulence_model_factory"]->schedule_task_group( "momentum_closure", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
