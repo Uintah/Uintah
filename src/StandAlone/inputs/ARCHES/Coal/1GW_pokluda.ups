@@ -1743,7 +1743,7 @@
             <thermal_cond_model_type>hadley</thermal_cond_model_type>
             <enamel_deposit_porosity>0.8</enamel_deposit_porosity>
             <sb_deposit_porosity>0.5</sb_deposit_porosity>
-            <coal_name>indonesian</coal_name>
+            <coal_name>illinois_no6</coal_name>
             <frenkel_constant>1.225</frenkel_constant>
             <deposit_velocity_name>dep_velocity</deposit_velocity_name>
             <enamel_ash_composition>[39.36,25.49, 7.89,  10.12, 2.46, 0.0, 1.09, 4.10]</enamel_ash_composition>
