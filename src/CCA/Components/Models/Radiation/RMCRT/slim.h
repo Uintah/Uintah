@@ -113,7 +113,6 @@ struct SlimRayTrace_dataOnion_solveDivQFunctor {
       if ( reinterpret_cast<const int&>(abskgSigmaT4CellTypeConst.abskg) & 0x80000000 ) {
          return; // No radiation in intrusions
       }
-
        // --------------------------------create cell extent ----------------------------------//
        //--  This computes a cell extent for each cell origin, using a constant extent range --//
        // -------------------------------------------------------------------------------------//
@@ -259,6 +258,20 @@ struct SlimRayTrace_dataOnion_solveDivQFunctor {
         //______________________________________________________________________
         //  Threshold  loop
         Combined_RMCRT_Required_Vars curAbskgSigmaT4CellType = abskgSigmaT4CellTypeConst;
+        //reinterpret_cast<const Combined_RMCRT_Required_Vars&>(m_abskgSigmaT4CellType[L](cur[0], cur[1], cur[2]));
+
+        // Move the ray ahead.  We know we can't drop a coarse level yet (halos must be at least 1),
+        // The cur/ray can't go out of bounds, because at worst this moves the ray into a wall.
+        dir = tMaxV[0] < tMaxV[1] ? (tMaxV[0] < tMaxV[2] ? 0 : 2) : (tMaxV[1] < tMaxV[2] ? 1 : 2);
+        cur[dir]  +=  step[dir];
+        double distanceTraveled = ( tMaxV[dir] - old_length );
+        old_length  = tMaxV[dir];
+        tMaxV[dir] = tMaxV[dir] + tDelta[L][dir];
+
+        //The ray started in cell 1, and previously confirmed its not in a wall.
+        //The ray has moved into cell 2, but the no values have been obtained yet for this new cell 2
+        //This new cell 2 could be a wall, but it can't be at a point where we would coarsen yet (assuming at least 1 halo cell layer)
+        //Start the loop, get the values at cell 2, and move the ray to a position ready to get cell 3.  We may coarsen after cur is moved into cell 3.
         do {
 
           dir = tMaxV[0] < tMaxV[1] ? (tMaxV[0] < tMaxV[2] ? 0 : 2) : (tMaxV[1] < tMaxV[2] ? 1 : 2);

@@ -1517,6 +1517,7 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
 
     int maxElem = Max( d_haloCells.x(), d_haloCells.y(), d_haloCells.z() );
 #ifdef COMBINE_ABSKG_SIGMAT4_CELLTYPE
+    printf("Needing it\n");
     tsk->requires( Task::NewDW,     d_abskgSigmaT4CellTypeLabel,     gac, maxElem );
 #else
     tsk->requires( abskg_dw,     d_abskgLabel,     gac, maxElem );
@@ -1525,6 +1526,7 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
 #endif
   } else {                                        // we don't know the number of ghostCells so get everything
 #ifdef COMBINE_ABSKG_SIGMAT4_CELLTYPE
+    printf("Needing it all\n");
     tsk->requires( Task::NewDW,     d_abskgSigmaT4CellTypeLabel,     gac, SHRT_MAX );
 #else
     tsk->requires( abskg_dw,      d_abskgLabel,     gac, SHRT_MAX );
@@ -2349,7 +2351,6 @@ Ray::rayTrace_dataOnion( DetailedTask* dtask,
       //abskg_dw->getRegion(    abskg[fine_L],         d_abskgLabel ,   d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
       //sigmaT4_dw->getRegion(  sigmaT4OverPi[fine_L], d_sigmaT4Label,  d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
       //celltype_dw->getRegion( cellType[fine_L],      d_cellTypeLabel, d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
-      //abskg_dw->getRegion(   abskgSigmaT4CellType[fine_L] , d_abskgSigmaT4CellTypeLabel   , d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
       new_dw->getRegion(   abskgSigmaT4CellType[fine_L] , d_abskgSigmaT4CellTypeLabel   , d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
 
       //Get the computable variables on the fine level
@@ -2672,7 +2673,6 @@ Ray::computeExtents(LevelP level_0,
   level_0->findCellIndexRange(regionLo[0], regionHi[0]);
 
   for (int L = maxLevels - 1; L > 1; L--) {
-
 
     LevelP level = new_dw->getGrid()->getLevel(L);
     if( level->hasCoarserLevel() ){

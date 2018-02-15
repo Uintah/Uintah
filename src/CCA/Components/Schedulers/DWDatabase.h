@@ -379,6 +379,7 @@ DWDatabase<DomainType>::scrub( const VarLabel   * label
 #endif
 
   if (idx != -1 && m_vars[idx]) {
+    printf("Scrubbing %s patch %d\n", label->getName().c_str(), dom->getID());
     delete m_vars[idx];
     m_vars[idx] = nullptr;
   }

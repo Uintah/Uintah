@@ -381,6 +381,7 @@ RMCRTCommon::combineAbskgSigmaT4CellType( const ProcessorGroup*,
     temp_dw->get(sigmaT4,  d_sigmaT4Label,  d_matl, patch, Ghost::None, 0);
     temp_dw->get(cellType, d_cellTypeLabel,  d_matl, patch, Ghost::None, 0);
 
+    printf("into %p\n", new_dw);
     new_dw->allocateAndPut(abskgSigmaT4CellType, d_abskgSigmaT4CellTypeLabel, d_matl, patch);
 
     // set the cell iterator
@@ -389,7 +390,7 @@ RMCRTCommon::combineAbskgSigmaT4CellType( const ProcessorGroup*,
     //if(includeEC){
       iter = patch->getExtraCellIterator();
     //}
-
+    printf("****Running task for patch %d****\n", patch->getID());
     // Pack them on in!
     for (;!iter.done();iter++){
       const IntVector& c = *iter;
