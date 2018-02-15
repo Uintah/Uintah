@@ -2128,7 +2128,7 @@
         <!-- Block of tags for specifying the linear solver used for DQMOM -->
         <LinearSolver                   spec="OPTIONAL NO_DATA">
           <tolerance                    spec="OPTIONAL DOUBLE 'positive'" />
-          <type                         spec="OPTIONAL STRING 'Lapack-invert, Lapack-svd, LU, Optimize, Simplest'" />
+          <type                         spec="OPTIONAL STRING 'Lapack-invert, Lapack-svd, LU, Optimize'" />
           <Optimization                 spec="OPTIONAL NO_DATA" >
             <Optimal_abscissas          spec="REQUIRED MULTIPLE_DOUBLES" />
           </Optimization>
