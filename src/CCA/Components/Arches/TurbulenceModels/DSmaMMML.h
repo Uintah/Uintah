@@ -159,8 +159,10 @@ DSmaMMML<TT>::register_timestep_eval( std::vector<ArchesFieldContainer::Variable
                                           variable_registry, const int time_substep , const bool packed_tasks){
 
   int nG = 1;
+  //int nGrho = 1;
   if (packed_tasks ){
    nG = 3;
+   //nGrho = 2;
   } 
  register_variable( m_volFraction_name, ArchesFieldContainer::REQUIRES, nG, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
@@ -259,6 +261,10 @@ DSmaMMML<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   typedef typename ArchesCore::VariableHelper< TT >::ConstXFaceType TX;
   typedef typename ArchesCore::VariableHelper< TT >::ConstYFaceType TY;
   typedef typename ArchesCore::VariableHelper< TT >::ConstZFaceType TZ;
+
+  //typedef typename ArchesCore::VariableHelper< TT >::XFaceType TX;
+  //typedef typename ArchesCore::VariableHelper< TT >::YFaceType TY;
+  //typedef typename ArchesCore::VariableHelper< TT >::ZFaceType TZ;
 
   FieldTool< TX > x_field_tool(tsk_info);
   FieldTool< TY > y_field_tool(tsk_info);

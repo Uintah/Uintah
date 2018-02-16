@@ -228,6 +228,11 @@ DSmaCs<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   Cs.initialize(0.0);
 
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
+  int nG = -1;
+  if ( tsk_info->packed_tasks() ){
+    nG = 0;
+  }
+
 
   const Vector Dx = patch->dCell(); //
   double filter = pow(Dx.x()*Dx.y()*Dx.z(),1.0/3.0);
@@ -243,10 +248,10 @@ DSmaCs<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   MM = c_field_tool.get("MM");
   IsI = c_field_tool.get(m_IsI_name);
 
-  //CCVariable<double>& filterML = tsk_info->get_uintah_field_add< CCVariable<double> >("filterML", 0);
-  CCVariable<double>& filterML = tsk_info->get_uintah_field_add< CCVariable<double> >("filterML");
-  CCVariable<double>& filterMM = tsk_info->get_uintah_field_add< CCVariable<double> >("filterMM");
-  //CCVariable<double>& filterMM = tsk_info->get_uintah_field_add< CCVariable<double> >("filterMM", 0);
+  CCVariable<double>& filterML = tsk_info->get_uintah_field_add< CCVariable<double> >("filterML", nG);
+  //CCVariable<double>& filterML = tsk_info->get_uintah_field_add< CCVariable<double> >("filterML");
+  //CCVariable<double>& filterMM = tsk_info->get_uintah_field_add< CCVariable<double> >("filterMM");
+  CCVariable<double>& filterMM = tsk_info->get_uintah_field_add< CCVariable<double> >("filterMM", nG);
   filterML.initialize(0.0);
   filterMM.initialize(0.0);
 

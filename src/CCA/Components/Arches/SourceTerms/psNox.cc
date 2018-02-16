@@ -441,7 +441,6 @@ psNox::computeSource( const ProcessorGroup* pc,
     //NO,HCN,NH3 source terms in continuum phase
     Uintah::parallel_for(range, [&](int i, int j, int k){
         if (vol_fraction(i,j,k) > 0.5) {
-
         std::vector<double> rxn_rates(nRates,0.);
         std::vector<std::vector<double> > rate_coef(nSpecies,std::vector<double > (nRates));
         for (int ispec =0 ; ispec<nSpecies ; ispec++){
@@ -451,33 +450,25 @@ psNox::computeSource( const ProcessorGroup* pc,
         }
 
         //convert mixture molecular weight     
-        const double mix_mol_weight_r = 1.0/mix_mol_weight(i,j,k)/1000.0;   //(kg/mol)
-         //convert unit:  (mol concentration: mol/m3)
-        const double O2_m  = max(O2(i,j,k),1e-20)   * density(i,j,k)/_MW_O2;   //(mol/m3)
-        const double CO_m  = CO(i,j,k)       * density(i,j,k)/_MW_CO;   //(mol/m3)
-        const double H2_m  = H2(i,j,k)       * density(i,j,k)/_MW_H2;   //(mol/m3)
-        const double N2_m  = max(N2(i,j,k), 1e-20)   * density(i,j,k)/_MW_N2;   //(mol/m3)
-        const double H2O_m = H2O(i,j,k)      * density(i,j,k)/_MW_H2O;  //(mol/m3)
+        double mix_mol_weight_r = 1.0/mix_mol_weight(i,j,k)/1000.0;   //(kg/mol)
+        //convert unit:  (mol concentration: mol/m3)
+        double O2_m  = max(O2(i,j,k),1e-20)   * density(i,j,k)/_MW_O2;   //(mol/m3)
+        double CO_m  = CO(i,j,k)       * density(i,j,k)/_MW_CO;   //(mol/m3)
+        double H2_m  = H2(i,j,k)       * density(i,j,k)/_MW_H2;   //(mol/m3)
+        double N2_m  = max(N2(i,j,k), 1e-20)   * density(i,j,k)/_MW_N2;   //(mol/m3)
+        double H2O_m = H2O(i,j,k)      * density(i,j,k)/_MW_H2O;  //(mol/m3)
         double NO_m  = max(tran_NO(i,j,k),1e-20 ) * density(i,j,k)/_MW_NO;   //(mol/m3)
-        double HCN_m=max(tran_HCN(i,j,k),1e-20) * density(i,j,k)/_MW_HCN;
-        double NH3_m=max(tran_NH3(i,j,k),1e-20) * density(i,j,k)/_MW_NH3;
-
-       //const int nOverkill=25;
-       //for (int iO=0 ; iO < nOverkill; iO++){
         std::vector<double> Spec_i_m(nSpecies);
         Spec_i_m[sNO]=NO_m;
-        Spec_i_m[sHCN]=HCN_m;
-        Spec_i_m[sNH3]=NH3_m;
+        Spec_i_m[sHCN]=max(tran_HCN(i,j,k),1e-20) * density(i,j,k)/_MW_HCN;
+        Spec_i_m[sNH3]=max(tran_NH3(i,j,k),1e-20) * density(i,j,k)/_MW_NH3;
         Spec_i_m[sN2]= N2_m;
         Spec_i_m[sO2]= O2_m;
         //convert unit: (mol fraction: mol/mol)
-        //double O2_mp  = O2(i,j,k)      /_MW_O2 * mix_mol_weight_r; //(mol/mol)
-        double O2_mp  =O2_m  * mix_mol_weight_r/density(i,j,k); //(mol/mol)
-        //double NO_mp  = max(tran_NO(i,j,k) ,1e-20)/_MW_NO * mix_mol_weight_r; //(mol/mol)
-        double NO_mp  = NO_m* mix_mol_weight_r/density(i,j,k); //(mol/mol)
-        //double NH3_mp = max(tran_NH3(i,j,k),1e-20)/_MW_NH3* mix_mol_weight_r; //(mol/mol)
-        double HCN_mp = HCN_m* mix_mol_weight_r/density(i,j,k); //(mol/mol)
-        double NH3_mp = NH3_m*mix_mol_weight_r/density(i,j,k); //(mol/mol)
+        double O2_mp  = O2(i,j,k)      /_MW_O2 * mix_mol_weight_r; //(mol/mol)
+        double NO_mp  = max(tran_NO(i,j,k) ,1e-20)/_MW_NO * mix_mol_weight_r; //(mol/mol)
+        double HCN_mp = max(tran_HCN(i,j,k),1e-20)/_MW_HCN* mix_mol_weight_r; //(mol/mol)
+        double NH3_mp = max(tran_NH3(i,j,k),1e-20)/_MW_NH3* mix_mol_weight_r; //(mol/mol)
 
         //determine reaction order of O2
         if (O2_mp<4.1e-3){
@@ -487,7 +478,7 @@ psNox::computeSource( const ProcessorGroup* pc,
         }else if(O2_mp>1.1e-2&&O2_mp<0.03){
           n_O2=-0.35-0.1*log(O2_mp);
         }else if(O2_mp>=0.03){
-          n_O2=0.0001;
+          n_O2=0.0;
         }
         //thermal-nox,S1
         //reaction rates from r1~r3:
@@ -508,23 +499,9 @@ psNox::computeSource( const ProcessorGroup* pc,
         double NO_S1_prod  = rate_f1*rate_f2*N2_m*O2_m*NO_thermal_rate_const;
         double NO_S1_cons  = rate_r1*rate_r2*NO_m*NO_m*NO_thermal_rate_const;
 
-        //rxn_rates[1]=NO_S1_cons;
+        rxn_rates[0]=NO_S1_prod;
 
-
-        //if (i == 8 && j==8 && k==1){
-        //std::cout <<temperature(i,j,k) << "  "           //1
-                  //<<    (N2_m)               << "  "  //2
-                  //<<    (O2_m)               << "  "  //3
-                  //<<   rate_f2               << "  "  //4
-                  //<<   rate_f1               << "  "  //5
-                  //<<   rate_r1               << "  "  //6
-                  //<<   rate_r2               << "  "  //7
-                  //<<   NO_m               << "  "  //8
-                  //<<    rate_r1*rate_r2*NO_m*NO_m/rate_f1/rate_f2/N2_m/O2_m             << "  " 
-                  //<<   (1.0+rate_r1*NO_m/(rate_f2*O2_m+rate_f3*OH_m))             << "  " 
-                  //<<     2.0*rate_f1*O_m*N2_m*_MW_NO                              << "  " 
-//<< rxn_rates[0]   << "  " << rxn_rates[1]<< "\n";
-        //}
+        rxn_rates[1]=NO_S1_cons;
 
         // de soete fuel nox rates
         //reaction rates from r1~r4:
@@ -563,31 +540,34 @@ psNox::computeSource( const ProcessorGroup* pc,
         rxn_rates[9]=CharOxyRate;
         rxn_rates[10]=TarRate;
       
-         
-        NO_src(i,j,k)=0.0;
-        HCN_src(i,j,k)=0.0;
-        NH3_src(i,j,k)=0.0;
+        for (int ispec =0 ; ispec<nSpecies ; ispec++){
+          double num=0.0;
+          double denom=0.0;
+          double instantanousRate=0.0;
+          for (int ix =0 ; ix<nRates ; ix++){
+            num+=  prate_coef[ispec][ix]*rxn_rates[ix];
+            denom+=nrate_coef[ispec][ix]*rxn_rates[ix];
+          }
+          instantanousRate=-denom;
+          denom=denom/Spec_i_m[ispec];
+          double netRate;                                
+
+          //double final_species = num/denom*(1.0-std::exp(-delta_t*denom)) + Spec_i_m[ispec]*std::exp(-delta_t*denom); // quasi-analytical approach ( may need a check on denom)
+          double final_species = (num*delta_t + Spec_i_m[ispec])/(1.0 + denom*delta_t); // quasi-implicit approach
+          netRate= (final_species-Spec_i_m[ispec])/delta_t-num;                 //(mol/sm3)                          
+              
+          for (int ispec2 =0 ; ispec2<nSpecies ; ispec2++){
+            for (unsigned int irxn =0 ; irxn<rel_ind[ispec].size() ; irxn++){
+              rate_coef[ispec2][rel_ind[ispec][irxn]]*= min(netRate/instantanousRate,1.000); // linear scaling of rates (negitive rates only).
+            }
+          }
+        }
+
        for (int ix =0 ; ix<nRates ; ix++){
          NO_src(i,j,k)  +=rxn_rates[ix]*rate_coef[sNO ][ix]*_MW_NO;
          HCN_src(i,j,k) +=rxn_rates[ix]*rate_coef[sHCN][ix]*_MW_HCN;
          NH3_src(i,j,k) +=rxn_rates[ix]*rate_coef[sNH3][ix]*_MW_NH3;
        }
-
-       //for (int ix =0 ; ix<nRates ; ix++){
-         //NO_src(i,j,k)  +=0.0;
-         //HCN_src(i,j,k) +=0.0;
-         //NH3_src(i,j,k) +=0.0;
-       //}
-
-      //NO_m  += NO_src(i,j,k)*delta_t/((double) nOverkill);
-     // HCN_m += HCN_src(i,j,k)*delta_t/((double) nOverkill);
-      //NH3_m += NH3_src(i,j,k)*delta_t/((double) nOverkill);
-      //O2_m+=NO_src(i,j,k)*delta_t/1000;
-      //N2_m+=
-      // }
-      //NO_src(i,j,k)=(NO_m-max(tran_NO(i,j,k),1e-20 ) * density(i,j,k)/_MW_NO)/delta_t;
-      //HCN_src(i,j,k)=(HCN_m-max(tran_HCN(i,j,k),1e-20 ) * density(i,j,k)/_MW_HCN)/delta_t;
-      //NH3_src(i,j,k)=(NH3_m-max(tran_NH3(i,j,k),1e-20 ) * density(i,j,k)/_MW_NH3)/delta_t;
 
      } else {  // if volFraction
         NO_src(i,j,k)  = 0.0; //(kg/sm3)                          

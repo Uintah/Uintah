@@ -98,9 +98,9 @@ void
 DSFT::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& filterRho = tsk_info->get_uintah_field_add< CCVariable<double> >("Filterrho");
-  SFCXVariable<double>& filterRhoU = tsk_info->get_uintah_field_add< SFCXVariable<double> >("Filterrho");
-  SFCYVariable<double>& filterRhoV = tsk_info->get_uintah_field_add< SFCYVariable<double> >("Filterrho");
-  SFCZVariable<double>& filterRhoW = tsk_info->get_uintah_field_add< SFCZVariable<double> >("Filterrho");
+  SFCXVariable<double>& filterRhoU = tsk_info->get_uintah_field_add< SFCXVariable<double> >("Filterrhou");
+  SFCYVariable<double>& filterRhoV = tsk_info->get_uintah_field_add< SFCYVariable<double> >("Filterrhov");
+  SFCZVariable<double>& filterRhoW = tsk_info->get_uintah_field_add< SFCZVariable<double> >("Filterrhow");
   filterRho.initialize(0.0);
   filterRhoU.initialize(0.0);
   filterRhoV.initialize(0.0);
@@ -198,14 +198,16 @@ DSFT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   int nGhosts2 = -1; //not using a temp field but rather the DW (ie, if nGhost < 0 then DW var)
   int nGhosts1 = -1; //not using a temp field but rather the DW (ie, if nGhost < 0 then DW var)
+  int nGrho = 2;
 
   if ( tsk_info->packed_tasks() ){
     nGhosts2 = 2;
     nGhosts1 = 1;
     nG1 = nGhosts1;
     nG2 = nGhosts2;
+    nGrho = 4;
   }
-  int nGrho = 2;
+  
   IntVector low_filter = patch->getCellLowIndex() + IntVector(-nG1,-nG1,-nG1);
   IntVector high_filter = patch->getCellHighIndex() + IntVector(nG1,nG1,nG1);
   IntVector low_filter2 = patch->getCellLowIndex() + IntVector(-nG2,-nG2,-nG2);
@@ -263,7 +265,7 @@ DSFT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   bcfilter.apply_zero_neumann(patch,Beta13,vol_fraction); 
   bcfilter.apply_zero_neumann(patch,Beta23,vol_fraction); 
   // Filter rho
-  CCVariable<double>& filterRho = tsk_info->get_uintah_field_add< CCVariable<double> >("Filterrho", nGhosts1);
+  CCVariable<double>& filterRho = tsk_info->get_uintah_field_add< CCVariable<double> >("Filterrho", nGhosts2);
   filterRho.initialize(0.0);
   // this need to be fixed 
   //filterRho.copy(ref_rho);
@@ -272,14 +274,14 @@ DSFT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   rhoBC.copy(rho);
   bcfilter.apply_BC_rho(patch,rhoBC,rho,vol_fraction);
-  m_Filter.applyFilter(rhoBC,filterRho,range1,vol_fraction);
+  m_Filter.applyFilter(rhoBC,filterRho,range2,vol_fraction);
 
   //m_Filter.applyFilter(rho,filterRho,range1,vol_fraction);
   
   // filter rho*ux...
-  SFCXVariable<double>& filterRhoU = tsk_info->get_uintah_field_add< SFCXVariable<double> >("Filterrhou", nGhosts1);
-  SFCYVariable<double>& filterRhoV = tsk_info->get_uintah_field_add< SFCYVariable<double> >("Filterrhov", nGhosts1);
-  SFCZVariable<double>& filterRhoW = tsk_info->get_uintah_field_add< SFCZVariable<double> >("Filterrhow", nGhosts1);
+  SFCXVariable<double>& filterRhoU = tsk_info->get_uintah_field_add< SFCXVariable<double> >("Filterrhou", nGhosts2);
+  SFCYVariable<double>& filterRhoV = tsk_info->get_uintah_field_add< SFCYVariable<double> >("Filterrhov", nGhosts2);
+  SFCZVariable<double>& filterRhoW = tsk_info->get_uintah_field_add< SFCZVariable<double> >("Filterrhow", nGhosts2);
   filterRhoU.initialize(0.0);
   filterRhoV.initialize(0.0);
   filterRhoW.initialize(0.0);
@@ -290,28 +292,28 @@ DSFT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   IntVector low;
   if ( xminus ){
-    low  = patch->getCellLowIndex()+IntVector(1,0,0) + IntVector(-nG1,-nG1,-nG1);
+    low  = patch->getCellLowIndex()+IntVector(1,0,0) + IntVector(-nG2,-nG2,-nG2);
   }else{
-    low  = patch->getCellLowIndex()+ IntVector(-nG1,-nG1,-nG1);
+    low  = patch->getCellLowIndex()+ IntVector(-nG2,-nG2,-nG2);
   }
   
-  Uintah::BlockRange range_u(low, high_filter);
+  Uintah::BlockRange range_u(low, high_filter2);
   m_Filter.applyFilter(uVel,filterRhoU,rho,vol_fraction,range_u); 
   if ( yminus ){
-    low = patch->getCellLowIndex()+IntVector(0,1,0) + IntVector(-nG1,-nG1,-nG1);
+    low = patch->getCellLowIndex()+IntVector(0,1,0) + IntVector(-nG2,-nG2,-nG2);
   } else {
-    low = patch->getCellLowIndex()+ IntVector(-nG1,-nG1,-nG1);
+    low = patch->getCellLowIndex()+ IntVector(-nG2,-nG2,-nG2);
   }
   
-  Uintah::BlockRange range_v(low, high_filter);
+  Uintah::BlockRange range_v(low, high_filter2);
   m_Filter.applyFilter(vVel,filterRhoV,rho,vol_fraction,range_v); 
 
   if ( zminus ){
-    low = patch->getCellLowIndex()+IntVector(0,0,1)+ IntVector(-nG1,-nG1,-nG1);
+    low = patch->getCellLowIndex()+IntVector(0,0,1)+ IntVector(-nG2,-nG2,-nG2);
   } else {
-    low = patch->getCellLowIndex()+ IntVector(-nG1,-nG1,-nG1);
+    low = patch->getCellLowIndex()+ IntVector(-nG2,-nG2,-nG2);
   }
-  Uintah::BlockRange range_w(low, high_filter);
+  Uintah::BlockRange range_w(low, high_filter2);
   m_Filter.applyFilter(wVel,filterRhoW,rho,vol_fraction,range_w); 
 
 

@@ -78,7 +78,7 @@ void
 WALE::register_initialize( std::vector<AFC::VariableInformation>&
                                        variable_registry , const bool packed_tasks){
 
-  //register_variable( m_t_vis_name, AFC::COMPUTES, variable_registry );
+  register_variable( m_t_vis_name, AFC::COMPUTES, variable_registry );
 
 }
 
@@ -86,8 +86,8 @@ WALE::register_initialize( std::vector<AFC::VariableInformation>&
 void
 WALE::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
- // CCVariable<double>& mu_sgc = *(tsk_info->get_uintah_field<CCVariable<double> >(m_t_vis_name));
- // mu_sgc.initialize(0.0);
+  CCVariable<double>& mu_sgc = *(tsk_info->get_uintah_field<CCVariable<double> >(m_t_vis_name));
+  mu_sgc.initialize(0.0);
 
 }
 
