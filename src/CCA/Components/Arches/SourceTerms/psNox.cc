@@ -386,7 +386,7 @@ psNox::computeSource( const ProcessorGroup* pc,
     
     const double prate_coef[nSpecies][nRates] // producing reactions
     // rxn# 0   1    2    3    4    5    6    7    8         9        10
-         {{0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, _beta1, _gamma1, _alpha1},   // NO
+         {{1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, _beta1, _gamma1, _alpha1},   // NO
           {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, _beta2, _gamma2, _alpha2},   // HCN
           {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, _beta3, _gamma3, _alpha3},   // NH3
           {0.0, 0.5, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0,    0.0,     0.0},       // N2
@@ -397,8 +397,8 @@ psNox::computeSource( const ProcessorGroup* pc,
          {{0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0 },    // NO
           {0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 },    // HCN
           {0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0 },    // NH3
-          {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 },    // N2
-          {0.0, 0.0, 0.5, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }};   // O2
+          {0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 },    // N2
+          {0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }};   // O2
     
     std::vector<std::vector<int> > rel_ind(nSpecies, std::vector<int>(0) ); // relevant indices
     std::vector<int > rel_ind_size(nSpecies,0);  
