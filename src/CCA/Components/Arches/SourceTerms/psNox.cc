@@ -171,14 +171,18 @@ psNox::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubS
 
   for ( int i = 0; i < m_num_env; i++){ 
     // weighted scaled variable = original variable/variable_scaling_constant * weight/weight_scaling_constant
-    std::string rcmassqn_name;
-    std::string rcmass_name;
+    //std::string rcmassqn_name;
+    //std::string rcmass_name;
     std::string coal_temperatureqn_name;
-    rcmassqn_name = ArchesCore::append_qn_env( m_rcmass_root, i );                               //weighted scaled rcmass
-    tsk->requires( which_dw, VarLabel::find(rcmassqn_name), Ghost::None, 0 );       
-    rcmass_name = ArchesCore::append_env( m_rcmass_root, i );                                    //unweighted unscaled rcmass, original value of rcmass of per particle 
-    tsk->requires( which_dw, VarLabel::find(rcmass_name), Ghost::None, 0 ); 
-    coal_temperatureqn_name = ArchesCore::append_env( m_coal_temperature_root, i );              //unweighted unscaled coal temperature
+    //rcmassqn_name = ParticleTools::append_qn_env( m_rcmass_root, i );                               //weighted scaled rcmass
+    //tsk->requires( which_dw, VarLabel::find(rcmassqn_name), Ghost::None, 0 );       
+    //rcmass_name = ParticleTools::append_env( m_rcmass_root, i );                                    //unweighted unscaled rcmass, original value of rcmass of per particle 
+    //tsk->requires( which_dw, VarLabel::find(rcmass_name), Ghost::None, 0 ); 
+    std::string weigth_name;
+    weigth_name = ParticleTools::append_env( "w", i );                               //weight
+    tsk->requires( which_dw, VarLabel::find(weigth_name), Ghost::None, 0 ); 
+
+    coal_temperatureqn_name = ParticleTools::append_env( m_coal_temperature_root, i );              //unweighted unscaled coal temperature
     tsk->requires( which_dw, VarLabel::find(coal_temperatureqn_name), Ghost::None, 0 ); 
 
     std::string length_name = ArchesCore::append_env( length_root, i );
@@ -349,20 +353,24 @@ psNox::computeSource( const ProcessorGroup* pc,
 
     //store sum of coal mass concentration* coal temperature
     for ( int i_env = 0; i_env < m_num_env; i_env++){
-      std::string rcmassqn_name;
-      std::string rcmass_name;
-      constCCVariable<double> rcmass_weighted_scaled;
-      constCCVariable<double> rcmass_unweighted_unscaled;
-      rcmassqn_name = ArchesCore::append_qn_env( m_rcmass_root, i_env );
-      which_dw->get( rcmass_weighted_scaled, VarLabel::find(rcmassqn_name), matlIndex, patch, gn, 0 );  
-      rcmass_name = ArchesCore::append_env( m_rcmass_root, i_env );
-      which_dw->get( rcmass_unweighted_unscaled, VarLabel::find(rcmass_name), matlIndex, patch, gn, 0 );  
+      //std::string rcmassqn_name;
+      //std::string rcmass_name;
+      //constCCVariable<double> rcmass_weighted_scaled;
+      //constCCVariable<double> rcmass_unweighted_unscaled;
+      //rcmassqn_name = ParticleTools::append_qn_env( m_rcmass_root, i_env );
+      //which_dw->get( rcmass_weighted_scaled, VarLabel::find(rcmassqn_name), matlIndex, patch, gn, 0 );  
+      //rcmass_name = ParticleTools::append_env( m_rcmass_root, i_env );
+      //which_dw->get( rcmass_unweighted_unscaled, VarLabel::find(rcmass_name), matlIndex, patch, gn, 0 );  
+      constCCVariable<double> weight;
+      std::string weigth_name;
+      weigth_name = ParticleTools::append_env( "w", i_env );
+      which_dw->get( weight, VarLabel::find(weigth_name), matlIndex, patch, gn, 0 );  
       Uintah::parallel_for(range, [&](int i, int j, int k){
-          double weight   =  0.0;
+          //double weight   =  0.0;
           double p_area =  0.0;
-          weight   = rcmass_weighted_scaled(i,j,k)/rcmass_unweighted_unscaled(i,j,k)*m_rc_scaling_const[i_env]*m_weight_scaling_const[i_env]; 
+          //weight   = rcmass_weighted_scaled(i,j,k)/rcmass_unweighted_unscaled(i,j,k)*m_rc_scaling_const[i_env]*m_weight_scaling_const[i_env]; 
           p_area = M_PI*length[i_env](i,j,k)*length[i_env](i,j,k);     // m^2
-          temp_coal_mass_concentration[i_env](i,j,k) =weight * p_area; // m^2 / m^3
+          temp_coal_mass_concentration[i_env](i,j,k) = weight(i,j,k) * p_area; // m^2 / m^3
           }); 
     }
 
