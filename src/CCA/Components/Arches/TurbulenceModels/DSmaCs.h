@@ -55,10 +55,14 @@ private:
 
     std::string m_Cs_name; //DSmaCs constant
     double m_molecular_visc;
+    //std::string m_t_vis_name_production; 
     std::string m_t_vis_name;
     //int Type_filter ;
     Uintah::FILTER Type_filter;
-
+    std::string m_volFraction_name;
+    std::string m_density_name;
+    std::string m_IsI_name;
+    bool m_create_labels_IsI_t_viscosity{true};   
   };
 
 //--------------------------------------------------------------------------------------------------
@@ -86,9 +90,11 @@ DSmaCs<TT>::problemSetup( ProblemSpecP& db ){
   if (db->findBlock("use_my_name_viscosity")){
     db->findBlock("use_my_name_viscosity")->getAttribute("label",m_t_vis_name);
   } else{
-    m_t_vis_name = parse_ups_for_role( TOTAL_VISCOSITY, db );
+    //m_t_vis_name = parse_ups_for_role( TOTAL_VISCOSITY, db, "viscosityCTS" );
+    m_t_vis_name = parse_ups_for_role( TOTAL_VISCOSITY, db, "viscosityCTS" );
   }
 
+  //m_t_vis_name_production = "viscosityCTS";
   const ProblemSpecP params_root = db->getRootNode();
   if (params_root->findBlock("PhysicalConstants")) {
     params_root->findBlock("PhysicalConstants")->require("viscosity", m_molecular_visc);
@@ -103,12 +109,23 @@ DSmaCs<TT>::problemSetup( ProblemSpecP& db ){
   db->findBlock("filter")->getAttribute("type",m_Type_filter_name);
 
   Type_filter = get_filter_from_string( m_Type_filter_name );
+  m_density_name     = parse_ups_for_role( DENSITY, db, "density" );
+  m_volFraction_name = "volFraction";
+  m_IsI_name = "strainMagnitudeLabel";
+
+  if (m_t_vis_name == "viscosityCTS") { // this is production code
+    m_create_labels_IsI_t_viscosity = false;
+  }
+
 }
 
 //--------------------------------------------------------------------------------------------------
 template<typename TT> void
 DSmaCs<TT>::create_local_labels(){
-  register_new_variable<CCVariable<double> >( m_t_vis_name);
+
+  if (m_create_labels_IsI_t_viscosity) {
+    register_new_variable<CCVariable<double> >( m_t_vis_name);
+  }
   register_new_variable<CCVariable<double> >( m_Cs_name);
 
   register_new_variable<CCVariable<double> >( "filterML");
@@ -120,7 +137,9 @@ DSmaCs<TT>::create_local_labels(){
 template<typename TT> void
 DSmaCs<TT>::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>&
                                        variable_registry , const bool packed_tasks){
-  register_variable( m_t_vis_name, ArchesFieldContainer::COMPUTES, variable_registry );
+  if (m_create_labels_IsI_t_viscosity) {
+    register_variable( m_t_vis_name, ArchesFieldContainer::COMPUTES, variable_registry );
+  }
   register_variable( m_Cs_name, ArchesFieldContainer::COMPUTES, variable_registry );
 
 }
@@ -128,24 +147,26 @@ DSmaCs<TT>::register_initialize( std::vector<ArchesFieldContainer::VariableInfor
 //--------------------------------------------------------------------------------------------------
 template<typename TT> void
 DSmaCs<TT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
-  CCVariable<double>& mu_sgc = *(tsk_info->get_uintah_field<CCVariable<double> >(m_t_vis_name));
+  if (m_create_labels_IsI_t_viscosity) {
+    CCVariable<double>& mu_sgc = *(tsk_info->get_uintah_field<CCVariable<double> >(m_t_vis_name));
+    mu_sgc.initialize(0.0);
+  }
   CCVariable<double>& Cs = *(tsk_info->get_uintah_field<CCVariable<double> >(m_Cs_name));
-  mu_sgc.initialize(0.0);
   Cs.initialize(0.0);
 }
 //--------------------------------------------------------------------------------------------------
 template<typename TT> void
 DSmaCs<TT>::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>&
                                           variable_registry , const bool packed_tasks){
-  register_variable( m_t_vis_name, ArchesFieldContainer::COMPUTES, variable_registry );
-  register_variable( m_Cs_name, ArchesFieldContainer::COMPUTES, variable_registry );
+  //register_variable( m_t_vis_name, ArchesFieldContainer::COMPUTES, variable_registry );
+  //register_variable( m_Cs_name, ArchesFieldContainer::COMPUTES, variable_registry );
 }
 
 //--------------------------------------------------------------------------------------------------
 template<typename TT> void
 DSmaCs<TT>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
-  CCVariable<double>& mu_sgc = *(tsk_info->get_uintah_field<CCVariable<double> >(m_t_vis_name));
-  CCVariable<double>& Cs = *(tsk_info->get_uintah_field<CCVariable<double> >(m_Cs_name));
+  //CCVariable<double>& mu_sgc = *(tsk_info->get_uintah_field<CCVariable<double> >(m_t_vis_name));
+  //CCVariable<double>& Cs = *(tsk_info->get_uintah_field<CCVariable<double> >(m_Cs_name));
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -153,16 +174,29 @@ template<typename TT> void
 DSmaCs<TT>::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>&
                                           variable_registry, const int time_substep , const bool packed_tasks){
 
-  register_variable( m_t_vis_name, ArchesFieldContainer::MODIFIES ,  variable_registry, time_substep );
-  register_variable( m_Cs_name, ArchesFieldContainer::MODIFIES ,  variable_registry, time_substep );
+  if (m_create_labels_IsI_t_viscosity) {
+    register_variable( m_t_vis_name, ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep );
+  } else {
+    register_variable( m_t_vis_name, ArchesFieldContainer::MODIFIES ,  variable_registry, time_substep );
+  }
 
+  register_variable( m_Cs_name, ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep );
+  //register_variable( m_t_vis_name_production, ArchesFieldContainer::MODIFIES ,  variable_registry, time_substep );
+
+  int nG = 1;
+  if (packed_tasks ){
+   nG = 3;
+  }
+
+  register_variable( m_density_name, ArchesFieldContainer::REQUIRES, nG, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
+  register_variable( m_volFraction_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry, time_substep );
 
   register_variable( "filterML" , ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
   register_variable( "filterMM" , ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
 
   register_variable("MM" , ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name, packed_tasks );
   register_variable("ML" , ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name, packed_tasks );
-  register_variable("IsI" , ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name, packed_tasks );
+  register_variable(m_IsI_name , ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name, packed_tasks );
 
 
 }
@@ -172,7 +206,10 @@ template<typename TT> void
 DSmaCs<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& mu_sgc = *(tsk_info->get_uintah_field<CCVariable<double> >(m_t_vis_name));
+  //CCVariable<double>& mu_sgc_p = *(tsk_info->get_uintah_field<CCVariable<double> >(m_t_vis_name_production));
   CCVariable<double>& Cs = *(tsk_info->get_uintah_field<CCVariable<double> >(m_Cs_name));
+  constCCVariable<double>& rho = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_density_name));
+  constCCVariable<double>& vol_fraction = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_volFraction_name);
 
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
 
@@ -188,7 +225,7 @@ DSmaCs<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   ML = c_field_tool.get("ML");
   MM = c_field_tool.get("MM");
-  IsI = c_field_tool.get("IsI");
+  IsI = c_field_tool.get(m_IsI_name);
 
   CCVariable<double>& filterML = tsk_info->get_uintah_field_add< CCVariable<double> >("filterML", 0);
   CCVariable<double>& filterMM = tsk_info->get_uintah_field_add< CCVariable<double> >("filterMM", 0);
@@ -202,7 +239,7 @@ DSmaCs<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   Uintah::parallel_for(range,get_fML);
 
   Uintah::parallel_for( range, [&](int i, int j, int k){
-    double value;
+    double value = 0;
     if ( (*MM)(i,j,k) < 1.0e-14 || (*ML)(i,j,k) < 1.0e-14) {
 //     value =0.04 ;
 //     value =0.0289 ;
@@ -212,9 +249,13 @@ DSmaCs<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     }
 
     Cs(i,j,k) = Min(value,10.0);
-    mu_sgc(i,j,k) = Cs(i,j,k)*filter2*(*IsI)(i,j,k) + m_molecular_visc; // I need to times density
+    mu_sgc(i,j,k) = (Cs(i,j,k)*filter2*(*IsI)(i,j,k)*rho(i,j,k) + m_molecular_visc)*vol_fraction(i,j,k); // 
 
   });
+
+  //Uintah::parallel_for( range, [&](int i, int j, int k){
+  //  mu_sgc_p(i,j,k) = mu_sgc(i,j,k); 
+  //});
 }
 //--------------------------------------------------------------------------------------------------
 }

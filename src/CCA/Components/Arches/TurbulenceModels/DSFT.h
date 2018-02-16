@@ -63,7 +63,9 @@ private:
     std::string m_rhou_vel_name;
     std::string m_rhov_vel_name;
     std::string m_rhow_vel_name;
+    std::string m_IsI_name;
     //int Type_filter ; 
+    bool m_create_labels_IsI_t_viscosity{true};   
     Uintah::FILTER Type_filter; 
   };
 }

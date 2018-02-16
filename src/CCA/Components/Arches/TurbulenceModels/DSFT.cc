@@ -27,13 +27,17 @@ DSFT::problemSetup( ProblemSpecP& db ){
   m_rhov_vel_name = "y-mom";
   m_rhow_vel_name = "z-mom" ;
 
-  m_cc_u_vel_name = m_u_vel_name + "_cc";
-  m_cc_v_vel_name = m_v_vel_name + "_cc";
-  m_cc_w_vel_name = m_w_vel_name + "_cc";
+  m_cc_u_vel_name = parse_ups_for_role( CCUVELOCITY, db, "CCUVelocity" );//;m_u_vel_name + "_cc";
+  m_cc_v_vel_name = parse_ups_for_role( CCVVELOCITY, db, "CCVVelocity" );//m_v_vel_name + "_cc";
+  m_cc_w_vel_name = parse_ups_for_role( CCWVELOCITY, db, "CCWVelocity" );;//m_w_vel_name + "_cc";
+
+  if (m_u_vel_name == "uVelocitySPBC") { // this is production code
+    m_create_labels_IsI_t_viscosity = false;
+  }
 
   std::string m_Type_filter_name;
   db->findBlock("filter")->getAttribute("type",m_Type_filter_name);
-
+  m_IsI_name = "strainMagnitudeLabel";
   Type_filter = get_filter_from_string( m_Type_filter_name );
 
 }
@@ -42,7 +46,9 @@ DSFT::problemSetup( ProblemSpecP& db ){
 void
 DSFT::create_local_labels(){
 
-  register_new_variable<CCVariable<double> >("IsI");
+  if (m_create_labels_IsI_t_viscosity) {
+    register_new_variable<CCVariable<double> >(m_IsI_name);
+  }
   register_new_variable<CCVariable<double> >("s11");
   register_new_variable<CCVariable<double> >("s12");
   register_new_variable<CCVariable<double> >("s13");
@@ -114,7 +120,7 @@ DSFT::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformat
   register_variable( m_cc_v_vel_name, ArchesFieldContainer::REQUIRES, nG, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
   register_variable( m_cc_w_vel_name, ArchesFieldContainer::REQUIRES, nG, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
 
-  register_variable( "IsI", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
+  register_variable( m_IsI_name, ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
   register_variable( "Beta11", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
   register_variable( "Beta12", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
   register_variable( "Beta13", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
@@ -177,7 +183,7 @@ DSFT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   Uintah::BlockRange range2(low_filter2, high_filter2 );
   Uintah::BlockRange range1(low_filter, high_filter );
 
-  CCVariable<double>& IsI = tsk_info->get_uintah_field_add< CCVariable<double> >("IsI",nGhosts2 );
+  CCVariable<double>& IsI = tsk_info->get_uintah_field_add< CCVariable<double> >(m_IsI_name,nGhosts2 );
   CCVariable<double>& s11 = tsk_info->get_uintah_field_add< CCVariable<double> >("s11",nGhosts2 );
   CCVariable<double>& s12 = tsk_info->get_uintah_field_add< CCVariable<double> >("s12",nGhosts2 );
   CCVariable<double>& s13 = tsk_info->get_uintah_field_add< CCVariable<double> >("s13",nGhosts2 );

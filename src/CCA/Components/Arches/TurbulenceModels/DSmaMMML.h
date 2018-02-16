@@ -55,6 +55,7 @@ private:
   //int Type_filter;
   double m_epsilon;
   Uintah::FILTER Type_filter;
+  std::string m_IsI_name;
   };
 
 //--------------------------------------------------------------------------------------------------
@@ -81,6 +82,7 @@ DSmaMMML<TT>::problemSetup( ProblemSpecP& db ){
   db->require("epsilon",m_epsilon);
 
   Type_filter = get_filter_from_string( m_Type_filter_name );
+  m_IsI_name = "strainMagnitudeLabel";
 
 }
 //--------------------------------------------------------------------------------------------------
@@ -194,7 +196,7 @@ DSmaMMML<TT>::register_timestep_eval( std::vector<ArchesFieldContainer::Variable
 
   register_variable( "Filterrho", ArchesFieldContainer::REQUIRES,0 , ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name, packed_tasks );
 
-  register_variable( "IsI", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name, packed_tasks );
+  register_variable( m_IsI_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name, packed_tasks );
   register_variable( "s11", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name, packed_tasks );
   register_variable( "s12", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name, packed_tasks );
   register_variable( "s13", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name, packed_tasks );
@@ -295,7 +297,7 @@ DSmaMMML<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   TT* s23;
   TT* s33;
 
-  IsI = c_field_tool.get("IsI");
+  IsI = c_field_tool.get(m_IsI_name);
   s11 = c_field_tool.get("s11");
   s12 = c_field_tool.get("s12");
   s13 = c_field_tool.get("s13");

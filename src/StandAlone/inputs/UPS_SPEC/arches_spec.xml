@@ -26,6 +26,7 @@
                                         attribute2="role REQUIRED STRING 'temperature, density, enthalpy, mixture_fraction,
                                                                           co2, h2o, soot, specific_heat,
                                                                           uvelocity, vvelocity, wvelocity,
+                                                                          ccuvelocity, ccvvelocity, ccwvelocity,
                                                                           total_viscosity'"/>
       </VarID>
 
