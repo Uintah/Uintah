@@ -17,6 +17,8 @@ import re         # regular expressions
 #
 # stdout.flush() # Make sure that output (via 'tee' command (from calling script)) is actually printed...
 #______________________________________________________________________
+inputs_dir = ""
+
 
 def nameoftest (test):
     return test[0]
@@ -30,8 +32,16 @@ def num_processes (test):
 def testOS(test):
     return upper(test[3])
 
-def inputs_root ():
-    return argv[2]
+def setInputsDir( here ) :
+    global inputs_dir
+    inputs_dir = here
+
+def getInputsDir():
+    global inputs_dir
+    # read from argument list if it hasn't been set
+    if inputs_dir == "" :
+      inputs_dir = path.abspath(argv[2])
+    return inputs_dir
 
 def date ():
     return asctime(localtime(time()))
@@ -106,19 +116,7 @@ def cmdline(command):
     out, err = process.communicate()
     return (out, err, process.returncode)
     
-#______________________________________________________________________
-# Used by toplevel/generateGoldStandards.py
-
-inputs_dir = ""
-
-def setGeneratingGoldStandards( inputs ) :
-    global inputs_dir
-    inputs_dir = inputs
-
-def generatingGoldStandards() :
-    global inputs_dir
-    return inputs_dir
-
+#__________________________________
 # returns the path of either opt/dbg
 def build_root():
     opt_dbg = path.normpath(path.join(getcwd(), "../"))
@@ -140,7 +138,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
   gold_standard = path.normpath(path.join(getcwd(), argv[3]))
   helperspath   = "%s/%s" % (path.normpath(path.join(getcwd(), path.dirname(argv[0]))), "helpers")
   toolspath     = path.normpath(path.join(getcwd(), "tools"))
-  inputpath     = path.normpath(path.join(getcwd(), inputs_root()))
+  inputpath     = getInputsDir()
 
   global startpath
   startpath       = getcwd()

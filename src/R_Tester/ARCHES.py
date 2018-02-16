@@ -2,15 +2,10 @@
 
 from os import symlink,environ, system
 from sys import argv,exit,platform
-from helpers.runSusTests import runSusTests, inputs_root, ignorePerformanceTests, generatingGoldStandards
+from helpers.runSusTests import runSusTests, ignorePerformanceTests, getInputsDir
 from helpers.modUPS import modUPS
 
-the_dir = generatingGoldStandards()
-
-if the_dir == "" :
-  the_dir = "%s/ARCHES" % inputs_root()
-else :
-  the_dir = the_dir + "/ARCHES"
+the_dir = "%s/%s" % ( getInputsDir(),"ARCHES" )
 
 #______________________________________________________________________                            
 #  Test syntax: ( "folder name", "input file", # processors, "OS", ["flags1","flag2"])
