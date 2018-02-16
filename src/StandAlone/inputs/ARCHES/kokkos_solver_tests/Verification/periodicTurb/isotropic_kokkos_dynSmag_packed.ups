@@ -70,9 +70,18 @@
         <var role="uvelocity" label="uVel"/>
         <var role="vvelocity" label="vVel"/>
         <var role="wvelocity" label="wVel"/>
+        <var role="ccuvelocity" label="uVel_cc"/>
+        <var role="ccvvelocity" label="vVel_cc"/>
+        <var role="ccwvelocity" label="wVel_cc"/>
         <var role="total_viscosity" label="gamma"/>
         <var role="density" label="density"/>
       </VarID>
+      <PropertyModelsV2>
+        <model label="volFraction" type="constant_property">
+          <grid type="CC"/>
+          <value>1.</value>
+        </model>
+      </PropertyModelsV2>
       <StateProperties> 
         <model label="density_model" type="constant">
           <const_property label="density" value="1."/>
