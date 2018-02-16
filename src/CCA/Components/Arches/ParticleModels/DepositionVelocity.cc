@@ -331,10 +331,10 @@ DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
             rhoi = _user_specified_rho;
             d_mass += flux*area_face[container_flux_ind[pp]];// [kg/s] ash
             // volumetric flow rate for particle i:
+            d_flow = (flux/rhoi) * area_face[container_flux_ind[pp]]+1e-100;// [m^3/s] ash
             d_velocity += d_flow;
-            total_area_face += area_face[container_flux_ind[pp]];
             // The total cell surface area exposed to radiation:
-            d_flow = (flux/rhoi) * area_face[container_flux_ind[pp]]+1e-100;// [kg/s] ash
+            total_area_face += area_face[container_flux_ind[pp]];
 	          env_flow_rate += d_flow; // m^3 / s * dp
 	          env_flow_rate_d += d_flow * particle_diameter; // m^3 / s
           }
