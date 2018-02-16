@@ -146,6 +146,8 @@ DSmaCs<TT>::register_initialize( std::vector<ArchesFieldContainer::VariableInfor
   }
 
   register_variable( m_Cs_name, ArchesFieldContainer::COMPUTES, variable_registry );
+  register_variable( "filterMM", ArchesFieldContainer::COMPUTES, variable_registry );
+  register_variable( "filterML", ArchesFieldContainer::COMPUTES, variable_registry );
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -158,7 +160,11 @@ DSmaCs<TT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     mu_turb.initialize(0.0);
   }
   CCVariable<double>& Cs = *(tsk_info->get_uintah_field<CCVariable<double> >(m_Cs_name));
+  CCVariable<double>& filterMM = *(tsk_info->get_uintah_field<CCVariable<double> >("filterMM"));
+  CCVariable<double>& filterML = *(tsk_info->get_uintah_field<CCVariable<double> >("filterML"));
   Cs.initialize(0.0);
+  filterMM.initialize(0.0);
+  filterML.initialize(0.0);
 }
 //--------------------------------------------------------------------------------------------------
 template<typename TT> void
@@ -238,8 +244,10 @@ DSmaCs<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   MM = c_field_tool.get("MM");
   IsI = c_field_tool.get(m_IsI_name);
 
-  CCVariable<double>& filterML = tsk_info->get_uintah_field_add< CCVariable<double> >("filterML", 0);
-  CCVariable<double>& filterMM = tsk_info->get_uintah_field_add< CCVariable<double> >("filterMM", 0);
+  //CCVariable<double>& filterML = tsk_info->get_uintah_field_add< CCVariable<double> >("filterML", 0);
+  CCVariable<double>& filterML = tsk_info->get_uintah_field_add< CCVariable<double> >("filterML");
+  CCVariable<double>& filterMM = tsk_info->get_uintah_field_add< CCVariable<double> >("filterMM");
+  //CCVariable<double>& filterMM = tsk_info->get_uintah_field_add< CCVariable<double> >("filterMM", 0);
   filterML.initialize(0.0);
   filterMM.initialize(0.0);
 
