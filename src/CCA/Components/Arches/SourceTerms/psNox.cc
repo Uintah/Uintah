@@ -594,15 +594,15 @@ psNox::computeSource( const ProcessorGroup* pc,
          //NH3_src(i,j,k) +=0.0;
        //}
 
-      NO_m +=NO_src(i,j,k)*delta_t/((double) nOverkill);
-      HCN_m+=HCN_src(i,j,k)*delta_t/((double) nOverkill);
-      NH3_m+=NH3_src(i,j,k)*delta_t/((double) nOverkill);
+      NO_m  += NO_src(i,j,k)*delta_t/((double) nOverkill);
+      HCN_m += HCN_src(i,j,k)*delta_t/((double) nOverkill);
+      NH3_m += NH3_src(i,j,k)*delta_t/((double) nOverkill);
       //O2_m+=NO_src(i,j,k)*delta_t/1000;
       //N2_m+=
        }
-NO_src(i,j,k)=(NO_m-max(tran_NO(i,j,k),1e-20 ) * density(i,j,k)/_MW_NO)/delta_t;
-HCN_src(i,j,k)=(HCN_m-max(tran_HCN(i,j,k),1e-20 ) * density(i,j,k)/_MW_HCN)/delta_t;
-NH3_src(i,j,k)=(NH3_m-max(tran_NH3(i,j,k),1e-20 ) * density(i,j,k)/_MW_NH3)/delta_t;
+      NO_src(i,j,k)=(NO_m-max(tran_NO(i,j,k),1e-20 ) * density(i,j,k)/_MW_NO)/delta_t;
+      HCN_src(i,j,k)=(HCN_m-max(tran_HCN(i,j,k),1e-20 ) * density(i,j,k)/_MW_HCN)/delta_t;
+      NH3_src(i,j,k)=(NH3_m-max(tran_NH3(i,j,k),1e-20 ) * density(i,j,k)/_MW_NH3)/delta_t;
 
      } else {  // if volFraction
         NO_src(i,j,k)  = 0.0; //(kg/sm3)                          
