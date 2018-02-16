@@ -70,6 +70,7 @@ private:
     //int Type_filter ; 
     bool m_create_labels_IsI_t_viscosity{true};   
     Uintah::FILTER Type_filter; 
+    FilterTest m_Filter;
   };
 }
 #endif

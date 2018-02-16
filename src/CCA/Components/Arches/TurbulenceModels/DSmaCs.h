@@ -64,6 +64,7 @@ private:
     std::string m_density_name;
     std::string m_IsI_name;
     bool m_create_labels_IsI_t_viscosity{true};   
+    FilterTest m_Filter;
   };
 
 //--------------------------------------------------------------------------------------------------
@@ -107,8 +108,9 @@ DSmaCs<TT>::problemSetup( ProblemSpecP& db ){
 
   std::string m_Type_filter_name;
   db->findBlock("filter")->getAttribute("type",m_Type_filter_name);
-
   Type_filter = get_filter_from_string( m_Type_filter_name );
+  m_Filter.get_w(Type_filter);
+
   m_density_name     = parse_ups_for_role( DENSITY, db, "density" );
   m_volFraction_name = "volFraction";
   m_IsI_name = "strainMagnitudeLabel";
@@ -241,11 +243,8 @@ DSmaCs<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   filterML.initialize(0.0);
   filterMM.initialize(0.0);
 
-  Uintah::FilterVarT<TT> get_fMM((*MM), filterMM, vol_fraction, 0,0,0, Type_filter);
-  Uintah::FilterVarT<TT> get_fML((*ML), filterML, vol_fraction, 0,0,0, Type_filter);
-
-  Uintah::parallel_for(range,get_fMM);
-  Uintah::parallel_for(range,get_fML);
+  m_Filter.applyFilter<TT>((*MM),filterMM,vol_fraction,range);
+  m_Filter.applyFilter<TT>((*ML),filterML,vol_fraction,range);
 
   const double m_MM_lower_value = 1.0e-14; 
   const double m_ML_lower_value = 1.0e-14;

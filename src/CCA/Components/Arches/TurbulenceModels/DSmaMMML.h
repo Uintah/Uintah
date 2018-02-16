@@ -57,6 +57,7 @@ private:
   Uintah::FILTER Type_filter;
   std::string m_IsI_name;
   std::string m_volFraction_name;
+  FilterTest m_Filter;
   };
 
 //--------------------------------------------------------------------------------------------------
@@ -78,12 +79,13 @@ DSmaMMML<TT>::problemSetup( ProblemSpecP& db ){
 
   std::string m_Type_filter_name;
   db->findBlock("filter")->getAttribute("type",m_Type_filter_name);
+  Type_filter = get_filter_from_string( m_Type_filter_name );
+  m_Filter.get_w(Type_filter);
 
   const ProblemSpecP params_root = db->getRootNode();
   db->require("epsilon",m_epsilon);
   
   
-  Type_filter = get_filter_from_string( m_Type_filter_name );
   m_IsI_name = "strainMagnitudeLabel";
   m_volFraction_name = "volFraction";
 
@@ -302,20 +304,12 @@ DSmaMMML<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   filterBeta23.initialize(0.0);
   filterBeta33.initialize(0.0);
 
-  Uintah::FilterVarT<TT> get_fBeta11((*Beta11), filterBeta11, vol_fraction, 0,0,0, Type_filter);
-  Uintah::FilterVarT<TT> get_fBeta22((*Beta22), filterBeta22, vol_fraction, 0,0,0, Type_filter);
-  Uintah::FilterVarT<TT> get_fBeta33((*Beta33), filterBeta33, vol_fraction, 0,0,0, Type_filter);
-  Uintah::FilterVarT<TT> get_fBeta12((*Beta12), filterBeta12, vol_fraction, 0,0,0, Type_filter);
-  Uintah::FilterVarT<TT> get_fBeta13((*Beta13), filterBeta13, vol_fraction, 0,0,0, Type_filter);
-  Uintah::FilterVarT<TT> get_fBeta23((*Beta23), filterBeta23, vol_fraction, 0,0,0, Type_filter);
-
-  Uintah::parallel_for(range1,get_fBeta11);
-  Uintah::parallel_for(range1,get_fBeta22);
-  Uintah::parallel_for(range1,get_fBeta33);
-  Uintah::parallel_for(range1,get_fBeta12);
-  Uintah::parallel_for(range1,get_fBeta13);
-  Uintah::parallel_for(range1,get_fBeta23);
-
+  m_Filter.applyFilter<TT>((*Beta11),filterBeta11,vol_fraction,range1);
+  m_Filter.applyFilter<TT>((*Beta22),filterBeta22,vol_fraction,range1);
+  m_Filter.applyFilter<TT>((*Beta33),filterBeta33,vol_fraction,range1);
+  m_Filter.applyFilter<TT>((*Beta12),filterBeta12,vol_fraction,range1);
+  m_Filter.applyFilter<TT>((*Beta13),filterBeta13,vol_fraction,range1);
+  m_Filter.applyFilter<TT>((*Beta23),filterBeta23,vol_fraction,range1);
   // Filter IsI and sij then compute alpha
 
   CCVariable<double>& filterIsI = tsk_info->get_uintah_field_add< CCVariable<double> >("filterIsI",nGhosts1 );
@@ -406,25 +400,15 @@ DSmaMMML<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   filter_rhoV.initialize(0.0);
   filter_rhoW.initialize(0.0);
 
-  Uintah::FilterVarT<TT>  get_frhoUU((*rhoUU), filter_rhoUU, vol_fraction, 0,0,0, Type_filter);
-  Uintah::FilterVarT<TT>  get_frhoVV((*rhoVV), filter_rhoVV, vol_fraction, 0,0,0, Type_filter);
-  Uintah::FilterVarT<TT>  get_frhoWW((*rhoWW), filter_rhoWW, vol_fraction, 0,0,0, Type_filter);
-  Uintah::FilterVarT<TT>  get_frhoUW((*rhoUW), filter_rhoUW, vol_fraction, 0,0,0, Type_filter);
-  Uintah::FilterVarT<TT>  get_frhoUV((*rhoUV), filter_rhoUV, vol_fraction, 0,0,0, Type_filter);
-  Uintah::FilterVarT<TT>  get_frhoVW((*rhoVW), filter_rhoVW, vol_fraction, 0,0,0, Type_filter);
-  Uintah::FilterVarT<TT>  get_frhoV((*rhoV), filter_rhoV, vol_fraction, 0,0,0, Type_filter);
-  Uintah::FilterVarT<TT>  get_frhoW((*rhoW), filter_rhoW, vol_fraction, 0,0,0, Type_filter);
-  Uintah::FilterVarT<TT>  get_frhoU((*rhoU), filter_rhoU, vol_fraction, 0,0,0, Type_filter);
-
-  Uintah::parallel_for(range1,get_frhoUU);
-  Uintah::parallel_for(range1,get_frhoVV);
-  Uintah::parallel_for(range1,get_frhoWW);
-  Uintah::parallel_for(range1,get_frhoUV);
-  Uintah::parallel_for(range1,get_frhoVW);
-  Uintah::parallel_for(range1,get_frhoUW);
-  Uintah::parallel_for(range1,get_frhoU);
-  Uintah::parallel_for(range1,get_frhoV);
-  Uintah::parallel_for(range1,get_frhoW);
+  m_Filter.applyFilter<TT>((*rhoUU),filter_rhoUU,vol_fraction,range1);
+  m_Filter.applyFilter<TT>((*rhoVV),filter_rhoVV,vol_fraction,range1);
+  m_Filter.applyFilter<TT>((*rhoWW),filter_rhoWW,vol_fraction,range1);
+  m_Filter.applyFilter<TT>((*rhoUW),filter_rhoUW,vol_fraction,range1);
+  m_Filter.applyFilter<TT>((*rhoUV),filter_rhoUV,vol_fraction,range1);
+  m_Filter.applyFilter<TT>((*rhoVW),filter_rhoVW,vol_fraction,range1);
+  m_Filter.applyFilter<TT>((*rhoV),filter_rhoV,vol_fraction,range1);
+  m_Filter.applyFilter<TT>((*rhoW),filter_rhoW,vol_fraction,range1);
+  m_Filter.applyFilter<TT>((*rhoU),filter_rhoU,vol_fraction,range1);
 
 
   CCVariable<double>& ML = tsk_info->get_uintah_field_add< CCVariable<double> >("ML",nGhosts1);

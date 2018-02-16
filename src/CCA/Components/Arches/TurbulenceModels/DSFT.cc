@@ -42,7 +42,7 @@ DSFT::problemSetup( ProblemSpecP& db ){
   m_ref_density_name = "denRefArray"; // name used in production code
   m_cell_type_name = "cellType";
   Type_filter = get_filter_from_string( m_Type_filter_name );
-
+  m_Filter.get_w(Type_filter);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -257,10 +257,8 @@ DSFT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   // Filter rho
   CCVariable<double>& filterRho = tsk_info->get_uintah_field_add< CCVariable<double> >("Filterrho", nGhosts1);
   filterRho.initialize(0.0);
-  Uintah::Filterdensity< constCCVariable<double> > get_frho(rho, filterRho, 
-                                                vol_fraction, 0,0,0, Type_filter);
-  Uintah::parallel_for(range1,get_frho);
   
+  m_Filter.applyFilter(rho,filterRho,vol_fraction,range1);
   Uintah::parallel_for( range, [&](int i, int j, int k){
   if (cell_type(i,j,k) > 0){
     if (filterRho(i,j,k) < 1e-14) {
@@ -277,12 +275,6 @@ DSFT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   filterRhoU.initialize(0.0);
   filterRhoV.initialize(0.0);
   filterRhoW.initialize(0.0);
-  Uintah::FilterrhoVarT< constSFCXVariable<double> > get_frhou(uVel, filterRhoU,rho, 
-                                                vol_fraction, 1,0,0, Type_filter);
-  Uintah::FilterrhoVarT< constSFCYVariable<double> > get_frhov(vVel, filterRhoV,rho, 
-                                                vol_fraction, 0,1,0, Type_filter);
-  Uintah::FilterrhoVarT< constSFCZVariable<double> > get_frhoz(wVel, filterRhoW,rho, 
-                                                vol_fraction, 0,0,1, Type_filter);
                                                 
   bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
   bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
@@ -296,8 +288,7 @@ DSFT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   }
   
   Uintah::BlockRange range_u(low, high_filter);
-  Uintah::parallel_for(range_u,get_frhou);
-  
+  m_Filter.applyFilter(uVel,filterRhoU,rho,vol_fraction,range_u); 
   if ( yminus ){
     low = patch->getCellLowIndex()+IntVector(0,1,0) + IntVector(-nG1,-nG1,-nG1);
   } else {
@@ -305,7 +296,7 @@ DSFT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   }
   
   Uintah::BlockRange range_v(low, high_filter);
-  Uintah::parallel_for(range_v,get_frhov);
+  m_Filter.applyFilter(vVel,filterRhoV,rho,vol_fraction,range_v); 
 
   if ( zminus ){
     low = patch->getCellLowIndex()+IntVector(0,0,1)+ IntVector(-nG1,-nG1,-nG1);
@@ -313,7 +304,7 @@ DSFT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     low = patch->getCellLowIndex()+ IntVector(-nG1,-nG1,-nG1);
   }
   Uintah::BlockRange range_w(low, high_filter);
-  Uintah::parallel_for(range_w,get_frhoz);
+  m_Filter.applyFilter(wVel,filterRhoW,rho,vol_fraction,range_w); 
   
   // Compute rhouiuj at cc
   CCVariable<double>& rhoUU = tsk_info->get_uintah_field_add< CCVariable<double> >("rhoUU",nGhosts2);

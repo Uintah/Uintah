@@ -19,13 +19,9 @@ namespace Uintah {
     }
 
   }
+  struct FilterTest {
 
-  template <typename V_T>
-  struct FilterrhoVarT{
-    FilterrhoVarT( V_T& i_var, Array3<double>& i_Fvar, constCCVariable<double>& i_rho, constCCVariable<double>& i_eps,
-                int _i_n, int _j_n, int _k_n ,FILTER i_Type): 
-      var(i_var), Fvar(i_Fvar), rho(i_rho), eps(i_eps), i_n(_i_n),
-       j_n(_j_n),k_n(_k_n), Type(i_Type)
+    void get_w(FILTER Type)
       {    
       
       if (Type == THREEPOINTS  ) {
@@ -66,190 +62,76 @@ namespace Uintah {
       throw InvalidValue("Error: Filter type not recognized. ", __FILE__, __LINE__);
     }
     }
-    void operator()(int i, int j, int k) const {
-        double F_var = 0.0; 
-        for ( int m = -1; m <= 1; m++ ){
-          for ( int n = -1; n <= 1; n++ ){
-            for ( int l = -1; l <= 1; l++ ){
-              double vf = std::floor((eps(i+m,j+n,k+l)
-                          + eps(i+m-i_n,j+n-j_n,k+l-k_n))/2.0);
-              F_var += w[m+1][n+1][l+1]*(vf*var(i+m,j+n,k+l)*
-                       (rho(i+m,j+n,k+l)+rho(i+m-i_n,j+n-j_n,k+l-k_n))/2.); 
-                       //(rho(i,j,k)+rho(i+i_n,j+j_n,k+k_n))/2.); 
-            }
-          }
-        }
-        F_var /= wt;
-        Fvar(i,j,k) = F_var;
-    }
-
-
-  private:
-  
-  V_T& var;
-  Array3<double>& Fvar;
-  constCCVariable<double>& eps;
-  constCCVariable<double>& rho;
-  int i_n;
-  int j_n;
-  int k_n;
-  FILTER Type ;
-  double w[3][3][3];
-  double wt;
-  };
-
+  // rh*u filter
   template <typename V_T>
-  struct Filterdensity{
-    Filterdensity( V_T& i_var, Array3<double>& i_Fvar, constCCVariable<double>& i_eps,
-                int _i_n, int _j_n, int _k_n ,FILTER i_Type): 
-      var(i_var), Fvar(i_Fvar), eps(i_eps), i_n(_i_n),
-       j_n(_j_n),k_n(_k_n), Type(i_Type)
-      {    
-      
-      if (Type == THREEPOINTS  ) {
-      // Three points symmetric: eq. 2.49 : LES for compressible flows Garnier et al.
-        for ( int m = -1; m <= 1; m++ ){
-          for ( int n = -1; n <= 1; n++ ){
-            for ( int l = -1; l <= 1; l++ ){
-              double my_value = abs(m) + abs(n) + abs(l)+3.0;
-              w[m+1][n+1][l+1]= (1.0/std::pow(2.0,my_value)); 
-            }
-          }
-        }
-      wt = 1.;
-      } else if (Type == SIMPSON) {
-      // Simpson integration rule: eq. 2.50 : LES for compressible flows Garnier et al.
-      // ref shows 1D case. For 3D case filter 3 times with 1D filter . 
-      for ( int m = -1; m <= 1; m++ ){
-        for ( int n = -1; n <= 1; n++ ){
-          for ( int l = -1; l <= 1; l++ ){
-            double my_value = -abs(m) - abs(n) - abs(l)+3.0;
-            w[m+1][n+1][l+1] = std::pow(4.0,my_value); 
-          }
+  void applyFilter(V_T& var, Array3<double>& Fvar, constCCVariable<double>& rho, 
+        constCCVariable<double>& eps, BlockRange range) 
+  {
+  ArchesCore::VariableHelper<V_T> helper;
+  int i_n = helper.ioff;
+  int j_n = helper.joff;
+  int k_n = helper.koff;
+ 
+  Uintah::parallel_for( range, [&](int i, int j, int k){
+    double F_var = 0.0; 
+    for ( int m = -1; m <= 1; m++ ){
+      for ( int n = -1; n <= 1; n++ ){
+        for ( int l = -1; l <= 1; l++ ){
+          double vf = std::floor((eps(i+m,j+n,k+l)
+                      + eps(i+m-i_n,j+n-j_n,k+l-k_n))/2.0);
+          F_var += w[m+1][n+1][l+1]*(vf*var(i+m,j+n,k+l)*
+                   (rho(i+m,j+n,k+l)+rho(i+m-i_n,j+n-j_n,k+l-k_n))/2.); 
         }
       }
-        wt = std::pow(6.0,3.0);
+    }
+    F_var /= wt;
+    Fvar(i,j,k) = F_var;
+  });
+  }
+  // density filter 
+  void applyFilter(constCCVariable<double>& var, Array3<double>& Fvar,  
+        constCCVariable<double>& eps, BlockRange range) 
+  {
 
-      } else if (Type == BOX) {
-      // Doing average on a box with three points
-      for ( int m = -1; m <= 1; m++ ){
-        for ( int n = -1; n <= 1; n++ ){
-          for ( int l = -1; l <= 1; l++ ){
-            w[m+1][n+1][l+1] = 1.0; 
-          }
+  Uintah::parallel_for( range, [&](int i, int j, int k){
+    double F_var = 0.0; 
+    for ( int m = -1; m <= 1; m++ ){
+      for ( int n = -1; n <= 1; n++ ){
+        for ( int l = -1; l <= 1; l++ ){
+          F_var += w[m+1][n+1][l+1]*(eps(i+m,j+n,k+l)*var(i+m,j+n,k+l)
+                 +(1.-eps(i+m,j+n,k+l))*var(i,j,k)); 
         }
       }
-      wt = 27.;
-    } else {
-      throw InvalidValue("Error: Filter type not recognized. ", __FILE__, __LINE__);
     }
-    }
-    void operator()(int i, int j, int k) const {
-        double F_var = 0.0; 
-        for ( int m = -1; m <= 1; m++ ){
-          for ( int n = -1; n <= 1; n++ ){
-            for ( int l = -1; l <= 1; l++ ){
-              //double vf = std::floor((eps(i+m,j+n,k+l)
-              //            + eps(i+m-i_n,j+n-j_n,k+l-k_n))/2.0);
-              double vf = eps(i+m,j+n,k+l);
-              F_var += w[m+1][n+1][l+1]* (vf*var(i+m,j+n,k+l)+(1.-vf)*var(i,j,k)); 
-            }
-          }
-        }
-        F_var /= wt;
-        Fvar(i,j,k) = F_var;
-    }
-
-
-  private:
-  
-  V_T& var;
-  Array3<double>& Fvar;
-  constCCVariable<double>& eps;
-  int i_n;
-  int j_n;
-  int k_n;
-  FILTER Type ;
-  double w[3][3][3];
-  double wt;
-  };
-
+    F_var /= wt;
+    Fvar(i,j,k) = F_var;
+  });
+  }
+  // scalar filter
   template <typename V_T>
-  struct FilterVarT{
-    FilterVarT( V_T& i_var, Array3<double>& i_Fvar, constCCVariable<double>& i_eps,
-                int _i_n, int _j_n, int _k_n ,FILTER i_Type): 
-      var(i_var), Fvar(i_Fvar), eps(i_eps), i_n(_i_n),
-       j_n(_j_n),k_n(_k_n), Type(i_Type)
-      {    
-      
-      if (Type == THREEPOINTS  ) {
-      // Three points symmetric: eq. 2.49 : LES for compressible flows Garnier et al.
-        for ( int m = -1; m <= 1; m++ ){
-          for ( int n = -1; n <= 1; n++ ){
-            for ( int l = -1; l <= 1; l++ ){
-              double my_value = abs(m) + abs(n) + abs(l)+3.0;
-              w[m+1][n+1][l+1]= (1.0/std::pow(2.0,my_value)); 
-            }
-          }
-        }
-      wt = 1.;
-      } else if (Type == SIMPSON) {
-      // Simpson integration rule: eq. 2.50 : LES for compressible flows Garnier et al.
-      // ref shows 1D case. For 3D case filter 3 times with 1D filter . 
-      for ( int m = -1; m <= 1; m++ ){
-        for ( int n = -1; n <= 1; n++ ){
-          for ( int l = -1; l <= 1; l++ ){
-            double my_value = -abs(m) - abs(n) - abs(l)+3.0;
-            w[m+1][n+1][l+1] = std::pow(4.0,my_value); 
-          }
+  void applyFilter(V_T& var, Array3<double>& Fvar,  
+        constCCVariable<double>& eps, BlockRange range) 
+  {
+
+  Uintah::parallel_for( range, [&](int i, int j, int k){
+    double F_var = 0.0; 
+    for ( int m = -1; m <= 1; m++ ){
+      for ( int n = -1; n <= 1; n++ ){
+        for ( int l = -1; l <= 1; l++ ){
+          F_var += w[m+1][n+1][l+1]* eps(i+m,j+n,k+l)*var(i+m,j+n,k+l); 
         }
       }
-        wt = std::pow(6.0,3.0);
-
-      } else if (Type == BOX) {
-      // Doing average on a box with three points
-      for ( int m = -1; m <= 1; m++ ){
-        for ( int n = -1; n <= 1; n++ ){
-          for ( int l = -1; l <= 1; l++ ){
-            w[m+1][n+1][l+1] = 1.0; 
-          }
-        }
-      }
-      wt = 27.;
-    } else {
-      throw InvalidValue("Error: Filter type not recognized. ", __FILE__, __LINE__);
     }
-    }
-    void operator()(int i, int j, int k) const {
-        double F_var = 0.0; 
-        for ( int m = -1; m <= 1; m++ ){
-          for ( int n = -1; n <= 1; n++ ){
-            for ( int l = -1; l <= 1; l++ ){
-              //double vf = std::floor((eps(i+m,j+n,k+l)
-              //            + eps(i+m-i_n,j+n-j_n,k+l-k_n))/2.0);
-              double vf = eps(i+m,j+n,k+l);
-              F_var += w[m+1][n+1][l+1]* vf*var(i+m,j+n,k+l); 
-            }
-          }
-        }
-        F_var /= wt;
-        Fvar(i,j,k) = F_var;
-    }
-
-
+    F_var /= wt;
+    Fvar(i,j,k) = F_var;
+  });
+  }
   private:
   
-  V_T& var;
-  Array3<double>& Fvar;
-  constCCVariable<double>& eps;
-  int i_n;
-  int j_n;
-  int k_n;
   FILTER Type ;
   double w[3][3][3];
   double wt;
   };
-
 
   struct computeIsInsij{
     computeIsInsij(Array3<double>& i_IsI, Array3<double>& i_s11, Array3<double>& i_s22, Array3<double>& i_s33, 
