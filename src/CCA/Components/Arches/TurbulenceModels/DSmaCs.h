@@ -283,6 +283,7 @@ DSmaCs<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
       }
     }
   }
+  proc0cout << "       Task: " << "DSmaCs" << "  Type: " << "Dynamic model" << std::endl;
 
   //Uintah::parallel_for( range, [&](int i, int j, int k){
   //  mu_sgc_p(i,j,k) = mu_sgc(i,j,k); 
