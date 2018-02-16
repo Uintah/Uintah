@@ -111,6 +111,38 @@ public:
   ~Filter(){
   };
 
+/* @brief Apply a filter to density */
+bool applyFilter( const ProcessorGroup* ,
+                  const Patch* patch,               
+                  constCCVariable<double>& var,                           
+                  constCCVariable<double>& eps, 
+                  CCVariable<double>& filterVar )        
+{
+  int shift = (_filter_width-1)/2;
+  int fstart = -1*shift;
+  int fend   = shift;
+
+  for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+
+    IntVector c = *iter; 
+    filterVar[c] = 0.0;
+
+    for ( int i = fstart; i <= fend; i++ ){
+      for ( int j = fstart; j <= fend; j++ ){
+        for ( int k = fstart; k <= fend; k++ ){
+
+          IntVector offset = c + IntVector(i,j,k);
+          filterVar[c] += _filter_array[i+shift][j+shift][k+shift] * 
+                         (eps[offset]*var[offset]+ (1.-eps[offset])*var[c]); 
+
+        }
+      }
+    }
+
+
+  }
+  return true;
+}
 /* @brief Apply a filter to a Uintah::CCVariable<double> */
 template<class T>
 bool applyFilter( const ProcessorGroup* ,
@@ -135,7 +167,7 @@ bool applyFilter( const ProcessorGroup* ,
 
           IntVector offset = c + IntVector(i,j,k);
           filterVar[c] += _filter_array[i+shift][j+shift][k+shift] * 
-                         (eps[offset]*var[offset]+ (1.-eps[offset])*var[c]); 
+                         eps[offset]*var[offset]; 
 
         }
       }
@@ -182,7 +214,7 @@ bool applyFilter( const ProcessorGroup* ,
 
           filterVar[c] += vf * 
             _filter_array[i+shift][j+shift][k+shift] * 
-            (rho[c]+rho[c+neigh])/2.0 * var[c + IntVector(i,j,k)]; 
+            (rho[offset]+rho[offset-neigh])/2.0 * var[offset]; 
 
         }
       }

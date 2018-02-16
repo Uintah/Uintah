@@ -24,6 +24,7 @@
 #include <CCA/Components/Arches/PropertyModelsV2/sootVolumeFrac.h>
 #include <CCA/Components/Arches/PropertyModelsV2/CO.h>
 #include <CCA/Components/Arches/PropertyModelsV2/UnweightVariable.h>
+#include <CCA/Components/Arches/PropertyModelsV2/ForFilterDensity.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 
@@ -63,7 +64,11 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
       db_model->getAttribute("label", name);
       db_model->getAttribute("type", type);
 
-      if ( type == "wall_heatflux_variable" ){
+      if ( type == "density_for_filter" ){
+        TaskInterface::TaskBuilder* tsk = scinew ForFilterDensity::Builder( name, 0 );
+        register_task( name, tsk );
+        _pre_update_property_tasks.push_back( name );
+      }else if ( type == "wall_heatflux_variable" ){
 
         TaskInterface::TaskBuilder* tsk = scinew WallHFVariable::Builder( name, 0, _shared_state );
         register_task( name, tsk );

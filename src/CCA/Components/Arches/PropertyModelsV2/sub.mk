@@ -47,6 +47,7 @@ SRCS += \
         $(SRCDIR)/partRadProperties.cc      \
         $(SRCDIR)/sootVolumeFrac.cc         \
         $(SRCDIR)/spectralProperties.cc     \
+        $(SRCDIR)/ForFilterDensity.cc     \
         $(SRCDIR)/sumRadiation.cc
 
 ########################################################################

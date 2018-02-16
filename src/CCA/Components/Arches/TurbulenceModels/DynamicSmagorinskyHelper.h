@@ -99,6 +99,82 @@ namespace Uintah {
   };
 
   template <typename V_T>
+  struct Filterdensity{
+    Filterdensity( V_T& i_var, Array3<double>& i_Fvar, constCCVariable<double>& i_eps,
+                int _i_n, int _j_n, int _k_n ,FILTER i_Type): 
+      var(i_var), Fvar(i_Fvar), eps(i_eps), i_n(_i_n),
+       j_n(_j_n),k_n(_k_n), Type(i_Type)
+      {    
+      
+      if (Type == THREEPOINTS  ) {
+      // Three points symmetric: eq. 2.49 : LES for compressible flows Garnier et al.
+        for ( int m = -1; m <= 1; m++ ){
+          for ( int n = -1; n <= 1; n++ ){
+            for ( int l = -1; l <= 1; l++ ){
+              double my_value = abs(m) + abs(n) + abs(l)+3.0;
+              w[m+1][n+1][l+1]= (1.0/std::pow(2.0,my_value)); 
+            }
+          }
+        }
+      wt = 1.;
+      } else if (Type == SIMPSON) {
+      // Simpson integration rule: eq. 2.50 : LES for compressible flows Garnier et al.
+      // ref shows 1D case. For 3D case filter 3 times with 1D filter . 
+      for ( int m = -1; m <= 1; m++ ){
+        for ( int n = -1; n <= 1; n++ ){
+          for ( int l = -1; l <= 1; l++ ){
+            double my_value = -abs(m) - abs(n) - abs(l)+3.0;
+            w[m+1][n+1][l+1] = std::pow(4.0,my_value); 
+          }
+        }
+      }
+        wt = std::pow(6.0,3.0);
+
+      } else if (Type == BOX) {
+      // Doing average on a box with three points
+      for ( int m = -1; m <= 1; m++ ){
+        for ( int n = -1; n <= 1; n++ ){
+          for ( int l = -1; l <= 1; l++ ){
+            w[m+1][n+1][l+1] = 1.0; 
+          }
+        }
+      }
+      wt = 27.;
+    } else {
+      throw InvalidValue("Error: Filter type not recognized. ", __FILE__, __LINE__);
+    }
+    }
+    void operator()(int i, int j, int k) const {
+        double F_var = 0.0; 
+        for ( int m = -1; m <= 1; m++ ){
+          for ( int n = -1; n <= 1; n++ ){
+            for ( int l = -1; l <= 1; l++ ){
+              //double vf = std::floor((eps(i+m,j+n,k+l)
+              //            + eps(i+m-i_n,j+n-j_n,k+l-k_n))/2.0);
+              double vf = eps(i+m,j+n,k+l);
+              F_var += w[m+1][n+1][l+1]* (vf*var(i+m,j+n,k+l)+(1.-vf)*var(i,j,k)); 
+            }
+          }
+        }
+        F_var /= wt;
+        Fvar(i,j,k) = F_var;
+    }
+
+
+  private:
+  
+  V_T& var;
+  Array3<double>& Fvar;
+  constCCVariable<double>& eps;
+  int i_n;
+  int j_n;
+  int k_n;
+  FILTER Type ;
+  double w[3][3][3];
+  double wt;
+  };
+
+  template <typename V_T>
   struct FilterVarT{
     FilterVarT( V_T& i_var, Array3<double>& i_Fvar, constCCVariable<double>& i_eps,
                 int _i_n, int _j_n, int _k_n ,FILTER i_Type): 
@@ -152,7 +228,7 @@ namespace Uintah {
               //double vf = std::floor((eps(i+m,j+n,k+l)
               //            + eps(i+m-i_n,j+n-j_n,k+l-k_n))/2.0);
               double vf = eps(i+m,j+n,k+l);
-              F_var += w[m+1][n+1][l+1]* (vf*var(i+m,j+n,k+l)+(1.-vf)*var(i,j,k)); 
+              F_var += w[m+1][n+1][l+1]* vf*var(i+m,j+n,k+l); 
             }
           }
         }

@@ -365,7 +365,8 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
     dim = 2;
     d_filter->applyFilter( pc, iter, wVel, density, filterVolume, vol_fraction, filterRhoW, dim );
 
-    d_filter->applyFilter<constCCVariable<double> >(pc, patch, density, filterVolume, vol_fraction, filterRho);
+    //d_filter->applyFilter<constCCVariable<double> >(pc, patch, density, filterVolume, vol_fraction, filterRho);
+    d_filter->applyFilter(pc, patch, density, vol_fraction, filterRho);
 
     // making filterRho nonzero
     int mmWallID = d_boundaryCondition->getMMWallId();

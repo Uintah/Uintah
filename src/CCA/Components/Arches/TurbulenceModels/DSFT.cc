@@ -257,7 +257,7 @@ DSFT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   // Filter rho
   CCVariable<double>& filterRho = tsk_info->get_uintah_field_add< CCVariable<double> >("Filterrho", nGhosts1);
   filterRho.initialize(0.0);
-  Uintah::FilterVarT< constCCVariable<double> > get_frho(rho, filterRho, 
+  Uintah::Filterdensity< constCCVariable<double> > get_frho(rho, filterRho, 
                                                 vol_fraction, 0,0,0, Type_filter);
   Uintah::parallel_for(range1,get_frho);
   
