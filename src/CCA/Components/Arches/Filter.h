@@ -214,7 +214,8 @@ bool applyFilter( const ProcessorGroup* ,
 
           filterVar[c] += vf * 
             _filter_array[i+shift][j+shift][k+shift] * 
-            (rho[offset]+rho[offset-neigh])/2.0 * var[offset]; 
+            (rho[c]+rho[c+neigh])/2.0 * var[c + IntVector(i,j,k)]; 
+            //(rho[offset]+rho[offset-neigh])/2.0 * var[offset]; 
 
         }
       }
