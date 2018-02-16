@@ -502,7 +502,7 @@ psNox::computeSource( const ProcessorGroup* pc,
         }else if(O2_mp>1.1e-2&&O2_mp<0.03){
           n_O2=-0.35-0.1*log(O2_mp);
         }else if(O2_mp>=0.03){
-          n_O2=0.0;
+          n_O2=0.0001;
         }
         //thermal-nox,S1
         //reaction rates from r1~r3:
