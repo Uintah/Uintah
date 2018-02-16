@@ -563,10 +563,10 @@ psNox::computeSource( const ProcessorGroup* pc,
         //nox reduction by particle surface, Adel sarofim char+NOx reduction
         double pNO   = NO_mp*_gasPressure/101325;                                                             //(atm);
         double NO_red_solid =0.0;
-        //for ( int i_env = 0; i_env < m_num_env; i_env++){
-          //double NO_red_solid_rate = 4.8e4 * std::exp (-145180./_R/coal_temperature[i_env](i,j,k)) * pNO;                               //(mol/m2 BET s)
-          //NO_red_solid += NO_red_solid_rate*temp_coal_mass_concentration[i_env](i,j,k); //(mol/m3 s)
-        //}
+        for ( int i_env = 0; i_env < m_num_env; i_env++){
+          double NO_red_solid_rate = 4.8e4 * std::exp (-145180./_R/coal_temperature[i_env](i,j,k)) * pNO;                               //(mol/m2 BET s)
+          NO_red_solid += NO_red_solid_rate*temp_coal_mass_concentration[i_env](i,j,k); //(mol/m3 s)
+        }
 
         rxn_rates[7]=NO_red_solid;
        
