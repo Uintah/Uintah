@@ -238,14 +238,18 @@ DSmaCs<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   Uintah::parallel_for(range,get_fMM);
   Uintah::parallel_for(range,get_fML);
 
+  const double m_MM_lower_value = 1.0e-10; // from production code CompDynamicProcedure.cc
+  const double m_ML_lower_value = 1.0e-7;
   Uintah::parallel_for( range, [&](int i, int j, int k){
     double value = 0;
-    if ( (*MM)(i,j,k) < 1.0e-14 || (*ML)(i,j,k) < 1.0e-14) {
+    //if ( (*MM)(i,j,k) < m_MM_lower_value || (*ML)(i,j,k) < m_ML_lower_value) {
+    if ( filterMM(i,j,k) < m_MM_lower_value || filterML(i,j,k) < m_ML_lower_value) {
 //     value =0.04 ;
 //     value =0.0289 ;
      value = 0.0;
     }else {
-     value  = (*ML)(i,j,k)/(*MM)(i,j,k);
+     //value  = (*ML)(i,j,k)/(*MM)(i,j,k);
+     value  = filterML(i,j,k)/filterMM(i,j,k);
     }
 
     Cs(i,j,k) = Min(value,10.0);
