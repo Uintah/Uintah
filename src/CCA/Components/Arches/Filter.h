@@ -134,8 +134,8 @@ bool applyFilter( const ProcessorGroup* ,
         for ( int k = fstart; k <= fend; k++ ){
 
           IntVector offset = c + IntVector(i,j,k);
-          filterVar[c] += eps[offset] * 
-            _filter_array[i+shift][j+shift][k+shift] * var[c + IntVector(i,j,k)]; 
+          filterVar[c] += _filter_array[i+shift][j+shift][k+shift] * 
+                         (eps[offset]*var[offset]+ (1.-eps[offset])*var[c]); 
 
         }
       }

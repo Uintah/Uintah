@@ -21,6 +21,84 @@ namespace Uintah {
   }
 
   template <typename V_T>
+  struct FilterrhoVarT{
+    FilterrhoVarT( V_T& i_var, Array3<double>& i_Fvar, constCCVariable<double>& i_rho, constCCVariable<double>& i_eps,
+                int _i_n, int _j_n, int _k_n ,FILTER i_Type): 
+      var(i_var), Fvar(i_Fvar), rho(i_rho), eps(i_eps), i_n(_i_n),
+       j_n(_j_n),k_n(_k_n), Type(i_Type)
+      {    
+      
+      if (Type == THREEPOINTS  ) {
+      // Three points symmetric: eq. 2.49 : LES for compressible flows Garnier et al.
+        for ( int m = -1; m <= 1; m++ ){
+          for ( int n = -1; n <= 1; n++ ){
+            for ( int l = -1; l <= 1; l++ ){
+              double my_value = abs(m) + abs(n) + abs(l)+3.0;
+              w[m+1][n+1][l+1]= (1.0/std::pow(2.0,my_value)); 
+            }
+          }
+        }
+      wt = 1.;
+      } else if (Type == SIMPSON) {
+      // Simpson integration rule: eq. 2.50 : LES for compressible flows Garnier et al.
+      // ref shows 1D case. For 3D case filter 3 times with 1D filter . 
+      for ( int m = -1; m <= 1; m++ ){
+        for ( int n = -1; n <= 1; n++ ){
+          for ( int l = -1; l <= 1; l++ ){
+            double my_value = -abs(m) - abs(n) - abs(l)+3.0;
+            w[m+1][n+1][l+1] = std::pow(4.0,my_value); 
+          }
+        }
+      }
+        wt = std::pow(6.0,3.0);
+
+      } else if (Type == BOX) {
+      // Doing average on a box with three points
+      for ( int m = -1; m <= 1; m++ ){
+        for ( int n = -1; n <= 1; n++ ){
+          for ( int l = -1; l <= 1; l++ ){
+            w[m+1][n+1][l+1] = 1.0; 
+          }
+        }
+      }
+      wt = 27.;
+    } else {
+      throw InvalidValue("Error: Filter type not recognized. ", __FILE__, __LINE__);
+    }
+    }
+    void operator()(int i, int j, int k) const {
+        double F_var = 0.0; 
+        for ( int m = -1; m <= 1; m++ ){
+          for ( int n = -1; n <= 1; n++ ){
+            for ( int l = -1; l <= 1; l++ ){
+              double vf = std::floor((eps(i+m,j+n,k+l)
+                          + eps(i+m-i_n,j+n-j_n,k+l-k_n))/2.0);
+              F_var += w[m+1][n+1][l+1]*(vf*var(i+m,j+n,k+l)*
+                       (rho(i+m,j+n,k+l)+rho(i+m-i_n,j+n-j_n,k+l-k_n))/2.); 
+                       //(rho(i,j,k)+rho(i+i_n,j+j_n,k+k_n))/2.); 
+            }
+          }
+        }
+        F_var /= wt;
+        Fvar(i,j,k) = F_var;
+    }
+
+
+  private:
+  
+  V_T& var;
+  Array3<double>& Fvar;
+  constCCVariable<double>& eps;
+  constCCVariable<double>& rho;
+  int i_n;
+  int j_n;
+  int k_n;
+  FILTER Type ;
+  double w[3][3][3];
+  double wt;
+  };
+
+  template <typename V_T>
   struct FilterVarT{
     FilterVarT( V_T& i_var, Array3<double>& i_Fvar, constCCVariable<double>& i_eps,
                 int _i_n, int _j_n, int _k_n ,FILTER i_Type): 
@@ -87,7 +165,7 @@ namespace Uintah {
   
   V_T& var;
   Array3<double>& Fvar;
-  constCCVariable<double> eps;
+  constCCVariable<double>& eps;
   int i_n;
   int j_n;
   int k_n;
@@ -206,6 +284,128 @@ namespace Uintah {
   const Vector& Dx;
   };
 
+  struct computefilterIsInsij{
+    computefilterIsInsij(Array3<double>& i_filterIsI, Array3<double>& i_filters11, Array3<double>& i_filters22, 
+                         Array3<double>& i_filters33, Array3<double>& i_filters12, Array3<double>& i_filters13, 
+                         Array3<double>& i_filters23,
+                         constSFCXVariable<double> i_filterRhoU, constSFCYVariable<double> i_filterRhoV,
+                         constSFCZVariable<double> i_filterRhoW, constCCVariable<double> i_filterRho,
+                         const Vector& i_Dx):
+                         filterIsI(i_filterIsI), filters11(i_filters11), filters22(i_filters22), 
+                         filters33(i_filters33), filters12(i_filters12), filters13(i_filters13), 
+                         filters23(i_filters23), filterRhoU(i_filterRhoU), filterRhoV(i_filterRhoV),
+                         filterRhoW(i_filterRhoW),filterRho(i_filterRho), Dx(i_Dx)
+  {}
 
+  void
+  operator()(int i, int j, int k ) const {
+
+
+  const double fuep = filterRhoU(i+1,j,k) /
+         (0.5 * (filterRho(i,j,k) + filterRho(i+1,j,k)));
+
+  const double fuwp = filterRhoU(i,j,k)/
+         (0.5 * (filterRho(i,j,k) + filterRho(i-1,j,k)));
+
+  //note: we have removed the (1/2) from the denom. because
+  //we are multiplying by (1/2) for Sij
+  const double funp = ( 0.5 * filterRhoU(i+1,j+1,k) /
+         ( (filterRho(i,j+1,k) + filterRho(i+1,j+1,k)))
+         + 0.5 * filterRhoU(i,j+1,k) /
+         ( (filterRho(i,j+1,k) + filterRho(i-1,j+1,k))));
+
+  const double fusp = ( 0.5 * filterRhoU(i+1,j-1,k) /
+         ( (filterRho(i,j-1,k) + filterRho(i+1,j-1,k)) )
+         + 0.5 * filterRhoU(i,j-1,k) /
+         ( (filterRho(i,j-1,k) + filterRho(i-1,j-1,k))));
+
+  const double futp = ( 0.5 * filterRhoU(i+1,j,k+1) /
+         ( (filterRho(i,j,k+1) + filterRho(i+1,j,k+1)) )
+         + 0.5 * filterRhoU(i,j,k+1) /
+         ( (filterRho(i,j,k+1) + filterRho(i-1,j,k+1))));
+
+  const double fubp = ( 0.5 * filterRhoU(i+1,j,k-1) /
+         ( ( filterRho(i,j,k-1) + filterRho(i+1,j,k-1)))
+         + 0.5 * filterRhoU(i,j,k-1) /
+         ( (filterRho(i,j,k-1) + filterRho(i-1,j,k-1))));
+
+  const double fvnp = filterRhoV(i,j+1,k) /
+         ( 0.5 * (filterRho(i,j,k) + filterRho(i,j+1,k)));
+
+  const double fvsp = filterRhoV(i,j,k) /
+         ( 0.5 * (filterRho(i,j,k) + filterRho(i,j-1,k)));
+
+  const double fvep = ( 0.5 * filterRhoV(i+1,j+1,k)/
+         ( (filterRho(i+1,j,k) +filterRho(i+1,j+1,k)))
+         + 0.5 * filterRhoV(i+1,j,k)/
+         ( (filterRho(i+1,j,k) + filterRho(i+1,j-1,k))));
+
+  const double fvwp = ( 0.5 * filterRhoV(i-1,j+1,k)/
+         ( (filterRho(i-1,j,k) + filterRho(i-1,j+1,k)))
+         + 0.5 * filterRhoV(i-1,j,k)/
+         ( (filterRho(i-1,j,k) + filterRho(i-1,j-1,k))));
+
+  const double fvtp = ( 0.5 * filterRhoV(i,j+1,k+1) /
+         ( (filterRho(i,j,k+1) + filterRho(i,j+1,k+1)))
+         + 0.5 * filterRhoV(i,j,k+1) /
+         ( (filterRho(i,j,k+1) + filterRho(i,j-1,k+1))));
+
+  const double fvbp = ( 0.5 * filterRhoV(i,j+1,k-1)/
+         ( (filterRho(i,j,k-1) + filterRho(i,j+1,k-1)))
+         + 0.5 * filterRhoV(i,j,k-1) /
+         ( (filterRho(i,j,k-1) + filterRho(i,j-1,k-1))));
+
+  const double fwtp = filterRhoW(i,j,k+1) /
+         ( 0.5 * (filterRho(i,j,k) + filterRho(i,j,k+1)));
+
+  const double fwbp = filterRhoW(i,j,k) /
+         ( 0.5 * (filterRho(i,j,k) + filterRho(i,j,k-1)));
+
+  const double fwep = ( 0.5 * filterRhoW(i+1,j,k+1) /
+         ( (filterRho(i+1,j,k) + filterRho(i+1,j,k+1)))
+         + 0.5 * filterRhoW(i+1,j,k) /
+         ( (filterRho(i+1,j,k) + filterRho(i+1,j,k-1))));
+
+  const double fwwp = ( 0.5 * filterRhoW(i-1,j,k+1) /
+         ( (filterRho(i-1,j,k) + filterRho(i-1,j,k+1)))
+         + 0.5 * filterRhoW(i-1,j,k) /
+         ( (filterRho(i-1,j,k) + filterRho(i-1,j,k-1))));
+
+  const double fwnp = ( 0.5 * filterRhoW(i,j+1,k+1)/
+         ( (filterRho(i,j+1,k) + filterRho(i,j+1,k+1)))
+         + 0.5 * filterRhoW(i,j+1,k) /
+         ( (filterRho(i,j+1,k) + filterRho(i,j+1,k-1))));
+
+  const double fwsp = ( 0.5 * filterRhoW(i,j-1,k+1)/
+         ( (filterRho(i,j-1,k) + filterRho(i,j-1,k+1)))
+         + 0.5 * filterRhoW(i,j-1,k)/
+             ( (filterRho(i,j-1,k) + filterRho(i,j-1,k-1))));
+
+  //calculate the filtered strain rate tensor
+  filters11(i,j,k) = (fuep-fuwp)/Dx.x();
+  filters22(i,j,k) = (fvnp-fvsp)/Dx.y();
+  filters33(i,j,k) = (fwtp-fwbp)/Dx.z();
+  filters12(i,j,k) = 0.5*((funp-fusp)/Dx.y() + (fvep-fvwp)/Dx.x());
+  filters13(i,j,k) = 0.5*((futp-fubp)/Dx.z() + (fwep-fwwp)/Dx.x());
+  filters23(i,j,k) = 0.5*((fvtp-fvbp)/Dx.z() + (fwnp-fwsp)/Dx.y());
+  filterIsI(i,j,k) = std::sqrt(2.0*(filters11(i,j,k)*filters11(i,j,k) 
+                     + filters22(i,j,k)*filters22(i,j,k) + filters33(i,j,k)*filters33(i,j,k)+
+                     2.0*(filters12(i,j,k)*filters12(i,j,k) + 
+                      filters13(i,j,k)*filters13(i,j,k) + filters23(i,j,k)*filters23(i,j,k))));
+  }
+  private:
+  Array3<double>& filterIsI;
+  Array3<double>& filters11;
+  Array3<double>& filters22;
+  Array3<double>& filters33;
+  Array3<double>& filters12;
+  Array3<double>& filters13;
+  Array3<double>& filters23;
+  constSFCXVariable<double>& filterRhoU;
+  constSFCYVariable<double>& filterRhoV;
+  constSFCZVariable<double>& filterRhoW;
+  constCCVariable<double>& filterRho;
+  const Vector& Dx;
+  };
 } //namespace
 #endif

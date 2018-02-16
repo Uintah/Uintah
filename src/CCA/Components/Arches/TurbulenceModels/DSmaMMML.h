@@ -204,7 +204,10 @@ DSmaMMML<TT>::register_timestep_eval( std::vector<ArchesFieldContainer::Variable
   register_variable( "Beta23", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name, packed_tasks );
   register_variable( "Beta33", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name, packed_tasks );
 
-  register_variable( "Filterrho", ArchesFieldContainer::REQUIRES,0 , ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name, packed_tasks );
+  register_variable( "Filterrho", ArchesFieldContainer::REQUIRES,1 , ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name, packed_tasks );
+  register_variable( "Filterrhou", ArchesFieldContainer::REQUIRES,1 , ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name, packed_tasks );
+  register_variable( "Filterrhov", ArchesFieldContainer::REQUIRES,1 , ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name, packed_tasks );
+  register_variable( "Filterrhow", ArchesFieldContainer::REQUIRES,1 , ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name, packed_tasks );
 
   register_variable( m_IsI_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name, packed_tasks );
   register_variable( "s11", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name, packed_tasks );
@@ -234,10 +237,7 @@ DSmaMMML<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   const Vector Dx = patch->dCell(); //
   double filter   = pow(Dx.x()*Dx.y()*Dx.z(),1.0/3.0);
   double filter2  = filter*filter;
-  //const double epsilon = -filter/0.008835729 + 4.5; it is using isotropic turbulence data
-  //double fhat     = epsilon*filter2 ;
-  double fhat     = m_epsilon*filter2 ;
-  //const int Nghostcells = 0; // I need to review this
+  double fhat     = m_epsilon;
   constCCVariable<double>& vol_fraction = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_volFraction_name);
 
 
@@ -253,6 +253,15 @@ DSmaMMML<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   Uintah::BlockRange range1(low_filter, high_filter );
 
   FieldTool< TT > c_field_tool(tsk_info);
+  
+  typedef typename ArchesCore::VariableHelper< TT >::ConstXFaceType TX;
+  typedef typename ArchesCore::VariableHelper< TT >::ConstYFaceType TY;
+  typedef typename ArchesCore::VariableHelper< TT >::ConstZFaceType TZ;
+
+  FieldTool< TX > x_field_tool(tsk_info);
+  FieldTool< TY > y_field_tool(tsk_info);
+  FieldTool< TZ > z_field_tool(tsk_info);
+
   TT* Beta11;
   TT* Beta12;
   TT* Beta13;
@@ -270,6 +279,13 @@ DSmaMMML<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   TT* filterRho;
   filterRho = c_field_tool.get("Filterrho");
+  TX* filterRhoU;
+  TY* filterRhoV;
+  TZ* filterRhoW;
+
+  filterRhoU = x_field_tool.get("Filterrhou");
+  filterRhoV = y_field_tool.get("Filterrhov");
+  filterRhoW = z_field_tool.get("Filterrhow");
 
   // Filter Beta
   CCVariable<double>& filterBeta11 = tsk_info->get_uintah_field_add< CCVariable<double> >("filterbeta11", nGhosts1);
@@ -302,22 +318,6 @@ DSmaMMML<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   // Filter IsI and sij then compute alpha
 
-  TT* IsI;
-  TT* s11;
-  TT* s12;
-  TT* s13;
-  TT* s22;
-  TT* s23;
-  TT* s33;
-
-  IsI = c_field_tool.get(m_IsI_name);
-  s11 = c_field_tool.get("s11");
-  s12 = c_field_tool.get("s12");
-  s13 = c_field_tool.get("s13");
-  s22 = c_field_tool.get("s22");
-  s23 = c_field_tool.get("s23");
-  s33 = c_field_tool.get("s33");
-
   CCVariable<double>& filterIsI = tsk_info->get_uintah_field_add< CCVariable<double> >("filterIsI",nGhosts1 );
   CCVariable<double>& filters11 = tsk_info->get_uintah_field_add< CCVariable<double> >("filters11",nGhosts1 );
   CCVariable<double>& filters12 = tsk_info->get_uintah_field_add< CCVariable<double> >("filters12",nGhosts1 );
@@ -335,22 +335,10 @@ DSmaMMML<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   filters23.initialize(0.0);
   filters33.initialize(0.0);
 
-  Uintah::FilterVarT<TT> get_fIsI((*IsI), filterIsI, vol_fraction, 0,0,0, Type_filter);
-  Uintah::FilterVarT<TT> get_fs11((*s11), filters11, vol_fraction, 0,0,0, Type_filter);
-  Uintah::FilterVarT<TT> get_fs22((*s22), filters22, vol_fraction, 0,0,0, Type_filter);
-  Uintah::FilterVarT<TT> get_fs33((*s33), filters33, vol_fraction, 0,0,0, Type_filter);
-  Uintah::FilterVarT<TT> get_fs12((*s12), filters12, vol_fraction, 0,0,0, Type_filter);
-  Uintah::FilterVarT<TT> get_fs13((*s13), filters13, vol_fraction, 0,0,0, Type_filter);
-  Uintah::FilterVarT<TT> get_fs23((*s23), filters23, vol_fraction, 0,0,0, Type_filter);
-
-  Uintah::parallel_for(range1,get_fIsI);
-  Uintah::parallel_for(range1,get_fs11);
-  Uintah::parallel_for(range1,get_fs22);
-  Uintah::parallel_for(range1,get_fs33);
-  Uintah::parallel_for(range1,get_fs12);
-  Uintah::parallel_for(range1,get_fs13);
-  Uintah::parallel_for(range1,get_fs23);
-
+  computefilterIsInsij get_filterIsIsij(filterIsI, filters11, filters22, 
+                                        filters33, filters12, filters13, 
+                                        filters23, (*filterRhoU), (*filterRhoV), (*filterRhoW), (*filterRho), Dx);
+  Uintah::parallel_for(range1,get_filterIsIsij);
 
   CCVariable<double>& alpha11 = tsk_info->get_uintah_field_add< CCVariable<double> >("alpha11",nGhosts1 );
   CCVariable<double>& alpha12 = tsk_info->get_uintah_field_add< CCVariable<double> >("alpha12",nGhosts1 );
@@ -445,12 +433,12 @@ DSmaMMML<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   MM.initialize(0.0);
 
   Uintah::parallel_for( range1, [&](int i, int j, int k){
-    double M11 = 2.0*filter2*filterBeta11(i,j,k) - 2.0*fhat*alpha11(i,j,k);
-    double M22 = 2.0*filter2*filterBeta22(i,j,k) - 2.0*fhat*alpha22(i,j,k);
-    double M33 = 2.0*filter2*filterBeta33(i,j,k) - 2.0*fhat*alpha33(i,j,k);
-    double M12 = 2.0*filter2*filterBeta12(i,j,k) - 2.0*fhat*alpha12(i,j,k);
-    double M13 = 2.0*filter2*filterBeta13(i,j,k) - 2.0*fhat*alpha13(i,j,k);
-    double M23 = 2.0*filter2*filterBeta23(i,j,k) - 2.0*fhat*alpha23(i,j,k);
+    double M11 = 2.0*filter2*(filterBeta11(i,j,k) - 2.0*fhat*alpha11(i,j,k));
+    double M22 = 2.0*filter2*(filterBeta22(i,j,k) - 2.0*fhat*alpha22(i,j,k));
+    double M33 = 2.0*filter2*(filterBeta33(i,j,k) - 2.0*fhat*alpha33(i,j,k));
+    double M12 = 2.0*filter2*(filterBeta12(i,j,k) - 2.0*fhat*alpha12(i,j,k));
+    double M13 = 2.0*filter2*(filterBeta13(i,j,k) - 2.0*fhat*alpha13(i,j,k));
+    double M23 = 2.0*filter2*(filterBeta23(i,j,k) - 2.0*fhat*alpha23(i,j,k));
 
     double L11 = filter_rhoUU(i,j,k) - filter_rhoU(i,j,k)*filter_rhoU(i,j,k)/(*filterRho)(i,j,k);
     double L22 = filter_rhoVV(i,j,k) - filter_rhoV(i,j,k)*filter_rhoV(i,j,k)/(*filterRho)(i,j,k);

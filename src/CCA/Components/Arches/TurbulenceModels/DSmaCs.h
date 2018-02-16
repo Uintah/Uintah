@@ -266,9 +266,9 @@ DSmaCs<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
 
     Cs(i,j,k) = Min(value,10.0);
-    if (Cs(i,j,k) > 9.9) {
-      Cs(i,j,k) = 0.0;
-    }
+    //if (Cs(i,j,k) > 9.9) {
+    //  Cs(i,j,k) = 0.0;
+    //}
     mu_sgc(i,j,k) = (Cs(i,j,k)*filter2*(*IsI)(i,j,k)*rho(i,j,k) + m_molecular_visc)*vol_fraction(i,j,k); // 
     mu_turb(i,j,k) = mu_sgc(i,j,k) - m_molecular_visc; // 
 

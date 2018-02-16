@@ -66,6 +66,9 @@ DSFT::create_local_labels(){
   register_new_variable<CCVariable<double> >("Beta33");
 
   register_new_variable<CCVariable<double> >( "Filterrho");
+  register_new_variable<SFCXVariable<double> >( "Filterrhou");
+  register_new_variable<SFCYVariable<double> >( "Filterrhov");
+  register_new_variable<SFCZVariable<double> >( "Filterrhow");
   register_new_variable<CCVariable<double> >( "rhoUU");
   register_new_variable<CCVariable<double> >( "rhoVV");
   register_new_variable<CCVariable<double> >( "rhoWW");
@@ -85,6 +88,9 @@ DSFT::register_initialize( std::vector<ArchesFieldContainer::VariableInformation
 
 
   register_variable( "Filterrho", ArchesFieldContainer::COMPUTES ,  variable_registry,  _task_name, packed_tasks);
+  register_variable( "Filterrhou", ArchesFieldContainer::COMPUTES ,  variable_registry,  _task_name, packed_tasks);
+  register_variable( "Filterrhov", ArchesFieldContainer::COMPUTES ,  variable_registry,  _task_name, packed_tasks);
+  register_variable( "Filterrhow", ArchesFieldContainer::COMPUTES ,  variable_registry,  _task_name, packed_tasks);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -92,7 +98,13 @@ void
 DSFT::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& filterRho = tsk_info->get_uintah_field_add< CCVariable<double> >("Filterrho");
+  SFCXVariable<double>& filterRhoU = tsk_info->get_uintah_field_add< SFCXVariable<double> >("Filterrho");
+  SFCYVariable<double>& filterRhoV = tsk_info->get_uintah_field_add< SFCYVariable<double> >("Filterrho");
+  SFCZVariable<double>& filterRhoW = tsk_info->get_uintah_field_add< SFCZVariable<double> >("Filterrho");
   filterRho.initialize(0.0);
+  filterRhoU.initialize(0.0);
+  filterRhoV.initialize(0.0);
+  filterRhoW.initialize(0.0);
   
 
 }
@@ -117,11 +129,12 @@ DSFT::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformat
   if (packed_tasks ){
    nG = 3;
   }
+  int nGrho = nG +1;
   register_variable( m_u_vel_name, ArchesFieldContainer::REQUIRES, nG, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
   register_variable( m_v_vel_name, ArchesFieldContainer::REQUIRES, nG, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
   register_variable( m_w_vel_name, ArchesFieldContainer::REQUIRES, nG , ArchesFieldContainer::NEWDW, variable_registry, time_substep);
-  register_variable( m_density_name, ArchesFieldContainer::REQUIRES, nG, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
-  register_variable( m_volFraction_name, ArchesFieldContainer::REQUIRES, nG, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+  register_variable( m_density_name, ArchesFieldContainer::REQUIRES, nGrho, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
+  register_variable( m_volFraction_name, ArchesFieldContainer::REQUIRES, nGrho, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
   register_variable( m_cc_u_vel_name, ArchesFieldContainer::REQUIRES, nG, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
   register_variable( m_cc_v_vel_name, ArchesFieldContainer::REQUIRES, nG, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
@@ -146,6 +159,9 @@ DSFT::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformat
   register_variable( "s33", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
 
   register_variable( "Filterrho", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep  , _task_name, packed_tasks);
+  register_variable( "Filterrhou", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep  , _task_name, packed_tasks);
+  register_variable( "Filterrhov", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep  , _task_name, packed_tasks);
+  register_variable( "Filterrhow", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep  , _task_name, packed_tasks);
   register_variable( "rhoUU", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep  , _task_name, packed_tasks);
   register_variable( "rhoVV", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep  , _task_name, packed_tasks);
   register_variable( "rhoWW", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks );
@@ -254,8 +270,51 @@ DSFT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   }
   });
   
- 
+  // filter rho*ux...
+  SFCXVariable<double>& filterRhoU = tsk_info->get_uintah_field_add< SFCXVariable<double> >("Filterrhou", nGhosts1);
+  SFCYVariable<double>& filterRhoV = tsk_info->get_uintah_field_add< SFCYVariable<double> >("Filterrhov", nGhosts1);
+  SFCZVariable<double>& filterRhoW = tsk_info->get_uintah_field_add< SFCZVariable<double> >("Filterrhow", nGhosts1);
+  filterRhoU.initialize(0.0);
+  filterRhoV.initialize(0.0);
+  filterRhoW.initialize(0.0);
+  Uintah::FilterrhoVarT< constSFCXVariable<double> > get_frhou(uVel, filterRhoU,rho, 
+                                                vol_fraction, 1,0,0, Type_filter);
+  Uintah::FilterrhoVarT< constSFCYVariable<double> > get_frhov(vVel, filterRhoV,rho, 
+                                                vol_fraction, 0,1,0, Type_filter);
+  Uintah::FilterrhoVarT< constSFCZVariable<double> > get_frhoz(wVel, filterRhoW,rho, 
+                                                vol_fraction, 0,0,1, Type_filter);
+                                                
+  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
 
+  IntVector low;
+  if ( xminus ){
+    low  = patch->getCellLowIndex()+IntVector(1,0,0) + IntVector(-nG1,-nG1,-nG1);
+  }else{
+    low  = patch->getCellLowIndex()+ IntVector(-nG1,-nG1,-nG1);
+  }
+  
+  Uintah::BlockRange range_u(low, high_filter);
+  Uintah::parallel_for(range_u,get_frhou);
+  
+  if ( yminus ){
+    low = patch->getCellLowIndex()+IntVector(0,1,0) + IntVector(-nG1,-nG1,-nG1);
+  } else {
+    low = patch->getCellLowIndex()+ IntVector(-nG1,-nG1,-nG1);
+  }
+  
+  Uintah::BlockRange range_v(low, high_filter);
+  Uintah::parallel_for(range_v,get_frhov);
+
+  if ( zminus ){
+    low = patch->getCellLowIndex()+IntVector(0,0,1)+ IntVector(-nG1,-nG1,-nG1);
+  } else {
+    low = patch->getCellLowIndex()+ IntVector(-nG1,-nG1,-nG1);
+  }
+  Uintah::BlockRange range_w(low, high_filter);
+  Uintah::parallel_for(range_w,get_frhoz);
+  
   // Compute rhouiuj at cc
   CCVariable<double>& rhoUU = tsk_info->get_uintah_field_add< CCVariable<double> >("rhoUU",nGhosts2);
   CCVariable<double>& rhoVV = tsk_info->get_uintah_field_add< CCVariable<double> >("rhoVV",nGhosts2);
