@@ -27,6 +27,7 @@ DSFT::problemSetup( ProblemSpecP& db ){
   m_rhov_vel_name = "y-mom";
   m_rhow_vel_name = "z-mom" ;
 
+  m_volFraction_name = "volFraction";
   m_cc_u_vel_name = parse_ups_for_role( CCUVELOCITY, db, "CCUVelocity" );//;m_u_vel_name + "_cc";
   m_cc_v_vel_name = parse_ups_for_role( CCVVELOCITY, db, "CCVVelocity" );//m_v_vel_name + "_cc";
   m_cc_w_vel_name = parse_ups_for_role( CCWVELOCITY, db, "CCWVelocity" );;//m_w_vel_name + "_cc";
@@ -118,6 +119,7 @@ DSFT::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformat
   register_variable( m_v_vel_name, ArchesFieldContainer::REQUIRES, nG, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
   register_variable( m_w_vel_name, ArchesFieldContainer::REQUIRES, nG , ArchesFieldContainer::NEWDW, variable_registry, time_substep);
   register_variable( m_density_name, ArchesFieldContainer::REQUIRES, nG, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
+  register_variable( m_volFraction_name, ArchesFieldContainer::REQUIRES, nG, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
   register_variable( m_cc_u_vel_name, ArchesFieldContainer::REQUIRES, nG, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
   register_variable( m_cc_v_vel_name, ArchesFieldContainer::REQUIRES, nG, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
@@ -160,6 +162,7 @@ DSFT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   constSFCZVariable<double>& wVel = *(tsk_info->get_const_uintah_field<constSFCZVariable<double> >(m_w_vel_name));
   constCCVariable<double>& rho = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_density_name));
 
+  constCCVariable<double>& vol_fraction = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_volFraction_name);
   constCCVariable<double>& CCuVel = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_cc_u_vel_name));
   constCCVariable<double>& CCvVel = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_cc_v_vel_name));
   constCCVariable<double>& CCwVel = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_cc_w_vel_name));
@@ -229,7 +232,8 @@ DSFT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   // Filter rho
   CCVariable<double>& filterRho = tsk_info->get_uintah_field_add< CCVariable<double> >("Filterrho", nGhosts1);
   filterRho.initialize(0.0);
-  Uintah::FilterVarT< constCCVariable<double> > get_frho(rho, filterRho, Type_filter);
+  Uintah::FilterVarT< constCCVariable<double> > get_frho(rho, filterRho, 
+                                                vol_fraction, 0,0,0, Type_filter);
   Uintah::parallel_for(range1,get_frho);
 
   // Compute rhouiuj at cc

@@ -55,6 +55,7 @@ private:
     std::string m_v_vel_name;
     std::string m_w_vel_name;
     std::string m_density_name;
+    std::string m_volFraction_name;
 
     std::string m_cc_u_vel_name;
     std::string m_cc_v_vel_name;

@@ -22,9 +22,12 @@ namespace Uintah {
 
   template <typename V_T>
   struct FilterVarT{
-    FilterVarT( V_T& i_var, Array3<double>& i_Fvar, FILTER i_Type): 
-      var(i_var), Fvar(i_Fvar), Type(i_Type)
+    FilterVarT( V_T& i_var, Array3<double>& i_Fvar, constCCVariable<double>& i_eps,
+                int _i_n, int _j_n, int _k_n ,FILTER i_Type): 
+      var(i_var), Fvar(i_Fvar), eps(i_eps), i_n(_i_n),
+       j_n(_j_n),k_n(_k_n), Type(i_Type)
       {    
+      
       if (Type == THREEPOINTS  ) {
       // Three points symmetric: eq. 2.49 : LES for compressible flows Garnier et al.
         for ( int m = -1; m <= 1; m++ ){
@@ -68,7 +71,10 @@ namespace Uintah {
         for ( int m = -1; m <= 1; m++ ){
           for ( int n = -1; n <= 1; n++ ){
             for ( int l = -1; l <= 1; l++ ){
-              F_var += w[m+1][n+1][l+1]* var(i+m,j+n,k+l); 
+              //double vf = std::floor((eps(i+m,j+n,k+l)
+              //            + eps(i+m-i_n,j+n-j_n,k+l-k_n))/2.0);
+              double vf = eps(i+m,j+n,k+l);
+              F_var += vf*w[m+1][n+1][l+1]* var(i+m,j+n,k+l); 
             }
           }
         }
@@ -81,6 +87,10 @@ namespace Uintah {
   
   V_T& var;
   Array3<double>& Fvar;
+  constCCVariable<double> eps;
+  int i_n;
+  int j_n;
+  int k_n;
   FILTER Type ;
   double w[3][3][3];
   double wt;

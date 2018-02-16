@@ -56,6 +56,7 @@ private:
   double m_epsilon;
   Uintah::FILTER Type_filter;
   std::string m_IsI_name;
+  std::string m_volFraction_name;
   };
 
 //--------------------------------------------------------------------------------------------------
@@ -80,9 +81,11 @@ DSmaMMML<TT>::problemSetup( ProblemSpecP& db ){
 
   const ProblemSpecP params_root = db->getRootNode();
   db->require("epsilon",m_epsilon);
-
+  
+  
   Type_filter = get_filter_from_string( m_Type_filter_name );
   m_IsI_name = "strainMagnitudeLabel";
+  m_volFraction_name = "volFraction";
 
 }
 //--------------------------------------------------------------------------------------------------
@@ -152,6 +155,13 @@ DSmaMMML<TT>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info
 template<typename TT> void
 DSmaMMML<TT>::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>&
                                           variable_registry, const int time_substep , const bool packed_tasks){
+
+  int nG = 1;
+  if (packed_tasks ){
+   nG = 3;
+  } 
+ register_variable( m_volFraction_name, ArchesFieldContainer::REQUIRES, nG, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+
   register_variable( "filterbeta11"  , ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
   register_variable( "filterbeta12"  , ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
   register_variable( "filterbeta13"  , ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
@@ -224,8 +234,11 @@ DSmaMMML<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   const Vector Dx = patch->dCell(); //
   double filter   = pow(Dx.x()*Dx.y()*Dx.z(),1.0/3.0);
   double filter2  = filter*filter;
+  //const double epsilon = -filter/0.008835729 + 4.5; it is using isotropic turbulence data
+  //double fhat     = epsilon*filter2 ;
   double fhat     = m_epsilon*filter2 ;
   //const int Nghostcells = 0; // I need to review this
+  constCCVariable<double>& vol_fraction = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_volFraction_name);
 
 
   int nGhosts1 = -1; //not using a temp field but rather the DW (ie, if nGhost < 0 then DW var)
@@ -273,12 +286,12 @@ DSmaMMML<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   filterBeta23.initialize(0.0);
   filterBeta33.initialize(0.0);
 
-  Uintah::FilterVarT<TT> get_fBeta11((*Beta11), filterBeta11, Type_filter);
-  Uintah::FilterVarT<TT> get_fBeta22((*Beta22), filterBeta22, Type_filter);
-  Uintah::FilterVarT<TT> get_fBeta33((*Beta33), filterBeta33, Type_filter);
-  Uintah::FilterVarT<TT> get_fBeta12((*Beta12), filterBeta12, Type_filter);
-  Uintah::FilterVarT<TT> get_fBeta13((*Beta13), filterBeta13, Type_filter);
-  Uintah::FilterVarT<TT> get_fBeta23((*Beta23), filterBeta23, Type_filter);
+  Uintah::FilterVarT<TT> get_fBeta11((*Beta11), filterBeta11, vol_fraction, 0,0,0, Type_filter);
+  Uintah::FilterVarT<TT> get_fBeta22((*Beta22), filterBeta22, vol_fraction, 0,0,0, Type_filter);
+  Uintah::FilterVarT<TT> get_fBeta33((*Beta33), filterBeta33, vol_fraction, 0,0,0, Type_filter);
+  Uintah::FilterVarT<TT> get_fBeta12((*Beta12), filterBeta12, vol_fraction, 0,0,0, Type_filter);
+  Uintah::FilterVarT<TT> get_fBeta13((*Beta13), filterBeta13, vol_fraction, 0,0,0, Type_filter);
+  Uintah::FilterVarT<TT> get_fBeta23((*Beta23), filterBeta23, vol_fraction, 0,0,0, Type_filter);
 
   Uintah::parallel_for(range1,get_fBeta11);
   Uintah::parallel_for(range1,get_fBeta22);
@@ -322,13 +335,13 @@ DSmaMMML<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   filters23.initialize(0.0);
   filters33.initialize(0.0);
 
-  Uintah::FilterVarT<TT> get_fIsI((*IsI), filterIsI, Type_filter);
-  Uintah::FilterVarT<TT> get_fs11((*s11), filters11, Type_filter);
-  Uintah::FilterVarT<TT> get_fs22((*s22), filters22, Type_filter);
-  Uintah::FilterVarT<TT> get_fs33((*s33), filters33, Type_filter);
-  Uintah::FilterVarT<TT> get_fs12((*s12), filters12, Type_filter);
-  Uintah::FilterVarT<TT> get_fs13((*s13), filters13, Type_filter);
-  Uintah::FilterVarT<TT> get_fs23((*s23), filters23, Type_filter);
+  Uintah::FilterVarT<TT> get_fIsI((*IsI), filterIsI, vol_fraction, 0,0,0, Type_filter);
+  Uintah::FilterVarT<TT> get_fs11((*s11), filters11, vol_fraction, 0,0,0, Type_filter);
+  Uintah::FilterVarT<TT> get_fs22((*s22), filters22, vol_fraction, 0,0,0, Type_filter);
+  Uintah::FilterVarT<TT> get_fs33((*s33), filters33, vol_fraction, 0,0,0, Type_filter);
+  Uintah::FilterVarT<TT> get_fs12((*s12), filters12, vol_fraction, 0,0,0, Type_filter);
+  Uintah::FilterVarT<TT> get_fs13((*s13), filters13, vol_fraction, 0,0,0, Type_filter);
+  Uintah::FilterVarT<TT> get_fs23((*s23), filters23, vol_fraction, 0,0,0, Type_filter);
 
   Uintah::parallel_for(range1,get_fIsI);
   Uintah::parallel_for(range1,get_fs11);
@@ -405,15 +418,15 @@ DSmaMMML<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   filter_rhoV.initialize(0.0);
   filter_rhoW.initialize(0.0);
 
-  Uintah::FilterVarT<TT>  get_frhoUU((*rhoUU), filter_rhoUU, Type_filter);
-  Uintah::FilterVarT<TT>  get_frhoVV((*rhoVV), filter_rhoVV, Type_filter);
-  Uintah::FilterVarT<TT>  get_frhoWW((*rhoWW), filter_rhoWW, Type_filter);
-  Uintah::FilterVarT<TT>  get_frhoUW((*rhoUW), filter_rhoUW, Type_filter);
-  Uintah::FilterVarT<TT>  get_frhoUV((*rhoUV), filter_rhoUV, Type_filter);
-  Uintah::FilterVarT<TT>  get_frhoVW((*rhoVW), filter_rhoVW, Type_filter);
-  Uintah::FilterVarT<TT>  get_frhoV((*rhoV), filter_rhoV, Type_filter);
-  Uintah::FilterVarT<TT>  get_frhoW((*rhoW), filter_rhoW, Type_filter);
-  Uintah::FilterVarT<TT>  get_frhoU((*rhoU), filter_rhoU, Type_filter);
+  Uintah::FilterVarT<TT>  get_frhoUU((*rhoUU), filter_rhoUU, vol_fraction, 0,0,0, Type_filter);
+  Uintah::FilterVarT<TT>  get_frhoVV((*rhoVV), filter_rhoVV, vol_fraction, 0,0,0, Type_filter);
+  Uintah::FilterVarT<TT>  get_frhoWW((*rhoWW), filter_rhoWW, vol_fraction, 0,0,0, Type_filter);
+  Uintah::FilterVarT<TT>  get_frhoUW((*rhoUW), filter_rhoUW, vol_fraction, 0,0,0, Type_filter);
+  Uintah::FilterVarT<TT>  get_frhoUV((*rhoUV), filter_rhoUV, vol_fraction, 0,0,0, Type_filter);
+  Uintah::FilterVarT<TT>  get_frhoVW((*rhoVW), filter_rhoVW, vol_fraction, 0,0,0, Type_filter);
+  Uintah::FilterVarT<TT>  get_frhoV((*rhoV), filter_rhoV, vol_fraction, 0,0,0, Type_filter);
+  Uintah::FilterVarT<TT>  get_frhoW((*rhoW), filter_rhoW, vol_fraction, 0,0,0, Type_filter);
+  Uintah::FilterVarT<TT>  get_frhoU((*rhoU), filter_rhoU, vol_fraction, 0,0,0, Type_filter);
 
   Uintah::parallel_for(range1,get_frhoUU);
   Uintah::parallel_for(range1,get_frhoVV);
