@@ -222,7 +222,6 @@ DSmaCs<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& mu_sgc = *(tsk_info->get_uintah_field<CCVariable<double> >(m_t_vis_name));
   CCVariable<double>& mu_turb = *(tsk_info->get_uintah_field<CCVariable<double> >(m_turb_viscosity_name));
-  //CCVariable<double>& mu_sgc_p = *(tsk_info->get_uintah_field<CCVariable<double> >(m_t_vis_name_production));
   CCVariable<double>& Cs = *(tsk_info->get_uintah_field<CCVariable<double> >(m_Cs_name));
   constCCVariable<double>& rho = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_density_name));
   constCCVariable<double>& vol_fraction = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_volFraction_name);
@@ -251,8 +250,8 @@ DSmaCs<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   filterML.initialize(0.0);
   filterMM.initialize(0.0);
 
-  m_Filter.applyFilter<TT>((*MM),filterMM,vol_fraction,range);
-  m_Filter.applyFilter<TT>((*ML),filterML,vol_fraction,range);
+  m_Filter.applyFilter<TT>((*MM),filterMM,range,vol_fraction);
+  m_Filter.applyFilter<TT>((*ML),filterML,range,vol_fraction);
 
   const double m_MM_lower_value = 1.0e-14; 
   const double m_ML_lower_value = 1.0e-14;
@@ -263,7 +262,7 @@ DSmaCs<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     // value = 0.0;
     }else {
      //value  = (*ML)(i,j,k)/(*MM)(i,j,k);
-      value  = vol_fraction(i,j,k)*filterML(i,j,k)/filterMM(i,j,k);
+      value  = filterML(i,j,k)/filterMM(i,j,k);
     }
     
     //double value  = filterML(i,j,k)/filterMM(i,j,k);
@@ -272,33 +271,15 @@ DSmaCs<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     //} 
 
 
-    Cs(i,j,k) = Min(value,10.0);
-    //if (Cs(i,j,k) > 9.9) {
-    //  Cs(i,j,k) = 0.0;
-    //}
+    Cs(i,j,k) = vol_fraction(i,j,k)*Min(value,10.0);
     mu_sgc(i,j,k) = (Cs(i,j,k)*filter2*(*IsI)(i,j,k)*rho(i,j,k) + m_molecular_visc)*vol_fraction(i,j,k); // 
     mu_turb(i,j,k) = mu_sgc(i,j,k) - m_molecular_visc; // 
 
   });
-  //apply zero neumann
-  std::vector<Patch::FaceType> bf;
-  patch->getBoundaryFaces(bf);
-  Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
-  for( std::vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
-
-    Patch::FaceType face = *itr;
-    IntVector f_dir = patch->getFaceDirection(face);
-
-    for( CellIterator iter=patch->getFaceIterator(face, MEC); !iter.done(); iter++) {
-      IntVector c = *iter;
-
-      if ( vol_fraction[c] > 1e-10 ){
-        mu_sgc[c] = mu_sgc[c-f_dir];
-        mu_turb[c] = mu_turb[c-f_dir];
-        Cs[c] = Cs[c-f_dir];
-      }
-    }
-  }
+  BCfilter bcfilter;
+  bcfilter.apply_zero_neumann(patch,mu_sgc,vol_fraction); 
+  bcfilter.apply_zero_neumann(patch,mu_turb,vol_fraction); 
+  bcfilter.apply_zero_neumann(patch,Cs,vol_fraction); 
   proc0cout << "       Task: " << "DSmaCs" << "  Type: " << "Dynamic model" << std::endl;
 
   //Uintah::parallel_for( range, [&](int i, int j, int k){

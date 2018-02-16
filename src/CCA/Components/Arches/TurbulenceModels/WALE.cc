@@ -149,7 +149,8 @@ WALE::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   const Vector Dx = patch->dCell();
   const double delta = pow(Dx.x()*Dx.y()*Dx.z(),1./3.);
 
-  Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+//  Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+  Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
 
   Uintah::parallel_for( range, [&](int i, int j, int k){
 
@@ -258,6 +259,7 @@ WALE::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     mu_sgc(i,j,k) = pow(m_Cs*delta,2.0)*fvis*rho(i,j,k) + m_molecular_visc; 
     IsI(i,j,k) = std::sqrt(2.0*SijSij);
   });
+  
 
 }
 } //namespace Uintah

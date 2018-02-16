@@ -19,6 +19,154 @@ namespace Uintah {
     }
 
   }
+  
+  struct BCfilter { 
+    void apply_BC_filter_rho( const Patch* patch, CCVariable<double>& var,
+                            CCVariable<double>& rho, constCCVariable<double>& vol_fraction){
+    
+      std::vector<Patch::FaceType> bf;
+      patch->getBoundaryFaces(bf);
+      Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
+
+    
+      for( std::vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
+    
+        Patch::FaceType face = *itr;
+        IntVector f_dir = patch->getFaceDirection(face);
+    
+        for( CellIterator iter=patch->getFaceIterator(face, MEC); !iter.done(); iter++) {
+          IntVector c = *iter;
+    
+              var[c] = rho[c] ;
+        }
+      }
+
+
+    }
+    void apply_BC_rho( const Patch* patch, CCVariable<double>& var,
+                            constCCVariable<double>& rho, 
+                            constCCVariable<double>& vol_fraction){
+      
+    
+      std::vector<Patch::FaceType> bf;
+      patch->getBoundaryFaces(bf);
+      Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
+    
+      for( std::vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
+    
+        Patch::FaceType face = *itr;
+        IntVector f_dir = patch->getFaceDirection(face);
+    
+        for( CellIterator iter=patch->getFaceIterator(face, MEC); !iter.done(); iter++) {
+          IntVector c = *iter;
+          var[c] = vol_fraction[c]*0.5*(rho[c]+rho[c-f_dir])+(1.-vol_fraction[c])*rho[c-f_dir];
+        }
+      }
+    }
+    void apply_zero_neumann( const Patch* patch, CCVariable<double>& var,
+                             constCCVariable<double>& vol_fraction ){
+    
+      std::vector<Patch::FaceType> bf;
+      patch->getBoundaryFaces(bf);
+      Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
+    
+      for( std::vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
+    
+        Patch::FaceType face = *itr;
+        IntVector f_dir = patch->getFaceDirection(face);
+    
+        for( CellIterator iter=patch->getFaceIterator(face, MEC); !iter.done(); iter++) {
+          IntVector c = *iter;
+    
+          if ( vol_fraction[c] > 1e-10 ){
+            var[c] = var[c-f_dir];
+          }
+        }
+      }
+    }
+    template <typename T, typename CT>
+    void apply_BC_rhou( const Patch* patch, T& var, CT& vel,
+                          constCCVariable<double> rho, constCCVariable<double> vol_fraction  ){
+    
+      std::vector<Patch::FaceType> bf;
+      patch->getBoundaryFaces(bf);
+      Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
+    
+      ArchesCore::VariableHelper<T> var_help;
+      IntVector vDir(var_help.ioff, var_help.joff, var_help.koff);
+
+      for( std::vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
+    
+        Patch::FaceType face = *itr;
+        IntVector f_dir = patch->getFaceDirection(face);
+      
+        const double dot = vDir[0]*f_dir[0] + vDir[1]*f_dir[1] + vDir[2]*f_dir[2];
+
+        //The face normal and the velocity are in parallel
+        if (dot == -1) {
+            //Face +
+          for( CellIterator iter=patch->getFaceIterator(face, MEC); !iter.done(); iter++) {
+            IntVector c = *iter;
+          
+            if ( vol_fraction[c] > 1e-10 ){
+              var[c-f_dir] = vel[c-f_dir]*(rho[c-f_dir]+rho[c])/2.;
+              var[c] = vel[c-f_dir];
+            }
+          }
+          } else {
+              // Face -
+          for( CellIterator iter=patch->getFaceIterator(face, MEC); !iter.done(); iter++) {
+            IntVector c = *iter;
+          
+            if ( vol_fraction[c] > 1e-10 ){
+              var[c] = vel[c]*(rho[c-f_dir]+rho[c])/2.;
+            }
+          } 
+       }
+       }
+      }
+    template <typename T>
+    void apply_zero_neumann( const Patch* patch, T& var,
+                             constCCVariable<double> vol_fraction  ){
+    
+      std::vector<Patch::FaceType> bf;
+      patch->getBoundaryFaces(bf);
+      Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
+    
+      ArchesCore::VariableHelper<T> var_help;
+      IntVector vDir(var_help.ioff, var_help.joff, var_help.koff);
+
+      for( std::vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
+    
+        Patch::FaceType face = *itr;
+        IntVector f_dir = patch->getFaceDirection(face);
+      
+        const double dot = vDir[0]*f_dir[0] + vDir[1]*f_dir[1] + vDir[2]*f_dir[2];
+
+        //The face normal and the velocity are in parallel
+        if (dot == -1) {
+            //Face +
+          for( CellIterator iter=patch->getFaceIterator(face, MEC); !iter.done(); iter++) {
+            IntVector c = *iter;
+          
+            if ( vol_fraction[c] > 1e-10 ){
+              var[c-f_dir] = var[c-f_dir-f_dir];
+              var[c] = var[c-f_dir];
+            }
+          }
+          } else {
+              // Face -
+          for( CellIterator iter=patch->getFaceIterator(face, MEC); !iter.done(); iter++) {
+            IntVector c = *iter;
+          
+            if ( vol_fraction[c] > 1e-10 ){
+              var[c] = var[c-f_dir];
+            }
+          } 
+       }
+       }
+      }
+  };
   struct FilterTest {
 
     void get_w(FILTER Type)
@@ -68,9 +216,9 @@ namespace Uintah {
         constCCVariable<double>& eps, BlockRange range) 
   {
   ArchesCore::VariableHelper<V_T> helper;
-  int i_n = helper.ioff;
-  int j_n = helper.joff;
-  int k_n = helper.koff;
+  const int i_n = helper.ioff;
+  const int j_n = helper.joff;
+  const int k_n = helper.koff;
  
   Uintah::parallel_for( range, [&](int i, int j, int k){
     double F_var = 0.0; 
@@ -85,12 +233,15 @@ namespace Uintah {
       }
     }
     F_var /= wt;
+    F_var *= (eps(i,j,k)*eps(i-i_n,j-j_n,k-k_n));
     Fvar(i,j,k) = F_var;
   });
   }
-  // density filter 
-  void applyFilter(constCCVariable<double>& var, Array3<double>& Fvar,  
-        constCCVariable<double>& eps, BlockRange range) 
+  //  This filter does not weigth the intrusion cells instead c value is used.
+  //  used in density  
+  template <typename T>
+  void applyFilter(T& var, Array3<double>& Fvar, 
+                  BlockRange range, constCCVariable<double>& eps ) 
   {
 
   Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -242,6 +393,130 @@ namespace Uintah {
   const Vector& Dx;
   };
 
+  struct computefilterIsInsijv2{
+    computefilterIsInsijv2(Array3<double>& i_filterIsI, Array3<double>& i_filters11, Array3<double>& i_filters22, 
+                         Array3<double>& i_filters33, Array3<double>& i_filters12, Array3<double>& i_filters13, 
+                         Array3<double>& i_filters23,
+                         constSFCXVariable<double> i_filterRhoU, constSFCYVariable<double> i_filterRhoV,
+                         constSFCZVariable<double> i_filterRhoW, constCCVariable<double> i_filterRho,
+                         const Vector& i_Dx, constCCVariable<double> i_eps):
+                         filterIsI(i_filterIsI), filters11(i_filters11), filters22(i_filters22), 
+                         filters33(i_filters33), filters12(i_filters12), filters13(i_filters13), 
+                         filters23(i_filters23), filterRhoU(i_filterRhoU), filterRhoV(i_filterRhoV),
+                         filterRhoW(i_filterRhoW),filterRho(i_filterRho), Dx(i_Dx), eps(i_eps)
+  {}
+
+  void
+  operator()(int i, int j, int k ) const {
+
+  const double SMALL = 1E-16;
+  const double fuep = filterRhoU(i+1,j,k) /
+         (0.5 * (filterRho(i,j,k) + filterRho(i+1,j,k)) + SMALL);
+
+  const double fuwp = filterRhoU(i,j,k)/
+         (0.5 * (filterRho(i,j,k) + filterRho(i-1,j,k)) + SMALL);
+
+  //note: we have removed the (1/2) from the denom. because
+  //we are multiplying by (1/2) for Sij
+  const double funp = ( 0.5 * filterRhoU(i+1,j+1,k) /
+         ( (filterRho(i,j+1,k) + filterRho(i+1,j+1,k)) + SMALL)
+         + 0.5 * filterRhoU(i,j+1,k) /
+         ( (filterRho(i,j+1,k) + filterRho(i-1,j+1,k))+ SMALL) );
+
+  const double fusp = ( 0.5 * filterRhoU(i+1,j-1,k) /
+         ( (filterRho(i,j-1,k) + filterRho(i+1,j-1,k)) + SMALL )
+         + 0.5 * filterRhoU(i,j-1,k) /
+         ( (filterRho(i,j-1,k) + filterRho(i-1,j-1,k))+ SMALL) );
+
+  const double futp = ( 0.5 * filterRhoU(i+1,j,k+1) /
+         ( (filterRho(i,j,k+1) + filterRho(i+1,j,k+1)) + SMALL )
+         + 0.5 * filterRhoU(i,j,k+1) /
+         ( (filterRho(i,j,k+1) + filterRho(i-1,j,k+1))+ SMALL));
+
+  const double fubp = ( 0.5 * filterRhoU(i+1,j,k-1) /
+         ( ( filterRho(i,j,k-1) + filterRho(i+1,j,k-1))+ SMALL)
+         + 0.5 * filterRhoU(i,j,k-1) /
+         ( (filterRho(i,j,k-1) + filterRho(i-1,j,k-1))+ SMALL));
+
+  const double fvnp = filterRhoV(i,j+1,k) /
+         ( 0.5 * (filterRho(i,j,k) + filterRho(i,j+1,k))+ SMALL);
+
+  const double fvsp = filterRhoV(i,j,k) /
+         ( 0.5 * (filterRho(i,j,k) + filterRho(i,j-1,k))+ SMALL);
+
+  const double fvep = ( 0.5 * filterRhoV(i+1,j+1,k)/
+         ( (filterRho(i+1,j,k) +filterRho(i+1,j+1,k))+ SMALL)
+         + 0.5 * filterRhoV(i+1,j,k)/
+         ( (filterRho(i+1,j,k) + filterRho(i+1,j-1,k))+ SMALL));
+
+  const double fvwp = ( 0.5 * filterRhoV(i-1,j+1,k)/
+         ( (filterRho(i-1,j,k) + filterRho(i-1,j+1,k))+ SMALL)
+         + 0.5 * filterRhoV(i-1,j,k)/
+         ( (filterRho(i-1,j,k) + filterRho(i-1,j-1,k))+ SMALL));
+
+  const double fvtp = ( 0.5 * filterRhoV(i,j+1,k+1) /
+         ( (filterRho(i,j,k+1) + filterRho(i,j+1,k+1))+ SMALL)
+         + 0.5 * filterRhoV(i,j,k+1) /
+         ( (filterRho(i,j,k+1) + filterRho(i,j-1,k+1))+ SMALL));
+
+  const double fvbp = ( 0.5 * filterRhoV(i,j+1,k-1)/
+         ( (filterRho(i,j,k-1) + filterRho(i,j+1,k-1))+ SMALL)
+         + 0.5 * filterRhoV(i,j,k-1) /
+         ( (filterRho(i,j,k-1) + filterRho(i,j-1,k-1))+ SMALL));
+
+  const double fwtp = filterRhoW(i,j,k+1) /
+         ( 0.5 * (filterRho(i,j,k) + filterRho(i,j,k+1))+ SMALL);
+
+  const double fwbp = filterRhoW(i,j,k) /
+         ( 0.5 * (filterRho(i,j,k) + filterRho(i,j,k-1))+ SMALL);
+
+  const double fwep = ( 0.5 * filterRhoW(i+1,j,k+1) /
+         ( (filterRho(i+1,j,k) + filterRho(i+1,j,k+1))+ SMALL)
+         + 0.5 * filterRhoW(i+1,j,k) /
+         ( (filterRho(i+1,j,k) + filterRho(i+1,j,k-1))+ SMALL));
+
+  const double fwwp = ( 0.5 * filterRhoW(i-1,j,k+1) /
+         ( (filterRho(i-1,j,k) + filterRho(i-1,j,k+1))+ SMALL)
+         + 0.5 * filterRhoW(i-1,j,k) /
+         ( (filterRho(i-1,j,k) + filterRho(i-1,j,k-1))+ SMALL));
+
+  const double fwnp = ( 0.5 * filterRhoW(i,j+1,k+1)/
+         ( (filterRho(i,j+1,k) + filterRho(i,j+1,k+1))+ SMALL)
+         + 0.5 * filterRhoW(i,j+1,k) /
+         ( (filterRho(i,j+1,k) + filterRho(i,j+1,k-1))+ SMALL));
+
+  const double fwsp = ( 0.5 * filterRhoW(i,j-1,k+1)/
+         ( (filterRho(i,j-1,k) + filterRho(i,j-1,k+1))+ SMALL)
+         + 0.5 * filterRhoW(i,j-1,k)/
+             ( (filterRho(i,j-1,k) + filterRho(i,j-1,k-1))+ SMALL));
+
+  //calculate the filtered strain rate tensor
+  filters11(i,j,k) = (fuep-fuwp)/Dx.x();
+  filters22(i,j,k) = (fvnp-fvsp)/Dx.y();
+  filters33(i,j,k) = (fwtp-fwbp)/Dx.z();
+  filters12(i,j,k) = 0.5*((funp-fusp)/Dx.y() + (fvep-fvwp)/Dx.x());
+  filters13(i,j,k) = 0.5*((futp-fubp)/Dx.z() + (fwep-fwwp)/Dx.x());
+  filters23(i,j,k) = 0.5*((fvtp-fvbp)/Dx.z() + (fwnp-fwsp)/Dx.y());
+  filterIsI(i,j,k) = std::sqrt(2.0*(filters11(i,j,k)*filters11(i,j,k) 
+                     + filters22(i,j,k)*filters22(i,j,k) + filters33(i,j,k)*filters33(i,j,k)+
+                     2.0*(filters12(i,j,k)*filters12(i,j,k) + 
+                      filters13(i,j,k)*filters13(i,j,k) + filters23(i,j,k)*filters23(i,j,k))));
+  }
+  private:
+  Array3<double>& filterIsI;
+  Array3<double>& filters11;
+  Array3<double>& filters22;
+  Array3<double>& filters33;
+  Array3<double>& filters12;
+  Array3<double>& filters13;
+  Array3<double>& filters23;
+  constSFCXVariable<double>& filterRhoU;
+  constSFCYVariable<double>& filterRhoV;
+  constSFCZVariable<double>& filterRhoW;
+  constCCVariable<double>& filterRho;
+  const Vector& Dx;
+  constCCVariable<double>& eps;
+  };
   struct computefilterIsInsij{
     computefilterIsInsij(Array3<double>& i_filterIsI, Array3<double>& i_filters11, Array3<double>& i_filters22, 
                          Array3<double>& i_filters33, Array3<double>& i_filters12, Array3<double>& i_filters13, 

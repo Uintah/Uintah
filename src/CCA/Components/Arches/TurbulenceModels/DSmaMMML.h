@@ -329,9 +329,9 @@ DSmaMMML<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   filters23.initialize(0.0);
   filters33.initialize(0.0);
 
-  computefilterIsInsij get_filterIsIsij(filterIsI, filters11, filters22, 
+  computefilterIsInsijv2 get_filterIsIsij(filterIsI, filters11, filters22, 
                                         filters33, filters12, filters13, 
-                                        filters23, (*filterRhoU), (*filterRhoV), (*filterRhoW), (*filterRho), Dx);
+                                        filters23, (*filterRhoU), (*filterRhoV), (*filterRhoW), (*filterRho), Dx,vol_fraction);
   Uintah::parallel_for(range1,get_filterIsIsij);
 
   CCVariable<double>& alpha11 = tsk_info->get_uintah_field_add< CCVariable<double> >("alpha11",nGhosts1 );
