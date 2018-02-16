@@ -1144,6 +1144,8 @@ ExplicitSolver::initialize( const LevelP     & level,
     // boundary condition factory
     _task_factory_map["boundary_condition_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
 
+    // turbulence factory 
+    
     //initialize factory
     all_tasks.clear();
     all_tasks = i_init_fac->second->retrieve_all_tasks();
@@ -1171,7 +1173,9 @@ ExplicitSolver::initialize( const LevelP     & level,
     }
 
     //turbulence models
-    i_turb_model_fac->second->schedule_initialization( level, sched, matls, is_restart );
+    //i_turb_model_fac->second->schedule_initialization( level, sched, matls, is_restart );
+    
+    
 
     //------------------ New Task Interface (end) ------------------------------------------------
 
@@ -1232,6 +1236,10 @@ ExplicitSolver::initialize( const LevelP     & level,
     sched_getCCVelocities(level, sched);
 
     d_turbModel->sched_reComputeTurbSubmodel(sched, level, matls, d_init_timelabel);
+    
+    //--- New interface 
+    _task_factory_map["turbulence_model_factory"]->schedule_task_group( "all_tasks", TaskInterface::TIMESTEP_EVAL, dont_pack_tasks, level, sched, matls );
+    // ----
 
     //----------------------
     //DQMOM initialization
@@ -1696,6 +1704,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     _task_factory_map["property_models_factory"]->schedule_task_group( "pre_update_property_models",
       TaskInterface::TIMESTEP_EVAL, dont_pack_tasks, level, sched, matls, curr_level );
+      
 
     i_transport->second->schedule_task_group("scalar_psi_builders",
       TaskInterface::TIMESTEP_EVAL, dont_pack_tasks, level, sched, matls, curr_level );
@@ -1938,6 +1947,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
         tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, curr_level);
       }
     }
+    
+    
     //------------------ New Task Interface (end) ------------------------------------------------
 
 
@@ -2026,6 +2037,10 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     // linearizes and solves pressure eqn
     // first computes, hatted velocities and then computes
     // the pressure poisson equation
+    
+//    _task_factory_map["turbulence_model_factory"]->schedule_task_group( "momentum_closure",
+//      TaskInterface::TIMESTEP_EVAL, dont_pack_tasks, level, sched, matls, curr_level );
+    
     d_momSolver->solveVelHat(level, sched, d_timeIntegratorLabels[curr_level], curr_level );
 
     for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
@@ -2163,8 +2178,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                                d_timeIntegratorLabels[curr_level]);
 
     TaskFactoryBase::TaskMap all_turb_models =
-      _task_factory_map["turbulence_model_factory"]->retrieve_all_tasks();
-    for ( TaskFactoryBase::TaskMap::iterator i = all_turb_models.begin(); i != all_turb_models.end(); i++){
+     _task_factory_map["turbulence_model_factory"]->retrieve_all_tasks();
+       for ( TaskFactoryBase::TaskMap::iterator i = all_turb_models.begin(); i != all_turb_models.end(); i++){
       i->second->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, curr_level);
     }
 

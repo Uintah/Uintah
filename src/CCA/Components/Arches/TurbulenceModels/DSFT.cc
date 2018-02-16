@@ -80,6 +80,7 @@ void
 DSFT::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>&
                                        variable_registry , const bool packed_tasks){
 
+
   register_variable( "Filterrho", ArchesFieldContainer::COMPUTES ,  variable_registry,  _task_name, packed_tasks);
 }
 
@@ -89,6 +90,8 @@ DSFT::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& filterRho = tsk_info->get_uintah_field_add< CCVariable<double> >("Filterrho");
   filterRho.initialize(0.0);
+  
+
 }
 //--------------------------------------------------------------------------------------------------
 void
