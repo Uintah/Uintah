@@ -104,35 +104,35 @@ EnthalpyShaddix::problemSetup(const ProblemSpecP& params, int qn)
   DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self();
 
   // check for particle enthalpy scaling constant
-  std::string enthalpy_root = ParticleTools::parse_for_role_to_label(db, "enthalpy");
-  std::string enthalpyqn_name = ParticleTools::append_qn_env( enthalpy_root, d_quadNode );
+  std::string enthalpy_root = ArchesCore::parse_for_role_to_label(db, "enthalpy");
+  std::string enthalpyqn_name = ArchesCore::append_qn_env( enthalpy_root, d_quadNode );
   EqnBase& temp_enthalpy_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(enthalpyqn_name);
   DQMOMEqn& enthalpy_eqn = dynamic_cast<DQMOMEqn&>(temp_enthalpy_eqn);
    _enthalpy_scaling_constant = enthalpy_eqn.getScalingConstant(d_quadNode);
 
   // check for particle temperature
-  std::string temperature_root = ParticleTools::parse_for_role_to_label(db, "temperature");
-  std::string temperature_name = ParticleTools::append_env( temperature_root, d_quadNode );
+  std::string temperature_root = ArchesCore::parse_for_role_to_label(db, "temperature");
+  std::string temperature_name = ArchesCore::append_env( temperature_root, d_quadNode );
   _particle_temperature_varlabel = VarLabel::find(temperature_name);
 
   // check for length
-  std::string length_root = ParticleTools::parse_for_role_to_label(db, "size");
-  std::string length_name = ParticleTools::append_env( length_root, d_quadNode );
+  std::string length_root = ArchesCore::parse_for_role_to_label(db, "size");
+  std::string length_name = ArchesCore::append_env( length_root, d_quadNode );
   _length_varlabel = VarLabel::find(length_name);
 
   // create raw coal mass var label
-  std::string rcmass_root = ParticleTools::parse_for_role_to_label(db, "raw_coal");
-  std::string rcmass_name = ParticleTools::append_env( rcmass_root, d_quadNode );
+  std::string rcmass_root = ArchesCore::parse_for_role_to_label(db, "raw_coal");
+  std::string rcmass_name = ArchesCore::append_env( rcmass_root, d_quadNode );
   _rcmass_varlabel = VarLabel::find(rcmass_name);
 
   // check for char mass and get scaling constant
-  std::string char_root = ParticleTools::parse_for_role_to_label(db, "char");
-  std::string char_name = ParticleTools::append_env( char_root, d_quadNode );
+  std::string char_root = ArchesCore::parse_for_role_to_label(db, "char");
+  std::string char_name = ArchesCore::append_env( char_root, d_quadNode );
   _char_varlabel = VarLabel::find(char_name);
 
   // get weight and scaling constant
-  std::string weightqn_name = ParticleTools::append_qn_env("w", d_quadNode);
-  std::string weight_name = ParticleTools::append_env("w", d_quadNode);
+  std::string weightqn_name = ArchesCore::append_qn_env("w", d_quadNode);
+  std::string weight_name = ArchesCore::append_env("w", d_quadNode);
   _weight_varlabel = VarLabel::find(weight_name);
   EqnBase& temp_weight_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(weightqn_name);
   DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(temp_weight_eqn);
@@ -193,7 +193,7 @@ EnthalpyShaddix::problemSetup(const ProblemSpecP& params, int qn)
     else {
       throw InvalidValue("ERROR: EnthalpyShaddix: problemSetup(): can't find radiationVolq.",__FILE__,__LINE__);
     }
-    std::string abskp_string = ParticleTools::append_env(baseNameAbskp, d_quadNode);
+    std::string abskp_string = ArchesCore::append_env(baseNameAbskp, d_quadNode);
     _abskp_varlabel = VarLabel::find(abskp_string);
   }
 
@@ -443,6 +443,7 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
       which_dw->get( radiationVolqIN, _volq_varlabel, matlIndex, patch, gn, 0);
       which_dw->get( abskp, _abskp_varlabel, matlIndex, patch, gn, 0);
       if (_radiateAtGasTemp){
+       
         which_dw->get( rad_particle_temperature, _gas_temperature_varlabel, matlIndex, patch, gn, 0 );
       }else{
         which_dw->get( rad_particle_temperature, _particle_temperature_varlabel, matlIndex, patch, gn, 0 );
@@ -476,8 +477,6 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
     constCCVariable<Vector> partVel;
     ArchesLabel::PartVelMap::const_iterator iter = d_fieldLabels->partVel.find(d_quadNode);
     new_dw->get(partVel, iter->second, matlIndex, patch, gn, 0);
-
-
   Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
       Uintah::parallel_for( range, [&](int i, int j, int k) {
          double max_Q_convection;
@@ -547,6 +546,7 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
          if (std::abs(Q_convection) > std::abs(max_Q_convection)){
          Q_convection = max_Q_convection;
          }
+         Q_convection = Q_convection*weightph;
          // Radiation part: -------------------------
          Q_radiation = 0.0;
          if ( _radiationOn) {
@@ -554,7 +554,7 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
          Eb = 4.0*_sigma*std::pow(rad_particle_temperature(i,j,k),4.0);
          FSum = radiationVolqIN(i,j,k);
          Q_radiation = abskp(i,j,k)*(FSum - Eb);
-         double Q_radMax=(std::pow( radiationVolqIN(i,j,k) / (4.0 * _sigma )  , 0.25)-rad_particle_temperature(i,j,k))/(dt)*alpha_cp;
+         double Q_radMax=(std::pow( radiationVolqIN(i,j,k) / (4.0 * _sigma )  , 0.25)-rad_particle_temperature(i,j,k))/(dt)*alpha_cp*weightph ;
          if (std::abs(Q_radMax) < std::abs(Q_radiation)){
          Q_radiation=Q_radMax;
          }
@@ -563,14 +563,14 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
          double hc = _Hc0 + hint * _RdMW;
          Q_reaction = charoxi_temp_sourceph;
          // This needs to be made consistant with lagrangian particles!!! - derek 12/14
-         heat_rate_ = (Q_convection*weightph + Q_radiation + _ksi*Q_reaction - (devol_gas_sourceph + chargas_sourceph)*hc)/
+         heat_rate_ = (Q_convection + Q_radiation + _ksi*Q_reaction - (devol_gas_sourceph + chargas_sourceph)*hc)/
          (_enthalpy_scaling_constant*_weight_scaling_constant);
-         gas_heat_rate_ = -weightph*Q_convection - Q_radiation - _ksi*Q_reaction + (devol_gas_sourceph+chargas_sourceph)*hc;
+         gas_heat_rate_ = -Q_convection - Q_radiation - _ksi*Q_reaction + (devol_gas_sourceph+chargas_sourceph)*hc;
          }
          heat_rate(i,j,k) = heat_rate_;
          gas_heat_rate(i,j,k) = gas_heat_rate_;
-         qconv(i,j,k) = Q_convection;
-         qrad(i,j,k) = Q_radiation;
+         qconv(i,j,k) = Q_convection; // W/m^3
+         qrad(i,j,k) = Q_radiation; // W/m^3
        } );
 
 

@@ -55,6 +55,7 @@ private:
     std::string m_v_vel_name;
     std::string m_w_vel_name;
     std::string m_density_name;
+    std::string m_volFraction_name;
 
     std::string m_cc_u_vel_name;
     std::string m_cc_v_vel_name;
@@ -63,8 +64,13 @@ private:
     std::string m_rhou_vel_name;
     std::string m_rhov_vel_name;
     std::string m_rhow_vel_name;
+    std::string m_IsI_name;
+    //std::string m_ref_density_name;
+    //std::string m_cell_type_name;
     //int Type_filter ; 
+    bool m_create_labels_IsI_t_viscosity{true};   
     Uintah::FILTER Type_filter; 
+    FilterTest m_Filter;
   };
 }
 #endif

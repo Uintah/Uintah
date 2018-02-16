@@ -28,7 +28,6 @@
 
 #include <Core/DataArchive/DataArchive.h>
 #include <Core/Exceptions/InternalError.h>
-#include <Core/Exceptions/PapiInitializationError.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/SimulationTime.h>
@@ -40,6 +39,10 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Util/DOUT.hpp>
 
+#ifdef USE_PAPI_COUNTERS
+  #include <Core/Exceptions/PapiInitializationError.h>
+#endif
+
 #include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Output.h>
 #include <CCA/Ports/ProblemSpecInterface.h>
@@ -50,6 +53,7 @@
 #include <CCA/Components/Schedulers/MPIScheduler.h>
 
 #include <sci_defs/visit_defs.h>
+
 
 #include <cstring>
 #include <fstream>
@@ -124,19 +128,19 @@ SimulationController::SimulationController( const ProcessorGroup * myworld
    */
 
   // PAPI_FP_OPS - floating point operations executed
-  m_papi_events.insert(pair<int, PapiEvent>(PAPI_FP_OPS, PapiEvent("PAPI_FP_OPS", TotalFlops)));
+  m_papi_events.insert(std::pair<int, PapiEvent>(PAPI_FP_OPS, PapiEvent("PAPI_FP_OPS", TotalFlops)));
 
   // PAPI_DP_OPS - floating point operations executed; optimized to count scaled double precision vector operations
-  m_papi_events.insert(pair<int, PapiEvent>(PAPI_DP_OPS, PapiEvent("PAPI_DP_OPS", TotalVFlops)));
+  m_papi_events.insert(std::pair<int, PapiEvent>(PAPI_DP_OPS, PapiEvent("PAPI_DP_OPS", TotalVFlops)));
 
   // PAPI_L2_TCM - level 2 total cache misses
-  m_papi_events.insert(pair<int, PapiEvent>(PAPI_L2_TCM, PapiEvent("PAPI_L2_TCM", L2Misses)));
+  m_papi_events.insert(std::pair<int, PapiEvent>(PAPI_L2_TCM, PapiEvent("PAPI_L2_TCM", L2Misses)));
 
   // PAPI_L3_TCM - level 3 total cache misses
-  m_papi_events.insert(pair<int, PapiEvent>(PAPI_L3_TCM, PapiEvent("PAPI_L3_TCM", L3Misses)));
+  m_papi_events.insert(std::pair<int, PapiEvent>(PAPI_L3_TCM, PapiEvent("PAPI_L3_TCM", L3Misses)));
 
   // PAPI_TLB_TL - Total translation lookaside buffer misses
-  m_papi_events.insert(pair<int, PapiEvent>(PAPI_TLB_TL, PapiEvent("PAPI_TLB_TL", TLBMisses)));
+  m_papi_events.insert(std::pair<int, PapiEvent>(PAPI_TLB_TL, PapiEvent("PAPI_TLB_TL", TLBMisses)));
 
   m_papi_event_values = scinew long long[m_papi_events.size()];
   m_papi_event_set    = PAPI_NULL;

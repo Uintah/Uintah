@@ -284,7 +284,7 @@ void parallel_reduce_1D( BlockRange const & r, const Functor & f, ReductionType 
 }
 
 template <typename Functor, typename ReductionType>
-void parallel_reduce( BlockRange const & r, const Functor & f, ReductionType & red  )
+void parallel_reduce_sum( BlockRange const & r, const Functor & f, ReductionType & red  )
 {
   //const int ib = r.begin(0); const int ie = r.end(0);
   //const int jb = r.begin(1); const int je = r.end(1);
@@ -303,6 +303,24 @@ void parallel_reduce( BlockRange const & r, const Functor & f, ReductionType & r
     MDPolicyType_3D mdpolicy_3d( {{r.begin(0),r.begin(1),r.begin(2)}}, {{r.end(0),r.end(1),r.end(2)}} );
 
     Kokkos::parallel_reduce( mdpolicy_3d, f, tmp );
+
+
+template <typename Functor, typename ReductionType>
+void parallel_reduce_min( BlockRange const & r, const Functor & f, ReductionType & red  )
+{
+  const int ib = r.begin(0); const int ie = r.end(0);
+  const int jb = r.begin(1); const int je = r.end(1);
+  const int kb = r.begin(2); const int ke = r.end(2);
+
+  ReductionType tmp = red;
+  Kokkos::parallel_reduce( Kokkos::RangePolicy<Kokkos::OpenMP, int>(kb, ke).set_chunk_size(2), KOKKOS_LAMBDA(int k, ReductionType & tmp) {
+    for (int j=jb; j<je; ++j) {
+    for (int i=ib; i<ie; ++i) {
+      f(i,j,k,tmp);
+    }}
+  }, Kokkos::Experimental::Min<ReductionType>(tmp));
+  red = tmp;
+};
 
 #else
   typedef typename Kokkos::MDRangePolicy<Kokkos::OpenMP, Kokkos::Rank<3,
@@ -364,7 +382,23 @@ void parallel_for( BlockRange const & r, const Functor & f, const Option& op )
 };
 
 template <typename Functor, typename ReductionType>
-void parallel_reduce( BlockRange const & r, const Functor & f, ReductionType & red  )
+void parallel_reduce_sum( BlockRange const & r, const Functor & f, ReductionType & red  )
+{
+  const int ib = r.begin(0); const int ie = r.end(0);
+  const int jb = r.begin(1); const int je = r.end(1);
+  const int kb = r.begin(2); const int ke = r.end(2);
+
+  ReductionType tmp = red;
+  for (int k=kb; k<ke; ++k) {
+  for (int j=jb; j<je; ++j) {
+  for (int i=ib; i<ie; ++i) {
+    f(i,j,k,tmp);
+  }}}
+  red = tmp;
+};
+
+template <typename Functor, typename ReductionType>
+void parallel_reduce_min( BlockRange const & r, const Functor & f, ReductionType & red  )
 {
   const int ib = r.begin(0); const int ie = r.end(0);
   const int jb = r.begin(1); const int je = r.end(1);

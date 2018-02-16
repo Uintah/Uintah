@@ -466,6 +466,16 @@ namespace Uintah{
         }
       }
 
+      /** @brief Return a reference to the NEW DW **/
+      DataWarehouse* getNewDW(){
+        return _new_dw;
+      }
+
+      /** @brief Return a reference to the OLD DW **/
+      DataWarehouse* getOldDW(){
+        return _old_dw;
+      }
+
     private:
 
       FieldContainerMap _nonconst_var_map;

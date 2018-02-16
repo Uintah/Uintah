@@ -53,11 +53,13 @@ WARNING
 
 namespace Uintah {
 
-void visit_SimGetCustomUIData(void *cbdata);
+void visit_SimGetCustomUIData    (void *cbdata);
 visit_handle visit_SimGetMetaData(void *cbdata);
-visit_handle visit_SimGetMesh(int domain, const char *name, void *cbdata);
+visit_handle visit_SimGetMesh    (int domain, const char *name, void *cbdata);
 visit_handle visit_SimGetVariable(int domain, const char *name, void *cbdata);
-visit_handle visit_SimGetDomainList(const char *name, void *cbdata);
+visit_handle visit_SimGetDomainList      (const char *name, void *cbdata);
+visit_handle visit_SimGetDomainBoundaries(const char *name, void *cbdata);
+visit_handle visit_SimGetDomainNesting   (const char *name, void *cbdata);
 
 } // End namespace Uintah
 

@@ -2,7 +2,7 @@
 
 from os import chdir,getcwd,mkdir,system,environ
 from sys import argv,exit,platform
-from helpers.runSusTests import runSusTests, inputs_root, ignorePerformanceTests, generatingGoldStandards
+from helpers.runSusTests import runSusTests, ignorePerformanceTests
 from helpers.modUPS import modUPS
 
 #______________________________________________________________________

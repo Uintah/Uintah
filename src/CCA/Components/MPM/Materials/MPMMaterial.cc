@@ -33,6 +33,8 @@
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/PlasticityModels/ErosionModel.h>
 #include <CCA/Components/MPM/Materials/ParticleCreator/ParticleCreatorFactory.h>
 #include <CCA/Components/MPM/Materials/ParticleCreator/ParticleCreator.h>
+#include <CCA/Components/MPM/Materials/Diffusion/DiffusionModels/ScalarDiffusionModel.h>
+#include <CCA/Components/MPM/Materials/Diffusion/ScalarDiffusionModelFactory.h>
 #include <Core/GeometryPiece/GeometryObject.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Grid/Box.h>
@@ -44,14 +46,10 @@
 #include <Core/GeometryPiece/NullGeometryPiece.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
-#include   <iostream>
-#include   <list>
-#include <CCA/Components/MPM/Materials/Diffusion/DiffusionModels/ScalarDiffusionModel.h>
-#include <CCA/Components/MPM/Materials/Diffusion/ScalarDiffusionModelFactory.h>
+#include <iostream>
+#include <list>
 
 #define d_TINY_RHO 1.0e-12 // also defined  ICE.cc and ICEMaterial.cc 
-
-#define OLD
 
 using namespace std;
 using namespace Uintah;

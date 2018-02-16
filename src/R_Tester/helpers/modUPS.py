@@ -8,19 +8,18 @@ from sys import exit
 # ["<patches> [2,2,2] </patches>",'<burn type = "null" />'] 
 # would be a list of changes
 
-def modUPS(directory, filename, changes):
-    realdir = path.normpath(path.join(getcwd(), directory))
+def modUPS(inputsDir, filename, changes):
     
-    org_filename = "%s/%s" % (realdir, filename)
-    mod_filename  = "%s/tmp/%s" % (realdir, filename)
+    org_filename = "%s/%s" % (inputsDir, filename)
+    mod_filename  = "%s/tmp/%s" % (inputsDir, filename)
 
     #__________________________________
     #  bulletproofing
     # see if filename exists in directory and create tmp
     try:
-      stat(realdir)
+      stat(inputsDir)
     except Exception:
-      print "(%s) does not exist" % realdir
+      print "(%s) does not exist" % inputsDir
       exit(1)
   
     try:
@@ -29,9 +28,9 @@ def modUPS(directory, filename, changes):
       print "(%s) does not exist" % org_filename
       exit(1)
     try:
-      stat("%s/tmp" % realdir)
+      stat("%s/tmp" % inputsDir)
     except Exception:
-      mkdir("%s/tmp" % realdir)
+      mkdir("%s/tmp" % inputsDir)
       
     #__________________________________
     # append numbers to the end of  filename.  You need to return a unique filename
@@ -99,17 +98,16 @@ def modUPS(directory, filename, changes):
 #                                "/Uintah_specification/Grid/Level/Box[@label=1]/resolution :[24,24,24]",
 #                                "/Uintah_specification/Grid/Level/Box[@label=2]/resolution :[48,48,48]"
 #                               ] )
-#  The depends on xmlstarlet.  
+#  This script depends on xmlstarlet.  
 #  Use:
 #       xmlstarlet el -v <ups>
 #  to see the path to the xml node
 
-def modUPS2(directory, filename, changes):
-    realdir = path.normpath(path.join(getcwd(), directory))
+def modUPS2( inputsDir, filename, changes):
     
-    org_filename = "%s/%s" % (realdir, filename)
-    mod_filename  = "%s/tmp/%s" % (realdir, filename)
-    tmp_filename  = "%s/tmp/%s.tmp" % (realdir, filename)
+    org_filename = "%s/%s" % (inputsDir, filename)
+    mod_filename  = "%s/tmp/%s" % (inputsDir, filename)
+    tmp_filename  = "%s/tmp/%s.tmp" % (inputsDir, filename)
 
     #__________________________________
     #  bulletproofing
@@ -124,9 +122,9 @@ def modUPS2(directory, filename, changes):
       return
     
     try:
-      stat(realdir)
+      stat(inputsDir)
     except Exception:
-      print "(%s) does not exist" % realdir
+      print "(%s) does not exist" % inputsDir
       exit(1)
   
     try:
@@ -136,9 +134,9 @@ def modUPS2(directory, filename, changes):
       exit(1)
       
     try:
-      stat("%s/tmp" % realdir)
+      stat("%s/tmp" % inputsDir)
     except Exception:
-      mkdir("%s/tmp" % realdir)
+      mkdir("%s/tmp" % inputsDir)
 
     #__________________________________
     # copy filename to tmp/

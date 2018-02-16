@@ -88,11 +88,11 @@ CoalTemperature::problemSetup( ProblemSpecP& db ){
       throw ProblemSetupException("Error: No <ultimate_analysis> found in input file.", __FILE__, __LINE__);
     }
 
-    _diameter_base_name = ParticleTools::parse_for_role_to_label(db, "size");
-    _rawcoal_base_name = ParticleTools::parse_for_role_to_label(db, "raw_coal");
-    _char_base_name = ParticleTools::parse_for_role_to_label(db, "char");
-    _enthalpy_base_name = ParticleTools::parse_for_role_to_label(db, "enthalpy");
-    _dTdt_base_name = ParticleTools::parse_for_role_to_label(db, "dTdt");
+    _diameter_base_name = ArchesCore::parse_for_role_to_label(db, "size");
+    _rawcoal_base_name = ArchesCore::parse_for_role_to_label(db, "raw_coal");
+    _char_base_name = ArchesCore::parse_for_role_to_label(db, "char");
+    _enthalpy_base_name = ArchesCore::parse_for_role_to_label(db, "enthalpy");
+    _dTdt_base_name = ArchesCore::parse_for_role_to_label(db, "dTdt");
     _gas_temperature_name = "temperature";
     _vol_fraction_name = "volFraction";
 

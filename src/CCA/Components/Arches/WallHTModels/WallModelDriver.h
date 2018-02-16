@@ -7,6 +7,7 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/GeometryPiece/GeometryPiece.h>
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
+#include <CCA/Components/Arches/ParticleModels/CoalHelper.h>
 #include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
 
 //============================================
@@ -55,6 +56,7 @@ namespace Uintah{
         double relax; // relaxation coefficient for updating surface temperature
         int em_model_type;
         int num_extra_src;
+        int Nenv;
         double delta_t;
         CCVariable<double> T;
         CCVariable<double> T_copy;
@@ -70,7 +72,8 @@ namespace Uintah{
         constCCVariable<double> deposit_velocity_old;
         constCCVariable<double> ave_deposit_velocity;
         std::vector< constCCVariable<double> > extra_src;
-        constCCVariable<double> d_vol_ave;
+        std::vector< constCCVariable<double> > particle_flow_rate;
+        std::vector< constCCVariable<double> > particle_flow_rate_d;
         constCCVariable<double> T_real_old;
         constCCVariable<double> T_old;
         constCCVariable<int> celltype;
@@ -98,6 +101,7 @@ namespace Uintah{
       std::string _dep_vel_name;
       std::vector<std::string> _extra_src_flux_names;
       int _num_extra_src;
+      int _Nenv;
       bool do_coal_region;
       int _calc_freq;                    ///< Wall heat transfer model calculation frequency
       std::string _T_label_name;         ///< Temperature label name
@@ -107,7 +111,7 @@ namespace Uintah{
       const VarLabel* _timeStepLabel;
       const VarLabel* _simulationTimeLabel;
       const VarLabel* _delTLabel;
-    
+
       // Net heat flux var labels:
       const VarLabel* _T_copy_label;
 
@@ -125,28 +129,29 @@ namespace Uintah{
       const VarLabel* _True_T_Label;
       const VarLabel* _ave_dep_vel_label;
       std::vector< const VarLabel*> _extra_src_varlabels;
+      std::vector< const VarLabel*> _particle_flow_rate_varlabels;
+      std::vector< const VarLabel*> _particle_flow_rate_d_varlabels;
       const VarLabel* _deposit_velocity_label;
       const VarLabel* _deposit_thickness_label;
       const VarLabel* _deposit_thickness_sb_s_label;
       const VarLabel* _deposit_thickness_sb_l_label;
-      const VarLabel* _d_vol_ave_label;
       const VarLabel* _emissivity_label;
       const VarLabel* _thermal_cond_en_label;
       const VarLabel* _thermal_cond_sb_s_label;
       const VarLabel* _thermal_cond_sb_l_label;
 
       void doWallHT( const ProcessorGroup* my_world,
-                     const PatchSubset* patches,
-                     const MaterialSubset* matls,
-                     DataWarehouse* old_dw,
-                     DataWarehouse* new_dw,
-                     const int time_substep );
+          const PatchSubset* patches,
+          const MaterialSubset* matls,
+          DataWarehouse* old_dw,
+          DataWarehouse* new_dw,
+          const int time_substep );
 
       void copyWallTintoT( const ProcessorGroup* my_world,
-                           const PatchSubset* patches,
-                           const MaterialSubset* matls,
-                           DataWarehouse* old_dw,
-                           DataWarehouse* new_dw );
+          const PatchSubset* patches,
+          const MaterialSubset* matls,
+          DataWarehouse* old_dw,
+          DataWarehouse* new_dw );
 
       //void doWallHT_alltoall( const ProcessorGroup* my_world,
       //                        const PatchSubset* patches,
@@ -208,7 +213,7 @@ namespace Uintah{
         db->require( "deposit_velocity_name", new_name );
         return new_name;
       }
-      
+
       inline static std::vector<std::string> get_extra_src_flux_names( const ProblemSpecP& input_db ){
         ProblemSpecP db = input_db;
         std::vector<std::string> new_src_names;
@@ -232,10 +237,12 @@ namespace Uintah{
           model_int = 2;
         } else if ( model_type=="pokluda"){
           model_int = 3;
+        } else if (model_type=="pokludaVisc"){
+          model_int = 4;
         } else {
-          throw InvalidValue("Error: emissivity_model_type must be either constant, dynamic, or pokluda.", __FILE__, __LINE__);
+          throw InvalidValue("Error: emissivity_model_type must be either constant, dynamic, pokluda or pokludaVisc.", __FILE__, __LINE__);
         }
-          return model_int;
+        return model_int;
       }
 
       inline static int get_thermal_cond_model_type( const ProblemSpecP& input_db ){
@@ -250,7 +257,7 @@ namespace Uintah{
         } else {
           throw InvalidValue("Error: thermal_cond_model_type must be either constant or hadley.", __FILE__, __LINE__);
         }
-          return model_int;
+        return model_int;
       }
 
 
@@ -300,7 +307,7 @@ namespace Uintah{
 
           struct ThermalCondBase {
             virtual void model( double &k_eff, const double &C, const double &T,
-                                const std::string layer_type )=0;
+                const std::string layer_type )=0;
             virtual ~ThermalCondBase(){}
           };
 
@@ -315,23 +322,24 @@ namespace Uintah{
 
           struct hadley_tc : ThermalCondBase {
             hadley_tc(ProblemSpecP db_model){
+              CoalHelper& coal_helper = CoalHelper::self();
               std::vector<double> default_comp = {39.36,25.49, 7.89,  10.12, 2.46, 0.0, 1.09, 4.10};
               db_model->getWithDefault( "enamel_ash_composition", en_ash_comp, default_comp);
               db_model->getWithDefault( "sb_ash_composition", sb_ash_comp, default_comp);
               db_model->getWithDefault( "enamel_deposit_porosity", en_porosity, 0.6);
               db_model->getWithDefault( "sb_deposit_porosity", sb_porosity, 0.6);
-	            //T_mid = ParticleTools::getAshPorosityTemperature(db_model);
-	            T_fluid = ParticleTools::getAshFluidTemperature(db_model);
+	            //T_mid = coal_helper.get_coal_db().T_porosity;
+	            T_fluid = coal_helper.get_coal_db().T_fluid;
               if (en_ash_comp.size() != 8 || sb_ash_comp.size() != 8){
                 throw InvalidValue("Error ash_compositions (enamel_ash_composition and sb_ash_composition) must have 8 entries: sio2, al2o3, cao, fe2o3, na2o, bao, tio2, mgo. ", __FILE__, __LINE__);
               }
 
               double poly_datas[6][5] = {{2.511097e1, -7.293704e-2, 9.210643e-5, -5.005416e-8, 9.748495e-12},//%sio2
-                                         {2.656406e1, -5.013363e-2, 4.798874e-5, -2.274117e-8, 4.353314e-12},//%al2o3
-                                         {2.738097e1, -9.707191e-2, 1.303015e-4, -6.99833e-8 , 1.467744e-11},//fe2o3
-                                         {1.79954e1 , -2.807481e-2, 2.769034e-5, -1.244762e-8, 2.104583e-12},//cao
-                                         {8.320303e1, -1.780395e-1, 1.598474e-4, -6.622821e-8, 1.072425e-11},//mgo
-                                         {3.03673e1 , -6.10737e-2 , 6.65477e-5 , -3.40088e-8 , 6.17558e-12}};//na2o
+                {2.656406e1, -5.013363e-2, 4.798874e-5, -2.274117e-8, 4.353314e-12},//%al2o3
+                {2.738097e1, -9.707191e-2, 1.303015e-4, -6.99833e-8 , 1.467744e-11},//fe2o3
+                {1.79954e1 , -2.807481e-2, 2.769034e-5, -1.244762e-8, 2.104583e-12},//cao
+                {8.320303e1, -1.780395e-1, 1.598474e-4, -6.622821e-8, 1.072425e-11},//mgo
+                {3.03673e1 , -6.10737e-2 , 6.65477e-5 , -3.40088e-8 , 6.17558e-12}};//na2o
               for (int i=0; i<6; ++i) {
                 for (int j=0; j<5; ++j) {
                   poly_data[i][j] = poly_datas[i][j];
@@ -358,7 +366,7 @@ namespace Uintah{
             double f0;
             double en_porosity;
             double sb_porosity;
-	          double T_fluid;
+            double T_fluid;
             double poly_data[6][5];
             void model(double &k_eff, const double &C, const double &T, const std::string layer_type) {
               ash_comp_tc = (layer_type == "enamel") ? en_ash_comp_tc : sb_ash_comp_tc;
@@ -377,10 +385,10 @@ namespace Uintah{
               // second compute the gas tc as a function of temperature
               kg = 2.286e-11*T*T*T - 7.022e-8*T*T + 1.209e-4*T - 5.321e-3;
 
-	            double phi; // this is a zeroth order porosity model for the sootblow layer
+              double phi; // this is a zeroth order porosity model for the sootblow layer
               phi = (layer_type == "enamel") ? en_porosity :  // enamel layer porosity never changes.
-                                               (T > T_fluid) ? 0.0 : // if this is the sb layer get porosity based on T.
-                                                               sb_porosity;
+                (T > T_fluid) ? 0.0 : // if this is the sb layer get porosity based on T.
+                sb_porosity;
               // third compute effective k for layer using hadley model
               a = (phi>=0.3) ? 1.5266*std::pow(1-phi,8.7381) : 0.7079*std::pow(1-phi,6.3051);
               kappa = ks/kg;
@@ -391,14 +399,14 @@ namespace Uintah{
 
 
           struct EmissivityBase {
-            virtual void model(double &e, const double &C, double &T, double &Dp, double &tau)=0;
+            virtual void model(double &e, const double &C, double &T, double &Dp, double &tau, std::vector<double> Dp_vec, std::vector<double> vdot)=0;
             virtual ~EmissivityBase(){}};
 
           EmissivityBase* m_em_model;
 
           struct constant_e : EmissivityBase {
-            void model(double &e, const double &C, double &T, double &Dp, double &tau) {
-               e = C;
+            void model(double &e, const double &C, double &T, double &Dp, double &tau, std::vector<double> Dp_vec, std::vector<double> vdot) {
+              e = C;
             }
             ~constant_e(){}
           };
@@ -459,7 +467,7 @@ namespace Uintah{
                 yscale = 1.26426850e-01;
                 ycenter = 7.98292921e-01;
                 fresnel={9.62350244e-01, -1.32310169e-06, -1.56147490e-01, -5.09003099e-03};
-	            } else {
+              } else {
                 throw InvalidValue("Error, coal_name wasn't recognized in dynamic ash emissivity data-base. ", __FILE__, __LINE__);
               }
 
@@ -481,7 +489,7 @@ namespace Uintah{
             double yscale;
             double ycenter;
             std::vector<double> fresnel;
-            void model(double &e, const double &C, double &T, double &Dp, double &tau) {
+            void model(double &e, const double &C, double &T, double &Dp, double &tau, std::vector<double> Dp_vec, std::vector<double> vdot) {
 
               // surface tension and viscosity model:
               // power law fit: log10(st/visc) = a*T^b+c
@@ -522,7 +530,8 @@ namespace Uintah{
           struct pokluda_e : EmissivityBase {
             pokluda_e(ProblemSpecP db_model){
               ProblemSpecP db_root = db_model->getRootNode();
-              int Nenv = ParticleTools::get_num_env( db_root, ParticleTools::DQMOM );
+              int Nenv = ArchesCore::get_num_env( db_root, ArchesCore::DQMOM_METHOD );
+              CoalHelper& coal_helper = CoalHelper::self();
               min_p_diam = 1e16;
               double min_p = min_p_diam;
               double rho_ash_bulk;
@@ -538,9 +547,9 @@ namespace Uintah{
                   }
                   db_part_properties->getWithDefault( "rho_ash_bulk",rho_ash_bulk,2300.0);
                   db_part_properties->getWithDefault( "void_fraction",p_void0,0.3);
-                  double init_particle_density = ParticleTools::getInletParticleDensity( db_root );
-                  double ash_mass_frac = ParticleTools::getAshMassFraction( db_root );
-                  double initial_diameter = ParticleTools::getInletParticleSize( db_root, i );
+                  double init_particle_density = ArchesCore::get_inlet_particle_density( db_root );
+                  double ash_mass_frac = coal_helper.get_coal_db().ash_mf;
+                  double initial_diameter = ArchesCore::get_inlet_particle_size( db_root, i );
                   double p_volume = M_PI/6.*initial_diameter*initial_diameter*initial_diameter; // particle volme [m^3]
                   double mass_ash = p_volume*init_particle_density*ash_mass_frac;
                   double initial_rc = (M_PI/6.0)*initial_diameter*initial_diameter*initial_diameter*init_particle_density*(1.-ash_mass_frac);
@@ -549,13 +558,13 @@ namespace Uintah{
                   min_p = std::pow( mass_ash * 6 / rho_ash_bulk / (1- p_voidmin) / M_PI ,1./3.);
                   min_p_diam = (min_p < min_p_diam) ? min_p : min_p_diam;
               }
-	            if (min_p_diam == 1e16) {
+              if (min_p_diam == 1e16) {
                 throw InvalidValue("Error, WallHT pokluda emissivity requires Particle Properties void fraction and rho ash or inlet particle size.", __FILE__, __LINE__);
               }
               std::string ash_type;
               db_model->getWithDefault( "coal_name", ash_type, "generic_coal");
               db_model->getWithDefault( "coordination_number", CN, 2);
-	            T_fluid = ParticleTools::getAshFluidTemperature(db_model);
+	            T_fluid = coal_helper.get_coal_db().T_fluid;
               if (ash_type == "indonesian"){
                 a_sv = -1.47871222e+04;
                 b_sv = -1.02820241e+00;
@@ -646,7 +655,7 @@ namespace Uintah{
                 ycenter = 7.92863708e-01;
                 pokluda={1.25909498e+00, 1.00031378e-05, -2.58931875e-01, -9.49645841e-01};
                 fresnel={9.65180162e-01, -1.37020417e-06, -1.58188334e-01, -5.62284478e-03};
-	            } else {
+              } else {
                 throw InvalidValue("Error, coal_name wasn't recognized in pokluda ash emissivity data-base. ", __FILE__, __LINE__);
               }
             }
@@ -667,7 +676,7 @@ namespace Uintah{
             double ycenter;
             std::vector<double> fresnel;
             std::vector<double> pokluda;
-            void model(double &e, const double &C, double &T, double &Dp, double &tau) {
+            void model(double &e, const double &C, double &T, double &Dp, double &tau, std::vector<double> Dp_vec, std::vector<double> vdot) {
 
               // surface tension and viscosity model:
               // power law fit: log10(st/visc) = a*T^b+c
@@ -680,9 +689,10 @@ namespace Uintah{
               // pokluda model for sintering
               // 2nd order exponential fit: d_eff = a*exp(b*X)+c*exp(d*X);
               double d_eff = (x_time>=100.0) ? (pokluda[0]*std::exp(pokluda[1]*100.0) + pokluda[2]*std::exp(pokluda[3]*100.0)) :
-                                               (pokluda[0]*std::exp(pokluda[1]*x_time) + pokluda[2]*std::exp(pokluda[3]*x_time));
+                (pokluda[0]*std::exp(pokluda[1]*x_time) + pokluda[2]*std::exp(pokluda[3]*x_time));
               double x_r = std::pow(std::max(d_eff - c_xr,0.0)/a_xr, 1.0/b_xr);
               d_eff = d_eff*Dp + (std::pow(CN,1./3.) - std::pow(2,1./3.))*x_r*Dp;// linear scale d_eff with respect to x_r
+	      d_eff = std::max(5e-6,std::min(300e-6,d_eff)); // limit size to the bounds of the regression
               // as a function of the coordination number.
               // mie emissivity as a function of temperature and effective particle size
               // rational quardratice fit: y = (a1+a2*x1+a3*x2+a4*x1^2+a5*x1*x2+a6*x2^2)/(b1+b2*x1+b3*x2+b4*x1^2+b5*x1*x2+b6*x2^2)
@@ -701,10 +711,160 @@ namespace Uintah{
               // 2nd order exponential fit: ef = a*exp(b*T)+c*exp(d*T);
               double ef=fresnel[0]*std::exp(fresnel[1]*T) + fresnel[2]*std::exp(fresnel[3]*T);
               e = (T>=T_fluid) ? ef :  // slagging is set to fresnel emissivity.
-                    (Dp<=min_p_diam) ? C : // if not slagging than use wall emissivity if flux is small.
-                    std::min(ef,e);  // if flux is positive you predicted emissivity.
+                (Dp<=min_p_diam) ? C : // if not slagging than use wall emissivity if flux is small.
+                std::min(ef,e);  // if flux is positive you predicted emissivity.
+	      e = std::max(0.0,std::min(1.0,e)); // emissivity safety
             }
             ~pokluda_e(){}
+          };
+
+          struct pokluda_v : EmissivityBase {
+            pokluda_v(ProblemSpecP db_model){
+              ProblemSpecP db_root = db_model->getRootNode();
+              Nenv = ArchesCore::get_num_env( db_root, ArchesCore::DQMOM_METHOD );
+              CoalHelper& coal_helper = CoalHelper::self();
+              double rho_ash_bulk;
+              double p_void0;
+              double v_hiT;
+              for(int i = 0; i != Nenv; i++) {
+                ProblemSpecP db_part_properties = db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties");
+                if (db_part_properties->findBlock("FOWYDevol")) {
+                  ProblemSpecP db_BT = db_part_properties->findBlock("FOWYDevol");
+                  db_BT->require("v_hiT", v_hiT); //
+                } else {
+                  throw ProblemSetupException("Error: CharOxidationSmith2016 requires FOWY v_hiT.", __FILE__, __LINE__);
+                }
+                db_part_properties->getWithDefault( "rho_ash_bulk",rho_ash_bulk,2300.0);
+                db_part_properties->getWithDefault( "void_fraction",p_void0,0.3);
+              }
+              std::string ash_type;
+              db_model->getWithDefault( "coal_name", ash_type, "generic_coal");
+	            T_fluid = coal_helper.get_coal_db().T_fluid;
+	            double A = coal_helper.get_coal_db().visc_pre_exponential_factor;
+              lnA = std::log(A);
+	            B = coal_helper.get_coal_db().visc_activation_energy;
+              if (A==-999 || B==-999){
+                throw ProblemSetupException("Error: PokludaVisc requires specification of ash viscosity parameters.", __FILE__, __LINE__);
+              }
+              if (ash_type == "indonesian"){
+		emiss_coeff = {0.42210472, -0.29718513, 0.52847460, -0.66785780, 0.36898482, -0.13952110, -0.00351870, 0.07376239, 0.20998621, -0.26403539, 0.07380761, 0.08677416, -0.05871292, 0.08181048, -0.07999015, 0.02236591, -0.03759233, 0.04154652, -0.03584659, 0.01244171, 0.00649477, -0.00330030, 0.00378924, 0.01575434, -0.00453514, 0.56640113, -0.00770423, -0.07205439};                
+                xmean = {9.50000000e+02, 2.90527950e-04};
+                xstd = {4.15013986e+02, 2.96789673e-04};
+                ymean = 6.90652085e-01;
+                ystd = 2.29605961e-01;
+                surfT = {5.80176135e-01,-7.82543187e-05};
+                pokluda={-4.77523025e-02, 1.26741073e+00};
+                fresnel={9.67076543e-01, -1.09397153e-06, -1.60576835e-01, -5.52272718e-03};
+              } else if (ash_type == "german_lignite"){
+                emiss_coeff = {0.44599557, -0.30478529, 0.51486973, -0.61507071, 0.32793017, -0.19859028, 0.02383266, 0.07590513, 0.17344142, -0.23015802, 0.06493135, 0.11102434, -0.05095981, 0.06994493, -0.07454708, 0.02110421, -0.03606207, 0.03776718, -0.03850843, 0.01366592, 0.00309512, -0.00582621, 0.00553658, 0.01637788, -0.00343548, 0.52336435, -0.00782776, -0.06257533};                
+                xmean = {9.50000000e+02, 2.90527950e-04};
+                xstd = {4.15013986e+02, 2.96789673e-04};
+                ymean = 6.69825177e-01;
+                ystd = 2.32511918e-01;
+                surfT = {5.71301560e-01,-8.13809376e-05};                
+                pokluda={-4.77182710e-02, 1.26365363e+00};
+                fresnel={9.66134618e-01, -1.15469725e-06, -1.64480775e-01, -5.70890613e-03};                
+              } else if (ash_type == "sufco"){
+                emiss_coeff = {0.47442630, -0.29968346, 0.47644786, -0.55391767, 0.29175602, -0.28389067, 0.05335562, 0.07140902, 0.13505376, -0.18947381, 0.05381933, 0.14227344, -0.04835121, 0.06211569, -0.07001087, 0.01996109, -0.03701543, 0.03863498, -0.04071644, 0.01457128, -0.00181829, -0.00665984, 0.00636716, 0.01892057, -0.00372373, 0.46096096, -0.00824010, -0.05533698};
+                xmean = {9.50000000e+02, 2.90527950e-04};
+                xstd = {4.15013986e+02, 2.96789673e-04};
+                ymean = 6.42478139e-01;
+                ystd = 2.31539137e-01;
+                surfT = {4.99663849e-01,-4.78930294e-05};
+                pokluda={-4.66118558e-02, 1.26945014e+00};
+                fresnel={9.63806575e-01, -1.84039293e-06, -1.67140818e-01, -5.49005745e-03};
+              } else if (ash_type == "black_thunder"){//River Basin
+                emiss_coeff = {0.46529034, -0.29981580, 0.48505851, -0.56039858, 0.29329730, -0.28749424, 0.04915288, 0.08635075, 0.12343530, -0.18570493, 0.05327620, 0.14513120, -0.03758705, 0.05707612, -0.07099795, 0.02039353, -0.03542345, 0.03530547, -0.04478814, 0.01630458, -0.00151683, -0.01012663, 0.00822094, 0.01733052, -0.00222077, 0.46108133, -0.00777840, -0.05537377};
+                xmean = {9.50000000e+02, 2.90527950e-04};
+                xstd = {4.15013986e+02, 2.96789673e-04};
+                ymean = 6.42437007e-01;
+                ystd = 2.34747731e-01;
+                surfT = {6.65251325e-01,-1.01475542e-04};
+                pokluda={-4.76777178e-02, 1.26619132e+00};
+                fresnel={9.64367875e-01, -2.43995449e-06, -1.65558767e-01, -6.51558072e-03};
+              } else if (ash_type == "illinois_no6"){
+                emiss_coeff = {0.28116197, -0.04796234, 0.44878875, -1.02871474, 0.70791090, -0.02938925, -0.11651905, 0.15951265, 0.27031796, -0.36712175, 0.10457104, 0.02109516, -0.03796620, 0.10692939, -0.11639365, 0.03423059, -0.02731009, 0.04638226, -0.04060291, 0.01387486, 0.01275071, -0.00413343, 0.00258171, 0.01089748, -0.00413871, 0.67618414, -0.00648648, -0.15473454};                
+                xmean = {9.50000000e+02, 2.90527950e-04};
+                xstd = {4.15013986e+02, 2.96789673e-04};
+                ymean = 7.26042062e-01;
+                ystd = 2.16751507e-01;
+                surfT = {4.03907696e-01,-1.27139046e-05}; 
+                pokluda={-5.14762513e-02, 1.26612415e+00};
+                fresnel={9.58939398e-01, -1.94306615e-06, -1.52516593e-01, -5.40993057e-03};                
+              } else if (ash_type == "polish_coal"){
+                emiss_coeff = {0.48614013, -0.52506995, 0.67895992, -0.46501249, 0.13443785, -0.05815506, -0.08908543, 0.15646069, 0.23721181, -0.34574423, 0.10183021, 0.06647438, -0.07050489, 0.08788616, -0.07187695, 0.01902046, -0.04944071, 0.04988776, -0.02755827, 0.00713287, 0.01706380, -0.00479225, 0.00217505, 0.01252978, -0.00357129, 0.58671155, -0.00761589, -0.01163714};
+                xmean = {9.50000000e+02, 1.66304348e-04};
+                xstd = {4.15013986e+02, 1.63118380e-04};
+                ymean = 7.03899649e-01;
+                ystd = 2.04027127e-01;
+                surfT = {4.20659229e-01,-2.36884087e-05}; 
+                pokluda={-5.10314026e-02, 1.26264329e+00};
+                fresnel={9.58939398e-01, -1.94306615e-06, -1.52516593e-01, -5.40993057e-03};                
+              } else {
+                throw InvalidValue("Error, coal_name wasn't recognized in pokluda ash emissivity data-base. ", __FILE__, __LINE__);
+              }
+            }
+            int Nenv;
+            double T_fluid;
+            std::vector<double> coeff_num;
+            std::vector<double> coeff_den;
+            std::vector<double> xstd;
+            std::vector<double> xmean;
+            std::vector<double> pokluda; 
+            std::vector<double> emiss_coeff;
+            std::vector<double> fresnel;
+            std::vector<double> surfT;
+            double ystd;
+            double log10tau;
+            double visc;
+            double lnA;
+            double B;
+            double surface_tension;
+            double ymean;
+            double vdot_sum;
+            double d_eff;
+            double x1;
+            double x2;
+            void model(double &e, const double &C, double &T, double &Dp, double &tau, std::vector<double> Dp_vec, std::vector<double> vdot) {
+              e = 0;
+              vdot_sum = 0; 
+              // for each size compute the effective size and the effective emissivity
+              for(int env = 0; env != Nenv; env++) {
+		//// MILO
+                //T = 300.;
+                //tau = 1;
+                //Dp_vec[env] = 399e-6;
+                //First obtain the effective particle size for the current environment.
+                visc = 0.1*std::exp(std::log(T) + 1000.0*B/T + lnA); // kg / m / s
+                surface_tension = surfT[0] + surfT[1]*T; // kg / s^2 
+                log10tau = std::log10(tau*surface_tension/visc/Dp_vec[env]); // non-dimensionalized time
+                d_eff =  Dp_vec[env] + 0.5*(Dp_vec[env]*std::cbrt(6.)-Dp_vec[env]) + 0.5*(Dp_vec[env]*std::cbrt(6.)-Dp_vec[env])*std::erf((log10tau-pokluda[0])/(std::sqrt(2.)*pokluda[1]));
+		d_eff = std::max(5e-6,std::min(400e-6,d_eff)); // limit size to the bounds of the regression
+                //std::cout << "log10tau " << log10tau << std::endl;
+                //std::cout << "surface_tension " << surface_tension << std::endl;
+                //std::cout << "visc " << visc << std::endl;
+                //std::cout << "T: " << T << " tau: " << tau << " Dp_vec[env]: " << Dp_vec[env] << " d_eff: " << d_eff << std::endl; 
+                //std::cout << "erf: " << (log10tau-pokluda[0])/(std::sqrt(2.)*pokluda[1])  << " " << std::erf((log10tau-pokluda[0])/(std::sqrt(2.)*pokluda[1])) << std::endl; 
+                x1 = (T-xmean[0])/xstd[0];
+                x2 = (d_eff-xmean[1])/xstd[1];
+                double xv_e[28]={x2, x2*x2, x2*x2*x2, x2*x2*x2*x2, x2*x2*x2*x2*x2, x1, x1*x2, x1*x2*x2, x1*x2*x2*x2, x1*x2*x2*x2*x2, x1*x2*x2*x2*x2*x2, x1*x1, x1*x1*x2, x1*x1*x2*x2, x1*x1*x2*x2*x2, x1*x1*x2*x2*x2*x2, x1*x1*x1, x1*x1*x1*x2, x1*x1*x1*x2*x2, x1*x1*x1*x2*x2*x2, x1*x1*x1*x1, x1*x1*x1*x1*x2, x1*x1*x1*x1*x2*x2, x1*x1*x1*x1*x1, x1*x1*x1*x1*x1*x2, 1., x1*x1*x1*x1*x1*x1, x2*x2*x2*x2*x2*x2};
+                double e_sc_c=0;
+                for ( int I=0; I < 28; I++ ) {
+                  e_sc_c+=emiss_coeff[I]*xv_e[I];
+                }
+                e += (vdot[env]+1e-100)*(e_sc_c*ystd + ymean); // sum in this environments emissivity weighted by flow rate
+                //std::cout << "resultant e: " << (e_sc_c*ystd + ymean) << std::endl; 
+                vdot_sum+=vdot[env]+1e-100; // sum in this environments volumetric flow rate
+              }
+              e = e/vdot_sum;
+              double ef=fresnel[0]*std::exp(fresnel[1]*T) + fresnel[2]*std::exp(fresnel[3]*T);
+              e = (tau>=8640000.) ? C : // if no deposition use wall emissivity. This corresponds to a replacement time-scale of 100 days.
+                  (T>=T_fluid || d_eff >= 400e-6) ? ef :  // if slagging use fresnel emissivity.
+	          std::min(ef,e);  // predicted emissivity.
+	      e = std::max(0.0,std::min(1.0,e)); // emissivity safety
+              //std::cout << "e after clipping: " << e << std::endl; 
+            }
+            ~pokluda_v(){}
           };
       };
 
@@ -759,13 +919,13 @@ namespace Uintah{
           int _max_it;                       ///< maximum iterations allowed
 
           struct WallInfo {
-              double k;
-              double dy;
-              double emissivity;
-              double T_inner;
-              double max_TW;     ///< maximum wall temperature
-              double min_TW;     ///< minimum wall temperature
-              std::vector<GeometryPieceP> geometry;
+            double k;
+            double dy;
+            double emissivity;
+            double T_inner;
+            double max_TW;     ///< maximum wall temperature
+            double min_TW;     ///< minimum wall temperature
+            std::vector<GeometryPieceP> geometry;
           };
 
           std::vector<WallInfo> _regions;
@@ -827,21 +987,22 @@ namespace Uintah{
           int _max_it;                       ///< maximum iterations allowed
 
           struct WallInfo {
-              double T_slag;
-              double dy_erosion;
-              double t_sb;
-              double k; // wall
-              double dy; // wall
-              double k_dep_en; // enamel deposit t.c.
-              double k_dep_sb; // soot blown deposit t.c.
-              double dy_dep_en; // enamel deposit thickness
-              double emissivity;
-              double T_inner;
-              double max_TW;     ///< maximum wall temperature
-              double min_TW;     ///< minimum wall temperature
-              double deposit_density;
-              std::vector<double> x_ash;
-              std::vector<GeometryPieceP> geometry;
+            double T_slag;
+            double Nenv;
+            double dy_erosion;
+            double t_sb;
+            double k; // wall
+            double dy; // wall
+            double k_dep_en; // enamel deposit t.c.
+            double k_dep_sb; // soot blown deposit t.c.
+            double dy_dep_en; // enamel deposit thickness
+            double emissivity;
+            double T_inner;
+            double max_TW;     ///< maximum wall temperature
+            double min_TW;     ///< minimum wall temperature
+            double deposit_density;
+            std::vector<double> x_ash;
+            std::vector<GeometryPieceP> geometry;
           };
 
           inline void newton_solve(double &TW_new, double &T_shell, double &T_old, double &R_tot, double &rad_q, double &Emiss, double &extra_src );

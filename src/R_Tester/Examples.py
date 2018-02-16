@@ -2,17 +2,12 @@
 
 from sys import argv,exit
 from os import environ, system
-from helpers.runSusTests import runSusTests, inputs_root, ignorePerformanceTests, generatingGoldStandards
+from helpers.runSusTests import runSusTests, ignorePerformanceTests, getInputsDir
 from helpers.modUPS import modUPS,modUPS2
 
 from os import system
 
-the_dir = generatingGoldStandards()
-
-if the_dir == "" :
-  the_dir = "%s/Examples" % inputs_root()
-else :
-  the_dir = the_dir + "/Examples"
+the_dir = "%s/%s" % ( getInputsDir(),"Examples" )
 
 # convert RMCRT:double -> RMCRT:float
 system("cd %s ; ./RMCRT_doubleToFloat  RMCRT_bm1_1L.ups  RMCRT_FLT_bm1_1L.ups"   % the_dir )

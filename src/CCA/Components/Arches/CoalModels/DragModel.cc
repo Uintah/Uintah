@@ -97,48 +97,48 @@ DragModel::problemSetup(const ProblemSpecP& params, int qn)
   }
 
   // Need a size IC:
-  std::string length_root = ParticleTools::parse_for_role_to_label(db, "size");
-  std::string length_name = ParticleTools::append_env( length_root, d_quadNode );
+  std::string length_root = ArchesCore::parse_for_role_to_label(db, "size");
+  std::string length_name = ArchesCore::append_env( length_root, d_quadNode );
   _length_varlabel = VarLabel::find(length_name);
 
   // Need a density
-  std::string density_root = ParticleTools::parse_for_role_to_label(db, "density");
-  _density_name = ParticleTools::append_env( density_root, d_quadNode );
+  std::string density_root = ArchesCore::parse_for_role_to_label(db, "density");
+  _density_name = ArchesCore::append_env( density_root, d_quadNode );
 
   // Need velocity scaling constant
   std::string vel_root;
   if ( _dir == 0 ){
-    vel_root = ParticleTools::parse_for_role_to_label(db, "uvel");
+    vel_root = ArchesCore::parse_for_role_to_label(db, "uvel");
   } else if ( _dir == 1){
-    vel_root = ParticleTools::parse_for_role_to_label(db, "vvel");
+    vel_root = ArchesCore::parse_for_role_to_label(db, "vvel");
   } else {
-    vel_root = ParticleTools::parse_for_role_to_label(db, "wvel");
+    vel_root = ArchesCore::parse_for_role_to_label(db, "wvel");
   }
 
-  vel_root = ParticleTools::append_qn_env( vel_root, d_quadNode );
+  vel_root = ArchesCore::append_qn_env( vel_root, d_quadNode );
   EqnBase& temp_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(vel_root);
   DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(temp_current_eqn);
   _vel_scaling_constant = current_eqn.getScalingConstant(d_quadNode);
   std::string ic_RHS = vel_root+"_RHS";
   _RHS_source_varlabel = VarLabel::find(ic_RHS);
 
-  std::string weight_name = ParticleTools::append_qn_env("w", qn);
+  std::string weight_name = ArchesCore::append_qn_env("w", qn);
   std::string weight_RHS_name = weight_name + "_RHS";
   _RHS_weight_varlabel = VarLabel::find(weight_RHS_name);
 
   //get the birth term if any:
   const std::string birth_name = current_eqn.get_model_by_type( "BirthDeath" );
-  std::string birth_qn_name = ParticleTools::append_qn_env(birth_name, d_quadNode);
+  std::string birth_qn_name = ArchesCore::append_qn_env(birth_name, d_quadNode);
   if ( birth_name != "NULLSTRING" ){
     _birth_label = VarLabel::find( birth_qn_name );
   }
 
   // Need weight name and scaling constant
-  //std::string weight_name = ParticleTools::append_env("w", d_quadNode);
+  //std::string weight_name = ArchesCore::append_env("w", d_quadNode);
   _weight_varlabel = VarLabel::find(weight_name);
-  std::string scaled_weight_name = ParticleTools::append_qn_env("w", d_quadNode);
+  std::string scaled_weight_name = ArchesCore::append_qn_env("w", d_quadNode);
   _scaled_weight_varlabel = VarLabel::find(scaled_weight_name);
-  std::string weightqn_name = ParticleTools::append_qn_env("w", d_quadNode);
+  std::string weightqn_name = ArchesCore::append_qn_env("w", d_quadNode);
   EqnBase& temp_current_eqn2 = dqmom_eqn_factory.retrieve_scalar_eqn(weightqn_name);
   DQMOMEqn& current_eqn2 = dynamic_cast<DQMOMEqn&>(temp_current_eqn2);
   _weight_small = current_eqn2.getSmallClipPlusTol();
@@ -221,15 +221,15 @@ DragModel::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeS
   }
 
   if ( _dir == 0 ){
-    std::string name = ParticleTools::append_qn_env("ux", d_quadNode );
+    std::string name = ArchesCore::append_qn_env("ux", d_quadNode );
     const VarLabel* label = VarLabel::find(name);
     tsk->requires( which_dw, label, gn, 0 );
   } else if ( _dir == 1 ){
-    std::string name = ParticleTools::append_qn_env("uy", d_quadNode );
+    std::string name = ArchesCore::append_qn_env("uy", d_quadNode );
     const VarLabel* label = VarLabel::find(name);
     tsk->requires( which_dw, label, gn, 0 );
   } else {
-    std::string name = ParticleTools::append_qn_env("uz", d_quadNode );
+    std::string name = ArchesCore::append_qn_env("uz", d_quadNode );
     const VarLabel* label = VarLabel::find(name);
     tsk->requires( which_dw, label, gn, 0 );
   }
@@ -297,15 +297,15 @@ DragModel::computeModel( const ProcessorGroup* pc,
 
     constCCVariable<double> weight_p_vel;
     if ( _dir == 0 ){
-      std::string name = ParticleTools::append_qn_env("ux", d_quadNode );
+      std::string name = ArchesCore::append_qn_env("ux", d_quadNode );
       const VarLabel* label = VarLabel::find(name);
       which_dw->get( weight_p_vel, label, matlIndex, patch, gn, 0 );
     } else if ( _dir == 1 ){
-      std::string name = ParticleTools::append_qn_env("uy", d_quadNode );
+      std::string name = ArchesCore::append_qn_env("uy", d_quadNode );
       const VarLabel* label = VarLabel::find(name);
       which_dw->get( weight_p_vel, label, matlIndex, patch, gn, 0 );
     } else {
-      std::string name = ParticleTools::append_qn_env("uz", d_quadNode );
+      std::string name = ArchesCore::append_qn_env("uz", d_quadNode );
       const VarLabel* label = VarLabel::find(name);
       which_dw->get( weight_p_vel, label, matlIndex, patch, gn, 0 );
     }

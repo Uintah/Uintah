@@ -64,6 +64,9 @@ Uintah::MasterLock g_scheduler_mutex{}; // main scheduler lock for multi-threade
 
 volatile int  g_num_tasks_done{0};
 
+bool g_have_hypre_task{false};
+DetailedTask* g_HypreTask;
+
 }
 
 
@@ -226,6 +229,8 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
 
 //---------------------------------------------------------------------------
 
+  while ( g_num_tasks_done < m_num_tasks ) {
+
 #ifdef UINTAH_ENABLE_KOKKOS
 
     auto task_worker = [&] ( int partition_id, int num_partitions ) {
@@ -248,6 +253,14 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
     this->runTasks();
 
 #endif // UINTAH_ENABLE_KOKKOS
+
+    if ( g_have_hypre_task ) {
+      DOUT( g_dbg, " Exited runTasks to run a " << g_HypreTask->getTask()->getType() << " task" );
+      MPIScheduler::runTask( g_HypreTask, m_curr_iteration.load(std::memory_order_relaxed) );
+      g_have_hypre_task = false;
+    }
+
+  } // end while ( g_num_tasks_done < m_num_tasks )
 
 //---------------------------------------------------------------------------
 
@@ -347,7 +360,7 @@ KokkosOpenMPScheduler::markTaskConsumed( volatile int          * numTasksDone
 void
 KokkosOpenMPScheduler::runTasks()
 {
-  while( g_num_tasks_done < m_num_tasks ) {
+  while( g_num_tasks_done < m_num_tasks && !g_have_hypre_task ) {
 
     DetailedTask* readyTask = nullptr;
     DetailedTask* initTask  = nullptr;
@@ -360,7 +373,18 @@ KokkosOpenMPScheduler::runTasks()
     {
       std::lock_guard<Uintah::MasterLock> scheduler_mutex_guard(g_scheduler_mutex);
 
-      while (!havework) {
+      while ( !havework ) {
+
+        /*
+         * (1.0)
+         *
+         * If it is time for a Hypre task, exit partitions.
+         *
+         */
+        if ( g_have_hypre_task ) {
+          return;
+        }
+
         /*
          * (1.1)
          *
@@ -387,6 +411,13 @@ KokkosOpenMPScheduler::runTasks()
           if (readyTask != nullptr) {
             havework = true;
             markTaskConsumed(&g_num_tasks_done, m_curr_phase, m_num_phases, readyTask);
+
+            if ( readyTask->getTask()->getType() == Task::Hypre ) {
+              g_HypreTask = readyTask;
+              g_have_hypre_task = true;
+              return;
+            }
+
             break;
           }
         }

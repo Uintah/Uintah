@@ -25,6 +25,9 @@
 #ifndef UINTAH_HOMEBREW_RUNTIMESTATSENUMS_H
 #define UINTAH_HOMEBREW_RUNTIMESTATSENUMS_H
 
+#include <sci_defs/papi_defs.h>
+
+
 namespace Uintah {
 
 /**************************************

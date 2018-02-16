@@ -721,9 +721,6 @@
         </table>
       </Properties>
       <DQMOM type="weightedAbs">
-        <LinearSolver>
-          <type>Simplest</type>
-        </LinearSolver>
         <number_quad_nodes>3</number_quad_nodes>
         <VelModel type="Dragforce">
         </VelModel>

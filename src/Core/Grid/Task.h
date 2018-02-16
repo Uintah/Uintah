@@ -992,9 +992,9 @@ public: // class Task
     , InitialSend
     , OncePerProc // make sure to pass a PerProcessor PatchSet to the addTask function
     , Output
-    , Spatial    // e.g. Radiometer task (spatial scheduling); must call task->setType(Task::Spatial)
+    , Spatial     // e.g. Radiometer task (spatial scheduling); must call task->setType(Task::Spatial)
+    , Hypre       // previously identified as a OncePerProc
   };
-    
 
 
   Task( const std::string & taskName, TaskType type )
@@ -1407,7 +1407,7 @@ public: // class Task
   //////////
   //
   void requires(       WhichDW
-               , const VarLabel           *
+               , const VarLabel         *
                ,       Ghost::GhostType   gtype
                ,       int                numGhostCells = 0
                ,       bool               oldTG         = false
@@ -1573,10 +1573,11 @@ public: // class Task
 
   //////////
   //
-  void modifies(const VarLabel*,
-                const PatchSubset* patches,
-                const MaterialSubset* matls,
-                bool oldTG = false);
+  void modifies( const VarLabel       *
+               , const PatchSubset    * patches
+               , const MaterialSubset * matls
+               ,       bool             oldTG = false
+               );
 
   //////////
   //

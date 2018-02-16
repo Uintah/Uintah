@@ -42,6 +42,7 @@
 #include <CCA/Components/Arches/ParticleModels/TotNumDensity.h>
 #include <CCA/Components/Arches/ParticleModels/CharOxidationps.h>
 #include <CCA/Components/Arches/ParticleModels/PartVariablesDQMOM.h>
+#include <CCA/Components/Arches/ParticleModels/DQMOMNoInversion.h>
 
 
 using namespace Uintah;
@@ -55,31 +56,29 @@ ParticleModelFactory::~ParticleModelFactory()
 void
 ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
 {
-  /*
 
-    <ParticleModels>
-      <model label="some unique name" type="defined type">
-
-        <spec consistent with model type>
-
-      </model>
-    </ParticleModels>
-
-
-   */
-  int N;
+  int N = 0;
 
   if (db->findBlock("CQMOM") ) {
-    std::vector<int> N_i;
-    db->findBlock("CQMOM")->require("QuadratureNodes",N_i);
-    N = 1;
-    for (unsigned int i = 0; i < N_i.size(); i++ ) {
-      N *= N_i[i];
-    }
+
+    N = ArchesCore::get_num_env(db, ArchesCore::CQMOM_METHOD);
+
   } else if (db->findBlock("DQMOM") ) {
-    db->findBlock("DQMOM")->require("number_quad_nodes",N);
+
+    N = ArchesCore::get_num_env(db, ArchesCore::DQMOM_METHOD);
+
+    //Currently, this allocates the source terms for the DQMOM transport
+    // for both the production and new kokkos line of code. Thus, it
+    // always needs to be 'on' for both forks.
+    std::string task_name = "dqmom_no_inversion";
+    TaskInterface::TaskBuilder* tsk = scinew DQMOMNoInversion::Builder( task_name, 0, N );
+    _pre_update_particle_tasks.push_back(task_name);
+    register_task( task_name, tsk );
+
   } else if (db->findBlock("LagrangianParticles")){
+
     N = 1;
+
   }
 
   // This is a **HACK** to get the post_update_particle_models to execute in a set order.
@@ -279,10 +278,10 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
         rate_enth_name = task_name; // order hack
 
       } else if ( type == "char_oxidation_ps" ) {
-      
+
         TaskInterface::TaskBuilder* tsk = scinew CharOxidationps< CCVariable<double> >::Builder(task_name,0);
         register_task( task_name, tsk );
-        
+
       } else if ( type == "particle_variables_dqmom" ) {
 
         TaskInterface::TaskBuilder* tsk = scinew PartVariablesDQMOM::Builder(task_name,0);
@@ -431,6 +430,15 @@ ParticleModelFactory::build_all_tasks( ProblemSpecP& db )
 
       tsk->create_local_labels();
 
+    }
+
+    if (db->findBlock("DQMOM") ) {
+      //See comment above about this task. 
+      std::string task_name = "dqmom_no_inversion";
+      print_task_setup_info( task_name, "DQMOM: No Inversion");
+      TaskInterface* tsk = retrieve_task(task_name);
+      tsk->problemSetup(db);
+      tsk->create_local_labels();
     }
 
   }

@@ -206,6 +206,7 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
 #endif
 
   ProblemSpecP db_linear_solver = db->findBlock("LinearSolver");
+
   if( db_linear_solver ) {
 
     db_linear_solver->getWithDefault("tolerance", m_solver_tolerance, 1.0e-5);
@@ -217,7 +218,6 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
     db_linear_solver->getWithDefault("type", m_solverType, "LU");
 
     m_optimize = false;
-    m_simplest = false;
 
     if( m_solverType == "Lapack-invert" ) {
       m_useLapack = true;
@@ -233,52 +233,38 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
         db_optimize->get("Optimal_abscissas",m_opt_abscissas);
         m_AAopt = scinew DenseMatrix((m_N_xi+1)*m_N_,(m_N_xi+1)*m_N_);
         m_AAopt->zero();
-        //if(m_unmweighted == true){
-          constructAopt_unw( m_AAopt, m_opt_abscissas );
-        //} else {
-        //  constructAopt( m_AAopt, m_opt_abscissas );
-        //}
+        constructAopt_unw( m_AAopt, m_opt_abscissas );
         m_AAopt->invert();
       }
-    } else if( m_solverType == "Simplest" ) {
-        m_simplest = true;
-    }else {
-      string err_msg = "ERROR: Arches: DQMOM: Unrecognized solver type "+m_solverType+": must be 'Lapack-invert', 'Lapack-svd', or 'LU'.\n";
-      throw ProblemSetupException(err_msg,__FILE__,__LINE__);
+
+    } else {
+
+      stringstream err_msg;
+      err_msg <<  "ERROR: Arches: DQMOM: Unrecognized solver type " << m_solverType <<
+                  "\n       must be 'Lapack-invert', 'Lapack-svd', or 'LU'." <<
+                  "\n       Remove the <LinearSolver> block for cases without a linear solve." << std::endl;
+
+      throw ProblemSetupException(err_msg.str(),__FILE__,__LINE__);
+      
     }
+
     if( m_calcConditionNumber == true && m_useLapack == false ) {
-      string err_msg = "ERROR: Arches: DQMOM: Cannot perform singular value decomposition without using Lapack!\n";
+      string err_msg = "ERROR: Arches DQMOM Cannot perform singular value decomposition without using Lapack!\n";
       throw ProblemSetupException(err_msg,__FILE__,__LINE__);
     }
 
-  } else {
+    // Check to make sure number of total moments specified in input file is correct
+    if ( moments != (m_N_xi+1)*m_N_ ) {
+      proc0cout << "ERROR:DQMOM:ProblemSetup: You specified " << moments << " moments, but you need " << (m_N_xi+1)*m_N_ << " moments." << endl;
+      throw InvalidValue( "ERROR:DQMOM:ProblemSetup: The number of moments specified was incorrect!",__FILE__,__LINE__);
+    }
 
-    //default for non-inversion
-    m_optimize = false;
-    m_solver_tolerance = 1.0e-5;
-    m_maxConditionNumber = 1.e16;
-    m_calcConditionNumber = false;
-    m_solverType = "Simplest";
-    m_simplest = true;
-
-    //string err_msg = "ERROR: Arches: DQMOM: Could not find block '<LinearSolver>': this block is required for DQMOM. \n";
-    //throw ProblemSetupException(err_msg,__FILE__,__LINE__);
+    // Check to make sure number of moment indices matches the number of internal coordinates
+    if ( index_length != m_N_xi ) {
+      proc0cout << "ERROR:DQMOM:ProblemSetup: You specified " << index_length << " moment indices, but there are " << m_N_xi << " internal coordinates." << endl;
+      throw InvalidValue( "ERROR:DQMOM:ProblemSetup: The number of moment indices specified was incorrect! Need ",__FILE__,__LINE__);
+    }
   }
-
-  // Check to make sure number of total moments specified in input file is correct
-  if ( moments != (m_N_xi+1)*m_N_ && m_solverType != "Simplest") {
-    proc0cout << "ERROR:DQMOM:ProblemSetup: You specified " << moments << " moments, but you need " << (m_N_xi+1)*m_N_ << " moments." << endl;
-    throw InvalidValue( "ERROR:DQMOM:ProblemSetup: The number of moments specified was incorrect!",__FILE__,__LINE__);
-  }
-
-  // Check to make sure number of moment indices matches the number of internal coordinates
-  if ( index_length != m_N_xi && m_solverType != "Simplest" ) {
-    proc0cout << "ERROR:DQMOM:ProblemSetup: You specified " << index_length << " moment indices, but there are " << m_N_xi << " internal coordinates." << endl;
-    throw InvalidValue( "ERROR:DQMOM:ProblemSetup: The number of moment indices specified was incorrect! Need ",__FILE__,__LINE__);
-  }
-
-
-
 
 }
 
@@ -365,12 +351,16 @@ DQMOM::sched_solveLinearSystem( const LevelP& level, SchedulerP& sched, int time
     // require weights
     tsk->requires( which_dw, tempLabel, Ghost::None, 0 );
 
-    const VarLabel* sourceterm_label = (*iEqn)->getSourceLabel();
-    if (timeSubStep == 0) {
-      tsk->computes(sourceterm_label);
-    } else {
+    //const VarLabel* sourceterm_label = (*iEqn)->getSourceLabel();
+    std::string eqn_label = (*iEqn)->getEqnName();
+    stringstream mod_label;
+    mod_label << eqn_label << "_src";
+    const VarLabel* sourceterm_label = VarLabel::find(mod_label.str());
+    //if (timeSubStep == 0) {
+      //tsk->computes(sourceterm_label);
+    //} else {
       tsk->modifies(sourceterm_label);
-    }
+    //}
 
     // require model terms
     vector<string> modelsList = (*iEqn)->getModelsList();
@@ -389,12 +379,16 @@ DQMOM::sched_solveLinearSystem( const LevelP& level, SchedulerP& sched, int time
     tsk->requires(which_dw, tempLabel, Ghost::None, 0);
 
     // compute or modify source terms
-    const VarLabel* sourceterm_label = (*iEqn)->getSourceLabel();
-    if (timeSubStep == 0) {
-      tsk->computes(sourceterm_label);
-    } else {
+    //const VarLabel* sourceterm_label = (*iEqn)->getSourceLabel();
+    std::string eqn_label = (*iEqn)->getEqnName();
+    stringstream mod_label;
+    mod_label << eqn_label << "_src";
+    const VarLabel* sourceterm_label = VarLabel::find(mod_label.str());
+    //if (timeSubStep == 0) {
+      //tsk->computes(sourceterm_label);
+    //} else {
       tsk->modifies(sourceterm_label);
-    }
+    //}
 
     // require model terms
     vector<string> modelsList = (*iEqn)->getModelsList();
@@ -486,11 +480,11 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
          iEqn != weightEqns.end(); iEqn++) {
       const VarLabel* source_label = (*iEqn)->getSourceLabel();
       CCVariable<double> tempCCVar;
-      if ( timeSubStep == 0 ) {
-        new_dw->allocateAndPut(tempCCVar, source_label, matlIndex, patch);
-      } else {
+      //if ( timeSubStep == 0 ) {
+        //new_dw->allocateAndPut(tempCCVar, source_label, matlIndex, patch);
+      //} else {
         new_dw->getModifiable(tempCCVar, source_label, matlIndex, patch);
-      }
+      //}
       tempCCVar.initialize(0.0);
     }
 
@@ -499,11 +493,11 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
          iEqn != weightedAbscissaEqns.end(); ++iEqn) {
       const VarLabel* source_label = (*iEqn)->getSourceLabel();
       CCVariable<double> tempCCVar;
-      if ( timeSubStep == 0 ){
-        new_dw->allocateAndPut(tempCCVar, source_label, matlIndex, patch);
-      } else {
+      //if ( timeSubStep == 0 ){
+        //new_dw->allocateAndPut(tempCCVar, source_label, matlIndex, patch);
+      //} else {
         new_dw->getModifiable(tempCCVar, source_label, matlIndex, patch);
-      }
+      //}
       tempCCVar.initialize(0.0);
     }
 
@@ -755,36 +749,6 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         delete BB;
         delete XX;
 
-      } else if( m_simplest == true ){
-
-        // tmp_timer.reset( true );
-        // Something to time - currently nothing constructed
-        // tmp_timer.stop();
-
-        // total_AXBConstructionTime += timer().seconds();
-
-        // tmp_timer.reset( true );
-        // Something to time - currently nothing solved
-        // tmp_timer.stop();
-
-        // total_SolveTime += timer().seconds();
-
-        int z=0; // equation loop counter
-        int z2=0; // equation loop counter
-
-        // Weight equations:
-        for( vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin();
-             iEqn != weightEqns.end(); ++iEqn ) {
-          (*(Source_weights_weightedAbscissas[z]))[c] = weight_models[z];
-          ++z;
-        }
-          // Weighted abscissa equations:
-        for( vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin();
-             iEqn != weightedAbscissaEqns.end(); ++iEqn) {
-          (*(Source_weights_weightedAbscissas[z]))[c] = models[z2];
-          ++z;
-          ++z2;
-        }
       } else if( m_useLapack == false ) {
 
         ///////////////////////////////////////////////////////
@@ -1442,8 +1406,6 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 
   }else if( m_solverType == "Optimize"){
     proc0cout << " Time for Optimized Method solution: " << total_SolveTime << "seconds\n";
-  }else if( m_solverType == "Simplest"){
-      proc0cout << "    Time for Simplest Method solution: " << total_SolveTime << "seconds\n";
   }
 
 #endif
@@ -1945,7 +1907,7 @@ DQMOM::sched_calculateMoments( const LevelP& level, SchedulerP& sched, int timeS
 {
 
   std::cout << " WARNING: The calculateMoments feature is non-functional " << std::endl;
-  
+
   //string taskname = "DQMOM::calculateMoments";
   //Task* tsk = scinew Task(taskname, this, &DQMOM::calculateMoments);
 

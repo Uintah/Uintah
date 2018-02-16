@@ -234,7 +234,7 @@ protected:
         } else {
 
           std::stringstream msg;
-          msg << "Error: VarLabel already registered: " << name << " (name your task variable something else and try again)." << std::endl;
+          msg << "Error: VarLabel already registered (with Uintah): " << name << " (name your task variable something else and try again)." << std::endl;
           throw InvalidValue(msg.str(), __FILE__, __LINE__);
 
         }

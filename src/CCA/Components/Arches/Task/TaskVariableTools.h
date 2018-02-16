@@ -33,36 +33,33 @@ namespace Uintah{
 
       public:
 
-        enum MAPCHECK {CHECK_FIELD,CONST_FIELD,NONCONST_FIELD};
+        enum MAPCHECK { CHECK_FIELD, CONST_FIELD, NONCONST_FIELD };
 
-        ArchesTaskInfoManager( std::vector<ArchesFieldContainer::VariableInformation>& var_reg,
-                               const Patch* patch, SchedToTaskInfo& info ):
-                        _var_reg(var_reg), _patch(patch), _tsk_info(info){
+        ArchesTaskInfoManager(       std::vector<ArchesFieldContainer::VariableInformation>& var_reg,
+                               const Patch*                                                  patch,
+                                     SchedToTaskInfo&                                        info ):
+                        _var_reg(var_reg), _patch(patch), _tsk_info( info ) {};
 
-        };
-
-        ~ArchesTaskInfoManager(){
-
-        };
+        ~ArchesTaskInfoManager(){};
 
         /** @brief return the time substep **/
-        inline const int get_time_substep(){ return _tsk_info.time_substep; };
+        inline int get_time_substep(){ return _tsk_info.time_substep; };
 
         /** @brief return the dt **/
-        inline const double get_dt(){ return _tsk_info.dt; };
-        
+        inline double get_dt(){ return _tsk_info.dt; };
+
         /** @brief return the time step **/
-        inline const int get_timeStep(){ return _tsk_info.timeStep; };
-        
+        inline int get_timeStep(){ return _tsk_info.timeStep; };
+
         /** @brief return the time **/
-        inline const double get_time(){ return _tsk_info.time; };
-        
-        /** @brief set the time **/ 
+        inline double get_time(){ return _tsk_info.time; };
+
+        /** @brief set the time **/
         inline void set_time(const double time){ _tsk_info.time = time; };
 
         /** @brief Return a bool to indicate if this Arches Task is a subset of a larger, single
                    Uintah task. **/
-        inline const bool packed_tasks(){ return _tsk_info.packed_tasks; }
+        inline bool packed_tasks(){ return _tsk_info.packed_tasks; }
 
         /** @brief return the variable registry **/
         inline std::vector<ArchesFieldContainer::VariableInformation>& get_variable_reg(){ return _var_reg; }
@@ -79,7 +76,7 @@ namespace Uintah{
         ArchesFieldContainer* getFieldContainer(){ return _field_container; };
 
          /** @brief Return the spp time factor: t_ssp = t + factor * dt **/
-        inline const double get_ssp_time_factor( const int rk_step ){
+        inline double get_ssp_time_factor( const int rk_step ){
 
         if ( rk_step == 0 ){
            return 0.0;
@@ -101,20 +98,26 @@ namespace Uintah{
 
         /** @brief Return a CONST UINTAH field **/
         template <typename T>
-        inline T& get_const_uintah_field_add( const std::string name ){
+        inline
+        T&
+        get_const_uintah_field_add( const std::string name ){
           return *(_field_container->get_const_field<T>(name));
         }
 
         /** @brief Return a CONST UINTAH field specifying the DW **/
         template <typename T>
-        inline T* get_const_uintah_field( const std::string name,
+        inline
+        T*
+        get_const_uintah_field( const std::string name,
           ArchesFieldContainer::WHICH_DW which_dw ){
           return _field_container->get_const_field<T>(name, which_dw);
         }
 
         /** @brief Return a CONST UINTAH field specifying the DW **/
         template <typename T>
-        inline T& get_const_uintah_field_add( const std::string name,
+        inline
+        T&
+        get_const_uintah_field_add( const std::string name,
           ArchesFieldContainer::WHICH_DW which_dw ){
           return *(_field_container->get_const_field<T>(name, which_dw));
         }
@@ -123,11 +126,15 @@ namespace Uintah{
                    in the DW as const (ie, you are requiring them) or might be temp
                    because it was computed upstream in a packed task and has no DW home **/
         template <typename T>
-        inline T* get_const_or_temp_uintah_field( const std::string name, const bool is_temp,
-                                                  const int nGhosts=1 ){
+        inline
+        T*
+        get_const_or_temp_uintah_field( const std::string name,
+                                        const bool        is_temp,
+                                        const int         nGhosts = 1 ){
           if ( is_temp ){
             return _field_container->get_temporary_field<T>(name, nGhosts);
-          } else {
+          }
+          else {
             return _field_container->get_const_field<T>(name);
           }
         }
@@ -135,60 +142,77 @@ namespace Uintah{
         /** @brief Return a UINTAH field allowing the user to manage
                    the memory. **/
         template <typename T>
-        inline void get_unmanaged_uintah_field( const std::string name,
-           T& field ){
-          _field_container->get_unmanaged_field<T>(name, field);
+        inline
+        void
+        get_unmanaged_uintah_field( const std::string name,
+                                          T&          field ){
+          _field_container->get_unmanaged_field<T>( name, field );
         }
 
         /** @brief Return a CONST UINTAH field allowing the user to manage
                    the memory. **/
         template <typename T>
-        inline void get_const_unmanaged_uintah_field( const std::string name,
-           T& field ){
-          _field_container->get_const_unmanaged_field<T>(name, field);
+        inline
+        void
+        get_const_unmanaged_uintah_field( const std::string name,
+                                                T&          field ){
+          _field_container->get_const_unmanaged_field<T>( name, field );
         }
 
         /** @brief Return a UINTAH field **/
         template <typename T>
-        inline T* get_uintah_field( const std::string name, const int nGhosts=-1 ){
+        inline
+        T*
+        get_uintah_field( const std::string name, const int nGhosts = -1 ){
 
           // Only temporary variables are allowed ghost cells.
           if ( nGhosts < 0 ){
             return _field_container->get_field<T>(name);
-          } else {
+          }
+          else {
             return _field_container->get_temporary_field<T>(name, nGhosts);
           }
-
         }
 
         /** @brief Return a UINTAH field **/
         template <typename T>
-        inline T& get_uintah_field_add( const std::string name,
-                                        const int nGhosts=-1 ){
-
+        inline
+        T&
+        get_uintah_field_add( const std::string name,
+                              const int         nGhosts = -1 ){
           // Only temporary variables are allowed ghost cells.
           if ( nGhosts < 0 ){
             return *(_field_container->get_field<T>(name));
-          } else {
+          }
+          else {
             return *(_field_container->get_temporary_field<T>(name, nGhosts));
           }
-
         }
 
         /** @brief Return a UINTAH particle field **/
         std::tuple<ParticleVariable<double>*, ParticleSubset*>
-          get_uintah_particle_field( const std::string name ){
+        get_uintah_particle_field( const std::string name ){
           return _field_container->get_uintah_particle_field( name );
         }
 
         /** @brief Return a const UINTAH particle field **/
         std::tuple<constParticleVariable<double>*, ParticleSubset*>
-          get_const_uintah_particle_field( const std::string name ){
+        get_const_uintah_particle_field( const std::string name ){
           return _field_container->get_const_uintah_particle_field( name );
         }
 
         /** @brief Get the current patch ID **/
         inline int get_patch_id(){ return _patch->getID(); }
+
+        /** @brief get NEW DW reference **/
+        DataWarehouse* getNewDW(){
+          return _field_container->getNewDW();
+        }
+
+        /** @brief get an OLD DW reference **/
+        DataWarehouse* getOldDW(){
+          return _field_container->getOldDW();
+        }
 
       private:
 
@@ -202,13 +226,13 @@ namespace Uintah{
 
     /** @brief Builds a struct for each variable containing all pertinent uintah
      * DW information **/
-     void register_variable_work( std::string name,
-                                  ArchesFieldContainer::VAR_DEPEND dep,
-                                  int nGhost,
-                                  ArchesFieldContainer::WHICH_DW dw,
-                                  ArchesFieldContainer::VariableRegistry& variable_registry,
-                                  const int time_substep,
-                                  const std::string task_name );
+    void register_variable_work( std::string name,
+                                 ArchesFieldContainer::VAR_DEPEND dep,
+                                 int nGhost,
+                                 ArchesFieldContainer::WHICH_DW dw,
+                                 ArchesFieldContainer::VariableRegistry& variable_registry,
+                                 const int time_substep,
+                                 const std::string task_name );
 
     /** @brief Inteface to register_variable_work -- this function is overloaded. **/
     void register_variable( std::string name,

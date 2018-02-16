@@ -161,10 +161,10 @@ public:
 
   // state variables
   enum {
-      check = 0
-    , init
-    , regrid
-    , restart
+      CHECK_LB = 0
+    , INIT_LB
+    , REGRID_LB
+    , RESTART_LB
   };
 
   //////////////////////////////////////////////////
@@ -181,10 +181,10 @@ public:
 
   // Resets forecaster to the defaults.
   virtual void resetCostForecaster() = 0;
-  
+
   virtual int  getNumDims() const = 0;
   virtual int* getActiveDims() = 0;
-  virtual void setDimensionality(bool x, bool y, bool z) = 0;
+  virtual void setDimensionality( bool x, bool y, bool z ) = 0;
 
   virtual void setRuntimeStats( ReductionInfoMapper< RuntimeStatsEnum, double > *runtimeStats) = 0;
 

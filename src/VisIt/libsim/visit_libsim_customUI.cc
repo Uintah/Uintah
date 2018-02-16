@@ -335,7 +335,7 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
                   dw->get( var_min, label );
                 else
                   dw->get( var_min, label, level, analysisVar.matl );
-		
+                
                 double varMin = var_min;
 
                 VisItUI_setTableValueD(table, row, 4+j*2, varMin, 0);
@@ -927,7 +927,7 @@ void visit_SetDouts( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetDatabase( visit_simulation_data *sim )
 {
-  VisItUI_setValueI("LoadExtraCells", sim->useExtraCells, 1);
+  VisItUI_setValueI("LoadExtraElements", sim->loadExtraElements, 1);
 }
 
 } // End namespace Uintah

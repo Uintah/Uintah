@@ -300,6 +300,30 @@
           <grid type="CC"/>
           <value>1.e-4</value>
         </model>
+        <model label="w_0" type="constant_property">
+          <grid type="CC"/>
+          <value>0.01</value>
+        </model>
+        <model label="w_1" type="constant_property">
+          <grid type="CC"/>
+          <value>1.01</value>
+        </model>
+        <model label="w_2" type="constant_property">
+          <grid type="CC"/>
+          <value>2.01</value>
+        </model>
+        <model label="w_3" type="constant_property">
+          <grid type="CC"/>
+          <value>3.01</value>
+        </model>
+        <model label="w_4" type="constant_property">
+          <grid type="CC"/>
+          <value>4.01</value>
+        </model>
+        <model label="w_5" type="constant_property">
+          <grid type="CC"/>
+          <value>5.01</value>
+        </model>
       </PropertyModelsV2>
       <StateProperties> 
         <model label="my_constant_model" type="constant">
@@ -423,10 +447,6 @@
           <grid independent_type="CC" dependent_type="CC"/>
           <constant>[2., 2., 2., 2, 2, 2]</constant> 
         </model>
-        <model label="w" type="constant">
-          <grid independent_type="CC" dependent_type="CC"/>
-          <constant>[0.2,0.2,0.2,0.2,0.2, 0.2]</constant> 
-        </model>
         <model label="temperature_coal" type="constant">
           <grid independent_type="CC" dependent_type="CC"/>
           <constant>[1000.,1000.,2000.,1500,1500,1800]</constant> 
@@ -445,7 +465,7 @@
         </model>
         <model label="length" type="constant">
           <grid independent_type="CC" dependent_type="CC"/>
-          <constant>[50e-6,50e-6,150e-6,200e-6,200e-6,200e-6]</constant> 
+          <constant>[50e-6,100e-6,150e-6,200e-6,250e-6,300e-6]</constant> 
         </model>
         <!--model label="number_density" type="total_number_density"/-->
         <model label="dqmom_variales" type="particle_variables_dqmom"/>
@@ -474,16 +494,6 @@
           <model label="a_model"/>
         </Ic>
         <Ic label="char_mass"/>
-        <Ic label="length">
-          <initialization type="env_constant">
-            <env_constant qn="0" value="0.01"/>
-            <env_constant qn="1" value="1.01"/>
-            <env_constant qn="2" value="2.01"/>
-            <env_constant qn="3" value="3.01"/>
-            <env_constant qn="4" value="4.01"/>
-            <env_constant qn="5" value="5.01"/>
-          </initialization>
-        </Ic>
         <Ic label="up"/>
         <Ic label="vp"/>
         <Ic label="wp"/>
