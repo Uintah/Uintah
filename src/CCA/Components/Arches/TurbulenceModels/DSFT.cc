@@ -39,6 +39,8 @@ DSFT::problemSetup( ProblemSpecP& db ){
   std::string m_Type_filter_name;
   db->findBlock("filter")->getAttribute("type",m_Type_filter_name);
   m_IsI_name = "strainMagnitudeLabel";
+  m_ref_density_name = "denRefArray"; // name used in production code
+  m_cell_type_name = "cellType";
   Type_filter = get_filter_from_string( m_Type_filter_name );
 
 }
@@ -124,6 +126,9 @@ DSFT::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformat
   register_variable( m_cc_u_vel_name, ArchesFieldContainer::REQUIRES, nG, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
   register_variable( m_cc_v_vel_name, ArchesFieldContainer::REQUIRES, nG, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
   register_variable( m_cc_w_vel_name, ArchesFieldContainer::REQUIRES, nG, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
+   
+  register_variable( m_ref_density_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
+  register_variable( m_cell_type_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
 
   register_variable( m_IsI_name, ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
   register_variable( "Beta11", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
@@ -161,7 +166,9 @@ DSFT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   constSFCYVariable<double>& vVel = *(tsk_info->get_const_uintah_field<constSFCYVariable<double> >(m_v_vel_name));
   constSFCZVariable<double>& wVel = *(tsk_info->get_const_uintah_field<constSFCZVariable<double> >(m_w_vel_name));
   constCCVariable<double>& rho = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_density_name));
-
+  constCCVariable<double>& ref_rho = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_ref_density_name));
+  constCCVariable<int>& cell_type = *(tsk_info->get_const_uintah_field<constCCVariable<int> >(m_cell_type_name));
+  
   constCCVariable<double>& vol_fraction = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_volFraction_name);
   constCCVariable<double>& CCuVel = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_cc_u_vel_name));
   constCCVariable<double>& CCvVel = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_cc_v_vel_name));
@@ -188,6 +195,8 @@ DSFT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   IntVector high_filter2 = patch->getCellHighIndex() + IntVector(nG2,nG2,nG2);
   Uintah::BlockRange range2(low_filter2, high_filter2 );
   Uintah::BlockRange range1(low_filter, high_filter );
+  Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex( ));
+  
 
   CCVariable<double>& IsI = tsk_info->get_uintah_field_add< CCVariable<double> >(m_IsI_name,nGhosts2 );
   CCVariable<double>& s11 = tsk_info->get_uintah_field_add< CCVariable<double> >("s11",nGhosts2 );
@@ -235,6 +244,17 @@ DSFT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   Uintah::FilterVarT< constCCVariable<double> > get_frho(rho, filterRho, 
                                                 vol_fraction, 0,0,0, Type_filter);
   Uintah::parallel_for(range1,get_frho);
+  
+  Uintah::parallel_for( range, [&](int i, int j, int k){
+  if (cell_type(i,j,k) > 0){
+    if (filterRho(i,j,k) < 1e-14) {
+    // making filterRho nonzero
+      filterRho(i,j,k) = ref_rho(i,j,k);
+    }
+  }
+  });
+  
+ 
 
   // Compute rhouiuj at cc
   CCVariable<double>& rhoUU = tsk_info->get_uintah_field_add< CCVariable<double> >("rhoUU",nGhosts2);

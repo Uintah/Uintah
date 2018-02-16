@@ -25,19 +25,25 @@ WALE::problemSetup( ProblemSpecP& db ){
   m_u_vel_name = parse_ups_for_role( UVELOCITY, db, "uVelocitySPBC" );
   m_v_vel_name = parse_ups_for_role( VVELOCITY, db, "vVelocitySPBC" );
   m_w_vel_name = parse_ups_for_role( WVELOCITY, db, "wVelocitySPBC" );
+  m_density_name     = parse_ups_for_role( DENSITY, db, "density" );
 
-  m_cc_u_vel_name = m_u_vel_name + "_cc";
-  m_cc_v_vel_name = m_v_vel_name + "_cc";
-  m_cc_w_vel_name = m_w_vel_name + "_cc";
+  m_cc_u_vel_name = parse_ups_for_role( CCUVELOCITY, db, "CCUVelocity" );//;m_u_vel_name + "_cc";
+  m_cc_v_vel_name = parse_ups_for_role( CCVVELOCITY, db, "CCVVelocity" );//m_v_vel_name + "_cc";
+  m_cc_w_vel_name = parse_ups_for_role( CCWVELOCITY, db, "CCWVelocity" );;//m_w_vel_name + "_cc";
+
+  m_IsI_name = "strainMagnitudeLabel";
 
   db->getWithDefault("Cs", m_Cs, .5);
 
   if (db->findBlock("use_my_name_viscosity")){
     db->findBlock("use_my_name_viscosity")->getAttribute("label",m_t_vis_name);
   } else{
-    m_t_vis_name = parse_ups_for_role( TOTAL_VISCOSITY, db );
+    m_t_vis_name = parse_ups_for_role( TOTAL_VISCOSITY, db, "viscosityCTS" );
   }
 
+  if (m_u_vel_name == "uVelocitySPBC") { // this is production code
+    m_create_labels_IsI_t_viscosity = false;
+  }
   const ProblemSpecP params_root = db->getRootNode();
   if (params_root->findBlock("PhysicalConstants")) {
     params_root->findBlock("PhysicalConstants")->require("viscosity",
@@ -60,7 +66,10 @@ WALE::problemSetup( ProblemSpecP& db ){
 void
 WALE::create_local_labels(){
 
-  register_new_variable<CCVariable<double> >( m_t_vis_name);
+  if (m_create_labels_IsI_t_viscosity) {
+    register_new_variable<CCVariable<double> >(m_IsI_name);
+    register_new_variable<CCVariable<double> >( m_t_vis_name);
+  }
 
 }
 
@@ -69,7 +78,7 @@ void
 WALE::register_initialize( std::vector<AFC::VariableInformation>&
                                        variable_registry , const bool packed_tasks){
 
-  register_variable( m_t_vis_name, AFC::COMPUTES, variable_registry );
+  //register_variable( m_t_vis_name, AFC::COMPUTES, variable_registry );
 
 }
 
@@ -77,8 +86,8 @@ WALE::register_initialize( std::vector<AFC::VariableInformation>&
 void
 WALE::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  CCVariable<double>& mu_sgc = *(tsk_info->get_uintah_field<CCVariable<double> >(m_t_vis_name));
-  mu_sgc.initialize(0.0);
+ // CCVariable<double>& mu_sgc = *(tsk_info->get_uintah_field<CCVariable<double> >(m_t_vis_name));
+ // mu_sgc.initialize(0.0);
 
 }
 
@@ -87,7 +96,7 @@ void
 WALE::register_timestep_init( std::vector<AFC::VariableInformation>&
                               variable_registry , const bool packed_tasks){
 
-  register_variable( m_t_vis_name, AFC::COMPUTES, variable_registry );
+  //register_variable( m_t_vis_name, AFC::COMPUTES, variable_registry );
 
 }
 
@@ -95,7 +104,7 @@ WALE::register_timestep_init( std::vector<AFC::VariableInformation>&
 void
 WALE::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  CCVariable<double>& mu_sgc = *(tsk_info->get_uintah_field<CCVariable<double> >(m_t_vis_name));
+ // CCVariable<double>& mu_sgc = *(tsk_info->get_uintah_field<CCVariable<double> >(m_t_vis_name));
 
 }
 
@@ -104,16 +113,21 @@ void
 WALE::register_timestep_eval( std::vector<AFC::VariableInformation>&
                               variable_registry, const int time_substep , const bool packed_tasks){
 
-  register_variable( m_u_vel_name, AFC::REQUIRES, Nghost_cells, AFC::LATEST, variable_registry, time_substep);
-  register_variable( m_v_vel_name, AFC::REQUIRES, Nghost_cells, AFC::LATEST, variable_registry, time_substep);
-  register_variable( m_w_vel_name, AFC::REQUIRES, Nghost_cells, AFC::LATEST, variable_registry, time_substep);
+  register_variable( m_u_vel_name, AFC::REQUIRES, Nghost_cells, AFC::NEWDW, variable_registry, time_substep);
+  register_variable( m_v_vel_name, AFC::REQUIRES, Nghost_cells, AFC::NEWDW, variable_registry, time_substep);
+  register_variable( m_w_vel_name, AFC::REQUIRES, Nghost_cells, AFC::NEWDW, variable_registry, time_substep);
 
-  register_variable( m_cc_u_vel_name, AFC::REQUIRES, Nghost_cells, AFC::LATEST, variable_registry, time_substep);
-  register_variable( m_cc_v_vel_name, AFC::REQUIRES, Nghost_cells, AFC::LATEST, variable_registry, time_substep);
-  register_variable( m_cc_w_vel_name, AFC::REQUIRES, Nghost_cells, AFC::LATEST, variable_registry, time_substep);
+  register_variable( m_cc_u_vel_name, AFC::REQUIRES, Nghost_cells, AFC::NEWDW, variable_registry, time_substep);
+  register_variable( m_cc_v_vel_name, AFC::REQUIRES, Nghost_cells, AFC::NEWDW, variable_registry, time_substep);
+  register_variable( m_cc_w_vel_name, AFC::REQUIRES, Nghost_cells, AFC::NEWDW, variable_registry, time_substep);
+  register_variable( m_density_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
 
-  register_variable( m_t_vis_name, AFC::MODIFIES ,  variable_registry, time_substep );
-
+  register_variable( m_IsI_name, ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
+  if (m_create_labels_IsI_t_viscosity) {
+    register_variable( m_t_vis_name, AFC::COMPUTES ,  variable_registry, time_substep );
+  } else {
+    register_variable( m_t_vis_name, AFC::MODIFIES ,  variable_registry, time_substep );
+  }
 }
 
 //---------------------------------------------------------------------------------
@@ -129,6 +143,8 @@ WALE::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   constCCVariable<double>& CCwVel = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_cc_w_vel_name);
 
   CCVariable<double>& mu_sgc = tsk_info->get_uintah_field_add<CCVariable<double> >(m_t_vis_name);
+  CCVariable<double>& IsI = tsk_info->get_uintah_field_add< CCVariable<double> >(m_IsI_name);
+  constCCVariable<double>& rho = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_density_name));
 
   const Vector Dx = patch->dCell();
   const double delta = pow(Dx.x()*Dx.y()*Dx.z(),1./3.);
@@ -203,12 +219,6 @@ WALE::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
       wbp = wVel(IJK_);
     }
 
-    const double s11 = (uep-uwp)/Dx.x();
-    const double s22 = (vnp-vsp)/Dx.y();
-    const double s33 = (wtp-wbp)/Dx.z();
-    const double s12 = 0.50 * ((unp-usp)/Dx.y() + (vep-vwp)/Dx.x());
-    const double s13 = 0.50 * ((utp-ubp)/Dx.z() + (wep-wwp)/Dx.x());
-    const double s23 = 0.50 * ((vtp-vbp)/Dx.z() + (wnp-wsp)/Dx.y());
 
     const double du11 = (uep-uwp)/Dx.x(); // dudx
     const double du12 = (unp-usp)/Dx.y(); //dudy
@@ -219,6 +229,16 @@ WALE::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     const double du23 = (vtp-vbp)/Dx.z(); //dvdz
     const double du32 = (wnp-wsp)/Dx.y(); //dwdy
     const double du33 = (wtp-wbp)/Dx.z(); //dwdz
+
+    const double s11 = du11;// (uep-uwp)/Dx.x();
+    const double s22 = du22;// (vnp-vsp)/Dx.y();
+    const double s33 = du33;// (wtp-wbp)/Dx.z();
+    //const double s12 = 0.50 * ((unp-usp)/Dx.y() + (vep-vwp)/Dx.x());
+    const double s12 = 0.50 * ( du12 + du21 );
+    //const double s13 = 0.50 * ((utp-ubp)/Dx.z() + (wep-wwp)/Dx.x());
+    const double s13 = 0.50 * ( du13 + du31 );
+    //const double s23 = 0.50 * ((vtp-vbp)/Dx.z() + (wnp-wsp)/Dx.y());
+    const double s23 = 0.50 * ( du23 + du32 );
 
     const double s11d = du11*du11 + du12*du21 + du13*du31  ;
     const double s12d = 0.5*(du11*du12 + du12*du22 + du13*du32 + du21*du11 + du22*du21 + du23*du31);
@@ -235,7 +255,8 @@ WALE::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     const double fvis = pow(SijdSijd,1.5)/(pow(SijSij,2.5) + pow(SijdSijd,5./4.));
 
-    mu_sgc(i,j,k) = pow(m_Cs*delta,2.0)*fvis + m_molecular_visc; // I need to times density
+    mu_sgc(i,j,k) = pow(m_Cs*delta,2.0)*fvis*rho(i,j,k) + m_molecular_visc; 
+    IsI(i,j,k) = std::sqrt(2.0*SijSij);
   });
 
 }

@@ -74,7 +74,7 @@ namespace Uintah {
               //double vf = std::floor((eps(i+m,j+n,k+l)
               //            + eps(i+m-i_n,j+n-j_n,k+l-k_n))/2.0);
               double vf = eps(i+m,j+n,k+l);
-              F_var += vf*w[m+1][n+1][l+1]* var(i+m,j+n,k+l); 
+              F_var += w[m+1][n+1][l+1]* (vf*var(i+m,j+n,k+l)+(1.-vf)*var(i,j,k)); 
             }
           }
         }
