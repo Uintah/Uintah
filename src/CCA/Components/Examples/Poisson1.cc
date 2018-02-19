@@ -41,14 +41,33 @@
 
 #include <sci_defs/kokkos_defs.h>
 
+
+#define NUM_EXECUTION_SPACES 2
+#define EXECUTION_SPACE_0 Kokkos::Cuda
+#define EXECUTION_SPACE_1 Kokkos::OpenMP
+#define MEMORY_SPACE_0    Kokkos::CudaSpace
+#define MEMORY_SPACE_1    Kokkos::HostSpace
+#define ALL_ARCHITECTURES
+
+#define CALL_ASSIGN_PORTABLE_TASK(FUNCTION_NAME, TASK_DEPENDENCIES, PATCHES, MATERIALS) {      \
+  Task* task = scinew Task("FUNCTION_NAME",                                                    \
+                           this,                                                               \
+                           &FUNCTION_NAME<EXECUTION_SPACE_1, MEMORY_SPACE_1>);                 \
+  TASK_DEPENDENCIES(task);                                                                     \
+  if (Uintah::Parallel::usingDevice()) {                                                       \
+    task->usesDevice(true);                                                                    \
+  }                                                                                            \
+  sched->addTask(task, PATCHES, MATERIALS);                                                    \
+}
+
 using namespace std;
 using namespace Uintah;
 
-<<<<<<< .working
 //A sample supporting three modes of execution:
 //Kokkos CPU (UINTAH_ENABLE_KOKKOS is defined, but HAVE_CUDA is not defined)
 //Kokkos GPU (UINTAH_ENABLE_KOKKOS is defined and HAVE_CUDA is defined)
 //Legacy Uintah CPU (UINTAH_ENABLE_KOKKOS is not defined and HAVE_CUDA is not defined)
+template <typename MEMORY_SPACE>
 struct TimeAdvanceFunctor {
 
   typedef double value_type;
@@ -166,18 +185,28 @@ void Poisson1::scheduleTimeAdvance( const LevelP     & level
                                   ,       SchedulerP & sched
                                   )
 {
-  Task* task = scinew Task("Poisson1::timeAdvance", this, &Poisson1::timeAdvance);
 
-#if defined(HAVE_CUDA) && defined(UINTAH_ENABLE_KOKKOS)
-  if (Uintah::Parallel::usingDevice()) {
-    task->usesDevice(true);
-  }
-#endif
 
-  task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
-  task->computesWithScratchGhost(phi_label, nullptr, Uintah::Task::NormalDomain, Ghost::AroundNodes, 1);
-  task->computes(residual_label);
-  sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
+
+  auto TaskDependencies = [&](Task* task) {
+    task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
+    task->computesWithScratchGhost(phi_label, nullptr, Uintah::Task::NormalDomain, Ghost::AroundNodes, 1);
+    task->computes(residual_label);
+  };
+  CALL_ASSIGN_PORTABLE_TASK(Poisson1::timeAdvance, TaskDependencies, level->eachPatch(), m_sharedState->allMaterials());
+
+  //Task* task = scinew Task("Poisson1::timeAdvance", this, &Poisson1::timeAdvance);
+
+  //#if defined(HAVE_CUDA) && defined(UINTAH_ENABLE_KOKKOS)
+  //  if (Uintah::Parallel::usingDevice()) {
+  //    task->usesDevice(true);
+  //  }
+  //#endif
+  //task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
+  //task->computesWithScratchGhost(phi_label, nullptr, Uintah::Task::NormalDomain, Ghost::AroundNodes, 1);
+  //task->computes(residual_label);
+
+  //sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
 
 }
 
@@ -242,6 +271,7 @@ void Poisson1::initialize( const ProcessorGroup *
 
 //______________________________________________________________________
 //
+template <typename EXECUTION_SPACE, typename MEMORY_SPACE>
 void Poisson1::timeAdvance(DetailedTask* task,
                             Task::CallBackEvent event,
                             const ProcessorGroup* pg,
@@ -302,8 +332,8 @@ void Poisson1::timeAdvance(DetailedTask* task,
 
     Uintah::BlockRange range(l, h);
 
-    TimeAdvanceFunctor func(phi, newphi);
-    Uintah::parallel_reduce_sum(range, func, residual);
+    TimeAdvanceFunctor<MEMORY_SPACE> func(phi, newphi);
+    Uintah::parallel_reduce_sum<EXECUTION_SPACE>(range, func, residual);
     //new_dw->put(sum_vartype(residual), residual_label);
   }
 }

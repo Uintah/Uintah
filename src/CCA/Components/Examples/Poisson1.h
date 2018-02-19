@@ -99,7 +99,8 @@ WARNING
                                const MaterialSubset* matls,
                                DataWarehouse* old_dw,
                                DataWarehouse* new_dw);
-                               
+
+    template <typename EXECUTION_SPACE, typename MEMORY_SPACE>
     void timeAdvance( DetailedTask* task,
                       Task::CallBackEvent event,
                       const ProcessorGroup* pg,

@@ -2480,8 +2480,6 @@ Ray::rayTrace_dataOnion( DetailedTask* dtask,
         RT_flags.startCell = 0;
         RT_flags.endCell = numCells;
         RT_flags.cellsPerGroup = hiRange.x();
-        Uintah::parallel_reduce_sum( range, functor, nRaySteps );
-
 
         //
         if (maxLevels==2){
@@ -2582,7 +2580,8 @@ Ray::rayTrace_dataOnion( DetailedTask* dtask,
 ,Max(d_haloCells[0],d_haloCells[1],d_haloCells[2])
 #endif
 );
-          Uintah::parallel_reduce_1D( range, functor, size );
+          //Uintah::parallel_reduce_sum( range, functor, nRaySteps );
+          Uintah::parallel_reduce_1D( range, functor, nRaySteps );
         } else {
           std::cout << "Too many levels requested.  Edit the code file to supply more possible levels" << std::endl;
           exit(-1);

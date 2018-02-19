@@ -247,8 +247,6 @@ struct FunctorBuilderReduce {
 
 template <typename Functor, typename ReductionType>
 void parallel_reduce_1D( BlockRange const & r, const Functor & f, ReductionType & red  ) {
-
-
 #if !defined( HAVE_CUDA )
   if ( ! Parallel::usingDevice() ) {
     ReductionType tmp = red;
@@ -278,9 +276,6 @@ void parallel_reduce_1D( BlockRange const & r, const Functor & f, ReductionType 
     Kokkos::parallel_reduce( rangepolicy, f, *tmp );  //TODO: Don't forget about these reduction values.
   //}
 #endif
-
-
-
 }
 
 template <typename Functor, typename ReductionType>
@@ -303,26 +298,66 @@ void parallel_reduce_sum( BlockRange const & r, const Functor & f, ReductionType
     MDPolicyType_3D mdpolicy_3d( {{r.begin(0),r.begin(1),r.begin(2)}}, {{r.end(0),r.end(1),r.end(2)}} );
 
     Kokkos::parallel_reduce( mdpolicy_3d, f, tmp );
+#else
+    const int ib = r.begin(0); const int ie = r.end(0);
+    const int jb = r.begin(1); const int je = r.end(1);
+    const int kb = r.begin(2); const int ke = r.end(2);
+
+    Kokkos::parallel_reduce( Kokkos::RangePolicy<Kokkos::OpenMP, int>(kb, ke).set_chunk_size(2), KOKKOS_LAMBDA(int k, ReductionType & tmp) {
+      for (int j=jb; j<je; ++j) {
+      for (int i=ib; i<ie; ++i) {
+        f(i,j,k,tmp);
+      }}
+    });
+
+#endif
+  red = tmp;
+}
+
+
+template <typename EXECUTION_SPACE, typename Functor, typename ReductionType>
+void parallel_reduce_sum( BlockRange const & r, const Functor & f, ReductionType & red  )
+{
+  //const int ib = r.begin(0); const int ie = r.end(0);
+  //const int jb = r.begin(1); const int je = r.end(1);
+  //const int kb = r.begin(2); const int ke = r.end(2);
+
+  ReductionType tmp = red;
+
+
+#if defined( HAVE_CUDA )
+
+    typedef typename Kokkos::MDRangePolicy<EXECUTION_SPACE, Kokkos::Rank<3,
+                                                         Kokkos::Iterate::Left,
+                                                         Kokkos::Iterate::Left>
+                                                         > MDPolicyType_3D;
+
+    MDPolicyType_3D mdpolicy_3d( {{r.begin(0),r.begin(1),r.begin(2)}}, {{r.end(0),r.end(1),r.end(2)}} );
+
+    Kokkos::parallel_reduce( mdpolicy_3d, f, tmp );
+#else
+    const int ib = r.begin(0); const int ie = r.end(0);
+    const int jb = r.begin(1); const int je = r.end(1);
+    const int kb = r.begin(2); const int ke = r.end(2);
+
+    Kokkos::parallel_reduce( Kokkos::RangePolicy<EXECUTION_SPACE, int>(kb, ke).set_chunk_size(2), KOKKOS_LAMBDA(int k, ReductionType & tmp) {
+      for (int j=jb; j<je; ++j) {
+      for (int i=ib; i<ie; ++i) {
+        f(i,j,k,tmp);
+      }}
+    });
+
+#endif
+  red = tmp;
+}
+
 
 
 template <typename Functor, typename ReductionType>
 void parallel_reduce_min( BlockRange const & r, const Functor & f, ReductionType & red  )
 {
-  const int ib = r.begin(0); const int ie = r.end(0);
-  const int jb = r.begin(1); const int je = r.end(1);
-  const int kb = r.begin(2); const int ke = r.end(2);
-
   ReductionType tmp = red;
-  Kokkos::parallel_reduce( Kokkos::RangePolicy<Kokkos::OpenMP, int>(kb, ke).set_chunk_size(2), KOKKOS_LAMBDA(int k, ReductionType & tmp) {
-    for (int j=jb; j<je; ++j) {
-    for (int i=ib; i<ie; ++i) {
-      f(i,j,k,tmp);
-    }}
-  }, Kokkos::Experimental::Min<ReductionType>(tmp));
-  red = tmp;
-};
-
-#else
+#if defined( HAVE_CUDA )
   typedef typename Kokkos::MDRangePolicy<Kokkos::OpenMP, Kokkos::Rank<3,
                                                        Kokkos::Iterate::Left,
                                                        Kokkos::Iterate::Left>
@@ -331,18 +366,26 @@ void parallel_reduce_min( BlockRange const & r, const Functor & f, ReductionType
   MDPolicyType_3D mdpolicy_3d( {{r.begin(0),r.begin(1),r.begin(2)}}, {{r.end(0),r.end(1),r.end(2)}} );
 
   Kokkos::parallel_reduce( mdpolicy_3d, f, tmp );
+#else
+  const int ib = r.begin(0); const int ie = r.end(0);
+  const int jb = r.begin(1); const int je = r.end(1);
+  const int kb = r.begin(2); const int ke = r.end(2);
 
-  //Kokkos::parallel_reduce( Kokkos::RangePolicy<Kokkos::OpenMP, int>(kb, ke).set_chunk_size(2), KOKKOS_LAMBDA(int k, ReductionType & tmp) {
-  //  for (int j=jb; j<je; ++j) {
-  //  for (int i=ib; i<ie; ++i) {
-  //    f(i,j,k,tmp);
-  //  }}
-  //}, tmp);
+  Kokkos::parallel_reduce( Kokkos::RangePolicy<Kokkos::OpenMP, int>(kb, ke).set_chunk_size(2), KOKKOS_LAMBDA(int k, ReductionType & tmp) {
+    for (int j=jb; j<je; ++j) {
+    for (int i=ib; i<ie; ++i) {
+      f(i,j,k,tmp);
+    }}
+  }, Kokkos::Experimental::Min<ReductionType>(tmp));
 
 #endif
   red = tmp;
 }
+
+
 #else //if !defined( UINTAH_ENABLE_KOKKOS )
+//This section is for running a functor/lambda expression if Kokkos isn't used at all.
+//Instead of Kokkos being responsible for the execution, we execute it.
 
 template <typename Functor>
 void parallel_for( BlockRange const & r, const Functor & f )
