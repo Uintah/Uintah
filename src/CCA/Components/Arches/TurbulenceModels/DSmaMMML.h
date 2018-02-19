@@ -422,6 +422,7 @@ DSmaMMML<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   ML.initialize(0.0);
   MM.initialize(0.0);
 
+ const double SMALL = 1e-16;
   Uintah::parallel_for( range1, [&](int i, int j, int k){
     double M11 = 2.0*filter2*(filterBeta11(i,j,k) - 2.0*fhat*alpha11(i,j,k));
     double M22 = 2.0*filter2*(filterBeta22(i,j,k) - 2.0*fhat*alpha22(i,j,k));
@@ -430,12 +431,12 @@ DSmaMMML<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     double M13 = 2.0*filter2*(filterBeta13(i,j,k) - 2.0*fhat*alpha13(i,j,k));
     double M23 = 2.0*filter2*(filterBeta23(i,j,k) - 2.0*fhat*alpha23(i,j,k));
 
-    double L11 = filter_rhoUU(i,j,k) - filter_rhoU(i,j,k)*filter_rhoU(i,j,k)/(*filterRho)(i,j,k);
-    double L22 = filter_rhoVV(i,j,k) - filter_rhoV(i,j,k)*filter_rhoV(i,j,k)/(*filterRho)(i,j,k);
-    double L33 = filter_rhoWW(i,j,k) - filter_rhoW(i,j,k)*filter_rhoW(i,j,k)/(*filterRho)(i,j,k);
-    double L12 = filter_rhoUV(i,j,k) - filter_rhoU(i,j,k)*filter_rhoV(i,j,k)/(*filterRho)(i,j,k);
-    double L13 = filter_rhoUW(i,j,k) - filter_rhoU(i,j,k)*filter_rhoW(i,j,k)/(*filterRho)(i,j,k);
-    double L23 = filter_rhoVW(i,j,k) - filter_rhoV(i,j,k)*filter_rhoW(i,j,k)/(*filterRho)(i,j,k);
+    double L11 = filter_rhoUU(i,j,k) - filter_rhoU(i,j,k)*filter_rhoU(i,j,k)/((*filterRho)(i,j,k) + SMALL);
+    double L22 = filter_rhoVV(i,j,k) - filter_rhoV(i,j,k)*filter_rhoV(i,j,k)/((*filterRho)(i,j,k) + SMALL);
+    double L33 = filter_rhoWW(i,j,k) - filter_rhoW(i,j,k)*filter_rhoW(i,j,k)/((*filterRho)(i,j,k) + SMALL);
+    double L12 = filter_rhoUV(i,j,k) - filter_rhoU(i,j,k)*filter_rhoV(i,j,k)/((*filterRho)(i,j,k) + SMALL);
+    double L13 = filter_rhoUW(i,j,k) - filter_rhoU(i,j,k)*filter_rhoW(i,j,k)/((*filterRho)(i,j,k) + SMALL);
+    double L23 = filter_rhoVW(i,j,k) - filter_rhoV(i,j,k)*filter_rhoW(i,j,k)/((*filterRho)(i,j,k) + SMALL);
 
     ML(i,j,k) = M11*L11 + M22*L22 + M33*L33 + 2.0*(M12*L12 + M13*L13 + M23*L23);
     MM(i,j,k) = M11*M11 + M22*M22 + M33*M33 + 2.0*(M12*M12 + M13*M13 + M23*M23);

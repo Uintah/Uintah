@@ -232,6 +232,7 @@ DSFT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   CCVariable<double>& Beta23 = tsk_info->get_uintah_field_add< CCVariable<double> >("Beta23",nGhosts2 );
   CCVariable<double>& Beta33 = tsk_info->get_uintah_field_add< CCVariable<double> >("Beta33",nGhosts2 );
 
+  IsI.initialize(0.0);
   s11.initialize(0.0);
   s12.initialize(0.0);
   s13.initialize(0.0);
