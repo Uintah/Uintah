@@ -563,27 +563,27 @@ TaskGraph::createDetailedDependencies()
   CompTable ct;
   int num_tasks = m_detailed_tasks->numTasks();
   for (auto i = 0; i < num_tasks; i++) {
-    DetailedTask* task = m_detailed_tasks->getTask(i);
+    DetailedTask* dtask = m_detailed_tasks->getTask(i);
 
     if (detaileddbg) {
       std::ostringstream message;
       message << '\n';
       message << "Rank-" << m_proc_group->myRank() << " createDetailedDependencies (collect comps) for:\n";
 
-      for (const Task::Dependency* req = task->getTask()->getRequires(); req != nullptr; req = req->m_next) {
+      for (const Task::Dependency* req = dtask->getTask()->getRequires(); req != nullptr; req = req->m_next) {
         message << "         requires: " << *req << '\n';
       }
-      for (const Task::Dependency* comp = task->getTask()->getComputes(); comp != nullptr; comp = comp->m_next) {
+      for (const Task::Dependency* comp = dtask->getTask()->getComputes(); comp != nullptr; comp = comp->m_next) {
         message << "         computes: " << *comp << '\n';
       }
-      for (const Task::Dependency* mod = task->getTask()->getModifies(); mod != nullptr; mod = mod->m_next) {
+      for (const Task::Dependency* mod = dtask->getTask()->getModifies(); mod != nullptr; mod = mod->m_next) {
         message << "         modifies: " << *mod << '\n';
       }
       DOUT(true, message.str());
     }
 
-    remembercomps( task, task->d_task->getComputes(), ct );
-    remembercomps( task, task->d_task->getModifies(), ct );
+    remembercomps( dtask, dtask->m_task->getComputes(), ct );
+    remembercomps( dtask, dtask->m_task->getModifies(), ct );
   }
 
   // Assign task phase number based on the reduction tasks so Unified scheduler won't have out of order reduction problems.
@@ -591,36 +591,37 @@ TaskGraph::createDetailedDependencies()
   int curr_num_comms = 0;
 
   for (auto i = 0; i < num_tasks; i++) {
-    DetailedTask* task = m_detailed_tasks->getTask(i);
-    task->d_task->m_phase = currphase;
+    DetailedTask* dtask = m_detailed_tasks->getTask(i);
+    dtask->m_task->m_phase = currphase;
 
-    DOUT(tgphasedbg, "Rank-" << m_proc_group->myRank() << " Task: " << *task << " phase: " << currphase);
+    DOUT(tgphasedbg, "Rank-" << m_proc_group->myRank() << " Task: " << *dtask << " phase: " << currphase);
 
-    if (task->d_task->getType() == Task::Reduction) {
-      task->d_task->m_comm = curr_num_comms;
+    if (dtask->m_task->getType() == Task::Reduction) {
+      dtask->m_task->m_comm = curr_num_comms;
       curr_num_comms++;
       currphase++;
     }
-    else if (task->d_task->usesMPI()) {
+    else if (dtask->m_task->usesMPI()) {
       currphase++;
     }
   }
+
   m_proc_group->setGlobalComm(curr_num_comms);
   m_num_task_phases = currphase + 1;
 
   // Go through the modifies/requires and create data dependencies as appropriate
   for (int i = 0; i < m_detailed_tasks->numTasks(); i++) {
-    DetailedTask* task = m_detailed_tasks->getTask(i);
+    DetailedTask* dtask = m_detailed_tasks->getTask(i);
 
-    if (detaileddbg && (task->d_task->getRequires() != nullptr)) {
-      DOUT(true, "Rank-" << m_proc_group->myRank() << " Looking at requires of detailed task: " << *task);
+    if (detaileddbg && (dtask->m_task->getRequires() != nullptr)) {
+      DOUT(true, "Rank-" << m_proc_group->myRank() << " Looking at requires of detailed task: " << *dtask);
     }
-    createDetailedDependencies(task, task->d_task->getRequires(), ct, false);
+    createDetailedDependencies(dtask, dtask->m_task->getRequires(), ct, false);
 
-    if (detaileddbg && (task->d_task->getModifies() != nullptr)) {
-      DOUT(true, "Rank-" << m_proc_group->myRank() << " Looking at modifies of detailed task: " << *task);
+    if (detaileddbg && (dtask->m_task->getModifies() != nullptr)) {
+      DOUT(true, "Rank-" << m_proc_group->myRank() << " Looking at modifies of detailed task: " << *dtask);
     }
-    createDetailedDependencies(task, task->d_task->getModifies(), ct, true);
+    createDetailedDependencies(dtask, dtask->m_task->getModifies(), ct, true);
   }
 
   DOUT(detaileddbg, "Rank-" << m_proc_group->myRank() << " Done creating detailed tasks");
@@ -629,7 +630,7 @@ TaskGraph::createDetailedDependencies()
 //______________________________________________________________________
 //
 void
-TaskGraph::remembercomps( DetailedTask     * task
+TaskGraph::remembercomps( DetailedTask     * dtask
                         , Task::Dependency * comp
                         , CompTable        & ct
                         )
@@ -649,27 +650,27 @@ TaskGraph::remembercomps( DetailedTask     * task
     if ( vartype == TypeDescription::ReductionVariable ||
          vartype == TypeDescription::SoleVariable ) {
       // this is either the task computing the var, modifying it, or the reduction itself
-      ct.remembercomp(task, comp, nullptr, comp->m_matls, m_proc_group);
+      ct.remembercomp(dtask, comp, nullptr, comp->m_matls, m_proc_group);
     }
     else {
       // Normal tasks
       constHandle<PatchSubset> patches;
 
       // if the patch pointer on both the dep and the task have not changed then use the cached result
-      if ( task->d_patches == cached_task_patches && comp->m_patches == cached_comp_patches ) {
+      if ( dtask->m_patches == cached_task_patches && comp->m_patches == cached_comp_patches ) {
         patches = cached_patches;
       }
       else {
         // compute the intersection
-        patches = comp->getPatchesUnderDomain( task->d_patches );
+        patches = comp->getPatchesUnderDomain( dtask->m_patches );
         // cache the result for the next iteration
         cached_patches = patches;
-        cached_task_patches = task->d_patches;
+        cached_task_patches = dtask->m_patches;
         cached_comp_patches = comp->m_patches;
       }
-      constHandle<MaterialSubset> matls = comp->getMaterialsUnderDomain( task->d_matls );
+      constHandle<MaterialSubset> matls = comp->getMaterialsUnderDomain( dtask->m_matls );
       if (patches && !patches->empty() && matls && !matls->empty()) {
-        ct.remembercomp( task, comp, patches.get_rep(), matls.get_rep(), m_proc_group );
+        ct.remembercomp( dtask, comp, patches.get_rep(), matls.get_rep(), m_proc_group );
       }
     }
   }
@@ -755,7 +756,7 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
 
     DOUT(detaileddbg, "Rank-" << my_rank << "  req: " << *req);
 
-    constHandle<PatchSubset> patches = req->getPatchesUnderDomain(dtask->d_patches);
+    constHandle<PatchSubset> patches = req->getPatchesUnderDomain(dtask->m_patches);
 
     TypeDescription::Type vartype = req->m_var->typeDescription()->getType();
 
@@ -767,7 +768,7 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
       patches = nullptr;
     }
 
-    constHandle<MaterialSubset> matls = req->getMaterialsUnderDomain(dtask->d_matls);
+    constHandle<MaterialSubset> matls = req->getMaterialsUnderDomain(dtask->m_matls);
 
     bool uses_SHRT_MAX = (req->m_num_ghost_cells == SHRT_MAX);
 
@@ -778,8 +779,8 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
     int levelID = 0;
     const Patch* origPatch = nullptr;
     const Level* origLevel = nullptr;
-    if ((dtask->d_patches) && (dtask->getTask()->getType() != Task::OncePerProc) && (dtask->getTask()->getType() != Task::Hypre)) {
-      origPatch = dtask->d_patches->get(0);
+    if ((dtask->m_patches) && (dtask->getTask()->getType() != Task::OncePerProc) && (dtask->getTask()->getType() != Task::Hypre)) {
+      origPatch = dtask->m_patches->get(0);
       origLevel = origPatch->getLevel();
       levelID = origLevel->getID();
     }
@@ -796,10 +797,10 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
     if (req->m_patches_dom == Task::CoarseLevel || req->m_patches_dom == Task::FineLevel) {
       // the requires should have been done with Task::CoarseLevel or FineLevel, with null patches
       // and the task->patches should be size one (so we don't have to worry about overlapping regions)
-      origPatch = dtask->d_patches->get(0);
+      origPatch = dtask->m_patches->get(0);
 
       ASSERT(req->m_patches == nullptr);
-      ASSERT(dtask->d_patches->size() == 1);
+      ASSERT(dtask->m_patches->size() == 1);
       ASSERT(req->m_level_offset > 0);
 
       if (req->m_patches_dom == Task::CoarseLevel) {
@@ -1058,8 +1059,8 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
                   if (prevReqTask == dtask) {
                     continue;
                   }
-                  if (prevReqTask->d_task == dtask->d_task) {
-                    if (!dtask->d_task->getHasSubScheduler()) {
+                  if (prevReqTask->m_task == dtask->m_task) {
+                    if (!dtask->m_task->getHasSubScheduler()) {
                     
 #if SCI_ASSERTION_LEVEL>0                             // remove this #if after spatial scheduling works in the Arches sweeps radiation code. 07/06/17 
                       std::ostringstream message;
@@ -1090,8 +1091,7 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
                         Patch::selectType n;
                         IntVector low, high;
 
-                        req_patch->computeVariableExtents(req->m_var->typeDescription()->getType(), req->m_var->getBoundaryLayer(),
-                                                          Ghost::AroundCells, 2, low, high);
+                        req_patch->computeVariableExtents(req->m_var->typeDescription()->getType(), req->m_var->getBoundaryLayer(), Ghost::AroundCells, 2, low, high);
 
                         req_patch->getLevel()->selectPatches(low, high, n);
                         bool found = false;
@@ -1106,8 +1106,7 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
                         }
                       }
                     }
-                    m_detailed_tasks->possiblyCreateDependency(prevReqTask, nullptr, nullptr, dtask, req, nullptr, matl, from_l,
-                                                               from_h, DetailedDep::Always);
+                    m_detailed_tasks->possiblyCreateDependency(prevReqTask, nullptr, nullptr, dtask, req, nullptr, matl, from_l, from_h, DetailedDep::Always);
                   }
                 }
               }
@@ -1177,7 +1176,7 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
       // intersecting with the computes or modifies... (maybe there's
       // a better way) - bryan
     }
-    else if ( dtask->d_matls &&  req->m_matls && dtask->d_patches &&  req->m_patches &&   patches.get_rep()->size()== 0  ) {
+    else if ( dtask->m_matls &&  req->m_matls && dtask->m_patches &&  req->m_patches &&   patches.get_rep()->size()== 0  ) {
        //Fields were required on a subset of the domain with ghosts.
        //This should be legal.
     }
@@ -1185,8 +1184,8 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
       std::ostringstream desc;
       desc << "TaskGraph::createDetailedDependencies, task dependency not supported without patches and materials"
            << " \n Trying to require or modify " << *req << " in Task " << dtask->getTask()->getName() << "\n\n";
-      if (dtask->d_matls) {
-        desc << "task materials:" << *dtask->d_matls << "\n";
+      if (dtask->m_matls) {
+        desc << "task materials:" << *dtask->m_matls << "\n";
       }
       else {
         desc << "no task materials\n";
@@ -1198,8 +1197,8 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
         desc << "no req materials\n";
         desc << "domain materials: " << *matls.get_rep() << "\n";
       }
-      if (dtask->d_patches) {
-        desc << "task patches:" << *dtask->d_patches << "\n";
+      if (dtask->m_patches) {
+        desc << "task patches:" << *dtask->m_patches << "\n";
       }
       else {
         desc << "no task patches\n";

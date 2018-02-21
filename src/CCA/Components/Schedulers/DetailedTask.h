@@ -118,12 +118,12 @@ public:
 
   void setProfileType( ProfileType type )
   {
-    d_profileType = type;
+    m_profile_type = type;
   }
 
   ProfileType getProfileType()
   {
-    return d_profileType;
+    return m_profile_type;
   }
 
   void doit( const ProcessorGroup                      * pg
@@ -138,23 +138,23 @@ public:
 
   std::string getName() const;
 
-  const Task*           getTask() const {      return d_task; }
-  const PatchSubset*    getPatches() const {   return d_patches; }
-  const MaterialSubset* getMaterials() const { return d_matls; }
+  const Task*           getTask() const {      return m_task; }
+  const PatchSubset*    getPatches() const {   return m_patches; }
+  const MaterialSubset* getMaterials() const { return m_matls; }
 
-  void assignResource( int idx ) { d_resourceIndex = idx; }
-  int  getAssignedResourceIndex() const { return d_resourceIndex; }
+  void assignResource( int idx ) { m_resource_index = idx; }
+  int  getAssignedResourceIndex() const { return m_resource_index; }
 
-  void assignStaticOrder( int i )  { d_staticOrder = i; }
-  int  getStaticOrder() const { return d_staticOrder; }
+  void assignStaticOrder( int i )  { m_static_order = i; }
+  int  getStaticOrder() const { return m_static_order; }
 
-  DetailedTasks* getTaskGroup() const { return d_taskGroup; }
+  DetailedTasks* getTaskGroup() const { return m_task_group; }
 
-  std::map<DependencyBatch*, DependencyBatch*>& getRequires() { return d_reqs; }
-  std::map<DependencyBatch*, DependencyBatch*>& getInternalRequires() { return d_internal_reqs; }
+  std::map<DependencyBatch*, DependencyBatch*>& getRequires() { return m_reqs; }
+  std::map<DependencyBatch*, DependencyBatch*>& getInternalRequires() { return m_internal_reqs; }
 
-  DependencyBatch* getComputes() const { return d_comp_head; }
-  DependencyBatch* getInternalComputes() const { return d_internal_comp_head; }
+  DependencyBatch* getComputes() const { return m_comp_head; }
+  DependencyBatch* getInternalComputes() const { return m_internal_comp_head; }
 
   void findRequiringTasks( const VarLabel * var , std::list<DetailedTask*> & requiringTasks );
 
@@ -177,16 +177,16 @@ public:
   void markInitiated()
   {
     m_wait_timer.start();
-    initiated_.store( true, std::memory_order_seq_cst );
+    m_initiated.store( true, std::memory_order_seq_cst );
   }
 
-  void incrementExternalDepCount() { externalDependencyCount_.fetch_add( 1, std::memory_order_seq_cst ); }
-  void decrementExternalDepCount() { externalDependencyCount_.fetch_sub( 1, std::memory_order_seq_cst ); }
+  void incrementExternalDepCount() { m_external_dependency_count.fetch_add( 1, std::memory_order_seq_cst ); }
+  void decrementExternalDepCount() { m_external_dependency_count.fetch_sub( 1, std::memory_order_seq_cst ); }
 
   void checkExternalDepCount();
-  int  getExternalDepCount() { return externalDependencyCount_.load(std::memory_order_seq_cst); }
+  int  getExternalDepCount() { return m_external_dependency_count.load(std::memory_order_seq_cst); }
 
-  bool areInternalDependenciesSatisfied() { return ( numPendingInternalDependencies == 0 ); }
+  bool areInternalDependenciesSatisfied() { return ( m_num_pending_internal_dependencies == 0 ); }
 
   double task_wait_time() const { return m_wait_timer().seconds(); }
   double task_exec_time() const { return m_exec_timer().seconds(); }
@@ -264,37 +264,37 @@ private:
   // Called when prerequisite tasks (dependencies) call done.
   void dependencySatisfied(InternalDependency * dep);
 
-  Task                                         * d_task { nullptr };
-  const PatchSubset                            * d_patches { nullptr };
-  const MaterialSubset                         * d_matls { nullptr };
-  std::map<DependencyBatch*, DependencyBatch*>   d_reqs;
-  std::map<DependencyBatch*, DependencyBatch*>   d_internal_reqs;
-  DependencyBatch                              * d_comp_head { nullptr };
-  DependencyBatch                              * d_internal_comp_head { nullptr };
-  DetailedTasks                                * d_taskGroup { nullptr };
+  Task                                         * m_task { nullptr };
+  const PatchSubset                            * m_patches { nullptr };
+  const MaterialSubset                         * m_matls { nullptr };
+  std::map<DependencyBatch*, DependencyBatch*>   m_reqs;
+  std::map<DependencyBatch*, DependencyBatch*>   m_internal_reqs;
+  DependencyBatch                              * m_comp_head { nullptr };
+  DependencyBatch                              * m_internal_comp_head { nullptr };
+  DetailedTasks                                * m_task_group { nullptr };
 
-  std::atomic<bool> initiated_ { false };
-  std::atomic<bool> externallyReady_ { false };
-  std::atomic<int>  externalDependencyCount_ { 0 };
+  std::atomic<bool> m_initiated { false };
+  std::atomic<bool> m_externally_ready { false };
+  std::atomic<int>  m_external_dependency_count { 0 };
 
-  mutable std::string name_;  // doesn't get set until getName() is called the first time.
+  mutable std::string m_name;  // doesn't get set until getName() is called the first time.
 
   // Internal dependencies are dependencies within the same process.
-  std::list<InternalDependency> internalDependencies;
+  std::list<InternalDependency> m_internal_dependencies;
 
   // internalDependents will point to InternalDependency's in the
   // internalDependencies list of the requiring DetailedTasks.
-  std::map<DetailedTask*, InternalDependency*> internalDependents;
+  std::map<DetailedTask*, InternalDependency*> m_internal_dependents;
 
-  unsigned long numPendingInternalDependencies { 0 };
+  unsigned long m_num_pending_internal_dependencies { 0 };
 
-  int d_resourceIndex { -1 };
-  int d_staticOrder   { -1 };
+  int m_resource_index { -1 };
+  int m_static_order   { -1 };
 
   // specifies the type of task this is:
   //   * Normal executes on either the patches cells or the patches coarse cells
   //   * Fine   executes on the patches fine cells (for example coarsening)
-  ProfileType d_profileType { Normal };
+  ProfileType m_profile_type { Normal };
 
   RuntimeStats::TaskExecTimer m_exec_timer{this};
   RuntimeStats::TaskWaitTimer m_wait_timer{this};

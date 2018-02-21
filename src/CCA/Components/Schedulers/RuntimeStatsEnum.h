@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_HOMEBREW_RUNTIMESTATSENUMS_H
-#define UINTAH_HOMEBREW_RUNTIMESTATSENUMS_H
+#ifndef CCA_COMPONENTS_SCHEDULERS_RUNTIMESTATSENUMS_H
+#define CCA_COMPONENTS_SCHEDULERS_RUNTIMESTATSENUMS_H
 
 #include <sci_defs/papi_defs.h>
 
@@ -35,26 +35,18 @@ namespace Uintah {
     CLASS
       RuntimeStatsEnum
       
-      Short Description...
       
     GENERAL INFORMATION
       
-      RunTimeStats.h
-      
-      Steven G. Parker
-      Department of Computer Science
-      University of Utah
-      
-      Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
+      RunTimeStatsEnum.h
       
       
     KEYWORDS
-      RuntimeStats
+      RuntimeStats Enumerations
       
     DESCRIPTION
-      RuntimeStats to be used by Simulation Controller.
+      RuntimeStats Enums to be used by Simulation Controller.
       
-    WARNING
       
 ****************************************/
 
@@ -105,6 +97,6 @@ namespace Uintah {
      , MAX_TIMING_STATS
   };
 
-} // End namespace Uintah
+} // end namespace Uintah
 
-#endif
+#endif // CCA_COMPONENTS_SCHEDULERS_RUNTIMESTATSENUMS_H
