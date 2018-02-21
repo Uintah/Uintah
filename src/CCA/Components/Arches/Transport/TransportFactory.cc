@@ -43,7 +43,8 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
 
       TaskInterface::TaskBuilder* tsk;
       if ( type == "CC" ){
-        typedef typename ArchesCore::VariableHelper<CCVariable<double> >::Type C;
+        
+        typedef CCVariable<double> C;
         typedef typename ArchesCore::VariableHelper<CCVariable<double> >::ConstType CT; 
         //typedef typename ArchesCore::VariableHelper<CCVariable<double> >::XFaceType FXT;
         //typedef typename ArchesCore::VariableHelper<CCVariable<double> >::YFaceType FYT;
@@ -62,7 +63,8 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
           tsk = scinew KScalarRHS<C, CT >::Builder(group_name, 0);
         }
       } else if ( type == "FX" ){
-        typedef typename ArchesCore::VariableHelper<SFCXVariable<double> >::Type C;
+        //typedef typename ArchesCore::VariableHelper<SFCXVariable<double> >::Type C;
+        typedef SFCXVariable<double> C;
         typedef typename ArchesCore::VariableHelper<SFCXVariable<double> >::ConstType CT; 
         //typedef typename ArchesCore::VariableHelper<SFCXVariable<double> >::XFaceType FXT;
         //typedef typename ArchesCore::VariableHelper<SFCXVariable<double> >::YFaceType FYT;
@@ -80,7 +82,8 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
 	  tsk = scinew KScalarRHS<C, CT >::Builder(group_name, 0);
         }
       } else if ( type == "FY" ){
-        typedef typename ArchesCore::VariableHelper<SFCYVariable<double> >::Type C;
+        //typedef typename ArchesCore::VariableHelper<SFCYVariable<double> >::Type C;
+        typedef SFCYVariable<double> C;
         typedef typename ArchesCore::VariableHelper<SFCYVariable<double> >::ConstType CT;        
         //typedef typename ArchesCore::VariableHelper<SFCYVariable<double> >::XFaceType FXT;
         //typedef typename ArchesCore::VariableHelper<SFCYVariable<double> >::YFaceType FYT;
@@ -98,7 +101,7 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
 	  tsk = scinew KScalarRHS<C, CT >::Builder(group_name, 0);
         }
       } else if ( type == "FZ" ){
-        typedef typename ArchesCore::VariableHelper<SFCZVariable<double> >::Type C;
+        typedef SFCZVariable<double> C;
         typedef typename ArchesCore::VariableHelper<SFCZVariable<double> >::ConstType CT;
         //typedef typename ArchesCore::VariableHelper<SFCZVariable<double> >::XFaceType FXT;
         //typedef typename ArchesCore::VariableHelper<SFCZVariable<double> >::YFaceType FYT;
@@ -414,7 +417,7 @@ void TransportFactory::register_DQMOM( ProblemSpecP db_dqmom ){
   std::string group_name = "dqmom_eqns";
 
   TaskInterface::TaskBuilder* tsk;
-  typedef typename ArchesCore::VariableHelper<CCVariable<double> >::Type C;
+  typedef CCVariable<double> C;
   typedef typename ArchesCore::VariableHelper<CCVariable<double> >::ConstType CT;
   //typedef typename ArchesCore::VariableHelper<CCVariable<double> >::XFaceType FXT;
   //typedef typename ArchesCore::VariableHelper<CCVariable<double> >::YFaceType FYT;

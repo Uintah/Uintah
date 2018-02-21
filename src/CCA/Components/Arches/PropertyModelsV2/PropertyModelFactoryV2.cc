@@ -79,7 +79,8 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
 
         if ( grid_type == "CC" ){
 
-          typedef typename ArchesCore::VariableHelper<CCVariable<double> >::Type T;
+          //typedef typename ArchesCore::VariableHelper<CCVariable<double> >::Type T;
+          typedef CCVariable<double> T;
           typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
 
           if (grid_type2 == "FX"){
@@ -102,15 +103,15 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
           }
 
           if ( grid_type == "FX" ){
-            typedef typename ArchesCore::VariableHelper<SFCXVariable<double> >::Type T;
+            typedef SFCXVariable<double> T;
             typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
             tsk = scinew VarInterpolation<CT, CCVariable<double> >::Builder(name, 0);
           } else if ( grid_type == "FY" ){
-            typedef typename ArchesCore::VariableHelper<SFCYVariable<double> >::Type T;
+            typedef SFCYVariable<double> T;
             typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
             tsk = scinew VarInterpolation<CT, CCVariable<double> >::Builder(name, 0);
           } else if ( grid_type == "FZ" ){
-            typedef typename ArchesCore::VariableHelper<SFCZVariable<double> >::Type T;
+            typedef SFCZVariable<double> T;
             typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
             tsk = scinew VarInterpolation<CT, CCVariable<double> >::Builder(name, 0);
           }

@@ -100,7 +100,6 @@ private:
     typedef typename ArchesCore::VariableHelper<CT>::YFaceType CFYT;
     typedef typename ArchesCore::VariableHelper<CT>::ZFaceType CFZT;
 
-    typedef typename ArchesCore::VariableHelper<PT>::Type CPT;
     typedef typename ArchesCore::VariableHelper<PT>::XFaceType FluxXT;
     typedef typename ArchesCore::VariableHelper<PT>::YFaceType FluxYT;
     typedef typename ArchesCore::VariableHelper<PT>::ZFaceType FluxZT;
