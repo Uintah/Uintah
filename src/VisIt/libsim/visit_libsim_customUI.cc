@@ -608,14 +608,12 @@ void visit_SetRuntimeStats( visit_simulation_data *sim )
 
   for (unsigned int i=0; i<runtimeStats.size(); ++i)
   {
-    RuntimeStatsEnum e = (RuntimeStatsEnum) i;
-    
-    std::string name  = runtimeStats.getName(e);
-    std::string units = runtimeStats.getUnits(e);
+    std::string name  = runtimeStats.getName(i);
+    std::string units = runtimeStats.getUnits(i);
 
-    double  average = runtimeStats.getAverage(e);
-    double  maximum = runtimeStats.getMaximum(e);
-    int     rank    = runtimeStats.getRank(e);
+    double  average = runtimeStats.getAverage(i);
+    double  maximum = runtimeStats.getMaximum(i);
+    int     rank    = runtimeStats.getRank(i);
 
     if( average > 0 && units == std::string("MBytes"))
     {
@@ -707,7 +705,7 @@ void visit_SetMPIStats( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetOtherStats( visit_simulation_data *sim )
 {
-  const ReductionInfoMapper< unsigned int, double > &otherStats =
+  const ReductionInfoMapper< SimulationController::OtherStatsEnum, double > &otherStats =
     sim->simController->getOtherStats();
 
   if( otherStats.size() )

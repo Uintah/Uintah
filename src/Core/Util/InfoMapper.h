@@ -112,14 +112,14 @@ public:
     if (m_values.size() != (unsigned int)lastKey) {
       std::stringstream msg;
       msg << "The count does not match. Expected "
-	        << (unsigned int) lastKey << " values. But added "
-	        << m_values.size() << " values.";
+                << (unsigned int) lastKey << " values. But added "
+                << m_values.size() << " values.";
       throw Uintah::InternalError(msg.str(), __FILE__, __LINE__);
     }
   };
 
   virtual void insert( const E key, const std::string name,
-		                   const std::string units, const T value )
+                                   const std::string units, const T value )
   {
     if (!exists(key) && !exists(name) && (unsigned int)key == m_keys.size()) {
       m_keys[key] = (unsigned int)key;
@@ -141,7 +141,7 @@ public:
   //   typename std::map< E, std::string >::iterator uIter = m_units.find( key );
 
   //   if( vIter != m_values.end() &&
-  // 	nIter != m_names.end() && uIter != m_units.end() )
+  //    nIter != m_names.end() && uIter != m_units.end() )
   //   {
   //     m_values.erase(key);
   //     m_names.erase(key);
@@ -155,16 +155,39 @@ public:
   //   }
   // }
 
-        T& operator[](E idx)       { return m_values[idx]; };
-  const T& operator[](E idx) const { return m_values[idx]; };
+        T& operator[](const E key)       { return m_values[key]; };
+  const T& operator[](const E key) const { return m_values[key]; };
+
+
+  T& operator[](unsigned int index)
+  {
+    const E key = (E) index;
+    return m_values[key];
+  };
+  
+  const T& operator[](unsigned int index) const
+  {
+    const E key = (E) index;
+    return m_values[key];
+  };
 
   virtual void setValue( const E key, const T value )
   {
     m_values[key] = value;
   };
 
+  // Get value
   virtual T getValue( const E key ) const
   {
+    validKey( key );
+
+    return m_values[key];
+  };
+
+  virtual T getValue( const unsigned int index ) const
+  {
+    const E key = (E) index;
+
     validKey( key );
 
     return m_values[key];
@@ -176,21 +199,69 @@ public:
 
     validKey( key );
 
-    return m_values[ key ];
+    return m_values[key];
   };
 
+  // Get name
   virtual std::string getName( const E key ) const
   {
     validKey( key );
 
-    return m_names[ key ];
+    return m_names[key];
   };
 
+  virtual std::string getName( const unsigned int index ) const
+  {
+    const E key = (E) index;
+
+    validKey( key );
+
+    return m_names[key];
+  };
+
+  virtual std::string getName( const std::string name ) const
+  {
+    E key = getKey(name);
+
+    validKey( key );
+
+    return m_names[key];
+  };
+
+  // Get units
   virtual std::string getUnits( const E key ) const
   {
     validKey( key );
 
-    return m_units[ key ];
+    return m_units[key];
+  };
+
+  virtual std::string getUnits( const unsigned int index ) const
+  {
+    const E key = (E) index;
+
+    validKey( key );
+
+    return m_units[key];
+  };
+
+  virtual std::string getUnits(  const std::string units ) const
+  {
+    E key = getKey(units);
+
+    validKey( key );
+
+    return m_units[key];
+  };
+
+  // Get key
+  virtual E getKey( const int index ) const
+  {
+    const E key = (E) index;
+
+    validKey( key );
+
+    return key;
   };
 
   virtual E getKey( const std::string name ) const
@@ -232,7 +303,7 @@ public:
   };
 
   virtual void insert( const E key, const std::string name,
-		       const std::string units, const T value )
+                       const std::string units, const T value )
   {
     InfoMapper<E, T>::insert( key, name, units, value );
 
@@ -240,12 +311,21 @@ public:
     m_rank_maximum.push_back(double_int(0,-1));
   }
 
-  // getSum
+  // Get sum
   virtual double getSum( const E key ) const
   {
     InfoMapper<E, T>::validKey( key );
 
-    return m_node_sum[ key ];
+    return m_node_sum[key];
+  };
+
+  virtual double getSum( const unsigned int index ) const
+  {
+    const E key = (E) index;
+
+    InfoMapper<E, T>::validKey( key );
+
+    return m_node_sum[key];
   };
 
   virtual double getSum( const std::string name ) const
@@ -254,15 +334,24 @@ public:
 
     InfoMapper<E, T>::validKey( key );
 
-    return m_node_sum[ key ];
+    return m_node_sum[key];
   };
 
-  // getAverage
+  // Get average
   virtual double getAverage( const E key ) const
   {
     InfoMapper<E, T>::validKey( key );
 
-    return m_rank_average[ key ];
+    return m_rank_average[key];
+  };
+
+  virtual double getAverage( const unsigned int index ) const
+  {
+    const E key = (E) index;
+
+    InfoMapper<E, T>::validKey( key );
+
+    return m_rank_average[key];
   };
 
   virtual double getAverage( const std::string name ) const
@@ -271,15 +360,24 @@ public:
 
     InfoMapper<E, T>::validKey( key );
 
-    return m_rank_average[ key ];
+    return m_rank_average[key];
   };
 
-  // getMaxium
+  // Get maxium
   virtual double getMaximum( const E key ) const
   {
     InfoMapper<E, T>::validKey( key );
 
-    return m_rank_maximum[ key ].val;
+    return m_rank_maximum[key].val;
+  };
+
+  virtual double getMaximum( const unsigned int index ) const
+  {
+    const E key = (E) index;
+
+    InfoMapper<E, T>::validKey( key );
+
+    return m_rank_maximum[key].val;
   };
 
   virtual double getMaximum( const std::string name ) const
@@ -288,15 +386,24 @@ public:
 
     InfoMapper<E, T>::validKey( key );
 
-    return m_rank_maximum[ key ].val;
+    return m_rank_maximum[key].val;
   };
 
-  // getRank
+  // Get rank
   virtual unsigned int getRank( const E key ) const
   {
     InfoMapper<E, T>::validKey( key );
 
-    return m_rank_maximum[ key ].rank;
+    return m_rank_maximum[key].rank;
+  };
+
+  virtual unsigned int getRank( const unsigned int index ) const
+  {
+    const E key = (E) index;
+
+    InfoMapper<E, T>::validKey( key );
+
+    return m_rank_maximum[key].rank;
   };
 
   virtual unsigned int getRank( const std::string name ) const
@@ -305,10 +412,10 @@ public:
 
     InfoMapper<E, T>::validKey( key );
 
-    return m_rank_maximum[ key ].rank;
+    return m_rank_maximum[key].rank;
   };
 
-  // reduce
+  // Reduce
   virtual void reduce( bool allReduce, const ProcessorGroup* myWorld )
   {
     unsigned int nStats = InfoMapper<E, T>::m_keys.size();
@@ -340,10 +447,10 @@ public:
       //       toReduce[i] = 0;
       //     }
       //   }
-	
+        
       //   Uintah::MPI::Allreduce( &toReduce[0], &reduced[0], nStats, MPI_DOUBLE, MPI_SUM, myWorld->getComm() );
 
-      // 	// If this rank belongs to this node then save the summation values.
+      //        // If this rank belongs to this node then save the summation values.
       //   if (n == myWorld->myNode()) {
       //     for (size_t i = 0; i < nStats; ++i) {
       //       m_node_sum[i] = reduced[i];

@@ -261,7 +261,9 @@ SimulationController::SimulationController( const ProcessorGroup * myworld
   m_runtime_stats.insert( TLBMisses,   std::string("TLBMisses")  , "misses", 0 );
 #endif
 
-  m_runtime_stats.validate( MAX_TIMING_STATS );
+  m_runtime_stats.validate( MAX_RUNTIME_STATS );
+
+  m_other_stats.validate( MAX_OTHER_STATS );
 
   ResetStats();
 
@@ -723,11 +725,11 @@ SimulationController::ReportStats(const ProcessorGroup*,
 
     if( header )
       message << std::endl
-	      << "Simulation and run time stats are reported "
-	      << "at the end of each time step" << std::endl
-	      << "EMA == Wall time as an exponential moving average "
-	      << "using a window of the last " << m_wall_timers.getWindow()
-	      << " time steps" << std::endl;
+              << "Simulation and run time stats are reported "
+              << "at the end of each time step" << std::endl
+              << "EMA == Wall time as an exponential moving average "
+              << "using a window of the last " << m_wall_timers.getWindow()
+              << " time steps" << std::endl;
 
     message << std::left
             << "Timestep "   << std::setw(8)  << m_app->getTimeStep()
@@ -755,26 +757,26 @@ SimulationController::ReportStats(const ProcessorGroup*,
       int           max_highwater_rank = m_runtime_stats.getRank(    SCIMemoryHighwater );
       
       if (avg_memused == max_memused && avg_highwater == max_highwater) {
-	message << "Memory Use=" << std::setw(8)
-		<< ProcessInfo::toHumanUnits((unsigned long) avg_memused);
+        message << "Memory Use=" << std::setw(8)
+                << ProcessInfo::toHumanUnits((unsigned long) avg_memused);
 
-	if(avg_highwater)
-	  message << "    Highwater Memory Use=" << std::setw(8)
-		  << ProcessInfo::toHumanUnits((unsigned long) avg_highwater);
+        if(avg_highwater)
+          message << "    Highwater Memory Use=" << std::setw(8)
+                  << ProcessInfo::toHumanUnits((unsigned long) avg_highwater);
       }
       else {
-	message << "Memory Used=" << std::setw(10)
-		<< ProcessInfo::toHumanUnits((unsigned long) avg_memused)
-		<< " (avg) " << std::setw(10)
-		<< ProcessInfo::toHumanUnits(max_memused)
-		<< " (max on rank: " << std::setw(6) << max_memused_rank << ")";
+        message << "Memory Used=" << std::setw(10)
+                << ProcessInfo::toHumanUnits((unsigned long) avg_memused)
+                << " (avg) " << std::setw(10)
+                << ProcessInfo::toHumanUnits(max_memused)
+                << " (max on rank: " << std::setw(6) << max_memused_rank << ")";
 
-	if (avg_highwater)
-	  message << "    Highwater Memory Used=" << std::setw(10)
-		  << ProcessInfo::toHumanUnits((unsigned long)avg_highwater)
-		  << " (avg) " << std::setw(10)
-		  << ProcessInfo::toHumanUnits(max_highwater)
-		  << " (max on rank: " << std::setw(6) << max_highwater_rank << ")";
+        if (avg_highwater)
+          message << "    Highwater Memory Used=" << std::setw(10)
+                  << ProcessInfo::toHumanUnits((unsigned long)avg_highwater)
+                  << " (avg) " << std::setw(10)
+                  << ProcessInfo::toHumanUnits(max_highwater)
+                  << " (max on rank: " << std::setw(6) << max_highwater_rank << ")";
       }
     }
     else {
@@ -782,11 +784,11 @@ SimulationController::ReportStats(const ProcessorGroup*,
       double  highwater = m_runtime_stats[SCIMemoryHighwater];
       
       message << "Memory Use=" << std::setw(8)
-	      << ProcessInfo::toHumanUnits((unsigned long) memused );
+              << ProcessInfo::toHumanUnits((unsigned long) memused );
 
       if(highwater)
-	message << "    Highwater Memory Use=" << std::setw(8)
-		<< ProcessInfo::toHumanUnits((unsigned long) highwater);
+        message << "    Highwater Memory Use=" << std::setw(8)
+                << ProcessInfo::toHumanUnits((unsigned long) highwater);
 
       message << " (on rank 0 only)";
     }
@@ -912,14 +914,12 @@ SimulationController::ReportStats(const ProcessorGroup*,
       message << "Per proc runtime performance stats" << std::endl;
 
       for (unsigned int i = 0; i < m_runtime_stats.size(); ++i) {
-	RuntimeStatsEnum e = (RuntimeStatsEnum) i;
-
-	if (m_runtime_stats[e] > 0) {
-	  message << "  " << std::left
-		  << "rank: " << std::setw(5) << d_myworld->myRank() << " "
-		  << std::left << std::setw(19) << m_runtime_stats.getName(e) << " ["
-		  << m_runtime_stats.getUnits(e) << "]: " << m_runtime_stats[e] << "\n";
-	}
+        if (m_runtime_stats[i] > 0) {
+          message << "  " << std::left
+                  << "rank: " << std::setw(5) << d_myworld->myRank() << " "
+                  << std::left << std::setw(19) << m_runtime_stats.getName(i) << " ["
+                  << m_runtime_stats.getUnits(i) << "]: " << m_runtime_stats[i] << "\n";
+        }
       }
 
       DOUT(true, message.str());
@@ -930,12 +930,12 @@ SimulationController::ReportStats(const ProcessorGroup*,
       message << "Other per proc performance stats" << std::endl;
 
       for (unsigned int i = 0; i < m_other_stats.size(); ++i) {
-	if (m_other_stats[i] > 0) {
-	  message << "  " << std::left
-		  << "rank: " << std::setw(5) << d_myworld->myRank() << " "
-		  << std::left << std::setw(19) << m_other_stats.getName(i) << " ["
-		  << m_other_stats.getUnits(i) << "]: " << m_other_stats[i] << "\n";
-	}
+        if (m_other_stats[i] > 0) {
+          message << "  " << std::left
+                  << "rank: " << std::setw(5) << d_myworld->myRank() << " "
+                  << std::left << std::setw(19) << m_other_stats.getName(i) << " ["
+                  << m_other_stats.getUnits(i) << "]: " << m_other_stats[i] << "\n";
+        }
       }
       
       DOUT(true, message.str());
@@ -952,51 +952,49 @@ SimulationController::ReportStats(const ProcessorGroup*,
       message << "Run time performance stats" << std::endl;
       
       message << "  " << std::left
-	      << std::setw(21) << "Description"
-	      << std::setw(15) << "Units"
-	      << std::setw(15) << "Average"
-	      << std::setw(15) << "Maximum"
-	      << std::setw(13) << "Rank"
-	      << std::setw(13) << "100*(1-ave/max) '% load imbalance'"
-	      << "\n";
-	
+              << std::setw(21) << "Description"
+              << std::setw(15) << "Units"
+              << std::setw(15) << "Average"
+              << std::setw(15) << "Maximum"
+              << std::setw(13) << "Rank"
+              << std::setw(13) << "100*(1-ave/max) '% load imbalance'"
+              << "\n";
+        
       for (unsigned int i=0; i<m_runtime_stats.size(); ++i) {
-	RuntimeStatsEnum e = (RuntimeStatsEnum) i;
-	  
-	if (m_runtime_stats.getMaximum(e) > 0) {
-	  message << "  " << std::left
-		  << std::setw(21) << m_runtime_stats.getName(e)
-		  << "[" << std::setw(10) << m_runtime_stats.getUnits(e) << "]"
-		  << " : " << std::setw(12) << m_runtime_stats.getAverage(e)
-		  << " : " << std::setw(12) << m_runtime_stats.getMaximum(e)
-		  << " : " << std::setw(10) << m_runtime_stats.getRank(e)
-		  << " : " << std::setw(10)
-		  << 100.0 * (1.0 - (m_runtime_stats.getAverage(e) / m_runtime_stats.getMaximum(e)))
-		  << "\n";
-	}
+        if (m_runtime_stats.getMaximum(i) > 0) {
+          message << "  " << std::left
+                  << std::setw(21) << m_runtime_stats.getName(i)
+                  << "[" << std::setw(10) << m_runtime_stats.getUnits(i) << "]"
+                  << " : " << std::setw(12) << m_runtime_stats.getAverage(i)
+                  << " : " << std::setw(12) << m_runtime_stats.getMaximum(i)
+                  << " : " << std::setw(10) << m_runtime_stats.getRank(i)
+                  << " : " << std::setw(10)
+                  << 100.0 * (1.0 - (m_runtime_stats.getAverage(i) / m_runtime_stats.getMaximum(i)))
+                  << "\n";
+        }
       }
     }
-      
+    
     // Report the overhead percentage.
     if( !std::isnan(overheadAverage) ) {
       message << "  Percentage of time spent in overhead : " << overheadAverage * 100.0 << "\n";
     }
-	
+        
     if( m_other_stats.size() ) {
       message << "Other performance stats" << std::endl;
       
       for (unsigned int i=0; i<m_other_stats.size(); ++i) {
-	if (m_other_stats.getMaximum(i) > 0) {
-	  message << "  " << std::left
-		  << std::setw(21) << m_other_stats.getName(i)
-		  << "["   << std::setw(10) << m_other_stats.getUnits(i) << "]"
-		  << " : " << std::setw(12) << m_other_stats.getAverage(i)
-		  << " : " << std::setw(12) << m_other_stats.getMaximum(i)
-		  << " : " << std::setw(10) << m_other_stats.getRank(i)
-		  << " : " << std::setw(10)
-		  << 100.0 * (1.0 - (m_other_stats.getAverage(i) / m_other_stats.getMaximum(i)))
-		  << "\n";
-	}
+        if (m_other_stats.getMaximum(i) > 0) {
+          message << "  " << std::left
+                  << std::setw(21) << m_other_stats.getName(i)
+                  << "["   << std::setw(10) << m_other_stats.getUnits(i) << "]"
+                  << " : " << std::setw(12) << m_other_stats.getAverage(i)
+                  << " : " << std::setw(12) << m_other_stats.getMaximum(i)
+                  << " : " << std::setw(10) << m_other_stats.getRank(i)
+                  << " : " << std::setw(10)
+                  << 100.0 * (1.0 - (m_other_stats.getAverage(i) / m_other_stats.getMaximum(i)))
+                  << "\n";
+        }
       }
     }
 

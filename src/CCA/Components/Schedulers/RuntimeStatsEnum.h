@@ -60,7 +60,7 @@ namespace Uintah {
     , RegriddingCopyDataTime
     , LoadBalancerTime
     
-    // These five enumerators are used in SimulationController::printSimulationStats to determine task and comm overhead.
+    // These five enumerators are used in SimulationController::ReportStats to determine task and comm overhead.
     , TaskExecTime
     , TaskLocalCommTime
     , TaskWaitCommTime
@@ -94,7 +94,7 @@ namespace Uintah {
     , TLBMisses             // Total translation lookaside buffer misses
 #endif
 
-     , MAX_TIMING_STATS
+     , MAX_RUNTIME_STATS
   };
 
 } // end namespace Uintah
