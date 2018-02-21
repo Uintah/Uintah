@@ -227,7 +227,7 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
     std::sort(_xyzPatch_boundary[1].begin(),_xyzPatch_boundary[1].end());
     std::sort(_xyzPatch_boundary[2].begin(),_xyzPatch_boundary[2].end());
 
-    if(_multiBox){  // check for staggered patch layouts and throw error if found.  We do this by checking to see if all patch boundarys line up with all patch-box bondaries.
+    if(_multiBox){  // check for staggered patch layouts and throw error if found.  We do this by checking to see if all patch boundarys line up with all patch-box boundaries.
       for ( ProblemSpecP db_box = db_level->findBlock("Box"); db_box != nullptr; db_box = db_box->findNextBlock("Box")){
         IntVector tempPatchIntVector(0,0,0);
         db_box->require( "patches", tempPatchIntVector );
@@ -1118,23 +1118,6 @@ DORadiation::setIntensityBC( const ProcessorGroup* pc,
 
   }
 }
-
-
-// Table search, nothing fancy linear search
-int
-DORadiation::getSweepPatchIndex( double patchMid, std::vector<double>& indep_var  ){
-  int j = -1;
-  for (unsigned int i=0; i < indep_var.size(); i++ ) {
-    if ( patchMid > indep_var[i] ) {
-      j++;
-    }else{
-      break;
-    }
-  }
-  return j;
-}
-
-
 
 
 void
