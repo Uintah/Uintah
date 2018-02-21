@@ -142,7 +142,7 @@
     <save label="char_mass_qn2_rhs"/>
     <save label="char_mass_qn3"/>
     <save label="char_mass_qn3_rhs"/>
-    <checkpoint cycle="2" interval="2e-3"/>
+    <checkpoint cycle="2" interval="1e-3"/>
     <compression>gzip</compression>
   </DataArchiver>
   <Grid>
