@@ -258,13 +258,13 @@ DSmaMMML<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   FieldTool< TT > c_field_tool(tsk_info);
   
-  typedef typename ArchesCore::VariableHelper< TT >::ConstXFaceType TX;
-  typedef typename ArchesCore::VariableHelper< TT >::ConstYFaceType TY;
-  typedef typename ArchesCore::VariableHelper< TT >::ConstZFaceType TZ;
+  //typedef typename ArchesCore::VariableHelper< TT >::ConstXFaceType TX;
+  //typedef typename ArchesCore::VariableHelper< TT >::ConstYFaceType TY;
+  //typedef typename ArchesCore::VariableHelper< TT >::ConstZFaceType TZ;
 
-  //typedef typename ArchesCore::VariableHelper< TT >::XFaceType TX;
-  //typedef typename ArchesCore::VariableHelper< TT >::YFaceType TY;
-  //typedef typename ArchesCore::VariableHelper< TT >::ZFaceType TZ;
+  typedef typename ArchesCore::VariableHelper< TT >::XFaceType TX;
+  typedef typename ArchesCore::VariableHelper< TT >::YFaceType TY;
+  typedef typename ArchesCore::VariableHelper< TT >::ZFaceType TZ;
 
   FieldTool< TX > x_field_tool(tsk_info);
   FieldTool< TY > y_field_tool(tsk_info);

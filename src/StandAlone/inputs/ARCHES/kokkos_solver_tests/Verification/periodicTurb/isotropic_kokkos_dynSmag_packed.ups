@@ -29,7 +29,6 @@
     <save label="vVel_cc"/>
     <save label="wVel_cc"/>
     <save label="gamma"/>
-    <save label="Cs"/>
     <save label="pressure"/>
     <save label="b_press"/>
     <!--checkpoint cycle="2" interval=".3"/-->
