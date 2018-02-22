@@ -100,14 +100,13 @@ class MPIScheduler : public SchedulerCommon {
     void computeNetRuntimeStats();
 
     // timing statistics for Uintah infrastructure overhead
-    enum TimingStat {
+    enum TimingStatEnum {
         TotalSend = 0
       , TotalRecv
       , TotalTest
       , TotalWait
       , TotalReduce
       , TotalTask
-      , MAX_TIMING_STATS
     };
     
     enum {
@@ -116,7 +115,7 @@ class MPIScheduler : public SchedulerCommon {
       , WAIT_ALL
     };
 
-    ReductionInfoMapper< TimingStat, double > mpi_info_;
+    ReductionInfoMapper< TimingStatEnum, double > mpi_info_;
 
     MPIScheduler* m_parent_scheduler{nullptr};
 

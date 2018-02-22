@@ -598,7 +598,7 @@ void visit_SetGridInfo( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetRuntimeStats( visit_simulation_data *sim )
 {
-  const ReductionInfoMapper< RuntimeStatsEnum, double > &runtimeStats =
+  ReductionInfoMapper< RuntimeStatsEnum, double > runtimeStats =
     sim->simController->getRuntimeStats();
 
   VisItUI_setValueS( "RuntimeStatsGroupBox", "SHOW_WIDGET", 1);
@@ -663,7 +663,7 @@ void visit_SetMPIStats( visit_simulation_data *sim )
   // Add in the mpi run time stats.
   if( mpiScheduler )
   {
-    ReductionInfoMapper< MPIScheduler::TimingStat, double > &mpiStats =
+    ReductionInfoMapper< MPIScheduler::TimingStatEnum, double > &mpiStats =
       mpiScheduler->mpi_info_;
 
     VisItUI_setValueS( "MPIStatsGroupBox", "SHOW_WIDGET", 1);
@@ -671,14 +671,12 @@ void visit_SetMPIStats( visit_simulation_data *sim )
 
     for (unsigned int i=0; i<mpiStats.size(); ++i)
     {
-      MPIScheduler::TimingStat e = (MPIScheduler::TimingStat) i;
+      std::string name  = mpiStats.getName(i);
+      std::string units = mpiStats.getUnits(i);
       
-      std::string name  = mpiStats.getName(e);
-      std::string units = mpiStats.getUnits(e);
-      
-      double  average = mpiStats.getAverage(e);
-      double  maximum = mpiStats.getMaximum(e);
-      int     rank    = mpiStats.getRank(e);
+      double  average = mpiStats.getAverage(i);
+      double  maximum = mpiStats.getMaximum(i);
+      int     rank    = mpiStats.getRank(i);
       
       VisItUI_setTableValueS("MPIStatsTable", i, 0, name.c_str(), 0);
       VisItUI_setTableValueS("MPIStatsTable", i, 1, units.c_str(), 0);
@@ -705,7 +703,7 @@ void visit_SetMPIStats( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetOtherStats( visit_simulation_data *sim )
 {
-  const ReductionInfoMapper< SimulationController::OtherStatsEnum, double > &otherStats =
+  ReductionInfoMapper< SimulationController::OtherStatsEnum, double > otherStats =
     sim->simController->getOtherStats();
 
   if( otherStats.size() )

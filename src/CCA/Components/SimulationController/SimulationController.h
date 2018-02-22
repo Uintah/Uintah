@@ -205,8 +205,7 @@ public:
 
   // Other stats
   enum OtherStatsEnum {
-    // UNUSED = 0,
-    MAX_OTHER_STATS = 0
+    Dummy_Stat = 99
   };
 
 protected:
@@ -299,10 +298,10 @@ public:
   void setVisIt( unsigned int val ) { m_do_visit = val; }
   unsigned int  getVisIt() { return m_do_visit; }
 
-  const ReductionInfoMapper< RuntimeStatsEnum, double > getRuntimeStats() const
+  ReductionInfoMapper< RuntimeStatsEnum, double > getRuntimeStats()
   { return m_runtime_stats; };
 
-  const ReductionInfoMapper< OtherStatsEnum,   double > getOtherStats() const
+  ReductionInfoMapper< OtherStatsEnum,   double > getOtherStats()
   { return m_other_stats; };
 
 protected:

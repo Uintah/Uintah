@@ -222,7 +222,9 @@ SimulationController::SimulationController( const ProcessorGroup * myworld
 
   std::string timeStr("seconds");
   std::string bytesStr("MBytes");
-    
+
+  m_other_stats.insert( Dummy_Stat, std::string("DummyStat"), "BodyCount", 0 );
+  
   m_runtime_stats.insert( CompilationTime,           std::string("Compilation"),           timeStr, 0 );
   m_runtime_stats.insert( RegriddingTime,            std::string("Regridding"),            timeStr, 0 );
   m_runtime_stats.insert( RegriddingCompilationTime, std::string("RegriddingCompilation"), timeStr, 0 );
@@ -260,10 +262,6 @@ SimulationController::SimulationController( const ProcessorGroup * myworld
   m_runtime_stats.insert( L3Misses,    std::string("L3Misses")   , "misses", 0 );
   m_runtime_stats.insert( TLBMisses,   std::string("TLBMisses")  , "misses", 0 );
 #endif
-
-  m_runtime_stats.validate( MAX_RUNTIME_STATS );
-
-  m_other_stats.validate( MAX_OTHER_STATS );
 
   ResetStats();
 

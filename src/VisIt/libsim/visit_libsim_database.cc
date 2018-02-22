@@ -556,7 +556,7 @@ visit_handle visit_SimGetMetaData(void *cbdata)
       for( unsigned j=0; j<2; ++j )
       {
         // Add in the processor runtime stats.
-        const ReductionInfoMapper< RuntimeStatsEnum, double > &runtimeStats =
+        ReductionInfoMapper< RuntimeStatsEnum, double > runtimeStats =
           sim->simController->getRuntimeStats();
         
         for( unsigned int i=0; i<runtimeStats.size(); ++i )
@@ -597,7 +597,7 @@ visit_handle visit_SimGetMetaData(void *cbdata)
             if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
             {
               std::string stat = std::string("processor/mpi/") + 
-                mpiScheduler->mpi_info_.getName( (MPIScheduler::TimingStat) i ) + proc_level[j];;
+                mpiScheduler->mpi_info_.getName( i ) + proc_level[j];;
               
               std::string units = 
                 runtimeStats.getUnits( i );
@@ -1560,7 +1560,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
     MPIScheduler *mpiScheduler = dynamic_cast<MPIScheduler*>
       (sim->simController->getSchedulerP().get_rep());
 
-    const ReductionInfoMapper< RuntimeStatsEnum, double > &runtimeStats =
+    ReductionInfoMapper< RuntimeStatsEnum, double > runtimeStats =
       sim->simController->getRuntimeStats();
 
     LevelInfo &levelInfo = stepInfo->levelInfo[level];

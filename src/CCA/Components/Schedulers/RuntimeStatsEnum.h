@@ -93,8 +93,6 @@ namespace Uintah {
     , L3Misses              // L3 cache misses
     , TLBMisses             // Total translation lookaside buffer misses
 #endif
-
-     , MAX_RUNTIME_STATS
   };
 
 } // end namespace Uintah
