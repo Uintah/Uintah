@@ -25,10 +25,10 @@
 #include <CCA/Components/MPM/PhysicalBC/ScalarFluxBC.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ParameterNotFound.h>
-#include <Core/GeometryPiece/BoxGeometryPiece.h>
 #include <Core/GeometryPiece/CylinderGeometryPiece.h>
 #include <Core/GeometryPiece/SphereGeometryPiece.h>
 #include <Core/GeometryPiece/DifferenceGeometryPiece.h>
+#include <Core/GeometryPiece/IntersectionGeometryPiece.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Grid/Box.h>
 #include <Core/Grid/Level.h>
@@ -42,6 +42,10 @@ using namespace std;
 ScalarFluxBC::ScalarFluxBC(ProblemSpecP& ps, const GridP& grid,
                        const MPMFlags* flags)
 {
+  d_outwardNormal = false;
+  d_surface       = nullptr;
+  d_surfaceVolume = nullptr;
+
   // First read the geometry information
   // d_surface is the geometry object containing the surface to be loaded.
 #if 0
@@ -80,6 +84,59 @@ ScalarFluxBC::ScalarFluxBC(ProblemSpecP& ps, const GridP& grid,
                        dx.y()/((double) d_res.y()),
                        dx.z()/((double) d_res.z()));
     }
+  } else if (go_type == "hemiShell") {
+    // Create a hemispherical shell WITHOUT the bisected sphere interior.
+    Point origin(0.0, 0.0, 0.0);
+    double radius(0.0);
+    if (!child->get("center", origin)) { // Alternate specification
+      child->require("origin", origin);
+    }
+    child->require("radius", radius);
+
+    if (radius <= 0.0) {
+      std::string errorMessage("Input File Error - ScalarFluxBC: ");
+      errorMessage += "Hemispherical radius must be > 0.0";
+      SCI_THROW(ProblemSetupException(errorMessage.c_str(), __FILE__, __LINE__));
+    }
+
+    Vector planeNormal;
+    child->require("plane_normal", planeNormal);
+    if (planeNormal.length2() <= 1.0e-10) {
+      std::string errorMessage("Input File Error - ScalarFluxBC: ");
+      errorMessage += "Hemispherical plane normal magnitude must be > 1e-10.";
+      SCI_THROW(ProblemSetupException(errorMessage.c_str(), __FILE__, __LINE__));
+    }
+    // Build the box directions to difference from the sphere.
+    //   i = normal, j = first parallel direction, k = i X j
+    // First direction in plane is arbitrary
+    Vector box_j(1.0, 1.0, 1.0);
+    planeNormal.normalize();
+    box_j.normalize();
+    // Remove components of normal from box_j
+    box_j -= Dot(planeNormal, box_j)*planeNormal;
+    box_j.normalize();
+    // planeNormal is magnitude 1, box_j is magnitude 1, therefore their cross
+    // product should be magnitude 1 by default since they should be orthogonal.
+    Vector box_k = Cross(planeNormal,box_j);
+    // To remove the bottom half of the sphere, in local coordinates, the difference
+    //   box has corners at:
+    //     origin + (box_k + box_j) * radius
+    //     (origin - normal * rad) - (box_k + box_j) * radius
+    Vector localCornerMax = origin.asVector() + (box_k + box_j) * radius;
+    Vector localCornerMin = (origin.asVector()-planeNormal*radius) - (box_k+box_j)*radius;
+    Vector globalCornerMax, globalCornerMin;
+
+    BoxGeometryPiece *normalBox = buildGlobalBox(localCornerMax, localCornerMin);
+    BoxGeometryPiece *shellBox  = buildGlobalBox(localCornerMax - planeNormal*d_dxpp,
+                                                localCornerMin);
+
+    SphereGeometryPiece *hemisphere = scinew SphereGeometryPiece(origin, radius);
+
+    // Box is finally defined globally.  Build geometry.
+
+    d_surface = scinew DifferenceGeometryPiece(hemisphere, normalBox);
+    d_surfaceType = "hemiShell";
+
   } else {
     throw ParameterNotFound("* ERROR *: No surface specified for ScalarFluxBC.",
                             __FILE__, __LINE__);
@@ -141,6 +198,26 @@ void ScalarFluxBC::outputProblemSpec(ProblemSpecP& ps)
   }
 }
 
+BoxGeometryPiece* ScalarFluxBC::buildGlobalBox(  const Vector localCorner1
+                                             ,  const Vector localCorner2 )
+{
+  Vector cornerMin, cornerMax;
+
+  for (int direction = 0; direction < 3; ++direction) {
+    if (localCorner1[direction] > localCorner2[direction] ) {
+      cornerMax[direction] = localCorner1[direction];
+      cornerMin[direction] = localCorner2[direction];
+    }
+    else {
+      cornerMax[direction] = localCorner2[direction];
+      cornerMin[direction] = localCorner1[direction];
+    }
+  }
+  BoxGeometryPiece *boxGP = scinew BoxGeometryPiece(cornerMin.asPoint(),
+                                                    cornerMax.asPoint());
+
+  return boxGP;
+}
 // Get the type of this object for BC application
 std::string 
 ScalarFluxBC::getType() const

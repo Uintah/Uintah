@@ -516,6 +516,8 @@ void AMRMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
     t->computes(lb->p_qLabel);
   }
 
+  t->computes(lb->rMaxEffectiveStress);
+
   if (flags->d_doScalarDiffusion){
     t->computes(lb->pConcentrationLabel);
     t->computes(lb->pConcPreviousLabel);
@@ -689,7 +691,6 @@ void AMRMPM::scheduleTimeAdvance(const LevelP & level,
     const PatchSet* patches = level->eachPatch();
     scheduleComputeAndIntegrateAcceleration(sched, patches, matls);
     scheduleExMomIntegrated(                sched, patches, matls);
-    //scheduleDiffusionInterfaceDiv(    sched, patches, matls);
     scheduleSetGridBoundaryConditions(      sched, patches, matls);
   }
 
@@ -1430,6 +1431,8 @@ void AMRMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::OldDW, lb->NC_CCweightLabel, d_one_matl, Ghost::None);
   t->computes(             lb->NC_CCweightLabel, d_one_matl);
 
+  t->computes(lb->rMaxEffectiveStress);
+
   if(flags->d_doScalarDiffusion){
     t->requires(Task::OldDW, lb->pConcentrationLabel,           d_gn);
     t->requires(Task::NewDW, lb->gConcentrationRateLabel,       d_gac, NGN);
@@ -1437,14 +1440,21 @@ void AMRMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
     t->computes(lb->pConcentrationLabel_preReloc);
     t->computes(lb->pConcPreviousLabel_preReloc);
 
-    if(flags->d_doAutoCycleBC){
-      if(flags->d_autoCycleUseMinMax){
-        t->computes(lb->MinConcLabel);
-        t->computes(lb->MaxConcLabel);
-      }else{
-        t->computes(lb->TotalConcLabel);
-      }
+    t->computes(lb->TotalConcLabel);
+
+    if (flags->d_doAutoCycleBC && flags->d_autoCycleUseMinMax) {
+      t->computes(lb->MinConcLabel);
+      t->computes(lb->MaxConcLabel);
     }
+
+//    if(flags->d_doAutoCycleBC){
+//      if(flags->d_autoCycleUseMinMax){
+//        t->computes(lb->MinConcLabel);
+//        t->computes(lb->MaxConcLabel);
+//      }else{
+//        t->computes(lb->TotalConcLabel);
+//      }
+//    }
   }
 
   if(flags->d_withGaussSolver){
@@ -1958,14 +1968,25 @@ void AMRMPM::actuallyInitialize(
 
   new_dw->put(sumlong_vartype(totalParticles), lb->partCountLabel);
 
-  if(flags->d_doAutoCycleBC && flags->d_doScalarDiffusion){
-    if(flags->d_autoCycleUseMinMax){
+  new_dw->put(max_vartype(0.0), lb->rMaxEffectiveStress);
+
+  if(flags->d_doScalarDiffusion) {
+    // Always track the total concentration.
+    new_dw->put(sum_vartype(0.0), lb->TotalConcLabel);
+    if (flags->d_doAutoCycleBC && flags->d_autoCycleUseMinMax) {
       new_dw->put(min_vartype(5e11), lb->MinConcLabel);
       new_dw->put(max_vartype(-5e11), lb->MaxConcLabel);
-    }else{
-      new_dw->put(sum_vartype(0.0), lb->TotalConcLabel);
     }
   }
+
+//  if(flags->d_doAutoCycleBC && flags->d_doScalarDiffusion){
+//    if(flags->d_autoCycleUseMinMax){
+//      new_dw->put(min_vartype(5e11), lb->MinConcLabel);
+//      new_dw->put(max_vartype(-5e11), lb->MaxConcLabel);
+//    }else{
+//      new_dw->put(sum_vartype(0.0), lb->TotalConcLabel);
+//    }
+//  }
 }
 //______________________________________________________________________
 //
@@ -3960,6 +3981,9 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup *,
                                                    DataWarehouse  * old_dw,
                                                    DataWarehouse  * new_dw)
 {
+  // Zero out max effective stress value before we compute the stress tensor.
+  new_dw->put(max_vartype(0.0), lb->rMaxEffectiveStress);
+
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,
@@ -4157,6 +4181,8 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup *,
             concRate += gConcentrationRate[node]   * S[k];
           }
 
+          // Fixme TODO JBH -- Total Conc should be mass multiplied.
+          totalconc += pConcentration[idx]*pmass[idx];
           pConcentrationNew[idx]= pConcentration[idx] + concRate*delT;
           if(pConcentrationNew[idx] < sdmMinEffectiveConc){
             pConcentrationNew[idx] = sdmMinEffectiveConc;
@@ -4166,15 +4192,22 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup *,
           }
           pConcPreviousNew[idx] = pConcentration[idx];
           if (mpm_matl->doConcReduction()) {
-            if(flags->d_autoCycleUseMinMax){
-              if(pConcentrationNew[idx] > maxPatchConc)
-                maxPatchConc = pConcentrationNew[idx];
-              if(pConcentrationNew[idx] < minPatchConc)
-                minPatchConc = pConcentrationNew[idx];
-            }else{
-              totalconc += pConcentration[idx];
+            if (flags->d_autoCycleUseMinMax) {
+              maxPatchConc = std::max(maxPatchConc,pConcentrationNew[idx]);
+              minPatchConc = std::min(minPatchConc,pConcentrationNew[idx]);
             }
           }
+
+//          if (mpm_matl->doConcReduction()) {
+//            if(flags->d_autoCycleUseMinMax){
+//              if(pConcentrationNew[idx] > maxPatchConc)
+//                maxPatchConc = pConcentrationNew[idx];
+//              if(pConcentrationNew[idx] < minPatchConc)
+//                minPatchConc = pConcentrationNew[idx];
+//            }else{
+//              totalconc += pConcentration[idx];
+//            }
+//          }
         }
 
         if(flags->d_withGaussSolver){
@@ -4223,14 +4256,21 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup *,
       new_dw->put(sumvec_vartype(CMX),          lb->CenterOfMassPositionLabel);
       new_dw->put(sumvec_vartype(totalMom),     lb->TotalMomentumLabel);
 
-      if(flags->d_doAutoCycleBC && flags->d_doScalarDiffusion){
-        if(flags->d_autoCycleUseMinMax){
-          new_dw->put(max_vartype(maxPatchConc),  lb->MaxConcLabel);
-          new_dw->put(min_vartype(minPatchConc),  lb->MinConcLabel);
-        }else{
-          new_dw->put(sum_vartype(totalconc),     lb->TotalConcLabel);
+      if (flags->d_doScalarDiffusion) {
+        new_dw->put(sum_vartype(totalconc), lb->TotalConcLabel);
+        if (flags->d_doAutoCycleBC && flags->d_autoCycleUseMinMax) {
+          new_dw->put(max_vartype(maxPatchConc), lb->MaxConcLabel);
+          new_dw->put(min_vartype(minPatchConc), lb->MinConcLabel);
         }
       }
+//      if(flags->d_doAutoCycleBC && flags->d_doScalarDiffusion){
+//        if(flags->d_autoCycleUseMinMax){
+//          new_dw->put(max_vartype(maxPatchConc),  lb->MaxConcLabel);
+//          new_dw->put(min_vartype(minPatchConc),  lb->MinConcLabel);
+//        }else{
+//          new_dw->put(sum_vartype(totalconc),     lb->TotalConcLabel);
+//        }
+//      }
 
 #ifndef USE_DEBUG_TASK
       //__________________________________

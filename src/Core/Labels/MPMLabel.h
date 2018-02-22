@@ -126,7 +126,15 @@ namespace Uintah {
       const VarLabel* pDiffusivityLabel_preReloc;         //for scalar diffusion
       const VarLabel* pChemicalPotentialLabel;            //for scalar diffusion
       const VarLabel* pChemicalPotentialGradientLabel;    //for scalar diffusion
+
+      // For tracking overall reaction progression.
+      const VarLabel* patchThermalMassLabel;
+      const VarLabel* sumThermalMassLabel;
+      const VarLabel* patchReactedMolesLabel;
+      const VarLabel* sumReactedMolesLabel;
+
       const VarLabel* TotalConcLabel;
+      const VarLabel* rMaxEffectiveStress;
       const VarLabel* MaxConcLabel;
       const VarLabel* MinConcLabel;
       const VarLabel* pAvgConcLabel;

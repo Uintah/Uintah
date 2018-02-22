@@ -114,6 +114,7 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps,
 
   // Step 3 -- check if scalar diffusion is used and
   // create the scalar diffusion model.
+  bool requestsDiffusion = ps->findBlock("scalar_diffusion");
   if(flags->d_doScalarDiffusion){
     d_sdm = ScalarDiffusionModelFactory::create(ps,ss,flags);
   }else{

@@ -30,6 +30,7 @@
 #include <CCA/Components/MPM/MPMFlags.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
+#include <Core/GeometryPiece/BoxGeometryPiece.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Math/Matrix3.h>
@@ -126,11 +127,19 @@ WARNING
       ScalarFluxBC(const ScalarFluxBC&);
       ScalarFluxBC& operator=(const ScalarFluxBC&);
       
+      BoxGeometryPiece* buildGlobalBox(const Vector maxLocalCorner,
+                                       const Vector minLocalCorner);
+
       // Private Data
       // Surface information
       GeometryPiece* d_surface;
+      GeometryPiece* d_surfaceVolume;
       std::string d_surfaceType;
       long d_numMaterialPoints;
+
+      Vector d_dxpp;
+      IntVector d_res;
+
       bool d_cylinder_end;
       bool d_axisymmetric_end;
       bool d_axisymmetric_side;
@@ -140,8 +149,12 @@ WARNING
       LoadCurve<double>* d_loadCurve;
 
     public:
-      Vector d_dxpp;
-      IntVector d_res;
+
+      // FIXME TODO JBH -- No reason I can see for these to be public!
+      //   In fact, I'm not sure why they exist at all!
+//      Vector d_dxpp;
+//      IntVector d_res;
+
 
       friend std::ostream& operator<<(std::ostream& out,
                                       const Uintah::ScalarFluxBC& bc);

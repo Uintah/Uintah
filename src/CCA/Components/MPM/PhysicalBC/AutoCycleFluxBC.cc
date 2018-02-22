@@ -201,6 +201,7 @@ void AutoCycleFluxBC::applyExternalScalarFlux(const ProcessorGroup* , const Patc
 
   sumlong_vartype totalparts;
   sum_vartype totalconc;
+  sum_vartype totalmass;
   max_vartype maxconc;
   min_vartype minconc;
   double avgconc;
@@ -220,8 +221,10 @@ void AutoCycleFluxBC::applyExternalScalarFlux(const ProcessorGroup* , const Patc
   }else{
     old_dw->get(totalparts, d_mpm_lb->partCountLabel);
     old_dw->get(totalconc,  d_mpm_lb->TotalConcLabel);
+    old_dw->get(totalmass,  d_mpm_lb->TotalMassLabel);
 
-    avgconc = totalconc/(double)totalparts;
+    avgconc = totalconc / totalmass;
+    // avgconc = totalconc/(double)totalparts;
 
     if(d_flux_sign > 0){
       if(avgconc > d_auto_cycle_max)

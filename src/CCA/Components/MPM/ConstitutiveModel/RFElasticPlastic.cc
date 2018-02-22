@@ -241,6 +241,7 @@ RFElasticPlastic::~RFElasticPlastic()
   VarLabel::destroy(pPlasticStrainRateLabel_preReloc);
   VarLabel::destroy(pEnergyLabel_preReloc);
 
+
   delete d_flow;
   delete d_yield;
   delete d_stable;
@@ -314,6 +315,7 @@ RFElasticPlastic::initializeLocalMPMLabels()
     ParticleVariable<double>::getTypeDescription());
   pEnergyLabel_preReloc = VarLabel::create("p.energy+",
     ParticleVariable<double>::getTypeDescription());
+
 }
 
 //______________________________________________________________________
@@ -395,6 +397,8 @@ RFElasticPlastic::initializeCMData(const Patch* patch,
   // Deviatoric Stress Model
   d_devStress->initializeInternalVars(pset, new_dw);
   
+  new_dw->put(max_vartype(0.0), lb->rMaxEffectiveStress,
+                patch->getLevel(), matl->getDWIndex());
 }
 //______________________________________________________________________
 //
@@ -489,6 +493,8 @@ RFElasticPlastic::addComputesAndRequires(Task* task,
   //******* start - temporary use, CG
   task->computes(lb->pEquivalentStress_t1_preReloc,  matlset);
   //******* end   - temporary use, CG
+
+  task->computes(lb->rMaxEffectiveStress);
 }
 //______________________________________________________________________
 //
@@ -543,6 +549,8 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
 //  if (flag->d_artificial_viscosity_heating) {
 //    include_AV_heating=1.0;
 //  }
+
+  double MaxEffectiveStress = 0.0;
 
   // Loop thru patches
   for(int patchIndex=0; patchIndex<patches->size(); patchIndex++){
@@ -1060,6 +1068,16 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
       // Save the new data
       pStress_new[idx] = sigma;
+      double trace = -(sigma(0,0) + sigma(1,1) + sigma(2,2))/3.0;
+      double dev0  = sigma(0,0) + trace;
+      double dev1  = sigma(1,1) + trace;
+      double dev2  = sigma(2,2) + trace;
+
+      double J2 = 0.5*(dev0*dev0 + dev1*dev1 + dev2*dev2) +
+                    sigma(0,1)*sigma(1,0) + sigma(0,2)*sigma(2,0) + sigma(1,2)*sigma(2,1);
+      double effectiveStress = sqrt(3.0*J2);
+
+      MaxEffectiveStress = std::max(MaxEffectiveStress,effectiveStress);
         
       // Rotate the deformation rate back to the laboratory coordinates
       tensorD = (tensorR*tensorD)*(tensorR.Transpose());
@@ -1109,7 +1127,9 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
         flag->d_reductionVars->strainEnergy) {
       new_dw->put(sum_vartype(totalStrainEnergy), lb->StrainEnergyLabel);
     }
+    new_dw->put(max_vartype(MaxEffectiveStress), lb->rMaxEffectiveStress);
   }
+
 
   if (cout_EP.active()) 
     cout_EP << getpid() << "... End." << endl;

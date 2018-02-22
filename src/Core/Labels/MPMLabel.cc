@@ -45,6 +45,21 @@ MPMLabel::MPMLabel()
 
   // Particle Variables
 
+
+  // Reaction related variables
+  patchThermalMassLabel =
+    VarLabel::create("patchThermalMass", PerPatch<double>::getTypeDescription());
+
+  sumThermalMassLabel =
+    VarLabel::create("totalThermalMass", sum_vartype::getTypeDescription());
+
+  patchReactedMolesLabel=
+    VarLabel::create("patchReactedMoles", PerPatch<double>::getTypeDescription());
+
+  sumReactedMolesLabel =
+    VarLabel::create("totalReactedMoles", sum_vartype::getTypeDescription());
+
+
   // Diffusion related variables
   pChemicalPotentialLabel = VarLabel::create ("p.chemPotential",
       ParticleVariable<double>::getTypeDescription() );
@@ -213,6 +228,9 @@ MPMLabel::MPMLabel()
 
   pConcPreviousLabel_preReloc  = VarLabel::create( "p.concPrevious+",
 			ParticleVariable<double>::getTypeDescription() );
+
+  rMaxEffectiveStress = VarLabel::create("max.EffectiveStress",
+                                          max_vartype::getTypeDescription());
 
   TotalConcLabel = VarLabel::create( "TotalConc",
       sum_vartype::getTypeDescription() );
@@ -851,6 +869,11 @@ MPMLabel::MPMLabel()
 
 MPMLabel::~MPMLabel()
 {
+  VarLabel::destroy(patchThermalMassLabel);
+  VarLabel::destroy(sumThermalMassLabel);
+  VarLabel::destroy(patchReactedMolesLabel);
+  VarLabel::destroy(sumReactedMolesLabel);
+
   VarLabel::destroy(heatRate_CCLabel);
   //non PermanentParticleState
   VarLabel::destroy(pVolumeDeformedLabel);
@@ -936,6 +959,7 @@ MPMLabel::~MPMLabel()
 //  VarLabel::destroy(pWorkEnergyLabel_preReloc);
 
   VarLabel::destroy(TotalConcLabel);
+  VarLabel::destroy(rMaxEffectiveStress);
   VarLabel::destroy(MaxConcLabel);
   VarLabel::destroy(MinConcLabel);
   VarLabel::destroy(pAvgConcLabel);
