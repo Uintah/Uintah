@@ -508,7 +508,7 @@ void write_tiff_volume(const tiffFlags* flags,
   // Open the TIFF file
   TIFF *out;
   if((out = TIFFOpen(tname.str().c_str(), "w")) == nullptr){
-    cout << "Could not open " << tname << " for writing\n";
+    cout << "Could not open " << tname.str() << " for writing\n";
     exit(1);
   }
 
@@ -598,7 +598,7 @@ void write_tiff_slices(const tiffFlags* flags,
     // Open the TIFF file
     TIFF *out;
     if((out = TIFFOpen(sliceName.str().c_str(), "w")) == nullptr){
-      cout << "Could not open " << sliceName << " for writing\n";
+      cout << "Could not open " << sliceName.str() << " for writing\n";
       exit(1);
     }
   
