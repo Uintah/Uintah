@@ -1347,7 +1347,7 @@ main( int argc, char** argv )
         if(timestep_dir.exists() ) {
           cout << "  Created directory: "<<tname.str()<<"\n";
         }else{
-          cout << "Failed creating  base output directory: "<<tname<<"\n";
+          cout << "Failed creating  base output directory: "<<tname.str()<<"\n";
           exit(1);
         }
         
