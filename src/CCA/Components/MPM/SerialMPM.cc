@@ -4201,7 +4201,7 @@ void SerialMPM::finalParticleUpdate(const ProcessorGroup*,
              (pLocalized[idx]==-999)){
           std::cout << "Deleting particle: " << idx << " of type " << dwi << " with "
                     << " mass: " << pmassNew[idx] << " Temp: " << pTempNew[idx]
-                    << " Localized: " << pLocalized[idx] << std::cout;
+                    << " Localized: " << pLocalized[idx] << std::endl;
           delset->addParticle(idx);
         }
 
