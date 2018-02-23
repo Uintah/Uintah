@@ -127,8 +127,8 @@ void CCVel::compute_velocities( const Patch* patch, ArchesTaskInfoManager* tsk_i
   Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
   Uintah::parallel_for( range, [&](int i, int j, int k){
     u_cc(i,j,k) = (u(i,j,k) + u(i+1,j,k)) / 2.;
-    v_cc(i,j,k) = (v(i,j,k) + v(i+1,j,k)) / 2.;
-    w_cc(i,j,k) = (w(i,j,k) + w(i+1,j,k)) / 2.;
+    v_cc(i,j,k) = (v(i,j,k) + v(i,j+1,k)) / 2.;
+    w_cc(i,j,k) = (w(i,j,k) + w(i,j,k+1)) / 2.;
   });
 
 }

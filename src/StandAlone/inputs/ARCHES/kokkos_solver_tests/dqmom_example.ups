@@ -19,7 +19,7 @@
   <DataArchiver>
     <filebase>dqmom_example.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
-    <outputInitTimestep/>
+    <!--outputInitTimestep/-->
     <save label="x-mom"/>
     <save label="y-mom"/>
     <save label="z-mom"/>
@@ -47,7 +47,6 @@
     <save label="raw_coal_qn0_rhs"/>
     <save label="length_qn3"/>
     <save label="up_qn0"/>
-    <save label="a_model_0"/>
     <save label="w_qn0"/>
     <save label="w_qn0_unscaled"/>
     <save label="w_qn0_rhs"/>
@@ -76,7 +75,7 @@
     <save label="char_mass_qn2_rhs"/>
     <save label="char_mass_qn3"/>
     <save label="char_mass_qn3_rhs"/>
-    <checkpoint cycle="2" interval="2e-3"/>
+    <checkpoint cycle="2" interval="1e-3"/>
     <compression>gzip</compression>
   </DataArchiver>
   <Grid>

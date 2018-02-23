@@ -55,9 +55,13 @@ namespace Uintah {
     typedef typename ArchesCore::VariableHelper<T>::XFaceType FXT;
     typedef typename ArchesCore::VariableHelper<T>::YFaceType FYT;
     typedef typename ArchesCore::VariableHelper<T>::ZFaceType FZT;
-    typedef typename ArchesCore::VariableHelper<T>::ConstXFaceType CFXT;
-    typedef typename ArchesCore::VariableHelper<T>::ConstYFaceType CFYT;
-    typedef typename ArchesCore::VariableHelper<T>::ConstZFaceType CFZT;
+    typedef typename ArchesCore::VariableHelper<CT>::XFaceType CFXT;
+    typedef typename ArchesCore::VariableHelper<CT>::YFaceType CFYT;
+    typedef typename ArchesCore::VariableHelper<CT>::ZFaceType CFZT;
+    
+//    typedef typename ArchesCore::VariableHelper<T>::ConstXFaceType CFXT;
+//    typedef typename ArchesCore::VariableHelper<T>::ConstYFaceType CFYT;
+//    typedef typename ArchesCore::VariableHelper<T>::ConstZFaceType CFZT;
 
     IntegrateFlux(T& rhs, CFXT& flux_x,
                   CFYT& flux_y, CFZT& flux_z,

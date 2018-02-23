@@ -43,56 +43,80 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
 
       TaskInterface::TaskBuilder* tsk;
       if ( type == "CC" ){
-        typedef typename ArchesCore::VariableHelper<CCVariable<double> >::Type C;
-        typedef typename ArchesCore::VariableHelper<CCVariable<double> >::XFaceType FXT;
-        typedef typename ArchesCore::VariableHelper<CCVariable<double> >::YFaceType FYT;
-        typedef typename ArchesCore::VariableHelper<CCVariable<double> >::ZFaceType FZT;
-        typedef typename ArchesCore::VariableHelper<CCVariable<double> >::ConstXFaceType CFXT;
-        typedef typename ArchesCore::VariableHelper<CCVariable<double> >::ConstYFaceType CFYT;
-        typedef typename ArchesCore::VariableHelper<CCVariable<double> >::ConstZFaceType CFZT;
+        
+        typedef CCVariable<double> C;
+        typedef typename ArchesCore::VariableHelper<CCVariable<double> >::ConstType CT; 
+        //typedef typename ArchesCore::VariableHelper<CCVariable<double> >::XFaceType FXT;
+        //typedef typename ArchesCore::VariableHelper<CCVariable<double> >::YFaceType FYT;
+       // typedef typename ArchesCore::VariableHelper<CCVariable<double> >::ZFaceType FZT;
+       // typedef typename ArchesCore::VariableHelper<CT>::XFaceType CFXT;
+       // typedef typename ArchesCore::VariableHelper<CT>::YFaceType CFYT;
+       // typedef typename ArchesCore::VariableHelper<CT>::ZFaceType CFZT;
+        
+        //typedef typename ArchesCore::VariableHelper<CCVariable<double> >::ConstXFaceType CFXT;
+        //typedef typename ArchesCore::VariableHelper<CCVariable<double> >::ConstYFaceType CFYT;
+        //typedef typename ArchesCore::VariableHelper<CCVariable<double> >::ConstZFaceType CFZT;
         if ( m_pack_transport_construction_tasks ){
-          tsk = scinew KScalarRHS<C, FXT, FYT, FZT >::Builder(group_name, 0);
+          //tsk = scinew KScalarRHS<C, FXT, FYT, FZT >::Builder(group_name, 0);
+          tsk = scinew KScalarRHS<C, C >::Builder(group_name, 0);
         } else {
-          tsk = scinew KScalarRHS<C, CFXT, CFYT, CFZT >::Builder(group_name, 0);
+          tsk = scinew KScalarRHS<C, CT >::Builder(group_name, 0);
         }
       } else if ( type == "FX" ){
-        typedef typename ArchesCore::VariableHelper<SFCXVariable<double> >::Type C;
-        typedef typename ArchesCore::VariableHelper<SFCXVariable<double> >::XFaceType FXT;
-        typedef typename ArchesCore::VariableHelper<SFCXVariable<double> >::YFaceType FYT;
-        typedef typename ArchesCore::VariableHelper<SFCXVariable<double> >::ZFaceType FZT;
-        typedef typename ArchesCore::VariableHelper<SFCXVariable<double> >::ConstXFaceType CFXT;
-        typedef typename ArchesCore::VariableHelper<SFCXVariable<double> >::ConstYFaceType CFYT;
-        typedef typename ArchesCore::VariableHelper<SFCXVariable<double> >::ConstZFaceType CFZT;
+        //typedef typename ArchesCore::VariableHelper<SFCXVariable<double> >::Type C;
+        typedef SFCXVariable<double> C;
+        typedef typename ArchesCore::VariableHelper<SFCXVariable<double> >::ConstType CT; 
+        //typedef typename ArchesCore::VariableHelper<SFCXVariable<double> >::XFaceType FXT;
+        //typedef typename ArchesCore::VariableHelper<SFCXVariable<double> >::YFaceType FYT;
+        //typedef typename ArchesCore::VariableHelper<SFCXVariable<double> >::ZFaceType FZT;
+        //typedef typename ArchesCore::VariableHelper<CT>::XFaceType CFXT;
+        //typedef typename ArchesCore::VariableHelper<CT>::YFaceType CFYT;
+        //typedef typename ArchesCore::VariableHelper<CT>::ZFaceType CFZT;
+        
+        //typedef typename ArchesCore::VariableHelper<SFCXVariable<double> >::ConstXFaceType CFXT;
+        //typedef typename ArchesCore::VariableHelper<SFCXVariable<double> >::ConstYFaceType CFYT;
+        //typedef typename ArchesCore::VariableHelper<SFCXVariable<double> >::ConstZFaceType CFZT;
         if ( m_pack_transport_construction_tasks ){
-          tsk = scinew KScalarRHS<C, FXT, FYT, FZT >::Builder(group_name, 0);
+          tsk = scinew KScalarRHS<C, C >::Builder(group_name, 0);
         } else {
-          tsk = scinew KScalarRHS<C, CFXT, CFYT, CFZT >::Builder(group_name, 0);
+	  tsk = scinew KScalarRHS<C, CT >::Builder(group_name, 0);
         }
       } else if ( type == "FY" ){
-        typedef typename ArchesCore::VariableHelper<SFCYVariable<double> >::Type C;
-        typedef typename ArchesCore::VariableHelper<SFCYVariable<double> >::XFaceType FXT;
-        typedef typename ArchesCore::VariableHelper<SFCYVariable<double> >::YFaceType FYT;
-        typedef typename ArchesCore::VariableHelper<SFCYVariable<double> >::ZFaceType FZT;
-        typedef typename ArchesCore::VariableHelper<SFCYVariable<double> >::ConstXFaceType CFXT;
-        typedef typename ArchesCore::VariableHelper<SFCYVariable<double> >::ConstYFaceType CFYT;
-        typedef typename ArchesCore::VariableHelper<SFCYVariable<double> >::ConstZFaceType CFZT;
+        //typedef typename ArchesCore::VariableHelper<SFCYVariable<double> >::Type C;
+        typedef SFCYVariable<double> C;
+        typedef typename ArchesCore::VariableHelper<SFCYVariable<double> >::ConstType CT;        
+        //typedef typename ArchesCore::VariableHelper<SFCYVariable<double> >::XFaceType FXT;
+        //typedef typename ArchesCore::VariableHelper<SFCYVariable<double> >::YFaceType FYT;
+        //typedef typename ArchesCore::VariableHelper<SFCYVariable<double> >::ZFaceType FZT;
+        //typedef typename ArchesCore::VariableHelper<CT>::XFaceType CFXT;
+        //typedef typename ArchesCore::VariableHelper<CT>::YFaceType CFYT;
+        //typedef typename ArchesCore::VariableHelper<CT>::ZFaceType CFZT;
+        
+        //typedef typename ArchesCore::VariableHelper<SFCYVariable<double> >::ConstXFaceType CFXT;
+        //typedef typename ArchesCore::VariableHelper<SFCYVariable<double> >::ConstYFaceType CFYT;
+        //typedef typename ArchesCore::VariableHelper<SFCYVariable<double> >::ConstZFaceType CFZT;
         if ( m_pack_transport_construction_tasks ){
-          tsk = scinew KScalarRHS<C, FXT, FYT, FZT >::Builder(group_name, 0);
+          tsk = scinew KScalarRHS<C, C >::Builder(group_name, 0);
         } else {
-          tsk = scinew KScalarRHS<C, CFXT, CFYT, CFZT >::Builder(group_name, 0);
+	  tsk = scinew KScalarRHS<C, CT >::Builder(group_name, 0);
         }
       } else if ( type == "FZ" ){
-        typedef typename ArchesCore::VariableHelper<SFCZVariable<double> >::Type C;
-        typedef typename ArchesCore::VariableHelper<SFCZVariable<double> >::XFaceType FXT;
-        typedef typename ArchesCore::VariableHelper<SFCZVariable<double> >::YFaceType FYT;
-        typedef typename ArchesCore::VariableHelper<SFCZVariable<double> >::ZFaceType FZT;
-        typedef typename ArchesCore::VariableHelper<SFCZVariable<double> >::ConstXFaceType CFXT;
-        typedef typename ArchesCore::VariableHelper<SFCZVariable<double> >::ConstYFaceType CFYT;
-        typedef typename ArchesCore::VariableHelper<SFCZVariable<double> >::ConstZFaceType CFZT;
+        typedef SFCZVariable<double> C;
+        typedef typename ArchesCore::VariableHelper<SFCZVariable<double> >::ConstType CT;
+        //typedef typename ArchesCore::VariableHelper<SFCZVariable<double> >::XFaceType FXT;
+        //typedef typename ArchesCore::VariableHelper<SFCZVariable<double> >::YFaceType FYT;
+       // typedef typename ArchesCore::VariableHelper<SFCZVariable<double> >::ZFaceType FZT;
+        //typedef typename ArchesCore::VariableHelper<CT>::XFaceType CFXT;
+       // typedef typename ArchesCore::VariableHelper<CT>::YFaceType CFYT;
+        //typedef typename ArchesCore::VariableHelper<CT>::ZFaceType CFZT;
+        
+//        typedef typename ArchesCore::VariableHelper<SFCZVariable<double> >::ConstXFaceType CFXT;
+//        typedef typename ArchesCore::VariableHelper<SFCZVariable<double> >::ConstYFaceType CFYT;
+//        typedef typename ArchesCore::VariableHelper<SFCZVariable<double> >::ConstZFaceType CFZT;
         if ( m_pack_transport_construction_tasks ){
-          tsk = scinew KScalarRHS<C, FXT, FYT, FZT >::Builder(group_name, 0);
+          tsk = scinew KScalarRHS<C, C >::Builder(group_name, 0);
         } else {
-          tsk = scinew KScalarRHS<C, CFXT, CFYT, CFZT >::Builder(group_name, 0);
+	  tsk = scinew KScalarRHS<C, CT >::Builder(group_name, 0);
         }
       } else {
         throw InvalidValue("Error: Eqn type for group not recognized named: "+group_name+" with type: "+type,__FILE__,__LINE__);
@@ -393,17 +417,22 @@ void TransportFactory::register_DQMOM( ProblemSpecP db_dqmom ){
   std::string group_name = "dqmom_eqns";
 
   TaskInterface::TaskBuilder* tsk;
-  typedef typename ArchesCore::VariableHelper<CCVariable<double> >::Type C;
-  typedef typename ArchesCore::VariableHelper<CCVariable<double> >::XFaceType FXT;
-  typedef typename ArchesCore::VariableHelper<CCVariable<double> >::YFaceType FYT;
-  typedef typename ArchesCore::VariableHelper<CCVariable<double> >::ZFaceType FZT;
-  typedef typename ArchesCore::VariableHelper<CCVariable<double> >::ConstXFaceType CFXT;
-  typedef typename ArchesCore::VariableHelper<CCVariable<double> >::ConstYFaceType CFYT;
-  typedef typename ArchesCore::VariableHelper<CCVariable<double> >::ConstZFaceType CFZT;
+  typedef CCVariable<double> C;
+  typedef typename ArchesCore::VariableHelper<CCVariable<double> >::ConstType CT;
+  //typedef typename ArchesCore::VariableHelper<CCVariable<double> >::XFaceType FXT;
+  //typedef typename ArchesCore::VariableHelper<CCVariable<double> >::YFaceType FYT;
+  //typedef typename ArchesCore::VariableHelper<CCVariable<double> >::ZFaceType FZT;
+
+  //typedef typename ArchesCore::VariableHelper<CT>::XFaceType CFXT;
+  //typedef typename ArchesCore::VariableHelper<CT>::YFaceType CFYT;
+  //typedef typename ArchesCore::VariableHelper<CT>::ZFaceType CFZT;
+  //typedef typename ArchesCore::VariableHelper<CCVariable<double> >::ConstXFaceType CFXT;
+  //typedef typename ArchesCore::VariableHelper<CCVariable<double> >::ConstYFaceType CFYT;
+  //typedef typename ArchesCore::VariableHelper<CCVariable<double> >::ConstZFaceType CFZT;
   if ( m_pack_transport_construction_tasks ){
-    tsk = scinew KScalarRHS<C, FXT, FYT, FZT >::Builder(group_name, 0);
+    tsk = scinew KScalarRHS<C, C >::Builder(group_name, 0);
   } else {
-    tsk = scinew KScalarRHS<C, CFXT, CFYT, CFZT >::Builder(group_name, 0);
+    tsk = scinew KScalarRHS<C, CT >::Builder(group_name, 0);
   }
 
   _dqmom_eqns.push_back(group_name);
@@ -477,7 +506,7 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
   }
 
   //Create weights
-  for ( unsigned int i = 0; i < nQn; i++ ){
+  for ( int i = 0; i < int(nQn); i++ ){
 
     ProblemSpecP eqn_db = db_eqn_group->appendChild("eqn");
     std::stringstream this_qn;
@@ -493,18 +522,20 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
     }
 
     //link the models with the Weight:
-    if ( db_weight->findBlock("model") ){
-      for ( ProblemSpecP db_model = db_weight->findBlock("model"); db_model != nullptr;
-            db_model = db_model->findNextBlock("model") ){
+    //if ( db_weight->findBlock("model") ){
+      //for ( ProblemSpecP db_model = db_weight->findBlock("model"); db_model != nullptr;
+            //db_model = db_model->findNextBlock("model") ){
 
-        std::string label;
-        db_model->getAttribute("label", label);
+        //std::string label;
+        //db_model->getAttribute("label", label);
 
-        ProblemSpecP src_db = eqn_db->appendChild("src");
-        src_db->setAttribute( "label", label );
+        //ProblemSpecP src_db = eqn_db->appendChild("src");
+        //src_db->setAttribute( "label", label );
 
-      }
-    }
+      //}
+    //}
+    ProblemSpecP src_db = eqn_db->appendChild("src");
+    src_db->setAttribute("label", "w_qn"+this_qn.str()+"_src");
 
     ProblemSpecP db_init = db_weight->findBlock("initialization");
     if ( db_init != nullptr ){
@@ -550,7 +581,7 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
     std::string ic_label;
     db_ic->getAttribute("label", ic_label);
 
-    for ( unsigned int i = 0; i < nQn; i++ ){
+    for ( int i = 0; i < int(nQn); i++ ){
 
       ProblemSpecP eqn_db = db_eqn_group->appendChild("eqn");
       std::stringstream this_qn;
@@ -568,18 +599,20 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
       }
 
       //link the models with the Ic:
-      if ( db_ic->findBlock("model") ){
-        for ( ProblemSpecP db_model = db_ic->findBlock("model"); db_model != nullptr;
-              db_model = db_model->findNextBlock("model") ){
+      //if ( db_ic->findBlock("model") ){
+        //for ( ProblemSpecP db_model = db_ic->findBlock("model"); db_model != nullptr;
+              //db_model = db_model->findNextBlock("model") ){
 
-          std::string label;
-          db_model->getAttribute("label", label);
+          //std::string label;
+          //db_model->getAttribute("label", label);
 
-          ProblemSpecP src_db = eqn_db->appendChild("src");
-          src_db->setAttribute( "label", label+"_"+this_qn.str() );
+          //ProblemSpecP src_db = eqn_db->appendChild("src");
+          //src_db->setAttribute( "label", label+"_"+this_qn.str() );
 
-        }
-      }
+        //}
+      //}
+      ProblemSpecP src_db = eqn_db->appendChild("src");
+      src_db->setAttribute("label", ic_label+"_qn"+this_qn.str()+"_src");
 
       ProblemSpecP db_init = db_ic->findBlock("initialization");
       if ( db_init != nullptr ){

@@ -142,9 +142,6 @@ void TransferRadFieldsFromOldDW( const ProcessorGroup* pc,
   }; // class Builder 
 
 
-// Table search, nothing fancy linear search
-  int getSweepPatchIndex( double patchMid, std::vector<double>& indep_var );
-
 private:
       enum DORadType {enum_linearSolve, enum_sweepSpatiallyParallel};
   int _nDir;

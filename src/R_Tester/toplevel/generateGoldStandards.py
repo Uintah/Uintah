@@ -21,7 +21,7 @@ from sys import argv, exit
 from string import upper
 
 from subprocess import check_output # needed to get full pathname response from which command
-from helpers.runSusTests import nameoftest, testOS, input, num_processes, testOS, setGeneratingGoldStandards, userFlags
+from helpers.runSusTests import nameoftest, testOS, input, num_processes, testOS, setInputsDir, userFlags
 
 ####################################################################################
 
@@ -140,7 +140,7 @@ def validateArgs( options, args ) :
     if not os.path.isdir( inputs ) :
         error( "'inputs' directory not found here: '" + inputs )
 
-    setGeneratingGoldStandards( inputs )
+    setInputsDir( inputs )
 
 ####################################################################################
 

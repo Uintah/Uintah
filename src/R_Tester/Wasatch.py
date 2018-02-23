@@ -3,15 +3,11 @@
 from sys import argv, exit
 from os import environ, system, path
 from commands import getoutput
-from helpers.runSusTests import runSusTests, inputs_root, ignorePerformanceTests, build_root, generatingGoldStandards
+from helpers.runSusTests import runSusTests, ignorePerformanceTests, build_root, getInputsDir
 from helpers.modUPS import modUPS
 
-the_dir = generatingGoldStandards()
 
-if the_dir == "" :
-  the_dir = "%s/Wasatch" % inputs_root()
-else :
-  the_dir = the_dir + "/Wasatch"
+the_dir = "%s/%s" % ( getInputsDir(),"Wasatch" )
 
 bc_gpu_x_ups = modUPS( the_dir, \
                   "bc-test-svol-xdir.ups", \

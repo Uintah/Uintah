@@ -556,7 +556,7 @@ visit_handle visit_SimGetMetaData(void *cbdata)
       for( unsigned j=0; j<2; ++j )
       {
         // Add in the processor runtime stats.
-        const ReductionInfoMapper< RuntimeStatsEnum, double > &runtimeStats =
+        ReductionInfoMapper< RuntimeStatsEnum, double > runtimeStats =
           sim->simController->getRuntimeStats();
         
         for( unsigned int i=0; i<runtimeStats.size(); ++i )
@@ -566,10 +566,9 @@ visit_handle visit_SimGetMetaData(void *cbdata)
           if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
           {
             std::string stat = std::string("processor/runtime/") +
-              runtimeStats.getName( (RuntimeStatsEnum) i ) + proc_level[j];
+              runtimeStats.getName( i ) + proc_level[j];
             
-            std::string units = 
-              runtimeStats.getUnits( (RuntimeStatsEnum) i );
+            std::string units = runtimeStats.getUnits( i );
             
             VisIt_VariableMetaData_setName(vmd, stat.c_str());
             VisIt_VariableMetaData_setMeshName(vmd, mesh_for_patch_data.c_str());
@@ -598,10 +597,10 @@ visit_handle visit_SimGetMetaData(void *cbdata)
             if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
             {
               std::string stat = std::string("processor/mpi/") + 
-                mpiScheduler->mpi_info_.getName( (MPIScheduler::TimingStat) i ) + proc_level[j];;
+                mpiScheduler->mpi_info_.getName( i ) + proc_level[j];;
               
               std::string units = 
-                runtimeStats.getUnits( (RuntimeStatsEnum) i );
+                runtimeStats.getUnits( i );
               
               VisIt_VariableMetaData_setName(vmd, stat.c_str());
               VisIt_VariableMetaData_setMeshName(vmd, mesh_for_patch_data.c_str());
@@ -1561,7 +1560,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
     MPIScheduler *mpiScheduler = dynamic_cast<MPIScheduler*>
       (sim->simController->getSchedulerP().get_rep());
 
-    const ReductionInfoMapper< RuntimeStatsEnum, double > &runtimeStats =
+    ReductionInfoMapper< RuntimeStatsEnum, double > runtimeStats =
       sim->simController->getRuntimeStats();
 
     LevelInfo &levelInfo = stepInfo->levelInfo[level];
@@ -1750,7 +1749,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
     {
       gd = getGridData(schedulerP, gridP, level, local_patch, varName,
                        atoi(matl.c_str()), plow, phigh,
-		       (nodeCentered ? 0 : loadExtraElements));
+                       (nodeCentered ? 0 : loadExtraElements));
 
       if( gd )
       {
@@ -1795,15 +1794,15 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
         }
         
         for (int i=0; i<3; i++)
-	{
+        {
           gd->low[i]  =  plow[i] + int(nodeCentered == false);
           gd->high[i] = phigh[i] + int(nodeCentered == false);
         }
 
-	gd->num = ((gd->high[0]-gd->low[0]) *
-		   (gd->high[1]-gd->low[1]) *
-		   (gd->high[2]-gd->low[2]));
-	
+        gd->num = ((gd->high[0]-gd->low[0]) *
+                   (gd->high[1]-gd->low[1]) *
+                   (gd->high[2]-gd->low[2]));
+        
         gd->data = new double[gd->num*gd->components];
 
         for (int i=0; i<gd->num*gd->components; ++i)

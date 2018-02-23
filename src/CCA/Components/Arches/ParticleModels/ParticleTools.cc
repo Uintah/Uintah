@@ -9,6 +9,7 @@
 
 namespace Uintah{ namespace ArchesCore{
 
+//--------------------------------------------------------------------------------------------------
   std::string parse_for_role_to_label( ProblemSpecP& db, const std::string role ){
 
     const ProblemSpecP params_root = db->getRootNode();
@@ -46,6 +47,7 @@ namespace Uintah{ namespace ArchesCore{
 
   }
 
+//--------------------------------------------------------------------------------------------------
   std::string append_env( std::string in_name, const int qn ){
 
     using namespace std;
@@ -59,6 +61,7 @@ namespace Uintah{ namespace ArchesCore{
 
   }
 
+//--------------------------------------------------------------------------------------------------
   std::string append_qn_env( std::string in_name, const int qn ){
 
     std::string new_name = in_name;
@@ -70,6 +73,7 @@ namespace Uintah{ namespace ArchesCore{
 
   }
 
+//--------------------------------------------------------------------------------------------------
   bool check_for_particle_method( ProblemSpecP& db, PARTICLE_METHOD method ){
 
     const ProblemSpecP arches_root = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES");
@@ -101,6 +105,7 @@ namespace Uintah{ namespace ArchesCore{
 
   }
 
+//--------------------------------------------------------------------------------------------------
   int get_num_env( ProblemSpecP& db, PARTICLE_METHOD method ){
 
     const ProblemSpecP arches_root = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES");
@@ -142,6 +147,7 @@ namespace Uintah{ namespace ArchesCore{
     }
   }
 
+//--------------------------------------------------------------------------------------------------
   std::string get_model_type( ProblemSpecP& db, std::string model_name, PARTICLE_METHOD method ){
 
     const ProblemSpecP arches_root = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES");
@@ -168,6 +174,7 @@ namespace Uintah{ namespace ArchesCore{
     return "nullptr";
   }
 
+//--------------------------------------------------------------------------------------------------
   double get_scaling_constant(ProblemSpecP& db, const std::string labelName, const int qn){
 
     const ProblemSpecP params_root = db->getRootNode();
@@ -204,6 +211,7 @@ namespace Uintah{ namespace ArchesCore{
     }
   }
 
+//--------------------------------------------------------------------------------------------------
   bool get_model_value(ProblemSpecP& db, const std::string labelName, const int qn, double &value){
 
     const ProblemSpecP params_root = db->getRootNode();
@@ -231,6 +239,7 @@ namespace Uintah{ namespace ArchesCore{
     return false;
   }
 
+//--------------------------------------------------------------------------------------------------
   double get_inlet_particle_density(ProblemSpecP& db){
 
     const ProblemSpecP params_root = db->getRootNode();
@@ -246,6 +255,7 @@ namespace Uintah{ namespace ArchesCore{
     return false;
   }
 
+//--------------------------------------------------------------------------------------------------
   double get_inlet_particle_size(ProblemSpecP& db, const int qn ){
 
     const ProblemSpecP params_root = db->getRootNode();
@@ -261,6 +271,7 @@ namespace Uintah{ namespace ArchesCore{
     return false;
   }
 
+//--------------------------------------------------------------------------------------------------
   std::vector<std::string> getICNames( ProblemSpecP& db ){
 
     const ProblemSpecP db_dqmom = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM");
@@ -287,6 +298,61 @@ namespace Uintah{ namespace ArchesCore{
     }
 
     return ic_names;
+
+  }
+
+//--------------------------------------------------------------------------------------------------
+  std::vector<std::string> getICModels( ProblemSpecP& db, const std::string ic_name ){
+
+    const ProblemSpecP db_dqmom
+      = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM");
+    std::vector<std::string> ic_models;
+
+    if ( db_dqmom ){
+
+      if ( ic_name == "w" ){
+
+        ProblemSpecP db_weight = db_dqmom->findBlock("Weights");
+        for ( ProblemSpecP db_model = db_weight->findBlock("model"); db_model != nullptr;
+              db_model = db_model->findNextBlock("model") ){
+
+          std::string this_model;
+          db_model->getAttribute("label", this_model);
+          ic_models.push_back(this_model);
+
+        }
+
+      } else {
+
+        for ( ProblemSpecP db_ic = db_dqmom->findBlock("Ic"); db_ic != nullptr;
+        db_ic = db_ic->findNextBlock("Ic") ){
+
+          std::string label;
+          db_ic->getAttribute("label", label );
+
+          if ( ic_name == label ){
+
+            for ( ProblemSpecP db_model = db_ic->findBlock("model"); db_model != nullptr;
+            db_model = db_model->findNextBlock("model") ){
+              std::string this_model;
+              db_model->getAttribute("label", this_model);
+              ic_models.push_back(this_model);
+            }
+          }
+        }
+
+      }
+
+    } else {
+
+      std::stringstream msg;
+      msg << "Error: Trying to look for internal coordinates but no DQMOM exists in input file."
+      << std::endl;
+      throw ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+
+    }
+
+    return ic_models;
 
   }
 

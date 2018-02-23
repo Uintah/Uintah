@@ -50,7 +50,7 @@
 #include <vector>
 
 using namespace Uintah;
-
+Dout  dbgOut("UDA2VIS", false);
 
 /////////////////////////////////////////////////////////////////////
 // Utility functions for copying data from Uintah structures into
@@ -182,6 +182,8 @@ void copyComponents<Matrix3>(double *dest, const Matrix3 &src)
 extern "C"
 DataArchive* openDataArchive(const std::string& input_uda_name)
 {
+  DOUT(dbgOut, "openDataArchive" );
+  
   DataArchive *archive = scinew DataArchive(input_uda_name);
 
   return archive;
@@ -194,6 +196,7 @@ DataArchive* openDataArchive(const std::string& input_uda_name)
 extern "C"
 void closeDataArchive(DataArchive *archive)
 {
+  DOUT(dbgOut, "closeDataArchive" );
   delete archive;
 }
 
@@ -206,6 +209,10 @@ void closeDataArchive(DataArchive *archive)
 extern "C"
 GridP* getGrid(DataArchive *archive, int timeStepNo)
 {
+  std::ostringstream msg;
+  msg << std::left<< std::setw(50) << "getGrid "<< std::right <<" timestep: " << timeStepNo;
+  DOUT(dbgOut, msg.str() );
+  
   GridP *grid = new GridP(archive->queryGrid(timeStepNo));
   return grid;
 }
@@ -216,6 +223,7 @@ GridP* getGrid(DataArchive *archive, int timeStepNo)
 extern "C"
 void releaseGrid(GridP *grid)
 {
+  DOUT(dbgOut, "releaseGrid" );
   delete grid;
 }
 
@@ -225,6 +233,7 @@ void releaseGrid(GridP *grid)
 extern "C"
 std::vector<double> getCycleTimes(DataArchive *archive)
 {
+  DOUT(dbgOut, "getCycleTimes" );
   // Get the times and indices.
   std::vector<int> index;
   std::vector<double> times;
@@ -246,6 +255,10 @@ TimeStepInfo* getTimeStepInfo(DataArchive *archive,
                               int timestep,
                               int loadExtraElements)
 {
+  std::ostringstream msg;
+  msg << std::left<< std::setw(50) << "getTimeStepInfo "<< std::right <<" timestep: " << timestep;
+  DOUT(dbgOut, msg.str() );
+  
   int numLevels = (*grid)->numLevels();
   TimeStepInfo *stepInfo = new TimeStepInfo();
   stepInfo->levelInfo.resize(numLevels);
@@ -401,6 +414,8 @@ static GridDataRaw* readGridData(DataArchive *archive,
 {
   if( archive->exists( variable_name, patch, timestep ) )
   {
+    printTask( patch, dbgOut, "    readGridData", timestep, material, variable_name );
+   
     GridDataRaw *gd = new GridDataRaw;
     gd->components = numComponents<T>();
     
@@ -538,6 +553,8 @@ static GridDataRaw* readPatchData(DataArchive *archive,
 {
   if( archive->exists( variable_name, patch, timestep ) )
   {
+    printTask( patch, dbgOut, "    readPatchData ", timestep, material, variable_name );
+    
     GridDataRaw *gd = new GridDataRaw;
     gd->components = numComponents<T>();
     
@@ -606,6 +623,9 @@ GridDataRaw* getGridDataMainType(DataArchive *archive,
                                  int loadExtraElements,
                                  const Uintah::TypeDescription *subtype)
 {
+  printTask( patch, dbgOut, "  getGridDataMainType", timestep, material, variable_name );
+
+
   switch (subtype->getType()) {
   case Uintah::TypeDescription::double_type:
     return readGridData<VAR, double>(archive, patch, level, variable_name,
@@ -660,6 +680,9 @@ GridDataRaw* getPatchDataMainType(DataArchive *archive,
                                   int loadExtraElements,
                                   const Uintah::TypeDescription *subtype)
 {
+
+  printTask( patch, dbgOut, "    getPatchDataMainType ", timestep, material, variable_name );
+  
   switch (subtype->getType())
   {
   case Uintah::TypeDescription::double_type:
@@ -709,6 +732,8 @@ GridDataRaw* getGridData(DataArchive *archive,
 {
   LevelP level = (*grid)->getLevel(level_i);
   const Patch *patch = level->getPatch(patch_i);
+  
+  printTask( patch, dbgOut, "getGridData ", timestep, material, variable_name );
 
   // Get variable type from the archive.
   std::vector<std::string> vars;
@@ -780,6 +805,8 @@ extern "C"
 bool variableExists(DataArchive *archive,
                     std::string variable_name)
 {
+  DOUT(dbgOut, "  variableExists (" << variable_name << ")"  );
+  
   // figure out what the type of the variable we're querying is
   std::vector<std::string> vars;
   std::vector<const Uintah::TypeDescription*> types;
@@ -809,6 +836,8 @@ ParticleDataRaw* readParticleData(DataArchive *archive,
                                   int material,
                                   int timestep)
 {
+
+  printTask( patch, dbgOut, "  readParticleData", timestep, material, variable_name );
   ParticleDataRaw *pd = new ParticleDataRaw;
   pd->components = numComponents<T>();
   pd->num = 0;
@@ -884,6 +913,8 @@ ParticleDataRaw* getParticleData(DataArchive *archive,
   LevelP level = (*grid)->getLevel(level_i);
   const Patch *patch = level->getPatch(patch_i);
 
+  printTask( patch, dbgOut, "getParticleData", timestep, material, variable_name );
+  
   // figure out what the type of the variable we're querying is
   std::vector<std::string> vars;
   std::vector<const Uintah::TypeDescription*> types;
@@ -1544,6 +1575,8 @@ GridDataRaw* getPatchDataMainType(DataWarehouse *dw,
                                   int loadExtraElements,
                                   const Uintah::TypeDescription *subtype)
 {
+  printTask( patch, dbgOut, "getPatchDataMainType" );
+  
   switch (subtype->getType())
   {
   case Uintah::TypeDescription::double_type:
@@ -1812,6 +1845,8 @@ ParticleDataRaw* getParticleData(SchedulerP schedulerP,
   LevelP level = gridP->getLevel(level_i);
   const Patch *patch = level->getPatch(patch_i);
 
+  printTask( patch, dbgOut, "getParticleData variable: " + variable_name );
+  
   // get the variable information
   const VarLabel* varLabel                = nullptr;
   const Uintah::TypeDescription* maintype = nullptr;
@@ -1879,5 +1914,168 @@ ParticleDataRaw* getParticleData(SchedulerP schedulerP,
     return nullptr;
   }
 }
+
+
+
+
+
+#if 0
+//______________________________________________________________________
+//
+void allocateTemporary( GridVariableBase& var,
+                        const Patch*      patch,
+                        Ghost::GhostType  gtype,
+                        const int        numGhostCells )
+{
+  IntVector boundaryLayer(0, 0, 0); // Is this right?
+  IntVector lowIndex, highIndex;
+  IntVector lowOffset, highOffset;
+  Patch::VariableBasis basis = Patch::translateTypeToBasis(var.virtualGetTypeDescription()->getType(), false);
+  Patch::getGhostOffsets(var.virtualGetTypeDescription()->getType(), gtype, numGhostCells, lowOffset, highOffset);
+
+  patch->computeExtents(basis, boundaryLayer, lowOffset, highOffset,lowIndex, highIndex);
+
+  var.allocate(lowIndex, highIndex);
+}
+
+//______________________________________________________________________
+//
+
+
+
+
+/*___________________________________________________________________
+ Function~  setFineLevelPatchExtraCells-- 
+_____________________________________________________________________*/
+template<template<typename> class VAR, typename T>
+void setFineLevelPatchExtraCells(const Patch* finePatch, 
+                                 const Level* fineLevel,          
+                                 const Level* coarseLevel,        
+                                 varType& Q_fineLevel,          
+                                 std::string Q_name,           
+                                 int matl)                        
+{
+  cout_dbg << *finePatch << " ";
+  finePatch->printPatchBCs(cout_dbg);
+  IntVector refineRatio = fineLevel->getRefinementRatio();
+  int order_CFI_Interpolation = 0
+  
+  //__________________________________
+  // Iterate over coarsefine interface faces
+  std::vector<Patch::FaceType> cf;
+  finePatch->getCoarseFaces(cf);
+  
+  std::vector<Patch::FaceType>::const_iterator iter;
+  for (iter  = cf.begin(); iter != cf.end(); ++iter){
+    Patch::FaceType face = *iter;
+
+    //__________________________________
+    // Get fine level hi & lo cell iter limits
+    //  and coarselevel hi and low index
+
+    IntVector cl, ch, fl, fh;
+    getCoarseFineFaceRange(finePatch, coarseLevel, face, Patch::ExtraPlusEdgeCells, 
+                           order_CFI_Interpolation, cl, ch, fl, fh);
+                           
+    //__________________________________
+    // enlarge the finelevel foot print by refineRatio (R)
+    // x-           x+        y-       y+       z-        z+
+    // (-1,0,0)  (1,0,0)  (0,-1,0)  (0,1,0)  (0,0,-1)  (0,0,1)
+    IntVector dir = finePatch->getFaceAxes(patchFace);        // face axes
+    int pDir      = dir[0];  // principal direction
+
+    if( face == Patch::xminus || face == Patch::yminus || face == Patch::zminus) {
+      fl[ pDir ] -= refineRatio[ pDir ] + 1;
+    }
+    if( face == Patch::xplus  || face == Patch::yplus  || face == Patch::zplus) {
+      fh[ pDir ] += refineRatio[ pDir ] - 1;
+    } 
+    
+    // clamp: don't exceed fine level limits
+    IntVector fL_l, fL_h;
+    fineLevel->findCellIndexRange( fL_l, fL_h );
+    
+    fl = Uintah::Max(fl, fL_l);
+    fh = Uintah::Min(fh, fL_h); 
+    
+    DOUT(dbgOut, " face " << face << " refineRatio "<< refineRatio
+        << " BC type " << finePatch->getBCType(face)
+        << " FineLevel iterator" << fl << " " << fh 
+        << " \t coarseLevel iterator " << cl << " " << ch << "\n" );
+    //__________________________________
+    // Pull coarse level data from archive
+    VAR<T> Q_CL;
+    archive->queryRegion(Q_CL, Q_name, matl, coarseLevel.get_rep(), timestep, cl, ch);
+
+    //__________________________________
+    // populate fine level cells with coarse level data
+    for(CellIterator iter(fl,fh); !iter.done(); iter++){
+      IntVector f_cell = *iter;
+      IntVector c_cell = fineLevel->mapCellToCoarser(f_cell);
+      Q_fineLevel[f_cell] = Q_CL[c_cell];
+    }
+                           
+    //____ B U L L E T   P R O O F I N G_______ 
+    // All values must be initialized at this point
+    // Note only check patches that aren't on the edge of the domain
+#if 0
+    IntVector badCell;
+    CellIterator iter = finePatch->getExtraCellIterator();
+    if( isEqual<varType>( varType(d_EVIL_NUM), iter, Q, badCell) ){
+      std::ostringstream warn;
+      warn <<"ERROR refine_CF_interfaceOperator "
+           << "detected an uninitialized variable: "
+           << Q_name << ", cell " << badCell
+           << " Q_CC " << Q[badCell] 
+           << " Patch " << finePatch->getID() << " Level idx "
+           <<fineLevel->getIndex()<<"\n\n";
+      throw InvalidValue(warn.str(), __FILE__, __LINE__);
+    }
+#endif
+
+  }  // face loop
+}
+
+#endif
+
+
+
+
+//______________________________________________________________________
+// 
+
+void printTask( const Patch * patch,       
+                Dout & out,
+                const std::string & where,
+                const int timestep,
+                const int material,
+                const std::string varName)
+{
+  std::ostringstream msg;
+  msg << std::left;
+  msg.width(50);
+  msg << where << std::right << " timestep: " << timestep 
+      << " matl: " << material << " Var: " << varName;
+  
+  printTask( patch, out, msg.str());
+}
+
+//__________________________________
+//
+void printTask( const Patch * patch,       
+                Dout & out, 
+                const std::string & where)
+{
+  if (out) {
+    std::ostringstream msg;
+    msg << std::left;
+    msg.width(50);
+    msg << where << " \tL-"
+        << patch->getLevel()->getIndex()
+        << " patch " << patch->getGridIndex();
+    DOUT(out, msg.str());
+  }
+}
+
 
 }

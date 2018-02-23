@@ -131,10 +131,6 @@
       <DQMOM type="weightedAbs">
         <number_quad_nodes>2</number_quad_nodes>
         <save_moments>false</save_moments>
-        <LinearSolver>
-          <tolerance>1.0e-10</tolerance>
-          <type>Simplest</type>
-        </LinearSolver>
         <!-- particle models -->
         <VelModel type="Dragforce"/>
         <Models>

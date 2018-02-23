@@ -112,6 +112,20 @@ if test `echo $uda | cut -c1` != "/"; then
 fi
 
 #__________________________________
+# Bulletproofing the uda directory name cannot contain ":" or " "
+
+rc=`echo $uda | grep --count [\:\|\ ]`
+
+if test "$rc" != "0";  then
+  echo "  ERROR: the uda directory name cannot contain a colon : or whitespace"
+  echo "  You can rename using: (find . -type d -name '*.uda.*' -exec rename 's/:/_/g' {} \;"
+  echo "  Now exiting...."
+  exit 1
+fi
+ 
+
+
+#__________________________________
 #  Create the TAR command used in the make file
 which pigz >& /dev/null                       # is the parallel version of gzip installed?
 rc=$?
@@ -144,7 +158,7 @@ echo "Inputs:"
 echo "	# processors:          $nproc"
 echo "	allDirectories:        $allTimesteps"
 echo "	create/extract:        $createExtract"
-echo "	deleteOrgTimesteps:     $deleteOrgTimesteps"
+echo "	deleteOrgTimesteps:    $deleteOrgTimesteps"
 echo "	continueTarring:       $continueTarring"
 echo "	uda:                   $uda"
 echo "	PTAR_FILES:            $PTAR_FILES"
@@ -299,6 +313,10 @@ for X in $PTAR_FILES.*; do
   PTAR_FILES_N="$X"
   export PTAR_FILES_N
   /usr/bin/time -p $MAKE  -s -f $pTardir/pTarUda_driver_$OS -j $nproc | tee -a $PTAR_RECORD
+  
+  # remove the .tarred/stamp directory
+  $MAKE  -s -f $pTardir/pTarUda_driver_$OS clean | tee -a $PTAR_RECORD
+  
 done
 
 echo | tee -a $PTAR_RECORD

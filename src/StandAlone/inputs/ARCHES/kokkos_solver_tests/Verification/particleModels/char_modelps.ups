@@ -178,7 +178,7 @@
           <value>0.6</value>
         </model>
       </PropertyModelsV2>
-      <StateProperties> 
+      <StateProperties>
         <model label="density_model" type="constant">
           <const_property label="density" value="1."/>
         </model>
@@ -266,7 +266,7 @@
         </LinearSwelling>
       </ParticleProperties>
       <EulerianParticles>
-        <ParticleVariables> 
+        <ParticleVariables>
           <variable label="RCmass" role="raw_coal"/>
           <variable label="Charmass" role="char"/>
           <variable label="pE" role="enthalpy"/>
@@ -283,39 +283,39 @@
       <ParticleModels>
         <model label="ux" type="constant">
           <grid independent_type="CC" dependent_type="CC"/>
-        <constant>[2., 2., 2., 2, 2]</constant> 
+        <constant>[2., 2., 2., 2, 2]</constant>
         </model>
         <model label="uy" type="constant">
           <grid independent_type="CC" dependent_type="CC"/>
-        <constant>[2., 2., 2., 2, 2]</constant> 
+        <constant>[2., 2., 2., 2, 2]</constant>
         </model>
         <model label="uz" type="constant">
           <grid independent_type="CC" dependent_type="CC"/>
-        <constant>[2., 2., 2., 2, 2]</constant> 
+        <constant>[2., 2., 2., 2, 2]</constant>
         </model>
         <model label="w" type="constant">
           <grid independent_type="CC" dependent_type="CC"/>
-        <constant>[0.2, 0.2, 0.2, 0.2, 0.2]</constant> 
+        <constant>[0.2, 0.2, 0.2, 0.2, 0.2]</constant>
         </model>
         <model label="temperature_coal" type="constant">
           <grid independent_type="CC" dependent_type="CC"/>
-        <constant>[1500., 1500.,1500.,1500,1500]</constant> 
+        <constant>[1500., 1500.,1500.,1500,1500]</constant>
         </model>
         <model label="RCmass" type="constant">
           <grid independent_type="CC" dependent_type="CC"/>
-          <constant>[2.96E-11, 2.96E-11, 7.99E-10, 1.89E-09, 1.89E-09]</constant> 
+          <constant>[2.96E-11, 2.96E-11, 7.99E-10, 1.89E-09, 1.89E-09]</constant>
         </model>
         <model label="Charmass" type="constant">
           <grid independent_type="CC" dependent_type="CC"/>
-        <constant>[3.70E-11, 3.70E-11, 9.98E-10, 2.37E-09, 2.37E-09]</constant> 
+        <constant>[3.70E-11, 3.70E-11, 9.98E-10, 2.37E-09, 2.37E-09]</constant>
         </model>
         <model label="devol_rate" type="constant">
           <grid independent_type="CC" dependent_type="CC"/>
-        <constant>[0,0,0,0,0]</constant> 
+        <constant>[0,0,0,0,0]</constant>
         </model>
         <model label="length" type="constant">
           <grid independent_type="CC" dependent_type="CC"/>
-        <constant>[50e-6,50e-6,150e-6,200e-6,200e-6]</constant> 
+        <constant>[50e-6,50e-6,150e-6,200e-6,200e-6]</constant>
         </model>
         <model label="rho_coal" type="coal_density">
           <model_type>dynamic_dqmom</model_type>

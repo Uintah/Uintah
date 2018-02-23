@@ -127,7 +127,6 @@ MPIScheduler::MPIScheduler( const ProcessorGroup * myworld
   mpi_info_.insert( TotalWait  , std::string("TotalWait")  ,    timeStr, 0 );
   mpi_info_.insert( TotalReduce, std::string("TotalReduce"),    timeStr, 0 );
   mpi_info_.insert( TotalTask  , std::string("TotalTask")  ,    timeStr, 0 );
-  mpi_info_.validate( MAX_TIMING_STATS );
 }
 
 //______________________________________________________________________
@@ -334,12 +333,10 @@ MPIScheduler::runTask( DetailedTask * dtask
   if (m_parent_scheduler) {
     size_t num_elems = mpi_info_.size();
     for (size_t i = 0; i < num_elems; ++i) {
-      MPIScheduler::TimingStat e = (MPIScheduler::TimingStat)i;
-      m_parent_scheduler->mpi_info_[e] += mpi_info_[e];
+      m_parent_scheduler->mpi_info_[i] += mpi_info_[i];
     }
     mpi_info_.reset(0);
   }
-
 }  // end runTask()
 
 //______________________________________________________________________
