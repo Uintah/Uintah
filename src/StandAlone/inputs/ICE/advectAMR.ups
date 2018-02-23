@@ -206,7 +206,7 @@
    </DataArchiver>
 
 
-    <AMR>
+    <AMR type="StaticGridML">
        <ICE>
          <orderOfInterpolation>1  </orderOfInterpolation>
          <do_Refluxing>  false </do_Refluxing>
