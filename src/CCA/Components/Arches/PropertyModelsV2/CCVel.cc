@@ -24,6 +24,22 @@ void CCVel::problemSetup( ProblemSpecP& db ){
   m_v_vel_name_cc = m_v_vel_name + "_cc";
   m_w_vel_name_cc = m_w_vel_name + "_cc";
 
+  m_int_scheme = ArchesCore::get_interpolant_from_string( "second" ); //default second order
+  m_ghost_cells = 1; //default for 2nd order
+
+  if ( db->findBlock("KMomentum") ){
+    if (db->findBlock("KMomentum")->findBlock("convection")){
+
+      std::string conv_scheme;
+      db->findBlock("KMomentum")->findBlock("convection")->getAttribute("scheme", conv_scheme);
+
+      if (conv_scheme == "fourth"){
+        m_ghost_cells=2;
+        m_int_scheme = ArchesCore::get_interpolant_from_string( conv_scheme );
+      }
+    }
+  }
+
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -40,9 +56,9 @@ void CCVel::register_initialize( AVarInfo& variable_registry , const bool pack_t
 
   typedef ArchesFieldContainer AFC;
 
-  register_variable( m_u_vel_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, _task_name );
-  register_variable( m_v_vel_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, _task_name );
-  register_variable( m_w_vel_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, _task_name );
+  register_variable( m_u_vel_name, AFC::REQUIRES,m_ghost_cells , AFC::NEWDW, variable_registry, _task_name );
+  register_variable( m_v_vel_name, AFC::REQUIRES,m_ghost_cells , AFC::NEWDW, variable_registry, _task_name );
+  register_variable( m_w_vel_name, AFC::REQUIRES,m_ghost_cells , AFC::NEWDW, variable_registry, _task_name );
   register_variable( m_u_vel_name_cc, AFC::COMPUTES, variable_registry, _task_name );
   register_variable( m_v_vel_name_cc, AFC::COMPUTES, variable_registry, _task_name );
   register_variable( m_w_vel_name_cc, AFC::COMPUTES, variable_registry, _task_name );
@@ -68,7 +84,7 @@ void CCVel::register_timestep_init( AVarInfo& variable_registry , const bool pac
   register_variable( m_u_vel_name_cc, AFC::REQUIRES, 0, AFC::OLDDW, variable_registry, _task_name );
   register_variable( m_v_vel_name_cc, AFC::REQUIRES, 0, AFC::OLDDW, variable_registry, _task_name );
   register_variable( m_w_vel_name_cc, AFC::REQUIRES, 0, AFC::OLDDW, variable_registry, _task_name );
-  
+
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -93,9 +109,9 @@ void CCVel::register_timestep_eval( VIVec& variable_registry, const int time_sub
 
   typedef ArchesFieldContainer AFC;
 
-  register_variable( m_u_vel_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep ,_task_name );
-  register_variable( m_v_vel_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep ,_task_name );
-  register_variable( m_w_vel_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep ,_task_name );
+  register_variable( m_u_vel_name, AFC::REQUIRES, m_ghost_cells, AFC::NEWDW, variable_registry, time_substep ,_task_name );
+  register_variable( m_v_vel_name, AFC::REQUIRES, m_ghost_cells, AFC::NEWDW, variable_registry, time_substep ,_task_name );
+  register_variable( m_w_vel_name, AFC::REQUIRES, m_ghost_cells, AFC::NEWDW, variable_registry, time_substep ,_task_name );
 
   register_variable( m_u_vel_name_cc, AFC::MODIFIES, variable_registry, time_substep , _task_name );
   register_variable( m_v_vel_name_cc, AFC::MODIFIES, variable_registry, time_substep , _task_name );
@@ -125,10 +141,24 @@ void CCVel::compute_velocities( const Patch* patch, ArchesTaskInfoManager* tsk_i
   w_cc.initialize(0.0);
 
   Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
-  Uintah::parallel_for( range, [&](int i, int j, int k){
-    u_cc(i,j,k) = (u(i,j,k) + u(i+1,j,k)) / 2.;
-    v_cc(i,j,k) = (v(i,j,k) + v(i,j+1,k)) / 2.;
-    w_cc(i,j,k) = (w(i,j,k) + w(i,j,k+1)) / 2.;
-  });
 
+  ArchesCore::OneDInterpolator my_interpolant_centerx(u_cc, u , 1, 0, 0 );
+  ArchesCore::OneDInterpolator my_interpolant_centery(v_cc, v , 0, 1, 0 );
+  ArchesCore::OneDInterpolator my_interpolant_centerz(w_cc, w , 0, 0, 1 );
+
+  if ( m_int_scheme == ArchesCore::SECONDCENTRAL ) {
+
+    ArchesCore::SecondCentral ci;
+    Uintah::parallel_for( range, my_interpolant_centerx, ci );
+    Uintah::parallel_for( range, my_interpolant_centery, ci );
+    Uintah::parallel_for( range, my_interpolant_centerz, ci );
+
+  } else if ( m_int_scheme== ArchesCore::FOURTHCENTRAL ){
+
+    ArchesCore::FourthCentral ci;
+    Uintah::parallel_for( range, my_interpolant_centerx, ci );
+    Uintah::parallel_for( range, my_interpolant_centery, ci );
+    Uintah::parallel_for( range, my_interpolant_centerz, ci );
+
+  }
 }

@@ -1312,7 +1312,7 @@
       <KMomentum                        spec="OPTIONAL NO_DATA">
 
         <convection                     spec="OPTIONAL NO_DATA"
-                                        attribute1="scheme REQUIRED STRING 'central, upwind, superbee, roe, vanleer'"/>
+                                        attribute1="scheme REQUIRED STRING 'central, upwind, superbee, roe, vanleer,fourth'"/>
         <inviscid                       spec="OPTIONAL NO_DATA"/> <!-- Turn off diffusion -->
         <src_x                          spec="OPTIONAL NO_DATA"
                                         attribute1=" label REQUIRED STRING"/>

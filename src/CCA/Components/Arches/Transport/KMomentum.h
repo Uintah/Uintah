@@ -103,6 +103,8 @@ private:
     //typedef typename ArchesCore::VariableHelper<T>::ConstYFaceType CFYT;
     //typedef typename ArchesCore::VariableHelper<T>::ConstZFaceType CFZT;
 
+    int m_ghost_cells;
+
     std::string m_x_velocity_name;
     std::string m_y_velocity_name;
     std::string m_z_velocity_name;
@@ -185,6 +187,9 @@ private:
     if ( db->findBlock("inviscid")){
       m_inviscid = true;
     }
+
+    //Note that this current implementation is hardwired for 1 eqn
+    m_ghost_cells = 1;
 
     //Clipping
     if ( db->findBlock("clip")){
@@ -286,7 +291,6 @@ private:
 
     delete conv_helper;
 
-
     ArchesCore::GridVarMap<T> var_map;
     var_map.problemSetup( input_db );
     m_eps_name = var_map.vol_frac_name;
@@ -313,6 +317,12 @@ private:
   template <typename T>
   void
   KMomentum<T>::create_local_labels(){
+
+    for ( auto i = m_conv_scheme.begin(); i != m_conv_scheme.end(); i++ ){
+      if ( *i == FOURTH ){
+        m_ghost_cells = 2;
+      }
+    }
 
     const int istart = 0;
     int iend = m_eqn_names.size();
@@ -384,7 +394,7 @@ private:
     const int istart = 0;
     const int iend = m_eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
-      register_variable( m_vel_name[ieqn], ArchesFieldContainer::COMPUTES , variable_registry  );    
+      register_variable( m_vel_name[ieqn], ArchesFieldContainer::COMPUTES , variable_registry  );
       register_variable( m_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry  );
       register_variable( m_eqn_names[ieqn]+"_rhs", ArchesFieldContainer::COMPUTES , variable_registry  );
       register_variable( m_eqn_names[ieqn], ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::OLDDW , variable_registry  );
@@ -421,15 +431,15 @@ private:
     const int iend = m_eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
 
-      register_variable( m_eqn_names[ieqn], ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+      register_variable( m_eqn_names[ieqn], ArchesFieldContainer::REQUIRES, m_ghost_cells, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
       register_variable( m_eqn_names[ieqn]+"_rhs", ArchesFieldContainer::MODIFIES, variable_registry, time_substep );
       register_variable( m_eqn_names[ieqn]+"_x_flux", ArchesFieldContainer::COMPUTES, variable_registry, time_substep, _task_name );
       register_variable( m_eqn_names[ieqn]+"_y_flux", ArchesFieldContainer::COMPUTES, variable_registry, time_substep, _task_name );
       register_variable( m_eqn_names[ieqn]+"_z_flux", ArchesFieldContainer::COMPUTES, variable_registry, time_substep, _task_name );
       if ( m_conv_scheme[ieqn] != NOCONV ){
-        register_variable( m_eqn_names[ieqn]+"_x_psi", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name, packed_tasks );
-        register_variable( m_eqn_names[ieqn]+"_y_psi", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name, packed_tasks );
-        register_variable( m_eqn_names[ieqn]+"_z_psi", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name, packed_tasks );
+        register_variable( m_eqn_names[ieqn]+"_x_psi", ArchesFieldContainer::REQUIRES, m_ghost_cells, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name, packed_tasks );
+        register_variable( m_eqn_names[ieqn]+"_y_psi", ArchesFieldContainer::REQUIRES, m_ghost_cells, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name, packed_tasks );
+        register_variable( m_eqn_names[ieqn]+"_z_psi", ArchesFieldContainer::REQUIRES, m_ghost_cells, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name, packed_tasks );
       }
 
       typedef std::vector<SourceInfo> VS;
@@ -446,9 +456,9 @@ private:
       register_variable( m_sigmaz_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
     }
 
-    register_variable( m_x_velocity_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-    register_variable( m_y_velocity_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-    register_variable( m_z_velocity_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+    register_variable( m_x_velocity_name, ArchesFieldContainer::REQUIRES, m_ghost_cells , ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+    register_variable( m_y_velocity_name, ArchesFieldContainer::REQUIRES, m_ghost_cells , ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+    register_variable( m_z_velocity_name, ArchesFieldContainer::REQUIRES, m_ghost_cells , ArchesFieldContainer::NEWDW, variable_registry, time_substep );
     register_variable( m_eps_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::OLDDW, variable_registry, time_substep );
     register_variable( m_mu_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::NEWDW, variable_registry, time_substep );
     register_variable( m_rho_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::NEWDW, variable_registry, time_substep );
@@ -512,6 +522,18 @@ private:
             FYT& y_psi = tsk_info->get_uintah_field_add<FYT>(m_eqn_names[ieqn]+"_y_psi");
             FZT& z_psi = tsk_info->get_uintah_field_add<FZT>(m_eqn_names[ieqn]+"_z_psi");
 
+           if ( m_conv_scheme[ieqn] == FOURTH ) {
+
+             FourthConvection helper;
+             Uintah::ComputeConvectiveFlux<FXT, FYT, FZT >
+             get_flux( phi, u_fx, v_fy, w_fz, x_psi, y_psi, z_psi,
+                       x_flux, y_flux, z_flux, eps );
+             GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE( 1, 1 )
+             Uintah::BlockRange x_range( low_fx_patch_range, high_fx_patch_range );
+             Uintah::parallel_for( x_range, get_flux, helper );
+
+           } else {
+
             Uintah::ComputeConvectiveFlux<FXT, FYT, FZT >
              get_flux( phi, u_fx, v_fy, w_fz, x_psi, y_psi, z_psi,
                        x_flux, y_flux, z_flux, eps );
@@ -520,22 +542,36 @@ private:
             Uintah::BlockRange x_range( low_fx_patch_range, high_fx_patch_range );
             Uintah::parallel_for( x_range, get_flux );
 
+             }// for the fourth order convective flux
+
           } else {
 
             CFXT& x_psi = tsk_info->get_const_uintah_field_add<CFXT>(m_eqn_names[ieqn]+"_x_psi");
             CFYT& y_psi = tsk_info->get_const_uintah_field_add<CFYT>(m_eqn_names[ieqn]+"_y_psi");
             CFZT& z_psi = tsk_info->get_const_uintah_field_add<CFZT>(m_eqn_names[ieqn]+"_z_psi");
 
-            Uintah::ComputeConvectiveFlux<CFXT, CFYT, CFZT >
-             get_flux( phi, u_fx, v_fy, w_fz, x_psi, y_psi, z_psi,
-                       x_flux, y_flux, z_flux, eps );
+             if ( m_conv_scheme[ieqn] == FOURTH ) {
 
+                  FourthConvection helper;
+                  Uintah::ComputeConvectiveFlux<CFXT, CFYT, CFZT >
+                  get_flux( phi, u_fx, v_fy, w_fz, x_psi, y_psi, z_psi,
+                            x_flux, y_flux, z_flux, eps );
 
-            GET_WALL_BUFFERED_PATCH_RANGE(low_patch_range, high_patch_range,1,1,0,1,0,1);
-            Uintah::BlockRange x_range( low_patch_range, high_patch_range );
-            Uintah::parallel_for( x_range, get_flux );
+                  GET_WALL_BUFFERED_PATCH_RANGE(low_patch_range, high_patch_range,1,1,0,1,0,1);
+                  Uintah::BlockRange x_range( low_patch_range, high_patch_range );
+                  Uintah::parallel_for( x_range, get_flux, helper );
 
-          }
+                } else {
+
+                  Uintah::ComputeConvectiveFlux<CFXT, CFYT, CFZT >
+                  get_flux( phi, u_fx, v_fy, w_fz, x_psi, y_psi, z_psi,
+                            x_flux, y_flux, z_flux, eps );
+                  GET_WALL_BUFFERED_PATCH_RANGE(low_patch_range, high_patch_range,1,1,0,1,0,1);
+                  Uintah::BlockRange x_range( low_patch_range, high_patch_range );
+                  Uintah::parallel_for( x_range, get_flux );
+
+                } // Fourth -second
+          } // end for packed criteria
 
         } else if ( my_dir == ArchesCore::YDIR ){
 
@@ -545,12 +581,24 @@ private:
             FYT& y_psi = tsk_info->get_uintah_field_add<FYT>(m_eqn_names[ieqn]+"_y_psi");
             FZT& z_psi = tsk_info->get_uintah_field_add<FZT>(m_eqn_names[ieqn]+"_z_psi");
 
-            Uintah::ComputeConvectiveFlux<FXT, FYT, FZT >
-              get_flux( phi, u_fx, v_fy, w_fz, x_psi, y_psi, z_psi, x_flux, y_flux, z_flux, eps );
+              if ( m_conv_scheme[ieqn] == FOURTH ) {
 
-            GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE( 1, 1 )
-            Uintah::BlockRange y_range( low_fy_patch_range, high_fy_patch_range );
-            Uintah::parallel_for( y_range, get_flux );
+                  FourthConvection helper;
+                  Uintah::ComputeConvectiveFlux<FXT, FYT, FZT >
+                  get_flux( phi, u_fx, v_fy, w_fz, x_psi, y_psi, z_psi, x_flux, y_flux, z_flux, eps );
+                  GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE( 1, 1 )
+                  Uintah::BlockRange y_range( low_fy_patch_range, high_fy_patch_range );
+                  Uintah::parallel_for( y_range, get_flux, helper );
+
+              }else{
+
+                 Uintah::ComputeConvectiveFlux<FXT, FYT, FZT >
+                  get_flux( phi, u_fx, v_fy, w_fz, x_psi, y_psi, z_psi, x_flux, y_flux, z_flux, eps );
+                 GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE( 1, 1 )
+                 Uintah::BlockRange y_range( low_fy_patch_range, high_fy_patch_range );
+                 Uintah::parallel_for( y_range, get_flux );
+
+              } // Fourth-second order
 
           } else {
 
@@ -558,14 +606,26 @@ private:
             CFYT& y_psi = tsk_info->get_const_uintah_field_add<CFYT>(m_eqn_names[ieqn]+"_y_psi");
             CFZT& z_psi = tsk_info->get_const_uintah_field_add<CFZT>(m_eqn_names[ieqn]+"_z_psi");
 
-            Uintah::ComputeConvectiveFlux<CFXT, CFYT, CFZT >
+            if ( m_conv_scheme[ieqn] == FOURTH ) {
+
+              FourthConvection helper;
+              Uintah::ComputeConvectiveFlux<CFXT, CFYT, CFZT >
               get_flux( phi, u_fx, v_fy, w_fz, x_psi, y_psi, z_psi, x_flux, y_flux, z_flux, eps );
+              GET_WALL_BUFFERED_PATCH_RANGE(low_patch_range, high_patch_range,0,1,1,1,0,1);
+              Uintah::BlockRange y_range( low_patch_range, high_patch_range );
+              Uintah::parallel_for( y_range, get_flux, helper );
 
-            GET_WALL_BUFFERED_PATCH_RANGE(low_patch_range, high_patch_range,0,1,1,1,0,1);
-            Uintah::BlockRange y_range( low_patch_range, high_patch_range );
-            Uintah::parallel_for( y_range, get_flux );
+              }else {
 
-          }
+              Uintah::ComputeConvectiveFlux<CFXT, CFYT, CFZT >
+              get_flux( phi, u_fx, v_fy, w_fz, x_psi, y_psi, z_psi, x_flux, y_flux, z_flux, eps );
+              GET_WALL_BUFFERED_PATCH_RANGE(low_patch_range, high_patch_range,0,1,1,1,0,1);
+              Uintah::BlockRange y_range( low_patch_range, high_patch_range );
+              Uintah::parallel_for( y_range, get_flux );
+
+            } // Fourth-second order
+
+          } // end for packed criteria
 
 
         } else {
@@ -576,12 +636,25 @@ private:
             FYT& y_psi = tsk_info->get_uintah_field_add<FYT>(m_eqn_names[ieqn]+"_y_psi");
             FZT& z_psi = tsk_info->get_uintah_field_add<FZT>(m_eqn_names[ieqn]+"_z_psi");
 
-            Uintah::ComputeConvectiveFlux<FXT, FYT, FZT >
+            if ( m_conv_scheme[ieqn] == FOURTH ) {
+
+              FourthConvection helper;
+              Uintah::ComputeConvectiveFlux<FXT, FYT, FZT >
+              get_flux( phi, u_fx, v_fy, w_fz, x_psi, y_psi, z_psi, x_flux, y_flux, z_flux, eps );
+              GET_EXTRACELL_FZ_BUFFERED_PATCH_RANGE( 1, 1 )
+              Uintah::BlockRange z_range( low_fz_patch_range, high_fz_patch_range );
+              Uintah::parallel_for( z_range, get_flux, helper );
+
+            } else {
+
+              Uintah::ComputeConvectiveFlux<FXT, FYT, FZT >
               get_flux( phi, u_fx, v_fy, w_fz, x_psi, y_psi, z_psi, x_flux, y_flux, z_flux, eps );
 
-            GET_EXTRACELL_FZ_BUFFERED_PATCH_RANGE( 1, 1 )
-            Uintah::BlockRange z_range( low_fz_patch_range, high_fz_patch_range );
-            Uintah::parallel_for( z_range, get_flux );
+              GET_EXTRACELL_FZ_BUFFERED_PATCH_RANGE( 1, 1 )
+              Uintah::BlockRange z_range( low_fz_patch_range, high_fz_patch_range );
+              Uintah::parallel_for( z_range, get_flux );
+
+            } // fourth- second order
 
           } else {
 
@@ -589,14 +662,26 @@ private:
             CFYT& y_psi = tsk_info->get_const_uintah_field_add<CFYT>(m_eqn_names[ieqn]+"_y_psi");
             CFZT& z_psi = tsk_info->get_const_uintah_field_add<CFZT>(m_eqn_names[ieqn]+"_z_psi");
 
+            if ( m_conv_scheme[ieqn] == FOURTH ) {
+
+            FourthConvection helper;
             Uintah::ComputeConvectiveFlux<CFXT, CFYT, CFZT >
               get_flux( phi, u_fx, v_fy, w_fz, x_psi, y_psi, z_psi, x_flux, y_flux, z_flux, eps );
+              GET_WALL_BUFFERED_PATCH_RANGE(low_patch_range, high_patch_range,0,1,0,1,1,1);
+              Uintah::BlockRange z_range( low_patch_range, high_patch_range );
+              Uintah::parallel_for( z_range, get_flux, helper );
 
-            GET_WALL_BUFFERED_PATCH_RANGE(low_patch_range, high_patch_range,0,1,0,1,1,1);
-            Uintah::BlockRange z_range( low_patch_range, high_patch_range );
-            Uintah::parallel_for( z_range, get_flux );
+            } else {
 
-          }
+            Uintah::ComputeConvectiveFlux<CFXT, CFYT, CFZT >
+              get_flux( phi, u_fx, v_fy, w_fz, x_psi, y_psi, z_psi, x_flux, y_flux, z_flux, eps );
+              GET_WALL_BUFFERED_PATCH_RANGE(low_patch_range, high_patch_range,0,1,0,1,1,1);
+              Uintah::BlockRange z_range( low_patch_range, high_patch_range );
+              Uintah::parallel_for( z_range, get_flux );
+
+            }// fourth order
+
+          } // end for packed criteria
         }
       }
 

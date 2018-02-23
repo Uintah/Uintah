@@ -150,7 +150,7 @@ namespace Uintah{ namespace ArchesCore{
     if ( patch->getBCType(Patch::xplus) != Patch::Neighbor ){ \
       high_fx_patch_range += Uintah::IntVector(buffer_high,0,0);\
     }
-    
+
 #define GET_WALL_BUFFERED_PATCH_RANGE(low_patch_range, high_patch_range,\
     buffer_low_x,buffer_high_x,\
     buffer_low_y,buffer_high_y,buffer_low_z,buffer_high_z) \
@@ -449,8 +449,8 @@ namespace Uintah{ namespace ArchesCore{
 
     void operator()(const FourthCentral& op, int i, int j, int k) const {
 
-      u_i(i,j,k) = (7./12.)*(u(i,j,k) + u(i-ioff,j-joff,k-koff))
-                 - (1./12.)*(u(i-2*ioff,j-2*joff,k-2*koff) + u(i+ioff,j+joff,k+koff)) ;
+      u_i(i,j,k) = (7./12.)*(u(i,j,k) + u(i+ioff,j+joff,k+koff))
+                 - (1./12.)*(u(i+2*ioff,j+2*joff,k+2*koff) + u(i-ioff,j-joff,k-koff)) ;
 
     }
 
