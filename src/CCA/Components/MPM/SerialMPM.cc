@@ -3026,6 +3026,9 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
 
     Ghost::GhostType  gnone = Ghost::None;
     Vector gravity = flags->d_gravity;
+    Vector dxCell = patch->dCell();
+    double delX = dxCell.x();
+
     for(int m = 0; m < m_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
@@ -3061,20 +3064,19 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
         }
         acceleration[c]  = acc +  gravity;
         velocity_star[c] = velocity[c] + acceleration[c] * delT;
-#if 0
-    Vector dxCell = patch->dCell();
-    double delX = dxCell.x();
-        if(velocity_star[c].length()*delT > 0.4*delX && c.z() >= 0){
-          cout << "n = " << c << endl;
-          cout << "mass = " << mass[c] << endl;
-          cout << "matl = " << m << endl;
-          cout << "Ratio = " << velocity_star[c].length()*delT/delX << endl;
-          cout << "velocity = " << velocity[c] << endl;
-          cout << "vel_star = " << velocity_star[c] << endl;
-          cout << "acceleration = " << acceleration[c] << endl << endl;
-          velocity_star[c] = velocity[c];
-        }
-#endif
+
+        if (flags->d_doingDissolution) {
+          if(velocity_star[c].length()*delT > 0.4*delX && c.z() >= 0){
+            cout << "n = " << c << endl;
+            cout << "mas = " << mass[c] << endl;
+            cout << "mat = " << m << endl;
+            cout << "rat = " << velocity_star[c].length()*delT/delX << endl;
+            cout << "vel = " << velocity[c] << endl;
+            cout << "vstar = " << velocity_star[c] << endl;
+            cout << "acc = " << acceleration[c] << endl << endl;
+            velocity_star[c] = velocity[c];
+          }
+        } // if doing dissolution
       }
     }    // matls
   }
