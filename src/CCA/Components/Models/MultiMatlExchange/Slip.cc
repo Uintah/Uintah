@@ -286,7 +286,7 @@ void SlipExch::vel_FC_exchange( CellIterator  iter,
 #endif
 
       double exchange = ( rho_L * vel_L[pDir] + rho_R * vel_R[pDir])/( rho_L + rho_R );
-      vel_FCME[m][R]  = vel_FC[m][R] - exchange;
+      vel_FCME[m][R]  = vel_FC[m][R] + exchange;
     }
   }
 }
@@ -370,7 +370,7 @@ void SlipExch::addExch_VelFC(const ProcessorGroup  * pg,
 
       if(mpm_matl) {
         pNewDW->get( vel_CC[m],         Ilb->vel_CCLabel, indx, patch,gac, 1);
-        pNewDW->get( surfaceNorm[m], d_surfaceNormLabel, indx, patch,gac, 1);
+        pNewDW->get( surfaceNorm[m], d_surfaceNormLabel,  indx, patch,gac, 1);
       }
 
       if(ice_matl) {
@@ -379,7 +379,7 @@ void SlipExch::addExch_VelFC(const ProcessorGroup  * pg,
       }
 
       // allocate
-      new_dw->allocateTemporary( notUsed[m],     patch );
+      new_dw->allocateTemporary( notUsed[m],        patch, gac, 1 );
       new_dw->allocateTemporary( delta_vel_exch[m], patch, gac, 1 );
 
       new_dw->allocateAndPut( uvel_FCME[m], Ilb->uvel_FCMELabel, indx, patch );
@@ -391,7 +391,7 @@ void SlipExch::addExch_VelFC(const ProcessorGroup  * pg,
       new_dw->allocateAndPut( sp_vol_ZFC[m],Ilb->sp_volZ_FCLabel,indx, patch );
 
       // initialize
-      delta_vel_exch[m].initialize( Vector(0,0,0) );
+      delta_vel_exch[m].initialize( Vector(-9e99,-9e99,-9e99) );
 
       // lowIndex is the same for all face centered vars
       IntVector lowIndex(patch->getExtraSFCXLowIndex());
@@ -408,8 +408,9 @@ void SlipExch::addExch_VelFC(const ProcessorGroup  * pg,
     adj_offset[0] = IntVector(-1, 0, 0);    // X faces
     adj_offset[1] = IntVector(0, -1, 0);    // Y faces
     adj_offset[2] = IntVector(0,  0, -1);   // Z faces
-
-    CellIterator EC_iterator  = patch->getExtraCellIterator();
+    
+    const int oneGhostCell = 1;
+    CellIterator EC_iterator  = patch->getExtraCellIterator( oneGhostCell );
     CellIterator XFC_iterator = patch->getSFCXIterator();
     CellIterator YFC_iterator = patch->getSFCYIterator();
     CellIterator ZFC_iterator = patch->getSFCZIterator();
