@@ -52,6 +52,7 @@ WARNING
 ****************************************/
 
 #include "Core/Grid/Grid.h"
+#include "Core/Parallel/ProcessorGroup.h"
 
 #include <map>
 #include <string>
@@ -75,6 +76,8 @@ class SimulationController;
 
 typedef struct
 {
+  const ProcessorGroup* myworld;
+
   // Uintah data members
   SimulationController *simController;
   GridP gridP;
@@ -123,9 +126,20 @@ typedef struct
   // Container for storing modiied variables - gets passed to the
   // DataArchiver so they are stored in the index.xml file.  
 
-  //   map< VarName           pair<oldValue,    newValue> >
+//std::map< VarName      std::pair<oldValue,    newValue   > >
   std::map< std::string, std::pair<std::string, std::string> > modifiedVars;
 
+  // In-situ machine layout.
+  std::string host;
+  std::vector< std::vector< unsigned int > > switches;
+
+  std::vector< unsigned int > nodeStart;
+  std::vector< unsigned int > nodeStop;
+  std::vector< unsigned int > nodeCores;
+  std::vector< unsigned int > nodeMemory;
+
+  unsigned int switchIndex, nodeIndex;
+  
 } visit_simulation_data;
 
 void visit_LibSimArguments(int argc, char **argv);

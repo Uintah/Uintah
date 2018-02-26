@@ -46,6 +46,7 @@
 #include "VisIt/uda2vis/udaData.h"
 #include "VisIt/uda2vis/uda2vis.h"
 
+#include <vector>
 #include <stdio.h>
 
 namespace Uintah {
@@ -163,7 +164,7 @@ visit_handle visit_SimGetMetaData(void *cbdata)
     VisIt_SimulationMetaData_setCycleTime(md, sim->cycle, sim->time);
 
     int numLevels = stepInfo->levelInfo.size();
-    
+
     int totalPatches = 0;
     for (int i=0; i<numLevels; ++i)
       totalPatches += stepInfo->levelInfo[i].patchInfo.size();
@@ -765,6 +766,112 @@ visit_handle visit_SimGetMetaData(void *cbdata)
       }   
     }
 
+    // Get the greatest common demoninator so to have multiple columns.
+    if( sim->switches.size() )
+    {
+      unsigned int gcd = 1;
+
+      // Get the max cores.
+      unsigned int maxCores = 0;
+      for( unsigned int i=0; i<sim->nodeCores.size(); ++i )
+	if( maxCores < sim->nodeCores[i] )
+	  maxCores = sim->nodeCores[i];
+
+      // Get the max nodes.
+      unsigned int maxNodes = 0;
+      for( unsigned int i=0; i<sim->switches.size(); ++i )
+	if( maxNodes < sim->switches[i].size() )
+	  maxNodes = sim->switches[i].size();
+
+      if( sim->nodeCores.size() == 1 )
+      {
+	gcd = 2;
+      }
+      else
+      {
+	for( unsigned int i=2; i<maxCores; ++i )
+	{
+	  int cc = 0;
+	  
+	  for( unsigned int j=0; j<sim->nodeCores.size(); ++j )
+	  {
+	    if( sim->nodeCores[j] % i == 0 )
+	      ++cc;
+	  }
+
+	  if( cc == sim->nodeCores.size() )
+	      gcd = i;
+	}
+      }
+
+      // Create two mesh entries. One is the global view of all
+      // nodes/cores. The other view is just the cores being used.
+      for( unsigned int i=0; i<2; ++i )
+      {
+	visit_handle mmd = VISIT_INVALID_HANDLE;
+        
+	/* Set the first mesh’s properties.*/
+	if(VisIt_MeshMetaData_alloc(&mmd) == VISIT_OKAY)
+        {
+	  /* Set the mesh’s properties.*/
+	  if( i == 0 )
+	    VisIt_MeshMetaData_setName(mmd, ("machine_" + sim->host + "/local").c_str());
+	  else
+	    VisIt_MeshMetaData_setName(mmd, ("machine_" + sim->host + "/global").c_str());
+
+	  if( sim->simController->getApplicationInterface()->isAMR() )
+	    VisIt_MeshMetaData_setMeshType(mmd, VISIT_MESHTYPE_AMR);
+	  else
+	    VisIt_MeshMetaData_setMeshType(mmd, VISIT_MESHTYPE_AMR);
+
+	  VisIt_MeshMetaData_setTopologicalDimension(mmd, 2);
+	  VisIt_MeshMetaData_setSpatialDimension(mmd, 2);
+
+	  // VisIt_MeshMetaData_setNumDomains(mmd, totalPatches);
+	  // VisIt_MeshMetaData_setDomainTitle(mmd, "patches");
+	  // VisIt_MeshMetaData_setDomainPieceName(mmd, "patch");
+	  // VisIt_MeshMetaData_setNumGroups(mmd, numLevels);
+	  // VisIt_MeshMetaData_setGroupTitle(mmd, "levels");
+	  // VisIt_MeshMetaData_setGroupPieceName(mmd, "level");
+
+
+	  // for (int k=0; k<totalPatches; ++k)
+	  // {
+	  //   char tmpName[64];
+	  //   int level, local_patch;
+	  
+	  //   GetLevelAndLocalPatchNumber(stepInfo, k, level, local_patch);
+	  //   sprintf(tmpName,"level%d, patch%d", level, local_patch);
+	  
+	  //   VisIt_MeshMetaData_addGroupId(mmd, level);
+	  //   VisIt_MeshMetaData_addDomainName(mmd, tmpName);
+	  // }
+
+	  // ARS - FIXME
+	  // VisIt_MeshMetaData_setContainsExteriorBoundaryGhosts(mmd, false);
+
+	  VisIt_MeshMetaData_setHasSpatialExtents(mmd, 1);
+	
+	  double extents[6] = { 0, double(sim->switches.size() * (gcd+1) - 1),
+				0, double(maxNodes * (maxCores/gcd+1) - 1),
+				0, 0 };
+
+	  VisIt_MeshMetaData_setSpatialExtents(mmd, extents);
+
+	  // ARS - FIXME
+	  // VisIt_MeshMetaData_setHasLogicalBounds(mmd, 1);
+	  // VisIt_MeshMetaData_logicalBounds(mmd, logical[0]);
+	
+	  VisIt_SimulationMetaData_addMesh(md, mmd);
+	}
+      }
+      
+      // std::cerr << "Calculating SimGetMetaData for "
+      //        << mesh_for_this_var.c_str() << " mesh (" << mmd << ")." 
+      //        << std::endl;
+    }
+  
+  
     // ARS - FIXME
     // md->AddGroupInformation(numLevels, totalPatches, groupIds);
     // md->AddDefaultSILRestrictionDescription(std::string("!TurnOnAll"));
@@ -1129,6 +1236,164 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
+  if( std::string(meshname).find("machine_") == 0 )
+  {
+    bool local = (std::string(meshname).find("local") != std::string::npos);
+
+    unsigned int gcd = 1;
+
+    // Get the max cores.
+    unsigned int maxCores = 0;
+    for( unsigned int i=0; i<sim->nodeCores.size(); ++i )
+      if( maxCores < sim->nodeCores[i] )
+	maxCores = sim->nodeCores[i];
+
+    // Get the max nodes.
+    unsigned int maxNodes = 0;
+    for( unsigned int i=0; i<sim->switches.size(); ++i )
+      if( maxNodes < sim->switches[i].size() )
+	maxNodes = sim->switches[i].size();
+
+    // Get the greatest common demoninator so to have multiple columns.
+    if( sim->nodeCores.size() == 1 )
+    {
+      gcd = 2;
+    }
+    else
+    {
+      for( unsigned int i=2; i<maxCores; ++i )
+      {
+	int cc = 0;
+	
+	for( unsigned int j=0; j<sim->nodeCores.size(); ++j )
+	{
+	  if( sim->nodeCores[j] % i == 0 )
+	    ++cc;
+	}
+	
+	if( cc == sim->nodeCores.size() )
+	  gcd = i;
+      }
+    }
+  
+    // Size of a node based on the number of cores and GCD.
+    unsigned int xNode = gcd;
+    unsigned int yNode = maxCores/gcd;
+
+    // Total size of the layout - add one to have gap between nodes.
+    unsigned int xMax = sim->switches.size() * (xNode+1);
+    unsigned int yMax = maxNodes             * (yNode+1);
+
+    unsigned int totalCores = sim->switches.size() * maxNodes * maxCores;
+
+    // Set all of the points as rectilinear grid.
+    unsigned int nPts = xMax * yMax;
+
+    float* xPts = new float[nPts];
+    float* yPts = new float[nPts];
+    float* zPts = new float[nPts];
+
+    for( unsigned int j=0; j<yMax; ++j)
+    {
+      for( unsigned int i=0; i<xMax; ++i)
+      {
+	xPts[j*xMax+i] = i;
+	yPts[j*xMax+i] = j;
+	zPts[j*xMax+i] = 0;
+      }
+    }
+
+    // Create all of the connections.
+    unsigned int nConnections = 0;
+    int* connections = new int[ 5 * totalCores ];
+
+    for( unsigned int i=0; i<5*totalCores; ++i)
+      connections[i] = 0;
+    
+    // Loop through each switch.
+    for( unsigned int s=0; s<sim->switches.size(); ++s )
+    {
+      unsigned int bx = s * (xNode+1);
+	
+      // Loop through each node.
+      for( unsigned int n=0; n<sim->switches[s].size(); ++n )
+      {
+	unsigned int by = n * (yNode+1);
+
+	// Get the number of cores for this node.
+	unsigned int nCores = 0;
+	for( unsigned int i=0; i<sim->nodeCores.size(); ++i )
+	{
+	  if( sim->nodeStart[i] <= sim->switches[s][n] &&
+	      sim->switches[s][n] <= sim->nodeStop[i] )
+	    {
+	      nCores = sim->nodeCores[i];
+	      break;
+	    }
+	}
+
+	// Loop through each core.
+	for( unsigned int i=0; i<nCores; ++i )
+	{
+	  // Get an x y index based on the GCD.
+	  unsigned int lx = bx + i % gcd;
+	  unsigned int ly = by + i / gcd;
+
+	  if( !local ||
+	      (local && s == sim->switchIndex && n == sim->nodeIndex &&
+	       i == sim->myworld->myNode_myRank()) )
+	  {
+	    // All cells are quads
+	    connections[nConnections++] = VISIT_CELL_QUAD;
+	    
+	    // Set the index based on a rectilinear grid.
+	    connections[nConnections++] = (ly+0) * xMax + (lx+0);
+	    connections[nConnections++] = (ly+1) * xMax + (lx+0);
+	    connections[nConnections++] = (ly+1) * xMax + (lx+1);
+	    connections[nConnections++] = (ly+0) * xMax + (lx+1);
+	  }
+	}
+      }
+    }
+
+    unsigned int nCells = nConnections / 5;
+
+    // The original connection array was a maximum resize it to the
+    // actual number of connections.
+    int* tmp = new int[nConnections];
+    std::copy_n(connections, nConnections, tmp);
+    delete[] connections;
+    connections = tmp;
+    
+    visit_handle meshH = VISIT_INVALID_HANDLE;
+ 
+    if(VisIt_UnstructuredMesh_alloc(&meshH) != VISIT_ERROR)
+    {
+      visit_handle xH ,yH, zH;
+      VisIt_VariableData_alloc( &xH );
+      VisIt_VariableData_alloc( &yH );
+      VisIt_VariableData_alloc( &zH );
+      
+      VisIt_VariableData_setDataF( xH, VISIT_OWNER_VISIT, 1, nPts, xPts );
+      VisIt_VariableData_setDataF( yH, VISIT_OWNER_VISIT, 1, nPts, yPts );
+      VisIt_VariableData_setDataF( zH, VISIT_OWNER_VISIT, 1, nPts, zPts );
+    
+      visit_handle connH;
+      VisIt_VariableData_alloc( &connH );
+      VisIt_VariableData_setDataI( connH, VISIT_OWNER_VISIT, 1,
+				   nConnections, connections );
+
+      VisIt_UnstructuredMesh_setCoordsXYZ( meshH, xH, yH, zH );
+      VisIt_UnstructuredMesh_setConnectivity( meshH, nCells, connH );
+
+      // No need to delete the points or the connections as the flag
+      // is VISIT_OWNER_VISIT so VisIt owns the data (VISIT_OWNER_SIM
+      // - indicates the simulation owns the data).
+    }
+
+    return meshH;
+  }  
+  
   SchedulerP schedulerP = sim->simController->getSchedulerP();
   GridP      gridP      = sim->gridP;
 
