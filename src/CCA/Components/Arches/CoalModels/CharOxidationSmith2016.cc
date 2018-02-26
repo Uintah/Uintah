@@ -34,7 +34,7 @@
 #include <CCA/Components/Arches/ParticleModels/CoalHelper.h>
 #include <CCA/Ports/Scheduler.h>
 
-#include <Core/Datatypes/DenseMatrix.h>
+//#include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
@@ -626,7 +626,8 @@ CharOxidationSmith2016::computeModel( const ProcessorGroup * pc,
     CCVariable<double> PO2surf_;
     std::vector< CCVariable<double> > reaction_rate_l(_NUM_reactions); // char reaction rate for lth reaction.
 
-    DenseMatrix* dfdrh = scinew DenseMatrix(_NUM_reactions,_NUM_reactions);
+      // 03 - No DenseMatrix
+    //DenseMatrix* dfdrh = scinew DenseMatrix(_NUM_reactions,_NUM_reactions);
 
     DataWarehouse* which_dw;
     if ( timeSubStep == 0 ){
@@ -771,29 +772,6 @@ CharOxidationSmith2016::computeModel( const ProcessorGroup * pc,
     double delta;
     double oxi_lim;
     double rh_l_i;
-    std::vector<double> effectivenessF(_NUM_reactions);
-    std::vector<double> M_T(_NUM_reactions);
-    std::vector<double> phi_l(_NUM_reactions);
-    std::vector<double> hrxn_l(_NUM_reactions);
-    std::vector<double> oxid_mass_frac(_NUM_reactions);
-    std::vector<double> oxid_mole_frac(_NUM_reactions);
-    std::vector<double> co_r(_NUM_reactions);
-    std::vector<double> k_r(_NUM_reactions);
-    std::vector<double> species_mass_frac(_NUM_species);
-    std::vector<double> rh_l(_NUM_reactions);
-    std::vector<double> rh_l_new(_NUM_reactions);
-    std::vector<double> D_oxid_mix_l(_NUM_reactions);
-    std::vector<double> D_kn(_NUM_reactions);
-    std::vector<double> D_eff(_NUM_reactions);
-    std::vector<double> F(_NUM_reactions);
-    std::vector<double> F_delta(_NUM_reactions);
-    std::vector<double> rh_l_delta(_NUM_reactions);
-    std::vector<double> Sc(_NUM_reactions);
-    std::vector<double> Sh(_NUM_reactions);
-    std::vector<double> co_s(_NUM_reactions);
-    std::vector<double> r_h_ex(_NUM_reactions);
-    std::vector<double> r_h_in(_NUM_reactions);
-
     InversionBase* invf;
     if (_NUM_reactions==2){
       invf = scinew invert_2_2;
@@ -817,6 +795,60 @@ CharOxidationSmith2016::computeModel( const ProcessorGroup * pc,
         }
 
       } else {
+      // 03 - No DenseMatrix
+      double dfdrh[3][3] = { {0,0,0},
+                             {0,0,0},
+                             {0,0,0}  };
+
+      // 04 - Replace std::vector with plain-old-data arrays
+    //std::vector<double> effectivenessF(_NUM_reactions);
+    //std::vector<double> M_T(_NUM_reactions);
+    //std::vector<double> phi_l(_NUM_reactions);
+    //std::vector<double> hrxn_l(_NUM_reactions);
+    //std::vector<double> oxid_mass_frac(_NUM_reactions);
+    //std::vector<double> oxid_mole_frac(_NUM_reactions);
+    //std::vector<double> co_r(_NUM_reactions);
+    //std::vector<double> k_r(_NUM_reactions);
+    //std::vector<double> species_mass_frac(_NUM_species);
+    //std::vector<double> rh_l(_NUM_reactions);
+    //std::vector<double> rh_l_new(_NUM_reactions);
+    //std::vector<double> D_oxid_mix_l(_NUM_reactions);
+    //std::vector<double> D_kn(_NUM_reactions);
+    //std::vector<double> D_eff(_NUM_reactions);
+    //std::vector<double> F(_NUM_reactions);
+   // std::vector<double> F_delta(_NUM_reactions);
+    //std::vector<double> rh_l_delta(_NUM_reactions);
+    //std::vector<double> Sc(_NUM_reactions);
+    //std::vector<double> Sh(_NUM_reactions);
+    //std::vector<double> co_s(_NUM_reactions);
+    //std::vector<double> r_h_ex(_NUM_reactions);
+    //std::vector<double> r_h_in(_NUM_reactions);
+
+      double D_oxid_mix_l     [ _NUM_reactions ];
+      double D_kn             [ _NUM_reactions ];
+      double D_eff            [ _NUM_reactions ];
+      double phi_l            [ _NUM_reactions ];
+      double hrxn_l           [ _NUM_reactions ];
+      double rh_l             [ _NUM_reactions ];
+      double rh_l_new         [ _NUM_reactions ];
+      double species_mass_frac[ _NUM_species ];
+      double oxid_mass_frac   [ _NUM_reactions ];
+
+      double Sc            [ _NUM_reactions ];
+      double Sh            [ _NUM_reactions ];
+      double co_s          [ _NUM_reactions ];
+      double oxid_mole_frac[ _NUM_reactions ];
+      double co_r          [ _NUM_reactions ];
+      double k_r           [ _NUM_reactions ];
+      double M_T           [ _NUM_reactions ];
+      double effectivenessF[ _NUM_reactions ];
+
+      double F         [ _NUM_reactions ];
+      double rh_l_delta[ _NUM_reactions ];
+      double F_delta   [ _NUM_reactions ];
+      double r_h_ex    [ _NUM_reactions ];
+      double r_h_in    [ _NUM_reactions ];
+
         // populate the temporary variables.
         Vector gas_vel = gasVel(i,j,k); // [m/s]
         Vector part_vel = partVel(i,j,k);// [m/s]
@@ -836,7 +868,8 @@ CharOxidationSmith2016::computeModel( const ProcessorGroup * pc,
 
         // populate temporary variable vectors
         delta = 1e-6;
-        dfdrh->zero();// [-]
+        // 03 - No DenseMatrix
+        //dfdrh->zero();// [-]
         for (int l=0; l<_NUM_reactions; l++) {
           rh_l[l]=old_reaction_rate_l[l](i,j,k);// [kg/m^3/s]
           rh_l_new[l]=old_reaction_rate_l[l](i,j,k);// [kg/m^3/s]
@@ -858,8 +891,18 @@ CharOxidationSmith2016::computeModel( const ProcessorGroup * pc,
         CO_CO2_ratio=CO_CO2_ratio*44.0/28.0; // [kmoles CO / kmoles CO2]
         CO2onCO=1./CO_CO2_ratio; // [kmoles CO2 / kmoles CO]
         for (int l=0; l<_NUM_reactions; l++) {
-          phi_l[l] = (_use_co2co_l[l]) ? (CO2onCO + 1)/(CO2onCO + 0.5) : _phi_l[l];
-          hrxn_l[l] = (_use_co2co_l[l]) ? (CO2onCO*_HF_CO2 + _HF_CO)/(1+CO2onCO) : _hrxn_l[l];
+
+          if ( _use_co2co_l[l] ) {
+            phi_l[l]  = ( CO2onCO + 1 ) / ( CO2onCO + 0.5 );
+            hrxn_l[l] = ( CO2onCO * _HF_CO2 + _HF_CO ) / ( 1 + CO2onCO );
+          }
+          else {
+            phi_l[l]  = _phi_l[l];
+            hrxn_l[l] = _hrxn_l[l];
+          }
+          // 1 - Conditionals
+//          phi_l[l] = (_use_co2co_l[l]) ? (CO2onCO + 1)/(CO2onCO + 0.5) : _phi_l[l];
+//          hrxn_l[l] = (_use_co2co_l[l]) ? (CO2onCO*_HF_CO2 + _HF_CO)/(1+CO2onCO) : _hrxn_l[l];
         }
         relative_velocity = sqrt( ( gas_vel.x() - part_vel.x() ) * ( gas_vel.x() - part_vel.x() ) +
                                          ( gas_vel.y() - part_vel.y() ) * ( gas_vel.y() - part_vel.y() ) +
@@ -879,9 +922,20 @@ CharOxidationSmith2016::computeModel( const ProcessorGroup * pc,
           sum_x_D=0;
           sum_x=0;
           for (int l2=0; l2<_NUM_species; l2++) {
-            sum_x_D = (_oxid_l[l] != _species_names[l2]) ? sum_x_D + species_mass_frac[l2]/(_MW_species[l2]*_D_mat[_oxidizer_indices[l]][l2]) : sum_x_D;
-            sum_x = (_oxid_l[l] != _species_names[l2]) ? sum_x + species_mass_frac[l2]/(_MW_species[l2]) : sum_x;
+            if ( _oxid_l[l] != _species_names[l2] ) {
+              sum_x_D = sum_x_D + species_mass_frac[l2] / ( _MW_species[l2] * _D_mat[_oxidizer_indices[l]][l2] );
+              sum_x   = sum_x   + species_mass_frac[l2] / ( _MW_species[l2] );
+            }
+            else {
+              sum_x_D = sum_x_D;
+              sum_x   = sum_x;
+            }
+
+            // 1 - Conditionals
+            //sum_x_D = (_oxid_l[l] != _species_names[l2]) ? sum_x_D + species_mass_frac[l2]/(_MW_species[l2]*_D_mat[_oxidizer_indices[l]][l2]) : sum_x_D;
+           // sum_x = (_oxid_l[l] != _species_names[l2]) ? sum_x + species_mass_frac[l2]/(_MW_species[l2]) : sum_x;
           }
+
           D_oxid_mix_l[l] = sum_x/sum_x_D * std::sqrt(CUBE( gas_T/_T0));
           D_kn[l] = 97.*rp*sqrt(p_T/_MW_species[l]);
           D_eff[l] = p_void / _tau/(1./D_kn[l] + 1/D_oxid_mix_l[l]);
@@ -897,6 +951,11 @@ CharOxidationSmith2016::computeModel( const ProcessorGroup * pc,
         }
         // Newton-Raphson solve for rh_l.
         // rh_(n+1) = rh_(n) - (dF_(n)/drh_(n))^-1 * F_(n)
+        // 07 - Root function
+        double rtot    = 0.0;
+        double Sfactor = 0.0;
+        double Bjm     = 0.0;
+        double mtc_r   = 0.0;
         count=0;
         for (int it=0; it<100; it++) {
           count=count+1;
@@ -904,24 +963,76 @@ CharOxidationSmith2016::computeModel( const ProcessorGroup * pc,
             rh_l[l]=rh_l_new[l];
           }
           // get F and Jacobian -> dF/drh
-          root_function( F, rh_l, co_r, gas_rho, cg, k_r, MW, r_devol_ns, p_diam, Sh, D_oxid_mix_l, phi_l, p_void, effectivenessF, Sj, p_rho, x_org);
+          //root_function( F, rh_l, co_r, gas_rho, cg, k_r, MW, r_devol_ns, p_diam, Sh, D_oxid_mix_l, phi_l, p_void, effectivenessF, Sj, p_rho, x_org);
+          rtot    = ( rh_l[0] + rh_l[1] + rh_l[2] ) * x_org * ( 1. - p_void ) + r_devol_ns;
+          Sfactor = 0.0;
+          Bjm     = 0.0;
+          mtc_r   = 0.0;
+
+          for ( int l = 0; l < _NUM_reactions; l++ ) {
+
+            Bjm     = std::min( 80.0, rtot * p_diam / ( D_oxid_mix_l[l] * gas_rho ) ); // [-] // this is the derived for mass flux  BSL chapter 22
+            mtc_r   = ( Sh[l] * D_oxid_mix_l[l] * ( ( Bjm >= 1e-7 ) ?  Bjm / ( std::exp( Bjm ) - 1. ) : 1.0 ) ) / p_diam; // [m/s]
+            Sfactor = 1 + effectivenessF[l] * p_diam * p_rho * _Sg0 * Sj / ( 6. * ( 1. - p_void ) );
+            F[l]    = rh_l[l] - ( _Mh * MW * phi_l[l] * k_r[l] * mtc_r * Sfactor * co_r[l] * cg ) /
+                      ( ( MW * cg * ( k_r[l] * x_org * ( 1. - p_void ) * Sfactor + mtc_r ) ) + rtot ); // [kg-char/m^3/s]
+          }
+
+          // end 07 - Root function
           for (int j=0; j<_NUM_reactions; j++) {
             for (int k=0; k<_NUM_reactions; k++) {
               rh_l_delta[k] = rh_l[k];
             }
             rh_l_delta[j] = rh_l[j]+delta;
-            root_function( F_delta, rh_l_delta, co_r, gas_rho, cg, k_r, MW, r_devol_ns, p_diam, Sh, D_oxid_mix_l, phi_l, p_void, effectivenessF, Sj, p_rho, x_org);
+            // 07 - Root function
+            //root_function( F_delta, rh_l_delta, co_r, gas_rho, cg, k_r, MW, r_devol_ns, p_diam, Sh, D_oxid_mix_l, phi_l, p_void, effectivenessF, Sj, p_rho, x_org);
+            rtot    = ( rh_l_delta[0] + rh_l_delta[1] + rh_l_delta[2] ) * x_org * ( 1. - p_void ) + r_devol_ns;
+            Sfactor = 0.0;
+            Bjm     = 0.0;
+            mtc_r   = 0.0;
+
+            for ( int l = 0; l < _NUM_reactions; l++ ) {
+
+              Bjm        = std::min( 80.0, rtot * p_diam / ( D_oxid_mix_l[l] * gas_rho ) ); // [-] // this is the derived for mass flux  BSL chapter 22
+              mtc_r      = ( Sh[l] * D_oxid_mix_l[l] * ( ( Bjm >= 1e-7 ) ?  Bjm / ( std::exp( Bjm ) - 1. ) : 1.0 ) ) / p_diam; // [m/s]
+              Sfactor    = 1 + effectivenessF[l] * p_diam * p_rho * _Sg0 * Sj / ( 6. * ( 1. - p_void ) );
+              F_delta[l] = rh_l_delta[l] - ( _Mh * MW * phi_l[l] * k_r[l] * mtc_r * Sfactor * co_r[l] * cg ) /
+                           ( ( MW * cg * ( k_r[l] * x_org * ( 1. - p_void ) * Sfactor + mtc_r ) ) + rtot ); // [kg-char/m^3/s]
+             }
+
+            // end 07 - Root function
             for (int l=0; l<_NUM_reactions; l++) {
-              (*dfdrh)[l][j] = (F_delta[l] - F[l]) / delta;
+              // 03 - No DenseMatrix
+              //(*dfdrh)[l][j] = (F_delta[l] - F[l]) / delta;
+              dfdrh[l][j] = ( F_delta[l] - F[l] ) / delta;
             }
           }
+          // 03 - No DenseMatrix
           // invert Jacobian -> (dF_(n)/drh_(n))^-1
-          invf->invert_mat(dfdrh); // simple matrix inversion for a 2x2 matrix.
+          //invf->invert_mat(dfdrh); // simple matrix inversion for a 2x2 matrix.
+          double det_inv = 1 / ( dfdrh[0][0] * dfdrh[1][1] * dfdrh[2][2] +
+                                 dfdrh[1][0] * dfdrh[2][1] * dfdrh[0][2] +
+                                 dfdrh[2][0] * dfdrh[0][1] * dfdrh[1][2] -
+                                 dfdrh[0][0] * dfdrh[2][1] * dfdrh[1][2] -
+                                 dfdrh[2][0] * dfdrh[1][1] * dfdrh[0][2] -
+                                 dfdrh[1][0] * dfdrh[0][1] * dfdrh[2][2]   );
+
+          dfdrh[0][0] = ( dfdrh[1][1] * dfdrh[2][2] - dfdrh[1][2] * dfdrh[2][1] ) * det_inv;
+          dfdrh[0][1] = ( dfdrh[0][2] * dfdrh[2][1] - dfdrh[0][1] * dfdrh[2][2] ) * det_inv;
+          dfdrh[0][2] = ( dfdrh[0][1] * dfdrh[1][2] - dfdrh[0][2] * dfdrh[1][1] ) * det_inv;
+          dfdrh[1][0] = ( dfdrh[1][2] * dfdrh[2][0] - dfdrh[1][0] * dfdrh[2][2] ) * det_inv;
+          dfdrh[1][1] = ( dfdrh[0][0] * dfdrh[2][2] - dfdrh[0][2] * dfdrh[2][0] ) * det_inv;
+          dfdrh[1][2] = ( dfdrh[0][2] * dfdrh[1][0] - dfdrh[0][0] * dfdrh[1][2] ) * det_inv;
+          dfdrh[2][0] = ( dfdrh[1][0] * dfdrh[2][1] - dfdrh[1][1] * dfdrh[2][0] ) * det_inv;
+          dfdrh[2][1] = ( dfdrh[0][1] * dfdrh[2][0] - dfdrh[0][0] * dfdrh[2][1] ) * det_inv;
+          dfdrh[2][2] = ( dfdrh[0][0] * dfdrh[1][1] - dfdrh[0][1] * dfdrh[1][0] ) * det_inv;
           // get rh_(n+1)
           double dominantRate=0.0;
           for (int l=0; l<_NUM_reactions; l++) {
             for (int var=0; var<_NUM_reactions; var++) {
-              rh_l_new[l]-=(*dfdrh)[l][var]*F[var];
+              // 03 - No DenseMatrix
+              //rh_l_new[l]-=(*dfdrh)[l][var]*F[var];
+              rh_l_new[l] -= dfdrh[l][var] * F[var];
             }
             dominantRate=std::max(dominantRate,std::abs(rh_l_new[l]));
           }
@@ -1020,7 +1131,8 @@ CharOxidationSmith2016::computeModel( const ProcessorGroup * pc,
       } // else statement
     }); //end cell loop
     // delete scinew DenseMatrix
-    delete dfdrh;
+      // 03 - No DenseMatrix
+    //delete dfdrh;
     delete invf;
   } //end patch loop
 }

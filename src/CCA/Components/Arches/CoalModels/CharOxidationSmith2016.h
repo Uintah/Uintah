@@ -203,6 +203,7 @@ private:
   double _weight_scaling_constant;   ///< Scaling factor for weight
   double _length_scaling_constant;   ///< Scaling factor for length 
   double _weight_small;   ///< small weight
+
   std::vector<bool> _use_co2co_l;
   std::vector<std::string> _oxid_l;
   std::vector<double> _MW_l;
@@ -210,6 +211,7 @@ private:
   std::vector<double> _e_l;
   std::vector<double> _phi_l;
   std::vector<double> _hrxn_l;
+
   int _NUM_reactions; //
   int _NUM_species; //
   double _Mh; // 12 kg carbon / kmole carbon
@@ -225,8 +227,11 @@ private:
   double _dynamic_visc; // [kg/(m s)]
   int _nQn_part;
   std::vector<std::vector<double> > _D_mat;
+    // 05 - Replace std::vectors with plain-old-data arrays
   std::vector<double> _MW_species;
   std::vector<int> _oxidizer_indices;
+  //  double _MW_species[4];
+ //   int    _oxidizer_indices[3];
   std::vector<int> _other_indices;
   std::vector<std::string> _species_names;
 
