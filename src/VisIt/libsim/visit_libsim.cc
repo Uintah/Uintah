@@ -242,8 +242,12 @@ void visit_InitLibSim( visit_simulation_data *sim )
   
   unsigned int maxNodes = 0;
   unsigned int maxCores = 0;
-  
-  std::ifstream infile("/Projects/Uintah/trunk/src/VisIt/libsim/ash_layout.txt");
+
+  std::string path(__FILE__);
+  size_t found = path.find_last_of("/");
+  path = path.substr(0, found+1);
+
+  std::ifstream infile(path + "ash_layout.txt");
 
     if( infile.is_open() )
     {
@@ -282,7 +286,7 @@ void visit_InitLibSim( visit_simulation_data *sim )
 	  std::string tmpMemory;
 	  std::string tmpGB;
 
-	  int start, stop, cores, memory;
+	  unsigned int start, stop, cores, memory;
 
 	  if (!(iss >> tmpNode >> start >> tmpTo >> stop >> tmpCores >> cores >> tmpMemory >> memory >> tmpGB))
 	    break; // error

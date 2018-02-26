@@ -791,7 +791,7 @@ visit_handle visit_SimGetMetaData(void *cbdata)
       {
 	for( unsigned int i=2; i<maxCores; ++i )
 	{
-	  int cc = 0;
+	  unsigned int cc = 0;
 	  
 	  for( unsigned int j=0; j<sim->nodeCores.size(); ++j )
 	  {
@@ -1341,7 +1341,7 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
 
 	  if( !local ||
 	      (local && s == sim->switchIndex && n == sim->nodeIndex &&
-	       i == sim->myworld->myNode_myRank()) )
+	       (int) i == sim->myworld->myNode_myRank()) )
 	  {
 	    // All cells are quads
 	    connections[nConnections++] = VISIT_CELL_QUAD;
@@ -1401,7 +1401,7 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
   // bool &forceMeshReload = sim->forceMeshReload;
   TimeStepInfo* &stepInfo = sim->stepInfo;
 
-  int timestate = sim->cycle;
+  // int timestate = sim->cycle;
 
   visit_handle meshH = VISIT_INVALID_HANDLE;
 

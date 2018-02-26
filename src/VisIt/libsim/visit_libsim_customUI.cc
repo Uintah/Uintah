@@ -282,7 +282,7 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
         if( (analysisVar.level == IGNORE_LEVEL && l == 0) ||
             (analysisVar.level == ALL_LEVELS) ||
             (analysisVar.level == FINEST_LEVEL && l == numLevels - 1) ||
-            (analysisVar.level == l) )
+            (analysisVar.level == (int) l) )
         {
           LevelP levelP = gridP->getLevel(l);
           Level *level = levelP.get_rep();
@@ -539,8 +539,9 @@ void visit_SetUPSVars( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetGridInfo( visit_simulation_data *sim )
 {
-  ApplicationInterface* simInterface =
-    sim->simController->getApplicationInterface();
+  // ApplicationInterface* simInterface =
+  //   sim->simController->getApplicationInterface();
+
   GridP                gridP        = sim->gridP;
 
   VisItUI_setValueS( "GridInfoGroupBox", "SHOW_WIDGET", 1);
@@ -654,8 +655,8 @@ void visit_SetRuntimeStats( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetMPIStats( visit_simulation_data *sim )
 {
-  ApplicationInterface* simInterface =
-    sim->simController->getApplicationInterface();
+  // ApplicationInterface* simInterface =
+  //   sim->simController->getApplicationInterface();
 
   MPIScheduler *mpiScheduler = dynamic_cast<MPIScheduler*>
     (sim->simController->getSchedulerP().get_rep());
