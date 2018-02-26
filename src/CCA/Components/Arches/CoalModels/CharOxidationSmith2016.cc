@@ -357,15 +357,19 @@ CharOxidationSmith2016::problemSetup(const ProblemSpecP& params, int qn)
       throw ProblemSetupException("Error: Species specified in SmithChar2016 oxidation species, not found in SmithChar2016 data-base (please add it).", __FILE__, __LINE__);
     }
   }
-  std::vector<double> temp_v;
+  // 12 - _D_mat
+  //std::vector<double> temp_v;
   for (int i=0; i<_NUM_species; i++) {
-    temp_v.clear();
+    //temp_v.clear();
     _MW_species.push_back(binary_diff_terms.MW_sp[specified_indices[i]]);
     helper.add_lookup_species(_species_names[i]); // request all indicated species from table
     for (int j=0; j<_NUM_species; j++) {
-      temp_v.push_back(binary_diff_terms.D_matrix[specified_indices[i]][specified_indices[j]]);
+  // 12 - _D_mat
+      //temp_v.push_back(binary_diff_terms.D_matrix[specified_indices[i]][specified_indices[j]]);
+      _D_mat[i][j] = binary_diff_terms.D_matrix[specified_indices[i]][specified_indices[j]];
     }
-    _D_mat.push_back(temp_v);
+  // 12 - _D_mat
+    //_D_mat.push_back(temp_v);
   }
   // find index of the oxidizers.
   for (int reac=0; reac<_NUM_reactions; reac++) {
@@ -732,8 +736,8 @@ CharOxidationSmith2016::computeModel( const ProcessorGroup * pc,
     // initialize all temporary variables which are use in the cell loop.
     int count;
     double relative_velocity;
-    double CO_CO2_ratio;
-    double CO2onCO;
+    //double CO_CO2_ratio;
+    //double CO2onCO;
     double gas_rho;
     double gas_T;
     double p_T;
@@ -825,8 +829,9 @@ CharOxidationSmith2016::computeModel( const ProcessorGroup * pc,
     //std::vector<double> r_h_in(_NUM_reactions);
 
       double D_oxid_mix_l     [ _NUM_reactions ];
-      double D_kn             [ _NUM_reactions ];
-      double D_eff            [ _NUM_reactions ];
+      // 06 - Cut excess temporary variables
+      //double D_kn             [ _NUM_reactions ];
+      //double D_eff            [ _NUM_reactions ];
       double phi_l            [ _NUM_reactions ];
       double hrxn_l           [ _NUM_reactions ];
       double rh_l             [ _NUM_reactions ];
@@ -834,10 +839,12 @@ CharOxidationSmith2016::computeModel( const ProcessorGroup * pc,
       double species_mass_frac[ _NUM_species ];
       double oxid_mass_frac   [ _NUM_reactions ];
 
-      double Sc            [ _NUM_reactions ];
+      // 06 - Cut excess temporary variables
+      //double Sc            [ _NUM_reactions ];
       double Sh            [ _NUM_reactions ];
-      double co_s          [ _NUM_reactions ];
-      double oxid_mole_frac[ _NUM_reactions ];
+      // 06 - Cut excess temporary variables
+      //double co_s          [ _NUM_reactions ];
+      //double oxid_mole_frac[ _NUM_reactions ];
       double co_r          [ _NUM_reactions ];
       double k_r           [ _NUM_reactions ];
       double M_T           [ _NUM_reactions ];
@@ -871,7 +878,8 @@ CharOxidationSmith2016::computeModel( const ProcessorGroup * pc,
         // 03 - No DenseMatrix
         //dfdrh->zero();// [-]
         for (int l=0; l<_NUM_reactions; l++) {
-          rh_l[l]=old_reaction_rate_l[l](i,j,k);// [kg/m^3/s]
+          // 06 - Cut excess temporary variables - Set by rh_l_new in Netwon solve
+          //rh_l[l]=old_reaction_rate_l[l](i,j,k);// [kg/m^3/s]
           rh_l_new[l]=old_reaction_rate_l[l](i,j,k);// [kg/m^3/s]
         }
         for (int l=0; l<_NUM_reactions; l++) {
@@ -887,9 +895,11 @@ CharOxidationSmith2016::computeModel( const ProcessorGroup * pc,
           AreaSum+=  weight[ix](i,j,k)*length[ix](i,j,k)*length[ix](i,j,k); // [#/m]
         }
         surfaceAreaFraction=w*p_diam*p_diam/AreaSum; // [-] this is the weighted area fraction for the current particle size.
-        CO_CO2_ratio = 200.*exp(-9000./(_R_cal*p_T)); // [ kg CO / kg CO2]
-        CO_CO2_ratio=CO_CO2_ratio*44.0/28.0; // [kmoles CO / kmoles CO2]
-        CO2onCO=1./CO_CO2_ratio; // [kmoles CO2 / kmoles CO]
+        // 06 - Cut excess temporary variables
+        //CO_CO2_ratio = 200.*exp(-9000./(_R_cal*p_T)); // [ kg CO / kg CO2]
+        //CO_CO2_ratio=CO_CO2_ratio*44.0/28.0; // [kmoles CO / kmoles CO2]
+        //CO2onCO=1./CO_CO2_ratio; // [kmoles CO2 / kmoles CO]
+        double CO2onCO = 1. / ( 200. * exp( -9000. / ( _R_cal * p_T ) ) * 44.0 / 28.0 ); // [ kg CO / kg CO2] => [kmoles CO / kmoles CO2] => [kmoles CO2 / kmoles CO]
         for (int l=0; l<_NUM_reactions; l++) {
 
           if ( _use_co2co_l[l] ) {
@@ -904,18 +914,24 @@ CharOxidationSmith2016::computeModel( const ProcessorGroup * pc,
 //          phi_l[l] = (_use_co2co_l[l]) ? (CO2onCO + 1)/(CO2onCO + 0.5) : _phi_l[l];
 //          hrxn_l[l] = (_use_co2co_l[l]) ? (CO2onCO*_HF_CO2 + _HF_CO)/(1+CO2onCO) : _hrxn_l[l];
         }
-        relative_velocity = sqrt( ( gas_vel.x() - part_vel.x() ) * ( gas_vel.x() - part_vel.x() ) +
-                                         ( gas_vel.y() - part_vel.y() ) * ( gas_vel.y() - part_vel.y() ) +
-                                         ( gas_vel.z() - part_vel.z() ) * ( gas_vel.z() - part_vel.z() )  );// [m/s]
-        Re_p  = relative_velocity * p_diam / ( _dynamic_visc / gas_rho ); // Reynolds number [-]
-
+        // 06 - Cut excess temporary variables
+        //relative_velocity = sqrt( ( gas_vel.x() - part_vel.x() ) * ( gas_vel.x() - part_vel.x() ) +
+        //                                 ( gas_vel.y() - part_vel.y() ) * ( gas_vel.y() - part_vel.y() ) +
+        //                                 ( gas_vel.z() - part_vel.z() ) * ( gas_vel.z() - part_vel.z() )  );// [m/s]
+        //Re_p  = relative_velocity * p_diam / ( _dynamic_visc / gas_rho ); // Reynolds number [-]
+        Re_p = std::sqrt( ( gas_vel.x() - part_vel.x() ) * ( gas_vel.x() - part_vel.x() ) +
+                                 ( gas_vel.y() - part_vel.y() ) * ( gas_vel.y() - part_vel.y() ) +
+                                 ( gas_vel.z() - part_vel.z() ) * ( gas_vel.z() - part_vel.z() ) )*
+                                  p_diam / ( _dynamic_visc / gas_rho ); // Reynolds number [-]
         x_org = (rc + ch) / (rc + ch + _mass_ash );
         cg = _gasPressure / (_R * gas_T * 1000.); // [kmoles/m^3] - Gas concentration
         p_area = M_PI * p_diam*p_diam; // particle surface area [m^2]
         p_volume = M_PI/6.*p_diam*p_diam*p_diam; // particle volme [m^3]
         p_void = std::max(1e-10, 1.-(1./p_volume)*((rc+ch)/_rho_org_bulk + _mass_ash/_rho_ash_bulk));    // current porosity. (-) required due to sign convention of char.
-        psi = 1./(_p_void0*(1.-_p_void0));
-        Sj =  _init_particle_density/p_rho*((1-p_void)/(1-_p_void0))*sqrt(1-std::min(1.0,psi*log((1-p_void)/(1-_p_void0))));
+        // 06 - Cut excess temporary variables
+        //psi = 1./(_p_void0*(1.-_p_void0));
+        //Sj =  _init_particle_density/p_rho*((1-p_void)/(1-_p_void0))*sqrt(1-std::min(1.0,psi*log((1-p_void)/(1-_p_void0))));
+        Sj  = _init_particle_density / p_rho * ( ( 1 - p_void ) / ( 1 - _p_void0 ) ) * std::sqrt( 1 - std::fmin( 1.0, ( 1. / ( _p_void0 * ( 1. - _p_void0 ) ) ) * log( ( 1 - p_void ) / ( 1 - _p_void0 ) ) ) );
         rp = 2 * p_void * (1. - p_void)/(p_rho * Sj * _Sg0); // average particle radius [m]
         // Calculate oxidizer diffusion coefficient // effect diffusion through stagnant gas (see "Multicomponent Mass Transfer", Taylor and Krishna equation 6.1.14)
         for (int l=0; l<_NUM_reactions; l++) {
@@ -937,16 +953,24 @@ CharOxidationSmith2016::computeModel( const ProcessorGroup * pc,
           }
 
           D_oxid_mix_l[l] = sum_x/sum_x_D * std::sqrt(CUBE( gas_T/_T0));
-          D_kn[l] = 97.*rp*sqrt(p_T/_MW_species[l]);
-          D_eff[l] = p_void / _tau/(1./D_kn[l] + 1/D_oxid_mix_l[l]);
-        }
-        for (int l=0; l<_NUM_reactions; l++) {
-          Sc[l] = _dynamic_visc / (gas_rho * D_oxid_mix_l[l]); // Schmidt number [-]
-          Sh[l] = 2.0 + 0.6 * std::sqrt(Re_p) * std::cbrt(Sc[l]); // Sherwood number [-]
-          oxid_mole_frac[l] = oxid_mass_frac[l] * MW / _MW_l[l]; // [mole fraction]
-          co_r[l] = cg * oxid_mole_frac[l]; // oxidizer concentration, [kmoles/m^3]
+          // 06 - Cut excess temporary variables
+          //D_kn[l] = 97.*rp*sqrt(p_T/_MW_species[l]);
+          //D_eff[l] = p_void / _tau/(1./D_kn[l] + 1/D_oxid_mix_l[l]);
+        //}
+        //for (int l=0; l<_NUM_reactions; l++) {
+          // 06 - Cut excess temporary variables
+          //Sc[l] = _dynamic_visc / (gas_rho * D_oxid_mix_l[l]); // Schmidt number [-]
+          //Sh[l] = 2.0 + 0.6 * std::sqrt(Re_p) * std::cbrt(Sc[l]); // Sherwood number [-]
+          Sh[l]             = 2.0 + 0.6 * std::sqrt( Re_p ) * std::cbrt( _dynamic_visc / ( gas_rho * D_oxid_mix_l[l] ) ); // Sherwood number [-]
+          // 06 - Cut excess temporary variables
+          //oxid_mole_frac[l] = oxid_mass_frac[l] * MW / _MW_l[l]; // [mole fraction]
+          //co_r[l] = cg * oxid_mole_frac[l]; // oxidizer concentration, [kmoles/m^3]
+          co_r[l]           = cg * ( oxid_mass_frac[l] * MW / _MW_l[l] ); // oxidizer concentration, [kmoles/m^3]
           k_r[l] = ( 10.0 * _a_l[l] * exp( - _e_l[l] / ( _R_cal * p_T)) * _R * p_T * 1000.0) / ( _Mh * phi_l[l] * 101325. ); // [m / s]
-          M_T[l] = p_diam/2.*sqrt(k_r[l]*_Sg0*Sj*p_rho/D_eff[l]);    //Thiele modulus, Mitchell's formulation
+          // 06 - Cut excess temporary variables
+          //M_T[l] = p_diam/2.*sqrt(k_r[l]*_Sg0*Sj*p_rho/D_eff[l]);    //Thiele modulus, Mitchell's formulation
+          M_T[l]            = p_diam / 2. * std::sqrt( k_r[l] * _Sg0 * Sj * p_rho /                                 // Thiele modulus, Mitchell's formulation
+                              ( p_void / _tau / ( 1. / ( 97. * rp * std::sqrt( p_T / _MW_species[l] ) ) + 1. / D_oxid_mix_l[l] ) ) );
           effectivenessF[l] = (M_T[l] < 1e-5) ? 1.0 : 3./M_T[l]*(1./std::tanh(M_T[l])-1./M_T[l]);   // effectiveness factor
         }
         // Newton-Raphson solve for rh_l.
@@ -1090,8 +1114,10 @@ CharOxidationSmith2016::computeModel( const ProcessorGroup * pc,
           rh_l_i = std::min(rh_l_new[l]*p_area*x_org*(1-p_void), oxi_lim);// [kg/s/#]
           char_mass_rate += -rh_l_i;// [kg/s/#]  negative sign because we are computing the destruction rate for the particles.
           d_mass += rh_l_i;
-          co_s[l] = rh_l_i/(phi_l[l]*_Mh*k_r[l]*(1 + effectivenessF[l]*p_diam*p_rho*_Sg0*Sj/(6.*(1-p_void)))); //oxidizer concentration at particle surface [kmoles/m^3]
-          r_h_ex[l] = phi_l[l]*_Mh*k_r[l]*co_s[l]; // [kg/m^2/s]
+          // 06 - Cut excess temporary variables
+          //co_s[l] = rh_l_i/(phi_l[l]*_Mh*k_r[l]*(1 + effectivenessF[l]*p_diam*p_rho*_Sg0*Sj/(6.*(1-p_void)))); //oxidizer concentration at particle surface [kmoles/m^3]
+          //r_h_ex[l] = phi_l[l]*_Mh*k_r[l]*co_s[l]; // [kg/m^2/s]
+          r_h_ex[l]            = phi_l[l] * _Mh * k_r[l] * ( rh_l_i / ( phi_l[l] * _Mh * k_r[l] * ( 1 + effectivenessF[l] * p_diam * p_rho * _Sg0 * Sj / ( 6. * ( 1 - p_void ) ) ) ) ); // [kg/m^2/s]
           r_h_in[l] = r_h_ex[l]*effectivenessF[l]*p_diam*p_rho*_Sg0*Sj/(6.*(1-p_void)); // [kg/m^2/s]
           h_rxn_factor += r_h_ex[l]*_ksi + r_h_in[l];
           h_rxn += hrxn_l[l] * (r_h_ex[l]*_ksi + r_h_in[l]);
