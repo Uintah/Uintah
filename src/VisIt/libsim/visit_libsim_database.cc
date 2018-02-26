@@ -814,7 +814,7 @@ visit_handle visit_SimGetMetaData(void *cbdata)
 	if(VisIt_MeshMetaData_alloc(&mmd) == VISIT_OKAY)
         {
 	  /* Set the mesh’s properties.*/
-	  if( i == 0 )
+	  if( i == 0 && sim->switchIndex != -1 && sim->nodeIndex != -1 )
 	    VisIt_MeshMetaData_setName(mmd, ("machine_" + sim->host + "/local").c_str());
 	  else
 	    VisIt_MeshMetaData_setName(mmd, ("machine_" + sim->host + "/global").c_str());
@@ -1263,7 +1263,7 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
     {
       for( unsigned int i=2; i<maxCores; ++i )
       {
-	int cc = 0;
+	unsigned int cc = 0;
 	
 	for( unsigned int j=0; j<sim->nodeCores.size(); ++j )
 	{

@@ -239,6 +239,9 @@ void visit_InitLibSim( visit_simulation_data *sim )
   sim->nodeStop.clear();
   sim->nodeCores.clear();
   sim->nodeMemory.clear();
+
+  sim->switchIndex = -1;
+  sim->nodeIndex = -1;  
   
   unsigned int maxNodes = 0;
   unsigned int maxCores = 0;
@@ -310,13 +313,12 @@ void visit_InitLibSim( visit_simulation_data *sim )
 	    // Remove the hostname leaving only the node number.
 	    std::string nodeStr = line.substr(found + sim->host.size()+1);
 	    found = nodeStr.find(" ");
+	    nodeStr = nodeStr.substr(0, found);
 
 	    // Nodes with three digits are compute nodes.
 	    // Compute node node001 vs head node node1
-	    if( found == 3 )
+	    if( nodeStr.size() == 3 )
 	    {
-	      nodeStr = nodeStr.substr(0, found);
-	    
 	      std::istringstream iss(nodeStr);
 
 	      unsigned int node;
@@ -348,32 +350,34 @@ void visit_InitLibSim( visit_simulation_data *sim )
       // Remove the hostname leaving only the node number.
       std::string nodeStr = sim->myworld->myProcName().substr(sim->host.size());
     
-      std::istringstream iss(nodeStr);
-
-      unsigned int node;
-
-      iss >> node;
-
-      sim->switchIndex = 0;
-      sim->nodeIndex = 0;
-    
-      for( unsigned int s=0; s<sim->switches.size(); ++s )
+      // Nodes with three digits are compute nodes.
+      // Compute node node001 vs head node node1
+      if( nodeStr.size() == 3 )
       {
-	for( unsigned int n=0; n<sim->switches[s].size(); ++n )
+	std::istringstream iss(nodeStr);
+	
+	unsigned int node;
+	
+	iss >> node;
+	
+	for( unsigned int s=0; s<sim->switches.size(); ++s )
 	{
-	  if( sim->switches[s][n] == node )
+	  for( unsigned int n=0; n<sim->switches[s].size(); ++n )
 	  {
-	    sim->switchIndex = s;
-	    sim->nodeIndex = n;
+	    if( sim->switches[s][n] == node )
+	    {
+	      sim->switchIndex = s;
+	      sim->nodeIndex = n;
+	    }
 	  }
 	}
-      }
       
       std::cerr << sim->myworld->myProcName() << "  "
 		<< sim->myworld->myNode_myRank() << "  "
 		<< node << "  "
 		<< sim->switchIndex << "  "
 		<< sim->nodeIndex << "  " << std::endl;
+      }
     }
 }
 
@@ -657,8 +661,8 @@ void visit_UpdateSimData( visit_simulation_data *sim,
                           double delt, double delt_next,
                           bool first, bool last )
 {
-  ApplicationInterface* appInterface =
-    sim->simController->getApplicationInterface();
+  // ApplicationInterface* appInterface =
+  //   sim->simController->getApplicationInterface();
 
   // Update all of the simulation grid and time dependent variables.
   sim->gridP     = currentGrid;

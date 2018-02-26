@@ -177,10 +177,10 @@ void visit_SetWallTimes( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetOutputIntervals( visit_simulation_data *sim )
 {
-  ApplicationInterface* simInterface =
-    sim->simController->getApplicationInterface();
+  // ApplicationInterface* simInterface =
+  //   sim->simController->getApplicationInterface();
 
-  SimulationTime* simTime = simInterface->getSimulationTime();
+  // SimulationTime* simTime = simInterface->getSimulationTime();
 
   Output          *output       = sim->simController->getOutput();
 
