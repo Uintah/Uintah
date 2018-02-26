@@ -776,14 +776,14 @@ CharOxidationSmith2016::computeModel( const ProcessorGroup * pc,
     double delta;
     double oxi_lim;
     double rh_l_i;
-    InversionBase* invf;
-    if (_NUM_reactions==2){
-      invf = scinew invert_2_2;
-    } else if (_NUM_reactions==3){
-      invf = scinew invert_3_3;
-    } else {
-      throw InvalidValue("ERROR: CharOxidationSmith2016: Matrix inversion not implemented for the number of reactions being used.",__FILE__,__LINE__);
-    }
+    //InversionBase* invf;
+    //if (_NUM_reactions==2){
+    //  invf = scinew invert_2_2;
+    //} else if (_NUM_reactions==3){
+    //  invf = scinew invert_3_3;
+    //} else {
+    //  throw InvalidValue("ERROR: CharOxidationSmith2016: Matrix inversion not implemented for the number of reactions being used.",__FILE__,__LINE__);
+    //}
 
     Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
     Uintah::parallel_for(range,  [&]( int i,  int j, int k){
@@ -857,21 +857,21 @@ CharOxidationSmith2016::computeModel( const ProcessorGroup * pc,
       double r_h_in    [ _NUM_reactions ];
 
         // populate the temporary variables.
-        Vector gas_vel = gasVel(i,j,k); // [m/s]
+        Vector gas_vel  = gasVel(i,j,k); // [m/s]
         Vector part_vel = partVel(i,j,k);// [m/s]
-        gas_rho=den(i,j,k);// [kg/m^3]
-        gas_T=temperature(i,j,k);// [K]
-        p_T=particle_temperature(i,j,k);// [K]
-        p_rho=particle_density(i,j,k);// [kg/m^3]
-        p_diam=length[d_quadNode](i,j,k);// [m]
-        rc=rawcoal_mass(i,j,k);// [kg/#]
-        ch=char_mass(i,j,k);// [kg/#]
-        w=weight[d_quadNode](i,j,k);// [#/m^3]
-        MW=1./MWmix(i,j,k); // [kg mix / kmol mix] (MW in table is 1/MW).
-        RHS=RHS_source(i,j,k)*_char_scaling_constant*_weight_scaling_constant; // [kg/s]
-        r_devol=devolRC(i,j,k)*_RC_scaling_constant*_weight_scaling_constant; // [kg/m^3/s]
-        r_devol_ns=-r_devol; // [kg/m^3/s]
-        RHS_v=RC_RHS_source(i,j,k)*_RC_scaling_constant*_weight_scaling_constant; // [kg/s]
+        gas_rho         = den(i,j,k);// [kg/m^3]
+        gas_T           = temperature(i,j,k);// [K]
+        p_T             = particle_temperature(i,j,k);// [K]
+        p_rho           = particle_density(i,j,k);// [kg/m^3]
+        p_diam          = length[d_quadNode](i,j,k);// [m]
+        rc              = rawcoal_mass(i,j,k);// [kg/#]
+        ch              = char_mass(i,j,k);// [kg/#]
+        w               = weight[d_quadNode](i,j,k);// [#/m^3]
+        MW              = 1./MWmix(i,j,k); // [kg mix / kmol mix] (MW in table is 1/MW).
+        RHS             = RHS_source(i,j,k)*_char_scaling_constant*_weight_scaling_constant; // [kg/s]
+        r_devol         = devolRC(i,j,k)*_RC_scaling_constant*_weight_scaling_constant; // [kg/m^3/s]
+        r_devol_ns      = -r_devol; // [kg/m^3/s]
+        RHS_v           = RC_RHS_source(i,j,k)*_RC_scaling_constant*_weight_scaling_constant; // [kg/s]
 
         // populate temporary variable vectors
         delta = 1e-6;
@@ -923,16 +923,17 @@ CharOxidationSmith2016::computeModel( const ProcessorGroup * pc,
                                  ( gas_vel.y() - part_vel.y() ) * ( gas_vel.y() - part_vel.y() ) +
                                  ( gas_vel.z() - part_vel.z() ) * ( gas_vel.z() - part_vel.z() ) )*
                                   p_diam / ( _dynamic_visc / gas_rho ); // Reynolds number [-]
-        x_org = (rc + ch) / (rc + ch + _mass_ash );
-        cg = _gasPressure / (_R * gas_T * 1000.); // [kmoles/m^3] - Gas concentration
-        p_area = M_PI * p_diam*p_diam; // particle surface area [m^2]
+
+        x_org    = (rc + ch) / (rc + ch + _mass_ash );
+        cg       = _gasPressure / (_R * gas_T * 1000.); // [kmoles/m^3] - Gas concentration
+        p_area   =  M_PI * p_diam*p_diam; // particle surface area [m^2]
         p_volume = M_PI/6.*p_diam*p_diam*p_diam; // particle volme [m^3]
-        p_void = std::max(1e-10, 1.-(1./p_volume)*((rc+ch)/_rho_org_bulk + _mass_ash/_rho_ash_bulk));    // current porosity. (-) required due to sign convention of char.
+        p_void   = std::max(1e-10, 1.-(1./p_volume)*((rc+ch)/_rho_org_bulk + _mass_ash/_rho_ash_bulk));    // current porosity. (-) required due to sign convention of char.
         // 06 - Cut excess temporary variables
         //psi = 1./(_p_void0*(1.-_p_void0));
         //Sj =  _init_particle_density/p_rho*((1-p_void)/(1-_p_void0))*sqrt(1-std::min(1.0,psi*log((1-p_void)/(1-_p_void0))));
-        Sj  = _init_particle_density / p_rho * ( ( 1 - p_void ) / ( 1 - _p_void0 ) ) * std::sqrt( 1 - std::fmin( 1.0, ( 1. / ( _p_void0 * ( 1. - _p_void0 ) ) ) * log( ( 1 - p_void ) / ( 1 - _p_void0 ) ) ) );
-        rp = 2 * p_void * (1. - p_void)/(p_rho * Sj * _Sg0); // average particle radius [m]
+        Sj       = _init_particle_density / p_rho * ( ( 1 - p_void ) / ( 1 - _p_void0 ) ) * std::sqrt( 1 - std::fmin( 1.0, ( 1. / ( _p_void0 * ( 1. - _p_void0 ) ) ) * log( ( 1 - p_void ) / ( 1 - _p_void0 ) ) ) );
+        rp       = 2 * p_void * (1. - p_void)/(p_rho * Sj * _Sg0); // average particle radius [m]
         // Calculate oxidizer diffusion coefficient // effect diffusion through stagnant gas (see "Multicomponent Mass Transfer", Taylor and Krishna equation 6.1.14)
         for (int l=0; l<_NUM_reactions; l++) {
           sum_x_D=0;
@@ -1159,7 +1160,7 @@ CharOxidationSmith2016::computeModel( const ProcessorGroup * pc,
     // delete scinew DenseMatrix
       // 03 - No DenseMatrix
     //delete dfdrh;
-    delete invf;
+    //delete invf;
   } //end patch loop
 }
 
