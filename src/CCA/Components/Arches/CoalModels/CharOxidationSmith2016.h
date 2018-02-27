@@ -227,8 +227,8 @@ private:
   double _dynamic_visc; // [kg/(m s)]
   int _nQn_part;
   // 12 - _D_mat
-  //std::vector<std::vector<double> > _D_mat;
-  double _D_mat[4][4];
+  std::vector<std::vector<double> > _D_mat;
+  //double _D_mat[4][4];
     // 05 - Replace std::vectors with plain-old-data arrays
   std::vector<double> _MW_species;
   std::vector<int> _oxidizer_indices;

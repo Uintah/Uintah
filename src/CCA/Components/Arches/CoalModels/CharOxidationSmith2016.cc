@@ -358,18 +358,18 @@ CharOxidationSmith2016::problemSetup(const ProblemSpecP& params, int qn)
     }
   }
   // 12 - _D_mat
-  //std::vector<double> temp_v;
+  std::vector<double> temp_v;
   for (int i=0; i<_NUM_species; i++) {
-    //temp_v.clear();
+    temp_v.clear();
     _MW_species.push_back(binary_diff_terms.MW_sp[specified_indices[i]]);
     helper.add_lookup_species(_species_names[i]); // request all indicated species from table
     for (int j=0; j<_NUM_species; j++) {
   // 12 - _D_mat
-      //temp_v.push_back(binary_diff_terms.D_matrix[specified_indices[i]][specified_indices[j]]);
-      _D_mat[i][j] = binary_diff_terms.D_matrix[specified_indices[i]][specified_indices[j]];
+      temp_v.push_back(binary_diff_terms.D_matrix[specified_indices[i]][specified_indices[j]]);
+      //_D_mat[i][j] = binary_diff_terms.D_matrix[specified_indices[i]][specified_indices[j]];
     }
   // 12 - _D_mat
-    //_D_mat.push_back(temp_v);
+    _D_mat.push_back(temp_v);
   }
   // find index of the oxidizers.
   for (int reac=0; reac<_NUM_reactions; reac++) {
