@@ -21,7 +21,7 @@ from sys import argv, exit
 from string import upper
 
 from subprocess import check_output # needed to get full pathname response from which command
-from helpers.runSusTests import nameoftest, testOS, input, num_processes, testOS, setInputsDir, userFlags
+from helpers.runSusTests import getTestName, getTestOS, input, getMPISize, getTestOS, setInputsDir, getTestFlags
 
 ####################################################################################
 
@@ -307,7 +307,7 @@ def generateGS() :
 
         nTestsFinished = 0
         for test in tests :
-            if testOS( test ) != upper( OS ) and testOS( test ) != "ALL":
+            if getTestOS( test ) != upper( OS ) and getTestOS( test ) != "ALL":
                 continue
              
             #  Defaults
@@ -318,7 +318,7 @@ def generateGS() :
             # parse user flags for the gpu and sus_options
             # override defaults if the flags have been specified
             if len(test) == 5:
-              flags = userFlags(test)
+              flags = getTestFlags(test)
               print( "User Flags:" )
 
               #  parse the user flags
@@ -347,16 +347,16 @@ def generateGS() :
                 continue
               
             # FIXME: NOT SURE IF THIS IS RIGHT, BUT IT APPEARS TO MATCH WHAT THE RUN TESTS SCRIPT NEEDS:
-            print( "About to run test: " + nameoftest( test ) )
-            os.mkdir( nameoftest( test ) )
-            os.chdir( nameoftest( test ) )
+            print( "About to run test: " + getTestName( test ) )
+            os.mkdir( getTestName( test ) )
+            os.chdir( getTestName( test ) )
 
             # Create (yet) another symbolic link to the 'inputs' directory so some .ups files will be able
             # to find what they need...  (Needed for, at least, methane8patch (ARCHES) test.)
             if not os.path.islink( "inputs" ) :
                 os.symlink( inputs, "inputs" )
 
-            np = float( num_processes( test ) )
+            np = float( getMPISize( test ) )
             mpirun = ""
 
             
@@ -391,7 +391,7 @@ def generateGS() :
             np = int( np )
             my_mpirun = "%s -np %s  " % (MPIHEAD, np)
 
-            command = my_mpirun + sus + " " + SVN_FLAGS + " " + sus_options + " " + inputs + "/" + component + "/" + input( test )  + " > sus_log.txt 2>&1 " 
+            command = my_mpirun + sus + " " + SVN_FLAGS + " " + sus_options + " " + inputs + "/" + component + "/" + getUpsFile( test )  + " > sus_log.txt 2>&1 " 
 
             print( "Running command: " + command )
 

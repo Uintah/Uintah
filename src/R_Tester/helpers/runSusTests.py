@@ -17,36 +17,38 @@ import re         # regular expressions
 #
 # stdout.flush() # Make sure that output (via 'tee' command (from calling script)) is actually printed...
 #______________________________________________________________________
-inputs_dir = ""
+
+# default value for the inputs path
+inputpath = path.abspath( argv[2] )
 
 
-def nameoftest (test):
+def getTestName(test):
     return test[0]
     
-def input (test):
+def getUpsFile(test):
     return test[1]
 
-def num_processes (test):
+def getMPISize(test):
     return test[2]
 
-def testOS(test):
+def getTestOS(test):
     return upper(test[3])
 
-def setInputsDir( here ) :
-    global inputs_dir
-    inputs_dir = here
+def setInputsDir( here ):
+    global inputpath
+    if inputpath == "":
+      inputpath = path.abspath( argv[2] )
+    else: 
+      inputpath = here
 
 def getInputsDir():
-    global inputs_dir
-    # read from argument list if it hasn't been set
-    if inputs_dir == "" :
-      inputs_dir = path.abspath(argv[2])
-    return inputs_dir
-
+    global inputpath
+    return inputpath
+    
 def date ():
     return asctime(localtime(time()))
 
-def userFlags (test):
+def getTestFlags (test):
     return test[-1]
 
 def nullCallback (test, susdir, inputsdir, compare_root, dbg_opt, max_parallelism):
@@ -60,7 +62,7 @@ def ignorePerformanceTests( TESTS ):
   for test in TESTS:
     
     if len(test) == 5:
-      flags = userFlags( test )
+      flags = getTestFlags( test )
       
       if not "do_performance_test" in str( flags ):
         myTests.append( test )
@@ -125,7 +127,9 @@ def build_root():
 #______________________________________________________________________
 # if a callback is given, it is executed before running each test and given
 # all of the paramaters given to runSusTest
-def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
+def runSusTests(argv, TESTS, application, callback = nullCallback):
+
+  print "runSusTests: %s " % application
 
   if len(argv) < 6 or len(argv) > 7 or not argv[4] in ["dbg", "opt", "unknown"] :
     print( "usage: %s <susdir> <inputsdir> <testdata_goldstandard> <dbg_opt> <max_parallelsim> <test>" % argv[0] )
@@ -134,11 +138,11 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
   #__________________________________
   # setup variables and paths
   global helperspath
+  inputpath     = getInputsDir()
   susdir        = path.normpath(path.join(getcwd(), argv[1]))
   gold_standard = path.normpath(path.join(getcwd(), argv[3]))
   helperspath   = "%s/%s" % (path.normpath(path.join(getcwd(), path.dirname(argv[0]))), "helpers")
   toolspath     = path.normpath(path.join(getcwd(), "tools"))
-  inputpath     = getInputsDir()
 
   global startpath
   startpath       = getcwd()
@@ -148,7 +152,6 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
   global svn_revision
   svn_revision = getoutput("svn info ../src |grep Revision")
   svn_revision = svn_revision.split(" ")[1]
-
 
   #check sus for CUDA capabilities
   has_gpu  = 0
@@ -160,7 +163,6 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
   if rc == 1:
     print( "sus was compiled with CUDA and a GPU is available" )
     has_gpu = 1
-
 
   #__________________________________
   # set environmental variables
@@ -200,27 +202,29 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     max_parallelism = 1;
 
   try:
-    chdir(helperspath)
+    stat( inputpath )
   except Exception:
-    print( "%s does not exist" % (helperspath) )
-    print( "'helpers' directory could not be found" )
+    print " ERROR: runSusTests: the path to the inputs directory (%s) is not valid" % inputpath
+    exit(1)  
+  try:
+    chdir( helperspath )
+  except Exception:
+    print( " ERROR runSusTests: the path to the 'helpers' directory (%s) is not valid" % (helperspath) )
     exit(1)
 
   try:
-    chdir(susdir)
-    stat("sus")
+    chdir( susdir )
+    stat( "sus" )
   except Exception:
-    print( "%s/sus does not exist" % (susdir) )
-    print( "Please give a valid <susdir> argument" )
+    print( " ERROR runSusTests: path to sus (%s/sus) is not valid" % (susdir) )
     exit(1)
 
   try:
-    chdir(gold_standard)
+    chdir( gold_standard )
   except Exception:
-    print( "%s does not exist" % (gold_standard) )
-    print( "Please give a valid <testdata_goldstandard> argument" )
+    print( " ERROR runSusTests: path to gold standards (%s) is not valid" % (gold_standard) )
     exit(1)
-  compare_root = "%s/%s" % (gold_standard, ALGO)
+  compare_root = "%s/%s" % (gold_standard, application)
 
   try:
     chdir(compare_root)
@@ -234,12 +238,12 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
 
     # only create component directory if the user is the owner
     if access(gold_standard, W_OK) and my_uid == file_uid:
-      print( " The directory %s does not exist in the gold standards %s" % ( ALGO, gold_standard) )
+      print( " The directory %s does not exist in the gold standards %s" % ( application, gold_standard) )
       print( " Now creating it...." )    
-      mkdir(ALGO)
-      system("chmod -R 775 %s" % ALGO)
+      mkdir(application)
+      system("chmod -R 775 %s" % application)
 
-  resultsdir = "%s/%s-results" % (startpath, ALGO)
+  resultsdir = "%s/%s-results" % (startpath, application)
   chdir(startpath)
 
   try:
@@ -251,14 +255,14 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
 
   chdir(resultsdir)
 
-  if outputpath != startpath and path.exists("%s/%s-results" % (outputpath, ALGO)) != 1:
-    mkdir("%s/%s-results" % (outputpath, ALGO))
+  if outputpath != startpath and path.exists("%s/%s-results" % (outputpath, application)) != 1:
+    mkdir("%s/%s-results" % (outputpath, application))
 
   print( "" )
   if solotest == "":
-    print( "Performing %s-%s tests." % (ALGO, dbg_opt) )
+    print( "Performing %s-%s tests." % (application, dbg_opt) )
   else:
-    print( "Performing %s-%s test %s." % (ALGO, dbg_opt, solotest) )
+    print( "Performing %s-%s test %s." % (application, dbg_opt, solotest) )
   print( "====================================" )
   print( "" )
 
@@ -271,18 +275,18 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
   comp_time0 = time()
 
   # clean up any old log files
-  system("rm -rf %s/%s-short.log" % (startpath,ALGO))
-  system("rm -rf %s/%s.log" % (startpath,ALGO))
+  system("rm -rf %s/%s-short.log" % (startpath,application))
+  system("rm -rf %s/%s.log" % (startpath,application))
 
   for test in TESTS:
 
-    testname = nameoftest(test)
-    inputxml = path.basename(input(test))
+    testname = getTestName(test)
+    inputxml = path.basename( getUpsFile(test) )
 
     if solotest != "" and testname != solotest:
       continue
 
-    if testOS(test) != upper(environ['OS']) and testOS(test) != "ALL":
+    if getTestOS(test) != upper(environ['OS']) and getTestOS(test) != "ALL":
       continue
 
     print( "__________________" )
@@ -310,7 +314,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     #__________________________________
     # override defaults if the flags has been specified
     if len(test) == 5:
-      flags = userFlags(test)
+      flags = getTestFlags(test)
       print( "User Flags:" )
       
       #  parse the user flags
@@ -427,22 +431,21 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
 
     if startFrom == "checkpoint" or startFrom == "postProcessUda":
       try:
-        here = "%s/CheckPoints/%s/%s/%s.uda.000/" %(startpath,ALGO,testname,testname)
+        here = "%s/CheckPoints/%s/%s/%s.uda.000/" %(startpath,application,testname,testname)
         chdir(here)
       except Exception:
-        print( "checkpoint uda %s does not exist" % here )
+        print( " ERROR: runSusTests: checkpoint uda (%s) does not exist" % here )
         print( "This file must exist when using 'startFromCheckpoint' or 'PostProcessUda' option" )
         exit(1)
 
 
     # need to set the inputs dir here, since it could be different per test
-    inputsdir = "%s/%s" % (inputpath, ALGO)
+    inputsdir = "%s/%s" % (inputpath, application)
 
     try:
       chdir(inputsdir)
     except Exception:
-      print( "%s does not exist" % (inputsdir) )
-      print( "Please give a valid <inputsdir> argument" )
+      print( " ERROR: runSusTests: the path to the inputs directory (%s) is not valid" % (inputsdir) ) 
       exit(1)
 
     chdir(resultsdir)
@@ -453,7 +456,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
       print( "Remove %s/%s before running this test" % (resultsdir, testname) )
       exit(1)
 
-    system("echo '%s/replace_gold_standard %s %s/%s-results %s' > %s/replace_gold_standard" % (helperspath, compare_root, startpath, ALGO, testname, testname))
+    system("echo '%s/replace_gold_standard %s %s/%s-results %s' > %s/replace_gold_standard" % (helperspath, compare_root, startpath, application, testname, testname))
     system("chmod gu+rwx %s/replace_gold_standard" % testname)
 
     chdir(testname)
@@ -462,7 +465,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     # call the callback function before running each test
     list = callback(test, susdir, inputsdir, compare_root, dbg_opt, max_parallelism)
 
-    system("cp %s/%s %s > /dev/null 2>&1" % (inputsdir, input(test), inputxml))
+    system("cp %s/%s %s > /dev/null 2>&1" % (inputsdir, getUpsFile( test ), inputxml))
     symlink(inputpath, "inputs")
     
     #________________________________
@@ -473,17 +476,17 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
         
     #__________________________________
     # Run test and perform comparisons on the uda
-    environ['WEBLOG'] = "%s/%s-results/%s" % (weboutputpath, ALGO, testname)
+    environ['WEBLOG'] = "%s/%s-results/%s" % (weboutputpath, application, testname)
     create_gs = "%s-%s" % (create_gs0, startFrom)
     
-    rc = runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallelism, tests_to_do, tolerances, startFrom, varBucket, create_gs)
+    rc = runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_parallelism, tests_to_do, tolerances, startFrom, varBucket, create_gs)
     system("rm inputs")
 
     # copy results to web server
     if outputpath != startpath:
-      if path.exists("%s/%s-results/%s" % (outputpath, ALGO, testname)) != 1:
-        mkdir("%s/%s-results/%s" % (outputpath, ALGO, testname))
-      system("rsync -a --exclude '*uda*' *.* %s/%s-results/%s/ > /dev/null 2>&1" % (outputpath, ALGO, testname))
+      if path.exists("%s/%s-results/%s" % (outputpath, application, testname)) != 1:
+        mkdir("%s/%s-results/%s" % (outputpath, application, testname))
+      system("rsync -a --exclude '*uda*' *.* %s/%s-results/%s/ > /dev/null 2>&1" % (outputpath, application, testname))
       
     # Return Code (rc) of 2 means it failed comparison or memory test, so try to run restart
     if rc == 0 or rc == 2:
@@ -501,11 +504,11 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
       # Run restart test
       if do_restart == 1:
         symlink(inputpath, "inputs")
-        environ['WEBLOG'] = "%s/%s-results/%s/restart" % (weboutputpath, ALGO, testname)
+        environ['WEBLOG'] = "%s/%s-results/%s/restart" % (weboutputpath, application, testname)
         startFrom = "restart"
         create_gs = "%s-%s" % (create_gs0, startFrom)
         
-        rc = runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallelism, tests_to_do, tolerances, startFrom, varBucket, create_gs)
+        rc = runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_parallelism, tests_to_do, tolerances, startFrom, varBucket, create_gs)
 
         if rc > 0:
           failcode = 1
@@ -513,9 +516,9 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
 
         # copy results to web server
         if outputpath != startpath:
-          if path.exists("%s/%s-results/%s/restart" % (outputpath, ALGO, testname)) != 1:
-            mkdir("%s/%s-results/%s/restart" % (outputpath, ALGO, testname))
-          system("rsync -a --exclude '*uda*' *.* %s/%s-results/%s/ > /dev/null 2>&1" % (outputpath, ALGO, testname))
+          if path.exists("%s/%s-results/%s/restart" % (outputpath, application, testname)) != 1:
+            mkdir("%s/%s-results/%s/restart" % (outputpath, application, testname))
+          system("rsync -a --exclude '*uda*' *.* %s/%s-results/%s/ > /dev/null 2>&1" % (outputpath, application, testname))
 
       chdir("..")
     elif rc == 1: # negative one means skipping -- not a failure
@@ -530,7 +533,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     # Only do this if the nightly RT cronjob is running
     if failcode == 0 and getenv('AUTO_UPDATE_SVN_STAMP') == "yes":
       print( "Updating the svn revision file %s" %svn_revision )
-      svn_file = "%s/%s/%s/svn_revision" % (gold_standard,ALGO,testname)
+      svn_file = "%s/%s/%s/svn_revision" % (gold_standard,application,testname)
       system( "echo 'This test last passed with Revision: %s'> %s" %(svn_revision, svn_file))
     #__________________________________
     # end of test loop
@@ -548,7 +551,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
 
   # copied results - permissions
   if outputpath != startpath:
-    system("chmod -R gu+rwX,a+rX %s/%s-results > /dev/null 2>&1" % (outputpath, ALGO))
+    system("chmod -R gu+rwX,a+rX %s/%s-results > /dev/null 2>&1" % (outputpath, application))
 
   if solotest != "" and solotest_found == 0:
     print( "unknown test: %s" % solotest )
@@ -566,10 +569,10 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
   if failcode == 0:
     if solotest != "":
       print( "" )
-      print( "%s-%s test %s passed successfully!" % (ALGO, dbg_opt, solotest) )
+      print( "%s-%s test %s passed successfully!" % (application, dbg_opt, solotest) )
     else:
       print( "" )
-      print( "All %s-%s tests passed successfully!" % (ALGO, dbg_opt) )
+      print( "All %s-%s tests passed successfully!" % (application, dbg_opt) )
   else:
     print( "" )
     print( "Some tests failed" )
@@ -584,14 +587,14 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
 # 3 ints stating whether to do comparison, memory, and performance tests
 # in that order
 
-def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallelism, tests_to_do, tolerances, startFrom, varBucket, create_gs):
+def runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_parallelism, tests_to_do, tolerances, startFrom, varBucket, create_gs):
   global startpath
   global helperspath
   global svn_revision
 
-  testname = nameoftest(test)
+  testname = getTestName(test)
 
-  np = float(num_processes(test))
+  np = float(getMPISize(test))
   if (np > max_parallelism):
     if np == 1.1:
       print( "Skipping test %s because it requires mpi and max_parallism < 1.1" % testname )
@@ -673,9 +676,10 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
   logpath = environ['WEBLOG']
 
   # if running performance tests, strip the output and checkpoints portions
+  # use the the input file local
   if do_performance_test == 1:
-
-    inputxml = modUPS("", inputxml,["<outputInterval>0</outputInterval>",
+    localPath = "./"
+    inputxml = modUPS(localPath, inputxml,["<outputInterval>0</outputInterval>",
                                     "<outputTimestepInterval>0</outputTimestepInterval>",
                                     '<checkpoint cycle="0" interval="0"/>'])
 
@@ -706,12 +710,12 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
 
   if startFrom == "checkpoint":
     print( "Running test from checkpoint ---%s--- %s at %s" % (testname, mpimsg, strftime( "%I:%M:%S")) )
-    susinput     = "-restart %s/CheckPoints/%s/%s/*.uda.000" %  (startpath,ALGO,testname)
+    susinput     = "-restart %s/CheckPoints/%s/%s/*.uda.000" %  (startpath,application,testname)
     restart_text = " "
 
   if startFrom == "postProcessUda":
     print( "Running test from checkpoint ---%s--- %s at %s" % (testname, mpimsg, strftime( "%I:%M:%S")) )
-    susinput     = "-postProcessUda %s/CheckPoints/%s/%s/*.uda.000" %  (startpath,ALGO,testname)
+    susinput     = "-postProcessUda %s/CheckPoints/%s/%s/*.uda.000" %  (startpath,application,testname)
     restart_text = " "
 
   if do_memory_test == 1:
@@ -776,7 +780,7 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
   if rc == 35072 or rc == 36608 :
     print( "\t*** Test %s exceeded maximum allowable run time" % (testname) )
     print( )
-    system("echo '  :%s: %s test exceeded maximum allowable run time' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
+    system("echo '  :%s: %s test exceeded maximum allowable run time' >> %s/%s-short.log" % (testname,restart_text,startpath,application))
     return_code = 1
     return return_code
 
@@ -789,7 +793,7 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
     print( sus_log_msg )
     print( "" )
     
-    system("echo '  :%s: %s test did not run to completion' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
+    system("echo '  :%s: %s test did not run to completion' >> %s/%s-short.log" % (testname,restart_text,startpath,application))
     
     return_code = 1
     return return_code
@@ -925,19 +929,19 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
     # print error codes
     # if comparison, memory, performance tests fail, return here, so mem_leak tests can run
     if compUda_RC == 5*256 or compUda_RC == 1*256:
-      system("echo '  :%s: \t%s test failed comparison tests' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
+      system("echo '  :%s: \t%s test failed comparison tests' >> %s/%s-short.log" % (testname,restart_text,startpath,application))
       return_code = 2;
 
     if performance_RC == 2*256:
-      system("echo '  :%s: \t%s test failed performance tests' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
+      system("echo '  :%s: \t%s test failed performance tests' >> %s/%s-short.log" % (testname,restart_text,startpath,application))
       return_code = 2;
 
     if memory_RC == 1*256 or memory_RC == 2*256 or memory_RC == 5*256:
-      system("echo '  :%s: \t%s test failed memory tests' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
+      system("echo '  :%s: \t%s test failed memory tests' >> %s/%s-short.log" % (testname,restart_text,startpath,application))
       return_code = 2;
 
     if return_code != 0:
       # as the file is only created if a certain test fails, change the permissions here as we are certain the file exists
-      system("chmod gu+rw,a+r %s/%s-short.log > /dev/null 2>&1" % (startpath, ALGO))
+      system("chmod gu+rw,a+r %s/%s-short.log > /dev/null 2>&1" % (startpath, application))
 
   return return_code
