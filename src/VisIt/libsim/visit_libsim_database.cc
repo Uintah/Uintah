@@ -553,11 +553,11 @@ visit_handle visit_SimGetMetaData(void *cbdata)
       }
       
       std::string mesh_name[2] = {mesh_for_patch_data,
-                                  ("machine_" + sim->host + "/local") };
+                                  ("machine_" + sim->hostName + "/local") };
 
       std::string proc_level[2] = {"/rank", "/node"};
 
-      std::string mesh[2] = {"/sim", "/"+sim->host};
+      std::string mesh[2] = {"/sim", "/"+sim->hostName};
 
       for( unsigned k=0; k<1+bool(sim->switches.size()); ++k )
       {
@@ -831,12 +831,12 @@ visit_handle visit_SimGetMetaData(void *cbdata)
           if( i == 0 )
           {
             if( (int) sim->switchIndex != -1 && (int) sim->nodeIndex != -1 )
-              VisIt_MeshMetaData_setName(mmd, ("machine_" + sim->host + "/global").c_str());
+              VisIt_MeshMetaData_setName(mmd, ("machine_" + sim->hostName + "/global").c_str());
             else
               continue;
           }
           else
-            VisIt_MeshMetaData_setName(mmd, ("machine_" + sim->host + "/local").c_str());
+            VisIt_MeshMetaData_setName(mmd, ("machine_" + sim->hostName + "/local").c_str());
 
           if( sim->simController->getApplicationInterface()->isAMR() )
             VisIt_MeshMetaData_setMeshType(mmd, VISIT_MESHTYPE_AMR);
@@ -1768,7 +1768,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       found = hostName.find_last_of("/");
       hostName = hostName.substr(found + 1);
 
-      isMachineMeshVar = (hostName == sim->host);
+      isMachineMeshVar = (hostName == sim->hostName);
     }
 
     if( isMachineMeshVar )

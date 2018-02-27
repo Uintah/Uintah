@@ -130,7 +130,7 @@ typedef struct
   std::map< std::string, std::pair<std::string, std::string> > modifiedVars;
 
   // In-situ machine layout.
-  std::string host;
+  std::string hostName;
   std::vector< std::vector< unsigned int > > switches;
 
   std::vector< unsigned int > nodeStart;

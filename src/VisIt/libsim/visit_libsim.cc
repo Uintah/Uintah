@@ -232,7 +232,7 @@ void visit_InitLibSim( visit_simulation_data *sim )
   }
 
   // Add in the machine details.
-  sim->host.clear();
+  sim->hostName.clear();
   sim->switches.clear();
   
   sim->nodeStart.clear();
@@ -242,20 +242,37 @@ void visit_InitLibSim( visit_simulation_data *sim )
 
   sim->switchIndex = -1;
   sim->nodeIndex = -1;  
-  
-  unsigned int maxNodes = 0;
-  unsigned int maxCores = 0;
 
+  // The machine layout files are in the  in-situ source dir
   std::string path(__FILE__);
   size_t found = path.find_last_of("/");
   path = path.substr(0, found+1);
 
-  std::ifstream infile(path + "ash_layout.txt");
+  const unsigned int nMachines = 1;
+
+  // Possible machine file names.
+  std::string hostNames[ nMachines ] = { "ash" };
+
+  unsigned int machine = -1;
+
+  for( unsigned int i=0; i<nMachines; ++i )
+  {
+    if( sim->myworld->myProcName().find( hostNames[i] ) == 0 )
+    {
+      machine = i;
+      break;
+    }
+  }
+
+  // A machine layout file should exist for this machine.
+  if( 0 <= machine && machine < nMachines )
+  {
+    sim->hostName = hostNames[machine];
+
+    std::ifstream infile(path + hostNames[machine] + "_layout.txt");
 
     if( infile.is_open() )
     {
-      sim->host = std::string("ash");
-
       std::string line;
       while (std::getline(infile, line))
       {
@@ -283,12 +300,7 @@ void visit_InitLibSim( visit_simulation_data *sim )
         else if( line.find("Nodes") == 0 )
         {
           // Get the node details (number of cores and memory).
-          std::string tmpNode;
-          std::string tmpTo;
-          std::string tmpCores;
-          std::string tmpMemory;
-          std::string tmpGB;
-
+          std::string tmpNode, tmpTo, tmpCores, tmpMemory, tmpGB;
           unsigned int start, stop, cores, memory;
 
           if (!(iss >> tmpNode >> start >> tmpTo >> stop >> tmpCores >> cores >> tmpMemory >> memory >> tmpGB))
@@ -298,20 +310,17 @@ void visit_InitLibSim( visit_simulation_data *sim )
           sim->nodeStop.push_back( stop );
           sim->nodeCores.push_back( cores );
           sim->nodeMemory.push_back( memory );
-
-          if( maxCores < cores )
-            maxCores = cores;
         }
         // A switch connection
         else if( line.find("[") == 0 )
         {
           // Find the hostname which will be quoted.
-          size_t found = line.find( "\"" + sim->host );
+          size_t found = line.find( "\"" + sim->hostName );
           
           if( found != std::string::npos )
           {
             // Remove the hostname leaving only the node number.
-            std::string nodeStr = line.substr(found + sim->host.size()+1);
+            std::string nodeStr = line.substr(found + sim->hostName.size()+1);
             found = nodeStr.find(" ");
             nodeStr = nodeStr.substr(0, found);
 
@@ -320,7 +329,6 @@ void visit_InitLibSim( visit_simulation_data *sim )
             if( nodeStr.size() == 3 )
             {
               std::istringstream iss(nodeStr);
-
               unsigned int node;
 
               iss >> node;
@@ -328,9 +336,6 @@ void visit_InitLibSim( visit_simulation_data *sim )
               // Add this node to the list.
               sim->switches.back().push_back( node );
 
-              if( maxNodes < sim->switches.back().size() )
-                maxNodes = sim->switches.back().size();
-            
               // std::cerr << node << "  ";
             }
           }
@@ -348,14 +353,14 @@ void visit_InitLibSim( visit_simulation_data *sim )
       // std::cerr << std::endl;
 
       // Remove the hostname leaving only the node number.
-      std::string nodeStr = sim->myworld->myProcName().substr(sim->host.size());
+      std::string nodeStr =
+        sim->myworld->myProcName().substr(sim->hostName.size());
     
       // Nodes with three digits are compute nodes.
-      // Compute node node001 vs head node node1
+      // Compute node (i.e. node001) vs head node (i.e. node1)
       if( nodeStr.size() == 3 )
       {
-        std::istringstream iss(nodeStr);
-        
+        std::istringstream iss(nodeStr);        
         unsigned int node;
         
         iss >> node;
@@ -381,6 +386,7 @@ void visit_InitLibSim( visit_simulation_data *sim )
 
       infile.close();
     }
+  }
 }
 
 
