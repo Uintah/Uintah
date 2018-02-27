@@ -776,15 +776,15 @@ CharOxidationSmith2016::computeModel( const ProcessorGroup * pc,
     double delta;
     double oxi_lim;
     double rh_l_i;
-    //InversionBase* invf;
-    //if (_NUM_reactions==2){
-    //  invf = scinew invert_2_2;
-    //} else if (_NUM_reactions==3){
-    //  invf = scinew invert_3_3;
-    //} else {
-    //  throw InvalidValue("ERROR: CharOxidationSmith2016: Matrix inversion not implemented for the number of reactions being used.",__FILE__,__LINE__);
-    //}
 
+    InversionBase* invf;
+    if (_NUM_reactions==2){
+      invf = scinew invert_2_2;
+    } else if (_NUM_reactions==3){
+      invf = scinew invert_3_3;
+    } else {
+      throw InvalidValue("ERROR: CharOxidationSmith2016: Matrix inversion not implemented for the number of reactions being used.",__FILE__,__LINE__);
+    }
     Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
     Uintah::parallel_for(range,  [&]( int i,  int j, int k){
 
@@ -799,10 +799,15 @@ CharOxidationSmith2016::computeModel( const ProcessorGroup * pc,
         }
 
       } else {
-      // 03 - No DenseMatrix
-      double dfdrh[3][3] = { {0,0,0},
-                             {0,0,0},
-                             {0,0,0}  };
+     // 03 - No DenseMatrix
+     ///double dfdrh[_NUM_reactions][_NUM_reactions];
+     double dfdrh[3][3];
+     //double **dfdrh;
+     for (int l=0; l<_NUM_reactions; l++) {
+       for (int lm=0; lm<_NUM_reactions; lm++) {
+         dfdrh[l][lm] = 0;
+      }
+     }
 
       // 04 - Replace std::vector with plain-old-data arrays
     //std::vector<double> effectivenessF(_NUM_reactions);
@@ -1034,33 +1039,33 @@ CharOxidationSmith2016::computeModel( const ProcessorGroup * pc,
           }
           // 03 - No DenseMatrix
           // invert Jacobian -> (dF_(n)/drh_(n))^-1
-          //invf->invert_mat(dfdrh); // simple matrix inversion for a 2x2 matrix.
-          double a11 = dfdrh[0][0];
-          double a12 = dfdrh[0][1];
-          double a13 = dfdrh[0][2];
-          double a21 = dfdrh[1][0];
-          double a22 = dfdrh[1][1];
-          double a23 = dfdrh[1][2];
-          double a31 = dfdrh[2][0];
-          double a32 = dfdrh[2][1];
-          double a33 = dfdrh[2][2];
+          invf->invert_mat(dfdrh); // simple matrix inversion for a 2x2 matrix.
+          //double a11 = dfdrh[0][0];
+          //double a12 = dfdrh[0][1];
+          //double a13 = dfdrh[0][2];
+          //double a21 = dfdrh[1][0];
+          //double a22 = dfdrh[1][1];
+          //double a23 = dfdrh[1][2];
+          //double a31 = dfdrh[2][0];
+          //double a32 = dfdrh[2][1];
+          //double a33 = dfdrh[2][2];
 
-          double det_inv = 1 / ( a11 * a22 * a33 +
-                                 a21 * a32 * a13 +
-                                 a31 * a12 * a23 -
-                                 a11 * a32 * a23 -
-                                 a31 * a22 * a13 -
-                                 a21 * a12 * a33   );
+          //double det_inv = 1 / ( a11 * a22 * a33 +
+          //                       a21 * a32 * a13 +
+          //                       a31 * a12 * a23 -
+          //                       a11 * a32 * a23 -
+          //                       a31 * a22 * a13 -
+          //                       a21 * a12 * a33   );
 
-          dfdrh[0][0] = ( a22 * a33 - a23 * a32 ) * det_inv;
-          dfdrh[0][1] = ( a13 * a32 - a12 * a33 ) * det_inv;
-          dfdrh[0][2] = ( a12 * a23 - a13 * a22 ) * det_inv;
-          dfdrh[1][0] = ( a23 * a31 - a21 * a33 ) * det_inv;
-          dfdrh[1][1] = ( a11 * a33 - a13 * a31 ) * det_inv;
-          dfdrh[1][2] = ( a13 * a21 - a11 * a23 ) * det_inv;
-          dfdrh[2][0] = ( a21 * a32 - a22 * a31 ) * det_inv;
-          dfdrh[2][1] = ( a12 * a31 - a11 * a32 ) * det_inv;
-          dfdrh[2][2] = ( a11 * a22 - a12 * a21 ) * det_inv;
+          //dfdrh[0][0] = ( a22 * a33 - a23 * a32 ) * det_inv;
+          //dfdrh[0][1] = ( a13 * a32 - a12 * a33 ) * det_inv;
+          //dfdrh[0][2] = ( a12 * a23 - a13 * a22 ) * det_inv;
+          //dfdrh[1][0] = ( a23 * a31 - a21 * a33 ) * det_inv;
+          //dfdrh[1][1] = ( a11 * a33 - a13 * a31 ) * det_inv;
+          //dfdrh[1][2] = ( a13 * a21 - a11 * a23 ) * det_inv;
+          //dfdrh[2][0] = ( a21 * a32 - a22 * a31 ) * det_inv;
+          //dfdrh[2][1] = ( a12 * a31 - a11 * a32 ) * det_inv;
+          //dfdrh[2][2] = ( a11 * a22 - a12 * a21 ) * det_inv;
           // get rh_(n+1)
           double dominantRate=0.0;
           for (int l=0; l<_NUM_reactions; l++) {
@@ -1171,7 +1176,7 @@ CharOxidationSmith2016::computeModel( const ProcessorGroup * pc,
     // delete scinew DenseMatrix
       // 03 - No DenseMatrix
     //delete dfdrh;
-    //delete invf;
+    delete invf;
   } //end patch loop
 }
 
