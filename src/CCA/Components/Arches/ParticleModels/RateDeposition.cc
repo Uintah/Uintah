@@ -414,7 +414,7 @@ RateDeposition::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   const double B2=-40.9429+234.0486*alpha-300.04*alpha*alpha;
   const double B3= 60.7619-153.9276*alpha+211.1616*alpha*alpha;
   const double Bactivational=B0+B1*SiO+B2*SiO*SiO+B3*SiO*SiO*SiO;
-  const double Aprepontional=exp(-(0.2693*Bactivational+11.6725));  //const double Bactivational= 47800;
+  //const double Aprepontional=exp(-(0.2693*Bactivational+11.6725));  //const double Bactivational= 47800;
 
   // computed probability variables:
   SFCXVariable<double>& ProbSurfaceX = tsk_info->get_uintah_field_add<SFCXVariable<double> >(_ProbSurfaceX_name);

@@ -226,9 +226,9 @@ SGSsigma::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info){
   double I1,I2,I3;
   double alpha1,alpha2,alpha3;
   double sigma1,sigma2,sigma3;
-  double mu=0.0;
+  //double mu=0.0;
   double sigOper=0.0;
-  mu=m_visc;
+  //mu=m_visc;
 
   Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
 

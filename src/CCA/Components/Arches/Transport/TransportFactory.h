@@ -80,6 +80,8 @@ namespace Uintah{
     void register_DQMOM( ProblemSpecP db );
     void build_DQMOM( ProblemSpecP db );
 
+    std::string m_dqmom_grp_name{"dqmom_eqns"};
+
   };
 }
 #endif
