@@ -74,7 +74,7 @@ MaximumTemperature::problemSetup(const ProblemSpecP& params, int qn)
   ProblemSpecP db_coal_props = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties");
   
   // create max T var label and get scaling constant
-  std::string max_pT_root = ArchesCore::parse_for_role_to_label(db, "max_temperature"); 
+  std::string max_pT_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_MAXTEMPERATURE); 
   std::string max_pT_name = ArchesCore::append_env( max_pT_root, d_quadNode ); 
   std::string max_pTqn_name = ArchesCore::append_qn_env( max_pT_root, d_quadNode ); 
   _max_pT_varlabel = VarLabel::find(max_pT_name);
@@ -87,7 +87,7 @@ MaximumTemperature::problemSetup(const ProblemSpecP& params, int qn)
 
   
   // create particle temperature label
-  std::string temperature_root = ArchesCore::parse_for_role_to_label(db, "temperature"); 
+  std::string temperature_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_TEMPERATURE); 
   std::string temperature_name = ArchesCore::append_env( temperature_root, d_quadNode ); 
   _particle_temperature_varlabel = VarLabel::find(temperature_name);
  

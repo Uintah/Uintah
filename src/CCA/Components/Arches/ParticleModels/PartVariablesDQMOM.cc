@@ -15,8 +15,8 @@ PartVariablesDQMOM::problemSetup( ProblemSpecP& db ){
 
   m_Nenv = ArchesCore::get_num_env( db, ArchesCore::DQMOM_METHOD );
 
-  m_length_root = ArchesCore::parse_for_role_to_label(db, "size");
-  m_number_density_name   = ArchesCore::parse_for_role_to_label(db, "total_number_density");
+  m_length_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_SIZE);
+  m_number_density_name   = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_TOTNUM_DENSITY);
   m_surfAreaF_root = "surfaceAreaFraction";
 }
 

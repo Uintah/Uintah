@@ -44,8 +44,8 @@ CoalGasHeat::problemSetup(const ProblemSpecP& inputdb)
   if (db->findBlock("heat_BirthDeath")) {
     ProblemSpecP db_bd = db->findBlock("heat_BirthDeath");
     m_dest_flag = true;
-    m_enthalpy_root = ArchesCore::parse_for_role_to_label(db, "enthalpy");
-    m_temperature_root = ArchesCore::parse_for_role_to_label(db, "temperature");
+    m_enthalpy_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_ENTHALPY);
+    m_temperature_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_TEMPERATURE);
     ProblemSpecP db_root = db->getRootNode();
     if ( db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties") ){
       ProblemSpecP db_coal_props = db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties");

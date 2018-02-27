@@ -45,9 +45,9 @@ void PartVel::problemSetup(const ProblemSpecP& inputdb)
   ProblemSpecP db = inputdb;
   ProblemSpecP dqmom_db = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM");
 
-  _uname = ArchesCore::parse_for_role_to_label(db, "uvel");
-  _vname = ArchesCore::parse_for_role_to_label(db, "vvel");
-  _wname = ArchesCore::parse_for_role_to_label(db, "wvel");
+  _uname = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_XVEL);
+  _vname = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_YVEL);
+  _wname = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_ZVEL);
 
   const int N = ArchesCore::get_num_env( db, ArchesCore::DQMOM_METHOD );
   for ( int i = 0; i < N; i++ ){

@@ -43,84 +43,53 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
 
       TaskInterface::TaskBuilder* tsk;
       if ( type == "CC" ){
-        
+
         typedef CCVariable<double> C;
-        typedef typename ArchesCore::VariableHelper<CCVariable<double> >::ConstType CT; 
-        //typedef typename ArchesCore::VariableHelper<CCVariable<double> >::XFaceType FXT;
-        //typedef typename ArchesCore::VariableHelper<CCVariable<double> >::YFaceType FYT;
-       // typedef typename ArchesCore::VariableHelper<CCVariable<double> >::ZFaceType FZT;
-       // typedef typename ArchesCore::VariableHelper<CT>::XFaceType CFXT;
-       // typedef typename ArchesCore::VariableHelper<CT>::YFaceType CFYT;
-       // typedef typename ArchesCore::VariableHelper<CT>::ZFaceType CFZT;
-        
-        //typedef typename ArchesCore::VariableHelper<CCVariable<double> >::ConstXFaceType CFXT;
-        //typedef typename ArchesCore::VariableHelper<CCVariable<double> >::ConstYFaceType CFYT;
-        //typedef typename ArchesCore::VariableHelper<CCVariable<double> >::ConstZFaceType CFZT;
+        typedef typename ArchesCore::VariableHelper<CCVariable<double> >::ConstType CT;
+
         if ( m_pack_transport_construction_tasks ){
-          //tsk = scinew KScalarRHS<C, FXT, FYT, FZT >::Builder(group_name, 0);
           tsk = scinew KScalarRHS<C, C >::Builder(group_name, 0);
         } else {
           tsk = scinew KScalarRHS<C, CT >::Builder(group_name, 0);
         }
+
       } else if ( type == "FX" ){
-        //typedef typename ArchesCore::VariableHelper<SFCXVariable<double> >::Type C;
+
         typedef SFCXVariable<double> C;
-        typedef typename ArchesCore::VariableHelper<SFCXVariable<double> >::ConstType CT; 
-        //typedef typename ArchesCore::VariableHelper<SFCXVariable<double> >::XFaceType FXT;
-        //typedef typename ArchesCore::VariableHelper<SFCXVariable<double> >::YFaceType FYT;
-        //typedef typename ArchesCore::VariableHelper<SFCXVariable<double> >::ZFaceType FZT;
-        //typedef typename ArchesCore::VariableHelper<CT>::XFaceType CFXT;
-        //typedef typename ArchesCore::VariableHelper<CT>::YFaceType CFYT;
-        //typedef typename ArchesCore::VariableHelper<CT>::ZFaceType CFZT;
-        
-        //typedef typename ArchesCore::VariableHelper<SFCXVariable<double> >::ConstXFaceType CFXT;
-        //typedef typename ArchesCore::VariableHelper<SFCXVariable<double> >::ConstYFaceType CFYT;
-        //typedef typename ArchesCore::VariableHelper<SFCXVariable<double> >::ConstZFaceType CFZT;
+        typedef typename ArchesCore::VariableHelper<SFCXVariable<double> >::ConstType CT;
+
         if ( m_pack_transport_construction_tasks ){
           tsk = scinew KScalarRHS<C, C >::Builder(group_name, 0);
         } else {
-	  tsk = scinew KScalarRHS<C, CT >::Builder(group_name, 0);
+          tsk = scinew KScalarRHS<C, CT >::Builder(group_name, 0);
         }
+
       } else if ( type == "FY" ){
-        //typedef typename ArchesCore::VariableHelper<SFCYVariable<double> >::Type C;
+
         typedef SFCYVariable<double> C;
-        typedef typename ArchesCore::VariableHelper<SFCYVariable<double> >::ConstType CT;        
-        //typedef typename ArchesCore::VariableHelper<SFCYVariable<double> >::XFaceType FXT;
-        //typedef typename ArchesCore::VariableHelper<SFCYVariable<double> >::YFaceType FYT;
-        //typedef typename ArchesCore::VariableHelper<SFCYVariable<double> >::ZFaceType FZT;
-        //typedef typename ArchesCore::VariableHelper<CT>::XFaceType CFXT;
-        //typedef typename ArchesCore::VariableHelper<CT>::YFaceType CFYT;
-        //typedef typename ArchesCore::VariableHelper<CT>::ZFaceType CFZT;
-        
-        //typedef typename ArchesCore::VariableHelper<SFCYVariable<double> >::ConstXFaceType CFXT;
-        //typedef typename ArchesCore::VariableHelper<SFCYVariable<double> >::ConstYFaceType CFYT;
-        //typedef typename ArchesCore::VariableHelper<SFCYVariable<double> >::ConstZFaceType CFZT;
+        typedef typename ArchesCore::VariableHelper<SFCYVariable<double> >::ConstType CT;
+
         if ( m_pack_transport_construction_tasks ){
           tsk = scinew KScalarRHS<C, C >::Builder(group_name, 0);
         } else {
-	  tsk = scinew KScalarRHS<C, CT >::Builder(group_name, 0);
+          tsk = scinew KScalarRHS<C, CT >::Builder(group_name, 0);
         }
+
       } else if ( type == "FZ" ){
+
         typedef SFCZVariable<double> C;
         typedef typename ArchesCore::VariableHelper<SFCZVariable<double> >::ConstType CT;
-        //typedef typename ArchesCore::VariableHelper<SFCZVariable<double> >::XFaceType FXT;
-        //typedef typename ArchesCore::VariableHelper<SFCZVariable<double> >::YFaceType FYT;
-       // typedef typename ArchesCore::VariableHelper<SFCZVariable<double> >::ZFaceType FZT;
-        //typedef typename ArchesCore::VariableHelper<CT>::XFaceType CFXT;
-       // typedef typename ArchesCore::VariableHelper<CT>::YFaceType CFYT;
-        //typedef typename ArchesCore::VariableHelper<CT>::ZFaceType CFZT;
-        
-//        typedef typename ArchesCore::VariableHelper<SFCZVariable<double> >::ConstXFaceType CFXT;
-//        typedef typename ArchesCore::VariableHelper<SFCZVariable<double> >::ConstYFaceType CFYT;
-//        typedef typename ArchesCore::VariableHelper<SFCZVariable<double> >::ConstZFaceType CFZT;
+
         if ( m_pack_transport_construction_tasks ){
           tsk = scinew KScalarRHS<C, C >::Builder(group_name, 0);
         } else {
-	  tsk = scinew KScalarRHS<C, CT >::Builder(group_name, 0);
+          tsk = scinew KScalarRHS<C, CT >::Builder(group_name, 0);
         }
+
       } else {
         throw InvalidValue("Error: Eqn type for group not recognized named: "+group_name+" with type: "+type,__FILE__,__LINE__);
       }
+
       _scalar_builders.push_back(group_name);
       register_task( group_name, tsk );
 
@@ -156,6 +125,7 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
         scinew KFEUpdate<SFCZVariable<double> >::Builder( update_task_name, 0 );
         register_task( update_task_name, update_tsk );
       }
+
       _scalar_compute_psi.push_back(compute_psi_name);
       _scalar_update.push_back( update_task_name );
 
@@ -294,7 +264,6 @@ TransportFactory::build_all_tasks( ProblemSpecP& db )
 
       // tsk = retrieve_task("scalar_ssp_update_"+group_name);
       // tsk->problemSetup( group_db );
-      //
       // tsk->create_local_labels();
 
     }
@@ -384,7 +353,6 @@ TransportFactory::build_all_tasks( ProblemSpecP& db )
      throw ProblemSetupException("Error: Please update UPS file to include a <PressureSolver> tag since momentum was detected.", __FILE__, __LINE__);
    }
 
-
   }
 }
 
@@ -418,7 +386,7 @@ void TransportFactory::register_DQMOM( ProblemSpecP db_dqmom ){
 
   for ( int i = 0; i < int(nQn); i++ ){
 
-    std::stringstream dqmom_eqn_grp_env; 
+    std::stringstream dqmom_eqn_grp_env;
     dqmom_eqn_grp_env << m_dqmom_grp_name << "_" << i;
 
     std::string group_name = dqmom_eqn_grp_env.str();
@@ -458,11 +426,11 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
 
   ProblemSpecP db_dqmom = db->findBlock("DQMOM");
 
-  std::string output_xml_name; 
-  bool print_ups_with_dqmom = false; 
-  if ( db_dqmom->findBlock("write_input_with_dqmom_eqns") ){ 
+  std::string output_xml_name;
+  bool print_ups_with_dqmom = false;
+  if ( db_dqmom->findBlock("write_input_with_dqmom_eqns") ){
     db_dqmom->getWithDefault("write_input_with_dqmom_eqns", output_xml_name, "your_input_with_dqmom_eqns.xml");
-    print_ups_with_dqmom = true; 
+    print_ups_with_dqmom = true;
   }
 
   ProblemSpecP db_transport;
@@ -477,9 +445,9 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
 
   for ( int i = 0; i < int(nQn); i++ ){
 
-    std::stringstream dqmom_eqn_grp_env; 
-    dqmom_eqn_grp_env << m_dqmom_grp_name << "_" << i; 
-    std::string grp_name = dqmom_eqn_grp_env.str(); 
+    std::stringstream dqmom_eqn_grp_env;
+    dqmom_eqn_grp_env << m_dqmom_grp_name << "_" << i;
+    std::string grp_name = dqmom_eqn_grp_env.str();
 
   //Create weights
     ProblemSpecP db_eqn_group = db_transport->appendChild("eqn_group");
@@ -535,7 +503,7 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
 
       //}
     //}
-    
+
     ProblemSpecP src_db = eqn_db->appendChild("src");
     src_db->setAttribute("label", "w_qn"+this_qn.str()+"_src");
 
@@ -569,7 +537,7 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
       db_weight->require("scaling_const", scaling_constants);
 
       if ( scaling_constants.size() != nQn ){
-        throw ProblemSetupException("Error: number of scaling constants != number quadrature nodes.", __FILE__, __LINE__); 
+        throw ProblemSetupException("Error: number of scaling constants != number quadrature nodes.", __FILE__, __LINE__);
       }
 
       eqn_db->appendChild("scaling")->setAttribute("value", scaling_constants[i]);
@@ -638,6 +606,9 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
       }
     }
 
+    //Set the velocities for this environment
+
+
     // RHSs
     std::string group_name = dqmom_eqn_grp_env.str();
     TaskInterface* tsk = retrieve_task(group_name);
@@ -660,23 +631,23 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
   }
 
   // Print to a temp file if user requests
-  if ( print_ups_with_dqmom ){ 
-    db_transport->output(output_xml_name.c_str()); 
+  if ( print_ups_with_dqmom ){
+    db_transport->output(output_xml_name.c_str());
   }
 
   for ( int i = 0; i < int(nQn); i++ ){
 
-    std::stringstream dqmom_eqn_grp_env; 
-    dqmom_eqn_grp_env << m_dqmom_grp_name << "_" << i; 
-    std::string grp_name = dqmom_eqn_grp_env.str(); 
+    std::stringstream dqmom_eqn_grp_env;
+    dqmom_eqn_grp_env << m_dqmom_grp_name << "_" << i;
+    std::string grp_name = dqmom_eqn_grp_env.str();
     //Going to remove the input that I just created so that restarts work.
-    //Otherwise, the input isn't parsed properly for restart. 
+    //Otherwise, the input isn't parsed properly for restart.
     for ( ProblemSpecP db_grp = db_transport->findBlock("eqn_group"); db_grp != nullptr;
               db_grp = db_grp->findNextBlock("eqn_group") ){
-      std::string grp_name; 
-      db_grp->getAttribute("label", grp_name); 
-      if ( grp_name == dqmom_eqn_grp_env.str() ){ 
-        db_transport->removeChild(db_grp); 
+      std::string grp_name;
+      db_grp->getAttribute("label", grp_name);
+      if ( grp_name == dqmom_eqn_grp_env.str() ){
+        db_transport->removeChild(db_grp);
         break;
       }
     }

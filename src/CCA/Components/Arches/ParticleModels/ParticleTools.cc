@@ -10,7 +10,7 @@
 namespace Uintah{ namespace ArchesCore{
 
 //--------------------------------------------------------------------------------------------------
-  std::string parse_for_role_to_label( ProblemSpecP& db, const std::string role ){
+  std::string parse_for_particle_role_to_label( ProblemSpecP& db, ArchesCore::PARTICLE_ROLE role ){
 
     const ProblemSpecP params_root = db->getRootNode();
     if ( params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("EulerianParticles") ){
@@ -26,13 +26,14 @@ namespace Uintah{ namespace ArchesCore{
           db_var->getAttribute("label", label);
           db_var->getAttribute("role", role_found);
 
-          if ( role_found == role ){
+          if ( ArchesCore::get_particle_role_from_enum(role) == role_found ){
             return label;
           }
 
         }
 
-        throw ProblemSetupException("Error: This Eulerian particle role not found: "+role, __FILE__, __LINE__);
+        throw ProblemSetupException("Error: This Eulerian particle role not found: "+
+          ArchesCore::get_particle_role_from_enum(role), __FILE__, __LINE__);
 
       } else {
 
@@ -43,6 +44,39 @@ namespace Uintah{ namespace ArchesCore{
 
       throw ProblemSetupException("Error: No <EulerianParticles> section found in input file.",__FILE__,__LINE__);
 
+    }
+
+  }
+
+//--------------------------------------------------------------------------------------------------
+  std::string get_particle_role_from_enum( PARTICLE_ROLE role ){
+
+    if ( role == P_SIZE ){
+      return "size";
+    } else if ( role == P_XVEL ){
+      return "uvel";
+    } else if ( role == P_YVEL ){
+      return "vvel";
+    } else if ( role == P_ZVEL ){
+      return "wvel";
+    } else if ( role == P_CHAR ){
+      return "char";
+    } else if ( role == P_RAWCOAL ){
+      return "raw_coal";
+    } else if ( role == P_DENSITY ){
+      return "density";
+    } else if ( role == P_ENTHALPY ){
+      return "enthalpy";
+    } else if ( role == P_TEMPERATURE ){
+      return "temperature";
+    } else if ( role == P_MAXTEMPERATURE ){
+      return "max_temperature";
+    } else if ( role == P_DTDT ){
+      return "dTdt";
+    } else if ( role == P_TOTNUM_DENSITY ){
+      return "total_number_density";
+    } else {
+      throw InvalidValue("Error: No particle role found.", __FILE__, __LINE__ );
     }
 
   }

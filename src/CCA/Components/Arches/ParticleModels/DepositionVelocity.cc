@@ -66,10 +66,10 @@ DepositionVelocity::problemSetup( ProblemSpecP& db ){
   _fd.push_back(IntVector(0,0,0)); // -y face
   _fd.push_back(IntVector(0,0,1)); // +z face
   _fd.push_back(IntVector(0,0,0)); // -z face
-  _diameter_base_name = ArchesCore::parse_for_role_to_label(db, "size");
+  _diameter_base_name = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_SIZE);
 
   // Need a density
-  _density_base_name = ArchesCore::parse_for_role_to_label(db, "density");
+  _density_base_name = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_DENSITY);
   double init_particle_density = ArchesCore::get_inlet_particle_density( db );
   double ash_mass_frac = coal_helper.get_coal_db().ash_mf;
   double initial_diameter = 0.0;

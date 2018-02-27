@@ -148,7 +148,7 @@ CharOxidationSmith2016::problemSetup(const ProblemSpecP& params, int qn)
   }
 
   // Need a particle density
-  std::string density_root = ArchesCore::parse_for_role_to_label(db, "density");
+  std::string density_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_DENSITY);
   std::string density_name = ArchesCore::append_env( density_root, d_quadNode );
   _p_density_varlabel = VarLabel::find(density_name);
   if(_p_density_varlabel == 0){
@@ -156,13 +156,13 @@ CharOxidationSmith2016::problemSetup(const ProblemSpecP& params, int qn)
   }
 
   // create raw coal mass var label
-  std::string rcmass_root = ArchesCore::parse_for_role_to_label(db, "raw_coal");
+  std::string rcmass_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_RAWCOAL);
   std::string rcmass_name = ArchesCore::append_env( rcmass_root, d_quadNode );
   std::string rcmassqn_name = ArchesCore::append_qn_env(rcmass_root, d_quadNode );
   _rcmass_varlabel = VarLabel::find(rcmass_name);
 
   // check for char mass and get scaling constant
-  std::string char_root = ArchesCore::parse_for_role_to_label(db, "char");
+  std::string char_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_CHAR);
   std::string char_name = ArchesCore::append_env( char_root, d_quadNode );
   std::string charqn_name = ArchesCore::append_qn_env( char_root, d_quadNode );
   _char_varlabel = VarLabel::find(char_name);
@@ -194,7 +194,7 @@ CharOxidationSmith2016::problemSetup(const ProblemSpecP& params, int qn)
   }
 
   // check for particle temperature
-  std::string temperature_root = ArchesCore::parse_for_role_to_label(db, "temperature");
+  std::string temperature_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_TEMPERATURE);
   std::string temperature_name = ArchesCore::append_env( temperature_root, d_quadNode );
   _particle_temperature_varlabel = VarLabel::find(temperature_name);
   if(_particle_temperature_varlabel == 0){
@@ -203,7 +203,7 @@ CharOxidationSmith2016::problemSetup(const ProblemSpecP& params, int qn)
 
   // check for length
   _nQn_part = ArchesCore::get_num_env(db,ArchesCore::DQMOM_METHOD);
-  std::string length_root = ArchesCore::parse_for_role_to_label(db, "size");
+  std::string length_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_SIZE);
   for (int i=0; i<_nQn_part;i++ ){
     std::string length_name = ArchesCore::append_env( length_root, i );
     _length_varlabel.push_back(  VarLabel::find(length_name));
@@ -234,7 +234,7 @@ CharOxidationSmith2016::problemSetup(const ProblemSpecP& params, int qn)
   std::string w_RHS = weightqn_name+"_RHS";
   _RHS_weight_varlabel = VarLabel::find(w_RHS);
 
-  std::string number_density_name = ArchesCore::parse_for_role_to_label(db, "total_number_density");
+  std::string number_density_name = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_TOTNUM_DENSITY);
   _number_density_varlabel = VarLabel::find(number_density_name);
 
   // get Char source term label and devol label from the devolatilization model
