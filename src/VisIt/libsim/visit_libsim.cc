@@ -259,90 +259,90 @@ void visit_InitLibSim( visit_simulation_data *sim )
       std::string line;
       while (std::getline(infile, line))
       {
-	// std::cerr << "Reading  " << line << std::endl;
+        // std::cerr << "Reading  " << line << std::endl;
       
-	std::istringstream iss(line);
+        std::istringstream iss(line);
 
-	if( line.empty() ||
-	    line.find("--") == 0 ||
-	    line.find("devid") == 0 ||
-	    line.find("sysimgguid") == 0 ||
-	    line.find("switchguid") == 0 ||
-	    line.find("switchguid") == 0 )
-	{
-	}
-	else if(line.find("Switch") == 0 )
+        if( line.empty() ||
+            line.find("--") == 0 ||
+            line.find("devid") == 0 ||
+            line.find("sysimgguid") == 0 ||
+            line.find("switchguid") == 0 ||
+            line.find("switchguid") == 0 )
         {
-	  // Found a new switch so start a new group.
-	  std::vector< unsigned int > nodes;
-	  
-	  sim->switches.push_back( nodes );
-	  
-	  // std::cerr << std::endl << "Switch " << sim->switches.size()-1 << " nodes: ";
-	}
-	else if( line.find("Nodes") == 0 )
-	{
-	  // Get the node details (number of cores and memory).
-	  std::string tmpNode;
-	  std::string tmpTo;
-	  std::string tmpCores;
-	  std::string tmpMemory;
-	  std::string tmpGB;
+        }
+        else if(line.find("Switch") == 0 )
+        {
+          // Found a new switch so start a new group.
+          std::vector< unsigned int > nodes;
+          
+          sim->switches.push_back( nodes );
+          
+          // std::cerr << std::endl << "Switch " << sim->switches.size()-1 << " nodes: ";
+        }
+        else if( line.find("Nodes") == 0 )
+        {
+          // Get the node details (number of cores and memory).
+          std::string tmpNode;
+          std::string tmpTo;
+          std::string tmpCores;
+          std::string tmpMemory;
+          std::string tmpGB;
 
-	  unsigned int start, stop, cores, memory;
+          unsigned int start, stop, cores, memory;
 
-	  if (!(iss >> tmpNode >> start >> tmpTo >> stop >> tmpCores >> cores >> tmpMemory >> memory >> tmpGB))
-	    break; // error
+          if (!(iss >> tmpNode >> start >> tmpTo >> stop >> tmpCores >> cores >> tmpMemory >> memory >> tmpGB))
+            break; // error
       
-	  sim->nodeStart.push_back( start );
-	  sim->nodeStop.push_back( stop );
-	  sim->nodeCores.push_back( cores );
-	  sim->nodeMemory.push_back( memory );
+          sim->nodeStart.push_back( start );
+          sim->nodeStop.push_back( stop );
+          sim->nodeCores.push_back( cores );
+          sim->nodeMemory.push_back( memory );
 
-	  if( maxCores < cores )
-	    maxCores = cores;
-	}
-	// A switch connection
-	else if( line.find("[") == 0 )
-	{
-	  // Find the hostname which will be quoted.
-	  size_t found = line.find( "\"" + sim->host );
-	  
-	  if( found != std::string::npos )
-	  {
-	    // Remove the hostname leaving only the node number.
-	    std::string nodeStr = line.substr(found + sim->host.size()+1);
-	    found = nodeStr.find(" ");
-	    nodeStr = nodeStr.substr(0, found);
+          if( maxCores < cores )
+            maxCores = cores;
+        }
+        // A switch connection
+        else if( line.find("[") == 0 )
+        {
+          // Find the hostname which will be quoted.
+          size_t found = line.find( "\"" + sim->host );
+          
+          if( found != std::string::npos )
+          {
+            // Remove the hostname leaving only the node number.
+            std::string nodeStr = line.substr(found + sim->host.size()+1);
+            found = nodeStr.find(" ");
+            nodeStr = nodeStr.substr(0, found);
 
-	    // Nodes with three digits are compute nodes.
-	    // Compute node node001 vs head node node1
-	    if( nodeStr.size() == 3 )
-	    {
-	      std::istringstream iss(nodeStr);
+            // Nodes with three digits are compute nodes.
+            // Compute node node001 vs head node node1
+            if( nodeStr.size() == 3 )
+            {
+              std::istringstream iss(nodeStr);
 
-	      unsigned int node;
+              unsigned int node;
 
-	      iss >> node;
+              iss >> node;
 
-	      // Add this node to the list.
-	      sim->switches.back().push_back( node );
+              // Add this node to the list.
+              sim->switches.back().push_back( node );
 
-	      if( maxNodes < sim->switches.back().size() )
-		maxNodes = sim->switches.back().size();
-	    
-	      // std::cerr << node << "  ";
-	    }
-	  }
-	}
-	else
-	{
-	  std::stringstream msg;
-	  msg << "Visit libsim - "
-	    << "Uintah machine parse error \"" << line << "\"  ";
-	  
-	  VisItUI_setValueS("SIMULATION_MESSAGE_WARNING", msg.str().c_str(), 1);
-	}
+              if( maxNodes < sim->switches.back().size() )
+                maxNodes = sim->switches.back().size();
+            
+              // std::cerr << node << "  ";
+            }
+          }
+        }
+        else
+        {
+          std::stringstream msg;
+          msg << "Visit libsim - "
+            << "Uintah machine parse error \"" << line << "\"  ";
+          
+          VisItUI_setValueS("SIMULATION_MESSAGE_WARNING", msg.str().c_str(), 1);
+        }
       }
       
       // std::cerr << std::endl;
@@ -354,30 +354,32 @@ void visit_InitLibSim( visit_simulation_data *sim )
       // Compute node node001 vs head node node1
       if( nodeStr.size() == 3 )
       {
-	std::istringstream iss(nodeStr);
-	
-	unsigned int node;
-	
-	iss >> node;
-	
-	for( unsigned int s=0; s<sim->switches.size(); ++s )
-	{
-	  for( unsigned int n=0; n<sim->switches[s].size(); ++n )
-	  {
-	    if( sim->switches[s][n] == node )
-	    {
-	      sim->switchIndex = s;
-	      sim->nodeIndex = n;
-	    }
-	  }
-	}
+        std::istringstream iss(nodeStr);
+        
+        unsigned int node;
+        
+        iss >> node;
+        
+        for( unsigned int s=0; s<sim->switches.size(); ++s )
+        {
+          for( unsigned int n=0; n<sim->switches[s].size(); ++n )
+          {
+            if( sim->switches[s][n] == node )
+            {
+              sim->switchIndex = s;
+              sim->nodeIndex = n;
+            }
+          }
+        }
       
-      std::cerr << sim->myworld->myProcName() << "  "
-		<< sim->myworld->myNode_myRank() << "  "
-		<< node << "  "
-		<< sim->switchIndex << "  "
-		<< sim->nodeIndex << "  " << std::endl;
+        // std::cerr << sim->myworld->myProcName() << "  "
+        //        << sim->myworld->myNode_myRank() << "  "
+        //        << node << "  "
+        //        << sim->switchIndex << "  "
+        //        << sim->nodeIndex << "  " << std::endl;
       }
+
+      infile.close();
     }
 }
 
