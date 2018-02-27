@@ -157,26 +157,18 @@ void visit_InitLibSim( visit_simulation_data *sim )
   
   if( Parallel::usingMPI() )
   {
-    int par_rank, par_size;
-
-    // Initialize MPI
-    Uintah::MPI::Comm_rank( MPI_COMM_WORLD, &par_rank );
-    Uintah::MPI::Comm_size( MPI_COMM_WORLD, &par_size );
-    
     // Tell libsim if the simulation is running in parallel.
-    VisItSetParallel( par_size > 1 );
-    VisItSetParallelRank( par_rank );
+    VisItSetParallel( sim->myworld->nRanks() > 1 );
+    VisItSetParallelRank( sim->myworld->myRank() );
 
     // Install callback functions for global communication.
     VisItSetBroadcastIntFunction( visit_BroadcastIntCallback );
     VisItSetBroadcastStringFunction( visit_BroadcastStringCallback );
 
-    sim->rank = par_rank;
     sim->isProc0 = isProc0_macro;
   }
   else
   {
-    sim->rank = 0;
     sim->isProc0 = true;
   }
 
@@ -231,9 +223,10 @@ void visit_InitLibSim( visit_simulation_data *sim )
                                         nullptr, simUI.c_str(), nullptr);
   }
 
-  // Add in the machine details.
+  // Add in the machine layout details if present for this machine.
   sim->hostName.clear();
-  sim->switches.clear();
+  sim->hostNode.clear();
+  sim->switchNodeList.clear();
   
   sim->nodeStart.clear();
   sim->nodeStop.clear();
@@ -243,65 +236,65 @@ void visit_InitLibSim( visit_simulation_data *sim )
   sim->switchIndex = -1;
   sim->nodeIndex = -1;  
 
-  // The machine layout files are in the  in-situ source dir
-  std::string path(__FILE__);
-  size_t found = path.find_last_of("/");
-  path = path.substr(0, found+1);
-
-  const unsigned int nMachines = 1;
-
   // Possible machine file names.
+  const unsigned int nMachines = 1;
   std::string hostNames[ nMachines ] = { "ash" };
+  unsigned int hostNodes[ nMachines ] = { 3 }; // Number of digits expected.
 
-  unsigned int machine = -1;
-
+  // Check for a machine layout file for this processor and that it is
+  // a compute node (opposed to a head node). Compute nodes will have
+  // three digits whereas a head will be have one digit.
   for( unsigned int i=0; i<nMachines; ++i )
   {
     if( sim->myworld->myProcName().find( hostNames[i] ) == 0 )
     {
-      machine = i;
-      break;
+      sim->hostName = hostNames[i];
+
+      // Remove the hostname leaving only the node number.
+      std::string nodeStr =
+        sim->myworld->myProcName().substr(sim->hostName.size());
+    
+      // Nodes with three digits are compute nodes.
+      // Compute node (i.e. node001) vs head node (i.e. node1)
+      if( nodeStr.size() == hostNodes[i] )
+      {
+        sim->hostNode = nodeStr;
+
+	break;
+      }
     }
   }
 
   // A machine layout file should exist for this machine.
-  if( 0 <= machine && machine < nMachines )
+  if( sim->hostName.size() && sim->hostNode.size() )
   {
-    sim->hostName = hostNames[machine];
+    // The machine layout files are in the  in-situ source dir
+    std::string path(__FILE__);
+    size_t found = path.find_last_of("/");
+    path = path.substr(0, found+1);
 
-    std::ifstream infile(path + hostNames[machine] + "_layout.txt");
+    std::ifstream infile(path + sim->hostName + "_layout.txt");
 
     if( infile.is_open() )
     {
+      // Read the text file line by line.
       std::string line;
       while (std::getline(infile, line))
       {
         // std::cerr << "Reading  " << line << std::endl;
-      
-        std::istringstream iss(line);
 
-        if( line.empty() ||
-            line.find("--") == 0 ||
-            line.find("devid") == 0 ||
-            line.find("sysimgguid") == 0 ||
-            line.find("switchguid") == 0 ||
-            line.find("switchguid") == 0 )
-        {
-        }
-        else if(line.find("Switch") == 0 )
-        {
-          // Found a new switch so start a new group.
-          std::vector< unsigned int > nodes;
-          
-          sim->switches.push_back( nodes );
-          
-          // std::cerr << std::endl << "Switch " << sim->switches.size()-1 << " nodes: ";
-        }
+	// Skip empty lines
+	if( line.empty() )
+	{
+	}
+	// This is part of the node table.
         else if( line.find("Nodes") == 0 )
         {
           // Get the node details (number of cores and memory).
           std::string tmpNode, tmpTo, tmpCores, tmpMemory, tmpGB;
           unsigned int start, stop, cores, memory;
+
+	  std::istringstream iss(line);
 
           if (!(iss >> tmpNode >> start >> tmpTo >> stop >> tmpCores >> cores >> tmpMemory >> memory >> tmpGB))
             break; // error
@@ -310,6 +303,23 @@ void visit_InitLibSim( visit_simulation_data *sim )
           sim->nodeStop.push_back( stop );
           sim->nodeCores.push_back( cores );
           sim->nodeMemory.push_back( memory );
+        }
+	// Skip these lines that are part of the call to ibnetdiscover
+        else if( line.find("--") == 0 ||
+		 line.find("devid") == 0 ||
+		 line.find("sysimgguid") == 0 ||
+		 line.find("switchguid") == 0 ||
+		 line.find("switchguid") == 0 )
+        {
+        }
+        else if(line.find("Switch") == 0 )
+        {
+          // Found a new switch so start a new node group.
+          std::vector< unsigned int > nodes;
+          
+          sim->switchNodeList.push_back( nodes );
+          
+          // std::cerr << std::endl << "Switch " << sim->switchNodeList.size()-1 << " nodes: ";
         }
         // A switch connection
         else if( line.find("[") == 0 )
@@ -326,7 +336,7 @@ void visit_InitLibSim( visit_simulation_data *sim )
 
             // Nodes with three digits are compute nodes.
             // Compute node node001 vs head node node1
-            if( nodeStr.size() == 3 )
+            if( nodeStr.size() == sim->hostNode.size() )
             {
               std::istringstream iss(nodeStr);
               unsigned int node;
@@ -334,9 +344,16 @@ void visit_InitLibSim( visit_simulation_data *sim )
               iss >> node;
 
               // Add this node to the list.
-              sim->switches.back().push_back( node );
+              sim->switchNodeList.back().push_back( node );
 
               // std::cerr << node << "  ";
+
+	      // Get the switch and node index for this processor.
+	      if( nodeStr == sim->hostNode )
+	      {
+		sim->switchIndex = sim->switchNodeList.size()-1;
+		sim->nodeIndex = sim->switchNodeList[sim->switchIndex].size()-1;
+	      }
             }
           }
         }
@@ -351,38 +368,12 @@ void visit_InitLibSim( visit_simulation_data *sim )
       }
       
       // std::cerr << std::endl;
-
-      // Remove the hostname leaving only the node number.
-      std::string nodeStr =
-        sim->myworld->myProcName().substr(sim->hostName.size());
-    
-      // Nodes with three digits are compute nodes.
-      // Compute node (i.e. node001) vs head node (i.e. node1)
-      if( nodeStr.size() == 3 )
-      {
-        std::istringstream iss(nodeStr);        
-        unsigned int node;
-        
-        iss >> node;
-        
-        for( unsigned int s=0; s<sim->switches.size(); ++s )
-        {
-          for( unsigned int n=0; n<sim->switches[s].size(); ++n )
-          {
-            if( sim->switches[s][n] == node )
-            {
-              sim->switchIndex = s;
-              sim->nodeIndex = n;
-            }
-          }
-        }
       
-        // std::cerr << sim->myworld->myProcName() << "  "
-        //        << sim->myworld->myNode_myRank() << "  "
-        //        << node << "  "
-        //        << sim->switchIndex << "  "
-        //        << sim->nodeIndex << "  " << std::endl;
-      }
+      // std::cerr << sim->myworld->myProcName() << "  "
+      //        << sim->myworld->myNode_myRank() << "  "
+      //        << node << "  "
+      //        << sim->switchIndex << "  "
+      //        << sim->nodeIndex << "  " << std::endl;
 
       infile.close();
     }
@@ -712,7 +703,7 @@ void visit_Initialize( visit_simulation_data *sim )
       
   if( Parallel::usingMPI() )
   {
-    msg << "Visit libsim - Processor " << sim->rank << " connected";
+    msg << "Visit libsim - Processor " << sim->myworld->myRank() << " connected";
   }
   else
   {

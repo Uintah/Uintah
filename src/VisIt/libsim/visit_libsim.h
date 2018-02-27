@@ -101,7 +101,6 @@ typedef struct
   int  runMode;  // What the libsim is doing.
   int  simMode;  // What the simulation is doing.
 
-  int  rank;
   bool isProc0;
 
   bool first;
@@ -130,14 +129,21 @@ typedef struct
   std::map< std::string, std::pair<std::string, std::string> > modifiedVars;
 
   // In-situ machine layout.
-  std::string hostName;
-  std::vector< std::vector< unsigned int > > switches;
 
+  // The root name of the host.
+  std::string hostName;
+  std::string hostNode;
+
+  // A list of nodes on each switch.
+  std::vector< std::vector< unsigned int > > switchNodeList;
+
+  // A table of nodes and the number of cores and memory.
   std::vector< unsigned int > nodeStart;
   std::vector< unsigned int > nodeStop;
   std::vector< unsigned int > nodeCores;
   std::vector< unsigned int > nodeMemory;
 
+  // The index of the switch and node for this core.
   unsigned int switchIndex, nodeIndex;
   
 } visit_simulation_data;
