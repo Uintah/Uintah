@@ -111,7 +111,8 @@ public:
                                     const std::string units, const T value )
   {
     if (!exists(key) && !exists(name)) {
-      m_keys[key] = m_keys.size();
+      unsigned int index = m_keys.size();
+      m_keys[key] = index;
       m_values.push_back(value);
       m_names.push_back(name);
       m_units.push_back(units);
@@ -214,7 +215,9 @@ public:
         return it->first;
     }
 
-    return (E) m_keys.size();
+    std::cerr << "InfoMapper::getKey bad index " << index << std::endl;
+
+    return m_keys.begin()->first;
   };
 
   virtual E getKey( const std::string name )
@@ -225,7 +228,9 @@ public:
       }
     }
 
-    return (E) m_values.size();
+    std::cerr << "InfoMapper::getKey bad name " << name << std::endl;
+
+    return m_keys.begin()->first;
   };
 
 protected:
