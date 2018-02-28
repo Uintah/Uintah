@@ -172,6 +172,7 @@ WallModelDriver::problemSetup( const ProblemSpecP& input_db )
       _all_ht_models.push_back( coal_ht );
 
       _dep_vel_name = get_dep_vel_name( db_model );
+      _k_ash_uncertain = get_k_ash_uncertain( db_model );
       _extra_src_flux_names = get_extra_src_flux_names( db_model );
       _num_extra_src = 0;
       for(std::vector<string>::const_iterator i = _extra_src_flux_names.begin(); i != _extra_src_flux_names.end(); ++i) {
@@ -362,6 +363,7 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
       if (do_coal_region){
         vars.num_extra_src = _num_extra_src;
         vars.Nenv = _Nenv;
+        vars.k_ash_uncertain = _k_ash_uncertain;
         vars.extra_src.resize(_num_extra_src);
         vars.particle_flow_rate.resize(_Nenv);
         vars.particle_flow_rate_d.resize(_Nenv);
@@ -1296,12 +1298,15 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
                 m_tc_model->model(k_en,wi.k_dep_en,T_en,enamel_name);//enamel layer
                 m_tc_model->model(k_sb_s,wi.k_dep_sb,T_sb_s,sb_name);//solid sb layer
                 m_tc_model->model(k_sb_l,wi.k_dep_sb,T_sb_l,sb_l_name);//liquid sb layer
+                k_en += vars.k_ash_uncertain; // add positive contribution for uncertainty in t.c.
+                k_sb_s += vars.k_ash_uncertain; // add positive contribution for uncertainty in t.c.
+                k_sb_l += vars.k_ash_uncertain; // add positive contribution for uncertainty in t.c.
                 residual = std::abs(k_sb_s - k_sb_s_old)/(k_sb_s_old+1e-100) + std::abs(k_sb_l - k_sb_l_old)/(k_sb_l_old+1e-100) + std::abs(k_en - k_en_old)/(k_en_old+1e-100);
                 if (residual < 1e-4){
                   break;
                 }
               }
-              vars.thermal_cond_en[c]=k_en;
+              vars.thermal_cond_en[c]= k_en;
               vars.thermal_cond_sb_s[c]=k_sb_s;
               vars.thermal_cond_sb_l[c]=k_sb_l;
               // now to make consistent with assumed emissivity of 1 in radiation model:
