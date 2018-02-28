@@ -40,6 +40,7 @@
 #include <Core/Parallel/UintahMPI.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Util/Environment.h>
 
 #include <sci_defs/visit_defs.h>
 
@@ -239,8 +240,7 @@ void visit_InitLibSim( visit_simulation_data *sim )
   sim->yNode = 0;
 
   sim->switchIndex = -1;
-  sim->nodeIndex = -1;  
-
+  sim->nodeIndex = -1;
 
   // Possible machine file names.
   const unsigned int nMachines = 1;
@@ -275,9 +275,8 @@ void visit_InitLibSim( visit_simulation_data *sim )
   if( sim->hostName.size() && sim->hostNode.size() )
   {
     // The machine layout files are in the  in-situ source dir
-    std::string path(__FILE__);
-    size_t found = path.find_last_of("/");
-    path = path.substr(0, found+1);
+    std::string path = std::string( sci_getenv("SCIRUN_OBJDIR") ) +
+      std::string("/../src/VisIt/libsim/");
 
     std::ifstream infile(path + sim->hostName + "_layout.txt");
 
@@ -304,13 +303,13 @@ void visit_InitLibSim( visit_simulation_data *sim )
 
           if (!(iss >> tmpNode >> start >> tmpTo >> stop >> tmpCores >> cores >> tmpMemory >> memory >> tmpGB))
             break; // error
-      
+
           sim->nodeStart.push_back( start );
           sim->nodeStop.push_back( stop );
           sim->nodeCores.push_back( cores );
           sim->nodeMemory.push_back( memory );
 
-	  // Get the max cores.
+	  // Get the maximum number of cores.
 	  if( sim->maxCores < cores )
 	    sim->maxCores = cores;
         }
@@ -356,17 +355,17 @@ void visit_InitLibSim( visit_simulation_data *sim )
               // Add this node to the list.
               sim->switchNodeList.back().push_back( node );
 
-	      // Get the max nodes.
-	      if( sim->maxNodes < node )
-		sim->maxNodes = node;
-
               // std::cerr << node << "  ";
+
+	      // Get the maximum number of nodes on a switch.
+	      if( sim->maxNodes < sim->switchNodeList.back().size() )
+		sim->maxNodes = sim->switchNodeList.back().size();
 
 	      // Get the switch and node index for this processor.
 	      if( nodeStr == sim->hostNode )
 	      {
 		sim->switchIndex = sim->switchNodeList.size()-1;
-		sim->nodeIndex = sim->switchNodeList[sim->switchIndex].size()-1;
+		sim->nodeIndex = sim->switchNodeList.back().size()-1;
 	      }
             }
           }

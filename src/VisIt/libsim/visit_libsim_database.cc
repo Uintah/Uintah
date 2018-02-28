@@ -1239,8 +1239,8 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
     bool local  = (std::string(meshname).find("local" ) != std::string::npos);
 
     // Only rank 0 return the whole of the mesh.
-    // if( global && sim->myworld->myRank() != 0 )
-    //   return VISIT_INVALID_HANDLE;
+    if( global && sim->myworld->myRank() != 0 )
+      return VISIT_INVALID_HANDLE;
 
     // Total size of the layout - add one to have gap between nodes.
     unsigned int xMax = sim->switchNodeList.size() * (sim->xNode+1);
