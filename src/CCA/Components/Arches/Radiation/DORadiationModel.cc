@@ -1485,10 +1485,8 @@ DORadiationModel::intensitysolveSweepOptimized( const Patch* patch,
   old_dw->get(abskt,_abskt_label, matlIndex , patch,Ghost::None, 0  );
 
 
-  constCCVariable<double> abskg;
   std::vector<constCCVariable<double> >abskg_array (d_nbands);
   if (_LspectralSolve){
-    old_dw->get(abskg,_abskg_label_vector[d_nbands-1], matlIndex , patch,Ghost::None, 0  ); // last abskg element is soot only (or zeros)
     for (int iband=0; iband<d_nbands; iband++){
       old_dw->get(abskg_array[iband],_abskg_label_vector[iband], matlIndex , patch,Ghost::None, 0  ); // last abskg element is soot only (or zeros)
     }
@@ -1520,7 +1518,7 @@ DORadiationModel::intensitysolveSweepOptimized( const Patch* patch,
     // definition of abskt(spectral)-> abskg_soot +  sum(abskp_i) + scatkt
     //
     // definition of abskg ->  abskg + abskg_soot 
-    // definition of abskg_i(spectral)-> abskg_soot_i + abskg_soot_i 
+    // definition of abskg_i(spectral)-> abskg_i  
     //--------------------------------------------------------//
     if (_LspectralSolve){
       for ( k = (_plusZ[cdirecn] ? idxLo.z() : idxHi.z());  (_plusZ[cdirecn] ? (k<=idxHi.z()) : (k>=idxLo.z())) ; k=k+ziter[cdirecn]){
@@ -1532,7 +1530,7 @@ DORadiationModel::intensitysolveSweepOptimized( const Patch* patch,
             if (cellType(i,j,k) !=ffield){ // if intrusions
               intensity(i,j,k) = emissSrc(i,j,k) ;
             } else{ // else flow cell
-              intensity(i,j,k) = (emissSrc(i,j,k) + intensity(i,j,km)*abs_oxi  +  intensity(i,jm,k)*abs_oeta  +  intensity(im,j,k)*abs_omu)/(denom + (abskg_array[iband](i,j,k) - abskg(i,j,k) + abskt(i,j,k))*vol);
+              intensity(i,j,k) = (emissSrc(i,j,k) + intensity(i,j,km)*abs_oxi  +  intensity(i,jm,k)*abs_oeta  +  intensity(im,j,k)*abs_omu)/(denom + (abskg_array[iband](i,j,k)  + abskt(i,j,k))*vol);
             } // end if intrusion
           } // end i loop
         } // end j loop
@@ -1892,20 +1890,3 @@ DORadiationModel::setIntensityBC2Orig(const Patch* patch,
 
   return;
 }
-
-void
-DORadiationModel::setExtraSweepingLabels(int nphase){
-
-  IntVector patchIntVector (0,0,0);
-  const TypeDescription* CC_double = CCVariable<double>::getTypeDescription();
-  _nphase=nphase;
-  for( int ixx=0;  ixx<_nphase;ixx++){
-    _patchIntensityLabels.push_back(std::vector< const VarLabel*> (0) );
-    for( int ix=0;  ix<d_totalOrds ;ix++){
-      ostringstream my_stringstream_object;
-      my_stringstream_object << "Intensity" << setfill('0') << setw(4)<<  ix << ixx ;
-      _patchIntensityLabels[ixx].push_back(VarLabel::create(my_stringstream_object.str(), CC_double));
-    }
-  }
-}
-

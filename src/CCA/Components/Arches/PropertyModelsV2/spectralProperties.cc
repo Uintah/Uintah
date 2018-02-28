@@ -220,9 +220,7 @@ spectralProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
      constCCVariable<double>& soot_vf = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(_soot_name));
      Uintah::parallel_for( range,  [&](int i, int j, int k){
              double k_soot= 3.72*soot_vf(i,j,k)*_C_o*temperature(i,j,k)/_C_2; //m^-1
-             for (int ii=0; ii< _nbands ; ii++){
-               abskg[ii](i,j,k)+=k_soot; //grey approximation for soot and soot is in thermal equilibrium with gas;
-            }
+             abskg[_nbands-1](i,j,k)=k_soot; //grey approximation for soot and soot is in thermal equilibrium with gas;
      });
    }
 

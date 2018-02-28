@@ -95,7 +95,13 @@ sumRadiation::register_initialize( VIVec& variable_registry , const bool pack_ta
   register_variable( m_abskt_name, ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable("volFraction" , ArchesFieldContainer::REQUIRES,0,ArchesFieldContainer::NEWDW,variable_registry);
   for (unsigned int i=0; i<_gas_part_name.size(); i++){
-    register_variable(_gas_part_name[i] , Uintah::ArchesFieldContainer::REQUIRES, variable_registry);
+
+    if (_gas_part_name[i]=="abskg_4") // abskg_4 is soot  =(
+      register_variable(_gas_part_name[i] , Uintah::ArchesFieldContainer::MODIFIES, variable_registry);
+    else{
+      register_variable(_gas_part_name[i] , Uintah::ArchesFieldContainer::REQUIRES, variable_registry);
+    }
+    
   }
 
 }
@@ -109,12 +115,20 @@ sumRadiation::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   abskt.initialize( 1.0);
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex());
   for (unsigned int i=0; i<_gas_part_name.size(); i++){
-    constCCVariable<double>&  abskf = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(_gas_part_name[i]);
+    if (_gas_part_name[i]=="abskg_4"){ // abskg_4 is soot  =(
+      CCVariable<double>&  abskf = tsk_info->get_uintah_field_add<CCVariable<double> >(_gas_part_name[i]);
+      Uintah::parallel_for( range, [&](int i, int j, int k){
+           abskt(i,j,k)=(volFrac(i,j,k) > 1e-16) ? abskt(i,j,k)+abskf(i,j,k)-1.0/ (double) _gas_part_name.size()  : 1.0;
+           abskf(i,j,k)=0.0; // transparent gas band 
+      });
+    }else{
+      constCCVariable<double>&  abskf = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(_gas_part_name[i]);
+      Uintah::parallel_for( range, [&](int i, int j, int k){
+           abskt(i,j,k)=(volFrac(i,j,k) > 1e-16) ? abskt(i,j,k)+abskf(i,j,k)-1.0/ (double) _gas_part_name.size()  : 1.0;
+      });
+    }
 
   //Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
-  Uintah::parallel_for( range, [&](int i, int j, int k){
-  abskt(i,j,k)=(volFrac(i,j,k) > 1e-16) ? abskt(i,j,k)+abskf(i,j,k)-1.0/ (double) _gas_part_name.size()  : 1.0;
-  });
 
   }
   if (_gas_part_name.size()==0){

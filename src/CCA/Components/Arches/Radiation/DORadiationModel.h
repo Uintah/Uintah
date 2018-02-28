@@ -106,8 +106,6 @@ public:
                                int cdirecn);
 
 
-      void setExtraSweepingLabels(int nphase);
-
       void getDOSource(const Patch* patch,
                        int matlIndex,                    
                        DataWarehouse* new_dw,            
