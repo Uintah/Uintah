@@ -21,7 +21,7 @@ from sys import argv, exit
 from string import upper
 
 from subprocess import check_output # needed to get full pathname response from which command
-from helpers.runSusTests import getTestName, getTestOS, input, getMPISize, getTestOS, setInputsDir, getTestFlags
+from helpers.runSusTests import getTestName, getTestOS, getUpsFile, getMPISize, getTestOS, setInputsDir, getTestFlags
 
 ####################################################################################
 
