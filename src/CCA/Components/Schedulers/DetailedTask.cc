@@ -50,6 +50,10 @@ using namespace Uintah;
 
 // declared in DetailedTasks.h - used in both places to protect external ready queue (hence, extern here)
 extern Uintah::MasterLock g_external_ready_mutex;
+extern Dout               g_scrubbing_dbg;
+extern std::string        g_var_scrub_dbg;
+extern int                g_patch_scrub_dbg;
+
 
 
 namespace {
@@ -57,13 +61,8 @@ namespace {
 Uintah::MasterLock g_internal_dependency_mutex{};
 Uintah::MasterLock g_dtask_output_mutex{};
 
-Dout scrubout(    "Scrubbing",     false);
-Dout internaldbg( "InternalDeps",  false);
-Dout externaldbg( "ExternalDeps",  false);
-
-// for debugging - set the variable name (inside the quotes) and patchID to watch one in the scrubout
-std::string dbgScrubVar   = "";
-int         dbgScrubPatch = -1;
+Dout g_internal_deps_dbg( "InternalDeps",  false);
+Dout g_external_deps_dbg( "ExternalDeps",  false);
 
 }
 
@@ -114,9 +113,13 @@ DetailedTask::doit( const ProcessorGroup                      * pg
                   ,       Task::CallBackEvent                   event /* = Task::CPU */
                   )
 {
+  // stop timing the task wait
   m_wait_timer.stop();
+
+  // start timing the execution duration
   m_exec_timer.start();
-  if ( internaldbg ) {
+
+  if ( g_internal_deps_dbg ) {
     std::ostringstream message;
     message << "DetailedTask " << this << " begin doit()\n";
     message << " task is " << m_task << "\n";
@@ -124,14 +127,14 @@ DetailedTask::doit( const ProcessorGroup                      * pg
     message << "   Originally needed deps (" << m_internal_dependencies.size() << "):\n";
 
     auto iter = m_internal_dependencies.begin();
-    for (int i = 0; iter != m_internal_dependencies.end(); ++iter, ++i) {
+    for (auto i = 0u; iter != m_internal_dependencies.end(); ++iter, ++i) {
       message << i << ":    " << *((*iter).m_prerequisite_task->getTask()) << "\n";
     }
 
     DOUT(true, message.str());
   }
 
-  for (int i = 0; i < (int)dws.size(); i++) {
+  for (auto i = 0u; i < dws.size(); i++) {
     if (oddws[i] != nullptr) {
       oddws[i]->pushRunningTask(m_task, &oddws);
     }
@@ -167,7 +170,7 @@ DetailedTask::doit( const ProcessorGroup                      * pg
 
     m_task->doit( this, event, pg, m_patches, m_matls, dws, nullptr, nullptr, nullptr, -1 );
 
-  for (int i = 0; i < static_cast<int>(dws.size()); i++) {
+  for (auto i = 0u; i < dws.size(); i++) {
     if ( oddws[i] != nullptr ) {
       oddws[i]->checkTasksAccesses( m_patches, m_matls );
       oddws[i]->popRunningTask();
@@ -180,7 +183,7 @@ DetailedTask::doit( const ProcessorGroup                      * pg
 void
 DetailedTask::scrub( std::vector<OnDemandDataWarehouseP> & dws )
 {
-  DOUT(scrubout, "Rank-" << Parallel::getMPIRank() << " Starting scrub after task: " << *this);
+  DOUT(g_scrubbing_dbg, "Rank-" << Parallel::getMPIRank() << " Starting scrub after task: " << *this);
 
   const Task* task = getTask();
 
@@ -249,9 +252,9 @@ DetailedTask::scrub( std::vector<OnDemandDataWarehouseP> & dws )
                 // there are a few rare cases in an AMR framework where you require from an OldDW, but only
                 // ones internal to the W-cycle (and not the previous timestep) which can have variables not exist in the OldDW.
                 count = dws[dw]->decrementScrubCount(req->m_var, matls->get(m), neighbor);
-                if (scrubout && (req->m_var->getName() == dbgScrubVar || dbgScrubVar == "") &&
-                                (neighbor->getID() == dbgScrubPatch   || dbgScrubPatch == -1)) {
-                  DOUT(scrubout, "Rank-" << Parallel::getMPIRank() << "   decrementing scrub count for requires of " << dws[dw]->getID() << "/"
+                if (g_scrubbing_dbg && (req->m_var->getName() == g_var_scrub_dbg || g_var_scrub_dbg == "") &&
+                                       (neighbor->getID() == g_patch_scrub_dbg   || g_patch_scrub_dbg == -1)) {
+                  DOUT(g_scrubbing_dbg, "Rank-" << Parallel::getMPIRank() << "   decrementing scrub count for requires of " << dws[dw]->getID() << "/"
                                          << neighbor->getID() << "/" << matls->get(m) << "/" << req->m_var->getName() << ": " << count
                                          << (count == 0 ? " - scrubbed\n" : "\n"));
                 }
@@ -285,9 +288,9 @@ DetailedTask::scrub( std::vector<OnDemandDataWarehouseP> & dws )
           const Patch* patch = patches->get(i);
           for (int m = 0; m < matls->size(); m++) {
             int count = dws[dw]->decrementScrubCount(mod->m_var, matls->get(m), patch);
-            if (scrubout && (mod->m_var->getName() == dbgScrubVar || dbgScrubVar == "")
-                && (patch->getID() == dbgScrubPatch || dbgScrubPatch == -1)) {
-              DOUT(scrubout, "Rank-" << Parallel::getMPIRank() << "   decrementing scrub count for modifies of " << dws[dw]->getID() << "/"
+            if (g_scrubbing_dbg && (mod->m_var->getName() == g_var_scrub_dbg || g_var_scrub_dbg == "") &&
+                                   (patch->getID() == g_patch_scrub_dbg || g_patch_scrub_dbg == -1)) {
+              DOUT(g_scrubbing_dbg, "Rank-" << Parallel::getMPIRank() << "   decrementing scrub count for modifies of " << dws[dw]->getID() << "/"
                                      << patch->getID() << "/" << matls->get(m) << "/" << mod->m_var->getName() << ": " << count
                                      << (count == 0 ? " - scrubbed\n" : "\n"));
             }
@@ -319,8 +322,8 @@ DetailedTask::scrub( std::vector<OnDemandDataWarehouseP> & dws )
             int matl = matls->get(m);
             int count;
             if ( m_task_group->getScrubCount(comp->m_var, matl, patch, whichdw, count) ) {
-              if (scrubout && (comp->m_var->getName() == dbgScrubVar || dbgScrubVar == "")
-                  && (patch->getID() == dbgScrubPatch || dbgScrubPatch == -1)) {
+              if (g_scrubbing_dbg && (comp->m_var->getName() == g_var_scrub_dbg || g_var_scrub_dbg == "") &&
+                                     (patch->getID() == g_patch_scrub_dbg || g_patch_scrub_dbg == -1)) {
                 DOUT(true, "Rank-" << Parallel::getMPIRank() << "   setting scrub count for computes of " << dws[dw]->getID() << "/"
                                    << patch->getID() << "/" << matls->get(m) << "/" << comp->m_var->getName() << ": " << count);
               }
@@ -328,8 +331,8 @@ DetailedTask::scrub( std::vector<OnDemandDataWarehouseP> & dws )
             }
             else {
               // Not in the scrub map, must be never needed...
-              if (scrubout && (comp->m_var->getName() == dbgScrubVar || dbgScrubVar == "")
-                  && (patch->getID() == dbgScrubPatch || dbgScrubPatch == -1)) {
+              if (g_scrubbing_dbg && (comp->m_var->getName() == g_var_scrub_dbg || g_var_scrub_dbg == "") &&
+                                     (patch->getID() == g_patch_scrub_dbg || g_patch_scrub_dbg == -1)) {
                 DOUT(true, "Rank-" << Parallel::getMPIRank() << "   trashing variable immediately after compute: " << dws[dw]->getID() << "/"
                                    << patch->getID() << "/" << matls->get(m) << "/" << comp->m_var->getName());
               }
@@ -410,15 +413,15 @@ DetailedTask::checkExternalDepCount()
 {
   std::lock_guard<Uintah::MasterLock> external_ready_guard(g_external_ready_mutex);
 
-  DOUT(externaldbg, "Rank-" << Parallel::getMPIRank() << " Task " << this->getTask()->getName() << " external deps: "
-                          << m_external_dependency_count.load(std::memory_order_seq_cst)
-                          << " internal deps: " << m_num_pending_internal_dependencies);
+  DOUT(g_external_deps_dbg, "Rank-" << Parallel::getMPIRank() << " Task " << this->getTask()->getName() << " external deps: "
+                                    << m_external_dependency_count.load(std::memory_order_seq_cst)
+                                    << " internal deps: " << m_num_pending_internal_dependencies);
 
   if ((m_external_dependency_count.load(std::memory_order_seq_cst) == 0) && m_task_group->m_sched_common->useInternalDeps() &&
        m_initiated.load(std::memory_order_seq_cst) && !m_task->usesMPI()) {
 
-    DOUT(externaldbg, "Rank-" << Parallel::getMPIRank() << " Task " << this->getTask()->getName()
-                            << " MPI requirements satisfied, placing into external ready queue");
+    DOUT(g_external_deps_dbg, "Rank-" << Parallel::getMPIRank() << " Task " << this->getTask()->getName()
+                                      << " MPI requirements satisfied, placing into external ready queue");
 
     if (m_externally_ready.load(std::memory_order_seq_cst) == false) {
       m_task_group->m_mpi_completed_tasks.push(this);
@@ -456,7 +459,8 @@ DetailedTask::addInternalDependency(       DetailedTask * prerequisiteTask
       prerequisiteTask->m_internal_dependents[this] = &m_internal_dependencies.back();
       m_num_pending_internal_dependencies = m_internal_dependencies.size();
 
-      DOUT(internaldbg, "Rank-" << Parallel::getMPIRank() << " Adding dependency between " << *this << " and " << *prerequisiteTask << " for var " << var->getName() << " source dep count: " << m_num_pending_internal_dependencies << " pre-req dep count " << prerequisiteTask->m_internal_dependents.size());
+      DOUT(g_internal_deps_dbg, "Rank-" << Parallel::getMPIRank() << " Adding dependency between " << *this << " and " << *prerequisiteTask << " for var " << var->getName()
+                                        << " source dep count: " << m_num_pending_internal_dependencies << " pre-req dep count " << prerequisiteTask->m_internal_dependents.size());
     }
     else {
       foundIt->second->addVarLabel(var);
@@ -472,7 +476,7 @@ DetailedTask::done( std::vector<OnDemandDataWarehouseP> & dws )
   // Important to scrub first, before dealing with the internal dependencies
   scrub(dws);
 
-  if (internaldbg) {
+  if (g_internal_deps_dbg) {
     std::ostringstream message;
     message << "This: " << this << " is done with task: " << m_task << "\n";
     message << "Name is: " << m_task->getName() << " which has (" << m_internal_dependents.size() << ") tasks waiting on it:";
@@ -483,7 +487,7 @@ DetailedTask::done( std::vector<OnDemandDataWarehouseP> & dws )
     InternalDependency* dep = (*iter).second;
     dep->m_dependent_task->dependencySatisfied(dep);
 
-    DOUT(internaldbg, "Rank-" << Parallel::getMPIRank() << " Dependency satisfied between " << *dep->m_dependent_task << " and " << *this);
+    DOUT(g_internal_deps_dbg, "Rank-" << Parallel::getMPIRank() << " Dependency satisfied between " << *dep->m_dependent_task << " and " << *this);
   }
 
   m_exec_timer.stop();
@@ -505,10 +509,10 @@ DetailedTask::dependencySatisfied( InternalDependency * dep )
   dep->m_satisfied_generation = currentGeneration;
   m_num_pending_internal_dependencies--;
 
-  DOUT(internaldbg, *(dep->m_dependent_task->getTask()) << " has " << m_num_pending_internal_dependencies << " left.");
+  DOUT(g_internal_deps_dbg, *(dep->m_dependent_task->getTask()) << " has " << m_num_pending_internal_dependencies << " left.");
 
-  DOUT(internaldbg, "Rank-" << Parallel::getMPIRank() << " satisfying dependency: prereq: " << *dep->m_prerequisite_task
-                            << " dep: " << *dep->m_dependent_task << " numPending: " << m_num_pending_internal_dependencies);
+  DOUT(g_internal_deps_dbg, "Rank-" << Parallel::getMPIRank() << " satisfying dependency: prereq: " << *dep->m_prerequisite_task
+                                    << " dep: " << *dep->m_dependent_task << " numPending: " << m_num_pending_internal_dependencies);
 
   if (m_num_pending_internal_dependencies == 0) {
     m_task_group->internalDependenciesSatisfied(this);

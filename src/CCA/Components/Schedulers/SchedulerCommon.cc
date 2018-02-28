@@ -102,18 +102,18 @@ SchedulerCommon::SchedulerCommon( const ProcessorGroup * myworld )
 //
 SchedulerCommon::~SchedulerCommon()
 {
-  if( m_mem_logfile ) {
+  if (m_mem_logfile) {
     delete m_mem_logfile;
   }
 
   // list of vars used for AMR regridding
-  for (unsigned i = 0; i < m_label_matls.size(); i++)
-    for ( LabelMatlMap::iterator iter = m_label_matls[i].begin(); iter != m_label_matls[i].end(); iter++)
+  for (unsigned i = 0u; i < m_label_matls.size(); i++)
+    for (LabelMatlMap::iterator iter = m_label_matls[i].begin(); iter != m_label_matls[i].end(); iter++)
       if (iter->second->removeReference()) {
         delete iter->second;
       }
-  
-  for (unsigned i = 0; i < m_task_graphs.size(); i++) {
+
+  for (unsigned i = 0u; i < m_task_graphs.size(); i++) {
     delete m_task_graphs[i];
   }
 
@@ -124,18 +124,17 @@ SchedulerCommon::~SchedulerCommon()
   }
 
   // Task monitoring variables.
-  if( m_monitoring )
-  {
-    if (m_dummy_matl && m_dummy_matl->removeReference()){
+  if (m_monitoring) {
+    if (m_dummy_matl && m_dummy_matl->removeReference()) {
       delete m_dummy_matl;
     }
-    
+
     // Loop through the global (0) and local (1) tasks
-    for (unsigned int i = 0; i < 2; ++i)
-    {
-      for( const auto &it : m_monitoring_tasks[i] )
-        VarLabel::destroy( it.second );
-      
+    for (unsigned int i = 0u; i < 2; ++i) {
+      for (const auto &it : m_monitoring_tasks[i]) {
+        VarLabel::destroy(it.second);
+      }
+
       m_monitoring_values[i].clear();
     }
   }
@@ -1325,7 +1324,7 @@ void
 SchedulerCommon::compile()
 {
   GridP grid = const_cast<Grid*>(getLastDW()->getGrid());
-  GridP oldGrid;
+  GridP oldGrid = nullptr;
 
   if (m_dws[0]) {
     oldGrid = const_cast<Grid*>(get_dw(0)->getGrid());
@@ -1335,45 +1334,47 @@ SchedulerCommon::compile()
 
     DOUT(g_schedulercommon_dbg, "Rank-" << d_myworld->myRank() << " SchedulerCommon starting compile");
 
-    // pass the first to the rest, so we can share the scrubcountTable
-    DetailedTasks* first = nullptr;
-    size_t num_task_graphs = m_task_graphs.size();
-    for (size_t i = 0; i < num_task_graphs; i++) {
+    auto num_task_graphs = m_task_graphs.size();
+    for (auto i = 0u; i < num_task_graphs; i++) {
       if (num_task_graphs > 1) {
         DOUT(g_schedulercommon_dbg, "Rank-" << d_myworld->myRank() << "  Compiling task graph: " << i+1 << " of " << m_task_graphs.size() << " with " << m_num_tasks << " tasks.");
       }
 
       Timers::Simple tg_compile_timer;
 
+      // do we have tasks with halo requirements > MAX_HALO_DEPTH? Determined in SchedulerCommon::addTask
       const bool has_distal_reqs = ( (m_task_graphs[i]->getIndex() > 0) && (m_max_distal_ghost_cells != 0) );
 
-      // NOTE: this single call is where all the TG compilation complexity arises
-      m_task_graphs[i]->createDetailedTasks( useInternalDeps(), first, grid, oldGrid, has_distal_reqs );
 
-      // TODO: not going to use shared scrubTable when using multiple regular task graphs
-      //   Commenting this out disables the entire "first" mechanism without modifying existing code.
-      //   Will use this for now (PSAAP INCITE runs), but may want to turn back on later.
-      //   This may not even be necessary at all any more except with W-cycle, non-lockstep AMR - APH 06/07/17
-//      DetailedTasks* dts = m_task_graphs[i]->createDetailedTasks( useInternalDeps(), first, grid, oldGrid, has_distal_reqs );
-//      if (!first) {
-//        first = dts;
-//      }
+      //--------------------------------------------------------------------------------------------
+      // NOTE: this single call is where all the TG compilation complexity arises
+      //--------------------------------------------------------------------------------------------
+      m_task_graphs[i]->createDetailedTasks( useInternalDeps(), grid, oldGrid, has_distal_reqs );
+      //--------------------------------------------------------------------------------------------
+
 
       double compile_time = tg_compile_timer().seconds();
-      DOUT(g_task_graph_compile, "Rank-" << std::left << std::setw(5) << d_myworld->myRank() << " time to compile TG-" << std::setw(4) << (m_is_init_timestep ? "INIT" : std::to_string(m_task_graphs[i]->getIndex())) << ": " << compile_time << " (sec)");
+
+      DOUT(g_task_graph_compile, "Rank-" << std::left << std::setw(5) << d_myworld->myRank() << " time to compile TG-" << std::setw(4)
+                                         << (m_is_init_timestep ? "INIT" : std::to_string(m_task_graphs[i]->getIndex())) << ": " << compile_time << " (sec)");
     }
+
+    // polymorphically check scheduler at runtime, that all ranks are executing the same size TG (excluding spatial tasks)
     verifyChecksum();
+
     DOUT(g_schedulercommon_dbg, "Rank-" << d_myworld->myRank() << " SchedulerCommon finished compile");
+
   } else {
     // NOTE: this was added with scheduleRestartInititalize() support (for empty TGs)
     //  Even when numTasks_ <= 0, the code below executed and did nothing worthwhile... seemingly
     //  Shouldn't need to do this work without tasks though -APH 03/12/15
-    return;// no tasks and nothing to do
+    return; // no tasks and nothing to do
   }
 
   m_locallyComputedPatchVarMap->reset();
 
-  // TODO: which of the two cases should we be using and why do both exist - APH 06/07/17
+  // TODO: which of the two cases should we be using and why do both exist - APH 02/23/18
+  //       looks like this sets up superbox and superpatch sets (m_locallyComputedPatchVarMap)
 #if 1
   for (int i = 0; i < grid->numLevels(); i++) {
     const PatchSubset* patches = m_loadBalancer->getPerProcessorPatchSet(grid->getLevel(i))->getSubset(d_myworld->myRank());
@@ -1384,18 +1385,18 @@ SchedulerCommon::compile()
   }
 
 #else
-  for (size_t i = 0; i < m_task_graphs.size(); i++) {
+  for (auto i = 0u; i < m_task_graphs.size(); i++) {
     DetailedTasks* dts = m_task_graphs[i]->getDetailedTasks();
 
     if (dts != nullptr) {
       // figure out the locally computed patches for each variable.
-      for (int i = 0; i < dts->numLocalTasks(); i++) {
-        const DetailedTask* dt = dts->localTask(i);
+      for (auto i = 0; i < dts->numLocalTasks(); i++) {
+        const DetailedTask* dtask = dts->localTask(i);
 
-        for(const Task::Dependency* comp = dt->getTask()->getComputes();comp != nullptr; comp = comp->m_next) {
+        for(const Task::Dependency* comp = dtask->getTask()->getComputes(); comp != nullptr; comp = comp->m_next) {
 
           if (comp->m_var->typeDescription()->getType() != TypeDescription::ReductionVariable) {
-            constHandle<PatchSubset> patches = comp->getPatchesUnderDomain(dt->getPatches());
+            constHandle<PatchSubset> patches = comp->getPatchesUnderDomain(dtask->getPatches());
             m_locallyComputedPatchVarMap->addComputedPatchSet(patches.get_rep());
           }
         }
@@ -1404,15 +1405,16 @@ SchedulerCommon::compile()
   }
 #endif
 
-  for (unsigned int dw = 0; dw < m_dws.size(); dw++) {
+  for (auto dw = 0u; dw < m_dws.size(); dw++) {
     if (m_dws[dw].get_rep()) {
-      for (unsigned i = 0; i < m_task_graphs.size(); i++) {
+      for (auto i = 0u; i < m_task_graphs.size(); i++) {
         DetailedTasks* dts = m_task_graphs[i]->getDetailedTasks();
         dts->copyoutDWKeyDatabase(m_dws[dw]);
       }
       m_dws[dw]->doReserve();
     }
   }
+
   m_locallyComputedPatchVarMap->makeGroups();
 }
 
@@ -2197,23 +2199,18 @@ void SchedulerCommon::recordTaskMonitoring( const ProcessorGroup *
                                           ,       DataWarehouse  * new_dw
                                           )
 {
-  // For all of the patches record the tasking monitoring attribute
-  // value.
+  // For all of the patches record the tasking monitoring attribute value.
   // const Level* level = getLevel(patches);
 
-  for(int p=0; p<patches->size(); p++)
-  {
+  for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
 
     // Loop through the global (0) and local (1) tasks
-    for (unsigned int i = 0; i < 2; ++i)
-    {
-      for( const auto &it : m_monitoring_tasks[i] )
-      {
-        PerPatch< double > value =
-          m_monitoring_values[i][it.first][patch->getID()];
+    for (unsigned int i = 0; i < 2; ++i) {
+      for (const auto &it : m_monitoring_tasks[i]) {
+        PerPatch<double> value = m_monitoring_values[i][it.first][patch->getID()];
 
-        new_dw->put( value, it.second, 0, patch);
+        new_dw->put(value, it.second, 0, patch);
       }
     }
   }
@@ -2224,19 +2221,17 @@ void SchedulerCommon::recordTaskMonitoring( const ProcessorGroup *
 void
 SchedulerCommon::sumTaskMonitoringValues( DetailedTask * dtask )
 {
-  if( !m_monitoring )
+  if (!m_monitoring) {
     return;
+  }
 
   const PatchSubset *patches = dtask->getPatches();
 
-  if( patches && patches->size() )
-  {
-    // Compute the cost on a per cell basis so the measured value can
-    // be distributed proportionally by cells
+  if (patches && patches->size()) {
+    // Compute the cost on a per cell basis so the measured value can be distributed proportionally by cells
     double num_cells = 0;
 
-    for(int p=0; p<patches->size(); p++)
-    {
+    for (int p = 0; p < patches->size(); p++) {
       const Patch* patch = patches->get(p);
       num_cells += patch->getNumExtraCells();
     }
@@ -2244,85 +2239,77 @@ SchedulerCommon::sumTaskMonitoringValues( DetailedTask * dtask )
     double weight;
 
     // Compute the value on a per cell basis.
-    if( m_monitoring_per_cell )
+    if (m_monitoring_per_cell) {
       weight = num_cells;
+    }
     // Compute the value on a per patch basis.
-    else
+    else {
       weight = 1;
+    }
 
     // Loop through the global (0) and local (1) tasks
-    for (unsigned int i = 0; i < 2; ++i)
-    {
-      for( const auto &it : m_monitoring_tasks[i] )
-      {
+    for (auto i = 0; i < 2; ++i) {
+      for (const auto &it : m_monitoring_tasks[i]) {
         // Strip off the attribute name from the task name.
         std::string taskName = it.first;
 
         // For a local task strip off the attribute name.
-        if( i == 1 )
-        {
+        if (i == 1) {
           size_t found = taskName.find_last_of("::");
           // std::string attribute = taskName.substr(found + 1);
-          taskName = taskName.substr(0, found-1);
+          taskName = taskName.substr(0, found - 1);
         }
 
         // Is this task being monitored ?
-        if( (i == 0) || // Global monitoring yes, otherwise check.
-            (i == 1 && taskName == dtask->getTask()->getName()) )
-        {
+        if ((i == 0) ||  // Global monitoring yes, otherwise check.
+        (i == 1 && taskName == dtask->getTask()->getName())) {
           bool loadBalancerCost = false;
           double value;
 
-          // Currently the montioring is limited to the LoadBalancer
+          // Currently the monitoring is limited to the LoadBalancer
           // cost, task exec time, and task wait time.
-          if( it.first.find( "LoadBalancerCost" ) != std::string::npos )
-          {
+          if (it.first.find("LoadBalancerCost") != std::string::npos) {
             // The same code is in runTask of the specific scheduler
             // (MPIScheduler and UnifiedScheduler) to use the task
             // execution time which is then weighted by the number of
             // cells in CostModelForecaster::addContribution
-            if (!dtask->getTask()->getHasSubScheduler() &&
-                !m_is_copy_data_timestep &&
-                dtask->getTask()->getType() != Task::Output) {
+            if (!dtask->getTask()->getHasSubScheduler() && !m_is_copy_data_timestep && dtask->getTask()->getType() != Task::Output) {
               value = dtask->task_exec_time() / num_cells;
-
               loadBalancerCost = true;
             }
-            else
-              value = 0;
+            else {
+              value = 0.0;
+            }
           }
-          else if( it.first.find( "ExecTime" ) != std::string::npos )
+          else if (it.first.find("ExecTime") != std::string::npos) {
             value = dtask->task_exec_time() / weight;
-          else if( it.first.find( "WaitTime" ) != std::string::npos )
+          }
+          else if (it.first.find("WaitTime") != std::string::npos) {
             value = dtask->task_wait_time() / weight;
-          else
-            value = 0;
-          
-          if( value != 0.0 )
-          {
+          }
+          else {
+            value = 0.0;
+          }
+
+          if (value != 0.0) {
             // Loop through patches and add the contribution.
-            for(int p=0; p<patches->size(); ++p)
-            {
+            for (int p = 0; p < patches->size(); ++p) {
               const Patch* patch = patches->get(p);
-              
-              if( m_monitoring_per_cell || loadBalancerCost )
-                m_monitoring_values[i][it.first][patch->getID()] +=
-                  patch->getNumExtraCells() * value;
-              else
-                m_monitoring_values[i][it.first][patch->getID()] +=
-                  value;
+
+              if (m_monitoring_per_cell || loadBalancerCost) {
+                m_monitoring_values[i][it.first][patch->getID()] += patch->getNumExtraCells() * value;
+              }
+              else {
+                m_monitoring_values[i][it.first][patch->getID()] += value;
+              }
 
               // A cheat ... the only time this task will come here is
               // after the value has been written (and the task is
               // completed) so the value can be overwritten. This
               // allows the monitoring to be monitored.
-              if( dtask->getTask()->getName() ==
-                  "SchedulerCommon::recordTaskMonitoring" )
-              {
-                PerPatch< double > value =
-                  m_monitoring_values[i][it.first][patch->getID()];
-
-                this->getLastDW()->put( value, it.second, 0, patch);
+              if (dtask->getTask()->getName() == "SchedulerCommon::recordTaskMonitoring") {
+                PerPatch<double> value = m_monitoring_values[i][it.first][patch->getID()];
+                this->getLastDW()->put(value, it.second, 0, patch);
               }
             }
           }

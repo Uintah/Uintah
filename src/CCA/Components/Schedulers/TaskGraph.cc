@@ -57,11 +57,12 @@ using namespace Uintah;
 
 namespace {
 
-Dout tgphasedbg(        "TaskGraphPhase"   , false);
-Dout neighbor_location( "NeighborLocation" , false);
-Dout compdbg(           "FindComp"         , false);
-Dout tgdbg(             "TaskGraph"        , false);
-Dout detaileddbg(       "TaskGraphDetailed", false);
+Dout g_tg_phase_dbg(          "TaskGraphPhases"              , false);
+Dout g_proc_neighborhood_dbg( "ProcNeighborhood"             , false);
+Dout g_find_computes_dbg(     "FindComputes"                 , false);
+Dout g_add_task_dbg(          "TaskGraphAddTask"             , false);
+Dout g_detailed_task_dbg(     "TaskGraphDetailedTasks"       , false);
+Dout g_detailed_deps_dbg(     "TaskGraphDetailedDependencies", false);
 
 }
 
@@ -82,18 +83,21 @@ TaskGraph::TaskGraph(       SchedulerCommon   * sched
 
 // #ifdef HAVE_VISIT
 //   static bool initialized = false;
-
+//
 //   // Running with VisIt so add in the variables that the user can modify.
 //   if (state->getVisIt() && !initialized) {
-
-//     state->d_douts.push_back(&tgphasedbg);
-//     state->d_douts.push_back(&compdbg);
-//     state->d_douts.push_back(&tgdbg);
-//     state->d_douts.push_back(&detaileddbg);
-
+//
+//     state->d_douts.push_back(&g_tg_phase_dbg);
+//     state->d_douts.push_back(&g_proc_neighborhood_dbg);
+//     state->d_douts.push_back(&g_find_computes_dbg);
+//     state->d_douts.push_back(&g_add_task_dbg);
+//     state->d_douts.push_back(&g_detailed_task_dbg);
+//     state->d_douts.push_back(&g_detailed_deps_dbg);
+//
 //     initialized = true;
 //   }
 // #endif
+
 }
 
 //______________________________________________________________________
@@ -159,13 +163,13 @@ TaskGraph::addTask(       std::shared_ptr<Task>   task
   task->setSets( patchset, matlset );
   if ( (patchset && patchset->totalsize() == 0) || (matlset && matlset->totalsize() == 0) ) {
     task.reset();
-    DOUT(detaileddbg, "Rank-" << m_proc_group->myRank() << " Killing empty task: " << *task);
+    DOUT(g_detailed_deps_dbg, "Rank-" << m_proc_group->myRank() << " Killing empty task: " << *task);
   }
   else {
     m_tasks.push_back( task );
 
-    DOUT(tgdbg, "Rank-" << m_proc_group->myRank() << " TG[" << m_index << "] adding task: " << task->getName());
-    task->displayAll_DOUT(tgdbg);
+    DOUT(g_add_task_dbg, "Rank-" << m_proc_group->myRank() << " TG[" << m_index << "] adding task: " << task->getName());
+    task->displayAll_DOUT(g_add_task_dbg);
     
 #if 0
     // This snippet will find all the tasks that require a label
@@ -174,7 +178,7 @@ TaskGraph::addTask(       std::shared_ptr<Task>   task
       std::string name = label->getName();
       if (name == "p.size") {
         std::cout << "\n" << Parallel::getMPIRank() << "This Task Requires label p.size" << std::endl;
-        task->display(std::cout);
+        task->displayAll_DOUT(std::cout);
       }
     }
 #endif
@@ -206,11 +210,10 @@ TaskGraph::createDetailedTask(       Task           * task
 //
 
 DetailedTasks*
-TaskGraph::createDetailedTasks(       bool            useInternalDeps
-                              ,       DetailedTasks * first
-                              , const GridP         & grid
-                              , const GridP         & oldGrid
-                              , const bool            hasDistalReqs /* = false */
+TaskGraph::createDetailedTasks(       bool    useInternalDeps
+                              , const GridP & grid
+                              , const GridP & oldGrid
+                              , const bool    hasDistalReqs /* = false */
                               )
 {
   std::vector<Task*> sorted_tasks;
@@ -221,130 +224,157 @@ TaskGraph::createDetailedTasks(       bool            useInternalDeps
 
   ASSERT(grid != nullptr);
 
-  //Create two neighborhoods.  One that keeps track of patches and procs within just a few ghost cells
-  //and another that keeps track of patches and procs to within the maximum known ghost cell among all
-  //tasks in the task graph.  The idea is that if a DetailedTask only has simulation variables which 
-  //throughout the simulation never go beyond 1 or 2 ghost cells, then those tasks do not concern 
-  //themselves with patch variables far away.  No need to create tasks on the task graph as we'll never bother with 
-  //their dependencies.  These tasks would then use the local neighborhood of the two neighborhoods.
-  //But some tasks (like radiation tasks) require ghost cells hundreds or thousands of cells out.  
-  //So we need many more of these tasks in the task graph so we can process their dependencies.
-  //Uintah history moment: The older neighborhood approach before this one was to only use one, and so if there were hundreds
-  //of tasks and one of those hundreds needed, say, 250 ghost cells, then a taskgraph was made to check for
-  //the possibility of every task's variables going out 250 ghost cells.  Even though most variables only
-  //go out 1 or 2 ghost cells out.  This resulted in a taskgraph of way too many DetailedTasks, the vast
-  //majority of which were useless as they were far away from this proc and would never depend on tasks on this proc.
-  //On one Titan run, this resulted in task graph compilation times hitting several hours.  So we made a second
-  //neighborhood to fix that.   
-  //(Note, it's possible to create more neighborhoods for each kind of ghost cell configuration,
-  //but the total savings seems not important at the time of this writing).  
+  // Create two neighborhoods.  One that keeps track of patches and procs within just a few ghost cells
+  // and another that keeps track of patches and procs to within the maximum known ghost cell among all
+  // tasks in the task graph.
+  //
+  // The idea is that if a DetailedTask only has simulation variables which
+  // throughout the simulation never go beyond 1 or 2 ghost cells, then those tasks do not concern
+  // themselves with patch variables far away.  No need to create tasks on the task graph as we'll never bother with
+  // their dependencies.  These tasks would then use the local neighborhood of the two neighborhoods.
+  // But some tasks (like radiation tasks) require ghost cells hundreds or thousands of cells out.
+  // So we need many more of these tasks in the task graph so we can process their dependencies.
+  //
+  // Uintah history moment: The older neighborhood approach before this one was to only use one, and so if there were hundreds
+  // of tasks and one of those hundreds needed, say, 250 ghost cells, then a taskgraph was made to check for
+  // the possibility of every task's variables going out 250 ghost cells.  Even though most variables only
+  // go out 1 or 2 ghost cells out.  This resulted in a taskgraph of way too many DetailedTasks, the vast
+  // majority of which were useless as they were far away from this proc and would never depend on tasks on this proc.
+  // On one Titan run, this resulted in task graph compilation times hitting several hours.  So we made a second
+  // neighborhood to fix that.
+  //
+  // (Note, it's possible to create more neighborhoods for each kind of ghost cell configuration,
+  // but the total savings seems not important at the time of this writing).
+
   m_load_balancer->createNeighborhoods(grid, oldGrid, hasDistalReqs);
 
   const std::set<int> local_procs  = m_load_balancer->getNeighborhoodProcessors();
   const std::set<int> distal_procs = m_load_balancer->getDistalNeighborhoodProcessors();
 
-  m_detailed_tasks = scinew DetailedTasks(m_scheduler, m_proc_group, first, this, (hasDistalReqs ? distal_procs : local_procs), useInternalDeps );
+  m_detailed_tasks = scinew DetailedTasks(m_scheduler, m_proc_group, this, (hasDistalReqs ? distal_procs : local_procs), useInternalDeps );
  
-  //Go through every task, find the max ghost cell associated with each varlabel/matl, and remember that.
-  //This will come in handy so we can create DetailedTasks for any var containing a requires, modifies, or 
-  //computes within range of that particular data.  For example, if a task's varlabel/matl requires variable 
-  //needs ghost cells of 250, then that DetailedTask needs to have a requirements dependency set up for all tasks
-  //250 cells away.  Also, if a task needing that varlabel/matl as a requires with 250 ghost cells, it will
-  //also need to have knowledge of what other task originally computed it.  This is so MPI sends and receives 
-  //can be created to know where to send these ghost cells and also where to receive them from.  This means
-  //that if one task only computes a variable, but another task requires 250 ghost cells of that variable,
-  //we still need many instances of DetailedTasks for the computing task in the task graph.
-  //(Note, this has an underlying assumption that tasks are assigned uniformly to patches.  If for some reason 
-  //we had very different tasks which ran on some patches but not on others, this approach overestimates and
-  //should be refined).  
-  const int number_of_tasks = static_cast<int>(sorted_tasks.size());
-  for (int i = 0; i < number_of_tasks; i++) {
+  // Go through every task, find the max ghost cell associated with each varlabel/matl, and remember that.
+  //
+  // This will come in handy so we can create DetailedTasks for any var containing a requires, modifies, or
+  // computes within range of that particular data.  For example, if a task's varlabel/matl requires variable
+  // needs ghost cells of 250, then that DetailedTask needs to have a requirements dependency set up for all tasks
+  // 250 cells away.
+  //
+  // Also, if a task needing that varlabel/matl has a requires with 250 ghost cells, it will
+  // also need to have knowledge of what other task originally computed it.  This is so MPI sends and receives
+  // can be created to know where to send these ghost cells and also where to receive them from.  This means
+  // that if one task only computes a variable, but another task requires 250 ghost cells of that variable,
+  // we still need many instances of DetailedTasks for the computing task in the task graph.
+  //
+  // (Note, this has an underlying assumption that tasks are assigned uniformly to patches.  If for some reason
+  // we had very different tasks which ran on some patches but not on others, this approach overestimates and
+  // should be refined).
+
+  const auto number_of_tasks = sorted_tasks.size();
+  for (auto i = 0u; i < number_of_tasks; i++) {
     Task* task = sorted_tasks[i];
-    //Assuming that variables on patches get the same amount of ghost cells on any patch
-    //in the simulation.  This goes for multimaterial vars as well.
 
-    //Get the tasks's level.  (Task's aren't explicitly assigned a level, but they are assigned a set of patches
-    //corresponding to that level.  So grab the task's 0th patch and get the level it is on.)
+    // Assuming that variables on patches get the same amount of ghost cells on any patch
+    // in the simulation.  This goes for multimaterial vars as well.
 
-    //TODO: Once per proc tasks are assigned multiple levels.  How does that affect this?  Brad P. 11/6/2016
+    // Get the tasks's level.  (Task's aren't explicitly assigned a level, but they are assigned a set of patches
+    // corresponding to that level.  So grab the task's 0th patch and get the level it is on.)
+
+    // TODO: OncePerProc tasks are assigned multiple levels.  How does that affect this?  Brad P. 11/6/2016
     int levelID = 0;
     const PatchSet* ps = task->getPatchSet();
-     if (ps && ps->size()) {  //Reduction tasks don't have patches, filter them out.
-       const PatchSubset* pss = ps->getSubset(0);
-       if (pss && pss->size()) {
-         const Level * level = pss->get(0)->getLevel();
-         levelID = level->getID();
-       }
-     }
+    // Reduction tasks don't have patches, filter them out.
+    if (ps && ps->size()) {
+      const PatchSubset* pss = ps->getSubset(0);
+      if (pss && pss->size()) {
+        const Level * level = pss->get(0)->getLevel();
+        levelID = level->getID();
+      }
+    }
 
     for (Task::Dependency* req = task->getRequires(); req != nullptr; req = req->m_next) {
       std::string key = req->m_var->getName();
 
-      //This offset is not fully helpful by itself. It only indicates how much its off from the level
-      //that the patches are assigned to.  It does *not* indicate if the offset is positive or negative,
-      //as it can be either positive or negative.
-      //If a task's patches are on the coarse level and the offset is 1, then the offset is positive.
-      //If a task's patches are on the fine level and the offset is 1, then the offset is negative.
+      // This offset is not fully helpful by itself. It only indicates how much its off from the level
+      // that the patches are assigned to.  It does *not* indicate if the offset is positive or negative,
+      // as it can be either positive or negative.
+      //
+      // If a task's patches are on the coarse level and the offset is 1, then the offset is positive.
+      // If a task's patches are on the fine level and the offset is 1, then the offset is negative.
+
       int levelOffset = req->m_level_offset;
       int trueLevel = levelID;
       if (req->m_patches_dom == Task::CoarseLevel) {
         trueLevel -= levelOffset;
-      } else if (req->m_patches_dom == Task::FineLevel) {
+      }
+      else if (req->m_patches_dom == Task::FineLevel) {
         trueLevel += levelOffset;
       }
+
       int ngc = req->m_num_ghost_cells;
-      DOUT(neighbor_location, "In task: " << task->getName() << "Checking for max ghost cell for requirements var " << key
-           << " which has: " << ngc << " ghost cells."
-           << " and is on level: " << trueLevel << ".");
+
+      DOUT(g_proc_neighborhood_dbg, "In task: " << task->getName() << "Checking for max ghost cell for requirements var " << key
+                                                << " which has: " << ngc << " ghost cells."
+                                                << " and is on level: " << trueLevel << ".");
+
       LabelLevel labelLevel(key, trueLevel);
       auto it = max_ghost_for_varlabelmap.find(labelLevel);
       if (it != max_ghost_for_varlabelmap.end()) {
         if (it->second < ngc) {
           it->second = ngc;
         }
-      } else {
+      }
+      else {
         max_ghost_for_varlabelmap.emplace(labelLevel, ngc);
       }
     }
 
-    //Can modifies have ghost cells?
+    // Can modifies have ghost cells?
     for (Task::Dependency* modifies = task->getModifies(); modifies != nullptr; modifies = modifies->m_next) {
       std::string key = modifies->m_var->getName();
       int levelOffset = modifies->m_level_offset;
       int trueLevel = levelID;
       if (modifies->m_patches_dom == Task::CoarseLevel) {
         trueLevel -= levelOffset;
-      } else if (modifies->m_patches_dom == Task::FineLevel) {
+      }
+      else if (modifies->m_patches_dom == Task::FineLevel) {
         trueLevel += levelOffset;
       }
       int ngc = modifies->m_num_ghost_cells;
-      DOUT(neighbor_location, "In task: " << task->getName() << "Checking for max ghost cell for modifies var " << key
-           << " which has: " << ngc << " ghost cells."
-           << " and is on level: " << trueLevel << ".");
+
+      DOUT(g_proc_neighborhood_dbg, "In task: " << task->getName() << "Checking for max ghost cell for modifies var " << key
+                                                << " which has: " << ngc << " ghost cells."
+                                                << " and is on level: " << trueLevel << ".");
+
       LabelLevel labelLevel(key, trueLevel);
       auto it = max_ghost_for_varlabelmap.find(labelLevel);
       if (it != max_ghost_for_varlabelmap.end()) {
         if (it->second < ngc) {
           it->second = ngc;
         }
-      } else {
+      }
+      else {
         max_ghost_for_varlabelmap.emplace(labelLevel, ngc);
       }
     }
-    // We don't care about computes ghost cells
-  }
 
-  if (neighbor_location) {
+    // We don't care about computes ghost cells
+
+  } // end task loop
+
+  //------------------------------------------------------------------------------------------------
+
+  if (g_proc_neighborhood_dbg) {
     for (auto kv : max_ghost_for_varlabelmap) {
-      DOUT(neighbor_location, "For varlabel " << kv.first.key << " on level: " << kv.first.level << " the max ghost cell is: " << kv.second);
+      DOUT(g_proc_neighborhood_dbg, "For varlabel " << kv.first.key << " on level: " << kv.first.level << " the max ghost cell is: " << kv.second);
     }
   }
   
   // Now loop again, setting the task's max ghost cells to the max ghost cell for a given varLabel
-  for (int i = 0; i < number_of_tasks; i++) {
+  for (auto i = 0u; i < number_of_tasks; i++) {
     Task* task = sorted_tasks[i];
     int levelID = 0;
-    const PatchSet    * ps = task->getPatchSet();
+    const PatchSet * ps = task->getPatchSet();
     if (ps && ps->size()) {
       const PatchSubset* pss = ps->getSubset(0);
       if (pss && pss->size()) {
@@ -354,16 +384,21 @@ TaskGraph::createDetailedTasks(       bool            useInternalDeps
     }
 
     // Again assuming all vars for a label get the same amount of ghost cells,
+
+    // check requires
     for (Task::Dependency* req = task->getRequires(); req != nullptr; req = req->m_next) {
       std::string key = req->m_var->getName();
       int levelOffset = req->m_level_offset;
       int trueLevel = levelID;
       if (req->m_patches_dom == Task::CoarseLevel) {
         trueLevel -= levelOffset;
-      } else if (req->m_patches_dom == Task::FineLevel) {
+      }
+      else if (req->m_patches_dom == Task::FineLevel) {
         trueLevel += levelOffset;
       }
-      DOUT(neighbor_location, "For task: " << task->getName() << " on level " << trueLevel << " from levelID: " << levelID << " and levelOffset: " << levelOffset << " checking out requires var: " << key);
+
+      DOUT(g_proc_neighborhood_dbg,"For task: " << task->getName() << " on level " << trueLevel << " from levelID: " << levelID
+                                                << " and levelOffset: "<< levelOffset << " checking out requires var: " << key);
 
       LabelLevel labelLevel(key, trueLevel);
       auto it = task->m_max_ghost_cells.find(trueLevel);
@@ -371,21 +406,26 @@ TaskGraph::createDetailedTasks(       bool            useInternalDeps
         if (task->m_max_ghost_cells[trueLevel] < max_ghost_for_varlabelmap[labelLevel]) {
           task->m_max_ghost_cells[trueLevel] = max_ghost_for_varlabelmap[labelLevel];
         }
-      } else {
+      }
+      else {
         task->m_max_ghost_cells[trueLevel] = max_ghost_for_varlabelmap[labelLevel];
       }
     }
 
+    // check modifies
     for (Task::Dependency* modifies = task->getModifies(); modifies != nullptr; modifies = modifies->m_next) {
       std::string key = modifies->m_var->getName();
       int levelOffset = modifies->m_level_offset;
       int trueLevel = levelID;
       if (modifies->m_patches_dom == Task::CoarseLevel) {
         trueLevel -= levelOffset;
-      } else if (modifies->m_patches_dom == Task::FineLevel) {
+      }
+      else if (modifies->m_patches_dom == Task::FineLevel) {
         trueLevel += levelOffset;
       }
-      DOUT(neighbor_location, "For task: " << task->getName() << " on level " << trueLevel << " from levelID: " << levelID << " and levelOffset: " << levelOffset << " checking out modifies var: " << key);
+
+      DOUT(g_proc_neighborhood_dbg,"For task: " << task->getName() << " on level " << trueLevel << " from levelID: " << levelID
+                                                << " and levelOffset: " << levelOffset << " checking out modifies var: " << key);
 
       LabelLevel labelLevel(key, trueLevel);
       auto it = task->m_max_ghost_cells.find(trueLevel);
@@ -393,42 +433,52 @@ TaskGraph::createDetailedTasks(       bool            useInternalDeps
         if (task->m_max_ghost_cells[trueLevel] < max_ghost_for_varlabelmap[labelLevel]) {
           task->m_max_ghost_cells[trueLevel] = max_ghost_for_varlabelmap[labelLevel];
         }
-      } else {
+      }
+      else {
         task->m_max_ghost_cells[trueLevel] = max_ghost_for_varlabelmap[labelLevel];
       }
     }
 
+    // check computes
     for (Task::Dependency* comps = task->getComputes(); comps != nullptr; comps = comps->m_next) {
       std::string key = comps->m_var->getName();
       int levelOffset = comps->m_level_offset;
       int trueLevel = levelID;
       if (comps->m_patches_dom == Task::CoarseLevel) {
         trueLevel -= levelOffset;
-      } else if (comps->m_patches_dom == Task::FineLevel) {
+      }
+      else if (comps->m_patches_dom == Task::FineLevel) {
         trueLevel += levelOffset;
       }
-      DOUT(neighbor_location, "For task: " << task->getName() << " on level " << trueLevel << " from levelID: " << levelID << " and levelOffset: " << levelOffset << " checking out computes var: " << key);
+      DOUT(g_proc_neighborhood_dbg, "For task: " << task->getName() << " on level " << trueLevel << " from levelID: " << levelID
+                                                 << " and levelOffset: " << levelOffset << " checking out computes var: " << key);
       LabelLevel labelLevel(key, trueLevel);
       auto it = task->m_max_ghost_cells.find(trueLevel);
       if (it != task->m_max_ghost_cells.end()) {
         if (task->m_max_ghost_cells[trueLevel] < max_ghost_for_varlabelmap[labelLevel]) {
           task->m_max_ghost_cells[trueLevel] = max_ghost_for_varlabelmap[labelLevel];
         }
-      } else {
+      }
+      else {
         task->m_max_ghost_cells[trueLevel] = max_ghost_for_varlabelmap[labelLevel];
       }
     }
-    for (auto& kv: task->m_max_ghost_cells) {
-      DOUT(neighbor_location, "For task: " << task->getName() << " on level " << kv.first << " the largest found max ghost cells so far is: " << kv.second);
+
+    for (auto& kv : task->m_max_ghost_cells) {
+      DOUT( g_proc_neighborhood_dbg, "For task: " << task->getName() << " on level " << kv.first
+                                                  << " the largest found max ghost cells so far is: " << kv.second);
     }
   }
 
-  //--------------------------------------------------------------------------------------------------------------
-  // Now proceed looking within the neighborhood defined by the max ghost cells a task needs to know about.
-  size_t num_normal_tasks = 0;
-  for (int i = 0; i < number_of_tasks; i++) {
+  //------------------------------------------------------------------------------------------------
+
+  // Now proceed looking within the appropriate neighborhood defined by the max ghost cells a task needs to know about.
+  size_t num_normal_tasks = 0u;
+
+  for (auto i = 0u; i < number_of_tasks; i++) {
     Task* task = sorted_tasks[i];
-    DOUT(neighbor_location, "Looking for max ghost vars for task: " << task->getName());
+
+    DOUT(g_proc_neighborhood_dbg, "Looking for max ghost vars for task: " << task->getName());
 
     const PatchSet    * ps = task->getPatchSet();
     const MaterialSet * ms = task->getMaterialSet();
@@ -458,49 +508,49 @@ TaskGraph::createDetailedTasks(       bool            useInternalDeps
       }
 
       // Output tasks
-      else if ( task->getType() == Task::Output ) {
+      else if (task->getType() == Task::Output) {
         // Compute rank that handles output for this process.
         int handling_rank = (m_proc_group->myRank() / m_load_balancer->getNthRank()) * m_load_balancer->getNthRank();
-
         // Only schedule output task for the subset involving our rank.
-        const PatchSubset* pss = ps->getSubset( handling_rank );
-
+        const PatchSubset* pss = ps->getSubset(handling_rank);
         // Don't schedule if there are no patches.
-        if ( pss->size() > 0 ) {
-          for ( int m = 0; m < ms->size(); m++ ) {
-            const MaterialSubset* mss = ms->getSubset( m );
-            createDetailedTask( task, pss, mss );
+        if (pss->size() > 0) {
+          for (auto m = 0; m < ms->size(); m++) {
+            const MaterialSubset* mss = ms->getSubset(m);
+            createDetailedTask(task, pss, mss);
           }
         }
       }
 
       // Normal tasks
       else {
-        size_t num_dts  = 0;
+        size_t num_dts = 0;
         const int ps_size = ps->size();
         for (int ps_index = 0; ps_index < ps_size; ps_index++) {
           const PatchSubset* pss = ps->getSubset(ps_index);
 
           // Make tasks in our neighborhood.  If there are multiple levels involved in the reqs of
           // a task, then the levelID should be the fine level
-          DOUT(neighbor_location, "For task: " << task->getName() << " looking for max ghost cells for level: " << levelID);
+          DOUT(g_proc_neighborhood_dbg, "For task: " << task->getName() << " looking for max ghost cells for level: " << levelID);
+
           // Still make sure we have an entry for this task on this level.
           // Some tasks can go into the task graph without any requires, modifies, or computes.
           bool search_distal_requires = false;
           for (auto kv : task->m_max_ghost_cells) {
             int levelIDTemp = kv.first;
             search_distal_requires = (task->m_max_ghost_cells.at(levelIDTemp) >= MAX_HALO_DEPTH);
-            DOUT(neighbor_location, "Rank-" << m_proc_group->myRank()
-                                    << " for: " << task->getName() << " on level: " << levelIDTemp
-                                    << " with task max ghost cells: " << task->m_max_ghost_cells.at(levelIDTemp)
-                                    << " Seeing if patch subset: " << *pss
-                                    << " is in neighborhood with search_distal_requires: " << search_distal_requires );
+
+            DOUT(g_proc_neighborhood_dbg, "Rank-" << m_proc_group->myRank() << " for: " << task->getName() << " on level: " << levelIDTemp
+                                                  << " with task max ghost cells: "<< task->m_max_ghost_cells.at(levelIDTemp) << " Seeing if patch subset: "
+                                                  << *pss << " is in neighborhood with search_distal_requires: " << search_distal_requires);
+
             if (search_distal_requires) {
               break;
             }
           }
+
           if (pss->size() > 0 && m_load_balancer->inNeighborhood(pss, search_distal_requires)) {
-            DOUT(neighbor_location, "Yes, it was in the neighborhood");
+            DOUT(g_proc_neighborhood_dbg, "Yes, it was in the neighborhood");
             for (int m = 0; m < ms->size(); m++) {
               const MaterialSubset* mss = ms->getSubset(m);
               createDetailedTask(task, pss, mss);
@@ -509,13 +559,16 @@ TaskGraph::createDetailedTasks(       bool            useInternalDeps
             }
           }
         }
-        DOUT(neighbor_location, "Rank-" << m_proc_group->myRank() << " created: " << num_dts << " tasks for: "
-                                << task->getName() << " on level: " << levelID);
+        DOUT( g_proc_neighborhood_dbg, "Rank-" << m_proc_group->myRank() << " created: " << num_dts << " tasks for: " << task->getName() << " on level: " << levelID);
       }
-    }
+    } // end valid patch and matl sets
+
+    // these tasks would be, e.g. DataArchiver::outputReductionVars or DataArchiver::outputVariables (CheckpointReduction)
     else if (!ps && !ms) {
       createDetailedTask(task, nullptr, nullptr);
     }
+
+    // reduction tasks
     else if (!ps) {
       if (task->getType() == Task::Reduction) {
         for (int m = 0; m < ms->size(); m++) {
@@ -531,7 +584,7 @@ TaskGraph::createDetailedTasks(       bool            useInternalDeps
     }
   }
   
-  DOUT(neighbor_location, "Rank-" << m_proc_group->myRank() << " created: " << num_normal_tasks << " detailed tasks in TG: " << m_index);
+  DOUT(g_proc_neighborhood_dbg, "Rank-" << m_proc_group->myRank() << " created: " << num_normal_tasks << " detailed tasks in TG: " << m_index);
 
   m_load_balancer->assignResources(*m_detailed_tasks);
 
@@ -559,16 +612,18 @@ TaskGraph::createDetailedTasks(       bool            useInternalDeps
 void
 TaskGraph::createDetailedDependencies()
 {
+  int my_rank = m_proc_group->myRank();
+
   // Collect all of the computes
   CompTable ct;
-  int num_tasks = m_detailed_tasks->numTasks();
+  const int num_tasks = m_detailed_tasks->numTasks();
   for (auto i = 0; i < num_tasks; i++) {
     DetailedTask* dtask = m_detailed_tasks->getTask(i);
 
-    if (detaileddbg) {
+    if (g_detailed_deps_dbg) {
       std::ostringstream message;
       message << '\n';
-      message << "Rank-" << m_proc_group->myRank() << " createDetailedDependencies (collect comps) for:\n";
+      message << "Rank-" << my_rank << " createDetailedDependencies (collect comps) for:\n";
 
       for (const Task::Dependency* req = dtask->getTask()->getRequires(); req != nullptr; req = req->m_next) {
         message << "         requires: " << *req << '\n';
@@ -594,7 +649,7 @@ TaskGraph::createDetailedDependencies()
     DetailedTask* dtask = m_detailed_tasks->getTask(i);
     dtask->m_task->m_phase = currphase;
 
-    DOUT(tgphasedbg, "Rank-" << m_proc_group->myRank() << " Task: " << *dtask << " phase: " << currphase);
+    DOUT(g_tg_phase_dbg, "Rank-" << my_rank << " Task: " << *dtask << " phase: " << currphase);
 
     if (dtask->m_task->getType() == Task::Reduction) {
       dtask->m_task->m_comm = curr_num_comms;
@@ -606,6 +661,7 @@ TaskGraph::createDetailedDependencies()
     }
   }
 
+  // Uintah::MPI::Comm_dup happens here
   m_proc_group->setGlobalComm(curr_num_comms);
   m_num_task_phases = currphase + 1;
 
@@ -613,18 +669,22 @@ TaskGraph::createDetailedDependencies()
   for (int i = 0; i < m_detailed_tasks->numTasks(); i++) {
     DetailedTask* dtask = m_detailed_tasks->getTask(i);
 
-    if (detaileddbg && (dtask->m_task->getRequires() != nullptr)) {
-      DOUT(true, "Rank-" << m_proc_group->myRank() << " Looking at requires of detailed task: " << *dtask);
+    // debug
+    if (g_detailed_deps_dbg && (dtask->m_task->getRequires() != nullptr)) {
+      DOUT(true, "Rank-" << my_rank << " Looking at requires of detailed task: " << *dtask);
     }
+
     createDetailedDependencies(dtask, dtask->m_task->getRequires(), ct, false);
 
-    if (detaileddbg && (dtask->m_task->getModifies() != nullptr)) {
-      DOUT(true, "Rank-" << m_proc_group->myRank() << " Looking at modifies of detailed task: " << *dtask);
+    // debug
+    if (g_detailed_deps_dbg && (dtask->m_task->getModifies() != nullptr)) {
+      DOUT(true, "Rank-" << my_rank << " Looking at modifies of detailed task: " << *dtask);
     }
+
     createDetailedDependencies(dtask, dtask->m_task->getModifies(), ct, true);
   }
 
-  DOUT(detaileddbg, "Rank-" << m_proc_group->myRank() << " Done creating detailed tasks");
+  DOUT(g_detailed_task_dbg, "Rank-" << my_rank << " Done creating detailed tasks");
 }
 
 //______________________________________________________________________
@@ -705,8 +765,8 @@ TaskGraph::remapTaskDWs( int dwmap[] )
       levelmin = Min(levelmin, l->getIndex());
     }
   }
-  DOUT(detaileddbg, "Rank-" << m_proc_group->myRank() << " Basic mapping " << "Old " << dwmap[Task::OldDW] << " New " << dwmap[Task::NewDW]
-                            << " CO " << dwmap[Task::CoarseOldDW] << " CN " << dwmap[Task::CoarseNewDW] << " levelmin " << levelmin);
+  DOUT(g_detailed_task_dbg, "Rank-" << m_proc_group->myRank() << " Basic mapping " << "Old " << dwmap[Task::OldDW] << " New " << dwmap[Task::NewDW]
+                                    << " CO " << dwmap[Task::CoarseOldDW] << " CN " << dwmap[Task::CoarseNewDW] << " levelmin " << levelmin);
 
   if (m_type == Scheduler::IntermediateTaskGraph) {
     // fix the CoarseNewDW for finer levels.  The CoarseOld will only matter
@@ -720,8 +780,8 @@ TaskGraph::remapTaskDWs( int dwmap[] )
         }
         if (getLevel(ps)->getIndex() > levelmin) {
           m_tasks[i]->setMapping(dwmap);
-          DOUT(detaileddbg, m_tasks[i]->getName() << " mapping " << "Old " << dwmap[Task::OldDW] << " New " << dwmap[Task::NewDW] << " CO "
-                                                  << dwmap[Task::CoarseOldDW] << " CN " << dwmap[Task::CoarseNewDW] << " (levelmin=" << levelmin << ")");
+          DOUT(g_detailed_task_dbg, m_tasks[i]->getName() << " mapping " << "Old " << dwmap[Task::OldDW] << " New " << dwmap[Task::NewDW] << " CO "
+                                                          << dwmap[Task::CoarseOldDW] << " CN " << dwmap[Task::CoarseNewDW] << " (levelmin=" << levelmin << ")");
         }
       }
     }
@@ -738,39 +798,31 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
                                      )
 {
   int my_rank = m_proc_group->myRank();
+
   for (; req != nullptr; req = req->m_next) {
 
-    // TODO figure if we need this, otherwise delete it - APH 06/30/17
 
     // ARS reduction vars seem be handled below with type checks. I
     // would say it is not not needed.
-
-//    if(req->m_var->typeDescription()->isReductionVariable())
-//      continue;
-
     // ARS - Should Reduction and Sole variables be treated the same??
 
     if (m_scheduler->isOldDW(req->mapDataWarehouse()) && !m_scheduler->isNewDW(req->mapDataWarehouse() + 1)) {
       continue;
     }
 
-    DOUT(detaileddbg, "Rank-" << my_rank << "  req: " << *req);
+    DOUT(g_detailed_deps_dbg, "Rank-" << my_rank << "  req: " << *req);
 
     constHandle<PatchSubset> patches = req->getPatchesUnderDomain(dtask->m_patches);
 
     TypeDescription::Type vartype = req->m_var->typeDescription()->getType();
 
     // ARS - Treat sole vars the same as reduction vars??
-    if ((vartype == TypeDescription::ReductionVariable ||
-         vartype == TypeDescription::SoleVariable) &&
-         m_scheduler->isNewDW(req->mapDataWarehouse())) {
-      // make sure newdw reduction variable requires link up to the reduction tasks.
+    // make sure newdw reduction variable requires link up to the reduction tasks.
+    if ((vartype == TypeDescription::ReductionVariable || vartype == TypeDescription::SoleVariable) && m_scheduler->isNewDW(req->mapDataWarehouse())) {
       patches = nullptr;
     }
 
     constHandle<MaterialSubset> matls = req->getMaterialsUnderDomain(dtask->m_matls);
-
-    bool uses_SHRT_MAX = (req->m_num_ghost_cells == SHRT_MAX);
 
     // this section is just to find the low and the high of the patch that will use the other
     // level's data.  Otherwise, we have to use the entire set of patches (and ghost patches if 
@@ -779,6 +831,7 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
     int levelID = 0;
     const Patch* origPatch = nullptr;
     const Level* origLevel = nullptr;
+    bool uses_SHRT_MAX = (req->m_num_ghost_cells == SHRT_MAX);
     if ((dtask->m_patches) && (dtask->getTask()->getType() != Task::OncePerProc) && (dtask->getTask()->getType() != Task::Hypre)) {
       origPatch = dtask->m_patches->get(0);
       origLevel = origPatch->getLevel();
@@ -831,7 +884,9 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
         }
         else {
           origPatch->computeVariableExtentsWithBoundaryCheck(req->m_var->typeDescription()->getType(),
-                                                             req->m_var->getBoundaryLayer(), req->m_gtype, req->m_num_ghost_cells,
+                                                             req->m_var->getBoundaryLayer(),
+                                                             req->m_gtype,
+                                                             req->m_num_ghost_cells,
                                                              otherLevelLow, otherLevelHigh);
         }
         otherLevelLow = origLevel->mapCellToFiner(otherLevelLow);
@@ -842,19 +897,21 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
     if (patches && !patches->empty() && matls && !matls->empty()) {
 
       // ARS - Treat sole vars the same as reduction vars??
-      if (vartype == TypeDescription::ReductionVariable ||
-          vartype == TypeDescription::SoleVariable) {
+      if (vartype == TypeDescription::ReductionVariable || vartype == TypeDescription::SoleVariable) {
         continue;
       }
 
-      for (int i = 0; i < patches->size(); i++) {
+
+      //------------------------------------------------------------------------
+      //           for all patches - find & store valid neighbors
+      //------------------------------------------------------------------------
+      for (auto i = 0; i < patches->size(); ++i) {
         const Patch* patch = patches->get(i);
 
-        //only allocate once
         static Patch::selectType neighbors;
         neighbors.resize(0);
 
-        IntVector low = IntVector(-9, -9, -9);
+        IntVector low  = IntVector(-9, -9, -9);
         IntVector high = IntVector(-9, -9, -9);
 
         Patch::VariableBasis basis = Patch::translateTypeToBasis(req->m_var->typeDescription()->getType(), false);
@@ -863,24 +920,25 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
           patch->getLevel()->computeVariableExtents(req->m_var->typeDescription()->getType(), low, high);
         }
         else {
-          patch->computeVariableExtentsWithBoundaryCheck(req->m_var->typeDescription()->getType(), req->m_var->getBoundaryLayer(),
-                                                         req->m_gtype, req->m_num_ghost_cells, low, high);
+          patch->computeVariableExtentsWithBoundaryCheck(req->m_var->typeDescription()->getType(),
+                                                         req->m_var->getBoundaryLayer(),
+                                                         req->m_gtype,
+                                                         req->m_num_ghost_cells,
+                                                         low, high);
         }
 
         if (req->m_patches_dom == Task::CoarseLevel || req->m_patches_dom == Task::FineLevel) {
           // make sure the bounds of the dep are limited to the original patch's (see above)
           // also limit to current patch, as patches already loops over all patches
-          IntVector origlow = low, orighigh = high;
+          IntVector origlow  = low;
+          IntVector orighigh = high;
           if (req->m_patches_dom == Task::FineLevel) {
             // don't coarsen the extra cells
-            low = patch->getExtraLowIndex(basis, req->m_var->getBoundaryLayer());
+            low  = patch->getExtraLowIndex(basis,  req->m_var->getBoundaryLayer());
             high = patch->getExtraHighIndex(basis, req->m_var->getBoundaryLayer());
-
-            //low = patch->getLowIndex(basis);
-            //high = patch->getHighIndex(basis);
           }
           else {
-            low = Max(low, otherLevelLow);
+            low  = Max(low, otherLevelLow);
             high = Min(high, otherLevelHigh);
           }
 
@@ -888,8 +946,7 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
             continue;
           }
 
-          // don't need to selectPatches.  Just use the current patch, as we're
-          // already looping over our required patches.
+          // don't need to selectPatches, just use current patch, as we're already looping over required patches
           neighbors.push_back(patch);
         }
         else {
@@ -903,23 +960,25 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
         }
 
         ASSERT(std::is_sorted(neighbors.begin(), neighbors.end(), Patch::Compare()));
-        DOUT(detaileddbg, "Rank-" << my_rank << "    Creating dependency on " << neighbors.size()
-                                  << " neighbors:     Low=" << low << ", high=" << high << ", var=" << req->m_var->getName());
+        DOUT(g_detailed_deps_dbg, "Rank-" << my_rank << "    Creating dependency on " << neighbors.size()
+                                          << " neighbor(s):     Low=" << low << ", high=" << high << ", var=" << req->m_var->getName());
 
-        for (unsigned int i = 0; i < neighbors.size(); i++) {
+
+        //------------------------------------------------------------------------
+        //           for all neighbors - find and store from neighbors
+        //------------------------------------------------------------------------
+        for (auto i = 0u; i < neighbors.size(); ++i) {
           const Patch* neighbor = neighbors[i];
 
           // if neighbor is not in my neighborhood just continue as its dependencies are not important to this processor
-          DOUT(
-              neighbor_location,
-              "    In detailed task: " << dtask->getName() << " checking if " << *req << " is in neighborhood on level: " << trueLevel);
+          DOUT(g_proc_neighborhood_dbg, "    In detailed task: " << dtask->getName() << " checking if " << *req << " is in neighborhood on level: " << trueLevel);
 
           const bool search_distal_reqs = (dtask->getTask()->m_max_ghost_cells.at(trueLevel) >= MAX_HALO_DEPTH);
           if (!m_load_balancer->inNeighborhood(neighbor->getRealPatch(), search_distal_reqs)) {
-            DOUT(neighbor_location, "    No");
+            DOUT(g_proc_neighborhood_dbg, "    No");
             continue;
           }
-          DOUT(neighbor_location, "    Yes");
+          DOUT(g_proc_neighborhood_dbg, "    Yes");
 
           static Patch::selectType fromNeighbors;
           fromNeighbors.resize(0);
@@ -938,16 +997,19 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
             // the grid assigned to the old dw should be the old grid.
             // This should really only impact things required from the OldDW.
             LevelP fromLevel = m_scheduler->get_dw(0)->getGrid()->getLevel(patch->getLevel()->getIndex());
-            fromLevel->selectPatches(Max(neighbor->getExtraLowIndex(basis, req->m_var->getBoundaryLayer()), l),
-                                     Min(neighbor->getExtraHighIndex(basis, req->m_var->getBoundaryLayer()), h), fromNeighbors);
+            fromLevel->selectPatches(Max(neighbor->getExtraLowIndex(basis, req->m_var->getBoundaryLayer()) , l),
+                                     Min(neighbor->getExtraHighIndex(basis, req->m_var->getBoundaryLayer()), h),
+                                     fromNeighbors);
           }
           else {
             fromNeighbors.push_back(neighbor);
           }
 
-          //__________________________________
-          //
-          for (unsigned int j = 0; j < fromNeighbors.size(); j++) {
+
+          //------------------------------------------------------------------------
+          //           for all from-neighbors
+          //------------------------------------------------------------------------
+          for (auto j = 0u; j < fromNeighbors.size(); ++j) {
             const Patch* fromNeighbor = fromNeighbors[j];
 
             // only add the requirements if fromNeighbor is in my neighborhood
@@ -961,17 +1023,15 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
 
             if (req->m_patches_dom == Task::OtherGridDomain && fromNeighbor->getLevel()->getIndex() > 0) {
               // DON'T send extra cells (unless they're on the domain boundary)
-              from_l = Max(fromNeighbor->getLowIndexWithDomainLayer(basis), l);
+              from_l = Max(fromNeighbor->getLowIndexWithDomainLayer(basis) , l);
               from_h = Min(fromNeighbor->getHighIndexWithDomainLayer(basis), h);
             }
             else {
-              // TODO - APH This intersection should not be needed, but let's clean this up if not - 06/15/16
-              //from_l = Max(fromNeighbor->getExtraLowIndex(basis, req->var->getBoundaryLayer()), l);
-              //from_h = Min(fromNeighbor->getExtraHighIndex(basis, req->var->getBoundaryLayer()), h);
               from_l = l;
               from_h = h;
+
               //verify in debug mode that the intersection is unneeded
-              ASSERT(Max(fromNeighbor->getExtraLowIndex(basis, req->m_var->getBoundaryLayer()), l) == l);
+              ASSERT(Max(fromNeighbor->getExtraLowIndex( basis, req->m_var->getBoundaryLayer()), l) == l);
               ASSERT(Min(fromNeighbor->getExtraHighIndex(basis, req->m_var->getBoundaryLayer()), h) == h);
             }
 
@@ -980,22 +1040,25 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
             // of the L-shaped domain, RMCRT_+_domain_DO.ups. Consider removing it  --Todd 07/19/17      
             if ( req->m_patches_dom == Task::ThisLevel) {
               // cull annoying overlapping AMR patch dependencies
-
               patch->cullIntersection(basis, req->m_var->getBoundaryLayer(), fromNeighbor, from_l, from_h);
-
               if (from_l == from_h) {
                 continue;
               }
             }
 #endif
-            for (int m = 0; m < matls->size(); m++) {
+
+
+            //------------------------------------------------------------------------
+            //           for all materials
+            //------------------------------------------------------------------------
+            for (auto m = 0; m < matls->size(); ++m) {
               int matl = matls->get(m);
 
               // creator is the task that performs the original compute.
               // If the require is for the OldDW, then it will be a send old
               // data task
-              DetailedTask* creator = nullptr;
-              Task::Dependency* comp = nullptr;
+              DetailedTask     * creator = nullptr;
+              Task::Dependency * comp    = nullptr;
 
               // look in old dw or in old TG.  Legal to modify across
               // TG boundaries
@@ -1027,12 +1090,12 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
                       continue;
                     }
 
-                    std::cout << "Failure finding " << *req << " for " << *dtask << std::endl;
+                    DOUT(true, "Failure finding " << *req << " for " << *dtask);
                     if (creator) {
                       std::cout << "creator=" << *creator << "\n";
                     }
-                    std::cout << "neighbor=" << *fromNeighbor << ", matl=" << matl << "\n";
-                    std::cout << "Rank-" << my_rank << "\n";
+                    DOUT(true, "neighbor=" << *fromNeighbor << ", matl=" << matl);
+                    DOUT(true, "Rank-" << my_rank);
 
                     SCI_THROW(InternalError("Failed to find comp for dep!", __FILE__, __LINE__));
                   }
@@ -1041,15 +1104,11 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
 
               if (modifies && comp) {  // comp means NOT send-old-data tasks
 
-                // find the tasks that up to this point require the
-                // variable that we are modifying (i.e., the ones that
-                // use the computed variable before we modify it), and
-                // put a dependency between those tasks and this tasks
+                // find the tasks that up to this point require the variable that we are modifying (i.e., the ones that
+                // use the computed variable before we modify it), and put a dependency between those tasks and this task
 
-                // i.e., the task that requires data computed by a
-                // task on this processor needs to finish its task
-                // before this task, which modifies the data computed
-                // by the same task
+                // i.e., the task that requires data computed by a task on this processor needs to finish its task
+                // before this task, which modifies the data computed by the same task
                 std::list<DetailedTask*> requireBeforeModifiedTasks;
                 creator->findRequiringTasks(req->m_var, requireBeforeModifiedTasks);
 
@@ -1069,18 +1128,18 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
                       static ProgressiveWarning warn(message.str(), 10);
                       warn.invoke();
 #endif
-                      if (detaileddbg.active()) {
-                        std::cout << my_rank << " Task that requires with ghost cells and modifies\n";
-                        std::cout << my_rank << " RGM: var: " << *req->m_var << " compute: " << *creator << " mod "
-                                    << *dtask << " PRT " << *prevReqTask << " " << from_l << " " << from_h << "\n";
+                      if (g_detailed_deps_dbg) {
+                        DOUT(true, my_rank << " Task that requires with ghost cells and modifies" << my_rank << " RGM: var: " << *req->m_var << " compute: "
+                                           << *creator << " mod " << *dtask << " PRT " << *prevReqTask << " " << from_l << " " << from_h);
                       }
                     }
                   }
                   else {
                     // dep requires what is to be modified before it is to be modified so create a dependency between them
                     // so the modifying won't conflict with the previous require.
-                    DOUT(detaileddbg, "Rank-" << my_rank << "       Requires to modifies dependency from " << prevReqTask->getName()
-                                              << " to " << dtask->getName() << " (created by " << creator->getName() << ")");
+                    DOUT(g_detailed_deps_dbg, "Rank-" << my_rank << "       Requires to modifies dependency from " << prevReqTask->getName()
+                                                      << " to " << dtask->getName() << " (created by " << creator->getName() << ")");
+
                     if (creator->getPatches() && creator->getPatches()->size() > 1) {
                       // if the creator works on many patches, then don't create links between patches that don't touch
                       const PatchSubset* psub = dtask->getPatches();
@@ -1120,14 +1179,19 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
                   DetailedTask* subsequentCreator = m_detailed_tasks->getOldDWSendTask(subsequentProc);
                   m_detailed_tasks->possiblyCreateDependency(subsequentCreator, comp, fromNeighbor, dtask, req, patch, matl, from_l,
                                                              from_h, DetailedDep::SubsequentIterations);
-                  DOUT(detaileddbg, "Rank-" << my_rank << "   Adding condition reqs for " << *req->m_var << " task : " << *creator << "  to " << *dtask);
+                  DOUT(g_detailed_deps_dbg, "Rank-" << my_rank << "   Adding condition reqs for " << *req->m_var << " task : " << *creator << "  to " << *dtask);
                 }
               }
               m_detailed_tasks->possiblyCreateDependency(creator, comp, fromNeighbor, dtask, req, patch, matl, from_l, from_h, cond);
+
             } // forall materials
-          }  //forall from_neigbors
+
+          }  // forall from_neigbors
+
         }  // forall neighbors
+
       }  // forall patches
+
     }  // if we have a valid patch AND material set
 
     else if (!patches && matls && !matls->empty()) {
@@ -1137,23 +1201,19 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
         static std::vector<DetailedTask*> creators;
         creators.resize(0);
 
-// Only used in conjunction with the old topological sort. Remove this when topo-sort is removed for good - APH 03/06/17
-#if 0
-        if (m_type == Scheduler::IntermediateTaskGraph && req->m_look_in_old_tg && m_scheduler->isNewDW(req->mapDataWarehouse())) {
-          continue;  // will we need to fix for mixed scheduling?
-        }
-#endif
         ct.findReductionComps(req, nullptr, matl, creators, m_proc_group);
+
         // if the size is 0, that's fine.  It means that there are
         // more procs than patches on this level, so the reducer will
         // pick a benign value that won't affect the reduction
 
         ASSERTRANGE(dtask->getAssignedResourceIndex(), 0, m_proc_group->nRanks());
+
         for (unsigned i = 0; i < creators.size(); i++) {
           DetailedTask* creator = creators[i];
           if (dtask->getAssignedResourceIndex() == creator->getAssignedResourceIndex() && dtask->getAssignedResourceIndex() == my_rank ) {
             dtask->addInternalDependency(creator, req->m_var);
-            DOUT(detaileddbg, "Rank-" << my_rank << "    Created reduction dependency between " << *dtask << " and " << *creator);
+            DOUT(g_detailed_deps_dbg, "Rank-" << my_rank << "    Created reduction dependency between " << *dtask << " and " << *creator);
           }
         }
       }
@@ -1166,6 +1226,7 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
                 dtask->getTask()->getType() == Task::Hypre       ||
                 dtask->getTask()->getType() == Task::Output      ||
                 dtask->getTask()->getName() == "SchedulerCommon::copyDataToNewGrid" ) ) {
+
       // this is a either coarsen task where there aren't any fine
       // patches, or a PerProcessor task where there aren't any
       // patches on this processor.  Perfectly legal, so do nothing
@@ -1177,8 +1238,7 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
       // a better way) - bryan
     }
     else if ( dtask->m_matls &&  req->m_matls && dtask->m_patches &&  req->m_patches &&   patches.get_rep()->size()== 0  ) {
-       //Fields were required on a subset of the domain with ghosts.
-       //This should be legal.
+       // Fields were required on a subset of the domain with ghosts - this should be legal.
     }
     else {
       std::ostringstream desc;
@@ -1194,8 +1254,7 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
         desc << "req materials: " << *req->m_matls << "\n";
       }
       else {
-        desc << "no req materials\n";
-        desc << "domain materials: " << *matls.get_rep() << "\n";
+        desc << "no req materials\n" << "domain materials: " << *matls.get_rep() << "\n";
       }
       if (dtask->m_patches) {
         desc << "task patches:" << *dtask->m_patches << "\n";
@@ -1209,7 +1268,6 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
       else {
         desc << "no req patches\n";
       }
-
       desc << "domain patches: " << *patches.get_rep() << "\n";
       SCI_THROW(InternalError(desc.str(), __FILE__, __LINE__));
     }
@@ -1303,7 +1361,7 @@ TaskGraph::makeVarLabelMaterialMap( Scheduler::VarLabelMaterialMap * result )
 void
 CompTable::remembercomp( Data* newData, const ProcessorGroup* pg )
 {
-  if (detaileddbg) {
+  if (g_detailed_deps_dbg) {
     std::ostringstream message;
     message << "Rank-" << pg->myRank() << " remembercomp: " << *newData->m_comp << ", matl=" << newData->m_matl;
     if (newData->m_patch) {
@@ -1397,13 +1455,13 @@ CompTable::findcomp(       Task::Dependency   * req
                    ,  const ProcessorGroup    * pg
                    )
 {
-  DOUT(compdbg, "Rank-" << pg->myRank() << ": Finding comp of req: " << *req << " for task: " << *req->m_task << "/");
+  DOUT(g_find_computes_dbg, "Rank-" << pg->myRank() << ": Finding comp of req: " << *req << " for task: " << *req->m_task << "/");
 
   Data key(nullptr, req, patch, matlIndex);
   Data* result = nullptr;
   for (Data* p = m_data.lookup(&key); p != nullptr; p = m_data.nextMatch(&key, p)) {
 
-    DOUT(compdbg, "Rank-" << pg->myRank() << ": Examining comp from: " << p->m_comp->m_task->getName() << ", order=" << p->m_comp->m_task->getSortedOrder());
+    DOUT(g_find_computes_dbg, "Rank-" << pg->myRank() << ": Examining comp from: " << p->m_comp->m_task->getName() << ", order=" << p->m_comp->m_task->getSortedOrder());
 
     // TODO - fix why this assert is tripped when the gold standard,
     // MPM/ARL/NanoPillar2D_FBC_sym.ups is run using a non-optimized build.
@@ -1414,15 +1472,16 @@ CompTable::findcomp(       Task::Dependency   * req
     if (p->m_comp->m_task->getSortedOrder() < req->m_task->getSortedOrder()) {
       if (!result || p->m_comp->m_task->getSortedOrder() > result->m_comp->m_task->getSortedOrder()) {
 
-        DOUT(compdbg, "Rank-" << pg->myRank() << ": New best is comp from: " << p->m_comp->m_task->getName() << ", order=" << p->m_comp->m_task->getSortedOrder());
+        DOUT(g_find_computes_dbg, "Rank-" << pg->myRank() << ": New best is comp from: " << p->m_comp->m_task->getName() << ", order=" << p->m_comp->m_task->getSortedOrder());
 
         result = p;
       }
     }
   }
+
   if (result) {
 
-    DOUT(compdbg, "Rank-" << pg->myRank() << ": Found comp at: " << result->m_comp->m_task->getName() << ", order=" << result->m_comp->m_task->getSortedOrder());
+    DOUT(g_find_computes_dbg, "Rank-" << pg->myRank() << ": Found comp at: " << result->m_comp->m_task->getName() << ", order=" << result->m_comp->m_task->getSortedOrder());
 
     dt = result->m_dtask;
     comp = result->m_comp;
@@ -1449,16 +1508,16 @@ CompTable::findReductionComps(       Task::Dependency           * req
   Data key(nullptr, req, patch, matlIndex);
   int bestSortedOrder = -1;
   for (Data* p = m_data.lookup(&key); p != nullptr; p = m_data.nextMatch(&key, p)) {
-    DOUT(detaileddbg, "Rank-" << pg->myRank() << " Examining comp from: " << p->m_comp->m_task->getName() << ", order="
-                              << p->m_comp->m_task->getSortedOrder() << " (" << req->m_task->getName() << " order: " << req->m_task->getSortedOrder() << ")");
+    DOUT(g_detailed_deps_dbg, "Rank-" << pg->myRank() << " Examining comp from: " << p->m_comp->m_task->getName() << ", order="
+                                      << p->m_comp->m_task->getSortedOrder() << " (" << req->m_task->getName() << " order: " << req->m_task->getSortedOrder() << ")");
 
     if (p->m_comp->m_task->getSortedOrder() < req->m_task->getSortedOrder() && p->m_comp->m_task->getSortedOrder() >= bestSortedOrder) {
       if (p->m_comp->m_task->getSortedOrder() > bestSortedOrder) {
         creators.clear();
         bestSortedOrder = p->m_comp->m_task->getSortedOrder();
-        DOUT(detaileddbg, "Rank-" << pg->myRank() << "    New best sorted order: " << bestSortedOrder);
+        DOUT(g_detailed_deps_dbg, "Rank-" << pg->myRank() << "    New best sorted order: " << bestSortedOrder);
       }
-        DOUT(detaileddbg, "Rank-" << pg->myRank() << " Adding comp from: " << p->m_comp->m_task->getName() << ", order=" << p->m_comp->m_task->getSortedOrder());
+        DOUT(g_detailed_deps_dbg, "Rank-" << pg->myRank() << " Adding comp from: " << p->m_comp->m_task->getName() << ", order=" << p->m_comp->m_task->getSortedOrder());
       creators.push_back(p->m_dtask);
     }
   }

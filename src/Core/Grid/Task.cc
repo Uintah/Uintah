@@ -937,7 +937,7 @@ constHandle<PatchSubset> Task::Dependency::getOtherLevelPatchSubset(       Task:
                                                                    ,       int                     ngc
                                                                    )
 {
-  constHandle<PatchSubset> myLevelSubset = PatchSubset::intersection(subset, domainSubset);
+  constHandle<PatchSubset> myLevelPatchSubset = PatchSubset::intersection(subset, domainSubset);
 
   int levelOffset = 0;
   switch (dom) {
@@ -952,8 +952,8 @@ constHandle<PatchSubset> Task::Dependency::getOtherLevelPatchSubset(       Task:
   }
 
   std::set<const Patch*, Patch::Compare> patches;
-  for (int p = 0; p < myLevelSubset->size(); p++) {
-    const Patch* patch = myLevelSubset->get(p);
+  for (int p = 0; p < myLevelPatchSubset->size(); p++) {
+    const Patch* patch = myLevelPatchSubset->get(p);
     Patch::selectType somePatches;
     patch->getOtherLevelPatches(levelOffset, somePatches, ngc);
     patches.insert(somePatches.begin(), somePatches.end());
