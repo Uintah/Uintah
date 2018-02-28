@@ -233,8 +233,14 @@ void visit_InitLibSim( visit_simulation_data *sim )
   sim->nodeCores.clear();
   sim->nodeMemory.clear();
 
+  sim->maxCores = 0;
+  sim->maxNodes = 0;
+  sim->xNode = 0;
+  sim->yNode = 0;
+
   sim->switchIndex = -1;
   sim->nodeIndex = -1;  
+
 
   // Possible machine file names.
   const unsigned int nMachines = 1;
@@ -303,6 +309,10 @@ void visit_InitLibSim( visit_simulation_data *sim )
           sim->nodeStop.push_back( stop );
           sim->nodeCores.push_back( cores );
           sim->nodeMemory.push_back( memory );
+
+	  // Get the max cores.
+	  if( sim->maxCores < cores )
+	    sim->maxCores = cores;
         }
 	// Skip these lines that are part of the call to ibnetdiscover
         else if( line.find("--") == 0 ||
@@ -346,6 +356,10 @@ void visit_InitLibSim( visit_simulation_data *sim )
               // Add this node to the list.
               sim->switchNodeList.back().push_back( node );
 
+	      // Get the max nodes.
+	      if( sim->maxNodes < node )
+		sim->maxNodes = node;
+
               // std::cerr << node << "  ";
 
 	      // Get the switch and node index for this processor.
@@ -376,6 +390,35 @@ void visit_InitLibSim( visit_simulation_data *sim )
       //        << sim->nodeIndex << "  " << std::endl;
 
       infile.close();
+
+
+      // Get the greatest common demoninator so to have multiple columns.
+      unsigned int gcd = 2;
+      
+      if( sim->nodeCores.size() == 1 )
+      {
+	gcd = int(ceil( sqrt(sim->nodeCores.size()) ) / 2.0) * 2;
+      }
+      else
+      {
+	for( unsigned int i=2; i<sim->maxCores; ++i )
+	{
+	  unsigned int cc = 0;
+	  
+	  for( unsigned int j=0; j<sim->nodeCores.size(); ++j )
+          {
+	    if( sim->nodeCores[j] % i == 0 )
+	      ++cc;
+	  }
+	  
+	  if( cc == sim->nodeCores.size() )
+	    gcd = i;
+	}
+      }
+  
+      // Size of a node based on the number of cores and GCD.
+      sim->xNode = gcd;
+      sim->yNode = sim->maxCores / gcd;
     }
   }
 }

@@ -143,6 +143,8 @@ typedef struct
   std::vector< unsigned int > nodeCores;
   std::vector< unsigned int > nodeMemory;
 
+  unsigned int maxNodes, maxCores, xNode, yNode;
+
   // The index of the switch and node for this core.
   unsigned int switchIndex, nodeIndex;
   

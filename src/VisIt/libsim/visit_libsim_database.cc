@@ -794,42 +794,6 @@ visit_handle visit_SimGetMetaData(void *cbdata)
     // placed on the machine mesh.
     if( addMachineData )
     {
-      // Get the greatest common demoninator so to have multiple columns.
-      unsigned int gcd = 1;
-
-      // Get the max cores.
-      unsigned int maxCores = 0;
-      for( unsigned int i=0; i<sim->nodeCores.size(); ++i )
-        if( maxCores < sim->nodeCores[i] )
-          maxCores = sim->nodeCores[i];
-
-      // Get the max nodes.
-      unsigned int maxNodes = 0;
-      for( unsigned int i=0; i<sim->switchNodeList.size(); ++i )
-        if( maxNodes < sim->switchNodeList[i].size() )
-          maxNodes = sim->switchNodeList[i].size();
-
-      if( sim->nodeCores.size() == 1 )
-      {
-        gcd = 2;
-      }
-      else
-      {
-        for( unsigned int i=2; i<maxCores; ++i )
-        {
-          unsigned int cc = 0;
-          
-          for( unsigned int j=0; j<sim->nodeCores.size(); ++j )
-          {
-            if( sim->nodeCores[j] % i == 0 )
-              ++cc;
-          }
-
-          if( cc == sim->nodeCores.size() )
-              gcd = i;
-        }
-      }
-
       // If there is a machine layout then there is a global and local
       // machine mesh. The global is all of the nodes and cores. The
       // local is the nodes and cores actually used.
@@ -885,9 +849,10 @@ visit_handle visit_SimGetMetaData(void *cbdata)
 
           VisIt_MeshMetaData_setHasSpatialExtents(mmd, 1);
         
-          double extents[6] = { 0, double(sim->switchNodeList.size() * (gcd+1) - 1),
-                                0, double(maxNodes * (maxCores/gcd+1) - 1),
-                                0, 0 };
+          double extents[6] =
+	    { 0, double(sim->switchNodeList.size() * (sim->xNode+1) - 1),
+	      0, double(sim->maxNodes              * (sim->yNode+1) - 1),
+	      0, 0 };
 
           VisIt_MeshMetaData_setSpatialExtents(mmd, extents);
 
@@ -1277,51 +1242,12 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
     // if( global && sim->myworld->myRank() != 0 )
     //   return VISIT_INVALID_HANDLE;
 
-    unsigned int gcd = 1;
-
-    // Get the max cores.
-    unsigned int maxCores = 0;
-    for( unsigned int i=0; i<sim->nodeCores.size(); ++i )
-      if( maxCores < sim->nodeCores[i] )
-        maxCores = sim->nodeCores[i];
-
-    // Get the max nodes.
-    unsigned int maxNodes = 0;
-    for( unsigned int i=0; i<sim->switchNodeList.size(); ++i )
-      if( maxNodes < sim->switchNodeList[i].size() )
-        maxNodes = sim->switchNodeList[i].size();
-
-    // Get the greatest common demoninator so to have multiple columns.
-    if( sim->nodeCores.size() == 1 )
-    {
-      gcd = 2;
-    }
-    else
-    {
-      for( unsigned int i=2; i<maxCores; ++i )
-      {
-        unsigned int cc = 0;
-        
-        for( unsigned int j=0; j<sim->nodeCores.size(); ++j )
-        {
-          if( sim->nodeCores[j] % i == 0 )
-            ++cc;
-        }
-        
-        if( cc == sim->nodeCores.size() )
-          gcd = i;
-      }
-    }
-  
-    // Size of a node based on the number of cores and GCD.
-    unsigned int xNode = gcd;
-    unsigned int yNode = maxCores/gcd;
-
     // Total size of the layout - add one to have gap between nodes.
-    unsigned int xMax = sim->switchNodeList.size() * (xNode+1);
-    unsigned int yMax = maxNodes             * (yNode+1);
+    unsigned int xMax = sim->switchNodeList.size() * (sim->xNode+1);
+    unsigned int yMax = sim->maxNodes              * (sim->yNode+1);
 
-    unsigned int totalCores = sim->switchNodeList.size() * maxNodes * maxCores;
+    unsigned int totalCores =
+      sim->switchNodeList.size() * sim->maxNodes * sim->maxCores;
 
     // Set all of the points as rectilinear grid.
     unsigned int nPts = xMax * yMax;
@@ -1350,12 +1276,12 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
     // Loop through each switch.
     for( unsigned int s=0; s<sim->switchNodeList.size(); ++s )
     {
-      unsigned int bx = s * (xNode+1);
+      unsigned int bx = s * (sim->xNode+1);
         
       // Loop through each node.
       for( unsigned int n=0; n<sim->switchNodeList[s].size(); ++n )
       {
-        unsigned int by = n * (yNode+1);
+        unsigned int by = n * (sim->yNode+1);
 
         // Get the number of cores for this node.
         unsigned int nCores = 0;
@@ -1372,9 +1298,9 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
         // Loop through each core.
         for( unsigned int i=0; i<nCores; ++i )
         {
-          // Get an x y index based on the GCD.
-          unsigned int lx = bx + i % gcd;
-          unsigned int ly = by + i / gcd;
+          // Get an x y index based on the xNode size.
+          unsigned int lx = bx + i % sim->xNode;
+          unsigned int ly = by + i / sim->xNode;
 
           if( global ||
               (local && s == sim->switchIndex && n == sim->nodeIndex &&
