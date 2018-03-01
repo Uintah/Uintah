@@ -35,6 +35,7 @@ void spectralProperties::problemSetup(  Uintah::ProblemSpecP& db )
   db->get("sootVolumeFrac",_soot_name);
     _LsootOn=true;
   if (_soot_name==""){
+    proc0cout << " WARNING:  Not soot found for spectral radiative properties \n";
     _LsootOn=false;
   }else{
     double cn = 1.85; // real portion of soot absorption coefficient
@@ -72,6 +73,7 @@ spectralProperties::create_local_labels(){
     register_new_variable<CCVariable<double> >(_abswg_name_vector[i]);
   }
 
+    register_new_variable<CCVariable<double> >("absksoot");
 }
 
 
@@ -81,16 +83,26 @@ spectralProperties::register_initialize( VIVec& variable_registry , const bool p
     register_variable( _abskg_name_vector[i], Uintah::ArchesFieldContainer::COMPUTES, variable_registry );
     register_variable( _abswg_name_vector[i], Uintah::ArchesFieldContainer::COMPUTES, variable_registry );
   }
+
+  if (_LsootOn){
+    register_variable("absksoot" , Uintah::ArchesFieldContainer::COMPUTES, variable_registry );
+  }
 }
 
 void
 spectralProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   for (int i=0; i< _nbands  ; i++){
-  CCVariable<double>& abskg     = tsk_info->get_uintah_field_add<CCVariable<double> >( _abskg_name_vector[i]);
-  CCVariable<double>& abswg     = tsk_info->get_uintah_field_add<CCVariable<double> >( _abswg_name_vector[i]);
-  abskg.initialize(0.0);
-  abswg.initialize(0.0);
+    CCVariable<double>& abskg     = tsk_info->get_uintah_field_add<CCVariable<double> >( _abskg_name_vector[i]);
+    CCVariable<double>& abswg     = tsk_info->get_uintah_field_add<CCVariable<double> >( _abswg_name_vector[i]);
+
+    abskg.initialize(0.0);
+    abswg.initialize(0.0);
+  }
+
+  if (_LsootOn){
+    CCVariable<double>& absksoot     = tsk_info->get_uintah_field_add<CCVariable<double> >( "absksoot");
+    absksoot.initialize(0.0);
   }
 }
 
@@ -130,8 +142,6 @@ spectralProperties::register_timestep_eval( std::vector<ArchesFieldContainer::Va
     register_variable( _abswg_name_vector[i] , Uintah::ArchesFieldContainer::COMPUTES, variable_registry, time_substep);
   }
 
-
-
     for ( std::vector<std::string>::iterator iter = _part_sp.begin(); iter != _part_sp.end(); iter++){
       const VarLabel* label = VarLabel::find(*iter);
       if ( label != 0 ){ 
@@ -143,6 +153,7 @@ spectralProperties::register_timestep_eval( std::vector<ArchesFieldContainer::Va
   register_variable(_temperature_name , ArchesFieldContainer::REQUIRES,0,ArchesFieldContainer::LATEST,variable_registry, time_substep );
   if (_LsootOn){
     register_variable(_soot_name , ArchesFieldContainer::REQUIRES,0,ArchesFieldContainer::LATEST,variable_registry, time_substep );
+    register_variable("absksoot" , Uintah::ArchesFieldContainer::COMPUTES, variable_registry, time_substep);
   }
   //register_variable("volFraction" , ArchesFieldContainer::REQUIRES,0,ArchesFieldContainer::NEWDW,variable_registry, time_substep );
 
@@ -164,6 +175,7 @@ spectralProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     abskg[i].initialize(0.0); 
     abswg[i].initialize(0.0); 
   }
+
 
   constCCVariable<double>& temperature = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(_temperature_name));
   //constCCVariable<double>& vol_fraction = *(tsk_info->get_const_uintah_field<constCCVariable<double> >("volFraction"));
@@ -214,13 +226,18 @@ spectralProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
                weight_sum+=abswg[ii](i,j,k);
             }
               abswg[_nbands-1](i,j,k)=1.0-weight_sum; // not needed, as this can be inferred from the other 4 weights, keeping for simplicity in the radiation solver
+
    });
 
    if (_LsootOn){
+     
+     CCVariable<double>  absksoot; 
+     tsk_info->get_unmanaged_uintah_field<CCVariable<double> >("absksoot",absksoot);
+
      constCCVariable<double>& soot_vf = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(_soot_name));
      Uintah::parallel_for( range,  [&](int i, int j, int k){
              double k_soot= 3.72*soot_vf(i,j,k)*_C_o*temperature(i,j,k)/_C_2; //m^-1
-             abskg[_nbands-1](i,j,k)=k_soot; //grey approximation for soot and soot is in thermal equilibrium with gas;
+             absksoot(i,j,k)=k_soot; //grey approximation for soot and soot is in thermal equilibrium with gas;
      });
    }
 

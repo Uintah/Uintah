@@ -193,6 +193,10 @@ public:
         return d_nbands;
       }
 
+      inline bool spectralSootOn(){
+        return _LspectralSootOn;
+      }
+
 private:
 
       std::vector<double> _grey_reference_weight;
@@ -248,6 +252,7 @@ private:
       int _sweepMethod;
       int d_nbands{1};
       bool _LspectralSolve;
+      bool _LspectralSootOn;
 
       const VarLabel* _scatktLabel;
       const VarLabel* _asymmetryLabel;
