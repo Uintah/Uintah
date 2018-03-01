@@ -1298,9 +1298,9 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
                 m_tc_model->model(k_en,wi.k_dep_en,T_en,enamel_name);//enamel layer
                 m_tc_model->model(k_sb_s,wi.k_dep_sb,T_sb_s,sb_name);//solid sb layer
                 m_tc_model->model(k_sb_l,wi.k_dep_sb,T_sb_l,sb_l_name);//liquid sb layer
-                k_en += vars.k_ash_uncertain; // add positive contribution for uncertainty in t.c.
-                k_sb_s += vars.k_ash_uncertain; // add positive contribution for uncertainty in t.c.
-                k_sb_l += vars.k_ash_uncertain; // add positive contribution for uncertainty in t.c.
+                k_en = std::pow(10.,std::log10(std::max(k_en,1e-15))+vars.k_ash_uncertain); // add positive contribution for uncertainty in t.c.
+                k_sb_s = std::pow(10.,std::log10(std::max(k_sb_s,1e-15))+vars.k_ash_uncertain); // add positive contribution for uncertainty in t.c.
+                k_sb_l = std::pow(10.,std::log10(std::max(k_sb_l,1e-15))+vars.k_ash_uncertain); // add positive contribution for uncertainty in t.c.
                 residual = std::abs(k_sb_s - k_sb_s_old)/(k_sb_s_old+1e-100) + std::abs(k_sb_l - k_sb_l_old)/(k_sb_l_old+1e-100) + std::abs(k_en - k_en_old)/(k_en_old+1e-100);
                 if (residual < 1e-4){
                   break;
