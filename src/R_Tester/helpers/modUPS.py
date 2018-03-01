@@ -1,18 +1,18 @@
 #!/usr/bin/env python
 
-from os import stat, system, mkdir, path, getcwd, chdir
+from os import system, mkdir, path, getcwd
 from sys import exit
 
 #______________________________________________________________________
 def bulletProofInputs(inputsDir, org_filename):
   try:
-    stat(inputsDir)
+    path.exists(inputsDir)
   except Exception:
     print " ERROR: modUPS: the inputs directory (%s) does not exist" % inputsDir
     exit(1)
 
   try:
-    stat(org_filename)
+    path.exists(org_filename)
   except Exception:
     print " ERROR: modUPS: the orginal ups file (%s) does not exist" % org_filename
     exit(1)
@@ -20,35 +20,33 @@ def bulletProofInputs(inputsDir, org_filename):
 
 #______________________________________________________________________
 # Append a number to the end of the filename.  You need to return a unique filename
-# if a base ups file is modified more than once from multiple modUPS calls.
-# go through loop until stat fails
+# if the original ups file is modified more than once from multiple modUPS calls.
 def getUniqueFilename(org_filename, inputsDir):
 
   #__________________________________
   #  create inputsDir/tmp directory
   tmpDir = "%s/tmp" % inputsDir
-  try:
-    stat( tmpDir  )
-  except Exception:
+  
+  if path.exists( tmpDir ) == False:
     mkdir(tmpDir )
 
+  # copy org_file to tmpDir
+  command = "cp %s %s" % (org_filename, tmpDir)
+  system(command)
+
   #__________________________________
-  # Append number to filename
+  # find unique file name
   basename = path.basename(org_filename)
   count = 1
-  appendedFilename = "null"
+  mod_filename = "%s/%s.%d" % ( tmpDir, basename, count )
 
-  try:
-    while 1:
-      appendedFilename = "%s.%d" % (basename,count)
-      stat(appendedFilename)
-      count = count + 1
-
-  except Exception:
-    mod_filename = "%s/%s" % (tmpDir, appendedFilename)
+  while path.exists(mod_filename):
+    count = count + 1
+    mod_filename     = "%s/%s.%d" % (tmpDir, basename, count) 
+    
   #__________________________________
-  # copy filename to tmpDir
-  command = "cp %s %s" % (org_filename, mod_filename)
+  # move org_file to unique file name
+  command = "mv %s/%s %s" % (tmpDir, basename, mod_filename)
   system(command)
 
   return mod_filename
