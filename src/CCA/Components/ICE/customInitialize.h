@@ -81,13 +81,13 @@ namespace Uintah {
   };
 
   struct customInitialize_basket{
-    vortices*     vortex_inputs;
-    mms*          mms_inputs;
-    gaussTemp*    gaussTemp_inputs;
-    counterflow*  counterflow_inputs;
-    powerLaw*     powerLaw_inputs;
-    bool          doesComputePressure;
-    std::string   which;
+    vortices     vortex_inputs;
+    mms          mms_inputs;
+    gaussTemp    gaussTemp_inputs;
+    counterflow  counterflow_inputs;
+    powerLaw     powerLaw_inputs;
+    bool         doesComputePressure;
+    std::string  which;
   };
   
   void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,

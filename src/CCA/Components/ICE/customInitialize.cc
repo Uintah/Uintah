@@ -60,7 +60,7 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
     // multiple vortices section
     ProblemSpecP vortices_ps= c_init_ps->findBlock("vortices");    
     if( vortices_ps ) {
-      cib->vortex_inputs = scinew vortices();
+      cib->vortex_inputs = vortices();
       cib->which = "vortices";
       cib->doesComputePressure = true;
       
@@ -72,9 +72,9 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
           vortex_ps->require("origin",   origin);
           vortex_ps->require("strength", strength);
           vortex_ps->require("radius",   radius);
-          cib->vortex_inputs->origin.push_back(origin);
-          cib->vortex_inputs->strength.push_back(strength);
-          cib->vortex_inputs->radius.push_back(radius);
+          cib->vortex_inputs.origin.push_back(origin);
+          cib->vortex_inputs.strength.push_back(strength);
+          cib->vortex_inputs.radius.push_back(radius);
         }
       }
     }  // multiple vortices
@@ -83,7 +83,7 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
     ProblemSpecP gaussTemp_ps= c_init_ps->findBlock("gaussianTemperature");
     if(gaussTemp_ps){
       cib->which = "gaussianTemp";
-      cib->gaussTemp_inputs = scinew gaussTemp();
+      cib->gaussTemp_inputs = gaussTemp();
       double spread_x;
       double spread_y;
       Point  origin;
@@ -92,10 +92,10 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
       gaussTemp_ps->require("origin",    origin);      
       gaussTemp_ps->require("spread_x",  spread_x);  
       gaussTemp_ps->require("spread_y",  spread_y);  
-      cib->gaussTemp_inputs->amplitude = amp;
-      cib->gaussTemp_inputs->origin    = origin;
-      cib->gaussTemp_inputs->spread_x  = spread_x;
-      cib->gaussTemp_inputs->spread_y  = spread_y;
+      cib->gaussTemp_inputs.amplitude = amp;
+      cib->gaussTemp_inputs.origin    = origin;
+      cib->gaussTemp_inputs.spread_x  = spread_x;
+      cib->gaussTemp_inputs.spread_y  = spread_y;
     }
     
     //_______________________________________________
@@ -110,13 +110,13 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
       
       if(cib->which == "mms_1") {
         cib->doesComputePressure = true;
-        cib->mms_inputs = scinew mms();
-        mms_ps->require("A", cib->mms_inputs->A);
+        cib->mms_inputs = mms();
+        mms_ps->require("A", cib->mms_inputs.A);
       }
       if(cib->which == "mms_3") {
         cib->doesComputePressure = false;
-        cib->mms_inputs = scinew mms();
-        mms_ps->require("angle", cib->mms_inputs->angle);
+        cib->mms_inputs = mms();
+        mms_ps->require("angle", cib->mms_inputs.angle);
       }
     } 
     
@@ -126,11 +126,11 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
     if(cf_ps) {
       cib->which = "counterflow";
       cib->doesComputePressure = true;
-      cib->counterflow_inputs = scinew counterflow();
-      cf_ps->require("strainRate",   cib->counterflow_inputs->strainRate);
-      cf_ps->require("referenceCell", cib->counterflow_inputs->refCell);
+      cib->counterflow_inputs = counterflow();
+      cf_ps->require("strainRate",   cib->counterflow_inputs.strainRate);
+      cf_ps->require("referenceCell", cib->counterflow_inputs.refCell);
       
-      grid->getLength(cib->counterflow_inputs->domainLength, "minusExtraCells");
+      grid->getLength(cib->counterflow_inputs.domainLength, "minusExtraCells");
     }
 
     //_______________________________________________
@@ -141,34 +141,34 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
       cib->which = "powerLaw";
       cib->doesComputePressure = true;
 
-      cib->powerLaw_inputs = scinew powerLaw();
-      powerLaw* inputs = cib->powerLaw_inputs;   // for code readability
+      cib->powerLaw_inputs = powerLaw();
+      powerLaw inputs = cib->powerLaw_inputs;   // for code readability
             
       // geometry: computational domain
       BBox b;
       grid->getInteriorSpatialRange(b);
-      cib->powerLaw_inputs->gridMin = b.min();
-      cib->powerLaw_inputs->gridMax = b.max();
+      cib->powerLaw_inputs.gridMin = b.min();
+      cib->powerLaw_inputs.gridMax = b.max();
       
-      pl_ps -> require( "U_infinity",        inputs->U_infinity   );    
-      pl_ps -> require( "exponent",          inputs->exponent    );     
-      pl_ps -> require( "verticalDirection", inputs->verticalDir );
+      pl_ps -> require( "U_infinity",        inputs.U_infinity   );    
+      pl_ps -> require( "exponent",          inputs.exponent    );     
+      pl_ps -> require( "verticalDirection", inputs.verticalDir );
 
       Vector tmp = b.max() - b.min();
-      double maxHeight = tmp[ inputs->verticalDir ];   // default value
+      double maxHeight = tmp[ inputs.verticalDir ];   // default value
 
       pl_ps -> get( "maxHeight",             maxHeight   );
       Vector lo = b.min().asVector();
-      inputs->maxHeight = maxHeight - lo[ inputs->verticalDir ];
+      inputs.maxHeight = maxHeight - lo[ inputs.verticalDir ];
 
       //__________________________________
       //  Add variance to the velocity profile
-      inputs->addVariance = false;
+      inputs.addVariance = false;
       ProblemSpecP var_ps = pl_ps->findBlock("variance");
       if (var_ps) {
-        inputs->addVariance = true;
-        var_ps -> get( "C_mu",        inputs->C_mu );
-        var_ps -> get( "frictionVel", inputs->u_star );
+        inputs.addVariance = true;
+        var_ps -> get( "C_mu",        inputs.C_mu );
+        var_ps -> get( "frictionVel", inputs.u_star );
       }
     }  // powerLaw inputs    
   }
@@ -190,11 +190,11 @@ void customInitialization(const Patch* patch,
   //See "Boundary Conditions for Direct Simulations of Compressible Viscous
   //     Flows" by Poinsot & LeLe pg 121
   if (cib->which == "vortices"){
-    for (int i = 0; i<(int) cib->vortex_inputs->origin.size(); i++) {
+    for (int i = 0; i<(int) cib->vortex_inputs.origin.size(); i++) {
       
-      Point origin = cib->vortex_inputs->origin[i]; // vortex origin
-      double C1 = cib->vortex_inputs->strength[i];  // vortex strength
-      double R = cib->vortex_inputs->radius[i];     // vortex radius
+      Point origin = cib->vortex_inputs.origin[i]; // vortex origin
+      double C1 = cib->vortex_inputs.strength[i];  // vortex strength
+      double R = cib->vortex_inputs.radius[i];     // vortex radius
       double R_sqr = R * R;
       double p_ref  = 101325;        // assumed reference pressure
      
@@ -224,10 +224,10 @@ void customInitialization(const Patch* patch,
   // gaussian Temperature
   if(cib->which == "gaussianTemp"){
   
-    double amp = cib->gaussTemp_inputs->amplitude;
-    Point origin     = cib->gaussTemp_inputs->origin;
-    double spread_x  = cib->gaussTemp_inputs->spread_x;
-    double spread_y  = cib->gaussTemp_inputs->spread_y;
+    double amp = cib->gaussTemp_inputs.amplitude;
+    Point origin     = cib->gaussTemp_inputs.origin;
+    double spread_x  = cib->gaussTemp_inputs.spread_x;
+    double spread_y  = cib->gaussTemp_inputs.spread_y;
     
     double x0 = origin.x();
     double y0 = origin.y();
@@ -253,9 +253,9 @@ void customInitialization(const Patch* patch,
   //        Combustion Theory and Modelling, Vol 9. No 4., Nov. 2005, 617-646
   if(cib->which == "counterflow"){
   
-    double strainRate   = cib->counterflow_inputs->strainRate;
-    Vector domainLength = cib->counterflow_inputs->domainLength;
-    IntVector refCell   = cib->counterflow_inputs->refCell;
+    double strainRate   = cib->counterflow_inputs.strainRate;
+    Vector domainLength = cib->counterflow_inputs.domainLength;
+    IntVector refCell   = cib->counterflow_inputs.refCell;
     
     double u_ref   = vel_CC[refCell].x();
     double v_ref   = vel_CC[refCell].y();
@@ -289,7 +289,7 @@ void customInitialization(const Patch* patch,
   //        Navier-Stokes equations" by Randy McDermott
   if(cib->which == "mms_1"){
     double t = 0.0; 
-    double A = cib->mms_inputs->A;
+    double A = cib->mms_inputs.A;
     double nu = ice_matl->getViscosity();
     double cv = ice_matl->getSpecificHeat();
     double gamma = ice_matl->getGamma();
@@ -347,7 +347,7 @@ void customInitialization(const Patch* patch,
   //   been provided by James Sutherland
   
   if(cib->which == "mms_3"){
-    double angle = cib->mms_inputs->angle;
+    double angle = cib->mms_inputs.angle;
     double A = ( 2.0/sqrt(3) ) ; 
     double B = (2.0 * M_PI/3.0);
     
@@ -368,12 +368,12 @@ void customInitialization(const Patch* patch,
   //  power law velocity profile + variance 
   // u = U_infinity * pow( h/height )^n
   if(cib->which == "powerLaw"){
-    int vDir          =  cib->powerLaw_inputs->verticalDir;
-    double d          =  cib->powerLaw_inputs->gridMin(vDir);
-    double gridHeight =  cib->powerLaw_inputs->gridMax(vDir);
-    double height     =  cib->powerLaw_inputs->maxHeight;
-    Vector U_infinity =  cib->powerLaw_inputs->U_infinity;
-    double n          =  cib->powerLaw_inputs->exponent;
+    int vDir          =  cib->powerLaw_inputs.verticalDir;
+    double d          =  cib->powerLaw_inputs.gridMin(vDir);
+    double gridHeight =  cib->powerLaw_inputs.gridMax(vDir);
+    double height     =  cib->powerLaw_inputs.maxHeight;
+    Vector U_infinity =  cib->powerLaw_inputs.U_infinity;
+    double n          =  cib->powerLaw_inputs.exponent;
     const Level* level = patch->getLevel();
     
     //std::cout << "     height: " << height << " exponent: " << n << " U_infinity: " << U_infinity 
@@ -419,13 +419,13 @@ void customInitialization(const Patch* patch,
     //             two-dimensional flows", Atmospheric Environment Vol. 31, No. 6
     //             pp 839-850, 1997.
     
-    if (cib->powerLaw_inputs->addVariance ){ 
+    if (cib->powerLaw_inputs.addVariance ){ 
       MTRand mTwister;
 
-      double gridHeight =  cib->powerLaw_inputs->gridMax(vDir); 
-      double d          =  cib->powerLaw_inputs->gridMin(vDir);
-      double inv_Cmu    = 1.0/cib->powerLaw_inputs->C_mu;
-      double u_star2    = cib->powerLaw_inputs->u_star * cib->powerLaw_inputs->u_star;
+      double gridHeight =  cib->powerLaw_inputs.gridMax(vDir); 
+      double d          =  cib->powerLaw_inputs.gridMin(vDir);
+      double inv_Cmu    = 1.0/cib->powerLaw_inputs.C_mu;
+      double u_star2    = cib->powerLaw_inputs.u_star * cib->powerLaw_inputs.u_star;
       
       for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++) {
         IntVector c = *iter;
