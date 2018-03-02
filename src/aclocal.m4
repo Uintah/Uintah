@@ -810,6 +810,8 @@ NVCC_CXXFLAGS="$NVCC_CXXFLAGS -arch=sm_$cuda_gencode"
 for i in $CXXFLAGS; do
   if test "$i" = "-std=c++11"; then
     NVCC_CXXFLAGS="$NVCC_CXXFLAGS $i"
+  elif test "$i" = "--expt-extended-lambda"; then
+    NVCC_CXXFLAGS="$NVCC_CXXFLAGS $i"
   else
     NVCC_CXXFLAGS="$NVCC_CXXFLAGS -Xcompiler $i"
   fi

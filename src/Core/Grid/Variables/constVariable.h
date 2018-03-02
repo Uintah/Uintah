@@ -136,10 +136,10 @@ WARNING
     { return this->rep_[idx]; }
 
 #ifdef UINTAH_ENABLE_KOKKOS
-      inline KokkosView3<const T> getKokkosView() const
+      inline KokkosView3<const T, Kokkos::HostSpace> getKokkosView() const
       {
         auto v = this->rep_.getKokkosView();
-        return KokkosView3<const T>( v.m_view, v.m_i, v.m_j, v.m_k );
+        return KokkosView3<const T, Kokkos::HostSpace>( v.m_view, v.m_i, v.m_j, v.m_k );
       }
 #endif
 

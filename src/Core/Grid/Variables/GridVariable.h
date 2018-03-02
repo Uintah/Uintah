@@ -27,6 +27,8 @@
 
 #include <Core/Grid/Variables/Array3.h>
 #include <Core/Grid/Variables/GridVariableBase.h>
+#include <Core/Parallel/LoopExecution.hpp>
+
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Disclosure/TypeUtils.h>
 #include <Core/Grid/Patch.h>

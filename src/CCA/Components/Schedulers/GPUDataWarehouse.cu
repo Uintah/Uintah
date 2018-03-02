@@ -847,11 +847,11 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase &var, char const* label, in
 
     // Also update the var object itself
     var.setArray3(offset, size, addr);
-    
+
     // Put all remaining information about the variable into the the database.
     put(var, sizeOfDataType, label, patchID, matlIndx, levelIndx, staging, gtype, numGhostCells);
 
-    // Now that we have the pointer and that it has been inserted into the database, 
+    // Now that we have the pointer and that it has been inserted into the database,
     // Update the status from allocating to allocated
     if (!staging) {
       compareAndSwapAllocate(it->second.var->atomicStatusInGpuMemory);
@@ -955,10 +955,10 @@ GPUDataWarehouse::copyItemIntoTaskDW(GPUDataWarehouse *hostSideGPUDW, char const
 
   if (!staging) {
 
-    // Create a new allVarPointersInfo object, copying over the offset.  
+    // Create a new allVarPointersInfo object, copying over the offset.
     allVarPointersInfo vp;
     vp.device_offset = hostSideGPUDW_iter->second.device_offset;
-    
+
     // Give it a d_varDB index
     vp.varDB_index = d_varDB_index;
 
@@ -984,8 +984,8 @@ GPUDataWarehouse::copyItemIntoTaskDW(GPUDataWarehouse *hostSideGPUDW, char const
     if (iter == varPointers->end()) {
       // A staging item was requested but there's no regular variable for it to piggy back in.
       // So create an empty placeholder regular variable.
-      
-      // Create a new allVarPointersInfo object, copying over the offset.  
+
+      // Create a new allVarPointersInfo object, copying over the offset.
       allVarPointersInfo vp;
       vp.device_offset = hostSideGPUDW_iter->second.device_offset;
 
@@ -3311,7 +3311,7 @@ GPUDataWarehouse::compareAndSwapFormASuperPatchGPU(char const* label, int patchI
        cerrLock.unlock();
      }
 
-    if ( (oldVarStatus & FORMING_SUPERPATCH) == FORMING_SUPERPATCH 
+    if ( (oldVarStatus & FORMING_SUPERPATCH) == FORMING_SUPERPATCH
        || ((oldVarStatus & SUPERPATCH) == SUPERPATCH)) {
       //Something else already took care of it.  So this task won't manage it.
       return false;
@@ -3358,7 +3358,7 @@ GPUDataWarehouse::compareAndSwapFormASuperPatchGPU(char const* label, int patchI
 //______________________________________________________________________
 // Sets the allocated flag on a variables atomicDataStatus
 // This is called after a forming a superpatch process completes.  *Only* the thread that got to set FORMING_SUPERPATCH can
-// set SUPERPATCH.  Further, no other thread should modify the atomic status 
+// set SUPERPATCH.  Further, no other thread should modify the atomic status
 //compareAndSwapFormASuperPatchGPU() should immediately call this.
 __host__ bool
 GPUDataWarehouse::compareAndSwapSetSuperPatchGPU(char const* label, int patchID, int matlIndx, int levelIndx)
@@ -3386,7 +3386,7 @@ GPUDataWarehouse::compareAndSwapSetSuperPatchGPU(char const* label, int patchID,
     printf("ERROR:\nGPUDataWarehouse::compareAndSwapSetSuperPatchGPU( )  Can't set a superpatch status if it wasn't previously marked as forming a superpatch.\n");
     exit(-1);
   } else {
-    //Attempt to claim forming it into a superpatch.  
+    //Attempt to claim forming it into a superpatch.
     atomicDataStatus newVarStatus = oldVarStatus;
     newVarStatus = newVarStatus & ~FORMING_SUPERPATCH;
     newVarStatus = newVarStatus | SUPERPATCH;
@@ -3421,7 +3421,7 @@ GPUDataWarehouse::isSuperPatchGPU(char const* label, int patchID, int matlIndx, 
 
 //______________________________________________________________________
 //
-__host__ void GPUDataWarehouse::setSuperPatchLowAndSize(char const* const label, const int patchID, const int matlIndx, const int levelIndx,  
+__host__ void GPUDataWarehouse::setSuperPatchLowAndSize(char const* const label, const int patchID, const int matlIndx, const int levelIndx,
                                                         const int3& low, const int3& size){
   varLock->lock();
 
@@ -3572,7 +3572,7 @@ GPUDataWarehouse::printGetError(const char* msg, char const* label, int8_t level
 //______________________________________________________________________
 //
 __host__ void*
-GPUDataWarehouse::getPlacementNewBuffer() 
+GPUDataWarehouse::getPlacementNewBuffer()
 {
   return placementNewBuffer;
 }

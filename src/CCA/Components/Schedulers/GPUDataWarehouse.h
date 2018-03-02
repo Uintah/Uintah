@@ -365,7 +365,7 @@ public:
 #ifdef UINTAH_ENABLE_KOKKOS
   //methods for Kokkos
   template <typename T>
-  __host__ inline KokkosView3<T> getKokkosView(char const* label, const int patchID, const int8_t matlIndx, const int8_t levelIndx) {
+  __host__ inline KokkosView3<T, Kokkos::CudaSpace> getKokkosView(char const* label, const int patchID, const int8_t matlIndx, const int8_t levelIndx) {
 
     // host code
     int3 var_offset{0,0,0};
@@ -388,8 +388,7 @@ public:
     }
     varLock->unlock();
 
-      //return KokkosView3<T>(  Kokkos::subview(  KokkosData<T, Kokkos::CudaSpace>(data_ptr, var_size.x, var_size.y, var_size.z)
-      return KokkosView3<T>(  Kokkos::subview(  KokkosData<T>(data_ptr, var_size.x, var_size.y, var_size.z)
+    return KokkosView3<T, Kokkos::CudaSpace>(  Kokkos::subview(  KokkosData<T, Kokkos::CudaSpace>(data_ptr, var_size.x, var_size.y, var_size.z)
                                , Kokkos::pair<int,int>( 0, var_size.x )
                                , Kokkos::pair<int,int>( 0, var_size.y )
                                , Kokkos::pair<int,int>( 0, var_size.z ) )

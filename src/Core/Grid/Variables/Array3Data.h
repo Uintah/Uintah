@@ -109,12 +109,9 @@ namespace Uintah {
       }
 
 #ifdef UINTAH_ENABLE_KOKKOS
-      inline KokkosData<T> getKokkosData() const {
-        return KokkosData<T>(d_data, d_size.x(), d_size.y(), d_size.z());
+      inline KokkosData<T, Kokkos::HostSpace> getKokkosData() const {
+        return KokkosData<T, Kokkos::HostSpace>(d_data, d_size.x(), d_size.y(), d_size.z());
       }
-      //inline KokkosData<T, Kokkos::HostSpace> getKokkosData() const {
-      //  return KokkosData<T, Kokkos::HostSpace>(d_data, d_size.x(), d_size.y(), d_size.z());
-      //}
 #endif //UINTAH_ENABLE_KOKKOS
 
 

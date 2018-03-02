@@ -25,12 +25,12 @@
 #ifndef UINTAH_HOMEBREW_ARRAY3_H
 #define UINTAH_HOMEBREW_ARRAY3_H
 
-#include <Core/Grid/Variables/BlockRange.hpp>
+
 
 #include <Core/Grid/Variables/Array3Window.h>
 #include <Core/Grid/Variables/Stencil7.h>
 #include <Core/Grid/Variables/Stencil4.h>
-
+#include <Core/Parallel/LoopExecution.hpp>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Math/Matrix3.h>
 
@@ -214,7 +214,7 @@ public:
 
 
 #if defined(UINTAH_ENABLE_KOKKOS)
-  inline KokkosView3<T> getKokkosView() const
+  inline KokkosView3<T, Kokkos::HostSpace> getKokkosView() const
   {
     return m_view;
   }
@@ -260,6 +260,7 @@ public:
       return m_view(i,j,k);
     }
 #else
+
   inline const T& operator[](const IntVector& idx) const {
     return d_window->get(idx);
   }
@@ -371,7 +372,7 @@ private:
   Array3Window<T>* d_window{nullptr};
 #if defined(UINTAH_ENABLE_KOKKOS)
   //Array3 variables should never go outside of HostSpace.
-  KokkosView3<T> m_view{};
+  KokkosView3<T, Kokkos::HostSpace> m_view{};
 #endif
 };
 

@@ -1198,261 +1198,261 @@ Ray::rayTrace( DetailedTask* dtask,
                Task::WhichDW which_sigmaT4_dw,
                Task::WhichDW which_celltype_dw )
 {
-  const Level* level = getLevel(patches);
-
-#ifdef USE_TIMER 
-    // No carry forward just reset the time to zero.
-    PerPatch< double > ppTimer = 0;
-    
-    for (int p=0; p<patches->size(); ++p) {
-      const Patch* patch = patches->get(p);
-      new_dw->put( ppTimer, d_PPTimerLabel, d_matl, patch);
-    }
-#endif
-  
-  DataWarehouse* abskg_dw    = new_dw->getOtherDataWarehouse(which_abskg_dw);
-  DataWarehouse* sigmaT4_dw  = new_dw->getOtherDataWarehouse(which_sigmaT4_dw);
-  DataWarehouse* celltype_dw = new_dw->getOtherDataWarehouse(which_celltype_dw);
-
-  //It seems these variables need to stay in scope for the entire run, otherwise something inside Uintah
-  //apparently deallocates them mid-run.
-  constCCVariable< T > sigmaT4OverPi;
-  constCCVariable< T > abskg;
-  constCCVariable<int> celltype;
-
-  //For portability, everything should be views.
-  KokkosView3<const T>   abskg_view;
-  KokkosView3<const T>   sigmaT4OverPi_view;
-  KokkosView3<double>    divQ_view;
-  KokkosView3<double>    radiationVolq_view;
-  KokkosView3<const int> celltype_view;
-  
-  if ( ! Parallel::usingDevice() ) {
-    if ( d_ROI_algo == entireDomain ) {
-      abskg_dw->getLevel(    abskg,         d_abskgLabel,    d_matl, level );
-      sigmaT4_dw->getLevel(  sigmaT4OverPi, d_sigmaT4Label,  d_matl, level );
-      celltype_dw->getLevel( celltype,      d_cellTypeLabel, d_matl, level );
-    }
-  }
-
-  // patch loop
-  for (int p=0; p < patches->size(); p++){
-
-    Timers::Simple timer;
-    timer.start();
-
-    const Patch* patch = patches->get(p);
-    printTask(patches,patch,g_ray_dbg,"Doing Ray::rayTrace");
-
-    //Get the variables from a Data Warehouse
-    //See if its CPU or GPU execution, if so, get the right variables from the right data warehouse.
-    if ( ! Parallel::usingDevice() ) {
-
-      CCVariable<double>   divQ;
-      CCVariable<Stencil7> boundFlux;
-      CCVariable<double>   radiationVolq;
-
-      if ( modifies_divQ ) {
-        new_dw->getModifiable( divQ,         d_divQLabel,          d_matl, patch );
-        new_dw->getModifiable( boundFlux,    d_boundFluxLabel,     d_matl, patch );
-        new_dw->getModifiable( radiationVolq,d_radiationVolqLabel, d_matl, patch );
-      }
-      else {
-        new_dw->allocateAndPut( divQ,         d_divQLabel,          d_matl, patch );
-        new_dw->allocateAndPut( boundFlux,    d_boundFluxLabel,     d_matl, patch );
-        new_dw->allocateAndPut( radiationVolq,d_radiationVolqLabel, d_matl, patch );
-        divQ.initialize( 0.0 );
-        radiationVolq.initialize( 0.0 );
-
-        for ( CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++ ) {
-          IntVector c = *iter;
-          boundFlux[c].initialize(0.0);
-        }
-      }
-
-      IntVector ROI_Lo = IntVector(-SHRT_MAX,-SHRT_MAX,-SHRT_MAX );
-      IntVector ROI_Hi = IntVector( SHRT_MAX, SHRT_MAX, SHRT_MAX );
-
-      //__________________________________
-      //  If ray length distance is used
-      if ( d_ROI_algo == boundedRayLength ) {
-
-        patch->computeVariableExtentsWithBoundaryCheck(CCVariable<double>::getTypeDescription()->getType(), IntVector(0,0,0),
-                                                       Ghost::AroundCells, d_haloCells.x(), ROI_Lo, ROI_Hi);
-        DOUT(g_ray_dbg, "  ROI: " << ROI_Lo << " "<< ROI_Hi );
-        abskg_dw->getRegion(   abskg,          d_abskgLabel ,   d_matl, level, ROI_Lo, ROI_Hi );
-        sigmaT4_dw->getRegion( sigmaT4OverPi,  d_sigmaT4Label,  d_matl, level, ROI_Lo, ROI_Hi );
-        celltype_dw->getRegion( celltype,      d_cellTypeLabel, d_matl, level, ROI_Lo, ROI_Hi );
-      }
-      
-      // Get the views for portability.
-      abskg_view         = abskg.getKokkosView();
-      sigmaT4OverPi_view = sigmaT4OverPi.getKokkosView();
-      celltype_view      = celltype.getKokkosView();
-      divQ_view          = divQ.getKokkosView();
-      radiationVolq_view = radiationVolq.getKokkosView();
-      
-      //__________________________________
-      //  BULLETPROOFING
-      //if ( level->isNonCubic() ){
-      if( false) {
-
-        IntVector l = abskg.getLowIndex();
-        IntVector h = abskg.getHighIndex();
-
-        CellIterator iterLim = CellIterator(l, h);
-        for(CellIterator iter = iterLim; !iter.done();iter++) {
-          IntVector c = *iter;
-
-          if ( std::isinf( abskg[c] )         || std::isnan( abskg[c] )  ||
-               std::isinf( sigmaT4OverPi[c] ) || std::isnan( sigmaT4OverPi[c] ) ){
-            std::ostringstream warn;
-            warn<< "ERROR:Ray::rayTrace   abskg or sigmaT4 is non-physical \n"
-                << "     c:   " << c << " location: " << level->getCellPosition(c) << "\n"
-                << "     ROI: " << ROI_Lo << " "<< ROI_Hi << "\n"
-                << "          " << *patch << "\n"
-                << " ( abskg[c]: " << abskg[c] << ", sigmaT4OverPi[c]: " << sigmaT4OverPi[c] << ")\n";
-
-            cout << warn.str() << endl;
-            throw InternalError( warn.str(), __FILE__, __LINE__ );
-          }
-        }
-      }
-    } else {  //if ( Parallel::usingDevice() )
-#if defined(HAVE_CUDA)
-      GPUDataWarehouse* abskg_gdw    = nullptr;
-      GPUDataWarehouse* sigmaT4_gdw  = nullptr;
-      GPUDataWarehouse* celltype_gdw = nullptr;
-      
-      if ( which_abskg_dw == Task::OldDW ) {
-        abskg_gdw = static_cast<GPUDataWarehouse*>(old_dw->getGPUDW());
-      } else {
-        abskg_gdw = static_cast<GPUDataWarehouse*>(new_dw->getGPUDW());
-      }
-      if ( which_sigmaT4_dw == Task::OldDW ) {
-        sigmaT4_gdw = static_cast<GPUDataWarehouse*>(old_dw->getGPUDW());
-      } else {
-        sigmaT4_gdw = static_cast<GPUDataWarehouse*>(new_dw->getGPUDW());
-      }
-      if ( which_celltype_dw == Task::OldDW ) {
-        celltype_gdw = static_cast<GPUDataWarehouse*>(old_dw->getGPUDW());
-      } else {
-        celltype_gdw = static_cast<GPUDataWarehouse*>(new_dw->getGPUDW());
-      }
-
-      abskg_view         = abskg_gdw->getKokkosView<const T>(         d_abskgLabel->getName().c_str(),         patch->getID(), d_matl, 0);
-      sigmaT4OverPi_view = sigmaT4_gdw->getKokkosView<const T>(       d_sigmaT4Label->getName().c_str(),       patch->getID(), d_matl, 0);
-      celltype_view      = celltype_gdw->getKokkosView<const int>(    d_cellTypeLabel->getName().c_str(),      patch->getID(), d_matl, 0);
-      divQ_view          = new_dw->getGPUDW()->getKokkosView<double>( d_divQLabel->getName().c_str(),          patch->getID(), d_matl, 0);
-      radiationVolq_view = new_dw->getGPUDW()->getKokkosView<double>( d_radiationVolqLabel->getName().c_str(), patch->getID(), d_matl, 0);
-#endif
-    }
-
-    unsigned long int size = 0;                   // current size of PathIndex
-    Vector Dx = patch->dCell();                   // cell spacing
-
-    //______________________________________________________________________
-    //         R A D I O M E T E R
-    //______________________________________________________________________
-
-// TODO: Kokkos-ify the radiometer
-
-    //______________________________________________________________________
-    //         B O U N D A R Y F L U X
-    //______________________________________________________________________
-
-// TODO: Kokkos-ify the boundary flux calculation
-
-    //______________________________________________________________________
-    //         S O L V E   D I V Q
-    //______________________________________________________________________
-
-    if ( d_solveDivQ ) {
-
-      bool latinHyperCube = ( d_rayDirSampleAlgo == LATIN_HYPER_CUBE ) ? true : false;
-      LevelParams levelParams_pod;
-      levelParams_pod.Dx[0] = Dx.x(); levelParams_pod.Dx[1] = Dx.y(); levelParams_pod.Dx[2] = Dx.z();
-      levelParams_pod.anchor[0] = level->getAnchor().x(); levelParams_pod.anchor[1] = level->getAnchor().y(); levelParams_pod.anchor[2] = level->getAnchor().z();
-
-      IntVector lo = patch->getCellLowIndex();
-      IntVector hi = patch->getCellHighIndex();
-
-      RMCRT_flags RT_flags;
-      RT_flags.finePatchLow.x = lo.x();
-      RT_flags.finePatchLow.y = lo.y();
-      RT_flags.finePatchLow.z = lo.z();
-      RT_flags.finePatchSize.x = hi.x()-lo.x();
-      RT_flags.finePatchSize.y = hi.y()-lo.y();
-      RT_flags.finePatchSize.z = hi.z()-lo.z();
-      const unsigned int numCells = RT_flags.finePatchSize.x *
-                                    RT_flags.finePatchSize.y *
-                                    RT_flags.finePatchSize.z;
-      RT_flags.startCell = 0;
-      RT_flags.endCell = numCells;
-
-      Uintah::BlockRange range;
-#ifdef HAVE_CUDA
-      int numKernels = dtask->getTask()->maxStreamsPerTask();
-      IntVector hiRange(256,0,0);
-      // Split up a functor into four loops.  Gets better GPU occupancy this way.
-      for (int i = 0; i < numKernels; i++) {
-
-        RT_flags.startCell = (i/static_cast<double>(numKernels)) * numCells;
-        RT_flags.endCell = ((i+1)/static_cast<double>(numKernels)) * numCells;
-        RT_flags.cellsPerGroup = hiRange.x();
-        range.setValues((cudaStream_t*)dtask->getCudaStreamForThisTask(i), IntVector(0,0,0), IntVector(RT_flags.cellsPerGroup,0,0) );
-        rayTrace_solveDivQFunctor< T, Kokkos::Random_XorShift1024_Pool<Kokkos::Cuda>   >
-#else
-      {
-        IntVector hiRange(8,0,0);
-        range.setValues( IntVector(0,0,0), hiRange );
-        RT_flags.startCell = 0;
-        RT_flags.endCell = numCells;
-        RT_flags.cellsPerGroup = hiRange.x();
-        rayTrace_solveDivQFunctor< T, Kokkos::Random_XorShift1024_Pool<Kokkos::OpenMP> >
-#endif
-           functor( levelParams_pod
-                  , RT_flags
-                  , latinHyperCube
-                  , d_nDivQRays
-                  , d_CCRays
-                  , d_sigmaScat
-                  , d_threshold
-                  , d_maxRayLength
-                  , abskg_view
-                  , sigmaT4OverPi_view
-                  , celltype_view
-                  , d_allowReflect
-                  , divQ_view
-                  , radiationVolq_view );
-
-        // This parallel_reduce replaces the cellIterator loop used to solve DivQ
-        //Uintah::parallel_reduce_sum( range, functor, size );
-        Uintah::parallel_reduce_1D( range, functor, size );
-      }
-
-    }  // end of if(_solveDivQ)
-
-    //__________________________________
-    //
-    timer.stop();
-    
-    if (patch->getGridIndex() == 0) {
-      cout << endl
-           << " RMCRT REPORT: Patch 0" << endl
-           << " Used " << timer().milliseconds()
-           << " milliseconds of CPU time. \n" << endl // Convert time to ms
-           << " Size: " << size << endl
-           << " Efficiency: " << size / timer().seconds()
-           << " steps per sec" << endl
-           << endl;
-    }
-
-#ifdef USE_TIMER    
-    PerPatch< double > ppTimer = timer().seconds();
-    new_dw->put( ppTimer, d_PPTimerLabel, d_matl, patch);
-#endif
-  }  //end patch loop
+//  const Level* level = getLevel(patches);
+//
+//#ifdef USE_TIMER
+//    // No carry forward just reset the time to zero.
+//    PerPatch< double > ppTimer = 0;
+//
+//    for (int p=0; p<patches->size(); ++p) {
+//      const Patch* patch = patches->get(p);
+//      new_dw->put( ppTimer, d_PPTimerLabel, d_matl, patch);
+//    }
+//#endif
+//
+//  DataWarehouse* abskg_dw    = new_dw->getOtherDataWarehouse(which_abskg_dw);
+//  DataWarehouse* sigmaT4_dw  = new_dw->getOtherDataWarehouse(which_sigmaT4_dw);
+//  DataWarehouse* celltype_dw = new_dw->getOtherDataWarehouse(which_celltype_dw);
+//
+//  //It seems these variables need to stay in scope for the entire run, otherwise something inside Uintah
+//  //apparently deallocates them mid-run.
+//  constCCVariable< T > sigmaT4OverPi;
+//  constCCVariable< T > abskg;
+//  constCCVariable<int> celltype;
+//
+//  //For portability, everything should be views.
+//  KokkosView3<const T>   abskg_view;
+//  KokkosView3<const T>   sigmaT4OverPi_view;
+//  KokkosView3<double>    divQ_view;
+//  KokkosView3<double>    radiationVolq_view;
+//  KokkosView3<const int> celltype_view;
+//
+//  if ( ! Parallel::usingDevice() ) {
+//    if ( d_ROI_algo == entireDomain ) {
+//      abskg_dw->getLevel(    abskg,         d_abskgLabel,    d_matl, level );
+//      sigmaT4_dw->getLevel(  sigmaT4OverPi, d_sigmaT4Label,  d_matl, level );
+//      celltype_dw->getLevel( celltype,      d_cellTypeLabel, d_matl, level );
+//    }
+//  }
+//
+//  // patch loop
+//  for (int p=0; p < patches->size(); p++){
+//
+//    Timers::Simple timer;
+//    timer.start();
+//
+//    const Patch* patch = patches->get(p);
+//    printTask(patches,patch,g_ray_dbg,"Doing Ray::rayTrace");
+//
+//    //Get the variables from a Data Warehouse
+//    //See if its CPU or GPU execution, if so, get the right variables from the right data warehouse.
+//    if ( ! Parallel::usingDevice() ) {
+//
+//      CCVariable<double>   divQ;
+//      CCVariable<Stencil7> boundFlux;
+//      CCVariable<double>   radiationVolq;
+//
+//      if ( modifies_divQ ) {
+//        new_dw->getModifiable( divQ,         d_divQLabel,          d_matl, patch );
+//        new_dw->getModifiable( boundFlux,    d_boundFluxLabel,     d_matl, patch );
+//        new_dw->getModifiable( radiationVolq,d_radiationVolqLabel, d_matl, patch );
+//      }
+//      else {
+//        new_dw->allocateAndPut( divQ,         d_divQLabel,          d_matl, patch );
+//        new_dw->allocateAndPut( boundFlux,    d_boundFluxLabel,     d_matl, patch );
+//        new_dw->allocateAndPut( radiationVolq,d_radiationVolqLabel, d_matl, patch );
+//        divQ.initialize( 0.0 );
+//        radiationVolq.initialize( 0.0 );
+//
+//        for ( CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++ ) {
+//          IntVector c = *iter;
+//          boundFlux[c].initialize(0.0);
+//        }
+//      }
+//
+//      IntVector ROI_Lo = IntVector(-SHRT_MAX,-SHRT_MAX,-SHRT_MAX );
+//      IntVector ROI_Hi = IntVector( SHRT_MAX, SHRT_MAX, SHRT_MAX );
+//
+//      //__________________________________
+//      //  If ray length distance is used
+//      if ( d_ROI_algo == boundedRayLength ) {
+//
+//        patch->computeVariableExtentsWithBoundaryCheck(CCVariable<double>::getTypeDescription()->getType(), IntVector(0,0,0),
+//                                                       Ghost::AroundCells, d_haloCells.x(), ROI_Lo, ROI_Hi);
+//        DOUT(g_ray_dbg, "  ROI: " << ROI_Lo << " "<< ROI_Hi );
+//        abskg_dw->getRegion(   abskg,          d_abskgLabel ,   d_matl, level, ROI_Lo, ROI_Hi );
+//        sigmaT4_dw->getRegion( sigmaT4OverPi,  d_sigmaT4Label,  d_matl, level, ROI_Lo, ROI_Hi );
+//        celltype_dw->getRegion( celltype,      d_cellTypeLabel, d_matl, level, ROI_Lo, ROI_Hi );
+//      }
+//
+//      // Get the views for portability.
+//      abskg_view         = abskg.getKokkosView();
+//      sigmaT4OverPi_view = sigmaT4OverPi.getKokkosView();
+//      celltype_view      = celltype.getKokkosView();
+//      divQ_view          = divQ.getKokkosView();
+//      radiationVolq_view = radiationVolq.getKokkosView();
+//
+//      //__________________________________
+//      //  BULLETPROOFING
+//      //if ( level->isNonCubic() ){
+//      if( false) {
+//
+//        IntVector l = abskg.getLowIndex();
+//        IntVector h = abskg.getHighIndex();
+//
+//        CellIterator iterLim = CellIterator(l, h);
+//        for(CellIterator iter = iterLim; !iter.done();iter++) {
+//          IntVector c = *iter;
+//
+//          if ( std::isinf( abskg[c] )         || std::isnan( abskg[c] )  ||
+//               std::isinf( sigmaT4OverPi[c] ) || std::isnan( sigmaT4OverPi[c] ) ){
+//            std::ostringstream warn;
+//            warn<< "ERROR:Ray::rayTrace   abskg or sigmaT4 is non-physical \n"
+//                << "     c:   " << c << " location: " << level->getCellPosition(c) << "\n"
+//                << "     ROI: " << ROI_Lo << " "<< ROI_Hi << "\n"
+//                << "          " << *patch << "\n"
+//                << " ( abskg[c]: " << abskg[c] << ", sigmaT4OverPi[c]: " << sigmaT4OverPi[c] << ")\n";
+//
+//            cout << warn.str() << endl;
+//            throw InternalError( warn.str(), __FILE__, __LINE__ );
+//          }
+//        }
+//      }
+//    } else {  //if ( Parallel::usingDevice() )
+//#if defined(HAVE_CUDA)
+//      GPUDataWarehouse* abskg_gdw    = nullptr;
+//      GPUDataWarehouse* sigmaT4_gdw  = nullptr;
+//      GPUDataWarehouse* celltype_gdw = nullptr;
+//
+//      if ( which_abskg_dw == Task::OldDW ) {
+//        abskg_gdw = static_cast<GPUDataWarehouse*>(old_dw->getGPUDW());
+//      } else {
+//        abskg_gdw = static_cast<GPUDataWarehouse*>(new_dw->getGPUDW());
+//      }
+//      if ( which_sigmaT4_dw == Task::OldDW ) {
+//        sigmaT4_gdw = static_cast<GPUDataWarehouse*>(old_dw->getGPUDW());
+//      } else {
+//        sigmaT4_gdw = static_cast<GPUDataWarehouse*>(new_dw->getGPUDW());
+//      }
+//      if ( which_celltype_dw == Task::OldDW ) {
+//        celltype_gdw = static_cast<GPUDataWarehouse*>(old_dw->getGPUDW());
+//      } else {
+//        celltype_gdw = static_cast<GPUDataWarehouse*>(new_dw->getGPUDW());
+//      }
+//
+//      abskg_view         = abskg_gdw->getKokkosView<const T>(         d_abskgLabel->getName().c_str(),         patch->getID(), d_matl, 0);
+//      sigmaT4OverPi_view = sigmaT4_gdw->getKokkosView<const T>(       d_sigmaT4Label->getName().c_str(),       patch->getID(), d_matl, 0);
+//      celltype_view      = celltype_gdw->getKokkosView<const int>(    d_cellTypeLabel->getName().c_str(),      patch->getID(), d_matl, 0);
+//      divQ_view          = new_dw->getGPUDW()->getKokkosView<double>( d_divQLabel->getName().c_str(),          patch->getID(), d_matl, 0);
+//      radiationVolq_view = new_dw->getGPUDW()->getKokkosView<double>( d_radiationVolqLabel->getName().c_str(), patch->getID(), d_matl, 0);
+//#endif
+//    }
+//
+//    unsigned long int size = 0;                   // current size of PathIndex
+//    Vector Dx = patch->dCell();                   // cell spacing
+//
+//    //______________________________________________________________________
+//    //         R A D I O M E T E R
+//    //______________________________________________________________________
+//
+//// TODO: Kokkos-ify the radiometer
+//
+//    //______________________________________________________________________
+//    //         B O U N D A R Y F L U X
+//    //______________________________________________________________________
+//
+//// TODO: Kokkos-ify the boundary flux calculation
+//
+//    //______________________________________________________________________
+//    //         S O L V E   D I V Q
+//    //______________________________________________________________________
+//
+//    if ( d_solveDivQ ) {
+//
+//      bool latinHyperCube = ( d_rayDirSampleAlgo == LATIN_HYPER_CUBE ) ? true : false;
+//      LevelParams levelParams_pod;
+//      levelParams_pod.Dx[0] = Dx.x(); levelParams_pod.Dx[1] = Dx.y(); levelParams_pod.Dx[2] = Dx.z();
+//      levelParams_pod.anchor[0] = level->getAnchor().x(); levelParams_pod.anchor[1] = level->getAnchor().y(); levelParams_pod.anchor[2] = level->getAnchor().z();
+//
+//      IntVector lo = patch->getCellLowIndex();
+//      IntVector hi = patch->getCellHighIndex();
+//
+//      RMCRT_flags RT_flags;
+//      RT_flags.finePatchLow.x = lo.x();
+//      RT_flags.finePatchLow.y = lo.y();
+//      RT_flags.finePatchLow.z = lo.z();
+//      RT_flags.finePatchSize.x = hi.x()-lo.x();
+//      RT_flags.finePatchSize.y = hi.y()-lo.y();
+//      RT_flags.finePatchSize.z = hi.z()-lo.z();
+//      const unsigned int numCells = RT_flags.finePatchSize.x *
+//                                    RT_flags.finePatchSize.y *
+//                                    RT_flags.finePatchSize.z;
+//      RT_flags.startCell = 0;
+//      RT_flags.endCell = numCells;
+//
+//      Uintah::BlockRange range;
+//#ifdef HAVE_CUDA
+//      int numKernels = dtask->getTask()->maxStreamsPerTask();
+//      IntVector hiRange(256,0,0);
+//      // Split up a functor into four loops.  Gets better GPU occupancy this way.
+//      for (int i = 0; i < numKernels; i++) {
+//
+//        RT_flags.startCell = (i/static_cast<double>(numKernels)) * numCells;
+//        RT_flags.endCell = ((i+1)/static_cast<double>(numKernels)) * numCells;
+//        RT_flags.cellsPerGroup = hiRange.x();
+//        range.setValues((cudaStream_t*)dtask->getCudaStreamForThisTask(i), IntVector(0,0,0), IntVector(RT_flags.cellsPerGroup,0,0) );
+//        rayTrace_solveDivQFunctor< T, Kokkos::Random_XorShift1024_Pool<Kokkos::Cuda>   >
+//#else
+//      {
+//        IntVector hiRange(8,0,0);
+//        range.setValues( IntVector(0,0,0), hiRange );
+//        RT_flags.startCell = 0;
+//        RT_flags.endCell = numCells;
+//        RT_flags.cellsPerGroup = hiRange.x();
+//        rayTrace_solveDivQFunctor< T, Kokkos::Random_XorShift1024_Pool<Kokkos::OpenMP> >
+//#endif
+//           functor( levelParams_pod
+//                  , RT_flags
+//                  , latinHyperCube
+//                  , d_nDivQRays
+//                  , d_CCRays
+//                  , d_sigmaScat
+//                  , d_threshold
+//                  , d_maxRayLength
+//                  , abskg_view
+//                  , sigmaT4OverPi_view
+//                  , celltype_view
+//                  , d_allowReflect
+//                  , divQ_view
+//                  , radiationVolq_view );
+//
+//        // This parallel_reduce replaces the cellIterator loop used to solve DivQ
+//        //Uintah::parallel_reduce_sum( range, functor, size );
+//        Uintah::parallel_reduce_1D( range, functor, size );
+//      }
+//
+//    }  // end of if(_solveDivQ)
+//
+//    //__________________________________
+//    //
+//    timer.stop();
+//
+//    if (patch->getGridIndex() == 0) {
+//      cout << endl
+//           << " RMCRT REPORT: Patch 0" << endl
+//           << " Used " << timer().milliseconds()
+//           << " milliseconds of CPU time. \n" << endl // Convert time to ms
+//           << " Size: " << size << endl
+//           << " Efficiency: " << size / timer().seconds()
+//           << " steps per sec" << endl
+//           << endl;
+//    }
+//
+//#ifdef USE_TIMER
+//    PerPatch< double > ppTimer = timer().seconds();
+//    new_dw->put( ppTimer, d_PPTimerLabel, d_matl, patch);
+//#endif
+//  }  //end patch loop
 }  // end ray trace method
 
 
@@ -2225,392 +2225,392 @@ Ray::rayTrace_dataOnion( DetailedTask* dtask,
                          Task::WhichDW which_celltype_dw )
 {
 
-  const Level* fineLevel = getLevel(finePatches);
-  int maxLevels    = fineLevel->getGrid()->numLevels();
-  int levelPatchID = fineLevel->getPatch(0)->getID();
-  LevelP level_0 = new_dw->getGrid()->getLevel(0);
-
-#ifdef USE_TIMER 
-    // No carry forward just reset the time to zero.
-    PerPatch< double > ppTimer = 0;    
-
-    for (int p=0; p<finePatches->size(); ++p) {
-      const Patch* finePatch = finePatches->get(p);
-      new_dw->put( ppTimer, d_PPTimerLabel, d_matl, finePatch );
-    }
-#endif
-
-
-  //__________________________________
-  //
-  // Declare these simulation vars here so they stay in scope for the OnDemandDataWarehouse
-  // Note that even though boundFlux isn't used here, we still have to allocate it so
-  // an upcoming carry forward task doesn't break
-  std::vector< constCCVariable< T > > abskg(maxLevels);
-  std::vector< constCCVariable< T > > sigmaT4OverPi(maxLevels);
-  std::vector< constCCVariable<int> > cellType(maxLevels);
-  std::vector< constCCVariable<double> > abskgSigmaT4CellType(maxLevels);
-  CCVariable<double>   divQ_fine;
-  CCVariable<Stencil7> boundFlux_fine;
-  CCVariable<double>   radiationVolq_fine;
-
-  // The upcoming Kokkos views
-  //KokkosView3<const T>   abskg_view[maxLevels];
-  //KokkosView3<const T>   sigmaT4OverPi_view[maxLevels];
-  //KokkosView3<const int> cellType_view[maxLevels];
-  KokkosView3<const double> abskgSigmaT4CellType_view[maxLevels];
-  KokkosView3<double> divQ_fine_view;
-  KokkosView3<double> radiationVolq_fine_view;
-
-  //DataWarehouse* sigmaT4_dw  = new_dw->getOtherDataWarehouse(which_sigmaT4_dw);
-  //DataWarehouse* celltype_dw = new_dw->getOtherDataWarehouse(which_celltype_dw);
-  DataWarehouse* abskg_dw = get_abskg_dw(maxLevels - 1, d_abskgLabel, new_dw);
-
-  // Determine the size of the domain.
-  BBox domain_BB;
-  level_0->getInteriorSpatialRange(domain_BB);                 // edge of computational domain
-  double domain_BB_Lo[3] = { domain_BB.min().x(), domain_BB.min().y(), domain_BB.min().z() };
-  double domain_BB_Hi[3] = { domain_BB.max().x(), domain_BB.max().y(), domain_BB.max().z() };
-
-  //  patch loop
-  for (int p = 0; p < finePatches->size(); p++) {
-
-    Timers::Simple timer;
-    timer.start();
-
-    const Patch* patch = finePatches->get(p);
-    const Patch* finePatch = finePatches->get(p);
-    printTask(finePatches, finePatch,g_ray_dbg,"Doing Ray::rayTrace_dataOnion");
-
-    int fine_L = maxLevels - 1;
-
-    //Load levelParamsML
-    LevelParamsML levelParamsML[maxLevels];
-    IntVector fineLevel_ROI_Lo = IntVector( -9,-9,-9 );
-    IntVector fineLevel_ROI_Hi = IntVector( -9,-9,-9 );
-    vector<IntVector> regionLo( maxLevels );
-    vector<IntVector> regionHi( maxLevels );
-
-    int fineLevel_ROI_Lo_pod[3] = { -9,-9,-9 };
-    int fineLevel_ROI_Hi_pod[3] = { -9,-9,-9 };
-    if ( d_ROI_algo == fixed || d_ROI_algo == dynamic ) {
-      const Patch* notUsed = 0;
-      computeExtents(level_0, fineLevel, notUsed, maxLevels, new_dw,
-                     fineLevel_ROI_Lo, fineLevel_ROI_Hi, regionLo,  regionHi);
-    } else if ( d_ROI_algo == patch_based ) {
-      computeExtents(level_0, fineLevel, finePatch, maxLevels, new_dw,
-                     fineLevel_ROI_Lo, fineLevel_ROI_Hi, regionLo,  regionHi);
-    }
-    for ( int L = 0; L < maxLevels; L++ ) {
-      LevelP level = new_dw->getGrid()->getLevel(L);
-      levelParamsML[L].Dx[0] = level->dCell().x();
-      levelParamsML[L].Dx[1] = level->dCell().y();
-      levelParamsML[L].Dx[2] = level->dCell().z();
-      levelParamsML[L].anchor[0] = level->getAnchor().x();
-      levelParamsML[L].anchor[1] = level->getAnchor().y();
-      levelParamsML[L].anchor[2] = level->getAnchor().z();
-      levelParamsML[L].refinementRatio[0] = level->getRefinementRatio().x();
-      levelParamsML[L].refinementRatio[1] = level->getRefinementRatio().y();
-      levelParamsML[L].refinementRatio[2] = level->getRefinementRatio().z();
-      levelParamsML[L].regionLo[0] = regionLo[L][0];
-      levelParamsML[L].regionLo[1] = regionLo[L][1];
-      levelParamsML[L].regionLo[2] = regionLo[L][2];
-      levelParamsML[L].regionHi[0] = regionHi[L][0];
-      levelParamsML[L].regionHi[1] = regionHi[L][1];
-      levelParamsML[L].regionHi[2] = regionHi[L][2];
-    }
-    fineLevel_ROI_Lo_pod[0] = fineLevel_ROI_Lo.x();
-    fineLevel_ROI_Lo_pod[1] = fineLevel_ROI_Lo.y();
-    fineLevel_ROI_Lo_pod[2] = fineLevel_ROI_Lo.z();
-    fineLevel_ROI_Hi_pod[0] = fineLevel_ROI_Hi.x();
-    fineLevel_ROI_Hi_pod[1] = fineLevel_ROI_Hi.y();
-    fineLevel_ROI_Hi_pod[2] = fineLevel_ROI_Hi.z();
-
-    //Get the variables from a Data Warehouse
-    //See if its CPU or GPU execution, if so, get the right variables from the right data warehouse.
-    if ( ! Parallel::usingDevice() ) {
-
-      //Get the const variables
-      for(int L = 0; L<maxLevels; L++) {
-        LevelP level = new_dw->getGrid()->getLevel(L);
-        if (level->hasFinerLevel() ) {                               // coarse level data
-          DataWarehouse* abskg_dw = get_abskg_dw(L, d_abskgLabel, new_dw);
-          if(level->hasCoarserLevel()){
-            // TODO: Not portable!
-            //abskg_dw->getRegion(   abskg[L]   ,       d_abskgLabel   , d_matl , level.get_rep(), regionLo[L], regionHi[L]);
-            //sigmaT4_dw->getRegion( sigmaT4OverPi[L] , d_sigmaT4Label , d_matl , level.get_rep(), regionLo[L], regionHi[L]);
-            //celltype_dw->getRegion( cellType[L] ,     d_cellTypeLabel, d_matl , level.get_rep(), regionLo[L], regionHi[L]);
-            new_dw->getRegion( abskgSigmaT4CellType[L] , d_abskgSigmaT4CellTypeLabel , d_matl , level.get_rep(), regionLo[L], regionHi[L]);
-          } else{
-            //abskg_dw->getLevel(   abskg[L]   ,       d_abskgLabel ,   d_matl , level.get_rep() );
-            //sigmaT4_dw->getLevel( sigmaT4OverPi[L] , d_sigmaT4Label,  d_matl , level.get_rep() );
-            //celltype_dw->getLevel( cellType[L] ,     d_cellTypeLabel, d_matl , level.get_rep() );
-            new_dw->getLevel( abskgSigmaT4CellType[L] , d_abskgSigmaT4CellTypeLabel , d_matl , level.get_rep() );
-            DOUT( g_ray_dbg, "    RT DataOnion: getting coarse level data L-" << L );
-          }
-        }
-      }
-
-      DOUT( g_ray_dbg, "    RT DataOnion:  getting fine level data across L-" << fine_L << " " << fineLevel_ROI_Lo << " " << fineLevel_ROI_Hi );
-      //abskg_dw->getRegion(    abskg[fine_L],         d_abskgLabel ,   d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
-      //sigmaT4_dw->getRegion(  sigmaT4OverPi[fine_L], d_sigmaT4Label,  d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
-      //celltype_dw->getRegion( cellType[fine_L],      d_cellTypeLabel, d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
-      new_dw->getRegion(   abskgSigmaT4CellType[fine_L] , d_abskgSigmaT4CellTypeLabel   , d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
-
-      //Get the computable variables on the fine level
-      if( modifies_divQ ){
-        old_dw->getModifiable( divQ_fine,          d_divQLabel,          d_matl, finePatch );
-        new_dw->getModifiable( boundFlux_fine,     d_boundFluxLabel,     d_matl, finePatch );
-        old_dw->getModifiable( radiationVolq_fine, d_radiationVolqLabel, d_matl, finePatch );
-      }else{
-        new_dw->allocateAndPut( divQ_fine,          d_divQLabel,          d_matl, finePatch );
-        new_dw->allocateAndPut( boundFlux_fine,     d_boundFluxLabel,     d_matl, finePatch );
-        new_dw->allocateAndPut( radiationVolq_fine, d_radiationVolqLabel, d_matl, finePatch );
-        divQ_fine.initialize( 0.0 );
-        radiationVolq_fine.initialize( 0.0 );
-        for (CellIterator iter = finePatch->getExtraCellIterator(); !iter.done(); iter++){
-          IntVector c = *iter;
-          boundFlux_fine[c].initialize(0.0);
-        }
-      }
-      
-      //Get the Kokkos Views from the simulation variables
-      for ( int L = 0; L < maxLevels; L++ ) {
-        //abskg_view[L]         = abskg[L].getKokkosView();
-        //sigmaT4OverPi_view[L] = sigmaT4OverPi[L].getKokkosView();
-        //cellType_view[L]      = cellType[L].getKokkosView();
-        abskgSigmaT4CellType_view[L] = abskgSigmaT4CellType[L].getKokkosView();
-      }
-      divQ_fine_view          = divQ_fine.getKokkosView();
-      radiationVolq_fine_view = radiationVolq_fine.getKokkosView();
-
-    } else {  //if ( Parallel::usingDevice() )
-#if defined(HAVE_CUDA)
-      GPUDataWarehouse* abskg_gdw    = static_cast<GPUDataWarehouse*>(abskg_dw->getGPUDW());
-      GPUDataWarehouse* sigmaT4_gdw  = static_cast<GPUDataWarehouse*>(sigmaT4_dw->getGPUDW());
-      GPUDataWarehouse* celltype_gdw = static_cast<GPUDataWarehouse*>(celltype_dw->getGPUDW());
-
-      //Get the Kokkos Views from the simulation variables
-      const Level* curLevel = fineLevel;
-      const Patch* curPatch = patch;
-      for ( int L = maxLevels - 1; L >= 0; L-- ) {
-        // Get vars on this level
-        abskg_view[L]         = abskg_gdw->getKokkosView<const T>(         d_abskgLabel->getName().c_str(),         curPatch->getID(), d_matl, L);
-        sigmaT4OverPi_view[L] = sigmaT4_gdw->getKokkosView<const T>(       d_sigmaT4Label->getName().c_str(),       curPatch->getID(), d_matl, L);
-        cellType_view[L]      = celltype_gdw->getKokkosView<const int>(    d_cellTypeLabel->getName().c_str(),      curPatch->getID(), d_matl, L);
-        // Go down a coarser level, if possible
-        if (curLevel->hasCoarserLevel()) {
-          //Get the patchID of the patch down a coarser level.
-          IntVector fineLow, fineHigh;
-          IntVector coarseLow = curLevel->mapCellToCoarser(curPatch->getCellLowIndex());
-          IntVector coarseHigh = curLevel->mapCellToCoarser(curPatch->getCellHighIndex());
-          Patch::selectType coarserPatches;
-          curLevel = curLevel->getCoarserLevel().get_rep();
-          curLevel->selectPatches(coarseLow, coarseHigh, coarserPatches);
-          curPatch = coarserPatches[0];
-        }
-      }
-      //Get the computational variables on the fine level
-      divQ_fine_view          = new_dw->getGPUDW()->getKokkosView<double>( d_divQLabel->getName().c_str(),          patch->getID(), d_matl, fine_L);
-      radiationVolq_fine_view = new_dw->getGPUDW()->getKokkosView<double>( d_radiationVolqLabel->getName().c_str(), patch->getID(), d_matl, fine_L);
-
-#endif
-    }
-
-    unsigned long int size = 0;                   // current size of PathIndex
-
-    //______________________________________________________________________
-    //         B O U N D A R Y F L U X
-    //______________________________________________________________________
-
-    unsigned long int nFluxRaySteps = 0;
-
-// TODO: Kokkos-ify the boundary flux calculation
-
-    unsigned long int nRaySteps = 0;
-
-    //______________________________________________________________________
-    //         S O L V E   D I V Q
-    //______________________________________________________________________
-
-    if (d_solveDivQ) {
-
-      IntVector lo = patch->getCellLowIndex();
-      IntVector hi = patch->getCellHighIndex();
-
-      RMCRT_flags RT_flags;
-      RT_flags.finePatchLow.x = lo.x();
-      RT_flags.finePatchLow.y = lo.y();
-      RT_flags.finePatchLow.z = lo.z();
-      RT_flags.finePatchSize.x = hi.x()-lo.x();
-      RT_flags.finePatchSize.y = hi.y()-lo.y();
-      RT_flags.finePatchSize.z = hi.z()-lo.z();
-      const unsigned int numCells = RT_flags.finePatchSize.x *
-                                    RT_flags.finePatchSize.y *
-                                    RT_flags.finePatchSize.z;
-      RT_flags.startCell = 0;
-      RT_flags.endCell = numCells;
-
-      Uintah::BlockRange range;
-
-#ifdef HAVE_CUDA
-      int numKernels = dtask->getTask()->maxStreamsPerTask();
-      IntVector hiRange(256,0,0);
-      // Split up a functor into four loops.  Gets better GPU occupancy this way.
-      for (int i = 0; i < numKernels; i++) {
-
-        RT_flags.startCell = (i/static_cast<double>(numKernels)) * numCells;
-        RT_flags.endCell = ((i+1)/static_cast<double>(numKernels)) * numCells;
-        RT_flags.cellsPerGroup = hiRange.x();
-        range.setValues((cudaStream_t*)dtask->getCudaStreamForThisTask(i), IntVector(0,0,0), IntVector(RT_flags.cellsPerGroup,0,0) );
-        if (maxLevels > 2) {
-          std::cout << "Too many levels requested.  Edit the code file to supply more possible levels" << std::endl;
-          exit(-1);
-        }
-        rayTrace_dataOnion_solveDivQFunctor< T, Kokkos::Random_XorShift1024_Pool<Kokkos::Cuda  >, 2 >
-        functor( levelParamsML, RT_flags, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, sigmaT4OverPi_view, abskg_view
-                 , cellType_view , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays);
-
-      // This parallel_reduce replaces the cellIterator loop used to solve DivQ
-        Uintah::parallel_reduce_1D( range, functor, size );
-#else
-      {
-        IntVector hiRange(256,0,0);
-        range.setValues( IntVector(0,0,0), hiRange );
-        RT_flags.startCell = 0;
-        RT_flags.endCell = numCells;
-        RT_flags.cellsPerGroup = hiRange.x();
-
-        //
-        if (maxLevels==2){
-          DO_raytrace<T,2>
-          functor( levelParamsML, RT_flags, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view 
-                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays
-#ifdef USE_SLIM
-,Max(d_haloCells[0],d_haloCells[1],d_haloCells[2])
-#endif
-);
-          Uintah::parallel_reduce_1D( range, functor, size );
-        } else if (maxLevels==3){
-          DO_raytrace<T,3>
-          functor( levelParamsML, RT_flags, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view 
-                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays
-#ifdef USE_SLIM
-,Max(d_haloCells[0],d_haloCells[1],d_haloCells[2])
-#endif
-);
-          Uintah::parallel_reduce_1D( range, functor, size );
-        } else if (maxLevels==4){
-          DO_raytrace<T,4>
-          functor( levelParamsML, RT_flags, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view 
-                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays
-#ifdef USE_SLIM
-,Max(d_haloCells[0],d_haloCells[1],d_haloCells[2])
-#endif
-);
-          Uintah::parallel_reduce_1D( range, functor, size );
-        } else if (maxLevels==5){
-          DO_raytrace<T,5>
-          functor( levelParamsML, RT_flags, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view 
-                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays
-#ifdef USE_SLIM
-,Max(d_haloCells[0],d_haloCells[1],d_haloCells[2])
-#endif
-);
-          Uintah::parallel_reduce_1D( range, functor, size );
-        } else if (maxLevels==6){
-          DO_raytrace<T,6>
-          functor( levelParamsML, RT_flags, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view 
-                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays
-#ifdef USE_SLIM
-,Max(d_haloCells[0],d_haloCells[1],d_haloCells[2])
-#endif
-);
-          Uintah::parallel_reduce_1D( range, functor, size );
-        } else if (maxLevels==7){
-          DO_raytrace<T,7>
-          functor( levelParamsML, RT_flags, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view 
-                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays
-#ifdef USE_SLIM
-,Max(d_haloCells[0],d_haloCells[1],d_haloCells[2])
-#endif
-);
-          Uintah::parallel_reduce_1D( range, functor, size );
-        } else if (maxLevels==8){
-          DO_raytrace<T,8>
-          functor( levelParamsML, RT_flags, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view 
-                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays
-#ifdef USE_SLIM
-,Max(d_haloCells[0],d_haloCells[1],d_haloCells[2])
-#endif
-);
-          Uintah::parallel_reduce_1D( range, functor, size );
-        } else if (maxLevels==9){
-          DO_raytrace<T,9>
-          functor( levelParamsML, RT_flags, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view 
-                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays
-#ifdef USE_SLIM
-,Max(d_haloCells[0],d_haloCells[1],d_haloCells[2])
-#endif
-);
-          Uintah::parallel_reduce_1D( range, functor, size );
-        } else if (maxLevels==10){
-          DO_raytrace<T,10>
-          functor( levelParamsML, RT_flags, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view 
-                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays
-#ifdef USE_SLIM
-,Max(d_haloCells[0],d_haloCells[1],d_haloCells[2])
-#endif
-);
-          Uintah::parallel_reduce_1D( range, functor, size );
-        } else if (maxLevels==11){
-          DO_raytrace<T,11>
-          functor( levelParamsML, RT_flags, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view 
-                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays
-#ifdef USE_SLIM
-,Max(d_haloCells[0],d_haloCells[1],d_haloCells[2])
-#endif
-);
-          Uintah::parallel_reduce_1D( range, functor, size );
-        } else if (maxLevels==12){
-          DO_raytrace<T,12>
-          functor( levelParamsML, RT_flags, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view 
-                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays
-#ifdef USE_SLIM
-,Max(d_haloCells[0],d_haloCells[1],d_haloCells[2])
-#endif
-);
-          //Uintah::parallel_reduce_sum( range, functor, nRaySteps );
-          Uintah::parallel_reduce_1D( range, functor, nRaySteps );
-        } else {
-          std::cout << "Too many levels requested.  Edit the code file to supply more possible levels" << std::endl;
-          exit(-1);
-        }
-#endif
-      }
-    }  // end of if(_solveDivQ)
-
-    //__________________________________
-    //
-    timer.stop();
-
-    if (finePatch->getGridIndex() == levelPatchID) {
-      cout << endl
-           << " RMCRT REPORT: Patch " << levelPatchID << endl
-           << " Used "<< timer().milliseconds()
-           << " milliseconds of CPU time. \n" << endl // Convert time to ms
-           << " nRaySteps: " << nRaySteps
-           << " nFluxRaySteps: " << nFluxRaySteps << endl
-           << " Efficiency: " << nRaySteps / timer().seconds()
-           << " steps per sec" << endl
-           << endl;
-    }
-
-#ifdef USE_TIMER     
-    PerPatch< double > ppTimer = timer().seconds();
-    new_dw->put( ppTimer, d_PPTimerLabel, d_matl, finePatch );
-#endif
-  }  // end finePatch loop
+//  const Level* fineLevel = getLevel(finePatches);
+//  int maxLevels    = fineLevel->getGrid()->numLevels();
+//  int levelPatchID = fineLevel->getPatch(0)->getID();
+//  LevelP level_0 = new_dw->getGrid()->getLevel(0);
+//
+//#ifdef USE_TIMER
+//    // No carry forward just reset the time to zero.
+//    PerPatch< double > ppTimer = 0;
+//
+//    for (int p=0; p<finePatches->size(); ++p) {
+//      const Patch* finePatch = finePatches->get(p);
+//      new_dw->put( ppTimer, d_PPTimerLabel, d_matl, finePatch );
+//    }
+//#endif
+//
+//
+//  //__________________________________
+//  //
+//  // Declare these simulation vars here so they stay in scope for the OnDemandDataWarehouse
+//  // Note that even though boundFlux isn't used here, we still have to allocate it so
+//  // an upcoming carry forward task doesn't break
+//  std::vector< constCCVariable< T > > abskg(maxLevels);
+//  std::vector< constCCVariable< T > > sigmaT4OverPi(maxLevels);
+//  std::vector< constCCVariable<int> > cellType(maxLevels);
+//  std::vector< constCCVariable<double> > abskgSigmaT4CellType(maxLevels);
+//  CCVariable<double>   divQ_fine;
+//  CCVariable<Stencil7> boundFlux_fine;
+//  CCVariable<double>   radiationVolq_fine;
+//
+//  // The upcoming Kokkos views
+//  //KokkosView3<const T>   abskg_view[maxLevels];
+//  //KokkosView3<const T>   sigmaT4OverPi_view[maxLevels];
+//  //KokkosView3<const int> cellType_view[maxLevels];
+//  KokkosView3<const double> abskgSigmaT4CellType_view[maxLevels];
+//  KokkosView3<double> divQ_fine_view;
+//  KokkosView3<double> radiationVolq_fine_view;
+//
+//  //DataWarehouse* sigmaT4_dw  = new_dw->getOtherDataWarehouse(which_sigmaT4_dw);
+//  //DataWarehouse* celltype_dw = new_dw->getOtherDataWarehouse(which_celltype_dw);
+//  DataWarehouse* abskg_dw = get_abskg_dw(maxLevels - 1, d_abskgLabel, new_dw);
+//
+//  // Determine the size of the domain.
+//  BBox domain_BB;
+//  level_0->getInteriorSpatialRange(domain_BB);                 // edge of computational domain
+//  double domain_BB_Lo[3] = { domain_BB.min().x(), domain_BB.min().y(), domain_BB.min().z() };
+//  double domain_BB_Hi[3] = { domain_BB.max().x(), domain_BB.max().y(), domain_BB.max().z() };
+//
+//  //  patch loop
+//  for (int p = 0; p < finePatches->size(); p++) {
+//
+//    Timers::Simple timer;
+//    timer.start();
+//
+//    const Patch* patch = finePatches->get(p);
+//    const Patch* finePatch = finePatches->get(p);
+//    printTask(finePatches, finePatch,g_ray_dbg,"Doing Ray::rayTrace_dataOnion");
+//
+//    int fine_L = maxLevels - 1;
+//
+//    //Load levelParamsML
+//    LevelParamsML levelParamsML[maxLevels];
+//    IntVector fineLevel_ROI_Lo = IntVector( -9,-9,-9 );
+//    IntVector fineLevel_ROI_Hi = IntVector( -9,-9,-9 );
+//    vector<IntVector> regionLo( maxLevels );
+//    vector<IntVector> regionHi( maxLevels );
+//
+//    int fineLevel_ROI_Lo_pod[3] = { -9,-9,-9 };
+//    int fineLevel_ROI_Hi_pod[3] = { -9,-9,-9 };
+//    if ( d_ROI_algo == fixed || d_ROI_algo == dynamic ) {
+//      const Patch* notUsed = 0;
+//      computeExtents(level_0, fineLevel, notUsed, maxLevels, new_dw,
+//                     fineLevel_ROI_Lo, fineLevel_ROI_Hi, regionLo,  regionHi);
+//    } else if ( d_ROI_algo == patch_based ) {
+//      computeExtents(level_0, fineLevel, finePatch, maxLevels, new_dw,
+//                     fineLevel_ROI_Lo, fineLevel_ROI_Hi, regionLo,  regionHi);
+//    }
+//    for ( int L = 0; L < maxLevels; L++ ) {
+//      LevelP level = new_dw->getGrid()->getLevel(L);
+//      levelParamsML[L].Dx[0] = level->dCell().x();
+//      levelParamsML[L].Dx[1] = level->dCell().y();
+//      levelParamsML[L].Dx[2] = level->dCell().z();
+//      levelParamsML[L].anchor[0] = level->getAnchor().x();
+//      levelParamsML[L].anchor[1] = level->getAnchor().y();
+//      levelParamsML[L].anchor[2] = level->getAnchor().z();
+//      levelParamsML[L].refinementRatio[0] = level->getRefinementRatio().x();
+//      levelParamsML[L].refinementRatio[1] = level->getRefinementRatio().y();
+//      levelParamsML[L].refinementRatio[2] = level->getRefinementRatio().z();
+//      levelParamsML[L].regionLo[0] = regionLo[L][0];
+//      levelParamsML[L].regionLo[1] = regionLo[L][1];
+//      levelParamsML[L].regionLo[2] = regionLo[L][2];
+//      levelParamsML[L].regionHi[0] = regionHi[L][0];
+//      levelParamsML[L].regionHi[1] = regionHi[L][1];
+//      levelParamsML[L].regionHi[2] = regionHi[L][2];
+//    }
+//    fineLevel_ROI_Lo_pod[0] = fineLevel_ROI_Lo.x();
+//    fineLevel_ROI_Lo_pod[1] = fineLevel_ROI_Lo.y();
+//    fineLevel_ROI_Lo_pod[2] = fineLevel_ROI_Lo.z();
+//    fineLevel_ROI_Hi_pod[0] = fineLevel_ROI_Hi.x();
+//    fineLevel_ROI_Hi_pod[1] = fineLevel_ROI_Hi.y();
+//    fineLevel_ROI_Hi_pod[2] = fineLevel_ROI_Hi.z();
+//
+//    //Get the variables from a Data Warehouse
+//    //See if its CPU or GPU execution, if so, get the right variables from the right data warehouse.
+//    if ( ! Parallel::usingDevice() ) {
+//
+//      //Get the const variables
+//      for(int L = 0; L<maxLevels; L++) {
+//        LevelP level = new_dw->getGrid()->getLevel(L);
+//        if (level->hasFinerLevel() ) {                               // coarse level data
+//          DataWarehouse* abskg_dw = get_abskg_dw(L, d_abskgLabel, new_dw);
+//          if(level->hasCoarserLevel()){
+//            // TODO: Not portable!
+//            //abskg_dw->getRegion(   abskg[L]   ,       d_abskgLabel   , d_matl , level.get_rep(), regionLo[L], regionHi[L]);
+//            //sigmaT4_dw->getRegion( sigmaT4OverPi[L] , d_sigmaT4Label , d_matl , level.get_rep(), regionLo[L], regionHi[L]);
+//            //celltype_dw->getRegion( cellType[L] ,     d_cellTypeLabel, d_matl , level.get_rep(), regionLo[L], regionHi[L]);
+//            new_dw->getRegion( abskgSigmaT4CellType[L] , d_abskgSigmaT4CellTypeLabel , d_matl , level.get_rep(), regionLo[L], regionHi[L]);
+//          } else{
+//            //abskg_dw->getLevel(   abskg[L]   ,       d_abskgLabel ,   d_matl , level.get_rep() );
+//            //sigmaT4_dw->getLevel( sigmaT4OverPi[L] , d_sigmaT4Label,  d_matl , level.get_rep() );
+//            //celltype_dw->getLevel( cellType[L] ,     d_cellTypeLabel, d_matl , level.get_rep() );
+//            new_dw->getLevel( abskgSigmaT4CellType[L] , d_abskgSigmaT4CellTypeLabel , d_matl , level.get_rep() );
+//            DOUT( g_ray_dbg, "    RT DataOnion: getting coarse level data L-" << L );
+//          }
+//        }
+//      }
+//
+//      DOUT( g_ray_dbg, "    RT DataOnion:  getting fine level data across L-" << fine_L << " " << fineLevel_ROI_Lo << " " << fineLevel_ROI_Hi );
+//      //abskg_dw->getRegion(    abskg[fine_L],         d_abskgLabel ,   d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
+//      //sigmaT4_dw->getRegion(  sigmaT4OverPi[fine_L], d_sigmaT4Label,  d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
+//      //celltype_dw->getRegion( cellType[fine_L],      d_cellTypeLabel, d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
+//      new_dw->getRegion(   abskgSigmaT4CellType[fine_L] , d_abskgSigmaT4CellTypeLabel   , d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
+//
+//      //Get the computable variables on the fine level
+//      if( modifies_divQ ){
+//        old_dw->getModifiable( divQ_fine,          d_divQLabel,          d_matl, finePatch );
+//        new_dw->getModifiable( boundFlux_fine,     d_boundFluxLabel,     d_matl, finePatch );
+//        old_dw->getModifiable( radiationVolq_fine, d_radiationVolqLabel, d_matl, finePatch );
+//      }else{
+//        new_dw->allocateAndPut( divQ_fine,          d_divQLabel,          d_matl, finePatch );
+//        new_dw->allocateAndPut( boundFlux_fine,     d_boundFluxLabel,     d_matl, finePatch );
+//        new_dw->allocateAndPut( radiationVolq_fine, d_radiationVolqLabel, d_matl, finePatch );
+//        divQ_fine.initialize( 0.0 );
+//        radiationVolq_fine.initialize( 0.0 );
+//        for (CellIterator iter = finePatch->getExtraCellIterator(); !iter.done(); iter++){
+//          IntVector c = *iter;
+//          boundFlux_fine[c].initialize(0.0);
+//        }
+//      }
+//
+//      //Get the Kokkos Views from the simulation variables
+//      for ( int L = 0; L < maxLevels; L++ ) {
+//        //abskg_view[L]         = abskg[L].getKokkosView();
+//        //sigmaT4OverPi_view[L] = sigmaT4OverPi[L].getKokkosView();
+//        //cellType_view[L]      = cellType[L].getKokkosView();
+//        abskgSigmaT4CellType_view[L] = abskgSigmaT4CellType[L].getKokkosView();
+//      }
+//      divQ_fine_view          = divQ_fine.getKokkosView();
+//      radiationVolq_fine_view = radiationVolq_fine.getKokkosView();
+//
+//    } else {  //if ( Parallel::usingDevice() )
+//#if defined(HAVE_CUDA)
+//      GPUDataWarehouse* abskg_gdw    = static_cast<GPUDataWarehouse*>(abskg_dw->getGPUDW());
+//      GPUDataWarehouse* sigmaT4_gdw  = static_cast<GPUDataWarehouse*>(sigmaT4_dw->getGPUDW());
+//      GPUDataWarehouse* celltype_gdw = static_cast<GPUDataWarehouse*>(celltype_dw->getGPUDW());
+//
+//      //Get the Kokkos Views from the simulation variables
+//      const Level* curLevel = fineLevel;
+//      const Patch* curPatch = patch;
+//      for ( int L = maxLevels - 1; L >= 0; L-- ) {
+//        // Get vars on this level
+//        abskg_view[L]         = abskg_gdw->getKokkosView<const T>(         d_abskgLabel->getName().c_str(),         curPatch->getID(), d_matl, L);
+//        sigmaT4OverPi_view[L] = sigmaT4_gdw->getKokkosView<const T>(       d_sigmaT4Label->getName().c_str(),       curPatch->getID(), d_matl, L);
+//        cellType_view[L]      = celltype_gdw->getKokkosView<const int>(    d_cellTypeLabel->getName().c_str(),      curPatch->getID(), d_matl, L);
+//        // Go down a coarser level, if possible
+//        if (curLevel->hasCoarserLevel()) {
+//          //Get the patchID of the patch down a coarser level.
+//          IntVector fineLow, fineHigh;
+//          IntVector coarseLow = curLevel->mapCellToCoarser(curPatch->getCellLowIndex());
+//          IntVector coarseHigh = curLevel->mapCellToCoarser(curPatch->getCellHighIndex());
+//          Patch::selectType coarserPatches;
+//          curLevel = curLevel->getCoarserLevel().get_rep();
+//          curLevel->selectPatches(coarseLow, coarseHigh, coarserPatches);
+//          curPatch = coarserPatches[0];
+//        }
+//      }
+//      //Get the computational variables on the fine level
+//      divQ_fine_view          = new_dw->getGPUDW()->getKokkosView<double>( d_divQLabel->getName().c_str(),          patch->getID(), d_matl, fine_L);
+//      radiationVolq_fine_view = new_dw->getGPUDW()->getKokkosView<double>( d_radiationVolqLabel->getName().c_str(), patch->getID(), d_matl, fine_L);
+//
+//#endif
+//    }
+//
+//    unsigned long int size = 0;                   // current size of PathIndex
+//
+//    //______________________________________________________________________
+//    //         B O U N D A R Y F L U X
+//    //______________________________________________________________________
+//
+//    unsigned long int nFluxRaySteps = 0;
+//
+//// TODO: Kokkos-ify the boundary flux calculation
+//
+//    unsigned long int nRaySteps = 0;
+//
+//    //______________________________________________________________________
+//    //         S O L V E   D I V Q
+//    //______________________________________________________________________
+//
+//    if (d_solveDivQ) {
+//
+//      IntVector lo = patch->getCellLowIndex();
+//      IntVector hi = patch->getCellHighIndex();
+//
+//      RMCRT_flags RT_flags;
+//      RT_flags.finePatchLow.x = lo.x();
+//      RT_flags.finePatchLow.y = lo.y();
+//      RT_flags.finePatchLow.z = lo.z();
+//      RT_flags.finePatchSize.x = hi.x()-lo.x();
+//      RT_flags.finePatchSize.y = hi.y()-lo.y();
+//      RT_flags.finePatchSize.z = hi.z()-lo.z();
+//      const unsigned int numCells = RT_flags.finePatchSize.x *
+//                                    RT_flags.finePatchSize.y *
+//                                    RT_flags.finePatchSize.z;
+//      RT_flags.startCell = 0;
+//      RT_flags.endCell = numCells;
+//
+//      Uintah::BlockRange range;
+//
+//#ifdef HAVE_CUDA
+//      int numKernels = dtask->getTask()->maxStreamsPerTask();
+//      IntVector hiRange(256,0,0);
+//      // Split up a functor into four loops.  Gets better GPU occupancy this way.
+//      for (int i = 0; i < numKernels; i++) {
+//
+//        RT_flags.startCell = (i/static_cast<double>(numKernels)) * numCells;
+//        RT_flags.endCell = ((i+1)/static_cast<double>(numKernels)) * numCells;
+//        RT_flags.cellsPerGroup = hiRange.x();
+//        range.setValues((cudaStream_t*)dtask->getCudaStreamForThisTask(i), IntVector(0,0,0), IntVector(RT_flags.cellsPerGroup,0,0) );
+//        if (maxLevels > 2) {
+//          std::cout << "Too many levels requested.  Edit the code file to supply more possible levels" << std::endl;
+//          exit(-1);
+//        }
+//        rayTrace_dataOnion_solveDivQFunctor< T, Kokkos::Random_XorShift1024_Pool<Kokkos::Cuda  >, 2 >
+//        functor( levelParamsML, RT_flags, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, sigmaT4OverPi_view, abskg_view
+//                 , cellType_view , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays);
+//
+//      // This parallel_reduce replaces the cellIterator loop used to solve DivQ
+//        Uintah::parallel_reduce_1D( range, functor, size );
+//#else
+//      {
+//        IntVector hiRange(256,0,0);
+//        range.setValues( IntVector(0,0,0), hiRange );
+//        RT_flags.startCell = 0;
+//        RT_flags.endCell = numCells;
+//        RT_flags.cellsPerGroup = hiRange.x();
+//
+//        //
+//        if (maxLevels==2){
+//          DO_raytrace<T,2>
+//          functor( levelParamsML, RT_flags, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view
+//                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays
+//#ifdef USE_SLIM
+//,Max(d_haloCells[0],d_haloCells[1],d_haloCells[2])
+//#endif
+//);
+//          Uintah::parallel_reduce_1D( range, functor, size );
+//        } else if (maxLevels==3){
+//          DO_raytrace<T,3>
+//          functor( levelParamsML, RT_flags, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view
+//                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays
+//#ifdef USE_SLIM
+//,Max(d_haloCells[0],d_haloCells[1],d_haloCells[2])
+//#endif
+//);
+//          Uintah::parallel_reduce_1D( range, functor, size );
+//        } else if (maxLevels==4){
+//          DO_raytrace<T,4>
+//          functor( levelParamsML, RT_flags, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view
+//                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays
+//#ifdef USE_SLIM
+//,Max(d_haloCells[0],d_haloCells[1],d_haloCells[2])
+//#endif
+//);
+//          Uintah::parallel_reduce_1D( range, functor, size );
+//        } else if (maxLevels==5){
+//          DO_raytrace<T,5>
+//          functor( levelParamsML, RT_flags, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view
+//                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays
+//#ifdef USE_SLIM
+//,Max(d_haloCells[0],d_haloCells[1],d_haloCells[2])
+//#endif
+//);
+//          Uintah::parallel_reduce_1D( range, functor, size );
+//        } else if (maxLevels==6){
+//          DO_raytrace<T,6>
+//          functor( levelParamsML, RT_flags, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view
+//                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays
+//#ifdef USE_SLIM
+//,Max(d_haloCells[0],d_haloCells[1],d_haloCells[2])
+//#endif
+//);
+//          Uintah::parallel_reduce_1D( range, functor, size );
+//        } else if (maxLevels==7){
+//          DO_raytrace<T,7>
+//          functor( levelParamsML, RT_flags, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view
+//                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays
+//#ifdef USE_SLIM
+//,Max(d_haloCells[0],d_haloCells[1],d_haloCells[2])
+//#endif
+//);
+//          Uintah::parallel_reduce_1D( range, functor, size );
+//        } else if (maxLevels==8){
+//          DO_raytrace<T,8>
+//          functor( levelParamsML, RT_flags, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view
+//                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays
+//#ifdef USE_SLIM
+//,Max(d_haloCells[0],d_haloCells[1],d_haloCells[2])
+//#endif
+//);
+//          Uintah::parallel_reduce_1D( range, functor, size );
+//        } else if (maxLevels==9){
+//          DO_raytrace<T,9>
+//          functor( levelParamsML, RT_flags, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view
+//                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays
+//#ifdef USE_SLIM
+//,Max(d_haloCells[0],d_haloCells[1],d_haloCells[2])
+//#endif
+//);
+//          Uintah::parallel_reduce_1D( range, functor, size );
+//        } else if (maxLevels==10){
+//          DO_raytrace<T,10>
+//          functor( levelParamsML, RT_flags, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view
+//                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays
+//#ifdef USE_SLIM
+//,Max(d_haloCells[0],d_haloCells[1],d_haloCells[2])
+//#endif
+//);
+//          Uintah::parallel_reduce_1D( range, functor, size );
+//        } else if (maxLevels==11){
+//          DO_raytrace<T,11>
+//          functor( levelParamsML, RT_flags, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view
+//                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays
+//#ifdef USE_SLIM
+//,Max(d_haloCells[0],d_haloCells[1],d_haloCells[2])
+//#endif
+//);
+//          Uintah::parallel_reduce_1D( range, functor, size );
+//        } else if (maxLevels==12){
+//          DO_raytrace<T,12>
+//          functor( levelParamsML, RT_flags, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view
+//                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays
+//#ifdef USE_SLIM
+//,Max(d_haloCells[0],d_haloCells[1],d_haloCells[2])
+//#endif
+//);
+//          //Uintah::parallel_reduce_sum( range, functor, nRaySteps );
+//          Uintah::parallel_reduce_1D( range, functor, nRaySteps );
+//        } else {
+//          std::cout << "Too many levels requested.  Edit the code file to supply more possible levels" << std::endl;
+//          exit(-1);
+//        }
+//#endif
+//      }
+//    }  // end of if(_solveDivQ)
+//
+//    //__________________________________
+//    //
+//    timer.stop();
+//
+//    if (finePatch->getGridIndex() == levelPatchID) {
+//      cout << endl
+//           << " RMCRT REPORT: Patch " << levelPatchID << endl
+//           << " Used "<< timer().milliseconds()
+//           << " milliseconds of CPU time. \n" << endl // Convert time to ms
+//           << " nRaySteps: " << nRaySteps
+//           << " nFluxRaySteps: " << nFluxRaySteps << endl
+//           << " Efficiency: " << nRaySteps / timer().seconds()
+//           << " steps per sec" << endl
+//           << endl;
+//    }
+//
+//#ifdef USE_TIMER
+//    PerPatch< double > ppTimer = timer().seconds();
+//    new_dw->put( ppTimer, d_PPTimerLabel, d_matl, finePatch );
+//#endif
+//  }  // end finePatch loop
 }  // end ray trace method
 
 

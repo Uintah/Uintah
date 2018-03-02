@@ -127,9 +127,9 @@ template<class T> class Array3Window : public RefCounted {
       }
 
 #ifdef UINTAH_ENABLE_KOKKOS
-      inline KokkosView3<T> getKokkosView() const
+      inline KokkosView3<T, Kokkos::HostSpace> getKokkosView() const
       {
-        return KokkosView3<T>(  Kokkos::subview(   data->getKokkosData()
+        return KokkosView3<T, Kokkos::HostSpace>(  Kokkos::subview(   data->getKokkosData()
                                  , Kokkos::pair<int,int>( lowIndex.x() - offset.x(), highIndex.x() - offset.x())
                                  , Kokkos::pair<int,int>( lowIndex.y() - offset.y(), highIndex.y() - offset.y())
                                  , Kokkos::pair<int,int>( lowIndex.z() - offset.z(), highIndex.z() - offset.z()) )

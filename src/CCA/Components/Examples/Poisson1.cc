@@ -24,6 +24,7 @@
 
 #include <CCA/Components/Examples/Poisson1.h>
 #include <CCA/Components/Examples/ExamplesLabel.h>
+#include <Core/Parallel/LoopExecution.hpp>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/KokkosViews.h>
 #include <Core/Grid/Variables/NCVariable.h>
@@ -41,25 +42,6 @@
 
 #include <sci_defs/kokkos_defs.h>
 
-
-#define NUM_EXECUTION_SPACES 2
-#define EXECUTION_SPACE_0 Kokkos::Cuda
-#define EXECUTION_SPACE_1 Kokkos::OpenMP
-#define MEMORY_SPACE_0    Kokkos::CudaSpace
-#define MEMORY_SPACE_1    Kokkos::HostSpace
-#define ALL_ARCHITECTURES
-
-#define CALL_ASSIGN_PORTABLE_TASK(FUNCTION_NAME, TASK_DEPENDENCIES, PATCHES, MATERIALS) {      \
-  Task* task = scinew Task("FUNCTION_NAME",                                                    \
-                           this,                                                               \
-                           &FUNCTION_NAME<EXECUTION_SPACE_1, MEMORY_SPACE_1>);                 \
-  TASK_DEPENDENCIES(task);                                                                     \
-  if (Uintah::Parallel::usingDevice()) {                                                       \
-    task->usesDevice(true);                                                                    \
-  }                                                                                            \
-  sched->addTask(task, PATCHES, MATERIALS);                                                    \
-}
-
 using namespace std;
 using namespace Uintah;
 
@@ -67,15 +49,15 @@ using namespace Uintah;
 //Kokkos CPU (UINTAH_ENABLE_KOKKOS is defined, but HAVE_CUDA is not defined)
 //Kokkos GPU (UINTAH_ENABLE_KOKKOS is defined and HAVE_CUDA is defined)
 //Legacy Uintah CPU (UINTAH_ENABLE_KOKKOS is not defined and HAVE_CUDA is not defined)
-template <typename MEMORY_SPACE>
+template <typename MemorySpace>
 struct TimeAdvanceFunctor {
 
   typedef double value_type;
 
   //Declare the vars
 #ifdef UINTAH_ENABLE_KOKKOS //Both CPU and GPU Kokkos runs need this.
-  KokkosView3<const double> m_phi;
-  KokkosView3<double> m_newphi;
+  KokkosView3<const double, MemorySpace> m_phi;
+  KokkosView3<double, MemorySpace> m_newphi;
 #else  //Just do this the legacy CPU way.
   constNCVariable<double> & m_phi;
   NCVariable<double> & m_newphi;
@@ -83,8 +65,8 @@ struct TimeAdvanceFunctor {
 
 //Retrieve the vars
 #ifdef UINTAH_ENABLE_KOKKOS
-  TimeAdvanceFunctor(KokkosView3<const double> & phi,
-                     KokkosView3<double> & newphi)
+  TimeAdvanceFunctor(KokkosView3<const double, MemorySpace> & phi,
+                     KokkosView3<double, MemorySpace> & newphi)
 
       : m_phi( phi )
       , m_newphi( newphi ) {}
@@ -106,7 +88,11 @@ struct TimeAdvanceFunctor {
     m_newphi(i, j, k) = (1. / 6)
         * (m_phi(i + 1, j, k) + m_phi(i - 1, j, k) + m_phi(i, j + 1, k) +
            m_phi(i, j - 1, k) + m_phi(i, j, k + 1) + m_phi(i, j, k - 1));
-    //printf("At (%d,%d,%d), m_phi is %g and m_newphi is %g\n", i, j, k, m_phi(i,j,k), m_newphi(i,j,k));
+    printf("At (%d,%d,%d), m_phi is %g from %g, %g, %g, %g, %g, %g and m_newphi is %g\n", i, j, k,
+        m_phi(i,j,k),
+        m_phi(i + 1, j, k), m_phi(i - 1, j, k), m_phi(i, j + 1, k),
+        m_phi(i, j - 1, k), m_phi(i, j, k + 1), m_phi(i, j, k - 1),
+        m_newphi(i,j,k));
     double diff = m_newphi(i, j, k) - m_phi(i, j, k);
     residual += diff * diff;
   }
@@ -271,7 +257,7 @@ void Poisson1::initialize( const ProcessorGroup *
 
 //______________________________________________________________________
 //
-template <typename EXECUTION_SPACE, typename MEMORY_SPACE>
+template <typename ExecutionSpace, typename MemorySpace>
 void Poisson1::timeAdvance(DetailedTask* task,
                             Task::CallBackEvent event,
                             const ProcessorGroup* pg,
@@ -288,6 +274,23 @@ void Poisson1::timeAdvance(DetailedTask* task,
   int matl = 0;
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
+
+    //Prepare the range
+    double residual = 0;
+    IntVector l = patch->getNodeLowIndex();
+    IntVector h = patch->getNodeHighIndex();
+    //Uintah::BlockRange boundaryConditionRange(l,h);
+
+    l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor ? 0 : 1,
+                  patch->getBCType(Patch::yminus) == Patch::Neighbor ? 0 : 1,
+                  patch->getBCType(Patch::zminus) == Patch::Neighbor ? 0 : 1);
+    h -= IntVector(patch->getBCType(Patch::xplus) == Patch::Neighbor ? 0 : 1,
+                  patch->getBCType(Patch::yplus) == Patch::Neighbor ? 0 : 1,
+                  patch->getBCType(Patch::zplus) == Patch::Neighbor ? 0 : 1);
+
+    Uintah::BlockRange range(l, h);
+
+
 //Get the data.
 #if !defined(UINTAH_ENABLE_KOKKOS)
     // The legacy Uintah CPU way
@@ -296,44 +299,34 @@ void Poisson1::timeAdvance(DetailedTask* task,
     old_dw->get(phi, phi_label, matl, patch, Ghost::AroundNodes, 1);
     new_dw->allocateAndPut(newphi, phi_label, matl, patch);
     newphi.copyPatch(phi, newphi.getLowIndex(), newphi.getHighIndex());
-
-#elif !defined(HAVE_CUDA) && defined(UINTAH_ENABLE_KOKKOS)
-    // Grab the variables then grab the Kokkos Views
-    constNCVariable<double> NC_phi;
-    NCVariable<double> NC_newphi;
-    old_dw->get(NC_phi, phi_label, matl, patch, Ghost::AroundNodes, 1);
-    new_dw->allocateAndPut(NC_newphi, phi_label, matl, patch);
-    NC_newphi.copyPatch(NC_phi, NC_newphi.getLowIndex(), NC_newphi.getHighIndex());
-    KokkosView3<const double> phi = NC_phi.getKokkosView();
-    KokkosView3<double> newphi = NC_newphi.getKokkosView();
-
-#elif defined(HAVE_CUDA) && defined(UINTAH_ENABLE_KOKKOS)
-    //Note: this will only work if the task's using_device is set to true.
-    //This section was only put here for future boilerplace
-    // Get the variables directly from the GPU Data Warehouse, we can avoid
-    // creating a temporary GPUGridVariable.
-    //TODO: Need to copy patch faces (or just zero them out), we don't have anything like that yet, so
-    //this will pull in garbage data from halos
-    KokkosView3<const double> phi = old_dw->getGPUDW()->getKokkosView<const double>(phi_label->getName().c_str(), patch->getID(),  matl, 0);
-    KokkosView3<double> newphi    = new_dw->getGPUDW()->getKokkosView<double>(phi_label->getName().c_str(), patch->getID(),  matl, 0);
+    TimeAdvanceFunctor<MemorySpace> func(phi, newphi);
+    Uintah::parallel_reduce_sum<ExecutionSpace>(range, func, residual);
+#else
+#ifdef HAVE_CUDA
+    if ( std::is_same< Kokkos::Cuda , ExecutionSpace >::value ) {
+      KokkosView3<const double, Kokkos::CudaSpace> phi = old_dw->getGPUDW()->getKokkosView<const double>(phi_label->getName().c_str(), patch->getID(),  matl, 0);
+      KokkosView3<double, Kokkos::CudaSpace> newphi    = new_dw->getGPUDW()->getKokkosView<double>(phi_label->getName().c_str(), patch->getID(),  matl, 0);
+      TimeAdvanceFunctor<Kokkos::CudaSpace> func(phi, newphi);
+      Uintah::parallel_reduce_sum<Kokkos::Cuda>(range, func, residual);
+    } else
 #endif
+    if ( std::is_same< Kokkos::OpenMP , ExecutionSpace >::value ) {
+      // Grab the variables then grab the Kokkos Views
 
-    //Prepare the range
-    double residual = 0;
-    IntVector l = patch->getNodeLowIndex();
-    IntVector h = patch->getNodeHighIndex();
+      constNCVariable<double> NC_phi;
+      NCVariable<double> NC_newphi;
+      old_dw->get(NC_phi, phi_label, matl, patch, Ghost::AroundNodes, 1);
+      new_dw->allocateAndPut(NC_newphi, phi_label, matl, patch);
+      NC_newphi.copyPatch(NC_phi, NC_newphi.getLowIndex(), NC_newphi.getHighIndex()); //TODO, replace with boundary condition
+      KokkosView3<const double, Kokkos::HostSpace> phi = NC_phi.getKokkosView();
+      KokkosView3<double, Kokkos::HostSpace> newphi = NC_newphi.getKokkosView();
 
-    l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor ? 0 : 1,
-                   patch->getBCType(Patch::yminus) == Patch::Neighbor ? 0 : 1,
-                   patch->getBCType(Patch::zminus) == Patch::Neighbor ? 0 : 1);
-    h -= IntVector(patch->getBCType(Patch::xplus) == Patch::Neighbor ? 0 : 1,
-                   patch->getBCType(Patch::yplus) == Patch::Neighbor ? 0 : 1,
-                   patch->getBCType(Patch::zplus) == Patch::Neighbor ? 0 : 1);
-
-    Uintah::BlockRange range(l, h);
-
-    TimeAdvanceFunctor<MEMORY_SPACE> func(phi, newphi);
-    Uintah::parallel_reduce_sum<EXECUTION_SPACE>(range, func, residual);
+      //Uintah::parallel_boundary_condition(boundaryConditionRange, range, boundaryFunc);
+      TimeAdvanceFunctor<Kokkos::HostSpace> func(phi, newphi);
+      Uintah::parallel_reduce_sum<Kokkos::OpenMP>(range, func, residual);
+    }
+#endif //#if !defined(UINTAH_ENABLE_KOKKOS)
+    printf("The residual is %g\n", residual);
     //new_dw->put(sum_vartype(residual), residual_label);
   }
 }
