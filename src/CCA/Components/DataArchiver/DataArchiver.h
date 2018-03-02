@@ -313,12 +313,12 @@ class LoadBalancer;
     void writeGridOriginal(   const bool hasGlobals, const GridP & grid, ProblemSpecP rootElem );
 
     // Writes out the <Grid> and <Data> sections (respectively) to separate files (that are associated with timestep.xml) using a XML streamer.
-    void writeGridTextWriter( const bool hasGlobals, const std::string & grim_path, const GridP & grid );
+    void writeGridTextWriter( const bool hasGlobals, const std::string & grid_path, const GridP & grid );
     void writeDataTextWriter( const bool hasGlobals, const std::string & data_path, const GridP & grid,
                               const std::vector< std::vector<bool> > & procOnLevel );
 
     // Writes out the <Grid> section (associated with timestep.xml) to a separate binary file.
-    void writeGridBinary(     const bool hasGlobals, const std::string & grim_path, const GridP & grid );
+    void writeGridBinary(     const bool hasGlobals, const std::string & grid_path, const GridP & grid );
 
     //__________________________________
     //! returns a ProblemSpecP reading the xml file xmlName.

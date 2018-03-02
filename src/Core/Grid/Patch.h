@@ -150,12 +150,10 @@ namespace Uintah {
     private:
     };
     
-    static const int MAX_PATCH_SELECT = 32;
-    //    typedef FixedVector<const Patch*, MAX_PATCH_SELECT> selectType;
     typedef std::vector<const Patch*> selectType;
 
     
-    /**************New Public Interaface*******************
+    /**************New Public Interface*******************
      *
      * This block will be used to store the new public interface as it goes live
      *

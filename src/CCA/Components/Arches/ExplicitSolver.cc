@@ -135,7 +135,6 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/Parallel.h>
-#include <Core/Util/DOUT.hpp>
 #include <Core/Math/MiscMath.h>
 #include <CCA/Components/Arches/Filter.h>
 
@@ -531,13 +530,15 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
     //dqmom_db->getAttribute( "type", d_which_dqmom );
     d_which_dqmom = "weighedAbs";
 
+    m_DQMOMSolverType = "No_Inversion";
+
     ProblemSpecP db_linear_solver = dqmom_db->findBlock("LinearSolver");
-    if( db_linear_solver ) {
-      string d_solverType;
-      db_linear_solver->getWithDefault("type", d_solverType, "LU");
+    if ( db_linear_solver ){
+
+      db_linear_solver->getWithDefault("type", m_DQMOMSolverType, "LU");
 
       // currently, unweighted abscissas only work with the optimized solver -- remove this check when other solvers work:
-      if( d_which_dqmom == "unweightedAbs" && d_solverType != "Optimize" ) {
+      if( d_which_dqmom == "unweightedAbs" && m_DQMOMSolverType != "Optimize" ) {
         throw ProblemSetupException("Error!: The unweighted abscissas only work with the optimized solver.", __FILE__, __LINE__);
       }
     }
@@ -1125,6 +1126,7 @@ ExplicitSolver::initialize( const LevelP     & level,
     BFM::iterator i_turb_model_fac = _task_factory_map.find("turbulence_model_factory");
 
     i_trans_fac->second->set_bcHelper( m_bcHelper[level->getID()] );
+    i_util_fac->second->set_bcHelper( m_bcHelper[level->getID()] );
 
     bool is_restart = false;
     const bool dont_pack_tasks = false;
@@ -1142,6 +1144,8 @@ ExplicitSolver::initialize( const LevelP     & level,
     // boundary condition factory
     _task_factory_map["boundary_condition_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
 
+    // turbulence factory 
+    
     //initialize factory
     all_tasks.clear();
     all_tasks = i_init_fac->second->retrieve_all_tasks();
@@ -1169,7 +1173,9 @@ ExplicitSolver::initialize( const LevelP     & level,
     }
 
     //turbulence models
-    i_turb_model_fac->second->schedule_initialization( level, sched, matls, is_restart );
+    //i_turb_model_fac->second->schedule_initialization( level, sched, matls, is_restart );
+    
+    
 
     //------------------ New Task Interface (end) ------------------------------------------------
 
@@ -1230,6 +1236,10 @@ ExplicitSolver::initialize( const LevelP     & level,
     sched_getCCVelocities(level, sched);
 
     d_turbModel->sched_reComputeTurbSubmodel(sched, level, matls, d_init_timelabel);
+    
+    //--- New interface 
+    _task_factory_map["turbulence_model_factory"]->schedule_task_group( "all_tasks", TaskInterface::TIMESTEP_EVAL, dont_pack_tasks, level, sched, matls );
+    // ----
 
     //----------------------
     //DQMOM initialization
@@ -1269,12 +1279,9 @@ ExplicitSolver::initialize( const LevelP     & level,
     }
 
     //------------------ New Task Interface (start) ------------------------------------------------
-    //particle models
-    all_tasks.clear();
-    all_tasks = i_partmod_fac->second->retrieve_all_tasks();
-    for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++) {
-      i->second->schedule_init(level, sched, matls, is_restart );
-    }
+    i_partmod_fac->second->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE,
+                                                dont_pack_tasks, level, sched, matls );
+
     //------------------ New Task Interface (end) ------------------------------------------------
 
     // check to make sure that all the scalar variables have BCs set and set intrusions:
@@ -1367,6 +1374,7 @@ ExplicitSolver::sched_restartInitialize( const LevelP& level, SchedulerP& sched 
   typedef std::map<std::string, std::shared_ptr<TaskFactoryBase> > BFM;
   BFM::iterator i_property_models_fac = _task_factory_map.find("property_models_factory");
   TaskFactoryBase::TaskMap all_prop_tasks = i_property_models_fac->second->retrieve_all_tasks();
+
   for ( TaskFactoryBase::TaskMap::iterator i = all_prop_tasks.begin(); i != all_prop_tasks.end(); i++) {
 
     i->second->schedule_init( level, sched, matls, doingRestart );
@@ -1376,6 +1384,9 @@ ExplicitSolver::sched_restartInitialize( const LevelP& level, SchedulerP& sched 
   setupBoundaryConditions( level, sched, doingRestart );
 
   d_tabulated_properties->set_bcHelper( m_bcHelper[level->getIndex()]);
+
+  BFM::iterator i_util_fac = _task_factory_map.find("utility_factory");
+  i_util_fac->second->set_bcHelper( m_bcHelper[level->getIndex()]);
 
   //Arches only currently solves on the finest level
   if ( !level->hasFinerLevel() ){
@@ -1670,8 +1681,9 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     matls );
 
   BFM::iterator i_particle_models = _task_factory_map.find("particle_model_factory");
-  i_particle_models->second->schedule_task_group( "all_tasks", TaskInterface::TIMESTEP_INITIALIZE, dont_pack_tasks, level, sched,
-    matls );
+  i_particle_models->second->schedule_task_group( "all_tasks", TaskInterface::TIMESTEP_INITIALIZE,
+                                                  dont_pack_tasks, level, sched,
+                                                  matls );
 
   _task_factory_map["turbulence_model_factory"]->schedule_task_group( "all_tasks", TaskInterface::TIMESTEP_INITIALIZE, dont_pack_tasks, level, sched,
     matls );
@@ -1692,6 +1704,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     _task_factory_map["property_models_factory"]->schedule_task_group( "pre_update_property_models",
       TaskInterface::TIMESTEP_EVAL, dont_pack_tasks, level, sched, matls, curr_level );
+      
 
     i_transport->second->schedule_task_group("scalar_psi_builders",
       TaskInterface::TIMESTEP_EVAL, dont_pack_tasks, level, sched, matls, curr_level );
@@ -1760,7 +1773,19 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       modelFactory.sched_coalParticleCalculation( level, sched, curr_level );// compute drag, devol, char, etc models..
 
       // schedule DQMOM linear solve
-      d_dqmomSolver->sched_solveLinearSystem( level, sched, curr_level );
+      if ( m_DQMOMSolverType != "No_Inversion"){
+
+        d_dqmomSolver->sched_solveLinearSystem( level, sched, curr_level );
+
+      } else {
+
+        i_particle_models->second->schedule_task_group( "pre_update_property_models",
+                                                        TaskInterface::TIMESTEP_EVAL,
+                                                        dont_pack_tasks, level, sched,
+                                                        matls );
+
+      }
+
 
       // Evaluate DQMOM equations
       for ( DQMOMEqnFactory::EqnMap::iterator iEqn = weights_eqns.begin();
@@ -1922,6 +1947,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
         tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, curr_level);
       }
     }
+    
+    
     //------------------ New Task Interface (end) ------------------------------------------------
 
 
@@ -2010,6 +2037,10 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     // linearizes and solves pressure eqn
     // first computes, hatted velocities and then computes
     // the pressure poisson equation
+    
+//    _task_factory_map["turbulence_model_factory"]->schedule_task_group( "momentum_closure",
+//      TaskInterface::TIMESTEP_EVAL, dont_pack_tasks, level, sched, matls, curr_level );
+    
     d_momSolver->solveVelHat(level, sched, d_timeIntegratorLabels[curr_level], curr_level );
 
     for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
@@ -2140,15 +2171,15 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       sched->get_dw(1)->get( timeStep, d_lab->d_timeStepLabel );
 
     d_turbCounter = timeStep;
-    
+
     if ((d_turbCounter%d_turbModelCalcFreq == 0)&&
         ((curr_level==0)||((!(curr_level==0))&&d_turbModelRKsteps)))
       d_turbModel->sched_reComputeTurbSubmodel(sched, level, matls,
                                                d_timeIntegratorLabels[curr_level]);
 
     TaskFactoryBase::TaskMap all_turb_models =
-      _task_factory_map["turbulence_model_factory"]->retrieve_all_tasks();
-    for ( TaskFactoryBase::TaskMap::iterator i = all_turb_models.begin(); i != all_turb_models.end(); i++){
+     _task_factory_map["turbulence_model_factory"]->retrieve_all_tasks();
+       for ( TaskFactoryBase::TaskMap::iterator i = all_turb_models.begin(); i != all_turb_models.end(); i++){
       i->second->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, curr_level);
     }
 
@@ -3619,11 +3650,9 @@ ExplicitSolver::sched_weightInit( const LevelP& level,
     if (eqn->weight()) {
       const VarLabel* tempVar = eqn->getTransportEqnLabel();
       const VarLabel* tempVar_icv = eqn->getUnscaledLabel();
-      const VarLabel* tempSource = eqn->getSourceLabel();
 
       tsk->computes( tempVar );
       tsk->computes( tempVar_icv );
-      tsk->computes( tempSource );
     }
   }
 
@@ -3666,19 +3695,16 @@ ExplicitSolver::weightInit( const ProcessorGroup*,
 
       if (eqn->weight()) {
         // This is a weight equation
-        const VarLabel* sourceLabel  = eqn->getSourceLabel();
         const VarLabel* phiLabel     = eqn->getTransportEqnLabel();
         const VarLabel* phiLabel_icv = eqn->getUnscaledLabel();
 
-        CCVariable<double> source;
+        //CCVariable<double> source;
         CCVariable<double> phi;
         CCVariable<double> phi_icv;
 
-        new_dw->allocateAndPut( source,  sourceLabel,  matlIndex, patch );
         new_dw->allocateAndPut( phi,     phiLabel,     matlIndex, patch );
         new_dw->allocateAndPut( phi_icv, phiLabel_icv, matlIndex, patch );
 
-        source.initialize(0.0);
         phi.initialize(0.0);
         phi_icv.initialize(0.0);
 
@@ -3711,10 +3737,8 @@ ExplicitSolver::sched_weightedAbsInit( const LevelP& level,
     if (!eqn->weight()) {
       const VarLabel* tempVar = eqn->getTransportEqnLabel();
       const VarLabel* tempVar_icv = eqn->getUnscaledLabel();
-      const VarLabel* tempSource = eqn->getSourceLabel();
       tsk->computes( tempVar );
       tsk->computes( tempVar_icv );
-      tsk->computes( tempSource );
     } else {
       const VarLabel* tempVar = eqn->getTransportEqnLabel();
       tsk->requires( Task::NewDW, tempVar, Ghost::None, 0 );
@@ -3772,7 +3796,6 @@ ExplicitSolver::weightedAbsInit( const ProcessorGroup*,
 
       if (!eqn->weight()) {
         // This is a weighted abscissa
-        const VarLabel* sourceLabel  = eqn->getSourceLabel();
         const VarLabel* phiLabel     = eqn->getTransportEqnLabel();
         const VarLabel* phiLabel_icv = eqn->getUnscaledLabel();
         std::string weight_name;
@@ -3785,17 +3808,14 @@ ExplicitSolver::weightedAbsInit( const ProcessorGroup*,
         EqnBase& w_eqn = dqmomFactory.retrieve_scalar_eqn(weight_name);
         const VarLabel* weightLabel = w_eqn.getTransportEqnLabel();
 
-        CCVariable<double> source;
         CCVariable<double> phi;
         CCVariable<double> phi_icv;
         constCCVariable<double> weight;
 
-        new_dw->allocateAndPut( source,  sourceLabel,  matlIndex, patch );
         new_dw->allocateAndPut( phi,     phiLabel,     matlIndex, patch );
         new_dw->allocateAndPut( phi_icv, phiLabel_icv, matlIndex, patch );
         new_dw->get( weight, weightLabel, matlIndex, patch, gn, 0 );
 
-        source.initialize(0.0);
         phi.initialize(0.0);
         phi_icv.initialize(0.0);
 
@@ -3940,10 +3960,8 @@ ExplicitSolver::scalarInit( const ProcessorGroup*,
                             DataWarehouse* old_dw,
                             DataWarehouse* new_dw )
 {
-  std::ostringstream message;
-  message << "Initializing all scalar equations and sources...\n";
-  DOUT(true, message.str());
 
+  proc0cout << "Initializing all scalar equations and sources...\n";
   for (int p = 0; p < patches->size(); p++) {
     //assume only one material for now
     int archIndex = 0;

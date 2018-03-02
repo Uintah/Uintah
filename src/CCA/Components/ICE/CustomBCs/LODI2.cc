@@ -311,7 +311,11 @@ void addRequires_Lodi(Task* t,
       t->computes(lb->LODI_BC_Li4Label, ice_matls);
       t->computes(lb->LODI_BC_Li5Label, ice_matls); 
     }
-  }  
+  }
+  if ( press_matl && press_matl->removeReference()){
+    delete press_matl;
+  }
+  
 }
 /*______________________________________________________________________ 
  Function~  preprocess_Lodi_BCs-- 

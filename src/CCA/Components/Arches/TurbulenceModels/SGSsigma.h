@@ -66,11 +66,23 @@ private:
   std::string m_v_vel_name ;
   std::string m_w_vel_name ;
   std::string m_CC_vel_name ;
-  std::string m_sigOper ;
+  //std::string m_sigOper ;
 
+    std::string m_cc_u_vel_name;
+    std::string m_cc_v_vel_name;
+    std::string m_cc_w_vel_name;
+    std::string m_IsI_name;
+    std::string m_density_name;
+    double m_Cs; //Wale constant
+    double m_molecular_visc;
+    std::string m_t_vis_name;
+    bool m_create_labels_IsI_t_viscosity{true};   
+    std::string m_turb_viscosity_name;
+    std::string m_volFraction_name;
+
+    int Nghost_cells;
   double m_PI;
   double m_visc;
-  double m_Cs;
 
   };
 }

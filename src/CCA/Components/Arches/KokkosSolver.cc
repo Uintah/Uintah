@@ -30,6 +30,7 @@
 #include <CCA/Components/Arches/UPSHelper.h>
 #include <CCA/Components/Arches/Transport/PressureEqn.h>
 #include <CCA/Components/Arches/ChemMix/TableLookup.h>
+#include <CCA/Components/Arches/ParticleModels/CoalHelper.h>
 #include <CCA/Components/Arches/Task/TaskController.h>
 //factories
 #include <CCA/Components/Arches/Task/TaskFactoryHelper.h>
@@ -48,16 +49,21 @@
 //#include <CCA/Components/Arches/Task/SampleFactory.h>
 //END NEW TASK INTERFACE STUFF
 
+#include <sci_defs/kokkos_defs.h>
+
 using namespace Uintah;
 
 typedef std::map<std::string, std::shared_ptr<TaskFactoryBase> > BFM;
 typedef std::vector<std::string> SVec;
 
 //--------------------------------------------------------------------------------------------------
-KokkosSolver::KokkosSolver( SimulationStateP& shared_state,
-                            const ProcessorGroup* myworld,
-                            SolverInterface* solver )
-  : NonlinearSolver( myworld ), m_sharedState(shared_state), m_hypreSolver(solver)
+KokkosSolver::KokkosSolver(       SimulationStateP & shared_state
+                          , const ProcessorGroup   * myworld
+                          ,       SolverInterface  * solver
+                          )
+  : NonlinearSolver ( myworld )
+  , m_sharedState   ( shared_state )
+  , m_hypreSolver   ( solver )
 {
   // delta t
   VarLabel* nonconstDelT =
@@ -67,7 +73,8 @@ KokkosSolver::KokkosSolver( SimulationStateP& shared_state,
 }
 
 //--------------------------------------------------------------------------------------------------
-KokkosSolver::~KokkosSolver(){
+KokkosSolver::~KokkosSolver()
+{
   for (auto i = m_bcHelper.begin(); i != m_bcHelper.end(); i++){
     delete i->second;
   }
@@ -80,7 +87,9 @@ KokkosSolver::~KokkosSolver(){
 
 //--------------------------------------------------------------------------------------------------
 void
-KokkosSolver::sched_restartInitialize( const LevelP& level, SchedulerP& sched )
+KokkosSolver::sched_restartInitialize( const LevelP     & level
+                                     ,       SchedulerP & sched
+                                     )
 {
 
   const MaterialSet* matls = m_sharedState->allArchesMaterials();
@@ -96,14 +105,17 @@ KokkosSolver::sched_restartInitialize( const LevelP& level, SchedulerP& sched )
 
 //--------------------------------------------------------------------------------------------------
 void
-KokkosSolver::sched_restartInitializeTimeAdvance( const LevelP& level, SchedulerP& sched )
+KokkosSolver::sched_restartInitializeTimeAdvance( const LevelP     & level
+                                                ,       SchedulerP & sched
+                                                )
 {}
 
 //--------------------------------------------------------------------------------------------------
 void
-KokkosSolver::problemSetup( const ProblemSpecP& input_db,
-                            SimulationStateP& state,
-                            GridP& grid )
+KokkosSolver::problemSetup( const ProblemSpecP     & input_db
+                          ,       SimulationStateP & state
+                          ,       GridP            & grid
+                          )
 {
 
   ProblemSpecP db = input_db;
@@ -117,6 +129,17 @@ KokkosSolver::problemSetup( const ProblemSpecP& input_db,
   proc0cout << " Time integrator: RK of order " << m_rk_order << "\n \n";
 
   commonProblemSetup( db_ks );
+
+  if( db->findBlock("ParticleProperties") ) {
+    std::string particle_type;
+    db->findBlock("ParticleProperties")->getAttribute("type", particle_type);
+    if ( particle_type == "coal" ) {
+      CoalHelper& coal_helper = CoalHelper::self();
+      coal_helper.parse_for_coal_info( db );
+    } else {
+      throw InvalidValue("Error: Particle type not recognized. Current types supported: coal",__FILE__,__LINE__);
+    }
+  }
 
   std::shared_ptr<UtilityFactory> UtilF(scinew UtilityFactory());
   std::shared_ptr<TransportFactory> TransF(scinew TransportFactory());
@@ -182,7 +205,9 @@ KokkosSolver::problemSetup( const ProblemSpecP& input_db,
 
 //--------------------------------------------------------------------------------------------------
 void
-KokkosSolver::computeTimestep(const LevelP& level, SchedulerP& sched)
+KokkosSolver::computeTimestep( const LevelP     & level
+                             ,       SchedulerP & sched
+                             )
 {
 
   using namespace ArchesCore;
@@ -260,11 +285,12 @@ KokkosSolver::computeTimestep(const LevelP& level, SchedulerP& sched)
 
 //--------------------------------------------------------------------------------------------------
 void
-KokkosSolver::computeStableTimeStep( const ProcessorGroup*,
-                                     const PatchSubset* patches,
-                                     const MaterialSubset*,
-                                     DataWarehouse* old_dw,
-                                     DataWarehouse* new_dw )
+KokkosSolver::computeStableTimeStep( const ProcessorGroup *
+                                   , const PatchSubset    * patches
+                                   , const MaterialSubset *
+                                   ,       DataWarehouse  * old_dw
+                                   ,       DataWarehouse  * new_dw
+                                   )
 {
 
   const Level* level = getLevel(patches);
@@ -291,25 +317,29 @@ KokkosSolver::computeStableTimeStep( const ProcessorGroup*,
     double dt = m_dt_init;
 
     Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
-    // Shouldn't this be a reduce???
-    // When I tried parallel_reduce I didn't get the behavior I expected.
-    Uintah::parallel_for( range, [&]( int i, int j, int k ) {
+
+    Uintah::parallel_reduce_min( range, [&]( int i, int j, int k, double & m_dt ) {
 
       const double small_num = 1.e-10;
+
       const double dx = Dx.x();
       const double dy = Dx.y();
       const double dz = Dx.z();
 
-      double denom_dt = std::abs( u(i,j,k) ) / dx +
-                        std::abs( v(i,j,k) ) / dy +
-                        std::abs( w(i,j,k) ) / dz +
-                        mu(i,j,k) / rho(i,j,k) * (
-                          1./(dx*dx) + 1./(dy*dy) + 1./(dz*dz)
-                        ) + small_num;
+      double denom_dt = std::fabs( u(i,j,k) ) / dx +
+                        std::fabs( v(i,j,k) ) / dy +
+                        std::fabs( w(i,j,k) ) / dz +
+                        mu(i,j,k) / rho(i,j,k) *
+                        ( 1. / ( dx * dx ) + 1. / ( dy * dy ) + 1. / ( dz * dz ) ) +
+                        small_num;
 
-      dt = std::min( 1.0 / denom_dt, dt );
+#ifdef UINTAH_ENABLE_KOKKOS
+      m_dt = std::fmin( 1.0 / denom_dt, m_dt_init ); // m_dt reduced by Kokkos::parallel_reduce
+#else
+      m_dt = std::fmin( 1.0 / denom_dt, m_dt );      // m_dt reduced here
+#endif
 
-    });
+    }, dt );
 
     new_dw->put(delt_vartype(dt), m_delTLabel, level);
   }
@@ -317,11 +347,13 @@ KokkosSolver::computeStableTimeStep( const ProcessorGroup*,
 
 //--------------------------------------------------------------------------------------------------
 void
-KokkosSolver::setTimeStep( const ProcessorGroup*,
-                           const PatchSubset* patches,
-                           const MaterialSubset*,
-                           DataWarehouse* old_dw,
-                           DataWarehouse* new_dw ){
+KokkosSolver::setTimeStep( const ProcessorGroup *
+                         , const PatchSubset    * patches
+                         , const MaterialSubset *
+                         ,       DataWarehouse  * old_dw
+                         ,       DataWarehouse  * new_dw
+                         )
+{
   const Level* level = getLevel(patches);
   for (int p = 0; p < patches->size(); p++) {
     new_dw->put(delt_vartype(m_dt_init), m_delTLabel, level);
@@ -330,7 +362,10 @@ KokkosSolver::setTimeStep( const ProcessorGroup*,
 
 //--------------------------------------------------------------------------------------------------
 void
-KokkosSolver::initialize( const LevelP& level, SchedulerP& sched, const bool doing_restart )
+KokkosSolver::initialize( const LevelP     & level
+                        ,       SchedulerP & sched
+                        , const bool         doing_restart
+                        )
 {
   const MaterialSet* matls = m_sharedState->allArchesMaterials();
   //bool is_restart = false;
@@ -345,9 +380,6 @@ KokkosSolver::initialize( const LevelP& level, SchedulerP& sched, const bool doi
 
   // set the volume fractions
   m_task_factory_map["utility_factory"]->schedule_task( "vol_fraction_calc", TaskInterface::INITIALIZE, level, sched, matls );
-
-  // particle models
-  m_task_factory_map["particle_model_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
 
   //transport factory
   m_task_factory_map["transport_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
@@ -381,6 +413,9 @@ KokkosSolver::initialize( const LevelP& level, SchedulerP& sched, const bool doi
   //property factory
   m_task_factory_map["property_models_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
   m_task_factory_map["property_models_factory"]->schedule_task_group( "all_tasks", TaskInterface::BC, dont_pack_tasks, level, sched, matls );
+
+  // particle models
+  m_task_factory_map["particle_model_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
 
   // turbulence model
   m_task_factory_map["turbulence_model_factory"]->schedule_task_group( "momentum_closure", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
@@ -418,8 +453,9 @@ KokkosSolver::initialize( const LevelP& level, SchedulerP& sched, const bool doi
 
 //--------------------------------------------------------------------------------------------------
 int
-KokkosSolver::nonlinearSolve( const LevelP& level,
-                              SchedulerP& sched )
+KokkosSolver::nonlinearSolve( const LevelP     & level
+                            ,       SchedulerP & sched
+                            )
 {
   const bool pack_tasks = true;
   //const bool dont_pack_tasks = false;
@@ -484,7 +520,11 @@ KokkosSolver::nonlinearSolve( const LevelP& level,
 
 //--------------------------------------------------------------------------------------------------
 void
-KokkosSolver::setupBCs( const LevelP& level, SchedulerP& sched, const MaterialSet* matls ){
+KokkosSolver::setupBCs( const LevelP      & level
+                      ,       SchedulerP  & sched
+                      , const MaterialSet * matls
+                      )
+{
   //boundary condition helper
   m_bcHelper.insert(std::make_pair(level->getID(), scinew WBCHelper( level, sched, matls, m_arches_spec )));
 
@@ -503,7 +543,10 @@ KokkosSolver::setupBCs( const LevelP& level, SchedulerP& sched, const MaterialSe
 
 //--------------------------------------------------------------------------------------------------
 void
-KokkosSolver::SSPRKSolve( const LevelP& level, SchedulerP& sched ){
+KokkosSolver::SSPRKSolve( const LevelP     & level
+                        ,       SchedulerP & sched
+                        )
+{
 
   using namespace Uintah::ArchesCore;
 
@@ -688,8 +731,10 @@ KokkosSolver::SSPRKSolve( const LevelP& level, SchedulerP& sched ){
 
 //--------------------------------------------------------------------------------------------------
 void
-KokkosSolver::SandBox( const LevelP& level, SchedulerP& sched ){
-
+KokkosSolver::SandBox( const LevelP     & level
+                     ,       SchedulerP & sched
+                     )
+{
   //const bool pack_tasks = true;
   //const bool dont_pack_tasks = false;
 

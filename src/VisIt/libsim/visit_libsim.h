@@ -52,6 +52,7 @@ WARNING
 ****************************************/
 
 #include "Core/Grid/Grid.h"
+#include "Core/Parallel/ProcessorGroup.h"
 
 #include <map>
 #include <string>
@@ -75,6 +76,8 @@ class SimulationController;
 
 typedef struct
 {
+  const ProcessorGroup* myworld;
+
   // Uintah data members
   SimulationController *simController;
   GridP gridP;
@@ -88,7 +91,7 @@ typedef struct
   double delt_next;
 
   // UDA archive variables.
-  bool useExtraCells;
+  int  loadExtraElements;
   bool forceMeshReload;
   std::string mesh_for_patch_data;
   
@@ -98,7 +101,6 @@ typedef struct
   int  runMode;  // What the libsim is doing.
   int  simMode;  // What the simulation is doing.
 
-  int  rank;
   bool isProc0;
 
   bool first;
@@ -123,9 +125,29 @@ typedef struct
   // Container for storing modiied variables - gets passed to the
   // DataArchiver so they are stored in the index.xml file.  
 
-  //   map< VarName           pair<oldValue,    newValue> >
+//std::map< VarName      std::pair<oldValue,    newValue   > >
   std::map< std::string, std::pair<std::string, std::string> > modifiedVars;
 
+  // In-situ machine layout.
+
+  // The root name of the host.
+  std::string hostName;
+  std::string hostNode;
+
+  // A list of nodes on each switch.
+  std::vector< std::vector< unsigned int > > switchNodeList;
+
+  // A table of nodes and the number of cores and memory.
+  std::vector< unsigned int > nodeStart;
+  std::vector< unsigned int > nodeStop;
+  std::vector< unsigned int > nodeCores;
+  std::vector< unsigned int > nodeMemory;
+
+  unsigned int maxNodes, maxCores, xNode, yNode;
+
+  // The index of the switch and node for this core.
+  unsigned int switchIndex, nodeIndex;
+  
 } visit_simulation_data;
 
 void visit_LibSimArguments(int argc, char **argv);
@@ -135,8 +157,8 @@ bool visit_CheckState(visit_simulation_data *sim);
 
 void visit_UpdateSimData( visit_simulation_data *sim, 
                           GridP currentGrid,
-			  double time,  unsigned int cycle,
-			  double delt,  double delt_next,
+                          double time,  unsigned int cycle,
+                          double delt,  double delt_next,
                           bool first, bool last );
 
 void visit_Initialize( visit_simulation_data *sim );

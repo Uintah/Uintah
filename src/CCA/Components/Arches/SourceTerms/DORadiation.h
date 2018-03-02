@@ -142,9 +142,6 @@ void TransferRadFieldsFromOldDW( const ProcessorGroup* pc,
   }; // class Builder 
 
 
-// Table search, nothing fancy linear search
-  int getSweepPatchIndex( double patchMid, std::vector<double>& indep_var );
-
 private:
       enum DORadType {enum_linearSolve, enum_sweepSpatiallyParallel};
   int _nDir;
@@ -163,6 +160,16 @@ private:
   std::vector<const PatchSubset*> _RelevantPatchesXmYpZm;  
   std::vector<const PatchSubset*> _RelevantPatchesXmYmZp;  
   std::vector<const PatchSubset*> _RelevantPatchesXmYmZm;  
+
+  std::vector<const PatchSet*> _RelevantPatchesXpYpZp2;   /// Some redundancy here, since XpYpZp = XmYmZm [ end : start ]
+  std::vector<const PatchSet*> _RelevantPatchesXpYpZm2;   /// only need four sets...
+  std::vector<const PatchSet*> _RelevantPatchesXpYmZp2;  
+  std::vector<const PatchSet*> _RelevantPatchesXpYmZm2;  
+  std::vector<const PatchSet*> _RelevantPatchesXmYpZp2;  
+  std::vector<const PatchSet*> _RelevantPatchesXmYpZm2;  
+  std::vector<const PatchSet*> _RelevantPatchesXmYmZp2;  
+  std::vector<const PatchSet*> _RelevantPatchesXmYmZm2;  
+
 
   IntVector _patchIntVector;
   int _radiation_calc_freq; 

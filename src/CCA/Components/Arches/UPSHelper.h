@@ -6,7 +6,7 @@
 
 namespace Uintah{ namespace ArchesCore {
 
-  enum CFD_ROLE { UVELOCITY, VVELOCITY, WVELOCITY, PRESSURE, TEMPERATURE, ENTHALPY, DENSITY,
+  enum CFD_ROLE { UVELOCITY, VVELOCITY, WVELOCITY, CCUVELOCITY, CCVVELOCITY, CCWVELOCITY,PRESSURE, TEMPERATURE, ENTHALPY, DENSITY,
                   TOTAL_VISCOSITY };
 
   static inline CFD_ROLE role_string_to_enum( const std::string role ){
@@ -17,6 +17,12 @@ namespace Uintah{ namespace ArchesCore {
       return VVELOCITY;
     } else if ( role == "wvelocity" ){
       return WVELOCITY;
+    } else if ( role == "ccuvelocity" ){
+      return CCUVELOCITY;
+    } else if ( role == "ccvvelocity" ){
+      return CCVVELOCITY;
+    } else if ( role == "ccwvelocity" ){
+      return CCWVELOCITY;
     } else if ( role == "pressure" ){
       return PRESSURE;
     } else if ( role == "temperature" ){
@@ -39,6 +45,12 @@ namespace Uintah{ namespace ArchesCore {
       return "vvelocity";
     } else if ( role == WVELOCITY ){
       return "wvelocity";
+    } else if ( role == CCUVELOCITY ){
+      return "ccuvelocity";
+    } else if ( role == CCVVELOCITY ){
+      return "ccvvelocity";
+    } else if ( role == CCWVELOCITY ){
+      return "ccwvelocity";
     } else if ( role == PRESSURE ){
       return "pressure";
     } else if ( role == TEMPERATURE ){

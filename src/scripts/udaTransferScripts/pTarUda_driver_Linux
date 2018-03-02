@@ -16,6 +16,9 @@ SRCS =   $(shell for i in $(FILES) ; do \
 DESTS := $(patsubst %,$(STAMP_DIR)/stamp/%,$(SRCS))
 
 all: $(STAMP_DIR)/stamp $(DESTS)
+
+
+clean:
 	@echo "Removing the list of tarred/untarred directories $(STAMP_DIR)"
 	/bin/rm -rf $(STAMP_DIR)
 

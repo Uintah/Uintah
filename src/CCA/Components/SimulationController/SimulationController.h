@@ -203,6 +203,11 @@ public:
                          DataWarehouse*,
                          bool header);
 
+  // Other stats
+  enum OtherStatsEnum {
+    Dummy_Stat = 99
+  };
+
 protected:
 
   void restartArchiveSetup();
@@ -257,20 +262,21 @@ protected:
   
   // Runtime stat mappers.
   ReductionInfoMapper< RuntimeStatsEnum, double > m_runtime_stats;
-  ReductionInfoMapper< unsigned int,     double > m_other_stats;
+  ReductionInfoMapper< OtherStatsEnum,   double > m_other_stats;
 
+  // PAPI Counters
 #ifdef USE_PAPI_COUNTERS
   int         m_papi_event_set;            // PAPI event set
   long long * m_papi_event_values;         // PAPI event set values
 
   struct PapiEvent {
-    bool                           m_is_supported{false};
-    int                            m_event_value_idx{0};
-    std::string                    m_name{""};
-    SimulationState::RuntimeStat   m_sim_stat_name{};
+    bool                   m_is_supported{false};
+    int                    m_event_value_idx{0};
+    std::string            m_name{""};
+    RuntimeStatsEnum       m_sim_stat_name{};
 
-    PapiEvent( const std::string                  & name
-             , const SimulationState::RuntimeStat & sim_stat_name )
+    PapiEvent( const std::string      & name
+             , const RuntimeStatsEnum & sim_stat_name )
       : m_name(name)
       , m_sim_stat_name(sim_stat_name)
     { }
@@ -292,10 +298,10 @@ public:
   void setVisIt( unsigned int val ) { m_do_visit = val; }
   unsigned int  getVisIt() { return m_do_visit; }
 
-  const ReductionInfoMapper< RuntimeStatsEnum, double > getRuntimeStats() const
+  ReductionInfoMapper< RuntimeStatsEnum, double > getRuntimeStats()
   { return m_runtime_stats; };
 
-  const ReductionInfoMapper< unsigned int,     double > getOtherStats() const
+  ReductionInfoMapper< OtherStatsEnum,   double > getOtherStats()
   { return m_other_stats; };
 
 protected:

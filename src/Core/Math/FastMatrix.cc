@@ -92,7 +92,7 @@ void FastMatrix::destructiveInvert(FastMatrix& a)
       double a10 = a.mat[1][0], a11 = a.mat[1][1], a12 = a.mat[1][2];
       double a20 = a.mat[2][0], a21 = a.mat[2][1], a22 = a.mat[2][2];
       double one_over_denom = 1./(-(a02*a11*a20) + a01*a12*a20 + a02*a10*a21 - 
-				  a00*a12*a21 - a01*a10*a22 + a00*a11*a22);
+                                  a00*a12*a21 - a01*a10*a22 + a00*a11*a22);
       mat[0][0] =  (-(a12*a21) + a11*a22) * one_over_denom;
       mat[0][1] =  (a02*a21 - a01*a22) * one_over_denom;
       mat[0][2] =  (-(a02*a11) + a01*a12) * one_over_denom;
@@ -165,7 +165,7 @@ void FastMatrix::multiply(const FastMatrix& a, const FastMatrix& b)
     for(int j=0;j<cols;j++){
       double sum=0;
       for(int k=0;k<s;k++){
-	sum+=a.mat[i][k]*b.mat[k][j];
+        sum+=a.mat[i][k]*b.mat[k][j];
       }
       mat[i][j]=sum;
     }
@@ -265,20 +265,20 @@ void FastMatrix::big_destructiveInvert(FastMatrix& a)
     int row=i;
     for(int j=i+1;j<rows;j++){
       if(Abs(a.mat[j][i]) > max){
-	max=Abs(a.mat[j][i]);
-	row=j;
+        max=Abs(a.mat[j][i]);
+        row=j;
       }
     }
     ASSERT(max > 1.e-12);
     if(row != i){
       // Switch rows
       for(int j=0;j<rows;j++){
-	double tmp = mat[i][j];
-	mat[i][j] = mat[row][j];
-	mat[row][j] = tmp;
-	double tmp2 = a.mat[i][j];
-	a.mat[i][j] = a.mat[row][j];
-	a.mat[row][j] = tmp2;
+        double tmp = mat[i][j];
+        mat[i][j] = mat[row][j];
+        mat[row][j] = tmp;
+        double tmp2 = a.mat[i][j];
+        a.mat[i][j] = a.mat[row][j];
+        a.mat[row][j] = tmp2;
       }
     }
     double denom=1./a.mat[i][i];
@@ -293,8 +293,8 @@ void FastMatrix::big_destructiveInvert(FastMatrix& a)
       double* r2=a.mat[j];
       double* n2=mat[j];
       for(int k=0;k<rows;k++){
-	r2[k]-=factor*r1[k];
-	n2[k]-=factor*n1[k];
+        r2[k]-=factor*r1[k];
+        n2[k]-=factor*n1[k];
       }
     }
   }
@@ -308,8 +308,8 @@ void FastMatrix::big_destructiveInvert(FastMatrix& a)
       double* r2=a.mat[j];
       double* n2=mat[j];
       for(int k=0;k<rows;k++){
-	r2[k]-=factor*r1[k];
-	n2[k]-=factor*n1[k];
+        r2[k]-=factor*r1[k];
+        n2[k]-=factor*n1[k];
       }
     }
   }
@@ -325,17 +325,17 @@ void FastMatrix::big_destructiveSolve(double* b)
     int row=i;
     for(int j=i+1;j<rows;j++){
       if(Abs(mat[j][i]) > max){
-	max=Abs(mat[j][i]);
-	row=j;
+        max=Abs(mat[j][i]);
+        row=j;
       }
     }
     ASSERT(max > 1.e-12);
     if(row != i){
       // Switch rows
       for(int j=i;j<rows;j++){
-	double tmp = mat[i][j];
-	mat[i][j] = mat[row][j];
-	mat[row][j] = tmp;
+        double tmp = mat[i][j];
+        mat[i][j] = mat[row][j];
+        mat[row][j] = tmp;
       }
       double tmp2 = b[i];
       b[i] = b[row];
@@ -350,7 +350,7 @@ void FastMatrix::big_destructiveSolve(double* b)
       double factor=mat[j][i];
       b[j]-=factor*b[i];
       for(int k=i;k<rows;k++){
-	mat[j][k]-=factor*mat[i][k];
+        mat[j][k]-=factor*mat[i][k];
       }
     }
   }
@@ -372,17 +372,17 @@ template<int size> void med_destructiveSolve(double mat[FastMatrix::MaxSize][Fas
     int row=i;
     for(int j=i+1;j<size;j++){
       if(Abs(mat[j][i]) > max){
-	max=Abs(mat[j][i]);
-	row=j;
+        max=Abs(mat[j][i]);
+        row=j;
       }
     }
     ASSERT(max > 1.e-12);
     if(row != i){
       // Switch rows
       for(int j=i;j<size;j++){
-	double tmp = mat[i][j];
-	mat[i][j] = mat[row][j];
-	mat[row][j] = tmp;
+        double tmp = mat[i][j];
+        mat[i][j] = mat[row][j];
+        mat[row][j] = tmp;
       }
       double tmp2 = b[i];
       b[i] = b[row];
@@ -397,7 +397,7 @@ template<int size> void med_destructiveSolve(double mat[FastMatrix::MaxSize][Fas
       double factor=mat[j][i];
       b[j]-=factor*b[i];
       for(int k=i;k<size;k++){
-	mat[j][k]-=factor*mat[i][k];
+        mat[j][k]-=factor*mat[i][k];
       }
     }
   }
@@ -429,9 +429,9 @@ void FastMatrix::destructiveSolve(double* b)
       // Example Problem Hilbert Matrix
       //  Exact solution is 1,1
       /*
-	mat[0][0] = 1.0;   mat[0][1] = 1/2.0;
-	mat[1][0] = 1/2.0; mat[1][1] = 1/3.0;
-	b[0] = 3.0/2.0;   b[1] = 5.0/6.0;*/
+        mat[0][0] = 1.0;   mat[0][1] = 1/2.0;
+        mat[1][0] = 1/2.0; mat[1][1] = 1/3.0;
+        b[0] = 3.0/2.0;   b[1] = 5.0/6.0;*/
     
       double a00 = mat[0][0], a01 = mat[0][1];
       double a10 = mat[1][0], a11 = mat[1][1];
@@ -454,23 +454,23 @@ void FastMatrix::destructiveSolve(double* b)
       // Example Problem Hilbert matrix
       // Exact Solution is 1,1,1
       /*
-	double a00 = 1.0,       a01 = 1.0/2.0,  a02 = 1.0/3.0;
-	double a10 = 1.0/2.0,   a11 = 1.0/3.0,  a12 = 1.0/4.0;
-	double a20 = 1.0/3.0,   a21 = 1.0/4.0,  a22 = 1.0/5.0;
-	double b0 = 11.0/6.0, b1 = 13.0/12.0, b2 = 47.0/60.0; */
+        double a00 = 1.0,       a01 = 1.0/2.0,  a02 = 1.0/3.0;
+        double a10 = 1.0/2.0,   a11 = 1.0/3.0,  a12 = 1.0/4.0;
+        double a20 = 1.0/3.0,   a21 = 1.0/4.0,  a22 = 1.0/5.0;
+        double b0 = 11.0/6.0, b1 = 13.0/12.0, b2 = 47.0/60.0; */
 
       double one_over_denom = 1./(-(a02*a11*a20) + a01*a12*a20 + a02*a10*a21 
-				  - a00*a12*a21 -  a01*a10*a22 + a00*a11*a22);
+                                  - a00*a12*a21 -  a01*a10*a22 + a00*a11*a22);
 
       b[0] = ( (-(a12*a21) + a11*a22)*b0 + (a02*a21 - a01*a22)*b1 +
-	       (-(a02*a11) + a01*a12)*b2 )*one_over_denom;
+               (-(a02*a11) + a01*a12)*b2 )*one_over_denom;
 
 
       b[1] = ( (a12*a20 - a10*a22)*b0 +  (-(a02*a20) + a00*a22)*b1 +
-	       (a02*a10 - a00*a12)*b2 ) * one_over_denom;
+               (a02*a10 - a00*a12)*b2 ) * one_over_denom;
 
       b[2] =  ( (-(a11*a20) + a10*a21)*b0 +  (a01*a20 - a00*a21)*b1 +
-		(-(a01*a10) + a00*a11)*b2) * one_over_denom;
+                (-(a01*a10) + a00*a11)*b2) * one_over_denom;
     }
     break;
   case 4:
@@ -498,17 +498,17 @@ void FastMatrix::big_destructiveSolve(double* b1, double* b2)
     int row=i;
     for(int j=i+1;j<rows;j++){
       if(Abs(mat[j][i]) > max){
-	max=Abs(mat[j][i]);
-	row=j;
+        max=Abs(mat[j][i]);
+        row=j;
       }
     }
     ASSERT(max > 1.e-12);
     if(row != i){
       // Switch rows
       for(int j=i;j<rows;j++){
-	double tmp = mat[i][j];
-	mat[i][j] = mat[row][j];
-	mat[row][j] = tmp;
+        double tmp = mat[i][j];
+        mat[i][j] = mat[row][j];
+        mat[row][j] = tmp;
       }
       double tmp2 = b1[i];
       b1[i] = b1[row];
@@ -528,7 +528,7 @@ void FastMatrix::big_destructiveSolve(double* b1, double* b2)
       b1[j]-=factor*b1[i];
       b2[j]-=factor*b2[i];
       for(int k=i;k<rows;k++){
-	mat[j][k]-=factor*mat[i][k];
+        mat[j][k]-=factor*mat[i][k];
       }
     }
   }
@@ -552,17 +552,17 @@ template<int size> void med_destructiveSolve(double mat[FastMatrix::MaxSize][Fas
     int row=i;
     for(int j=i+1;j<size;j++){
       if(Abs(mat[j][i]) > max){
-	max=Abs(mat[j][i]);
-	row=j;
+        max=Abs(mat[j][i]);
+        row=j;
       }
     }
     ASSERT(max > 1.e-12);
     if(row != i){
       // Switch rows
       for(int j=i;j<size;j++){
-	double tmp = mat[i][j];
-	mat[i][j] = mat[row][j];
-	mat[row][j] = tmp;
+        double tmp = mat[i][j];
+        mat[i][j] = mat[row][j];
+        mat[row][j] = tmp;
       }
       double tmp2 = b1[i];
       b1[i] = b1[row];
@@ -582,7 +582,7 @@ template<int size> void med_destructiveSolve(double mat[FastMatrix::MaxSize][Fas
       b1[j]-=factor*b1[i];
       b2[j]-=factor*b2[i];
       for(int k=i;k<size;k++){
-	mat[j][k]-=factor*mat[i][k];
+        mat[j][k]-=factor*mat[i][k];
       }
     }
   }
@@ -617,9 +617,9 @@ void FastMatrix::destructiveSolve(double* b1, double* b2)
       // Example Problem Hilbert Matrix
       //  Exact solution is 1,1
       /*
-	mat[0][0] = 1.0;   mat[0][1] = 1/2.0;
-	mat[1][0] = 1/2.0; mat[1][1] = 1/3.0;
-	b[0] = 3.0/2.0;   b[1] = 5.0/6.0;*/
+        mat[0][0] = 1.0;   mat[0][1] = 1/2.0;
+        mat[1][0] = 1/2.0; mat[1][1] = 1/3.0;
+        b[0] = 3.0/2.0;   b[1] = 5.0/6.0;*/
     
       double a00 = mat[0][0], a01 = mat[0][1];
       double a10 = mat[1][0], a11 = mat[1][1];
@@ -645,29 +645,29 @@ void FastMatrix::destructiveSolve(double* b1, double* b2)
       // Example Problem Hilbert matrix
       // Exact Solution is 1,1,1
       /*
-	double a00 = 1.0,       a01 = 1.0/2.0,  a02 = 1.0/3.0;
-	double a10 = 1.0/2.0,   a11 = 1.0/3.0,  a12 = 1.0/4.0;
-	double a20 = 1.0/3.0,   a21 = 1.0/4.0,  a22 = 1.0/5.0;
-	double b0 = 11.0/6.0, b1 = 13.0/12.0, b2 = 47.0/60.0; */
+        double a00 = 1.0,       a01 = 1.0/2.0,  a02 = 1.0/3.0;
+        double a10 = 1.0/2.0,   a11 = 1.0/3.0,  a12 = 1.0/4.0;
+        double a20 = 1.0/3.0,   a21 = 1.0/4.0,  a22 = 1.0/5.0;
+        double b0 = 11.0/6.0, b1 = 13.0/12.0, b2 = 47.0/60.0; */
 
       double one_over_denom = 1./(-(a02*a11*a20) + a01*a12*a20 + a02*a10*a21 
-				  - a00*a12*a21 -  a01*a10*a22 + a00*a11*a22);
+                                  - a00*a12*a21 -  a01*a10*a22 + a00*a11*a22);
 
       b1[0] = ( (-(a12*a21) + a11*a22)*b10 + (a02*a21 - a01*a22)*b11 +
-	       (-(a02*a11) + a01*a12)*b12 )*one_over_denom;
+               (-(a02*a11) + a01*a12)*b12 )*one_over_denom;
       b2[0] = ( (-(a12*a21) + a11*a22)*b20 + (a02*a21 - a01*a22)*b21 +
-	       (-(a02*a11) + a01*a12)*b22 )*one_over_denom;
+               (-(a02*a11) + a01*a12)*b22 )*one_over_denom;
 
 
       b1[1] = ( (a12*a20 - a10*a22)*b10 +  (-(a02*a20) + a00*a22)*b11 +
-	       (a02*a10 - a00*a12)*b12 ) * one_over_denom;
+               (a02*a10 - a00*a12)*b12 ) * one_over_denom;
       b2[1] = ( (a12*a20 - a10*a22)*b20 +  (-(a02*a20) + a00*a22)*b21 +
-	       (a02*a10 - a00*a12)*b22 ) * one_over_denom;
+               (a02*a10 - a00*a12)*b22 ) * one_over_denom;
 
       b1[2] =  ( (-(a11*a20) + a10*a21)*b10 +  (a01*a20 - a00*a21)*b11 +
-		(-(a01*a10) + a00*a11)*b12) * one_over_denom;
+                (-(a01*a10) + a00*a11)*b12) * one_over_denom;
       b2[2] =  ( (-(a11*a20) + a10*a21)*b20 +  (a01*a20 - a00*a21)*b21 +
-		(-(a01*a10) + a00*a11)*b22) * one_over_denom;
+                (-(a01*a10) + a00*a11)*b22) * one_over_denom;
     }
     break;
   case 4:
@@ -698,17 +698,17 @@ void FastMatrix::big_destructiveSolve(Vector* b)
     int row=i;
     for(int j=i+1;j<rows;j++){
       if(Abs(mat[j][i]) > max){
-	max=Abs(mat[j][i]);
-	row=j;
+        max=Abs(mat[j][i]);
+        row=j;
       }
     }
     ASSERT(max > 1.e-12);
     if(row != i){
       // Switch rows
       for(int j=i;j<rows;j++){
-	double tmp = mat[i][j];
-	mat[i][j] = mat[row][j];
-	mat[row][j] = tmp;
+        double tmp = mat[i][j];
+        mat[i][j] = mat[row][j];
+        mat[row][j] = tmp;
       }
       Vector tmp2 = b[i];
       b[i] = b[row];
@@ -724,7 +724,7 @@ void FastMatrix::big_destructiveSolve(Vector* b)
       double factor=mat[j][i];
       b[j]-=factor*b[i];
       for(int k=i;k<rows;k++)
-	mat[j][k]-=factor*mat[i][k];
+        mat[j][k]-=factor*mat[i][k];
     }
   }
 
@@ -746,17 +746,17 @@ template<int size> void med_destructiveSolve(double mat[FastMatrix::MaxSize][Fas
     int row=i;
     for(int j=i+1;j<size;j++){
       if(Abs(mat[j][i]) > max){
-	max=Abs(mat[j][i]);
-	row=j;
+        max=Abs(mat[j][i]);
+        row=j;
       }
     }
     ASSERT(max > 1.e-12);
     if(row != i){
       // Switch rows
       for(int j=i;j<size;j++){
-	double tmp = mat[i][j];
-	mat[i][j] = mat[row][j];
-	mat[row][j] = tmp;
+        double tmp = mat[i][j];
+        mat[i][j] = mat[row][j];
+        mat[row][j] = tmp;
       }
       Vector tmp2 = b[i];
       b[i] = b[row];
@@ -772,7 +772,7 @@ template<int size> void med_destructiveSolve(double mat[FastMatrix::MaxSize][Fas
       double factor=mat[j][i];
       b[j]-=factor*b[i];
       for(int k=i;k<size;k++)
-	mat[j][k]-=factor*mat[i][k];
+        mat[j][k]-=factor*mat[i][k];
     }
   }
 
@@ -807,9 +807,9 @@ void FastMatrix::destructiveSolve(Vector* b)
       // Example Problem Hilbert Matrix
       //  Exact solution is 1,1
       /*
-	mat[0][0] = 1.0;   mat[0][1] = 1/2.0;
-	mat[1][0] = 1/2.0; mat[1][1] = 1/3.0;
-	b[0] = 3.0/2.0;   b[1] = 5.0/6.0;*/
+        mat[0][0] = 1.0;   mat[0][1] = 1/2.0;
+        mat[1][0] = 1/2.0; mat[1][1] = 1/3.0;
+        b[0] = 3.0/2.0;   b[1] = 5.0/6.0;*/
     
       double a00 = mat[0][0], a01 = mat[0][1];
       double a10 = mat[1][0], a11 = mat[1][1];
@@ -831,22 +831,22 @@ void FastMatrix::destructiveSolve(Vector* b)
       // Example Problem Hilbert matrix
       // Exact Solution is 1,1,1
       /*
-	double a00 = 1.0,       a01 = 1.0/2.0,  a02 = 1.0/3.0;
-	double a10 = 1.0/2.0,   a11 = 1.0/3.0,  a12 = 1.0/4.0;
-	double a20 = 1.0/3.0,   a21 = 1.0/4.0,  a22 = 1.0/5.0;
-	double b0 = 11.0/6.0, b1 = 13.0/12.0, b2 = 47.0/60.0; */
+        double a00 = 1.0,       a01 = 1.0/2.0,  a02 = 1.0/3.0;
+        double a10 = 1.0/2.0,   a11 = 1.0/3.0,  a12 = 1.0/4.0;
+        double a20 = 1.0/3.0,   a21 = 1.0/4.0,  a22 = 1.0/5.0;
+        double b0 = 11.0/6.0, b1 = 13.0/12.0, b2 = 47.0/60.0; */
 
       double one_over_denom = 1./(-(a02*a11*a20) + a01*a12*a20 + a02*a10*a21 
-				  - a00*a12*a21 -  a01*a10*a22 + a00*a11*a22);
+                                  - a00*a12*a21 -  a01*a10*a22 + a00*a11*a22);
 
       b[0] = ( (-(a12*a21) + a11*a22)*b0 + (a02*a21 - a01*a22)*b1 +
-	       (-(a02*a11) + a01*a12)*b2 )*one_over_denom;
+               (-(a02*a11) + a01*a12)*b2 )*one_over_denom;
 
       b[1] = ( (a12*a20 - a10*a22)*b0 +  (-(a02*a20) + a00*a22)*b1 +
-	       (a02*a10 - a00*a12)*b2 ) * one_over_denom;
+               (a02*a10 - a00*a12)*b2 ) * one_over_denom;
 
       b[2] =  ( (-(a11*a20) + a10*a21)*b0 +  (a01*a20 - a00*a21)*b1 +
-		(-(a01*a10) + a00*a11)*b2) * one_over_denom;
+                (-(a01*a10) + a00*a11)*b2) * one_over_denom;
     }
     break;
   case 4:

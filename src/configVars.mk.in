@@ -161,6 +161,7 @@ ifeq ($(IS_BGQ),yes)
   CXXFLAGS := $(CXXFLAGS) -DPETSC_RESTRICT=__restrict__ -DPETSC_DEPRECATED\(why\)= 
 endif
 
+HAVE_PAPI        := @HAVE_PAPI@
 PAPI_INCLUDE     := @INC_PAPI_H@
 PAPI_LIBRARY     := @PAPI_LIB_DIR_FLAG@ @PAPI_LIB_FLAG@
 

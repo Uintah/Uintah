@@ -27,22 +27,31 @@ DSFT::problemSetup( ProblemSpecP& db ){
   m_rhov_vel_name = "y-mom";
   m_rhow_vel_name = "z-mom" ;
 
-  m_cc_u_vel_name = m_u_vel_name + "_cc";
-  m_cc_v_vel_name = m_v_vel_name + "_cc";
-  m_cc_w_vel_name = m_w_vel_name + "_cc";
+  m_volFraction_name = "volFraction";
+  m_cc_u_vel_name = parse_ups_for_role( CCUVELOCITY, db, "CCUVelocity" );//;m_u_vel_name + "_cc";
+  m_cc_v_vel_name = parse_ups_for_role( CCVVELOCITY, db, "CCVVelocity" );//m_v_vel_name + "_cc";
+  m_cc_w_vel_name = parse_ups_for_role( CCWVELOCITY, db, "CCWVelocity" );;//m_w_vel_name + "_cc";
+
+  if (m_u_vel_name == "uVelocitySPBC") { // this is production code
+    m_create_labels_IsI_t_viscosity = false;
+  }
 
   std::string m_Type_filter_name;
   db->findBlock("filter")->getAttribute("type",m_Type_filter_name);
-
+  m_IsI_name = "strainMagnitudeLabel";
+  //m_ref_density_name = "denRefArray"; // name used in production code
+  //m_cell_type_name = "cellType";
   Type_filter = get_filter_from_string( m_Type_filter_name );
-
+  m_Filter.get_w(Type_filter);
 }
 
 //--------------------------------------------------------------------------------------------------
 void
 DSFT::create_local_labels(){
 
-  register_new_variable<CCVariable<double> >("IsI");
+  if (m_create_labels_IsI_t_viscosity) {
+    register_new_variable<CCVariable<double> >(m_IsI_name);
+  }
   register_new_variable<CCVariable<double> >("s11");
   register_new_variable<CCVariable<double> >("s12");
   register_new_variable<CCVariable<double> >("s13");
@@ -57,6 +66,9 @@ DSFT::create_local_labels(){
   register_new_variable<CCVariable<double> >("Beta33");
 
   register_new_variable<CCVariable<double> >( "Filterrho");
+  register_new_variable<SFCXVariable<double> >( "Filterrhou");
+  register_new_variable<SFCYVariable<double> >( "Filterrhov");
+  register_new_variable<SFCZVariable<double> >( "Filterrhow");
   register_new_variable<CCVariable<double> >( "rhoUU");
   register_new_variable<CCVariable<double> >( "rhoVV");
   register_new_variable<CCVariable<double> >( "rhoWW");
@@ -74,7 +86,11 @@ void
 DSFT::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>&
                                        variable_registry , const bool packed_tasks){
 
+
   register_variable( "Filterrho", ArchesFieldContainer::COMPUTES ,  variable_registry,  _task_name, packed_tasks);
+  register_variable( "Filterrhou", ArchesFieldContainer::COMPUTES ,  variable_registry,  _task_name, packed_tasks);
+  register_variable( "Filterrhov", ArchesFieldContainer::COMPUTES ,  variable_registry,  _task_name, packed_tasks);
+  register_variable( "Filterrhow", ArchesFieldContainer::COMPUTES ,  variable_registry,  _task_name, packed_tasks);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -82,7 +98,15 @@ void
 DSFT::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& filterRho = tsk_info->get_uintah_field_add< CCVariable<double> >("Filterrho");
+  SFCXVariable<double>& filterRhoU = tsk_info->get_uintah_field_add< SFCXVariable<double> >("Filterrhou");
+  SFCYVariable<double>& filterRhoV = tsk_info->get_uintah_field_add< SFCYVariable<double> >("Filterrhov");
+  SFCZVariable<double>& filterRhoW = tsk_info->get_uintah_field_add< SFCZVariable<double> >("Filterrhow");
   filterRho.initialize(0.0);
+  filterRhoU.initialize(0.0);
+  filterRhoV.initialize(0.0);
+  filterRhoW.initialize(0.0);
+  
+
 }
 //--------------------------------------------------------------------------------------------------
 void
@@ -105,16 +129,22 @@ DSFT::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformat
   if (packed_tasks ){
    nG = 3;
   }
+  int nGrho = nG +1;
   register_variable( m_u_vel_name, ArchesFieldContainer::REQUIRES, nG, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
   register_variable( m_v_vel_name, ArchesFieldContainer::REQUIRES, nG, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
   register_variable( m_w_vel_name, ArchesFieldContainer::REQUIRES, nG , ArchesFieldContainer::NEWDW, variable_registry, time_substep);
-  register_variable( m_density_name, ArchesFieldContainer::REQUIRES, nG, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
+  register_variable( m_density_name, ArchesFieldContainer::REQUIRES, nGrho, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
+  register_variable( m_volFraction_name, ArchesFieldContainer::REQUIRES, nGrho, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
   register_variable( m_cc_u_vel_name, ArchesFieldContainer::REQUIRES, nG, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
   register_variable( m_cc_v_vel_name, ArchesFieldContainer::REQUIRES, nG, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
   register_variable( m_cc_w_vel_name, ArchesFieldContainer::REQUIRES, nG, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
+   
+  //register_variable( m_ref_density_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
+  //register_variable( m_cell_type_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
+  //register_variable( "rhoBC", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
 
-  register_variable( "IsI", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
+  register_variable( m_IsI_name, ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
   register_variable( "Beta11", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
   register_variable( "Beta12", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
   register_variable( "Beta13", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
@@ -130,6 +160,9 @@ DSFT::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformat
   register_variable( "s33", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
 
   register_variable( "Filterrho", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep  , _task_name, packed_tasks);
+  register_variable( "Filterrhou", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep  , _task_name, packed_tasks);
+  register_variable( "Filterrhov", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep  , _task_name, packed_tasks);
+  register_variable( "Filterrhow", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep  , _task_name, packed_tasks);
   register_variable( "rhoUU", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep  , _task_name, packed_tasks);
   register_variable( "rhoVV", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep  , _task_name, packed_tasks);
   register_variable( "rhoWW", ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks );
@@ -150,7 +183,10 @@ DSFT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   constSFCYVariable<double>& vVel = *(tsk_info->get_const_uintah_field<constSFCYVariable<double> >(m_v_vel_name));
   constSFCZVariable<double>& wVel = *(tsk_info->get_const_uintah_field<constSFCZVariable<double> >(m_w_vel_name));
   constCCVariable<double>& rho = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_density_name));
-
+  //constCCVariable<double>& ref_rho = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_ref_density_name));
+  //constCCVariable<int>& cell_type = *(tsk_info->get_const_uintah_field<constCCVariable<int> >(m_cell_type_name));
+  
+  constCCVariable<double>& vol_fraction = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_volFraction_name);
   constCCVariable<double>& CCuVel = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_cc_u_vel_name));
   constCCVariable<double>& CCvVel = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_cc_v_vel_name));
   constCCVariable<double>& CCwVel = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_cc_w_vel_name));
@@ -162,22 +198,26 @@ DSFT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   int nGhosts2 = -1; //not using a temp field but rather the DW (ie, if nGhost < 0 then DW var)
   int nGhosts1 = -1; //not using a temp field but rather the DW (ie, if nGhost < 0 then DW var)
+  int nGrho = 2;
 
   if ( tsk_info->packed_tasks() ){
     nGhosts2 = 2;
     nGhosts1 = 1;
     nG1 = nGhosts1;
     nG2 = nGhosts2;
+    nGrho = 4;
   }
-
+  
   IntVector low_filter = patch->getCellLowIndex() + IntVector(-nG1,-nG1,-nG1);
   IntVector high_filter = patch->getCellHighIndex() + IntVector(nG1,nG1,nG1);
   IntVector low_filter2 = patch->getCellLowIndex() + IntVector(-nG2,-nG2,-nG2);
   IntVector high_filter2 = patch->getCellHighIndex() + IntVector(nG2,nG2,nG2);
   Uintah::BlockRange range2(low_filter2, high_filter2 );
   Uintah::BlockRange range1(low_filter, high_filter );
+  Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex( ));
+  
 
-  CCVariable<double>& IsI = tsk_info->get_uintah_field_add< CCVariable<double> >("IsI",nGhosts2 );
+  CCVariable<double>& IsI = tsk_info->get_uintah_field_add< CCVariable<double> >(m_IsI_name,nGhosts2 );
   CCVariable<double>& s11 = tsk_info->get_uintah_field_add< CCVariable<double> >("s11",nGhosts2 );
   CCVariable<double>& s12 = tsk_info->get_uintah_field_add< CCVariable<double> >("s12",nGhosts2 );
   CCVariable<double>& s13 = tsk_info->get_uintah_field_add< CCVariable<double> >("s13",nGhosts2 );
@@ -192,6 +232,7 @@ DSFT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   CCVariable<double>& Beta23 = tsk_info->get_uintah_field_add< CCVariable<double> >("Beta23",nGhosts2 );
   CCVariable<double>& Beta33 = tsk_info->get_uintah_field_add< CCVariable<double> >("Beta33",nGhosts2 );
 
+  IsI.initialize(0.0);
   s11.initialize(0.0);
   s12.initialize(0.0);
   s13.initialize(0.0);
@@ -217,12 +258,70 @@ DSFT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     Beta23(i,j,k) = rho(i,j,k)*IsI(i,j,k)*s23(i,j,k);
   });
 
+  BCfilter bcfilter;
+  bcfilter.apply_zero_neumann(patch,Beta11,vol_fraction); 
+  bcfilter.apply_zero_neumann(patch,Beta22,vol_fraction); 
+  bcfilter.apply_zero_neumann(patch,Beta33,vol_fraction); 
+  bcfilter.apply_zero_neumann(patch,Beta12,vol_fraction); 
+  bcfilter.apply_zero_neumann(patch,Beta13,vol_fraction); 
+  bcfilter.apply_zero_neumann(patch,Beta23,vol_fraction); 
   // Filter rho
-  CCVariable<double>& filterRho = tsk_info->get_uintah_field_add< CCVariable<double> >("Filterrho", nGhosts1);
+  CCVariable<double>& filterRho = tsk_info->get_uintah_field_add< CCVariable<double> >("Filterrho", nGhosts2);
   filterRho.initialize(0.0);
-  Uintah::FilterVarT< constCCVariable<double> > get_frho(rho, filterRho, Type_filter);
-  Uintah::parallel_for(range1,get_frho);
+  // this need to be fixed 
+  //filterRho.copy(ref_rho);
+ 
+  CCVariable<double>& rhoBC = tsk_info->get_uintah_field_add< CCVariable<double> >("rhoBC",nGrho);
 
+  rhoBC.copy(rho);
+  bcfilter.apply_BC_rho(patch,rhoBC,rho,vol_fraction);
+  m_Filter.applyFilter(rhoBC,filterRho,range2,vol_fraction);
+
+  //m_Filter.applyFilter(rho,filterRho,range1,vol_fraction);
+  
+  // filter rho*ux...
+  SFCXVariable<double>& filterRhoU = tsk_info->get_uintah_field_add< SFCXVariable<double> >("Filterrhou", nGhosts2);
+  SFCYVariable<double>& filterRhoV = tsk_info->get_uintah_field_add< SFCYVariable<double> >("Filterrhov", nGhosts2);
+  SFCZVariable<double>& filterRhoW = tsk_info->get_uintah_field_add< SFCZVariable<double> >("Filterrhow", nGhosts2);
+  filterRhoU.initialize(0.0);
+  filterRhoV.initialize(0.0);
+  filterRhoW.initialize(0.0);
+                                                
+  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+
+  IntVector low;
+  if ( xminus ){
+    low  = patch->getCellLowIndex()+IntVector(1,0,0) + IntVector(-nG2,-nG2,-nG2);
+  }else{
+    low  = patch->getCellLowIndex()+ IntVector(-nG2,-nG2,-nG2);
+  }
+  
+  Uintah::BlockRange range_u(low, high_filter2);
+  m_Filter.applyFilter(uVel,filterRhoU,rho,vol_fraction,range_u); 
+  if ( yminus ){
+    low = patch->getCellLowIndex()+IntVector(0,1,0) + IntVector(-nG2,-nG2,-nG2);
+  } else {
+    low = patch->getCellLowIndex()+ IntVector(-nG2,-nG2,-nG2);
+  }
+  
+  Uintah::BlockRange range_v(low, high_filter2);
+  m_Filter.applyFilter(vVel,filterRhoV,rho,vol_fraction,range_v); 
+
+  if ( zminus ){
+    low = patch->getCellLowIndex()+IntVector(0,0,1)+ IntVector(-nG2,-nG2,-nG2);
+  } else {
+    low = patch->getCellLowIndex()+ IntVector(-nG2,-nG2,-nG2);
+  }
+  Uintah::BlockRange range_w(low, high_filter2);
+  m_Filter.applyFilter(wVel,filterRhoW,rho,vol_fraction,range_w); 
+
+
+  bcfilter.apply_BC_rhou(patch,filterRhoU,uVel,rho,vol_fraction); 
+  bcfilter.apply_BC_rhou(patch,filterRhoV,vVel,rho,vol_fraction); 
+  bcfilter.apply_BC_rhou(patch,filterRhoW,wVel,rho,vol_fraction); 
+  bcfilter.apply_BC_filter_rho(patch,filterRho,rhoBC,vol_fraction);
   // Compute rhouiuj at cc
   CCVariable<double>& rhoUU = tsk_info->get_uintah_field_add< CCVariable<double> >("rhoUU",nGhosts2);
   CCVariable<double>& rhoVV = tsk_info->get_uintah_field_add< CCVariable<double> >("rhoVV",nGhosts2);
@@ -255,6 +354,15 @@ DSFT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     rhoV(i,j,k) = rho(i,j,k)*CCvVel(i,j,k);
     rhoW(i,j,k) = rho(i,j,k)*CCwVel(i,j,k);
   });
+  bcfilter.apply_zero_neumann(patch,rhoUU,vol_fraction); 
+  bcfilter.apply_zero_neumann(patch,rhoVV,vol_fraction); 
+  bcfilter.apply_zero_neumann(patch,rhoWW,vol_fraction); 
+  bcfilter.apply_zero_neumann(patch,rhoUV,vol_fraction); 
+  bcfilter.apply_zero_neumann(patch,rhoUW,vol_fraction); 
+  bcfilter.apply_zero_neumann(patch,rhoVW,vol_fraction); 
+  bcfilter.apply_zero_neumann(patch,rhoV,vol_fraction); 
+  bcfilter.apply_zero_neumann(patch,rhoU,vol_fraction); 
+  bcfilter.apply_zero_neumann(patch,rhoW,vol_fraction); 
 }
 
 } //namespace Uintah

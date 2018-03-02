@@ -43,9 +43,10 @@
 using namespace std;
 using namespace Uintah;
 
-Poisson1::Poisson1(const ProcessorGroup* myworld,
-		   const SimulationStateP sharedState) :
-  ApplicationCommon(myworld, sharedState)
+Poisson1::Poisson1( const ProcessorGroup   * myworld
+                  , const SimulationStateP   sharedState
+                  )
+  : ApplicationCommon( myworld, sharedState )
 {
   phi_label = VarLabel::create("phi", NCVariable<double>::getTypeDescription());
   residual_label = VarLabel::create("residual", sum_vartype::getTypeDescription());
@@ -61,9 +62,10 @@ Poisson1::~Poisson1()
 
 //______________________________________________________________________
 //
-void Poisson1::problemSetup(const ProblemSpecP& params,
-                            const ProblemSpecP& restart_prob_spec,
-                            GridP& /*grid*/)
+void Poisson1::problemSetup( const ProblemSpecP & params
+                           , const ProblemSpecP & restart_prob_spec
+                           ,       GridP        & /*grid*/
+                           )
 {
   ProblemSpecP poisson = params->findBlock("Poisson");
 
@@ -76,8 +78,9 @@ void Poisson1::problemSetup(const ProblemSpecP& params,
 
 //______________________________________________________________________
 //
-void Poisson1::scheduleInitialize(const LevelP& level,
-                                  SchedulerP& sched)
+void Poisson1::scheduleInitialize( const LevelP     & level
+                                 ,       SchedulerP & sched
+                                 )
 {
   Task* task = scinew Task("Poisson1::initialize", this, &Poisson1::initialize);
 
@@ -88,15 +91,17 @@ void Poisson1::scheduleInitialize(const LevelP& level,
 
 //______________________________________________________________________
 //
-void Poisson1::scheduleRestartInitialize(const LevelP& level,
-                                         SchedulerP& sched)
+void Poisson1::scheduleRestartInitialize( const LevelP     & level
+                                        ,       SchedulerP & sched
+                                        )
 {
 }
 
 //______________________________________________________________________
 //
-void Poisson1::scheduleComputeStableTimeStep(const LevelP& level,
-                                             SchedulerP& sched)
+void Poisson1::scheduleComputeStableTimeStep( const LevelP     & level
+                                            ,       SchedulerP & sched
+                                            )
 {
   Task* task = scinew Task("Poisson1::computeStableTimeStep", this, &Poisson1::computeStableTimeStep);
 
@@ -107,8 +112,9 @@ void Poisson1::scheduleComputeStableTimeStep(const LevelP& level,
 
 //______________________________________________________________________
 //
-void Poisson1::scheduleTimeAdvance(const LevelP& level,
-                                   SchedulerP& sched)
+void Poisson1::scheduleTimeAdvance( const LevelP     & level
+                                  ,       SchedulerP & sched
+                                  )
 {
   Task* task = scinew Task("Poisson1::timeAdvance", this, &Poisson1::timeAdvance);
 
@@ -120,11 +126,12 @@ void Poisson1::scheduleTimeAdvance(const LevelP& level,
 
 //______________________________________________________________________
 //
-void Poisson1::computeStableTimeStep(const ProcessorGroup* pg,
-                                     const PatchSubset* patches,
-                                     const MaterialSubset* /*matls*/,
-                                     DataWarehouse*,
-                                     DataWarehouse* new_dw)
+void Poisson1::computeStableTimeStep( const ProcessorGroup * pg
+                                    , const PatchSubset    * patches
+                                    , const MaterialSubset * /*matls*/
+                                    ,       DataWarehouse  *
+                                    ,       DataWarehouse  * new_dw
+                                    )
 {
   if (pg->myRank() == 0) {
     sum_vartype residual;
@@ -135,11 +142,12 @@ void Poisson1::computeStableTimeStep(const ProcessorGroup* pg,
 
 //______________________________________________________________________
 //
-void Poisson1::initialize(const ProcessorGroup*,
-                          const PatchSubset* patches,
-                          const MaterialSubset* matls,
-                          DataWarehouse* /*old_dw*/,
-                          DataWarehouse* new_dw)
+void Poisson1::initialize( const ProcessorGroup *
+                         , const PatchSubset    * patches
+                         , const MaterialSubset * matls
+                         ,       DataWarehouse  * /*old_dw*/
+                         ,       DataWarehouse  * new_dw
+                         )
 {
   int matl = 0;
   for (int p = 0; p < patches->size(); p++) {
@@ -217,11 +225,12 @@ struct TimeAdvanceFunctor {
 
 //______________________________________________________________________
 //
-void Poisson1::timeAdvance(const ProcessorGroup*,
-                           const PatchSubset* patches,
-                           const MaterialSubset* matls,
-                           DataWarehouse* old_dw,
-                           DataWarehouse* new_dw)
+void Poisson1::timeAdvance( const ProcessorGroup *
+                          , const PatchSubset    * patches
+                          , const MaterialSubset * matls
+                          ,       DataWarehouse  * old_dw
+                          ,       DataWarehouse  * new_dw
+                          )
 {
   int matl = 0;
   for (int p = 0; p < patches->size(); p++) {
@@ -248,7 +257,7 @@ void Poisson1::timeAdvance(const ProcessorGroup*,
     Uintah::BlockRange range(l, h);
 
     TimeAdvanceFunctor func(phi, newphi);
-    Uintah::parallel_reduce(range, func, residual);
+    Uintah::parallel_reduce_sum(range, func, residual);
 
     new_dw->put(sum_vartype(residual), residual_label);
   }

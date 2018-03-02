@@ -176,7 +176,7 @@ usage( const std::string& message, const std::string& badarg, const std::string&
     std::cerr << "-visit_connect           : Wait for a visit connection before executing the simulation\n";
     std::cerr << "-visit_comment <comment> : A comment about the simulation\n";
     std::cerr << "-visit_dir <directory>   : Top level directory for the VisIt installation\n";
-    std::cerr << "-visit_option <string>   : Optional args for the VisIt launch script\n";
+    std::cerr << "-visit_options <string>   : Optional args for the VisIt launch script\n";
     std::cerr << "-visit_trace <file>      : Trace file for VisIt's Sim V2 function calls\n";
     std::cerr << "-visit_ui <file>         : Use the named Qt GUI file instead of the default\n";
 #endif
@@ -437,9 +437,9 @@ main( int argc, char *argv[], char *env[] )
       else if( do_VisIt == VISIT_SIMMODE_UNKNOWN )
         do_VisIt = VISIT_SIMMODE_RUNNING;
     }
-    else if (arg == "-visit_option" ) {
+    else if (arg == "-visit_options" ) {
       if (++i == argc) {
-        usage("You must provide a string for -visit_option", arg, argv[0]);
+        usage("You must provide a string for -visit_options", arg, argv[0]);
       }
       else if( do_VisIt == VISIT_SIMMODE_UNKNOWN )
         do_VisIt = VISIT_SIMMODE_RUNNING;

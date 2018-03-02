@@ -95,10 +95,13 @@ namespace Uintah{
     std::string _FluxPx_base_name;
     std::string _FluxPy_base_name;
     std::string _FluxPz_base_name;
-
+   
     std::string  _WallTemperature_name;
     double _pi_div_six;
-
+    double FactA;
+    double lnFactA;
+    double FactB;
+    double T_fluid;
     //--------------------compute the deposition probability ---------------------------------------
     inline double compute_prob_stick( const double A, const double B,
                                       const double Tvol, const double MaxTvol)
@@ -117,6 +120,29 @@ namespace Uintah{
       //compute the viscosity probability
       Visc = 0.1 * A * std::max(Tvol,273.0) * exp(1000.0*B /(std::max(Tvol,273.0)) );
       ProbVisc = ( ReferVisc/(Visc) > 1 ? 1 :  ReferVisc/(Visc) );
+      ProbStick= ( ProbVisc * ProbMelt );
+      return ProbStick;
+    };
+    
+    //--------------------compute the deposition probability withFactage ---------------------------------------
+    inline double compute_prob_stick_fact( const double lnA, const double B,
+                                      const double Tvol, const double MaxTvol)
+    {
+      // Urbain model 1981
+      const double ReferVisc=100.0;
+
+      //-----------------------Actual work here----------------------
+      // Compute the melting probability
+      double ProbMelt=0;
+      double ProbVisc=0;
+      double ProbStick=0;
+      double Visc=0;
+      ProbMelt=( MaxTvol >= _Tmelt ? 1:0);
+
+      //compute the viscosity probability
+      Visc = 0.1*std::exp(std::log( std::max(Tvol,273.0) ) + 1000.0*B/std::max(Tvol,273.0) + lnA); // kg / m / s
+      //Visc = 0.1 * A * std::max(Tvol,273.0) * exp(1000.0*B /(std::max(Tvol,273.0)) );
+      ProbVisc = ( ReferVisc/(Visc) > 1 ? 1.0 :  ReferVisc/(Visc) );
       ProbStick= ( ProbVisc * ProbMelt );
       return ProbStick;
     };

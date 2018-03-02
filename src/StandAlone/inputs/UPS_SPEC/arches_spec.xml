@@ -26,6 +26,7 @@
                                         attribute2="role REQUIRED STRING 'temperature, density, enthalpy, mixture_fraction,
                                                                           co2, h2o, soot, specific_heat,
                                                                           uvelocity, vvelocity, wvelocity,
+                                                                          ccuvelocity, ccvvelocity, ccwvelocity,
                                                                           total_viscosity'"/>
       </VarID>
 
@@ -529,6 +530,8 @@
           <ash_softening_temperature             spec="OPTIONAL DOUBLE" />     <!-- Base of ash cone is equal to its height. Porosity is set to zero when T > (T_soft + T_fluid ) / 2.  -->
           <ash_hemispherical_temperature         spec="OPTIONAL DOUBLE" />     <!-- Base of ash cone is twice its height. This is the temperature at which ash particles melting probability is assumed to be 1. -->
           <ash_fluid_temperature                 spec="OPTIONAL DOUBLE" />     <!-- Ash cone has spread to a fused liquid mass. This is the slagging temperature used in the wallHT model. -->
+          <visc_pre_exponential_factor           spec="OPTIONAL DOUBLE" />     <!-- Urbain visocity pre-exponential factor. [poise/K]-->
+          <visc_activation_energy                spec="OPTIONAL DOUBLE" />     <!-- Urbain visocity activation temperature. [K]-->
 
 
         <!-- Coal Properties -->
@@ -1031,6 +1034,7 @@
             <geom_object/>
           </region>
           <deposit_velocity_name           spec="REQUIRED STRING" need_applies_to="type coal_region_ht"/>
+          <k_ash_sigma                     spec="OPTIONAL DOUBLE" need_applies_to="type coal_region_ht"/> <!-- additive thermal conductivity for ash model for exploring uncertainty [+/-log10(W/m/K)] -->
           <extra_src                       spec="MULTIPLE STRING" need_applies_to="type coal_region_ht"/> <!-- extra_src labels this will be added when computing the net heat flux. -->
           <coal_name                       spec="OPTIONAL STRING" need_applies_to="type coal_region_ht"/> <!-- this is the name corresponding to a given ash composition. -->
           <coordination_number             spec="OPTIONAL INTEGER" need_applies_to="type coal_region_ht"/> <!-- this is the coordination number for the pokluda sintering model, default is 2, int must be >=2. -->
@@ -1309,7 +1313,7 @@
       <KMomentum                        spec="OPTIONAL NO_DATA">
 
         <convection                     spec="OPTIONAL NO_DATA"
-                                        attribute1="scheme REQUIRED STRING 'central, upwind, superbee, roe, vanleer'"/>
+                                        attribute1="scheme REQUIRED STRING 'central, upwind, superbee, roe, vanleer,fourth'"/>
         <inviscid                       spec="OPTIONAL NO_DATA"/> <!-- Turn off diffusion -->
         <src_x                          spec="OPTIONAL NO_DATA"
                                         attribute1=" label REQUIRED STRING"/>
@@ -2126,7 +2130,7 @@
         <!-- Block of tags for specifying the linear solver used for DQMOM -->
         <LinearSolver                   spec="OPTIONAL NO_DATA">
           <tolerance                    spec="OPTIONAL DOUBLE 'positive'" />
-          <type                         spec="OPTIONAL STRING 'Lapack-invert, Lapack-svd, LU, Optimize, Simplest'" />
+          <type                         spec="OPTIONAL STRING 'Lapack-invert, Lapack-svd, LU, Optimize'" />
           <Optimization                 spec="OPTIONAL NO_DATA" >
             <Optimal_abscissas          spec="REQUIRED MULTIPLE_DOUBLES" />
           </Optimization>

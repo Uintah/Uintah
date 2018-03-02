@@ -53,19 +53,22 @@ using namespace Uintah;
 // used externally in DetailedTask.cc
 Uintah::MasterLock g_external_ready_mutex{}; // synchronizes access to the external-ready task queue
 
+// used externally in DetailedTask.cc
+Dout g_scrubbing_dbg(      "Scrubbing",     false);
+
+// used externally in DetailedTask.cc
+// for debugging - set the variable name (inside the quotes) and patchID to watch one in the scrubout
+std::string g_var_scrub_dbg   = "";
+int         g_patch_scrub_dbg = -1;
+
+
 namespace {
 
 Uintah::MasterLock g_internal_ready_mutex{}; // synchronizes access to the internal-ready task queue
 
-Dout dbg(         "DetailedTasks", false);
-Dout scrubout(    "Scrubbing",     false);
-Dout messagedbg(  "MessageTags",   false);
-Dout internaldbg( "InternalDeps",  false);
-Dout dwdbg(       "DetailedDWDBG", false);
-
-// for debugging - set the variable name (inside the quotes) and patchID to watch one in the scrubout
-std::string dbgScrubVar   = "";
-int         dbgScrubPatch = -1;
+Dout g_detailed_dw_dbg(    "DetailedDWDBG", false);
+Dout g_detailed_tasks_dbg( "DetailedTasks", false);
+Dout g_message_tags_dbg(   "MessageTags",   false);
 
 
 #ifdef HAVE_CUDA
@@ -91,14 +94,12 @@ int         dbgScrubPatch = -1;
 //
 DetailedTasks::DetailedTasks(       SchedulerCommon * sc
                             , const ProcessorGroup  * pg
-                            ,       DetailedTasks   * first
                             , const TaskGraph       * taskgraph
                             , const std::set<int>   & neighborhood_processors
                             ,       bool              mustConsiderInternalDependencies /* = false */
                             )
   : m_sched_common(sc)
   , m_proc_group(pg)
-  , m_first(first)
   , m_task_graph(taskgraph)
   , m_must_consider_internal_deps(mustConsiderInternalDependencies)
 {
@@ -120,7 +121,7 @@ DetailedTasks::DetailedTasks(       SchedulerCommon * sc
     DetailedTask* newtask = scinew DetailedTask( m_send_old_data, nullptr, nullptr, this );
     newtask->assignResource(*iter);
 
-    //use a map because the processors in this map are likely to be sparse
+    // use a map because the processors in this map are likely to be sparse
     m_send_old_map[*iter] = m_tasks.size();
     m_tasks.push_back(newtask);
   }
@@ -131,7 +132,7 @@ DetailedTasks::DetailedTasks(       SchedulerCommon * sc
 DetailedTasks::~DetailedTasks()
 {
   // Free dynamically allocated SrubItems
-  (m_first ? m_first->m_scrub_count_table : m_scrub_count_table).remove_all();
+  m_scrub_count_table.remove_all();
 
   for (size_t i = 0; i < m_dep_batches.size(); i++) {
     delete m_dep_batches[i];
@@ -165,12 +166,12 @@ DetailedTasks::assignMessageTags( int me )
       // Easier to go in reverse order now, instead of reinitializing perPairBatchIndices.
       std::pair<int, int> fromToPair = std::make_pair(from, to);
       m_dep_batches[i]->m_message_tag = ++perPairBatchIndices[fromToPair];  // start with one
-      DOUT(messagedbg, "Rank-" << me << " assigning message tag " << batch->m_message_tag << " from task " << batch->m_from_task->getName()
+      DOUT(g_message_tags_dbg, "Rank-" << me << " assigning message tag " << batch->m_message_tag << " from task " << batch->m_from_task->getName()
                                << " to task " << batch->m_to_tasks.front()->getName() << ", rank-" << from << " to rank-" << to);
     }
   }
 
-  if (messagedbg) {
+  if (g_message_tags_dbg) {
     for (auto iter = perPairBatchIndices.begin(); iter != perPairBatchIndices.end(); ++iter) {
       int from = iter->first.first;
       int to   = iter->first.second;
@@ -194,7 +195,7 @@ DetailedTasks::add( DetailedTask * dtask )
 void
 DetailedTasks::makeDWKeyDatabase()
 {
-  for (int i = 0; i < (int)m_local_tasks.size(); i++) {
+  for (auto i = 0u; i < m_local_tasks.size(); i++) {
     DetailedTask* task = m_local_tasks[i];
     //for reduction task check modifies other task check computes
     const Task::Dependency *comp = task->getTask()->isReductionTask() ? task->getTask()->getModifies() : task->getTask()->getComputes();
@@ -213,7 +214,7 @@ DetailedTasks::makeDWKeyDatabase()
             const Patch* patch = patches->get(p);
             m_var_keyDB.insert(comp->m_var, matl, patch);
 
-            DOUT(dwdbg, "reserve " << comp->m_var->getName() << " on Patch " << patch->getID() << ", Matl " << matl);
+            DOUT(g_detailed_dw_dbg, "reserve " << comp->m_var->getName() << " on Patch " << patch->getID() << ", Matl " << matl);
           }
         }
       } //end matls
@@ -232,7 +233,7 @@ DetailedTasks::computeLocalTasks( int me )
 
   int order = 0;
   m_initial_ready_tasks = TaskQueue();
-  for (int i = 0; i < (int)m_tasks.size(); i++) {
+  for (auto i = 0u; i < m_tasks.size(); i++) {
     DetailedTask* task = m_tasks[i];
 
     ASSERTRANGE(task->getAssignedResourceIndex(), 0, m_proc_group->nRanks());
@@ -253,7 +254,7 @@ DetailedTasks::computeLocalTasks( int me )
 void
 DetailedTasks::initializeScrubs( std::vector<OnDemandDataWarehouseP> & dws, int dwmap[] )
 {
-  DOUT(scrubout, "Rank-" << Parallel::getMPIRank() << " Begin initialize scrubs");
+  DOUT(g_scrubbing_dbg, "Rank-" << Parallel::getMPIRank() << " Begin initialize scrubs");
 
   std::vector<bool> initialized(dws.size(), false);
   for (int i = 0; i < (int)Task::TotalDWs; i++) {
@@ -268,22 +269,22 @@ DetailedTasks::initializeScrubs( std::vector<OnDemandDataWarehouseP> & dws, int 
       int tgtype = getTaskGraph()->getType();
       if (!initialized[dwmap[i]] || tgtype == Scheduler::IntermediateTaskGraph) {
         // if we're intermediate, we're going to need to make sure we don't scrub CoarseOld before we finish using it
-        DOUT(scrubout, "Rank-" << Parallel::getMPIRank() << " Initializing scrubs on dw: " << dw->getID()
-                               << " for DW type " << i << " ADD=" << initialized[dwmap[i]]);
-        dw->initializeScrubs(i, &(m_first ? m_first->m_scrub_count_table : m_scrub_count_table), initialized[dwmap[i]]);
+        DOUT(g_scrubbing_dbg, "Rank-" << Parallel::getMPIRank() << " Initializing scrubs on dw: " << dw->getID()
+                                      << " for DW type " << i << " ADD=" << initialized[dwmap[i]]);
+        dw->initializeScrubs(i, &m_scrub_count_table, initialized[dwmap[i]]);
       }
       if (i != Task::OldDW && tgtype != Scheduler::IntermediateTaskGraph && dwmap[Task::NewDW] - dwmap[Task::OldDW] > 1) {
         // add the CoarseOldDW's scrubs to the OldDW, so we keep it around for future task graphs
         OnDemandDataWarehouse* olddw = dws[dwmap[Task::OldDW]].get_rep();
-        DOUT(scrubout, "Rank-" << Parallel::getMPIRank() << " Initializing scrubs on dw: " << olddw->getID() << " for DW type " << i << " ADD=" << 1);
+        DOUT(g_scrubbing_dbg, "Rank-" << Parallel::getMPIRank() << " Initializing scrubs on dw: " << olddw->getID() << " for DW type " << i << " ADD=" << 1);
         ASSERT(initialized[dwmap[Task::OldDW]]);
-        olddw->initializeScrubs(i, &(m_first ? m_first->m_scrub_count_table : m_scrub_count_table), true);
+        olddw->initializeScrubs(i, &m_scrub_count_table, true);
       }
       initialized[dwmap[i]] = true;
     }
   }
 
-  DOUT(scrubout, "Rank-" << Parallel::getMPIRank() << " End initialize scrubs");
+  DOUT(g_scrubbing_dbg, "Rank-" << Parallel::getMPIRank() << " End initialize scrubs");
 }
 
 //_____________________________________________________________________________
@@ -302,16 +303,15 @@ DetailedTasks::addScrubCount( const VarLabel * var
   }
   ScrubItem key(var, matlindex, patch, dw);
   ScrubItem* result;
-  result = (m_first ? m_first->m_scrub_count_table : m_scrub_count_table).lookup(&key);
+  result = m_scrub_count_table.lookup(&key);
   if (!result) {
     result = scinew ScrubItem(var, matlindex, patch, dw);
-    (m_first ? m_first->m_scrub_count_table : m_scrub_count_table).insert(result);
+    m_scrub_count_table.insert(result);
   }
   result->m_count++;
-  if (scrubout && (var->getName() == dbgScrubVar || dbgScrubVar == "")
-      && (dbgScrubPatch == patch->getID() || dbgScrubPatch == -1)) {
-    DOUT(true, "Rank-" << Parallel::getMPIRank() << " Adding Scrub count for req of " << dw << "/" << patch->getID() << "/" << matlindex
-                       << "/" << *var << ": " << result->m_count);
+  if (g_scrubbing_dbg && (var->getName() == g_var_scrub_dbg || g_var_scrub_dbg == "") && (g_patch_scrub_dbg == patch->getID() || g_patch_scrub_dbg == -1)) {
+    DOUT(true, "Rank-" << Parallel::getMPIRank() << " Adding Scrub count for req of " << dw << "/"
+                       << patch->getID() << "/" << matlindex << "/" << *var << ": " << result->m_count);
   }
 }
 
@@ -334,8 +334,7 @@ DetailedTasks::setScrubCount( const Task::Dependency                    * req
       SCI_THROW(InternalError("No scrub count for received MPIVariable: "+req->m_var->getName(), __FILE__, __LINE__));
     }
 
-    if (scrubout && (req->m_var->getName() == dbgScrubVar || dbgScrubVar == "")
-        && (dbgScrubPatch == patch->getID() || dbgScrubPatch == -1)) {
+    if (g_scrubbing_dbg && (req->m_var->getName() == g_var_scrub_dbg || g_var_scrub_dbg == "") && (g_patch_scrub_dbg == patch->getID() || g_patch_scrub_dbg == -1)) {
       DOUT(true, "Rank-" << Parallel::getMPIRank() << " setting scrubcount for recv of " << req->mapDataWarehouse() << "/" << patch->getID()
                          << "/" << matl << "/" << req->m_var->getName() << ": " << scrubcount);
     }
@@ -355,7 +354,7 @@ DetailedTasks::getScrubCount( const VarLabel * label
 {
   ASSERT(!patch->isVirtual());
   ScrubItem key(label, matlIndex, patch, dw);
-  ScrubItem* result = (m_first ? m_first->m_scrub_count_table : m_scrub_count_table).lookup(&key);
+  ScrubItem* result = m_scrub_count_table.lookup(&key);
   if (result) {
     count = result->m_count;
     return true;
@@ -371,7 +370,7 @@ void
 DetailedTasks::createScrubCounts()
 {
   // Clear old ScrubItems
-  (m_first ? m_first->m_scrub_count_table : m_scrub_count_table).remove_all();
+  m_scrub_count_table.remove_all();
 
   // Go through each of the tasks and determine which variables it will require
   for (int i = 0; i < (int)m_local_tasks.size(); i++) {
@@ -415,11 +414,11 @@ DetailedTasks::createScrubCounts()
     }
   }
 
-  if (scrubout) {
+  if (g_scrubbing_dbg) {
     std::ostringstream message;
     message << Parallel::getMPIRank() << " scrub counts:\n";
     message << Parallel::getMPIRank() << " DW/Patch/Matl/Label\tCount\n";
-    for (FastHashTableIter<ScrubItem> iter(&(m_first ? m_first->m_scrub_count_table : m_scrub_count_table)); iter.ok(); ++iter) {
+    for (FastHashTableIter<ScrubItem> iter(&m_scrub_count_table); iter.ok(); ++iter) {
       const ScrubItem* rec = iter.get_key();
       message << rec->m_dw << '/' << (rec->m_patch ? rec->m_patch->getID() : 0) << '/' << rec->m_matl << '/' << rec->m_label->getName()
                << "\t\t" << rec->m_count << '\n';
@@ -435,13 +434,13 @@ DetailedDep*
 DetailedTasks::findMatchingDetailedDep(       DependencyBatch  * batch
                                       ,       DetailedTask     * toTask
                                       ,       Task::Dependency * req
-                                      ,  const Patch           * fromPatch
-                                      ,        int               matl
-                                      ,        IntVector         low
-                                      ,        IntVector         high
-                                      ,        IntVector       & totalLow
-                                      ,        IntVector       & totalHigh
-                                      ,        DetailedDep    *& parent_dep
+                                      , const Patch            * fromPatch
+                                      ,       int                matl
+                                      ,       IntVector          low
+                                      ,       IntVector          high
+                                      ,       IntVector        & totalLow
+                                      ,       IntVector        & totalHigh
+                                      ,       DetailedDep     *& parent_dep
                                       )
 {
   totalLow = low;
@@ -500,7 +499,7 @@ DetailedTasks::findMatchingDetailedDep(       DependencyBatch  * batch
             //keep searching in case there is a better dep to combine with
           }
         }
-        else if (dbg) {
+        else if (g_detailed_tasks_dbg) {
           std::ostringstream message;
           message << m_proc_group->myRank() << "            Ignoring: " << dep->m_low << " " << dep->m_high << ", fromPatch = ";
           if (fromPatch) {
@@ -561,14 +560,16 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask     * from
   ASSERTRANGE(from->getAssignedResourceIndex(), 0, m_proc_group->nRanks());
   ASSERTRANGE(to->getAssignedResourceIndex(),   0, m_proc_group->nRanks());
 
-  if (dbg) {
+  int my_rank = m_proc_group->myRank();
+
+  if (g_detailed_tasks_dbg) {
     std::ostringstream message;
-    message << "Rank-" << m_proc_group->myRank() << "  " << *to << " depends on " << *from << "\n";
+    message << "Rank-" << my_rank << "  " << *to << " depends on " << *from << "\n";
       if (comp) {
-        message << "Rank-" << m_proc_group->myRank() << "  From comp " << *comp;
+        message << "Rank-" << my_rank << "  From comp " << *comp;
       }
       else {
-        message << "Rank-" << m_proc_group->myRank() << "  From OldDW ";
+        message << "Rank-" << my_rank << "  From OldDW ";
       }
       message << " to req " << *req;
       DOUT(true, message.str());
@@ -578,18 +579,18 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask     * from
   int fromresource = from->getAssignedResourceIndex();
 
   // if neither task talks to this processor, return
-  if (fromresource != m_proc_group->myRank() && toresource != m_proc_group->myRank()) {
+  if (fromresource != my_rank && toresource != my_rank) {
     return;
   }
 
-  if ((toresource == m_proc_group->myRank() || (req->m_patches_dom != Task::ThisLevel && fromresource == m_proc_group->myRank()))
+  if ((toresource == my_rank || (req->m_patches_dom != Task::ThisLevel && fromresource == my_rank))
       && fromPatch && !req->m_var->typeDescription()->isReductionVariable()) {
     // add scrub counts for local tasks, and not for non-data deps
     addScrubCount(req->m_var, matl, fromPatch, req->m_whichdw);
   }
 
   // if the dependency is on the same processor then add an internal dependency
-  if (fromresource == m_proc_group->myRank() && fromresource == toresource) {
+  if (fromresource == my_rank && fromresource == toresource) {
     to->addInternalDependency(from, req->m_var);
 
     // In case of multiple GPUs per node, we don't return.  Multiple GPUs
@@ -606,9 +607,10 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask     * from
   if (req->m_var->typeDescription()->getType() == TypeDescription::SoleVariable) {
     return;
   }
+
 #ifdef HAVE_CUDA
   if (Uintah::Parallel::usingDevice()) {
-    if (fromresource == m_proc_group->myRank() && fromresource == toresource) {
+    if (fromresource == my_rank && fromresource == toresource) {
       if (fromPatch != toPatch) {
         //printf("In DetailedTasks::createInternalDependencyBatch creating internal dependency from patch %d to patch %d, from task %p to task %p\n", fromPatch->getID(), toPatch->getID(), from, to);
         createInternalDependencyBatch(from, comp, fromPatch, to, req, toPatch, matl, low, high, cond);
@@ -623,7 +625,7 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask     * from
     m_var_keyDB.insert(req->m_var, matl, fromPatch);
   }
 
-  //get dependency batch
+  // get dependency batch
   DependencyBatch* batch = from->getComputes();
 
   // find dependency batch that is to the same processor as this dependency
@@ -647,14 +649,14 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask     * from
 
     ASSERTL2(newRequireBatch);
 
-    DOUT(dbg, "Rank-" << m_proc_group->myRank() << "          NEW BATCH!");
+    DOUT(g_detailed_tasks_dbg, "Rank-" << my_rank << "          NEW BATCH!");
   }
   else if (m_must_consider_internal_deps) {  // i.e. threaded mode
     if (to->addRequires(batch)) {
       // this is a new requires batch for this task, so add to the batch's toTasks.
       batch->m_to_tasks.push_back(to);
     }
-    DOUT(dbg, "Rank-" << m_proc_group->myRank() << "          USING PREVIOUSLY CREATED BATCH!");
+    DOUT(g_detailed_tasks_dbg, "Rank-" << my_rank << "          USING PREVIOUSLY CREATED BATCH!");
   }
 
   IntVector varRangeLow(INT_MAX, INT_MAX, INT_MAX), varRangeHigh(INT_MIN, INT_MIN, INT_MIN);
@@ -667,8 +669,9 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask     * from
   // location of parent dependency
   DetailedDep* parent_dep;
 
-  DetailedDep* matching_dep = findMatchingDetailedDep(batch, to, req, fromPatch, matl, new_dep->m_low, new_dep->m_high, varRangeLow,
-                                                      varRangeHigh, parent_dep);
+  DetailedDep* matching_dep = findMatchingDetailedDep(batch, to, req, fromPatch, matl,
+                                                      new_dep->m_low, new_dep->m_high,
+                                                      varRangeLow, varRangeHigh, parent_dep);
 
   // This is set to either the parent of the first matching dep or when there is no matching deps the last dep in the list.
   DetailedDep* insert_dep = parent_dep;
@@ -677,9 +680,9 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask     * from
   while (matching_dep != nullptr) {
 
     // debugging output
-    if (dbg) {
+    if (g_detailed_tasks_dbg) {
       std::ostringstream message;
-      message << "Rank-" << m_proc_group->myRank() << "            EXTENDED from " << new_dep->m_low << " " << new_dep->m_high << " to "
+      message << "Rank-" << my_rank << "            EXTENDED from " << new_dep->m_low << " " << new_dep->m_high << " to "
               << Min(new_dep->m_low, matching_dep->m_low) << " " << Max(new_dep->m_high, matching_dep->m_high) << "\n";
       message << *req->m_var << '\n';
       message << *new_dep->m_req->m_var << '\n';
@@ -696,7 +699,7 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask     * from
     new_dep->m_low  = Min(new_dep->m_low,  matching_dep->m_low);
     new_dep->m_high = Max(new_dep->m_high, matching_dep->m_high);
 
-    // TODO This has broken OutputNthProc - figure this out ASAP and fix, APH 09/27/17
+    // TODO This has broken OutputNthProc - figure this out ASAP and fix, APH 02/23/18
 //    // if the same dependency already exists then short circuit out of this function.
 //    if (matching_dep->m_low == new_dep->m_low && matching_dep->m_high == new_dep->m_high) {
 //      matching_dep->m_to_tasks.splice(matching_dep->m_to_tasks.begin(), new_dep->m_to_tasks);
@@ -712,12 +715,12 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask     * from
       PSPatchMatlGhostRange pmg(fromPatch, matl, matching_dep->m_low, matching_dep->m_high, (int)cond);
 
       if (req->m_var->getName() == "p.x") {
-        DOUT(dbg, "Rank-" << m_proc_group->myRank() << " erasing particles from " << fromresource << " to " << toresource << " var " << *req->m_var
-                          << " on patch " << fromPatch->getID() << " matl " << matl << " range " << matching_dep->m_low << " " << matching_dep->m_high
-                          << " cond " << cond << " dw " << req->mapDataWarehouse());
+        DOUT(g_detailed_tasks_dbg, "Rank-" << my_rank << " erasing particles from " << fromresource << " to " << toresource << " var " << *req->m_var
+                                           << " on patch " << fromPatch->getID() << " matl " << matl << " range " << matching_dep->m_low << " " << matching_dep->m_high
+                                           << " cond " << cond << " dw " << req->mapDataWarehouse());
       }
 
-      if (fromresource == m_proc_group->myRank()) {
+      if (fromresource == my_rank) {
         std::set<PSPatchMatlGhostRange>::iterator iter = m_particle_sends[toresource].find(pmg);
         ASSERT(iter != m_particle_sends[toresource].end());
 
@@ -729,7 +732,7 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask     * from
           m_particle_sends[toresource].erase(iter);
         }
       }
-      else if (toresource == m_proc_group->myRank()) {
+      else if (toresource == my_rank) {
         std::set<PSPatchMatlGhostRange>::iterator iter = m_particle_recvs[fromresource].find(pmg);
         ASSERT(iter != m_particle_recvs[fromresource].end());
         // subtract one from the count
@@ -784,7 +787,7 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask     * from
   if (req->m_var->typeDescription()->getType() == TypeDescription::ParticleVariable && req->m_whichdw == Task::OldDW) {
     PSPatchMatlGhostRange pmg = PSPatchMatlGhostRange(fromPatch, matl, new_dep->m_low, new_dep->m_high, (int)cond, 1);
 
-    if (fromresource == m_proc_group->myRank()) {
+    if (fromresource == my_rank) {
       std::set<PSPatchMatlGhostRange>::iterator iter = m_particle_sends[toresource].find(pmg);
       if (iter == m_particle_sends[toresource].end()) {  //if does not exist
         //add to the sends list
@@ -795,7 +798,7 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask     * from
         iter->count_++;
       }
     }
-    else if (toresource == m_proc_group->myRank()) {
+    else if (toresource == my_rank) {
       std::set<PSPatchMatlGhostRange>::iterator iter = m_particle_recvs[fromresource].find(pmg);
       if (iter == m_particle_recvs[fromresource].end()) {
         //add to the recvs list
@@ -808,15 +811,15 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask     * from
 
     }
     if (req->m_var->getName() == "p.x") {
-      DOUT(dbg, "Rank-" << m_proc_group->myRank() << " scheduling particles from " << fromresource << " to " << toresource << " on patch "
-                        << fromPatch->getID() << " matl " << matl << " range " << low << " " << high << " cond " << cond << " dw "
-                        << req->mapDataWarehouse());
+      DOUT(g_detailed_tasks_dbg, "Rank-" << my_rank << " scheduling particles from " << fromresource << " to " << toresource << " on patch "
+                                         << fromPatch->getID() << " matl " << matl << " range " << low << " " << high << " cond " << cond << " dw "
+                                         << req->mapDataWarehouse());
     }
   }
 
-  if (dbg) {
+  if (g_detailed_tasks_dbg) {
     std::ostringstream message;
-    message << "Rank-" << m_proc_group->myRank() << "            ADDED " << low << " " << high << ", fromPatch = ";
+    message << "Rank-" << my_rank << "            ADDED " << low << " " << high << ", fromPatch = ";
     if (fromPatch) {
       message << fromPatch->getID() << '\n';
     }
@@ -851,7 +854,6 @@ DetailedTasks::internalDependenciesSatisfied( DetailedTask * dtask )
 
   m_ready_tasks.push(dtask);
   atomic_readyTasks_size.fetch_add(1, std::memory_order_relaxed);
-  DOUT(internaldbg, *dtask << " satisfied.  Now " << m_ready_tasks.size() << " ready.");
 }
 
 //_____________________________________________________________________________
@@ -1382,7 +1384,7 @@ void DetailedTasks::createInternalDependencyBatch(       DetailedTask     * from
     to->addInternalRequires(batch);
 #endif
     ASSERTL2(newRequireBatch);
-    if (dbg)
+    if (g_detailed_tasks_dbg)
       DOUT(true, "Rank-" << m_proc_group->myRank() << "          NEW BATCH!");
   } else if (m_must_consider_internal_deps) {  // i.e. threaded mode
     if (to->addInternalRequires(batch)) {
@@ -1391,7 +1393,7 @@ void DetailedTasks::createInternalDependencyBatch(       DetailedTask     * from
       batch->m_to_tasks.push_back(to);
     }
 
-    DOUT(dbg, "Rank-" << m_proc_group->myRank() << "          USING PREVIOUSLY CREATED BATCH!");
+    DOUT(g_detailed_tasks_dbg, "Rank-" << m_proc_group->myRank() << "          USING PREVIOUSLY CREATED BATCH!");
   }
 
   IntVector varRangeLow(INT_MAX, INT_MAX, INT_MAX), varRangeHigh(INT_MIN, INT_MIN, INT_MIN);
@@ -1421,7 +1423,7 @@ void DetailedTasks::createInternalDependencyBatch(       DetailedTask     * from
   while (matching_dep != nullptr) {
 
     //debugging output
-    if (dbg) {
+    if (g_detailed_tasks_dbg) {
       std::ostringstream message;
       message << m_proc_group->myRank() << "            EXTENDED from " << new_dep->m_low << " " << new_dep->m_high << " to "
               << Min(new_dep->m_low, matching_dep->m_low) << " " << Max(new_dep->m_high, matching_dep->m_high) << "\n";
@@ -1450,7 +1452,7 @@ void DetailedTasks::createInternalDependencyBatch(       DetailedTask     * from
       PSPatchMatlGhostRange pmg(fromPatch, matl, matching_dep->m_low, matching_dep->m_high, (int)cond);
 
       if (req->m_var->getName() == "p.x")
-        DOUT(dbg, "Rank-" << m_proc_group->myRank() << " erasing particles from " << fromresource << " to " << toresource << " var " << *req->m_var
+        DOUT(g_detailed_tasks_dbg, "Rank-" << m_proc_group->myRank() << " erasing particles from " << fromresource << " to " << toresource << " var " << *req->m_var
                           << " on patch " << fromPatch->getID() << " matl " << matl << " range " << matching_dep->m_low << " " << matching_dep->m_high
                           << " cond " << cond << " dw " << req->mapDataWarehouse());
 
@@ -1540,12 +1542,12 @@ void DetailedTasks::createInternalDependencyBatch(       DetailedTask     * from
 
     }
     if (req->m_var->getName() == "p.x")
-      DOUT(dbg, "Rank-" << m_proc_group->myRank() << " scheduling particles from " << fromresource << " to " << toresource << " on patch "
-                        << fromPatch->getID() << " matl " << matl << " range " << low << " " << high << " cond " << cond << " dw "
-                        << req->mapDataWarehouse());
+      DOUT(g_detailed_tasks_dbg, "Rank-" << m_proc_group->myRank() << " scheduling particles from " << fromresource << " to " << toresource << " on patch "
+                                         << fromPatch->getID() << " matl " << matl << " range " << low << " " << high << " cond " << cond << " dw "
+                                         << req->mapDataWarehouse());
   }
 
-  if (dbg) {
+  if (g_detailed_tasks_dbg) {
     std::ostringstream message;
     message << m_proc_group->myRank() << "            ADDED " << low << " " << high << ", fromPatch = ";
     if (fromPatch) {

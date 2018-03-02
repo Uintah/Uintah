@@ -2,21 +2,21 @@
 
 from sys import argv, exit
 from os import environ, system
-from helpers.runSusTests import runSusTests, inputs_root, ignorePerformanceTests, generatingGoldStandards
-from helpers.modUPS import modUPS
+from helpers.runSusTests import runSusTests, ignorePerformanceTests, getInputsDir
+from helpers.modUPS import modUPS, modUPS2
 
-the_dir = generatingGoldStandards()
 
-if the_dir == "" :
-  the_dir = "%s/ICE" % inputs_root()
-else :
-  the_dir = the_dir + "/ICE"
+the_dir = "%s/%s" % ( getInputsDir(),"ICE" )
 
 riemann_1L_ups    = modUPS( the_dir,                       \
                              "riemann_sm.ups" ,            \
                              ["<maxTime>            0.0001      </maxTime>", \
                               "<outputInterval> 0.000025 </outputInterval>"])
 
+
+advectAMR_perf_ups = modUPS2( the_dir, \
+                               "advectAMR.ups", \
+                               [("delete", "/Uintah_specification/DataAnalysis")] )
 
 riemann_AMR_3L_ups = modUPS( the_dir,                       \
                              "riemann_AMR.ups" ,            \
@@ -75,7 +75,8 @@ LODI        = [    ("Lodi_pulse",        "Lodi_pulse.ups",         8, "All", ["e
               ]
 
 
-AMRTESTS =    [
+AMRTESTS =    [   ("advectAMR",          "advectAMR.ups",           8, "All", ["exactComparison"]),
+                  ("advectAMR_perf",     advectAMR_perf_ups,        8, "All", ["do_performance_test"]),
                   ("riemann_AMR_3L",      riemann_AMR_3L_ups,       8, "All", ["exactComparison"]),
                   ("advect2matAMR",      "advect2matAMR.ups",       1, "All", ["exactComparison"]),
                   ("hotBlob_AMR",        "hotBlob_AMR.ups",         4, "All", ["exactComparison"]),
@@ -95,6 +96,9 @@ DEBUGGING =   [   ("advect",           "advect.ups",           1, "All", ["exact
 #LIST:  AMRTESTS DIFFUSION DEBUGGING LOCALTESTS LODI NIGHTLYTESTS BUILDBOTTESTS
 #__________________________________
 # returns the list
+
+NIGHTLYTESTS = NIGHTLYTESTS + AMRTESTS + DIFFUSION + LODI
+
 def getTestList(me) :
   if me == "AMRTESTS":
     TESTS = AMRTESTS
@@ -103,11 +107,11 @@ def getTestList(me) :
   elif me == "DIFFUSION":
     TESTS = DIFFUSION
   elif me == "LOCALTESTS":
-    TESTS = NIGHTLYTESTS + AMRTESTS + DIFFUSION
+    TESTS = NIGHTLYTESTS
   elif me == "LODI":
     TESTS = LODI
   elif me == "NIGHTLYTESTS":
-    TESTS = NIGHTLYTESTS + AMRTESTS + DIFFUSION
+    TESTS = NIGHTLYTESTS
   elif me == "BUILDBOTTESTS":
     TESTS = ignorePerformanceTests( NIGHTLYTESTS )
   else:

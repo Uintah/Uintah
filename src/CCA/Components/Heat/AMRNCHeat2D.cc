@@ -328,7 +328,7 @@ void AMRNCHeat2D::task_error_estimate ( ProcessorGroup const * /*myworld*/, Patc
         bool refine_patch = false;
         BlockRange range = get_flag_range ( patch );
         dbg_out3 << "= Iterating over cells window " << range << std::endl;
-        parallel_reduce ( range, [patch, &u, &flag_refine, this] ( int i, int j, int k, bool & refine_patch )->void { error_estimate ( i, j, k, patch, get_view ( u ), get_view ( flag_refine ), refine_patch, refine_threshold ); }, refine_patch );
+        Uintah::parallel_reduce_sum ( range, [patch, &u, &flag_refine, this] ( int i, int j, int k, bool & refine_patch )->void { error_estimate ( i, j, k, patch, get_view ( u ), get_view ( flag_refine ), refine_patch, refine_threshold ); }, refine_patch );
 
         if ( refine_patch )
         {
