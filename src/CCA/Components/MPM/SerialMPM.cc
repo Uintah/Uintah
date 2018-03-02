@@ -262,6 +262,8 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
     if(exists == 0){
       burialHistory=nullptr;
     }
+  } else {
+      burialHistory=nullptr;
   }
 
   if (flags->d_prescribeDeformation){
