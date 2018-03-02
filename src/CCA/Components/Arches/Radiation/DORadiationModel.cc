@@ -1580,8 +1580,8 @@ DORadiationModel::getDOSource(const Patch* patch,
   constCCVariable<int> cellType;
   old_dw->get(cellType,_cellTypeLabel,matlIndex,patch,Ghost::None,0);
 
-  std::vector< constCCVariable<double> > abskp(_nQn_part +  (_LspectralSootOn && _LspectralSolve) ? 1:0); // stor soot in particle array
-  std::vector< constCCVariable<double> > partTemp(_nQn_part +  (_LspectralSootOn && _LspectralSolve) ? 1:0);
+  std::vector< constCCVariable<double> > abskp(_nQn_part + ( (_LspectralSootOn && _LspectralSolve) ? 1:0)); // stor soot in particle array
+  std::vector< constCCVariable<double> > partTemp(_nQn_part + ( (_LspectralSootOn && _LspectralSolve) ? 1:0));
   std::vector< CCVariable <double > > emissSrc(d_nbands);
   std::vector< constCCVariable<double> > abskg(d_nbands);
 
