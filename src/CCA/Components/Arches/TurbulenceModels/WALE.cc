@@ -1,5 +1,6 @@
 #include <CCA/Components/Arches/TurbulenceModels/WALE.h>
 #include <CCA/Components/Arches/GridTools.h>
+#include <CCA/Components/Arches/TurbulenceModels/DynamicSmagorinskyHelper.h>
 
 namespace Uintah{
 
@@ -32,6 +33,8 @@ WALE::problemSetup( ProblemSpecP& db ){
   m_cc_w_vel_name = parse_ups_for_role( CCWVELOCITY, db, "CCWVelocity" );;//m_w_vel_name + "_cc";
 
   m_IsI_name = "strainMagnitudeLabel";
+  m_turb_viscosity_name = "turb_viscosity";
+  m_volFraction_name = "volFraction";
 
   db->getWithDefault("Cs", m_Cs, .5);
 
@@ -69,6 +72,7 @@ WALE::create_local_labels(){
   if (m_create_labels_IsI_t_viscosity) {
     register_new_variable<CCVariable<double> >(m_IsI_name);
     register_new_variable<CCVariable<double> >( m_t_vis_name);
+    register_new_variable<CCVariable<double> >( m_turb_viscosity_name);
   }
 
 }
@@ -79,6 +83,7 @@ WALE::register_initialize( std::vector<AFC::VariableInformation>&
                                        variable_registry , const bool packed_tasks){
 
   register_variable( m_t_vis_name, AFC::COMPUTES, variable_registry );
+  register_variable( m_turb_viscosity_name, AFC::COMPUTES, variable_registry );
 
 }
 
@@ -87,7 +92,9 @@ void
 WALE::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& mu_sgc = *(tsk_info->get_uintah_field<CCVariable<double> >(m_t_vis_name));
+  CCVariable<double>& mu_turb = *(tsk_info->get_uintah_field<CCVariable<double> >(m_turb_viscosity_name));
   mu_sgc.initialize(0.0);
+  mu_turb.initialize(0.0);
 
 }
 
@@ -120,13 +127,16 @@ WALE::register_timestep_eval( std::vector<AFC::VariableInformation>&
   register_variable( m_cc_u_vel_name, AFC::REQUIRES, Nghost_cells, AFC::NEWDW, variable_registry, time_substep);
   register_variable( m_cc_v_vel_name, AFC::REQUIRES, Nghost_cells, AFC::NEWDW, variable_registry, time_substep);
   register_variable( m_cc_w_vel_name, AFC::REQUIRES, Nghost_cells, AFC::NEWDW, variable_registry, time_substep);
-  register_variable( m_density_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
+  register_variable( m_density_name, AFC::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
+  register_variable( m_volFraction_name, AFC::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
   register_variable( m_IsI_name, ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , _task_name, packed_tasks);
   if (m_create_labels_IsI_t_viscosity) {
     register_variable( m_t_vis_name, AFC::COMPUTES ,  variable_registry, time_substep );
+    register_variable( m_turb_viscosity_name, AFC::COMPUTES ,  variable_registry, time_substep );
   } else {
     register_variable( m_t_vis_name, AFC::MODIFIES ,  variable_registry, time_substep );
+    register_variable( m_turb_viscosity_name, AFC::MODIFIES ,  variable_registry, time_substep );
   }
 }
 
@@ -143,15 +153,18 @@ WALE::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   constCCVariable<double>& CCwVel = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_cc_w_vel_name);
 
   CCVariable<double>& mu_sgc = tsk_info->get_uintah_field_add<CCVariable<double> >(m_t_vis_name);
+  CCVariable<double>& mu_turb = *(tsk_info->get_uintah_field<CCVariable<double> >(m_turb_viscosity_name));
   CCVariable<double>& IsI = tsk_info->get_uintah_field_add< CCVariable<double> >(m_IsI_name);
   constCCVariable<double>& rho = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_density_name));
+  constCCVariable<double>& vol_fraction = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_volFraction_name);
 
+  IsI.initialize(0.0);
   const Vector Dx = patch->dCell();
   const double delta = pow(Dx.x()*Dx.y()*Dx.z(),1./3.);
 
 //  Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
-
+  const double SMALL = 1e-16;
   Uintah::parallel_for( range, [&](int i, int j, int k){
 
     double uep = 0.0;
@@ -254,12 +267,16 @@ WALE::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     const double SijSij =( s11*s11 + s22*s22 + s33*s33
                  + 2.0*s12*s12 + 2.0*s13*s13 + 2.0*s23*s23);
 
-    const double fvis = pow(SijdSijd,1.5)/(pow(SijSij,2.5) + pow(SijdSijd,5./4.));
+    const double fvis = pow(SijdSijd,1.5)/(pow(SijSij,2.5) + pow(SijdSijd,5./4.)+SMALL);
 
-    mu_sgc(i,j,k) = pow(m_Cs*delta,2.0)*fvis*rho(i,j,k) + m_molecular_visc; 
-    IsI(i,j,k) = std::sqrt(2.0*SijSij);
+    mu_sgc(i,j,k) = pow(m_Cs*delta,2.0)*fvis*rho(i,j,k)*vol_fraction(i,j,k) + m_molecular_visc; 
+    IsI(i,j,k) = std::sqrt(2.0*SijSij)*vol_fraction(i,j,k) ;
+    mu_turb(i,j,k) = mu_sgc(i,j,k) - m_molecular_visc; // 
   });
   
+  BCfilter bcfilter;
+  bcfilter.apply_zero_neumann(patch,mu_sgc,vol_fraction); 
+  bcfilter.apply_zero_neumann(patch,mu_turb,vol_fraction); 
 
 }
 } //namespace Uintah

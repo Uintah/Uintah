@@ -93,7 +93,7 @@ CharOxidationShaddix::problemSetup(const ProblemSpecP& params, int qn)
     }
 
   // create raw coal mass var label
-  std::string rcmass_root = ArchesCore::parse_for_role_to_label(db, "raw_coal");
+  std::string rcmass_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_RAWCOAL);
   std::string rcmass_name = ArchesCore::append_env( rcmass_root, d_quadNode );
   std::string rcmassqn_name = ArchesCore::append_qn_env(rcmass_root, d_quadNode );
   _rcmass_varlabel = VarLabel::find(rcmass_name);
@@ -101,7 +101,7 @@ CharOxidationShaddix::problemSetup(const ProblemSpecP& params, int qn)
   _rcmass_weighted_scaled_varlabel = VarLabel::find(rc_weighted_scaled_name);
 
   // check for char mass and get scaling constant
-  std::string char_root = ArchesCore::parse_for_role_to_label(db, "char");
+  std::string char_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_CHAR);
   std::string char_name = ArchesCore::append_env( char_root, d_quadNode );
   std::string charqn_name = ArchesCore::append_qn_env( char_root, d_quadNode );
   _char_varlabel = VarLabel::find(char_name);
@@ -136,7 +136,7 @@ CharOxidationShaddix::problemSetup(const ProblemSpecP& params, int qn)
   }
 
   // check for particle temperature
-  std::string temperature_root = ArchesCore::parse_for_role_to_label(db, "temperature");
+  std::string temperature_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_TEMPERATURE);
   std::string temperature_name = ArchesCore::append_env( temperature_root, d_quadNode );
   _particle_temperature_varlabel = VarLabel::find(temperature_name);
   if(_particle_temperature_varlabel == 0){
@@ -145,7 +145,7 @@ CharOxidationShaddix::problemSetup(const ProblemSpecP& params, int qn)
 
   // check for length
   _nQn_part = ArchesCore::get_num_env(db,ArchesCore::DQMOM_METHOD);
-  std::string length_root = ArchesCore::parse_for_role_to_label(db, "size");
+  std::string length_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_SIZE);
   for (int i=0; i<_nQn_part;i++ ){
     std::string length_name = ArchesCore::append_env( length_root, i );
     _length_varlabel.push_back(  VarLabel::find(length_name));
@@ -173,7 +173,7 @@ CharOxidationShaddix::problemSetup(const ProblemSpecP& params, int qn)
   _weight_small = weight_eqn.getSmallClipPlusTol();
   _weight_scaling_constant = weight_eqn.getScalingConstant(d_quadNode);
 
-  std::string number_density_name = ArchesCore::parse_for_role_to_label(db, "total_number_density");
+  std::string number_density_name = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_TOTNUM_DENSITY);
   _number_density_varlabel = VarLabel::find(number_density_name);
 
   // get Char source term label and devol lable from the devolatilization model

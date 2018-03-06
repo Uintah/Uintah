@@ -119,7 +119,7 @@ namespace Uintah{
   void BodyForce<IT, DT>::problemSetup( ProblemSpecP& db ){
     proc0cout << "WARNING: ParticleModels BodyForce needs to be made consistent with DQMOM models and use correct DW, use model at your own risk."
       << "\n" << "\n" << "\n" << "\n" << "\n" << "\n" << "\n" << "\n" << "\n" << "\n"<< std::endl;
-    m_base_density_name = ArchesCore::parse_for_role_to_label(db, "density");
+    m_base_density_name = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_DENSITY);
 
     db->require("direction",m_direction);
     m_gas_density_name = "densityCP";

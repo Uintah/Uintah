@@ -227,7 +227,7 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
     std::sort(_xyzPatch_boundary[1].begin(),_xyzPatch_boundary[1].end());
     std::sort(_xyzPatch_boundary[2].begin(),_xyzPatch_boundary[2].end());
 
-    if(_multiBox){  // check for staggered patch layouts and throw error if found.  We do this by checking to see if all patch boundarys line up with all patch-box bondaries.
+    if(_multiBox){  // check for staggered patch layouts and throw error if found.  We do this by checking to see if all patch boundarys line up with all patch-box boundaries.
       for ( ProblemSpecP db_box = db_level->findBlock("Box"); db_box != nullptr; db_box = db_box->findNextBlock("Box")){
         IntVector tempPatchIntVector(0,0,0);
         db_box->require( "patches", tempPatchIntVector );
@@ -712,56 +712,12 @@ DORadiation::doSweepAdvanced( const ProcessorGroup* pc,
                          DataWarehouse* old_dw,
                          DataWarehouse* new_dw ,
                         const int ixx_orig       , int intensity_iter        )
-{
-
+{   // This version relies on FULL spatial scheduling to reduce work, to see logic needed for partial spatial scheduling see revision 57848 or earlier
   int archIndex = 0;
   int matlIndex = _labels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
   for (int p=0; p < patches->size(); p++){
-  int ixx=ixx_orig;
     const Patch* patch = patches->get(p);
-
-      int xPatch=0;
-      int yPatch=0;
-      int zPatch=0;
-      if(_multiBox){
-        Vector patchLo= patch->getBox().lower().toVector();
-        Vector PatchHi= patch->getBox().upper().toVector();
-        Vector patchMid=(patchLo+PatchHi)/2.0;
-
-        xPatch=getSweepPatchIndex(patchMid[0],_xyzPatch_boundary[0]);
-        yPatch=getSweepPatchIndex(patchMid[1],_xyzPatch_boundary[1]);
-        zPatch=getSweepPatchIndex(patchMid[2],_xyzPatch_boundary[2]);
-
-
-      }else{
-        int patchNumber= patch->getID() ;  // patches are assigned z y x 0 -> npatches-1
-        xPatch =    floor(patchNumber/(_patchIntVector[1]*_patchIntVector[2]));
-        yPatch =    floor((patchNumber-xPatch*_patchIntVector[1]*_patchIntVector[2])/_patchIntVector[2]); // possible type (int) problems here?
-        zPatch =    patchNumber%(_patchIntVector[2]);
-
-      }
-
-
-    int xPatchAdjusted =xPatch;  // account for varying direction of intensities
-    int yPatchAdjusted =yPatch;
-    int zPatchAdjusted =zPatch;
-    if(_DO_model->xDir(intensity_iter)==0){
-      xPatchAdjusted=_patchIntVector[0]-xPatch-1;
-    }
-    if(_DO_model->yDir(intensity_iter)==0){
-      yPatchAdjusted=_patchIntVector[1]-yPatch-1;
-    }
-    if(_DO_model->zDir(intensity_iter)==0){
-      zPatchAdjusted=_patchIntVector[2]-zPatch-1;
-    }
-
-  ixx+=  _directional_phase_adjustment[1-_DO_model->xDir(intensity_iter)][1-_DO_model->yDir(intensity_iter)][1-_DO_model->zDir(intensity_iter)];// L-shaped domain adjustment
-
-
-
-    if ((intensity_iter%(_nDir/8))== (ixx-(xPatchAdjusted+yPatchAdjusted+zPatchAdjusted))){
-        _DO_model->intensitysolveSweepOptimized(patch,matlIndex, new_dw,old_dw, intensity_iter );
-    }
+    _DO_model->intensitysolveSweepOptimized(patch,matlIndex, new_dw,old_dw, intensity_iter );
   }
 }
 
@@ -884,7 +840,6 @@ DORadiation::sched_computeSourceSweep( const LevelP& level, SchedulerP& sched, i
                   }
 
 
-                  //proc0cout <<_doesPatchExist[iAdj+(idir==0 ? 0 : -1)][jAdj+(jdir==0 ? 0 : -1)][kAdj+(kdir==0 ? 0 : -1)] << " " <<  IntVector( iAdj+(idir==0 ? 0 : -1),jAdj+(jdir==0 ? 0 : -1),kAdj+(kdir==0 ? 0 : -1))  << " \n";
                   if( _doesPatchExist[iAdj+(idir==0 ? 0 : -1)][jAdj+(jdir==0 ? 0 : -1)][kAdj+(kdir==0 ? 0 : -1)]==false) { // needed for multi-box problems
                     continue ;
                   }
@@ -973,6 +928,10 @@ DORadiation::sched_computeSourceSweep( const LevelP& level, SchedulerP& sched, i
         tsk1->requires( Task::OldDW,spectral_gas_weight[iband], gn, 0 );
       }
     }
+
+      if(_DO_model->spectralSootOn()){
+        tsk1->requires( Task::OldDW,VarLabel::find("absksoot"), gn, 0 ); 
+      }
 
     for (int iband=0; iband<d_nbands; iband++){
       tsk1->requires( Task::OldDW,spectral_gas_absorption[iband], gn, 0 );
@@ -1163,23 +1122,6 @@ DORadiation::setIntensityBC( const ProcessorGroup* pc,
 
   }
 }
-
-
-// Table search, nothing fancy linear search
-int
-DORadiation::getSweepPatchIndex( double patchMid, std::vector<double>& indep_var  ){
-  int j = -1;
-  for (unsigned int i=0; i < indep_var.size(); i++ ) {
-    if ( patchMid > indep_var[i] ) {
-      j++;
-    }else{
-      break;
-    }
-  }
-  return j;
-}
-
-
 
 
 void

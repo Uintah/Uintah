@@ -68,6 +68,9 @@ private:
     std::string m_u_vel_name_cc;
     std::string m_v_vel_name_cc;
     std::string m_w_vel_name_cc;
+    ArchesCore::INTERPOLANT m_int_scheme;
+
+    int m_ghost_cells;
 
     void compute_velocities( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 

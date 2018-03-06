@@ -58,6 +58,7 @@ namespace Uintah{
         int num_extra_src;
         int Nenv;
         double delta_t;
+        double k_ash_uncertain;
         CCVariable<double> T;
         CCVariable<double> T_copy;
         CCVariable<double> T_real;
@@ -101,6 +102,7 @@ namespace Uintah{
       std::string _dep_vel_name;
       std::vector<std::string> _extra_src_flux_names;
       int _num_extra_src;
+      int _k_ash_uncertain;
       int _Nenv;
       bool do_coal_region;
       int _calc_freq;                    ///< Wall heat transfer model calculation frequency
@@ -212,6 +214,12 @@ namespace Uintah{
         std::string new_name;
         db->require( "deposit_velocity_name", new_name );
         return new_name;
+      }
+      inline static double get_k_ash_uncertain( const ProblemSpecP& input_db ){
+        ProblemSpecP db = input_db;
+        double k_val;
+        db->getWithDefault( "k_ash_sigma", k_val,0.0);
+        return k_val;
       }
 
       inline static std::vector<std::string> get_extra_src_flux_names( const ProblemSpecP& input_db ){
@@ -829,18 +837,27 @@ namespace Uintah{
               e = 0;
               vdot_sum = 0; 
               // for each size compute the effective size and the effective emissivity
+              double ef=fresnel[0]*std::exp(fresnel[1]*T) + fresnel[2]*std::exp(fresnel[3]*T);
               for(int env = 0; env != Nenv; env++) {
-		//// MILO
-                //T = 300.;
-                //tau = 1;
-                //Dp_vec[env] = 399e-6;
+		            //// MILO
+                //T = 1535.09;
+                //tau = 1485.441;
+                //Dp_vec[0] = 1.46777e-05;
+                //Dp_vec[1] = 7.74869e-05;
+                //Dp_vec[2] = 0.000130429;
+                //Dp_vec[3] = 0.000235755;
+                //Dp_vec[4] = 0.000340963;
+                //vdot[0] = 2.11031e-10;
+                //vdot[1] = 1.89357e-10;
+                //vdot[2] = 1.11495e-10;
+                //vdot[3] = 3.0919e-11;
+                //vdot[4] = 2.36355e-11;
                 //First obtain the effective particle size for the current environment.
                 visc = 0.1*std::exp(std::log(T) + 1000.0*B/T + lnA); // kg / m / s
                 surface_tension = surfT[0] + surfT[1]*T; // kg / s^2 
                 log10tau = std::log10(tau*surface_tension/visc/Dp_vec[env]); // non-dimensionalized time
                 d_eff =  Dp_vec[env] + 0.5*(Dp_vec[env]*std::cbrt(6.)-Dp_vec[env]) + 0.5*(Dp_vec[env]*std::cbrt(6.)-Dp_vec[env])*std::erf((log10tau-pokluda[0])/(std::sqrt(2.)*pokluda[1]));
-		d_eff = std::max(5e-6,std::min(400e-6,d_eff)); // limit size to the bounds of the regression
-                //std::cout << "log10tau " << log10tau << std::endl;
+		            d_eff = std::max(5e-6,std::min(400e-6,d_eff)); // limit size to the bounds of the regression
                 //std::cout << "surface_tension " << surface_tension << std::endl;
                 //std::cout << "visc " << visc << std::endl;
                 //std::cout << "T: " << T << " tau: " << tau << " Dp_vec[env]: " << Dp_vec[env] << " d_eff: " << d_eff << std::endl; 
@@ -852,16 +869,19 @@ namespace Uintah{
                 for ( int I=0; I < 28; I++ ) {
                   e_sc_c+=emiss_coeff[I]*xv_e[I];
                 }
-                e += (vdot[env]+1e-100)*(e_sc_c*ystd + ymean); // sum in this environments emissivity weighted by flow rate
-                //std::cout << "resultant e: " << (e_sc_c*ystd + ymean) << std::endl; 
+                double e_i = e_sc_c*ystd + ymean; 
+                e_i = (tau>=8640000.) ? C : // if no deposition use wall emissivity. This corresponds to a replacement time-scale of 100 days.
+                    (T>=T_fluid || d_eff >= 400e-6) ? ef :  // if slagging use fresnel emissivity.
+	                  std::min(ef,e_i);  // predicted emissivity.
+                e += (vdot[env]+1e-100)*e_i; // sum in this environments emissivity weighted by flow rate
+                //std::cout << "env " << env << std::endl;
+                //std::cout << "e_i: " << e_i << std::endl; 
                 vdot_sum+=vdot[env]+1e-100; // sum in this environments volumetric flow rate
               }
               e = e/vdot_sum;
-              double ef=fresnel[0]*std::exp(fresnel[1]*T) + fresnel[2]*std::exp(fresnel[3]*T);
-              e = (tau>=8640000.) ? C : // if no deposition use wall emissivity. This corresponds to a replacement time-scale of 100 days.
-                  (T>=T_fluid || d_eff >= 400e-6) ? ef :  // if slagging use fresnel emissivity.
-	          std::min(ef,e);  // predicted emissivity.
-	      e = std::max(0.0,std::min(1.0,e)); // emissivity safety
+              //std::cout << "T_fluid: " << T_fluid << std::endl;
+              //std::cout << "d_eff: " << d_eff << std::endl;
+	            e = std::max(0.0,std::min(1.0,e)); // emissivity safety
               //std::cout << "e after clipping: " << e << std::endl; 
             }
             ~pokluda_v(){}

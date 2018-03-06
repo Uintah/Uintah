@@ -56,6 +56,8 @@ CZMaterial::standardInitialization(ProblemSpecP& ps, MPMFlags* flags)
   ps->require("tau_max",d_tau_max);
   ps->require("cz_filename",d_cz_filename);
   ps->getWithDefault("do_rotation",d_do_rotation,false);
+  ps->getWithDefault("delta_n_fail",d_delta_n_fail,4.0*d_delta_n);
+  ps->getWithDefault("delta_t_fail",d_delta_t_fail,4.0*d_delta_t);
 }
 
 // Default constructor
@@ -82,6 +84,8 @@ ProblemSpecP CZMaterial::outputProblemSpec(ProblemSpecP& ps)
 
   cz_ps->appendElement("delta_n",d_delta_n);
   cz_ps->appendElement("delta_t",d_delta_t);
+  cz_ps->appendElement("delta_n_fail",d_delta_n_fail);
+  cz_ps->appendElement("delta_t_fail",d_delta_t_fail);
   cz_ps->appendElement("sig_max",d_sig_max);
   cz_ps->appendElement("tau_max",d_tau_max);
   cz_ps->appendElement("cz_filename",d_cz_filename);
@@ -96,6 +100,8 @@ CZMaterial::copyWithoutGeom(ProblemSpecP& ps,const CZMaterial* mat,
 {
   d_delta_n = mat->d_delta_n;
   d_delta_t = mat->d_delta_t;
+  d_delta_n_fail = mat->d_delta_n_fail;
+  d_delta_t_fail = mat->d_delta_t_fail;
   d_sig_max = mat->d_sig_max;
   d_tau_max = mat->d_tau_max;
   d_cz_filename = mat->d_cz_filename;
@@ -112,6 +118,16 @@ CohesiveZone* CZMaterial::getCohesiveZone()
 double CZMaterial::getCharLengthNormal() const
 {
   return d_delta_n;
+}
+
+double CZMaterial::getNormalFailureDisplacement() const
+{
+  return d_delta_n_fail;
+}
+
+double CZMaterial::getTangentialFailureDisplacement() const
+{
+  return d_delta_t_fail;
 }
 
 double CZMaterial::getCharLengthTangential() const

@@ -587,8 +587,7 @@ UnifiedScheduler::runTask( DetailedTask*         dtask
     // Add subscheduler timings to the parent scheduler and reset subscheduler timings
     if (m_parent_scheduler != nullptr) {
       for (size_t i = 0; i < mpi_info_.size(); ++i) {
-        MPIScheduler::TimingStat e = (MPIScheduler::TimingStat)i;
-        m_parent_scheduler->mpi_info_[e] += mpi_info_[e];
+        m_parent_scheduler->mpi_info_[i] += mpi_info_[i];
       }
       mpi_info_.reset(0);
     }

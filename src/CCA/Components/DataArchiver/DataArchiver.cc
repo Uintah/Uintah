@@ -1765,17 +1765,17 @@ DataArchiver::writeto_xml_files( const GridP& grid )
       // given level.  Quick check to see that, so we don't create a
       // node that points to no data.
 
-      string grim_path = baseDirs[i]->getName() + "/" + tname.str() + "/";
+      string grid_path = baseDirs[i]->getName() + "/" + tname.str() + "/";
 
 #if XML_TEXTWRITER
 
-      writeGridTextWriter( hasGlobals, grim_path, grid );
+      writeGridTextWriter( hasGlobals, grid_path, grid );
 #else
       // Original version:
       writeGridOriginal( hasGlobals, grid, rootElem );
 
       // Binary Grid version:
-      // writeGridBinary( hasGlobals, grim_path, grid );
+      // writeGridBinary( hasGlobals, grid_path, grid );
 #endif
       // Add the <Materials> section to the timestep.xml
       GeometryPieceFactory::resetGeometryPiecesOutput();
@@ -1903,7 +1903,7 @@ DataArchiver::writeto_xml_files( std::map< std::string,
 }
 
 void
-DataArchiver::writeGridBinary( const bool hasGlobals, const string & grim_path, const GridP & grid )
+DataArchiver::writeGridBinary( const bool hasGlobals, const string & grid_path, const GridP & grid )
 {
   // Originally the <Grid> was saved in XML.  While this makes it very
   // human readable, for large runs (10K+ patches), the (original)
@@ -1939,7 +1939,7 @@ DataArchiver::writeGridBinary( const bool hasGlobals, const string & grim_path, 
   FILE * fp;
   int marker = DataArchive::GRID_MAGIC_NUMBER;
 
-  string grim_filename = grim_path + "grid.xml";
+  string grim_filename = grid_path + "grid.xml";
 
   fp = fopen( grim_filename.c_str(), "wb" );
   fwrite( &marker, sizeof(int), 1, fp );
@@ -2043,7 +2043,7 @@ DataArchiver::writeGridBinary( const bool hasGlobals, const string & grim_path, 
 
   fclose( fp );
 
-  writeDataTextWriter( hasGlobals, grim_path, grid, procOnLevel );
+  writeDataTextWriter( hasGlobals, grid_path, grid, procOnLevel );
 
 } // end writeGridBinary()
 
@@ -2167,7 +2167,7 @@ DataArchiver::writeGridOriginal( const bool hasGlobals, const GridP & grid, Prob
 
 
 void
-DataArchiver::writeGridTextWriter( const bool hasGlobals, const string & grim_path, const GridP & grid )
+DataArchiver::writeGridTextWriter( const bool hasGlobals, const string & grid_path, const GridP & grid )
 {
   // With AMR, we're not guaranteed that a proc do work on a given
   // level.  Quick check to see that, so we don't create a node that
@@ -2179,7 +2179,7 @@ DataArchiver::writeGridTextWriter( const bool hasGlobals, const string & grim_pa
   // grid.xml and data.xml files using libxml2's TextWriter which is a
   // streaming output format which doesn't use a DOM tree.
 
-  string name_grid = grim_path + "grid.xml";
+  string name_grid = grid_path + "grid.xml";
 
   xmlTextWriterPtr writer_grid;
   /* Create a new XmlWriter for uri, with no compression. */
@@ -2300,7 +2300,7 @@ DataArchiver::writeGridTextWriter( const bool hasGlobals, const string & grim_pa
   xmlTextWriterEndDocument( writer_grid ); // Writes output to the timestep.xml file
   xmlFreeTextWriter( writer_grid );
 
-  writeDataTextWriter( hasGlobals, grim_path, grid, procOnLevel );
+  writeDataTextWriter( hasGlobals, grid_path, grid, procOnLevel );
 
 } // end writeGridTextWriter()
 

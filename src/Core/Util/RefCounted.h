@@ -71,8 +71,8 @@ class RefCounted {
 
     RefCounted& operator=(const RefCounted&);
 
-    mutable int d_refCount;
-            int d_lockIndex;
+    mutable int d_refCount{0};
+            int d_lockIndex{0};
 };
 
 } // namespace Uintah

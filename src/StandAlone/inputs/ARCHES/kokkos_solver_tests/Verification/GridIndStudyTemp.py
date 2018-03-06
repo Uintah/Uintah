@@ -139,6 +139,9 @@ def main():
   parser.add_argument('-var_mms', required=True,
                       help='name of mms')
 
+  parser.add_argument('-keep_uda', 
+                      help='Keep the udas - do not delete them.', action='store_true')
+
   args = parser.parse_args()
   
   # if the number of levels is not provided, set it to 3
@@ -404,7 +407,8 @@ def main():
        plt.savefig(data+'/'+basename)
 
   plt.show()
-  os.system('rm -rf *.uda*')
+  if args.keep_uda is None:
+    os.system('rm -rf *.uda*')
   os.system('rm -rf *.dot')
   os.system('rm log.txt')  
   #os.system('rm data/*.txt')  

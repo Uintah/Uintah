@@ -43,7 +43,7 @@ CoalGasDevol::problemSetup(const ProblemSpecP& inputdb)
   if (db->findBlock("devol_BirthDeath")) {
     ProblemSpecP db_bd = db->findBlock("devol_BirthDeath");
     m_dest_flag = true;
-    m_rcmass_root = ArchesCore::parse_for_role_to_label(db, "raw_coal");
+    m_rcmass_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_RAWCOAL);
   }
 
   _source_grid_type = CC_SRC;

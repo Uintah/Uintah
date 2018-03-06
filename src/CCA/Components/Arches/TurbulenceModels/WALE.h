@@ -64,6 +64,8 @@ private:
     double m_molecular_visc;
     std::string m_t_vis_name;
     bool m_create_labels_IsI_t_viscosity{true};   
+    std::string m_turb_viscosity_name;
+    std::string m_volFraction_name;
 
     int Nghost_cells;
 

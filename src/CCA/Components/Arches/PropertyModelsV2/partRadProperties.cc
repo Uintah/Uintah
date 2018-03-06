@@ -21,7 +21,7 @@ partRadProperties::partRadProperties( std::string task_name, int matl_index ) : 
 partRadProperties::~partRadProperties( )
 {
   // Destroying all local VarLabels stored in _extra_local_labels:
-     
+
 #ifdef HAVE_RADPROPS
 if (_particle_calculator_type == "constantCIF"){
  delete _part_radprops;
@@ -207,8 +207,8 @@ void partRadProperties::problemSetup(  Uintah::ProblemSpecP& db )
       throw ProblemSetupException("Error: This particle radiation property method only supports DQMOM/CQMOM.",__FILE__,__LINE__);
     }
 
-    std::string base_temperature_name = ArchesCore::parse_for_role_to_label( db, "temperature");
-    std::string base_size_name        = ArchesCore::parse_for_role_to_label( db, "size" );
+    std::string base_temperature_name = ArchesCore::parse_for_particle_role_to_label( db, ArchesCore::P_TEMPERATURE);
+    std::string base_size_name        = ArchesCore::parse_for_particle_role_to_label( db, ArchesCore::P_SIZE );
     std::string base_weight_name      = "w"; //hard coded as w
     std::string char_name = "Charmass";
     std::string RC_names = "RCmass";

@@ -66,10 +66,10 @@ DepositionVelocity::problemSetup( ProblemSpecP& db ){
   _fd.push_back(IntVector(0,0,0)); // -y face
   _fd.push_back(IntVector(0,0,1)); // +z face
   _fd.push_back(IntVector(0,0,0)); // -z face
-  _diameter_base_name = ArchesCore::parse_for_role_to_label(db, "size");
+  _diameter_base_name = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_SIZE);
 
   // Need a density
-  _density_base_name = ArchesCore::parse_for_role_to_label(db, "density");
+  _density_base_name = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_DENSITY);
   double init_particle_density = ArchesCore::get_inlet_particle_density( db );
   double ash_mass_frac = coal_helper.get_coal_db().ash_mf;
   double initial_diameter = 0.0;
@@ -331,10 +331,10 @@ DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
             rhoi = _user_specified_rho;
             d_mass += flux*area_face[container_flux_ind[pp]];// [kg/s] ash
             // volumetric flow rate for particle i:
+            d_flow = (flux/rhoi) * area_face[container_flux_ind[pp]]+1e-100;// [m^3/s] ash
             d_velocity += d_flow;
-            total_area_face += area_face[container_flux_ind[pp]];
             // The total cell surface area exposed to radiation:
-            d_flow = (flux/rhoi) * area_face[container_flux_ind[pp]]+1e-100;// [kg/s] ash
+            total_area_face += area_face[container_flux_ind[pp]];
 	          env_flow_rate += d_flow; // m^3 / s * dp
 	          env_flow_rate_d += d_flow * particle_diameter; // m^3 / s
           }

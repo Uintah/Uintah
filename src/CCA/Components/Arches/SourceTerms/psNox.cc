@@ -123,10 +123,10 @@ psNox::problemSetup(const ProblemSpecP& inputdb)
   helper.add_lookup_species( m_density_name);
   helper.add_lookup_species( m_mix_mol_weight_name );
   //read DQMOM Information 
-  m_rcmass_root         = ArchesCore::parse_for_role_to_label(db, "raw_coal");                   //raw coal
-  m_coal_temperature_root       = ArchesCore::parse_for_role_to_label(db, "temperature");        //coal particle temperature
+  m_rcmass_root         = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_RAWCOAL);                   //raw coal
+  m_coal_temperature_root       = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_TEMPERATURE);        //coal particle temperature
   m_num_env             = ArchesCore::get_num_env(db, ArchesCore::DQMOM_METHOD);                     //qn number
-  length_root=(ArchesCore::parse_for_role_to_label(db, "size"));                                 // paritcle diameter root name
+  length_root=(ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_SIZE));                                 // paritcle diameter root name
 
 
   for ( int i = 0; i < m_num_env; i++ ){                                                            //scaling constant of raw coal

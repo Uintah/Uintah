@@ -252,25 +252,25 @@ CharOxidationps<T>::problemSetup( ProblemSpecP & db
   // particle variables
 
   // check for particle temperature
-  std::string temperature_root = ArchesCore::parse_for_role_to_label( db, "temperature" );
+  std::string temperature_root = ArchesCore::parse_for_particle_role_to_label( db, ArchesCore::P_TEMPERATURE );
 
   // check for length
-  std::string length_root = ArchesCore::parse_for_role_to_label( db, "size" );
+  std::string length_root = ArchesCore::parse_for_particle_role_to_label( db, ArchesCore::P_SIZE );
 
   // Need a particle density
-  std::string density_root = ArchesCore::parse_for_role_to_label( db, "density" );
+  std::string density_root = ArchesCore::parse_for_particle_role_to_label( db, ArchesCore::P_DENSITY );
 
   // create raw coal mass var label
-  std::string rcmass_root = ArchesCore::parse_for_role_to_label( db, "raw_coal" );
+  std::string rcmass_root = ArchesCore::parse_for_particle_role_to_label( db, ArchesCore::P_RAWCOAL );
 
   // check for char mass and get scaling constant
-  std::string char_root = ArchesCore::parse_for_role_to_label( db, "char" );
-  number_density_name   = ArchesCore::parse_for_role_to_label( db, "total_number_density" );
+  std::string char_root = ArchesCore::parse_for_particle_role_to_label( db, ArchesCore::P_CHAR );
+  number_density_name   = ArchesCore::parse_for_particle_role_to_label( db, ArchesCore::P_TOTNUM_DENSITY );
 
   // check for particle velocity
-  std::string up_root = ArchesCore::parse_for_role_to_label( db, "uvel" );
-  std::string vp_root = ArchesCore::parse_for_role_to_label( db, "vvel" );
-  std::string wp_root = ArchesCore::parse_for_role_to_label( db, "wvel" );
+  std::string up_root = ArchesCore::parse_for_particle_role_to_label( db, ArchesCore::P_XVEL );
+  std::string vp_root = ArchesCore::parse_for_particle_role_to_label( db, ArchesCore::P_YVEL );
+  std::string wp_root = ArchesCore::parse_for_particle_role_to_label( db, ArchesCore::P_ZVEL );
 
   for ( int l = 0; l < m_nQn_part; l++ ) {
     m_particle_temperature.push_back( ArchesCore::append_env( temperature_root, l ) );
@@ -416,7 +416,7 @@ CharOxidationps<T>::problemSetup( ProblemSpecP & db
 
     _init_particle_density = ArchesCore::get_inlet_particle_density( db );
 
-    double ash_mass_frac = coal_helper.get_coal_db().ash_mf; 
+    double ash_mass_frac = coal_helper.get_coal_db().ash_mf;
 
     for ( int l = 0; l < m_nQn_part; l++ ) {
 

@@ -62,9 +62,9 @@ CoalDensity::problemSetup( ProblemSpecP& db ){
       throw ProblemSetupException("Error: No <ultimate_analysis> found in input file.", __FILE__, __LINE__);
     }
 
-    _rawcoal_base_name = ArchesCore::parse_for_role_to_label(db, "raw_coal");
-    _char_base_name    = ArchesCore::parse_for_role_to_label(db, "char");
-    _diameter_base_name = ArchesCore::parse_for_role_to_label(db, "size");
+    _rawcoal_base_name = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_RAWCOAL);
+    _char_base_name    = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_CHAR);
+    _diameter_base_name = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_SIZE);
 
   } else {
     throw ProblemSetupException("Error: <CoalProperties> required in UPS file to compute a coal density.", __FILE__, __LINE__);

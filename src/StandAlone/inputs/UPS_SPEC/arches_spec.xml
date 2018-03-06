@@ -1034,6 +1034,7 @@
             <geom_object/>
           </region>
           <deposit_velocity_name           spec="REQUIRED STRING" need_applies_to="type coal_region_ht"/>
+          <k_ash_sigma                     spec="OPTIONAL DOUBLE" need_applies_to="type coal_region_ht"/> <!-- additive thermal conductivity for ash model for exploring uncertainty [+/-log10(W/m/K)] -->
           <extra_src                       spec="MULTIPLE STRING" need_applies_to="type coal_region_ht"/> <!-- extra_src labels this will be added when computing the net heat flux. -->
           <coal_name                       spec="OPTIONAL STRING" need_applies_to="type coal_region_ht"/> <!-- this is the name corresponding to a given ash composition. -->
           <coordination_number             spec="OPTIONAL INTEGER" need_applies_to="type coal_region_ht"/> <!-- this is the coordination number for the pokluda sintering model, default is 2, int must be >=2. -->
@@ -1312,7 +1313,7 @@
       <KMomentum                        spec="OPTIONAL NO_DATA">
 
         <convection                     spec="OPTIONAL NO_DATA"
-                                        attribute1="scheme REQUIRED STRING 'central, upwind, superbee, roe, vanleer'"/>
+                                        attribute1="scheme REQUIRED STRING 'central, upwind, superbee, roe, vanleer,fourth'"/>
         <inviscid                       spec="OPTIONAL NO_DATA"/> <!-- Turn off diffusion -->
         <src_x                          spec="OPTIONAL NO_DATA"
                                         attribute1=" label REQUIRED STRING"/>
@@ -2087,10 +2088,20 @@
                                         attribute1="type OPTIONAL STRING 'unweightedAbs, weightedAbs'"> <!-- phasing out the type specification. all dqmom is weightedAbs-->
 
         <!-- These tags are for the new DQMOM interface -->
+
         <!--If this tag is present, diffusion is computed.-->
         <diffusion                    spec="OPTIONAL NO_DATA"
                                       attribute1="scheme REQUIRED STRING 'central'"
                                       attribute2="D_label REQUIRED STRING"/>
+
+        <!-- Overrides the default velocities used to transport the NDF -->
+        <!-- Default velocities are the velocity IC's -->
+        <!-- These velocity labels are used for all environments -->
+        <velocity                     spec="OPTIONAL NO_DATA"
+                                      attribute1="xlabel REQUIRED STRING"
+                                      attribute2="ylabel REQUIRED STRING"
+                                      attribute3="zlabel REQUIRED STRING"/>
+
         <!-- If this tag is present, convection is computed.
          The type refers to the scheme: upwind, central, superbee, roe_minmod.-->
         <convection                   spec="OPTIONAL NO_DATA"

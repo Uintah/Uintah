@@ -177,10 +177,10 @@ void visit_SetWallTimes( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetOutputIntervals( visit_simulation_data *sim )
 {
-  ApplicationInterface* simInterface =
-    sim->simController->getApplicationInterface();
+  // ApplicationInterface* simInterface =
+  //   sim->simController->getApplicationInterface();
 
-  SimulationTime* simTime = simInterface->getSimulationTime();
+  // SimulationTime* simTime = simInterface->getSimulationTime();
 
   Output          *output       = sim->simController->getOutput();
 
@@ -282,7 +282,7 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
         if( (analysisVar.level == IGNORE_LEVEL && l == 0) ||
             (analysisVar.level == ALL_LEVELS) ||
             (analysisVar.level == FINEST_LEVEL && l == numLevels - 1) ||
-            (analysisVar.level == l) )
+            (analysisVar.level == (int) l) )
         {
           LevelP levelP = gridP->getLevel(l);
           Level *level = levelP.get_rep();
@@ -539,8 +539,9 @@ void visit_SetUPSVars( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetGridInfo( visit_simulation_data *sim )
 {
-  ApplicationInterface* simInterface =
-    sim->simController->getApplicationInterface();
+  // ApplicationInterface* simInterface =
+  //   sim->simController->getApplicationInterface();
+
   GridP                gridP        = sim->gridP;
 
   VisItUI_setValueS( "GridInfoGroupBox", "SHOW_WIDGET", 1);
@@ -598,7 +599,7 @@ void visit_SetGridInfo( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetRuntimeStats( visit_simulation_data *sim )
 {
-  const ReductionInfoMapper< RuntimeStatsEnum, double > &runtimeStats =
+  ReductionInfoMapper< RuntimeStatsEnum, double > runtimeStats =
     sim->simController->getRuntimeStats();
 
   VisItUI_setValueS( "RuntimeStatsGroupBox", "SHOW_WIDGET", 1);
@@ -608,14 +609,12 @@ void visit_SetRuntimeStats( visit_simulation_data *sim )
 
   for (unsigned int i=0; i<runtimeStats.size(); ++i)
   {
-    RuntimeStatsEnum e = (RuntimeStatsEnum) i;
-    
-    std::string name  = runtimeStats.getName(e);
-    std::string units = runtimeStats.getUnits(e);
+    std::string name  = runtimeStats.getName(i);
+    std::string units = runtimeStats.getUnits(i);
 
-    double  average = runtimeStats.getAverage(e);
-    double  maximum = runtimeStats.getMaximum(e);
-    int     rank    = runtimeStats.getRank(e);
+    double  average = runtimeStats.getAverage(i);
+    double  maximum = runtimeStats.getMaximum(i);
+    int     rank    = runtimeStats.getRank(i);
 
     if( average > 0 && units == std::string("MBytes"))
     {
@@ -656,8 +655,8 @@ void visit_SetRuntimeStats( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetMPIStats( visit_simulation_data *sim )
 {
-  ApplicationInterface* simInterface =
-    sim->simController->getApplicationInterface();
+  // ApplicationInterface* simInterface =
+  //   sim->simController->getApplicationInterface();
 
   MPIScheduler *mpiScheduler = dynamic_cast<MPIScheduler*>
     (sim->simController->getSchedulerP().get_rep());
@@ -665,7 +664,7 @@ void visit_SetMPIStats( visit_simulation_data *sim )
   // Add in the mpi run time stats.
   if( mpiScheduler )
   {
-    ReductionInfoMapper< MPIScheduler::TimingStat, double > &mpiStats =
+    ReductionInfoMapper< MPIScheduler::TimingStatEnum, double > &mpiStats =
       mpiScheduler->mpi_info_;
 
     VisItUI_setValueS( "MPIStatsGroupBox", "SHOW_WIDGET", 1);
@@ -673,14 +672,12 @@ void visit_SetMPIStats( visit_simulation_data *sim )
 
     for (unsigned int i=0; i<mpiStats.size(); ++i)
     {
-      MPIScheduler::TimingStat e = (MPIScheduler::TimingStat) i;
+      std::string name  = mpiStats.getName(i);
+      std::string units = mpiStats.getUnits(i);
       
-      std::string name  = mpiStats.getName(e);
-      std::string units = mpiStats.getUnits(e);
-      
-      double  average = mpiStats.getAverage(e);
-      double  maximum = mpiStats.getMaximum(e);
-      int     rank    = mpiStats.getRank(e);
+      double  average = mpiStats.getAverage(i);
+      double  maximum = mpiStats.getMaximum(i);
+      int     rank    = mpiStats.getRank(i);
       
       VisItUI_setTableValueS("MPIStatsTable", i, 0, name.c_str(), 0);
       VisItUI_setTableValueS("MPIStatsTable", i, 1, units.c_str(), 0);
@@ -707,7 +704,7 @@ void visit_SetMPIStats( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetOtherStats( visit_simulation_data *sim )
 {
-  const ReductionInfoMapper< unsigned int, double > &otherStats =
+  ReductionInfoMapper< SimulationController::OtherStatsEnum, double > otherStats =
     sim->simController->getOtherStats();
 
   if( otherStats.size() )

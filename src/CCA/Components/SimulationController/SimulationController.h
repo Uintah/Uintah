@@ -203,6 +203,11 @@ public:
                          DataWarehouse*,
                          bool header);
 
+  // Other stats
+  enum OtherStatsEnum {
+    Dummy_Stat = 99
+  };
+
 protected:
 
   void restartArchiveSetup();
@@ -257,8 +262,9 @@ protected:
   
   // Runtime stat mappers.
   ReductionInfoMapper< RuntimeStatsEnum, double > m_runtime_stats;
-  ReductionInfoMapper< unsigned int,     double > m_other_stats;
+  ReductionInfoMapper< OtherStatsEnum,   double > m_other_stats;
 
+  // PAPI Counters
 #ifdef USE_PAPI_COUNTERS
   int         m_papi_event_set;            // PAPI event set
   long long * m_papi_event_values;         // PAPI event set values
@@ -292,10 +298,10 @@ public:
   void setVisIt( unsigned int val ) { m_do_visit = val; }
   unsigned int  getVisIt() { return m_do_visit; }
 
-  const ReductionInfoMapper< RuntimeStatsEnum, double > getRuntimeStats() const
+  ReductionInfoMapper< RuntimeStatsEnum, double > getRuntimeStats()
   { return m_runtime_stats; };
 
-  const ReductionInfoMapper< unsigned int,     double > getOtherStats() const
+  ReductionInfoMapper< OtherStatsEnum,   double > getOtherStats()
   { return m_other_stats; };
 
 protected:

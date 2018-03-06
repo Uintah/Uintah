@@ -519,11 +519,16 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
   d_props->setBC(d_boundaryCondition);
 
   // ----- DQMOM STUFF:
+  d_kokkos_dqmom_Translate = false;
   ProblemSpecP dqmom_db = db->findBlock("DQMOM");
   if (dqmom_db) {
 
     //turn on DQMOM
     d_doDQMOM = true;
+
+    if ( dqmom_db->findBlock("kokkos_translate")){
+      d_kokkos_dqmom_Translate = true;
+    }
 
     // require that we have weighted or unweighted explicitly specified as an attribute to DQMOM
     // type = "unweightedAbs" or type = "weighedAbs"
@@ -1141,11 +1146,13 @@ ExplicitSolver::initialize( const LevelP     & level,
     //  apply BCs
     _task_factory_map["transport_factory"]->schedule_task_group( "all_tasks", TaskInterface::BC, dont_pack_tasks, level, sched, matls );
 
+    if ( d_kokkos_dqmom_Translate ){
+      _task_factory_map["transport_factory"]->schedule_task_group( "dqmom_eqns", TaskInterface::BC, true, level, sched, matls );
+    }
+
     // boundary condition factory
     _task_factory_map["boundary_condition_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
 
-    // turbulence factory 
-    
     //initialize factory
     all_tasks.clear();
     all_tasks = i_init_fac->second->retrieve_all_tasks();
@@ -1174,8 +1181,6 @@ ExplicitSolver::initialize( const LevelP     & level,
 
     //turbulence models
     //i_turb_model_fac->second->schedule_initialization( level, sched, matls, is_restart );
-    
-    
 
     //------------------ New Task Interface (end) ------------------------------------------------
 
@@ -1236,29 +1241,34 @@ ExplicitSolver::initialize( const LevelP     & level,
     sched_getCCVelocities(level, sched);
 
     d_turbModel->sched_reComputeTurbSubmodel(sched, level, matls, d_init_timelabel);
-    
-    //--- New interface 
+
+    //--- New interface
     _task_factory_map["turbulence_model_factory"]->schedule_task_group( "all_tasks", TaskInterface::TIMESTEP_EVAL, dont_pack_tasks, level, sched, matls );
     // ----
 
     //----------------------
     //DQMOM initialization
-    if(d_doDQMOM)
-    {
-      sched_weightInit(level, sched);
-      sched_weightedAbsInit(level, sched);
+    if (d_doDQMOM) {
 
-      // check to make sure that all dqmom equations have BCs set.
-      DQMOMEqnFactory& dqmom_factory = DQMOMEqnFactory::self();
-      DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmom_factory.retrieve_all_eqns();
-      for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++) {
-        EqnBase* eqn = ieqn->second;
-        eqn->sched_checkBCs( level, sched, false );
-        //as needed for the coal propery models
-        DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(ieqn->second);
-        dqmom_eqn->sched_getUnscaledValues( level, sched );
+      if ( !d_kokkos_dqmom_Translate ){
+
+        sched_weightInit(level, sched);
+        sched_weightedAbsInit(level, sched);
+
+        // check to make sure that all dqmom equations have BCs set.
+        DQMOMEqnFactory& dqmom_factory = DQMOMEqnFactory::self();
+        DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmom_factory.retrieve_all_eqns();
+        for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++) {
+          EqnBase* eqn = ieqn->second;
+          eqn->sched_checkBCs( level, sched, false );
+          //as needed for the coal propery models
+          DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(ieqn->second);
+          dqmom_eqn->sched_getUnscaledValues( level, sched );
+        }
       }
+
       d_partVel->schedInitPartVel(level, sched);
+
     }
 
     //----------------------
@@ -1494,26 +1504,6 @@ ExplicitSolver::initializeVariables(const ProcessorGroup* ,
     //total KE:
     new_dw->put( sum_vartype(0.0), d_lab->d_totalKineticEnergyLabel );
 
-    //---------------------------------------------------------------------------------------------
-    //test the bc stuff:
-    // const BndMapT& my_map = m_bcHelper[level->getID()]->get_boundary_information();
-    //
-    // for ( auto i_map = my_map.begin(); i_map != my_map.end(); i_map++ ){
-    //
-    //   std::cout << "Getting an iterator for bc: " << i_map->first << std::endl;
-    //   BndSpec a_spec = i_map->second;
-    //   std::cout << "    the type  =  " << a_spec.type << std::endl;
-    //   Uintah::Iterator my_iter = m_bcHelper[level->getID()]->get_uintah_extra_bnd_mask(a_spec, patch->getID());
-    //   ////this is how you would retrieve a specific variable
-    //   //const BndCondSpec* test_var_find = a_spec.find("mixture_fraction");
-    //   //this is how you would loop over the iterator
-    //   for (my_iter.reset(); !my_iter.done(); my_iter++ ){
-    //     std::cout << " iter = " << *my_iter << std::endl;
-    //   }
-    //
-    // }
-    //---------------------------------------------------------------------------------------------
-
     allocateAndInitializeToC( d_lab->d_densityGuessLabel  , new_dw, indx, patch, 0.0 );
     allocateAndInitializeToC( d_lab->d_uVelRhoHatLabel    , new_dw, indx, patch, 0.0 );
     allocateAndInitializeToC( d_lab->d_uVelocitySPBCLabel , new_dw, indx, patch, 0.0 );
@@ -1704,7 +1694,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     _task_factory_map["property_models_factory"]->schedule_task_group( "pre_update_property_models",
       TaskInterface::TIMESTEP_EVAL, dont_pack_tasks, level, sched, matls, curr_level );
-      
 
     i_transport->second->schedule_task_group("scalar_psi_builders",
       TaskInterface::TIMESTEP_EVAL, dont_pack_tasks, level, sched, matls, curr_level );
@@ -1744,81 +1733,104 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     if (d_doDQMOM) {
 
-      CoalModelFactory& modelFactory = CoalModelFactory::self();
-      DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns();
-      DQMOMEqnFactory::EqnMap& weights_eqns = dqmomFactory.retrieve_weights_eqns();
-      DQMOMEqnFactory::EqnMap& abscissas_eqns = dqmomFactory.retrieve_abscissas_eqns();
-
       // Compute the particle velocities at time t w^tu^t/w^t
       d_partVel->schedComputePartVel( level, sched, curr_level );
 
       // Evaluate DQMOM equations
-      for ( DQMOMEqnFactory::EqnMap::iterator iEqn = weights_eqns.begin();
-            iEqn != weights_eqns.end(); iEqn++){
+      if ( !d_kokkos_dqmom_Translate ){
 
-        DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
+        CoalModelFactory& modelFactory = CoalModelFactory::self();
+        DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns();
+        DQMOMEqnFactory::EqnMap& weights_eqns = dqmomFactory.retrieve_weights_eqns();
+        DQMOMEqnFactory::EqnMap& abscissas_eqns = dqmomFactory.retrieve_abscissas_eqns();
 
-        dqmom_eqn->sched_evalTransportEqn( level, sched, curr_level );//compute rhs
-      }
+        for ( DQMOMEqnFactory::EqnMap::iterator iEqn = weights_eqns.begin();
+              iEqn != weights_eqns.end(); iEqn++){
 
-      for ( DQMOMEqnFactory::EqnMap::iterator iEqn = abscissas_eqns.begin();
-            iEqn != abscissas_eqns.end(); iEqn++){
+          DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
 
-        DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
+          dqmom_eqn->sched_evalTransportEqn( level, sched, curr_level );//compute rhs
+        }
 
-        dqmom_eqn->sched_evalTransportEqn( level, sched, curr_level );//compute rhs
-      }
+        for ( DQMOMEqnFactory::EqnMap::iterator iEqn = abscissas_eqns.begin();
+              iEqn != abscissas_eqns.end(); iEqn++){
 
-      // schedule the models for evaluation
-      modelFactory.sched_coalParticleCalculation( level, sched, curr_level );// compute drag, devol, char, etc models..
+          DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
 
-      // schedule DQMOM linear solve
-      if ( m_DQMOMSolverType != "No_Inversion"){
+          dqmom_eqn->sched_evalTransportEqn( level, sched, curr_level );//compute rhs
+        }
 
-        d_dqmomSolver->sched_solveLinearSystem( level, sched, curr_level );
+        // schedule the models for evaluation
+        modelFactory.sched_coalParticleCalculation( level, sched, curr_level );// compute drag, devol, char, etc models..
+
+        // schedule DQMOM linear solve
+        if ( m_DQMOMSolverType != "No_Inversion"){
+
+          d_dqmomSolver->sched_solveLinearSystem( level, sched, curr_level );
+
+        } else {
+
+          i_particle_models->second->schedule_task_group( "pre_update_property_models",
+                                                          TaskInterface::TIMESTEP_EVAL,
+                                                          dont_pack_tasks, level, sched,
+                                                          matls );
+
+        }
+
+        // Evaluate DQMOM equations
+        for ( DQMOMEqnFactory::EqnMap::iterator iEqn = weights_eqns.begin();
+              iEqn != weights_eqns.end(); iEqn++){
+
+          DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
+
+          dqmom_eqn->sched_updateTransportEqn( level, sched, curr_level );// add sources and solve equation
+        }
+
+        for ( DQMOMEqnFactory::EqnMap::iterator iEqn = abscissas_eqns.begin();
+              iEqn != abscissas_eqns.end(); iEqn++){
+
+          DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
+
+          dqmom_eqn->sched_updateTransportEqn( level, sched, curr_level );// add sources and solve equation
+        }
+
+
+        for( DQMOMEqnFactory::EqnMap::iterator iEqn = dqmom_eqns.begin();
+             iEqn!=dqmom_eqns.end(); ++iEqn ) {
+
+          DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
+
+          //get the abscissa values
+          dqmom_eqn->sched_getUnscaledValues( level, sched );
+        }
+
+        // calculate the moments
+        bool saveMoments = d_dqmomSolver->getSaveMoments();
+        if( saveMoments ) {
+          // schedule DQMOM moment calculation
+          d_dqmomSolver->sched_calculateMoments( level, sched, curr_level );
+        }
 
       } else {
+
+        const int time_substep = curr_level;
+        i_transport->second->schedule_task_group("dqmom_psi_builders",
+          TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 
         i_particle_models->second->schedule_task_group( "pre_update_property_models",
                                                         TaskInterface::TIMESTEP_EVAL,
                                                         dont_pack_tasks, level, sched,
                                                         matls );
 
-      }
+        i_transport->second->schedule_task_group("dqmom_diffusion_flux_builders",
+          TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 
+        i_transport->second->schedule_task_group("dqmom_eqns",
+          TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 
-      // Evaluate DQMOM equations
-      for ( DQMOMEqnFactory::EqnMap::iterator iEqn = weights_eqns.begin();
-            iEqn != weights_eqns.end(); iEqn++){
+        i_transport->second->schedule_task_group("dqmom_fe_update",
+          TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 
-        DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
-
-        dqmom_eqn->sched_updateTransportEqn( level, sched, curr_level );// add sources and solve equation
-      }
-
-      for ( DQMOMEqnFactory::EqnMap::iterator iEqn = abscissas_eqns.begin();
-            iEqn != abscissas_eqns.end(); iEqn++){
-
-        DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
-
-        dqmom_eqn->sched_updateTransportEqn( level, sched, curr_level );// add sources and solve equation
-      }
-
-
-      for( DQMOMEqnFactory::EqnMap::iterator iEqn = dqmom_eqns.begin();
-           iEqn!=dqmom_eqns.end(); ++iEqn ) {
-
-        DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
-
-        //get the abscissa values
-        dqmom_eqn->sched_getUnscaledValues( level, sched );
-      }
-
-      // calculate the moments
-      bool saveMoments = d_dqmomSolver->getSaveMoments();
-      if( saveMoments ) {
-        // schedule DQMOM moment calculation
-        d_dqmomSolver->sched_calculateMoments( level, sched, curr_level );
       }
 
     }
@@ -1947,8 +1959,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
         tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, curr_level);
       }
     }
-    
-    
+
+
     //------------------ New Task Interface (end) ------------------------------------------------
 
 
@@ -2037,10 +2049,10 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     // linearizes and solves pressure eqn
     // first computes, hatted velocities and then computes
     // the pressure poisson equation
-    
+
 //    _task_factory_map["turbulence_model_factory"]->schedule_task_group( "momentum_closure",
 //      TaskInterface::TIMESTEP_EVAL, dont_pack_tasks, level, sched, matls, curr_level );
-    
+
     d_momSolver->solveVelHat(level, sched, d_timeIntegratorLabels[curr_level], curr_level );
 
     for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
@@ -2117,7 +2129,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       //TABLE LOOKUP #3
       initialize_it  = false;
       modify_ref_den = false;
-      //d_props->sched_computeProps( level, sched, initialize_it, modify_ref_den, curr_level );
       d_tabulated_properties->sched_getState( level, sched, initialize_it, modify_ref_den, curr_level );
     }
 
@@ -2163,7 +2174,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                                            d_timeIntegratorLabels[curr_level]);
     }
 
-    // d_turbCounter = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
     timeStep_vartype timeStep(0);
     if( sched->get_dw(0) && sched->get_dw(0)->exists( d_lab->d_timeStepLabel ) )
       sched->get_dw(0)->get( timeStep, d_lab->d_timeStepLabel );

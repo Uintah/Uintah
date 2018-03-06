@@ -287,14 +287,13 @@ namespace WasatchCore {
   {
     // go through reduction variables that are computed in this Wasatch Task
     // and insert a Uintah task immediately after.
-    Expr::ExpressionFactory& factory = tree->get_expression_factory();
     typedef std::map<Expr::Tag, bool> MapT;
     BOOST_FOREACH( MapT::value_type& pair, ReductionBase::reductionTagList ){
-      const Expr::Tag rtag = pair.first;
+      const Expr::Tag& rtag = pair.first;
+      ReductionBase* redExpr = dynamic_cast<ReductionBase*>( tree->get_expression( rtag ) );
       const bool compute = (pair.second) ? true : rkStage==1;
-      if (tree->computes_field( rtag) && compute) {
-        ReductionBase& redExpr = dynamic_cast<ReductionBase&>( factory.retrieve_expression( rtag, patchID, false ) );
-        redExpr.schedule_set_reduction_vars( level, sched, materials, rkStage  );
+      if( tree->computes_field( rtag) && compute ){
+        redExpr->schedule_set_reduction_vars( level, sched, materials, rkStage  );
       }
     }    
   }

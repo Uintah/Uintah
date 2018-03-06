@@ -29,6 +29,7 @@
 #include <CCA/Components/Arches/Transport/TransportHelper.h>
 #include <CCA/Components/Arches/GridTools.h>
 #include <CCA/Components/Arches/Directives.h>
+#include <iomanip>
 
 #ifdef DO_TIMINGS
 #  include <spatialops/util/TimeLogger.h>
@@ -92,9 +93,9 @@ private:
     typedef typename ArchesCore::VariableHelper<T>::XFaceType FXT;
     typedef typename ArchesCore::VariableHelper<T>::YFaceType FYT;
     typedef typename ArchesCore::VariableHelper<T>::ZFaceType FZT;
-    typedef typename ArchesCore::VariableHelper<T>::ConstXFaceType CFXT;
-    typedef typename ArchesCore::VariableHelper<T>::ConstYFaceType CFYT;
-    typedef typename ArchesCore::VariableHelper<T>::ConstZFaceType CFZT;
+    typedef typename ArchesCore::VariableHelper<CT>::XFaceType CFXT;
+    typedef typename ArchesCore::VariableHelper<CT>::YFaceType CFYT;
+    typedef typename ArchesCore::VariableHelper<CT>::ZFaceType CFZT;
 
     std::vector<std::string> _eqn_names;
     std::map<std::string, double> m_scaling_info;
@@ -308,6 +309,7 @@ private:
       if ( time_substep == 0 ){
 
         auto fe_update = [&](int i, int j, int k){
+
 
           rhs(i,j,k) = rhs(i,j,k) - ( ax * ( x_flux(i+1,j,k) - x_flux(i,j,k) ) +
                                       ay * ( y_flux(i,j+1,k) - y_flux(i,j,k) ) +

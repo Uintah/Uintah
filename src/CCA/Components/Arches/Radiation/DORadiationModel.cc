@@ -153,7 +153,7 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
   _nQn_part =0;
   _LspectralSolve=false;
   d_nbands=1;
-  bool LsootOn=false;
+  _LspectralSootOn=false;
   ProblemSpecP db_propV2 = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("PropertyModelsV2");
   if  (db_propV2){
     for ( ProblemSpecP db_model = db_propV2->findBlock("model"); db_model != nullptr;
@@ -186,10 +186,10 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
 
         double T_ref=0.0;
         double molarRatio_ref=0.0;
-        db_model->getWithDefault( "Temperature_ref", T_ref, 1200 );
+        db_model->getWithDefault( "Temperature_ref", T_ref, 1750 );
         db_model->getWithDefault( "CO2_H2OMolarRatio_ref", molarRatio_ref, 0.25 );
-        molarRatio_ref=std::min(std::max(molarRatio_ref/1200.0,0.01),4.0);
         T_ref=std::min(std::max(T_ref,500.0),2400.0);  // limit reference to within bounds of fit data
+        molarRatio_ref=std::min(std::max(molarRatio_ref,0.01),4.0);
 
         _abskg_name_vector=std::vector<std::string>  (d_nbands);
         _abswg_name_vector=std::vector<std::string>  (d_nbands);
@@ -205,9 +205,9 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
         std::string soot_name="";
         db_model->get("sootVolumeFrac",soot_name);
         if (soot_name==""){
-          LsootOn=false;
+          _LspectralSootOn=false;
         }else{
-          LsootOn=true;
+          _LspectralSootOn=true;
         }
 
         _grey_reference_weight=std::vector<double> (d_nbands+1,0.0); // +1 for transparent band 
@@ -216,7 +216,7 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
      
           {{0.7412956,  -0.9412652,   0.8531866,   -.3342806,    0.0431436 },
            {0.1552073,  0.6755648,  -1.1253940, 0.6040543,  -0.1105453},
-           {0.2550242,  -0.605428,  0.8123855,  -0.45322990,  0.0869309},
+           {0.2550242,  -0.6065428,  0.8123855,  -0.45322990,  0.0869309},
            {-0.0345199, 0.4112046, -0.5055995, 0.2317509, -0.0375491}},
      
           {{-0.5244441, 0.2799577 ,   0.0823075,    0.1474987,   -0.0688622},
@@ -286,7 +286,7 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
     }
 
     // solve for transparent band if soot or particles are present
-    if(_LspectralSolve && (_nQn_part > 0 || LsootOn)){
+    if(_LspectralSolve && (_nQn_part > 0 || _LspectralSootOn)){
       std::stringstream abskg_name;
       abskg_name << "abskg" <<"_"<< d_nbands;
       _abskg_name_vector.push_back(abskg_name.str());
@@ -1177,7 +1177,7 @@ DORadiationModel::computeIntensitySource( const Patch* patch, std::vector <const
 
 
     //Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
-  for (int qn=0; qn < _nQn_part; qn++){
+  for (unsigned int qn=0; qn < abskp.size(); qn++){
     if( _radiateAtGasTemp ){
       for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
         double sum=(_sigma/M_PI)*abskp[qn][*iter]*std::pow(gTemp[*iter],4.0);
@@ -1485,10 +1485,8 @@ DORadiationModel::intensitysolveSweepOptimized( const Patch* patch,
   old_dw->get(abskt,_abskt_label, matlIndex , patch,Ghost::None, 0  );
 
 
-  constCCVariable<double> abskg;
   std::vector<constCCVariable<double> >abskg_array (d_nbands);
   if (_LspectralSolve){
-    old_dw->get(abskg,_abskg_label_vector[d_nbands-1], matlIndex , patch,Ghost::None, 0  ); // last abskg element is soot only (or zeros)
     for (int iband=0; iband<d_nbands; iband++){
       old_dw->get(abskg_array[iband],_abskg_label_vector[iband], matlIndex , patch,Ghost::None, 0  ); // last abskg element is soot only (or zeros)
     }
@@ -1520,7 +1518,7 @@ DORadiationModel::intensitysolveSweepOptimized( const Patch* patch,
     // definition of abskt(spectral)-> abskg_soot +  sum(abskp_i) + scatkt
     //
     // definition of abskg ->  abskg + abskg_soot 
-    // definition of abskg_i(spectral)-> abskg_soot_i + abskg_soot_i 
+    // definition of abskg_i(spectral)-> abskg_i  
     //--------------------------------------------------------//
     if (_LspectralSolve){
       for ( k = (_plusZ[cdirecn] ? idxLo.z() : idxHi.z());  (_plusZ[cdirecn] ? (k<=idxHi.z()) : (k>=idxLo.z())) ; k=k+ziter[cdirecn]){
@@ -1532,7 +1530,7 @@ DORadiationModel::intensitysolveSweepOptimized( const Patch* patch,
             if (cellType(i,j,k) !=ffield){ // if intrusions
               intensity(i,j,k) = emissSrc(i,j,k) ;
             } else{ // else flow cell
-              intensity(i,j,k) = (emissSrc(i,j,k) + intensity(i,j,km)*abs_oxi  +  intensity(i,jm,k)*abs_oeta  +  intensity(im,j,k)*abs_omu)/(denom + (abskg_array[iband](i,j,k) - abskg(i,j,k) + abskt(i,j,k))*vol);
+              intensity(i,j,k) = (emissSrc(i,j,k) + intensity(i,j,km)*abs_oxi  +  intensity(i,jm,k)*abs_oeta  +  intensity(im,j,k)*abs_omu)/(denom + (abskg_array[iband](i,j,k)  + abskt(i,j,k))*vol);
             } // end if intrusion
           } // end i loop
         } // end j loop
@@ -1582,8 +1580,8 @@ DORadiationModel::getDOSource(const Patch* patch,
   constCCVariable<int> cellType;
   old_dw->get(cellType,_cellTypeLabel,matlIndex,patch,Ghost::None,0);
 
-  std::vector< constCCVariable<double> > abskp(_nQn_part);
-  std::vector< constCCVariable<double> > partTemp(_nQn_part);
+  std::vector< constCCVariable<double> > abskp(_nQn_part + ( (_LspectralSootOn && _LspectralSolve) ? 1:0)); // stor soot in particle array
+  std::vector< constCCVariable<double> > partTemp(_nQn_part + ( (_LspectralSootOn && _LspectralSolve) ? 1:0));
   std::vector< CCVariable <double > > emissSrc(d_nbands);
   std::vector< constCCVariable<double> > abskg(d_nbands);
 
@@ -1591,6 +1589,13 @@ DORadiationModel::getDOSource(const Patch* patch,
     old_dw->get(abskp[ix],_abskp_label_vector[ix], matlIndex , patch,Ghost::None, 0  );
     old_dw->get(partTemp[ix],_temperature_label_vector[ix], matlIndex , patch,Ghost::None, 0  );
   }
+
+  if(_LspectralSootOn && _LspectralSolve){
+    old_dw->get(abskp[_nQn_part],VarLabel::find("absksoot"), matlIndex , patch,Ghost::None, 0  );
+    new_dw->get(partTemp[_nQn_part],_T_label, matlIndex , patch,Ghost::None, 0  ); // soot radiates at gas temp always
+  }
+
+
 
     for (int iband=0; iband<d_nbands; iband++){
       old_dw->get(abskg[iband],_abskg_label_vector[iband], matlIndex , patch,Ghost::None, 0  );
@@ -1878,7 +1883,6 @@ DORadiationModel::setIntensityBC2Orig(const Patch* patch,
 
 
 
-
   constCCVariable<double> radTemp;
   new_dw->get(radTemp,_T_label, matlIndex , patch,Ghost::None, 0  );
   constCCVariable<int> cellType;
@@ -1892,20 +1896,3 @@ DORadiationModel::setIntensityBC2Orig(const Patch* patch,
 
   return;
 }
-
-void
-DORadiationModel::setExtraSweepingLabels(int nphase){
-
-  IntVector patchIntVector (0,0,0);
-  const TypeDescription* CC_double = CCVariable<double>::getTypeDescription();
-  _nphase=nphase;
-  for( int ixx=0;  ixx<_nphase;ixx++){
-    _patchIntensityLabels.push_back(std::vector< const VarLabel*> (0) );
-    for( int ix=0;  ix<d_totalOrds ;ix++){
-      ostringstream my_stringstream_object;
-      my_stringstream_object << "Intensity" << setfill('0') << setw(4)<<  ix << ixx ;
-      _patchIntensityLabels[ixx].push_back(VarLabel::create(my_stringstream_object.str(), CC_double));
-    }
-  }
-}
-

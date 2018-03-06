@@ -99,11 +99,11 @@ Thermophoresis::problemSetup(const ProblemSpecP& params, int qn)
   // Need velocity scaling constant
   std::string vel_root;
   if ( _dir == 0 ){
-    vel_root = ArchesCore::parse_for_role_to_label(db, "uvel");
+    vel_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_XVEL);
   } else if ( _dir == 1){
-    vel_root = ArchesCore::parse_for_role_to_label(db, "vvel");
+    vel_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_YVEL);
   } else {
-    vel_root = ArchesCore::parse_for_role_to_label(db, "wvel");
+    vel_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_ZVEL);
   }
 
   vel_root = ArchesCore::append_qn_env( vel_root, d_quadNode );
@@ -112,17 +112,17 @@ Thermophoresis::problemSetup(const ProblemSpecP& params, int qn)
   _vel_scaling_constant = current_eqn.getScalingConstant(d_quadNode);
 
   // Need a size IC:
-  std::string length_root = ArchesCore::parse_for_role_to_label(db, "size");
+  std::string length_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_SIZE);
   std::string length_name = ArchesCore::append_env( length_root, d_quadNode );
   _length_varlabel = VarLabel::find(length_name);
 
   // Need a density
-  std::string density_root = ArchesCore::parse_for_role_to_label(db, "density");
+  std::string density_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_DENSITY);
   std::string density_name = ArchesCore::append_env( density_root, d_quadNode );
   _particle_density_varlabel = VarLabel::find(density_name);
 
   // create particle temperature label
-  std::string temperature_root = ArchesCore::parse_for_role_to_label(db, "temperature");
+  std::string temperature_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_TEMPERATURE);
   std::string temperature_name = ArchesCore::append_env( temperature_root, d_quadNode );
   _particle_temperature_varlabel = VarLabel::find(temperature_name);
 

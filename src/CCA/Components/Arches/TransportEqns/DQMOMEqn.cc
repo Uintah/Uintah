@@ -388,9 +388,11 @@ DQMOMEqn::problemSetup( const ProblemSpecP& inputdb )
   // need particle info for partMassFlowInlet
   d_partVelNames = std::vector<std::string>(3,"NotSet");
   if (ArchesCore::check_for_particle_method(db, ArchesCore::DQMOM_METHOD )){
-    std::string str3D = "uvw";
-    for(unsigned int i = 0; i<str3D.length(); i++) {
-      std::string velLabelName =ArchesCore::parse_for_role_to_label(db,std::string (1,str3D[i])+"vel");
+    ArchesCore::PARTICLE_ROLE vel_enums[] = {ArchesCore::P_XVEL,
+                                             ArchesCore::P_YVEL,
+                                             ArchesCore::P_ZVEL};
+    for(unsigned int i = 0; i<3; i++) {
+      std::string velLabelName =ArchesCore::parse_for_particle_role_to_label(db,vel_enums[i]);
       d_partVelNames[i]=velLabelName+"_qn";
 
     }
@@ -882,7 +884,7 @@ DQMOMEqn::sched_addSources( const LevelP& level, SchedulerP& sched, const int ti
 
   string taskname = "DQMOMEqn::addSources";
 
-  d_sourceLabel = VarLabel::find(d_sourceName); 
+  d_sourceLabel = VarLabel::find(d_sourceName);
 
   Task* tsk = scinew Task(taskname, this, &DQMOMEqn::addSources, timeSubStep);
 

@@ -99,6 +99,8 @@ WARNING
    CohesiveZone* getCohesiveZone();
    double getCharLengthNormal() const;
    double getCharLengthTangential() const;
+   double getNormalFailureDisplacement() const;
+   double getTangentialFailureDisplacement() const;
    double getCohesiveNormalStrength() const;
    double getCohesiveTangentialStrength() const;
    std::string getCohesiveFilename() const;
@@ -114,6 +116,8 @@ WARNING
 
    double d_delta_n;
    double d_delta_t;
+   double d_delta_n_fail;
+   double d_delta_t_fail;
    double d_sig_max;
    double d_tau_max;
    bool d_do_rotation;

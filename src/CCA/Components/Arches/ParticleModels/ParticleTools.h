@@ -10,9 +10,14 @@ namespace Uintah{ namespace ArchesCore{
 
 
   enum PARTICLE_METHOD {DQMOM_METHOD, CQMOM_METHOD, LAGRANGIAN_METHOD};
+  enum PARTICLE_ROLE { P_SIZE, P_XVEL, P_YVEL, P_ZVEL, P_TEMPERATURE, P_ENTHALPY, P_TOTNUM_DENSITY,
+                       P_MAXTEMPERATURE, P_RAWCOAL, P_CHAR, P_DENSITY, P_DTDT };
 
   /** @brief Parse for a role -> label match in the EulerianParticles section **/
-  std::string parse_for_role_to_label( ProblemSpecP& db, const std::string role );
+  std::string parse_for_particle_role_to_label( ProblemSpecP& db, PARTICLE_ROLE role );
+
+  /** @brief Map role string to enum **/
+  std::string get_particle_role_from_enum( PARTICLE_ROLE role );
 
   /** @brief Obtain a vector<string> of all internal internal cordinates **/
   std::vector<std::string> getICNames( ProblemSpecP& db );

@@ -118,6 +118,7 @@ AMRSimulationController::run()
     m_app->getDebugStreams().push_back( &gheapprofile );
     m_app->getDebugStreams().push_back( &gheapchecker );
 
+    m_visitSimData->myworld = d_myworld;
     visit_InitLibSim( m_visitSimData );
   }
 #endif

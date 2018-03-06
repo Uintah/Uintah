@@ -104,29 +104,29 @@ EnthalpyShaddix::problemSetup(const ProblemSpecP& params, int qn)
   DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self();
 
   // check for particle enthalpy scaling constant
-  std::string enthalpy_root = ArchesCore::parse_for_role_to_label(db, "enthalpy");
+  std::string enthalpy_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_ENTHALPY);
   std::string enthalpyqn_name = ArchesCore::append_qn_env( enthalpy_root, d_quadNode );
   EqnBase& temp_enthalpy_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(enthalpyqn_name);
   DQMOMEqn& enthalpy_eqn = dynamic_cast<DQMOMEqn&>(temp_enthalpy_eqn);
    _enthalpy_scaling_constant = enthalpy_eqn.getScalingConstant(d_quadNode);
 
   // check for particle temperature
-  std::string temperature_root = ArchesCore::parse_for_role_to_label(db, "temperature");
+  std::string temperature_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_TEMPERATURE);
   std::string temperature_name = ArchesCore::append_env( temperature_root, d_quadNode );
   _particle_temperature_varlabel = VarLabel::find(temperature_name);
 
   // check for length
-  std::string length_root = ArchesCore::parse_for_role_to_label(db, "size");
+  std::string length_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_SIZE);
   std::string length_name = ArchesCore::append_env( length_root, d_quadNode );
   _length_varlabel = VarLabel::find(length_name);
 
   // create raw coal mass var label
-  std::string rcmass_root = ArchesCore::parse_for_role_to_label(db, "raw_coal");
+  std::string rcmass_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_RAWCOAL);
   std::string rcmass_name = ArchesCore::append_env( rcmass_root, d_quadNode );
   _rcmass_varlabel = VarLabel::find(rcmass_name);
 
   // check for char mass and get scaling constant
-  std::string char_root = ArchesCore::parse_for_role_to_label(db, "char");
+  std::string char_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_CHAR);
   std::string char_name = ArchesCore::append_env( char_root, d_quadNode );
   _char_varlabel = VarLabel::find(char_name);
 
