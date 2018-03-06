@@ -64,8 +64,6 @@ private:
   std::map<int, const VarLabel*> _face_y_part_vel_labels;
   std::map<int, const VarLabel*> _face_z_part_vel_labels;
 
-  bool d_drag;
-
   std::string _uname, _vname, _wname;
 
  }; //end class PartVel

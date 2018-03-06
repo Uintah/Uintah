@@ -234,10 +234,14 @@
         </model>
       </ParticleModels>
       <DQMOM>
+        <write_input_with_dqmom_eqns>dqmom_example_fragment.xml</write_input_with_dqmom_eqns>
         <number_quad_nodes>5</number_quad_nodes>
         <kokkos_translate/>
         <diffusion  scheme="central" D_label="gamma"/>
         <convection scheme="upwind"/>
+        <velocity xlabel="uVel"
+                  ylabel="vVel"
+                  zlabel="wVel"/>
         <Weights>
           <initialization type="env_constant">
             <env_constant qn="0" value="0.01"/>

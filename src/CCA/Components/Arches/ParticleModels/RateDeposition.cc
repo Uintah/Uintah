@@ -404,15 +404,15 @@ RateDeposition::register_timestep_eval( std::vector<AFC_VI>& variable_registry, 
 void
 RateDeposition::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  double CaO=_CaO;double MgO=_MgO; double AlO=_AlO;double SiO=_SiO; //const double alpha=0;
+  //double CaO=_CaO;double MgO=_MgO; double AlO=_AlO;double SiO=_SiO; //const double alpha=0;
   // const double B0=0; const doulbe B1=0; const double B3=0;
-  double CaOmolar=0.0;               double AlOmolar=0.0;
-  CaOmolar=CaO/(CaO+MgO+AlO+SiO);            AlOmolar=AlO/(CaO+MgO+AlO+SiO);
-  const double alpha=CaOmolar/(AlOmolar+CaOmolar);
-  const double B0=13.8+39.9355*alpha-44.049*alpha*alpha;
-  const double B1=30.481-117.1505*alpha+129.9978*alpha*alpha;
-  const double B2=-40.9429+234.0486*alpha-300.04*alpha*alpha;
-  const double B3= 60.7619-153.9276*alpha+211.1616*alpha*alpha;
+  //double CaOmolar=0.0;               double AlOmolar=0.0;
+  //CaOmolar=CaO/(CaO+MgO+AlO+SiO);            AlOmolar=AlO/(CaO+MgO+AlO+SiO);
+  //const double alpha=CaOmolar/(AlOmolar+CaOmolar);
+  // const double B0=13.8+39.9355*alpha-44.049*alpha*alpha;
+  // const double B1=30.481-117.1505*alpha+129.9978*alpha*alpha;
+  // const double B2=-40.9429+234.0486*alpha-300.04*alpha*alpha;
+  // const double B3= 60.7619-153.9276*alpha+211.1616*alpha*alpha;
   //const double Bactivational=B0+B1*SiO+B2*SiO*SiO+B3*SiO*SiO*SiO;
   //const double Aprepontional=exp(-(0.2693*Bactivational+11.6725));  //const double Bactivational= 47800;
 

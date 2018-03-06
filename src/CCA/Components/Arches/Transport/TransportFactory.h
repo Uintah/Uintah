@@ -43,6 +43,10 @@ namespace Uintah{
         return _pressure_eqn;
       } else if ( subset == "dqmom_eqns"){
         return _dqmom_eqns;
+      } else if ( subset == "dqmom_diffusion_flux_builders"){
+        return _dqmom_compute_diff;
+      } else if ( subset == "diffusion_flux_builders"){
+        return _scalar_diffusion;
       } else if ( subset == "dqmom_fe_update"){
         return _dqmom_fe_update;
       } else if ( subset == _all_tasks_str ){
@@ -74,6 +78,8 @@ namespace Uintah{
     std::vector<std::string> _dqmom_eqns;
     std::vector<std::string> _dqmom_compute_psi;
     std::vector<std::string> _dqmom_fe_update;
+    std::vector<std::string> _dqmom_compute_diff;
+    std::vector<std::string> _scalar_diffusion;
 
     bool m_pack_transport_construction_tasks{false};
 

@@ -65,24 +65,6 @@ void PartVel::problemSetup(const ProblemSpecP& inputdb)
 
   }
 
-  std::string which_dqmom;
-  dqmom_db->getAttribute( "type", which_dqmom );
-
-  ProblemSpecP vel_db = db->findBlock("VelModel");
-  if (vel_db) {
-
-    std::string model_type;
-    vel_db->getAttribute("type", model_type);
-
-    if(model_type == "Dragforce") {
-      d_drag = true;
-    } else {
-      throw InvalidValue( "Invalid type for Velocity Model must be Dragforce",__FILE__,__LINE__);
-    }
-  } else {
-    throw InvalidValue( "A <VelModel> section is missing from your input file!",__FILE__,__LINE__);
-  }
-
 }
 
 //---------------------------------------------------------------------------

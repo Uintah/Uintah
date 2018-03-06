@@ -8,6 +8,7 @@
 #include <CCA/Components/Arches/Transport/AddPressGradient.h>
 #include <CCA/Components/Arches/Transport/PressureBC.h>
 #include <CCA/Components/Arches/Transport/StressTensor.h>
+#include <CCA/Components/Arches/Transport/Diffusion.h>
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 #include <CCA/Components/Arches/Task/AtomicTaskInterface.h>
 #include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
@@ -96,6 +97,7 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
       //Generate a psi function for each scalar and fe updates:
       std::string compute_psi_name = "compute_scalar_psi_"+group_name;
       std::string update_task_name = "scalar_fe_update_"+group_name;
+      std::string diffusion_task_name = "diffusion_"+group_name;
       if ( type == "CC" ){
         TaskInterface::TaskBuilder* compute_psi_tsk =
         scinew ComputePsi<CCVariable<double> >::Builder( compute_psi_name, 0 );
@@ -103,6 +105,12 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
         KFEUpdate<CCVariable<double> >::Builder* update_tsk =
         scinew KFEUpdate<CCVariable<double> >::Builder( update_task_name, 0 );
         register_task( update_task_name, update_tsk );
+
+        //diffusion term:
+        TaskInterface::TaskBuilder* diff_tsk =
+          scinew Diffusion<CCVariable<double> >::Builder( diffusion_task_name, 0 );
+        register_task( diffusion_task_name, diff_tsk );
+
       } else if ( type == "FX" ){
         TaskInterface::TaskBuilder* compute_psi_tsk =
         scinew ComputePsi<SFCXVariable<double> >::Builder( compute_psi_name, 0 );
@@ -110,6 +118,12 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
         KFEUpdate<SFCXVariable<double> >::Builder* update_tsk =
         scinew KFEUpdate<SFCXVariable<double> >::Builder( update_task_name, 0 );
         register_task( update_task_name, update_tsk );
+
+        //diffusion term:
+        TaskInterface::TaskBuilder* diff_tsk =
+          scinew Diffusion<SFCXVariable<double> >::Builder( diffusion_task_name, 0 );
+        register_task( diffusion_task_name, diff_tsk );
+
       } else if ( type == "FY" ){
         TaskInterface::TaskBuilder* compute_psi_tsk =
         scinew ComputePsi<SFCYVariable<double> >::Builder( compute_psi_name, 0 );
@@ -117,6 +131,12 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
         KFEUpdate<SFCYVariable<double> >::Builder* update_tsk =
         scinew KFEUpdate<SFCYVariable<double> >::Builder( update_task_name, 0 );
         register_task( update_task_name, update_tsk );
+
+        //diffusion term:
+        TaskInterface::TaskBuilder* diff_tsk =
+          scinew Diffusion<SFCYVariable<double> >::Builder( diffusion_task_name, 0 );
+        register_task( diffusion_task_name, diff_tsk );
+
       } else if ( type == "FZ" ){
         TaskInterface::TaskBuilder* compute_psi_tsk =
         scinew ComputePsi<SFCZVariable<double> >::Builder( compute_psi_name, 0 );
@@ -124,10 +144,17 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
         KFEUpdate<SFCZVariable<double> >::Builder* update_tsk =
         scinew KFEUpdate<SFCZVariable<double> >::Builder( update_task_name, 0 );
         register_task( update_task_name, update_tsk );
+
+        //diffusion term:
+        TaskInterface::TaskBuilder* diff_tsk =
+          scinew Diffusion<SFCZVariable<double> >::Builder( diffusion_task_name, 0 );
+        register_task( diffusion_task_name, diff_tsk );
+
       }
 
       _scalar_compute_psi.push_back(compute_psi_name);
       _scalar_update.push_back( update_task_name );
+      _scalar_diffusion.push_back( diffusion_task_name );
 
     }
   }
@@ -248,17 +275,23 @@ TransportFactory::build_all_tasks( ProblemSpecP& db )
 
       //RHS builders
       TaskInterface* tsk = retrieve_task(group_name);
-      proc0cout << "       Task: " << group_name << "  Type: " << "compute_RHS" << std::endl;
+      print_task_setup_info(group_name, "Compute RHS.");
       tsk->problemSetup(group_db);
       tsk->create_local_labels();
 
       TaskInterface* psi_tsk = retrieve_task("compute_scalar_psi_"+group_name);
-      proc0cout << "       Task: " << group_name << "  Type: " << "compute_psi" << std::endl;
+      print_task_setup_info(group_name, "Compute PSI function.");
       psi_tsk->problemSetup( group_db );
       psi_tsk->create_local_labels();
 
+      std::string diffusion_task_name = "diffusion_"+group_name;
+      print_task_setup_info(diffusion_task_name, "Compute diffusive fluxes.");
+      TaskInterface* diff_tsk = retrieve_task(diffusion_task_name);
+      diff_tsk->problemSetup( group_db );
+      diff_tsk->create_local_labels();
+
       TaskInterface* fe_tsk = retrieve_task("scalar_fe_update_"+group_name);
-      proc0cout << "       Task: " << group_name << "  Type: " << "scalar_fe_update" << std::endl;
+      print_task_setup_info(group_name, "FE update.");
       fe_tsk->problemSetup( group_db );
       fe_tsk->create_local_labels();
 
@@ -418,6 +451,14 @@ void TransportFactory::register_DQMOM( ProblemSpecP db_dqmom ){
     _dqmom_fe_update.push_back( update_task_name );
     _dqmom_compute_psi.push_back( compute_psi_name );
 
+    if ( db_dqmom->findBlock("diffusion") ) {
+      std::string diffusion_task_name = "dqmom_diffusion_"+group_name;
+      TaskInterface::TaskBuilder* diff_tsk =
+        scinew Diffusion<CCVariable<double> >::Builder( diffusion_task_name, 0);
+      register_task( diffusion_task_name, diff_tsk );
+      _dqmom_compute_diff.push_back( diffusion_task_name );
+    }
+
   }
 }
 
@@ -480,6 +521,28 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
     ProblemSpecP eqn_db = db_eqn_group->appendChild("eqn");
     std::stringstream this_qn;
     this_qn << i;
+
+    if ( db_dqmom->findBlock("velocity") ){
+      //This sets one velocity for the distribution
+      std::string xvel_label;
+      std::string yvel_label;
+      std::string zvel_label;
+      db_dqmom->findBlock("velocity")->getAttribute("xlabel", xvel_label);
+      db_dqmom->findBlock("velocity")->getAttribute("ylabel", yvel_label);
+      db_dqmom->findBlock("velocity")->getAttribute("zlabel", zvel_label);
+      ProblemSpecP conv_vel = db_eqn_group->appendChild("velocity");
+      conv_vel->setAttribute("xlabel", xvel_label);
+      conv_vel->setAttribute("ylabel", yvel_label);
+      conv_vel->setAttribute("zlabel", zvel_label);
+    } else {
+      //This uses the internal coordinates of velocity for the distribution
+      ProblemSpecP conv_vel = db_eqn_group->appendChild("velocity");
+      conv_vel->setAttribute("xlabel", "pvel_face_x_" + this_qn.str());
+      conv_vel->setAttribute("ylabel", "pvel_face_y_" + this_qn.str());
+      conv_vel->setAttribute("zlabel", "pvel_fave_z_" + this_qn.str());
+    }
+
+
     eqn_db->setAttribute("label", "w_qn"+this_qn.str());
     if ( do_convection ){
       ProblemSpecP conv_db = eqn_db->appendChild("convection");
@@ -606,9 +669,6 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
       }
     }
 
-    //Set the velocities for this environment
-
-
     // RHSs
     std::string group_name = dqmom_eqn_grp_env.str();
     TaskInterface* tsk = retrieve_task(group_name);
@@ -621,6 +681,13 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
     print_task_setup_info( "dqmom_psi_builders_"+group_name, "DQMOM compute psi.");
     psi_tsk->problemSetup( db_eqn_group );
     psi_tsk->create_local_labels();
+
+    // Diffusion
+    if ( do_diffusion ){
+      TaskInterface* diff_tsk = retrieve_task("dqmom_diffusion_"+group_name);
+      diff_tsk->problemSetup( db_eqn_group );
+      diff_tsk->create_local_labels();
+    }
 
     // FE update
     TaskInterface* fe_tsk = retrieve_task("dqmom_fe_update_"+group_name);

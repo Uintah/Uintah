@@ -48,7 +48,11 @@
 using namespace Uintah;
 
 ParticleModelFactory::ParticleModelFactory()
-{}
+{
+
+  _factory_name = "ParticleModelFactory";
+
+}
 
 ParticleModelFactory::~ParticleModelFactory()
 {}
@@ -433,7 +437,7 @@ ParticleModelFactory::build_all_tasks( ProblemSpecP& db )
     }
 
     if (db->findBlock("DQMOM") ) {
-      //See comment above about this task. 
+      //See comment above about this task.
       std::string task_name = "dqmom_no_inversion";
       print_task_setup_info( task_name, "DQMOM: No Inversion");
       TaskInterface* tsk = retrieve_task(task_name);

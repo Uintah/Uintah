@@ -390,5 +390,4 @@ namespace Uintah{ namespace ArchesCore{
 
   }
 
-
 }} //Uintah::ArchesCore

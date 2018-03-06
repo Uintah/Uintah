@@ -2088,10 +2088,20 @@
                                         attribute1="type OPTIONAL STRING 'unweightedAbs, weightedAbs'"> <!-- phasing out the type specification. all dqmom is weightedAbs-->
 
         <!-- These tags are for the new DQMOM interface -->
+
         <!--If this tag is present, diffusion is computed.-->
         <diffusion                    spec="OPTIONAL NO_DATA"
                                       attribute1="scheme REQUIRED STRING 'central'"
                                       attribute2="D_label REQUIRED STRING"/>
+
+        <!-- Overrides the default velocities used to transport the NDF -->
+        <!-- Default velocities are the velocity IC's -->
+        <!-- These velocity labels are used for all environments -->
+        <velocity                     spec="OPTIONAL NO_DATA"
+                                      attribute1="xlabel REQUIRED STRING"
+                                      attribute2="ylabel REQUIRED STRING"
+                                      attribute3="zlabel REQUIRED STRING"/>
+
         <!-- If this tag is present, convection is computed.
          The type refers to the scheme: upwind, central, superbee, roe_minmod.-->
         <convection                   spec="OPTIONAL NO_DATA"

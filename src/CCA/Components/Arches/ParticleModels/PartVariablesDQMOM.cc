@@ -51,7 +51,7 @@ PartVariablesDQMOM::register_initialize(
     register_variable( length_name, ArchesFieldContainer::REQUIRES, 0,
                        ArchesFieldContainer::NEWDW, variable_registry );
 
-     register_variable( surfAreaF_name, ArchesFieldContainer::COMPUTES, variable_registry );
+    register_variable( surfAreaF_name, ArchesFieldContainer::COMPUTES, variable_registry );
 
   }
 
@@ -77,14 +77,14 @@ PartVariablesDQMOM::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_i
     constCCVariable<double>& weight =
       tsk_info->get_const_uintah_field_add<constCCVariable<double> >( weight_name );
 
-    constCCVariable<double>& length = 
+    constCCVariable<double>& length =
       tsk_info->get_const_uintah_field_add< constCCVariable<double> >(length_name);
 
     Uintah::parallel_for(range,  [&]( int i,  int j, int k){
       AreaSumF(i,j,k) += weight(i,j,k)*length(i,j,k)*length(i,j,k); // [#/m]
       num_den(i,j,k)  += weight(i,j,k);
     }); //end cell loop
-  } 
+  }
 
   for ( int ienv = 0; ienv < m_Nenv; ienv++ ){
 
@@ -94,10 +94,10 @@ PartVariablesDQMOM::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_i
 
     constCCVariable<double>& weight =
       tsk_info->get_const_uintah_field_add<constCCVariable<double> >( weight_name );
-    constCCVariable<double>& length = 
+    constCCVariable<double>& length =
       tsk_info->get_const_uintah_field_add< constCCVariable<double> >(length_name);
 
-    CCVariable<double>& surfaceAreaFraction  
+    CCVariable<double>& surfaceAreaFraction
       = tsk_info->get_uintah_field_add<CCVariable<double> >( surfAreaF_name );
 
     Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -150,14 +150,14 @@ PartVariablesDQMOM::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     constCCVariable<double>& weight =
       tsk_info->get_const_uintah_field_add<constCCVariable<double> >( weight_name );
 
-    constCCVariable<double>& length = 
+    constCCVariable<double>& length =
       tsk_info->get_const_uintah_field_add< constCCVariable<double> >(length_name);
 
     Uintah::parallel_for(range,  [&]( int i,  int j, int k){
       AreaSumF(i,j,k) +=  weight(i,j,k)*length(i,j,k)*length(i,j,k); // [#/m]
       num_den(i,j,k)  += weight(i,j,k);
     }); //end cell loop
-  } 
+  }
 
   for ( int ienv = 0; ienv < m_Nenv; ienv++ ){
 
@@ -167,10 +167,10 @@ PartVariablesDQMOM::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     constCCVariable<double>& weight =
       tsk_info->get_const_uintah_field_add<constCCVariable<double> >( weight_name );
-    constCCVariable<double>& length = 
+    constCCVariable<double>& length =
       tsk_info->get_const_uintah_field_add< constCCVariable<double> >(length_name);
 
-    CCVariable<double>& surfaceAreaFraction  
+    CCVariable<double>& surfaceAreaFraction
       = tsk_info->get_uintah_field_add<CCVariable<double> >( surfAreaF_name );
 
     Uintah::parallel_for( range, [&](int i, int j, int k){
