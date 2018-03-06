@@ -517,13 +517,13 @@ class OnDemandDataWarehouse : public DataWarehouse {
 
     // does a final check to see if gets/puts/etc. consistent with
     // requires/computes/modifies for the current task.
-    void checkTasksAccesses(const PatchSubset    * patches,
-                            const MaterialSubset * matls);
+//    void checkTasksAccesses(const PatchSubset    * patches,
+//                            const MaterialSubset * matls);
 
     ScrubMode getScrubMode() const { return d_scrubMode; }
 
     // The following is for support of regriding
-    virtual void getVarLabelMatlLevelTriples(std::vector<VarLabelMatl<Level> >& vars) const;
+    virtual void getVarLabelMatlLevelTriples(std::vector<VarLabelMatlMemspace<Level, MemorySpace> >& vars) const;
 
     static bool d_combineMemory;
 
@@ -532,33 +532,33 @@ class OnDemandDataWarehouse : public DataWarehouse {
 
   private:
 
-    enum AccessType {
-      NoAccess = 0,
-      PutAccess,
-      GetAccess,
-      ModifyAccess
-    };
+//    enum AccessType {
+//      NoAccess = 0,
+//      PutAccess,
+//      GetAccess,
+//      ModifyAccess
+//    };
+//
+//    struct AccessInfo {
+//        AccessInfo()
+//            : accessType(NoAccess), lowOffset(0, 0, 0), highOffset(0, 0, 0) { }
+//
+//        AccessInfo(AccessType type)
+//            : accessType(type), lowOffset(0, 0, 0), highOffset(0, 0, 0) { }
+//
+//        void encompassOffsets(IntVector low,
+//                              IntVector high)
+//        {
+//          lowOffset  = Uintah::Max( low,  lowOffset );
+//          highOffset = Uintah::Max( high, highOffset );
+//        }
+//
+//        AccessType accessType;
+//        IntVector lowOffset;  // ghost cell access
+//        IntVector highOffset;
+//    };
 
-    struct AccessInfo {
-        AccessInfo()
-            : accessType(NoAccess), lowOffset(0, 0, 0), highOffset(0, 0, 0) { }
-
-        AccessInfo(AccessType type)
-            : accessType(type), lowOffset(0, 0, 0), highOffset(0, 0, 0) { }
-
-        void encompassOffsets(IntVector low,
-                              IntVector high)
-        {
-          lowOffset  = Uintah::Max( low,  lowOffset );
-          highOffset = Uintah::Max( high, highOffset );
-        }
-
-        AccessType accessType;
-        IntVector lowOffset;  // ghost cell access
-        IntVector highOffset;
-    };
-
-    typedef std::map<VarLabelMatl<Patch>, AccessInfo> VarAccessMap;
+//    typedef std::map<VarLabelMatl<Patch>, AccessInfo> VarAccessMap;
 
     struct RunningTaskInfo {
         RunningTaskInfo()
@@ -569,18 +569,18 @@ class OnDemandDataWarehouse : public DataWarehouse {
             : d_task(task), dws(dws) { }
 
         RunningTaskInfo(const RunningTaskInfo& copy)
-            : d_task(copy.d_task), dws(copy.dws), d_accesses(copy.d_accesses) { }
+            : d_task(copy.d_task), dws(copy.dws)/*, d_accesses(copy.d_accesses)*/ { }
 
         RunningTaskInfo& operator=(const RunningTaskInfo& copy)
         {
           d_task = copy.d_task;
           dws = copy.dws;
-          d_accesses = copy.d_accesses;
+//        d_accesses = copy.d_accesses;
           return *this;
         }
         const Task* d_task;
         std::vector<OnDemandDataWarehouseP>* dws;
-        VarAccessMap d_accesses;
+//      VarAccessMap d_accesses;
     };
 
     virtual DataWarehouse* getOtherDataWarehouse(Task::WhichDW,
@@ -596,41 +596,41 @@ class OnDemandDataWarehouse : public DataWarehouse {
     inline Task::WhichDW getWhichDW(RunningTaskInfo *info);
 
     // These will throw an exception if access is not allowed for the current task.
-    inline void checkGetAccess(const VarLabel* label,
-                               int matlIndex,
-                               const Patch* patch,
-                               Ghost::GhostType gtype = Ghost::None,
-                               int numGhostCells = 0);
-
-    inline void checkPutAccess(const VarLabel* label,
-                               int matlIndex,
-                               const Patch* patch,
-                               bool replace);
-
-    inline void checkModifyAccess(const VarLabel* label,
-                                  int matlIndex,
-                                  const Patch* patch);
-
-    // These will return false if access is not allowed for the current task.
-    inline bool hasGetAccess(const Task* runningTask,
-                             const VarLabel* label,
-                             int matlIndex,
-                             const Patch* patch,
-                             IntVector lowOffset,
-                             IntVector highOffset,
-                             RunningTaskInfo *info);
-
-    inline bool hasPutAccess(const Task* runningTask,
-                             const VarLabel* label,
-                             int matlIndex,
-                             const Patch* patch,
-                             bool replace);
-
-    void checkAccesses(RunningTaskInfo* runningTaskInfo,
-                       const Task::Dependency* dep,
-                       AccessType accessType,
-                       const PatchSubset* patches,
-                       const MaterialSubset* matls);
+//    inline void checkGetAccess(const VarLabel* label,
+//                               int matlIndex,
+//                               const Patch* patch,
+//                               Ghost::GhostType gtype = Ghost::None,
+//                               int numGhostCells = 0);
+//
+//    inline void checkPutAccess(const VarLabel* label,
+//                               int matlIndex,
+//                               const Patch* patch,
+//                               bool replace);
+//
+//    inline void checkModifyAccess(const VarLabel* label,
+//                                  int matlIndex,
+//                                  const Patch* patch);
+//
+//    // These will return false if access is not allowed for the current task.
+//    inline bool hasGetAccess(const Task* runningTask,
+//                             const VarLabel* label,
+//                             int matlIndex,
+//                             const Patch* patch,
+//                             IntVector lowOffset,
+//                             IntVector highOffset,
+//                             RunningTaskInfo *info);
+//
+//    inline bool hasPutAccess(const Task* runningTask,
+//                             const VarLabel* label,
+//                             int matlIndex,
+//                             const Patch* patch,
+//                             bool replace);
+//
+//    void checkAccesses(RunningTaskInfo* runningTaskInfo,
+//                       const Task::Dependency* dep,
+//                       AccessType accessType,
+//                       const PatchSubset* patches,
+//                       const MaterialSubset* matls);
     
     void printDebuggingPutInfo( const VarLabel* label,
                                 int matlIndex,

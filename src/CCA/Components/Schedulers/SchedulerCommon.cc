@@ -1123,6 +1123,7 @@ SchedulerCommon::advanceDataWarehouse( const GridP & grid
 
   ASSERT(m_dws.size() >= 2);
 
+  //TODO: This can cost roughly 1 millisecond of time.  Find a way to reuse data warehouses if possible?  Brad March 6 2018
   // The last becomes last old, and the rest are new
   m_dws[m_num_old_dws - 1] = m_dws[m_dws.size() - 1];
 
@@ -1748,16 +1749,16 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP & grid )
 
   //__________________________________
   // copy reduction variables to the new_dw
-  std::vector<VarLabelMatl<Level> > levelVariableInfo;
+  std::vector<VarLabelMatlMemspace<Level, MemorySpace> > levelVariableInfo;
   oldDataWarehouse->getVarLabelMatlLevelTriples(levelVariableInfo);
 
   newDataWarehouse->unfinalize();
   for (unsigned int i = 0; i < levelVariableInfo.size(); i++) {
-    VarLabelMatl<Level> currentReductionVar = levelVariableInfo[i];
+    VarLabelMatlMemspace<Level, MemorySpace> currentReductionVar = levelVariableInfo[i];
 
     if (currentReductionVar.label_->typeDescription()->isReductionVariable()) {
 
-      // cout << "REDUNCTION:  Label(" << setw(15) << currentReductionVar.label_->getName() << "): Patch(" << reinterpret_cast<int>(currentReductionVar.level_) << "): Material(" << currentReductionVar.matlIndex_ << ")" << endl; 
+      // cout << "REDUCTION:  Label(" << setw(15) << currentReductionVar.label_->getName() << "): Patch(" << reinterpret_cast<int>(currentReductionVar.level_) << "): Material(" << currentReductionVar.matlIndex_ << ")" << endl;
       const Level* oldLevel = currentReductionVar.domain_;
       const Level* newLevel = nullptr;
       if (oldLevel && oldLevel->getIndex() < grid->numLevels()) {

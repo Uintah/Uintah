@@ -101,11 +101,14 @@ Task::initialize()
   m_patch_set = nullptr;
   m_matl_set  = nullptr;
 
-  m_uses_mpi         = false;
-  m_uses_threads     = false;
-  m_uses_device      = false;
-  m_subpatch_capable = false;
-  m_has_subscheduler = false;
+  m_uses_mpi           = false;
+  m_uses_threads       = false;
+  m_uses_device        = false;
+  m_preload_sim_vars   = false;
+  m_uses_kokkos_openmp = false;
+  m_uses_kokkos_cuda   = false;
+  m_subpatch_capable   = false;
+  m_has_subscheduler   = false;
 
   for (int i = 0; i < TotalDWs; i++) {
     m_dwmap[i] = Task::InvalidDW;
@@ -195,6 +198,30 @@ Task::usesDevice(bool state, int maxStreamsPerTask /* = 1 */ )
 {
   m_uses_device = state;
   m_max_streams_per_task = maxStreamsPerTask;
+}
+
+//______________________________________________________________________
+//
+void
+Task::usesSimVarPreloading(bool state)
+{
+  m_preload_sim_vars = state;
+}
+
+//______________________________________________________________________
+//
+void
+Task::usesKokkosOpenMP(bool state)
+{
+  m_uses_kokkos_openmp = state;
+}
+
+//______________________________________________________________________
+//
+void
+Task::usesKokkosCuda(bool state)
+{
+  m_uses_kokkos_cuda = state;
 }
 
 //______________________________________________________________________

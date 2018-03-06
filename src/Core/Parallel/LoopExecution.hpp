@@ -63,25 +63,37 @@
 #define MEMORY_SPACE_1    Kokkos::HostSpace
 #endif //#if defined(HAVE_CUDA)
 
+
+//This macro gives a mechanism to allow the user to supply a task callback name without template arguments,
+//and then the macro tacks on the tempalte arguments and uses that.  (This is why a macro is used.)
+//At compile time, the compiler will compile the task for *all* execution spaces (OpenMP, Cuda, etc.)
+//At run time, the appropriate if statement logic will determine which task to use.
 #define CALL_ASSIGN_PORTABLE_TASK(FUNCTION_NAME, TASK_DEPENDENCIES, PATCHES, MATERIALS) {      \
   Task* task{nullptr};                                                                         \
   if (NUM_EXECUTION_SPACES == 1) {                                                             \
     task = scinew Task("FUNCTION_NAME",                                                        \
                              this,                                                             \
-                             &FUNCTION_NAME<EXECUTION_SPACE_1, MEMORY_SPACE_1>);               \
+                             &FUNCTION_NAME<EXECUTION_SPACE_0, MEMORY_SPACE_0>);               \
+    task->usesKokkosOpenMP(true);                                                            \
   } else {                                                                                     \
     if (Uintah::Parallel::usingDevice()) {                                                     \
       task = scinew Task("FUNCTION_NAME",                                                      \
                                this,                                                           \
                                &FUNCTION_NAME<EXECUTION_SPACE_0, MEMORY_SPACE_0>);             \
       task->usesDevice(true);                                                                  \
+      task->usesKokkosCuda(true);                                                              \
     } else {                                                                                   \
       task = scinew Task("FUNCTION_NAME",                                                      \
                                this,                                                           \
                                &FUNCTION_NAME<EXECUTION_SPACE_1, MEMORY_SPACE_1>);             \
+      task->usesKokkosOpenMP(true);                                                            \
     }                                                                                          \
   }                                                                                            \
+                                                                                               \
+  task->usesSimVarPreloading(true);                                                            \
+                                                                                               \
   TASK_DEPENDENCIES(task);                                                                     \
+                                                                                               \
   sched->addTask(task, PATCHES, MATERIALS);                                                    \
 }
 #endif  //#if defined(UINTAH_ENABLE_KOKKOS)

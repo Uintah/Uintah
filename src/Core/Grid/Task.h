@@ -1365,6 +1365,16 @@ public: // class Task
   inline bool usesDevice() const { return m_uses_device; }
   inline int  maxStreamsPerTask() const { return  m_max_streams_per_task; }
 
+         void usesSimVarPreloading(bool state);
+  inline bool usesSimVarPreloading() const { return m_preload_sim_vars; }
+
+         void usesKokkosOpenMP(bool state);
+  inline bool usesKokkosOpenMP() const { return m_uses_kokkos_openmp; }
+
+         void usesKokkosCuda(bool state);
+  inline bool usesKokkosCuda() const { return m_uses_kokkos_cuda; }
+
+
   enum MaterialDomainSpec {
       NormalDomain  // <- Normal/default setting
     , OutOfDomain   // <- Require things from all material
@@ -1823,6 +1833,9 @@ protected: // class Task
   bool m_uses_mpi{false};
   bool m_uses_threads{false};
   bool m_uses_device{false};
+  bool m_preload_sim_vars{false};
+  bool m_uses_kokkos_openmp{false};
+  bool m_uses_kokkos_cuda{false};
   int  m_max_streams_per_task{1};
   bool m_subpatch_capable{false};
   bool m_has_subscheduler{false};

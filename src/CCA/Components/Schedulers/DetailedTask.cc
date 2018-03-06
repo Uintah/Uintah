@@ -169,7 +169,7 @@ DetailedTask::doit( const ProcessorGroup                      * pg
 
   for (int i = 0; i < static_cast<int>(dws.size()); i++) {
     if ( oddws[i] != nullptr ) {
-      oddws[i]->checkTasksAccesses( d_patches, d_matls );
+//      oddws[i]->checkTasksAccesses( d_patches, d_matls );
       oddws[i]->popRunningTask();
     }
   }

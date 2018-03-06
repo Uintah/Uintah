@@ -33,6 +33,7 @@
 #include <CCA/Components/Schedulers/RuntimeStatsEnum.h>
 
 #include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Grid/Variables/VarLabelMatl.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/Parallel/UintahParallelComponent.h>

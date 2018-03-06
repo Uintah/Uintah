@@ -31,7 +31,7 @@
 #include <Core/Grid/Variables/ReductionVariableBase.h>
 #include <Core/Grid/Variables/ScrubItem.h>
 #include <Core/Grid/Variables/VarLabel.h>
-#include <Core/Grid/Variables/VarLabelMatl.h>
+#include <Core/Grid/Variables/VarLabelMatlMemspace.h>
 #include <Core/Containers/FastHashTable.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Malloc/Allocator.h>
@@ -109,7 +109,11 @@ public:
 
 private:
 
-  using keyDBtype = hashmap<VarLabelMatl<DomainType>, int>;
+  //using keyDBtype = hashmap<VarLabelMatlMemspace<DomainType, int>, int>;
+  using keyDBtype = std::unordered_map<VarLabelMatlMemspace<DomainType, MemorySpace>,
+                                       int,
+                                       Uintah::VarLabelMatlMemspaceHasher<DomainType, MemorySpace>
+                                      >;
   keyDBtype m_keys;
 
   int m_key_count { 0 };
@@ -226,7 +230,7 @@ class DWDatabase {
                      ,       int             dwid
                      );
 
-    void getVarLabelMatlTriples(std::vector<VarLabelMatl<DomainType> >& vars) const;
+    void getVarLabelMatlTriples(std::vector<VarLabelMatlMemspace<DomainType, MemorySpace> >& vars) const;
 
 
   private:
@@ -379,7 +383,6 @@ DWDatabase<DomainType>::scrub( const VarLabel   * label
 #endif
 
   if (idx != -1 && m_vars[idx]) {
-    printf("Scrubbing %s patch %d\n", label->getName().c_str(), dom->getID());
     delete m_vars[idx];
     m_vars[idx] = nullptr;
   }
@@ -398,7 +401,7 @@ DWDatabase<DomainType>::initializeScrubs(       int                        dwid
   // If the variable has no entry in the scrubcount map, delete it
   for (auto keyiter = m_keyDB->m_keys.begin(); keyiter != m_keyDB->m_keys.end();) {
     if (m_vars[keyiter->second]) {
-      VarLabelMatl<DomainType> vlm = keyiter->first;
+      VarLabelMatlMemspace<DomainType, MemorySpace> vlm = keyiter->first;
       // See if it is in the scrubcounts map.
       ScrubItem key(vlm.label_, vlm.matlIndex_, vlm.domain_, dwid);
       ScrubItem* result = scrubcounts->lookup(&key);
@@ -437,7 +440,7 @@ KeyDatabase<DomainType>::lookup( const VarLabel   * label
 {
   std::lock_guard<Uintah::MasterLock> lookup_lock(g_keyDB_mutex);
 
-  VarLabelMatl<DomainType> v(label, matlIndex, getRealDomain(dom));
+  VarLabelMatlMemspace<DomainType, MemorySpace> v(label, matlIndex, getRealDomain(dom), MemorySpace::HostSpace);
   typename keyDBtype::const_iterator const_iter = m_keys.find(v);
   if (const_iter == m_keys.end()) {
     return -1;
@@ -457,7 +460,7 @@ KeyDatabase<DomainType>::merge( const KeyDatabase<DomainType> & newDB )
       const_keyiter++) {
     typename keyDBtype::const_iterator const_db_iter = m_keys.find(const_keyiter->first);
     if (const_db_iter == m_keys.end()) {
-      m_keys.insert(std::pair<VarLabelMatl<DomainType>, int>(const_keyiter->first, m_key_count++));
+      m_keys.insert(std::pair<VarLabelMatlMemspace<DomainType, MemorySpace>, int>(const_keyiter->first, m_key_count++));
     }
   }
 }
@@ -471,10 +474,10 @@ KeyDatabase<DomainType>::insert( const VarLabel   * label
                                , const DomainType * dom
                                )
 {
-  VarLabelMatl<DomainType> v(label, matlIndex, getRealDomain(dom));
+  VarLabelMatlMemspace<DomainType, MemorySpace> v(label, matlIndex, getRealDomain(dom), MemorySpace::HostSpace);
   typename keyDBtype::const_iterator const_iter = m_keys.find(v);
   if (const_iter == m_keys.end()) {
-    m_keys.insert(std::pair<VarLabelMatl<DomainType>, int>(v, m_key_count++));
+    m_keys.insert(std::pair<VarLabelMatlMemspace<DomainType, MemorySpace>, int>(v, m_key_count++));
   }
 }
 
@@ -495,7 +498,7 @@ void
 KeyDatabase<DomainType>::print( std::ostream & out, int rank ) const
 {
   for (auto keyiter = m_keys.begin(); keyiter != m_keys.end(); keyiter++) {
-    const VarLabelMatl<DomainType>& vlm = keyiter->first;
+    const VarLabelMatlMemspace<DomainType, MemorySpace>& vlm = keyiter->first;
     const DomainType* dom = vlm.domain_;
     if (dom) {
       out << rank << " Name: " << vlm.label_->getName() << "  domain: " << *dom << "  matl:" << vlm.matlIndex_ << '\n';
@@ -738,7 +741,7 @@ DWDatabase<DomainType>::print( std::ostream & out, int rank ) const
 {
   for (auto keyiter = m_keyDB->m_keys.begin(); keyiter != m_keyDB->m_keys.end(); keyiter++) {
     if (m_vars[keyiter->second]) {
-      const VarLabelMatl<DomainType>& vlm = keyiter->first;
+      const VarLabelMatlMemspace<DomainType, MemorySpace>& vlm = keyiter->first;
       const DomainType* dom = vlm.domain_;
       if (dom) {
         out << rank << " Name: " << vlm.label_->getName() << "  domain: " << *dom << "  matl:" << vlm.matlIndex_ << '\n';
@@ -763,7 +766,7 @@ DWDatabase<DomainType>::logMemoryUse(       std::ostream  & out
   for (auto keyiter = m_keyDB->m_keys.begin(); keyiter != m_keyDB->m_keys.end(); keyiter++) {
     if (m_vars[keyiter->second]) {
       Variable* var = m_vars[keyiter->second]->m_var;
-      VarLabelMatl<DomainType> vlm = keyiter->first;
+      VarLabelMatlMemspace<DomainType, MemorySpace> vlm = keyiter->first;
       const VarLabel* label = vlm.label_;
       std::string elems;
       unsigned long totsize;
@@ -781,10 +784,10 @@ DWDatabase<DomainType>::logMemoryUse(       std::ostream  & out
 //
 template<class DomainType>
 void
-DWDatabase<DomainType>::getVarLabelMatlTriples( std::vector<VarLabelMatl<DomainType> > & v) const
+DWDatabase<DomainType>::getVarLabelMatlTriples( std::vector<VarLabelMatlMemspace<DomainType, MemorySpace> > & v) const
 {
   for (auto keyiter = m_keyDB->m_keys.begin(); keyiter != m_keyDB->m_keys.end(); keyiter++) {
-    const VarLabelMatl<DomainType>& vlm = keyiter->first;
+    const VarLabelMatlMemspace<DomainType, MemorySpace>& vlm = keyiter->first;
     if (m_vars[keyiter->second]) {
       v.push_back(vlm);
     }
@@ -797,51 +800,63 @@ DWDatabase<DomainType>::getVarLabelMatlTriples( std::vector<VarLabelMatl<DomainT
 //
 // Hash function for VarLabelMatl
 //
-#ifdef HAVE_GNU_HASHMAP
-
-  namespace __gnu_cxx
-  {
-    using Uintah::DWDatabase;
-    using Uintah::VarLabelMatl;
-    template <class DomainType>
-    struct hash<VarLabelMatl<DomainType> > : public std::unary_function<VarLabelMatl<DomainType>, size_t>
-    {
-      size_t operator()(const VarLabelMatl<DomainType>& v) const
-      {
-        size_t h=0;
-        char *str =const_cast<char*> (v.label_->getName().data());
-        while (int c = *str++) h = h*7+c;
-        return ( ( ((size_t)v.label_) << (sizeof(size_t)/2) ^ ((size_t)v.label_) >> (sizeof(size_t)/2) )
-                 ^ (size_t)v.domain_ ^ (size_t)v.matlIndex_ );
-      }
-    };
-  }
-
-#elif HAVE_TR1_HASHMAP || HAVE_C11_HASHMAP 
-
-  namespace std {
-#if HAVE_TR1_HASHMAP 
-    namespace tr1 {
-#endif 
-      using Uintah::DWDatabase;
-      using Uintah::VarLabelMatl;
-      template <class DomainType>
-      struct hash<VarLabelMatl<DomainType> > : public unary_function<VarLabelMatl<DomainType>, size_t>
-      {
-        size_t operator()(const VarLabelMatl<DomainType>& v) const
-        {
-          size_t h=0;
-          char *str =const_cast<char*> (v.label_->getName().data());
-          while (int c = *str++) h = h*7+c;
-          return ( ( ((size_t)v.label_) << (sizeof(size_t)/2) ^ ((size_t)v.label_) >> (sizeof(size_t)/2) )
-                   ^ (size_t)v.domain_ ^ (size_t)v.matlIndex_ );
-        }
-      };
-#if HAVE_TR1_HASHMAP 
-    } // end namespace tr1
-#endif 
-  } // end namespace std
-
-#endif // HAVE_GNU_HASHMAP
+//#ifdef HAVE_GNU_HASHMAP
+//
+//  namespace __gnu_cxx
+//  {
+//    using Uintah::DWDatabase;
+//    using Uintah::VarLabelMatl;
+//    template <class DomainType>
+//    struct hash<VarLabelMatl<DomainType> > : public std::unary_function<VarLabelMatl<DomainType>, size_t>
+//    {
+//      size_t operator()(const VarLabelMatl<DomainType>& v) const
+//      {
+//        size_t h=0;
+//        char *str =const_cast<char*> (v.label_->getName().data());
+//        while (int c = *str++) h = h*7+c;
+//        return ( ( ((size_t)v.label_) << (sizeof(size_t)/2) ^ ((size_t)v.label_) >> (sizeof(size_t)/2) )
+//                 ^ (size_t)v.domain_ ^ (size_t)v.matlIndex_ );
+//      }
+//    };
+//    template <class DomainType>
+//    struct hash<VarLabelMatlMemspace<DomainType, int> > : public unary_function<VarLabelMatlMemspace<DomainType, int>, size_t>
+//    {
+//      size_t operator()(const VarLabelMatlMemspace<DomainType>& v) const
+//      {
+//        size_t h=0;
+//        char *str =const_cast<char*> (v.label_->getName().data());
+//        while (int c = *str++) h = h*7+c;
+//        return ( ( ((size_t)v.label_) << (sizeof(size_t)/2) ^ ((size_t)v.label_) >> (sizeof(size_t)/2) )
+//                 ^ (size_t)v.domain_ ^ (size_t)v.matlIndex_ );
+//      }
+//    };
+//  }
+//
+//#elif HAVE_TR1_HASHMAP || HAVE_C11_HASHMAP
+//
+//  namespace std {
+//#if HAVE_TR1_HASHMAP
+//    namespace tr1 {
+//#endif
+//      using Uintah::DWDatabase;
+//      using Uintah::VarLabelMatl;
+//      template <class DomainType>
+//      struct hash<VarLabelMatl<DomainType> > : public unary_function<VarLabelMatl<DomainType>, size_t>
+//      {
+//        size_t operator()(const VarLabelMatl<DomainType>& v) const
+//        {
+//          size_t h=0;
+//          char *str =const_cast<char*> (v.label_->getName().data());
+//          while (int c = *str++) h = h*7+c;
+//          return ( ( ((size_t)v.label_) << (sizeof(size_t)/2) ^ ((size_t)v.label_) >> (sizeof(size_t)/2) )
+//                   ^ (size_t)v.domain_ ^ (size_t)v.matlIndex_ );
+//        }
+//      };
+//#if HAVE_TR1_HASHMAP
+//    } // end namespace tr1
+//#endif
+//  } // end namespace std
+//
+//#endif // HAVE_GNU_HASHMAP
 
 #endif // CCA_COMPONENTS_SCHEDULERS_DWDATABASE_H
