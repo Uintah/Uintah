@@ -184,22 +184,18 @@ namespace WasatchCore{
 
       if( !( advSlnFactory.have_entry( temporaryRhoTag ) ) ){
 #ifdef HAVE_POKITT
-        const TagNames& tagNames = TagNames::self();
         typedef pokitt::Density<SVolField>::Builder Density;
         advSlnFactory.register_expression( new Density( temporaryRhoTag, temporaryTemperatureTag, temporaryPTag, temporaryMMWTag ) );
 #else
-        const TagNames& tagNames = TagNames::self();
         typedef Density_IC<SVolField>::Builder Density;
         advSlnFactory.register_expression( new Density( temporaryRhoTag, temporaryTemperatureTag, temporaryPTag, temporaryMMWTag, wasatchSpec_ ) );
 #endif
       }
       if( !( initFactory.have_entry( temporaryRhoTag ) ) ){
 #ifdef HAVE_POKITT
-        const TagNames& tagNames = TagNames::self();
         typedef pokitt::Density<SVolField>::Builder Density;
         initFactory.register_expression( new Density( temporaryRhoTag, temporaryTemperatureTag, temporaryPTag, temporaryMMWTag ) );
 #else
-        const TagNames& tagNames = TagNames::self();
         typedef Density_IC<SVolField>::Builder Density;
         initFactory.register_expression( new Density( temporaryRhoTag, temporaryTemperatureTag, temporaryPTag, temporaryMMWTag, wasatchSpec_ ) );
 #endif
@@ -257,7 +253,6 @@ namespace WasatchCore{
               {
                 std::string dir = "X";
                 typedef ContinuityBoundaryTyper<SpatialOps::SSurfXField, SpatialOps::GradientX> BCTypes;
-                BCTypes bcTypes;
 
                 normalConvectiveFluxName = this->solnVarName_ + TagNames::self().convectiveflux + dir;
 
@@ -274,7 +269,6 @@ namespace WasatchCore{
               {
                 std::string dir = "Y";
                 typedef ContinuityBoundaryTyper<SpatialOps::SSurfYField, SpatialOps::GradientY> BCTypes;
-                BCTypes bcTypes;
 
                 normalConvectiveFluxName = this->solnVarName_ + TagNames::self().convectiveflux + dir;
 
@@ -291,7 +285,6 @@ namespace WasatchCore{
               {
                 std::string dir = "Z";
                 typedef ContinuityBoundaryTyper<SpatialOps::SSurfZField, SpatialOps::GradientZ> BCTypes;
-                BCTypes bcTypes;
 
                 normalConvectiveFluxName = this->solnVarName_ + TagNames::self().convectiveflux + dir;
 
