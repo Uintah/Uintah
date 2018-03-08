@@ -1004,12 +1004,6 @@ namespace WasatchCore{
   template class CompressibleMomentumTransportEquation<SpatialOps::XDIR>;
   template class CompressibleMomentumTransportEquation<SpatialOps::YDIR>;
   template class CompressibleMomentumTransportEquation<SpatialOps::ZDIR>;
-  template struct NormalDirTypeSelector<SpatialOps::XDIR>;
-  template struct NormalDirTypeSelector<SpatialOps::YDIR>;
-  template struct NormalDirTypeSelector<SpatialOps::ZDIR>;
-  template struct StrainDirTypeSelector<SpatialOps::XDIR>;
-  template struct StrainDirTypeSelector<SpatialOps::YDIR>;
-  template struct StrainDirTypeSelector<SpatialOps::ZDIR>;
 } // namespace Wasatch
 
 
