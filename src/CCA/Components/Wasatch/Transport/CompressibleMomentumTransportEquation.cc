@@ -699,11 +699,6 @@ namespace WasatchCore{
             advSlnFactory.register_expression( oneSidedPressureCorrectionBuilder );
           }
 
-
-          // check to do transverse strain BCs
-          const bool doStrain1 = advSlnFactory.have_entry( this->shearStrainTag1_ );
-          const bool doStrain2 = advSlnFactory.have_entry( this->shearStrainTag2_ );
-
           // tags for modifier expressions and strings for BC spec names, will depend on boundary face
           Expr::Tag bcCopiedMomentumTag, neumannZeroNormalStrainTag, neumannZeroPressureTag;
 
@@ -715,7 +710,6 @@ namespace WasatchCore{
               const std::string dir = "X";
               typedef typename ConstantBC<SVolField>::Builder ConstantCellBC;
               typedef CompressibleMomentumBoundaryTyper<MomDirT, SpatialOps::SSurfXField, SpatialOps::GradientX> BCTypes;
-              BCTypes bcTypes;
 
               neumannZeroNormalStrainTag = get_decorated_tag( this->normalStrainTag_, "neumann-zero-hard-inflow", dir );
               bcCopiedMomentumTag        = get_decorated_tag( this->solnVarTag_     , "bccopy-hard-inflow"      , dir );
@@ -731,7 +725,6 @@ namespace WasatchCore{
               const std::string dir = "Y";
               typedef typename ConstantBC<SVolField>::Builder ConstantCellBC;
               typedef CompressibleMomentumBoundaryTyper<MomDirT, SpatialOps::SSurfYField, SpatialOps::GradientY> BCTypes;
-              BCTypes bcTypes;
 
               neumannZeroNormalStrainTag = get_decorated_tag( this->normalStrainTag_, "neumann-zero-for-inflow", dir );
               bcCopiedMomentumTag        = get_decorated_tag( this->solnVarTag_     , "bccopy-hard-inflow"      , dir );
@@ -747,7 +740,6 @@ namespace WasatchCore{
               const std::string dir = "Z";
               typedef typename ConstantBC<SVolField>::Builder ConstantCellBC;
               typedef CompressibleMomentumBoundaryTyper<MomDirT, SpatialOps::SSurfZField, SpatialOps::GradientZ> BCTypes;
-              BCTypes bcTypes;
 
               neumannZeroNormalStrainTag = get_decorated_tag( this->normalStrainTag_, "neumann-zero-hard-inflow", dir );
               bcCopiedMomentumTag        = get_decorated_tag( this->solnVarTag_     , "bccopy-hard-inflow"      , dir );
