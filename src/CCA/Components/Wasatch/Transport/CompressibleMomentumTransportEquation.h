@@ -543,6 +543,3 @@ namespace WasatchCore{
   };
 
 }
-
-
-

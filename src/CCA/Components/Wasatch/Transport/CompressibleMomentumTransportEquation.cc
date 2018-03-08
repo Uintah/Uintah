@@ -708,7 +708,6 @@ namespace WasatchCore{
             case Uintah::Patch::xminus:
             {
               const std::string dir = "X";
-              typedef typename ConstantBC<SVolField>::Builder ConstantCellBC;
               typedef CompressibleMomentumBoundaryTyper<MomDirT, SpatialOps::SSurfXField, SpatialOps::GradientX> BCTypes;
 
               neumannZeroNormalStrainTag = get_decorated_tag( this->normalStrainTag_, "neumann-zero-hard-inflow", dir );
@@ -723,7 +722,6 @@ namespace WasatchCore{
             case Uintah::Patch::yminus:
             {
               const std::string dir = "Y";
-              typedef typename ConstantBC<SVolField>::Builder ConstantCellBC;
               typedef CompressibleMomentumBoundaryTyper<MomDirT, SpatialOps::SSurfYField, SpatialOps::GradientY> BCTypes;
 
               neumannZeroNormalStrainTag = get_decorated_tag( this->normalStrainTag_, "neumann-zero-for-inflow", dir );
@@ -738,7 +736,6 @@ namespace WasatchCore{
             case Uintah::Patch::zminus:
             {
               const std::string dir = "Z";
-              typedef typename ConstantBC<SVolField>::Builder ConstantCellBC;
               typedef CompressibleMomentumBoundaryTyper<MomDirT, SpatialOps::SSurfZField, SpatialOps::GradientZ> BCTypes;
 
               neumannZeroNormalStrainTag = get_decorated_tag( this->normalStrainTag_, "neumann-zero-hard-inflow", dir );
@@ -789,7 +786,6 @@ namespace WasatchCore{
             case Uintah::Patch::xminus:
             {
               const std::string dir = "X";
-              typedef typename ConstantBC<SVolField>::Builder ConstantCellBC;
               typedef CompressibleMomentumBoundaryTyper<MomDirT, SpatialOps::SSurfXField, SpatialOps::GradientX> BCTypes;
               BCTypes bcTypes;
 
@@ -817,7 +813,6 @@ namespace WasatchCore{
             case Uintah::Patch::yminus:
             {
               const std::string dir = "Y";
-              typedef typename ConstantBC<SVolField>::Builder ConstantCellBC;
               typedef CompressibleMomentumBoundaryTyper<MomDirT, SpatialOps::SSurfYField, SpatialOps::GradientY> BCTypes;
               BCTypes bcTypes;
 
@@ -845,7 +840,6 @@ namespace WasatchCore{
             case Uintah::Patch::zminus:
             {
               const std::string dir = "Z";
-              typedef typename ConstantBC<SVolField>::Builder ConstantCellBC;
               typedef CompressibleMomentumBoundaryTyper<MomDirT, SpatialOps::SSurfZField, SpatialOps::GradientZ> BCTypes;
               BCTypes bcTypes;
 
