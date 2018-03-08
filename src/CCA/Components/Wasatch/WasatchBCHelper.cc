@@ -671,7 +671,7 @@ namespace WasatchCore {
   //------------------------------------------------------------------------------------------------
   
   void WasatchBCHelper::update_pressure_rhs( SVolField& pressureRHS,
-                                      const Uintah::Patch* patch )
+                                             const Uintah::Patch* patch )
   {
     typedef std::vector<SpatialOps::IntVec> MaskT;
     
