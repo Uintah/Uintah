@@ -30,6 +30,7 @@
 #include <CCA/Components/Arches/ParticleModels/BodyForce.h>
 #include <CCA/Components/Arches/ParticleModels/CoalDensity.h>
 #include <CCA/Components/Arches/ParticleModels/CoalTemperature.h>
+#include <CCA/Components/Arches/ParticleModels/Burnout.h>
 #include <CCA/Components/Arches/ParticleModels/Constant.h>
 #include <CCA/Components/Arches/ParticleModels/DepositionVelocity.h>
 #include <CCA/Components/Arches/ParticleModels/DepositionEnthalpy.h>
@@ -253,6 +254,16 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
       } else if ( type == "coal_temperature" ) {
 
         TaskInterface::TaskBuilder* tsk = scinew CoalTemperature::Builder(task_name,0,N);
+        register_task( task_name, tsk );
+
+        _coal_models.push_back(task_name);
+        _post_update_particle_tasks.push_back(task_name);
+
+        temp_model_list.insert(temp_model_list.begin(), task_name); // order hack
+
+      } else if ( type == "burnout" ) {
+
+        TaskInterface::TaskBuilder* tsk = scinew Burnout::Builder(task_name,0,N);
         register_task( task_name, tsk );
 
         _coal_models.push_back(task_name);
