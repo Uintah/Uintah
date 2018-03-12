@@ -1196,12 +1196,9 @@ namespace WasatchCore{
 
     if ( timeIntegrator_.has_dual_time() ) {
       subsched_ = sched->createSubScheduler();
-      subsched_->initialize(3,1);
-      
-      // updates the current time. This should happen on the outer timestep since time will be
-      // frozen in the dual time iteration
-//      scheduleUpdateCurrentTime(level, subsched_, 1);
+      subsched_->initialize(3,1); // initialize(number of OldDWs, number of NewDWs)
 
+      
       // if we are in dual time, then the TimeAdvance will drive the dual time integrator
       Uintah::Task* dualTimeTask = scinew Uintah::Task("Wasatch::dualTimeAdvance",
                                                        this, &Wasatch::dualTimeAdvance,
@@ -1209,7 +1206,7 @@ namespace WasatchCore{
                                                        advSolGraphHelper->exprFactory);
       dualTimeTask->hasSubScheduler();
 
-      // we need the "outer" timestep for this temporary example
+      // we need the "outer" timestep
       dualTimeTask->requires( Uintah::Task::OldDW, getTimeStepLabel() );
       dualTimeTask->requires( Uintah::Task::OldDW, getDelTLabel() );
       
@@ -1220,53 +1217,10 @@ namespace WasatchCore{
       timeTags.push_back( TagNames::self().rkstage  );
       typedef Expr::PlaceHolder<SpatialOps::SingleValueField>  PlcHolder;
       advSolGraphHelper->exprFactory->register_expression(scinew PlcHolder::Builder(timeTags));
-
-      //============================================================================================
-      // to get all the task dependencies in a jif, create a dummy subscheduler and
-      // create the wasatch tasks on it. Once these tasks are created, one can easily obtain the
-      // requires/computes from the dummy scheduler
-      Uintah::SchedulerP dummySched = sched->createSubScheduler();
-      dummySched->initialize(3,1);
-      dummySched->clearMappings();
       
-      dummySched->mapDataWarehouse(Uintah::Task::ParentOldDW, 0);
-      dummySched->mapDataWarehouse(Uintah::Task::ParentNewDW, 1);
-      dummySched->mapDataWarehouse(Uintah::Task::OldDW, 2);
-      dummySched->mapDataWarehouse(Uintah::Task::NewDW, 3);
-      
-      scheduleUpdateCurrentTime(level, dummySched, 1);
-      create_dual_timestepper_on_patches( perproc_patches, materials_, level, dummySched );
-      Uintah::GridP grid = level->getGrid();
-      dummySched->advanceDataWarehouse(grid); // needed for compiling the subscheduler tasks
-      dummySched->compile();
-      
-      const std::set<const Uintah::VarLabel*, Uintah::VarLabel::Compare>& initialRequires = dummySched->getInitialRequiredVars();
-      for (std::set<const Uintah::VarLabel*>::const_iterator it=initialRequires.begin(); it!=initialRequires.end(); ++it)
-      {
-        dualTimeTask->requires(Uintah::Task::OldDW, *it, Uintah::Ghost::AroundCells, 1);
-      }
-
-      const std::set<const Uintah::VarLabel*, Uintah::VarLabel::Compare>& computedVars = dummySched->getComputedVars();
-      for (std::set<const Uintah::VarLabel*>::const_iterator it=computedVars.begin(); it!=computedVars.end(); ++it)
-      {
-        std::string varname = (*it)->getName();
-        if (varname == "dt" || varname == "rkstage" || varname == "timestep" || varname == "time" )  continue;
-        dualTimeTask->computes(*it);
-      }
-
-      // cleanup the rootids
-      graphCategories_[ ADVANCE_SOLUTION ]->rootIDs.clear();
-      // cleanup the dual time integrators
-      for( DTIntegratorMapT::iterator it=dualTimeIntegrators_.begin(); it != dualTimeIntegrators_.end(); ++it ){
-        delete it->second;
-      }
-      //============================================================================================
-      
-      // figure out the convergence reduction
+      // figure out how to deal with the convergence criterion (reduction)
       Uintah::VarLabel* convLabel = Uintah::VarLabel::create( "DualtimeResidual", Uintah::max_vartype::getTypeDescription() );
       dualTimeTask->requires( Uintah::Task::NewDW, convLabel );
-      
-      sched->addTask(dualTimeTask, perproc_patches, m_sharedState->allMaterials());      
 
       // -----------------------------------------------------------------------
       // BOUNDARY CONDITIONS TREATMENT
@@ -1300,7 +1254,7 @@ namespace WasatchCore{
       }
       proc0cout << "------------------------------------------------" << std::endl;
       
-      // create and schedule the Wasatch RHS tasks as well as the DT integrators
+      // create and schedule the Wasatch RHS tasks as well as the dualtime integrators
       subsched_->clearMappings();
       
       subsched_->mapDataWarehouse(Uintah::Task::ParentOldDW, 0);
@@ -1308,6 +1262,8 @@ namespace WasatchCore{
       subsched_->mapDataWarehouse(Uintah::Task::OldDW, 2);
       subsched_->mapDataWarehouse(Uintah::Task::NewDW, 3);
 
+      // updates the current time. This should happen on the outer timestep since time will be
+      // frozen in the dual time iteration
       scheduleUpdateCurrentTime(level, subsched_, 1);
       
       // create all the Wasatch RHS tasks for the transport equations
@@ -1316,11 +1272,37 @@ namespace WasatchCore{
       // compute the residual using a reduction
       scheduleComputeDualTimeResidual(level, subsched_);
       
+      Uintah::GridP grid = level->getGrid();
       subsched_->advanceDataWarehouse(grid); // needed for compiling the subscheduler tasks
+    
+      //----------------------------------------------------------------------------------------------
+      /* tsaad: This section below stinks. we should figure out a way to find the dependencies of the
+       dualTimeTask without invoking the subscheduler - we should try to get these from the ExprLib graph
+       directly.
+       */
+      subsched_->compile(); // compile subscheduler
       
-      proc0cout << "compiling dual time subscheduler... \n";
-      subsched_->compile();
+      // Now get all the dependencies for the dualtimetask from the subscheduler and add them to the dualTimeTask.
+      // These are the dependencies that the dual time task needs from the parent scheduler
+      const std::set<const Uintah::VarLabel*, Uintah::VarLabel::Compare>& initialRequires = subsched_->getInitialRequiredVars();
+      for (std::set<const Uintah::VarLabel*>::const_iterator it=initialRequires.begin(); it!=initialRequires.end(); ++it)
+      {
+        dualTimeTask->requires(Uintah::Task::OldDW, *it, Uintah::Ghost::AroundCells, 1);
+      }
 
+      const std::set<const Uintah::VarLabel*, Uintah::VarLabel::Compare>& computedVars = subsched_->getComputedVars();
+      for (std::set<const Uintah::VarLabel*>::const_iterator it=computedVars.begin(); it!=computedVars.end(); ++it)
+      {
+        std::string varname = (*it)->getName();
+        if (varname == "dt" || varname == "rkstage" || varname == "timestep" || varname == "time" )  continue;
+        dualTimeTask->computes(*it);
+      }
+      //----------------------------------------------------------------------------------------------
+      
+      // add the dualtimetask to the parent scheduler
+      sched->addTask(dualTimeTask, perproc_patches, m_sharedState->allMaterials());
+      a
+      subsched_->compile(); // here we need to recompile the subscheduler for reasons mysterious to me - but this seems to make dualtime work with mpi!
     } else {
       if( isRestarting_ ){
         setup_patchinfo_map( level, sched );
