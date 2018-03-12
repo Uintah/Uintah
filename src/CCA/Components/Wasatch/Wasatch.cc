@@ -1301,7 +1301,7 @@ namespace WasatchCore{
       
       // add the dualtimetask to the parent scheduler
       sched->addTask(dualTimeTask, perproc_patches, m_sharedState->allMaterials());
-      a
+      
       subsched_->compile(); // here we need to recompile the subscheduler for reasons mysterious to me - but this seems to make dualtime work with mpi!
     } else {
       if( isRestarting_ ){
