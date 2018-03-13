@@ -119,6 +119,7 @@
 #include <expression/ExpressionFactory.h>
 #include <expression/dualtime/FixedPointBDFDualTimeIntegrator.h>
 #include <expression/dualtime/VariableImplicitBDFDualTimeIntegrator.h>
+#include <expression/dualtime/BlockImplicitBDFDualTimeIntegrator.h>
 
 namespace Expr{
   class ExpressionID;
@@ -326,6 +327,7 @@ namespace WasatchCore{
     int  radCalcFrequency_;
     bool doParticles_;
     unsigned long totalDualTimeIterations_;
+    bool dualTimeBlockImplicit_;
     
     TimeIntegrator timeIntegrator_;
     

@@ -61,6 +61,8 @@ namespace WasatchCore{
     int dualTimeIterations;
     double dualTimeTolerance;
     double dualTimeds;
+    bool dualTimeBlockImplicit = false;
+    bool dualTimeDoChemistryTESTING;
 
     TimeIntegrator( const TimeIntegratorEnum theTimeIntEnum )
     : timeIntEnum( theTimeIntEnum )

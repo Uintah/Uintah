@@ -165,12 +165,13 @@ namespace WasatchCore{
   // jcs this should be done on a single patch, since the PatchInfo is for a single patch.
   void
   TimeStepper::create_dualtime_tasks( const PatchInfoMap& patchInfoMap,
-                            const Uintah::PatchSet* const patches,
-                            const Uintah::MaterialSet* const materials,
-                            const Uintah::LevelP& level,
-                            Uintah::SchedulerP& sched,
-                            DTIntegratorMapT& dualTimeIntegrators_,
-                            const std::set<std::string>& ioFieldSet )
+                                      const Uintah::PatchSet* const patches,
+                                      const Uintah::MaterialSet* const materials,
+                                      const Uintah::LevelP& level,
+                                      Uintah::SchedulerP& sched,
+                                      DTIntegratorMapT& dualTimeIntegrators_,
+                                      const std::set<std::string>& ioFieldSet,
+                                      const bool blockImplicit )
   {
     // need to explicitly make all RHS fields persistent.  This avoids the situation
     // where they may be internal nodes in a graph and could thus turn into "temporary"
@@ -199,7 +200,8 @@ namespace WasatchCore{
                                                     dualTimeIntegrators_,
                                                     varNames,
                                                     rhsTags,
-                                                    persistentFields );
+                                                    persistentFields,
+                                                    blockImplicit );
 
       taskInterfaceList_.push_back( rhsTask );
       

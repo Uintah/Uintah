@@ -34,6 +34,9 @@
 #include <expression/ExprLib.h>
 #include <expression/FieldRequest.h>
 #include <expression/ExpressionTree.h>
+#include <expression/matrix-assembly/SparseMatrix.h>
+#include <expression/matrix-assembly/DenseSubMatrix.h>
+#include <expression/matrix-assembly/ScaledIdentityMatrix.h>
 
 
 //-- Uintah includes --//
@@ -67,6 +70,8 @@
 
 #include <stdexcept>
 #include <fstream>
+
+#include <boost/pointer_cast.hpp>
 
 // getting ready for debugstream
 #include <Core/Util/DebugStream.h>
@@ -771,6 +776,7 @@ namespace WasatchCore{
                                 const std::vector<std::string> & varNames,
                                 const std::vector<Expr::Tag>   & rhsTags,
                                 const std::set<std::string>& ioFieldSet,
+                                const bool blockImplicit,
                                 const bool lockAllFields )
   {
     // only set up trees on the patches that we own on this process.
@@ -785,11 +791,12 @@ namespace WasatchCore{
     for( int ip=0; ip<localPatches->size(); ++ip ){
       const int patchID = localPatches->get(ip)->getID();
       TreePtr tree( scinew Expr::ExpressionTree(roots,factory,patchID,taskName) );
-      
-        // tsaad: for the moment, just use a fixed point integrator with BDF order 1
+
+      if( !blockImplicit ){
         dualTimeIntegrators[patchID] = scinew Expr::DualTime::FixedPointBDFDualTimeIntegrator<SVolField>(tree.get(),
                                                                                                          &factory,
-                                                                                                       patchID, "Wasatch Dual Time Integrator",
+                                                                                                         patchID,
+                                                                                                         "Wasatch Dual Time Integrator",
                                                                                                          tags.dt,
                                                                                                          tags.ds,
                                                                                                          tags.timestep,
@@ -803,8 +810,60 @@ namespace WasatchCore{
           dtIntegrator.add_variable<SVolField>(varNames[i], rhsTags[i]);
         }
         dtIntegrator.prepare_for_integration<SVolField>();
-      
-      const TreeList treeList = (dtIntegrator.get_tree()).split_tree();
+      }
+      else{
+        typedef Expr::DualTime::BlockImplicitBDFDualTimeIntegrator<SVolField> BlockImplicitBDF;
+        dualTimeIntegrators[patchID] = scinew BlockImplicitBDF(tree.get(),
+                                                               &factory,
+                                                               patchID,
+                                                               "Wasatch Dual Time Integrator",
+                                                               tags.dt,
+                                                               tags.ds,
+                                                               tags.timestep,
+                                                               1,
+                                                               Expr::STATE_DYNAMIC);
+
+        BlockImplicitBDF* dtIntegrator = boost::dynamic_pointer_cast<BlockImplicitBDF>( dualTimeIntegrators[patchID] );
+        dtIntegrator->set_dual_time_step_expression(factory.get_id(tags.ds));
+
+        for( size_t i=0; i<varNames.size(); i++ ){
+          dtIntegrator->add_variable<SVolField>( varNames[i], rhsTags[i], i, i );
+        }
+        dtIntegrator->done_adding_variables();
+
+        /*
+         * --------------------------------------------------------------------------------------------------------------------------------
+         * This should look something like "build_dual_time_matrices( dtIntegrator );" in the future
+         *
+         * We will have to support particular types of equations unless we want to enable matrix assembly from the input file :p
+         *
+         * There should be two cases:
+         * - compressible, multicomponent, reacting navier-stokes
+         * - general-purpose scalar transport
+         *
+         * General-purpose scalar transport should use the graph and simply specify RHS sensitivities to solution variables.
+         * Compressible nse will be more complicated as state transformation matrices are necessary.
+         */
+        std::map<Expr::Tag,int> varIdxMap = dtIntegrator->variable_tag_index_map( Expr::STATE_DYNAMIC );
+        std::map<Expr::Tag,int> rhsIdxMap = dtIntegrator->rhs_tag_index_map();
+
+        boost::shared_ptr<matrix::DenseSubMatrix<SVolField> > jacobian = boost::make_shared<matrix::DenseSubMatrix<SVolField> >();
+
+        for( const auto& v : varIdxMap ){
+          for( const auto& r : rhsIdxMap ){
+            jacobian->element<SVolField>(r.second, v.second) = matrix::sensitivity( r.first, v.first );
+          }
+        }
+        jacobian->finalize();
+        dtIntegrator->set_jacobian( jacobian );
+        /*
+         * --------------------------------------------------------------------------------------------------------------------------------
+         */
+
+        dtIntegrator->prepare_for_integration<SVolField>();
+      }
+
+      const TreeList treeList = (dualTimeIntegrators[patchID]->get_tree()).split_tree();
       
       // write out graph information.
       if( Uintah::Parallel::getMPIRank() == 0 && ip == 0 ){

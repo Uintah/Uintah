@@ -78,6 +78,43 @@ evaluate()
 //--------------------------------------------------------------------
 
 template< typename FieldT >
+void
+ExprAlgebra<FieldT>::
+sensitivity( const Expr::Tag& varTag )
+{
+  using namespace SpatialOps;
+  FieldT& sens_result = this->sensitivity_result( varTag );
+
+  sens_result <<= 0.0;
+  if( algebraicOperation_ == PRODUCT ){ /* need to protect against divide by zero */
+    SpatialOps::SpatFldPtr<FieldT> temporary = SpatialOps::SpatialFieldStore::get<FieldT>( sens_result );
+    *temporary <<= 0.0;
+    for( size_t i=0; i<srcFields_.size(); ++i ){
+      const FieldT& dfdv = srcFields_[i]->sens_field_ref( varTag );
+      for( size_t j=0; j<srcFields_.size(); ++j ){
+        if( j != i ){
+          const FieldT& fj = srcFields_[j]->field_ref();
+          *temporary <<= *temporary + fj;
+        }
+      }
+      sens_result <<= sens_result + dfdv * (*temporary);
+    }
+  }
+  else{
+    for( size_t i=0; i<srcFields_.size(); ++i ){
+      const FieldT& dfdv = srcFields_[i]->sens_field_ref( varTag );
+      switch( algebraicOperation_ ){
+        case SUM       : sens_result <<= sens_result + dfdv;  break;
+        case DIFFERENCE: sens_result <<= sens_result - dfdv;  break;
+        case PRODUCT   : break;
+      }
+    }
+  }
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
 ExprAlgebra<FieldT>::
 Builder::Builder( const Expr::Tag& resultTag,
                  const Expr::TagList srcTagList,

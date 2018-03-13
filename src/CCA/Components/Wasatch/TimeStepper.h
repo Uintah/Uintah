@@ -199,6 +199,7 @@ namespace WasatchCore{
      *  \param sched the scheduler
      *  \param dualTimeIntegrators
      *  \param ioFieldSet the set of fields that should be locked to maintain persistence
+     *  \param blockImplicit if the block-implicit dual time-stepping method has been specified
      */
     void create_dualtime_tasks( const PatchInfoMap& infoMap,
                                 const Uintah::PatchSet* const localPatches,
@@ -206,7 +207,8 @@ namespace WasatchCore{
                                 const Uintah::LevelP& level,
                                 Uintah::SchedulerP& sched,
                                 DTIntegratorMapT& dualTimeIntegrators,
-                                const std::set<std::string>& ioFieldSet );
+                                const std::set<std::string>& ioFieldSet,
+                                const bool blockImplicit );
 
 
     const std::list< TaskInterface* >&
