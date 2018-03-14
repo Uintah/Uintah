@@ -562,9 +562,6 @@ namespace WasatchCore{
       if (dualTimeSpec->findAttribute("tolerance")){
         dualTimeSpec->getAttribute("tolerance", timeIntegrator_.dualTimeTolerance);
       }
-      if (dualTimeSpec->findAttribute("blockimplicit")){
-        dualTimeSpec->getAttribute("blockimplicit", timeIntegrator_.dualTimeBlockImplicit);
-      }
       if (dualTimeSpec->findAttribute("ds")){
         dualTimeSpec->getAttribute("ds", timeIntegrator_.dualTimeds);
       }
@@ -1747,12 +1744,7 @@ namespace WasatchCore{
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
     }
-
-    // Can I move this over to the TaskInterface constructor that does dual time? Is that valid?
-    // Or should we (do we have to) do the logic for constructing the dual time step (requires parsing) here?
-    // Parsing ought to be done earlier in this file when the TimeIntegratorTools struct has dual time parameters populated.
-    // Note that the dual time step must be persistent (locked) for the GESAT approach that uses its old value.
-    // We should just lock ds no matter what.
+    
     typedef Expr::ConstantExpr<SpatialOps::SingleValueField>::Builder ConstantSingleValueT;
     const TagNames& tagNames = TagNames::self();
     exprFactory.register_expression(scinew ConstantSingleValueT(tagNames.ds, timeIntegrator_.dualTimeds), true );
@@ -1763,8 +1755,7 @@ namespace WasatchCore{
     // the task that updates the variables from time "n" to "n+1"
     timeStepper_->create_dualtime_tasks( patchInfoMap_, localPatches,
                                          materials, level, sched,
-                                         dualTimeIntegrators_, persistentFields_,
-                                         timeIntegrator_.dualTimeBlockImplicit );
+                                         dualTimeIntegrators_, persistentFields_ );
   }
 
   

@@ -82,7 +82,6 @@ public:
   
   ~ExprAlgebra();
   void evaluate();
-  void sensitivity( const Expr::Tag& varTag );
   
 private:
   DECLARE_VECTOR_OF_FIELDS(FieldT, srcFields_)

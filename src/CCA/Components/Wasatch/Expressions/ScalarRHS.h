@@ -36,9 +36,6 @@
 #include "RHSTerms.h"
 
 
-#include <CCA/Components/Wasatch/PatchInfo.h>
-
-
 /**
  *  \ingroup 	Expressions
  *  \class 	ScalarRHS
@@ -114,10 +111,6 @@ protected:
   typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::Interpolant,YVolField,YFluxT>::type  YVolToYFluxInterpT;
   typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::Interpolant,ZVolField,ZFluxT>::type  ZVolToZFluxInterpT;
 
-  typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::Interpolant,XFluxT,FieldT>::type  XFluxToFieldInterpT;
-  typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::Interpolant,YFluxT,FieldT>::type  YFluxToFieldInterpT;
-  typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::Interpolant,ZFluxT,FieldT>::type  ZFluxToFieldInterpT;
-
 public:
 
 
@@ -179,7 +172,6 @@ public:
   };
 
   virtual void evaluate();
-  virtual void sensitivity( const Expr::Tag& varTag );
   virtual void bind_operators( const SpatialOps::OperatorDatabase& opDB );
 
 protected:
@@ -198,22 +190,15 @@ protected:
   const Expr::Tag densityTag_;
 
   DECLARE_FIELDS( SVolField, rho_, volfrac_, divrhou_, phi_ )
-  DECLARE_FIELDS( SVolField, xSVol_, ySVol_, zSVol_ )
   DECLARE_FIELD( XVolField, xareafrac_ )
   DECLARE_FIELD( YVolField, yareafrac_ )
   DECLARE_FIELD( ZVolField, zareafrac_ )
-
-  WasatchCore::UintahPatchContainer* patchContainer_;
 
   // Operators
   const SVolToFieldTInterpT* volFracInterpOp_;
   const XVolToXFluxInterpT* xAreaFracInterpOp_;
   const YVolToYFluxInterpT* yAreaFracInterpOp_;
   const ZVolToZFluxInterpT* zAreaFracInterpOp_;
-
-  const XFluxToFieldInterpT* xInterpOp_;
-  const YFluxToFieldInterpT* yInterpOp_;
-  const ZFluxToFieldInterpT* zInterpOp_;
 
   const bool isConstDensity_, strongForm_;
   const DensityInterpT* densityInterpOp_;

@@ -150,7 +150,6 @@ namespace WasatchCore{
                     const std::vector<std::string> & varNames,
                     const std::vector<Expr::Tag>   & rhsTags,
                     const std::set<std::string> & ioFieldSet,
-                    const bool                    blockImplicit,
                     const bool                    lockAllFields = false );
 
     ~TaskInterface();
