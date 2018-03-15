@@ -9,6 +9,9 @@ SurfaceVolumeFractionCalc::create_local_labels(){
 
   // CC fields
   register_new_variable<CCVariable<double> >( "cc_volume_fraction" );
+  // register_new_variable<ArchesCore::VariableHelper<CCVariable<double> >::XFaceType >("cc_fx_volume_fraction");
+  // register_new_variable<ArchesCore::VariableHelper<CCVariable<double> >::YFaceType >("cc_fy_volume_fraction");
+  // register_new_variable<ArchesCore::VariableHelper<CCVariable<double> >::ZFaceType >("cc_fz_volume_fraction"); 
 
   // FX fields
   register_new_variable<SFCXVariable<double> >( "fx_volume_fraction" );
