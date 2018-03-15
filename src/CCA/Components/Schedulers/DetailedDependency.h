@@ -80,10 +80,9 @@ public:
 
 
   // As an arbitrary convention, non-data dependency have a nullptr fromPatch.
-  // These types of dependency exist between a modifying task and any task
-  // that requires the data (from ghost cells in particular) before it is
-  // modified preventing the possibility of modifying data while it is being
-  // used.
+  // These types of dependencies exist between a modifying task and any task
+  // that requires the data (from ghost cells in particular) before it is modified
+  // modified preventing the possibility of modifying data while it is being used.
   bool isNonDataDependency() const { return (m_from_patch == nullptr); }
 
   DetailedDep              * m_next;

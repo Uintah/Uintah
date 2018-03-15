@@ -156,12 +156,12 @@ Deposition::problemSetup(const ProblemSpecP& inputdb, int qn)
   _rate_depZ_varlabel = VarLabel::find(rate_dep_Z);
 
   // Need a size IC:
-  std::string length_root = ArchesCore::parse_for_role_to_label(db, "size");
+  std::string length_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_SIZE);
   std::string length_name = ArchesCore::append_env( length_root, d_quadNode );
   _length_varlabel = VarLabel::find(length_name);
 
   // Need a density
-  std::string density_root = ArchesCore::parse_for_role_to_label(db, "density");
+  std::string density_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_DENSITY);
   std::string density_name = ArchesCore::append_env( density_root, d_quadNode );
   _particle_density_varlabel = VarLabel::find(density_name);
 

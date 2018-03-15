@@ -29,11 +29,11 @@ RMCRT_1L_perf_GPU_ups = modUPS( the_dir, \
 
 RMCRT_DO_perf_GPU_ups = modUPS2( the_dir, \
                                "RMCRT_DO_perf.ups", \
-                               ["/Uintah_specification/Grid/Level/Box[@label=0]/resolution :[32,32,32]",
-                                "/Uintah_specification/Grid/Level/Box[@label=0]/patches    :[2,2,2]",
-                                "/Uintah_specification/Grid/Level/Box[@label=1]/resolution :[64,64,64]",
-                                "/Uintah_specification/Grid/Level/Box[@label=1]/patches    :[4,4,4]",
-                                "Uintah_specification/RMCRT/nDivQRays                      : 100"
+                               [( "update", "/Uintah_specification/Grid/Level/Box[@label=0]/resolution :[32,32,32]" ),
+                                ( "update", "/Uintah_specification/Grid/Level/Box[@label=0]/patches    :[2,2,2]"    ),
+                                ( "update", "/Uintah_specification/Grid/Level/Box[@label=1]/resolution :[64,64,64]" ),
+                                ( "update", "/Uintah_specification/Grid/Level/Box[@label=1]/patches    :[4,4,4]"    ),
+                                ( "update", "Uintah_specification/RMCRT/nDivQRays                      : 100"       )
                                ] )
 
 #______________________________________________________________________

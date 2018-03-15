@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-from runSusTests import nameoftest
+from runSusTests import getTestName
 import os
 import sys
 import importlib
@@ -50,7 +50,7 @@ for component in components :
     isOrphan = True
     
     for test in RT_tests :
-      testname = nameoftest( test )
+      testname = getTestName( test )
       
       if testname == target:
         isOrphan = False

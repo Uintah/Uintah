@@ -46,12 +46,7 @@ public:
   DependencyBatch( int            to
                  , DetailedTask * fromTask
                  , DetailedTask * toTask
-                 )
-    : m_from_task(fromTask)
-    , m_to_rank(to)
-  {
-    m_to_tasks.push_back(toTask);
-  }
+                 );
 
   ~DependencyBatch();
 

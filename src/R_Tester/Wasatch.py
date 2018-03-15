@@ -291,8 +291,23 @@ QMOMTESTS=[
 ]
 
 POKITTTESTS=[
-  ("species-transport-test",       "species-transport.ups",  1, "All", ["exactComparison","no_restart"] ),
-  ("coal-cpd-cck-1D",              "coal-cpd-cck-1D.ups",    1, "All", ["exactComparison","no_restart"] )
+  ("species-transport-test",                    "species-transport.ups",                          1, "All", ["exactComparison","no_restart"] ),
+  ("coal-cpd-cck-1D",                           "coal-cpd-cck-1D.ups",                            1, "All", ["exactComparison","no_restart"] ),
+  ("MultispeciesBC-inflow-nonreacting-xminus",  "MultispeciesBC-inflow-nonreacting-xminus.ups",   1, "All", ["exactComparison","no_restart","no_memoryTest"] ),
+  ("MultispeciesBC-inflow-nonreacting-yminus",  "MultispeciesBC-inflow-nonreacting-yminus.ups",   1, "All", ["exactComparison","no_restart","no_memoryTest"] ),
+  ("MultispeciesBC-inflow-nonreacting-zminus",  "MultispeciesBC-inflow-nonreacting-zminus.ups",   1, "All", ["exactComparison","no_restart","no_memoryTest"] ),
+  ("MultispeciesBC-inflow-nonreacting-xplus",   "MultispeciesBC-inflow-nonreacting-xplus.ups",    1, "All", ["exactComparison","no_restart","no_memoryTest"] ),
+  ("MultispeciesBC-inflow-nonreacting-yplus",   "MultispeciesBC-inflow-nonreacting-yplus.ups",    1, "All", ["exactComparison","no_restart","no_memoryTest"] ),
+  ("MultispeciesBC-inflow-nonreacting-zplus",   "MultispeciesBC-inflow-nonreacting-zplus.ups",    1, "All", ["exactComparison","no_restart","no_memoryTest"] ),
+  ("MultispeciesBC-open-nonreacting-xdir",      "MultispeciesBC-open-nonreacting-xdir.ups",       1, "All", ["exactComparison","no_restart","no_memoryTest"] ),
+  ("MultispeciesBC-open-nonreacting-ydir",      "MultispeciesBC-open-nonreacting-ydir.ups",       1, "All", ["exactComparison","no_restart","no_memoryTest"] ),
+  ("MultispeciesBC-open-nonreacting-zdir",      "MultispeciesBC-open-nonreacting-zdir.ups",       1, "All", ["exactComparison","no_restart","no_memoryTest"] ),
+  ("MultispeciesBC-open-premixed-flame-xdir",   "MultispeciesBC-open-premixed-flame-xdir.ups",    1, "All", ["exactComparison","no_restart","no_memoryTest"] ),
+  ("MultispeciesBC-open-premixed-flame-ydir",   "MultispeciesBC-open-premixed-flame-ydir.ups",    1, "All", ["exactComparison","no_restart","no_memoryTest"] ),
+  ("MultispeciesBC-open-premixed-flame-zdir",   "MultispeciesBC-open-premixed-flame-zdir.ups",    1, "All", ["exactComparison","no_restart","no_memoryTest"] ),
+  ("MultispeciesBC-premixed-flame-xyplane",     "MultispeciesBC-premixed-flame-xyplane.ups",      1, "All", ["exactComparison","no_restart","no_memoryTest"] ),
+  ("MultispeciesBC-premixed-flame-xzplane",     "MultispeciesBC-premixed-flame-xzplane.ups",      1, "All", ["exactComparison","no_restart","no_memoryTest"] ),
+  ("MultispeciesBC-premixed-flame-yzplane",     "MultispeciesBC-premixed-flame-yzplane.ups",      1, "All", ["exactComparison","no_restart","no_memoryTest"] )
 ]
 
 SCALARTRANSPORTTESTS=[

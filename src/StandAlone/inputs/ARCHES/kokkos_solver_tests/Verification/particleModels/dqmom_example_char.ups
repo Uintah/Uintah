@@ -493,6 +493,9 @@
       <DQMOM>
         <number_quad_nodes>5</number_quad_nodes>
         <kokkos_translate/>
+        <velocity xlabel="uVel"
+                  ylabel="vVel"
+                  zlabel="wVel"/>
         <diffusion  scheme="central" D_label="gamma"/>
         <convection scheme="upwind"/>
         <Weights>

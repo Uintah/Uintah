@@ -2286,7 +2286,7 @@ BoundaryCondition::setupBCs( ProblemSpecP db, const LevelP& level )
 
                 // get radius BC (radius particle model will dominate BC specification)
                 double diameter;
-                std::string sizeLabelName =ArchesCore::parse_for_role_to_label(db_BCType,"size");
+                std::string sizeLabelName =ArchesCore::parse_for_particle_role_to_label(db_BCType,ArchesCore::P_SIZE);
                 if (ArchesCore::get_model_value(db_BCType,sizeLabelName,qn,diameter)== false){
                   double diameterScalingConstant = ArchesCore::get_scaling_constant(db_BCType,sizeLabelName,qn);
 
@@ -2307,9 +2307,11 @@ BoundaryCondition::setupBCs( ProblemSpecP db, const LevelP& level )
                   diameter = diameter/weight*diameterScalingConstant;
                 }
 
-                std::string str3D = "uvw";
-                for(unsigned int i = 0; i<str3D.length(); i++) {
-                  std::string velLabelName =ArchesCore::parse_for_role_to_label(db_BCType,std::string (1,str3D[i])+"vel");
+                ArchesCore::PARTICLE_ROLE vel_enums[] = {ArchesCore::P_XVEL,
+                                                         ArchesCore::P_YVEL,
+                                                         ArchesCore::P_ZVEL};
+                for(unsigned int i = 0; i<3; i++) {
+                  std::string velLabelName =ArchesCore::parse_for_particle_role_to_label(db_BCType,vel_enums[i]);
                   my_info.vVelScalingConst[qn][i] =  ArchesCore::get_scaling_constant(db_BCType,velLabelName,qn);
                   my_info.vVelLabels[qn][i] = ArchesCore::append_qn_env(velLabelName,qn);
                 }

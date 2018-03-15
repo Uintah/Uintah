@@ -5,9 +5,9 @@ namespace Uintah{ namespace ArchesCore {
 
 INTERPOLANT get_interpolant_from_string(const std::string value){
 
-  if ( value == "second_central" ){
+  if ( value == "second" ){
     return SECONDCENTRAL;
-  } else if ( value == "fourth_central" ){
+  } else if ( value == "fourth" ){
     return FOURTHCENTRAL;
   } else {
     throw InvalidValue("Error: interpolar type not recognized: "+value, __FILE__, __LINE__);

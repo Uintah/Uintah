@@ -58,6 +58,7 @@ namespace Uintah{
         int num_extra_src;
         int Nenv;
         double delta_t;
+        double k_ash_uncertain;
         CCVariable<double> T;
         CCVariable<double> T_copy;
         CCVariable<double> T_real;
@@ -101,6 +102,7 @@ namespace Uintah{
       std::string _dep_vel_name;
       std::vector<std::string> _extra_src_flux_names;
       int _num_extra_src;
+      int _k_ash_uncertain;
       int _Nenv;
       bool do_coal_region;
       int _calc_freq;                    ///< Wall heat transfer model calculation frequency
@@ -212,6 +214,12 @@ namespace Uintah{
         std::string new_name;
         db->require( "deposit_velocity_name", new_name );
         return new_name;
+      }
+      inline static double get_k_ash_uncertain( const ProblemSpecP& input_db ){
+        ProblemSpecP db = input_db;
+        double k_val;
+        db->getWithDefault( "k_ash_sigma", k_val,0.0);
+        return k_val;
       }
 
       inline static std::vector<std::string> get_extra_src_flux_names( const ProblemSpecP& input_db ){

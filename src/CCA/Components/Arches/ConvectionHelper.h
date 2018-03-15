@@ -30,7 +30,7 @@
 
 namespace Uintah {
 
-  enum LIMITER {NOCONV, CENTRAL, UPWIND, SUPERBEE, ROE, VANLEER};
+  enum LIMITER {NOCONV, CENTRAL, UPWIND, SUPERBEE, ROE, VANLEER, FOURTH};
 
 #define SUPERBEEMACRO(r) \
       my_psi = ( r < huge ) ? std::max( std::min( 2.*r, 1.), std::min(r, 2. ) ) : 2.; \
@@ -103,6 +103,9 @@ namespace Uintah {
 
   };
 
+  /** @struct ComputeConvectiveFluxHelper **/
+  struct FourthConvection{};
+
   /**
       @struct ComputeConvectiveFlux
       @brief Compute a convective flux given psi (flux limiter) with this functor.
@@ -126,8 +129,8 @@ namespace Uintah {
       flux_x(i_flux_x), flux_y(i_flux_y), flux_z(i_flux_z), eps(i_eps)
       {}
 
-    void
-    operator()(int i, int j, int k ) const {
+    // Default operator relies on the psi functions. 
+    void operator()( int i, int j, int k ) const {
 
       //X-dir
       {
@@ -152,6 +155,31 @@ namespace Uintah {
         const double Sdn = w(IJK_) > 0 ? phi(IJK_) : phi(IJK_M_);
         const double afc = ( eps(IJK_) + eps(IJK_M_) ) / 2. < 0.51 ? 0.0 : 1.0;
         flux_z(IJK_) = afc * w(IJK_) * ( Sup + 0.5 * psi_z(IJK_) * ( Sdn - Sup )) ;
+      }
+    }
+
+    void
+    operator()(const FourthConvection& scheme, int i, int j, int k ) const {
+      double c1 = 7./12.;
+      double c2 = -1./12.;
+
+      //X-dir
+      {
+        STENCIL5_1D(0);
+        const double afc = ( eps(IJK_) + eps(IJK_M_) ) / 2. < 0.51 ? 0.0 : 1.0;
+        flux_x(IJK_) = afc * u(IJK_) * ( c1*(phi(IJK_) + phi(IJK_M_)) + c2*(phi(IJK_MM_) + phi(IJK_P_)) ) ;
+      }
+      //Y-dir
+      {
+        STENCIL5_1D(1);
+        const double afc = ( eps(IJK_) + eps(IJK_M_) ) / 2. < 0.51 ? 0.0 : 1.0;
+        flux_y(IJK_) = afc * v(IJK_) * ( c1*(phi(IJK_) + phi(IJK_M_)) + c2*(phi(IJK_MM_) + phi(IJK_P_)) );
+      }
+      //Z-dir
+      {
+        STENCIL5_1D(2);
+        const double afc = ( eps(IJK_) + eps(IJK_M_) ) / 2. < 0.51 ? 0.0 : 1.0;
+        flux_z(IJK_) = afc * w(IJK_) * ( c1*(phi(IJK_) + phi(IJK_M_)) + c2*(phi(IJK_MM_) + phi(IJK_P_)) );
       }
     }
 
@@ -330,6 +358,8 @@ namespace Uintah {
     LIMITER get_limiter_from_string( const std::string value ){
       if ( value == "central" ){
         return CENTRAL;
+      } else if ( value == "fourth" ){
+        return FOURTH;
       } else if ( value == "upwind" ){
         return UPWIND;
       } else if ( value == "superbee" ){

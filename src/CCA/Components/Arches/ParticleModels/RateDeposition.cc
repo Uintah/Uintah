@@ -30,14 +30,14 @@ RateDeposition::problemSetup( ProblemSpecP& db ){
     throw ProblemSetupException("Error: RateDeposition requires specification of ash viscosity parameters.", __FILE__, __LINE__);
   }
 
-  _Tmelt = coal_helper.get_coal_db().T_hemisphere; 
+  _Tmelt = coal_helper.get_coal_db().T_hemisphere;
   db->getWithDefault("CaO",_CaO,26.49/100.0);
   db->getWithDefault("MgO",_MgO,4.47/100.0);
   db->getWithDefault("AlO",_AlO,14.99/100.0);
   db->getWithDefault("SiO",_SiO,38.9/100.0);
 
-  _ParticleTemperature_base_name  = ArchesCore::parse_for_role_to_label(db,"temperature");
-  _MaxParticleTemperature_base_name= ArchesCore::parse_for_role_to_label(db,"max_temperature");
+  _ParticleTemperature_base_name  = ArchesCore::parse_for_particle_role_to_label(db,ArchesCore::P_TEMPERATURE);
+  _MaxParticleTemperature_base_name= ArchesCore::parse_for_particle_role_to_label(db,ArchesCore::P_MAXTEMPERATURE);
 
   _ProbParticleX_base_name = "ProbParticleX";
   _ProbParticleY_base_name = "ProbParticleY";
@@ -57,13 +57,13 @@ RateDeposition::problemSetup( ProblemSpecP& db ){
 
   _WallTemperature_name = "Temperature";
 
-  _xvel_base_name  = ArchesCore::parse_for_role_to_label(db,"uvel");
-  _yvel_base_name  = ArchesCore::parse_for_role_to_label(db,"vvel");
-  _zvel_base_name  = ArchesCore::parse_for_role_to_label(db,"wvel");
+  _xvel_base_name  = ArchesCore::parse_for_particle_role_to_label(db,ArchesCore::P_XVEL);
+  _yvel_base_name  = ArchesCore::parse_for_particle_role_to_label(db,ArchesCore::P_YVEL);
+  _zvel_base_name  = ArchesCore::parse_for_particle_role_to_label(db,ArchesCore::P_ZVEL);
 
   _weight_base_name  = "w";
-  _rho_base_name  = ArchesCore::parse_for_role_to_label(db,"density");
-  _diameter_base_name  = ArchesCore::parse_for_role_to_label(db,"size");
+  _rho_base_name  = ArchesCore::parse_for_particle_role_to_label(db,ArchesCore::P_DENSITY);
+  _diameter_base_name  = ArchesCore::parse_for_particle_role_to_label(db,ArchesCore::P_SIZE);
 
   _FluxPx_base_name  = "FluxPx";
   _FluxPy_base_name  = "FluxPy";
@@ -404,17 +404,17 @@ RateDeposition::register_timestep_eval( std::vector<AFC_VI>& variable_registry, 
 void
 RateDeposition::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  double CaO=_CaO;double MgO=_MgO; double AlO=_AlO;double SiO=_SiO; //const double alpha=0;
+  //double CaO=_CaO;double MgO=_MgO; double AlO=_AlO;double SiO=_SiO; //const double alpha=0;
   // const double B0=0; const doulbe B1=0; const double B3=0;
-  double CaOmolar=0.0;               double AlOmolar=0.0;
-  CaOmolar=CaO/(CaO+MgO+AlO+SiO);            AlOmolar=AlO/(CaO+MgO+AlO+SiO);
-  const double alpha=CaOmolar/(AlOmolar+CaOmolar);
-  const double B0=13.8+39.9355*alpha-44.049*alpha*alpha;
-  const double B1=30.481-117.1505*alpha+129.9978*alpha*alpha;
-  const double B2=-40.9429+234.0486*alpha-300.04*alpha*alpha;
-  const double B3= 60.7619-153.9276*alpha+211.1616*alpha*alpha;
-  const double Bactivational=B0+B1*SiO+B2*SiO*SiO+B3*SiO*SiO*SiO;
-  const double Aprepontional=exp(-(0.2693*Bactivational+11.6725));  //const double Bactivational= 47800;
+  //double CaOmolar=0.0;               double AlOmolar=0.0;
+  //CaOmolar=CaO/(CaO+MgO+AlO+SiO);            AlOmolar=AlO/(CaO+MgO+AlO+SiO);
+  //const double alpha=CaOmolar/(AlOmolar+CaOmolar);
+  // const double B0=13.8+39.9355*alpha-44.049*alpha*alpha;
+  // const double B1=30.481-117.1505*alpha+129.9978*alpha*alpha;
+  // const double B2=-40.9429+234.0486*alpha-300.04*alpha*alpha;
+  // const double B3= 60.7619-153.9276*alpha+211.1616*alpha*alpha;
+  //const double Bactivational=B0+B1*SiO+B2*SiO*SiO+B3*SiO*SiO*SiO;
+  //const double Aprepontional=exp(-(0.2693*Bactivational+11.6725));  //const double Bactivational= 47800;
 
   // computed probability variables:
   SFCXVariable<double>& ProbSurfaceX = tsk_info->get_uintah_field_add<SFCXVariable<double> >(_ProbSurfaceX_name);

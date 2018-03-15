@@ -432,7 +432,7 @@ def getTestList(me) :
   elif me == "DEBUG":
     TESTS = DEBUG
   elif me == "BUILDBOTTESTS":
-    TESTS = ignorePerformanceTests( NIGHTLYTESTS )
+    TESTS = ignorePerformanceTests( NIGHTLYTESTS + RMCRTTESTS )
   else:
     print "\nERROR:ARCHES.py  getTestList:  The test list (%s) does not exist!\n\n" % me
     exit(1)

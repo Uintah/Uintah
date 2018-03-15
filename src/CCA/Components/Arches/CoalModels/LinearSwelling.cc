@@ -94,7 +94,7 @@ LinearSwelling::problemSetup(const ProblemSpecP& params, int qn)
   DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self();
 
   // Get length scaling constant
-  std::string length_root = ArchesCore::parse_for_role_to_label(db, "size");
+  std::string length_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_SIZE);
   std::string length_name = ArchesCore::append_env( length_root, qn );
   std::string lengthqn_name = ArchesCore::append_qn_env( length_root, qn );
   EqnBase& temp_length_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(lengthqn_name);
@@ -121,7 +121,7 @@ LinearSwelling::problemSetup(const ProblemSpecP& params, int qn)
   DQMOMEqn& current_eqn2 = dynamic_cast<DQMOMEqn&>(temp_current_eqn2);
 
   // Get rcmass scaling constant
-  std::string rc_root = ArchesCore::parse_for_role_to_label(db, "raw_coal");
+  std::string rc_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_RAWCOAL);
   std::string rc_name = ArchesCore::append_env( rc_root, qn );
   std::string rcqn_name = ArchesCore::append_qn_env( rc_root, qn );
   EqnBase& temp_rc_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(rcqn_name);

@@ -402,7 +402,7 @@ public:
                                 const bool doing_restart );
 
   int getTaskGraphIndex(const int time_step ) {
-    if (d_num_taskgraphs==1){  
+    if (d_num_taskgraphs==1){
       return 0;
     }else{
       return ((time_step % d_rad_calc_frequency == 0));
@@ -429,7 +429,7 @@ public:
   // for probing data for debuging or plotting
   // properties...solves density, temperature and specie concentrations
   Properties* d_props;
-  TableLookup* d_tabulated_properties; 
+  TableLookup* d_tabulated_properties;
   // Boundary conditions
   BoundaryCondition* d_boundaryCondition;
   // Turbulence Model
@@ -484,6 +484,7 @@ public:
 
   //DQMOM
   bool d_doDQMOM;
+  bool d_kokkos_dqmom_Translate; 
   PartVel* d_partVel;
   DQMOM* d_dqmomSolver;
   std::string d_which_dqmom;
@@ -519,7 +520,7 @@ public:
 
   std::map<int,WBCHelper*> m_bcHelper;
 
-  std::string m_DQMOMSolverType; 
+  std::string m_DQMOMSolverType;
 
 }; // End class ExplicitSolver
 } // End namespace Uintah

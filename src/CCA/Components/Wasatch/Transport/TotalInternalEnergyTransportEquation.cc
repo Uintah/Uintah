@@ -933,7 +933,6 @@ namespace WasatchCore {
             {
               std::string dir = "X";
               typedef EnergyBoundaryTyper<SpatialOps::SSurfXField, SpatialOps::GradientX> BCTypes;
-              BCTypes bcTypes;
 
               heatFluxName       = heatFluxNameBase + dir;
               normalConvFluxName = normalConvFluxNameBase + dir;
@@ -953,7 +952,6 @@ namespace WasatchCore {
             {
               std::string dir = "Y";
               typedef EnergyBoundaryTyper<SpatialOps::SSurfYField, SpatialOps::GradientY> BCTypes;
-              BCTypes bcTypes;
 
               heatFluxName       = heatFluxNameBase + dir;
               normalConvFluxName = normalConvFluxNameBase + dir;
@@ -973,7 +971,6 @@ namespace WasatchCore {
             {
               std::string dir = "Z";
               typedef EnergyBoundaryTyper<SpatialOps::SSurfZField, SpatialOps::GradientZ> BCTypes;
-              BCTypes bcTypes;
 
               heatFluxName       = heatFluxNameBase + dir;
               normalConvFluxName = normalConvFluxNameBase + dir;

@@ -285,7 +285,6 @@ DSmaCs<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   bcfilter.apply_zero_neumann(patch,mu_sgc,vol_fraction); 
   bcfilter.apply_zero_neumann(patch,mu_turb,vol_fraction); 
   bcfilter.apply_zero_neumann(patch,Cs,vol_fraction); 
-  proc0cout << "       Task: " << "DSmaCs" << "  Type: " << "Dynamic model" << std::endl;
 
   //Uintah::parallel_for( range, [&](int i, int j, int k){
   //  mu_sgc_p(i,j,k) = mu_sgc(i,j,k); 

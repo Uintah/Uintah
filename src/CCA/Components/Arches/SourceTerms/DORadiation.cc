@@ -929,6 +929,10 @@ DORadiation::sched_computeSourceSweep( const LevelP& level, SchedulerP& sched, i
       }
     }
 
+      if(_DO_model->spectralSootOn()){
+        tsk1->requires( Task::OldDW,VarLabel::find("absksoot"), gn, 0 ); 
+      }
+
     for (int iband=0; iband<d_nbands; iband++){
       tsk1->requires( Task::OldDW,spectral_gas_absorption[iband], gn, 0 );
     }

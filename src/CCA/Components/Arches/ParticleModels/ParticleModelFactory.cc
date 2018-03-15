@@ -30,6 +30,7 @@
 #include <CCA/Components/Arches/ParticleModels/BodyForce.h>
 #include <CCA/Components/Arches/ParticleModels/CoalDensity.h>
 #include <CCA/Components/Arches/ParticleModels/CoalTemperature.h>
+#include <CCA/Components/Arches/ParticleModels/Burnout.h>
 #include <CCA/Components/Arches/ParticleModels/Constant.h>
 #include <CCA/Components/Arches/ParticleModels/DepositionVelocity.h>
 #include <CCA/Components/Arches/ParticleModels/DepositionEnthalpy.h>
@@ -48,7 +49,11 @@
 using namespace Uintah;
 
 ParticleModelFactory::ParticleModelFactory()
-{}
+{
+
+  _factory_name = "ParticleModelFactory";
+
+}
 
 ParticleModelFactory::~ParticleModelFactory()
 {}
@@ -256,6 +261,16 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
 
         temp_model_list.insert(temp_model_list.begin(), task_name); // order hack
 
+      } else if ( type == "burnout" ) {
+
+        TaskInterface::TaskBuilder* tsk = scinew Burnout::Builder(task_name,0,N);
+        register_task( task_name, tsk );
+
+        _coal_models.push_back(task_name);
+        _post_update_particle_tasks.push_back(task_name);
+
+        temp_model_list.insert(temp_model_list.begin(), task_name); // order hack
+
       } else if ( type == "deposition_velocity" ) {
 
         TaskInterface::TaskBuilder* tsk = scinew DepositionVelocity::Builder(task_name,0,N,_shared_state);
@@ -433,7 +448,7 @@ ParticleModelFactory::build_all_tasks( ProblemSpecP& db )
     }
 
     if (db->findBlock("DQMOM") ) {
-      //See comment above about this task. 
+      //See comment above about this task.
       std::string task_name = "dqmom_no_inversion";
       print_task_setup_info( task_name, "DQMOM: No Inversion");
       TaskInterface* tsk = retrieve_task(task_name);

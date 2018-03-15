@@ -97,22 +97,22 @@ DragModel::problemSetup(const ProblemSpecP& params, int qn)
   }
 
   // Need a size IC:
-  std::string length_root = ArchesCore::parse_for_role_to_label(db, "size");
+  std::string length_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_SIZE);
   std::string length_name = ArchesCore::append_env( length_root, d_quadNode );
   _length_varlabel = VarLabel::find(length_name);
 
   // Need a density
-  std::string density_root = ArchesCore::parse_for_role_to_label(db, "density");
+  std::string density_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_DENSITY);
   _density_name = ArchesCore::append_env( density_root, d_quadNode );
 
   // Need velocity scaling constant
   std::string vel_root;
   if ( _dir == 0 ){
-    vel_root = ArchesCore::parse_for_role_to_label(db, "uvel");
+    vel_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_XVEL);
   } else if ( _dir == 1){
-    vel_root = ArchesCore::parse_for_role_to_label(db, "vvel");
+    vel_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_YVEL);
   } else {
-    vel_root = ArchesCore::parse_for_role_to_label(db, "wvel");
+    vel_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_ZVEL);
   }
 
   vel_root = ArchesCore::append_qn_env( vel_root, d_quadNode );

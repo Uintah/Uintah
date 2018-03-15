@@ -44,6 +44,19 @@ Uintah::MasterLock g_received_mutex{};
 
 //_____________________________________________________________________________
 //
+DependencyBatch::DependencyBatch( int            to
+                                , DetailedTask * fromTask
+                                , DetailedTask * toTask
+                                )
+  : m_from_task(fromTask)
+  , m_to_rank(to)
+{
+  m_to_tasks.push_back(toTask);
+}
+
+
+//_____________________________________________________________________________
+//
 DependencyBatch::~DependencyBatch()
 {
   DetailedDep* dep = m_head;

@@ -428,11 +428,11 @@ namespace WasatchCore{
         // for the initialization tree, make sure ALL fields are persistent. This is needed
         // in case an initial condition for a transport equation is "derived" from other quantities.
         // In this case, ExprLib will mark the expression as local non persistent
-        if (tree.name() == "initialization") {
+        if( tree.name() == "initialization" ){
           tree.set_expr_is_persistent(fieldTag, fml);
         }
         // look for particle variables that are managed by uintah
-        if (tree.name()!="initialization") {
+        if( tree.name()!="initialization" ){
           if (fieldInfo.varlabel->typeDescription()->getType() == Uintah::TypeDescription::ParticleVariable) {
             if (tree.is_persistent(fieldTag)) {
               // if a particle variable is managed by uintah, then pass it on to the particles helper
@@ -486,7 +486,7 @@ namespace WasatchCore{
           if( newDWFields.find( fieldTag ) != newDWFields.end() )
             fieldInfo.useOldDataWarehouse = false;
         }
-
+        
         
         // here's what's happening here:
         /*
@@ -568,15 +568,13 @@ namespace WasatchCore{
     const Uintah::MaterialSubset* const mss = materials_->getUnion();
     const Uintah::PatchSubset* const pss = patches_->getUnion();
 
-    Expr::ExpressionFactory& factory = tree->get_expression_factory();
-
     // augment newDWFields to include any fields that are a result of tree cleaving
     {
       for( Expr::ExpressionTree::ExprFieldMap::const_iterator imp=tree->field_map().begin(); imp!=tree->field_map().end(); ++imp ){
         const Expr::TagList tags = imp->second->get_tags();
-        for (Expr::TagList::const_iterator iTag = tags.begin(); iTag != tags.end(); ++iTag) {
+        for( Expr::TagList::const_iterator iTag = tags.begin(); iTag != tags.end(); ++iTag ){
           const Expr::Tag& tag = *iTag;
-          if( factory.retrieve_expression( tag, patchID, true ).is_placeholder() ) continue;
+          if( tree->get_expression( tag )->is_placeholder() ) continue;
           newDWFields.insert( tag );
         }
       }
@@ -587,7 +585,7 @@ namespace WasatchCore{
     //---------------------------------------------------------------------------------------------------------------------------
     // Added for temporal scheduling support when using RMCRT - APH 05/30/17
     //---------------------------------------------------------------------------------------------------------------------------
-    if (tree->computes_field(TagNames::self().radiationsource)) {
+    if( tree->computes_field(TagNames::self().radiationsource) ){
       // For RMCRT there will be 2 task graphs - put the radiation tasks in TG-1, otherwise tasks go into TG-0, or both TGs
       //   TG-0 == carry forward and/or non-radiation timesteps
       //   TG-1 == RMCRT radiation timestep
@@ -595,39 +593,39 @@ namespace WasatchCore{
     }
     //---------------------------------------------------------------------------------------------------------------------------
     // jcs eachPatch vs. allPatches (gang schedule vs. independent...)
-    else {
+    else{
       scheduler_->addTask(task, patches_, materials_);
     }
 
     if( hasPressureExpression_ && Wasatch::flow_treatment() != WasatchCore::COMPRESSIBLE && Wasatch::need_pressure_solve() ){
-      Pressure& pexpr = dynamic_cast<Pressure&>( factory.retrieve_expression( TagNames::self().pressure, patchID, true ) );
-      pexpr.declare_uintah_vars( *task, pss, mss, rkStage );
-      pexpr.schedule_solver( Uintah::getLevelP(pss), scheduler_, materials_, rkStage );
-      pexpr.schedule_set_pressure_bcs( Uintah::getLevelP(pss), scheduler_, materials_, rkStage );
+      Pressure* pexpr = dynamic_cast<Pressure*>( tree->get_expression( TagNames::self().pressure ) );
+      pexpr->declare_uintah_vars( *task, pss, mss, rkStage );
+      pexpr->schedule_solver( Uintah::getLevelP(pss), scheduler_, materials_, rkStage );
+      pexpr->schedule_set_pressure_bcs( Uintah::getLevelP(pss), scheduler_, materials_, rkStage );
     }
 
     if( tree->computes_field(TagNames::self().radiationsource) ){
-      RadiationSource& radExpr = dynamic_cast<RadiationSource&>( factory.retrieve_expression(TagNames::self().radiationsource,patchID,true) );
-      radExpr.schedule_ray_tracing( Uintah::getLevelP(pss), scheduler_, materials_, rkStage );
+      RadiationSource* radExpr = dynamic_cast<RadiationSource*>( tree->get_expression(TagNames::self().radiationsource) );
+      radExpr->schedule_ray_tracing( Uintah::getLevelP(pss), scheduler_, materials_, rkStage );
     }
 
     for( Expr::TagList::iterator ptag=PoissonExpression::poissonTagList.begin();
         ptag!=PoissonExpression::poissonTagList.end();
         ++ptag ){
-      if (tree->computes_field( *ptag )) {
-        PoissonExpression& pexpr = dynamic_cast<PoissonExpression&>( factory.retrieve_expression(*ptag,patchID,true) );
-        pexpr.schedule_solver( Uintah::getLevelP(pss), scheduler_, materials_, rkStage, tree->name()=="initialization" );
-        pexpr.declare_uintah_vars( *task, pss, mss, rkStage );
-        pexpr.schedule_set_poisson_bcs( Uintah::getLevelP(pss), scheduler_, materials_, rkStage );
+      if( tree->computes_field( *ptag ) ){
+        PoissonExpression* pexpr = dynamic_cast<PoissonExpression*>( tree->get_expression(*ptag) );
+        pexpr->schedule_solver( Uintah::getLevelP(pss), scheduler_, materials_, rkStage, tree->name()=="initialization" );
+        pexpr->declare_uintah_vars( *task, pss, mss, rkStage );
+        pexpr->schedule_set_poisson_bcs( Uintah::getLevelP(pss), scheduler_, materials_, rkStage );
       }
     }
 
     BOOST_FOREACH( const Expr::Tag& tag, DORadSolver::intensityTags ){
       if( !tree->computes_field(tag) ) continue;
       std::cout << "preliminary stuff for " << tag << " ... " << std::flush;
-      DORadSolver& rad = dynamic_cast<DORadSolver&>( factory.retrieve_expression(tag,patchID,true) );
-      rad.schedule_solver( Uintah::getLevelP(pss), scheduler_, materials_, rkStage, tree->name()=="initialization" );
-      rad.declare_uintah_vars( *task, pss, mss, rkStage );
+      DORadSolver* rad = dynamic_cast<DORadSolver*>( tree->get_expression(tag) );
+      rad->schedule_solver( Uintah::getLevelP(pss), scheduler_, materials_, rkStage, tree->name()=="initialization" );
+      rad->declare_uintah_vars( *task, pss, mss, rkStage );
       std::cout << "done" << std::endl;
     }
 
@@ -689,7 +687,6 @@ namespace WasatchCore{
       }
 #     endif
 
-      Expr::ExpressionFactory& factory = tree->get_expression_factory();
       const SpatialOps::OperatorDatabase& opdb = *iptm->second.operators;
 
       for( int im=0; im<materials->size(); ++im ){
@@ -712,14 +709,14 @@ namespace WasatchCore{
           fml_->allocate_fields( ainfo );
 
           if( hasPressureExpression_ && Wasatch::flow_treatment() != WasatchCore::COMPRESSIBLE && Wasatch::need_pressure_solve() ){
-            Pressure& pexpr = dynamic_cast<Pressure&>( factory.retrieve_expression( TagNames::self().pressure, patchID, true ) );
-            pexpr.bind_uintah_vars( newDW, patch, material, rkStage );
+            Pressure* pexpr = dynamic_cast<Pressure*>( tree->get_expression( TagNames::self().pressure ) );
+            pexpr->bind_uintah_vars( newDW, patch, material, rkStage );
           }
 
           BOOST_FOREACH( const Expr::Tag& ptag, PoissonExpression::poissonTagList ){
             if( tree->computes_field( ptag ) ){
-              PoissonExpression& pexpr = dynamic_cast<PoissonExpression&>( factory.retrieve_expression( ptag, patchID, true ) );
-              pexpr.bind_uintah_vars( newDW, patch, material, rkStage );
+              PoissonExpression* pexpr = dynamic_cast<PoissonExpression*>( tree->get_expression( ptag ) );
+              pexpr->bind_uintah_vars( newDW, patch, material, rkStage );
             }
           }
 
@@ -740,10 +737,8 @@ namespace WasatchCore{
 
           BOOST_FOREACH( const Expr::Tag& tag, DORadSolver::intensityTags ){
             if( tree->computes_field( tag ) ){
-              DORadSolver& rad = dynamic_cast<DORadSolver&>( factory.retrieve_expression(tag,patchID, true ) );
-              std::cout << "Binding vars for " << tag << " ..." << std::flush;
-              rad.bind_uintah_vars( newDW, patch, material, rkStage );
-              std::cout << "done\n";
+              DORadSolver* rad = dynamic_cast<DORadSolver*>( tree->get_expression(tag) );
+              rad->bind_uintah_vars( newDW, patch, material, rkStage );
             }
           }
 
@@ -765,18 +760,18 @@ namespace WasatchCore{
   //------------------------------------------------------------------
   
   TaskInterface::TaskInterface( const IDSet& roots,
-                               const std::string taskName,
-                               Expr::ExpressionFactory& factory,
-                               const Uintah::LevelP& level,
-                               Uintah::SchedulerP& sched,
-                               const Uintah::PatchSet* patches,
-                               const Uintah::MaterialSet* const materials,
-                               const PatchInfoMap& info,
-                               DTIntegratorMapT& dualTimeIntegrators,
-                               const std::vector<std::string> & varNames,
-                               const std::vector<Expr::Tag>   & rhsTags,
-                               const std::set<std::string>& ioFieldSet,
-                               const bool lockAllFields)
+                                const std::string taskName,
+                                Expr::ExpressionFactory& factory,
+                                const Uintah::LevelP& level,
+                                Uintah::SchedulerP& sched,
+                                const Uintah::PatchSet* patches,
+                                const Uintah::MaterialSet* const materials,
+                                const PatchInfoMap& info,
+                                DTIntegratorMapT& dualTimeIntegrators,
+                                const std::vector<std::string> & varNames,
+                                const std::vector<Expr::Tag>   & rhsTags,
+                                const std::set<std::string>& ioFieldSet,
+                                const bool lockAllFields )
   {
     // only set up trees on the patches that we own on this process.
     const Uintah::PatchSet*  perproc_patchset = sched->getLoadBalancer()->getPerProcessorPatchSet(level);
@@ -791,23 +786,23 @@ namespace WasatchCore{
       const int patchID = localPatches->get(ip)->getID();
       TreePtr tree( scinew Expr::ExpressionTree(roots,factory,patchID,taskName) );
       
-      // tsaad: for the moment, just use a fixed point integrator with BDF order 1
-      dualTimeIntegrators[patchID] = scinew Expr::DualTime::FixedPointBDFDualTimeIntegrator<SVolField>(tree.get(),
-                                                                                                       &factory,
+        // tsaad: for the moment, just use a fixed point integrator with BDF order 1
+        dualTimeIntegrators[patchID] = scinew Expr::DualTime::FixedPointBDFDualTimeIntegrator<SVolField>(tree.get(),
+                                                                                                         &factory,
                                                                                                        patchID, "Wasatch Dual Time Integrator",
-                                                                                                       tags.dt,
-                                                                                                       tags.ds,
-                                                                                                       tags.timestep,
-                                                                                                       1,
-                                                                                                       Expr::STATE_DYNAMIC);
-      
-      Expr::DualTime::BDFDualTimeIntegrator& dtIntegrator = *dualTimeIntegrators[patchID];
-      dtIntegrator.set_dual_time_step_expression(factory.get_id(tags.ds));
+                                                                                                         tags.dt,
+                                                                                                         tags.ds,
+                                                                                                         tags.timestep,
+                                                                                                         1,
+                                                                                                         Expr::STATE_DYNAMIC);
 
-      for( size_t i=0; i<varNames.size(); i++ ){
-        dtIntegrator.add_variable<SVolField>(varNames[i], rhsTags[i]);
-      }
-      dtIntegrator.prepare_for_integration<SVolField>();
+        Expr::DualTime::BDFDualTimeIntegrator& dtIntegrator = *dualTimeIntegrators[patchID];
+        dtIntegrator.set_dual_time_step_expression(factory.get_id(tags.ds));
+
+        for( size_t i=0; i<varNames.size(); i++ ){
+          dtIntegrator.add_variable<SVolField>(varNames[i], rhsTags[i]);
+        }
+        dtIntegrator.prepare_for_integration<SVolField>();
       
       const TreeList treeList = (dtIntegrator.get_tree()).split_tree();
       
@@ -963,7 +958,7 @@ namespace WasatchCore{
     BOOST_FOREACH( TreeTaskExecute* taskexec, execList_ ){
       TreePtr tree = taskexec->get_patch_tree_map().begin()->second.tree;
       BOOST_FOREACH( const Expr::ExpressionTree::ExprFieldMap::value_type& vt, tree->field_map() ){
-        const Expr::TagList& tl = tree->get_expression_factory().get_labels( vt.first );
+        const Expr::TagList& tl = tree->get_tags( vt.first );
         tags.insert( tags.end(), tl.begin(), tl.end() );
       }
     }

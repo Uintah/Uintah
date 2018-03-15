@@ -44,7 +44,7 @@ CoalGasOxi::problemSetup(const ProblemSpecP& inputdb)
   if (db->findBlock("char_BirthDeath")) {
     ProblemSpecP db_bd = db->findBlock("char_BirthDeath");
     m_dest_flag = true;
-    m_charmass_root = ArchesCore::parse_for_role_to_label(db, "char");
+    m_charmass_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_CHAR);
   }
 
   _source_grid_type = CC_SRC;
