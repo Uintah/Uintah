@@ -290,7 +290,7 @@ SCI_ARG_WITH(blas,
    sci_required_blas=yes],
   [with_blas=NOT_SET],
   DIR,
-  WITHOUT-IS-NOT-VALID)
+  WITHOUT-IS-VALID)
   
 SCI_ARG_WITH(lapack,
   AC_HELP_STRING(--with-lapack=DIR, 
@@ -299,7 +299,7 @@ SCI_ARG_WITH(lapack,
    sci_required_lapack=yes],
   [with_lapack=NOT_SET],
   DIR,
-  WITHOUT-IS-NOT-VALID)
+  WITHOUT-IS-VALID)
   
 SCI_ARG_WITH(fortran,
   AC_HELP_STRING(--with-fortran=DIR, 
@@ -876,6 +876,19 @@ if test "$use_all_components"         = "yes" -a  \
   add_important_warning "!!! Both --enable-all-components and --enable-<specific-component> were used. ALL Componenets will be built."
   add_important_warning "-------------------------------------------------------------------------"
 #   AC_MSG_ERROR( Can not use both --enable-all-components and --enable-<specific-component> )
+fi
+
+if test \("$with_blas"                = "no" -o  \
+   	  "$with_lapack"              = "no" \) -a  \
+        \( "$enable_arches"           = "yes" -o  \
+           "$enable_examples"         = "yes" -o  \
+           "$enable_fvm"              = "yes" -o  \
+           "$enable_heat"             = "yes" -o  \
+           "$enable_ice"              = "yes" -o  \
+           "$enable_mpm"              = "yes" -o  \
+           "$enable_phasefield"       = "yes" -o  \
+           "$enable_wasatch"          = "yes" \); then
+   AC_MSG_ERROR( Can not use --with_blas=no or --with_lapack=no when enabling a component )
 fi
 
 if test "$enable_minimal"       != "yes" -a  \
@@ -3007,7 +3020,7 @@ AC_SUBST(CBLAS_H)
 _sci_lib=
 _sci_inc=
 
-if test "$HAVE_BLAS" != "yes"; then
+if test "$with_blas" != "no" -a "$HAVE_BLAS" != "yes"; then
 
   # if HAVE_BLAS is yes at this point, then atlas has been found and we
   # don't want to check for blas.
@@ -3142,7 +3155,8 @@ sci_defs_files="$sci_defs_files include/sci_defs/blas_testdefs.h"
 
 ##  --  search for lapack stuff  -----------------------------------------
 
-if test "$HAVE_LAPACK" != "yes"; then
+if test "$with_lapack" != "no" -a "$HAVE_LAPCK" != "yes"; then
+
   # if HAVE_LAPACK is yes at this point, then atlas/mkl has been found and we
   # don't want to check for it here.
 

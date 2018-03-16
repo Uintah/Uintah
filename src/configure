@@ -3524,13 +3524,13 @@ fi
     if test "DIR" != "DIR" -a "DIR" != "FILE" -a "DIR" != "FILES" ; then
       as_fn_error FILE "Internal Uintah configure error for '--with-blas': invalid value of 'DIR' used for 5th parameter - should be DIR" "$LINENO" 5
     fi
-    if test "WITHOUT-IS-NOT-VALID" != "WITHOUT-IS-VALID" -a "WITHOUT-IS-NOT-VALID" != "WITHOUT-IS-NOT-VALID" ; then
-      as_fn_error $? "Internal Uintah configure error for '--with-blas': invalid value of 'WITHOUT-IS-NOT-VALID' used for 6th parameter - should be WITHOUT-IS-NOT-VALID.  Please report." "$LINENO" 5
+    if test "WITHOUT-IS-VALID" != "WITHOUT-IS-VALID" -a "WITHOUT-IS-VALID" != "WITHOUT-IS-NOT-VALID" ; then
+      as_fn_error $? "Internal Uintah configure error for '--with-blas': invalid value of 'WITHOUT-IS-VALID' used for 6th parameter - should be WITHOUT-IS-NOT-VALID.  Please report." "$LINENO" 5
     fi
 
     # Verify --without is valid
     if test "$with_blas" = "no" ; then
-      if test "WITHOUT-IS-NOT-VALID" != "WITHOUT-IS-VALID"; then
+      if test "WITHOUT-IS-VALID" != "WITHOUT-IS-VALID"; then
         as_fn_error $? "'--without-blas' is not supported!" "$LINENO" 5
       fi
     fi
@@ -3589,13 +3589,13 @@ fi
     if test "DIR" != "DIR" -a "DIR" != "FILE" -a "DIR" != "FILES" ; then
       as_fn_error FILE "Internal Uintah configure error for '--with-lapack': invalid value of 'DIR' used for 5th parameter - should be DIR" "$LINENO" 5
     fi
-    if test "WITHOUT-IS-NOT-VALID" != "WITHOUT-IS-VALID" -a "WITHOUT-IS-NOT-VALID" != "WITHOUT-IS-NOT-VALID" ; then
-      as_fn_error $? "Internal Uintah configure error for '--with-lapack': invalid value of 'WITHOUT-IS-NOT-VALID' used for 6th parameter - should be WITHOUT-IS-NOT-VALID.  Please report." "$LINENO" 5
+    if test "WITHOUT-IS-VALID" != "WITHOUT-IS-VALID" -a "WITHOUT-IS-VALID" != "WITHOUT-IS-NOT-VALID" ; then
+      as_fn_error $? "Internal Uintah configure error for '--with-lapack': invalid value of 'WITHOUT-IS-VALID' used for 6th parameter - should be WITHOUT-IS-NOT-VALID.  Please report." "$LINENO" 5
     fi
 
     # Verify --without is valid
     if test "$with_lapack" = "no" ; then
-      if test "WITHOUT-IS-NOT-VALID" != "WITHOUT-IS-VALID"; then
+      if test "WITHOUT-IS-VALID" != "WITHOUT-IS-VALID"; then
         as_fn_error $? "'--without-lapack' is not supported!" "$LINENO" 5
       fi
     fi
@@ -6433,6 +6433,19 @@ if test "$use_all_components"         = "yes" -a  \
   add_important_warning "!!! Both --enable-all-components and --enable-<specific-component> were used. ALL Componenets will be built."
   add_important_warning "-------------------------------------------------------------------------"
 #   AC_MSG_ERROR( Can not use both --enable-all-components and --enable-<specific-component> )
+fi
+
+if test \("$with_blas"                = "no" -o  \
+   	  "$with_lapack"              = "no" \) -a  \
+        \( "$enable_arches"           = "yes" -o  \
+           "$enable_examples"         = "yes" -o  \
+           "$enable_fvm"              = "yes" -o  \
+           "$enable_heat"             = "yes" -o  \
+           "$enable_ice"              = "yes" -o  \
+           "$enable_mpm"              = "yes" -o  \
+           "$enable_phasefield"       = "yes" -o  \
+           "$enable_wasatch"          = "yes" \); then
+   as_fn_error $? "Can not use --with_blas=no or --with_lapack=no when enabling a component " "$LINENO" 5
 fi
 
 if test "$enable_minimal"       != "yes" -a  \
@@ -26449,7 +26462,7 @@ fi
 _sci_lib=
 _sci_inc=
 
-if test "$HAVE_BLAS" != "yes"; then
+if test "$with_blas" != "no" -a "$HAVE_BLAS" != "yes"; then
 
   # if HAVE_BLAS is yes at this point, then atlas has been found and we
   # don't want to check for blas.
@@ -30400,7 +30413,8 @@ sci_defs_files="$sci_defs_files include/sci_defs/blas_testdefs.h"
 
 ##  --  search for lapack stuff  -----------------------------------------
 
-if test "$HAVE_LAPACK" != "yes"; then
+if test "$with_lapack" != "no" -a "$HAVE_LAPCK" != "yes"; then
+
   # if HAVE_LAPACK is yes at this point, then atlas/mkl has been found and we
   # don't want to check for it here.
 
