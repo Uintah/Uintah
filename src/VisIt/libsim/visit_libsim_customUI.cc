@@ -293,6 +293,7 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
           // Set the variable name, material, and level.
           VisItUI_setTableValueS(table, row, 0, analysisVar.name.c_str(), 0);
 
+	  // Add the material to the analysis var
           if( analysisVar.matl < 0 )
           {
             VisItUI_setTableValueS(table, row, 1, "NA", 0);
@@ -303,6 +304,7 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
             stripChartName << "/" << analysisVar.matl;
           }
 
+	  // Add the level to the analysis var
           if( analysisVar.level < 0)
           {
             VisItUI_setTableValueS(table, row, 2, "NA", 0);
@@ -358,8 +360,7 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
                 VisItUI_setTableValueD(table, row, 4+j*2, varMax, 0);
 
                 visit_SetStripChartValue( sim, stripChartName.str() +
-                                          "/Maximum",
-                                          varMax );
+                                          "/Maximum", varMax );
               }
               
               else if( label->typeDescription() == minvec_vartype::getTypeDescription() )

@@ -608,7 +608,7 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
 
   switch( row )
   {
-  case 1:
+  case 1:  // DeltaTNext
     {
       double minValue = simTime->m_delt_min;
       double maxValue = simTime->m_delt_max;
@@ -629,7 +629,7 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
       visit_VarModifiedMessage( sim, "DeltaTNext", oldValue, newValue );
     }
     break;
-  case 2:
+  case 2:  // DeltaTFactor
     {
       double minValue = 1.0e-4;
       double maxValue = 1.0e+4;
@@ -650,7 +650,7 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
       visit_VarModifiedMessage( sim, "DeltaTFactor", oldValue, newValue );
     }
     break;
-  case 3:
+  case 3:  // MaxDeltaIncrease
     {
       double minValue = 0;
       double maxValue = 1.e99;
@@ -671,7 +671,7 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
       visit_VarModifiedMessage( sim, "MaxDeltaIncrease", oldValue, newValue );
     }
     break;
-  case 4:
+  case 4:   // DeltaTMin
     {
       double minValue = 0;
       double maxValue = simTime->m_delt_max;
@@ -692,7 +692,7 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
       visit_VarModifiedMessage( sim, "DeltaTMin", oldValue, newValue );
     }
     break;
-  case 5:
+  case 5:  // DeltaTMax
     {
       double minValue = simTime->m_delt_min;
       double maxValue = 1.0e9;
@@ -713,7 +713,7 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
       visit_VarModifiedMessage( sim, "DeltaTMax", oldValue, newValue );
     }
     break;
-  case 6:
+  case 6:  // MaxInitialDelta
     {
       double minValue = 1.0e-99;
       double maxValue = DBL_MAX;
@@ -734,7 +734,7 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
       visit_VarModifiedMessage( sim, "MaxInitialDelta", oldValue, newValue );
     }
     break;
-  case 7:
+  case 7:  // InitialDeltaRange
     {
       double minValue = 0;
       double maxValue = 1.0e99;
@@ -755,7 +755,7 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
       visit_VarModifiedMessage( sim, "InitialDeltaRange", oldValue, newValue );
     }
     break;
-  case 8:
+  case 8:  // OverrideRestartDelta
     {
       double minValue = 0;
       double maxValue = 1.0e99;
@@ -1335,9 +1335,9 @@ void visit_DoutCallback(char *val, void *cbdata)
     }
     
     simInterface->getDouts()[row]->setActive( text == "TRUE" ||
-                                           text == "True" ||
-                                           text == "true" ||
-                                           text == "1" );
+					      text == "True" ||
+					      text == "true" ||
+					      text == "1" );
     
     // if( simInterface->getDouts()[row]->m_outstream == nullptr )
     // {
