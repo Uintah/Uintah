@@ -352,7 +352,7 @@ AMRSimulationController::run()
     m_recompile_taskgraph = ( m_recompile_taskgraph ||
                               m_app->needRecompile   ( m_current_gridP ) ||
                               m_output->needRecompile( m_current_gridP ) ||
-                              m_loadBalancer->needRecompile    ( m_current_gridP ) ||
+                              m_loadBalancer->needRecompile( m_current_gridP ) ||
                               (m_regridder &&
                                m_regridder->needRecompile( m_current_gridP )) );
 
