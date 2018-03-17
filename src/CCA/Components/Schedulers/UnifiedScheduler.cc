@@ -83,9 +83,9 @@ Uintah::MasterLock g_lb_mutex{};                  // load balancer lock
 
 #ifdef HAVE_CUDA
 
-  DebugStream gpu_stats(              "GPUStats"             , "Schedulers", "",, false );
-  DebugStream simulate_multiple_gpus( "GPUSimulateMultiple"  , "Schedulers", "",, false );
-  DebugStream gpudbg(                 "GPUDataWarehouse"     , "Schedulers", "",, false );
+  DebugStream gpu_stats(              "GPUStats"             , "Schedulers", "", false );
+  DebugStream simulate_multiple_gpus( "GPUSimulateMultiple"  , "Schedulers", "", false );
+  DebugStream gpudbg(                 "GPUDataWarehouse"     , "Schedulers", "", false );
 
   namespace {
 
