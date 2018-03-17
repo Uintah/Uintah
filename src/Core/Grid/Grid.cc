@@ -50,7 +50,7 @@
 using namespace std;
 using namespace Uintah;
 
-Dout g_dbg("GRID", false);
+Dout g_dbg("GRID", "Core/Grid", "Grid debug stream", false);
 
 //______________________________________________________________________
 //
@@ -373,6 +373,8 @@ Grid::parseGridFromFile( FILE * fp, vector< vector<int> > & procMap )
 {
   int  num_levelsRead  = 0;
   int  num_levels      = 0;
+  (void) num_levels; // Removes an unused var warning
+  
   bool doneWithGrid   = false;
   bool foundLevelTag  = false;
 
