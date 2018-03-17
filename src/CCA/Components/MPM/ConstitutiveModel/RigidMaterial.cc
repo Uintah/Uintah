@@ -148,7 +148,7 @@ RigidMaterial::carryForward(const PatchSubset* patches,
     // when using RigidMPM.
     // This method is defined in the ConstitutiveModel base class.
     carryForwardSharedData(pset, old_dw, new_dw, matl);
-    new_dw->put(delt_vartype(1.0), lb->delTLabel, patch->getLevel());
+    new_dw->put(delt_vartype(1.0e10), lb->delTLabel, patch->getLevel());
     
     if (flag->d_reductionVars->accStrainEnergy ||
         flag->d_reductionVars->strainEnergy) {
