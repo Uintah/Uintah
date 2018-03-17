@@ -602,10 +602,6 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
     var.modified   = false;
     m_UPSVars.push_back( var );
 
-    m_debugStreams.push_back( &cout_norm  );
-    m_debugStreams.push_back( &cout_doing );
-    m_debugStreams.push_back( &ds_EqPress );
-
 #define IGNORE_LEVEL -2
     
     analysisVar aVar;
