@@ -39,10 +39,12 @@ using namespace Uintah;
 std::string VarLabel::s_particle_position_name   = "p.x";
 std::string VarLabel::s_default_compression_mode = "none";
 
+std::map<std::string, VarLabel*> VarLabel::g_all_labels;
+
 namespace {
 
-Dout g_varlabel_dbg( "VarLabel", false );
-std::map<std::string, VarLabel*> g_all_labels;
+Dout g_varlabel_dbg( "VarLabel", "Core/Grid/Variables", "VarLabel debug stream", false );
+  
 Uintah::MasterLock g_label_mutex{};
 
 }
