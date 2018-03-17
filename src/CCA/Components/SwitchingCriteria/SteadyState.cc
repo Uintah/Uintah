@@ -37,7 +37,8 @@
 
 using namespace std;
 using namespace Uintah;
-static DebugStream dbg("SWITCHER", false);
+
+extern DebugStream switching_dbg;
 
 SteadyState::SteadyState(ProblemSpecP& ps)
 {
@@ -105,7 +106,7 @@ void SteadyState::initialize(const ProcessorGroup*,
 
 void SteadyState::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
 {
-  printSchedule(level,dbg,"Switching Criteria:SteadyState::scheduleSwitchTest");
+  printSchedule(level,switching_dbg,"Switching Criteria:SteadyState::scheduleSwitchTest");
   
   Task* t = scinew Task("switchTest", this, &SteadyState::switchTest);
 
@@ -139,7 +140,7 @@ void SteadyState::switchTest(const ProcessorGroup* group,
 
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);  
-    printTask(patches, patch,dbg,"Doing Switching Criteria:SimpleBurnCriteria::switchTest");
+    printTask(patches, patch,switching_dbg,"Doing Switching Criteria:SimpleBurnCriteria::switchTest");
     
     constCCVariable<double> heatFlux;
     new_dw->get(heatFlux, m_heatRate_CCLabel,0,patch,Ghost::None,0);

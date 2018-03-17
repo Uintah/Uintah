@@ -31,8 +31,8 @@
 using namespace std;
 using namespace Uintah;
 
-static DebugStream stats("ProfileDriverStats",false);
-static DebugStream stats2("ProfileDriverStats2",false);
+extern DebugStream g_profile_stats;
+extern DebugStream g_profile_stats2;
 
 //______________________________________________________________________
 //
@@ -163,10 +163,10 @@ ProfileDriver::outputError( const GridP currentGrid )
       smape += fabs(error);
       smpe  += error;
 
-      if(d_myworld->myRank()==0 && stats2.active())
+      if(d_myworld->myRank()==0 && g_profile_stats2.active())
       {
         IntVector low(patch->getCellLowIndex()), high(patch->getCellHighIndex());
-        stats2 << iter << " " << patch->getID() << " " << (measured_sum[l][p]-predicted_sum[l][p])/(measured_sum[l][p]+predicted_sum[l][p]) << " "
+        g_profile_stats2 << iter << " " << patch->getID() << " " << (measured_sum[l][p]-predicted_sum[l][p])/(measured_sum[l][p]+predicted_sum[l][p]) << " "
           << measured_sum[l][p] << " " << predicted_sum[l][p] << " " << l << " "
           << low[0] << " " << low[1] << " " << low[2] << " " << high[0] << " " << high[1] << " " << high[2] << endl;
       }
@@ -192,14 +192,14 @@ ProfileDriver::outputError( const GridP currentGrid )
         total_volume+=regions[r].getVolume();
       }
 
-      stats << "Profile Error: " << l << " " << total_measured_error/regions.size() << " " << total_measured_percent_error/regions.size() << " " << total_measured << " " << total_predicted << endl;
+      g_profile_stats << "Profile Error: " << l << " " << total_measured_error/regions.size() << " " << total_measured_percent_error/regions.size() << " " << total_measured << " " << total_predicted << endl;
     }
   }
 
   smpe/=num_patches;
   smape/=num_patches;
 
-  if(d_myworld->myRank()==0 && stats.active()){
+  if(d_myworld->myRank()==0 && g_profile_stats.active()){
     cout << "SMPE: " << smpe << " sMAPE: " << smape << " MAXsPE: " << max_error << endl;
   }
 
@@ -230,8 +230,8 @@ ProfileDriver::outputError( const GridP currentGrid )
 
   if(d_myworld->myRank()==0)
   {
-    stats << "LoadBalance Measured:  Mean:" << meanCostm/d_myworld->nRanks() << " Max:" << maxCostm << " on processor " << maxLocm << endl;
-    stats << "LoadBalance Predicted:  Mean:" << meanCostp/d_myworld->nRanks() << " Max:" << maxCostp << " on processor " << maxLocp << endl;
+    g_profile_stats << "LoadBalance Measured:  Mean:" << meanCostm/d_myworld->nRanks() << " Max:" << maxCostm << " on processor " << maxLocm << endl;
+    g_profile_stats << "LoadBalance Predicted:  Mean:" << meanCostp/d_myworld->nRanks() << " Max:" << maxCostp << " on processor " << maxLocp << endl;
   }
 #if 0
   if(maxCostm/maxCostp>1.1)
@@ -239,7 +239,7 @@ ProfileDriver::outputError( const GridP currentGrid )
     stringstream str;
     if(d_myworld->myRank()==0)
     {
-      stats << d_myworld->myRank() << " Error measured/predicted do not line up, patch cost processor " << maxLocm << " patches:\n";
+      g_profile_stats << d_myworld->myRank() << " Error measured/predicted do not line up, patch cost processor " << maxLocm << " patches:\n";
     }
 
     //for each level
@@ -266,7 +266,7 @@ ProfileDriver::outputError( const GridP currentGrid )
         {
           if(d_myworld->myRank()==0)
           {
-            stats << "    level: " << l << " region: " << regions[r] << " measured:" << measured_sum[l][r] << " predicted:" << predicted_sum[l][r] << endl;
+            g_profile_stats << "    level: " << l << " region: " << regions[r] << " measured:" << measured_sum[l][r] << " predicted:" << predicted_sum[l][r] << endl;
           }
           //find max error region
           double error=measured_sum[l][r]-predicted_sum[l][r];
@@ -301,7 +301,7 @@ ProfileDriver::outputError( const GridP currentGrid )
     {
       Uintah::MPI::Barrier(d_myworld->getComm());
       if(p==d_myworld->myRank())
-        stats << str.str();
+        g_profile_stats << str.str();
     }
   }
 #endif
@@ -314,7 +314,7 @@ void ProfileDriver::finalizeContributions(const GridP currentGrid)
   //if(d_myworld->myRank()==0)
   //  cout << "Finalizing Contributions in cost profiler on timestep: " << d_timesteps << "\n";
 
-  if(stats.active())
+  if(g_profile_stats.active())
   {
     outputError(currentGrid);
   }

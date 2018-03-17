@@ -52,6 +52,8 @@ static DebugStream rdbg(       "Regridder",        "Regridder", "Regridder debug
 static DebugStream dilate_dbg( "Regridder_dilate", "Regridder", "Regridder dilate debug stream", false );
 static DebugStream rreason(    "RegridReason",     "Regridder", "Regridder reason debug stream", false );
 
+DebugStream regrider_dbg("GridDBG", "Regridder", "Regridder debug stream", false);
+
 //______________________________________________________________________
 //
 RegridderCommon::RegridderCommon(const ProcessorGroup* pg)

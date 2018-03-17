@@ -46,7 +46,8 @@
 using namespace std;
 
 using namespace Uintah;
-static DebugStream dbg("SWITCHER", false);
+
+extern DebugStream switching_dbg;
 
 SteadyBurnCriteria::SteadyBurnCriteria(ProblemSpecP& ps)
 {
@@ -84,7 +85,7 @@ void SteadyBurnCriteria::problemSetup(const ProblemSpecP& ps,
 void SteadyBurnCriteria::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
 {
   
-  printSchedule(level,dbg,"Switching Criteria:SteadyBurnCriteria::scheduleSwitchTest");
+  printSchedule(level,switching_dbg,"Switching Criteria:SteadyBurnCriteria::scheduleSwitchTest");
   Task* t = scinew Task("switchTest", this, &SteadyBurnCriteria::switchTest);
 
   MaterialSubset* one_matl = scinew MaterialSubset();
@@ -128,7 +129,7 @@ void SteadyBurnCriteria::switchTest(const ProcessorGroup* group,
   
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
-      printTask(patches, patch,dbg,"Doing Switching Criteria:SteadyBurnCriteria::switchTest");
+      printTask(patches, patch,switching_dbg,"Doing Switching Criteria:SteadyBurnCriteria::switchTest");
       
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(d_material);
       int d_indx = mpm_matl->getDWIndex();

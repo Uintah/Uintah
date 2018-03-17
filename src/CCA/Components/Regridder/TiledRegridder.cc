@@ -42,8 +42,9 @@
 using namespace Uintah;
 using namespace std;
 
-static DebugStream grid_dbg("GridDBG",false);
-static DebugStream rgtimes("RGTimes",false);
+static DebugStream rgtimes("RGTimes", "Regridder", "Tiled regridder times debug stream", false);
+
+extern DebugStream regrider_dbg;
 
 int
 Product( const IntVector &i )
@@ -580,7 +581,7 @@ bool TiledRegridder::verifyGrid(Grid *grid)
   vector<string> labels;
 
   int num_levels=grid->numLevels();
-  grid_dbg << d_myworld->myRank() << " Grid number of levels:" << num_levels << endl;
+  regrider_dbg << d_myworld->myRank() << " Grid number of levels:" << num_levels << endl;
   their_checksums.resize(d_myworld->nRanks());
   Uintah::MPI::Gather(&num_levels,1,MPI_INT,&their_checksums[0],1,MPI_INT,0,d_myworld->getComm());
 
@@ -611,7 +612,7 @@ bool TiledRegridder::verifyGrid(Grid *grid)
     for(int p=0;p<level->numPatches();p++)
     {
       const Patch* patch = level->getPatch(p); 
-      grid_dbg << d_myworld->myRank() << "    Level: " << i << " Patch " << p << ": " << *patch << endl;
+      regrider_dbg << d_myworld->myRank() << "    Level: " << i << " Patch " << p << ": " << *patch << endl;
       Sum =Abs(patch->getCellHighIndex()) + Abs(patch->getCellLowIndex());
       Diff=Abs(patch->getCellHighIndex()) - Abs(patch->getCellLowIndex());
       

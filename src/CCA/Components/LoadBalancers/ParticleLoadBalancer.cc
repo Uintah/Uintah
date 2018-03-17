@@ -52,9 +52,9 @@
 using namespace Uintah;
 using namespace std;
 
-static DebugStream doing( "ParticleLoadBalancer_doing", false );
-static DebugStream lb(    "ParticleLoadBalancer_lb", false );
-static DebugStream dbg(   "ParticleLoadBalancer", false );
+static DebugStream doing( "ParticleLoadBalancer_doing", "LoadBalancers", "", false );
+static DebugStream lb(    "ParticleLoadBalancer_lb",    "LoadBalancers", "", false );
+static DebugStream dbg(   "ParticleLoadBalancer",       "LoadBalancers", "", false );
 
 extern DebugStream stats;
 extern DebugStream times;

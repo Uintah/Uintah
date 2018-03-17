@@ -50,9 +50,12 @@
 
 using namespace Uintah;
 
-DebugStream stats( "LBStats", false );
-DebugStream times( "LBTimes", false );
-DebugStream lbout( "LBOut",   false );
+DebugStream stats( "LBStats", "LoadBalancers", "", false );
+DebugStream times( "LBTimes", "LoadBalancers", "", false );
+DebugStream lbout( "LBOut",   "LoadBalancers", "", false );
+
+DebugStream g_profile_stats ("ProfileStats",   "LoadBalancers", "", false );
+DebugStream g_profile_stats2("ProfileStats2",  "LoadBalancers", "", false );
 
 namespace {
 

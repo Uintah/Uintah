@@ -32,10 +32,9 @@
 using namespace std;
 using namespace Uintah;
    
-namespace Uintah
-{
-static DebugStream stats("CostModelForecasterStats", false);
-static DebugStream stats2("CostModelForecasterStats2", false);
+extern DebugStream g_profile_stats;
+extern DebugStream g_profile_stats2;
+
 void
 CostModelForecaster::addContribution( DetailedTask *task, double cost )
 {
@@ -102,7 +101,7 @@ void CostModelForecaster::outputError(const GridP grid)
       IntVector low(patch->getCellLowIndex());
       IntVector high(patch->getCellHighIndex());
       
-      if(stats2.active()){
+      if(g_profile_stats2.active()){
         cout << "PROFILESTATS: " << iter << " " << fabs(error) << " " << l << " " 
             << low[0] << " " << low[1] << " " << low[2] << " " << high[0] << " " << high[1] << " " << high[2] << endl;
       }
@@ -132,7 +131,7 @@ void CostModelForecaster::outputError(const GridP grid)
     max_error  = max_error_local;
   }
 
-  if(d_myworld->myRank()==0 && stats.active()) {
+  if(d_myworld->myRank()==0 && g_profile_stats.active()) {
     sum_error/=size;
     sum_aerror/=size;
     cout << "sMPE: " << sum_error << " sMAPE: " << sum_aerror << " MAXsPE: " << max_error << endl;
@@ -350,11 +349,11 @@ CostModelForecaster::finalizeContributions( const GridP currentGrid )
   collectPatchInfo(currentGrid,patch_info);
 
 #if 0
-  if(stats.active() && d_myworld->myRank()==0){
+  if(g_profile_stats.active() && d_myworld->myRank()==0){
     static int j=0;
     
     for(size_t i=0;i<patch_info.size();i++){
-      stats << j << " " << patch_info[i] << endl;
+      g_profile_stats << j << " " << patch_info[i] << endl;
     }
     j++;
   }
@@ -454,7 +453,7 @@ CostModelForecaster::finalizeContributions( const GridP currentGrid )
   //update model coefficents
   setCosts(d_x[3], d_x[0], d_x[1], d_x[2]);
   
-  if(d_myworld->myRank()==0 && stats.active()){
+  if(d_myworld->myRank()==0 && g_profile_stats.active()){
     cout << "Update: patchCost: " << d_patchCost << " cellCost: " << d_cellCost << " d_extraCellCost: " << d_extraCellCost << " particleCost: " << d_particleCost << endl;
   }
   
@@ -475,5 +474,4 @@ ostream& operator<<(ostream& out, const CostModelForecaster::PatchInfo &pi)
 {
   out << "NumCells: " << pi.num_cells << " NumExtraCells: " << pi.num_extraCells << " NumParticles: " << pi.num_particles << " ExecTime: " << pi.execTime ;
   return out;
-}
 }

@@ -88,10 +88,10 @@
 using namespace Uintah;
 using namespace std;
 
-static DebugStream dbg("DataArchiver", false);
+static DebugStream dbg("DataArchiver", "DataArchiver", "Data archiver debug stream", false);
 
 #ifdef HAVE_PIDX
-  static DebugStream dbgPIDX ("DataArchiverPIDX", false);
+  static DebugStream dbgPIDX ("DataArchiverPIDX", "DataArchiver", "Data archiver PIDX debug stream", false);
 #endif
 
 bool DataArchiver::m_wereSavesAndCheckpointsInitialized = false;

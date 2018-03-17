@@ -53,9 +53,9 @@
 using namespace Uintah;
 using namespace std;
 
-static DebugStream doing( "DynamicLoadBalancer_doing", false );
-static DebugStream lb(    "DynamicLoadBalancer_lb", false );
-static DebugStream dbg(   "DynamicLoadBalancer", false );
+static DebugStream doing( "DynamicLoadBalancer_doing", "LoadBalancers", "", false );
+static DebugStream lb(    "DynamicLoadBalancer_lb",    "LoadBalancers", "", false );
+static DebugStream dbg(   "DynamicLoadBalancer",       "LoadBalancers", "", false );
 
 extern DebugStream stats;
 extern DebugStream times;
