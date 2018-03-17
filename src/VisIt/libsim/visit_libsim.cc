@@ -39,7 +39,7 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/UintahMPI.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Util/DebugStream.h>
+#include <Core/Util/DOUT.hpp>
 #include <Core/Util/Environment.h>
 
 #include <sci_defs/visit_defs.h>
@@ -51,7 +51,7 @@
 
 #define ALL_LEVELS 99
 
-static Uintah::DebugStream visitdbg( "VisItLibSim", true );
+namespace Uintah {
 
 static std::string simFileName( "Uintah" );
 static std::string simExecName;
@@ -59,7 +59,7 @@ static std::string simArgs;
 static std::string simComment("Uintah Simulation");
 static std::string simUI("uintah.ui");
 
-namespace Uintah {
+Uintah::Dout visitdbg("VisItLibSim", "VisIt", "VisIt in situ debug stream", false);
 
 //---------------------------------------------------------------------
 // ProcessLibSimArguments
@@ -448,8 +448,7 @@ void visit_EndLibSim( visit_simulation_data *sim )
       msg << "Visit libsim - "
           << "The simulation has finished, stopping at the last time step.";
       
-      visitdbg << msg.str().c_str() << std::endl;
-      visitdbg.flush();
+      DOUT( visitdbg, msg.str().c_str() );
       
       VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
     }
@@ -489,8 +488,8 @@ bool visit_CheckState( visit_simulation_data *sim )
             << "timestep " << sim->cycle << ",  "
             << "Time = "   << sim->time;
         
-//      visitdbg << msg.str().c_str() << std::endl;
-//      visitdbg.flush();
+	// DOUT( visitdbg, msg.str().c_str() );
+	
         VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
       }
 
@@ -553,8 +552,8 @@ bool visit_CheckState( visit_simulation_data *sim )
                 << "timestep " << sim->cycle << ",  "
                 << "Time = " << sim->time;
             
-            visitdbg << msg.str().c_str() << std::endl;
-            visitdbg.flush();
+	    DOUT( visitdbg, msg.str().c_str() );
+ 
             VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
           }
         }
@@ -577,8 +576,8 @@ bool visit_CheckState( visit_simulation_data *sim )
       msg << "Visit libsim - CheckState cannot recover from error ("
           << visitstate << ") !!";
           
-      visitdbg << msg.str().c_str() << std::endl;
-      visitdbg.flush();
+      DOUT( visitdbg, msg.str().c_str() );
+
       VisItUI_setValueS("SIMULATION_MESSAGE_ERROR", msg.str().c_str(), 1);
 
       err = 1;
@@ -596,8 +595,8 @@ bool visit_CheckState( visit_simulation_data *sim )
           std::stringstream msg;          
           msg << "Visit libsim - No input, continuing the simulation.";
 
-          // visitdbg << msg.str().c_str() << std::endl;
-          // visitdbg.flush();
+	  // DOUT( visitdbg, msg.str().c_str() );
+
           VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
         }
       }
@@ -617,8 +616,8 @@ bool visit_CheckState( visit_simulation_data *sim )
         std::stringstream msg;
         msg << "Visit libsim - Can not connect.";
 
-        // visitdbg << msg.str().c_str() << std::endl;
-        // visitdbg.flush();
+	// DOUT( visitdbg, msg.str().c_str() );
+
         VisItUI_setValueS("SIMULATION_MESSAGE_ERROR", msg.str().c_str(), 1);
       }
     }
@@ -653,8 +652,8 @@ bool visit_CheckState( visit_simulation_data *sim )
           std::stringstream msg;          
           msg << "Visit libsim - Continuing the simulation for one time step";
           
-          // visitdbg << msg.str().c_str() << std::endl;
-          // visitdbg.flush();
+	  // DOUT( visitdbg, msg.str().c_str() );
+
           VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
         }
 
@@ -676,8 +675,8 @@ bool visit_CheckState( visit_simulation_data *sim )
           std::stringstream msg;          
           msg << "Visit libsim - Finished the simulation ";
 
-          // visitdbg << msg.str().c_str() << std::endl;
-          // visitdbg.flush();
+	  // DOUT( visitdbg, msg.str().c_str() );
+
           VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
           VisItUI_setValueS("SIMULATION_MESSAGE", " ", 1);
         }
@@ -727,8 +726,7 @@ void visit_UpdateSimData( visit_simulation_data *sim,
       msg << "Visit libsim - "
           << "The simulation has finished, stopping at the last time step.";
       
-      visitdbg << msg.str().c_str() << std::endl;
-      visitdbg.flush();
+      DOUT( visitdbg, msg.str().c_str() );
       
       VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
     }
@@ -757,8 +755,8 @@ void visit_Initialize( visit_simulation_data *sim )
     VisItUI_setValueS("SIMULATION_MESSAGE_CLEAR", "NoOp", 1);
     VisItUI_setValueS("STRIP_CHART_CLEAR_ALL",    "NoOp", 1);
     
-    // visitdbg << msg.str().c_str() << std::endl;
-    // visitdbg.flush();
+    // DOUT( visitdbg, msg.str().c_str() );
+
     VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);    
     VisItUI_setValueS("SIMULATION_MODE", "Connected", 1);
   }

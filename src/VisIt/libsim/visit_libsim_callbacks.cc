@@ -45,7 +45,7 @@
 
 namespace Uintah {
 
-extern Dout visitdbg;
+extern Uintah::Dout visitdbg;
 
 #define VISIT_COMMAND_PROCESS 0
 #define VISIT_COMMAND_SUCCESS 1

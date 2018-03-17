@@ -29,7 +29,7 @@
 using namespace Uintah;
 
 
-DebugStream gp_dbg( "GeometryPiece", false );
+DebugStream gp_dbg( "GeometryPiece", "GeometryPiece", "Geometry piece debug stream", false );
 
 GeometryPiece::GeometryPiece() :
   nameSet_( false ),

@@ -37,7 +37,7 @@
 using namespace Uintah;
 using namespace std;
 
-static DebugStream dbggpu("RAYGPU", false);
+static DebugStream dbggpu("RAYGPU", "Radiation Models", "RMCRT Ray GPU debug stream", false);
 
 //---------------------------------------------------------------------------
 // Method: The GPU ray tracer - setup for ray trace kernel

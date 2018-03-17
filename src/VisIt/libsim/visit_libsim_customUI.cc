@@ -48,8 +48,6 @@
 
 namespace Uintah {
 
-Dout visitdbg("VisItLibSim", "VisIt", "VisIt in situ ebug stream", false);
-
 //---------------------------------------------------------------------
 // SetTimeVars
 //    Set the times values so they can be displayed in the Custon UI
