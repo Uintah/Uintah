@@ -45,7 +45,7 @@
 
 namespace Uintah {
 
-static Uintah::DebugStream visitdbg( "VisItLibSim", true );
+extern Dout visitdbg;
 
 #define VISIT_COMMAND_PROCESS 0
 #define VISIT_COMMAND_SUCCESS 1
@@ -72,8 +72,7 @@ void visit_VarModifiedMessage( visit_simulation_data *sim,
     VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
     VisItUI_setValueS("SIMULATION_MESSAGE", " ", 1);
     
-    // visitdbg << msg.str().c_str() << std::endl;
-    // visitdbg.flush();
+    // DOUT( visitdbg, msg.str().c_str() );
   }
 
   // Using a map - update the value so it can be recorded by Uintah.
@@ -351,8 +350,7 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
       VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
       VisItUI_setValueS("SIMULATION_MESSAGE", " ", 1);
 
-      visitdbg << msg.str().c_str() << std::endl;
-      visitdbg.flush();
+      DOUT( visitdbg, msg.str().c_str() );
 
       VisItUI_setValueS("STRIP_CHART_CLEAR_ALL", "NoOp", 1);
     }
@@ -366,8 +364,7 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
       VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
       VisItUI_setValueS("SIMULATION_MESSAGE", " ", 1);
 
-      visitdbg << msg.str().c_str() << std::endl;
-      visitdbg.flush();
+      DOUT( visitdbg, msg.str().c_str() );
 
       VisItUI_setValueS("STRIP_CHART_CLEAR_ALL", "NoOp", 1);
     }
@@ -1250,7 +1247,20 @@ void visit_DebugStreamCallback(char *val, void *cbdata)
 
   parseCompositeCMD( val, row, column, text);
 
-  if( column == 1 )
+  // Find the debugStream
+  DebugStream *debugStream = nullptr;
+    
+  // int i = 0;
+  // for (auto iter = DebugStream::m_all_debugStreams.begin();
+  //      iter != DebugStream::m_all_debugStreams.end();
+  //      ++iter, ++i) {
+  //   if( i == row ) {
+  //     debugStream = (*iter).second;
+  //     break;
+  //   }
+  // }
+
+  if( debugStream && column == 1 )
   {
     if( text != "FALSE" && text != "False" && text != "false" &&
         text != "TRUE"  && text != "True"  && text != "true" && 
@@ -1258,46 +1268,44 @@ void visit_DebugStreamCallback(char *val, void *cbdata)
     {
       std::stringstream msg;
       msg << "Visit libsim - the value (" << text << ") for "
-          << simInterface->getDebugStreams()[row]->getName()
+          << debugStream->getName()
           << " is not 'true' or 'false'. Resetting value.";
       VisItUI_setValueS("SIMULATION_MESSAGE_BOX", msg.str().c_str(), 1);
       visit_SetDebugStreams( sim );
       return;
     }
     
-    simInterface->getDebugStreams()[row]->setActive( text == "TRUE" ||
-                                               text == "True" ||
-                                               text == "true" ||
-                                               text == "1" );
+    debugStream->setActive( text == "TRUE" || text == "True" ||
+			    text == "true" || text == "1" );
     
-    if( simInterface->getDebugStreams()[row]->m_outstream == nullptr )
+    if( debugStream->m_outstream == nullptr )
     {
-      simInterface->getDebugStreams()[row]->setFilename( "cout" );
-      simInterface->getDebugStreams()[row]->m_outstream = &std::cout;
+      debugStream->setFilename( "std::cout" );
+      debugStream->m_outstream = &std::cout;
     }
   }
-  else if( column == 2 )
+  else if( debugStream && column == 2 )
   {
     if( text.find("cerr") != std::string::npos )
     {
-      simInterface->getDebugStreams()[row]->setFilename( "cerr" );
-      simInterface->getDebugStreams()[row]->m_outstream = &std::cerr;
+      debugStream->setFilename( "std::cerr" );
+      debugStream->m_outstream = &std::cerr;
     }
     else if( text.find("cout") != std::string::npos )
     {
-      simInterface->getDebugStreams()[row]->setFilename( "cout" );
-      simInterface->getDebugStreams()[row]->m_outstream = &std::cout;
+      debugStream->setFilename( "std::cout" );
+      debugStream->m_outstream = &std::cout;
     }
     else
     {
-      simInterface->getDebugStreams()[row]->setFilename( text );
+      debugStream->setFilename( text );
 
-      if( simInterface->getDebugStreams()[row]->m_outstream &&
-          simInterface->getDebugStreams()[row]->m_outstream != &std::cerr &&
-          simInterface->getDebugStreams()[row]->m_outstream != &std::cout )
-        delete simInterface->getDebugStreams()[row]->m_outstream;
+      if( debugStream->m_outstream &&
+          debugStream->m_outstream != &std::cerr &&
+          debugStream->m_outstream != &std::cout )
+        delete debugStream->m_outstream;
 
-      simInterface->getDebugStreams()[row]->m_outstream = new std::ofstream(text);
+      debugStream->m_outstream = new std::ofstream(text);
     }
   }
 }
@@ -1319,7 +1327,20 @@ void visit_DoutCallback(char *val, void *cbdata)
 
   parseCompositeCMD( val, row, column, text);
 
-  if( column == 1 )
+  // Find the dout
+  Dout *dout = nullptr;
+    
+  int i = 0;
+  for (auto iter = Dout::m_all_douts.begin();
+       iter != Dout::m_all_douts.end();
+       ++iter, ++i) {
+    if( i == row ) {
+      dout = (*iter).second;
+      break;
+    }
+  }
+    
+  if( dout && column == 1 )
   {
     if( text != "FALSE" && text != "False" && text != "false" &&
         text != "TRUE"  && text != "True"  && text != "true" && 
@@ -1327,48 +1348,46 @@ void visit_DoutCallback(char *val, void *cbdata)
     {
       std::stringstream msg;
       msg << "Visit libsim - the value (" << text << ") for "
-          << simInterface->getDouts()[row]->name()
+          << dout->name()
           << " is not 'true' or 'false'. Resetting value.";
       VisItUI_setValueS("SIMULATION_MESSAGE_BOX", msg.str().c_str(), 1);
       visit_SetDebugStreams( sim );
       return;
     }
-    
-    simInterface->getDouts()[row]->setActive( text == "TRUE" ||
-					      text == "True" ||
-					      text == "true" ||
-					      text == "1" );
-    
-    // if( simInterface->getDouts()[row]->m_outstream == nullptr )
+
+    dout->setActive( text == "TRUE" || text == "True" ||
+		     text == "true" || text == "1" );
+
+    // if( dout->m_outstream == nullptr )
     // {
-    //   simInterface->getDouts()[row]->setFilename( "cout" );
-    //   simInterface->getDouts()[row]->m_outstream = &std::cout;
+    //   dout->setFilename( "cout" );
+    //   dout->m_outstream = &std::cout;
     // }
   }
-  // else if( column == 2 )
+  // else if( dout && column == 2 )
   // {
   //   std::string filename( value );
 
   //   if( filename.find("cerr") != std::string::npos )
   //   {
-  //     simInterface->getDouts()[row]->setFilename( "cerr" );
-  //     simInterface->getDouts()[row]->m_outstream = &std::cerr;
+  //     dout->setFilename( "cerr" );
+  //     dout->m_outstream = &std::cerr;
   //   }
   //   else if( filename.find("cout") != std::string::npos )
   //   {
-  //     simInterface->getDouts()[row]->setFilename( "cout" );
-  //     simInterface->getDouts()[row]->m_outstream = &std::cout;
+  //     dout->setFilename( "cout" );
+  //     dout->m_outstream = &std::cout;
   //   }
   //   else
   //   {
-  //     simInterface->getDouts()[row]->setFilename( filename );
+  //     dout->setFilename( filename );
 
-  //     if( simInterface->getDouts()[row]->m_outstream &&
-  //      simInterface->getDouts()[row]->m_outstream != &std::cerr &&
-  //      simInterface->getDouts()[row]->m_outstream != &std::cout )
-  //    delete simInterface->getDouts()[row]->m_outstream;
+  //     if( dout->m_outstream &&
+  //      dout->m_outstream != &std::cerr &&
+  //      dout->m_outstream != &std::cout )
+  //    delete dout->m_outstream;
 
-  //     simInterface->getDouts()[row]->m_outstream = new std::ofstream(filename);
+  //     dout->m_outstream = new std::ofstream(filename);
   //   }
   // }
 }

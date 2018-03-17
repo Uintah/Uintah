@@ -23,7 +23,6 @@
  */
 
 //-- Uintah component includes --//
-#include <Core/Grid/Variables/PerPatchVars.h>
 #include <CCA/Components/Regridder/RegridderCommon.h>
 #include <CCA/Ports/ApplicationInterface.h>
 #include <CCA/Ports/DataWarehouse.h>
@@ -38,6 +37,7 @@
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/PerPatch.h>
+#include <Core/Grid/Variables/PerPatchVars.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Util/DebugStream.h>
 
@@ -48,9 +48,9 @@
 
 using namespace Uintah;
 
-DebugStream rdbg(       "Regridder", false );
-DebugStream dilate_dbg( "Regridder_dilate", false );
-DebugStream rreason(    "RegridReason", false );
+static DebugStream rdbg(       "Regridder",        "Regridder", "Regridder debug stream",        false );
+static DebugStream dilate_dbg( "Regridder_dilate", "Regridder", "Regridder dilate debug stream", false );
+static DebugStream rreason(    "RegridReason",     "Regridder", "Regridder reason debug stream", false );
 
 //______________________________________________________________________
 //

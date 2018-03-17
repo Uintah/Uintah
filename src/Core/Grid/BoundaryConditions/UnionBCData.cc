@@ -38,7 +38,7 @@ using namespace std;
 using namespace Uintah;
 
 // export SCI_DEBUG="BC_dbg:+"
-static DebugStream BC_dbg("BC_dbg",false);
+extern DebugStream BC_dbg;
 
 UnionBCData::UnionBCData() : BCGeomBase()
 {

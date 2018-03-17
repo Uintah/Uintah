@@ -54,7 +54,7 @@ using namespace std;
 
 namespace {
 
-  Uintah::Dout g_rmcrt_test_dbg("RMCRT_Test", false);
+  Uintah::Dout g_rmcrt_test_dbg("RMCRT_Test", "Examples", "RMCRT_Test debug stream", false);
 }
 
 

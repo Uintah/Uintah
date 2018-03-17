@@ -30,12 +30,17 @@
 #include <Core/Grid/Variables/GridIterator.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
+#include <Core/Util/DebugStream.h>
+
 #include <iostream>
 #include <vector>
 
 
 using namespace Uintah;
 using namespace std;
+
+// export SCI_DEBUG="BC_dbg:+"
+DebugStream BC_dbg("BC_dbg", "Grid Boundary Conditions", "", false);
 
 //--------------------------------------------------------------------------------------------------
 

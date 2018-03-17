@@ -46,9 +46,9 @@
 #define FINEST_LEVEL -1
 #define IGNORE_LEVEL -2
 
-static Uintah::DebugStream visitdbg( "VisItLibSim", true );
-
 namespace Uintah {
+
+Dout visitdbg("VisItLibSim", "VisIt", "VisIt in situ ebug stream", false);
 
 //---------------------------------------------------------------------
 // SetTimeVars
@@ -857,28 +857,31 @@ void visit_SetDebugStreams( visit_simulation_data *sim )
   VisItUI_setTableValueS("DebugStreamTable",
                          -1, -1, "CLEAR_TABLE", 0);
 
-  if( simInterface->getDebugStreams().size() )
-  {
-    VisItUI_setValueS( "DebugStreamGroupBox", "SHOW_WIDGET", 1);
+  // if( DebugStream::m_all_debugStreams.size() )
+  // {
+  //   VisItUI_setValueS( "DebugStreamGroupBox", "SHOW_WIDGET", 1);
 
-    unsigned int nStreams = simInterface->getDebugStreams().size();
+  //   int i = 0;
     
-    for( unsigned int i=0; i<nStreams; ++i )
-    {
-      // Add in the stream and state.
-      std::string name     = simInterface->getDebugStreams()[i]->getName();
-      std::string filename = simInterface->getDebugStreams()[i]->getFilename();
-      bool        active   = simInterface->getDebugStreams()[i]->active();
+  //   for (auto iter = DebugStream::m_all_debugStreams.begin();
+  // 	 iter != DebugStream::m_all_debugStreams.end();
+  // 	 ++iter, ++i)
+  //   {
+  //     // Add in the stream and state.
+  //     std::string name      = (*iter).second->getName();
+  //     std::string component = (*iter).second->getComponent();
+  //     std::string filename  = (*iter).second->getFilename();
+  //     bool        active    = (*iter).second->active();
 
-      VisItUI_setTableValueS("DebugStreamTable",
-                             i, 0, name.c_str(),  0);
-      VisItUI_setTableValueS("DebugStreamTable",
-                             i, 1, (active ? "true":"false"), 1);
-      VisItUI_setTableValueS("DebugStreamTable",
-                             i, 2, filename.c_str(), 1);
-    }
-  }
-  else
+  //     VisItUI_setTableValueS("DebugStreamTable",
+  //                            i, 0, (component+":"+name).c_str(), 0);
+  //     VisItUI_setTableValueS("DebugStreamTable",
+  //                            i, 1, (active ? "true":"false"), 1);
+  //     VisItUI_setTableValueS("DebugStreamTable",
+  //                            i, 2, filename.c_str(), 1);
+  //   }
+  // }
+  // else
     VisItUI_setValueS( "DebugStreamGroupBox", "HIDE_WIDGET", 0);
 }
 
@@ -894,21 +897,24 @@ void visit_SetDouts( visit_simulation_data *sim )
   VisItUI_setTableValueS("DoutTable",
                          -1, -1, "CLEAR_TABLE", 0);
 
-  if( simInterface->getDouts().size() )
+  if( Dout::m_all_douts.size() )
   {
     VisItUI_setValueS( "DoutGroupBox", "SHOW_WIDGET", 1);
 
-    unsigned int nStreams = simInterface->getDouts().size();
+    int i = 0;
     
-    for( unsigned int i=0; i<nStreams; ++i )
+    for (auto iter = Dout::m_all_douts.begin();
+	 iter != Dout::m_all_douts.end();
+	 ++iter, ++i)
     {
       // Add in the stream and state.
-      std::string name     = simInterface->getDouts()[i]->name();
-      std::string filename = "cout"; //simInterface->getDouts()[i]->getFilename();
-      bool        active   = simInterface->getDouts()[i]->active();
+      std::string name      = (*iter).second->name();
+      std::string component = (*iter).second->component();
+      std::string filename  = "cout"; // (*iter).second->getFilename();
+      bool        active    = (*iter).second->active();
 
       VisItUI_setTableValueS("DoutTable",
-                             i, 0, name.c_str(), 0);
+                             i, 0, (component+":"+name).c_str(), 0);
       VisItUI_setTableValueS("DoutTable",
                              i, 1, (active ? "true":"false"), 1);
       VisItUI_setTableValueS("DoutTable",

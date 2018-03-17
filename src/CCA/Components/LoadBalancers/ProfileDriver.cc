@@ -31,8 +31,8 @@
 using namespace std;
 using namespace Uintah;
 
-static DebugStream stats("ProfileStats",false);
-static DebugStream stats2("ProfileStats2",false);
+static DebugStream stats("ProfileDriverStats",false);
+static DebugStream stats2("ProfileDriverStats2",false);
 
 //______________________________________________________________________
 //

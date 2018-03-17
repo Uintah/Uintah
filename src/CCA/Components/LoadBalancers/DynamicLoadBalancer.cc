@@ -46,8 +46,6 @@
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/Timers/Timers.hpp>
 
-#include <sci_defs/visit_defs.h>
-
 #include <iostream> // debug only
 #include <stack>
 #include <vector>
@@ -58,9 +56,10 @@ using namespace std;
 static DebugStream doing( "DynamicLoadBalancer_doing", false );
 static DebugStream lb(    "DynamicLoadBalancer_lb", false );
 static DebugStream dbg(   "DynamicLoadBalancer", false );
-static DebugStream stats( "LBStats", false );
-static DebugStream times( "LBTimes", false );
-static DebugStream lbout( "LBOut", false );
+
+extern DebugStream stats;
+extern DebugStream times;
+extern DebugStream lbout;
 
 double lbtimes[5] = {0,0,0,0,0};
 
@@ -1212,21 +1211,4 @@ DynamicLoadBalancer::problemSetup( ProblemSpecP & pspec, GridP & grid, const Sim
 
     d_costForecaster->setMinPatchSize(mps);
   }
-
-#ifdef HAVE_VISIT
-  static bool initialized = false;
-
-  // Running with VisIt so add in the variables that the user can
-  // modify.
-  if( m_application->getVisIt() && !initialized ) {
-    m_application->getDebugStreams().push_back( &doing  );
-    m_application->getDebugStreams().push_back( &lb );
-    m_application->getDebugStreams().push_back( &dbg );
-    m_application->getDebugStreams().push_back( &stats  );
-    m_application->getDebugStreams().push_back( &times );
-    m_application->getDebugStreams().push_back( &lbout );
-
-    initialized = true;
-  }
-#endif
 }

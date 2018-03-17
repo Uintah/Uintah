@@ -39,7 +39,7 @@ using std::endl;
 using namespace Uintah;
 
 // export SCI_DEBUG="BC_dbg:+"
-static DebugStream BC_dbg("BC_dbg",false);
+extern DebugStream BC_dbg;
 
 DifferenceBCData::DifferenceBCData(BCGeomBase* p1,BCGeomBase* p2)
 : BCGeomBase(), left(p1->clone()), right(p2->clone())

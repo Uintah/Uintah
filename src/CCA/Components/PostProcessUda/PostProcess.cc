@@ -32,7 +32,7 @@
 
 using namespace std;
 using namespace Uintah;
-Dout dbg_pp("postProcess", false);
+Dout dbg_pp("postProcess", "PostProcessUda", "PostProcessUda debug strream", false);
 
 //______________________________________________________________________
 //

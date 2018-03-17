@@ -373,10 +373,6 @@ WARNING
     // Interactive state variables from the application.
     virtual std::vector< interactiveVar > & getStateVars() { return m_stateVars; }
   
-    // Debug streams that can be turned on or off.
-    virtual std::vector< DebugStream * > & getDebugStreams() { return m_debugStreams; }
-    virtual std::vector< Dout * > & getDouts() { return m_douts; }
-  
     virtual void setVisIt( unsigned int val ) { m_doVisIt = val; }
     virtual unsigned int  getVisIt() { return m_doVisIt; }
 
@@ -389,10 +385,6 @@ WARNING
 
     // Interactive state variables from the application.
     std::vector< interactiveVar > m_stateVars;
-
-    // Debug streams that can be turned on or off.
-    std::vector< DebugStream * > m_debugStreams;
-    std::vector< Dout * > m_douts;
 
     unsigned int m_doVisIt{false};
 #endif

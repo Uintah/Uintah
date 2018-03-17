@@ -440,20 +440,6 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
               << m_checkpointWallTimeInterval << " wall clock seconds,"
               << " starting after " << m_checkpointWallTimeStart << " seconds.\n";
   }
-  
-#ifdef HAVE_VISIT
-  static bool initialized = false;
-
-  // Running with VisIt so add in the variables that the user can
-  // modify.
-  if( m_application->getVisIt() && !initialized ) {
-    m_application->getDebugStreams().push_back( &dbg  );
-#ifdef HAVE_PIDX
-    m_application->getDebugStreams().push_back( &dbgPIDX );
-#endif
-    initialized = true;
-  }
-#endif
 }
 
 //______________________________________________________________________

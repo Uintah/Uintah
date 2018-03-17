@@ -36,8 +36,6 @@
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/Timers/Timers.hpp>
 
-#include <sci_defs/visit_defs.h>
-
 #include <iomanip>
 #include <cstdio>
 
@@ -434,19 +432,6 @@ void TiledRegridder::problemSetup(const ProblemSpecP& params,
       problemSetup_BulletProofing(k);
     }
   }
-
-#ifdef HAVE_VISIT
-  static bool initialized = false;
-
-  // Running with VisIt so add in the variables that the user can
-  // modify.
-  if( m_application->getVisIt() && !initialized ) {
-    m_application->getDebugStreams().push_back( &grid_dbg );
-    m_application->getDebugStreams().push_back( &rgtimes );
-
-    initialized = true;
-  }
-#endif
 }
 
 //_________________________________________________________________

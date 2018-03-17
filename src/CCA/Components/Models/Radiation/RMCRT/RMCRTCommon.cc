@@ -32,7 +32,7 @@
 #include <Core/Util/DOUT.hpp>
 #include <fstream>
 
-#define DEBUG -9             // 1: divQ, 2: boundFlux, 3: scattering
+#define DEBUG -9            // 1: divQ, 2: boundFlux, 3: scattering
 #define FIXED_RAY_DIR -9    // Sets ray direction.  1: (0.7071,0.7071, 0), 2: (0.7071, 0, 0.7071), 3: (0, 0.7071, 0.7071)
                             //                     4: (0.7071, 0.7071, 7071), 5: (1,0,0)  6: (0, 1, 0),   7: (0,0,1)
 #define SIGN 1              // Multiply the FIXED_RAY_DIRs by value
@@ -45,9 +45,10 @@
 //
 using namespace Uintah;
 
-// this is used externally (e.g. Radiamoter.cc), keep them visible outside this unit
-Dout g_ray_dbg("RAY", false);
-
+// These are used externally (e.g. Radiamoter.cc), keep them visible
+// outside this unit
+Dout g_ray_dbg("Ray_dbg", "Models", "RMCRT Ray model general debug stream", false);
+Dout g_ray_BC ("Ray_BC",  "Models", "RMCRT Ray model BC debug stream", false);
 //______________________________________________________________________
 // Static variable declarations
 // This class is instantiated by ray() and radiometer().

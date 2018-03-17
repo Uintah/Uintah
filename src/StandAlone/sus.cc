@@ -67,6 +67,8 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Parallel/MasterLock.h>
 #include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Util/DebugStream.h>
+#include <Core/Util/DOUT.hpp>
 #include <Core/Util/Environment.h>
 #include <Core/Util/FileUtils.h>
 
@@ -108,27 +110,13 @@ namespace {
 
 Uintah::MasterLock cerr_mutex{};
 
-Dout g_stack_debug(       "ExceptionStack" , true );
-Dout g_wait_for_debugger( "WaitForDebugger", false );
+Dout g_stack_debug(       "ExceptionStack" , "Standalone", "sus stack debug stream ", true );
+Dout g_wait_for_debugger( "WaitForDebugger", "Standalone", "sus wait for debugger debug stream ", false );
 
 }
 
 
-static
-void
-quit(const std::string& msg = "")
-{
-  if (msg != "") {
-    std::cerr << msg << "\n";
-  }
-  Uintah::Parallel::finalizeManager();
-  Parallel::exitAll(2);
-}
-
-
-static
-void
-usage( const std::string& message, const std::string& badarg, const std::string& progname )
+static void start()
 {
   int argc = 0;
   char **argv;
@@ -137,7 +125,25 @@ usage( const std::string& message, const std::string& badarg, const std::string&
   // Initialize MPI so that "usage" is only printed by proc 0.
   // (If we are using MPICH, then Uintah::MPI::Init() has already been called.)
   Uintah::Parallel::initializeManager(argc, argv);
+}
 
+static void quit(const std::string& msg = "")
+{
+  if (msg != "") {
+    std::cerr << msg << "\n";
+  }
+  
+  Uintah::Parallel::finalizeManager();
+  Parallel::exitAll(2);
+}
+
+
+static void usage( const std::string& message,
+		   const std::string& badarg,
+		   const std::string& progname )
+{
+  start();
+  
   if (Uintah::Parallel::getMPIRank() == 0) {
     std::cerr << "\n";
     if (badarg != "") {
@@ -150,6 +156,7 @@ usage( const std::string& message, const std::string& badarg, const std::string&
     std::cerr << "Usage: " << progname << " [options] <input_file_name>\n\n";
     std::cerr << "Valid options are:\n";
     std::cerr << "-h[elp]              : This usage information\n";
+    std::cerr << "-d[ebug]             : List the debug streams\n";
 #ifdef HAVE_CUDA
     std::cerr << "-gpu                 : use available GPU devices, requires multi-threaded Unified scheduler \n";
 #endif
@@ -186,8 +193,7 @@ usage( const std::string& message, const std::string& badarg, const std::string&
 }
 
 
-void
-sanityChecks()
+void sanityChecks()
 {
 #if defined( DISABLE_SCI_MALLOC )
   if (getenv("MALLOC_STATS")) {
@@ -212,15 +218,13 @@ sanityChecks()
 }
 
 
-void
-abortCleanupFunc()
+void abortCleanupFunc()
 {
   Uintah::Parallel::finalizeManager(Uintah::Parallel::Abort);
 }
 
 
-int
-main( int argc, char *argv[], char *env[] )
+int main( int argc, char *argv[], char *env[] )
 {
   sanityChecks();
 
@@ -270,6 +274,19 @@ main( int argc, char *argv[], char *env[] )
     std::string arg = argv[i];
     if ((arg == "-help") || (arg == "-h")) {
       usage("", "", argv[0]);
+    }
+    else if ((arg == "-debug") || (arg == "-d")) {
+      start();
+
+      if (Uintah::Parallel::getMPIRank() == 0) {
+	std::cout << "The following debug streams are known. Active streams are indicated with plus sign." << std::endl;
+	std::cout << "To activate a debug stream set the environment variable 'setenv SCI_DEBUG \"Debug_Stream_Name:+\"'" << std::endl;
+      
+	Dout::printAll();
+	DebugStream::printAll();
+      }
+      
+      quit();
     }
     else if (arg == "-nthreads") {
       if (++i == argc) {

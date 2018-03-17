@@ -99,8 +99,7 @@ using std::vector;
 using std::string;
 
 extern Dout g_ray_dbg;
-Dout dbg_BC_ray("RAY_BC", false);
-
+extern Dout g_ray_BC;
 
 //---------------------------------------------------------------------------
 // Class: Constructor.
@@ -409,7 +408,7 @@ Ray::problemSetup( const ProblemSpecP     & prob_spec
 //     m_sharedState->d_UPSVars.push_back( var );
     
 //     m_sharedState->d_douts.push_back( &g_ray_dbg );
-//     m_sharedState->d_douts.push_back( &dbg_BC_ray );
+//     m_sharedState->d_douts.push_back( &g_ray_BC );
 
 //     initialized = true;
 //   }
@@ -2602,9 +2601,9 @@ void Ray::setBC(       CCVariable< T > & Q_CC
     return;
   }
 
-  if( dbg_BC_ray.active() ){
+  if( g_ray_BC.active() ){
     const Level* level = patch->getLevel();
-    DOUT( dbg_BC_ray, "setBC \t"<< desc <<" "
+    DOUT( g_ray_BC, "setBC \t"<< desc <<" "
            << " mat_id = " << mat_id <<  ", Patch: "<< patch->getID() << " L-" <<level->getIndex() );
   }
 
@@ -2652,9 +2651,9 @@ void Ray::setBC(       CCVariable< T > & Q_CC
 
         //__________________________________
         //  debugging
-        if( dbg_BC_ray.active() ) {
+        if( g_ray_BC.active() ) {
           bound_ptr.reset();
-          DOUT( dbg_BC_ray, "Face: "<< patch->getFaceName(face) <<" numCellsTouched " << nCells
+          DOUT( g_ray_BC, "Face: "<< patch->getFaceName(face) <<" numCellsTouched " << nCells
              <<"\t child " << child  <<" NumChildren "<<numChildren
              <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
              <<"\t bound limits = "<< bound_ptr );
@@ -2662,8 +2661,8 @@ void Ray::setBC(       CCVariable< T > & Q_CC
       }  // if iterator found
     }  // child loop
 
-    if( dbg_BC_ray.active() ){
-      DOUT( dbg_BC_ray, "    "<< patch->getFaceName(face) << " \t " << bc_kind << " numChildren: " << numChildren
+    if( g_ray_BC.active() ){
+      DOUT( g_ray_BC, "    "<< patch->getFaceName(face) << " \t " << bc_kind << " numChildren: " << numChildren
              << " nCellsTouched: " << nCells );
     }
     //__________________________________

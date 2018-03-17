@@ -35,7 +35,7 @@ using std::cout;
 using std::endl;
 
 // export SCI_DEBUG="BC_dbg:+"
-static DebugStream BC_dbg("BC_dbg",false);
+extern DebugStream BC_dbg;
 
 RectangleBCData::RectangleBCData() : BCGeomBase()
 {

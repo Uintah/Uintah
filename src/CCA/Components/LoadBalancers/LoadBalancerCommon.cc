@@ -50,12 +50,16 @@
 
 using namespace Uintah;
 
+DebugStream stats( "LBStats", false );
+DebugStream times( "LBTimes", false );
+DebugStream lbout( "LBOut",   false );
+
 namespace {
 
-Dout g_lb_dbg(                "LoadBalancer"     , false );
-Dout g_neighborhood_dbg(      "Neighborhood"     , false );
-Dout g_neighborhood_size_dbg( "NeighborhoodSize" , false );
-Dout g_patch_assignment(      "LBPatchAssignment", false );
+Dout g_lb_dbg(                "LoadBalancer"     , "LoadBalancers", "", false );
+Dout g_neighborhood_dbg(      "Neighborhood"     , "LoadBalancers", "", false );
+Dout g_neighborhood_size_dbg( "NeighborhoodSize" , "LoadBalancers", "", false );
+Dout g_patch_assignment(      "LBPatchAssignment", "LoadBalancers", "", false );
 
 }
 
@@ -895,9 +899,6 @@ LoadBalancerCommon::problemSetup(       ProblemSpecP     & pspec
     var.recompile  = false;
     var.modified   = false;
     m_application->getUPSVars().push_back( var );
-
-    m_application->getDouts().push_back( &g_lb_dbg  );
-    m_application->getDouts().push_back( &g_neighborhood_dbg );
 
     initialized = true;
   }

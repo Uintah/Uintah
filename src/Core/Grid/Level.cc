@@ -59,8 +59,9 @@ std::atomic<int32_t> ids{0};
 Uintah::MasterLock   ids_init{};
 Uintah::MasterLock   patch_cache_mutex{};
 
-DebugStream bcout{   "BCTypes", false };
-DebugStream rgtimes{ "RGTimes", false };
+static DebugStream bcout{   "BCTypes", "Grid Level", "Grid Level BC debug stream", false };
+static DebugStream rgtimes{ "RGTimes", "Grid Level", "Grid Level time debug stream", false };
+  
 using std::map;
 using std::pair;
 

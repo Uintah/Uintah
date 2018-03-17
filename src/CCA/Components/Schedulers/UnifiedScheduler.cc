@@ -71,8 +71,8 @@ extern std::map<std::string, double> g_exec_times;
 //
 namespace {
 
-Dout g_dbg(         "Unified_DBG"        , false);
-Dout g_queuelength( "Unified_QueueLength", false);
+Dout g_dbg(         "Unified_DBG"        , "Schedulers", "", false);
+Dout g_queuelength( "Unified_QueueLength", "Schedulers", "",  false);
 
 Uintah::MasterLock g_scheduler_mutex{};           // main scheduler lock for multi-threaded task selection
 Uintah::MasterLock g_mark_task_consumed_mutex{};  // allow only one task at a time to enter the task consumed section

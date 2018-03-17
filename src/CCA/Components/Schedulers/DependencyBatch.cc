@@ -35,7 +35,7 @@ namespace Uintah {
 
 namespace {
 
-Dout g_received_dbg( "DependencyBatch", false );
+Dout g_received_dbg( "DependencyBatch", "Schedulers", "", false );
 
 Uintah::MasterLock g_received_mutex{};
 

@@ -111,7 +111,7 @@ extern Uintah::MasterLock cerrLock;
 
 namespace {
 
-Dout        g_foreign_dbg( "ForeignVariables", false);
+Dout        g_foreign_dbg( "ForeignVariables", "Schedulers", "OnDemandDataWarehouse foreign variables debug stream", false);
 
 DebugStream dbg(        "OnDemandDataWarehouse",      false );
 DebugStream warn(       "OnDemandDataWarehouse_warn", true  );

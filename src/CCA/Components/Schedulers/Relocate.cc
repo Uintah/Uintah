@@ -40,7 +40,7 @@ using namespace Uintah;
 
 extern Dout g_mpi_dbg;
 
-Dout g_total_reloc("RELOCATE_SCATTER_DBG", false);
+Dout g_total_reloc("RELOCATE_SCATTER_DBG", "Schedulers", "Relocate and scatter debug stream", false);
 
 static DebugStream coutdbg("RELOCATE_DBG", false);
 

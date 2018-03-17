@@ -45,8 +45,6 @@
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/Timers/Timers.hpp>
 
-#include <sci_defs/visit_defs.h>
-
 #include <iostream> // debug only
 #include <stack>
 #include <vector>
@@ -57,9 +55,10 @@ using namespace std;
 static DebugStream doing( "ParticleLoadBalancer_doing", false );
 static DebugStream lb(    "ParticleLoadBalancer_lb", false );
 static DebugStream dbg(   "ParticleLoadBalancer", false );
-static DebugStream stats( "LBStats", false );
-static DebugStream times( "LBTimes", false );
-static DebugStream lbout( "LBOut", false );
+
+extern DebugStream stats;
+extern DebugStream times;
+extern DebugStream lbout;
 
 ParticleLoadBalancer::ParticleLoadBalancer( const ProcessorGroup * myworld ) :
   LoadBalancerCommon(myworld)
@@ -905,22 +904,5 @@ ParticleLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid, const Simul
   m_sfc.SetMergeMode(1);
   m_sfc.SetCleanup(BATCHERS);
   m_sfc.SetMergeParameters(3000,500,2,.15);  //Should do this by profiling
-
-#ifdef HAVE_VISIT
-  static bool initialized = false;
-
-  // Running with VisIt so add in the variables that the user can
-  // modify.
-  if( m_application->getVisIt() && !initialized ) {
-    m_application->getDebugStreams().push_back( &doing  );
-    m_application->getDebugStreams().push_back( &lb );
-    m_application->getDebugStreams().push_back( &dbg );
-    m_application->getDebugStreams().push_back( &stats  );
-    m_application->getDebugStreams().push_back( &times );
-    m_application->getDebugStreams().push_back( &lbout );
-
-    initialized = true;
-  }
-#endif
 }
 

@@ -331,10 +331,6 @@ WARNING
     // Interactive state variables from components.
     virtual std::vector< interactiveVar > & getStateVars() = 0;
      
-    // Debug streams that can be turned on or off.
-    virtual std::vector< DebugStream * > & getDebugStreams() = 0;
-    virtual std::vector< Dout * > & getDouts() = 0;
-  
     virtual void setVisIt( unsigned int val ) = 0;
     virtual unsigned int  getVisIt() = 0;
 #endif

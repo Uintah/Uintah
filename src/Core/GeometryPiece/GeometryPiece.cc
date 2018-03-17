@@ -29,7 +29,7 @@
 using namespace Uintah;
 
 
-static DebugStream dbg( "GeometryPiece", false );
+DebugStream gp_dbg( "GeometryPiece", false );
 
 GeometryPiece::GeometryPiece() :
   nameSet_( false ),
@@ -51,16 +51,16 @@ GeometryPiece::outputProblemSpec( ProblemSpecP & ps ) const
 
     if( firstOutput_ ) {
       // If geom obj is named, then only output data the first time.
-      dbg << "GP::outputProblemSpec(): Full description of: " << name_ << " -- " << getType() << "\n";
+      gp_dbg << "GP::outputProblemSpec(): Full description of: " << name_ << " -- " << getType() << "\n";
       outputHelper( child_ps );
       firstOutput_ = false;
 
     } else {
-      dbg << "GP::outputProblemSpec(): Reference to: " << name_ << " -- " << getType() << "\n";
+      gp_dbg << "GP::outputProblemSpec(): Reference to: " << name_ << " -- " << getType() << "\n";
     }
 
   } else {
-    dbg << "GP::outputProblemSpec(): Full Description Of: " << name_ << " -- " << getType() << "\n";
+    gp_dbg << "GP::outputProblemSpec(): Full Description Of: " << name_ << " -- " << getType() << "\n";
     // If no name, then always print out all data.
     outputHelper( child_ps );
   }

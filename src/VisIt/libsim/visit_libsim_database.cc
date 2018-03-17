@@ -133,7 +133,7 @@ visit_handle visit_SimGetMetaData(void *cbdata)
 
   // int timestate = sim->cycle;
   
-  int &loadExtraElements = sim->loadExtraElements;
+  LoadExtra loadExtraElements = (LoadExtra) sim->loadExtraElements;
   // bool &forceMeshReload = sim->forceMeshReload;
   std::string &mesh_for_patch_data = sim->mesh_for_patch_data;
 
@@ -951,7 +951,7 @@ visit_handle visit_SimGetDomainBoundaries(const char *name, void *cbdata)
     visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
     // int timestate = sim->cycle;  
-    // int &loadExtraElements = sim->loadExtraElements;
+    // LoadExtra loadExtraElements = (LoadExtra) sim->loadExtraElements;
     // bool &forceMeshReload = sim->forceMeshReload;
     TimeStepInfo* &stepInfo = sim->stepInfo;
     
@@ -1048,7 +1048,7 @@ visit_handle visit_SimGetDomainNesting(const char *name, void *cbdata)
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
   // int timestate = sim->cycle;  
-  // int &loadExtraElements = sim->loadExtraElements;
+  // LoadExtra loadExtraElements = (LoadExtra) sim->loadExtraElements;
   // bool &forceMeshReload = sim->forceMeshReload;
   TimeStepInfo* &stepInfo = sim->stepInfo;
     
@@ -1360,7 +1360,7 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
   SchedulerP schedulerP = sim->simController->getSchedulerP();
   GridP      gridP      = sim->gridP;
 
-  // int &loadExtraElements = sim->loadExtraElements;
+  // LoadExtra loadExtraElements = (LoadExtra) sim->loadExtraElements;
   // bool &forceMeshReload = sim->forceMeshReload;
   TimeStepInfo* &stepInfo = sim->stepInfo;
 
@@ -1662,7 +1662,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
   SchedulerP schedulerP      = sim->simController->getSchedulerP();
   GridP gridP                = sim->gridP;
 
-  int  &loadExtraElements = sim->loadExtraElements;
+  LoadExtra loadExtraElements = (LoadExtra) sim->loadExtraElements;
   // bool &forceMeshReload = sim->forceMeshReload;
   std::string &mesh_for_patch_data = sim->mesh_for_patch_data;
   TimeStepInfo* &stepInfo = sim->stepInfo;
@@ -2100,7 +2100,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
     {
       gd = getGridData(schedulerP, gridP, level, local_patch, varName,
                        atoi(matl.c_str()), plow, phigh,
-                       (nodeCentered ? 0 : loadExtraElements));
+                       (LoadExtra) (nodeCentered ? 0 : loadExtraElements));
 
       if( gd )
       {

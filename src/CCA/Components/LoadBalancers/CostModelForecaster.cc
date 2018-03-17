@@ -34,8 +34,8 @@ using namespace Uintah;
    
 namespace Uintah
 {
-static DebugStream stats("ProfileStats", false);
-static DebugStream stats2("ProfileStats2", false);
+static DebugStream stats("CostModelForecasterStats", false);
+static DebugStream stats2("CostModelForecasterStats2", false);
 void
 CostModelForecaster::addContribution( DetailedTask *task, double cost )
 {

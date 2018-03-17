@@ -75,12 +75,12 @@
 
 namespace {
 
-Uintah::Dout g_sim_stats(         "SimulationStats",            true  );
-Uintah::Dout g_sim_mem_stats(     "SimulationMemStats",         true  );
-Uintah::Dout g_sim_time_stats(    "SimulationTimeStats",        false );
-Uintah::Dout g_sim_ctrl_dbg(      "SimulationController",       false );
-Uintah::Dout g_comp_timings(      "ComponentTimings",           false );
-Uintah::Dout g_indv_comp_timings( "IndividualComponentTimings", false );
+Uintah::Dout g_sim_stats(         "SimulationStats",            "SimulationController", "SimulationController stats debug stream", true  );
+Uintah::Dout g_sim_mem_stats(     "SimulationMemStats",         "SimulationController", "SimulationController memory debug stream", true  );
+Uintah::Dout g_sim_time_stats(    "SimulationTimeStats",        "SimulationController", "SimulationController time debug stream", false );
+Uintah::Dout g_sim_ctrl_dbg(      "SimulationController",       "SimulationController", "SimulationController control debug stream", false );
+Uintah::Dout g_comp_timings(      "ComponentTimings",           "SimulationController", "SimulationController component debug stream", false );
+Uintah::Dout g_indv_comp_timings( "IndividualComponentTimings", "SimulationController", "SimulationController individual component debug stream", false );
 
 }
 
@@ -643,17 +643,6 @@ SimulationController::finalSetup()
   if( amr_ps ) {
     amr_ps->get( "doMultiTaskgraphing", m_do_multi_taskgraphing );
   }
-
-#ifdef HAVE_VISIT
-  if( getVisIt() ) {
-    m_app->getDouts().push_back( &g_sim_stats );
-    m_app->getDouts().push_back( &g_sim_mem_stats );
-    m_app->getDouts().push_back( &g_sim_time_stats );
-    m_app->getDouts().push_back( &g_sim_ctrl_dbg );
-    m_app->getDouts().push_back( &g_comp_timings );
-    m_app->getDouts().push_back( &g_indv_comp_timings );
-  }
-#endif
 }
 
 //______________________________________________________________________

@@ -110,14 +110,6 @@ AMRSimulationController::run()
     var.modified   = false;
     m_app->getStateVars().push_back( var );
 
-    m_app->getDebugStreams().push_back( &amrout );
-    m_app->getDebugStreams().push_back( &dbg );
-    m_app->getDebugStreams().push_back( &dbg_barrier );
-    m_app->getDebugStreams().push_back( &dbg_dwmem );
-    m_app->getDebugStreams().push_back( &gprofile );
-    m_app->getDebugStreams().push_back( &gheapprofile );
-    m_app->getDebugStreams().push_back( &gheapchecker );
-
     m_visitSimData->myworld = d_myworld;
     visit_InitLibSim( m_visitSimData );
   }
