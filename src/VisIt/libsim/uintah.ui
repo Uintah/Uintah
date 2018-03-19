@@ -724,7 +724,7 @@
         <x>10</x>
         <y>80</y>
         <width>600</width>
-        <height>411</height>
+        <height>671</height>
        </rect>
       </property>
       <property name="title">
@@ -735,8 +735,8 @@
         <rect>
          <x>10</x>
          <y>20</y>
-         <width>251</width>
-         <height>251</height>
+         <width>281</width>
+         <height>141</height>
         </rect>
        </property>
        <property name="title">
@@ -747,8 +747,8 @@
          <rect>
           <x>10</x>
           <y>30</y>
-          <width>231</width>
-          <height>211</height>
+          <width>261</width>
+          <height>101</height>
          </rect>
         </property>
         <column>
@@ -766,10 +766,10 @@
       <widget class="QGroupBox" name="DebugStreamGroupBox">
        <property name="geometry">
         <rect>
-         <x>270</x>
-         <y>20</y>
-         <width>321</width>
-         <height>191</height>
+         <x>10</x>
+         <y>450</y>
+         <width>571</width>
+         <height>211</height>
         </rect>
        </property>
        <property name="title">
@@ -780,10 +780,15 @@
          <rect>
           <x>10</x>
           <y>30</y>
-          <width>301</width>
-          <height>151</height>
+          <width>551</width>
+          <height>171</height>
          </rect>
         </property>
+        <column>
+         <property name="text">
+          <string>Component</string>
+         </property>
+        </column>
         <column>
          <property name="text">
           <string>Debug Stream</string>
@@ -804,10 +809,10 @@
       <widget class="QGroupBox" name="OutputIntervalGroupBox">
        <property name="geometry">
         <rect>
-         <x>10</x>
-         <y>270</y>
-         <width>251</width>
-         <height>131</height>
+         <x>310</x>
+         <y>20</y>
+         <width>281</width>
+         <height>141</height>
         </rect>
        </property>
        <property name="title">
@@ -818,8 +823,8 @@
          <rect>
           <x>10</x>
           <y>30</y>
-          <width>231</width>
-          <height>91</height>
+          <width>261</width>
+          <height>101</height>
          </rect>
         </property>
         <column>
@@ -837,10 +842,10 @@
       <widget class="QGroupBox" name="DoutGroupBox">
        <property name="geometry">
         <rect>
-         <x>270</x>
-         <y>210</y>
-         <width>321</width>
-         <height>191</height>
+         <x>10</x>
+         <y>240</y>
+         <width>581</width>
+         <height>201</height>
         </rect>
        </property>
        <property name="title">
@@ -851,10 +856,15 @@
          <rect>
           <x>10</x>
           <y>30</y>
-          <width>301</width>
-          <height>151</height>
+          <width>561</width>
+          <height>161</height>
          </rect>
         </property>
+        <column>
+         <property name="text">
+          <string>Component</string>
+         </property>
+        </column>
         <column>
          <property name="text">
           <string>Dout</string>
@@ -872,56 +882,56 @@
         </column>
        </widget>
       </widget>
-     </widget>
-     <widget class="QGroupBox" name="groupBox">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>500</y>
-        <width>261</width>
-        <height>141</height>
-       </rect>
-      </property>
-      <property name="title">
-       <string>Database</string>
-      </property>
-      <widget class="QComboBox" name="LoadExtraElements">
-       <property name="geometry">
-        <rect>
-         <x>140</x>
-         <y>30</y>
-         <width>105</width>
-         <height>30</height>
-        </rect>
-       </property>
-       <item>
-        <property name="text">
-         <string>None</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string notr="true">Cells</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Patches</string>
-        </property>
-       </item>
-      </widget>
-      <widget class="QLabel" name="LoadExtraElementsLabel">
+      <widget class="QGroupBox" name="groupBox">
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>30</y>
-         <width>131</width>
-         <height>16</height>
+         <y>170</y>
+         <width>281</width>
+         <height>61</height>
         </rect>
        </property>
-       <property name="text">
-        <string>Load extra elements</string>
+       <property name="title">
+        <string>Database</string>
        </property>
+       <widget class="QComboBox" name="LoadExtraElements">
+        <property name="geometry">
+         <rect>
+          <x>160</x>
+          <y>20</y>
+          <width>105</width>
+          <height>30</height>
+         </rect>
+        </property>
+        <item>
+         <property name="text">
+          <string>None</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string notr="true">Cells</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Patches</string>
+         </property>
+        </item>
+       </widget>
+       <widget class="QLabel" name="LoadExtraElementsLabel">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>30</y>
+          <width>131</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Load extra elements</string>
+        </property>
+       </widget>
       </widget>
      </widget>
     </widget>

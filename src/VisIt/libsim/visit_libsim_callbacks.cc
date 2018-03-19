@@ -1250,15 +1250,15 @@ void visit_DebugStreamCallback(char *val, void *cbdata)
   // Find the debugStream
   DebugStream *debugStream = nullptr;
     
-  // int i = 0;
-  // for (auto iter = DebugStream::m_all_debugStreams.begin();
-  //      iter != DebugStream::m_all_debugStreams.end();
-  //      ++iter, ++i) {
-  //   if( i == row ) {
-  //     debugStream = (*iter).second;
-  //     break;
-  //   }
-  // }
+  int i = 0;
+  for (auto iter = DebugStream::m_all_debugStreams.begin();
+       iter != DebugStream::m_all_debugStreams.end();
+       ++iter, ++i) {
+    if( i == row ) {
+      debugStream = (*iter).second;
+      break;
+    }
+  }
 
   if( debugStream && column == 1 )
   {
@@ -1280,7 +1280,7 @@ void visit_DebugStreamCallback(char *val, void *cbdata)
     
     if( debugStream->m_outstream == nullptr )
     {
-      debugStream->setFilename( "std::cout" );
+      debugStream->setFilename( "cout" );
       debugStream->m_outstream = &std::cout;
     }
   }
@@ -1288,12 +1288,12 @@ void visit_DebugStreamCallback(char *val, void *cbdata)
   {
     if( text.find("cerr") != std::string::npos )
     {
-      debugStream->setFilename( "std::cerr" );
+      debugStream->setFilename( "cerr" );
       debugStream->m_outstream = &std::cerr;
     }
     else if( text.find("cout") != std::string::npos )
     {
-      debugStream->setFilename( "std::cout" );
+      debugStream->setFilename( "cout" );
       debugStream->m_outstream = &std::cout;
     }
     else

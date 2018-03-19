@@ -855,31 +855,33 @@ void visit_SetDebugStreams( visit_simulation_data *sim )
   VisItUI_setTableValueS("DebugStreamTable",
                          -1, -1, "CLEAR_TABLE", 0);
 
-  // if( DebugStream::m_all_debugStreams.size() )
-  // {
-  //   VisItUI_setValueS( "DebugStreamGroupBox", "SHOW_WIDGET", 1);
+  if( DebugStream::m_all_debugStreams.size() )
+  {
+    VisItUI_setValueS( "DebugStreamGroupBox", "SHOW_WIDGET", 1);
 
-  //   int i = 0;
+    int i = 0;
     
-  //   for (auto iter = DebugStream::m_all_debugStreams.begin();
-  // 	 iter != DebugStream::m_all_debugStreams.end();
-  // 	 ++iter, ++i)
-  //   {
-  //     // Add in the stream and state.
-  //     std::string name      = (*iter).second->getName();
-  //     std::string component = (*iter).second->getComponent();
-  //     std::string filename  = (*iter).second->getFilename();
-  //     bool        active    = (*iter).second->active();
+    for (auto iter = DebugStream::m_all_debugStreams.begin();
+  	 iter != DebugStream::m_all_debugStreams.end();
+  	 ++iter, ++i)
+    {
+      // Add in the stream and state.
+      std::string name      = (*iter).second->getName();
+      std::string component = (*iter).second->getComponent();
+      std::string filename  = (*iter).second->getFilename();
+      bool        active    = (*iter).second->active();
 
-  //     VisItUI_setTableValueS("DebugStreamTable",
-  //                            i, 0, (component+":"+name).c_str(), 0);
-  //     VisItUI_setTableValueS("DebugStreamTable",
-  //                            i, 1, (active ? "true":"false"), 1);
-  //     VisItUI_setTableValueS("DebugStreamTable",
-  //                            i, 2, filename.c_str(), 1);
-  //   }
-  // }
-  // else
+      VisItUI_setTableValueS("DebugStreamTable",
+                             i, 0, component.c_str(), 0);
+      VisItUI_setTableValueS("DebugStreamTable",
+                             i, 1, name.c_str(), 0);
+      VisItUI_setTableValueS("DebugStreamTable",
+                             i, 2, (active ? "true":"false"), 1);
+      VisItUI_setTableValueS("DebugStreamTable",
+                             i, 3, filename.c_str(), 1);
+    }
+  }
+  else
     VisItUI_setValueS( "DebugStreamGroupBox", "HIDE_WIDGET", 0);
 }
 
@@ -912,11 +914,13 @@ void visit_SetDouts( visit_simulation_data *sim )
       bool        active    = (*iter).second->active();
 
       VisItUI_setTableValueS("DoutTable",
-                             i, 0, (component+":"+name).c_str(), 0);
+                             i, 0, component.c_str(), 0);
       VisItUI_setTableValueS("DoutTable",
-                             i, 1, (active ? "true":"false"), 1);
+                             i, 1, name.c_str(), 0);
       VisItUI_setTableValueS("DoutTable",
-                             i, 2, filename.c_str(), 0);
+                             i, 2, (active ? "true":"false"), 1);
+      VisItUI_setTableValueS("DoutTable",
+                             i, 3, filename.c_str(), 0);
     }
   }
   else
