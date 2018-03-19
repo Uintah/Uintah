@@ -40,7 +40,7 @@ using namespace Uintah;
 using namespace std;
 
 // export SCI_DEBUG="BC_dbg:+"
-DebugStream BC_dbg("BC_dbg", "Grid Boundary Conditions", "", false);
+DebugStream BC_dbg("BC_dbg", "Grid_BoundaryConditions", "", false);
 
 //--------------------------------------------------------------------------------------------------
 

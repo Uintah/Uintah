@@ -88,7 +88,7 @@ DebugStream::DebugStream( const std::string& name, bool defaulton )
   , m_component( "Unknown" )
   , m_description( "No description" )
   , m_active( defaulton )
-  , m_filename( "std::cout" )
+  , m_filename( "cout" )
 {
   m_dbgbuf.m_owner = this;
     
@@ -110,7 +110,7 @@ DebugStream::DebugStream( const std::string& name,
   , m_component( component )
   , m_description( description )
   , m_active( defaulton )
-  , m_filename( "std::cout" )
+  , m_filename( "cout" )
 {
   m_dbgbuf.m_owner = this;
     
@@ -132,28 +132,29 @@ DebugStream::~DebugStream()
 void
 DebugStream::checkName()
 {
+  // Commnent out this if statement and the SCI_THROW to see all
+  // name conflicts.      
+  if( m_component != "" && m_component != "Unknown" )
+  {
     // See if the name has already been registered.
     auto iter = m_all_debugStreams.find(m_name);
     
     if ( iter != m_all_debugStreams.end()) {
 
-      // Commnent out this if statement to see all name conflicts.
-      if( m_component != "" && m_component != "Unknown" )
-      {
-	printf("These two debugStreams are for the same component and have the same name. \n");
-	(*iter).second->print();
-	print();
+      printf("These two debugStreams are for the same component and have the same name. \n");
+      (*iter).second->print();
+      print();
       
-	// Two debugStreams for the same compent with the same name.
-	SCI_THROW(InternalError(std::string("Multiple DebugStreams for component " +
-					    m_component + " with name " + m_name),
-				__FILE__, __LINE__));
-      }
+      // Two debugStreams for the same compent with the same name.
+      SCI_THROW(InternalError(std::string("Multiple DebugStreams for component " +
+					  m_component + " with name " + m_name),
+			      __FILE__, __LINE__));
     }
     else
     {
       m_all_debugStreams[m_name] = this;
     }
+  }
 }  
 
 void
@@ -205,7 +206,7 @@ DebugStream::checkEnv()
 
 	// if no output file was specified, set to cout
 	if( file.length() == 1 ) {
-	  m_filename = std::string( "std::cout" );
+	  m_filename = std::string( "cout" );
 	  m_outstream = &std::cout;
 	}
 	else if( file.length() > 1 ) {

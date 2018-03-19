@@ -43,7 +43,7 @@ std::map<std::string, VarLabel*> VarLabel::g_all_labels;
 
 namespace {
 
-Dout g_varlabel_dbg( "VarLabel", "Grid Variables", "VarLabel debug stream", false );
+Dout g_varlabel_dbg( "VarLabel", "Grid_Variables", "VarLabel debug stream", false );
   
 Uintah::MasterLock g_label_mutex{};
 

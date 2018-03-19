@@ -50,7 +50,7 @@
 using namespace std;
 using namespace Uintah;
 
-Dout g_dbg("GRID", "Core/Grid", "Grid debug stream", false);
+Dout g_dbg("GRID", "Grid", "Grid debug stream", false);
 
 //______________________________________________________________________
 //
