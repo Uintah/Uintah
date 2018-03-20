@@ -38,12 +38,12 @@ void
 SurfaceVolumeFractionCalc::create_local_labels(){
 
   // CC fields
-  register_new_variable<CCVariable<double> >( "cc_volume_fraction" );
+  register_new_variable<CCVariable<double> >( "volFraction" );
   register_new_variable<SFCXVariable<double> >( "fx_volume_fraction" );
   register_new_variable<SFCYVariable<double> >( "fy_volume_fraction" );
   register_new_variable<SFCZVariable<double> >( "fz_volume_fraction" );
 
-  m_var_names.push_back( "cc_volume_fraction" );
+  m_var_names.push_back( "volFraction" );
   m_var_names.push_back( "fx_volume_fraction" );
   m_var_names.push_back( "fy_volume_fraction" );
   m_var_names.push_back( "fz_volume_fraction" );
@@ -65,7 +65,7 @@ SurfaceVolumeFractionCalc::initialize( const Patch* patch, ArchesTaskInfoManager
 
   typedef CCVariable<double> T;
 
-  T& cc_vf = tsk_info->get_uintah_field_add<T>("cc_volume_fraction");
+  T& cc_vf = tsk_info->get_uintah_field_add<T>("volFraction");
   SFCXVariable<double>& fx_vf = tsk_info->get_uintah_field_add<SFCXVariable<double> >("fx_volume_fraction");
   SFCYVariable<double>& fy_vf = tsk_info->get_uintah_field_add<SFCYVariable<double> >("fy_volume_fraction");
   SFCZVariable<double>& fz_vf = tsk_info->get_uintah_field_add<SFCZVariable<double> >("fz_volume_fraction");
@@ -127,7 +127,7 @@ SurfaceVolumeFractionCalc::initialize( const Patch* patch, ArchesTaskInfoManager
         Uintah::Iterator cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
 
         for ( cell_iter.reset(); !cell_iter.done(); cell_iter++ ){
-          cc_vf[*cell_iter] = 0.0; 
+          cc_vf[*cell_iter] = 0.0;
         }
 
       }
@@ -149,8 +149,8 @@ SurfaceVolumeFractionCalc::register_timestep_init( ArchesVIVector& variable_regi
 void
 SurfaceVolumeFractionCalc::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  CCVariable<double>& cc_vol_frac = tsk_info->get_uintah_field_add<CCVariable<double> >("cc_volume_fraction");
-  constCCVariable<double>& cc_vol_frac_old = tsk_info->get_const_uintah_field_add<constCCVariable<double> >("cc_volume_fraction");
+  CCVariable<double>& cc_vol_frac = tsk_info->get_uintah_field_add<CCVariable<double> >("volFraction");
+  constCCVariable<double>& cc_vol_frac_old = tsk_info->get_const_uintah_field_add<constCCVariable<double> >("volFraction");
 
   cc_vol_frac.copyData(cc_vol_frac_old);
 

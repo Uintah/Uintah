@@ -310,7 +310,7 @@ namespace Uintah{ namespace ArchesCore{
   struct GridVarMap {
     std::string vol_frac_name = "NOT_AVAILABLE";
   };
-  
+
   template <>
   struct GridVarMap<CCVariable<double> >{
     void problemSetup( ProblemSpecP db ){
@@ -319,7 +319,7 @@ namespace Uintah{ namespace ArchesCore{
       wvel_name = parse_ups_for_role( WVELOCITY, db, "NotSet" );
       mu_name = parse_ups_for_role( TOTAL_VISCOSITY, db, "NotSet");
     }
-    std::string vol_frac_name = "cc_volume_fraction";
+    std::string vol_frac_name = "volFraction";
     std::string mu_name;
     std::string uvel_name;
     std::string vvel_name;
