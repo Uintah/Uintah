@@ -91,16 +91,17 @@ namespace Uintah {
     virtual const VarLabel* getDelTLabel() const { return m_delTLabel; }
 
   protected:
-    Output*    m_output    {nullptr};
-    Scheduler* m_scheduler {nullptr};
+    ApplicationInterface*  m_application {nullptr};
+    Output*                m_output      {nullptr};
+    Scheduler*             m_scheduler   {nullptr};
 
     SimulationStateP m_sharedState {nullptr};
     
     ProblemSpecP m_module_spec {nullptr};
 
-    const VarLabel* m_timeStepLabel {nullptr};
+    const VarLabel* m_timeStepLabel       {nullptr};
     const VarLabel* m_simulationTimeLabel {nullptr};
-    const VarLabel* m_delTLabel {nullptr};
+    const VarLabel* m_delTLabel           {nullptr};
   };
 }
 
