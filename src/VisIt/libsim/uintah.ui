@@ -24,7 +24,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>2</number>
+     <number>0</number>
     </property>
     <widget class="QWidget" name="tab">
      <attribute name="title">
@@ -78,7 +78,7 @@
         <string>Time Step</string>
        </property>
       </widget>
-      <widget class="QLineEdit" name="Timestep">
+      <widget class="QLineEdit" name="TimeStep">
        <property name="geometry">
         <rect>
          <x>110</x>
@@ -124,7 +124,7 @@
         <string>Max Time Step</string>
        </property>
       </widget>
-      <widget class="QLineEdit" name="MaxTimestep">
+      <widget class="QLineEdit" name="MaxTimeStep">
        <property name="geometry">
         <rect>
          <x>110</x>
@@ -812,7 +812,7 @@
          <x>310</x>
          <y>20</y>
          <width>281</width>
-         <height>141</height>
+         <height>211</height>
         </rect>
        </property>
        <property name="title">
@@ -824,7 +824,7 @@
           <x>10</x>
           <y>30</y>
           <width>261</width>
-          <height>101</height>
+          <height>171</height>
          </rect>
         </property>
         <column>
@@ -951,8 +951,8 @@
  </widget>
  <tabstops>
   <tabstop>tabWidget</tabstop>
-  <tabstop>Timestep</tabstop>
-  <tabstop>MaxTimestep</tabstop>
+  <tabstop>TimeStep</tabstop>
+  <tabstop>MaxTimeStep</tabstop>
   <tabstop>Time</tabstop>
   <tabstop>MaxTime</tabstop>
   <tabstop>ClampTimestepsToOutput</tabstop>

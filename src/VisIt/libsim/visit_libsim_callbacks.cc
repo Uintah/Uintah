@@ -954,7 +954,7 @@ void visit_OutputIntervalVariableCallback(char *val, void *cbdata)
     if( output->getOutputInterval() > 0 )
       output->setOutputInterval( value );
     // Output interval based on timestep.
-    else
+    else // if( output->getOutputTimeStepInterval() > 0 )
       output->setOutputTimeStepInterval( value );
   }
  
@@ -964,9 +964,18 @@ void visit_OutputIntervalVariableCallback(char *val, void *cbdata)
     // Checkpoint interval based on times.
     if( output->getCheckpointInterval() > 0 )
       output->setCheckpointInterval( value );
-    // Checkpoint interval based on timestep.
-    else
+    // Checkpoint interval based on the wall time.
+    else if( output->getCheckpointWallTimeInterval() > 0 )
+      output->setCheckpointWallTimeInterval( value );
+    // Checkpoint interval based on the time step.
+    else // if( output->getCheckpointTimeStepInterval() > 0 )
       output->setCheckpointTimeStepInterval( value );
+  }
+
+  // Checkpoint cycle.
+  else if( row == CheckpointCycleRow )
+  {
+    output->setCheckpointCycle( value );
   }
 }
 

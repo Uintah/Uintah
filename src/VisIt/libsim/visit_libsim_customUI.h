@@ -52,7 +52,8 @@ WARNING
 ****************************************/
 
 #define OutputIntervalRow         0
-#define CheckpointIntervalRow     1
+#define CheckpointIntervalRow     3
+#define CheckpointCycleRow        6
 
 class visit_simulation_data;
 

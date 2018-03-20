@@ -192,18 +192,25 @@ void visit_SetOutputIntervals( visit_simulation_data *sim )
     // Add in the output and checkout intervals.
     std::string name;
     double val;
-      
+
+    std::string nextName;
+    double nextVal;
+
     // Output interval based on time.
     if( output->getOutputInterval() > 0 )
     {
       name = "OutputInterval";
       val = output->getOutputInterval();
-    }
+      nextName = "NextOutput";
+      nextVal = output->getNextOutputTime();
+    } 
     // Output interval based on time step.
-    else
+    else // if( output->getOutputTimeStepInterval() > 0 )
     {
       name = "OutputTimeStepInterval";
       val = output->getOutputTimeStepInterval();
+      nextName = "OutputTimeStep";
+      nextVal = output->getNextOutputTimeStep();
     }
 
     // This var must be in row specified by OutputIntervalRow so
@@ -213,25 +220,69 @@ void visit_SetOutputIntervals( visit_simulation_data *sim )
     VisItUI_setTableValueD("OutputIntervalVariableTable",
                            OutputIntervalRow, 1, val, 1);
     
-    // Checkpoint interval based on times.
+    // This var must be in row specified by OutputIntervalRow
+    VisItUI_setTableValueS("OutputIntervalVariableTable",
+                           OutputIntervalRow+1, 0, nextName.c_str(),  0);
+    VisItUI_setTableValueD("OutputIntervalVariableTable",
+                           OutputIntervalRow+1, 1, nextVal, 0);
+    
+    // This var must be in row specified by OutputIntervalRow
+    VisItUI_setTableValueS("OutputIntervalVariableTable",
+                           OutputIntervalRow+2, 0, "isOutputTimeStep",  0);
+    VisItUI_setTableValueI("OutputIntervalVariableTable",
+                           OutputIntervalRow+2, 1, output->isOutputTimeStep(), 0);
+    
+    // Checkpoint interval based on sim time.
     if( output->getCheckpointInterval() > 0 )
     {
       name = "CheckpointInterval";
+      nextName = "NextCheckpoint";
       val = output->getCheckpointInterval();
+      nextVal = output->getNextCheckpointTime();
     }
-      // Checkpoint interval based on timestep.
-    else
+    // Checkpoint interval based on the wall time.
+    else if( output->getCheckpointWallTimeInterval() > 0 )
+    {
+      name = "CheckpointWallTimeInterval";
+      val = output->getCheckpointWallTimeInterval();
+      nextName = "NextCheckpointWallTime";
+      nextVal = output->getNextCheckpointWallTime();
+    }
+    // Checkpoint interval based on the time step.
+    else // if( output->getCheckpointTimeStepInterval() > 0 )
     {
       name = "CheckpointTimeStepInterval";
       val = output->getCheckpointTimeStepInterval();
+      nextName = "NextCheckpointTimeStep";
+      nextVal = output->getNextCheckpointTimeStep();
     }
-
+    
     // This var must be in row specified by CheckpointIntervalRow so
     // that the callback OutputIntervalVariableTableCallback can get it.
     VisItUI_setTableValueS("OutputIntervalVariableTable",
                            CheckpointIntervalRow, 0, name.c_str(),  0);
     VisItUI_setTableValueD("OutputIntervalVariableTable",
                            CheckpointIntervalRow, 1, val, 1);
+
+    // This var must be in row specified by CheckpointIntervalRow
+    VisItUI_setTableValueS("OutputIntervalVariableTable",
+                           CheckpointIntervalRow+1, 0, nextName.c_str(), 0);
+    VisItUI_setTableValueD("OutputIntervalVariableTable",
+                           CheckpointIntervalRow+1, 1, nextVal, 0);
+
+
+    // This var must be in row specified by CheckpointIntervalRow
+    VisItUI_setTableValueS("OutputIntervalVariableTable",
+                           CheckpointIntervalRow+2, 0, "isCheckpointTimeStep", 0);
+    VisItUI_setTableValueI("OutputIntervalVariableTable",
+                           CheckpointIntervalRow+2, 1, output->isCheckpointTimeStep(), 0);
+
+
+    // This var must be in row specified by CheckpointCyclelRow
+    VisItUI_setTableValueS("OutputIntervalVariableTable",
+                           CheckpointCycleRow, 0, "CheckpointCycle",  0);
+    VisItUI_setTableValueI("OutputIntervalVariableTable",
+                           CheckpointCycleRow, 1, output->getCheckpointCycle(), 1);
   }
   else
     VisItUI_setValueS( "OutputIntervalGroupBox", "HIDE_WIDGET", 0);
