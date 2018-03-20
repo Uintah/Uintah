@@ -138,9 +138,10 @@ namespace Uintah {
     { return m_modelComputesThermoTransportProps; }
 
   protected:
-    Scheduler * m_scheduler {nullptr};
-    Regridder * m_regridder {nullptr};
-    Output    * m_output    {nullptr};
+    ApplicationInterface   * m_application {nullptr};
+    Scheduler              * m_scheduler   {nullptr};
+    Regridder              * m_regridder   {nullptr};
+    Output                 * m_output      {nullptr};
    
     SimulationStateP m_sharedState {nullptr};
     

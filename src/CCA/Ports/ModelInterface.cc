@@ -49,15 +49,22 @@ void ModelInterface::setComponents( ApplicationInterface *comp )
   setAMR( parent->isAMR() );
   setDynamicRegridding( parent->isDynamicRegridding() );
   
-  attachPort( "scheduler", parent->getScheduler() );
-  attachPort( "regridder", parent->getRegridder() );
-  attachPort( "output",    parent->getOutput() );
+  attachPort( "application", parent );
+  attachPort( "scheduler",   parent->getScheduler() );
+  attachPort( "regridder",   parent->getRegridder() );
+  attachPort( "output",      parent->getOutput() );
 
   getComponents();
 }
 
 void ModelInterface::getComponents()
 {
+  m_application = dynamic_cast<ApplicationInterface*>( getPort("application") );
+
+  if( !m_application ) {
+    throw InternalError("dynamic_cast of 'm_application' failed!", __FILE__, __LINE__);
+  }
+
   m_scheduler = dynamic_cast<Scheduler*>( getPort("scheduler") );
 
   if( !m_scheduler ) {
@@ -79,10 +86,12 @@ void ModelInterface::getComponents()
 
 void ModelInterface::releaseComponents()
 {
+  releasePort( "application" );
   releasePort( "scheduler" );
   releasePort( "regridder" );
   releasePort( "output" );
 
+  m_application  = nullptr;
   m_scheduler    = nullptr;
   m_regridder    = nullptr;
   m_output       = nullptr;
