@@ -55,8 +55,6 @@
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/Timers/Timers.hpp>
 
-#include <sci_defs/visit_defs.h>
-
 #include <cerrno>
 #include <cstdlib>
 #include <fstream>
@@ -524,18 +522,6 @@ SchedulerCommon::problemSetup( const ProblemSpecP     & prob_spec
 
   m_no_scrub_vars.insert("refineFlag");
   m_no_scrub_vars.insert("refinePatchFlag");
-  
-// #ifdef HAVE_VISIT
-//   static bool initialized = false;
-
-//   // Running with VisIt so add in the variables that the user can
-//   // modify.
-//   if( m_sharedState->getVisIt() && !initialized ) {
-//      m_sharedState->d_douts.push_back( &g_schedulercommon_dbg  );
-
-//     initialized = true;
-//   }
-// #endif
 }
 
 //______________________________________________________________________
