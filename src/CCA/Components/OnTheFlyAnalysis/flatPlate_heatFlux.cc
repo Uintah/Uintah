@@ -23,15 +23,19 @@
  */
 
 #include <CCA/Components/OnTheFlyAnalysis/flatPlate_heatFlux.h>
+
+#include <CCA/Components/MPM/Core/MPMLabel.h>
+
+#include <CCA/Ports/ApplicationInterface.h>
 #include <CCA/Ports/Scheduler.h>
+
+#include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Box.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/NodeIterator.h>
-#include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Exceptions/InternalError.h>
 #include <Core/Util/DebugStream.h>
 
 #include <sci_defs/visit_defs.h>
@@ -186,17 +190,17 @@ void flatPlate_heatFlux::problemSetup(const ProblemSpecP& ,
   p->endPt   = end;
   d_plane.push_back(p);
   
-// #ifdef HAVE_VISIT
-//   if( sharedState->getVisIt() ) {
-//     SimulationState::analysisVar aVar;
-//     aVar.name  = M_lb->gHeatFluxLabel->getName();
-//     aVar.matl  = d_matl->getDWIndex();
-//     aVar.level = -1;
-//     aVar.labels.push_back( v_lb->total_heatRateLabel );
+#ifdef HAVE_VISIT
+  if( m_application->getVisIt() ) {
+    ApplicationInterface::analysisVar aVar;
+    aVar.name  = M_lb->gHeatFluxLabel->getName();
+    aVar.matl  = d_matl->getDWIndex();
+    aVar.level = -1;
+    aVar.labels.push_back( v_lb->total_heatRateLabel );
     
-//     m_sharedState->d_analysisVars.push_back(aVar);
-//   }
-// #endif
+    m_application->getAnalysisVars().push_back(aVar);
+  }
+#endif
 }
 
 //______________________________________________________________________
