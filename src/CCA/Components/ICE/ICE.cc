@@ -592,6 +592,18 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
 
     // variable 2 - Must start with the component name and have NO
     // spaces in the var name
+    var.name     = "ICE-referencePressure";
+    var.type     = Uintah::TypeDescription::double_type;
+    var.value    = (void *) &d_ref_press;
+    var.range[0]   = -1.0e9;
+    var.range[1]   = +1.0e9;
+    var.modifiable = true;
+    var.recompile  = false;
+    var.modified   = false;
+    m_UPSVars.push_back( var );
+
+    // variable 3 - Must start with the component name and have NO
+    // spaces in the var name
     var.name     = "ICE-gravity";
     var.type     = Uintah::TypeDescription::Vector;
     var.value    = (void *) &d_gravity;
