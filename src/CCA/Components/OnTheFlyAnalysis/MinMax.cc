@@ -474,8 +474,8 @@ void MinMax::computeMinMax(const ProcessorGroup* pg,
   DataWarehouse * dw = m_scheduler->get_dw(0);
   
   delt_vartype delt_var;
-  if( dw->exists( getDelTLabel() ) ) {
-    m_scheduler->get_dw(0)->get( delt_var, getDelTLabel() );
+  if( dw->exists( m_delTLabel ) ) {
+    m_scheduler->get_dw(0)->get( delt_var, m_delTLabel );
     now += delt_var;
   }
 
@@ -616,8 +616,8 @@ void MinMax::doAnalysis(const ProcessorGroup* pg,
   DataWarehouse * dw = m_scheduler->get_dw(0);
   
   delt_vartype delt_var;
-  if( dw->exists( getDelTLabel() ) ) {
-    m_scheduler->get_dw(0)->get( delt_var, getDelTLabel() );
+  if( dw->exists( m_delTLabel ) ) {
+    m_scheduler->get_dw(0)->get( delt_var, m_delTLabel );
     now += delt_var;
   }
 

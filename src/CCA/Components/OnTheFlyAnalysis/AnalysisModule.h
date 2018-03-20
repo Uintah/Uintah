@@ -81,8 +81,6 @@ namespace Uintah {
     virtual void scheduleDoAnalysis_preReloc(SchedulerP& sched,
                                     const LevelP& level) =0;
 
-    virtual const VarLabel* getDelTLabel() const { return m_delTLabel; }
-
   protected:
     ApplicationInterface*  m_application {nullptr};
     Output*                m_output      {nullptr};
