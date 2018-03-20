@@ -48,13 +48,6 @@ namespace Uintah {
   class AnalysisModule : public UintahParallelComponent {
   public:
     
-    // Other stats that can be used by individual components.
-    // enum OtherStat
-    // {
-    //   OnTheFlyAnalysisMinMaxTime = 0,
-    //   MAX_OTHER_STATS
-    // };
-    
     AnalysisModule(const ProcessorGroup* myworld,
 		   const SimulationStateP sharedState,
 		   const ProblemSpecP& module_spec);
