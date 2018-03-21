@@ -213,20 +213,20 @@ void visit_SetOutputIntervals( visit_simulation_data *sim )
       nextVal = output->getNextOutputTimeStep();
     }
 
-    // This var must be in row specified by OutputIntervalRow so
+    // This var must be in the row specified by OutputIntervalRow so
     // that the callback OutputIntervalVariableTableCallback can get it.
     VisItUI_setTableValueS("OutputIntervalVariableTable",
                            OutputIntervalRow, 0, name.c_str(),  0);
     VisItUI_setTableValueD("OutputIntervalVariableTable",
                            OutputIntervalRow, 1, val, 1);
     
-    // This var must be in row specified by OutputIntervalRow
+    // This var must be in the row specified by OutputIntervalRow
     VisItUI_setTableValueS("OutputIntervalVariableTable",
                            OutputIntervalRow+1, 0, nextName.c_str(),  0);
     VisItUI_setTableValueD("OutputIntervalVariableTable",
                            OutputIntervalRow+1, 1, nextVal, 0);
     
-    // This var must be in row specified by OutputIntervalRow
+    // This var must be in the row specified by OutputIntervalRow
     VisItUI_setTableValueS("OutputIntervalVariableTable",
                            OutputIntervalRow+2, 0, "isOutputTimeStep",  0);
     VisItUI_setTableValueI("OutputIntervalVariableTable",
@@ -257,21 +257,21 @@ void visit_SetOutputIntervals( visit_simulation_data *sim )
       nextVal = output->getNextCheckpointTimeStep();
     }
     
-    // This var must be in row specified by CheckpointIntervalRow so
+    // This var must be in the row specified by CheckpointIntervalRow so
     // that the callback OutputIntervalVariableTableCallback can get it.
     VisItUI_setTableValueS("OutputIntervalVariableTable",
                            CheckpointIntervalRow, 0, name.c_str(),  0);
     VisItUI_setTableValueD("OutputIntervalVariableTable",
                            CheckpointIntervalRow, 1, val, 1);
 
-    // This var must be in row specified by CheckpointIntervalRow
+    // This var must be in the row specified by CheckpointIntervalRow
     VisItUI_setTableValueS("OutputIntervalVariableTable",
                            CheckpointIntervalRow+1, 0, nextName.c_str(), 0);
     VisItUI_setTableValueD("OutputIntervalVariableTable",
                            CheckpointIntervalRow+1, 1, nextVal, 0);
 
 
-    // This var must be in row specified by CheckpointIntervalRow
+    // This var must be in the row specified by CheckpointIntervalRow
     VisItUI_setTableValueS("OutputIntervalVariableTable",
                            CheckpointIntervalRow+2, 0, "isCheckpointTimeStep", 0);
     VisItUI_setTableValueI("OutputIntervalVariableTable",
@@ -562,6 +562,14 @@ void visit_SetUPSVars( visit_simulation_data *sim )
         {
           double *val = (double*) var.value;
           VisItUI_setTableValueD("UPSVariableTable", i, 1, *val, 1);
+        }
+        break;
+            
+        case Uintah::TypeDescription::Point:
+        {
+          Point *val = (Point*) var.value;
+          VisItUI_setTableValueV("UPSVariableTable", i, 1,
+                                 val->x(), val->y(), val->z(), 1);
         }
         break;
             
@@ -868,14 +876,22 @@ void visit_SetStateVars( visit_simulation_data *sim )
           VisItUI_setTableValueI("StateVariableTable", i, 1, *val, 1);
         }
         break;
-            
+
         case Uintah::TypeDescription::double_type:
         {
           double *val = (double*) var.value;
           VisItUI_setTableValueD("StateVariableTable", i, 1, *val, 1);
         }
         break;
-            
+
+        case Uintah::TypeDescription::Point:
+        {
+          Point *val = (Point*) var.value;
+          VisItUI_setTableValueV("StateVariableTable", i, 1,
+                                 val->x(), val->y(), val->z(), 1);
+        }
+        break;
+	
         case Uintah::TypeDescription::Vector:
         {
           Vector *val = (Vector*) var.value;

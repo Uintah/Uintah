@@ -893,6 +893,36 @@ void visit_UPSVariableCallback(char *val, void *cbdata)
       break;
     }
     
+    case Uintah::TypeDescription::Point:
+    {
+      double x, y, z;
+      sscanf(text.c_str(), "%lf,%lf,%lf", &x, &y, &z);
+
+      Point *val = (Point*) var.value;
+      Point oldValue = *val;
+      Point newValue = Point(x, y, z);
+
+      if( newValue.x() < (double) var.range[0] ||
+	  (double) var.range[1] < newValue.x() ||
+	  newValue.y() < (double) var.range[0] ||
+	  (double) var.range[1] < newValue.y() ||
+	  newValue.z() < (double) var.range[0] ||
+	  (double) var.range[1] < newValue.z() )
+      {
+        std::stringstream msg;
+        msg << "Visit libsim - the value (" << newValue << ") for "
+            << var.name << " is outside the range [" << var.range[0] << ", "
+            << var.range[1] << "]. Resetting value.";
+        VisItUI_setValueS("SIMULATION_MESSAGE_BOX", msg.str().c_str(), 1);
+        visit_SetUPSVars( sim );
+        return;
+      }
+
+      *val = newValue;
+
+      visit_VarModifiedMessage( sim, var.name, oldValue, newValue );
+      break;
+    }
     case Uintah::TypeDescription::Vector:
     {
       double x, y, z;
@@ -1201,6 +1231,36 @@ void visit_StateVariableCallback(char *val, void *cbdata)
       break;
     }
     
+    case Uintah::TypeDescription::Point:
+    {
+      double x, y, z;
+      sscanf(text.c_str(), "%lf,%lf,%lf", &x, &y, &z);
+
+      Point *val = (Point*) var.value;
+      Point oldValue = *val;
+      Point newValue = Point(x, y, z);
+
+      if( newValue.x() < (double) var.range[0] ||
+	  (double) var.range[1] < newValue.x() ||
+	  newValue.y() < (double) var.range[0] ||
+	  (double) var.range[1] < newValue.y() ||
+	  newValue.z() < (double) var.range[0] ||
+	  (double) var.range[1] < newValue.z() )
+      {
+        std::stringstream msg;
+        msg << "Visit libsim - the value (" << newValue << ") for "
+            << var.name << " is outside the range [" << var.range[0] << ", "
+            << var.range[1] << "]. Resetting value.";
+        VisItUI_setValueS("SIMULATION_MESSAGE_BOX", msg.str().c_str(), 1);
+        visit_SetStateVars( sim );
+        return;
+      }
+
+      *val = newValue;
+
+      visit_VarModifiedMessage( sim, var.name, oldValue, newValue );
+      break;
+    }
     case Uintah::TypeDescription::Vector:
     {
       double x, y, z;
