@@ -304,6 +304,7 @@ WARNING
   public:
     // Reduction analysis variables for on the fly analysis
     struct analysisVar {
+      std::string component;
       std::string name;
       int matl;
       int level;
@@ -315,6 +316,7 @@ WARNING
     // Interactive variables from the UPS problem spec or other state
     // variables.
     struct interactiveVar {
+      std::string component;
       std::string name;
       TypeDescription::Type type;
       void * value;
