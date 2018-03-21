@@ -53,8 +53,8 @@ static DebugStream cout_doing("VORTICITY_DOING_COUT", false);
 static DebugStream cout_dbg("VORTICITY_DBG_COUT", false);
 //______________________________________________________________________
 vorticity::vorticity(const ProcessorGroup* myworld,
-		     const SimulationStateP sharedState,
-		     const ProblemSpecP& module_spec)
+                     const SimulationStateP sharedState,
+                     const ProblemSpecP& module_spec)
   : AnalysisModule(myworld, sharedState, module_spec)
 {
   d_matl_set = 0;
@@ -96,11 +96,15 @@ void vorticity::problemSetup(const ProblemSpecP& ,
   d_matl_set->addReference();
   d_matl_sub = d_matl_set->getUnion();
 
-// #ifdef HAVE_VISIT
-//   if( sharedState->getVisIt() ) {
-//     required = true;
-//   }
-// #endif
+#ifdef HAVE_VISIT
+  static bool initialized = false;
+
+  if( m_application->getVisIt() && !initialized ) {
+    required = true;
+
+    initialized = true;
+  }
+#endif
 }
 
 //______________________________________________________________________

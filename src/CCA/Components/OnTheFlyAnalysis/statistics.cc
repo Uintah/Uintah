@@ -327,11 +327,15 @@ void statistics::problemSetup(const ProblemSpecP&,
   d_matSubSet = d_matlSet->getUnion();
   proc0cout << "__________________________________ Data Analysis module: statistics" << endl;
   
-// #ifdef HAVE_VISIT
-//   if( sharedState->getVisIt() ) {
-//     required = true;
-//   }
-// #endif
+#ifdef HAVE_VISIT
+  static bool initialized = false;
+
+  if( m_application->getVisIt() && !initialized ) {
+    required = true;
+
+    initialized = true;
+  }
+#endif
 }
 
 //______________________________________________________________________

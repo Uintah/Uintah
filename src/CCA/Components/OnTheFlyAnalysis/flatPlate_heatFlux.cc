@@ -57,8 +57,8 @@ static DebugStream cout_doing("FLATPLATE_HEATFLUX_DOING_COUT", false);
 static DebugStream cout_dbg("FLATPLATE_HEATFLUX_DBG_COUT", false);
 //______________________________________________________________________
 flatPlate_heatFlux::flatPlate_heatFlux(const ProcessorGroup* myworld,
-				       const SimulationStateP sharedState,
-				       const ProblemSpecP& module_spec)
+                                       const SimulationStateP sharedState,
+                                       const ProblemSpecP& module_spec)
   : AnalysisModule(myworld, sharedState, module_spec)
 {
   d_matl = nullptr;
@@ -191,14 +191,17 @@ void flatPlate_heatFlux::problemSetup(const ProblemSpecP& ,
   d_plane.push_back(p);
   
 #ifdef HAVE_VISIT
-  if( m_application->getVisIt() ) {
+  static bool initialized = false;
+
+  if( m_application->getVisIt() && !initialized ) {
     ApplicationInterface::analysisVar aVar;
     aVar.name  = M_lb->gHeatFluxLabel->getName();
     aVar.matl  = d_matl->getDWIndex();
     aVar.level = -1;
-    aVar.labels.push_back( v_lb->total_heatRateLabel );
-    
+    aVar.labels.push_back( v_lb->total_heatRateLabel );    
     m_application->getAnalysisVars().push_back(aVar);
+
+    initialized = true;
   }
 #endif
 }
@@ -224,7 +227,7 @@ void flatPlate_heatFlux::restartInitialize()
 
 //______________________________________________________________________
 void flatPlate_heatFlux::scheduleDoAnalysis(SchedulerP& sched,
-					    const LevelP& level)
+                                            const LevelP& level)
 {
   cout_doing << "flatPlate_heatFlux::scheduleDoAnalysis " << endl;
   Task* t = scinew Task("flatPlate_heatFlux::doAnalysis", 

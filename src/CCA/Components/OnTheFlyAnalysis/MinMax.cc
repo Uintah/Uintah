@@ -267,15 +267,55 @@ void MinMax::problemSetup(const ProblemSpecP&,
     d_analyzeVars.push_back(me);
   
 #ifdef HAVE_VISIT
-    if( m_application->getVisIt() ) {
+    static bool initialized = false;
+
+    if( m_application->getVisIt() && !initialized ) {
       ApplicationInterface::analysisVar aVar;
       aVar.name  = label->getName();
       aVar.matl  = matl;
       aVar.level = level;
       aVar.labels.push_back( meMin );
-      aVar.labels.push_back( meMax );
-    
+      aVar.labels.push_back( meMax );    
       m_application->getAnalysisVars().push_back(aVar);
+
+      // variable 1 - Must start with the component name and have NO
+      // spaces in the var name
+      ApplicationInterface::interactiveVar var;
+      var.name     = "Analysis-MinMax-SamplingFrequency";
+      var.type     = Uintah::TypeDescription::double_type;
+      var.value    = (void *) &d_writeFreq;
+      var.range[0]   = 0;
+      var.range[1]   = 1e99;
+      var.modifiable = true;
+      var.recompile  = false;
+      var.modified   = false;
+      m_application->getUPSVars().push_back( var );
+
+      // variable 2 - Must start with the component name and have NO
+      // spaces in the var name
+      var.name     = "Analysis-MinMax-StartTime";
+      var.type     = Uintah::TypeDescription::double_type;
+      var.value    = (void *) &d_startTime;
+      var.range[0]   = 0;
+      var.range[1]   = 1e99;
+      var.modifiable = true;
+      var.recompile  = false;
+      var.modified   = false;
+      m_application->getUPSVars().push_back( var );
+      
+      // variable 3 - Must start with the component name and have NO
+      // spaces in the var name
+      var.name     = "Analysis-MinMax-StopTime";
+      var.type     = Uintah::TypeDescription::double_type;
+      var.value    = (void *) &d_stopTime;
+      var.range[0]   = 0;
+      var.range[1]   = 1e99;
+      var.modifiable = true;
+      var.recompile  = false;
+      var.modified   = false;
+      m_application->getUPSVars().push_back( var );
+
+      initialized = true;
     }
 #endif
   }
