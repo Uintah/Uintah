@@ -580,9 +580,10 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
     // variable 1 - Must start with the component name and have NO
     // spaces in the var name
     interactiveVar var;
-    var.name     = "ICE-OrderOfAdvection";
-    var.type     = Uintah::TypeDescription::int_type;
-    var.value    = (void *) &d_OrderOfAdvection;
+    var.component  = "ICE";
+    var.name       = "OrderOfAdvection";
+    var.type       = Uintah::TypeDescription::int_type;
+    var.value      = (void *) &d_OrderOfAdvection;
     var.range[0]   = 1;
     var.range[1]   = 2;
     var.modifiable = true;
@@ -590,11 +591,10 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
     var.modified   = false;
     m_UPSVars.push_back( var );
 
-    // variable 2 - Must start with the component name and have NO
-    // spaces in the var name
-    var.name     = "ICE-referencePressure";
-    var.type     = Uintah::TypeDescription::double_type;
-    var.value    = (void *) &d_ref_press;
+    var.component  = "ICE";
+    var.name       = "ReferencePressure";
+    var.type       = Uintah::TypeDescription::double_type;
+    var.value      = (void *) &d_ref_press;
     var.range[0]   = -1.0e9;
     var.range[1]   = +1.0e9;
     var.modifiable = true;
@@ -602,11 +602,10 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
     var.modified   = false;
     m_UPSVars.push_back( var );
 
-    // variable 3 - Must start with the component name and have NO
-    // spaces in the var name
-    var.name     = "ICE-gravity";
-    var.type     = Uintah::TypeDescription::Vector;
-    var.value    = (void *) &d_gravity;
+    var.component  = "ICE";
+    var.name       = "Gravity";
+    var.type       = Uintah::TypeDescription::Vector;
+    var.value      = (void *) &d_gravity;
     var.range[0]   = -1.0e9;
     var.range[1]   = +1.0e9;
     var.modifiable = true;
@@ -622,6 +621,7 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
     
     if (d_conservationTest->mass )
     {
+      aVar.component = "ICE";
       aVar.name = lb->TotalMassLabel->getName();
       aVar.labels.clear();
       aVar.labels.push_back( lb->TotalMassLabel );      
@@ -629,6 +629,7 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
     }
 
     if ( d_conservationTest->momentum ) {
+      aVar.component = "ICE";
       aVar.name = lb->TotalMomentumLabel->getName();
       aVar.labels.clear();
       aVar.labels.push_back( lb->TotalMomentumLabel );
@@ -637,11 +638,13 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
 
     if (d_conservationTest->energy )
     {
+      aVar.component = "ICE";
       aVar.name = lb->TotalIntEngLabel->getName();
       aVar.labels.clear();
       aVar.labels.push_back( lb->TotalIntEngLabel );      
       m_analysisVars.push_back(aVar);
 
+      aVar.component = "ICE";
       aVar.name = lb->KineticEnergyLabel->getName();
       aVar.labels.clear();
       aVar.labels.push_back( lb->KineticEnergyLabel );
@@ -650,11 +653,13 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
 
     if (d_conservationTest->exchange )
     {
+      aVar.component = "ICE";
       aVar.name = lb->mom_exch_errorLabel->getName();
       aVar.labels.clear();
       aVar.labels.push_back( lb->mom_exch_errorLabel );
       m_analysisVars.push_back(aVar);
 
+      aVar.component = "ICE";
       aVar.name = lb->eng_exch_errorLabel->getName();
       aVar.labels.clear();
       aVar.labels.push_back( lb->eng_exch_errorLabel );

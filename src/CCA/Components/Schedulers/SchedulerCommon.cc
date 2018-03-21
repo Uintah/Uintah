@@ -534,9 +534,10 @@ SchedulerCommon::problemSetup( const ProblemSpecP     & prob_spec
     // variable 1 - Must start with the component name and have NO
     // spaces in the var name
     ApplicationInterface::interactiveVar var;
-    var.name     = "Scheduler-UseSmallMessages";
-    var.type     = Uintah::TypeDescription::bool_type;
-    var.value    = (void *) &m_use_small_messages;
+    var.component  = "LoadBalancer";
+    var.name       = "UseSmallMessages";
+    var.type       = Uintah::TypeDescription::bool_type;
+    var.value      = (void *) &m_use_small_messages;
     var.range[0]   = 0;
     var.range[1]   = 1;
     var.modifiable = true;

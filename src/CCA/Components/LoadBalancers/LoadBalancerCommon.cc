@@ -893,11 +893,12 @@ LoadBalancerCommon::problemSetup(       ProblemSpecP     & pspec
   // modify.
   if( m_application->getVisIt() && !initialized ) {
     ApplicationInterface::interactiveVar var;
-    var.name     = "LoadBalancer-DoSpaceCurve";
-    var.type     = Uintah::TypeDescription::bool_type;
-    var.value    = (void *) &m_do_space_curve;
-    var.range[0] = 0;
-    var.range[1] = 1;
+    var.component  = "LoadBalancer";
+    var.name       = "DoSpaceCurve";
+    var.type       = Uintah::TypeDescription::bool_type;
+    var.value      = (void *) &m_do_space_curve;
+    var.range[0]   = 0;
+    var.range[1]   = 1;
     var.modifiable = true;
     var.recompile  = false;
     var.modified   = false;

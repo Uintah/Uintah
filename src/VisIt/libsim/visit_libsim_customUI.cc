@@ -337,30 +337,32 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
           Level *level = levelP.get_rep();
 
           std::stringstream stripChartName;
-          stripChartName << "Analysis/" << analysisVar.name;
+          stripChartName << "Analysis/"
+			 << analysisVar.component << "/"  << analysisVar.name;
 
           // Set the variable name, material, and level.
-          VisItUI_setTableValueS(table, row, 0, analysisVar.name.c_str(), 0);
+          VisItUI_setTableValueS(table, row, 0, analysisVar.component.c_str(), 0);
+          VisItUI_setTableValueS(table, row, 1, analysisVar.name.c_str(), 0);
 
 	  // Add the material to the analysis var
           if( analysisVar.matl < 0 )
           {
-            VisItUI_setTableValueS(table, row, 1, "NA", 0);
+            VisItUI_setTableValueS(table, row, 2, "NA", 0);
           }
           else
           {
-            VisItUI_setTableValueI(table, row, 1, analysisVar.matl, 0);
+            VisItUI_setTableValueI(table, row, 2, analysisVar.matl, 0);
             stripChartName << "/" << analysisVar.matl;
           }
 
 	  // Add the level to the analysis var
           if( analysisVar.level < 0)
           {
-            VisItUI_setTableValueS(table, row, 2, "NA", 0);
+            VisItUI_setTableValueS(table, row, 3, "NA", 0);
           }
           else
           {
-            VisItUI_setTableValueI(table, row, 2, l, 0);
+            VisItUI_setTableValueI(table, row, 3, l, 0);
             stripChartName << "/l" << l;
           }
           
@@ -378,7 +380,7 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
               // Get the reduction type.
               if( label->typeDescription() == min_vartype::getTypeDescription() )
               {
-                VisItUI_setTableValueS(table, row, 3+j*2, "Min", 0);
+                VisItUI_setTableValueS(table, row, 4+j*2, "Min", 0);
 
                 min_vartype var_min;
 
@@ -389,14 +391,14 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
                 
                 double varMin = var_min;
 
-                VisItUI_setTableValueD(table, row, 4+j*2, varMin, 0);
+                VisItUI_setTableValueD(table, row, 5+j*2, varMin, 0);
 
                 visit_SetStripChartValue( sim, stripChartName.str() +
                                           "/Minimum", varMin );
               }
               else if( label->typeDescription() == max_vartype::getTypeDescription() )
               {
-                VisItUI_setTableValueS(table, row, 3+j*2, "Max", 0);
+                VisItUI_setTableValueS(table, row, 4+j*2, "Max", 0);
 
                 max_vartype var_max;
                 if( analysisVar.level == IGNORE_LEVEL )
@@ -406,7 +408,7 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
 
                 double varMax = var_max;
 
-                VisItUI_setTableValueD(table, row, 4+j*2, varMax, 0);
+                VisItUI_setTableValueD(table, row, 5+j*2, varMax, 0);
 
                 visit_SetStripChartValue( sim, stripChartName.str() +
                                           "/Maximum", varMax );
@@ -414,7 +416,7 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
               
               else if( label->typeDescription() == minvec_vartype::getTypeDescription() )
               {
-                VisItUI_setTableValueS(table, row, 3+j*2, "Min", 0);
+                VisItUI_setTableValueS(table, row, 4+j*2, "Min", 0);
 
                 minvec_vartype var_min;
 
@@ -425,7 +427,7 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
 
                 double varMin = ((Vector) var_min).length();
 
-                VisItUI_setTableValueV(table, row, 4+j*2,
+                VisItUI_setTableValueV(table, row, 5+j*2,
                                        ((Vector) var_min).x(),
                                        ((Vector) var_min).y(),
                                        ((Vector) var_min).z(), 0);    
@@ -435,7 +437,7 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
               }
               else if( label->typeDescription() == maxvec_vartype::getTypeDescription() )
               {
-                VisItUI_setTableValueS(table, row, 3+j*2, "Max", 0);
+                VisItUI_setTableValueS(table, row, 4+j*2, "Max", 0);
 
                 maxvec_vartype var_max;
                 if( analysisVar.level < 0 )
@@ -445,7 +447,7 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
 
                 double varMax = ((Vector) var_max).length();
 
-                VisItUI_setTableValueV(table, row, 4+j*2,
+                VisItUI_setTableValueV(table, row, 5+j*2,
                                        ((Vector) var_max).x(),
                                        ((Vector) var_max).y(),
                                        ((Vector) var_max).z(), 0);
@@ -456,7 +458,7 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
               }
               else if( label->typeDescription() == sum_vartype::getTypeDescription() )
               {
-                VisItUI_setTableValueS(table, row, 3+j*2, "Sum", 0);
+                VisItUI_setTableValueS(table, row, 4+j*2, "Sum", 0);
 
                 sum_vartype var_sum;
                 if( analysisVar.level == IGNORE_LEVEL )
@@ -466,7 +468,7 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
 
                 double varSum = var_sum;
 
-                VisItUI_setTableValueD(table, row, 4+j*2, varSum, 0);
+                VisItUI_setTableValueD(table, row, 5+j*2, varSum, 0);
 
                 visit_SetStripChartValue( sim, stripChartName.str() +
                                           "/Sum",
@@ -474,7 +476,7 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
               }
               else if( label->typeDescription() == sumvec_vartype::getTypeDescription() )
               {
-                VisItUI_setTableValueS(table, row, 3+j*2, "Sum", 0);
+                VisItUI_setTableValueS(table, row, 4+j*2, "Sum", 0);
 
                 sumvec_vartype var_sum;
                 if( analysisVar.level == IGNORE_LEVEL )
@@ -484,7 +486,7 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
 
                 double varSum = ((Vector) var_sum).length();
 
-                VisItUI_setTableValueV(table, row, 4+j*2,
+                VisItUI_setTableValueV(table, row, 5+j*2,
                                        ((Vector) var_sum).x(),
                                        ((Vector) var_sum).y(),
                                        ((Vector) var_sum).z(), 0);
@@ -502,8 +504,8 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
                     << "unknown_vartype";
 
                 VisItUI_setValueS("SIMULATION_MESSAGE_WARNING", msg.str().c_str(), 1);
-                VisItUI_setTableValueS(table, row, 3+j*2, "Unknown", 0);
-                VisItUI_setTableValueS(table, row, 4+j*2, "NA", 0);
+                VisItUI_setTableValueS(table, row, 4+j*2, "Unknown", 0);
+                VisItUI_setTableValueS(table, row, 5+j*2, "NA", 0);
               }
             }
           }
@@ -540,35 +542,36 @@ void visit_SetUPSVars( visit_simulation_data *sim )
       
       var.modified = false;
       
-      VisItUI_setTableValueS("UPSVariableTable", i, 0, var.name.c_str(), 0);
+      VisItUI_setTableValueS("UPSVariableTable", i, 0, var.component.c_str(), 0);
+      VisItUI_setTableValueS("UPSVariableTable", i, 1, var.name.c_str(), 0);
       
       switch( var.type )
       {
         case Uintah::TypeDescription::bool_type:
         {
           bool *val = (bool*) var.value;
-          VisItUI_setTableValueI("UPSVariableTable", i, 1, *val, 1);
+          VisItUI_setTableValueI("UPSVariableTable", i, 2, *val, 1);
         }
         break;
             
         case Uintah::TypeDescription::int_type:
         {
           int *val = (int*) var.value;
-          VisItUI_setTableValueI("UPSVariableTable", i, 1, *val, 1);
+          VisItUI_setTableValueI("UPSVariableTable", i, 2, *val, 1);
         }
         break;
             
         case Uintah::TypeDescription::double_type:
         {
           double *val = (double*) var.value;
-          VisItUI_setTableValueD("UPSVariableTable", i, 1, *val, 1);
+          VisItUI_setTableValueD("UPSVariableTable", i, 2, *val, 1);
         }
         break;
             
         case Uintah::TypeDescription::Point:
         {
           Point *val = (Point*) var.value;
-          VisItUI_setTableValueV("UPSVariableTable", i, 1,
+          VisItUI_setTableValueV("UPSVariableTable", i, 2,
                                  val->x(), val->y(), val->z(), 1);
         }
         break;
@@ -576,7 +579,7 @@ void visit_SetUPSVars( visit_simulation_data *sim )
         case Uintah::TypeDescription::Vector:
         {
           Vector *val = (Vector*) var.value;
-          VisItUI_setTableValueV("UPSVariableTable", i, 1,
+          VisItUI_setTableValueV("UPSVariableTable", i, 2,
                                  val->x(), val->y(), val->z(), 1);
         }
         break;
@@ -859,35 +862,36 @@ void visit_SetStateVars( visit_simulation_data *sim )
       
       var.modified = false;
       
-      VisItUI_setTableValueS("StateVariableTable", i, 0, var.name.c_str(), 0);
+      VisItUI_setTableValueS("StateVariableTable", i, 0, var.component.c_str(), 0);
+      VisItUI_setTableValueS("StateVariableTable", i, 1, var.name.c_str(), 0);
       
       switch( var.type )
       {
         case Uintah::TypeDescription::bool_type:
         {
           bool *val = (bool*) var.value;
-          VisItUI_setTableValueI("StateVariableTable", i, 1, *val, 1);
+          VisItUI_setTableValueI("StateVariableTable", i, 2, *val, 1);
         }
         break;
             
         case Uintah::TypeDescription::int_type:
         {
           int *val = (int*) var.value;
-          VisItUI_setTableValueI("StateVariableTable", i, 1, *val, 1);
+          VisItUI_setTableValueI("StateVariableTable", i, 2, *val, 1);
         }
         break;
 
         case Uintah::TypeDescription::double_type:
         {
           double *val = (double*) var.value;
-          VisItUI_setTableValueD("StateVariableTable", i, 1, *val, 1);
+          VisItUI_setTableValueD("StateVariableTable", i, 2, *val, 1);
         }
         break;
 
         case Uintah::TypeDescription::Point:
         {
           Point *val = (Point*) var.value;
-          VisItUI_setTableValueV("StateVariableTable", i, 1,
+          VisItUI_setTableValueV("StateVariableTable", i, 2,
                                  val->x(), val->y(), val->z(), 1);
         }
         break;
@@ -895,7 +899,7 @@ void visit_SetStateVars( visit_simulation_data *sim )
         case Uintah::TypeDescription::Vector:
         {
           Vector *val = (Vector*) var.value;
-          VisItUI_setTableValueV("StateVariableTable", i, 1,
+          VisItUI_setTableValueV("StateVariableTable", i, 2,
                                  val->x(), val->y(), val->z(), 1);
         }
         break;
