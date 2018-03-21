@@ -23,16 +23,17 @@
  */
 
 #include <CCA/Components/OnTheFlyAnalysis/statistics.h>
+
+#include <CCA/Ports/ApplicationInterface.h>
 #include <CCA/Ports/Output.h>
 #include <CCA/Ports/Scheduler.h>
 
+#include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/CellIterator.h>
-
-#include <Core/Exceptions/InternalError.h>
 #include <Core/Util/DebugStream.h>
 
 #include <sci_defs/visit_defs.h>
