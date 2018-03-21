@@ -60,6 +60,7 @@ NIGHTLYTESTS = [   ("advect",             "advect.ups",              1, "All", [
                    ("riemann_1L",         riemann_1L_ups,            1, "All", ["exactComparison"]),
                    ("hotBlob2mat",        "hotBlob2mat.ups",         1, "All", ["exactComparison"]),
                    ("hotBlob2mat_sym",    "hotBlob2mat_sym.ups",     1, "All", ["exactComparison"]),
+                   ("impAdvect",          "impAdvect.ups",           8, "All", ["exactComparison"]),
                    ("impHotBlob",         "impHotBlob.ups",          1, "All", ["exactComparison"]),
                    ("hotBlob2mat8patch",  "hotBlob2mat8patch.ups",   8, "All", ["exactComparison"]),
                    ("waterAirOscillator", "waterAirOscillator.ups",  4, "All", ["exactComparison"])    

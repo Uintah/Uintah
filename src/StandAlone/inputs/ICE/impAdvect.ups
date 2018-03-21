@@ -10,6 +10,7 @@
    </Meta>
 
    <SimulationComponent type="ice" />
+   <Solver type="hypre" />
    
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
@@ -19,7 +20,7 @@
        <initTime>           0.0         </initTime>
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
-       <delt_init>          1.0e-9      </delt_init>
+       <delt_init>          1.0e-5      </delt_init>
        <max_delt_increase>  2.0        </max_delt_increase>
        <timestep_multiplier>1.0         </timestep_multiplier>
    </Time>
@@ -138,17 +139,17 @@
               <lower>        [0,0,0]          </lower>
               <upper>        [5,5,5]          </upper>
               <extraCells>   [1,1,1]          </extraCells>
-              <patches>      [1,1,1]          </patches>
+              <patches>      [2,2,2]          </patches>
            </Box>
-           <spacing>         [0.5,0.5,0.5]    </spacing>
+           <spacing>         [.1,.1,.1]         </spacing>
        </Level>
     </Grid>    
     <!--____________________________________________________________________-->
     <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
     <!--____________________________________________________________________-->
-   <DataArchiver>
-      <filebase>advect.uda</filebase>
-      <outputTimestepInterval>1</outputTimestepInterval>
+    <DataArchiver>
+      <filebase>impAdvect.uda</filebase>
+      <outputTimestepInterval>10</outputTimestepInterval>
       <save label="press_equil_CC"/>
       <save label="uvel_FC"/>
       <save label="vvel_FC"/>
@@ -163,36 +164,31 @@
       <save label="press_CC"/>
       <save label="mom_L_ME_CC"/>
       <save label="rho_CC"/>
-      <save label="vel_CC"/>      
-   </DataArchiver>
+      <save label="vel_CC"/> 
+      <checkpoint timestepInterval = "5" cycle = "2" />    
+    </DataArchiver>
 
     
     <!--____________________________________________________________________-->
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
     <CFD>
-         <cfl>0.75</cfl>
+         <cfl>0.3</cfl>
        <ICE>
         <advection type = "FirstOrder" />
    
         <TimeStepControl>
-          <Scheme_for_delT_calc> conservative     </Scheme_for_delT_calc>
+          <Scheme_for_delT_calc> aggressive     </Scheme_for_delT_calc>
           <knob_for_speedSound>  0.0            </knob_for_speedSound>
         </TimeStepControl>
         
         <ImplicitSolver>
-           <max_outer_iterations>      20    </max_outer_iterations>
-           <outer_iteration_tolerance> 1.0e-7  </outer_iteration_tolerance>
-           <iters_before_timestep_restart> 5 </iters_before_timestep_restart>
+           <max_outer_iterations>          20     </max_outer_iterations>
+           <outer_iteration_tolerance>     1.0e-7 </outer_iteration_tolerance>
+           <iters_before_timestep_restart> 5      </iters_before_timestep_restart>
            <Parameters variable="implicitPressure">
             <!-- Common options -->
-              <tolerance>1.e-8    </tolerance>
-
-            <!-- CGSolver options -->
-              <norm>     LInfinity  </norm>
-              <criteria> Absolute   </criteria>
-
-            <!-- Hypre options -->
+            <tolerance>      1.e-8   </tolerance>
             <solver>         cg      </solver>
             <preconditioner> pfmg    </preconditioner>
             <maxiterations>  7500    </maxiterations>
