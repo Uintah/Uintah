@@ -3877,7 +3877,10 @@ DataArchiver::setOutputInterval( double newinv )
   {
     m_outputInterval = newinv;
     m_outputTimeStepInterval = 0;
+
+    // Reset the output so force one to happen.
     m_nextOutputTime = 0.0;
+    m_nextOutputTimeStep = 0;
   }
 }
 
@@ -3888,9 +3891,12 @@ DataArchiver::setOutputTimeStepInterval( int newinv )
 {
   if (m_outputTimeStepInterval != newinv)
   {
-    m_outputTimeStepInterval = newinv;
     m_outputInterval = 0;
+    m_outputTimeStepInterval = newinv;
+
+    // Reset the output so force one to happen.
     m_nextOutputTime = 0.0;
+    m_nextOutputTimeStep = 0;
   }
 }
 
@@ -3905,6 +3911,7 @@ DataArchiver::setCheckpointInterval( double newinv )
     m_checkpointTimeStepInterval = 0;
     m_checkpointWallTimeInterval = 0;
 
+    // Reset the check point so force one to happen.
     m_nextCheckpointTime = 0.0;
     m_nextCheckpointTimeStep = 0.0;
     m_nextCheckpointWallTime = 0.0;
@@ -3934,6 +3941,7 @@ DataArchiver::setCheckpointTimeStepInterval( int newinv )
     m_checkpointTimeStepInterval = newinv;
     m_checkpointWallTimeInterval = 0;
 
+    // Reset the check point so force one to happen.
     m_nextCheckpointTime = 0.0;
     m_nextCheckpointTimeStep = 0.0;
     m_nextCheckpointWallTime = 0.0;
@@ -3963,6 +3971,7 @@ DataArchiver::setCheckpointWallTimeInterval( int newinv )
     m_checkpointTimeStepInterval = 0;
     m_checkpointWallTimeInterval = newinv;
 
+    // Reset the check point so force one to happen.
     m_nextCheckpointTime = 0.0;
     m_nextCheckpointTimeStep = 0.0;
     m_nextCheckpointWallTime = 0.0;
