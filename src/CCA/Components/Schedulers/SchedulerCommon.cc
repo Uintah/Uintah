@@ -55,6 +55,8 @@
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/Timers/Timers.hpp>
 
+#include <sci_defs/visit_defs.h>
+
 #include <cerrno>
 #include <cstdlib>
 #include <fstream>
@@ -522,6 +524,29 @@ SchedulerCommon::problemSetup( const ProblemSpecP     & prob_spec
 
   m_no_scrub_vars.insert("refineFlag");
   m_no_scrub_vars.insert("refinePatchFlag");
+
+#ifdef HAVE_VISIT
+  static bool initialized = false;
+
+  // Running with VisIt so add in the variables that the user can
+  // modify.
+  if( m_application->getVisIt() && !initialized ) {
+    // variable 1 - Must start with the component name and have NO
+    // spaces in the var name
+    ApplicationInterface::interactiveVar var;
+    var.name     = "Scheduler-UseSmallMessages";
+    var.type     = Uintah::TypeDescription::bool_type;
+    var.value    = (void *) &m_use_small_messages;
+    var.range[0]   = 0;
+    var.range[1]   = 1;
+    var.modifiable = true;
+    var.recompile  = false;
+    var.modified   = false;
+    m_application->getUPSVars().push_back( var );
+
+    initialized = true;
+  }
+#endif
 }
 
 //______________________________________________________________________
