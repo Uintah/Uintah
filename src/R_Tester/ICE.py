@@ -82,7 +82,7 @@ AMRTESTS =    [   ("advectAMR",          "advectAMR.ups",           8, "All", ["
                   ("advect2matAMR",      "advect2matAMR.ups",       1, "All", ["exactComparison"]),
                   ("hotBlob_AMR",        "hotBlob_AMR.ups",         4, "All", ["exactComparison"]),
                   ("hotBlob_AMR_3L",      hotBlob_AMR_3L_ups,       4, "All", ["exactComparison"]),
-                  ("impAdvectAMR",       "impAdvectAMR.ups",        1, "All", ["exactComparison"])
+                  ("impAdvect_ML_5L",    "impAdvect_ML_5L.ups",     8, "All", ["exactComparison"])
               ]
 
 DEBUGGING =   [   ("advect",           "advect.ups",           1, "All", ["exactComparison"]),
