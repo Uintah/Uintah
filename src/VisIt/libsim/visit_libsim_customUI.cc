@@ -229,8 +229,9 @@ void visit_SetOutputIntervals( visit_simulation_data *sim )
     // This var must be in the row specified by OutputIntervalRow
     VisItUI_setTableValueS("OutputIntervalVariableTable",
                            OutputIntervalRow+2, 0, "isOutputTimeStep",  0);
-    VisItUI_setTableValueI("OutputIntervalVariableTable",
-                           OutputIntervalRow+2, 1, output->isOutputTimeStep(), 0);
+    VisItUI_setTableValueS("OutputIntervalVariableTable",
+                           OutputIntervalRow+2, 1,
+                           (output->isOutputTimeStep() ? "Yes" : "No"), 0);
     
     // Checkpoint interval based on sim time.
     if( output->getCheckpointInterval() > 0 )
@@ -270,12 +271,12 @@ void visit_SetOutputIntervals( visit_simulation_data *sim )
     VisItUI_setTableValueD("OutputIntervalVariableTable",
                            CheckpointIntervalRow+1, 1, nextVal, 0);
 
-
     // This var must be in the row specified by CheckpointIntervalRow
     VisItUI_setTableValueS("OutputIntervalVariableTable",
                            CheckpointIntervalRow+2, 0, "isCheckpointTimeStep", 0);
-    VisItUI_setTableValueI("OutputIntervalVariableTable",
-                           CheckpointIntervalRow+2, 1, output->isCheckpointTimeStep(), 0);
+    VisItUI_setTableValueS("OutputIntervalVariableTable",
+                           CheckpointIntervalRow+2, 1,
+                           (output->isCheckpointTimeStep() ? "Yes" : "No"), 0);
 
 
     // This var must be in row specified by CheckpointCyclelRow
@@ -338,13 +339,13 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
 
           std::stringstream stripChartName;
           stripChartName << "Analysis/"
-			 << analysisVar.component << "/"  << analysisVar.name;
+                         << analysisVar.component << "/"  << analysisVar.name;
 
           // Set the variable name, material, and level.
           VisItUI_setTableValueS(table, row, 0, analysisVar.component.c_str(), 0);
           VisItUI_setTableValueS(table, row, 1, analysisVar.name.c_str(), 0);
 
-	  // Add the material to the analysis var
+          // Add the material to the analysis var
           if( analysisVar.matl < 0 )
           {
             VisItUI_setTableValueS(table, row, 2, "NA", 0);
@@ -355,7 +356,7 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
             stripChartName << "/" << analysisVar.matl;
           }
 
-	  // Add the level to the analysis var
+          // Add the level to the analysis var
           if( analysisVar.level < 0)
           {
             VisItUI_setTableValueS(table, row, 3, "NA", 0);
@@ -686,9 +687,12 @@ void visit_SetRuntimeStats( visit_simulation_data *sim )
       VisItUI_setTableValueS("RuntimeStatsTable", cc, 3,
                              ProcessInfo::toHumanUnits(maximum).c_str(), 0);
       VisItUI_setTableValueI("RuntimeStatsTable", cc, 4, rank, 0);
-      VisItUI_setTableValueD("RuntimeStatsTable", cc, 5,
-                             100*(1-(average/maximum)), 0);
-    
+      if( maximum != 0 )
+        VisItUI_setTableValueD("RuntimeStatsTable", cc, 5,
+                               100.0*(1.0-(average/maximum)), 0);
+      else
+        VisItUI_setTableValueD("RuntimeStatsTable", cc, 5, 0.0, 0);
+      
       ++cc;
     }
   
@@ -699,8 +703,11 @@ void visit_SetRuntimeStats( visit_simulation_data *sim )
       VisItUI_setTableValueD("RuntimeStatsTable", cc, 2, average, 0);
       VisItUI_setTableValueD("RuntimeStatsTable", cc, 3, maximum, 0);
       VisItUI_setTableValueI("RuntimeStatsTable", cc, 4, rank, 0);
-      VisItUI_setTableValueD("RuntimeStatsTable", cc, 5,
-                             100*(1-(average/maximum)), 0);
+      if( maximum != 0 )
+        VisItUI_setTableValueD("RuntimeStatsTable", cc, 5,
+                               100.0*(1.0-(average/maximum)), 0);
+      else
+        VisItUI_setTableValueD("RuntimeStatsTable", cc, 5, 0.0, 0);
 
       ++cc;
     }
@@ -745,8 +752,11 @@ void visit_SetMPIStats( visit_simulation_data *sim )
       VisItUI_setTableValueD("MPIStatsTable", i, 2, average, 0);
       VisItUI_setTableValueD("MPIStatsTable", i, 3, maximum, 0);
       VisItUI_setTableValueI("MPIStatsTable", i, 4, rank, 0);
-      VisItUI_setTableValueD("MPIStatsTable", i, 5,
-                             100*(1-(average/maximum)), 0);
+      if( maximum != 0 )
+        VisItUI_setTableValueD("MPIStatsTable", i, 5,
+                               100.0*(1.0-(average/maximum)), 0);
+      else
+        VisItUI_setTableValueD("MPIStatsTable", i, 5, 0.0, 0);
 
       visit_SetStripChartValue( sim, "MPIStats/"+name+"/Average", average );
       visit_SetStripChartValue( sim, "MPIStats/"+name+"/Maximum", maximum );
@@ -787,8 +797,12 @@ void visit_SetOtherStats( visit_simulation_data *sim )
       VisItUI_setTableValueD("OtherStatsTable", i, 2, average, 0);
       VisItUI_setTableValueD("OtherStatsTable", i, 3, maximum, 0);
       VisItUI_setTableValueI("OtherStatsTable", i, 4, rank, 0);
-      VisItUI_setTableValueD("OtherStatsTable", i, 5,
-                             100*(1-(average/maximum)), 0);
+      // if( maximum != 0 )
+      //         VisItUI_setTableValueD("OtherStatsTable", i, 5,
+      //                                100.0*(1.0-(average/maximum)), 0);
+      // else
+      //         VisItUI_setTableValueD("OtherStatsTable", i, 5, 0.0, 0);
+      
       visit_SetStripChartValue( sim, "OtherStats/"+name+"/Average", average );
       visit_SetStripChartValue( sim, "OtherStats/"+name+"/Maximum", maximum );
     }
@@ -895,7 +909,7 @@ void visit_SetStateVars( visit_simulation_data *sim )
                                  val->x(), val->y(), val->z(), 1);
         }
         break;
-	
+        
         case Uintah::TypeDescription::Vector:
         {
           Vector *val = (Vector*) var.value;
@@ -933,8 +947,8 @@ void visit_SetDebugStreams( visit_simulation_data *sim )
     int i = 0;
     
     for (auto iter = DebugStream::m_all_debugStreams.begin();
-  	 iter != DebugStream::m_all_debugStreams.end();
-  	 ++iter, ++i)
+         iter != DebugStream::m_all_debugStreams.end();
+         ++iter, ++i)
     {
       // Add in the stream and state.
       std::string name      = (*iter).second->getName();
@@ -975,8 +989,8 @@ void visit_SetDouts( visit_simulation_data *sim )
     int i = 0;
     
     for (auto iter = Dout::m_all_douts.begin();
-	 iter != Dout::m_all_douts.end();
-	 ++iter, ++i)
+         iter != Dout::m_all_douts.end();
+         ++iter, ++i)
     {
       // Add in the stream and state.
       std::string name      = (*iter).second->name();

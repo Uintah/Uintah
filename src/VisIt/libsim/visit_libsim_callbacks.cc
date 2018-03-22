@@ -903,11 +903,11 @@ void visit_UPSVariableCallback(char *val, void *cbdata)
       Point newValue = Point(x, y, z);
 
       if( newValue.x() < (double) var.range[0] ||
-	  (double) var.range[1] < newValue.x() ||
-	  newValue.y() < (double) var.range[0] ||
-	  (double) var.range[1] < newValue.y() ||
-	  newValue.z() < (double) var.range[0] ||
-	  (double) var.range[1] < newValue.z() )
+          (double) var.range[1] < newValue.x() ||
+          newValue.y() < (double) var.range[0] ||
+          (double) var.range[1] < newValue.y() ||
+          newValue.z() < (double) var.range[0] ||
+          (double) var.range[1] < newValue.z() )
       {
         std::stringstream msg;
         msg << "Visit libsim - the value (" << newValue << ") for "
@@ -1241,11 +1241,11 @@ void visit_StateVariableCallback(char *val, void *cbdata)
       Point newValue = Point(x, y, z);
 
       if( newValue.x() < (double) var.range[0] ||
-	  (double) var.range[1] < newValue.x() ||
-	  newValue.y() < (double) var.range[0] ||
-	  (double) var.range[1] < newValue.y() ||
-	  newValue.z() < (double) var.range[0] ||
-	  (double) var.range[1] < newValue.z() )
+          (double) var.range[1] < newValue.x() ||
+          newValue.y() < (double) var.range[0] ||
+          (double) var.range[1] < newValue.y() ||
+          newValue.z() < (double) var.range[0] ||
+          (double) var.range[1] < newValue.z() )
       {
         std::stringstream msg;
         msg << "Visit libsim - the value (" << newValue << ") for "
@@ -1345,7 +1345,7 @@ void visit_DebugStreamCallback(char *val, void *cbdata)
     }
     
     debugStream->setActive( text == "TRUE" || text == "True" ||
-			    text == "true" || text == "1" );
+                            text == "true" || text == "1" );
     
     if( debugStream->m_outstream == nullptr )
     {
@@ -1425,7 +1425,7 @@ void visit_DoutCallback(char *val, void *cbdata)
     }
 
     dout->setActive( text == "TRUE" || text == "True" ||
-		     text == "true" || text == "1" );
+                     text == "true" || text == "1" );
 
     // if( dout->m_outstream == nullptr )
     // {
