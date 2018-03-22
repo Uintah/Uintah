@@ -205,7 +205,9 @@ public:
 
   // Other stats
   enum OtherStatsEnum {
-    Dummy_Stat = 99
+    // Add additional stat enums that are used outside of the
+    // infrastructure (i.e. the models or applications).
+    CarcassCount = 99
   };
 
 protected:
@@ -230,7 +232,7 @@ protected:
   SchedulerP             m_scheduler{nullptr};
   GridP                  m_current_gridP{nullptr};
 
-  LoadBalancer     * m_loadBalancer{nullptr};
+  LoadBalancer         * m_loadBalancer{nullptr};
   Output               * m_output{nullptr};
   ApplicationInterface * m_app{nullptr};
   Regridder            * m_regridder{nullptr};

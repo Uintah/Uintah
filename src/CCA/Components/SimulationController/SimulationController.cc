@@ -223,7 +223,7 @@ SimulationController::SimulationController( const ProcessorGroup * myworld
   std::string timeStr("seconds");
   std::string bytesStr("MBytes");
 
-  m_other_stats.insert( Dummy_Stat, std::string("DummyStat"), "BodyCount", 0 );
+  m_other_stats.insert( CarcassCount, std::string("CarcassCount"), "Carcasses", 0 );
   
   m_runtime_stats.insert( CompilationTime,           std::string("Compilation"),           timeStr, 0 );
   m_runtime_stats.insert( RegriddingTime,            std::string("Regridding"),            timeStr, 0 );
@@ -650,7 +650,7 @@ SimulationController::finalSetup()
 void SimulationController::ResetStats( void )
 {
   m_runtime_stats.reset( 0 );
-  m_other_stats.reset( 0 );  
+  m_other_stats.reset( 0 );
 }
 
 //______________________________________________________________________
@@ -683,6 +683,8 @@ SimulationController::ReportStats(const ProcessorGroup*,
                                         DataWarehouse*,
                                         bool header )
 {
+  // m_other_stats[CarcassCount] = rand() * 10.0;
+
   // Get and reduce the performance runtime stats
   getMemoryStats();
   getPAPIStats();
@@ -1161,7 +1163,11 @@ SimulationController::CheckInSitu(const ProcessorGroup*,
       m_app->mayEndSimulation(true);
     }
 
-//     std::cerr << "*************" << __FUNCTION__ << "  " << __LINE__ << "  " << first << std::endl;
+    // std::cerr << "*************" << __FUNCTION__ << "  " << __LINE__ << "  "
+    //        << first << "  "
+    //        << m_app->getSimTime() << "  "
+    //        << m_app->getTimeStep() << "  "
+    //        << std::endl;
 
     // This function is no longer used as last is now used in the
     // UpdateSimData which in turn will flip the state.
