@@ -26,8 +26,8 @@ void VelRhoHatBC::create_local_labels(){
 }
 
 //--------------------------------------------------------------------------------------------------
-void VelRhoHatBC::register_eval( std::vector<AFC::VariableInformation>& variable_registry,
-                                 const int time_substep ){
+void VelRhoHatBC::register_timestep_eval( std::vector<AFC::VariableInformation>& variable_registry,
+                                 const int time_substep, const bool pack_tasks ){
   register_variable( m_xmom, AFC::MODIFIES, variable_registry, m_task_name );
   register_variable( m_ymom, AFC::MODIFIES, variable_registry, m_task_name );
   register_variable( m_zmom, AFC::MODIFIES, variable_registry, m_task_name );

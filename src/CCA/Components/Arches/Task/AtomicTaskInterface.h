@@ -20,7 +20,7 @@
 * @author Jeremy Thornock
 * @date   2016
 *
-* @brief An atomic task (schedule + call back only). 
+* @brief An atomic task (schedule + call back only).
 *
 **/
 
@@ -31,11 +31,9 @@ namespace Uintah{
   class Task;
   class VarLabel;
   class Level;
-  class AtomicTaskInterface{
+  class AtomicTaskInterface : public TaskInterface {
 
 public:
-
-    enum ATOMIC_TASK_TYPE { ATOMIC_STANDARD_TASK };
 
     typedef std::tuple<ParticleVariable<double>*, ParticleSubset*> ParticleTuple;
 
@@ -47,11 +45,6 @@ public:
     /** @brief Default destructor **/
     virtual ~AtomicTaskInterface();
 
-    /** @brief Print task name. **/
-    void print_task_name(){
-      std::cout << "Task: " << m_task_name << std::endl;
-    }
-
     /** @brief Input file interface **/
     virtual void problemSetup( ProblemSpecP& db ) = 0;
 
@@ -60,25 +53,9 @@ public:
 
     /** @brief Registers all variables with pertinent information for the
      *         uintah dw interface **/
-    virtual void register_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
-                                const int time_substep ) = 0;
-
-    /** @brief Add this task to the Uintah task scheduler **/
-    void schedule_task( const LevelP& level,
-                        SchedulerP& sched,
-                        const MaterialSet* matls,
-                        ATOMIC_TASK_TYPE task_type,
-                        int time_substep );
-
-    /** @brief The actual task interface function that references the
-     *         derived class implementation **/
-    void do_task( const ProcessorGroup* pc,
-                  const PatchSubset* patches,
-                  const MaterialSubset* matls,
-                  DataWarehouse* old_dw,
-                  DataWarehouse* new_dw,
-                  std::vector<ArchesFieldContainer::VariableInformation> variable_registry,
-                  int time_substep );
+    virtual void register_timestep_eval(
+      std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
+      const int time_substep, const bool packed_tasks ) = 0;
 
     /** @brief Builder class containing instructions on how to build the task **/
     class AtomicTaskBuilder {
@@ -98,6 +75,22 @@ public:
     void set_bcHelper( Uintah::WBCHelper* helper ){
       m_bcHelper = helper;
     }
+
+    //These method definitions are required per the TaskInterface def:
+    // They are defined here to avoid forcing the user to define empty functions
+    // and to keep the spirit of the Atomic Task (eval only)
+    void register_initialize( std::vector<AFC::VariableInformation>& variable_registry,
+                                      const bool pack_tasks ){}
+    void register_compute_bcs( std::vector<AFC::VariableInformation>& variable_registry,
+                                       const int time_substep, const bool packed_tasks ){}
+    void register_restart_initialize(
+      std::vector<AFC::VariableInformation>& variable_registry, const bool packed_tasks ){}
+    void register_timestep_init( std::vector<AFC::VariableInformation>& variable_registry,
+                                         const bool pack_tasks ){}
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr ){}
+    void restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr ){}
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr ){}
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr ){}
 
 protected:
 

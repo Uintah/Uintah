@@ -398,16 +398,14 @@ void TransportFactory::schedule_initialization( const LevelP& level,
   for ( auto i = _tasks.begin(); i != _tasks.end(); i++ ){
 
     if ( i->first != "build_pressure_system" ){
-      TaskInterface* tsk = retrieve_task( i->first );
-      tsk->schedule_init( level, sched, matls, doing_restart );
+      schedule_task( i->first, TaskInterface::INITIALIZE, level, sched, matls );
     }
 
   }
 
   //because this relies on momentum solvers.
   if ( has_task( "build_pressure_system" ) ){
-    TaskInterface* tsk = retrieve_task( "build_pressure_system" );
-    tsk->schedule_init( level, sched, matls, doing_restart );
+    schedule_task( "build_pressure_system", TaskInterface::INITIALIZE, level, sched, matls ); 
   }
 
 }

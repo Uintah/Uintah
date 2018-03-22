@@ -1133,7 +1133,6 @@ ExplicitSolver::initialize( const LevelP     & level,
     i_trans_fac->second->set_bcHelper( m_bcHelper[level->getID()] );
     i_util_fac->second->set_bcHelper( m_bcHelper[level->getID()] );
 
-    bool is_restart = false;
     const bool dont_pack_tasks = false;
     TaskFactoryBase::TaskMap all_tasks;
 
@@ -1153,34 +1152,11 @@ ExplicitSolver::initialize( const LevelP     & level,
     // boundary condition factory
     _task_factory_map["boundary_condition_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
 
-    //initialize factory
-    all_tasks.clear();
-    all_tasks = i_init_fac->second->retrieve_all_tasks();
-    for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++) {
-      if ( i->first == "Lx" || i->first == "Lvel" || i->first == "Ld") {
-        std::cout << "Delaying particle calc..." << std::endl;
-      } else {
-        i->second->schedule_init(level, sched, matls, is_restart);
-      }
-    }
+    i_lag_fac->second->schedule_task_group("all_tasks", TaskInterface::INITIALIZE,
+      dont_pack_tasks, level, sched, matls );
 
-    //have to delay and order these specific tasks...clean this up later...
-    TaskFactoryBase::TaskMap::iterator iLX = all_tasks.find("Lx");
-    if ( iLX != all_tasks.end() ) iLX->second->schedule_init(level, sched, matls, is_restart);
-    TaskFactoryBase::TaskMap::iterator iLD = all_tasks.find("Ld");
-    if ( iLD != all_tasks.end() ) iLD->second->schedule_init(level, sched, matls, is_restart);
-    TaskFactoryBase::TaskMap::iterator iLV = all_tasks.find("Lvel");
-    if ( iLV != all_tasks.end() ) iLV->second->schedule_init(level, sched, matls, is_restart);
-
-    //lagrangian particles
-    all_tasks.clear();
-    all_tasks = i_lag_fac->second->retrieve_all_tasks();
-    for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++) {
-      i->second->schedule_init(level, sched, matls, is_restart );
-    }
-
-    //turbulence models
-    //i_turb_model_fac->second->schedule_initialization( level, sched, matls, is_restart );
+    i_init_fac->second->schedule_task_group("all_tasks", TaskInterface::INITIALIZE,
+      dont_pack_tasks, level, sched, matls );
 
     //------------------ New Task Interface (end) ------------------------------------------------
 
@@ -1382,14 +1358,9 @@ ExplicitSolver::sched_restartInitialize( const LevelP& level, SchedulerP& sched 
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
 
   typedef std::map<std::string, std::shared_ptr<TaskFactoryBase> > BFM;
-  BFM::iterator i_property_models_fac = _task_factory_map.find("property_models_factory");
-  TaskFactoryBase::TaskMap all_prop_tasks = i_property_models_fac->second->retrieve_all_tasks();
 
-  for ( TaskFactoryBase::TaskMap::iterator i = all_prop_tasks.begin(); i != all_prop_tasks.end(); i++) {
-
-    i->second->schedule_init( level, sched, matls, doingRestart );
-
-  }
+  _task_factory_map["property_models_factory"]->schedule_task_group("all_tasks", TaskInterface::RESTART_INITIALIZE,
+    false, level, sched, matls );
 
   setupBoundaryConditions( level, sched, doingRestart );
 
@@ -1443,7 +1414,8 @@ ExplicitSolver::sched_restartInitialize( const LevelP& level, SchedulerP& sched 
     d_boundaryCondition->sched_setupNewIntrusions( sched, level, matls );
 
     //turbulence models
-    _task_factory_map["turbulence_model_factory"]->schedule_initialization( level, sched, matls, doingRestart );
+    _task_factory_map["turbulence_model_factory"]->schedule_task_group("all_tasks", TaskInterface::RESTART_INITIALIZE, 
+                                                                        false, level, sched, matls ); 
 
   }
 
@@ -1930,12 +1902,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     //ParticleModels evaluated after the RK averaging.
     //All particle transport should draw from the "latest" DW (old for rk = 0, new for rk > 0)
-    std::vector<std::string> post_update_part_tasks
-      = i_particle_models->second->retrieve_task_subset("post_update_particle_models");
-    for ( std::vector<std::string>::iterator itsk = post_update_part_tasks.begin(); itsk != post_update_part_tasks.end(); itsk++ ){
-      TaskInterface* tsk = i_particle_models->second->retrieve_task(*itsk);
-      tsk->schedule_task( level, sched, matls, TaskInterface::STANDARD_TASK, curr_level );
-    }
+    i_particle_models->second->schedule_task_group("post_update_particle_models", TaskInterface::TIMESTEP_EVAL,
+      dont_pack_tasks, level, sched, matls, curr_level );
 
 
     // STAGE 0
@@ -1950,17 +1918,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                       d_timeIntegratorLabels[curr_level]);
 
     //------------------ New Task Interface (start) ------------------------------------------------
-    const TaskFactoryBase::TypeToTaskMap& den_guess_tasks = i_property_models->second->retrieve_type_to_tasks();
-    TaskFactoryBase::TypeToTaskMap::const_iterator i_den_guess = den_guess_tasks.find("density_predictor");
-    if ( i_den_guess != den_guess_tasks.end() ){
-      for ( std::vector<std::string>::const_iterator idg = i_den_guess->second.begin();
-            idg != i_den_guess->second.end(); idg++ ){
-        TaskInterface* tsk = i_property_models->second->retrieve_task(*idg);
-        tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, curr_level);
-      }
-    }
-
-
+    // i_property_models->second->schedule_task_group("density_predictor", TaskInterface::TIMESTEP_EVAL,
+    //   dont_pack_tasks, level, sched, matls, curr_level );
     //------------------ New Task Interface (end) ------------------------------------------------
 
 
@@ -1996,12 +1955,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       hl_model->sched_computeProp( level, sched, curr_level );
 
     //------------------ New Task Interface (start) ------------------------------------------------
-    std::vector<std::string> pre_table_props
-    = i_property_models->second->retrieve_task_subset("pre_table_post_iv_update");
-    for ( std::vector<std::string>::iterator itsk = pre_table_props.begin(); itsk != pre_table_props.end(); itsk++ ){
-      TaskInterface* tsk = i_property_models->second->retrieve_task(*itsk);
-      tsk->schedule_task( level, sched, matls, TaskInterface::STANDARD_TASK, curr_level );
-    }
+    i_property_models->second->schedule_task_group("pre_table_post_iv_update", TaskInterface::TIMESTEP_EVAL,
+      dont_pack_tasks, level, sched, matls, curr_level );
     //------------------ New Task Interface (end) ------------------------------------------------
 
 
@@ -2187,48 +2142,34 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       d_turbModel->sched_reComputeTurbSubmodel(sched, level, matls,
                                                d_timeIntegratorLabels[curr_level]);
 
-    TaskFactoryBase::TaskMap all_turb_models =
-     _task_factory_map["turbulence_model_factory"]->retrieve_all_tasks();
-       for ( TaskFactoryBase::TaskMap::iterator i = all_turb_models.begin(); i != all_turb_models.end(); i++){
-      i->second->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, curr_level);
-    }
+    _task_factory_map["turbulence_model_factory"]->schedule_task_group("all_tasks", TaskInterface::TIMESTEP_EVAL,
+      dont_pack_tasks, level, sched, matls, curr_level );
 
 
   } // END OF RK LOOP
 
   //variable math:
   const std::vector<std::string> math_tasks = i_util->second->retrieve_tasks_by_type("variable_math");
-
-  for( std::vector<std::string>::const_iterator i = math_tasks.begin(); i != math_tasks.end(); i++ ) {
-    TaskInterface* tsk = i_util->second->retrieve_task(*i);
-    //time substep??
-    tsk->schedule_task( level, sched, matls, TaskInterface::STANDARD_TASK, 0 );
-  }
+  i_util->second->schedule_task_group("all_math_tasks", math_tasks, TaskInterface::TIMESTEP_EVAL,
+    dont_pack_tasks,
+    level, sched, matls, 0 );
 
   //Property Models before starting over
-  std::vector<std::string> final_prop_tasks = i_property_models->second->retrieve_task_subset("final_property_models");
-  for ( std::vector<std::string>::iterator itsk = final_prop_tasks.begin(); itsk != final_prop_tasks.end(); itsk++ ){
+  i_property_models->second->schedule_task_group("final_property_models",
+    TaskInterface::TIMESTEP_EVAL, dont_pack_tasks,
+    level, sched, matls, 1 );
 
-    TaskInterface* tsk = i_property_models->second->retrieve_task(*itsk);
-    //passing in curr_level > 0 because we are at the end of the time step
-    tsk->schedule_task( level, sched, matls, TaskInterface::STANDARD_TASK, 1 );
-
-  }
-
+  //Wall HF
   std::vector<std::string> wall_hf_tasks =
     i_property_models->second->retrieve_tasks_by_type("wall_heatflux_variable");
-  i_property_models->second->schedule_task_group(
-    "wall_heatflux_tasks", wall_hf_tasks, TaskInterface::TIMESTEP_EVAL, false, level, sched, matls );
+  i_property_models->second->schedule_task_group("wall_hf_tasks", wall_hf_tasks, TaskInterface::TIMESTEP_EVAL,
+    dont_pack_tasks,
+    level, sched, matls );
 
   //Variable stats stuff
-  std::vector<std::string> stats_tasks = i_property_models->second->retrieve_task_subset("variable_stat_models");
-  for ( std::vector<std::string>::iterator itsk = stats_tasks.begin(); itsk != stats_tasks.end(); itsk++ ){
-
-    TaskInterface* tsk = i_property_models->second->retrieve_task(*itsk);
-    //passing in curr_level > 0 because we are at the end of the time step
-    tsk->schedule_task( level, sched, matls, TaskInterface::STANDARD_TASK, 1 );
-
-  }
+  i_property_models->second->schedule_task_group("variable_stat_models",
+    TaskInterface::TIMESTEP_EVAL, dont_pack_tasks,
+    level, sched, matls, 1 );
 
   if ( d_printTotalKE ){
    sched_computeKE( sched, patches, matls );
@@ -2237,20 +2178,10 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
   if ( _doLagrangianParticles ) {
 
-    typedef std::map<std::string, std::shared_ptr<TaskFactoryBase> > BFM;
-    BFM::iterator i_lag_fac = _task_factory_map.find("lagrangian_factory");
-    TaskFactoryBase::TaskMap all_tasks = i_lag_fac->second->retrieve_all_tasks();
-
-    TaskFactoryBase::TaskMap::iterator i_part_size_update = all_tasks.find("update_particle_size");
-    TaskFactoryBase::TaskMap::iterator i_part_pos_update = all_tasks.find("update_particle_position");
-    TaskFactoryBase::TaskMap::iterator i_part_vel_update = all_tasks.find("update_particle_velocity");
-
     //UPDATE SIZE
-    i_part_size_update->second->schedule_task( level, sched, d_sharedState->allArchesMaterials(), TaskInterface::STANDARD_TASK, 0);
-    //UPDATE POSITION
-    i_part_pos_update->second->schedule_task( level, sched, d_sharedState->allArchesMaterials(), TaskInterface::STANDARD_TASK, 0);
-    //UPDATE VELOCITY
-    i_part_vel_update->second->schedule_task( level, sched, d_sharedState->allArchesMaterials(), TaskInterface::STANDARD_TASK, 0);
+    _task_factory_map["lagrangian_factory"]->schedule_task( "update_particle_size", TaskInterface::TIMESTEP_EVAL, level, sched, matls, 0 );
+    _task_factory_map["lagrangian_factory"]->schedule_task( "update_particle_position", TaskInterface::TIMESTEP_EVAL, level, sched, matls, 0 );
+    _task_factory_map["lagrangian_factory"]->schedule_task( "update_particle_velocity", TaskInterface::TIMESTEP_EVAL, level, sched, matls, 0 );
 
     _particlesHelper->schedule_sync_particle_position(level,sched);
     _particlesHelper->schedule_transfer_particle_ids(level,sched);

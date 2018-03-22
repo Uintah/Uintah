@@ -70,11 +70,14 @@ KokkosSolver::KokkosSolver(       SimulationStateP & shared_state
     VarLabel::create(delT_name, delt_vartype::getTypeDescription() );
   nonconstDelT->allowMultipleComputes();
   m_delTLabel = nonconstDelT;
+  // Simulation time
+  //VarLabel* m_simtime_label = VarLabel::create(simTime_name, simTime_vartype::getTypeDescription());
 }
 
 //--------------------------------------------------------------------------------------------------
 KokkosSolver::~KokkosSolver()
 {
+
   for (auto i = m_bcHelper.begin(); i != m_bcHelper.end(); i++){
     delete i->second;
   }
@@ -83,6 +86,8 @@ KokkosSolver::~KokkosSolver()
   delete m_table_lookup;
 
   VarLabel::destroy(m_delTLabel);
+ // VarLabel::destroy(m_simtime_label);
+
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -591,7 +596,7 @@ KokkosSolver::SSPRKSolve( const LevelP     & level
     i_transport->second->schedule_task_group("dqmom_psi_builders",
       TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 
-    i_transport->second->schedule_task_group("dqmom_diffusion_flux_builders", 
+    i_transport->second->schedule_task_group("dqmom_diffusion_flux_builders",
       TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 
     i_transport->second->schedule_task_group("dqmom_eqns",
@@ -692,28 +697,37 @@ KokkosSolver::SSPRKSolve( const LevelP     & level
     //Compute drhodt
     i_prop_fac->second->schedule_task( "drhodt", TaskInterface::TIMESTEP_EVAL,
       level, sched, matls, time_substep, false, true );
+
     // ** PRESSURE PROJECTION **
     if ( i_transport->second->has_task("build_pressure_system")){
 
       //APPLY BC for OULET AND PRESSURE PER STAS'S BCs
-      AtomicTaskInterface* rhohat_tsk = i_transport->second->retrieve_atomic_task("vel_rho_hat_bc");
-      rhohat_tsk->schedule_task(level, sched, matls, AtomicTaskInterface::ATOMIC_STANDARD_TASK, time_substep);
+      i_transport->second->schedule_task("vel_rho_hat_bc", TaskInterface::ATOMIC,
+                                          level, sched, matls, time_substep );
 
-      PressureEqn* press_tsk = dynamic_cast<PressureEqn*>(i_transport->second->retrieve_task("build_pressure_system"));
+      PressureEqn* press_tsk = dynamic_cast<PressureEqn*>(
+        i_transport->second->retrieve_task("build_pressure_system"));
+
       // Compute the coeffificients
-      press_tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep );
+      i_transport->second->schedule_task("build_pressure_system", TaskInterface::TIMESTEP_EVAL,
+                                          level, sched, matls, time_substep );
+
       // Compute the boundary conditions on the linear system
-      press_tsk->schedule_task(level, sched, matls, TaskInterface::BC_TASK, time_substep );
+      i_transport->second->schedule_task("build_pressure_system", TaskInterface::BC,
+                                          level, sched, matls, time_substep );
+
       // Solve it - calling out to hypre external lib
       press_tsk->solve(level, sched, time_substep);
+
       // Apply boundary conditions on the pressure field. The BCs are initially applied on the
       // linear system, however, the resulting pressure field also needs BCs so that the correction
       // to the velocities is done correctly.
-      AtomicTaskInterface* press_bc_tsk = i_transport->second->retrieve_atomic_task("pressure_bcs");
-      press_bc_tsk->schedule_task(level, sched, matls, AtomicTaskInterface::ATOMIC_STANDARD_TASK, time_substep);
+      i_transport->second->schedule_task("pressure_bcs", TaskInterface::ATOMIC,
+                                          level, sched, matls, time_substep );
+
       // Correct velocities
-      AtomicTaskInterface* gradP_tsk = i_transport->second->retrieve_atomic_task("pressure_correction");
-      gradP_tsk->schedule_task(level, sched, matls, AtomicTaskInterface::ATOMIC_STANDARD_TASK, time_substep);
+      i_transport->second->schedule_task("pressure_correction", TaskInterface::ATOMIC,
+                                          level, sched, matls, time_substep );
 
     }
 
@@ -759,39 +773,26 @@ KokkosSolver::SandBox( const LevelP     & level
 
   // ----------------- Time Integration ------------------------------------------------------------
   // (pre-update properties tasks)
-  SVec prop_preupdate_tasks = i_prop_fac->second->retrieve_task_subset("pre_update_property_models");
-  for (auto i = prop_preupdate_tasks.begin(); i != prop_preupdate_tasks.end(); i++){
-    TaskInterface* tsk = i_prop_fac->second->retrieve_task(*i);
-    tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
-  }
+  i_prop_fac->second->schedule_task( "pre_update_property_models", TaskInterface::TIMESTEP_EVAL,
+    level, sched, matls, time_substep );
 
    // (pre-update source terms)
-  SVec pre_update_source = i_source_fac ->second->retrieve_task_subset("pre_update_source_task");
-  for (auto i = pre_update_source.begin(); i != pre_update_source.end(); i++){
-    TaskInterface* tsk = i_source_fac->second->retrieve_task(*i);
-    tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
-  }
+  i_source_fac->second->schedule_task( "pre_update_source_task", TaskInterface::TIMESTEP_EVAL,
+    level, sched, matls, time_substep );
 
   // first compute the psi functions for the limiters:
-  SVec scalar_psi_builders = i_transport->second->retrieve_task_subset("scalar_psi_builders");
-  for ( SVec::iterator i = scalar_psi_builders.begin(); i != scalar_psi_builders.end(); i++){
-    TaskInterface* tsk = i_transport->second->retrieve_task(*i);
-    tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
-  }
+  i_transport->second->schedule_task( "scalar_psi_builders", TaskInterface::TIMESTEP_EVAL,
+    level, sched, matls, time_substep );
 
   // now construct the RHS:
-  SVec scalar_rhs_builders = i_transport->second->retrieve_task_subset("scalar_rhs_builders");
-  for ( SVec::iterator i = scalar_rhs_builders.begin(); i != scalar_rhs_builders.end(); i++){
-    TaskInterface* tsk = i_transport->second->retrieve_task(*i);
-    tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
-    tsk->schedule_task(level, sched, matls, TaskInterface::BC_TASK, time_substep);
-  }
+  i_transport->second->schedule_task( "scalar_rhs_builders", TaskInterface::TIMESTEP_EVAL,
+    level, sched, matls, time_substep );
+    
+  i_transport->second->schedule_task( "scalar_rhs_builders", TaskInterface::BC,
+    level, sched, matls, time_substep );
 
   // now update them:
-  SVec scalar_fe_up = i_transport->second->retrieve_task_subset("scalar_fe_update");
-  for ( SVec::iterator i = scalar_fe_up.begin(); i != scalar_fe_up.end(); i++){
-    TaskInterface* tsk = i_transport->second->retrieve_task(*i);
-    tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
-  }
+  i_transport->second->schedule_task( "scalar_fe_update", TaskInterface::TIMESTEP_EVAL,
+    level, sched, matls, time_substep );
 
 }

@@ -600,11 +600,9 @@ void PropertyModelFactoryV2::schedule_initialization( const LevelP& level,
                                                       const MaterialSet* matls,
                                                       bool doing_restart ){
 
-  for ( auto i = m_task_init_order.begin(); i != m_task_init_order.end(); i++ ){
-
-    TaskInterface* tsk = retrieve_task( *i );
-    tsk->schedule_init( level, sched, matls, doing_restart );
-  }
+  const bool pack_tasks = false;
+  schedule_task_group( "Ordered_PV2_initialization", m_task_init_order, TaskInterface::INITIALIZE,
+                       pack_tasks, level, sched, matls );
 
 }
 

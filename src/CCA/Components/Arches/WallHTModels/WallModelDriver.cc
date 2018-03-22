@@ -58,8 +58,7 @@ _shared_state( shared_state )
   // Time Step
   _timeStepLabel = VarLabel::create(timeStep_name, timeStep_vartype::getTypeDescription());
 
-  // Simulation Time
-  _simulationTimeLabel = VarLabel::create(simTime_name, simTime_vartype::getTypeDescription());
+  _simulationTimeLabel = VarLabel::find(simTime_name); 
 
   // delta t
   VarLabel* nonconstDelT =
@@ -80,7 +79,6 @@ WallModelDriver::~WallModelDriver()
   }
 
   VarLabel::destroy(_timeStepLabel);
-  VarLabel::destroy(_simulationTimeLabel);
   VarLabel::destroy(_delTLabel);
 
   VarLabel::destroy( _T_copy_label );
@@ -1092,7 +1090,7 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
   double T_i, T_en, T_metal, T_sb_l, T_sb_s, dy_dep_sb_s, dy_dep_sb_l, dy_dep_sb_l_old, dy_dep_en, k_en, k_sb_s, k_sb_l, k_en_old, k_sb_s_old, k_sb_l_old;
   std::vector<double> vdot;
   std::vector<double> Dp_vec;
-  const std::string enamel_name = "enamel"; 
+  const std::string enamel_name = "enamel";
   const std::string sb_name = "sb";
   const std::string sb_l_name = "sb_liquid";
   vector<Patch::FaceType> bf;
@@ -1209,10 +1207,10 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
               vdot.clear();
               Dp_vec.clear();
               for(int i=0; i<vars.Nenv; i++) {
-                dp_arrival+=vars.particle_flow_rate_d[i][c]; 
+                dp_arrival+=vars.particle_flow_rate_d[i][c];
                 dp_flow+=vars.particle_flow_rate[i][c];
-                vdot.push_back(vars.particle_flow_rate[i][c]); 
-                Dp_vec.push_back(vars.particle_flow_rate_d[i][c]/vars.particle_flow_rate[i][c]); 
+                vdot.push_back(vars.particle_flow_rate[i][c]);
+                Dp_vec.push_back(vars.particle_flow_rate_d[i][c]/vars.particle_flow_rate[i][c]);
               }
               dp_arrival=dp_arrival/dp_flow; // [m^3/s * m]/[m^3/s]
               tau_sint=min(dp_arrival/max(vars.ave_deposit_velocity[c],1e-50),1e10); // [s]
