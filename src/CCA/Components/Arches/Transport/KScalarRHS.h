@@ -34,19 +34,6 @@
 #include <CCA/Components/Arches/UPSHelper.h>
 #include <Core/Util/Timers/Timers.hpp>
 
-#define CONVECTION(range_conv) \
-        if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ) { \
-          Uintah::ComputeConvectiveFlux                             \
-            get_flux( rho_phi, u, v, w,                             \
-                      x_flux, y_flux, z_flux, eps );                \
-          Uintah::parallel_for( range_conv, get_flux, scheme );     \
-        } else {                                                    \
-          Uintah::ComputeConvectiveFlux                             \
-            get_flux( phi, u, v, w,                                 \
-                      x_flux, y_flux, z_flux, eps );                \
-          Uintah::parallel_for( range_conv, get_flux, scheme );\
-        }                                                           
-
 #define CONVECTION_x(range_conv) \
         if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ) { \
           Uintah::ComputeConvectiveFlux1D                           \
@@ -56,7 +43,7 @@
           Uintah::ComputeConvectiveFlux1D                             \
             get_flux_x( phi, u, x_flux, eps,0 );                \
           Uintah::parallel_for( range_conv, get_flux_x, scheme );\
-        }                                                           
+        }
 #define CONVECTION_y(range_conv) \
         if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ) { \
           Uintah::ComputeConvectiveFlux1D                           \
@@ -66,7 +53,7 @@
           Uintah::ComputeConvectiveFlux1D                             \
             get_flux_y( phi, v, y_flux, eps,1 );                \
           Uintah::parallel_for( range_conv, get_flux_y, scheme );\
-        }                                                           
+        }
 #define CONVECTION_z(range_conv) \
         if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ) { \
           Uintah::ComputeConvectiveFlux1D                           \
@@ -76,7 +63,7 @@
           Uintah::ComputeConvectiveFlux1D                             \
             get_flux_z( phi, w, z_flux, eps,2 );                \
           Uintah::parallel_for( range_conv, get_flux_z, scheme );\
-        }                                                           
+        }
 namespace Uintah{
 
   template<typename T, typename PT>
@@ -143,7 +130,7 @@ private:
     typedef typename ArchesCore::VariableHelper<PT>::XFaceType FluxXT;
     typedef typename ArchesCore::VariableHelper<PT>::YFaceType FluxYT;
     typedef typename ArchesCore::VariableHelper<PT>::ZFaceType FluxZT;
-    
+
 
     std::string m_D_name;
     //std::string m_premultiplier_name;
@@ -178,7 +165,7 @@ private:
     std::vector<std::vector<SourceInfo> > m_source_info;
     struct Scaling_info {
       std::string unscaled_var; // unscaled value
-      double constant; // 
+      double constant; //
     };
     std::map<std::string, Scaling_info> m_scaling_info;
     //std::map<std::string, double> m_scaling_info;
@@ -230,8 +217,8 @@ private:
     std::string postmultiplier_name = get_postmultiplier_name(m_eqn_class);
 
     std::string env_number="NA";
-    if (m_eqn_class == ArchesCore::DQMOM) {      
-      input_db->findBlock("env_number")->getAttribute("number", env_number);    
+    if (m_eqn_class == ArchesCore::DQMOM) {
+      input_db->findBlock("env_number")->getAttribute("number", env_number);
     }
 
     for( ProblemSpecP db = input_db->findBlock("eqn"); db != nullptr; db = db->findNextBlock("eqn") ) {
@@ -249,24 +236,24 @@ private:
       } else {
         rho_phi_name = premultiplier_name + eqn_name;
       }
-      
+
       if (db->findBlock("no_weight_factor") != nullptr){
         rho_phi_name = eqn_name;//"NA";// for weights in DQMOM
         //Scaling Constant only for weight
         if (m_eqn_class == ArchesCore::DQMOM) {
           if ( db->findBlock("scaling") ){
-     
+
             double scaling_constant;
             db->findBlock("scaling")->getAttribute("value", scaling_constant);
             //m_scaling_info.insert(std::make_pair(scalar_name, scaling_constant));
-     
+
             Scaling_info scaling_w ;
             scaling_w.unscaled_var = "w_" + env_number ;
             scaling_w.constant    = scaling_constant;
             m_scaling_info.insert(std::make_pair(eqn_name, scaling_w));
           }
         }
-      }  
+      }
 
       m_transported_eqn_names.push_back(rho_phi_name);
       //Check for something other than density weighted:
@@ -355,19 +342,19 @@ private:
     }
 
     // setup the boundary conditions for this eqn set
-    
-    
+
+
     if (m_eqn_class == ArchesCore::DQMOM) {
       for ( auto i = m_transported_eqn_names.begin(); i != m_transported_eqn_names.end(); i++ ){
-        m_eqn_names_BC.push_back(*i);  
+        m_eqn_names_BC.push_back(*i);
       }
     } else {
       for ( auto i = m_eqn_names.begin(); i != m_eqn_names.end(); i++ ){
-        m_eqn_names_BC.push_back(*i);  
+        m_eqn_names_BC.push_back(*i);
       }
     }
-    
-    
+
+
     m_boundary_functors->create_bcs( input_db, m_eqn_names_BC );
 
     delete conv_helper;
@@ -451,7 +438,7 @@ private:
     //for ( auto i = m_scaling_info.begin(); i != m_scaling_info.end(); i++ ){
     //  register_variable( i->first+"_unscaled", ArchesFieldContainer::COMPUTES, variable_registry, _task_name );
     //}
-  
+
     for ( auto ieqn = m_scaling_info.begin(); ieqn != m_scaling_info.end(); ieqn++ ){
       register_variable((ieqn->second).unscaled_var, ArchesFieldContainer::COMPUTES, variable_registry, _task_name );
     }
@@ -461,7 +448,7 @@ private:
   template <typename T, typename PT> void
   KScalarRHS<T, PT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-    constCCVariable<double>& vol_fraction = 
+    constCCVariable<double>& vol_fraction =
     tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_volFraction_name);
 
     const int istart = 0;
@@ -618,7 +605,7 @@ private:
     CFYT& v = tsk_info->get_const_uintah_field_add<CFYT>(m_y_velocity_name);
     CFZT& w = tsk_info->get_const_uintah_field_add<CFZT>(m_z_velocity_name);
     CT& eps = tsk_info->get_const_uintah_field_add<CT>(m_eps_name);
-    
+
 
     const int istart = 0;
     const int iend = m_eqn_names.size();
@@ -637,7 +624,7 @@ private:
 
       //Timers::Simple timer;
       //Timers::Simple timer2;
-  
+
       //timer.start();
       //for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++) {
         //rhs[*iter] = 0.;
@@ -646,183 +633,177 @@ private:
       //std::cout << "rhs init Time: " << m_eqn_names[ieqn]<<": " <<timer().seconds() << std::endl;
 
       //timer.reset(false);
-      
+
       //timer.start();
       Uintah::BlockRange range_t(patch->getExtraCellLowIndex(),patch->getExtraCellHighIndex());
       Uintah::parallel_for(range_t,  [&]( int i,  int j, int k){
         rhs(i,j,k) = 0;
       }); //end cell loop
 
-      
+
       if ( m_conv_scheme[ieqn] != NOCONV ){
 
         //Convection:
         FXT& x_flux = tsk_info->get_uintah_field_add<FXT>(m_eqn_names[ieqn]+"_x_flux");
         FYT& y_flux = tsk_info->get_uintah_field_add<FYT>(m_eqn_names[ieqn]+"_y_flux");
         FZT& z_flux = tsk_info->get_uintah_field_add<FZT>(m_eqn_names[ieqn]+"_z_flux");
-        
+
         //IntVector low  = patch->getCellLowIndex();
         //IntVector high = patch->getExtraCellHighIndex();
-        
+
         IntVector low_x  = patch->getCellLowIndex();
         IntVector high_x = patch->getCellHighIndex();
         IntVector low_y  = patch->getCellLowIndex();
         IntVector high_y = patch->getCellHighIndex();
         IntVector low_z  = patch->getCellLowIndex();
         IntVector high_z = patch->getCellHighIndex();
-        
+
         IntVector lbuffer(0,0,0), hbuffer(0,0,0);
         int  boundary_buffer_x = 0;
         int  boundary_buffer_y = 0;
         int  boundary_buffer_z = 0;
-        
+
         if ( m_boundary_int > 0 && m_dir == 0 ) boundary_buffer_x = 1;
         if ( m_boundary_int > 0 && m_dir == 1 ) boundary_buffer_y = 1;
         if ( m_boundary_int > 0 && m_dir == 2 ) boundary_buffer_z = 1;
-        
+
         if ( patch->getBCType(Patch::xminus) != Patch::Neighbor ) {
           low_x[0]  += 1 ;
-          // xminus face is computed with central scheme  
+          // xminus face is computed with central scheme
           IntVector low  = patch->getCellLowIndex();
           IntVector high = patch->getExtraCellHighIndex();
           high[0] = low[0] + 1 ;
           Uintah::BlockRange range( low, high);
-          CentralConvection scheme; 
-          CONVECTION_x(range); 
+          CentralConvection scheme;
+          CONVECTION_x(range);
         }
-       
+
         if ( patch->getBCType(Patch::xplus)  != Patch::Neighbor ) {
            // check this
           IntVector low  = patch->getCellLowIndex();
           IntVector high = patch->getExtraCellHighIndex();
           low[0] = high[0] - boundary_buffer_x -1 ;
           Uintah::BlockRange range( low, high);
-        
-          CentralConvection scheme; 
-          CONVECTION_x(range); 
-          CONVECTION_y(range); 
-          CONVECTION_z(range); 
-        
+
+          CentralConvection scheme;
+          CONVECTION_x(range);
+          CONVECTION_y(range);
+          CONVECTION_z(range);
+
         }
-        
+
         if ( patch->getBCType(Patch::yminus) != Patch::Neighbor ) {
           low_y[1] += 1 ;
           IntVector low = patch->getCellLowIndex();
           IntVector high = patch->getExtraCellHighIndex();
           high[1] = low[1] + 1 ;
           Uintah::BlockRange range( low, high);
-        
-          CentralConvection scheme; 
-          CONVECTION_y(range); 
-        
+
+          CentralConvection scheme;
+          CONVECTION_y(range);
+
         }
-        
+
         if ( patch->getBCType(Patch::yplus)  != Patch::Neighbor ) {
           IntVector low  = patch->getCellLowIndex();
           IntVector high = patch->getExtraCellHighIndex();
           low[1] = high[1] - boundary_buffer_y -1 ;
           Uintah::BlockRange range( low, high);
-        
-          CentralConvection scheme; 
-          CONVECTION_x(range); 
-          CONVECTION_y(range); 
-          CONVECTION_z(range); 
-        
+
+          CentralConvection scheme;
+          CONVECTION_x(range);
+          CONVECTION_y(range);
+          CONVECTION_z(range);
+
         }
-        
-        
+
+
         if ( patch->getBCType(Patch::zminus) != Patch::Neighbor ) {
           low_z[2] += 1 ;
           IntVector low = patch->getCellLowIndex();
           IntVector high = patch->getExtraCellHighIndex();
           high[2] = low[2] +  1 ;
           Uintah::BlockRange range( low, high);
-        
-          CentralConvection scheme; 
-          CONVECTION_z(range); 
-        
+
+          CentralConvection scheme;
+          CONVECTION_z(range);
+
         }
-        
+
         if ( patch->getBCType(Patch::zplus)  != Patch::Neighbor ) {
           IntVector low  = patch->getCellLowIndex();
           IntVector high = patch->getExtraCellHighIndex();
           low[2] = high[2] - boundary_buffer_z -1 ;
           Uintah::BlockRange range( low, high);
-        
-          CentralConvection scheme; 
-          CONVECTION_x(range); 
-          CONVECTION_y(range); 
-          CONVECTION_z(range); 
-        
+
+          CentralConvection scheme;
+          CONVECTION_x(range);
+          CONVECTION_y(range);
+          CONVECTION_z(range);
+
         }
-        
+
         Uintah::BlockRange range_cl_to_ech_x( low_x, high_x);
         Uintah::BlockRange range_cl_to_ech_y( low_y, high_y);
         Uintah::BlockRange range_cl_to_ech_z( low_z, high_z);
-      
+
         if ( m_conv_scheme[ieqn] == UPWIND ){
-  
-          UpwindConvection scheme; 
-  
+
+          UpwindConvection scheme;
+
           //timer.reset(false);
           //timer.start();
-          CONVECTION_x(range_cl_to_ech_x); 
-          CONVECTION_y(range_cl_to_ech_y); 
-          CONVECTION_z(range_cl_to_ech_z); 
-          //CONVECTION(range_cl_to_ech); 
+          CONVECTION_x(range_cl_to_ech_x);
+          CONVECTION_y(range_cl_to_ech_y);
+          CONVECTION_z(range_cl_to_ech_z);
           //timer.stop();
           //std::cout << "CONVECTION Time: " << m_eqn_names[ieqn]<<": " <<timer().seconds() << std::endl;
-  
+
         } else if ( m_conv_scheme[ieqn] == CENTRAL ){
-  
-          CentralConvection scheme; 
-  
-          //CONVECTION(range_cl_to_ech); 
-          CONVECTION_x(range_cl_to_ech_x); 
-          CONVECTION_y(range_cl_to_ech_y); 
-          CONVECTION_z(range_cl_to_ech_z); 
-  
+
+          CentralConvection scheme;
+
+          CONVECTION_x(range_cl_to_ech_x);
+          CONVECTION_y(range_cl_to_ech_y);
+          CONVECTION_z(range_cl_to_ech_z);
+
         } else if ( m_conv_scheme[ieqn] == SUPERBEE ){
-  
-          SuperBeeConvection scheme; 
-  
-          //CONVECTION(range_cl_to_ech); 
-          CONVECTION_x(range_cl_to_ech_x); 
-          CONVECTION_y(range_cl_to_ech_y); 
-          CONVECTION_z(range_cl_to_ech_z); 
-  
+
+          SuperBeeConvection scheme;
+
+          CONVECTION_x(range_cl_to_ech_x);
+          CONVECTION_y(range_cl_to_ech_y);
+          CONVECTION_z(range_cl_to_ech_z);
+
         } else if ( m_conv_scheme[ieqn] == VANLEER ){
-  
-          VanLeerConvection scheme; 
-  
-          //CONVECTION(range_cl_to_ech); 
-          CONVECTION_x(range_cl_to_ech_x); 
-          CONVECTION_y(range_cl_to_ech_y); 
-          CONVECTION_z(range_cl_to_ech_z); 
-  
+
+          VanLeerConvection scheme;
+
+          CONVECTION_x(range_cl_to_ech_x);
+          CONVECTION_y(range_cl_to_ech_y);
+          CONVECTION_z(range_cl_to_ech_z);
+
         } else if ( m_conv_scheme[ieqn] == ROE ){
-  
-          RoeConvection scheme; 
-  
-          //CONVECTION(range_cl_to_ech); 
-          CONVECTION_x(range_cl_to_ech_x); 
-          CONVECTION_y(range_cl_to_ech_y); 
-          CONVECTION_z(range_cl_to_ech_z); 
-  
-  
+
+          RoeConvection scheme;
+
+          CONVECTION_x(range_cl_to_ech_x);
+          CONVECTION_y(range_cl_to_ech_y);
+          CONVECTION_z(range_cl_to_ech_z);
+
+
         } else if ( m_conv_scheme[ieqn] == FOURTH ){
-  
-          FourthConvection scheme; 
-  
-          //CONVECTION(range_cl_to_ech); 
-          CONVECTION_x(range_cl_to_ech_x); 
-          CONVECTION_y(range_cl_to_ech_y); 
-          CONVECTION_z(range_cl_to_ech_z); 
-  
-        } else { 
-  
-          throw InvalidValue("Error: Convection scheme for eqn: "+m_transported_eqn_names[ieqn]+" not valid.", __FILE__, __LINE__); 
-  
+
+          FourthConvection scheme;
+
+          CONVECTION_x(range_cl_to_ech_x);
+          CONVECTION_y(range_cl_to_ech_y);
+          CONVECTION_z(range_cl_to_ech_z);
+
+        } else {
+
+          throw InvalidValue("Error: Convection scheme for eqn: "+m_transported_eqn_names[ieqn]+" not valid.", __FILE__, __LINE__);
+
         }
       }
       //Diffusion:

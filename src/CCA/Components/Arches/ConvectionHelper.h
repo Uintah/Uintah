@@ -2,7 +2,7 @@
 #define Uintah_Component_Arches_CONVECTIONHELPER_h
 
 #include <CCA/Components/Arches/GridTools.h>
-#include <cmath> 
+#include <cmath>
 #include <sci_defs/kokkos_defs.h>
 
 /** @class ConvectionHelper
@@ -58,7 +58,7 @@ namespace Uintah {
     typedef typename ArchesCore::VariableHelper<CT>::XFaceType CFXT;
     typedef typename ArchesCore::VariableHelper<CT>::YFaceType CFYT;
     typedef typename ArchesCore::VariableHelper<CT>::ZFaceType CFZT;
-    
+
 //    typedef typename ArchesCore::VariableHelper<T>::ConstXFaceType CFXT;
 //    typedef typename ArchesCore::VariableHelper<T>::ConstYFaceType CFYT;
 //    typedef typename ArchesCore::VariableHelper<T>::ConstZFaceType CFZT;
@@ -106,10 +106,10 @@ namespace Uintah {
   /** @struct ComputeConvectiveFluxHelper **/
   struct FourthConvection{};
   struct UpwindConvection{};
-  struct CentralConvection{}; 
-  struct VanLeerConvection{}; 
+  struct CentralConvection{};
+  struct VanLeerConvection{};
   struct RoeConvection{};
-  struct SuperBeeConvection{}; 
+  struct SuperBeeConvection{};
 
   /**
       @struct ComputeConvectiveFlux
@@ -122,7 +122,7 @@ namespace Uintah {
   struct ComputeConvectiveFlux1D{
 
     ComputeConvectiveFlux1D( const Array3<double>& i_phi,
-                             const Array3<double>& i_u, 
+                             const Array3<double>& i_u,
                              Array3<double>& i_flux,
                              const Array3<double>& i_eps, int i_dir ) :
       phi(i_phi), u(i_u), flux(i_flux), eps(i_eps), dir(i_dir)
@@ -140,32 +140,31 @@ namespace Uintah {
 
         STENCIL3_1D(dir);
         const double Sup = u(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
-        const double afc = ( eps(IJK_) + eps(IJK_M_) ) / 2. < 0.51 ? 0.0 : 1.0;
+        const double afc = floor(( eps(IJK_) + eps(IJK_M_) ) / 2. );
         flux(IJK_) = afc * u(IJK_) * Sup;
     }
 
-    void operator()( const CentralConvection& scheme, int i, int j, int k ) const { 
+    void operator()( const CentralConvection& scheme, int i, int j, int k ) const {
        {
         STENCIL3_1D(dir);
-        const double afc  = (( eps(IJK_) + eps(IJK_M_) )/2.) < 0.51 ? 0. : 1.;
-
-        flux(IJK_) = afc * u(IJK_) * 0.5 * ( phi(IJK_) + phi(IJK_M_)); 
+        const double afc  = floor((( eps(IJK_) + eps(IJK_M_) )/2.));
+        flux(IJK_) = afc * u(IJK_) * 0.5 * ( phi(IJK_) + phi(IJK_M_));
        }
     }
 
-    void operator()( const SuperBeeConvection& scheme, int i, int j, int k ) const { 
+    void operator()( const SuperBeeConvection& scheme, int i, int j, int k ) const {
       const double tiny = 1.0e-16;
       const double huge = 1.0e10;
         double my_psi;
         STENCIL5_1D(dir);
         double r = u(IJK_) > 0 ?
                   fabs(( phi(IJK_M_) - phi(IJK_MM_) ) / ( phi(IJK_) - phi(IJK_M_) + tiny )) :
-                  fabs(( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny )) ; 
+                  fabs(( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny )) ;
 
         SUPERBEEMACRO(r);
 
-        const double afc  = (( eps(IJK_) + eps(IJK_M_) )/2.) < 0.51 ? 0. : 1.;
-        const double afcm = (( eps(IJK_M_) + eps(IJK_MM_) )/2.) < 0.51 ? 0. : 1.;
+        const double afc  = floor((( eps(IJK_) + eps(IJK_M_) )/2.));
+        const double afcm = floor((( eps(IJK_M_) + eps(IJK_MM_) )/2.));
 
         my_psi *= afc * afcm;
 
@@ -176,7 +175,7 @@ namespace Uintah {
 
     }
 
-    void operator()( const VanLeerConvection& scheme, int i, int j, int k ) const { 
+    void operator()( const VanLeerConvection& scheme, int i, int j, int k ) const {
       const double tiny = 1.0e-16;
       const double huge = 1.0e10;
         double my_psi;
@@ -184,12 +183,11 @@ namespace Uintah {
         STENCIL5_1D(dir);
         double r = u(IJK_) > 0 ?
               fabs(( phi(IJK_M_) - phi(IJK_MM_) ) / ( phi(IJK_) - phi(IJK_M_) + tiny )) :
-              fabs(( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny )) ; 
+              fabs(( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny )) ;
         VANLEERMACRO(r);
 
-        const double afc  = (( eps(IJK_) + eps(IJK_M_) )/2.) < 0.51 ? 0. : 1.;
-        const double afcm = (( eps(IJK_M_) + eps(IJK_MM_) )/2.) < 0.51 ? 0. : 1.;
-
+        const double afc  = floor((( eps(IJK_) + eps(IJK_M_) )/2.));
+        const double afcm = floor((( eps(IJK_M_) + eps(IJK_MM_) )/2.));
         my_psi *= afc * afcm;
 
         const double Sup = u(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
@@ -199,7 +197,7 @@ namespace Uintah {
 
     }
 
-    void operator()( const RoeConvection& scheme, int i, int j, int k ) const { 
+    void operator()( const RoeConvection& scheme, int i, int j, int k ) const {
       const double tiny = 1.0e-16;
       const double huge = 1.0e10;
         double my_psi;
@@ -207,12 +205,12 @@ namespace Uintah {
         STENCIL5_1D(dir);
         double r = u(IJK_) > 0 ?
               fabs(( phi(IJK_M_) - phi(IJK_MM_) ) / ( phi(IJK_) - phi(IJK_M_) + tiny )) :
-              fabs(( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny )); 
+              fabs(( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny ));
 
         ROEMACRO(r);
 
-        const double afc  = (( eps(IJK_) + eps(IJK_M_) )/2.) < 0.51 ? 0. : 1.;
-        const double afcm = (( eps(IJK_M_) + eps(IJK_MM_) )/2.) < 0.51 ? 0. : 1.;
+        const double afc  = floor((( eps(IJK_) + eps(IJK_M_) )/2.));
+        const double afcm = floor((( eps(IJK_M_) + eps(IJK_MM_) )/2.));
 
         my_psi *= afc * afcm;
 
@@ -229,7 +227,7 @@ namespace Uintah {
       double c2 = -1./12.;
 
         STENCIL5_1D(dir);
-        const double afc = ( eps(IJK_) + eps(IJK_M_) ) / 2. < 0.51 ? 0.0 : 1.0;
+        const double afc = floor(( eps(IJK_) + eps(IJK_M_) ) / 2.);
         flux(IJK_) = afc * u(IJK_) * ( c1*(phi(IJK_) + phi(IJK_M_)) + c2*(phi(IJK_MM_) + phi(IJK_P_)) ) ;
     }
 
@@ -250,8 +248,8 @@ namespace Uintah {
                            Array3<double>& i_flux_x, Array3<double>& i_flux_y,
                            Array3<double>& i_flux_z,
                            const Array3<double>& i_eps ) :
-      phi(i_phi), u(i_u), v(i_v), w(i_w), 
-      flux_x(i_flux_x), flux_y(i_flux_y), flux_z(i_flux_z), 
+      phi(i_phi), u(i_u), v(i_v), w(i_w),
+      flux_x(i_flux_x), flux_y(i_flux_y), flux_z(i_flux_z),
       eps(i_eps)
       {}
 
@@ -284,35 +282,35 @@ namespace Uintah {
         STENCIL3_1D(2);
         const double Sup = w(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
         const double afc = ( eps(IJK_) + eps(IJK_M_) ) / 2. < 0.51 ? 0.0 : 1.0;
-        flux_z(IJK_) = afc * w(IJK_) * Sup; 
+        flux_z(IJK_) = afc * w(IJK_) * Sup;
       }
     }
 
-    void operator()( const CentralConvection& scheme, int i, int j, int k ) const { 
+    void operator()( const CentralConvection& scheme, int i, int j, int k ) const {
       //X-dir
       {
         STENCIL3_1D(0);
         const double afc  = (( eps(IJK_) + eps(IJK_M_) )/2.) < 0.51 ? 0. : 1.;
 
-        flux_x(IJK_) = afc * u(IJK_) * 0.5 * ( phi(IJK_) + phi(IJK_M_)); 
+        flux_x(IJK_) = afc * u(IJK_) * 0.5 * ( phi(IJK_) + phi(IJK_M_));
       }
       //Y-dir
       {
         STENCIL3_1D(1);
         const double afc  = (( eps(IJK_) + eps(IJK_M_) )/2.) < 0.51 ? 0. : 1.;
 
-        flux_y(IJK_) = afc * v(IJK_) * 0.5 * ( phi(IJK_) + phi(IJK_M_)); 
+        flux_y(IJK_) = afc * v(IJK_) * 0.5 * ( phi(IJK_) + phi(IJK_M_));
       }
       //Z-dir
       {
         STENCIL3_1D(2);
         const double afc  = (( eps(IJK_) + eps(IJK_M_) )/2.) < 0.51 ? 0. : 1.;
 
-        flux_z(IJK_) = afc * w(IJK_) * 0.5 * ( phi(IJK_) + phi(IJK_M_)); 
+        flux_z(IJK_) = afc * w(IJK_) * 0.5 * ( phi(IJK_) + phi(IJK_M_));
       }
     }
 
-    void operator()( const SuperBeeConvection& scheme, int i, int j, int k ) const { 
+    void operator()( const SuperBeeConvection& scheme, int i, int j, int k ) const {
       const double tiny = 1.0e-16;
       const double huge = 1.0e10;
       //X-dir
@@ -322,7 +320,7 @@ namespace Uintah {
         STENCIL5_1D(0);
         const double r = u(IJK_) > 0 ?
              abs( ( phi(IJK_M_) - phi(IJK_MM_) ) / ( phi(IJK_) - phi(IJK_M_) + tiny ) ):
-             abs( ( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny ) ); 
+             abs( ( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny ) );
 
         SUPERBEEMACRO(r);
 
@@ -344,7 +342,7 @@ namespace Uintah {
         STENCIL5_1D(1);
         const double r = v(IJK_) > 0 ?
              abs( ( phi(IJK_M_) - phi(IJK_MM_) ) / ( phi(IJK_) - phi(IJK_M_) + tiny ) ):
-             abs( ( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny ) ); 
+             abs( ( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny ) );
 
         SUPERBEEMACRO(r);
 
@@ -366,7 +364,7 @@ namespace Uintah {
         STENCIL5_1D(2);
         const double r = w(IJK_) > 0 ?
              abs( ( phi(IJK_M_) - phi(IJK_MM_) ) / ( phi(IJK_) - phi(IJK_M_) + tiny ) ):
-             abs( ( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny ) ); 
+             abs( ( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny ) );
 
         SUPERBEEMACRO(r);
 
@@ -383,7 +381,7 @@ namespace Uintah {
       }
     }
 
-    void operator()( const VanLeerConvection& scheme, int i, int j, int k ) const { 
+    void operator()( const VanLeerConvection& scheme, int i, int j, int k ) const {
       const double tiny = 1.0e-16;
       const double huge = 1.0e10;
       //X-dir
@@ -393,7 +391,7 @@ namespace Uintah {
         STENCIL5_1D(0);
         const double r = u(IJK_) > 0 ?
              abs( ( phi(IJK_M_) - phi(IJK_MM_) ) / ( phi(IJK_) - phi(IJK_M_) + tiny ) ):
-             abs( ( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny ) ); 
+             abs( ( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny ) );
 
         VANLEERMACRO(r);
 
@@ -415,7 +413,7 @@ namespace Uintah {
         STENCIL5_1D(1);
         const double r = v(IJK_) > 0 ?
              abs( ( phi(IJK_M_) - phi(IJK_MM_) ) / ( phi(IJK_) - phi(IJK_M_) + tiny ) ):
-             abs( ( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny ) ); 
+             abs( ( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny ) );
 
         VANLEERMACRO(r);
 
@@ -437,7 +435,7 @@ namespace Uintah {
         STENCIL5_1D(2);
         const double r = w(IJK_) > 0 ?
              abs( ( phi(IJK_M_) - phi(IJK_MM_) ) / ( phi(IJK_) - phi(IJK_M_) + tiny ) ):
-             abs( ( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny ) ); 
+             abs( ( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny ) );
 
         VANLEERMACRO(r);
 
@@ -454,7 +452,7 @@ namespace Uintah {
       }
     }
 
-    void operator()( const RoeConvection& scheme, int i, int j, int k ) const { 
+    void operator()( const RoeConvection& scheme, int i, int j, int k ) const {
       const double tiny = 1.0e-16;
       const double huge = 1.0e10;
       //X-dir
@@ -464,7 +462,7 @@ namespace Uintah {
         STENCIL5_1D(0);
         const double r = u(IJK_) > 0 ?
              abs( ( phi(IJK_M_) - phi(IJK_MM_) ) / ( phi(IJK_) - phi(IJK_M_) + tiny ) ):
-             abs( ( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny ) ); 
+             abs( ( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny ) );
 
         ROEMACRO(r);
 
@@ -486,7 +484,7 @@ namespace Uintah {
         STENCIL5_1D(1);
         const double r = v(IJK_) > 0 ?
              abs( ( phi(IJK_M_) - phi(IJK_MM_) ) / ( phi(IJK_) - phi(IJK_M_) + tiny ) ):
-             abs( ( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny ) ); 
+             abs( ( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny ) );
 
         ROEMACRO(r);
 
@@ -508,7 +506,7 @@ namespace Uintah {
         STENCIL5_1D(2);
         const double r = w(IJK_) > 0 ?
              abs( ( phi(IJK_M_) - phi(IJK_MM_) ) / ( phi(IJK_) - phi(IJK_M_) + tiny ) ):
-             abs( ( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny ) ); 
+             abs( ( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny ) );
 
         ROEMACRO(r);
 
