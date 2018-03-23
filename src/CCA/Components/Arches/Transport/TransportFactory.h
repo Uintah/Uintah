@@ -33,12 +33,6 @@ namespace Uintah{
         return _momentum_spp;
       } else if ( subset == "momentum_construction" ){
         return _momentum_solve;
-      } else if ( subset == "scalar_psi_builders" ){
-        return _scalar_compute_psi;
-      } else if ( subset == "dqmom_psi_builders" ){
-        return _dqmom_compute_psi;
-      } else if ( subset == "momentum_psi_builders" ){
-        return _momentum_compute_psi;
       } else if ( subset == "pressure_eqn" ){
         return _pressure_eqn;
       } else if ( subset == "dqmom_eqns"){
@@ -49,6 +43,8 @@ namespace Uintah{
         return _scalar_diffusion;
       } else if ( subset == "dqmom_fe_update"){
         return _dqmom_fe_update;
+      } else if ( subset == "dqmom_ic_from_wic" ){
+        return _ic_from_w_ic;
       } else if ( subset == _all_tasks_str ){
         return _active_tasks;
       } else {
@@ -71,15 +67,13 @@ namespace Uintah{
     std::vector<std::string> _momentum_update;
     std::vector<std::string> _scalar_ssp;
     std::vector<std::string> _momentum_spp;
-    std::vector<std::string> _scalar_compute_psi;
-    std::vector<std::string> _momentum_compute_psi;
     std::vector<std::string> _pressure_eqn;
     std::vector<std::string> _momentum_solve;
     std::vector<std::string> _dqmom_eqns;
-    std::vector<std::string> _dqmom_compute_psi;
     std::vector<std::string> _dqmom_fe_update;
     std::vector<std::string> _dqmom_compute_diff;
     std::vector<std::string> _scalar_diffusion;
+    std::vector<std::string> _ic_from_w_ic;
 
     bool m_pack_transport_construction_tasks{false};
 

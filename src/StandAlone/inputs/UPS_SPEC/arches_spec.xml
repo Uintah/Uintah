@@ -1564,7 +1564,8 @@
                                                                         shaddix_oxidation,
                                                                         char_oxidation_ps,
                                                                         particle_variables_dqmom,
-                                                                        shaddix_enthalpy'">
+                                                                        shaddix_enthalpy,
+                                                                        particle_face_velocity'">
 
             <!-- The grid parameter is used for templated properties -->
             <grid                       spec="REQUIRED NO_DATA"

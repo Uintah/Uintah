@@ -32,9 +32,10 @@
 #include <CCA/Components/Arches/BoundaryConditions/BoundaryFunctors.h>
 #include <CCA/Components/Arches/UPSHelper.h>
 
-#ifdef DO_TIMINGS
-#  include <spatialops/util/TimeLogger.h>
-#endif
+#define MOMCONVECTION() \
+        Uintah::ComputeConvectiveFlux                                       \
+          get_flux( phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );   \
+        Uintah::parallel_for( convection_range, get_flux, scheme );         
 
 namespace Uintah{
 
@@ -329,7 +330,7 @@ private:
     for (int i = istart; i < iend; i++ ){
       register_new_variable<T>( m_vel_name[i] );
       register_new_variable<T>( m_eqn_names[i] );
-      register_new_variable<T>( m_eqn_names[i]+"_rhs" );
+      register_new_variable<T>( m_eqn_names[i]+"_RHS" );
       register_new_variable<FXT>( m_eqn_names[i]+"_x_flux" );
       register_new_variable<FYT>( m_eqn_names[i]+"_y_flux" );
       register_new_variable<FZT>( m_eqn_names[i]+"_z_flux" );
@@ -348,7 +349,7 @@ private:
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
       register_variable(  m_vel_name[ieqn] , ArchesFieldContainer::COMPUTES , variable_registry );
       register_variable(  m_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry );
-      register_variable(  m_eqn_names[ieqn]+"_rhs", ArchesFieldContainer::COMPUTES , variable_registry );
+      register_variable(  m_eqn_names[ieqn]+"_RHS", ArchesFieldContainer::COMPUTES , variable_registry );
       register_variable(  m_eqn_names[ieqn]+"_x_flux", ArchesFieldContainer::COMPUTES , variable_registry );
       register_variable(  m_eqn_names[ieqn]+"_y_flux", ArchesFieldContainer::COMPUTES , variable_registry );
       register_variable(  m_eqn_names[ieqn]+"_z_flux", ArchesFieldContainer::COMPUTES , variable_registry );
@@ -367,7 +368,7 @@ private:
 
       T& u    = tsk_info->get_uintah_field_add<T>(m_vel_name[ieqn]);
       T& phi    = tsk_info->get_uintah_field_add<T>(m_eqn_names[ieqn]);
-      T& rhs    = tsk_info->get_uintah_field_add<T>(m_eqn_names[ieqn]+"_rhs");
+      T& rhs    = tsk_info->get_uintah_field_add<T>(m_eqn_names[ieqn]+"_RHS");
       Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
       Uintah::parallel_for( range, [&](int i, int j, int k){
         phi(i,j,k) = scalar_init_value;
@@ -396,7 +397,7 @@ private:
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
       register_variable( m_vel_name[ieqn], ArchesFieldContainer::COMPUTES , variable_registry  );
       register_variable( m_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry  );
-      register_variable( m_eqn_names[ieqn]+"_rhs", ArchesFieldContainer::COMPUTES , variable_registry  );
+      register_variable( m_eqn_names[ieqn]+"_RHS", ArchesFieldContainer::COMPUTES , variable_registry  );
       register_variable( m_eqn_names[ieqn], ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::OLDDW , variable_registry  );
       register_variable( m_vel_name[ieqn], ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::OLDDW , variable_registry  );
     }
@@ -411,7 +412,7 @@ private:
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
       T& u    = tsk_info->get_uintah_field_add<T>(m_vel_name[ieqn]);
       T& phi =  tsk_info->get_uintah_field_add<T>( m_eqn_names[ieqn] );
-      T& rhs =  tsk_info->get_uintah_field_add<T>( m_eqn_names[ieqn]+"_rhs" );
+      T& rhs =  tsk_info->get_uintah_field_add<T>( m_eqn_names[ieqn]+"_RHS" );
       CT& old_phi = tsk_info->get_const_uintah_field_add<CT>( m_eqn_names[ieqn] );
       CT& old_u    = tsk_info->get_const_uintah_field_add<CT>(m_vel_name[ieqn]);
 
@@ -432,15 +433,10 @@ private:
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
 
       register_variable( m_eqn_names[ieqn], ArchesFieldContainer::REQUIRES, m_ghost_cells, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-      register_variable( m_eqn_names[ieqn]+"_rhs", ArchesFieldContainer::MODIFIES, variable_registry, time_substep );
+      register_variable( m_eqn_names[ieqn]+"_RHS", ArchesFieldContainer::MODIFIES, variable_registry, time_substep );
       register_variable( m_eqn_names[ieqn]+"_x_flux", ArchesFieldContainer::COMPUTES, variable_registry, time_substep, _task_name );
       register_variable( m_eqn_names[ieqn]+"_y_flux", ArchesFieldContainer::COMPUTES, variable_registry, time_substep, _task_name );
       register_variable( m_eqn_names[ieqn]+"_z_flux", ArchesFieldContainer::COMPUTES, variable_registry, time_substep, _task_name );
-      if ( m_conv_scheme[ieqn] != NOCONV ){
-        register_variable( m_eqn_names[ieqn]+"_x_psi", ArchesFieldContainer::REQUIRES, m_ghost_cells, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name, packed_tasks );
-        register_variable( m_eqn_names[ieqn]+"_y_psi", ArchesFieldContainer::REQUIRES, m_ghost_cells, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name, packed_tasks );
-        register_variable( m_eqn_names[ieqn]+"_z_psi", ArchesFieldContainer::REQUIRES, m_ghost_cells, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name, packed_tasks );
-      }
 
       typedef std::vector<SourceInfo> VS;
       for (typename VS::iterator i = m_source_info[ieqn].begin(); i != m_source_info[ieqn].end(); i++){
@@ -482,16 +478,12 @@ private:
     constCCVariable<double>& mu = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_mu_name));
     constCCVariable<double>& rho = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_rho_name));
 
-#ifdef DO_TIMINGS
-    SpatialOps::TimeLogger timer("kokkos_scalar_assemble.out."+_task_name);
-    timer.start("work");
-#endif
     const int istart = 0;
     const int iend = m_eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
 
       CT& phi     = *(tsk_info->get_const_uintah_field<CT>(m_eqn_names[ieqn]));
-      T& rhs      = *(tsk_info->get_uintah_field<T>(m_eqn_names[ieqn]+"_rhs"));
+      T& rhs      = *(tsk_info->get_uintah_field<T>(m_eqn_names[ieqn]+"_RHS"));
 
       //Convection:
       FXT& x_flux = *(tsk_info->get_uintah_field<FXT>(m_eqn_names[ieqn]+"_x_flux"));
@@ -508,180 +500,69 @@ private:
 
       });
 
+      //convection
       if ( m_conv_scheme[ieqn] != NOCONV ){
+
+        //IntVector low_patch_range(0,0,0); 
+        //IntVector high_patch_range(0,0,0); 
+        IntVector low_patch_range = patch->getCellLowIndex();
+        IntVector high_patch_range = patch->getCellHighIndex();
+
+        //resolve the range: 
+        if ( my_dir == ArchesCore::XDIR ){
+          GET_WALL_BUFFERED_PATCH_RANGE( low_patch_range, high_patch_range, 1, 1, 0, 1, 0, 1 );
+        } else if ( my_dir == ArchesCore::YDIR ){ 
+          GET_WALL_BUFFERED_PATCH_RANGE( low_patch_range, high_patch_range, 0, 1, 1, 1, 0, 1 );
+        } else { 
+          GET_WALL_BUFFERED_PATCH_RANGE( low_patch_range, high_patch_range, 0, 1, 0, 1, 1, 1 );
+        }
+
+        Uintah::BlockRange convection_range(low_patch_range, high_patch_range);
 
         CT& u_fx = tsk_info->get_const_uintah_field_add<CT>(m_x_velocity_name);
         CT& v_fy = tsk_info->get_const_uintah_field_add<CT>(m_y_velocity_name);
         CT& w_fz = tsk_info->get_const_uintah_field_add<CT>(m_z_velocity_name);
-
-        if ( my_dir == ArchesCore::XDIR ){
-
-          if ( tsk_info->packed_tasks() ){
-
-            FXT& x_psi = tsk_info->get_uintah_field_add<FXT>(m_eqn_names[ieqn]+"_x_psi");
-            FYT& y_psi = tsk_info->get_uintah_field_add<FYT>(m_eqn_names[ieqn]+"_y_psi");
-            FZT& z_psi = tsk_info->get_uintah_field_add<FZT>(m_eqn_names[ieqn]+"_z_psi");
-
-           if ( m_conv_scheme[ieqn] == FOURTH ) {
-
-             FourthConvection helper;
-             Uintah::ComputeConvectiveFlux<FXT, FYT, FZT >
-             get_flux( phi, u_fx, v_fy, w_fz, x_psi, y_psi, z_psi,
-                       x_flux, y_flux, z_flux, eps );
-             GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE( 1, 1 )
-             Uintah::BlockRange x_range( low_fx_patch_range, high_fx_patch_range );
-             Uintah::parallel_for( x_range, get_flux, helper );
-
-           } else {
-
-            Uintah::ComputeConvectiveFlux<FXT, FYT, FZT >
-             get_flux( phi, u_fx, v_fy, w_fz, x_psi, y_psi, z_psi,
-                       x_flux, y_flux, z_flux, eps );
-
-            GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE( 1, 1 )
-            Uintah::BlockRange x_range( low_fx_patch_range, high_fx_patch_range );
-            Uintah::parallel_for( x_range, get_flux );
-
-             }// for the fourth order convective flux
-
-          } else {
-
-            CFXT& x_psi = tsk_info->get_const_uintah_field_add<CFXT>(m_eqn_names[ieqn]+"_x_psi");
-            CFYT& y_psi = tsk_info->get_const_uintah_field_add<CFYT>(m_eqn_names[ieqn]+"_y_psi");
-            CFZT& z_psi = tsk_info->get_const_uintah_field_add<CFZT>(m_eqn_names[ieqn]+"_z_psi");
-
-             if ( m_conv_scheme[ieqn] == FOURTH ) {
-
-                  FourthConvection helper;
-                  Uintah::ComputeConvectiveFlux<CFXT, CFYT, CFZT >
-                  get_flux( phi, u_fx, v_fy, w_fz, x_psi, y_psi, z_psi,
-                            x_flux, y_flux, z_flux, eps );
-
-                  GET_WALL_BUFFERED_PATCH_RANGE(low_patch_range, high_patch_range,1,1,0,1,0,1);
-                  Uintah::BlockRange x_range( low_patch_range, high_patch_range );
-                  Uintah::parallel_for( x_range, get_flux, helper );
-
-                } else {
-
-                  Uintah::ComputeConvectiveFlux<CFXT, CFYT, CFZT >
-                  get_flux( phi, u_fx, v_fy, w_fz, x_psi, y_psi, z_psi,
-                            x_flux, y_flux, z_flux, eps );
-                  GET_WALL_BUFFERED_PATCH_RANGE(low_patch_range, high_patch_range,1,1,0,1,0,1);
-                  Uintah::BlockRange x_range( low_patch_range, high_patch_range );
-                  Uintah::parallel_for( x_range, get_flux );
-
-                } // Fourth -second
-          } // end for packed criteria
-
-        } else if ( my_dir == ArchesCore::YDIR ){
-
-          if ( tsk_info->packed_tasks() ){
-
-            FXT& x_psi = tsk_info->get_uintah_field_add<FXT>(m_eqn_names[ieqn]+"_x_psi");
-            FYT& y_psi = tsk_info->get_uintah_field_add<FYT>(m_eqn_names[ieqn]+"_y_psi");
-            FZT& z_psi = tsk_info->get_uintah_field_add<FZT>(m_eqn_names[ieqn]+"_z_psi");
-
-              if ( m_conv_scheme[ieqn] == FOURTH ) {
-
-                  FourthConvection helper;
-                  Uintah::ComputeConvectiveFlux<FXT, FYT, FZT >
-                  get_flux( phi, u_fx, v_fy, w_fz, x_psi, y_psi, z_psi, x_flux, y_flux, z_flux, eps );
-                  GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE( 1, 1 )
-                  Uintah::BlockRange y_range( low_fy_patch_range, high_fy_patch_range );
-                  Uintah::parallel_for( y_range, get_flux, helper );
-
-              }else{
-
-                 Uintah::ComputeConvectiveFlux<FXT, FYT, FZT >
-                  get_flux( phi, u_fx, v_fy, w_fz, x_psi, y_psi, z_psi, x_flux, y_flux, z_flux, eps );
-                 GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE( 1, 1 )
-                 Uintah::BlockRange y_range( low_fy_patch_range, high_fy_patch_range );
-                 Uintah::parallel_for( y_range, get_flux );
-
-              } // Fourth-second order
-
-          } else {
-
-            CFXT& x_psi = tsk_info->get_const_uintah_field_add<CFXT>(m_eqn_names[ieqn]+"_x_psi");
-            CFYT& y_psi = tsk_info->get_const_uintah_field_add<CFYT>(m_eqn_names[ieqn]+"_y_psi");
-            CFZT& z_psi = tsk_info->get_const_uintah_field_add<CFZT>(m_eqn_names[ieqn]+"_z_psi");
-
-            if ( m_conv_scheme[ieqn] == FOURTH ) {
-
-              FourthConvection helper;
-              Uintah::ComputeConvectiveFlux<CFXT, CFYT, CFZT >
-              get_flux( phi, u_fx, v_fy, w_fz, x_psi, y_psi, z_psi, x_flux, y_flux, z_flux, eps );
-              GET_WALL_BUFFERED_PATCH_RANGE(low_patch_range, high_patch_range,0,1,1,1,0,1);
-              Uintah::BlockRange y_range( low_patch_range, high_patch_range );
-              Uintah::parallel_for( y_range, get_flux, helper );
-
-              }else {
-
-              Uintah::ComputeConvectiveFlux<CFXT, CFYT, CFZT >
-              get_flux( phi, u_fx, v_fy, w_fz, x_psi, y_psi, z_psi, x_flux, y_flux, z_flux, eps );
-              GET_WALL_BUFFERED_PATCH_RANGE(low_patch_range, high_patch_range,0,1,1,1,0,1);
-              Uintah::BlockRange y_range( low_patch_range, high_patch_range );
-              Uintah::parallel_for( y_range, get_flux );
-
-            } // Fourth-second order
-
-          } // end for packed criteria
-
-
-        } else {
-
-          if ( tsk_info->packed_tasks() ){
-
-            FXT& x_psi = tsk_info->get_uintah_field_add<FXT>(m_eqn_names[ieqn]+"_x_psi");
-            FYT& y_psi = tsk_info->get_uintah_field_add<FYT>(m_eqn_names[ieqn]+"_y_psi");
-            FZT& z_psi = tsk_info->get_uintah_field_add<FZT>(m_eqn_names[ieqn]+"_z_psi");
-
-            if ( m_conv_scheme[ieqn] == FOURTH ) {
-
-              FourthConvection helper;
-              Uintah::ComputeConvectiveFlux<FXT, FYT, FZT >
-              get_flux( phi, u_fx, v_fy, w_fz, x_psi, y_psi, z_psi, x_flux, y_flux, z_flux, eps );
-              GET_EXTRACELL_FZ_BUFFERED_PATCH_RANGE( 1, 1 )
-              Uintah::BlockRange z_range( low_fz_patch_range, high_fz_patch_range );
-              Uintah::parallel_for( z_range, get_flux, helper );
-
-            } else {
-
-              Uintah::ComputeConvectiveFlux<FXT, FYT, FZT >
-              get_flux( phi, u_fx, v_fy, w_fz, x_psi, y_psi, z_psi, x_flux, y_flux, z_flux, eps );
-
-              GET_EXTRACELL_FZ_BUFFERED_PATCH_RANGE( 1, 1 )
-              Uintah::BlockRange z_range( low_fz_patch_range, high_fz_patch_range );
-              Uintah::parallel_for( z_range, get_flux );
-
-            } // fourth- second order
-
-          } else {
-
-            CFXT& x_psi = tsk_info->get_const_uintah_field_add<CFXT>(m_eqn_names[ieqn]+"_x_psi");
-            CFYT& y_psi = tsk_info->get_const_uintah_field_add<CFYT>(m_eqn_names[ieqn]+"_y_psi");
-            CFZT& z_psi = tsk_info->get_const_uintah_field_add<CFZT>(m_eqn_names[ieqn]+"_z_psi");
-
-            if ( m_conv_scheme[ieqn] == FOURTH ) {
-
-            FourthConvection helper;
-            Uintah::ComputeConvectiveFlux<CFXT, CFYT, CFZT >
-              get_flux( phi, u_fx, v_fy, w_fz, x_psi, y_psi, z_psi, x_flux, y_flux, z_flux, eps );
-              GET_WALL_BUFFERED_PATCH_RANGE(low_patch_range, high_patch_range,0,1,0,1,1,1);
-              Uintah::BlockRange z_range( low_patch_range, high_patch_range );
-              Uintah::parallel_for( z_range, get_flux, helper );
-
-            } else {
-
-            Uintah::ComputeConvectiveFlux<CFXT, CFYT, CFZT >
-              get_flux( phi, u_fx, v_fy, w_fz, x_psi, y_psi, z_psi, x_flux, y_flux, z_flux, eps );
-              GET_WALL_BUFFERED_PATCH_RANGE(low_patch_range, high_patch_range,0,1,0,1,1,1);
-              Uintah::BlockRange z_range( low_patch_range, high_patch_range );
-              Uintah::parallel_for( z_range, get_flux );
-
-            }// fourth order
-
-          } // end for packed criteria
+       
+        // switch between difference convection schemes: 
+        switch (m_conv_scheme[ieqn]){ 
+          case CENTRAL:
+            { 
+            CentralConvection scheme; 
+            MOMCONVECTION(); 
+            }
+            break; 
+          case FOURTH: 
+            {
+            FourthConvection scheme; 
+            MOMCONVECTION(); 
+            }
+            break; 
+          case VANLEER:
+            { 
+            VanLeerConvection scheme; 
+            MOMCONVECTION(); 
+            }
+            break; 
+          case SUPERBEE: 
+            {
+            SuperBeeConvection scheme; 
+            MOMCONVECTION();
+            } 
+            break; 
+          case ROE: 
+            {
+            RoeConvection scheme; 
+            MOMCONVECTION(); 
+            }
+            break; 
+          case UPWIND: 
+            {
+            UpwindConvection scheme; 
+            MOMCONVECTION(); 
+            }
+            break; 
+          default: 
+            throw InvalidValue("Error: Momentum convection scheme not recognized.", __FILE__, __LINE__); 
         }
       }
 
@@ -719,7 +600,8 @@ private:
           Uintah::BlockRange range(low_fz_patch_range, high_fz_patch_range);
           Uintah::parallel_for( range, stressTensor );
         }
-       }
+      }
+
       //Sources:
       typedef std::vector<SourceInfo> VS;
       for (typename VS::iterator isrc = m_source_info[ieqn].begin(); isrc != m_source_info[ieqn].end(); isrc++){
@@ -749,9 +631,6 @@ private:
         }
       }
     } // equation loop
-#ifdef DO_TIMINGS
-    timer.stop("work");
-#endif
 
   }
 

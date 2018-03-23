@@ -1,3 +1,4 @@
+
 #ifndef Uintah_Component_Arches_KFEUpdate_h
 #define Uintah_Component_Arches_KFEUpdate_h
 
@@ -77,9 +78,9 @@ protected:
 
     void register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks);
 
-    void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){};
+    void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks);
 
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
     void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
@@ -98,7 +99,14 @@ private:
     typedef typename ArchesCore::VariableHelper<CT>::ZFaceType CFZT;
 
     std::vector<std::string> _eqn_names;
-    std::map<std::string, double> m_scaling_info;
+    std::vector<std::string> m_transported_eqn_names;
+    //std::map<std::string, double> m_scaling_info;
+
+    struct Scaling_info {
+      std::string unscaled_var; // unscaled value
+      double constant; // 
+    };
+    std::map<std::string, Scaling_info> m_scaling_info;
 
     int _time_order;
     std::vector<double> _alpha;
@@ -107,8 +115,9 @@ private:
     ArchesCore::EQUATION_CLASS m_eqn_class;
 
     ArchesCore::DIR m_dir;
+    std::string m_volFraction_name;
 
-    std::string m_premultiplier_name;
+    //std::string m_premultiplier_name;
 
   };
 
@@ -128,8 +137,7 @@ private:
   template <typename T>
   void KFEUpdate<T>::create_local_labels(){
     for ( auto i = m_scaling_info.begin(); i != m_scaling_info.end(); i++ ){
-
-      register_new_variable<T>( i->first + "_unscaled" );
+      register_new_variable<T>( (i->second).unscaled_var);
 
     }
   }
@@ -138,12 +146,16 @@ private:
   template <typename T>
   void KFEUpdate<T>::problemSetup( ProblemSpecP& db ){
 
+    m_volFraction_name = "volFraction";
+
     std::string eqn_class = "density_weighted";
     if ( db->findAttribute("class") ){
       db->getAttribute("class", eqn_class);
     }
     m_eqn_class = ArchesCore::assign_eqn_class_enum( eqn_class );
-    m_premultiplier_name = get_premultiplier_name( m_eqn_class );
+    std::string premultiplier_name = get_premultiplier_name( m_eqn_class );
+    std::string postmultiplier_name = get_postmultiplier_name( m_eqn_class );
+    //m_premultiplier_name = get_premultiplier_name( m_eqn_class );
 
     ProblemSpecP db_root = db->getRootNode();
     db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("TimeIntegrator")->getAttribute("order", _time_order);
@@ -196,7 +208,10 @@ private:
     } else {
       throw InvalidValue("Error: <TimeIntegrator> must have value: 1, 2, or 3 (representing the order).",__FILE__, __LINE__);
     }
-
+    std::string env_number="NA";
+    if (m_eqn_class == ArchesCore::DQMOM) {      
+      db->findBlock("env_number")->getAttribute("number", env_number);    
+    }
     _eqn_names.clear();
     for (ProblemSpecP eqn_db = db->findBlock("eqn");
 	       eqn_db.get_rep() != nullptr;
@@ -207,14 +222,47 @@ private:
       eqn_db->getAttribute("label", scalar_name);
       _eqn_names.push_back(scalar_name);
 
-      //Scaling Constant
+    if (eqn_db->findBlock("no_weight_factor") == nullptr ){
+      std::string trans_variable;
+      if (m_eqn_class == ArchesCore::DQMOM) {
+
+        std::string delimiter = env_number ;
+        std::string name_1    = scalar_name.substr(0, scalar_name.find(delimiter));
+        trans_variable         = name_1 + postmultiplier_name + env_number;//
+
+      } else {
+
+        trans_variable = premultiplier_name + scalar_name + postmultiplier_name;//
+
+      }
+      //if ( eqn_db->findBlock("scaling") ){
+
+      //  double scaling_constant;
+      //  eqn_db->findBlock("scaling")->getAttribute("value", scaling_constant);
+
+      //  Scaling_info scaling_w ;
+      //  scaling_w.unscaled_var = trans_variable + "_unscaled" ;
+      //  scaling_w.constant     = scaling_constant;
+      //  m_scaling_info.insert(std::make_pair(trans_variable, scaling_w));
+      // }
+    
+      m_transported_eqn_names.push_back(trans_variable);//
+    } else {
+      // weight:  w is transported 
+          m_transported_eqn_names.push_back(scalar_name);// for weights in DQMOM
+      //Scaling Constant only for weight
       if ( eqn_db->findBlock("scaling") ){
 
         double scaling_constant;
         eqn_db->findBlock("scaling")->getAttribute("value", scaling_constant);
-        m_scaling_info.insert(std::make_pair(scalar_name, scaling_constant));
+        //m_scaling_info.insert(std::make_pair(scalar_name, scaling_constant));
 
+        Scaling_info scaling_w ;
+        scaling_w.unscaled_var = "w_" + env_number ;
+        scaling_w.constant    = scaling_constant;
+        m_scaling_info.insert(std::make_pair(scalar_name, scaling_w));
       }
+    }  
 
     }
 
@@ -225,6 +273,7 @@ private:
     if ( _eqn_names.size() == 0 ){
       std::string which_mom = _task_name.substr(0,5);
       _eqn_names.push_back(which_mom);
+      m_transported_eqn_names.push_back(which_mom);
     }
 
   }
@@ -236,31 +285,27 @@ private:
     const int time_substep , const bool packed_tasks){
 
     typedef std::vector<std::string> SV;
+    int ieqn =0;
     for ( SV::iterator i = _eqn_names.begin(); i != _eqn_names.end(); i++){
-      if ((*i == "x-mom") || (*i == "y-mom") || (*i == "z-mom")){
-        register_variable(*i, ArchesFieldContainer::MODIFIES, variable_registry, time_substep );
-        register_variable( *i, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry, time_substep );
-
-      } else {
-        std::string varname;
-        if ( m_premultiplier_name != "none" ){
-          varname = "rho_"+*i;
-        } else {
-          varname = *i;
-        }
-        register_variable( varname, ArchesFieldContainer::MODIFIES, variable_registry, time_substep );
-        register_variable( varname, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry, time_substep );
-      }
-      std::string rhs_name = *i + "_rhs";
+      register_variable( m_transported_eqn_names[ieqn], ArchesFieldContainer::MODIFIES, variable_registry, time_substep );
+      register_variable( m_transported_eqn_names[ieqn], ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry, time_substep );
+      //std::string rhs_name = *i + "_rhs";
+      std::string rhs_name = m_transported_eqn_names[ieqn] + "_RHS";
       register_variable( rhs_name, ArchesFieldContainer::MODIFIES, variable_registry, time_substep );
       register_variable( *i+"_x_flux", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
       register_variable( *i+"_y_flux", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
       register_variable( *i+"_z_flux", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+      ieqn += 1;
+      //auto iscal = m_scaling_info.find(*i);
+      //if ( iscal != m_scaling_info.end() ){
+        
+      //  register_variable( *i+"_unscaled", ArchesFieldContainer::COMPUTES, variable_registry, time_substep );
+      //}
+    }
+    register_variable( m_volFraction_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name  );
 
-      auto iscal = m_scaling_info.find(*i);
-      if ( iscal != m_scaling_info.end() ){
-        register_variable( *i+"_unscaled", ArchesFieldContainer::COMPUTES, variable_registry, time_substep );
-      }
+    for ( auto ieqn = m_scaling_info.begin(); ieqn != m_scaling_info.end(); ieqn++ ){
+      register_variable((ieqn->second).unscaled_var, ArchesFieldContainer::COMPUTES, variable_registry, time_substep );
     }
   }
 
@@ -276,22 +321,14 @@ private:
     typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
 
     const int time_substep = tsk_info->get_time_substep();
-
+    int ceqn = 0;
     for ( SV::iterator ieqn = _eqn_names.begin(); ieqn != _eqn_names.end(); ieqn++){
 
-      std::string varname;
-      if ((*ieqn == "x-mom") || (*ieqn == "y-mom") || (*ieqn == "z-mom")){
-        varname = *ieqn;
-      } else {
-        if ( m_premultiplier_name != "none" ){
-          varname = "rho_"+*ieqn;
-        } else {
-          varname = *ieqn;
-        }
-      }
-      T& phi = tsk_info->get_uintah_field_add<T>(varname);
-      T& rhs = tsk_info->get_uintah_field_add<T>(*ieqn+"_rhs");
-      CT& old_phi = tsk_info->get_const_uintah_field_add<CT>(varname, ArchesFieldContainer::OLDDW);
+      T& phi = tsk_info->get_uintah_field_add<T>(m_transported_eqn_names[ceqn]);
+      //T& rhs = tsk_info->get_uintah_field_add<T>(*ieqn+"_rhs");
+      T& rhs = tsk_info->get_uintah_field_add<T>(m_transported_eqn_names[ceqn]+"_RHS");
+      CT& old_phi = tsk_info->get_const_uintah_field_add<CT>(m_transported_eqn_names[ceqn], ArchesFieldContainer::OLDDW);
+      ceqn +=1;
       CFXT& x_flux = tsk_info->get_const_uintah_field_add<CFXT>(*ieqn+"_x_flux");
       CFYT& y_flux = tsk_info->get_const_uintah_field_add<CFYT>(*ieqn+"_y_flux");
       CFZT& z_flux = tsk_info->get_const_uintah_field_add<CFZT>(*ieqn+"_z_flux");
@@ -379,20 +416,59 @@ private:
     for ( auto ieqn = m_scaling_info.begin(); ieqn != m_scaling_info.end(); ieqn++ ){
 
       std::string varname = ieqn->first;
-      std::string unscaled_varname = ieqn->first+"_unscaled";
-      const double scaling_constant = ieqn->second;
+      Scaling_info info = ieqn->second;
+      //const double scaling_constant = ieqn->second;
+      constCCVariable<double>& vol_fraction = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_volFraction_name);
 
-      T& phi = tsk_info->get_uintah_field_add<T>( varname );
-      T& phi_unscaled = tsk_info->get_uintah_field_add<T>( unscaled_varname );
+      T& phi = tsk_info->get_uintah_field_add<T>(varname);
+      T& phi_unscaled = tsk_info->get_uintah_field_add<T>(info.unscaled_var);
 
       Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
 
       Uintah::parallel_for( range, [&](int i, int j, int k){
 
-        phi_unscaled(i,j,k) = phi(i,j,k) * scaling_constant;
+        phi_unscaled(i,j,k) = phi(i,j,k) * info.constant * vol_fraction(i,j,k);
 
       });
     }
+  }
+
+//--------------------------------------------------------------------------------------------------
+  template <typename T> void
+  KFEUpdate<T>::register_compute_bcs(
+    std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
+    const int time_substep , const bool packed_tasks){
+
+    register_variable( m_volFraction_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name  );
+    
+    for ( auto ieqn = m_scaling_info.begin(); ieqn != m_scaling_info.end(); ieqn++ ){
+      register_variable((ieqn->second).unscaled_var, ArchesFieldContainer::MODIFIES, variable_registry, _task_name );
+      register_variable(ieqn->first, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+    }
+  }
+//--------------------------------------------------------------------------------------------------
+  template <typename T > void
+  KFEUpdate<T >::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  const BndMapT& bc_info = m_bcHelper->get_boundary_information();
+  ArchesCore::VariableHelper<T> helper;
+  typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
+  constCCVariable<double>& vol_fraction = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_volFraction_name);
+  
+
+  for ( auto ieqn = m_scaling_info.begin(); ieqn != m_scaling_info.end(); ieqn++ ){
+    CT& phi = tsk_info->get_const_uintah_field_add<CT>(ieqn->first);
+    T& phi_unscaled = tsk_info->get_uintah_field_add<T>((ieqn->second).unscaled_var);
+    
+    for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
+      //Get the iterator
+      Uintah::Iterator cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
+
+        for ( cell_iter.reset(); !cell_iter.done(); cell_iter++ ){
+          IntVector c = *cell_iter;
+          phi_unscaled[c] = phi[c] * (ieqn->second).constant*vol_fraction[c] ;
+        }
+    }
+  }
   }
 }
 #endif

@@ -10,6 +10,7 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Parallel/Parallel.h>
 #include <CCA/Components/Arches/ConvectionHelper.h>
+#include <Core/Util/Timers/Timers.hpp>
 
 using namespace std;
 using namespace Uintah;
@@ -843,10 +844,12 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
 
     //----CONVECTION
     if ( d_doConv ){
-
-
+      Timers::Simple timer;
+      timer.start();
+      
       d_disc->computeConv( patch, Fconv, phi, partVel, areaFraction, d_convScheme );
-
+      timer.stop();
+      cout << "computeConv Time: "<< d_eqnName << ": "<< timer().seconds() << endl;
 
       if ( _using_new_intrusion ) {
         _intrusions[ilvl]->addScalarRHS( patch, Dx, d_eqnName, RHS );

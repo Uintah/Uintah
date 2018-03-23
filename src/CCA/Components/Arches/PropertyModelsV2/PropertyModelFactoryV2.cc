@@ -282,27 +282,27 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
 
       if ( grp_class == "null" || grp_class == "density_weighted" ){
 
-        std::string weight_task_name = "weigth_var_"+group_name;
+        std::string weight_task_name = "weight_var_"+group_name;
 
         if ( type == "CC" ){
-          TaskInterface::TaskBuilder* weigth_var_tsk =
+          TaskInterface::TaskBuilder* weight_var_tsk =
           scinew UnweightVariable<CCVariable<double>>::Builder( weight_task_name , 0 );
-          register_task( weight_task_name, weigth_var_tsk );
+          register_task( weight_task_name, weight_var_tsk );
           _phi_from_rho_phi.push_back(weight_task_name);
         } else if ( type == "FX" ){
-          TaskInterface::TaskBuilder* weigth_var_tsk =
+          TaskInterface::TaskBuilder* weight_var_tsk =
           scinew UnweightVariable<SFCXVariable<double>>::Builder( weight_task_name , 0 );
-          register_task( weight_task_name, weigth_var_tsk );
+          register_task( weight_task_name, weight_var_tsk );
           _phi_from_rho_phi.push_back(weight_task_name);
         } else if ( type == "FY" ){
-          TaskInterface::TaskBuilder* weigth_var_tsk =
+          TaskInterface::TaskBuilder* weight_var_tsk =
           scinew UnweightVariable<SFCYVariable<double>>::Builder( weight_task_name , 0 );
-          register_task( weight_task_name, weigth_var_tsk );
+          register_task( weight_task_name, weight_var_tsk );
           _phi_from_rho_phi.push_back(weight_task_name);
         } else if ( type == "FZ" ){
-          TaskInterface::TaskBuilder* weigth_var_tsk =
+          TaskInterface::TaskBuilder* weight_var_tsk =
           scinew UnweightVariable<SFCZVariable<double>>::Builder( weight_task_name , 0 );
-          register_task( weight_task_name, weigth_var_tsk );
+          register_task( weight_task_name, weight_var_tsk );
           _phi_from_rho_phi.push_back(weight_task_name);
         }
 
@@ -431,9 +431,9 @@ if ( db->findBlock("PropertyModelsV2") != nullptr){
     std::string type = "null";
     group_db->getAttribute("label", group_name);
     group_db->getAttribute("type", type );
-    std::string weight_task_name = "weigth_var_"+group_name;
+    std::string weight_task_name = "weight_var_"+group_name;
     TaskInterface* tsk = retrieve_task(weight_task_name);
-    proc0cout << "       Task: " << group_name << "  Type: " << "compute_rho phi" << std::endl;
+    print_task_setup_info( group_name,  "compute_rho phi");
     tsk->problemSetup(group_db);
     tsk->create_local_labels();
 

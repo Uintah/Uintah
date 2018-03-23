@@ -405,6 +405,8 @@ KokkosSolver::initialize( const LevelP     & level
 
   m_task_factory_map["transport_factory"]->schedule_task_group( "dqmom_eqns", TaskInterface::BC, pack_tasks, level, sched, matls );
 
+  //m_task_factory_map["transport_factory"]->schedule_task_group( "dqmom_fe_update", TaskInterface::BC, pack_tasks, level, sched, matls );
+
   // variable that computed with density such as rho*u
   m_task_factory_map["initialize_factory"]->schedule_task_group( "rho_phi_tasks", TaskInterface::INITIALIZE, pack_tasks, level, sched, matls );
 
@@ -412,6 +414,9 @@ KokkosSolver::initialize( const LevelP     & level
   m_task_factory_map["property_models_factory"]->schedule_task_group("phifromrhophi",
     TaskInterface::INITIALIZE, pack_tasks, level, sched, matls );
 
+  // dqmom initilization for w ic
+  m_task_factory_map["transport_factory"]->schedule_task_group("dqmom_ic_from_wic",
+    TaskInterface::INITIALIZE, pack_tasks, level, sched, matls );
   //Need to apply BC's after everything is initialized
   m_task_factory_map["transport_factory"]->schedule_task_group( "momentum_construction", TaskInterface::BC, pack_tasks, level, sched, matls );
 
@@ -486,10 +491,10 @@ KokkosSolver::nonlinearSolve( const LevelP     & level
   i_util_fac->second->schedule_task( "vol_fraction_calc", TaskInterface::TIMESTEP_INITIALIZE, level,
     sched, matls );
 
-  i_particle_model_fac->second->schedule_task_group("all_tasks", TaskInterface::TIMESTEP_INITIALIZE,
+  i_transport->second->schedule_task_group( "all_tasks", TaskInterface::TIMESTEP_INITIALIZE,
     pack_tasks, level, sched, matls );
 
-  i_transport->second->schedule_task_group( "all_tasks", TaskInterface::TIMESTEP_INITIALIZE,
+  i_particle_model_fac->second->schedule_task_group("all_tasks", TaskInterface::TIMESTEP_INITIALIZE,
     pack_tasks, level, sched, matls );
 
   i_prop_fac->second->schedule_task_group( "all_tasks", TaskInterface::TIMESTEP_INITIALIZE,
@@ -580,23 +585,12 @@ KokkosSolver::SSPRKSolve( const LevelP     & level
     i_prop_fac->second->schedule_task_group( "pre_update_property_models",
       TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 
-    // particle models
-    //i_particle_model_fac->second->schedule_task_group( "char_oxidation_text",
-    //   TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
-
     // compute momentum closure
     i_turb_model_fac->second->schedule_task_group("momentum_closure",
       TaskInterface::TIMESTEP_EVAL, packed_info.turbulence, level, sched, matls, time_substep );
 
-    // compute all particle models.
-    i_particle_model_fac->second->schedule_task_group("all_tasks",
-      TaskInterface::TIMESTEP_EVAL, packed_info.turbulence, level, sched, matls, time_substep );
-
     // ** DQMOM **
-    i_transport->second->schedule_task_group("dqmom_psi_builders",
-      TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
-
-    i_transport->second->schedule_task_group("dqmom_diffusion_flux_builders",
+    i_transport->second->schedule_task_group("dqmom_diffusion_flux_builders", 
       TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 
     i_transport->second->schedule_task_group("dqmom_eqns",
@@ -605,16 +599,29 @@ KokkosSolver::SSPRKSolve( const LevelP     & level
     i_transport->second->schedule_task_group("dqmom_fe_update",
       TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 
+    i_transport->second->schedule_task_group("dqmom_eqns",
+      TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
+
+    i_transport->second->schedule_task_group("dqmom_fe_update",
+      TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
+
+    // computes ic from w*ic  :
+    i_transport->second->schedule_task_group("dqmom_ic_from_wic",
+      TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
+
+    i_transport->second->schedule_task_group("dqmom_ic_from_wic",
+      TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
+
+    // compute all particle models.
+    i_particle_model_fac->second->schedule_task_group("all_tasks",
+      TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
+
    // (pre-update source terms)
     i_source_fac->second->schedule_task_group( "pre_update_source_tasks",
       TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls , time_substep );
 
     // ** SCALARS **
     // PRE-PROJECTION
-    // first compute the psi functions for the limiters:
-    i_transport->second->schedule_task_group("scalar_psi_builders",
-      TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
-
     i_transport->second->schedule_task_group("diffusion_flux_builders",
       TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 
@@ -778,10 +785,6 @@ KokkosSolver::SandBox( const LevelP     & level
 
    // (pre-update source terms)
   i_source_fac->second->schedule_task( "pre_update_source_task", TaskInterface::TIMESTEP_EVAL,
-    level, sched, matls, time_substep );
-
-  // first compute the psi functions for the limiters:
-  i_transport->second->schedule_task( "scalar_psi_builders", TaskInterface::TIMESTEP_EVAL,
     level, sched, matls, time_substep );
 
   // now construct the RHS:

@@ -171,9 +171,9 @@ psNox::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubS
 
   for ( int i = 0; i < m_num_env; i++){ 
     std::string coal_temperatureqn_name;
-    std::string weigth_name;
-    weigth_name = ArchesCore::append_env( "w", i );                               //weight
-    tsk->requires( which_dw, VarLabel::find(weigth_name), Ghost::None, 0 ); 
+    std::string weight_name;
+    weight_name = ArchesCore::append_env( "w", i );                               //weight
+    tsk->requires( which_dw, VarLabel::find(weight_name), Ghost::None, 0 ); 
 
     coal_temperatureqn_name = ArchesCore::append_env( m_coal_temperature_root, i );              //unweighted unscaled coal temperature 
     tsk->requires( which_dw, VarLabel::find(coal_temperatureqn_name), Ghost::None, 0 ); 
@@ -347,9 +347,9 @@ psNox::computeSource( const ProcessorGroup* pc,
     //store sum of coal mass concentration* coal temperature
     for ( int i_env = 0; i_env < m_num_env; i_env++){
       constCCVariable<double> weight;
-      std::string weigth_name;
-      weigth_name = ArchesCore::append_env( "w", i_env );
-      which_dw->get( weight, VarLabel::find(weigth_name), matlIndex, patch, gn, 0 );  
+      std::string weight_name;
+      weight_name = ArchesCore::append_env( "w", i_env );
+      which_dw->get( weight, VarLabel::find(weight_name), matlIndex, patch, gn, 0 );  
       Uintah::parallel_for(range, [&](int i, int j, int k){
           //double weight   =  0.0;
           double p_area =  0.0;

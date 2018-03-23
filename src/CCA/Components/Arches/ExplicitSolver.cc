@@ -1142,12 +1142,19 @@ ExplicitSolver::initialize( const LevelP     & level,
     //transport factory
     //  initialize
     _task_factory_map["transport_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
-    //  apply BCs
+
+    //  apply BCs 
     _task_factory_map["transport_factory"]->schedule_task_group( "all_tasks", TaskInterface::BC, dont_pack_tasks, level, sched, matls );
 
-    if ( d_kokkos_dqmom_Translate ){
-      _task_factory_map["transport_factory"]->schedule_task_group( "dqmom_eqns", TaskInterface::BC, true, level, sched, matls );
-    }
+    //_task_factory_map["transport_factory"]->schedule_task_group( "dqmom_eqns", TaskInterface::BC, true, level, sched, matls );
+
+    // dqmom initilization for w ic
+    //_task_factory_map["transport_factory"]->schedule_task_group("dqmom_ic_from_wic", TaskInterface::INITIALIZE, true, level, sched, matls );
+
+    //if ( d_kokkos_dqmom_Translate ){
+    //  d_partVel->schedInitPartVel(level, sched);
+    //  _task_factory_map["transport_factory"]->schedule_task_group( "dqmom_eqns", TaskInterface::BC, true, level, sched, matls );
+    //}
 
     // boundary condition factory
     _task_factory_map["boundary_condition_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
@@ -1241,6 +1248,12 @@ ExplicitSolver::initialize( const LevelP     & level,
           DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(ieqn->second);
           dqmom_eqn->sched_getUnscaledValues( level, sched );
         }
+      } else {
+
+        // Models
+        // initialize all of the computed variables for the coal models
+        CoalModelFactory& modelFactory = CoalModelFactory::self();
+        modelFactory.sched_init_all_models( level, sched );
       }
 
       d_partVel->schedInitPartVel(level, sched);
@@ -1667,9 +1680,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     _task_factory_map["property_models_factory"]->schedule_task_group( "pre_update_property_models",
       TaskInterface::TIMESTEP_EVAL, dont_pack_tasks, level, sched, matls, curr_level );
 
-    i_transport->second->schedule_task_group("scalar_psi_builders",
-      TaskInterface::TIMESTEP_EVAL, dont_pack_tasks, level, sched, matls, curr_level );
-
     i_transport->second->schedule_task_group("scalar_rhs_builders",
       TaskInterface::TIMESTEP_EVAL, dont_pack_tasks, level, sched, matls, curr_level );
 
@@ -1707,11 +1717,11 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
       // Compute the particle velocities at time t w^tu^t/w^t
       d_partVel->schedComputePartVel( level, sched, curr_level );
+      CoalModelFactory& modelFactory = CoalModelFactory::self();
 
       // Evaluate DQMOM equations
       if ( !d_kokkos_dqmom_Translate ){
 
-        CoalModelFactory& modelFactory = CoalModelFactory::self();
         DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns();
         DQMOMEqnFactory::EqnMap& weights_eqns = dqmomFactory.retrieve_weights_eqns();
         DQMOMEqnFactory::EqnMap& abscissas_eqns = dqmomFactory.retrieve_abscissas_eqns();
@@ -1786,8 +1796,9 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       } else {
 
         const int time_substep = curr_level;
-        i_transport->second->schedule_task_group("dqmom_psi_builders",
-          TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
+
+        // schedule the models for evaluation
+        modelFactory.sched_coalParticleCalculation( level, sched, curr_level );// compute drag, devol, char, etc models..
 
         i_particle_models->second->schedule_task_group( "pre_update_property_models",
                                                         TaskInterface::TIMESTEP_EVAL,
@@ -1800,9 +1811,21 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
         i_transport->second->schedule_task_group("dqmom_eqns",
           TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 
+        i_transport->second->schedule_task_group("dqmom_eqns",
+          TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
+
         i_transport->second->schedule_task_group("dqmom_fe_update",
           TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 
+        // computes ic from w*ic  :
+        i_transport->second->schedule_task_group("dqmom_ic_from_wic",
+          TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
+        
+        i_transport->second->schedule_task_group("dqmom_ic_from_wic",
+          TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
+
+        i_transport->second->schedule_task_group("dqmom_fe_update",
+          TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
       }
 
     }
