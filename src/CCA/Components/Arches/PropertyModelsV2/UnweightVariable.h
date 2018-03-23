@@ -331,7 +331,7 @@ void UnweightVariable<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager
     if ( on_this_patch ){
       //Get the iterator
       Uintah::Iterator cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
-      std::string facename = i_bc->second.name;
+      //std::string facename = i_bc->second.name;
       IntVector iDir = patch->faceDirection( i_bc->second.face );
 
       const double dot = vDir[0]*iDir[0] + vDir[1]*iDir[1] + vDir[2]*iDir[2];
@@ -485,7 +485,6 @@ void UnweightVariable<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_i
   for ( auto ieqn = m_scaling_info.begin(); ieqn != m_scaling_info.end(); ieqn++ ){
     Scaling_info info = ieqn->second;
     T& un_var = tsk_info->get_uintah_field_add<T>(info.unscaled_var);
-    //const double scaling_constant = ieqn->second;
     Uintah::parallel_for( range, [&](int i, int j, int k){
       un_var(i,j,k) *= info.constant;
     });
