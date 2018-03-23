@@ -117,9 +117,6 @@ private:
     up_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_XVEL );
     vp_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_YVEL );
     wp_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_ZVEL );
-    //up_face = up_root + "_face";
-    //vp_face = vp_root + "_face";
-    //wp_face = wp_root + "_face";
     up_face = "face_pvel_x";
     vp_face = "face_pvel_y";
     wp_face = "face_pvel_z";
@@ -141,9 +138,9 @@ private:
       std::string up_face_i = ArchesCore::append_env(up_face,i);
       std::string vp_face_i = ArchesCore::append_env(vp_face,i);
       std::string wp_face_i = ArchesCore::append_env(wp_face,i);
-      register_variable( up_face_i, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry );
-      register_variable( vp_face_i, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry );
-      register_variable( wp_face_i, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry );
+      register_variable( up_face_i, ArchesFieldContainer::COMPUTES, variable_registry );
+      register_variable( vp_face_i, ArchesFieldContainer::COMPUTES, variable_registry );
+      register_variable( wp_face_i, ArchesFieldContainer::COMPUTES, variable_registry );
 
       std::string up_i = ArchesCore::append_env(up_root,i);
       std::string vp_i = ArchesCore::append_env(vp_root,i);
@@ -224,9 +221,9 @@ private:
       std::string up_face_i = ArchesCore::append_env(up_face,ienv);
       std::string vp_face_i = ArchesCore::append_env(vp_face,ienv);
       std::string wp_face_i = ArchesCore::append_env(wp_face,ienv);
-      register_variable( up_face_i, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep  );
-      register_variable( vp_face_i, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep  );
-      register_variable( wp_face_i, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep  );
+      register_variable( up_face_i, ArchesFieldContainer::COMPUTES, variable_registry , _task_name  );
+      register_variable( vp_face_i, ArchesFieldContainer::COMPUTES, variable_registry , _task_name  );
+      register_variable( wp_face_i, ArchesFieldContainer::COMPUTES, variable_registry , _task_name  );
 
       std::string up_i = ArchesCore::append_env(up_root,ienv);
       std::string vp_i = ArchesCore::append_env(vp_root,ienv);
