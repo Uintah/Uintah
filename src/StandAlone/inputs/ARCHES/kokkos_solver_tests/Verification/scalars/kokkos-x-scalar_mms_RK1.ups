@@ -12,7 +12,7 @@
     <initTime>0.0</initTime>
     <delt_min>0.02</delt_min>
     <delt_max>0.02</delt_max>
-    <delt_init>1e-5</delt_init>
+    <delt_init>1e-1</delt_init>
     <timestep_multiplier>0.3</timestep_multiplier>
     <max_Timesteps>50</max_Timesteps>
   </Time>
@@ -22,11 +22,6 @@
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
     <save label="cc_phi_upwind"/>
-    <save label="rho_cc_phi_upwind"/>
-    <!--save label="cc_phi_vanleer"/>
-    <save label="cc_phi_superbee"/>
-    <save label="cc_phi_central"/>
-    <save label="cc_phi_f_central"/-->
     <save label="phi_mms"/>
     <save label="phi_mms_source_time"/>
     <checkpoint cycle="2" interval=".3"/>
