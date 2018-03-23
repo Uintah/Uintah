@@ -589,6 +589,14 @@ KokkosSolver::SSPRKSolve( const LevelP     & level
     i_turb_model_fac->second->schedule_task_group("momentum_closure",
       TaskInterface::TIMESTEP_EVAL, packed_info.turbulence, level, sched, matls, time_substep );
 
+    // compute all particle models.
+    i_particle_model_fac->second->schedule_task_group("all_tasks",
+      TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
+
+   // (pre-update source terms)
+    i_source_fac->second->schedule_task_group( "pre_update_source_tasks",
+      TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls , time_substep );
+
     // ** DQMOM **
     i_transport->second->schedule_task_group("dqmom_diffusion_flux_builders", 
       TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
@@ -612,13 +620,6 @@ KokkosSolver::SSPRKSolve( const LevelP     & level
     i_transport->second->schedule_task_group("dqmom_ic_from_wic",
       TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
 
-    // compute all particle models.
-    i_particle_model_fac->second->schedule_task_group("all_tasks",
-      TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
-
-   // (pre-update source terms)
-    i_source_fac->second->schedule_task_group( "pre_update_source_tasks",
-      TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls , time_substep );
 
     // ** SCALARS **
     // PRE-PROJECTION

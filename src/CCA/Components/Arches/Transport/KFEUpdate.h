@@ -460,12 +460,16 @@ private:
     T& phi_unscaled = tsk_info->get_uintah_field_add<T>((ieqn->second).unscaled_var);
     
     for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
+      const bool on_this_patch = i_bc->second.has_patch(patch->getID());
       //Get the iterator
-      Uintah::Iterator cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
 
-        for ( cell_iter.reset(); !cell_iter.done(); cell_iter++ ){
-          IntVector c = *cell_iter;
-          phi_unscaled[c] = phi[c] * (ieqn->second).constant*vol_fraction[c] ;
+      if ( on_this_patch ){
+        Uintah::Iterator cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
+        
+          for ( cell_iter.reset(); !cell_iter.done(); cell_iter++ ){
+            IntVector c = *cell_iter;
+            phi_unscaled[c] = phi[c] * (ieqn->second).constant*vol_fraction[c] ;
+          }
         }
     }
   }

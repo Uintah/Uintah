@@ -209,7 +209,13 @@ private:
     //Initial Value
     if ( db->findBlock("initialize") ){
       double value;
-      db->findBlock("initialize")->getAttribute("value",value);
+      if ( my_dir == ArchesCore::XDIR ){
+        db->findBlock("initialize")->getAttribute("u",value);
+      } else if ( my_dir == ArchesCore::YDIR ){
+        db->findBlock("initialize")->getAttribute("v",value);
+      } else if ( my_dir == ArchesCore::ZDIR ){
+        db->findBlock("initialize")->getAttribute("w",value);
+      }
       m_init_value.push_back(value);
     } else {
       m_init_value.push_back(0.0);
@@ -371,9 +377,9 @@ private:
       T& rhs    = tsk_info->get_uintah_field_add<T>(m_eqn_names[ieqn]+"_RHS");
       Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
       Uintah::parallel_for( range, [&](int i, int j, int k){
-        phi(i,j,k) = scalar_init_value;
+        phi(i,j,k) = 0.0;
         rhs(i,j,k) = 0.0;
-        u(i,j,k)   = 0.0;
+        u(i,j,k)   = scalar_init_value; // initial value for velocity, phi (rho_u) is computed in UnweightVariable task
       });
 
       FXT& x_flux = tsk_info->get_uintah_field_add<FXT>(m_eqn_names[ieqn]+"_x_flux");
@@ -503,9 +509,7 @@ private:
       //convection
       if ( m_conv_scheme[ieqn] != NOCONV ){
 
-        //IntVector low_patch_range(0,0,0); 
-        //IntVector high_patch_range(0,0,0); 
-        IntVector low_patch_range = patch->getCellLowIndex();
+        IntVector low_patch_range  = patch->getCellLowIndex();
         IntVector high_patch_range = patch->getCellHighIndex();
 
         //resolve the range: 

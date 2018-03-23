@@ -53,10 +53,9 @@
             get_flux_x( rho_phi, u, x_flux, eps,0 );                \
           Uintah::parallel_for( range_conv, get_flux_x, scheme );   \
         } else {                                                    \
-          Uintah::ComputeConvectiveFlux                             \
-            get_flux( phi, u, v, w,                                 \
-                      x_flux, y_flux, z_flux, eps );                \
-          Uintah::parallel_for( range_conv, get_flux, scheme );\
+          Uintah::ComputeConvectiveFlux1D                             \
+            get_flux_x( phi, u, x_flux, eps,0 );                \
+          Uintah::parallel_for( range_conv, get_flux_x, scheme );\
         }                                                           
 #define CONVECTION_y(range_conv) \
         if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ) { \
@@ -64,10 +63,9 @@
             get_flux_y( rho_phi, v, y_flux, eps,1 );                \
           Uintah::parallel_for( range_conv, get_flux_y, scheme );   \
         } else {                                                    \
-          Uintah::ComputeConvectiveFlux                             \
-            get_flux( phi, u, v, w,                                 \
-                      x_flux, y_flux, z_flux, eps );                \
-          Uintah::parallel_for( range_conv, get_flux, scheme );\
+          Uintah::ComputeConvectiveFlux1D                             \
+            get_flux_y( phi, v, y_flux, eps,1 );                \
+          Uintah::parallel_for( range_conv, get_flux_y, scheme );\
         }                                                           
 #define CONVECTION_z(range_conv) \
         if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ) { \
@@ -75,10 +73,9 @@
             get_flux_z( rho_phi, w, z_flux, eps,2 );                \
           Uintah::parallel_for( range_conv, get_flux_z, scheme );   \
         } else {                                                    \
-          Uintah::ComputeConvectiveFlux                             \
-            get_flux( phi, u, v, w,                                 \
-                      x_flux, y_flux, z_flux, eps );                \
-          Uintah::parallel_for( range_conv, get_flux, scheme );\
+          Uintah::ComputeConvectiveFlux1D                             \
+            get_flux_z( phi, w, z_flux, eps,2 );                \
+          Uintah::parallel_for( range_conv, get_flux_z, scheme );\
         }                                                           
 namespace Uintah{
 
@@ -547,13 +544,9 @@ private:
       T& rhs = tsk_info->get_uintah_field_add<T>( m_transported_eqn_names[ieqn]+"_RHS" );
       CT& old_phi = tsk_info->get_const_uintah_field_add<CT>( m_eqn_names[ieqn] );
 
-      //if ( m_premultiplier_name != "none" ){
-      //if ( m_transported_eqn_names[ieqn] != "NA" ) {
       if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ) {
         CT& old_rho_phi = tsk_info->get_const_uintah_field_add<CT>(m_transported_eqn_names[ieqn] );
         T& rho_phi      = tsk_info->get_uintah_field_add<T>( m_transported_eqn_names[ieqn] );
-        //CT& old_rho_phi = tsk_info->get_const_uintah_field_add<CT>(m_premultiplier_name+m_eqn_names[ieqn] );
-        //T& rho_phi      = tsk_info->get_uintah_field_add<T>( m_premultiplier_name+m_eqn_names[ieqn] );
         rho_phi.copyData(old_rho_phi);
       }
 

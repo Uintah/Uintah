@@ -1315,6 +1315,10 @@
         <convection                     spec="OPTIONAL NO_DATA"
                                         attribute1="scheme REQUIRED STRING 'central, upwind, superbee, roe, vanleer,fourth'"/>
         <inviscid                       spec="OPTIONAL NO_DATA"/> <!-- Turn off diffusion -->
+        <initialize                     spec="OPTIONAL NO_DATA"
+                                        attribute1="u REQUIRED DOUBLE"
+                                        attribute2="v REQUIRED DOUBLE"
+                                        attribute3="w REQUIRED DOUBLE"/>
         <src_x                          spec="OPTIONAL NO_DATA"
                                         attribute1=" label REQUIRED STRING"/>
 
