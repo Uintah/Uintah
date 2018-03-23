@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from os import symlink,environ, system
 from sys import argv,exit,platform
@@ -434,7 +434,7 @@ def getTestList(me) :
   elif me == "BUILDBOTTESTS":
     TESTS = ignorePerformanceTests( NIGHTLYTESTS + RMCRTTESTS )
   else:
-    print "\nERROR:ARCHES.py  getTestList:  The test list (%s) does not exist!\n\n" % me
+    print("\nERROR:ARCHES.py  getTestList:  The test list (%s) does not exist!\n\n" % me)
     exit(1)
   return TESTS
 

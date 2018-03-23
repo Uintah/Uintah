@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from os import system, mkdir, path, getcwd
 from sys import exit
@@ -8,13 +8,13 @@ def bulletProofInputs(inputsDir, org_filename):
   try:
     path.exists(inputsDir)
   except Exception:
-    print " ERROR: modUPS: the inputs directory (%s) does not exist" % inputsDir
+    print(" ERROR: modUPS: the inputs directory (%s) does not exist" % inputsDir)
     exit(1)
 
   try:
     path.exists(org_filename)
   except Exception:
-    print " ERROR: modUPS: the orginal ups file (%s) does not exist" % org_filename
+    print(" ERROR: modUPS: the orginal ups file (%s) does not exist" % org_filename)
     exit(1)
 
 
@@ -139,10 +139,10 @@ def modUPS2( inputsDir, filename, changes):
     rc = system("which xmlstarlet > /dev/null 2>&1")
 
     if rc == 256:
-      print "__________________________________"
-      print "  ERROR:modUPS.py "
-      print "      The command (xmlstarlet) was not found and the file %s was not modified" % filename
-      print "__________________________________"
+      print("__________________________________")
+      print("  ERROR:modUPS.py ")
+      print("      The command (xmlstarlet) was not found and the file %s was not modified" % filename)
+      print("__________________________________")
       return
 
     #__________________________________
@@ -159,10 +159,10 @@ def modUPS2( inputsDir, filename, changes):
         command = "xmlstarlet edit --delete %s %s > %s "% (option[0], mod_filename, tmp_filename )
 
       else:
-        print "__________________________________"
-        print "  ERROR:modUPS.py "
-        print "      The operation (%s) was not found and the file %s was not modified" % (operation, filename )
-        print "__________________________________"
+        print("__________________________________")
+        print("  ERROR:modUPS.py ")
+        print("      The operation (%s) was not found and the file %s was not modified" % (operation, filename ))
+        print("__________________________________")
         return
       system(command)
 

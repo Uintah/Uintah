@@ -1,5 +1,5 @@
-#! /usr/bin/env python
-from runSusTests import getTestName
+#! /usr/bin/env python3
+from .runSusTests import getTestName
 import os
 import sys
 import importlib
@@ -30,8 +30,8 @@ sys.argv.append(inputDir)
 
 #__________________________________
 for component in components :
-  print "__________________________________________%s:%s" % (dbgOpt, component)
-  print " The following gold standards are orphans"
+  print("__________________________________________%s:%s" % (dbgOpt, component))
+  print(" The following gold standards are orphans")
 
   #define gold standard path
   gs_path = "%s/%s" % (GS_dir, component)
@@ -57,4 +57,4 @@ for component in components :
         continue
     
     if( isOrphan ):
-      print "  rm -rf %s/%s " % (gs_path, target)
+      print("  rm -rf %s/%s " % (gs_path, target))
