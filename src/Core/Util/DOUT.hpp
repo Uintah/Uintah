@@ -29,9 +29,11 @@
 #include <cstdlib>
 #include <cstring>
 
+#include <map>
 #include <sstream>
 #include <string>
 
+#include <Core/Exceptions/InternalError.h>
 #include <Core/Parallel/UintahMPI.h>
 
 
@@ -84,14 +86,37 @@ public:
   Dout & operator=( const Dout & ) = default;
   Dout & operator=( Dout && )      = default;
 
-  Dout( std::string const & name, bool default_active )
+  Dout( std::string const & name,
+	std::string const & component,
+	std::string const & description,
+	bool default_active )
     : m_active{ is_active(name, default_active) }
     , m_name{ name }
-  {}
+    , m_component{ component }
+    , m_description{ description }
+  {
+    auto iter = m_all_douts.find(m_name);
+
+    if (iter != m_all_douts.end()) {
+
+      printf("These two dout are for the same component and have the same name. \n");
+      (*iter).second->print();
+      print();
+      
+      // Two douts for the same compent with the same name.
+      SCI_THROW(InternalError(std::string("Multiple Douts for component " +
+      					  m_component + " with name " + m_name),
+      			      __FILE__, __LINE__));
+    }
+
+    m_all_douts[m_name] = this;
+  }
 
   explicit operator bool() const { return m_active; }
 
-  const std::string & name () const { return m_name ; }
+  const std::string & name ()        const { return m_name; }
+  const std::string & component ()   const { return m_component; }
+  const std::string & description () const { return m_description; }
 
   friend bool operator<(const Dout & a, const Dout &b )
   {
@@ -102,6 +127,23 @@ public:
   //   active() is effectively the same as operator bool() - APH, 07/14/17
   bool active() const { return m_active; }
   void setActive( bool active ) { m_active = active; }
+
+  void print() const
+  {
+    printf( "%s Component: %s,  Name: %s,  Description: %s\n",
+	    (m_active ? "+" : "-"),
+	    m_component.c_str(), m_name.c_str(), m_description.c_str() );
+  }
+
+  static void printAll()
+  {
+    for (auto iter = m_all_douts.begin(); iter != m_all_douts.end(); ++iter)
+    {
+      (*iter).second->print();
+    }
+  }
+
+  static std::map<std::string, Dout*> m_all_douts;
 
 private:
 
@@ -133,6 +175,8 @@ private:
 
   bool        m_active {false};
   std::string m_name   {""};
+  std::string m_component   {""};
+  std::string m_description   {""};
 };
 
 } //namespace Uintah

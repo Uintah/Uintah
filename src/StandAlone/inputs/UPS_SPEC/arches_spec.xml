@@ -1315,6 +1315,10 @@
         <convection                     spec="OPTIONAL NO_DATA"
                                         attribute1="scheme REQUIRED STRING 'central, upwind, superbee, roe, vanleer,fourth'"/>
         <inviscid                       spec="OPTIONAL NO_DATA"/> <!-- Turn off diffusion -->
+        <initialize                     spec="OPTIONAL NO_DATA"
+                                        attribute1="u REQUIRED DOUBLE"
+                                        attribute2="v REQUIRED DOUBLE"
+                                        attribute3="w REQUIRED DOUBLE"/>
         <src_x                          spec="OPTIONAL NO_DATA"
                                         attribute1=" label REQUIRED STRING"/>
 
@@ -1558,12 +1562,14 @@
                                                                         deposition_enthalpy,
                                                                         coal_temperature_nebo,
                                                                         coal_temperature,
+                                                                        burnout,
                                                                         total_number_density,
                                                                         fowy_devolatilization,
                                                                         shaddix_oxidation,
                                                                         char_oxidation_ps,
                                                                         particle_variables_dqmom,
-                                                                        shaddix_enthalpy'">
+                                                                        shaddix_enthalpy,
+                                                                        particle_face_velocity'">
 
             <!-- The grid parameter is used for templated properties -->
             <grid                       spec="REQUIRED NO_DATA"
@@ -1900,6 +1906,7 @@
 
             <!-- Radiation models -->
             <calc_frequency             spec="OPTIONAL INTEGER" need_applies_to="type do_radiation rmcrt_radiation" /> <!-- calculate radiation every N steps, default = 3 -->
+            <profile_rad_frequency      spec="OPTIONAL STRING"  need_applies_to="type do_radiation" /> <!-- Turns on a global reduction to measure the temporal changes in the included string varLabel-->
             <checkForMissingIntensities spec="OPTIONAL BOOLEAN" need_applies_to="type do_radiation" /> <!-- This flag is designed to assist users using DOR with scattering, and changing their ordinate number on a restart -->
             <calc_on_all_RKsteps        spec="OPTIONAL BOOLEAN" need_applies_to="type do_radiation rmcrt_radiation" /> <!-- calculate radiation every RK step, default = false -->
             <abskt                      spec="REQUIRED NO_DATA"

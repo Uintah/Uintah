@@ -188,11 +188,10 @@ class LoadBalancer;
 
     //! Get the time the next output will occur
     virtual double getNextOutputTime() const { return m_nextOutputTime; }
-
     //! Get the time step the next output will occur
     virtual int  getNextOutputTimeStep() const { return m_nextOutputTimeStep; }
     // Pushes output back by one time step.
-    virtual void postponeNextOutputTimeStep() { m_nextOutputTimeStep++; }
+    virtual void postponeNextOutputTimeStep() { ++m_nextOutputTimeStep; }
 
     //! Get the time/time step/wall time of the next checkpoint will occur
     virtual double getNextCheckpointTime()     const { return m_nextCheckpointTime; }
@@ -222,6 +221,7 @@ class LoadBalancer;
     void   setCheckpointTimeStepInterval( int inv );
     int    getCheckpointTimeStepInterval() const { return m_checkpointTimeStepInterval; }
 
+    void   setCheckpointWallTimeInterval( int inv );
     int    getCheckpointWallTimeInterval() const { return m_checkpointWallTimeInterval; }
 
     bool   savingAsPIDX() const { return ( m_outputFileFormat == PIDX ); } 
@@ -245,6 +245,9 @@ class LoadBalancer;
     
     void   setElapsedWallTime( double val );
     double getElapsedWallTime() const { return m_elapsedWallTime; };
+     
+    void   setCheckpointCycle( int val );
+    double getCheckpointCycle() const { return m_checkpointCycle; };
      
     void setUseLocalFileSystems(bool val) { m_useLocalFileSystems = val; };
     bool getUseLocalFileSystems() const { return m_useLocalFileSystems; };

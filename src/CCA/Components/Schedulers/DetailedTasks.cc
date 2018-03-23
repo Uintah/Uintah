@@ -54,7 +54,7 @@ using namespace Uintah;
 Uintah::MasterLock g_external_ready_mutex{}; // synchronizes access to the external-ready task queue
 
 // used externally in DetailedTask.cc
-Dout g_scrubbing_dbg(      "Scrubbing",     false);
+Dout g_scrubbing_dbg(      "Scrubbing", "Schedulers", "", false);
 
 // used externally in DetailedTask.cc
 // for debugging - set the variable name (inside the quotes) and patchID to watch one in the scrubout
@@ -66,9 +66,9 @@ namespace {
 
 Uintah::MasterLock g_internal_ready_mutex{}; // synchronizes access to the internal-ready task queue
 
-Dout g_detailed_dw_dbg(    "DetailedDWDBG", false);
-Dout g_detailed_tasks_dbg( "DetailedTasks", false);
-Dout g_message_tags_dbg(   "MessageTags",   false);
+Dout g_detailed_dw_dbg(    "DetailedDWDBG", "Schedulers", "", false);
+Dout g_detailed_tasks_dbg( "DetailedTasks", "Schedulers", "", false);
+Dout g_message_tags_dbg(   "MessageTags",   "Schedulers", "", false);
 
 
 #ifdef HAVE_CUDA

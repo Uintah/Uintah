@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from sys import argv,exit
 from os import environ
@@ -71,7 +71,7 @@ def getTestList(me) :
   elif me == "BUILDBOTTESTS":
     TESTS = ignorePerformanceTests( NIGHTLYTESTS )
   else:
-    print "\nERROR:IMPM.py  getTestList:  The test list (%s) does not exist!\n\n" % me
+    print("\nERROR:IMPM.py  getTestList:  The test list (%s) does not exist!\n\n" % me)
     exit(1)
   return TESTS
 #__________________________________

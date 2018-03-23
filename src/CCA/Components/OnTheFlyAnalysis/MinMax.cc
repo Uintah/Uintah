@@ -25,6 +25,7 @@
 #include <CCA/Components/OnTheFlyAnalysis/MinMax.h>
 #include <CCA/Components/OnTheFlyAnalysis/FileInfoVar.h>
 
+#include <CCA/Ports/ApplicationInterface.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/LoadBalancer.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -60,7 +61,7 @@ using namespace std;
 //__________________________________
 //  To turn on the output
 //  setenv SCI_DEBUG "MinMax_DBG_COUT:+" 
-static DebugStream cout_doing("MinMax_DOING_COUT", false);
+static DebugStream cout_doing("MinMax_DOING_COUT", "OnTheFlyAnalysis", "Min/Max debug stream", false);
 
 //______________________________________________________________________    
 /*  TO DO:
@@ -265,18 +266,56 @@ void MinMax::problemSetup(const ProblemSpecP&,
     me.reductionMinLabel = meMin;
     d_analyzeVars.push_back(me);
   
-// #ifdef HAVE_VISIT
-//     if( sharedState->getVisIt() ) {
-//       SimulationState::analysisVar aVar;
-//       aVar.name  = label->getName();
-//       aVar.matl  = matl;
-//       aVar.level = level;
-//       aVar.labels.push_back( meMin );
-//       aVar.labels.push_back( meMax );
-    
-//       m_sharedState->d_analysisVars.push_back(aVar);
-//     }
-// #endif
+#ifdef HAVE_VISIT
+    static bool initialized = false;
+
+    if( m_application->getVisIt() && !initialized ) {
+      ApplicationInterface::analysisVar aVar;
+      aVar.component = "Analysis-MinMax";
+      aVar.name  = label->getName();
+      aVar.matl  = matl;
+      aVar.level = level;
+      aVar.labels.push_back( meMin );
+      aVar.labels.push_back( meMax );    
+      m_application->getAnalysisVars().push_back(aVar);
+
+      ApplicationInterface::interactiveVar var;
+      var.component = "Analysis-MinMax";
+      var.name       = "SamplingFrequency";
+      var.type       = Uintah::TypeDescription::double_type;
+      var.value      = (void *) &d_writeFreq;
+      var.range[0]   = 0;
+      var.range[1]   = 1e99;
+      var.modifiable = true;
+      var.recompile  = false;
+      var.modified   = false;
+      m_application->getUPSVars().push_back( var );
+
+      var.component = "Analysis-MinMax";
+      var.name       = "StartTime";
+      var.type       = Uintah::TypeDescription::double_type;
+      var.value      = (void *) &d_startTime;
+      var.range[0]   = 0;
+      var.range[1]   = 1e99;
+      var.modifiable = true;
+      var.recompile  = false;
+      var.modified   = false;
+      m_application->getUPSVars().push_back( var );
+      
+      var.component = "Analysis-MinMax";
+      var.name       = "StopTime";
+      var.type       = Uintah::TypeDescription::double_type;
+      var.value      = (void *) &d_stopTime;
+      var.range[0]   = 0;
+      var.range[1]   = 1e99;
+      var.modifiable = true;
+      var.recompile  = false;
+      var.modified   = false;
+      m_application->getUPSVars().push_back( var );
+
+      initialized = true;
+    }
+#endif
   }
   
   //__________________________________
@@ -473,8 +512,8 @@ void MinMax::computeMinMax(const ProcessorGroup* pg,
   DataWarehouse * dw = m_scheduler->get_dw(0);
   
   delt_vartype delt_var;
-  if( dw->exists( getDelTLabel() ) ) {
-    m_scheduler->get_dw(0)->get( delt_var, getDelTLabel() );
+  if( dw->exists( m_delTLabel ) ) {
+    m_scheduler->get_dw(0)->get( delt_var, m_delTLabel );
     now += delt_var;
   }
 
@@ -615,8 +654,8 @@ void MinMax::doAnalysis(const ProcessorGroup* pg,
   DataWarehouse * dw = m_scheduler->get_dw(0);
   
   delt_vartype delt_var;
-  if( dw->exists( getDelTLabel() ) ) {
-    m_scheduler->get_dw(0)->get( delt_var, getDelTLabel() );
+  if( dw->exists( m_delTLabel ) ) {
+    m_scheduler->get_dw(0)->get( delt_var, m_delTLabel );
     now += delt_var;
   }
 

@@ -33,12 +33,10 @@
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Util/DebugStream.h>
 
-#include <sci_defs/visit_defs.h>
-
 using namespace Uintah;
 using namespace std;
 
-static DebugStream grid_dbg("GridDBG",false);
+extern DebugStream regrider_dbg;
 
 
 SingleLevelRegridder::SingleLevelRegridder(const ProcessorGroup* pg) : TiledRegridder(pg)
@@ -116,18 +114,6 @@ void SingleLevelRegridder::problemSetup(const ProblemSpecP& params,
       problemSetup_BulletProofing(k);
     }
   }
-
-#ifdef HAVE_VISIT
-  static bool initialized = false;
-
-  // Running with VisIt so add in the variables that the user can
-  // modify.
-  if( m_application->getVisIt() && !initialized ) {
-    m_application->getDebugStreams().push_back( &grid_dbg );
-
-    initialized = true;
-  }
-#endif
 }
 
 

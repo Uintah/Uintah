@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from os import chdir,getcwd,mkdir,system,environ
 from sys import argv,exit,platform
@@ -64,7 +64,7 @@ def getTestList(me) :
     TESTS = ignorePerformanceTests( LOCALTESTS + NIGHTLYTESTS )
   else:
     
-    print "\nERROR:UCF.py  getTestList:  The test list (%s) does not exist!\n\n" % me
+    print("\nERROR:UCF.py  getTestList:  The test list (%s) does not exist!\n\n" % me)
     exit(1)
   return TESTS
 #__________________________________

@@ -142,6 +142,7 @@ namespace Uintah{ namespace ArchesCore{
            are std::int.
 */
 #define GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE(buffer_low, buffer_high) \
+    \
     Uintah::IntVector low_fx_patch_range = patch->getCellLowIndex(); \
     Uintah::IntVector high_fx_patch_range = patch->getCellHighIndex(); \
     if ( patch->getBCType(Patch::xminus) != Patch::Neighbor ){ \
@@ -152,8 +153,9 @@ namespace Uintah{ namespace ArchesCore{
     }
 
 #define GET_WALL_BUFFERED_PATCH_RANGE(low_patch_range, high_patch_range,\
-    buffer_low_x,buffer_high_x,\
-    buffer_low_y,buffer_high_y,buffer_low_z,buffer_high_z) \
+                                      buffer_low_x,buffer_high_x,\
+                                      buffer_low_y,buffer_high_y,\
+                                      buffer_low_z,buffer_high_z) \
     \
     if ( patch->getBCType(Patch::xminus) != Patch::Neighbor ){ \
       low_patch_range += Uintah::IntVector(buffer_low_x,0,0); \
@@ -310,7 +312,7 @@ namespace Uintah{ namespace ArchesCore{
   struct GridVarMap {
     std::string vol_frac_name = "NOT_AVAILABLE";
   };
-  
+
   template <>
   struct GridVarMap<CCVariable<double> >{
     void problemSetup( ProblemSpecP db ){
@@ -319,7 +321,7 @@ namespace Uintah{ namespace ArchesCore{
       wvel_name = parse_ups_for_role( WVELOCITY, db, "NotSet" );
       mu_name = parse_ups_for_role( TOTAL_VISCOSITY, db, "NotSet");
     }
-    std::string vol_frac_name = "cc_volume_fraction";
+    std::string vol_frac_name = "volFraction";
     std::string mu_name;
     std::string uvel_name;
     std::string vvel_name;

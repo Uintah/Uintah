@@ -66,7 +66,7 @@ using namespace Uintah;
 //______________________________________________________________________
 // Initialize class static variables:
 
-DebugStream DataArchive::dbg( "DataArchive", false );
+DebugStream DataArchive::dbg( "DataArchive", "DataArchive", "Data archive debug stream", false );
 bool        DataArchive::d_types_initialized = false;
 
 //______________________________________________________________________

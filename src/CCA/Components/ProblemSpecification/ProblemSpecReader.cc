@@ -64,8 +64,8 @@ namespace Uintah {
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
-static DebugStream dbg( "ProblemSpecReader", false );
-static DebugStream inc_dbg( "ProblemSpecReaderIncludes", false );
+static DebugStream     dbg( "ProblemSpecReader",         "ProblemSpecification", "Problem specification reader debug stream", false );
+static DebugStream inc_dbg( "ProblemSpecReaderIncludes", "ProblemSpecification", "Problem specification reader includes debug stream", false );
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 // Utility Functions:

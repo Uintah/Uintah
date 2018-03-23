@@ -120,10 +120,10 @@ PartVariablesDQMOM::register_timestep_eval(
     const std::string surfAreaF_name = ArchesCore::append_env( m_surfAreaF_root, ienv);
 
     register_variable( weight_name, ArchesFieldContainer::REQUIRES, 0,
-                       ArchesFieldContainer::NEWDW, variable_registry, time_substep);
+                       ArchesFieldContainer::LATEST, variable_registry, time_substep);
 
     register_variable( length_name, ArchesFieldContainer::REQUIRES, 0,
-                       ArchesFieldContainer::NEWDW, variable_registry, time_substep);
+                       ArchesFieldContainer::LATEST, variable_registry, time_substep);
 
      register_variable( surfAreaF_name, ArchesFieldContainer::COMPUTES, variable_registry, time_substep);
 

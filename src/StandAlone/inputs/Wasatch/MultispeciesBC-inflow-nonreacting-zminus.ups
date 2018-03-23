@@ -1,0 +1,121 @@
+<Uintah_specification>
+
+  <Meta>
+    <title>regression test: inflow non-reacting flow, z- direction</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+      
+  <Wasatch>
+
+    <Density method="COMPRESSIBLE">
+      <NameTag name="rho"/>
+    </Density>
+
+    <NSCBC pfarfield="101325."/>
+         
+    <TimeIntegrator>RK3SSP</TimeIntegrator>
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="O2"/>
+      <Constant>0.5</Constant>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="Temperature"/>
+      <GaussianFunction amplitude="300.0" deviation="0.0001" mean="0.001" baseline="300.0">
+        <NameTag name="ZSVOL"/>
+      </GaussianFunction>
+    </BasicExpression>
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="u"/>
+      <Constant>-10.</Constant>
+    </BasicExpression>
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="pressure"/>
+      <Constant>101325.0</Constant>
+    </BasicExpression>
+
+    <MomentumEquations>
+      <Z-Velocity>u</Z-Velocity>
+      <Z-Momentum>x-mom</Z-Momentum>
+      <Viscosity>
+        <NameTag name="viscosity"/>
+        <FromPoKiTT/>
+      </Viscosity>    
+    </MomentumEquations>
+
+    <EnergyEquation>
+      <SolutionVariable>rhoet</SolutionVariable>
+      <PrimitiveVariable>et</PrimitiveVariable>
+      <ConvectiveFlux direction="Z" method="CENTRAL">
+        <AdvectiveVelocity>
+          <NameTag name="u"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+    </EnergyEquation>
+    
+    <SpeciesTransportEquations>
+      <CanteraInputFile>inputs/Wasatch/h2-burke-nonreacting-2sp.xml</CanteraInputFile>
+      <CanteraGroup>h2-burke</CanteraGroup>
+      <DiffusiveFlux direction="Z">
+        <MixtureAveraged/>
+      </DiffusiveFlux> 
+      <ConvectiveFlux direction="Z" method="CENTRAL">
+        <AdvectiveVelocity>
+          <NameTag name="u"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+      <DetailedKinetics/>
+    </SpeciesTransportEquations>
+
+  </Wasatch>
+
+  <Time>
+    <maxTime>1.e-3</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>5.e-8</delt_min>
+    <delt_max>5.e-8</delt_max>
+    <max_Timesteps>250</max_Timesteps>
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+  <DataArchiver>
+    <filebase>MultispeciesBC-inflow-nonreacting-zminus.uda</filebase>
+    <outputTimestepInterval>50</outputTimestepInterval>
+    <outputInitTimestep/>
+    <compression>gzip</compression>
+    <save label="O2"/>
+    <save label="u"/>
+    <save label="pressure"/>
+    <save label="Temperature"/>
+  </DataArchiver>
+
+  <Grid>
+    <BoundaryConditions>
+      <DefaultMaterial>all</DefaultMaterial>
+      <Face side="z+" type="Velocity">
+        <BCType var="Dirichlet" label="temporary_O2_for_bcs" value="0.5"/>
+        <BCType var="Dirichlet" label="temporary_u_for_bcs" value="-10."/>
+        <BCType var="Dirichlet" label="temporary_Temperature_for_bcs" value="600.0"/>
+        <BCType var="Dirichlet" label="temporary_pressure_for_bcs" value="101325.0"/>
+      </Face>
+      <Face side="z-" type="Open"></Face>
+    </BoundaryConditions>
+    <Level>
+      <Box label="1">
+        <lower>[-1.e-3,-1.e-3,-1.e-3]</lower>
+        <upper>[+1.e-3,+1.e-3,+1.e-3]</upper>
+        <resolution>[1,1,100]</resolution>
+        <patches>[1,1,1]</patches>
+      </Box>
+      <periodic>[1,1,0]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>
+

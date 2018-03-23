@@ -18,6 +18,7 @@
     <outputTimestepInterval>1</outputTimestepInterval>
     <!--outputInterval>0.01</outputInterval-->
     <outputInitTimestep/>
+    <save label="burnout"/>
     <save label="divQ"/>
     <save label="heat_source"/>
     <save label="NO_zz"/>
@@ -2042,6 +2043,7 @@
         <model label="temperature_coal" type="coal_temperature">
           <const_size>true</const_size>
         </model>
+        <model label="burnout" type="burnout"/>
         <model label="zhou_deposition" type="rate_deposition">
           <CaO>0.075</CaO>
           <MgO>0.03</MgO>

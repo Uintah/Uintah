@@ -1504,14 +1504,24 @@ DORadiationModel::intensitysolveSweepOptimized( const Patch* patch,
       new_dw->get( emissSrc, _radIntSource[iband], matlIndex, patch, Ghost::None,0 );  
     }
 
-
-
     int i ;
     int im;
     int j;
     int jm;
     int k ;
     int km;
+
+    const int kstart=(_plusZ[cdirecn] ? idxLo.z() : idxHi.z()); // allows for direct logic in triple for loop  
+    const int jstart=(_plusY[cdirecn] ? idxLo.y() : idxHi.y());
+    const int istart=(_plusX[cdirecn] ? idxLo.x() : idxHi.x());
+    const int kDir=_plusZ[cdirecn] ? 1 : -1; // reverse logic for negative directions
+    const int jDir=_plusY[cdirecn] ? 1 : -1;
+    const int iDir=_plusX[cdirecn] ? 1 : -1;
+    
+    const int kEnd=_plusZ[cdirecn] ? idxHi.z() : -idxLo.z();  // reverse logic and bound for negative directions
+    const int jEnd=_plusY[cdirecn] ? idxHi.y() : -idxLo.y();
+    const int iEnd=_plusX[cdirecn] ? idxHi.x() : -idxLo.x();
+
 
     //--------------------------------------------------------//
     // definition of abskt -> abskg_soot + abskg + sum(abskp_i) + scatkt
@@ -1521,11 +1531,11 @@ DORadiationModel::intensitysolveSweepOptimized( const Patch* patch,
     // definition of abskg_i(spectral)-> abskg_i  
     //--------------------------------------------------------//
     if (_LspectralSolve){
-      for ( k = (_plusZ[cdirecn] ? idxLo.z() : idxHi.z());  (_plusZ[cdirecn] ? (k<=idxHi.z()) : (k>=idxLo.z())) ; k=k+ziter[cdirecn]){
+      for ( k = kstart ;  kDir*k<=kEnd  ; k=k+ziter[cdirecn]){
         km=k-ziter[cdirecn];
-        for ( j = (_plusY[cdirecn] ? idxLo.y() : idxHi.y());  (_plusY[cdirecn] ? (j<=idxHi.y()) : (j>=idxLo.y())) ; j=j+yiter[cdirecn]){
+        for ( j = jstart;  jDir*j<=jEnd  ; j=j+yiter[cdirecn]){
           jm=j-yiter[cdirecn];
-          for ( i = (_plusX[cdirecn] ? idxLo.x() : idxHi.x());  (_plusX[cdirecn] ? (i<=idxHi.x()) : (i>=idxLo.x())) ; i=i+xiter[cdirecn]){
+          for ( i = istart;  (iDir*i<=iEnd)  ; i=i+xiter[cdirecn]){
             im=i-xiter[cdirecn];
             if (cellType(i,j,k) !=ffield){ // if intrusions
               intensity(i,j,k) = emissSrc(i,j,k) ;
@@ -1536,11 +1546,11 @@ DORadiationModel::intensitysolveSweepOptimized( const Patch* patch,
         } // end j loop
       } // end k loop
     }else{
-      for ( k = (_plusZ[cdirecn] ? idxLo.z() : idxHi.z());  (_plusZ[cdirecn] ? (k<=idxHi.z()) : (k>=idxLo.z())) ; k=k+ziter[cdirecn]){
+      for ( k = kstart ;  kDir*k<=kEnd  ; k=k+ziter[cdirecn]){
         km=k-ziter[cdirecn];
-        for ( j = (_plusY[cdirecn] ? idxLo.y() : idxHi.y());  (_plusY[cdirecn] ? (j<=idxHi.y()) : (j>=idxLo.y())) ; j=j+yiter[cdirecn]){
+        for ( j = jstart;  jDir*j<=jEnd  ; j=j+yiter[cdirecn]){
           jm=j-yiter[cdirecn];
-          for ( i = (_plusX[cdirecn] ? idxLo.x() : idxHi.x());  (_plusX[cdirecn] ? (i<=idxHi.x()) : (i>=idxLo.x())) ; i=i+xiter[cdirecn]){
+          for ( i = istart;  (iDir*i<=iEnd)  ; i=i+xiter[cdirecn]){
             im=i-xiter[cdirecn];
             if (cellType(i,j,k) !=ffield){ // if intrusions
               intensity(i,j,k) = emissSrc(i,j,k) ;

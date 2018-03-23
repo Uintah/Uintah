@@ -167,27 +167,34 @@ CharOxidationSmith2016::problemSetup(const ProblemSpecP& params, int qn)
   std::string charqn_name = ArchesCore::append_qn_env( char_root, d_quadNode );
   _char_varlabel = VarLabel::find(char_name);
 
-  EqnBase& temp_char_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(charqn_name);
-  DQMOMEqn& char_eqn = dynamic_cast<DQMOMEqn&>(temp_char_eqn);
-  _char_scaling_constant = char_eqn.getScalingConstant(d_quadNode);
+  //EqnBase& temp_char_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(charqn_name);
+  //DQMOMEqn& char_eqn = dynamic_cast<DQMOMEqn&>(temp_char_eqn);
+  //_char_scaling_constant = char_eqn.getScalingConstant(d_quadNode);
+  _char_scaling_constant = ArchesCore::get_scaling_constant(db,char_root, d_quadNode);
+  
   std::string ic_RHS = charqn_name+"_RHS";
   _RHS_source_varlabel = VarLabel::find(ic_RHS);
 
   //CHAR get the birth term if any:
-  const std::string char_birth_name = char_eqn.get_model_by_type( "BirthDeath" );
+  //const std::string char_birth_name = char_eqn.get_model_by_type( "BirthDeath" );
+  const std::string char_birth_name = ArchesCore::getModelNameByType( db, char_root, "BirthDeath");
+  
   std::string char_birth_qn_name = ArchesCore::append_qn_env(char_birth_name, d_quadNode);
   if ( char_birth_name != "NULLSTRING" ){
     _char_birth_label = VarLabel::find( char_birth_qn_name );
   }
 
-  EqnBase& temp_rcmass_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(rcmassqn_name);
-  DQMOMEqn& rcmass_eqn = dynamic_cast<DQMOMEqn&>(temp_rcmass_eqn);
-  _RC_scaling_constant  = rcmass_eqn.getScalingConstant(d_quadNode)  ;
+  //EqnBase& temp_rcmass_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(rcmassqn_name);
+  //DQMOMEqn& rcmass_eqn = dynamic_cast<DQMOMEqn&>(temp_rcmass_eqn);
+  //_RC_scaling_constant  = rcmass_eqn.getScalingConstant(d_quadNode)  ;
+  _RC_scaling_constant = ArchesCore::get_scaling_constant(db,rcmass_root, d_quadNode);
   std::string RC_RHS = rcmassqn_name + "_RHS";
   _RC_RHS_source_varlabel = VarLabel::find(RC_RHS);
 
   //RAW COAL get the birth term if any:
-  const std::string rawcoal_birth_name = rcmass_eqn.get_model_by_type( "BirthDeath" );
+  //const std::string rawcoal_birth_name = rcmass_eqn.get_model_by_type( "BirthDeath" );
+  const std::string rawcoal_birth_name = ArchesCore::getModelNameByType( db, rcmass_root, "BirthDeath");
+  
   std::string rawcoal_birth_qn_name = ArchesCore::append_qn_env(rawcoal_birth_name, d_quadNode);
   if ( rawcoal_birth_name != "NULLSTRING" ){
     _rawcoal_birth_label = VarLabel::find( rawcoal_birth_qn_name );
@@ -203,6 +210,7 @@ CharOxidationSmith2016::problemSetup(const ProblemSpecP& params, int qn)
 
   // check for length
   _nQn_part = ArchesCore::get_num_env(db,ArchesCore::DQMOM_METHOD);
+  
   std::string length_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_SIZE);
   for (int i=0; i<_nQn_part;i++ ){
     std::string length_name = ArchesCore::append_env( length_root, i );
@@ -211,6 +219,7 @@ CharOxidationSmith2016::problemSetup(const ProblemSpecP& params, int qn)
   std::string length_qn_name = ArchesCore::append_qn_env( length_root, d_quadNode );
   std::string length_RHS = length_qn_name+"_RHS";
   _RHS_length_varlabel = VarLabel::find(length_RHS);
+  
   EqnBase& temp_length_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(length_qn_name);
   DQMOMEqn& length_eqn = dynamic_cast<DQMOMEqn&>(temp_length_eqn);
   const std::string length_birth_name = length_eqn.get_model_by_type( "BirthDeath" );
@@ -1040,33 +1049,7 @@ CharOxidationSmith2016::computeModel( const ProcessorGroup * pc,
           // 03 - No DenseMatrix
           // invert Jacobian -> (dF_(n)/drh_(n))^-1
           invf->invert_mat(dfdrh); // simple matrix inversion for a 2x2 matrix.
-          //double a11 = dfdrh[0][0];
-          //double a12 = dfdrh[0][1];
-          //double a13 = dfdrh[0][2];
-          //double a21 = dfdrh[1][0];
-          //double a22 = dfdrh[1][1];
-          //double a23 = dfdrh[1][2];
-          //double a31 = dfdrh[2][0];
-          //double a32 = dfdrh[2][1];
-          //double a33 = dfdrh[2][2];
 
-          //double det_inv = 1 / ( a11 * a22 * a33 +
-          //                       a21 * a32 * a13 +
-          //                       a31 * a12 * a23 -
-          //                       a11 * a32 * a23 -
-          //                       a31 * a22 * a13 -
-          //                       a21 * a12 * a33   );
-
-          //dfdrh[0][0] = ( a22 * a33 - a23 * a32 ) * det_inv;
-          //dfdrh[0][1] = ( a13 * a32 - a12 * a33 ) * det_inv;
-          //dfdrh[0][2] = ( a12 * a23 - a13 * a22 ) * det_inv;
-          //dfdrh[1][0] = ( a23 * a31 - a21 * a33 ) * det_inv;
-          //dfdrh[1][1] = ( a11 * a33 - a13 * a31 ) * det_inv;
-          //dfdrh[1][2] = ( a13 * a21 - a11 * a23 ) * det_inv;
-          //dfdrh[2][0] = ( a21 * a32 - a22 * a31 ) * det_inv;
-          //dfdrh[2][1] = ( a12 * a31 - a11 * a32 ) * det_inv;
-          //dfdrh[2][2] = ( a11 * a22 - a12 * a21 ) * det_inv;
-          // get rh_(n+1)
           double dominantRate=0.0;
           for (int l=0; l<_NUM_reactions; l++) {
             for (int var=0; var<_NUM_reactions; var++) {

@@ -242,7 +242,7 @@ for componentTest in $selectedCompTests; do
       BUILD_TYPE="dbg"
   fi
 
-  echo "python -u TestScripts/$componentTest.py susdir inputs goldStandard $BUILD_TYPE $PARALLELISM "'$1' >> "$doTestScript"
+  echo "python3 -u TestScripts/$componentTest.py susdir inputs goldStandard $BUILD_TYPE $PARALLELISM "'$1' >> "$doTestScript"
 
   /bin/chmod a+x "$doTestScript"
 

@@ -44,10 +44,10 @@ namespace Uintah {
 
 namespace {
 
-Dout mpi_stats{  "MPIStats",  false };
-Dout exec_times{ "ExecTimes", false };
-Dout wait_times{ "WaitTimes", false };
-Dout task_stats{ "TaskStats", false };
+Dout  mpi_stats( "MPIStats",  "Schedulers", "Runtime MPI Stats",  false);
+Dout exec_times( "ExecTimes", "Schedulers", "Runtime Exec Stats", false);
+Dout wait_times( "WaitTimes", "Schedulers", "Runtime Wait Stats", false);
+Dout task_stats( "TaskStats", "Schedulers", "Runtime Task Stats", false);
 
 struct ReportValue
 {

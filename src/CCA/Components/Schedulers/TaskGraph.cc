@@ -44,8 +44,6 @@
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/ProgressiveWarning.h>
 
-#include <sci_defs/visit_defs.h>
-
 #include <iostream>
 #include <map>
 #include <memory>
@@ -57,12 +55,12 @@ using namespace Uintah;
 
 namespace {
 
-Dout g_tg_phase_dbg(          "TaskGraphPhases"              , false);
-Dout g_proc_neighborhood_dbg( "ProcNeighborhood"             , false);
-Dout g_find_computes_dbg(     "FindComputes"                 , false);
-Dout g_add_task_dbg(          "TaskGraphAddTask"             , false);
-Dout g_detailed_task_dbg(     "TaskGraphDetailedTasks"       , false);
-Dout g_detailed_deps_dbg(     "TaskGraphDetailedDependencies", false);
+Dout g_tg_phase_dbg(          "TaskGraphPhases"              , "Schedulers", "Task graph ???", false);
+Dout g_proc_neighborhood_dbg( "ProcNeighborhood"             , "Schedulers", "Task graph ???", false);
+Dout g_find_computes_dbg(     "FindComputes"                 , "Schedulers", "Task graph ???", false);
+Dout g_add_task_dbg(          "TaskGraphAddTask"             , "Schedulers", "Task graph ???", false);
+Dout g_detailed_task_dbg(     "TaskGraphDetailedTasks"       , "Schedulers", "Task graph ???", false);
+Dout g_detailed_deps_dbg(     "TaskGraphDetailedDependencies", "Schedulers", "Task graph ???", false);
 
 }
 
@@ -80,24 +78,6 @@ TaskGraph::TaskGraph(       SchedulerCommon   * sched
   , m_index{index}
 {
   m_load_balancer = dynamic_cast<LoadBalancer*>( m_scheduler->getPort("load balancer") );
-
-// #ifdef HAVE_VISIT
-//   static bool initialized = false;
-//
-//   // Running with VisIt so add in the variables that the user can modify.
-//   if (state->getVisIt() && !initialized) {
-//
-//     state->d_douts.push_back(&g_tg_phase_dbg);
-//     state->d_douts.push_back(&g_proc_neighborhood_dbg);
-//     state->d_douts.push_back(&g_find_computes_dbg);
-//     state->d_douts.push_back(&g_add_task_dbg);
-//     state->d_douts.push_back(&g_detailed_task_dbg);
-//     state->d_douts.push_back(&g_detailed_deps_dbg);
-//
-//     initialized = true;
-//   }
-// #endif
-
 }
 
 //______________________________________________________________________

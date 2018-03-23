@@ -38,6 +38,30 @@ UpdateParticleSize::problemSetup( ProblemSpecP& db ){
 
 //--------------------------------------------------------------------------------------------------
 void
+UpdateParticleSize::register_initialize(
+  std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
+  const bool packed_tasks)
+{
+  register_variable( _size_name, ArchesFieldContainer::COMPUTES, variable_registry );
+}
+
+//--------------------------------------------------------------------------------------------------
+void
+UpdateParticleSize::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+
+  ParticleTuple pd_t = tsk_info->get_uintah_particle_field( _size_name );
+  ParticleVariable<double>& pd = *(std::get<0>(pd_t));
+  ParticleSubset* p_subset = std::get<1>(pd_t);
+
+  for (auto iter = p_subset->begin(); iter != p_subset->end(); iter++){
+    particleIndex i = *iter;
+    pd[i] = 0.0;
+  }
+
+}
+
+//--------------------------------------------------------------------------------------------------
+void
 UpdateParticleSize::register_timestep_eval(
   std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
   const int time_substep, const bool packed_tasks ){

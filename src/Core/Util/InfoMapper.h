@@ -29,6 +29,8 @@
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/UintahMPI.h>
 
+#include <sci_defs/visit_defs.h>
+
 #include <iostream>
 #include <map>
 #include <sstream>
@@ -371,7 +373,6 @@ public:
       m_rank_average.resize(nStats);
       m_rank_maximum.resize(nStats);
 
-      // std::vector<double>      reduced( nStats );
       std::vector<double>      toReduce( nStats );
       std::vector<double_int>  toReduceMax( nStats );
 
@@ -381,20 +382,28 @@ public:
       // for the sum and one for the maximum. 
       for (size_t i = 0; i < nStats; ++i) {
         toReduce[i] = InfoMapper<E, T>::m_values[i];
-        toReduceMax[i] = double_int(InfoMapper<E, T>::m_values[i], myWorld->myRank());
+        toReduceMax[i] =
+	  double_int(InfoMapper<E, T>::m_values[i], myWorld->myRank());
       }
 
       // Reduction across each node.
-      // Uintah::MPI::Allreduce(&toReduce[0], &m_node_sum[0], nStats, MPI_DOUBLE, MPI_SUM, myWorld->getNodeComm());
-
+#ifdef HAVE_VISIT
+      Uintah::MPI::Allreduce(&toReduce[0], &m_node_sum[0], nStats,
+			     MPI_DOUBLE, MPI_SUM, myWorld->getNodeComm());
+#endif
+      
       // Reductions across all ranks.
       if (allReduce) {
-        Uintah::MPI::Allreduce(&toReduce[0], &m_rank_average[0], nStats, MPI_DOUBLE, MPI_SUM, myWorld->getComm());
-        Uintah::MPI::Allreduce(&toReduceMax[0], &m_rank_maximum[0], nStats, MPI_DOUBLE_INT, MPI_MAXLOC, myWorld->getComm());
+        Uintah::MPI::Allreduce(&toReduce[0], &m_rank_average[0], nStats,
+			       MPI_DOUBLE, MPI_SUM, myWorld->getComm());
+        Uintah::MPI::Allreduce(&toReduceMax[0], &m_rank_maximum[0], nStats,
+			       MPI_DOUBLE_INT, MPI_MAXLOC, myWorld->getComm());
       }
       else {
-        Uintah::MPI::Reduce(&toReduce[0], &m_rank_average[0], nStats, MPI_DOUBLE, MPI_SUM, 0, myWorld->getComm());
-        Uintah::MPI::Reduce(&toReduceMax[0], &m_rank_maximum[0], nStats, MPI_DOUBLE_INT, MPI_MAXLOC, 0, myWorld->getComm());
+        Uintah::MPI::Reduce(&toReduce[0], &m_rank_average[0], nStats,
+			    MPI_DOUBLE, MPI_SUM, 0, myWorld->getComm());
+        Uintah::MPI::Reduce(&toReduceMax[0], &m_rank_maximum[0], nStats,
+			    MPI_DOUBLE_INT, MPI_MAXLOC, 0, myWorld->getComm());
       }
 
       // Calculate the averages.

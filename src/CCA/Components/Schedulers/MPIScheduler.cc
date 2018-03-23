@@ -46,7 +46,6 @@
 #include <Core/Util/Timers/Timers.hpp>
 
 #include <sci_defs/kokkos_defs.h>
-#include <sci_defs/visit_defs.h>
 
 #ifdef UINTAH_ENABLE_KOKKOS
 #  include <Kokkos_Core.hpp>
@@ -80,20 +79,20 @@ Uintah::MasterLock g_send_time_mutex{};         // for reporting thread-safe MPI
 Uintah::MasterLock g_recv_time_mutex{};         // for reporting thread-safe MPI recv times
 Uintah::MasterLock g_wait_time_mutex{};         // for reporting thread-safe MPI wait times
 
-Dout g_dbg(          "MPIScheduler_DBG"       , false );
-Dout g_send_stats(   "MPISendStats"           , false );
-Dout g_reductions(   "ReductionTasks"         , false );
-Dout g_time_out(     "MPIScheduler_TimingsOut", false );
-Dout g_task_level(   "TaskLevel"              , false );
+Dout g_dbg(          "MPIScheduler_DBG"       , "Schedulers", "", false );
+Dout g_send_stats(   "MPISendStats"           , "Schedulers", "", false );
+Dout g_reductions(   "ReductionTasks"         , "Schedulers", "", false );
+Dout g_time_out(     "MPIScheduler_TimingsOut", "Schedulers", "", false );
+Dout g_task_level(   "TaskLevel"              , "Schedulers", "", false );
 
 }
 
 
 // these are used externally, keep them visible outside this unit
-Dout g_task_order( "TaskOrder", false );
-Dout g_task_dbg(   "TaskDBG"  , false );
-Dout g_mpi_dbg(    "MPIDBG"   , false );
-Dout g_exec_out(   "ExecTimes", false );
+Dout g_task_order( "TaskOrder", "Schedulers", "MPIScheduler task order debug stream", false );
+Dout g_task_dbg(   "TaskDBG"  , "Schedulers", "MPIScheduler task debug stream", false );
+Dout g_mpi_dbg(    "MPIDBG"   , "Schedulers", "MPIScheduler MPI debug stream", false );
+Dout g_exec_out(   "ExecOut"  , "Schedulers", "MPIScheduler exec debug stream", false );
 
 std::map<std::string, double> g_exec_times;
 
@@ -152,26 +151,6 @@ MPIScheduler::problemSetup( const ProblemSpecP     & prob_spec
                           )
 {
   SchedulerCommon::problemSetup(prob_spec, state);
-
-#ifdef HAVE_VISIT
-  static bool initialized = false;
-
-  // Running with VisIt so add in the variables that the user can
-  // modify.
-  if( m_application->getVisIt() && !initialized ) {
-    m_application->getDouts().push_back( &g_dbg );
-    m_application->getDouts().push_back( &g_send_stats );
-    m_application->getDouts().push_back( &g_reductions );
-    m_application->getDouts().push_back( &g_time_out );
-    m_application->getDouts().push_back( &g_task_level );
-    m_application->getDouts().push_back( &g_task_order );
-    m_application->getDouts().push_back( &g_task_dbg );
-    m_application->getDouts().push_back( &g_mpi_dbg  );
-    m_application->getDouts().push_back( &g_exec_out  );
-
-    initialized = true;
-  }
-#endif
 }
 
 //______________________________________________________________________

@@ -30,11 +30,11 @@
 namespace Uintah {
 
 
-static DebugStream dbg("ProgressiveWarning", true);
+static DebugStream dbg("ProgressiveWarning", "Progressive Warning", "Progressive warning debug stream", true);
 
-  ProgressiveWarning::ProgressiveWarning(const std::string & message,
-                                         int multiplier /* = -1 */, 
-                                         std::ostream & stream /* = cerr */)
+ProgressiveWarning::ProgressiveWarning(const std::string & message,
+				       int multiplier /* = -1 */, 
+				       std::ostream & stream /* = cerr */)
 {
   d_message = message;
   d_multiplier = multiplier;

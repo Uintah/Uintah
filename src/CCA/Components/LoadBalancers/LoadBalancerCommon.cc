@@ -50,12 +50,19 @@
 
 using namespace Uintah;
 
+DebugStream stats( "LBStats", "LoadBalancers", "", false );
+DebugStream times( "LBTimes", "LoadBalancers", "", false );
+DebugStream lbout( "LBOut",   "LoadBalancers", "", false );
+
+DebugStream g_profile_stats ("ProfileStats",   "LoadBalancers", "", false );
+DebugStream g_profile_stats2("ProfileStats2",  "LoadBalancers", "", false );
+
 namespace {
 
-Dout g_lb_dbg(                "LoadBalancer"     , false );
-Dout g_neighborhood_dbg(      "Neighborhood"     , false );
-Dout g_neighborhood_size_dbg( "NeighborhoodSize" , false );
-Dout g_patch_assignment(      "LBPatchAssignment", false );
+Dout g_lb_dbg(                "LoadBalancer"     , "LoadBalancers", "", false );
+Dout g_neighborhood_dbg(      "Neighborhood"     , "LoadBalancers", "", false );
+Dout g_neighborhood_size_dbg( "NeighborhoodSize" , "LoadBalancers", "", false );
+Dout g_patch_assignment(      "LBPatchAssignment", "LoadBalancers", "", false );
 
 }
 
@@ -886,18 +893,16 @@ LoadBalancerCommon::problemSetup(       ProblemSpecP     & pspec
   // modify.
   if( m_application->getVisIt() && !initialized ) {
     ApplicationInterface::interactiveVar var;
-    var.name     = "LoadBalancer-DoSpaceCurve";
-    var.type     = Uintah::TypeDescription::bool_type;
-    var.value    = (void *) &m_do_space_curve;
-    var.range[0] = 0;
-    var.range[1] = 1;
+    var.component  = "LoadBalancer";
+    var.name       = "DoSpaceCurve";
+    var.type       = Uintah::TypeDescription::bool_type;
+    var.value      = (void *) &m_do_space_curve;
+    var.range[0]   = 0;
+    var.range[1]   = 1;
     var.modifiable = true;
     var.recompile  = false;
     var.modified   = false;
     m_application->getUPSVars().push_back( var );
-
-    m_application->getDouts().push_back( &g_lb_dbg  );
-    m_application->getDouts().push_back( &g_neighborhood_dbg );
 
     initialized = true;
   }

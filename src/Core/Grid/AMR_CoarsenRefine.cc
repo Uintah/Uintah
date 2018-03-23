@@ -34,7 +34,7 @@ using namespace std;
 
 namespace Uintah {
 
-static Uintah::DebugStream cout_dbg("AMR_CoarsenRefine", false);
+static Uintah::DebugStream cout_dbg("AMR_CoarsenRefine", "AMR_CoarsenRefine", "AMR coarsen refine debug stream", false);
 //______________________________________________________________________
 //
 template<typename T>

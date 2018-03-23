@@ -115,11 +115,17 @@ DragModel::problemSetup(const ProblemSpecP& params, int qn)
     vel_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_ZVEL);
   }
 
+  
+  //EqnBase& temp_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(vel_root);
+  //DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(temp_current_eqn);
+  
+  _vel_scaling_constant = ArchesCore::get_scaling_constant(db,vel_root, d_quadNode);//current_eqn.getScalingConstant(d_quadNode);
+  const std::string birth_name = ArchesCore::getModelNameByType( db, vel_root, "BirthDeath");
+
   vel_root = ArchesCore::append_qn_env( vel_root, d_quadNode );
-  EqnBase& temp_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(vel_root);
-  DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(temp_current_eqn);
-  _vel_scaling_constant = current_eqn.getScalingConstant(d_quadNode);
+  
   std::string ic_RHS = vel_root+"_RHS";
+  //std::string ic_RHS = vel_root+"_rhs";
   _RHS_source_varlabel = VarLabel::find(ic_RHS);
 
   std::string weight_name = ArchesCore::append_qn_env("w", qn);
@@ -127,7 +133,8 @@ DragModel::problemSetup(const ProblemSpecP& params, int qn)
   _RHS_weight_varlabel = VarLabel::find(weight_RHS_name);
 
   //get the birth term if any:
-  const std::string birth_name = current_eqn.get_model_by_type( "BirthDeath" );
+//  const std::string birth_name = current_eqn.get_model_by_type( "BirthDeath" );
+
   std::string birth_qn_name = ArchesCore::append_qn_env(birth_name, d_quadNode);
   if ( birth_name != "NULLSTRING" ){
     _birth_label = VarLabel::find( birth_qn_name );

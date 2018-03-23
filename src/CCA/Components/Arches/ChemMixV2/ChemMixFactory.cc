@@ -85,12 +85,10 @@ void ChemMixFactory::schedule_initialization( const LevelP& level,
                                               const MaterialSet* matls,
                                               bool doing_restart ){
 
-  for ( auto i = m_task_order.begin(); i != m_task_order.end(); i++ ){
+  const bool pack_tasks = false;
+  schedule_task_group( "Ordered_ChemMixV2_initialization", m_task_init_order, TaskInterface::INITIALIZE,
+                       pack_tasks, level, sched, matls );
 
-    TaskInterface* tsk = retrieve_task( *i );
-    tsk->schedule_init( level, sched, matls, doing_restart );
-
-  }
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -99,10 +97,7 @@ void ChemMixFactory::schedule_applyBCs( const LevelP& level,
                                         const MaterialSet* matls,
                                         const int time_substep ){
 
-  for ( auto i = m_task_order.begin(); i != m_task_order.end(); i++ ){
-
-    TaskInterface* tsk = retrieve_task( *i );
-    tsk->schedule_task( level, sched, matls, TaskInterface::BC_TASK, time_substep );
-
-  }
+  const bool pack_tasks = false;
+  schedule_task_group( "Ordered_ChemMixV2_bc", m_task_init_order, TaskInterface::BC,
+                       pack_tasks, level, sched, matls );
 }

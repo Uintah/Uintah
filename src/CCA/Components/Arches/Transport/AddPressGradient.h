@@ -37,8 +37,8 @@ public:
 
     /** @brief Registers all variables with pertinent information for the
      *         uintah dw interface **/
-    void register_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
-                                const int time_substep );
+    void register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
+                        const int time_substep, const bool pack_tasks );
 
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
@@ -52,7 +52,7 @@ public:
 
         ~Builder() {}
 
-        AddPressGradient* build(){ return scinew AddPressGradient(m_task_name, m_matl_index);};
+        AddPressGradient* build(){ return scinew AddPressGradient(m_task_name, m_matl_index);}
 
       protected:
 

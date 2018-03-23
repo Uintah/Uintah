@@ -34,7 +34,7 @@
 
 using namespace Uintah;
 
-static DebugStream dbg("SWITCHER", false);
+extern DebugStream switching_dbg;
 
 TimestepNumber::TimestepNumber(ProblemSpecP& ps)
 {
@@ -61,7 +61,7 @@ void TimestepNumber::problemSetup(const ProblemSpecP& ps,
 
 void TimestepNumber::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
 {
-  printSchedule(level,dbg,"Switchinng Criteria:TimestepNumber::scheduleSwitchTest");
+  printSchedule(level,switching_dbg,"Switchinng Criteria:TimestepNumber::scheduleSwitchTest");
   
   Task* t = scinew Task("switchTest", this, &TimestepNumber::switchTest);
 
@@ -76,7 +76,7 @@ void TimestepNumber::switchTest(const ProcessorGroup* group,
                                 DataWarehouse* old_dw,
                                 DataWarehouse* new_dw)
 {
-  dbg << "Doing Switch Criteria:TimeStepNumber";
+  switching_dbg << "Doing Switch Criteria:TimeStepNumber";
 
   // int timeStep = m_sharedState->getCurrentTopLevelTimeStep();
   
@@ -89,7 +89,7 @@ void TimestepNumber::switchTest(const ProcessorGroup* group,
 
   double sw = (timeStep == m_timeStep);
 
-  dbg  << " is it time to switch components: " << sw << std::endl;
+  switching_dbg  << " is it time to switch components: " << sw << std::endl;
 
   max_vartype switch_condition(sw);
   

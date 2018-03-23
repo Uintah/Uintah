@@ -190,7 +190,7 @@ namespace Uintah {
     bool d_doOperatorSplitting;                 //use operator splitting to calculate nodes for multiple permutations
     bool d_usePartVel;                          //use particle velocity as an IC
     
-    double weightRatio;                         //adaptive double for minimum allowed weigth ratio
+    double weightRatio;                         //adaptive double for minimum allowed weight ratio
     double abscissaRatio;                       //adaptive double for minimum allowed abscissa ratio
     
     std::vector<std::string> coordinateNames;   //list of internal coordiante names

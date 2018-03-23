@@ -176,34 +176,34 @@ TurbulenceModelFactory::build_all_tasks( ProblemSpecP& db )
 
       if (type == "dynamic_smagorinsky" ) {
 
-        name = "DS_task1"; 
+        name = "DS_task1";
         TaskInterface* tsk = retrieve_task(name);
         tsk->problemSetup(db_model);
         tsk->create_local_labels();
 
-        name = "DS_task2"; 
+        name = "DS_task2";
         TaskInterface* tsk2 = retrieve_task(name);
         tsk2->problemSetup(db_model);
         tsk2->create_local_labels();
 
-        name = "DS_task3"; 
+        name = "DS_task3";
         TaskInterface* tsk3 = retrieve_task(name);
         tsk3->problemSetup(db_model);
         tsk3->create_local_labels();
 
       } else if (type == "dynamic_smagorinsky_v2" ) {
 
-        name = "DS_task1"; 
+        name = "DS_task1";
         TaskInterface* tsk = retrieve_task(name);
         tsk->problemSetup(db_model);
         tsk->create_local_labels();
 
-        name = "DS_task2"; 
+        name = "DS_task2";
         TaskInterface* tsk2 = retrieve_task(name);
         tsk2->problemSetup(db_model);
         tsk2->create_local_labels();
 
-        name = "DS_task3"; 
+        name = "DS_task3";
         TaskInterface* tsk3 = retrieve_task(name);
         tsk3->problemSetup(db_model);
         tsk3->create_local_labels();
@@ -223,9 +223,8 @@ void TurbulenceModelFactory::schedule_initialization( const LevelP& level,
                                                       const MaterialSet* matls,
                                                       bool doing_restart ){
 
-  for ( auto i = _active_tasks.begin(); i != _active_tasks.end(); i++ ){
-    TaskInterface* tsk = retrieve_task( *i );
-    tsk->schedule_init( level, sched, matls, doing_restart );
-  }
+  const bool pack_tasks = false;
+  schedule_task_group( "all_tasks", m_task_init_order, TaskInterface::INITIALIZE,
+                       pack_tasks, level, sched, matls );
 
 }

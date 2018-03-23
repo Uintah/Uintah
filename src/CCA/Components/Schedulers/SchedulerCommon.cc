@@ -72,8 +72,8 @@ using namespace Uintah;
 
 namespace {
 
-Dout g_schedulercommon_dbg( "SchedulerCommon_DBG", false);
-Dout g_task_graph_compile(  "SchedulerCommon_TG" , false);
+Dout g_schedulercommon_dbg( "SchedulerCommon_DBG", "Schedulers", "Scheduler common ???", false);
+Dout g_task_graph_compile(  "SchedulerCommon_TG" , "Schedulers", "Scheduler common ???", false);
 
 }
 
@@ -524,18 +524,30 @@ SchedulerCommon::problemSetup( const ProblemSpecP     & prob_spec
 
   m_no_scrub_vars.insert("refineFlag");
   m_no_scrub_vars.insert("refinePatchFlag");
-  
-// #ifdef HAVE_VISIT
-//   static bool initialized = false;
 
-//   // Running with VisIt so add in the variables that the user can
-//   // modify.
-//   if( m_sharedState->getVisIt() && !initialized ) {
-//      m_sharedState->d_douts.push_back( &g_schedulercommon_dbg  );
+#ifdef HAVE_VISIT
+  static bool initialized = false;
 
-//     initialized = true;
-//   }
-// #endif
+  // Running with VisIt so add in the variables that the user can
+  // modify.
+  if( m_application->getVisIt() && !initialized ) {
+    // variable 1 - Must start with the component name and have NO
+    // spaces in the var name
+    ApplicationInterface::interactiveVar var;
+    var.component  = "LoadBalancer";
+    var.name       = "UseSmallMessages";
+    var.type       = Uintah::TypeDescription::bool_type;
+    var.value      = (void *) &m_use_small_messages;
+    var.range[0]   = 0;
+    var.range[1]   = 1;
+    var.modifiable = true;
+    var.recompile  = false;
+    var.modified   = false;
+    m_application->getUPSVars().push_back( var );
+
+    initialized = true;
+  }
+#endif
 }
 
 //______________________________________________________________________
