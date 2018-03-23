@@ -421,7 +421,7 @@
         <x>10</x>
         <y>0</y>
         <width>661</width>
-        <height>291</height>
+        <height>301</height>
        </rect>
       </property>
       <property name="title">
@@ -433,7 +433,7 @@
          <x>10</x>
          <y>30</y>
          <width>641</width>
-         <height>251</height>
+         <height>261</height>
         </rect>
        </property>
        <column>
@@ -472,9 +472,9 @@
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>290</y>
+        <y>300</y>
         <width>661</width>
-        <height>291</height>
+        <height>281</height>
        </rect>
       </property>
       <property name="title">
@@ -486,7 +486,7 @@
          <x>10</x>
          <y>30</y>
          <width>641</width>
-         <height>251</height>
+         <height>241</height>
         </rect>
        </property>
        <column>
@@ -521,7 +521,7 @@
        </column>
       </widget>
      </widget>
-     <widget class="QGroupBox" name="OtherStatsGroupBox">
+     <widget class="QGroupBox" name="ApplicationStatsGroupBox">
       <property name="geometry">
        <rect>
         <x>10</x>
@@ -531,9 +531,9 @@
        </rect>
       </property>
       <property name="title">
-       <string>Other Performance Stats</string>
+       <string>Application Performance Stats</string>
       </property>
-      <widget class="QTableWidget" name="OtherStatsTable">
+      <widget class="QTableWidget" name="ApplicationStatsTable">
        <property name="geometry">
         <rect>
          <x>10</x>
@@ -981,7 +981,7 @@
   <tabstop>GridInfoTable</tabstop>
   <tabstop>RuntimeStatsTable</tabstop>
   <tabstop>MPIStatsTable</tabstop>
-  <tabstop>OtherStatsTable</tabstop>
+  <tabstop>ApplicationStatsTable</tabstop>
   <tabstop>ImageGroupBox</tabstop>
   <tabstop>ImageFilename</tabstop>
   <tabstop>ImageHeight</tabstop>

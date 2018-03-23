@@ -175,10 +175,10 @@ void visit_SetWallTimes( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetOutputIntervals( visit_simulation_data *sim )
 {
-  // ApplicationInterface* simInterface =
+  // ApplicationInterface* appInterface =
   //   sim->simController->getApplicationInterface();
 
-  // SimulationTime* simTime = simInterface->getSimulationTime();
+  // SimulationTime* simTime = appInterface->getSimulationTime();
 
   Output          *output       = sim->simController->getOutput();
 
@@ -303,13 +303,13 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
   const char table[] = "AnalysisVariableTable";
     
   GridP           gridP      = sim->gridP;
-  ApplicationInterface* simInterface =
+  ApplicationInterface* appInterface =
     sim->simController->getApplicationInterface();
   SchedulerP      schedulerP = sim->simController->getSchedulerP();
   DataWarehouse  *dw         = sim->simController->getSchedulerP()->getLastDW();
 
   std::vector< ApplicationInterface::analysisVar > analysisVars =
-    simInterface->getAnalysisVars();
+    appInterface->getAnalysisVars();
     
   VisItUI_setTableValueS("AnalysisVariableTable", -1, -1, "CLEAR_TABLE", 0);
 
@@ -527,15 +527,15 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetUPSVars( visit_simulation_data *sim )
 {
-  ApplicationInterface* simInterface =
+  ApplicationInterface* appInterface =
     sim->simController->getApplicationInterface();
 
-  if( simInterface->getUPSVars().size() )
+  if( appInterface->getUPSVars().size() )
   {
     VisItUI_setValueS( "UPSVariableGroupBox", "SHOW_WIDGET", 1);
 
     std::vector< ApplicationInterface::interactiveVar > &vars =
-      simInterface->getUPSVars();
+      appInterface->getUPSVars();
       
     for( unsigned int i=0; i<vars.size(); ++i )
     {
@@ -601,7 +601,7 @@ void visit_SetUPSVars( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetGridInfo( visit_simulation_data *sim )
 {
-  // ApplicationInterface* simInterface =
+  // ApplicationInterface* appInterface =
   //   sim->simController->getApplicationInterface();
 
   GridP                gridP        = sim->gridP;
@@ -723,14 +723,11 @@ void visit_SetRuntimeStats( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetMPIStats( visit_simulation_data *sim )
 {
-  // ApplicationInterface* simInterface =
-  //   sim->simController->getApplicationInterface();
-
   MPIScheduler *mpiScheduler = dynamic_cast<MPIScheduler*>
     (sim->simController->getSchedulerP().get_rep());
   
   // Add in the mpi run time stats.
-  if( mpiScheduler )
+  if( mpiScheduler && mpiScheduler->mpi_info_.size() )
   {
     ReductionInfoMapper< MPIScheduler::TimingStatEnum, double > &mpiStats =
       mpiScheduler->mpi_info_;
@@ -770,47 +767,49 @@ void visit_SetMPIStats( visit_simulation_data *sim )
 }
 
 //---------------------------------------------------------------------
-// SetOtherStats
-//    Set the Other stats
+// SetApplicationStats
+//    Set the application stats
 //---------------------------------------------------------------------
-void visit_SetOtherStats( visit_simulation_data *sim )
+void visit_SetApplicationStats( visit_simulation_data *sim )
 {
-  ReductionInfoMapper< SimulationController::OtherStatsEnum, double > otherStats =
-    sim->simController->getOtherStats();
+  ApplicationInterface* appInterface =
+    sim->simController->getApplicationInterface();
 
-  if( otherStats.size() )
+  unsigned int nStats = appInterface->getApplicationStats().size();
+
+  if( nStats )
   {
-    VisItUI_setValueS( "OtherStatsGroupBox", "SHOW_WIDGET", 1);
-    VisItUI_setTableValueS("OtherStatsTable", -1, -1, "CLEAR_TABLE", 0);
+    VisItUI_setValueS( "ApplicationStatsGroupBox", "SHOW_WIDGET", 1);
+    VisItUI_setTableValueS("ApplicationStatsTable", -1, -1, "CLEAR_TABLE", 0);
 
-    for (unsigned int i=0; i<otherStats.size(); ++i)
+    for (unsigned int i=0; i<nStats; ++i)
     {
-      std::string name  = otherStats.getName(i);
-      std::string units = otherStats.getUnits(i);
+      std::string name  = appInterface->getApplicationStats().getName(i);
+      std::string units = appInterface->getApplicationStats().getUnits(i);
       
-      double  average = otherStats.getAverage(i);
-      double  maximum = otherStats.getMaximum(i);
-      int     rank    = otherStats.getRank(i);
+      double  average = appInterface->getApplicationStats().getAverage(i);
+      double  maximum = appInterface->getApplicationStats().getMaximum(i);
+      int     rank    = appInterface->getApplicationStats().getRank(i);
       
-      VisItUI_setTableValueS("OtherStatsTable", i, 0, name.c_str(), 0);
-      VisItUI_setTableValueS("OtherStatsTable", i, 1, units.c_str(), 0);
-      VisItUI_setTableValueD("OtherStatsTable", i, 2, average, 0);
-      VisItUI_setTableValueD("OtherStatsTable", i, 3, maximum, 0);
-      VisItUI_setTableValueI("OtherStatsTable", i, 4, rank, 0);
+      VisItUI_setTableValueS("ApplicationStatsTable", i, 0, name.c_str(), 0);
+      VisItUI_setTableValueS("ApplicationStatsTable", i, 1, units.c_str(), 0);
+      VisItUI_setTableValueD("ApplicationStatsTable", i, 2, average, 0);
+      VisItUI_setTableValueD("ApplicationStatsTable", i, 3, maximum, 0);
+      VisItUI_setTableValueI("ApplicationStatsTable", i, 4, rank, 0);
       // if( maximum != 0 )
-      //         VisItUI_setTableValueD("OtherStatsTable", i, 5,
+      //         VisItUI_setTableValueD("ApplicationStatsTable", i, 5,
       //                                100.0*(1.0-(average/maximum)), 0);
       // else
-      //         VisItUI_setTableValueD("OtherStatsTable", i, 5, 0.0, 0);
+      //         VisItUI_setTableValueD("ApplicationStatsTable", i, 5, 0.0, 0);
       
-      visit_SetStripChartValue( sim, "OtherStats/"+name+"/Average", average );
-      visit_SetStripChartValue( sim, "OtherStats/"+name+"/Maximum", maximum );
+      visit_SetStripChartValue( sim, "ApplicationStats/"+name+"/Average", average );
+      visit_SetStripChartValue( sim, "ApplicationStats/"+name+"/Maximum", maximum );
     }
   }
   else
   {
-    VisItUI_setValueS( "OtherStatsGroupBox", "HIDE_WIDGET", 0);
-    VisItUI_setTableValueS("OtherStatsTable", -1, -1, "CLEAR_TABLE", 0);
+    VisItUI_setValueS( "ApplicationStatsGroupBox", "HIDE_WIDGET", 0);
+    VisItUI_setTableValueS("ApplicationStatsTable", -1, -1, "CLEAR_TABLE", 0);
   }
 }
 
@@ -860,15 +859,15 @@ void visit_SetStripChartValue( visit_simulation_data *sim,
 //---------------------------------------------------------------------
 void visit_SetStateVars( visit_simulation_data *sim )
 {
-  ApplicationInterface* simInterface =
+  ApplicationInterface* appInterface =
     sim->simController->getApplicationInterface();
 
-  if( simInterface->getStateVars().size() )
+  if( appInterface->getStateVars().size() )
   {
     VisItUI_setValueS( "StateVariableGroupBox", "SHOW_WIDGET", 1);
 
     std::vector< ApplicationInterface::interactiveVar > &vars =
-      simInterface->getStateVars();
+      appInterface->getStateVars();
       
     for( unsigned int i=0; i<vars.size(); ++i )
     {
@@ -934,7 +933,7 @@ void visit_SetStateVars( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetDebugStreams( visit_simulation_data *sim )
 {
-  ApplicationInterface* simInterface =
+  ApplicationInterface* appInterface =
     sim->simController->getApplicationInterface();
 
   VisItUI_setTableValueS("DebugStreamTable",
@@ -976,7 +975,7 @@ void visit_SetDebugStreams( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetDouts( visit_simulation_data *sim )
 {
-  ApplicationInterface* simInterface =
+  ApplicationInterface* appInterface =
     sim->simController->getApplicationInterface();
 
   VisItUI_setTableValueS("DoutTable",

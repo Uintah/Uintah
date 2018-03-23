@@ -307,12 +307,23 @@ WARNING
     virtual bool isLastTimeStep( double walltime ) const;
     virtual bool maybeLastTimeStep( double walltime ) const;
 
+    virtual ReductionInfoMapper< ApplicationStatsEnum,
+				 double > & getApplicationStats()
+    { return m_application_stats; };
+
+    virtual void resetApplicationStats( double val )
+    { m_application_stats.reset( val ); };
+      
+    virtual void reduceApplicationStats( bool allReduce,
+					 const ProcessorGroup* myWorld )
+    { m_application_stats.reduce( allReduce, myWorld ); };      
+    
   protected:
-    Scheduler*       m_scheduler{nullptr};
-    LoadBalancer* m_loadBalancer{nullptr};
-    SolverInterface* m_solver{nullptr};
-    Regridder*       m_regridder{nullptr};
-    Output*          m_output{nullptr};
+    Scheduler       * m_scheduler    {nullptr};
+    LoadBalancer    * m_loadBalancer {nullptr};
+    SolverInterface * m_solver       {nullptr};
+    Regridder       * m_regridder    {nullptr};
+    Output          * m_output       {nullptr};
 
     bool m_recompile {false};
     
@@ -358,6 +369,9 @@ WARNING
   protected:    
     SimulationStateP m_sharedState{nullptr};
 
+    ReductionInfoMapper< ApplicationStatsEnum,
+			 double > m_application_stats;    
+    
   private:
     ApplicationCommon(const ApplicationCommon&);
     ApplicationCommon& operator=(const ApplicationCommon&);
