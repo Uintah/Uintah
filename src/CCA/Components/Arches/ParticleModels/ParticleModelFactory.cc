@@ -45,6 +45,7 @@
 #include <CCA/Components/Arches/ParticleModels/PartVariablesDQMOM.h>
 #include <CCA/Components/Arches/ParticleModels/DQMOMNoInversion.h>
 #include <CCA/Components/Arches/ParticleModels/FaceParticleVel.h>
+#include <CCA/Components/Arches/ParticleModels/WDragModel.h>
 
 
 using namespace Uintah;
@@ -188,6 +189,17 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
         }
 
         temp_model_list.insert(temp_model_list.end(), task_name); // order hack
+
+      } else if  ( type == "wdrag" ) {
+
+        const int nQn_part = ArchesCore::get_num_env( db, ArchesCore::DQMOM_METHOD );
+        for ( int i = 0; i < nQn_part; i++ ){
+          std::stringstream ienv;
+          ienv << i;
+          std::string task_name_N = task_name + "_qn" + ienv.str(); 
+          TaskInterface::TaskBuilder* tsk = scinew WDragModel<CCVariable<double> >::Builder(task_name_N, 0, i);
+          register_task( task_name_N, tsk );
+        }     
 
       } else if  ( type == "gravity" ) {
 
@@ -449,18 +461,30 @@ ParticleModelFactory::build_all_tasks( ProblemSpecP& db )
     for (ProblemSpecP db_model = db_pm->findBlock("model"); db_model != nullptr;
          db_model = db_model->findNextBlock("model")){
 
+
       std::string model_name;
       std::string type;
       db_model->getAttribute("label",model_name );
       db_model->getAttribute("type", type );
-
       print_task_setup_info( model_name, type );
-      TaskInterface* tsk = retrieve_task(model_name);
 
-      tsk->problemSetup( db_model );
-
-      tsk->create_local_labels();
-
+      if (type == "wdrag") {
+        const int nQn_part = ArchesCore::get_num_env( db, ArchesCore::DQMOM_METHOD );
+        for ( int i = 0; i < nQn_part; i++ ){
+          std::stringstream ienv;
+          ienv << i;
+          std::string model_name_N = model_name + "_qn" + ienv.str(); 
+          TaskInterface* tsk = retrieve_task(model_name_N);
+        
+          tsk->problemSetup( db_model );
+          tsk->create_local_labels();
+        }
+      } else {
+        TaskInterface* tsk = retrieve_task(model_name);
+        
+        tsk->problemSetup( db_model );
+        tsk->create_local_labels();
+      }
     }
 
     if (db->findBlock("DQMOM") ) {

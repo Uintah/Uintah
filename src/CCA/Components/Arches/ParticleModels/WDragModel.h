@@ -13,7 +13,7 @@ namespace Uintah{
 
 public:
 
-    WDragModel<T>( std::string task_name, int matl_index, const std::string var_name );
+    WDragModel<T>( std::string task_name, int matl_index, int Nenv );
     ~WDragModel<T>();
 
     void problemSetup( ProblemSpecP& db );
@@ -60,28 +60,29 @@ protected:
     void create_local_labels();
 
 private:
-
     typedef typename ArchesCore::VariableHelper<T>::XFaceType FXT;
     typedef typename ArchesCore::VariableHelper<T>::YFaceType FYT;
     typedef typename ArchesCore::VariableHelper<T>::ZFaceType FZT;
     typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
 
-    std:: string m_model_name;
-    std:: string m_gasSource_name;
-    std:: string m_density_gas_name;
-    std:: string m_cc_u_vel_name;
-    std:: string m_cc_v_vel_name;
-    std:: string m_cc_w_vel_name;
-    std:: string m_volFraction_name;
-    std:: string m_up_name;
-    std:: string m_vp_name;
-    std:: string m_wp_name;
-    std:: string m_length_name;
-    std:: string m_particle_density_name;
-    std:: string m_w_qn_name;
-    std:: string m_vel_dir_name;
-    std:: string m_pvel_dir_name;
-    std:: string m_wvelp_name;
+    int _Nenv; 
+    std::string m_model_name;
+    std::string m_gasSource_name;
+    std::string m_density_gas_name;
+    std::string m_cc_u_vel_name;
+    std::string m_cc_v_vel_name;
+    std::string m_cc_w_vel_name;
+    std::string m_volFraction_name;
+    std::string m_up_name;
+    std::string m_vp_name;
+    std::string m_wp_name;
+    std::string m_length_name;
+    std::string m_particle_density_name;
+    std::string m_w_qn_name;
+    std::string m_w_name;
+    std::string m_vel_dir_name;
+    std::string m_pvel_dir_name;
+    std::string m_wvelp_name;
     //std:: string ;
     double m_kvisc;
     double m_scaling_constant;
@@ -116,9 +117,9 @@ private:
     m_gasSource_name = _task_name + "_gasSource";
 
     m_density_gas_name = ArchesCore::parse_ups_for_role( ArchesCore::DENSITY,   db, "density" );
-    m_cc_u_vel_name = parse_ups_for_role( CCUVELOCITY, db, "CCUVelocity" );
-    m_cc_v_vel_name = parse_ups_for_role( CCVVELOCITY, db, "CCVVelocity" );
-    m_cc_w_vel_name = parse_ups_for_role( CCWVELOCITY, db, "CCWVelocity" );
+    m_cc_u_vel_name = ArchesCore::parse_ups_for_role( ArchesCore::CCUVELOCITY, db, "CCUVelocity" );
+    m_cc_v_vel_name = ArchesCore::parse_ups_for_role( ArchesCore::CCVVELOCITY, db, "CCVVelocity" );
+    m_cc_w_vel_name = ArchesCore::parse_ups_for_role( ArchesCore::CCWVELOCITY, db, "CCWVelocity" );
     m_volFraction_name = "volFraction";
 
     // check for particle velocity
@@ -128,20 +129,20 @@ private:
     std::string density_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_DENSITY);
     std::string length_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_SIZE);
     
-    m_up_name = ArchesCore::append_env( up_root, Nenv);
-    m_vp_name = ArchesCore::append_env( vp_root, Nenv);
-    m_wp_name = ArchesCore::append_env( wp_root, Nenv);
+    m_up_name = ArchesCore::append_env( up_root, _Nenv);
+    m_vp_name = ArchesCore::append_env( vp_root, _Nenv);
+    m_wp_name = ArchesCore::append_env( wp_root, _Nenv);
 
-    m_length_name  = ArchesCore::append_env( length_root, Nenv );
-    m_particle_density_name  = ArchesCore::append_env( density_root, Nenv );
-    m_w_qn_name              = ArchesCore::append_qn_env("w", Nenv ); // w_qn
+    m_length_name  = ArchesCore::append_env( length_root, _Nenv );
+    m_particle_density_name  = ArchesCore::append_env( density_root, _Nenv );
+    m_w_qn_name              = ArchesCore::append_qn_env("w", _Nenv ); // w_qn
     
     // check for gravity
     const ProblemSpecP params_root = db->getRootNode();
+    std::vector<double> gravity;
     if (params_root->findBlock("PhysicalConstants")) {
-      std::vector<double> gravity;
       ProblemSpecP db_phys = params_root->findBlock("PhysicalConstants");
-      db_phys->require("gravity", _gravity);
+      db_phys->require("gravity", gravity);
       db_phys->require("viscosity",m_kvisc);
     } else {
       throw InvalidValue("Error: Missing <PhysicalConstants> section in input file required for drag model.",__FILE__,__LINE__);
@@ -152,26 +153,26 @@ private:
     
     if ( coord == "x" || coord == "X" ){
 
-      m_scaling_constant = ArchesCore::get_scaling_constant(dq,up_root,m_Nenv );
+      m_scaling_constant = ArchesCore::get_scaling_constant(db,up_root,_Nenv );
       m_vel_dir_name     = m_cc_u_vel_name;
       m_pvel_dir_name    = m_up_name;
-      m_wvelp_name       = ArchesCore::append_qn_env(up_root, Nenv ) ; 
+      m_wvelp_name       = ArchesCore::append_qn_env(up_root, _Nenv ) ; 
       m_gravity          = gravity[0]; 
 
     } else if ( coord == "y" || coord == "Y" ){
 
-      m_scaling_constant = ArchesCore::get_scaling_constant(dq,vp_root,m_Nenv );
+      m_scaling_constant = ArchesCore::get_scaling_constant(db,vp_root,_Nenv );
       m_vel_dir_name     = m_cc_v_vel_name;
       m_pvel_dir_name    = m_vp_name;
-      m_wvelp_name       = ArchesCore::append_qn_env(vp_root, Nenv ) ; 
+      m_wvelp_name       = ArchesCore::append_qn_env(vp_root, _Nenv ) ; 
       m_gravity          = gravity[1]; 
 
     } else {
 
-      m_scaling_constant = ArchesCore::get_scaling_constant(dq,wp_root,m_Nenv );
+      m_scaling_constant = ArchesCore::get_scaling_constant(db,wp_root,_Nenv );
       m_vel_dir_name     = m_cc_w_vel_name;
       m_pvel_dir_name    = m_wp_name;
-      m_wvelp_name       = ArchesCore::append_qn_env(wp_root, Nenv ) ; 
+      m_wvelp_name       = ArchesCore::append_qn_env(wp_root, _Nenv ) ; 
       m_gravity          = gravity[2]; 
 
     }
@@ -238,6 +239,7 @@ private:
   void WDragModel<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   const double dt = tsk_info->get_dt();
+  Vector Dx = patch->dCell();
   const double vol = Dx.x()* Dx.y()* Dx.z();
 
   T& model      = tsk_info->get_uintah_field_add<T>(m_model_name);
@@ -259,10 +261,10 @@ private:
 
   // DQMOM valiables 
   CT& w_qn         = tsk_info->get_const_uintah_field_add<CT>(m_w_qn_name);
-  CT& weigth       =  tsk_info->get_const_uintah_field_add<CT>(m_w_name);
-  CT& RHS_weigth   = tsk_info->get_const_uintah_field_add<CT>(m_w_qn_name + "_RHS");
-  CT& Vel          = tsk_info->get_const_uintah_field_add<CT>( m_vel_dir_name );
-  CT& pVel         = tsk_info->get_const_uintah_field_add< CT >( m_pvel_dir_name );
+  CT& weight       = tsk_info->get_const_uintah_field_add<CT>(m_w_name);
+  CT& RHS_weight   = tsk_info->get_const_uintah_field_add<CT>(m_w_qn_name + "_RHS");
+  CT& Vel          = tsk_info->get_const_uintah_field_add<CT>(m_vel_dir_name );
+  CT& pVel         = tsk_info->get_const_uintah_field_add<CT>(m_pvel_dir_name );
   CT& weight_p_vel = tsk_info->get_const_uintah_field_add<CT>(m_wvelp_name);// 
   CT& RHS_source   = tsk_info->get_const_uintah_field_add<CT>(m_wvelp_name + "_RHS");
 
@@ -282,18 +284,18 @@ private:
                                                    ( CCvVel(i,j,k) - vp(i,j,k) ) * ( CCvVel(i,j,k) - vp(i,j,k) ) +
                                                    ( CCwVel(i,j,k) - wp(i,j,k) ) * ( CCwVel(i,j,k) - wp(i,j,k) )   ); // [m/s]
 
-      const double Re  = relative_velocity * l_pph / ( _kvisc / denph );
+      const double Re  = relative_velocity * l_pph / ( m_kvisc / denph );
 
-      const double fDrag    = Re <994 ? 1.0 + 0.15*sdt::pow(Re, 0.687) : 0.0183*Re;
+      const double fDrag    = Re <994 ? 1.0 + 0.15*std::pow(Re, 0.687) : 0.0183*Re;
 
-      const double t_p = ( rho_pph * l_pph * l_pph )/( 18.0 * _kvisc );
+      const double t_p = ( rho_pph * l_pph * l_pph )/( 18.0 * m_kvisc );
       const double tau=t_p/fDrag;
 
       if (tau > dt ){ 
-        model(i,j,k)      = scaled_weight(i,j,k) * ( fDrag / t_p * (Vel(i,j,k)-pVel(i,j,k)) + m_gravity) / m_scaling_constant;
+        model(i,j,k)      = w_qn(i,j,k) * ( fDrag / t_p * (Vel(i,j,k)-pVel(i,j,k)) + m_gravity) / m_scaling_constant;
         gas_source(i,j,k) = -weight(i,j,k) * rho_pph / 6.0 * M_PI * fDrag / t_p * ( Vel(i,j,k)-pVel(i,j,k) ) * std::pow(l_pph,3.0);
       } else {  // rate clip, if we aren't resolving timescale
-        const double updated_weight = std::max(scaled_weight(i,j,k) + dt / vol * ( RHS_weight(i,j,k) ) , 1e-15);
+        const double updated_weight = std::max(w_qn(i,j,k) + dt / vol * ( RHS_weight(i,j,k) ) , 1e-15);
         model(i,j,k) = 1. / m_scaling_constant * ( updated_weight * Vel(i,j,k) - weight_p_vel(i,j,k) ) / dt - ( RHS_source(i,j,k) / vol + lambdaBirth(i,j,k));
       } // end timescale if
 
