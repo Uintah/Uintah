@@ -92,6 +92,8 @@ public:
   // Coverts the 'type' enum to a string.
   static std::string toString( Type type );
 
+  size_t getElementDataSize() const;
+
   TypeDescription( Type type, const std::string& name, bool isFlat, MPI_Datatype (*make_mpitype)() );
 
   TypeDescription( Type type, const std::string& name, bool isFlat, MPI_Datatype mpitype );

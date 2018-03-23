@@ -61,6 +61,7 @@ Dout g_dbg(         "KokkosOMP_DBG"        , false);
 Dout g_queuelength( "KokkosOMP_QueueLength", false);
 
 Uintah::MasterLock g_scheduler_mutex{}; // main scheduler lock for multi-threaded task selection
+Uintah::MasterLock g_mark_task_consumed_mutex{};  // allow only one task at a time to enter the task consumed section
 
 volatile int  g_num_tasks_done{0};
 
@@ -342,6 +343,8 @@ KokkosOpenMPScheduler::markTaskConsumed( volatile int          * numTasksDone
                                        )
 {
 
+  std::lock_guard<Uintah::MasterLock> task_consumed_guard(g_mark_task_consumed_mutex);
+
   // Update the count of tasks consumed by the scheduler.
   (*numTasksDone)++;
 
@@ -360,12 +363,53 @@ KokkosOpenMPScheduler::markTaskConsumed( volatile int          * numTasksDone
 void
 KokkosOpenMPScheduler::runTasks()
 {
+
+// This runTasks loop manages tasks that vary on these parameters:
+// Are task variables in a homogeneous only environment (e.g. host memory) or heterogeneous (host memory + GPU memory)?
+// Is the task computing on a CPU or a GPU?
+// Did the task request to preload variables prior to task execution (new) or load them at task runtime (legacy)?
+// The above decision tree would create 8 scenarios.  However, GPU tasks don't have a decision tree, they only support
+// heterogeneous memory spaces and simulation variable preloading.  Therefore, the decision tree creates 5 scenarios.
+// The chart below describes all 5 scenarios.  It also describes all possible phases the task proceeds through.
+// ---------------------------------------------------------------------------------------------------------------------------
+//           CPU Task                                        |   GPU Task    |
+//         Homogeneous        |          Heterogeneous       | Heterogeneous | Scheduler Phase
+// No Preloading | Preloading | No Preloading   | Preloading |  Preloading   |
+//   (Legacy)    | (New)      |   (Legacy)      | (New)      |               |
+// -----------------------------------------------------------------------------------------------------------------------------------
+//       X       |     X      |        X        |     X      |       X       |  Internally ready, initiate MPI receives, when complete
+//               |            |                 |            |               |  these tasks go into the externally ready queue
+// -----------------------------------------------------------------------------------------------------------------------------------
+//               |     X      |                 |     X      |       X       |  Preallocate space for all computes for the task.
+// -----------------------------------------------------------------------------------------------------------------------------------
+//               |     X      |                 |     X      |       X       |  Copy task variables into the task's memory space.
+//               |            |                 |            |               |  This includes all halo data as well.
+// -----------------------------------------------------------------------------------------------------------------------------------
+//               |     X      |                 |     X      |       X       |  Check the stream.
+//               |            |                 |            |               |  Mark that task variable data copies have completed.
+// -----------------------------------------------------------------------------------------------------------------------------------
+//               |     X      |                 |     X      |       X       |  Verify all task variables have been copied.
+//               |            |                 |            |               |  (Other tasks may be copying some of the variables.)
+
+
+
+
+
+
+
+
   while( g_num_tasks_done < m_num_tasks && !g_have_hypre_task ) {
 
     DetailedTask* readyTask = nullptr;
     DetailedTask* initTask  = nullptr;
 
     bool havework = false;
+
+    bool allocateComputes = false;
+    bool runReady = false;
+#ifdef HAVE_CUDA
+    bool inHeterogeneousEnvironment = Uintah::Parallel::usingDevice();  //If the -gpu flag was passed in.  Not all tasks have to run on the GPU, but some could
+#endif
 
     // ----------------------------------------------------------------------------------
     // Part 1 (serial): Task selection
@@ -393,33 +437,47 @@ KokkosOpenMPScheduler::runTasks()
          */
         if ((m_phase_sync_task[m_curr_phase] != nullptr) && (m_phase_tasks_done[m_curr_phase] == m_phase_tasks[m_curr_phase] - 1)) {
           readyTask = m_phase_sync_task[m_curr_phase];
+          printf("1.1 The task is %s\n", readyTask->getTask()->getName().c_str());
           havework = true;
           markTaskConsumed(&g_num_tasks_done, m_curr_phase, m_num_phases, readyTask);
+          runReady = true;
           break;
         }
 
         /*
          * (1.2)
          *
-         * Run a CPU task that has its MPI communication complete. These tasks get in the external
+         * A task has its MPI communication complete. These tasks get in the external
          * ready queue automatically when their receive count hits 0 in DependencyBatch::received,
          * which is called when a MPI message is delivered.
          *
          */
-        else if (m_detailed_tasks->numExternalReadyTasks() > 0) {
-          readyTask = m_detailed_tasks->getNextExternalReadyTask();
-          if (readyTask != nullptr) {
-            havework = true;
-            markTaskConsumed(&g_num_tasks_done, m_curr_phase, m_num_phases, readyTask);
+        else if ((readyTask = m_detailed_tasks->getNextExternalReadyTask())) {
+          printf("1.2 The task is %s\n", readyTask->getTask()->getName().c_str());
+          havework = true;
+          //bool usesKokkosOpenMP = readyTask->getTask()->usesKokkosCuda();
+          bool usesSimVarPreloading = readyTask->getTask()->usesSimVarPreloading();
 
-            if ( readyTask->getTask()->getType() == Task::Hypre ) {
-              g_HypreTask = readyTask;
-              g_have_hypre_task = true;
-              return;
+#ifdef HAVE_CUDA
+          if (inHeterogeneousEnvironment == false || readyTask->getPatches() == nullptr) {
+            // Uintah is running in a homogenous/CPU environment or
+            // this is a task that can only run on CPUs (no patches).
+#endif
+            if (usesSimVarPreloading) {
+              allocateComputes = true;
+            } else {
+              markTaskConsumed(&g_num_tasks_done, m_curr_phase, m_num_phases, readyTask);
+              if ( readyTask->getTask()->getType() == Task::Hypre ) {
+                g_HypreTask = readyTask;
+                g_have_hypre_task = true;
+                return;
+              } else {
+                runReady = true;
+              }
             }
-
-            break;
+#ifdef HAVE_CUDA
           }
+#endif
         }
 
         /*
@@ -430,31 +488,29 @@ KokkosOpenMPScheduler::runTasks()
          * call to task->checkExternalDepCount().
          *
          */
-        else if (m_detailed_tasks->numInternalReadyTasks() > 0) {
-          initTask = m_detailed_tasks->getNextInternalReadyTask();
-          if (initTask != nullptr) {
-            if (initTask->getTask()->getType() == Task::Reduction || initTask->getTask()->usesMPI()) {
-              m_phase_sync_task[initTask->getTask()->m_phase] = initTask;
-              ASSERT(initTask->getRequires().size() == 0)
-              initTask = nullptr;
-            }
-            else if (initTask->getRequires().size() == 0) {  // no ext. dependencies, then skip MPI sends
-              initTask->markInitiated();
-              initTask->checkExternalDepCount();  // where tasks get added to external ready queue (no ext deps though)
-              initTask = nullptr;
-            }
-            else {
-              havework = true;
-              break;
-            }
+        else if ((initTask = m_detailed_tasks->getNextInternalReadyTask())) {
+          if (initTask->getTask()->getType() == Task::Reduction || initTask->getTask()->usesMPI()) {
+            m_phase_sync_task[initTask->getTask()->m_phase] = initTask;
+            ASSERT(initTask->getRequires().size() == 0)
+            initTask = nullptr;
+          }
+          else if (initTask->getRequires().size() == 0) {  // no ext. dependencies, then skip MPI sends
+            initTask->markInitiated();
+            initTask->checkExternalDepCount();  // where tasks get added to external ready queue (no ext deps though)
+            initTask = nullptr;
+          }
+          else {
+            havework = true;
+            break;
           }
         }
 
         /*
-         * (1.4)
+         * (1.6)
          *
          * Otherwise there's nothing to do but process MPI recvs.
          */
+
         else {
           if (m_recvs.size() != 0u) {
             havework = true;
@@ -487,7 +543,12 @@ KokkosOpenMPScheduler::runTasks()
         MPIScheduler::initiateReduction(readyTask);
       }
       else {
-        MPIScheduler::runTask(readyTask, m_curr_iteration.load(std::memory_order_relaxed));
+
+        if (allocateComputes) {
+          allocateTaskComputesVariables(readyTask);
+        } else if (runReady) {
+          MPIScheduler::runTask(readyTask, m_curr_iteration.load(std::memory_order_relaxed));
+        }
       }
     }
     else {
@@ -499,3 +560,82 @@ KokkosOpenMPScheduler::runTasks()
   ASSERT(g_num_tasks_done == m_num_tasks);
 }
 
+
+//_____________________________________________________________________________________________________________
+//
+void
+KokkosOpenMPScheduler::allocateTaskComputesVariables( DetailedTask * dtask )
+{
+
+  const Task* task = dtask->getTask();
+
+  for (const Task::Dependency* computesVar = task->getComputes(); computesVar != 0; computesVar = computesVar->m_next) {
+    constHandle<PatchSubset> patches = computesVar->getPatchesUnderDomain(dtask->getPatches());
+    constHandle<MaterialSubset> matls = computesVar->getMaterialsUnderDomain(dtask->getMaterials());
+    const int numPatches = patches->size();
+    const int numMatls = matls->size();
+    for (int i = 0; i < numPatches; i++) {
+      for (int j = 0; j < numMatls; j++) {
+
+        const TypeDescription::Type type = computesVar->m_var->typeDescription()->getType();
+
+        if (type == TypeDescription::CCVariable
+            || type == TypeDescription::NCVariable
+            || type == TypeDescription::SFCXVariable
+            || type == TypeDescription::SFCYVariable
+            || type == TypeDescription::SFCZVariable
+            || type == TypeDescription::PerPatch
+            || type == TypeDescription::ReductionVariable) {
+
+          //Get patch, level, and material information
+          const Patch * patch = patches->get(i);
+          if (!patch) {
+            printf("ERROR:\nKokkosOpenMPScheduler::allocateTaskComputesVariables() patch not found.\n");
+            SCI_THROW( InternalError("Patch not found.", __FILE__, __LINE__));
+          }
+          const int patchID = patch->getID();
+          const Level* level = patch->getLevel();
+          int levelID = level->getID();
+          if (computesVar->m_var->typeDescription()->getType() == TypeDescription::ReductionVariable) {
+            levelID = -1;
+          }
+          const int matlID = matls->get(j);
+
+          //Determine the variable's cell size and required memory size.
+          // a fix for when INF ghost cells are requested such as in RMCRT e.g. tsk->requires(abskg_dw, d_abskgLabel, gac, SHRT_MAX);
+          bool uses_SHRT_MAX = (computesVar->m_num_ghost_cells == SHRT_MAX);
+          //Get all size information about this dependency.
+          IntVector low, high; // lowOffset, highOffset;
+          if (uses_SHRT_MAX) {
+            level->computeVariableExtents(type, low, high);
+          } else {
+            Patch::VariableBasis basis = Patch::translateTypeToBasis(type, false);
+            patch->computeVariableExtents(basis, computesVar->m_var->getBoundaryLayer(), computesVar->m_gtype, computesVar->m_num_ghost_cells, low, high);
+          }
+          const IntVector host_size = high - low;
+          const size_t elementDataSize = computesVar->m_var->typeDescription()->getSubType()->getElementDataSize();
+          size_t memSize = 0;
+          if (type == TypeDescription::PerPatch
+              || type == TypeDescription::ReductionVariable) {
+            memSize = elementDataSize;
+          } else {
+            memSize = host_size.x() * host_size.y() * host_size.z() * elementDataSize;
+          }
+
+          //Attempt to allocate it, if not already done so.
+          const int dwIndex = computesVar->mapDataWarehouse();
+          OnDemandDataWarehouseP dw = m_dws[dwIndex];
+
+          MemorySpace ms = dtask->getTask()->getMemorySpace();
+          dw->allocateAndPutIfPossible(computesVar->m_var, matlID, patch, low, high, ms);
+
+        } else {
+          std::cerr << "KokkosOpenMPScheduler::allocateTaskComputesVariables(), unsupported variable type for computes variable "
+                    << computesVar->m_var->getName() << std::endl;
+          SCI_THROW(InternalError("Unsupported variable type for computes variable \n",__FILE__, __LINE__));
+        }
+
+      }
+    }
+  }
+}

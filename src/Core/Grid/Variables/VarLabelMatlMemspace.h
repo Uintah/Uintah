@@ -29,7 +29,7 @@
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Level.h>
-
+#include <Core/Parallel/UintahMemorySpaces.h>
 
 namespace Uintah {
 
@@ -50,8 +50,6 @@ namespace Uintah {
       WARNING
 
       ****************************************/
-
-enum MemorySpace { HostSpace, CudaSpace };
 
 template<class DomainType, class MemSpace>
 struct VarLabelMatlMemspace

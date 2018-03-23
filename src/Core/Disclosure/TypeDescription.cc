@@ -243,3 +243,39 @@ TypeDescription::toString( Type type )
       throw InternalError( msg.str(), __FILE__, __LINE__);
   }
 }
+
+size_t
+TypeDescription::getElementDataSize() const
+{
+  switch( d_type ) {
+    case CCVariable:          return 0;
+    case NCVariable:          return 0;
+    case SFCXVariable:        return 0;
+    case SFCYVariable:        return 0;
+    case SFCZVariable:        return 0;
+    case ParticleVariable:    return 0;
+    case PerPatch:            return 0;
+    case Point:               return 0;
+    case Vector:              return 0;
+    case Matrix3:             return 0;
+    case ReductionVariable:   return 0;
+    case SoleVariable:        return 0;
+    case double_type:         return sizeof(double);
+    case float_type:          return sizeof(float);
+    case bool_type:           return sizeof(bool);
+    case int_type:            return sizeof(int);
+    case short_int_type:      return sizeof(short);
+    case long_type:           return sizeof(long);
+    case long64_type:         return sizeof(long long);
+    case Short27:             return 0;
+    case Stencil4:            return 0;
+    case Stencil7:            return 0;
+    case IntVector:           return 0;
+    case Unknown:             return 0;
+    case Other:               return 0;
+    default:
+      std::stringstream msg;
+      msg << "Invalid type: " << d_type;
+      throw InternalError( msg.str(), __FILE__, __LINE__);
+  }
+}

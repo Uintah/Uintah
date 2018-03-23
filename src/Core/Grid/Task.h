@@ -31,6 +31,7 @@
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Parallel/Parallel.h>
+#include <Core/Parallel/UintahMemorySpaces.h>
 #include <CCA/Ports/DataWarehouseP.h>
 #include <Core/Util/constHandle.h>
 #include <Core/Util/DOUT.hpp>
@@ -1374,6 +1375,7 @@ public: // class Task
          void usesKokkosCuda(bool state);
   inline bool usesKokkosCuda() const { return m_uses_kokkos_cuda; }
 
+  MemorySpace getMemorySpace() const;
 
   enum MaterialDomainSpec {
       NormalDomain  // <- Normal/default setting

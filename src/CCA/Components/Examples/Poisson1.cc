@@ -172,8 +172,6 @@ void Poisson1::scheduleTimeAdvance( const LevelP     & level
                                   )
 {
 
-
-
   auto TaskDependencies = [&](Task* task) {
     task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
     task->computesWithScratchGhost(phi_label, nullptr, Uintah::Task::NormalDomain, Ghost::AroundNodes, 1);
@@ -324,9 +322,56 @@ void Poisson1::timeAdvance(DetailedTask* task,
       //Uintah::parallel_boundary_condition(boundaryConditionRange, range, boundaryFunc);
       TimeAdvanceFunctor<Kokkos::HostSpace> func(phi, newphi);
       Uintah::parallel_reduce_sum<Kokkos::OpenMP>(range, func, residual);
+
     }
 #endif //#if !defined(UINTAH_ENABLE_KOKKOS)
     printf("The residual is %g\n", residual);
     //new_dw->put(sum_vartype(residual), residual_label);
   }
 }
+
+
+
+//void Poisson1::scheduleTimeAdvance(/* ... Uintah parameters ... */) {
+//  auto TaskDependencies = [&](Task* task) {
+//    task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
+//    task->computes(phi_label, nullptr, Uintah::Task::NormalDomain, Ghost::AroundNodes, 1);
+//    task->computes(residual_label);
+//  };
+//  CALL_ASSIGN_PORTABLE_TASK(Poisson1::timeAdvance, TaskDependencies,
+//                            level->eachPatch(), m_sharedState->allMaterials());
+//}
+
+//template <typename ExecutionSpace, typename MemorySpace>
+//void Poisson1::timeAdvance(/* ... Uintah task parameters ... */) {
+//  auto residual =
+//      new_dw->getKokkosResidual<double, MemorySpace>(residual_label, patch, material);
+//  auto new_phi  =
+//      new_dw->getKokkosView<double, MemorySpace>(phi_label, patch, material);
+//  auto old_phi  =
+//      old_dw->getKokkosView<const double, MemorySpace>(phi_label, patch, material);
+//
+//  Uintah::BlockRange range(patch->getNodeLowIndex(), patch->getNodeHighIndex(),
+//                           asyncStreamPointer);
+//
+//  Uintah::parallel_boundary_condition<ExecutionSpace>(
+//      Uintah::FACE_CELLS, patch, range,
+//    [&](int i, int j, int k) {
+//      new_phi(i,j,k) = 0.0;  //Initialize to zero
+//    }
+//  );
+//
+//  Uintah::parallel_reduce_sum<ExecutionSpace>(range,
+//    [&](int i, int j, int k, double& inner_residual) {
+//      //Poisson stencil computation
+//      new_phi(i,j,k) = (1. / 6)
+//                       * (old_phi(i + 1, j, k) + old_phi(i - 1, j, k)
+//                       +  old_phi(i, j + 1, k) + old_phi(i, j - 1, k)
+//                       +  old_phi(i, j, k + 1) + old_phi(i, j, k - 1));
+//      double diff = new_phi(i, j, k) - old_phi(i, j, k);
+//      inner_residual += diff * diff;
+//    },
+//    residual);
+//}
+
+

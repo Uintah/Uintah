@@ -226,6 +226,18 @@ Task::usesKokkosCuda(bool state)
 
 //______________________________________________________________________
 //
+MemorySpace
+Task::getMemorySpace() const
+{
+  if (usesDevice()) {
+    return Uintah::CudaSpace;
+  } else {
+    return Uintah::HostSpace;
+  }
+}
+
+//______________________________________________________________________
+//
 void Task::requires(       WhichDW              dw
                    , const VarLabel           * var
                    , const PatchSubset        * patches

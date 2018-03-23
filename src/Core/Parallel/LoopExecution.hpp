@@ -37,7 +37,8 @@
 
 #include <cstddef>
 
-
+#define STRINGIFY(x) #x
+#define TOSTRING(x) STRINGIFY(x)
 
 //The purpose of this file is to provide portability between Kokkos and non-Kokkos builds.
 //For example, if a user calls a parallel_for loop but Kokkos is NOT provided, this will run the
@@ -71,19 +72,19 @@
 #define CALL_ASSIGN_PORTABLE_TASK(FUNCTION_NAME, TASK_DEPENDENCIES, PATCHES, MATERIALS) {      \
   Task* task{nullptr};                                                                         \
   if (NUM_EXECUTION_SPACES == 1) {                                                             \
-    task = scinew Task("FUNCTION_NAME",                                                        \
+    task = scinew Task(TOSTRING(FUNCTION_NAME),                                                \
                              this,                                                             \
                              &FUNCTION_NAME<EXECUTION_SPACE_0, MEMORY_SPACE_0>);               \
-    task->usesKokkosOpenMP(true);                                                            \
+    task->usesKokkosOpenMP(true);                                                              \
   } else {                                                                                     \
     if (Uintah::Parallel::usingDevice()) {                                                     \
-      task = scinew Task("FUNCTION_NAME",                                                      \
+      task = scinew Task(TOSTRING(FUNCTION_NAME),                                              \
                                this,                                                           \
                                &FUNCTION_NAME<EXECUTION_SPACE_0, MEMORY_SPACE_0>);             \
       task->usesDevice(true);                                                                  \
       task->usesKokkosCuda(true);                                                              \
     } else {                                                                                   \
-      task = scinew Task("FUNCTION_NAME",                                                      \
+      task = scinew Task(TOSTRING(FUNCTION_NAME),                                              \
                                this,                                                           \
                                &FUNCTION_NAME<EXECUTION_SPACE_1, MEMORY_SPACE_1>);             \
       task->usesKokkosOpenMP(true);                                                            \

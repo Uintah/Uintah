@@ -88,7 +88,29 @@ DESCRIPTION
 WARNING
 	
 ****************************************/
-      
+
+typedef int atomicDataStatus;
+//    0                   1                   2                   3
+//    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+//   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+//   |    16-bit reference counter   |  unused     |U|S|D|V|A|V|C|A|A|
+//   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+//left sixteen bits is a 16-bit integer reference counter.
+
+//Not allocated/Invalid = If the value is 0x00000000
+
+//Allocating                = bit 31 - 0x00000001
+//Allocated                 = bit 30 - 0x00000002
+//Copying in                = bit 29 - 0x00000004
+//Valid                     = bit 28 - 0x00000008
+//Awaiting ghost data       = bit 27 - 0x00000010
+//Valid with ghost cells    = bit 26 - 0x00000020
+//Deallocating              = bit 25 - 0x00000040
+//Superpatch                = bit 24 - 0x00000080
+//Unknown                   = bit 23 - 0x00000100
+
+
 class DataWarehouse : public RefCounted {
 
 public:
