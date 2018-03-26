@@ -812,7 +812,7 @@ SCI_ARG_ENABLE(wasatch,
 SCI_ARG_ENABLE(all_components,
   AC_HELP_STRING(--enable-all-components,
                  Turn on the all components.),
-  [use_all_components="yes"
+  [enable_all_components="yes"
    BUILD_ARCHES="yes"
    BUILD_EXAMPLES="yes"
    BUILD_FVM="yes"
@@ -829,7 +829,7 @@ SCI_ARG_ENABLE(all_components,
    DEF_UNIT_TESTS=
    DEF_WASATCH=
   ],
-  [use_all_components="no"])
+  [enable_all_components="no"])
 
 #
 # --- end list of -enable components ------
@@ -837,24 +837,37 @@ SCI_ARG_ENABLE(all_components,
 BUILD_MODELS_RADIATION=no
 DEF_MODELS_RADIATION=
 
-if test "$use_all_components"   = "yes" -o  \
-        "$enable_arches"        = "yes" -o  \
-        "$enable_examples"      = "yes" -o  \
-        "$enable_wasatch"       = "yes" ; then
+if test "$enable_all_components" = "yes" -o  \
+        "$enable_arches"         = "yes" -o  \
+        "$enable_examples"       = "yes" -o  \
+        "$enable_wasatch"        = "yes" ; then
   BUILD_MODELS_RADIATION=yes
 fi
 
-if test "$enable_minimal"             = "yes" -a  \
-        \( "$use_all_components"      = "yes" -o  \
-	   "$enable_unit_tests"       = "yes" -o  \
-	   "$enable_arches"           = "yes" -o  \
-           "$enable_examples"         = "yes" -o  \
-           "$enable_fvm"              = "yes" -o  \
-           "$enable_heat"             = "yes" -o  \
-           "$enable_ice"              = "yes" -o  \
-           "$enable_mpm"              = "yes" -o  \
-           "$enable_phasefield"       = "yes" -o  \
-           "$enable_wasatch"          = "yes" \); then
+# Check for enabling a specific component (one or more)
+if test \( "$enable_arches"     = "yes" -o  \
+           "$enable_examples"   = "yes" -o  \
+           "$enable_fvm"        = "yes" -o  \
+           "$enable_heat"       = "yes" -o  \
+           "$enable_ice"        = "yes" -o  \
+           "$enable_mpm"        = "yes" -o  \
+           "$enable_phasefield" = "yes" -o  \
+           "$enable_wasatch"    = "yes" \); then
+  enabling_components=yes
+  # Warn if enable all was also specified.
+  if test "$enable_all_components" = "yes"; then
+    add_important_warning "-------------------------------------------------------------------------"
+    add_important_warning "!!! Both --enable-all-components and --enable-<specific-component> were used. ALL Componenets will be built."
+    add_important_warning "-------------------------------------------------------------------------"
+  fi
+elif test "$enable_all_components" = "yes"; then
+  enabling_components=yes
+else
+  enabling_components=no
+fi
+
+if test "$enable_minimal"       = "yes" -a  \
+        "$enabling_componentss" = "yes"; then
    AC_MSG_ERROR( Can not do a minimal library only build if building applications or unit tests)
 elif test "$enable_minimal" = "yes"; then
 
@@ -863,44 +876,14 @@ elif test "$enable_minimal" = "yes"; then
   add_important_warning "-------------------------------------------------------------------------"
 fi
 
-if test "$use_all_components"         = "yes" -a  \
-        \( "$enable_arches"           = "yes" -o  \
-           "$enable_examples"         = "yes" -o  \
-           "$enable_fvm"              = "yes" -o  \
-           "$enable_heat"             = "yes" -o  \
-           "$enable_ice"              = "yes" -o  \
-           "$enable_mpm"              = "yes" -o  \
-           "$enable_phasefield"       = "yes" -o  \
-           "$enable_wasatch"          = "yes" \); then
-  add_important_warning "-------------------------------------------------------------------------"
-  add_important_warning "!!! Both --enable-all-components and --enable-<specific-component> were used. ALL Componenets will be built."
-  add_important_warning "-------------------------------------------------------------------------"
-#   AC_MSG_ERROR( Can not use both --enable-all-components and --enable-<specific-component> )
-fi
-
-if test \("$with_blas"                = "no" -o  \
-   	  "$with_lapack"              = "no" \) -a  \
-        \( "$enable_arches"           = "yes" -o  \
-           "$enable_examples"         = "yes" -o  \
-           "$enable_fvm"              = "yes" -o  \
-           "$enable_heat"             = "yes" -o  \
-           "$enable_ice"              = "yes" -o  \
-           "$enable_mpm"              = "yes" -o  \
-           "$enable_phasefield"       = "yes" -o  \
-           "$enable_wasatch"          = "yes" \); then
+if test \("$with_blas"         = "no" -o  \
+   	  "$with_lapack"       = "no" \) -a  \
+	"$enabling_components" = "yes"; then
    AC_MSG_ERROR( Can not use --with_blas=no or --with_lapack=no when enabling a component )
 fi
 
-if test "$enable_minimal"       != "yes" -a  \
-        "$use_all_components"   != "yes" -a  \
-        "$enable_arches"        != "yes" -a  \
-        "$enable_examples"      != "yes" -a  \
-        "$enable_fvm"           != "yes" -a  \
-        "$enable_heat"          != "yes" -a  \
-        "$enable_ice"           != "yes" -a  \
-        "$enable_mpm"           != "yes" -a  \
-        "$enable_phasefield"    != "yes" -a  \
-        "$enable_wasatch"       != "yes" ; then
+if test "$enable_minimal"      != "yes" -a  \
+        "$enabling_components" != "yes" -a; then
   add_important_warning "-------------------------------------------------------------------------"
   add_important_warning "!!! No components were specified! Only utility programs will be built !!!"
   add_important_warning "-------------------------------------------------------------------------"
