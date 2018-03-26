@@ -33,7 +33,7 @@ echo "setenv WHICH_TESTS $WHICH_TESTS"                     >> "$doTestScript"
 echo "setenv SCI_MALLOC_ENABLED $is_dbg"                   >> "$doTestScript"
 echo "setenv COMMON_GROUP $COMMON_GROUP"                   >> "$doTestScript"
 
-echo "python TestScripts/$componentTest.py susdir inputs goldStandard $mode $PARALLELISM "'$1' >> "$doTestScript"
+echo "python3 TestScripts/$componentTest.py susdir inputs goldStandard $mode $PARALLELISM "'$1' >> "$doTestScript"
 
 /bin/chmod a+x "$doTestScript"
 
