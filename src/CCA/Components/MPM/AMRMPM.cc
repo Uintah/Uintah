@@ -445,7 +445,6 @@ void AMRMPM::outputProblemSpec(ProblemSpecP& root_ps)
     MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->outputProblemSpec(mpm_ph_bc_ps);
   }
 
-
 }
 
 //______________________________________________________________________
@@ -553,7 +552,7 @@ void AMRMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
 
   sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
 
-  if (level->getIndex() == 0 ) schedulePrintParticleCount(level, sched); 
+  if (level->getIndex() == 0 ) schedulePrintParticleCount(level, sched);
 
   if (flags->d_useLoadCurves && !flags->d_doScalarDiffusion) {
     // Schedule the initialization of pressure BCs per particle
@@ -1538,8 +1537,7 @@ void AMRMPM::scheduleAddParticles(SchedulerP& sched,
                                   const MaterialSet* matls)
 {
   if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
-                           getLevel(patches)->getGrid()->numLevels()))
-    return;
+                           getLevel(patches)->getGrid()->numLevels())) return;
 
     printSchedule(patches,cout_doing,"AMRMPM::scheduleAddParticles");
 
@@ -5663,22 +5661,21 @@ void AMRMPM::scheduleComputeFlux(SchedulerP& sched,
                                  const MaterialSet* matls)
 {
   if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
-                           getLevel(patches)->getGrid()->numLevels()))
-    return;
+                           getLevel(patches)->getGrid()->numLevels())) return;
 
-    printSchedule(patches,cout_doing,"AMRMPM::scheduleComputeFlux");
+  printSchedule(patches,cout_doing,"AMRMPM::scheduleComputeFlux");
 
-    Task* t = scinew Task("AMRMPM::computeFlux",
+  Task* t = scinew Task("AMRMPM::computeFlux",
                      this,&AMRMPM::computeFlux);
 
-    int numMPM = d_sharedState->getNumMPMMatls();
-    for(int m = 0; m < numMPM; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-      ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
-      sdm->scheduleComputeFlux(t, mpm_matl, patches);
-    }
+  int numMPM = d_sharedState->getNumMPMMatls();
+  for(int m = 0; m < numMPM; m++) {
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
+    sdm->scheduleComputeFlux(t, mpm_matl, patches);
+  }
 
-    sched->addTask(t, patches, matls);
+  sched->addTask(t, patches, matls);
 }
 //______________________________________________________________________
 //

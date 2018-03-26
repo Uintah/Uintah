@@ -116,6 +116,8 @@ void SimpleSDInterface::sdInterfaceDivergence(
   int               numGhost;
   d_shared_state->getParticleGhostLayer(typeGhost, numGhost);
 
+  Ghost::GhostType gnone = Ghost::None;
+
   delt_vartype delT;
   oldDW->get(delT, d_shared_state->get_delt_label(), getLevel(patches) );
   double delTInv = 1.0/delT;
@@ -126,8 +128,7 @@ void SimpleSDInterface::sdInterfaceDivergence(
     int totalDWI = d_shared_state->getAllInOneMatl()->get(0);
 
     constNCVariable<double>               gTotalVolume;
-    newDW->get(gTotalVolume, d_mpm_lb->gVolumeLabel, totalDWI, patch,
-               typeGhost, numGhost);
+    newDW->get(gTotalVolume, d_mpm_lb->gVolumeLabel, totalDWI, patch, gnone, 0);
 
     StaticArray<constNCVariable<double> > gVolume(numMatls);
     StaticArray<constNCVariable<double> > gConc(numMatls);  // C_i,j = gConc[j][i]
@@ -148,13 +149,13 @@ void SimpleSDInterface::sdInterfaceDivergence(
 
     for (int mIdx = 0; mIdx < numMatls; ++mIdx) {
       int dwi = matls->get(mIdx);
-      newDW->get(gVolume[mIdx], d_mpm_lb->gVolumeLabel,             dwi, patch, typeGhost, numGhost);
-      newDW->get(gConc[mIdx],   d_mpm_lb->gConcentrationLabel,      dwi, patch, typeGhost, numGhost);
+      newDW->get(gVolume[mIdx], d_mpm_lb->gVolumeLabel,             dwi, patch, gnone, 0);
+      newDW->get(gConc[mIdx],   d_mpm_lb->gConcentrationLabel,      dwi, patch, gnone, 0);
 
-      newDW->allocateAndPut(gdCdt_interface[mIdx], sdInterfaceRate, dwi, patch, typeGhost, numGhost);
+      newDW->allocateAndPut(gdCdt_interface[mIdx], sdInterfaceRate, dwi, patch);
       gdCdt_interface[mIdx].initialize(0);
 
-      newDW->allocateAndPut(gInterfaceFlag[mIdx],  sdInterfaceFlag, dwi, patch, typeGhost, numGhost);
+      newDW->allocateAndPut(gInterfaceFlag[mIdx],  sdInterfaceFlag, dwi, patch);
       gInterfaceFlag[mIdx].initialize(false);
       // Not in place yet, but should be for mass normalization.
       //massNormFactor[mIdx] = mpm_matl->getMassNormFactor();

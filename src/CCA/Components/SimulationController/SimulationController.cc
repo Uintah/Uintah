@@ -761,143 +761,133 @@ SimulationController::ReportStats( bool header /* = false */ )
   // Update the moving average and get the wall time for this time step.
   Timers::nanoseconds timeStep = walltimers.updateExpMovingAverage();
 
+  int topTimestep = d_sharedState->getCurrentTopLevelTimeStep();
+
+  const int printEvery = 1000;
+  const int printOffset = 1;
   if( d_myworld->myrank() == 0 )
   {
-    ostringstream message;
-    message << left
-	    << "Timestep "   << setw(8)
-	    << d_sharedState->getCurrentTopLevelTimeStep()
-	    << "Time="       << setw(12) << d_simTime
+    if ((topTimestep % printEvery) == printOffset) {
+      ostringstream message;
+      message << left
+          << "Timestep "   << setw(8)
+          << topTimestep
+//          << d_sharedState->getCurrentTopLevelTimeStep()
+          << "Time="       << setw(12) << d_simTime
 //	    << "delT="       << setw(12) << d_prev_delt
-	    << "Next delT="  << setw(12) << d_delt
+          << "Next delT="  << setw(12) << d_delt
 
-	    << "Wall Time = " << setw(10) << Time::currentSeconds()
+          << "Wall Time = " << setw(10) << Time::currentSeconds()
 	    // << "All Time steps= " << setw(12) << walltimers.TimeStep().seconds()
 	    // << "Current Time Step= " << setw(12) << timeStep.seconds()
-	    << "EMA="        << setw(12) << walltimers.ExpMovingAverage().seconds();
+	      << "EMA="        << setw(12) << walltimers.ExpMovingAverage().seconds();
 
     // Report on the memory used.
-    if (avg_memused == max_memused && avg_highwater == max_highwater) {
-      message << "Memory Use=" << setw(8)
-	      << ProcessInfo::toHumanUnits((unsigned long) avg_memused);
+      if (avg_memused == max_memused && avg_highwater == max_highwater) {
+        message << "Memory Use=" << setw(8)
+	          << ProcessInfo::toHumanUnits((unsigned long) avg_memused);
 
-      if(avg_highwater)
-	message << "    Highwater Memory Use=" << setw(8)
-		<< ProcessInfo::toHumanUnits((unsigned long) avg_highwater);
-    }
-    else {
-      message << "Memory Used=" << setw(10)
-	      << ProcessInfo::toHumanUnits((unsigned long) avg_memused)
-	      << " (avg) " << setw(10)
-	      << ProcessInfo::toHumanUnits(max_memused)
-	      << " (max on rank:" << setw(6) << max_memused_rank << ")";
+        if(avg_highwater)
+          message << "    Highwater Memory Use=" << setw(8)
+          << ProcessInfo::toHumanUnits((unsigned long) avg_highwater);
+      } else {
+        message << "Memory Used=" << setw(10)
+	        << ProcessInfo::toHumanUnits((unsigned long) avg_memused)
+	        << " (avg) " << setw(10)
+	        << ProcessInfo::toHumanUnits(max_memused)
+	        << " (max on rank:" << setw(6) << max_memused_rank << ")";
 
-      if(avg_highwater)
-	message << "    Highwater Memory Used=" << setw(10)
-		<< ProcessInfo::toHumanUnits((unsigned long)avg_highwater)
-		<< " (avg) " << setw(10)
-		<< ProcessInfo::toHumanUnits(max_highwater)
-		<< " (max on rank:" << setw(6) << max_highwater_rank << ")";
-    }
+        if(avg_highwater)
+          message << "    Highwater Memory Used=" << setw(10)
+          << ProcessInfo::toHumanUnits((unsigned long)avg_highwater)
+        << " (avg) " << setw(10)
+        << ProcessInfo::toHumanUnits(max_highwater)
+        << " (max on rank:" << setw(6) << max_highwater_rank << ")";
+      }
 
-    dbg << message.str() << "\n";
-    dbg.flush();
-    cout.flush();
+      dbg << message.str() << "\n";
+      dbg.flush();
+      cout.flush();
 
     // Ignore the first sample as that is for initalization.
-    if (stats.active() && d_nSamples) {
-	  stats << "  " << left
-		<< setw(21) << "Description"
-		<< setw(15) << "Units"
-		<< setw(15) << "Average"
-		<< setw(15) << "Maximum"
-		<< setw(13) << "Rank"
-		<< setw(13) << "100*(1-ave/max) '% load imbalance'"
-		<< "\n";
+      if (stats.active() && d_nSamples) {
+        stats << "  " << left
+            << setw(21) << "Description"
+            << setw(15) << "Units"
+            << setw(15) << "Average"
+            << setw(15) << "Maximum"
+            << setw(13) << "Rank"
+            << setw(13) << "100*(1-ave/max) '% load imbalance'"
+            << "\n";
 
-      for (unsigned int i=0; i<runTimeStats.size(); ++i)
-      {
-	SimulationState::RunTimeStat e = (SimulationState::RunTimeStat) i;
+        for (unsigned int i=0; i<runTimeStats.size(); ++i) {
+          SimulationState::RunTimeStat e = (SimulationState::RunTimeStat) i;
 	
-	if (runTimeStats.getMaximum(e) > 0)
-	{
-	  stats << "  " << left
+          if (runTimeStats.getMaximum(e) > 0) {
+            stats << "  " << left
                 << setw(21) << runTimeStats.getName(e)
-		<< "[" << setw(10) << runTimeStats.getUnits(e) << "]"
-		<< " : " << setw(12) << runTimeStats.getAverage(e)
-		<< " : " << setw(12) << runTimeStats.getMaximum(e)
-		<< " : " << setw(10) << runTimeStats.getRank(e)
-		<< " : " << setw(10)
-		<< 100.0 * (1.0 - (runTimeStats.getAverage(e) /
-				   runTimeStats.getMaximum(e)))
-		<< "\n";
-	}
-      }
+                << "[" << setw(10) << runTimeStats.getUnits(e) << "]"
+                << " : " << setw(12) << runTimeStats.getAverage(e)
+                << " : " << setw(12) << runTimeStats.getMaximum(e)
+                << " : " << setw(10) << runTimeStats.getRank(e)
+                << " : " << setw(10)
+                << 100.0 * (1.0 - (runTimeStats.getAverage(e) / runTimeStats.getMaximum(e)))
+                << "\n";
+          }
+        }
       
-      // Report the overhead percentage.
-      if( !std::isnan(d_sharedState->getOverheadAvg()) ) {
-        stats << "  Percentage of time spent in overhead : "
+        // Report the overhead percentage.
+        if( !std::isnan(d_sharedState->getOverheadAvg()) ) {
+          stats << "  Percentage of time spent in overhead : "
               << d_sharedState->getOverheadAvg()*100.0 <<  "\n";
+        }
       }
-    }
   
-    // Ignore the first sample as that is for initalization.
-    if (dbgTime.active() && d_nSamples ) {
-      double realSecondsNow =
-	timeStep.seconds() / d_delt;
-      double realSecondsAvg =
-	walltimers.TimeStep().seconds() / (d_simTime-d_startSimTime);
+      // Ignore the first sample as that is for initalization.
+      if (dbgTime.active() && d_nSamples ) {
+        double realSecondsNow = timeStep.seconds() / d_delt;
+        double realSecondsAvg = walltimers.TimeStep().seconds() / (d_simTime-d_startSimTime);
 
-      dbgTime << "1 simulation second takes ";
+        dbgTime << "1 simulation second takes ";
 
-      dbgTime << left << showpoint << setprecision(3) << setw(4);
+        dbgTime << left << showpoint << setprecision(3) << setw(4);
 
-      if (realSecondsNow < SECONDS_PER_MINUTE) {
-        dbgTime << realSecondsNow << " seconds (now), ";
-      }
-      else if (realSecondsNow < SECONDS_PER_HOUR) {
-        dbgTime << realSecondsNow / SECONDS_PER_MINUTE << " minutes (now), ";
-      }
-      else if (realSecondsNow < SECONDS_PER_DAY) {
-        dbgTime << realSecondsNow / SECONDS_PER_HOUR << " hours (now), ";
-      }
-      else if (realSecondsNow < SECONDS_PER_WEEK) {
-        dbgTime << realSecondsNow / SECONDS_PER_DAY << " days (now), ";
-      }
-      else if (realSecondsNow < SECONDS_PER_YEAR) {
-        dbgTime << realSecondsNow / SECONDS_PER_WEEK << " weeks (now), ";
-      }
-      else {
-        dbgTime << realSecondsNow / SECONDS_PER_YEAR << " years (now), ";
-      }
+        if (realSecondsNow < SECONDS_PER_MINUTE) {
+          dbgTime << realSecondsNow << " seconds (now), ";
+        } else if (realSecondsNow < SECONDS_PER_HOUR) {
+          dbgTime << realSecondsNow / SECONDS_PER_MINUTE << " minutes (now), ";
+        } else if (realSecondsNow < SECONDS_PER_DAY) {
+          dbgTime << realSecondsNow / SECONDS_PER_HOUR << " hours (now), ";
+        } else if (realSecondsNow < SECONDS_PER_WEEK) {
+          dbgTime << realSecondsNow / SECONDS_PER_DAY << " days (now), ";
+        } else if (realSecondsNow < SECONDS_PER_YEAR) {
+          dbgTime << realSecondsNow / SECONDS_PER_WEEK << " weeks (now), ";
+        } else {
+          dbgTime << realSecondsNow / SECONDS_PER_YEAR << " years (now), ";
+        }
 
-      dbgTime << setw(4);
+        dbgTime << setw(4);
 
-      if (realSecondsAvg < SECONDS_PER_MINUTE) {
-        dbgTime << realSecondsAvg << " seconds (avg) ";
-      }
-      else if (realSecondsAvg < SECONDS_PER_HOUR) {
-        dbgTime << realSecondsAvg / SECONDS_PER_MINUTE << " minutes (avg) ";
-      }
-      else if (realSecondsAvg < SECONDS_PER_DAY) {
-        dbgTime << realSecondsAvg / SECONDS_PER_HOUR << " hours (avg) ";
-      }
-      else if (realSecondsAvg < SECONDS_PER_WEEK) {
-        dbgTime << realSecondsAvg / SECONDS_PER_DAY << " days (avg) ";
-      }
-      else if (realSecondsAvg < SECONDS_PER_YEAR) {
-        dbgTime << realSecondsAvg / SECONDS_PER_WEEK << " weeks (avg) ";
-      }
-      else {
-        dbgTime << realSecondsAvg / SECONDS_PER_YEAR << " years (avg) ";
-      }
+        if (realSecondsAvg < SECONDS_PER_MINUTE) {
+          dbgTime << realSecondsAvg << " seconds (avg) ";
+        } else if (realSecondsAvg < SECONDS_PER_HOUR) {
+          dbgTime << realSecondsAvg / SECONDS_PER_MINUTE << " minutes (avg) ";
+        } else if (realSecondsAvg < SECONDS_PER_DAY) {
+          dbgTime << realSecondsAvg / SECONDS_PER_HOUR << " hours (avg) ";
+        } else if (realSecondsAvg < SECONDS_PER_WEEK) {
+          dbgTime << realSecondsAvg / SECONDS_PER_DAY << " days (avg) ";
+        } else if (realSecondsAvg < SECONDS_PER_YEAR) {
+          dbgTime << realSecondsAvg / SECONDS_PER_WEEK << " weeks (avg) ";
+        } else {
+          dbgTime << realSecondsAvg / SECONDS_PER_YEAR << " years (avg) ";
+        }
 
-      dbgTime << "to calculate." << "\n";
-    }
+        dbgTime << "to calculate." << "\n";
+      }
+    } // Print every nth timestep
   }
 
   ++d_nSamples;
-
 } // end printSimulationStats()
 
 //______________________________________________________________________
