@@ -868,7 +868,7 @@ fi
 
 if test "$enable_minimal"       = "yes" -a  \
         "$enabling_componentss" = "yes"; then
-   AC_MSG_ERROR( Can not do a minimal library only build if building applications or unit tests)
+   AC_MSG_ERROR( Can not do a minimal library only build if building applications or unit tests )
 elif test "$enable_minimal" = "yes"; then
 
   add_important_warning "-------------------------------------------------------------------------"
@@ -876,14 +876,14 @@ elif test "$enable_minimal" = "yes"; then
   add_important_warning "-------------------------------------------------------------------------"
 fi
 
-if test \("$with_blas"         = "no" -o  \
-   	  "$with_lapack"       = "no" \) -a  \
-	"$enabling_components" = "yes"; then
+if test "$enabling_components" = "yes" -a  \
+	\( "$with_blas"        = "no"  -o  \
+           "$with_lapack"      = "no" \); then
    AC_MSG_ERROR( Can not use --with_blas=no or --with_lapack=no when enabling a component )
 fi
 
 if test "$enable_minimal"      != "yes" -a  \
-        "$enabling_components" != "yes" -a; then
+        "$enabling_components" != "yes"; then
   add_important_warning "-------------------------------------------------------------------------"
   add_important_warning "!!! No components were specified! Only utility programs will be built !!!"
   add_important_warning "-------------------------------------------------------------------------"
