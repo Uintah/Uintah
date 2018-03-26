@@ -475,8 +475,7 @@ LoadBalancerCommon::possiblyDynamicallyReallocate( const GridP & grid
 {
   if( state != LoadBalancer::CHECK_LB ) {
     // Have it create a new patch set, and have the DLB version call this.
-    // This is a good place to do it, as it is automatically called when the
-    // grid changes.
+    // This is a good place to do it, as it is automatically called when the grid changes.
     m_level_perproc_patchsets.clear();
     m_output_patchsets.clear();
     m_grid_perproc_patchsets = createPerProcessorPatchSet(grid);
