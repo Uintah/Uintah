@@ -67,6 +67,7 @@
 #include <map>
 #include <string>
 #include <iostream>
+#include <iomanip>
 
 namespace Uintah {
 
@@ -124,18 +125,18 @@ public:
 
   void print() const
   {
-    printf("  Component: %s,  Name: %s,  Description: %s, Active: %s\n", m_component.c_str(), m_name.c_str(), m_description.c_str(), (m_active ? "+" : "-"));
+    std::cout << std::setw(2)  << std::left << (m_active ? "+" : "-")
+              << std::setw(40) << std::left << m_name.c_str()
+              << std::setw(50) << std::left << m_description.c_str()
+              << std::setw(40) << std::left << m_component.c_str()
+              << std::endl;
   }
 
   static void printAll()
   {
     printf("--------------------------------------------------------------------------------\n");
-    auto iter = m_all_debug_streams.begin();
-    for (; iter != m_all_debug_streams.end(); ++iter) {
+    for (auto iter = m_all_debug_streams.begin(); iter != m_all_debug_streams.end(); ++iter) {
       (*iter).second->print();
-    }
-    if (m_all_debug_streams.empty()) {
-      printf("  No DebugStreams currently active.....\n");
     }
     printf("--------------------------------------------------------------------------------\n\n");
   }

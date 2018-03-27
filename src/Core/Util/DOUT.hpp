@@ -33,6 +33,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <iomanip>
 #include <map>
 #include <sstream>
 #include <string>
@@ -135,18 +136,20 @@ public:
 
   void print() const
   {
-    printf("  Component: %s,   Name: %s,   Description: %s,  Active: %s\n", m_component.c_str(),  m_name.c_str(), m_description.c_str(), (m_active ? "+" : "-"));
+    std::stringstream message;
+    message << std::setw(2)  << std::left << (m_active ? "+" : "-")
+            << std::setw(40) << std::left << m_name.c_str()
+            << std::setw(50) << std::left << m_description.c_str()
+            << std::setw(40) << std::left << m_component.c_str()
+            << std::endl;
+    printf("%s", message.str().c_str());
   }
 
   static void printAll()
   {
     printf("--------------------------------------------------------------------------------\n");
-    auto iter = m_all_douts.begin();
-    for (; iter != m_all_douts.end(); ++iter) {
+    for (auto iter = m_all_douts.begin(); iter != m_all_douts.end(); ++iter) {
       (*iter).second->print();
-    }
-    if (m_all_douts.empty()) {
-      printf("    No Douts currently active.....\n");
     }
     printf("--------------------------------------------------------------------------------\n\n");
   }
