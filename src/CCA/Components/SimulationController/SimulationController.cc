@@ -249,6 +249,11 @@ SimulationController::SimulationController( const ProcessorGroup * myworld
   m_runtime_stats.insert( CheckpointIORate,          std::string("CheckpointIORate"), "MBytes/sec", 0 );
   m_runtime_stats.insert( CheckpointReducIORate,     std::string("CheckpointReducIORate"), "MBytes/sec", 0 );
 
+  m_runtime_stats.insert( NumTasks,                  std::string("NumberOfTasks"), "tasks", 0 );
+  m_runtime_stats.insert( NumPatches,                std::string("NumberOfPatches"), "patches", 0 );
+  m_runtime_stats.insert( NumCells,                  std::string("NumberOfCells"), "cells", 0 );
+  m_runtime_stats.insert( NumParticles,              std::string("NumberOfParticles"), "paticles", 0 );
+  
   m_runtime_stats.insert( SCIMemoryUsed,             std::string("SCIMemoryUsed"),         bytesStr, 0 );
   m_runtime_stats.insert( SCIMemoryMaxUsed,          std::string("SCIMemoryMaxUsed"),      bytesStr, 0 );
   m_runtime_stats.insert( SCIMemoryHighwater,        std::string("SCIMemoryHighwater"),    bytesStr, 0 );

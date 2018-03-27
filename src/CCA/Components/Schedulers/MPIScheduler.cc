@@ -761,6 +761,10 @@ MPIScheduler::execute( int tgnum     /* = 0 */
   }
 
   int ntasks = dts->numLocalTasks();
+
+  if( d_runtimeStats )
+    (*d_runtimeStats)[NumTasks] += ntasks;
+                   
   dts->initializeScrubs(m_dws, m_dwmap);
   dts->initTimestep();
 
@@ -869,6 +873,32 @@ MPIScheduler::execute( int tgnum     /* = 0 */
 
   // only do on top-level scheduler
   if ( m_parent_scheduler == nullptr ) {
+
+    if( d_runtimeStats )
+    {
+      int numCells = 0, numParticles = 0;
+      OnDemandDataWarehouseP dw = m_dws[m_dws.size() - 1];
+      const GridP grid(const_cast<Grid*>(dw->getGrid()));
+      const PatchSubset* myPatches = m_loadBalancer->getPerProcessorPatchSet(grid)->getSubset(my_rank);
+      
+      for (auto p = 0; p < myPatches->size(); p++) {
+        const Patch* patch = myPatches->get(p);
+        IntVector range = patch->getExtraCellHighIndex() - patch->getExtraCellLowIndex();
+        numCells += range.x() * range.y() * range.z();
+        
+        // go through all materials since getting an MPMMaterial correctly would depend on MPM
+        for (int m = 0; m < m_sharedState->getNumMatls(); m++) {
+          if (dw->haveParticleSubset(m, patch)) {
+            numParticles += dw->getParticleSubset(m, patch)->numParticles();
+          }
+        }
+      }
+      
+      (*d_runtimeStats)[NumPatches]   = myPatches->size();
+      (*d_runtimeStats)[NumCells]     = numCells;
+      (*d_runtimeStats)[NumParticles] = numParticles;
+    }    
+    
     outputTimingStats( "MPIScheduler" );
   }
 
@@ -943,7 +973,7 @@ MPIScheduler::outputTimingStats( const char* label )
         }
       }
     }
-
+    
     double  totalexec = m_exec_timer().seconds();
 
     emitTime("NumPatches"  , myPatches->size());
