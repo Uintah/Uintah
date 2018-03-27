@@ -110,8 +110,8 @@ namespace {
 
 Uintah::MasterLock cerr_mutex{};
 
-Dout g_stack_debug(       "ExceptionStack" , "Standalone", "sus stack debug stream ", true );
-Dout g_wait_for_debugger( "WaitForDebugger", "Standalone", "sus wait for debugger debug stream ", false );
+Dout g_stack_debug(       "ExceptionStack" , "Standalone", "sus stack debug stream"            , true );
+Dout g_wait_for_debugger( "WaitForDebugger", "Standalone", "sus wait for debugger debug stream", false );
 
 }
 
@@ -279,13 +279,17 @@ int main( int argc, char *argv[], char *env[] )
       start();
 
       if (Uintah::Parallel::getMPIRank() == 0) {
-	std::cout << "The following debug streams are known. Active streams are indicated with plus sign." << std::endl;
-	std::cout << "To activate a debug stream set the environment variable 'setenv SCI_DEBUG \"Debug_Stream_Name:+\"'" << std::endl;
-      
-	Dout::printAll();
-	DebugStream::printAll();
+
+        // report all active Dout debug objects
+        std::cout << "\nThe following Douts are known. Active Douts are indicated with plus sign." << std::endl;
+        std::cout << "To activate a Dout, set the environment variable 'setenv SCI_DEBUG \"Dout_Name:+\"'" << std::endl;
+        Dout::printAll();
+
+        // report all active DebugStreams
+        std::cout << "\nThe following DebugStreams are known. Active streams are indicated with plus sign." << std::endl;
+        std::cout << "To activate a DebugStreams set the environment variable 'setenv SCI_DEBUG \"Debug_Stream_Name:+\"'" << std::endl;
+        DebugStream::printAll();
       }
-      
       quit();
     }
     else if (arg == "-nthreads") {

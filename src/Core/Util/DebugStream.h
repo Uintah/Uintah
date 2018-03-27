@@ -61,8 +61,8 @@
 //   figure out a way to requery the environment variables during
 //   execution.  
 
-#ifndef SCI_project_DebugStream_h
-#define SCI_project_DebugStream_h 1
+#ifndef CORE_UTIL_DEBUGSTREAM_H
+#define CORE_UTIL_DEBUGSTREAM_H
 
 #include <map>
 #include <string>
@@ -76,34 +76,44 @@ class DebugBuf;
 ///////////////////
 // Class DebugBuf
 //
-// For use with DebugStream.  This class overrides the overflow
-// operator.  Each time overflow is called it checks to see where
-// to direct the output to. 
-class DebugBuf : public std::streambuf {
+// For use with DebugStream.  This class overrides the overflow operator.
+// Each time overflow is called it checks to see where to direct the output to.
+class DebugBuf : public std::streambuf
+{
+
 private:
+
 public:
+
   DebugBuf();
   ~DebugBuf();
-  // Points the the DebugStream that instantiated me.
-  DebugStream * m_owner;
+
   int overflow( int ch );
+
+  // Points the the DebugStream that instantiated me.
+  DebugStream * m_owner{nullptr};
 };
 
 ///////////////////
-// class DebugStream
 // A general purpose debugging ostream.
-class DebugStream: public std::ostream {
+class DebugStream : public std::ostream
+{
+
 public:
   DebugStream();
+
   DebugStream(const std::string& name, bool defaulton = true);
-  DebugStream(const std::string& name,
-	      const std::string& component,
-	      const std::string& description, bool defaulton = true);
+
+  DebugStream( const std::string& name
+             , const std::string& component
+	           , const std::string& description
+	           , bool defaulton = true
+	           );
 
   ~DebugStream();
 
-  std::string getName() { return m_name; }
-  std::string getComponent() { return m_component; }
+  std::string getName()        { return m_name; }
+  std::string getComponent()   { return m_component; }
   std::string getDescription() { return m_description; }
 
   std::string getFilename() { return m_filename; }
@@ -114,25 +124,31 @@ public:
 
   void print() const
   {
-    printf( "%s Component: %s,  Name: %s,  Description: %s\n",
-	    (m_active ? "+" : "-"),
-	    m_component.c_str(), m_name.c_str(), m_description.c_str() );
+    printf("  Component: %s,  Name: %s,  Description: %s, Active: %s\n", m_component.c_str(), m_name.c_str(), m_description.c_str(), (m_active ? "+" : "-"));
   }
 
   static void printAll()
   {
-    for (auto iter = m_all_debugStreams.begin(); iter != m_all_debugStreams.end(); ++iter)
-    {
+    printf("--------------------------------------------------------------------------------\n");
+    auto iter = m_all_debug_streams.begin();
+    for (; iter != m_all_debug_streams.end(); ++iter) {
       (*iter).second->print();
     }
+    if (m_all_debug_streams.empty()) {
+      printf("  No DebugStreams currently active.....\n");
+    }
+    printf("--------------------------------------------------------------------------------\n\n");
   }
 
   // The ostream that output should be redirected to. cout by default.
-  std::ostream * m_outstream;
+  std::ostream * m_outstream{nullptr};
 
-  static std::map<std::string, DebugStream*> m_all_debugStreams;
+  static std::map<std::string, DebugStream*> m_all_debug_streams;
+  static bool                                m_all_dbg_streams_initialized;
+
 
 private:
+
   // Identifies me uniquely.
   std::string m_name;
   std::string m_component;
@@ -152,8 +168,11 @@ private:
 
   // Check for a previous name.
   void checkName();
+
+  void instantiate_map();
+
 };
     
-} // End namespace Uintah
+} // namespace Uintah
 
-#endif
+#endif // CORE_UTIL_DEBUGSTREAM_H
