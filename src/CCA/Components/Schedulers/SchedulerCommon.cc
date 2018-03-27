@@ -1763,13 +1763,21 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP & grid )
 
   //__________________________________
   // copy reduction variables to the new_dw
+#ifdef BRADS_NEW_DWDATABASE
   std::vector<VarLabelMatlMemspace<Level, MemorySpace> > levelVariableInfo;
   oldDataWarehouse->getVarLabelMatlLevelTriples(levelVariableInfo);
 
   newDataWarehouse->unfinalize();
   for (unsigned int i = 0; i < levelVariableInfo.size(); i++) {
     VarLabelMatlMemspace<Level, MemorySpace> currentReductionVar = levelVariableInfo[i];
+#else
+    std::vector<VarLabelMatl<Level> > levelVariableInfo;
+    oldDataWarehouse->getVarLabelMatlLevelTriples(levelVariableInfo);
 
+    newDataWarehouse->unfinalize();
+    for (unsigned int i = 0; i < levelVariableInfo.size(); i++) {
+      VarLabelMatl<Level> currentReductionVar = levelVariableInfo[i];
+#endif
     if (currentReductionVar.label_->typeDescription()->isReductionVariable()) {
 
       // cout << "REDUCTION:  Label(" << setw(15) << currentReductionVar.label_->getName() << "): Patch(" << reinterpret_cast<int>(currentReductionVar.level_) << "): Material(" << currentReductionVar.matlIndex_ << ")" << endl;

@@ -258,9 +258,13 @@ public:
 		   int matlIndex, const Patch*) = 0;
   virtual void put(PerPatchBase&, const VarLabel*,
 		   int matlIndex, const Patch*, bool replace = false) = 0;
-     
+
   // this is so we can get reduction information for regridding
+#ifdef BRADS_NEW_DWDATABASE
   virtual void getVarLabelMatlLevelTriples(std::vector<VarLabelMatlMemspace<Level, MemorySpace> >& vars ) const = 0;
+#else
+  virtual void getVarLabelMatlLevelTriples(std::vector<VarLabelMatl<Level> >& vars ) const = 0;
+#endif
 
   // Remove particles that are no longer relevant
   virtual void deleteParticles(ParticleSubset* delset) = 0;

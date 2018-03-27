@@ -256,7 +256,7 @@ public:
        int matlIndex, const Patch*, bool replace = false) = 0;
 
   // this is so we can get reduction information for regridding
-  virtual void getVarLabelMatlLevelTriples(std::vector<VarLabelMatl<Level> >& vars ) const = 0;
+  virtual void getVarLabelMatlLevelTriples(std::vector<VarLabelMatlMemspace<Level> >& vars ) const = 0;
 
   // Remove particles that are no longer relevant
   virtual void deleteParticles(ParticleSubset* delset) = 0;

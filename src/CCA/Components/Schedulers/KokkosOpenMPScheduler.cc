@@ -358,6 +358,10 @@ KokkosOpenMPScheduler::markTaskConsumed( volatile int          * numTasksDone
   }
 }
 
+
+
+#ifdef BRADS_NEW_DWDATABASE
+
 //______________________________________________________________________
 //
 void
@@ -639,3 +643,153 @@ KokkosOpenMPScheduler::allocateTaskComputesVariables( DetailedTask * dtask )
     }
   }
 }
+
+#else  //#ifdef BRADS_NEW_DWDATABASE
+
+//______________________________________________________________________
+//
+void
+KokkosOpenMPScheduler::runTasks()
+{
+  while( g_num_tasks_done < m_num_tasks && !g_have_hypre_task ) {
+
+    DetailedTask* readyTask = nullptr;
+    DetailedTask* initTask  = nullptr;
+
+    bool havework = false;
+
+    // ----------------------------------------------------------------------------------
+    // Part 1 (serial): Task selection
+    // ----------------------------------------------------------------------------------
+    {
+      std::lock_guard<Uintah::MasterLock> scheduler_mutex_guard(g_scheduler_mutex);
+
+      while ( !havework ) {
+
+        /*
+         * (1.0)
+         *
+         * If it is time for a Hypre task, exit partitions.
+         *
+         */
+        if ( g_have_hypre_task ) {
+          return;
+        }
+
+        /*
+         * (1.1)
+         *
+         * If it is time to setup for a reduction task, then do so.
+         *
+         */
+        if ((m_phase_sync_task[m_curr_phase] != nullptr) && (m_phase_tasks_done[m_curr_phase] == m_phase_tasks[m_curr_phase] - 1)) {
+          readyTask = m_phase_sync_task[m_curr_phase];
+          printf("1.1 The task is %s\n", readyTask->getTask()->getName().c_str());
+          havework = true;
+          markTaskConsumed(&g_num_tasks_done, m_curr_phase, m_num_phases, readyTask);
+          break;
+        }
+
+        /*
+         * (1.2)
+         *
+         * Run a CPU task that has its MPI communication complete. These tasks get in the external
+         * ready queue automatically when their receive count hits 0 in DependencyBatch::received,
+         * which is called when a MPI message is delivered.
+         *
+         */
+        else if (m_detailed_tasks->numExternalReadyTasks() > 0) {
+          readyTask = m_detailed_tasks->getNextExternalReadyTask();
+          printf("1.2 The task is %s\n", readyTask->getTask()->getName().c_str());
+          if (readyTask != nullptr) {
+            havework = true;
+            markTaskConsumed(&g_num_tasks_done, m_curr_phase, m_num_phases, readyTask);
+
+            if ( readyTask->getTask()->getType() == Task::Hypre ) {
+              g_HypreTask = readyTask;
+              g_have_hypre_task = true;
+              return;
+            }
+
+            break;
+          }
+        }
+
+        /*
+         * (1.3)
+         *
+         * If we have an internally-ready CPU task, initiate its MPI receives, preparing it for
+         * CPU external ready queue. The task is moved to the CPU external-ready queue in the
+         * call to task->checkExternalDepCount().
+         *
+         */
+        else if (m_detailed_tasks->numInternalReadyTasks() > 0) {
+          initTask = m_detailed_tasks->getNextInternalReadyTask();
+          if (initTask != nullptr) {
+            if (initTask->getTask()->getType() == Task::Reduction || initTask->getTask()->usesMPI()) {
+              m_phase_sync_task[initTask->getTask()->m_phase] = initTask;
+              ASSERT(initTask->getRequires().size() == 0)
+              initTask = nullptr;
+            }
+            else if (initTask->getRequires().size() == 0) {  // no ext. dependencies, then skip MPI sends
+              initTask->markInitiated();
+              initTask->checkExternalDepCount();  // where tasks get added to external ready queue (no ext deps though)
+              initTask = nullptr;
+            }
+            else {
+              havework = true;
+              break;
+            }
+          }
+        }
+
+        /*
+         * (1.4)
+         *
+         * Otherwise there's nothing to do but process MPI recvs.
+         */
+        else {
+          if (m_recvs.size() != 0u) {
+            havework = true;
+            break;
+          }
+        }
+
+        if (g_num_tasks_done == m_num_tasks) {
+          break;
+        }
+      }  // end while (!havework)
+    }  // end lock_guard
+
+
+
+    // ----------------------------------------------------------------------------------
+    // Part 2 (concurrent): Task execution
+    // ----------------------------------------------------------------------------------
+
+    if (initTask != nullptr) {
+      MPIScheduler::initiateTask(initTask, m_abort, m_abort_point, m_curr_iteration.load(std::memory_order_relaxed));
+      initTask->markInitiated();
+      initTask->checkExternalDepCount();
+    }
+    else if (readyTask) {
+
+      DOUT(g_dbg, " Task now external ready: " << *readyTask);
+
+      if (readyTask->getTask()->getType() == Task::Reduction) {
+        MPIScheduler::initiateReduction(readyTask);
+      }
+      else {
+        MPIScheduler::runTask(readyTask, m_curr_iteration.load(std::memory_order_relaxed));
+      }
+    }
+    else {
+      if (m_recvs.size() != 0u) {
+        MPIScheduler::processMPIRecvs(TEST);
+      }
+    }
+  }  // end while (numTasksDone < ntasks)
+  ASSERT(g_num_tasks_done == m_num_tasks);
+}
+
+#endif  //#ifdef BRADS_NEW_DWDATABASE

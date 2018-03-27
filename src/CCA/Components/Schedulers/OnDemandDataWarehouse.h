@@ -538,7 +538,7 @@ class OnDemandDataWarehouse : public DataWarehouse {
 
 
     static bool d_combineMemory;
-    https://www.reddit.com/r/all/
+
     friend class SchedulerCommon;
     friend class UnifiedScheduler;
 
