@@ -1320,8 +1320,8 @@ void visit_DebugStreamCallback(char *val, void *cbdata)
   DebugStream *debugStream = nullptr;
     
   int i = 0;
-  for (auto iter = DebugStream::m_all_debugStreams.begin();
-       iter != DebugStream::m_all_debugStreams.end();
+  for (auto iter = DebugStream::m_all_debug_streams.begin();
+       iter != DebugStream::m_all_debug_streams.end();
        ++iter, ++i) {
     if( i == row ) {
       debugStream = (*iter).second;

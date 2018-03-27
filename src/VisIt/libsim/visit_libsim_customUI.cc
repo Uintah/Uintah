@@ -939,14 +939,14 @@ void visit_SetDebugStreams( visit_simulation_data *sim )
   VisItUI_setTableValueS("DebugStreamTable",
                          -1, -1, "CLEAR_TABLE", 0);
 
-  if( DebugStream::m_all_debugStreams.size() )
+  if( DebugStream::m_all_debug_streams.size() )
   {
     VisItUI_setValueS( "DebugStreamGroupBox", "SHOW_WIDGET", 1);
 
     int i = 0;
     
-    for (auto iter = DebugStream::m_all_debugStreams.begin();
-         iter != DebugStream::m_all_debugStreams.end();
+    for (auto iter = DebugStream::m_all_debug_streams.begin();
+         iter != DebugStream::m_all_debug_streams.end();
          ++iter, ++i)
     {
       // Add in the stream and state.
