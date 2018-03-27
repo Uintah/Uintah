@@ -874,19 +874,24 @@ MPIScheduler::execute( int tgnum     /* = 0 */
   // only do on top-level scheduler
   if ( m_parent_scheduler == nullptr ) {
 
+    // This seems like the best place to collect and save these
+    // runtime stats. They are reported in outputTimingStats.
     if( d_runtimeStats )
     {
       int numCells = 0, numParticles = 0;
       OnDemandDataWarehouseP dw = m_dws[m_dws.size() - 1];
       const GridP grid(const_cast<Grid*>(dw->getGrid()));
-      const PatchSubset* myPatches = m_loadBalancer->getPerProcessorPatchSet(grid)->getSubset(my_rank);
+      const PatchSubset* myPatches =
+	m_loadBalancer->getPerProcessorPatchSet(grid)->getSubset(my_rank);
       
       for (auto p = 0; p < myPatches->size(); p++) {
         const Patch* patch = myPatches->get(p);
-        IntVector range = patch->getExtraCellHighIndex() - patch->getExtraCellLowIndex();
+        IntVector range =
+	  patch->getExtraCellHighIndex() - patch->getExtraCellLowIndex();
         numCells += range.x() * range.y() * range.z();
         
-        // go through all materials since getting an MPMMaterial correctly would depend on MPM
+        // Go through all materials since getting an MPMMaterial
+        // correctly would depend on MPM
         for (int m = 0; m < m_sharedState->getNumMatls(); m++) {
           if (dw->haveParticleSubset(m, patch)) {
             numParticles += dw->getParticleSubset(m, patch)->numParticles();
@@ -956,30 +961,14 @@ MPIScheduler::outputTimingStats( const char* label )
     m_labels.clear();
     m_times.clear();
 
-    // add number of cells, patches, and particles
-    int numCells = 0, numParticles = 0;
-    OnDemandDataWarehouseP dw = m_dws[m_dws.size() - 1];
-    const GridP grid(const_cast<Grid*>(dw->getGrid()));
-    const PatchSubset* myPatches = m_loadBalancer->getPerProcessorPatchSet(grid)->getSubset(my_rank);
-    for (auto p = 0; p < myPatches->size(); p++) {
-      const Patch* patch = myPatches->get(p);
-      IntVector range = patch->getExtraCellHighIndex() - patch->getExtraCellLowIndex();
-      numCells += range.x() * range.y() * range.z();
-
-      // go through all materials since getting an MPMMaterial correctly would depend on MPM
-      for (int m = 0; m < m_sharedState->getNumMatls(); m++) {
-        if (dw->haveParticleSubset(m, patch)) {
-          numParticles += dw->getParticleSubset(m, patch)->numParticles();
-        }
-      }
-    }
-    
     double  totalexec = m_exec_timer().seconds();
 
-    emitTime("NumPatches"  , myPatches->size());
-    emitTime("NumCells"    , numCells);
-    emitTime("NumParticles", numParticles);
-
+    if( d_runtimeStats ) {
+      emitTime("NumPatches"  , (*d_runtimeStats)[NumPatches]);
+      emitTime("NumCells"    , (*d_runtimeStats)[NumCells]);
+      emitTime("NumParticles", (*d_runtimeStats)[NumParticles]);
+    }
+    
     emitTime("Total send time"  , mpi_info_[TotalSend]);
     emitTime("Total recv time"  , mpi_info_[TotalRecv]);
     emitTime("Total test time"  , mpi_info_[TotalTest]);
