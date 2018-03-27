@@ -950,19 +950,24 @@ void visit_SetDebugStreams( visit_simulation_data *sim )
          ++iter, ++i)
     {
       // Add in the stream and state.
-      std::string name      = (*iter).second->getName();
-      std::string component = (*iter).second->getComponent();
-      std::string filename  = (*iter).second->getFilename();
-      bool        active    = (*iter).second->active();
+      std::string name        = (*iter).second->getName();
+      std::string component   = (*iter).second->getComponent();
+      // Can not show the description because of spaces.
+      // std::string description = (*iter).second->getDescription();
+      std::string filename    = (*iter).second->getFilename();
+      bool        active      = (*iter).second->active();
 
+      unsigned int col = 0;
       VisItUI_setTableValueS("DebugStreamTable",
-                             i, 0, component.c_str(), 0);
+                             i, col++, (active ? "true":"false"), 1);
       VisItUI_setTableValueS("DebugStreamTable",
-                             i, 1, name.c_str(), 0);
+                             i, col++, name.c_str(), 0);
+      // VisItUI_setTableValueS("DebugStreamTable",
+      //                        i, col++, description.c_str(), 0);
       VisItUI_setTableValueS("DebugStreamTable",
-                             i, 2, (active ? "true":"false"), 1);
+                             i, col++, component.c_str(), 0);
       VisItUI_setTableValueS("DebugStreamTable",
-                             i, 3, filename.c_str(), 1);
+                             i, col++, filename.c_str(), 1);
     }
   }
   else
@@ -992,19 +997,24 @@ void visit_SetDouts( visit_simulation_data *sim )
          ++iter, ++i)
     {
       // Add in the stream and state.
-      std::string name      = (*iter).second->name();
-      std::string component = (*iter).second->component();
-      std::string filename  = "cout"; // (*iter).second->getFilename();
-      bool        active    = (*iter).second->active();
+      std::string name        = (*iter).second->name();
+      std::string component   = (*iter).second->component();
+      // Can not show the description because of spaces.
+      // std::string description = (*iter).second->description();
+      std::string filename    = "cout"; // (*iter).second->getFilename();
+      bool        active      = (*iter).second->active();
 
+      unsigned int col = 0;
       VisItUI_setTableValueS("DoutTable",
-                             i, 0, component.c_str(), 0);
+                             i, col++, (active ? "true":"false"), 1);
       VisItUI_setTableValueS("DoutTable",
-                             i, 1, name.c_str(), 0);
+                             i, col++, name.c_str(), 0);
+      // VisItUI_setTableValueS("DoutTable",
+      //                        i, col++, description.c_str(), 0);
       VisItUI_setTableValueS("DoutTable",
-                             i, 2, (active ? "true":"false"), 1);
+                             i, col++, component.c_str(), 0);
       VisItUI_setTableValueS("DoutTable",
-                             i, 3, filename.c_str(), 0);
+                             i, col++, filename.c_str(), 0);
     }
   }
   else

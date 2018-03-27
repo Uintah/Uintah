@@ -1329,11 +1329,11 @@ void visit_DebugStreamCallback(char *val, void *cbdata)
     }
   }
 
-  if( debugStream && column == 1 )
+  if( debugStream && column == 0 )
   {
     if( text != "FALSE" && text != "False" && text != "false" &&
         text != "TRUE"  && text != "True"  && text != "true" && 
-        text != "0" && text != "1" )
+        text != "0" && text != "1" && text != "-" && text != "+" )
     {
       std::stringstream msg;
       msg << "Visit libsim - the value (" << text << ") for "
@@ -1345,7 +1345,7 @@ void visit_DebugStreamCallback(char *val, void *cbdata)
     }
     
     debugStream->setActive( text == "TRUE" || text == "True" ||
-                            text == "true" || text == "1" );
+                            text == "true" || text == "1" || text == "+" );
     
     if( debugStream->m_outstream == nullptr )
     {
@@ -1353,7 +1353,7 @@ void visit_DebugStreamCallback(char *val, void *cbdata)
       debugStream->m_outstream = &std::cout;
     }
   }
-  else if( debugStream && column == 2 )
+  else if( debugStream && column == 3 )
   {
     if( text.find("cerr") != std::string::npos )
     {
@@ -1409,11 +1409,12 @@ void visit_DoutCallback(char *val, void *cbdata)
     }
   }
     
-  if( dout && column == 1 )
+  if( dout && column == 0 )
   {
     if( text != "FALSE" && text != "False" && text != "false" &&
         text != "TRUE"  && text != "True"  && text != "true" && 
-        text != "0" && text != "1" )
+        text != "0" && text != "1" && text != "-" && text != "+" )
+
     {
       std::stringstream msg;
       msg << "Visit libsim - the value (" << text << ") for "
@@ -1425,7 +1426,7 @@ void visit_DoutCallback(char *val, void *cbdata)
     }
 
     dout->setActive( text == "TRUE" || text == "True" ||
-                     text == "true" || text == "1" );
+                     text == "true" || text == "1" || text == "+" );
 
     // if( dout->m_outstream == nullptr )
     // {
@@ -1433,7 +1434,7 @@ void visit_DoutCallback(char *val, void *cbdata)
     //   dout->m_outstream = &std::cout;
     // }
   }
-  // else if( dout && column == 2 )
+  // else if( dout && column == 3 )
   // {
   //   std::string filename( value );
 

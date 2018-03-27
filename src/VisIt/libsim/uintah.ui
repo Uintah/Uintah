@@ -801,7 +801,7 @@
         </property>
         <column>
          <property name="text">
-          <string>Component</string>
+          <string>Active</string>
          </property>
         </column>
         <column>
@@ -811,7 +811,7 @@
         </column>
         <column>
          <property name="text">
-          <string>Active</string>
+          <string>Component</string>
          </property>
         </column>
         <column>
@@ -877,7 +877,7 @@
         </property>
         <column>
          <property name="text">
-          <string>Component</string>
+          <string>Active</string>
          </property>
         </column>
         <column>
@@ -887,7 +887,7 @@
         </column>
         <column>
          <property name="text">
-          <string>Active</string>
+          <string>Component</string>
          </property>
         </column>
         <column>
