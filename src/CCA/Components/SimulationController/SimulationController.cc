@@ -947,7 +947,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
     std::ostringstream message;
 
     if (m_runtime_stats.size()) {
-      message << "Run time performance stats" << std::endl;
+      message << "Runtime performance stats" << std::endl;
       
       message << "  " << std::left
               << std::setw(21) << "Description"
@@ -956,10 +956,10 @@ SimulationController::ReportStats(const ProcessorGroup*,
               << std::setw(15) << "Maximum"
               << std::setw(13) << "Rank"
               << std::setw(13) << "100*(1-ave/max) '% load imbalance'"
-              << "\n";
+              << std::endl;
         
       for (unsigned int i=0; i<m_runtime_stats.size(); ++i) {
-        if (m_runtime_stats.getMaximum(i) > 0) {
+        if( m_runtime_stats.getMaximum(i) != 0.0 )
           message << "  " << std::left
                   << std::setw(21) << m_runtime_stats.getName(i)
                   << "[" << std::setw(10) << m_runtime_stats.getUnits(i) << "]"
@@ -967,9 +967,8 @@ SimulationController::ReportStats(const ProcessorGroup*,
                   << " : " << std::setw(12) << m_runtime_stats.getMaximum(i)
                   << " : " << std::setw(10) << m_runtime_stats.getRank(i)
                   << " : " << std::setw(10)
-                  << 100.0 * (1.0 - (m_runtime_stats.getAverage(i) / m_runtime_stats.getMaximum(i)))
-                  << "\n";
-        }
+                  << (m_runtime_stats.getMaximum(i) != 0.0 ? (100.0 * (1.0 - (m_runtime_stats.getAverage(i) / m_runtime_stats.getMaximum(i)))) : 0)
+                  << std::endl;
       }
     }
     
@@ -977,13 +976,24 @@ SimulationController::ReportStats(const ProcessorGroup*,
     if( !std::isnan(overheadAverage) ) {
       message << "  Percentage of time spent in overhead : " << overheadAverage * 100.0 << "\n";
     }
-        
+
+    message << std::endl;
+    
     // Report the application stats.
     if( m_application->getApplicationStats().size() ) {
-      message << "Other performance stats" << std::endl;
+      message << "Application performance stats" << std::endl;
       
+      message << "  " << std::left
+              << std::setw(21) << "Description"
+              << std::setw(15) << "Units"
+              << std::setw(15) << "Average"
+              << std::setw(15) << "Maximum"
+              << std::setw(13) << "Rank"
+              << std::setw(13) << "100*(1-ave/max) '% load imbalance'"
+              << std::endl;
+
       for (unsigned int i=0; i<m_application->getApplicationStats().size(); ++i) {
-        if (m_application->getApplicationStats().getMaximum(i) > 0) {
+        if( m_application->getApplicationStats().getMaximum(i) != 0.0 )
           message << "  " << std::left
                   << std::setw(21) << m_application->getApplicationStats().getName(i)
                   << "["   << std::setw(10) << m_application->getApplicationStats().getUnits(i) << "]"
@@ -991,10 +1001,11 @@ SimulationController::ReportStats(const ProcessorGroup*,
                   << " : " << std::setw(12) << m_application->getApplicationStats().getMaximum(i)
                   << " : " << std::setw(10) << m_application->getApplicationStats().getRank(i)
                   << " : " << std::setw(10)
-                  << 100.0 * (1.0 - (m_application->getApplicationStats().getAverage(i) / m_application->getApplicationStats().getMaximum(i)))
-                  << "\n";
-        }
+                  << (m_application->getApplicationStats().getMaximum(i) != 0.0 ? (100.0 * (1.0 - (m_application->getApplicationStats().getAverage(i) / m_application->getApplicationStats().getMaximum(i)))) : 0)
+                  << std::endl;
       }
+
+      message << std::endl;
     }
 
     DOUT(true, message.str());
