@@ -111,12 +111,12 @@ extern Uintah::MasterLock cerrLock;
 
 namespace {
 
-Dout        g_foreign_dbg( "ForeignVariables", "Schedulers", "OnDemandDataWarehouse foreign variables debug stream", false);
+Dout        g_foreign_dbg( "ForeignVariables", "OnDemandDataWarehouse", "foreign variables debug stream", false);
 
-DebugStream dbg(        "OnDemandDataWarehouse",      "Schedulers", "", false );
-DebugStream warn(       "OnDemandDataWarehouse_warn", "Schedulers", "", true  );
-DebugStream particles(  "DWParticles",                "Schedulers", "", false );
-DebugStream particles2( "DWParticles2",               "Schedulers", "", false );
+DebugStream dbg(        "OnDemandDataWarehouse",      "OnDemandDataWarehouse", "", false );
+DebugStream warn(       "OnDemandDataWarehouse_warn", "OnDemandDataWarehouse", "", true  );
+DebugStream particles(  "DWParticles",                "OnDemandDataWarehouse", "", false );
+DebugStream particles2( "DWParticles2",               "OnDemandDataWarehouse", "", false );
 
 Uintah::MasterLock g_running_tasks_lock{};
 

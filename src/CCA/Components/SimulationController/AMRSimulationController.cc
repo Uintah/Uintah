@@ -63,13 +63,13 @@ using namespace Uintah;
 
 namespace {
 
-  DebugStream amrout(      "AMR"                    , "SimulationController", "AMR debug stream",false);
-  DebugStream dbg(         "AMRSimulationController", "SimulationController", "Task/Cycle debug stream",false);
-  DebugStream dbg_barrier( "MPIBarriers"            , "SimulationController", "MPIBarriers debug stream",false);
-  DebugStream dbg_dwmem(   "LogDWMemory"            , "SimulationController", "LogDWMemory debug stream",false);
-  DebugStream gprofile(    "CPUProfiler"            , "SimulationController", "CPUProfiler debug stream",false);
-  DebugStream gheapprofile("HeapProfiler"           , "SimulationController", "HeapProfiler debug stream",false);
-  DebugStream gheapchecker("HeapChecker"            , "SimulationController", "HeapChecker debug stream",false);
+DebugStream amrout(      "AMR"                    , "AMRSimulationController", "AMR debug stream",false);
+DebugStream dbg(         "AMRSimulationController", "AMRSimulationController", "Task/Cycle debug stream",false);
+DebugStream dbg_barrier( "MPIBarriers"            , "AMRSimulationController", "MPIBarriers debug stream",false);
+DebugStream dbg_dwmem(   "LogDWMemory"            , "AMRSimulationController", "LogDWMemory debug stream",false);
+DebugStream gprofile(    "CPUProfiler"            , "AMRSimulationController", "Google Prof CPUProfiler",false);
+DebugStream gheapprofile("HeapProfiler"           , "AMRSimulationController", "Google Prof HeapProfiler",false);
+DebugStream gheapchecker("HeapChecker"            , "AMRSimulationController", "Google Prof HeapChecker",false);
 
 }
 

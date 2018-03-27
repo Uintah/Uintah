@@ -79,20 +79,20 @@ Uintah::MasterLock g_send_time_mutex{};         // for reporting thread-safe MPI
 Uintah::MasterLock g_recv_time_mutex{};         // for reporting thread-safe MPI recv times
 Uintah::MasterLock g_wait_time_mutex{};         // for reporting thread-safe MPI wait times
 
-Dout g_dbg(          "MPIScheduler_DBG"       , "Schedulers", "", false );
-Dout g_send_stats(   "MPISendStats"           , "Schedulers", "", false );
-Dout g_reductions(   "ReductionTasks"         , "Schedulers", "", false );
-Dout g_time_out(     "MPIScheduler_TimingsOut", "Schedulers", "", false );
-Dout g_task_level(   "TaskLevel"              , "Schedulers", "", false );
+Dout g_dbg(          "MPIScheduler_DBG"       , "MPIScheduler", "", false );
+Dout g_send_stats(   "MPISendStats"           , "MPIScheduler", "", false );
+Dout g_reductions(   "ReductionTasks"         , "MPIScheduler", "", false );
+Dout g_time_out(     "MPIScheduler_TimingsOut", "MPIScheduler", "", false );
+Dout g_task_level(   "TaskLevel"              , "MPIScheduler", "", false );
 
 }
 
 
 // these are used externally, keep them visible outside this unit
-Dout g_task_order( "TaskOrder", "Schedulers", "MPIScheduler task order debug stream", false );
-Dout g_task_dbg(   "TaskDBG"  , "Schedulers", "MPIScheduler task debug stream", false );
-Dout g_mpi_dbg(    "MPIDBG"   , "Schedulers", "MPIScheduler MPI debug stream", false );
-Dout g_exec_out(   "ExecOut"  , "Schedulers", "MPIScheduler exec debug stream", false );
+Dout g_task_order( "TaskOrder", "MPIScheduler", "task order debug stream", false );
+Dout g_task_dbg(   "TaskDBG"  , "MPIScheduler", "task debug stream", false );
+Dout g_mpi_dbg(    "MPIDBG"   , "MPIScheduler", "MPI debug stream", false );
+Dout g_exec_out(   "ExecOut"  , "MPIScheduler", "exec debug stream", false );
 
 std::map<std::string, double> g_exec_times;
 

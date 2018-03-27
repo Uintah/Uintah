@@ -70,8 +70,8 @@ extern std::map<std::string, double> g_exec_times;
 //
 namespace {
 
-Dout g_dbg(         "Unified_DBG"        , "Schedulers", "", false);
-Dout g_queuelength( "Unified_QueueLength", "Schedulers", "",  false);
+Dout g_dbg(         "Unified_DBG"        , "UnifiedScheduler", "", false);
+Dout g_queuelength( "Unified_QueueLength", "UnifiedScheduler", "",  false);
 
 Uintah::MasterLock g_scheduler_mutex{};           // main scheduler lock for multi-threaded task selection
 Uintah::MasterLock g_mark_task_consumed_mutex{};  // allow only one task at a time to enter the task consumed section
@@ -82,9 +82,9 @@ Uintah::MasterLock g_lb_mutex{};                  // load balancer lock
 
 #ifdef HAVE_CUDA
 
-  DebugStream gpu_stats(              "GPUStats"             , "Schedulers", "", false );
-  DebugStream simulate_multiple_gpus( "GPUSimulateMultiple"  , "Schedulers", "", false );
-  DebugStream gpudbg(                 "GPUDataWarehouse"     , "Schedulers", "", false );
+  DebugStream gpu_stats(              "GPUStats"             , "UnifiedScheduler", "", false );
+  DebugStream simulate_multiple_gpus( "GPUSimulateMultiple"  , "UnifiedScheduler", "", false );
+  DebugStream gpudbg(                 "GPUDataWarehouse"     , "UnifiedScheduler", "", false );
 
   namespace {
 
