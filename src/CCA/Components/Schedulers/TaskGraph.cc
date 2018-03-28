@@ -603,7 +603,7 @@ TaskGraph::createDetailedDependencies()
     if (g_detailed_deps_dbg) {
       std::ostringstream message;
       message << '\n';
-      message << "Rank-" << my_rank << " createDetailedDependencies (collect comps) for:\n";
+      message << "Rank-" << my_rank << " createDetailedDependencies for:\n";
 
       for (const Task::Dependency* req = dtask->getTask()->getRequires(); req != nullptr; req = req->m_next) {
         message << "         requires: " << *req << '\n';
@@ -940,14 +940,18 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
         }
 
         ASSERT(std::is_sorted(neighbors.begin(), neighbors.end(), Patch::Compare()));
-        DOUT(g_detailed_deps_dbg, "Rank-" << my_rank << "    Creating dependency on " << neighbors.size()
-                                          << " neighbor(s):     Low=" << low << ", high=" << high << ", var=" << req->m_var->getName());
+
+        auto num_neighbors = neighbors.size();
+
+        DOUT(g_detailed_deps_dbg, "Rank-" << my_rank << "    Creating detailed dependency on " << num_neighbors
+                                          << " neighboring patch" << (num_neighbors > 1 ? "es " : "   ") << neighbors
+                                          << "   Low=" << low << ", high=" << high << ", var=" << req->m_var->getName());
 
 
         //------------------------------------------------------------------------
         //           for all neighbors - find and store from neighbors
         //------------------------------------------------------------------------
-        for (auto i = 0u; i < neighbors.size(); ++i) {
+        for (auto i = 0u; i < num_neighbors; ++i) {
           const Patch* neighbor = neighbors[i];
 
           // if neighbor is not in my neighborhood just continue as its dependencies are not important to this processor

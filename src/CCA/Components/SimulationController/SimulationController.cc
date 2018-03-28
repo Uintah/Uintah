@@ -75,12 +75,12 @@
 
 namespace {
 
-Uintah::Dout g_sim_stats(         "SimulationStats",            "SimulationController", "SimulationController stats debug stream", true  );
-Uintah::Dout g_sim_mem_stats(     "SimulationMemStats",         "SimulationController", "SimulationController memory debug stream", true  );
-Uintah::Dout g_sim_time_stats(    "SimulationTimeStats",        "SimulationController", "SimulationController time debug stream", false );
-Uintah::Dout g_sim_ctrl_dbg(      "SimulationController",       "SimulationController", "SimulationController control debug stream", false );
-Uintah::Dout g_comp_timings(      "ComponentTimings",           "SimulationController", "SimulationController component debug stream", false );
-Uintah::Dout g_indv_comp_timings( "IndividualComponentTimings", "SimulationController", "SimulationController individual component debug stream", false );
+Uintah::Dout g_sim_stats(         "SimulationStats",            "SimulationController", "sim stats debug stream", true  );
+Uintah::Dout g_sim_mem_stats(     "SimulationMemStats",         "SimulationController", "memory stats debug stream", true  );
+Uintah::Dout g_sim_time_stats(    "SimulationTimeStats",        "SimulationController", "stats time debug stream", false );
+Uintah::Dout g_sim_ctrl_dbg(      "SimulationController",       "SimulationController", "general debug stream", false );
+Uintah::Dout g_comp_timings(      "ComponentTimings",           "SimulationController", "aggregated component timings", false );
+Uintah::Dout g_indv_comp_timings( "IndividualComponentTimings", "SimulationController", "individual component timings", false );
 
 }
 
@@ -249,6 +249,11 @@ SimulationController::SimulationController( const ProcessorGroup * myworld
   m_runtime_stats.insert( CheckpointIORate,          std::string("CheckpointIORate"), "MBytes/sec", 0 );
   m_runtime_stats.insert( CheckpointReducIORate,     std::string("CheckpointReducIORate"), "MBytes/sec", 0 );
 
+  m_runtime_stats.insert( NumTasks,                  std::string("NumberOfTasks"), "tasks", 0 );
+  m_runtime_stats.insert( NumPatches,                std::string("NumberOfPatches"), "patches", 0 );
+  m_runtime_stats.insert( NumCells,                  std::string("NumberOfCells"), "cells", 0 );
+  m_runtime_stats.insert( NumParticles,              std::string("NumberOfParticles"), "paticles", 0 );
+  
   m_runtime_stats.insert( SCIMemoryUsed,             std::string("SCIMemoryUsed"),         bytesStr, 0 );
   m_runtime_stats.insert( SCIMemoryMaxUsed,          std::string("SCIMemoryMaxUsed"),      bytesStr, 0 );
   m_runtime_stats.insert( SCIMemoryHighwater,        std::string("SCIMemoryHighwater"),    bytesStr, 0 );
@@ -942,7 +947,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
     std::ostringstream message;
 
     if (m_runtime_stats.size()) {
-      message << "Run time performance stats" << std::endl;
+      message << "Runtime performance stats" << std::endl;
       
       message << "  " << std::left
               << std::setw(21) << "Description"
@@ -951,10 +956,10 @@ SimulationController::ReportStats(const ProcessorGroup*,
               << std::setw(15) << "Maximum"
               << std::setw(13) << "Rank"
               << std::setw(13) << "100*(1-ave/max) '% load imbalance'"
-              << "\n";
+              << std::endl;
         
       for (unsigned int i=0; i<m_runtime_stats.size(); ++i) {
-        if (m_runtime_stats.getMaximum(i) > 0) {
+        if( m_runtime_stats.getMaximum(i) != 0.0 )
           message << "  " << std::left
                   << std::setw(21) << m_runtime_stats.getName(i)
                   << "[" << std::setw(10) << m_runtime_stats.getUnits(i) << "]"
@@ -962,9 +967,8 @@ SimulationController::ReportStats(const ProcessorGroup*,
                   << " : " << std::setw(12) << m_runtime_stats.getMaximum(i)
                   << " : " << std::setw(10) << m_runtime_stats.getRank(i)
                   << " : " << std::setw(10)
-                  << 100.0 * (1.0 - (m_runtime_stats.getAverage(i) / m_runtime_stats.getMaximum(i)))
-                  << "\n";
-        }
+                  << (m_runtime_stats.getMaximum(i) != 0.0 ? (100.0 * (1.0 - (m_runtime_stats.getAverage(i) / m_runtime_stats.getMaximum(i)))) : 0)
+                  << std::endl;
       }
     }
     
@@ -972,13 +976,24 @@ SimulationController::ReportStats(const ProcessorGroup*,
     if( !std::isnan(overheadAverage) ) {
       message << "  Percentage of time spent in overhead : " << overheadAverage * 100.0 << "\n";
     }
-        
+
+    message << std::endl;
+    
     // Report the application stats.
     if( m_application->getApplicationStats().size() ) {
-      message << "Other performance stats" << std::endl;
+      message << "Application performance stats" << std::endl;
       
+      message << "  " << std::left
+              << std::setw(21) << "Description"
+              << std::setw(15) << "Units"
+              << std::setw(15) << "Average"
+              << std::setw(15) << "Maximum"
+              << std::setw(13) << "Rank"
+              << std::setw(13) << "100*(1-ave/max) '% load imbalance'"
+              << std::endl;
+
       for (unsigned int i=0; i<m_application->getApplicationStats().size(); ++i) {
-        if (m_application->getApplicationStats().getMaximum(i) > 0) {
+        if( m_application->getApplicationStats().getMaximum(i) != 0.0 )
           message << "  " << std::left
                   << std::setw(21) << m_application->getApplicationStats().getName(i)
                   << "["   << std::setw(10) << m_application->getApplicationStats().getUnits(i) << "]"
@@ -986,10 +1001,11 @@ SimulationController::ReportStats(const ProcessorGroup*,
                   << " : " << std::setw(12) << m_application->getApplicationStats().getMaximum(i)
                   << " : " << std::setw(10) << m_application->getApplicationStats().getRank(i)
                   << " : " << std::setw(10)
-                  << 100.0 * (1.0 - (m_application->getApplicationStats().getAverage(i) / m_application->getApplicationStats().getMaximum(i)))
-                  << "\n";
-        }
+                  << (m_application->getApplicationStats().getMaximum(i) != 0.0 ? (100.0 * (1.0 - (m_application->getApplicationStats().getAverage(i) / m_application->getApplicationStats().getMaximum(i)))) : 0)
+                  << std::endl;
       }
+
+      message << std::endl;
     }
 
     DOUT(true, message.str());

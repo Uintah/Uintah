@@ -454,8 +454,7 @@ DetailedTasks::findMatchingDetailedDep(       DependencyBatch  * batch
   //search each dep
   for (; dep != nullptr; dep = dep->m_next) {
     //if deps are equivalent
-    if (fromPatch == dep->m_from_patch &&  matl == dep->m_matl &&
-        (req == dep->m_req || (req->m_var->equals(dep->m_req->m_var) && req->mapDataWarehouse() == dep->m_req->mapDataWarehouse()))) {
+    if (fromPatch == dep->m_from_patch &&  matl == dep->m_matl && (req == dep->m_req || (req->m_var->equals(dep->m_req->m_var) && req->mapDataWarehouse() == dep->m_req->mapDataWarehouse()))) {
 
       // total range - the same var in each dep needs to have the same patchlow/high
       dep->m_patch_low = totalLow = Min(totalLow, dep->m_patch_low);

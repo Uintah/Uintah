@@ -594,6 +594,7 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
             cout_intrusiondebug << "IntrusionBC::NOT using inert stream mixing to look up properties" << std::endl;
 
             density = mixingTable->getTableValue(iv, "density");
+            cout_intrusiondebug << "IntrusionBC::Got a value for density = " << density << std::endl;
 
             //get values for all other scalars that depend on a table lookup:
             for (std::map<std::string, scalarInletBase*>::iterator iter_lookup = iIntrusion->second.scalar_map.begin();
@@ -607,6 +608,8 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
                 std::string lookup_name = tab_scalar.get_depend_var_name();
 
                 double lookup_value = mixingTable->getTableValue(iv, lookup_name);
+
+                cout_intrusiondebug << "IntrusionBC::Got a value for  " << lookup_name << " = " << lookup_value << std::endl;
 
                 cout_intrusiondebug << "IntrusionBC::Setting scalar " << iter_lookup->first << " to a lookup value of: " << lookup_value << std::endl;
 

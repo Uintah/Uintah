@@ -79,20 +79,20 @@ Uintah::MasterLock g_send_time_mutex{};         // for reporting thread-safe MPI
 Uintah::MasterLock g_recv_time_mutex{};         // for reporting thread-safe MPI recv times
 Uintah::MasterLock g_wait_time_mutex{};         // for reporting thread-safe MPI wait times
 
-Dout g_dbg(          "MPIScheduler_DBG"       , "Schedulers", "", false );
-Dout g_send_stats(   "MPISendStats"           , "Schedulers", "", false );
-Dout g_reductions(   "ReductionTasks"         , "Schedulers", "", false );
-Dout g_time_out(     "MPIScheduler_TimingsOut", "Schedulers", "", false );
-Dout g_task_level(   "TaskLevel"              , "Schedulers", "", false );
+Dout g_dbg(          "MPIScheduler_DBG"       , "MPIScheduler", "", false );
+Dout g_send_stats(   "MPISendStats"           , "MPIScheduler", "", false );
+Dout g_reductions(   "ReductionTasks"         , "MPIScheduler", "", false );
+Dout g_time_out(     "MPIScheduler_TimingsOut", "MPIScheduler", "", false );
+Dout g_task_level(   "TaskLevel"              , "MPIScheduler", "", false );
 
 }
 
 
 // these are used externally, keep them visible outside this unit
-Dout g_task_order( "TaskOrder", "Schedulers", "MPIScheduler task order debug stream", false );
-Dout g_task_dbg(   "TaskDBG"  , "Schedulers", "MPIScheduler task debug stream", false );
-Dout g_mpi_dbg(    "MPIDBG"   , "Schedulers", "MPIScheduler MPI debug stream", false );
-Dout g_exec_out(   "ExecOut"  , "Schedulers", "MPIScheduler exec debug stream", false );
+Dout g_task_order( "TaskOrder", "MPIScheduler", "task order debug stream", false );
+Dout g_task_dbg(   "TaskDBG"  , "MPIScheduler", "task debug stream", false );
+Dout g_mpi_dbg(    "MPIDBG"   , "MPIScheduler", "MPI debug stream", false );
+Dout g_exec_out(   "ExecOut"  , "MPIScheduler", "exec debug stream", false );
 
 std::map<std::string, double> g_exec_times;
 
@@ -761,6 +761,10 @@ MPIScheduler::execute( int tgnum     /* = 0 */
   }
 
   int ntasks = dts->numLocalTasks();
+
+  if( d_runtimeStats )
+    (*d_runtimeStats)[NumTasks] += ntasks;
+                   
   dts->initializeScrubs(m_dws, m_dwmap);
   dts->initTimestep();
 
@@ -869,6 +873,37 @@ MPIScheduler::execute( int tgnum     /* = 0 */
 
   // only do on top-level scheduler
   if ( m_parent_scheduler == nullptr ) {
+
+    // This seems like the best place to collect and save these
+    // runtime stats. They are reported in outputTimingStats.
+    if( d_runtimeStats )
+    {
+      int numCells = 0, numParticles = 0;
+      OnDemandDataWarehouseP dw = m_dws[m_dws.size() - 1];
+      const GridP grid(const_cast<Grid*>(dw->getGrid()));
+      const PatchSubset* myPatches =
+	m_loadBalancer->getPerProcessorPatchSet(grid)->getSubset(my_rank);
+      
+      for (auto p = 0; p < myPatches->size(); p++) {
+        const Patch* patch = myPatches->get(p);
+        IntVector range =
+	  patch->getExtraCellHighIndex() - patch->getExtraCellLowIndex();
+        numCells += range.x() * range.y() * range.z();
+        
+        // Go through all materials since getting an MPMMaterial
+        // correctly would depend on MPM
+        for (int m = 0; m < m_sharedState->getNumMatls(); m++) {
+          if (dw->haveParticleSubset(m, patch)) {
+            numParticles += dw->getParticleSubset(m, patch)->numParticles();
+          }
+        }
+      }
+      
+      (*d_runtimeStats)[NumPatches]   = myPatches->size();
+      (*d_runtimeStats)[NumCells]     = numCells;
+      (*d_runtimeStats)[NumParticles] = numParticles;
+    }    
+    
     outputTimingStats( "MPIScheduler" );
   }
 
@@ -926,30 +961,14 @@ MPIScheduler::outputTimingStats( const char* label )
     m_labels.clear();
     m_times.clear();
 
-    // add number of cells, patches, and particles
-    int numCells = 0, numParticles = 0;
-    OnDemandDataWarehouseP dw = m_dws[m_dws.size() - 1];
-    const GridP grid(const_cast<Grid*>(dw->getGrid()));
-    const PatchSubset* myPatches = m_loadBalancer->getPerProcessorPatchSet(grid)->getSubset(my_rank);
-    for (auto p = 0; p < myPatches->size(); p++) {
-      const Patch* patch = myPatches->get(p);
-      IntVector range = patch->getExtraCellHighIndex() - patch->getExtraCellLowIndex();
-      numCells += range.x() * range.y() * range.z();
-
-      // go through all materials since getting an MPMMaterial correctly would depend on MPM
-      for (int m = 0; m < m_sharedState->getNumMatls(); m++) {
-        if (dw->haveParticleSubset(m, patch)) {
-          numParticles += dw->getParticleSubset(m, patch)->numParticles();
-        }
-      }
-    }
-
     double  totalexec = m_exec_timer().seconds();
 
-    emitTime("NumPatches"  , myPatches->size());
-    emitTime("NumCells"    , numCells);
-    emitTime("NumParticles", numParticles);
-
+    if( d_runtimeStats ) {
+      emitTime("NumPatches"  , (*d_runtimeStats)[NumPatches]);
+      emitTime("NumCells"    , (*d_runtimeStats)[NumCells]);
+      emitTime("NumParticles", (*d_runtimeStats)[NumParticles]);
+    }
+    
     emitTime("Total send time"  , mpi_info_[TotalSend]);
     emitTime("Total recv time"  , mpi_info_[TotalRecv]);
     emitTime("Total test time"  , mpi_info_[TotalTest]);

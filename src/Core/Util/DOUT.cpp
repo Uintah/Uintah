@@ -27,5 +27,6 @@
 namespace Uintah {
 
 std::map<std::string, Dout*> Dout::m_all_douts;
+bool                         Dout::m_all_douts_initialized;
 
 } // End namespace Uintah

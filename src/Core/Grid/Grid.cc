@@ -56,7 +56,7 @@ Dout g_dbg("GRID", "Grid", "Grid debug stream", false);
 //
 Grid::Grid()
 {
-  // Initialize values that may be uses for the autoPatching calculations
+  // Initialize values that may be used for the autoPatching calculations
   af_   =  0;
   bf_   =  0;
   cf_   =  0;
@@ -1068,7 +1068,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
           cout << "* WARNING:\n";
           cout << "* The patch to processor ratio you chose\n";
           cout << "* does not factor well into patches.  Consider\n";
-          cout << "* using a differnt number of processors.\n";
+          cout << "* using a different number of processors.\n";
           cout << "*\n";
           cout << "********************\n\n";
         }
@@ -1113,7 +1113,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
                      << "\n startCell/refineRatio (" << startRatio << "), endCell/refineRatio ("<<endRatio << ")\n";
                 throw InvalidGrid(desc.str(),__FILE__,__LINE__);
               }
-              level->addPatch(startcell, endcell, inStartCell, inEndCell,this);
+              level->addPatch(startcell, endcell, inStartCell, inEndCell, this);
               
               boxLo_cell = Uintah::Min( boxLo_cell, inStartCell );
               boxHi_cell = Uintah::Max( boxHi_cell, inEndCell );
