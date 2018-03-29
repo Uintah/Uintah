@@ -24,12 +24,11 @@
 
 
 #include <Core/GeometryPiece/GeometryPiece.h>
-#include <Core/Util/DebugStream.h>
 
 using namespace Uintah;
 
+DebugStream GeometryPiece::gp_dbg( "GeometryPiece", "GeometryPiece", "Geometry piece debug stream", false );
 
-DebugStream gp_dbg( "GeometryPiece", "GeometryPiece", "Geometry piece debug stream", false );
 
 GeometryPiece::GeometryPiece() :
   nameSet_( false ),
@@ -65,4 +64,3 @@ GeometryPiece::outputProblemSpec( ProblemSpecP & ps ) const
     outputHelper( child_ps );
   }
 }
-

@@ -29,17 +29,12 @@
 #include <Core/Grid/Variables/DifferenceIterator.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Util/DebugStream.h>
-#include <set>
-#include <iostream>
-#include <algorithm>
 
-using std::endl;
+#include <algorithm>
+#include <iostream>
+#include <set>
 
 using namespace Uintah;
-
-// export SCI_DEBUG="BC_dbg:+"
-extern DebugStream BC_dbg;
 
 DifferenceBCData::DifferenceBCData(BCGeomBase* p1,BCGeomBase* p2)
 : BCGeomBase(), left(p1->clone()), right(p2->clone())
@@ -127,12 +122,12 @@ bool DifferenceBCData::inside(const Point &p) const
 void DifferenceBCData::print()
 {
 #if 1
-  BC_dbg << "Difference Geometry type = " << typeid(this).name() << endl;
-  BC_dbg << "Left" << endl;
+  BC_dbg << "Difference Geometry type = " << typeid(this).name() << std::endl;
+  BC_dbg << "Left" << std::endl;
 #endif
   left->print();
 #if 1
-  BC_dbg << "Right" << endl;
+  BC_dbg << "Right" << std::endl;
 #endif
   right->print();
 }
@@ -143,7 +138,7 @@ void DifferenceBCData::determineIteratorLimits(Patch::FaceType face,
 {
   
 #if 0
-  cout << "DifferenceBC determineIteratorLimits() " << patch->getFaceName(face)<< endl;
+  std::cout << "DifferenceBC determineIteratorLimits() " << patch->getFaceName(face)<< std::endl;
 #endif
   
   
@@ -162,18 +157,18 @@ void DifferenceBCData::determineIteratorLimits(Patch::FaceType face,
   
 #if 0
 #if 0
-  cout << "DifferenceBC determineIteratorLimits()" << endl;
-  cout << "Doing left determineIteratorLimits()" << endl;
+  std::cout << "DifferenceBC determineIteratorLimits()" << std::endl;
+  std::cout << "Doing left determineIteratorLimits()" << std::endl;
 #endif
   left->determineIteratorLimits(face,patch,test_pts);
 #if 0
-  cout << "Doing right determineIteratorLimits()" << endl;
+  std::cout << "Doing right determineIteratorLimits()" << std::endl;
 #endif
   right->determineIteratorLimits(face,patch,test_pts);
   
 #if 0
-  cout << "Size of boundary = " << boundary.size() << endl;
-  cout << "Size of nboundary = " << nboundary.size() << endl;
+  std::cout << "Size of boundary = " << boundary.size() << std::endl;
+  std::cout << "Size of nboundary = " << nboundary.size() << std::endl;
 #endif
   
   // Need to do the set difference operations for the left and right to get
@@ -189,10 +184,10 @@ void DifferenceBCData::determineIteratorLimits(Patch::FaceType face,
   right->getNBoundaryIterator(right_nboundary);
   
 #if 0
-  cout << "Size of left_boundary = " << left_boundary->size() << endl;
-  cout << "Size of left_nboundary = " << left_nboundary->size() << endl;
-  cout << "Size of right_boundary = " << right_boundary->size() << endl;
-  cout << "Size of right_nboundary = " << right_nboundary->size() << endl;
+  std::cout << "Size of left_boundary = " << left_boundary->size() << std::endl;
+  std::cout << "Size of left_nboundary = " << left_nboundary->size() << std::endl;
+  std::cout << "Size of right_boundary = " << right_boundary->size() << std::endl;
+  std::cout << "Size of right_nboundary = " << right_nboundary->size() << std::endl;
 #endif
   
   for (vector<IntVector>::const_iterator it = left_boundary->begin();
@@ -215,8 +210,8 @@ void DifferenceBCData::determineIteratorLimits(Patch::FaceType face,
   setNBoundaryIterator(diff_nboundary);
   
 #if 0
-  cout << "Size of boundary = " << boundary->size() << endl;
-  cout << "Size of nboundary = " << nboundary->size() << endl;
+  std::cout << "Size of boundary = " << boundary->size() << std::endl;
+  std::cout << "Size of nboundary = " << nboundary->size() << std::endl;
 #endif
   
 #endif

@@ -30,11 +30,12 @@
 #include <Core/Grid/Level.h>
 #include <Core/Util/DebugStream.h>
 
-using namespace std;
+namespace {
+  Uintah::DebugStream cout_dbg("AMR_CoarsenRefine", "AMR_CoarsenRefine", "AMR coarsen refine debug stream", false);
+}
 
 namespace Uintah {
 
-static Uintah::DebugStream cout_dbg("AMR_CoarsenRefine", "AMR_CoarsenRefine", "AMR coarsen refine debug stream", false);
 //______________________________________________________________________
 //
 template<typename T>
@@ -154,7 +155,7 @@ void fineToCoarseOperator(CCVariable<T>& q_CC,
     dw->getRegion(fine_q_CC,  varLabel, indx, fineLevel, fl, fh, false);
     
     cout_dbg << " fineToCoarseOperator: finePatch "<< fl << " " << fh 
-             << " coarsePatch "<< cl << " " << ch << endl;
+             << " coarsePatch "<< cl << " " << ch << std::endl;
              
     IntVector r_Ratio = fineLevel->getRefinementRatio();
     

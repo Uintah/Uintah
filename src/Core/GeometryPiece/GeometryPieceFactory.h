@@ -25,14 +25,14 @@
 #ifndef __GEOMETRY_OBJECT_FACTORY_H__
 #define __GEOMETRY_OBJECT_FACTORY_H__
 
-#include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/GeometryPiece/GeometryPiece.h>
 #include <Core/Grid/Patch.h>
-#include   <vector>
-#include   <map>
-#include   <string>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
-#include <Core/GeometryPiece/GeometryPiece.h>
+#include <vector>
+#include <map>
+#include <string>
+
 namespace Uintah {
 
   class GeometryPieceFactory
@@ -99,7 +99,7 @@ namespace Uintah {
      */
     static bool foundInsidePoints(const std::string geomName, const int patchID);
   };
-
+  
 } // End namespace Uintah
 
 #endif /* __GEOMETRY_PIECE_FACTORY_H__ */

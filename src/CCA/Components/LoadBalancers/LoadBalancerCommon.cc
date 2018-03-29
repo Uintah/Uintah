@@ -36,7 +36,6 @@
 #include <Core/Grid/SimulationState.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Util/DebugStream.h>
 #include <Core/Util/DOUT.hpp>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/NotFinished.h>
@@ -50,20 +49,18 @@
 
 using namespace Uintah;
 
-DebugStream stats( "LBStats", "LoadBalancers", "", false );
-DebugStream times( "LBTimes", "LoadBalancers", "", false );
-DebugStream lbout( "LBOut",   "LoadBalancers", "", false );
-
-DebugStream g_profile_stats ("ProfileStats",   "LoadBalancers", "", false );
-DebugStream g_profile_stats2("ProfileStats2",  "LoadBalancers", "", false );
-
 namespace {
 
-Dout g_lb_dbg(                "LoadBalancer"     , "LoadBalancers", "", false );
-Dout g_neighborhood_dbg(      "Neighborhood"     , "LoadBalancers", "", false );
-Dout g_neighborhood_size_dbg( "NeighborhoodSize" , "LoadBalancers", "", false );
-Dout g_patch_assignment(      "LBPatchAssignment", "LoadBalancers", "", false );
+  Dout g_lb_dbg(                "LoadBalancer"     , "LoadBalancers", "", false );
+  Dout g_neighborhood_dbg(      "Neighborhood"     , "LoadBalancers", "", false );
+  Dout g_neighborhood_size_dbg( "NeighborhoodSize" , "LoadBalancers", "", false );
+  Dout g_patch_assignment(      "LBPatchAssignment", "LoadBalancers", "", false );
 
+}
+
+namespace Uintah {
+  DebugStream g_profile_stats ("ProfileStats",   "LoadBalancers", "", false );
+  DebugStream g_profile_stats2("ProfileStats2",  "LoadBalancers", "", false );
 }
 
 // If defined, the space-filling curve will be computed in parallel,
@@ -77,6 +74,9 @@ Dout g_patch_assignment(      "LBPatchAssignment", "LoadBalancers", "", false );
 LoadBalancerCommon::LoadBalancerCommon( const ProcessorGroup * myworld )
   : UintahParallelComponent( myworld )
   , m_sfc( myworld )
+  , stats( "LBStats", "LoadBalancers", "", false )
+  , times( "LBTimes", "LoadBalancers", "", false )
+  , lbout( "LBOut",   "LoadBalancers", "", false )
 {
   m_activeDims[0] = m_activeDims[1] = m_activeDims[2] = 0;
 }

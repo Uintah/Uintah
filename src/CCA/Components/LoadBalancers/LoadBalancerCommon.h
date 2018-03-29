@@ -35,6 +35,7 @@
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Util/DebugStream.h>
 #include <Core/Util/InfoMapper.h>
 
 #include <set>
@@ -270,6 +271,10 @@ protected:
 
   ReductionInfoMapper< RuntimeStatsEnum, double > * d_runtimeStats{nullptr};
 
+  DebugStream stats;
+  DebugStream times;
+  DebugStream lbout;
+  
 private:
 
   // eliminate copy, assignment and move

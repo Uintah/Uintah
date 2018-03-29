@@ -55,7 +55,13 @@
 
 using namespace Uintah;
 
-static DebugStream switcher_dbg("SWITCHER", "Switcher", "Switcher debug stream", false);
+//______________________________________________________________________
+// Initialize class static variables:
+
+// export SCI_DEBUG="SWITCHER:+"
+DebugStream Switcher::switcher_dbg("SWITCHER", "Switcher", "Switcher debug stream", false);
+//______________________________________________________________________
+//
 
 #define ALL_LEVELS  99
 

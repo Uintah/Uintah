@@ -56,17 +56,15 @@ using namespace Uintah;
 //______________________________________________________________________
 //
 namespace {
+  Dout g_dbg(         "KokkosOMP_DBG"        , "Schedulers", "", false);
+  Dout g_queuelength( "KokkosOMP_QueueLength", "Schedulers", "", false);
 
-Dout g_dbg(         "KokkosOMP_DBG"        , "Schedulers", "", false);
-Dout g_queuelength( "KokkosOMP_QueueLength", "Schedulers", "", false);
+  Uintah::MasterLock g_scheduler_mutex{}; // main scheduler lock for multi-threaded task selection
 
-Uintah::MasterLock g_scheduler_mutex{}; // main scheduler lock for multi-threaded task selection
-
-volatile int  g_num_tasks_done{0};
-
-bool g_have_hypre_task{false};
-DetailedTask* g_HypreTask;
-
+  volatile int  g_num_tasks_done{0};
+  
+  bool g_have_hypre_task{false};
+  DetailedTask* g_HypreTask;
 }
 
 

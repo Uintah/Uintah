@@ -32,6 +32,7 @@
 
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
+#include <Core/Util/DebugStream.h>
 
 #include   <string>
 
@@ -125,6 +126,8 @@ protected:
   // Must be 'mutable' as most of these objects are (mostly) 'const'
   mutable bool firstOutput_;
 
+  // Can only be one and cloning is possible.
+  static DebugStream gp_dbg;
 };
 
 } // End namespace Uintah

@@ -77,52 +77,47 @@
 #include <sstream>
 #include <vector>
 
-
-namespace {
-
-// Tags for each CrowdMonitor
-struct varDB_tag{};
-struct levelDB_tag{};
-struct psetDB_tag{};
-struct addsetDB_tag{};
-struct delsetDB_tag{};
-struct data_location_tag{};
-struct task_access_tag{};
-
-using  varDB_monitor = Uintah::CrowdMonitor<varDB_tag>;
-using  levelDB_monitor = Uintah::CrowdMonitor<levelDB_tag>;
-using  psetDB_monitor = Uintah::CrowdMonitor<psetDB_tag>;
-using  addsetDB_monitor = Uintah::CrowdMonitor<addsetDB_tag>;
-using  delsetDB_monitor = Uintah::CrowdMonitor<delsetDB_tag>;
-using  data_location_monitor = Uintah::CrowdMonitor<data_location_tag>;
-using  task_access_monitor = Uintah::CrowdMonitor<task_access_tag>;
-
-}
-
 using namespace Uintah;
 
 // Debug: Used to sync cerr/cout so it is readable when output by multiple ranks
 extern Uintah::MasterLock cerrLock;
 
+namespace Uintah {
+  extern Dout g_mpi_dbg;
+
 #ifdef HAVE_CUDA
   extern DebugStream simulate_multiple_gpus;
   extern DebugStream gpudbg;
 #endif
-
-namespace {
-
-Dout        g_foreign_dbg( "ForeignVariables", "OnDemandDataWarehouse", "foreign variables debug stream", false);
-
-DebugStream dbg(        "OnDemandDataWarehouse",      "OnDemandDataWarehouse", "", false );
-DebugStream warn(       "OnDemandDataWarehouse_warn", "OnDemandDataWarehouse", "", true  );
-DebugStream particles(  "DWParticles",                "OnDemandDataWarehouse", "", false );
-DebugStream particles2( "DWParticles2",               "OnDemandDataWarehouse", "", false );
-
-Uintah::MasterLock g_running_tasks_lock{};
-
 }
 
-extern Dout g_mpi_dbg;
+namespace {
+  // Tags for each CrowdMonitor
+  struct varDB_tag{};
+  struct levelDB_tag{};
+  struct psetDB_tag{};
+  struct addsetDB_tag{};
+  struct delsetDB_tag{};
+  struct data_location_tag{};
+  struct task_access_tag{};
+  
+  using  varDB_monitor = Uintah::CrowdMonitor<varDB_tag>;
+  using  levelDB_monitor = Uintah::CrowdMonitor<levelDB_tag>;
+  using  psetDB_monitor = Uintah::CrowdMonitor<psetDB_tag>;
+  using  addsetDB_monitor = Uintah::CrowdMonitor<addsetDB_tag>;
+  using  delsetDB_monitor = Uintah::CrowdMonitor<delsetDB_tag>;
+  using  data_location_monitor = Uintah::CrowdMonitor<data_location_tag>;
+  using  task_access_monitor = Uintah::CrowdMonitor<task_access_tag>;
+
+  Dout        g_foreign_dbg( "ForeignVariables", "OnDemandDataWarehouse", "foreign variables debug stream", false);
+
+  DebugStream dbg(        "OnDemandDataWarehouse",      "OnDemandDataWarehouse", "", false );
+  DebugStream warn(       "OnDemandDataWarehouse_warn", "OnDemandDataWarehouse", "", true  );
+  DebugStream particles(  "DWParticles",                "OnDemandDataWarehouse", "", false );
+  DebugStream particles2( "DWParticles2",               "OnDemandDataWarehouse", "", false );
+
+  Uintah::MasterLock g_running_tasks_lock{};
+}
 
 struct ParticleSend : public RefCounted {
   int numParticles;

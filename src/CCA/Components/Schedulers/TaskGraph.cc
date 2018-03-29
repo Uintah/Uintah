@@ -39,7 +39,6 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/Parallel.h>
-#include <Core/Util/DebugStream.h>
 #include <Core/Util/DOUT.hpp>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/ProgressiveWarning.h>
@@ -54,14 +53,12 @@ using namespace Uintah;
 
 
 namespace {
-
-Dout g_tg_phase_dbg(          "TaskGraphPhases"              , "Schedulers", "Task graph ???", false);
-Dout g_proc_neighborhood_dbg( "ProcNeighborhood"             , "Schedulers", "Task graph ???", false);
-Dout g_find_computes_dbg(     "FindComputes"                 , "Schedulers", "Task graph ???", false);
-Dout g_add_task_dbg(          "TaskGraphAddTask"             , "Schedulers", "Task graph ???", false);
-Dout g_detailed_task_dbg(     "TaskGraphDetailedTasks"       , "Schedulers", "Task graph ???", false);
-Dout g_detailed_deps_dbg(     "TaskGraphDetailedDependencies", "Schedulers", "Task graph ???", false);
-
+  Dout g_tg_phase_dbg(          "TaskGraphPhases"              , "Schedulers", "Task graph ???", false);
+  Dout g_proc_neighborhood_dbg( "ProcNeighborhood"             , "Schedulers", "Task graph ???", false);
+  Dout g_find_computes_dbg(     "FindComputes"                 , "Schedulers", "Task graph ???", false);
+  Dout g_add_task_dbg(          "TaskGraphAddTask"             , "Schedulers", "Task graph ???", false);
+  Dout g_detailed_task_dbg(     "TaskGraphDetailedTasks"       , "Schedulers", "Task graph ???", false);
+  Dout g_detailed_deps_dbg(     "TaskGraphDetailedDependencies", "Schedulers", "Task graph ???", false);
 }
 
 //______________________________________________________________________

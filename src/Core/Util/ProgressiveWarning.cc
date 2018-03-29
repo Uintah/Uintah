@@ -23,14 +23,16 @@
  */
 
 #include <Core/Util/ProgressiveWarning.h>
+
 #include <Core/Util/DebugStream.h>
 
 #include <iostream>
 
-namespace Uintah {
+using namespace Uintah;
 
-
-static DebugStream dbg("ProgressiveWarning", "Progressive Warning", "Progressive warning debug stream", true);
+namespace {
+  DebugStream dbg("ProgressiveWarning", "Progressive Warning", "Progressive warning debug stream", true);
+}
 
 ProgressiveWarning::ProgressiveWarning(const std::string & message,
 				       int multiplier /* = -1 */, 
@@ -89,5 +91,3 @@ ProgressiveWarning::showWarning()
   (*d_out) << d_message << "\n";
   (*d_out) << "  This warning has occurred " << d_numOccurences << " times.\n";
 }
-
-} // end namespace Uintah

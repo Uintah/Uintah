@@ -96,7 +96,7 @@ public:
 
   virtual bool exists( const unsigned int index ) const
   {
-    return (0 <= index && index < m_keys.size());
+    return (index < m_keys.size());
   };
 
   virtual bool exists( const std::string name ) const

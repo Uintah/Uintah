@@ -33,6 +33,7 @@
 #include <Core/Util/FileUtils.h>
 #include <Core/Util/StringUtil.h>
 
+
 #include <algorithm>
 #include <iomanip>
 #include <iostream>
@@ -47,10 +48,63 @@
 #include <libxml/tree.h>
 #include <libxml/parser.h>
 
-using namespace std;
 using namespace Uintah;
 
 //////////////////////////////////////////////////////////////////////////////////////////////
+
+namespace {
+  DebugStream dbg    ( "ProblemSpecReader",         "ProblemSpecification", "", false );
+  DebugStream inc_dbg( "ProblemSpecReaderIncludes", "ProblemSpecification", "", false );
+
+  // Utility Functions:
+
+  // Prints out 2 spaces for each level of indentation.
+  void
+  indent( std::ostream & out, unsigned int depth )
+  {
+    // out << depth << " ";
+    for( unsigned int pos = 0; pos < depth; pos++ ) {
+      out << "    ";
+    }
+  }
+
+  std::string
+  getErrorInfo( const xmlNode * node )
+  {
+    std::ostringstream error;
+    
+    if( node->_private == nullptr ) {
+      // All nodes of the ups_spec.xml will have _private set, but nodes coming from the 
+      // .ups file being validated may not.  However, they will have a doc pointer that
+      // has the file information.
+      //
+      // Both ATTRIBUTE and TEXT node line numbers aren't part of those
+      // type of 'node's... we have to look at their parents to get the
+      // real value.  (This occurs because we cast all nodes into
+      // generic xmlNodes before they get to this portion of the code,
+      // and this is why we need to do this test.)
+      if( node->type == XML_ATTRIBUTE_NODE || node->type == XML_TEXT_NODE ) {
+	error << "See file: " << (const char *)( node->doc->URL ) << " (line #" << node->parent->line << ")";
+      }
+      else {
+	error << "See file: " << (const char *)( node->doc->URL ) << " (line #" << node->line << ")";
+      }
+    }
+    else {
+      std::string file = *(std::string*)(node->_private);
+      error << "See file: " << file << " (line #" << node->line << ")";;
+
+    }
+  
+    return error.str();
+  }
+
+} // end unnamed namespace
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+
+// The following section holds structures used in validating the problem spec file.
 
 namespace Uintah {
 
@@ -60,63 +114,6 @@ namespace Uintah {
   typedef Handle<Tag>              TagP;
   typedef Handle<Attribute>        AttributeP;
   typedef Handle<ChildRequirement> ChildRequirementP;
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////
-
-static DebugStream     dbg( "ProblemSpecReader",         "ProblemSpecification", "Problem specification reader debug stream", false );
-static DebugStream inc_dbg( "ProblemSpecReaderIncludes", "ProblemSpecification", "Problem specification reader includes debug stream", false );
-
-//////////////////////////////////////////////////////////////////////////////////////////////
-// Utility Functions:
-
-// Prints out 2 spaces for each level of indentation.
-static
-void
-indent( ostream & out, unsigned int depth )
-{
-  // out << depth << " ";
-  for( unsigned int pos = 0; pos < depth; pos++ ) {
-    out << "    ";
-  }
-}
-
-static
-string
-getErrorInfo( const xmlNode * node )
-{
-  ostringstream error;
-
-  if( node->_private == nullptr ) {
-    // All nodes of the ups_spec.xml will have _private set, but nodes coming from the 
-    // .ups file being validated may not.  However, they will have a doc pointer that
-    // has the file information.
-    //
-    // Both ATTRIBUTE and TEXT node line numbers aren't part of those
-    // type of 'node's... we have to look at their parents to get the
-    // real value.  (This occurs because we cast all nodes into
-    // generic xmlNodes before they get to this portion of the code,
-    // and this is why we need to do this test.)
-    if( node->type == XML_ATTRIBUTE_NODE || node->type == XML_TEXT_NODE ) {
-      error << "See file: " << (const char *)( node->doc->URL ) << " (line #" << node->parent->line << ")";
-    }
-    else {
-      error << "See file: " << (const char *)( node->doc->URL ) << " (line #" << node->line << ")";
-    }
-  }
-  else {
-    string file = *(string*)(node->_private);
-    error << "See file: " << file << " (line #" << node->line << ")";;
-
-  }
-  
-  return error.str();
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////
-// The following section holds structures used in validating the problem spec file.
-
-namespace Uintah {
 
 /////////////////////////////////////////////////////////////////
 //
@@ -129,8 +126,8 @@ enum need_e { OPTIONAL, REQUIRED, MULTIPLE, INVALID_NEED };
 //   probably should have a separate validation that 'integers' are used, but don't do that now...
 enum type_e { DOUBLE, INTEGER, STRING, VECTOR, BOOLEAN, NO_DATA, MULTIPLE_DOUBLES, MULTIPLE_INTEGERS, MULTIPLE_VECTORS, INVALID_TYPE };
 
-ostream &
-operator<<( ostream & out, const need_e & need )
+std::ostream &
+operator<<( std::ostream & out, const need_e & need )
 {
   if(      need == REQUIRED )     { out << "REQUIRED"; }
   else if( need == OPTIONAL )     { out << "OPTIONAL"; }
@@ -142,8 +139,8 @@ operator<<( ostream & out, const need_e & need )
   return out;
 }
 
-ostream &
-operator<<( ostream & out, const type_e & type )
+std::ostream &
+operator<<( std::ostream & out, const type_e & type )
 {
   if     ( type == DOUBLE )  { out << "DOUBLE"; }
   else if( type == INTEGER ) { out << "INTEGER"; }
@@ -159,7 +156,7 @@ operator<<( ostream & out, const type_e & type )
 }
 
 need_e
-getNeed( const string & needStr )
+getNeed( const std::string & needStr )
 {
   if(      needStr == "REQUIRED" ) {
     return REQUIRED;
@@ -178,7 +175,7 @@ getNeed( const string & needStr )
 }
 
 type_e
-getType( const string & typeStr )
+getType( const std::string & typeStr )
 {
   if(      typeStr == "DOUBLE" ) {
     return DOUBLE;
@@ -219,8 +216,8 @@ getType( const string & typeStr )
 // Helper Structs:
 
 struct NeedAppliesTo {
-  string parentAttributeName_;   // Eg: The parent of this tag will have an attribute named "type" or "label".
-  vector< string > validValues_; //     the value of "type" might be 'hard_sphere_gas'.  If that value
+  std::string parentAttributeName_;   // Eg: The parent of this tag will have an attribute named "type" or "label".
+  std::vector< std::string > validValues_; //     the value of "type" might be 'hard_sphere_gas'.  If that value
 };                               //     is in the validValues_ array, then the 'need' of the tag applies.
 
 struct ChildRequirement : public RefCounted {
@@ -228,11 +225,11 @@ struct ChildRequirement : public RefCounted {
 
   Req              typeOfRequirement; 
   bool             appliesToAttribute; // 'false' if requirement applies to a child tag.
-  vector< string > childrenList;       // used for ONE_OF and ALL_OR_NONE_OF
+  std::vector< std::string > childrenList;       // used for ONE_OF and ALL_OR_NONE_OF
 };
 
-ostream &
-operator<<( ostream & out, const ChildRequirement::Req & req )
+std::ostream &
+operator<<( std::ostream & out, const ChildRequirement::Req & req )
 {
   if(      req == ChildRequirement::ONE_OF )         { out << "ONE_OF"; }
   else if( req == ChildRequirement::ALL_OR_NONE_OF ) { out << "ALL_OR_NONE_OF"; }
@@ -242,13 +239,13 @@ operator<<( ostream & out, const ChildRequirement::Req & req )
   return out;
 }
 
-ostream &
-operator<<( ostream & out, const ChildRequirement & chreq )
+std::ostream &
+operator<<( std::ostream & out, const ChildRequirement & chreq )
 {
   if(      chreq.typeOfRequirement == ChildRequirement::ALL_OR_NONE_OF ){ out << "ALL_OR_NONE_OF( "; }
   else if( chreq.typeOfRequirement == ChildRequirement::ONE_OF )        { out << "ONE_OF( "; }
   else {
-    ostringstream error;
+    std::ostringstream error;
     error << "Error in ChildRequirement::Req '<<' operator: value of 'chreq': " << (int)chreq.typeOfRequirement << ", is invalid... \n";
     throw ProblemSetupException( error.str(), __FILE__, __LINE__ );
   }
@@ -265,23 +262,23 @@ operator<<( ostream & out, const ChildRequirement & chreq )
 
 struct AttributeAndTagBase :  public RefCounted {
 
-  AttributeAndTagBase( const string & name, TagP parent ) :
+  AttributeAndTagBase( const std::string & name, TagP parent ) :
     parent_( parent ), name_( name ), need_(INVALID_NEED), occurrences_( 0 ) { }
 
-  AttributeAndTagBase( const string & name, need_e need, type_e type, 
-                       const vector<string> & validValues, /*const*/ TagP parent ) :
+  AttributeAndTagBase( const std::string & name, need_e need, type_e type, 
+                       const std::vector<std::string> & validValues, /*const*/ TagP parent ) :
     parent_( parent ),
     name_( name ), need_( need ), type_( type ),
     validValues_( validValues ),
     occurrences_( 0 ) { }
 
-  AttributeAndTagBase( const string & name, need_e need, type_e type, 
-                       const string & validValues, /*const*/ TagP parent ) :
+  AttributeAndTagBase( const std::string & name, need_e need, type_e type, 
+                       const std::string & validValues, /*const*/ TagP parent ) :
     parent_( parent ),
     name_( name ), need_( need ), type_( type ),
     occurrences_( 0 )
   {
-    vector<char> separators;
+    std::vector<char> separators;
     separators.push_back( ',' );
     separators.push_back( ' ' );
     validValues_ = split_string( validValues, separators );
@@ -293,10 +290,10 @@ struct AttributeAndTagBase :  public RefCounted {
   virtual ~AttributeAndTagBase() {}
 
   TagP           parent_; // was const... should be, but I need to be able to pass it into findAttribute()...
-  string         name_;
+  std::string         name_;
   need_e         need_;
   type_e         type_;
-  vector<string> validValues_;
+  std::vector<std::string> validValues_;
   int            occurrences_;
 
   NeedAppliesTo  needAppliesTo_;
@@ -306,23 +303,23 @@ struct AttributeAndTagBase :  public RefCounted {
   // when validating the tag's (for which this attribute applies) children.  Once
   // the validation moves past this tag (the tag for which this attribute applies)
   // then this field is no longer valid.
-  string         currentValue_;
+  std::string         currentValue_;
 
   // currentChildrenTags_ is used to validate the number of children (in some cases).
   // Its value changes as each tag is checked.  (It is valid while a given tag is 
   // being validated, but overwritten the next time that type of tag is validated.)
-  vector< string > currentChildrenTags_;
+  std::vector< std::string > currentChildrenTags_;
 
   ///////////////////////////////////
 
-  string getCompleteName() const;
+  std::string getCompleteName() const;
 
   // 'node' is the gold standard node being validated against.
-  void   validateText(    const string & text,  xmlNode * node  ) const;
-  bool   validateString(  const string & value ) const;
-  bool   validateBoolean( const string & value ) const;
+  void   validateText(    const std::string & text,  xmlNode * node  ) const;
+  bool   validateString(  const std::string & value ) const;
+  bool   validateBoolean( const std::string & value ) const;
   void   validateDouble(  double value         ) const;
-  bool   validateVector(  const string & text ) const; // text should be "[#, #, #]" to be valid.
+  bool   validateVector(  const std::string & text ) const; // text should be "[#, #, #]" to be valid.
 
   virtual void cleanUp( bool force = false ) = 0;
 
@@ -334,7 +331,7 @@ struct AttributeAndTagBase :  public RefCounted {
       dbg << "WARNING... print truncating indention depth to 14...\n";
       depth = 14;
     }
-    string fill;
+    std::string fill;
     for( unsigned int pos = name_.size(); pos < (30-(depth*2)); pos++ ) {
       fill += " ";
     }
@@ -358,7 +355,7 @@ struct AttributeAndTagBase :  public RefCounted {
 
 struct Attribute : public AttributeAndTagBase { 
 
-  Attribute( const string & name, need_e need, type_e type, const string & validValues, /*const*/ TagP parent ) :
+  Attribute( const std::string & name, need_e need, type_e type, const std::string & validValues, /*const*/ TagP parent ) :
     AttributeAndTagBase( name, need, type, validValues, parent ) {
   }
 
@@ -379,10 +376,10 @@ private:
   const xmlNode              * originalXmlNode_; // This var is used (only) for debugging
                                                  // (it contains the file/line # this tag comes from...)
 public:
-  vector< AttributeP >         attributes_;
-  vector< TagP >               subTags_;
+  std::vector< AttributeP >         attributes_;
+  std::vector< TagP >               subTags_;
 
-  vector< ChildRequirementP >  childReqs_;
+  std::vector< ChildRequirementP >  childReqs_;
 
   bool                         forwardDeclaration_;
   bool                         isCommonTag_;
@@ -395,12 +392,12 @@ public:
   //  BOOLEAN: validValues is not allowed... because it defaults to true/false.
   //  VECTOR: FIXME... does nothing yet...
   //
-  Tag( const string & name, TagP parent, const xmlNode * node ) : 
+  Tag( const std::string & name, TagP parent, const xmlNode * node ) : 
     // This constructor is used only for creating a tag that is a forward declaration place holder tag.
     AttributeAndTagBase( name, parent ), 
     originalXmlNode_( node ), forwardDeclaration_( true ), isCommonTag_( false ) {}
 
-  Tag( const string & name, need_e need, type_e type, const string & validValues, /*const*/ TagP parent, const xmlNode * node ) :
+  Tag( const std::string & name, need_e need, type_e type, const std::string & validValues, /*const*/ TagP parent, const xmlNode * node ) :
     AttributeAndTagBase( name, need, type, validValues, parent ),
     originalXmlNode_( node ), forwardDeclaration_( false ), isCommonTag_( false ) {}
 
@@ -426,11 +423,11 @@ public:
 
   virtual void cleanUp( bool force = false ) {
 
-    for( vector< AttributeP >::iterator iter = attributes_.begin(); iter != attributes_.end(); iter++ ) {
+    for( std::vector< AttributeP >::iterator iter = attributes_.begin(); iter != attributes_.end(); iter++ ) {
       (*iter)->cleanUp();
     }
 
-    for( vector< TagP >::iterator iter = subTags_.begin(); iter != subTags_.end(); iter++ ) {
+    for( std::vector< TagP >::iterator iter = subTags_.begin(); iter != subTags_.end(); iter++ ) {
       if( (*iter)->parent_ != this ) {
         (*iter) = 0;
       }
@@ -442,21 +439,21 @@ public:
   }
 
   ~Tag() {
-    for( vector< AttributeP >::iterator iter = attributes_.begin(); iter != attributes_.end(); iter++ ) {
+    for( std::vector< AttributeP >::iterator iter = attributes_.begin(); iter != attributes_.end(); iter++ ) {
       *iter = 0;
     }
-    for( vector< TagP >::iterator iter = subTags_.begin(); iter != subTags_.end(); iter++ ) {
+    for( std::vector< TagP >::iterator iter = subTags_.begin(); iter != subTags_.end(); iter++ ) {
       if( *iter ) {
         *iter = 0;
       }
     }
-    for( vector< ChildRequirementP >::iterator iter = childReqs_.begin(); iter != childReqs_.end(); iter++ ) {
+    for( std::vector< ChildRequirementP >::iterator iter = childReqs_.begin(); iter != childReqs_.end(); iter++ ) {
       *iter = 0;
     }
   }
 
-  AttributeP findAttribute( const string & attrName );
-  TagP       findChildTag( const string & tagName );
+  AttributeP findAttribute( const std::string & attrName );
+  TagP       findChildTag( const std::string & tagName );
   void       validateAttribute( xmlAttr * attr );
 
   // User most likely should not use the 'depth' parameter.
@@ -506,18 +503,18 @@ static TagP commonTags_g;
 // This map is used to allow validation of Geom tags (in the .ups files) that
 // are 'name'd (or 'label'd) so they can be referenced again.  This is used
 // only for 'cylinder's and 'box's currently.
-map<string, TagP> namedGeomPieces_g;
+std::map<std::string, TagP> namedGeomPieces_g;
 
-list< TagP >      needForwardDeclResolution;
-map<string, bool> forwardDeclMap;
+std::list< TagP >      needForwardDeclResolution;
+std::map<std::string, bool> forwardDeclMap;
 
 //
 ///////////////////////////////////////////////////////////////////////
 
-string
+std::string
 AttributeAndTagBase::getCompleteName() const
 {
-  string      result = name_;
+  std::string      result = name_;
   const Tag * tag = parent_.get_rep();
     
   while( tag != nullptr ) {
@@ -528,7 +525,7 @@ AttributeAndTagBase::getCompleteName() const
 }
 
 AttributeP
-Tag::findAttribute( const string & attrName )
+Tag::findAttribute( const std::string & attrName )
 {
   for( unsigned int pos = 0; pos < attributes_.size(); pos++ ) {
     if( attributes_[ pos ]->name_ == attrName ) {
@@ -539,7 +536,7 @@ Tag::findAttribute( const string & attrName )
 }
 
 TagP
-Tag::findChildTag( const string & tagName )
+Tag::findChildTag( const std::string & tagName )
 {
   for( unsigned int pos = 0; pos < subTags_.size(); pos++ ) {
     if( subTags_[ pos ]->name_ == tagName ) {
@@ -552,14 +549,14 @@ Tag::findChildTag( const string & tagName )
 // Chops up 'validValues' (based on ','s) and verifies that 'value' is in the list.
 // (If validValues is empty, then 'value' is considered valid by definition.)
 bool
-AttributeAndTagBase::validateString( const string & value ) const
+AttributeAndTagBase::validateString( const std::string & value ) const
 {
   // If no 'valid values' are set, then all values are valid.
   if( validValues_.size() == 0 ) {
     return true;
   }
 
-  vector<string>::const_iterator iter = find( validValues_.begin(), validValues_.end(), value );
+  std::vector<std::string>::const_iterator iter = find( validValues_.begin(), validValues_.end(), value );
   if( iter != validValues_.end() ) {
     return true;
   } 
@@ -569,7 +566,7 @@ AttributeAndTagBase::validateString( const string & value ) const
 }
 
 bool
-AttributeAndTagBase::validateBoolean( const string & value ) const
+AttributeAndTagBase::validateBoolean( const std::string & value ) const
 {
   if( value == "true" || value == "false" ) {
     return true;
@@ -590,8 +587,8 @@ AttributeAndTagBase::validateDouble( double value ) const
   if( validValues_.size() == 1 ) {
     if( validValues_[0] == "positive" ) {
       if( value < 0 ) {
-        ostringstream error;
-        error << setprecision(12);
+        std::ostringstream error;
+        error << std::setprecision(12);
         error << "<" << getCompleteName() << ">: Specified value '" << value << "' is not 'positive' (as required).";
         throw ProblemSetupException( error.str(), __FILE__, __LINE__ );
       }
@@ -602,8 +599,8 @@ AttributeAndTagBase::validateDouble( double value ) const
     sscanf( validValues_[0].c_str(), "%lf", &min );
     sscanf( validValues_[1].c_str(), "%lf", &max );
     if( value < min || value > max ) {
-      ostringstream error;
-      error << setprecision(12);
+      std::ostringstream error;
+      error << std::setprecision(12);
       error << "<" << getCompleteName() << "> - " << "Specified value '" << value << "' is outside of valid range (" 
             << min << ", " << max << ")";
       throw ProblemSetupException( error.str(), __FILE__, __LINE__ );
@@ -615,10 +612,10 @@ AttributeAndTagBase::validateDouble( double value ) const
 }
 
 bool
-AttributeAndTagBase::validateVector( const string & text ) const
+AttributeAndTagBase::validateVector( const std::string & text ) const
 {
   // remove " " from text
-  string cleanText = text;
+  std::string cleanText = text;
   replace_substring(cleanText, " ","");
   
   int numCommas = count_substrs( cleanText, "," ); 
@@ -638,21 +635,21 @@ AttributeAndTagBase::validateVector( const string & text ) const
 // (etc).  In this case, the tag is a common tag and needs to be found
 // in the list of common tags.
 bool
-getNeedAndTypeAndValidValues( const string & specStr, need_e & need, type_e & type, string & validValues )
+getNeedAndTypeAndValidValues( const std::string & specStr, need_e & need, type_e & type, std::string & validValues )
 {
   // First bust up the specStr string based on the substring
   // (specified with ' (a quote).  This should give us 1 or 2 pieces.
   // (1 piece if there is not a 'validValues' string, and 2 pieces if
   // there is.)
   //
-  vector<char> separators;
+  std::vector<char> separators;
   separators.push_back( '\'' );
 
   // remove leading and tailing blanks, tabs, \n, \r
-  string specStr_clean = specStr;
+  std::string specStr_clean = specStr;
   collapse( specStr_clean );
   
-  vector<string> specs = split_string( specStr_clean, separators );
+  std::vector<std::string> specs = split_string( specStr_clean, separators );
 
   if( specs.size() < 1 || specs.size() > 2 ) {
     throw ProblemSetupException( "Error in getNeedAndTypeAndValidValues()...(" + specStr_clean + ")", __FILE__, __LINE__ );
@@ -661,7 +658,7 @@ getNeedAndTypeAndValidValues( const string & specStr, need_e & need, type_e & ty
   separators.clear();
   separators.push_back( ' ' );
   separators.push_back( '\t' );
-  vector<string> needType = split_string( specs[0], separators );
+  std::vector<std::string> needType = split_string( specs[0], separators );
 
   if( needType.size() == 1 ) {
     // Only the 'need' is provided... grab it, and drop out.
@@ -670,7 +667,7 @@ getNeedAndTypeAndValidValues( const string & specStr, need_e & need, type_e & ty
   }
 
   if( needType.size() != 2 ) {
-    throw ProblemSetupException( string( "Error: need/type specification '" ) + concatStrings( needType ) + 
+    throw ProblemSetupException( std::string( "Error: need/type specification '" ) + concatStrings( needType ) + 
                                  "' did not parse correctly...", __FILE__, __LINE__ );
   }
 
@@ -692,21 +689,21 @@ getNeedAndTypeAndValidValues( const string & specStr, need_e & need, type_e & ty
 }
 
 void
-getLabelAndNeedAndTypeAndValidValues( const string & specStr, string & label, 
-                                      need_e & need, type_e & type, string & validValues )
+getLabelAndNeedAndTypeAndValidValues( const std::string & specStr, std::string & label, 
+                                      need_e & need, type_e & type, std::string & validValues )
 {
   // First bust up the specStr string based on the substring
   // (specified with ' (a quote).  This should give us 1 or 2 pieces.
   // (1 piece if there is not a 'validValues' string, and 2 pieces if
   // there is.)
   //
-  vector<char> separators;
+  std::vector<char> separators;
   separators.push_back( '\'' ); // Split by "'"s (single quotes).
 
-  vector<string> specs = split_string( specStr, separators );
+  std::vector<std::string> specs = split_string( specStr, separators );
 
   if( specs.size() < 1 || specs.size() > 2 ) {
-    ostringstream errorMsg;
+    std::ostringstream errorMsg;
     errorMsg << "Error in getLabelAndNeedAndTypeAndValidValues... Spec string split into " << specs.size() << " pieces,\n"
              << "(using ' (single quote) as the delimiter) but should have been only 1 or 2.  Spec string: '" << specStr << "'";
     throw ProblemSetupException( errorMsg.str(), __FILE__, __LINE__ );
@@ -715,7 +712,7 @@ getLabelAndNeedAndTypeAndValidValues( const string & specStr, string & label,
   separators.clear();
   separators.push_back( ' ' );
   separators.push_back( '\t' );
-  vector<string> labelNeedType = split_string( specs[0], separators );
+  std::vector<std::string> labelNeedType = split_string( specs[0], separators );
 
   if( labelNeedType.size() != 3 ) {
     throw ProblemSetupException( "Error: label/need/type did not parse correctly for: '" + specs[0] + "'...", __FILE__, __LINE__ );
@@ -735,6 +732,8 @@ getLabelAndNeedAndTypeAndValidValues( const string & specStr, string & label,
 }
 
 } // end namespace Uintah
+
+//////////////////////////////////////////////////////////////////////////////////////////////
 
 void
 Tag::update( TagP tag )
@@ -764,8 +763,8 @@ Tag::update( TagP tag )
 void
 Tag::parseXmlTag( const xmlNode * xmlTag )
 {
-  //  string name = to_char_ptr( xmlTag->name );
-  string name = (const char *)( xmlTag->name );
+  //  std::string name = to_char_ptr( xmlTag->name );
+  std::string name = (const char *)( xmlTag->name );
   collapse( name );
 
   dbg << "Parse node: " << name << "\n";
@@ -785,7 +784,7 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
 
         // This section checks for multiply declared versions of the same 'Common' tag...
 
-        string specStr = (const char *)( xmlTag->properties->children->content );
+        std::string specStr = (const char *)( xmlTag->properties->children->content );
 
         if( tempTag->forwardDeclaration_ ) { // If the original (first) specification of this Tag is a forward
                                              // declaration, then if the new one is a forward declaration, there
@@ -800,7 +799,7 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
 
           need_e nd   = INVALID_NEED; // Need          - These three variable names are just used in debugging
           type_e tp   = INVALID_TYPE; // Type          - and just in the following line, so am using
-          string vvs;                 // Valid Values  - abbreviated names as not to confuse with other vars later.
+          std::string vvs;                 // Valid Values  - abbreviated names as not to confuse with other vars later.
           getNeedAndTypeAndValidValues( specStr, nd, tp, vvs );
           if( tp != INVALID_TYPE ) {
             throw ProblemSetupException( "Error: The CommonTag <" + name + "> appears to be created (specified) twice.\n" +
@@ -826,7 +825,7 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
         throw ProblemSetupException( "Error (b)... <" + name + "> does not have required 'spec' attribute (eg: spec=\"REQUIRED NO_DATA\").",
                                      __FILE__, __LINE__ );
       }
-      else if( string( "spec" ) != (const char *)( xmlTag->properties->name ) ) {
+      else if( std::string( "spec" ) != (const char *)( xmlTag->properties->name ) ) {
         throw ProblemSetupException( "Error (c)... <" + name + "> does not have required 'spec' attribute (eg: spec=\"REQUIRED NO_DATA\").  " +
                                      "Found attribute '" + (const char *)( xmlTag->properties->name ) + "' instead.", __FILE__, __LINE__ );
       }
@@ -837,10 +836,10 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
   type_e type        = INVALID_TYPE;
   bool   common      = true;
   bool   forwardDecl = false;
-  string validValues;
+  std::string validValues;
 
   if( hasSpecString ) {
-    string specStr = (const char *)( xmlTag->properties->children->content );
+    std::string specStr = (const char *)( xmlTag->properties->children->content );
 
     if( specStr == "FORWARD_DECLARATION" ) {
       forwardDecl = true;
@@ -848,7 +847,7 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
     else {
       common = !getNeedAndTypeAndValidValues( specStr, need, type, validValues );
 
-      map<string,bool>::iterator iter = forwardDeclMap.find( name );
+      std::map<std::string,bool>::iterator iter = forwardDeclMap.find( name );
 
       if( iter != forwardDeclMap.end() ) {
         // The current tag being worked on is referencing a forwardly
@@ -916,12 +915,12 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
 
         need_e need;
         type_e type;
-        string label, validValues;
+        std::string label, validValues;
 
-        const string attrName = (const char *)( child->name );
+        const std::string attrName = (const char *)( child->name );
 
         if( attrName.find( "attribute") == 0 ) { // attribute string begins with "attribute"
-          string specStr = (const char *)( child->children->content );
+          std::string specStr = (const char *)( child->children->content );
           getLabelAndNeedAndTypeAndValidValues( specStr, label, need, type, validValues );
 
           if( need == INVALID_NEED ) {
@@ -931,9 +930,9 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
         }
         else if( attrName.find( "children") == 0 ) {  // attribute string begins with "children"
 
-          string attrStr = (const char *)( child->children->content );
-          vector<string> strings;
-          vector<char> separators;
+          std::string attrStr = (const char *)( child->children->content );
+          std::vector<std::string> strings;
+          std::vector<char> separators;
 
           separators.push_back( ',' );
           separators.push_back( '(' );
@@ -951,12 +950,12 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
             chreq->typeOfRequirement = ChildRequirement::ALL_OR_NONE_OF;
           }
           else {
-            throw ProblemSetupException( string( "ERROR in parsing '" ) + attrStr + "'.  'children' tag does not support: " + 
+            throw ProblemSetupException( std::string( "ERROR in parsing '" ) + attrStr + "'.  'children' tag does not support: " + 
                                          strings[0] + "...", __FILE__, __LINE__ );
           }
 
           if( strings.size() < 3 ) {
-            stringstream error;
+            std::stringstream error;
             error << "ERROR in parsing " << chreq->typeOfRequirement << "().  Not enough fields."
                   <<  getErrorInfo( xmlTag );
             throw ProblemSetupException( error.str(), __FILE__, __LINE__ );
@@ -969,7 +968,7 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
             chreq->appliesToAttribute = false;
           }
           else {
-            stringstream error;
+            std::stringstream error;
             error << "ERROR in parsing " << chreq->typeOfRequirement << "().  First field must be either ATTRIBUTE or CHILD, but found: '"
                   << strings[1] << "', " 
                   << getErrorInfo( xmlTag );
@@ -983,10 +982,10 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
         }
         else if( attrName.find( "need_applies_to") == 0 ) {  // attribute string begins with "children"
 
-          string attrStr = (const char *)( child->children->content );
+          std::string attrStr = (const char *)( child->children->content );
           
-          vector<string> strings;
-          vector<char> separators;
+          std::vector<std::string> strings;
+          std::vector<char> separators;
 
           separators.push_back( ',' );
           separators.push_back( ' ' );
@@ -994,11 +993,11 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
           strings = split_string( attrStr, separators );
 
           if( strings.size() <= 1 ) {
-            throw ProblemSetupException( string( "ERROR in parsing '" ) + attrStr + "'.  Not enough values for 'need_applies_to' field.\n" +
+            throw ProblemSetupException( std::string( "ERROR in parsing '" ) + attrStr + "'.  Not enough values for 'need_applies_to' field.\n" +
                                          "Please fix 'ups_spec.xml'.\n", __FILE__, __LINE__ );
           }
           if( !findAttribute( strings[0] ) ) {
-            throw ProblemSetupException( string( "ERROR in parsing '" ) + attrStr + "'.  Parent does not have attribute '" + strings[0] + "'",
+            throw ProblemSetupException( std::string( "ERROR in parsing '" ) + attrStr + "'.  Parent does not have attribute '" + strings[0] + "'",
                                          __FILE__, __LINE__ );
           }
 
@@ -1006,17 +1005,17 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
 
           for( unsigned int pos = 1; pos < strings.size(); pos++ ) {
 
-            string value = strings[ pos ];
+            std::string value = strings[ pos ];
 
             AttributeP attribute = findAttribute( newTag->needAppliesTo_.parentAttributeName_ );
             if( !attribute ) {
-              throw ProblemSetupException( string( "Parent attribute '" ) + newTag->needAppliesTo_.parentAttributeName_ + "' specified for '"  +
+              throw ProblemSetupException( std::string( "Parent attribute '" ) + newTag->needAppliesTo_.parentAttributeName_ + "' specified for '"  +
                                            getCompleteName() + "' does not exist!\n" + "The 'need_applies_to' field " +
                                            "in the 'ups_spec.xml' is broken.  Please fix.",
                                            __FILE__, __LINE__ );
             }
             if( attribute->need_ != REQUIRED ) {
-              ostringstream errorMsg;
+              std::ostringstream errorMsg;
               errorMsg << "For 'need_applies_to' tag '" << newTag->getCompleteName() << "', parent's attribute '" 
                        << newTag->needAppliesTo_.parentAttributeName_ << "'\nspecified for '"  
                        << getCompleteName() << "' must be REQUIRED, but it is marked as '" 
@@ -1050,7 +1049,7 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
   for( xmlNode * child = xmlTag->children; child != 0; child = child->next) {
     if( child->type == XML_ELEMENT_NODE ) {
 
-      string node = (const char *)( child->name );
+      std::string node = (const char *)( child->name );
       collapse( node );
 
       newTag->parseXmlTag( child );
@@ -1068,8 +1067,8 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
         chreq->typeOfRequirement == ChildRequirement::ALL_OR_NONE_OF ) {
 
       for( unsigned int pos = 0; pos < chreq->childrenList.size(); pos++ ) {
-        string childName = chreq->childrenList[ pos ];
-        string theType;
+        std::string childName = chreq->childrenList[ pos ];
+        std::string theType;
         bool   valid = true;
         if( chreq->appliesToAttribute ) {
           AttributeP attributeTag = newTag->findAttribute( childName );
@@ -1086,7 +1085,7 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
           }
         }
         if( !valid ) {
-          stringstream error;
+          std::stringstream error;
           error << newTag->getCompleteName() << ": " << chreq->typeOfRequirement << " has nonexistent " 
                 << theType << ": '" << childName << "'\n" 
                 << getErrorInfo( xmlTag );
@@ -1111,14 +1110,14 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
     // future someone tried to get fancy with the forward declaration
     // infrastruction, they probably could easily break the code.)
 
-    map<string,bool>::iterator fdmIter = forwardDeclMap.find( name );
+    std::map<std::string,bool>::iterator fdmIter = forwardDeclMap.find( name );
     forwardDeclMap.erase( fdmIter );
 
     // Now that we have the full definition of the tag (that was
     // previously only forwardly declared), we can update any tags that 
     // referred to it...
 
-    list<TagP>::iterator iter = needForwardDeclResolution.begin();
+    std::list<TagP>::iterator iter = needForwardDeclResolution.begin();
     while( iter != needForwardDeclResolution.end() ) {
       TagP fdtag = *iter;
       if( fdtag->name_ == name ) {
@@ -1134,7 +1133,7 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
 
         fdtag->childReqs_   = commonTag->childReqs_;
 
-        list<TagP>::iterator temp = iter;
+	std::list<TagP>::iterator temp = iter;
         iter++;
         needForwardDeclResolution.erase( temp );
       }
@@ -1146,6 +1145,8 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
 
 } // end parseXmlTag()
 
+//////////////////////////////////////////////////////////////////////////////////////////////
+
 void
 ProblemSpecReader::parseValidationFile()
 {
@@ -1156,7 +1157,7 @@ ProblemSpecReader::parseValidationFile()
 
   xmlDocPtr doc; /* the resulting document tree */
   
-  string valFileName = string( sci_getenv("SCIRUN_SRCDIR") ) + "/StandAlone/inputs/UPS_SPEC/ups_spec.xml";
+  std::string valFileName = std::string( sci_getenv("SCIRUN_SRCDIR") ) + "/StandAlone/inputs/UPS_SPEC/ups_spec.xml";
 
   doc = xmlReadFile( valFileName.c_str(), 0, XML_PARSE_PEDANTIC );
 
@@ -1179,7 +1180,7 @@ ProblemSpecReader::parseValidationFile()
     }
   }
                                
-  string * valFileNamePtr = scinew string( valFileName );
+  std::string * valFileNamePtr = scinew std::string( valFileName );
   d_upsFilename.push_back( valFileNamePtr );
 
   xmlNode * root = xmlDocGetRootElement( doc );
@@ -1192,8 +1193,8 @@ ProblemSpecReader::parseValidationFile()
   uintahSpec_g = new Tag( "Uintah_specification", REQUIRED, NO_DATA, "", nullptr, root );
   commonTags_g = new Tag( "CommonTags", REQUIRED, NO_DATA, "", nullptr, root );
 
-  //  string tagName = to_char_ptr( root->name );
-  string tagName = (const char *)( root->name );
+  //  std::string tagName = to_char_ptr( root->name );
+  std::string tagName = (const char *)( root->name );
 
   if( tagName != "Uintah_specification" ) {
     throw ProblemSetupException( valFileName + " does not appear to be valid... First tag should be\n" +
@@ -1206,7 +1207,7 @@ ProblemSpecReader::parseValidationFile()
   for( xmlNode * child = root->children; child != 0; child = child->next) {
 
     if( child->type == XML_ELEMENT_NODE ) {
-      string tagName = (const char *)( child->name );
+      std::string tagName = (const char *)( child->name );
     
       if( tagName == "CommonTags" ) {
         commonTagsFound = true;
@@ -1228,7 +1229,7 @@ ProblemSpecReader::parseValidationFile()
   // Parse <Uintah_specification>
   for( xmlNode * child = root->children; child != 0; child = child->next) {
     if( child->type == XML_ELEMENT_NODE ) {
-      string tagName = (const char *)( child->name );
+      std::string tagName = (const char *)( child->name );
       if( tagName != "CommonTags" ) { // We've already handled the Common Tags...
         uintahSpec_g->parseXmlTag( child );
       }
@@ -1244,9 +1245,9 @@ ProblemSpecReader::parseValidationFile()
   xmlFreeDoc(doc);
 
   if( forwardDeclMap.size() > 0 ) {
-    string name = forwardDeclMap.begin()->first;
+    std::string name = forwardDeclMap.begin()->first;
 
-    throw ProblemSetupException( string( "Forward declaration of '" ) + name +
+    throw ProblemSetupException( std::string( "Forward declaration of '" ) + name +
                                  "' was never resolved... Please fix ups_spec.xml.", __FILE__, __LINE__ );
   }
 
@@ -1255,10 +1256,10 @@ ProblemSpecReader::parseValidationFile()
 } // end parseValidationFile()
 
 void
-AttributeAndTagBase::validateText( const string & text, xmlNode * node ) const
+AttributeAndTagBase::validateText( const std::string & text, xmlNode * node ) const
 {
-  string classType = "Attribute";
-  const string completeName = getCompleteName();
+  std::string classType = "Attribute";
+  const std::string completeName = getCompleteName();
 
   const Tag * testIfTag = dynamic_cast<const Tag*>( this );
   if( testIfTag ) {
@@ -1279,7 +1280,7 @@ AttributeAndTagBase::validateText( const string & text, xmlNode * node ) const
   }
   else { // type != NO_DATA
     if( text == "" ) {
-      stringstream error_stream;
+      std::stringstream error_stream;
       error_stream << classType << " <" << completeName << "> should have a value (of type: " 
                    << type_ << ") but is empty. " << "Please fix XML in .ups file or\n"
                    << "correct validation Tag list.\n"
@@ -1399,7 +1400,7 @@ AttributeAndTagBase::validateText( const string & text, xmlNode * node ) const
     break;
   case MULTIPLE_VECTORS:
     {
-      string tempText = text;
+      std::string tempText = text;
       replace_substring( tempText, " ", "" );
       replace_substring( tempText, "\t", "" );
       collapse( tempText );
@@ -1414,7 +1415,7 @@ AttributeAndTagBase::validateText( const string & text, xmlNode * node ) const
 
       while( pos < tempText.length()-2 ) {
 
-        string vectorStr = tempText.substr( pos, tempText.find( "]", pos ) - pos + 1 );
+        std::string vectorStr = tempText.substr( pos, tempText.find( "]", pos ) - pos + 1 );
         if( !validateVector( vectorStr ) ) {
           throw ProblemSetupException( classType + " ('" + completeName + "') should have a MULTIPLE_VECTOR value (but has: '" +
                                        text + "').  Please fix XML in .ups file or correct validation Tag list.\n" +
@@ -1440,19 +1441,19 @@ Tag::validateAttribute( xmlAttr * attr )
     throw ProblemSetupException( "Error... attr is nullptr", __FILE__, __LINE__ );
   }
 
-  const string attrName = (const char *)( attr->name );
+  const std::string attrName = (const char *)( attr->name );
 
   AttributeP   attribute = findAttribute( attrName );
 
   if( !attribute ) {
-    string errorInfo = getErrorInfo( attr->parent );
+    std::string errorInfo = getErrorInfo( attr->parent );
     throw ProblemSetupException( "Error, attribute ('" + attrName + "') not part of spec for tag " + getCompleteName() + "\n" +
                                  errorInfo, __FILE__, __LINE__ );
   }
 
   attribute->occurrences_++;
 
-  string attrContent = (const char *)( attr->children->content );
+  std::string attrContent = (const char *)( attr->children->content );
   collapse( attrContent );
   attribute->validateText( attrContent, (xmlNode*)attr );
 
@@ -1470,7 +1471,7 @@ Tag::validateAttribute( xmlAttr * attr )
 void
 Tag::validate( const ProblemSpec * ps, unsigned int depth /* = 0 */ )
 {
-  string name = ps->getNodeName();
+  std::string name = ps->getNodeName();
 
   indent( inc_dbg, depth );
   inc_dbg << name << "\t\t\t" << getErrorInfo( ps->getNode() ) << "\n";
@@ -1481,7 +1482,8 @@ Tag::validate( const ProblemSpec * ps, unsigned int depth /* = 0 */ )
 
   if( dbg.active() ) {
     dbg << "ProblemSpec::validate - ";
-    indent( dbg, depth ); dbg << name << "\n";
+    indent( dbg, depth );
+    dbg << name << "\n";
   }
 
   /////////////////////////////////////////////////////////////////////
@@ -1527,19 +1529,19 @@ Tag::validate( const ProblemSpec * ps, unsigned int depth /* = 0 */ )
   //     If it was: <myTag>  </myTag> then children is not null... it just filled with blanks.
 
   int       numTextNodes = 0;
-  string    text = "";
+  std::string    text = "";
   xmlNode * textNode = ps->getNode(); // default to 'ps' in case a text node is not found...
 
   for( xmlNode *child = ps->getNode()->children; child != 0; child = child->next) {
 
     if (child->type == XML_TEXT_NODE) {
 
-      string tempText = (const char *)( child->content );
+      std::string tempText = (const char *)( child->content );
       collapse( tempText );
 
       if( tempText != "" ) {
         if( numTextNodes >= 1 ) {
-          throw ProblemSetupException( string( "Node has multiple text (non-tag) nodes in it, but should have only one!\n" ) +
+          throw ProblemSetupException( std::string( "Node has multiple text (non-tag) nodes in it, but should have only one!\n" ) +
                                        "       The 2nd text node contains: '" + tempText + "'\n" +
                                        getErrorInfo( child ), __FILE__, __LINE__ );
         }
@@ -1552,7 +1554,7 @@ Tag::validate( const ProblemSpec * ps, unsigned int depth /* = 0 */ )
       continue;
     }
     else if( child->type != XML_ELEMENT_NODE ) {
-      throw ProblemSetupException( string( "Node has an unknown type of child node... child node's name is '" ) +
+      throw ProblemSetupException( std::string( "Node has an unknown type of child node... child node's name is '" ) +
                                    (const char *)( child->name ) + "'", __FILE__, __LINE__ );
     }
     else {
@@ -1561,7 +1563,7 @@ Tag::validate( const ProblemSpec * ps, unsigned int depth /* = 0 */ )
       TagP         childTag  = findChildTag( childName );
 
       if( !childTag ) {
-        throw ProblemSetupException( string( "Tag '" ) + childName + "' not valid (for <" + getCompleteName() + 
+        throw ProblemSetupException( std::string( "Tag '" ) + childName + "' not valid (for <" + getCompleteName() + 
                                      ">).  Please fix XML in .ups file or correct validation Tag list.\n" +
                                      getErrorInfo( child ), __FILE__, __LINE__ );
       }
@@ -1571,7 +1573,7 @@ Tag::validate( const ProblemSpec * ps, unsigned int depth /* = 0 */ )
       childTag->occurrences_++;
 
       if( childTag->occurrences_ > 1 && childTag->need_ != MULTIPLE ) {
-        throw ProblemSetupException( string( "Tag <" ) + childTag->getCompleteName() +
+        throw ProblemSetupException( std::string( "Tag <" ) + childTag->getCompleteName() +
                                      "> occurred too many times.  Please fix XML in .ups file or correct validation Tag list.\n" +
                                      getErrorInfo( child ),
                                      __FILE__, __LINE__ );
@@ -1586,7 +1588,7 @@ Tag::validate( const ProblemSpec * ps, unsigned int depth /* = 0 */ )
         AttributeP attribute = childTag->parent_->findAttribute( childTag->needAppliesTo_.parentAttributeName_ );
 
         if( !attribute ) {
-          throw ProblemSetupException( string( "Parent attribute '" + childTag->needAppliesTo_.parentAttributeName_ + "' specified for '"  +
+          throw ProblemSetupException( std::string( "Parent attribute '" + childTag->needAppliesTo_.parentAttributeName_ + "' specified for '"  +
                                                childTag->parent_->getCompleteName() + "' does not exist!\n" + "The 'need_applies_to' field " +
                                                "in the 'ups_spec.xml' is broken.  Please fix." ),
                                        __FILE__, __LINE__ );
@@ -1602,10 +1604,10 @@ Tag::validate( const ProblemSpec * ps, unsigned int depth /* = 0 */ )
             << "' attribute, when the attribute's value is: '" << concatStrings( childTag->needAppliesTo_.validValues_ ) << "'\n";
         dbg << "  We are currently looking at the " + childTag->getCompleteName() + " tag.\n";
         
-        vector<string>::const_iterator iter = find( childTag->needAppliesTo_.validValues_.begin(), childTag->needAppliesTo_.validValues_.end(),
+        std::vector<std::string>::const_iterator iter = find( childTag->needAppliesTo_.validValues_.begin(), childTag->needAppliesTo_.validValues_.end(),
                                                     attribute->currentValue_ );
         if( iter == childTag->needAppliesTo_.validValues_.end() ) {
-          throw ProblemSetupException( string( "The OPTIONAL tag '" ) + childTag->getCompleteName() + "' is not a valid child for\n'"  +
+          throw ProblemSetupException( std::string( "The OPTIONAL tag '" ) + childTag->getCompleteName() + "' is not a valid child for\n'"  +
                                                childTag->parent_->getCompleteName() + " (" + attribute->name_ + ": " +
                                                attribute->currentValue_ + ")'.  See the 'need_applies_to' field " +
                                                "in the 'ups_spec.xml'.\n" +
@@ -1626,7 +1628,7 @@ Tag::validate( const ProblemSpec * ps, unsigned int depth /* = 0 */ )
   for( unsigned int pos = 0; pos < attributes_.size(); pos++ ) {
     AttributeP attr = attributes_[ pos ];
     if( attr->need_ == REQUIRED && attr->occurrences_ == 0 ) {
-      throw ProblemSetupException( string( "Required attribute '" ) + attr->getCompleteName() +
+      throw ProblemSetupException( std::string( "Required attribute '" ) + attr->getCompleteName() +
                                    "' missing.  Please fix XML in .ups file or correct validation Attribute list.\n" +
                                    getErrorInfo( ps->getNode() ),
                                    __FILE__, __LINE__ );
@@ -1639,16 +1641,16 @@ Tag::validate( const ProblemSpec * ps, unsigned int depth /* = 0 */ )
   dbg << "validate child requirements for " << name << ": " << childReqs_.size() << "\n";
 
   for( unsigned int pos = 0; pos < childReqs_.size(); pos++ ) {
-    string theType = (childReqs_[ pos ]->typeOfRequirement) ? "ATTRIBUTE" : "CHILD";
+    std::string theType = (childReqs_[ pos ]->typeOfRequirement) ? "ATTRIBUTE" : "CHILD";
     switch( childReqs_[ pos ]->typeOfRequirement ) {
     case ChildRequirement::ONE_OF :  // Verify that the ONE_OF is valid
       {
         bool   foundIt = false;
         for( unsigned int childNamePos = 0; childNamePos < childReqs_[ pos ]->childrenList.size(); childNamePos++ ) {
-          string & childName = childReqs_[ pos ]->childrenList[ childNamePos ];
+          std::string & childName = childReqs_[ pos ]->childrenList[ childNamePos ];
 
           if( childReqs_[ pos ]->appliesToAttribute ) {
-            string dummy;
+            std::string dummy;
             bool foundAttribute = ps->getAttribute( childName, dummy );
             if( foundAttribute ) {
               if( foundIt ) {
@@ -1684,11 +1686,11 @@ Tag::validate( const ProblemSpec * ps, unsigned int depth /* = 0 */ )
       break;
     case ChildRequirement::ALL_OR_NONE_OF :
       {
-        vector<bool> found( childReqs_[ pos ]->childrenList.size() );
+        std::vector<bool> found( childReqs_[ pos ]->childrenList.size() );
         for( unsigned int childNamePos = 0; childNamePos < childReqs_[ pos ]->childrenList.size(); childNamePos++ ) {
-          string & childName = childReqs_[ pos ]->childrenList[ childNamePos ];
+          std::string & childName = childReqs_[ pos ]->childrenList[ childNamePos ];
           if( childReqs_[ pos ]->appliesToAttribute ) {
-            string dummy;
+            std::string dummy;
             found[ childNamePos ] = ps->getAttribute( childName, dummy );
           }
           else {
@@ -1740,7 +1742,7 @@ Tag::validate( const ProblemSpec * ps, unsigned int depth /* = 0 */ )
         dbg << "  We are currently looking at the " + tag->getCompleteName() + " tag.\n";
 
         if( !attribute ) {
-          throw ProblemSetupException( string( "Parent attribute '" + tag->needAppliesTo_.parentAttributeName_ + "' specified for '"  +
+          throw ProblemSetupException( std::string( "Parent attribute '" + tag->needAppliesTo_.parentAttributeName_ + "' specified for '"  +
                                                tag->parent_->getCompleteName() + "' does not exist!\n" + "The 'need_applies_to' field " +
                                                "in the 'ups_spec.xml' is broken.  Please fix." ),
                                        __FILE__, __LINE__ );
@@ -1754,7 +1756,7 @@ Tag::validate( const ProblemSpec * ps, unsigned int depth /* = 0 */ )
                                        "', Could not find the required (need_applies_to) parent attribute: '" + tag->needAppliesTo_.parentAttributeName_ + "'.\n", __FILE__, __LINE__ );
         }
         else {
-          vector<string>::const_iterator iter = find( tag->needAppliesTo_.validValues_.begin(), tag->needAppliesTo_.validValues_.end(),
+          std::vector<std::string>::const_iterator iter = find( tag->needAppliesTo_.validValues_.begin(), tag->needAppliesTo_.validValues_.end(),
                                                       attribute->currentValue_ );
           if( iter == tag->needAppliesTo_.validValues_.end() ) {
             continue;  // Tag is required, but not for this 'version' of the parent tag, so we just skip it.
@@ -1762,7 +1764,7 @@ Tag::validate( const ProblemSpec * ps, unsigned int depth /* = 0 */ )
         }
       }
 
-      throw ProblemSetupException( string( "Required tag '" ) + tag->getCompleteName() +
+      throw ProblemSetupException( std::string( "Required tag '" ) + tag->getCompleteName() +
                                    "' missing.  Please fix .ups file (or update ups_spec.xml).\n" +
                                    getErrorInfo( textNode ),
                                    __FILE__, __LINE__ );
@@ -1828,23 +1830,23 @@ ProblemSpecReader::~ProblemSpecReader()
   }
 }
 
-string
-getPath( const string & filename )
+std::string
+getPath( const std::string & filename )
 {
   return filename.substr( 0, filename.rfind( "/" ) );
 }
 
-string
-validateFilename( const string & filename, const xmlNode * parent )
+std::string
+validateFilename( const std::string & filename, const xmlNode * parent )
 {
-  string fullFilename;
-  string errorMsg;
+  std::string fullFilename;
+  std::string errorMsg;
   bool   filenameIsBad = false;
 
   if( filename[0] != '/') { // If not absolute path, make it one...
           
     if( parent ) {
-      fullFilename = getPath( *((string*)(parent->_private)) ) + "/" + filename;
+      fullFilename = getPath( *((std::string*)(parent->_private)) ) + "/" + filename;
       inc_dbg << "1) filename: " << fullFilename << "\n";
     }
 
@@ -1856,7 +1858,7 @@ validateFilename( const string & filename, const xmlNode * parent )
         errorMsg += "WARNING: Directory not returned by getcwd()...\n";
       }
       else {
-        fullFilename = string(buffer) + "/" + filename;
+        fullFilename = std::string(buffer) + "/" + filename;
       }
       if( !validFile( fullFilename ) ) {
         filenameIsBad = true;
@@ -1876,9 +1878,9 @@ validateFilename( const string & filename, const xmlNode * parent )
 
   if( filenameIsBad ) {
     // if ( !getInfo( fullFilename ) ) { // Stat'ing the file failed... so let's try testing the filesystem...
-    //   stringstream error_stream;
+    //   std::stringstream error_stream;
       
-    //   string directory = fullFilename.substr(0, fullFilename.rfind( "/" ) );
+    //   std::string directory = fullFilename.substr(0, fullFilename.rfind( "/" ) );
 
     //   if( !testFilesystem( directory, error_stream,
     //                     (Parallel::usingMPI() ?
@@ -1887,7 +1889,7 @@ validateFilename( const string & filename, const xmlNode * parent )
     //     cout.flush();
     //   }
     // }
-    string errorInfo;
+    std::string errorInfo;
     if( parent ) {
       errorInfo = getErrorInfo( parent );
     }
@@ -1900,7 +1902,7 @@ validateFilename( const string & filename, const xmlNode * parent )
 } // end validateFilename()
 
 void
-printDoc( xmlNode * node, int depth, ostream & out = std::cout )
+printDoc( xmlNode * node, int depth, std::ostream & out = std::cout )
 {
   if( depth == 0 ) {
     out << "PRINTING DOC\n";
@@ -1911,7 +1913,7 @@ printDoc( xmlNode * node, int depth, ostream & out = std::cout )
   }
 
   if( node->type == XML_ELEMENT_NODE ) {
-    string name = (char*)node->name;
+    std::string name = (char*)node->name;
 
     indent( out, depth );
     out << name << "\n";
@@ -1934,14 +1936,14 @@ printDoc( xmlNode * node, int depth, ostream & out = std::cout )
 
 
 ProblemSpecP
-ProblemSpecReader::readInputFile( const string & filename, bool validate /* = false */ )
+ProblemSpecReader::readInputFile( const std::string & filename, bool validate /* = false */ )
 {
-  vector<int> patches;
+  std::vector<int> patches;
   return readInputFile( filename, patches, validate );
 }
 
 ProblemSpecP
-ProblemSpecReader::readInputFile( const string & filename, const vector<int> & patches, bool validate /* = false */ )
+ProblemSpecReader::readInputFile( const std::string & filename, const std::vector<int> & patches, bool validate /* = false */ )
 {
   if( d_xmlData != nullptr ) {
     return d_xmlData;
@@ -1953,7 +1955,7 @@ ProblemSpecReader::readInputFile( const string & filename, const vector<int> & p
     initialized = true;
   }
 
-  string full_filename = validateFilename( filename, nullptr );
+  std::string full_filename = validateFilename( filename, nullptr );
 
   xmlDocPtr doc;
 
@@ -1980,7 +1982,7 @@ ProblemSpecReader::readInputFile( const string & filename, const vector<int> & p
     char             line3[ LINE_LENGTH ];
     char           * result;
     int              length;
-    vector< char >   my_xml_data;
+    std::vector< char >   my_xml_data;
     bool             done = false;
 
     FILE           * the_xml_file = fopen( filename.c_str(), "r" );
@@ -1996,37 +1998,37 @@ ProblemSpecReader::readInputFile( const string & filename, const vector<int> & p
 	  throw ProblemSetupException( "Line too long... Error parsing .ups file: " + full_filename , __FILE__, __LINE__ );
 	}
 
-	string node_name = line1;
+	std::string node_name = line1;
 	collapse( node_name );
 	if( node_name == "<Patch>" ) {
 
 	  result = fgets( line2, LINE_LENGTH, the_xml_file );
 	  result = fgets( line3, LINE_LENGTH, the_xml_file );
 
-	  string proc = line3;
+	  std::string proc = line3;
 	  collapse( proc );
 
 	  if( proc.substr( 0, 6 ) == "<proc>" ) {
 
-	    vector<char>   separators;
+	    std::vector<char>   separators;
 	    separators.push_back( '<' );
 	    separators.push_back( '>' );
-	    vector<string> pieces = split_string( proc, separators );
-	    string         num_str = pieces[3];
+	    std::vector<std::string> pieces = split_string( proc, separators );
+	    std::string num_str = pieces[3];
 
-	    int            num = atoi( num_str.c_str() );
+	    int num = atoi( num_str.c_str() );
 
 	    if( num == patches[ 1 ] ) { /// QWERTY FIXME actually search the vector...
 
-	      vector<char> temp_line1( line1, line1 + length );
+	      std::vector<char> temp_line1( line1, line1 + length );
 	      my_xml_data.insert( my_xml_data.end(), temp_line1.begin(), temp_line1.end() );
 
 	      length = strlen( line2 );
-	      vector<char> temp_line2( line2, line2 + length );
+	      std::vector<char> temp_line2( line2, line2 + length );
 	      my_xml_data.insert( my_xml_data.end(), temp_line2.begin(), temp_line2.end() );
 
 	      length = strlen( line3 );
-	      vector<char> temp_line3( line3, line3 + length );
+	      std::vector<char> temp_line3( line3, line3 + length );
 	      my_xml_data.insert( my_xml_data.end(), temp_line3.begin(), temp_line3.end() );
 	    }
 	  
@@ -2036,7 +2038,7 @@ ProblemSpecReader::readInputFile( const string & filename, const vector<int> & p
 	  }
 	}
 	else {
-	  vector<char> temp_line1( line1, line1 + length );
+	  std::vector<char> temp_line1( line1, line1 + length );
 	  my_xml_data.insert( my_xml_data.end(), temp_line1.begin(), temp_line1.end() );
 	}
       }
@@ -2052,7 +2054,7 @@ ProblemSpecReader::readInputFile( const string & filename, const vector<int> & p
 
   ProblemSpecP prob_spec = scinew ProblemSpec( xmlDocGetRootElement(doc), true );
 
-  string * strPtr = new string( full_filename );
+  std::string * strPtr = new std::string( full_filename );
 
   d_upsFilename.push_back( strPtr );
   prob_spec->getNode()->_private = (void*)strPtr;
@@ -2069,8 +2071,8 @@ ProblemSpecReader::readInputFile( const string & filename, const vector<int> & p
 
 } // end readInputFile()
 
-string *
-ProblemSpecReader::findFileNamePtr( const string & filename )
+std::string *
+ProblemSpecReader::findFileNamePtr( const std::string & filename )
 {
   for( unsigned int pos = 0; pos < d_upsFilename.size(); pos++ ) {
     if( *d_upsFilename[ pos ] == filename ) {
@@ -2085,15 +2087,15 @@ ProblemSpecReader::resolveIncludes( xmlNode * child, xmlNode * parent, int depth
 {
   while( child != nullptr ) {
     if( child->type == XML_ELEMENT_NODE ) {
-      string name1 = (const char *)(child->name);
+      std::string name1 = (const char *)(child->name);
       if( name1 == "include" ) {
         ProblemSpec temp( child );
-        map<string, string> attributes;
+        std::map<std::string, std::string> attributes;
         temp.getAttributes( attributes );
         xmlNode * prevChild = child->prev;
         
-        string filename;
-        string section = attributes[ "section" ];
+        std::string filename;
+        std::string section = attributes[ "section" ];
         if( child->_private ) {
           filename = validateFilename( attributes["href"], child );
         }
@@ -2103,20 +2105,20 @@ ProblemSpecReader::resolveIncludes( xmlNode * child, xmlNode * parent, int depth
         
         xmlDocPtr  doc     = xmlReadFile( filename.c_str(), 0, XML_PARSE_PEDANTIC );
         xmlNode  * include = xmlDocGetRootElement(doc);
-        string * strPtr = new string( filename );
+        std::string * strPtr = new std::string( filename );
         d_upsFilename.push_back( strPtr );
 
         // nodes to be substituted must be enclosed in a 
         // "Uintah_Include" node
 
-        string name = (const char *)( include->name );
+        std::string name = (const char *)( include->name );
         if( name == "Uintah_Include" || name == "Uintah_specification" ) {
           xmlNode * incChild = include->children;
 
           if( section != "" ) {  // Find the right section of the included file (to include).
 
-            vector<string> sections;
-            vector<char>   separators;
+            std::vector<std::string> sections;
+            std::vector<char>   separators;
             separators.push_back( '/' );
             sections = split_string( section, separators );
             for( unsigned int pos = 0; pos < sections.size(); pos++ ) {
@@ -2126,7 +2128,7 @@ ProblemSpecReader::resolveIncludes( xmlNode * child, xmlNode * parent, int depth
                   throw ProblemSetupException("Error parsing included file '" + filename + "' section '" + section + "'", __FILE__, __LINE__);
                 }
 
-                string childName = (const char *)(incChild->name);
+                std::string childName = (const char *)(incChild->name);
                 
                 if( ( incChild->type == XML_ELEMENT_NODE ) && ( childName == sections[ pos ] ) ) {
                   if( pos != sections.size()-1 ) { // Not the last section, so descend.

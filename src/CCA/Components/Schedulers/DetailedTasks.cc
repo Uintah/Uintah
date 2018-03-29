@@ -50,25 +50,26 @@
 
 using namespace Uintah;
 
-// used externally in DetailedTask.cc
-Uintah::MasterLock g_external_ready_mutex{}; // synchronizes access to the external-ready task queue
+namespace Uintah {
+  // Used externally in DetailedTask.cc
+  Uintah::MasterLock g_external_ready_mutex{}; // synchronizes access to the external-ready task queue
 
-// used externally in DetailedTask.cc
-Dout g_scrubbing_dbg(      "Scrubbing", "Schedulers", "", false);
-
-// used externally in DetailedTask.cc
-// for debugging - set the variable name (inside the quotes) and patchID to watch one in the scrubout
-std::string g_var_scrub_dbg   = "";
-int         g_patch_scrub_dbg = -1;
-
+  // used externally in DetailedTask.cc
+  Dout g_scrubbing_dbg(      "Scrubbing", "Schedulers", "", false);
+  
+  // used externally in DetailedTask.cc
+  // for debugging - set the variable name (inside the quotes) and patchID to watch one in the scrubout
+  std::string g_var_scrub_dbg   = "";
+  int         g_patch_scrub_dbg = -1;
+}
 
 namespace {
 
-Uintah::MasterLock g_internal_ready_mutex{}; // synchronizes access to the internal-ready task queue
-
-Dout g_detailed_dw_dbg(    "DetailedDWDBG", "Schedulers", "", false);
-Dout g_detailed_tasks_dbg( "DetailedTasks", "Schedulers", "", false);
-Dout g_message_tags_dbg(   "MessageTags",   "Schedulers", "", false);
+  Uintah::MasterLock g_internal_ready_mutex{}; // synchronizes access to the internal-ready task queue
+  
+  Dout g_detailed_dw_dbg(    "DetailedDWDBG", "Schedulers", "", false);
+  Dout g_detailed_tasks_dbg( "DetailedTasks", "Schedulers", "", false);
+  Dout g_message_tags_dbg(   "MessageTags",   "Schedulers", "", false);
 
 
 #ifdef HAVE_CUDA

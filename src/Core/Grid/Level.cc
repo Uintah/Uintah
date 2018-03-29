@@ -38,8 +38,8 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Util/Timers/Timers.hpp>
 #include <Core/Util/DebugStream.h>
+#include <Core/Util/Timers/Timers.hpp>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/Handle.h>
 #include <Core/Util/ProgressiveWarning.h>
@@ -55,16 +55,12 @@ using namespace Uintah;
 
 namespace {
 
-std::atomic<int32_t> ids{0};
-Uintah::MasterLock   ids_init{};
-Uintah::MasterLock   patch_cache_mutex{};
+  std::atomic<int32_t> ids{0};
+  Uintah::MasterLock   ids_init{};
+  Uintah::MasterLock   patch_cache_mutex{};
 
-static DebugStream bcout{   "BCTypes", "Grid_Level", "Grid Level BC debug stream", false };
-static DebugStream rgtimes{ "RGTimesLevel", "Grid_Level", "Grid regridder debug stream", false };
-  
-using std::map;
-using std::pair;
-
+  DebugStream bcout{   "BCTypes",      "Grid_Level", "Grid Level BC debug stream", false };
+  DebugStream rgtimes{ "RGTimesLevel", "Grid_Level", "Grid regridder debug stream", false };  
 }
 
 
@@ -698,7 +694,7 @@ void Level::setOverlappingPatches()
 //______________________________________________________________________
 //  This method returns the min/max number of overlapping patch cells that are within a specified
 //  region.  Patches will overlap when the domain is non-cubic
-pair<int,int>
+std::pair<int,int>
 Level::getOverlapCellsInRegion( const selectType & patches,
                                 const IntVector  & regionLow, 
                                 const IntVector  & regionHigh) const
@@ -717,7 +713,7 @@ Level::getOverlapCellsInRegion( const selectType & patches,
 
       int Id         = patches[i]->getID();
       int neighborId = patches[j]->getID();
-      pair<int,int> patchIds = std::make_pair( Id, neighborId );
+      std::pair<int,int> patchIds = std::make_pair( Id, neighborId );
 
       auto result = m_overLapPatches.find( patchIds );
       overlap ol  = result->second;
@@ -743,7 +739,7 @@ Level::getOverlapCellsInRegion( const selectType & patches,
       }
     }
   }
-  pair<int,int> overLapCells_minMax = std::make_pair(minOverlapCells,totalOverlapCells);
+  std::pair<int,int> overLapCells_minMax = std::make_pair(minOverlapCells,totalOverlapCells);
   return overLapCells_minMax; 
 }
 

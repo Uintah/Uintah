@@ -50,7 +50,9 @@
 #include <vector>
 
 using namespace Uintah;
-Dout  dbgOut("UDA2VIS", "UDA2VIS", "Debug stream for uda2vis", false);
+
+namespace {
+  Dout  dbgOut("UDA2VIS", "UDA2VIS", "Debug stream for uda2vis", false);
 
 /////////////////////////////////////////////////////////////////////
 // Utility functions for copying data from Uintah structures into
@@ -175,6 +177,8 @@ void copyComponents<Matrix3>(double *dest, const Matrix3 &src)
     }
   }
 }
+
+} // end unnamed namespace
 
 
 /////////////////////////////////////////////////////////////////////

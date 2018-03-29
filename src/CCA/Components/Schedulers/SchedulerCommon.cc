@@ -71,10 +71,8 @@
 using namespace Uintah;
 
 namespace {
-
-Dout g_schedulercommon_dbg( "SchedulerCommon_DBG", "Schedulers", "Scheduler common ???", false);
-Dout g_task_graph_compile(  "SchedulerCommon_TG" , "Schedulers", "Scheduler common ???", false);
-
+  Dout g_schedulercommon_dbg( "SchedulerCommon_DBG", "Schedulers", "Debug output ", false);
+  Dout g_task_graph_compile(  "SchedulerCommon_TG" , "Schedulers", "Task graph output", false);
 }
 
 

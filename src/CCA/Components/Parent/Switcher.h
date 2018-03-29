@@ -29,6 +29,7 @@
 
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/VarLabel.h>
+#include <Core/Util/DebugStream.h>
 
 #include <map>
 #include <set>
@@ -148,6 +149,8 @@ namespace Uintah {
     // disable copy and assignment
     Switcher( const Switcher& );
     Switcher& operator=( const Switcher& );
+
+    static DebugStream switcher_dbg;
   };
 
 }

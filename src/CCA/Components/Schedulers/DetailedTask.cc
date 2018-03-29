@@ -48,22 +48,21 @@
 using namespace Uintah;
 
 
-// declared in DetailedTasks.h - used in both places to protect external ready queue (hence, extern here)
-extern Uintah::MasterLock g_external_ready_mutex;
-extern Dout               g_scrubbing_dbg;
-extern std::string        g_var_scrub_dbg;
-extern int                g_patch_scrub_dbg;
-
+// declared in DetailedTasks.cc - used in both places to protect external ready queue (hence, extern here)
+namespace Uintah {
+  extern Uintah::MasterLock g_external_ready_mutex;
+  extern Dout               g_scrubbing_dbg;
+  extern std::string        g_var_scrub_dbg;
+  extern int                g_patch_scrub_dbg;
+}
 
 
 namespace {
-
-Uintah::MasterLock g_internal_dependency_mutex{};
-Uintah::MasterLock g_dtask_output_mutex{};
-
-Dout g_internal_deps_dbg( "InternalDeps", "Schedulers", "", false);
-Dout g_external_deps_dbg( "ExternalDeps", "Schedulers", "", false);
-
+  Uintah::MasterLock g_internal_dependency_mutex{};
+  Uintah::MasterLock g_dtask_output_mutex{};
+  
+  Dout g_internal_deps_dbg( "InternalDeps", "Schedulers", "", false);
+  Dout g_external_deps_dbg( "ExternalDeps", "Schedulers", "", false);
 }
 
 

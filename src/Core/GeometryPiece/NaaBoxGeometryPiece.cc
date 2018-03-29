@@ -30,14 +30,11 @@
 
 #include <Core/Geometry/Point.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Util/DebugStream.h>
 
 #include <iostream>
 
 using namespace Uintah;
 using namespace std;
-
-extern DebugStream gp_dbg;
 
 const string NaaBoxGeometryPiece::TYPE_NAME = "parallelepiped";
 

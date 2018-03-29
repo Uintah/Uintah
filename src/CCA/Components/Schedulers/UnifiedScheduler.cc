@@ -59,44 +59,38 @@
 
 using namespace Uintah;
 
-
-extern Dout g_task_dbg;
-extern Dout g_task_order;
-extern Dout g_exec_out;
-
-extern std::map<std::string, double> g_exec_times;
-
 //______________________________________________________________________
 //
+namespace Uintah {
+  extern Dout g_task_dbg;
+  extern Dout g_task_order;
+  extern Dout g_exec_out;
+}
+
 namespace {
+  Dout g_dbg(         "Unified_DBG"        , "UnifiedScheduler", "", false);
+  Dout g_queuelength( "Unified_QueueLength", "UnifiedScheduler", "",  false);
 
-Dout g_dbg(         "Unified_DBG"        , "UnifiedScheduler", "", false);
-Dout g_queuelength( "Unified_QueueLength", "UnifiedScheduler", "",  false);
-
-Uintah::MasterLock g_scheduler_mutex{};           // main scheduler lock for multi-threaded task selection
-Uintah::MasterLock g_mark_task_consumed_mutex{};  // allow only one task at a time to enter the task consumed section
-Uintah::MasterLock g_lb_mutex{};                  // load balancer lock
-
+  Uintah::MasterLock g_scheduler_mutex{};           // main scheduler lock for multi-threaded task selection
+  Uintah::MasterLock g_mark_task_consumed_mutex{};  // allow only one task at a time to enter the task consumed section
+  Uintah::MasterLock g_lb_mutex{};                  // load balancer lock
 } // namespace
-
 
 #ifdef HAVE_CUDA
 
+extern Uintah::MasterLock cerrLock;
+
+namespace Uintah {
   DebugStream gpu_stats(              "GPUStats"             , "UnifiedScheduler", "", false );
   DebugStream simulate_multiple_gpus( "GPUSimulateMultiple"  , "UnifiedScheduler", "", false );
   DebugStream gpudbg(                 "GPUDataWarehouse"     , "UnifiedScheduler", "", false );
+}
 
-  namespace {
-
+namespace {
   Uintah::MasterLock g_GridVarSuperPatch_mutex{};   // An ugly hack to get superpatches for host levels to work.
-
-  }
-
-  extern Uintah::MasterLock cerrLock;
+}
 
 #endif
-
-
 
 //______________________________________________________________________
 //
@@ -533,7 +527,7 @@ UnifiedScheduler::runTask( DetailedTask*         dtask
 
       double total_task_time = dtask->task_exec_time();
       if (g_exec_out) {
-        g_exec_times[dtask->getTask()->getName()] += total_task_time;
+        m_exec_times[dtask->getTask()->getName()] += total_task_time;
       }
       // if I do not have a sub scheduler
       if (!dtask->getTask()->getHasSubScheduler()) {
