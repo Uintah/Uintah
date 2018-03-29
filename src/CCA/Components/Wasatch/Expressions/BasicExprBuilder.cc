@@ -932,7 +932,7 @@ namespace WasatchCore{
   
   template<typename FieldT>
   std::list<Expr::ExpressionBuilder*>
-  build_bc_expr( Uintah::ProblemSpecP params )
+  build_bc_expr( Uintah::ProblemSpecP params, Uintah::ProblemSpecP WasatchSpec )
   {
     std::list<Expr::ExpressionBuilder*> builders;
     const Expr::Tag tag = parse_nametag( params->findBlock("NameTag") );
@@ -1019,8 +1019,11 @@ namespace WasatchCore{
       double rho0=1.29985, rho1=0.081889;
       Uintah::ProblemSpecP valParams = params->findBlock("VarDenMMSMomentum");
       valParams->getAttribute("side",side);
-      valParams->get("rho0",rho0);
-      valParams->get("rho1",rho1);
+      if (WasatchSpec->findBlock("TwoStreamMixing")){
+      Uintah::ProblemSpecP densityParams =WasatchSpec->findBlock("TwoStreamMixing") ;
+      densityParams->getAttribute("rho0",rho0);
+      densityParams->getAttribute("rho1",rho1);
+      }
       typedef VarDen1DMMSMomentum<FieldT> VarDenMMSMomExpr;
       SpatialOps::BCSide bcSide;
       if      (side == "PLUS"  ) bcSide = SpatialOps::PLUS_SIDE;
@@ -1044,9 +1047,11 @@ namespace WasatchCore{
     else if( params->findBlock("VarDenMMSDensity") ){
       double rho0=1.29985, rho1=0.081889;
       Uintah::ProblemSpecP valParams = params->findBlock("VarDenMMSDensity");
-      valParams->get("rho0",rho0);
-      valParams->get("rho1",rho1);
-
+      if (WasatchSpec->findBlock("TwoStreamMixing")){
+      Uintah::ProblemSpecP densityParams = WasatchSpec->findBlock("TwoStreamMixing");
+      densityParams->getAttribute("rho0",rho0);
+      densityParams->getAttribute("rho1",rho1);
+      }
       typedef VarDen1DMMSDensity<FieldT> VarDen1DMMSDensityExpr;
       builders.push_back( scinew typename VarDen1DMMSDensityExpr::Builder( tag, tagNames.time, rho0, rho1 ) );
     }
@@ -1054,9 +1059,11 @@ namespace WasatchCore{
     else if( params->findBlock("VarDenMMSSolnVar") ){
       double rho0=1.29985, rho1=0.081889;
       Uintah::ProblemSpecP valParams = params->findBlock("VarDenMMSSolnVar");
-      valParams->get("rho0",rho0);
-      valParams->get("rho1",rho1);
-
+      if (WasatchSpec->findBlock("TwoStreamMixing")){
+      Uintah::ProblemSpecP densityParams = WasatchSpec->findBlock("TwoStreamMixing");
+      densityParams->getAttribute("rho0",rho0);
+      densityParams->getAttribute("rho1",rho1);
+      }
       typedef VarDen1DMMSSolnVar<FieldT> VarDen1DMMSSolnVarExpr;
       builders.push_back( scinew typename VarDen1DMMSSolnVarExpr::Builder( tag, tagNames.time, rho0, rho1 ) );
     }
@@ -1320,10 +1327,10 @@ namespace WasatchCore{
         std::string taskName = *taskNameIter;
         std::list<Expr::ExpressionBuilder*> builders;
         switch( get_field_type(fieldType) ){
-          case SVOL : builders = build_bc_expr< SVolField >( exprParams );  break;
-          case XVOL : builders = build_bc_expr< XVolField >( exprParams );  break;
-          case YVOL : builders = build_bc_expr< YVolField >( exprParams );  break;
-          case ZVOL : builders = build_bc_expr< ZVolField >( exprParams );  break;
+          case SVOL : builders = build_bc_expr< SVolField >( exprParams,parser );  break;
+          case XVOL : builders = build_bc_expr< XVolField >( exprParams,parser );  break;
+          case YVOL : builders = build_bc_expr< YVolField >( exprParams,parser );  break;
+          case ZVOL : builders = build_bc_expr< ZVolField >( exprParams,parser );  break;
           default:
             std::ostringstream msg;
             msg << "ERROR: unsupported field type '" << fieldType << "' while trying to register BC expression.." << std::endl;
