@@ -4605,6 +4605,19 @@ else
         fi
      fi
 
+     version_file=$_sci_inc/HYPRE_config.h
+
+     if test -f "$version_file"; then
+          AC_MSG_RESULT(HYPRE version file = $version_file)
+     	  hypre_version_major=`grep HYPRE_RELEASE_VERSION /opt/local/include/HYPRE_config.h | awk '{print $3}' | tr -d '"' | awk  '{print $1}' FS=.`
+	  hypre_version_minor=`grep HYPRE_RELEASE_VERSION /opt/local/include/HYPRE_config.h | awk '{print $3}' | tr -d '"' | awk  '{print $2}' FS=.`
+     	  hypre_version_patch=`grep HYPRE_RELEASE_VERSION /opt/local/include/HYPRE_config.h | awk '{print $3}' | tr -d '"' | awk  '{print $3}' FS=.`
+
+     	  DEF_HYPRE_VERSION_MAJOR="#define HYPRE_VERSION_MAJOR $hypre_version_major"
+     	  DEF_HYPRE_VERSION_MINOR="#define HYPRE_VERSION_MINOR $hypre_version_minor"
+     	  DEF_HYPRE_VERSION_PATCH="#define HYPRE_VERSION_PATCH $hypre_version_patch"
+     fi		      
+     
      # # We used to also check for HYPRE_blas, but hypre 1.9 doesn't have it,
      # # so we aren't going to check for it in any version.  If the other 3
      # # libs exist, we will assume that HYPRE_blas is there if it is needed.
@@ -4649,6 +4662,10 @@ AC_SUBST(DEF_HYPRE)
 AC_SUBST(INC_HYPRE_H)
 AC_SUBST(HYPRE_LIB_FLAG)
 AC_SUBST(HYPRE_LIB_DIR_FLAG)
+AC_SUBST(DEF_HYPRE_VERSION_MAJOR)
+AC_SUBST(DEF_HYPRE_VERSION_MINOR)
+AC_SUBST(DEF_HYPRE_VERSION_PATCH)
+
 
 sci_defs_files="$sci_defs_files include/sci_defs/hypre_testdefs.h"
 
