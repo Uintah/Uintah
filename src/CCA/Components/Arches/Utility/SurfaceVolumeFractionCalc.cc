@@ -78,6 +78,8 @@ SurfaceVolumeFractionCalc::initialize( const Patch* patch, ArchesTaskInfoManager
   //Clean out all intrusions that don't intersect with this patch:
   for ( auto i = m_intrusions.begin(); i != m_intrusions.end(); i++ ){
 
+    std::vector<GeometryPieceP> intersecting_geometry;
+
     for ( auto i_geom  = i->geometry.begin(); i_geom != i->geometry.end(); i_geom++ ){
 
       //Adding a buffer to ensure that patch-to-patch boundaries arent ignored
@@ -91,6 +93,8 @@ SurfaceVolumeFractionCalc::initialize( const Patch* patch, ArchesTaskInfoManager
 
       if ( !intersecting_box.degenerate() ){
 
+        intersecting_geometry.push_back(geom);
+
         for ( CellIterator icell = patch->getExtraCellIterator(); !icell.done(); icell++ ){
 
           IntVector c = *icell;
@@ -103,14 +107,11 @@ SurfaceVolumeFractionCalc::initialize( const Patch* patch, ArchesTaskInfoManager
 
           }
         }
-
-      } else {
-
-        //remove the box
-        i->geometry.erase(i_geom);
-
       }
     }
+
+    i->geometry = intersecting_geometry;
+
   }
 
   //Now get the boundary conditions:
