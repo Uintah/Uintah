@@ -461,13 +461,17 @@ SchedulerCommon::problemSetup( const ProblemSpecP     & prob_spec
 
         // Set the variable name AllTasks/ plus the attribute name and
         // store in a map for easy lookup by the attribute name.
+
+        // Note: this modifided name will be needed for saving.
         m_monitoring_tasks[0][attribute] =
           VarLabel::create( "AllTasks/" + attribute,
                             PerPatch<double>::getTypeDescription() );
 
         if (d_myworld->myRank() == 0)
           std::cout << "--  Monitoring attribute " << attribute << " "
-                    << "for all tasks" << std::endl;
+                    << "for all tasks. "
+                    << "VarLabel name = 'AllTasks/" << attribute << "'"
+                    << std::endl;
       }
 
       // Maps for the specific tasks to be monitored.
@@ -490,13 +494,17 @@ SchedulerCommon::problemSetup( const ProblemSpecP     & prob_spec
         // Set the variable name to the task name plus the attribute
         // name and store in a map for easy lookup by the task and
         // attribute name.
+
+        // Note: this modifided name will be needed for saving.
         m_monitoring_tasks[1][taskName + "::" + attribute] =
           VarLabel::create( varName + "/" + attribute,
                             PerPatch<double>::getTypeDescription() );
 
         if (d_myworld->myRank() == 0)
           std::cout << "--  Monitoring attribute " << attribute << " "
-                    << "for task: " << taskName << std::endl;
+                    << "for task: " << taskName << ".  "
+                    << "VarLabel name = '" << varName << "/" << attribute << "'"
+                    << std::endl;
       }
     }
 
@@ -2238,7 +2246,8 @@ SchedulerCommon::sumTaskMonitoringValues( DetailedTask * dtask )
   const PatchSubset *patches = dtask->getPatches();
 
   if (patches && patches->size()) {
-    // Compute the cost on a per cell basis so the measured value can be distributed proportionally by cells
+    // Compute the cost on a per cell basis so the measured value can
+    // be distributed proportionally by cells
     double num_cells = 0;
 
     for (int p = 0; p < patches->size(); p++) {
@@ -2272,7 +2281,7 @@ SchedulerCommon::sumTaskMonitoringValues( DetailedTask * dtask )
 
         // Is this task being monitored ?
         if ((i == 0) ||  // Global monitoring yes, otherwise check.
-        (i == 1 && taskName == dtask->getTask()->getName())) {
+            (i == 1 && taskName == dtask->getTask()->getName())) {
           bool loadBalancerCost = false;
           double value;
 
