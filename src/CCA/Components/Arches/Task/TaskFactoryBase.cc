@@ -369,11 +369,17 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
 }
 
 //--------------------------------------------------------------------------------------------------
-void TaskFactoryBase::do_task ( const ProcessorGroup* pc,
+void TaskFactoryBase::do_task ( DetailedTask* task,
+                                Task::CallBackEvent event,
+                                const ProcessorGroup* pc,
                                 const PatchSubset* patches,
                                 const MaterialSubset* matls,
                                 DataWarehouse* old_dw,
                                 DataWarehouse* new_dw,
+                                void* old_TaskGpuDW,
+                                void* new_TaskGpuDW,
+                                void* stream,
+                                int deviceID,
                                 std::vector<ArchesFieldContainer::VariableInformation> variable_registry,
                                 std::vector<TaskInterface*> arches_tasks,
                                 TaskInterface::TASK_TYPE type,

@@ -548,7 +548,6 @@ KokkosOpenMPScheduler::runTasks()
       }
     }
 
-#ifdef HAVE_CUDA
     /*
      * (1.4)
      *
@@ -558,53 +557,18 @@ KokkosOpenMPScheduler::runTasks()
      *
      */
 
+
     /*
      * (1.6)
      *
      * Otherwise there's nothing to do but process MPI recvs.
      */
-#endif
-
     else {
       if (m_recvs.size() != 0u) {
         MPIScheduler::processMPIRecvs(TEST);
       }
     }
 
-    if (g_num_tasks_done == m_num_tasks) {
-      break;
-    }
-
-
-
-    // ----------------------------------------------------------------------------------
-    // Part 2 (concurrent): Task execution
-    // ----------------------------------------------------------------------------------
-
-    if (initTask != nullptr) {
-
-    }
-    else if (readyTask) {
-
-      DOUT(g_dbg, " Task now external ready: " << *readyTask);
-
-      if (readyTask->getTask()->getType() == Task::Reduction) {
-        MPIScheduler::initiateReduction(readyTask);
-      }
-      else {
-
-        if (allocateComputes) {
-
-        } else if (runReady) {
-
-        }
-      }
-    }
-    else {
-      if (m_recvs.size() != 0u) {
-
-      }
-    }
   }  // end while (numTasksDone < ntasks)
   ASSERT(g_num_tasks_done == m_num_tasks);
 }

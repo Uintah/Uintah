@@ -199,11 +199,17 @@ namespace Uintah{
                                 const bool pack_tasks );
 
     /** @brief Task callback **/
-    void do_task ( const ProcessorGroup* pc,
+    void do_task ( DetailedTask* task,
+                   Task::CallBackEvent event,
+                   const ProcessorGroup* pc,
                    const PatchSubset* patches,
                    const MaterialSubset* matls,
                    DataWarehouse* old_dw,
                    DataWarehouse* new_dw,
+                   void* old_TaskGpuDW,
+                   void* new_TaskGpuDW,
+                   void* stream,
+                   int deviceID,
                    std::vector<ArchesFieldContainer::VariableInformation>  variable_registry,
                    std::vector<TaskInterface*> arches_task,
                    TaskInterface::TASK_TYPE type,
