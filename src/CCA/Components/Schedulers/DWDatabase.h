@@ -98,37 +98,26 @@ typedef int atomicDataStatus;
 //    0                   1                   2                   3
 //    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 //   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-//   |    16-bit reference counter   |  unused     |S|F|D|V|A|V|C|A|A|
+//   |    16-bit reference counter   |  unused           |G|B|V|B|A|B|
 //   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 // Left sixteen bits is a 16-bit integer reference counter.
 
 enum status { UNALLOCATED               = 0x00000000,
-              ALLOCATING                = 0x00000001,
+              BECOMING_ALLOCATED        = 0x00000001,
               ALLOCATED                 = 0x00000002,
-              COPYING_IN                = 0x00000004,
-              VALID                     = 0x00000008,     //For when a variable has its data, this excludes any knowledge of ghost cells.
-              AWAITING_GHOST_COPY       = 0x00000010,     //For when when we know a variable is awaiting ghost cell data
-                                                          //It is possible for VALID bit set to 0 or 1 with this bit set,
-                                                          //meaning we can know a variable is awaiting ghost copies but we
-                                                          //don't know from this bit alone if the variable is valid yet.
-              VALID_WITH_GHOSTS         = 0x00000020,     //For when a variable has its data and it has its ghost cells
-                                                          //Note: Change to just GHOST_VALID?  Meaning ghost cells could be valid but the
-                                                          //non ghost part is unknown?
-              DEALLOCATING              = 0x00000040,     //TODO: Remove this.
-              FORMING_SUPERPATCH        = 0x00000080,     //As the name suggests, when a number of individual patches are being formed
-                                                          //into a superpatch, there is a period of time which other threads
-                                                          //should wait until all patches have been processed.
-              SUPERPATCH                = 0x00000100      //Indicates this patch is allocated as part of a superpatch.
-                                                          //At the moment superpatches is only implemented for entire domain
-                                                          //levels.  But it seems to make the most sense to have another set of
-                                                          //logic in level.cc which subdivides a level into superpatches.
-                                                          //If this bit is set, you should find the lowest numbered patch ID
-                                                          //first and start with concurrency reads/writes there.  (Doing this
-                                                          //avoids the Dining Philosopher's problem.
+              BECOMING_VALID            = 0x00000004,     // Could be due to computing/modifying, copying in, resizing, or superpatching.
+              VALID                     = 0x00000008,     // For when a variable has its data, this excludes any knowledge of ghost cells.
+              BECOMING_GHOST_VALID      = 0x00000010,     // For when when we know a variable is awaiting ghost cell data
+                                                          // It is possible for VALID bit set to 0 or 1 with this bit set,
+                                                          // meaning we can know a variable is awaiting ghost copies but we
+                                                          // don't know from this bit alone if the variable is valid yet.
+              GHOST_VALID               = 0x00000020      // For when a variable has its data and it has its ghost cells
+                                                          // Note: Change to just GHOST_VALID?  Meaning ghost cells could be valid but the
+                                                          // non ghost part is unknown?
 
-              //LEFT_SIXTEEN_BITS                         //Use the other 16 bits as a usage counter.
-                                                          //If it is zero we could deallocate.
+              //LEFT_SIXTEEN_BITS                         // Use the other 16 bits as a usage to track how many tasks
+                                                          // are currently using the variable.
 };
 
 namespace Uintah {
@@ -186,7 +175,7 @@ class DWDatabase {
 
     void clear();
 
-    void doReserve( KeyDatabase<DomainType>* keydb );
+    // void doReserve( KeyDatabase<DomainType>* keydb );
 
     bool exists( const VarLabel   * label
                ,       int          matlIndex
@@ -335,7 +324,7 @@ class DWDatabase {
                                    std::shared_ptr<DataItem>,
                                    Uintah::VarLabelMatlMemspaceHasher<DomainType, MemorySpace>
                                     >;
-    varDBType varDB;
+    varDBtype varDB;
 
 
 //    KeyDatabase<DomainType>* m_keyDB {};
@@ -682,7 +671,7 @@ DWDatabase<DomainType>::exists( const VarLabel   * label,
 //    return true;
 //  }
 
-  return (keyDB.contains(VarLabelMatlMemspace<DomainType, MemorySpace>(label, matlIndex, getRealDomain(dom), MemorySpace::HostSpace)));
+  return (varDB.contains(VarLabelMatlMemspace<DomainType, MemorySpace>(label, matlIndex, getRealDomain(dom), MemorySpace::HostSpace)));
 
 }
 
@@ -744,11 +733,11 @@ DWDatabase<DomainType>::put( const VarLabel   * label
     // From a concurrency standpoint, replace is messy.  It is effectively a combined erase and put.  To do erasing concurrently,
     // we would need to start doing referencing counting on tasks using the variable.  For now, we're going to just replace and pray the
     // user isn't invoking replace while other tasks are simultaneously using this variable.
-    keyDB.insert_or_assign(
+    varDB.insert_or_assign(
         VarLabelMatlMemspace<DomainType, MemorySpace>( label, matlIndex, getRealDomain(dom), MemorySpace::HostSpace ),
         dataItem);
   } else {
-    bool success = keyDB.insert(
+    bool success = varDB.insert(
         VarLabelMatlMemspace<DomainType, MemorySpace>( label, matlIndex, getRealDomain(dom), MemorySpace::HostSpace ),
         dataItem);
     if ( !success ) {
@@ -771,51 +760,50 @@ DWDatabase<DomainType>::putReduce( const VarLabel              * label
 {
   ASSERT(matlIndex >= -1);
 
-
-//  if (init) {
-//    keyDB_monitor keyDB_lock{ Uintah::CrowdMonitor<keyDB_tag>::WRITER };
-//    m_keyDB->insert(label, matlIndex, dom);
-//    this->doReserve(m_keyDB);
-//  }
-//
-//  // lookup is lock_guard protected
-//  int idx = m_keyDB->lookup(label, matlIndex, dom);
-//  if (idx == -1) {
-//    SCI_THROW(UnknownVariable(label->getName(), -1, dom, matlIndex, "check task computes", __FILE__, __LINE__));
-//  }
-//
-//  DataItem* newdi = new DataItem();
-//  newdi->m_var = var;
-//  do {
-//    DataItem* olddi = __sync_lock_test_and_set(&m_vars[idx], 0);
-//    if (olddi == nullptr) {
-//      olddi = newdi;
-//    }
-//    else {
-//      ReductionVariableBase* oldvar = dynamic_cast<ReductionVariableBase*>(olddi->m_var);
-//      ReductionVariableBase* newvar = dynamic_cast<ReductionVariableBase*>(newdi->m_var);
-//      oldvar->reduce(*newvar);
-//      delete newdi;
-//    }
-//    newdi = __sync_lock_test_and_set(&m_vars[idx], olddi);
-//  }
-//  while (newdi != nullptr);
-
-  //Attempt to insert it.
-  //If successful on inserting, set the variable flags to ALLOCATED and VALID
-  //If not successful on inserting, then one is already in there.  Obtain the var,
-  //  set the flag from VALID back to UPDATING_VALUE (when possible), perform the
+  // Attempt to insert it.
+  // If not successful on inserting, then one is already in there.  Obtain the var,
+  //  set the flag from VALID back to BECOMING_VALID (when possible), perform the
   //  reduction operation on it, then set the flag back to VALID.
-
   std::shared_ptr<DataItem> dataItem = std::make_shared<DataItem>();
+  dataItem->m_var = var;
+  dataItem->statusInMemory = ALLOCATED & VALID;
 
-  bool success = keyDB.insert(
-      VarLabelMatlMemspace<DomainType, MemorySpace>( label, matlIndex, getRealDomain(dom), MemorySpace::HostSpace ),
-      dataItem);
-  if (success) {
-    //First time insert.  No need to run any further reduction operation.
-    //Set the variable on in.  Set the variable flags to ALLOCATED and VALID
-    //
+  auto key = VarLabelMatlMemspace<DomainType, MemorySpace>( label, matlIndex, getRealDomain(dom), MemorySpace::HostSpace );
+
+  bool success = varDB.insert(key, dataItem);
+  if (!success) {
+    // Set the data item's var back to nullptr so the var doesn't get deleted when dataItem gets deallocated.
+    dataItem->m_var = nullptr;
+    std::shared_ptr<DataItem> existingDataItem = varDB.find(key);
+    //Attempt to set it back to BECOMING_VALID to get our lock on the reduction variable.
+    do {
+      // Do an atomic read.
+      atomicDataStatus oldVarStatus = __sync_or_and_fetch(&existingDataItem->statusInMemory, 0);
+      if ( (( oldVarStatus & ALLOCATED ) == 0 ) || (( oldVarStatus & VALID ) == 0 )) {
+        //A sanity check
+        std::ostringstream msgstr;
+        msgstr << label->getName() << ", material " << matlIndex << " is not listed as allocated or valid.";
+        SCI_THROW(InternalError(msgstr.str(), __FILE__, __LINE__));
+      } else {
+        //Attempt to claim we get to modify it.  Turn off the VALID bit and turn on the BECOMING_VALID bit.
+        atomicDataStatus newVarStatus = oldVarStatus & ~VALID;
+        newVarStatus = newVarStatus | BECOMING_VALID;
+        success = __sync_bool_compare_and_swap(&existingDataItem->statusInMemory, oldVarStatus, newVarStatus);
+      }
+    } while (!success);
+
+    //We now have the lock.  Perform the reduction on the var
+    ReductionVariableBase* existingVar = dynamic_cast<ReductionVariableBase*>(existingDataItem->m_var);
+    existingVar->reduce(*var);
+
+    //Release the lock.  Turn off BECOMING_VALID and turn on VALID.
+    do {
+      atomicDataStatus oldVarStatus = __sync_or_and_fetch(&existingDataItem->statusInMemory, 0);
+      atomicDataStatus newVarStatus = oldVarStatus & ~BECOMING_VALID;
+      newVarStatus = newVarStatus | VALID;
+      success = __sync_bool_compare_and_swap(&existingDataItem->statusInMemory, oldVarStatus, newVarStatus);
+    } while(!success);
+
   }
 }
 
@@ -1007,11 +995,11 @@ bool setAllocated( atomicDataStatus& status )
 
   //get the value
   atomicDataStatus oldVarStatus = __sync_or_and_fetch( &status, 0 );
-  if ( ( oldVarStatus & ALLOCATING ) == 0 ) {
+  if ( ( oldVarStatus & BECOMING_ALLOCATED ) == 0 ) {
     //A sanity check
     printf("ERROR:\nGPUDataWarehouse::setAllocated( )  Can't allocate a status if it wasn't previously marked as allocating.\n");
     exit( -1 );
-  } else if ( ( oldVarStatus & ALLOCATED ) == ALLOCATED ) {
+  } else if ( ( oldVarStatus & BECOMING_ALLOCATED ) == BECOMING_ALLOCATED ) {
     //A sanity check
     printf("ERROR:\nGPUDataWarehouse::compareAndSwapAllocate( )  Can't allocate a status if it's already allocated\n");
     exit( -1 );
@@ -1022,7 +1010,7 @@ bool setAllocated( atomicDataStatus& status )
     //Note: No need to turn off UNALLOCATED, it's defined as all zero bits.
     //But the below is kept in just for readability's sake.
     atomicDataStatus newVarStatus = oldVarStatus & ~UNALLOCATED;
-    newVarStatus = newVarStatus & ~ALLOCATING;
+    newVarStatus = newVarStatus & ~BECOMING_ALLOCATED;
     newVarStatus = newVarStatus | ALLOCATED;
 
     //If we succeeded in our attempt to claim to allocate, this returns true.

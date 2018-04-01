@@ -45,7 +45,7 @@ CLASS
 GENERAL INFORMATION
    KokkosOpenMPScheduler.h
 
-   Alan Humphrey, John Holmen
+   Alan Humphrey, John Holmen, Brad Peterson
    Scientific Computing and Imaging Institute
    University of Utah
 
@@ -102,6 +102,8 @@ class KokkosOpenMPScheduler : public MPIScheduler  {
     KokkosOpenMPScheduler& operator=( KokkosOpenMPScheduler && )      = delete;
 
     void markTaskConsumed( volatile int * numTasksDone, int & currphase, int numPhases, DetailedTask * dtask );
+    void runReadyTask( DetailedTask* readyTask );
+
 #ifdef BRADS_NEW_DWDATABASE
     void allocateTaskComputesVariables( DetailedTask * dtask );
 #endif

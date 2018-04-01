@@ -358,6 +358,18 @@ KokkosOpenMPScheduler::markTaskConsumed( volatile int          * numTasksDone
   }
 }
 
+//______________________________________________________________________
+//
+void
+KokkosOpenMPScheduler::runReadyTask( DetailedTask* readyTask )
+{
+  if (readyTask->getTask()->getType() == Task::Reduction) {
+    MPIScheduler::initiateReduction(readyTask);
+  }
+  else {
+    MPIScheduler::runTask(readyTask, m_curr_iteration.load(std::memory_order_relaxed));
+  }
+}
 
 
 #ifdef BRADS_NEW_DWDATABASE
@@ -376,157 +388,192 @@ KokkosOpenMPScheduler::runTasks()
 // heterogeneous memory spaces and simulation variable preloading.  Therefore, the decision tree creates 5 scenarios.
 // The chart below describes all 5 scenarios.  It also describes all possible phases the task proceeds through.
 // ---------------------------------------------------------------------------------------------------------------------------
-//           CPU Task                                        |   GPU Task    |
-//         Homogeneous        |          Heterogeneous       | Heterogeneous | Scheduler Phase
-// No Preloading | Preloading | No Preloading   | Preloading |  Preloading   |
-//   (Legacy)    | (New)      |   (Legacy)      | (New)      |               |
+//                        CPU Task                         |   GPU Task    |
+//         Homogeneous        |         Heterogeneous      | Heterogeneous | Scheduler Phase
+// No Preloading | Preloading | No Preloading | Preloading |  Preloading   |
+//   (Legacy)    | (New)      |   (Legacy)    | (New)      |               |
 // -----------------------------------------------------------------------------------------------------------------------------------
-//       X       |     X      |        X        |     X      |       X       |  Internally ready, initiate MPI receives, when complete
-//               |            |                 |            |               |  these tasks go into the externally ready queue
+//                                    ALL                                  | (1.1) Reduction Task.  (Run 1.5 *EXECUTE TASK*)
 // -----------------------------------------------------------------------------------------------------------------------------------
-//               |     X      |                 |     X      |       X       |  Preallocate space for all computes for the task.
+//                                    ALL                                  | (1.3) Internally ready.  If it's a reduction, send it to (1.1)
+//                                                                         |       Otherwise, initiate MPI receives, when complete
+//                                                                         |       these tasks go into the externally ready queue (1.2)
 // -----------------------------------------------------------------------------------------------------------------------------------
-//               |     X      |                 |     X      |       X       |  Copy task variables into the task's memory space.
-//               |            |                 |            |               |  This includes all halo data as well.
+//                                    ALL                                  | (1.2) Externally ready. All MPI received have arrived.
+//                                                                         |       From here tasks proceed according to the chart.
 // -----------------------------------------------------------------------------------------------------------------------------------
-//               |     X      |                 |     X      |       X       |  Check the stream.
-//               |            |                 |            |               |  Mark that task variable data copies have completed.
+//               |     X      |               |      X     |       X       | (1.4.0) Preallocate space for all computes for the task.
+//                                                                         |         States that can be involved: (ALLOCATING, ALLOCATED, BECOMING_VALID)
 // -----------------------------------------------------------------------------------------------------------------------------------
-//               |     X      |                 |     X      |       X       |  Verify all task variables have been copied.
-//               |            |                 |            |               |  (Other tasks may be copying some of the variables.)
+//               |            |        X      |      X     |       X       | (1.4.1) Copy task variables into the task's memory space.
+//               |            |               |            |               |         This includes all halo data as well.
+//               |            |               |            |               |         Assign GPU streams to the task.
+//               |            |               |            |               |         States that can be involved: (ALLOCATING, ALLOCATED, BECOMING_VALID)
+// -----------------------------------------------------------------------------------------------------------------------------------
+//               |            |        X      |      X     |       X       | (1.4.2) Check the stream if GPU.
+//               |            |               |            |               |         Mark all vars it copies as (VALID)
+// -----------------------------------------------------------------------------------------------------------------------------------
+//               |     X      |               |      X     |       X       | (1.4.3) Perform all ghost cell copies if possible and go to (1.4.4)
+//               |            |               |            |               |         This step would also perform variable resizing and superpatching.
+//               |            |               |            |               |         Otherwise, put back in (1.4.3) and check later.
+//               |            |               |            |               |         Many states can be involved here.
+// -----------------------------------------------------------------------------------------------------------------------------------
+//               |     X      |               |      X     |       X       | (1.4.4) Check the stream if GPU.
+//               |            |               |            |               |         Mark all vars it managed as (GHOST_VALID)
+// -----------------------------------------------------------------------------------------------------------------------------------
+//               |     X      |        X      |      X     |       X       | (1.4.5) If task vars not ready, put back in (1.4.5) and check later
+//               |            |               |            |               |         If vars ready, go to (1.5)
+// -----------------------------------------------------------------------------------------------------------------------------------
+//                                    ALL                                  | (1.5)   Mark all modifies as no longer valid but as BECOMING_VALID
+//                                                                         |         Increment usage counter of all requires.
+//                                                                         |         *** EXECUTE TASK ***
+//                                                                         |         Go to (1.5.1)
+// -----------------------------------------------------------------------------------------------------------------------------------
+//                                    ALL                                  | (1.5.1) Check the stream if GPU.
+//                                                                         |         Mark task computes and modifies as VALID.
+//                                                                         |         Decrement usage counter of all requires.
+//                                                                         |         Mark task as done.  Clean up any temporary/pool variables.
+// -----------------------------------------------------------------------------------------------------------------------------------
+//                                    ALL                                  | (1.6)   Process MPI receives
 
-
-
-
-
-
-
+//TODO: Processing MPI sends.  Task Data Warehouses.   Changing state of modifies variables.
 
   while( g_num_tasks_done < m_num_tasks && !g_have_hypre_task ) {
 
     DetailedTask* readyTask = nullptr;
-    DetailedTask* initTask  = nullptr;
+    DetailedTask* initTask  = nullptr;  //Internally ready task
 
     bool havework = false;
 
     bool allocateComputes = false;
     bool runReady = false;
 #ifdef HAVE_CUDA
-    bool inHeterogeneousEnvironment = Uintah::Parallel::usingDevice();  //If the -gpu flag was passed in.  Not all tasks have to run on the GPU, but some could
+    bool inHeterogeneousEnvironment = Uintah::Parallel::usingDevice();  // If the -gpu flag was passed in.
+                                                                        // Not all tasks have to run on the GPU, but some could
 #endif
 
-    // ----------------------------------------------------------------------------------
-    // Part 1 (serial): Task selection
-    // ----------------------------------------------------------------------------------
-    {
-      std::lock_guard<Uintah::MasterLock> scheduler_mutex_guard(g_scheduler_mutex);
+    // ---------------------------------------------------------------------------------------------------------
+    // The main work loop.  Modify with caution, as you can easily create concurrency problems/race conditions
+    // ---------------------------------------------------------------------------------------------------------
 
-      while ( !havework ) {
-
-        /*
-         * (1.0)
-         *
-         * If it is time for a Hypre task, exit partitions.
-         *
-         */
-        if ( g_have_hypre_task ) {
-          return;
-        }
-
-        /*
-         * (1.1)
-         *
-         * If it is time to setup for a reduction task, then do so.
-         *
-         */
+    /*
+     * (1.1)
+     *
+     * If it is time to setup for a reduction task, then do so.
+     */
+    if ((m_phase_sync_task[m_curr_phase] != nullptr) && (m_phase_tasks_done[m_curr_phase] == m_phase_tasks[m_curr_phase] - 1)) {
+      {
+        std::lock_guard<Uintah::MasterLock> scheduler_mutex_guard(g_scheduler_mutex);
+        //Now that it's locked, do a second look just to make sure this is correct.
         if ((m_phase_sync_task[m_curr_phase] != nullptr) && (m_phase_tasks_done[m_curr_phase] == m_phase_tasks[m_curr_phase] - 1)) {
           readyTask = m_phase_sync_task[m_curr_phase];
-          printf("1.1 The task is %s\n", readyTask->getTask()->getName().c_str());
-          havework = true;
+        }
+      }
+      if (readyTask) {
+        printf("1.1 The task is %s\n", readyTask->getTask()->getName().c_str());
+
+        markTaskConsumed(&g_num_tasks_done, m_curr_phase, m_num_phases, readyTask);
+
+        //TODO: Are Reduction tasks only phase tasks?
+        // ** (1.5) **
+        runReadyTask(readyTask);
+      }
+    }
+
+    /*
+     * (1.2)
+     *
+     * A task has its MPI communication complete. These tasks get in the external
+     * ready queue automatically when their receive count hits 0 in DependencyBatch::received,
+     * which is called when a MPI message is delivered.
+     */
+    else if ((readyTask = m_detailed_tasks->getNextExternalReadyTask())) {
+      printf("1.2 The task is %s\n", readyTask->getTask()->getName().c_str());
+
+      //bool usesKokkosOpenMP = readyTask->getTask()->usesKokkosCuda();
+      bool usesSimVarPreloading = readyTask->getTask()->usesSimVarPreloading();
+
+#ifdef HAVE_CUDA
+      if (inHeterogeneousEnvironment == false || readyTask->getPatches() == nullptr) {
+        // Uintah is running in a homogeneous/CPU environment or
+        // this is a task that can only run on CPUs (no patches).
+#endif
+        if (usesSimVarPreloading) {
+          allocateTaskComputesVariables(readyTask);
+          //TODO: Put into a new queue.
+        } else {
           markTaskConsumed(&g_num_tasks_done, m_curr_phase, m_num_phases, readyTask);
-          runReady = true;
-          break;
+          if ( readyTask->getTask()->getType() == Task::Hypre ) {
+            // hypre tasks need to be run using all OpenMP threads.  Set global g_HypreTask to true so
+            // so all threads in this scheduler work loop exit to run the hypre task.
+            g_HypreTask = readyTask;
+            g_have_hypre_task = true;
+            return;
+          } else {
+            // ** (1.5) **
+            runReadyTask(ReadyTask);
+          }
         }
+#ifdef HAVE_CUDA
+      } else {
+        //
+      }
+#endif
+    }
 
-        /*
-         * (1.2)
-         *
-         * A task has its MPI communication complete. These tasks get in the external
-         * ready queue automatically when their receive count hits 0 in DependencyBatch::received,
-         * which is called when a MPI message is delivered.
-         *
-         */
-        else if ((readyTask = m_detailed_tasks->getNextExternalReadyTask())) {
-          printf("1.2 The task is %s\n", readyTask->getTask()->getName().c_str());
-          havework = true;
-          //bool usesKokkosOpenMP = readyTask->getTask()->usesKokkosCuda();
-          bool usesSimVarPreloading = readyTask->getTask()->usesSimVarPreloading();
+    /*
+     * (1.3)
+     *
+     * If we have an internally-ready CPU task, initiate its MPI receives, preparing it for
+     * CPU external ready queue. The task is moved to the CPU external-ready queue in the
+     * call to task->checkExternalDepCount().
+     *
+     */
+    else if ((initTask = m_detailed_tasks->getNextInternalReadyTask())) {
+      if (initTask->getTask()->getType() == Task::Reduction || initTask->getTask()->usesMPI()) {
+        std::lock_guard<Uintah::MasterLock> scheduler_mutex_guard(g_scheduler_mutex);
+        m_phase_sync_task[initTask->getTask()->m_phase] = initTask;
+        ASSERT(initTask->getRequires().size() == 0)
+        initTask = nullptr;
+      }
+      else if (initTask->getRequires().size() == 0) {  // No ext. dependencies, then skip MPI receives
+        initTask->markInitiated();
+        initTask->checkExternalDepCount();  // Add task to external ready queue (no ext deps though)
+        initTask = nullptr;
+      }
+      else {   //Posts the MPI receives
+        MPIScheduler::initiateTask(initTask, m_abort, m_abort_point, m_curr_iteration.load(std::memory_order_relaxed));
+        initTask->markInitiated();
+        initTask->checkExternalDepCount();  // Add task to external ready queue
+      }
+    }
 
 #ifdef HAVE_CUDA
-          if (inHeterogeneousEnvironment == false || readyTask->getPatches() == nullptr) {
-            // Uintah is running in a homogenous/CPU environment or
-            // this is a task that can only run on CPUs (no patches).
+    /*
+     * (1.4)
+     *
+     *
+     *
+     *
+     *
+     */
+
+    /*
+     * (1.6)
+     *
+     * Otherwise there's nothing to do but process MPI recvs.
+     */
 #endif
-            if (usesSimVarPreloading) {
-              allocateComputes = true;
-            } else {
-              markTaskConsumed(&g_num_tasks_done, m_curr_phase, m_num_phases, readyTask);
-              if ( readyTask->getTask()->getType() == Task::Hypre ) {
-                g_HypreTask = readyTask;
-                g_have_hypre_task = true;
-                return;
-              } else {
-                runReady = true;
-              }
-            }
-#ifdef HAVE_CUDA
-          }
-#endif
-        }
 
-        /*
-         * (1.3)
-         *
-         * If we have an internally-ready CPU task, initiate its MPI receives, preparing it for
-         * CPU external ready queue. The task is moved to the CPU external-ready queue in the
-         * call to task->checkExternalDepCount().
-         *
-         */
-        else if ((initTask = m_detailed_tasks->getNextInternalReadyTask())) {
-          if (initTask->getTask()->getType() == Task::Reduction || initTask->getTask()->usesMPI()) {
-            m_phase_sync_task[initTask->getTask()->m_phase] = initTask;
-            ASSERT(initTask->getRequires().size() == 0)
-            initTask = nullptr;
-          }
-          else if (initTask->getRequires().size() == 0) {  // no ext. dependencies, then skip MPI sends
-            initTask->markInitiated();
-            initTask->checkExternalDepCount();  // where tasks get added to external ready queue (no ext deps though)
-            initTask = nullptr;
-          }
-          else {
-            havework = true;
-            break;
-          }
-        }
+    else {
+      if (m_recvs.size() != 0u) {
+        MPIScheduler::processMPIRecvs(TEST);
+      }
+    }
 
-        /*
-         * (1.6)
-         *
-         * Otherwise there's nothing to do but process MPI recvs.
-         */
-
-        else {
-          if (m_recvs.size() != 0u) {
-            havework = true;
-            break;
-          }
-        }
-
-        if (g_num_tasks_done == m_num_tasks) {
-          break;
-        }
-      }  // end while (!havework)
-    }  // end lock_guard
+    if (g_num_tasks_done == m_num_tasks) {
+      break;
+    }
 
 
 
@@ -535,9 +582,7 @@ KokkosOpenMPScheduler::runTasks()
     // ----------------------------------------------------------------------------------
 
     if (initTask != nullptr) {
-      MPIScheduler::initiateTask(initTask, m_abort, m_abort_point, m_curr_iteration.load(std::memory_order_relaxed));
-      initTask->markInitiated();
-      initTask->checkExternalDepCount();
+
     }
     else if (readyTask) {
 
@@ -549,15 +594,15 @@ KokkosOpenMPScheduler::runTasks()
       else {
 
         if (allocateComputes) {
-          allocateTaskComputesVariables(readyTask);
+
         } else if (runReady) {
-          MPIScheduler::runTask(readyTask, m_curr_iteration.load(std::memory_order_relaxed));
+
         }
       }
     }
     else {
       if (m_recvs.size() != 0u) {
-        MPIScheduler::processMPIRecvs(TEST);
+
       }
     }
   }  // end while (numTasksDone < ntasks)
