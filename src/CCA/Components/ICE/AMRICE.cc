@@ -27,6 +27,7 @@
 #include <CCA/Components/ICE/Materials/ICEMaterial.h>
 #include <Core/Grid/Variables/PerPatchVars.h>
 #include <CCA/Components/Models/FluidsBased/FluidsBasedModel.h>
+#include <CCA/Components/Models/HEChem/HEChemModel.h>
 #include <CCA/Ports/SolverInterface.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/Regridder.h>
@@ -1913,8 +1914,13 @@ void AMRICE::scheduleErrorEstimate(const LevelP& coarseLevel,
   // Models
   for(vector<ModelInterface*>::iterator m_iter  = d_models.begin();
                                         m_iter != d_models.end(); m_iter++){
-    ModelInterface* model = *m_iter;
-    model->scheduleErrorEstimate(coarseLevel, sched);;
+      FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( *m_iter );
+      if( fb_model )
+	fb_model->scheduleErrorEstimate(coarseLevel, sched);;
+      
+      HEChemModel* hec_model = dynamic_cast<HEChemModel*>( *m_iter );
+      if( hec_model )
+	hec_model->scheduleErrorEstimate(coarseLevel, sched);;
   }
 }
 

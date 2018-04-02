@@ -121,11 +121,7 @@ namespace Uintah {
   					       const LevelP& level) = 0;
       
     virtual void scheduleComputeModelSources(SchedulerP& scheduler,
-  					     const LevelP& level) = 0;
-                                              
-    virtual void scheduleModifyThermoTransportProperties(SchedulerP& scheduler,
-  							 const LevelP& level,
-  							 const MaterialSet*) = 0;
+					     const LevelP& level) = 0;
                                                 
     virtual void computeSpecificHeat(CCVariable<double>&,
                                      const Patch* patch,
@@ -136,7 +132,11 @@ namespace Uintah {
                                        SchedulerP& sched) = 0;
                                                
     virtual void scheduleTestConservation(SchedulerP&,
-  					  const PatchSet* patches) = 0;
+					  const PatchSet* patches) = 0;
+
+    virtual void scheduleModifyThermoTransportProperties(SchedulerP& scheduler,
+  							 const LevelP& level,
+  							 const MaterialSet*) = 0;
 
     // Method specific to FluidsBasedModels
     virtual void registerTransportedVariable(const MaterialSet* matlSet,
@@ -149,11 +149,16 @@ namespace Uintah {
     virtual std::vector<TransportedVariable*> getTransportedVars() {return d_trans_vars; }
     virtual std::vector<AMRRefluxVariable*> getAMRRefluxVars() { return d_reflux_vars; }
 
+    virtual bool computesThermoTransportProps() const
+    { return m_modelComputesThermoTransportProps; }
+
   // protected:
     std::vector<TransportedVariable*> d_trans_vars;
     std::vector<AMRRefluxVariable*> d_reflux_vars;
 
-  private:     
+    bool m_modelComputesThermoTransportProps {false};
+
+  private:
     FluidsBasedModel(const FluidsBasedModel&);
     FluidsBasedModel& operator=(const FluidsBasedModel&);
   };

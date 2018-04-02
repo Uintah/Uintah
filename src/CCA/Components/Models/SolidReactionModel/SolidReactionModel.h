@@ -51,8 +51,7 @@ namespace Uintah {
      Department of Chemistry
      University of Utah
      
-     Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-     
+     Center for the Simulation of Accidental Fires and Explosions (C-SAFE)     
           
      KEYWORDS
      SolidReactionModel
@@ -66,88 +65,70 @@ namespace Uintah {
     
     class SolidReactionModel : public ModelInterface {
     public:
-        SolidReactionModel(const ProcessorGroup* d_myworld,
-			   const SimulationStateP& sharedState,
-			   const ProblemSpecP& params,
-                           const ProblemSpecP& prob_spec);
-
+      SolidReactionModel(const ProcessorGroup* d_myworld,
+                         const SimulationStateP& sharedState,
+                         const ProblemSpecP& params,
+                         const ProblemSpecP& prob_spec);
+      
       virtual ~SolidReactionModel();
+      
+      virtual void problemSetup(GridP& grid, const bool isRestart);
+      
+      virtual void outputProblemSpec(ProblemSpecP& ps);
         
-        virtual void outputProblemSpec(ProblemSpecP& ps);
+      virtual void scheduleInitialize(SchedulerP&,
+				      const LevelP& level);
         
-        virtual void problemSetup(GridP& grid,
-                                   const bool isRestart);
-        
-        virtual void scheduleInitialize(SchedulerP&,
-                                        const LevelP& level);
-        
-        virtual void restartInitialize() {}
-        
-        virtual void scheduleComputeStableTimeStep(SchedulerP& sched,
-                                                   const LevelP& level);
-        
-        virtual void scheduleComputeModelSources(SchedulerP&,
+      virtual void restartInitialize() {}
+      
+      virtual void scheduleComputeStableTimeStep(SchedulerP& sched,
                                                  const LevelP& level);
-        
-        virtual void scheduleModifyThermoTransportProperties(SchedulerP&,
-                                                             const LevelP&,
-                                                             const MaterialSet*);
-        
-        virtual void computeSpecificHeat(CCVariable<double>&,
-                                         const Patch* patch,
-                                         DataWarehouse* new_dw,
-                                         const int indx);
-        
-        virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
-                                           SchedulerP& sched);
-        
-        virtual void scheduleTestConservation(SchedulerP&,
-                                              const PatchSet* patches);    
-        
+      
+      virtual void scheduleComputeModelSources(SchedulerP&,
+                                                 const LevelP& level);
+                
     private:
 
-        void computeModelSources(const ProcessorGroup*,
+      void computeModelSources(const ProcessorGroup*,
                                  const PatchSubset* patches,
                                  const MaterialSubset* matls,
                                  DataWarehouse*,
                                  DataWarehouse* new_dw);
 
-        // Functions
-        SolidReactionModel(const SolidReactionModel&);
-        SolidReactionModel& operator=(const SolidReactionModel&);
-        
-        // Innards
-        RateConstant *rateConstant {nullptr};  // k(T)
-        RateModel    *rateModel {nullptr};     // f(a)
-        const Material* reactant {nullptr};
-        const Material* product {nullptr};
-        std::string fromMaterial;
-        std::string toMaterial;
-        double d_E0;                 // Enthalpy change for reaction in J/kg
+      // Functions
+      SolidReactionModel(const SolidReactionModel&);
+      SolidReactionModel& operator=(const SolidReactionModel&);
+      
+      // Innards
+      RateConstant *rateConstant {nullptr};  // k(T)
+      RateModel    *rateModel {nullptr};     // f(a)
+      const Material* reactant {nullptr};
+      const Material* product {nullptr};
+      std::string fromMaterial;
+      std::string toMaterial;
+      double d_E0;                 // Enthalpy change for reaction in J/kg
        
-        ICELabel *Ilb;               // Used to get handles on temperature, pressure, etc.
-        MaterialSet *mymatls;        // All the materials referenced by this model
+      ICELabel *Ilb;               // Used to get handles on temperature, pressure, etc.
+      MaterialSet *mymatls;        // All the materials referenced by this model
 
-        // Variables used for tracking the Reaction
-        const VarLabel* reactedFractionLabel;   // Fraction of reactant in cell
-        const VarLabel* delFLabel;              // Change of fraction of reactant during timestep
-        const VarLabel* totalMassBurnedLabel;  
-        const VarLabel* totalHeatReleasedLabel;
+      // Variables used for tracking the Reaction
+      const VarLabel* reactedFractionLabel;   // Fraction of reactant in cell
+      const VarLabel* delFLabel;              // Change of fraction of reactant during timestep
+      const VarLabel* totalMassBurnedLabel;  
+      const VarLabel* totalHeatReleasedLabel;
  
-        // flags for the conservation test
-        struct saveConservedVars{
-          bool onOff;
-          bool mass;
-          bool energy;
-        };
-        saveConservedVars* d_saveConservedVars;
+      // flags for the conservation test
+      struct saveConservedVars{
+        bool onOff;
+        bool mass;
+        bool energy;
+      };
 
-        // Some Uintah Necessities
-        ProblemSpecP d_params {nullptr};
-        ProblemSpecP d_prob_spec {nullptr};
+      saveConservedVars* d_saveConservedVars;
 
-        #define d_SMALL_NUM 1e-100
-        #define d_TINY_RHO 1e-12
+      // Some Uintah Necessities
+      ProblemSpecP d_params {nullptr};
+      ProblemSpecP d_prob_spec {nullptr};
     };
 }
 

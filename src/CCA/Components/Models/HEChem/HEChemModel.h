@@ -22,11 +22,10 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_HOMEBREW_ModelInterface_H
-#define UINTAH_HOMEBREW_ModelInterface_H
+#ifndef UINTAH_HOMEBREW_HECHEMMODEL_H
+#define UINTAH_HOMEBREW_HECHEMMODEL_H
 
-#include <Core/Parallel/UintahParallelComponent.h>
-
+#include <CCA/Ports/ModelInterface.h>
 #include <CCA/Ports/SchedulerP.h>
 
 #include <Core/Grid/Variables/CCVariable.h>
@@ -40,13 +39,13 @@
 /**************************************
 
 CLASS
-   ModelInterface
+   HEChemModel
    
    Short description...
 
 GENERAL INFORMATION
 
-   ModelInterface.h
+   HEChemModel.h
 
    Steven G. Parker
    Department of Computer Science
@@ -56,7 +55,7 @@ GENERAL INFORMATION
   
    
 KEYWORDS
-   Model_Interface
+   HEChem Model
 
 DESCRIPTION
    Long description...
@@ -67,29 +66,18 @@ WARNING
 
 namespace Uintah {
 
-  class ApplicationInterface;
-  class Regridder;
-  class Output;
-
   class DataWarehouse;
-  class Material;
   class ProcessorGroup;
-  class VarLabel;
   
   //________________________________________________
-  class ModelInterface : public UintahParallelComponent {
+  class HEChemModel : public ModelInterface {
   public:
-    ModelInterface(const ProcessorGroup* myworld,
-		   const SimulationStateP sharedState);
+    HEChemModel(const ProcessorGroup* myworld,
+		const SimulationStateP sharedState)
+      : ModelInterface(myworld, sharedState) {};
 
-    virtual ~ModelInterface();
+    virtual ~HEChemModel() {};
 
-    // Methods for managing the components attached via the ports.
-    virtual void setComponents( UintahParallelComponent *comp ) {};
-    virtual void setComponents( ApplicationInterface *comp );
-    virtual void getComponents();
-    virtual void releaseComponents();
-      
     virtual void problemSetup(GridP& grid, const bool isRestart) = 0;
       
     virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
@@ -97,39 +85,23 @@ namespace Uintah {
     virtual void scheduleInitialize(SchedulerP& scheduler,
 				    const LevelP& level) = 0;
 
-    virtual void restartInitialize() {}
-      
     virtual void scheduleComputeStableTimeStep(SchedulerP& scheduler,
 					       const LevelP& level) = 0;
-    
+
+    // Used by DDT1 ONLY.
     virtual void scheduleRefine(const PatchSet* patches,
 				SchedulerP& sched) {};
 
-    virtual void setAMR(bool val) { m_AMR = val; }
-    virtual bool isAMR() const { return m_AMR; }
-  
-    virtual void setDynamicRegridding(bool val) {m_dynamicRegridding = val; }
-    virtual bool isDynamicRegridding() const { return m_dynamicRegridding; }
+    virtual void scheduleComputeModelSources(SchedulerP& scheduler,
+					     const LevelP& level) = 0;
 
-    virtual bool adjustOutputInterval()     const { return false; };
-    virtual bool adjustCheckpointInterval() const { return false; };
-
-    virtual bool mayEndSimulation()         const { return false; };
-          
-  protected:
-    ApplicationInterface   * m_application {nullptr};
-    Scheduler              * m_scheduler   {nullptr};
-    Regridder              * m_regridder   {nullptr};
-    Output                 * m_output      {nullptr};
-   
-    SimulationStateP m_sharedState {nullptr};
-    
-    bool m_AMR {false};
-    bool m_dynamicRegridding {false};
-
+    // Used by LightTime ONLY.
+    virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
+                                       SchedulerP& sched) {};
+                                               
   private:     
-    ModelInterface(const ModelInterface&);
-    ModelInterface& operator=(const ModelInterface&);
+    HEChemModel(const HEChemModel&);
+    HEChemModel& operator=(const HEChemModel&);
   };
 } // End namespace Uintah
    
