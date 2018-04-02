@@ -310,65 +310,81 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
     }
   }
 
-  Task* tsk = scinew Task( _factory_name+"::"+task_group_name, this,
-                           &TaskFactoryBase::do_task, variable_registry,
-                           arches_tasks, type, time_substep, pack_tasks );
 
-  int counter = 0;
-  for ( auto pivar = variable_registry.begin(); pivar != variable_registry.end(); pivar++ ){
+  //Task* tsk = scinew Task( _factory_name+"::"+task_group_name, this,
+  //                         &TaskFactoryBase::do_task, variable_registry,
+  //                         arches_tasks, type, time_substep, pack_tasks );
 
-    counter++;
 
-    ArchesFieldContainer::VariableInformation& ivar = *pivar;
+  auto TaskDependencies = [&](Task *& tsk) {
+    int counter = 0;
+    for ( auto pivar = variable_registry.begin(); pivar != variable_registry.end(); pivar++ ){
 
-    switch(ivar.depend) {
-    case ArchesFieldContainer::COMPUTES:
-      if ( time_substep == 0 ) {
-        if ( reinitialize ){
-          cout_archestaskdebug << "      modifying: " << ivar.name << std::endl;
-          tsk->modifies( ivar.label );   // was computed upstream
+      counter++;
+
+      ArchesFieldContainer::VariableInformation& ivar = *pivar;
+
+      switch(ivar.depend) {
+      case ArchesFieldContainer::COMPUTES:
+        if ( time_substep == 0 ) {
+          if ( reinitialize ){
+            cout_archestaskdebug << "      modifying: " << ivar.name << std::endl;
+            tsk->modifies( ivar.label );   // was computed upstream
+          } else {
+            cout_archestaskdebug << "      computing: " << ivar.name << std::endl;
+            tsk->computes( ivar.label );   //only compute on the zero time substep
+          }
         } else {
-          cout_archestaskdebug << "      computing: " << ivar.name << std::endl;
-          tsk->computes( ivar.label );   //only compute on the zero time substep
+          cout_archestaskdebug << "      modifying: " << ivar.name << std::endl;
+          tsk->modifies( ivar.label );
         }
-      } else {
+        break;
+      case ArchesFieldContainer::MODIFIES:
         cout_archestaskdebug << "      modifying: " << ivar.name << std::endl;
         tsk->modifies( ivar.label );
+        break;
+      case ArchesFieldContainer::REQUIRES:
+        cout_archestaskdebug << "      requiring: " << ivar.name <<
+                                " with ghosts: " << ivar.nGhost << std::endl;
+        tsk->requires( ivar.uintah_task_dw, ivar.label, ivar.ghost_type, ivar.nGhost );
+        break;
+      default:
+        std::stringstream msg;
+        msg << "Arches Task Error: Cannot schedule task because "
+            << "of incomplete variable dependency. \n";
+        throw InvalidValue(msg.str(), __FILE__, __LINE__);
+        break;
+
       }
-      break;
-    case ArchesFieldContainer::MODIFIES:
-      cout_archestaskdebug << "      modifying: " << ivar.name << std::endl;
-      tsk->modifies( ivar.label );
-      break;
-    case ArchesFieldContainer::REQUIRES:
-      cout_archestaskdebug << "      requiring: " << ivar.name <<
-                              " with ghosts: " << ivar.nGhost << std::endl;
-      tsk->requires( ivar.uintah_task_dw, ivar.label, ivar.ghost_type, ivar.nGhost );
-      break;
-    default:
-      std::stringstream msg;
-      msg << "Arches Task Error: Cannot schedule task because "
-          << "of incomplete variable dependency. \n";
-      throw InvalidValue(msg.str(), __FILE__, __LINE__);
-      break;
-
     }
-  }
 
-  //other variables:
-  if ( sched->get_dw(0) != nullptr ){
-    tsk->requires(Task::OldDW, VarLabel::find("delT"));
-    tsk->requires(Task::OldDW, VarLabel::find(simTime_name));
-  }
+    //other variables:
+    if ( sched->get_dw(0) != nullptr ){
+      tsk->requires(Task::OldDW, VarLabel::find("delT"));
+      tsk->requires(Task::OldDW, VarLabel::find(simTime_name));
+    }
 
-  if ( counter > 0 )
-    sched->addTask( tsk, level->eachPatch(), matls );
-  else
-    delete tsk;
+    // This task had no work to perform.  Delete it.
+    if ( counter == 0 ) {
+      delete tsk;
+      tsk = nullptr;
+    }
+  };
+
+  //auto ptr = &TaskFactoryBase::do_task<Kokkos::OpenMP, Kokkos::HostSpace>;
+  //Task* task = scinew Task(_factory_name+"::"+task_group_name, this, ptr, variable_registry, arches_tasks, type, time_substep, pack_tasks);
+
+  CALL_ASSIGN_PORTABLE_TASK(TaskDependencies, _factory_name+"::"+task_group_name, TaskFactoryBase::do_task,
+                            level->eachPatch(), matls,
+                            variable_registry, arches_tasks, type, time_substep, pack_tasks);
+  //CALL_ASSIGN_PORTABLE_TASK(Poisson1::timeAdvance, TaskDependencies, level->eachPatch(), m_sharedState->allMaterials());
+
+
 
 }
 
 //--------------------------------------------------------------------------------------------------
+template <typename ExecutionSpace, typename MemorySpace>
 void TaskFactoryBase::do_task ( DetailedTask* task,
                                 Task::CallBackEvent event,
                                 const ProcessorGroup* pc,

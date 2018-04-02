@@ -693,7 +693,6 @@ KokkosOpenMPScheduler::runTasks()
          */
         if ((m_phase_sync_task[m_curr_phase] != nullptr) && (m_phase_tasks_done[m_curr_phase] == m_phase_tasks[m_curr_phase] - 1)) {
           readyTask = m_phase_sync_task[m_curr_phase];
-          printf("1.1 The task is %s\n", readyTask->getTask()->getName().c_str());
           havework = true;
           markTaskConsumed(&g_num_tasks_done, m_curr_phase, m_num_phases, readyTask);
           break;
@@ -709,7 +708,6 @@ KokkosOpenMPScheduler::runTasks()
          */
         else if (m_detailed_tasks->numExternalReadyTasks() > 0) {
           readyTask = m_detailed_tasks->getNextExternalReadyTask();
-          printf("1.2 The task is %s\n", readyTask->getTask()->getName().c_str());
           if (readyTask != nullptr) {
             havework = true;
             markTaskConsumed(&g_num_tasks_done, m_curr_phase, m_num_phases, readyTask);

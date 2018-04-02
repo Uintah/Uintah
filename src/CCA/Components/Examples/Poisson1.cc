@@ -177,7 +177,7 @@ void Poisson1::scheduleTimeAdvance( const LevelP     & level
     task->computesWithScratchGhost(phi_label, nullptr, Uintah::Task::NormalDomain, Ghost::AroundNodes, 1);
     task->computes(residual_label);
   };
-  CALL_ASSIGN_PORTABLE_TASK(Poisson1::timeAdvance, TaskDependencies, level->eachPatch(), m_sharedState->allMaterials());
+  CALL_ASSIGN_PORTABLE_TASK(TaskDependencies, "Poisson1::timeAdvance", Poisson1::timeAdvance, level->eachPatch(), m_sharedState->allMaterials());
 
   //Task* task = scinew Task("Poisson1::timeAdvance", this, &Poisson1::timeAdvance);
 

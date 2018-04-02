@@ -69,24 +69,29 @@
 //and then the macro tacks on the tempalte arguments and uses that.  (This is why a macro is used.)
 //At compile time, the compiler will compile the task for *all* execution spaces (OpenMP, Cuda, etc.)
 //At run time, the appropriate if statement logic will determine which task to use.
-#define CALL_ASSIGN_PORTABLE_TASK(FUNCTION_NAME, TASK_DEPENDENCIES, PATCHES, MATERIALS) {      \
+#define CALL_ASSIGN_PORTABLE_TASK(TASK_DEPENDENCIES,                                           \
+                                  FUNCTION_NAME, FUNCTION_CODE_NAME,                           \
+                                  PATCHES, MATERIALS, ...) {                                   \
   Task* task{nullptr};                                                                         \
   if (NUM_EXECUTION_SPACES == 1) {                                                             \
-    task = scinew Task(TOSTRING(FUNCTION_NAME),                                                \
+    task = scinew Task(FUNCTION_NAME,                                                          \
                              this,                                                             \
-                             &FUNCTION_NAME<EXECUTION_SPACE_0, MEMORY_SPACE_0>);               \
+                             &FUNCTION_CODE_NAME<EXECUTION_SPACE_0, MEMORY_SPACE_0>,           \
+                             ## __VA_ARGS__);                                                  \
     task->usesKokkosOpenMP(true);                                                              \
   } else {                                                                                     \
     if (Uintah::Parallel::usingDevice()) {                                                     \
-      task = scinew Task(TOSTRING(FUNCTION_NAME),                                              \
+      task = scinew Task(FUNCTION_NAME,                                                        \
                                this,                                                           \
-                               &FUNCTION_NAME<EXECUTION_SPACE_0, MEMORY_SPACE_0>);             \
+                               &FUNCTION_CODE_NAME<EXECUTION_SPACE_0, MEMORY_SPACE_0>,         \
+                               ## __VA_ARGS__);                                                \
       task->usesDevice(true);                                                                  \
       task->usesKokkosCuda(true);                                                              \
     } else {                                                                                   \
-      task = scinew Task(TOSTRING(FUNCTION_NAME),                                              \
+      task = scinew Task(FUNCTION_NAME,                                                        \
                                this,                                                           \
-                               &FUNCTION_NAME<EXECUTION_SPACE_1, MEMORY_SPACE_1>);             \
+                               &FUNCTION_CODE_NAME<EXECUTION_SPACE_1, MEMORY_SPACE_1>,         \
+                               ## __VA_ARGS__);                                                \
       task->usesKokkosOpenMP(true);                                                            \
     }                                                                                          \
   }                                                                                            \
@@ -95,9 +100,13 @@
                                                                                                \
   TASK_DEPENDENCIES(task);                                                                     \
                                                                                                \
-  sched->addTask(task, PATCHES, MATERIALS);                                                    \
+  if (task) {                                                                                  \
+    sched->addTask(task, PATCHES, MATERIALS);                                                  \
+  }                                                                                            \
 }
 #endif  //#if defined(UINTAH_ENABLE_KOKKOS)
+
+
 
 namespace Uintah {
 
@@ -307,7 +316,7 @@ struct FunctorBuilderReduce {
 template <typename Functor, typename ReductionType>
 void parallel_reduce_1D( BlockRange const & r, const Functor & f, ReductionType & red  ) {
 #if !defined( HAVE_CUDA )
-  if ( ! Parallel::usingDevice() ) {
+  if ( ! Uintah::Parallel::usingDevice() ) {
     ReductionType tmp = red;
     Kokkos::RangePolicy<Kokkos::OpenMP> rangepolicy(r.begin(0), r.end(0));
     Kokkos::parallel_reduce( rangepolicy, f, tmp );

@@ -199,6 +199,7 @@ namespace Uintah{
                                 const bool pack_tasks );
 
     /** @brief Task callback **/
+    template <typename EXECUTION_SPACE, typename MEMORY_SPACE>
     void do_task ( DetailedTask* task,
                    Task::CallBackEvent event,
                    const ProcessorGroup* pc,
