@@ -396,41 +396,6 @@ CharOxidationSmith2016::problemSetup(const ProblemSpecP& params, int qn)
       _other_indices.push_back(spec);
     }
   }
-
-#ifdef HAVE_VISIT
-  static bool initialized = false;
-
-  // Running with VisIt so add in the variables that the user can
-  // modify.
-//   if( d_sharedState->getVisIt() && !initialized ) {
-    // variable 1 - Must start with the component name and have NO
-    // spaces in the var name.
-//     SimulationState::interactiveVar var;
-//     var.name     = "Arches-CharOx-PreExp-Factor-O2";
-//     var.type     = Uintah::TypeDescription::double_type;
-//     var.value    = (void *) &(_a_l[0]);
-//     var.range[0]   = -1.0e9;
-//     var.range[1]   = +1.0e9;
-//     var.modifiable = true;
-//     var.recompile  = false;
-//     var.modified   = false;
-//     d_sharedState->d_UPSVars.push_back( var );
-
-    // variable 2 - Must start with the component name and have NO
-    // spaces in the var name.
-//     var.name     = "Arches-CharOx-Activation-Energy-O2";
-//     var.type     = Uintah::TypeDescription::double_type;
-//     var.value    = (void *) &(_e_l[0]);
-//     var.range[0]   = -1.0e9;
-//     var.range[1]   = +1.0e9;
-//     var.modifiable = true;
-//     var.recompile  = false;
-//     var.modified   = false;
-//     d_sharedState->d_UPSVars.push_back( var );
-
-//     initialized = true;
-//   }
-#endif
 }
 
 
@@ -454,6 +419,45 @@ CharOxidationSmith2016::sched_initVars( const LevelP& level, SchedulerP& sched )
   }
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
+
+#ifdef HAVE_VISIT
+  static bool initialized = false;
+
+  // Running with VisIt so add in the variables that the user can
+  // modify.
+  ApplicationInterface* m_application = sched->getApplication();
+  
+  if( m_application && m_application->getVisIt() && !initialized ) {
+    // variable 1 - Must start with the component name and have NO
+    // spaces in the var name.
+    ApplicationInterface::interactiveVar var;
+    var.component  = "Arches";
+    var.name       = "CharOx-PreExp-Factor-O2";
+    var.type       = Uintah::TypeDescription::double_type;
+    var.value      = (void *) &(_a_l[0]);
+    var.range[0]   = -1.0e9;
+    var.range[1]   = +1.0e9;
+    var.modifiable = true;
+    var.recompile  = false;
+    var.modified   = false;
+    m_application->getUPSVars().push_back( var );
+
+    // variable 2 - Must start with the component name and have NO
+    // spaces in the var name.
+    var.component  = "Arches";
+    var.name       = "CharOx-Activation-Energy-O2";
+    var.type       = Uintah::TypeDescription::double_type;
+    var.value      = (void *) &(_e_l[0]);
+    var.range[0]   = -1.0e9;
+    var.range[1]   = +1.0e9;
+    var.modifiable = true;
+    var.recompile  = false;
+    var.modified   = false;
+    m_application->getUPSVars().push_back( var );
+
+    initialized = true;
+  }
+#endif
 }
 
 //-------------------------------------------------------------------------
@@ -1093,11 +1097,11 @@ CharOxidationSmith2016::computeModel( const ProcessorGroup * pc,
             std::cout << "rh_l_new[0]: " << rh_l_new[0] << std::endl;
             std::cout << "rh_l_new[1]: " << rh_l_new[1] << std::endl;
             std::cout << "rh_l_new[2]: " << rh_l_new[2] << std::endl;
-	          std::cout << "org: " << rc + ch << std::endl;
-	          std::cout << "x_org: " << x_org << std::endl;
-	          std::cout << "p_rho: " << p_rho << std::endl;
-	          std::cout << "p_void0: " << _p_void0 << std::endl;
-	          std::cout << "psi: " << psi << std::endl;
+                  std::cout << "org: " << rc + ch << std::endl;
+                  std::cout << "x_org: " << x_org << std::endl;
+                  std::cout << "p_rho: " << p_rho << std::endl;
+                  std::cout << "p_void0: " << _p_void0 << std::endl;
+                  std::cout << "psi: " << psi << std::endl;
         }
         char_mass_rate  = 0.0;
         d_mass = 0.0;
