@@ -260,7 +260,7 @@ RMCRT_Radiation::extraSetup( GridP& grid,
   // read in RMCRT problem spec
   ProblemSpecP rmcrt_ps = _ps->findBlock("RMCRT");
 
-  _RMCRT->problemSetup(_ps, rmcrt_ps, grid, _sharedState);
+  _RMCRT->problemSetup(_ps, rmcrt_ps, grid);
 
 //  _RMCRT->BC_bulletproofing( rmcrt_ps );
 
@@ -722,7 +722,6 @@ RMCRT_Radiation::sched_setBoundaryConditions( const LevelP& level,
                                               Task::WhichDW temp_dw,
                                               const bool backoutTemp /* = false */ )
 {
-
   std::string taskname = "RMCRT_radiation::setBoundaryConditions";
   Task* tsk = nullptr;
 

@@ -816,7 +816,6 @@ namespace WasatchCore{
                                                              TagNames::self().celltype,
                                                              rmcrt_,
                                                              radSpec,
-                                                             m_sharedState,
                                                              grid ) );
       graphCategories_[ADVANCE_SOLUTION]->exprFactory->cleave_from_parents ( exprID );
       graphCategories_[ADVANCE_SOLUTION]->exprFactory->cleave_from_children( exprID );
@@ -1462,8 +1461,9 @@ namespace WasatchCore{
     DataWarehouse* subOldDW = subsched_->get_dw(2);
     DataWarehouse* subNewDW = subsched_->get_dw(3);
 
-    DataWarehouse* parOldDW = subsched_->get_dw(0);
-    DataWarehouse* parNewDW = subsched_->get_dw(1);
+    // Unused - commented out to remove a warning
+    // DataWarehouse* parOldDW = subsched_->get_dw(0);
+    // DataWarehouse* parNewDW = subsched_->get_dw(1);
 
     //__________________________________
     //  Move data from parentOldDW to subSchedNewDW.
@@ -1492,8 +1492,9 @@ namespace WasatchCore{
       subOldDW = subsched_->get_dw(2);
       subNewDW = subsched_->get_dw(3);
       
-      parOldDW = subsched_->get_dw(0);
-      parNewDW = subsched_->get_dw(1);
+      // Unused - commented out to remove a warning
+      // parOldDW = subsched_->get_dw(0);
+      // parNewDW = subsched_->get_dw(1);
 
       for( std::set<const Uintah::VarLabel*>::const_iterator it=initialRequires.begin(); it!=initialRequires.end(); ++it ){
 

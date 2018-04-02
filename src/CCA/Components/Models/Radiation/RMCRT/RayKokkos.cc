@@ -175,7 +175,6 @@ void
 Ray::problemSetup( const ProblemSpecP     & prob_spec
                  , const ProblemSpecP     & rmcrtps
                  , const GridP            & grid
-                 ,       SimulationStateP & sharedState
                  )
 {
 
@@ -374,45 +373,6 @@ Ray::problemSetup( const ProblemSpecP     & prob_spec
   #endif
 #endif
   proc0cout << "__________________________________ " << endl;
-  //______________________________________________________________________
-  //
-// #ifdef HAVE_VISIT
-//   static bool initialized = false;
-
-//   // Running with VisIt so add in the variables that the user can
-//   // modify.
-//   if( m_sharedState->getVisIt() && !initialized ) {
-//     // variable 1 - Must start with the component name and have NO
-//     // spaces in the var name
-//     SimulationState::interactiveVar var;
-//     var.name     = "Ray-nDivQRays";
-//     var.type     = Uintah::TypeDescription::int_type;
-//     var.value    = (void *) &d_nDivQRays;
-//     var.range[0]   = 1;
-//     var.range[1]   = 100;
-//     var.modifiable = true;
-//     var.recompile  = false;
-//     var.modified   = false;
-//     m_sharedState->d_UPSVars.push_back( var );
-
-//     // variable 2 - Must start with the component name and have NO
-//     // spaces in the var name
-//     var.name     = "Ray-nFluxRays";
-//     var.type     = Uintah::TypeDescription::int_type;
-//     var.value    = (void *) &d_nFluxRays;
-//     var.range[0]   = 1;
-//     var.range[1]   = 100;
-//     var.modifiable = true;
-//     var.recompile  = false;
-//     var.modified   = false;
-//     m_sharedState->d_UPSVars.push_back( var );
-    
-//     m_sharedState->d_douts.push_back( &g_ray_dbg );
-//     m_sharedState->d_douts.push_back( &g_ray_BC );
-
-//     initialized = true;
-//   }
-// #endif
 }
 
 
@@ -2495,6 +2455,47 @@ Ray::sched_setBoundaryConditions( const LevelP        & level
   tsk->modifies( d_abskgLabel );
 
   sched->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT );
+
+  // ______________________________________________________________________
+  
+#ifdef HAVE_VISIT
+  static bool initialized = false;
+
+  // Running with VisIt so add in the variables that the user can
+  // modify.
+  ApplicationInterface* m_application = sched->getApplication();
+  
+  if( m_application && m_application->getVisIt() && !initialized ) {
+    // variable 1 - Must start with the component name and have NO
+    // spaces in the var name
+    ApplicationInterface::interactiveVar var;
+    var.component  = "RMCRT-Ray";
+    var.name       = "nDivQRays";
+    var.type       = Uintah::TypeDescription::int_type;
+    var.value      = (void *) &d_nDivQRays;
+    var.range[0]   = 1;
+    var.range[1]   = 100;
+    var.modifiable = true;
+    var.recompile  = false;
+    var.modified   = false;
+    m_application->getUPSVars().push_back( var );
+
+    // variable 2 - Must start with the component name and have NO
+    // spaces in the var name
+    var.component  = "RMCRT-Ray";
+    var.name       = "nFluxRays";
+    var.type       = Uintah::TypeDescription::int_type;
+    var.value      = (void *) &d_nFluxRays;
+    var.range[0]   = 1;
+    var.range[1]   = 100;
+    var.modifiable = true;
+    var.recompile  = false;
+    var.modified   = false;
+    m_application->getUPSVars().push_back( var );
+
+    initialized = true;
+  }
+#endif
 }
 
 
