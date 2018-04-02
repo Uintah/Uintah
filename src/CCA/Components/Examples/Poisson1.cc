@@ -177,6 +177,11 @@ void Poisson1::scheduleTimeAdvance( const LevelP     & level
     task->computesWithScratchGhost(phi_label, nullptr, Uintah::Task::NormalDomain, Ghost::AroundNodes, 1);
     task->computes(residual_label);
   };
+
+  //auto ptr = &Poisson1::timeAdvance<int, int>;
+  //Task* task = scinew Task("Poisson1::timeAdvance",
+  //                             this,
+  //                             ptr);
   CALL_ASSIGN_PORTABLE_TASK(TaskDependencies, "Poisson1::timeAdvance", Poisson1::timeAdvance, level->eachPatch(), m_sharedState->allMaterials());
 
   //Task* task = scinew Task("Poisson1::timeAdvance", this, &Poisson1::timeAdvance);
@@ -297,8 +302,8 @@ void Poisson1::timeAdvance(DetailedTask* task,
     old_dw->get(phi, phi_label, matl, patch, Ghost::AroundNodes, 1);
     new_dw->allocateAndPut(newphi, phi_label, matl, patch);
     newphi.copyPatch(phi, newphi.getLowIndex(), newphi.getHighIndex());
-    TimeAdvanceFunctor<MemorySpace> func(phi, newphi);
-    Uintah::parallel_reduce_sum<ExecutionSpace>(range, func, residual);
+    TimeAdvanceFunctor<UintahSpaces::HostSpace> func(phi, newphi);
+    Uintah::parallel_reduce_sum<UintahSpaces::CPU>(range, func, residual);
 #else
 #ifdef HAVE_CUDA
     if ( std::is_same< Kokkos::Cuda , ExecutionSpace >::value ) {
