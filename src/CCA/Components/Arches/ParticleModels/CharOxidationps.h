@@ -1055,7 +1055,6 @@ struct solveFunctor {
 #ifdef UINTAH_ENABLE_KOKKOS
           rh_l_new[r] = m_old_reaction_rate[r](i,j,k); // [kg/m^3/s]
 #else
-//          rh_l_new[r] = (*old_reaction_rate[m2 + r])(i,j,k); // [kg/m^3/s]
           rh_l_new[r] = (*m_old_reaction_rate[r])(i,j,k); // [kg/m^3/s]
 #endif
         }
@@ -1113,9 +1112,6 @@ struct solveFunctor {
           for ( int ns = 0; ns < species_count; ns++ ) {
 
             // 06 - No std::string
-            //sum_x_D = ( _oxid_l[r] != _species_names[ns] ) ? sum_x_D + species_mass_frac[ns] / ( _MW_species[ns] * _D_mat[_oxidizer_indices[r]][ns] ) : sum_x_D;
-            //sum_x   = ( _oxid_l[r] != _species_names[ns] ) ? sum_x   + species_mass_frac[ns] / ( _MW_species[ns] )                                    : sum_x;
-
             sum_x_D = ( ns != m_oxidizer_indices[r] ) ? sum_x_D + species_mass_frac[ns] / ( m_MW_species[ns] * m_D_mat[m_oxidizer_indices[r]][ns] ) : sum_x_D;
             sum_x   = ( ns != m_oxidizer_indices[r] ) ? sum_x   + species_mass_frac[ns] / ( m_MW_species[ns] )                                      : sum_x;
           }
@@ -1260,36 +1256,36 @@ struct solveFunctor {
         } // end for ( int it = 0; it < 100; it++ )
 
         if ( count > 90 ) {
-          std::cout << "warning no solution found in char ox: [env " << i << ", " << j << ", " << k << "] " << std::endl;
-          std::cout << "F[0]: "              << F[0]              << std::endl;
-          std::cout << "F[1]: "              << F[1]              << std::endl;
-          std::cout << "F[2]: "              << F[2]              << std::endl;
-          std::cout << "p_void: "            << p_void            << std::endl;
-          std::cout << "gas_rho: "           << gas_rho           << std::endl;
-          std::cout << "gas_T: "             << gas_T             << std::endl;
-          std::cout << "p_T: "               << p_T               << std::endl;
-          std::cout << "p_diam: "            << p_diam            << std::endl;
-          std::cout << "relative_velocity: " << relative_velocity << std::endl;
-          std::cout << "w: "                 << w                 << std::endl;
-          std::cout << "MW: "                << MW                << std::endl;
-          std::cout << "r_devol_ns: "        << r_devol_ns        << std::endl;
-          std::cout << "oxid_mass_frac[0]: " << oxid_mass_frac[0] << std::endl;
-          std::cout << "oxid_mass_frac[1]: " << oxid_mass_frac[1] << std::endl;
-          std::cout << "oxid_mass_frac[2]: " << oxid_mass_frac[2] << std::endl;
-          std::cout << "oxid_mole_frac[0]: " << oxid_mole_frac[0] << std::endl;
-          std::cout << "oxid_mole_frac[1]: " << oxid_mole_frac[1] << std::endl;
-          std::cout << "oxid_mole_frac[2]: " << oxid_mole_frac[2] << std::endl;
-          std::cout << "D_oxid_mix_l[0]: "   << D_oxid_mix_l[0]   << std::endl;
-          std::cout << "D_oxid_mix_l[1]: "   << D_oxid_mix_l[1]   << std::endl;
-          std::cout << "D_oxid_mix_l[2]: "   << D_oxid_mix_l[2]   << std::endl;
-          std::cout << "rh_l_new[0]: "       << rh_l_new[0]       << std::endl;
-          std::cout << "rh_l_new[1]: "       << rh_l_new[1]       << std::endl;
-          std::cout << "rh_l_new[2]: "       << rh_l_new[2]       << std::endl;
-          std::cout << "org: "               << rc + ch           << std::endl;
-          std::cout << "x_org: "             << x_org             << std::endl;
-          std::cout << "p_rho: "             << p_rho             << std::endl;
-          std::cout << "p_void0: "           << m_p_void0          << std::endl;
-          std::cout << "psi: "               << psi               << std::endl;
+          printf( "warning no solution found in char ox: [ %d, %d, %d ]\n", i, j, k );
+          printf( "F[0]: %g\n",              F[0] );
+          printf( "F[1]: %g\n",              F[1] );
+          printf( "F[2]: %g\n",              F[2] );
+          printf( "p_void: %g\n",            p_void );
+          printf( "gas_rho: %g\n",           gas_rho );
+          printf( "gas_T: %g\n",             gas_T );
+          printf( "p_T: %g\n",               p_T );
+          printf( "p_diam: %g\n",            p_diam );
+          printf( "relative_velocity: %g\n", relative_velocity );
+          printf( "w: %g\n",                 w );
+          printf( "MW: %g\n",                MW );
+          printf( "r_devol_ns: %g\n",        r_devol_ns );
+          printf( "oxid_mass_frac[0]: %g\n", oxid_mass_frac[0] );
+          printf( "oxid_mass_frac[1]: %g\n", oxid_mass_frac[1] );
+          printf( "oxid_mass_frac[2]: %g\n", oxid_mass_frac[2] );
+          printf( "oxid_mole_frac[0]: %g\n", oxid_mole_frac[0] );
+          printf( "oxid_mole_frac[1]: %g\n", oxid_mole_frac[1] );
+          printf( "oxid_mole_frac[2]: %g\n", oxid_mole_frac[2] );
+          printf( "D_oxid_mix_l[0]: %g\n",   D_oxid_mix_l[0] );
+          printf( "D_oxid_mix_l[1]: %g\n",   D_oxid_mix_l[1] );
+          printf( "D_oxid_mix_l[2]: %g\n",   D_oxid_mix_l[2] );
+          printf( "rh_l_new[0]: %g\n",       rh_l_new[0] );
+          printf( "rh_l_new[1]: %g\n",       rh_l_new[1] );
+          printf( "rh_l_new[2]: %g\n",       rh_l_new[2] );
+          printf( "org: %g\n",               rc + ch );
+          printf( "x_org: %g\n",             x_org );
+          printf( "p_rho: %g\n",             p_rho );
+          printf( "p_void0: %g\n",           m_p_void0 );
+          printf( "psi:  %g\n",              psi );
         }
 
         double char_mass_rate      = 0.0;
@@ -1309,7 +1305,6 @@ struct solveFunctor {
 #ifdef UINTAH_ENABLE_KOKKOS
           m_reaction_rate[r](i,j,k) = rh_l_new[r]; // [kg/m^2/s] this is for the intial guess during the next time-step
 #else
-//          (*reaction_rate[m2 + r])(i,j,k) = rh_l_new[r]; // [kg/m^2/s] this is for the intial guess during the next time-step
           (*m_reaction_rate[r])(i,j,k) = rh_l_new[r]; // [kg/m^2/s] this is for the intial guess during the next time-step
 #endif
 
@@ -1417,7 +1412,6 @@ CharOxidationps<T>::eval( const Patch                 * patch
 #ifdef UINTAH_ENABLE_KOKKOS
   KokkosView3<const double> species[species_count];
 #else
-//  std::vector< CT* > species;
   CT* species[species_count];
 #endif
 
@@ -1427,9 +1421,6 @@ CharOxidationps<T>::eval( const Patch                 * patch
 #ifdef UINTAH_ENABLE_KOKKOS
     species[ns] = tsk_info->get_const_uintah_field_add< CT >( _species_names[ns] ).getKokkosView();
 #else
-    //CT* species_p = tsk_info->get_const_uintah_field< CT >( _species_names[ns] );
-    //species.push_back( species_p );
-
     species[ns] = tsk_info->get_const_uintah_field< CT >( _species_names[ns] );
 #endif
   }
@@ -1456,29 +1447,11 @@ CharOxidationps<T>::eval( const Patch                 * patch
   //  }); //end cell loop
   //}
 
-  //InversionBase* invf;
-
-  //if ( _NUM_reactions == 2 ) {
-  //  invf = scinew invert_2_2;
-  //}
-  //else if ( _NUM_reactions == 3 ) {
-  //  invf = scinew invert_3_3;
-  //}
-  //else {
-  //  throw InvalidValue( "ERROR: CharOxidationSmith2016: Matrix inversion not implemented for the number of reactions being used.", __FILE__, __LINE__ );
-  //}
-
-  //root function: find a better way of doing this
-  //RootFunctionBase* rf;
-  //rf = scinew root_functionB;
-
   // 05 - KokkosView3
 #ifdef UINTAH_ENABLE_KOKKOS
   KokkosView3<double>       reaction_rate[reactions_count];
   KokkosView3<const double> old_reaction_rate[reactions_count];
 #else
-//  std::vector< T* >  reaction_rate;
-//  std::vector< CT* > old_reaction_rate;
   T*  reaction_rate[reactions_count];
   CT* old_reaction_rate[reactions_count];
 #endif
@@ -1547,14 +1520,6 @@ CharOxidationps<T>::eval( const Patch                 * patch
 
       m += 1;
 #else
-      //T*  reaction_rate_p     = tsk_info->get_uintah_field< T >       ( m_reaction_rate_names[m] );
-      //CT* old_reaction_rate_p = tsk_info->get_const_uintah_field< CT >( m_reaction_rate_names[m] );
-
-      //m += 1;
-
-      //reaction_rate.push_back    ( reaction_rate_p );
-      //old_reaction_rate.push_back( old_reaction_rate_p );
-
       reaction_rate[r]     = tsk_info->get_uintah_field< T >       ( m_reaction_rate_names[m] );
       old_reaction_rate[r] = tsk_info->get_const_uintah_field< CT >( m_reaction_rate_names[m] );
 
@@ -1708,407 +1673,6 @@ solveFunctor< T, CT > func(
 
     Uintah::parallel_for( range, func );
 
-/*
-    Uintah::parallel_for( range, [&]( int i,  int j, int k ) {
-
-      //DenseMatrix* dfdrh = scinew DenseMatrix( _NUM_reactions,_NUM_reactions );
-      double dfdrh[reactions_count][reactions_count];
-
-      // 02 - Replace per-cell std::vector with plain-old-data arrays
-      double D_oxid_mix_l     [ reactions_count ];
-      double D_kn             [ reactions_count ];
-      double D_eff            [ reactions_count ];
-      double phi_l            [ reactions_count ];
-      double hrxn_l           [ reactions_count ];
-      double rh_l             [ reactions_count ];
-      double rh_l_new         [ reactions_count ];
-      double species_mass_frac[ species_count ];
-      double oxid_mass_frac   [ reactions_count ];
-
-      double Sc            [ reactions_count ];
-      double Sh            [ reactions_count ];
-      double co_s          [ reactions_count ];
-      double oxid_mole_frac[ reactions_count ];
-      double co_r          [ reactions_count ];
-      double k_r           [ reactions_count ];
-      double M_T           [ reactions_count ];
-      double effectivenessF[ reactions_count ];
-
-      double F         [ reactions_count ];
-      double rh_l_delta[ reactions_count ];
-      double F_delta   [ reactions_count ];
-      double r_h_ex    [ reactions_count ];
-      double r_h_in    [ reactions_count ];
-
-      if ( weight(i,j,k) / m_weight_scaling_constant[l] < _weight_small ) {
-
-        char_rate(i,j,k)          = 0.0;
-        gas_char_rate(i,j,k)      = 0.0;
-        particle_temp_rate(i,j,k) = 0.0;
-        particle_Size_rate(i,j,k) = 0.0;
-        surface_rate(i,j,k)       = 0.0;
-
-        for ( int r = 0; r < reactions_count; r++ ) {
-
-          // 05 - KokkosView3
-#ifdef UINTAH_ENABLE_KOKKOS
-          reaction_rate[r](i,j,k) = 0.0; // check this
-#else
-//          (*reaction_rate[m2 + r])(i,j,k) = 0.0; // check this
-          (*reaction_rate[r])(i,j,k) = 0.0; // check this
-#endif
-        }
-      }
-      else {
-
-        // populate the temporary variables.
-        //Vector gas_vel;                                  // [m/s]
-        //Vector part_vel   = partVel(i,j,k);              // [m/s]
-        double gas_rho    = den(i,j,k);                  // [kg/m^3]
-        double gas_T      = temperature(i,j,k);          // [K]
-        double p_T        = particle_temperature(i,j,k); // [K]
-        double p_rho      = particle_density(i,j,k);     // [kg/m^3]
-        double p_diam     = length(i,j,k);               // [m]
-        double rc         = rawcoal_mass(i,j,k);         // [kg/#]
-        double ch         = char_mass(i,j,k);            // [kg/#]
-        double w          = weight(i,j,k);               // [#/m^3]
-        double MW         = 1. / MWmix(i,j,k);           // [kg mix / kmol mix] (MW in table is 1/MW)
-        double r_devol    = devolRC(i,j,k) * m_RC_scaling_constant[l] * m_weight_scaling_constant[l]; // [kg/m^3/s]
-        double r_devol_ns = -r_devol; // [kg/m^3/s]
-        //double RHS_v      = RC_RHS_source(i,j,k) * m_RC_scaling_constant[l] * m_weight_scaling_constant[l]; // [kg/s]
-        //double RHS        = RHS_source(i,j,k) * m_char_scaling_constant[l] * m_weight_scaling_constant[l];  // [kg/s]
-
-        // populate temporary variable vectors
-        double delta = 1e-6;
-
-        for ( int r = 0; r < reactions_count; r++ ) {
-
-          // 05 - KokkosView3
-#ifdef UINTAH_ENABLE_KOKKOS
-          rh_l_new[r] = old_reaction_rate[r](i,j,k); // [kg/m^3/s]
-#else
-//          rh_l_new[r] = (*old_reaction_rate[m2 + r])(i,j,k); // [kg/m^3/s]
-          rh_l_new[r] = (*old_reaction_rate[r])(i,j,k); // [kg/m^3/s]
-#endif
-        }
-
-        for ( int r = 0; r < reactions_count; r++ ) { // check this
-
-          // 05 - KokkosView3
-#ifdef UINTAH_ENABLE_KOKKOS
-          oxid_mass_frac[r] = species[_oxidizer_indices[r]](i,j,k); // [mass fraction]
-#else
-          oxid_mass_frac[r] = (*species[_oxidizer_indices[r]])(i,j,k); // [mass fraction]
-#endif
-        }
-
-        for ( int ns = 0; ns < species_count; ns++ ) {
-
-          // 05 - KokkosView3
-#ifdef UINTAH_ENABLE_KOKKOS
-          species_mass_frac[ns] = species[ns](i,j,k); // [mass fraction]
-#else
-          species_mass_frac[ns] = (*species[ns])(i,j,k); // [mass fraction]
-#endif
-        }
-
-        double CO_CO2_ratio = 200. * exp( -9000. / ( _R_cal * p_T ) ) * 44.0 / 28.0; // [ kg CO / kg CO2] => [kmoles CO / kmoles CO2]
-        double CO2onCO      = 1. / CO_CO2_ratio;                                     // [kmoles CO2 / kmoles CO]
-
-        for ( int r = 0; r < reactions_count; r++ ) {
-          phi_l[r]  = ( _use_co2co_l[r] ) ? ( CO2onCO + 1 ) / ( CO2onCO + 0.5 )              : _phi_l[r];
-          hrxn_l[r] = ( _use_co2co_l[r] ) ? ( CO2onCO * _HF_CO2 + _HF_CO ) / ( 1 + CO2onCO ) : _hrxn_l[r];
-        }
-
-        double relative_velocity = sqrt( ( CCuVel(i,j,k) - up(i,j,k) ) * ( CCuVel(i,j,k) - up(i,j,k) ) +
-                                         ( CCvVel(i,j,k) - vp(i,j,k) ) * ( CCvVel(i,j,k) - vp(i,j,k) ) +
-                                         ( CCwVel(i,j,k) - wp(i,j,k) ) * ( CCwVel(i,j,k) - wp(i,j,k) )   ); // [m/s]
-
-        double Re_p     = relative_velocity * p_diam / ( _dynamic_visc / gas_rho ); // Reynolds number [-]
-        double x_org    = (rc + ch) / (rc + ch + m_mass_ash[l] );
-        double cg       = _gasPressure / (_R * gas_T * 1000.); // [kmoles/m^3] - Gas concentration
-        double p_area   = M_PI * SQUARE( p_diam );             // particle surface area [m^2]
-        double p_volume = M_PI / 6. * CUBE( p_diam );          // particle volme [m^3]
-        double p_void   = fmax( 1e-10, 1. - ( 1. / p_volume ) * ( ( rc + ch ) / m_rho_org_bulk[l] + m_mass_ash[l] / _rho_ash_bulk ) ); // current porosity. (-) required due to sign convention of char.
-
-        double psi = 1. / ( _p_void0 * ( 1. - _p_void0 ) );
-        double Sj  = _init_particle_density / p_rho * ( ( 1 - p_void ) / ( 1 - _p_void0 ) ) * sqrt( 1 - fmin( 1.0, psi * log( ( 1 - p_void ) / ( 1 - _p_void0 ) ) ) );
-        double rp  = 2 * p_void * (1. - p_void ) / ( p_rho * Sj * _Sg0 ); // average particle radius [m]
-
-        // Calculate oxidizer diffusion coefficient
-        // effect diffusion through stagnant gas (see "Multicomponent Mass Transfer", Taylor and Krishna equation 6.1.14)
-        for ( int r = 0; r < reactions_count; r++ ) {
-
-          double sum_x_D = 0;
-          double sum_x   = 0;
-
-          for ( int ns = 0; ns < species_count; ns++ ) {
-
-            // 06 - No std::string
-            //sum_x_D = ( _oxid_l[r] != _species_names[ns] ) ? sum_x_D + species_mass_frac[ns] / ( _MW_species[ns] * _D_mat[_oxidizer_indices[r]][ns] ) : sum_x_D;
-            //sum_x   = ( _oxid_l[r] != _species_names[ns] ) ? sum_x   + species_mass_frac[ns] / ( _MW_species[ns] )                                    : sum_x;
-
-            sum_x_D = ( ns != _oxidizer_indices[r] ) ? sum_x_D + species_mass_frac[ns] / ( _MW_species[ns] * _D_mat[_oxidizer_indices[r]][ns] ) : sum_x_D;
-            sum_x   = ( ns != _oxidizer_indices[r] ) ? sum_x   + species_mass_frac[ns] / ( _MW_species[ns] )                                    : sum_x;
-          }
-
-          D_oxid_mix_l[r] = sum_x / sum_x_D * sqrt( CUBE( gas_T / _T0 ) );
-          D_kn[r]         = 97. * rp * sqrt( p_T / _MW_species[r] );
-          D_eff[r]        = p_void / _tau / ( 1. / D_kn[r] + 1. / D_oxid_mix_l[r] );
-        }
-
-        for ( int r = 0; r < reactions_count; r++ ) {
-
-          Sc[r]             = _dynamic_visc / ( gas_rho * D_oxid_mix_l[r] );      // Schmidt number [-]
-          Sh[r]             = 2.0 + 0.6 * sqrt( Re_p ) * cbrt( Sc[r] ); // Sherwood number [-]
-          oxid_mole_frac[r] = oxid_mass_frac[r] * MW / _MW_l[r];                  // [mole fraction]
-          co_r[r]           = cg * oxid_mole_frac[r];                             // oxidizer concentration, [kmoles/m^3]
-          k_r[r]            = ( 10.0 * _a_l[r] * exp( -_e_l[r] / ( _R_cal * p_T ) ) * _R * p_T * 1000.0 ) / ( _Mh * phi_l[r] * 101325. ); // [m / s]
-          M_T[r]            = p_diam / 2. * sqrt( k_r[r] * _Sg0 * Sj * p_rho / D_eff[r] );                   // Thiele modulus, Mitchell's formulation
-          effectivenessF[r] = ( M_T[r] < 1e-5 ) ? 1.0 : 3. / M_T[r] * ( 1. / tanh( M_T[r] ) - 1. / M_T[r] ); // effectiveness factor
-        }
-
-        // Newton-Raphson solve for rh_l.
-        // rh_(n+1) = rh_(n) - (dF_(n)/drh_(n))^-1 * F_(n)
-
-        int count = 0;
-        double rtot    = 0.0;
-        double Sfactor = 0.0;
-        double Bjm     = 0.0;
-        double mtc_r   = 0.0;
-
-        for ( int it = 0; it < 100; it++ ) {
-
-          count = count + 1;
-
-          for ( int r = 0; r < reactions_count; r++ ) {
-            rh_l[r] = rh_l_new[r];
-          }
-
-          // get F and Jacobian -> dF/drh
-          rtot    = ( rh_l[0] + rh_l[1] + rh_l[2] ) * x_org * ( 1. - p_void ) + r_devol_ns;
-          Sfactor = 0.0;
-          Bjm     = 0.0;
-          mtc_r   = 0.0;
-
-          for ( int l = 0; l < reactions_count; l++ ) {
-
-            Bjm     = fmin( 80.0, rtot * p_diam / ( D_oxid_mix_l[l] * gas_rho ) ); // [-] // this is the derived for mass flux  BSL chapter 22
-            mtc_r   = ( Sh[l] * D_oxid_mix_l[l] * ( ( Bjm >= 1e-7 ) ?  Bjm / ( exp( Bjm ) - 1. ) : 1.0 ) ) / p_diam; // [m/s]
-            Sfactor = 1 + effectivenessF[l] * p_diam * p_rho * _Sg0 * Sj / ( 6. * ( 1. - p_void ) );
-            F[l]    = rh_l[l] - ( _Mh * MW * phi_l[l] * k_r[l] * mtc_r * Sfactor * co_r[l] * cg ) /
-                      ( ( MW * cg * ( k_r[l] * x_org * ( 1. - p_void ) * Sfactor + mtc_r ) ) + rtot ); // [kg-char/m^3/s]
-          }
-
-          for ( int j = 0; j < reactions_count; j++ ) {
-
-            for ( int k = 0; k < reactions_count; k++ ) {
-              rh_l_delta[k] = rh_l[k]; // why ? OD
-            }
-
-            rh_l_delta[j] = rh_l[j] + delta;
-
-            rtot    = ( rh_l_delta[0] + rh_l_delta[1] + rh_l_delta[2] ) * x_org * ( 1. - p_void ) + r_devol_ns;
-            Sfactor = 0.0;
-            Bjm     = 0.0;
-            mtc_r   = 0.0;
-
-            for ( int l = 0; l < reactions_count; l++ ) {
-
-              Bjm        = fmin( 80.0, rtot * p_diam / ( D_oxid_mix_l[l] * gas_rho ) ); // [-] // this is the derived for mass flux  BSL chapter 22
-              mtc_r      = ( Sh[l] * D_oxid_mix_l[l] * ( ( Bjm >= 1e-7 ) ?  Bjm / ( exp( Bjm ) - 1. ) : 1.0 ) ) / p_diam; // [m/s]
-              Sfactor    = 1 + effectivenessF[l] * p_diam * p_rho * _Sg0 * Sj / ( 6. * ( 1. - p_void ) );
-              F_delta[l] = rh_l_delta[l] - ( _Mh * MW * phi_l[l] * k_r[l] * mtc_r * Sfactor * co_r[l] * cg ) /
-                           ( ( MW * cg * ( k_r[l] * x_org * ( 1. - p_void ) * Sfactor + mtc_r ) ) + rtot ); // [kg-char/m^3/s]
-             }
-
-            for ( int r = 0; r < reactions_count; r++ ) {
-              dfdrh[r][j] = ( F_delta[r] - F[r] ) / delta;
-            }
-          }
-
-          // invert Jacobian -> (dF_(n)/drh_(n))^-1
-          double a11 = dfdrh[0][0];
-          double a12 = dfdrh[0][1];
-          double a13 = dfdrh[0][2];
-          double a21 = dfdrh[1][0];
-          double a22 = dfdrh[1][1];
-          double a23 = dfdrh[1][2];
-          double a31 = dfdrh[2][0];
-          double a32 = dfdrh[2][1];
-          double a33 = dfdrh[2][2];
-
-          double det_inv = 1 / ( a11 * a22 * a33 +
-                                 a21 * a32 * a13 +
-                                 a31 * a12 * a23 -
-                                 a11 * a32 * a23 -
-                                 a31 * a22 * a13 -
-                                 a21 * a12 * a33   );
-
-          dfdrh[0][0] = ( a22 * a33 - a23 * a32 ) * det_inv;
-          dfdrh[0][1] = ( a13 * a32 - a12 * a33 ) * det_inv;
-          dfdrh[0][2] = ( a12 * a23 - a13 * a22 ) * det_inv;
-          dfdrh[1][0] = ( a23 * a31 - a21 * a33 ) * det_inv;
-          dfdrh[1][1] = ( a11 * a33 - a13 * a31 ) * det_inv;
-          dfdrh[1][2] = ( a13 * a21 - a11 * a23 ) * det_inv;
-          dfdrh[2][0] = ( a21 * a32 - a22 * a31 ) * det_inv;
-          dfdrh[2][1] = ( a12 * a31 - a11 * a32 ) * det_inv;
-          dfdrh[2][2] = ( a11 * a22 - a12 * a21 ) * det_inv;
-
-          // get rh_(n+1)
-          double dominantRate = 0.0;
-          //double max_F        = 1e-8;
-
-          for ( int r = 0; r < reactions_count; r++ ) {
-
-            for ( int var = 0; var < reactions_count; var++ ) {
-              rh_l_new[r] -= dfdrh[r][var] * F[var];
-            }
-
-            dominantRate = fmax( dominantRate, fabs( rh_l_new[r] ) );
-            //max_F        = fmax( max_F, fabs( F[r] ) );
-          }
-
-          double residual = 0.0;
-
-          for ( int r = 0; r < reactions_count; r++ ) {
-            residual += fabs( F[r] ) / dominantRate;
-            //residual += fabs( F[r] ) / max_F;
-          }
-
-          // make sure rh_(n+1) is inbounds
-          for ( int r = 0; r < reactions_count; r++ ) {
-            rh_l_new[r] = fmin( 100000., fmax( 0.0, rh_l_new[r] ) ); // max rate adjusted based on pressure (empirical limit)
-          }
-
-          //if ( residual < 1e-3 ) {
-          if ( residual < 1e-8 ) {
-            //std::cout << "residual: " <<" "<< residual << " " << "Number of iterations "<< count << " " <<" env " << l  << std::endl;
-            //std::cout << "F[0]: " << F[0] << std::endl;
-            //std::cout << "F[1]: " << F[1] << std::endl;
-            //std::cout << "F[2]: " << F[2] << std::endl;
-            break;
-          }
-        } // end for ( int it = 0; it < 100; it++ )
-
-        if ( count > 90 ) {
-          std::cout << "warning no solution found in char ox: [env " << l << " "  << i << ", " << j << ", " << k << "] " << std::endl;
-          std::cout << "F[0]: "              << F[0]              << std::endl;
-          std::cout << "F[1]: "              << F[1]              << std::endl;
-          std::cout << "F[2]: "              << F[2]              << std::endl;
-          std::cout << "p_void: "            << p_void            << std::endl;
-          std::cout << "gas_rho: "           << gas_rho           << std::endl;
-          std::cout << "gas_T: "             << gas_T             << std::endl;
-          std::cout << "p_T: "               << p_T               << std::endl;
-          std::cout << "p_diam: "            << p_diam            << std::endl;
-          std::cout << "relative_velocity: " << relative_velocity << std::endl;
-          std::cout << "w: "                 << w                 << std::endl;
-          std::cout << "MW: "                << MW                << std::endl;
-          std::cout << "r_devol_ns: "        << r_devol_ns        << std::endl;
-          std::cout << "oxid_mass_frac[0]: " << oxid_mass_frac[0] << std::endl;
-          std::cout << "oxid_mass_frac[1]: " << oxid_mass_frac[1] << std::endl;
-          std::cout << "oxid_mass_frac[2]: " << oxid_mass_frac[2] << std::endl;
-          std::cout << "oxid_mole_frac[0]: " << oxid_mole_frac[0] << std::endl;
-          std::cout << "oxid_mole_frac[1]: " << oxid_mole_frac[1] << std::endl;
-          std::cout << "oxid_mole_frac[2]: " << oxid_mole_frac[2] << std::endl;
-          std::cout << "D_oxid_mix_l[0]: "   << D_oxid_mix_l[0]   << std::endl;
-          std::cout << "D_oxid_mix_l[1]: "   << D_oxid_mix_l[1]   << std::endl;
-          std::cout << "D_oxid_mix_l[2]: "   << D_oxid_mix_l[2]   << std::endl;
-          std::cout << "rh_l_new[0]: "       << rh_l_new[0]       << std::endl;
-          std::cout << "rh_l_new[1]: "       << rh_l_new[1]       << std::endl;
-          std::cout << "rh_l_new[2]: "       << rh_l_new[2]       << std::endl;
-          std::cout << "org: "               << rc + ch           << std::endl;
-          std::cout << "x_org: "             << x_org             << std::endl;
-          std::cout << "p_rho: "             << p_rho             << std::endl;
-          std::cout << "p_void0: "           << _p_void0          << std::endl;
-          std::cout << "psi: "               << psi               << std::endl;
-        }
-
-        double char_mass_rate      = 0.0;
-        double d_mass              = 0.0;
-        double d_mass2             = 0.0;
-        double h_rxn               = 0.0; // this is to compute the reaction rate averaged heat of reaction. It is needed so we don't need to clip any additional rates.
-        double h_rxn_factor        = 0.0; // this is to compute a multiplicative factor to correct for fp.
-        double surface_rate_factor = 0.0; // this is to compute a multiplicative factor to correct for external vs interal rxn.
-        //double oxi_lim             = 0.0; // max rate due to reactions
-        //double rh_l_i              = 0.0;
-
-        double surfaceAreaFraction = surfAreaF(i,j,k); //w*p_diam*p_diam/AreaSumF(i,j,k); // [-] this is the weighted area fraction for the current particle size.
-
-        for ( int r = 0; r < reactions_count; r++ ) {
-
-          // 05 - KokkosView3
-#ifdef UINTAH_ENABLE_KOKKOS
-          reaction_rate[r](i,j,k) = rh_l_new[r]; // [kg/m^2/s] this is for the intial guess during the next time-step
-#else
-//          (*reaction_rate[m2 + r])(i,j,k) = rh_l_new[r]; // [kg/m^2/s] this is for the intial guess during the next time-step
-          (*reaction_rate[r])(i,j,k) = rh_l_new[r]; // [kg/m^2/s] this is for the intial guess during the next time-step
-#endif
-
-          // check to see if reaction rate is oxidizer limited.
-          double oxi_lim = ( oxid_mass_frac[r] * gas_rho * surfaceAreaFraction ) / ( dt * w );   // [kg/s/#] // here the surfaceAreaFraction parameter is allowing us to only consume the oxidizer multiplied by the weighted area fraction for the current particle.
-          double rh_l_i  = fmin( rh_l_new[r] * p_area * x_org * ( 1. - p_void ), oxi_lim ); // [kg/s/#]
-
-          char_mass_rate      += -rh_l_i; // [kg/s/#] // negative sign because we are computing the destruction rate for the particles.
-          d_mass              += rh_l_i;
-          co_s[r]              = rh_l_i / ( phi_l[r] * _Mh * k_r[r] * ( 1 + effectivenessF[r] * p_diam * p_rho * _Sg0 * Sj / ( 6. * ( 1 - p_void ) ) ) ); // oxidizer concentration at particle surface [kmoles/m^3]
-          r_h_ex[r]            = phi_l[r] * _Mh * k_r[l] * co_s[r]; // [kg/m^2/s]
-          r_h_in[r]            = r_h_ex[r] * effectivenessF[r] * p_diam * p_rho * _Sg0 * Sj / ( 6. * ( 1 - p_void ) ); // [kg/m^2/s]
-          h_rxn_factor        += r_h_ex[r] * _ksi + r_h_in[r];
-          h_rxn               += hrxn_l[r] * ( r_h_ex[r] * _ksi + r_h_in[r] );
-          d_mass2             += r_h_ex[r] * _ksi + r_h_in[r];
-          surface_rate_factor += r_h_ex[r];
-        }
-
-        h_rxn_factor        /= ( d_mass  + 1e-50 );
-        surface_rate_factor /= ( d_mass  + 1e-50 );
-        h_rxn               /= ( d_mass2 + 1e-50 ); // [J/mole]
-
-        // rate clipping for char_mass_rate
-        //if ( m_add_rawcoal_birth && m_add_char_birth ) {
-        //  char_mass_rate = std::fmax( char_mass_rate, -( ( rc + ch ) / ( dt ) + ( RHS + RHS_v ) / ( vol * w ) + r_devol / w + char_birth(i,j,k) / w + rawcoal_birth(i,j,k) / w ) ); // [kg/s/#]
-        //}
-        //else {
-        //  char_mass_rate = std::fmax( char_mass_rate, - ( ( rc + ch ) / ( dt ) + ( RHS + RHS_v ) / ( vol * w ) + r_devol / w ) ); // [kg/s/#]
-        //}
-
-        char_mass_rate = fmin( 0.0, char_mass_rate ); // [kg/s/#] make sure we aren't creating char.
-
-        // organic consumption rate
-        char_rate(i,j,k) = ( char_mass_rate * w ) / ( m_char_scaling_constant[l] * m_weight_scaling_constant[l] ); // [kg/m^3/s - scaled]
-
-        // off-gas production rate
-        gas_char_rate(i,j,k) = -char_mass_rate * w; // [kg/m^3/s] (negative sign for exchange between solid and gas)
-
-        // heat of reaction source term for enthalpyshaddix
-        particle_temp_rate(i,j,k) = h_rxn * 1000. / _Mh * h_rxn_factor * char_mass_rate * w / _ksi; // [J/s/m^4] -- the *1000 is need to convert J/mole to J/kmole. char_mass_rate was already multiplied by x_org * (1-p_void).
-                                                                                                    // note: this model is designed to work with EnthalpyShaddix. The effect of ksi has already been added to Qreaction so we divide here.
-
-        // particle shrinkage rate
-        //double updated_weight = std::fmax( w / m_weight_scaling_constant[l] + dt / vol * ( RHS_weight(i,j,k) ), 1e-15 );
-        //double min_p_diam     = std::pow( m_mass_ash[l] * 6 / _rho_ash_bulk / ( 1. - m_p_voidmin[l] ) / M_PI, 1. / 3. );
-
-        double max_Size_rate = 0.0;
-
-        //if ( m_add_length_birth ) {
-        //  max_Size_rate = ( updated_weight * min_p_diam / m_length_scaling_constant[l] - weight_p_diam(i,j,k) ) / dt - ( RHS_length(i,j,k) / vol + length_birth(i,j,k) );
-        //}
-        //else {
-        //  max_Size_rate = ( updated_weight * min_p_diam / m_length_scaling_constant[l] - weight_p_diam(i,j,k) ) / dt - ( RHS_length(i,j,k) / vol);
-        //}
-
-        double Size_rate = ( x_org < 1e-8 ) ? 0.0 :
-                           w / m_weight_scaling_constant[l] * 2. * x_org * surface_rate_factor * char_mass_rate /
-                           m_rho_org_bulk[l] / p_area / x_org / ( 1. - p_void ) / m_length_scaling_constant[l]; // [m/s]
-
-        particle_Size_rate(i,j,k) = fmax( max_Size_rate, Size_rate ); // [m/s] -- these source terms are negative.
-        surface_rate(i,j,k)       = char_mass_rate / p_area;               // in [kg/(s # m^2)]
-        //PO2surf_(i,j,k)           = 0.0;                                   // multiple oxidizers, so we are leaving this empty.
-
-      } // end if ( weight(i,j,k) / m_weight_scaling_constant[l] < _weight_small ) else
-
-    }); // end Uintah::parallel_for
-*/
     m2 += _NUM_reactions;
 
   } // end for ( int l = 0; l < m_nQn_part; l++ )

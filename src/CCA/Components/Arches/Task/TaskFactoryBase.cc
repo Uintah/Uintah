@@ -2,6 +2,8 @@
 #include <CCA/Components/Arches/ArchesParticlesHelper.h>
 #include <CCA/Components/Arches/Task/FieldContainer.h>
 
+#include <Core/Parallel/LoopExecution.hpp>
+
 using namespace Uintah;
 
 //--------------------------------------------------------------------------------------------------
