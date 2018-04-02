@@ -4608,10 +4608,10 @@ else
      version_file=$_sci_inc/HYPRE_config.h
 
      if test -f "$version_file"; then
-          AC_MSG_RESULT(HYPRE version file = $version_file)
-     	  hypre_version_major=`grep HYPRE_RELEASE_VERSION /opt/local/include/HYPRE_config.h | awk '{print $3}' | tr -d '"' | awk  '{print $1}' FS=.`
-	  hypre_version_minor=`grep HYPRE_RELEASE_VERSION /opt/local/include/HYPRE_config.h | awk '{print $3}' | tr -d '"' | awk  '{print $2}' FS=.`
-     	  hypre_version_patch=`grep HYPRE_RELEASE_VERSION /opt/local/include/HYPRE_config.h | awk '{print $3}' | tr -d '"' | awk  '{print $3}' FS=.`
+        AC_MSG_RESULT(HYPRE version file = $version_file)
+     	  hypre_version_major=`grep HYPRE_RELEASE_VERSION $version_file | awk '{print $3}' | tr -d '"' | awk  '{print $1}' FS=.`
+	      hypre_version_minor=`grep HYPRE_RELEASE_VERSION $version_file | awk '{print $3}' | tr -d '"' | awk  '{print $2}' FS=.`
+     	  hypre_version_patch=`grep HYPRE_RELEASE_VERSION $version_file | awk '{print $3}' | tr -d '"' | awk  '{print $3}' FS=.`
 
      	  DEF_HYPRE_VERSION_MAJOR="#define HYPRE_VERSION_MAJOR $hypre_version_major"
      	  DEF_HYPRE_VERSION_MINOR="#define HYPRE_VERSION_MINOR $hypre_version_minor"
