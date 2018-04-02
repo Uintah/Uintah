@@ -880,13 +880,13 @@ Task::Dependency::Dependency(       DepType              deptype
 //
 Task::Dependency::~Dependency()
 {
-  VarLabel::destroy(m_var); // just remove the ref
+  VarLabel::destroy(m_var);  // just remove the ref
 
-  if(m_patches != nullptr && m_patches->removeReference()){
+  if (m_patches != nullptr && m_patches->removeReference()) {
     delete m_patches;
   }
 
-  if(m_matls != nullptr && m_matls->removeReference()){
+  if (m_matls != nullptr && m_matls->removeReference()) {
     delete m_matls;
   }
 }

@@ -706,8 +706,7 @@ int main( int argc, char *argv[], char *env[] )
     // Simulation controller
     const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
 
-    SimulationController* simController =
-      scinew AMRSimulationController( world, ups );
+    SimulationController* simController = scinew AMRSimulationController( world, ups );
 
     // Set the simulation controller flags for reduce uda
     if ( postProcessUda ) {
@@ -720,11 +719,9 @@ int main( int argc, char *argv[], char *env[] )
 
     //__________________________________
     // Component and application interface
-    UintahParallelComponent* appComp =
-      ApplicationFactory::create( ups, world, nullptr, udaDir );
+    UintahParallelComponent* appComp = ApplicationFactory::create( ups, world, nullptr, udaDir );
     
-    ApplicationInterface* application =
-      dynamic_cast<ApplicationInterface*>(appComp);
+    ApplicationInterface* application = dynamic_cast<ApplicationInterface*>(appComp);
 
     // Read the UPS file to get the general application details.
     application->problemSetup( ups );
@@ -744,15 +741,13 @@ int main( int argc, char *argv[], char *env[] )
     // Solver
     SolverInterface * solver = SolverFactory::create( ups, world, solverName );
 
-    UintahParallelComponent* solverComp =
-      dynamic_cast<UintahParallelComponent*>(solver);
+    UintahParallelComponent* solverComp = dynamic_cast<UintahParallelComponent*>(solver);
 
     appComp->attachPort( "solver", solver );
 
     //__________________________________
     // Load balancer
-    LoadBalancerCommon* loadBalancer =
-      LoadBalancerFactory::create( ups, world );
+    LoadBalancerCommon* loadBalancer = LoadBalancerFactory::create( ups, world );
 
     loadBalancer->attachPort( "application", application );
     simController->attachPort( "load balancer", loadBalancer );
@@ -846,7 +841,6 @@ int main( int argc, char *argv[], char *env[] )
     appComp->releaseComponents();
     simController->releaseComponents();
 
-    
     scheduler->removeReference();
 
     if ( regridder ) {

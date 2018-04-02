@@ -796,18 +796,16 @@ void Switcher::carryOverVars(const ProcessorGroup *,
 //______________________________________________________________________
 // 
 void Switcher::switchApplication( const ProblemSpecP     & restart_prob_spec,
-				  const GridP            & grid )
+				                          const GridP            & grid )
 {
   // Get the initial simulation component and initialize the need components
   proc0cout << "\n------------ Switching to application (" << d_componentIndex <<") \n";
   proc0cout << "  Reading input file: " << d_in_file[d_componentIndex] << "\n";
 
   // Read the ups file for the first subcomponent.
-  ProblemSpecP subCompUps =
-    ProblemSpecReader().readInputFile(d_in_file[d_componentIndex]);  
+  ProblemSpecP subCompUps = ProblemSpecReader().readInputFile(d_in_file[d_componentIndex]);
   
-  d_app =
-    dynamic_cast<ApplicationInterface*>( getPort("application", d_componentIndex) );
+  d_app = dynamic_cast<ApplicationInterface*>( getPort("application", d_componentIndex) );
   d_app->setComponents( this );
 
   // Send the subcomponent's UPS file to it's sim interface.
