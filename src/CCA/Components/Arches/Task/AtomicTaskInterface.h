@@ -103,7 +103,7 @@ protected:
     std::string                  m_task_name;
     const int                    m_matl_index;
     std::vector<const VarLabel*> m_local_labels;
-    WBCHelper* m_bcHelper;
+    WBCHelper* m_bcHelper {nullptr};
 
     /** @brief A helper struct for creating new varlabels as requested by the task **/
     template <typename T>
