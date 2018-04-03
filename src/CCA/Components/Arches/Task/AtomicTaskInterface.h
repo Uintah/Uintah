@@ -100,8 +100,6 @@ protected:
     /** @brief The actual work done within the derived class **/
     virtual void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr ) = 0;
 
-    std::string                  m_task_name;
-    const int                    m_matl_index;
     std::vector<const VarLabel*> m_local_labels;
     WBCHelper* m_bcHelper {nullptr};
 

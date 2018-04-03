@@ -41,7 +41,7 @@ namespace Uintah {
       my_psi = std::max(0., my_psi);
 
 #define VANLEERMACRO(r) \
-      my_psi = ( r < huge ) ? ( r + std::abs(r) ) / ( 1. + std::abs(r) ) : 2.; \
+      my_psi = ( r < huge ) ? ( r + fabs(r) ) / ( 1. + fabs(r) ) : 2.; \
       my_psi = ( r >= 0. ) ? my_psi : 0.;
 
   /**
@@ -319,8 +319,8 @@ namespace Uintah {
 
         STENCIL5_1D(0);
         const double r = u(IJK_) > 0 ?
-             abs( ( phi(IJK_M_) - phi(IJK_MM_) ) / ( phi(IJK_) - phi(IJK_M_) + tiny ) ):
-             abs( ( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny ) );
+             fabs( ( phi(IJK_M_) - phi(IJK_MM_) ) / ( phi(IJK_) - phi(IJK_M_) + tiny ) ):
+             fabs( ( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny ) );
 
         SUPERBEEMACRO(r);
 
@@ -341,8 +341,8 @@ namespace Uintah {
 
         STENCIL5_1D(1);
         const double r = v(IJK_) > 0 ?
-             abs( ( phi(IJK_M_) - phi(IJK_MM_) ) / ( phi(IJK_) - phi(IJK_M_) + tiny ) ):
-             abs( ( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny ) );
+             fabs( ( phi(IJK_M_) - phi(IJK_MM_) ) / ( phi(IJK_) - phi(IJK_M_) + tiny ) ):
+             fabs( ( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny ) );
 
         SUPERBEEMACRO(r);
 
@@ -363,8 +363,8 @@ namespace Uintah {
 
         STENCIL5_1D(2);
         const double r = w(IJK_) > 0 ?
-             abs( ( phi(IJK_M_) - phi(IJK_MM_) ) / ( phi(IJK_) - phi(IJK_M_) + tiny ) ):
-             abs( ( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny ) );
+             fabs( ( phi(IJK_M_) - phi(IJK_MM_) ) / ( phi(IJK_) - phi(IJK_M_) + tiny ) ):
+             fabs( ( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny ) );
 
         SUPERBEEMACRO(r);
 
@@ -390,8 +390,8 @@ namespace Uintah {
 
         STENCIL5_1D(0);
         const double r = u(IJK_) > 0 ?
-             abs( ( phi(IJK_M_) - phi(IJK_MM_) ) / ( phi(IJK_) - phi(IJK_M_) + tiny ) ):
-             abs( ( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny ) );
+             fabs( ( phi(IJK_M_) - phi(IJK_MM_) ) / ( phi(IJK_) - phi(IJK_M_) + tiny ) ):
+             fabs( ( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny ) );
 
         VANLEERMACRO(r);
 
@@ -412,8 +412,8 @@ namespace Uintah {
 
         STENCIL5_1D(1);
         const double r = v(IJK_) > 0 ?
-             abs( ( phi(IJK_M_) - phi(IJK_MM_) ) / ( phi(IJK_) - phi(IJK_M_) + tiny ) ):
-             abs( ( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny ) );
+             fabs( ( phi(IJK_M_) - phi(IJK_MM_) ) / ( phi(IJK_) - phi(IJK_M_) + tiny ) ):
+             fabs( ( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny ) );
 
         VANLEERMACRO(r);
 
@@ -434,8 +434,8 @@ namespace Uintah {
 
         STENCIL5_1D(2);
         const double r = w(IJK_) > 0 ?
-             abs( ( phi(IJK_M_) - phi(IJK_MM_) ) / ( phi(IJK_) - phi(IJK_M_) + tiny ) ):
-             abs( ( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny ) );
+             fabs( ( phi(IJK_M_) - phi(IJK_MM_) ) / ( phi(IJK_) - phi(IJK_M_) + tiny ) ):
+             fabs( ( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny ) );
 
         VANLEERMACRO(r);
 
@@ -461,8 +461,8 @@ namespace Uintah {
 
         STENCIL5_1D(0);
         const double r = u(IJK_) > 0 ?
-             abs( ( phi(IJK_M_) - phi(IJK_MM_) ) / ( phi(IJK_) - phi(IJK_M_) + tiny ) ):
-             abs( ( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny ) );
+             fabs( ( phi(IJK_M_) - phi(IJK_MM_) ) / ( phi(IJK_) - phi(IJK_M_) + tiny ) ):
+             fabs( ( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny ) );
 
         ROEMACRO(r);
 
@@ -483,8 +483,8 @@ namespace Uintah {
 
         STENCIL5_1D(1);
         const double r = v(IJK_) > 0 ?
-             abs( ( phi(IJK_M_) - phi(IJK_MM_) ) / ( phi(IJK_) - phi(IJK_M_) + tiny ) ):
-             abs( ( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny ) );
+             fabs( ( phi(IJK_M_) - phi(IJK_MM_) ) / ( phi(IJK_) - phi(IJK_M_) + tiny ) ):
+             fabs( ( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny ) );
 
         ROEMACRO(r);
 
@@ -505,8 +505,8 @@ namespace Uintah {
 
         STENCIL5_1D(2);
         const double r = w(IJK_) > 0 ?
-             abs( ( phi(IJK_M_) - phi(IJK_MM_) ) / ( phi(IJK_) - phi(IJK_M_) + tiny ) ):
-             abs( ( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny ) );
+             fabs( ( phi(IJK_M_) - phi(IJK_MM_) ) / ( phi(IJK_) - phi(IJK_M_) + tiny ) ):
+             fabs( ( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny ) );
 
         ROEMACRO(r);
 
@@ -603,7 +603,7 @@ namespace Uintah {
       r = u(IJK_) > 0 ?
         ( phi(IJK_M_) - phi(IJK_MM_) ) / ( phi(IJK_) - phi(IJK_M_) + tiny ) :
         ( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny );
-      r = std::abs(r);
+      r = fabs(r);
       SUPERBEEMACRO(r);
       const double afc  = (( eps(IJK_) + eps(IJK_M_) )/2.) < 0.51 ? 0. : 1.;
       const double afcm = (( eps(IJK_M_) + eps(IJK_MM_) )/2.) < 0.51 ? 0. : 1.;
@@ -629,7 +629,7 @@ namespace Uintah {
       r = u(IJK_) > 0 ?
         ( phi(IJK_M_) - phi(IJK_MM_) ) / ( phi(IJK_) - phi(IJK_M_) + tiny ) :
         ( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny );
-      r = std::abs(r);
+      r = fabs(r);
       ROEMACRO(r);
       const double afc  = (( eps(IJK_) + eps(IJK_M_) )/2.) < 0.51 ? 0. : 1.;
       const double afcm = (( eps(IJK_M_) + eps(IJK_MM_) )/2.) < 0.51 ? 0. : 1.;
@@ -655,7 +655,7 @@ namespace Uintah {
       r = u(IJK_) > 0 ?
         ( phi(IJK_M_) - phi(IJK_MM_) ) / ( phi(IJK_) - phi(IJK_M_) + tiny ) :
         ( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny );
-      r = std::abs(r);
+      r = fabs(r);
       VANLEERMACRO(r);
       const double afc  = (( eps(IJK_) + eps(IJK_M_) )/2.) < 0.51 ? 0. : 1.;
       const double afcm = (( eps(IJK_M_) + eps(IJK_MM_) )/2.) < 0.51 ? 0. : 1.;

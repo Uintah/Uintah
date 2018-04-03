@@ -7,9 +7,7 @@ typedef ArchesFieldContainer::VAR_DEPEND VAR_DEPEND;
 typedef ArchesFieldContainer::VariableRegistry VariableRegistry;
 
 AtomicTaskInterface::AtomicTaskInterface( std::string task_name, int matl_index ) :
-  TaskInterface( task_name, matl_index ),
-  m_task_name(task_name),
-  m_matl_index(matl_index)
+  TaskInterface( task_name, matl_index )
 {
 }
 
