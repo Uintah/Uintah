@@ -1461,10 +1461,6 @@ namespace WasatchCore{
     DataWarehouse* subOldDW = subsched_->get_dw(2);
     DataWarehouse* subNewDW = subsched_->get_dw(3);
 
-    // Unused - commented out to remove a warning
-    // DataWarehouse* parOldDW = subsched_->get_dw(0);
-    // DataWarehouse* parNewDW = subsched_->get_dw(1);
-
     //__________________________________
     //  Move data from parentOldDW to subSchedNewDW.
     const std::set<const Uintah::VarLabel*, Uintah::VarLabel::Compare>& initialRequires = subsched_->getInitialRequiredVars();
@@ -1492,10 +1488,6 @@ namespace WasatchCore{
       subOldDW = subsched_->get_dw(2);
       subNewDW = subsched_->get_dw(3);
       
-      // Unused - commented out to remove a warning
-      // parOldDW = subsched_->get_dw(0);
-      // parNewDW = subsched_->get_dw(1);
-
       for( std::set<const Uintah::VarLabel*>::const_iterator it=initialRequires.begin(); it!=initialRequires.end(); ++it ){
 
         Uintah::TypeDescription::Type vartype = (*it)->typeDescription()->getType();
