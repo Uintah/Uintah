@@ -111,6 +111,7 @@ void FaceVelocities::register_timestep_eval( VIVec& variable_registry, const int
 }
 
 //--------------------------------------------------------------------------------------------------
+template<typename ExecutionSpace, typename MemorySpace>
 void FaceVelocities::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   constSFCXVariable<double>& uVel = *(tsk_info->get_const_uintah_field<constSFCXVariable<double> >(m_u_vel_name));

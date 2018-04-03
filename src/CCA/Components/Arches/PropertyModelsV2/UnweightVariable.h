@@ -51,6 +51,7 @@ public:
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
+    template <typename EXECUTION_SPACE, typename MEMORY_SPACE>
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
     void create_local_labels();
@@ -452,6 +453,7 @@ void UnweightVariable<T>::register_timestep_eval(
 
 //--------------------------------------------------------------------------------------------------
 template <typename T>
+template<typename ExecutionSpace, typename MemorySpace>
 void UnweightVariable<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   ArchesCore::VariableHelper<T> helper;

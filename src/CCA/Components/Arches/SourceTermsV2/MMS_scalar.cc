@@ -194,7 +194,7 @@ MMS_scalar::register_timestep_eval( std::vector<ArchesFieldContainer::VariableIn
 }
 
 //--------------------------------------------------------------------------------------------------
-void
+template<typename ExecutionSpace, typename MemorySpace> void
 MMS_scalar::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& f_mms = *(tsk_info->get_uintah_field<CCVariable<double> >(m_MMS_label));

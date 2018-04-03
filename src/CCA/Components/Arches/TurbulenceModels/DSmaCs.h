@@ -30,6 +30,7 @@ public:
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
+    template <typename EXECUTION_SPACE, typename MEMORY_SPACE>
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
     void create_local_labels();
@@ -217,7 +218,8 @@ DSmaCs<TT>::register_timestep_eval( std::vector<ArchesFieldContainer::VariableIn
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename TT> void
+template<typename TT>
+template<typename ExecutionSpace, typename MemorySpace> void
 DSmaCs<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& mu_sgc = *(tsk_info->get_uintah_field<CCVariable<double> >(m_t_vis_name));

@@ -105,7 +105,7 @@ SampleTask::register_timestep_eval(
 
 //--------------------------------------------------------------------------------------------------
 //This is the work for the task.  First, get the variables. Second, do the work!
-void
+template<typename ExecutionSpace, typename MemorySpace> void
 SampleTask::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& field   = tsk_info->get_uintah_field_add<CCVariable<double> >( "a_sample_field" );

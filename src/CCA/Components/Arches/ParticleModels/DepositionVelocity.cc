@@ -186,7 +186,7 @@ DepositionVelocity::register_timestep_eval(
 
 }
 
-void
+template<typename ExecutionSpace, typename MemorySpace> void
 DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   const int FLOW = -1;

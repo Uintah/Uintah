@@ -29,6 +29,7 @@ public:
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
+    template <typename EXECUTION_SPACE, typename MEMORY_SPACE>
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
     void create_local_labels();
@@ -235,7 +236,8 @@ DSmaMMML<TT>::register_timestep_eval( std::vector<ArchesFieldContainer::Variable
 }
 
 //--------------------------------------------------------------------------------------------------
-template<typename TT> void
+template<typename TT>
+template<typename ExecutionSpace, typename MemorySpace> void
 DSmaMMML<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   const Vector Dx = patch->dCell(); //

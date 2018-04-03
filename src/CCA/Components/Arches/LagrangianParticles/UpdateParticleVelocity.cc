@@ -84,7 +84,7 @@ UpdateParticleVelocity::register_timestep_eval(
 }
 
 //--------------------------------------------------------------------------------------------------
-void
+template<typename ExecutionSpace, typename MemorySpace> void
 UpdateParticleVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   ParticleTuple pu_t = tsk_info->get_uintah_particle_field( _u_name );

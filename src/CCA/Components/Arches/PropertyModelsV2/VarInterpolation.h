@@ -50,6 +50,7 @@ public:
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
+    template <typename EXECUTION_SPACE, typename MEMORY_SPACE>
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
     void create_local_labels();
@@ -171,6 +172,7 @@ void VarInterpolation<T,IT>::register_timestep_eval(
 
 //--------------------------------------------------------------------------------------------------
 template <typename T, typename IT>
+template<typename ExecutionSpace, typename MemorySpace>
 void VarInterpolation<T,IT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   IT& int_var = tsk_info->get_uintah_field_add<IT>(m_inter_var_name);

@@ -176,7 +176,7 @@ DSFT::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformat
 }
 
 //--------------------------------------------------------------------------------------------------
-void
+template<typename ExecutionSpace, typename MemorySpace> void
 DSFT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   constSFCXVariable<double>& uVel = *(tsk_info->get_const_uintah_field<constSFCXVariable<double> >(m_u_vel_name));

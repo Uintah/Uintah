@@ -110,7 +110,7 @@ DensityPredictor::register_timestep_eval( std::vector<ArchesFieldContainer::Vari
 }
 
 //--------------------------------------------------------------------------------------------------
-void
+template<typename ExecutionSpace, typename MemorySpace> void
 DensityPredictor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& rho_guess = *(tsk_info->get_uintah_field<CCVariable<double> >( "new_densityGuess"));

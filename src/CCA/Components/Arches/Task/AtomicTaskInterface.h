@@ -98,7 +98,8 @@ protected:
     typedef std::map<std::string, constVariableBase<GridVariableBase>* > ConstUintahVarMap;
 
     /** @brief The actual work done within the derived class **/
-    virtual void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr ) = 0;
+    template <typename EXECUTION_SPACE, typename MEMORY_SPACE>
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr );
 
     std::string                  m_task_name;
     const int                    m_matl_index;

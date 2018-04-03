@@ -90,6 +90,7 @@ protected:
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
+    template <typename EXECUTION_SPACE, typename MEMORY_SPACE>
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
     void create_local_labels();
@@ -402,6 +403,7 @@ private:
   }
 
   template <typename T>
+  template<typename ExecutionSpace, typename MemorySpace>
   void TaskAlgebra<T>::eval(
     const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 

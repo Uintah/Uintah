@@ -128,7 +128,7 @@ GravityA::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInfo
 }
 
 //--------------------------------------------------------------------------------------------------
-void
+template<typename ExecutionSpace, typename MemorySpace> void
 GravityA::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   constCCVariable<double>& density  = tsk_info->get_const_uintah_field_add<constCCVariable<double > >( m_density_label );

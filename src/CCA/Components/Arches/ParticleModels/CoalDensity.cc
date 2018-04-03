@@ -204,7 +204,7 @@ CoalDensity::register_timestep_eval(
 }
 
 //--------------------------------------------------------------------------------------------------
-void
+template<typename ExecutionSpace, typename MemorySpace> void
 CoalDensity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   for ( int ienv = 0; ienv < _Nenv; ienv++ ){

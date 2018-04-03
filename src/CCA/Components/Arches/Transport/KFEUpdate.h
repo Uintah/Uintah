@@ -86,6 +86,7 @@ protected:
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
+    template <typename EXECUTION_SPACE, typename MEMORY_SPACE>
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
 private:
@@ -311,6 +312,7 @@ private:
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
+  template<typename ExecutionSpace, typename MemorySpace>
   void KFEUpdate<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     const double dt = tsk_info->get_dt();

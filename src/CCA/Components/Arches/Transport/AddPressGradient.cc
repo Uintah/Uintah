@@ -36,6 +36,7 @@ void AddPressGradient::register_timestep_eval( std::vector<AFC::VariableInformat
   register_variable( m_press, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, m_task_name );
 }
 
+template<typename ExecutionSpace, typename MemorySpace>
 void AddPressGradient::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   const double dt = tsk_info->get_dt();

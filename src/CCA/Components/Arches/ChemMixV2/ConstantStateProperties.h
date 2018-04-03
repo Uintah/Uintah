@@ -35,6 +35,7 @@ public:
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
+    template <typename EXECUTION_SPACE, typename MEMORY_SPACE>
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
     //Build instructions for this (ConstantStateProperties) class.

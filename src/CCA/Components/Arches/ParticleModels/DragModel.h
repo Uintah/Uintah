@@ -82,6 +82,7 @@ namespace Uintah{
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
+    template <typename EXECUTION_SPACE, typename MEMORY_SPACE>
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
   private:
@@ -279,6 +280,7 @@ namespace Uintah{
   }
 
   template <typename IT, typename DT>
+  template<typename ExecutionSpace, typename MemorySpace>
   void DragModel<IT,DT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     IT& rhoG = *(tsk_info->get_const_uintah_field<IT>(_gas_density_name));

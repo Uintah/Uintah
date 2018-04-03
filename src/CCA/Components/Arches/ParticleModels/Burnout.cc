@@ -95,7 +95,7 @@ Burnout::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInfor
 }
 
 //--------------------------------------------------------------------------------------------------
-void
+template<typename ExecutionSpace, typename MemorySpace> void
 Burnout::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());

@@ -109,6 +109,7 @@ void UFromRhoU::register_timestep_eval( VIVec& variable_registry, const int time
 }
 
 //--------------------------------------------------------------------------------------------------
+template<typename ExecutionSpace, typename MemorySpace>
 void UFromRhoU::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   compute_velocities( patch, tsk_info );

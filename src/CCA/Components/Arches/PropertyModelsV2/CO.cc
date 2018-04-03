@@ -185,7 +185,7 @@ CO::register_timestep_eval( std::vector<AFC::VariableInformation>& variable_regi
 
 }
 
-void
+template<typename ExecutionSpace, typename MemorySpace> void
 CO::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
 

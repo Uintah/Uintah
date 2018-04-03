@@ -333,7 +333,7 @@ partRadProperties::register_timestep_eval( std::vector<ArchesFieldContainer::Var
 
 
 
-void
+template<typename ExecutionSpace, typename MemorySpace> void
 partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
 

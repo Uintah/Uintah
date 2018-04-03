@@ -91,7 +91,7 @@ UpdateParticlePosition::register_timestep_eval(
 }
 
 //--------------------------------------------------------------------------------------------------
-void
+template<typename ExecutionSpace, typename MemorySpace> void
 UpdateParticlePosition::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   ParticleTuple px_tup = tsk_info->get_uintah_particle_field( _px_name );

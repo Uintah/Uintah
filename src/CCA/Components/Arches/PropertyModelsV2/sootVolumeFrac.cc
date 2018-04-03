@@ -81,7 +81,7 @@ sootVolumeFrac::register_timestep_eval( std::vector<ArchesFieldContainer::Variab
 }
 
 
-void
+template<typename ExecutionSpace, typename MemorySpace> void
 sootVolumeFrac::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& fvSoot     = tsk_info->get_uintah_field_add<CCVariable<double> >( _fvSoot);

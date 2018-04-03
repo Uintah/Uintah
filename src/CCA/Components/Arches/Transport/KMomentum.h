@@ -67,6 +67,7 @@ public:
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
+    template <typename EXECUTION_SPACE, typename MEMORY_SPACE>
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
     void create_local_labels();
@@ -468,7 +469,8 @@ private:
   }
 
   //------------------------------------------------------------------------------------------------
-  template <typename T> void
+  template <typename T>
+  template<typename ExecutionSpace, typename MemorySpace> void
   KMomentum<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     Vector Dx = patch->dCell();

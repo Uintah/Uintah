@@ -156,7 +156,7 @@ gasRadProperties::register_timestep_eval( std::vector<ArchesFieldContainer::Vari
 }
 
 
-void
+template<typename ExecutionSpace, typename MemorySpace> void
 gasRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());

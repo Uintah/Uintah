@@ -153,7 +153,7 @@ WallHFVariable::register_timestep_eval( std::vector<ArchesFieldContainer::Variab
 
 }
 
-void
+template<typename ExecutionSpace, typename MemorySpace> void
 WallHFVariable::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   double sigma=5.67e-8;  //  w / m^2 k^4

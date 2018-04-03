@@ -32,6 +32,7 @@ void PressureBC::register_timestep_eval( std::vector<AFC::VariableInformation>& 
 }
 
 //--------------------------------------------------------------------------------------------------
+template<typename ExecutionSpace, typename MemorySpace>
 void PressureBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& p = tsk_info->get_uintah_field_add<CCVariable<double> >( m_press );

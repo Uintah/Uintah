@@ -56,6 +56,7 @@ protected:
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
+    template <typename EXECUTION_SPACE, typename MEMORY_SPACE>
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
     void create_local_labels();
@@ -174,6 +175,7 @@ private:
   }
 
   template <typename IT, typename DT>
+  template<typename ExecutionSpace, typename MemorySpace>
   void ExampleParticleModel<IT,DT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     typedef typename ArchesCore::VariableHelper<IT>::ConstType CIT;

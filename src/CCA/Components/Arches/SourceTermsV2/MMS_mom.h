@@ -55,6 +55,7 @@ public:
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
+    template <typename EXECUTION_SPACE, typename MEMORY_SPACE>
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
     void create_local_labels();
@@ -178,6 +179,7 @@ void MMS_mom<T>::register_timestep_eval( std::vector<VarInfo>&
 
 //--------------------------------------------------------------------------------------------------
 template <typename T>
+template<typename ExecutionSpace, typename MemorySpace>
 void MMS_mom<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   compute_source( patch, tsk_info );

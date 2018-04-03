@@ -39,6 +39,7 @@ public:
     void register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
                                 const int time_substep, const bool pack_tasks );
 
+    template <typename EXECUTION_SPACE, typename MEMORY_SPACE>
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
     /** @brief Builder class containing instructions on how to build the task **/

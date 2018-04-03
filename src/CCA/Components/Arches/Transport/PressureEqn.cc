@@ -200,7 +200,7 @@ PressureEqn::register_timestep_eval(
 }
 
 //--------------------------------------------------------------------------------------------------
-void
+template<typename ExecutionSpace, typename MemorySpace> void
 PressureEqn::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   Vector DX = patch->dCell();
