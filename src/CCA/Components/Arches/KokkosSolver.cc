@@ -594,7 +594,7 @@ KokkosSolver::SSPRKSolve( const LevelP     & level
       TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls , time_substep );
 
     // compute particle face velocities 
-    i_particle_model_fac->second->schedule_task_group("part_face_velocities",
+    i_particle_model_fac->second->schedule_task_group("dqmom_variables",
       TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 
     // compute constant models
@@ -602,7 +602,7 @@ KokkosSolver::SSPRKSolve( const LevelP     & level
       TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 
     // drag model models.
-    i_particle_model_fac->second->schedule_task_group("drag_model_task",
+    i_particle_model_fac->second->schedule_task_group("dqmom_model_task",
       TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 
    // DQMOM inversion

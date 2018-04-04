@@ -1733,14 +1733,14 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
         }
 
 
-        i_particle_models->second->schedule_task_group( "part_face_velocities",
+        i_particle_models->second->schedule_task_group( "dqmom_variables",
                                                          TaskInterface::TIMESTEP_EVAL,
                                                          dont_pack_tasks, level, sched,
                                                          matls, curr_level );
         // schedule the models for evaluation
         modelFactory.sched_coalParticleCalculation( level, sched, curr_level );// compute drag, devol, char, etc models..
 
-        i_particle_models->second->schedule_task_group( "drag_model_task",
+        i_particle_models->second->schedule_task_group( "dqmom_model_task",
                                                          TaskInterface::TIMESTEP_EVAL,
                                                          dont_pack_tasks, level, sched,
                                                          matls, curr_level );

@@ -1,105 +1,58 @@
-#ifndef Uintah_Component_Arches_CharOxidationpsHelpe_h
-#define Uintah_Component_Arches_CharOxidationpsHelpe_h
+#ifndef Uintah_Component_Arches_CharOxidationpsHelper_h
+#define Uintah_Component_Arches_CharOxidationpsHelper_h
 
 #include <algorithm>
 #include <numeric>
 
 namespace Uintah {
 
-  struct RootFunctionBase {
-    virtual void root_function( std::vector<double> & F, std::vector<double> & rh_l, std::vector<double> & co_r,
-                                   double & gas_rho, double & cg, std::vector<double> & k_r, double & MW, 
-                                   double & r_devol, double & p_diam, std::vector<double> & Sh,
-                                   std::vector<double> & D_oxid_mix_l, std::vector<double> & phi_l,
-                                   double & p_void, std::vector<double> & effectivenessF, double & Sj,
-                                   double & p_rho, double & x_org, int & NUM_reactions, double& Sg0, double& Mh )=0;
-    virtual ~RootFunctionBase(){}
-  };
-
-  struct root_functionB : RootFunctionBase{
-    void root_function( std::vector<double> & F, std::vector<double> & rh_l, std::vector<double> & co_r,
-                                   double & gas_rho, double & cg, std::vector<double> & k_r, double & MW, 
-                                   double & r_devol, double & p_diam, std::vector<double> & Sh,
-                                   std::vector<double> & D_oxid_mix_l, std::vector<double> & phi_l,
-                                   double & p_void, std::vector<double> & effectivenessF, double & Sj,
-                                   double & p_rho, double & x_org, int & NUM_reactions, double& Sg0, double& Mh )
-    { 
-      double rh = 0.0;
-      double rtot = 0.0;
-      double Sfactor = 0.0;
-      double Bjm = 0.0;
-      double Fac = 0.0;
-      double mtc_r = 0.0;
-      double numerator = 0.0;
-      double denominator = 0.0;
-      for (int l=0; l< NUM_reactions; l++) {
-        rh          = std::accumulate(rh_l.begin(), rh_l.end(), 0.0);
-        rtot        = rh *  x_org * (1.-p_void) + r_devol;
-        Bjm         = std::min( 80.0 , rtot*p_diam/( D_oxid_mix_l[l] * gas_rho )); // [-] // this is the derived for mass flux  BSL chapter 22
-        Fac         = ( Bjm >= 1e-7 ) ?  Bjm/(exp(Bjm)-1.) : 1.0; // also from BSL chapter 22 the mass transfer correction factor.
-        mtc_r       = (Sh[l] * D_oxid_mix_l[l] * Fac) / p_diam; // [m/s]
-        Sfactor     = 1 + effectivenessF[l]*p_diam*p_rho*Sg0*Sj/(6.*(1.-p_void)); 
-        numerator   =  Mh * MW * phi_l[l] * k_r[l] * mtc_r * Sfactor * co_r[l] * cg; // [(#^2 kg-char kg-mix) / (s^2 m^6)]
-        denominator = MW * cg * (k_r[l] * x_org * (1.-p_void) * Sfactor + mtc_r); // [(kg-mix #) / (m^3 s)]
-        F[l]        = rh_l[l] - numerator / ( denominator + rtot); // [kg-char/m^3/s]
-        //double n_d = numerator / ( denominator + rtot);
-        //std::cout <<  " Num_reaction " << l << " F: " << F[l] << std::endl;
-        //std::cout <<  " Num_reaction " << l << " rh_l: " << rh_l[l]  << std::endl;
-        //std::cout <<  " Num_reaction " << l << " n_d: " << n_d  << std::endl;
-
-      }
-    }
-    ~root_functionB(){}
-  };
-
-
-
   struct InversionBase {
-    virtual void invert_mat(DenseMatrix* &dfdrh)=0;
+    virtual void invert_mat( double dfdrh[3][3])=0;
     virtual ~InversionBase(){}
   };
   
   struct invert_2_2 : InversionBase {
-    void invert_mat(DenseMatrix* &dfdrh) {
-      double a11=(*dfdrh)[0][0];
-      double a12=(*dfdrh)[0][1];
-      double a21=(*dfdrh)[1][0];
-      double a22=(*dfdrh)[1][1];
+    void invert_mat( double dfdrh[3][3]) {
+      double a11=dfdrh[0][0];
+      double a12=dfdrh[0][1];
+      double a21=dfdrh[1][0];
+      double a22=dfdrh[1][1];
       double det = a11*a22-a12*a21;
       double det_inv = 1/det;
-      (*dfdrh)[0][0]=a22*det_inv;
-      (*dfdrh)[0][1]=-a12*det_inv;
-      (*dfdrh)[1][0]=-a21*det_inv;
-      (*dfdrh)[1][1]=a11*det_inv;
+      dfdrh[0][0]=a22*det_inv;
+      dfdrh[0][1]=-a12*det_inv;
+      dfdrh[1][0]=-a21*det_inv;
+      dfdrh[1][1]=a11*det_inv;
     }
     ~invert_2_2(){}
   };
   
   struct invert_3_3 : InversionBase {
-    void invert_mat(DenseMatrix* &dfdrh) {
-      double a11=(*dfdrh)[0][0];
-      double a12=(*dfdrh)[0][1];
-      double a13=(*dfdrh)[0][2];
-      double a21=(*dfdrh)[1][0];
-      double a22=(*dfdrh)[1][1];
-      double a23=(*dfdrh)[1][2];
-      double a31=(*dfdrh)[2][0];
-      double a32=(*dfdrh)[2][1];
-      double a33=(*dfdrh)[2][2];
+    void invert_mat( double dfdrh[3][3]) {
+      double a11=dfdrh[0][0];
+      double a12=dfdrh[0][1];
+      double a13=dfdrh[0][2];
+      double a21=dfdrh[1][0];
+      double a22=dfdrh[1][1];
+      double a23=dfdrh[1][2];
+      double a31=dfdrh[2][0];
+      double a32=dfdrh[2][1];
+      double a33=dfdrh[2][2];
       double det = a11*a22*a33+a21*a32*a13+a31*a12*a23-a11*a32*a23-a31*a22*a13-a21*a12*a33;
       double det_inv = 1/det;
-      (*dfdrh)[0][0]=(a22*a33-a23*a32)*det_inv;
-      (*dfdrh)[0][1]=(a13*a32-a12*a33)*det_inv;
-      (*dfdrh)[0][2]=(a12*a23-a13*a22)*det_inv;
-      (*dfdrh)[1][0]=(a23*a31-a21*a33)*det_inv;
-      (*dfdrh)[1][1]=(a11*a33-a13*a31)*det_inv;
-      (*dfdrh)[1][2]=(a13*a21-a11*a23)*det_inv;
-      (*dfdrh)[2][0]=(a21*a32-a22*a31)*det_inv;
-      (*dfdrh)[2][1]=(a12*a31-a11*a32)*det_inv;
-      (*dfdrh)[2][2]=(a11*a22-a12*a21)*det_inv;
+      dfdrh[0][0]=(a22*a33-a23*a32)*det_inv;
+      dfdrh[0][1]=(a13*a32-a12*a33)*det_inv;
+      dfdrh[0][2]=(a12*a23-a13*a22)*det_inv;
+      dfdrh[1][0]=(a23*a31-a21*a33)*det_inv;
+      dfdrh[1][1]=(a11*a33-a13*a31)*det_inv;
+      dfdrh[1][2]=(a13*a21-a11*a23)*det_inv;
+      dfdrh[2][0]=(a21*a32-a22*a31)*det_inv;
+      dfdrh[2][1]=(a12*a31-a11*a32)*det_inv;
+      dfdrh[2][2]=(a11*a22-a12*a21)*det_inv;
     }
     ~invert_3_3(){}
   };
+
 
   struct diffusion_terms{
     int num_species;

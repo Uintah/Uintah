@@ -42,7 +42,6 @@ SRCS +=  \
          $(SRCDIR)/ParticleModelFactory.cc \
          $(SRCDIR)/ShaddixOxidation.cc     \
          $(SRCDIR)/CharOxidationps.cc      \
-         $(SRCDIR)/CharOxidationps_env.cc      \
          $(SRCDIR)/PartVariablesDQMOM.cc   \
          $(SRCDIR)/ParticleTools.cc        \
          $(SRCDIR)/FaceParticleVel.cc      \

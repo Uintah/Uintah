@@ -124,16 +124,16 @@
     <save label="temperature_coal_2"/>
     <save label="temperature_coal_3"/>
     <save label="temperature_coal_4"/>
-    <save label="char_ps_0"/>
-    <save label="char_ps_1"/>
-    <save label="char_ps_2"/>
-    <save label="char_ps_3"/>
-    <save label="char_ps_4"/>
-    <save label="char_ps_gasSource_0"/>
-    <save label="char_ps_gasSource_1"/>
-    <save label="char_ps_gasSource_2"/>
-    <save label="char_ps_gasSource_3"/>
-    <save label="char_ps_gasSource_4"/>
+    <save label="char_ps_qn0"/>
+    <save label="char_ps_qn1"/>
+    <save label="char_ps_qn2"/>
+    <save label="char_ps_qn3"/>
+    <save label="char_ps_qn4"/>
+    <save label="char_ps_qn0_gasSource"/>
+    <save label="char_ps_qn1_gasSource"/>
+    <save label="char_ps_qn2_gasSource"/>
+    <save label="char_ps_qn3_gasSource"/>
+    <save label="char_ps_qn4_gasSource"/>
     <save label="rho_coal_0"/>
     <save label="rho_coal_1"/>
     <save label="rho_coal_2"/>
@@ -270,6 +270,9 @@
         <var role="uvelocity" label="uVel"/>
         <var role="vvelocity" label="vVel"/>
         <var role="wvelocity" label="wVel"/>
+        <var role="ccuvelocity" label="uVel_cc"/>
+        <var role="ccvvelocity" label="vVel_cc"/>
+        <var role="ccwvelocity" label="wVel_cc"/>
         <var role="total_viscosity" label="gamma"/>
         <var role="density" label="density"/>
       </VarID>
@@ -449,7 +452,9 @@
         <model label="rho_coal" type="coal_density">
           <model_type>dynamic_dqmom</model_type>
         </model>
-        <model label="char_ps" type="char_oxidation_ps"/>
+        <model label="char_ps" type="char_oxidation_ps">
+          <devol_model_name>devol_rate</devol_model_name>
+        </model>
       </ParticleModels>
       <DQMOM>
         <number_quad_nodes>5</number_quad_nodes>
@@ -459,6 +464,7 @@
                   zlabel="wVel"/>
         <diffusion  scheme="central" D_label="gamma"/>
         <convection scheme="upwind"/>
+        <Models/>
         <Weights>
           <initialization type="env_constant">
             <env_constant qn="0" value="0.01"/>

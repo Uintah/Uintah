@@ -60,16 +60,16 @@
     <save label="uz_2"/>
     <save label="uz_3"/>
     <save label="uz_4"/>
-    <save label="char_ps_0"/>
-    <save label="char_ps_1"/>
-    <save label="char_ps_2"/>
-    <save label="char_ps_3"/>
-    <save label="char_ps_4"/>
-    <save label="char_ps_gasSource_0"/>
-    <save label="char_ps_gasSource_1"/>
-    <save label="char_ps_gasSource_2"/>
-    <save label="char_ps_gasSource_3"/>
-    <save label="char_ps_gasSource_4"/>
+    <save label="char_ps_qn0"/>
+    <save label="char_ps_qn1"/>
+    <save label="char_ps_qn2"/>
+    <save label="char_ps_qn3"/>
+    <save label="char_ps_qn4"/>
+    <save label="char_ps_qn0_gasSource"/>
+    <save label="char_ps_qn1_gasSource"/>
+    <save label="char_ps_qn2_gasSource"/>
+    <save label="char_ps_qn3_gasSource"/>
+    <save label="char_ps_qn4_gasSource"/>
     <save label="rho_coal_0"/>
     <save label="rho_coal_1"/>
     <save label="rho_coal_2"/>
@@ -121,10 +121,93 @@
         <var role="uvelocity" label="uVel"/>
         <var role="vvelocity" label="vVel"/>
         <var role="wvelocity" label="wVel"/>
+        <var role="ccuvelocity" label="uVel_cc"/>
+        <var role="ccvvelocity" label="vVel_cc"/>
+        <var role="ccwvelocity" label="wVel_cc"/>
         <var role="total_viscosity" label="gamma"/>
         <var role="density" label="density"/>
       </VarID>
       <PropertyModelsV2>
+        <model label="RCmass_qn0_RHS" type="constant_property">
+          <grid type="CC"/>
+          <value>0</value>
+        </model>
+        <model label="Charmass_qn0_RHS" type="constant_property">
+          <grid type="CC"/>
+          <value>0</value>
+        </model>
+        <model label="length_qn0_RHS" type="constant_property">
+          <grid type="CC"/>
+          <value>0</value>
+        </model>
+        <model label="w_qn0_RHS" type="constant_property">
+          <grid type="CC"/>
+          <value>0</value>
+        </model>
+        <model label="RCmass_qn1_RHS" type="constant_property">
+          <grid type="CC"/>
+          <value>0</value>
+        </model>
+        <model label="Charmass_qn1_RHS" type="constant_property">
+          <grid type="CC"/>
+          <value>0</value>
+        </model>
+        <model label="length_qn1_RHS" type="constant_property">
+          <grid type="CC"/>
+          <value>0</value>
+        </model>
+        <model label="w_qn1_RHS" type="constant_property">
+          <grid type="CC"/>
+          <value>0</value>
+        </model>
+        <model label="RCmass_qn2_RHS" type="constant_property">
+          <grid type="CC"/>
+          <value>0</value>
+        </model>
+        <model label="Charmass_qn2_RHS" type="constant_property">
+          <grid type="CC"/>
+          <value>0</value>
+        </model>
+        <model label="length_qn2_RHS" type="constant_property">
+          <grid type="CC"/>
+          <value>0</value>
+        </model>
+        <model label="w_qn2_RHS" type="constant_property">
+          <grid type="CC"/>
+          <value>0</value>
+        </model>
+        <model label="RCmass_qn3_RHS" type="constant_property">
+          <grid type="CC"/>
+          <value>0</value>
+        </model>
+        <model label="Charmass_qn3_RHS" type="constant_property">
+          <grid type="CC"/>
+          <value>0</value>
+        </model>
+        <model label="length_qn3_RHS" type="constant_property">
+          <grid type="CC"/>
+          <value>0</value>
+        </model>
+        <model label="w_qn3_RHS" type="constant_property">
+          <grid type="CC"/>
+          <value>0</value>
+        </model>
+        <model label="RCmass_qn4_RHS" type="constant_property">
+          <grid type="CC"/>
+          <value>0</value>
+        </model>
+        <model label="Charmass_qn4_RHS" type="constant_property">
+          <grid type="CC"/>
+          <value>0</value>
+        </model>
+        <model label="length_qn4_RHS" type="constant_property">
+          <grid type="CC"/>
+          <value>0</value>
+        </model>
+        <model label="w_qn4_RHS" type="constant_property">
+          <grid type="CC"/>
+          <value>0</value>
+        </model>
         <model label="gamma" type="constant_property">
           <grid type="CC"/>
           <value>1.e-4</value>
@@ -322,7 +405,9 @@
         </model>
         <!--model label="number_density" type="total_number_density"/-->
         <model label="dqmom_variales" type="particle_variables_dqmom"/>
-        <model label="char_ps" type="char_oxidation_ps"/>
+        <model label="char_ps" type="char_oxidation_ps">
+          <devol_model_name>devol_rate</devol_model_name>
+        </model>
       </ParticleModels>
       <BoundaryConditions>
         <force_area_calc/>
