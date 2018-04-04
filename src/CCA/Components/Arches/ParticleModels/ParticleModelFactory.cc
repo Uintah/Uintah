@@ -41,7 +41,8 @@
 #include <CCA/Components/Arches/ParticleModels/ShaddixEnthalpy.h>
 #include <CCA/Components/Arches/ParticleModels/ShaddixOxidation.h>
 #include <CCA/Components/Arches/ParticleModels/TotNumDensity.h>
-#include <CCA/Components/Arches/ParticleModels/CharOxidationps.h>
+//#include <CCA/Components/Arches/ParticleModels/CharOxidationps.h>
+#include <CCA/Components/Arches/ParticleModels/CharOxidationps_env.h>
 #include <CCA/Components/Arches/ParticleModels/PartVariablesDQMOM.h>
 #include <CCA/Components/Arches/ParticleModels/DQMOMNoInversion.h>
 #include <CCA/Components/Arches/ParticleModels/FaceParticleVel.h>
@@ -201,6 +202,17 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
           register_task( task_name_N, tsk );
           _drag_model_task.push_back(task_name_N);
         }     
+      } else if  ( type == "wchar_ps" ) {
+
+        const int nQn_part = ArchesCore::get_num_env( db, ArchesCore::DQMOM_METHOD );
+        for ( int i = 0; i < nQn_part; i++ ){
+          std::stringstream ienv;
+          ienv << i;
+          std::string task_name_N = task_name + "_qn" + ienv.str(); 
+          TaskInterface::TaskBuilder* tsk = scinew CharOxidationps_env<CCVariable<double> >::Builder(task_name_N, 0, i);
+          register_task( task_name_N, tsk );
+          _drag_model_task.push_back(task_name_N);
+        }     
 
       } else if  ( type == "gravity" ) {
 
@@ -324,9 +336,9 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
 
       } else if ( type == "char_oxidation_ps" ) {
 
-        TaskInterface::TaskBuilder* tsk = scinew CharOxidationps< CCVariable<double> >::Builder(task_name,0);
-        register_task( task_name, tsk );
-        _drag_model_task.push_back(task_name);
+        //TaskInterface::TaskBuilder* tsk = scinew CharOxidationps< CCVariable<double> >::Builder(task_name,0);
+        //register_task( task_name, tsk );
+        //_drag_model_task.push_back(task_name);
 
       } else if ( type == "particle_variables_dqmom" ) {
 
@@ -473,6 +485,18 @@ ParticleModelFactory::build_all_tasks( ProblemSpecP& db )
       print_task_setup_info( model_name, type );
 
       if (type == "wdrag") {
+        const int nQn_part = ArchesCore::get_num_env( db, ArchesCore::DQMOM_METHOD );
+        for ( int i = 0; i < nQn_part; i++ ){
+          std::stringstream ienv;
+          ienv << i;
+          std::string model_name_N = model_name + "_qn" + ienv.str(); 
+          TaskInterface* tsk = retrieve_task(model_name_N);
+        
+          tsk->problemSetup( db_model );
+          tsk->create_local_labels();
+        }
+
+      } else if (type == "wchar_ps") {
         const int nQn_part = ArchesCore::get_num_env( db, ArchesCore::DQMOM_METHOD );
         for ( int i = 0; i < nQn_part; i++ ){
           std::stringstream ienv;

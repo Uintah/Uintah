@@ -460,6 +460,7 @@
                   zlabel="wVel"/>
         <diffusion  scheme="central" D_label="gamma"/>
         <convection scheme="upwind"/>
+        <Models/>
         <Weights>
           <initialization type="env_constant">
             <env_constant qn="0" value="0.01"/>

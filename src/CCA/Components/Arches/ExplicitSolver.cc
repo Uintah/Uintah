@@ -1732,6 +1732,11 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
           dqmom_eqn->sched_evalTransportEqn( level, sched, curr_level );//compute rhs
         }
 
+
+        i_particle_models->second->schedule_task_group( "part_face_velocities",
+                                                         TaskInterface::TIMESTEP_EVAL,
+                                                         dont_pack_tasks, level, sched,
+                                                         matls, curr_level );
         // schedule the models for evaluation
         modelFactory.sched_coalParticleCalculation( level, sched, curr_level );// compute drag, devol, char, etc models..
 
@@ -1795,6 +1800,11 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
         // schedule the models for evaluation
         modelFactory.sched_coalParticleCalculation( level, sched, curr_level );// compute drag, devol, char, etc models..
 
+        i_particle_models->second->schedule_task_group( "part_face_velocities",
+                                                         TaskInterface::TIMESTEP_EVAL,
+                                                         dont_pack_tasks, level, sched,
+                                                         matls, time_substep);
+
         i_particle_models->second->schedule_task_group( "drag_model_task",
                                                          TaskInterface::TIMESTEP_EVAL,
                                                          dont_pack_tasks, level, sched,
@@ -1803,7 +1813,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
         i_particle_models->second->schedule_task_group( "pre_update_property_models",
                                                         TaskInterface::TIMESTEP_EVAL,
                                                         dont_pack_tasks, level, sched,
-                                                        matls );
+                                                        matls , time_substep);
 
         i_transport->second->schedule_task_group("dqmom_diffusion_flux_builders",
           TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
