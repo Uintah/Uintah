@@ -136,6 +136,7 @@ private:
     m_length_name  = ArchesCore::append_env( length_root, _Nenv );
     m_particle_density_name  = ArchesCore::append_env( density_root, _Nenv );
     m_w_qn_name              = ArchesCore::append_qn_env("w", _Nenv ); // w_qn
+    m_w_name                 = ArchesCore::append_env("w", _Nenv ); // w
     
     // check for gravity
     const ProblemSpecP params_root = db->getRootNode();
@@ -221,8 +222,8 @@ private:
   register_variable( m_density_gas_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
   register_variable( m_volFraction_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
 
-  register_variable( m_w_qn_name,            ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-  register_variable( m_w_name,               ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+  register_variable( m_w_qn_name,            ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+  register_variable( m_w_name,               ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
   register_variable( m_w_qn_name + "_RHS",   ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
   register_variable( m_up_name,               ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
@@ -231,7 +232,7 @@ private:
   register_variable( m_particle_density_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
   register_variable( m_length_name,           ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
   register_variable( m_wvelp_name,            ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
-  register_variable( m_wvelp_name + "_RHS",   ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+  register_variable( m_wvelp_name + "_RHS",   ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
   }
 

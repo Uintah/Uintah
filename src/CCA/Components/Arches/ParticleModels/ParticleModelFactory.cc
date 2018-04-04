@@ -199,6 +199,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
           std::string task_name_N = task_name + "_qn" + ienv.str(); 
           TaskInterface::TaskBuilder* tsk = scinew WDragModel<CCVariable<double> >::Builder(task_name_N, 0, i);
           register_task( task_name_N, tsk );
+          _drag_model_task.push_back(task_name_N);
         }     
 
       } else if  ( type == "gravity" ) {
@@ -243,6 +244,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
           FaceParticleVel<CCVariable<double> >::Builder(task_name, 0, model_name);
 
           register_task( task_name, tsk );
+          _part_face_velocities.push_back(task_name);
        }
       } else if  ( type == "constant" ) {
 
@@ -324,11 +326,13 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
 
         TaskInterface::TaskBuilder* tsk = scinew CharOxidationps< CCVariable<double> >::Builder(task_name,0);
         register_task( task_name, tsk );
+        _drag_model_task.push_back(task_name);
 
       } else if ( type == "particle_variables_dqmom" ) {
 
         TaskInterface::TaskBuilder* tsk = scinew PartVariablesDQMOM::Builder(task_name,0);
         register_task( task_name, tsk );
+        _part_face_velocities.push_back(task_name);
 
       } else if ( type == "rate_deposition" ) {
 

@@ -589,13 +589,25 @@ KokkosSolver::SSPRKSolve( const LevelP     & level
     i_turb_model_fac->second->schedule_task_group("momentum_closure",
       TaskInterface::TIMESTEP_EVAL, packed_info.turbulence, level, sched, matls, time_substep );
 
-    // compute all particle models.
-    i_particle_model_fac->second->schedule_task_group("all_tasks",
-      TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
-
    // (pre-update source terms)
     i_source_fac->second->schedule_task_group( "pre_update_source_tasks",
       TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls , time_substep );
+
+    // compute particle face velocities 
+    i_particle_model_fac->second->schedule_task_group("part_face_velocities",
+      TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
+
+    // compute constant models
+    i_particle_model_fac->second->schedule_task_group("post_update_particle_models",
+      TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
+
+    // drag model models.
+    i_particle_model_fac->second->schedule_task_group("drag_model_task",
+      TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
+
+   // DQMOM inversion
+    i_particle_model_fac->second->schedule_task_group("pre_update_property_models",
+      TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 
     // ** DQMOM **
     i_transport->second->schedule_task_group("dqmom_diffusion_flux_builders", 
@@ -610,9 +622,6 @@ KokkosSolver::SSPRKSolve( const LevelP     & level
     i_transport->second->schedule_task_group("dqmom_eqns",
       TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
 
-    i_transport->second->schedule_task_group("dqmom_fe_update",
-      TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
-
     // computes ic from w*ic  :
     i_transport->second->schedule_task_group("dqmom_ic_from_wic",
       TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
@@ -620,6 +629,8 @@ KokkosSolver::SSPRKSolve( const LevelP     & level
     i_transport->second->schedule_task_group("dqmom_ic_from_wic",
       TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
 
+    i_transport->second->schedule_task_group("dqmom_fe_update",
+      TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
 
     // ** SCALARS **
     // PRE-PROJECTION
