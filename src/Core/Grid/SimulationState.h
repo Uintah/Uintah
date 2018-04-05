@@ -70,15 +70,16 @@ class WasatchMaterial;
       SimulationState
       
     DESCRIPTION
-      Global data structure to store data accessible
-      by all components
+      Global data structure to store data accessible by all components
       
     WARNING
       
 ****************************************/
 
 class SimulationState : public RefCounted {
+
 public:
+
   SimulationState();
   ~SimulationState();
 

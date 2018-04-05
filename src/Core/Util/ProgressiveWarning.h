@@ -68,34 +68,34 @@ DESCRIPTION
 
 class ProgressiveWarning {
 
- public:
-   //! Pass the message to output as a warning.  The multiplier is the amount to multiply the
-   //! next occurrence by when we output the warning.  -1 will mean to only output once.
-   //! Output to stream.  'Multiplier' should not be set to '1'... and will be updated to '2' if
-   //! '1' is specified.
+  public:
+    //! Pass the message to output as a warning.  The multiplier is the amount to multiply the
+    //! next occurrence by when we output the warning.  -1 will mean to only output once.
+    //! Output to stream.  'Multiplier' should not be set to '1'... and will be updated to '2' if
+    //! '1' is specified.
 
-   ProgressiveWarning( const std::string & message, int multiplier = -1, std::ostream & stream = std::cerr );
+    ProgressiveWarning( const std::string & message, int multiplier = -1, std::ostream & stream = std::cerr );
 
-   //! Invoke the warning numTimes times.  If we've hit this enough times, output the warning message.
-   //! Return true if we output the message.
+    //! Invoke the warning numTimes times.  If we've hit this enough times, output the warning message.
+    //! Return true if we output the message.
 
-   bool invoke( int numTimes = 1 );
-   void changeMessage( const std::string & message );
-   void showWarning();
+    bool invoke( int numTimes = 1 );
+    void changeMessage( const std::string & message );
+    void showWarning();
 
- private:
+  private:
 
-   void doMessage();
+    void doMessage();
 
-   std::string    d_message;
-   int            d_numOccurences;
-   int            d_multiplier;
-   int            d_nextOccurence;
+    std::string    d_message;
+    int            d_numOccurences;
+    int            d_multiplier;
+    int            d_nextOccurence;
 
-   bool           d_warned;
+    bool           d_warned;
 
-   std::ostream * d_out;
-};
+    std::ostream * d_out;
+  };
 
 } // ends namespace Uintah
 

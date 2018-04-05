@@ -144,6 +144,8 @@ class MPIScheduler : public SchedulerCommon {
 
     Timers::Simple              m_exec_timer;
   
+    std::map<std::string, double> m_exec_times;
+
   private:
 
     // eliminate copy, assignment and move

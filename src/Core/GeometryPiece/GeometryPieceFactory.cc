@@ -55,7 +55,9 @@
 using namespace std;
 using namespace Uintah;
 
-static DebugStream dbg( "GeometryPieceFactory", "GeometryPieceFactory", "Geometry piece factory debug stream", false );
+namespace {
+  DebugStream dbg( "GeometryPieceFactory", "GeometryPieceFactory", "", false );
+}
 
 // Static class variable definition:
 map<string,GeometryPieceP>             GeometryPieceFactory::namedPieces_;

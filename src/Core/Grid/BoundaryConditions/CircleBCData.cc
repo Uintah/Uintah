@@ -27,14 +27,10 @@
 #include <Core/Grid/Box.h>
 #include <Core/Grid/BoundaryConditions/BoundCondFactory.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Util/DebugStream.h>
+
 #include <iostream>
 
-using namespace std;
 using namespace Uintah;
-
-// export SCI_DEBUG="BC_dbg:+"
-extern DebugStream BC_dbg;
 
 CircleBCData::CircleBCData() : BCGeomBase()
 {
@@ -106,17 +102,17 @@ bool CircleBCData::inside(const Point &p) const
 
 void CircleBCData::print()
 {
-  BC_dbg << "Geometry type = " << typeid(this).name() << endl;
+  BC_dbg << "Geometry type = " << typeid(this).name() << std::endl;
   d_bc.print();
 }
 
 
 void CircleBCData::determineIteratorLimits(Patch::FaceType face, 
                                            const Patch* patch, 
-                                           vector<Point>& test_pts)
+                                           std::vector<Point>& test_pts)
 {
 #if 0
-  cout << "Circle determineIteratorLimits() " << patch->getFaceName(face)<< endl;
+  std::cout << "Circle determineIteratorLimits() " << patch->getFaceName(face)<< std::std::endl;
 #endif
 
   BCGeomBase::determineIteratorLimits(face,patch,test_pts);

@@ -27,14 +27,8 @@
 #include <Core/Grid/Box.h>
 #include <Core/Grid/BoundaryConditions/BoundCondFactory.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Util/DebugStream.h>
 #include <iostream>
 using namespace Uintah;
-using std::cout;
-using std::endl;
-
-// export SCI_DEBUG="BC_dbg:+"
-extern DebugStream BC_dbg;
 
 RectangulusBCData::RectangulusBCData() : BCGeomBase()
 {
@@ -135,7 +129,7 @@ bool RectangulusBCData::inside(const Point &p) const
 
 void RectangulusBCData::print()
 {
-  BC_dbg << "Geometry type = " << typeid(this).name() << endl;
+  BC_dbg << "Geometry type = " << typeid(this).name() << std::endl;
   d_bc.print();
 }
 
@@ -145,12 +139,7 @@ void RectangulusBCData::determineIteratorLimits(Patch::FaceType face,
                                               const Patch* patch, 
                                               std::vector<Point>& test_pts)
 {
-#if 0
-  cout << "RectangulusBC determineIteratorLimits()" << endl;
-#endif
-
   BCGeomBase::determineIteratorLimits(face,patch,test_pts);
-
 }
 
 

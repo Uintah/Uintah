@@ -36,6 +36,8 @@
 #include <CCA/Components/ICE/WallShearStressModel/WallShearStressFactory.h>
 #include <CCA/Components/Models/ModelFactory.h>
 #include <CCA/Components/Models/FluidsBased/FluidsBasedModel.h>
+#include <CCA/Components/Models/HEChem/HEChemModel.h>
+#include <CCA/Components/Models/SolidReactionModel/SolidReactionModel.h>
 #include <CCA/Components/Models/MultiMatlExchange/ExchangeFactory.h>
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #include <CCA/Components/MPMICE/Core/MPMICELabel.h>
@@ -516,25 +518,13 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
     d_models = ModelFactory::makeModels(d_myworld, m_sharedState,
                                         orig_or_restart_ps, prob_spec);
 
-    // problem setup for each model  
+    // Problem setup for each model  
     for(vector<ModelInterface*>::iterator m_iter  = d_models.begin();
                                           m_iter != d_models.end(); m_iter++){
       ModelInterface* model = *m_iter;
       model->setComponents( dynamic_cast<ApplicationInterface*>( this ) );
       model->problemSetup(grid, isRestart);
       
-      // An ICE model may adjust the output interval or the checkpoint
-      // interval during a simulation.  For example in deflagration ->
-      // detonation simulations.
-      if( model->adjustOutputInterval() )
-        adjustOutputInterval( true );
-      
-      if( model->adjustCheckpointInterval() )
-        adjustCheckpointInterval( true );
-    
-      if( model->mayEndSimulation() )
-        mayEndSimulation( true );
-    
       //__________________________________
       // Model with transported variables. Bullet proofing each
       // transported variable must have a boundary condition.
@@ -1111,9 +1101,11 @@ void ICE::scheduleComputeThermoTransportProperties(SchedulerP& sched,
   if(d_models.size() != 0){
     for(vector<ModelInterface*>::iterator m_iter  = d_models.begin();
                                           m_iter != d_models.end(); m_iter++){
-      ModelInterface* model = *m_iter;
-      if(model->computesThermoTransportProps() ) {
-         model->scheduleModifyThermoTransportProperties(sched,level,ice_matls);
+
+      FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( *m_iter );
+	  
+      if( fb_model && fb_model->computesThermoTransportProps() ) {
+	fb_model->scheduleModifyThermoTransportProperties(sched,level,ice_matls);
       } 
     }
   }
@@ -1273,6 +1265,7 @@ void ICE::scheduleComputeModelSources(SchedulerP& sched,
     // Model with transported variables.
     for(vector<ModelInterface*>::iterator m_iter  = d_models.begin();
                                           m_iter != d_models.end(); m_iter++){
+
       FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( *m_iter );
 
       if( fb_model && fb_model->d_trans_vars.size() ){
@@ -1294,8 +1287,18 @@ void ICE::scheduleComputeModelSources(SchedulerP& sched,
     //  Models *can* compute their resources
     for(vector<ModelInterface*>::iterator m_iter  = d_models.begin();
                                           m_iter != d_models.end(); m_iter++){
-      ModelInterface* model = *m_iter;
-      model->scheduleComputeModelSources(sched, level);
+
+      FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( *m_iter );
+      if( fb_model )
+	fb_model->scheduleComputeModelSources(sched, level);
+      
+      HEChemModel* hec_model = dynamic_cast<HEChemModel*>( *m_iter );
+      if( hec_model )
+	hec_model->scheduleComputeModelSources(sched, level);
+      
+      SolidReactionModel* sr_model = dynamic_cast<SolidReactionModel*>( *m_iter );
+      if( sr_model )
+	sr_model->scheduleComputeModelSources(sched, level);
     }
   }
 }
@@ -2001,8 +2004,10 @@ void ICE::scheduleTestConservation(SchedulerP& sched,
   if(d_models.size() != 0){
     for(vector<ModelInterface*>::iterator m_iter  = d_models.begin();
                                           m_iter != d_models.end(); m_iter++){
-      ModelInterface* model = *m_iter;
-      model->scheduleTestConservation(sched,patches);
+
+      FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( *m_iter );
+      if( fb_model )
+	fb_model->scheduleTestConservation(sched,patches);
     }
   }
 }
@@ -4946,9 +4951,11 @@ void ICE::conservedtoPrimitive_Vars(const ProcessorGroup* /*pg*/,
       if(d_models.size() != 0){
         for(vector<ModelInterface*>::iterator m_iter  = d_models.begin();
                                               m_iter != d_models.end(); m_iter++){ 
-          ModelInterface* model = *m_iter;
-          if(model->computesThermoTransportProps() ) {
-            model->computeSpecificHeat(cv_new, patch, new_dw, indx);
+	  FluidsBasedModel* fb_model =
+	    dynamic_cast<FluidsBasedModel*>( *m_iter );
+	  
+          if(fb_model && fb_model->computesThermoTransportProps() ) {
+            fb_model->computeSpecificHeat(cv_new, patch, new_dw, indx);
           }
         }
       }

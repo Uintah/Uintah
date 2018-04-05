@@ -1610,6 +1610,10 @@
             <concentration              spec="REQUIRED NO_DATA"
                                         attribute1="label REQUIRED STRING"
                                         need_applies_to="type simple_rate"/>       <!-- label for the "concentration" -->
+            
+            <!-- char oxidation ps  -->
+            <devol_model_name          spec="REQUIRED STRING" 
+                                        need_applies_to="type char_oxidation_ps"  /> <!-- label of devol model -->
 
             <!-- drag model -->
             <direction                  spec="REQUIRED STRING 'x,y,z,X,Y,Z'"

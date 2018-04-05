@@ -212,15 +212,21 @@ namespace Uintah{ namespace ArchesCore{
   double get_scaling_constant(ProblemSpecP& db, const std::string labelName, const int qn){
 
     const ProblemSpecP params_root = db->getRootNode();
-    if ( params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM") ){
+    const ProblemSpecP db_dqmom = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM");
+    if ( db_dqmom ){
 
       if ( labelName == "w" ||  labelName == "weights" || labelName == "weight"){
 
         if ( params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM")->findBlock("Weights") ){
 
           std::vector<double> scaling_const;
-          params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM")->findBlock("Weights")->require("scaling_const",scaling_const);
-          return scaling_const[qn];
+          ProblemSpecP db_weight_scal = db_dqmom->findBlock("Weights")->findBlock("scaling_const");
+          if ( db_weight_scal ) { 
+            db_dqmom->findBlock("Weights")->require("scaling_const",scaling_const);
+            return scaling_const[qn];
+          }else {
+            return 1.;
+          }
         }
         else {
           throw ProblemSetupException("Error: cannot find <weights> block in inupt file.",__FILE__,__LINE__);
@@ -234,11 +240,17 @@ namespace Uintah{ namespace ArchesCore{
           IcBlock->getAttribute("label",tempLabelname);
           if (tempLabelname == labelName){
             std::vector<double> scaling_const;
-            IcBlock->require("scaling_const",scaling_const);
-            return scaling_const[qn];
+            ProblemSpecP db_ic_scal = IcBlock->findBlock("scaling_const");
+            if ( db_ic_scal ) { 
+              IcBlock->require("scaling_const",scaling_const);
+              return scaling_const[qn];
+            } else {
+              return 1.;
+            }
           }
         }
-        throw ProblemSetupException("Error: couldn't find internal coordinate or weight with name: "+labelName , __FILE__, __LINE__);
+        //throw ProblemSetupException("Error: couldn't find internal coordinate or weight with name: "+labelName , __FILE__, __LINE__);
+        return 1.;
       }
     } else {
       throw ProblemSetupException("Error: DQMOM section not found in input file.",__FILE__,__LINE__);

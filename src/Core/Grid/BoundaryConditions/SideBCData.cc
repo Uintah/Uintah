@@ -28,17 +28,10 @@
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/NodeIterator.h>
 #include <Core/Grid/BoundaryConditions/BoundCondFactory.h>
-#include <Core/Util/DebugStream.h>
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
 
-using std::endl;
-using std::vector;
-
 using namespace Uintah;
-
-// export SCI_DEBUG="BC_dbg:+"
-extern DebugStream BC_dbg;
 
 SideBCData::SideBCData() 
 {
@@ -96,17 +89,17 @@ bool SideBCData::inside(const Point &p) const
 
 void SideBCData::print()
 {
-  BC_dbg << "Geometry type = " << typeid(this).name() << endl;
+  BC_dbg << "Geometry type = " << typeid(this).name() << std::endl;
   d_bc.print();
 }
 
 
 void SideBCData::determineIteratorLimits(Patch::FaceType face, 
                                          const Patch* patch, 
-                                         vector<Point>& test_pts)
+                                         std::vector<Point>& test_pts)
 {
 #if 0
-  cout << "SideBC determineIteratorLimits() " << patch->getFaceName(face)<<  endl;
+  std::cout << "SideBC determineIteratorLimits() " << patch->getFaceName(face)<<  std::endl;
 #endif
 
 
@@ -115,8 +108,8 @@ void SideBCData::determineIteratorLimits(Patch::FaceType face,
   d_cells = GridIterator(l,h);
 
 #if 0
-  cout << "d_cells->begin() = " << d_cells->begin() << " d_cells->end() = " 
-       << d_cells->end() << endl;
+  std::cout << "d_cells->begin() = " << d_cells->begin() << " d_cells->end() = " 
+       << d_cells->end() << std::endl;
 #endif
 
 
@@ -126,16 +119,16 @@ void SideBCData::determineIteratorLimits(Patch::FaceType face,
 
 
 #if 0
-  cout << "d_nodes->begin() = " << d_nodes->begin() << " d_nodes->end() = " 
-       << d_nodes->end() << endl;
+  std::cout << "d_nodes->begin() = " << d_nodes->begin() << " d_nodes->end() = " 
+       << d_nodes->end() << std::endl;
 #endif
 
   //  Iterator iii(d_cells);
 
 #if 0
-  cout << "Iterator output . . . " << endl;
+  std::cout << "Iterator output . . . " << std::endl;
   for (Iterator ii(d_cells); !ii.done(); ii++) {
-    cout << ii << endl;
+    std::cout << ii << std::endl;
   }
 #endif
   

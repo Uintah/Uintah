@@ -41,53 +41,52 @@
 
 namespace Uintah {
 
-
 namespace {
 
-Dout  mpi_stats( "MPIStats",  "Schedulers", "Runtime MPI Stats",  false);
-Dout exec_times( "ExecTimes", "Schedulers", "Runtime Exec Stats", false);
-Dout wait_times( "WaitTimes", "Schedulers", "Runtime Wait Stats", false);
-Dout task_stats( "TaskStats", "Schedulers", "Runtime Task Stats", false);
+  Dout  mpi_stats( "MPIStats",  "Schedulers", "Runtime MPI Stats",  false);
+  Dout exec_times( "ExecTimes", "Schedulers", "Runtime Exec Stats", false);
+  Dout wait_times( "WaitTimes", "Schedulers", "Runtime Wait Stats", false);
+  Dout task_stats( "TaskStats", "Schedulers", "Runtime Task Stats", false);
 
-struct ReportValue
-{
-  ReportValue()                     = default;
-  ReportValue( const ReportValue &) = default;
-  ReportValue( ReportValue &&)      = default;
+  struct ReportValue
+  {
+    ReportValue()                     = default;
+    ReportValue( const ReportValue &) = default;
+    ReportValue( ReportValue &&)      = default;
+    
+    ReportValue & operator=( const ReportValue & ) = default;
+    ReportValue & operator=( ReportValue && )      = default;
+    
+    ReportValue( RuntimeStats::ValueType  type
+		 , std::function<int64_t()> get
+		 , std::function<void()>    clear = [](){}
+		 )
+      : m_type{type}
+      , m_get{get}
+      , m_clear{clear}
+    {}
 
-  ReportValue & operator=( const ReportValue & ) = default;
-  ReportValue & operator=( ReportValue && )      = default;
+    RuntimeStats::ValueType  m_type{};
+    std::function<int64_t()> m_get{};
+    std::function<void()>    m_clear{};
+    int m_index{-1};
+  };
 
-  ReportValue( RuntimeStats::ValueType  type
-             , std::function<int64_t()> get
-             , std::function<void()>    clear = [](){}
-             )
-    : m_type{type}
-    , m_get{get}
-    , m_clear{clear}
-  {}
+  Uintah::MasterLock g_report_lock{};
 
-  RuntimeStats::ValueType  m_type{};
-  std::function<int64_t()> m_get{};
-  std::function<void()>    m_clear{};
-  int m_index{-1};
-};
+  // [Dout][value_name] = ReportValue
+  std::map< Dout, std::map< std::string, ReportValue> > g_report_values;
 
-Uintah::MasterLock g_report_lock{};
+  size_t g_num_tasks;
+  std::vector< std::string > g_task_names;
+  std::unique_ptr< std::atomic<int64_t>[] > g_task_exec_times{nullptr};
+  std::unique_ptr< std::atomic<int64_t>[] > g_task_wait_times{nullptr};
 
-// [Dout][value_name] = ReportValue
-std::map< Dout, std::map< std::string, ReportValue> > g_report_values;
-
-size_t g_num_tasks;
-std::vector< std::string > g_task_names;
-std::unique_ptr< std::atomic<int64_t>[] > g_task_exec_times{nullptr};
-std::unique_ptr< std::atomic<int64_t>[] > g_task_wait_times{nullptr};
-
-size_t impl_get_global_id( DetailedTask const* t)
-{
-  auto const itr = std::lower_bound( g_task_names.begin(), g_task_names.end(), t->getTask()->getName() );
-  return itr - g_task_names.begin();
-}
+  size_t impl_get_global_id( DetailedTask const* t)
+  {
+    auto const itr = std::lower_bound( g_task_names.begin(), g_task_names.end(), t->getTask()->getName() );
+    return itr - g_task_names.begin();
+  }
 
 } // namespace
 

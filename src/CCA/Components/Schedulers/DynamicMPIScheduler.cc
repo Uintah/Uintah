@@ -35,16 +35,15 @@
 using namespace Uintah;
 
 
-extern Dout g_task_dbg;
-extern Dout g_task_order;
-extern Dout g_exec_out;
-
+namespace Uintah {
+  extern Dout g_task_dbg;
+  extern Dout g_task_order;
+  extern Dout g_exec_out;
+}
 
 namespace {
-
-Dout g_dbg(          "DynamicMPI_DBG",         "Schedulers", "", false);
-Dout g_queue_length( "DynamicMPI_QueueLength", "Schedulers", "", false);
-
+  Dout g_dbg(          "DynamicMPI_DBG",         "Schedulers", "", false);
+  Dout g_queue_length( "DynamicMPI_QueueLength", "Schedulers", "", false);
 }
 
 

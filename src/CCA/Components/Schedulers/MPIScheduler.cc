@@ -68,33 +68,30 @@
 
 using namespace Uintah;
 
-
-namespace {
-
-Uintah::MasterLock g_lb_mutex{};                // load balancer lock
-Uintah::MasterLock g_recv_mutex{};              // for postMPIRecvs
-
-Uintah::MasterLock g_msg_vol_mutex{};           // to report thread-safe msg volume info
-Uintah::MasterLock g_send_time_mutex{};         // for reporting thread-safe MPI send times
-Uintah::MasterLock g_recv_time_mutex{};         // for reporting thread-safe MPI recv times
-Uintah::MasterLock g_wait_time_mutex{};         // for reporting thread-safe MPI wait times
-
-Dout g_dbg(          "MPIScheduler_DBG"       , "MPIScheduler", "", false );
-Dout g_send_stats(   "MPISendStats"           , "MPIScheduler", "", false );
-Dout g_reductions(   "ReductionTasks"         , "MPIScheduler", "", false );
-Dout g_time_out(     "MPIScheduler_TimingsOut", "MPIScheduler", "", false );
-Dout g_task_level(   "TaskLevel"              , "MPIScheduler", "", false );
-
+namespace Uintah {
+// These are used externally, keep them visible outside this unit
+  Dout g_task_order( "TaskOrder", "MPIScheduler", "task order debug stream", false );
+  Dout g_task_dbg(   "TaskDBG"  , "MPIScheduler", "task debug stream", false );
+  Dout g_mpi_dbg(    "MPIDBG"   , "MPIScheduler", "MPI debug stream", false );
+  Dout g_exec_out(   "ExecOut"  , "MPIScheduler", "exec debug stream", false );
 }
 
+namespace {
+  Uintah::MasterLock g_lb_mutex{};                // load balancer lock
+  Uintah::MasterLock g_recv_mutex{};              // for postMPIRecvs
+  
+  Uintah::MasterLock g_msg_vol_mutex{};           // to report thread-safe msg volume info
+  Uintah::MasterLock g_send_time_mutex{};         // for reporting thread-safe MPI send times
+  Uintah::MasterLock g_recv_time_mutex{};         // for reporting thread-safe MPI recv times
+  Uintah::MasterLock g_wait_time_mutex{};         // for reporting thread-safe MPI wait times
+  
+  Dout g_dbg(          "MPIScheduler_DBG"       , "MPIScheduler", "", false );
+  Dout g_send_stats(   "MPISendStats"           , "MPIScheduler", "", false );
+  Dout g_reductions(   "ReductionTasks"         , "MPIScheduler", "", false );
+  Dout g_time_out(     "MPIScheduler_TimingsOut", "MPIScheduler", "", false );
+  Dout g_task_level(   "TaskLevel"              , "MPIScheduler", "", false );
+}
 
-// these are used externally, keep them visible outside this unit
-Dout g_task_order( "TaskOrder", "MPIScheduler", "task order debug stream", false );
-Dout g_task_dbg(   "TaskDBG"  , "MPIScheduler", "task debug stream", false );
-Dout g_mpi_dbg(    "MPIDBG"   , "MPIScheduler", "MPI debug stream", false );
-Dout g_exec_out(   "ExecOut"  , "MPIScheduler", "exec debug stream", false );
-
-std::map<std::string, double> g_exec_times;
 
 //______________________________________________________________________
 //
@@ -280,7 +277,7 @@ MPIScheduler::runTask( DetailedTask * dtask
     
     double total_task_time = dtask->task_exec_time();
     if (g_exec_out) {
-      g_exec_times[dtask->getTask()->getName()] += total_task_time;
+      m_exec_times[dtask->getTask()->getName()] += total_task_time;
     }
     // if I do not have a sub scheduler
     if (!dtask->getTask()->getHasSubScheduler()) {
@@ -947,11 +944,11 @@ MPIScheduler::outputTimingStats( const char* label )
            << m_application->getTimeStep()
            << ")" << std::endl;
 
-      for (auto iter = g_exec_times.begin(); iter != g_exec_times.end(); ++iter) {
+      for (auto iter = m_exec_times.begin(); iter != m_exec_times.end(); ++iter) {
         fout << std::fixed<< "Rank-" << my_rank << ": TaskExecTime(s): " << iter->second << " Task:" << iter->first << std::endl;
       }
       fout.close();
-      g_exec_times.clear();
+      m_exec_times.clear();
     }
   }
 

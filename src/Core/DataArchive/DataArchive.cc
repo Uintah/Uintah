@@ -44,7 +44,6 @@
 #include <Core/Math/MiscMath.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Util/Assert.h>
-#include <Core/Util/DebugStream.h>
 #include <Core/Util/StringUtil.h>
 #include <Core/Util/XMLUtils.h>
 
@@ -66,8 +65,8 @@ using namespace Uintah;
 //______________________________________________________________________
 // Initialize class static variables:
 
-DebugStream DataArchive::dbg( "DataArchive", "DataArchive", "Data archive debug stream", false );
 bool        DataArchive::d_types_initialized = false;
+DebugStream DataArchive::dbg( "DataArchive", "DataArchive", "Data archive debug stream", false );
 
 //______________________________________________________________________
 //

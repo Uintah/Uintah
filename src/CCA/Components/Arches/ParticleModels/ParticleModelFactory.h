@@ -23,6 +23,14 @@ namespace Uintah{
 
         return _coal_models;
 
+      } else if ( subset == "dqmom_variables"){
+
+        return _dqmom_variables;
+
+      } else if ( subset == "dqmom_model_task"){
+
+        return _dqmom_model_task;
+
       } else if ( subset == "post_update_particle_models"){
 
         return _post_update_particle_tasks;
@@ -49,6 +57,8 @@ namespace Uintah{
     std::vector<std::string> _post_update_particle_tasks;  ///< Tasks that execute after the timeave
                                                             //  of the particle transport variables
     std::vector<std::string> _pre_update_particle_tasks;   ///< Tasks before update
+    std::vector<std::string> _dqmom_model_task;   ///< 
+    std::vector<std::string> _dqmom_variables;   ///< 
 
   };
 }

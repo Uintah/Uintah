@@ -25,14 +25,14 @@
 #ifndef UINTAH_GRID_BoundCondReader_H
 #define UINTAH_GRID_BoundCondReader_H
 
-#include <map>
-#include <string>
-
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/BoundaryConditions/BCData.h>
 #include <Core/Grid/BoundaryConditions/BCGeomBase.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/Patch.h>
+
+#include <map>
+#include <string>
 
 namespace Uintah {
 
@@ -155,6 +155,7 @@ namespace Uintah {
    private:
     friend class Level;
     friend class Patch;
+
     std::map<Patch::FaceType,BCDataArray > d_BCReaderData;
     std::map<Patch::FaceType,BCDataArray > d_interiorBndBCReaderData;
     

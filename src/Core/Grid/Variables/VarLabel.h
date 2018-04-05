@@ -30,8 +30,8 @@
 #include <Core/Util/RefCounted.h>
 #include <Core/Geometry/IntVector.h>
 
-#include <string>
 #include <iosfwd>
+#include <string>
 
 
 namespace Uintah {
@@ -173,7 +173,7 @@ private:
 
   // Static member to keep track of all labels created to prevent
   // duplicates.
-  static std::map<std::string, VarLabel*> g_all_labels;  
+  static std::map<std::string, VarLabel*> g_all_labels; 
 };
 
 } // End namespace Uintah

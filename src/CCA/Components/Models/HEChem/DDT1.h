@@ -27,7 +27,8 @@
 #ifndef Packages_Uintah_CCA_Components_Models_DDT1_h
 #define Packages_Uintah_CCA_Components_Models_DDT1_h
 
-#include <CCA/Ports/ModelInterface.h>
+#include <CCA/Components/Models/HEChem/HEChemModel.h>
+
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/NCVariable.h>
 
@@ -67,7 +68,7 @@ WARNING
 
 ****************************************/
 
-  class DDT1 : public ModelInterface {
+  class DDT1 : public HEChemModel {
   public:
     DDT1(const ProcessorGroup* myworld,
 	 const SimulationStateP& sharedState,
@@ -100,25 +101,9 @@ WARNING
     virtual void scheduleComputeModelSources(SchedulerP&,
 						   const LevelP& level);
                                              
-    virtual void scheduleModifyThermoTransportProperties(SchedulerP&,
-                                               const LevelP&,
-                                               const MaterialSet*);
-                                               
-   virtual void computeSpecificHeat(CCVariable<double>&,
-                                    const Patch*,
-                                    DataWarehouse*,
-                                    const int);
-                                    
-   virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
-                                      SchedulerP& sched);
-                                      
    virtual void scheduleRefine( const PatchSet* patches,
                                 SchedulerP& sched );
                                              
-   virtual void scheduleTestConservation(SchedulerP&,
-                                         const PatchSet* patches);
-
-    
   virtual bool adjustOutputInterval()     const { return d_adj_IO_Press->onOff || d_adj_IO_Det->onOff; };
   virtual bool adjustCheckpointInterval() const { return d_adj_IO_Press->onOff || d_adj_IO_Det->onOff; };
 
@@ -312,8 +297,6 @@ WARNING
     adj_IO* d_adj_IO_Det;  
       
     static const double d_EPSILON;   /* stop epsilon for Bisection-Newton method */   
-    #define d_SMALL_NUM 1e-100
-    #define d_TINY_RHO 1e-12
   };
 }
 

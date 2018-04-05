@@ -38,5 +38,12 @@
    verses a new Hypre, so please leave it here.)
 */
 
+@DEF_HYPRE_VERSION_MAJOR@
+
+@DEF_HYPRE_VERSION_MINOR@
+
+@DEF_HYPRE_VERSION_PATCH@
+
+
 #endif
 

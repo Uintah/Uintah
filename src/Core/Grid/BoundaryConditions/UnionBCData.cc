@@ -29,16 +29,10 @@
 #include <Core/Grid/Variables/UnionIterator.h>
 #include <Core/Grid/Level.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Util/DebugStream.h>
 #include <iostream>
 #include <algorithm>
 
-using namespace std;
-
 using namespace Uintah;
-
-// export SCI_DEBUG="BC_dbg:+"
-extern DebugStream BC_dbg;
 
 UnionBCData::UnionBCData() : BCGeomBase()
 {
@@ -46,7 +40,7 @@ UnionBCData::UnionBCData() : BCGeomBase()
 
 UnionBCData::~UnionBCData()
 {
-  for (vector<BCGeomBase*>::const_iterator bc = child.begin();
+  for (std::vector<BCGeomBase*>::const_iterator bc = child.begin();
        bc != child.end(); ++bc)
     delete (*bc);
   
@@ -56,7 +50,7 @@ UnionBCData::~UnionBCData()
 
 UnionBCData::UnionBCData(const UnionBCData& mybc): BCGeomBase(mybc)
 {
-  vector<BCGeomBase*>::const_iterator itr;
+  std::vector<BCGeomBase*>::const_iterator itr;
   for (itr=mybc.child.begin(); itr != mybc.child.end(); ++itr)
     child.push_back((*itr)->clone());
 }
@@ -69,7 +63,7 @@ UnionBCData& UnionBCData::operator=(const UnionBCData& rhs)
     return *this;
 
   // Delete the lhs
-  vector<BCGeomBase*>::const_iterator itr;
+  std::vector<BCGeomBase*>::const_iterator itr;
   for(itr=child.begin(); itr != child.end();++itr)
     delete *itr;
 
@@ -129,7 +123,7 @@ void UnionBCData::getBCData(BCData& bc) const
 
 bool UnionBCData::inside(const Point &p) const 
 {
-  for (vector<BCGeomBase*>::const_iterator i = child.begin(); i != child.end();
+  for (std::vector<BCGeomBase*>::const_iterator i = child.begin(); i != child.end();
        ++i){
     if ((*i)->inside(p))
       return true;
@@ -139,8 +133,8 @@ bool UnionBCData::inside(const Point &p) const
 
 void UnionBCData::print()
 {
-  BC_dbg << "Geometry type = " << typeid(this).name() << endl;
-  for (vector<BCGeomBase*>::const_iterator i = child.begin(); i != child.end();
+  BC_dbg << "Geometry type = " << typeid(this).name() << std::endl;
+  for (std::vector<BCGeomBase*>::const_iterator i = child.begin(); i != child.end();
        ++i)
     (*i)->print();
 
@@ -149,20 +143,20 @@ void UnionBCData::print()
 
 void UnionBCData::determineIteratorLimits(Patch::FaceType face, 
                                           const Patch* patch, 
-                                          vector<Point>& test_pts)
+                                          std::vector<Point>& test_pts)
 {
 #if 0
   cout << "UnionBC determineIteratorLimits()" << endl;
 #endif
 
-  for (vector<BCGeomBase*>::const_iterator bc = child.begin();
+  for (std::vector<BCGeomBase*>::const_iterator bc = child.begin();
        bc != child.end(); ++bc) {
     (*bc)->determineIteratorLimits(face,patch,test_pts);
   }
   
   UnionIterator cells,nodes;
 
-  for (vector<BCGeomBase*>::const_iterator bc = child.begin();
+  for (std::vector<BCGeomBase*>::const_iterator bc = child.begin();
        bc != child.end(); ++bc) {
     Iterator cell_itr,node_itr;
     (*bc)->getCellFaceIterator(cell_itr);
@@ -180,8 +174,8 @@ void UnionBCData::determineIteratorLimits(Patch::FaceType face,
   IntVector l,h;
   patch->getFaceCells(face,0,l,h);
 
-  vector<IntVector> b,nb;
-  vector<Point>::iterator pts;
+  std::vector<IntVector> b,nb;
+  std::vector<Point>::iterator pts;
   pts = test_pts.begin();
   for (CellIterator bound(l,h); !bound.done(); bound++,pts++) 
     if (inside(*pts))
@@ -192,10 +186,10 @@ void UnionBCData::determineIteratorLimits(Patch::FaceType face,
   cout << "Size of boundary = " << boundary.size() << endl;
 #endif
   // Need to determine the boundary iterators for each separate bc.
-  for (vector<BCGeomBase*>::const_iterator bc = child.begin();  
+  for (std::vector<BCGeomBase*>::const_iterator bc = child.begin();  
        bc != child.end(); ++bc) {
     pts = test_pts.begin();
-    vector<IntVector> boundary_itr;
+    std::vector<IntVector> boundary_itr;
     for (CellIterator bound(l,h); !bound.done(); bound++, pts++) 
       if ( (*bc)->inside(*pts))
         boundary_itr.push_back(*bound);

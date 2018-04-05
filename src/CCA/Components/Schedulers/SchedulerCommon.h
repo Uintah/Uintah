@@ -97,8 +97,11 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     virtual void getComponents();
     virtual void releaseComponents();
 
+    // TEMPORARY
+    virtual ApplicationInterface *getApplication() { return m_application; };
+  
     virtual void problemSetup( const ProblemSpecP     & prob_spec,
-			       const SimulationStateP & state );
+                               const SimulationStateP & state );
 
     virtual void doEmitTaskGraphDocs();
 
@@ -282,7 +285,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     bool isCopyDataTimestep() { return m_is_copy_data_timestep; }
       
     bool copyTimestep() { return (m_is_copy_data_timestep ||
-				  m_is_init_timestep); }
+                                  m_is_init_timestep); }
 
     void setInitTimestep( bool isInitTimestep ) { m_is_init_timestep = isInitTimestep; }
 

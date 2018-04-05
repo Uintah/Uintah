@@ -874,6 +874,29 @@
                             attribute1="type OPTIONAL STRING 'MPI DynamicMPI Unified KokkosOpenMP'">
     <small_messages       spec="OPTIONAL BOOLEAN" />
     <taskReadyQueueAlg    spec="OPTIONAL STRING 'MostChildren LeastChildren MostAllChildren LeastAllChildren MostL2Children LeastL2Children PatchOrder PatchOrderRandom MostMessages LeastMessages Random FCFS Stack'" />
+
+    <!-- TaskMonitoring Example
+
+    To monitor global values and a particular task (the same name
+    given to the scheduler:
+
+    <TaskMonitoring>
+
+      <attribute>LoadBalancerCost</attribute>
+      <attribute>ExecTime</attribute>
+      <task name="SchedulerCommon::recordTaskMonitoring" attribute="ExecTime"> </task>
+    </TaskMonitoring>
+
+    To save the values the names are concatenated together with a
+    forward lash. Global values begin with AllTasks.
+
+    <save label="AllTasks/LoadBalancerCost"/>
+    <save label="AllTasks/ExecTime"/>
+    <save label="SchedulerCommon/recordTaskMonitoring/ExecTime"/> 
+
+    The values must be saved otherwise they are only availble in situ.
+    -->
+    
     <TaskMonitoring       spec="OPTIONAL NO_DATA">
       <per_cell           spec="OPTIONAL BOOLEAN" />
       <attribute          spec="MULTIPLE STRING 'LoadBalancerCost ExecTime WaitTime'" />

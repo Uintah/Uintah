@@ -53,7 +53,7 @@ ZeroOrder::ZeroOrder(const ProcessorGroup* myworld,
                      const SimulationStateP& sharedState,
                      const ProblemSpecP& params,
                      const ProblemSpecP& prob_spec)
-  : ModelInterface(myworld, sharedState),
+  : HEChemModel(myworld, sharedState),
     d_params(params), d_prob_spec(prob_spec)
 {
   mymatls = 0;
@@ -355,32 +355,4 @@ void ZeroOrder::computeModelSources(const ProcessorGroup*,
   if(d_saveConservedVars->energy){
     new_dw->put(sum_vartype(totalHeatReleased), ZeroOrder::totalHeatReleasedLabel);
   }
-}
-//______________________________________________________________________
-//
-void ZeroOrder::scheduleModifyThermoTransportProperties(SchedulerP&,
-                                                        const LevelP&,
-                                                        const MaterialSet*)
-{
-  // do nothing      
-}
-void ZeroOrder::computeSpecificHeat(CCVariable<double>&,
-                                    const Patch*,   
-                                    DataWarehouse*, 
-                                    const int)      
-{
-  //do nothing
-}
-//______________________________________________________________________
-//
-void ZeroOrder::scheduleErrorEstimate(const LevelP&,
-                                      SchedulerP&)
-{
-  // Not implemented yet
-}
-//__________________________________
-void ZeroOrder::scheduleTestConservation(SchedulerP&,
-                                         const PatchSet*)                     
-{
-  // Not implemented yet
 }

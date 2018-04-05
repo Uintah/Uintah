@@ -325,41 +325,6 @@ CharOxidationSmith::problemSetup(const ProblemSpecP& params, int qn)
       _other_indices.push_back(spec);
     }
   }
-
-#ifdef HAVE_VISIT
-  static bool initialized = false;
-
-  // Running with VisIt so add in the variables that the user can
-  // modify.
-//   if( d_sharedState->getVisIt() && !initialized ) {
-    // variable 1 - Must start with the component name and have NO
-    // spaces in the var name.
-//     SimulationState::interactiveVar var;
-//     var.name     = "Arches-CharOx-PreExp-Factor-O2";
-//     var.type     = Uintah::TypeDescription::double_type;
-//     var.value    = (void *) &(_a_l[0]);
-//     var.range[0]   = -1.0e9;
-//     var.range[1]   = +1.0e9;
-//     var.modifiable = true;
-//     var.recompile  = false;
-//     var.modified   = false;
-//     d_sharedState->d_UPSVars.push_back( var );
-
-    // variable 2 - Must start with the component name and have NO
-    // spaces in the var name.
-//     var.name     = "Arches-CharOx-Activation-Energy-O2";
-//     var.type     = Uintah::TypeDescription::double_type;
-//     var.value    = (void *) &(_e_l[0]);
-//     var.range[0]   = -1.0e9;
-//     var.range[1]   = +1.0e9;
-//     var.modifiable = true;
-//     var.recompile  = false;
-//     var.modified   = false;
-//     d_sharedState->d_UPSVars.push_back( var );
-
-//     initialized = true;
-//   }
-#endif
 }
 
 
@@ -382,6 +347,45 @@ CharOxidationSmith::sched_initVars( const LevelP& level, SchedulerP& sched )
   }
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
+
+#ifdef HAVE_VISIT
+  static bool initialized = false;
+
+  // Running with VisIt so add in the variables that the user can
+  // modify.
+  ApplicationInterface* m_application = sched->getApplication();
+  
+  if( m_application && m_application->getVisIt() && !initialized ) {
+    // variable 1 - Must start with the component name and have NO
+    // spaces in the var name.
+    ApplicationInterface::interactiveVar var;
+    var.component  = "Arches";
+    var.name       = "CharOx-PreExp-Factor-O2";
+    var.type       = Uintah::TypeDescription::double_type;
+    var.value      = (void *) &(_a_l[0]);
+    var.range[0]   = -1.0e9;
+    var.range[1]   = +1.0e9;
+    var.modifiable = true;
+    var.recompile  = false;
+    var.modified   = false;
+    m_application->getUPSVars().push_back( var );
+
+    // variable 2 - Must start with the component name and have NO
+    // spaces in the var name.
+    var.component  = "Arches";
+    var.name       = "CharOx-Activation-Energy-O2";
+    var.type       = Uintah::TypeDescription::double_type;
+    var.value      = (void *) &(_e_l[0]);
+    var.range[0]   = -1.0e9;
+    var.range[1]   = +1.0e9;
+    var.modifiable = true;
+    var.recompile  = false;
+    var.modified   = false;
+    m_application->getUPSVars().push_back( var );
+
+    initialized = true;
+  }
+#endif
 }
 
 //-------------------------------------------------------------------------
@@ -757,7 +761,7 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
         CO_CO2_ratio = 200.*exp(-9000./(_R_cal*p_T)); // [ kg CO / kg CO2]
         CO_CO2_ratio=CO_CO2_ratio*44.0/28.0; // [kmoles CO / kmoles CO2]
         CO2onCO=1./CO_CO2_ratio; // [kmoles CO2 / kmoles CO]
-	      for (int l=0; l<_NUM_reactions; l++) {
+              for (int l=0; l<_NUM_reactions; l++) {
           phi_l[l] = (_use_co2co_l[l]) ? (CO2onCO + 1)/(CO2onCO + 0.5) : _phi_l[l]; 
           hrxn_l[l] = (_use_co2co_l[l]) ? (CO2onCO*_HF_CO2 + _HF_CO)/(1+CO2onCO) : _hrxn_l[l]; 
         }
@@ -847,8 +851,8 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
         }
         // convert rh units from kg/m^3/s to kg/s/#
         char_mass_rate  = 0.0;
-	      d_mass = 0.0;
-	      h_rxn = 0.0; // this is the reaction rate weighted heat of reaction. It is needed so we can used the clipped value when computed the heat of reaction rate.
+              d_mass = 0.0;
+              h_rxn = 0.0; // this is the reaction rate weighted heat of reaction. It is needed so we can used the clipped value when computed the heat of reaction rate.
                      // h_rxn = sum(hrxn_l * rxn_l)/sum(rxn_l)
         double oxi_lim = 0.0; // max rate due to reactions
         double rh_l_i = 0.0;
@@ -858,10 +862,10 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
           oxi_lim = (oxid_mass_frac[l] * gas_rho * surfaceAreaFraction) / dt;// [kg/s/#] // here the surfaceAreaFraction parameter is allowing us to only consume the oxidizer multiplied by the weighted area fraction for the current particle.
           rh_l_i = std::min(rh_l_new[l], oxi_lim);
           char_mass_rate += -rh_l_i/w;// [kg/s/#]  negative sign because we are computing the destruction rate for the particles.
-	        d_mass += rh_l_i;
-	        h_rxn += hrxn_l[l] * rh_l_i;
+                d_mass += rh_l_i;
+                h_rxn += hrxn_l[l] * rh_l_i;
         }
-	      h_rxn /= (d_mass + 1e-50); // [J/mole]
+              h_rxn /= (d_mass + 1e-50); // [J/mole]
         
         // check to see if reaction rate is fuel limited.
         if ( add_rawcoal_birth && add_char_birth ){

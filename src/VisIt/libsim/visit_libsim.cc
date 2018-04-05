@@ -59,7 +59,7 @@ static std::string simArgs;
 static std::string simComment("Uintah Simulation");
 static std::string simUI("uintah.ui");
 
-Uintah::Dout visitdbg("VisItLibSim", "VisIt", "VisIt in situ debug stream", true);
+Dout visitdbg("VisItLibSim", "VisIt", "VisIt in situ debug stream", true);
 
 //---------------------------------------------------------------------
 // ProcessLibSimArguments

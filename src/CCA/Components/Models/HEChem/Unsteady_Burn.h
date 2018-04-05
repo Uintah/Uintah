@@ -26,7 +26,8 @@
 #ifndef Packages_Uintah_CCA_Components_Examples_Unsteady_Burn_h
 #define Packages_Uintah_CCA_Components_Examples_Unsteady_Burn_h
 
-#include <CCA/Ports/ModelInterface.h>
+#include <CCA/Components/Models/HEChem/HEChemModel.h>
+
 #include <Core/Grid/Variables/NCVariable.h>
 
 namespace Uintah {
@@ -65,7 +66,7 @@ WARNING
   
 ****************************************/
 
-  class Unsteady_Burn : public ModelInterface {
+  class Unsteady_Burn : public HEChemModel {
   public:
     Unsteady_Burn(const ProcessorGroup* myworld,
 		  const SimulationStateP& sharedState,
@@ -95,22 +96,6 @@ WARNING
     
     virtual void scheduleComputeModelSources(SchedulerP&,
                                              const LevelP& level);
-    
-    virtual void scheduleModifyThermoTransportProperties(SchedulerP&,
-                                                         const LevelP&,
-                                                         const MaterialSet*);
-    
-    virtual void computeSpecificHeat(CCVariable<double>&,
-                                     const Patch*,
-                                     DataWarehouse*,
-                                     const int);
-    
-    virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
-                                       SchedulerP& sched);
-    
-    virtual void scheduleTestConservation(SchedulerP&,
-                                          const PatchSet* patches); 
-    
  
   private:    
     void computeModelSources(const ProcessorGroup*,
@@ -211,8 +196,6 @@ WARNING
     static const double EPSILON;   /* stop epsilon for Bisection-Newton method */
     static const double INIT_TS;   /* initial surface temperature          */
     static const double INIT_BETA; /* initial surface temperature gradient */
-    #define d_SMALL_NUM 1e-100
-    #define d_TINY_RHO  1e-12
   };
 }
 

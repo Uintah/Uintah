@@ -110,8 +110,9 @@ namespace {
 
 Uintah::MasterLock cerr_mutex{};
 
-Dout g_stack_debug(       "ExceptionStack" , "Standalone", "sus stack debug stream"            , true );
-Dout g_wait_for_debugger( "WaitForDebugger", "Standalone", "sus wait for debugger debug stream", false );
+Dout g_stack_debug(       "ExceptionStack" , "StandAlone", "sus stack debug stream"            , true  );
+Dout g_wait_for_debugger( "WaitForDebugger", "StandAlone", "sus wait for debugger debug stream", false );
+Dout g_show_env(          "ShowEnv"        , "StandAlone", "sus show environment"              , false );
 
 }
 
@@ -277,9 +278,7 @@ int main( int argc, char *argv[], char *env[] )
     }
     else if ((arg == "-debug") || (arg == "-d")) {
       start();
-
       if (Uintah::Parallel::getMPIRank() == 0) {
-
         // report all active Dout debug objects
         std::cout << "\nThe following Douts are known. Active Douts are indicated with plus sign." << std::endl;
         std::cout << "To activate a Dout, set the environment variable 'setenv SCI_DEBUG \"Dout_Name:+\"'" << std::endl;
@@ -534,14 +533,11 @@ int main( int argc, char *argv[], char *env[] )
     // Initialize after parsing the args...
     Uintah::Parallel::initializeManager( argc, argv );
 
-    // Uncomment the following to see what the environment is... this is useful to figure out
-    // what environment variable can be checked for (in Uintah/Core/Parallel/Parallel.cc)
-    // to automatically determine that sus is running under MPI (instead of having to
-    // be explicit with the "-mpi" arg):
-    //
-//    if( Uintah::Parallel::getMPIRank() == 0 ) {
-//      show_env();
-//    }
+    if (g_show_env) {
+      if( Uintah::Parallel::getMPIRank() == 0 ) {
+        show_env();
+      }
+    }
 
     if( !validateUps ) {
       // Print out warning message here (after Parallel::initializeManager()), so that
@@ -706,8 +702,7 @@ int main( int argc, char *argv[], char *env[] )
     // Simulation controller
     const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
 
-    SimulationController* simController =
-      scinew AMRSimulationController( world, ups );
+    SimulationController* simController = scinew AMRSimulationController( world, ups );
 
     // Set the simulation controller flags for reduce uda
     if ( postProcessUda ) {
@@ -720,11 +715,9 @@ int main( int argc, char *argv[], char *env[] )
 
     //__________________________________
     // Component and application interface
-    UintahParallelComponent* appComp =
-      ApplicationFactory::create( ups, world, nullptr, udaDir );
+    UintahParallelComponent* appComp = ApplicationFactory::create( ups, world, nullptr, udaDir );
     
-    ApplicationInterface* application =
-      dynamic_cast<ApplicationInterface*>(appComp);
+    ApplicationInterface* application = dynamic_cast<ApplicationInterface*>(appComp);
 
     // Read the UPS file to get the general application details.
     application->problemSetup( ups );
@@ -744,15 +737,13 @@ int main( int argc, char *argv[], char *env[] )
     // Solver
     SolverInterface * solver = SolverFactory::create( ups, world, solverName );
 
-    UintahParallelComponent* solverComp =
-      dynamic_cast<UintahParallelComponent*>(solver);
+    UintahParallelComponent* solverComp = dynamic_cast<UintahParallelComponent*>(solver);
 
     appComp->attachPort( "solver", solver );
 
     //__________________________________
     // Load balancer
-    LoadBalancerCommon* loadBalancer =
-      LoadBalancerFactory::create( ups, world );
+    LoadBalancerCommon* loadBalancer = LoadBalancerFactory::create( ups, world );
 
     loadBalancer->attachPort( "application", application );
     simController->attachPort( "load balancer", loadBalancer );
@@ -846,7 +837,6 @@ int main( int argc, char *argv[], char *env[] )
     appComp->releaseComponents();
     simController->releaseComponents();
 
-    
     scheduler->removeReference();
 
     if ( regridder ) {

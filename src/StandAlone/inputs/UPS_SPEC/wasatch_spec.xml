@@ -578,20 +578,14 @@
       <!-- Momentum profile on the boundaries with respect to time for the variable density MMS !-->
       <VarDenMMSMomentum  spec="OPTIONAL NO_DATA"
                           attribute1="side REQUIRED STRING 'PLUS,MINUS'">
-        <rho0             spec="OPTIONAL DOUBLE"/>
-        <rho1             spec="OPTIONAL DOUBLE"/>
       </VarDenMMSMomentum>
 
       <!-- Scalar solution variable profile on the boundaries with respect to time for the variable density MMS !-->
       <VarDenMMSSolnVar  spec="OPTIONAL NO_DATA">
-        <rho0            spec="OPTIONAL DOUBLE"/>
-        <rho1            spec="OPTIONAL DOUBLE"/>
       </VarDenMMSSolnVar>
        
       <!-- Density profile on the boundaries with respect to time for the variable density MMS !-->
       <VarDenMMSDensity  spec="OPTIONAL NO_DATA">
-        <rho0            spec="OPTIONAL DOUBLE"/>
-        <rho1            spec="OPTIONAL DOUBLE"/>
       </VarDenMMSDensity>
 
 
@@ -914,9 +908,7 @@
     </Turbulence>
 
     <VariableDensityMMS  spec="OPTIONAL NO_DATA">
-      <D       spec="OPTIONAL DOUBLE"/>                                   
-      <rho0    spec="OPTIONAL DOUBLE"/>                                   
-      <rho1    spec="OPTIONAL DOUBLE"/>                               
+      <D       spec="OPTIONAL DOUBLE"/>
       <Scalar  spec="REQUIRED STRING"/>
       <ConservedScalar  spec="REQUIRED STRING"/> <!-- The conserved scalar is created by the transport equation. just Specify the name here -->      
     </VariableDensityMMS>

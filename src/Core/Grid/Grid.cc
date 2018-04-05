@@ -47,13 +47,15 @@
 #include <iomanip>
 #include <iostream>
 
-using namespace std;
 using namespace Uintah;
 
-Dout g_dbg("GRID", "Grid", "Grid debug stream", false);
+namespace {
+  Dout g_dbg("GRID", "Grid", "Grid debug stream", false);
+}
 
 //______________________________________________________________________
 //
+
 Grid::Grid()
 {
   // Initialize values that may be used for the autoPatching calculations
@@ -100,7 +102,7 @@ Grid::getLevel( int l ) const
 //      </Patch>
 //
 bool
-Grid::parsePatchFromFile( FILE * fp, LevelP level, vector<int> & procMapForLevel )
+Grid::parsePatchFromFile( FILE * fp, LevelP level, std::vector<int> & procMapForLevel )
 {
   bool      doneWithPatch   = false;
 
@@ -122,13 +124,13 @@ Grid::parsePatchFromFile( FILE * fp, LevelP level, vector<int> & procMapForLevel
   // int       nnodes           = -1;
   // bool      foundNNodes      = false;
 
-  // Vector    lower, upper;
+  // Std::Vector    lower, upper;
   // bool      foundLower       = false;
   // bool      foundUpper       = false;
 
 
   while( !doneWithPatch ) {
-    string line = UintahXML::getLine( fp );
+    std::string line = UintahXML::getLine( fp );
     
     if( line == "</Patch>" ) {
       doneWithPatch = true;
@@ -137,7 +139,7 @@ Grid::parsePatchFromFile( FILE * fp, LevelP level, vector<int> & procMapForLevel
       return false; // end of file reached
     }
     else {
-      vector< string > pieces = UintahXML::splitXMLtag( line );
+      std::vector< std::string > pieces = UintahXML::splitXMLtag( line );
       if( pieces[0] == "<id>" ) {
         id = atoi( pieces[1].c_str() );
         foundId = true;
@@ -172,7 +174,7 @@ Grid::parsePatchFromFile( FILE * fp, LevelP level, vector<int> & procMapForLevel
       else if( pieces[0] == "<totalCells>" ) {
       }
       else {
-        ostringstream msg;
+        std::ostringstream msg;
         msg << "parsePatchFromFile(): Bad XML tag: " << pieces[0] << "\n";
         throw InternalError( msg.str(), __FILE__, __LINE__ );
       }
@@ -215,7 +217,7 @@ Grid::parsePatchFromFile( FILE * fp, LevelP level, vector<int> & procMapForLevel
 //    </Level>
 //
 bool
-Grid::parseLevelFromFile( FILE * fp, vector<int> & procMapForLevel )
+Grid::parseLevelFromFile( FILE * fp, std::vector<int> & procMapForLevel )
 {
   int       numPatches       = 0;
   int       numPatchesRead   = 0;
@@ -243,7 +245,7 @@ Grid::parseLevelFromFile( FILE * fp, vector<int> & procMapForLevel )
   LevelP    level;
 
   while( !done_with_level ) {
-    string line = UintahXML::getLine( fp );
+    std::string line = UintahXML::getLine( fp );
     
     if( line == "</Level>" ) {
       done_with_level = true;
@@ -284,8 +286,8 @@ Grid::parseLevelFromFile( FILE * fp, vector<int> & procMapForLevel )
       else if( !foundId ) {
         static bool warned_once = false;
         if( !warned_once ){
-          cerr << "WARNING: Data archive does not have level ID.\n";
-          cerr << "This is okay, as long as you aren't trying to do AMR.\n";
+	  std::cerr << "WARNING: Data archive does not have level ID.\n";
+          std::cerr << "This is okay, as long as you aren't trying to do AMR.\n";
         }
         warned_once = true;
       }
@@ -293,7 +295,7 @@ Grid::parseLevelFromFile( FILE * fp, vector<int> & procMapForLevel )
       parsePatchFromFile( fp, level, procMapForLevel );
     }
     else {
-      vector< string > pieces = UintahXML::splitXMLtag( line );
+      std::vector< std::string > pieces = UintahXML::splitXMLtag( line );
       
 /*`==========TESTING==========*/
       if( pieces[0] == "<nonCubic>" ) {
@@ -330,7 +332,7 @@ Grid::parseLevelFromFile( FILE * fp, vector<int> & procMapForLevel )
         foundPeriodicBoundaries = true;
       }
       else {
-        ostringstream msg;
+        std::ostringstream msg;
         msg << "parseLevelFromFile(): Bad XML tag: " << pieces[0] << "\n";
         throw InternalError( msg.str(), __FILE__, __LINE__ );
       }
@@ -369,7 +371,7 @@ Grid::parseLevelFromFile( FILE * fp, vector<int> & procMapForLevel )
 //    </Grid>
 //
 bool
-Grid::parseGridFromFile( FILE * fp, vector< vector<int> > & procMap )
+Grid::parseGridFromFile( FILE * fp, std::vector< std::vector<int> > & procMap )
 {
   int  num_levelsRead  = 0;
   int  num_levels      = 0;
@@ -383,7 +385,7 @@ Grid::parseGridFromFile( FILE * fp, vector< vector<int> > & procMap )
     // Parse all of the Grid...  When we are done with it, we are done parsing the file, hence the reason
     // we can use "done" for both while loops.
 
-    string line = UintahXML::getLine( fp );
+    std::string line = UintahXML::getLine( fp );
 
     if( line == "</Grid>" ) {
       doneWithGrid = true;
@@ -391,8 +393,8 @@ Grid::parseGridFromFile( FILE * fp, vector< vector<int> > & procMap )
     else if( line == "<Level>" ) {
       foundLevelTag = true;
 
-      procMap.push_back( vector<int>() );
-      vector<int> & procMapForLevel = procMap[ num_levelsRead ];
+      procMap.push_back( std::vector<int>() );
+      std::vector<int> & procMapForLevel = procMap[ num_levelsRead ];
  
       num_levelsRead++;
 
@@ -402,12 +404,12 @@ Grid::parseGridFromFile( FILE * fp, vector< vector<int> > & procMap )
       break; // end of file reached.
     }
     else {
-      vector< string > pieces = UintahXML::splitXMLtag( line );
+      std::vector< std::string > pieces = UintahXML::splitXMLtag( line );
       if( pieces[0] == "<numLevels>" ) {
         num_levels = atoi( pieces[1].c_str() );
       }
       else {
-        ostringstream msg;
+        std::ostringstream msg;
         msg << "parseGridFromFile(): Bad XML tag: " << pieces[0] << "\n";
         throw InternalError( msg.str(), __FILE__, __LINE__ );
       }
@@ -431,7 +433,7 @@ Grid::parseGridFromFile( FILE * fp, vector< vector<int> > & procMap )
 //______________________________________________________________________
 // Read in the grid information (from grid.xml) in binary.
 void
-Grid::readLevelsFromFileBinary( FILE * fp, vector< vector<int> > & procMap )
+Grid::readLevelsFromFileBinary( FILE * fp, std::vector< std::vector<int> > & procMap )
 {
   int    num_levels, num_patches;
   long   num_cells;
@@ -455,8 +457,8 @@ Grid::readLevelsFromFileBinary( FILE * fp, vector< vector<int> > & procMap )
       foundPeriodicBoundaries = true;
     }
 
-    procMap.push_back( vector<int>() );
-    vector<int> & procMapForLevel = procMap[ lev ];
+    procMap.push_back( std::vector<int>() );
+    std::vector<int> & procMapForLevel = procMap[ lev ];
 
     const Point  anchor_p( anchor[0], anchor[1], anchor[2] );
     const Vector dcell( cell_spacing[0], cell_spacing[1], cell_spacing[2] );
@@ -513,14 +515,14 @@ Grid::readLevelsFromFileBinary( FILE * fp, vector< vector<int> > & procMap )
 // we are concerned about the highwater mark (max memory per node), which the XML structure may push us over.
 //
 void
-Grid::readLevelsFromFile( FILE * fp, vector< vector<int> > & procMap )
+Grid::readLevelsFromFile( FILE * fp, std::vector< std::vector<int> > & procMap )
 {
   bool done      = false;
   bool foundGrid = false;
 
   while( !done ) { // Start at the very top of the file (most likely 'timestep.xml').
 
-    string line = UintahXML::getLine( fp );
+    std::string line = UintahXML::getLine( fp );
 
     if( line == "<Grid>" ) {
       foundGrid = parseGridFromFile( fp, procMap );
@@ -536,8 +538,8 @@ Grid::readLevelsFromFile( FILE * fp, vector< vector<int> > & procMap )
   }
 
 
-  //      timedata.d_patchInfo.push_back(vector<PatchData>());
-  //      timedata.d_matlInfo.push_back(vector<bool>());
+  //      timedata.d_patchInfo.push_back(std::vector<PatchData>());
+  //      timedata.d_matlInfo.push_back(std::vector<bool>());
 
   //          r->get("proc", pi.proc); // defaults to -1 if not available
   //          timedata.d_patchInfo[levelIndex].push_back(pi);
@@ -567,7 +569,7 @@ Grid::addLevel( const Point & anchor, const Vector & dcell, int id /* = -1 */ )
     Vector diff = r - ratio.asVector();
     if (diff.x() > 1e-5 || diff.y() > 1e-5 || diff.z() > 1e-5) {
       // non-integral refinement ratio
-      ostringstream out;
+      std::ostringstream out;
       out << "Non-integral refinement ratio: " << r;
       throw InvalidGrid(out.str().c_str(), __FILE__, __LINE__);
     }
@@ -627,11 +629,11 @@ Grid::performConsistencyCheck() const
          Fbox_max.x() > Cbox_max.x() ||
          Fbox_max.y() > Cbox_max.y() ||
          Fbox_max.z() > Cbox_max.z() ) {
-        ostringstream desc;
+        std::ostringstream desc;
         desc << " The finer Level " << fineLevel->getIndex()
              << " "<< F_box.min() << " "<< F_box.max()
              << " can't lay outside of coarser level " << level->getIndex()
-             << " "<< C_box.min() << " "<< C_box.max() << endl;
+             << " "<< C_box.min() << " "<< C_box.max() << std::endl;
         throw InvalidGrid(desc.str(),__FILE__,__LINE__);
       }
       //__________________________________
@@ -654,12 +656,12 @@ Grid::performConsistencyCheck() const
       
       if( (integerTest_min >smallNum || integerTest_max > smallNum) && 
            integerTest_distance > smallNum){
-        ostringstream desc;
+        std::ostringstream desc;
         desc << " The finer Level " << fineLevel->getIndex()
              << " "<< Fbox_min << " "<< Fbox_max
              << " upper or lower limits are not divisible by the cell spacing "
              << dx_fineLevel << " \n Remainder of level box/dx: lower" 
-             << integerTest_min << " upper " << integerTest_max<< endl;
+             << integerTest_min << " upper " << integerTest_max<< std::endl;
         throw InvalidGrid(desc.str(),__FILE__,__LINE__);
       } 
     }
@@ -672,25 +674,25 @@ Grid::performConsistencyCheck() const
 void
 Grid::printStatistics() const
 {
-  cout << "Grid statistics:\n";
-  cout << "Number of levels:\t\t" << numLevels() << '\n';
+  std::cout << "Grid statistics:\n";
+  std::cout << "Number of levels:\t\t" << numLevels() << '\n';
 
   unsigned long totalCells = 0;
   unsigned long totalPatches = 0;
 
   for( int i = 0; i < numLevels(); i++ ) {
     LevelP l = getLevel(i);
-    cout << "Level " << i << ":\n";
+    std::cout << "Level " << i << ":\n";
     if (l->getPeriodicBoundaries() != IntVector(0,0,0)){
-      cout << "  Periodic boundaries:\t\t" << l->getPeriodicBoundaries()<< '\n';
+      std::cout << "  Periodic boundaries:\t\t" << l->getPeriodicBoundaries()<< '\n';
     }
     if( l->isNonCubic() ){
-      cout << "  isNonCubic:\t\t\t" << l->isNonCubic() << '\n';
+      std::cout << "  isNonCubic:\t\t\t" << l->isNonCubic() << '\n';
     }
-    cout << "  Number of patches:\t\t" << l->numPatches() << '\n';
+    std::cout << "  Number of patches:\t\t" << l->numPatches() << '\n';
     totalPatches += l->numPatches();
     double ppc = double(l->totalCells())/double(l->numPatches());
-    cout << "  Total number of cells:\t" << l->totalCells() << " (" << ppc << " avg. per patch)\n";
+    std::cout << "  Total number of cells:\t" << l->totalCells() << " (" << ppc << " avg. per patch)\n";
     totalCells += l->totalCells();
 
     //__________________________________
@@ -700,7 +702,7 @@ Grid::printStatistics() const
       printf("  patches: \n");
       for(iter = l->patchesBegin(); iter != l->patchesEnd(); iter++) {
         const Patch* patch = *iter;
-        ostringstream msg;
+        std::ostringstream msg;
         
         msg << "   Patch: " << patch->getID();
         msg << " Interior Cells " << patch->getCellLowIndex() << " " << patch->getCellHighIndex();
@@ -712,10 +714,10 @@ Grid::printStatistics() const
     }
     
   }
-  cout << "Total patches in grid:\t\t" << totalPatches << '\n';
+  std::cout << "Total patches in grid:\t\t" << totalPatches << '\n';
   double ppc = double(totalCells)/double(totalPatches);
-  cout << "Total cells in grid:\t\t" << totalCells << " (" << ppc << " avg. per patch)\n";
-  cout << "\n";
+  std::cout << "Total cells in grid:\t\t" << totalCells << " (" << ppc << " avg. per patch)\n";
+  std::cout << "\n";
 }
 
 //______________________________________________________________________
@@ -745,7 +747,7 @@ Grid::getInteriorSpatialRange( BBox & b ) const
 //______________________________________________________________________
 // Computes the length in each direction of the grid
 void
-Grid::getLength( Vector & length, const string & flag ) const
+Grid::getLength( Vector & length, const std::string & flag ) const
 {
   BBox b;
   // just call the same function for all the levels
@@ -804,7 +806,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
       IntVector extraCells(0, 0, 0);
       for(ProblemSpecP box_ps = level_ps->findBlock("Box"); box_ps != nullptr; box_ps = box_ps->findNextBlock("Box")){
          
-        string boxLabel = "";
+        std::string boxLabel = "";
         box_ps->getAttribute("label",boxLabel);
          
         Point lower;
@@ -830,7 +832,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
             if( have_patchspacing ){
               Vector diff = spacing-newspacing;
               if( diff.length() > 1.e-14 ) {
-                ostringstream msg;
+                std::ostringstream msg;
                 msg<< "\nAll boxes on same level must have same cell spacing. Box (" << boxLabel 
                    << ") is inconsistent with the previous box by: (" << diff << ").  Box spacing is ("
                    << newspacing << ")\n";
@@ -851,18 +853,18 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
         if( have_levelspacing || have_patchspacing ){
           for(int dir = 0; dir<3; dir++){
             if ( (upper(dir)-lower(dir)) <= 0.0 ) {
-              ostringstream msg;
+              std::ostringstream msg;
               msg<< "\nComputational Domain Input Error: Level("<< levelIndex << ")"
                  << " \n The computational domain " << lower<<", " << upper
-                 << " must have a positive distance in each coordinate direction  " << upper-lower << endl; 
+                 << " must have a positive distance in each coordinate direction  " << upper-lower << std::endl; 
               throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
             }
           
             if ( spacing[dir] > (upper(dir)-lower(dir)) || spacing[dir] < 0 ){
-              ostringstream msg;
+              std::ostringstream msg;
               msg<< "\nComputational Domain Input Error: Level("<< levelIndex << ")"
                  << " \n The spacing " << spacing 
-                 << " must be less than the upper - lower corner and positive " << upper << endl; 
+                 << " must be less than the upper - lower corner and positive " << upper << std::endl; 
               throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
             }
           }
@@ -893,7 +895,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
       // second pass - set up patches and cells
       for(ProblemSpecP box_ps = level_ps->findBlock("Box"); box_ps != nullptr; box_ps = box_ps->findNextBlock("Box")){
          
-        string boxLabel="";
+        std::string boxLabel="";
         box_ps->getAttribute( "label", boxLabel );
          
         Point lower, upper;
@@ -904,10 +906,10 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
         // bullet proofing inputs
         for(int dir = 0; dir<3; dir++){
           if (lower(dir) >= upper(dir)){
-            ostringstream msg;
+            std::ostringstream msg;
             msg<< "\nComputational Domain Input Error: Level("<< levelIndex << ")"
                << " \n The lower corner " << lower 
-               << " must be smaller than the upper corner " << upper << endl; 
+               << " must be smaller than the upper corner " << upper << std::endl; 
             throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
           }
         }
@@ -944,35 +946,35 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
         double max_component_upper = Abs(Vector(upper)).maxComponent();
 
         if( diff_lower > max_component_lower * epsilon ) {
-          cerr << " boxLabel: " << boxLabel << '\n';
-          cerr << setprecision(16) << "epsilon: " << epsilon << "\n";
+          std::cerr << " boxLabel: " << boxLabel << '\n';
+          std::cerr << std::setprecision(16) << "epsilon: " << epsilon << "\n";
 
-          cerr << "diff_lower: " << diff_lower << "\n";
-          cerr << "max_component_lower: " << max_component_lower << "\n";
+          std::cerr << "diff_lower: " << diff_lower << "\n";
+          std::cerr << "max_component_lower: " << max_component_lower << "\n";
 
-          cerr << setprecision(16) << "lower    = " << lower << '\n';
-          cerr << setprecision(16) << "lowCell  = " << lowCell << '\n';
-          cerr << setprecision(16) << "highCell = " << highCell << '\n';
-          cerr << setprecision(16) << "lower2   = " << lower2 << '\n';
-          cerr << setprecision(16) << "diff     = " << diff_lower << '\n';
+          std::cerr << std::setprecision(16) << "lower    = " << lower << '\n';
+          std::cerr << std::setprecision(16) << "lowCell  = " << lowCell << '\n';
+          std::cerr << std::setprecision(16) << "highCell = " << highCell << '\n';
+          std::cerr << std::setprecision(16) << "lower2   = " << lower2 << '\n';
+          std::cerr << std::setprecision(16) << "diff     = " << diff_lower << '\n';
         
           throw ProblemSetupException("Box lower corner does not coincide with grid", __FILE__, __LINE__);
         }
 
         if( diff_upper > max_component_upper * epsilon ){
           
-          cerr << " boxLabel: " << boxLabel << '\n'
-               << "upper    = " << upper << '\n'
-               << "lowCell  = " << lowCell << '\n'
-               << "highCell = " << highCell << '\n'
-               << "upper2   = " << upper2 << '\n'
-               << "diff     = " << diff_upper << '\n';
+          std::cerr << " boxLabel: " << boxLabel << '\n'
+		    << "upper    = " << upper << '\n'
+		    << "lowCell  = " << lowCell << '\n'
+		    << "highCell = " << highCell << '\n'
+		    << "upper2   = " << upper2 << '\n'
+		    << "diff     = " << diff_upper << '\n';
           throw ProblemSetupException("Box upper corner does not coincide with grid", __FILE__, __LINE__);
         }
 
         IntVector resolution( highCell - lowCell );
         if(resolution.x() < 1 || resolution.y() < 1 || resolution.z() < 1) {
-          ostringstream warn;
+          std::ostringstream warn;
           warn << "Resolution is negative: " << resolution
                << " high Cell: " << highCell << " lowCell: " << lowCell << '\n';
           throw ProblemSetupException(warn.str() , __FILE__, __LINE__);
@@ -989,7 +991,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
         double autoPatchValue = 0;  // This value represents the ideal ratio of patches per
                                     // processor.  Often this is one, but for some load balancing
                                     // schemes it will be around 1.5.  When in doubt, use 1.
-        map<string, string> patchAttributes;  // Hash for parsing out the XML attributes
+        std::map<std::string, std::string> patchAttributes;  // Hash for parsing out the XML attributes
 
 
         if(box_ps->get("autoPatch", autoPatchValue)) {
@@ -1006,7 +1008,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
           
           Primes::FactorType factors;
           int numFactors = Primes::factorize(targetPatches, factors);
-          list<int> primeList;
+	  std::list<int> primeList;
           for(int i=0; i<numFactors; ++i) {
             primeList.push_back(factors[i]);
           }
@@ -1053,7 +1055,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
         // bulletproofing: catch patches > resolution 
         for (int d=0; d<3; d++) {
           if ( patches[d] > resolution[d] ){
-            ostringstream desc;
+	    std::ostringstream desc;
             desc << "   ERROR: The number of patches in direction (" << d << ") is greater than the number of cells."
                  << " (patches: " << patches << ", cells: " << resolution << ")";
             throw InvalidGrid(desc.str(),__FILE__,__LINE__);
@@ -1063,14 +1065,14 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
         // If the value of the norm nf_ is too high, then user chose a 
         // bad number of processors, warn them.
         if( nf_ > 3 ) {
-          cout << "\n********************\n";
-          cout << "*\n";
-          cout << "* WARNING:\n";
-          cout << "* The patch to processor ratio you chose\n";
-          cout << "* does not factor well into patches.  Consider\n";
-          cout << "* using a different number of processors.\n";
-          cout << "*\n";
-          cout << "********************\n\n";
+          std::cout << "\n********************\n";
+          std::cout << "*\n";
+          std::cout << "* WARNING:\n";
+          std::cout << "* The patch to processor ratio you chose\n";
+          std::cout << "* does not factor well into patches.  Consider\n";
+          std::cout << "* using a different number of processors.\n";
+          std::cout << "*\n";
+          std::cout << "********************\n\n";
         }
   
         proc0cout << "Patch layout: \t\t(" << patches.x() << ","
@@ -1106,7 +1108,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
                   inStartCell.z() % refineRatio.z() || inEndCell.z() % refineRatio.z()) {
                 Vector startRatio = inStartCell.asVector()/refineRatio.asVector();
                 Vector endRatio   = inEndCell.asVector()/refineRatio.asVector();
-                ostringstream desc;
+                std::ostringstream desc;
                 desc << "Level Box: (" << boxLabel << "), the finer patch boundaries (" << inStartCell << "->" << inEndCell 
                      << ") does not coincide with a coarse cell"
                      << "\n(i.e., they are not divisible by the refinement ratio " << refineRatio << ')'
@@ -1149,19 +1151,19 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
 //
 namespace Uintah
 {
-  ostream& operator<<(ostream& out, const Grid& grid)
+  std::ostream& operator<<(std::ostream& out, const Grid& grid)
   {
-    out.setf(ios::floatfield);
+    out.setf(std::ios::floatfield);
     out.precision(6);
-    out << "Grid has " << grid.numLevels() << " level(s)" << endl;
+    out << "Grid has " << grid.numLevels() << " level(s)" << std::endl;
     for ( int levelIndex = 0; levelIndex < grid.numLevels(); levelIndex++ ) {
       LevelP level = grid.getLevel( levelIndex );
       out << "  Level " << level->getID() 
           << ", indx: "<< level->getIndex()
-          << " has " << level->numPatches() << " patch(es)" << endl;
+          << " has " << level->numPatches() << " patch(es)" << std::endl;
       for ( Level::patch_iterator patchIter = level->patchesBegin(); patchIter < level->patchesEnd(); patchIter++ ) {
         const Patch* patch = *patchIter;
-        out <<"    "<< *patch << endl;
+        out <<"    "<< *patch << std::endl;
       }
     }
     return out;
@@ -1222,7 +1224,7 @@ bool Grid::isSimilar(const Grid& othergrid) const
  
   for(int i=numLevels()-1;i>=0;i--)
   {
-    vector<Region> r1, r2, difference;
+    std::vector<Region> r1, r2, difference;
     const Level* l1=getLevel(i).get_rep();
     const Level* l2=othergrid.getLevel(i).get_rep();
     int a1=0,a2=0;
@@ -1259,24 +1261,24 @@ bool Grid::isSimilar(const Grid& othergrid) const
 }
 //______________________________________________________________________
 //
-IntVector Grid::run_partition3D(list<int> primes)
+IntVector Grid::run_partition3D(std::list<int> primes)
 {
   partition3D(primes, 1, 1, 1);
   return IntVector(af_, bf_, cf_);
 }
 //______________________________________________________________________
 //
-void Grid::partition3D(list<int> primes, int a, int b, int c)
+void Grid::partition3D(std::list<int> primes, int a, int b, int c)
 {
   // base case: no primes left, compute the norm and store values
   // of a,b,c if they are the best so far.
   if( primes.size() == 0 ) {
-    double new_norm = sqrt( (double)(max(a,b)/min(a,b) - max(ares_,bres_)/min(ares_,bres_)) *
-                            (max(a,b)/min(a,b) - max(ares_,bres_)/min(ares_,bres_)) + 
-                            (max(b,c)/min(b,c) - max(bres_,cres_)/min(bres_,cres_)) *
-                            (max(b,c)/min(b,c) - max(bres_,cres_)/min(bres_,cres_)) +
-                            (max(a,c)/min(a,c) - max(ares_,cres_)/min(ares_,cres_)) *
-                            (max(a,c)/min(a,c) - max(ares_,cres_)/min(ares_,cres_))
+    double new_norm = sqrt( (double)(std::max(a,b)/std::min(a,b) - std::max(ares_,bres_)/std::min(ares_,bres_)) *
+                            (std::max(a,b)/std::min(a,b) - std::max(ares_,bres_)/std::min(ares_,bres_)) + 
+                            (std::max(b,c)/std::min(b,c) - std::max(bres_,cres_)/std::min(bres_,cres_)) *
+                            (std::max(b,c)/std::min(b,c) - std::max(bres_,cres_)/std::min(bres_,cres_)) +
+                            (std::max(a,c)/std::min(a,c) - std::max(ares_,cres_)/std::min(ares_,cres_)) *
+                            (std::max(a,c)/std::min(a,c) - std::max(ares_,cres_)/std::min(ares_,cres_))
                           );
 
     if( new_norm < nf_ || nf_ == -1 ) { // negative 1 flags initial trash value of nf_, 
@@ -1312,7 +1314,7 @@ void Grid::partition2D(std::list<int> primes, int a, int b)
   // base case: no primes left, compute the norm and store values
   // of a,b if they are the best so far.
   if( primes.size() == 0 ) {
-    double new_norm = (double)max(a,b)/min(a,b) - max(ares_,bres_)/min(ares_,bres_);
+    double new_norm = (double)std::max(a,b)/std::min(a,b) - std::max(ares_,bres_)/std::min(ares_,bres_);
 
     if( new_norm < nf_ || nf_ == -1 ) { // negative 1 flags initial trash value of nf_, 
                                        // should always be overwritten

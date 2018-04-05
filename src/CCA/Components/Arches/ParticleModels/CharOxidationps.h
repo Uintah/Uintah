@@ -4,7 +4,6 @@
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 #include <CCA/Components/Arches/GridTools.h>
 #include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
-#include <Core/Datatypes/DenseMatrix.h>
 #include <CCA/Components/Arches/ParticleModels/CharOxidationpsHelper.h>
 #include <CCA/Components/Arches/ChemMix/ChemHelper.h>
 #include <CCA/Components/Arches/ParticleModels/CoalHelper.h>
@@ -22,7 +21,7 @@ namespace Uintah {
 
 public:
 
-    CharOxidationps( std::string task_name, int matl_index );
+    CharOxidationps( std::string task_name, int matl_index, int Nenv );
     ~CharOxidationps();
 
     void problemSetup( ProblemSpecP& db );
@@ -51,20 +50,22 @@ public:
 
       public:
 
-      Builder( std::string task_name, int matl_index ) : _task_name(task_name), _matl_index(matl_index){}
+      Builder( std::string task_name, int matl_index , int Nenv ) : _task_name(task_name), _matl_index(matl_index), _Nenv(Nenv){}
       ~Builder(){}
 
       CharOxidationps* build()
-      { return scinew CharOxidationps<T>( _task_name, _matl_index ); }
+      { return scinew CharOxidationps<T>( _task_name, _matl_index, _Nenv ); }
 
       private:
 
       std::string _task_name;
       int         _matl_index;
+      int _Nenv;
     };
 
 private:
 
+    int _Nenv;
     // constants
     double _R;      // [J/ (K mol) ]
     double _R_cal;  // [cal/ (K mol) ]
@@ -170,9 +171,11 @@ private:
 //--------------------------------------------------------------------------------------------------
 template<typename T>
 CharOxidationps<T>::CharOxidationps( std::string task_name
-                                   , int         matl_index
+                                   , int matl_index
+                                   , int Nenv
                                    )
   : TaskInterface( task_name, matl_index )
+  , _Nenv        ( Nenv )
 {
 }
 

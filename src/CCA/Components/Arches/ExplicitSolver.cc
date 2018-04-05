@@ -1146,16 +1146,6 @@ ExplicitSolver::initialize( const LevelP     & level,
     //  apply BCs 
     _task_factory_map["transport_factory"]->schedule_task_group( "all_tasks", TaskInterface::BC, dont_pack_tasks, level, sched, matls );
 
-    //_task_factory_map["transport_factory"]->schedule_task_group( "dqmom_eqns", TaskInterface::BC, true, level, sched, matls );
-
-    // dqmom initilization for w ic
-    //_task_factory_map["transport_factory"]->schedule_task_group("dqmom_ic_from_wic", TaskInterface::INITIALIZE, true, level, sched, matls );
-
-    //if ( d_kokkos_dqmom_Translate ){
-    //  d_partVel->schedInitPartVel(level, sched);
-    //  _task_factory_map["transport_factory"]->schedule_task_group( "dqmom_eqns", TaskInterface::BC, true, level, sched, matls );
-    //}
-
     // boundary condition factory
     _task_factory_map["boundary_condition_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
 
@@ -1742,8 +1732,18 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
           dqmom_eqn->sched_evalTransportEqn( level, sched, curr_level );//compute rhs
         }
 
+
+        i_particle_models->second->schedule_task_group( "dqmom_variables",
+                                                         TaskInterface::TIMESTEP_EVAL,
+                                                         dont_pack_tasks, level, sched,
+                                                         matls, curr_level );
         // schedule the models for evaluation
         modelFactory.sched_coalParticleCalculation( level, sched, curr_level );// compute drag, devol, char, etc models..
+
+        i_particle_models->second->schedule_task_group( "dqmom_model_task",
+                                                         TaskInterface::TIMESTEP_EVAL,
+                                                         dont_pack_tasks, level, sched,
+                                                         matls, curr_level );
 
         // schedule DQMOM linear solve
         if ( m_DQMOMSolverType != "No_Inversion"){
@@ -1755,7 +1755,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
           i_particle_models->second->schedule_task_group( "pre_update_property_models",
                                                           TaskInterface::TIMESTEP_EVAL,
                                                           dont_pack_tasks, level, sched,
-                                                          matls );
+                                                          matls, curr_level);
 
         }
 
@@ -1800,10 +1800,20 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
         // schedule the models for evaluation
         modelFactory.sched_coalParticleCalculation( level, sched, curr_level );// compute drag, devol, char, etc models..
 
+        i_particle_models->second->schedule_task_group( "part_face_velocities",
+                                                         TaskInterface::TIMESTEP_EVAL,
+                                                         dont_pack_tasks, level, sched,
+                                                         matls, time_substep);
+
+        i_particle_models->second->schedule_task_group( "drag_model_task",
+                                                         TaskInterface::TIMESTEP_EVAL,
+                                                         dont_pack_tasks, level, sched,
+                                                         matls, time_substep);
+
         i_particle_models->second->schedule_task_group( "pre_update_property_models",
                                                         TaskInterface::TIMESTEP_EVAL,
                                                         dont_pack_tasks, level, sched,
-                                                        matls );
+                                                        matls , time_substep);
 
         i_transport->second->schedule_task_group("dqmom_diffusion_flux_builders",
           TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );

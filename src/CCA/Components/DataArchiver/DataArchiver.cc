@@ -88,13 +88,19 @@
 using namespace Uintah;
 using namespace std;
 
-static DebugStream dbg("DataArchiver", "DataArchiver", "Data archiver debug stream", false);
-
+namespace {
+  DebugStream dbg("DataArchiver", "DataArchiver", "Data archiver debug stream", false);
 #ifdef HAVE_PIDX
-  static DebugStream dbgPIDX ("DataArchiverPIDX", "DataArchiver", "Data archiver PIDX debug stream", false);
+  DebugStream dbgPIDX ("DataArchiverPIDX", "DataArchiver", "Data archiver PIDX debug stream", false);
 #endif
+}
 
+//______________________________________________________________________
+// Initialize class static variables:
 bool DataArchiver::m_wereSavesAndCheckpointsInitialized = false;
+
+//______________________________________________________________________
+//
 
 DataArchiver::DataArchiver(const ProcessorGroup* myworld, int udaSuffix)
   : UintahParallelComponent(myworld),

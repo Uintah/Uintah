@@ -854,6 +854,8 @@ visit_handle visit_SimGetMetaData(void *cbdata)
           VisIt_MeshMetaData_setMeshType(mmd, VISIT_MESHTYPE_UNSTRUCTURED);
           VisIt_MeshMetaData_setTopologicalDimension(mmd, 2);
           VisIt_MeshMetaData_setSpatialDimension(mmd, 2);
+          VisIt_MeshMetaData_setXLabel(mmd, "Switches");
+          VisIt_MeshMetaData_setYLabel(mmd, "Nodes");
 
           // std::cerr << "rank " << sim->rank << "  " << sim->myworld->myRank()
           //        << std::endl;
