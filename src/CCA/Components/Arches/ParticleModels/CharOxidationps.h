@@ -1363,6 +1363,10 @@ CharOxidationps<T>::eval( const Patch                 * patch
 
   const double dt = tsk_info->get_dt();
 
+  const int _time_substep = tsk_info->get_time_substep();
+  const int _patch        = tsk_info->get_patch_id();
+  const int _matl         = tsk_info->getFieldContainer()->_matl_index;
+
 //__________________________________
 // Legacy Uintah CPU
 #if !defined(UINTAH_ENABLE_KOKKOS)
@@ -1391,42 +1395,34 @@ CharOxidationps<T>::eval( const Patch                 * patch
 
     if ( std::is_same< Kokkos::Cuda , ExecutionSpace >::value ) {
 
-      // gas variables
-      KokkosView3<const double, Kokkos::CudaSpace> CCuVel = new_dw->getGPUDW()->getKokkosView<const double>( m_cc_u_vel_name.c_str()
-                                                                                                           , tsk_info->get_patch_id()
-                                                                                                           , tsk_info->getFieldContainer()->_matl_index
-                                                                                                           , 0 );
+      if ( _time_substep == 0 ) {
 
-      KokkosView3<const double, Kokkos::CudaSpace> CCvVel = new_dw->getGPUDW()->getKokkosView<const double>( m_cc_v_vel_name.c_str()
-                                                                                                           , tsk_info->get_patch_id()
-                                                                                                           , tsk_info->getFieldContainer()->_matl_index
-                                                                                                           , 0 );
+        // gas variables
+        KokkosView3<const double, Kokkos::CudaSpace> CCuVel         = tsk_info->getOldDW()->getGPUDW()->getKokkosView<const double>( m_cc_u_vel_name.c_str(),         _patch, _matl, 0 );
+        KokkosView3<const double, Kokkos::CudaSpace> CCvVel         = tsk_info->getOldDW()->getGPUDW()->getKokkosView<const double>( m_cc_v_vel_name.c_str(),         _patch, _matl, 0 );
+        KokkosView3<const double, Kokkos::CudaSpace> CCwVel         = tsk_info->getOldDW()->getGPUDW()->getKokkosView<const double>( m_cc_w_vel_name.c_str(),         _patch, _matl, 0 );
 
-      KokkosView3<const double, Kokkos::CudaSpace> CCwVel = new_dw->getGPUDW()->getKokkosView<const double>( m_cc_w_vel_name.c_str()
-                                                                                                           , tsk_info->get_patch_id()
-                                                                                                           , tsk_info->getFieldContainer()->_matl_index
-                                                                                                           , 0 );
+        KokkosView3<const double, Kokkos::CudaSpace> den            = tsk_info->getOldDW()->getGPUDW()->getKokkosView<const double>( m_density_gas_name.c_str(),      _patch, _matl, 0 );
+        KokkosView3<const double, Kokkos::CudaSpace> temperature    = tsk_info->getOldDW()->getGPUDW()->getKokkosView<const double>( m_gas_temperature_label.c_str(), _patch, _matl, 0 );
+        KokkosView3<const double, Kokkos::CudaSpace> MWmix          = tsk_info->getOldDW()->getGPUDW()->getKokkosView<const double>( m_MW_name.c_str(),               _patch, _matl, 0 );
 
-      KokkosView3<const double, Kokkos::CudaSpace> den = new_dw->getGPUDW()->getKokkosView<const double>( m_density_gas_name.c_str()
-                                                                                                        , tsk_info->get_patch_id()
-                                                                                                        , tsk_info->getFieldContainer()->_matl_index
-                                                                                                        , 0 );
+        KokkosView3<const double, Kokkos::CudaSpace> number_density = tsk_info->getOldDW()->getGPUDW()->getKokkosView<const double>( number_density_name.c_str(),     _patch, _matl, 0 );
+      }
+      else {
 
-      KokkosView3<const double, Kokkos::CudaSpace> temperature = new_dw->getGPUDW()->getKokkosView<const double>( m_gas_temperature_label.c_str()
-                                                                                                                , tsk_info->get_patch_id()
-                                                                                                                , tsk_info->getFieldContainer()->_matl_index
-                                                                                                                , 0 );
+        // gas variables
+        KokkosView3<const double, Kokkos::CudaSpace> CCuVel         = tsk_info->getNewDW()->getGPUDW()->getKokkosView<const double>( m_cc_u_vel_name.c_str(),         _patch, _matl, 0 );
+        KokkosView3<const double, Kokkos::CudaSpace> CCvVel         = tsk_info->getNewDW()->getGPUDW()->getKokkosView<const double>( m_cc_v_vel_name.c_str(),         _patch, _matl, 0 );
+        KokkosView3<const double, Kokkos::CudaSpace> CCwVel         = tsk_info->getNewDW()->getGPUDW()->getKokkosView<const double>( m_cc_w_vel_name.c_str(),         _patch, _matl, 0 );
 
-      KokkosView3<const double, Kokkos::CudaSpace> MWmix = new_dw->getGPUDW()->getKokkosView<const double>( m_MW_name.c_str()
-                                                                                                           , tsk_info->get_patch_id()
-                                                                                                           , tsk_info->getFieldContainer()->_matl_index
-                                                                                                           , 0 );
+        KokkosView3<const double, Kokkos::CudaSpace> den            = tsk_info->getNewDW()->getGPUDW()->getKokkosView<const double>( m_density_gas_name.c_str(),      _patch, _matl, 0 );
+        KokkosView3<const double, Kokkos::CudaSpace> temperature    = tsk_info->getNewDW()->getGPUDW()->getKokkosView<const double>( m_gas_temperature_label.c_str(), _patch, _matl, 0 );
+        KokkosView3<const double, Kokkos::CudaSpace> MWmix          = tsk_info->getNewDW()->getGPUDW()->getKokkosView<const double>( m_MW_name.c_str(),               _patch, _matl, 0 );
+
+        KokkosView3<const double, Kokkos::CudaSpace> number_density = tsk_info->getNewDW()->getGPUDW()->getKokkosView<const double>( number_density_name.c_str(),     _patch, _matl, 0 );
+      }
+
       KokkosView3<const double, Kokkos::CudaSpace> species[species_count];
-
-      KokkosView3<const double, Kokkos::CudaSpace> number_density = new_dw->getGPUDW()->getKokkosView<const double>( number_density_name.c_str()
-                                                                                                                   , tsk_info->get_patch_id()
-                                                                                                                   , tsk_info->getFieldContainer()->_matl_index
-                                                                                                                   , 0 ); // total number density
 
       KokkosView3<      double, Kokkos::CudaSpace> reaction_rate[reactions_count];
       KokkosView3<const double, Kokkos::CudaSpace> old_reaction_rate[reactions_count];
@@ -1473,10 +1469,12 @@ CharOxidationps<T>::eval( const Patch                 * patch
 
     if ( std::is_same< Kokkos::Cuda , ExecutionSpace >::value ) {
 
-      species[ns] = new_dw->getGPUDW()->getKokkosView<const double>( _species_names[ns].c_str()
-                                                                   , tsk_info->get_patch_id()
-                                                                   , tsk_info->getFieldContainer()->_matl_index
-                                                                   , 0 );
+      if ( _time_substep == 0 ) {
+        species[ns] = tsk_info->getOldDW()->getGPUDW()->getKokkosView<const double>( _species_names[ns].c_str(), _patch, _matl, 0 );
+      }
+      else {
+        species[ns] = tsk_info->getNewDW()->getGPUDW()->getKokkosView<const double>( _species_names[ns].c_str(), _patch, _matl, 0 );
+      }
     }
     else
 
@@ -1546,15 +1544,14 @@ CharOxidationps<T>::eval( const Patch                 * patch
 
     if ( std::is_same< Kokkos::Cuda , ExecutionSpace >::value ) {
 
-      reaction_rate[r] = old_dw->getGPUDW()->getKokkosView<double>( m_reaction_rate_names[m].c_str()
-                                                                  , tsk_info->get_patch_id()
-                                                                  , tsk_info->getFieldContainer()->_matl_index
-                                                                  , 0 );
+      reaction_rate[r] = tsk_info->getNewDW()->getGPUDW()->getGPUDW()->getKokkosView<double>( m_reaction_rate_names[m].c_str(), _patch, _matl, 0 );
 
-      old_reaction_rate[r] = old_dw->getGPUDW()->getKokkosView<const double>( m_reaction_rate_names[m].c_str()
-                                                                            , tsk_info->get_patch_id()
-                                                                            , tsk_info->getFieldContainer()->_matl_index
-                                                                            , 0 );
+      if ( _time_substep == 0 ) {
+        old_reaction_rate[r] = tsk_info->getOldDW()->getGPUDW()->getKokkosView<const double>( m_reaction_rate_names[m].c_str(), _patch, _matl, 0 );
+      }
+      else {
+        old_reaction_rate[r] = tsk_info->getNewDW()->getGPUDW()->getKokkosView<const double>( m_reaction_rate_names[m].c_str(), _patch, _matl, 0 );
+      }
     }
     else
 
@@ -1608,87 +1605,48 @@ CharOxidationps<T>::eval( const Patch                 * patch
     if ( std::is_same< Kokkos::Cuda , ExecutionSpace >::value ) {
 
       // model variables
-      KokkosView3<double, Kokkos::CudaSpace> char_rate = new_dw->getGPUDW()->getKokkosView<double>( m_modelLabel[l].c_str()
-                                                                                                  , tsk_info->get_patch_id()
-                                                                                                  , tsk_info->getFieldContainer()->_matl_index
-                                                                                                  , 0 );
+      KokkosView3<double, Kokkos::CudaSpace> char_rate            = tsk_info->getNewDW()->getGPUDW()->getKokkosView<double>( m_modelLabel[l].c_str(),   _patch, _matl, 0 );
+      KokkosView3<double, Kokkos::CudaSpace> gas_char_rate        = tsk_info->getNewDW()->getGPUDW()->getKokkosView<double>( m_gasLabel[l].c_str(),     _patch, _matl, 0 );
+      KokkosView3<double, Kokkos::CudaSpace> particle_temp_rate   = tsk_info->getNewDW()->getGPUDW()->getKokkosView<double>( m_particletemp[l].c_str(), _patch, _matl, 0 );
+      KokkosView3<double, Kokkos::CudaSpace> particle_Size_rate   = tsk_info->getNewDW()->getGPUDW()->getKokkosView<double>( m_particleSize[l].c_str(), _patch, _matl, 0 );
+      KokkosView3<double, Kokkos::CudaSpace> surface_rate         = tsk_info->getNewDW()->getGPUDW()->getKokkosView<double>( m_surfacerate[l].c_str(),  _patch, _matl, 0 );
 
-      KokkosView3<double, Kokkos::CudaSpace> gas_char_rate = new_dw->getGPUDW()->getKokkosView<double>( m_gasLabel[l].c_str()
-                                                                                                      , tsk_info->get_patch_id()
-                                                                                                      , tsk_info->getFieldContainer()->_matl_index
-                                                                                                      , 0 );
+      if ( _time_substep == 0 ) {
 
-      KokkosView3<double, Kokkos::CudaSpace> particle_temp_rate = new_dw->getGPUDW()->getKokkosView<double>( m_particletemp[l].c_str()
-                                                                                                           , tsk_info->get_patch_id()
-                                                                                                           , tsk_info->getFieldContainer()->_matl_index
-                                                                                                           , 0 );
+        // from devol model
+        KokkosView3<const double, Kokkos::CudaSpace> devolRC              = tsk_info->getOldDW()->getGPUDW()->getKokkosView<const double>( m_devolRC[l].c_str(),              _patch, _matl, 0 );
 
-      KokkosView3<double, Kokkos::CudaSpace> particle_Size_rate = new_dw->getGPUDW()->getKokkosView<double>( m_particleSize[l].c_str()
-                                                                                                           , tsk_info->get_patch_id()
-                                                                                                           , tsk_info->getFieldContainer()->_matl_index
-                                                                                                           , 0 );
+        // particle variables from other models
+        KokkosView3<const double, Kokkos::CudaSpace> particle_temperature = tsk_info->getOldDW()->getGPUDW()->getKokkosView<const double>( m_particle_temperature[l].c_str(), _patch, _matl, 0 );
+        KokkosView3<const double, Kokkos::CudaSpace> length               = tsk_info->getOldDW()->getGPUDW()->getKokkosView<const double>( m_particle_length[l].c_str(),      _patch, _matl, 0 );
+        KokkosView3<const double, Kokkos::CudaSpace> particle_density     = tsk_info->getOldDW()->getGPUDW()->getKokkosView<const double>( m_particle_density[l].c_str(),     _patch, _matl, 0 );
+        KokkosView3<const double, Kokkos::CudaSpace> rawcoal_mass         = tsk_info->getOldDW()->getGPUDW()->getKokkosView<const double>( m_rcmass[l].c_str(),               _patch, _matl, 0 );
+        KokkosView3<const double, Kokkos::CudaSpace> char_mass            = tsk_info->getOldDW()->getGPUDW()->getKokkosView<const double>( m_char_name[l].c_str(),            _patch, _matl, 0 );
+        KokkosView3<const double, Kokkos::CudaSpace> weight               = tsk_info->getOldDW()->getGPUDW()->getKokkosView<const double>( m_weight_name[l].c_str(),          _patch, _matl, 0 );
+        KokkosView3<const double, Kokkos::CudaSpace> up                   = tsk_info->getOldDW()->getGPUDW()->getKokkosView<const double>( m_up_name[l].c_str(),              _patch, _matl, 0 );
+        KokkosView3<const double, Kokkos::CudaSpace> vp                   = tsk_info->getOldDW()->getGPUDW()->getKokkosView<const double>( m_vp_name[l].c_str(),              _patch, _matl, 0 );
+        KokkosView3<const double, Kokkos::CudaSpace> wp                   = tsk_info->getOldDW()->getGPUDW()->getKokkosView<const double>( m_wp_name[l].c_str(),              _patch, _matl, 0 );
 
-      KokkosView3<double, Kokkos::CudaSpace> surface_rate = new_dw->getGPUDW()->getKokkosView<double>( m_surfacerate[l].c_str()
-                                                                                                     , tsk_info->get_patch_id()
-                                                                                                     , tsk_info->getFieldContainer()->_matl_index
-                                                                                                     , 0 );
+        KokkosView3<const double, Kokkos::CudaSpace> surfAreaF            = tsk_info->getOldDW()->getGPUDW()->getKokkosView<const double>( m_surfAreaF_name[l].c_str(),       _patch, _matl, 0 );
+      }
+      else {
 
-      // from devol model
-      KokkosView3<const double, Kokkos::CudaSpace> devolRC = new_dw->getGPUDW()->getKokkosView<const double>( m_devolRC[l].c_str()
-                                                                                                            , tsk_info->get_patch_id()
-                                                                                                            , tsk_info->getFieldContainer()->_matl_index
-                                                                                                            , 0 );
+        // from devol model
+        KokkosView3<const double, Kokkos::CudaSpace> devolRC              = tsk_info->getNewDW()->getGPUDW()->getKokkosView<const double>( m_devolRC[l].c_str(),              _patch, _matl, 0 );
 
-      // particle variables from other models
-      KokkosView3<const double, Kokkos::CudaSpace> particle_temperature = new_dw->getGPUDW()->getKokkosView<const double>( m_particle_temperature[l].c_str()
-                                                                                                                         , tsk_info->get_patch_id()
-                                                                                                                         , tsk_info->getFieldContainer()->_matl_index
-                                                                                                                         , 0 );
+        // particle variables from other models
+        KokkosView3<const double, Kokkos::CudaSpace> particle_temperature = tsk_info->getNewDW()->getGPUDW()->getKokkosView<const double>( m_particle_temperature[l].c_str(), _patch, _matl, 0 );
+        KokkosView3<const double, Kokkos::CudaSpace> length               = tsk_info->getNewDW()->getGPUDW()->getKokkosView<const double>( m_particle_length[l].c_str(),      _patch, _matl, 0 );
+        KokkosView3<const double, Kokkos::CudaSpace> particle_density     = tsk_info->getNewDW()->getGPUDW()->getKokkosView<const double>( m_particle_density[l].c_str(),     _patch, _matl, 0 );
+        KokkosView3<const double, Kokkos::CudaSpace> rawcoal_mass         = tsk_info->getNewDW()->getGPUDW()->getKokkosView<const double>( m_rcmass[l].c_str(),               _patch, _matl, 0 );
+        KokkosView3<const double, Kokkos::CudaSpace> char_mass            = tsk_info->getNewDW()->getGPUDW()->getKokkosView<const double>( m_char_name[l].c_str(),            _patch, _matl, 0 );
+        KokkosView3<const double, Kokkos::CudaSpace> weight               = tsk_info->getNewDW()->getGPUDW()->getKokkosView<const double>( m_weight_name[l].c_str(),          _patch, _matl, 0 );
+        KokkosView3<const double, Kokkos::CudaSpace> up                   = tsk_info->getNewDW()->getGPUDW()->getKokkosView<const double>( m_up_name[l].c_str(),              _patch, _matl, 0 );
+        KokkosView3<const double, Kokkos::CudaSpace> vp                   = tsk_info->getNewDW()->getGPUDW()->getKokkosView<const double>( m_vp_name[l].c_str(),              _patch, _matl, 0 );
+        KokkosView3<const double, Kokkos::CudaSpace> wp                   = tsk_info->getNewDW()->getGPUDW()->getKokkosView<const double>( m_wp_name[l].c_str(),              _patch, _matl, 0 );
 
-      KokkosView3<const double, Kokkos::CudaSpace> length = new_dw->getGPUDW()->getKokkosView<const double>( m_particle_length[l].c_str()
-                                                                                                           , tsk_info->get_patch_id()
-                                                                                                           , tsk_info->getFieldContainer()->_matl_index
-                                                                                                           , 0 );
-
-      KokkosView3<const double, Kokkos::CudaSpace> particle_density = new_dw->getGPUDW()->getKokkosView<const double>( m_particle_density[l].c_str()
-                                                                                                                     , tsk_info->get_patch_id()
-                                                                                                                     , tsk_info->getFieldContainer()->_matl_index
-                                                                                                                     , 0 );
-
-      KokkosView3<const double, Kokkos::CudaSpace> rawcoal_mass = new_dw->getGPUDW()->getKokkosView<const double>( m_rcmass[l].c_str()
-                                                                                                                 , tsk_info->get_patch_id()
-                                                                                                                 , tsk_info->getFieldContainer()->_matl_index
-                                                                                                                 , 0 );
-
-      KokkosView3<const double, Kokkos::CudaSpace> char_mass = new_dw->getGPUDW()->getKokkosView<const double>( m_char_name[l].c_str()
-                                                                                                              , tsk_info->get_patch_id()
-                                                                                                              , tsk_info->getFieldContainer()->_matl_index
-                                                                                                              , 0 );
-
-      KokkosView3<const double, Kokkos::CudaSpace> weight = new_dw->getGPUDW()->getKokkosView<const double>( m_weight_name[l].c_str()
-                                                                                                           , tsk_info->get_patch_id()
-                                                                                                           , tsk_info->getFieldContainer()->_matl_index
-                                                                                                           , 0 );
-
-      KokkosView3<const double, Kokkos::CudaSpace> up = new_dw->getGPUDW()->getKokkosView<const double>( m_up_name[l].c_str()
-                                                                                                       , tsk_info->get_patch_id()
-                                                                                                       , tsk_info->getFieldContainer()->_matl_index
-                                                                                                       , 0 );
-
-      KokkosView3<const double, Kokkos::CudaSpace> vp = new_dw->getGPUDW()->getKokkosView<const double>( m_vp_name[l].c_str()
-                                                                                                       , tsk_info->get_patch_id()
-                                                                                                       , tsk_info->getFieldContainer()->_matl_index
-                                                                                                       , 0 );
-
-      KokkosView3<const double, Kokkos::CudaSpace> wp = new_dw->getGPUDW()->getKokkosView<const double>( m_wp_name[l].c_str()
-                                                                                                       , tsk_info->get_patch_id()
-                                                                                                       , tsk_info->getFieldContainer()->_matl_index
-                                                                                                       , 0 );
-
-      KokkosView3<const double, Kokkos::CudaSpace> surfAreaF = new_dw->getGPUDW()->getKokkosView<const double>( m_surfAreaF_name[l].c_str()
-                                                                                                              , tsk_info->get_patch_id()
-                                                                                                              , tsk_info->getFieldContainer()->_matl_index
-                                                                                                              , 0 );
+        KokkosView3<const double, Kokkos::CudaSpace> surfAreaF            = tsk_info->getNewDW()->getGPUDW()->getKokkosView<const double>( m_surfAreaF_name[l].c_str(),       _patch, _matl, 0 );
+      }
     }
     else
 
