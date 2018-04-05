@@ -50,25 +50,26 @@
 
 using namespace Uintah;
 
-// used externally in DetailedTask.cc
-Uintah::MasterLock g_external_ready_mutex{}; // synchronizes access to the external-ready task queue
+namespace Uintah {
+  // Used externally in DetailedTask.cc
+  Uintah::MasterLock g_external_ready_mutex{}; // synchronizes access to the external-ready task queue
 
-// used externally in DetailedTask.cc
-Dout g_scrubbing_dbg(      "Scrubbing",     false);
-
-// used externally in DetailedTask.cc
-// for debugging - set the variable name (inside the quotes) and patchID to watch one in the scrubout
-std::string g_var_scrub_dbg   = "";
-int         g_patch_scrub_dbg = -1;
-
+  // used externally in DetailedTask.cc
+  Dout g_scrubbing_dbg(      "Scrubbing", "Schedulers", "", false);
+  
+  // used externally in DetailedTask.cc
+  // for debugging - set the variable name (inside the quotes) and patchID to watch one in the scrubout
+  std::string g_var_scrub_dbg   = "";
+  int         g_patch_scrub_dbg = -1;
+}
 
 namespace {
 
-Uintah::MasterLock g_internal_ready_mutex{}; // synchronizes access to the internal-ready task queue
-
-Dout g_detailed_dw_dbg(    "DetailedDWDBG", false);
-Dout g_detailed_tasks_dbg( "DetailedTasks", false);
-Dout g_message_tags_dbg(   "MessageTags",   false);
+  Uintah::MasterLock g_internal_ready_mutex{}; // synchronizes access to the internal-ready task queue
+  
+  Dout g_detailed_dw_dbg(    "DetailedDWDBG", "Schedulers", "", false);
+  Dout g_detailed_tasks_dbg( "DetailedTasks", "Schedulers", "", false);
+  Dout g_message_tags_dbg(   "MessageTags",   "Schedulers", "", false);
 
 
 #ifdef HAVE_CUDA
@@ -454,8 +455,7 @@ DetailedTasks::findMatchingDetailedDep(       DependencyBatch  * batch
   //search each dep
   for (; dep != nullptr; dep = dep->m_next) {
     //if deps are equivalent
-    if (fromPatch == dep->m_from_patch &&  matl == dep->m_matl &&
-        (req == dep->m_req || (req->m_var->equals(dep->m_req->m_var) && req->mapDataWarehouse() == dep->m_req->mapDataWarehouse()))) {
+    if (fromPatch == dep->m_from_patch &&  matl == dep->m_matl && (req == dep->m_req || (req->m_var->equals(dep->m_req->m_var) && req->mapDataWarehouse() == dep->m_req->mapDataWarehouse()))) {
 
       // total range - the same var in each dep needs to have the same patchlow/high
       dep->m_patch_low = totalLow = Min(totalLow, dep->m_patch_low);

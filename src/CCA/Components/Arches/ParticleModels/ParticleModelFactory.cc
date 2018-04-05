@@ -44,6 +44,8 @@
 #include <CCA/Components/Arches/ParticleModels/CharOxidationps.h>
 #include <CCA/Components/Arches/ParticleModels/PartVariablesDQMOM.h>
 #include <CCA/Components/Arches/ParticleModels/DQMOMNoInversion.h>
+#include <CCA/Components/Arches/ParticleModels/FaceParticleVel.h>
+#include <CCA/Components/Arches/ParticleModels/WDragModel.h>
 
 
 using namespace Uintah;
@@ -188,6 +190,29 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
 
         temp_model_list.insert(temp_model_list.end(), task_name); // order hack
 
+      } else if  ( type == "wdrag" ) {
+
+        const int nQn_part = ArchesCore::get_num_env( db, ArchesCore::DQMOM_METHOD );
+        for ( int i = 0; i < nQn_part; i++ ){
+          std::stringstream ienv;
+          ienv << i;
+          std::string task_name_N = task_name + "_qn" + ienv.str(); 
+          TaskInterface::TaskBuilder* tsk = scinew WDragModel<CCVariable<double> >::Builder(task_name_N, 0, i);
+          register_task( task_name_N, tsk );
+          _dqmom_model_task.push_back(task_name_N);
+        }     
+      } else if  ( type == "char_oxidation_ps" ) {
+
+        const int nQn_part = ArchesCore::get_num_env( db, ArchesCore::DQMOM_METHOD );
+        for ( int i = 0; i < nQn_part; i++ ){
+          std::stringstream ienv;
+          ienv << i;
+          std::string task_name_N = task_name + "_qn" + ienv.str(); 
+          TaskInterface::TaskBuilder* tsk = scinew CharOxidationps<CCVariable<double> >::Builder(task_name_N, 0, i);
+          register_task( task_name_N, tsk );
+          _dqmom_model_task.push_back(task_name_N);
+        }     
+
       } else if  ( type == "gravity" ) {
 
         std::string dependent_type;
@@ -216,6 +241,22 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
 
         temp_model_list.insert(temp_model_list.end(), task_name); // order hack
 
+       } else if  ( type == "particle_face_velocity" ) {
+
+        std::string dependent_type;
+        if ( db_model->findBlock("grid") != nullptr ){
+          db_model->findBlock("grid")->getAttribute("dependent_type", dependent_type);
+        } else {
+          throw InvalidValue("Error: You must specify the <grid> for the constant model", __FILE__, __LINE__);
+        }
+         if ( dependent_type == "CC" ){
+
+          TaskInterface::TaskBuilder* tsk = scinew
+          FaceParticleVel<CCVariable<double> >::Builder(task_name, 0, model_name);
+
+          register_task( task_name, tsk );
+          _dqmom_variables.push_back(task_name);
+       }
       } else if  ( type == "constant" ) {
 
         std::string dependent_type;
@@ -292,15 +333,11 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
         has_rate_enth = true; // order hack
         rate_enth_name = task_name; // order hack
 
-      } else if ( type == "char_oxidation_ps" ) {
-
-        TaskInterface::TaskBuilder* tsk = scinew CharOxidationps< CCVariable<double> >::Builder(task_name,0);
-        register_task( task_name, tsk );
-
       } else if ( type == "particle_variables_dqmom" ) {
 
         TaskInterface::TaskBuilder* tsk = scinew PartVariablesDQMOM::Builder(task_name,0);
         register_task( task_name, tsk );
+        _dqmom_variables.push_back(task_name);
 
       } else if ( type == "rate_deposition" ) {
 
@@ -433,18 +470,42 @@ ParticleModelFactory::build_all_tasks( ProblemSpecP& db )
     for (ProblemSpecP db_model = db_pm->findBlock("model"); db_model != nullptr;
          db_model = db_model->findNextBlock("model")){
 
+
       std::string model_name;
       std::string type;
       db_model->getAttribute("label",model_name );
       db_model->getAttribute("type", type );
-
       print_task_setup_info( model_name, type );
-      TaskInterface* tsk = retrieve_task(model_name);
 
-      tsk->problemSetup( db_model );
+      if (type == "wdrag") {
+        const int nQn_part = ArchesCore::get_num_env( db, ArchesCore::DQMOM_METHOD );
+        for ( int i = 0; i < nQn_part; i++ ){
+          std::stringstream ienv;
+          ienv << i;
+          std::string model_name_N = model_name + "_qn" + ienv.str(); 
+          TaskInterface* tsk = retrieve_task(model_name_N);
+        
+          tsk->problemSetup( db_model );
+          tsk->create_local_labels();
+        }
 
-      tsk->create_local_labels();
-
+      } else if (type == "char_oxidation_ps") {
+        const int nQn_part = ArchesCore::get_num_env( db, ArchesCore::DQMOM_METHOD );
+        for ( int i = 0; i < nQn_part; i++ ){
+          std::stringstream ienv;
+          ienv << i;
+          std::string model_name_N = model_name + "_qn" + ienv.str(); 
+          TaskInterface* tsk = retrieve_task(model_name_N);
+        
+          tsk->problemSetup( db_model );
+          tsk->create_local_labels();
+        }
+      } else {
+        TaskInterface* tsk = retrieve_task(model_name);
+        
+        tsk->problemSetup( db_model );
+        tsk->create_local_labels();
+      }
     }
 
     if (db->findBlock("DQMOM") ) {

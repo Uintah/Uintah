@@ -61,8 +61,9 @@ Uintah::show_env()
   std::map<std::string, std::string>::const_iterator iter = scirun_env.begin();
   while (iter != scirun_env.end()) {
     printf("  %s : %s\n", iter->first.c_str(), iter->second.c_str());
-    iter++;
+    ++iter;
   }
+  printf("\n");
 }
 
 

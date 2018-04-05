@@ -1,12 +1,13 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from os         import getenv,environ,unsetenv,rmdir,mkdir,path,system,chdir,stat,getcwd,pathsep,symlink,stat,access,getuid,W_OK
 from time       import strftime,time,gmtime,asctime,localtime
 from sys        import argv,exit,stdout
-from string     import upper,rstrip,rsplit
-from modUPS     import modUPS
-from commands   import getoutput
+from .modUPS     import modUPS
+from subprocess   import getoutput
 from subprocess import PIPE, Popen
+
+import shutil
 import socket
 import resource
 import re         # regular expressions
@@ -32,7 +33,7 @@ def getMPISize(test):
     return test[2]
 
 def getTestOS(test):
-    return upper(test[3])
+    return test[3].upper()
 
 def setInputsDir( here ):
     global inputpath
@@ -100,7 +101,7 @@ def isValid_inputFile( inputxml, startFrom, do_restart ):
   initTS = da.find( 'outputInitTimestep' )
    
   if ( initTS != None and intrvl > 1 ):
-    print '     isValid_inputFile %s'% inputxml
+    print('     isValid_inputFile %s'% inputxml)
     print( "    *** ERROR: The xml file is not valid, (DataArchiver:outputInitTimestep) is not allowed in regression testing.")
     return False
   else:
@@ -129,7 +130,7 @@ def build_root():
 # all of the paramaters given to runSusTest
 def runSusTests(argv, TESTS, application, callback = nullCallback):
 
-  print "runSusTests: %s " % application
+  print("runSusTests: %s " % application)
 
   if len(argv) < 6 or len(argv) > 7 or not argv[4] in ["dbg", "opt", "unknown"] :
     print( "usage: %s <susdir> <inputsdir> <testdata_goldstandard> <dbg_opt> <max_parallelsim> <test>" % argv[0] )
@@ -204,7 +205,7 @@ def runSusTests(argv, TESTS, application, callback = nullCallback):
   try:
     stat( inputpath )
   except Exception:
-    print " ERROR: runSusTests: the path to the inputs directory (%s) is not valid" % inputpath
+    print(" ERROR: runSusTests: the path to the inputs directory (%s) is not valid" % inputpath)
     exit(1)  
   try:
     chdir( helperspath )
@@ -286,7 +287,7 @@ def runSusTests(argv, TESTS, application, callback = nullCallback):
     if solotest != "" and testname != solotest:
       continue
 
-    if getTestOS(test) != upper(environ['OS']) and getTestOS(test) != "ALL":
+    if getTestOS(test) != environ['OS'].upper() and getTestOS(test) != "ALL":
       continue
 
     print( "__________________" )
@@ -638,13 +639,12 @@ def runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_p
   try :
     MPIRUN = environ['MPIRUN']    # first try the environmental variable
   except :
-    MPIRUN = "mpirun"
-    rc = system("which mpirun > /dev/null 2>&1")
-
-    if rc == 256:
-      print( "ERROR:runSusTests.py " )
+    try:
+      MPIRUN = shutil.which("mpirun")
+    except:
+      print( "ERROR:runSusTests.py ")
       print( "      mpirun command was not found and the environmental variable MPIRUN was not set." )
-      print( "      You must either put mpirun in your path or set the environmental variable" )
+      print( "      You must either add mpirun to your path, or set the 'MPIRUN' environment variable." )
       exit (1)
 
   if not do_memory_test :
@@ -901,11 +901,11 @@ def runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_p
 
         elif compUda_RC == 1 * 256:
           print( "\t*** ERROR, test (%s) failed uda comparison, tolerances exceeded (%s)" % (testname, compUda_RC) ) 
-          print compare_msg
+          print(compare_msg)
            
         elif compUda_RC == 5*256:
           print( "\t*** ERROR: test (%s) uda comparison aborted (%s)" % (testname, compUda_RC) )
-          print compare_msg
+          print(compare_msg)
         
           if startFrom != "restart":
           

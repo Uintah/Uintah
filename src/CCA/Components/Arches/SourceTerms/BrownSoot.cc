@@ -44,7 +44,7 @@ BrownSoot::problemSetup(const ProblemSpecP& inputdb)
   db->getWithDefault("Ns_label",             m_Ns_name,               "Ns");
   db->getWithDefault("o2_label",             m_O2_name,               "O2");
   db->getWithDefault("oh_label",             m_OH_name,               "OH");
-  db->getWithDefault("co2_label",	     m_CO2_name,	      "CO2");
+  db->getWithDefault("co2_label",	         m_CO2_name,		      "CO2");
   db->getWithDefault("h2o_label",            m_H2O_name,              "H2O");
   db->getWithDefault("density_label",        m_rho_name,              "density");
   db->getWithDefault("temperature_label",    m_temperature_name,      "radiation_temperature");
@@ -219,14 +219,14 @@ BrownSoot::computeSource( const ProcessorGroup* pc,
     //const double Ags = 4.1536E9;	      ///< preexponential: soot gasification (1/s/atm^0.54)
     //const double Egs = 148E6;           ///< Ea: soot gasification, J/kmol
 
-    const double Ao2  = 1.92E-3;                   ///< kg*K^0.5/Pa/m2/s
-    const double Eo2  = 1.16E8;                    ///< J/kmol
-    const double Aoh  = 2.93E-3;                   ///< kg*K^0.5/Pa/m2/s
-    const double Aco2 = 1.31E-17;                  ///< kg/Pa^0.5/K2/m2/s
-    const double Eco2 = 5.55E6;                    ///< J/kmol
-    const double Ah2o = 1.86E6;                    ///< kg*K^0.5/Pa^n/m2/s
-    const double Eh2o = 4.17E8;                    ///< J/kmol
-    const double nh2o = 1.21;                      ///< unitless
+    const double Ao2  = 0.798;                     ///< kg*K^0.5/Pa/m2/s
+    const double Eo2  = 1.77e8;                    ///< J/kmol
+    const double Aoh  = 1.89e-3;                   ///< kg*K^0.5/Pa/m2/s
+    const double Aco2 = 3.06e-17;                  ///< kg/Pa^0.5/K2/m2/s
+    const double Eco2 = 5.56e6;                    ///< J/kmol
+    const double Ah2o = 6.27e4;                    ///< kg*K^0.5/Pa^n/m2/s
+    const double Eh2o = 2.95e8;                    ///< J/kmol
+    const double nh2o = 0.13;                      ///< unitless
 
     const double Rgas = 8314.46;        ///< Gas constant: J/kmol*K
     const double kb   = 1.3806488E-23;  ///< Boltzmann constant: kg*m2/s2*K
@@ -235,6 +235,8 @@ BrownSoot::computeSource( const ProcessorGroup* pc,
     const double rhos = 1950.;          ///< soot density kg/m3
     const double Ca   = 3.0;            ///< collision frequency constant
     const double Cmin = 9.0E4;          ///< # carbons per incipient particle
+    
+    const double mp_min = 2E-25;        ///< kg per particle below which soot is "magically" killed: 2E-26 = 1 carbon atom per soot
 
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
 
@@ -257,7 +259,8 @@ BrownSoot::computeSource( const ProcessorGroup* pc,
         const double P = m_sys_pressure;
         const double dt = delta_t;
 
-        //if (c==IntVector(30,10,10){ })
+        double gas_rate_from_soot;
+        double gas_rate_from_tar;
 
         //---------------- tar
 
@@ -266,6 +269,8 @@ BrownSoot::computeSource( const ProcessorGroup* pc,
         double kot = abs(rhoYO2)*Aot*exp(-Eot/Rgas/abs(T));        ///< tar oxidation rate (kg/m3*s)/rhoYt
 
         tar_src[c] = abs(rhoYt)/dt*( exp((-kfs-kgt-kot)*dt) - 1.0 );  ///< kg/m3*s
+
+        gas_rate_from_tar  = -abs(rhoYt)/dt*( exp((-kgt-kot)*dt) - 1.0 );  ///< kg/m3*s (for balance_src, below)
 
         //---------------- nd
 
@@ -277,10 +282,14 @@ BrownSoot::computeSource( const ProcessorGroup* pc,
 
         num_density_src[c] = rfn - ran;                               ///< #/m3*s
         num_density_src[c] = ( num_density_src[c] < 0.0 ) ? std::max( -nd/dt, num_density_src[c] ) : num_density_src[c];
+        
+        if(rhoYs/nd < mp_min)                        // if soot mass is below some threshold, then delete the soot.
+            num_density_src[c] = -nd/dt;
 
         //---------------- Ys
 
         double SA = M_PI*pow( abs(6./M_PI*rhoYs/rhos), 2./3. )*pow(abs(nd),1./3.);   ///< m2/m3: pi*pow() = SA/part; pi*pow()*nd = SA/part*part/m3 = SA/Vol
+
         double rfs = kfs * abs(rhoYt);                                               ///< soot formation rate (kg/m3*s)
 
         //double ros = SA*P/101325.0*abs(XO2)/sqrt(abs(T))*Aos*exp(-Eos/Rgas/abs(T));  ///< soot oxidation rate (kg/m3*s)
@@ -291,14 +300,24 @@ BrownSoot::computeSource( const ProcessorGroup* pc,
         double rgs = ( Aco2*pow(P*XCO2,0.5)*T*T*exp(-Eco2/Rgas/T) +             ///< soot gasification rate (kg/m3/s)
                        Ah2o*pow(P*XH2O,nh2o)*pow(abs(T),-0.5)*exp(-Eh2o/Rgas/T) ) * SA;
 
-        soot_mass_src[c] = rfs - ros - rgs;
-        soot_mass_src[c] = ( soot_mass_src[c] < 0.0 ) ? std::max( -rhoYs/dt, soot_mass_src[c] ) : soot_mass_src[c];
+        double rns = rfs - ros - rgs;                  // net soot rate
+
+        if(rhoYs/nd < mp_min) {                        // if low soot mass, destroy all the soot
+            soot_mass_src[c]   = -rhoYs/dt;
+            gas_rate_from_soot = rhoYs/dt + rfs;
+        }
+        else if( (rns < 0.0) && (rns < -rhoYs/dt) ) {  // if soot reactions are too fast (making soot neg.) then step at rate that gives 0 soot at end of step
+            soot_mass_src[c]   = -rhoYs/dt;
+            gas_rate_from_soot = rhoYs/dt + rfs;
+        }
+        else {                                         // the usual case
+            soot_mass_src[c] = rns;
+            gas_rate_from_soot = ros + rgs;
+        }
 
         //---------------- Gas source
-
-        double gas_rate_from_tar = -abs(rhoYt)/dt*( exp((-kgt-kot)*dt) - 1.0 );  ///< kg/m3*s
-        balance_src[c] = rgs + ros + gas_rate_from_tar;
-        balance_src[c] = std::min( rhoYs/dt + rhoYt/dt, balance_src[c] );
+       
+        balance_src[c] = gas_rate_from_tar + gas_rate_from_soot;
 
     }
   }

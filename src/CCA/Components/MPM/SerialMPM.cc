@@ -2419,9 +2419,9 @@ void SerialMPM::addCohesiveZoneForces(const ProcessorGroup*,
     printTask(patches,patch,cout_doing,"Doing addCohesiveZoneForces");
 
 //    ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
-    ParticleInterpolator* linear_interpolator=scinew LinearInterpolator(patch);
-    vector<IntVector> ni(linear_interpolator->size());
-    vector<double> S(linear_interpolator->size());
+    ParticleInterpolator* interpolator = scinew LinearInterpolator(patch);
+    vector<IntVector> ni(interpolator->size());
+    vector<double> S(interpolator->size());
 
     Ghost::GhostType  gan = Ghost::AroundNodes;
     Ghost::GhostType  gac = Ghost::AroundCells;
@@ -2467,7 +2467,7 @@ void SerialMPM::addCohesiveZoneForces(const ProcessorGroup*,
         defgrad.Identity();
 
         // Get the node indices that surround the cell
-        int NN = linear_interpolator->findCellAndWeights(czx[idx],ni,S,size,defgrad);
+        int NN = interpolator->findCellAndWeights(czx[idx],ni,S,size,defgrad);
 
         int TopMat = czTopMat[idx];
         int BotMat = czBotMat[idx];
@@ -2505,7 +2505,7 @@ void SerialMPM::addCohesiveZoneForces(const ProcessorGroup*,
         }
       }
     }
-    delete linear_interpolator;
+    delete interpolator;
   }
 }
 
@@ -3827,9 +3827,9 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
     // Daphalapurkar, N.P., et al., Int. J. Fracture, 143, 79-102, 2007.
 
 //    ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
-    ParticleInterpolator* linear_interpolator=scinew LinearInterpolator(patch);
-    vector<IntVector> ni(linear_interpolator->size());
-    vector<double> S(linear_interpolator->size());
+    ParticleInterpolator* interpolator = scinew LinearInterpolator(patch);
+    vector<IntVector> ni(interpolator->size());
+    vector<double> S(interpolator->size());
 
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches) );
@@ -3930,24 +3930,38 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
         defgrad.Identity();
 
         // Get the node indices that surround the cell
-        int NN = linear_interpolator->findCellAndWeights(czx[idx],ni,S,size,defgrad);
+        int NN = interpolator->findCellAndWeights(czx[idx],ni,S,size,defgrad);
 
         Vector velTop(0.0,0.0,0.0);
         Vector velBot(0.0,0.0,0.0);
         double massTop = 0.0;
         double massBot = 0.0;
-        double mass_ratio = 0.0;
         int TopMat = czTopMat[idx];
         int BotMat = czBotMat[idx];
+        double sumSTop = 0.;
+        double sumSBot = 0.;
 
         // Accumulate the contribution from each surrounding vertex
         for (int k = 0; k < NN; k++) {
           IntVector node = ni[k];
-          velTop      += gvelocity[TopMat][node] * S[k];
-          velBot      += gvelocity[BotMat][node] * S[k];
+          if(gmass[TopMat][node]>2.e-200){
+            velTop      += gvelocity[TopMat][node]* S[k];
+            sumSTop     += S[k];
+          }
+          if(gmass[BotMat][node]>2.e-200){
+            velBot      += gvelocity[BotMat][node]* S[k];
+            sumSBot     += S[k];
+          }
           massTop     += gmass[TopMat][node]*S[k];
           massBot     += gmass[BotMat][node]*S[k];
         }
+        velTop/=sumSTop;
+        velBot/=sumSBot;
+
+#if 0
+        // I'm not sure what this was here for in the first place,
+        // but it is disabled for now
+        double mass_ratio = 0.0;
         if (massBot > 0.0) {
           mass_ratio = massTop/massBot;
           mass_ratio = min(mass_ratio,1.0/mass_ratio);
@@ -3957,6 +3971,7 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
         }
 
         double mass_correction_factor = mass_ratio;
+#endif
 
         // Update the cohesive zone's position and displacements
         czx_new[idx]         = czx[idx]       + .5*(velTop + velBot)*delT;
@@ -4033,11 +4048,11 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
                               * exp(-D_n/delta_n)
                               * exp(-D_t2*D_t2/(delta_s*delta_s));
 
-        czforce_new[idx]     = mass_correction_factor *
-                             ((normal_stress*cznorm_new[idx]
-                             + tang1_stress*cztang_new[idx]
-                             + tang2_stress*cztang2)*czarea_new[idx])
-                             * (1.0 - czf);
+//        czforce_new[idx]     = mass_correction_factor *
+        czforce_new[idx]     = ((normal_stress*cznorm_new[idx]
+                             +   tang1_stress*cztang_new[idx]
+                             +   tang2_stress*cztang2)*czarea_new[idx])
+                             *   (1.0 - czf);
 
 /*
         dest << time << " " << czsep_new[idx].x() << " " << czsep_new[idx].y() << " " << czforce_new[idx].x() << " " << czforce_new[idx].y() << endl;
@@ -4055,7 +4070,7 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
       }
     }
 
-    delete linear_interpolator;
+    delete interpolator;
   }
 }
 

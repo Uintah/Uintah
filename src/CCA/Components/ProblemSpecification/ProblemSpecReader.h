@@ -86,7 +86,6 @@ namespace Uintah {
 
     // Replaces <include> tags with xml file tree.
     void resolveIncludes( xmlNode * child, xmlNode * parent, int depth = 0 );
-
    };
 
 } // End namespace Uintah

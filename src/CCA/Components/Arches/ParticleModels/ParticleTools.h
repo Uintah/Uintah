@@ -5,6 +5,7 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <vector>
 #include <sstream>
+#include <map>
 
 namespace Uintah{ namespace ArchesCore{
 
@@ -51,6 +52,14 @@ namespace Uintah{ namespace ArchesCore{
 
   /** @brief Return a list of models asssociated with a particular IC **/
   std::vector<std::string> getICModels( ProblemSpecP& db, const std::string ic_name );
+
+  /** @brief Return a map with model and type of model **/
+  std::map<std::string, std::string> getModelTypeMap( ProblemSpecP& db, const std::string ic_name );
+
+  /** @brief  **/
+  std::string getModelNameByType( ProblemSpecP& db, const std::string ic_name, const std::string model_type );
+  
+ 
 
 }} //Uintah::ArchesCore
 

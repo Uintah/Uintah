@@ -1,8 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from sys import argv, exit
 from os import environ, system, path
-from commands import getoutput
+from subprocess import getoutput
 from helpers.runSusTests import runSusTests, ignorePerformanceTests, build_root, getInputsDir
 from helpers.modUPS import modUPS
 
@@ -423,7 +423,7 @@ def getTestList(me) :
   elif me == "BUILDBOTTESTS":
     TESTS = ignorePerformanceTests( NIGHTLYTESTS )           
   else:
-    print "\nERROR:Wasatch.py  getTestList:  The test list (%s) does not exist!\n\n" % me
+    print("\nERROR:Wasatch.py  getTestList:  The test list (%s) does not exist!\n\n" % me)
     exit(1)
     
   # Limit the tests run on the nightly gpu_rt.  Brittle  

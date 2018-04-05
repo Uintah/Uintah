@@ -71,10 +71,8 @@
 using namespace Uintah;
 
 namespace {
-
-Dout g_schedulercommon_dbg( "SchedulerCommon_DBG", false);
-Dout g_task_graph_compile(  "SchedulerCommon_TG" , false);
-
+  Dout g_schedulercommon_dbg( "SchedulerCommon_DBG", "Schedulers", "Debug output ", false);
+  Dout g_task_graph_compile(  "SchedulerCommon_TG" , "Schedulers", "Task graph output", false);
 }
 
 
@@ -463,13 +461,17 @@ SchedulerCommon::problemSetup( const ProblemSpecP     & prob_spec
 
         // Set the variable name AllTasks/ plus the attribute name and
         // store in a map for easy lookup by the attribute name.
+
+        // Note: this modifided name will be needed for saving.
         m_monitoring_tasks[0][attribute] =
           VarLabel::create( "AllTasks/" + attribute,
                             PerPatch<double>::getTypeDescription() );
 
         if (d_myworld->myRank() == 0)
           std::cout << "--  Monitoring attribute " << attribute << " "
-                    << "for all tasks" << std::endl;
+                    << "for all tasks. "
+                    << "VarLabel name = 'AllTasks/" << attribute << "'"
+                    << std::endl;
       }
 
       // Maps for the specific tasks to be monitored.
@@ -492,13 +494,17 @@ SchedulerCommon::problemSetup( const ProblemSpecP     & prob_spec
         // Set the variable name to the task name plus the attribute
         // name and store in a map for easy lookup by the task and
         // attribute name.
+
+        // Note: this modifided name will be needed for saving.
         m_monitoring_tasks[1][taskName + "::" + attribute] =
           VarLabel::create( varName + "/" + attribute,
                             PerPatch<double>::getTypeDescription() );
 
         if (d_myworld->myRank() == 0)
           std::cout << "--  Monitoring attribute " << attribute << " "
-                    << "for task: " << taskName << std::endl;
+                    << "for task: " << taskName << ".  "
+                    << "VarLabel name = '" << varName << "/" << attribute << "'"
+                    << std::endl;
       }
     }
 
@@ -524,18 +530,30 @@ SchedulerCommon::problemSetup( const ProblemSpecP     & prob_spec
 
   m_no_scrub_vars.insert("refineFlag");
   m_no_scrub_vars.insert("refinePatchFlag");
-  
-// #ifdef HAVE_VISIT
-//   static bool initialized = false;
 
-//   // Running with VisIt so add in the variables that the user can
-//   // modify.
-//   if( m_sharedState->getVisIt() && !initialized ) {
-//      m_sharedState->d_douts.push_back( &g_schedulercommon_dbg  );
+#ifdef HAVE_VISIT
+  static bool initialized = false;
 
-//     initialized = true;
-//   }
-// #endif
+  // Running with VisIt so add in the variables that the user can
+  // modify.
+  if( m_application->getVisIt() && !initialized ) {
+    // variable 1 - Must start with the component name and have NO
+    // spaces in the var name
+    ApplicationInterface::interactiveVar var;
+    var.component  = "LoadBalancer";
+    var.name       = "UseSmallMessages";
+    var.type       = Uintah::TypeDescription::bool_type;
+    var.value      = (void *) &m_use_small_messages;
+    var.range[0]   = 0;
+    var.range[1]   = 1;
+    var.modifiable = true;
+    var.recompile  = false;
+    var.modified   = false;
+    m_application->getUPSVars().push_back( var );
+
+    initialized = true;
+  }
+#endif
 }
 
 //______________________________________________________________________
@@ -2228,7 +2246,8 @@ SchedulerCommon::sumTaskMonitoringValues( DetailedTask * dtask )
   const PatchSubset *patches = dtask->getPatches();
 
   if (patches && patches->size()) {
-    // Compute the cost on a per cell basis so the measured value can be distributed proportionally by cells
+    // Compute the cost on a per cell basis so the measured value can
+    // be distributed proportionally by cells
     double num_cells = 0;
 
     for (int p = 0; p < patches->size(); p++) {
@@ -2262,7 +2281,7 @@ SchedulerCommon::sumTaskMonitoringValues( DetailedTask * dtask )
 
         // Is this task being monitored ?
         if ((i == 0) ||  // Global monitoring yes, otherwise check.
-        (i == 1 && taskName == dtask->getTask()->getName())) {
+            (i == 1 && taskName == dtask->getTask()->getName())) {
           bool loadBalancerCost = false;
           double value;
 

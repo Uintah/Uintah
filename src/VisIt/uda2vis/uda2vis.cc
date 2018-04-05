@@ -50,7 +50,9 @@
 #include <vector>
 
 using namespace Uintah;
-Dout  dbgOut("UDA2VIS", false);
+
+namespace {
+  Dout  dbgOut("UDA2VIS", "UDA2VIS", "Debug stream for uda2vis", false);
 
 /////////////////////////////////////////////////////////////////////
 // Utility functions for copying data from Uintah structures into
@@ -176,6 +178,8 @@ void copyComponents<Matrix3>(double *dest, const Matrix3 &src)
   }
 }
 
+} // end unnamed namespace
+
 
 /////////////////////////////////////////////////////////////////////
 // Open a data archive.
@@ -253,7 +257,7 @@ extern "C"
 TimeStepInfo* getTimeStepInfo(DataArchive *archive,
                               GridP *grid,
                               int timestep,
-                              int loadExtraElements)
+                              LoadExtra loadExtraElements)
 {
   std::ostringstream msg;
   msg << std::left<< std::setw(50) << "getTimeStepInfo "<< std::right <<" timestep: " << timestep;
@@ -410,7 +414,7 @@ static GridDataRaw* readGridData(DataArchive *archive,
                                  int timestep,
                                  int low[3],
                                  int high[3],
-                                 int loadExtraElements)
+                                 LoadExtra loadExtraElements)
 {
   if( archive->exists( variable_name, patch, timestep ) )
   {
@@ -549,7 +553,7 @@ static GridDataRaw* readPatchData(DataArchive *archive,
                                   int timestep,
                                   int low[3],
                                   int high[3],
-                                  int loadExtraElements)
+                                  LoadExtra loadExtraElements)
 {
   if( archive->exists( variable_name, patch, timestep ) )
   {
@@ -620,7 +624,7 @@ GridDataRaw* getGridDataMainType(DataArchive *archive,
                                  int timestep,
                                  int low[3],
                                  int high[3],
-                                 int loadExtraElements,
+                                 LoadExtra loadExtraElements,
                                  const Uintah::TypeDescription *subtype)
 {
   printTask( patch, dbgOut, "  getGridDataMainType", timestep, material, variable_name );
@@ -677,7 +681,7 @@ GridDataRaw* getPatchDataMainType(DataArchive *archive,
                                   int timestep,
                                   int low[3],
                                   int high[3],
-                                  int loadExtraElements,
+                                  LoadExtra loadExtraElements,
                                   const Uintah::TypeDescription *subtype)
 {
 
@@ -728,7 +732,7 @@ GridDataRaw* getGridData(DataArchive *archive,
                          int timestep,
                          int low[3],
                          int high[3],
-                         int loadExtraElements)
+                         LoadExtra loadExtraElements)
 {
   LevelP level = (*grid)->getLevel(level_i);
   const Patch *patch = level->getPatch(patch_i);
@@ -997,7 +1001,7 @@ namespace Uintah {
 // This uses the scheduler for in-situ.
 TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
                               GridP gridP,
-                              int loadExtraElements)
+                              LoadExtra loadExtraElements)
 {
   DataWarehouse* dw = schedulerP->getLastDW();
   LoadBalancer * lb = schedulerP->getLoadBalancer();
@@ -1315,7 +1319,7 @@ static GridDataRaw* readGridData(DataWarehouse *dw,
                                  int material,
                                  int low[3],
                                  int high[3],
-                                 int loadExtraElements)
+                                 LoadExtra loadExtraElements)
 {
   if( dw->exists( varLabel, material, patch ) )
   {
@@ -1450,7 +1454,7 @@ static GridDataRaw* readPatchData(DataWarehouse *dw,
                                   int material,
                                   int low[3],
                                   int high[3],
-                                  int loadExtraElements)
+                                  LoadExtra loadExtraElements)
 {
   if( dw->exists( varLabel, material, patch ) )
   {
@@ -1519,7 +1523,7 @@ GridDataRaw* getGridDataMainType(DataWarehouse *dw,
                                  int material,
                                  int low[3],
                                  int high[3],
-                                 int loadExtraElements,
+                                 LoadExtra loadExtraElements,
                                  const Uintah::TypeDescription *subtype)
 {  
   switch (subtype->getType())
@@ -1572,7 +1576,7 @@ GridDataRaw* getPatchDataMainType(DataWarehouse *dw,
                                   int material,
                                   int low[3],
                                   int high[3],
-                                  int loadExtraElements,
+                                  LoadExtra loadExtraElements,
                                   const Uintah::TypeDescription *subtype)
 {
   printTask( patch, dbgOut, "getPatchDataMainType" );
@@ -1620,7 +1624,7 @@ GridDataRaw* getGridData(SchedulerP schedulerP,
                          int material,
                          int low[3],
                          int high[3],
-                         int loadExtraElements)
+                         LoadExtra loadExtraElements)
 {
   DataWarehouse *dw = schedulerP->getLastDW();
   

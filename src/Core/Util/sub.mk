@@ -30,6 +30,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR := Core/Util
 
 SRCS += \
+        $(SRCDIR)/DOUT.cpp              \
         $(SRCDIR)/DebugStream.cc        \
         $(SRCDIR)/Endian.cc             \
         $(SRCDIR)/Environment.cc        \

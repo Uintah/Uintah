@@ -2,13 +2,16 @@
 
 namespace Uintah{
 
+//--------------------------------------------------------------------------------------------------
 UpdateParticlePosition::UpdateParticlePosition( std::string task_name, int matl_index ) :
 TaskInterface( task_name, matl_index ) {
 }
 
+//--------------------------------------------------------------------------------------------------
 UpdateParticlePosition::~UpdateParticlePosition(){
 }
 
+//--------------------------------------------------------------------------------------------------
 void
 UpdateParticlePosition::problemSetup( ProblemSpecP& db ){
 
@@ -22,44 +25,56 @@ UpdateParticlePosition::problemSetup( ProblemSpecP& db ){
   db_vel->getAttribute("v",_v_name);
   db_vel->getAttribute("w",_w_name);
 
+}
+
+//--------------------------------------------------------------------------------------------------
+void
+UpdateParticlePosition::register_initialize(
+  std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
+  const bool packed_tasks)
+{
+  register_variable( _px_name, ArchesFieldContainer::COMPUTES, variable_registry );
+  register_variable( _py_name, ArchesFieldContainer::COMPUTES, variable_registry );
+  register_variable( _pz_name, ArchesFieldContainer::COMPUTES, variable_registry );
+}
+
+//--------------------------------------------------------------------------------------------------
+void
+UpdateParticlePosition::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+
+  ParticleTuple px_tup = tsk_info->get_uintah_particle_field( _px_name );
+  ParticleTuple py_tup = tsk_info->get_uintah_particle_field( _py_name );
+  ParticleTuple pz_tup = tsk_info->get_uintah_particle_field( _pz_name );
+
+  ParticleVariable<double>& px = *(std::get<0>(px_tup));
+  ParticleVariable<double>& py = *(std::get<0>(py_tup));
+  ParticleVariable<double>& pz = *(std::get<0>(pz_tup));
+
+  ParticleSubset* p_subset = std::get<1>(px_tup);
+  for (auto iter = p_subset->begin(); iter != p_subset->end(); iter++){
+    particleIndex i = *iter;
+    px[i] = 0.0;
+    py[i] = 0.0;
+    pz[i] = 0.0;
+  }
 
 }
 
-//
-//------------------------------------------------
-//-------------- INITIALIZATION ------------------
-//------------------------------------------------
-//
-
+//--------------------------------------------------------------------------------------------------
 void
-UpdateParticlePosition::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){
-
+UpdateParticlePosition::register_timestep_init( 
+  std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){
 }
 
-void
-UpdateParticlePosition::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
-
-
-//
-//------------------------------------------------
-//------------- TIMESTEP INIT --------------------
-//------------------------------------------------
-//
-void
-UpdateParticlePosition::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){
-}
-
+//--------------------------------------------------------------------------------------------------
 void
 UpdateParticlePosition::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-//
-//------------------------------------------------
-//------------- TIMESTEP WORK --------------------
-//------------------------------------------------
-//
-
+//--------------------------------------------------------------------------------------------------
 void
-UpdateParticlePosition::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){
+UpdateParticlePosition::register_timestep_eval( 
+  std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, 
+  const int time_substep , const bool packed_tasks){
 
   register_variable( _px_name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW,  variable_registry );
   register_variable( _py_name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW,  variable_registry );
@@ -75,7 +90,7 @@ UpdateParticlePosition::register_timestep_eval( std::vector<ArchesFieldContainer
 
 }
 
-//This is the work for the task.  First, get the variables. Second, do the work!
+//--------------------------------------------------------------------------------------------------
 void
 UpdateParticlePosition::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 

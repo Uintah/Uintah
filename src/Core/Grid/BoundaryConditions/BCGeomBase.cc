@@ -30,16 +30,18 @@
 #include <Core/Grid/Variables/GridIterator.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
+
 #include <iostream>
 #include <vector>
 
 
 using namespace Uintah;
-using namespace std;
+
+DebugStream BCGeomBase::BC_dbg("BC_dbg", "Grid_BoundaryConditions", "", false);
 
 //--------------------------------------------------------------------------------------------------
 
-BCGeomBase::BCGeomBase() 
+BCGeomBase::BCGeomBase()
 {
   d_cells           = GridIterator(IntVector(0,0,0),IntVector(0,0,0));
   d_nodes           = GridIterator(IntVector(0,0,0),IntVector(0,0,0));
@@ -104,7 +106,7 @@ void BCGeomBase::getNodeFaceIterator(Iterator& b_ptr)
 
 void BCGeomBase::determineIteratorLimits( const Patch::FaceType   face,
                                          const Patch           * patch,
-                                         const vector<Point>   & test_pts )
+                                         const std::vector<Point>   & test_pts )
 {
 #if 0
   cout << "BCGeomBase determineIteratorLimits() " << patch->getFaceName(face)<< endl;
@@ -122,10 +124,10 @@ void BCGeomBase::determineIteratorLimits( const Patch::FaceType   face,
   
   Iterator cell_itr(cells), node_itr(nodes);
   
-  vector<Point>::const_iterator pts = test_pts.begin();
+  std::vector<Point>::const_iterator pts = test_pts.begin();
   
   ListOfCellsIterator list_cells;
-  vector<IntVector> vec_cells;
+  std::vector<IntVector> vec_cells;
   
   for (cell_itr.reset(); !cell_itr.done();cell_itr++,pts++) {
     if (inside(*pts)) {
@@ -134,7 +136,7 @@ void BCGeomBase::determineIteratorLimits( const Patch::FaceType   face,
   }
   
   ListOfCellsIterator list_nodes;
-  vector<IntVector> vec_nodes;
+  std::vector<IntVector> vec_nodes;
   
   for (node_itr.reset(); !node_itr.done();node_itr++) {
     Point p = patch->getLevel()->getNodePosition(*node_itr);
@@ -147,7 +149,7 @@ void BCGeomBase::determineIteratorLimits( const Patch::FaceType   face,
     d_cells = GridIterator(IntVector(0,0,0),IntVector(0,0,0));
   }
   else {
-    for (vector<IntVector>::const_iterator i = vec_cells.begin();
+    for (std::vector<IntVector>::const_iterator i = vec_cells.begin();
          i != vec_cells.end(); ++i) {
       list_cells.add(*i);
     }
@@ -157,7 +159,7 @@ void BCGeomBase::determineIteratorLimits( const Patch::FaceType   face,
     d_nodes = GridIterator(IntVector(0,0,0),IntVector(0,0,0));
   }
   else {
-    for (vector<IntVector>::const_iterator i = vec_nodes.begin();
+    for (std::vector<IntVector>::const_iterator i = vec_nodes.begin();
          i != vec_nodes.end(); ++i) {
       list_nodes.add(*i);
     }
@@ -240,10 +242,10 @@ void BCGeomBase::determineInteriorBndIteratorLimits( const Patch::FaceType   fac
   
   GridIterator cells(lpts,hpts);
   Iterator cell_itr(cells);
-  vector<Point>::const_iterator pts = test_pts.begin();
+  std::vector<Point>::const_iterator pts = test_pts.begin();
 
   ListOfCellsIterator list_cells;
-  vector<IntVector> vec_cells;
+  std::vector<IntVector> vec_cells;
 
   cell_itr.reset();
   for (; pts != test_pts.end(); ++pts, ++cell_itr) {
@@ -260,7 +262,7 @@ void BCGeomBase::determineInteriorBndIteratorLimits( const Patch::FaceType   fac
     d_cells = GridIterator(IntVector(0,0,0),IntVector(0,0,0));
   }
   else {
-    for (vector<IntVector>::const_iterator i = vec_cells.begin();
+    for (std::vector<IntVector>::const_iterator i = vec_cells.begin();
          i != vec_cells.end(); ++i) {
       list_cells.add(*i);
     }
@@ -274,7 +276,7 @@ void BCGeomBase::determineInteriorBndIteratorLimits( const Patch::FaceType   fac
   GridIterator nodes(ln,hn);
   Iterator node_itr(nodes);
   ListOfCellsIterator list_nodes;
-  vector<IntVector> vec_nodes;
+  std::vector<IntVector> vec_nodes;
   for (node_itr.reset(); !node_itr.done();node_itr++) {
     Point p = patch->getLevel()->getNodePosition(*node_itr);
     if (inside(p)) {
@@ -285,7 +287,7 @@ void BCGeomBase::determineInteriorBndIteratorLimits( const Patch::FaceType   fac
     d_nodes = GridIterator(IntVector(0,0,0),IntVector(0,0,0));
   }
   else {
-    for (vector<IntVector>::const_iterator i = vec_nodes.begin();
+    for (std::vector<IntVector>::const_iterator i = vec_nodes.begin();
          i != vec_nodes.end(); ++i) {
       list_nodes.add(*i);
     }

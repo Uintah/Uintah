@@ -88,13 +88,19 @@
 using namespace Uintah;
 using namespace std;
 
-static DebugStream dbg("DataArchiver", false);
-
+namespace {
+  DebugStream dbg("DataArchiver", "DataArchiver", "Data archiver debug stream", false);
 #ifdef HAVE_PIDX
-  static DebugStream dbgPIDX ("DataArchiverPIDX", false);
+  DebugStream dbgPIDX ("DataArchiverPIDX", "DataArchiver", "Data archiver PIDX debug stream", false);
 #endif
+}
 
+//______________________________________________________________________
+// Initialize class static variables:
 bool DataArchiver::m_wereSavesAndCheckpointsInitialized = false;
+
+//______________________________________________________________________
+//
 
 DataArchiver::DataArchiver(const ProcessorGroup* myworld, int udaSuffix)
   : UintahParallelComponent(myworld),
@@ -242,6 +248,7 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
     m_outputInterval = 0.0; // default
   }
 
+  // Can't use both outputInterval and outpointTimeStepInterval
   if ( m_outputInterval > 0.0 && m_outputTimeStepInterval > 0 ) {
     throw ProblemSetupException("Use <outputInterval> or <outputTimeStepInterval>, not both",__FILE__, __LINE__);
   }
@@ -323,7 +330,8 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
     //__________________________________
     //  bullet proofing: must save p.x 
     //  in addition to other particle variables "p.*"
-    if (saveItem.labelName == m_particlePositionName || saveItem.labelName == "p.xx") {
+    if (saveItem.labelName == m_particlePositionName ||
+	saveItem.labelName == "p.xx") {
       m_saveP_x = true;
     }
 
@@ -402,8 +410,11 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
     }
   }
 
-  // Can't use both checkpointInterval and checkpointTimeStepInterval.
-  if (m_checkpointInterval > 0.0 && m_checkpointTimeStepInterval > 0) {
+  // Can't use both checkpointInterval and checkpointTimeStepInterval and
+  // checkpointWallTimeInterval.
+  if (((int) (m_checkpointInterval > 0.0) +
+       (int) (m_checkpointTimeStepInterval > 0) +
+       (int) (m_checkpointWallTimeInterval > 0)) > 2) {
     throw ProblemSetupException("Use <checkpoint interval=...> or <checkpoint timestepInterval=...>, not both",
                                 __FILE__, __LINE__);
   }
@@ -440,17 +451,26 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
               << m_checkpointWallTimeInterval << " wall clock seconds,"
               << " starting after " << m_checkpointWallTimeStart << " seconds.\n";
   }
-  
+
 #ifdef HAVE_VISIT
   static bool initialized = false;
 
   // Running with VisIt so add in the variables that the user can
   // modify.
   if( m_application->getVisIt() && !initialized ) {
-    m_application->getDebugStreams().push_back( &dbg  );
-#ifdef HAVE_PIDX
-    m_application->getDebugStreams().push_back( &dbgPIDX );
-#endif
+
+    ApplicationInterface::interactiveVar var;
+    var.component  = "DataArchiver";
+    var.name       = "outputDoubleAsFloat";
+    var.type       = Uintah::TypeDescription::bool_type;
+    var.value      = (void *) &m_outputDoubleAsFloat;
+    var.range[0]   = 0;
+    var.range[1]   = 1;
+    var.modifiable = true;
+    var.recompile  = false;
+    var.modified   = false;
+    m_application->getUPSVars().push_back( var );
+
     initialized = true;
   }
 #endif
@@ -1411,7 +1431,8 @@ DataArchiver::findNext_OutputCheckPointTimeStep( const bool restart,
     }
     // Checkpoint based on the wall time.
     else if( m_checkpointWallTimeInterval > 0 ) {
-      m_nextCheckpointWallTime = m_elapsedWallTime + m_checkpointWallTimeInterval;
+      m_nextCheckpointWallTime =
+        ceil( m_elapsedWallTime / m_checkpointWallTimeInterval ) * m_checkpointWallTimeInterval;
     }
   }
   
@@ -3862,7 +3883,10 @@ DataArchiver::setOutputInterval( double newinv )
   {
     m_outputInterval = newinv;
     m_outputTimeStepInterval = 0;
+
+    // Reset the output so force one to happen.
     m_nextOutputTime = 0.0;
+    m_nextOutputTimeStep = 0;
   }
 }
 
@@ -3873,9 +3897,12 @@ DataArchiver::setOutputTimeStepInterval( int newinv )
 {
   if (m_outputTimeStepInterval != newinv)
   {
-    m_outputTimeStepInterval = newinv;
     m_outputInterval = 0;
+    m_outputTimeStepInterval = newinv;
+
+    // Reset the output so force one to happen.
     m_nextOutputTime = 0.0;
+    m_nextOutputTimeStep = 0;
   }
 }
 
@@ -3888,7 +3915,12 @@ DataArchiver::setCheckpointInterval( double newinv )
   {
     m_checkpointInterval = newinv;
     m_checkpointTimeStepInterval = 0;
+    m_checkpointWallTimeInterval = 0;
+
+    // Reset the check point so force one to happen.
     m_nextCheckpointTime = 0.0;
+    m_nextCheckpointTimeStep = 0.0;
+    m_nextCheckpointWallTime = 0.0;
 
     // If needed create checkpoints/index.xml
     if( !m_checkpointsDir.exists() )
@@ -3911,9 +3943,44 @@ DataArchiver::setCheckpointTimeStepInterval( int newinv )
 {
   if (m_checkpointTimeStepInterval != newinv)
   {
-    m_checkpointTimeStepInterval = newinv;
     m_checkpointInterval = 0;
+    m_checkpointTimeStepInterval = newinv;
+    m_checkpointWallTimeInterval = 0;
+
+    // Reset the check point so force one to happen.
     m_nextCheckpointTime = 0.0;
+    m_nextCheckpointTimeStep = 0.0;
+    m_nextCheckpointWallTime = 0.0;
+
+    // If needed create checkpoints/index.xml
+    if( !m_checkpointsDir.exists())
+    {
+      if( d_myworld->myRank() == 0) {
+        m_checkpointsDir = m_dir.createSubdir("checkpoints");
+        createIndexXML(m_checkpointsDir);
+      }
+    }
+
+    // Sync up before every rank can use the checkpoints dir
+    Uintah::MPI::Barrier(d_myworld->getComm());
+  }
+}
+
+//__________________________________
+// Allow the component to set the checkpoint wall time interval
+void
+DataArchiver::setCheckpointWallTimeInterval( int newinv )
+{
+  if (m_checkpointWallTimeInterval != newinv)
+  {
+    m_checkpointInterval = 0;
+    m_checkpointTimeStepInterval = 0;
+    m_checkpointWallTimeInterval = newinv;
+
+    // Reset the check point so force one to happen.
+    m_nextCheckpointTime = 0.0;
+    m_nextCheckpointTimeStep = 0.0;
+    m_nextCheckpointWallTime = 0.0;
 
     // If needed create checkpoints/index.xml
     if( !m_checkpointsDir.exists())
@@ -4089,7 +4156,7 @@ DataArchiver::checkpointTimeStep( const GridP& grid,
 }
 
 //______________________________________________________________________
-// Called by In-situ VisIt to dump a checkpoint.
+// Called to set the elapsed wall time
 //
 void
 DataArchiver::setElapsedWallTime( double val )
@@ -4099,6 +4166,15 @@ DataArchiver::setElapsedWallTime( double val )
   Uintah::MPI::Bcast( &val, 1, MPI_DOUBLE, 0, d_myworld->getComm() );
   
   m_elapsedWallTime = val;
+};
+
+//______________________________________________________________________
+// Called to set the elapsed wall time
+//
+void
+DataArchiver::setCheckpointCycle( int val )
+{
+  m_checkpointCycle = val;
 };
 
 //______________________________________________________________________

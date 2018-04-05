@@ -212,15 +212,21 @@ namespace Uintah{ namespace ArchesCore{
   double get_scaling_constant(ProblemSpecP& db, const std::string labelName, const int qn){
 
     const ProblemSpecP params_root = db->getRootNode();
-    if ( params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM") ){
+    const ProblemSpecP db_dqmom = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM");
+    if ( db_dqmom ){
 
       if ( labelName == "w" ||  labelName == "weights" || labelName == "weight"){
 
         if ( params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM")->findBlock("Weights") ){
 
           std::vector<double> scaling_const;
-          params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM")->findBlock("Weights")->require("scaling_const",scaling_const);
-          return scaling_const[qn];
+          ProblemSpecP db_weight_scal = db_dqmom->findBlock("Weights")->findBlock("scaling_const");
+          if ( db_weight_scal ) { 
+            db_dqmom->findBlock("Weights")->require("scaling_const",scaling_const);
+            return scaling_const[qn];
+          }else {
+            return 1.;
+          }
         }
         else {
           throw ProblemSetupException("Error: cannot find <weights> block in inupt file.",__FILE__,__LINE__);
@@ -234,11 +240,17 @@ namespace Uintah{ namespace ArchesCore{
           IcBlock->getAttribute("label",tempLabelname);
           if (tempLabelname == labelName){
             std::vector<double> scaling_const;
-            IcBlock->require("scaling_const",scaling_const);
-            return scaling_const[qn];
+            ProblemSpecP db_ic_scal = IcBlock->findBlock("scaling_const");
+            if ( db_ic_scal ) { 
+              IcBlock->require("scaling_const",scaling_const);
+              return scaling_const[qn];
+            } else {
+              return 1.;
+            }
           }
         }
-        throw ProblemSetupException("Error: couldn't find internal coordinate or weight with name: "+labelName , __FILE__, __LINE__);
+        //throw ProblemSetupException("Error: couldn't find internal coordinate or weight with name: "+labelName , __FILE__, __LINE__);
+        return 1.;
       }
     } else {
       throw ProblemSetupException("Error: DQMOM section not found in input file.",__FILE__,__LINE__);
@@ -390,4 +402,100 @@ namespace Uintah{ namespace ArchesCore{
 
   }
 
-}} //Uintah::ArchesCore
+//--------------------------------------------------------------------------------------------------
+ std::map<std::string, std::string> getModelTypeMap( ProblemSpecP& db, const std::string ic_name ){
+
+     const ProblemSpecP db_dqmom
+       = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM");
+     std::vector<std::string> ic_models;
+
+     std::map<std::string, std::string> the_map; // (type) -> (name of the model) FOR THIS IC
+     the_map.clear();
+
+     if ( db_dqmom ){
+
+       ProblemSpecP db_models = db_dqmom->findBlock("Models");
+
+       if ( ic_name == "w" ){
+
+         ProblemSpecP db_weight = db_dqmom->findBlock("Weights");
+         for ( ProblemSpecP db_model = db_weight->findBlock("model"); db_model != nullptr;
+               db_model = db_model->findNextBlock("model") ){
+
+           std::string this_model;
+           db_model->getAttribute("label", this_model);
+
+           //Now find the model in the list of <Models> to get the type:
+           for ( ProblemSpecP db_m = db_models->findBlock("model"); db_m != nullptr;
+                  db_m = db_m->findNextBlock("model")){
+
+             std::string name;
+             std::string type;
+             db_m->getAttribute("label", name);
+             db_m->getAttribute("type", type);
+             if ( this_model == name ){
+               the_map.insert(std::make_pair(type, name));
+             }
+
+           }
+         }
+
+       } else {
+
+         for ( ProblemSpecP db_ic = db_dqmom->findBlock("Ic"); db_ic != nullptr;
+         db_ic = db_ic->findNextBlock("Ic") ){
+
+           std::string label;
+           db_ic->getAttribute("label", label );
+
+           if ( ic_name == label ){
+
+             for ( ProblemSpecP db_model = db_ic->findBlock("model"); db_model != nullptr;
+                   db_model = db_model->findNextBlock("model") ){
+
+               std::string this_model;
+               db_model->getAttribute("label", this_model);
+
+               //Now find the model in the list of <Models> to get the type:
+               for ( ProblemSpecP db_m = db_models->findBlock("model"); db_m != nullptr;
+                      db_m = db_m->findNextBlock("model")){
+
+                 std::string name;
+                 std::string type;
+                 db_m->getAttribute("label", name);
+                 db_m->getAttribute("type", type);
+                 if ( this_model == name ){
+                   the_map.insert(std::make_pair(type, name));
+                 }
+               }
+             }
+           }
+         }
+       }
+
+     } else {
+
+       std::stringstream msg;
+       msg << "Error: Trying to look for internal coordinates but no DQMOM exists in input file."
+       << std::endl;
+       throw ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+
+     }
+
+     return the_map;
+
+ }
+
+ std::string getModelNameByType( ProblemSpecP& db, const std::string ic_name,
+                                 const std::string model_type ){
+
+   std::map<std::string, std::string> the_map = getModelTypeMap( db, ic_name );
+   auto i = the_map.find( model_type );
+   if ( i == the_map.end() ){
+     return "NULLSTRING";
+   } else {
+     return i->second;
+   }
+ }
+
+ }} //Uintah::ArchesCore

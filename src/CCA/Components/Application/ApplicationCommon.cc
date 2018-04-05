@@ -95,6 +95,8 @@ ApplicationCommon::ApplicationCommon( const ProcessorGroup   * myworld,
   VarLabel* nonconstEndSimulation = VarLabel::create(endSimulation_name, bool_or_vartype::getTypeDescription());
   nonconstEndSimulation->allowMultipleComputes();
   m_endSimulationLabel = nonconstEndSimulation;
+
+  m_application_stats.insert( CarcassCount, std::string("CarcassCount"), "Carcasses", 0 );
 }
 
 ApplicationCommon::~ApplicationCommon()

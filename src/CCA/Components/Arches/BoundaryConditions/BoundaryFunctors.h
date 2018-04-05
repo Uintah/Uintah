@@ -1020,55 +1020,62 @@ void BCFunctors<T>::get_bc_modifies( std::vector<std::string>& varnames, WBCHelp
 // This function actually applies the BC to the variable(s)
 template <typename T>
 void BCFunctors<T>::apply_bc( std::vector<std::string> varnames, WBCHelper* bc_helper,
-               ArchesTaskInfoManager* tsk_info, const Patch* patch ){
+                              ArchesTaskInfoManager* tsk_info, const Patch* patch ){
 
   const BndMapT& bc_info = bc_helper->get_boundary_information();
+
   for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
 
-    //Get the iterator
-    Uintah::Iterator cell_iter = bc_helper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
+    const bool on_this_patch = i_bc->second.has_patch(patch->getID());
 
-    std::string facename = i_bc->second.name;
+    if ( on_this_patch ){
 
-    for ( auto i_eqn = varnames.begin(); i_eqn != varnames.end(); i_eqn++ ){
+      //Get the iterator
+      Uintah::Iterator cell_iter = bc_helper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
 
-      const BndCondSpec* spec = i_bc->second.find(*i_eqn);
+      std::string facename = i_bc->second.name;
 
-      if ( spec == nullptr ){
+      for ( auto i_eqn = varnames.begin(); i_eqn != varnames.end(); i_eqn++ ){
 
-        // Only throwing an error for edge BCs.
-        // Interior BC's allowed to be missing
-        if ( i_bc->second.edge_type == EDGE ){
-          std::stringstream msg;
-          msg << "Error: Cannot find a boundary condition for variable: " << *i_eqn << " on face: " << facename << std::endl;
-          throw InvalidValue(msg.str(), __FILE__, __LINE__);
-        }
+        const BndCondSpec* spec = i_bc->second.find(*i_eqn);
 
-      } else {
+        if ( spec == nullptr ){
 
-        std::shared_ptr<BaseFunctor> bc_fun = nullptr;
-        if ( spec->bcType == DIRICHLET ){
-          bc_fun = m_bcFunStorage[func_enum_str(DIRICHLET_FUN)];
-        } else if ( spec->bcType == NEUMANN ){
-          bc_fun = m_bcFunStorage[func_enum_str(NEUMANN_FUN)];
+          // Only throwing an error for edge BCs.
+          // Interior BC's allowed to be missing
+          if ( i_bc->second.edge_type == EDGE ){
+            std::stringstream msg;
+            msg << "Error: Cannot find a boundary condition for variable: " <<
+              *i_eqn << " on face: " << facename << std::endl;
+            throw InvalidValue(msg.str(), __FILE__, __LINE__);
+          }
+
         } else {
-          //CUSTOM BCS
-          std::string key_name = pair_face_var_names( facename, *i_eqn );
-          bc_fun = m_bcFunStorage[key_name];
-        }
 
-        const BndSpec bndSpec = i_bc->second;
+          std::shared_ptr<BaseFunctor> bc_fun = nullptr;
+          if ( spec->bcType == DIRICHLET ){
+            bc_fun = m_bcFunStorage[func_enum_str(DIRICHLET_FUN)];
+          } else if ( spec->bcType == NEUMANN ){
+            bc_fun = m_bcFunStorage[func_enum_str(NEUMANN_FUN)];
+          } else {
+            //CUSTOM BCS
+            std::string key_name = pair_face_var_names( facename, *i_eqn );
+            bc_fun = m_bcFunStorage[key_name];
+          }
 
-        // Actually applying the boundary condition here:
-        if ( bc_fun != nullptr ){
-          bc_fun->eval_bc( *i_eqn, patch, tsk_info, &bndSpec, cell_iter );
-        } else {
-          std::stringstream msg;
-          msg << "Error: Boundary condition implementation not found." << " \n " <<
-                 " Var name:     " << spec->varName << std::endl <<
-                 "  Face name:    " << facename << std::endl <<
-                 "  Functor name: " << spec->functorName << std::endl;
-          throw InvalidValue( msg.str(), __FILE__, __LINE__);
+          const BndSpec bndSpec = i_bc->second;
+
+          // Actually applying the boundary condition here:
+          if ( bc_fun != nullptr ){
+            bc_fun->eval_bc( *i_eqn, patch, tsk_info, &bndSpec, cell_iter );
+          } else {
+            std::stringstream msg;
+            msg << "Error: Boundary condition implementation not found." << " \n " <<
+                   " Var name:     " << spec->varName << std::endl <<
+                   "  Face name:    " << facename << std::endl <<
+                   "  Functor name: " << spec->functorName << std::endl;
+            throw InvalidValue( msg.str(), __FILE__, __LINE__);
+          }
         }
       }
     }

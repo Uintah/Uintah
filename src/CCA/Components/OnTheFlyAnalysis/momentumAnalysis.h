@@ -157,7 +157,6 @@ WARNING
     // VarLabels
     class MA_Labels {
       public:
-        const VarLabel* delT;
         VarLabel* lastCompTime;
         VarLabel* fileVarsStruct;
 

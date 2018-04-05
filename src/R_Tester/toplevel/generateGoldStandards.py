@@ -1,12 +1,12 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 
 import os 
 
 # bulletproofing
-if os.sys.version_info <= (2,7):
+if os.sys.version_info <= (3,0):
   print( "" )
   print( "ERROR: Your python version [" + str( os.sys.version_info ) + "] is too old.\n" + \
-        "       You must use version 2.7 or greater (but NOT version 3.x!). \n" )
+        "       You must use version 3.0 or greater. \n" )
   exit( 1 )
 
 import shutil
@@ -18,9 +18,6 @@ import subprocess # needed to accurately get return codes
 from os import system
 from optparse import OptionParser
 from sys import argv, exit
-from string import upper
-
-from subprocess import check_output # needed to get full pathname response from which command
 from helpers.runSusTests import getTestName, getTestOS, getUpsFile, getMPISize, getTestOS, setInputsDir, getTestFlags
 
 ####################################################################################
@@ -175,8 +172,7 @@ def generateGS() :
       MPIRUN = os.environ['MPIRUN']    # first try the environmental variable
     except :
       try:
-        MPIRUN = check_output(["which", "mpirun"])
-        MPIRUN = MPIRUN[:-1] # get rid of carriage return at the end of check_output
+        MPIRUN = shutil.which("mpirun")
       except:
         print( "ERROR:generateGoldStandards.py ")
         print( "      mpirun command was not found and the environmental variable MPIRUN was not set." )
@@ -235,7 +231,7 @@ def generateGS() :
     configVars = options.build_directory + "/configVars.mk"
     for component in components :
 
-      searchString = "BUILD_%s=no" % upper(component)  # search for BUILD_<COMPONENT>=no
+      searchString = "BUILD_%s=no" % component.upper()  # search for BUILD_<COMPONENT>=no
       for line in open(configVars):
         if searchString in line:
           print( "\n ERROR: the component (%s) was not compiled.  You must compile it before you can generate the gold standards\n" % component )
@@ -307,7 +303,7 @@ def generateGS() :
 
         nTestsFinished = 0
         for test in tests :
-            if getTestOS( test ) != upper( OS ) and getTestOS( test ) != "ALL":
+            if getTestOS( test ) != OS.upper() and getTestOS( test ) != "ALL":
                 continue
              
             #  Defaults

@@ -101,25 +101,7 @@ namespace Uintah {
       
     virtual void scheduleComputeStableTimeStep(SchedulerP& scheduler,
 					       const LevelP& level) = 0;
-      
-    virtual void scheduleComputeModelSources(SchedulerP& scheduler,
-					     const LevelP& level) = 0;
-                                              
-    virtual void scheduleModifyThermoTransportProperties(SchedulerP& scheduler,
-							 const LevelP& level,
-							 const MaterialSet*) = 0;
-                                                
-    virtual void computeSpecificHeat(CCVariable<double>&,
-                                     const Patch* patch,
-                                     DataWarehouse* new_dw,
-                                     const int indx) = 0;
-                                     
-    virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
-                                       SchedulerP& sched) = 0;
-                                               
-    virtual void scheduleTestConservation(SchedulerP&,
-					  const PatchSet* patches) = 0;
-                                           
+    
     virtual void scheduleRefine(const PatchSet* patches,
 				SchedulerP& sched) {};
 
@@ -134,19 +116,16 @@ namespace Uintah {
 
     virtual bool mayEndSimulation()         const { return false; };
           
-    virtual bool computesThermoTransportProps() const
-    { return m_modelComputesThermoTransportProps; }
-
   protected:
-    Scheduler * m_scheduler {nullptr};
-    Regridder * m_regridder {nullptr};
-    Output    * m_output    {nullptr};
+    ApplicationInterface   * m_application {nullptr};
+    Scheduler              * m_scheduler   {nullptr};
+    Regridder              * m_regridder   {nullptr};
+    Output                 * m_output      {nullptr};
    
     SimulationStateP m_sharedState {nullptr};
     
     bool m_AMR {false};
     bool m_dynamicRegridding {false};
-    bool m_modelComputesThermoTransportProps {false};
 
   private:     
     ModelInterface(const ModelInterface&);

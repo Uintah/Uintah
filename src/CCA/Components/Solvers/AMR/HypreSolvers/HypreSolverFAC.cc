@@ -84,8 +84,13 @@ HypreSolverFAC::solve(void)
     // Set the special arrays required by FAC
     int* pLevel;                  // Part ID of each level
     hypre_Index* refinementRatio; // Refinement ratio of level to level-1.
+#if (HYPRE_VERSION_MINOR >= 14)
+    refinementRatio = hypre_TAlloc(hypre_Index, numLevels,HYPRE_MEMORY_HOST);
+    pLevel          = hypre_TAlloc(int , numLevels,HYPRE_MEMORY_HOST);
+#else
     refinementRatio = hypre_TAlloc(hypre_Index, numLevels);
     pLevel          = hypre_TAlloc(int , numLevels);
+#endif
     HYPRE_SStructMatrix facA;
      for (int level = 0; level < numLevels; level++) {
       pLevel[level] = level;      // part ID of this level
@@ -146,8 +151,13 @@ HypreSolverFAC::solve(void)
 
     // Destroy & free
     HYPRE_SStructFACDestroy2(solver);
+#if (HYPRE_VERSION_MINOR >= 14)
+    hypre_TFree(pLevel,HYPRE_MEMORY_HOST);
+    hypre_TFree(refinementRatio,HYPRE_MEMORY_HOST);
+#else
     hypre_TFree(pLevel);
     hypre_TFree(refinementRatio);
+#endif
     HYPRE_SStructGraph facGraph = hypre_SStructMatrixGraph(facA);
     HYPRE_SStructGraphDestroy(facGraph);
     HYPRE_SStructMatrixDestroy(facA);

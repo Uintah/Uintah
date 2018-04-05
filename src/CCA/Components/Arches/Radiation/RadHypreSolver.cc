@@ -32,6 +32,7 @@
 #include <HYPRE_struct_ls.h>
 #include <krylov.h>
 #include <_hypre_struct_mv.h>
+#include <sci_defs/hypre_defs.h>
 
 #include <cstdlib>
 #include <cstdio>
@@ -214,12 +215,20 @@ RadHypreSolver::matrixInit(const Patch* patch){
   bz = 1;
   d_dim = 3;
 
-  d_nblocks = bx*by*bz;                             //number of blocks per processor, now is set to 1
-  d_ilower = hypre_CTAlloc(int*, d_nblocks);
-  d_iupper = hypre_CTAlloc(int*, d_nblocks);
-  d_stencilIndices = hypre_CTAlloc(int, d_stencilSize);
-  d_offsets = hypre_CTAlloc(int*, d_stencilSize);   //Allocating memory for 7 point stencil but since I'm using symmetry, only 4 is needed
-
+  d_nblocks = bx*by*bz;                        //number of blocks per processor, now is set to 1
+#if ((HYPRE_VERSION_MINOR) >= 14) 
+    d_ilower = hypre_CTAlloc(int*, d_nblocks,HYPRE_MEMORY_HOST);
+    d_iupper = hypre_CTAlloc(int*, d_nblocks,HYPRE_MEMORY_HOST);
+    d_stencilIndices = hypre_CTAlloc(int, d_stencilSize,HYPRE_MEMORY_HOST);
+    //Allocating memory for 7 point stencil but since I'm using symmetry, only 4 is needed
+    d_offsets = hypre_CTAlloc(int*, d_stencilSize,HYPRE_MEMORY_HOST);   
+#else
+      d_ilower = hypre_CTAlloc(int*, d_nblocks);
+      d_iupper = hypre_CTAlloc(int*, d_nblocks);
+      d_stencilIndices = hypre_CTAlloc(int, d_stencilSize);
+      //Allocating memory for 7 point stencil but since I'm using symmetry, only 4 is needed
+      d_offsets = hypre_CTAlloc(int*, d_stencilSize);
+#endif
 
   for (int s = 0; s < (d_stencilSize); s++){
     d_stencilIndices[s] = s;
@@ -227,8 +236,14 @@ RadHypreSolver::matrixInit(const Patch* patch){
 
 
   for (int i = 0; i < d_nblocks; i++){
+#if (HYPRE_VERSION_MINOR >= 14) 
+    d_ilower[i] = hypre_CTAlloc(int, d_dim,HYPRE_MEMORY_HOST);
+    d_iupper[i] = hypre_CTAlloc(int, d_dim,HYPRE_MEMORY_HOST);
+#else
     d_ilower[i] = hypre_CTAlloc(int, d_dim);
     d_iupper[i] = hypre_CTAlloc(int, d_dim);
+#endif
+    
   }
 
   for (int i = 0; i < d_dim; i++){
@@ -254,21 +269,41 @@ RadHypreSolver::matrixInit(const Patch* patch){
     }
   }
 
-
+#if (HYPRE_VERSION_MINOR >= 14) 
+  d_offsets = hypre_CTAlloc(int*, d_stencilSize,HYPRE_MEMORY_HOST);   //Allocating memory for 7 point stencil but since I'm using symmetry, only 4 is needed
+#else
   d_offsets = hypre_CTAlloc(int*, d_stencilSize);   //Allocating memory for 7 point stencil but since I'm using symmetry, only 4 is needed
-  if(d_use7PointStencil){ 
+#endif
+  if(d_use7PointStencil){
+#if (HYPRE_VERSION_MINOR >= 14) 
+    d_offsets[0] = hypre_CTAlloc(int, 3,HYPRE_MEMORY_HOST); 
+    d_offsets[1] = hypre_CTAlloc(int, 3,HYPRE_MEMORY_HOST); 
+    d_offsets[2] = hypre_CTAlloc(int, 3,HYPRE_MEMORY_HOST); 
+    d_offsets[3] = hypre_CTAlloc(int, 3,HYPRE_MEMORY_HOST); 
+    d_offsets[4] = hypre_CTAlloc(int, 3,HYPRE_MEMORY_HOST); 
+    d_offsets[5] = hypre_CTAlloc(int, 3,HYPRE_MEMORY_HOST); 
+    d_offsets[6] = hypre_CTAlloc(int, 3,HYPRE_MEMORY_HOST);
+#else
     d_offsets[0] = hypre_CTAlloc(int, 3); 
     d_offsets[1] = hypre_CTAlloc(int, 3); 
     d_offsets[2] = hypre_CTAlloc(int, 3); 
     d_offsets[3] = hypre_CTAlloc(int, 3); 
     d_offsets[4] = hypre_CTAlloc(int, 3); 
     d_offsets[5] = hypre_CTAlloc(int, 3); 
-    d_offsets[6] = hypre_CTAlloc(int, 3); 
+    d_offsets[6] = hypre_CTAlloc(int, 3);
+#endif
   }else{
+#if (HYPRE_VERSION_MINOR >= 14)
+    d_offsets[0] = hypre_CTAlloc(int, 3,HYPRE_MEMORY_HOST); //Allocating memory for 3 d_dimension indexing
+    d_offsets[1] = hypre_CTAlloc(int, 3,HYPRE_MEMORY_HOST);
+    d_offsets[2] = hypre_CTAlloc(int, 3,HYPRE_MEMORY_HOST);
+    d_offsets[3] = hypre_CTAlloc(int, 3,HYPRE_MEMORY_HOST);
+#else
     d_offsets[0] = hypre_CTAlloc(int, 3); //Allocating memory for 3 d_dimension indexing
     d_offsets[1] = hypre_CTAlloc(int, 3);
     d_offsets[2] = hypre_CTAlloc(int, 3);
     d_offsets[3] = hypre_CTAlloc(int, 3);
+#endif
   }
 
   HYPRE_StructGridCreate(MPI_COMM_WORLD, d_dim, &d_grid);
@@ -300,11 +335,15 @@ RadHypreSolver::matrixInit(const Patch* patch){
   HYPRE_StructVectorAssemble(d_x);
 
 
-
+#if (HYPRE_VERSION_MINOR >= 14)
+  d_valueA = hypre_CTAlloc(double, (d_stencilSize)*d_volume,HYPRE_MEMORY_HOST);
+  d_valueB = hypre_CTAlloc(double, d_volume,HYPRE_MEMORY_HOST);
+  d_valueX = hypre_CTAlloc(double, d_volume,HYPRE_MEMORY_HOST);
+#else
   d_valueA = hypre_CTAlloc(double, (d_stencilSize)*d_volume);
   d_valueB = hypre_CTAlloc(double, d_volume);
   d_valueX = hypre_CTAlloc(double, d_volume);
-
+#endif
 
 
 
@@ -714,7 +753,11 @@ RadHypreSolver::copyRadSoln(const Patch* patch, ArchesVariables* vars)
   IntVector idxLo = patch->getFortranCellLowIndex();
   IntVector idxHi = patch->getFortranCellHighIndex();
   double* xvec;
+#if (HYPRE_VERSION_MINOR >= 14)
+  xvec = hypre_CTAlloc(double, d_volume,HYPRE_MEMORY_HOST);
+#else
   xvec = hypre_CTAlloc(double, d_volume);
+#endif
  
   for (int ib = 0; ib < d_nblocks; ib++){
     HYPRE_StructVectorGetBoxValues(d_x, d_ilower[ib], d_iupper[ib], xvec);
@@ -734,8 +777,11 @@ RadHypreSolver::copyRadSoln(const Patch* patch, ArchesVariables* vars)
       }
     }
   }
-
-  hypre_TFree(xvec);
+#if (HYPRE_VERSION_MINOR >= 14)
+  hypre_TFree(xvec,HYPRE_MEMORY_HOST);
+#else
+    hypre_TFree(xvec);
+#endif
 }
 //______________________________________________________________________
 //  
@@ -752,25 +798,46 @@ RadHypreSolver::destroyMatrix()
   HYPRE_StructVectorDestroy(d_x);
    
   for (int i = 0; i < d_nblocks; i++){
+#if (HYPRE_VERSION_MINOR >= 14)
+    hypre_TFree(d_iupper[i],HYPRE_MEMORY_HOST);
+    hypre_TFree(d_ilower[i],HYPRE_MEMORY_HOST);
+#else
     hypre_TFree(d_iupper[i]);
     hypre_TFree(d_ilower[i]);
+#endif
   }
+#if (HYPRE_VERSION_MINOR >= 14)
+  hypre_TFree(d_ilower,HYPRE_MEMORY_HOST);
+  hypre_TFree(d_iupper,HYPRE_MEMORY_HOST);
+  hypre_TFree(d_stencilIndices,HYPRE_MEMORY_HOST);
+#else
   hypre_TFree(d_ilower);
   hypre_TFree(d_iupper);
   hypre_TFree(d_stencilIndices);
+#endif
   
   for (int i = 0; i < d_stencilSize; i++){
+#if (HYPRE_VERSION_MINOR >= 14)
+    hypre_TFree(d_offsets[i],HYPRE_MEMORY_HOST);
+#else
     hypre_TFree(d_offsets[i]);
+#endif
   }
+#if (HYPRE_VERSION_MINOR >= 14)
+  hypre_TFree(d_offsets,HYPRE_MEMORY_HOST);
+  hypre_TFree(d_valueA,HYPRE_MEMORY_HOST);
+  hypre_TFree(d_valueB,HYPRE_MEMORY_HOST);
+  hypre_TFree(d_valueX,HYPRE_MEMORY_HOST);
+#else
   hypre_TFree(d_offsets);
-
-
   hypre_TFree(d_valueA);
   hypre_TFree(d_valueB);
   hypre_TFree(d_valueX);
+  hypre_FinalizeMemoryDebug();
+#endif
 
   
-  hypre_FinalizeMemoryDebug();
+  
 }
 
 void

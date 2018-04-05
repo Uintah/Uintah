@@ -26,6 +26,7 @@
 #include <CCA/Components/Models/HEChem/DDT1.h>
 #include <CCA/Components/Models/HEChem/Common.h>
 
+
 #include <CCA/Components/ICE/Core/ICELabel.h>
 #include <CCA/Components/ICE/CustomBCs/BoundaryCond.h>
 #include <CCA/Components/ICE/Materials/ICEMaterial.h>
@@ -33,6 +34,7 @@
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #include <CCA/Components/MPMICE/Core/MPMICELabel.h>
 
+#include <CCA/Ports/ApplicationInterface.h>
 #include <CCA/Ports/Regridder.h>
 #include <CCA/Ports/Scheduler.h>
 
@@ -55,6 +57,10 @@
 
 using namespace Uintah;
 using namespace std;
+
+#define d_SMALL_NUM 1e-100
+#define d_TINY_RHO 1e-12
+
 //__________________________________
 //  setenv SCI_DEBUG "MODELS_DOING_COUT:+"
 //  MODELS_DOING_COUT:   dumps when tasks are scheduled and performed
@@ -66,7 +72,7 @@ DDT1::DDT1(const ProcessorGroup* myworld,
            const SimulationStateP& sharedState,
            const ProblemSpecP& params,
            const ProblemSpecP& prob_spec)
-  : ModelInterface(myworld, sharedState),
+  : HEChemModel(myworld, sharedState),
     d_params(params), d_prob_spec(prob_spec)
 {
   d_max_initial_delt = 0;
@@ -238,6 +244,9 @@ void DDT1::problemSetup(GridP&,
   if(adj_ps){
     ProblemSpecP PS_ps = adj_ps->findBlockWithOutAttribute( "PressureSwitch" );
     if( PS_ps ){
+      m_application->adjustOutputInterval( true );
+      m_application->adjustCheckpointInterval( true );
+      
       d_adj_IO_Press->onOff     = true;
       PS_ps->require("PressureThreshold",     d_adj_IO_Press->pressThreshold );
       PS_ps->require("newOutputInterval",     d_adj_IO_Press->output_interval );  
@@ -246,13 +255,16 @@ void DDT1::problemSetup(GridP&,
   
     ProblemSpecP DS_ps = adj_ps->findBlockWithOutAttribute( "DetonationDetected" );
     if( DS_ps ){
+      m_application->adjustOutputInterval( true );
+      m_application->adjustCheckpointInterval( true );
+      
       d_adj_IO_Det->onOff     = true;
       DS_ps->require("remainingTimesteps",    d_adj_IO_Det->timestepsLeft );
       DS_ps->require("newOutputInterval",     d_adj_IO_Det->output_interval );  
       DS_ps->require("newCheckPointInterval", d_adj_IO_Det->chkPt_interval );
     }
   }
-  
+    
   /* initialize constants */
   d_CC1 = d_Ac * d_R * d_Kc/d_Ec/d_Cp;        
   d_CC2 = d_Qc/d_Cp/2;              
@@ -1733,34 +1745,4 @@ double DDT1::BisectionNewton(double Ts, IterationVariables *iterVar){
 
       Ts = (iterVar->IL+iterVar->IR)/2.0; //Bisection Step
   }
-}
-
-
-//______________________________________________________________________
-//
-void DDT1::scheduleModifyThermoTransportProperties(SchedulerP&,
-                                                   const LevelP&,
-                                                   const MaterialSet*)
-{
-  // do nothing      
-}
-void DDT1::computeSpecificHeat(CCVariable<double>&,
-                               const Patch*,   
-                               DataWarehouse*, 
-                               const int)      
-{
-  //do nothing
-}
-//______________________________________________________________________
-//
-void DDT1::scheduleErrorEstimate(const LevelP&,
-                                 SchedulerP&)
-{
-  // Not implemented yet
-}
-//__________________________________
-void DDT1::scheduleTestConservation(SchedulerP&,
-                                    const PatchSet*)                     
-{
-  // Not implemented yet
 }

@@ -67,6 +67,8 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Parallel/MasterLock.h>
 #include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Util/DebugStream.h>
+#include <Core/Util/DOUT.hpp>
 #include <Core/Util/Environment.h>
 #include <Core/Util/FileUtils.h>
 
@@ -108,27 +110,14 @@ namespace {
 
 Uintah::MasterLock cerr_mutex{};
 
-Dout g_stack_debug(       "ExceptionStack" , true );
-Dout g_wait_for_debugger( "WaitForDebugger", false );
+Dout g_stack_debug(       "ExceptionStack" , "StandAlone", "sus stack debug stream"            , true  );
+Dout g_wait_for_debugger( "WaitForDebugger", "StandAlone", "sus wait for debugger debug stream", false );
+Dout g_show_env(          "ShowEnv"        , "StandAlone", "sus show environment"              , false );
 
 }
 
 
-static
-void
-quit(const std::string& msg = "")
-{
-  if (msg != "") {
-    std::cerr << msg << "\n";
-  }
-  Uintah::Parallel::finalizeManager();
-  Parallel::exitAll(2);
-}
-
-
-static
-void
-usage( const std::string& message, const std::string& badarg, const std::string& progname )
+static void start()
 {
   int argc = 0;
   char **argv;
@@ -137,7 +126,25 @@ usage( const std::string& message, const std::string& badarg, const std::string&
   // Initialize MPI so that "usage" is only printed by proc 0.
   // (If we are using MPICH, then Uintah::MPI::Init() has already been called.)
   Uintah::Parallel::initializeManager(argc, argv);
+}
 
+static void quit(const std::string& msg = "")
+{
+  if (msg != "") {
+    std::cerr << msg << "\n";
+  }
+  
+  Uintah::Parallel::finalizeManager();
+  Parallel::exitAll(2);
+}
+
+
+static void usage( const std::string& message,
+		   const std::string& badarg,
+		   const std::string& progname )
+{
+  start();
+  
   if (Uintah::Parallel::getMPIRank() == 0) {
     std::cerr << "\n";
     if (badarg != "") {
@@ -150,6 +157,7 @@ usage( const std::string& message, const std::string& badarg, const std::string&
     std::cerr << "Usage: " << progname << " [options] <input_file_name>\n\n";
     std::cerr << "Valid options are:\n";
     std::cerr << "-h[elp]              : This usage information\n";
+    std::cerr << "-d[ebug]             : List the debug streams\n";
 #ifdef HAVE_CUDA
     std::cerr << "-gpu                 : use available GPU devices, requires multi-threaded Unified scheduler \n";
 #endif
@@ -186,8 +194,7 @@ usage( const std::string& message, const std::string& badarg, const std::string&
 }
 
 
-void
-sanityChecks()
+void sanityChecks()
 {
 #if defined( DISABLE_SCI_MALLOC )
   if (getenv("MALLOC_STATS")) {
@@ -212,15 +219,13 @@ sanityChecks()
 }
 
 
-void
-abortCleanupFunc()
+void abortCleanupFunc()
 {
   Uintah::Parallel::finalizeManager(Uintah::Parallel::Abort);
 }
 
 
-int
-main( int argc, char *argv[], char *env[] )
+int main( int argc, char *argv[], char *env[] )
 {
   sanityChecks();
 
@@ -270,6 +275,21 @@ main( int argc, char *argv[], char *env[] )
     std::string arg = argv[i];
     if ((arg == "-help") || (arg == "-h")) {
       usage("", "", argv[0]);
+    }
+    else if ((arg == "-debug") || (arg == "-d")) {
+      start();
+      if (Uintah::Parallel::getMPIRank() == 0) {
+        // report all active Dout debug objects
+        std::cout << "\nThe following Douts are known. Active Douts are indicated with plus sign." << std::endl;
+        std::cout << "To activate a Dout, set the environment variable 'setenv SCI_DEBUG \"Dout_Name:+\"'" << std::endl;
+        Dout::printAll();
+
+        // report all active DebugStreams
+        std::cout << "\nThe following DebugStreams are known. Active streams are indicated with plus sign." << std::endl;
+        std::cout << "To activate a DebugStreams set the environment variable 'setenv SCI_DEBUG \"Debug_Stream_Name:+\"'" << std::endl;
+        DebugStream::printAll();
+      }
+      quit();
     }
     else if (arg == "-nthreads") {
       if (++i == argc) {
@@ -513,14 +533,11 @@ main( int argc, char *argv[], char *env[] )
     // Initialize after parsing the args...
     Uintah::Parallel::initializeManager( argc, argv );
 
-    // Uncomment the following to see what the environment is... this is useful to figure out
-    // what environment variable can be checked for (in Uintah/Core/Parallel/Parallel.cc)
-    // to automatically determine that sus is running under MPI (instead of having to
-    // be explicit with the "-mpi" arg):
-    //
-//    if( Uintah::Parallel::getMPIRank() == 0 ) {
-//      show_env();
-//    }
+    if (g_show_env) {
+      if( Uintah::Parallel::getMPIRank() == 0 ) {
+        show_env();
+      }
+    }
 
     if( !validateUps ) {
       // Print out warning message here (after Parallel::initializeManager()), so that
@@ -685,8 +702,7 @@ main( int argc, char *argv[], char *env[] )
     // Simulation controller
     const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
 
-    SimulationController* simController =
-      scinew AMRSimulationController( world, ups );
+    SimulationController* simController = scinew AMRSimulationController( world, ups );
 
     // Set the simulation controller flags for reduce uda
     if ( postProcessUda ) {
@@ -699,11 +715,9 @@ main( int argc, char *argv[], char *env[] )
 
     //__________________________________
     // Component and application interface
-    UintahParallelComponent* appComp =
-      ApplicationFactory::create( ups, world, nullptr, udaDir );
+    UintahParallelComponent* appComp = ApplicationFactory::create( ups, world, nullptr, udaDir );
     
-    ApplicationInterface* application =
-      dynamic_cast<ApplicationInterface*>(appComp);
+    ApplicationInterface* application = dynamic_cast<ApplicationInterface*>(appComp);
 
     // Read the UPS file to get the general application details.
     application->problemSetup( ups );
@@ -723,15 +737,13 @@ main( int argc, char *argv[], char *env[] )
     // Solver
     SolverInterface * solver = SolverFactory::create( ups, world, solverName );
 
-    UintahParallelComponent* solverComp =
-      dynamic_cast<UintahParallelComponent*>(solver);
+    UintahParallelComponent* solverComp = dynamic_cast<UintahParallelComponent*>(solver);
 
     appComp->attachPort( "solver", solver );
 
     //__________________________________
     // Load balancer
-    LoadBalancerCommon* loadBalancer =
-      LoadBalancerFactory::create( ups, world );
+    LoadBalancerCommon* loadBalancer = LoadBalancerFactory::create( ups, world );
 
     loadBalancer->attachPort( "application", application );
     simController->attachPort( "load balancer", loadBalancer );
@@ -825,7 +837,6 @@ main( int argc, char *argv[], char *env[] )
     appComp->releaseComponents();
     simController->releaseComponents();
 
-    
     scheduler->removeReference();
 
     if ( regridder ) {

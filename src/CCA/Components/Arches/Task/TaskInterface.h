@@ -39,8 +39,8 @@ public:
 
     typedef ArchesFieldContainer AFC;
 
-    enum TASK_TYPE { STANDARD_TASK, BC_TASK, INITIALIZE, TIMESTEP_INITIALIZE, TIMESTEP_EVAL, BC,
-                     RESTART_INITIALIZE };
+    enum TASK_TYPE { INITIALIZE, TIMESTEP_INITIALIZE, TIMESTEP_EVAL, BC,
+                     RESTART_INITIALIZE, ATOMIC };
 
     static const std::string get_task_type_string( TASK_TYPE type ){
       if ( type == TIMESTEP_INITIALIZE ){
@@ -53,6 +53,8 @@ public:
         return "Boundary Condition Evalulation";
       } else if ( type == RESTART_INITIALIZE ){
         return "Restart Initialize";
+      } else if ( type == ATOMIC ){ 
+        return "Atomic Task"; 
       } else {
         std::cout << type << std::endl;
         //return "Unknown task type. Please fix."
@@ -104,72 +106,6 @@ public:
     /** @brief Register initialization work to be accomplished only on restart **/
     virtual void register_restart_initialize(
       std::vector<AFC::VariableInformation>& variable_registry, const bool packed_tasks ){}
-
-    /** @brief Add this task to the Uintah task scheduler **/
-    void schedule_task( const LevelP& level,
-                        SchedulerP& sched,
-                        const MaterialSet* matls,
-                        TASK_TYPE task_type,
-                        int time_substep );
-
-    /** @brief The actual task interface function that references the
-     *         derived class implementation **/
-    void do_task( const ProcessorGroup* pc,
-                  const PatchSubset* patches,
-                  const MaterialSubset* matls,
-                  DataWarehouse* old_dw,
-                  DataWarehouse* new_dw,
-                  std::vector<AFC::VariableInformation> variable_registry,
-                  int time_substep );
-
-    /** @brief Add this task to the Uintah task scheduler **/
-    void schedule_init( const LevelP& level,
-                        SchedulerP& sched,
-                        const MaterialSet* matls,
-                        const bool is_restart,
-                        const bool reinitialize=false );
-
-    /** @brief The actual task interface function that references the
-     *         derived class implementation **/
-    void do_init( const ProcessorGroup* pc,
-                  const PatchSubset* patches,
-                  const MaterialSubset* matls,
-                  DataWarehouse* old_dw,
-                  DataWarehouse* new_dw,
-                  std::vector<AFC::VariableInformation> variable_registry );
-
-    /** @brief The actual task interface function that references the
-     *         derived class implementation **/
-    void do_restart_init( const ProcessorGroup* pc,
-                          const PatchSubset* patches,
-                          const MaterialSubset* matls,
-                          DataWarehouse* old_dw,
-                          DataWarehouse* new_dw,
-                          std::vector<AFC::VariableInformation> variable_registry );
-
-    /** @brief Add this task to the Uintah task scheduler **/
-    void schedule_timestep_init( const LevelP& level,
-                                 SchedulerP& sched,
-                                 const MaterialSet* matls );
-
-    /** @brief The actual task interface function that references the
-     *         derived class implementation **/
-    void do_timestep_init( const ProcessorGroup* pc,
-                           const PatchSubset* patches,
-                           const MaterialSubset* matls,
-                           DataWarehouse* old_dw,
-                           DataWarehouse* new_dw,
-                           std::vector<AFC::VariableInformation> variable_registry );
-
-    /** @brief The actual task interface function that references the
-     *         derived class implementation **/
-    void do_bcs( const ProcessorGroup* pc,
-                 const PatchSubset* patches,
-                 const MaterialSubset* matls,
-                 DataWarehouse* old_dw,
-                 DataWarehouse* new_dw,
-                 std::vector<AFC::VariableInformation> variable_registry,
-                 int time_substep );
 
     /** @brief Builder class containing instructions on how to build the task **/
     class TaskBuilder {

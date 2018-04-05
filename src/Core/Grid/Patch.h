@@ -1672,7 +1672,7 @@ namespace Uintah {
     /**
      * This stores a pointer to this patch's grid.
      */
-    Grid* d_grid;
+    Grid* d_grid{nullptr};
     
     /**
      * A unique patch id.
@@ -1689,7 +1689,7 @@ namespace Uintah {
      * Virtual patches exist for wrap-around on periodic boundary
      * conditions.
      */
-    const Patch* d_realPatch;
+    const Patch* d_realPatch{nullptr};
     
     //****************End of new private Interace**************/
     
@@ -1698,13 +1698,13 @@ namespace Uintah {
     Patch& operator=( const Patch& );
     
     
-    int d_level_index;  // I'm at this index in the Level vector;
+    int d_level_index{-1};  // I'm at this index in the Level vector;
     
     // Used only by friend class 'Level'
     inline void setLevelIndex( int idx ){ d_level_index = idx; }
     
-    std::vector<BCDataArray*>* d_arrayBCS;
-    std::vector<BCDataArray*>* d_interiorBndArrayBCS;
+    std::vector<BCDataArray*>* d_arrayBCS{nullptr};
+    std::vector<BCDataArray*>* d_interiorBndArrayBCS{nullptr};
     
     /********************
      The following are needed in order to use Patch as a Box in

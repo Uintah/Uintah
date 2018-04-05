@@ -318,7 +318,6 @@ private:
   // overlapping patches   
   std::map< std::pair<int, int>, overlap > m_overLapPatches;
   void setOverlappingPatches();
-  
 };
 
 const Level  * getLevel(  const PatchSubset * subset );

@@ -46,7 +46,7 @@
 
 namespace Uintah {
 
-  enum {
+typedef enum loadExtra {
     NONE    = 0,
     CELLS   = 1,
     PATCHES = 2,
@@ -54,7 +54,7 @@ namespace Uintah {
     
 TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
                               GridP grid,
-                              int loadExtraElements);
+                              LoadExtra loadExtraElements);
 
 GridDataRaw* getGridData(SchedulerP schedulerP,
                          GridP gridP,
@@ -64,7 +64,7 @@ GridDataRaw* getGridData(SchedulerP schedulerP,
                          int material,
                          int low[3],
                          int high[3],
-                         int loadExtraElements);
+                         LoadExtra loadExtraElements);
 
 ParticleDataRaw* getParticleData(SchedulerP schedulerP,
                                  GridP gridP,

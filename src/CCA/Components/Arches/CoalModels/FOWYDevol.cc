@@ -187,29 +187,6 @@ FOWYDevol::problemSetup(const ProblemSpecP& params, int qn)
   DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(temp_weight_eqn);
   _weight_small = weight_eqn.getSmallClipPlusTol();
   _weight_scaling_constant = weight_eqn.getScalingConstant(d_quadNode);
-
-#ifdef HAVE_VISIT
-  static bool initialized = false;
-
-  // Running with VisIt so add in the variables that the user can
-  // modify.
-//  if( d_sharedState->getVisIt() && !initialized ) {
-    // variable 1 - Must start with the component name and have NO
-    // spaces in the var name.
-//     SimulationState::interactiveVar var;
-//     var.name     = "Arches-Devol-Ultimate-Yield";
-//     var.type     = Uintah::TypeDescription::double_type;
-//     var.value    = (void *) &( _v_hiT);
-//     var.range[0]   = -1.0e9;
-//     var.range[1]   = +1.0e9;
-//     var.modifiable = true;
-//     var.recompile  = false;
-//     var.modified   = false;
-//     d_sharedState->d_UPSVars.push_back( var );
-
-  //   initialized = true;
-  // }
-#endif
 }
 
 //---------------------------------------------------------------------------
@@ -227,6 +204,32 @@ FOWYDevol::sched_initVars( const LevelP& level, SchedulerP& sched )
   tsk->computes(_v_inf_label);
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
+
+#ifdef HAVE_VISIT
+  static bool initialized = false;
+
+  // Running with VisIt so add in the variables that the user can
+  // modify.
+  ApplicationInterface* m_application = sched->getApplication();
+  
+  if( m_application && m_application->getVisIt() && !initialized ) {
+    // variable 1 - Must start with the component name and have NO
+    // spaces in the var name.
+    ApplicationInterface::interactiveVar var;
+    var.component  = "Arches";
+    var.name       = "Devol-Ultimate-Yield";
+    var.type       = Uintah::TypeDescription::double_type;
+    var.value      = (void *) &( _v_hiT);
+    var.range[0]   = -1.0e9;
+    var.range[1]   = +1.0e9;
+    var.modifiable = true;
+    var.recompile  = false;
+    var.modified   = false;
+    m_application->getUPSVars().push_back( var );
+
+    initialized = true;
+  }
+#endif
 }
 
 //-------------------------------------------------------------------------
@@ -234,10 +237,10 @@ FOWYDevol::sched_initVars( const LevelP& level, SchedulerP& sched )
 //-------------------------------------------------------------------------
 void
 FOWYDevol::initVars( const ProcessorGroup * pc,
-                              const PatchSubset    * patches,
-                              const MaterialSubset * matls,
-                              DataWarehouse        * old_dw,
-                              DataWarehouse        * new_dw )
+                     const PatchSubset    * patches,
+                     const MaterialSubset * matls,
+                     DataWarehouse        * old_dw,
+                     DataWarehouse        * new_dw )
 {
   //patch loop
   for (int p=0; p < patches->size(); p++){

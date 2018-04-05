@@ -165,7 +165,12 @@ void TaskFactoryBase::schedule_task( const std::string task_name,
   // task_group scheduling feature
   std::vector<TaskInterface*> task_list_dummy(1);
 
-  TaskInterface* tsk  = retrieve_task( task_name, ignore_missing_task );
+  TaskInterface* tsk;
+  if ( type != TaskInterface::ATOMIC ){
+    tsk = retrieve_task( task_name, ignore_missing_task );
+  } else {
+    tsk = retrieve_atomic_task( task_name );
+  }
 
   if ( tsk != NULL ){
 
@@ -284,6 +289,7 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
       case (TaskInterface::RESTART_INITIALIZE):
         (*i_task)->register_restart_initialize( variable_registry , pack_tasks);
         time_substep = 0;
+        break;
       case (TaskInterface::TIMESTEP_INITIALIZE):
         (*i_task)->register_timestep_init( variable_registry, pack_tasks );
         time_substep = 0;
@@ -293,6 +299,9 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
         break;
       case (TaskInterface::BC):
         (*i_task)->register_compute_bcs( variable_registry, time_substep , pack_tasks);
+        break;
+      case (TaskInterface::ATOMIC):
+        (*i_task)->register_timestep_eval( variable_registry, time_substep, pack_tasks );
         break;
       default:
         throw InvalidValue("Error: TASK_TYPE not recognized.",__FILE__,__LINE__);
@@ -347,8 +356,9 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
   }
 
   //other variables:
-  if ( sched->get_dw(0) != NULL ){
+  if ( sched->get_dw(0) != nullptr ){
     tsk->requires(Task::OldDW, VarLabel::find("delT"));
+    tsk->requires(Task::OldDW, VarLabel::find(simTime_name));
   }
 
   if ( counter > 0 )
@@ -379,13 +389,19 @@ void TaskFactoryBase::do_task ( const ProcessorGroup* pc,
 
     SchedToTaskInfo info;
 
-    if ( old_dw != NULL ){
+    if ( old_dw != nullptr ){
       //get the current dt
       delt_vartype DT;
       old_dw->get(DT, VarLabel::find("delT"));
       info.dt = DT;
       info.time_substep = time_substep;
+
+      //get the time
+      simTime_vartype simTime;
+      old_dw->get(simTime, VarLabel::find(simTime_name));
+      info.time = simTime;
     }
+
     info.packed_tasks = packed_tasks;
 
     ArchesTaskInfoManager* tsk_info_mngr = scinew ArchesTaskInfoManager( variable_registry,
@@ -411,6 +427,9 @@ void TaskFactoryBase::do_task ( const ProcessorGroup* pc,
           break;
         case (TaskInterface::BC):
           (*i_task)->compute_bcs( patch, tsk_info_mngr );
+          break;
+        case (TaskInterface::ATOMIC):
+          (*i_task)->eval( patch, tsk_info_mngr);
           break;
         default:
           throw InvalidValue("Error: TASK_TYPE not recognized.",__FILE__,__LINE__);
