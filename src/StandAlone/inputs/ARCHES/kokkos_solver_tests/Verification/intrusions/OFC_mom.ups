@@ -7,12 +7,12 @@
   </Meta>
   <SimulationComponent type="arches"/>
   <Solver type="hypre"/>
-  <Scheduler type='MPI'>
+  <!--Scheduler type='MPI'>
     <TaskMonitoring>
       <attribute>WaitTime</attribute>
       <task name="TransportFactory::x-mom" attribute="ExecTime"/>
     </TaskMonitoring>
-  </Scheduler>
+  </Scheduler-->
   <Time>
     <maxTime>100.</maxTime>
     <initTime>0.0</initTime>
@@ -20,7 +20,7 @@
     <delt_max>1e-1</delt_max>
     <delt_init>1e-1</delt_init>
     <timestep_multiplier>0.3</timestep_multiplier>
-    <max_Timesteps>50</max_Timesteps>
+    <max_Timesteps>5</max_Timesteps>
   </Time>
   <DataArchiver>
     <filebase>x-mom-minus.uda</filebase>
@@ -49,9 +49,9 @@
     <save label="gamma"/>
     <save label="b_press"/>
     <save label="A_press"/>
-    <save label="TransportFactory/x-mom/ExecTime"/>
+    <!--save label="TransportFactory/x-mom/ExecTime"/-->
     <!--<save label="WaitTime"/>-->
-    <checkpoint cycle="2" interval=".3"/>
+    <checkpoint cycle="2" interval="1e-3"/>
     <compression>gzip</compression>
   </DataArchiver>
   <Grid>
