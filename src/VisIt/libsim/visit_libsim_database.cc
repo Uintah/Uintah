@@ -377,12 +377,12 @@ visit_handle visit_SimGetMetaData(void *cbdata)
             // VisIt_MeshMetaData_logicalBounds(mmd, logical[0]);
 
             VisIt_SimulationMetaData_addMesh(md, mmd);
+
+            // std::cerr << "Calculating SimGetMetaData for "
+            //        << mesh_for_this_var.c_str() << " mesh (" << mmd << ")." 
+            //        << std::endl;          
           }
 
-          // std::cerr << "Calculating SimGetMetaData for "
-          //        << mesh_for_this_var.c_str() << " mesh (" << mmd << ")." 
-          //        << std::endl;
-          
           meshes_added.insert(mesh_for_this_var);
         }
 
@@ -492,6 +492,63 @@ visit_handle visit_SimGetMetaData(void *cbdata)
     // Add the patch data
     if (addPatchData)
     {
+      // Mesh meta data
+      visit_handle mmd = VISIT_INVALID_HANDLE;
+      
+      /* Set the first mesh’s properties.*/
+      if(VisIt_MeshMetaData_alloc(&mmd) == VISIT_OKAY)
+      {
+        /* Set the mesh’s properties.*/
+        VisIt_MeshMetaData_setName(mmd, "Patch_Mesh");
+        if( sim->simController->getApplicationInterface()->isAMR() )
+          VisIt_MeshMetaData_setMeshType(mmd, VISIT_MESHTYPE_AMR);
+        else
+          VisIt_MeshMetaData_setMeshType(mmd, VISIT_MESHTYPE_RECTILINEAR);
+        
+        VisIt_MeshMetaData_setTopologicalDimension(mmd, 3);
+        VisIt_MeshMetaData_setSpatialDimension(mmd, 3);
+
+        VisIt_MeshMetaData_setNumDomains(mmd, totalPatches);
+        VisIt_MeshMetaData_setDomainTitle(mmd, "patches");
+        VisIt_MeshMetaData_setDomainPieceName(mmd, "patch");
+        VisIt_MeshMetaData_setNumGroups(mmd, numLevels);
+        VisIt_MeshMetaData_setGroupTitle(mmd, "levels");
+        VisIt_MeshMetaData_setGroupPieceName(mmd, "level");
+
+        for (int k=0; k<totalPatches; ++k)
+        {
+          char tmpName[64];
+          int level, local_patch;
+      
+          GetLevelAndLocalPatchNumber(stepInfo, k, level, local_patch);
+          sprintf(tmpName,"level%d, patch%d", level, local_patch);
+          
+          VisIt_MeshMetaData_addGroupId(mmd, level);
+          VisIt_MeshMetaData_addDomainName(mmd, tmpName);
+        }
+
+        // ARS - FIXME
+        // VisIt_MeshMetaData_setContainsExteriorBoundaryGhosts(mmd, false);
+        
+        VisIt_MeshMetaData_setHasSpatialExtents(mmd, 1);
+        
+        double extents[6] = { box_min[0], box_max[0],
+                              box_min[1], box_max[1],
+                              box_min[2], box_max[2] };
+        
+        VisIt_MeshMetaData_setSpatialExtents(mmd, extents);
+        
+        // ARS - FIXME
+        // VisIt_MeshMetaData_setHasLogicalBounds(mmd, 1);
+        // VisIt_MeshMetaData_logicalBounds(mmd, logical[0]);
+        
+        VisIt_SimulationMetaData_addMesh(md, mmd);
+
+        // std::cerr << "Calculating SimGetMetaData for "
+        //        << mesh_for_this_var.c_str() << " mesh (" << mmd << ")." 
+        //        << std::endl;
+      }
+      
       visit_handle vmd = VISIT_INVALID_HANDLE;
 
       int cent = (mesh_for_patch_data == "CC_Mesh" ?
@@ -1395,7 +1452,7 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
 
     return meshH;
   }  
-  
+
   SchedulerP schedulerP = sim->simController->getSchedulerP();
   GridP      gridP      = sim->gridP;
 
@@ -1551,6 +1608,59 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
   }
 
   // Volume data
+  else if (meshName.find("Patch_Mesh") != std::string::npos)
+  {
+    LevelInfo &levelInfo = stepInfo->levelInfo[level];
+    PatchInfo &patchInfo = levelInfo.patchInfo[local_patch];
+
+    int dims[3] = {2, 2, 2}, base[3] = {0, 0, 0};
+
+    // Get the patch bounds
+    int plow[3], phigh[3];
+    patchInfo.getBounds(plow, phigh, "CC_MESH");
+
+    // debug5 << "Calculating vtkRectilinearGrid mesh for "
+    //     << meshName << " mesh (" << rgrid << ").\n";
+
+    visit_handle cordH[3] = { VISIT_INVALID_HANDLE,
+                              VISIT_INVALID_HANDLE,
+                              VISIT_INVALID_HANDLE };
+
+    // Set the coordinates of the grid points in each direction.
+    for (int c=0; c<3; ++c)
+    {
+      if(VisIt_VariableData_alloc(&cordH[c]) == VISIT_OKAY)
+      {
+        float *array = new float[ 2 ];
+
+        array[0] = levelInfo.anchor[c] +  plow[c] * levelInfo.spacing[c];
+        array[1] = levelInfo.anchor[c] + phigh[c] * levelInfo.spacing[c];
+
+        std::cerr << "Patch " << array[0] << "  " << array[1] << std::endl;
+          
+        VisIt_VariableData_setDataF(cordH[c], VISIT_OWNER_VISIT,
+                                    1, dims[c], array);
+
+        // No need to delete as the flag is VISIT_OWNER_VISIT so VisIt
+        // owns the data (VISIT_OWNER_SIM - indicates the simulation
+        // owns the data).
+        
+        // delete[] array;
+      }
+    }
+
+    if(VisIt_RectilinearMesh_alloc(&meshH) == VISIT_OKAY)
+    {
+      /* Fill in the attributes of the RectilinearMesh. */
+      VisIt_RectilinearMesh_setCoordsXYZ(meshH, cordH[0], cordH[1], cordH[2]);
+      VisIt_RectilinearMesh_setRealIndices(meshH, base, dims);
+      VisIt_RectilinearMesh_setBaseIndex(meshH, base);
+
+      // VisIt_RectilinearMesh_setGhostCells(meshH, visit_handle gz);
+      // VisIt_RectilinearMesh_setGhostNodes(meshH, visit_handle gn);
+    }
+  }
+  // Volume data
   else //if (meshName.find("Particle_Mesh") == std::string::npos)
   {
     LevelInfo &levelInfo = stepInfo->levelInfo[level];
@@ -1586,9 +1696,6 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
     // debug5 << "Calculating vtkRectilinearGrid mesh for "
     //     << meshName << " mesh (" << rgrid << ").\n";
 
-    // vtkRectilinearGrid *rgrid = vtkRectilinearGrid::New();
-    // rgrid->SetDimensions(dims);
-
     // These are needed to offset grid points in order to preserve
     // face centered locations on node-centered domain.
     bool sfck[3] = { meshName.find("SFCX") != std::string::npos,
@@ -1607,14 +1714,10 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
     // Set the coordinates of the grid points in each direction.
     for (int c=0; c<3; ++c)
     {
-      // vtkFloatArray *coords = vtkFloatArray::New(); 
-      // coords->SetNumberOfTuples(dims[c]); 
-      // float *array = (float *) coords->GetVoidPointer(0);
-
-      float *array = new float[ dims[c] ];
-
       if(VisIt_VariableData_alloc(&cordH[c]) == VISIT_OKAY)
       {
+        float *array = new float[ dims[c] ];
+
         for (int i=0; i<dims[c]; ++i)
         {
           // Face centered data gets shifted towards -inf by half a cell.
@@ -1846,7 +1949,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       double val;
       
       if( procLevelName == "node" )
-        val = sim->simController->getRuntimeStats().getSum( varName );
+        val = sim->simController->getRuntimeStats().getNodeSum( varName );
       else // if( procLevelName == "rank" )
         val = sim->simController->getRuntimeStats().getValue( varName );
       
@@ -1861,7 +1964,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       double val;
       
       if( procLevelName == "node" )
-        val = mpiScheduler->mpi_info_.getSum( varName );
+        val = mpiScheduler->mpi_info_.getNodeSum( varName );
       else // if( procLevelName == "rank" )
         val = mpiScheduler->mpi_info_.getValue( varName );
       
@@ -1876,7 +1979,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       double val;
       
       if( procLevelName == "node" )
-        val = sim->simController->getApplicationInterface()->getApplicationStats().getSum( varName );
+        val = sim->simController->getApplicationInterface()->getApplicationStats().getNodeSum( varName );
       else // if( procLevelName == "rank" )
         val = sim->simController->getApplicationInterface()->getApplicationStats().getValue( varName );
       
@@ -2045,7 +2148,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
         double val;
 
         if( procLevelName == "node" )
-          val = runtimeStats.getSum( varName );
+          val = runtimeStats.getNodeSum( varName );
         else // if( procLevelName == "rank" )
           val = runtimeStats.getValue( varName );
 
@@ -2060,7 +2163,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
         double val;
 
         if( procLevelName == "node" )
-          val = mpiScheduler->mpi_info_.getSum( varName );
+          val = mpiScheduler->mpi_info_.getNodeSum( varName );
         else // if( procLevelName == "rank" )
           val = mpiScheduler->mpi_info_.getValue( varName );
 
