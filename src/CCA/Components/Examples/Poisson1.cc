@@ -182,7 +182,9 @@ void Poisson1::scheduleTimeAdvance( const LevelP     & level
   //Task* task = scinew Task("Poisson1::timeAdvance",
   //                             this,
   //                             ptr);
-  CALL_ASSIGN_PORTABLE_TASK(TaskDependencies, "Poisson1::timeAdvance", Poisson1::timeAdvance, level->eachPatch(), m_sharedState->allMaterials());
+  CALL_ASSIGN_PORTABLE_TASK(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, KOKKOS_CUDA_TAG,
+                            TaskDependencies, "Poisson1::timeAdvance", Poisson1::timeAdvance,
+                            level->eachPatch(), m_sharedState->allMaterials());
 
   //Task* task = scinew Task("Poisson1::timeAdvance", this, &Poisson1::timeAdvance);
 
