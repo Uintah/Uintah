@@ -139,40 +139,40 @@ using KOKKOS_CUDA_TAG = Kokkos::Cuda;
 //};
 
 
-#define PREPARE_UINTAH_CPU_TASK(EXECUTION_SPACE,                                                 \
-                                TASK, TASK_DEPENDENCIES,                                         \
-                                FUNCTION_NAME, FUNCTION_CODE_NAME,                               \
-                                PATCHES, MATERIALS, ...) {                                       \
-  TASK = scinew Task(FUNCTION_NAME,                                                              \
-                           this,                                                                 \
-                           &FUNCTION_CODE_NAME<EXECUTION_SPACE, UintahSpaces::HostSpace>,        \
-                           ## __VA_ARGS__);                                                      \
+#define PREPARE_UINTAH_CPU_TASK(EXECUTION_SPACE,                                                   \
+                                TASK, TASK_DEPENDENCIES,                                           \
+                                FUNCTION_NAME, FUNCTION_CODE_NAME,                                 \
+                                PATCHES, MATERIALS, ...) {                                         \
+  TASK = scinew Task(FUNCTION_NAME,                                                                \
+                           this,                                                                   \
+                           &FUNCTION_CODE_NAME<EXECUTION_SPACE, UintahSpaces::HostSpace>,          \
+                           ## __VA_ARGS__);                                                        \
 }
 
-#define PREPARE_KOKKOS_OPENMP_TASK(EXECUTION_SPACE,                                              \
-                                TASK, TASK_DEPENDENCIES,                                         \
-                                FUNCTION_NAME, FUNCTION_CODE_NAME,                               \
-                                PATCHES, MATERIALS, ...) {                                       \
-  TASK = scinew Task(FUNCTION_NAME,                                                              \
-                           this,                                                                 \
-                           &FUNCTION_CODE_NAME<EXECUTION_SPACE, Kokkos::HostSpace>,              \
-                           ## __VA_ARGS__);                                                      \
-                                                                                                 \
-  TASK->usesKokkosOpenMP(true);                                                                  \
+#define PREPARE_KOKKOS_OPENMP_TASK(EXECUTION_SPACE,                                                \
+                                TASK, TASK_DEPENDENCIES,                                           \
+                                FUNCTION_NAME, FUNCTION_CODE_NAME,                                 \
+                                PATCHES, MATERIALS, ...) {                                         \
+  TASK = scinew Task(FUNCTION_NAME,                                                                \
+                           this,                                                                   \
+                           &FUNCTION_CODE_NAME<EXECUTION_SPACE, Kokkos::HostSpace>,                \
+                           ## __VA_ARGS__);                                                        \
+                                                                                                   \
+  TASK->usesKokkosOpenMP(true);                                                                    \
 }
 
-#define PREPARE_KOKKOS_CUDA_TASK(EXECUTION_SPACE,                                                \
-                                TASK, TASK_DEPENDENCIES,                                         \
-                                FUNCTION_NAME, FUNCTION_CODE_NAME,                               \
-                                PATCHES, MATERIALS, ...) {                                       \
-  TASK = scinew Task(FUNCTION_NAME,                                                              \
-                           this,                                                                 \
-                           &FUNCTION_CODE_NAME<EXECUTION_SPACE, Kokkos::CudaSpace>,              \
-                           ## __VA_ARGS__);                                                      \
-                                                                                                 \
-  TASK->usesDevice(true);                                                                        \
-  TASK->usesKokkosCuda(true);                                                                    \
-  TASK->usesSimVarPreloading(true);                                                              \
+#define PREPARE_KOKKOS_CUDA_TASK(EXECUTION_SPACE,                                                  \
+                                TASK, TASK_DEPENDENCIES,                                           \
+                                FUNCTION_NAME, FUNCTION_CODE_NAME,                                 \
+                                PATCHES, MATERIALS, ...) {                                         \
+  TASK = scinew Task(FUNCTION_NAME,                                                                \
+                           this,                                                                   \
+                           &FUNCTION_CODE_NAME<EXECUTION_SPACE, Kokkos::CudaSpace>,                \
+                           ## __VA_ARGS__);                                                        \
+                                                                                                   \
+  TASK->usesDevice(true);                                                                          \
+  TASK->usesKokkosCuda(true);                                                                      \
+  TASK->usesSimVarPreloading(true);                                                                \
 }
 // This macro gives a mechanism to allow the user to do two things.
 // 1) Specify all execution spaces allowed by this task
@@ -189,49 +189,54 @@ using KOKKOS_CUDA_TAG = Kokkos::Cuda;
 
 // Logic note, we don't allow both a Uintah CPU task and a Kokkos CPU task to exist in the same
 // compiled build.  But we do allow a Kokkos CPU and Kokkos GPU task to exist in the same build
-#define CALL_ASSIGN_PORTABLE_TASK(TAG1, TAG2, TAG3,                                              \
-                                  TASK_DEPENDENCIES,                                             \
-                                  FUNCTION_NAME, FUNCTION_CODE_NAME,                             \
-                                  PATCHES, MATERIALS, ...) {                                     \
-  Task* task{nullptr};                                                                           \
-  if      (std::is_same< Kokkos::OpenMP,    TAG1 >::value) {                                     \
-    PREPARE_KOKKOS_OPENMP_TASK(TAG1, task, TASK_DEPENDENCIES, FUNCTION_NAME, FUNCTION_CODE_NAME, \
-                               PATCHES, MATERIALS, ## __VA_ARGS__);                              \
-  } else if (std::is_same< Kokkos::OpenMP,    TAG2 >::value) {                                   \
-    PREPARE_KOKKOS_OPENMP_TASK(TAG2, task, TASK_DEPENDENCIES, FUNCTION_NAME, FUNCTION_CODE_NAME, \
-                               PATCHES, MATERIALS, ## __VA_ARGS__);                              \
-  } else if (std::is_same< Kokkos::OpenMP,    TAG3 >::value) {                                   \
-    PREPARE_KOKKOS_OPENMP_TASK(TAG3, task, TASK_DEPENDENCIES, FUNCTION_NAME, FUNCTION_CODE_NAME, \
-                               PATCHES, MATERIALS, ## __VA_ARGS__);                              \
-  } else if (std::is_same< UintahSpaces::CPU, TAG1 >::value) {                                   \
-    PREPARE_UINTAH_CPU_TASK(   TAG1, task, TASK_DEPENDENCIES, FUNCTION_NAME, FUNCTION_CODE_NAME, \
-                               PATCHES, MATERIALS, ## __VA_ARGS__);                              \
-  } else if (std::is_same< UintahSpaces::CPU, TAG2 >::value) {                                   \
-    PREPARE_UINTAH_CPU_TASK(   TAG2, task, TASK_DEPENDENCIES, FUNCTION_NAME, FUNCTION_CODE_NAME, \
-                               PATCHES, MATERIALS, ## __VA_ARGS__);                              \
-  } else if (std::is_same< UintahSpaces::CPU, TAG3 >::value) {                                   \
-    PREPARE_UINTAH_CPU_TASK(   TAG3, task, TASK_DEPENDENCIES, FUNCTION_NAME, FUNCTION_CODE_NAME, \
-                               PATCHES, MATERIALS, ## __VA_ARGS__);                              \
-  }                                                                                              \
-                                                                                                 \
-  if        (std::is_same< Kokkos::Cuda,      TAG1 >::value) {                                   \
-    PREPARE_KOKKOS_CUDA_TASK(TAG1, task, TASK_DEPENDENCIES, FUNCTION_NAME, FUNCTION_CODE_NAME,   \
-                               PATCHES, MATERIALS, ## __VA_ARGS__);                              \
-  } else if (std::is_same< Kokkos::Cuda,      TAG2 >::value) {                                   \
-    PREPARE_KOKKOS_CUDA_TASK(TAG2, task, TASK_DEPENDENCIES, FUNCTION_NAME, FUNCTION_CODE_NAME,   \
-                               PATCHES, MATERIALS, ## __VA_ARGS__);                              \
-  } else if (std::is_same< Kokkos::Cuda,      TAG3 >::value) {                                   \
-    PREPARE_KOKKOS_CUDA_TASK(TAG3, task, TASK_DEPENDENCIES, FUNCTION_NAME, FUNCTION_CODE_NAME,   \
-                               PATCHES, MATERIALS, ## __VA_ARGS__);                              \
-  }                                                                                              \
-                                                                                                 \
-  if (task) {                                                                                    \
-    TASK_DEPENDENCIES(task);                                                                     \
-  }                                                                                              \
-                                                                                                 \
-  if (task) {                                                                                    \
-    sched->addTask(task, PATCHES, MATERIALS);                                                    \
-  }                                                                                              \
+#define CALL_ASSIGN_PORTABLE_TASK(TAG1, TAG2, TAG3,                                                \
+                                  TASK_DEPENDENCIES,                                               \
+                                  FUNCTION_NAME, FUNCTION_CODE_NAME,                               \
+                                  PATCHES, MATERIALS, ...) {                                       \
+  Task* task{nullptr};                                                                             \
+                                                                                                   \
+  if (Uintah::Parallel::usingDevice()) {                                                           \
+    if        (std::is_same< Kokkos::Cuda,      TAG1 >::value) {                                   \
+      PREPARE_KOKKOS_CUDA_TASK(TAG1, task, TASK_DEPENDENCIES, FUNCTION_NAME, FUNCTION_CODE_NAME,   \
+                                 PATCHES, MATERIALS, ## __VA_ARGS__);                              \
+    } else if (std::is_same< Kokkos::Cuda,      TAG2 >::value) {                                   \
+      PREPARE_KOKKOS_CUDA_TASK(TAG2, task, TASK_DEPENDENCIES, FUNCTION_NAME, FUNCTION_CODE_NAME,   \
+                                 PATCHES, MATERIALS, ## __VA_ARGS__);                              \
+    } else if (std::is_same< Kokkos::Cuda,      TAG3 >::value) {                                   \
+      PREPARE_KOKKOS_CUDA_TASK(TAG3, task, TASK_DEPENDENCIES, FUNCTION_NAME, FUNCTION_CODE_NAME,   \
+                                 PATCHES, MATERIALS, ## __VA_ARGS__);                              \
+    }                                                                                              \
+  }                                                                                                \
+                                                                                                   \
+  if (!task) {                                                                                     \
+    if      (std::is_same< Kokkos::OpenMP,    TAG1 >::value) {                                     \
+      PREPARE_KOKKOS_OPENMP_TASK(TAG1, task, TASK_DEPENDENCIES, FUNCTION_NAME, FUNCTION_CODE_NAME, \
+                                 PATCHES, MATERIALS, ## __VA_ARGS__);                              \
+    } else if (std::is_same< Kokkos::OpenMP,    TAG2 >::value) {                                   \
+      PREPARE_KOKKOS_OPENMP_TASK(TAG2, task, TASK_DEPENDENCIES, FUNCTION_NAME, FUNCTION_CODE_NAME, \
+                                 PATCHES, MATERIALS, ## __VA_ARGS__);                              \
+    } else if (std::is_same< Kokkos::OpenMP,    TAG3 >::value) {                                   \
+      PREPARE_KOKKOS_OPENMP_TASK(TAG3, task, TASK_DEPENDENCIES, FUNCTION_NAME, FUNCTION_CODE_NAME, \
+                                 PATCHES, MATERIALS, ## __VA_ARGS__);                              \
+    } else if (std::is_same< UintahSpaces::CPU, TAG1 >::value) {                                   \
+      PREPARE_UINTAH_CPU_TASK(   TAG1, task, TASK_DEPENDENCIES, FUNCTION_NAME, FUNCTION_CODE_NAME, \
+                                 PATCHES, MATERIALS, ## __VA_ARGS__);                              \
+    } else if (std::is_same< UintahSpaces::CPU, TAG2 >::value) {                                   \
+      PREPARE_UINTAH_CPU_TASK(   TAG2, task, TASK_DEPENDENCIES, FUNCTION_NAME, FUNCTION_CODE_NAME, \
+                                 PATCHES, MATERIALS, ## __VA_ARGS__);                              \
+    } else if (std::is_same< UintahSpaces::CPU, TAG3 >::value) {                                   \
+      PREPARE_UINTAH_CPU_TASK(   TAG3, task, TASK_DEPENDENCIES, FUNCTION_NAME, FUNCTION_CODE_NAME, \
+                                 PATCHES, MATERIALS, ## __VA_ARGS__);                              \
+    }                                                                                              \
+  }                                                                                                \
+                                                                                                   \
+  if (task) {                                                                                      \
+    TASK_DEPENDENCIES(task);                                                                       \
+  }                                                                                                \
+                                                                                                   \
+  if (task) {                                                                                      \
+    sched->addTask(task, PATCHES, MATERIALS);                                                      \
+  }                                                                                                \
 }
 
 namespace Uintah {
