@@ -8,11 +8,11 @@
 namespace Uintah {
 
 
-template <typename T, typename MemorySpace = MEMORY_SPACE_0>
+template <typename T, typename MemorySpace = Kokkos::OpenMP>
 using KokkosData = Kokkos::View<T***, Kokkos::LayoutLeft, MemorySpace , Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
 
 //For the default memory space
-template <typename T, typename MemorySpace = MEMORY_SPACE_0>
+template <typename T, typename MemorySpace = Kokkos::OpenMP>
 struct KokkosView3
 {
   using view_type = Kokkos::View<T***, Kokkos::LayoutStride, MemorySpace, Kokkos::MemoryTraits<Kokkos::Unmanaged> >;
