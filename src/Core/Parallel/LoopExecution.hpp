@@ -105,9 +105,12 @@ using KOKKOS_CUDA_TAG = Kokkos::Cuda;
 //Depending on the configure/compiler flags determines which of these are actually
 //compiled.
 
-//const unsigned int UINTAH_CPU_TAG = 1;                          //binary 001
-//const unsigned int KOKKOS_OPENMP_TAG = 2;                       //binary 010
-//const unsigned int KOKKOS_CUDA_TAG = 4;                         //binary 100
+enum TaskAssignedExecutionSpace {
+  NONE = 0,
+  UINTAH_CPU = 1,                          //binary 001
+  KOKKOS_OPENMP = 2,                       //binary 010
+  KOKKOS_CUDA = 4,                          //binary 100
+};
 //
 ////An object of this class is used for CALL_ASSIGN_PORTABLE_TASK.
 //class TaskExecutionSpaces {
@@ -209,7 +212,7 @@ using KOKKOS_CUDA_TAG = Kokkos::Cuda;
   }                                                                                                \
                                                                                                    \
   if (!task) {                                                                                     \
-    if      (std::is_same< Kokkos::OpenMP,    TAG1 >::value) {                                     \
+    if      (std::is_same< Kokkos::OpenMP,      TAG1 >::value) {                                   \
       PREPARE_KOKKOS_OPENMP_TASK(TAG1, task, TASK_DEPENDENCIES, FUNCTION_NAME, FUNCTION_CODE_NAME, \
                                  PATCHES, MATERIALS, ## __VA_ARGS__);                              \
     } else if (std::is_same< Kokkos::OpenMP,    TAG2 >::value) {                                   \
@@ -237,6 +240,24 @@ using KOKKOS_CUDA_TAG = Kokkos::Cuda;
   if (task) {                                                                                      \
     sched->addTask(task, PATCHES, MATERIALS);                                                      \
   }                                                                                                \
+}
+
+//If only 1 execution space tag is specified
+#define CALL_ASSIGN_PORTABLE_TASK(TAG1, TASK_DEPENDENCIES,                                         \
+                                  FUNCTION_NAME, FUNCTION_CODE_NAME,                               \
+                                  PATCHES, MATERIALS, ...) {                                       \
+  CALL_ASSIGN_PORTABLE_TASK(TAG1, void, void, TASK_DEPENDENCIES,                                   \
+                            FUNCTION_NAME, FUNCTION_CODE_NAME,                                     \
+                            PATCHES, MATERIALS, ## __VA_ARGS__);                                   \
+}
+
+//If only 2 execution space tags are specified
+#define CALL_ASSIGN_PORTABLE_TASK(TAG1, TAG2, TASK_DEPENDENCIES,                                   \
+                                  FUNCTION_NAME, FUNCTION_CODE_NAME,                               \
+                                  PATCHES, MATERIALS, ...) {                                       \
+  CALL_ASSIGN_PORTABLE_TASK(TAG1, TAG2, void, TASK_DEPENDENCIES,                                   \
+                            FUNCTION_NAME, FUNCTION_CODE_NAME,                                     \
+                            PATCHES, MATERIALS, ## __VA_ARGS__);                                   \
 }
 
 namespace Uintah {

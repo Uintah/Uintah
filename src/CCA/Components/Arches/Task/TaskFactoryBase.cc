@@ -277,11 +277,21 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
   const std::string type_string = TaskInterface::get_task_type_string(type);
   cout_archestaskdebug << " Scheduling the following task group with mode: "<< type_string << std::endl;
 
+  TaskAssignedExecutionSpace assignedExecutionSpace;
+
   for ( auto i_task = arches_tasks.begin(); i_task != arches_tasks.end(); i_task++ ){
 
     cout_archestaskdebug << "   Task: " << (*i_task)->get_task_name() << std::endl;
 
     switch( type ){
+
+      TaskExecutionSpaces temp = (*i_task)->loadTaskFunctionPointers();
+      if (assignedExecutionSpace != TaskAssignedExecutionSpace::None && assignedExecutionSpace != temp) {
+        throw InvalidValue("Error: Different execution spaces specified.  All Arches tasks within a single Uintah task must share the same execution space.",__FILE__,__LINE__);
+        break;
+      } else {
+        assignedExecutionSpace = temp;
+      }
 
       case (TaskInterface::INITIALIZE):
         (*i_task)->register_initialize( variable_registry, pack_tasks );
@@ -310,12 +320,6 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
 
     }
   }
-
-
-  //Task* tsk = scinew Task( _factory_name+"::"+task_group_name, this,
-  //                         &TaskFactoryBase::do_task, variable_registry,
-  //                         arches_tasks, type, time_substep, pack_tasks );
-
 
   auto TaskDependencies = [&](Task *& tsk) {
     int counter = 0;
@@ -372,13 +376,21 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
     }
   };
 
-  //auto ptr = &TaskFactoryBase::do_task<Kokkos::OpenMP, Kokkos::HostSpace>;
-  //Task* task = scinew Task(_factory_name+"::"+task_group_name, this, ptr, variable_registry, arches_tasks, type, time_substep, pack_tasks);
-
-  CALL_ASSIGN_PORTABLE_TASK(TaskDependencies, _factory_name+"::"+task_group_name, TaskFactoryBase::do_task,
-                            level->eachPatch(), matls,
-                            variable_registry, arches_tasks, type, time_substep, pack_tasks);
-  //CALL_ASSIGN_PORTABLE_TASK(Poisson1::timeAdvance, TaskDependencies, level->eachPatch(), m_sharedState->allMaterials());
+  // We must know which memory space(s) the Arches task embedded within the Uintah task will execute
+  // so Uintah can ensure those simulation variables are prepared in that memory space prior to task execution.
+  if (assignedExecutionSpace == TaskAssignedExecutionSpace::KOKKOS_OPENMP) {
+    CALL_ASSIGN_PORTABLE_TASK(KOKKOS_OPENMP_TAG, TaskDependencies, _factory_name+"::"+task_group_name, TaskFactoryBase::do_task,
+                              level->eachPatch(), matls,
+                              variable_registry, arches_tasks, type, time_substep, pack_tasks);
+  } else if (assignedExecutionSpace == TaskAssignedExecutionSpace::KOKKOS_CUDA) {
+    CALL_ASSIGN_PORTABLE_TASK(KOKKOS_CUDA_TAG, TaskDependencies, _factory_name+"::"+task_group_name, TaskFactoryBase::do_task,
+                                  level->eachPatch(), matls,
+                                  variable_registry, arches_tasks, type, time_substep, pack_tasks);
+  } else { //if (assignedExecutionSpace == TaskAssignedExecutionSpace::UINTAH_CPU) {
+    CALL_ASSIGN_PORTABLE_TASK(UINTAH_CPU_TAG, TaskDependencies, _factory_name+"::"+task_group_name, TaskFactoryBase::do_task,
+                                level->eachPatch(), matls,
+                                variable_registry, arches_tasks, type, time_substep, pack_tasks);
+  }
 
 
 
