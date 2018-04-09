@@ -464,13 +464,13 @@ SimulationState::clearMaterials()
 
   if(all_matls && all_matls->removeReference()){
     delete all_matls;
-    all_matls = nullptr;
   }
+  all_matls = nullptr;
   
   if (allInOneMatl && allInOneMatl->removeReference()) {
     delete allInOneMatl;
-    allInOneMatl = nullptr;
   }
+  allInOneMatl = nullptr;
 
   matls.clear();
   named_matls.clear();
@@ -479,39 +479,39 @@ SimulationState::clearMaterials()
 #ifndef NO_ARCHES
   if (all_arches_matls && all_arches_matls->removeReference()){
     delete all_arches_matls;
-    all_arches_matls = nullptr;
   }
   arches_matls.clear();
+  all_arches_matls = nullptr;
 #endif
 
 #ifndef NO_FVM
   if(all_fvm_matls && all_fvm_matls->removeReference()){
     delete all_fvm_matls;
-    all_fvm_matls = nullptr;
   }
   fvm_matls.clear();
+  all_fvm_matls = nullptr;
 #endif
 
 #ifndef NO_ICE
   if(all_ice_matls && all_ice_matls->removeReference()){
     delete all_ice_matls;
-    all_ice_matls = nullptr;
   }
   ice_matls.clear();
+  all_ice_matls = nullptr;
 #endif
   
 #ifndef NO_MPM
   if(all_cz_matls && all_cz_matls->removeReference()){
     delete all_cz_matls;
-    all_cz_matls = nullptr;
   }
   cz_matls.clear();
+  all_cz_matls = nullptr;
 
   if(all_mpm_matls && all_mpm_matls->removeReference()){
     delete all_mpm_matls;
-    all_mpm_matls = nullptr;
   }
   mpm_matls.clear();
+  all_mpm_matls = nullptr;
   
   d_cohesiveZoneState.clear();
   d_cohesiveZoneState_preReloc.clear();
@@ -523,8 +523,8 @@ SimulationState::clearMaterials()
 #ifndef NO_WASATCH
   if(all_wasatch_matls && all_wasatch_matls->removeReference()){
     delete all_wasatch_matls;
-    all_wasatch_matls = nullptr;
   }
   wasatch_matls.clear();
+  all_wasatch_matls = nullptr;
 #endif
 }

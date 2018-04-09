@@ -117,7 +117,7 @@ DetailedTasks::DetailedTasks(       SchedulerCommon * sc
   m_send_old_data->m_phase = 0;
   m_send_old_data->setMapping( dwmap );
 
-  // Create a send old detailed task for every processor in my neighborhood.
+  // Create a send-old-data detailed task for every processor in my neighborhood.
   for (auto iter = neighborhood_processors.begin(); iter != neighborhood_processors.end(); ++iter) {
     DetailedTask* newtask = scinew DetailedTask( m_send_old_data, nullptr, nullptr, this );
     newtask->assignResource(*iter);
