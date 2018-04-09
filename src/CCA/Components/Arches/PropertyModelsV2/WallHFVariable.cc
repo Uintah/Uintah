@@ -18,6 +18,14 @@ WallHFVariable::WallHFVariable( std::string task_name, int matl_index, Simulatio
 WallHFVariable::~WallHFVariable(){
 }
 
+TaskAssignedExecutionSpace WallHFVariable::loadTaskFunctionPointers(){
+
+  TaskAssignedExecutionSpace assignedTag{};
+  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, WallHFVariable::eval);
+  return assignedTag;
+
+}
+
 void
 WallHFVariable::problemSetup( ProblemSpecP& db ){
 

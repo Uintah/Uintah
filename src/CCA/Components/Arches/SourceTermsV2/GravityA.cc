@@ -14,6 +14,15 @@ GravityA::~GravityA()
 {}
 
 //--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace GravityA::loadTaskFunctionPointers(){
+
+  TaskAssignedExecutionSpace assignedTag{};
+  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, GravityA::eval);
+  return assignedTag;
+
+}
+
+//--------------------------------------------------------------------------------------------------
 void
 GravityA::problemSetup( ProblemSpecP& db ){
 

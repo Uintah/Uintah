@@ -15,6 +15,8 @@ public:
     VariableStats( std::string task_name, int matl_index );
     ~VariableStats();
 
+    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+
     void problemSetup( ProblemSpecP& db );
 
     void register_initialize( VIVec& variable_registry , const bool pack_tasks);

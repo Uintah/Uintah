@@ -25,6 +25,15 @@ TaskInterface( task_name, matl_index ){
 FaceVelocities::~FaceVelocities(){}
 
 //--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace FaceVelocities::loadTaskFunctionPointers(){
+
+  TaskAssignedExecutionSpace assignedTag{};
+  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, FaceVelocities::eval);
+  return assignedTag;
+
+}
+
+//--------------------------------------------------------------------------------------------------
 void FaceVelocities::problemSetup( ProblemSpecP& db ){
 
   using namespace Uintah::ArchesCore;

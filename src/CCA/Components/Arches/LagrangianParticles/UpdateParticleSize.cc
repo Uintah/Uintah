@@ -10,6 +10,14 @@ TaskInterface( task_name, matl_index ) {
 UpdateParticleSize::~UpdateParticleSize(){
 }
 
+TaskAssignedExecutionSpace UpdateParticleSize::loadTaskFunctionPointers(){
+
+  TaskAssignedExecutionSpace assignedTag{};
+  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, UpdateParticleSize::eval);
+  return assignedTag;
+
+}
+
 void
 UpdateParticleSize::problemSetup( ProblemSpecP& db ){
 

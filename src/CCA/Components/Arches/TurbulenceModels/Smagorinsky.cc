@@ -13,6 +13,15 @@ Smagorinsky::~Smagorinsky()
 {}
 
 //--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace Smagorinsky::loadTaskFunctionPointers(){
+
+  TaskAssignedExecutionSpace assignedTag{};
+  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, Smagorinsky::eval);
+  return assignedTag;
+
+}
+
+//--------------------------------------------------------------------------------------------------
 void
 Smagorinsky::problemSetup( ProblemSpecP& db ){
 

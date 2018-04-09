@@ -15,6 +15,14 @@ Drhodt::~Drhodt(){
 }
 
 //--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace Drhodt::loadTaskFunctionPointers(){
+
+  TaskAssignedExecutionSpace assignedTag{};
+  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, Drhodt::eval);
+  return assignedTag;
+
+}
+//--------------------------------------------------------------------------------------------------
 void
 Drhodt::problemSetup( ProblemSpecP& db ){
 

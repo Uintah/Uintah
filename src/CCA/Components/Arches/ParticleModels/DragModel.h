@@ -41,6 +41,8 @@ namespace Uintah{
     DragModel<IT, DT>( std::string task_name, int matl_index, const std::string var_name, const int N );
     ~DragModel<IT, DT>();
 
+    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+
     void problemSetup( ProblemSpecP& db );
 
     void create_local_labels();
@@ -131,6 +133,17 @@ namespace Uintah{
   template <typename IT, typename DT>
   DragModel<IT, DT>::~DragModel()
   {}
+
+  template <typename IT, typename DT>
+  TaskAssignedExecutionSpace DragModel<IT, DT>::loadTaskFunctionPointers(){
+
+    TaskAssignedExecutionSpace assignedTag{};
+    // This one is a bit hackier.  Passing in DragModel<IT, DT>::eval into the macro caused problems on the comma as it parsed it
+    // as two separate arguments.  The approach below did the trick with a #define COMMA ,
+    LOAD_ARCHES_EVAL_TASK_3TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, void, assignedTag, DragModel<IT COMMA DT>::eval);
+    return assignedTag;
+
+  }
 
   template <typename IT, typename DT>
   void DragModel<IT, DT>::problemSetup( ProblemSpecP& db ){

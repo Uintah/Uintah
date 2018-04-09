@@ -12,6 +12,8 @@ public:
     SGSsigma( std::string task_name, int matl_index );
     ~SGSsigma();
 
+    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+
     void problemSetup( ProblemSpecP& db );
 
     void register_initialize(

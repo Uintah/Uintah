@@ -6,6 +6,15 @@ using namespace Uintah;
 typedef ArchesFieldContainer AFC;
 
 //--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace GridInfo::loadTaskFunctionPointers(){
+
+  TaskAssignedExecutionSpace assignedTag{};
+  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, GridInfo::eval);
+  return assignedTag;
+
+}
+
+//--------------------------------------------------------------------------------------------------
 void
 GridInfo::create_local_labels(){
 

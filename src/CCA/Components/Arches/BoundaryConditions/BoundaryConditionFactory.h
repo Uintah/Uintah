@@ -13,6 +13,8 @@ namespace Uintah{
     BoundaryConditionFactory( );
     ~BoundaryConditionFactory();
 
+    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+
     void register_all_tasks( ProblemSpecP& db );
 
     void build_all_tasks( ProblemSpecP& db );

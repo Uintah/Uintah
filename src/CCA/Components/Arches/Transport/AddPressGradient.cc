@@ -16,6 +16,15 @@ AddPressGradient::~AddPressGradient()
 }
 
 //--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace AddPressGradient::loadTaskFunctionPointers(){
+
+  TaskAssignedExecutionSpace assignedTag{};
+  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, AddPressGradient::eval);
+  return assignedTag;
+
+}
+
+//--------------------------------------------------------------------------------------------------
 void AddPressGradient::problemSetup( ProblemSpecP& db ){
   m_xmom = "x-mom";
   m_ymom = "y-mom";

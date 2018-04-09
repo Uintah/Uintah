@@ -5,6 +5,14 @@
 namespace Uintah{
 
 //--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace CoalTemperature::loadTaskFunctionPointers(){
+
+  TaskAssignedExecutionSpace assignedTag{};
+  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, CoalTemperature::eval);
+  return assignedTag;
+
+}
+
 void
 CoalTemperature::problemSetup( ProblemSpecP& db ){
 

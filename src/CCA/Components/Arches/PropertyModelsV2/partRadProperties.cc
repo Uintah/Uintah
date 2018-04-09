@@ -35,6 +35,16 @@ if (_particle_calculator_type=="tabulated")
  delete myTable;
 }
 
+//---------------------------------------------------------------------------
+//Method: Load task function pointers for portability
+//---------------------------------------------------------------------------
+TaskAssignedExecutionSpace partRadProperties::loadTaskFunctionPointers(){
+
+  TaskAssignedExecutionSpace assignedTag{};
+  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, partRadProperties::eval);
+  return assignedTag;
+
+}
 
 //---------------------------------------------------------------------------
 //Method: Problem Setup

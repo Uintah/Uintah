@@ -24,6 +24,16 @@ gasRadProperties::~gasRadProperties( )
   delete _calc; 
 }
 
+//---------------------------------------------------------------------------
+//Method: Load task function pointers for portability
+//---------------------------------------------------------------------------
+TaskAssignedExecutionSpace gasRadProperties::loadTaskFunctionPointers(){
+
+  TaskAssignedExecutionSpace assignedTag{};
+  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, gasRadProperties::eval);
+  return assignedTag;
+
+}
 
 //---------------------------------------------------------------------------
 //Method: Problem Setup

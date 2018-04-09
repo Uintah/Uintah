@@ -15,6 +15,8 @@ public:
     PressureEqn( std::string task_name, int matl_index, SimulationStateP shared_state );
     ~PressureEqn();
 
+    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+
     void problemSetup( ProblemSpecP& db );
 
     void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const bool pack_tasks);

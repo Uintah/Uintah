@@ -21,6 +21,16 @@ TaskInterface( task_name, matl_index ){
 //--------------------------------------------------------------------------------------------------
 StressTensor::~StressTensor(){
 }
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace StressTensor::loadTaskFunctionPointers(){
+
+  TaskAssignedExecutionSpace assignedTag{};
+  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, StressTensor::eval);
+  return assignedTag;
+
+}
+
 //--------------------------------------------------------------------------------------------------
 void StressTensor::problemSetup( ProblemSpecP& db ){
 

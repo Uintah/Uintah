@@ -18,6 +18,8 @@ public:
     ConstantProperty<T>( std::string task_name, int matl_index );
     ~ConstantProperty<T>();
 
+    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+
     void problemSetup( ProblemSpecP& db );
 
     void create_local_labels(){
@@ -90,6 +92,16 @@ private:
   //------------------------------------------------------------------------------------------------
   template <typename T>
   ConstantProperty<T>::~ConstantProperty(){}
+
+  //------------------------------------------------------------------------------------------------
+  template <typename T>
+  TaskAssignedExecutionSpace ConstantProperty<T>::loadTaskFunctionPointers(){
+
+    TaskAssignedExecutionSpace assignedTag{};
+    LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, ConstantProperty<T>::eval);
+    return assignedTag;
+
+  }
 
   //------------------------------------------------------------------------------------------------
   template <typename T>

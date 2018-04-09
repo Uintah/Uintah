@@ -30,6 +30,8 @@ public:
     /** @brief Default destructor **/
     ~PressureBC();
 
+    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+
     /** @brief Input file interface **/
     void problemSetup( ProblemSpecP& db );
 

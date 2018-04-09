@@ -16,6 +16,8 @@ public:
     UnweightVariable<T>( std::string task_name, int matl_index );
     ~UnweightVariable<T>();
 
+    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+
     void problemSetup( ProblemSpecP& db );
 
     class Builder : public TaskInterface::TaskBuilder {
@@ -104,6 +106,16 @@ TaskInterface( task_name, matl_index ) {
 template <typename T>
 UnweightVariable<T>::~UnweightVariable()
 {}
+
+//--------------------------------------------------------------------------------------------------
+template <typename T>
+TaskAssignedExecutionSpace UnweightVariable<T>::loadTaskFunctionPointers(){
+
+  TaskAssignedExecutionSpace assignedTag{};
+  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, UnweightVariable<T>::eval);
+  return assignedTag;
+
+}
 
 //--------------------------------------------------------------------------------------------------
 template <typename T>

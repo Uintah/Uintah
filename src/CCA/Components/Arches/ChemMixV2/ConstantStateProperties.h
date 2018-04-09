@@ -13,6 +13,8 @@ public:
     ConstantStateProperties( std::string task_name, int matl_index );
     ~ConstantStateProperties();
 
+    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+
     void problemSetup( ProblemSpecP& db );
 
     void create_local_labels();

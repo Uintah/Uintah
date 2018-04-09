@@ -10,6 +10,15 @@ TaskInterface( task_name, matl_index ) {
 }
 
 //--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace PartVariablesDQMOM::loadTaskFunctionPointers(){
+
+  TaskAssignedExecutionSpace assignedTag{};
+  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, PartVariablesDQMOM::eval);
+  return assignedTag;
+
+}
+
+//--------------------------------------------------------------------------------------------------
 void
 PartVariablesDQMOM::problemSetup( ProblemSpecP& db ){
 

@@ -16,9 +16,9 @@ public:
     WDragModel<T>( std::string task_name, int matl_index, int Nenv );
     ~WDragModel<T>();
 
+    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+
     void problemSetup( ProblemSpecP& db );
-
-
 
     class Builder : public TaskInterface::TaskBuilder {
 
@@ -110,6 +110,15 @@ private:
   template <typename T>
   WDragModel<T>::~WDragModel()
   {}
+
+  template <typename T>
+  TaskAssignedExecutionSpace WDragModel<T>::loadTaskFunctionPointers(){
+
+    TaskAssignedExecutionSpace assignedTag{};
+    LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, WDragModel<T>::eval);
+    return assignedTag;
+
+  }
 
   template <typename T>
   void WDragModel<T>::problemSetup( ProblemSpecP& db ){

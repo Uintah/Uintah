@@ -11,6 +11,13 @@ TaskInterface( task_name, matl_index ) {
 UpdateParticlePosition::~UpdateParticlePosition(){
 }
 
+TaskAssignedExecutionSpace UpdateParticlePosition::loadTaskFunctionPointers(){
+
+  TaskAssignedExecutionSpace assignedTag{};
+  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, UpdateParticlePosition::eval);
+  return assignedTag;
+
+}
 //--------------------------------------------------------------------------------------------------
 void
 UpdateParticlePosition::problemSetup( ProblemSpecP& db ){

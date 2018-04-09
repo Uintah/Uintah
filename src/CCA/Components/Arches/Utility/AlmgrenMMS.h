@@ -14,6 +14,8 @@ public:
     AlmgrenMMS<T>( std::string task_name, int matl_index, const std::string var_name );
     ~AlmgrenMMS<T>();
 
+    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+
     void problemSetup( ProblemSpecP& db );
 
     //Build instructions for this (AlmgrenMMS) class.
@@ -85,6 +87,16 @@ private:
   template <typename T>
   AlmgrenMMS<T>::~AlmgrenMMS()
   {}
+
+  //------------------------------------------------------------------------------------------------
+  template <typename T>
+  TaskAssignedExecutionSpace AlmgrenMMS<T>::loadTaskFunctionPointers(){
+
+    TaskAssignedExecutionSpace assignedTag{};
+    LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, AlmgrenMMS<T>::eval);
+    return assignedTag;
+
+  }
 
   //------------------------------------------------------------------------------------------------
   template <typename T>

@@ -15,6 +15,8 @@ public:
     FaceVelocities( std::string task_name, int matl_index );
     ~FaceVelocities();
 
+    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+
     void problemSetup( ProblemSpecP& db );
 
     void create_local_labels();

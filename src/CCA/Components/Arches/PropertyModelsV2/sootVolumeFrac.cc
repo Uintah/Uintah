@@ -21,6 +21,16 @@ sootVolumeFrac::~sootVolumeFrac( )
 
 }
 
+//---------------------------------------------------------------------------
+//Method: Load task function pointers for portability
+//---------------------------------------------------------------------------
+TaskAssignedExecutionSpace sootVolumeFrac::loadTaskFunctionPointers(){
+
+  TaskAssignedExecutionSpace assignedTag{};
+  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, sootVolumeFrac::eval);
+  return assignedTag;
+
+}
 
 //---------------------------------------------------------------------------
 //Method: Problem Setup

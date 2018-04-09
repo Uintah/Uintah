@@ -15,6 +15,8 @@ public:
     HandOff<T>( std::string task_name, int matl_index ) : TaskInterface(task_name, matl_index ){}
     ~HandOff<T>(){}
 
+    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+
     void problemSetup( ProblemSpecP& db );
 
     void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const bool packed_tasks );
@@ -81,6 +83,16 @@ private:
     int m_index;
 
   };
+
+  //Load function pointers for portability ---------------------------------------------------------
+  template <typename T>
+  TaskAssignedExecutionSpace HandOff<T>::loadTaskFunctionPointers(){
+
+    TaskAssignedExecutionSpace assignedTag{};
+    LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, HandOff<T>::eval);
+    return assignedTag;
+
+  }
 
   //Function definitions ---------------------------------------------------------------------------
   template <typename T>

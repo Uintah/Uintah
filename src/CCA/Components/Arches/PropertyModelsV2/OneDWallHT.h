@@ -12,6 +12,8 @@ public:
     OneDWallHT( std::string task_name, int matl_index );
     ~OneDWallHT();
 
+    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+
     void problemSetup( ProblemSpecP& db );
 
     void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool pack_tasks);

@@ -36,6 +36,8 @@ namespace Uintah{
     FOWYDevol<T>( std::string task_name, int matl_index, const std::string var_name, const int N );
     ~FOWYDevol<T>();
 
+    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+
     void problemSetup( ProblemSpecP& db );
 
     void create_local_labels();
@@ -129,6 +131,15 @@ namespace Uintah{
   template <typename T>
   FOWYDevol<T>::~FOWYDevol()
   {}
+
+  template <typename T>
+  TaskAssignedExecutionSpace FOWYDevol<T>::loadTaskFunctionPointers(){
+
+    TaskAssignedExecutionSpace assignedTag{};
+    LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, FOWYDevol<T>::eval);
+    return assignedTag;
+
+  }
 
   template <typename T>
   void FOWYDevol<T>::problemSetup( ProblemSpecP& db ){

@@ -15,6 +15,8 @@ public:
     UFromRhoU( std::string task_name, int matl_index );
     ~UFromRhoU();
 
+    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+
     void problemSetup( ProblemSpecP& db );
 
     void create_local_labels();

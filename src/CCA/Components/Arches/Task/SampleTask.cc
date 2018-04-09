@@ -12,6 +12,15 @@ SampleTask::~SampleTask(){
 }
 
 //--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace SampleTask::loadTaskFunctionPointers(){
+
+  TaskAssignedExecutionSpace assignedTag{};
+  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, SampleTask::eval);
+  return assignedTag;
+
+}
+
+//--------------------------------------------------------------------------------------------------
 void
 SampleTask::problemSetup( ProblemSpecP& db ){
 

@@ -32,6 +32,8 @@ namespace Uintah{
     ShaddixOxidation<T>( std::string task_name, int matl_index, const std::string var_name, const int N );
     ~ShaddixOxidation<T>();
 
+    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+
     void problemSetup( ProblemSpecP& db );
 
     void create_local_labels();
@@ -146,6 +148,15 @@ namespace Uintah{
   template <typename T>
   ShaddixOxidation<T>::~ShaddixOxidation()
   {}
+
+  template <typename T>
+  TaskAssignedExecutionSpace ShaddixOxidation<T>::loadTaskFunctionPointers(){
+
+    TaskAssignedExecutionSpace assignedTag{};
+    LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, ShaddixOxidation<T>::eval);
+    return assignedTag;
+
+  }
 
   template <typename T>
   void ShaddixOxidation<T>::problemSetup( ProblemSpecP& db ){

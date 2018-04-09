@@ -13,6 +13,15 @@ ContinuityPredictor::~ContinuityPredictor(){
 }
 
 //--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace ContinuityPredictor::loadTaskFunctionPointers(){
+
+  TaskAssignedExecutionSpace assignedTag{};
+  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, ContinuityPredictor::eval);
+  return assignedTag;
+
+}
+
+//--------------------------------------------------------------------------------------------------
 void
 ContinuityPredictor::problemSetup( ProblemSpecP& db ){
 

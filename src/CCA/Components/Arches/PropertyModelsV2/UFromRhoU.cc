@@ -12,6 +12,15 @@ TaskInterface( task_name, matl_index ){}
 UFromRhoU::~UFromRhoU(){}
 
 //--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace UFromRhoU::loadTaskFunctionPointers(){
+
+  TaskAssignedExecutionSpace assignedTag{};
+  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, UFromRhoU::eval);
+  return assignedTag;
+
+}
+
+//--------------------------------------------------------------------------------------------------
 void UFromRhoU::problemSetup( ProblemSpecP& db ){
 
   using namespace Uintah::ArchesCore;

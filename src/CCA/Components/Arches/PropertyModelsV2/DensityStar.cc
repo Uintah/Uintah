@@ -15,6 +15,15 @@ DensityStar::~DensityStar(){
 }
 
 //--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace DensityStar::loadTaskFunctionPointers(){
+
+  TaskAssignedExecutionSpace assignedTag{};
+  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, DensityStar::eval);
+  return assignedTag;
+
+}
+
+//--------------------------------------------------------------------------------------------------
 void
 DensityStar::problemSetup( ProblemSpecP& db ){
 

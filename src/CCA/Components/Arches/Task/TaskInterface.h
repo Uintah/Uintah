@@ -46,52 +46,62 @@ namespace Uintah{
   using evalFunctionPtr  = void (TaskInterface::*)(const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr);
 
 
-#define PREPARE_ARCHES_EVAL_UINTAH_CPU_TASK(EXECUTION_SPACE, ASSIGNED_TAG, FUNCTION_CODE_NAME) {    \
-  this->addEvalFunctionPtr(type_index(typeid(EXECUTION_SPACE)),                                     \
-     static_cast<evalFunctionPtr>(&FUNCTION_CODE_NAME<EXECUTION_SPACE, UintahSpaces::HostSpace>));  \
-  ASSIGNED_TAG = TaskAssignedExecutionSpace::UINTAH_CPU;                                            \
-}
-
-#define PREPARE_ARCHES_EVAL_KOKKOS_OPENMP_TASK(EXECUTION_SPACE, ASSIGNED_TAG, FUNCTION_CODE_NAME) { \
-  this->addEvalFunctionPtr(type_index(typeid(EXECUTION_SPACE)),                                     \
-     static_cast<evalFunctionPtr>(&FUNCTION_CODE_NAME<EXECUTION_SPACE, Kokkos::HostSpace>));        \
-  ASSIGNED_TAG = TaskAssignedExecutionSpace::KOKKOS_OPENMP;                                         \
-}
-
-#define PREPARE_ARCHES_EVAL_KOKKOS_CUDA_TASK(EXECUTION_SPACE, ASSIGNED_TAG, FUNCTION_CODE_NAME) {   \
-  this->addEvalFunctionPtr(type_index(typeid(EXECUTION_SPACE)),                                     \
-     static_cast<evalFunctionPtr>(&FUNCTION_CODE_NAME<EXECUTION_SPACE, Kokkos::CudaSpace>));        \
-  ASSIGNED_TAG = TaskAssignedExecutionSpace::KOKKOS_CUDA;                                           \
-}
-
-#define LOAD_ARCHES_EVAL_TASK_PORTABILITY(TAG1, TAG2, TAG3, ASSIGNED_TAG, FUNCTION_CODE_NAME) {     \
+//See Core/Parallel/LoopExecution.h for the purpose behind these macros, as that file uses a similar pattern
+#define LOAD_ARCHES_EVAL_TASK_3TAGS(TAG1, TAG2, TAG3, ASSIGNED_TAG, FUNCTION_CODE_NAME) {           \
   if (Uintah::Parallel::usingDevice()) {                                                            \
     if               (std::is_same< Kokkos::Cuda,      TAG1 >::value) {                             \
-      PREPARE_ARCHES_EVAL_KOKKOS_CUDA_TASK(  TAG1, ASSIGNED_TAG, FUNCTION_CODE_NAME);               \
+      this->addEvalFunctionPtr(std::type_index(typeid(TAG1)),                                       \
+            static_cast<evalFunctionPtr>(&FUNCTION_CODE_NAME<TAG1, Kokkos::CudaSpace>));            \
+      ASSIGNED_TAG = KOKKOS_CUDA;                                                                   \
     } else if        (std::is_same< Kokkos::Cuda,      TAG2 >::value) {                             \
-      PREPARE_ARCHES_EVAL_KOKKOS_CUDA_TASK(  TAG2, ASSIGNED_TAG, FUNCTION_CODE_NAME);               \
+      this->addEvalFunctionPtr(std::type_index(typeid(TAG2)),                                       \
+            static_cast<evalFunctionPtr>(&FUNCTION_CODE_NAME<TAG2, Kokkos::CudaSpace>));            \
+      ASSIGNED_TAG = KOKKOS_CUDA;                                                                   \
     } else if        (std::is_same< Kokkos::Cuda,      TAG3 >::value) {                             \
-      PREPARE_ARCHES_EVAL_KOKKOS_CUDA_TASK(  TAG3, ASSIGNED_TAG, FUNCTION_CODE_NAME);               \
+      this->addEvalFunctionPtr(std::type_index(typeid(TAG3)),                                       \
+            static_cast<evalFunctionPtr>(&FUNCTION_CODE_NAME<TAG3, Kokkos::CudaSpace>));            \
+      ASSIGNED_TAG = KOKKOS_CUDA;                                                                   \
     }                                                                                               \
   }                                                                                                 \
                                                                                                     \
-  if (ASSIGNED_TAG == TaskAssignedExecutionSpace::None) {                                           \
+  if (ASSIGNED_TAG == TaskAssignedExecutionSpace::NONE) {                                           \
     if               (std::is_same< Kokkos::OpenMP,    TAG1 >::value) {                             \
-      PREPARE_ARCHES_EVAL_KOKKOS_OPENMP_TASK(TAG1, ASSIGNED_TAG, FUNCTION_CODE_NAME);               \
+        this->addEvalFunctionPtr(std::type_index(typeid(TAG1)),                                     \
+              static_cast<evalFunctionPtr>(&FUNCTION_CODE_NAME<TAG1, Kokkos::HostSpace>));          \
+        ASSIGNED_TAG = KOKKOS_OPENMP;                                                               \
     } else if        (std::is_same< Kokkos::OpenMP,    TAG2 >::value) {                             \
-      PREPARE_ARCHES_EVAL_KOKKOS_OPENMP_TASK(TAG2, ASSIGNED_TAG, FUNCTION_CODE_NAME);               \
+        this->addEvalFunctionPtr(std::type_index(typeid(TAG2)),                                     \
+              static_cast<evalFunctionPtr>(&FUNCTION_CODE_NAME<TAG2, Kokkos::HostSpace>));          \
+        ASSIGNED_TAG = KOKKOS_OPENMP;                                                               \
     } else if        (std::is_same< Kokkos::OpenMP,    TAG3 >::value) {                             \
-      PREPARE_ARCHES_EVAL_KOKKOS_OPENMP_TASK(TAG3, ASSIGNED_TAG, FUNCTION_CODE_NAME);               \
+        this->addEvalFunctionPtr(std::type_index(typeid(TAG3)),                                     \
+              static_cast<evalFunctionPtr>(&FUNCTION_CODE_NAME<TAG3, Kokkos::HostSpace>));          \
+        ASSIGNED_TAG = KOKKOS_OPENMP;                                                               \
     } else if        (std::is_same< UintahSpaces::CPU, TAG1 >::value) {                             \
-      PREPARE_ARCHES_EVAL_UINTAH_CPU_TASK(   TAG1, ASSIGNED_TAG, FUNCTION_CODE_NAME);               \
+        this->addEvalFunctionPtr(std::type_index(typeid(TAG1)),                                     \
+              static_cast<evalFunctionPtr>(&FUNCTION_CODE_NAME<TAG1, UintahSpaces::HostSpace>));    \
+        ASSIGNED_TAG = UINTAH_CPU;                                                                  \
     } else if        (std::is_same< UintahSpaces::CPU, TAG2 >::value) {                             \
-      PREPARE_ARCHES_EVAL_UINTAH_CPU_TASK(   TAG2, ASSIGNED_TAG, FUNCTION_CODE_NAME);               \
+        this->addEvalFunctionPtr(std::type_index(typeid(TAG2)),                                     \
+              static_cast<evalFunctionPtr>(&FUNCTION_CODE_NAME<TAG2, UintahSpaces::HostSpace>));    \
+        ASSIGNED_TAG = UINTAH_CPU;                                                                  \
     } else if        (std::is_same< UintahSpaces::CPU, TAG3 >::value) {                             \
-      PREPARE_ARCHES_EVAL_UINTAH_CPU_TASK(   TAG3, ASSIGNED_TAG, FUNCTION_CODE_NAME);               \
+        this->addEvalFunctionPtr(std::type_index(typeid(TAG3)),                                     \
+              static_cast<evalFunctionPtr>(&FUNCTION_CODE_NAME<TAG3, UintahSpaces::HostSpace>));    \
+        ASSIGNED_TAG = UINTAH_CPU;                                                                  \
     }                                                                                               \
   }                                                                                                 \
 }
 
+//If only 1 execution space tag is specified
+#define LOAD_ARCHES_EVAL_TASK_1TAGS(TAG1, ASSIGNED_TAG, FUNCTION_CODE_NAME) {                       \
+    LOAD_ARCHES_EVAL_TASK_3TAGS(TAG1, void, void, ASSIGNED_TAG, FUNCTION_CODE_NAME);                \
+}
+
+//If only 2 execution space tags are specified
+#define LOAD_ARCHES_EVAL_TASK_2TAGS(TAG1, TAG2, ASSIGNED_TAG, FUNCTION_CODE_NAME) {                 \
+    LOAD_ARCHES_EVAL_TASK_3TAGS(TAG1, TAG2, void, ASSIGNED_TAG, FUNCTION_CODE_NAME);                \
+}
 
   class TaskInterface{
 
@@ -158,13 +168,15 @@ public:
     // possible template options.  Then when the "polymorphic" code is executed, it instead invokes the base
     // class version of the method, not the derived classes version, and the base class version searches
     // up the correct function pointer and executes it.
+    // It also has a second helpful benefit with the compiler compiling all template options, for
+    // Kokkos::Cuda, even if it's not desired, it may still compile and just won't generate compiler errors.
     // Yes, it's ugly.  But it's the best least ugly solution I could find.  -- Brad Peterson
     template<typename ExecutionSpace, typename MemorySpace>
     void eval(const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr) {
       evalFunctionPtr handler_ptr{nullptr};
-
-      auto handler = TaskInterface::evalFunctionPtrs.find(type_index(typeid(ExecutionSpace)));
-      if(handler != TaskInterface::evalFunctionPtrs.end()) {
+      auto index = std::type_index(typeid(ExecutionSpace));
+      auto handler = this->evalFunctionPtrs.find(index);
+      if(handler != this->evalFunctionPtrs.end()) {
         handler_ptr = handler->second;
       } else {
         throw InternalError("Derived class version of Arches task eval() not found!", __FILE__, __LINE__);

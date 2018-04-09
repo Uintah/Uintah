@@ -14,6 +14,8 @@ public:
     DSmaCsv2( std::string task_name, int matl_index );
     ~DSmaCsv2();
 
+    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+
     void problemSetup( ProblemSpecP& db );
 
     void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks);
@@ -78,6 +80,16 @@ TaskInterface( task_name, matl_index ) {
 //--------------------------------------------------------------------------------------------------
 template<typename TT>
 DSmaCsv2<TT>::~DSmaCsv2(){
+}
+
+//--------------------------------------------------------------------------------------------------
+template<typename TT>
+TaskAssignedExecutionSpace DSmaCsv2<TT>::loadTaskFunctionPointers(){
+
+  TaskAssignedExecutionSpace assignedTag{};
+  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, DSmaCsv2<TT>::eval);
+  return assignedTag;
+
 }
 
 //--------------------------------------------------------------------------------------------------

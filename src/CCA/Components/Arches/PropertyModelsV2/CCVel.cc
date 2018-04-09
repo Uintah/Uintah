@@ -12,6 +12,15 @@ TaskInterface( task_name, matl_index ){}
 CCVel::~CCVel(){}
 
 //--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace CCVel::loadTaskFunctionPointers(){
+
+  TaskAssignedExecutionSpace assignedTag{};
+  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, CCVel::eval);
+  return assignedTag;
+
+}
+
+//--------------------------------------------------------------------------------------------------
 void CCVel::problemSetup( ProblemSpecP& db ){
 
   using namespace Uintah::ArchesCore;

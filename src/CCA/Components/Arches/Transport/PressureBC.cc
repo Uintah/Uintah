@@ -15,6 +15,15 @@ PressureBC::~PressureBC()
 {}
 
 //--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace PressureBC::loadTaskFunctionPointers(){
+
+  TaskAssignedExecutionSpace assignedTag{};
+  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, PressureBC::eval);
+  return assignedTag;
+
+}
+
+//--------------------------------------------------------------------------------------------------
 void PressureBC::problemSetup( ProblemSpecP& db ){
   m_press = "pressure";
 }

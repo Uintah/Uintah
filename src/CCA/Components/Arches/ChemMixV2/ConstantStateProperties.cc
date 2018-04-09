@@ -13,6 +13,16 @@ ConstantStateProperties::~ConstantStateProperties(){
 }
 
 //--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace ConstantStateProperties::loadTaskFunctionPointers(){
+
+  TaskAssignedExecutionSpace assignedTag{};
+  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, ConstantStateProperties::eval);
+  return assignedTag;
+
+}
+
+
+//--------------------------------------------------------------------------------------------------
 void ConstantStateProperties::problemSetup( ProblemSpecP& db ){
 
   for ( ProblemSpecP db_prop = db->findBlock("const_property");

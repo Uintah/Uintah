@@ -75,7 +75,7 @@ using KOKKOS_CUDA_TAG = Kokkos::Cuda;
 
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)
-
+#define COMMA ,  //Macros don't like passing in data types that contain commas in them, such as two template arguments. This helps fix that.
 //#if defined(UINTAH_ENABLE_KOKKOS)
 
 //#if defined(HAVE_CUDA)
@@ -192,7 +192,7 @@ enum TaskAssignedExecutionSpace {
 
 // Logic note, we don't allow both a Uintah CPU task and a Kokkos CPU task to exist in the same
 // compiled build.  But we do allow a Kokkos CPU and Kokkos GPU task to exist in the same build
-#define CALL_ASSIGN_PORTABLE_TASK(TAG1, TAG2, TAG3,                                                \
+#define CALL_ASSIGN_PORTABLE_TASK_3TAGS(TAG1, TAG2, TAG3,                                          \
                                   TASK_DEPENDENCIES,                                               \
                                   FUNCTION_NAME, FUNCTION_CODE_NAME,                               \
                                   PATCHES, MATERIALS, ...) {                                       \
@@ -243,19 +243,19 @@ enum TaskAssignedExecutionSpace {
 }
 
 //If only 1 execution space tag is specified
-#define CALL_ASSIGN_PORTABLE_TASK(TAG1, TASK_DEPENDENCIES,                                         \
+#define CALL_ASSIGN_PORTABLE_TASK_1TAGS(TAG1, TASK_DEPENDENCIES,                                   \
                                   FUNCTION_NAME, FUNCTION_CODE_NAME,                               \
                                   PATCHES, MATERIALS, ...) {                                       \
-  CALL_ASSIGN_PORTABLE_TASK(TAG1, void, void, TASK_DEPENDENCIES,                                   \
+  CALL_ASSIGN_PORTABLE_TASK_3TAGS(TAG1, void, void, TASK_DEPENDENCIES,                             \
                             FUNCTION_NAME, FUNCTION_CODE_NAME,                                     \
                             PATCHES, MATERIALS, ## __VA_ARGS__);                                   \
 }
 
 //If only 2 execution space tags are specified
-#define CALL_ASSIGN_PORTABLE_TASK(TAG1, TAG2, TASK_DEPENDENCIES,                                   \
+#define CALL_ASSIGN_PORTABLE_TASK_2TAGS(TAG1, TAG2, TASK_DEPENDENCIES,                             \
                                   FUNCTION_NAME, FUNCTION_CODE_NAME,                               \
                                   PATCHES, MATERIALS, ...) {                                       \
-  CALL_ASSIGN_PORTABLE_TASK(TAG1, TAG2, void, TASK_DEPENDENCIES,                                   \
+  CALL_ASSIGN_PORTABLE_TASK_3TAGS(TAG1, TAG2, void, TASK_DEPENDENCIES,                             \
                             FUNCTION_NAME, FUNCTION_CODE_NAME,                                     \
                             PATCHES, MATERIALS, ## __VA_ARGS__);                                   \
 }

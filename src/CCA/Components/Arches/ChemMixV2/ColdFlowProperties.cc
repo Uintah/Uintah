@@ -13,6 +13,15 @@ ColdFlowProperties::~ColdFlowProperties(){
 }
 
 //--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace ColdFlowProperties::loadTaskFunctionPointers(){
+
+  TaskAssignedExecutionSpace assignedTag{};
+  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, ColdFlowProperties::eval);
+  return assignedTag;
+
+}
+
+//--------------------------------------------------------------------------------------------------
 void ColdFlowProperties::problemSetup( ProblemSpecP& db ){
 
   for ( ProblemSpecP db_prop = db->findBlock("property");

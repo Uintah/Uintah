@@ -13,6 +13,15 @@ DSFTv2::~DSFTv2(){
 }
 
 //--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace DSFTv2::loadTaskFunctionPointers(){
+
+  TaskAssignedExecutionSpace assignedTag{};
+  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, DSFTv2::eval);
+  return assignedTag;
+
+}
+
+//--------------------------------------------------------------------------------------------------
 void
 DSFTv2::problemSetup( ProblemSpecP& db ){
 

@@ -30,6 +30,8 @@ namespace Uintah{
     Constant<T>( std::string task_name, int matl_index, const std::string var_name, const int N );
     ~Constant<T>(){};
 
+    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+
     void problemSetup( ProblemSpecP& db );
 
     void create_local_labels();
@@ -105,6 +107,16 @@ namespace Uintah{
   Constant<T>::Constant( std::string task_name, int matl_index,
                          const std::string base_var_name, const int N ) :
   TaskInterface( task_name, matl_index ), _base_var_name(base_var_name), _N(N){
+  }
+
+  //------------------------------------------------------------------------------------------------
+  template <typename T>
+  TaskAssignedExecutionSpace Constant<T>::loadTaskFunctionPointers(){
+
+    TaskAssignedExecutionSpace assignedTag{};
+    LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, Constant<T>::eval);
+    return assignedTag;
+
   }
 
   //------------------------------------------------------------------------------------------------

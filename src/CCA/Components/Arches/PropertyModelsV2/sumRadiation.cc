@@ -5,6 +5,15 @@
 namespace Uintah{
 
 //--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace sumRadiation::loadTaskFunctionPointers(){
+
+  TaskAssignedExecutionSpace assignedTag{};
+  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, sumRadiation::eval);
+  return assignedTag;
+
+}
+
+//--------------------------------------------------------------------------------------------------
 void
 sumRadiation::problemSetup( ProblemSpecP& db ){
 

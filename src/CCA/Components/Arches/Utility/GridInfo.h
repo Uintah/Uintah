@@ -12,6 +12,8 @@ public:
     GridInfo( std::string task_name, int matl_index ) : TaskInterface(task_name, matl_index ){}
     ~GridInfo(){}
 
+    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+
     void problemSetup( ProblemSpecP& db ){}
 
     void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks);

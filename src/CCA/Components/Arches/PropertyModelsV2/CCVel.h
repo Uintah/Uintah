@@ -15,6 +15,8 @@ public:
     CCVel( std::string task_name, int matl_index );
     ~CCVel();
 
+    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+
     void problemSetup( ProblemSpecP& db );
 
     void create_local_labels();

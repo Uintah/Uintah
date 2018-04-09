@@ -13,6 +13,8 @@ public:
     MMS_mom<T>( std::string task_name, int matl_index, SimulationStateP shared_state  );
     ~MMS_mom<T>();
 
+    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+
     void problemSetup( ProblemSpecP& db );
 
     //Build instructions for this (MMS_mom) class.
@@ -91,6 +93,16 @@ TaskInterface( task_name, matl_index ) , _shared_state(shared_state){
 //--------------------------------------------------------------------------------------------------
 template <typename T>
 MMS_mom<T>::~MMS_mom(){
+}
+
+//--------------------------------------------------------------------------------------------------
+template <typename T>
+TaskAssignedExecutionSpace MMS_mom<T>::loadTaskFunctionPointers(){
+
+  TaskAssignedExecutionSpace assignedTag{};
+  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, MMS_mom<T>::eval);
+  return assignedTag;
+
 }
 
 //--------------------------------------------------------------------------------------------------

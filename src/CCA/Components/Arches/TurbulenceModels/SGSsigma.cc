@@ -28,6 +28,15 @@ SGSsigma::~SGSsigma(){
 }
 
 //--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace SGSsigma::loadTaskFunctionPointers(){
+
+  TaskAssignedExecutionSpace assignedTag{};
+  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, SGSsigma::eval);
+  return assignedTag;
+
+}
+
+//--------------------------------------------------------------------------------------------------
 void
 SGSsigma::problemSetup( ProblemSpecP& db ){
 

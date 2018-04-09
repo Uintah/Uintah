@@ -14,6 +14,8 @@ public:
     TaylorGreen3D<T>( std::string task_name, int matl_index, const std::string var_name );
     ~TaylorGreen3D<T>();
 
+    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+
     void problemSetup( ProblemSpecP& db );
 
     //Build instructions for this (TaylorGreen3D) class.
@@ -85,6 +87,16 @@ private:
   template <typename T>
   TaylorGreen3D<T>::~TaylorGreen3D()
   {}
+
+  //------------------------------------------------------------------------------------------------
+  template <typename T>
+  TaskAssignedExecutionSpace TaylorGreen3D<T>::loadTaskFunctionPointers(){
+
+    TaskAssignedExecutionSpace assignedTag{};
+    LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, TaylorGreen3D<T>::eval);
+    return assignedTag;
+
+  }
 
   //------------------------------------------------------------------------------------------------
   template <typename T>

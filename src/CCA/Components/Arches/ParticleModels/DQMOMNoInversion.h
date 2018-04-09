@@ -27,6 +27,8 @@ namespace Uintah{
     DQMOMNoInversion( std::string task_name, int matl_index, const int N );
     ~DQMOMNoInversion();
 
+    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+
     void problemSetup( ProblemSpecP& db );
 
     void create_local_labels();

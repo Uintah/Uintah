@@ -5,6 +5,14 @@
 namespace Uintah{
 
 //--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace CoalDensity::loadTaskFunctionPointers(){
+
+  TaskAssignedExecutionSpace assignedTag{};
+  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, CoalDensity::eval);
+  return assignedTag;
+
+}
+
 void
 CoalDensity::problemSetup( ProblemSpecP& db ){
 

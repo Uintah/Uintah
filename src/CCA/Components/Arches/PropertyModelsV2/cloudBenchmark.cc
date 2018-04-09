@@ -4,6 +4,15 @@
 namespace Uintah{
 
 //--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace cloudBenchmark::loadTaskFunctionPointers(){
+
+  TaskAssignedExecutionSpace assignedTag{};
+  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, cloudBenchmark::eval);
+  return assignedTag;
+
+}
+
+//--------------------------------------------------------------------------------------------------
 void
 cloudBenchmark::problemSetup( ProblemSpecP& db ){
 

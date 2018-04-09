@@ -14,6 +14,8 @@ public:
     DSmaCs( std::string task_name, int matl_index );
     ~DSmaCs();
 
+    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+
     void problemSetup( ProblemSpecP& db );
 
     void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks);
@@ -78,6 +80,16 @@ TaskInterface( task_name, matl_index ) {
 //--------------------------------------------------------------------------------------------------
 template<typename TT>
 DSmaCs<TT>::~DSmaCs(){
+}
+
+//--------------------------------------------------------------------------------------------------
+template<typename TT>
+TaskAssignedExecutionSpace DSmaCs<TT>::loadTaskFunctionPointers(){
+
+  TaskAssignedExecutionSpace assignedTag{};
+  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, DSmaCs<TT>::eval);
+  return assignedTag;
+
 }
 
 //--------------------------------------------------------------------------------------------------

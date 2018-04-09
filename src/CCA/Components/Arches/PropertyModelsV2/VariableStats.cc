@@ -15,6 +15,15 @@ VariableStats::~VariableStats()
 {}
 
 //--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace VariableStats::loadTaskFunctionPointers(){
+
+  TaskAssignedExecutionSpace assignedTag{};
+  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, VariableStats::eval);
+  return assignedTag;
+
+}
+
+//--------------------------------------------------------------------------------------------------
 void VariableStats::problemSetup( ProblemSpecP& db ){
 
   ChemHelper& chem_helper = ChemHelper::self();

@@ -14,6 +14,8 @@ public:
     ShunnMMSP3<T>( std::string task_name, int matl_index, const std::string var_name );
     ~ShunnMMSP3<T>();
 
+    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+
     void problemSetup( ProblemSpecP& db );
 
     //Build instructions for this (ShunnMMSP3) class.
@@ -107,6 +109,17 @@ private:
   template <typename T>
   ShunnMMSP3<T>::~ShunnMMSP3()
   {}
+
+  //------------------------------------------------------------------------------------------------
+  template <typename T>
+  TaskAssignedExecutionSpace ShunnMMSP3<T>::loadTaskFunctionPointers(){
+
+    TaskAssignedExecutionSpace assignedTag{};
+    LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, ShunnMMSP3<T>::eval);
+    return assignedTag;
+
+  }
+
 
   //------------------------------------------------------------------------------------------------
   template <typename T>

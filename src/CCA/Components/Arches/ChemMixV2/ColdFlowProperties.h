@@ -14,6 +14,8 @@ public:
     ColdFlowProperties( std::string task_name, int matl_index );
     ~ColdFlowProperties();
 
+    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+
     void problemSetup( ProblemSpecP& db );
 
     void create_local_labels();

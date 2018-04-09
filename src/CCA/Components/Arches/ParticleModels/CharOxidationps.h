@@ -24,6 +24,8 @@ public:
     CharOxidationps( std::string task_name, int matl_index, int Nenv );
     ~CharOxidationps();
 
+    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+
     void problemSetup( ProblemSpecP& db );
 
     void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const bool packed_tasks );
@@ -188,10 +190,8 @@ CharOxidationps<T>::~CharOxidationps()
 template <typename T> TaskAssignedExecutionSpace
 CharOxidationps<T>::loadTaskFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag;
-
-  LOAD_ARCHES_EVAL_TASK_PORTABILITY(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, KOKKOS_CUDA_TAG, assignedTag, CharOxidationps<T>::eval);
-
+  TaskAssignedExecutionSpace assignedTag{};
+  LOAD_ARCHES_EVAL_TASK_3TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, KOKKOS_CUDA_TAG, assignedTag, CharOxidationps<T>::eval);
   return assignedTag;
 
 }
@@ -1365,14 +1365,6 @@ struct solveFunctor {
     }  // end operator()
   };   // end solveFunctor
 }      // end namespace
-
-//--------------------------------------------------------------------------------------------------
-template<typename T> void
-CharOxidationps<T>::eval_do_task(const Patch * patch ,  ArchesTaskInfoManager * tsk_info) {
-
-  eval<Kokkos::OpenMP, Kokkos::CudaSpace>(patch, tsk_info);
-
-}
 
 //--------------------------------------------------------------------------------------------------
 template<typename T>

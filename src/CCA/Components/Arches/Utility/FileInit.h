@@ -16,6 +16,8 @@ public:
       ( std::string task_name, int matl_index, const std::string var_name );
     ~FileInit<T>();
 
+    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+
     void problemSetup( ProblemSpecP& db );
 
     void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool pack_tasks);
@@ -86,6 +88,16 @@ private:
   template <typename T>
   FileInit<T>::~FileInit()
   {}
+
+  //------------------------------------------------------------------------------------------------
+  template <typename T>
+  TaskAssignedExecutionSpace FileInit<T>::loadTaskFunctionPointers(){
+
+    TaskAssignedExecutionSpace assignedTag{};
+    LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, FileInit<T>::eval);
+    return assignedTag;
+
+  }
 
   //------------------------------------------------------------------------------------------------
   template <typename T>

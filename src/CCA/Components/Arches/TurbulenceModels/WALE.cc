@@ -16,6 +16,15 @@ WALE::~WALE()
 {}
 
 //---------------------------------------------------------------------------------
+TaskAssignedExecutionSpace WALE::loadTaskFunctionPointers(){
+
+  TaskAssignedExecutionSpace assignedTag{};
+  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, WALE::eval);
+  return assignedTag;
+
+}
+
+//---------------------------------------------------------------------------------
 void
 WALE::problemSetup( ProblemSpecP& db ){
 

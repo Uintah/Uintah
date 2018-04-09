@@ -5,6 +5,15 @@
 namespace Uintah{
 
 //--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace Burnout::loadTaskFunctionPointers(){
+
+  TaskAssignedExecutionSpace assignedTag{};
+  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, Burnout::eval);
+  return assignedTag;
+
+}
+
+
 void
 Burnout::problemSetup( ProblemSpecP& db ){
 

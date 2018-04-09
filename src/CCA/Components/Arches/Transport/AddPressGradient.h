@@ -29,6 +29,8 @@ public:
     /** @brief Default destructor **/
     ~AddPressGradient();
 
+    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+
     /** @brief Input file interface **/
     void problemSetup( ProblemSpecP& db );
 

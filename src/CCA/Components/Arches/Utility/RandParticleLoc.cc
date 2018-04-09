@@ -1,6 +1,17 @@
 #include <CCA/Components/Arches/Utility/RandParticleLoc.h>
 
 namespace Uintah {
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace RandParticleLoc::loadTaskFunctionPointers(){
+
+  TaskAssignedExecutionSpace assignedTag{};
+  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, RandParticleLoc::eval);
+  return assignedTag;
+
+}
+
+
 //--------------------------------------------------------------------------------------------------
 void
 RandParticleLoc::problemSetup( ProblemSpecP& db ){

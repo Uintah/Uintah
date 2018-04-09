@@ -13,6 +13,8 @@ namespace Uintah{
     RateDeposition( std::string task_name, int matl_index, const int N );
     ~RateDeposition();
 
+    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+
     void problemSetup( ProblemSpecP& db );
 
     void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks);

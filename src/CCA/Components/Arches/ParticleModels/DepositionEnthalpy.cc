@@ -15,6 +15,14 @@ TaskInterface( task_name, matl_index ), _Nenv(N),_shared_state(shared_state) {
 DepositionEnthalpy::~DepositionEnthalpy(){
 }
 
+TaskAssignedExecutionSpace DepositionEnthalpy::loadTaskFunctionPointers(){
+
+  TaskAssignedExecutionSpace assignedTag{};
+  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, DepositionEnthalpy::eval);
+  return assignedTag;
+
+}
+
 void
 DepositionEnthalpy::problemSetup( ProblemSpecP& db ){
 

@@ -16,6 +16,8 @@ namespace Uintah{
 
     typedef std::vector<ArchesFieldContainer::VariableInformation> ArchesVIVector;
 
+    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+
     void problemSetup( ProblemSpecP& db );
 
     void register_initialize( ArchesVIVector& variable_registry , const bool packed_tasks);

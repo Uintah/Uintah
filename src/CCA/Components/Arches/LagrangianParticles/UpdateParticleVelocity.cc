@@ -11,6 +11,14 @@ TaskInterface( task_name, matl_index ) {
 UpdateParticleVelocity::~UpdateParticleVelocity(){
 }
 
+TaskAssignedExecutionSpace UpdateParticleVelocity::loadTaskFunctionPointers(){
+
+  TaskAssignedExecutionSpace assignedTag{};
+  LOAD_ARCHES_EVAL_TASK_3TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, KOKKOS_CUDA_TAG, assignedTag, UpdateParticleVelocity::eval);
+  return assignedTag;
+
+}
+
 //--------------------------------------------------------------------------------------------------
 void
 UpdateParticleVelocity::problemSetup( ProblemSpecP& db ){

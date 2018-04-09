@@ -16,6 +16,8 @@ public:
     FaceParticleVel<T>( std::string task_name, int matl_index, const std::string var_name );
     ~FaceParticleVel<T>();
 
+    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+
     void problemSetup( ProblemSpecP& db );
 
 
@@ -110,6 +112,15 @@ private:
   template <typename T>
   FaceParticleVel<T>::~FaceParticleVel()
   {}
+
+  template <typename T>
+  TaskAssignedExecutionSpace FaceParticleVel<T>::loadTaskFunctionPointers(){
+
+    TaskAssignedExecutionSpace assignedTag{};
+    LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, FaceParticleVel<T>::eval);
+    return assignedTag;
+
+  }
 
   template <typename T>
   void FaceParticleVel<T>::problemSetup( ProblemSpecP& db ){

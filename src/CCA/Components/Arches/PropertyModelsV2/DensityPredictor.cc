@@ -14,6 +14,15 @@ DensityPredictor::~DensityPredictor(){
 }
 
 //--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace DensityPredictor::loadTaskFunctionPointers(){
+
+  TaskAssignedExecutionSpace assignedTag{};
+  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, DensityPredictor::eval);
+  return assignedTag;
+
+}
+
+//--------------------------------------------------------------------------------------------------
 void
 DensityPredictor::problemSetup( ProblemSpecP& db ){
 

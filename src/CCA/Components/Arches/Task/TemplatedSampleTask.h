@@ -13,6 +13,8 @@ public:
     TemplatedSampleTask<T>( std::string task_name, int matl_index );
     ~TemplatedSampleTask<T>();
 
+    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+
     void problemSetup( ProblemSpecP& db );
 
     //Build instructions for this (TemplatedSampleTask) class.
@@ -68,6 +70,15 @@ private:
   template <typename T>
   TemplatedSampleTask<T>::~TemplatedSampleTask()
   {
+  }
+
+  template <typename T>
+  TaskAssignedExecutionSpace TemplatedSampleTask<T>::loadTaskFunctionPointers(){
+
+    TaskAssignedExecutionSpace assignedTag{};
+    LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, TemplatedSampleTask<T>::eval);
+    return assignedTag;
+
   }
 
   template <typename T>

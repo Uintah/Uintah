@@ -44,6 +44,8 @@ public:
     TaskAlgebra<T>( std::string task_name, int matl_index );
     ~TaskAlgebra<T>();
 
+    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+
     void problemSetup( ProblemSpecP& db );
 
     //Build instructions for this (TaskAlgebra) class.
@@ -142,6 +144,17 @@ private:
   template <typename T>
   TaskAlgebra<T>::~TaskAlgebra()
   {}
+
+  // Load portable task function pointers ----------------------------------------------------------
+  template <typename T>
+  TaskAssignedExecutionSpace TaskAlgebra<T>::loadTaskFunctionPointers(){
+
+    TaskAssignedExecutionSpace assignedTag{};
+    LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, TaskAlgebra<T>::eval);
+    return assignedTag;
+
+  }
+
 
   // Problem Setup ---------------------------------------------------------------------------------
   template <typename T>

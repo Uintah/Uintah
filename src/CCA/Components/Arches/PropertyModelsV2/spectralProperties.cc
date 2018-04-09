@@ -19,6 +19,17 @@ spectralProperties::~spectralProperties( )
 }
 
 //---------------------------------------------------------------------------
+//Method: Load task function pointers for portability
+//---------------------------------------------------------------------------
+TaskAssignedExecutionSpace spectralProperties::loadTaskFunctionPointers(){
+
+  TaskAssignedExecutionSpace assignedTag{};
+  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, spectralProperties::eval);
+  return assignedTag;
+
+}
+
+//---------------------------------------------------------------------------
 //Method: Problem Setup
 //---------------------------------------------------------------------------
 void spectralProperties::problemSetup(  Uintah::ProblemSpecP& db )
