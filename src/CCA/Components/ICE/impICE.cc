@@ -1085,9 +1085,9 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
     subNewDW->get(max_RHS,     lb->max_RHSLabel);
     subOldDW->get(max_RHS_old, lb->max_RHSLabel);
     
-    proc0cout << "Outer iteration " << counter
-              << " max_rhs before solve "<< max_RHS_old
-              << " after solve " << max_RHS<< endl;
+    DOUTR0(  "  Outer iteration " << counter
+            << " max_rhs before solve "<< max_RHS_old
+            << " after solve " << max_RHS << "\n" );
     
     // output files for debugging
     // double timeStep = m_sharedState->getCurrentTopLevelTimeStep();
@@ -1107,11 +1107,11 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
                                           //  too many outer iterations
     if (counter > d_iters_before_timestep_restart ){
       restart = true;
-      proc0cout <<"\nWARNING: max iterations befor timestep restart reached\n"<<endl;
+      DOUTR0("\nWARNING: max iterations befor timestep restart reached\n" );
     }
                                           //  solver or advection has requested a restart
     if (d_subsched->get_dw(1)->timestepRestarted() ) {
-      proc0cout << "\nWARNING  impICE:implicitPressureSolve timestep restart.\n" <<endl;
+      DOUTR0( "\nWARNING  impICE:implicitPressureSolve timestep restart.\n" );
       restart = true;
     }
     
@@ -1120,10 +1120,10 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
       smallest_max_RHS_sofar = max_RHS;
     }
     if(((max_RHS - smallest_max_RHS_sofar) > 100.0*smallest_max_RHS_sofar) ){
-      proc0cout << "\nWARNING: outer iteration is diverging now "
+      DOUTR0( "\nWARNING: outer iteration is diverging now "
                 << "restarting the timestep"
                 << " Max_RHS " << max_RHS 
-                << " smallest_max_RHS_sofar "<< smallest_max_RHS_sofar<< endl;
+                << " smallest_max_RHS_sofar "<< smallest_max_RHS_sofar << "\n");
       restart = true;
     }
     if( restart ) {
