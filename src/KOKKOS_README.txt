@@ -69,6 +69,13 @@ It seems also this is needed: LDFLAGS='-ldl'
 
 If you are using CUDA, you must put the nvcc_wrapper for the CXX
 CXX=/home/brad/opt/kokkos-cuda-9.0-gcc-6.4/bin/nvcc_wrapper 
+
+Note that we are requiring OpenMP for all builds, CUDA and non-CUDA.  
+
+For an example of building a single Kokkos test program with both CUDA and OpenMP support:
+
+/home/brad/opt/kokkos-cuda-9.0-gcc-6.4/bin/nvcc_wrapper -DKOKKOS_ENABLE_CUDA_LAMBDA --expt-extended-lambda -I./ -I/home/brad/opt/kokkos-openmp-cuda-9.0-gcc-6.4/include -I/opt/cuda-9.0/include -L/home/brad/opt/kokkos-openmp-cuda-9.0-gcc-6.4/lib -L/opt/cuda-9.0/lib64 -fopenmp  -lkokkos -ldl -lcudart -lcuda --std=c++11 -arch=sm_52 -Xcompiler -fopenmp -O3 team_demo.cc -o team_demo.x
+
 -----------------------------------------------------------------------------------------------------------------------------
 When you build Uintah, make sure you specify sus: "make -j8 sus" and not just "make -j8", the kokkos build fails on all Uintah stuff. 
 
@@ -79,4 +86,7 @@ Unified scheduler: sus -nthreads 1 RMCRT_bm1_DO.ups
 
 For CPU/Xeon Phi tasks, because of how Kokkos+OpenMP runs loops, both schedulers will use all cores on an MPI rank anyway.
 For GPU tasks, you must use the Unified Scheduler and you must use at least 2 threads, and often it's a good idea to use all available threads.
+-------------------------------------------
+
+
 
