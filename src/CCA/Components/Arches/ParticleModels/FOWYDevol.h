@@ -360,7 +360,7 @@ namespace Uintah{
         const double rateMax = std::max( fDrive / dt + clipVal, 0.0);
         const double zFact = std::min( std::max( fDrive/ initRawCoal/_v_hiT, 2.5e-5), 1.0-2.5e-5 );
         double einput = 1.0 - 2.0 * zFact;
-        const double z = std::sqrt(2.0) * erfinv( einput );
+        const double z = std::sqrt(2.0) * Arches::erfinv( einput );
 
         //rate of devolatilization dmVol/dt
         devolRate(i,j,k) = - std::min( _A * fDrive * std::exp(-(_Ta + z * _sigma)/ partTemp(i,j,k) ), rateMax );

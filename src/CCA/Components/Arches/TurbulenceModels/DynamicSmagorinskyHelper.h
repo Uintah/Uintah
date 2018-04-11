@@ -220,7 +220,7 @@ namespace Uintah {
   const int j_n = helper.joff;
   const int k_n = helper.koff;
  
-  Uintah::parallel_for( range, [&](int i, int j, int k){
+  Uintah::parallel_for( range, [&, i_n, j_n, k_n](int i, int j, int k){
     double F_var = 0.0; 
     for ( int m = -1; m <= 1; m++ ){
       for ( int n = -1; n <= 1; n++ ){

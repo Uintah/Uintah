@@ -345,18 +345,18 @@ private:
 #if defined(UINTAH_ENABLE_KOKKOS)
 template <typename ExecutionSpace, typename Functor>
 inline typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::OpenMP>::value, void>::type
-parallel_for( BlockRange const & r, const Functor & f )
+parallel_for( BlockRange const & r, const Functor & functor )
 {
   const int ib = r.begin(0); const int ie = r.end(0);
   const int jb = r.begin(1); const int je = r.end(1);
   const int kb = r.begin(2); const int ke = r.end(2);
 
-  // Note, capturing with [&] generating a compiler bug when also using the nvcc_wrapper.
+  // Note, capturing with [&] generated a compiler bug when also using the nvcc_wrapper.
   // But capturing with [=] worked fine, no compiler bugs.
   Kokkos::parallel_for( Kokkos::RangePolicy<Kokkos::OpenMP, int>(kb, ke).set_chunk_size(2), [=](int k) {
     for (int j=jb; j<je; ++j) {
     for (int i=ib; i<ie; ++i) {
-      f(i,j,k);
+      functor(i,j,k);
     }}
   });
 }
@@ -366,7 +366,7 @@ parallel_for( BlockRange const & r, const Functor & f )
 #if defined(HAVE_CUDA)
 template <typename ExecutionSpace, typename Functor>
 inline typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::Cuda>::value, void>::type
-parallel_for( BlockRange const & r, const Functor & f )
+parallel_for( BlockRange const & r, const Functor & functor )
 {
   const int ib = r.begin(0); const int ie = r.end(0);
   const int jb = r.begin(1); const int je = r.end(1);
@@ -375,7 +375,7 @@ parallel_for( BlockRange const & r, const Functor & f )
   Kokkos::parallel_for( Kokkos::RangePolicy<Kokkos::Cuda, int>(kb, ke), [=] __device__ (int k) {
     for (int j=jb; j<je; ++j) {
     for (int i=ib; i<ie; ++i) {
-      f(i,j,k);
+      functor(i,j,k);
     }}
   });
 }
@@ -384,7 +384,7 @@ parallel_for( BlockRange const & r, const Functor & f )
 
 template <typename ExecutionSpace, typename Functor>
 inline typename std::enable_if<std::is_same<ExecutionSpace, UintahSpaces::CPU>::value, void>::type
-parallel_for( BlockRange const & r, const Functor & f )
+parallel_for( BlockRange const & r, const Functor & functor )
 {
   const int ib = r.begin(0); const int ie = r.end(0);
   const int jb = r.begin(1); const int je = r.end(1);
@@ -393,27 +393,19 @@ parallel_for( BlockRange const & r, const Functor & f )
   for (int k=kb; k<ke; ++k) {
   for (int j=jb; j<je; ++j) {
   for (int i=ib; i<ie; ++i) {
-    f(i,j,k);
+    functor(i,j,k);
   }}}
 }
 
 //For legacy loops where no execution space was specified as a template parameter.
 template < typename Functor>
 void
-parallel_for( BlockRange const & r, const Functor & f )
+parallel_for( BlockRange const & r, const Functor & functor )
 {
 #if defined(UINTAH_ENABLE_KOKKOS)
-  parallel_for<Kokkos::OpenMP>(r, f);
+  parallel_for<Kokkos::OpenMP>( r, functor );
 #else
-  const int ib = r.begin(0); const int ie = r.end(0);
-  const int jb = r.begin(1); const int je = r.end(1);
-  const int kb = r.begin(2); const int ke = r.end(2);
-
-  for (int k=kb; k<ke; ++k) {
-  for (int j=jb; j<je; ++j) {
-  for (int i=ib; i<ie; ++i) {
-    f(i,j,k);
-  }}}
+  parallel_for<UintahSpaces::CPU>( r, functor );
 #endif
 }
 
@@ -474,6 +466,8 @@ parallel_reduce_sum( BlockRange const & r, const Functor & functor, ReductionTyp
     });
   }, tmp);
 
+  red = tmp;
+
 }
 #endif  //#if defined(UINTAH_ENABLE_KOKKOS)
 
@@ -513,6 +507,7 @@ parallel_reduce_sum( BlockRange const & r, const Functor & functor, ReductionTyp
     });
   }, tmp);
 
+  red = tmp;
 }
 #endif  //#if defined(HAVE_CUDA)
 #endif  //#if defined(UINTAH_ENABLE_KOKKOS)
@@ -534,11 +529,94 @@ parallel_reduce_sum( BlockRange const & r, const Functor & functor, ReductionTyp
   red = tmp;
 }
 
+//For legacy loops where no execution space was specified as a template parameter.
+template < typename Functor, typename ReductionType>
+void
+parallel_reduce_sum( BlockRange const & r, const Functor & functor, ReductionType & red )
+{
+#if defined(UINTAH_ENABLE_KOKKOS)
+  parallel_reduce_sum<Kokkos::OpenMP>( r, functor, red );
+#else
+  parallel_reduce_sum<UintahSpaces::CPU>( r, functor, red );
+#endif
+}
+
+// -------------------------------------  parallel_reduce_min loops  ---------------------------------------------
+
+
+#if defined(UINTAH_ENABLE_KOKKOS)
+template <typename ExecutionSpace, typename Functor, typename ReductionType>
+inline typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::OpenMP>::value, void>::type
+parallel_reduce_min( BlockRange const & r, const Functor & functor, ReductionType & red  )
+{
+  ReductionType tmp = red;
+
+  const int ib = r.begin(0); const int ie = r.end(0);
+  const int jb = r.begin(1); const int je = r.end(1);
+  const int kb = r.begin(2); const int ke = r.end(2);
+
+  // Manual approach
+  Kokkos::parallel_reduce( Kokkos::RangePolicy<Kokkos::OpenMP, int>(kb, ke).set_chunk_size(2), [=](int k, ReductionType & tmp) {
+    for (int j=jb; j<je; ++j) {
+    for (int i=ib; i<ie; ++i) {
+      functor(i,j,k,tmp);
+    }}
+  }, Kokkos::Experimental::Min<ReductionType>(tmp));
+
+  red = tmp;
+
+}
+#endif  //#if defined(UINTAH_ENABLE_KOKKOS)
+
+#if defined(UINTAH_ENABLE_KOKKOS)
+#if defined(HAVE_CUDA)
+template <typename ExecutionSpace, typename Functor, typename ReductionType>
+inline typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::Cuda>::value, void>::type
+parallel_reduce_min( BlockRange const & r, const Functor & functor, ReductionType & red  )
+{
+
+  printf("CUDA version of parallel_reduce_min not yet implemented\n");
+  exit(-1);
+
+}
+#endif  //#if defined(HAVE_CUDA)
+#endif  //#if defined(UINTAH_ENABLE_KOKKOS)
+
+//TODO: This appears to not do any "min" on the reduction.
+template <typename ExecutionSpace, typename Functor, typename ReductionType>
+inline typename std::enable_if<std::is_same<ExecutionSpace, UintahSpaces::CPU>::value, void>::type
+parallel_reduce_min( BlockRange const & r, const Functor & functor, ReductionType & red  )
+{
+  const int ib = r.begin(0); const int ie = r.end(0);
+  const int jb = r.begin(1); const int je = r.end(1);
+  const int kb = r.begin(2); const int ke = r.end(2);
+
+  ReductionType tmp = red;
+  for (int k=kb; k<ke; ++k) {
+  for (int j=jb; j<je; ++j) {
+  for (int i=ib; i<ie; ++i) {
+    functor(i,j,k,tmp);
+  }}}
+  red = tmp;
+}
+
+//For legacy loops where no execution space was specified as a template parameter.
+template < typename Functor, typename ReductionType>
+void
+parallel_reduce_min( BlockRange const & r, const Functor & functor, ReductionType & red )
+{
+#if defined(UINTAH_ENABLE_KOKKOS)
+  parallel_reduce_min<Kokkos::OpenMP>( r, functor, red );
+#else
+  parallel_reduce_min<UintahSpaces::CPU>( r, functor, red );
+#endif
+}
+
 
 // --------------------------------------  Other loops that should get cleaned up ------------------------------
 
 template <typename Functor>
-void serial_for( BlockRange const & r, const Functor & f )
+void serial_for( BlockRange const & r, const Functor & functor )
 {
   const int ib = r.begin(0); const int ie = r.end(0);
   const int jb = r.begin(1); const int je = r.end(1);
@@ -547,7 +625,7 @@ void serial_for( BlockRange const & r, const Functor & f )
   for (int k=kb; k<ke; ++k) {
   for (int j=jb; j<je; ++j) {
   for (int i=ib; i<ie; ++i) {
-    f(i,j,k);
+    functor(i,j,k);
   }}}
 }
 
@@ -555,7 +633,7 @@ void serial_for( BlockRange const & r, const Functor & f )
 //a GPU.  This function allows a developer to ensure the task only runs on CPU code.  Further, we
 //will just run this without the use of Kokkos (this is so GPU builds don't require OpenMP as well).
 template <typename Functor>
-void parallel_for_cpu_only( BlockRange const & r, const Functor & f )
+void parallel_for_cpu_only( BlockRange const & r, const Functor & functor )
 {
   const int ib = r.begin(0); const int ie = r.end(0);
   const int jb = r.begin(1); const int je = r.end(1);
@@ -564,10 +642,23 @@ void parallel_for_cpu_only( BlockRange const & r, const Functor & f )
   for (int k=kb; k<ke; ++k) {
   for (int j=jb; j<je; ++j) {
   for (int i=ib; i<ie; ++i) {
-    f(i,j,k);
+    functor(i,j,k);
   }}}
 }
 
+template <typename Functor, typename Option>
+void parallel_for( BlockRange const & r, const Functor & f, const Option& op )
+{
+  const int ib = r.begin(0); const int ie = r.end(0);
+  const int jb = r.begin(1); const int je = r.end(1);
+  const int kb = r.begin(2); const int ke = r.end(2);
+
+  for (int k=kb; k<ke; ++k) {
+  for (int j=jb; j<je; ++j) {
+  for (int i=ib; i<ie; ++i) {
+    f(op,i,j,k);
+  }}}
+};
 
 #if defined( UINTAH_ENABLE_KOKKOS )
 
@@ -639,72 +730,12 @@ void parallel_reduce_1D( BlockRange const & r, const Functor & f, ReductionType 
 }
 
 
-template <typename Functor, typename ReductionType>
-void parallel_reduce_min( BlockRange const & r, const Functor & f, ReductionType & red  )
-{
-  ReductionType tmp = red;
-#if defined( HAVE_CUDA )
-  typedef typename Kokkos::MDRangePolicy<Kokkos::OpenMP, Kokkos::Rank<3,
-                                                       Kokkos::Iterate::Left,
-                                                       Kokkos::Iterate::Left>
-                                                       > MDPolicyType_3D;
-
-  MDPolicyType_3D mdpolicy_3d( {{r.begin(0),r.begin(1),r.begin(2)}}, {{r.end(0),r.end(1),r.end(2)}} );
-
-  Kokkos::parallel_reduce( mdpolicy_3d, f, tmp );
-#else
-  const int ib = r.begin(0); const int ie = r.end(0);
-  const int jb = r.begin(1); const int je = r.end(1);
-  const int kb = r.begin(2); const int ke = r.end(2);
-
-  Kokkos::parallel_reduce( Kokkos::RangePolicy<Kokkos::OpenMP, int>(kb, ke).set_chunk_size(2), KOKKOS_LAMBDA(int k, ReductionType & tmp) {
-    for (int j=jb; j<je; ++j) {
-    for (int i=ib; i<ie; ++i) {
-      f(i,j,k,tmp);
-    }}
-  }, Kokkos::Experimental::Min<ReductionType>(tmp));
-
-#endif
-  red = tmp;
-}
+#endif //if defined( UINTAH_ENABLE_KOKKOS )
 
 
-#else //if !defined( UINTAH_ENABLE_KOKKOS )
-//This section is for running a functor/lambda expression if Kokkos isn't used at all.
-//Instead of Kokkos being responsible for the execution, we execute it.
-
-template <typename Functor, typename Option>
-void parallel_for( BlockRange const & r, const Functor & f, const Option& op )
-{
-  const int ib = r.begin(0); const int ie = r.end(0);
-  const int jb = r.begin(1); const int je = r.end(1);
-  const int kb = r.begin(2); const int ke = r.end(2);
-
-  for (int k=kb; k<ke; ++k) {
-  for (int j=jb; j<je; ++j) {
-  for (int i=ib; i<ie; ++i) {
-    f(op,i,j,k);
-  }}}
-};
 
 
-template <typename Functor, typename ReductionType>
-void parallel_reduce_min( BlockRange const & r, const Functor & f, ReductionType & red  )
-{
-  const int ib = r.begin(0); const int ie = r.end(0);
-  const int jb = r.begin(1); const int je = r.end(1);
-  const int kb = r.begin(2); const int ke = r.end(2);
 
-  ReductionType tmp = red;
-  for (int k=kb; k<ke; ++k) {
-  for (int j=jb; j<je; ++j) {
-  for (int i=ib; i<ie; ++i) {
-    f(i,j,k,tmp);
-  }}}
-  red = tmp;
-};
-
-#endif
 
 
 } // namespace Uintah

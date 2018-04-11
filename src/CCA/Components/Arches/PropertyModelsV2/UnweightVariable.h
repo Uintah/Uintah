@@ -260,9 +260,8 @@ void UnweightVariable<T>::initialize( const Patch* patch, ArchesTaskInfoManager*
   for (int ieqn = istart; ieqn < iend; ieqn++ ){
     T&  var = tsk_info->get_uintah_field_add<T>(m_eqn_names[ieqn]);
     CT& un_var = tsk_info->get_const_uintah_field_add<CT>(m_un_eqn_names[ieqn]);
-    Uintah::parallel_for( range, [&](int i, int j, int k){
-      const double rho_inter = 0.5 * (rho(i,j,k)+rho(i-ioff,j-joff,k-koff));
-      var(i,j,k) = un_var(i,j,k)*rho_inter;
+    Uintah::parallel_for( range, [&, ioff, joff, koff](const int i, const int j, const int k){
+      var(i,j,k) = un_var(i,j,k)* (0.5 * (rho(i,j,k)+rho(i-ioff,j-joff,k-koff)));
     });
   }
 
@@ -487,7 +486,7 @@ void UnweightVariable<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_i
   for (int ieqn = istart; ieqn < iend; ieqn++ ){
     T& un_var = tsk_info->get_uintah_field_add<T>(m_un_eqn_names[ieqn]);
     CT& var = tsk_info->get_const_uintah_field_add<CT>(m_eqn_names[ieqn]);
-    Uintah::parallel_for( range, [&](int i, int j, int k){
+    Uintah::parallel_for( range, [&, ioff, joff, koff](int i, int j, int k){
       const double rho_inter = 0.5 * (rho(i,j,k)+rho(i-ioff,j-joff,k-koff));
       un_var(i,j,k) = var(i,j,k)/rho_inter;
     });
