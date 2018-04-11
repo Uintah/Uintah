@@ -11,6 +11,7 @@ cd ~/opt/kokkos-openmp/build
 
 -----------------------------------------------------------------------------------------------------------------------------
 Here is how I configure Kokkos for OpenMP
+
 ~/src/kokkos/generate_makefile.bash --kokkos-path=/home/brad/src/kokkos --prefix=/home/brad/opt/kokkos-openmp --with-openmp
 
 Here is how I configure Kokkos for CUDA
@@ -26,7 +27,8 @@ else
   CXX ?= g++
 endif
 
-~/src/kokkos/generate_makefile.bash --kokkos-path=/home/brad/src/kokkos --prefix=/home/brad/opt/kokkos-cuda-9.0-gcc-6.4 --with-cuda=/home/brad/opt/cuda-9.0 --arch=Maxwell50
+Here is how I configure Kokkos for OpenMP and 
+~/src/kokkos/generate_makefile.bash --kokkos-path=/home/brad/src/kokkos --prefix=/home/brad/opt/kokkos-openmp-cuda-9.0-gcc-6.4 --with-openmp --with-cuda=/home/brad/opt/cuda-9.0 --arch=Maxwell52
 -----------------------------------------------------------------------------------------------------------------------------
 
 make
@@ -37,7 +39,7 @@ Your Kokkos should now be built and ready to go.
 
 For a CUDA build, you must edit nvcc_wrapper whereever Kokkos was installed and edit a couple things:
 
-vim ~/opt/kokkos-cuda-9.0-gcc-6.4/bin/nvcc_wrapper
+vim ~/opt/kokkos-openmp-cuda-9.0-gcc-6.4/bin/nvcc_wrapper
 
 1) Put in the correct default_arch (e.g. default_arch="sm_50")
 2) Comment out depfile arguments, they're broken right now:
