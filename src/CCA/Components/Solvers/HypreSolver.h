@@ -54,7 +54,7 @@
 
 namespace Uintah {
 
-  //__________________________________
+  //______________________________________________________________________
   //
   class HypreSolver2Params : public SolverParameters {
   public:
@@ -93,7 +93,8 @@ namespace Uintah {
     SimulationStateP m_sharedState;
   };
 
-
+  //______________________________________________________________________
+  //
   enum SolverType {
     smg,
     pfmg,
@@ -105,7 +106,8 @@ namespace Uintah {
     diagonal
   };
 
-
+  //______________________________________________________________________
+  //
   struct hypre_solver_struct : public RefCounted {
     bool                 created_solver;
     bool                 created_precond_solver;
@@ -117,6 +119,8 @@ namespace Uintah {
     HYPRE_StructVector * HB;
     HYPRE_StructVector * HX;
     
+    //__________________________________
+    //
     hypre_solver_struct() {
       created_solver         = false;
       created_precond_solver = false;
@@ -128,7 +132,9 @@ namespace Uintah {
       HB = 0;
       HX = 0;
     };
-
+    
+    //__________________________________
+    //
     virtual ~hypre_solver_struct() {
       if (created_solver) {
         HYPRE_StructMatrixDestroy( *HA );
@@ -209,7 +215,9 @@ namespace Uintah {
   };
 
   typedef Handle<hypre_solver_struct> hypre_solver_structP;
-
+  
+  //______________________________________________________________________
+  //
   class HypreSolver2 : public SolverCommon {
   public:
     HypreSolver2(const ProcessorGroup* myworld);
