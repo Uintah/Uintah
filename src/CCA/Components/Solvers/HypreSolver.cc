@@ -46,6 +46,7 @@
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Util/StringUtil.h>
 #include <Core/Util/Timers/Timers.hpp>
 #include <iomanip>
 
@@ -563,7 +564,7 @@ namespace Uintah {
         
         //______________________________________________________________________
         // Solve the system
-        if (params->solvertype == "SMG" || params->solvertype == "smg"){
+        if (  params->solvertype == "smg" ){
           
           HYPRE_StructSolver* solver =  hypre_solver_s->solver;
           if (timeStep == 1 || restart) {
@@ -593,7 +594,7 @@ namespace Uintah {
           HYPRE_StructSMGGetNumIterations(*solver, &num_iterations);
           HYPRE_StructSMGGetFinalRelativeResidualNorm(*solver, &final_res_norm);
 
-        } else if(params->solvertype == "PFMG" || params->solvertype == "pfmg"){
+        } else if( params->solvertype == "pfmg" ){
 
           HYPRE_StructSolver* solver =  hypre_solver_s->solver;
 
@@ -629,7 +630,7 @@ namespace Uintah {
           HYPRE_StructPFMGGetFinalRelativeResidualNorm(*solver, 
                                                        &final_res_norm);
 
-        } else if(params->solvertype == "SparseMSG" || params->solvertype == "sparsemsg"){
+        } else if( params->solvertype == "sparsemsg" ){
 
           HYPRE_StructSolver* solver = hypre_solver_s->solver;
           if (timeStep == 1 || restart) {
@@ -664,10 +665,7 @@ namespace Uintah {
 
           //__________________________________
           //
-        } else if(params->solvertype == "CG" || params->solvertype == "cg" 
-                  || params->solvertype == "conjugategradient" 
-                  || params->solvertype == "PCG" 
-                  || params->solvertype == "cg"){
+        } else if( params->solvertype == "cg" || params->solvertype == "pcg" ){
 
           HYPRE_StructSolver* solver =  hypre_solver_s->solver;
 
@@ -722,8 +720,7 @@ namespace Uintah {
           HYPRE_StructPCGGetNumIterations(*solver, &num_iterations);
           HYPRE_StructPCGGetFinalRelativeResidualNorm(*solver,&final_res_norm);
 
-        } else if(params->solvertype == "Hybrid" 
-                  || params->solvertype == "hybrid"){
+        } else if( params->solvertype == "hybrid" ){
           /*-----------------------------------------------------------
            * Solve the system using Hybrid
            *-----------------------------------------------------------*/
@@ -788,8 +785,7 @@ namespace Uintah {
                                                          &final_res_norm);
           //__________________________________
           //
-        } else if(params->solvertype == "GMRES" 
-                  || params->solvertype == "gmres"){
+        } else if( params->solvertype == "gmres" ){
           
           HYPRE_StructSolver* solver =  hypre_solver_s->solver;
 
@@ -968,7 +964,7 @@ namespace Uintah {
                      )
     {
 
-      if(params->precondtype == "SMG" || params->precondtype == "smg"){
+      if( params->precondtype == "smg" ){
         /* use symmetric SMG as preconditioner */
         
         precond_solver_type = smg;
@@ -985,7 +981,7 @@ namespace Uintah {
         pcsetup = HYPRE_StructSMGSetup;
       //__________________________________
       //
-      } else if(params->precondtype == "PFMG" || params->precondtype == "pfmg"){
+      } else if( params->precondtype == "pfmg" ){
         /* use symmetric PFMG as preconditioner */
         precond_solver_type = pfmg;
         HYPRE_StructPFMGCreate        (pg->getComm(),    &precond_solver);
@@ -1004,7 +1000,7 @@ namespace Uintah {
         pcsetup = HYPRE_StructPFMGSetup;
       //__________________________________
       //
-      } else if(params->precondtype == "SparseMSG" || params->precondtype == "sparsemsg"){
+      } else if( params->precondtype == "sparsemsg" ){
         precond_solver_type = sparsemsg;
         /* use symmetric SparseMSG as preconditioner */
         HYPRE_StructSparseMSGCreate       (pg->getComm(),   &precond_solver);
@@ -1023,7 +1019,7 @@ namespace Uintah {
         pcsetup = HYPRE_StructSparseMSGSetup;
       //__________________________________
       //
-      } else if(params->precondtype == "Jacobi" || params->precondtype == "jacobi"){
+      } else if( params->precondtype == "jacobi" ){
         /* use two-step Jacobi as preconditioner */
         precond_solver_type = jacobi;
         HYPRE_StructJacobiCreate      (pg->getComm(),    &precond_solver);  
@@ -1035,7 +1031,7 @@ namespace Uintah {
         pcsetup = HYPRE_StructJacobiSetup;
       //__________________________________
       //
-      } else if(params->precondtype == "Diagonal" || params->precondtype == "diagonal"){
+      } else if( params->precondtype == "diagonal" ){
         /* use diagonal scaling as preconditioner */
         precond_solver_type = diagonal;
         precond = HYPRE_StructDiagScale;
@@ -1050,15 +1046,19 @@ namespace Uintah {
     
     void destroyPrecond( HYPRE_StructSolver precond_solver )
     {
-      if(params->precondtype        == "SMG"       || params->precondtype == "smg"){
+      if( params->precondtype == "smg"){
         HYPRE_StructSMGDestroy(precond_solver);
-      } else if(params->precondtype == "PFMG"      || params->precondtype == "pfmg"){
+      } 
+      else if( params->precondtype == "pfmg" ){
         HYPRE_StructPFMGDestroy(precond_solver);
-      } else if(params->precondtype == "SparseMSG" || params->precondtype == "sparsemsg"){
+      } 
+      else if( params->precondtype == "sparsemsg" ){
         HYPRE_StructSparseMSGDestroy(precond_solver);
-      } else if(params->precondtype == "Jacobi"    || params->precondtype == "jacobi"){
+      } 
+      else if( params->precondtype == "jacobi" ){
         HYPRE_StructJacobiDestroy(precond_solver);
-      } else if(params->precondtype == "Diagonal"  || params->precondtype == "diagonal"){
+      } 
+      else if( params->precondtype == "diagonal" ){
       } else {
         // This should have been caught in readParameters...
         throw InternalError("Unknown preconditionertype in destroyPrecond: "+params->precondtype, __FILE__, __LINE__);
@@ -1142,8 +1142,10 @@ namespace Uintah {
         }
         int sFreq;
         int coefFreq;
-        param->getWithDefault ("solver",          hypreSolveParams->solvertype,     "smg");      
-        param->getWithDefault ("preconditioner",  hypreSolveParams->precondtype,    "diagonal"); 
+        string str_solver;
+        string str_precond;
+        param->getWithDefault ("solver",          str_solver,     "smg");      
+        param->getWithDefault ("preconditioner",  str_precond,    "diagonal"); 
         param->getWithDefault ("tolerance",       hypreSolveParams->tolerance,      1.e-10);     
         param->getWithDefault ("maxiterations",   hypreSolveParams->maxiterations,  75);         
         param->getWithDefault ("npre",            hypreSolveParams->npre,           1);          
@@ -1155,6 +1157,11 @@ namespace Uintah {
         param->getWithDefault ("updateCoefFrequency",  coefFreq,             1);
         param->getWithDefault ("solveFrequency",  hypreSolveParams->solveFrequency, 1);
         param->getWithDefault ("relax_type",      hypreSolveParams->relax_type,     1); 
+        
+        // change to lowercase
+        hypreSolveParams->solvertype  = string_tolower( str_solver );
+        hypreSolveParams->precondtype = string_tolower( str_precond );
+        
         hypreSolveParams->setSetupFrequency(sFreq);
         hypreSolveParams->setUpdateCoefFrequency(coefFreq);
         // Options from the HYPRE_ref_manual 2.8
@@ -1288,7 +1295,7 @@ namespace Uintah {
         ostringstream warn;
         warn << "\nINPUT FILE WARNING: hypre solver: \n"
              << "With periodic boundary conditions the resolution of your grid "<<range<<", in each periodic direction, must be as close to a power of 2 as possible (i.e. M x 2^n).\n";
-        if (dparams->solvertype == "SMG") {
+        if (dparams->solvertype == "smg") {
           throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
         }
         else {

@@ -1011,7 +1011,7 @@
                               attribute1="type REQUIRED STRING 'CGSolver, direct, hypre, hypreamr'" >
     <Parameters               spec="OPTIONAL NO_DATA" 
                               attribute1="variable OPTIONAL STRING" >      
-      <solver                 spec="REQUIRED STRING 'SMG, smg, PFMG, pfmg, SparseMSG, sparsemsg, CG, cg, conjugategradient, PCG, Hybrid, hybrid, GMRES, gmres, AMG, amg, BoomerAMG, boomeramg, FAC, fac'" />                               
+      <solver                 spec="REQUIRED STRING 'SMG, smg, PFMG, pfmg, SparseMSG, sparsemsg, CG, cg, PCG, Hybrid, hybrid, GMRES, gmres, AMG, amg, BoomerAMG, boomeramg, FAC, fac'" />                               
       <preconditioner         spec="REQUIRED STRING 'None, none, SMG, smg, PFMG, pfmg, SparseMSG, sparsemsg, Jacobi, jacobi, Diagonal, diagonal, AMG, amg, BoomerAMG, boomeramg, FAC, fac'" />                            
       <tolerance              spec="REQUIRED DOUBLE" />                                         
       <maxiterations          spec="OPTIONAL INTEGER 'positive'" />                             
