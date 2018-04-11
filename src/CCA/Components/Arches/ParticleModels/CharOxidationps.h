@@ -537,11 +537,9 @@ CharOxidationps<T>::problemSetup( ProblemSpecP & db
       }
     }
 
-    for ( int l = 0; l < m_nQn_part; l++ ) {
-      for ( int r = 0; r < _NUM_reactions; r++ ) {
-        std::string rate_name = "char_gas_reaction" + std::to_string(r) + "_qn" + std::to_string(l);
-        m_reaction_rate_names.push_back( rate_name );
-      }
+    for ( int r = 0; r < _NUM_reactions; r++ ) {
+      std::string rate_name = "char_gas_reaction" + std::to_string(r) + "_qn" + std::to_string(_Nenv);
+      m_reaction_rate_names.push_back( rate_name );
     }
   } // end if ( db_coal_props->findBlock( "SmithChar2016" ) )
 }
@@ -1373,6 +1371,17 @@ CharOxidationps<T>::eval( const Patch                 * patch
                         ,       ArchesTaskInfoManager * tsk_info
                         )
 {
+
+  if ( std::is_same< Kokkos::OpenMP , ExecutionSpace >::value ) {
+    printf("In CharOxidation for Kokkos::OpenMP!\n");
+  } else if ( std::is_same< Kokkos::Cuda , ExecutionSpace >::value ) {
+    printf("In CharOxidation for Kokkos::Cuda!\n");
+  } else if ( std::is_same< UintahSpaces::CPU , ExecutionSpace >::value ) {
+    printf("In CharOxidation for UintahSpaces::CPU!\n");
+  } else {
+    printf("No execution space found!!!\n");
+  }
+  exit(1);
 //  typedef typename ArchesCore::VariableHelper<T>::ConstType CT; // check comment from other char model
 //
 //  const double dt = tsk_info->get_dt();

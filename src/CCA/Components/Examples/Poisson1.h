@@ -86,6 +86,19 @@ WARNING
     virtual void scheduleTimeAdvance( const LevelP& level, 
                                           SchedulerP&);
 
+    template <typename EXECUTION_SPACE, typename MEMORY_SPACE>
+    void timeAdvance( DetailedTask* task,
+                      Task::CallBackEvent event,
+                      const ProcessorGroup* pg,
+                      const PatchSubset* patches,
+                      const MaterialSubset* matls,
+                      DataWarehouse* old_dw,
+                      DataWarehouse* new_dw,
+                      void* old_TaskGpuDW,
+                      void* new_TaskGpuDW,
+                      void* stream,
+                      int deviceID );
+
   private:
     void initialize(const ProcessorGroup*,
                     const PatchSubset* patches, 
@@ -99,19 +112,6 @@ WARNING
                                const MaterialSubset* matls,
                                DataWarehouse* old_dw,
                                DataWarehouse* new_dw);
-
-    template <typename EXECUTION_SPACE, typename MEMORY_SPACE>
-    void timeAdvance( DetailedTask* task,
-                      Task::CallBackEvent event,
-                      const ProcessorGroup* pg,
-                      const PatchSubset* patches,
-                      const MaterialSubset* matls,
-                      DataWarehouse* old_dw,
-                      DataWarehouse* new_dw,
-                      void* old_TaskGpuDW,
-                      void* new_TaskGpuDW,
-                      void* stream,
-                      int deviceID );
                      
     double delt_;
     SimpleMaterial* mymat_;

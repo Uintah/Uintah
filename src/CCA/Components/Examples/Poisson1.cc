@@ -312,7 +312,24 @@ void Poisson1::timeAdvance(DetailedTask* task,
       KokkosView3<const double, Kokkos::CudaSpace> phi = old_dw->getGPUDW()->getKokkosView<const double>(phi_label->getName().c_str(), patch->getID(),  matl, 0);
       KokkosView3<double, Kokkos::CudaSpace> newphi    = new_dw->getGPUDW()->getKokkosView<double>(phi_label->getName().c_str(), patch->getID(),  matl, 0);
       TimeAdvanceFunctor<Kokkos::CudaSpace> func(phi, newphi);
-      Uintah::parallel_reduce_sum<Kokkos::Cuda>(range, func, residual);
+      //Uintah::parallel_reduce_sum<Kokkos::Cuda>(range, func, residual);
+      //Uintah::parallel_for<Kokkos::Cuda>(range, func);
+      Uintah::parallel_reduce_sum<Kokkos::Cuda>( range, [=] __host__ __device__ (int i, int j, int k, double& residual){
+        newphi(i, j, k) = (1. / 6)
+            * (phi(i + 1, j, k) + phi(i - 1, j, k) + phi(i, j + 1, k) +
+                phi(i, j - 1, k) + phi(i, j, k + 1) + phi(i, j, k - 1));
+        printf("In lambda CUDA at (%d,%d,%d), m_phi is %g from %g, %g, %g, %g, %g, %g and m_newphi is %g\n", i, j, k,
+            phi(i,j,k),
+            phi(i + 1, j, k), phi(i - 1, j, k), phi(i, j + 1, k),
+            phi(i, j - 1, k), phi(i, j, k + 1), phi(i, j, k - 1),
+            newphi(i,j,k));
+        double diff = newphi(i, j, k) - phi(i, j, k);
+        residual += diff * diff;
+      }, residual);
+      //parallel_for<Kokkos::Cuda>(range, KOKKOS_LAMBDA (const int i, const int j, const int k) {
+      //  printf("i is %d\n", i);
+      //});
+
     } else
 #endif
     if ( std::is_same< Kokkos::OpenMP , ExecutionSpace >::value ) {
@@ -328,7 +345,19 @@ void Poisson1::timeAdvance(DetailedTask* task,
 
       //Uintah::parallel_boundary_condition(boundaryConditionRange, range, boundaryFunc);
       TimeAdvanceFunctor<Kokkos::HostSpace> func(phi, newphi);
-      Uintah::parallel_reduce_sum<Kokkos::OpenMP>(range, func, residual);
+      //Uintah::parallel_reduce_sum<Kokkos::OpenMP>(range, func, residual);
+      Uintah::parallel_reduce_sum<Kokkos::OpenMP>( range, [&](int i, int j, int k, double& residual){
+        newphi(i, j, k) = (1. / 6)
+            * (phi(i + 1, j, k) + phi(i - 1, j, k) + phi(i, j + 1, k) +
+                phi(i, j - 1, k) + phi(i, j, k + 1) + phi(i, j, k - 1));
+        printf("In lambda OpenMP at (%d,%d,%d), m_phi is %g from %g, %g, %g, %g, %g, %g and m_newphi is %g\n", i, j, k,
+            phi(i,j,k),
+            phi(i + 1, j, k), phi(i - 1, j, k), phi(i, j + 1, k),
+            phi(i, j - 1, k), phi(i, j, k + 1), phi(i, j, k - 1),
+            newphi(i,j,k));
+        double diff = newphi(i, j, k) - phi(i, j, k);
+        residual += diff * diff;
+      }, residual);
 
     }
 #endif //#if !defined(UINTAH_ENABLE_KOKKOS)

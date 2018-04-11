@@ -285,7 +285,7 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
 
     TaskAssignedExecutionSpace temp = (*i_task)->loadTaskFunctionPointers();
 
-    if (assignedExecutionSpace != TaskAssignedExecutionSpace::NONE && assignedExecutionSpace != temp) {
+    if (assignedExecutionSpace != TaskAssignedExecutionSpace::NONE_SPACE && assignedExecutionSpace != temp) {
       throw InvalidValue("Error: Different execution spaces specified.  All Arches tasks within a single Uintah task must share the same execution space.",__FILE__,__LINE__);
       break;
     } else {

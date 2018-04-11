@@ -64,7 +64,7 @@ namespace Uintah{
     }                                                                                               \
   }                                                                                                 \
                                                                                                     \
-  if (ASSIGNED_TAG == TaskAssignedExecutionSpace::NONE) {                                           \
+  if (ASSIGNED_TAG == TaskAssignedExecutionSpace::NONE_SPACE) {                                     \
     if               (std::is_same< Kokkos::OpenMP,    TAG1 >::value) {                             \
         this->addEvalFunctionPtr(std::type_index(typeid(TAG1)),                                     \
               static_cast<evalFunctionPtr>(&FUNCTION_CODE_NAME<TAG1, Kokkos::HostSpace>));          \
@@ -273,6 +273,10 @@ protected:
 
       void create_variable( const std::string name, std::vector<const VarLabel*>& local_labels ){
         const VarLabel* test = nullptr;
+
+        if ( name == "char_gas_reaction0_qn0" ) {
+          printf(" Registering variable char_gas_reaction0_qn0 for task \n");
+        }
         test = VarLabel::find( name );
 
         if ( test == nullptr ){
