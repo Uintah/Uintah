@@ -96,10 +96,10 @@ SRCS += $(SRCDIR)/Arches.cc                    \
         $(SRCDIR)/HandoffHelper.cc             \
         $(SRCDIR)/TurbulenceModelPlaceholder.cc
 
-ifeq ($(HAVE_CUDA),yes)
-  SRCS += $(SRCDIR)/constructLinearSystemKernel.cu
-  DLINK_FILES := $(DLINK_FILES) $(SRCDIR)/constructLinearSystemKernel.o
-endif
+#ifeq ($(HAVE_CUDA),yes)
+#  SRCS += $(SRCDIR)/constructLinearSystemKernel.cu
+#  DLINK_FILES := $(DLINK_FILES) $(SRCDIR)/constructLinearSystemKernel.o
+#endif
 
 PSELIBS := \
 	CCA/Components/Application      \

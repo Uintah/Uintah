@@ -491,21 +491,34 @@ parallel_reduce_sum( BlockRange const & r, const Functor & functor, ReductionTyp
   //Later the TeamThreadRange will reuse those 256 threads.  For example, if teamThreadRangeSize is 800, then
   //Cuda thread 0 will be assigned to n = 0, n = 256, n = 512, and n = 768,
   //Cuda thread 1 will be assigned to n = 1, n = 257, n = 513, and n = 769...
+  
   const unsigned int teamThreadRangeSize = (i_size > 0 ? i_size : 1) * (j_size > 0 ? j_size : 1) * (k_size > 0 ? k_size : 1);
   const unsigned int actualThreads = teamThreadRangeSize > 256 ? 256 : teamThreadRangeSize;
 
   typedef Kokkos::TeamPolicy< ExecutionSpace > policy_type;
-
+  
   Kokkos::parallel_reduce (Kokkos::TeamPolicy< ExecutionSpace >( 1, actualThreads ),
-                           [=] __device__ ( typename policy_type::member_type thread, ReductionType& inner_sum ) {
+                           KOKKOS_LAMBDA ( typename policy_type::member_type thread, ReductionType& inner_sum ) {
     Kokkos::parallel_for (Kokkos::TeamThreadRange(thread, teamThreadRangeSize), [&] (const int& n) {
-
+  
       const int i = n / (j_size * k_size) + rbegin0;
       const int j = (n / k_size) % j_size + rbegin1;
       const int k = n % k_size + rbegin2;
       functor( i, j, k, inner_sum );
     });
   }, tmp);
+
+  // Manual approach
+  //    const int ib = r.begin(0); const int ie = r.end(0);
+  //    const int jb = r.begin(1); const int je = r.end(1);
+  //    const int kb = r.begin(2); const int ke = r.end(2);
+  //
+  //    Kokkos::parallel_reduce( Kokkos::RangePolicy<ExecutionSpace, int>(kb, ke), KOKKOS_LAMBDA(int k, ReductionType & tmp) {
+  //      for (int j=jb; j<je; ++j) {
+  //      for (int i=ib; i<ie; ++i) {
+  //        functor(i,j,k,tmp);
+  //      }}
+  //    });
 
   red = tmp;
 }

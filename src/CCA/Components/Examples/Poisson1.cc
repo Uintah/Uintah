@@ -312,7 +312,7 @@ void Poisson1::timeAdvance(DetailedTask* task,
       TimeAdvanceFunctor<Kokkos::CudaSpace> func(phi, newphi);
       //Uintah::parallel_reduce_sum<Kokkos::Cuda>(range, func, residual);
       //Uintah::parallel_for<Kokkos::Cuda>(range, func);
-      Uintah::parallel_reduce_sum<Kokkos::Cuda>( range, [=] __host__ __device__ (int i, int j, int k, double& residual){
+      Uintah::parallel_reduce_sum<Kokkos::Cuda>( range, KOKKOS_LAMBDA (int i, int j, int k, double& residual){
         newphi(i, j, k) = (1. / 6)
             * (phi(i + 1, j, k) + phi(i - 1, j, k) + phi(i, j + 1, k) +
                 phi(i, j - 1, k) + phi(i, j, k + 1) + phi(i, j, k - 1));
