@@ -44,8 +44,8 @@
 #if defined(UINTAH_ENABLE_KOKKOS)
 #include <Kokkos_Core.hpp>
   const bool HAVE_KOKKOS = true;
-#if !defined(HAVE_CUDA)
-  //Kokkos GPU included in this build.  Create some stub types so these types at least exist.
+#if !defined( KOKKOS_ENABLE_CUDA )
+  //Kokkos GPU is not included in this build.  Create some stub types so these types at least exist.
   namespace Kokkos {
     class Cuda {};
     class CudaSpace {};
