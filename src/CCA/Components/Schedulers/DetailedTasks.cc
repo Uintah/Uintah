@@ -67,9 +67,9 @@ namespace {
 
   Uintah::MasterLock g_internal_ready_mutex{}; // synchronizes access to the internal-ready task queue
   
-  Dout g_detailed_dw_dbg(    "DetailedDWDBG", "Schedulers", "", false);
-  Dout g_detailed_tasks_dbg( "DetailedTasks", "Schedulers", "", false);
-  Dout g_message_tags_dbg(   "MessageTags",   "Schedulers", "", false);
+  Dout g_detailed_dw_dbg(    "DetailedDWDBG", "DetailedTasks", "report when var is saved in varDB", false);
+  Dout g_detailed_tasks_dbg( "DetailedTasks", "DetailedTasks", "general bdg info for DetailedTasks", false);
+  Dout g_message_tags_dbg(   "MessageTags",   "DetailedTasks", "info on MPI message tag assignment", false);
 
 
 #ifdef HAVE_CUDA
