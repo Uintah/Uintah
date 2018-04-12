@@ -126,6 +126,10 @@ ParticleCreator::ParticleCreator(MPMMaterial* matl,
   registerPermanentParticleState(matl);
 }
 
+ParticleCreator::ParticleCreator()
+{
+}
+
 ParticleCreator::~ParticleCreator()
 {
   delete d_lb;
@@ -409,7 +413,7 @@ ParticleCreator::createParticles(MPMMaterial* matl,
       // a physical BC attached to it then mark with the 
       // physical BC pointer
       if (d_useLoadCurves) {
-        if (checkForSurface(piece,*itr,dxpp)) {
+        if (checkForSurface(piece,*itr,dxpp,d_flags->d_ndim)) {
           Vector areacomps;
           pvars.pLoadCurveID[pidx] = getLoadCurveID(*itr, dxpp,areacomps);
 #if 0
@@ -1137,7 +1141,7 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
 
 int
 ParticleCreator::checkForSurface( const GeometryPieceP piece, const Point p,
-                                  const Vector dxpp )
+                                  const Vector dxpp, int ndim)
 {
 
   //  Check the candidate points which surround the point just passed
@@ -1157,7 +1161,7 @@ ParticleCreator::checkForSurface( const GeometryPieceP piece, const Point p,
   // Check in front (+y)
   if(!piece->inside(p+Vector(0.,dxpp.y(),0.)))
     ss++;
-  if (d_flags->d_ndim>2){
+  if (ndim>2){
     // Check below (-z)
     if(!piece->inside(p-Vector(0.,0.,dxpp.z())))
       ss++;

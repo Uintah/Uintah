@@ -51,6 +51,7 @@ namespace Uintah {
   public:
     
     ParticleCreator(MPMMaterial* matl, MPMFlags* flags);
+    ParticleCreator();
 
 
     virtual ~ParticleCreator();
@@ -64,6 +65,12 @@ namespace Uintah {
 
 
     virtual void registerPermanentParticleState(MPMMaterial* matl);
+
+    int checkForSurface(const GeometryPieceP piece, const Point p,
+                        const Vector dxpp, int ndim);
+
+    double checkForSurface2(const GeometryPieceP piece, const Point p,
+                            const Vector dxpp);
 
     std::vector<const VarLabel* > returnParticleState();
     std::vector<const VarLabel* > returnParticleStatePreReloc();
@@ -163,12 +170,6 @@ namespace Uintah {
     virtual void applyForceBC(const Vector& dxpp,  const Point& pp,
                               const double& pMass,  Vector& pExtForce);
     
-    int checkForSurface(const GeometryPieceP piece, const Point p,
-                        const Vector dxpp);
-
-    double checkForSurface2(const GeometryPieceP piece, const Point p,
-                            const Vector dxpp);
-
     MPMLabel* d_lb;
     MPMFlags* d_flags;
 
