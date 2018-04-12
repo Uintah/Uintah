@@ -79,7 +79,7 @@ Uintah::Dout g_sim_stats(         "SimulationStats",            "SimulationContr
 Uintah::Dout g_sim_mem_stats(     "SimulationMemStats",         "SimulationController", "memory stats debug stream", true  );
 Uintah::Dout g_sim_time_stats(    "SimulationTimeStats",        "SimulationController", "stats time debug stream", false );
 Uintah::Dout g_sim_ctrl_dbg(      "SimulationController",       "SimulationController", "general debug stream", false );
-Uintah::Dout g_comp_timings(      "ComponentTimings",           "SimulationController", "aggregated component timings", false );
+Uintah::Dout g_comp_timings(      "ComponentTimings",           "SimulationController", "aggregated component timing stats per timestep", false );
 Uintah::Dout g_indv_comp_timings( "IndividualComponentTimings", "SimulationController", "individual component timings", false );
 
 }

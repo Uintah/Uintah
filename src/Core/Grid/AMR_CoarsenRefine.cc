@@ -31,7 +31,7 @@
 #include <Core/Util/DebugStream.h>
 
 namespace {
-  Uintah::DebugStream cout_dbg("AMR_CoarsenRefine", "AMR_CoarsenRefine", "AMR coarsen refine debug stream", false);
+  Uintah::DebugStream cout_dbg("AMR_CoarsenRefine", "AMR_CoarsenRefine", "AMR - coarsening and refining operations", false);
 }
 
 namespace Uintah {

@@ -101,17 +101,17 @@ namespace {
   struct data_location_tag{};
   struct task_access_tag{};
   
-  using  varDB_monitor = Uintah::CrowdMonitor<varDB_tag>;
-  using  levelDB_monitor = Uintah::CrowdMonitor<levelDB_tag>;
-  using  psetDB_monitor = Uintah::CrowdMonitor<psetDB_tag>;
-  using  addsetDB_monitor = Uintah::CrowdMonitor<addsetDB_tag>;
-  using  delsetDB_monitor = Uintah::CrowdMonitor<delsetDB_tag>;
+  using  varDB_monitor         = Uintah::CrowdMonitor<varDB_tag>;
+  using  levelDB_monitor       = Uintah::CrowdMonitor<levelDB_tag>;
+  using  psetDB_monitor        = Uintah::CrowdMonitor<psetDB_tag>;
+  using  addsetDB_monitor      = Uintah::CrowdMonitor<addsetDB_tag>;
+  using  delsetDB_monitor      = Uintah::CrowdMonitor<delsetDB_tag>;
   using  data_location_monitor = Uintah::CrowdMonitor<data_location_tag>;
-  using  task_access_monitor = Uintah::CrowdMonitor<task_access_tag>;
+  using  task_access_monitor   = Uintah::CrowdMonitor<task_access_tag>;
 
-  Dout        g_foreign_dbg( "ForeignVariables", "OnDemandDataWarehouse", "foreign variables debug stream", false);
+  Dout        g_foreign_dbg( "ForeignVariables", "OnDemandDataWarehouse", "report when foreign variable is added to DW", false);
 
-  DebugStream dbg(        "OnDemandDataWarehouse",      "OnDemandDataWarehouse", "", false );
+  DebugStream dbg(        "OnDemandDataWarehouse",      "OnDemandDataWarehouse", "report each get/put for DW", false );
   DebugStream warn(       "OnDemandDataWarehouse_warn", "OnDemandDataWarehouse", "", true  );
   DebugStream particles(  "DWParticles",                "OnDemandDataWarehouse", "", false );
   DebugStream particles2( "DWParticles2",               "OnDemandDataWarehouse", "", false );

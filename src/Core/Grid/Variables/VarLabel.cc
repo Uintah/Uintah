@@ -39,7 +39,7 @@ using namespace Uintah;
 namespace {
   MasterLock g_label_mutex{};
 
-  Dout g_varlabel_dbg( "VarLabel", "Grid_Variables", "VarLabel debug stream", false );  
+  Dout g_varlabel_dbg( "VarLabel", "VarLabel", "report when a VarLabel is created and deleted", false );
 }
 
 //______________________________________________________________________

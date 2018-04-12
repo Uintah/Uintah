@@ -55,7 +55,7 @@ namespace Uintah {
   Uintah::MasterLock g_external_ready_mutex{}; // synchronizes access to the external-ready task queue
 
   // used externally in DetailedTask.cc
-  Dout g_scrubbing_dbg(      "Scrubbing", "Schedulers", "", false);
+  Dout g_scrubbing_dbg(      "Scrubbing", "DetailedTasks", "report var scrubbing: see DetailedTasks.cc for usage", false);
   
   // used externally in DetailedTask.cc
   // for debugging - set the variable name (inside the quotes) and patchID to watch one in the scrubout
