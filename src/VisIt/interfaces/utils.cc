@@ -34,10 +34,6 @@
 
 #include <VisIt/interfaces/utils.h>
 
-#include <Core/Grid/Variables/Stencil4.h>
-#include <Core/Grid/Variables/Stencil7.h>
-#include <Core/Math/Matrix3.h>
-
 using namespace Uintah;
 
 namespace Uintah {

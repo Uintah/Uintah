@@ -37,6 +37,10 @@
 
 #include <Core/Grid/Variables/Variable.h>
 
+#include <Core/Grid/Variables/Stencil4.h>
+#include <Core/Grid/Variables/Stencil7.h>
+#include <Core/Math/Matrix3.h>
+
 using namespace Uintah;
 
 namespace Uintah {
@@ -62,6 +66,51 @@ void copyComponents(double *dest, const T &src)
 {
   (*dest) = 0;
 }
+
+template <>
+int numComponents<Vector>();
+
+template <>
+int numComponents<IntVector>();
+
+template <>
+int numComponents<Stencil7>();
+
+template <>
+int numComponents<Stencil4>();
+
+template <>
+int numComponents<Point>();
+
+template <>
+int numComponents<Matrix3>();
+
+template <>
+void copyComponents(double *dest, const int &src);
+
+template <>
+void copyComponents(double *dest, const float &src);
+
+template <>
+void copyComponents(double *dest, const double &src);
+
+template <>
+void copyComponents<Vector>(double *dest, const Vector &src);
+
+template <>
+void copyComponents<IntVector>(double *dest, const IntVector &src);
+
+template <>
+void copyComponents<Stencil7>(double *dest, const Stencil7 &src);
+
+template <>
+void copyComponents<Stencil4>(double *dest, const Stencil4 &src);
+
+template <>
+void copyComponents<Point>(double *dest, const Point &src);
+
+template <>
+void copyComponents<Matrix3>(double *dest, const Matrix3 &src);
 
 }
 
