@@ -146,16 +146,16 @@ KokkosSolver::problemSetup( const ProblemSpecP     & input_db
     }
   }
 
-  std::shared_ptr<UtilityFactory> UtilF(scinew UtilityFactory());
-  std::shared_ptr<TransportFactory> TransF(scinew TransportFactory());
-  std::shared_ptr<InitializeFactory> InitF(scinew InitializeFactory());
-  std::shared_ptr<ParticleModelFactory> PartModF(scinew ParticleModelFactory());
-  std::shared_ptr<LagrangianParticleFactory> LagF(scinew LagrangianParticleFactory());
-  std::shared_ptr<PropertyModelFactoryV2> PropModels(scinew PropertyModelFactoryV2());
-  std::shared_ptr<BoundaryConditionFactory> BC(scinew BoundaryConditionFactory());
-  std::shared_ptr<ChemMixFactory> TableModels(scinew ChemMixFactory());
-  std::shared_ptr<TurbulenceModelFactory> TurbModelF(scinew TurbulenceModelFactory());
-  std::shared_ptr<SourceTermFactoryV2> SourceTermV2(scinew SourceTermFactoryV2());
+  std::shared_ptr<UtilityFactory> UtilF(scinew UtilityFactory(m_arches));
+  std::shared_ptr<TransportFactory> TransF(scinew TransportFactory(m_arches));
+  std::shared_ptr<InitializeFactory> InitF(scinew InitializeFactory(m_arches));
+  std::shared_ptr<ParticleModelFactory> PartModF(scinew ParticleModelFactory(m_arches));
+  std::shared_ptr<LagrangianParticleFactory> LagF(scinew LagrangianParticleFactory(m_arches));
+  std::shared_ptr<PropertyModelFactoryV2> PropModels(scinew PropertyModelFactoryV2(m_arches));
+  std::shared_ptr<BoundaryConditionFactory> BC(scinew BoundaryConditionFactory(m_arches));
+  std::shared_ptr<ChemMixFactory> TableModels(scinew ChemMixFactory(m_arches));
+  std::shared_ptr<TurbulenceModelFactory> TurbModelF(scinew TurbulenceModelFactory(m_arches));
+  std::shared_ptr<SourceTermFactoryV2> SourceTermV2(scinew SourceTermFactoryV2(m_arches));
 
   m_task_factory_map.clear();
   m_task_factory_map.insert(std::make_pair("utility_factory",UtilF));

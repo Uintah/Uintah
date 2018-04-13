@@ -50,7 +50,8 @@
 
 using namespace Uintah;
 
-ParticleModelFactory::ParticleModelFactory()
+ParticleModelFactory::ParticleModelFactory( const ApplicationCommon* arches ) :
+TaskFactoryBase(arches)
 {
 
   _factory_name = "ParticleModelFactory";
@@ -196,22 +197,22 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
         for ( int i = 0; i < nQn_part; i++ ){
           std::stringstream ienv;
           ienv << i;
-          std::string task_name_N = task_name + "_qn" + ienv.str(); 
+          std::string task_name_N = task_name + "_qn" + ienv.str();
           TaskInterface::TaskBuilder* tsk = scinew WDragModel<CCVariable<double> >::Builder(task_name_N, 0, i);
           register_task( task_name_N, tsk );
           _dqmom_model_task.push_back(task_name_N);
-        }     
+        }
       } else if  ( type == "char_oxidation_ps" ) {
 
         const int nQn_part = ArchesCore::get_num_env( db, ArchesCore::DQMOM_METHOD );
         for ( int i = 0; i < nQn_part; i++ ){
           std::stringstream ienv;
           ienv << i;
-          std::string task_name_N = task_name + "_qn" + ienv.str(); 
+          std::string task_name_N = task_name + "_qn" + ienv.str();
           TaskInterface::TaskBuilder* tsk = scinew CharOxidationps<CCVariable<double> >::Builder(task_name_N, 0, i);
           register_task( task_name_N, tsk );
           _dqmom_model_task.push_back(task_name_N);
-        }     
+        }
 
       } else if  ( type == "gravity" ) {
 
@@ -482,9 +483,9 @@ ParticleModelFactory::build_all_tasks( ProblemSpecP& db )
         for ( int i = 0; i < nQn_part; i++ ){
           std::stringstream ienv;
           ienv << i;
-          std::string model_name_N = model_name + "_qn" + ienv.str(); 
+          std::string model_name_N = model_name + "_qn" + ienv.str();
           TaskInterface* tsk = retrieve_task(model_name_N);
-        
+
           tsk->problemSetup( db_model );
           tsk->create_local_labels();
         }
@@ -494,15 +495,15 @@ ParticleModelFactory::build_all_tasks( ProblemSpecP& db )
         for ( int i = 0; i < nQn_part; i++ ){
           std::stringstream ienv;
           ienv << i;
-          std::string model_name_N = model_name + "_qn" + ienv.str(); 
+          std::string model_name_N = model_name + "_qn" + ienv.str();
           TaskInterface* tsk = retrieve_task(model_name_N);
-        
+
           tsk->problemSetup( db_model );
           tsk->create_local_labels();
         }
       } else {
         TaskInterface* tsk = retrieve_task(model_name);
-        
+
         tsk->problemSetup( db_model );
         tsk->create_local_labels();
       }

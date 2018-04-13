@@ -6,7 +6,7 @@
 
 using namespace Uintah;
 
-ChemMixFactory::ChemMixFactory( )
+ChemMixFactory::ChemMixFactory( const ApplicationCommon* arches ) : TaskFactoryBase(arches)
 {
   _factory_name = "ChemMixFactory";
 }
