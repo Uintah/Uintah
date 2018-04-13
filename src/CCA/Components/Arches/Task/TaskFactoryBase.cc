@@ -277,7 +277,7 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
   const std::string type_string = TaskInterface::get_task_type_string(type);
   cout_archestaskdebug << " Scheduling the following task group with mode: "<< type_string << std::endl;
 
-  TaskAssignedExecutionSpace assignedExecutionSpace;
+  TaskAssignedExecutionSpace assignedExecutionSpace{};
 
   for ( auto i_task = arches_tasks.begin(); i_task != arches_tasks.end(); i_task++ ){
 
