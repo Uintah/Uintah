@@ -764,9 +764,7 @@ CharOxidationps<T>::eval( const Patch                 * patch
 
   Uintah::parallel_for( range, [&]( int i,  int j, int k ) {
 
-  // initialize all temporary variables which are use in the cell loop.
-    //if ( weight(i,j,k) / m_weight_scaling_constant[l] < _weight_small ) {
-    if (volFraction(i,j,k) > 0 ) {
+    if ( volFraction(i,j,k) > 0 ) {
 
       double D_oxid_mix_l     [ _NUM_reactions ];
       double phi_l            [ _NUM_reactions ];
@@ -789,11 +787,12 @@ CharOxidationps<T>::eval( const Patch                 * patch
       double r_h_in    [ _NUM_reactions ];
       double dfdrh[3][3];
 
-      for (int l=0; l<_NUM_reactions; l++) {
-        for (int lm=0; lm<_NUM_reactions; lm++) {
+      for ( int l = 0; l < _NUM_reactions; l++ ) {
+        for ( int lm = 0; lm < _NUM_reactions; lm++ ) {
           dfdrh[l][lm] = 0;
-       }
+        }
       }
+
       // populate the temporary variables.
       const double gas_rho    = den(i,j,k);                  // [kg/m^3]
       const double gas_T      = temperature(i,j,k);          // [K]
@@ -1094,17 +1093,7 @@ CharOxidationps<T>::eval( const Patch                 * patch
         particle_Size_rate(i,j,k) = fmax( max_Size_rate, Size_rate ); // [m/s] -- these source terms are negative.
         surface_rate(i,j,k)       = char_mass_rate / p_area;               // in [kg/(s # m^2)]
 
-      } // end if ( weight(i,j,k) / m_weight_scaling_constant[l] < _weight_small ) else
-
-      //if (( i== 2) && (j== 10) && (k == 10 )) {
-      //  std::cout << "warning no solution found in char ox: [env " << _Nenv << " "  << i << ", " << j << ", " << k << "] " << std::endl;
-      //    std::cout << "surface_rate:                            "                  <<  surface_rate(i,j,k)              << std::endl;
-      //    std::cout << "particle_Size_rate:                      "            <<  particle_Size_rate(i,j,k)            << std::endl;
-      //    std::cout << "gas_char_rate:                           "                 <<  gas_char_rate(i,j,k)            << std::endl;
-      //    std::cout << "particle_temp_rate:                      "            <<  particle_temp_rate(i,j,k)            << std::endl;
-      //    std::cout << "char_rate:                               "                     <<  char_rate(i,j,k)            << std::endl;
-          //std::cout << ": "                     <<  (i,j,k)            << std::endl;
-     // }
+      } // end if ( volFraction(i,j,k) > 0 ) {
     }); // end Uintah::parallel_for
 
 #else
@@ -1214,9 +1203,7 @@ CharOxidationps<T>::eval( const Patch                 * patch
 
   Uintah::parallel_for( range, [&]( int i,  int j, int k ) {
 
-  // initialize all temporary variables which are use in the cell loop.
-    //if ( weight(i,j,k) / m_weight_scaling_constant[l] < _weight_small ) {
-    if (volFraction(i,j,k) > 0 ) {
+    if ( volFraction(i,j,k) > 0 ) {
 
       double D_oxid_mix_l     [ _NUM_reactions ];
       double phi_l            [ _NUM_reactions ];
@@ -1239,11 +1226,12 @@ CharOxidationps<T>::eval( const Patch                 * patch
       double r_h_in    [ _NUM_reactions ];
       double dfdrh[3][3];
 
-      for (int l=0; l<_NUM_reactions; l++) {
-        for (int lm=0; lm<_NUM_reactions; lm++) {
+      for ( int l = 0; l < _NUM_reactions; l++ ) {
+        for ( int lm = 0; lm < _NUM_reactions; lm++ ) {
           dfdrh[l][lm] = 0;
-       }
+        }
       }
+
       // populate the temporary variables.
       const double gas_rho    = den(i,j,k);                  // [kg/m^3]
       const double gas_T      = temperature(i,j,k);          // [K]
@@ -1263,15 +1251,15 @@ CharOxidationps<T>::eval( const Patch                 * patch
       const double delta = 1e-6;
 
       for ( int r = 0; r < _NUM_reactions; r++ ) {
-        rh_l_new[r] = (*old_reaction_rate[r])(i,j,k); // [kg/m^3/s]
+        rh_l_new[r] = old_reaction_rate[r](i,j,k); // [kg/m^3/s]
       }
 
       for ( int r = 0; r < _NUM_reactions; r++ ) { // check this
-        oxid_mass_frac[r] = (*species[_oxidizer_indices[r]])(i,j,k); // [mass fraction]
+        oxid_mass_frac[r] = species[_oxidizer_indices[r]](i,j,k); // [mass fraction]
       }
 
       for ( int ns = 0; ns < _NUM_species; ns++ ) {
-        species_mass_frac[ns] = (*species[ns])(i,j,k); // [mass fraction]
+        species_mass_frac[ns] = species[ns](i,j,k); // [mass fraction]
       }
 
       const double CO2onCO = 1. / ( 200. * exp( -9000. / ( _R_cal * p_T ) ) * 44.0 / 28.0 ); // [ kg CO / kg CO2] => [kmoles CO / kmoles CO2] => [kmoles CO2 / kmoles CO]
@@ -1484,7 +1472,7 @@ CharOxidationps<T>::eval( const Patch                 * patch
 
         for ( int r = 0; r < _NUM_reactions; r++ ) {
 
-          (*reaction_rate[r])(i,j,k) = rh_l_new[r]; // [kg/m^2/s] this is for the intial guess during the next time-step
+          reaction_rate[r](i,j,k) = rh_l_new[r]; // [kg/m^2/s] this is for the intial guess during the next time-step
 
           // check to see if reaction rate is oxidizer limited.
           const double oxi_lim = ( oxid_mass_frac[r] * gas_rho * surfaceAreaFraction ) / ( dt * w );   // [kg/s/#] // here the surfaceAreaFraction parameter is allowing us to only consume the oxidizer multiplied by the weighted area fraction for the current particle.
@@ -1538,23 +1526,13 @@ CharOxidationps<T>::eval( const Patch                 * patch
         }
 
         double Size_rate = ( x_org < 1e-8 ) ? 0.0 :
-                    w / m_weight_scaling_constant * 2. * x_org * surface_rate_factor * char_mass_rate /
-                    m_rho_org_bulk / p_area / x_org / ( 1. - p_void ) / m_length_scaling_constant; // [m/s]
+                             w / m_weight_scaling_constant * 2. * x_org * surface_rate_factor * char_mass_rate /
+                             m_rho_org_bulk / p_area / x_org / ( 1. - p_void ) / m_length_scaling_constant; // [m/s]
 
         particle_Size_rate(i,j,k) = fmax( max_Size_rate, Size_rate ); // [m/s] -- these source terms are negative.
         surface_rate(i,j,k)       = char_mass_rate / p_area;               // in [kg/(s # m^2)]
 
-      } // end if ( weight(i,j,k) / m_weight_scaling_constant[l] < _weight_small ) else
-
-      //if (( i== 2) && (j== 10) && (k == 10 )) {
-      //  std::cout << "warning no solution found in char ox: [env " << _Nenv << " "  << i << ", " << j << ", " << k << "] " << std::endl;
-      //    std::cout << "surface_rate:                            "                  <<  surface_rate(i,j,k)              << std::endl;
-      //    std::cout << "particle_Size_rate:                      "            <<  particle_Size_rate(i,j,k)            << std::endl;
-      //    std::cout << "gas_char_rate:                           "                 <<  gas_char_rate(i,j,k)            << std::endl;
-      //    std::cout << "particle_temp_rate:                      "            <<  particle_temp_rate(i,j,k)            << std::endl;
-      //    std::cout << "char_rate:                               "                     <<  char_rate(i,j,k)            << std::endl;
-          //std::cout << ": "                     <<  (i,j,k)            << std::endl;
-     // }
+      } // end if ( volFraction(i,j,k) > 0 ) {
     }); // end Uintah::parallel_for
 
 #else
