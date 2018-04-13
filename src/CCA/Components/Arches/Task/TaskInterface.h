@@ -80,15 +80,15 @@ namespace Uintah{
     } else if        (std::is_same< UintahSpaces::CPU, TAG1 >::value) {                             \
         this->addEvalFunctionPtr(std::type_index(typeid(TAG1)),                                     \
               static_cast<evalFunctionPtr>(&FUNCTION_CODE_NAME<TAG1, UintahSpaces::HostSpace>));    \
-        ASSIGNED_TAG = UINTAH_CPU;                                                                  \
+        ASSIGNED_TAG = KOKKOS_OPENMP;                                                                  \
     } else if        (std::is_same< UintahSpaces::CPU, TAG2 >::value) {                             \
         this->addEvalFunctionPtr(std::type_index(typeid(TAG2)),                                     \
               static_cast<evalFunctionPtr>(&FUNCTION_CODE_NAME<TAG2, UintahSpaces::HostSpace>));    \
-        ASSIGNED_TAG = UINTAH_CPU;                                                                  \
+        ASSIGNED_TAG = KOKKOS_OPENMP;                                                                  \
     } else if        (std::is_same< UintahSpaces::CPU, TAG3 >::value) {                             \
         this->addEvalFunctionPtr(std::type_index(typeid(TAG3)),                                     \
               static_cast<evalFunctionPtr>(&FUNCTION_CODE_NAME<TAG3, UintahSpaces::HostSpace>));    \
-        ASSIGNED_TAG = UINTAH_CPU;                                                                  \
+        ASSIGNED_TAG = KOKKOS_OPENMP;                                                                  \
     }                                                                                               \
   }                                                                                                 \
 }
