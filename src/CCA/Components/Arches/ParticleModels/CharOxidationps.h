@@ -190,7 +190,7 @@ template <typename T> TaskAssignedExecutionSpace
 CharOxidationps<T>::loadTaskFunctionPointers(){
 
   TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_3TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, KOKKOS_CUDA_TAG, assignedTag, CharOxidationps<T>::eval);
+  LOAD_ARCHES_UINTAH_OPENMP_CUDA(assignedTag, CharOxidationps<T>::eval);
   return assignedTag;
 
 }
@@ -276,7 +276,7 @@ CharOxidationps<T>::problemSetup( ProblemSpecP & db
   std::string char_root = ArchesCore::parse_for_particle_role_to_label( db, ArchesCore::P_CHAR );
   number_density_name   = ArchesCore::parse_for_particle_role_to_label( db, ArchesCore::P_TOTNUM_DENSITY );
 
-  // check for particle velocity
+  // check for partic_CUDAle velocity
   std::string up_root = ArchesCore::parse_for_particle_role_to_label( db, ArchesCore::P_XVEL );
   std::string vp_root = ArchesCore::parse_for_particle_role_to_label( db, ArchesCore::P_YVEL );
   std::string wp_root = ArchesCore::parse_for_particle_role_to_label( db, ArchesCore::P_ZVEL );
@@ -1100,9 +1100,9 @@ CharOxidationps<T>::eval( const Patch                 * patch
     }); // end Uintah::parallel_for
 
 #else
-#if !defined(HAVE_CUDA)
+  if ( std::is_same< Kokkos::OpenMP , ExecutionSpace >::value ) {
   //The KOKKOS OPENMP version
-  std::cout << "Hello from OpenMP version!" << std::endl;
+  std::cout << "Hello from OpenMP version!  Patch is" << patch->getID() << std::endl;
   if   (std::is_same< Kokkos::HostSpace,  MemorySpace >::value) {
     std::cout << "The memory space was Kokkos::HostSpace" << std::endl;
   }
@@ -1189,9 +1189,7 @@ CharOxidationps<T>::eval( const Patch                 * patch
   KokkosView3<const double, Kokkos::HostSpace> surfAreaF = tsk_info->get_const_uintah_field_add< CT >( m_surfAreaF_name ).getKokkosView();
 
   Uintah::BlockRange range_E( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
-
-  Uintah::parallel_for( range_E, [&]( int i, int j, int k ) {
-
+  Uintah::parallel_for<Kokkos::OpenMP>( range_E, [&](int i, int j, int k ){
     char_rate(i,j,k)          = 0.0;
     gas_char_rate(i,j,k)      = 0.0;
     particle_temp_rate(i,j,k) = 0.0;
@@ -1205,7 +1203,7 @@ CharOxidationps<T>::eval( const Patch                 * patch
 
   Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
 
-  Uintah::parallel_for( range, [&]( int i,  int j, int k ) {
+  Uintah::parallel_for<Kokkos::OpenMP>( range, [&]( int i,  int j, int k ) {
 
     if ( volFraction(i,j,k) > 0 ) {
 
@@ -1538,9 +1536,18 @@ CharOxidationps<T>::eval( const Patch                 * patch
       } // end if ( volFraction(i,j,k) > 0 ) {
     }); // end Uintah::parallel_for
 
-#else
-  //The CUDA version
-#endif // if !defined(HAVE_CUDA)
+  }
+#if defined (HAVE_CUDA)
+  if ( std::is_same< Kokkos::Cuda , ExecutionSpace >::value ) {
+    //The CUDA version
+    Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
+    Uintah::parallel_for<Kokkos::Cuda>( range, KOKKOS_LAMBDA ( int i,  int j, int k ) {
+      if ( i == 0 && j == 0 && k == 0 ) {
+        printf("Hello from Char Oxidation CUDA!\n");
+      }
+    });
+  }
+#endif // if defined(HAVE_CUDA)
 #endif // if !defined(UINTAH_ENABLE_KOKKOS)
 }
 //--------------------------------------------------------------------------------------------------

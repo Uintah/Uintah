@@ -368,16 +368,50 @@ template <typename ExecutionSpace, typename Functor>
 inline typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::Cuda>::value, void>::type
 parallel_for( BlockRange const & r, const Functor & functor )
 {
-  const int ib = r.begin(0); const int ie = r.end(0);
-  const int jb = r.begin(1); const int je = r.end(1);
-  const int kb = r.begin(2); const int ke = r.end(2);
 
-  Kokkos::parallel_for( Kokkos::RangePolicy<Kokkos::Cuda, int>(kb, ke), [=] __device__ (int k) {
-    for (int j=jb; j<je; ++j) {
-    for (int i=ib; i<ie; ++i) {
-      functor(i,j,k);
-    }}
+// Team policy approach (reuses CUDA threads)
+  unsigned int i_size = r.end(0) - r.begin(0);
+  unsigned int j_size = r.end(1) - r.begin(1);
+  unsigned int k_size = r.end(2) - r.begin(2);
+  unsigned int rbegin0 = r.begin(0);
+  unsigned int rbegin1 = r.begin(1);
+  unsigned int rbegin2 = r.begin(2);
+
+
+  //If 256 threads aren't needed, use less.
+  //But cap at 256 threads total, as this will correspond to 256 threads in a block.
+  //Later the TeamThreadRange will reuse those 256 threads.  For example, if teamThreadRangeSize is 800, then
+  //Cuda thread 0 will be assigned to n = 0, n = 256, n = 512, and n = 768,
+  //Cuda thread 1 will be assigned to n = 1, n = 257, n = 513, and n = 769...
+
+  const unsigned int teamThreadRangeSize = (i_size > 0 ? i_size : 1) * (j_size > 0 ? j_size : 1) * (k_size > 0 ? k_size : 1);
+  const unsigned int actualThreads = teamThreadRangeSize > 256 ? 256 : teamThreadRangeSize;
+
+  typedef Kokkos::TeamPolicy< ExecutionSpace > policy_type;
+
+  Kokkos::parallel_for (Kokkos::TeamPolicy< ExecutionSpace >( 1, actualThreads ),
+                           KOKKOS_LAMBDA ( typename policy_type::member_type thread ) {
+    Kokkos::parallel_for (Kokkos::TeamThreadRange(thread, teamThreadRangeSize), [=] (const int& n) {
+
+      const int i = n / (j_size * k_size) + rbegin0;
+      const int j = (n / k_size) % j_size + rbegin1;
+      const int k = n % k_size + rbegin2;
+      functor( i, j, k );
+    });
   });
+
+//  Manual approach
+//  const int ib = r.begin(0); const int ie = r.end(0);
+//  const int jb = r.begin(1); const int je = r.end(1);
+//  const int kb = r.begin(2); const int ke = r.end(2);
+//
+//
+//  Kokkos::parallel_for( Kokkos::RangePolicy<Kokkos::Cuda, int>(kb, ke), KOKKOS_LAMBDA (int k) {
+//    for (int j=jb; j<je; ++j) {
+//    for (int i=ib; i<ie; ++i) {
+//      functor(i,j,k);
+//    }}
+//  });
 }
 #endif  //#if defined(HAVE_CUDA)
 #endif  //#if defined(UINTAH_ENABLE_KOKKOS)
@@ -402,11 +436,8 @@ template < typename Functor>
 void
 parallel_for( BlockRange const & r, const Functor & functor )
 {
-#if defined(UINTAH_ENABLE_KOKKOS)
-  parallel_for<Kokkos::OpenMP>( r, functor );
-#else
+  //Force users into using a single CPU thread if they didn't specify OpenMP
   parallel_for<UintahSpaces::CPU>( r, functor );
-#endif
 }
 
 // -------------------------------------  parallel_reduce_sum loops  ---------------------------------------------
@@ -547,11 +578,8 @@ template < typename Functor, typename ReductionType>
 void
 parallel_reduce_sum( BlockRange const & r, const Functor & functor, ReductionType & red )
 {
-#if defined(UINTAH_ENABLE_KOKKOS)
-  parallel_reduce_sum<Kokkos::OpenMP>( r, functor, red );
-#else
+  //Force users into using a single CPU thread if they didn't specify OpenMP
   parallel_reduce_sum<UintahSpaces::CPU>( r, functor, red );
-#endif
 }
 
 // -------------------------------------  parallel_reduce_min loops  ---------------------------------------------

@@ -276,18 +276,23 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
 
   const std::string type_string = TaskInterface::get_task_type_string(type);
   cout_archestaskdebug << " Scheduling the following task group with mode: "<< type_string << std::endl;
-
+  int i = 0;
+  bool archesTasksMixMemorySpaces = false;
   TaskAssignedExecutionSpace assignedExecutionSpace{};
-
+  std::cout << "Task in group: ";
   for ( auto i_task = arches_tasks.begin(); i_task != arches_tasks.end(); i_task++ ){
+    std::cout << (*i_task)->get_task_name() << " ";
+    i++;
+    if ((*i_task)->get_task_name() == "rho_coal") {
+      printf("");
+    }
 
     cout_archestaskdebug << "   Task: " << (*i_task)->get_task_name() << std::endl;
 
     TaskAssignedExecutionSpace temp = (*i_task)->loadTaskFunctionPointers();
 
     if (assignedExecutionSpace != TaskAssignedExecutionSpace::NONE_SPACE && assignedExecutionSpace != temp) {
-      throw InvalidValue("Error: Different execution spaces specified.  All Arches tasks within a single Uintah task must share the same execution space.",__FILE__,__LINE__);
-      break;
+      archesTasksMixMemorySpaces = true;
     } else {
       assignedExecutionSpace = temp;
     }
@@ -320,6 +325,8 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
 
     }
   }
+
+  std::cout << std::endl;
 
   auto TaskDependencies = [&](Task *& tsk) {
     int counter = 0;
@@ -373,6 +380,11 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
     if ( counter == 0 ) {
       delete tsk;
       tsk = nullptr;
+    } else {
+      if (archesTasksMixMemorySpaces) {
+        std::cout << std::endl << " WARNING Different execution spaces specified.  All Arches tasks within a single Uintah task must share the same execution space." << std::endl << std::endl;
+        //throw InvalidValue("Error: Different execution spaces specified.  All Arches tasks within a single Uintah task must share the same execution space.",__FILE__,__LINE__);
+      }
     }
   };
 
@@ -391,7 +403,6 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
                                 level->eachPatch(), matls,
                                 variable_registry, arches_tasks, type, time_substep, pack_tasks);
   }
-
 
 
 }
