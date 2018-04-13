@@ -3707,16 +3707,30 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
     //There currently exists a race condition.  Suppose cellType is in both host and GPU 
     //memory.  Currently the GPU data warehouse knows it is in GPU memory, but it doesn't
     //know if it's in host memory (the GPU DW doesn't track lifetimes of host DW vars).  
-    //Thread 2 - Task A requests a requires var for cellType for the host newDW, and get sit.  .
-    //Thread 3 - Task B invokes the initiateD2H check, thinks there is no host isntance of cellType, 
+    //Thread 2 - Task A requests a requires var for cellType for the host newDW, and gets it.
+    //Thread 3 - Task B invokes the initiateD2H check, thinks there is no host instance of cellType,
    //             so it initiates a D2H, which performs another host allocateAndPut, and the subsequent put
-    //           deletes the old entry and creates a new entry.
-    //Race condition is that thread 2's pointer has been cleaned up, while thread 3 has a new one.
-    //A temp fix could be to check if all host vars exist in the host dw prior to launching the task.
+    //           deletes the old entry and cgetreates a new entry.
+    // Race condition is that thread 2's pointer has been cleaned up, while thread 3 has a new one.
+    // A temp fix could be to check if all host vars exist in the host dw prior to launching the task.
+    // For now, the if statement's job is to ignore a GPU task's *requires* that nay get pulled D2H
+    // by subsequent CPU tasks.  For example, RMCRT computes divQ, RMCRTboundFlux, and radiationVolq.
+    // and requires other variables.  So the logic is "If it wasn't one of the computes", then we
+    // don't need to copy it back D2H"
+    // RMCRT hack:
+    // if (varName != "divQ" && varName != "RMCRTboundFlux" && varName != "radiationVolq" ) {
+    //   continue;
+    // }
 
-    //if (varName != "divQ" && varName != "RMCRTboundFlux" && varName != "radiationVolq" ) {
-    //  continue;
-    //}
+    // Arches hack:
+    // All the computes are char_ps_qn4, char_ps_qn4_gasSource, char_ps_qn4_particletempSource, char_ps_qn4_particleSizeSource
+    // char_ps_qn4_surfacerate, char_gas_reaction0_qn4, char_gas_reaction1_qn4, char_gas_reaction2_qn4.  Note that the qn# goes
+    // from qn0 to qn4.  Also, the char_gas_reaction0_qn4 variable is both a computes in the newDW and a requires in the oldDW
+    if ( !
+         (varName.substr(0,10) == "char_ps_qn" || (varName.substr(0,17) == "char_gas_reaction && " && dwIndex == Task::NewDW))
+       ){
+      continue; //Go start the loop over and get the next potential variable.
+    }
     if (gpudw != nullptr) {
       // It's not valid on the CPU but it is on the GPU.  Copy it on over.
       if (!gpudw->isValidOnCPU( varName.c_str(), patchID, matlID, levelID) &&
