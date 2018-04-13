@@ -283,4 +283,23 @@ printSchedule( const LevelP      & level
   }
 }
 
+//______________________________________________________________________
+// 
+
+void printTask( const Patch * patch,       
+                Dout & out,
+                const std::string & where,
+                const int timestep,
+                const int material,
+                const std::string varName)
+{
+  std::ostringstream msg;
+  msg << std::left;
+  msg.width(50);
+  msg << where << std::right << " timestep: " << timestep 
+      << " matl: " << material << " Var: " << varName;
+  
+  printTask( patch, out, msg.str());
+}
+
 } // End namespace Uintah

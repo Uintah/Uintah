@@ -65,6 +65,12 @@ void printTask(       DebugStream & dbg
               );
 
 
+void printTask( const Patch * patch,       
+                Dout & out,
+                const std::string & where,
+                const int timestep,
+                const int material,
+                const std::string var);
 
 // ------------------------------------------------------------------------------------------------
 // APH - 07/14/17
