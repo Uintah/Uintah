@@ -681,8 +681,6 @@ CharOxidationps<T>::eval( const Patch                 * patch
     species.push_back( species_p );
   }
 
-  Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
-
   CT& number_density = tsk_info->get_const_uintah_field_add< CT >( number_density_name ); // total number density
 
   std::vector< T* >  reaction_rate;
@@ -748,8 +746,10 @@ CharOxidationps<T>::eval( const Patch                 * patch
 
   CT& surfAreaF = tsk_info->get_const_uintah_field_add< CT >( m_surfAreaF_name );
 
-  Uintah::BlockRange range_E(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
-  Uintah::parallel_for( range_E, [&](int i, int j, int k){
+  Uintah::BlockRange range_E( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+
+  Uintah::parallel_for( range_E, [&]( int i, int j, int k ) {
+
     char_rate(i,j,k)          = 0.0;
     gas_char_rate(i,j,k)      = 0.0;
     particle_temp_rate(i,j,k) = 0.0;
@@ -761,6 +761,7 @@ CharOxidationps<T>::eval( const Patch                 * patch
     }
   });
 
+  Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
 
   Uintah::parallel_for( range, [&]( int i,  int j, int k ) {
 
@@ -1127,8 +1128,6 @@ CharOxidationps<T>::eval( const Patch                 * patch
     species[ns] = tsk_info->get_const_uintah_field_add< CT >( _species_names[ns] ).getKokkosView();
   }
 
-  Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
-
   KokkosView3<const double, MemorySpace> number_density = tsk_info->get_const_uintah_field_add< CT >( number_density_name ).getKokkosView(); // total number density
 
   KokkosView3<      double, MemorySpace> reaction_rate[reactions_count];
@@ -1187,8 +1186,10 @@ CharOxidationps<T>::eval( const Patch                 * patch
 
   KokkosView3<const double, MemorySpace> surfAreaF = tsk_info->get_const_uintah_field_add< CT >( m_surfAreaF_name ).getKokkosView();
 
-  Uintah::BlockRange range_E(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() ); 
-  Uintah::parallel_for( range_E, [&](int i, int j, int k){ 
+  Uintah::BlockRange range_E( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+
+  Uintah::parallel_for( range_E, [&]( int i, int j, int k ) {
+
     char_rate(i,j,k)          = 0.0;
     gas_char_rate(i,j,k)      = 0.0;
     particle_temp_rate(i,j,k) = 0.0;
@@ -1196,10 +1197,11 @@ CharOxidationps<T>::eval( const Patch                 * patch
     surface_rate(i,j,k)       = 0.0;
 
     for ( int r = 0; r < _NUM_reactions; r++ ) {
-      (*reaction_rate[r])(i,j,k) = 0.0; 
+      reaction_rate[r](i,j,k) = 0.0;
     }
   });
 
+  Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
 
   Uintah::parallel_for( range, [&]( int i,  int j, int k ) {
 
