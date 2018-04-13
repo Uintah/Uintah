@@ -89,18 +89,6 @@ void allocateTemporary(  GridVariableBase& var,
                          const Patch*      patch,
                          Ghost::GhostType  gtype,
                          int               numGhostCells ); 
-
-void printTask( const Patch * patch,       
-                Dout & out,
-                const std::string & where,
-                const int timestep,
-                const int material,
-                const std::string var);
-
-void printTask( const Patch * patch,       
-                Dout & out, 
-                const std::string & where);
-
 }
 
 #endif //UINTAH_UDA2VIS_H

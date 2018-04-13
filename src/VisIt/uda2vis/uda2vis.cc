@@ -34,10 +34,12 @@
 
 #include <VisIt/uda2vis/uda2vis.h>
 
-#include <Core/Grid/Variables/PerPatchVars.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Scheduler.h>
+
+#include <Core/Grid/DbgOutput.h>
+#include <Core/Grid/Variables/PerPatchVars.h>
 #include <Core/DataArchive/DataArchive.h>
 #include <Core/Grid/Variables/PerPatch.h>
 
@@ -201,6 +203,7 @@ extern "C"
 void closeDataArchive(DataArchive *archive)
 {
   DOUT(dbgOut, "closeDataArchive" );
+
   delete archive;
 }
 
@@ -228,6 +231,7 @@ extern "C"
 void releaseGrid(GridP *grid)
 {
   DOUT(dbgOut, "releaseGrid" );
+
   delete grid;
 }
 
@@ -238,6 +242,7 @@ extern "C"
 std::vector<double> getCycleTimes(DataArchive *archive)
 {
   DOUT(dbgOut, "getCycleTimes" );
+
   // Get the times and indices.
   std::vector<int> index;
   std::vector<double> times;
@@ -1182,6 +1187,8 @@ TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
     }
   }
 
+  delete pLabelMatlMap;
+  
   return stepInfo;
 }
 
@@ -1832,6 +1839,8 @@ ParticleDataRaw* readParticleData(SchedulerP schedulerP,
   for (unsigned int i=0; i<particle_vars.size(); ++i)
     delete particle_vars[i];
 
+  delete pLabelMatlMap;
+
   return pd;
 }
 
@@ -2041,45 +2050,5 @@ void setFineLevelPatchExtraCells(const Patch* finePatch,
 }
 
 #endif
-
-
-
-
-//______________________________________________________________________
-// 
-
-void printTask( const Patch * patch,       
-                Dout & out,
-                const std::string & where,
-                const int timestep,
-                const int material,
-                const std::string varName)
-{
-  std::ostringstream msg;
-  msg << std::left;
-  msg.width(50);
-  msg << where << std::right << " timestep: " << timestep 
-      << " matl: " << material << " Var: " << varName;
-  
-  printTask( patch, out, msg.str());
-}
-
-//__________________________________
-//
-void printTask( const Patch * patch,       
-                Dout & out, 
-                const std::string & where)
-{
-  if (out) {
-    std::ostringstream msg;
-    msg << std::left;
-    msg.width(50);
-    msg << where << " \tL-"
-        << patch->getLevel()->getIndex()
-        << " patch " << patch->getGridIndex();
-    DOUT(out, msg.str());
-  }
-}
-
 
 }
