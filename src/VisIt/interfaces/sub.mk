@@ -47,7 +47,7 @@ PSELIBS := \
 
 SRCS := \
 	$(SRCDIR)/archiveInterface.cc \
-	$(SRCDIR)/insituInterface.cc  \
+	$(SRCDIR)/warehouseInterface.cc  \
 	$(SRCDIR)/utils.cc
 
 LIBS := $(XML2_LIBRARY) $(M_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY)

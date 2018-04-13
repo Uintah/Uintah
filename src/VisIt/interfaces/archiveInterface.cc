@@ -113,7 +113,7 @@ void releaseGrid(GridP *grid)
 
 /////////////////////////////////////////////////////////////////////
 // Get the time for each cycle.
-extern "C++"
+extern "C"
 std::vector<double> getCycleTimes(DataArchive *archive)
 {
   DOUT(dbgOut, "getCycleTimes" );
@@ -430,10 +430,7 @@ static GridDataRaw* readPatchData(DataArchive *archive,
                                   const LevelP level,
                                   std::string variable_name,
                                   int material,
-                                  int timestep,
-                                  int low[3],
-                                  int high[3],
-                                  LoadExtra loadExtraElements)
+                                  int timestep)
 {
   if( archive->exists( variable_name, patch, timestep ) )
   {
@@ -442,12 +439,7 @@ static GridDataRaw* readPatchData(DataArchive *archive,
     GridDataRaw *gd = new GridDataRaw;
     gd->components = numComponents<T>();
     
-    for (int i=0; i<3; ++i) {
-      gd->low[i]  =  low[i];
-      gd->high[i] = high[i];
-    }
-
-    gd->num = (high[0]-low[0])*(high[1]-low[1])*(high[2]-low[2]);
+    gd->num = 1;
     gd->data = new double[gd->num*gd->components];
   
     if (variable_name == "refinePatchFlag")
@@ -559,9 +551,6 @@ GridDataRaw* getPatchDataMainType(DataArchive *archive,
                                   std::string variable_name,
                                   int material,
                                   int timestep,
-                                  int low[3],
-                                  int high[3],
-                                  LoadExtra loadExtraElements,
                                   const Uintah::TypeDescription *subtype)
 {
 
@@ -571,13 +560,13 @@ GridDataRaw* getPatchDataMainType(DataArchive *archive,
   {
   case Uintah::TypeDescription::double_type:
     return readPatchData<VAR, double>(archive, patch, level, variable_name,
-                                      material, timestep, low, high, loadExtraElements);
+                                      material, timestep);
   case Uintah::TypeDescription::float_type:
     return readPatchData<VAR, float>(archive, patch, level, variable_name,
-                                     material, timestep, low, high, loadExtraElements);
+                                     material, timestep);
   case Uintah::TypeDescription::int_type:
     return readPatchData<VAR, int>(archive, patch, level, variable_name,
-                                   material, timestep, low, high, loadExtraElements);
+                                   material, timestep);
   case Uintah::TypeDescription::Vector:
   case Uintah::TypeDescription::Stencil7:
   case Uintah::TypeDescription::Stencil4:
@@ -671,8 +660,7 @@ GridDataRaw* getGridData(DataArchive *archive,
                                              low, high, loadExtraElements, subtype);
   case Uintah::TypeDescription::PerPatch:
     return getPatchDataMainType<PerPatch>(archive, patch, level,
-                                          variable_name, material, timestep,
-                                          low, high, loadExtraElements, subtype);
+                                          variable_name, material, timestep, subtype);
   default:
     std::cerr << "Uintah::archiveUtils::getGridData :"
               << "unknown subtype: " << subtype->getName()
@@ -861,6 +849,18 @@ ParticleDataRaw* getParticleData(DataArchive *archive,
     return nullptr;
   }
 }
+
+/////////////////////////////////////////////////////////////////////
+// Read the particle position name
+// This function uses the archive for file reading.
+extern "C"
+std::string getParticlePositionName(DataArchive *archive)
+{
+    return archive->getParticlePositionName();
+}
+
+
+
 
 
 #if 0

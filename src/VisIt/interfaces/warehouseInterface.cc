@@ -33,7 +33,7 @@
  *
  */
 
-#include <VisIt/interfaces/insituInterface.h>
+#include <VisIt/interfaces/warehouseInterface.h>
 #include <VisIt/interfaces/utils.h>
 
 #include <CCA/Ports/DataWarehouse.h>
@@ -56,7 +56,7 @@
 using namespace Uintah;
 
 namespace {
-  Dout  dbgOut("VisItInSituInterface", "VisIt", "Data warehoue interface to VisIt's libsim", false);
+  Dout  dbgOut("VisItWarehouseInterface", "VisIt", "Data warehoue interface to VisIt", false);
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -521,22 +521,14 @@ static GridDataRaw* readPatchData(DataWarehouse *dw,
                                   const Patch *patch,
                                   const LevelP level,
                                   const VarLabel *varLabel,
-                                  int material,
-                                  int low[3],
-                                  int high[3],
-                                  LoadExtra loadExtraElements)
+                                  int material)
 {
   if( dw->exists( varLabel, material, patch ) )
   {
     GridDataRaw *gd = new GridDataRaw;
     gd->components = numComponents<T>();
-    
-    for (int i=0; i<3; ++i) {
-      gd->low[i]  =  low[i];
-      gd->high[i] = high[i];
-    }
-    
-    gd->num = (high[0]-low[0])*(high[1]-low[1])*(high[2]-low[2]);
+
+    gd->num = 1;
     gd->data = new double[gd->num*gd->components];
     
     if (varLabel->getName() == "refinePatchFlag")
@@ -571,6 +563,10 @@ static GridDataRaw* readPatchData(DataWarehouse *dw,
 
       for (int i=0; i<gd->num; ++i)
         copyComponents<T>(&gd->data[i*gd->components], *p);
+
+      // std::cerr << *p << " ************* "
+      // 		<< gd->data[0] << " ************* " 
+      // 		<< std::endl;
     }
   
     return gd;
@@ -644,9 +640,6 @@ GridDataRaw* getPatchDataMainType(DataWarehouse *dw,
                                   const LevelP level,
                                   const VarLabel *varLabel,
                                   int material,
-                                  int low[3],
-                                  int high[3],
-                                  LoadExtra loadExtraElements,
                                   const TypeDescription *subtype)
 {
   printTask( patch, dbgOut, "getPatchDataMainType" );
@@ -654,14 +647,11 @@ GridDataRaw* getPatchDataMainType(DataWarehouse *dw,
   switch (subtype->getType())
   {
   case TypeDescription::double_type:
-    return readPatchData<VAR, double>(dw, patch, level, varLabel,
-                                      material, low, high, loadExtraElements);
+    return readPatchData<VAR, double>(dw, patch, level, varLabel, material);
   case TypeDescription::float_type:
-    return readPatchData<VAR, float>(dw, patch, level, varLabel,
-                                     material, low, high, loadExtraElements);
+    return readPatchData<VAR,  float>(dw, patch, level, varLabel, material);
   case TypeDescription::int_type:
-    return readPatchData<VAR, int>(dw, patch, level, varLabel,
-                                   material, low, high, loadExtraElements);
+    return readPatchData<VAR,    int>(dw, patch, level, varLabel, material);
   case TypeDescription::Vector:
   case TypeDescription::Stencil7:
   case TypeDescription::Stencil4:
@@ -764,8 +754,7 @@ GridDataRaw* getGridData(SchedulerP schedulerP,
                                                   low, high, loadExtraElements, subtype);
   case TypeDescription::PerPatch:
     return getPatchDataMainType<PerPatch>(dw, patch, level,
-                                          varLabel, material,
-                                          low, high, loadExtraElements, subtype);
+                                          varLabel, material, subtype);
   default:
     std::cerr << "Uintah/VisIt Libsim Error: unknown type: "
               << maintype->getName() << " for variable: "
