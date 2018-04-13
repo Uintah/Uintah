@@ -29,7 +29,7 @@
 
 include $(SCIRUN_SCRIPTS)/so_prologue.mk
 
-SRCDIR  := VisIt/uda2vis
+SRCDIR  := VisIt/interfaces
 
 PSELIBS := \
       Core/Containers   \
@@ -46,7 +46,9 @@ PSELIBS := \
       Core/Util
 
 SRCS := \
-	$(SRCDIR)/uda2vis.cc
+	$(SRCDIR)/archiveInterface.cc \
+	$(SRCDIR)/insituInterface.cc  \
+	$(SRCDIR)/utils.cc
 
 LIBS := $(XML2_LIBRARY) $(M_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY)
 

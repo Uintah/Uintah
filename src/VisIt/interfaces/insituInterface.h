@@ -23,35 +23,28 @@
  */
 
 /*
- *  uda2vis.h: Provides an interface between VisIt's libsim and Uintah.
+ *  insituUtils.h: Provides an interface between the Uintah data warehouse 
+ *                 and VisIt's libsim in situ interface.
  *
  *  Written by:
- *   Department of Computer Science
+ *   Scientific Computing and Imaging Institute
  *   University of Utah
- *   March 2015
+ *   April 2018
  *
  */
 
-#ifndef UINTAH_UDA2VIS_H
-#define UINTAH_UDA2VIS_H
+#ifndef UINTAH_VISIT_INTERFACES_INSITU_INTERFACE_H
+#define UINTAH_VISIT_INTERFACES_INSITU_INTERFACE_H
 
-#include <VisIt/uda2vis/udaData.h>
+#include <VisIt/interfaces/datatypes.h>
 
 #include <CCA/Ports/SchedulerP.h>
 #include <Core/Grid/GridP.h>
-#include <Core/Grid/Variables/GridVariable.h>
-#include <Core/Util/DOUT.hpp>
 
 // Define these for the in-situ usage.
 
 namespace Uintah {
 
-typedef enum loadExtra {
-    NONE    = 0,
-    CELLS   = 1,
-    PATCHES = 2,
-  } LoadExtra;
-    
 TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
                               GridP grid,
                               LoadExtra loadExtraElements);
@@ -83,12 +76,6 @@ int GetGlobalDomainNumber(TimeStepInfo* stepInfo,
 void CheckNaNs(double *data, const int num,
                const char* varname, const int level, const int patch);
 
-//______________________________________________________________________
-// 
-void allocateTemporary(  GridVariableBase& var,
-                         const Patch*      patch,
-                         Ghost::GhostType  gtype,
-                         int               numGhostCells ); 
 }
 
-#endif //UINTAH_UDA2VIS_H
+#endif //UINTAH_INSITUUTILS_H
