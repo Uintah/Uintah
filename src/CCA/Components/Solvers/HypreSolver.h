@@ -81,16 +81,6 @@ namespace Uintah {
     
     // SparseMSG parameters
     int    jump;               // Hypre Sparse MSG parameter
-    
-    void setSolveFrequency(const int freq) {
-      solveFrequency = freq;
-    }
-    
-    int getSolveFrequency() const {
-      return solveFrequency;
-    }
-
-    SimulationStateP m_sharedState;
   };
 
   //______________________________________________________________________
@@ -224,8 +214,7 @@ namespace Uintah {
     virtual ~HypreSolver2();
 
     virtual SolverParameters* readParameters(       ProblemSpecP & params,
-                                              const std::string  & name,
-                                              const SimulationStateP & state );
+                                              const std::string  & name  );
 
     /**
      *  @brief Schedules the solution of the linear system \[ \mathbf{A} \mathbf{x} = \mathbf{b}\].

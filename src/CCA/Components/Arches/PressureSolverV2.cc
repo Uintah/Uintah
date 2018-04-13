@@ -100,8 +100,7 @@ PressureSolver::problemSetup(ProblemSpecP& params,SimulationStateP& state)
   // make source and boundary_condition objects
   d_source = scinew Source(d_physicalConsts);
 
-  d_hypreSolver_parameters = d_hypreSolver->readParameters(db, "pressure",
-							   state);
+  d_hypreSolver_parameters = d_hypreSolver->readParameters(db, "pressure" );
   d_hypreSolver_parameters->setSolveOnExtraCells(false);
 
   //force a zero setup frequency since nothing else

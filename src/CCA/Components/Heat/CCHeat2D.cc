@@ -91,7 +91,7 @@ void CCHeat2D::problemSetup ( ProblemSpecP const & params, ProblemSpecP const & 
         {
             throw InternalError ( "CCHeat2D:couldn't get solver port", __FILE__, __LINE__ );
         }
-        solver_parameters = solver->readParameters ( solv, "u", m_sharedState );
+        solver_parameters = solver->readParameters ( solv, "u" );
         solver_parameters->setSolveOnExtraCells ( false );
     }
 }

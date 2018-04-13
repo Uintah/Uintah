@@ -81,8 +81,7 @@ void SolverTest2::problemSetup(const ProblemSpecP& prob_spec,
   //}
   
   ProblemSpecP st_ps = prob_spec->findBlock("SolverTest");
-  //solver_parameters = solver->readParameters(st_ps, "implicitPressure",
-  //                                           shared_state);
+  //solver_parameters = solver->readParameters(st_ps, "implicitPressure");
   //solver_parameters->setSolveOnExtraCells(false);
     
   st_ps->require("delt", delt_);

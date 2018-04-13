@@ -260,16 +260,17 @@ private:
   bool modifies_x;
   const DirectSolveParams* params;
 };
-
+//______________________________________________________________________
+//
 SolverParameters *
 DirectSolve::readParameters(       ProblemSpecP & params,
-                             const string       & varname,
-			     const SimulationStateP & state )
+                             const string       & varname )
 {
   DirectSolveParams* p = scinew DirectSolveParams();
   return p;
 }
-
+//______________________________________________________________________
+//
 void
 DirectSolve::scheduleSolve( const LevelP           & level,
                                   SchedulerP       & sched,

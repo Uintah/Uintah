@@ -36,9 +36,8 @@ namespace Uintah {
     DirectSolve(const ProcessorGroup* myworld);
     virtual ~DirectSolve();
     
-    virtual SolverParameters* readParameters(       ProblemSpecP     & params,
-					      const std::string      & name,
-					      const SimulationStateP & state );
+    virtual SolverParameters* readParameters(  ProblemSpecP & params,
+					      const std::string  & name  );
     
     virtual void scheduleSolve( const LevelP           & level,
 				      SchedulerP       & sched,

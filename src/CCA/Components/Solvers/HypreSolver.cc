@@ -1152,13 +1152,10 @@ namespace Uintah {
 
   //---------------------------------------------------------------------------------------------
   
-  SolverParameters* HypreSolver2::readParameters(       ProblemSpecP     & params
-                                                , const string           & varname
-                                                , const SimulationStateP & state
-                                                )
+  SolverParameters* HypreSolver2::readParameters(       ProblemSpecP & params
+                                                , const string       & varname)
   {
     HypreSolver2Params* hypreSolveParams = scinew HypreSolver2Params();
-    hypreSolveParams->m_sharedState = state;
 
     bool found=false;
     if(params){

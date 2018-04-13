@@ -65,7 +65,7 @@ PressureEqn::setup_solver( ProblemSpecP& db ){
     throw ProblemSetupException("Error: You must specify a <PressureSolver> block in the UPS file.",__FILE__,__LINE__);
   }
 
-  m_hypreSolver_parameters = m_hypreSolver->readParameters(db_pressure, "pressure", m_sharedState );
+  m_hypreSolver_parameters = m_hypreSolver->readParameters(db_pressure, "pressure" );
   m_hypreSolver_parameters->setSolveOnExtraCells(false);
 
   //force a zero setup frequency since nothing else

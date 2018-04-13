@@ -941,8 +941,7 @@ private:
 //______________________________________________________________________
 //
 SolverParameters* CGSolver::readParameters(ProblemSpecP& params,
-                                           const string& varname,
-					   const SimulationStateP & state)
+                                           const string& varname)
 {
 
   CGSolverParams* p = new CGSolverParams();

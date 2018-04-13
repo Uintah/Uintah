@@ -68,8 +68,7 @@ AMRSolver::~AMRSolver() {}
  _____________________________________________________________________*/
 SolverParameters*
 AMRSolver::readParameters(ProblemSpecP& params,
-                          const string& varname,
-                          const SimulationStateP& state)
+                          const string& varname)
 {
   HypreSolverParams* p = new HypreSolverParams();
   bool found=false;

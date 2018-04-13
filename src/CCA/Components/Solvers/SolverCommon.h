@@ -42,9 +42,8 @@ namespace Uintah {
     virtual void getComponents() {};
     virtual void releaseComponents() {};
     
-    virtual SolverParameters* readParameters(       ProblemSpecP & params,
-					      const std::string  & name,
-					      const SimulationStateP & state ) = 0;
+    virtual SolverParameters* readParameters(  ProblemSpecP & params,
+					      const std::string  & name ) = 0;
 
     virtual void scheduleSolve( const LevelP           & level,
 				      SchedulerP       & sched,
