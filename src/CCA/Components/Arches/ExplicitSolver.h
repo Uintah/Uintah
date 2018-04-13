@@ -99,13 +99,15 @@ public:
              PhysicalConstants* physConst,
              const ProcessorGroup* myworld,
              ArchesParticlesHelper* particle_helper,
-             SolverInterface* hypreSolver ) :
+             SolverInterface* hypreSolver,
+             const ApplicationCommon* arches ) :
              _sharedState(sharedState),
              _MAlb(MAlb),
              _physConst(physConst),
              _myworld(myworld),
              _particle_helper(particle_helper),
-             _hypreSolver(hypreSolver)
+             _hypreSolver(hypreSolver),
+             _arches(arches)
     { }
 
     ~Builder(){}
@@ -116,7 +118,8 @@ public:
                                     _physConst,
                                     _myworld,
                                     _particle_helper,
-                                    _hypreSolver);
+                                    _hypreSolver,
+                                    _arches );
     }
 
   private:
@@ -127,6 +130,7 @@ public:
     const ProcessorGroup* _myworld;
     ArchesParticlesHelper* _particle_helper;
     SolverInterface* _hypreSolver;
+    const ApplicationCommon* _arches;
 
   };
 
@@ -135,7 +139,8 @@ public:
                   PhysicalConstants* physConst,
                   const ProcessorGroup* myworld,
                   ArchesParticlesHelper* particle_helper,
-                  SolverInterface* hypreSolver );
+                  SolverInterface* hypreSolver,
+                  const ApplicationCommon* arches );
 
   virtual ~ExplicitSolver();
 
@@ -484,7 +489,7 @@ public:
 
   //DQMOM
   bool d_doDQMOM;
-  bool d_kokkos_dqmom_Translate; 
+  bool d_kokkos_dqmom_Translate;
   PartVel* d_partVel;
   DQMOM* d_dqmomSolver;
   std::string d_which_dqmom;

@@ -57,11 +57,11 @@ typedef std::map<std::string, std::shared_ptr<TaskFactoryBase> > BFM;
 typedef std::vector<std::string> SVec;
 
 //--------------------------------------------------------------------------------------------------
-KokkosSolver::KokkosSolver(       SimulationStateP & shared_state
-                          , const ProcessorGroup   * myworld
-                          ,       SolverInterface  * solver
-                          )
-  : NonlinearSolver ( myworld )
+KokkosSolver::KokkosSolver( SimulationStateP& shared_state,
+                            const ProcessorGroup* myworld,
+                            SolverInterface* solver,
+                            const ApplicationCommon* arches )
+  : NonlinearSolver ( myworld, arches )
   , m_sharedState   ( shared_state )
   , m_hypreSolver   ( solver )
 {
@@ -593,7 +593,7 @@ KokkosSolver::SSPRKSolve( const LevelP     & level
     i_source_fac->second->schedule_task_group( "pre_update_source_tasks",
       TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls , time_substep );
 
-    // compute particle face velocities 
+    // compute particle face velocities
     i_particle_model_fac->second->schedule_task_group("dqmom_variables",
       TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 
@@ -610,7 +610,7 @@ KokkosSolver::SSPRKSolve( const LevelP     & level
       TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 
     // ** DQMOM **
-    i_transport->second->schedule_task_group("dqmom_diffusion_flux_builders", 
+    i_transport->second->schedule_task_group("dqmom_diffusion_flux_builders",
       TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 
     i_transport->second->schedule_task_group("dqmom_eqns",
@@ -802,7 +802,7 @@ KokkosSolver::SandBox( const LevelP     & level
   // now construct the RHS:
   i_transport->second->schedule_task( "scalar_rhs_builders", TaskInterface::TIMESTEP_EVAL,
     level, sched, matls, time_substep );
-    
+
   i_transport->second->schedule_task( "scalar_rhs_builders", TaskInterface::BC,
     level, sched, matls, time_substep );
 

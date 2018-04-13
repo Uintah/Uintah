@@ -27,8 +27,9 @@
 #include <CCA/Components/Arches/NonlinearSolver.h>
 using namespace Uintah;
 
-NonlinearSolver::NonlinearSolver(const ProcessorGroup* myworld)
-   : d_myworld(myworld)
+NonlinearSolver::NonlinearSolver( const ProcessorGroup* myworld,
+                                  const ApplicationCommon* arches )
+   : d_myworld(myworld), m_arches(arches)
 {}
 
 NonlinearSolver::~NonlinearSolver()

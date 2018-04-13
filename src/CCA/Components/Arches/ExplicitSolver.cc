@@ -154,8 +154,9 @@ ExplicitSolver(SimulationStateP& sharedState,
                PhysicalConstants* physConst,
                const ProcessorGroup* myworld,
                ArchesParticlesHelper* particle_helper,
-               SolverInterface* hypreSolver):
-               NonlinearSolver(myworld),
+               SolverInterface* hypreSolver,
+               const ApplicationCommon* arches ):
+               NonlinearSolver(myworld, arches),
                d_sharedState(sharedState),
                d_MAlab(MAlb),
                d_physicalConsts(physConst),
@@ -1143,7 +1144,7 @@ ExplicitSolver::initialize( const LevelP     & level,
     //  initialize
     _task_factory_map["transport_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
 
-    //  apply BCs 
+    //  apply BCs
     _task_factory_map["transport_factory"]->schedule_task_group( "all_tasks", TaskInterface::BC, dont_pack_tasks, level, sched, matls );
 
     // boundary condition factory
@@ -1417,8 +1418,8 @@ ExplicitSolver::sched_restartInitialize( const LevelP& level, SchedulerP& sched 
     d_boundaryCondition->sched_setupNewIntrusions( sched, level, matls );
 
     //turbulence models
-    _task_factory_map["turbulence_model_factory"]->schedule_task_group("all_tasks", TaskInterface::RESTART_INITIALIZE, 
-                                                                        false, level, sched, matls ); 
+    _task_factory_map["turbulence_model_factory"]->schedule_task_group("all_tasks", TaskInterface::RESTART_INITIALIZE,
+                                                                        false, level, sched, matls );
 
   }
 
@@ -1830,7 +1831,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
         // computes ic from w*ic  :
         i_transport->second->schedule_task_group("dqmom_ic_from_wic",
           TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
-        
+
         i_transport->second->schedule_task_group("dqmom_ic_from_wic",
           TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
 
