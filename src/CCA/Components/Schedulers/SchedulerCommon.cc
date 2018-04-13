@@ -901,7 +901,7 @@ SchedulerCommon::addTask(       Task        * task
   //__________________________________
   // create reduction task if computes included one or more reduction vars
   for (auto dep = task->getComputes(); dep != nullptr; dep = dep->m_next) {
-
+    
     if (dep->m_var->typeDescription()->isReductionVariable()) {
       int levelidx = dep->m_reduction_level ? dep->m_reduction_level->getIndex() : -1;
       int dw = dep->mapDataWarehouse();
@@ -1181,12 +1181,6 @@ SchedulerCommon::replaceDataWarehouse(       int     index
   if (initialization) {
     return;
   }
-
-  // std::cerr << __FUNCTION__ << "  " << __LINE__ << "  "
-  //           << get_dw(0) << "  " 
-  //           << get_dw(1) << "  " 
-  //           << getLastDW() << "  " 
-  //           << std::endl;
   
   for (unsigned i = 0; i < m_task_graphs.size(); i++) {
     DetailedTasks* dts = m_task_graphs[i]->getDetailedTasks();
@@ -1390,7 +1384,7 @@ SchedulerCommon::compile()
   }
 
   m_locallyComputedPatchVarMap->reset();
-
+  
   // TODO: which of the two cases should we be using and why do both exist - APH 02/23/18
   //       looks like this sets up superbox and superpatch sets (m_locallyComputedPatchVarMap)
 #if 1
@@ -1826,8 +1820,6 @@ SchedulerCommon::copyDataToNewGrid( const ProcessorGroup * /* pg */
 {
   DOUT(g_schedulercommon_dbg, "SchedulerCommon::copyDataToNewGrid() BGN on patches " << *patches);
 
-  // std::cerr << __FUNCTION__ << "  " << __LINE__ << std::endl;
-
   OnDemandDataWarehouse* oldDataWarehouse = dynamic_cast<OnDemandDataWarehouse*>(old_dw);
   OnDemandDataWarehouse* newDataWarehouse = dynamic_cast<OnDemandDataWarehouse*>(new_dw);
 
@@ -2152,7 +2144,7 @@ SchedulerCommon::scheduleTaskMonitoring( const LevelP& level )
 {
   if( !m_monitoring )
     return;
-  
+
   // Create and schedule a task that will record each of the
   // tasking monitoring attributes.
   Task* t = scinew Task("SchedulerCommon::recordTaskMonitoring",
@@ -2160,14 +2152,14 @@ SchedulerCommon::scheduleTaskMonitoring( const LevelP& level )
 
   // Ghost::GhostType gn = Ghost::None;
 
-  for (unsigned i = 0; i < 2; ++i)
+  for (unsigned int i = 0; i < 2; ++i)
   {
     for( const auto &it : m_monitoring_tasks[i] )
     {
       t->computes( it.second, m_dummy_matl, Task::OutOfDomain );
       
-      // overrideVariableBehavior(it.second->getName(),
-      //                          false, false, true, true, true);
+      overrideVariableBehavior(it.second->getName(),
+                               false, false, true, true, true);
       // treatAsOld copyData noScrub notCopyData noCheckpoint
     }
   }
@@ -2192,14 +2184,14 @@ SchedulerCommon::scheduleTaskMonitoring( const PatchSet* patches )
 
   // Ghost::GhostType gn = Ghost::None;
 
-  for (unsigned i = 0; i < 2; ++i)
+  for (unsigned int i = 0; i < 2; ++i)
   {
     for( const auto &it : m_monitoring_tasks[i] )
     {
       t->computes( it.second, m_dummy_matl, Task::OutOfDomain );
 
-      // overrideVariableBehavior(it.second->getName(),
-      //                          false, false, true, true, true);
+      overrideVariableBehavior(it.second->getName(),
+                               false, false, true, true, true);
       // treatAsOld copyData noScrub notCopyData noCheckpoint
     }
   }
@@ -2217,9 +2209,9 @@ void SchedulerCommon::recordTaskMonitoring( const ProcessorGroup *
                                           ,       DataWarehouse  * new_dw
                                           )
 {
-  // For all of the patches record the tasking monitoring attribute value.
-  // const Level* level = getLevel(patches);
+  int matlIndex = 0;
 
+  // For all of the patches record the tasking monitoring attribute value.
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
 
@@ -2228,7 +2220,7 @@ void SchedulerCommon::recordTaskMonitoring( const ProcessorGroup *
       for (const auto &it : m_monitoring_tasks[i]) {
         PerPatch<double> value = m_monitoring_values[i][it.first][patch->getID()];
 
-        new_dw->put(value, it.second, 0, patch);
+        new_dw->put(value, it.second, matlIndex, patch);
       }
     }
   }
@@ -2311,6 +2303,7 @@ SchedulerCommon::sumTaskMonitoringValues( DetailedTask * dtask )
           }
 
           if (value != 0.0) {
+
             // Loop through patches and add the contribution.
             for (int p = 0; p < patches->size(); ++p) {
               const Patch* patch = patches->get(p);
