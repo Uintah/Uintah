@@ -247,7 +247,7 @@ SimulationController::SimulationController( const ProcessorGroup * myworld
   m_runtime_stats.insert( OutputIORate,              std::string("OutputIORate"),     "MBytes/sec", 0 );
   m_runtime_stats.insert( ReductionIORate,           std::string("ReductionIORate"),  "MBytes/sec", 0 );
   m_runtime_stats.insert( CheckpointIORate,          std::string("CheckpointIORate"), "MBytes/sec", 0 );
-  m_runtime_stats.insert( CheckpointReducIORate,     std::string("CheckpointReducIORate"), "MBytes/sec", 0 );
+  m_runtime_stats.insert( CheckpointReductionIORate, std::string("CheckpointReductionIORate"), "MBytes/sec", 0 );
 
   m_runtime_stats.insert( NumTasks,                  std::string("NumberOfTasks"), "tasks", 0 );
   m_runtime_stats.insert( NumPatches,                std::string("NumberOfPatches"), "patches", 0 );

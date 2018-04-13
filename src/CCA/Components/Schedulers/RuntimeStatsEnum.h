@@ -77,7 +77,7 @@ namespace Uintah {
     , OutputIORate
     , ReductionIORate
     , CheckpointIORate
-    , CheckpointReducIORate
+    , CheckpointReductionIORate
 
     , SCIMemoryUsed
     , SCIMemoryMaxUsed
