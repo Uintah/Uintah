@@ -684,18 +684,6 @@ CharOxidationps<T>::eval( const Patch                 * patch
 
   CT& number_density = tsk_info->get_const_uintah_field_add< CT >( number_density_name ); // total number density
 
-  InversionBase* invf;
-
-  if ( _NUM_reactions == 2 ) {
-    invf = scinew invert_2_2;
-  }
-  else if ( _NUM_reactions == 3 ) {
-    invf = scinew invert_3_3;
-  }
-  else {
-    throw InvalidValue( "ERROR: CharOxidationSmith2016: Matrix inversion not implemented for the number of reactions being used.", __FILE__, __LINE__ );
-  }
-
   std::vector< T* >  reaction_rate;
   std::vector< CT* > old_reaction_rate;
 
@@ -951,7 +939,32 @@ CharOxidationps<T>::eval( const Patch                 * patch
         }
 
         // invert Jacobian -> (dF_(n)/drh_(n))^-1
-        invf->invert_mat( dfdrh ); // simple matrix inversion for a 2x2 matrix.
+        double a11 = dfdrh[0][0];
+        double a12 = dfdrh[0][1];
+        double a13 = dfdrh[0][2];
+        double a21 = dfdrh[1][0];
+        double a22 = dfdrh[1][1];
+        double a23 = dfdrh[1][2];
+        double a31 = dfdrh[2][0];
+        double a32 = dfdrh[2][1];
+        double a33 = dfdrh[2][2];
+
+        double det_inv = 1 / ( a11 * a22 * a33 +
+                               a21 * a32 * a13 +
+                               a31 * a12 * a23 -
+                               a11 * a32 * a23 -
+                               a31 * a22 * a13 -
+                               a21 * a12 * a33   );
+
+        dfdrh[0][0] = ( a22 * a33 - a23 * a32 ) * det_inv;
+        dfdrh[0][1] = ( a13 * a32 - a12 * a33 ) * det_inv;
+        dfdrh[0][2] = ( a12 * a23 - a13 * a22 ) * det_inv;
+        dfdrh[1][0] = ( a23 * a31 - a21 * a33 ) * det_inv;
+        dfdrh[1][1] = ( a11 * a33 - a13 * a31 ) * det_inv;
+        dfdrh[1][2] = ( a13 * a21 - a11 * a23 ) * det_inv;
+        dfdrh[2][0] = ( a21 * a32 - a22 * a31 ) * det_inv;
+        dfdrh[2][1] = ( a12 * a31 - a11 * a32 ) * det_inv;
+        dfdrh[2][2] = ( a11 * a22 - a12 * a21 ) * det_inv;
 
         // get rh_(n+1)
         double dominantRate = 0.0;
@@ -1092,9 +1105,6 @@ CharOxidationps<T>::eval( const Patch                 * patch
      // }
     }); // end Uintah::parallel_for
 
-
-  delete invf;
-  ///
 #else
 #if !defined(HAVE_CUDA)
   //The KOKKOS OPENMP version
@@ -1130,18 +1140,6 @@ CharOxidationps<T>::eval( const Patch                 * patch
   Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
 
   CT& number_density = tsk_info->get_const_uintah_field_add< CT >( number_density_name ); // total number density
-
-  InversionBase* invf;
-
-  if ( _NUM_reactions == 2 ) {
-    invf = scinew invert_2_2;
-  }
-  else if ( _NUM_reactions == 3 ) {
-    invf = scinew invert_3_3;
-  }
-  else {
-    throw InvalidValue( "ERROR: CharOxidationSmith2016: Matrix inversion not implemented for the number of reactions being used.", __FILE__, __LINE__ );
-  }
 
   std::vector< T* >  reaction_rate;
   std::vector< CT* > old_reaction_rate;
@@ -1398,7 +1396,32 @@ CharOxidationps<T>::eval( const Patch                 * patch
         }
 
         // invert Jacobian -> (dF_(n)/drh_(n))^-1
-        invf->invert_mat( dfdrh ); // simple matrix inversion for a 2x2 matrix.
+        double a11 = dfdrh[0][0];
+        double a12 = dfdrh[0][1];
+        double a13 = dfdrh[0][2];
+        double a21 = dfdrh[1][0];
+        double a22 = dfdrh[1][1];
+        double a23 = dfdrh[1][2];
+        double a31 = dfdrh[2][0];
+        double a32 = dfdrh[2][1];
+        double a33 = dfdrh[2][2];
+
+        double det_inv = 1 / ( a11 * a22 * a33 +
+                               a21 * a32 * a13 +
+                               a31 * a12 * a23 -
+                               a11 * a32 * a23 -
+                               a31 * a22 * a13 -
+                               a21 * a12 * a33   );
+
+        dfdrh[0][0] = ( a22 * a33 - a23 * a32 ) * det_inv;
+        dfdrh[0][1] = ( a13 * a32 - a12 * a33 ) * det_inv;
+        dfdrh[0][2] = ( a12 * a23 - a13 * a22 ) * det_inv;
+        dfdrh[1][0] = ( a23 * a31 - a21 * a33 ) * det_inv;
+        dfdrh[1][1] = ( a11 * a33 - a13 * a31 ) * det_inv;
+        dfdrh[1][2] = ( a13 * a21 - a11 * a23 ) * det_inv;
+        dfdrh[2][0] = ( a21 * a32 - a22 * a31 ) * det_inv;
+        dfdrh[2][1] = ( a12 * a31 - a11 * a32 ) * det_inv;
+        dfdrh[2][2] = ( a11 * a22 - a12 * a21 ) * det_inv;
 
         // get rh_(n+1)
         double dominantRate = 0.0;
@@ -1539,9 +1562,6 @@ CharOxidationps<T>::eval( const Patch                 * patch
      // }
     }); // end Uintah::parallel_for
 
-
-  delete invf;
-  ///
 #else
   //The CUDA version
 #endif // if !defined(HAVE_CUDA)
