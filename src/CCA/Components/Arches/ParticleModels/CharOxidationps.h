@@ -12,6 +12,7 @@
 #define CUBE(x)   x*x*x
 
 #define reactions_count 3
+#define species_count   4
 
 namespace Uintah {
 
@@ -859,7 +860,8 @@ CharOxidationps<T>::eval( const Patch                 * patch
         double sum_x   = 0;
 
         for ( int ns = 0; ns < _NUM_species; ns++ ) {
-          if ( _oxid_l[r] != _species_names[ns] ) {
+
+          if ( ns != _oxidizer_indices[r] ) {
             sum_x_D = sum_x_D + species_mass_frac[ns] / ( _MW_species[ns] * _D_mat[_oxidizer_indices[r]][ns] );
             sum_x   = sum_x   + species_mass_frac[ns] / ( _MW_species[ns] );
           }
@@ -1112,16 +1114,16 @@ CharOxidationps<T>::eval( const Patch                 * patch
   if   (std::is_same< Kokkos::HostSpace,  MemorySpace >::value) {
     std::cout << "The memory space was Kokkos::HostSpace" << std::endl;
   }
+
   // gas variables
   KokkosView3<const double, MemorySpace> CCuVel = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( m_cc_u_vel_name ).getKokkosView();
-  KokkosView3<const double, Kokkos::HostSpace> CCvVel = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( m_cc_v_vel_name ).getKokkosView();
-  KokkosView3<const double, Kokkos::HostSpace> CCwVel = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( m_cc_w_vel_name ).getKokkosView();
-  KokkosView3<const double, Kokkos::HostSpace> volFraction = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( m_volFraction_name ).getKokkosView();
+  KokkosView3<const double, MemorySpace> CCvVel = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( m_cc_v_vel_name ).getKokkosView();
+  KokkosView3<const double, MemorySpace> CCwVel = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( m_cc_w_vel_name ).getKokkosView();
+  KokkosView3<const double, MemorySpace> volFraction = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( m_volFraction_name ).getKokkosView();
 
-  KokkosView3<const double, Kokkos::HostSpace> den         = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( m_density_gas_name ).getKokkosView();
-  KokkosView3<const double, Kokkos::HostSpace> temperature = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( m_gas_temperature_label ).getKokkosView();
-  KokkosView3<const double, Kokkos::HostSpace> MWmix       = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( m_MW_name ).getKokkosView(); // in kmol/kg_mix
-
+  KokkosView3<const double, MemorySpace> den         = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( m_density_gas_name ).getKokkosView();
+  KokkosView3<const double, MemorySpace> temperature = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( m_gas_temperature_label ).getKokkosView();
+  KokkosView3<const double, MemorySpace> MWmix       = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( m_MW_name ).getKokkosView(); // in kmol/kg_mix
 
   typedef typename ArchesCore::VariableHelper<T>::ConstType CT; // check comment from other char model
 
@@ -1130,79 +1132,71 @@ CharOxidationps<T>::eval( const Patch                 * patch
   Vector Dx = patch->dCell();
   const double vol = Dx.x()* Dx.y()* Dx.z();
 
-  std::vector< CT* > species;
+  KokkosView3<const double, MemorySpace> species[species_count];
 
   for ( int ns = 0; ns < _NUM_species; ns++ ) {
-    CT* species_p = tsk_info->get_const_uintah_field< CT >( _species_names[ns] );
-    species.push_back( species_p );
+    species[ns] = tsk_info->get_const_uintah_field_add< CT >( _species_names[ns] ).getKokkosView();
   }
 
   Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
 
-  CT& number_density = tsk_info->get_const_uintah_field_add< CT >( number_density_name ); // total number density
+  KokkosView3<const double, MemorySpace> number_density = tsk_info->get_const_uintah_field_add< CT >( number_density_name ).getKokkosView(); // total number density
 
-  std::vector< T* >  reaction_rate;
-  std::vector< CT* > old_reaction_rate;
+  KokkosView3<      double, MemorySpace> reaction_rate[reactions_count];
+  KokkosView3<const double, MemorySpace> old_reaction_rate[reactions_count];
 
-    // model variables
-  T& char_rate          = tsk_info->get_uintah_field_add< T >( m_modelLabel );
-  T& gas_char_rate      = tsk_info->get_uintah_field_add< T >( m_gasLabel );
-  T& particle_temp_rate = tsk_info->get_uintah_field_add< T >( m_particletemp );
-  T& particle_Size_rate = tsk_info->get_uintah_field_add< T >( m_particleSize );
-  T& surface_rate       = tsk_info->get_uintah_field_add< T >( m_surfacerate );
+  // model variables
+  KokkosView3<double, MemorySpace> char_rate          = tsk_info->get_uintah_field_add< T >( m_modelLabel ).getKokkosView();
+  KokkosView3<double, MemorySpace> gas_char_rate      = tsk_info->get_uintah_field_add< T >( m_gasLabel ).getKokkosView();
+  KokkosView3<double, MemorySpace> particle_temp_rate = tsk_info->get_uintah_field_add< T >( m_particletemp ).getKokkosView();
+  KokkosView3<double, MemorySpace> particle_Size_rate = tsk_info->get_uintah_field_add< T >( m_particleSize ).getKokkosView();
+  KokkosView3<double, MemorySpace> surface_rate       = tsk_info->get_uintah_field_add< T >( m_surfacerate ).getKokkosView();
 
     // reaction rate
   for ( int r = 0; r < _NUM_reactions; r++ ) {
 
-    T*  reaction_rate_p     = tsk_info->get_uintah_field< T >       ( m_reaction_rate_names[r] );
-    CT* old_reaction_rate_p = tsk_info->get_const_uintah_field< CT >( m_reaction_rate_names[r] );
-
-    reaction_rate.push_back    ( reaction_rate_p );
-    old_reaction_rate.push_back( old_reaction_rate_p );
+    reaction_rate[r]     = tsk_info->get_uintah_field_add< T >       ( m_reaction_rate_names[r] ).getKokkosView();
+    old_reaction_rate[r] = tsk_info->get_const_uintah_field_add< CT >( m_reaction_rate_names[r] ).getKokkosView();
   }
 
   // from devol model
-  CT& devolRC = tsk_info->get_const_uintah_field_add< CT >( m_devolRC );
+  KokkosView3<const double, MemorySpace> devolRC = tsk_info->get_const_uintah_field_add< CT >( m_devolRC ).getKokkosView();
 
   // particle variables from other models
-  CT& particle_temperature = tsk_info->get_const_uintah_field_add< CT >( m_particle_temperature );
-  CT& length               = tsk_info->get_const_uintah_field_add< CT >( m_particle_length );
-  CT& particle_density     = tsk_info->get_const_uintah_field_add< CT >( m_particle_density );
-  CT& rawcoal_mass         = tsk_info->get_const_uintah_field_add< CT >( m_rcmass );
-  CT& char_mass            = tsk_info->get_const_uintah_field_add< CT >( m_char_name );
-  CT& weight               = tsk_info->get_const_uintah_field_add< CT >( m_weight_name );
-  CT& up                   = tsk_info->get_const_uintah_field_add< CT >( m_up_name );
-  CT& vp                   = tsk_info->get_const_uintah_field_add< CT >( m_vp_name );
-  CT& wp                   = tsk_info->get_const_uintah_field_add< CT >( m_wp_name );
+  KokkosView3<const double, MemorySpace> particle_temperature = tsk_info->get_const_uintah_field_add< CT >( m_particle_temperature ).getKokkosView();
+  KokkosView3<const double, MemorySpace> length               = tsk_info->get_const_uintah_field_add< CT >( m_particle_length ).getKokkosView();
+  KokkosView3<const double, MemorySpace> particle_density     = tsk_info->get_const_uintah_field_add< CT >( m_particle_density ).getKokkosView();
+  KokkosView3<const double, MemorySpace> rawcoal_mass         = tsk_info->get_const_uintah_field_add< CT >( m_rcmass ).getKokkosView();
+  KokkosView3<const double, MemorySpace> char_mass            = tsk_info->get_const_uintah_field_add< CT >( m_char_name ).getKokkosView();
+  KokkosView3<const double, MemorySpace> weight               = tsk_info->get_const_uintah_field_add< CT >( m_weight_name ).getKokkosView();
+  KokkosView3<const double, MemorySpace> up                   = tsk_info->get_const_uintah_field_add< CT >( m_up_name ).getKokkosView();
+  KokkosView3<const double, MemorySpace> vp                   = tsk_info->get_const_uintah_field_add< CT >( m_vp_name ).getKokkosView();
+  KokkosView3<const double, MemorySpace> wp                   = tsk_info->get_const_uintah_field_add< CT >( m_wp_name ).getKokkosView();
 
   // birth terms
-  CT* rawcoal_birth_ptr = nullptr;
-  CT* char_birth_ptr    = nullptr;
-  CT* length_birth_ptr  = nullptr;
+  KokkosView3<const double, MemorySpace> rawcoal_birth;
+  KokkosView3<const double, MemorySpace> char_birth;
+  KokkosView3<const double, MemorySpace> length_birth;
 
-  if (m_add_rawcoal_birth) {
-    rawcoal_birth_ptr = tsk_info->get_const_uintah_field< CT >(m_rawcoal_birth_qn_name);
+  if ( m_add_rawcoal_birth ) {
+    rawcoal_birth = tsk_info->get_const_uintah_field_add< CT >(m_rawcoal_birth_qn_name).getKokkosView();
   }
 
-  if (m_add_char_birth) {
-    char_birth_ptr   = tsk_info->get_const_uintah_field< CT >(m_char_birth_qn_name);
+  if ( m_add_char_birth ) {
+    char_birth = tsk_info->get_const_uintah_field_add< CT >(m_char_birth_qn_name).getKokkosView();
   }
 
-  if (m_add_length_birth) {
-    length_birth_ptr = tsk_info->get_const_uintah_field< CT >(m_length_birth_qn_name);
+  if ( m_add_length_birth ) {
+    length_birth = tsk_info->get_const_uintah_field_add< CT >(m_length_birth_qn_name).getKokkosView();
   }
 
-  CT& rawcoal_birth = *rawcoal_birth_ptr;
-  CT& char_birth    = *char_birth_ptr;
-  CT& length_birth  = *length_birth_ptr;
+  KokkosView3<const double, MemorySpace> weight_p_diam = tsk_info->get_const_uintah_field_add< CT >( m_particle_length_qn ).getKokkosView(); //check
+  KokkosView3<const double, MemorySpace> RC_RHS_source = tsk_info->get_const_uintah_field_add< CT >( m_RC_RHS ).getKokkosView();
+  KokkosView3<const double, MemorySpace> RHS_source    = tsk_info->get_const_uintah_field_add< CT >( m_ic_RHS ).getKokkosView();
+  KokkosView3<const double, MemorySpace> RHS_weight    = tsk_info->get_const_uintah_field_add< CT >( m_w_RHS ).getKokkosView();
+  KokkosView3<const double, MemorySpace> RHS_length    = tsk_info->get_const_uintah_field_add< CT >( m_length_RHS ).getKokkosView();
 
-  CT& weight_p_diam = tsk_info->get_const_uintah_field_add< CT >( m_particle_length_qn ); //check
-  CT& RC_RHS_source = tsk_info->get_const_uintah_field_add< CT >( m_RC_RHS );
-  CT& RHS_source    = tsk_info->get_const_uintah_field_add< CT >( m_ic_RHS );
-  CT& RHS_weight    = tsk_info->get_const_uintah_field_add< CT >( m_w_RHS );
-  CT& RHS_length    = tsk_info->get_const_uintah_field_add< CT >( m_length_RHS );
-
-  CT& surfAreaF = tsk_info->get_const_uintah_field_add< CT >( m_surfAreaF_name );
+  KokkosView3<const double, MemorySpace> surfAreaF = tsk_info->get_const_uintah_field_add< CT >( m_surfAreaF_name ).getKokkosView();
 
   Uintah::BlockRange range_E(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() ); 
   Uintah::parallel_for( range_E, [&](int i, int j, int k){ 
@@ -1316,7 +1310,8 @@ CharOxidationps<T>::eval( const Patch                 * patch
         double sum_x   = 0;
 
         for ( int ns = 0; ns < _NUM_species; ns++ ) {
-          if ( _oxid_l[r] != _species_names[ns] ) {
+
+          if ( ns != _oxidizer_indices[r] ) {
             sum_x_D = sum_x_D + species_mass_frac[ns] / ( _MW_species[ns] * _D_mat[_oxidizer_indices[r]][ns] );
             sum_x   = sum_x   + species_mass_frac[ns] / ( _MW_species[ns] );
           }
