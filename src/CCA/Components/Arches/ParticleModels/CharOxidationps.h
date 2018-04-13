@@ -849,18 +849,18 @@ CharOxidationps<T>::eval( const Patch                 * patch
         }
       }
 
-      const double Re_p = std::sqrt( ( CCuVel(i,j,k) - up(i,j,k) ) * ( CCuVel(i,j,k) - up(i,j,k) ) +
-                        ( CCvVel(i,j,k) - vp(i,j,k) ) * ( CCvVel(i,j,k) - vp(i,j,k) ) +
-                        ( CCwVel(i,j,k) - wp(i,j,k) ) * ( CCwVel(i,j,k) - wp(i,j,k) ) )*
-                        p_diam / ( _dynamic_visc / gas_rho ); // Reynolds number [-]
+      const double Re_p = sqrt( ( CCuVel(i,j,k) - up(i,j,k) ) * ( CCuVel(i,j,k) - up(i,j,k) ) +
+                                ( CCvVel(i,j,k) - vp(i,j,k) ) * ( CCvVel(i,j,k) - vp(i,j,k) ) +
+                                ( CCwVel(i,j,k) - wp(i,j,k) ) * ( CCwVel(i,j,k) - wp(i,j,k) ) )*
+                                p_diam / ( _dynamic_visc / gas_rho ); // Reynolds number [-]
 
       const double x_org    = (rc + ch) / (rc + ch + m_mass_ash );
       const double cg       = _gasPressure / (_R * gas_T * 1000.); // [kmoles/m^3] - Gas concentration
       const double p_area   = M_PI * SQUARE( p_diam );             // particle surface area [m^2]
       const double p_volume = M_PI / 6. * CUBE( p_diam );          // particle volme [m^3]
-      const double p_void   = std::fmax( 1e-10, 1. - ( 1. / p_volume ) * ( ( rc + ch ) / m_rho_org_bulk + m_mass_ash / _rho_ash_bulk ) ); // current porosity. (-) required due to sign convention of char.
+      const double p_void   = fmax( 1e-10, 1. - ( 1. / p_volume ) * ( ( rc + ch ) / m_rho_org_bulk + m_mass_ash / _rho_ash_bulk ) ); // current porosity. (-) required due to sign convention of char.
 
-      const double Sj       = _init_particle_density / p_rho * ( ( 1 - p_void ) / ( 1 - _p_void0 ) ) * std::sqrt( 1 - std::fmin( 1.0, ( 1. / ( _p_void0 * ( 1. - _p_void0 ) ) ) * log( ( 1 - p_void ) / ( 1 - _p_void0 ) ) ) );
+      const double Sj       = _init_particle_density / p_rho * ( ( 1 - p_void ) / ( 1 - _p_void0 ) ) * sqrt( 1 - fmin( 1.0, ( 1. / ( _p_void0 * ( 1. - _p_void0 ) ) ) * log( ( 1 - p_void ) / ( 1 - _p_void0 ) ) ) );
       const double rp  = 2 * p_void * (1. - p_void ) / ( p_rho * Sj * _Sg0 ); // average particle radius [m]
 
       // Calculate oxidizer diffusion coefficient
@@ -881,13 +881,13 @@ CharOxidationps<T>::eval( const Patch                 * patch
           }
         }
 
-        D_oxid_mix_l[r] = sum_x / sum_x_D * std::sqrt( CUBE( gas_T / _T0 ) );
-        Sh[r]             = 2.0 + 0.6 * std::sqrt( Re_p ) * std::cbrt( _dynamic_visc / ( gas_rho * D_oxid_mix_l[r] ) ); // Sherwood number [-]
+        D_oxid_mix_l[r] = sum_x / sum_x_D * sqrt( CUBE( gas_T / _T0 ) );
+        Sh[r]             = 2.0 + 0.6 * sqrt( Re_p ) * cbrt( _dynamic_visc / ( gas_rho * D_oxid_mix_l[r] ) ); // Sherwood number [-]
         co_r[r]           = cg * ( oxid_mass_frac[r] * MW / _MW_l[r] ); // oxidizer concentration, [kmoles/m^3]
         k_r[r] = ( 10.0 * _a_l[r] * exp( - _e_l[r] / ( _R_cal * p_T)) * _R * p_T * 1000.0) / ( _Mh * phi_l[r] * 101325. ); // [m / s]
-        M_T[r]            = p_diam / 2. * std::sqrt( k_r[r] * _Sg0 * Sj * p_rho /                                 // Thiele modulus, Mitchell's formulation
-                              ( p_void / _tau / ( 1. / ( 97. * rp * std::sqrt( p_T / _MW_species[r] ) ) + 1. / D_oxid_mix_l[r] ) ) );
-        effectivenessF[r] = ( M_T[r] < 1e-5 ) ? 1.0 : 3. / M_T[r] * ( 1. / std::tanh( M_T[r] ) - 1. / M_T[r] ); // effectiveness factor
+        M_T[r]            = p_diam / 2. * sqrt( k_r[r] * _Sg0 * Sj * p_rho /                                 // Thiele modulus, Mitchell's formulation
+                              ( p_void / _tau / ( 1. / ( 97. * rp * sqrt( p_T / _MW_species[r] ) ) + 1. / D_oxid_mix_l[r] ) ) );
+        effectivenessF[r] = ( M_T[r] < 1e-5 ) ? 1.0 : 3. / M_T[r] * ( 1. / tanh( M_T[r] ) - 1. / M_T[r] ); // effectiveness factor
       }
 
       // Newton-Raphson solve for rh_l.
@@ -915,8 +915,8 @@ CharOxidationps<T>::eval( const Patch                 * patch
 
         for ( int l = 0; l < _NUM_reactions; l++ ) {
 
-          Bjm     = std::min( 80.0, rtot * p_diam / ( D_oxid_mix_l[l] * gas_rho ) ); // [-] // this is the derived for mass flux  BSL chapter 22
-          mtc_r   = ( Sh[l] * D_oxid_mix_l[l] * ( ( Bjm >= 1e-7 ) ?  Bjm / ( std::exp( Bjm ) - 1. ) : 1.0 ) ) / p_diam; // [m/s]
+          Bjm     = fmin( 80.0, rtot * p_diam / ( D_oxid_mix_l[l] * gas_rho ) ); // [-] // this is the derived for mass flux  BSL chapter 22
+          mtc_r   = ( Sh[l] * D_oxid_mix_l[l] * ( ( Bjm >= 1e-7 ) ?  Bjm / ( exp( Bjm ) - 1. ) : 1.0 ) ) / p_diam; // [m/s]
           Sfactor = 1 + effectivenessF[l] * p_diam * p_rho * _Sg0 * Sj / ( 6. * ( 1. - p_void ) );
           F[l]    = rh_l[l] - ( _Mh * MW * phi_l[l] * k_r[l] * mtc_r * Sfactor * co_r[l] * cg ) /
                     ( ( MW * cg * ( k_r[l] * x_org * ( 1. - p_void ) * Sfactor + mtc_r ) ) + rtot ); // [kg-char/m^3/s]
@@ -937,8 +937,8 @@ CharOxidationps<T>::eval( const Patch                 * patch
 
           for ( int l = 0; l < _NUM_reactions; l++ ) {
 
-            Bjm        = std::min( 80.0, rtot * p_diam / ( D_oxid_mix_l[l] * gas_rho ) ); // [-] // this is the derived for mass flux  BSL chapter 22
-            mtc_r      = ( Sh[l] * D_oxid_mix_l[l] * ( ( Bjm >= 1e-7 ) ?  Bjm / ( std::exp( Bjm ) - 1. ) : 1.0 ) ) / p_diam; // [m/s]
+            Bjm        = fmin( 80.0, rtot * p_diam / ( D_oxid_mix_l[l] * gas_rho ) ); // [-] // this is the derived for mass flux  BSL chapter 22
+            mtc_r      = ( Sh[l] * D_oxid_mix_l[l] * ( ( Bjm >= 1e-7 ) ?  Bjm / ( exp( Bjm ) - 1. ) : 1.0 ) ) / p_diam; // [m/s]
             Sfactor    = 1 + effectivenessF[l] * p_diam * p_rho * _Sg0 * Sj / ( 6. * ( 1. - p_void ) );
             F_delta[l] = rh_l_delta[l] - ( _Mh * MW * phi_l[l] * k_r[l] * mtc_r * Sfactor * co_r[l] * cg ) /
                          ( ( MW * cg * ( k_r[l] * x_org * ( 1. - p_void ) * Sfactor + mtc_r ) ) + rtot ); // [kg-char/m^3/s]
@@ -963,17 +963,17 @@ CharOxidationps<T>::eval( const Patch                 * patch
               rh_l_new[r] -= dfdrh[r][var] * F[var];
             }
 
-            dominantRate = std::fmax( dominantRate, std::fabs( rh_l_new[r] ) );
+            dominantRate = fmax( dominantRate, fabs( rh_l_new[r] ) );
           }
 
           double residual = 0.0;
 
           for ( int r = 0; r < _NUM_reactions; r++ ) {
-            residual += std::fabs( F[r] ) / dominantRate;
+            residual += fabs( F[r] ) / dominantRate;
           }
 
           for ( int r = 0; r < _NUM_reactions; r++ ) {
-            rh_l_new[r] = std::fmin( 100000., std::fmax( 0.0, rh_l_new[r] ) ); // max rate adjusted based on pressure (empirical limit)
+            rh_l_new[r] = fmin( 100000., fmax( 0.0, rh_l_new[r] ) ); // max rate adjusted based on pressure (empirical limit)
           }
 
           if ( residual < 1e-3 ) {
@@ -984,28 +984,28 @@ CharOxidationps<T>::eval( const Patch                 * patch
 
         if ( count > 90 ) {
         //if ( count > 1 ) {
-          std::cout << "warning no solution found in char ox: [env " << _Nenv << " "  << i << ", " << j << ", " << k << "] " << std::endl;
-          std::cout << "F[0]: "              << F[0]              << std::endl;
-          std::cout << "F[1]: "              << F[1]              << std::endl;
-          std::cout << "F[2]: "              << F[2]              << std::endl;
-          std::cout << "p_void: "            << p_void            << std::endl;
-          std::cout << "gas_rho: "           << gas_rho           << std::endl;
-          std::cout << "gas_T: "             << gas_T             << std::endl;
-          std::cout << "p_T: "               << p_T               << std::endl;
-          std::cout << "p_diam: "            << p_diam            << std::endl;
-          std::cout << "w: "                 << w                 << std::endl;
-          std::cout << "MW: "                << MW                << std::endl;
-          std::cout << "r_devol_ns: "        << r_devol_ns        << std::endl;
-          std::cout << "D_oxid_mix_l[0]: "   << D_oxid_mix_l[0]   << std::endl;
-          std::cout << "D_oxid_mix_l[1]: "   << D_oxid_mix_l[1]   << std::endl;
-          std::cout << "D_oxid_mix_l[2]: "   << D_oxid_mix_l[2]   << std::endl;
-          std::cout << "rh_l_new[0]: "       << rh_l_new[0]       << std::endl;
-          std::cout << "rh_l_new[1]: "       << rh_l_new[1]       << std::endl;
-          std::cout << "rh_l_new[2]: "       << rh_l_new[2]       << std::endl;
-          std::cout << "org: "               << rc + ch           << std::endl;
-          std::cout << "x_org: "             << x_org             << std::endl;
-          std::cout << "p_rho: "             << p_rho             << std::endl;
-          std::cout << "p_void0: "           << _p_void0          << std::endl;
+          printf( "warning no solution found in char ox: [env %d %d, %d, %d ]\n", _Nenv, i, j, k );
+          printf( "F[0]: %g\n",            F[0] );
+          printf( "F[1]: %g\n",            F[1] );
+          printf( "F[2]: %g\n",            F[2] );
+          printf( "p_void: %g\n",          p_void );
+          printf( "gas_rho: %g\n",         gas_rho );
+          printf( "gas_T: %g\n",           gas_T );
+          printf( "p_T: %g\n",             p_T );
+          printf( "p_diam: %g\n",          p_diam );
+          printf( "w: %g\n",               w );
+          printf( "MW: %g\n",              MW );
+          printf( "r_devol_ns: %g\n",      r_devol_ns );
+          printf( "D_oxid_mix_l[0]: %g\n", D_oxid_mix_l[0] );
+          printf( "D_oxid_mix_l[1]: %g\n", D_oxid_mix_l[1] );
+          printf( "D_oxid_mix_l[2]: %g\n", D_oxid_mix_l[2] );
+          printf( "rh_l_new[0]: %g\n",     rh_l_new[0] );
+          printf( "rh_l_new[1]: %g\n",     rh_l_new[1] );
+          printf( "rh_l_new[2]: %g\n",     rh_l_new[2] );
+          printf( "org: %g\n",             rc + ch );
+          printf( "x_org: %g\n",           x_org );
+          printf( "p_rho: %g\n",           p_rho );
+          printf( "p_void0: %g\n",         m_p_void0 );
         }
 
         double char_mass_rate      = 0.0;
@@ -1023,7 +1023,7 @@ CharOxidationps<T>::eval( const Patch                 * patch
 
           // check to see if reaction rate is oxidizer limited.
           const double oxi_lim = ( oxid_mass_frac[r] * gas_rho * surfaceAreaFraction ) / ( dt * w );   // [kg/s/#] // here the surfaceAreaFraction parameter is allowing us to only consume the oxidizer multiplied by the weighted area fraction for the current particle.
-          const double rh_l_i  = std::fmin( rh_l_new[r] * p_area * x_org * ( 1. - p_void ), oxi_lim ); // [kg/s/#]
+          const double rh_l_i  = fmin( rh_l_new[r] * p_area * x_org * ( 1. - p_void ), oxi_lim ); // [kg/s/#]
 
           char_mass_rate      += -rh_l_i; // [kg/s/#] // negative sign because we are computing the destruction rate for the particles.
           d_mass              += rh_l_i;
@@ -1041,13 +1041,13 @@ CharOxidationps<T>::eval( const Patch                 * patch
 
         // rate clipping for char_mass_rate
         if ( m_add_rawcoal_birth && m_add_char_birth ) {
-          char_mass_rate = std::fmax( char_mass_rate, -( ( rc + ch ) / ( dt ) + ( RHS + RHS_v ) / ( vol * w ) + r_devol / w + char_birth(i,j,k) / w + rawcoal_birth(i,j,k) / w ) ); // [kg/s/#]
+          char_mass_rate = fmax( char_mass_rate, -( ( rc + ch ) / ( dt ) + ( RHS + RHS_v ) / ( vol * w ) + r_devol / w + char_birth(i,j,k) / w + rawcoal_birth(i,j,k) / w ) ); // [kg/s/#]
         }
         else {
-          char_mass_rate = std::fmax( char_mass_rate, - ( ( rc + ch ) / ( dt ) + ( RHS + RHS_v ) / ( vol * w ) + r_devol / w ) ); // [kg/s/#]
+          char_mass_rate = fmax( char_mass_rate, - ( ( rc + ch ) / ( dt ) + ( RHS + RHS_v ) / ( vol * w ) + r_devol / w ) ); // [kg/s/#]
         }
 
-        char_mass_rate = std::fmin( 0.0, char_mass_rate ); // [kg/s/#] make sure we aren't creating char.
+        char_mass_rate = fmin( 0.0, char_mass_rate ); // [kg/s/#] make sure we aren't creating char.
 
         // organic consumption rate
         char_rate(i,j,k) = ( char_mass_rate * w ) / ( m_char_scaling_constant * m_weight_scaling_constant ); // [kg/m^3/s - scaled]
@@ -1060,8 +1060,8 @@ CharOxidationps<T>::eval( const Patch                 * patch
                                                                                                     // note: this model is designed to work with EnthalpyShaddix. The effect of ksi has already been added to Qreaction so we divide here.
 
         // particle shrinkage rate
-        const double updated_weight = std::fmax( w / m_weight_scaling_constant + dt / vol * ( RHS_weight(i,j,k) ), 1e-15 );
-        const double min_p_diam     = std::pow( m_mass_ash * 6 / _rho_ash_bulk / ( 1. - m_p_voidmin ) / M_PI, 1. / 3. );
+        const double updated_weight = fmax( w / m_weight_scaling_constant + dt / vol * ( RHS_weight(i,j,k) ), 1e-15 );
+        const double min_p_diam     = pow( m_mass_ash * 6 / _rho_ash_bulk / ( 1. - m_p_voidmin ) / M_PI, 1. / 3. );
 
         double max_Size_rate = 0.0;
 
@@ -1076,7 +1076,7 @@ CharOxidationps<T>::eval( const Patch                 * patch
                     w / m_weight_scaling_constant * 2. * x_org * surface_rate_factor * char_mass_rate /
                     m_rho_org_bulk / p_area / x_org / ( 1. - p_void ) / m_length_scaling_constant; // [m/s]
 
-        particle_Size_rate(i,j,k) = std::fmax( max_Size_rate, Size_rate ); // [m/s] -- these source terms are negative.
+        particle_Size_rate(i,j,k) = fmax( max_Size_rate, Size_rate ); // [m/s] -- these source terms are negative.
         surface_rate(i,j,k)       = char_mass_rate / p_area;               // in [kg/(s # m^2)]
 
       } // end if ( weight(i,j,k) / m_weight_scaling_constant[l] < _weight_small ) else
@@ -1296,18 +1296,18 @@ CharOxidationps<T>::eval( const Patch                 * patch
         }
       }
 
-      const double Re_p = std::sqrt( ( CCuVel(i,j,k) - up(i,j,k) ) * ( CCuVel(i,j,k) - up(i,j,k) ) +
-                        ( CCvVel(i,j,k) - vp(i,j,k) ) * ( CCvVel(i,j,k) - vp(i,j,k) ) +
-                        ( CCwVel(i,j,k) - wp(i,j,k) ) * ( CCwVel(i,j,k) - wp(i,j,k) ) )*
-                        p_diam / ( _dynamic_visc / gas_rho ); // Reynolds number [-]
+      const double Re_p = sqrt( ( CCuVel(i,j,k) - up(i,j,k) ) * ( CCuVel(i,j,k) - up(i,j,k) ) +
+                                ( CCvVel(i,j,k) - vp(i,j,k) ) * ( CCvVel(i,j,k) - vp(i,j,k) ) +
+                                ( CCwVel(i,j,k) - wp(i,j,k) ) * ( CCwVel(i,j,k) - wp(i,j,k) ) )*
+                                p_diam / ( _dynamic_visc / gas_rho ); // Reynolds number [-]
 
       const double x_org    = (rc + ch) / (rc + ch + m_mass_ash );
       const double cg       = _gasPressure / (_R * gas_T * 1000.); // [kmoles/m^3] - Gas concentration
       const double p_area   = M_PI * SQUARE( p_diam );             // particle surface area [m^2]
       const double p_volume = M_PI / 6. * CUBE( p_diam );          // particle volme [m^3]
-      const double p_void   = std::fmax( 1e-10, 1. - ( 1. / p_volume ) * ( ( rc + ch ) / m_rho_org_bulk + m_mass_ash / _rho_ash_bulk ) ); // current porosity. (-) required due to sign convention of char.
+      const double p_void   = fmax( 1e-10, 1. - ( 1. / p_volume ) * ( ( rc + ch ) / m_rho_org_bulk + m_mass_ash / _rho_ash_bulk ) ); // current porosity. (-) required due to sign convention of char.
 
-      const double Sj       = _init_particle_density / p_rho * ( ( 1 - p_void ) / ( 1 - _p_void0 ) ) * std::sqrt( 1 - std::fmin( 1.0, ( 1. / ( _p_void0 * ( 1. - _p_void0 ) ) ) * log( ( 1 - p_void ) / ( 1 - _p_void0 ) ) ) );
+      const double Sj       = _init_particle_density / p_rho * ( ( 1 - p_void ) / ( 1 - _p_void0 ) ) * sqrt( 1 - fmin( 1.0, ( 1. / ( _p_void0 * ( 1. - _p_void0 ) ) ) * log( ( 1 - p_void ) / ( 1 - _p_void0 ) ) ) );
       const double rp  = 2 * p_void * (1. - p_void ) / ( p_rho * Sj * _Sg0 ); // average particle radius [m]
 
       // Calculate oxidizer diffusion coefficient
@@ -1328,13 +1328,13 @@ CharOxidationps<T>::eval( const Patch                 * patch
           }
         }
 
-        D_oxid_mix_l[r] = sum_x / sum_x_D * std::sqrt( CUBE( gas_T / _T0 ) );
-        Sh[r]             = 2.0 + 0.6 * std::sqrt( Re_p ) * std::cbrt( _dynamic_visc / ( gas_rho * D_oxid_mix_l[r] ) ); // Sherwood number [-]
+        D_oxid_mix_l[r] = sum_x / sum_x_D * sqrt( CUBE( gas_T / _T0 ) );
+        Sh[r]             = 2.0 + 0.6 * sqrt( Re_p ) * cbrt( _dynamic_visc / ( gas_rho * D_oxid_mix_l[r] ) ); // Sherwood number [-]
         co_r[r]           = cg * ( oxid_mass_frac[r] * MW / _MW_l[r] ); // oxidizer concentration, [kmoles/m^3]
         k_r[r] = ( 10.0 * _a_l[r] * exp( - _e_l[r] / ( _R_cal * p_T)) * _R * p_T * 1000.0) / ( _Mh * phi_l[r] * 101325. ); // [m / s]
-        M_T[r]            = p_diam / 2. * std::sqrt( k_r[r] * _Sg0 * Sj * p_rho /                                 // Thiele modulus, Mitchell's formulation
-                              ( p_void / _tau / ( 1. / ( 97. * rp * std::sqrt( p_T / _MW_species[r] ) ) + 1. / D_oxid_mix_l[r] ) ) );
-        effectivenessF[r] = ( M_T[r] < 1e-5 ) ? 1.0 : 3. / M_T[r] * ( 1. / std::tanh( M_T[r] ) - 1. / M_T[r] ); // effectiveness factor
+        M_T[r]            = p_diam / 2. * sqrt( k_r[r] * _Sg0 * Sj * p_rho /                                 // Thiele modulus, Mitchell's formulation
+                              ( p_void / _tau / ( 1. / ( 97. * rp * sqrt( p_T / _MW_species[r] ) ) + 1. / D_oxid_mix_l[r] ) ) );
+        effectivenessF[r] = ( M_T[r] < 1e-5 ) ? 1.0 : 3. / M_T[r] * ( 1. / tanh( M_T[r] ) - 1. / M_T[r] ); // effectiveness factor
       }
 
       // Newton-Raphson solve for rh_l.
@@ -1362,8 +1362,8 @@ CharOxidationps<T>::eval( const Patch                 * patch
 
         for ( int l = 0; l < _NUM_reactions; l++ ) {
 
-          Bjm     = std::min( 80.0, rtot * p_diam / ( D_oxid_mix_l[l] * gas_rho ) ); // [-] // this is the derived for mass flux  BSL chapter 22
-          mtc_r   = ( Sh[l] * D_oxid_mix_l[l] * ( ( Bjm >= 1e-7 ) ?  Bjm / ( std::exp( Bjm ) - 1. ) : 1.0 ) ) / p_diam; // [m/s]
+          Bjm     = fmin( 80.0, rtot * p_diam / ( D_oxid_mix_l[l] * gas_rho ) ); // [-] // this is the derived for mass flux  BSL chapter 22
+          mtc_r   = ( Sh[l] * D_oxid_mix_l[l] * ( ( Bjm >= 1e-7 ) ?  Bjm / ( exp( Bjm ) - 1. ) : 1.0 ) ) / p_diam; // [m/s]
           Sfactor = 1 + effectivenessF[l] * p_diam * p_rho * _Sg0 * Sj / ( 6. * ( 1. - p_void ) );
           F[l]    = rh_l[l] - ( _Mh * MW * phi_l[l] * k_r[l] * mtc_r * Sfactor * co_r[l] * cg ) /
                     ( ( MW * cg * ( k_r[l] * x_org * ( 1. - p_void ) * Sfactor + mtc_r ) ) + rtot ); // [kg-char/m^3/s]
@@ -1384,8 +1384,8 @@ CharOxidationps<T>::eval( const Patch                 * patch
 
           for ( int l = 0; l < _NUM_reactions; l++ ) {
 
-            Bjm        = std::min( 80.0, rtot * p_diam / ( D_oxid_mix_l[l] * gas_rho ) ); // [-] // this is the derived for mass flux  BSL chapter 22
-            mtc_r      = ( Sh[l] * D_oxid_mix_l[l] * ( ( Bjm >= 1e-7 ) ?  Bjm / ( std::exp( Bjm ) - 1. ) : 1.0 ) ) / p_diam; // [m/s]
+            Bjm        = fmin( 80.0, rtot * p_diam / ( D_oxid_mix_l[l] * gas_rho ) ); // [-] // this is the derived for mass flux  BSL chapter 22
+            mtc_r      = ( Sh[l] * D_oxid_mix_l[l] * ( ( Bjm >= 1e-7 ) ?  Bjm / ( exp( Bjm ) - 1. ) : 1.0 ) ) / p_diam; // [m/s]
             Sfactor    = 1 + effectivenessF[l] * p_diam * p_rho * _Sg0 * Sj / ( 6. * ( 1. - p_void ) );
             F_delta[l] = rh_l_delta[l] - ( _Mh * MW * phi_l[l] * k_r[l] * mtc_r * Sfactor * co_r[l] * cg ) /
                          ( ( MW * cg * ( k_r[l] * x_org * ( 1. - p_void ) * Sfactor + mtc_r ) ) + rtot ); // [kg-char/m^3/s]
@@ -1410,17 +1410,17 @@ CharOxidationps<T>::eval( const Patch                 * patch
               rh_l_new[r] -= dfdrh[r][var] * F[var];
             }
 
-            dominantRate = std::fmax( dominantRate, std::fabs( rh_l_new[r] ) );
+            dominantRate = fmax( dominantRate, fabs( rh_l_new[r] ) );
           }
 
           double residual = 0.0;
 
           for ( int r = 0; r < _NUM_reactions; r++ ) {
-            residual += std::fabs( F[r] ) / dominantRate;
+            residual += fabs( F[r] ) / dominantRate;
           }
 
           for ( int r = 0; r < _NUM_reactions; r++ ) {
-            rh_l_new[r] = std::fmin( 100000., std::fmax( 0.0, rh_l_new[r] ) ); // max rate adjusted based on pressure (empirical limit)
+            rh_l_new[r] = fmin( 100000., fmax( 0.0, rh_l_new[r] ) ); // max rate adjusted based on pressure (empirical limit)
           }
 
           if ( residual < 1e-3 ) {
@@ -1431,28 +1431,28 @@ CharOxidationps<T>::eval( const Patch                 * patch
 
         if ( count > 90 ) {
         //if ( count > 1 ) {
-          std::cout << "warning no solution found in char ox: [env " << _Nenv << " "  << i << ", " << j << ", " << k << "] " << std::endl;
-          std::cout << "F[0]: "              << F[0]              << std::endl;
-          std::cout << "F[1]: "              << F[1]              << std::endl;
-          std::cout << "F[2]: "              << F[2]              << std::endl;
-          std::cout << "p_void: "            << p_void            << std::endl;
-          std::cout << "gas_rho: "           << gas_rho           << std::endl;
-          std::cout << "gas_T: "             << gas_T             << std::endl;
-          std::cout << "p_T: "               << p_T               << std::endl;
-          std::cout << "p_diam: "            << p_diam            << std::endl;
-          std::cout << "w: "                 << w                 << std::endl;
-          std::cout << "MW: "                << MW                << std::endl;
-          std::cout << "r_devol_ns: "        << r_devol_ns        << std::endl;
-          std::cout << "D_oxid_mix_l[0]: "   << D_oxid_mix_l[0]   << std::endl;
-          std::cout << "D_oxid_mix_l[1]: "   << D_oxid_mix_l[1]   << std::endl;
-          std::cout << "D_oxid_mix_l[2]: "   << D_oxid_mix_l[2]   << std::endl;
-          std::cout << "rh_l_new[0]: "       << rh_l_new[0]       << std::endl;
-          std::cout << "rh_l_new[1]: "       << rh_l_new[1]       << std::endl;
-          std::cout << "rh_l_new[2]: "       << rh_l_new[2]       << std::endl;
-          std::cout << "org: "               << rc + ch           << std::endl;
-          std::cout << "x_org: "             << x_org             << std::endl;
-          std::cout << "p_rho: "             << p_rho             << std::endl;
-          std::cout << "p_void0: "           << _p_void0          << std::endl;
+          printf( "warning no solution found in char ox: [env %d %d, %d, %d ]\n", _Nenv, i, j, k );
+          printf( "F[0]: %g\n",            F[0] );
+          printf( "F[1]: %g\n",            F[1] );
+          printf( "F[2]: %g\n",            F[2] );
+          printf( "p_void: %g\n",          p_void );
+          printf( "gas_rho: %g\n",         gas_rho );
+          printf( "gas_T: %g\n",           gas_T );
+          printf( "p_T: %g\n",             p_T );
+          printf( "p_diam: %g\n",          p_diam );
+          printf( "w: %g\n",               w );
+          printf( "MW: %g\n",              MW );
+          printf( "r_devol_ns: %g\n",      r_devol_ns );
+          printf( "D_oxid_mix_l[0]: %g\n", D_oxid_mix_l[0] );
+          printf( "D_oxid_mix_l[1]: %g\n", D_oxid_mix_l[1] );
+          printf( "D_oxid_mix_l[2]: %g\n", D_oxid_mix_l[2] );
+          printf( "rh_l_new[0]: %g\n",     rh_l_new[0] );
+          printf( "rh_l_new[1]: %g\n",     rh_l_new[1] );
+          printf( "rh_l_new[2]: %g\n",     rh_l_new[2] );
+          printf( "org: %g\n",             rc + ch );
+          printf( "x_org: %g\n",           x_org );
+          printf( "p_rho: %g\n",           p_rho );
+          printf( "p_void0: %g\n",         m_p_void0 );
         }
 
         double char_mass_rate      = 0.0;
@@ -1470,7 +1470,7 @@ CharOxidationps<T>::eval( const Patch                 * patch
 
           // check to see if reaction rate is oxidizer limited.
           const double oxi_lim = ( oxid_mass_frac[r] * gas_rho * surfaceAreaFraction ) / ( dt * w );   // [kg/s/#] // here the surfaceAreaFraction parameter is allowing us to only consume the oxidizer multiplied by the weighted area fraction for the current particle.
-          const double rh_l_i  = std::fmin( rh_l_new[r] * p_area * x_org * ( 1. - p_void ), oxi_lim ); // [kg/s/#]
+          const double rh_l_i  = fmin( rh_l_new[r] * p_area * x_org * ( 1. - p_void ), oxi_lim ); // [kg/s/#]
 
           char_mass_rate      += -rh_l_i; // [kg/s/#] // negative sign because we are computing the destruction rate for the particles.
           d_mass              += rh_l_i;
@@ -1488,13 +1488,13 @@ CharOxidationps<T>::eval( const Patch                 * patch
 
         // rate clipping for char_mass_rate
         if ( m_add_rawcoal_birth && m_add_char_birth ) {
-          char_mass_rate = std::fmax( char_mass_rate, -( ( rc + ch ) / ( dt ) + ( RHS + RHS_v ) / ( vol * w ) + r_devol / w + char_birth(i,j,k) / w + rawcoal_birth(i,j,k) / w ) ); // [kg/s/#]
+          char_mass_rate = fmax( char_mass_rate, -( ( rc + ch ) / ( dt ) + ( RHS + RHS_v ) / ( vol * w ) + r_devol / w + char_birth(i,j,k) / w + rawcoal_birth(i,j,k) / w ) ); // [kg/s/#]
         }
         else {
-          char_mass_rate = std::fmax( char_mass_rate, - ( ( rc + ch ) / ( dt ) + ( RHS + RHS_v ) / ( vol * w ) + r_devol / w ) ); // [kg/s/#]
+          char_mass_rate = fmax( char_mass_rate, - ( ( rc + ch ) / ( dt ) + ( RHS + RHS_v ) / ( vol * w ) + r_devol / w ) ); // [kg/s/#]
         }
 
-        char_mass_rate = std::fmin( 0.0, char_mass_rate ); // [kg/s/#] make sure we aren't creating char.
+        char_mass_rate = fmin( 0.0, char_mass_rate ); // [kg/s/#] make sure we aren't creating char.
 
         // organic consumption rate
         char_rate(i,j,k) = ( char_mass_rate * w ) / ( m_char_scaling_constant * m_weight_scaling_constant ); // [kg/m^3/s - scaled]
@@ -1507,8 +1507,8 @@ CharOxidationps<T>::eval( const Patch                 * patch
                                                                                                     // note: this model is designed to work with EnthalpyShaddix. The effect of ksi has already been added to Qreaction so we divide here.
 
         // particle shrinkage rate
-        const double updated_weight = std::fmax( w / m_weight_scaling_constant + dt / vol * ( RHS_weight(i,j,k) ), 1e-15 );
-        const double min_p_diam     = std::pow( m_mass_ash * 6 / _rho_ash_bulk / ( 1. - m_p_voidmin ) / M_PI, 1. / 3. );
+        const double updated_weight = fmax( w / m_weight_scaling_constant + dt / vol * ( RHS_weight(i,j,k) ), 1e-15 );
+        const double min_p_diam     = pow( m_mass_ash * 6 / _rho_ash_bulk / ( 1. - m_p_voidmin ) / M_PI, 1. / 3. );
 
         double max_Size_rate = 0.0;
 
@@ -1523,7 +1523,7 @@ CharOxidationps<T>::eval( const Patch                 * patch
                     w / m_weight_scaling_constant * 2. * x_org * surface_rate_factor * char_mass_rate /
                     m_rho_org_bulk / p_area / x_org / ( 1. - p_void ) / m_length_scaling_constant; // [m/s]
 
-        particle_Size_rate(i,j,k) = std::fmax( max_Size_rate, Size_rate ); // [m/s] -- these source terms are negative.
+        particle_Size_rate(i,j,k) = fmax( max_Size_rate, Size_rate ); // [m/s] -- these source terms are negative.
         surface_rate(i,j,k)       = char_mass_rate / p_area;               // in [kg/(s # m^2)]
 
       } // end if ( weight(i,j,k) / m_weight_scaling_constant[l] < _weight_small ) else
