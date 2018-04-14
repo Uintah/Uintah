@@ -1797,11 +1797,16 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
 
       //Get all size information about this dependency.
       IntVector low, high; // lowOffset, highOffset;
-      if (uses_SHRT_MAX) {
-        level->computeVariableExtents(type, low, high);
+      if (type == TypeDescription::PerPatch || type == TypeDescription::ReductionVariable) {
+        low.x(0); low.y(0); low.z(0);
+        high.x(0); high.y(0); high.z(0);
       } else {
-        Patch::VariableBasis basis = Patch::translateTypeToBasis(type, false);
-        patch->computeVariableExtents(basis, curDependency->m_var->getBoundaryLayer(), curDependency->m_gtype, curDependency->m_num_ghost_cells, low, high);
+        if (uses_SHRT_MAX) {
+          level->computeVariableExtents(type, low, high);
+        } else {
+          Patch::VariableBasis basis = Patch::translateTypeToBasis(type, false);
+          patch->computeVariableExtents(basis, curDependency->m_var->getBoundaryLayer(), curDependency->m_gtype, curDependency->m_num_ghost_cells, low, high);
+        }
       }
       const IntVector host_size = high - low;
       const size_t elementDataSize = OnDemandDataWarehouse::getTypeDescriptionSize(curDependency->m_var->typeDescription()->getSubType()->getType());
@@ -1851,9 +1856,15 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
           } else if (curDependency->m_dep_type == Task::Computes) {
             gpu_stats << " - A COMPUTES dependency";
           }
-          gpu_stats << " with a size of (" << host_size.x() << ", " << host_size.y() << ", " << host_size.z() << ")"
-                    << " and each element in it has a size of " << elementDataSize << " bytes"
-                    << " and the entire variable uses  " << memSize << " bytes." << std::endl;
+          if (type != TypeDescription::PerPatch && type != TypeDescription::ReductionVariable) {
+            gpu_stats << " with a size of (" << host_size.x() << ", " << host_size.y() << ", " << host_size.z() << ")"
+                      << " and each element in it has a size of " << elementDataSize << " bytes";
+          } else if (type == TypeDescription::PerPatch) {
+            gpu_stats << " a PerPatch variable";
+          } else if (type == TypeDescription::ReductionVariable) {
+            gpu_stats << " a reduction variable";
+          }
+          gpu_stats<< " and the entire variable uses  " << memSize << " bytes." << std::endl;
         }
         cerrLock.unlock();
       }
@@ -3119,8 +3130,12 @@ UnifiedScheduler::allGPUVarsProcessingReady( DetailedTask * dtask )
   // Go through each var, see if it's valid or valid with ghosts.
   std::map<labelPatchMatlDependency, const Task::Dependency*>::iterator varIter;
   for (varIter = vars.begin(); varIter != vars.end(); ++varIter) {
-    const Task::Dependency* curDependency = varIter->second;
 
+
+    const Task::Dependency* curDependency = varIter->second;
+    if (curDependency->m_var->typeDescription()->getType() == TypeDescription::SoleVariable) {
+      continue; //TODO: We are ignoring SoleVariables for now. They should be managed.
+    }
     constHandle<PatchSubset> patches = curDependency->getPatchesUnderDomain(dtask->getPatches());
     constHandle<MaterialSubset> matls = curDependency->getMaterialsUnderDomain(dtask->getMaterials());
     const int numPatches = patches->size();
