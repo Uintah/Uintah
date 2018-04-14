@@ -261,7 +261,7 @@ void Poisson1::initialize( const ProcessorGroup *
 //______________________________________________________________________
 //
 template <typename ExecutionSpace, typename MemorySpace>
-void Poisson1::timeAdvance(DetailedTask* task,
+void Poisson1::timeAdvance(DetailedTask* dtask,
                             Task::CallBackEvent event,
                             const ProcessorGroup* pg,
                             const PatchSubset* patches,
@@ -291,7 +291,7 @@ void Poisson1::timeAdvance(DetailedTask* task,
                   patch->getBCType(Patch::yplus) == Patch::Neighbor ? 0 : 1,
                   patch->getBCType(Patch::zplus) == Patch::Neighbor ? 0 : 1);
 
-    Uintah::BlockRange range(l, h);
+    Uintah::BlockRange range( stream, l, h );
 
 
 //Get the data.

@@ -209,6 +209,9 @@ enum TaskAssignedExecutionSpace {
       PREPARE_KOKKOS_CUDA_TASK(TAG3, task, TASK_DEPENDENCIES, FUNCTION_NAME, FUNCTION_CODE_NAME,   \
                                  PATCHES, MATERIALS, ## __VA_ARGS__);                              \
     }                                                                                              \
+    if (task) {                                                                                    \
+      task->usesDevice(true);                                                                      \
+    }                                                                                              \
   }                                                                                                \
                                                                                                    \
   if (!task) {                                                                                     \
@@ -262,6 +265,8 @@ enum TaskAssignedExecutionSpace {
 
 namespace Uintah {
 
+class BlockRange;
+
 class BlockRange
 {
 public:
@@ -285,6 +290,12 @@ public:
     setValues( c0, c1 );
   }
 
+  template <typename ArrayType>
+  BlockRange(void* stream, ArrayType const & c0, ArrayType const & c1 )
+  {
+    setValues( stream, c0, c1 );
+  }
+
   BlockRange( const BlockRange& obj ) {
     for (int i=0; i<rank; ++i) {
       this->m_offset[i] = obj.m_offset[i];
@@ -292,26 +303,19 @@ public:
     }
   }
 
-#ifdef HAVE_CUDA
   template <typename ArrayType>
-  void setValues(cudaStream_t* stream, ArrayType const & c0, ArrayType const & c1 )
+  void setValues(void* stream, ArrayType const & c0, ArrayType const & c1 )
   {
     for (int i=0; i<rank; ++i) {
       m_offset[i] = c0[i] < c1[i] ? c0[i] : c1[i];
       m_dim[i] =   (c0[i] < c1[i] ? c1[i] : c0[i]) - m_offset[i];
     }
+#ifdef HAVE_CUDA
     m_stream = stream;
-  }
-
-  template <typename ArrayType>
-  BlockRange(cudaStream_t* stream, ArrayType const & c0, ArrayType const & c1 )
-  {
-    setValues( stream, c0, c1 );
-  }
-
-
-
+#else
+    m_stream = nullptr;  //Streams are pointless without CUDA
 #endif
+  }
 
   int begin( int r ) const { return m_offset[r]; }
   int   end( int r ) const { return m_offset[r] + m_dim[r]; }
@@ -328,12 +332,10 @@ public:
 private:
   int m_offset[rank];
   int m_dim[rank];
-#ifdef HAVE_CUDA
 public:
-  cudaStream_t* getStream() const { return m_stream; }
+  void * getStream() const { return m_stream; }
 private:
-  cudaStream_t* m_stream {nullptr};
-#endif
+  void* m_stream {nullptr};
 };
 
 //----------------------------------------------------------------------------
@@ -399,19 +401,6 @@ parallel_for( BlockRange const & r, const Functor & functor )
       functor( i, j, k );
     });
   });
-
-//  Manual approach
-//  const int ib = r.begin(0); const int ie = r.end(0);
-//  const int jb = r.begin(1); const int je = r.end(1);
-//  const int kb = r.begin(2); const int ke = r.end(2);
-//
-//
-//  Kokkos::parallel_for( Kokkos::RangePolicy<Kokkos::Cuda, int>(kb, ke), KOKKOS_LAMBDA (int k) {
-//    for (int j=jb; j<je; ++j) {
-//    for (int i=ib; i<ie; ++i) {
-//      functor(i,j,k);
-//    }}
-//  });
 }
 #endif  //#if defined(HAVE_CUDA)
 #endif  //#if defined(UINTAH_ENABLE_KOKKOS)
@@ -479,22 +468,39 @@ parallel_reduce_sum( BlockRange const & r, const Functor & functor, ReductionTyp
   //    });
 
   // Team Policy approach
+//  const unsigned int teamThreadRangeSize = (i_size > 0 ? i_size : 1) * (j_size > 0 ? j_size : 1) * (k_size > 0 ? k_size : 1);
+//
+//  const unsigned int actualThreads = teamThreadRangeSize > 16 ? 16 : teamThreadRangeSize;
+//
+//  typedef Kokkos::TeamPolicy< Kokkos::OpenMP > policy_type;
+//
+//  Kokkos::parallel_reduce (Kokkos::TeamPolicy< Kokkos::OpenMP >( 1, actualThreads ),
+//                           [&] ( typename policy_type::member_type thread, ReductionType& inner_sum ) {
+//    //printf("i is %d\n", thread.team_rank());
+//
+//    Kokkos::parallel_for (Kokkos::TeamThreadRange(thread, teamThreadRangeSize), [&] (const int& n) {
+//      const int i = n / (j_size * k_size) + rbegin0;
+//      const int j = (n / k_size) % j_size + rbegin1;
+//      const int k = n % k_size + rbegin2;
+//      functor(i, j, k, inner_sum);
+//    });
+//  }, tmp);
+
+  //Range policy manual approach:
   const unsigned int teamThreadRangeSize = (i_size > 0 ? i_size : 1) * (j_size > 0 ? j_size : 1) * (k_size > 0 ? k_size : 1);
+  const unsigned int actualThreads = teamThreadRangeSize > 256 ? 256 : teamThreadRangeSize;
 
-  const unsigned int actualThreads = teamThreadRangeSize > 16 ? 16 : teamThreadRangeSize;
+  Kokkos::RangePolicy<ExecutionSpace> rangepolicy(0, actualThreads);
 
-  typedef Kokkos::TeamPolicy< Kokkos::OpenMP > policy_type;
-
-  Kokkos::parallel_reduce (Kokkos::TeamPolicy< Kokkos::OpenMP >( 1, actualThreads ),
-                           [&] ( typename policy_type::member_type thread, ReductionType& inner_sum ) {
-    //printf("i is %d\n", thread.team_rank());
-
-    Kokkos::parallel_for (Kokkos::TeamThreadRange(thread, teamThreadRangeSize), [&] (const int& n) {
-      const int i = n / (j_size * k_size) + rbegin0;
-      const int j = (n / k_size) % j_size + rbegin1;
-      const int k = n % k_size + rbegin2;
-      functor(i, j, k, inner_sum);
-    });
+  Kokkos::parallel_reduce( rangepolicy, [&, teamThreadRangeSize, j_size, k_size, rbegin0, rbegin1, rbegin2](const int& n, ReductionType & tmp) {
+    int threadNum = n;
+    while ( threadNum < teamThreadRangeSize ) {
+      const int i = threadNum / (j_size * k_size) + rbegin0;
+      const int j = (threadNum / k_size) % j_size + rbegin1;
+      const int k = threadNum % k_size + rbegin2;
+      functor( i, j, k, tmp );
+      threadNum += 256;
+    }
   }, tmp);
 
   red = tmp;
@@ -523,33 +529,49 @@ parallel_reduce_sum( BlockRange const & r, const Functor & functor, ReductionTyp
   //Cuda thread 0 will be assigned to n = 0, n = 256, n = 512, and n = 768,
   //Cuda thread 1 will be assigned to n = 1, n = 257, n = 513, and n = 769...
   
+//  const unsigned int teamThreadRangeSize = (i_size > 0 ? i_size : 1) * (j_size > 0 ? j_size : 1) * (k_size > 0 ? k_size : 1);
+//  const unsigned int actualThreads = teamThreadRangeSize > 256 ? 256 : teamThreadRangeSize;
+//
+//  Kokkos::Cuda instanceObject = Kokkos::Cuda( *(r.getStream()) );
+//
+//  typedef Kokkos::TeamPolicy< ExecutionSpace > policy_type;
+//
+//  Kokkos::parallel_reduce (Kokkos::TeamPolicy< ExecutionSpace >(instanceObject, 1, actualThreads ),
+//                           KOKKOS_LAMBDA ( typename policy_type::member_type thread, ReductionType& inner_sum ) {
+//    Kokkos::parallel_for (Kokkos::TeamThreadRange(thread, teamThreadRangeSize), [&] (const int& n) {
+//
+//      const int i = n / (j_size * k_size) + rbegin0;
+//      const int j = (n / k_size) % j_size + rbegin1;
+//      const int k = n % k_size + rbegin2;
+//      functor( i, j, k, inner_sum );
+//    });
+//  }, tmp);
+
+
+  //  Manual approach using range policy that shares threads.
   const unsigned int teamThreadRangeSize = (i_size > 0 ? i_size : 1) * (j_size > 0 ? j_size : 1) * (k_size > 0 ? k_size : 1);
-  const unsigned int actualThreads = teamThreadRangeSize > 256 ? 256 : teamThreadRangeSize;
+  const unsigned int threadsPerGroup = 256;
+  const unsigned int actualThreads = teamThreadRangeSize > threadsPerGroup ? threadsPerGroup : teamThreadRangeSize;
+  
+  void* stream = r.getStream();
 
-  typedef Kokkos::TeamPolicy< ExecutionSpace > policy_type;
-  
-  Kokkos::parallel_reduce (Kokkos::TeamPolicy< ExecutionSpace >( 1, actualThreads ),
-                           KOKKOS_LAMBDA ( typename policy_type::member_type thread, ReductionType& inner_sum ) {
-    Kokkos::parallel_for (Kokkos::TeamThreadRange(thread, teamThreadRangeSize), [&] (const int& n) {
-  
-      const int i = n / (j_size * k_size) + rbegin0;
-      const int j = (n / k_size) % j_size + rbegin1;
-      const int k = n % k_size + rbegin2;
-      functor( i, j, k, inner_sum );
-    });
+  if (!stream) {
+    std::cout << "Error, the CUDA stream must not be nullptr\n" << std::endl;
+    exit(-1);
+  }
+  Kokkos::Cuda instanceObject(*(static_cast<cudaStream_t*>(stream)));
+  Kokkos::RangePolicy<Kokkos::Cuda> rangepolicy( instanceObject, 0, actualThreads);
+
+  Kokkos::parallel_reduce( rangepolicy, KOKKOS_LAMBDA ( const int& n, ReductionType & inner_tmp ) {
+    int threadNum = n;
+    while ( threadNum < teamThreadRangeSize ) {
+      const int i = threadNum / (j_size * k_size) + rbegin0;
+      const int j = (threadNum / k_size) % j_size + rbegin1;
+      const int k = threadNum % k_size + rbegin2;
+      functor( i, j, k, inner_tmp );
+      threadNum += threadsPerGroup;
+    }
   }, tmp);
-
-  // Manual approach
-  //    const int ib = r.begin(0); const int ie = r.end(0);
-  //    const int jb = r.begin(1); const int je = r.end(1);
-  //    const int kb = r.begin(2); const int ke = r.end(2);
-  //
-  //    Kokkos::parallel_reduce( Kokkos::RangePolicy<ExecutionSpace, int>(kb, ke), KOKKOS_LAMBDA(int k, ReductionType & tmp) {
-  //      for (int j=jb; j<je; ++j) {
-  //      for (int i=ib; i<ie; ++i) {
-  //        functor(i,j,k,tmp);
-  //      }}
-  //    });
 
   red = tmp;
 }
@@ -758,7 +780,7 @@ void parallel_reduce_1D( BlockRange const & r, const Functor & f, ReductionType 
     //Kokkos::RangePolicy<Kokkos::Cuda, Kokkos::LaunchBounds<512,1>> rangepolicy(r.begin(0), r.end(0));
 
     //Streaming
-    Kokkos::Cuda instanceObject = Kokkos::Cuda( *(r.getStream()) );
+    Kokkos::Cuda instanceObject = Kokkos::Cuda( *(static_cast<cudaStream_t>(r.getStream())) );
  
     //Streaming, no launch bounds
     //Kokkos::RangePolicy<Kokkos::Cuda> rangepolicy(instanceObject, r.begin(0), r.end(0));

@@ -139,9 +139,9 @@ DetailedTask::doit( const ProcessorGroup                      * pg
     }
   }
 
-#ifdef HAVE_CUDA
   // Determine if task will be executed on CPU or GPU
   if ( m_task->usesDevice() ) {
+#ifdef HAVE_CUDA
     // Run the GPU task.  Technically the engine has structure to run one task on multiple devices if
     // that task had patches on multiple devices.  So run the task once per device.  As often as possible,
     // we want to design tasks so each task runs on only once device, instead of a one to many relationship.
@@ -163,14 +163,12 @@ DetailedTask::doit( const ProcessorGroup                      * pg
                     device_newtaskdw,
                     getCudaStreamForThisTask(currentDevice), currentDevice );
     }
-  }
-  else
+#else
+    SCI_THROW(InternalError("A task was marked as GPU enabled, but Uintah was not compiled for CUDA support", __FILE__, __LINE__));
 #endif
-    if (this->getTask()->getName() == "ParticleModelFactory::all_tasks") {
-      printf("** %s **\n ", this->getTask()->getName().c_str());
-    }
+  } else {
     m_task->doit( this, event, pg, m_patches, m_matls, dws, nullptr, nullptr, nullptr, -1 );
-
+  }
   for (auto i = 0u; i < dws.size(); i++) {
     if ( oddws[i] != nullptr ) {
 //      oddws[i]->checkTasksAccesses( d_patches, d_matls );
