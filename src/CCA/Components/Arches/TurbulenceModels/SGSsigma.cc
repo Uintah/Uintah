@@ -201,7 +201,7 @@ SGSsigma::register_timestep_eval(
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemorySpace> void
-SGSsigma::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info){
+SGSsigma::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, void* stream ){
 
   Vector Dx=patch->dCell();
   double dx=Dx.x(); double dy=Dx.y(); double dz=Dx.z();

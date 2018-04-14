@@ -166,7 +166,9 @@ DetailedTask::doit( const ProcessorGroup                      * pg
   }
   else
 #endif
-
+    if (this->getTask()->getName() == "ParticleModelFactory::all_tasks") {
+      printf("** %s **\n ", this->getTask()->getName().c_str());
+    }
     m_task->doit( this, event, pg, m_patches, m_matls, dws, nullptr, nullptr, nullptr, -1 );
 
   for (auto i = 0u; i < dws.size(); i++) {

@@ -71,7 +71,7 @@ Drhodt::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInform
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemorySpace> void
-Drhodt::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+Drhodt::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, void* stream ){
 
   constCCVariable<double>& rho = tsk_info->get_const_uintah_field_add<constCCVariable<double> >( m_label_density );
   constCCVariable<double>& old_rho = tsk_info->get_const_uintah_field_add<constCCVariable<double> >( m_label_density, ArchesFieldContainer::OLDDW);

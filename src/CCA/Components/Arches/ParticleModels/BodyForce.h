@@ -76,7 +76,7 @@ namespace Uintah{
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
     template <typename EXECUTION_SPACE, typename MEMORY_SPACE>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, void* stream );
 
   private:
 
@@ -206,7 +206,7 @@ namespace Uintah{
 
   template <typename IT, typename DT>
   template<typename ExecutionSpace, typename MemorySpace>
-  void BodyForce<IT,DT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  void BodyForce<IT,DT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, void* stream ){
 
     typedef typename ArchesCore::VariableHelper<IT>::ConstType CIT;
     typedef typename ArchesCore::VariableHelper<DT>::ConstType CDT;

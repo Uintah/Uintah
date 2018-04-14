@@ -83,7 +83,7 @@ namespace Uintah{
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
     template <typename EXECUTION_SPACE, typename MEMORY_SPACE>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, void* stream );
 
   private:
     //resulting model names
@@ -416,7 +416,7 @@ namespace Uintah{
 //--------------------------------------------------------------------------------------------------
   template <typename T>
   template<typename ExecutionSpace, typename MemorySpace>
-  void ShaddixEnthalpy<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  void ShaddixEnthalpy<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, void* stream ){
 
     typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
 

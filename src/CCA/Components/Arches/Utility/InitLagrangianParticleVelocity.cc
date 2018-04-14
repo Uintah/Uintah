@@ -157,6 +157,6 @@ InitLagrangianParticleVelocity::register_timestep_eval( std::vector<ArchesFieldC
 
 //This is the work for the task.  First, get the variables. Second, do the work!
 template<typename ExecutionSpace, typename MemorySpace> void
-InitLagrangianParticleVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
+InitLagrangianParticleVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, void* stream ){}
 
 } // namespace Uintah

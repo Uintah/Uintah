@@ -99,7 +99,7 @@ UpdateParticlePosition::register_timestep_eval(
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemorySpace> void
-UpdateParticlePosition::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+UpdateParticlePosition::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, void* stream ){
 
   ParticleTuple px_tup = tsk_info->get_uintah_particle_field( _px_name );
   ParticleTuple py_tup = tsk_info->get_uintah_particle_field( _py_name );

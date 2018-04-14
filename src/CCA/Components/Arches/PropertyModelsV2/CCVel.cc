@@ -130,7 +130,7 @@ void CCVel::register_timestep_eval( VIVec& variable_registry, const int time_sub
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemorySpace>
-void CCVel::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+void CCVel::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, void* stream ){
 
   compute_velocities( patch, tsk_info );
 

@@ -344,7 +344,7 @@ partRadProperties::register_timestep_eval( std::vector<ArchesFieldContainer::Var
 
 
 template<typename ExecutionSpace, typename MemorySpace> void
-partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, void* stream ){
 
 
   CCVariable<double>& abskp = tsk_info->get_uintah_field_add<CCVariable<double> >(_abskp_name);

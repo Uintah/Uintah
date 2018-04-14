@@ -90,7 +90,7 @@ public:
       Step 5: update y to time t+1
     **/
     template <typename EXECUTION_SPACE, typename MEMORY_SPACE>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_inf );
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, void* stream );
 
     void create_local_labels();
 

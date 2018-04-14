@@ -76,7 +76,7 @@ namespace Uintah{
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
     template <typename EXECUTION_SPACE, typename MEMORY_SPACE>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, void* stream );
 
   private:
     //resulting model names
@@ -351,7 +351,7 @@ namespace Uintah{
 
   template <typename T>
   template<typename ExecutionSpace, typename MemorySpace>
-  void ShaddixOxidation<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  void ShaddixOxidation<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, void* stream ){
 
     //typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
     //**NOTE: This typedef wasn't behaving properly so I have commented it out for now. Some

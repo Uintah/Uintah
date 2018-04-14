@@ -43,7 +43,7 @@ void VelRhoHatBC::register_timestep_eval( std::vector<AFC::VariableInformation>&
 }
 
 template<typename ExecutionSpace, typename MemorySpace>
-void VelRhoHatBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+void VelRhoHatBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, void* stream ){
 
   SFCXVariable<double>* xmom = tsk_info->get_uintah_field<SFCXVariable<double> >( m_xmom );
   SFCYVariable<double>* ymom = tsk_info->get_uintah_field<SFCYVariable<double> >( m_ymom );

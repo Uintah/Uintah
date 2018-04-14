@@ -142,7 +142,7 @@ PartVariablesDQMOM::register_timestep_eval(
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemorySpace> void
-PartVariablesDQMOM::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+PartVariablesDQMOM::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, void* stream ){
 
   CCVariable<double>& num_den  = tsk_info->get_uintah_field_add<CCVariable<double> >( m_number_density_name );
   CCVariable<double>& AreaSumF = tsk_info->get_uintah_field_add< CCVariable<double> >("AreaSum",0);// temporal variable

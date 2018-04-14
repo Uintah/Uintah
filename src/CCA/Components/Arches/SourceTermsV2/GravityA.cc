@@ -138,7 +138,7 @@ GravityA::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInfo
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemorySpace> void
-GravityA::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+GravityA::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, void* stream ){
 
   constCCVariable<double>& density  = tsk_info->get_const_uintah_field_add<constCCVariable<double > >( m_density_label );
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );

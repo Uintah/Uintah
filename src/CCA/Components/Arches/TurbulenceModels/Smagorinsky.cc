@@ -131,7 +131,7 @@ Smagorinsky::register_timestep_eval( std::vector<ArchesFieldContainer::VariableI
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemorySpace> void
-Smagorinsky::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+Smagorinsky::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, void* stream ){
 
   constSFCXVariable<double>& uVel = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >(m_u_vel_name);
   constSFCYVariable<double>& vVel = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >(m_v_vel_name);

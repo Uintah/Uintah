@@ -43,7 +43,7 @@ public:
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
     template <typename ExecutionSpace, typename HostSpace>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, void* stream );
 
     void create_local_labels();
 
@@ -867,6 +867,7 @@ template <typename ExecutionSpace, typename MemorySpace>
 void
 CharOxidationps<T>::eval( const Patch                 * patch
                         ,       ArchesTaskInfoManager * tsk_info
+                        , void                        * stream
                         )
 {
 

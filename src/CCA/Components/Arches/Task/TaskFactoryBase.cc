@@ -469,13 +469,13 @@ void TaskFactoryBase::do_task ( DetailedTask* task,
           time_substep = 0;
           break;
         case (TaskInterface::TIMESTEP_EVAL):
-          (*i_task)->eval<ExecutionSpace, MemorySpace>( patch, tsk_info_mngr );
+          (*i_task)->eval<ExecutionSpace, MemorySpace>( patch, tsk_info_mngr, stream );
           break;
         case (TaskInterface::BC):
           (*i_task)->compute_bcs( patch, tsk_info_mngr );
           break;
         case (TaskInterface::ATOMIC):
-          (*i_task)->eval<ExecutionSpace, MemorySpace>( patch, tsk_info_mngr);
+          (*i_task)->eval<ExecutionSpace, MemorySpace>( patch, tsk_info_mngr, stream );
           break;
         default:
           throw InvalidValue("Error: TASK_TYPE not recognized.",__FILE__,__LINE__);

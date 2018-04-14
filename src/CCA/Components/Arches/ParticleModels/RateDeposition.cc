@@ -410,7 +410,7 @@ RateDeposition::register_timestep_eval( std::vector<AFC_VI>& variable_registry, 
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemorySpace> void
-RateDeposition::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+RateDeposition::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, void* stream ){
 
   //double CaO=_CaO;double MgO=_MgO; double AlO=_AlO;double SiO=_SiO; //const double alpha=0;
   // const double B0=0; const doulbe B1=0; const double B3=0;

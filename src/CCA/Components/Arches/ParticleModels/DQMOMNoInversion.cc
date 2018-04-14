@@ -150,7 +150,7 @@ void DQMOMNoInversion::register_timestep_eval(
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemorySpace>
-void DQMOMNoInversion::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+void DQMOMNoInversion::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, void* stream ){
 
   for  ( auto i = m_ic_qn_srcnames.begin(); i != m_ic_qn_srcnames.end(); i++ ){
 

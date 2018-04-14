@@ -43,7 +43,7 @@ namespace Uintah{
   class WBCHelper;
   class TaskInterface;
 
-  using evalFunctionPtr  = void (TaskInterface::*)(const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr);
+  using evalFunctionPtr  = void (TaskInterface::*)( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr, void* stream );
 
 
 #define SUPPORTED_UINTAH__TRYING_UINTAH_EXECUTION                 UintahSpaces::CPU
@@ -258,7 +258,7 @@ public:
     // Kokkos::Cuda, even if it's not desired, it may still compile and just won't generate compiler errors.
     // Yes, it's ugly.  But it's the best least ugly solution I could find.  -- Brad Peterson
     template<typename ExecutionSpace, typename MemorySpace>
-    void eval(const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr) {
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr, void* stream ) {
       evalFunctionPtr handler_ptr{nullptr};
       auto index = std::type_index(typeid(ExecutionSpace));
       auto handler = this->evalFunctionPtrs.find(index);
@@ -270,14 +270,14 @@ public:
 
       // Found the eval() function pointer associated with the execution space.  Run it.
       if (handler_ptr) {
-        (this->*handler_ptr)( patch, tsk_info_mngr );
+        (this->*handler_ptr)( patch, tsk_info_mngr, stream );
       }
 
     }
 protected:
 
-    void addEvalFunctionPtr(std::type_index ti, evalFunctionPtr ep) {
-      evalFunctionPtrs.emplace(ti, ep);
+    void addEvalFunctionPtr( std::type_index ti, evalFunctionPtr ep ) {
+      evalFunctionPtrs.emplace( ti, ep );
     }
 private:
     std::map<std::type_index, evalFunctionPtr> evalFunctionPtrs;

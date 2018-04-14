@@ -172,7 +172,7 @@ spectralProperties::register_timestep_eval( std::vector<ArchesFieldContainer::Va
 
 
 template<typename ExecutionSpace, typename MemorySpace> void
-spectralProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+spectralProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, void* stream ){
 
   Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
 

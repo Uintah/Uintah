@@ -242,7 +242,7 @@ CoalTemperature::register_timestep_eval( std::vector<ArchesFieldContainer::Varia
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemorySpace> void
-CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, void* stream ){
 
   const std::string gas_temperature_name   = _gas_temperature_name;
   constCCVariable<double>& gas_temperature = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(gas_temperature_name));

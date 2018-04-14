@@ -595,7 +595,7 @@ void VariableStats::register_timestep_eval( VIVec& variable_registry, const int 
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemorySpace>
-void VariableStats::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
+void VariableStats::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, void* stream )
 {
 
   const double dt = tsk_info->get_dt();

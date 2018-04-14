@@ -52,7 +52,7 @@ protected:
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
     template <typename EXECUTION_SPACE, typename MEMORY_SPACE>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, void* stream );
 
     void create_local_labels();
 
@@ -125,7 +125,7 @@ private:
 
   template <typename T>
   template<typename ExecutionSpace, typename MemorySpace>
-  void TemplatedSampleTask<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  void TemplatedSampleTask<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, void* stream ){
 
     T& field = *(tsk_info->get_uintah_field<T>( "templated_variable" ));
     Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );

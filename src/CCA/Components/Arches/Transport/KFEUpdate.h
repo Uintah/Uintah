@@ -89,7 +89,7 @@ protected:
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
     template <typename EXECUTION_SPACE, typename MEMORY_SPACE>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, void* stream );
 
 private:
 
@@ -325,7 +325,7 @@ private:
   //------------------------------------------------------------------------------------------------
   template <typename T>
   template<typename ExecutionSpace, typename MemorySpace>
-  void KFEUpdate<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  void KFEUpdate<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, void* stream ){
 
     const double dt = tsk_info->get_dt();
     Vector DX = patch->dCell();
