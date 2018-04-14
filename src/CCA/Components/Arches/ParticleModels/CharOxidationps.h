@@ -1105,316 +1105,316 @@ CharOxidationps<T>::eval( const Patch                 * patch
 
 #else
   if ( std::is_same< Kokkos::OpenMP , ExecutionSpace >::value ) {
-  //The KOKKOS OPENMP version
-  std::cout << "Hello from OpenMP version!  Patch is" << patch->getID() << std::endl;
-  if   (std::is_same< Kokkos::HostSpace,  MemorySpace >::value) {
-    std::cout << "The memory space was Kokkos::HostSpace" << std::endl;
-  }
-
-  // gas variables
-  KokkosView3<const double, Kokkos::HostSpace> CCuVel      = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( m_cc_u_vel_name ).getKokkosView();
-  KokkosView3<const double, Kokkos::HostSpace> CCvVel      = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( m_cc_v_vel_name ).getKokkosView();
-  KokkosView3<const double, Kokkos::HostSpace> CCwVel      = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( m_cc_w_vel_name ).getKokkosView();
-  KokkosView3<const double, Kokkos::HostSpace> volFraction = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( m_volFraction_name ).getKokkosView();
-
-  KokkosView3<const double, Kokkos::HostSpace> den         = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( m_density_gas_name ).getKokkosView();
-  KokkosView3<const double, Kokkos::HostSpace> temperature = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( m_gas_temperature_label ).getKokkosView();
-  KokkosView3<const double, Kokkos::HostSpace> MWmix       = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( m_MW_name ).getKokkosView(); // in kmol/kg_mix
-
-  typedef typename ArchesCore::VariableHelper<T>::ConstType CT; // check comment from other char model
-
-  const double dt = tsk_info->get_dt();
-
-  Vector Dx = patch->dCell();
-  const double vol = Dx.x()* Dx.y()* Dx.z();
-
-  KokkosView3<const double, Kokkos::HostSpace> species[species_count];
-
-  for ( int ns = 0; ns < _NUM_species; ns++ ) {
-    species[ns] = tsk_info->get_const_uintah_field_add< CT >( _species_names[ns] ).getKokkosView();
-  }
-
-  KokkosView3<const double, Kokkos::HostSpace> number_density = tsk_info->get_const_uintah_field_add< CT >( number_density_name ).getKokkosView(); // total number density
-
-  KokkosView3<      double, Kokkos::HostSpace> reaction_rate[reactions_count];
-  KokkosView3<const double, Kokkos::HostSpace> old_reaction_rate[reactions_count];
-
-  // model variables
-  KokkosView3<double, Kokkos::HostSpace> char_rate          = tsk_info->get_uintah_field_add< T >( m_modelLabel ).getKokkosView();
-  KokkosView3<double, Kokkos::HostSpace> gas_char_rate      = tsk_info->get_uintah_field_add< T >( m_gasLabel ).getKokkosView();
-  KokkosView3<double, Kokkos::HostSpace> particle_temp_rate = tsk_info->get_uintah_field_add< T >( m_particletemp ).getKokkosView();
-  KokkosView3<double, Kokkos::HostSpace> particle_Size_rate = tsk_info->get_uintah_field_add< T >( m_particleSize ).getKokkosView();
-  KokkosView3<double, Kokkos::HostSpace> surface_rate       = tsk_info->get_uintah_field_add< T >( m_surfacerate ).getKokkosView();
-
-    // reaction rate
-  for ( int r = 0; r < _NUM_reactions; r++ ) {
-
-    reaction_rate[r]     = tsk_info->get_uintah_field_add< T >       ( m_reaction_rate_names[r] ).getKokkosView();
-    old_reaction_rate[r] = tsk_info->get_const_uintah_field_add< CT >( m_reaction_rate_names[r] ).getKokkosView();
-  }
-
-  // from devol model
-  KokkosView3<const double, Kokkos::HostSpace> devolRC = tsk_info->get_const_uintah_field_add< CT >( m_devolRC ).getKokkosView();
-
-  // particle variables from other models
-  KokkosView3<const double, Kokkos::HostSpace> particle_temperature = tsk_info->get_const_uintah_field_add< CT >( m_particle_temperature ).getKokkosView();
-  KokkosView3<const double, Kokkos::HostSpace> length               = tsk_info->get_const_uintah_field_add< CT >( m_particle_length ).getKokkosView();
-  KokkosView3<const double, Kokkos::HostSpace> particle_density     = tsk_info->get_const_uintah_field_add< CT >( m_particle_density ).getKokkosView();
-  KokkosView3<const double, Kokkos::HostSpace> rawcoal_mass         = tsk_info->get_const_uintah_field_add< CT >( m_rcmass ).getKokkosView();
-  KokkosView3<const double, Kokkos::HostSpace> char_mass            = tsk_info->get_const_uintah_field_add< CT >( m_char_name ).getKokkosView();
-  KokkosView3<const double, Kokkos::HostSpace> weight               = tsk_info->get_const_uintah_field_add< CT >( m_weight_name ).getKokkosView();
-  KokkosView3<const double, Kokkos::HostSpace> up                   = tsk_info->get_const_uintah_field_add< CT >( m_up_name ).getKokkosView();
-  KokkosView3<const double, Kokkos::HostSpace> vp                   = tsk_info->get_const_uintah_field_add< CT >( m_vp_name ).getKokkosView();
-  KokkosView3<const double, Kokkos::HostSpace> wp                   = tsk_info->get_const_uintah_field_add< CT >( m_wp_name ).getKokkosView();
-
-  // birth terms
-  KokkosView3<const double, Kokkos::HostSpace> rawcoal_birth;
-  KokkosView3<const double, Kokkos::HostSpace> char_birth;
-  KokkosView3<const double, Kokkos::HostSpace> length_birth;
-
-  if ( m_add_rawcoal_birth ) {
-    rawcoal_birth = tsk_info->get_const_uintah_field_add< CT >(m_rawcoal_birth_qn_name).getKokkosView();
-  }
-
-  if ( m_add_char_birth ) {
-    char_birth = tsk_info->get_const_uintah_field_add< CT >(m_char_birth_qn_name).getKokkosView();
-  }
-
-  if ( m_add_length_birth ) {
-    length_birth = tsk_info->get_const_uintah_field_add< CT >(m_length_birth_qn_name).getKokkosView();
-  }
-
-  KokkosView3<const double, Kokkos::HostSpace> weight_p_diam = tsk_info->get_const_uintah_field_add< CT >( m_particle_length_qn ).getKokkosView(); //check
-  KokkosView3<const double, Kokkos::HostSpace> RC_RHS_source = tsk_info->get_const_uintah_field_add< CT >( m_RC_RHS ).getKokkosView();
-  KokkosView3<const double, Kokkos::HostSpace> RHS_source    = tsk_info->get_const_uintah_field_add< CT >( m_ic_RHS ).getKokkosView();
-  KokkosView3<const double, Kokkos::HostSpace> RHS_weight    = tsk_info->get_const_uintah_field_add< CT >( m_w_RHS ).getKokkosView();
-  KokkosView3<const double, Kokkos::HostSpace> RHS_length    = tsk_info->get_const_uintah_field_add< CT >( m_length_RHS ).getKokkosView();
-
-  KokkosView3<const double, Kokkos::HostSpace> surfAreaF = tsk_info->get_const_uintah_field_add< CT >( m_surfAreaF_name ).getKokkosView();
-
-  Uintah::BlockRange range_E( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
-
-  Uintah::parallel_for<Kokkos::OpenMP>( range_E, [&]( int i, int j, int k ) {
-
-    char_rate(i,j,k)          = 0.0;
-    gas_char_rate(i,j,k)      = 0.0;
-    particle_temp_rate(i,j,k) = 0.0;
-    particle_Size_rate(i,j,k) = 0.0;
-    surface_rate(i,j,k)       = 0.0;
-
-    for ( int r = 0; r < _NUM_reactions; r++ ) {
-      reaction_rate[r](i,j,k) = 0.0;
+    //The KOKKOS OPENMP version
+    std::cout << "Hello from OpenMP version!  Patch is" << patch->getID() << std::endl;
+    if   (std::is_same< Kokkos::HostSpace,  MemorySpace >::value) {
+      std::cout << "The memory space was Kokkos::HostSpace" << std::endl;
     }
-  });
 
-  Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
+    // gas variables
+    KokkosView3<const double, Kokkos::HostSpace> CCuVel      = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( m_cc_u_vel_name ).getKokkosView();
+    KokkosView3<const double, Kokkos::HostSpace> CCvVel      = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( m_cc_v_vel_name ).getKokkosView();
+    KokkosView3<const double, Kokkos::HostSpace> CCwVel      = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( m_cc_w_vel_name ).getKokkosView();
+    KokkosView3<const double, Kokkos::HostSpace> volFraction = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( m_volFraction_name ).getKokkosView();
 
-  Uintah::parallel_for<Kokkos::OpenMP>( range, [&]( int i,  int j, int k ) {
+    KokkosView3<const double, Kokkos::HostSpace> den         = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( m_density_gas_name ).getKokkosView();
+    KokkosView3<const double, Kokkos::HostSpace> temperature = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( m_gas_temperature_label ).getKokkosView();
+    KokkosView3<const double, Kokkos::HostSpace> MWmix       = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( m_MW_name ).getKokkosView(); // in kmol/kg_mix
 
-    if ( volFraction(i,j,k) > 0 ) {
+    typedef typename ArchesCore::VariableHelper<T>::ConstType CT; // check comment from other char model
 
-      double D_oxid_mix_l     [ _NUM_reactions ];
-      double phi_l            [ _NUM_reactions ];
-      double hrxn_l           [ _NUM_reactions ];
-      double rh_l             [ _NUM_reactions ];
-      double rh_l_new         [ _NUM_reactions ];
-      double species_mass_frac[ _NUM_species ];
-      double oxid_mass_frac   [ _NUM_reactions ];
+    const double dt = tsk_info->get_dt();
 
-      double Sh            [ _NUM_reactions ];
-      double co_r          [ _NUM_reactions ];
-      double k_r           [ _NUM_reactions ];
-      double M_T           [ _NUM_reactions ];
-      double effectivenessF[ _NUM_reactions ];
+    Vector Dx = patch->dCell();
+    const double vol = Dx.x()* Dx.y()* Dx.z();
 
-      double F         [ _NUM_reactions ];
-      double rh_l_delta[ _NUM_reactions ];
-      double F_delta   [ _NUM_reactions ];
-      double r_h_ex    [ _NUM_reactions ];
-      double r_h_in    [ _NUM_reactions ];
-      double dfdrh[3][3];
+    KokkosView3<const double, Kokkos::HostSpace> species[species_count];
 
-      for ( int l = 0; l < _NUM_reactions; l++ ) {
-        for ( int lm = 0; lm < _NUM_reactions; lm++ ) {
-          dfdrh[l][lm] = 0;
-        }
-      }
+    for ( int ns = 0; ns < _NUM_species; ns++ ) {
+      species[ns] = tsk_info->get_const_uintah_field_add< CT >( _species_names[ns] ).getKokkosView();
+    }
 
-      // populate the temporary variables.
-      const double gas_rho    = den(i,j,k);                  // [kg/m^3]
-      const double gas_T      = temperature(i,j,k);          // [K]
-      const double p_T        = particle_temperature(i,j,k); // [K]
-      const double p_rho      = particle_density(i,j,k);     // [kg/m^3]
-      const double p_diam     = length(i,j,k);               // [m]
-      const double rc         = rawcoal_mass(i,j,k);         // [kg/#]
-      const double ch         = char_mass(i,j,k);            // [kg/#]
-      const double w          = weight(i,j,k);               // [#/m^3]
-      const double MW         = 1. / MWmix(i,j,k);           // [kg mix / kmol mix] (MW in table is 1/MW)
-      const double r_devol    = devolRC(i,j,k) * m_RC_scaling_constant * m_weight_scaling_constant; // [kg/m^3/s]
-      const double r_devol_ns = -r_devol; // [kg/m^3/s]
-      const double RHS_v      = RC_RHS_source(i,j,k) * m_RC_scaling_constant * m_weight_scaling_constant; // [kg/s]
-      const double RHS        = RHS_source(i,j,k) * m_char_scaling_constant * m_weight_scaling_constant;  // [kg/s]
+    KokkosView3<const double, Kokkos::HostSpace> number_density = tsk_info->get_const_uintah_field_add< CT >( number_density_name ).getKokkosView(); // total number density
 
-      // populate temporary variable vectors
-      const double delta = 1e-6;
+    KokkosView3<      double, Kokkos::HostSpace> reaction_rate[reactions_count];
+    KokkosView3<const double, Kokkos::HostSpace> old_reaction_rate[reactions_count];
+
+    // model variables
+    KokkosView3<double, Kokkos::HostSpace> char_rate          = tsk_info->get_uintah_field_add< T >( m_modelLabel ).getKokkosView();
+    KokkosView3<double, Kokkos::HostSpace> gas_char_rate      = tsk_info->get_uintah_field_add< T >( m_gasLabel ).getKokkosView();
+    KokkosView3<double, Kokkos::HostSpace> particle_temp_rate = tsk_info->get_uintah_field_add< T >( m_particletemp ).getKokkosView();
+    KokkosView3<double, Kokkos::HostSpace> particle_Size_rate = tsk_info->get_uintah_field_add< T >( m_particleSize ).getKokkosView();
+    KokkosView3<double, Kokkos::HostSpace> surface_rate       = tsk_info->get_uintah_field_add< T >( m_surfacerate ).getKokkosView();
+
+      // reaction rate
+    for ( int r = 0; r < _NUM_reactions; r++ ) {
+
+      reaction_rate[r]     = tsk_info->get_uintah_field_add< T >       ( m_reaction_rate_names[r] ).getKokkosView();
+      old_reaction_rate[r] = tsk_info->get_const_uintah_field_add< CT >( m_reaction_rate_names[r] ).getKokkosView();
+    }
+
+    // from devol model
+    KokkosView3<const double, Kokkos::HostSpace> devolRC = tsk_info->get_const_uintah_field_add< CT >( m_devolRC ).getKokkosView();
+
+    // particle variables from other models
+    KokkosView3<const double, Kokkos::HostSpace> particle_temperature = tsk_info->get_const_uintah_field_add< CT >( m_particle_temperature ).getKokkosView();
+    KokkosView3<const double, Kokkos::HostSpace> length               = tsk_info->get_const_uintah_field_add< CT >( m_particle_length ).getKokkosView();
+    KokkosView3<const double, Kokkos::HostSpace> particle_density     = tsk_info->get_const_uintah_field_add< CT >( m_particle_density ).getKokkosView();
+    KokkosView3<const double, Kokkos::HostSpace> rawcoal_mass         = tsk_info->get_const_uintah_field_add< CT >( m_rcmass ).getKokkosView();
+    KokkosView3<const double, Kokkos::HostSpace> char_mass            = tsk_info->get_const_uintah_field_add< CT >( m_char_name ).getKokkosView();
+    KokkosView3<const double, Kokkos::HostSpace> weight               = tsk_info->get_const_uintah_field_add< CT >( m_weight_name ).getKokkosView();
+    KokkosView3<const double, Kokkos::HostSpace> up                   = tsk_info->get_const_uintah_field_add< CT >( m_up_name ).getKokkosView();
+    KokkosView3<const double, Kokkos::HostSpace> vp                   = tsk_info->get_const_uintah_field_add< CT >( m_vp_name ).getKokkosView();
+    KokkosView3<const double, Kokkos::HostSpace> wp                   = tsk_info->get_const_uintah_field_add< CT >( m_wp_name ).getKokkosView();
+
+    // birth terms
+    KokkosView3<const double, Kokkos::HostSpace> rawcoal_birth;
+    KokkosView3<const double, Kokkos::HostSpace> char_birth;
+    KokkosView3<const double, Kokkos::HostSpace> length_birth;
+
+    if ( m_add_rawcoal_birth ) {
+      rawcoal_birth = tsk_info->get_const_uintah_field_add< CT >(m_rawcoal_birth_qn_name).getKokkosView();
+    }
+
+    if ( m_add_char_birth ) {
+      char_birth = tsk_info->get_const_uintah_field_add< CT >(m_char_birth_qn_name).getKokkosView();
+    }
+
+    if ( m_add_length_birth ) {
+      length_birth = tsk_info->get_const_uintah_field_add< CT >(m_length_birth_qn_name).getKokkosView();
+    }
+
+    KokkosView3<const double, Kokkos::HostSpace> weight_p_diam = tsk_info->get_const_uintah_field_add< CT >( m_particle_length_qn ).getKokkosView(); //check
+    KokkosView3<const double, Kokkos::HostSpace> RC_RHS_source = tsk_info->get_const_uintah_field_add< CT >( m_RC_RHS ).getKokkosView();
+    KokkosView3<const double, Kokkos::HostSpace> RHS_source    = tsk_info->get_const_uintah_field_add< CT >( m_ic_RHS ).getKokkosView();
+    KokkosView3<const double, Kokkos::HostSpace> RHS_weight    = tsk_info->get_const_uintah_field_add< CT >( m_w_RHS ).getKokkosView();
+    KokkosView3<const double, Kokkos::HostSpace> RHS_length    = tsk_info->get_const_uintah_field_add< CT >( m_length_RHS ).getKokkosView();
+
+    KokkosView3<const double, Kokkos::HostSpace> surfAreaF = tsk_info->get_const_uintah_field_add< CT >( m_surfAreaF_name ).getKokkosView();
+
+    Uintah::BlockRange range_E( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+
+    Uintah::parallel_for<Kokkos::OpenMP>( range_E, [&]( int i, int j, int k ) {
+
+      char_rate(i,j,k)          = 0.0;
+      gas_char_rate(i,j,k)      = 0.0;
+      particle_temp_rate(i,j,k) = 0.0;
+      particle_Size_rate(i,j,k) = 0.0;
+      surface_rate(i,j,k)       = 0.0;
 
       for ( int r = 0; r < _NUM_reactions; r++ ) {
-        rh_l_new[r] = old_reaction_rate[r](i,j,k); // [kg/m^3/s]
+        reaction_rate[r](i,j,k) = 0.0;
       }
+    });
 
-      for ( int r = 0; r < _NUM_reactions; r++ ) { // check this
-        oxid_mass_frac[r] = species[_oxidizer_indices[r]](i,j,k); // [mass fraction]
-      }
+    Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
 
-      for ( int ns = 0; ns < _NUM_species; ns++ ) {
-        species_mass_frac[ns] = species[ns](i,j,k); // [mass fraction]
-      }
+    Uintah::parallel_for<Kokkos::OpenMP>( range, [&]( int i,  int j, int k ) {
 
-      const double CO2onCO = 1. / ( 200. * exp( -9000. / ( _R_cal * p_T ) ) * 44.0 / 28.0 ); // [ kg CO / kg CO2] => [kmoles CO / kmoles CO2] => [kmoles CO2 / kmoles CO]
+      if ( volFraction(i,j,k) > 0 ) {
 
-      for ( int r = 0; r < _NUM_reactions; r++ ) {
+        double D_oxid_mix_l     [ _NUM_reactions ];
+        double phi_l            [ _NUM_reactions ];
+        double hrxn_l           [ _NUM_reactions ];
+        double rh_l             [ _NUM_reactions ];
+        double rh_l_new         [ _NUM_reactions ];
+        double species_mass_frac[ _NUM_species ];
+        double oxid_mass_frac   [ _NUM_reactions ];
 
-        if ( _use_co2co_l[r] ) {
-          phi_l[r]  = ( CO2onCO + 1 ) / ( CO2onCO + 0.5 );
-          hrxn_l[r] = ( CO2onCO * _HF_CO2 + _HF_CO ) / ( 1 + CO2onCO );
-        }
-        else {
-          phi_l[r]  = _phi_l[r];
-          hrxn_l[r] = _hrxn_l[r];
-        }
-      }
+        double Sh            [ _NUM_reactions ];
+        double co_r          [ _NUM_reactions ];
+        double k_r           [ _NUM_reactions ];
+        double M_T           [ _NUM_reactions ];
+        double effectivenessF[ _NUM_reactions ];
 
-      const double Re_p = sqrt( ( CCuVel(i,j,k) - up(i,j,k) ) * ( CCuVel(i,j,k) - up(i,j,k) ) +
-                                ( CCvVel(i,j,k) - vp(i,j,k) ) * ( CCvVel(i,j,k) - vp(i,j,k) ) +
-                                ( CCwVel(i,j,k) - wp(i,j,k) ) * ( CCwVel(i,j,k) - wp(i,j,k) ) )*
-                                p_diam / ( _dynamic_visc / gas_rho ); // Reynolds number [-]
-
-      const double x_org    = (rc + ch) / (rc + ch + m_mass_ash );
-      const double cg       = _gasPressure / (_R * gas_T * 1000.); // [kmoles/m^3] - Gas concentration
-      const double p_area   = M_PI * SQUARE( p_diam );             // particle surface area [m^2]
-      const double p_volume = M_PI / 6. * CUBE( p_diam );          // particle volme [m^3]
-      const double p_void   = fmax( 1e-10, 1. - ( 1. / p_volume ) * ( ( rc + ch ) / m_rho_org_bulk + m_mass_ash / _rho_ash_bulk ) ); // current porosity. (-) required due to sign convention of char.
-
-      const double Sj       = _init_particle_density / p_rho * ( ( 1 - p_void ) / ( 1 - _p_void0 ) ) * sqrt( 1 - fmin( 1.0, ( 1. / ( _p_void0 * ( 1. - _p_void0 ) ) ) * log( ( 1 - p_void ) / ( 1 - _p_void0 ) ) ) );
-      const double rp  = 2 * p_void * (1. - p_void ) / ( p_rho * Sj * _Sg0 ); // average particle radius [m]
-
-      // Calculate oxidizer diffusion coefficient
-      // effect diffusion through stagnant gas (see "Multicomponent Mass Transfer", Taylor and Krishna equation 6.1.14)
-      for ( int r = 0; r < _NUM_reactions; r++ ) {
-
-        double sum_x_D = 0;
-        double sum_x   = 0;
-
-        for ( int ns = 0; ns < _NUM_species; ns++ ) {
-
-          if ( ns != _oxidizer_indices[r] ) {
-            sum_x_D = sum_x_D + species_mass_frac[ns] / ( _MW_species[ns] * _D_mat[_oxidizer_indices[r]][ns] );
-            sum_x   = sum_x   + species_mass_frac[ns] / ( _MW_species[ns] );
-          }
-          else {
-            sum_x_D = sum_x_D;
-            sum_x   = sum_x;
-          }
-        }
-
-        D_oxid_mix_l[r] = sum_x / sum_x_D * sqrt( CUBE( gas_T / _T0 ) );
-        Sh[r]             = 2.0 + 0.6 * sqrt( Re_p ) * cbrt( _dynamic_visc / ( gas_rho * D_oxid_mix_l[r] ) ); // Sherwood number [-]
-        co_r[r]           = cg * ( oxid_mass_frac[r] * MW / _MW_l[r] ); // oxidizer concentration, [kmoles/m^3]
-        k_r[r] = ( 10.0 * _a_l[r] * exp( - _e_l[r] / ( _R_cal * p_T)) * _R * p_T * 1000.0) / ( _Mh * phi_l[r] * 101325. ); // [m / s]
-        M_T[r]            = p_diam / 2. * sqrt( k_r[r] * _Sg0 * Sj * p_rho /                                 // Thiele modulus, Mitchell's formulation
-                              ( p_void / _tau / ( 1. / ( 97. * rp * sqrt( p_T / _MW_species[r] ) ) + 1. / D_oxid_mix_l[r] ) ) );
-        effectivenessF[r] = ( M_T[r] < 1e-5 ) ? 1.0 : 3. / M_T[r] * ( 1. / tanh( M_T[r] ) - 1. / M_T[r] ); // effectiveness factor
-      }
-
-      // Newton-Raphson solve for rh_l.
-      // rh_(n+1) = rh_(n) - (dF_(n)/drh_(n))^-1 * F_(n)
-      double rtot    = 0.0;
-      double Sfactor = 0.0;
-      double Bjm     = 0.0;
-      double mtc_r   = 0.0;
-
-      int count = 0;
-
-      for ( int it = 0; it < 100; it++ ) {
-
-        count = count + 1;
-
-        for ( int r = 0; r < _NUM_reactions; r++ ) {
-          rh_l[r] = rh_l_new[r];
-        }
-
-        // get F and Jacobian -> dF/drh
-        rtot    = ( rh_l[0] + rh_l[1] + rh_l[2] ) * x_org * ( 1. - p_void ) + r_devol_ns;
-        Sfactor = 0.0;
-        Bjm     = 0.0;
-        mtc_r   = 0.0;
+        double F         [ _NUM_reactions ];
+        double rh_l_delta[ _NUM_reactions ];
+        double F_delta   [ _NUM_reactions ];
+        double r_h_ex    [ _NUM_reactions ];
+        double r_h_in    [ _NUM_reactions ];
+        double dfdrh[3][3];
 
         for ( int l = 0; l < _NUM_reactions; l++ ) {
-
-          Bjm     = fmin( 80.0, rtot * p_diam / ( D_oxid_mix_l[l] * gas_rho ) ); // [-] // this is the derived for mass flux  BSL chapter 22
-          mtc_r   = ( Sh[l] * D_oxid_mix_l[l] * ( ( Bjm >= 1e-7 ) ?  Bjm / ( exp( Bjm ) - 1. ) : 1.0 ) ) / p_diam; // [m/s]
-          Sfactor = 1 + effectivenessF[l] * p_diam * p_rho * _Sg0 * Sj / ( 6. * ( 1. - p_void ) );
-          F[l]    = rh_l[l] - ( _Mh * MW * phi_l[l] * k_r[l] * mtc_r * Sfactor * co_r[l] * cg ) /
-                    ( ( MW * cg * ( k_r[l] * x_org * ( 1. - p_void ) * Sfactor + mtc_r ) ) + rtot ); // [kg-char/m^3/s]
+          for ( int lm = 0; lm < _NUM_reactions; lm++ ) {
+            dfdrh[l][lm] = 0;
+          }
         }
 
-        for ( int j = 0; j < _NUM_reactions; j++ ) {
+        // populate the temporary variables.
+        const double gas_rho    = den(i,j,k);                  // [kg/m^3]
+        const double gas_T      = temperature(i,j,k);          // [K]
+        const double p_T        = particle_temperature(i,j,k); // [K]
+        const double p_rho      = particle_density(i,j,k);     // [kg/m^3]
+        const double p_diam     = length(i,j,k);               // [m]
+        const double rc         = rawcoal_mass(i,j,k);         // [kg/#]
+        const double ch         = char_mass(i,j,k);            // [kg/#]
+        const double w          = weight(i,j,k);               // [#/m^3]
+        const double MW         = 1. / MWmix(i,j,k);           // [kg mix / kmol mix] (MW in table is 1/MW)
+        const double r_devol    = devolRC(i,j,k) * m_RC_scaling_constant * m_weight_scaling_constant; // [kg/m^3/s]
+        const double r_devol_ns = -r_devol; // [kg/m^3/s]
+        const double RHS_v      = RC_RHS_source(i,j,k) * m_RC_scaling_constant * m_weight_scaling_constant; // [kg/s]
+        const double RHS        = RHS_source(i,j,k) * m_char_scaling_constant * m_weight_scaling_constant;  // [kg/s]
 
-          for ( int k = 0; k < _NUM_reactions; k++ ) {
-            rh_l_delta[k] = rh_l[k]; 
+        // populate temporary variable vectors
+        const double delta = 1e-6;
+
+        for ( int r = 0; r < _NUM_reactions; r++ ) {
+          rh_l_new[r] = old_reaction_rate[r](i,j,k); // [kg/m^3/s]
+        }
+
+        for ( int r = 0; r < _NUM_reactions; r++ ) { // check this
+          oxid_mass_frac[r] = species[_oxidizer_indices[r]](i,j,k); // [mass fraction]
+        }
+
+        for ( int ns = 0; ns < _NUM_species; ns++ ) {
+          species_mass_frac[ns] = species[ns](i,j,k); // [mass fraction]
+        }
+
+        const double CO2onCO = 1. / ( 200. * exp( -9000. / ( _R_cal * p_T ) ) * 44.0 / 28.0 ); // [ kg CO / kg CO2] => [kmoles CO / kmoles CO2] => [kmoles CO2 / kmoles CO]
+
+        for ( int r = 0; r < _NUM_reactions; r++ ) {
+
+          if ( _use_co2co_l[r] ) {
+            phi_l[r]  = ( CO2onCO + 1 ) / ( CO2onCO + 0.5 );
+            hrxn_l[r] = ( CO2onCO * _HF_CO2 + _HF_CO ) / ( 1 + CO2onCO );
+          }
+          else {
+            phi_l[r]  = _phi_l[r];
+            hrxn_l[r] = _hrxn_l[r];
+          }
+        }
+
+        const double Re_p = sqrt( ( CCuVel(i,j,k) - up(i,j,k) ) * ( CCuVel(i,j,k) - up(i,j,k) ) +
+                                  ( CCvVel(i,j,k) - vp(i,j,k) ) * ( CCvVel(i,j,k) - vp(i,j,k) ) +
+                                  ( CCwVel(i,j,k) - wp(i,j,k) ) * ( CCwVel(i,j,k) - wp(i,j,k) ) )*
+                                  p_diam / ( _dynamic_visc / gas_rho ); // Reynolds number [-]
+
+        const double x_org    = (rc + ch) / (rc + ch + m_mass_ash );
+        const double cg       = _gasPressure / (_R * gas_T * 1000.); // [kmoles/m^3] - Gas concentration
+        const double p_area   = M_PI * SQUARE( p_diam );             // particle surface area [m^2]
+        const double p_volume = M_PI / 6. * CUBE( p_diam );          // particle volme [m^3]
+        const double p_void   = fmax( 1e-10, 1. - ( 1. / p_volume ) * ( ( rc + ch ) / m_rho_org_bulk + m_mass_ash / _rho_ash_bulk ) ); // current porosity. (-) required due to sign convention of char.
+
+        const double Sj       = _init_particle_density / p_rho * ( ( 1 - p_void ) / ( 1 - _p_void0 ) ) * sqrt( 1 - fmin( 1.0, ( 1. / ( _p_void0 * ( 1. - _p_void0 ) ) ) * log( ( 1 - p_void ) / ( 1 - _p_void0 ) ) ) );
+        const double rp  = 2 * p_void * (1. - p_void ) / ( p_rho * Sj * _Sg0 ); // average particle radius [m]
+
+        // Calculate oxidizer diffusion coefficient
+        // effect diffusion through stagnant gas (see "Multicomponent Mass Transfer", Taylor and Krishna equation 6.1.14)
+        for ( int r = 0; r < _NUM_reactions; r++ ) {
+
+          double sum_x_D = 0;
+          double sum_x   = 0;
+
+          for ( int ns = 0; ns < _NUM_species; ns++ ) {
+
+            if ( ns != _oxidizer_indices[r] ) {
+              sum_x_D = sum_x_D + species_mass_frac[ns] / ( _MW_species[ns] * _D_mat[_oxidizer_indices[r]][ns] );
+              sum_x   = sum_x   + species_mass_frac[ns] / ( _MW_species[ns] );
+            }
+            else {
+              sum_x_D = sum_x_D;
+              sum_x   = sum_x;
+            }
           }
 
-          rh_l_delta[j] = rh_l[j] + delta;
+          D_oxid_mix_l[r] = sum_x / sum_x_D * sqrt( CUBE( gas_T / _T0 ) );
+          Sh[r]             = 2.0 + 0.6 * sqrt( Re_p ) * cbrt( _dynamic_visc / ( gas_rho * D_oxid_mix_l[r] ) ); // Sherwood number [-]
+          co_r[r]           = cg * ( oxid_mass_frac[r] * MW / _MW_l[r] ); // oxidizer concentration, [kmoles/m^3]
+          k_r[r] = ( 10.0 * _a_l[r] * exp( - _e_l[r] / ( _R_cal * p_T)) * _R * p_T * 1000.0) / ( _Mh * phi_l[r] * 101325. ); // [m / s]
+          M_T[r]            = p_diam / 2. * sqrt( k_r[r] * _Sg0 * Sj * p_rho /                                 // Thiele modulus, Mitchell's formulation
+                                ( p_void / _tau / ( 1. / ( 97. * rp * sqrt( p_T / _MW_species[r] ) ) + 1. / D_oxid_mix_l[r] ) ) );
+          effectivenessF[r] = ( M_T[r] < 1e-5 ) ? 1.0 : 3. / M_T[r] * ( 1. / tanh( M_T[r] ) - 1. / M_T[r] ); // effectiveness factor
+        }
 
-          rtot    = ( rh_l_delta[0] + rh_l_delta[1] + rh_l_delta[2] ) * x_org * ( 1. - p_void ) + r_devol_ns;
+        // Newton-Raphson solve for rh_l.
+        // rh_(n+1) = rh_(n) - (dF_(n)/drh_(n))^-1 * F_(n)
+        double rtot    = 0.0;
+        double Sfactor = 0.0;
+        double Bjm     = 0.0;
+        double mtc_r   = 0.0;
+
+        int count = 0;
+
+        for ( int it = 0; it < 100; it++ ) {
+
+          count = count + 1;
+
+          for ( int r = 0; r < _NUM_reactions; r++ ) {
+            rh_l[r] = rh_l_new[r];
+          }
+
+          // get F and Jacobian -> dF/drh
+          rtot    = ( rh_l[0] + rh_l[1] + rh_l[2] ) * x_org * ( 1. - p_void ) + r_devol_ns;
           Sfactor = 0.0;
           Bjm     = 0.0;
           mtc_r   = 0.0;
 
           for ( int l = 0; l < _NUM_reactions; l++ ) {
 
-            Bjm        = fmin( 80.0, rtot * p_diam / ( D_oxid_mix_l[l] * gas_rho ) ); // [-] // this is the derived for mass flux  BSL chapter 22
-            mtc_r      = ( Sh[l] * D_oxid_mix_l[l] * ( ( Bjm >= 1e-7 ) ?  Bjm / ( exp( Bjm ) - 1. ) : 1.0 ) ) / p_diam; // [m/s]
-            Sfactor    = 1 + effectivenessF[l] * p_diam * p_rho * _Sg0 * Sj / ( 6. * ( 1. - p_void ) );
-            F_delta[l] = rh_l_delta[l] - ( _Mh * MW * phi_l[l] * k_r[l] * mtc_r * Sfactor * co_r[l] * cg ) /
-                         ( ( MW * cg * ( k_r[l] * x_org * ( 1. - p_void ) * Sfactor + mtc_r ) ) + rtot ); // [kg-char/m^3/s]
+            Bjm     = fmin( 80.0, rtot * p_diam / ( D_oxid_mix_l[l] * gas_rho ) ); // [-] // this is the derived for mass flux  BSL chapter 22
+            mtc_r   = ( Sh[l] * D_oxid_mix_l[l] * ( ( Bjm >= 1e-7 ) ?  Bjm / ( exp( Bjm ) - 1. ) : 1.0 ) ) / p_diam; // [m/s]
+            Sfactor = 1 + effectivenessF[l] * p_diam * p_rho * _Sg0 * Sj / ( 6. * ( 1. - p_void ) );
+            F[l]    = rh_l[l] - ( _Mh * MW * phi_l[l] * k_r[l] * mtc_r * Sfactor * co_r[l] * cg ) /
+                      ( ( MW * cg * ( k_r[l] * x_org * ( 1. - p_void ) * Sfactor + mtc_r ) ) + rtot ); // [kg-char/m^3/s]
           }
 
-          for ( int r = 0; r < _NUM_reactions; r++ ) {
-            dfdrh[r][j] = ( F_delta[r] - F[r] ) / delta;
+          for ( int j = 0; j < _NUM_reactions; j++ ) {
+
+            for ( int k = 0; k < _NUM_reactions; k++ ) {
+              rh_l_delta[k] = rh_l[k];
+            }
+
+            rh_l_delta[j] = rh_l[j] + delta;
+
+            rtot    = ( rh_l_delta[0] + rh_l_delta[1] + rh_l_delta[2] ) * x_org * ( 1. - p_void ) + r_devol_ns;
+            Sfactor = 0.0;
+            Bjm     = 0.0;
+            mtc_r   = 0.0;
+
+            for ( int l = 0; l < _NUM_reactions; l++ ) {
+
+              Bjm        = fmin( 80.0, rtot * p_diam / ( D_oxid_mix_l[l] * gas_rho ) ); // [-] // this is the derived for mass flux  BSL chapter 22
+              mtc_r      = ( Sh[l] * D_oxid_mix_l[l] * ( ( Bjm >= 1e-7 ) ?  Bjm / ( exp( Bjm ) - 1. ) : 1.0 ) ) / p_diam; // [m/s]
+              Sfactor    = 1 + effectivenessF[l] * p_diam * p_rho * _Sg0 * Sj / ( 6. * ( 1. - p_void ) );
+              F_delta[l] = rh_l_delta[l] - ( _Mh * MW * phi_l[l] * k_r[l] * mtc_r * Sfactor * co_r[l] * cg ) /
+                           ( ( MW * cg * ( k_r[l] * x_org * ( 1. - p_void ) * Sfactor + mtc_r ) ) + rtot ); // [kg-char/m^3/s]
+            }
+
+            for ( int r = 0; r < _NUM_reactions; r++ ) {
+              dfdrh[r][j] = ( F_delta[r] - F[r] ) / delta;
+            }
           }
-        }
 
-        // invert Jacobian -> (dF_(n)/drh_(n))^-1
-        double a11 = dfdrh[0][0];
-        double a12 = dfdrh[0][1];
-        double a13 = dfdrh[0][2];
-        double a21 = dfdrh[1][0];
-        double a22 = dfdrh[1][1];
-        double a23 = dfdrh[1][2];
-        double a31 = dfdrh[2][0];
-        double a32 = dfdrh[2][1];
-        double a33 = dfdrh[2][2];
+          // invert Jacobian -> (dF_(n)/drh_(n))^-1
+          double a11 = dfdrh[0][0];
+          double a12 = dfdrh[0][1];
+          double a13 = dfdrh[0][2];
+          double a21 = dfdrh[1][0];
+          double a22 = dfdrh[1][1];
+          double a23 = dfdrh[1][2];
+          double a31 = dfdrh[2][0];
+          double a32 = dfdrh[2][1];
+          double a33 = dfdrh[2][2];
 
-        double det_inv = 1 / ( a11 * a22 * a33 +
-                               a21 * a32 * a13 +
-                               a31 * a12 * a23 -
-                               a11 * a32 * a23 -
-                               a31 * a22 * a13 -
-                               a21 * a12 * a33   );
+          double det_inv = 1 / ( a11 * a22 * a33 +
+                                 a21 * a32 * a13 +
+                                 a31 * a12 * a23 -
+                                 a11 * a32 * a23 -
+                                 a31 * a22 * a13 -
+                                 a21 * a12 * a33   );
 
-        dfdrh[0][0] = ( a22 * a33 - a23 * a32 ) * det_inv;
-        dfdrh[0][1] = ( a13 * a32 - a12 * a33 ) * det_inv;
-        dfdrh[0][2] = ( a12 * a23 - a13 * a22 ) * det_inv;
-        dfdrh[1][0] = ( a23 * a31 - a21 * a33 ) * det_inv;
-        dfdrh[1][1] = ( a11 * a33 - a13 * a31 ) * det_inv;
-        dfdrh[1][2] = ( a13 * a21 - a11 * a23 ) * det_inv;
-        dfdrh[2][0] = ( a21 * a32 - a22 * a31 ) * det_inv;
-        dfdrh[2][1] = ( a12 * a31 - a11 * a32 ) * det_inv;
-        dfdrh[2][2] = ( a11 * a22 - a12 * a21 ) * det_inv;
+          dfdrh[0][0] = ( a22 * a33 - a23 * a32 ) * det_inv;
+          dfdrh[0][1] = ( a13 * a32 - a12 * a33 ) * det_inv;
+          dfdrh[0][2] = ( a12 * a23 - a13 * a22 ) * det_inv;
+          dfdrh[1][0] = ( a23 * a31 - a21 * a33 ) * det_inv;
+          dfdrh[1][1] = ( a11 * a33 - a13 * a31 ) * det_inv;
+          dfdrh[1][2] = ( a13 * a21 - a11 * a23 ) * det_inv;
+          dfdrh[2][0] = ( a21 * a32 - a22 * a31 ) * det_inv;
+          dfdrh[2][1] = ( a12 * a31 - a11 * a32 ) * det_inv;
+          dfdrh[2][2] = ( a11 * a22 - a12 * a21 ) * det_inv;
 
-        // get rh_(n+1)
-        double dominantRate = 0.0;
+          // get rh_(n+1)
+          double dominantRate = 0.0;
           //double max_F        = 1e-8;
 
           for ( int r = 0; r < _NUM_reactions; r++ ) {
@@ -1541,423 +1541,414 @@ CharOxidationps<T>::eval( const Patch                 * patch
 
       } // end if ( volFraction(i,j,k) > 0 ) {
     }); // end Uintah::parallel_for
-
   }
 #if defined (HAVE_CUDA)
   if ( std::is_same< Kokkos::Cuda , ExecutionSpace >::value ) {
-    //The CUDA version
-    Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
-    Uintah::parallel_for<Kokkos::Cuda>( range, KOKKOS_LAMBDA ( int i,  int j, int k ) {
-      if ( i == 0 && j == 0 && k == 0 ) {
-        printf("Hello from Char Oxidation CUDA!\n");
+
+    const int _time_substep = tsk_info->get_time_substep();
+    const int _patch        = tsk_info->get_patch_id();
+
+    // gas variables
+    KokkosView3<const double, Kokkos::CudaSpace> CCuVel;
+    KokkosView3<const double, Kokkos::CudaSpace> CCvVel;
+    KokkosView3<const double, Kokkos::CudaSpace> CCwVel;
+    KokkosView3<const double, Kokkos::CudaSpace> volFraction;
+
+    KokkosView3<const double, Kokkos::CudaSpace> den;
+    KokkosView3<const double, Kokkos::CudaSpace> temperature;
+    KokkosView3<const double, Kokkos::CudaSpace> MWmix;
+
+    if ( _time_substep == 0 ) {
+
+      CCuVel      = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_cc_u_vel_name.c_str(),    _patch, _matl_index, 0 );
+      CCvVel      = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_cc_v_vel_name.c_str(),    _patch, _matl_index, 0 );
+      CCwVel      = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_cc_w_vel_name.c_str(),    _patch, _matl_index, 0 );
+      volFraction = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_volFraction_name.c_str(), _patch, _matl_index, 0 );
+
+      den         = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_density_gas_name.c_str(),      _patch, _matl_index, 0 );
+      temperature = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_gas_temperature_label.c_str(), _patch, _matl_index, 0 );
+      MWmix       = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_MW_name.c_str(),               _patch, _matl_index, 0 );
+    }
+    else {
+
+      CCuVel      = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_cc_u_vel_name.c_str(),    _patch, _matl_index, 0 );
+      CCvVel      = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_cc_v_vel_name.c_str(),    _patch, _matl_index, 0 );
+      CCwVel      = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_cc_w_vel_name.c_str(),    _patch, _matl_index, 0 );
+      volFraction = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_volFraction_name.c_str(), _patch, _matl_index, 0 );
+
+      den         = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_density_gas_name.c_str(),      _patch, _matl_index, 0 );
+      temperature = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_gas_temperature_label.c_str(), _patch, _matl_index, 0 );
+      MWmix       = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_MW_name.c_str(),               _patch, _matl_index, 0 );
+    }
+
+    typedef typename ArchesCore::VariableHelper<T>::ConstType CT; // check comment from other char model
+
+    const double dt = tsk_info->get_dt();
+
+    Vector Dx = patch->dCell();
+    const double vol = Dx.x()* Dx.y()* Dx.z();
+
+    KokkosView3<const double, Kokkos::CudaSpace> species[species_count];
+
+    for ( int ns = 0; ns < _NUM_species; ns++ ) {
+
+      if ( _time_substep == 0 ) {
+        species[ns] = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( _species_names[ns].c_str(), _patch, _matl_index, 0 );
+      }
+      else {
+        species[ns] = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( _species_names[ns].c_str(), _patch, _matl_index, 0 );
+      }
+    }
+
+    KokkosView3<const double, Kokkos::CudaSpace> number_density;
+
+    if ( _time_substep == 0 ) {
+      number_density = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( number_density_name.c_str(), _patch, _matl_index, 0 );
+    }
+    else {
+      number_density = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( number_density_name.c_str(), _patch, _matl_index, 0 );
+    }
+
+    KokkosView3<      double, Kokkos::CudaSpace> reaction_rate[reactions_count];
+    KokkosView3<const double, Kokkos::CudaSpace> old_reaction_rate[reactions_count];
+
+    // model variables
+    KokkosView3<double, Kokkos::CudaSpace> char_rate          = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<double>( m_modelLabel.c_str(),   _patch, _matl_index, 0 );
+    KokkosView3<double, Kokkos::CudaSpace> gas_char_rate      = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<double>( m_gasLabel.c_str(),     _patch, _matl_index, 0 );
+    KokkosView3<double, Kokkos::CudaSpace> particle_temp_rate = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<double>( m_particletemp.c_str(), _patch, _matl_index, 0 );
+    KokkosView3<double, Kokkos::CudaSpace> particle_Size_rate = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<double>( m_particleSize.c_str(), _patch, _matl_index, 0 );
+    KokkosView3<double, Kokkos::CudaSpace> surface_rate       = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<double>( m_surfacerate.c_str(),  _patch, _matl_index, 0 );
+
+      // reaction rate
+    for ( int r = 0; r < _NUM_reactions; r++ ) {
+
+      reaction_rate[r] = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<double>( m_reaction_rate_names[r].c_str(), _patch, _matl_index, 0 );
+
+      if ( _time_substep == 0 ) {
+        old_reaction_rate[r] = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_reaction_rate_names[r].c_str(), _patch, _matl_index, 0 );
+      }
+      else {
+        old_reaction_rate[r] = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_reaction_rate_names[r].c_str(), _patch, _matl_index, 0 );
+      }
+    }
+
+    // from devol model
+    KokkosView3<const double, Kokkos::CudaSpace> devolRC = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_devolRC.c_str(), _patch, _matl_index, 0 );
+
+    // particle variables from other models
+    KokkosView3<const double, Kokkos::CudaSpace> particle_temperature;
+    KokkosView3<const double, Kokkos::CudaSpace> length;
+    KokkosView3<const double, Kokkos::CudaSpace> particle_density;
+    KokkosView3<const double, Kokkos::CudaSpace> rawcoal_mass;
+    KokkosView3<const double, Kokkos::CudaSpace> char_mass;
+    KokkosView3<const double, Kokkos::CudaSpace> weight;
+    KokkosView3<const double, Kokkos::CudaSpace> up;
+    KokkosView3<const double, Kokkos::CudaSpace> vp;
+    KokkosView3<const double, Kokkos::CudaSpace> wp;
+
+    if ( _time_substep == 0 ) {
+
+      particle_temperature = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_particle_temperature.c_str(), _patch, _matl_index, 0 );
+      length               = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_particle_length.c_str(),      _patch, _matl_index, 0 );
+      particle_density     = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_particle_density.c_str(),     _patch, _matl_index, 0 );
+      rawcoal_mass         = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_rcmass.c_str(),               _patch, _matl_index, 0 );
+      char_mass            = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_char_name.c_str(),            _patch, _matl_index, 0 );
+      weight               = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_weight_name.c_str(),          _patch, _matl_index, 0 );
+      up                   = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_up_name.c_str(),              _patch, _matl_index, 0 );
+      vp                   = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_vp_name.c_str(),              _patch, _matl_index, 0 );
+      wp                   = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_wp_name.c_str(),              _patch, _matl_index, 0 );
+    }
+    else {
+
+      particle_temperature = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_particle_temperature.c_str(), _patch, _matl_index, 0 );
+      length               = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_particle_length.c_str(),      _patch, _matl_index, 0 );
+      particle_density     = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_particle_density.c_str(),     _patch, _matl_index, 0 );
+      rawcoal_mass         = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_rcmass.c_str(),               _patch, _matl_index, 0 );
+      char_mass            = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_char_name.c_str(),            _patch, _matl_index, 0 );
+      weight               = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_weight_name.c_str(),          _patch, _matl_index, 0 );
+      up                   = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_up_name.c_str(),              _patch, _matl_index, 0 );
+      vp                   = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_vp_name.c_str(),              _patch, _matl_index, 0 );
+      wp                   = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_wp_name.c_str(),              _patch, _matl_index, 0 );
+    }
+
+    // birth terms
+    KokkosView3<const double, Kokkos::CudaSpace> rawcoal_birth;
+    KokkosView3<const double, Kokkos::CudaSpace> char_birth;
+    KokkosView3<const double, Kokkos::CudaSpace> length_birth;
+
+    if ( m_add_rawcoal_birth ) {
+      if ( _time_substep == 0 ) {
+        rawcoal_birth = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_rawcoal_birth_qn_name.c_str(), _patch, _matl_index, 0 );
+      }
+      else {
+        rawcoal_birth = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_rawcoal_birth_qn_name.c_str(), _patch, _matl_index, 0 );
+      }
+    }
+
+    if ( m_add_char_birth ) {
+      if ( _time_substep == 0 ) {
+        char_birth = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_char_birth_qn_name.c_str(), _patch, _matl_index, 0 );
+      }
+      else {
+        char_birth = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_char_birth_qn_name.c_str(), _patch, _matl_index, 0 );
+      }
+    }
+
+    if ( m_add_length_birth ) {
+      if ( _time_substep == 0 ) {
+        length_birth = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_length_birth_qn_name.c_str(), _patch, _matl_index, 0 );
+      }
+      else {
+        length_birth = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_length_birth_qn_name.c_str(), _patch, _matl_index, 0 );
+      }
+    }
+
+    KokkosView3<const double, Kokkos::CudaSpace> weight_p_diam;
+
+    if ( _time_substep == 0 ) {
+      weight_p_diam = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_particle_length_qn.c_str(), _patch, _matl_index, 0 );
+    }
+    else {
+      weight_p_diam = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_particle_length_qn.c_str(), _patch, _matl_index, 0 );
+    }
+
+    KokkosView3<const double, Kokkos::CudaSpace> RC_RHS_source = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_RC_RHS.c_str(),     _patch, _matl_index, 0 );
+    KokkosView3<const double, Kokkos::CudaSpace> RHS_source    = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_ic_RHS.c_str(),     _patch, _matl_index, 0 );
+    KokkosView3<const double, Kokkos::CudaSpace> RHS_weight    = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_w_RHS.c_str(),      _patch, _matl_index, 0 );
+    KokkosView3<const double, Kokkos::CudaSpace> RHS_length    = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_length_RHS.c_str(), _patch, _matl_index, 0 );
+
+    KokkosView3<const double, Kokkos::CudaSpace> surfAreaF;
+
+    if ( _time_substep == 0 ) {
+      surfAreaF = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_surfAreaF_name.c_str(), _patch, _matl_index, 0 );
+    }
+    else {
+      surfAreaF = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_surfAreaF_name.c_str(), _patch, _matl_index, 0 );
+    }
+
+    Uintah::BlockRange range_E( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+
+    Uintah::parallel_for<Kokkos::Cuda>( range_E, [&]( int i, int j, int k ) {
+
+      char_rate(i,j,k)          = 0.0;
+      gas_char_rate(i,j,k)      = 0.0;
+      particle_temp_rate(i,j,k) = 0.0;
+      particle_Size_rate(i,j,k) = 0.0;
+      surface_rate(i,j,k)       = 0.0;
+
+      for ( int r = 0; r < _NUM_reactions; r++ ) {
+        reaction_rate[r](i,j,k) = 0.0;
       }
     });
-  }
 
-  const int _time_substep = tsk_info->get_time_substep();
-  const int _patch        = tsk_info->get_patch_id();
-
-  // gas variables
-  KokkosView3<const double, Kokkos::CudaSpace> CCuVel;
-  KokkosView3<const double, Kokkos::CudaSpace> CCvVel;
-  KokkosView3<const double, Kokkos::CudaSpace> CCwVel;
-  KokkosView3<const double, Kokkos::CudaSpace> volFraction;
-
-  KokkosView3<const double, Kokkos::CudaSpace> den;
-  KokkosView3<const double, Kokkos::CudaSpace> temperature;
-  KokkosView3<const double, Kokkos::CudaSpace> MWmix;
-
-  if ( _time_substep == 0 ) {
-
-    CCuVel      = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_cc_u_vel_name.c_str(),    _patch, _matl_index, 0 );
-    CCvVel      = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_cc_v_vel_name.c_str(),    _patch, _matl_index, 0 );
-    CCwVel      = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_cc_w_vel_name.c_str(),    _patch, _matl_index, 0 );
-    volFraction = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_volFraction_name.c_str(), _patch, _matl_index, 0 );
-
-    den         = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_density_gas_name.c_str(),      _patch, _matl_index, 0 );
-    temperature = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_gas_temperature_label.c_str(), _patch, _matl_index, 0 );
-    MWmix       = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_MW_name.c_str(),               _patch, _matl_index, 0 );
-  }
-  else {
-
-    CCuVel      = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_cc_u_vel_name.c_str(),    _patch, _matl_index, 0 );
-    CCvVel      = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_cc_v_vel_name.c_str(),    _patch, _matl_index, 0 );
-    CCwVel      = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_cc_w_vel_name.c_str(),    _patch, _matl_index, 0 );
-    volFraction = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_volFraction_name.c_str(), _patch, _matl_index, 0 );
-
-    den         = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_density_gas_name.c_str(),      _patch, _matl_index, 0 );
-    temperature = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_gas_temperature_label.c_str(), _patch, _matl_index, 0 );
-    MWmix       = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_MW_name.c_str(),               _patch, _matl_index, 0 );
-  }
-
-  typedef typename ArchesCore::VariableHelper<T>::ConstType CT; // check comment from other char model
-
-  const double dt = tsk_info->get_dt();
-
-  Vector Dx = patch->dCell();
-  const double vol = Dx.x()* Dx.y()* Dx.z();
-
-  KokkosView3<const double, Kokkos::CudaSpace> species[species_count];
-
-  for ( int ns = 0; ns < _NUM_species; ns++ ) {
-
-    if ( _time_substep == 0 ) {
-      species[ns] = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( _species_names[ns].c_str(), _patch, _matl_index, 0 );
-    }
-    else {
-      species[ns] = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( _species_names[ns].c_str(), _patch, _matl_index, 0 );
-    }
-  }
-
-  KokkosView3<const double, Kokkos::CudaSpace> number_density;
-
-  if ( _time_substep == 0 ) {
-    number_density = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( number_density_name.c_str(), _patch, _matl_index, 0 );
-  }
-  else {
-    number_density = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( number_density_name.c_str(), _patch, _matl_index, 0 );
-  }
-
-  KokkosView3<      double, Kokkos::CudaSpace> reaction_rate[reactions_count];
-  KokkosView3<const double, Kokkos::CudaSpace> old_reaction_rate[reactions_count];
-
-  // model variables
-  KokkosView3<double, Kokkos::CudaSpace> char_rate          = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<double>( m_modelLabel.c_str(),   _patch, _matl_index, 0 );
-  KokkosView3<double, Kokkos::CudaSpace> gas_char_rate      = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<double>( m_gasLabel.c_str(),     _patch, _matl_index, 0 );
-  KokkosView3<double, Kokkos::CudaSpace> particle_temp_rate = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<double>( m_particletemp.c_str(), _patch, _matl_index, 0 );
-  KokkosView3<double, Kokkos::CudaSpace> particle_Size_rate = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<double>( m_particleSize.c_str(), _patch, _matl_index, 0 );
-  KokkosView3<double, Kokkos::CudaSpace> surface_rate       = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<double>( m_surfacerate.c_str(),  _patch, _matl_index, 0 );
-
-    // reaction rate
-  for ( int r = 0; r < _NUM_reactions; r++ ) {
-
-    reaction_rate[r] = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<double>( m_reaction_rate_names[r].c_str(), _patch, _matl_index, 0 );
-
-    if ( _time_substep == 0 ) {
-      old_reaction_rate[r] = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_reaction_rate_names[r].c_str(), _patch, _matl_index, 0 );
-    }
-    else {
-      old_reaction_rate[r] = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_reaction_rate_names[r].c_str(), _patch, _matl_index, 0 );
-    }
-  }
-
-  // from devol model
-  KokkosView3<const double, Kokkos::CudaSpace> devolRC = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_devolRC.c_str(), _patch, _matl_index, 0 );
-
-  // particle variables from other models
-  KokkosView3<const double, Kokkos::CudaSpace> particle_temperature;
-  KokkosView3<const double, Kokkos::CudaSpace> length;
-  KokkosView3<const double, Kokkos::CudaSpace> particle_density;
-  KokkosView3<const double, Kokkos::CudaSpace> rawcoal_mass;
-  KokkosView3<const double, Kokkos::CudaSpace> char_mass;
-  KokkosView3<const double, Kokkos::CudaSpace> weight;
-  KokkosView3<const double, Kokkos::CudaSpace> up;
-  KokkosView3<const double, Kokkos::CudaSpace> vp;
-  KokkosView3<const double, Kokkos::CudaSpace> wp;
-
-  if ( _time_substep == 0 ) {
-
-    particle_temperature = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_particle_temperature.c_str(), _patch, _matl_index, 0 );
-    length               = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_particle_length.c_str(),      _patch, _matl_index, 0 );
-    particle_density     = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_particle_density.c_str(),     _patch, _matl_index, 0 );
-    rawcoal_mass         = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_rcmass.c_str(),               _patch, _matl_index, 0 );
-    char_mass            = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_char_name.c_str(),            _patch, _matl_index, 0 );
-    weight               = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_weight_name.c_str(),          _patch, _matl_index, 0 );
-    up                   = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_up_name.c_str(),              _patch, _matl_index, 0 );
-    vp                   = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_vp_name.c_str(),              _patch, _matl_index, 0 );
-    wp                   = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_wp_name.c_str(),              _patch, _matl_index, 0 );
-  }
-  else {
-
-    particle_temperature = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_particle_temperature.c_str(), _patch, _matl_index, 0 );
-    length               = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_particle_length.c_str(),      _patch, _matl_index, 0 );
-    particle_density     = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_particle_density.c_str(),     _patch, _matl_index, 0 );
-    rawcoal_mass         = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_rcmass.c_str(),               _patch, _matl_index, 0 );
-    char_mass            = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_char_name.c_str(),            _patch, _matl_index, 0 );
-    weight               = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_weight_name.c_str(),          _patch, _matl_index, 0 );
-    up                   = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_up_name.c_str(),              _patch, _matl_index, 0 );
-    vp                   = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_vp_name.c_str(),              _patch, _matl_index, 0 );
-    wp                   = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_wp_name.c_str(),              _patch, _matl_index, 0 );
-  }
-
-  // birth terms
-  KokkosView3<const double, Kokkos::CudaSpace> rawcoal_birth;
-  KokkosView3<const double, Kokkos::CudaSpace> char_birth;
-  KokkosView3<const double, Kokkos::CudaSpace> length_birth;
-
-  if ( m_add_rawcoal_birth ) {
-    if ( _time_substep == 0 ) {
-      rawcoal_birth = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_rawcoal_birth_qn_name.c_str(), _patch, _matl_index, 0 );
-    }
-    else {
-      rawcoal_birth = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_rawcoal_birth_qn_name.c_str(), _patch, _matl_index, 0 );
-    }
-  }
-
-  if ( m_add_char_birth ) {
-    if ( _time_substep == 0 ) {
-      char_birth = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_char_birth_qn_name.c_str(), _patch, _matl_index, 0 );
-    }
-    else {
-      char_birth = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_char_birth_qn_name.c_str(), _patch, _matl_index, 0 );
-    }
-  }
-
-  if ( m_add_length_birth ) {
-    if ( _time_substep == 0 ) {
-      length_birth = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_length_birth_qn_name.c_str(), _patch, _matl_index, 0 );
-    }
-    else {
-      length_birth = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_length_birth_qn_name.c_str(), _patch, _matl_index, 0 );
-    }
-  }
-
-  KokkosView3<const double, Kokkos::CudaSpace> weight_p_diam;
-
-  if ( _time_substep == 0 ) {
-    weight_p_diam = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_particle_length_qn.c_str(), _patch, _matl_index, 0 );
-  }
-  else {
-    weight_p_diam = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_particle_length_qn.c_str(), _patch, _matl_index, 0 );
-  }
-
-  KokkosView3<const double, Kokkos::CudaSpace> RC_RHS_source = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_RC_RHS.c_str(),     _patch, _matl_index, 0 );
-  KokkosView3<const double, Kokkos::CudaSpace> RHS_source    = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_ic_RHS.c_str(),     _patch, _matl_index, 0 );
-  KokkosView3<const double, Kokkos::CudaSpace> RHS_weight    = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_w_RHS.c_str(),      _patch, _matl_index, 0 );
-  KokkosView3<const double, Kokkos::CudaSpace> RHS_length    = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_length_RHS.c_str(), _patch, _matl_index, 0 );
-
-  KokkosView3<const double, Kokkos::CudaSpace> surfAreaF;
-
-  if ( _time_substep == 0 ) {
-    surfAreaF = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_surfAreaF_name.c_str(), _patch, _matl_index, 0 );
-  }
-  else {
-    surfAreaF = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_surfAreaF_name.c_str(), _patch, _matl_index, 0 );
-  }
-
-  Uintah::BlockRange range_E( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
-
-  Uintah::parallel_for<Kokkos::OpenMP>( range_E, [&]( int i, int j, int k ) {
-
-    char_rate(i,j,k)          = 0.0;
-    gas_char_rate(i,j,k)      = 0.0;
-    particle_temp_rate(i,j,k) = 0.0;
-    particle_Size_rate(i,j,k) = 0.0;
-    surface_rate(i,j,k)       = 0.0;
-
-    for ( int r = 0; r < _NUM_reactions; r++ ) {
-      reaction_rate[r](i,j,k) = 0.0;
-    }
-  });
-
-  Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
-
-  Uintah::parallel_for<Kokkos::OpenMP>( range, [&]( int i,  int j, int k ) {
-
-    if ( volFraction(i,j,k) > 0 ) {
-
-      double D_oxid_mix_l     [ _NUM_reactions ];
-      double phi_l            [ _NUM_reactions ];
-      double hrxn_l           [ _NUM_reactions ];
-      double rh_l             [ _NUM_reactions ];
-      double rh_l_new         [ _NUM_reactions ];
-      double species_mass_frac[ _NUM_species ];
-      double oxid_mass_frac   [ _NUM_reactions ];
-
-      double Sh            [ _NUM_reactions ];
-      double co_r          [ _NUM_reactions ];
-      double k_r           [ _NUM_reactions ];
-      double M_T           [ _NUM_reactions ];
-      double effectivenessF[ _NUM_reactions ];
-
-      double F         [ _NUM_reactions ];
-      double rh_l_delta[ _NUM_reactions ];
-      double F_delta   [ _NUM_reactions ];
-      double r_h_ex    [ _NUM_reactions ];
-      double r_h_in    [ _NUM_reactions ];
-      double dfdrh[3][3];
-
-      for ( int l = 0; l < _NUM_reactions; l++ ) {
-        for ( int lm = 0; lm < _NUM_reactions; lm++ ) {
-          dfdrh[l][lm] = 0;
-        }
-      }
-
-      // populate the temporary variables.
-      const double gas_rho    = den(i,j,k);                  // [kg/m^3]
-      const double gas_T      = temperature(i,j,k);          // [K]
-      const double p_T        = particle_temperature(i,j,k); // [K]
-      const double p_rho      = particle_density(i,j,k);     // [kg/m^3]
-      const double p_diam     = length(i,j,k);               // [m]
-      const double rc         = rawcoal_mass(i,j,k);         // [kg/#]
-      const double ch         = char_mass(i,j,k);            // [kg/#]
-      const double w          = weight(i,j,k);               // [#/m^3]
-      const double MW         = 1. / MWmix(i,j,k);           // [kg mix / kmol mix] (MW in table is 1/MW)
-      const double r_devol    = devolRC(i,j,k) * m_RC_scaling_constant * m_weight_scaling_constant; // [kg/m^3/s]
-      const double r_devol_ns = -r_devol; // [kg/m^3/s]
-      const double RHS_v      = RC_RHS_source(i,j,k) * m_RC_scaling_constant * m_weight_scaling_constant; // [kg/s]
-      const double RHS        = RHS_source(i,j,k) * m_char_scaling_constant * m_weight_scaling_constant;  // [kg/s]
-
-      // populate temporary variable vectors
-      const double delta = 1e-6;
-
-      for ( int r = 0; r < _NUM_reactions; r++ ) {
-        rh_l_new[r] = old_reaction_rate[r](i,j,k); // [kg/m^3/s]
-      }
-
-      for ( int r = 0; r < _NUM_reactions; r++ ) { // check this
-        oxid_mass_frac[r] = species[_oxidizer_indices[r]](i,j,k); // [mass fraction]
-      }
-
-      for ( int ns = 0; ns < _NUM_species; ns++ ) {
-        species_mass_frac[ns] = species[ns](i,j,k); // [mass fraction]
-      }
-
-      const double CO2onCO = 1. / ( 200. * exp( -9000. / ( _R_cal * p_T ) ) * 44.0 / 28.0 ); // [ kg CO / kg CO2] => [kmoles CO / kmoles CO2] => [kmoles CO2 / kmoles CO]
-
-      for ( int r = 0; r < _NUM_reactions; r++ ) {
-
-        if ( _use_co2co_l[r] ) {
-          phi_l[r]  = ( CO2onCO + 1 ) / ( CO2onCO + 0.5 );
-          hrxn_l[r] = ( CO2onCO * _HF_CO2 + _HF_CO ) / ( 1 + CO2onCO );
-        }
-        else {
-          phi_l[r]  = _phi_l[r];
-          hrxn_l[r] = _hrxn_l[r];
-        }
-      }
-
-      const double Re_p = sqrt( ( CCuVel(i,j,k) - up(i,j,k) ) * ( CCuVel(i,j,k) - up(i,j,k) ) +
-                                ( CCvVel(i,j,k) - vp(i,j,k) ) * ( CCvVel(i,j,k) - vp(i,j,k) ) +
-                                ( CCwVel(i,j,k) - wp(i,j,k) ) * ( CCwVel(i,j,k) - wp(i,j,k) ) )*
-                                p_diam / ( _dynamic_visc / gas_rho ); // Reynolds number [-]
-
-      const double x_org    = (rc + ch) / (rc + ch + m_mass_ash );
-      const double cg       = _gasPressure / (_R * gas_T * 1000.); // [kmoles/m^3] - Gas concentration
-      const double p_area   = M_PI * SQUARE( p_diam );             // particle surface area [m^2]
-      const double p_volume = M_PI / 6. * CUBE( p_diam );          // particle volme [m^3]
-      const double p_void   = fmax( 1e-10, 1. - ( 1. / p_volume ) * ( ( rc + ch ) / m_rho_org_bulk + m_mass_ash / _rho_ash_bulk ) ); // current porosity. (-) required due to sign convention of char.
-
-      const double Sj       = _init_particle_density / p_rho * ( ( 1 - p_void ) / ( 1 - _p_void0 ) ) * sqrt( 1 - fmin( 1.0, ( 1. / ( _p_void0 * ( 1. - _p_void0 ) ) ) * log( ( 1 - p_void ) / ( 1 - _p_void0 ) ) ) );
-      const double rp  = 2 * p_void * (1. - p_void ) / ( p_rho * Sj * _Sg0 ); // average particle radius [m]
-
-      // Calculate oxidizer diffusion coefficient
-      // effect diffusion through stagnant gas (see "Multicomponent Mass Transfer", Taylor and Krishna equation 6.1.14)
-      for ( int r = 0; r < _NUM_reactions; r++ ) {
-
-        double sum_x_D = 0;
-        double sum_x   = 0;
-
-        for ( int ns = 0; ns < _NUM_species; ns++ ) {
-
-          if ( ns != _oxidizer_indices[r] ) {
-            sum_x_D = sum_x_D + species_mass_frac[ns] / ( _MW_species[ns] * _D_mat[_oxidizer_indices[r]][ns] );
-            sum_x   = sum_x   + species_mass_frac[ns] / ( _MW_species[ns] );
-          }
-          else {
-            sum_x_D = sum_x_D;
-            sum_x   = sum_x;
-          }
-        }
-
-        D_oxid_mix_l[r] = sum_x / sum_x_D * sqrt( CUBE( gas_T / _T0 ) );
-        Sh[r]             = 2.0 + 0.6 * sqrt( Re_p ) * cbrt( _dynamic_visc / ( gas_rho * D_oxid_mix_l[r] ) ); // Sherwood number [-]
-        co_r[r]           = cg * ( oxid_mass_frac[r] * MW / _MW_l[r] ); // oxidizer concentration, [kmoles/m^3]
-        k_r[r] = ( 10.0 * _a_l[r] * exp( - _e_l[r] / ( _R_cal * p_T)) * _R * p_T * 1000.0) / ( _Mh * phi_l[r] * 101325. ); // [m / s]
-        M_T[r]            = p_diam / 2. * sqrt( k_r[r] * _Sg0 * Sj * p_rho /                                 // Thiele modulus, Mitchell's formulation
-                              ( p_void / _tau / ( 1. / ( 97. * rp * sqrt( p_T / _MW_species[r] ) ) + 1. / D_oxid_mix_l[r] ) ) );
-        effectivenessF[r] = ( M_T[r] < 1e-5 ) ? 1.0 : 3. / M_T[r] * ( 1. / tanh( M_T[r] ) - 1. / M_T[r] ); // effectiveness factor
-      }
-
-      // Newton-Raphson solve for rh_l.
-      // rh_(n+1) = rh_(n) - (dF_(n)/drh_(n))^-1 * F_(n)
-      double rtot    = 0.0;
-      double Sfactor = 0.0;
-      double Bjm     = 0.0;
-      double mtc_r   = 0.0;
-
-      int count = 0;
-
-      for ( int it = 0; it < 100; it++ ) {
-
-        count = count + 1;
-
-        for ( int r = 0; r < _NUM_reactions; r++ ) {
-          rh_l[r] = rh_l_new[r];
-        }
-
-        // get F and Jacobian -> dF/drh
-        rtot    = ( rh_l[0] + rh_l[1] + rh_l[2] ) * x_org * ( 1. - p_void ) + r_devol_ns;
-        Sfactor = 0.0;
-        Bjm     = 0.0;
-        mtc_r   = 0.0;
+    Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
+
+    Uintah::parallel_for<Kokkos::Cuda>( range, [&]( int i,  int j, int k ) {
+
+      if ( volFraction(i,j,k) > 0 ) {
+
+        double D_oxid_mix_l     [ _NUM_reactions ];
+        double phi_l            [ _NUM_reactions ];
+        double hrxn_l           [ _NUM_reactions ];
+        double rh_l             [ _NUM_reactions ];
+        double rh_l_new         [ _NUM_reactions ];
+        double species_mass_frac[ _NUM_species ];
+        double oxid_mass_frac   [ _NUM_reactions ];
+
+        double Sh            [ _NUM_reactions ];
+        double co_r          [ _NUM_reactions ];
+        double k_r           [ _NUM_reactions ];
+        double M_T           [ _NUM_reactions ];
+        double effectivenessF[ _NUM_reactions ];
+
+        double F         [ _NUM_reactions ];
+        double rh_l_delta[ _NUM_reactions ];
+        double F_delta   [ _NUM_reactions ];
+        double r_h_ex    [ _NUM_reactions ];
+        double r_h_in    [ _NUM_reactions ];
+        double dfdrh[3][3];
 
         for ( int l = 0; l < _NUM_reactions; l++ ) {
-
-          Bjm     = fmin( 80.0, rtot * p_diam / ( D_oxid_mix_l[l] * gas_rho ) ); // [-] // this is the derived for mass flux  BSL chapter 22
-          mtc_r   = ( Sh[l] * D_oxid_mix_l[l] * ( ( Bjm >= 1e-7 ) ?  Bjm / ( exp( Bjm ) - 1. ) : 1.0 ) ) / p_diam; // [m/s]
-          Sfactor = 1 + effectivenessF[l] * p_diam * p_rho * _Sg0 * Sj / ( 6. * ( 1. - p_void ) );
-          F[l]    = rh_l[l] - ( _Mh * MW * phi_l[l] * k_r[l] * mtc_r * Sfactor * co_r[l] * cg ) /
-                    ( ( MW * cg * ( k_r[l] * x_org * ( 1. - p_void ) * Sfactor + mtc_r ) ) + rtot ); // [kg-char/m^3/s]
+          for ( int lm = 0; lm < _NUM_reactions; lm++ ) {
+            dfdrh[l][lm] = 0;
+          }
         }
 
-        for ( int j = 0; j < _NUM_reactions; j++ ) {
+        // populate the temporary variables.
+        const double gas_rho    = den(i,j,k);                  // [kg/m^3]
+        const double gas_T      = temperature(i,j,k);          // [K]
+        const double p_T        = particle_temperature(i,j,k); // [K]
+        const double p_rho      = particle_density(i,j,k);     // [kg/m^3]
+        const double p_diam     = length(i,j,k);               // [m]
+        const double rc         = rawcoal_mass(i,j,k);         // [kg/#]
+        const double ch         = char_mass(i,j,k);            // [kg/#]
+        const double w          = weight(i,j,k);               // [#/m^3]
+        const double MW         = 1. / MWmix(i,j,k);           // [kg mix / kmol mix] (MW in table is 1/MW)
+        const double r_devol    = devolRC(i,j,k) * m_RC_scaling_constant * m_weight_scaling_constant; // [kg/m^3/s]
+        const double r_devol_ns = -r_devol; // [kg/m^3/s]
+        const double RHS_v      = RC_RHS_source(i,j,k) * m_RC_scaling_constant * m_weight_scaling_constant; // [kg/s]
+        const double RHS        = RHS_source(i,j,k) * m_char_scaling_constant * m_weight_scaling_constant;  // [kg/s]
 
-          for ( int k = 0; k < _NUM_reactions; k++ ) {
-            rh_l_delta[k] = rh_l[k];
+        // populate temporary variable vectors
+        const double delta = 1e-6;
+
+        for ( int r = 0; r < _NUM_reactions; r++ ) {
+          rh_l_new[r] = old_reaction_rate[r](i,j,k); // [kg/m^3/s]
+        }
+
+        for ( int r = 0; r < _NUM_reactions; r++ ) { // check this
+          oxid_mass_frac[r] = species[_oxidizer_indices[r]](i,j,k); // [mass fraction]
+        }
+
+        for ( int ns = 0; ns < _NUM_species; ns++ ) {
+          species_mass_frac[ns] = species[ns](i,j,k); // [mass fraction]
+        }
+
+        const double CO2onCO = 1. / ( 200. * exp( -9000. / ( _R_cal * p_T ) ) * 44.0 / 28.0 ); // [ kg CO / kg CO2] => [kmoles CO / kmoles CO2] => [kmoles CO2 / kmoles CO]
+
+        for ( int r = 0; r < _NUM_reactions; r++ ) {
+
+          if ( _use_co2co_l[r] ) {
+            phi_l[r]  = ( CO2onCO + 1 ) / ( CO2onCO + 0.5 );
+            hrxn_l[r] = ( CO2onCO * _HF_CO2 + _HF_CO ) / ( 1 + CO2onCO );
+          }
+          else {
+            phi_l[r]  = _phi_l[r];
+            hrxn_l[r] = _hrxn_l[r];
+          }
+        }
+
+        const double Re_p = sqrt( ( CCuVel(i,j,k) - up(i,j,k) ) * ( CCuVel(i,j,k) - up(i,j,k) ) +
+                                  ( CCvVel(i,j,k) - vp(i,j,k) ) * ( CCvVel(i,j,k) - vp(i,j,k) ) +
+                                  ( CCwVel(i,j,k) - wp(i,j,k) ) * ( CCwVel(i,j,k) - wp(i,j,k) ) )*
+                                  p_diam / ( _dynamic_visc / gas_rho ); // Reynolds number [-]
+
+        const double x_org    = (rc + ch) / (rc + ch + m_mass_ash );
+        const double cg       = _gasPressure / (_R * gas_T * 1000.); // [kmoles/m^3] - Gas concentration
+        const double p_area   = M_PI * SQUARE( p_diam );             // particle surface area [m^2]
+        const double p_volume = M_PI / 6. * CUBE( p_diam );          // particle volme [m^3]
+        const double p_void   = fmax( 1e-10, 1. - ( 1. / p_volume ) * ( ( rc + ch ) / m_rho_org_bulk + m_mass_ash / _rho_ash_bulk ) ); // current porosity. (-) required due to sign convention of char.
+
+        const double Sj       = _init_particle_density / p_rho * ( ( 1 - p_void ) / ( 1 - _p_void0 ) ) * sqrt( 1 - fmin( 1.0, ( 1. / ( _p_void0 * ( 1. - _p_void0 ) ) ) * log( ( 1 - p_void ) / ( 1 - _p_void0 ) ) ) );
+        const double rp  = 2 * p_void * (1. - p_void ) / ( p_rho * Sj * _Sg0 ); // average particle radius [m]
+
+        // Calculate oxidizer diffusion coefficient
+        // effect diffusion through stagnant gas (see "Multicomponent Mass Transfer", Taylor and Krishna equation 6.1.14)
+        for ( int r = 0; r < _NUM_reactions; r++ ) {
+
+          double sum_x_D = 0;
+          double sum_x   = 0;
+
+          for ( int ns = 0; ns < _NUM_species; ns++ ) {
+
+            if ( ns != _oxidizer_indices[r] ) {
+              sum_x_D = sum_x_D + species_mass_frac[ns] / ( _MW_species[ns] * _D_mat[_oxidizer_indices[r]][ns] );
+              sum_x   = sum_x   + species_mass_frac[ns] / ( _MW_species[ns] );
+            }
+            else {
+              sum_x_D = sum_x_D;
+              sum_x   = sum_x;
+            }
           }
 
-          rh_l_delta[j] = rh_l[j] + delta;
+          D_oxid_mix_l[r] = sum_x / sum_x_D * sqrt( CUBE( gas_T / _T0 ) );
+          Sh[r]             = 2.0 + 0.6 * sqrt( Re_p ) * cbrt( _dynamic_visc / ( gas_rho * D_oxid_mix_l[r] ) ); // Sherwood number [-]
+          co_r[r]           = cg * ( oxid_mass_frac[r] * MW / _MW_l[r] ); // oxidizer concentration, [kmoles/m^3]
+          k_r[r] = ( 10.0 * _a_l[r] * exp( - _e_l[r] / ( _R_cal * p_T)) * _R * p_T * 1000.0) / ( _Mh * phi_l[r] * 101325. ); // [m / s]
+          M_T[r]            = p_diam / 2. * sqrt( k_r[r] * _Sg0 * Sj * p_rho /                                 // Thiele modulus, Mitchell's formulation
+                                ( p_void / _tau / ( 1. / ( 97. * rp * sqrt( p_T / _MW_species[r] ) ) + 1. / D_oxid_mix_l[r] ) ) );
+          effectivenessF[r] = ( M_T[r] < 1e-5 ) ? 1.0 : 3. / M_T[r] * ( 1. / tanh( M_T[r] ) - 1. / M_T[r] ); // effectiveness factor
+        }
 
-          rtot    = ( rh_l_delta[0] + rh_l_delta[1] + rh_l_delta[2] ) * x_org * ( 1. - p_void ) + r_devol_ns;
+        // Newton-Raphson solve for rh_l.
+        // rh_(n+1) = rh_(n) - (dF_(n)/drh_(n))^-1 * F_(n)
+        double rtot    = 0.0;
+        double Sfactor = 0.0;
+        double Bjm     = 0.0;
+        double mtc_r   = 0.0;
+
+        int count = 0;
+
+        for ( int it = 0; it < 100; it++ ) {
+
+          count = count + 1;
+
+          for ( int r = 0; r < _NUM_reactions; r++ ) {
+            rh_l[r] = rh_l_new[r];
+          }
+
+          // get F and Jacobian -> dF/drh
+          rtot    = ( rh_l[0] + rh_l[1] + rh_l[2] ) * x_org * ( 1. - p_void ) + r_devol_ns;
           Sfactor = 0.0;
           Bjm     = 0.0;
           mtc_r   = 0.0;
 
           for ( int l = 0; l < _NUM_reactions; l++ ) {
 
-            Bjm        = fmin( 80.0, rtot * p_diam / ( D_oxid_mix_l[l] * gas_rho ) ); // [-] // this is the derived for mass flux  BSL chapter 22
-            mtc_r      = ( Sh[l] * D_oxid_mix_l[l] * ( ( Bjm >= 1e-7 ) ?  Bjm / ( exp( Bjm ) - 1. ) : 1.0 ) ) / p_diam; // [m/s]
-            Sfactor    = 1 + effectivenessF[l] * p_diam * p_rho * _Sg0 * Sj / ( 6. * ( 1. - p_void ) );
-            F_delta[l] = rh_l_delta[l] - ( _Mh * MW * phi_l[l] * k_r[l] * mtc_r * Sfactor * co_r[l] * cg ) /
-                         ( ( MW * cg * ( k_r[l] * x_org * ( 1. - p_void ) * Sfactor + mtc_r ) ) + rtot ); // [kg-char/m^3/s]
+            Bjm     = fmin( 80.0, rtot * p_diam / ( D_oxid_mix_l[l] * gas_rho ) ); // [-] // this is the derived for mass flux  BSL chapter 22
+            mtc_r   = ( Sh[l] * D_oxid_mix_l[l] * ( ( Bjm >= 1e-7 ) ?  Bjm / ( exp( Bjm ) - 1. ) : 1.0 ) ) / p_diam; // [m/s]
+            Sfactor = 1 + effectivenessF[l] * p_diam * p_rho * _Sg0 * Sj / ( 6. * ( 1. - p_void ) );
+            F[l]    = rh_l[l] - ( _Mh * MW * phi_l[l] * k_r[l] * mtc_r * Sfactor * co_r[l] * cg ) /
+                      ( ( MW * cg * ( k_r[l] * x_org * ( 1. - p_void ) * Sfactor + mtc_r ) ) + rtot ); // [kg-char/m^3/s]
           }
 
-          for ( int r = 0; r < _NUM_reactions; r++ ) {
-            dfdrh[r][j] = ( F_delta[r] - F[r] ) / delta;
+          for ( int j = 0; j < _NUM_reactions; j++ ) {
+
+            for ( int k = 0; k < _NUM_reactions; k++ ) {
+              rh_l_delta[k] = rh_l[k];
+            }
+
+            rh_l_delta[j] = rh_l[j] + delta;
+
+            rtot    = ( rh_l_delta[0] + rh_l_delta[1] + rh_l_delta[2] ) * x_org * ( 1. - p_void ) + r_devol_ns;
+            Sfactor = 0.0;
+            Bjm     = 0.0;
+            mtc_r   = 0.0;
+
+            for ( int l = 0; l < _NUM_reactions; l++ ) {
+
+              Bjm        = fmin( 80.0, rtot * p_diam / ( D_oxid_mix_l[l] * gas_rho ) ); // [-] // this is the derived for mass flux  BSL chapter 22
+              mtc_r      = ( Sh[l] * D_oxid_mix_l[l] * ( ( Bjm >= 1e-7 ) ?  Bjm / ( exp( Bjm ) - 1. ) : 1.0 ) ) / p_diam; // [m/s]
+              Sfactor    = 1 + effectivenessF[l] * p_diam * p_rho * _Sg0 * Sj / ( 6. * ( 1. - p_void ) );
+              F_delta[l] = rh_l_delta[l] - ( _Mh * MW * phi_l[l] * k_r[l] * mtc_r * Sfactor * co_r[l] * cg ) /
+                           ( ( MW * cg * ( k_r[l] * x_org * ( 1. - p_void ) * Sfactor + mtc_r ) ) + rtot ); // [kg-char/m^3/s]
+            }
+
+            for ( int r = 0; r < _NUM_reactions; r++ ) {
+              dfdrh[r][j] = ( F_delta[r] - F[r] ) / delta;
+            }
           }
-        }
 
-        // invert Jacobian -> (dF_(n)/drh_(n))^-1
-        double a11 = dfdrh[0][0];
-        double a12 = dfdrh[0][1];
-        double a13 = dfdrh[0][2];
-        double a21 = dfdrh[1][0];
-        double a22 = dfdrh[1][1];
-        double a23 = dfdrh[1][2];
-        double a31 = dfdrh[2][0];
-        double a32 = dfdrh[2][1];
-        double a33 = dfdrh[2][2];
+          // invert Jacobian -> (dF_(n)/drh_(n))^-1
+          double a11 = dfdrh[0][0];
+          double a12 = dfdrh[0][1];
+          double a13 = dfdrh[0][2];
+          double a21 = dfdrh[1][0];
+          double a22 = dfdrh[1][1];
+          double a23 = dfdrh[1][2];
+          double a31 = dfdrh[2][0];
+          double a32 = dfdrh[2][1];
+          double a33 = dfdrh[2][2];
 
-        double det_inv = 1 / ( a11 * a22 * a33 +
-                               a21 * a32 * a13 +
-                               a31 * a12 * a23 -
-                               a11 * a32 * a23 -
-                               a31 * a22 * a13 -
-                               a21 * a12 * a33   );
+          double det_inv = 1 / ( a11 * a22 * a33 +
+                                 a21 * a32 * a13 +
+                                 a31 * a12 * a23 -
+                                 a11 * a32 * a23 -
+                                 a31 * a22 * a13 -
+                                 a21 * a12 * a33   );
 
-        dfdrh[0][0] = ( a22 * a33 - a23 * a32 ) * det_inv;
-        dfdrh[0][1] = ( a13 * a32 - a12 * a33 ) * det_inv;
-        dfdrh[0][2] = ( a12 * a23 - a13 * a22 ) * det_inv;
-        dfdrh[1][0] = ( a23 * a31 - a21 * a33 ) * det_inv;
-        dfdrh[1][1] = ( a11 * a33 - a13 * a31 ) * det_inv;
-        dfdrh[1][2] = ( a13 * a21 - a11 * a23 ) * det_inv;
-        dfdrh[2][0] = ( a21 * a32 - a22 * a31 ) * det_inv;
-        dfdrh[2][1] = ( a12 * a31 - a11 * a32 ) * det_inv;
-        dfdrh[2][2] = ( a11 * a22 - a12 * a21 ) * det_inv;
+          dfdrh[0][0] = ( a22 * a33 - a23 * a32 ) * det_inv;
+          dfdrh[0][1] = ( a13 * a32 - a12 * a33 ) * det_inv;
+          dfdrh[0][2] = ( a12 * a23 - a13 * a22 ) * det_inv;
+          dfdrh[1][0] = ( a23 * a31 - a21 * a33 ) * det_inv;
+          dfdrh[1][1] = ( a11 * a33 - a13 * a31 ) * det_inv;
+          dfdrh[1][2] = ( a13 * a21 - a11 * a23 ) * det_inv;
+          dfdrh[2][0] = ( a21 * a32 - a22 * a31 ) * det_inv;
+          dfdrh[2][1] = ( a12 * a31 - a11 * a32 ) * det_inv;
+          dfdrh[2][2] = ( a11 * a22 - a12 * a21 ) * det_inv;
 
-        // get rh_(n+1)
-        double dominantRate = 0.0;
+          // get rh_(n+1)
+          double dominantRate = 0.0;
           //double max_F        = 1e-8;
 
           for ( int r = 0; r < _NUM_reactions; r++ ) {
@@ -2084,7 +2075,7 @@ CharOxidationps<T>::eval( const Patch                 * patch
 
       } // end if ( volFraction(i,j,k) > 0 ) {
     }); // end Uintah::parallel_for
-
+  }
 #endif // if defined(HAVE_CUDA)
 #endif // if !defined(UINTAH_ENABLE_KOKKOS)
 }
@@ -2141,7 +2132,7 @@ CharOxidationps<T>::eval( const Patch                 * patch
 //  CT                      & m_particle_density;
 //  CT                      & m_length;
 //  CT                      & m_rawcoal_mass;
-//  CT                      & m_char_mass;
+//  CT                      & m_char_mass; line
 //  constCCVariable<double> & m_MWmix;
 //  CT                      & m_devolRC;
 //  CT                      * m_species[species_count];
