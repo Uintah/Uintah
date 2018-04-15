@@ -2730,7 +2730,6 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
                   //}
 
                   CUDA_RT_SAFE_CALL(cudaMemcpyAsync(device_ptr, host_ptr, it->second.m_varMemSize, cudaMemcpyHostToDevice, *stream));
-
                   // Tell this task that we're managing the copies for this variable.
 
                   dtask->getVarsBeingCopiedByTask().getMap().insert(std::pair<GpuUtilities::LabelPatchMatlLevelDw,

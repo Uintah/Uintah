@@ -386,20 +386,45 @@ parallel_for( BlockRange const & r, const Functor & functor )
   //Cuda thread 0 will be assigned to n = 0, n = 256, n = 512, and n = 768,
   //Cuda thread 1 will be assigned to n = 1, n = 257, n = 513, and n = 769...
 
-  const unsigned int teamThreadRangeSize = (i_size > 0 ? i_size : 1) * (j_size > 0 ? j_size : 1) * (k_size > 0 ? k_size : 1);
-  const unsigned int actualThreads = teamThreadRangeSize > 256 ? 256 : teamThreadRangeSize;
+//  const unsigned int teamThreadRangeSize = (i_size > 0 ? i_size : 1) * (j_size > 0 ? j_size : 1) * (k_size > 0 ? k_size : 1);
+//  const unsigned int actualThreads = teamThreadRangeSize > 256 ? 256 : teamThreadRangeSize;
+//
+//  typedef Kokkos::TeamPolicy< ExecutionSpace > policy_type;
+//
+//  Kokkos::parallel_for (Kokkos::TeamPolicy< ExecutionSpace >( 1, actualThreads ),
+//                           KOKKOS_LAMBDA ( typename policy_type::member_type thread ) {
+//    Kokkos::parallel_for (Kokkos::TeamThreadRange(thread, teamThreadRangeSize), [=] (const int& n) {
+//
+//      const int i = n / (j_size * k_size) + rbegin0;
+//      const int j = (n / k_size) % j_size + rbegin1;
+//      const int k = n % k_size + rbegin2;
+//      functor( i, j, k );
+//    });
+//  });
 
-  typedef Kokkos::TeamPolicy< ExecutionSpace > policy_type;
 
-  Kokkos::parallel_for (Kokkos::TeamPolicy< ExecutionSpace >( 1, actualThreads ),
-                           KOKKOS_LAMBDA ( typename policy_type::member_type thread ) {
-    Kokkos::parallel_for (Kokkos::TeamThreadRange(thread, teamThreadRangeSize), [=] (const int& n) {
+  const int teamThreadRangeSize = (i_size > 0 ? i_size : 1) * (j_size > 0 ? j_size : 1) * (k_size > 0 ? k_size : 1);
+  const int threadsPerGroup = 256;
+  const int actualThreads = teamThreadRangeSize > threadsPerGroup ? threadsPerGroup : teamThreadRangeSize;
 
-      const int i = n / (j_size * k_size) + rbegin0;
-      const int j = (n / k_size) % j_size + rbegin1;
-      const int k = n % k_size + rbegin2;
+  void* stream = r.getStream();
+
+  if (!stream) {
+    std::cout << "Error, the CUDA stream must not be nullptr\n" << std::endl;
+    exit(-1);
+  }
+  Kokkos::Cuda instanceObject(*(static_cast<cudaStream_t*>(stream)));
+  Kokkos::RangePolicy<Kokkos::Cuda> rangepolicy( instanceObject, 0, actualThreads);
+
+  Kokkos::parallel_for( rangepolicy, KOKKOS_LAMBDA ( const int& n ) {
+    int threadNum = n;
+    while ( threadNum < teamThreadRangeSize ) {
+      const int i = threadNum / (j_size * k_size) + rbegin0;
+      const int j = (threadNum / k_size) % j_size + rbegin1;
+      const int k = threadNum % k_size + rbegin2;
       functor( i, j, k );
-    });
+      threadNum += threadsPerGroup;
+    }
   });
 }
 #endif  //#if defined(HAVE_CUDA)
@@ -487,8 +512,8 @@ parallel_reduce_sum( BlockRange const & r, const Functor & functor, ReductionTyp
 //  }, tmp);
 
   //Range policy manual approach:
-  const unsigned int teamThreadRangeSize = (i_size > 0 ? i_size : 1) * (j_size > 0 ? j_size : 1) * (k_size > 0 ? k_size : 1);
-  const unsigned int actualThreads = teamThreadRangeSize > 256 ? 256 : teamThreadRangeSize;
+  const int teamThreadRangeSize = (i_size > 0 ? i_size : 1) * (j_size > 0 ? j_size : 1) * (k_size > 0 ? k_size : 1);
+  const int actualThreads = teamThreadRangeSize > 256 ? 256 : teamThreadRangeSize;
 
   Kokkos::RangePolicy<ExecutionSpace> rangepolicy(0, actualThreads);
 
@@ -549,9 +574,9 @@ parallel_reduce_sum( BlockRange const & r, const Functor & functor, ReductionTyp
 
 
   //  Manual approach using range policy that shares threads.
-  const unsigned int teamThreadRangeSize = (i_size > 0 ? i_size : 1) * (j_size > 0 ? j_size : 1) * (k_size > 0 ? k_size : 1);
-  const unsigned int threadsPerGroup = 256;
-  const unsigned int actualThreads = teamThreadRangeSize > threadsPerGroup ? threadsPerGroup : teamThreadRangeSize;
+  const int teamThreadRangeSize = (i_size > 0 ? i_size : 1) * (j_size > 0 ? j_size : 1) * (k_size > 0 ? k_size : 1);
+  const int threadsPerGroup = 256;
+  const int actualThreads = teamThreadRangeSize > threadsPerGroup ? threadsPerGroup : teamThreadRangeSize;
   
   void* stream = r.getStream();
 

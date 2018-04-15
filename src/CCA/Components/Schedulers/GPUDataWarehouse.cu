@@ -2053,7 +2053,6 @@ GPUDataWarehouse::copyGpuGhostCellsToGpuVars() {
   //Copy all ghost cells from their source to their destination.
   //The ghost cells could either be only the data that needs to be copied,
   //or it could be on an edge of a bigger grid var.
-
   //I believe the x,y,z coordinates of everything should match.
 
   //This could probably be made more efficient by using only perhaps one block,
@@ -2112,8 +2111,6 @@ GPUDataWarehouse::copyGpuGhostCellsToGpuVars() {
 
 
          int destOffset = x_dest_real + d_varDB[destIndex].var_size.x * (y_dest_real + z_dest_real * d_varDB[destIndex].var_size.y);
-
-
 
          //if (threadID == 0) {
 //            printf("Going to copy, between (%d, %d, %d) from offset %d to offset %d.  From starts at (%d, %d, %d) with size (%d, %d, %d) at index %d pointer %p.  To starts at (%d, %d, %d) with size (%d, %d, %d).\n",
@@ -2206,8 +2203,11 @@ GPUDataWarehouse::copyGpuGhostCellsToGpuVarsInvoker(cudaStream_t* stream)
      }
      cerrLock.unlock();
     }
+    //copyGpuGhostCellsToGpuVarsKernel<<< dimGrid, dimBlock>>>(this->d_device_copy);
     copyGpuGhostCellsToGpuVarsKernel<<< dimGrid, dimBlock, 0, *stream >>>(this->d_device_copy);
-    //cudaDeviceSynchronize();
+    cudaDeviceSynchronize();
+    cudaError_t retVal = cudaGetLastError();
+    printf("The error was %d\n", retVal);
   }
 }
 

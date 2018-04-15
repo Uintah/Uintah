@@ -244,7 +244,7 @@ void Poisson1::initialize( const ProcessorGroup *
           const BoundCond<double>* bc = dynamic_cast<const BoundCond<double>*>(bcb);
           double value = bc->getValue();
           for (nbound_ptr.reset(); !nbound_ptr.done(); nbound_ptr++) {
-            phi[*nbound_ptr] = value;
+            phi[*nbound_ptr] = 777.0;
 
           }
           delete bcb;
@@ -282,7 +282,8 @@ void Poisson1::timeAdvance(DetailedTask* dtask,
     double residual = 0;
     IntVector l = patch->getNodeLowIndex();
     IntVector h = patch->getNodeHighIndex();
-    //Uintah::BlockRange boundaryConditionRange(l,h);
+
+    Uintah::BlockRange rangeBoundary( stream, l, h);
 
     l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor ? 0 : 1,
                   patch->getBCType(Patch::yminus) == Patch::Neighbor ? 0 : 1,
@@ -309,14 +310,24 @@ void Poisson1::timeAdvance(DetailedTask* dtask,
     if ( std::is_same< Kokkos::Cuda , ExecutionSpace >::value ) {
       KokkosView3<const double, Kokkos::CudaSpace> phi = old_dw->getGPUDW()->getKokkosView<const double>(phi_label->getName().c_str(), patch->getID(),  matl, 0);
       KokkosView3<double, Kokkos::CudaSpace> newphi    = new_dw->getGPUDW()->getKokkosView<double>(phi_label->getName().c_str(), patch->getID(),  matl, 0);
-      TimeAdvanceFunctor<Kokkos::CudaSpace> func(phi, newphi);
+      //TimeAdvanceFunctor<Kokkos::CudaSpace> func(phi, newphi);
       //Uintah::parallel_reduce_sum<Kokkos::Cuda>(range, func, residual);
       //Uintah::parallel_for<Kokkos::Cuda>(range, func);
+
+      //Replace with boundary condition
+
+      Uintah::parallel_for<Kokkos::Cuda>( rangeBoundary, KOKKOS_LAMBDA(int i, int j, int k){
+          printf("At ( %d,%d,%d ) copying %g \n", i,j,k,phi(i,j,k));
+          newphi(i, j, k) = phi(i,j,k);
+      });
+
+
       Uintah::parallel_reduce_sum<Kokkos::Cuda>( range, KOKKOS_LAMBDA (int i, int j, int k, double& residual){
         newphi(i, j, k) = (1. / 6)
             * (phi(i + 1, j, k) + phi(i - 1, j, k) + phi(i, j + 1, k) +
                 phi(i, j - 1, k) + phi(i, j, k + 1) + phi(i, j, k - 1));
-        printf("In lambda CUDA at (%d,%d,%d), m_phi is %g from %g, %g, %g, %g, %g, %g and m_newphi is %g\n", i, j, k,
+        printf("In lambda CUDA at (%d,%d,%d), m_phi is at %p %p %g from %g, %g, %g, %g, %g, %g and m_newphi is %g\n", i, j, k,
+            phi.m_view.data(), &(phi(i,j,k)),
             phi(i,j,k),
             phi(i + 1, j, k), phi(i - 1, j, k), phi(i, j + 1, k),
             phi(i, j - 1, k), phi(i, j, k + 1), phi(i, j, k - 1),
@@ -324,6 +335,7 @@ void Poisson1::timeAdvance(DetailedTask* dtask,
         double diff = newphi(i, j, k) - phi(i, j, k);
         residual += diff * diff;
       }, residual);
+      cudaDeviceSynchronize();
       //parallel_for<Kokkos::Cuda>(range, KOKKOS_LAMBDA (const int i, const int j, const int k) {
       //  printf("i is %d\n", i);
       //});
@@ -337,9 +349,13 @@ void Poisson1::timeAdvance(DetailedTask* dtask,
       NCVariable<double> NC_newphi;
       old_dw->get(NC_phi, phi_label, matl, patch, Ghost::AroundNodes, 1);
       new_dw->allocateAndPut(NC_newphi, phi_label, matl, patch);
-      NC_newphi.copyPatch(NC_phi, NC_newphi.getLowIndex(), NC_newphi.getHighIndex()); //TODO, replace with boundary condition
       KokkosView3<const double, Kokkos::HostSpace> phi = NC_phi.getKokkosView();
       KokkosView3<double, Kokkos::HostSpace> newphi = NC_newphi.getKokkosView();
+
+      //NC_newphi.copyPatch(NC_phi, NC_newphi.getLowIndex(), NC_newphi.getHighIndex()); //TODO, replace with boundary condition
+      Uintah::parallel_for<Kokkos::OpenMP>( rangeBoundary, [&](int i, int j, int k){
+              newphi(i, j, k) = phi(i,j,k);
+      });
 
       //Uintah::parallel_boundary_condition(boundaryConditionRange, range, boundaryFunc);
       TimeAdvanceFunctor<Kokkos::HostSpace> func(phi, newphi);
