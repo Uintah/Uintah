@@ -2188,8 +2188,9 @@ GPUDataWarehouse::copyGpuGhostCellsToGpuVarsInvoker(cudaStream_t* stream)
     int zblocks = 1;
 #endif
 
-    dim3 dimBlock(32, 32, 1);
-    dim3 dimGrid(1, 1, 1);  //Give each ghost copying kernel 32 * 32 = 1024 threads to copy
+    dim3 dimBlock(32, 16, 1);
+    dim3 dimGrid(1, 1, 1);  //Give each ghost copying kernel 32 * 16 = 512 threads to copy
+                            //(32x32 was too much for a smaller laptop GPU, but was fine for the Titan X on Albion)
     if (gpu_stats.active()) {
      cerrLock.lock();
      {
@@ -2203,11 +2204,8 @@ GPUDataWarehouse::copyGpuGhostCellsToGpuVarsInvoker(cudaStream_t* stream)
      }
      cerrLock.unlock();
     }
-    //copyGpuGhostCellsToGpuVarsKernel<<< dimGrid, dimBlock>>>(this->d_device_copy);
     copyGpuGhostCellsToGpuVarsKernel<<< dimGrid, dimBlock, 0, *stream >>>(this->d_device_copy);
-    cudaDeviceSynchronize();
-    cudaError_t retVal = cudaGetLastError();
-    printf("The error was %d\n", retVal);
+
   }
 }
 
