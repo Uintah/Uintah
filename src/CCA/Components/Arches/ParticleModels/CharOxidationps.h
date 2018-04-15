@@ -653,7 +653,7 @@ CharOxidationps<T>::register_timestep_eval(       std::vector<ArchesFieldContain
 }
 
 
-
+#ifdef UINTAH_ENABLE_KOKKOS
 //--------------------------------------------------------------------------------------------------
 namespace {
 
@@ -1265,6 +1265,7 @@ namespace {
     }  // end operator()
   };   // end solveFunctor
 }      // end namespace
+#endif
 
 //--------------------------------------------------------------------------------------------------
 template<typename T>
