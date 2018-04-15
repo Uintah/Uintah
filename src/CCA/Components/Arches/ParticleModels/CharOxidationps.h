@@ -659,32 +659,62 @@ namespace {
 
   template < typename MemorySpace, typename T, typename CT >
   struct solveFunctor {
-    KokkosView3<const double, Kokkos::HostSpace> species[species_count];
-    KokkosView3<      double, Kokkos::HostSpace> reaction_rate[reactions_count];
-    KokkosView3<const double, Kokkos::HostSpace> old_reaction_rate[reactions_count];
-    KokkosView3<const double, Kokkos::HostSpace> CCuVel;
-    KokkosView3<const double, Kokkos::HostSpace> CCvVel;
-    KokkosView3<const double, Kokkos::HostSpace> CCwVel;
+
     KokkosView3<const double, Kokkos::HostSpace> volFraction;
-    KokkosView3<const double, Kokkos::HostSpace> den;
-    KokkosView3<const double, Kokkos::HostSpace> temperature;
-    KokkosView3<const double, Kokkos::HostSpace> MWmix;
-    KokkosView3<const double, Kokkos::HostSpace> number_density;
+    KokkosView3<const double, Kokkos::HostSpace> weight;
     KokkosView3<      double, Kokkos::HostSpace> char_rate;
     KokkosView3<      double, Kokkos::HostSpace> gas_char_rate;
     KokkosView3<      double, Kokkos::HostSpace> particle_temp_rate;
     KokkosView3<      double, Kokkos::HostSpace> particle_Size_rate;
     KokkosView3<      double, Kokkos::HostSpace> surface_rate;
-    KokkosView3<const double, Kokkos::HostSpace> devolRC;
+    KokkosView3<      double, Kokkos::HostSpace> reaction_rate[reactions_count];
+    KokkosView3<const double, Kokkos::HostSpace> old_reaction_rate[reactions_count];
+    KokkosView3<const double, Kokkos::HostSpace> den;
+    KokkosView3<const double, Kokkos::HostSpace> temperature;
     KokkosView3<const double, Kokkos::HostSpace> particle_temperature;
-    KokkosView3<const double, Kokkos::HostSpace> length;
     KokkosView3<const double, Kokkos::HostSpace> particle_density;
+    KokkosView3<const double, Kokkos::HostSpace> length;
     KokkosView3<const double, Kokkos::HostSpace> rawcoal_mass;
     KokkosView3<const double, Kokkos::HostSpace> char_mass;
-    KokkosView3<const double, Kokkos::HostSpace> weight;
+    KokkosView3<const double, Kokkos::HostSpace> MWmix;
+    KokkosView3<const double, Kokkos::HostSpace> devolRC;
+    KokkosView3<const double, Kokkos::HostSpace> species[species_count];
+    KokkosView3<const double, Kokkos::HostSpace> CCuVel;
+    KokkosView3<const double, Kokkos::HostSpace> CCvVel;
+    KokkosView3<const double, Kokkos::HostSpace> CCwVel;
     KokkosView3<const double, Kokkos::HostSpace> up;
     KokkosView3<const double, Kokkos::HostSpace> vp;
     KokkosView3<const double, Kokkos::HostSpace> wp;
+    KokkosView3<const double, Kokkos::HostSpace> surfAreaF;
+    const double                                 m_weight_scaling_constant;
+    const double                                 m_RC_scaling_constant;
+    double                                       _R_cal;
+    bool                                         _use_co2co_l[reactions_count];
+    double                                       _phi_l[reactions_count];
+    double                                       _hrxn_l[reactions_count];
+    double                                       _HF_CO2;
+    double                                       _HF_CO;
+    double                                       _dynamic_visc;
+    double                                       m_mass_ash;
+    double                                       _gasPressure;
+    double                                       _R;
+    double                                       m_rho_org_bulk;
+    double                                       _rho_ash_bulk;
+    double                                       _p_void0;
+    double                                       _init_particle_density;
+    double                                       _Sg0;
+    double                                       _MW_species[species_count];
+    double                                       _D_mat[reactions_count][species_count];
+    int                                          _oxidizer_indices[reactions_count];
+    double                                       _T0;
+    double                                       _tau;
+    double                                       _MW_l[reactions_count];
+    double                                       _a_l[reactions_count];
+    double                                       _e_l[reactions_count];
+    const double                                 dt;
+    double                                       _Mh;
+    double                                       _ksi;
+    double                                       m_char_scaling_constant;
     KokkosView3<const double, Kokkos::HostSpace> rawcoal_birth;
     KokkosView3<const double, Kokkos::HostSpace> char_birth;
     KokkosView3<const double, Kokkos::HostSpace> length_birth;
@@ -693,121 +723,151 @@ namespace {
     KokkosView3<const double, Kokkos::HostSpace> RHS_source;
     KokkosView3<const double, Kokkos::HostSpace> RHS_weight;
     KokkosView3<const double, Kokkos::HostSpace> RHS_length;
-    KokkosView3<const double, Kokkos::HostSpace> surfAreaF;
-    const double m_weight_scaling_constant;
-    const double m_RC_scaling_constant;
-    const double m_char_scaling_constant;
-    int _oxidizer_indices[reactions_count];
-    const double _R_cal;
-    solveFunctor(
 
-        KokkosView3<const double, Kokkos::HostSpace> species[species_count],
-        KokkosView3<      double, Kokkos::HostSpace> reaction_rate[reactions_count],
-        KokkosView3<const double, Kokkos::HostSpace> old_reaction_rate[reactions_count],
-        KokkosView3<const double, Kokkos::HostSpace> & CCuVel,
-        KokkosView3<const double, Kokkos::HostSpace> & CCvVel,
-        KokkosView3<const double, Kokkos::HostSpace> & CCwVel,
-        KokkosView3<const double, Kokkos::HostSpace> & volFraction,
-        KokkosView3<const double, Kokkos::HostSpace> & den,
-        KokkosView3<const double, Kokkos::HostSpace> & temperature,
-        KokkosView3<const double, Kokkos::HostSpace> & MWmix,
-        KokkosView3<const double, Kokkos::HostSpace> & number_density,
-        KokkosView3<      double, Kokkos::HostSpace> & char_rate,
-        KokkosView3<      double, Kokkos::HostSpace> & gas_char_rate,
-        KokkosView3<      double, Kokkos::HostSpace> & particle_temp_rate,
-        KokkosView3<      double, Kokkos::HostSpace> & particle_Size_rate,
-        KokkosView3<      double, Kokkos::HostSpace> & surface_rate,
-        KokkosView3<const double, Kokkos::HostSpace> & devolRC,
-        KokkosView3<const double, Kokkos::HostSpace> & particle_temperature,
-        KokkosView3<const double, Kokkos::HostSpace> & length,
-        KokkosView3<const double, Kokkos::HostSpace> & particle_density,
-        KokkosView3<const double, Kokkos::HostSpace> & rawcoal_mass,
-        KokkosView3<const double, Kokkos::HostSpace> & char_mass,
-        KokkosView3<const double, Kokkos::HostSpace> & weight,
-        KokkosView3<const double, Kokkos::HostSpace> & up,
-        KokkosView3<const double, Kokkos::HostSpace> & vp,
-        KokkosView3<const double, Kokkos::HostSpace> & wp,
-        KokkosView3<const double, Kokkos::HostSpace> & rawcoal_birth,
-        KokkosView3<const double, Kokkos::HostSpace> & char_birth,
-        KokkosView3<const double, Kokkos::HostSpace> & length_birth,
-        KokkosView3<const double, Kokkos::HostSpace> & weight_p_diam,
-        KokkosView3<const double, Kokkos::HostSpace> & RC_RHS_source,
-        KokkosView3<const double, Kokkos::HostSpace> & RHS_source,
-        KokkosView3<const double, Kokkos::HostSpace> & RHS_weight,
-        KokkosView3<const double, Kokkos::HostSpace> & RHS_length,
-        KokkosView3<const double, Kokkos::HostSpace> & surfAreaF,
-        const double                                 & m_weight_scaling_constant,
-        const double                                 & m_RC_scaling_constant,
-        const double                                 & m_char_scaling_constant,
-        int                                            _oxidizer_indices[reactions_count],
-        const double                                   _R_cal
+    solveFunctor( KokkosView3<const double, Kokkos::HostSpace> & volFraction
+                , KokkosView3<const double, Kokkos::HostSpace> & weight
+                , KokkosView3<      double, Kokkos::HostSpace> & char_rate
+                , KokkosView3<      double, Kokkos::HostSpace> & gas_char_rate
+                , KokkosView3<      double, Kokkos::HostSpace> & particle_temp_rate
+                , KokkosView3<      double, Kokkos::HostSpace> & particle_Size_rate
+                , KokkosView3<      double, Kokkos::HostSpace> & surface_rate
+                , KokkosView3<      double, Kokkos::HostSpace>   reaction_rate[reactions_count]
+                , KokkosView3<const double, Kokkos::HostSpace>   old_reaction_rate[reactions_count]
+                , KokkosView3<const double, Kokkos::HostSpace> & den
+                , KokkosView3<const double, Kokkos::HostSpace> & temperature
+                , KokkosView3<const double, Kokkos::HostSpace> & particle_temperature
+                , KokkosView3<const double, Kokkos::HostSpace> & particle_density
+                , KokkosView3<const double, Kokkos::HostSpace> & length
+                , KokkosView3<const double, Kokkos::HostSpace> & rawcoal_mass
+                , KokkosView3<const double, Kokkos::HostSpace> & char_mass
+                , KokkosView3<const double, Kokkos::HostSpace> & MWmix
+                , KokkosView3<const double, Kokkos::HostSpace> & devolRC
+                , KokkosView3<const double, Kokkos::HostSpace>   species[species_count]
+                , KokkosView3<const double, Kokkos::HostSpace> & CCuVel
+                , KokkosView3<const double, Kokkos::HostSpace> & CCvVel
+                , KokkosView3<const double, Kokkos::HostSpace> & CCwVel
+                , KokkosView3<const double, Kokkos::HostSpace> & up
+                , KokkosView3<const double, Kokkos::HostSpace> & vp
+                , KokkosView3<const double, Kokkos::HostSpace> & wp
+                , KokkosView3<const double, Kokkos::HostSpace> & surfAreaF
+                , const double                                 & m_weight_scaling_constant
+                , const double                                 & m_RC_scaling_constant
+                , double                                         _R_cal
+                , bool                                           _use_co2co_l[reactions_count]
+                , double                                         _phi_l[reactions_count]
+                , double                                         _hrxn_l[reactions_count]
+                , double                                         _HF_CO2
+                , double                                         _HF_CO
+                , double                                         _dynamic_visc
+                , double                                         m_mass_ash
+                , double                                         _gasPressure
+                , double                                         _R
+                , double                                         m_rho_org_bulk
+                , double                                         _rho_ash_bulk
+                , double                                         _p_void0
+                , double                                         _init_particle_density
+                , double                                         _Sg0
+                , double                                         _MW_species[species_count]
+                , double                                         _D_mat[reactions_count][species_count]
+                , int                                            _oxidizer_indices[reactions_count]
+                , double                                         _T0
+                , double                                         _tau
+                , double                                         _MW_l[reactions_count]
+                , double                                         _a_l[reactions_count]
+                , double                                         _e_l[reactions_count]
+                , const double                                    dt
+                , double                                         _Mh
+                , double                                         _ksi
+                , double                                         m_char_scaling_constant
+                , KokkosView3<const double, Kokkos::HostSpace> & rawcoal_birth
+                , KokkosView3<const double, Kokkos::HostSpace> & char_birth
+                , KokkosView3<const double, Kokkos::HostSpace> & length_birth
+                , KokkosView3<const double, Kokkos::HostSpace> & weight_p_diam
+                , KokkosView3<const double, Kokkos::HostSpace> & RC_RHS_source
+                , KokkosView3<const double, Kokkos::HostSpace> & RHS_source
+                , KokkosView3<const double, Kokkos::HostSpace> & RHS_weight
+                , KokkosView3<const double, Kokkos::HostSpace> & RHS_length
     ) :
-     // START DW VARIABLES
-      CCuVel (CCuVel),
-      CCvVel (CCvVel),
-      CCwVel (CCwVel),
-      volFraction (volFraction),
-      den (den),
-      temperature (temperature),
-      MWmix (MWmix),
-      number_density (number_density),
-      char_rate (char_rate),
-      gas_char_rate (gas_char_rate),
-      particle_temp_rate (particle_temp_rate),
-      particle_Size_rate (particle_Size_rate),
-      surface_rate (surface_rate),
-      devolRC (devolRC),
-      particle_temperature (particle_temperature),
-      length (length),
-      particle_density (particle_density),
-      rawcoal_mass (rawcoal_mass),
-      char_mass (char_mass),
-      weight (weight),
-      up (up),
-      vp (vp),
-      wp (wp),
-      rawcoal_birth (rawcoal_birth),
-      char_birth (char_birth),
-      length_birth (length_birth),
-      weight_p_diam (weight_p_diam),
-      RC_RHS_source (RC_RHS_source),
-      RHS_source (RHS_source),
-      RHS_weight (RHS_weight),
-      RHS_length (RHS_length),
-      surfAreaF (surfAreaF),
-    // END DW VARIABLES
-      m_weight_scaling_constant (m_weight_scaling_constant),
-      m_RC_scaling_constant (m_RC_scaling_constant),
-      m_char_scaling_constant (m_char_scaling_constant),
-      _R_cal (_R_cal)
-    {
-      for ( int nr = 0; nr < reactions_count; nr++ ) {
+      volFraction               ( volFraction )
+    , weight                    ( weight )
+    , char_rate                 ( char_rate )
+    , gas_char_rate             ( gas_char_rate )
+    , particle_temp_rate        ( particle_temp_rate )
+    , particle_Size_rate        ( particle_Size_rate )
+    , surface_rate              ( surface_rate )
+    , den                       ( den )
+    , temperature               ( temperature )
+    , particle_temperature      ( particle_temperature )
+    , particle_density          ( particle_density )
+    , length                    ( length )
+    , rawcoal_mass              ( rawcoal_mass )
+    , char_mass                 ( char_mass )
+    , MWmix                     ( MWmix )
+    , devolRC                   ( devolRC )
+    , CCuVel                    ( CCuVel )
+    , CCvVel                    ( CCvVel )
+    , CCwVel                    ( CCwVel )
+    , up                        ( up )
+    , vp                        ( vp )
+    , wp                        ( wp )
+    , surfAreaF                 ( surfAreaF )
+    , m_weight_scaling_constant ( m_weight_scaling_constant )
+    , m_RC_scaling_constant     ( m_RC_scaling_constant )
+    , _R_cal                    ( _R_cal )
+    , _HF_CO2                   ( _HF_CO2 )
+    , _HF_CO                    ( _HF_CO )
+    , _dynamic_visc             ( _dynamic_visc )
+    , m_mass_ash                ( m_mass_ash )
+    , _gasPressure              ( _gasPressure )
+    , _R                        ( _R )
+    , m_rho_org_bulk            ( m_rho_org_bulk )
+    , _rho_ash_bulk             ( _rho_ash_bulk )
+    , _p_void0                  ( _p_void0 )
+    , _init_particle_density    ( _init_particle_density )
+    , _Sg0                      (_Sg0 )
+    , _T0                       (_T0 )
+    , _tau                      ( _tau )
+    , dt                        ( dt )
+    , _Mh                       ( _Mh )
+    , _ksi                      ( _ksi )
+    , m_char_scaling_constant   ( m_char_scaling_constant )
+    , rawcoal_birth             ( rawcoal_birth )
+    , char_birth                ( char_birth )
+    , length_birth              ( length_birth )
+    , weight_p_diam             ( weight_p_diam )
+    , RC_RHS_source             ( RC_RHS_source )
+    , RHS_source                ( RHS_source )
+    , RHS_weight                ( RHS_weight )
+    , RHS_length                (RHS_length)
+  {
+    for ( int nr = 0; nr < reactions_count; nr++ ) {
 
-        this->reaction_rate[nr]     = reaction_rate[nr];
-        this->old_reaction_rate[nr] = old_reaction_rate[nr];
-//        m_use_co2co_l[nr]       = _use_co2co_l[nr];
-//        m_phi_l[nr]             = _phi_l[nr];
-//        m_hrxn_l[nr]            = _hrxn_l[nr];
-        this->_oxidizer_indices[nr]  = _oxidizer_indices[nr];
-//        m_MW_l[nr]              = _MW_l[nr];
-//        m_a_l[nr]               = _a_l[nr];
-//        m_e_l[nr]               = _e_l[nr];
-//m_
-//        for ( int ns = 0; ns < species_count; ns++ ) {
-//          m_D_mat[nr][ns] = _D_mat[nr][ns];
-//        }
-      }
-//
+      this->reaction_rate[nr]     = reaction_rate[nr];
+      this->old_reaction_rate[nr] = old_reaction_rate[nr];
+      this->_use_co2co_l[nr]      = _use_co2co_l[nr];
+      this->_phi_l[nr]            = _phi_l[nr];
+      this->_hrxn_l[nr]           = _hrxn_l[nr];
+      this->_oxidizer_indices[nr] = _oxidizer_indices[nr];
+      this->_MW_l[nr]             = _MW_l[nr];
+      this->_a_l[nr]              = _a_l[nr];
+      this->_e_l[nr]              = _e_l[nr];
+
       for ( int ns = 0; ns < species_count; ns++ ) {
-        this->species[ns]    = species[ns];
-//        m_MW_species[ns] = _MW_species[ns];
+        this->_D_mat[nr][ns] = _D_mat[nr][ns];
       }
     }
+
+    for ( int ns = 0; ns < species_count; ns++ ) {
+      this->species[ns]     = species[ns];
+      this->_MW_species[ns] = _MW_species[ns];
+    }
+  }
 
 #ifdef UINTAH_ENABLE_KOKKOS
   KOKKOS_INLINE_FUNCTION
 #endif
     void operator() ( int i, int j, int k ) const {
+
       if ( volFraction(i,j,k) > 0 ) {
 
         double D_oxid_mix_l     [ reactions_count ];
@@ -1683,6 +1743,36 @@ CharOxidationps<T>::eval( const Patch                 * patch
 
     KokkosView3<const double, Kokkos::HostSpace> surfAreaF = tsk_info->get_const_uintah_field_add< CT >( m_surfAreaF_name ).getKokkosView();
 
+    bool   _use_co2co_l_pod     [ reactions_count ];
+    double _phi_l_pod           [ reactions_count ];
+    double _hrxn_l_pod          [ reactions_count ];
+    int    _oxidizer_indices_pod[ reactions_count ];
+    double _MW_l_pod            [ reactions_count ];
+    double _a_l_pod             [ reactions_count ];
+    double _e_l_pod             [ reactions_count ];
+    double _D_mat_pod           [ reactions_count ][ species_count ];
+
+    for ( int nr = 0; nr < reactions_count; nr++ ) {
+
+      _use_co2co_l_pod[nr]      = _use_co2co_l[nr];
+      _phi_l_pod[nr]            = _phi_l[nr];
+      _hrxn_l_pod[nr]           = _hrxn_l[nr];
+      _oxidizer_indices_pod[nr] = _oxidizer_indices[nr];
+      _MW_l_pod[nr]             = _MW_l[nr];
+      _a_l_pod[nr]              = _a_l[nr];
+      _e_l_pod[nr]              = _e_l[nr];
+
+      for ( int ns = 0; ns < species_count; ns++ ) {
+        _D_mat_pod[nr][ns] = _D_mat[nr][ns];
+      }
+    }
+
+    double _MW_species_pod[ species_count ];
+
+    for ( int ns = 0; ns < species_count; ns++ ) {
+      _MW_species_pod[ns] = _MW_species[ns];
+    }
+
     Uintah::BlockRange range_E( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
 
     Uintah::parallel_for<Kokkos::OpenMP>( range_E, [&] ( int i, int j, int k ) {
@@ -1699,48 +1789,73 @@ CharOxidationps<T>::eval( const Patch                 * patch
     });
 
     Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
-    solveFunctor<Kokkos::HostSpace, T, CT> func(
-        species,
-        reaction_rate,
-        old_reaction_rate,
-        CCuVel,
-        CCvVel,
-        CCwVel,
-        volFraction,
-        den,
-        temperature,
-        MWmix,
-        number_density,
-        char_rate,
-        gas_char_rate,
-        particle_temp_rate,
-        particle_Size_rate,
-        surface_rate,
-        devolRC,
-        particle_temperature,
-        length,
-        particle_density,
-        rawcoal_mass,
-        char_mass,
-        weight,
-        up,
-        vp,
-        wp,
-        rawcoal_birth,
-        char_birth,
-        length_birth,
-        weight_p_diam,
-        RC_RHS_source,
-        RHS_source,
-        RHS_weight,
-        RHS_length,
-        surfAreaF,
-        m_weight_scaling_constant,
-        m_RC_scaling_constant,
-        m_char_scaling_constant,
-        _oxidizer_indices,
-        _R_cal);
-    Uintah::parallel_for<Kokkos::OpenMP>(range, func);
+
+    solveFunctor< Kokkos::HostSpace, T, CT > func( volFraction
+                                                 ,  weight
+                                                 , char_rate
+                                                 , gas_char_rate
+                                                 , particle_temp_rate
+                                                 , particle_Size_rate
+                                                 , surface_rate
+                                                 , reaction_rate
+                                                 , old_reaction_rate
+                                                 , den
+                                                 , temperature
+                                                 , particle_temperature
+                                                 , particle_density
+                                                 , length
+                                                 , rawcoal_mass
+                                                 , char_mass
+                                                 , MWmix
+                                                 , devolRC
+                                                 , species
+                                                 , CCuVel
+                                                 , CCvVel
+                                                 , CCwVel
+                                                 , up
+                                                 , vp
+                                                 , wp
+                                                 , surfAreaF
+                                                 , m_weight_scaling_constant
+                                                 , m_RC_scaling_constant
+                                                 , _R_cal
+                                                 , _use_co2co_l_pod
+                                                 , _phi_l_pod
+                                                 , _hrxn_l_pod
+                                                 , _HF_CO2
+                                                 , _HF_CO
+                                                 , _dynamic_visc
+                                                 , m_mass_ash
+                                                 , _gasPressure
+                                                 , _R
+                                                 , m_rho_org_bulk
+                                                 , _rho_ash_bulk
+                                                 , _p_void0
+                                                 , _init_particle_density
+                                                 , _Sg0
+                                                 , _MW_species_pod
+                                                 , _D_mat_pod
+                                                 , _oxidizer_indices_pod
+                                                 , _T0
+                                                 , _tau
+                                                 , _MW_l_pod
+                                                 , _a_l_pod
+                                                 , _e_l_pod
+                                                 , dt
+                                                 , _Mh
+                                                 , _ksi
+                                                 , m_char_scaling_constant
+                                                 , rawcoal_birth
+                                                 , char_birth
+                                                 , length_birth
+                                                 , weight_p_diam
+                                                 , RC_RHS_source
+                                                 , RHS_source
+                                                 , RHS_weight
+                                                 , RHS_length
+                                                 );
+
+    Uintah::parallel_for<Kokkos::OpenMP>( range, func );
 
 //    Uintah::parallel_for<Kokkos::OpenMP>( range, [&] ( int i,  int j, int k ) {
 //
