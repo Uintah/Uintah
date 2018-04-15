@@ -667,7 +667,7 @@ namespace {
     KokkosView3<      double, MemorySpace > reaction_rate[reactions_count];
 
     initializeDataFunctor(
-                        KokkosView3<      double, MemorySpace > & char_rate;
+                        KokkosView3<      double, MemorySpace > & char_rate
                       , KokkosView3<      double, MemorySpace > & gas_char_rate
                       , KokkosView3<      double, MemorySpace > & particle_temp_rate
                       , KokkosView3<      double, MemorySpace > & particle_Size_rate
@@ -694,7 +694,7 @@ namespace {
       particle_Size_rate(i,j,k) = 0.0;
       surface_rate(i,j,k)       = 0.0;
 
-      for ( int r = 0; r < _NUM_reactions; r++ ) {
+      for ( int r = 0; r < reactions_count; r++ ) {
         reaction_rate[r](i,j,k) = 0.0;
       }
     }
