@@ -992,7 +992,7 @@ namespace {
         }
 
         const double CO2onCO = 1. / ( 200. * exp( -9000. / ( _R_cal * p_T ) ) * 44.0 / 28.0 ); // [ kg CO / kg CO2] => [kmoles CO / kmoles CO2] => [kmoles CO2 / kmoles CO]
-
+        printf("(%d,%d,%d), CO2onCO is %g\n", i, j, k, CO2onCO);
         for ( int r = 0; r < reactions_count; r++ ) {
 
           if ( _use_co2co_l[r] ) {
@@ -2121,6 +2121,36 @@ CharOxidationps<T>::eval( const Patch                 * patch
       surfAreaF = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_surfAreaF_name.c_str(), _patch, _matl_index, 0 );
     }
 
+    bool   _use_co2co_l_pod     [ reactions_count ];
+    double _phi_l_pod           [ reactions_count ];
+    double _hrxn_l_pod          [ reactions_count ];
+    int    _oxidizer_indices_pod[ reactions_count ];
+    double _MW_l_pod            [ reactions_count ];
+    double _a_l_pod             [ reactions_count ];
+    double _e_l_pod             [ reactions_count ];
+    double _D_mat_pod           [ reactions_count ][ species_count ];
+
+    for ( int nr = 0; nr < reactions_count; nr++ ) {
+
+      _use_co2co_l_pod[nr]      = _use_co2co_l[nr];
+      _phi_l_pod[nr]            = _phi_l[nr];
+      _hrxn_l_pod[nr]           = _hrxn_l[nr];
+      _oxidizer_indices_pod[nr] = _oxidizer_indices[nr];
+      _MW_l_pod[nr]             = _MW_l[nr];
+      _a_l_pod[nr]              = _a_l[nr];
+      _e_l_pod[nr]              = _e_l[nr];
+
+      for ( int ns = 0; ns < species_count; ns++ ) {
+        _D_mat_pod[nr][ns] = _D_mat[nr][ns];
+      }
+    }
+
+    double _MW_species_pod[ species_count ];
+
+    for ( int ns = 0; ns < species_count; ns++ ) {
+      _MW_species_pod[ns] = _MW_species[ns];
+    }
+
     Uintah::BlockRange range_E( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
     initializeDataFunctor< Kokkos::HostSpace > initFunc ( char_rate
                                                         , gas_char_rate
@@ -2186,9 +2216,15 @@ CharOxidationps<T>::eval( const Patch                 * patch
                                                  , _a_l_pod
                                                  , _e_l_pod
                                                  , dt
+                                                 , vol
                                                  , _Mh
                                                  , _ksi
                                                  , m_char_scaling_constant
+                                                 , m_length_scaling_constant
+                                                 , m_p_voidmin
+                                                 , m_add_rawcoal_birth
+                                                 , m_add_length_birth
+                                                 , m_add_char_birth
                                                  , rawcoal_birth
                                                  , char_birth
                                                  , length_birth
@@ -2197,6 +2233,7 @@ CharOxidationps<T>::eval( const Patch                 * patch
                                                  , RHS_source
                                                  , RHS_weight
                                                  , RHS_length
+                                                 , _Nenv
                                                  );
 
     Uintah::parallel_for<Kokkos::Cuda>( range, func );
