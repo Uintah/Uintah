@@ -2152,89 +2152,88 @@ CharOxidationps<T>::eval( const Patch                 * patch
     }
 
     Uintah::BlockRange range_E( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
-    initializeDataFunctor< Kokkos::HostSpace > initFunc ( char_rate
-                                                        , gas_char_rate
-                                                        , particle_temp_rate
-                                                        , particle_Size_rate
-                                                        , surface_rate
-                                                        , reaction_rate);
+    initializeDataFunctor< MemorySpace > initFunc ( char_rate
+                                                  , gas_char_rate
+                                                  , particle_temp_rate
+                                                  , particle_Size_rate
+                                                  , surface_rate
+                                                  , reaction_rate);
 
     Uintah::parallel_for<Kokkos::OpenMP>( range_E, initFunc );
 
     Uintah::BlockRange range( stream, patch->getCellLowIndex(), patch->getCellHighIndex() );
 
-
-    solveFunctor< Kokkos::CudaSpace, T, CT > func( volFraction
-                                                 ,  weight
-                                                 , char_rate
-                                                 , gas_char_rate
-                                                 , particle_temp_rate
-                                                 , particle_Size_rate
-                                                 , surface_rate
-                                                 , reaction_rate
-                                                 , old_reaction_rate
-                                                 , den
-                                                 , temperature
-                                                 , particle_temperature
-                                                 , particle_density
-                                                 , length
-                                                 , rawcoal_mass
-                                                 , char_mass
-                                                 , MWmix
-                                                 , devolRC
-                                                 , species
-                                                 , CCuVel
-                                                 , CCvVel
-                                                 , CCwVel
-                                                 , up
-                                                 , vp
-                                                 , wp
-                                                 , surfAreaF
-                                                 , m_weight_scaling_constant
-                                                 , m_RC_scaling_constant
-                                                 , _R_cal
-                                                 , _use_co2co_l_pod
-                                                 , _phi_l_pod
-                                                 , _hrxn_l_pod
-                                                 , _HF_CO2
-                                                 , _HF_CO
-                                                 , _dynamic_visc
-                                                 , m_mass_ash
-                                                 , _gasPressure
-                                                 , _R
-                                                 , m_rho_org_bulk
-                                                 , _rho_ash_bulk
-                                                 , _p_void0
-                                                 , _init_particle_density
-                                                 , _Sg0
-                                                 , _MW_species_pod
-                                                 , _D_mat_pod
-                                                 , _oxidizer_indices_pod
-                                                 , _T0
-                                                 , _tau
-                                                 , _MW_l_pod
-                                                 , _a_l_pod
-                                                 , _e_l_pod
-                                                 , dt
-                                                 , vol
-                                                 , _Mh
-                                                 , _ksi
-                                                 , m_char_scaling_constant
-                                                 , m_length_scaling_constant
-                                                 , m_p_voidmin
-                                                 , m_add_rawcoal_birth
-                                                 , m_add_length_birth
-                                                 , m_add_char_birth
-                                                 , rawcoal_birth
-                                                 , char_birth
-                                                 , length_birth
-                                                 , weight_p_diam
-                                                 , RC_RHS_source
-                                                 , RHS_source
-                                                 , RHS_weight
-                                                 , RHS_length
-                                                 , _Nenv
-                                                 );
+    solveFunctor< MemorySpace, T, CT > func( volFraction
+                                           ,  weight
+                                           , char_rate
+                                           , gas_char_rate
+                                           , particle_temp_rate
+                                           , particle_Size_rate
+                                           , surface_rate
+                                           , reaction_rate
+                                           , old_reaction_rate
+                                           , den
+                                           , temperature
+                                           , particle_temperature
+                                           , particle_density
+                                           , length
+                                           , rawcoal_mass
+                                           , char_mass
+                                           , MWmix
+                                           , devolRC
+                                           , species
+                                           , CCuVel
+                                           , CCvVel
+                                           , CCwVel
+                                           , up
+                                           , vp
+                                           , wp
+                                           , surfAreaF
+                                           , m_weight_scaling_constant
+                                           , m_RC_scaling_constant
+                                           , _R_cal
+                                           , _use_co2co_l_pod
+                                           , _phi_l_pod
+                                           , _hrxn_l_pod
+                                           , _HF_CO2
+                                           , _HF_CO
+                                           , _dynamic_visc
+                                           , m_mass_ash
+                                           , _gasPressure
+                                           , _R
+                                           , m_rho_org_bulk
+                                           , _rho_ash_bulk
+                                           , _p_void0
+                                           , _init_particle_density
+                                           , _Sg0
+                                           , _MW_species_pod
+                                           , _D_mat_pod
+                                           , _oxidizer_indices_pod
+                                           , _T0
+                                           , _tau
+                                           , _MW_l_pod
+                                           , _a_l_pod
+                                           , _e_l_pod
+                                           , dt
+                                           , vol
+                                           , _Mh
+                                           , _ksi
+                                           , m_char_scaling_constant
+                                           , m_length_scaling_constant
+                                           , m_p_voidmin
+                                           , m_add_rawcoal_birth
+                                           , m_add_length_birth
+                                           , m_add_char_birth
+                                           , rawcoal_birth
+                                           , char_birth
+                                           , length_birth
+                                           , weight_p_diam
+                                           , RC_RHS_source
+                                           , RHS_source
+                                           , RHS_weight
+                                           , RHS_length
+                                           , _Nenv
+                                           );
 
     Uintah::parallel_for<Kokkos::Cuda>( range, func );
 
