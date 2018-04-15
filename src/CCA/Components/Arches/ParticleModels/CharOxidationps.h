@@ -2151,19 +2151,19 @@ CharOxidationps<T>::eval( const Patch                 * patch
       _MW_species_pod[ns] = _MW_species[ns];
     }
 
-    Uintah::BlockRange range_E( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
-    initializeDataFunctor< MemorySpace > initFunc ( char_rate
+    Uintah::BlockRange range_E( stream, patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+    initializeDataFunctor< Kokkos::CudaSpace > initFunc ( char_rate
                                                   , gas_char_rate
                                                   , particle_temp_rate
                                                   , particle_Size_rate
                                                   , surface_rate
                                                   , reaction_rate);
 
-    Uintah::parallel_for<Kokkos::OpenMP>( range_E, initFunc );
+    Uintah::parallel_for< Kokkos::Cuda >( range_E, initFunc );
 
     Uintah::BlockRange range( stream, patch->getCellLowIndex(), patch->getCellHighIndex() );
 
-    solveFunctor< MemorySpace, T, CT > func( volFraction
+    solveFunctor< Kokkos::CudaSpace, T, CT > func( volFraction
                                            ,  weight
                                            , char_rate
                                            , gas_char_rate
@@ -2235,7 +2235,7 @@ CharOxidationps<T>::eval( const Patch                 * patch
                                            , _Nenv
                                            );
 
-    Uintah::parallel_for<Kokkos::Cuda>( range, func );
+    Uintah::parallel_for< Kokkos::Cuda >( range, func );
 
   }
 #endif // if defined(HAVE_CUDA)
