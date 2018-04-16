@@ -75,6 +75,14 @@
     printf("%s\n",dout_msg.str().c_str());                  \
   }
 
+//__________________________________
+//  output: all threads on rank 0
+#define DOUTR0( ... )                                \
+  if ( MPI::Impl::prank( MPI_COMM_WORLD ) == 0 ) {   \
+    std::ostringstream dout_msg;                     \
+    dout_msg << __VA_ARGS__;                         \
+    printf("%s",dout_msg.str().c_str());             \
+  }
 
 namespace Uintah {
 
@@ -139,8 +147,8 @@ public:
     std::stringstream message;
     message << std::setw(2)  << std::left << (m_active ? "+" : "-")
             << std::setw(30) << std::left << m_name.c_str()
-            << std::setw(40) << std::left << m_description.c_str()
-            << std::setw(40) << std::left << m_component.c_str()
+            << std::setw(60) << std::left << m_description.c_str()
+            << std::setw(30) << std::left << m_component.c_str()
             << std::endl;
     printf("%s", message.str().c_str());
   }

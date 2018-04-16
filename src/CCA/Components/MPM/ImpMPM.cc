@@ -128,11 +128,11 @@ ImpMPM::~ImpMPM()
     cout << "Freeing patches!!\n";
   }
 
-  if(one_matl->removeReference())
+  if(one_matl && one_matl->removeReference())
     delete one_matl;
 
 #if 0
-  if(d_perproc_patches->removeReference())
+  if(d_perproc_patches && d_perproc_patches->removeReference())
     delete d_perproc_patches;
 #endif
 
@@ -964,10 +964,8 @@ void ImpMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   if (flags->d_temp_solve == false){
     t->requires(Task::OldDW,lb->gTemperatureLabel,one_matl,Ghost::None,0);
   }
-  t->computes(lb->gMassLabel,        m_sharedState->getAllInOneMatl(),
-              Task::OutOfDomain);
-  t->computes(lb->gVolumeLabel,      m_sharedState->getAllInOneMatl(),
-              Task::OutOfDomain);
+  t->computes(lb->gMassLabel,        m_sharedState->getAllInOneMatl(), Task::OutOfDomain);
+  t->computes(lb->gVolumeLabel,      m_sharedState->getAllInOneMatl(), Task::OutOfDomain);
 
   t->computes(lb->gMassLabel);
   t->computes(lb->gMassAllLabel);
@@ -1624,8 +1622,7 @@ void ImpMPM::scheduleInterpolateStressToGrid(SchedulerP& sched,
   t->requires(Task::NewDW,lb->pVolumeDeformedLabel, Ghost::AroundNodes,1);
   t->requires(Task::NewDW,lb->pStressLabel_preReloc,Ghost::AroundNodes,1);
   t->requires(Task::NewDW,lb->gVolumeLabel,         Ghost::None);
-  t->requires(Task::NewDW,lb->gVolumeLabel,m_sharedState->getAllInOneMatl(),
-                                 Task::OutOfDomain, Ghost::None);
+  t->requires(Task::NewDW,lb->gVolumeLabel,m_sharedState->getAllInOneMatl(), Task::OutOfDomain, Ghost::None);
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel,   Ghost::AroundNodes,1);
 
 
@@ -2148,10 +2145,8 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 
  
     NCVariable<double> gmassglobal,gvolumeglobal;
-    new_dw->allocateAndPut(gmassglobal, lb->gMassLabel,
-                           m_sharedState->getAllInOneMatl()->get(0), patch);
-    new_dw->allocateAndPut(gvolumeglobal, lb->gVolumeLabel,
-                           m_sharedState->getAllInOneMatl()->get(0), patch);
+    new_dw->allocateAndPut(gmassglobal, lb->gMassLabel, m_sharedState->getAllInOneMatl()->get(0), patch);
+    new_dw->allocateAndPut(gvolumeglobal, lb->gVolumeLabel, m_sharedState->getAllInOneMatl()->get(0), patch);
     gmassglobal.initialize(d_SMALL_NUM_MPM);
     gvolumeglobal.initialize(d_SMALL_NUM_MPM);
 
@@ -3737,8 +3732,7 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
     int n8or27 = flags->d_8or27;
 
     constNCVariable<double>   GVOLUME;
-    new_dw->get(GVOLUME, lb->gVolumeLabel,
-                m_sharedState->getAllInOneMatl()->get(0), patch, Ghost::None,0);
+    new_dw->get(GVOLUME, lb->gVolumeLabel, m_sharedState->getAllInOneMatl()->get(0), patch, Ghost::None,0);
 
     NCVariable<Matrix3>       GSTRESS;
     new_dw->allocateTemporary(GSTRESS, patch, Ghost::None,0);

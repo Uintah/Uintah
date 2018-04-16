@@ -1319,7 +1319,7 @@ void visit_DebugStreamCallback(char *val, void *cbdata)
   // Find the debugStream
   DebugStream *debugStream = nullptr;
     
-  int i = 0;
+  unsigned int i = 0;
   for (auto iter = DebugStream::m_all_debug_streams.begin();
        iter != DebugStream::m_all_debug_streams.end();
        ++iter, ++i) {
@@ -1388,9 +1388,6 @@ void visit_DoutCallback(char *val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-  ApplicationInterface* simInterface =
-    sim->simController->getApplicationInterface();
-  
   unsigned int row, column;
   std::string text;
 
@@ -1399,7 +1396,7 @@ void visit_DoutCallback(char *val, void *cbdata)
   // Find the dout
   Dout *dout = nullptr;
     
-  int i = 0;
+  unsigned int i = 0;
   for (auto iter = Dout::m_all_douts.begin();
        iter != Dout::m_all_douts.end();
        ++iter, ++i) {

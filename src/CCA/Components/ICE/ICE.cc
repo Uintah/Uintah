@@ -295,9 +295,7 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
   ProblemSpecP impSolver = cfd_ice_ps->findBlock("ImplicitSolver");
   if (impSolver) {
     d_delT_knob = 0.5;      // default value when running implicit
-    d_solver_parameters = m_solver->readParameters(impSolver, 
-                                                   "implicitPressure",
-                                                   m_sharedState);
+    d_solver_parameters = m_solver->readParameters(impSolver, "implicitPressure");
     d_solver_parameters->setSolveOnExtraCells(false);
     d_solver_parameters->setRestartTimestepOnFailure(true);
     impSolver->require("max_outer_iterations",      d_max_iter_implicit);

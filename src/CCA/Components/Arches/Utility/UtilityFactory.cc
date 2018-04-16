@@ -7,7 +7,8 @@
 
 using namespace Uintah;
 
-UtilityFactory::UtilityFactory()
+UtilityFactory::UtilityFactory( const ApplicationCommon* arches ) :
+TaskFactoryBase(arches)
 {
   _factory_name = "UtilityFactory";
 }

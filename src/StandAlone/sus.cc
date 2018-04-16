@@ -110,9 +110,9 @@ namespace {
 
 Uintah::MasterLock cerr_mutex{};
 
-Dout g_stack_debug(       "ExceptionStack" , "StandAlone", "sus stack debug stream"            , true  );
-Dout g_wait_for_debugger( "WaitForDebugger", "StandAlone", "sus wait for debugger debug stream", false );
-Dout g_show_env(          "ShowEnv"        , "StandAlone", "sus show environment"              , false );
+Dout g_stack_debug(       "ExceptionStack" , "sus", "sus exception stack debug stream"                     , true  );
+Dout g_wait_for_debugger( "WaitForDebugger", "sus", "halt program, print out pid and attach a debugger"    , false );
+Dout g_show_env(          "ShowEnv"        , "sus", "sus show environment (the SCI env that was built up)" , false );
 
 }
 

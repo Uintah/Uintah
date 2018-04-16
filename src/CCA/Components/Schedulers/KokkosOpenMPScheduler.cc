@@ -56,8 +56,8 @@ using namespace Uintah;
 //______________________________________________________________________
 //
 namespace {
-  Dout g_dbg(         "KokkosOMP_DBG"        , "Schedulers", "", false);
-  Dout g_queuelength( "KokkosOMP_QueueLength", "Schedulers", "", false);
+  Dout g_dbg(         "KokkosOMP_DBG"        , "KokkosOpenMPScheduler", "general debugging info for KokkosOpenMPScheduler"  , false );
+  Dout g_queuelength( "KokkosOMP_QueueLength", "KokkosOpenMPScheduler", "report task queue length for KokkosOpenMPScheduler", false );
 
   Uintah::MasterLock g_scheduler_mutex{}; // main scheduler lock for multi-threaded task selection
 

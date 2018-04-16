@@ -57,7 +57,7 @@ else
       Core/ProblemSpec  \
       Core/Util         \
       Core/OS           \
-      VisIt/uda2vis
+      VisIt/interfaces
 endif
 
 LIBS := $(VISIT_LIBRARY) $(MPI_LIBRARY)

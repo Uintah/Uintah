@@ -143,9 +143,8 @@ namespace Uintah {
     virtual void getComponents() = 0;
     virtual void releaseComponents() = 0;
   
-    virtual SolverParameters* readParameters(       ProblemSpecP     & params,
-					      const std::string      & name,
-					      const SimulationStateP &state ) = 0;
+    virtual SolverParameters* readParameters(  ProblemSpecP & params,
+					      const std::string  & name ) = 0;
 
     virtual void scheduleInitialize( const LevelP      & level,
                                            SchedulerP  & sched,
@@ -163,7 +162,7 @@ namespace Uintah {
                                 const VarLabel         * guess,
                                       Task::WhichDW      which_guess_dw,
                                 const SolverParameters * params,
-                                      bool               modifies_hypre = false ) = 0;
+                                      bool               isFirstSolve = true ) = 0;
 
     virtual std::string getName() = 0;
     

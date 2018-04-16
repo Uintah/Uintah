@@ -1,4 +1,4 @@
-#!/bin/csh
+#!/bin/csh -f
 
 # Buildbot test script. Execute this script in the top level source dir:
 # i.e. /Uintah/trunk/src

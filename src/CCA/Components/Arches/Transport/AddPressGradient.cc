@@ -17,6 +17,8 @@ AddPressGradient::~AddPressGradient()
 
 //--------------------------------------------------------------------------------------------------
 void AddPressGradient::problemSetup( ProblemSpecP& db ){
+
+  m_eps_name = "volFraction";
   m_xmom = "x-mom";
   m_ymom = "y-mom";
   m_zmom = "z-mom";
@@ -30,10 +32,11 @@ void AddPressGradient::create_local_labels(){
 //--------------------------------------------------------------------------------------------------
 void AddPressGradient::register_timestep_eval( std::vector<AFC::VariableInformation>& variable_registry,
   const int time_substep, const bool pack_tasks ){
-  register_variable( m_xmom, AFC::MODIFIES, variable_registry, _task_name );
-  register_variable( m_ymom, AFC::MODIFIES, variable_registry, _task_name );
-  register_variable( m_zmom, AFC::MODIFIES, variable_registry, _task_name );
-  register_variable( m_press, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, _task_name );
+  register_variable( m_xmom, AFC::MODIFIES, variable_registry, time_substep, _task_name );
+  register_variable( m_ymom, AFC::MODIFIES, variable_registry, time_substep, _task_name );
+  register_variable( m_zmom, AFC::MODIFIES, variable_registry, time_substep, _task_name );
+  register_variable( m_press, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep, _task_name );
+  register_variable( m_eps_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep, _task_name  );
 }
 
 void AddPressGradient::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
@@ -44,6 +47,7 @@ void AddPressGradient::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info
   SFCYVariable<double>& ymom = tsk_info->get_uintah_field_add<SFCYVariable<double> >( m_ymom );
   SFCZVariable<double>& zmom = tsk_info->get_uintah_field_add<SFCZVariable<double> >( m_zmom );
   constCCVariable<double>& p = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_press);
+  constCCVariable<double>& eps = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_eps_name);
 
   // because the hypre solve required a positive diagonal
   // so we -1 * ( Ax = b ) requiring that we change the sign
@@ -57,7 +61,8 @@ void AddPressGradient::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info
 
   Uintah::parallel_for( x_range, [&](int i, int j, int k){
 
-    xmom(i,j,k) += dt * ( p(i-1,j,k) - p(i,j,k) ) / DX.x();
+    const double afc = floor(( eps(i,j,k) + eps(i-1,j,k) ) / 2. );
+    xmom(i,j,k) += dt * ( p(i-1,j,k) - p(i,j,k) ) / DX.x()*afc;
 
   });
 
@@ -66,7 +71,8 @@ void AddPressGradient::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info
 
   Uintah::parallel_for( y_range, [&](int i, int j, int k){
 
-    ymom(i,j,k) += dt * ( p(i,j-1,k) - p(i,j,k) ) / DX.y();
+    const double afc = floor(( eps(i,j,k) + eps(i,j-1,k) ) / 2. );
+    ymom(i,j,k) += dt * ( p(i,j-1,k) - p(i,j,k) ) / DX.y()*afc;
 
   });
 
@@ -74,7 +80,8 @@ void AddPressGradient::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info
   Uintah::BlockRange z_range( low_fz_patch_range, high_fz_patch_range );
   Uintah::parallel_for( z_range, [&](int i, int j, int k){
 
-    zmom(i,j,k) += dt * ( p(i,j,k-1) - p(i,j,k) ) / DX.z();
+    const double afc = floor(( eps(i,j,k) + eps(i,j,k-1) ) / 2. );
+    zmom(i,j,k) += dt * ( p(i,j,k-1) - p(i,j,k) ) / DX.z()*afc;
 
   });
 }

@@ -109,8 +109,7 @@ void ElectrostaticSolve::problemSetup(const ProblemSpecP& prob_spec,
                                 __FILE__, __LINE__);
   }
   
-  d_solver_parameters = d_solver->readParameters(fvm_ps, "electrostatic_solver",
-                                                 m_sharedState);
+  d_solver_parameters = d_solver->readParameters(fvm_ps, "electrostatic_solver");
 
   d_solver_parameters->setSolveOnExtraCells(false);
     

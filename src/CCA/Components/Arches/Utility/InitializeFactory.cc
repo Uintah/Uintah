@@ -13,7 +13,7 @@
 
 using namespace Uintah;
 
-InitializeFactory::InitializeFactory()
+InitializeFactory::InitializeFactory( const ApplicationCommon* arches ) : TaskFactoryBase(arches)
 {
   _factory_name = "InitializeFactory";
 }

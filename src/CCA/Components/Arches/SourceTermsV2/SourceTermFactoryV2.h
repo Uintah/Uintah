@@ -10,7 +10,7 @@ namespace Uintah{
 
   public:
 
-    SourceTermFactoryV2( );
+    SourceTermFactoryV2( const ApplicationCommon* arches );
     ~SourceTermFactoryV2();
 
     void register_all_tasks( ProblemSpecP& db );

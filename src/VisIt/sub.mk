@@ -36,7 +36,7 @@ endif
 
 SUBDIRS := \
 	$(LIBSIM) \
-	$(SRCDIR)/uda2vis
+	$(SRCDIR)/interfaces
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 

@@ -5,7 +5,7 @@
 using namespace Uintah;
 
 //--------------------------------------------------------------------------------------------------
-TaskFactoryBase::TaskFactoryBase()
+TaskFactoryBase::TaskFactoryBase( const ApplicationCommon* arches ) : m_arches(arches)
 {
   _matl_index = 0; //Arches material
   _tasks.clear();

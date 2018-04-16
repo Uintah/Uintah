@@ -179,7 +179,7 @@ namespace WasatchCore{
           //throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
         }
         
-        solverParams_ = linSolver.readParameters( pressureParams, "", sharedState );
+        solverParams_ = linSolver.readParameters( pressureParams, "" );
         solverParams_->setSolveOnExtraCells( false );
         solverParams_->setUseStencil4( false );
         solverParams_->setSymmetric( this->is_constant_density() );
