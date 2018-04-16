@@ -292,7 +292,6 @@ QMOMTESTS=[
 
 POKITTTESTS=[
   ("species-transport-test",                    "species-transport.ups",                          1, "All", ["exactComparison","no_restart"] ),
-  ("coal-cpd-cck-1D",                           "coal-cpd-cck-1D.ups",                            1, "All", ["exactComparison","no_restart"] ),
   ("MultispeciesBC-inflow-nonreacting-xminus",  "MultispeciesBC-inflow-nonreacting-xminus.ups",   1, "All", ["exactComparison","no_restart","no_memoryTest"] ),
   ("MultispeciesBC-inflow-nonreacting-yminus",  "MultispeciesBC-inflow-nonreacting-yminus.ups",   1, "All", ["exactComparison","no_restart","no_memoryTest"] ),
   ("MultispeciesBC-inflow-nonreacting-zminus",  "MultispeciesBC-inflow-nonreacting-zminus.ups",   1, "All", ["exactComparison","no_restart","no_memoryTest"] ),
@@ -308,6 +307,15 @@ POKITTTESTS=[
   ("MultispeciesBC-premixed-flame-xyplane",     "MultispeciesBC-premixed-flame-xyplane.ups",      1, "All", ["exactComparison","no_restart","no_memoryTest"] ),
   ("MultispeciesBC-premixed-flame-xzplane",     "MultispeciesBC-premixed-flame-xzplane.ups",      1, "All", ["exactComparison","no_restart","no_memoryTest"] ),
   ("MultispeciesBC-premixed-flame-yzplane",     "MultispeciesBC-premixed-flame-yzplane.ups",      1, "All", ["exactComparison","no_restart","no_memoryTest"] )
+]
+
+COALTESTS=[
+  ("coal-cpd-cck-1D",                    "coal-cpd-cck-1D.ups",                   1, "All", ["exactComparison","no_restart"] ),
+  ("coal-cpd-langmuirHinshelwood-1D",    "coal-cpd-langmuirHinshelwood-1D.ups",   1, "All", ["exactComparison","no_restart"] ),
+  ("coal-inertGas-cpd-1D",               "coal-inertGas-cpd-1D.ups",              1, "All", ["exactComparison","no_restart"] ),
+  ("coal-inertGas-dae-1D",               "coal-inertGas-dae-1D.ups",              1, "All", ["exactComparison","no_restart"] ),
+  ("coal-inertGas-kobayashiSarofim-1D",  "coal-inertGas-kobayashiSarofim-1D.ups", 1, "All", ["exactComparison","no_restart"] ),
+  ("coalChar-langmuirHinshelwood-1D",    "coalChar-langmuirHinshelwood-1D",       1, "All", ["exactComparison","no_restart"] ),
 ]
 
 SCALARTRANSPORTTESTS=[
@@ -373,12 +381,12 @@ print( "HAVE_POKITT: %s" % (HAVE_POKITT) )
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: LOCALTESTS DUALTIMETESTS GPUTESTS BCTESTS COMPRESSIBLETESTS CONVECTIONTESTS DEBUGTESTS INTRUSIONTESTS MISCTESTS NIGHTLYTESTS PARTICLETESTS POKITTTESTS PROJECTIONTESTS QMOMTESTS RADIATIONTESTS RKTESTS SCALARTRANSPORTTESTS TURBULENCETESTS VARDENTESTS BUILDBOTTESTS
+#LIST: LOCALTESTS DUALTIMETESTS GPUTESTS BCTESTS COALTESTS COMPRESSIBLETESTS CONVECTIONTESTS DEBUGTESTS INTRUSIONTESTS MISCTESTS NIGHTLYTESTS PARTICLETESTS POKITTTESTS PROJECTIONTESTS QMOMTESTS RADIATIONTESTS RKTESTS SCALARTRANSPORTTESTS TURBULENCETESTS VARDENTESTS BUILDBOTTESTS
 #__________________________________
 NIGHTLYTESTS = DUALTIMETESTS + RADIATIONTESTS + TURBULENCETESTS + INTRUSIONTESTS + PROJECTIONTESTS + RKTESTS + VARDENTESTS + MISCTESTS + CONVECTIONTESTS + BCTESTS + QMOMTESTS + SCALARTRANSPORTTESTS + PARTICLETESTS + COMPRESSIBLETESTS
 
 if HAVE_POKITT != "0":
-  NIGHTLYTESTS = NIGHTLYTESTS + POKITTTESTS
+  NIGHTLYTESTS = NIGHTLYTESTS + POKITTTESTS + COALTESTS
 
 # returns the list
 def getTestList(me) :
@@ -420,6 +428,8 @@ def getTestList(me) :
     TESTS = DUALTIMETESTS           
   elif me == "POKITTTESTS":
     TESTS = POKITTTESTS
+  elif me == "COALTESTS":
+    TESTS = COALTESTS
   elif me == "BUILDBOTTESTS":
     TESTS = ignorePerformanceTests( NIGHTLYTESTS )           
   else:

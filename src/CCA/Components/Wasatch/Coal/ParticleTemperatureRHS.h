@@ -5,24 +5,17 @@
 #include <CCA/Components/Wasatch/Coal/CoalData.h>
 
 /**
- *   Author : Babak Goshayeshi (www.bgoshayeshi.com)
- *   Date   : Feb 11 2011
+ *   Author : Babak Goshayeshi, Josh McConnell
+ *   Date   : April, 2018
  *   University of Utah - Institute for Clean and Secure Energy
  *
  *   Particle Temperature RHS, which depend on :
  *
- *   partmast   : particle mass
- *   partCpt    : particle heat capacity ( constant pressure )
- *   moistrhst  : Moisture mass production rate in particle
- *   oxidationt : Char Oxidaiot RHS
- *   co2gasift  : Char consumption rate due to CO2 gasification reaction
- *   h2ogasift  : Char consumption rate due to h2o gasification reaction
- *   co2coratiot: CO2 / CO - From char oxidation reaction
- *   tempPt     : particle temperature
- *   o2rhst     : Oxygen consumption rate
- *   inttempGt  : interpolated gas temperature to particle filed
- *   intpresst  : interpolated gas pressure to particle field
- *   co2corhst  : co2 and co consumption rate (in gas phase)
+ *   pMassTag           : particle mass
+ *   pCpTag             : particle heat capacity ( constant pressure )
+ *   evapRHSTag         : Moisture mass production rate in particle
+ *   pTempTag           : particle temperature
+ *   heatFromCharRxnsTag: heat from char oxidation and gasification
  *
  *
  *   Method -- Latent of Vaporization :
@@ -45,53 +38,39 @@ class ParticleTemperatureRHS
 {
   const double alpha_;
 
-  DECLARE_FIELDS( FieldT, partmas_, partCp_, moistrhs_, oxidation_, co2gasif_ )
-  DECLARE_FIELDS( FieldT, h2ogasif_, co2coratio_, tempP_, inttempG_ )
-	
+  DECLARE_FIELDS( FieldT, pMass_, pCp_, evapRHS_, pTemp_, heatFromCharRxns_ )
 
-  ParticleTemperatureRHS( const Expr::Tag& partmast,
-                          const Expr::Tag& partCpt,
-                          const Expr::Tag& moistrhst,
-                          const Expr::Tag& oxidationt,
-                          const Expr::Tag& co2gasift,
-                          const Expr::Tag& h2ogasift,
-                          const Expr::Tag& co2coratiot,
-                          const Expr::Tag& tempPt,
-                          const Expr::Tag& inttempGt );
+  ParticleTemperatureRHS( const Expr::Tag& pMassTag,
+                          const Expr::Tag& pCpTag,
+                          const Expr::Tag& evapRHSTag,
+                          const Expr::Tag& pTempTag,
+                          const Expr::Tag& heatFromCharRxnsTag );
 
 public:
   class Builder : public Expr::ExpressionBuilder
   {
-    const Expr::Tag partmast_,  partCpt_ , moistrhst_, oxidationt_, co2gasift_,
-                    h2ogasift_, co2coratiot_, inttempGt_, tempPt_;
+    const Expr::Tag pMassTag_,  pCpTag_ , evapRHSTag_,
+                    pTempTag_, heatFromCharRxnsTag_;
   public:
-    Builder( const Expr::Tag& ptrhs,
-             const Expr::Tag& partmast,
-             const Expr::Tag& partCpt,
-             const Expr::Tag& moistrhst,
-             const Expr::Tag& oxidaitont,
-             const Expr::Tag& co2gasift,
-             const Expr::Tag& h2ogasift,
-             const Expr::Tag& co2coratiot,
-             const Expr::Tag& tempPt,
-             const Expr::Tag& inttempGt )
-    : Expr::ExpressionBuilder(ptrhs),
-      partmast_   ( partmast   ),
-      partCpt_    ( partCpt    ),
-      moistrhst_  ( moistrhst  ),
-      oxidationt_ ( oxidaitont ),
-      co2gasift_  ( co2gasift  ),
-      h2ogasift_  ( h2ogasift  ),
-      co2coratiot_( co2coratiot),
-      inttempGt_  ( inttempGt  ),
-      tempPt_     ( tempPt     )
+    Builder( const Expr::Tag& pTempRHSTag,
+             const Expr::Tag& pMassTag,
+             const Expr::Tag& pCpTag,
+             const Expr::Tag& evapRHSTag,
+             const Expr::Tag& pTempTag,
+             const Expr::Tag& heatFromCharRxnsTag )
+    : Expr::ExpressionBuilder(pTempRHSTag),
+      pMassTag_            ( pMassTag             ),
+      pCpTag_              ( pCpTag               ),
+      evapRHSTag_          ( evapRHSTag           ),
+      pTempTag_            ( pTempTag             ),
+      heatFromCharRxnsTag_ ( heatFromCharRxnsTag  )
     {}
 
     ~Builder(){}
 
     Expr::ExpressionBase* build() const{
-      return new ParticleTemperatureRHS<FieldT>( partmast_, partCpt_, moistrhst_, oxidationt_, co2gasift_,
-                                                 h2ogasift_, co2coratiot_, tempPt_, inttempGt_ );
+      return new ParticleTemperatureRHS<FieldT>( pMassTag_, pCpTag_, evapRHSTag_,
+                                                 pTempTag_, heatFromCharRxnsTag_ );
     }
   };
 
@@ -110,29 +89,21 @@ public:
 
 template< typename FieldT >
 ParticleTemperatureRHS<FieldT>::
-ParticleTemperatureRHS( const Expr::Tag& partmast,
-                        const Expr::Tag& partCpt,
-                        const Expr::Tag& moistrhst,
-                        const Expr::Tag& oxidationt,
-                        const Expr::Tag& co2gasift,
-                        const Expr::Tag& h2ogasift,
-                        const Expr::Tag& co2coratiot,
-                        const Expr::Tag& tempPt,
-                        const Expr::Tag& inttempGt )
+ParticleTemperatureRHS( const Expr::Tag& pMassTag,
+                        const Expr::Tag& pCpTag,
+                        const Expr::Tag& evapRHSTag,
+                        const Expr::Tag& pTempTag,
+                        const Expr::Tag& heatFromCharRxnsTag )
   : Expr::Expression<FieldT>(),
     alpha_( Coal::absored_heat_fraction_particle() )
 {
   this->set_gpu_runnable(true);
 
-  partmas_    = this->template create_field_request<FieldT>( partmast    );
-  partCp_     = this->template create_field_request<FieldT>( partCpt     );
-  moistrhs_   = this->template create_field_request<FieldT>( moistrhst   );
-  oxidation_  = this->template create_field_request<FieldT>( oxidationt  );
-  co2gasif_   = this->template create_field_request<FieldT>( co2gasift   );
-  h2ogasif_   = this->template create_field_request<FieldT>( h2ogasift   );
-  co2coratio_ = this->template create_field_request<FieldT>( co2coratiot );
-  tempP_      = this->template create_field_request<FieldT>( tempPt      );
-  inttempG_   = this->template create_field_request<FieldT>( inttempGt   );
+  pMass_            = this->template create_field_request<FieldT>( pMassTag            );
+  pCp_              = this->template create_field_request<FieldT>( pCpTag              );
+  evapRHS_          = this->template create_field_request<FieldT>( evapRHSTag          );
+  pTemp_            = this->template create_field_request<FieldT>( pTempTag            );
+  heatFromCharRxns_ = this->template create_field_request<FieldT>( heatFromCharRxnsTag );
 }
 
 //--------------------------------------------------------------------
@@ -145,18 +116,11 @@ evaluate()
   using namespace SpatialOps;
   FieldT& result = this->value();
 
-  const FieldT& partmas    = partmas_   ->field_ref();
-  const FieldT& partCp     = partCp_    ->field_ref();
-  const FieldT& moistrhs   = moistrhs_  ->field_ref();
-  const FieldT& oxidation  = oxidation_ ->field_ref();
-  const FieldT& co2gasif   = co2gasif_  ->field_ref();
-  const FieldT& h2ogasif   = h2ogasif_  ->field_ref();
-  const FieldT& co2coratio = co2coratio_->field_ref();
-  const FieldT& tempP      = tempP_     ->field_ref();
-  const FieldT& inttempG   = inttempG_  ->field_ref();
-
-  const double hco  = 9629.64E3;  // J/kg
-  const double hco2 = 33075.72E3; // J/kg [1]
+  const FieldT& pMass    = pMass_           ->field_ref();
+  const FieldT& pCp      = pCp_             ->field_ref();
+  const FieldT& evapRHS  = evapRHS_         ->field_ref();
+  const FieldT& pTemp    = pTemp_           ->field_ref();
+  const FieldT& hSrcChar = heatFromCharRxns_->field_ref();
 
   // temperature rhs for vaporization
   // @ T = 300 K ,Heat of Vaporization = 2438 kj/kg, Tcritical = 647.096 K
@@ -165,13 +129,11 @@ evaluate()
   // temperature rhs for char oxidation
   result <<=
   (
-      cond( tempP < Tc, 2438.E3 * pow( (1.0- tempP/Tc)/(1.0-300/Tc), 0.375 ) * moistrhs )( 0.0 )  // vaporization
-      + -1.0 * alpha_ * ( oxidation * co2coratio / ( 1.0 + co2coratio) ) * hco2 // CO2
-      + -1.0 * alpha_ * ( oxidation/ (1.0+ co2coratio) ) * hco // CO
-      + alpha_ * ( co2gasif *14.37E6)                            // CO2 gasification reaction [2]
-      + alpha_ * ( h2ogasif * 10.94E6)                           // H2O gasification reaction [2]
+      cond( pTemp < Tc, 2438.E3 * pow( (1. - pTemp/Tc)/(1. - 300/Tc), 0.375 ) * evapRHS )
+          ( 0. )  // vaporization
+      -alpha_ * hSrcChar   // char rxns. hSrcChar is negative when exothermic, hence the "-"
   )
-  / (partmas * partCp);
+  / (pMass * pCp);
 }
 
 //--------------------------------------------------------------------

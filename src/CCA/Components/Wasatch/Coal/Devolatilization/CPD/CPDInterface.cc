@@ -1,4 +1,4 @@
-#include "CPDInterface.h"
+#include <CCA/Components/Wasatch/Coal/Devolatilization/CPD/CPDInterface.h>
 
 #include <stdexcept>
 #include <sstream>
@@ -11,18 +11,18 @@
 #include <expression/ClipValue.h>
 
 // expressions we build here
-#include "L_RHS.h"
-#include "CPDData.h"
-#include "C_RHS.h"
-#include "Gi_RHS.h"
-#include "Deltai_RHS.h"
-#include "c0_fun.h"
-#include "kb.h"
-#include "kg_i.h"
-#include "dy_gi.h"
-#include "MvRHS.h"
-#include "Mv.h"
-#include "TarProductionRate.h"
+#include <CCA/Components/Wasatch/Coal/Devolatilization/CPD/L_RHS.h>
+#include <CCA/Components/Wasatch/Coal/Devolatilization/CPD/CPDData.h>
+#include <CCA/Components/Wasatch/Coal/Devolatilization/CPD/C_RHS.h>
+#include <CCA/Components/Wasatch/Coal/Devolatilization/CPD/Gi_RHS.h>
+#include <CCA/Components/Wasatch/Coal/Devolatilization/CPD/Deltai_RHS.h>
+#include <CCA/Components/Wasatch/Coal/Devolatilization/CPD/c0_fun.h>
+#include <CCA/Components/Wasatch/Coal/Devolatilization/CPD/kb.h>
+#include <CCA/Components/Wasatch/Coal/Devolatilization/CPD/kg_i.h>
+#include <CCA/Components/Wasatch/Coal/Devolatilization/CPD/dy_gi.h>
+#include <CCA/Components/Wasatch/Coal/Devolatilization/CPD/MvRHS.h>
+#include <CCA/Components/Wasatch/Coal/Devolatilization/CPD/Mv.h>
+#include <CCA/Components/Wasatch/Coal/Devolatilization/CPD/TarProductionRate.h>
 
 using std::vector;
 using std::cout;
@@ -54,7 +54,7 @@ CPDSpecies gas_dev2cpd( const DEV::DEVSpecies cspec )
     case DEV::HCN:  s=HCN;             break;
     case DEV::NH3:  s=NH3;             break;
     case DEV::CH4:  s=CH4;             break;
-    case DEV::H  :  s=H;               break;
+    case DEV::H2 :  s=H2;              break;
     default:   s=INVALID_SPECIES; break;
   }
   return s;

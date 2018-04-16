@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include "TarOxidationRate.h"
+#include <CCA/Components/Wasatch/Expressions/TarAndSoot/TarOxidationRate.h>
 
 #ifndef GAS_CONSTANT
 #  define GAS_CONSTANT 8.3144621 // J/(mol*K)
