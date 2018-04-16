@@ -17,7 +17,7 @@
     <max_Timesteps>5</max_Timesteps>
   </Time>
   <DataArchiver>
-    <filebase>dqmom_char.uda</filebase>
+    <filebase>dqmom_char_no_pressure.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
     <save label="phi"/>
@@ -33,107 +33,53 @@
     <save label="raw_coal_qn2"/>
     <save label="raw_coal_qn3"/>
     <save label="raw_coal_qn4"/>
-    <save label="raw_coal_0"/>
-    <save label="raw_coal_1"/>
-    <save label="raw_coal_2"/>
-    <save label="raw_coal_3"/>
-    <save label="raw_coal_4"/>
-    <save label="length_qn0"/>
-    <save label="length_qn1"/>
-    <save label="length_qn2"/>
+    <save label="raw_coal_qn0_rhs"/>
     <save label="length_qn3"/>
-    <save label="length_qn4"/>
-    <save label="length_0"/>
-    <save label="length_1"/>
-    <save label="length_2"/>
-    <save label="length_3"/>
-    <save label="length_4"/>
-    <save label="up_0"/>
-    <save label="up_1"/>
-    <save label="up_2"/>
-    <save label="up_3"/>
-    <save label="up_4"/>
     <save label="up_qn0"/>
-    <save label="up_qn1"/>
-    <save label="up_qn2"/>
-    <save label="up_qn3"/>
-    <save label="up_qn4"/>
-    <save label="vp_0"/>
-    <save label="vp_1"/>
-    <save label="vp_2"/>
-    <save label="vp_3"/>
-    <save label="vp_4"/>
-    <save label="vp_qn0"/>
-    <save label="vp_qn1"/>
-    <save label="vp_qn2"/>
-    <save label="vp_qn3"/>
-    <save label="vp_qn4"/>
-    <save label="wp_0"/>
-    <save label="wp_1"/>
-    <save label="wp_2"/>
-    <save label="wp_3"/>
-    <save label="wp_4"/>
-    <save label="wp_qn0"/>
-    <save label="wp_qn1"/>
-    <save label="wp_qn2"/>
-    <save label="wp_qn3"/>
-    <save label="wp_qn4"/>
-    <save label="w_0"/>
-    <save label="w_1"/>
-    <save label="w_2"/>
-    <save label="w_3"/>
-    <save label="w_4"/>
-    <save label="w_qn0"/>
-    <save label="w_qn1"/>
-    <save label="w_qn2"/>
-    <save label="w_qn3"/>
-    <save label="w_qn4"/>
-    <save label="w_qn0_RHS"/>
-    <save label="w_qn1_RHS"/>
-    <save label="w_qn2_RHS"/>
-    <save label="w_qn3_RHS"/>
-    <save label="w_qn4_RHS"/>
-    <save label="raw_coal_qn0_RHS"/>
-    <save label="raw_coal_qn1_RHS"/>
-    <save label="raw_coal_qn2_RHS"/>
-    <save label="raw_coal_qn3_RHS"/>
-    <save label="raw_coal_qn4_RHS"/>
-    <save label="char_mass_qn0"/>
-    <save label="char_mass_qn1"/>
-    <save label="char_mass_qn2"/>
-    <save label="char_mass_qn3"/>
-    <save label="char_mass_0"/>
-    <save label="char_mass_1"/>
-    <save label="char_mass_2"/>
-    <save label="char_mass_3"/>
-    <save label="char_mass_4"/>
-    <save label="char_mass_qn0_RHS"/>
-    <save label="char_mass_qn1_RHS"/>
-    <save label="char_mass_qn2_RHS"/>
-    <save label="char_mass_qn3_RHS"/>
-    <save label="char_mass_qn4_RHS"/>
     <save label="a_model_0"/>
+    <save label="w_qn0"/>
+    <save label="w_qn0_unscaled"/>
     <save label="number_density"/>
     <save label="surfaceAreaFraction_0"/>
     <save label="surfaceAreaFraction_1"/>
     <save label="surfaceAreaFraction_2"/>
     <save label="surfaceAreaFraction_3"/>
     <save label="surfaceAreaFraction_4"/>
+    <save label="w_0"/>
+    <save label="w_1"/>
+    <save label="w_2"/>
+    <save label="w_3"/>
+    <save label="w_4"/>
     <save label="temperature_coal_0"/>
     <save label="temperature_coal_1"/>
     <save label="temperature_coal_2"/>
     <save label="temperature_coal_3"/>
     <save label="temperature_coal_4"/>
-    <save label="char_ps_qn0"/>
-    <save label="char_ps_qn1"/>
-    <save label="char_ps_qn2"/>
-    <save label="char_ps_qn3"/>
-    <save label="char_ps_qn4"/>
-    <save label="char_ps_qn0_gasSource"/>
-    <save label="char_ps_qn1_gasSource"/>
-    <save label="char_ps_qn2_gasSource"/>
-    <save label="char_ps_qn3_gasSource"/>
-    <save label="char_ps_qn4_gasSource"/>
+    <save label="ux_0"/>
+    <save label="ux_1"/>
+    <save label="ux_2"/>
+    <save label="ux_3"/>
+    <save label="ux_4"/>
+    <save label="uy_0"/>
+    <save label="uy_1"/>
+    <save label="uy_2"/>
+    <save label="uy_3"/>
+    <save label="uy_4"/>
+    <save label="uz_0"/>
+    <save label="uz_1"/>
+    <save label="uz_2"/>
+    <save label="uz_3"/>
+    <save label="uz_4"/>
+    <save label="char_ps_0"/>
+    <save label="char_ps_1"/>
+    <save label="char_ps_2"/>
+    <save label="char_ps_3"/>
+    <save label="char_ps_4"/>
+    <save label="char_ps_gasSource_0"/>
+    <save label="char_ps_gasSource_1"/>
+    <save label="char_ps_gasSource_2"/>
+    <save label="char_ps_gasSource_3"/>
+    <save label="char_ps_gasSource_4"/>
     <save label="rho_coal_0"/>
     <save label="rho_coal_1"/>
     <save label="rho_coal_2"/>
@@ -154,7 +100,7 @@
     <save label="char_gas_reaction0_qn4"/>
     <save label="char_gas_reaction1_qn4"/>
     <save label="char_gas_reaction2_qn4"/>
-    <checkpoint cycle="2" interval="1e-3"/>
+    <checkpoint cycle="2" interval="2e-3"/>
     <compression>gzip</compression>
   </DataArchiver>
   <Grid>
@@ -270,9 +216,6 @@
         <var role="uvelocity" label="uVel"/>
         <var role="vvelocity" label="vVel"/>
         <var role="wvelocity" label="wVel"/>
-        <var role="ccuvelocity" label="uVel_cc"/>
-        <var role="ccvvelocity" label="vVel_cc"/>
-        <var role="ccwvelocity" label="wVel_cc"/>
         <var role="total_viscosity" label="gamma"/>
         <var role="density" label="density"/>
       </VarID>
@@ -366,6 +309,7 @@
         <RichardsFletcher_coefficients>[1.18e7, 1.46e13, 9044, 29215, 0.0309, 0.5573, -104.45, 323.46, -54.197, -0.8526, -728.01, -0.0345, 0.0, 14.590, -53.759, 126.16, -132.02, 44.477, -0.000817, 0.0]</RichardsFletcher_coefficients>
         <FOWYDevol>
           <v_hiT>6.641e-01</v_hiT>
+          <Tig>590</Tig>
           <A>19724227.36</A>
           <Ta>1.113e4</Ta>
           <Tbp_graphite>3e3</Tbp_graphite>
@@ -422,49 +366,72 @@
       </ParticleProperties>
       <EulerianParticles>
         <ParticleVariables> 
-          <variable label="raw_coal" role="raw_coal"/>
-          <variable label="char_mass" role="char"/>
+          <variable label="RCmass" role="raw_coal"/>
+          <variable label="Charmass" role="char"/>
           <variable label="pE" role="enthalpy"/>
           <variable label="length" role="size"/>
           <variable label="rho_coal" role="density"/>
           <variable label="temperature_coal" role="temperature"/>
           <variable label="dTdt" role="dTdt"/>
-          <variable label="up" role="uvel"/>
-          <variable label="vp" role="vvel"/>
-          <variable label="wp" role="wvel"/>
+          <variable label="ux" role="uvel"/>
+          <variable label="uy" role="vvel"/>
+          <variable label="uz" role="wvel"/>
           <variable label="number_density" role="total_number_density"/>
         </ParticleVariables>
       </EulerianParticles>
       <ParticleModels>
         <model label="a_model" type="constant">
           <grid independent_type="CC" dependent_type="CC"/>
-          <constant>[1e-12, 1.e-12, 1.e-12, 1e-12, 1e-12]</constant> 
+          <constant>[2., 2., 2., 2, 2, 2.]</constant> 
+        </model>
+        <model label="ux" type="constant">
+          <grid independent_type="CC" dependent_type="CC"/>
+          <constant>[2., 2., 2., 2, 2, 2]</constant> 
+        </model>
+        <model label="uy" type="constant">
+          <grid independent_type="CC" dependent_type="CC"/>
+          <constant>[2., 2., 2., 2, 2, 2]</constant> 
+        </model>
+        <model label="uz" type="constant">
+          <grid independent_type="CC" dependent_type="CC"/>
+          <constant>[2., 2., 2., 2, 2, 2]</constant> 
+        </model>
+        <model label="w" type="constant">
+          <grid independent_type="CC" dependent_type="CC"/>
+          <constant>[0.2,0.2,0.2,0.2,0.2, 0.2]</constant> 
         </model>
         <model label="temperature_coal" type="constant">
           <grid independent_type="CC" dependent_type="CC"/>
-          <constant>[1000.,1000.,2000.,1500,1500]</constant> 
+          <constant>[1000.,1000.,2000.,1500,1500,1800]</constant> 
+        </model>
+        <model label="RCmass" type="constant">
+          <grid independent_type="CC" dependent_type="CC"/>
+          <constant>[2.96E-11, 2.96E-11, 7.99E-10, 1.89E-09, 1.89E-09, 1.89e-9]</constant> 
+        </model>
+        <model label="Charmass" type="constant">
+          <grid independent_type="CC" dependent_type="CC"/>
+          <constant>[3.70E-11, 3.70E-11, 9.98E-10, 2.37E-09, 2.37E-09, 2.3e-9]</constant> 
         </model>
         <model label="devol_rate" type="constant">
           <grid independent_type="CC" dependent_type="CC"/>
-          <constant>[0,0,0,0,0]</constant> 
+          <constant>[0,0,0,0,0,0]</constant> 
         </model>
-        <model label="dqmom_variables" type="particle_variables_dqmom"/>
+        <model label="length" type="constant">
+          <grid independent_type="CC" dependent_type="CC"/>
+          <constant>[50e-6,50e-6,150e-6,200e-6,200e-6,200e-6]</constant> 
+        </model>
+        <!--model label="number_density" type="total_number_density"/-->
+        <model label="dqmom_variales" type="particle_variables_dqmom"/>
         <model label="rho_coal" type="coal_density">
           <model_type>dynamic_dqmom</model_type>
         </model>
-        <model label="char_ps" type="char_oxidation_ps">
-          <devol_model_name>devol_rate</devol_model_name>
-        </model>
+        <model label="char_ps" type="char_oxidation_ps"/>
       </ParticleModels>
       <DQMOM>
-        <number_quad_nodes>5</number_quad_nodes>
+        <number_quad_nodes>6</number_quad_nodes>
         <kokkos_translate/>
-        <velocity xlabel="uVel"
-                  ylabel="vVel"
-                  zlabel="wVel"/>
         <diffusion  scheme="central" D_label="gamma"/>
         <convection scheme="upwind"/>
-        <Models/>
         <Weights>
           <initialization type="env_constant">
             <env_constant qn="0" value="0.01"/>
@@ -472,58 +439,29 @@
             <env_constant qn="2" value="2.01"/>
             <env_constant qn="3" value="3.01"/>
             <env_constant qn="4" value="4.01"/>
+            <env_constant qn="5" value="5.01"/>
           </initialization>
-          <scaling_const>[1,1,1,1,1]</scaling_const>
+          <scaling_const>[2,2,2,2,2,2]</scaling_const>
         </Weights>
         <Ic label="raw_coal">
           <model label="a_model"/>
+        </Ic>
+        <Ic label="char_mass"/>
+        <Ic label="length">
           <initialization type="env_constant">
-            <env_constant qn="0" value="2.96E-11"/>
-            <env_constant qn="1" value="2.96E-11"/>
-            <env_constant qn="2" value="7.99E-10"/>
-            <env_constant qn="3" value="1.89E-09"/>
-            <env_constant qn="4" value="1.89E-09"/>
+            <env_constant qn="0" value="0.01"/>
+            <env_constant qn="1" value="1.01"/>
+            <env_constant qn="2" value="2.01"/>
+            <env_constant qn="3" value="3.01"/>
+            <env_constant qn="4" value="4.01"/>
+            <env_constant qn="5" value="5.01"/>
           </initialization>
         </Ic>
-        <Ic label="char_mass">
-          <initialization type="env_constant">
-            <env_constant qn="0" value="3.70E-11"/>
-            <env_constant qn="1" value="3.70E-11"/>
-            <env_constant qn="2" value="9.98E-10"/>
-            <env_constant qn="3" value="2.37E-09"/>
-            <env_constant qn="4" value="2.37E-09"/>
-          </initialization>
-        </Ic>
-        <Ic label="up">
-          <initialization type="env_constant">
-            <env_constant qn="0" value="1"/>
-            <env_constant qn="1" value="1"/>
-            <env_constant qn="2" value="1"/>
-            <env_constant qn="3" value="1"/>
-            <env_constant qn="4" value="1"/>
-          </initialization>
-        </Ic>
+        <Ic label="up"/>
         <Ic label="vp"/>
         <Ic label="wp"/>
         <Ic label="pE"/>
-        <Ic label="particle_max_temp">
-          <initialization type="env_constant">
-            <env_constant qn="0" value="1000"/>
-            <env_constant qn="1" value="1000"/>
-            <env_constant qn="2" value="1000"/>
-            <env_constant qn="3" value="1000"/>
-            <env_constant qn="4" value="1000"/>
-          </initialization>
-        </Ic>
-        <Ic label="length">
-          <initialization type="env_constant">
-            <env_constant qn="0" value="50e-6"/>
-            <env_constant qn="1" value="100e-6"/>
-            <env_constant qn="2" value="150e-6"/>
-            <env_constant qn="3" value="200e-6"/>
-            <env_constant qn="4" value="250e-6"/>
-          </initialization>
-        </Ic>
+        <Ic label="particle_max_temp"/>
       </DQMOM>
       <BoundaryConditions>
         <force_area_calc/>
