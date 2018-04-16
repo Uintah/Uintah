@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2017 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -24,8 +24,7 @@
 
 //----- Ray.cc ----------------------------------------------
 #include <CCA/Components/Models/Radiation/RMCRT/Ray.h>
-
-#include <CCA/Ports/ApplicationInterface.h>
+#include <CCA/Components/Regridder/PerPatchVars.h>
 
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -33,9 +32,9 @@
 #include <Core/Grid/AMR_CoarsenRefine.h>
 #include <Core/Grid/BoundaryConditions/BCUtils.h>
 #include <Core/Grid/DbgOutput.h>
-#include <Core/Grid/Variables/PerPatchVars.h>
-#include <Core/Math/MersenneTwister.h>
 #include <Core/Util/DOUT.hpp>
+#include <Core/Grid/Variables/PerPatch.h>
+#include <Core/Math/MersenneTwister.h>
 #include <Core/Util/Timers/Timers.hpp>
 
 #include <include/sci_defs/uintah_testdefs.h.in>
@@ -73,7 +72,7 @@ using std::vector;
 using std::string;
 
 extern Dout g_ray_dbg;
-extern Dout g_ray_BC;
+Dout dbg_BC_ray("RAY_BC", false);
 
 //---------------------------------------------------------------------------
 // Class: Constructor.
@@ -154,7 +153,8 @@ Ray::~Ray()
 void
 Ray::problemSetup( const ProblemSpecP& prob_spec,
                    const ProblemSpecP& rmcrtps,
-                   const GridP&        grid)
+                   const GridP&        grid,
+                   SimulationStateP&   sharedState)
 {
   ProblemSpecP rmcrt_ps = rmcrtps;
   string rayDirSampleAlgo;
@@ -347,6 +347,45 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   #endif
 #endif
   proc0cout << "__________________________________ " << endl;
+  //______________________________________________________________________
+  //
+// #ifdef HAVE_VISIT
+//   static bool initialized = false;
+
+//   // Running with VisIt so add in the variables that the user can
+//   // modify.
+//   if( m_sharedState->getVisIt() && !initialized ) {
+//     // variable 1 - Must start with the component name and have NO
+//     // spaces in the var name
+//     SimulationState::interactiveVar var;
+//     var.name     = "Ray-nDivQRays";
+//     var.type     = Uintah::TypeDescription::int_type;
+//     var.value    = (void *) &d_nDivQRays;
+//     var.range[0]   = 1;
+//     var.range[1]   = 100;
+//     var.modifiable = true;
+//     var.recompile  = false;
+//     var.modified   = false;
+//     m_sharedState->d_UPSVars.push_back( var );
+
+//     // variable 2 - Must start with the component name and have NO
+//     // spaces in the var name
+//     var.name     = "Ray-nFluxRays";
+//     var.type     = Uintah::TypeDescription::int_type;
+//     var.value    = (void *) &d_nFluxRays;
+//     var.range[0]   = 1;
+//     var.range[1]   = 100;
+//     var.modifiable = true;
+//     var.recompile  = false;
+//     var.modified   = false;
+//     m_sharedState->d_UPSVars.push_back( var );
+    
+//     m_sharedState->d_douts.push_back( &g_ray_dbg );
+//     m_sharedState->d_douts.push_back( &dbg_BC_ray );
+
+//     initialized = true;
+//   }
+// #endif
 }
 
 //______________________________________________________________________
@@ -420,6 +459,8 @@ Ray::sched_rayTrace( const LevelP& level,
     // The reason a timestep is passed in is that Todd liked random
     // numbers that are in a sense repeatable.  But the same could be
     // accomplished with repeatable random numbers passed in.
+
+    // int timeStep = m_sharedState->getCurrentTopLevelTimeStep();
 
     timeStep_vartype timeStepVar(0);
     if( sched->get_dw(0) && sched->get_dw(0)->exists( m_timeStepLabel ) )
@@ -848,6 +889,8 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
   
   if (Parallel::usingDevice()) {          // G P U
     taskname = "Ray::rayTraceDataOnionGPU";
+
+    // int timeStep = m_sharedState->getCurrentTopLevelTimeStep();
 
     timeStep_vartype timeStepVar(0);
     if( sched->get_dw(0) && sched->get_dw(0)->exists( m_timeStepLabel ) )
@@ -1604,6 +1647,7 @@ Ray::sched_setBoundaryConditions( const LevelP& level,
                                   Task::WhichDW temp_dw,
                                   const bool backoutTemp )
 {
+
   string taskname = "Ray::setBoundaryConditions";
 
   Task* tsk = nullptr;
@@ -1624,49 +1668,7 @@ Ray::sched_setBoundaryConditions( const LevelP& level,
   tsk->modifies( d_abskgLabel );
 
   sched->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT );
-
-  // ______________________________________________________________________
-  
-#ifdef HAVE_VISIT
-  static bool initialized = false;
-
-  // Running with VisIt so add in the variables that the user can
-  // modify.
-  ApplicationInterface* m_application = sched->getApplication();
-  
-  if( m_application && m_application->getVisIt() && !initialized ) {
-    // variable 1 - Must start with the component name and have NO
-    // spaces in the var name
-    ApplicationInterface::interactiveVar var;
-    var.component  = "RMCRT-Ray";
-    var.name       = "nDivQRays";
-    var.type       = Uintah::TypeDescription::int_type;
-    var.value      = (void *) &d_nDivQRays;
-    var.range[0]   = 1;
-    var.range[1]   = 100;
-    var.modifiable = true;
-    var.recompile  = false;
-    var.modified   = false;
-    m_application->getUPSVars().push_back( var );
-
-    // variable 2 - Must start with the component name and have NO
-    // spaces in the var name
-    var.component  = "RMCRT-Ray";
-    var.name       = "nFluxRays";
-    var.type       = Uintah::TypeDescription::int_type;
-    var.value      = (void *) &d_nFluxRays;
-    var.range[0]   = 1;
-    var.range[1]   = 100;
-    var.modifiable = true;
-    var.recompile  = false;
-    var.modified   = false;
-    m_application->getUPSVars().push_back( var );
-    
-    initialized = true;
-  }
-#endif
 }
-
 //---------------------------------------------------------------------------
 template<class T>
 void Ray::setBoundaryConditions( const ProcessorGroup*,
@@ -1767,9 +1769,9 @@ void Ray::setBC(CCVariable< T >& Q_CC,
     return;
   }
 
-  if( g_ray_BC.active() ){
+  if( dbg_BC_ray.active() ){
     const Level* level = patch->getLevel();
-    DOUT( g_ray_BC, "setBC \t"<< desc <<" "
+    DOUT( dbg_BC_ray, "setBC \t"<< desc <<" "
            << " mat_id = " << mat_id <<  ", Patch: "<< patch->getID() << " L-" <<level->getIndex() );
   }
 
@@ -1817,9 +1819,9 @@ void Ray::setBC(CCVariable< T >& Q_CC,
 
         //__________________________________
         //  debugging
-        if( g_ray_BC.active() ) {
+        if( dbg_BC_ray.active() ) {
           bound_ptr.reset();
-          DOUT( g_ray_BC, "Face: "<< patch->getFaceName(face) <<" numCellsTouched " << nCells
+          DOUT( dbg_BC_ray, "Face: "<< patch->getFaceName(face) <<" numCellsTouched " << nCells
              <<"\t child " << child  <<" NumChildren "<<numChildren
              <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
              <<"\t bound limits = "<< bound_ptr );
@@ -1827,8 +1829,8 @@ void Ray::setBC(CCVariable< T >& Q_CC,
       }  // if iterator found
     }  // child loop
 
-    if( g_ray_BC.active() ){
-      DOUT( g_ray_BC, "    "<< patch->getFaceName(face) << " \t " << bc_kind << " numChildren: " << numChildren
+    if( dbg_BC_ray.active() ){
+      DOUT( dbg_BC_ray, "    "<< patch->getFaceName(face) << " \t " << bc_kind << " numChildren: " << numChildren
              << " nCellsTouched: " << nCells );
     }
     //__________________________________

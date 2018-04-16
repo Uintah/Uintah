@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2017 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -61,7 +61,7 @@ static DebugStream cout_doing("MODELS_DOING_COUT", false);
 IandG::IandG(const ProcessorGroup* myworld,
              const SimulationStateP& sharedState,
              const ProblemSpecP& params)
-  : HEChemModel(myworld, sharedState), d_params(params)
+  : ModelInterface(myworld, sharedState), d_params(params)
 {
   mymatls = 0;
   Ilb = scinew ICELabel();
@@ -353,4 +353,32 @@ void IandG::computeModelSources(const ProcessorGroup*,
     setBC(term3, "set_if_sym_BC",patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
     setBC(Fr,    "set_if_sym_BC",patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
   }
+}
+//______________________________________________________________________
+//
+void IandG::scheduleModifyThermoTransportProperties(SchedulerP&,
+                                                    const LevelP&,         
+                                                    const MaterialSet*)    
+{
+  // do nothing      
+}
+void IandG::computeSpecificHeat(CCVariable<double>&,
+                                const Patch*,   
+                                DataWarehouse*, 
+                                const int)      
+{
+  //do nothing
+}
+//______________________________________________________________________
+//
+void IandG::scheduleErrorEstimate(const LevelP&,
+                                  SchedulerP&)
+{
+  // Not implemented yet
+}
+//__________________________________
+void IandG::scheduleTestConservation(SchedulerP&,
+                                     const PatchSet*)               
+{
+  // Not implemented yet
 }

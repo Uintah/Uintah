@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2017 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -32,6 +32,7 @@
 #include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #include <CCA/Components/MPMICE/Core/MPMICELabel.h>
+#include <CCA/Components/Regridder/PerPatchVars.h>
 
 #include <CCA/Ports/Regridder.h>
 #include <CCA/Ports/Scheduler.h>
@@ -56,9 +57,6 @@
 
 using namespace Uintah;
 using namespace std;
-      
-#define d_SMALL_NUM 1e-100
-#define d_TINY_RHO 1e-12
 
 //__________________________________
 //  setenv SCI_DEBUG "MODELS_DOING_COUT:+"
@@ -69,7 +67,7 @@ DDT0::DDT0(const ProcessorGroup* myworld,
            const SimulationStateP& sharedState,
            const ProblemSpecP& params,
            const ProblemSpecP& prob_spec)              
-  : HEChemModel(myworld, sharedState), d_params(params), d_prob_spec(prob_spec)
+  : ModelInterface(myworld, sharedState), d_params(params), d_prob_spec(prob_spec)
 {
   d_mymatls  = 0;
   d_one_matl = 0;
@@ -656,3 +654,33 @@ void DDT0::computeModelSources(const ProcessorGroup*,
       new_dw->put(sum_vartype(totalHeatReleased),DDT0::totalHeatReleasedLabel);
   }
 }
+
+//______________________________________________________________________
+//
+void DDT0::scheduleModifyThermoTransportProperties(SchedulerP&,
+                                                    const LevelP&,
+                                                    const MaterialSet*)
+{
+  // do nothing      
+}
+void DDT0::computeSpecificHeat(CCVariable<double>&,
+                                const Patch*,   
+                                DataWarehouse*, 
+                                const int)      
+{
+  //do nothing
+}
+//______________________________________________________________________
+//
+void DDT0::scheduleErrorEstimate(const LevelP&,
+                                 SchedulerP&)
+{
+  // Not implemented yet
+}
+//__________________________________
+void DDT0::scheduleTestConservation(SchedulerP&,
+                                    const PatchSet*)                     
+{
+  // Not implemented yet
+}
+

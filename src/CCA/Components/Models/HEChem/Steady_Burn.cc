@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2017 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -55,10 +55,6 @@
 
 using namespace Uintah;
 using namespace std;
-
-#define d_SMALL_NUM 1e-100
-#define d_TINY_RHO  1e-12
-
 //__________________________________   
 //  MODELS_DOING_COUT:   dumps when tasks are scheduled and performed
 static DebugStream cout_doing("MODELS_DOING_COUT", false);
@@ -69,7 +65,7 @@ Steady_Burn::Steady_Burn(const ProcessorGroup* myworld,
                          const  SimulationStateP& sharedState,
                          const ProblemSpecP& params,
                          const ProblemSpecP& prob_spec)
-  : HEChemModel(myworld, sharedState),
+  : ModelInterface(myworld, sharedState),
     d_params(params), d_prob_spec(prob_spec)
 { 
   mymatls = 0;
@@ -299,6 +295,20 @@ void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched,
   if(one_matl->removeReference())
     delete one_matl;
 }
+
+//__________________________________
+void Steady_Burn::scheduleModifyThermoTransportProperties(SchedulerP&, 
+                                                          const LevelP&, 
+                                                          const MaterialSet*){
+  // do nothing      
+}
+
+//__________________________________
+void Steady_Burn::computeSpecificHeat(CCVariable<double>&, const Patch*, DataWarehouse*, const int){
+  //do nothing
+}
+
+
 
 /*
  ***************** Private Member Functions:******************************
@@ -545,6 +555,17 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
  
 }
 
+void Steady_Burn::scheduleErrorEstimate(const LevelP&,
+                                        SchedulerP&){
+  // Not implemented yet
+}
+
+void Steady_Burn::scheduleTestConservation(SchedulerP&,
+                                           const PatchSet*){
+  // Not implemented yet
+}
+
+
 /****************************************************************************/
 /******************* Bisection Newton Solver ********************************/
 /****************************************************************************/
@@ -690,4 +711,3 @@ double Steady_Burn::BisectionNewton(double Ts, IterationVariables *iterVar){
     Ts = (iterVar->IL+iterVar->IR)/2.0; //Bisection Step
   }
 }
-

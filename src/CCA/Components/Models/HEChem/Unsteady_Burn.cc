@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2017 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -54,9 +54,6 @@
 using namespace Uintah;
 using namespace std;
 
-#define d_SMALL_NUM 1e-100
-#define d_TINY_RHO  1e-12
-
 //__________________________________   
 //  setenv SCI_DEBUG "MPMICE_NORMAL_COUT:+,MPMICE_DOING_COUT:+"
 //  MPMICE_DOING_COUT:   dumps when tasks are scheduled and performed
@@ -70,7 +67,7 @@ Unsteady_Burn::Unsteady_Burn(const ProcessorGroup* myworld,
                              const  SimulationStateP& sharedState,
                              const ProblemSpecP& params,
                              const ProblemSpecP& prob_spec)
-  : HEChemModel(myworld, sharedState),
+  : ModelInterface(myworld, sharedState),
     d_params(params), d_prob_spec(prob_spec) { 
   mymatls = 0;
   Mlb  = scinew MPMLabel();
@@ -328,6 +325,18 @@ void Unsteady_Burn::scheduleComputeModelSources(SchedulerP& sched,
   if(one_matl->removeReference())
     delete one_matl;
 }
+
+
+void Unsteady_Burn::scheduleModifyThermoTransportProperties(SchedulerP&, const LevelP&, const MaterialSet*){
+  // do nothing      
+}
+
+
+void Unsteady_Burn::computeSpecificHeat(CCVariable<double>&, const Patch*, DataWarehouse*, const int){
+  //do nothing
+}
+
+
 
 /*
  ***************** Private Member Functions:******************************
@@ -627,6 +636,16 @@ void Unsteady_Burn::computeModelSources(const ProcessorGroup*,
   if(d_saveConservedVars->energy){
     new_dw->put(sum_vartype(totalHeatReleased),Unsteady_Burn::totalHeatReleasedLabel);
   }
+}
+
+void Unsteady_Burn::scheduleErrorEstimate(const LevelP&,
+                                          SchedulerP&){
+  // Not implemented yet
+}
+
+void Unsteady_Burn::scheduleTestConservation(SchedulerP&,
+                                             const PatchSet*){
+  // Not implemented yet
 }
 
 /****************************************************************************/
