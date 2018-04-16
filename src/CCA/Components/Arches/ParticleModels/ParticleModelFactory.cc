@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2017 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -30,7 +30,6 @@
 #include <CCA/Components/Arches/ParticleModels/BodyForce.h>
 #include <CCA/Components/Arches/ParticleModels/CoalDensity.h>
 #include <CCA/Components/Arches/ParticleModels/CoalTemperature.h>
-#include <CCA/Components/Arches/ParticleModels/Burnout.h>
 #include <CCA/Components/Arches/ParticleModels/Constant.h>
 #include <CCA/Components/Arches/ParticleModels/DepositionVelocity.h>
 #include <CCA/Components/Arches/ParticleModels/DepositionEnthalpy.h>
@@ -43,20 +42,12 @@
 #include <CCA/Components/Arches/ParticleModels/TotNumDensity.h>
 #include <CCA/Components/Arches/ParticleModels/CharOxidationps.h>
 #include <CCA/Components/Arches/ParticleModels/PartVariablesDQMOM.h>
-#include <CCA/Components/Arches/ParticleModels/DQMOMNoInversion.h>
-#include <CCA/Components/Arches/ParticleModels/FaceParticleVel.h>
-#include <CCA/Components/Arches/ParticleModels/WDragModel.h>
 
 
 using namespace Uintah;
 
-ParticleModelFactory::ParticleModelFactory( const ApplicationCommon* arches ) :
-TaskFactoryBase(arches)
-{
-
-  _factory_name = "ParticleModelFactory";
-
-}
+ParticleModelFactory::ParticleModelFactory()
+{}
 
 ParticleModelFactory::~ParticleModelFactory()
 {}
@@ -64,29 +55,31 @@ ParticleModelFactory::~ParticleModelFactory()
 void
 ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
 {
+  /*
 
-  int N = 0;
+    <ParticleModels>
+      <model label="some unique name" type="defined type">
+
+        <spec consistent with model type>
+
+      </model>
+    </ParticleModels>
+
+
+   */
+  int N;
 
   if (db->findBlock("CQMOM") ) {
-
-    N = ArchesCore::get_num_env(db, ArchesCore::CQMOM_METHOD);
-
-  } else if (db->findBlock("DQMOM") ) {
-
-    N = ArchesCore::get_num_env(db, ArchesCore::DQMOM_METHOD);
-
-    //Currently, this allocates the source terms for the DQMOM transport
-    // for both the production and new kokkos line of code. Thus, it
-    // always needs to be 'on' for both forks.
-    std::string task_name = "dqmom_no_inversion";
-    TaskInterface::TaskBuilder* tsk = scinew DQMOMNoInversion::Builder( task_name, 0, N );
-    _pre_update_particle_tasks.push_back(task_name);
-    register_task( task_name, tsk );
-
-  } else if (db->findBlock("LagrangianParticles")){
-
+    std::vector<int> N_i;
+    db->findBlock("CQMOM")->require("QuadratureNodes",N_i);
     N = 1;
-
+    for (unsigned int i = 0; i < N_i.size(); i++ ) {
+      N *= N_i[i];
+    }
+  } else if (db->findBlock("DQMOM") ) {
+    db->findBlock("DQMOM")->require("number_quad_nodes",N);
+  } else if (db->findBlock("LagrangianParticles")){
+    N = 1;
   }
 
   // This is a **HACK** to get the post_update_particle_models to execute in a set order.
@@ -191,29 +184,6 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
 
         temp_model_list.insert(temp_model_list.end(), task_name); // order hack
 
-      } else if  ( type == "wdrag" ) {
-
-        const int nQn_part = ArchesCore::get_num_env( db, ArchesCore::DQMOM_METHOD );
-        for ( int i = 0; i < nQn_part; i++ ){
-          std::stringstream ienv;
-          ienv << i;
-          std::string task_name_N = task_name + "_qn" + ienv.str();
-          TaskInterface::TaskBuilder* tsk = scinew WDragModel<CCVariable<double> >::Builder(task_name_N, 0, i);
-          register_task( task_name_N, tsk );
-          _dqmom_model_task.push_back(task_name_N);
-        }
-      } else if  ( type == "char_oxidation_ps" ) {
-
-        const int nQn_part = ArchesCore::get_num_env( db, ArchesCore::DQMOM_METHOD );
-        for ( int i = 0; i < nQn_part; i++ ){
-          std::stringstream ienv;
-          ienv << i;
-          std::string task_name_N = task_name + "_qn" + ienv.str();
-          TaskInterface::TaskBuilder* tsk = scinew CharOxidationps<CCVariable<double> >::Builder(task_name_N, 0, i);
-          register_task( task_name_N, tsk );
-          _dqmom_model_task.push_back(task_name_N);
-        }
-
       } else if  ( type == "gravity" ) {
 
         std::string dependent_type;
@@ -242,22 +212,6 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
 
         temp_model_list.insert(temp_model_list.end(), task_name); // order hack
 
-       } else if  ( type == "particle_face_velocity" ) {
-
-        std::string dependent_type;
-        if ( db_model->findBlock("grid") != nullptr ){
-          db_model->findBlock("grid")->getAttribute("dependent_type", dependent_type);
-        } else {
-          throw InvalidValue("Error: You must specify the <grid> for the constant model", __FILE__, __LINE__);
-        }
-         if ( dependent_type == "CC" ){
-
-          TaskInterface::TaskBuilder* tsk = scinew
-          FaceParticleVel<CCVariable<double> >::Builder(task_name, 0, model_name);
-
-          register_task( task_name, tsk );
-          _dqmom_variables.push_back(task_name);
-       }
       } else if  ( type == "constant" ) {
 
         std::string dependent_type;
@@ -303,16 +257,6 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
 
         temp_model_list.insert(temp_model_list.begin(), task_name); // order hack
 
-      } else if ( type == "burnout" ) {
-
-        TaskInterface::TaskBuilder* tsk = scinew Burnout::Builder(task_name,0,N);
-        register_task( task_name, tsk );
-
-        _coal_models.push_back(task_name);
-        _post_update_particle_tasks.push_back(task_name);
-
-        temp_model_list.insert(temp_model_list.begin(), task_name); // order hack
-
       } else if ( type == "deposition_velocity" ) {
 
         TaskInterface::TaskBuilder* tsk = scinew DepositionVelocity::Builder(task_name,0,N,_shared_state);
@@ -334,11 +278,15 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
         has_rate_enth = true; // order hack
         rate_enth_name = task_name; // order hack
 
+      } else if ( type == "char_oxidation_ps" ) {
+      
+        TaskInterface::TaskBuilder* tsk = scinew CharOxidationps< CCVariable<double> >::Builder(task_name,0);
+        register_task( task_name, tsk );
+        
       } else if ( type == "particle_variables_dqmom" ) {
 
         TaskInterface::TaskBuilder* tsk = scinew PartVariablesDQMOM::Builder(task_name,0);
         register_task( task_name, tsk );
-        _dqmom_variables.push_back(task_name);
 
       } else if ( type == "rate_deposition" ) {
 
@@ -471,51 +419,18 @@ ParticleModelFactory::build_all_tasks( ProblemSpecP& db )
     for (ProblemSpecP db_model = db_pm->findBlock("model"); db_model != nullptr;
          db_model = db_model->findNextBlock("model")){
 
-
       std::string model_name;
       std::string type;
       db_model->getAttribute("label",model_name );
       db_model->getAttribute("type", type );
+
       print_task_setup_info( model_name, type );
+      TaskInterface* tsk = retrieve_task(model_name);
 
-      if (type == "wdrag") {
-        const int nQn_part = ArchesCore::get_num_env( db, ArchesCore::DQMOM_METHOD );
-        for ( int i = 0; i < nQn_part; i++ ){
-          std::stringstream ienv;
-          ienv << i;
-          std::string model_name_N = model_name + "_qn" + ienv.str();
-          TaskInterface* tsk = retrieve_task(model_name_N);
+      tsk->problemSetup( db_model );
 
-          tsk->problemSetup( db_model );
-          tsk->create_local_labels();
-        }
-
-      } else if (type == "char_oxidation_ps") {
-        const int nQn_part = ArchesCore::get_num_env( db, ArchesCore::DQMOM_METHOD );
-        for ( int i = 0; i < nQn_part; i++ ){
-          std::stringstream ienv;
-          ienv << i;
-          std::string model_name_N = model_name + "_qn" + ienv.str();
-          TaskInterface* tsk = retrieve_task(model_name_N);
-
-          tsk->problemSetup( db_model );
-          tsk->create_local_labels();
-        }
-      } else {
-        TaskInterface* tsk = retrieve_task(model_name);
-
-        tsk->problemSetup( db_model );
-        tsk->create_local_labels();
-      }
-    }
-
-    if (db->findBlock("DQMOM") ) {
-      //See comment above about this task.
-      std::string task_name = "dqmom_no_inversion";
-      print_task_setup_info( task_name, "DQMOM: No Inversion");
-      TaskInterface* tsk = retrieve_task(task_name);
-      tsk->problemSetup(db);
       tsk->create_local_labels();
+
     }
 
   }
