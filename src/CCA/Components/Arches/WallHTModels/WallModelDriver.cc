@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2017 The University of Utah
  *
   is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -58,7 +58,8 @@ _shared_state( shared_state )
   // Time Step
   _timeStepLabel = VarLabel::create(timeStep_name, timeStep_vartype::getTypeDescription());
 
-  _simulationTimeLabel = VarLabel::find(simTime_name); 
+  // Simulation Time
+  _simulationTimeLabel = VarLabel::create(simTime_name, simTime_vartype::getTypeDescription());
 
   // delta t
   VarLabel* nonconstDelT =
@@ -79,6 +80,7 @@ WallModelDriver::~WallModelDriver()
   }
 
   VarLabel::destroy(_timeStepLabel);
+  VarLabel::destroy(_simulationTimeLabel);
   VarLabel::destroy(_delTLabel);
 
   VarLabel::destroy( _T_copy_label );
@@ -134,7 +136,7 @@ WallModelDriver::problemSetup( const ProblemSpecP& input_db )
 
 
   do_coal_region = false;
-
+  
   db->getWithDefault("relaxation_coef", _relax, 1.0);
 
 
@@ -170,13 +172,11 @@ WallModelDriver::problemSetup( const ProblemSpecP& input_db )
       _all_ht_models.push_back( coal_ht );
 
       _dep_vel_name = get_dep_vel_name( db_model );
-      _k_ash_uncertain = get_k_ash_uncertain( db_model );
       _extra_src_flux_names = get_extra_src_flux_names( db_model );
       _num_extra_src = 0;
       for(std::vector<string>::const_iterator i = _extra_src_flux_names.begin(); i != _extra_src_flux_names.end(); ++i) {
-        _num_extra_src += 1;
+        _num_extra_src += 1; 
       }
-      _Nenv = ArchesCore::get_num_env( db_model, ArchesCore::DQMOM_METHOD );
 
     } else {
 
@@ -218,19 +218,12 @@ WallModelDriver::sched_doWallHT( const LevelP& level, SchedulerP& sched, const i
   _HF_B_label     = VarLabel::find( "radiationFluxB" );
 
   if (do_coal_region){
-    for(int i=0; i<_num_extra_src; i++) {
-      VarLabel * extra_src_varlabel_temp = VarLabel::find(_extra_src_flux_names[i]);
-      _extra_src_varlabels.push_back(extra_src_varlabel_temp);
-    }
+      for(int i=0; i<_num_extra_src; i++) {
+        VarLabel * extra_src_varlabel_temp = VarLabel::find(_extra_src_flux_names[i]);
+        _extra_src_varlabels.push_back(extra_src_varlabel_temp);
+      }
     _ave_dep_vel_label = VarLabel::find(_dep_vel_name);
-    for(int i=0; i<_Nenv; i++) {
-      const std::string d_vol_ave_num_s = ArchesCore::append_env("d_vol_ave_num",i);
-      const std::string d_vol_ave_den_s = ArchesCore::append_env("d_vol_ave_den",i);
-      VarLabel * particle_flow_rate_d_temp = VarLabel::find(d_vol_ave_num_s);
-      VarLabel * particle_flow_rate_temp = VarLabel::find(d_vol_ave_den_s);
-      _particle_flow_rate_varlabels.push_back(particle_flow_rate_temp);
-      _particle_flow_rate_d_varlabels.push_back(particle_flow_rate_d_temp);
-    }
+    _d_vol_ave_label = VarLabel::find("d_vol_ave");
   }
 
   if ( !check_varlabels() ){
@@ -266,12 +259,9 @@ WallModelDriver::sched_doWallHT( const LevelP& level, SchedulerP& sched, const i
       task->requires( Task::OldDW, _thermal_cond_sb_s_label, Ghost::None, 0 );
       task->requires( Task::OldDW, _thermal_cond_sb_l_label, Ghost::None, 0 );
       task->requires( Task::OldDW, _ave_dep_vel_label, Ghost::None, 0 );
+      task->requires( Task::OldDW, _d_vol_ave_label, Ghost::None, 0 );
       for(int i=0; i<_num_extra_src; i++) {
         task->requires( Task::OldDW, _extra_src_varlabels[i] , Ghost::None, 0 );
-      }
-      for(int i=0; i<_Nenv; i++) {
-        task->requires( Task::OldDW, _particle_flow_rate_d_varlabels[i] , Ghost::None, 0 );
-        task->requires( Task::OldDW, _particle_flow_rate_varlabels[i] , Ghost::None, 0 );
       }
     }
     //task->requires( Task::OldDW , _True_T_Label   , Ghost::None , 0 );
@@ -360,19 +350,12 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
 
       if (do_coal_region){
         vars.num_extra_src = _num_extra_src;
-        vars.Nenv = _Nenv;
-        vars.k_ash_uncertain = _k_ash_uncertain;
         vars.extra_src.resize(_num_extra_src);
-        vars.particle_flow_rate.resize(_Nenv);
-        vars.particle_flow_rate_d.resize(_Nenv);
         for(int i=0; i<_num_extra_src; i++) {
-          old_dw->get( vars.extra_src[i] , _extra_src_varlabels[i], _matl_index, patch, Ghost::None, 0 ); // get all of the extra sources to add to the net flux balance.
-        }
-        for(int i=0; i<_Nenv; i++) {
-          old_dw->get( vars.particle_flow_rate_d[i] , _particle_flow_rate_d_varlabels[i], _matl_index, patch, Ghost::None, 0 ); // particle flow rate to wall * size
-          old_dw->get( vars.particle_flow_rate[i] , _particle_flow_rate_varlabels[i], _matl_index, patch, Ghost::None, 0 ); // particle flow rate
+          old_dw->get( vars.extra_src[i] , _extra_src_varlabels[i], _matl_index, patch, Ghost::None, 0 ); // get all of the extra sources to add to the net flux balance. 
         }
         old_dw->get( vars.ave_deposit_velocity , _ave_dep_vel_label, _matl_index, patch, Ghost::None, 0 ); // from particle model
+        old_dw->get( vars.d_vol_ave , _d_vol_ave_label, _matl_index, patch, Ghost::None, 0 ); // from particle model
         old_dw->get( vars.deposit_thickness_old , _deposit_thickness_label, _matl_index, patch, Ghost::None, 0 );
         old_dw->get( vars.deposit_thickness_sb_s_old , _deposit_thickness_sb_s_label, _matl_index, patch, Ghost::None, 0 );
         old_dw->get( vars.deposit_thickness_sb_l_old , _deposit_thickness_sb_l_label, _matl_index, patch, Ghost::None, 0 );
@@ -994,7 +977,6 @@ void
 WallModelDriver::CoalRegionHT::problemSetup( const ProblemSpecP& input_db ){
 
   ProblemSpecP db = input_db;
-  CoalHelper& coal_helper = CoalHelper::self();
   db->getWithDefault( "max_it", _max_it, 50 );
   db->getWithDefault( "initial_tol", _init_tol, 1e-3 );
   db->getWithDefault( "tol", _tol, 1e-5 );
@@ -1006,8 +988,6 @@ WallModelDriver::CoalRegionHT::problemSetup( const ProblemSpecP& input_db ){
     m_em_model = scinew dynamic_e(db);
   } else if (emissivity_model_type == 3){
     m_em_model = scinew pokluda_e(db);
-  } else if (emissivity_model_type == 4){
-    m_em_model = scinew pokluda_v(db);
   } else {
     throw InvalidValue("ERROR: WallModelDriver: No emissivity model selected.",__FILE__,__LINE__);
   }
@@ -1020,7 +1000,7 @@ WallModelDriver::CoalRegionHT::problemSetup( const ProblemSpecP& input_db ){
   } else {
     throw InvalidValue("ERROR: WallModelDriver: No thermal conductivity model selected.",__FILE__,__LINE__);
   }
-
+  
   std::vector<double> default_comp = {39.36,25.49, 7.89,  10.12, 2.46, 0.0, 1.09, 4.10};
   std::vector<double> y_ash;
   db->getWithDefault( "sb_ash_composition", y_ash, default_comp);
@@ -1028,18 +1008,18 @@ WallModelDriver::CoalRegionHT::problemSetup( const ProblemSpecP& input_db ){
   std::for_each(y_ash.begin(), y_ash.end(), [&] (double n) { sum_y_ash += n;});
   for(std::vector<int>::size_type i = 0; i != y_ash.size(); i++) {
     y_ash[i]=y_ash[i]/sum_y_ash;
-  }
+  } 
   //                      0      1       2        3       4        5       6      7
-  //                      sio2,  al2o3,  cao,     fe2o3,  na2o,    bao,    tio2,  mgo.
+  //                      sio2,  al2o3,  cao,     fe2o3,  na2o,    bao,    tio2,  mgo.  
   std::vector<double> MW={60.08, 101.96, 56.0774, 159.69, 61.9789, 153.33, 79.866,40.3044};
   std::vector<double> x_ash;
   double sum_x_ash = 0.0;
   for(std::vector<int>::size_type i = 0; i != y_ash.size(); i++) {
        sum_x_ash += y_ash[i]*MW[i];
-  }
+  } 
   for(std::vector<int>::size_type i = 0; i != y_ash.size(); i++) {
        x_ash.push_back( y_ash[i]*MW[i] / sum_x_ash );
-  }
+  } 
 
   double rho_ash_bulk;
   if ( db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")){
@@ -1050,7 +1030,7 @@ WallModelDriver::CoalRegionHT::problemSetup( const ProblemSpecP& input_db ){
   }
   double p_void0;
   db->getWithDefault( "sb_deposit_porosity",p_void0,0.6); // note here we are using the sb layer to estimate the wall density no the enamel layer.
-  double deposit_density = rho_ash_bulk * p_void0;
+  double deposit_density = rho_ash_bulk * p_void0;  
 
   for ( ProblemSpecP r_db = db->findBlock("coal_region"); r_db != nullptr; r_db = r_db->findNextBlock("coal_region") ) {
 
@@ -1058,7 +1038,7 @@ WallModelDriver::CoalRegionHT::problemSetup( const ProblemSpecP& input_db ){
     ProblemSpecP geometry_db = r_db->findBlock("geom_object");
     GeometryPieceFactory::create( geometry_db, info.geometry );
     r_db->require("erosion_thickness", info.dy_erosion);
-    info.T_slag = coal_helper.get_coal_db().T_fluid;
+    info.T_slag = ParticleTools::getAshFluidTemperature(r_db);
     r_db->require("tscale_dep", info.t_sb);
     r_db->require("k", info.k);
     r_db->require("wall_thickness", info.dy);
@@ -1075,8 +1055,8 @@ WallModelDriver::CoalRegionHT::problemSetup( const ProblemSpecP& input_db ){
     r_db->getWithDefault("enamel_deposit_thickness", info.dy_dep_en,0.0);
     r_db->getWithDefault("wall_emissivity", info.emissivity, 1.0);
     r_db->require("tube_side_T", info.T_inner);
-    info.deposit_density = deposit_density;
-    info.x_ash = x_ash;
+    info.deposit_density = deposit_density; 
+    info.x_ash = x_ash; 
     _regions.push_back( info );
 
   }
@@ -1086,11 +1066,9 @@ WallModelDriver::CoalRegionHT::problemSetup( const ProblemSpecP& input_db ){
 void
 WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars, CCVariable<double>& T ){
 
-  double residual, TW_new, T_old, net_q, net_q_radiation, rad_q, extra_src_sum, total_area_face, average_area_face, R_wall, R_en, R_sb, R_tot, Emiss, dp_arrival,dp_flow, tau_sint;
+  double residual, TW_new, T_old, net_q, net_q_radiation, rad_q, extra_src_sum, total_area_face, average_area_face, R_wall, R_en, R_sb, R_tot, Emiss, dp_arrival, tau_sint;
   double T_i, T_en, T_metal, T_sb_l, T_sb_s, dy_dep_sb_s, dy_dep_sb_l, dy_dep_sb_l_old, dy_dep_en, k_en, k_sb_s, k_sb_l, k_en_old, k_sb_s_old, k_sb_l_old;
-  std::vector<double> vdot;
-  std::vector<double> Dp_vec;
-  const std::string enamel_name = "enamel";
+  const std::string enamel_name = "enamel"; 
   const std::string sb_name = "sb";
   const std::string sb_l_name = "sb_liquid";
   vector<Patch::FaceType> bf;
@@ -1185,36 +1163,26 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
 
               rad_q /= total_area_face; // representative radiative flux to the cell.
               average_area_face = total_area_face/total_flux_ind;
-
-              extra_src_sum = 0; // add up heat flux contribution from conduction or other additional source terms.
+              
+              extra_src_sum = 0; // add up heat flux contribution from conduction or other additional source terms. 
               for(int i=0; i<vars.num_extra_src; i++) {
-                extra_src_sum+=vars.extra_src[i][c]; // get all of the extra sources to add to the net flux balance.
+                extra_src_sum+=vars.extra_src[i][c]; // get all of the extra sources to add to the net flux balance. 
               }
 
               // We are using the old emissivity, and thermal conductivities for the calculation of the deposition regime
-              // and the new temperature. We then update the emissivity and thermal conductivies using the new temperature.
-              // This effectivly time-lags the emissivity and thermal conductivies by one radiation-solve. We chose to do this
-              // because we didn't want to make the temperature solve more expensive.
+              // and the new temperature. We then update the emissivity and thermal conductivies using the new temperature.                   
+              // This effectivly time-lags the emissivity and thermal conductivies by one radiation-solve. We chose to do this                
+              // because we didn't want to make the temperature solve more expensive.                                
               k_en=vars.thermal_cond_en_old[c];
               k_sb_s=vars.thermal_cond_sb_s_old[c];
               k_sb_l=vars.thermal_cond_sb_l_old[c];
-              Emiss=vars.emissivity_old[c];
+              Emiss=vars.emissivity_old[c]; 
               TW_new =  vars.T_real_old[c];
               T_old =  vars.T_real_old[c];
-
-              dp_arrival=0.0;
-              dp_flow=0.0;
-              vdot.clear();
-              Dp_vec.clear();
-              for(int i=0; i<vars.Nenv; i++) {
-                dp_arrival+=vars.particle_flow_rate_d[i][c];
-                dp_flow+=vars.particle_flow_rate[i][c];
-                vdot.push_back(vars.particle_flow_rate[i][c]);
-                Dp_vec.push_back(vars.particle_flow_rate_d[i][c]/vars.particle_flow_rate[i][c]);
-              }
-              dp_arrival=dp_arrival/dp_flow; // [m^3/s * m]/[m^3/s]
+                                            
+              dp_arrival=vars.d_vol_ave[c];
               tau_sint=min(dp_arrival/max(vars.ave_deposit_velocity[c],1e-50),1e10); // [s]
-              dy_dep_sb_s = std::min(vars.ave_deposit_velocity[c]*wi.t_sb, wi.dy_erosion);// This includes our crude erosion model. If the deposit wants to grow above a certain size it will erode.
+              dy_dep_sb_s = std::min(vars.ave_deposit_velocity[c]*wi.t_sb, wi.dy_erosion);// This includes our crude erosion model. If the deposit wants to grow above a certain size it will erode. 
 
               // here we computed quantaties to find which deposition regime we are in.
               dy_dep_en = wi.dy_dep_en;
@@ -1235,36 +1203,36 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
               double rad_q_max = (qnet_max - extra_src_sum)/Emiss + _sigma_constant*std::pow( Ts_max,4.0);
 
               if (rad_q < rad_q_melt){
-                // regime 1
-                // dy_dep_sb_s = vars.ave_deposit_velocity[c] * wi.t_sb; // this has already been computed above
+                // regime 1 
+                // dy_dep_sb_s = vars.ave_deposit_velocity[c] * wi.t_sb; // this has already been computed above 
                 dy_dep_sb_l = 0.0;
                 R_tot = R_wall + R_en + dy_dep_sb_s/k_sb_s;
                 newton_solve( TW_new, wi.T_inner, T_old, R_tot, rad_q, Emiss, extra_src_sum );
               } else if (rad_q>=rad_q_melt && rad_q<=rad_q_max){
-                // regime 2
+                // regime 2 
                 dy_dep_sb_l = (dsb_l_max/(rad_q_max-rad_q_melt))*(rad_q-rad_q_melt);
                 R_tot = dy_dep_sb_l/k_sb_l;
                 newton_solve( TW_new, wi.T_slag, T_old, R_tot, rad_q, Emiss, extra_src_sum );
-                // now we can solve for the solid layer thickness given the new surface temperature.
+                // now we can solve for the solid layer thickness given the new surface temperature. 
                 double qnet = Emiss*(rad_q - _sigma_constant * std::pow( TW_new, 4.0 )) + extra_src_sum;
                 qnet = std::abs(qnet) > 1e-12 ? qnet : 1e-12; // to avoid div by zero and preserve the sign.
                 dy_dep_sb_s = k_sb_s*((TW_new-wi.T_inner)/qnet - R_wall - R_en - dy_dep_sb_l/k_sb_l);
               } else { // rad_q > rad_q_max
-                // regime 3
+                // regime 3 
                 dy_dep_sb_s = 0.0;
                 dy_dep_sb_l = dsb_l_max;
                 residual = 0.0;
                 for ( int iterT=0; iterT < 100; iterT++) { // iterate tc until we reach a consistent solution.
-                  dy_dep_sb_l_old = dy_dep_sb_l;
+                  dy_dep_sb_l_old = dy_dep_sb_l;  
                   double qnet = Emiss*(rad_q - _sigma_constant * std::pow( TW_new, 4.0 )) + extra_src_sum;
                   qnet = std::abs(qnet) > 1e-12 ? qnet : 1e-12; // to avoid div by zero and preserve the sign.
                   R_tot = R_wall + R_en + dy_dep_sb_l/k_sb_l;
                   newton_solve( TW_new, wi.T_inner, T_old, R_tot, rad_q, Emiss, extra_src_sum );
-                  T_i = TW_new - qnet * dy_dep_sb_l / k_sb_l;// this is the interface temperature between the liquid and the enamel.
+                  T_i = TW_new - qnet * dy_dep_sb_l / k_sb_l;// this is the interface temperature between the liquid and the enamel. 
                   urbain_viscosity(visc, T_i, wi.x_ash);
                   kin_visc = visc/wi.deposit_density;
                   dy_dep_sb_l = a_p*std::pow(kin_visc*kin_visc/9.8,1./3.)*std::pow(4.*(mdot/cell_width)/visc,b_p);
-                  residual = std::abs(dy_dep_sb_l_old - dy_dep_sb_l)/(dy_dep_sb_l+1e-100);
+                  residual = std::abs(dy_dep_sb_l_old - dy_dep_sb_l)/(dy_dep_sb_l+1e-100); 
                   if (residual < 1e-4){
                     break;
                   }
@@ -1278,33 +1246,29 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
 
               vars.T_real[c] = (1 - vars.relax) * vars.T_real_old[c] + vars.relax * TW_new; // this is the real wall temperature, vars.T_real_old is the old solution for "temperature".
               // update the net heat flux, emissivity, and thermal conductivies with the new time-averaged wall temperature and thickness
-              double T_lim = std::max(273.0,std::min(3500.0,vars.T_real[c]));
-              m_em_model->model(Emiss,wi.emissivity,T_lim,dp_arrival, tau_sint, Dp_vec, vdot);
+              m_em_model->model(Emiss,wi.emissivity,vars.T_real[c],dp_arrival, tau_sint);
               vars.emissivity[c]=Emiss;
               net_q = Emiss * (rad_q - _sigma_constant * std::pow( vars.T_real[c], 4.0 )) + extra_src_sum;
               residual = 0.0;
               for ( int iterT=0; iterT < 100; iterT++) { // iterate tc until we reach a consistent solution.
-                k_sb_s_old = k_sb_s;
-                k_sb_l_old = k_sb_l;
-                k_en_old = k_en;
-                T_sb_s = vars.T_real[c] - net_q * dy_dep_sb_l / k_sb_l; // Temperature between the liquid and solid sb layer.
-                T_en = T_sb_s - net_q * dy_dep_sb_s / k_sb_s; // Temperature between the solid sb and enamel layer.
-                T_metal = T_en - net_q * dy_dep_en / k_en; // Temperature between the enamel and sb layer.
-                T_sb_l = std::max(wi.T_inner,(vars.T_real[c] + T_sb_s)/2.0);//Temperature at the center of liquid sb layer. std::max is needed because of the negative temperatures during initialization.
+                k_sb_s_old = k_sb_s; 
+                k_sb_l_old = k_sb_l; 
+                k_en_old = k_en; 
+                T_sb_s = vars.T_real[c] - net_q * dy_dep_sb_l / k_sb_l; // Temperature between the liquid and solid sb layer. 
+                T_en = T_sb_s - net_q * dy_dep_sb_s / k_sb_s; // Temperature between the solid sb and enamel layer. 
+                T_metal = T_en - net_q * dy_dep_en / k_en; // Temperature between the enamel and sb layer. 
+                T_sb_l = std::max(wi.T_inner,(vars.T_real[c] + T_sb_s)/2.0);//Temperature at the center of liquid sb layer. std::max is needed because of the negative temperatures during initialization. 
                 T_sb_s = std::max(wi.T_inner,(T_sb_s + T_en)/2.0);//Temperature at the center of the solid sb layer. std::max is needed because of the negative temperatures during initialization.
                 T_en = std::max(wi.T_inner,(T_en + T_metal)/2.0);//Temperature at the center of the enamel layer. std::max is needed because of the negative temperatures during initialization.
                 m_tc_model->model(k_en,wi.k_dep_en,T_en,enamel_name);//enamel layer
                 m_tc_model->model(k_sb_s,wi.k_dep_sb,T_sb_s,sb_name);//solid sb layer
                 m_tc_model->model(k_sb_l,wi.k_dep_sb,T_sb_l,sb_l_name);//liquid sb layer
-                k_en = std::pow(10.,std::log10(std::max(k_en,1e-15))+vars.k_ash_uncertain); // add positive contribution for uncertainty in t.c.
-                k_sb_s = std::pow(10.,std::log10(std::max(k_sb_s,1e-15))+vars.k_ash_uncertain); // add positive contribution for uncertainty in t.c.
-                k_sb_l = std::pow(10.,std::log10(std::max(k_sb_l,1e-15))+vars.k_ash_uncertain); // add positive contribution for uncertainty in t.c.
-                residual = std::abs(k_sb_s - k_sb_s_old)/(k_sb_s_old+1e-100) + std::abs(k_sb_l - k_sb_l_old)/(k_sb_l_old+1e-100) + std::abs(k_en - k_en_old)/(k_en_old+1e-100);
+                residual = std::abs(k_sb_s - k_sb_s_old)/(k_sb_s_old+1e-100) + std::abs(k_sb_l - k_sb_l_old)/(k_sb_l_old+1e-100) + std::abs(k_en - k_en_old)/(k_en_old+1e-100); 
                 if (residual < 1e-4){
                   break;
                 }
               }
-              vars.thermal_cond_en[c]= k_en;
+              vars.thermal_cond_en[c]=k_en;
               vars.thermal_cond_sb_s[c]=k_sb_s;
               vars.thermal_cond_sb_l[c]=k_sb_l;
               // now to make consistent with assumed emissivity of 1 in radiation model:
@@ -1407,7 +1371,7 @@ WallModelDriver::CoalRegionHT::newton_solve(double &TW_new, double &T_shell, dou
 void WallModelDriver::CoalRegionHT::urbain_viscosity(double &visc, double &T, std::vector<double> &x_ash)
 {  // Urbain model 1981
   //0      1       2        3       4        5       6      7
-  //sio2,  al2o3,  cao,     fe2o3,  na2o,    bao,    tio2,  mgo.
+  //sio2,  al2o3,  cao,     fe2o3,  na2o,    bao,    tio2,  mgo.  
   const double N = x_ash[0];
   const double al2o3=x_ash[1];
 
@@ -1421,14 +1385,14 @@ void WallModelDriver::CoalRegionHT::urbain_viscosity(double &visc, double &T, st
   const double nio=0.0;
   const double tio2=x_ash[6];
   const double zro2=0.0;
-
+  
   const double M=1*(cao+mgo+na2o+k2o+feo+mno+nio)+2*(tio2+zro2);
   const double alpha=M/(M+al2o3);
   const double B0=13.8+39.9355*alpha-44.049*alpha*alpha;
   const double B1=30.481-117.1505*alpha+129.9978*alpha*alpha;
   const double B2=-40.9429+234.0486*alpha-300.04*alpha*alpha;
   const double B3=60.7619-153.9276*alpha+211.1616*alpha*alpha;
-
+  
   const double B=B0+B1*N+B2*N*N+B3*N*N*N;
   const double A=std::exp(-(0.2693*B+11.6725));
   visc=0.1*A*T*std::exp((B*1000)/T);
