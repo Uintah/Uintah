@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2018 The University of Utah
+#  Copyright (c) 1997-2017 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -39,11 +39,6 @@ SRCDIR  := CCA/Components
 # Arches
 ifeq ($(BUILD_ARCHES),yes)
   ARCHES   := $(SRCDIR)/Arches
-endif
-
-# EXAMPLES
-ifeq ($(BUILD_EXAMPLES),yes)
-  EXAMPLES :=$(SRCDIR)/Examples
 endif
 
 # FVM
@@ -93,7 +88,6 @@ endif
 
 SUBDIRS := \
         $(ARCHES)                      \
-        $(EXAMPLES)                    \
         $(FVM)                         \
         $(HEAT)                        \
         $(ICE)                         \
@@ -101,31 +95,21 @@ SUBDIRS := \
         $(MPMARCHES)                   \
         $(MPMFVM)                      \
         $(MPMICE)                      \
-        $(PARENT)                      \
         $(PHASEFIELD)                  \
-        $(WASATCH)
-
-ifeq ($(BUILD_MINIMAL),yes)
-  SUBDIRS += \
-        $(SRCDIR)/DataArchiver         \
-        $(SRCDIR)/LoadBalancers        \
-        $(SRCDIR)/ProblemSpecification \
-        $(SRCDIR)/Schedulers
-else
-  SUBDIRS += \
+        $(WASATCH)                     \
         $(SRCDIR)/Application          \
         $(SRCDIR)/DataArchiver         \
+        $(SRCDIR)/Examples             \
         $(SRCDIR)/LoadBalancers        \
         $(SRCDIR)/Models               \
         $(SRCDIR)/OnTheFlyAnalysis     \
         $(SRCDIR)/Parent               \
-	$(SRCDIR)/PostProcessUda       \
         $(SRCDIR)/ProblemSpecification \
+        $(SRCDIR)/PostProcessUda       \
         $(SRCDIR)/Regridder            \
         $(SRCDIR)/Schedulers           \
         $(SRCDIR)/SimulationController \
         $(SRCDIR)/Solvers              \
-        $(SRCDIR)/SwitchingCriteria
-endif
+        $(SRCDIR)/SwitchingCriteria    
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
