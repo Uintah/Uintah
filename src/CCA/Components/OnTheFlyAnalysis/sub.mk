@@ -76,7 +76,11 @@ ifeq ($(BUILD_MPM),yes)
              CCA/Components/MPM/Materials
 endif
 
+<<<<<<< HEAD
 # MPM-ICE analysis modules
+=======
+# MPM-ICE analysis
+>>>>>>> removed need for calls to shared state for the time step and sim time
 ifeq ($(BUILD_MPM)$(BUILD_ICE),yesyes)
   SRCS += \
         $(SRCDIR)/1stLawThermo.cc

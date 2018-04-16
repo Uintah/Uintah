@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2017 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -48,6 +48,13 @@ namespace Uintah {
   class AnalysisModule : public UintahParallelComponent {
   public:
     
+    // Other stats that can be used by individual components.
+    // enum OtherStat
+    // {
+    //   OnTheFlyAnalysisMinMaxTime = 0,
+    //   MAX_OTHER_STATS
+    // };
+    
     AnalysisModule(const ProcessorGroup* myworld,
 		   const SimulationStateP sharedState,
 		   const ProblemSpecP& module_spec);
@@ -81,18 +88,19 @@ namespace Uintah {
     virtual void scheduleDoAnalysis_preReloc(SchedulerP& sched,
                                     const LevelP& level) =0;
 
+    virtual const VarLabel* getDelTLabel() const { return m_delTLabel; }
+
   protected:
-    ApplicationInterface*  m_application {nullptr};
-    Output*                m_output      {nullptr};
-    Scheduler*             m_scheduler   {nullptr};
+    Output*    m_output    {nullptr};
+    Scheduler* m_scheduler {nullptr};
 
     SimulationStateP m_sharedState {nullptr};
     
     ProblemSpecP m_module_spec {nullptr};
 
-    const VarLabel* m_timeStepLabel       {nullptr};
+    const VarLabel* m_timeStepLabel {nullptr};
     const VarLabel* m_simulationTimeLabel {nullptr};
-    const VarLabel* m_delTLabel           {nullptr};
+    const VarLabel* m_delTLabel {nullptr};
   };
 }
 
