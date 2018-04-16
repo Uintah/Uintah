@@ -1,4 +1,4 @@
-#include "StringNames.h"
+#include <CCA/Components/Wasatch/Coal/StringNames.h>
 
 using std::string;
 
@@ -16,7 +16,7 @@ StringNames::StringNames()
   cpd_g("cpd_g_"), cpd_delta("cpd_delta_"),
   cpd_kg("cpd_kg_"), cpd_y("cpd_y_"), cpd_dy("cpd_dy_"), dev_mv("Volatile_Mass"),
   cpd_kb("cpd_kb"), cpd_C_rhs("cpd_C_rhs"), dev_volatile_src("dev_volatile_rhs"),
-  cpd_product_rhs ("cpd_product_rhs"), cpd_charProd_rhs("cpd_char_production_"),
+  cpd_product_rhs ("cpd_product_rhs"), cpd_charProd_rhs("cpd_char_production"),
   char_mass("char_mass"),
   char_coco2ratio("char_Mole_CO2/CO"),
   char_heattogas("heat_released_to_gas"),
@@ -41,7 +41,18 @@ StringNames::StringNames()
   cpd_tar("cpd_tar"), cpd_lbPopulation("cpd_lbPopulation"),
   sarofim_tar("sarofim_tar"), sarofim_tar_src("sarofim_tar_src"),
   singlerate_tar("singlerate_tar"), singlerate_tar_src("singlerate_tar_src"),
-  moisture("moisture_mass")
+  moisture("moisture_mass"),
+  coalConsumedGasYi("coalConsumedGasY_"),
+  coalProducedGasYi("coalProducedGasY_"),
+  coalYiConsumptionRate("coal_consumption_rate_"),
+  coalYiProductionRate("coal_production_rate_"),
+  coalTotalGasConsumptionRate("coal_total_gas_consumption_rate"),
+  coalTotalGasProductionRate("coal_total_gas_production_rate"),
+  coalConsumedGasEnthalpy("coal_consumed_gas_enthalpy"),
+  coalProducedGasEnthalpy("coal_produced_gas_enthalpy"),
+  coalConsumedGasEnthalpySrc("coal_consumed_gas_enthalpy_src"),
+  coalProducedGasEnthalpySrc("coal_produced_gas_enthalpy_src"),
+  heatFromCharRxns("heat_from_char_rxns")
 {}
 //--------------------------------------------------------------------
 StringNames::~StringNames()

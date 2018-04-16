@@ -1,4 +1,4 @@
-#include "KobSarofimInterface.h"
+#include <CCA/Components/Wasatch/Coal/Devolatilization/KobayashiSarofim/KobSarofimInterface.h>
 
 #include <stdexcept>
 #include <sstream>

@@ -1,4 +1,4 @@
-#include "SingleRateInterface.h"
+#include <CCA/Components/Wasatch/Coal/Devolatilization/SingleRate/SingleRateInterface.h>
 
 #include <stdexcept>
 #include <sstream>
@@ -6,7 +6,7 @@
 #include <spatialops/particles/ParticleFieldTypes.h>
 #include <spatialops/Nebo.h>
 
-#include "SingleRateData.h"
+#include <CCA/Components/Wasatch/Coal/Devolatilization/SingleRate/SingleRateData.h>
 
 
 // expressions we build here

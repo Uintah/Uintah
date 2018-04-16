@@ -3,7 +3,7 @@
 
 #include <expression/Expression.h>
 
-#include "KobSarofimData.h"
+#include <CCA/Components/Wasatch/Coal/Devolatilization/KobayashiSarofim/KobSarofimData.h>
 #include <spatialops/structured/SpatialFieldStore.h>
 
 /**

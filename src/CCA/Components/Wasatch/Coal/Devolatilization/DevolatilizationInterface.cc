@@ -1,4 +1,4 @@
-#include "DevolatilizationInterface.h"
+#include <CCA/Components/Wasatch/Coal/Devolatilization/DevolatilizationInterface.h>
 #include <stdexcept>
 #include <sstream>
 #include <cstdlib>

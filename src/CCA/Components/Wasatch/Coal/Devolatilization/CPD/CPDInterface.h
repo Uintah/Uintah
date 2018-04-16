@@ -16,7 +16,7 @@
 #include <CCA/Components/Wasatch/Coal/StringNames.h>
 #include <CCA/Components/Wasatch/Coal/CoalData.h>
 
-#include "CPDData.h"
+#include <CCA/Components/Wasatch/Coal/Devolatilization/CPD/CPDData.h>
 
 namespace DEV { class DevolatilizationBase; }
 

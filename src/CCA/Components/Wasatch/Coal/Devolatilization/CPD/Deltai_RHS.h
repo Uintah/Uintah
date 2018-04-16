@@ -2,7 +2,7 @@
 #define Deltai_RHS_Expr_h
 
 #include <expression/Expression.h>
-#include "CPDData.h"
+#include <CCA/Components/Wasatch/Coal/Devolatilization/CPD/CPDData.h>
 #include <vector>
 
 namespace CPD{

@@ -15,8 +15,8 @@
     <TimeIntegrator>RK3SSP</TimeIntegrator>
     
     <Coal>
-     <DevolModel name="CPD"                />
-     <CharModel  name="CCK"                />
+     <DevolModel name="DAE"                />
+     <CharModel  name="LH"                />
      <CoalType   name="Eastern_Bituminous" />
     </Coal>
     
@@ -111,17 +111,19 @@
       <Constant>0.0</Constant>      
     </BasicExpression>
 
+    <!-- if a tiny ammount of O2 is not added initally, the temperature solve fails after
+          a sing time steo -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
       <NameTag name="O2"/>
-      <Constant>0.2</Constant>
+      <Constant>1e-14</Constant>
     </BasicExpression>
     
     <!-- Set the initial condition on temperature -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
       <NameTag name="Temperature"/>
-      <Constant>1000</Constant>
+      <Constant>700</Constant>
     </BasicExpression>
     <!-- Set the initial condition expression for x-velocity -->
     <BasicExpression type="SVOL">
@@ -193,7 +195,7 @@
   </Wasatch>
 
   <Time>
-    <maxTime>5e-8</maxTime>
+    <maxTime>20e-8</maxTime>
     <initTime>0.0</initTime>
     <delt_min>1e-8</delt_min>
     <delt_max>1e-8</delt_max>
@@ -201,7 +203,7 @@
   </Time>
 
   <DataArchiver>
-    <filebase>coal-cpd-cck-1D.uda</filebase>
+    <filebase>coal-inertGas-dae-1D.uda</filebase>
     <outputTimestepInterval>2</outputTimestepInterval>
     <outputInitTimestep/>
     <checkpoint cycle="2" interval="2.5e-8"/>
@@ -261,19 +263,21 @@
     <save label="coalConsumedGasY_H2O"/>
     
     <save label="coalProducedGasY_CO"/>
-    <save label="coalProducedGasY_CO2"/>
     <save label="coalProducedGasY_H2"/>
     <save label="coalProducedGasY_H2O"/>
-    <save label="coalProducedGasY_HCN"/>
-    <save label="coalProducedGasY_NH3"/>
-    <save label="coalProducedGasY_CH4"/>
+    <save label="coalProducedGasY_CO2"/>
     
     <save label="coal_total_gas_consumption_rate"/>
 	<save label="coal_total_gas_production_rate"/>
 	<!-- - - - - - - - - - - - - - - - - - - - -  - - - - - - - - - - - - - - - - - -  -->
+    
+    <save label="dev_char_production"/>
+ 
+    <save label="singlerate_CO_rhs"/>    
+    <save label="singlerate_H2_rhs"/>
+    <save label="singlerate_tar_src"/>
 
   <save label="char_H2O_rhs"/>
-  <save label="char_CH4_rhs"/>
   <save label="char_CO_rhs" />
   <save label="char_CO2_rhs"/>
   <save label="char_H2_rhs" />
