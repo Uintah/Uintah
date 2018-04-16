@@ -90,8 +90,6 @@ namespace Uintah {
       return solveFrequency;
     }
 
-    std::string m_variable;
-    
     SimulationStateP m_sharedState;
   };
 
