@@ -32,9 +32,9 @@ SRCDIR   := CCA/Components/Models/MultiMatlExchange
 ifeq ($(BUILD_MPM)$(BUILD_ICE),yesyes)
 
 SRCS     += $(SRCDIR)/ExchangeFactory.cc      \
-            $(SRCDIR)/ExchangeModel.cc        \
+	     $(SRCDIR)/ExchangeModel.cc        \
             $(SRCDIR)/ExchangeCoefficients.cc \
-            $(SRCDIR)/Scalar.cc               \
-            $(SRCDIR)/Slip.cc
+            $(SRCDIR)/Scalar.cc             
+#            $(SRCDIR)/Slip.cc 
 
 endif

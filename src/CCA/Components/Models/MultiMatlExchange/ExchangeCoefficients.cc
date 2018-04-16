@@ -50,9 +50,8 @@ ExchangeCoefficients::~ExchangeCoefficients()
 
 //______________________________________________________________________
 //
-void ExchangeCoefficients::problemSetup(const ProblemSpecP  & matl_ps,
-                                        const int numMatls,
-                                        ProblemSpecP        & exch_ps )
+void ExchangeCoefficients::problemSetup(const ProblemSpecP& matl_ps,
+                                        const int numMatls)
 {
   d_numMatls = numMatls;
   if (d_numMatls == 1 ){
@@ -61,7 +60,7 @@ void ExchangeCoefficients::problemSetup(const ProblemSpecP  & matl_ps,
 
   //__________________________________
   // Pull out the constant Coeff exchange coefficients
-  exch_ps = matl_ps->findBlock("exchange_properties");
+  ProblemSpecP exch_ps = matl_ps->findBlock("exchange_properties");
   if (!exch_ps){
     throw ProblemSetupException("Cannot find exchange_properties tag", __FILE__, __LINE__);
   }
@@ -128,18 +127,15 @@ void ExchangeCoefficients::problemSetup(const ProblemSpecP  & matl_ps,
 
 //______________________________________________________________________
 //
-void ExchangeCoefficients::outputProblemSpec(ProblemSpecP& matl_ps,
-                                             ProblemSpecP& exch_prop_ps)
+void ExchangeCoefficients::outputProblemSpec(ProblemSpecP& ps)
 {
-  if (d_numMatls == 1 ){
-    return;
-  }
-  // <exchange_properties>
-  exch_prop_ps = matl_ps->appendChild("exchange_properties");
+  ProblemSpecP exch_prop_ps = ps->appendChild("exchange_properties");
   exch_prop_ps->appendElement("heatExchangeCoeff",d_heatExchCoeffModel);
 
-  // <exchange_coefficients>
-  ProblemSpecP exch_coeff_ps = exch_prop_ps->appendChild("exchange_coefficients");
+  ProblemSpecP exch_coeff_ps =
+    exch_prop_ps->appendChild("exchange_coefficients");
+
+
   exch_coeff_ps->appendElement("momentum", d_K_mom_V);
   exch_coeff_ps->appendElement("heat",     d_K_heat_V);
 

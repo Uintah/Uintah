@@ -41,6 +41,7 @@ SRCS += \
         $(SRCDIR)/MinMax.cc                \
         $(SRCDIR)/momentumAnalysis.cc      \
         $(SRCDIR)/planeExtract.cc          \
+        $(SRCDIR)/radiometer.cc            \
         $(SRCDIR)/statistics.cc
 
 PSELIBS := \
@@ -76,22 +77,10 @@ ifeq ($(BUILD_MPM),yes)
              CCA/Components/MPM/Materials
 endif
 
-<<<<<<< HEAD
 # MPM-ICE analysis modules
-=======
-# MPM-ICE analysis
->>>>>>> removed need for calls to shared state for the time step and sim time
 ifeq ($(BUILD_MPM)$(BUILD_ICE),yesyes)
   SRCS += \
         $(SRCDIR)/1stLawThermo.cc
-endif
-
-# Radiation analysis modules
-ifeq ($(BUILD_MODELS_RADIATION),yes)
-  SRCS += \
-        $(SRCDIR)/radiometer.cc
-
-  PSELIBS += CCA/Components/Models
 endif
 
 LIBS := $(XML_LIBRARY) $(MPI_LIBRARY)

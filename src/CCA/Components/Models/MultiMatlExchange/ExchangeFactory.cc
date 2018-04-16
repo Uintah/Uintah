@@ -24,9 +24,8 @@
 
 #include <CCA/Components/Models/MultiMatlExchange/ExchangeFactory.h>
 #include <CCA/Components/Models/MultiMatlExchange/Scalar.h>
-#include <CCA/Components/Models/MultiMatlExchange/Slip.h>
+//#include <CCA/Components/Models/MultiMatlExchange/Slip.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-
 
 using namespace std;
 using namespace Uintah;
@@ -60,17 +59,15 @@ ExchangeFactory::create(const ProblemSpecP     & matl_ps,
   //__________________________________
   //    default model
   if( model_ps == nullptr ) {
-    return ( scinew ExchangeModels::ScalarExch( matl_ps, sharedState ));
+    return ( scinew ExchangeModels::ScalarExch( matl_ps, sharedState) );
   }
   
-  //__________________________________
-  //    Other models
   map<string,string> attributes;
   model_ps->getAttributes(attributes);
   std::string model = attributes["type"];
 
   if ( model == "slip" ) {
-    return ( scinew ExchangeModels::SlipExch( exchg_ps, sharedState ));
+//    return ( scinew ExchangeModels::SlipExch( exchg_ps, sharedState) );
   }      
   else {
     throw ProblemSetupException("\nERROR: Unknown exchange model.  "+model,__FILE__, __LINE__);

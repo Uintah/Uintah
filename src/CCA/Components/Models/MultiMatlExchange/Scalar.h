@@ -21,13 +21,12 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+
 #ifndef Models_MultiMatlExchange_Scalar_h
 #define Models_MultiMatlExchange_Scalar_h
 
-#include <CCA/Components/ICE/Core/ICELabel.h>
 #include <CCA/Components/Models/MultiMatlExchange/ExchangeCoefficients.h>
 #include <CCA/Components/Models/MultiMatlExchange/ExchangeModel.h>
-#include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/Variables/ComputeSet.h>
@@ -50,31 +49,20 @@ namespace ExchangeModels{
 
     virtual void problemSetup(const ProblemSpecP & prob_spec);
 
-    virtual void outputProblemSpec(ProblemSpecP & prob_spec);
 
-    virtual void sched_PreExchangeTasks(SchedulerP           & sched,
-                                        const PatchSet       * patches,     
-                                        const MaterialSubset * iceMatls,    
-                                        const MaterialSet    * allMatls){};
-                                        
-    virtual void addExchangeModelRequires ( Task* t,
-                                            const MaterialSubset * zeroMatls,
-                                            const MaterialSubset * iceMatls,
-                                            const MaterialSubset * mpmMatls){};  
-
-    virtual void sched_AddExch_VelFC(SchedulerP           & sched,
-                                     const PatchSet       * patches,
-                                     const MaterialSubset * iceMatls,
-                                     const MaterialSet    * allMatls,
+    virtual void sched_AddExch_VelFC(SchedulerP           & sched,         
+                                     const PatchSet       * patches,       
+                                     const MaterialSubset * iceMatls,      
+                                     const MaterialSet    * allMatls,      
                                      customBC_globalVars  * BC_globalVars,
                                      const bool recursion);
 
 
-    virtual void addExch_VelFC(const ProcessorGroup * pg,
-                               const PatchSubset    * patch,
-                               const MaterialSubset * matls,
-                               DataWarehouse        * old_dw,
-                               DataWarehouse        * new_dw,
+    virtual void addExch_VelFC(const ProcessorGroup * pg,         
+                               const PatchSubset    * patch,      
+                               const MaterialSubset * matls,      
+                               DataWarehouse        * old_dw,     
+                               DataWarehouse        * new_dw,     
                                customBC_globalVars  * BC_globalVars,
                                const bool recursion);
 
@@ -82,16 +70,14 @@ namespace ExchangeModels{
                                            const PatchSet       * patches,
                                            const MaterialSubset * ice_matls,
                                            const MaterialSubset * mpm_matls,
-                                           const MaterialSet    * all_matls,
-                                           customBC_globalVars  * BC_globalVars);
+                                           const MaterialSubset * press_matl,
+                                           const MaterialSet    * all_matls);
 
     virtual void addExch_Vel_Temp_CC( const ProcessorGroup * pg,
                                       const PatchSubset    * patches,
                                       const MaterialSubset * matls,
                                       DataWarehouse        * old_dw,
-                                      DataWarehouse        * new_dw,
-                                      customBC_globalVars  * BC_globalVars);
-  //__________________________________
+                                      DataWarehouse        * new_dw);
   private:
     template<class constSFC, class SFC>
     void vel_FC_exchange( CellIterator  iter,
@@ -105,18 +91,10 @@ namespace ExchangeModels{
                           std::vector< SFC >                   & sp_vol_FC,
                           std::vector< SFC >                   & vel_FCME);
 
-    void addExch_Vel_Temp_CC_1matl(const ProcessorGroup * pg,
-                                   const PatchSubset    * patches,
-                                   const MaterialSubset * matls,
-                                   DataWarehouse        * old_dw,
-                                   DataWarehouse        * new_dws,
-                                   customBC_globalVars  * BC_globalVars);
-
     //__________________________________
     //  variables
     ExchangeCoefficients* d_exchCoeff;
-    MPMLabel* Mlb;
-    ICELabel* Ilb;
+
   };
 }
 }

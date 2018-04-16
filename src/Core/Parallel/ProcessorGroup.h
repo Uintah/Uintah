@@ -27,7 +27,6 @@
 
 #include <Core/Parallel/UintahMPI.h>
 
-#include <string>
 #include <vector>
 
 namespace Uintah {
@@ -66,27 +65,19 @@ class ProcessorGroup {
 
 public:
 
-  ~ProcessorGroup();
+  ~ProcessorGroup(){};
 
-  std::string myProcName() const { return std::string(m_proc_name); }
 
-  // Returns the total number of nodes this MPI session is running on.
-  int nNodes() const { return m_nNodes; }
+  int nNodes() const { return m_nNodes; } // Returns the total number of nodes this MPI session is running on.
   int myNode() const { return m_node; }
-
-  int myNode_nRanks() const { return m_node_nRanks; }
-  int myNode_myRank() const { return m_node_rank; }
-  
-  // Returns the total number of MPI ranks in this MPI session.
-  int nRanks() const { return m_nRanks; }
+  int nRanks() const { return m_nRanks; } // Returns the total number of MPI ranks in this MPI session.
   int myRank() const { return m_rank; }
 
   MPI_Comm getComm() const { return m_comm; }
-  MPI_Comm getNodeComm() const { return m_node_comm; }
 
   MPI_Comm getGlobalComm( int comm_idx ) const
   {
-    if (comm_idx == -1 || m_threads <= 1) {
+    if (comm_idx == -1 || m_threads < 1) {
       return m_comm;
     } else {
       return m_global_comms[comm_idx];
@@ -112,13 +103,8 @@ private:
   ProcessorGroup( ProcessorGroup && )                 = delete;
   ProcessorGroup& operator=( ProcessorGroup && )      = delete;
 
-  char m_proc_name[MPI_MAX_PROCESSOR_NAME];
-  
   int  m_node;   // Node this rank is executing on.
   int  m_nNodes; // Total number of nodes this MPI session is running on.
-
-  int  m_node_rank;   // MPI rank of this process relative to the node.
-  int  m_node_nRanks; // Total number of MPI Ranks relative to the node.
 
   int  m_rank;   // MPI rank of this process.
   int  m_nRanks; // Total number of MPI Ranks.
@@ -126,11 +112,11 @@ private:
   int  m_threads;
 
   MPI_Comm                        m_comm;
-  MPI_Comm                        m_node_comm;
   mutable std::vector<MPI_Comm>   m_global_comms;
   const ProcessorGroup          * m_parent_group;
 
   friend class Parallel;
+
 };
 
 }  // namespace Uintah

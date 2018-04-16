@@ -25,10 +25,11 @@
 #ifndef Models_MultiMatlExchange_Exchange_h
 #define Models_MultiMatlExchange_Exchange_h
 
-
+#include <CCA/Components/ICE/Core/ICELabel.h>
+#include <CCA/Components/MPM/Core/MPMLabel.h>
+#include <CCA/Components/MPMICE/Core/MPMICELabel.h>
 
 #include <CCA/Components/ICE/CustomBCs/C_BC_driver.h>
-#include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/SchedulerP.h>
 #include <Core/Grid/DbgOutput.h>
@@ -50,32 +51,20 @@ namespace Uintah {
     virtual ~ExchangeModel();
 
     virtual void problemSetup(const ProblemSpecP & prob_spec ) = 0;
-    
-    virtual void outputProblemSpec(ProblemSpecP & prob_spec ) = 0;
-  
-    virtual void sched_PreExchangeTasks(SchedulerP           & sched,
-                                        const PatchSet       * patches,     
-                                        const MaterialSubset * iceMatls,    
-                                        const MaterialSet    * allMatls) = 0;
-                                        
-    virtual void addExchangeModelRequires ( Task* t,
-                                            const MaterialSubset * zeroMatls,
-                                            const MaterialSubset * iceMatls,
-                                            const MaterialSubset * mpmMatls) = 0;
-
-    virtual void sched_AddExch_VelFC(SchedulerP           & sched,
-                                     const PatchSet       * patches,
-                                     const MaterialSubset * iceMatls,
-                                     const MaterialSet    * allMatls,
+                               
+    virtual void sched_AddExch_VelFC(SchedulerP           & sched,        
+                                     const PatchSet       * patches,      
+                                     const MaterialSubset * iceMatls,     
+                                     const MaterialSet    * allMatls,     
                                      customBC_globalVars  * BC_globalVars,
                                      const bool recursion) = 0;
 
 
-    virtual void addExch_VelFC(const ProcessorGroup  * pg,
-                               const PatchSubset     * patch,
-                               const MaterialSubset  * matls,
-                               DataWarehouse         * old_dw,
-                               DataWarehouse         * new_dw,
+    virtual void addExch_VelFC(const ProcessorGroup  * pg,        
+                               const PatchSubset     * patch,     
+                               const MaterialSubset  * matls,     
+                               DataWarehouse         * old_dw,    
+                               DataWarehouse         * new_dw,    
                                customBC_globalVars   * BC_globalVars,
                                const bool recursion) = 0;
 
@@ -83,41 +72,46 @@ namespace Uintah {
                                            const PatchSet       * patches,
                                            const MaterialSubset * ice_matls,
                                            const MaterialSubset * mpm_matls,
-                                           const MaterialSet    * all_matls,
-                                           customBC_globalVars  * BC_globalVars) = 0;
+                                           const MaterialSubset * press_matl,
+                                           const MaterialSet    * all_matls) = 0;
 
     virtual void addExch_Vel_Temp_CC( const ProcessorGroup * pg,
                                       const PatchSubset    * patches,
                                       const MaterialSubset * matls,
                                       DataWarehouse        * old_dw,
-                                      DataWarehouse        * new_dw,
-                                      customBC_globalVars  * BC_globalVars) = 0;
+                                      DataWarehouse        * new_dw) = 0;
 
-    void schedComputeSurfaceNormal( SchedulerP     & sched,
-                                    const PatchSet * patches );
 
-    void ComputeSurfaceNormal( const ProcessorGroup *,
-                               const PatchSubset    * patches,
-                               const MaterialSubset *,
-                               DataWarehouse        * old_dw,
-                               DataWarehouse        * new_dw );
+#if 0
+    void scheduleComputeSurfaceNormal( SchedulerP           & sched,
+                                       const PatchSet       * patches,
+                                       const MaterialSubset * mpm_matls,
+                                       const MaterialSubset * press_matl,
+                                       const MaterialSet    * all_matls );
+
+    void ComputeSurfaceNormalValues( const ProcessorGroup *,
+                                     const PatchSubset    * patches,
+                                     const MaterialSubset *,
+                                     DataWarehouse        * old_dw,
+                                     DataWarehouse        * new_dw );
+
+#endif
 
     //__________________________________
-    // variables & objects needed by
+    // variables & objects needed by 
     // the different exchange models.
+    MPMLabel* Mlb;
+    ICELabel* Ilb;
+    MPMICELabel* MIlb;
+
+    const VarLabel* d_vel_CCTransposedLabel;
     const VarLabel* d_surfaceNormLabel;
-    const VarLabel* d_isSurfaceCellLabel;
 
     double d_SMALL_NUM = 1.0e-100;
     int    d_numMatls  = -9;
     SimulationStateP  d_sharedState;
-    MaterialSubset * d_zero_matl;
-
-  private:
-    MPMLabel* Mlb;
-
+    
   };
 }
 
 #endif
-
