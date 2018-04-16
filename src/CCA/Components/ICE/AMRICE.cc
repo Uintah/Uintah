@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2017 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,9 +25,8 @@
 
 #include <CCA/Components/ICE/AMRICE.h>
 #include <CCA/Components/ICE/Materials/ICEMaterial.h>
-#include <Core/Grid/Variables/PerPatchVars.h>
+#include <CCA/Components/Regridder/PerPatchVars.h>
 #include <CCA/Components/Models/FluidsBased/FluidsBasedModel.h>
-#include <CCA/Components/Models/HEChem/HEChemModel.h>
 #include <CCA/Ports/SolverInterface.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/Regridder.h>
@@ -1914,13 +1913,8 @@ void AMRICE::scheduleErrorEstimate(const LevelP& coarseLevel,
   // Models
   for(vector<ModelInterface*>::iterator m_iter  = d_models.begin();
                                         m_iter != d_models.end(); m_iter++){
-      FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( *m_iter );
-      if( fb_model )
-	fb_model->scheduleErrorEstimate(coarseLevel, sched);;
-      
-      HEChemModel* hec_model = dynamic_cast<HEChemModel*>( *m_iter );
-      if( hec_model )
-	hec_model->scheduleErrorEstimate(coarseLevel, sched);;
+    ModelInterface* model = *m_iter;
+    model->scheduleErrorEstimate(coarseLevel, sched);;
   }
 }
 
