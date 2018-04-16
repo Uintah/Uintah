@@ -1326,8 +1326,8 @@ CompTable::remembercomp( Data* newData, const ProcessorGroup* pg )
   
   // ARS - Treat sole vars the same as reduction vars??
   if (newData->m_comp->m_dep_type != Task::Modifies &&
-      vartype != TypeDescription::ReductionVariable /* &&
-						       vartype != TypeDescription::SoleVariable*/ ) {
+      vartype != TypeDescription::ReductionVariable  &&
+      vartype != TypeDescription::SoleVariable ) {
     if (m_data.lookup(newData)) {
       std::cout << "Multiple compute found:\n";
       std::cout << "  matl: " << newData->m_matl << "\n";
