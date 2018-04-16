@@ -18,7 +18,6 @@
     <outputTimestepInterval>1</outputTimestepInterval>
     <!--outputInterval>0.01</outputInterval-->
     <outputInitTimestep/>
-    <save label="burnout"/>
     <save label="divQ"/>
     <save label="heat_source"/>
     <save label="NO_zz"/>
@@ -48,6 +47,7 @@
     <save label="Charmass_os_src_qn0"/>
     <save label="Charmass_os_src_qn1"/>
     <save label="Charmass_os_src_qn2"/>
+    <save label="d_vol_ave"/>
     <save label="conv_scheme_x"/>
     <save label="conv_scheme_y"/>
     <save label="conv_scheme_z"/>
@@ -1809,12 +1809,13 @@
           <absorption_modifier>1.0</absorption_modifier>
         </model>
         <model label="abskp" type="partRadProperties">
-          <subModel>tabulated</subModel>
-          <TablePath>inputs/ARCHES/ClassicMixingTables/radprops/part.mix.gz</TablePath>
+          <subModel>constantCIF</subModel>
           <part_temp_label>temperature_coal</part_temp_label>
           <part_size_label>length</part_size_label>
           <radiateAtGasTemp>false</radiateAtGasTemp>
           <model_type>planck</model_type>
+          <complex_ir_real>2.0</complex_ir_real>
+          <complex_ir_imag>-0.6</complex_ir_imag>
           <const_asymmFact>1</const_asymmFact>
           <absorption_modifier>1.0</absorption_modifier>
         </model>
@@ -1905,8 +1906,6 @@
         <ash_softening_temperature>1530.372</ash_softening_temperature>
         <ash_hemispherical_temperature>1557.039</ash_hemispherical_temperature>
         <ash_fluid_temperature>1621.483</ash_fluid_temperature>
-        <visc_pre_exponential_factor>1.653920826593733e-13</visc_pre_exponential_factor>
-        <visc_activation_energy>47.808431840038367</visc_activation_energy>
         <ultimate_analysis>
           <C>0.55400</C>
           <H>0.03845</H>
@@ -1925,6 +1924,7 @@
         <!-- ash enthalpy (at inlet conditions) [J/kg] -->
         <FOWYDevol>
           <v_hiT>0.55</v_hiT>
+          <Tig>590</Tig>
           <A>19724227.36</A>
           <Ta>1.113e4</Ta>
           <T_hardened_bond>1800.0</T_hardened_bond>
@@ -2043,7 +2043,6 @@
         <model label="temperature_coal" type="coal_temperature">
           <const_size>true</const_size>
         </model>
-        <model label="burnout" type="burnout"/>
         <model label="zhou_deposition" type="rate_deposition">
           <CaO>0.075</CaO>
           <MgO>0.03</MgO>
@@ -2377,6 +2376,12 @@
         <inverse_density_average>false</inverse_density_average>
       </Properties>
       <DQMOM type="weightedAbs">
+        <LinearSolver>
+          <tolerance>1e-5</tolerance>
+          <type>Simplest</type>
+          <maxConditionNumber>10000000000000000</maxConditionNumber>
+          <calcConditionNumber>false</calcConditionNumber>
+        </LinearSolver>
         <number_quad_nodes>3</number_quad_nodes>
         <VelModel type="Dragforce">
         </VelModel>
@@ -2403,13 +2408,13 @@
           <model label="zthermophoresis" type="Thermophoresis">
             <direction>z</direction>
           </model>
-          <model label="devol" type="FOWYDevol">
+          <model label="devol" type="FOWYDevol"> 
           </model>
           <model label="heat" type="EnthalpyShaddix">
             <low_clip>9.9999999999999995e-07</low_clip>
             <high_clip>999999</high_clip>
           </model>
-          <model label="char" type="CharOxidationSmith2016">
+          <model label="char" type="CharOxidationSmith2016"> 
           </model>
           <model label="max_T_rate" type="MaximumTemperature">
           </model>
