@@ -109,7 +109,7 @@ CharOxidationData::
 CharOxidationData( const Coal::CoalType sel )
  : sel_    ( sel ),
   coalComp_( sel ),
-  speciesData_( GasSpec::SpeciesData::self() )
+  speciesData_()
 {
   // I have call this class for two reason :
   // 1- Extract O  mass fraction from parent coal

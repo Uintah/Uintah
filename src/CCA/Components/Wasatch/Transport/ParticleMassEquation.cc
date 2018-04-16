@@ -50,7 +50,6 @@ namespace WasatchCore{
                       const Expr::Tag& pDiameterTag )
         : Expr::Expression<ParticleField>()
       {
-        this->set_gpu_runnable(true);
         pRho_ = create_field_request<ParticleField>(pRhoTag);
         pDiameter_ = create_field_request<ParticleField>(pDiameterTag);
       }

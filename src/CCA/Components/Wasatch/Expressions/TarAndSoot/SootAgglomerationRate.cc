@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/Wasatch/Expressions/TarAndSoot/SootAgglomerationRate.h>
+#include "SootAgglomerationRate.h"
 
 #ifndef PI
 #  define PI 3.1415926535897932384626433832795

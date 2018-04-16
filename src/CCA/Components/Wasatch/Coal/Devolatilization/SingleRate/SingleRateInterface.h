@@ -26,7 +26,7 @@
 #include <CCA/Components/Wasatch/Coal/CoalData.h>
 #include <CCA/Components/Wasatch/Coal/Devolatilization/DevolatilizationBase.h>
 
-#include <CCA/Components/Wasatch/Coal/Devolatilization/SingleRate/SingleRateModel.h>
+#include "SingleRateModel.h"
 
 
 namespace DEV{ class DevolatilizationBase;}

@@ -7,7 +7,7 @@
  *   Department of Chemical Engineering - University of Utah
  */
 
-#include <CCA/Components/Wasatch/Coal/Devolatilization/SingleRate/SingleRateData.h>
+#include "SingleRateData.h"
 
 namespace SNGRATE {
 

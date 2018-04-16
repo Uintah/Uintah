@@ -122,7 +122,7 @@ namespace CHAR{
     void set_data();
 
   private:
-    const GasSpec::SpeciesData& speciesData_;
+    GasSpec::SpeciesData speciesData_;
   };
 
 } // namespace CHAR

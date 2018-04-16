@@ -139,14 +139,11 @@
 #include <CCA/Components/Arches/Filter.h>
 
 #include <cmath>
-#include <mutex>
 
 using namespace std;
 using namespace Uintah;
 
 static DebugStream dbg("ARCHES", false);
-
-extern std::mutex coutLock;
 
 // ****************************************************************************
 // Default constructor for ExplicitSolver
@@ -157,8 +154,9 @@ ExplicitSolver(SimulationStateP& sharedState,
                PhysicalConstants* physConst,
                const ProcessorGroup* myworld,
                ArchesParticlesHelper* particle_helper,
-               SolverInterface* hypreSolver):
-               NonlinearSolver(myworld),
+               SolverInterface* hypreSolver,
+               const ApplicationCommon* arches ):
+               NonlinearSolver(myworld, arches),
                d_sharedState(sharedState),
                d_MAlab(MAlb),
                d_physicalConsts(physConst),
@@ -296,15 +294,15 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
   //------------------ New Task Interface (start) --------------------------------------------------
 
   //build the factories
-  std::shared_ptr<UtilityFactory> UtilF(scinew UtilityFactory());
-  std::shared_ptr<TransportFactory> TransF(scinew TransportFactory());
-  std::shared_ptr<InitializeFactory> InitF(scinew InitializeFactory());
-  std::shared_ptr<ParticleModelFactory> PartModF(scinew ParticleModelFactory());
-  std::shared_ptr<LagrangianParticleFactory> LagF(scinew LagrangianParticleFactory());
-  std::shared_ptr<PropertyModelFactoryV2> PropModelsF(scinew PropertyModelFactoryV2());
-  std::shared_ptr<TurbulenceModelFactory> TurbModelF(scinew TurbulenceModelFactory());
-  std::shared_ptr<BoundaryConditionFactory> BCF(scinew BoundaryConditionFactory());
-  std::shared_ptr<SourceTermFactoryV2> SourceTermV2F(scinew SourceTermFactoryV2());
+  std::shared_ptr<UtilityFactory> UtilF(scinew UtilityFactory(m_arches));
+  std::shared_ptr<TransportFactory> TransF(scinew TransportFactory(m_arches));
+  std::shared_ptr<InitializeFactory> InitF(scinew InitializeFactory(m_arches));
+  std::shared_ptr<ParticleModelFactory> PartModF(scinew ParticleModelFactory(m_arches));
+  std::shared_ptr<LagrangianParticleFactory> LagF(scinew LagrangianParticleFactory(m_arches));
+  std::shared_ptr<PropertyModelFactoryV2> PropModelsF(scinew PropertyModelFactoryV2(m_arches));
+  std::shared_ptr<TurbulenceModelFactory> TurbModelF(scinew TurbulenceModelFactory(m_arches));
+  std::shared_ptr<BoundaryConditionFactory> BCF(scinew BoundaryConditionFactory(m_arches));
+  std::shared_ptr<SourceTermFactoryV2> SourceTermV2F(scinew SourceTermFactoryV2(m_arches));
 
   _task_factory_map.clear();
   _task_factory_map.insert(std::make_pair("utility_factory",UtilF));
@@ -522,24 +520,31 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
   d_props->setBC(d_boundaryCondition);
 
   // ----- DQMOM STUFF:
+  d_kokkos_dqmom_Translate = false;
   ProblemSpecP dqmom_db = db->findBlock("DQMOM");
   if (dqmom_db) {
 
     //turn on DQMOM
     d_doDQMOM = true;
 
+    if ( dqmom_db->findBlock("kokkos_translate")){
+      d_kokkos_dqmom_Translate = true;
+    }
+
     // require that we have weighted or unweighted explicitly specified as an attribute to DQMOM
     // type = "unweightedAbs" or type = "weighedAbs"
     //dqmom_db->getAttribute( "type", d_which_dqmom );
     d_which_dqmom = "weighedAbs";
 
+    m_DQMOMSolverType = "No_Inversion";
+
     ProblemSpecP db_linear_solver = dqmom_db->findBlock("LinearSolver");
-    if( db_linear_solver ) {
-      string d_solverType;
-      db_linear_solver->getWithDefault("type", d_solverType, "LU");
+    if ( db_linear_solver ){
+
+      db_linear_solver->getWithDefault("type", m_DQMOMSolverType, "LU");
 
       // currently, unweighted abscissas only work with the optimized solver -- remove this check when other solvers work:
-      if( d_which_dqmom == "unweightedAbs" && d_solverType != "Optimize" ) {
+      if( d_which_dqmom == "unweightedAbs" && m_DQMOMSolverType != "Optimize" ) {
         throw ProblemSetupException("Error!: The unweighted abscissas only work with the optimized solver.", __FILE__, __LINE__);
       }
     }
@@ -1127,8 +1132,8 @@ ExplicitSolver::initialize( const LevelP     & level,
     BFM::iterator i_turb_model_fac = _task_factory_map.find("turbulence_model_factory");
 
     i_trans_fac->second->set_bcHelper( m_bcHelper[level->getID()] );
+    i_util_fac->second->set_bcHelper( m_bcHelper[level->getID()] );
 
-    bool is_restart = false;
     const bool dont_pack_tasks = false;
     TaskFactoryBase::TaskMap all_tasks;
 
@@ -1138,40 +1143,18 @@ ExplicitSolver::initialize( const LevelP     & level,
     //transport factory
     //  initialize
     _task_factory_map["transport_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
+
     //  apply BCs
     _task_factory_map["transport_factory"]->schedule_task_group( "all_tasks", TaskInterface::BC, dont_pack_tasks, level, sched, matls );
 
     // boundary condition factory
     _task_factory_map["boundary_condition_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
 
-    //initialize factory
-    all_tasks.clear();
-    all_tasks = i_init_fac->second->retrieve_all_tasks();
-    for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++) {
-      if ( i->first == "Lx" || i->first == "Lvel" || i->first == "Ld") {
-        std::cout << "Delaying particle calc..." << std::endl;
-      } else {
-        i->second->schedule_init(level, sched, matls, is_restart);
-      }
-    }
+    i_lag_fac->second->schedule_task_group("all_tasks", TaskInterface::INITIALIZE,
+      dont_pack_tasks, level, sched, matls );
 
-    //have to delay and order these specific tasks...clean this up later...
-    TaskFactoryBase::TaskMap::iterator iLX = all_tasks.find("Lx");
-    if ( iLX != all_tasks.end() ) iLX->second->schedule_init(level, sched, matls, is_restart);
-    TaskFactoryBase::TaskMap::iterator iLD = all_tasks.find("Ld");
-    if ( iLD != all_tasks.end() ) iLD->second->schedule_init(level, sched, matls, is_restart);
-    TaskFactoryBase::TaskMap::iterator iLV = all_tasks.find("Lvel");
-    if ( iLV != all_tasks.end() ) iLV->second->schedule_init(level, sched, matls, is_restart);
-
-    //lagrangian particles
-    all_tasks.clear();
-    all_tasks = i_lag_fac->second->retrieve_all_tasks();
-    for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++) {
-      i->second->schedule_init(level, sched, matls, is_restart );
-    }
-
-    //turbulence models
-    i_turb_model_fac->second->schedule_initialization( level, sched, matls, is_restart );
+    i_init_fac->second->schedule_task_group("all_tasks", TaskInterface::INITIALIZE,
+      dont_pack_tasks, level, sched, matls );
 
     //------------------ New Task Interface (end) ------------------------------------------------
 
@@ -1233,24 +1216,39 @@ ExplicitSolver::initialize( const LevelP     & level,
 
     d_turbModel->sched_reComputeTurbSubmodel(sched, level, matls, d_init_timelabel);
 
+    //--- New interface
+    _task_factory_map["turbulence_model_factory"]->schedule_task_group( "all_tasks", TaskInterface::TIMESTEP_EVAL, dont_pack_tasks, level, sched, matls );
+    // ----
+
     //----------------------
     //DQMOM initialization
-    if(d_doDQMOM)
-    {
-      sched_weightInit(level, sched);
-      sched_weightedAbsInit(level, sched);
+    if (d_doDQMOM) {
 
-      // check to make sure that all dqmom equations have BCs set.
-      DQMOMEqnFactory& dqmom_factory = DQMOMEqnFactory::self();
-      DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmom_factory.retrieve_all_eqns();
-      for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++) {
-        EqnBase* eqn = ieqn->second;
-        eqn->sched_checkBCs( level, sched, false );
-        //as needed for the coal propery models
-        DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(ieqn->second);
-        dqmom_eqn->sched_getUnscaledValues( level, sched );
+      if ( !d_kokkos_dqmom_Translate ){
+
+        sched_weightInit(level, sched);
+        sched_weightedAbsInit(level, sched);
+
+        // check to make sure that all dqmom equations have BCs set.
+        DQMOMEqnFactory& dqmom_factory = DQMOMEqnFactory::self();
+        DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmom_factory.retrieve_all_eqns();
+        for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++) {
+          EqnBase* eqn = ieqn->second;
+          eqn->sched_checkBCs( level, sched, false );
+          //as needed for the coal propery models
+          DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(ieqn->second);
+          dqmom_eqn->sched_getUnscaledValues( level, sched );
+        }
+      } else {
+
+        // Models
+        // initialize all of the computed variables for the coal models
+        CoalModelFactory& modelFactory = CoalModelFactory::self();
+        modelFactory.sched_init_all_models( level, sched );
       }
+
       d_partVel->schedInitPartVel(level, sched);
+
     }
 
     //----------------------
@@ -1271,12 +1269,9 @@ ExplicitSolver::initialize( const LevelP     & level,
     }
 
     //------------------ New Task Interface (start) ------------------------------------------------
-    //particle models
-    all_tasks.clear();
-    all_tasks = i_partmod_fac->second->retrieve_all_tasks();
-    for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++) {
-      i->second->schedule_init(level, sched, matls, is_restart );
-    }
+    i_partmod_fac->second->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE,
+                                                dont_pack_tasks, level, sched, matls );
+
     //------------------ New Task Interface (end) ------------------------------------------------
 
     // check to make sure that all the scalar variables have BCs set and set intrusions:
@@ -1367,17 +1362,16 @@ ExplicitSolver::sched_restartInitialize( const LevelP& level, SchedulerP& sched 
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
 
   typedef std::map<std::string, std::shared_ptr<TaskFactoryBase> > BFM;
-  BFM::iterator i_property_models_fac = _task_factory_map.find("property_models_factory");
-  TaskFactoryBase::TaskMap all_prop_tasks = i_property_models_fac->second->retrieve_all_tasks();
-  for ( TaskFactoryBase::TaskMap::iterator i = all_prop_tasks.begin(); i != all_prop_tasks.end(); i++) {
 
-    i->second->schedule_init( level, sched, matls, doingRestart );
-
-  }
+  _task_factory_map["property_models_factory"]->schedule_task_group("all_tasks", TaskInterface::RESTART_INITIALIZE,
+    false, level, sched, matls );
 
   setupBoundaryConditions( level, sched, doingRestart );
 
   d_tabulated_properties->set_bcHelper( m_bcHelper[level->getIndex()]);
+
+  BFM::iterator i_util_fac = _task_factory_map.find("utility_factory");
+  i_util_fac->second->set_bcHelper( m_bcHelper[level->getIndex()]);
 
   //Arches only currently solves on the finest level
   if ( !level->hasFinerLevel() ){
@@ -1424,7 +1418,8 @@ ExplicitSolver::sched_restartInitialize( const LevelP& level, SchedulerP& sched 
     d_boundaryCondition->sched_setupNewIntrusions( sched, level, matls );
 
     //turbulence models
-    _task_factory_map["turbulence_model_factory"]->schedule_initialization( level, sched, matls, doingRestart );
+    _task_factory_map["turbulence_model_factory"]->schedule_task_group("all_tasks", TaskInterface::RESTART_INITIALIZE,
+                                                                        false, level, sched, matls );
 
   }
 
@@ -1484,26 +1479,6 @@ ExplicitSolver::initializeVariables(const ProcessorGroup* ,
 
     //total KE:
     new_dw->put( sum_vartype(0.0), d_lab->d_totalKineticEnergyLabel );
-
-    //---------------------------------------------------------------------------------------------
-    //test the bc stuff:
-    // const BndMapT& my_map = m_bcHelper[level->getID()]->get_boundary_information();
-    //
-    // for ( auto i_map = my_map.begin(); i_map != my_map.end(); i_map++ ){
-    //
-    //   std::cout << "Getting an iterator for bc: " << i_map->first << std::endl;
-    //   BndSpec a_spec = i_map->second;
-    //   std::cout << "    the type  =  " << a_spec.type << std::endl;
-    //   Uintah::Iterator my_iter = m_bcHelper[level->getID()]->get_uintah_extra_bnd_mask(a_spec, patch->getID());
-    //   ////this is how you would retrieve a specific variable
-    //   //const BndCondSpec* test_var_find = a_spec.find("mixture_fraction");
-    //   //this is how you would loop over the iterator
-    //   for (my_iter.reset(); !my_iter.done(); my_iter++ ){
-    //     std::cout << " iter = " << *my_iter << std::endl;
-    //   }
-    //
-    // }
-    //---------------------------------------------------------------------------------------------
 
     allocateAndInitializeToC( d_lab->d_densityGuessLabel  , new_dw, indx, patch, 0.0 );
     allocateAndInitializeToC( d_lab->d_uVelRhoHatLabel    , new_dw, indx, patch, 0.0 );
@@ -1672,8 +1647,9 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     matls );
 
   BFM::iterator i_particle_models = _task_factory_map.find("particle_model_factory");
-  i_particle_models->second->schedule_task_group( "all_tasks", TaskInterface::TIMESTEP_INITIALIZE, dont_pack_tasks, level, sched,
-    matls );
+  i_particle_models->second->schedule_task_group( "all_tasks", TaskInterface::TIMESTEP_INITIALIZE,
+                                                  dont_pack_tasks, level, sched,
+                                                  matls );
 
   _task_factory_map["turbulence_model_factory"]->schedule_task_group( "all_tasks", TaskInterface::TIMESTEP_INITIALIZE, dont_pack_tasks, level, sched,
     matls );
@@ -1693,9 +1669,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     const TaskController::Packing& packed_info = tsk_controller.get_packing_info();
 
     _task_factory_map["property_models_factory"]->schedule_task_group( "pre_update_property_models",
-      TaskInterface::TIMESTEP_EVAL, dont_pack_tasks, level, sched, matls, curr_level );
-
-    i_transport->second->schedule_task_group("scalar_psi_builders",
       TaskInterface::TIMESTEP_EVAL, dont_pack_tasks, level, sched, matls, curr_level );
 
     i_transport->second->schedule_task_group("scalar_rhs_builders",
@@ -1733,69 +1706,137 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     if (d_doDQMOM) {
 
-      CoalModelFactory& modelFactory = CoalModelFactory::self();
-      DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns();
-      DQMOMEqnFactory::EqnMap& weights_eqns = dqmomFactory.retrieve_weights_eqns();
-      DQMOMEqnFactory::EqnMap& abscissas_eqns = dqmomFactory.retrieve_abscissas_eqns();
-
       // Compute the particle velocities at time t w^tu^t/w^t
       d_partVel->schedComputePartVel( level, sched, curr_level );
+      CoalModelFactory& modelFactory = CoalModelFactory::self();
 
       // Evaluate DQMOM equations
-      for ( DQMOMEqnFactory::EqnMap::iterator iEqn = weights_eqns.begin();
-            iEqn != weights_eqns.end(); iEqn++){
+      if ( !d_kokkos_dqmom_Translate ){
 
-        DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
+        DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns();
+        DQMOMEqnFactory::EqnMap& weights_eqns = dqmomFactory.retrieve_weights_eqns();
+        DQMOMEqnFactory::EqnMap& abscissas_eqns = dqmomFactory.retrieve_abscissas_eqns();
 
-        dqmom_eqn->sched_evalTransportEqn( level, sched, curr_level );//compute rhs
-      }
+        for ( DQMOMEqnFactory::EqnMap::iterator iEqn = weights_eqns.begin();
+              iEqn != weights_eqns.end(); iEqn++){
 
-      for ( DQMOMEqnFactory::EqnMap::iterator iEqn = abscissas_eqns.begin();
-            iEqn != abscissas_eqns.end(); iEqn++){
+          DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
 
-        DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
+          dqmom_eqn->sched_evalTransportEqn( level, sched, curr_level );//compute rhs
+        }
 
-        dqmom_eqn->sched_evalTransportEqn( level, sched, curr_level );//compute rhs
-      }
+        for ( DQMOMEqnFactory::EqnMap::iterator iEqn = abscissas_eqns.begin();
+              iEqn != abscissas_eqns.end(); iEqn++){
 
-      // schedule the models for evaluation
-      modelFactory.sched_coalParticleCalculation( level, sched, curr_level );// compute drag, devol, char, etc models..
+          DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
 
-      // schedule DQMOM linear solve
-      d_dqmomSolver->sched_solveLinearSystem( level, sched, curr_level );
-
-      // Evaluate DQMOM equations
-      for ( DQMOMEqnFactory::EqnMap::iterator iEqn = weights_eqns.begin();
-            iEqn != weights_eqns.end(); iEqn++){
-
-        DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
-
-        dqmom_eqn->sched_updateTransportEqn( level, sched, curr_level );// add sources and solve equation
-      }
-
-      for ( DQMOMEqnFactory::EqnMap::iterator iEqn = abscissas_eqns.begin();
-            iEqn != abscissas_eqns.end(); iEqn++){
-
-        DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
-
-        dqmom_eqn->sched_updateTransportEqn( level, sched, curr_level );// add sources and solve equation
-      }
+          dqmom_eqn->sched_evalTransportEqn( level, sched, curr_level );//compute rhs
+        }
 
 
-      for( DQMOMEqnFactory::EqnMap::iterator iEqn = dqmom_eqns.begin();
-           iEqn!=dqmom_eqns.end(); ++iEqn ) {
+        i_particle_models->second->schedule_task_group( "dqmom_variables",
+                                                         TaskInterface::TIMESTEP_EVAL,
+                                                         dont_pack_tasks, level, sched,
+                                                         matls, curr_level );
+        // schedule the models for evaluation
+        modelFactory.sched_coalParticleCalculation( level, sched, curr_level );// compute drag, devol, char, etc models..
 
-        DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
+        i_particle_models->second->schedule_task_group( "dqmom_model_task",
+                                                         TaskInterface::TIMESTEP_EVAL,
+                                                         dont_pack_tasks, level, sched,
+                                                         matls, curr_level );
 
-        //get the abscissa values
-        dqmom_eqn->sched_getUnscaledValues( level, sched );
-      }
+        // schedule DQMOM linear solve
+        if ( m_DQMOMSolverType != "No_Inversion"){
 
-      // calculate the moments
-      bool saveMoments = d_dqmomSolver->getSaveMoments();
-      if( saveMoments ) {
-        // schedule DQMOM moment calculation
-        d_dqmomSolver->sched_calculateMoments( level, sched, curr_level );
+          d_dqmomSolver->sched_solveLinearSystem( level, sched, curr_level );
+
+        } else {
+
+          i_particle_models->second->schedule_task_group( "pre_update_property_models",
+                                                          TaskInterface::TIMESTEP_EVAL,
+                                                          dont_pack_tasks, level, sched,
+                                                          matls, curr_level);
+
+        }
+
+        // Evaluate DQMOM equations
+        for ( DQMOMEqnFactory::EqnMap::iterator iEqn = weights_eqns.begin();
+              iEqn != weights_eqns.end(); iEqn++){
+
+          DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
+
+          dqmom_eqn->sched_updateTransportEqn( level, sched, curr_level );// add sources and solve equation
+        }
+
+        for ( DQMOMEqnFactory::EqnMap::iterator iEqn = abscissas_eqns.begin();
+              iEqn != abscissas_eqns.end(); iEqn++){
+
+          DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
+
+          dqmom_eqn->sched_updateTransportEqn( level, sched, curr_level );// add sources and solve equation
+        }
+
+
+        for( DQMOMEqnFactory::EqnMap::iterator iEqn = dqmom_eqns.begin();
+             iEqn!=dqmom_eqns.end(); ++iEqn ) {
+
+          DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
+
+          //get the abscissa values
+          dqmom_eqn->sched_getUnscaledValues( level, sched );
+        }
+
+        // calculate the moments
+        bool saveMoments = d_dqmomSolver->getSaveMoments();
+        if( saveMoments ) {
+          // schedule DQMOM moment calculation
+          d_dqmomSolver->sched_calculateMoments( level, sched, curr_level );
+        }
+
+      } else {
+
+        const int time_substep = curr_level;
+
+        // schedule the models for evaluation
+        modelFactory.sched_coalParticleCalculation( level, sched, curr_level );// compute drag, devol, char, etc models..
+
+        i_particle_models->second->schedule_task_group( "part_face_velocities",
+                                                         TaskInterface::TIMESTEP_EVAL,
+                                                         dont_pack_tasks, level, sched,
+                                                         matls, time_substep);
+
+        i_particle_models->second->schedule_task_group( "drag_model_task",
+                                                         TaskInterface::TIMESTEP_EVAL,
+                                                         dont_pack_tasks, level, sched,
+                                                         matls, time_substep);
+
+        i_particle_models->second->schedule_task_group( "pre_update_property_models",
+                                                        TaskInterface::TIMESTEP_EVAL,
+                                                        dont_pack_tasks, level, sched,
+                                                        matls , time_substep);
+
+        i_transport->second->schedule_task_group("dqmom_diffusion_flux_builders",
+          TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
+
+        i_transport->second->schedule_task_group("dqmom_eqns",
+          TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
+
+        i_transport->second->schedule_task_group("dqmom_eqns",
+          TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
+
+        i_transport->second->schedule_task_group("dqmom_fe_update",
+          TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
+
+        // computes ic from w*ic  :
+        i_transport->second->schedule_task_group("dqmom_ic_from_wic",
+          TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
+
+        i_transport->second->schedule_task_group("dqmom_ic_from_wic",
+          TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
+
+        i_transport->second->schedule_task_group("dqmom_fe_update",
+          TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
       }
 
     }
@@ -1895,12 +1936,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     //ParticleModels evaluated after the RK averaging.
     //All particle transport should draw from the "latest" DW (old for rk = 0, new for rk > 0)
-    std::vector<std::string> post_update_part_tasks
-      = i_particle_models->second->retrieve_task_subset("post_update_particle_models");
-    for ( std::vector<std::string>::iterator itsk = post_update_part_tasks.begin(); itsk != post_update_part_tasks.end(); itsk++ ){
-      TaskInterface* tsk = i_particle_models->second->retrieve_task(*itsk);
-      tsk->schedule_task( level, sched, matls, TaskInterface::STANDARD_TASK, curr_level );
-    }
+    i_particle_models->second->schedule_task_group("post_update_particle_models", TaskInterface::TIMESTEP_EVAL,
+      dont_pack_tasks, level, sched, matls, curr_level );
 
 
     // STAGE 0
@@ -1915,15 +1952,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                       d_timeIntegratorLabels[curr_level]);
 
     //------------------ New Task Interface (start) ------------------------------------------------
-    const TaskFactoryBase::TypeToTaskMap& den_guess_tasks = i_property_models->second->retrieve_type_to_tasks();
-    TaskFactoryBase::TypeToTaskMap::const_iterator i_den_guess = den_guess_tasks.find("density_predictor");
-    if ( i_den_guess != den_guess_tasks.end() ){
-      for ( std::vector<std::string>::const_iterator idg = i_den_guess->second.begin();
-            idg != i_den_guess->second.end(); idg++ ){
-        TaskInterface* tsk = i_property_models->second->retrieve_task(*idg);
-        tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, curr_level);
-      }
-    }
+    // i_property_models->second->schedule_task_group("density_predictor", TaskInterface::TIMESTEP_EVAL,
+    //   dont_pack_tasks, level, sched, matls, curr_level );
     //------------------ New Task Interface (end) ------------------------------------------------
 
 
@@ -1959,12 +1989,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       hl_model->sched_computeProp( level, sched, curr_level );
 
     //------------------ New Task Interface (start) ------------------------------------------------
-    std::vector<std::string> pre_table_props
-    = i_property_models->second->retrieve_task_subset("pre_table_post_iv_update");
-    for ( std::vector<std::string>::iterator itsk = pre_table_props.begin(); itsk != pre_table_props.end(); itsk++ ){
-      TaskInterface* tsk = i_property_models->second->retrieve_task(*itsk);
-      tsk->schedule_task( level, sched, matls, TaskInterface::STANDARD_TASK, curr_level );
-    }
+    i_property_models->second->schedule_task_group("pre_table_post_iv_update", TaskInterface::TIMESTEP_EVAL,
+      dont_pack_tasks, level, sched, matls, curr_level );
     //------------------ New Task Interface (end) ------------------------------------------------
 
 
@@ -2012,6 +2038,10 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     // linearizes and solves pressure eqn
     // first computes, hatted velocities and then computes
     // the pressure poisson equation
+
+//    _task_factory_map["turbulence_model_factory"]->schedule_task_group( "momentum_closure",
+//      TaskInterface::TIMESTEP_EVAL, dont_pack_tasks, level, sched, matls, curr_level );
+
     d_momSolver->solveVelHat(level, sched, d_timeIntegratorLabels[curr_level], curr_level );
 
     for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
@@ -2088,7 +2118,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       //TABLE LOOKUP #3
       initialize_it  = false;
       modify_ref_den = false;
-      //d_props->sched_computeProps( level, sched, initialize_it, modify_ref_den, curr_level );
       d_tabulated_properties->sched_getState( level, sched, initialize_it, modify_ref_den, curr_level );
     }
 
@@ -2134,7 +2163,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                                            d_timeIntegratorLabels[curr_level]);
     }
 
-    // d_turbCounter = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
     timeStep_vartype timeStep(0);
     if( sched->get_dw(0) && sched->get_dw(0)->exists( d_lab->d_timeStepLabel ) )
       sched->get_dw(0)->get( timeStep, d_lab->d_timeStepLabel );
@@ -2142,54 +2170,40 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       sched->get_dw(1)->get( timeStep, d_lab->d_timeStepLabel );
 
     d_turbCounter = timeStep;
-    
+
     if ((d_turbCounter%d_turbModelCalcFreq == 0)&&
         ((curr_level==0)||((!(curr_level==0))&&d_turbModelRKsteps)))
       d_turbModel->sched_reComputeTurbSubmodel(sched, level, matls,
                                                d_timeIntegratorLabels[curr_level]);
 
-    TaskFactoryBase::TaskMap all_turb_models =
-      _task_factory_map["turbulence_model_factory"]->retrieve_all_tasks();
-    for ( TaskFactoryBase::TaskMap::iterator i = all_turb_models.begin(); i != all_turb_models.end(); i++){
-      i->second->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, curr_level);
-    }
+    _task_factory_map["turbulence_model_factory"]->schedule_task_group("all_tasks", TaskInterface::TIMESTEP_EVAL,
+      dont_pack_tasks, level, sched, matls, curr_level );
 
 
   } // END OF RK LOOP
 
   //variable math:
   const std::vector<std::string> math_tasks = i_util->second->retrieve_tasks_by_type("variable_math");
-
-  for( std::vector<std::string>::const_iterator i = math_tasks.begin(); i != math_tasks.end(); i++ ) {
-    TaskInterface* tsk = i_util->second->retrieve_task(*i);
-    //time substep??
-    tsk->schedule_task( level, sched, matls, TaskInterface::STANDARD_TASK, 0 );
-  }
+  i_util->second->schedule_task_group("all_math_tasks", math_tasks, TaskInterface::TIMESTEP_EVAL,
+    dont_pack_tasks,
+    level, sched, matls, 0 );
 
   //Property Models before starting over
-  std::vector<std::string> final_prop_tasks = i_property_models->second->retrieve_task_subset("final_property_models");
-  for ( std::vector<std::string>::iterator itsk = final_prop_tasks.begin(); itsk != final_prop_tasks.end(); itsk++ ){
+  i_property_models->second->schedule_task_group("final_property_models",
+    TaskInterface::TIMESTEP_EVAL, dont_pack_tasks,
+    level, sched, matls, 1 );
 
-    TaskInterface* tsk = i_property_models->second->retrieve_task(*itsk);
-    //passing in curr_level > 0 because we are at the end of the time step
-    tsk->schedule_task( level, sched, matls, TaskInterface::STANDARD_TASK, 1 );
-
-  }
-
+  //Wall HF
   std::vector<std::string> wall_hf_tasks =
     i_property_models->second->retrieve_tasks_by_type("wall_heatflux_variable");
-  i_property_models->second->schedule_task_group(
-    "wall_heatflux_tasks", wall_hf_tasks, TaskInterface::TIMESTEP_EVAL, false, level, sched, matls );
+  i_property_models->second->schedule_task_group("wall_hf_tasks", wall_hf_tasks, TaskInterface::TIMESTEP_EVAL,
+    dont_pack_tasks,
+    level, sched, matls );
 
   //Variable stats stuff
-  std::vector<std::string> stats_tasks = i_property_models->second->retrieve_task_subset("variable_stat_models");
-  for ( std::vector<std::string>::iterator itsk = stats_tasks.begin(); itsk != stats_tasks.end(); itsk++ ){
-
-    TaskInterface* tsk = i_property_models->second->retrieve_task(*itsk);
-    //passing in curr_level > 0 because we are at the end of the time step
-    tsk->schedule_task( level, sched, matls, TaskInterface::STANDARD_TASK, 1 );
-
-  }
+  i_property_models->second->schedule_task_group("variable_stat_models",
+    TaskInterface::TIMESTEP_EVAL, dont_pack_tasks,
+    level, sched, matls, 1 );
 
   if ( d_printTotalKE ){
    sched_computeKE( sched, patches, matls );
@@ -2198,20 +2212,10 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
   if ( _doLagrangianParticles ) {
 
-    typedef std::map<std::string, std::shared_ptr<TaskFactoryBase> > BFM;
-    BFM::iterator i_lag_fac = _task_factory_map.find("lagrangian_factory");
-    TaskFactoryBase::TaskMap all_tasks = i_lag_fac->second->retrieve_all_tasks();
-
-    TaskFactoryBase::TaskMap::iterator i_part_size_update = all_tasks.find("update_particle_size");
-    TaskFactoryBase::TaskMap::iterator i_part_pos_update = all_tasks.find("update_particle_position");
-    TaskFactoryBase::TaskMap::iterator i_part_vel_update = all_tasks.find("update_particle_velocity");
-
     //UPDATE SIZE
-    i_part_size_update->second->schedule_task( level, sched, d_sharedState->allArchesMaterials(), TaskInterface::STANDARD_TASK, 0);
-    //UPDATE POSITION
-    i_part_pos_update->second->schedule_task( level, sched, d_sharedState->allArchesMaterials(), TaskInterface::STANDARD_TASK, 0);
-    //UPDATE VELOCITY
-    i_part_vel_update->second->schedule_task( level, sched, d_sharedState->allArchesMaterials(), TaskInterface::STANDARD_TASK, 0);
+    _task_factory_map["lagrangian_factory"]->schedule_task( "update_particle_size", TaskInterface::TIMESTEP_EVAL, level, sched, matls, 0 );
+    _task_factory_map["lagrangian_factory"]->schedule_task( "update_particle_position", TaskInterface::TIMESTEP_EVAL, level, sched, matls, 0 );
+    _task_factory_map["lagrangian_factory"]->schedule_task( "update_particle_velocity", TaskInterface::TIMESTEP_EVAL, level, sched, matls, 0 );
 
     _particlesHelper->schedule_sync_particle_position(level,sched);
     _particlesHelper->schedule_transfer_particle_ids(level,sched);
@@ -3621,11 +3625,9 @@ ExplicitSolver::sched_weightInit( const LevelP& level,
     if (eqn->weight()) {
       const VarLabel* tempVar = eqn->getTransportEqnLabel();
       const VarLabel* tempVar_icv = eqn->getUnscaledLabel();
-      const VarLabel* tempSource = eqn->getSourceLabel();
 
       tsk->computes( tempVar );
       tsk->computes( tempVar_icv );
-      tsk->computes( tempSource );
     }
   }
 
@@ -3668,19 +3670,16 @@ ExplicitSolver::weightInit( const ProcessorGroup*,
 
       if (eqn->weight()) {
         // This is a weight equation
-        const VarLabel* sourceLabel  = eqn->getSourceLabel();
         const VarLabel* phiLabel     = eqn->getTransportEqnLabel();
         const VarLabel* phiLabel_icv = eqn->getUnscaledLabel();
 
-        CCVariable<double> source;
+        //CCVariable<double> source;
         CCVariable<double> phi;
         CCVariable<double> phi_icv;
 
-        new_dw->allocateAndPut( source,  sourceLabel,  matlIndex, patch );
         new_dw->allocateAndPut( phi,     phiLabel,     matlIndex, patch );
         new_dw->allocateAndPut( phi_icv, phiLabel_icv, matlIndex, patch );
 
-        source.initialize(0.0);
         phi.initialize(0.0);
         phi_icv.initialize(0.0);
 
@@ -3713,10 +3712,8 @@ ExplicitSolver::sched_weightedAbsInit( const LevelP& level,
     if (!eqn->weight()) {
       const VarLabel* tempVar = eqn->getTransportEqnLabel();
       const VarLabel* tempVar_icv = eqn->getUnscaledLabel();
-      const VarLabel* tempSource = eqn->getSourceLabel();
       tsk->computes( tempVar );
       tsk->computes( tempVar_icv );
-      tsk->computes( tempSource );
     } else {
       const VarLabel* tempVar = eqn->getTransportEqnLabel();
       tsk->requires( Task::NewDW, tempVar, Ghost::None, 0 );
@@ -3774,7 +3771,6 @@ ExplicitSolver::weightedAbsInit( const ProcessorGroup*,
 
       if (!eqn->weight()) {
         // This is a weighted abscissa
-        const VarLabel* sourceLabel  = eqn->getSourceLabel();
         const VarLabel* phiLabel     = eqn->getTransportEqnLabel();
         const VarLabel* phiLabel_icv = eqn->getUnscaledLabel();
         std::string weight_name;
@@ -3787,17 +3783,14 @@ ExplicitSolver::weightedAbsInit( const ProcessorGroup*,
         EqnBase& w_eqn = dqmomFactory.retrieve_scalar_eqn(weight_name);
         const VarLabel* weightLabel = w_eqn.getTransportEqnLabel();
 
-        CCVariable<double> source;
         CCVariable<double> phi;
         CCVariable<double> phi_icv;
         constCCVariable<double> weight;
 
-        new_dw->allocateAndPut( source,  sourceLabel,  matlIndex, patch );
         new_dw->allocateAndPut( phi,     phiLabel,     matlIndex, patch );
         new_dw->allocateAndPut( phi_icv, phiLabel_icv, matlIndex, patch );
         new_dw->get( weight, weightLabel, matlIndex, patch, gn, 0 );
 
-        source.initialize(0.0);
         phi.initialize(0.0);
         phi_icv.initialize(0.0);
 
@@ -3942,9 +3935,8 @@ ExplicitSolver::scalarInit( const ProcessorGroup*,
                             DataWarehouse* old_dw,
                             DataWarehouse* new_dw )
 {
-  coutLock.lock();
+
   proc0cout << "Initializing all scalar equations and sources...\n";
-  coutLock.unlock();
   for (int p = 0; p < patches->size(); p++) {
     //assume only one material for now
     int archIndex = 0;

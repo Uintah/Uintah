@@ -43,10 +43,12 @@ namespace ExchangeModels{
     ExchangeCoefficients();
     ~ExchangeCoefficients();
 
-    void problemSetup( const ProblemSpecP& ps,
-                       const int numMatls );
+    void problemSetup( const ProblemSpecP  & ps,
+                       const int numMatls,
+                       ProblemSpecP        & exch_ps );
 
-    void outputProblemSpec( ProblemSpecP& ps );
+    void outputProblemSpec(ProblemSpecP& matl_ps,
+                           ProblemSpecP& exch_prop_ps);
 
     void getConstantExchangeCoeff( FastMatrix& K,
                                    FastMatrix& H );

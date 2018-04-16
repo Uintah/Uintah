@@ -3,8 +3,8 @@
 
 #include <expression/Expression.h>
 
-#include <CCA/Components/Wasatch/Coal/Devolatilization/CPD/CPDData.h>
-#include <CCA/Components/Wasatch/Coal/Devolatilization/CPD/Eb_fun.h>
+#include "CPDData.h"
+#include "Eb_fun.h"
 
 namespace CPD{
 

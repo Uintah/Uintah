@@ -56,7 +56,6 @@ dy_gi( const Expr::TagList& giRHStag )
   : Expr::Expression<FieldT>(),
     specSum_( SpeciesSum::self() )
 {
-  this->set_gpu_runnable(true);
   this->template create_field_vector_request<FieldT>( giRHStag, gi_ );
 }
 

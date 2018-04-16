@@ -22,11 +22,11 @@
 #include <CCA/Components/Wasatch/Coal/CoalData.h>
 #include <CCA/Components/Wasatch/Coal/StringNames.h>
 
-#include <CCA/Components/Wasatch/Coal/Devolatilization/CPD/CPDInterface.h>
-#include <CCA/Components/Wasatch/Coal/Devolatilization/KobayashiSarofim/KobSarofimInterface.h>
-#include <CCA/Components/Wasatch/Coal/Devolatilization/SingleRate/SingleRateInterface.h>
+#include "CPD/CPDInterface.h"
+#include "KobayashiSarofim/KobSarofimInterface.h"
+#include "SingleRate/SingleRateInterface.h"
 
-#include <CCA/Components/Wasatch/Coal/Devolatilization/DevolatilizationBase.h>
+#include "DevolatilizationBase.h"
 
 
 using WasatchCore::GraphCategories;

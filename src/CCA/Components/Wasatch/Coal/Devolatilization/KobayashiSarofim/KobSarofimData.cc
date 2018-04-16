@@ -6,7 +6,7 @@
  *
  */
 
-#include <CCA/Components/Wasatch/Coal/Devolatilization/KobayashiSarofim/KobSarofimData.h>
+#include "KobSarofimData.h"
 
 namespace SAROFIM {
 

@@ -2,7 +2,7 @@
 #define Dev_SingleRateModel_Expr_h
 
 #include <expression/Expression.h>
-#include <CCA/Components/Wasatch/Coal/Devolatilization/SingleRate/SingleRateData.h>
+#include "SingleRateData.h"
 #include <CCA/Components/Wasatch/Coal/Devolatilization/CPD/Eb_fun.h>
 
 /**

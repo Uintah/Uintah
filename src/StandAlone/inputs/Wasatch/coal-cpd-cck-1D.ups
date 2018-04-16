@@ -22,7 +22,6 @@
     
     <ParticleTransportEquations>
       <ParticlesPerCell>1</ParticlesPerCell>
-      <MaximumParticles>1</MaximumParticles>
       <ParticleDensity name="p.rho"/>
       <ParticleMass name="p.m" state="STATE_DYNAMIC">
         <SourceTerm name="nothing"/>
@@ -63,7 +62,7 @@
     <BasicExpression type="PARTICLE">
        <TaskList>initialization</TaskList>
        <NameTag name="p.T"/>
-       <Constant>700</Constant>
+       <Constant>500</Constant>
     </BasicExpression>
 
     <BasicExpression type="PARTICLE">
@@ -73,25 +72,28 @@
     </BasicExpression>
     
     <BasicExpression type="PARTICLE">
-       <TaskList>initialization</TaskList>
-       <NameTag name="p.xw"/>
-       <Constant>0.</Constant>
+      <TaskList>initialization</TaskList>
+      <NameTag name="p.xw"/>
+       <ParticlePositionIC coordinate="X" bounds="PATCHBASED">
+       		<Random seed="3"/>
+       </ParticlePositionIC>
     </BasicExpression>
-
     
     <BasicExpression type="PARTICLE">
-       <TaskList>initialization</TaskList>
-       <NameTag name="p.yw"/>
-       <Constant>0.</Constant>
+    <TaskList>initialization</TaskList>
+      <NameTag name="p.yw"/>
+       <ParticlePositionIC coordinate="Y" bounds="PATCHBASED">
+       		<Random seed="3"/>
+       </ParticlePositionIC>
     </BasicExpression>
-
     
     <BasicExpression type="PARTICLE">
-       <TaskList>initialization</TaskList>
-       <NameTag name="p.zw"/>
-       <Constant>0.</Constant>
+    <TaskList>initialization</TaskList>
+      <NameTag name="p.zw"/>
+       <ParticlePositionIC coordinate="Z" bounds="PATCHBASED">
+       		<Random seed="3"/>
+       </ParticlePositionIC>
     </BasicExpression>
-
     
     <BasicExpression type="PARTICLE">
       <TaskList>initialization</TaskList>
@@ -113,15 +115,22 @@
 
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="O2"/>
+      <NameTag name="H2"/>
       <Constant>0.2</Constant>
+    </BasicExpression>
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="O2"/>
+      <Constant>0.2</Constant>     
     </BasicExpression>
     
     <!-- Set the initial condition on temperature -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
       <NameTag name="Temperature"/>
-      <Constant>1000</Constant>
+      <GaussianFunction amplitude="700.0" deviation="2e-3" mean="0.0" baseline="800.0">
+        <NameTag name="XSVOL"/>
+      </GaussianFunction>
     </BasicExpression>
     <!-- Set the initial condition expression for x-velocity -->
     <BasicExpression type="SVOL">
@@ -178,7 +187,7 @@
     </EnergyEquation>
     
     <SpeciesTransportEquations>
-      <CanteraInputFile>inputs/Wasatch/gri30.xml</CanteraInputFile>
+      <CanteraInputFile>inputs/Wasatch/griReduced.xml</CanteraInputFile>
       <CanteraGroup>gri30</CanteraGroup>
       <DiffusiveFlux direction="X">
         <MixtureAveraged/>
@@ -207,14 +216,14 @@
     <checkpoint cycle="2" interval="2.5e-8"/>
     <compression>gzip</compression>
     <save label="H2"/>
-    <save label="H"/>
     <save label="HO2"/>
     <save label="H2O"/>
     <save label="OH"/>
-    <save label="NH3"/>
-    <save label="HCN"/>
-    <save label="CH4"/>
+    <save label="rho_OH_rhs"/>
     <save label="O2"/>
+    <save label="O2_diffFlux_X"/>
+    <save label="O2_enthalpy"/>
+    <save label="HeatFlux_X"/>
     <save label="N2"/>
     <save label="Temperature"/>
     <save label="et"/>
@@ -222,6 +231,7 @@
     <save label="rhoet_rhs"/>
     <save label="x-mom_rhs"/>
     <save label="rho"/>
+    <save label="rho_H2"/>
     <save label="Mixture_MW"/>
     <save label="pressure"/>
     <save label="viscosity"/>
@@ -232,7 +242,6 @@
     <save label="p.v"/>
     <save label="p.w"/>
     <save label="p.T"/>
-    <save label="p.T_rhs"/>
     <save label="p.size"/>
     <save label="p.size_init"/>
     <save label="p.rho"/>
@@ -241,37 +250,27 @@
     
     <save label="char_mass"/>
     <save label="Volatile_Mass"/>
-    <save label="heat_released_to_gas"/>
-    <save label="coal_Temperature_rhs"/>
-    <save label="p.heatCapacity"/>
-    <save label="p.T_rhs_convection"/>   
     
-    <save label="moisture_mass"/>   
-    <save label="moisture_mass_rhs"/>  
+<!--     <save label="dev_char_production"/> -->
     
+<!--     KS vars -->
+<!-- 
+    <save label="sarofim_CO_rhs"/>    
+    <save label="sarofim_H2_rhs"/>
+    <save label="sarofim_tar_src"/>
+ -->
+ 
+ <!--     SingleRate vars -->
+<!-- 
+    <save label="singlerate_CO_rhs"/>    
+    <save label="singlerate_H2_rhs"/>
+    <save label="singlerate_tar_src"/>
+ -->
+ 
+  <!--    CPD vars   -->
 
-	<!-- As of 2018/04/10, saving these fields is necessary for this input file to run -->
-    <save label="coal_consumed_gas_enthalpy"/> 
-    <save label="coal_produced_gas_enthalpy"/>
-    <save label="coal_consumed_gas_enthalpy_src"/> 
-    <save label="coal_produced_gas_enthalpy_src"/> 
-    
-    <save label="coalConsumedGasY_O2"/>
-    <save label="coalConsumedGasY_CO2"/>
-    <save label="coalConsumedGasY_H2O"/>
-    
-    <save label="coalProducedGasY_CO"/>
-    <save label="coalProducedGasY_CO2"/>
-    <save label="coalProducedGasY_H2"/>
-    <save label="coalProducedGasY_H2O"/>
-    <save label="coalProducedGasY_HCN"/>
-    <save label="coalProducedGasY_NH3"/>
-    <save label="coalProducedGasY_CH4"/>
-    
-    <save label="coal_total_gas_consumption_rate"/>
-	<save label="coal_total_gas_production_rate"/>
-	<!-- - - - - - - - - - - - - - - - - - - - -  - - - - - - - - - - - - - - - - - -  -->
 
+  <!--    CCK vars   -->
   <save label="char_H2O_rhs"/>
   <save label="char_CH4_rhs"/>
   <save label="char_CO_rhs" />
@@ -283,9 +282,9 @@
   <Grid>
     <Level>
       <Box label="1">
-        <lower>[-1e-2,-1e-3,-1e-3]</lower>
-        <upper>[ 1e-2, 1e-3, 1e-3]</upper>
-        <resolution>[ 32, 1, 1 ]</resolution>
+        <lower>[-1e-2,-1e-2,-1e-2]</lower>
+        <upper>[ 1e-2, 1e-2, 1e-2]</upper>
+        <resolution>[ 128, 1, 1 ]</resolution>
         <patches>[1,1,1]</patches>
       </Box>
       <periodic>[1,1,1]</periodic>

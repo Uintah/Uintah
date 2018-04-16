@@ -128,6 +128,9 @@ namespace WasatchCore{
     factory_.register_expression( new C2PBuilder( mwC2PTag    , mwTag    , pSizeTag_, pPosTags_) );
     factory_.register_expression( new C2PBuilder( gPressC2PTag, gPressTag, pSizeTag_, pPosTags_) );
 
+    // Setup Cantera
+    setup_cantera();
+
     // Setup a map so the coal code knows what species tags to use *************************//
     Coal::SpeciesTagMap specTagMap;
     for( int i=0; i<CanteraObjects::number_species(); ++i ){
@@ -301,7 +304,7 @@ namespace WasatchCore{
         const Tag gasEnergyTag = tagNames_.totalinternalenergy;
         factory_.attach_dependency_to_expression( p2cEnergySrcTag,
                                                   get_rhs_tag( gasEnergyTag.name() ),
-                                                  Expr::ADD_SOURCE_EXPRESSION );
+                                                  Expr::SUBTRACT_SOURCE_EXPRESSION );
 
       }
     }

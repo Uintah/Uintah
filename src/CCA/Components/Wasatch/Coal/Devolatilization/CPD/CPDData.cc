@@ -1,4 +1,4 @@
-#include <CCA/Components/Wasatch/Coal/Devolatilization/CPD/CPDData.h>
+#include "CPDData.h"
 
 #include <stdexcept>
 #include <sstream>
@@ -22,7 +22,7 @@ namespace CPD{
       Ml0_     ( 28    ),
       coordNo_ ( 3.6   ),  // coordination number of coal lattice         [3]
       lbPop0_  (0.59   ),  // initial normalized labile bridge population [3]
-      speciesData_( GasSpec::SpeciesData::self() )
+      speciesData_()
  
   {
     /*  For more information on the data here:
@@ -70,21 +70,21 @@ namespace CPD{
       break;
 			
     case Coal::Gillette_Subbituminous:
-      fg_.push_back( 0.018 ); // Y1  CO2 extra loose
-      fg_.push_back( 0.053 ); // Y2  CO2 loose
-      fg_.push_back( 0.028 ); // Y3  tight
-      fg_.push_back( 0.031 ); // Y4  H2o loose
-      fg_.push_back( 0.031 ); // Y5  tight
-      fg_.push_back( 0.080 ); // Y6  CO ether loose
-      fg_.push_back( 0.043 ); // Y7  CO ether tight
-      fg_.push_back( 0.007 ); // Y8  HCN loose
-      fg_.push_back( 0.015 ); // Y9  HCN tight
-      fg_.push_back( 0.000 ); // Y10 NH3
-      fg_.push_back( 0.000 ); // Y12 methane extra loose
-      fg_.push_back( 0.026 ); // Y13 methane loose
-      fg_.push_back( 0.017 ); // Y14 methane tight
-      fg_.push_back( 0.012 ); // Y15 H aromatic
-      fg_.push_back( 0.031 ); // Y17 CO extra tight
+      fg_.push_back( 0.018 );
+      fg_.push_back( 0.053 );
+      fg_.push_back( 0.028 );
+      fg_.push_back( 0.031 );
+      fg_.push_back( 0.031 );
+      fg_.push_back( 0.080 );
+      fg_.push_back( 0.043 );
+      fg_.push_back( 0.007 );
+      fg_.push_back( 0.015 );
+      fg_.push_back( 0.000 );
+      fg_.push_back( 0.000 );
+      fg_.push_back( 0.026 );
+      fg_.push_back( 0.017 );
+      fg_.push_back( 0.012 );
+      fg_.push_back( 0.031 );
 
       tarMassFrac0_ = 0.158;
       break;
@@ -197,21 +197,21 @@ namespace CPD{
         break;
         
     case Coal::Russian_Bituminous: // Interpolation
-        fg_.push_back( 0.0096 ); // Y1  CO2 extra loose
-        fg_.push_back( 0.0135 ); // Y2  CO2 loose
-        fg_.push_back( 0.0138 ); // Y3  tight
-        fg_.push_back( 0.0238 ); // Y4  H2o loose
-        fg_.push_back( 0.0145 ); // Y5  tight
-        fg_.push_back( 0.0528 ); // Y6  CO ether loose
-        fg_.push_back( 0.0304 ); // Y7  CO ether tight
-        fg_.push_back( 0.0142 ); // Y8  HCN loose
-        fg_.push_back( 0.0155 ); // Y9  HCN tight
-        fg_.push_back( 0.0001 ); // Y10 NH3
-        fg_.push_back( 0.0153 ); // Y12 methane extra loose
-        fg_.push_back( 0.0152 ); // Y13 methane loose
-        fg_.push_back( 0.0160 ); // Y14 methane tight
-        fg_.push_back( 0.0130 ); // Y15 H aromatic
-        fg_.push_back( 0.0130 ); // Y17 CO extra tight
+        fg_.push_back( 0.0096 );
+        fg_.push_back( 0.0135 );
+        fg_.push_back( 0.0138 );
+        fg_.push_back( 0.0238 );
+        fg_.push_back( 0.0145 );
+        fg_.push_back( 0.0528 );
+        fg_.push_back( 0.0304 );
+        fg_.push_back( 0.0142 );
+        fg_.push_back( 0.0155 );
+        fg_.push_back( 0.0001 );
+        fg_.push_back( 0.0153 );
+        fg_.push_back( 0.0152 );
+        fg_.push_back( 0.0160 );
+        fg_.push_back( 0.0130 );
+        fg_.push_back( 0.0130 );
 
         tarMassFrac0_ = 0.1562;
         Mw_ = 47.3348;
@@ -219,21 +219,21 @@ namespace CPD{
         
     case Coal::Black_Thunder: // Interpolation
         
-        fg_.push_back( 0.0371 ); // Y1  CO2 extra loose
-        fg_.push_back( 0.0353 ); // Y2  CO2 loose
-        fg_.push_back( 0.0219 ); // Y3  tight
-        fg_.push_back( 0.0478 ); // Y4  H2o loose
-        fg_.push_back( 0.0299 ); // Y5  tight
-        fg_.push_back( 0.0638 ); // Y6  CO ether loose
-        fg_.push_back( 0.0403 ); // Y7  CO ether tight
-        fg_.push_back( 0.0068 ); // Y8  HCN loose
-        fg_.push_back( 0.0143 ); // Y9  HCN tight
-        fg_.push_back( 0.0005 ); // Y10 NH3
-        fg_.push_back( 0.0023 ); // Y12 methane extra loose
-        fg_.push_back( 0.0189 ); // Y13 methane loose
-        fg_.push_back( 0.0144 ); // Y14 methane tight
-        fg_.push_back( 0.0146 ); // Y15 H aromatic
-        fg_.push_back( 0.0350 ); // Y17 CO extra tight
+        fg_.push_back( 0.0371 );
+        fg_.push_back( 0.0353 );
+        fg_.push_back( 0.0219 );
+        fg_.push_back( 0.0478 );
+        fg_.push_back( 0.0299 );
+        fg_.push_back( 0.0638 );
+        fg_.push_back( 0.0403 );
+        fg_.push_back( 0.0068 );
+        fg_.push_back( 0.0143 );
+        fg_.push_back( 0.0005 );
+        fg_.push_back( 0.0023 );
+        fg_.push_back( 0.0189 );
+        fg_.push_back( 0.0144 );
+        fg_.push_back( 0.0146 );
+        fg_.push_back( 0.0350 );
 
         tarMassFrac0_ = 0.1155;
         Mw_ = 41.0397;
@@ -241,21 +241,21 @@ namespace CPD{
         
     case Coal::Shenmu: //Interpolation
         
-        fg_.push_back( 0.0108 ); // Y1  CO2 extra loose
-        fg_.push_back( 0.0145 ); // Y2  CO2 loose
-        fg_.push_back( 0.0147 ); // Y3  tight
-        fg_.push_back( 0.0252 ); // Y4  H2o loose
-        fg_.push_back( 0.0156 ); // Y5  tight
-        fg_.push_back( 0.0530 ); // Y6  CO ether loose
-        fg_.push_back( 0.0305 ); // Y7  CO ether tight
-        fg_.push_back( 0.0137 ); // Y8  HCN loose
-        fg_.push_back( 0.0155 ); // Y9  HCN tight
-        fg_.push_back( 0.0002 ); // Y10 NH3
-        fg_.push_back( 0.0146 ); // Y12 methane extra loose
-        fg_.push_back( 0.0154 ); // Y13 methane loose
-        fg_.push_back( 0.0160 ); // Y14 methane tight
-        fg_.push_back( 0.0130 ); // Y15 H aromatic
-        fg_.push_back( 0.0122 ); // Y17 CO extra tight
+        fg_.push_back( 0.0108 );
+        fg_.push_back( 0.0145 );
+        fg_.push_back( 0.0147 );
+        fg_.push_back( 0.0252 );
+        fg_.push_back( 0.0156 );
+        fg_.push_back( 0.0530 );
+        fg_.push_back( 0.0305 );
+        fg_.push_back( 0.0137 );
+        fg_.push_back( 0.0155 );
+        fg_.push_back( 0.0002 );
+        fg_.push_back( 0.0146 );
+        fg_.push_back( 0.0154 );
+        fg_.push_back( 0.0160 );
+        fg_.push_back( 0.0130 );
+        fg_.push_back( 0.0122 );
 
         tarMassFrac0_ = 0.1532;
         Mw_ = 43.5368;              
@@ -264,21 +264,21 @@ namespace CPD{
       case Coal::Guizhou: //Interpolation
       case Coal::Eastern_Bituminous:
         
-        fg_.push_back( 0.0098 ); // Y1  CO2 extra loose
-        fg_.push_back( 0.0137 ); // Y2  CO2 loose
-        fg_.push_back( 0.0139 ); // Y3  tight
-        fg_.push_back( 0.0240 ); // Y4  H2o loose
-        fg_.push_back( 0.0148 ); // Y5  tight
-        fg_.push_back( 0.0528 ); // Y6  CO ether loose
-        fg_.push_back( 0.0303 ); // Y7  CO ether tight
-        fg_.push_back( 0.0140 ); // Y8  HCN loose
-        fg_.push_back( 0.0155 ); // Y9  HCN tight
-        fg_.push_back( 0.0002 ); // Y10 NH3
-        fg_.push_back( 0.0151 ); // Y12 methane extra loose
-        fg_.push_back( 0.0152 ); // Y13 methane loose
-        fg_.push_back( 0.0160 ); // Y14 methane tight
-        fg_.push_back( 0.0130 ); // Y15 H aromatic
-        fg_.push_back( 0.0129 ); // Y17 CO extra tight
+        fg_.push_back( 0.0098 );
+        fg_.push_back( 0.0137 );
+        fg_.push_back( 0.0139 );
+        fg_.push_back( 0.0240 );
+        fg_.push_back( 0.0148 );
+        fg_.push_back( 0.0528 );
+        fg_.push_back( 0.0303 );
+        fg_.push_back( 0.0140 );
+        fg_.push_back( 0.0155 );
+        fg_.push_back( 0.0002 );
+        fg_.push_back( 0.0151 );
+        fg_.push_back( 0.0152 );
+        fg_.push_back( 0.0160 );
+        fg_.push_back( 0.0130 );
+        fg_.push_back( 0.0129 );
 
         tarMassFrac0_ = 0.1559;
         Mw_ = 47.3576;
@@ -286,21 +286,21 @@ namespace CPD{
 				
       case Coal::Utah_Bituminous: //Interpolation
         
-        fg_.push_back( 0.0140 ); // Y1  CO2 extra loose
-        fg_.push_back( 0.0169 ); // Y2  CO2 loose
-        fg_.push_back( 0.0176 ); // Y3  tight
-        fg_.push_back( 0.0294 ); // Y4  H2o loose
-        fg_.push_back( 0.0168 ); // Y5  tight
-        fg_.push_back( 0.0539 ); // Y6  CO ether loose
-        fg_.push_back( 0.0325 ); // Y7  CO ether tight
-        fg_.push_back( 0.0126 ); // Y8  HCN loose
-        fg_.push_back( 0.0155 ); // Y9  HCN tight
-        fg_.push_back( 0.0002 ); // Y10 NH3
-        fg_.push_back( 0.0130 ); // Y12 methane extra loose
-        fg_.push_back( 0.0154 ); // Y13 methane loose
-        fg_.push_back( 0.0163 ); // Y14 methane tight
-        fg_.push_back( 0.0133 ); // Y15 H aromatic
-        fg_.push_back( 0.0099 ); // Y17 CO extra tight
+        fg_.push_back( 0.0140 );
+        fg_.push_back( 0.0169 );
+        fg_.push_back( 0.0176 );
+        fg_.push_back( 0.0294 );
+        fg_.push_back( 0.0168 );
+        fg_.push_back( 0.0539 );
+        fg_.push_back( 0.0325 );
+        fg_.push_back( 0.0126 );
+        fg_.push_back( 0.0155 );
+        fg_.push_back( 0.0002 );
+        fg_.push_back( 0.0130 );
+        fg_.push_back( 0.0154 );
+        fg_.push_back( 0.0163 );
+        fg_.push_back( 0.0133 );
+        fg_.push_back( 0.0099 );
 
         tarMassFrac0_ = 0.1437;
         Mw_ = 47.1; // ??? Check again 
@@ -328,7 +328,7 @@ namespace CPD{
     mwVec_.push_back( speciesData_.get_mw(GasSpec::CH4) ); //11 CH4  -
     mwVec_.push_back( speciesData_.get_mw(GasSpec::CH4) ); //12 CH4
     mwVec_.push_back( speciesData_.get_mw(GasSpec::CH4) ); //13 CH4
-    mwVec_.push_back( speciesData_.get_mw(GasSpec::H2 ) ); //14 H2   -
+    mwVec_.push_back( speciesData_.get_mw(GasSpec::H  ) ); //14 H    -
     mwVec_.push_back( speciesData_.get_mw(GasSpec::CO ) ); //15 CO   -
 
     sumfg_ = std::accumulate( fg_.begin(), fg_.end(), 0.0 ) + tarMassFrac0_;
@@ -350,38 +350,38 @@ namespace CPD{
     A0_.push_back( 0.20E14 ); // CO extra tight  (17)
 		
     // These are E0/R
-    E0_.push_back( 22500 ); // Y1  CO2 extra loose
-    E0_.push_back( 33850 ); // Y2  CO2 loose
-    E0_.push_back( 38315 ); // Y3  tight
-    E0_.push_back( 30000 ); // Y4  H2o loose
-    E0_.push_back( 32700 ); // Y5  tight
-    E0_.push_back( 40000 ); // Y6  CO ether loose
-    E0_.push_back( 40500 ); // Y7  CO ether tight
-    E0_.push_back( 30000 ); // Y8  HCN loose
-    E0_.push_back( 42500 ); // Y9  HCN tight
-    E0_.push_back( 27300 ); // Y10 NH3
-    E0_.push_back( 30000 ); // Y12 methane extra loose
-    E0_.push_back( 30000 ); // Y13 methane loose
-    E0_.push_back( 30000 ); // Y14 methane tight
-    E0_.push_back( 40500 ); // Y15 H aromatic
-    E0_.push_back( 45500 );	// Y17 CO extra tight
+    E0_.push_back( 22500 );
+    E0_.push_back( 33850 );
+    E0_.push_back( 38315 );
+    E0_.push_back( 30000 );
+    E0_.push_back( 32700 );
+    E0_.push_back( 40000 ); // 6
+    E0_.push_back( 40500 );
+    E0_.push_back( 30000 );
+    E0_.push_back( 42500 );
+    E0_.push_back( 27300 );
+    E0_.push_back( 30000 );
+    E0_.push_back( 30000 );
+    E0_.push_back( 30000 );
+    E0_.push_back( 40500 );
+    E0_.push_back( 45500 );	
 	
     // These are ???/R
-    sigma_.push_back( 1500 ); // Y1  CO2 extra loose
-    sigma_.push_back( 1500 ); // Y2  CO2 loose
-    sigma_.push_back( 2000 ); // Y3  tight
-    sigma_.push_back( 1500 ); // Y4  H2o loose
-    sigma_.push_back( 1500 ); // Y5  tight
-    sigma_.push_back( 6000 ); // Y6  CO ether loose
-    sigma_.push_back( 1500 ); // Y7  CO ether tight
-    sigma_.push_back( 1500 ); // Y8  HCN loose
-    sigma_.push_back( 4750 ); // Y9  HCN tight
-    sigma_.push_back( 3000 ); // Y10 NH3
-    sigma_.push_back( 1500 ); // Y12 methane extra loose
-    sigma_.push_back( 2000 ); // Y13 methane loose
-    sigma_.push_back( 2000 ); // Y14 methane tight
-    sigma_.push_back( 6000 ); // Y15 H aromatic
-    sigma_.push_back( 1500 ); // Y17 CO extra tight
+    sigma_.push_back( 1500 );
+    sigma_.push_back( 1500 );
+    sigma_.push_back( 2000 );
+    sigma_.push_back( 1500 );
+    sigma_.push_back( 1500 );
+    sigma_.push_back( 6000 );
+    sigma_.push_back( 1500 );
+    sigma_.push_back( 1500 );
+    sigma_.push_back( 4750 );
+    sigma_.push_back( 3000 );
+    sigma_.push_back( 1500 );
+    sigma_.push_back( 2000 );
+    sigma_.push_back( 2000 );
+    sigma_.push_back( 6000 );
+    sigma_.push_back( 1500 );
 
   }
 
@@ -404,7 +404,7 @@ namespace CPD{
     sContVec_.push_back( species_connect( HCN  ) );
     sContVec_.push_back( species_connect( NH3  ) );
     sContVec_.push_back( species_connect( CH4  ) );
-    sContVec_.push_back( species_connect( H2   ) );
+    sContVec_.push_back( species_connect( H    ) );
   }
 
   //------------------------------------------------------------------
@@ -427,7 +427,6 @@ namespace CPD{
   {
     double mw;
     VecI sList;
-    const GasSpec::SpeciesData& speciesData = GasSpec::SpeciesData::self();
 
     switch ( spec ) {
 
@@ -435,43 +434,43 @@ namespace CPD{
       sList.push_back(1);
       sList.push_back(2);
       sList.push_back(3);
-      mw = speciesData.get_mw(GasSpec::CO2);
+      mw = 44.0;    
       break;
 
     case H2O:
       sList.push_back(4);
       sList.push_back(5);
-      mw = speciesData.get_mw(GasSpec::H2O);
+      mw = 18.0;    
       break;
 
     case CO:
       sList.push_back(6);
       sList.push_back(7);
       sList.push_back(15);
-      mw = speciesData.get_mw(GasSpec::CO );
+      mw = 28.0;    
       break;
 
     case HCN:
       sList.push_back(8);
       sList.push_back(9);
-      mw = speciesData.get_mw(GasSpec::HCN);
+      mw = 27.0;    
       break;
 
     case NH3:
       sList.push_back(10);
-      mw = speciesData.get_mw(GasSpec::NH3);
+      mw = 17.0;    
       break;
 
     case CH4:
       sList.push_back(11);
       sList.push_back(12);
       sList.push_back(13);
-      mw = speciesData.get_mw(GasSpec::CH4);
+      mw = 16.0;    
       break;
 
-    case H2:
+    case H:
       sList.push_back(14);
-      mw = speciesData.get_mw(GasSpec::H2 );
+      mw = 1.0;    
       break;
 
     default:

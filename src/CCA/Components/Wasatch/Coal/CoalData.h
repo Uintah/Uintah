@@ -49,6 +49,7 @@ namespace Coal{
     O2,
     CO,
     CO2,
+    H,
     H2,
     H2O,
     CH4,

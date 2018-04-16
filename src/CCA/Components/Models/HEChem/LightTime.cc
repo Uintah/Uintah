@@ -30,7 +30,7 @@
 #include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #include <CCA/Components/MPMICE/Core/MPMICELabel.h>
-#include <CCA/Components/Regridder/PerPatchVars.h>
+#include <Core/Grid/Variables/PerPatchVars.h>
 
 #include <CCA/Ports/Regridder.h>
 #include <CCA/Ports/Scheduler.h>
@@ -56,6 +56,9 @@
 using namespace Uintah;
 using namespace std;
 
+#define d_SMALL_NUM 1e-100
+#define d_TINY_RHO  1e-12
+
 //__________________________________
 //  setenv SCI_DEBUG "MODELS_NORMAL_COUT:+,MODELS_DOING_COUT:+"
 //  MODELS_DOING_COUT:   dumps when tasks are scheduled and performed
@@ -64,7 +67,7 @@ static DebugStream cout_doing("MODELS_DOING_COUT", false);
 LightTime::LightTime(const ProcessorGroup* myworld,
                      const SimulationStateP& sharedState,
                      const ProblemSpecP& params)
-  : ModelInterface(myworld, sharedState), d_params(params)
+  : HEChemModel(myworld, sharedState), d_params(params)
 {
   mymatls = 0;
   Ilb = scinew ICELabel();
@@ -461,26 +464,4 @@ void LightTime::errorEstimate(const ProcessorGroup*,
       }
     }
   }  // patches
-}
-
-//______________________________________________________________________
-//
-void LightTime::scheduleModifyThermoTransportProperties(SchedulerP&,
-                                                    const LevelP&,
-                                                    const MaterialSet*)
-{
-  // do nothing      
-}
-void LightTime::computeSpecificHeat(CCVariable<double>&,
-                                    const Patch*,
-                                    DataWarehouse*,
-                                    const int)
-{
-  //do nothing
-}
-//__________________________________
-void LightTime::scheduleTestConservation(SchedulerP&,
-                                         const PatchSet*)
-{
-  // Not implemented yet
 }

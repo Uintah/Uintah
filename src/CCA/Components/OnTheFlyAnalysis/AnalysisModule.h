@@ -48,13 +48,6 @@ namespace Uintah {
   class AnalysisModule : public UintahParallelComponent {
   public:
     
-    // Other stats that can be used by individual components.
-    // enum OtherStat
-    // {
-    //   OnTheFlyAnalysisMinMaxTime = 0,
-    //   MAX_OTHER_STATS
-    // };
-    
     AnalysisModule(const ProcessorGroup* myworld,
 		   const SimulationStateP sharedState,
 		   const ProblemSpecP& module_spec);
@@ -88,19 +81,18 @@ namespace Uintah {
     virtual void scheduleDoAnalysis_preReloc(SchedulerP& sched,
                                     const LevelP& level) =0;
 
-    virtual const VarLabel* getDelTLabel() const { return m_delTLabel; }
-
   protected:
-    Output*    m_output    {nullptr};
-    Scheduler* m_scheduler {nullptr};
+    ApplicationInterface*  m_application {nullptr};
+    Output*                m_output      {nullptr};
+    Scheduler*             m_scheduler   {nullptr};
 
     SimulationStateP m_sharedState {nullptr};
     
     ProblemSpecP m_module_spec {nullptr};
 
-    const VarLabel* m_timeStepLabel {nullptr};
+    const VarLabel* m_timeStepLabel       {nullptr};
     const VarLabel* m_simulationTimeLabel {nullptr};
-    const VarLabel* m_delTLabel {nullptr};
+    const VarLabel* m_delTLabel           {nullptr};
   };
 }
 

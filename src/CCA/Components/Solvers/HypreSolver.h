@@ -54,7 +54,7 @@
 
 namespace Uintah {
 
-  //__________________________________
+  //______________________________________________________________________
   //
   class HypreSolver2Params : public SolverParameters {
   public:
@@ -81,19 +81,10 @@ namespace Uintah {
     
     // SparseMSG parameters
     int    jump;               // Hypre Sparse MSG parameter
-    
-    void setSolveFrequency(const int freq) {
-      solveFrequency = freq;
-    }
-    
-    int getSolveFrequency() const {
-      return solveFrequency;
-    }
-
-    SimulationStateP m_sharedState;
   };
 
-
+  //______________________________________________________________________
+  //
   enum SolverType {
     smg,
     pfmg,
@@ -105,7 +96,8 @@ namespace Uintah {
     diagonal
   };
 
-
+  //______________________________________________________________________
+  //
   struct hypre_solver_struct : public RefCounted {
     bool                 created_solver;
     bool                 created_precond_solver;
@@ -117,6 +109,8 @@ namespace Uintah {
     HYPRE_StructVector * HB;
     HYPRE_StructVector * HX;
     
+    //__________________________________
+    //
     hypre_solver_struct() {
       created_solver         = false;
       created_precond_solver = false;
@@ -128,7 +122,9 @@ namespace Uintah {
       HB = 0;
       HX = 0;
     };
-
+    
+    //__________________________________
+    //
     virtual ~hypre_solver_struct() {
       if (created_solver) {
         HYPRE_StructMatrixDestroy( *HA );
@@ -209,15 +205,16 @@ namespace Uintah {
   };
 
   typedef Handle<hypre_solver_struct> hypre_solver_structP;
-
+  
+  //______________________________________________________________________
+  //
   class HypreSolver2 : public SolverCommon {
   public:
     HypreSolver2(const ProcessorGroup* myworld);
     virtual ~HypreSolver2();
 
     virtual SolverParameters* readParameters(       ProblemSpecP & params,
-                                              const std::string  & name,
-                                              const SimulationStateP & state );
+                                              const std::string  & name  );
 
     /**
      *  @brief Schedules the solution of the linear system \[ \mathbf{A} \mathbf{x} = \mathbf{b}\].

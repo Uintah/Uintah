@@ -16,6 +16,7 @@ namespace GasSpec{
   {
     string name="";
     switch( spec ){
+      case H  : name = "H"  ; break;
       case H2 : name = "H2" ; break;
       case H2O: name = "H2O"; break;
       case CO : name = "CO" ; break;
@@ -38,6 +39,7 @@ namespace GasSpec{
     numSpecies_= (int)INVALID_SPECIES;
 
     specNames_.clear();
+    specNames_.push_back( "H"   );
     specNames_.push_back( "H2"  );
     specNames_.push_back( "H2O" );
     specNames_.push_back( "CO"  );
@@ -63,12 +65,12 @@ namespace GasSpec{
   }
 
   //------------------------------------------------------------------
-  const SpeciesData&
-  SpeciesData::self()
-  {
-    static SpeciesData s;
-    return s;
+
+  SpeciesData::
+  ~SpeciesData(){
+    CanteraObjects::restore_gasmix(gas_);
   }
+  //------------------------------------------------------------------
 
   /**
    *  \fn GasSpecies species_name_to_enum( const GasSpeciesName )
@@ -82,7 +84,8 @@ namespace GasSpec{
   const GasSpecies
   SpeciesData::species_name_to_enum( const string name ) const
   {
-    if     ( name == "H2"  ) return H2 ;
+    if     ( name == "H"   ) return H  ;
+    else if( name == "H2"  ) return H2 ;
     else if( name == "H2O" ) return H2O;
     else if( name == "CO"  ) return CO ;
     else if( name == "CO2" ) return CO2;
@@ -125,6 +128,7 @@ namespace GasSpec{
       case GasSpecies::HCN:  specIndex = gas_->speciesIndex("HCN");  break;
       case GasSpecies::NH3:  specIndex = gas_->speciesIndex("NH3");  break;
       case GasSpecies::NO2:  specIndex = gas_->speciesIndex("NO2");  break;
+      case GasSpecies::H  :  specIndex = gas_->speciesIndex("H"  );  break;
 
       default:
         std::ostringstream msg;

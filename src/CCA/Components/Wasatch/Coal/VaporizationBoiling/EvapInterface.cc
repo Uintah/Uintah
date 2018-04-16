@@ -3,8 +3,8 @@
 
 #include <CCA/Components/Wasatch/Coal/StringNames.h>
 
-#include <CCA/Components/Wasatch/Coal/VaporizationBoiling/EvapInterface.h>
-#include <CCA/Components/Wasatch/Coal/VaporizationBoiling/Vaporization_RHS.h>
+#include "EvapInterface.h"
+#include "Vaporization_RHS.h"
 
 #include <spatialops/particles/ParticleFieldTypes.h>
 #include <spatialops/Nebo.h>

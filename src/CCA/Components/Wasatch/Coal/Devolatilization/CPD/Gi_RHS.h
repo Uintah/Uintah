@@ -2,7 +2,7 @@
 #define Gi_RHS_Expr_h
 
 #include <expression/Expression.h>
-#include <CCA/Components/Wasatch/Coal/Devolatilization/CPD/CPDData.h>
+#include "CPDData.h"
 
 namespace CPD{
 

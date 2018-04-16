@@ -3,28 +3,19 @@
 
 #include <spatialops/particles/ParticleFieldTypes.h>
 
-#include <expression/Functions.h>
-
-#include <pokitt/thermo/Enthalpy.h>
-
 #include <CCA/Components/Wasatch/TagNames.h>
-#include <CCA/Components/Wasatch/Expressions/ExprAlgebra.h>
 
-#include <CCA/Components/Wasatch/Coal/VaporizationBoiling/EvapInterface.h>
-#include <CCA/Components/Wasatch/Coal/CoalInterface.h>
-#include <CCA/Components/Wasatch/Coal/CharOxidation/CharInterface.h>
-#include <CCA/Components/Wasatch/Coal/ParticleTemperatureRHS.h>
-#include <CCA/Components/Wasatch/Coal/CoalHeatCapacity.h>
-#include <CCA/Components/Wasatch/Coal/ProducedGasComposition.h>
-#include <CCA/Components/Wasatch/Coal/ConsumedGasComposition.h>
-#include <CCA/Components/Wasatch/Coal/HeatFromCharReactions.h>
+#include "VaporizationBoiling/EvapInterface.h"
+#include "CoalInterface.h"
+#include "CharOxidation/CharInterface.h"
+#include "ParticleTemperatureRHS.h"
+#include "CoalHeatCapacity.h"
+#include "HeatReleasedtoGas.h"
 
 using std::vector;
 using std::string;
 using std::endl;
 using std::ostringstream;
-using std::set;
-using std::map;
 
 namespace Coal{
 
@@ -42,6 +33,7 @@ namespace Coal{
     case HCN:  s=DEV::HCN;             break;
     case NH3:  s=DEV::NH3;             break;
     case CH4:  s=DEV::CH4;             break;
+    case H  :  s=DEV::H;               break;
     case H2:   s=DEV::H2;              break; 
     default:   s=DEV::INVALID_SPECIES; break;
     }
@@ -152,8 +144,7 @@ namespace Coal{
 
       mvTag_      ( dev_ ->volatiles_tag()              ),
       charTag_    ( char_->char_mass_tag()              ),
-      moistureTag_( evap_->retrieve_moisture_mass_tag() ),
-      gas_        (CanteraObjects::get_gasmix()         )
+      moistureTag_( evap_->retrieve_moisture_mass_tag() )
   {
     // assemble the collection of tags corresponding to gas phase
     // source terms from the CPD and Char oxidation models,
@@ -164,9 +155,8 @@ namespace Coal{
     for( Expr::TagList::const_iterator iss=cpdSpeciesSrcTags.begin(); iss!=cpdSpeciesSrcTags.end(); ++iss ){
       gasSpeciesSourceTags_.push_back( *iss );
     }
-
-    // CharSpecRHSt[0]  : CO2 rhs consumption rate in gas phase
-    // CharSpecRHSt[1]  : CO  rhs consumption rate in gas phase
+    // CharSpecRHSt[0]  : CO2 rhs consupmtion rate in gas phase
+    // CharSpecRHSt[1]  : CO  rhs consupmtion rate in gas phase
     // CharSpecRHSt[2]  : O2  rhs consumption rate in gas phase
     // CharSpecRHSt[3]  : H2  rhs consumption rate in gas phase
     // CharSpecRHSt[4]  : H2O rhs consumption rate in gas phase
@@ -197,8 +187,6 @@ namespace Coal{
     delete dev_;
     delete char_;
     delete evap_;
-
-    CanteraObjects::restore_gasmix(gas_);
   }
 
   //------------------------------------------------------------------
@@ -213,163 +201,34 @@ namespace Coal{
     std::cout << "\nRegistering coal expressions for energy source terms"<<std::endl;
 
     const Expr::TagList charGasTags   = char_->gas_species_src_tags(); // consist of three tags, 1.CO2_RHS (Negative), 2.CO_RHS (Negative), 3.O2_RHS (Positive)
-    const Expr::TagList devSpecRHSTags = dev_->gas_species_src_tags();  // consist of 8 tags. ALl are Negative !
-    const Expr::Tag     evapRHSTag    = evap_->moisture_rhs_tag();     // Evaporation RHS. Always negative !
+    const Expr::TagList cpdSpec_rhsTag = dev_->gas_species_src_tags();  // consist of 8 tags. ALl are Negative !
+    const Expr::Tag     evap_rhsTag    = evap_->moisture_rhs_tag();     // Evaporation RHS. Always negative !
     const Expr::Tag     oxidationTag  = char_->oxidation_tag();
     const Expr::Tag     co2GasifTag   = char_->char_gasification_co2_rate_tag();
     const Expr::Tag     h2oGasifTag   = char_->char_gasification_h2o_rate_tag();
     const Expr::Tag     co2CoRatioTag = char_->co2coratio_tag();
-    const Expr::Tag     o2RHSTag      = char_->gas_species_src_tag(CHAR::O2);
-
-    const double mwChar = gas_->atomicWeight( gas_->elementIndex("C") );
-
-    const StringNames& sNames = StringNames::self();
-
-    typedef typename Expr::LinearFunction  <FieldT>::Builder LinFunBuilder;
-    typedef typename Expr::ConstantExpr    <FieldT>::Builder ConstBuilder;
-    typedef typename ProducedGasComposition<FieldT>::Builder ProducedCompBuilder;
-    typedef typename ConsumedGasComposition<FieldT>::Builder ConsumedCompBuilder;
-    typedef typename HeatFromCharReactions <FieldT>::Builder deltaHCharBuilder;
-
-    typedef typename pokitt::Enthalpy     <FieldT>::Builder EnthalpyBuilder;
-    typedef typename ExprAlgebra          <FieldT>::Builder AlgebraBuilder;
-    typedef typename CoalHeatCapacity     <FieldT>::Builder CoalCpBuilder;
-    typedef          ExprAlgebra          <FieldT>          Algebra;
-
-    /* register expressions corresponding to gas *consumed* at the particle */
-    /*****************************************************************************************/
-    const Expr::Tag zeroTag                  ( "particle-zero-val"               , Expr::STATE_NONE );
-    const Expr::Tag totalConsumptionRateTag  ( sNames.coalTotalGasConsumptionRate, Expr::STATE_NONE );
-    const Expr::Tag consumedGasEnthalpyTag   ( sNames.coalConsumedGasEnthalpy    , Expr::STATE_NONE );
-    const Expr::Tag consumedGasEnthalpySrcTag( sNames.coalConsumedGasEnthalpySrc , Expr::STATE_NONE );
-
-    factory.register_expression( new ConstBuilder( zeroTag, 0.) );
-
-    /* Gasification rates are given in (mass char produced)/second and need to be converted to
-     * (species mass)/second consumed
-     */
-    // Expression for O2 consumption rate registered in the implemented char model interface
-    const std::string&  consumedYiPrefix = sNames.coalConsumedGasYi;
-    const SpeciesTagMap consumedYiTags   = ConsumedCompBuilder::
-                                           get_consumed_species_tag_map( consumedYiPrefix );
-
-    /* Assemble a TagList of all species in the cantera species group. If a species is not
-     * present in consumedYiTags, a tag to a zero-valued field will be added in its place.
-     */
-    Expr::TagList allYiTagsConsumed;
-    for(const std::string& specName : gas_->speciesNames()){
-      const GasSpeciesName                specEnum = gas_name_to_enum   ( specName );
-      const SpeciesTagMap::const_iterator iter     = consumedYiTags.find( specEnum );
-
-      allYiTagsConsumed.push_back( iter == consumedYiTags.end() ? zeroTag : iter->second );
-    }
-
-    factory.register_expression( new ConsumedCompBuilder( consumedYiPrefix,
-                                                          totalConsumptionRateTag,
-                                                          o2RHSTag,
-                                                          co2GasifTag,
-                                                          h2oGasifTag ));
-
-    factory.register_expression( new EnthalpyBuilder( consumedGasEnthalpyTag, gTempTag_,
-                                                      allYiTagsConsumed) );
-
-    /* this calculates the enthalpy removed from the gas (J/s) from gas consumption
-     * at the particle.
-     */
-    factory.register_expression( new AlgebraBuilder( consumedGasEnthalpySrcTag,
-                                                     Expr::tag_list( totalConsumptionRateTag,
-                                                                     consumedGasEnthalpyTag ),
-                                                     Algebra::PRODUCT ) );
-
-    /* register expressions corresponding to gas *produced* at the particle */
-    /*****************************************************************************************/
-
-    const Expr::Tag totalProductionRateTag   (sNames.coalTotalGasProductionRate, Expr::STATE_NONE);
-    const Expr::Tag producedGasEnthalpyTag   (sNames.coalProducedGasEnthalpy   , Expr::STATE_NONE);
-    const Expr::Tag producedGasEnthalpySrcTag(sNames.coalProducedGasEnthalpySrc, Expr::STATE_NONE);
-
-    const std::string& producedYiPrefix = sNames.coalProducedGasYi;
-    const SpeciesTagMap producedYiTags = ProducedCompBuilder::
-                                         get_produced_species_tag_map( producedYiPrefix,
-                                                                       devModel_ );
-
-    /* Assemble a TagList of all species in the cantera species group. If a species is not
-     * present in producedYiTags, a tag to a zero-valued field will be added in its place.
-     */
-    Expr::TagList allYiTagsProduced;
-    for(const std::string& specName : gas_->speciesNames()){
-      const GasSpeciesName                specEnum = gas_name_to_enum   ( specName );
-      const SpeciesTagMap::const_iterator iter     = producedYiTags.find( specEnum );
-
-      allYiTagsProduced.push_back( iter == producedYiTags.end() ? zeroTag : iter->second );
-    }
-
-        factory.register_expression( new ProducedCompBuilder( producedYiPrefix, totalProductionRateTag,
-                                                              devSpecRHSTags, evapRHSTag,
-                                                              oxidationTag, co2CoRatioTag,
-                                                              co2GasifTag, h2oGasifTag,
-                                                              devModel_ ) );
-
-        factory.register_expression( new EnthalpyBuilder( producedGasEnthalpyTag, pTempTag_,
-                                                          allYiTagsProduced ) );
-
-        /* this calculates the enthalpy removed from the gas (J/s) from gas production
-         * at the particle.
-         */
-        factory.register_expression( new AlgebraBuilder( producedGasEnthalpySrcTag,
-                                                         Expr::tag_list( totalProductionRateTag,
-                                                                         producedGasEnthalpyTag ),
-                                                         Algebra::PRODUCT ) );
-
-
-    /*****************************************************************************************/
-    const Expr::Tag heatFromCharRxnTag     ( sNames.heatFromCharRxns,             Expr::STATE_NONE );
-    const Expr::Tag heatFromCharRxnToGasTag( sNames.heatFromCharRxns + "_to_gas", Expr::STATE_NONE );
-
-    factory.register_expression( new deltaHCharBuilder( heatFromCharRxnTag,
-                                                        oxidationTag,
-                                                        co2GasifTag,
-                                                        h2oGasifTag,
-                                                        co2CoRatioTag ) );
-
-    factory.register_expression( new LinFunBuilder( heatFromCharRxnToGasTag,
-                                                    heatFromCharRxnTag,
-                                                    1. - Coal::absored_heat_fraction_particle(),
-                                                    0 ) );
-
-    factory.register_expression( new AlgebraBuilder( heatReleasedToGasTag_,
-                                                     Expr::tag_list( consumedGasEnthalpySrcTag,
-                                                                     producedGasEnthalpySrcTag,
-                                                                     heatFromCharRxnToGasTag ),
-                                                     Algebra::SUM ) );
 
     Expr::TagList charco2co;
-    charco2co.push_back(char_->gas_species_src_tag(CHAR::CO2));
-    charco2co.push_back(char_->gas_species_src_tag(CHAR::CO ));
+    charco2co.push_back(charGasTags[0]);
+    charco2co.push_back(charGasTags[1]);
+    const Expr::Tag o2_rhsTag = charGasTags[2];
 
     // AllowOverwrite = true for CoalHeatCapacity because a placeholder expression is registered first
     // (in PArticleTemperatureEquation.cc).
-    factory. register_expression( new CoalCpBuilder( pCpTag_,
-                                                     mvTag_,
-                                                     charTag_,
-                                                     moistureTag_,
-                                                     pMassTag_,
-                                                     pTempTag_ ) );
+    factory.register_expression( new typename CoalHeatCapacity       <FieldT>::
+                                 Builder( pCpTag_, mvTag_, charTag_, moistureTag_, pMassTag_, pTempTag_) );
 
-    iFactory.register_expression( new CoalCpBuilder( pCpTag_,
-                                                     mvTag_,
-                                                     charTag_,
-                                                     moistureTag_,
-                                                     pMassTag_,
-                                                     pTempTag_ ) );
+    iFactory.register_expression( new typename CoalHeatCapacity       <FieldT>::
+                                 Builder( pCpTag_, mvTag_, charTag_, moistureTag_, pMassTag_, pTempTag_) );
 
     factory.register_expression( new typename ParticleTemperatureRHS <FieldT>::
-                                 Builder( pTemp_rhsTag_,
-                                          pMassTag_,
-                                          pCpTag_,
-                                          evapRHSTag,
-                                          pTempTag_,
-                                          heatFromCharRxnTag ) );
+                                 Builder( pTemp_rhsTag_, pMassTag_, pCpTag_, evap_rhsTag, oxidationTag,
+                                          co2GasifTag, h2oGasifTag, co2CoRatioTag, pTempTag_, gTempTag_ ) );
+
+    factory.register_expression( new typename HeatReleasedtoGas<FieldT>::
+                                 Builder( heatReleasedToGasTag_, o2_rhsTag, cpdSpec_rhsTag, evap_rhsTag,
+                                          oxidationTag, co2CoRatioTag, co2GasifTag,
+                                          h2oGasifTag, pTempTag_, gTempTag_, gPressTag_, devModel_) );
 
     // Plug the char production rate from CPD into the char model.
     // The CPD model produces char.  The char model calculates the

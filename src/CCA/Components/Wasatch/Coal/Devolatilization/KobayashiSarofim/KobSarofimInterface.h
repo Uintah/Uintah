@@ -25,8 +25,8 @@
 #include <CCA/Components/Wasatch/Coal/CoalData.h>
 #include <CCA/Components/Wasatch/Coal/Devolatilization/DevolatilizationBase.h>
 
-#include <CCA/Components/Wasatch/Coal/Devolatilization/KobayashiSarofim/KobayashiSarofim.h>
-#include <CCA/Components/Wasatch/Coal/Devolatilization/KobayashiSarofim/KobSarofimData.h>
+#include "KobayashiSarofim.h"
+#include "KobSarofimData.h"
 
 namespace DEV { class DevolatilizationBase;}
 
