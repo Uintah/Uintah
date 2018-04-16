@@ -541,26 +541,26 @@ PressureSolver::sched_SolveSystem(SchedulerP& sched,
   //__________________________________
   //  gross logic to determine what the
   //  solution label is and if it is a modified variable
-  bool modifies_x = false;
-  bool modifies_hypre = false;
+  bool modifies_x   = false;
+  bool isFirstSolve = true;
   const VarLabel* pressLabel;
   if (timelabels->integrator_step_number > 0)
-    modifies_hypre = true;
+    isFirstSolve = true;
 
   if ( extraProjection ){
 
     pressLabel = d_lab->d_pressureExtraProjectionLabel;
 
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
-      modifies_x = false;
-      modifies_hypre = false;
+      modifies_x   = false;
+      isFirstSolve = true;
     }else{
-      modifies_x = true;
-      modifies_hypre = true;
+      modifies_x   = true;
+      isFirstSolve = false;
     }
   } else {
     pressLabel = timelabels->pressure_out;
-    //    modifies_hypre = false;
+    //    isFirstSolve = false;
     modifies_x = false;
   }
 
@@ -580,7 +580,7 @@ PressureSolver::sched_SolveSystem(SchedulerP& sched,
                                x,      modifies_x,
                                b,      Task::NewDW,
                                guess,  Task::NewDW,
-                               d_hypreSolver_parameters,modifies_hypre);
+                               d_hypreSolver_parameters,isFirstSolve);
 
   //add this?
   //if ( d_ref_value != 0. ) {

@@ -95,7 +95,7 @@ namespace Uintah {
                  , const VarLabel           * guess_in
                  ,       Task::WhichDW        which_guess_dw_in
                  , const HypreSolver2Params * params_in
-                 ,       bool                 modifies_hypre_in
+                 ,       bool                 isFirstSolve_in
                  )
       : level(level_in)
       , matlset(matlset_in)
@@ -108,7 +108,7 @@ namespace Uintah {
       , guess_label(guess_in)
       , which_guess_dw(which_guess_dw_in)
       , params(params_in)
-      , modifies_hypre(modifies_hypre_in)
+      , isFirstSolve(isFirstSolve_in)
     {
       // Time Step
       m_timeStepLabel =
@@ -1107,7 +1107,7 @@ namespace Uintah {
     const VarLabel*    guess_label;
     Task::WhichDW      which_guess_dw;
     const HypreSolver2Params* params;
-    bool               modifies_hypre;
+    bool               isFirstSolve;
 
     const VarLabel* m_timeStepLabel;
     const VarLabel* hypre_solver_label;
@@ -1288,7 +1288,7 @@ namespace Uintah {
                              , const VarLabel         * guess
                              ,       Task::WhichDW      which_guess_dw
                              , const SolverParameters * params
-                             ,       bool               modifies_hypre /* = false */
+                             ,       bool               isFirstSolve /* = true */
                              )
   {
     printSchedule(level, cout_doing, "HypreSolver:scheduleSolve");
@@ -1333,35 +1333,35 @@ namespace Uintah {
     switch(domtype){
     case TypeDescription::SFCXVariable:
       {
-        HypreStencil7<SFCXTypes>* that = scinew HypreStencil7<SFCXTypes>(level.get_rep(), matls, A, which_A_dw, x, modifies_X, b, which_b_dw, guess, which_guess_dw, dparams,modifies_hypre);
+        HypreStencil7<SFCXTypes>* that = scinew HypreStencil7<SFCXTypes>(level.get_rep(), matls, A, which_A_dw, x, modifies_X, b, which_b_dw, guess, which_guess_dw, dparams, isFirstSolve);
         Handle<HypreStencil7<SFCXTypes> > handle = that;
         task = scinew Task("Hypre:Matrix solve (SFCX)", that, &HypreStencil7<SFCXTypes>::solve, handle);
       }
       break;
     case TypeDescription::SFCYVariable:
       {
-        HypreStencil7<SFCYTypes>* that = scinew HypreStencil7<SFCYTypes>(level.get_rep(), matls, A, which_A_dw, x, modifies_X, b, which_b_dw, guess, which_guess_dw, dparams,modifies_hypre);
+        HypreStencil7<SFCYTypes>* that = scinew HypreStencil7<SFCYTypes>(level.get_rep(), matls, A, which_A_dw, x, modifies_X, b, which_b_dw, guess, which_guess_dw, dparams, isFirstSolve);
         Handle<HypreStencil7<SFCYTypes> > handle = that;
         task = scinew Task("Hypre:Matrix solve (SFCY)", that, &HypreStencil7<SFCYTypes>::solve, handle);
       }
       break;
     case TypeDescription::SFCZVariable:
       {
-        HypreStencil7<SFCZTypes>* that = scinew HypreStencil7<SFCZTypes>(level.get_rep(), matls, A, which_A_dw, x, modifies_X, b, which_b_dw, guess, which_guess_dw, dparams,modifies_hypre);
+        HypreStencil7<SFCZTypes>* that = scinew HypreStencil7<SFCZTypes>(level.get_rep(), matls, A, which_A_dw, x, modifies_X, b, which_b_dw, guess, which_guess_dw, dparams, isFirstSolve);
         Handle<HypreStencil7<SFCZTypes> > handle = that;
         task = scinew Task("Hypre:Matrix solve (SFCZ)", that, &HypreStencil7<SFCZTypes>::solve, handle);
       }
       break;
     case TypeDescription::CCVariable:
       {
-        HypreStencil7<CCTypes>* that = scinew HypreStencil7<CCTypes>(level.get_rep(), matls, A, which_A_dw, x, modifies_X, b, which_b_dw, guess, which_guess_dw, dparams,modifies_hypre);
+        HypreStencil7<CCTypes>* that = scinew HypreStencil7<CCTypes>(level.get_rep(), matls, A, which_A_dw, x, modifies_X, b, which_b_dw, guess, which_guess_dw, dparams, isFirstSolve);
         Handle<HypreStencil7<CCTypes> > handle = that;
         task = scinew Task("Hypre:Matrix solve (CC)", that, &HypreStencil7<CCTypes>::solve, handle);
       }
       break;
     case TypeDescription::NCVariable:
       {
-        HypreStencil7<NCTypes>* that = scinew HypreStencil7<NCTypes>(level.get_rep(), matls, A, which_A_dw, x, modifies_X, b, which_b_dw, guess, which_guess_dw, dparams,modifies_hypre);
+        HypreStencil7<NCTypes>* that = scinew HypreStencil7<NCTypes>(level.get_rep(), matls, A, which_A_dw, x, modifies_X, b, which_b_dw, guess, which_guess_dw, dparams, isFirstSolve);
         Handle<HypreStencil7<NCTypes> > handle = that;
         task = scinew Task("Hypre:Matrix solve (NC)", that, &HypreStencil7<NCTypes>::solve, handle);
       }
@@ -1384,15 +1384,15 @@ namespace Uintah {
     task->requires(which_b_dw, b, Ghost::None, 0);
     LoadBalancer * lb = sched->getLoadBalancer();
 
-    if (modifies_hypre) {
-      task->requires( Task::NewDW, hypre_solver_label);
-      task->requires( Task::OldDW, m_timeStepLabel);
-    }  else {
+    if (isFirstSolve) {
       task->requires( Task::OldDW, hypre_solver_label);
       task->computes( hypre_solver_label);
 
       task->requires( Task::OldDW, m_timeStepLabel);
       task->computes( m_timeStepLabel);
+    }  else {
+      task->requires( Task::NewDW, hypre_solver_label);
+      task->requires( Task::OldDW, m_timeStepLabel);
     }
     
     sched->overrideVariableBehavior(hypre_solver_label->getName(),false,false,

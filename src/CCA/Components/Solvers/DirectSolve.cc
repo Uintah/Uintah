@@ -284,7 +284,7 @@ DirectSolve::scheduleSolve( const LevelP           & level,
                             const VarLabel         * guess,
                                   Task::WhichDW      /* which_guess_dw */,
                             const SolverParameters * params,
-                                  bool               /* modifies_hypre = false */ )
+                                  bool               /* isFirstSolve = true */ )
 {
   if(level->numPatches() != 1) {
     throw InternalError("DirectSolve only works with 1 patch", __FILE__, __LINE__);

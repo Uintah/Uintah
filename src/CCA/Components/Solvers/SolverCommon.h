@@ -57,15 +57,15 @@ namespace Uintah {
 				const VarLabel         * guess,
 				      Task::WhichDW      which_guess_dw,
 				const SolverParameters * params,
-				      bool               modifies_hypre = false ) = 0;
+				      bool               isFirstSolve = true ) = 0;
                                
     virtual std::string getName() = 0;
 
     // SolverCommon does not require initialization... but we need an empty
     // routine to satisfy inheritance.
     virtual void scheduleInitialize( const LevelP      & level,
-				     SchedulerP  & sched,
-				     const MaterialSet * matls ) = 0;
+				               SchedulerP  & sched,
+				         const MaterialSet * matls ) = 0;
   };
 } // end namespace Uintah
 

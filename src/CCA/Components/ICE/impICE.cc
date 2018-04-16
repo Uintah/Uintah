@@ -1041,7 +1041,7 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
                               lb->imp_delPLabel, modifies_X,
                               lb->rhsLabel,      Task::OldDW,
                               whichInitialGuess, Task::OldDW,
-                              d_solver_parameters,false);
+                              d_solver_parameters,true);
       
       scheduleUpdatePressure( d_subsched,  level, patch_set,  ice_matls,
                               mpm_matls, 

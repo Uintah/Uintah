@@ -135,7 +135,7 @@ Pressure::schedule_solver( const Uintah::LevelP& level,
                          pressureLabel_, true,
                          prhsLabel_, Uintah::Task::NewDW,
                          pressureLabel_, RKStage == 1 ? Uintah::Task::OldDW : Uintah::Task::NewDW,
-                         &solverParams_, RKStage == 1 ? false:true);
+                         &solverParams_, RKStage == 1 ? true:false);
   if(useRefPressure_) {
     solver_.scheduleSetReferenceValue<WasatchCore::SelectUintahFieldType<SVolField>::type >(level, sched, materials, pressureLabel_, RKStage, refPressureLocation_, refPressureValue_);
   }

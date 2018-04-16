@@ -354,12 +354,12 @@ PressureEqn::solve( const LevelP& level, SchedulerP& sched, const int time_subst
     m_hypreSolver->scheduleEnforceSolvability<CCVariable<double> >(level, sched, matls, b, time_substep);
   }
 
-  bool modifies_hypre = false;
+  bool isFirstSolve = true;
 
   bool modifies_x = true; //because x was computed upstream
 
   if ( time_substep > 0 ) {
-    modifies_hypre = true;
+    isFirstSolve = false;
   }
 
   m_hypreSolver->scheduleSolve(level, sched,  matls,
@@ -368,6 +368,6 @@ PressureEqn::solve( const LevelP& level, SchedulerP& sched, const int time_subst
                                b,      Task::NewDW,
                                guess,  Task::NewDW,
                                m_hypreSolver_parameters,
-                               modifies_hypre);
+                               isFirstSolve);
 
 }

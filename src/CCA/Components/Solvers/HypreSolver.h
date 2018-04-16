@@ -249,7 +249,7 @@ namespace Uintah {
                                 const VarLabel         * guess_in,
                                       Task::WhichDW      which_guess_dw_in,
                                 const SolverParameters * params_in,
-                                      bool               modifies_hypre_in = false );
+                                      bool               isFirstSolve_in = true );
 
     virtual void scheduleInitialize( const LevelP      & level,
                                            SchedulerP  & sched,

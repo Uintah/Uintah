@@ -162,7 +162,7 @@ namespace Uintah {
                                 const VarLabel         * guess,
                                       Task::WhichDW      which_guess_dw,
                                 const SolverParameters * params,
-                                      bool               modifies_hypre = false ) = 0;
+                                      bool               isFirstSolve = true ) = 0;
 
     virtual std::string getName() = 0;
     

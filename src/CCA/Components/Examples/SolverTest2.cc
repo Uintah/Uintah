@@ -145,7 +145,7 @@ SolverTest2::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
   //solver->scheduleSolve(level, sched, m_sharedState->allMaterials(),
   //                      lb_->pressure_matrix, Task::NewDW, lb_->pressure,
   //                      false, lb_->pressure_rhs, Task::NewDW, 0, Task::OldDW,
-  //                      solver_parameters,false);
+  //                      solver_parameters,true);
 
 }
 //__________________________________
