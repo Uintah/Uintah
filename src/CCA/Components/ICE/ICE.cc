@@ -258,16 +258,14 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
   ProblemSpecP cfd_ps = prob_spec->findBlock("CFD");
 
   if(!cfd_ps){
-    throw ProblemSetupException(
-     "\n Could not find the <CFD> section in the input file\n",__FILE__, __LINE__);    
+    throw ProblemSetupException("\n Could not find the <CFD> section in the input file\n",__FILE__, __LINE__);    
   }
 
   cfd_ps->require("cfl",d_CFL);
   
   ProblemSpecP cfd_ice_ps = cfd_ps->findBlock("ICE");
   if(!cfd_ice_ps){
-    throw ProblemSetupException(
-     "\n Could not find the <CFD> <ICE> section in the input file\n",__FILE__, __LINE__);    
+    throw ProblemSetupException("\n Could not find the <CFD> <ICE> section in the input file\n",__FILE__, __LINE__);    
   }
   
   cfd_ice_ps->get("max_iteration_equilibration",d_max_iter_equilibration);
@@ -298,10 +296,11 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
     d_solver_parameters = m_solver->readParameters(impSolver, "implicitPressure");
     d_solver_parameters->setSolveOnExtraCells(false);
     d_solver_parameters->setRestartTimestepOnFailure(true);
-    impSolver->require("max_outer_iterations",      d_max_iter_implicit);
-    impSolver->require("outer_iteration_tolerance", d_outer_iter_tolerance);
-    impSolver->getWithDefault("iters_before_timestep_restart",    
-                               d_iters_before_timestep_restart, 5);
+    
+    
+    impSolver->require(       "max_outer_iterations",          d_max_iter_implicit);
+    impSolver->require(       "outer_iteration_tolerance",     d_outer_iter_tolerance);
+    impSolver->getWithDefault("iters_before_timestep_restart", d_iters_before_timestep_restart, 5);
     d_impICE = true;
 
     d_subsched = m_scheduler->createSubScheduler();

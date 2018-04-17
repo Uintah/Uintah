@@ -111,8 +111,7 @@ namespace Uintah {
       , isFirstSolve(isFirstSolve_in)
     {
       // Time Step
-      m_timeStepLabel =
-        VarLabel::create(timeStep_name, timeStep_vartype::getTypeDescription() );
+      m_timeStepLabel    = VarLabel::create(timeStep_name, timeStep_vartype::getTypeDescription() );
       hypre_solver_label = VarLabel::create("hypre_solver_label",
                                             SoleVariable<hypre_solver_structP>::getTypeDescription());
                    
@@ -145,20 +144,13 @@ namespace Uintah {
       tMatVecSetup_ = hypre_InitializeTiming("Matrix + Vector setup");
       tSolveOnly_   = hypre_InitializeTiming("Solve time");
 
-      // int timeStep = params->m_sharedState->getCurrentTopLevelTimeStep();
-
+      // timestep can come from the old_dw or parentOldDW
       timeStep_vartype timeStep(0);
-
-      if (new_dw->exists(m_timeStepLabel)) {
-        new_dw->get(timeStep, m_timeStepLabel);
-      }
-      else if (old_dw->exists(m_timeStepLabel)) {
-        old_dw->get(timeStep, m_timeStepLabel);
-        new_dw->put(timeStep, m_timeStepLabel);
-      }
-      else {
-        new_dw->put(timeStep, m_timeStepLabel);
-      }
+      
+      Task::WhichDW myOldDW = params->getWhichOldDW();
+      DataWarehouse* pOldDW= new_dw->getOtherDataWarehouse(myOldDW);
+      
+      pOldDW->get(timeStep, m_timeStepLabel);
 
       //________________________________________________________
       // Solve frequency
@@ -233,7 +225,7 @@ namespace Uintah {
 
       Timers::Simple timer;
       timer.start();
-      
+
       for(int m = 0;m<matls->size();m++){
         int matl = matls->get(m);
 
@@ -1370,35 +1362,46 @@ namespace Uintah {
       throw InternalError("Unknown variable type in scheduleSolve", __FILE__, __LINE__);
     }
 
+    //__________________________________
+    //  Computes and requires
+    
+    // Matrix A
     task->requires(which_A_dw, A, Ghost::None, 0);
+  
+    // Solution X
     if(modifies_X){
       task->modifies(x);
     } else {
       task->computes(x);
     }
     
+    // Initial Guess
     if(guess){
       task->requires(which_guess_dw, guess, Ghost::None, 0); 
     }
 
+    // RHS  B
     task->requires(which_b_dw, b, Ghost::None, 0);
-    LoadBalancer * lb = sched->getLoadBalancer();
+    
+    // timestep 
+    // it could come from old_dw or parentOldDw
+    Task::WhichDW old_dw = params->getWhichOldDW();
+    task->requires( old_dw, m_timeStepLabel );
 
+    // solve struct
     if (isFirstSolve) {
       task->requires( Task::OldDW, hypre_solver_label);
       task->computes( hypre_solver_label);
-
-      task->requires( Task::OldDW, m_timeStepLabel);
-      task->computes( m_timeStepLabel);
     }  else {
       task->requires( Task::NewDW, hypre_solver_label);
-      task->requires( Task::OldDW, m_timeStepLabel);
     }
     
     sched->overrideVariableBehavior(hypre_solver_label->getName(),false,false,
                                     false,true,true);
 
     task->setType(Task::Hypre);
+
+    LoadBalancer * lb = sched->getLoadBalancer();    
     sched->addTask(task, lb->getPerProcessorPatchSet(level), matls);
   }
 
