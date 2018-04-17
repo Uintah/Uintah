@@ -210,7 +210,7 @@ namespace Coal{
   {
     Expr::ExpressionFactory& factory  = *(gc_[WasatchCore::ADVANCE_SOLUTION]->exprFactory);
     Expr::ExpressionFactory& iFactory = *(gc_[WasatchCore::INITIALIZATION  ]->exprFactory);
-    std::cout << "\nRegistering coal expressions for energy source terms"<<std::endl;
+    proc0cout << "\nRegistering coal expressions for energy source terms" << std::endl;
 
     const Expr::TagList charGasTags   = char_->gas_species_src_tags(); // consist of three tags, 1.CO2_RHS (Negative), 2.CO_RHS (Negative), 3.O2_RHS (Positive)
     const Expr::TagList devSpecRHSTags = dev_->gas_species_src_tags();  // consist of 8 tags. ALl are Negative !

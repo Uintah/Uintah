@@ -144,7 +144,7 @@ namespace CHAR{
     const double f0err = 1e-15;
     const double h1err = 1e-10;
     double po2S, q, c_s, po2st,  cs;
-    double f_0,f_1,f_2, po2S_1, po2S_2, po2S_r;
+    double f_0,f_1,f_2, po2S_2, po2S_r;
     double af,bf,cf,h1,h2,gama;
     double k1, k2,  co2CORatio, k_a_s;
 
@@ -354,7 +354,7 @@ namespace CHAR{
         err_ *= err_;
 
         if( i>100 ){
-          std::cout << " CharOxidation.h : bisection method couldn't converge on oxygen concentration at particle surface! \n";
+          proc0cout << " CharOxidation.h : bisection method couldn't converge on oxygen concentration at particle surface! \n";
           break;
         }
       }
@@ -405,8 +405,8 @@ namespace CHAR{
     if( chmodel == CCK ){
       std::ostringstream msg;
       msg << __FILE__ << " : " << __LINE__
-          <<"\nCCK model should not be used with CharOxidation object"
-          <<"\nas it already considers char oxidation.";
+          << "\nCCK model should not be used with CharOxidation object"
+          << "\nas it already considers char oxidation.";
       throw std::runtime_error( msg.str() );
     }
   }

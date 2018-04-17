@@ -110,7 +110,6 @@ evaluate()
   const SpecContributeVec::const_iterator iCie = specSum_.get_vec_comp().end();
 
   for( ; iCi != iCie; ++iCi ){
-    const double mw = iCi->first;
     const VecI& contributingIndices = iCi->second;
 
     for( size_t i=0; i<contributingIndices.size(); ++i ){

@@ -49,11 +49,11 @@ namespace FOA{
       pTempTag_      ( pTempTag          ),
       gTempTag_      ( gTempTag          ),
       mixMWTag_      ( mixMWTag          ),
-      pDensTag_    ( pDensTag        ),
-      gPressTag_( gPressTag ),
-      pDiamTag_    ( pDiamTag        ),
-      pMassTag_    ( pMassTag        ),
-      pMass0Tag_( initPrtmassTag    ),
+      pDensTag_      ( pDensTag          ),
+      gPressTag_     ( gPressTag         ),
+      pDiamTag_      ( pDiamTag          ),
+      pMassTag_      ( pMassTag          ),
+      pMass0Tag_     ( initPrtmassTag    ),
       o2MassFracTag_ ( o2MassFracTag     ),
       h2MassFracTag_ ( h2MassFracTag     ),
       h2oMassFracTag_( h2oMassFracTag    ),
@@ -72,9 +72,9 @@ namespace FOA{
       firstOrderData_( coalType ),
       sNames_        ( Coal::StringNames::self() )
   {
-    std::cout<< "Setting up char model: "
-             << CHAR::char_model_name(charModel_)
-             << std::endl;
+    proc0cout << "Setting up char model: "
+              << CHAR::char_model_name(charModel_)
+              << std::endl;
 
     parse_equations();
     set_tags();
@@ -87,7 +87,7 @@ namespace FOA{
   FirstOrderInterface<FieldT>::
   parse_equations()
   {
-    std::cout<<"Parsing equations...\n";
+    proc0cout << "Parsing equations...\n";
 
         // Get initial mass fraction of char within coal volatiles
         double c0 = 0.0;
@@ -98,7 +98,7 @@ namespace FOA{
          // Calculate initial mass fraction of char within coal
          double char0 = charData_.get_fixed_C()+ charData_.get_vm()*c0;
 
-        std::cout << std::endl
+        proc0cout << std::endl
                   << "Initial char mass fraction in coal volatiles is : "
                   << charData_.get_vm()*c0
                   << std::endl
@@ -159,7 +159,7 @@ namespace FOA{
   FirstOrderInterface<FieldT>::
   register_expressions()
   {
-    std::cout<<"Registering expressions...\n";
+    proc0cout << "Registering expressions...\n";
     Expr::ExpressionFactory& factory = *(gc_[WasatchCore::ADVANCE_SOLUTION]->exprFactory);
 
     factory.register_expression( new typename Expr::ConstantExpr<FieldT>::Builder(ch4_rhsTag_, 0));

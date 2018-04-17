@@ -78,7 +78,7 @@ namespace EVAP{
   EvapInterface<FieldT>::
   parse_equations()
   {
-    std::cout<<"\n\nEvapInterface::parse_equations() called. \n\n";
+    proc0cout << "\n\nEvapInterface::parse_equations() called. \n\n";
     const Coal::StringNames& sNames = Coal::StringNames::self();;
     evapEqn_ = new Coal::CoalEquation( sNames.moisture, pMassTag_, coalComp_.get_moisture(), gc_ );
 

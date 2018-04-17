@@ -178,14 +178,14 @@ void
 CharOxidationData::
 insufficient_data()
 {
-  std::cout << " ------------------------------------------------------------------------ \n"
-      << " WARNING:\n"
-      << "  For more accurate calculation in Char oxidation model, this coal type   \n"
-      << "  requires the following values to be specified in CharData.cc:          \n"
-      << "   - initial coal porosity                      (default = " << e0_ << ")\n"
-      << "   - mean pore radius (m)                       (default = " << rPore_ << ")\n"
-      << "   - initial internal char surface area (m2/kg) (default = " << s0_ << ")\n"
-      << " ------------------------------------------------------------------------ \n";
+  proc0cout << " ------------------------------------------------------------------------ \n"
+            << " WARNING:\n"
+            << "  For more accurate calculation in Char oxidation model, this coal type   \n"
+            << "  requires the following values to be specified in CharData.cc:          \n"
+            << "   - initial coal porosity                      (default = " << e0_ << ")\n"
+            << "   - mean pore radius (m)                       (default = " << rPore_ << ")\n"
+            << "   - initial internal char surface area (m2/kg) (default = " << s0_ << ")\n"
+            << " ------------------------------------------------------------------------ \n";
 }
 //--------------------------------------------------------------------
 

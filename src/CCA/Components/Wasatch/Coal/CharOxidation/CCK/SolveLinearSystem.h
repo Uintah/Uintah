@@ -19,12 +19,12 @@ bool SolveLinearSystem( const CHAR::Array2D& A,
 
  // see if the A is square
  if( n != A.shape()[1] ){
-   std::cout<<"\n\nInputed matrix must be square!!!\n\n";
+   proc0cout << "\n\nInputed matrix must be square!!!\n\n";
  }
 
  // check whether A, b and x have consistent dimensions
  if( n != x.size() || n != b.size() ){
-   std::cout<<"\n\nInputed matrix and vectors do not have consistent dimensions !!!\n\n";
+   proc0cout << "\n\nInputed matrix and vectors do not have consistent dimensions !!!\n\n";
  }
 
  boost::numeric::ublas::matrix<double> A_(n,n);

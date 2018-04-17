@@ -65,9 +65,9 @@ namespace LH{
       gc_            ( gc                ),
       sNames_        ( Coal::StringNames::self() )
   {
-    std::cout<< "Setting up char model: "
-             << CHAR::char_model_name(charModel_)
-             << std::endl;
+    proc0cout << "Setting up char model: "
+              << CHAR::char_model_name(charModel_)
+              << std::endl;
 
     parse_equations();
     set_tags();
@@ -81,7 +81,7 @@ namespace LH{
   LangmuirInterface<FieldT>::
   parse_equations()
   {
-    std::cout<<"Parsing equations...\n";
+    proc0cout << "Parsing equations...\n";
 
         // Get initial mass fraction of char within coal volatiles
         double c0 = 0.0;
@@ -92,7 +92,7 @@ namespace LH{
          // Calculate initial mass fraction of char within coal
          double char0 = charData_.get_fixed_C()+ charData_.get_vm()*c0;
 
-        std::cout << std::endl
+        proc0cout << std::endl
                   << "Initial char mass fraction in coal volatiles is : "
                   << charData_.get_vm()*c0
                   << std::endl
@@ -146,7 +146,7 @@ namespace LH{
   LangmuirInterface<FieldT>::
   register_expressions()
   {
-    std::cout<<"Registering expressions...\n";
+    proc0cout << "Registering expressions...\n";
 
     Expr::ExpressionFactory& factory = *(gc_[WasatchCore::ADVANCE_SOLUTION]->exprFactory);
 
@@ -157,14 +157,12 @@ namespace LH{
                                                             pMass0Tag_, charData_, charModel_) );
 
     gasifco2ID_     = factory.register_expression( new typename CHAR::GasificationCO2<FieldT>::
-                                                   Builder( heteroCo2Tag_,charMassTag_, pDiamTag_,
-                                                            pTempTag_,co2MassFracTag_, mixMWTag_,
-                                                            gPressTag_) );
+                                                   Builder( heteroCo2Tag_, charMassTag_, pTempTag_,
+                                                            co2MassFracTag_, mixMWTag_, gPressTag_) );
 
     gasifh2oID_     = factory.register_expression( new typename CHAR::GasificationH2O<FieldT>::
-                                                   Builder( heteroH2oTag_, charMassTag_, pDiamTag_,
-                                                            pTempTag_, h2oMassFracTag_, mixMWTag_,
-                                                            gPressTag_) );
+                                                   Builder( heteroH2oTag_, charMassTag_, pTempTag_,
+                                                            h2oMassFracTag_, mixMWTag_, gPressTag_) );
 
     h2Andh2oRHSID_  = factory.register_expression( new typename CHAR::H2andH2ORHS    <FieldT>::
                                                    Builder( h2andh2o_rhsTags_, heteroH2oTag_) );

@@ -26,7 +26,6 @@
 #define CharConversion_Expr_h
 
 #include <expression/Expression.h>
-#include <CCA/Components/Wasatch/Coal/Devolatilization/CPD/c0_fun.h>
 #include "CCKData.h"
 
 namespace CCK{
@@ -95,9 +94,6 @@ public:
 
     const FieldT& charMass = charMass_->field_ref();
     const FieldT& pMass0   = pMass0_->field_ref();
-
-    const double c0 = CPD::c0_fun( cckData_.get_C(),
-                                   cckData_.get_O() );
 
     //const double xc   = cckData_.get_fixed_C() + cckData_.get_vm()*c0;
     const double xc   = cckData_.get_fixed_C();
