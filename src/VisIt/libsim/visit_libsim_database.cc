@@ -1910,8 +1910,8 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
           if( sim->nodeStart[i] <= sim->switchNodeList[s][n] &&
               sim->switchNodeList[s][n] <= sim->nodeStop[i] )
             {
-              nCores = sim->nodeCores[i];
-              nCores = sim->nodeMemory[i];
+              nCores  = sim->nodeCores[i];
+              nMemory = sim->nodeMemory[i];
               break;
             }
         }
@@ -1926,7 +1926,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
 	    if( varName.find("processor/machine/ID") == 0 )
 	      values[nValues++] = atoi(sim->hostNode.c_str());
 	    else if( varName.find("processor/machine/Memory") == 0 )
-	      values[nValues++] = atoi(sim->hostNode.c_str());
+	      values[nValues++] = atoi(nMemory);
 	    else if( varName.find("processor/machine/MPI/node_rank") == 0 )
 	      values[nValues++] = sim->myworld->myNode_myRank();
 	    else if( varName.find("processor/machine/MPI/rank") == 0 )
