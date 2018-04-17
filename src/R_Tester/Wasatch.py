@@ -315,7 +315,7 @@ COALTESTS=[
   ("coal-inertGas-cpd-1D",               "coal-inertGas-cpd-1D.ups",              1, "All", ["exactComparison","no_restart"] ),
   ("coal-inertGas-dae-1D",               "coal-inertGas-dae-1D.ups",              1, "All", ["exactComparison","no_restart"] ),
   ("coal-inertGas-kobayashiSarofim-1D",  "coal-inertGas-kobayashiSarofim-1D.ups", 1, "All", ["exactComparison","no_restart"] ),
-  ("coalChar-langmuirHinshelwood-1D",    "coalChar-langmuirHinshelwood-1D",       1, "All", ["exactComparison","no_restart"] ),
+  ("coalChar-langmuirHinshelwood-1D",    "coalChar-langmuirHinshelwood-1D.ups",   1, "All", ["exactComparison","no_restart"] ),
 ]
 
 SCALARTRANSPORTTESTS=[

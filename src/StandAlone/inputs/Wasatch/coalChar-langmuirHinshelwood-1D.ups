@@ -267,7 +267,6 @@
     <save label="coalProducedGasY_HCN"/>
     <save label="coalProducedGasY_NH3"/>
     <save label="coalProducedGasY_CH4"/>
-    <save label="coalProducedGasY_H"/>
     
     <save label="coal_total_gas_consumption_rate"/>
 	<save label="coal_total_gas_production_rate"/>
