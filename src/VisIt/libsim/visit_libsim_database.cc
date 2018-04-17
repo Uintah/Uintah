@@ -783,8 +783,7 @@ visit_handle visit_SimGetMetaData(void *cbdata)
               VisIt_VariableMetaData_setTreatAsASCII(vmd, false);
               VisIt_SimulationMetaData_addVariable(md, vmd);
             }
-          }
-          
+          }          
         }
       }
     }
@@ -1007,8 +1006,35 @@ visit_handle visit_SimGetMetaData(void *cbdata)
           VisIt_SimulationMetaData_addMesh(md, mmd);
         }
       }
-    }
 
+      std::string vars[4] = {"ID",
+			     "MPI/node_rank", "MPI/node",
+			     "MPI/rank"};
+
+      std::string meshName = "machine_" + sim->hostName + "/local";
+      
+      for( unsigned int i=0; i<4; ++i )
+      {
+        visit_handle vmd = VISIT_INVALID_HANDLE;
+
+	if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
+	{
+	  std::string var = std::string("processor/machine/") + vars[i];
+	  
+	  VisIt_VariableMetaData_setName(vmd, var.c_str());
+	  VisIt_VariableMetaData_setMeshName(vmd, meshName.c_str());
+	  VisIt_VariableMetaData_setCentering(vmd, VISIT_VARCENTERING_ZONE);
+	  VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
+	  VisIt_VariableMetaData_setNumComponents(vmd, 1);
+              
+	  // ARS - FIXME
+	  //      VisIt_VariableMetaData_setHasDataExtents(vmd, false);
+	  VisIt_VariableMetaData_setTreatAsASCII(vmd, false);
+	  VisIt_SimulationMetaData_addVariable(md, vmd);
+	}
+      }
+    }
+    
     // ARS - FIXME
     // md->AddGroupInformation(numLevels, totalPatches, groupIds);
     // md->AddDefaultSILRestrictionDescription(std::string("!TurnOnAll"));
@@ -1400,11 +1426,12 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
       }
     }
 
-    // Create all of the connections.
+    // nConnections are for quads so the type plus four points.
+    const unsigned int nQuadVals = 5;
     unsigned int nConnections = 0;
-    int* connections = new int[ 5 * totalCores ];
+    int* connections = new int[ totalCores * nQuadVals ];
 
-    for( unsigned int i=0; i<5*totalCores; ++i)
+    for( unsigned int i=0; i<totalCores*nQuadVals; ++i)
       connections[i] = 0;
     
     // Loop through each switch.
@@ -1453,7 +1480,8 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
       }
     }
 
-    unsigned int nCells = nConnections / 5;
+    // nConnections are for quads so the type plus four points.
+    unsigned int nCells = nConnections / nQuadVals;
 
     // The original connection array was a maximum resize it to the
     // actual number of connections.
@@ -1839,6 +1867,88 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
     
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
+  std::string varName(varname);
+
+  if( varName.find("processor/machine/") == 0 )
+  {
+    // bool global = (varName.find("global") != std::string::npos);
+    // bool local  = (varName.find("local" ) != std::string::npos);
+
+    bool global = false;
+    bool local  = true;
+    
+    // Only rank 0 return the whole of the mesh.
+    if( global && sim->myworld->myRank() != 0 )
+      return VISIT_INVALID_HANDLE;
+
+    unsigned int totalCores =
+      sim->switchNodeList.size() * sim->maxNodes * sim->maxCores;
+
+    unsigned int nValues = 0;
+    float* values = new float[ totalCores ];
+    for( unsigned int i=0; i<totalCores; ++i)
+      values[i] = 0;
+    
+    // Loop through each switch.
+    for( unsigned int s=0; s<sim->switchNodeList.size(); ++s )
+    {
+      // Loop through each node.
+      for( unsigned int n=0; n<sim->switchNodeList[s].size(); ++n )
+      {
+        // Get the number of cores for this node.
+        unsigned int nCores = 0;
+
+        for( unsigned int i=0; i<sim->nodeCores.size(); ++i )
+        {
+          if( sim->nodeStart[i] <= sim->switchNodeList[s][n] &&
+              sim->switchNodeList[s][n] <= sim->nodeStop[i] )
+            {
+              nCores = sim->nodeCores[i];
+              break;
+            }
+        }
+
+        // Loop through each core.
+        for( unsigned int i=0; i<nCores; ++i )
+        {
+          if( global ||
+              (local && s == sim->switchIndex && n == sim->nodeIndex &&
+               (int) i == sim->myworld->myNode_myRank()) )
+          {
+	    if( varName.find("processor/machine/ID") == 0 )
+	      values[nValues++] = atoi(sim->hostNode.c_str());
+	    else if( varName.find("processor/machine/MPI/node_rank") == 0 )
+	      values[nValues++] = sim->myworld->myNode_myRank();
+	    else if( varName.find("processor/machine/MPI/rank") == 0 )
+	      values[nValues++] = sim->myworld->myNode();
+	    else if( varName.find("processor/machine/MPI/node") == 0 )
+	      values[nValues++] = sim->myworld->myRank();
+          }
+        }
+      }
+    }
+
+    // The original connection array was a maximum resize it to the
+    // actual number of connections.
+    float* tmp = new float[nValues];
+    std::copy_n(values, nValues, tmp);
+    delete[] values;
+    values = tmp;
+
+    visit_handle varH = VISIT_INVALID_HANDLE;
+    
+    if(VisIt_VariableData_alloc(&varH) == VISIT_OKAY)
+    {
+      VisIt_VariableData_setDataF(varH, VISIT_OWNER_VISIT, 1, nValues, values);
+
+      // No need to delete as the flag is VISIT_OWNER_VISIT so VisIt
+      // owns the data (VISIT_OWNER_SIM - indicates the simulation
+      // owns the data).
+    }
+
+    return varH;
+  }  
+
   SchedulerP schedulerP      = sim->simController->getSchedulerP();
   GridP gridP                = sim->gridP;
 
@@ -1854,7 +1964,6 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
 
   // Get the var name sans the material. If a patch or processor
   // variable then the var name will be either "patch" or "processor".
-  std::string varName(varname);
   size_t found = varName.find("/");
   std::string matl = varName.substr(found + 1);
   varName = varName.substr(0, found);
