@@ -1007,13 +1007,13 @@ visit_handle visit_SimGetMetaData(void *cbdata)
         }
       }
 
-      std::string vars[4] = {"ID",
+      std::string vars[5] = {"ID", "Memory",
 			     "MPI/node_rank", "MPI/node",
 			     "MPI/rank"};
 
       std::string meshName = "machine_" + sim->hostName + "/local";
       
-      for( unsigned int i=0; i<4; ++i )
+      for( unsigned int i=0; i<5; ++i )
       {
         visit_handle vmd = VISIT_INVALID_HANDLE;
 
@@ -1026,6 +1026,12 @@ visit_handle visit_SimGetMetaData(void *cbdata)
 	  VisIt_VariableMetaData_setCentering(vmd, VISIT_VARCENTERING_ZONE);
 	  VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
 	  VisIt_VariableMetaData_setNumComponents(vmd, 1);
+	  if( vars[2] ==  "ID" )
+	    VisIt_VariableMetaData_setUnits(vmd, sim->hostName.c_str());
+	  else if( vars[2] ==  "Memory" )
+	    VisIt_VariableMetaData_setUnits(vmd, "Gb");
+	  else
+	    VisIt_VariableMetaData_setUnits(vmd, "");
               
 	  // ARS - FIXME
 	  //      VisIt_VariableMetaData_setHasDataExtents(vmd, false);
@@ -1897,6 +1903,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       {
         // Get the number of cores for this node.
         unsigned int nCores = 0;
+        unsigned int nMemory = 0;
 
         for( unsigned int i=0; i<sim->nodeCores.size(); ++i )
         {
@@ -1904,6 +1911,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
               sim->switchNodeList[s][n] <= sim->nodeStop[i] )
             {
               nCores = sim->nodeCores[i];
+              nCores = sim->nodeMemory[i];
               break;
             }
         }
@@ -1917,12 +1925,14 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
           {
 	    if( varName.find("processor/machine/ID") == 0 )
 	      values[nValues++] = atoi(sim->hostNode.c_str());
+	    else if( varName.find("processor/machine/Memory") == 0 )
+	      values[nValues++] = atoi(sim->hostNode.c_str());
 	    else if( varName.find("processor/machine/MPI/node_rank") == 0 )
 	      values[nValues++] = sim->myworld->myNode_myRank();
 	    else if( varName.find("processor/machine/MPI/rank") == 0 )
-	      values[nValues++] = sim->myworld->myNode();
-	    else if( varName.find("processor/machine/MPI/node") == 0 )
 	      values[nValues++] = sim->myworld->myRank();
+	    else if( varName.find("processor/machine/MPI/node") == 0 )
+	      values[nValues++] = sim->myworld->myNode();
           }
         }
       }
