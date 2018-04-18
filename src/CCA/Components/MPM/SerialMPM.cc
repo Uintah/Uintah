@@ -1953,7 +1953,7 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
             interp_type=="3rdorderBS" ||
             interp_type=="fast_cpdi" ||
             interp_type=="cpdi")                          && 
-            ((num_extra_cells+periodic)!=IntVector(1,1,1) && 
+            ((num_extra_cells+periodic)!=IntVector(1,1,1) || 
             ((num_extra_cells+periodic)!=IntVector(1,1,0) && 
              flags->d_axisymmetric)))){
       ostringstream msg;
