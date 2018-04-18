@@ -239,11 +239,8 @@ TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
       // Set the patch id
       patchInfo.setPatchId(patch->getID());
 
-      // Set the processor rank id
-      patchInfo.setProcRankId( lb->getPatchwiseProcessorAssignment(patch) );
-      
-      // Set the processor node id
-      patchInfo.setProcNodeId( 0 );
+      // Set the processor id
+      patchInfo.setProcId( lb->getPatchwiseProcessorAssignment(patch) );
       
       // Set the number of nodes
       patchInfo.setNumNodes( 0 );
