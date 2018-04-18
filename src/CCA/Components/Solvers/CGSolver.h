@@ -60,6 +60,10 @@ namespace Uintah {
     virtual void scheduleInitialize( const LevelP      & level,
                                            SchedulerP  & sched,
                                      const MaterialSet * matls ) {}
+                                     
+    virtual void scheduleRestartInitialize( const LevelP      & level,
+                                                  SchedulerP  & sched,
+                                            const MaterialSet * matls) {}
   };
 
 } // end namespace Uintah

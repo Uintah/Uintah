@@ -713,7 +713,8 @@ ICE::outputProblemSpec( ProblemSpecP & root_ps )
  Function~  ICE::scheduleInitialize--
  Notes:     This task actually schedules several tasks.
 _____________________________________________________________________*/
-void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
+void ICE::scheduleInitialize(const LevelP & level,
+                             SchedulerP   & sched)
 {
   cout_doing << d_myworld->myRank() << " Doing ICE::scheduleInitialize \t\t\t\tL-"
              <<level->getIndex() << endl;
@@ -800,6 +801,10 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
 void ICE::scheduleRestartInitialize(const LevelP& level,
                                     SchedulerP& sched)
 {
+  if (d_impICE){
+    const MaterialSet* ice_matls = m_sharedState->allICEMaterials();
+    m_solver->scheduleRestartInitialize(level, sched, ice_matls);
+  }
 }
 /* _____________________________________________________________________
  Function~  ICE::restartInitialize--

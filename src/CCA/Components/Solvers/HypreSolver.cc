@@ -550,8 +550,9 @@ namespace Uintah {
           }  // initialGuess
         } // patch loop
         
-        if (timeStep == 1 || restart || do_setup)
+        if (timeStep == 1 || restart || do_setup){
           HYPRE_StructVectorAssemble(*HX);
+        }
         
         hypre_EndTiming(tMatVecSetup_);
         
@@ -1214,7 +1215,6 @@ namespace Uintah {
       hypreSolveParams->solveFrequency = 1;
       hypreSolveParams->relax_type = 1;
     }
-    hypreSolveParams->restart   = true;
 
     return hypreSolveParams;
   }
@@ -1230,6 +1230,23 @@ namespace Uintah {
 
     task->computes(hypre_solver_label);
     sched->addTask(task, sched->getLoadBalancer()->getPerProcessorPatchSet(level), matls);
+  }
+  
+ //---------------------------------------------------------------------------------------------
+  
+  void HypreSolver2::scheduleRestartInitialize( const LevelP      & level
+                                              ,       SchedulerP  & sched
+                                              , const MaterialSet * matls
+                                              )
+  {
+#if 0
+    cout << " HypreSolver2::scheduleRestartInitialize       is a restart: " << sched->isRestartInitTimestep() << endl;
+      
+    Task* task = scinew Task("restartInitialize_hypre", this, &HypreSolver2::initialize);
+
+    task->computes(hypre_solver_label);
+    sched->addTask(task, sched->getLoadBalancer()->getPerProcessorPatchSet(level), matls);
+#endif
   }
 
   //---------------------------------------------------------------------------------------------
