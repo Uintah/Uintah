@@ -101,8 +101,7 @@ void GaussSolve::problemSetup(const ProblemSpecP& prob_spec,
 
   ProblemSpecP fvm_ps = prob_spec->findBlock("FVM");
 
-  d_solver_parameters = d_solver->readParameters(fvm_ps, "gauss1_solver",
-                                             m_sharedState);
+  d_solver_parameters = d_solver->readParameters(fvm_ps, "gauss1_solver");
   d_solver_parameters->setSolveOnExtraCells(false);
     
   fvm_ps->require("delt", d_delt);

@@ -7,7 +7,8 @@
 
 using namespace Uintah;
 
-UtilityFactory::UtilityFactory()
+UtilityFactory::UtilityFactory( const ApplicationCommon* arches ) :
+TaskFactoryBase(arches)
 {
   _factory_name = "UtilityFactory";
 }
@@ -28,9 +29,11 @@ UtilityFactory::register_all_tasks( ProblemSpecP& db )
   tsk = scinew SurfaceNormals::Builder( tname, 0 );
   register_task( tname, tsk );
 
-  tname = "vol_fraction_calc";
-  tsk = scinew SurfaceVolumeFractionCalc::Builder( tname, 0 );
-  register_task( tname, tsk );
+  if ( db->findBlock("KokkosSolver")){
+    tname = "vol_fraction_calc";
+    tsk = scinew SurfaceVolumeFractionCalc::Builder( tname, 0 );
+    register_task( tname, tsk );
+  }
 
   ProblemSpecP db_all_util = db->findBlock("Utilities");
 
@@ -151,11 +154,13 @@ UtilityFactory::build_all_tasks( ProblemSpecP& db )
   tsk->problemSetup(db);
   tsk->create_local_labels();
 
-  // computes a volume fraction for each cell type
-  tsk = retrieve_task("vol_fraction_calc");
-  print_task_setup_info( "vol_fraction_calc", "calc vol frac");
-  tsk->problemSetup(db);
-  tsk->create_local_labels();
+  if ( db->findBlock("KokkosSolver")){
+    // computes a volume fraction for each cell type
+    tsk = retrieve_task("vol_fraction_calc");
+    print_task_setup_info( "vol_fraction_calc", "calc vol frac");
+    tsk->problemSetup(db);
+    tsk->create_local_labels();
+  }
 
   //<Utilities>
   ProblemSpecP db_all_util = db->findBlock("Utilities");

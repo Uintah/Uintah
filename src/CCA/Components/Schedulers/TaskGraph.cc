@@ -39,12 +39,9 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/Parallel.h>
-#include <Core/Util/DebugStream.h>
 #include <Core/Util/DOUT.hpp>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/ProgressiveWarning.h>
-
-#include <sci_defs/visit_defs.h>
 
 #include <iostream>
 #include <map>
@@ -56,14 +53,12 @@ using namespace Uintah;
 
 
 namespace {
-
-Dout g_tg_phase_dbg(          "TaskGraphPhases"              , false);
-Dout g_proc_neighborhood_dbg( "ProcNeighborhood"             , false);
-Dout g_find_computes_dbg(     "FindComputes"                 , false);
-Dout g_add_task_dbg(          "TaskGraphAddTask"             , false);
-Dout g_detailed_task_dbg(     "TaskGraphDetailedTasks"       , false);
-Dout g_detailed_deps_dbg(     "TaskGraphDetailedDependencies", false);
-
+  Dout g_tg_phase_dbg(          "TaskGraphPhases"       , "TaskGraph", "task phase assigned to each task by the task graph"  , false);
+  Dout g_proc_neighborhood_dbg( "ProcNeighborhood"      , "TaskGraph", "info on local or distal patch neighborhoods"         , false);
+  Dout g_find_computes_dbg(     "FindComputes"          , "TaskGraph", "info on computing task for particular requires"      , false);
+  Dout g_add_task_dbg(          "TaskGraphAddTask"      , "TaskGraph", "report task name, computes and requires: every task" , false);
+  Dout g_detailed_task_dbg(     "TaskGraphDetailedTasks", "TaskGraph", "high-level info on creation of DetailedTasks"        , false);
+  Dout g_detailed_deps_dbg(     "TaskGraphDetailedDeps" , "TaskGraph", "detailed dep info for each DetailedTask"             , false);
 }
 
 //______________________________________________________________________
@@ -80,24 +75,6 @@ TaskGraph::TaskGraph(       SchedulerCommon   * sched
   , m_index{index}
 {
   m_load_balancer = dynamic_cast<LoadBalancer*>( m_scheduler->getPort("load balancer") );
-
-// #ifdef HAVE_VISIT
-//   static bool initialized = false;
-//
-//   // Running with VisIt so add in the variables that the user can modify.
-//   if (state->getVisIt() && !initialized) {
-//
-//     state->d_douts.push_back(&g_tg_phase_dbg);
-//     state->d_douts.push_back(&g_proc_neighborhood_dbg);
-//     state->d_douts.push_back(&g_find_computes_dbg);
-//     state->d_douts.push_back(&g_add_task_dbg);
-//     state->d_douts.push_back(&g_detailed_task_dbg);
-//     state->d_douts.push_back(&g_detailed_deps_dbg);
-//
-//     initialized = true;
-//   }
-// #endif
-
 }
 
 //______________________________________________________________________
@@ -623,7 +600,7 @@ TaskGraph::createDetailedDependencies()
     if (g_detailed_deps_dbg) {
       std::ostringstream message;
       message << '\n';
-      message << "Rank-" << my_rank << " createDetailedDependencies (collect comps) for:\n";
+      message << "Rank-" << my_rank << " createDetailedDependencies for:\n";
 
       for (const Task::Dependency* req = dtask->getTask()->getRequires(); req != nullptr; req = req->m_next) {
         message << "         requires: " << *req << '\n';
@@ -960,14 +937,18 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
         }
 
         ASSERT(std::is_sorted(neighbors.begin(), neighbors.end(), Patch::Compare()));
-        DOUT(g_detailed_deps_dbg, "Rank-" << my_rank << "    Creating dependency on " << neighbors.size()
-                                          << " neighbor(s):     Low=" << low << ", high=" << high << ", var=" << req->m_var->getName());
+
+        auto num_neighbors = neighbors.size();
+
+        DOUT(g_detailed_deps_dbg, "Rank-" << my_rank << "    Creating detailed dependency on " << num_neighbors
+                                          << " neighboring patch" << (num_neighbors > 1 ? "es " : "   ") << neighbors
+                                          << "   Low=" << low << ", high=" << high << ", var=" << req->m_var->getName());
 
 
         //------------------------------------------------------------------------
         //           for all neighbors - find and store from neighbors
         //------------------------------------------------------------------------
-        for (auto i = 0u; i < neighbors.size(); ++i) {
+        for (auto i = 0u; i < num_neighbors; ++i) {
           const Patch* neighbor = neighbors[i];
 
           // if neighbor is not in my neighborhood just continue as its dependencies are not important to this processor

@@ -38,11 +38,15 @@
 
 using namespace Uintah;
 
-extern Dout g_mpi_dbg;
+namespace Uintah {
+  extern Dout g_mpi_dbg;
+}
 
-Dout g_total_reloc("RELOCATE_SCATTER_DBG", false);
+namespace {
+  Dout g_total_reloc("RELOCATE_SCATTER_DBG", "Schedulers", "prints info on particle scatter ops", false);
 
-static DebugStream coutdbg("RELOCATE_DBG", false);
+  DebugStream coutdbg("RELOCATE_DBG", "Schedulers", "prints particle relocation neighbor patches", false);
+}
 
 Relocate::~Relocate()
 {

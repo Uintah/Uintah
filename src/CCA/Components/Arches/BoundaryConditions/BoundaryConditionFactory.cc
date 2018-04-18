@@ -5,9 +5,10 @@
 
 using namespace Uintah;
 
-BoundaryConditionFactory::BoundaryConditionFactory( )
+BoundaryConditionFactory::BoundaryConditionFactory( const ApplicationCommon* arches ) :
+TaskFactoryBase(arches)
 {
-  _factory_name = "BoundaryConditionFactory"; 
+  _factory_name = "BoundaryConditionFactory";
 }
 
 BoundaryConditionFactory::~BoundaryConditionFactory()
@@ -126,10 +127,9 @@ void BoundaryConditionFactory::schedule_initialization( const LevelP& level,
                                                         const MaterialSet* matls,
                                                         bool doing_restart ){
 
-  for ( auto i = _tasks.begin(); i != _tasks.end(); i++ ){
+  const bool pack_tasks = false;
+  schedule_task_group( "all_tasks",
+                        TaskInterface::INITIALIZE,
+                        pack_tasks, level, sched, matls );
 
-    TaskInterface* tsk = retrieve_task( i->first );
-    tsk->schedule_init( level, sched, matls, doing_restart );
-
-  }
 }

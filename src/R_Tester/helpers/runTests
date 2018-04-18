@@ -130,8 +130,14 @@ EOF
   cat "$BUILDROOT"/log >> "$BUILDROOT"/mail.msg
 
   if [ $use_html = "1" ]; then
-    echo "See build and run logs at" >> "$BUILDROOT"/mail.msg
-    echo "$WEBLOG" >> "$BUILDROOT"/mail.msg
+    echo "Build and run logs:"  >> "$BUILDROOT"/mail.msg
+    echo -e "$WEBLOG/Uintah.html\n"  >> "$BUILDROOT"/mail.msg
+    
+    echo "Historical memory usage plots:"  >> "$BUILDROOT"/mail.msg
+    echo -e "$WEBLOG/Plots/Memory\n"      >> "$BUILDROOT"/mail.msg
+    
+    echo "Historical simulation run time plots:"  >> "$BUILDROOT"/mail.msg
+    echo -e "$WEBLOG/Plots/simRunTime\n"  >> "$BUILDROOT"/mail.msg
   fi
   sendmail "$SEND_MAIL_TO" < "$BUILDROOT"/mail.msg
 #   rm -f "$BUILDROOT"/mail.msg

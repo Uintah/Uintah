@@ -77,7 +77,7 @@ namespace Uintah {
     , OutputIORate
     , ReductionIORate
     , CheckpointIORate
-    , CheckpointReducIORate
+    , CheckpointReductionIORate
 
     , SCIMemoryUsed
     , SCIMemoryMaxUsed
@@ -85,7 +85,12 @@ namespace Uintah {
 
     , MemoryUsed
     , MemoryResident
-    
+
+    , NumTasks
+    , NumPatches
+    , NumCells
+    , NumParticles
+
 #ifdef USE_PAPI_COUNTERS
     , TotalFlops            // Floating point operations executed
     , TotalVFlops           // Floating point operations executed; optimized to count scaled DP vector ops

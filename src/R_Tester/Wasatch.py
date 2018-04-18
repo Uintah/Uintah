@@ -1,8 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from sys import argv, exit
 from os import environ, system, path
-from commands import getoutput
+from subprocess import getoutput
 from helpers.runSusTests import runSusTests, ignorePerformanceTests, build_root, getInputsDir
 from helpers.modUPS import modUPS
 
@@ -291,8 +291,31 @@ QMOMTESTS=[
 ]
 
 POKITTTESTS=[
-  ("species-transport-test",       "species-transport.ups",  1, "All", ["exactComparison","no_restart"] ),
-  ("coal-cpd-cck-1D",              "coal-cpd-cck-1D.ups",    1, "All", ["exactComparison","no_restart"] )
+  ("species-transport-test",                    "species-transport.ups",                          1, "All", ["exactComparison","no_restart"] ),
+  ("MultispeciesBC-inflow-nonreacting-xminus",  "MultispeciesBC-inflow-nonreacting-xminus.ups",   1, "All", ["exactComparison","no_restart","no_memoryTest"] ),
+  ("MultispeciesBC-inflow-nonreacting-yminus",  "MultispeciesBC-inflow-nonreacting-yminus.ups",   1, "All", ["exactComparison","no_restart","no_memoryTest"] ),
+  ("MultispeciesBC-inflow-nonreacting-zminus",  "MultispeciesBC-inflow-nonreacting-zminus.ups",   1, "All", ["exactComparison","no_restart","no_memoryTest"] ),
+  ("MultispeciesBC-inflow-nonreacting-xplus",   "MultispeciesBC-inflow-nonreacting-xplus.ups",    1, "All", ["exactComparison","no_restart","no_memoryTest"] ),
+  ("MultispeciesBC-inflow-nonreacting-yplus",   "MultispeciesBC-inflow-nonreacting-yplus.ups",    1, "All", ["exactComparison","no_restart","no_memoryTest"] ),
+  ("MultispeciesBC-inflow-nonreacting-zplus",   "MultispeciesBC-inflow-nonreacting-zplus.ups",    1, "All", ["exactComparison","no_restart","no_memoryTest"] ),
+  ("MultispeciesBC-open-nonreacting-xdir",      "MultispeciesBC-open-nonreacting-xdir.ups",       1, "All", ["exactComparison","no_restart","no_memoryTest"] ),
+  ("MultispeciesBC-open-nonreacting-ydir",      "MultispeciesBC-open-nonreacting-ydir.ups",       1, "All", ["exactComparison","no_restart","no_memoryTest"] ),
+  ("MultispeciesBC-open-nonreacting-zdir",      "MultispeciesBC-open-nonreacting-zdir.ups",       1, "All", ["exactComparison","no_restart","no_memoryTest"] ),
+  ("MultispeciesBC-open-premixed-flame-xdir",   "MultispeciesBC-open-premixed-flame-xdir.ups",    1, "All", ["exactComparison","no_restart","no_memoryTest"] ),
+  ("MultispeciesBC-open-premixed-flame-ydir",   "MultispeciesBC-open-premixed-flame-ydir.ups",    1, "All", ["exactComparison","no_restart","no_memoryTest"] ),
+  ("MultispeciesBC-open-premixed-flame-zdir",   "MultispeciesBC-open-premixed-flame-zdir.ups",    1, "All", ["exactComparison","no_restart","no_memoryTest"] ),
+  ("MultispeciesBC-premixed-flame-xyplane",     "MultispeciesBC-premixed-flame-xyplane.ups",      1, "All", ["exactComparison","no_restart","no_memoryTest"] ),
+  ("MultispeciesBC-premixed-flame-xzplane",     "MultispeciesBC-premixed-flame-xzplane.ups",      1, "All", ["exactComparison","no_restart","no_memoryTest"] ),
+  ("MultispeciesBC-premixed-flame-yzplane",     "MultispeciesBC-premixed-flame-yzplane.ups",      1, "All", ["exactComparison","no_restart","no_memoryTest"] )
+]
+
+COALTESTS=[
+  ("coal-cpd-cck-1D",                    "coal-cpd-cck-1D.ups",                   1, "All", ["exactComparison","no_restart"] ),
+  ("coal-cpd-langmuirHinshelwood-1D",    "coal-cpd-langmuirHinshelwood-1D.ups",   1, "All", ["exactComparison","no_restart"] ),
+  ("coal-inertGas-cpd-1D",               "coal-inertGas-cpd-1D.ups",              1, "All", ["exactComparison","no_restart"] ),
+  ("coal-inertGas-dae-1D",               "coal-inertGas-dae-1D.ups",              1, "All", ["exactComparison","no_restart"] ),
+  ("coal-inertGas-kobayashiSarofim-1D",  "coal-inertGas-kobayashiSarofim-1D.ups", 1, "All", ["exactComparison","no_restart"] ),
+  ("coalChar-langmuirHinshelwood-1D",    "coalChar-langmuirHinshelwood-1D.ups",   1, "All", ["exactComparison","no_restart"] ),
 ]
 
 SCALARTRANSPORTTESTS=[
@@ -358,12 +381,12 @@ print( "HAVE_POKITT: %s" % (HAVE_POKITT) )
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: LOCALTESTS DUALTIMETESTS GPUTESTS BCTESTS COMPRESSIBLETESTS CONVECTIONTESTS DEBUGTESTS INTRUSIONTESTS MISCTESTS NIGHTLYTESTS PARTICLETESTS POKITTTESTS PROJECTIONTESTS QMOMTESTS RADIATIONTESTS RKTESTS SCALARTRANSPORTTESTS TURBULENCETESTS VARDENTESTS BUILDBOTTESTS
+#LIST: LOCALTESTS DUALTIMETESTS GPUTESTS BCTESTS COALTESTS COMPRESSIBLETESTS CONVECTIONTESTS DEBUGTESTS INTRUSIONTESTS MISCTESTS NIGHTLYTESTS PARTICLETESTS POKITTTESTS PROJECTIONTESTS QMOMTESTS RADIATIONTESTS RKTESTS SCALARTRANSPORTTESTS TURBULENCETESTS VARDENTESTS BUILDBOTTESTS
 #__________________________________
 NIGHTLYTESTS = DUALTIMETESTS + RADIATIONTESTS + TURBULENCETESTS + INTRUSIONTESTS + PROJECTIONTESTS + RKTESTS + VARDENTESTS + MISCTESTS + CONVECTIONTESTS + BCTESTS + QMOMTESTS + SCALARTRANSPORTTESTS + PARTICLETESTS + COMPRESSIBLETESTS
 
 if HAVE_POKITT != "0":
-  NIGHTLYTESTS = NIGHTLYTESTS + POKITTTESTS
+  NIGHTLYTESTS = NIGHTLYTESTS + POKITTTESTS + COALTESTS
 
 # returns the list
 def getTestList(me) :
@@ -405,10 +428,12 @@ def getTestList(me) :
     TESTS = DUALTIMETESTS           
   elif me == "POKITTTESTS":
     TESTS = POKITTTESTS
+  elif me == "COALTESTS":
+    TESTS = COALTESTS
   elif me == "BUILDBOTTESTS":
     TESTS = ignorePerformanceTests( NIGHTLYTESTS )           
   else:
-    print "\nERROR:Wasatch.py  getTestList:  The test list (%s) does not exist!\n\n" % me
+    print("\nERROR:Wasatch.py  getTestList:  The test list (%s) does not exist!\n\n" % me)
     exit(1)
     
   # Limit the tests run on the nightly gpu_rt.  Brittle  

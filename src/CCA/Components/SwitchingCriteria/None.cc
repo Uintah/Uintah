@@ -31,7 +31,8 @@
 
 using namespace std;
 using namespace Uintah;
-static DebugStream dbg("SWITCHER", false);
+
+DebugStream switching_dbg("SwitchingCriteria", "SwitchingCriteria", "Switching criteria debug stream", false);
 
 None::None()
 {
@@ -50,7 +51,7 @@ void None::problemSetup(const ProblemSpecP& ps,
 
 void None::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
 {
-  printSchedule(level,dbg,"Switching Criteria:None::scheduleSwitchTest");
+  printSchedule(level,switching_dbg,"Switching Criteria:None::scheduleSwitchTest");
   
   Task* t = scinew Task("switchTest", this, &None::switchTest);
 
@@ -65,7 +66,7 @@ void None::switchTest(const ProcessorGroup* group,
                       DataWarehouse* old_dw,
                       DataWarehouse* new_dw)
 {
-  dbg << "  Doing Switching Criteria:None::switchTest" <<  endl;
+  switching_dbg << "  Doing Switching Criteria:None::switchTest" <<  endl;
   double sw = 0;
   max_vartype switch_condition(sw);
   const Level* allLevels = 0;

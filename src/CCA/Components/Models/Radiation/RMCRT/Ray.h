@@ -25,11 +25,12 @@
 #ifndef CCA_COMPONENTS_MODELS_RADIATION_RMCRT_RAY_H
 #define CCA_COMPONENTS_MODELS_RADIATION_RMCRT_RAY_H
 
+#include <CCA/Ports/Scheduler.h>
+
 #include <CCA/Components/Models/Radiation/RMCRT/RMCRTCommon.h>
 #include <CCA/Components/Models/Radiation/RMCRT/Radiometer.h>
-#include <CCA/Ports/Scheduler.h>
+
 #include <Core/Disclosure/TypeDescription.h>
-#include <Core/Grid/SimulationState.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 #include <Core/Grid/Variables/VarTypes.h>
@@ -84,8 +85,7 @@ namespace Uintah{
       /** @brief Interface to input file information */
       void  problemSetup( const ProblemSpecP& prob_spec,
                           const ProblemSpecP& rmcrt_ps,
-                          const GridP& grid,
-                          SimulationStateP& sharedState );
+                          const GridP& grid );
 
       /** @brief Algorithm for tracing rays through a single level*/
       void sched_rayTrace( const LevelP& level,

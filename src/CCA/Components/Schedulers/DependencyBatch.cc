@@ -34,11 +34,9 @@ namespace Uintah {
 
 
 namespace {
+  Dout g_received_dbg( "DependencyBatch", "DependencyBatch", "report when a DependencyBatch is received", false );
 
-Dout g_received_dbg( "DependencyBatch", false );
-
-Uintah::MasterLock g_received_mutex{};
-
+  Uintah::MasterLock g_received_mutex{};
 }
 
 

@@ -38,8 +38,9 @@ public:
 
     /** @brief Registers all variables with pertinent information for the
      *         uintah dw interface **/
-    void register_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
-                                const int time_substep );
+    void register_timestep_eval(
+      std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
+      const int time_substep, const bool pack_tasks );
 
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 

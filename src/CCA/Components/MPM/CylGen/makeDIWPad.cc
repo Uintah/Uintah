@@ -43,7 +43,7 @@ int main()
   // Parameters for user to change - BEGIN
 
   int numLayers         = 10;
-  int threadsPerLayer   = 10;
+  int threadsPerLayer   = 20;
   double threadDiameter = 0.0355;
   double threadSpacing  = 0.0710;
   double threadOverlap  = 0.10; // Fraction of the diameter
@@ -60,28 +60,11 @@ int main()
   vector<double>  yTop,yBot;
   vector<double>  zTop,zBot;
 
-  // Even layers run along the x-axis, odd layers run along the y-axis
+  // Even layers run along the y-axis, odd layers run along the x-axis
 
   // Create threads for the even layers
   double z = 0.5*threadDiameter;
   for(int i=0;i<numLayers;i+=2){
-    double y = 0.5*threadSpacing;
-    for(int j=0;j<threadsPerLayer;j++){
-      xBot.push_back(0.0);
-      xTop.push_back(threadLength);
-      yBot.push_back(y);
-      yTop.push_back(y);
-      zBot.push_back(z);
-      zTop.push_back(z);
-      y+=threadSpacing;
-    } // Loop over threads in the layer
-    z+=2.0*(threadDiameter)*(1.-threadOverlap);
-  }   // Loop over the even layers
-
-  // Create threads for the odd layers
-//  double z = threadDiameter+0.5*threadDiameter-threadOverlap*threadDiameter;
-  z = (1.5-threadOverlap)*threadDiameter;
-  for(int i=1;i<numLayers;i+=2){
     double x = 0.5*threadSpacing;
     for(int j=0;j<threadsPerLayer;j++){
       yBot.push_back(0.0);
@@ -91,6 +74,23 @@ int main()
       zBot.push_back(z);
       zTop.push_back(z);
       x+=threadSpacing;
+    } // Loop over threads in the layer
+    z+=2.0*(threadDiameter)*(1.-threadOverlap);
+  }   // Loop over the even layers
+
+  // Create threads for the odd layers
+//  double z = threadDiameter+0.5*threadDiameter-threadOverlap*threadDiameter;
+  z = (1.5-threadOverlap)*threadDiameter;
+  for(int i=1;i<numLayers;i+=2){
+    double y = 0.5*threadSpacing;
+    for(int j=0;j<threadsPerLayer;j++){
+      xBot.push_back(0.0);
+      xTop.push_back(threadLength);
+      yBot.push_back(y);
+      yTop.push_back(y);
+      zBot.push_back(z);
+      zTop.push_back(z);
+      y+=threadSpacing;
     } // Loop over threads in the layer
     z+=2.0*(threadDiameter)*(1.-threadOverlap);
   }   // Loop over the even layers

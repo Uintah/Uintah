@@ -27,14 +27,11 @@
 #include <Core/Grid/Box.h>
 #include <Core/Grid/BoundaryConditions/BoundCondFactory.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Util/DebugStream.h>
+
 #include <iostream>
 
 using namespace std;
 using namespace Uintah;
-
-// export SCI_DEBUG="BC_dbg:+"
-static DebugStream BC_dbg("BC_dbg",false);
 
 EllipseBCData::EllipseBCData() : BCGeomBase()
 {}

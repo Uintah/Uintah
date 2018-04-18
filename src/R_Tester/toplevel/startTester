@@ -49,7 +49,7 @@ if [ "$MACHINE" == "uintah-build" ]; then
   #          simRunTime/
   
   HTMLLOG=/home/${LOGNAME}/public_html/Uintah.html
-  WEBLOG=http://155.101.15.100/~${LOGNAME}/Uintah.html
+  WEBLOG=http://155.101.15.100/~${LOGNAME}
   
   if [ "$LOGNAME" == "gpu_rt" ]; then
     names=(\
@@ -84,7 +84,7 @@ if test "$MACHINE" = "cyrus.mech.utah.edu" ; then
 
   # Where the webpage will be, and init webpage.  (SEE above notes)
   HTMLLOG=/raid/home/rt/public_html/Uintah.html
-  WEBLOG=http://cyrus.mech.utah.edu:8050/~rt/public_html/Uintah.html
+  WEBLOG=http://cyrus.mech.utah.edu:8050/~rt/public_html
 fi
 
 

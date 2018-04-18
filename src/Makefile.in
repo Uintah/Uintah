@@ -54,7 +54,7 @@ Makefile: ${SRCTOP}/Makefile.in ${OBJTOP}/config.status
 configVars.mk: ${SRCTOP}/configVars.mk.in ${OBJTOP}/config.status
 	@( Here="`pwd`" ; cd ${OBJTOP} ; Top="`pwd`" ; CONFIG_FILES=`echo $${Here} | sed -e "s%^"$${Top}"/%%" -e "s%^"$${Top}"%.%"`/configVars.mk CONFIG_HEADERS="" ./config.status )
 
-ALLTARGETS := $(ALLTARGETS) lib/libVisIt_uda2vis.$(SO_OR_A_FILE)
+ALLTARGETS := $(ALLTARGETS) lib/libVisIt_interfaces.$(SO_OR_A_FILE)
 
 ifeq ($(HAVE_CUDA),yes)
   GPU_EXTRA_LINK := gpu_extra_link

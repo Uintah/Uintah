@@ -12,16 +12,14 @@ _src_name(src_name), _type(type), _shared_state( shared_state ), _required_label
 {
   _init_type = "constant";
   _stage = -1;
-  _mult_srcs.clear(); 
+  _mult_srcs.clear();
+  _simulationTimeLabel = VarLabel::find(simTime_name);
 
-  // Simulation Time
-  _simulationTimeLabel = VarLabel::create(simTime_name, simTime_vartype::getTypeDescription());
 }
 
 SourceTermBase::~SourceTermBase()
 {
   VarLabel::destroy(_src_label);
-  VarLabel::destroy(_simulationTimeLabel);
 }
 
 void

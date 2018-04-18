@@ -25,15 +25,12 @@
 #include <CCA/Components/LoadBalancers/CostProfiler.h>
 #include <CCA/Components/Schedulers/DetailedTasks.h>
 
-#include <Core/Util/DebugStream.h>
-
 using namespace Uintah;
-using namespace std;
 
 //______________________________________________________________________
 //
 void
-CostProfiler::setMinPatchSize( const vector<IntVector> & min_patch_size )
+CostProfiler::setMinPatchSize( const std::vector<IntVector> & min_patch_size )
 {
   d_profiler.setMinPatchSize(min_patch_size);
 }
@@ -51,7 +48,7 @@ CostProfiler::addContribution( DetailedTask *task, double cost )
   {
     const Patch* patch=patches->get(p);
     if(d_lb->getPatchwiseProcessorAssignment(patch)!=d_myworld->myRank())
-      cout << d_myworld->myRank() << " error patch is owned by processor:" << d_lb->getPatchwiseProcessorAssignment(patch) << " for task:" << task->getName() << endl;
+      std::cout << d_myworld->myRank() << " error patch is owned by processor:" << d_lb->getPatchwiseProcessorAssignment(patch) << " for task:" << task->getName() << std::endl;
   }
 #endif
   d_profiler.addContribution( task->getPatches(), cost );
@@ -72,14 +69,14 @@ CostProfiler::finalizeContributions( const GridP currentGrid )
 //______________________________________________________________________
 //
 void
-CostProfiler::getWeights(const Grid* grid, vector<vector<int> > num_particles, vector<vector<double> >&costs)
+CostProfiler::getWeights(const Grid* grid, std::vector<std::vector<int> > num_particles, std::vector<std::vector<double> >&costs)
 {
   costs.resize(grid->numLevels());
   //for each level
   for (int l=0; l<grid->numLevels();l++)
   {
     LevelP level=grid->getLevel(l);
-    vector<Region> regions(level->numPatches());
+    std::vector<Region> regions(level->numPatches());
 
     costs[l].resize(level->numPatches());
     for(int p=0; p<level->numPatches();p++)

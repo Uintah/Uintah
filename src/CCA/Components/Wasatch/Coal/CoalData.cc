@@ -1,7 +1,7 @@
 #include <stdexcept>
 #include <sstream>
 
-#include "CoalData.h"
+#include <CCA/Components/Wasatch/Coal/CoalData.h>
 
 using std::string;
 using std::ostringstream;
@@ -99,7 +99,6 @@ namespace Coal{
       case CH4: name="CH4"; break;
       case HCN: name="HCN"; break;
       case NH3: name="NH3"; break;
-      case H  : name="H";   break;
       case INVALID_SPECIES: name=""; break;
     }
     return name;
@@ -117,7 +116,6 @@ namespace Coal{
     else if( name == "CH4" ) return CH4;
     else if( name == "HCN" ) return HCN;
     else if( name == "NH3" ) return NH3;
-    else if( name == "H"   ) return H  ;
     return INVALID_SPECIES;
   }
 

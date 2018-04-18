@@ -53,7 +53,8 @@ namespace Uintah {
                          restartableTimestep(false),
                          setupFrequency(1),
                          updateCoefFrequency(1),
-                         outputFileName("nullptr") {}
+                         outputFileName("nullptr"),
+                         m_which_old_dw(Task::OldDW) {}
     
     void setSolveOnExtraCells(bool s) {
       solveOnExtraCells = s;
@@ -107,12 +108,31 @@ namespace Uintah {
       fname.push_back( "x" + outputFileName );
     }
 
-    void setSetupFrequency(const int freq) {setupFrequency = freq;}
-    int getSetupFrequency() const { return setupFrequency;}
+    void setSetupFrequency(const int freq) {
+      setupFrequency = freq;
+    }
+    
+    int getSetupFrequency() const { 
+      return setupFrequency;
+    }
 
-    void setUpdateCoefFrequency(const int freq) {updateCoefFrequency = freq;}
-    int  getUpdateCoefFrequency() const { return updateCoefFrequency;}
-
+    void setUpdateCoefFrequency(const int freq) {
+      updateCoefFrequency = freq;
+    }
+    int  getUpdateCoefFrequency() const { 
+      return updateCoefFrequency;
+    }
+    
+    // oldDW or ParentOldDW
+    void setWhichOldDW(Task::WhichDW dw){
+      ASSERT( ((dw == Task::OldDW ) || ( dw == Task::ParentOldDW)) );
+      m_which_old_dw = dw;
+    }
+    
+    Task::WhichDW getWhichOldDW() const {
+      return m_which_old_dw;
+    }    
+    
     virtual ~SolverParameters() {}
 
   private:
@@ -124,6 +144,7 @@ namespace Uintah {
     int         setupFrequency;        /// delete matrix and recreate it and update coefficients. Needed if Stencil changes.
     int         updateCoefFrequency;   /// do not modify matrix stencil/sparsity - only change values of coefficients
     std::string outputFileName;
+    Task::WhichDW  m_which_old_dw;     // DataWarehouse either old_dw or parent_old_dw
   };
   
   class SolverInterface : public UintahParallelPort {
@@ -143,9 +164,8 @@ namespace Uintah {
     virtual void getComponents() = 0;
     virtual void releaseComponents() = 0;
   
-    virtual SolverParameters* readParameters(       ProblemSpecP     & params,
-					      const std::string      & name,
-					      const SimulationStateP &state ) = 0;
+    virtual SolverParameters* readParameters(  ProblemSpecP & params,
+					      const std::string  & name ) = 0;
 
     virtual void scheduleInitialize( const LevelP      & level,
                                            SchedulerP  & sched,
@@ -163,7 +183,7 @@ namespace Uintah {
                                 const VarLabel         * guess,
                                       Task::WhichDW      which_guess_dw,
                                 const SolverParameters * params,
-                                      bool               modifies_hypre = false ) = 0;
+                                      bool               isFirstSolve = true ) = 0;
 
     virtual std::string getName() = 0;
     

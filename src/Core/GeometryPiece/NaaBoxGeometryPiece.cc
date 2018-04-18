@@ -30,14 +30,11 @@
 
 #include <Core/Geometry/Point.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Util/DebugStream.h>
 
 #include <iostream>
 
 using namespace Uintah;
 using namespace std;
-
-static DebugStream dbg( "GeometryPiece", false );
 
 const string NaaBoxGeometryPiece::TYPE_NAME = "parallelepiped";
 
@@ -119,7 +116,7 @@ NaaBoxGeometryPiece::init( const Point& p1,
     }
   }
 
-  dbg << "Creating NaaBoxx with BBox of: " << boundingBox_ << "\n";
+  gp_dbg << "Creating NaaBoxx with BBox of: " << boundingBox_ << "\n";
 
   // Map the arbitrary box to a unit cube...
   Matrix3 mat( p2minusP1.x(), p3minusP1.x(),  p4minusP1.x(),

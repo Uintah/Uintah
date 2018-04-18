@@ -438,6 +438,7 @@ Uintah::Iterator&
 WBCHelper::get_uintah_extra_bnd_mask( const BndSpec& myBndSpec,
                                       const int& patchID )
 {
+
   const std::string bndName = myBndSpec.name;
 
   if ( bndNamePatchIDMaskMap_.find(bndName) != bndNamePatchIDMaskMap_.end() ) {
@@ -803,7 +804,7 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
   } // material subset loop
 }
 
-//------------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------
 
 const BndMapT& WBCHelper::get_boundary_information() const
 {

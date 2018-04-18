@@ -39,16 +39,17 @@ std::multimap<Uintah::GPUMemoryPool::gpuMemoryPoolDeviceSizeItem, Uintah::GPUMem
 std::map <unsigned int, std::queue<cudaStream_t*> > * Uintah::GPUMemoryPool::s_idle_streams =
     new std::map <unsigned int, std::queue<cudaStream_t*> >;
 
-extern DebugStream        gpu_stats;
 extern Uintah::MasterLock cerrLock;
 
+namespace Uintah {
+  extern DebugStream        gpu_stats;
+}
+
 namespace {
+  Uintah::MasterLock idle_streams_mutex{};
 
-Uintah::MasterLock idle_streams_mutex{};
-
-struct pool_tag{};
-using  pool_monitor = Uintah::CrowdMonitor<pool_tag>;
-
+  struct pool_tag{};
+  using  pool_monitor = Uintah::CrowdMonitor<pool_tag>;
 }
 
 

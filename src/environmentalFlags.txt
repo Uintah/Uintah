@@ -5,8 +5,9 @@ Set these like this:
  -> bash: export SCI_DEBUG=ExecTimes:+
 To set multiple flags, use quotation marks and separate flags by a comma:
 (no spaces after commas)
- -> bash: export SCI_DEBUG="ExecTimes:+,TaskGraph:+,WASATCH_FIELDS:+"
+ -> bash: export SCI_DEBUG="ExecTimes:+,TaskGraph:+,WASATCH_FIELDS:+"ï¿½
  -> tcsh: setenv SCI_DEBUG  ExecTimes:+,TaskGraph:+,WASATCH_FIELDS:+
+
 
 Name                     type               Description
 ______________________________________________________________________
@@ -23,14 +24,13 @@ ExecTimes                SCI_DEBUG     Outputs the time for execution on each ta
                                        NOTE: This only works with MPI and you must run your input file for more than 10 timesteps
 
 ReductionTasks            SCI_DEBUG     outputs a message on processor 0 whenever a reduction task occurs.
-RELOCATE_DBG              SCI_DEBUG     prints out debugging information in the code that finds the neighboring
-                                        patches inside of particle relocation task.
-WaitForDebugger           SCI_DEBUG     when an exception is thrown halt the program and print out
-                                        the pid so you can attach a debugger to it.
+RELOCATE_DBG              SCI_DEBUG     prints out debugging information in the code that finds the neighboring patches inside of particle relocation task.
+WaitForDebugger           SCI_DEBUG     when an exception is thrown halt the program and print out the pid so you can attach a debugger to it.
 OnDemandDataWarehouse     SCI_DEBUG     outputs when a variable is retrieved or put into the data warehouse.
 VarLabel                                List when a VarLabel is created and deleted
 ComponentTimings          SCI_DEBUG     output overall mpi and cpu times
-BCR_dbg                   SCI_DEBUG     print out some information regarding the BC setup
+BCR_DBG                   SCI_DEBUG     print out some information regarding the BC setup
+
 
 Grid related Information:
 __________________________________
@@ -38,15 +38,17 @@ GRID                      SCI_DEBUG     prints out each patch's index space
 AMR                       SCI_DEBUG     prints out the patch layout
 AMR_CoarsenRefine         SCI_DEBUG     prints out debugging information for coarsening and refining operations
 
+
+
 Task and Taskgraph Debugging Information:
 __________________________________
 TaskDBG                    SCI_DEBUG     output the name of each task as it begins executing and when it's completed
 TaskLevel                  SCI_DEBUG     output the task name and beginning patch on each level after the task has completed.
-TaskGraph                  SCI_DEBUG     prints out task name, computes and requires for every task
-TaskGraphDetailed          SCI_DEBUG     prints out internal details of computes and requires for every task
-TaskGraphPhase             SCI_DEBUG     prints out the task phase assigned to each task by the task graph
-Scrubbing                  SCI_DEBUG     prints debugging information for scrubbing vars.  You can "watch" one variable by setting:
-                                         DetailedTask.cc:  dbgScrubVar = "Var";
+TaskGraphAddTask           SCI_DEBUG     prints out task name, computes and requires for every task
+TaskGraphDetailedDeps      SCI_DEBUG     prints out internal details of computes and requires for every task
+TaskGraphPhases            SCI_DEBUG     prints out the task phase assigned to each task by the task graph
+Scrubbing                  SCI_DEBUG     prints debugging information for scrubbing vars.  You can "watch" one variable by setting: DetailedTasks.cc:  g_var_scrub_dbg = "Var";
+
 
 Scheduler Debugging Information:
 __________________________________
@@ -54,6 +56,7 @@ MPIScheduler_DBG           SCI_DEBUG     Prints general debugging information fo
 MPIScheduler_TimingsOut    SCI_DEBUG     Outputs fine-grained MPI communication timings to files: timingstats.avg, timingstats.max
 MPIStats                   SCI_DEBUG     Prints comprehensive, fine-grained MPI summary to stdout
 WaitTimes                  SCI_DEBUG     Prints detailed summary of task wait times to stdout
+
 
 
 DynamicMPIScheduler Related:
@@ -71,9 +74,9 @@ Unified_QueueLength        SCI_DEBUG     Prints the average task queue length
 
 GPU Related:
 __________________________________
-GPUStats          SCI_DEBUG     Reports detailed GPU statistics from within the UnififedScheudler on "host-->device"
-                                and "device-->host" data movement.
+GPUStats          SCI_DEBUG     Reports detailed GPU statistics from within the UnififedScheudler on "H2D" and "D2H" data movement.
 GPUDataWarehouse  SCI_DEBUG     Reports detailed statistics from within the GPUDW on GPUDataWarehouse activity.
+
 
 
 ICE:

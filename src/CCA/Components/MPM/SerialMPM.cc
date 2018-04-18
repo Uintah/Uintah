@@ -972,11 +972,13 @@ void SerialMPM::scheduleAddCohesiveZoneForces(SchedulerP& sched,
                         this,&SerialMPM::addCohesiveZoneForces);
 
   Ghost::GhostType  gan = Ghost::AroundNodes;
+  Ghost::GhostType  gac = Ghost::AroundCells;
   t->requires(Task::OldDW, lb->pXLabel,                     cz_matls, gan,NGP);
   t->requires(Task::NewDW, lb->czAreaLabel_preReloc,        cz_matls, gan,NGP);
   t->requires(Task::NewDW, lb->czForceLabel_preReloc,       cz_matls, gan,NGP);
   t->requires(Task::NewDW, lb->czTopMatLabel_preReloc,      cz_matls, gan,NGP);
   t->requires(Task::NewDW, lb->czBotMatLabel_preReloc,      cz_matls, gan,NGP);
+  t->requires(Task::NewDW, lb->gMassLabel,                  mpm_matls,gac,NGN);
 
   t->modifies(lb->gExternalForceLabel, mpm_matls);
 
@@ -2595,20 +2597,24 @@ void SerialMPM::addCohesiveZoneForces(const ProcessorGroup*,
 
     printTask(patches,patch,cout_doing,"Doing addCohesiveZoneForces");
 
-    ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
+//    ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
+    ParticleInterpolator* interpolator = scinew LinearInterpolator(patch);
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
 
+    Ghost::GhostType  gan = Ghost::AroundNodes;
+    Ghost::GhostType  gac = Ghost::AroundCells;
     int numMPMMatls=m_sharedState->getNumMPMMatls();
     std::vector<NCVariable<Vector> > gext_force(numMPMMatls);
+    std::vector<constNCVariable<double> > gmass(numMPMMatls);
     for(int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* cz_matl = m_sharedState->getMPMMaterial( m );
-      int dwi = cz_matl->getDWIndex();
+      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
 
       new_dw->getModifiable(gext_force[m], lb->gExternalForceLabel, dwi, patch);
+      new_dw->get(gmass[m],                lb->gMassLabel,dwi, patch, gac, NGN);
     }
 
-    Ghost::GhostType  gan = Ghost::AroundNodes;
     int numCZMatls=m_sharedState->getNumCZMatls();
     for(int m = 0; m < numCZMatls; m++){
       CZMaterial* cz_matl = m_sharedState->getCZMaterial( m );
@@ -2645,14 +2651,35 @@ void SerialMPM::addCohesiveZoneForces(const ProcessorGroup*,
         int TopMat = czTopMat[idx];
         int BotMat = czBotMat[idx];
 
+        double totMassTop = 0.;
+        double totMassBot = 0.;
+        int topNodesHaveMass = 0;
+        int botNodesHaveMass = 0;
+
+        for (int k = 0; k < NN; k++) {
+          IntVector node = ni[k];
+          totMassTop += S[k]*gmass[TopMat][node];
+          totMassBot += S[k]*gmass[BotMat][node];
+          if(gmass[TopMat][node]>d_SMALL_NUM_MPM){
+            topNodesHaveMass++;
+          }
+          if(gmass[BotMat][node]>d_SMALL_NUM_MPM){
+            botNodesHaveMass++;
+          }
+        }
+
         // Accumulate the contribution from each surrounding vertex
         for (int k = 0; k < NN; k++) {
           IntVector node = ni[k];
           if(patch->containsNode(node)) {
-            gext_force[BotMat][node] = gext_force[BotMat][node]
-                                     + czforce[idx] * S[k];
-            gext_force[TopMat][node] = gext_force[TopMat][node]
-                                     - czforce[idx] * S[k];
+            gext_force[BotMat][node] += czforce[idx]*S[k]*gmass[BotMat][node]
+                                                                 /totMassBot;
+            gext_force[TopMat][node] -= czforce[idx]*S[k]*gmass[TopMat][node]
+                                                                 /totMassTop;
+//            gext_force[BotMat][node] = gext_force[BotMat][node]
+//                                     + czforce[idx] * S[k];
+//            gext_force[TopMat][node] = gext_force[TopMat][node]
+//                                     - czforce[idx] * S[k];
           }
         }
       }
@@ -4279,7 +4306,8 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
     // using the generalized interpolation material point (GIMP) method"
     // Daphalapurkar, N.P., et al., Int. J. Fracture, 143, 79-102, 2007.
 
-    ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
+//    ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
+    ParticleInterpolator* interpolator = scinew LinearInterpolator(patch);
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
 
@@ -4289,8 +4317,7 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
     int numMPMMatls=m_sharedState->getNumMPMMatls();
     std::vector<constNCVariable<Vector> > gvelocity(numMPMMatls);
     std::vector<constNCVariable<double> > gmass(numMPMMatls);
-    //double rho_init[numMPMMatls];
-    Vector dx = patch-> dCell();
+
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
@@ -4299,21 +4326,6 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
       new_dw->get(gvelocity[m], lb->gVelocityLabel,dwi, patch, gac, NGN);
       new_dw->get(gmass[m],     lb->gMassLabel,    dwi, patch, gac, NGN);
     }
-
-/*
-    // Get the current simulation time
-    simTime_vartype simTimeVar;
-    old_dw->get(simTimeVar, lb->simulationTimeLabel);
-    double time = simTimeVar;
-
-    // double time = m_sharedState->getElapsedSimTime();
-    string outfile_name = "force_sep.dat";
-    ofstream dest;
-    dest.open(outfile_name.c_str(),ios::app);
-    if(!dest){
-      cerr << "File " << outfile_name << " can't be opened." << endl;
-    }
-*/
 
     int numCZMatls=m_sharedState->getNumCZMatls();
     for(int m = 0; m < numCZMatls; m++){
@@ -4366,7 +4378,6 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
       new_dw->allocateAndPut(czBotMat_new, lb->czBotMatLabel_preReloc,    pset);
       new_dw->allocateAndPut(czFailed_new, lb->czFailedLabel_preReloc,    pset);
 
-
       czarea_new.copyData(czarea);
       czids_new.copyData(czids);
       czTopMat_new.copyData(czTopMat);
@@ -4374,9 +4385,11 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
 
       double sig_max = cz_matl->getCohesiveNormalStrength();
       double delta_n = cz_matl->getCharLengthNormal();
-      double tau_max = cz_matl->getCohesiveTangentialStrength();
       double delta_t = cz_matl->getCharLengthTangential();
+      double tau_max = cz_matl->getCohesiveTangentialStrength();
       double delta_s = delta_t;
+      double delta_n_fail = cz_matl->getNormalFailureDisplacement();
+      double delta_t_fail = cz_matl->getTangentialFailureDisplacement();
       bool rotate_CZs= cz_matl->getDoRotation();
 
       double phi_n = M_E*sig_max*delta_n;
@@ -4392,8 +4405,6 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
           iter != pset->end(); iter++){
         particleIndex idx = *iter;
 
-//        double length = sqrt(czarea[idx]);
-//        Vector size(length,length,length);
         Matrix3 size(0.1,0.,0.,0.,0.1,0.,0.,0.,0.1);
         Matrix3 defgrad;
         defgrad.Identity();
@@ -4405,41 +4416,42 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
         Vector velBot(0.0,0.0,0.0);
         double massTop = 0.0;
         double massBot = 0.0;
-        double mass_ratio = 0.0;
         int TopMat = czTopMat[idx];
         int BotMat = czBotMat[idx];
-        double cell_volume = dx.x()*dx.y()*dx.z();
-        //double denseTop = rho_init[TopMat];
-        //double denseBot = rho_init[BotMat];
-        double TOPMAX = 0.0;
-        double BOTMAX = 0.0;
+        double sumSTop = 0.;
+        double sumSBot = 0.;
 
-//      if (denseBot != denseTop){
-//         throw ProblemSetupException("Different densities not allowed for Bottom and Top Material of Cohesive Zone",
-//                                 __FILE__, __LINE__);
-//      }
-
-        //double density_ratio = denseTop/denseBot;
         // Accumulate the contribution from each surrounding vertex
         for (int k = 0; k < NN; k++) {
           IntVector node = ni[k];
-          velTop      += gvelocity[TopMat][node] * S[k];
-          velBot      += gvelocity[BotMat][node] * S[k];
+          if(gmass[TopMat][node]>2.e-200){
+            velTop      += gvelocity[TopMat][node]* S[k];
+            sumSTop     += S[k];
+          }
+          if(gmass[BotMat][node]>2.e-200){
+            velBot      += gvelocity[BotMat][node]* S[k];
+            sumSBot     += S[k];
+          }
           massTop     += gmass[TopMat][node]*S[k];
-          TOPMAX      += cell_volume;
           massBot     += gmass[BotMat][node]*S[k];
-          BOTMAX      += cell_volume;
         }
-        massTop = massTop/TOPMAX;
-        massBot = massBot/BOTMAX;
+        velTop/=sumSTop;
+        velBot/=sumSBot;
+
+#if 0
+        // I'm not sure what this was here for in the first place,
+        // but it is disabled for now
+        double mass_ratio = 0.0;
         if (massBot > 0.0) {
-            mass_ratio = massTop/massBot;
-            mass_ratio = min(mass_ratio,1.0/mass_ratio);
+          mass_ratio = massTop/massBot;
+          mass_ratio = min(mass_ratio,1.0/mass_ratio);
         }
         else {
-            mass_ratio = 0.0;
+          mass_ratio = 0.0;
         }
+
         double mass_correction_factor = mass_ratio;
+#endif
 
         // Update the cohesive zone's position and displacements
         czx_new[idx]         = czx[idx]       + .5*(velTop + velBot)*delT;
@@ -4447,7 +4459,8 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
         czDispBot_new[idx]   = czDispBot[idx] + velBot*delT;
         czsep_new[idx]       = czDispTop_new[idx] - czDispBot_new[idx];
 
-        double disp = czsep_new[idx].length();
+        double disp_old = czsep[idx].length();
+        double disp     = czsep_new[idx].length();
         if (disp > 0.0 && rotate_CZs){
           Matrix3 Rotation;
           Matrix3 Rotation_tang;
@@ -4472,20 +4485,27 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
         // to fail zone if normal sep is > 4*delta_n or 2*delta_t
         double czf=0.0;
         if(czFailed[idx]>0 ){
-          czFailed_new[idx]=czFailed[idx];
-          czf=1.0;
+//          czFailed_new[idx]=czFailed[idx];
+          if(disp>=disp_old){
+           czFailed_new[idx]=min(czFailed[idx]+1,1000);
+          } else {
+           czFailed_new[idx]=czFailed[idx];
+          }
+          czf =.001*((double) czFailed_new[idx]);
+//          czf=1.0;
         }
-        else if(D_n > 4.0*delta_n){
+        else if(fabs(D_n) > delta_n_fail){
+          cout << "czFailed, D_n =  " << endl;
           czFailed_new[idx]=1;
-          czf=1.0;
+//          czf=1.0;
         }
-        else if( fabs(D_t1) > 2.0*delta_t){
-          czFailed_new[idx]=2;
-          czf=1.0;
+        else if( fabs(D_t1) > delta_t_fail){
+          czFailed_new[idx]=1;
+//          czf=1.0;
         }
-        else if( fabs(D_t2) > 2.0*delta_s){
-          czFailed_new[idx]=2;
-          czf=1.0;
+        else if( fabs(D_t2) > delta_t_fail){
+          czFailed_new[idx]=1;
+//          czf=1.0;
         }
         else {
           czFailed_new[idx]=0;
@@ -4508,10 +4528,11 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
                               * exp(-D_n/delta_n)
                               * exp(-D_t2*D_t2/(delta_s*delta_s));
 
-        czforce_new[idx]     = mass_correction_factor*(normal_stress*cznorm_new[idx]*czarea_new[idx]
-                             + tang1_stress*cztang_new[idx]*czarea_new[idx]
-                             + tang2_stress*cztang2*czarea_new[idx])
-                             * (1.0 - czf);
+//        czforce_new[idx]     = mass_correction_factor *
+        czforce_new[idx]     = ((normal_stress*cznorm_new[idx]
+                             +   tang1_stress*cztang_new[idx]
+                             +   tang2_stress*cztang2)*czarea_new[idx])
+                             *   (1.0 - czf);
 
 /*
         dest << time << " " << czsep_new[idx].x() << " " << czsep_new[idx].y() << " " << czforce_new[idx].x() << " " << czforce_new[idx].y() << endl;

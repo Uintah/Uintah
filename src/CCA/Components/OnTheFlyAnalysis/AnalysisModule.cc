@@ -69,18 +69,25 @@ void AnalysisModule::setComponents( ApplicationInterface *comp )
 {
   ApplicationInterface * parent = dynamic_cast<ApplicationInterface*>( comp );
 
-  attachPort( "scheduler", parent->getScheduler() );
-  attachPort( "output",    parent->getOutput() );
+  attachPort( "application", parent );
+  attachPort( "scheduler",   parent->getScheduler() );
+  attachPort( "output",      parent->getOutput() );
 
   getComponents();
 }
 
 void AnalysisModule::getComponents()
 {
+  m_application = dynamic_cast<ApplicationInterface*>( getPort("application") );
+
+  if( !m_application ) {
+    throw InternalError("dynamic_cast of 'm_application' failed!", __FILE__, __LINE__);
+  }
+
   m_scheduler = dynamic_cast<Scheduler*>( getPort("scheduler") );
 
   if( !m_scheduler ) {
-    throw InternalError("dynamic_cast of 'm_regridder' failed!", __FILE__, __LINE__);
+    throw InternalError("dynamic_cast of 'm_scheduler' failed!", __FILE__, __LINE__);
   }
 
   m_output = dynamic_cast<Output*>( getPort("output") );
@@ -92,9 +99,11 @@ void AnalysisModule::getComponents()
 
 void AnalysisModule::releaseComponents()
 {
+  releasePort( "application" );
   releasePort( "scheduler" );
   releasePort( "output" );
 
+  m_application  = nullptr;
   m_scheduler    = nullptr;
   m_output       = nullptr;
 }

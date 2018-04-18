@@ -94,6 +94,17 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
   ProblemSpecP db = inputdb;
 
   db->getWithDefault( "calc_frequency",   _radiation_calc_freq, 3 );
+
+  if(db->findBlock("profile_rad_frequency") !=nullptr){
+     _runRadProfiler=true; 
+    db->get("profile_rad_frequency",_profiler_label_name);
+    if (_profiler_label_name=="divQ"){
+       //"Do Time scale analysis" 
+       _doTimeScaleAnalysis=true;
+    }
+    
+  } // else initialized to false
+
   db->getWithDefault( "checkForMissingIntensities", _checkForMissingIntensities  , false );
   db->getWithDefault( "calc_on_all_RKsteps", _all_rk, false );
   if (db->findBlock("abskt")!= nullptr ){
@@ -391,6 +402,10 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
   if (_DO_model->get_nQn_part() >0 && _abskt_label_name == _abskg_label_name){
     throw ProblemSetupException("DORadiation: You must use a gas phase aborptoin coefficient if particles are included, as well as a seperate label for abskt.",__FILE__, __LINE__);
   }
+
+  int Rad_TG=1; // solve radiation in this taskgraph 
+  int no_Rad_TG=0; // don't solve radiation in this taskgraph
+
   if (_sweepMethod>0){
     sched_computeSourceSweep( level, sched, timeSubStep );
   }else{
@@ -460,7 +475,6 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
   tsk->requires(Task::OldDW, _labels->d_cellTypeLabel, gac, 1 );
   tsk->requires(Task::NewDW, _labels->d_cellInfoLabel, gn);
 
-  int Rad_TG=1;
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials(),Rad_TG);
 
 
@@ -480,13 +494,37 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
       tsk_noRad->computes( *iter );
     }
 
-    int no_Rad_TG=0;
     sched->addTask(tsk_noRad, level->eachPatch(), _shared_state->allArchesMaterials(),no_Rad_TG);
   }
 
 ////----------------------------------------------------------------------//
 
 }
+
+
+if (_runRadProfiler && timeSubStep==0){
+  VarLabel::create("max_rad_change",  max_vartype::getTypeDescription());
+  std::string taskname4 = "DORadiation::profileDynamicRadiation";
+  Task* tsk4 = scinew Task(taskname4, this, &DORadiation::profileDynamicRadiation);
+
+  tsk4->requires( Task::OldDW,VarLabel::find(_profiler_label_name), Ghost::None, 0 );
+  tsk4->requires( Task::NewDW,VarLabel::find(_profiler_label_name), Ghost::None, 0 );
+
+  tsk4->computes(VarLabel::find("max_rad_change"));
+
+  if (_doTimeScaleAnalysis){
+    tsk4->requires(Task::OldDW,_labels->d_delTLabel,Ghost::None,0);
+  }
+  sched->addTask(tsk4, level->eachPatch(), _shared_state->allArchesMaterials(),Rad_TG);
+
+  std::string taskname5 = "DORadiation::printChange";
+  Task* tsk5 = scinew Task(taskname5, this, &DORadiation::printChange);
+
+  tsk5->requires(Task::NewDW,VarLabel::find("max_rad_change"),Ghost::None,0);
+
+  sched->addTask(tsk5, level->eachPatch(), _shared_state->allArchesMaterials(),Rad_TG);
+}
+
 }
 //---------------------------------------------------------------------------
 // Method: Actually compute the source term
@@ -1097,8 +1135,73 @@ DORadiation::sched_computeSourceSweep( const LevelP& level, SchedulerP& sched, i
     tsk3->computes( _src_label);
 
     sched->addTask(tsk3, level->eachPatch(), _shared_state->allArchesMaterials(),Radiation_TG);
+
   }
  }
+}
+
+
+
+void
+DORadiation::profileDynamicRadiation( const ProcessorGroup* pc,
+                         const PatchSubset* patches,
+                         const MaterialSubset* matls,
+                         DataWarehouse* old_dw,
+                         DataWarehouse* new_dw
+                         ){
+
+
+  double change=0.;
+  for (int p=0; p < patches->size(); p++){
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matlIndex = _labels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+
+
+    constCCVariable <double > rad_field;
+    constCCVariable <double > rad_field_old;
+    old_dw->get(rad_field_old,VarLabel::find(_profiler_label_name), matlIndex, patch, Ghost::None,0);
+    new_dw->get(rad_field,VarLabel::find(_profiler_label_name), matlIndex, patch, Ghost::None,0);
+
+    Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
+     if (_doTimeScaleAnalysis){
+       Uintah::parallel_for( range,   [&](int i, int j, int k){
+           change=std::max(std::abs(rad_field(i,j,k)-rad_field_old(i,j,k)), change);
+
+           });
+     }else{
+        Uintah::parallel_for( range,   [&](int i, int j, int k){
+            change=std::max(std::abs(rad_field(i,j,k)-rad_field_old(i,j,k))/rad_field(i,j,k),change);
+            });
+     }
+
+
+  }
+
+  if (_doTimeScaleAnalysis){
+    const double Cp_vol=400.; // j/m^3/K            air at 1000K
+    delt_vartype delT;
+    old_dw->get(delT,_labels->d_delTLabel);
+    change=change/2./Cp_vol*delT*_radiation_calc_freq;
+  }
+
+  new_dw->put(max_vartype(change), VarLabel::find("max_rad_change"));
+}
+
+void
+DORadiation::printChange( const ProcessorGroup* pc,
+                         const PatchSubset* patches,
+                         const MaterialSubset* matls,
+                         DataWarehouse* old_dw,
+                         DataWarehouse* new_dw
+                         ){
+  max_vartype change;
+  new_dw->get(change,VarLabel::find("max_rad_change"));
+  if (_doTimeScaleAnalysis){
+    proc0cout << "***rad Dynamics result in "<< change << "K for this radiation calculation frequency  \n";
+  }else{
+    proc0cout << "Max Change in "<< _profiler_label_name <<": "<<change*100 << " percent \n";
+  }
 }
 
 void

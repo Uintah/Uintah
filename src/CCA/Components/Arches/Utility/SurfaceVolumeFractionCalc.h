@@ -2,6 +2,7 @@
 #define Uintah_Component_Arches_SurfaceVolumeFractionCalc_h
 
 #include <CCA/Components/Arches/Task/TaskInterface.h>
+#include <Core/GeometryPiece/GeometryPieceFactory.h>
 
 namespace Uintah{
 
@@ -15,7 +16,7 @@ namespace Uintah{
 
     typedef std::vector<ArchesFieldContainer::VariableInformation> ArchesVIVector;
 
-    void problemSetup( ProblemSpecP& db ){};
+    void problemSetup( ProblemSpecP& db );
 
     void register_initialize( ArchesVIVector& variable_registry , const bool packed_tasks);
 
@@ -59,6 +60,12 @@ namespace Uintah{
   private:
 
     std::vector<std::string> m_var_names;
+
+    struct IntrusionBoundary{
+      std::vector<GeometryPieceP> geometry;
+    };
+
+    std::vector<IntrusionBoundary> m_intrusions;
 
   }; // class SurfaceVolumeFractionCalc
 

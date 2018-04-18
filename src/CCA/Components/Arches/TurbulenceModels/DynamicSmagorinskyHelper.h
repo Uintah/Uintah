@@ -237,7 +237,7 @@ namespace Uintah {
     Fvar(i,j,k) = F_var;
   });
   }
-  //  This filter does not weigth the intrusion cells instead c value is used.
+  //  This filter does not weight the intrusion cells instead c value is used.
   //  used in density  
   template <typename T>
   void applyFilter(T& var, Array3<double>& Fvar, 

@@ -298,6 +298,8 @@ namespace Uintah {
 
         // Setup & solve phases
         int timeSolve = hypre_InitializeTiming("Solver Setup");
+	(void) timeSolve;  // Removes an unused var warning
+
         hypre_BeginTiming(timeSolve);
         
         solver->solve();  

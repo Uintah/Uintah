@@ -49,9 +49,11 @@
 
 #include <map>
 
-extern DebugStream gpu_stats;
-
 extern Uintah::MasterLock cerrLock;
+
+namespace Uintah {
+  extern DebugStream gpu_stats;
+}
 
 
 //______________________________________________________________________

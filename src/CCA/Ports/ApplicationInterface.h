@@ -34,6 +34,7 @@
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Util/InfoMapper.h>
 
 #include <sci_defs/visit_defs.h>
 
@@ -152,22 +153,22 @@ WARNING
 
     // Schedule the inital switching.
     virtual void scheduleSwitchInitialization( const LevelP     & level,
-					             SchedulerP & sched ) = 0;
+                                                     SchedulerP & sched ) = 0;
       
     virtual void scheduleSwitchTest( const LevelP &     level,
                                            SchedulerP & scheduler ) = 0;
 
     // Schedule the actual time step advencement tasks.
     virtual void scheduleTimeAdvance( const LevelP     & level,
-				            SchedulerP & scheduler ) = 0;
+                                            SchedulerP & scheduler ) = 0;
 
     // Optionally schedule tasks that can not be done in scheduleTimeAdvance.
     virtual void scheduleFinalizeTimestep( const LevelP     & level,
-					         SchedulerP & scheduler ) = 0;
+                                                 SchedulerP & scheduler ) = 0;
 
     // Optionally schedule analysis tasks.
     virtual void scheduleAnalysis( const LevelP     & level,
-				         SchedulerP & scheduler) = 0;
+                                         SchedulerP & scheduler) = 0;
 
     // Optionally schedule a task that determines the next delt T value.
     virtual void scheduleComputeStableTimeStep( const LevelP & level,
@@ -175,22 +176,22 @@ WARNING
       
     // Reduce the system wide values such as the next delta T.
     virtual void scheduleReduceSystemVars(const GridP      & grid,
-					  const PatchSet   * perProcPatchSet,
-					        SchedulerP & scheduler) = 0;
+                                          const PatchSet   * perProcPatchSet,
+                                                SchedulerP & scheduler) = 0;
 
     // Schedule the initialization of system values such at the time step.
     virtual void scheduleInitializeSystemVars(const GridP      & grid,
-					      const PatchSet   * perProcPatchSet,
-					            SchedulerP & scheduler) = 0;
+                                              const PatchSet   * perProcPatchSet,
+                                                    SchedulerP & scheduler) = 0;
     
     // Schedule the updating of system values such at the time step.
     virtual void scheduleUpdateSystemVars(const GridP      & grid,
-					  const PatchSet   * perProcPatchSet,
-					        SchedulerP & scheduler) = 0;
+                                          const PatchSet   * perProcPatchSet,
+                                                SchedulerP & scheduler) = 0;
     
     // Methods used for scheduling AMR regridding.
     virtual void scheduleRefine( const PatchSet   * patches,
-				       SchedulerP & scheduler ) = 0;
+                                       SchedulerP & scheduler ) = 0;
     
     virtual void scheduleRefineInterface( const LevelP     & fineLevel, 
                                                 SchedulerP & scheduler,
@@ -202,7 +203,7 @@ WARNING
 
     // Schedule to mark flags for AMR regridding
     virtual void scheduleErrorEstimate( const LevelP     & coarseLevel,
-					      SchedulerP & scheduler) = 0;
+                                              SchedulerP & scheduler) = 0;
 
     // Schedule to mark initial flags for AMR regridding
     virtual void scheduleInitialErrorEstimate(const LevelP     & coarseLevel,
@@ -263,14 +264,29 @@ WARNING
     virtual SimulationTime * getSimulationTime() const = 0;
     virtual SimulationStateP getSimulationStateP() const = 0;
 
+    // Application stats
+    enum ApplicationStatsEnum {
+      // Add additional stat enums that are used outside of the
+      // infrastructure (i.e. the models or applications).
+      CarcassCount = 99
+    };
+
+    virtual ReductionInfoMapper< ApplicationStatsEnum,
+                                 double > & getApplicationStats() = 0;
+
+    virtual void resetApplicationStats( double val ) = 0;
+      
+    virtual void reduceApplicationStats( bool allReduce,
+                                         const ProcessorGroup* myWorld ) = 0;
+
     // The member methods are private as the child application should
     // ONLY get/set these values via the data warehouse.
   private:
     virtual   void setDelT( double delT ) = 0;
     virtual double getDelT() const = 0;
     virtual   void setDelTForAllLevels( SchedulerP& scheduler,
-					const GridP & grid,
-					const int totalFine ) = 0;
+                                        const GridP & grid,
+                                        const int totalFine ) = 0;
 
     virtual   void setNextDelT( double delT ) = 0;
     virtual double getNextDelT() const = 0;
@@ -296,7 +312,6 @@ WARNING
     virtual bool isLastTimeStep( double walltime ) const = 0;
     virtual bool maybeLastTimeStep( double walltime ) const = 0;
 
-  private:
     ApplicationInterface(const ApplicationInterface&);
     ApplicationInterface& operator=(const ApplicationInterface&);
   
@@ -304,6 +319,7 @@ WARNING
   public:
     // Reduction analysis variables for on the fly analysis
     struct analysisVar {
+      std::string component;
       std::string name;
       int matl;
       int level;
@@ -315,6 +331,7 @@ WARNING
     // Interactive variables from the UPS problem spec or other state
     // variables.
     struct interactiveVar {
+      std::string component;
       std::string name;
       TypeDescription::Type type;
       void * value;
@@ -331,10 +348,6 @@ WARNING
     // Interactive state variables from components.
     virtual std::vector< interactiveVar > & getStateVars() = 0;
      
-    // Debug streams that can be turned on or off.
-    virtual std::vector< DebugStream * > & getDebugStreams() = 0;
-    virtual std::vector< Dout * > & getDouts() = 0;
-  
     virtual void setVisIt( unsigned int val ) = 0;
     virtual unsigned int  getVisIt() = 0;
 #endif

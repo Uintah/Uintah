@@ -1,0 +1,320 @@
+<Uintah_specification>
+
+  <Meta>
+        <title>1D Species transport with reaction and coal model implementation</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+      
+  <Wasatch>
+
+    <Density method="COMPRESSIBLE">
+      <NameTag name="rho"/>
+    </Density>
+         
+    <TimeIntegrator>RK3SSP</TimeIntegrator>
+    
+    <Coal>
+     <DevolModel name="CPD"                />
+     <CharModel  name="LH"                 />
+     <CoalType   name="Eastern_Bituminous" />
+    </Coal>
+    
+    <ParticleTransportEquations>
+      <ParticlesPerCell>1</ParticlesPerCell>
+      <MaximumParticles>1</MaximumParticles>
+      <ParticleDensity name="p.rho"/>
+      <ParticleMass name="p.m" state="STATE_DYNAMIC">
+        <SourceTerm name="nothing"/>
+      </ParticleMass>
+      <ParticleTemperature name="p.T" state="STATE_DYNAMIC">
+        <SourceTerm name="nothing"/>
+      </ParticleTemperature>
+      <ParticleSize name="p.size" state="STATE_DYNAMIC">
+        <SourceTerm name="nothing"/>
+      </ParticleSize>
+      <ParticlePosition x="p.xw" y="p.yw" z="p.zw">
+        <Velocity>
+          <XVel name="p.u" state="STATE_DYNAMIC"/>
+          <YVel name="p.v" state="STATE_DYNAMIC"/>
+          <ZVel name="p.w" state="STATE_DYNAMIC"/>
+        </Velocity>
+      </ParticlePosition>
+      <ParticleMomentum x="p.u" y="p.v" z="p.w">
+        <Gravity direction="Z"/>
+        <GasProperties>
+          <GasViscosity name="viscosity"/>
+          <GasDensity name="rho" state="STATE_DYNAMIC"/>
+          <GasVelocity>
+            <XVel name="u"/>
+            <YVel name="v"/>
+            <ZVel name="w"/>
+          </GasVelocity>
+        </GasProperties>
+      </ParticleMomentum>      
+    </ParticleTransportEquations>
+    
+    <!-- Set the initial condition expressions for particles -->
+    <BasicExpression type="PARTICLE">
+       <TaskList>initialization</TaskList>
+       <NameTag name="p.size"/>
+       <Constant>1e-4</Constant>
+     </BasicExpression>
+    <BasicExpression type="PARTICLE">
+       <TaskList>initialization</TaskList>
+       <NameTag name="p.T"/>
+       <Constant>700</Constant>
+    </BasicExpression>
+
+    <BasicExpression type="PARTICLE">
+      <TaskList>initialization</TaskList>
+      <NameTag name="p.rho"/>
+      <Constant>1200</Constant>
+    </BasicExpression>
+    
+    <BasicExpression type="PARTICLE">
+       <TaskList>initialization</TaskList>
+       <NameTag name="p.xw"/>
+       <Constant>0.</Constant>
+    </BasicExpression>
+
+    
+    <BasicExpression type="PARTICLE">
+       <TaskList>initialization</TaskList>
+       <NameTag name="p.yw"/>
+       <Constant>0.</Constant>
+    </BasicExpression>
+
+    
+    <BasicExpression type="PARTICLE">
+       <TaskList>initialization</TaskList>
+       <NameTag name="p.zw"/>
+       <Constant>0.</Constant>
+    </BasicExpression>
+
+    
+    <BasicExpression type="PARTICLE">
+      <TaskList>initialization</TaskList>
+      <NameTag name="p.u"/>
+      <RandomField low="-3" high="3" seed="12"/>      
+    </BasicExpression>
+    
+    <BasicExpression type="PARTICLE">
+      <TaskList>initialization</TaskList>
+      <NameTag name="p.v"/>
+      <Constant>0.0</Constant>      
+    </BasicExpression>
+    
+    <BasicExpression type="PARTICLE">
+      <TaskList>initialization</TaskList>
+      <NameTag name="p.w"/>
+      <Constant>0.0</Constant>      
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="O2"/>
+      <Constant>0.2</Constant>
+    </BasicExpression>
+    
+    <!-- Set the initial condition on temperature -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="Temperature"/>
+      <Constant>1000</Constant>
+    </BasicExpression>
+    <!-- Set the initial condition expression for x-velocity -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="u"/>
+      <Constant>0</Constant>
+    </BasicExpression>
+    
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="v"/>
+      <Constant>0</Constant>
+    </BasicExpression>
+    
+   <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="w"/>
+      <Constant>0</Constant>
+    </BasicExpression>
+    
+    <!-- Set the initial condition expression for pressure - currently pressure has to be name pressure -->
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="pressure"/>
+      <Constant>101325.0</Constant>
+    </BasicExpression>
+
+    <!--                     -->
+    <!-- TRANSPORT EQUATIONS -->
+    <!--                     -->
+    
+    <!-- Momentum transport equations -->
+    <MomentumEquations>
+      <X-Velocity>u</X-Velocity>
+      <X-Momentum>x-mom</X-Momentum>
+      <Viscosity>
+        <NameTag name="viscosity"/>
+        <FromPoKiTT/>       
+      </Viscosity>    
+    </MomentumEquations>
+    <EnergyEquation>
+      <SolutionVariable>rhoet</SolutionVariable>
+      <PrimitiveVariable>et</PrimitiveVariable>
+      <ConvectiveFlux direction="X" method="CENTRAL">
+        <AdvectiveVelocity>
+          <NameTag name="u"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+      <!--
+         note that the diffusive fluxes for the energy equation will be
+         formed automatically for whatever directsions are active in the
+         species equations
+       -->
+    </EnergyEquation>
+    
+    <SpeciesTransportEquations>
+      <CanteraInputFile>inputs/Wasatch/gri30.xml</CanteraInputFile>
+      <CanteraGroup>gri30</CanteraGroup>
+      <DiffusiveFlux direction="X">
+        <MixtureAveraged/>
+      </DiffusiveFlux>
+      <ConvectiveFlux direction="X" method="UPWIND">
+        <AdvectiveVelocity>
+          <NameTag name="u"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+      <DetailedKinetics/>
+    </SpeciesTransportEquations>
+  </Wasatch>
+
+  <Time>
+    <maxTime>20e-8</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>1e-8</delt_min>
+    <delt_max>1e-8</delt_max>
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+  <DataArchiver>
+    <filebase>coal-cpd-langmuirHinshelwood-1D.uda</filebase>
+    <outputTimestepInterval>2</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle="2" interval="2.5e-8"/>
+    <compression>gzip</compression>
+    <save label="H2"/>
+    <save label="H"/>
+    <save label="HO2"/>
+    <save label="H2O"/>
+    <save label="OH"/>
+    <save label="NH3"/>
+    <save label="HCN"/>
+    <save label="CH4"/>
+    <save label="O2"/>
+    <save label="N2"/>
+    <save label="Temperature"/>
+    <save label="et"/>
+    <save label="rhoet"/>
+    <save label="rhoet_rhs"/>
+    <save label="x-mom_rhs"/>
+    <save label="rho"/>
+    <save label="Mixture_MW"/>
+    <save label="pressure"/>
+    <save label="viscosity"/>
+    <save label="u"/>
+    
+    <save label="p.particleID"/>
+    <save label="p.u"></save>
+    <save label="p.v"/>
+    <save label="p.w"/>
+    <save label="p.T"/>
+    <save label="p.T_rhs"/>
+    <save label="p.size"/>
+    <save label="p.size_init"/>
+    <save label="p.rho"/>
+    <save label="p.m"/>
+    <save label="p.x"/>
+    
+    <save label="char_mass"/>
+    <save label="Volatile_Mass"/>
+    <save label="heat_released_to_gas"/>
+    <save label="coal_Temperature_rhs"/>
+    <save label="p.heatCapacity"/>
+    <save label="p.T_rhs_convection"/>   
+    
+    <save label="moisture_mass"/>   
+    <save label="moisture_mass_rhs"/>  
+    
+
+	<!-- As of 2018/04/10, saving these fields is necessary for this input file to run -->
+    <save label="coal_consumed_gas_enthalpy"/> 
+    <save label="coal_produced_gas_enthalpy"/>
+    <save label="coal_consumed_gas_enthalpy_src"/> 
+    <save label="coal_produced_gas_enthalpy_src"/> 
+    
+    <save label="coalConsumedGasY_O2"/>
+    <save label="coalConsumedGasY_CO2"/>
+    <save label="coalConsumedGasY_H2O"/>
+    
+    <save label="coalProducedGasY_CO"/>
+    <save label="coalProducedGasY_CO2"/>
+    <save label="coalProducedGasY_H2"/>
+    <save label="coalProducedGasY_H2O"/>
+    <save label="coalProducedGasY_HCN"/>
+    <save label="coalProducedGasY_NH3"/>
+    <save label="coalProducedGasY_CH4"/>
+    
+    <save label="coal_total_gas_consumption_rate"/>
+	<save label="coal_total_gas_production_rate"/>
+	<!-- - - - - - - - - - - - - - - - - - - - -  - - - - - - - - - - - - - - - - - -  -->
+
+    
+<!--     <save label="dev_char_production"/> -->
+    
+<!--     KS vars -->
+<!-- 
+    <save label="sarofim_CO_rhs"/>    
+    <save label="sarofim_H2_rhs"/>
+    <save label="sarofim_tar_src"/>
+    <save label="dev_char_production"/>
+ -->
+
+ 
+ <!--     SingleRate vars -->
+<!-- 
+    <save label="singlerate_CO_rhs"/>    
+    <save label="singlerate_H2_rhs"/>
+    <save label="singlerate_tar_src"/>
+ -->
+
+
+ 
+  <!--    CPD vars   -->
+
+
+  <!--    LH vars   -->
+  <save label="char_H2O_rhs"/>
+  <save label="char_CO_rhs" />
+  <save label="char_CO2_rhs"/>
+  <save label="char_H2_rhs" />
+  <save label="char_O2_rhs" />
+  </DataArchiver>
+
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>[-1e-2,-1e-3,-1e-3]</lower>
+        <upper>[ 1e-2, 1e-3, 1e-3]</upper>
+        <resolution>[ 128, 1, 1 ]</resolution>
+        <patches>[1,1,1]</patches>
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>
+

@@ -322,7 +322,7 @@ CQMOMSourceWrapper::buildSourceTerm( const ProcessorGroup* pc,
       std::vector<double> temp_abscissas ( _N * M, 0.0 );
       std::vector<double> temp_sources ( _N * nSources, 0.0 );
       
-      //put all the weigths, abscissas and sources in temp vectors
+      //put all the weights, abscissas and sources in temp vectors
       for (int i = 0; i < _N; i++) {
         temp_weights[i] = cqmomWeights[i][c];
       }

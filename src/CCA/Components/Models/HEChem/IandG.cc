@@ -61,7 +61,7 @@ static DebugStream cout_doing("MODELS_DOING_COUT", false);
 IandG::IandG(const ProcessorGroup* myworld,
              const SimulationStateP& sharedState,
              const ProblemSpecP& params)
-  : ModelInterface(myworld, sharedState), d_params(params)
+  : HEChemModel(myworld, sharedState), d_params(params)
 {
   mymatls = 0;
   Ilb = scinew ICELabel();
@@ -353,32 +353,4 @@ void IandG::computeModelSources(const ProcessorGroup*,
     setBC(term3, "set_if_sym_BC",patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
     setBC(Fr,    "set_if_sym_BC",patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
   }
-}
-//______________________________________________________________________
-//
-void IandG::scheduleModifyThermoTransportProperties(SchedulerP&,
-                                                    const LevelP&,         
-                                                    const MaterialSet*)    
-{
-  // do nothing      
-}
-void IandG::computeSpecificHeat(CCVariable<double>&,
-                                const Patch*,   
-                                DataWarehouse*, 
-                                const int)      
-{
-  //do nothing
-}
-//______________________________________________________________________
-//
-void IandG::scheduleErrorEstimate(const LevelP&,
-                                  SchedulerP&)
-{
-  // Not implemented yet
-}
-//__________________________________
-void IandG::scheduleTestConservation(SchedulerP&,
-                                     const PatchSet*)               
-{
-  // Not implemented yet
 }

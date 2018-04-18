@@ -99,8 +99,7 @@ using std::vector;
 using std::string;
 
 extern Dout g_ray_dbg;
-Dout dbg_BC_ray("RAY_BC", false);
-
+extern Dout g_ray_BC;
 
 //---------------------------------------------------------------------------
 // Class: Constructor.
@@ -176,7 +175,6 @@ void
 Ray::problemSetup( const ProblemSpecP     & prob_spec
                  , const ProblemSpecP     & rmcrtps
                  , const GridP            & grid
-                 ,       SimulationStateP & sharedState
                  )
 {
 
@@ -375,45 +373,6 @@ Ray::problemSetup( const ProblemSpecP     & prob_spec
   #endif
 #endif
   proc0cout << "__________________________________ " << endl;
-  //______________________________________________________________________
-  //
-// #ifdef HAVE_VISIT
-//   static bool initialized = false;
-
-//   // Running with VisIt so add in the variables that the user can
-//   // modify.
-//   if( m_sharedState->getVisIt() && !initialized ) {
-//     // variable 1 - Must start with the component name and have NO
-//     // spaces in the var name
-//     SimulationState::interactiveVar var;
-//     var.name     = "Ray-nDivQRays";
-//     var.type     = Uintah::TypeDescription::int_type;
-//     var.value    = (void *) &d_nDivQRays;
-//     var.range[0]   = 1;
-//     var.range[1]   = 100;
-//     var.modifiable = true;
-//     var.recompile  = false;
-//     var.modified   = false;
-//     m_sharedState->d_UPSVars.push_back( var );
-
-//     // variable 2 - Must start with the component name and have NO
-//     // spaces in the var name
-//     var.name     = "Ray-nFluxRays";
-//     var.type     = Uintah::TypeDescription::int_type;
-//     var.value    = (void *) &d_nFluxRays;
-//     var.range[0]   = 1;
-//     var.range[1]   = 100;
-//     var.modifiable = true;
-//     var.recompile  = false;
-//     var.modified   = false;
-//     m_sharedState->d_UPSVars.push_back( var );
-    
-//     m_sharedState->d_douts.push_back( &g_ray_dbg );
-//     m_sharedState->d_douts.push_back( &dbg_BC_ray );
-
-//     initialized = true;
-//   }
-// #endif
 }
 
 
@@ -2496,6 +2455,47 @@ Ray::sched_setBoundaryConditions( const LevelP        & level
   tsk->modifies( d_abskgLabel );
 
   sched->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT );
+
+  // ______________________________________________________________________
+  
+#ifdef HAVE_VISIT
+  static bool initialized = false;
+
+  // Running with VisIt so add in the variables that the user can
+  // modify.
+  ApplicationInterface* m_application = sched->getApplication();
+  
+  if( m_application && m_application->getVisIt() && !initialized ) {
+    // variable 1 - Must start with the component name and have NO
+    // spaces in the var name
+    ApplicationInterface::interactiveVar var;
+    var.component  = "RMCRT-Ray";
+    var.name       = "nDivQRays";
+    var.type       = Uintah::TypeDescription::int_type;
+    var.value      = (void *) &d_nDivQRays;
+    var.range[0]   = 1;
+    var.range[1]   = 100;
+    var.modifiable = true;
+    var.recompile  = false;
+    var.modified   = false;
+    m_application->getUPSVars().push_back( var );
+
+    // variable 2 - Must start with the component name and have NO
+    // spaces in the var name
+    var.component  = "RMCRT-Ray";
+    var.name       = "nFluxRays";
+    var.type       = Uintah::TypeDescription::int_type;
+    var.value      = (void *) &d_nFluxRays;
+    var.range[0]   = 1;
+    var.range[1]   = 100;
+    var.modifiable = true;
+    var.recompile  = false;
+    var.modified   = false;
+    m_application->getUPSVars().push_back( var );
+
+    initialized = true;
+  }
+#endif
 }
 
 
@@ -2602,9 +2602,9 @@ void Ray::setBC(       CCVariable< T > & Q_CC
     return;
   }
 
-  if( dbg_BC_ray.active() ){
+  if( g_ray_BC.active() ){
     const Level* level = patch->getLevel();
-    DOUT( dbg_BC_ray, "setBC \t"<< desc <<" "
+    DOUT( g_ray_BC, "setBC \t"<< desc <<" "
            << " mat_id = " << mat_id <<  ", Patch: "<< patch->getID() << " L-" <<level->getIndex() );
   }
 
@@ -2652,9 +2652,9 @@ void Ray::setBC(       CCVariable< T > & Q_CC
 
         //__________________________________
         //  debugging
-        if( dbg_BC_ray.active() ) {
+        if( g_ray_BC.active() ) {
           bound_ptr.reset();
-          DOUT( dbg_BC_ray, "Face: "<< patch->getFaceName(face) <<" numCellsTouched " << nCells
+          DOUT( g_ray_BC, "Face: "<< patch->getFaceName(face) <<" numCellsTouched " << nCells
              <<"\t child " << child  <<" NumChildren "<<numChildren
              <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
              <<"\t bound limits = "<< bound_ptr );
@@ -2662,8 +2662,8 @@ void Ray::setBC(       CCVariable< T > & Q_CC
       }  // if iterator found
     }  // child loop
 
-    if( dbg_BC_ray.active() ){
-      DOUT( dbg_BC_ray, "    "<< patch->getFaceName(face) << " \t " << bc_kind << " numChildren: " << numChildren
+    if( g_ray_BC.active() ){
+      DOUT( g_ray_BC, "    "<< patch->getFaceName(face) << " \t " << bc_kind << " numChildren: " << numChildren
              << " nCellsTouched: " << nCells );
     }
     //__________________________________

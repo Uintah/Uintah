@@ -99,13 +99,15 @@ public:
              PhysicalConstants* physConst,
              const ProcessorGroup* myworld,
              ArchesParticlesHelper* particle_helper,
-             SolverInterface* hypreSolver ) :
+             SolverInterface* hypreSolver,
+             const ApplicationCommon* arches ) :
              _sharedState(sharedState),
              _MAlb(MAlb),
              _physConst(physConst),
              _myworld(myworld),
              _particle_helper(particle_helper),
-             _hypreSolver(hypreSolver)
+             _hypreSolver(hypreSolver),
+             _arches(arches)
     { }
 
     ~Builder(){}
@@ -116,7 +118,8 @@ public:
                                     _physConst,
                                     _myworld,
                                     _particle_helper,
-                                    _hypreSolver);
+                                    _hypreSolver,
+                                    _arches );
     }
 
   private:
@@ -127,6 +130,7 @@ public:
     const ProcessorGroup* _myworld;
     ArchesParticlesHelper* _particle_helper;
     SolverInterface* _hypreSolver;
+    const ApplicationCommon* _arches;
 
   };
 
@@ -135,7 +139,8 @@ public:
                   PhysicalConstants* physConst,
                   const ProcessorGroup* myworld,
                   ArchesParticlesHelper* particle_helper,
-                  SolverInterface* hypreSolver );
+                  SolverInterface* hypreSolver,
+                  const ApplicationCommon* arches );
 
   virtual ~ExplicitSolver();
 
@@ -402,7 +407,7 @@ public:
                                 const bool doing_restart );
 
   int getTaskGraphIndex(const int time_step ) {
-    if (d_num_taskgraphs==1){  
+    if (d_num_taskgraphs==1){
       return 0;
     }else{
       return ((time_step % d_rad_calc_frequency == 0));
@@ -429,7 +434,7 @@ public:
   // for probing data for debuging or plotting
   // properties...solves density, temperature and specie concentrations
   Properties* d_props;
-  TableLookup* d_tabulated_properties; 
+  TableLookup* d_tabulated_properties;
   // Boundary conditions
   BoundaryCondition* d_boundaryCondition;
   // Turbulence Model
@@ -484,6 +489,7 @@ public:
 
   //DQMOM
   bool d_doDQMOM;
+  bool d_kokkos_dqmom_Translate;
   PartVel* d_partVel;
   DQMOM* d_dqmomSolver;
   std::string d_which_dqmom;
@@ -519,7 +525,7 @@ public:
 
   std::map<int,WBCHelper*> m_bcHelper;
 
-  std::string m_DQMOMSolverType; 
+  std::string m_DQMOMSolverType;
 
 }; // End class ExplicitSolver
 } // End namespace Uintah

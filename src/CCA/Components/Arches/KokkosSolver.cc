@@ -57,11 +57,11 @@ typedef std::map<std::string, std::shared_ptr<TaskFactoryBase> > BFM;
 typedef std::vector<std::string> SVec;
 
 //--------------------------------------------------------------------------------------------------
-KokkosSolver::KokkosSolver(       SimulationStateP & shared_state
-                          , const ProcessorGroup   * myworld
-                          ,       SolverInterface  * solver
-                          )
-  : NonlinearSolver ( myworld )
+KokkosSolver::KokkosSolver( SimulationStateP& shared_state,
+                            const ProcessorGroup* myworld,
+                            SolverInterface* solver,
+                            const ApplicationCommon* arches )
+  : NonlinearSolver ( myworld, arches )
   , m_sharedState   ( shared_state )
   , m_hypreSolver   ( solver )
 {
@@ -70,11 +70,14 @@ KokkosSolver::KokkosSolver(       SimulationStateP & shared_state
     VarLabel::create(delT_name, delt_vartype::getTypeDescription() );
   nonconstDelT->allowMultipleComputes();
   m_delTLabel = nonconstDelT;
+  // Simulation time
+  //VarLabel* m_simtime_label = VarLabel::create(simTime_name, simTime_vartype::getTypeDescription());
 }
 
 //--------------------------------------------------------------------------------------------------
 KokkosSolver::~KokkosSolver()
 {
+
   for (auto i = m_bcHelper.begin(); i != m_bcHelper.end(); i++){
     delete i->second;
   }
@@ -83,6 +86,8 @@ KokkosSolver::~KokkosSolver()
   delete m_table_lookup;
 
   VarLabel::destroy(m_delTLabel);
+ // VarLabel::destroy(m_simtime_label);
+
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -141,16 +146,16 @@ KokkosSolver::problemSetup( const ProblemSpecP     & input_db
     }
   }
 
-  std::shared_ptr<UtilityFactory> UtilF(scinew UtilityFactory());
-  std::shared_ptr<TransportFactory> TransF(scinew TransportFactory());
-  std::shared_ptr<InitializeFactory> InitF(scinew InitializeFactory());
-  std::shared_ptr<ParticleModelFactory> PartModF(scinew ParticleModelFactory());
-  std::shared_ptr<LagrangianParticleFactory> LagF(scinew LagrangianParticleFactory());
-  std::shared_ptr<PropertyModelFactoryV2> PropModels(scinew PropertyModelFactoryV2());
-  std::shared_ptr<BoundaryConditionFactory> BC(scinew BoundaryConditionFactory());
-  std::shared_ptr<ChemMixFactory> TableModels(scinew ChemMixFactory());
-  std::shared_ptr<TurbulenceModelFactory> TurbModelF(scinew TurbulenceModelFactory());
-  std::shared_ptr<SourceTermFactoryV2> SourceTermV2(scinew SourceTermFactoryV2());
+  std::shared_ptr<UtilityFactory> UtilF(scinew UtilityFactory(m_arches));
+  std::shared_ptr<TransportFactory> TransF(scinew TransportFactory(m_arches));
+  std::shared_ptr<InitializeFactory> InitF(scinew InitializeFactory(m_arches));
+  std::shared_ptr<ParticleModelFactory> PartModF(scinew ParticleModelFactory(m_arches));
+  std::shared_ptr<LagrangianParticleFactory> LagF(scinew LagrangianParticleFactory(m_arches));
+  std::shared_ptr<PropertyModelFactoryV2> PropModels(scinew PropertyModelFactoryV2(m_arches));
+  std::shared_ptr<BoundaryConditionFactory> BC(scinew BoundaryConditionFactory(m_arches));
+  std::shared_ptr<ChemMixFactory> TableModels(scinew ChemMixFactory(m_arches));
+  std::shared_ptr<TurbulenceModelFactory> TurbModelF(scinew TurbulenceModelFactory(m_arches));
+  std::shared_ptr<SourceTermFactoryV2> SourceTermV2(scinew SourceTermFactoryV2(m_arches));
 
   m_task_factory_map.clear();
   m_task_factory_map.insert(std::make_pair("utility_factory",UtilF));
@@ -400,6 +405,8 @@ KokkosSolver::initialize( const LevelP     & level
 
   m_task_factory_map["transport_factory"]->schedule_task_group( "dqmom_eqns", TaskInterface::BC, pack_tasks, level, sched, matls );
 
+  //m_task_factory_map["transport_factory"]->schedule_task_group( "dqmom_fe_update", TaskInterface::BC, pack_tasks, level, sched, matls );
+
   // variable that computed with density such as rho*u
   m_task_factory_map["initialize_factory"]->schedule_task_group( "rho_phi_tasks", TaskInterface::INITIALIZE, pack_tasks, level, sched, matls );
 
@@ -407,6 +414,9 @@ KokkosSolver::initialize( const LevelP     & level
   m_task_factory_map["property_models_factory"]->schedule_task_group("phifromrhophi",
     TaskInterface::INITIALIZE, pack_tasks, level, sched, matls );
 
+  // dqmom initilization for w ic
+  m_task_factory_map["transport_factory"]->schedule_task_group("dqmom_ic_from_wic",
+    TaskInterface::INITIALIZE, pack_tasks, level, sched, matls );
   //Need to apply BC's after everything is initialized
   m_task_factory_map["transport_factory"]->schedule_task_group( "momentum_construction", TaskInterface::BC, pack_tasks, level, sched, matls );
 
@@ -481,10 +491,10 @@ KokkosSolver::nonlinearSolve( const LevelP     & level
   i_util_fac->second->schedule_task( "vol_fraction_calc", TaskInterface::TIMESTEP_INITIALIZE, level,
     sched, matls );
 
-  i_particle_model_fac->second->schedule_task_group("all_tasks", TaskInterface::TIMESTEP_INITIALIZE,
+  i_transport->second->schedule_task_group( "all_tasks", TaskInterface::TIMESTEP_INITIALIZE,
     pack_tasks, level, sched, matls );
 
-  i_transport->second->schedule_task_group( "all_tasks", TaskInterface::TIMESTEP_INITIALIZE,
+  i_particle_model_fac->second->schedule_task_group("all_tasks", TaskInterface::TIMESTEP_INITIALIZE,
     pack_tasks, level, sched, matls );
 
   i_prop_fac->second->schedule_task_group( "all_tasks", TaskInterface::TIMESTEP_INITIALIZE,
@@ -574,21 +584,33 @@ KokkosSolver::SSPRKSolve( const LevelP     & level
     // pre-update properties/source tasks)
     i_prop_fac->second->schedule_task_group( "pre_update_property_models",
       TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
-      
-    // particle models 
-    //i_particle_model_fac->second->schedule_task_group( "char_oxidation_text",
-    //   TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
-    
+
     // compute momentum closure
     i_turb_model_fac->second->schedule_task_group("momentum_closure",
       TaskInterface::TIMESTEP_EVAL, packed_info.turbulence, level, sched, matls, time_substep );
 
-    // compute all particle models.
-    i_particle_model_fac->second->schedule_task_group("all_tasks",
-      TaskInterface::TIMESTEP_EVAL, packed_info.turbulence, level, sched, matls, time_substep );
+   // (pre-update source terms)
+    i_source_fac->second->schedule_task_group( "pre_update_source_tasks",
+      TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls , time_substep );
+
+    // compute particle face velocities
+    i_particle_model_fac->second->schedule_task_group("dqmom_variables",
+      TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
+
+    // compute constant models
+    i_particle_model_fac->second->schedule_task_group("post_update_particle_models",
+      TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
+
+    // drag model models.
+    i_particle_model_fac->second->schedule_task_group("dqmom_model_task",
+      TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
+
+   // DQMOM inversion
+    i_particle_model_fac->second->schedule_task_group("pre_update_property_models",
+      TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 
     // ** DQMOM **
-    i_transport->second->schedule_task_group("dqmom_psi_builders",
+    i_transport->second->schedule_task_group("dqmom_diffusion_flux_builders",
       TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 
     i_transport->second->schedule_task_group("dqmom_eqns",
@@ -597,14 +619,22 @@ KokkosSolver::SSPRKSolve( const LevelP     & level
     i_transport->second->schedule_task_group("dqmom_fe_update",
       TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 
-   // (pre-update source terms)
-    i_source_fac->second->schedule_task_group( "pre_update_source_tasks",
-      TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls , time_substep );
+    i_transport->second->schedule_task_group("dqmom_eqns",
+      TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
+
+    // computes ic from w*ic  :
+    i_transport->second->schedule_task_group("dqmom_ic_from_wic",
+      TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
+
+    i_transport->second->schedule_task_group("dqmom_ic_from_wic",
+      TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
+
+    i_transport->second->schedule_task_group("dqmom_fe_update",
+      TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
 
     // ** SCALARS **
     // PRE-PROJECTION
-    // first compute the psi functions for the limiters:
-    i_transport->second->schedule_task_group("scalar_psi_builders",
+    i_transport->second->schedule_task_group("diffusion_flux_builders",
       TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 
     // now construct the RHS:
@@ -686,28 +716,37 @@ KokkosSolver::SSPRKSolve( const LevelP     & level
     //Compute drhodt
     i_prop_fac->second->schedule_task( "drhodt", TaskInterface::TIMESTEP_EVAL,
       level, sched, matls, time_substep, false, true );
+
     // ** PRESSURE PROJECTION **
     if ( i_transport->second->has_task("build_pressure_system")){
 
       //APPLY BC for OULET AND PRESSURE PER STAS'S BCs
-      AtomicTaskInterface* rhohat_tsk = i_transport->second->retrieve_atomic_task("vel_rho_hat_bc");
-      rhohat_tsk->schedule_task(level, sched, matls, AtomicTaskInterface::ATOMIC_STANDARD_TASK, time_substep);
+      i_transport->second->schedule_task("vel_rho_hat_bc", TaskInterface::ATOMIC,
+                                          level, sched, matls, time_substep );
 
-      PressureEqn* press_tsk = dynamic_cast<PressureEqn*>(i_transport->second->retrieve_task("build_pressure_system"));
+      PressureEqn* press_tsk = dynamic_cast<PressureEqn*>(
+        i_transport->second->retrieve_task("build_pressure_system"));
+
       // Compute the coeffificients
-      press_tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep );
+      i_transport->second->schedule_task("build_pressure_system", TaskInterface::TIMESTEP_EVAL,
+                                          level, sched, matls, time_substep );
+
       // Compute the boundary conditions on the linear system
-      press_tsk->schedule_task(level, sched, matls, TaskInterface::BC_TASK, time_substep );
+      i_transport->second->schedule_task("build_pressure_system", TaskInterface::BC,
+                                          level, sched, matls, time_substep );
+
       // Solve it - calling out to hypre external lib
       press_tsk->solve(level, sched, time_substep);
+
       // Apply boundary conditions on the pressure field. The BCs are initially applied on the
       // linear system, however, the resulting pressure field also needs BCs so that the correction
       // to the velocities is done correctly.
-      AtomicTaskInterface* press_bc_tsk = i_transport->second->retrieve_atomic_task("pressure_bcs");
-      press_bc_tsk->schedule_task(level, sched, matls, AtomicTaskInterface::ATOMIC_STANDARD_TASK, time_substep);
+      i_transport->second->schedule_task("pressure_bcs", TaskInterface::ATOMIC,
+                                          level, sched, matls, time_substep );
+
       // Correct velocities
-      AtomicTaskInterface* gradP_tsk = i_transport->second->retrieve_atomic_task("pressure_correction");
-      gradP_tsk->schedule_task(level, sched, matls, AtomicTaskInterface::ATOMIC_STANDARD_TASK, time_substep);
+      i_transport->second->schedule_task("pressure_correction", TaskInterface::ATOMIC,
+                                          level, sched, matls, time_substep );
 
     }
 
@@ -753,39 +792,22 @@ KokkosSolver::SandBox( const LevelP     & level
 
   // ----------------- Time Integration ------------------------------------------------------------
   // (pre-update properties tasks)
-  SVec prop_preupdate_tasks = i_prop_fac->second->retrieve_task_subset("pre_update_property_models");
-  for (auto i = prop_preupdate_tasks.begin(); i != prop_preupdate_tasks.end(); i++){
-    TaskInterface* tsk = i_prop_fac->second->retrieve_task(*i);
-    tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
-  }
+  i_prop_fac->second->schedule_task( "pre_update_property_models", TaskInterface::TIMESTEP_EVAL,
+    level, sched, matls, time_substep );
 
    // (pre-update source terms)
-  SVec pre_update_source = i_source_fac ->second->retrieve_task_subset("pre_update_source_task");
-  for (auto i = pre_update_source.begin(); i != pre_update_source.end(); i++){
-    TaskInterface* tsk = i_source_fac->second->retrieve_task(*i);
-    tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
-  }
-
-  // first compute the psi functions for the limiters:
-  SVec scalar_psi_builders = i_transport->second->retrieve_task_subset("scalar_psi_builders");
-  for ( SVec::iterator i = scalar_psi_builders.begin(); i != scalar_psi_builders.end(); i++){
-    TaskInterface* tsk = i_transport->second->retrieve_task(*i);
-    tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
-  }
+  i_source_fac->second->schedule_task( "pre_update_source_task", TaskInterface::TIMESTEP_EVAL,
+    level, sched, matls, time_substep );
 
   // now construct the RHS:
-  SVec scalar_rhs_builders = i_transport->second->retrieve_task_subset("scalar_rhs_builders");
-  for ( SVec::iterator i = scalar_rhs_builders.begin(); i != scalar_rhs_builders.end(); i++){
-    TaskInterface* tsk = i_transport->second->retrieve_task(*i);
-    tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
-    tsk->schedule_task(level, sched, matls, TaskInterface::BC_TASK, time_substep);
-  }
+  i_transport->second->schedule_task( "scalar_rhs_builders", TaskInterface::TIMESTEP_EVAL,
+    level, sched, matls, time_substep );
+
+  i_transport->second->schedule_task( "scalar_rhs_builders", TaskInterface::BC,
+    level, sched, matls, time_substep );
 
   // now update them:
-  SVec scalar_fe_up = i_transport->second->retrieve_task_subset("scalar_fe_update");
-  for ( SVec::iterator i = scalar_fe_up.begin(); i != scalar_fe_up.end(); i++){
-    TaskInterface* tsk = i_transport->second->retrieve_task(*i);
-    tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
-  }
+  i_transport->second->schedule_task( "scalar_fe_update", TaskInterface::TIMESTEP_EVAL,
+    level, sched, matls, time_substep );
 
 }

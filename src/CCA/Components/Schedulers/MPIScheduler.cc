@@ -46,7 +46,6 @@
 #include <Core/Util/Timers/Timers.hpp>
 
 #include <sci_defs/kokkos_defs.h>
-#include <sci_defs/visit_defs.h>
 
 #ifdef UINTAH_ENABLE_KOKKOS
 #  include <Kokkos_Core.hpp>
@@ -69,33 +68,31 @@
 
 using namespace Uintah;
 
+namespace Uintah {
 
-namespace {
-
-Uintah::MasterLock g_lb_mutex{};                // load balancer lock
-Uintah::MasterLock g_recv_mutex{};              // for postMPIRecvs
-
-Uintah::MasterLock g_msg_vol_mutex{};           // to report thread-safe msg volume info
-Uintah::MasterLock g_send_time_mutex{};         // for reporting thread-safe MPI send times
-Uintah::MasterLock g_recv_time_mutex{};         // for reporting thread-safe MPI recv times
-Uintah::MasterLock g_wait_time_mutex{};         // for reporting thread-safe MPI wait times
-
-Dout g_dbg(          "MPIScheduler_DBG"       , false );
-Dout g_send_stats(   "MPISendStats"           , false );
-Dout g_reductions(   "ReductionTasks"         , false );
-Dout g_time_out(     "MPIScheduler_TimingsOut", false );
-Dout g_task_level(   "TaskLevel"              , false );
-
+// These are used externally, keep them visible outside this unit
+  Dout g_task_order( "TaskOrder", "MPIScheduler", "task order debug stream", false );
+  Dout g_task_dbg(   "TaskDBG"  , "MPIScheduler", "output each task name as it begins/ends", false );
+  Dout g_mpi_dbg(    "MPIDBG"   , "MPIScheduler", "MPI debug stream", false );
+  Dout g_exec_out(   "ExecOut"  , "MPIScheduler", "exec debug stream", false );
 }
 
+namespace {
+  Uintah::MasterLock g_lb_mutex{};                // load balancer lock
+  Uintah::MasterLock g_recv_mutex{};              // for postMPIRecvs
+  
+  Uintah::MasterLock g_msg_vol_mutex{};           // to report thread-safe msg volume info
+  Uintah::MasterLock g_send_time_mutex{};         // for reporting thread-safe MPI send times
+  Uintah::MasterLock g_recv_time_mutex{};         // for reporting thread-safe MPI recv times
+  Uintah::MasterLock g_wait_time_mutex{};         // for reporting thread-safe MPI wait times
+  
+  Dout g_dbg(          "MPIScheduler_DBG"       , "MPIScheduler", "general dbg info for MPIScheduler", false );
+  Dout g_send_stats(   "MPISendStats"           , "MPIScheduler", "MPI send statistics, num_sends, send volume", false );
+  Dout g_reductions(   "ReductionTasks"         , "MPIScheduler", "rank-0 reports each reduction task", false );
+  Dout g_time_out(     "MPIScheduler_TimingsOut", "MPIScheduler", "write MPI timing files: timingstats.avg, timingstats.max", false );
+  Dout g_task_level(   "TaskLevel"              , "MPIScheduler", "output task name and each level's beginning patch when done", false );
+}
 
-// these are used externally, keep them visible outside this unit
-Dout g_task_order( "TaskOrder", false );
-Dout g_task_dbg(   "TaskDBG"  , false );
-Dout g_mpi_dbg(    "MPIDBG"   , false );
-Dout g_exec_out(   "ExecTimes", false );
-
-std::map<std::string, double> g_exec_times;
 
 //______________________________________________________________________
 //
@@ -152,26 +149,6 @@ MPIScheduler::problemSetup( const ProblemSpecP     & prob_spec
                           )
 {
   SchedulerCommon::problemSetup(prob_spec, state);
-
-#ifdef HAVE_VISIT
-  static bool initialized = false;
-
-  // Running with VisIt so add in the variables that the user can
-  // modify.
-  if( m_application->getVisIt() && !initialized ) {
-    m_application->getDouts().push_back( &g_dbg );
-    m_application->getDouts().push_back( &g_send_stats );
-    m_application->getDouts().push_back( &g_reductions );
-    m_application->getDouts().push_back( &g_time_out );
-    m_application->getDouts().push_back( &g_task_level );
-    m_application->getDouts().push_back( &g_task_order );
-    m_application->getDouts().push_back( &g_task_dbg );
-    m_application->getDouts().push_back( &g_mpi_dbg  );
-    m_application->getDouts().push_back( &g_exec_out  );
-
-    initialized = true;
-  }
-#endif
 }
 
 //______________________________________________________________________
@@ -301,7 +278,7 @@ MPIScheduler::runTask( DetailedTask * dtask
     
     double total_task_time = dtask->task_exec_time();
     if (g_exec_out) {
-      g_exec_times[dtask->getTask()->getName()] += total_task_time;
+      m_exec_times[dtask->getTask()->getName()] += total_task_time;
     }
     // if I do not have a sub scheduler
     if (!dtask->getTask()->getHasSubScheduler()) {
@@ -782,6 +759,10 @@ MPIScheduler::execute( int tgnum     /* = 0 */
   }
 
   int ntasks = dts->numLocalTasks();
+
+  if( d_runtimeStats )
+    (*d_runtimeStats)[NumTasks] += ntasks;
+                   
   dts->initializeScrubs(m_dws, m_dwmap);
   dts->initTimestep();
 
@@ -890,6 +871,37 @@ MPIScheduler::execute( int tgnum     /* = 0 */
 
   // only do on top-level scheduler
   if ( m_parent_scheduler == nullptr ) {
+
+    // This seems like the best place to collect and save these
+    // runtime stats. They are reported in outputTimingStats.
+    if( d_runtimeStats )
+    {
+      int numCells = 0, numParticles = 0;
+      OnDemandDataWarehouseP dw = m_dws[m_dws.size() - 1];
+      const GridP grid(const_cast<Grid*>(dw->getGrid()));
+      const PatchSubset* myPatches =
+	m_loadBalancer->getPerProcessorPatchSet(grid)->getSubset(my_rank);
+      
+      for (auto p = 0; p < myPatches->size(); p++) {
+        const Patch* patch = myPatches->get(p);
+        IntVector range =
+	  patch->getExtraCellHighIndex() - patch->getExtraCellLowIndex();
+        numCells += range.x() * range.y() * range.z();
+        
+        // Go through all materials since getting an MPMMaterial
+        // correctly would depend on MPM
+        for (int m = 0; m < m_sharedState->getNumMatls(); m++) {
+          if (dw->haveParticleSubset(m, patch)) {
+            numParticles += dw->getParticleSubset(m, patch)->numParticles();
+          }
+        }
+      }
+      
+      (*d_runtimeStats)[NumPatches]   = myPatches->size();
+      (*d_runtimeStats)[NumCells]     = numCells;
+      (*d_runtimeStats)[NumParticles] = numParticles;
+    }    
+    
     outputTimingStats( "MPIScheduler" );
   }
 
@@ -933,11 +945,11 @@ MPIScheduler::outputTimingStats( const char* label )
            << m_application->getTimeStep()
            << ")" << std::endl;
 
-      for (auto iter = g_exec_times.begin(); iter != g_exec_times.end(); ++iter) {
+      for (auto iter = m_exec_times.begin(); iter != m_exec_times.end(); ++iter) {
         fout << std::fixed<< "Rank-" << my_rank << ": TaskExecTime(s): " << iter->second << " Task:" << iter->first << std::endl;
       }
       fout.close();
-      g_exec_times.clear();
+      m_exec_times.clear();
     }
   }
 
@@ -947,30 +959,14 @@ MPIScheduler::outputTimingStats( const char* label )
     m_labels.clear();
     m_times.clear();
 
-    // add number of cells, patches, and particles
-    int numCells = 0, numParticles = 0;
-    OnDemandDataWarehouseP dw = m_dws[m_dws.size() - 1];
-    const GridP grid(const_cast<Grid*>(dw->getGrid()));
-    const PatchSubset* myPatches = m_loadBalancer->getPerProcessorPatchSet(grid)->getSubset(my_rank);
-    for (auto p = 0; p < myPatches->size(); p++) {
-      const Patch* patch = myPatches->get(p);
-      IntVector range = patch->getExtraCellHighIndex() - patch->getExtraCellLowIndex();
-      numCells += range.x() * range.y() * range.z();
-
-      // go through all materials since getting an MPMMaterial correctly would depend on MPM
-      for (int m = 0; m < m_sharedState->getNumMatls(); m++) {
-        if (dw->haveParticleSubset(m, patch)) {
-          numParticles += dw->getParticleSubset(m, patch)->numParticles();
-        }
-      }
-    }
-
     double  totalexec = m_exec_timer().seconds();
 
-    emitTime("NumPatches"  , myPatches->size());
-    emitTime("NumCells"    , numCells);
-    emitTime("NumParticles", numParticles);
-
+    if( d_runtimeStats ) {
+      emitTime("NumPatches"  , (*d_runtimeStats)[NumPatches]);
+      emitTime("NumCells"    , (*d_runtimeStats)[NumCells]);
+      emitTime("NumParticles", (*d_runtimeStats)[NumParticles]);
+    }
+    
     emitTime("Total send time"  , mpi_info_[TotalSend]);
     emitTime("Total recv time"  , mpi_info_[TotalRecv]);
     emitTime("Total test time"  , mpi_info_[TotalTest]);

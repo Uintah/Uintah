@@ -34,6 +34,7 @@ SRCS +=  \
          $(SRCDIR)/CQMOMSourceWrapper.cc   \
          $(SRCDIR)/CoalDensity.cc          \
          $(SRCDIR)/CoalTemperature.cc      \
+         $(SRCDIR)/Burnout.cc              \
          $(SRCDIR)/Constant.cc             \
          $(SRCDIR)/DragModel.cc            \
          $(SRCDIR)/ExampleParticleModel.cc \
@@ -43,7 +44,9 @@ SRCS +=  \
          $(SRCDIR)/CharOxidationps.cc      \
          $(SRCDIR)/PartVariablesDQMOM.cc   \
          $(SRCDIR)/ParticleTools.cc        \
+         $(SRCDIR)/FaceParticleVel.cc      \
          $(SRCDIR)/DQMOMNoInversion.cc     \
+         $(SRCDIR)/WDragModel.cc           \
          $(SRCDIR)/TotNumDensity.cc        
 
 

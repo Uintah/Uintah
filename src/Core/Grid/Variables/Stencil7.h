@@ -48,7 +48,7 @@ namespace Uintah {
       ASSERTRANGE(index, 0, 7);
       return (&w)[index];
     }
-    
+
     void initialize(double a){
       w = a;
       e = a;
@@ -58,6 +58,17 @@ namespace Uintah {
       t = a;
       p = a;
     }
+
+    // constructors
+    Stencil7(){}
+    
+    inline Stencil7(double init) : 
+      w(init), e(init),
+      s(init), n(init),
+      b(init), t(init),
+      p(init){}
+    
+    
   };
 
   std::ostream & operator << (std::ostream &out, const Uintah::Stencil7 &a);

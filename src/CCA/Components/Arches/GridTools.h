@@ -142,6 +142,7 @@ namespace Uintah{ namespace ArchesCore{
            are std::int.
 */
 #define GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE(buffer_low, buffer_high) \
+    \
     Uintah::IntVector low_fx_patch_range = patch->getCellLowIndex(); \
     Uintah::IntVector high_fx_patch_range = patch->getCellHighIndex(); \
     if ( patch->getBCType(Patch::xminus) != Patch::Neighbor ){ \
@@ -152,8 +153,9 @@ namespace Uintah{ namespace ArchesCore{
     }
 
 #define GET_WALL_BUFFERED_PATCH_RANGE(low_patch_range, high_patch_range,\
-    buffer_low_x,buffer_high_x,\
-    buffer_low_y,buffer_high_y,buffer_low_z,buffer_high_z) \
+                                      buffer_low_x,buffer_high_x,\
+                                      buffer_low_y,buffer_high_y,\
+                                      buffer_low_z,buffer_high_z) \
     \
     if ( patch->getBCType(Patch::xminus) != Patch::Neighbor ){ \
       low_patch_range += Uintah::IntVector(buffer_low_x,0,0); \
@@ -220,27 +222,20 @@ namespace Uintah{ namespace ArchesCore{
   template <>
   struct VariableHelper<Uintah::CCVariable<double> >{
     typedef Uintah::constCCVariable<double> ConstType;
-    //typedef Uintah::CCVariable<double> Type;
     typedef Uintah::SFCXVariable<double> XFaceType;
     typedef Uintah::SFCYVariable<double> YFaceType;
     typedef Uintah::SFCZVariable<double> ZFaceType;
-    //typedef Uintah::constSFCXVariable<double> ConstXFaceType;
-    //typedef Uintah::constSFCYVariable<double> ConstYFaceType;
-    //typedef Uintah::constSFCZVariable<double> ConstZFaceType;
     DIR dir;
     int ioff, joff, koff;
     VariableHelper():dir(NODIR), ioff(-1), joff(-1), koff(-1){}
   };
+
   template <>
   struct VariableHelper<Uintah::constCCVariable<double> >{
     typedef Uintah::constCCVariable<double> ConstType;
-    //typedef Uintah::CCVariable<double> Type;
     typedef Uintah::constSFCXVariable<double> XFaceType;
     typedef Uintah::constSFCYVariable<double> YFaceType;
     typedef Uintah::constSFCZVariable<double> ZFaceType;
-    //typedef Uintah::constSFCXVariable<double> ConstXFaceType;
-    //typedef Uintah::constSFCYVariable<double> ConstYFaceType;
-    //typedef Uintah::constSFCZVariable<double> ConstZFaceType;
     DIR dir;
     int ioff, joff, koff;
     VariableHelper():dir(NODIR), ioff(-1), joff(-1), koff(-1){}
@@ -249,27 +244,20 @@ namespace Uintah{ namespace ArchesCore{
   template <>
   struct VariableHelper<Uintah::SFCXVariable<double> >{
     typedef Uintah::constSFCXVariable<double> ConstType;
-    //typedef Uintah::SFCXVariable<double> Type;
     typedef Uintah::SFCXVariable<double> XFaceType;
     typedef Uintah::SFCXVariable<double> YFaceType;
     typedef Uintah::SFCXVariable<double> ZFaceType;
-    //typedef Uintah::constSFCXVariable<double> ConstXFaceType;
-    //typedef Uintah::constSFCXVariable<double> ConstYFaceType;
-    //typedef Uintah::constSFCXVariable<double> ConstZFaceType;
     DIR dir;
     int ioff, joff, koff;
     VariableHelper():dir(XDIR), ioff(1), joff(0), koff(0){}
   };
+
   template <>
   struct VariableHelper<Uintah::constSFCXVariable<double> >{
     typedef Uintah::constSFCXVariable<double> ConstType;
-    //typedef Uintah::SFCXVariable<double> Type;
     typedef Uintah::constSFCXVariable<double> XFaceType;
     typedef Uintah::constSFCXVariable<double> YFaceType;
     typedef Uintah::constSFCXVariable<double> ZFaceType;
-    //typedef Uintah::constSFCXVariable<double> ConstXFaceType;
-    //typedef Uintah::constSFCXVariable<double> ConstYFaceType;
-    //typedef Uintah::constSFCXVariable<double> ConstZFaceType;
     DIR dir;
     int ioff, joff, koff;
     VariableHelper():dir(XDIR), ioff(1), joff(0), koff(0){}
@@ -278,27 +266,20 @@ namespace Uintah{ namespace ArchesCore{
   template <>
   struct VariableHelper<Uintah::SFCYVariable<double> >{
     typedef Uintah::constSFCYVariable<double> ConstType;
-    //typedef Uintah::SFCYVariable<double> Type;
     typedef Uintah::SFCYVariable<double> XFaceType;
     typedef Uintah::SFCYVariable<double> YFaceType;
     typedef Uintah::SFCYVariable<double> ZFaceType;
-    //typedef Uintah::constSFCYVariable<double> ConstXFaceType;
-    //typedef Uintah::constSFCYVariable<double> ConstYFaceType;
-    //typedef Uintah::constSFCYVariable<double> ConstZFaceType;
     DIR dir;
     int ioff, joff, koff;
     VariableHelper():dir(YDIR), ioff(0), joff(1), koff(0){}
   };
+
   template <>
   struct VariableHelper<Uintah::constSFCYVariable<double> >{
     typedef Uintah::constSFCYVariable<double> ConstType;
-    //typedef Uintah::SFCYVariable<double> Type;
     typedef Uintah::constSFCYVariable<double> XFaceType;
     typedef Uintah::constSFCYVariable<double> YFaceType;
     typedef Uintah::constSFCYVariable<double> ZFaceType;
-    //typedef Uintah::constSFCYVariable<double> ConstXFaceType;
-    //typedef Uintah::constSFCYVariable<double> ConstYFaceType;
-    //typedef Uintah::constSFCYVariable<double> ConstZFaceType;
     DIR dir;
     int ioff, joff, koff;
     VariableHelper():dir(YDIR), ioff(0), joff(1), koff(0){}
@@ -307,27 +288,20 @@ namespace Uintah{ namespace ArchesCore{
   template <>
   struct VariableHelper<Uintah::SFCZVariable<double> >{
     typedef Uintah::constSFCZVariable<double> ConstType;
-    //typedef Uintah::SFCZVariable<double> Type;
     typedef Uintah::SFCZVariable<double> XFaceType;
     typedef Uintah::SFCZVariable<double> YFaceType;
     typedef Uintah::SFCZVariable<double> ZFaceType;
-    //typedef Uintah::constSFCZVariable<double> ConstXFaceType;
-    //typedef Uintah::constSFCZVariable<double> ConstYFaceType;
-    //typedef Uintah::constSFCZVariable<double> ConstZFaceType;
     DIR dir;
     int ioff, joff, koff;
     VariableHelper():dir(ZDIR), ioff(0), joff(0), koff(1){}
   };
+
   template <>
   struct VariableHelper<Uintah::constSFCZVariable<double> >{
     typedef Uintah::constSFCZVariable<double> ConstType;
-    //typedef Uintah::SFCZVariable<double> Type;
     typedef Uintah::constSFCZVariable<double> XFaceType;
     typedef Uintah::constSFCZVariable<double> YFaceType;
     typedef Uintah::constSFCZVariable<double> ZFaceType;
-    //typedef Uintah::constSFCZVariable<double> ConstXFaceType;
-    //typedef Uintah::constSFCZVariable<double> ConstYFaceType;
-    //typedef Uintah::constSFCZVariable<double> ConstZFaceType;
     DIR dir;
     int ioff, joff, koff;
     VariableHelper():dir(ZDIR), ioff(0), joff(0), koff(1){}
@@ -338,6 +312,7 @@ namespace Uintah{ namespace ArchesCore{
   struct GridVarMap {
     std::string vol_frac_name = "NOT_AVAILABLE";
   };
+
   template <>
   struct GridVarMap<CCVariable<double> >{
     void problemSetup( ProblemSpecP db ){
@@ -346,7 +321,7 @@ namespace Uintah{ namespace ArchesCore{
       wvel_name = parse_ups_for_role( WVELOCITY, db, "NotSet" );
       mu_name = parse_ups_for_role( TOTAL_VISCOSITY, db, "NotSet");
     }
-    std::string vol_frac_name = "cc_volume_fraction";
+    std::string vol_frac_name = "volFraction";
     std::string mu_name;
     std::string uvel_name;
     std::string vvel_name;

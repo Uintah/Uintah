@@ -74,12 +74,6 @@
         <var role="total_viscosity" label="gamma"/>
         <var role="density" label="density"/>
       </VarID>
-      <PropertyModelsV2>
-        <model label="volFraction" type="constant_property">
-          <grid type="CC"/>
-          <value>1.</value>
-        </model>
-      </PropertyModelsV2>
       <StateProperties> 
         <model label="density_model" type="constant">
           <const_property label="density" value="1."/>

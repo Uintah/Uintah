@@ -62,7 +62,6 @@ namespace WasatchCore {
                                    const Expr::Tag& celltypeTag,
                                    Uintah::Ray* rmcrt,
                                    const Uintah::ProblemSpecP& radiationSpec,
-                                   Uintah::SimulationStateP sharedState,
                                    Uintah::GridP grid)
   : Expr::Expression<SVolField>(),
   
@@ -87,7 +86,7 @@ namespace WasatchCore {
                               celltypeLabel_,
                               divqLabel_ );
     
-    rmcrt_->problemSetup(radiationSpec, radiationSpec, grid, sharedState);
+    rmcrt_->problemSetup(radiationSpec, radiationSpec, grid);
     
     rmcrt_->BC_bulletproofing( radiationSpec );
   }
@@ -223,7 +222,6 @@ namespace WasatchCore {
                                     const Expr::Tag& celltypeTag,
                                     Uintah::Ray* rmcrt,
                                     Uintah::ProblemSpecP& radiationSpec,
-                                    Uintah::SimulationStateP sharedState,
                                     Uintah::GridP& grid)
   : ExpressionBuilder  ( results        ),
   temperatureTag_    ( temperatureTag ),
@@ -231,7 +229,6 @@ namespace WasatchCore {
   celltypeTag_       ( celltypeTag    ),
   rmcrt_             ( rmcrt          ),
   radiationSpec_     ( radiationSpec  ),
-  sharedState_       ( sharedState    ),
   grid_              ( grid           )
   {}
   
@@ -241,7 +238,7 @@ namespace WasatchCore {
   RadiationSource::Builder::build() const
   {
     const Expr::TagList radTags = get_tags();
-    return new RadiationSource( radTags[0].name(), temperatureTag_, absorptionTag_, celltypeTag_, rmcrt_, radiationSpec_, sharedState_, grid_ );
+    return new RadiationSource( radTags[0].name(), temperatureTag_, absorptionTag_, celltypeTag_, rmcrt_, radiationSpec_, grid_ );
   }
   
 } // namespace WasatchCore

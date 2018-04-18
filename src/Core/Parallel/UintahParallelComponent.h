@@ -22,11 +22,11 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef Uintah_Parallel_UintahParallelComponent_h
-#define Uintah_Parallel_UintahParallelComponent_h
+#ifndef CORE_PARALLEL_UINTAHPARALLELCOMPONENT_H
+#define CORE_PARALLEL_UINTAHPARALLELCOMPONENT_H
 
-#include <string>
 #include <map>
+#include <string>
 #include <vector>
 
 namespace Uintah {
@@ -39,8 +39,6 @@ namespace Uintah {
 CLASS
    UintahParallelComponent
    
-   Short description...
-
 GENERAL INFORMATION
 
    UintahParallelComponent.h
@@ -49,8 +47,6 @@ GENERAL INFORMATION
    Department of Computer Science
    University of Utah
 
-   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-  
 
 KEYWORDS
    Uintah_Parallel_Dataflow/Component, Dataflow/Component
@@ -75,17 +71,15 @@ public:
 
   //////////
   // Insert Documentation Here:
-  void attachPort( const std::string& name,
-                   UintahParallelPort* port );
+  void attachPort( const std::string& name, UintahParallelPort* port );
 
   UintahParallelPort* getPort( const std::string& name );
-  UintahParallelPort* getPort( const std::string& name,
-                               unsigned int i );
+  UintahParallelPort* getPort( const std::string& name, unsigned int i );
   void releasePort( const std::string& name );
   unsigned int numConnections( const std::string& name );
 
   // Methods for managing the components attached via the ports.
-  virtual void setComponents( UintahParallelComponent *comp ) = 0;
+  virtual void setComponents( UintahParallelComponent* comp ) = 0;
   virtual void getComponents() = 0;
   virtual void releaseComponents() = 0;
 
@@ -93,6 +87,7 @@ protected:
 
   const ProcessorGroup* d_myworld;
 };
+
 } // End namespace Uintah
    
-#endif
+#endif // CORE_PARALLEL_UINTAHPARALLELCOMPONENT_H

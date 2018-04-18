@@ -15,7 +15,6 @@ namespace GasSpec{
    * \brief Enumerates species considered in the gas-phase
    */
   enum GasSpecies {
-    H,
     H2,
     H2O,
     CH4,
@@ -39,10 +38,12 @@ namespace GasSpec{
   std::string species_name( const GasSpecies );
 
   class SpeciesData {
-  public:
     SpeciesData();
+    SpeciesData& operator=( const SpeciesData& );  // no assignment
+    SpeciesData( const SpeciesData& );  // no copying
 
-    ~SpeciesData();
+  public:
+    static const SpeciesData& self();
 
     /**
      *  \fn string nSpecies()

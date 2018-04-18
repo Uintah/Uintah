@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from sys import argv, exit
 from os import environ, system
@@ -60,6 +60,7 @@ NIGHTLYTESTS = [   ("advect",             "advect.ups",              1, "All", [
                    ("riemann_1L",         riemann_1L_ups,            1, "All", ["exactComparison"]),
                    ("hotBlob2mat",        "hotBlob2mat.ups",         1, "All", ["exactComparison"]),
                    ("hotBlob2mat_sym",    "hotBlob2mat_sym.ups",     1, "All", ["exactComparison"]),
+                   ("impAdvect",          "impAdvect.ups",           8, "All", ["exactComparison"]),
                    ("impHotBlob",         "impHotBlob.ups",          1, "All", ["exactComparison"]),
                    ("hotBlob2mat8patch",  "hotBlob2mat8patch.ups",   8, "All", ["exactComparison"]),
                    ("waterAirOscillator", "waterAirOscillator.ups",  4, "All", ["exactComparison"])    
@@ -81,7 +82,7 @@ AMRTESTS =    [   ("advectAMR",          "advectAMR.ups",           8, "All", ["
                   ("advect2matAMR",      "advect2matAMR.ups",       1, "All", ["exactComparison"]),
                   ("hotBlob_AMR",        "hotBlob_AMR.ups",         4, "All", ["exactComparison"]),
                   ("hotBlob_AMR_3L",      hotBlob_AMR_3L_ups,       4, "All", ["exactComparison"]),
-                  ("impAdvectAMR",       "impAdvectAMR.ups",        1, "All", ["exactComparison"])
+                  ("impAdvect_ML_5L",    "impAdvect_ML_5L.ups",     8, "All", ["exactComparison"])
               ]
 
 DEBUGGING =   [   ("advect",           "advect.ups",           1, "All", ["exactComparison"]),
@@ -115,7 +116,7 @@ def getTestList(me) :
   elif me == "BUILDBOTTESTS":
     TESTS = ignorePerformanceTests( NIGHTLYTESTS )
   else:
-    print "\nERROR:ICE.py  getTestList:  The test list (%s) does not exist!\n\n" % me
+    print("\nERROR:ICE.py  getTestList:  The test list (%s) does not exist!\n\n" % me)
     exit(1)
   return TESTS
 

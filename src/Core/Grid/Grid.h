@@ -174,7 +174,6 @@ WARNING
     // static const double PATCH_TOLERANCE_ = 3;  
     
     IntVector d_extraCells;
-
   };
 
 } // End namespace Uintah

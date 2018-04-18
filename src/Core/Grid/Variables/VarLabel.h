@@ -30,8 +30,8 @@
 #include <Core/Util/RefCounted.h>
 #include <Core/Geometry/IntVector.h>
 
-#include <string>
 #include <iosfwd>
+#include <string>
 
 
 namespace Uintah {
@@ -170,6 +170,10 @@ private:
   VarLabel& operator=( const VarLabel & ) = delete;
   VarLabel( VarLabel && )                 = delete;
   VarLabel& operator=( VarLabel && )      = delete;
+
+  // Static member to keep track of all labels created to prevent
+  // duplicates.
+  static std::map<std::string, VarLabel*> g_all_labels; 
 };
 
 } // End namespace Uintah

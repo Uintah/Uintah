@@ -167,27 +167,34 @@ CharOxidationSmith2016::problemSetup(const ProblemSpecP& params, int qn)
   std::string charqn_name = ArchesCore::append_qn_env( char_root, d_quadNode );
   _char_varlabel = VarLabel::find(char_name);
 
-  EqnBase& temp_char_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(charqn_name);
-  DQMOMEqn& char_eqn = dynamic_cast<DQMOMEqn&>(temp_char_eqn);
-  _char_scaling_constant = char_eqn.getScalingConstant(d_quadNode);
+  //EqnBase& temp_char_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(charqn_name);
+  //DQMOMEqn& char_eqn = dynamic_cast<DQMOMEqn&>(temp_char_eqn);
+  //_char_scaling_constant = char_eqn.getScalingConstant(d_quadNode);
+  _char_scaling_constant = ArchesCore::get_scaling_constant(db,char_root, d_quadNode);
+  
   std::string ic_RHS = charqn_name+"_RHS";
   _RHS_source_varlabel = VarLabel::find(ic_RHS);
 
   //CHAR get the birth term if any:
-  const std::string char_birth_name = char_eqn.get_model_by_type( "BirthDeath" );
+  //const std::string char_birth_name = char_eqn.get_model_by_type( "BirthDeath" );
+  const std::string char_birth_name = ArchesCore::getModelNameByType( db, char_root, "BirthDeath");
+  
   std::string char_birth_qn_name = ArchesCore::append_qn_env(char_birth_name, d_quadNode);
   if ( char_birth_name != "NULLSTRING" ){
     _char_birth_label = VarLabel::find( char_birth_qn_name );
   }
 
-  EqnBase& temp_rcmass_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(rcmassqn_name);
-  DQMOMEqn& rcmass_eqn = dynamic_cast<DQMOMEqn&>(temp_rcmass_eqn);
-  _RC_scaling_constant  = rcmass_eqn.getScalingConstant(d_quadNode)  ;
+  //EqnBase& temp_rcmass_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(rcmassqn_name);
+  //DQMOMEqn& rcmass_eqn = dynamic_cast<DQMOMEqn&>(temp_rcmass_eqn);
+  //_RC_scaling_constant  = rcmass_eqn.getScalingConstant(d_quadNode)  ;
+  _RC_scaling_constant = ArchesCore::get_scaling_constant(db,rcmass_root, d_quadNode);
   std::string RC_RHS = rcmassqn_name + "_RHS";
   _RC_RHS_source_varlabel = VarLabel::find(RC_RHS);
 
   //RAW COAL get the birth term if any:
-  const std::string rawcoal_birth_name = rcmass_eqn.get_model_by_type( "BirthDeath" );
+  //const std::string rawcoal_birth_name = rcmass_eqn.get_model_by_type( "BirthDeath" );
+  const std::string rawcoal_birth_name = ArchesCore::getModelNameByType( db, rcmass_root, "BirthDeath");
+  
   std::string rawcoal_birth_qn_name = ArchesCore::append_qn_env(rawcoal_birth_name, d_quadNode);
   if ( rawcoal_birth_name != "NULLSTRING" ){
     _rawcoal_birth_label = VarLabel::find( rawcoal_birth_qn_name );
@@ -203,6 +210,7 @@ CharOxidationSmith2016::problemSetup(const ProblemSpecP& params, int qn)
 
   // check for length
   _nQn_part = ArchesCore::get_num_env(db,ArchesCore::DQMOM_METHOD);
+  
   std::string length_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_SIZE);
   for (int i=0; i<_nQn_part;i++ ){
     std::string length_name = ArchesCore::append_env( length_root, i );
@@ -211,6 +219,7 @@ CharOxidationSmith2016::problemSetup(const ProblemSpecP& params, int qn)
   std::string length_qn_name = ArchesCore::append_qn_env( length_root, d_quadNode );
   std::string length_RHS = length_qn_name+"_RHS";
   _RHS_length_varlabel = VarLabel::find(length_RHS);
+  
   EqnBase& temp_length_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(length_qn_name);
   DQMOMEqn& length_eqn = dynamic_cast<DQMOMEqn&>(temp_length_eqn);
   const std::string length_birth_name = length_eqn.get_model_by_type( "BirthDeath" );
@@ -387,41 +396,6 @@ CharOxidationSmith2016::problemSetup(const ProblemSpecP& params, int qn)
       _other_indices.push_back(spec);
     }
   }
-
-#ifdef HAVE_VISIT
-  static bool initialized = false;
-
-  // Running with VisIt so add in the variables that the user can
-  // modify.
-//   if( d_sharedState->getVisIt() && !initialized ) {
-    // variable 1 - Must start with the component name and have NO
-    // spaces in the var name.
-//     SimulationState::interactiveVar var;
-//     var.name     = "Arches-CharOx-PreExp-Factor-O2";
-//     var.type     = Uintah::TypeDescription::double_type;
-//     var.value    = (void *) &(_a_l[0]);
-//     var.range[0]   = -1.0e9;
-//     var.range[1]   = +1.0e9;
-//     var.modifiable = true;
-//     var.recompile  = false;
-//     var.modified   = false;
-//     d_sharedState->d_UPSVars.push_back( var );
-
-    // variable 2 - Must start with the component name and have NO
-    // spaces in the var name.
-//     var.name     = "Arches-CharOx-Activation-Energy-O2";
-//     var.type     = Uintah::TypeDescription::double_type;
-//     var.value    = (void *) &(_e_l[0]);
-//     var.range[0]   = -1.0e9;
-//     var.range[1]   = +1.0e9;
-//     var.modifiable = true;
-//     var.recompile  = false;
-//     var.modified   = false;
-//     d_sharedState->d_UPSVars.push_back( var );
-
-//     initialized = true;
-//   }
-#endif
 }
 
 
@@ -445,6 +419,45 @@ CharOxidationSmith2016::sched_initVars( const LevelP& level, SchedulerP& sched )
   }
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
+
+#ifdef HAVE_VISIT
+  static bool initialized = false;
+
+  // Running with VisIt so add in the variables that the user can
+  // modify.
+  ApplicationInterface* m_application = sched->getApplication();
+  
+  if( m_application && m_application->getVisIt() && !initialized ) {
+    // variable 1 - Must start with the component name and have NO
+    // spaces in the var name.
+    ApplicationInterface::interactiveVar var;
+    var.component  = "Arches";
+    var.name       = "CharOx-PreExp-Factor-O2";
+    var.type       = Uintah::TypeDescription::double_type;
+    var.value      = (void *) &(_a_l[0]);
+    var.range[0]   = -1.0e9;
+    var.range[1]   = +1.0e9;
+    var.modifiable = true;
+    var.recompile  = false;
+    var.modified   = false;
+    m_application->getUPSVars().push_back( var );
+
+    // variable 2 - Must start with the component name and have NO
+    // spaces in the var name.
+    var.component  = "Arches";
+    var.name       = "CharOx-Activation-Energy-O2";
+    var.type       = Uintah::TypeDescription::double_type;
+    var.value      = (void *) &(_e_l[0]);
+    var.range[0]   = -1.0e9;
+    var.range[1]   = +1.0e9;
+    var.modifiable = true;
+    var.recompile  = false;
+    var.modified   = false;
+    m_application->getUPSVars().push_back( var );
+
+    initialized = true;
+  }
+#endif
 }
 
 //-------------------------------------------------------------------------
@@ -1040,33 +1053,7 @@ CharOxidationSmith2016::computeModel( const ProcessorGroup * pc,
           // 03 - No DenseMatrix
           // invert Jacobian -> (dF_(n)/drh_(n))^-1
           invf->invert_mat(dfdrh); // simple matrix inversion for a 2x2 matrix.
-          //double a11 = dfdrh[0][0];
-          //double a12 = dfdrh[0][1];
-          //double a13 = dfdrh[0][2];
-          //double a21 = dfdrh[1][0];
-          //double a22 = dfdrh[1][1];
-          //double a23 = dfdrh[1][2];
-          //double a31 = dfdrh[2][0];
-          //double a32 = dfdrh[2][1];
-          //double a33 = dfdrh[2][2];
 
-          //double det_inv = 1 / ( a11 * a22 * a33 +
-          //                       a21 * a32 * a13 +
-          //                       a31 * a12 * a23 -
-          //                       a11 * a32 * a23 -
-          //                       a31 * a22 * a13 -
-          //                       a21 * a12 * a33   );
-
-          //dfdrh[0][0] = ( a22 * a33 - a23 * a32 ) * det_inv;
-          //dfdrh[0][1] = ( a13 * a32 - a12 * a33 ) * det_inv;
-          //dfdrh[0][2] = ( a12 * a23 - a13 * a22 ) * det_inv;
-          //dfdrh[1][0] = ( a23 * a31 - a21 * a33 ) * det_inv;
-          //dfdrh[1][1] = ( a11 * a33 - a13 * a31 ) * det_inv;
-          //dfdrh[1][2] = ( a13 * a21 - a11 * a23 ) * det_inv;
-          //dfdrh[2][0] = ( a21 * a32 - a22 * a31 ) * det_inv;
-          //dfdrh[2][1] = ( a12 * a31 - a11 * a32 ) * det_inv;
-          //dfdrh[2][2] = ( a11 * a22 - a12 * a21 ) * det_inv;
-          // get rh_(n+1)
           double dominantRate=0.0;
           for (int l=0; l<_NUM_reactions; l++) {
             for (int var=0; var<_NUM_reactions; var++) {
@@ -1110,11 +1097,11 @@ CharOxidationSmith2016::computeModel( const ProcessorGroup * pc,
             std::cout << "rh_l_new[0]: " << rh_l_new[0] << std::endl;
             std::cout << "rh_l_new[1]: " << rh_l_new[1] << std::endl;
             std::cout << "rh_l_new[2]: " << rh_l_new[2] << std::endl;
-	          std::cout << "org: " << rc + ch << std::endl;
-	          std::cout << "x_org: " << x_org << std::endl;
-	          std::cout << "p_rho: " << p_rho << std::endl;
-	          std::cout << "p_void0: " << _p_void0 << std::endl;
-	          std::cout << "psi: " << psi << std::endl;
+                  std::cout << "org: " << rc + ch << std::endl;
+                  std::cout << "x_org: " << x_org << std::endl;
+                  std::cout << "p_rho: " << p_rho << std::endl;
+                  std::cout << "p_void0: " << _p_void0 << std::endl;
+                  std::cout << "psi: " << psi << std::endl;
         }
         char_mass_rate  = 0.0;
         d_mass = 0.0;

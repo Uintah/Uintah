@@ -23,38 +23,31 @@
  */
 
 /*
- *  uda2vis.h: Provides an interface between VisIt's libsim and Uintah.
+ *  insituUtils.h: Provides an interface between the Uintah data warehouse 
+ *                 and VisIt's libsim in situ interface.
  *
  *  Written by:
- *   Department of Computer Science
+ *   Scientific Computing and Imaging Institute
  *   University of Utah
- *   March 2015
+ *   April 2018
  *
  */
 
-#ifndef UINTAH_UDA2VIS_H
-#define UINTAH_UDA2VIS_H
+#ifndef UINTAH_VISIT_INTERFACES_INSITU_INTERFACE_H
+#define UINTAH_VISIT_INTERFACES_INSITU_INTERFACE_H
 
-#include <VisIt/uda2vis/udaData.h>
+#include <VisIt/interfaces/datatypes.h>
 
 #include <CCA/Ports/SchedulerP.h>
 #include <Core/Grid/GridP.h>
-#include <Core/Grid/Variables/GridVariable.h>
-#include <Core/Util/DOUT.hpp>
 
 // Define these for the in-situ usage.
 
 namespace Uintah {
 
-  enum {
-    NONE    = 0,
-    CELLS   = 1,
-    PATCHES = 2,
-  } LoadExtra;
-    
 TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
                               GridP grid,
-                              int loadExtraElements);
+                              LoadExtra loadExtraElements);
 
 GridDataRaw* getGridData(SchedulerP schedulerP,
                          GridP gridP,
@@ -64,7 +57,7 @@ GridDataRaw* getGridData(SchedulerP schedulerP,
                          int material,
                          int low[3],
                          int high[3],
-                         int loadExtraElements);
+                         LoadExtra loadExtraElements);
 
 ParticleDataRaw* getParticleData(SchedulerP schedulerP,
                                  GridP gridP,
@@ -83,24 +76,6 @@ int GetGlobalDomainNumber(TimeStepInfo* stepInfo,
 void CheckNaNs(double *data, const int num,
                const char* varname, const int level, const int patch);
 
-//______________________________________________________________________
-// 
-void allocateTemporary(  GridVariableBase& var,
-                         const Patch*      patch,
-                         Ghost::GhostType  gtype,
-                         int               numGhostCells ); 
-
-void printTask( const Patch * patch,       
-                Dout & out,
-                const std::string & where,
-                const int timestep,
-                const int material,
-                const std::string var);
-
-void printTask( const Patch * patch,       
-                Dout & out, 
-                const std::string & where);
-
 }
 
-#endif //UINTAH_UDA2VIS_H
+#endif //UINTAH_INSITUUTILS_H

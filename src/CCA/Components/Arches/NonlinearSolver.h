@@ -28,6 +28,7 @@
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
+#include <CCA/Components/Application/ApplicationCommon.h>
 
 //--------------------------------------------------------------------------------------------------
 /**
@@ -61,7 +62,8 @@ class NonlinearSolver {
 
 public:
 
-  NonlinearSolver( const ProcessorGroup* myworld );
+  NonlinearSolver( const ProcessorGroup* myworld,
+                   const ApplicationCommon* arches );
 
   virtual ~NonlinearSolver();
 
@@ -109,14 +111,12 @@ public:
 protected:
 
    const ProcessorGroup * d_myworld;
+   const ApplicationCommon* m_arches;
    std::string            d_timeIntegratorType;
-
    double                 d_initial_dt;
    bool                   d_underflow;
-
    typedef std::map< int, ArchesBCHelper* >* BCHelperMapT;
    BCHelperMapT _bcHelperMap;
-
    ProblemSpecP m_arches_spec;
 
 private:

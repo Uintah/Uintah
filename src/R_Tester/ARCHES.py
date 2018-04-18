@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from os import symlink,environ, system
 from sys import argv,exit,platform
@@ -327,6 +327,7 @@ KOKKOSTESTS = [
    ("char_modelps"                      , "kokkos_solver_tests/Verification/particleModels/char_modelps.ups"                    , 8   , "All"   , ["exactComparison"]), 
    ("dqmom_example_char"                , "kokkos_solver_tests/Verification/particleModels/dqmom_example_char.ups"              , 8   , "All"   , ["exactComparison"]), 
    ("dqmom_example"                     , "kokkos_solver_tests/dqmom_example.ups"                                               , 1   , "All"   , ["exactComparison"]), 
+   ("OFC_mom"                           , "kokkos_solver_tests/Verification/intrusions/OFC_mom.ups"                             , 3   , "All"   , ["exactComparison"]), 
 ]
 
 KOKKOSCOALTESTS = [
@@ -434,7 +435,7 @@ def getTestList(me) :
   elif me == "BUILDBOTTESTS":
     TESTS = ignorePerformanceTests( NIGHTLYTESTS + RMCRTTESTS )
   else:
-    print "\nERROR:ARCHES.py  getTestList:  The test list (%s) does not exist!\n\n" % me
+    print("\nERROR:ARCHES.py  getTestList:  The test list (%s) does not exist!\n\n" % me)
     exit(1)
   return TESTS
 
