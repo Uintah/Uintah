@@ -68,8 +68,8 @@ namespace Uintah {
 }
 
 namespace {
-  Dout g_dbg(         "Unified_DBG"        , "UnifiedScheduler", "", false);
-  Dout g_queuelength( "Unified_QueueLength", "UnifiedScheduler", "",  false);
+  Dout g_dbg(         "Unified_DBG"        , "UnifiedScheduler", "general debugging info for UnifiedScheduler"  , false );
+  Dout g_queuelength( "Unified_QueueLength", "UnifiedScheduler", "report task queue length for UnifiedScheduler", false );
 
   Uintah::MasterLock g_scheduler_mutex{};           // main scheduler lock for multi-threaded task selection
   Uintah::MasterLock g_mark_task_consumed_mutex{};  // allow only one task at a time to enter the task consumed section
@@ -81,9 +81,9 @@ namespace {
 extern Uintah::MasterLock cerrLock;
 
 namespace Uintah {
-  DebugStream gpu_stats(              "GPUStats"             , "UnifiedScheduler", "", false );
-  DebugStream simulate_multiple_gpus( "GPUSimulateMultiple"  , "UnifiedScheduler", "", false );
-  DebugStream gpudbg(                 "GPUDataWarehouse"     , "UnifiedScheduler", "", false );
+  DebugStream gpu_stats(              "GPUStats"             , "UnifiedScheduler", "detailed GPU statistics on H2D and D2H data movement", false );
+  DebugStream simulate_multiple_gpus( "GPUSimulateMultiple"  , "UnifiedScheduler", "simulate multiple GPUs, when using only one", false );
+  DebugStream gpudbg(                 "GPUDataWarehouse"     , "UnifiedScheduler", "detailed statistics from within the GPUDW on GPUDataWarehouse activity", false );
 }
 
 namespace {

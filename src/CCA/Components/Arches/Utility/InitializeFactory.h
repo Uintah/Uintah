@@ -10,7 +10,7 @@ namespace Uintah{
 
   public:
 
-    InitializeFactory();
+    InitializeFactory( const ApplicationCommon* arches );
     ~InitializeFactory();
 
     void register_all_tasks( ProblemSpecP& db );

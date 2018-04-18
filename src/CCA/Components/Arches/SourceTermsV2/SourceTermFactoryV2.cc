@@ -12,7 +12,8 @@
 using namespace Uintah;
 
 //--------------------------------------------------------------------------------------------------
-SourceTermFactoryV2::SourceTermFactoryV2()
+SourceTermFactoryV2::SourceTermFactoryV2( const ApplicationCommon* arches ) :
+TaskFactoryBase(arches)
 {
   _factory_name = "SourceTermFactoryV2";
 }
@@ -282,6 +283,6 @@ void SourceTermFactoryV2::schedule_initialization( const LevelP& level,
                                                  bool doing_restart ){
 
   const bool pack_tasks = false;
-  schedule_task_group("all_tasks", TaskInterface::INITIALIZE, pack_tasks, level, sched, matls ); 
+  schedule_task_group("all_tasks", TaskInterface::INITIALIZE, pack_tasks, level, sched, matls );
 
 }

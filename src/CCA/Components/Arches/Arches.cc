@@ -139,11 +139,15 @@ Arches::problemSetup( const ProblemSpecP     & params,
                                               m_physicalConsts,
                                               d_myworld,
                                               m_particlesHelper,
-                                              m_solver );
+                                              m_solver,
+                                              this );
 
   } else if ( db->findBlock("KokkosSolver")) {
 
-    builder = scinew KokkosSolver::Builder( m_sharedState, d_myworld, m_solver );
+    builder = scinew KokkosSolver::Builder( m_sharedState,
+                                            d_myworld,
+                                            m_solver,
+                                            this );
 
   } else {
 
@@ -320,7 +324,7 @@ Arches::scheduleAnalysis( const LevelP& level,
 int Arches::computeTaskGraphIndex( const int timeStep )
 {
   // Setup the task graph for execution on the next timestep.
-  
+
   return m_nlSolver->getTaskGraphIndex( timeStep );
 }
 

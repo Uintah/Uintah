@@ -6,6 +6,8 @@
 #include <expression/ExprLib.h>
 #include <expression/Tag.h>
 
+#include <cantera/IdealGasMix.h>
+
 #include <CCA/Components/Wasatch/Coal/StringNames.h>
 #include <CCA/Components/Wasatch/Coal/Devolatilization/DevolatilizationInterface.h>
 #include <CCA/Components/Wasatch/Coal/CharOxidation/CharInterface.h>
@@ -49,6 +51,7 @@ using WasatchCore::GraphCategories;
 
     Expr::TagList gasSpeciesSourceTags_, productionRateTags_;
 
+    Cantera::IdealGasMix* const gas_;
 
     /**
      *  \brief Obtain the Expr::Tag for the given species.

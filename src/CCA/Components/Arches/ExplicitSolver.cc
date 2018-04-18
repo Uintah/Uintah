@@ -154,8 +154,9 @@ ExplicitSolver(SimulationStateP& sharedState,
                PhysicalConstants* physConst,
                const ProcessorGroup* myworld,
                ArchesParticlesHelper* particle_helper,
-               SolverInterface* hypreSolver):
-               NonlinearSolver(myworld),
+               SolverInterface* hypreSolver,
+               const ApplicationCommon* arches ):
+               NonlinearSolver(myworld, arches),
                d_sharedState(sharedState),
                d_MAlab(MAlb),
                d_physicalConsts(physConst),
@@ -293,15 +294,15 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
   //------------------ New Task Interface (start) --------------------------------------------------
 
   //build the factories
-  std::shared_ptr<UtilityFactory> UtilF(scinew UtilityFactory());
-  std::shared_ptr<TransportFactory> TransF(scinew TransportFactory());
-  std::shared_ptr<InitializeFactory> InitF(scinew InitializeFactory());
-  std::shared_ptr<ParticleModelFactory> PartModF(scinew ParticleModelFactory());
-  std::shared_ptr<LagrangianParticleFactory> LagF(scinew LagrangianParticleFactory());
-  std::shared_ptr<PropertyModelFactoryV2> PropModelsF(scinew PropertyModelFactoryV2());
-  std::shared_ptr<TurbulenceModelFactory> TurbModelF(scinew TurbulenceModelFactory());
-  std::shared_ptr<BoundaryConditionFactory> BCF(scinew BoundaryConditionFactory());
-  std::shared_ptr<SourceTermFactoryV2> SourceTermV2F(scinew SourceTermFactoryV2());
+  std::shared_ptr<UtilityFactory> UtilF(scinew UtilityFactory(m_arches));
+  std::shared_ptr<TransportFactory> TransF(scinew TransportFactory(m_arches));
+  std::shared_ptr<InitializeFactory> InitF(scinew InitializeFactory(m_arches));
+  std::shared_ptr<ParticleModelFactory> PartModF(scinew ParticleModelFactory(m_arches));
+  std::shared_ptr<LagrangianParticleFactory> LagF(scinew LagrangianParticleFactory(m_arches));
+  std::shared_ptr<PropertyModelFactoryV2> PropModelsF(scinew PropertyModelFactoryV2(m_arches));
+  std::shared_ptr<TurbulenceModelFactory> TurbModelF(scinew TurbulenceModelFactory(m_arches));
+  std::shared_ptr<BoundaryConditionFactory> BCF(scinew BoundaryConditionFactory(m_arches));
+  std::shared_ptr<SourceTermFactoryV2> SourceTermV2F(scinew SourceTermFactoryV2(m_arches));
 
   _task_factory_map.clear();
   _task_factory_map.insert(std::make_pair("utility_factory",UtilF));
@@ -1143,7 +1144,7 @@ ExplicitSolver::initialize( const LevelP     & level,
     //  initialize
     _task_factory_map["transport_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
 
-    //  apply BCs 
+    //  apply BCs
     _task_factory_map["transport_factory"]->schedule_task_group( "all_tasks", TaskInterface::BC, dont_pack_tasks, level, sched, matls );
 
     // boundary condition factory
@@ -1417,8 +1418,8 @@ ExplicitSolver::sched_restartInitialize( const LevelP& level, SchedulerP& sched 
     d_boundaryCondition->sched_setupNewIntrusions( sched, level, matls );
 
     //turbulence models
-    _task_factory_map["turbulence_model_factory"]->schedule_task_group("all_tasks", TaskInterface::RESTART_INITIALIZE, 
-                                                                        false, level, sched, matls ); 
+    _task_factory_map["turbulence_model_factory"]->schedule_task_group("all_tasks", TaskInterface::RESTART_INITIALIZE,
+                                                                        false, level, sched, matls );
 
   }
 
@@ -1830,7 +1831,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
         // computes ic from w*ic  :
         i_transport->second->schedule_task_group("dqmom_ic_from_wic",
           TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
-        
+
         i_transport->second->schedule_task_group("dqmom_ic_from_wic",
           TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
 

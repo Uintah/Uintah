@@ -202,7 +202,7 @@ namespace WasatchCore {
                            rhsLabel_, Uintah::Task::NewDW,
                            intensityLabel_, Uintah::Task::NewDW,
                            &solverParams_,
-                           !(rkStage == 1) );
+                           (rkStage == 1) );
   }
 
   //--------------------------------------------------------------------

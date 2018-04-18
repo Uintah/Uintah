@@ -79,7 +79,7 @@ Uintah::Dout g_sim_stats(         "SimulationStats",            "SimulationContr
 Uintah::Dout g_sim_mem_stats(     "SimulationMemStats",         "SimulationController", "memory stats debug stream", true  );
 Uintah::Dout g_sim_time_stats(    "SimulationTimeStats",        "SimulationController", "stats time debug stream", false );
 Uintah::Dout g_sim_ctrl_dbg(      "SimulationController",       "SimulationController", "general debug stream", false );
-Uintah::Dout g_comp_timings(      "ComponentTimings",           "SimulationController", "aggregated component timings", false );
+Uintah::Dout g_comp_timings(      "ComponentTimings",           "SimulationController", "aggregated component timing stats per timestep", false );
 Uintah::Dout g_indv_comp_timings( "IndividualComponentTimings", "SimulationController", "individual component timings", false );
 
 }
@@ -247,7 +247,7 @@ SimulationController::SimulationController( const ProcessorGroup * myworld
   m_runtime_stats.insert( OutputIORate,              std::string("OutputIORate"),     "MBytes/sec", 0 );
   m_runtime_stats.insert( ReductionIORate,           std::string("ReductionIORate"),  "MBytes/sec", 0 );
   m_runtime_stats.insert( CheckpointIORate,          std::string("CheckpointIORate"), "MBytes/sec", 0 );
-  m_runtime_stats.insert( CheckpointReducIORate,     std::string("CheckpointReducIORate"), "MBytes/sec", 0 );
+  m_runtime_stats.insert( CheckpointReductionIORate, std::string("CheckpointReductionIORate"), "MBytes/sec", 0 );
 
   m_runtime_stats.insert( NumTasks,                  std::string("NumberOfTasks"), "tasks", 0 );
   m_runtime_stats.insert( NumPatches,                std::string("NumberOfPatches"), "patches", 0 );

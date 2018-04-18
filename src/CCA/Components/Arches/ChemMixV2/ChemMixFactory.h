@@ -10,7 +10,7 @@ namespace Uintah{
 
   public:
 
-    ChemMixFactory( );
+    ChemMixFactory( const ApplicationCommon* arches );
     ~ChemMixFactory();
 
     TaskAssignedExecutionSpace loadTaskFunctionPointers();
@@ -28,7 +28,7 @@ namespace Uintah{
       } else {
 
         throw InvalidValue("Error: Accessing the base class implementation of retrieve_task_subset in CheMixFactory, which means there is no specific implementation for this factory.",__FILE__,__LINE__);
-        
+
       }
     }
 

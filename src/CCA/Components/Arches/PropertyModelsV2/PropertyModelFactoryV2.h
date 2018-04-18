@@ -10,7 +10,7 @@ namespace Uintah{
 
   public:
 
-    PropertyModelFactoryV2( );
+    PropertyModelFactoryV2( const ApplicationCommon* arches );
     ~PropertyModelFactoryV2();
 
     void register_all_tasks( ProblemSpecP& db );

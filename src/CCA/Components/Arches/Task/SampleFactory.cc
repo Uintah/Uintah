@@ -5,7 +5,8 @@
 
 using namespace Uintah;
 
-SampleFactory::SampleFactory()
+SampleFactory::SampleFactory( const ApplicationCommon* arches ) :
+TaskFactoryBase( arches )
 {}
 
 SampleFactory::~SampleFactory()

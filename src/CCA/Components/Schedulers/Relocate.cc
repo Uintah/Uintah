@@ -43,9 +43,9 @@ namespace Uintah {
 }
 
 namespace {
-  Dout g_total_reloc("RELOCATE_SCATTER_DBG", "Schedulers", "Relocate and scatter debug stream", false);
+  Dout g_total_reloc("RELOCATE_SCATTER_DBG", "Schedulers", "prints info on particle scatter ops", false);
 
-  DebugStream coutdbg("RELOCATE_DBG", "Schedulers", "", false);
+  DebugStream coutdbg("RELOCATE_DBG", "Schedulers", "prints particle relocation neighbor patches", false);
 }
 
 Relocate::~Relocate()

@@ -7,8 +7,10 @@
 
 using namespace Uintah;
 
-LagrangianParticleFactory::LagrangianParticleFactory()
+LagrangianParticleFactory::LagrangianParticleFactory( const ApplicationCommon* arches ) :
+TaskFactoryBase(arches)
 {
+  _factory_name = "lagrangian_particle_factory";
 }
 
 LagrangianParticleFactory::~LagrangianParticleFactory()

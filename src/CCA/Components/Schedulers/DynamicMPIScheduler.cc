@@ -42,8 +42,8 @@ namespace Uintah {
 }
 
 namespace {
-  Dout g_dbg(          "DynamicMPI_DBG",         "Schedulers", "", false);
-  Dout g_queue_length( "DynamicMPI_QueueLength", "Schedulers", "", false);
+  Dout g_dbg(          "DynamicMPI_DBG",         "DynamicMPIScheduler", "general debugging info for DynamicMPIScheduler"  , false );
+  Dout g_queue_length( "DynamicMPI_QueueLength", "DynamicMPIScheduler", "report task queue length for DynamicMPIScheduler", false );
 }
 
 

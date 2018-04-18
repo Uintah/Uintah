@@ -22,8 +22,18 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_UDADATA_H
-#define UINTAH_UDADATA_H
+/*
+ *  datatypes.h: Datatypes for the interface between Uintah and VisIt.
+ *
+ *  Written by:
+ *   Scientific Computing and Imaging Institute
+ *   University of Utah
+ *   April 2018
+ *
+ */
+
+#ifndef UINTAH_VISIT_INTERFACES_DATATYPES_H
+#define UINTAH_VISIT_INTERFACES_DATATYPES_H
 
 #include <string>
 #include <sstream>
@@ -31,6 +41,12 @@
 #include <iostream>
 #include <climits>
 
+typedef enum loadExtra {
+    NONE    = 0,
+    CELLS   = 1,
+    PATCHES = 2,
+  } LoadExtra;
+    
 class PatchInfo {
 public:
 
@@ -40,13 +56,13 @@ public:
   // str2GridType
   static GridType str2GridType(const std::string &type)
   {
-    if (type.find("SFCX")!=std::string::npos) return SFCX;
-    if (type.find("SFCY")!=std::string::npos) return SFCY;
-    if (type.find("SFCZ")!=std::string::npos) return SFCZ;
-    if (type.find("CC")  !=std::string::npos) return CC;
-    if (type.find("NC")  !=std::string::npos) return NC;
-    if (type.find("NEIGHBORS")!=std::string::npos) return NEIGHBORS;
-    if (type.find("PerPatch") !=std::string::npos) return CC;
+    if (type.find("SFCX")      != std::string::npos) return SFCX;
+    if (type.find("SFCY")      != std::string::npos) return SFCY;
+    if (type.find("SFCZ")      != std::string::npos) return SFCZ;
+    if (type.find("CC")        != std::string::npos) return CC;
+    if (type.find("NC")        != std::string::npos) return NC;
+    if (type.find("NEIGHBORS") != std::string::npos) return NEIGHBORS;
+    if (type.find("PerPatch")  != std::string::npos) return CC;
     return UNKNOWN;
   }
 
@@ -413,4 +429,4 @@ public:
   double *data;
 };
 
-#endif // UINTAH_UDADATA_H
+#endif // UINTAH_DATATYPES_H

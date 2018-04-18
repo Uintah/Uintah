@@ -51,16 +51,16 @@ using namespace Uintah;
 
 namespace {
 
-  Dout g_lb_dbg(                "LoadBalancer"     , "LoadBalancers", "", false );
-  Dout g_neighborhood_dbg(      "Neighborhood"     , "LoadBalancers", "", false );
-  Dout g_neighborhood_size_dbg( "NeighborhoodSize" , "LoadBalancers", "", false );
-  Dout g_patch_assignment(      "LBPatchAssignment", "LoadBalancers", "", false );
+  Dout g_lb_dbg(                "LoadBalancer"     , "LoadBalancerCommon", "general info on LB patch assignment", false );
+  Dout g_neighborhood_dbg(      "Neighborhood"     , "LoadBalancerCommon", "report processor neighborhood contents", false );
+  Dout g_neighborhood_size_dbg( "NeighborhoodSize" , "LoadBalancerCommon", "report patch neighborhood sizes, local & distal", false );
+  Dout g_patch_assignment(      "LBPatchAssignment", "LoadBalancerCommon", "report per-process patch assignment", false );
 
 }
 
 namespace Uintah {
-  DebugStream g_profile_stats ("ProfileStats",   "LoadBalancers", "", false );
-  DebugStream g_profile_stats2("ProfileStats2",  "LoadBalancers", "", false );
+  DebugStream g_profile_stats ("ProfileStats",   "LoadBalancerCommon", "", false );
+  DebugStream g_profile_stats2("ProfileStats2",  "LoadBalancerCommon", "", false );
 }
 
 // If defined, the space-filling curve will be computed in parallel,
@@ -74,9 +74,9 @@ namespace Uintah {
 LoadBalancerCommon::LoadBalancerCommon( const ProcessorGroup * myworld )
   : UintahParallelComponent( myworld )
   , m_sfc( myworld )
-  , stats( "LBStats", "LoadBalancers", "", false )
-  , times( "LBTimes", "LoadBalancers", "", false )
-  , lbout( "LBOut",   "LoadBalancers", "", false )
+  , stats( "LBStats", "LoadBalancerCommon", "", false )
+  , times( "LBTimes", "LoadBalancerCommon", "", false )
+  , lbout( "LBOut",   "LoadBalancerCommon", "", false )
 {
   m_activeDims[0] = m_activeDims[1] = m_activeDims[2] = 0;
 }

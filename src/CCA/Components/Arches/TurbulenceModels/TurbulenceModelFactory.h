@@ -10,7 +10,7 @@ namespace Uintah{
 
   public:
 
-    TurbulenceModelFactory( );
+    TurbulenceModelFactory( const ApplicationCommon* arches );
     ~TurbulenceModelFactory();
 
     void register_all_tasks( ProblemSpecP& db );

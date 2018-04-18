@@ -36,7 +36,7 @@ namespace FOA{
 
     //mass fractions and species RHSs
     const Tag o2MassFracTag_,  h2oMassFracTag_, h2MassFracTag_, co2MassFracTag_, coMassFracTag_,
-              ch4MassFracTag_, o2_rhsTag_,       h2o_rhsTag_,   h2_rhsTag_,      ch4_rhsTag_,
+              ch4MassFracTag_, o2_rhsTag_,       h2_rhsTag_,   h2o_rhsTag_,      ch4_rhsTag_,
               co2_rhsTag_,     co_rhsTag_;
 
     const bool initDevChar_;  ///< Initial char in volatile matter (Only with CPD Model)

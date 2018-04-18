@@ -10,7 +10,7 @@ namespace Uintah{
 
   public:
 
-    TransportFactory();
+    TransportFactory( const ApplicationCommon* arches );
     ~TransportFactory();
 
     void register_all_tasks( ProblemSpecP& db );

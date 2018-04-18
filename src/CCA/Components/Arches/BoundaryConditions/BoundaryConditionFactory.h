@@ -10,7 +10,7 @@ namespace Uintah{
 
   public:
 
-    BoundaryConditionFactory( );
+    BoundaryConditionFactory( const ApplicationCommon* arches );
     ~BoundaryConditionFactory();
 
     TaskAssignedExecutionSpace loadTaskFunctionPointers();

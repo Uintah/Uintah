@@ -61,8 +61,8 @@ namespace {
   Uintah::MasterLock g_internal_dependency_mutex{};
   Uintah::MasterLock g_dtask_output_mutex{};
   
-  Dout g_internal_deps_dbg( "InternalDeps", "Schedulers", "", false);
-  Dout g_external_deps_dbg( "ExternalDeps", "Schedulers", "", false);
+  Dout g_internal_deps_dbg( "InternalDeps", "DetailedTask", "info on internal (intra-nodal) data dependencies", false);
+  Dout g_external_deps_dbg( "ExternalDeps", "DetailedTask", "info on external (inter-nodal) data dependencies", false);
 }
 
 

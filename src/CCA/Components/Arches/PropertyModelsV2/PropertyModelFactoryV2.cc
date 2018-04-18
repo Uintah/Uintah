@@ -29,7 +29,8 @@
 
 using namespace Uintah;
 
-PropertyModelFactoryV2::PropertyModelFactoryV2( )
+PropertyModelFactoryV2::PropertyModelFactoryV2( const ApplicationCommon* arches ) :
+TaskFactoryBase(arches)
 {
   _factory_name = "PropertyModelFactory";
 }

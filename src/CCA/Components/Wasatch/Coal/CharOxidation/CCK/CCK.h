@@ -27,7 +27,6 @@
 
 #include <cmath>
 #include <expression/Expression.h>
-#include <CCA/Components/Wasatch/Coal/Devolatilization/CPD/c0_fun.h>
 #include "CCKData.h"
 #include "SolveLinearSystem.h"
 
@@ -186,13 +185,6 @@ evaluate()
   //ratio of CO2 to CO for char oxidation
   typename FieldT::iterator iCO2_CO_ratio = result[5]->begin();
 
-
-  // initial mass fraction of char in volatiles
-  const double c0 = CPD::c0_fun( cckData_.get_C(), cckData_.get_O() );
-
-  // char contribution from volatiles (mass fraction)
-  const double charMassFrac0 = cckData_.get_fixed_C() + cckData_.get_vm()*c0;
-
   // pack a vector with mass fraction iterators.
   yIVec_.clear();
   for( size_t i=0; i<massFracs_.size(); ++i )
@@ -204,31 +196,23 @@ evaluate()
   FieldIter ipressure = gasProps_[1]->field_ref().begin(); // pressure
   FieldIter imixMW    = gasProps_[2]->field_ref().begin(); // mixture molecular weight
 
-  FieldIter iprtTemp  = prtProps_[ 0]->field_ref().begin(); // particle temperature
-  FieldIter ipMass0   = prtProps_[ 1]->field_ref().begin(); // initial particle mass
-  FieldIter ipMass    = prtProps_[ 2]->field_ref().begin(); // particle mass
-  FieldIter icharMass = prtProps_[ 3]->field_ref().begin(); // char mass
-  FieldIter icharConv = prtProps_[ 4]->field_ref().begin(); // char mass
-  FieldIter icoreDens = prtProps_[ 5]->field_ref().begin(); // core density
-  FieldIter icoreDiam = prtProps_[ 6]->field_ref().begin(); // core diameter
-  FieldIter iprtDiam  = prtProps_[ 7]->field_ref().begin(); // particle diameter
-  FieldIter itheta    = prtProps_[ 8]->field_ref().begin(); // ash film porosity
-  FieldIter idelta    = prtProps_[ 9]->field_ref().begin(); // ash film thickness
-  FieldIter iaFactor  = prtProps_[10]->field_ref().begin(); // thermal annealing deactivation factor
+  FieldIter iprtTemp  = prtProps_[0]->field_ref().begin(); // particle temperature
+  FieldIter icharConv = prtProps_[1]->field_ref().begin(); // char conversion
+  FieldIter icoreDens = prtProps_[2]->field_ref().begin(); // core density
+  FieldIter icoreDiam = prtProps_[3]->field_ref().begin(); // core diameter
+  FieldIter iprtDiam  = prtProps_[4]->field_ref().begin(); // particle diameter
+  FieldIter itheta    = prtProps_[5]->field_ref().begin(); // ash film porosity
+  FieldIter iaFactor  = prtProps_[6]->field_ref().begin(); // thermal annealing deactivation factor
 
   const typename FieldT::const_iterator iEnd = prtProps_[0]->field_ref().end();
 
   // loop over each particle
-  for(; iprtTemp != iEnd; ++igasTemp, ++ipressure, ++imixMW, ++iprtTemp, ++ipMass0,
-        ++ipMass, ++icharMass, ++icharConv, ++icoreDens, ++icoreDiam, ++iprtDiam, ++itheta,
-        ++idelta, ++iaFactor,
+  for(; iprtTemp != iEnd; ++igasTemp, ++ipressure, ++imixMW, ++iprtTemp,
+        ++icharConv, ++icoreDens, ++icoreDiam, ++iprtDiam, ++itheta, ++iaFactor,
         ++irC_CO2, ++irC_CO, ++irC_O2, ++irC_H2, ++irC_H2O, ++iCO2_CO_ratio){
 
 
     // set parameters that are constant within this for-loop
-    const double initCharMass   = charMassFrac0 * *ipMass0;
-    // jcs it appears that charConversion isn't used.  That implies that charMass and initCharMass are also unused...
-    const double charConversion = 1.0 - *icharMass/initCharMass;
     const double mTemp = 0.5*( *iprtTemp + *igasTemp );
 
     CHAR::Vec xInf;  xInf.clear();  // bulk species mole fractions
@@ -268,16 +252,6 @@ evaluate()
 
     const double gamma = calc_gamma( *iprtTemp );
 
-    /* Calculate partial pressures of inert components. Calculations herein
-     * will assume the only inert component at particle surfaces is N2
-     * (if at all). It is also assumed that the inert component has the same
-     * partial pressure at the particle surface and the bulk.
-     */
-    const double xSum    = std::accumulate( xInf.begin(), xInf.end(), 0.0 );
-    // jcs it appears that ppInert is unused, which means that xSum is also unused.
-    const double ppInert = *ipressure * fmin(1.0, fmax(0.0, 1.0 - xSum ) );
-    double       CO2_CO_ratio;
-
      /* Get map determining which species will be solved for. If a species is
       * neither consumed nor produced, its index will not be an element of this
       * map.
@@ -296,6 +270,7 @@ evaluate()
      for(size_t i = 0; i<n; ++i){ pSurf1[i] = pBulk[i];}
 
      //Variables that will be set by cckData_.charConsumptionRates
+     double    CO2_CO_ratio;
      CHAR::Vec error1;  error1.assign(n, 0.0);
      CHAR::Vec error2 = error1;
      CHAR::Vec error3;  error3.assign(m, 0.0);

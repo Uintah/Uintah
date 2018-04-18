@@ -47,6 +47,10 @@ namespace Uintah {
       ASSERTRANGE(index, 0, 3);
       return (&w)[index];
     }
+    
+    // constructors
+    Stencil4(){}
+    inline Stencil4(double init) : w(init), s(init), b(init){}
   };
   
    std::ostream & operator << (std::ostream &out, const Uintah::Stencil4 &a);

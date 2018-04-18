@@ -933,9 +933,6 @@ void visit_SetStateVars( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetDebugStreams( visit_simulation_data *sim )
 {
-  ApplicationInterface* appInterface =
-    sim->simController->getApplicationInterface();
-
   VisItUI_setTableValueS("DebugStreamTable",
                          -1, -1, "CLEAR_TABLE", 0);
 
@@ -980,9 +977,6 @@ void visit_SetDebugStreams( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetDouts( visit_simulation_data *sim )
 {
-  ApplicationInterface* appInterface =
-    sim->simController->getApplicationInterface();
-
   VisItUI_setTableValueS("DoutTable",
                          -1, -1, "CLEAR_TABLE", 0);
 

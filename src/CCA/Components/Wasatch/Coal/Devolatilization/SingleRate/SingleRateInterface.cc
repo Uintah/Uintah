@@ -1,4 +1,4 @@
-#include "SingleRateInterface.h"
+#include <CCA/Components/Wasatch/Coal/Devolatilization/SingleRate/SingleRateInterface.h>
 
 #include <stdexcept>
 #include <sstream>
@@ -6,13 +6,12 @@
 #include <spatialops/particles/ParticleFieldTypes.h>
 #include <spatialops/Nebo.h>
 
-#include "SingleRateData.h"
+#include <CCA/Components/Wasatch/Coal/Devolatilization/SingleRate/SingleRateData.h>
 
 
 // expressions we build here
 
 using std::vector;
-using std::cout;
 using std::endl;
 using std::ostringstream;
 using std::string;

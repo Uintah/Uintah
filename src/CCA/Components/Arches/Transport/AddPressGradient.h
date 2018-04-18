@@ -70,6 +70,7 @@ private:
     std::string m_ymom;
     std::string m_zmom;
     std::string m_press;
+    std::string m_eps_name;
 
 
   };
