@@ -54,7 +54,6 @@ TriGeometryPiece::TriGeometryPiece(ProblemSpecP &ps)
 #ifdef USE_PLANES
   makePlanes();
 #endif
-//  makeTriBoxes();
 
   // cout << "Triangulated surfaces read: \t" <<d_tri.size() <<endl;
 
@@ -67,6 +66,30 @@ TriGeometryPiece::TriGeometryPiece(ProblemSpecP &ps)
   d_grid->buildUniformGrid(tri_list);
   d_points.clear();
 }
+
+TriGeometryPiece::TriGeometryPiece(string filename)
+{
+  name_ = "Unnamed Tri";
+
+  d_file = filename;
+
+  readPoints(d_file);
+  readTri(d_file);
+#ifdef USE_PLANES
+  makePlanes();
+#endif
+
+  // cout << "Triangulated surfaces read: \t" <<d_tri.size() <<endl;
+
+  // The Tri class sits inside of UniformGrid.h
+  list<Tri> tri_list;
+  Tri tri;
+
+  tri_list = tri.makeTriList(d_tri,d_points);
+  d_grid = scinew UniformGrid(d_box);
+  d_grid->buildUniformGrid(tri_list);
+}
+
 
 TriGeometryPiece::TriGeometryPiece(const TriGeometryPiece& copy)
 {
@@ -148,12 +171,20 @@ TriGeometryPiece::insideNew(const Point &p,int& cross) const
   if (!(p == Max(p,d_box.lower()) && p == Min(p,d_box.upper())))
     return false;
 
-  d_grid->countIntersections(p,cross);
+  int crossx=0;
+  int crossy=0;
+  int crossz=0;
+  d_grid->countIntersectionsx(p,crossx);
+  d_grid->countIntersectionsy(p,crossy);
+  d_grid->countIntersectionsz(p,crossz);
   //  cout << "Point " << p << " has " << cross << " crossings " << endl;
-  if (cross % 2)
+  if ((crossx % 2 == 1 && crossy % 2 ==1)||
+      (crossx % 2 == 1 && crossz % 2 ==1)||
+      (crossy % 2 == 1 && crossz % 2 ==1)){
     return true;
-  else
+  } else {
     return false;
+  }
 }
 
 
@@ -259,23 +290,22 @@ TriGeometryPiece::readPoints(const string& file)
 
   double x,y,z;
   while (source >> x >> y >> z) {
-    d_points.push_back(FloatPoint(x,y,z));
+    d_points.push_back(Point(x,y,z));
   }
 
   source.close();
 
   // Find the min and max points so that the bounding box can be determined.
-  FloatPoint min(1e30,1e30,1e30),max(-1e30,-1e30,-1e30);
-  vector<FloatPoint>::const_iterator itr;
+  Point min(1e30,1e30,1e30),max(-1e30,-1e30,-1e30);
+  vector<Point>::const_iterator itr;
   for (itr = d_points.begin(); itr != d_points.end(); ++itr) {
     min = Min(*itr,min);
     max = Max(*itr,max);
   }
-  float pi_2 = asin(1.0);
-  FloatVector fudge(1.e-5,1.e-5,1.e-5);
-  min = min - pi_2*fudge;
-  max = max + pi_2*fudge;
-  d_box =Box(Point(min.x(), min.y(), min.z()),Point(max.x(), max.y(), max.z()));
+  Vector fudge(1.e-5,1.e-5,1.e-5);
+  min = min - fudge;
+  max = max + fudge;
+  d_box = Box(min,max);
 }
 
 
@@ -304,7 +334,7 @@ void
 TriGeometryPiece::makePlanes()
 {
   for (int i = 0; i < (int) d_tri.size(); i++) {
-    FloatPoint pt[3];
+    Point pt[3];
     IntVector tri = d_tri[i];
     pt[0] = d_points[tri.x()];
     pt[1] = d_points[tri.y()];
@@ -312,6 +342,7 @@ TriGeometryPiece::makePlanes()
     Plane plane(pt[0],pt[1],pt[2]);
     d_planes.push_back(plane);
   }
+
 }
 #endif
 
@@ -335,7 +366,7 @@ TriGeometryPiece::makeTriBoxes()
 
 #ifdef USE_PLANES
 void
-TriGeometryPiece::insideTriangle( FloatPoint& q,int num,int& NCS,
+TriGeometryPiece::insideTriangle( Point& q,int num,int& NCS,
                                   int& NES ) const
 {
 /*
@@ -359,8 +390,9 @@ TriGeometryPiece::insideTriangle( FloatPoint& q,int num,int& NCS,
   // magnitude.
   //
 
-  FloatVector plane_normal = d_planes[num].normal();
-  FloatVector plane_normal_abs = Abs(plane_normal);
+
+  Vector plane_normal = d_planes[num].normal();
+  Vector plane_normal_abs = Abs(plane_normal);
   double largest = plane_normal_abs.maxComponent();
   // WARNING: if dominant_coord is not 1-3, then this code breaks...
   int dominant_coord = -1;
@@ -378,7 +410,7 @@ TriGeometryPiece::insideTriangle( FloatPoint& q,int num,int& NCS,
     std::cout << " dominant coordinate not found " << endl;
     throw InternalError("Dominant coordinate not found", __FILE__, __LINE__);
   }
-  FloatPoint p[3];
+  Point p[3];
   p[0] = d_points[d_tri[num].x()];
   p[1] = d_points[d_tri[num].y()];
   p[2] = d_points[d_tri[num].z()];
@@ -388,10 +420,10 @@ TriGeometryPiece::insideTriangle( FloatPoint& q,int num,int& NCS,
   //  cout << "inside = " << inside << endl;
 
   // Now translate the points that make up the vertices of the triangle.
-  FloatPoint trans_pt(0.,0.,0.), trans_vt[3];
-  trans_vt[0] = FloatPoint(0.,0.,0.);
-  trans_vt[1] = FloatPoint(0.,0.,0.);
-  trans_vt[2] = FloatPoint(0.,0.,0.);
+  Point trans_pt(0.,0.,0.), trans_vt[3];
+  trans_vt[0] = Point(0.,0.,0.);
+  trans_vt[1] = Point(0.,0.,0.);
+  trans_vt[2] = Point(0.,0.,0.);
 
   if (dominant_coord == 1) {
     trans_pt.x(q.y());
@@ -502,15 +534,15 @@ TriGeometryPiece::insideTriangle( FloatPoint& q,int num,int& NCS,
 
 void TriGeometryPiece::scale(const double factor)
 {
-  FloatVector origin(0.,0.,0.);
+  Vector origin(0.,0.,0.);
 
-  for (vector<FloatPoint>::iterator itr = d_points.begin(); itr != d_points.end(); 
+  for (vector<Point>::iterator itr = d_points.begin(); itr != d_points.end();
        itr++) {
     origin = origin +  itr->asVector();
   }
   origin = origin/(static_cast<double>(d_points.size()));
 
-  for (vector<FloatPoint>::iterator itr = d_points.begin(); itr != d_points.end(); 
+  for (vector<Point>::iterator itr = d_points.begin(); itr != d_points.end();
        itr++) {
     *itr = factor*(*itr - origin) + origin;
   }
@@ -522,15 +554,15 @@ double TriGeometryPiece::surfaceArea() const
   double surfaceArea = 0.;
   for (vector<IntVector>::const_iterator itr = d_tri.begin();
        itr != d_tri.end(); itr++) {
-    FloatPoint pt[3];
+    Point pt[3];
     pt[0] = d_points[itr->x()];
     pt[1] = d_points[itr->y()];
     pt[2] = d_points[itr->z()];
-    FloatVector v[2];
+    Vector v[2];
     v[0] = pt[0].asVector() - pt[1].asVector();
     v[1] = pt[2].asVector() - pt[1].asVector();
 
-    FloatVector area = Cross(v[0],v[1]);
+    Vector area = Cross(v[0],v[1]);
     surfaceArea += .5 * area.length();
   }
   return surfaceArea;

@@ -28,10 +28,9 @@
 #include <Core/GeometryPiece/GeometryPiece.h>
 #include <Core/Grid/Box.h>
 #include <Core/Grid/Variables/Array3.h>
-#include <Core/Geometry/FloatPoint.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/IntVector.h>
-#include <Core/Geometry/FloatPlane.h>
+#include <Core/Geometry/Plane.h>
 #include <vector>
 #include <list>
 
@@ -70,17 +69,17 @@ WARNING
  public:
    enum coord {X=0,Y=1,Z=2};
 
-   Tri(FloatPoint& p1, FloatPoint& p2, FloatPoint& p3);
+   Tri(Point& p1, Point& p2, Point& p3);
    Tri();
    ~Tri();
-   FloatPoint centroid();
-   FloatPoint vertex(int i);
-   std::list<Tri> makeTriList(std::vector<IntVector>& tris, std::vector<FloatPoint>& pts);
+   Point centroid();
+   Point vertex(int i);
+   std::list<Tri> makeTriList(std::vector<IntVector>& tris, std::vector<Point>& pts);
    bool inside(Point& p);
-   FloatPlane plane();
+   Plane plane();
  private:
-   FloatPoint d_points[3];
-   FloatPlane d_plane;
+   Point d_points[3];
+   Plane d_plane;
  };
 
  class UniformGrid {
@@ -90,14 +89,22 @@ WARNING
    ~UniformGrid();
    UniformGrid& operator=(const UniformGrid&);
    UniformGrid(const UniformGrid&);
-   IntVector cellID(FloatPoint point);
+   IntVector cellID(Point point);
    void buildUniformGrid(std::list<Tri>& polygons);
-   void countIntersections(const Point& ray, int& crossings);
-      
+   /** @brief Assume the ray goes to infinity **/
+   void countIntersections(const Point& pt, int& crossings);
+   void countIntersectionsx(const Point& pt, int& crossings);
+   void countIntersectionsy(const Point& pt, int& crossings);
+   void countIntersectionsz(const Point& pt, int& crossings);
+   /** @brief Let the user specify the second point to define the ray (pt -> pt_away). This returns
+              the total number of crossing and the min distance from pt **/
+   void countIntersections(const Point& pt, const Point& pt_away, int& crossings, double& min_distance);
+
  private:
    Array3<std::list<Tri> > d_grid;
    Box d_bound_box;
-   FloatVector d_max_min;
+   Vector d_max_min;
+
  };
 
 
