@@ -1007,8 +1007,8 @@ visit_handle visit_SimGetMetaData(void *cbdata)
         }
       }
 
-      std::string vars[5] = {"ID", "Memory",
-			     "MPI/node_rank", "MPI/node",
+      std::string vars[5] = {"Node/Number", "Node/Memory",
+			     "MPI/Comm/node", "MPI/Comm/rank",
 			     "MPI/rank"};
 
       std::string meshName = "machine_" + sim->hostName + "/local";
@@ -1923,16 +1923,16 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
               (local && s == sim->switchIndex && n == sim->nodeIndex &&
                (int) i == sim->myworld->myNode_myRank()) )
           {
-	    if( varName.find("processor/machine/ID") == 0 )
+	    if( varName.find("processor/machine/Node/Number") == 0 )
 	      values[nValues++] = atoi(sim->hostNode.c_str());
-	    else if( varName.find("processor/machine/Memory") == 0 )
+	    else if( varName.find("processor/machine/Node/Memory") == 0 )
 	      values[nValues++] = nMemory;
-	    else if( varName.find("processor/machine/MPI/node_rank") == 0 )
+	    else if( varName.find("processor/machine/MPI/Comm/node") == 0 )
+	      values[nValues++] = sim->myworld->myNode();
+	    else if( varName.find("processor/machine/MPI/Comm/rank") == 0 )
 	      values[nValues++] = sim->myworld->myNode_myRank();
 	    else if( varName.find("processor/machine/MPI/rank") == 0 )
 	      values[nValues++] = sim->myworld->myRank();
-	    else if( varName.find("processor/machine/MPI/node") == 0 )
-	      values[nValues++] = sim->myworld->myNode();
           }
         }
       }
