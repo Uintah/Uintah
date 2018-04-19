@@ -71,10 +71,9 @@
         <lower>       [0,0,0]   </lower>
         <upper>       [4,4,3]   </upper>
 	<resolution>  [40,40,30]</resolution>
-        <extraCells>  [0,0,1]   </extraCells>
+        <extraCells>  [1,1,1]   </extraCells>
 	<patches>     [1,1,1]   </patches>
       </Box>
-      <periodic>[1,1,0]</periodic>
     </Level>
     <BoundaryConditions>
       <DefaultMaterial>all</DefaultMaterial>
