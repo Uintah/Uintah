@@ -335,8 +335,6 @@ class TaskGraph {
 
     std::vector<std::shared_ptr<Task> > m_tasks;
 
-    std::map<const VarLabel*, DetailedTask*, VarLabel::Compare>  m_reduction_tasks;
-
     struct LabelLevel {
       LabelLevel(const std::string& key, const int level) : key(key), level(level) {}
       std::string key;
