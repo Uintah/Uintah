@@ -398,10 +398,11 @@ KokkosSolver::initialize( const LevelP     & level
 
   // tabulated factory
   m_task_factory_map["table_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, pack_tasks, level, sched, matls );
-  m_task_factory_map["table_factory"]->schedule_task_group( "all_tasks", TaskInterface::BC, pack_tasks, level, sched, matls );
 
   //Need to apply BC's after everything is initialized
   m_task_factory_map["transport_factory"]->schedule_task_group( "scalar_rhs_builders", TaskInterface::BC, pack_tasks, level, sched, matls );
+  // Need to updated table BC 
+  m_task_factory_map["table_factory"]->schedule_task_group( "all_tasks", TaskInterface::BC, pack_tasks, level, sched, matls );
 
   m_task_factory_map["transport_factory"]->schedule_task_group( "dqmom_eqns", TaskInterface::BC, pack_tasks, level, sched, matls );
 
@@ -588,6 +589,10 @@ KokkosSolver::SSPRKSolve( const LevelP     & level
     // compute momentum closure
     i_turb_model_fac->second->schedule_task_group("momentum_closure",
       TaskInterface::TIMESTEP_EVAL, packed_info.turbulence, level, sched, matls, time_substep );
+
+    // pre-update properties/source tasks)
+    i_prop_fac->second->schedule_task_group( "diffusion_property_models",
+      TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 
    // (pre-update source terms)
     i_source_fac->second->schedule_task_group( "pre_update_source_tasks",

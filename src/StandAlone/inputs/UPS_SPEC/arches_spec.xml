@@ -108,6 +108,7 @@
                                                                           partRadProperties,
                                                                           CO,
                                                                           spectralProperties,
+                                                                          constant_scalar_diffusion_coef,
                                                                           wall_thermal_resistance'">
 
               <absorption_modifier        spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type partRadProperties gasRadProperties spectralProperties"/> <!-- multiplicative modifier on gas or particle absorption coefficients, does not affect scattering coefficients -->
@@ -302,7 +303,11 @@
                                         need_applies_to="type one_d_wallht"/> <!-- outside wall temperature -->
           <wall_resistance_label        spec="REQUIRED STRING"
                                         need_applies_to="type one_d_wallht"/> <!-- total wall resistance label -->
-
+          <!--for constant diffusion scalar model -->
+          <turbulentPrandtlNumber       spec="REQUIRED DOUBLE"
+                                        need_applies_to= "type constant_scalar_diffusion_coef"  />
+          <D_mol                        spec="REQUIRED DOUBLE"
+                                        need_applies_to= "type constant_scalar_diffusion_coef"  />
         </model>
       </PropertyModelsV2>
 
@@ -1484,7 +1489,7 @@
         <SourceV2                       spec="OPTIONAL NO_DATA">
           <src                          spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        attribute2="type REQUIRED STRING  'MMS_mom, MMS_scalar, MMS_Shunn, MMS_Shunn_p3'">
+                                        attribute2="type REQUIRED STRING  'gravity, MMS_mom, MMS_scalar, MMS_Shunn, MMS_Shunn_p3'">
 
             <!-- Specs for MMS mom -->
           <variable                     spec="OPTIONAL NO_DATA"
@@ -1545,6 +1550,9 @@
                                       need_applies_to="type MMS_mom"/>
           <frequency                  spec="OPTIONAL DOUBLE"
                                       need_applies_to="type MMS_mom"/>
+          <reference_density          spec="REQUIRED NO_DATA"
+                                      attribute1="value REQUIRED DOUBLE"
+                                      need_applies_to="type gravity"/> <!--Reference density: RHS of the momentum equation is computed as: F = (rho_ref - rho_local)*g -->
         </src>
         </SourceV2>
 

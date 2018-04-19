@@ -178,6 +178,7 @@ void UnweightVariable<T>::problemSetup( ProblemSpecP& db ){
     //m_compute_mom = true;
 
   } else if (_task_name == "wVel"){
+    m_eqn_class = ArchesCore::MOMENTUM;
     m_var_name = "z-mom";
     m_un_var_name = _task_name;
     m_un_eqn_names.push_back(m_un_var_name);
@@ -371,7 +372,10 @@ void UnweightVariable<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager
           
             for ( cell_iter.reset(); !cell_iter.done(); cell_iter++ ){
               IntVector c = *cell_iter;
-              var[c] = un_var[c]*rho[c];
+              IntVector cp = *cell_iter - iDir;
+              const double rho_inter = 0.5 * (rho[c] + rho[cp]);
+              const double phi_inter = 0.5 * (un_var[c] + un_var[cp]);
+              var[c] = 2.0*rho_inter*phi_inter - un_var[c]*rho[c];
             }
           } 
         }
