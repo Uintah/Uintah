@@ -375,7 +375,7 @@ void UnweightVariable<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager
               IntVector cp = *cell_iter - iDir;
               const double rho_inter = 0.5 * (rho[c] + rho[cp]);
               const double phi_inter = 0.5 * (un_var[c] + un_var[cp]);
-              var[c] = 2.0*rho_inter*phi_inter - un_var[c]*rho[c];
+              var[c] = 2.0*rho_inter*phi_inter - un_var[cp]*rho[cp];
             }
           } 
         }
