@@ -47,9 +47,9 @@ class ConsumedGasComposition
 
   DECLARE_FIELDS( FieldT, o2RHS_, co2GasifRHS_, h2oGasifRHS_ )
 
-  const SpeciesTagMap& specTagMap_;
-
   const std::vector<GasSpeciesName> specEnums_;
+
+  const SpeciesTagMap& specTagMap_;
 
   Cantera::IdealGasMix* const gas_;
 
@@ -116,8 +116,8 @@ public:
       specTagMap_( specTagMap                                         ),
       gas_       ( CanteraObjects::get_gasmix()                       ),
       mwChar_    ( gas_->atomicWeight   ( gas_->elementIndex("C"  ) ) ),
-      mwCO2_     ( gas_->molecularWeight( gas_->speciesIndex("CO2") ) ),
       mwH2O_     ( gas_->molecularWeight( gas_->speciesIndex("H2O") ) ),
+      mwCO2_     ( gas_->molecularWeight( gas_->speciesIndex("CO2") ) ),
       nSpec_     ( specTagMap_.size()                                 )
   {
     this->set_gpu_runnable(true);
