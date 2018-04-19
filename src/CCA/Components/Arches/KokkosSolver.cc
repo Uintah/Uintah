@@ -418,11 +418,13 @@ KokkosSolver::initialize( const LevelP     & level
   // dqmom initilization for w ic
   m_task_factory_map["transport_factory"]->schedule_task_group("dqmom_ic_from_wic",
     TaskInterface::INITIALIZE, pack_tasks, level, sched, matls );
-  //Need to apply BC's after everything is initialized
-  m_task_factory_map["transport_factory"]->schedule_task_group( "momentum_construction", TaskInterface::BC, pack_tasks, level, sched, matls );
 
   //property factory
   m_task_factory_map["property_models_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
+
+  //Need to apply BC's after everything is initialized
+  m_task_factory_map["transport_factory"]->schedule_task_group( "momentum_construction", TaskInterface::BC, pack_tasks, level, sched, matls );
+
   m_task_factory_map["property_models_factory"]->schedule_task_group( "all_tasks", TaskInterface::BC, dont_pack_tasks, level, sched, matls );
 
   // particle models
