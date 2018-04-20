@@ -156,6 +156,7 @@ namespace Uintah{
     const VarLabel* m_wLabel;
     const VarLabel* m_rhoLabel;
     const VarLabel* m_tot_muLabel;
+    const VarLabel* m_simtime_label; 
 
     double m_dt_init;
 

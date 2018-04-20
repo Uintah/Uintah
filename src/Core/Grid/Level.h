@@ -214,8 +214,6 @@ public:
 
   Box getBox( const IntVector &, const IntVector & ) const;
 
-  static const int MAX_PATCH_SELECT = 32;
-  //  using selectType = FixedVector<const Patch*, MAX_PATCH_SELECT>;
   using selectType = std::vector<const Patch*>;
 
 
@@ -320,7 +318,6 @@ private:
   // overlapping patches   
   std::map< std::pair<int, int>, overlap > m_overLapPatches;
   void setOverlappingPatches();
-  
 };
 
 const Level  * getLevel(  const PatchSubset * subset );

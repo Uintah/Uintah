@@ -26,7 +26,8 @@
 #ifndef Packages_Uintah_CCA_Components_Models_LightTime_h
 #define Packages_Uintah_CCA_Components_Models_LightTime_h
 
-#include <CCA/Ports/ModelInterface.h>
+#include <CCA/Components/Models/HEChem/HEChemModel.h>
+
 #include <Core/Grid/Variables/ComputeSet.h>
 
 namespace Uintah {
@@ -59,11 +60,11 @@ WARNING
 
 ****************************************/
 
-  class LightTime : public ModelInterface {
+  class LightTime : public HEChemModel {
   public:
     LightTime(const ProcessorGroup* myworld,
-	      const SimulationStateP& sharedState,
-	      const ProblemSpecP& params);
+              const SimulationStateP& sharedState,
+              const ProblemSpecP& params);
     
     virtual ~LightTime();
 
@@ -89,26 +90,15 @@ WARNING
     virtual void scheduleComputeModelSources(SchedulerP&,
                                                    const LevelP& level);
                                              
-    virtual void scheduleModifyThermoTransportProperties(SchedulerP&,
-                                               const LevelP&,
-                                               const MaterialSet*);
-                                               
-   virtual void computeSpecificHeat(CCVariable<double>&,
-                                    const Patch*,
-                                    DataWarehouse*,
-                                    const int);
-                                    
-   virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
-                                      SchedulerP& sched);
-                                      
-   virtual void scheduleTestConservation(SchedulerP&,
-                                         const PatchSet* patches);
+    virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
+                                       SchedulerP& sched);
+
   private:    
     void computeModelSources(const ProcessorGroup*, 
                              const PatchSubset* patches,
-			     const MaterialSubset* matls, 
+                             const MaterialSubset* matls, 
                              DataWarehouse*, 
-			     DataWarehouse* new_dw);
+                             DataWarehouse* new_dw);
                              
     void errorEstimate(const ProcessorGroup*,
                           const PatchSubset* patches,
@@ -136,9 +126,6 @@ WARNING
     Vector d_direction;
     bool   d_react_mixed_cells;
     double d_refineCriteria;
-
-    #define d_SMALL_NUM 1e-100
-    #define d_TINY_RHO 1e-12
   };
 }
 

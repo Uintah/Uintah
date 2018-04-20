@@ -177,6 +177,7 @@ WARNING
     virtual double getCheckpointInterval() const = 0;
     virtual void   setCheckpointTimeStepInterval( int inv ) = 0;
     virtual int    getCheckpointTimeStepInterval() const = 0;
+    virtual void   setCheckpointWallTimeInterval( int inv ) = 0;
     virtual int    getCheckpointWallTimeInterval() const = 0;
 
     // Returns true if the UPS file has specified to save the UDA using PIDX format.
@@ -198,6 +199,9 @@ WARNING
 
     virtual void   setElapsedWallTime( double val ) = 0;
     virtual double getElapsedWallTime() const = 0;
+
+    virtual void   setCheckpointCycle( int val ) = 0;
+    virtual double getCheckpointCycle() const = 0;
 
     virtual void setUseLocalFileSystems( bool val ) = 0;
     virtual bool getUseLocalFileSystems() const = 0;

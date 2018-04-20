@@ -50,10 +50,10 @@ int main(int argc, char* argv[])
    
   //__________________________________
   //  populate matrix
-  Uintah::FastMatrix m(size, size);
+  Uintah::FastMatrix matrix(size, size);
   for(int i=0;i<size;i++){
     for(int j=0;j<size;j++){
-      m(i,j) = drand48();
+      matrix(i,j) = drand48();
     }
   }
   
@@ -82,7 +82,7 @@ int main(int argc, char* argv[])
 
 #if 0
   for(int i=0;i<reps;i++){
-    minv.destructiveInvert(m);
+    minv.destructiveInvert(matrix);
     minv.multiply(b, x);
     minv.multiply(b2, x2);
   }
@@ -93,11 +93,11 @@ int main(int argc, char* argv[])
   }
   
   for(int i=0;i<reps;i++){
-    m.destructiveSolve(b);    // vector version
+    matrix.destructiveSolve(b);    // vector version
   }  
 #else
   for(int i=0;i<reps;i++){
-    m.destructiveSolve(b_D);   // double version
+    matrix.destructiveSolve(b_D);   // double version
   }
 #endif
 

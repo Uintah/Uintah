@@ -227,16 +227,16 @@ std::ostream& operator<<(std::ostream& out, const PatchSubset&);
 std::ostream& operator<<(std::ostream& out, const MaterialSubset&);
 
 template<class T>
-ComputeSet<T>::ComputeSet() { d_un = 0; }
+ComputeSet<T>::ComputeSet() { d_un = nullptr; }
 
 template<class T>
 ComputeSet<T>::~ComputeSet() {
-  for(int i=0;i<(int)d_set.size();i++) {
-    if(d_set[i]->removeReference()) {
-          delete d_set[i];
+  for (int i = 0; i < (int)d_set.size(); i++) {
+    if (d_set[i] && d_set[i]->removeReference()) {
+      delete d_set[i];
     }
   }
-  if(d_un && d_un->removeReference()) {
+  if (d_un && d_un->removeReference()) {
     delete d_un;
   }    
 }
@@ -362,7 +362,7 @@ template<class T>
 bool
 ComputeSubset<T>::compareElems( const T e1, const T e2 ) { return e1 < e2; }
 
-// Compute the interesection between s1 and s2
+// Compute the intersection between s1 and s2
 template<class T>
 constHandle< ComputeSubset<T> >
 ComputeSubset<T>::intersection( const constHandle< ComputeSubset<T> >& s1, const constHandle< ComputeSubset<T> >& s2 ) {

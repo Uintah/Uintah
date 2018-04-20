@@ -23,15 +23,19 @@
  */
 
 #include <CCA/Components/OnTheFlyAnalysis/flatPlate_heatFlux.h>
+
+#include <CCA/Components/MPM/Core/MPMLabel.h>
+
+#include <CCA/Ports/ApplicationInterface.h>
 #include <CCA/Ports/Scheduler.h>
+
+#include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Box.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/NodeIterator.h>
-#include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Exceptions/InternalError.h>
 #include <Core/Util/DebugStream.h>
 
 #include <sci_defs/visit_defs.h>
@@ -53,8 +57,8 @@ static DebugStream cout_doing("FLATPLATE_HEATFLUX_DOING_COUT", false);
 static DebugStream cout_dbg("FLATPLATE_HEATFLUX_DBG_COUT", false);
 //______________________________________________________________________
 flatPlate_heatFlux::flatPlate_heatFlux(const ProcessorGroup* myworld,
-				       const SimulationStateP sharedState,
-				       const ProblemSpecP& module_spec)
+                                       const SimulationStateP sharedState,
+                                       const ProblemSpecP& module_spec)
   : AnalysisModule(myworld, sharedState, module_spec)
 {
   d_matl = nullptr;
@@ -186,17 +190,21 @@ void flatPlate_heatFlux::problemSetup(const ProblemSpecP& ,
   p->endPt   = end;
   d_plane.push_back(p);
   
-// #ifdef HAVE_VISIT
-//   if( sharedState->getVisIt() ) {
-//     SimulationState::analysisVar aVar;
-//     aVar.name  = M_lb->gHeatFluxLabel->getName();
-//     aVar.matl  = d_matl->getDWIndex();
-//     aVar.level = -1;
-//     aVar.labels.push_back( v_lb->total_heatRateLabel );
-    
-//     m_sharedState->d_analysisVars.push_back(aVar);
-//   }
-// #endif
+#ifdef HAVE_VISIT
+  static bool initialized = false;
+
+  if( m_application->getVisIt() && !initialized ) {
+    ApplicationInterface::analysisVar aVar;
+    aVar.component = "Analysis-FlatPlate";
+    aVar.name      = M_lb->gHeatFluxLabel->getName();
+    aVar.matl      = d_matl->getDWIndex();
+    aVar.level     = -1;
+    aVar.labels.push_back( v_lb->total_heatRateLabel );    
+    m_application->getAnalysisVars().push_back(aVar);
+
+    initialized = true;
+  }
+#endif
 }
 
 //______________________________________________________________________
@@ -220,7 +228,7 @@ void flatPlate_heatFlux::restartInitialize()
 
 //______________________________________________________________________
 void flatPlate_heatFlux::scheduleDoAnalysis(SchedulerP& sched,
-					    const LevelP& level)
+                                            const LevelP& level)
 {
   cout_doing << "flatPlate_heatFlux::scheduleDoAnalysis " << endl;
   Task* t = scinew Task("flatPlate_heatFlux::doAnalysis", 

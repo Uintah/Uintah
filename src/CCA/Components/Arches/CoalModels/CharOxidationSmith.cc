@@ -146,15 +146,15 @@ CharOxidationSmith::problemSetup(const ProblemSpecP& params, int qn)
   }
 
   // create raw coal mass var label
-  std::string rcmass_root = ParticleTools::parse_for_role_to_label(db, "raw_coal");
-  std::string rcmass_name = ParticleTools::append_env( rcmass_root, d_quadNode );
-  std::string rcmassqn_name = ParticleTools::append_qn_env(rcmass_root, d_quadNode );
+  std::string rcmass_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_RAWCOAL);
+  std::string rcmass_name = ArchesCore::append_env( rcmass_root, d_quadNode );
+  std::string rcmassqn_name = ArchesCore::append_qn_env(rcmass_root, d_quadNode );
   _rcmass_varlabel = VarLabel::find(rcmass_name);
 
   // check for char mass and get scaling constant
-  std::string char_root = ParticleTools::parse_for_role_to_label(db, "char");
-  std::string char_name = ParticleTools::append_env( char_root, d_quadNode );
-  std::string charqn_name = ParticleTools::append_qn_env( char_root, d_quadNode );
+  std::string char_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_CHAR);
+  std::string char_name = ArchesCore::append_env( char_root, d_quadNode );
+  std::string charqn_name = ArchesCore::append_qn_env( char_root, d_quadNode );
   _char_varlabel = VarLabel::find(char_name);
 
   EqnBase& temp_char_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(charqn_name);
@@ -165,7 +165,7 @@ CharOxidationSmith::problemSetup(const ProblemSpecP& params, int qn)
 
   //CHAR get the birth term if any:
   const std::string char_birth_name = char_eqn.get_model_by_type( "BirthDeath" );
-  std::string char_birth_qn_name = ParticleTools::append_qn_env(char_birth_name, d_quadNode);
+  std::string char_birth_qn_name = ArchesCore::append_qn_env(char_birth_name, d_quadNode);
   if ( char_birth_name != "NULLSTRING" ){
     _char_birth_label = VarLabel::find( char_birth_qn_name );
   }
@@ -178,31 +178,31 @@ CharOxidationSmith::problemSetup(const ProblemSpecP& params, int qn)
 
   //RAW COAL get the birth term if any:
   const std::string rawcoal_birth_name = rcmass_eqn.get_model_by_type( "BirthDeath" );
-  std::string rawcoal_birth_qn_name = ParticleTools::append_qn_env(rawcoal_birth_name, d_quadNode);
+  std::string rawcoal_birth_qn_name = ArchesCore::append_qn_env(rawcoal_birth_name, d_quadNode);
   if ( rawcoal_birth_name != "NULLSTRING" ){
     _rawcoal_birth_label = VarLabel::find( rawcoal_birth_qn_name );
   }
 
   // check for particle temperature
-  std::string temperature_root = ParticleTools::parse_for_role_to_label(db, "temperature");
-  std::string temperature_name = ParticleTools::append_env( temperature_root, d_quadNode );
+  std::string temperature_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_TEMPERATURE);
+  std::string temperature_name = ArchesCore::append_env( temperature_root, d_quadNode );
   _particle_temperature_varlabel = VarLabel::find(temperature_name);
   if(_particle_temperature_varlabel == 0){
     throw ProblemSetupException("Error: Unable to find coal temperature label!!!! Looking for name: "+temperature_name, __FILE__, __LINE__);
   }
 
   // check for length
-  _nQn_part = ParticleTools::get_num_env(db,ParticleTools::DQMOM);
-  std::string length_root = ParticleTools::parse_for_role_to_label(db, "size");
+  _nQn_part = ArchesCore::get_num_env(db,ArchesCore::DQMOM_METHOD);
+  std::string length_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_SIZE);
   for (int i=0; i<_nQn_part;i++ ){
-    std::string length_name = ParticleTools::append_env( length_root, i );
+    std::string length_name = ArchesCore::append_env( length_root, i );
     _length_varlabel.push_back(  VarLabel::find(length_name));
   }
 
   // get weight scaling constant
-  std::string weightqn_name = ParticleTools::append_qn_env("w", d_quadNode);
+  std::string weightqn_name = ArchesCore::append_qn_env("w", d_quadNode);
   for (int i=0; i<_nQn_part;i++ ){
-  std::string weight_name = ParticleTools::append_env("w", i);
+  std::string weight_name = ArchesCore::append_env("w", i);
     _weight_varlabel.push_back( VarLabel::find(weight_name) );
   }
   EqnBase& temp_weight_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(weightqn_name);
@@ -210,7 +210,7 @@ CharOxidationSmith::problemSetup(const ProblemSpecP& params, int qn)
   _weight_small = weight_eqn.getSmallClipPlusTol();
   _weight_scaling_constant = weight_eqn.getScalingConstant(d_quadNode);
 
-  std::string number_density_name = ParticleTools::parse_for_role_to_label(db, "total_number_density");
+  std::string number_density_name = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_TOTNUM_DENSITY);
   _number_density_varlabel = VarLabel::find(number_density_name);
 
   // get Char source term label and devol label from the devolatilization model
@@ -325,41 +325,6 @@ CharOxidationSmith::problemSetup(const ProblemSpecP& params, int qn)
       _other_indices.push_back(spec);
     }
   }
-
-#ifdef HAVE_VISIT
-  static bool initialized = false;
-
-  // Running with VisIt so add in the variables that the user can
-  // modify.
-//   if( d_sharedState->getVisIt() && !initialized ) {
-    // variable 1 - Must start with the component name and have NO
-    // spaces in the var name.
-//     SimulationState::interactiveVar var;
-//     var.name     = "Arches-CharOx-PreExp-Factor-O2";
-//     var.type     = Uintah::TypeDescription::double_type;
-//     var.value    = (void *) &(_a_l[0]);
-//     var.range[0]   = -1.0e9;
-//     var.range[1]   = +1.0e9;
-//     var.modifiable = true;
-//     var.recompile  = false;
-//     var.modified   = false;
-//     d_sharedState->d_UPSVars.push_back( var );
-
-    // variable 2 - Must start with the component name and have NO
-    // spaces in the var name.
-//     var.name     = "Arches-CharOx-Activation-Energy-O2";
-//     var.type     = Uintah::TypeDescription::double_type;
-//     var.value    = (void *) &(_e_l[0]);
-//     var.range[0]   = -1.0e9;
-//     var.range[1]   = +1.0e9;
-//     var.modifiable = true;
-//     var.recompile  = false;
-//     var.modified   = false;
-//     d_sharedState->d_UPSVars.push_back( var );
-
-//     initialized = true;
-//   }
-#endif
 }
 
 
@@ -382,6 +347,45 @@ CharOxidationSmith::sched_initVars( const LevelP& level, SchedulerP& sched )
   }
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
+
+#ifdef HAVE_VISIT
+  static bool initialized = false;
+
+  // Running with VisIt so add in the variables that the user can
+  // modify.
+  ApplicationInterface* m_application = sched->getApplication();
+  
+  if( m_application && m_application->getVisIt() && !initialized ) {
+    // variable 1 - Must start with the component name and have NO
+    // spaces in the var name.
+    ApplicationInterface::interactiveVar var;
+    var.component  = "Arches";
+    var.name       = "CharOx-PreExp-Factor-O2";
+    var.type       = Uintah::TypeDescription::double_type;
+    var.value      = (void *) &(_a_l[0]);
+    var.range[0]   = -1.0e9;
+    var.range[1]   = +1.0e9;
+    var.modifiable = true;
+    var.recompile  = false;
+    var.modified   = false;
+    m_application->getUPSVars().push_back( var );
+
+    // variable 2 - Must start with the component name and have NO
+    // spaces in the var name.
+    var.component  = "Arches";
+    var.name       = "CharOx-Activation-Energy-O2";
+    var.type       = Uintah::TypeDescription::double_type;
+    var.value      = (void *) &(_e_l[0]);
+    var.range[0]   = -1.0e9;
+    var.range[1]   = +1.0e9;
+    var.modifiable = true;
+    var.recompile  = false;
+    var.modified   = false;
+    m_application->getUPSVars().push_back( var );
+
+    initialized = true;
+  }
+#endif
 }
 
 //-------------------------------------------------------------------------
@@ -757,7 +761,7 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
         CO_CO2_ratio = 200.*exp(-9000./(_R_cal*p_T)); // [ kg CO / kg CO2]
         CO_CO2_ratio=CO_CO2_ratio*44.0/28.0; // [kmoles CO / kmoles CO2]
         CO2onCO=1./CO_CO2_ratio; // [kmoles CO2 / kmoles CO]
-	      for (int l=0; l<_NUM_reactions; l++) {
+              for (int l=0; l<_NUM_reactions; l++) {
           phi_l[l] = (_use_co2co_l[l]) ? (CO2onCO + 1)/(CO2onCO + 0.5) : _phi_l[l]; 
           hrxn_l[l] = (_use_co2co_l[l]) ? (CO2onCO*_HF_CO2 + _HF_CO)/(1+CO2onCO) : _hrxn_l[l]; 
         }
@@ -847,8 +851,8 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
         }
         // convert rh units from kg/m^3/s to kg/s/#
         char_mass_rate  = 0.0;
-	      d_mass = 0.0;
-	      h_rxn = 0.0; // this is the reaction rate weighted heat of reaction. It is needed so we can used the clipped value when computed the heat of reaction rate.
+              d_mass = 0.0;
+              h_rxn = 0.0; // this is the reaction rate weighted heat of reaction. It is needed so we can used the clipped value when computed the heat of reaction rate.
                      // h_rxn = sum(hrxn_l * rxn_l)/sum(rxn_l)
         double oxi_lim = 0.0; // max rate due to reactions
         double rh_l_i = 0.0;
@@ -858,10 +862,10 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
           oxi_lim = (oxid_mass_frac[l] * gas_rho * surfaceAreaFraction) / dt;// [kg/s/#] // here the surfaceAreaFraction parameter is allowing us to only consume the oxidizer multiplied by the weighted area fraction for the current particle.
           rh_l_i = std::min(rh_l_new[l], oxi_lim);
           char_mass_rate += -rh_l_i/w;// [kg/s/#]  negative sign because we are computing the destruction rate for the particles.
-	        d_mass += rh_l_i;
-	        h_rxn += hrxn_l[l] * rh_l_i;
+                d_mass += rh_l_i;
+                h_rxn += hrxn_l[l] * rh_l_i;
         }
-	      h_rxn /= (d_mass + 1e-50); // [J/mole]
+              h_rxn /= (d_mass + 1e-50); // [J/mole]
         
         // check to see if reaction rate is fuel limited.
         if ( add_rawcoal_birth && add_char_birth ){

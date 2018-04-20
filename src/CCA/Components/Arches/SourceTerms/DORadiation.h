@@ -96,6 +96,19 @@ void computeFluxDivQ( const ProcessorGroup* pc,
                          DataWarehouse* old_dw, 
                          DataWarehouse* new_dw );
 
+// profile radiaiton dynamics, to help users resolve radiation fields.
+void profileDynamicRadiation( const ProcessorGroup* pc, 
+                         const PatchSubset* patches, 
+                         const MaterialSubset* matls, 
+                         DataWarehouse* old_dw, 
+                         DataWarehouse* new_dw );
+// print reduction variable
+void printChange( const ProcessorGroup* pc, 
+                         const PatchSubset* patches, 
+                         const MaterialSubset* matls, 
+                         DataWarehouse* old_dw, 
+                         DataWarehouse* new_dw );
+
 // initialize and set boundary conditions for intensities
 void setIntensityBC( const ProcessorGroup* pc, 
                          const PatchSubset* patches, 
@@ -142,9 +155,6 @@ void TransferRadFieldsFromOldDW( const ProcessorGroup* pc,
   }; // class Builder 
 
 
-// Table search, nothing fancy linear search
-  int getSweepPatchIndex( double patchMid, std::vector<double>& indep_var );
-
 private:
       enum DORadType {enum_linearSolve, enum_sweepSpatiallyParallel};
   int _nDir;
@@ -152,6 +162,8 @@ private:
   int _nstage;
 
   bool _multiBox; 
+  bool _runRadProfiler{false};  /// turns on the radiation profiler, tool to identifying if radiation is being resolved
+  bool _doTimeScaleAnalysis{false};  // uses a time scale to help users know if they are solving radiation frequently enough, using several approximations
   std::vector<std::vector<double> > _xyzPatch_boundary;/// all patch boundaries (approximate), needed for multi-box weeps, 
 
   std::vector< std::vector < std::vector < bool > > > _doesPatchExist;
@@ -164,6 +176,16 @@ private:
   std::vector<const PatchSubset*> _RelevantPatchesXmYmZp;  
   std::vector<const PatchSubset*> _RelevantPatchesXmYmZm;  
 
+  std::vector<const PatchSet*> _RelevantPatchesXpYpZp2;   /// Some redundancy here, since XpYpZp = XmYmZm [ end : start ]
+  std::vector<const PatchSet*> _RelevantPatchesXpYpZm2;   /// only need four sets...
+  std::vector<const PatchSet*> _RelevantPatchesXpYmZp2;  
+  std::vector<const PatchSet*> _RelevantPatchesXpYmZm2;  
+  std::vector<const PatchSet*> _RelevantPatchesXmYpZp2;  
+  std::vector<const PatchSet*> _RelevantPatchesXmYpZm2;  
+  std::vector<const PatchSet*> _RelevantPatchesXmYmZp2;  
+  std::vector<const PatchSet*> _RelevantPatchesXmYmZm2;  
+
+
   IntVector _patchIntVector;
   int _radiation_calc_freq; 
   int _nQn_part; 
@@ -174,6 +196,7 @@ private:
   int _sweepMethod;
   std::vector <std::vector< std::vector<int> > > _directional_phase_adjustment;
 
+  std::string _profiler_label_name; 
   std::string _T_label_name; 
   std::string _abskt_label_name; 
   std::string _abskg_label_name; 

@@ -46,17 +46,16 @@ ProcessorGroup::ProcessorGroup( const ProcessorGroup * parent
   m_node = -1;
   m_nNodes = 0;
 
-  char my_proc_name[MPI_MAX_PROCESSOR_NAME];
   int resultlen;
 
   // For each rank get the processor name.
-  MPI::Get_processor_name( my_proc_name, &resultlen );
+  MPI::Get_processor_name( m_proc_name, &resultlen );
 
   // Gather all of the processor names on the root node.
   char all_proc_names[nRanks*MPI_MAX_PROCESSOR_NAME+1];
   all_proc_names[nRanks*MPI_MAX_PROCESSOR_NAME] = '\0';
   
-  MPI::Gather(my_proc_name, MPI_MAX_PROCESSOR_NAME, MPI_CHAR,
+  MPI::Gather(  m_proc_name,  MPI_MAX_PROCESSOR_NAME, MPI_CHAR,
 	      all_proc_names, MPI_MAX_PROCESSOR_NAME, MPI_CHAR, 0, MPI_COMM_WORLD);
 
   char proc_name[MPI_MAX_PROCESSOR_NAME];
@@ -106,7 +105,7 @@ ProcessorGroup::ProcessorGroup( const ProcessorGroup * parent
 
     // Check the local processor name with the unique processor name
     // list, if a match store the index.
-    if( std::string(my_proc_name) == std::string(proc_name) )
+    if( std::string(m_proc_name) == std::string(proc_name) )
     {
       m_node = i;
       break;

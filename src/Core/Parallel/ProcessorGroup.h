@@ -27,6 +27,7 @@
 
 #include <Core/Parallel/UintahMPI.h>
 
+#include <string>
 #include <vector>
 
 namespace Uintah {
@@ -66,6 +67,8 @@ class ProcessorGroup {
 public:
 
   ~ProcessorGroup();
+
+  std::string myProcName() const { return std::string(m_proc_name); }
 
   // Returns the total number of nodes this MPI session is running on.
   int nNodes() const { return m_nNodes; }
@@ -109,6 +112,8 @@ private:
   ProcessorGroup( ProcessorGroup && )                 = delete;
   ProcessorGroup& operator=( ProcessorGroup && )      = delete;
 
+  char m_proc_name[MPI_MAX_PROCESSOR_NAME];
+  
   int  m_node;   // Node this rank is executing on.
   int  m_nNodes; // Total number of nodes this MPI session is running on.
 

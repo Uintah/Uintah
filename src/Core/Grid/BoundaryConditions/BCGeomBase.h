@@ -30,6 +30,8 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Grid/Variables/Iterator.h>
 #include <Core/Grid/Variables/BaseIterator.h>
+#include <Core/Util/DebugStream.h>
+
 #include <vector>
 #include <typeinfo>
 #include <iterator>
@@ -204,6 +206,9 @@ namespace Uintah {
     ParticleBndSpec   d_particleBndSpec;
     double            d_surfaceArea;
     Point             d_origin;
+
+    // Can only be one and copying is possible.
+    static DebugStream BC_dbg;
   };
 
   template<class T> 

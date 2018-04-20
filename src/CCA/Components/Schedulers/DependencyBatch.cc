@@ -34,11 +34,22 @@ namespace Uintah {
 
 
 namespace {
+  Dout g_received_dbg( "DependencyBatch", "Schedulers", "", false );
 
-Dout g_received_dbg( "DependencyBatch", false );
+  Uintah::MasterLock g_received_mutex{};
+}
 
-Uintah::MasterLock g_received_mutex{};
 
+//_____________________________________________________________________________
+//
+DependencyBatch::DependencyBatch( int            to
+                                , DetailedTask * fromTask
+                                , DetailedTask * toTask
+                                )
+  : m_from_task(fromTask)
+  , m_to_rank(to)
+{
+  m_to_tasks.push_back(toTask);
 }
 
 

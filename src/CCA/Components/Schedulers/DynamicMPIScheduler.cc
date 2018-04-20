@@ -32,21 +32,18 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Util/DOUT.hpp>
 
-#include <sci_defs/visit_defs.h>
-
 using namespace Uintah;
 
 
-extern Dout g_task_dbg;
-extern Dout g_task_order;
-extern Dout g_exec_out;
-
+namespace Uintah {
+  extern Dout g_task_dbg;
+  extern Dout g_task_order;
+  extern Dout g_exec_out;
+}
 
 namespace {
-
-Dout g_dbg(          "DynamicMPI_DBG",         false);
-Dout g_queue_length( "DynamicMPI_QueueLength", false);
-
+  Dout g_dbg(          "DynamicMPI_DBG",         "Schedulers", "", false);
+  Dout g_queue_length( "DynamicMPI_QueueLength", "Schedulers", "", false);
 }
 
 
@@ -110,19 +107,6 @@ DynamicMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec
   }
 
   SchedulerCommon::problemSetup(prob_spec, state);
-
-#ifdef HAVE_VISIT
-  static bool initialized = false;
-
-  // Running with VisIt so add in the variables that the user can
-  // modify.
-  if( m_application->getVisIt() && !initialized ) {
-    m_application->getDouts().push_back( &g_dbg );
-    m_application->getDouts().push_back( &g_queue_length );
-
-    initialized = true;
-  }
-#endif
 }
 
 //______________________________________________________________________

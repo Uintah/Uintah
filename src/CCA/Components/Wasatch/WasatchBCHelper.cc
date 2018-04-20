@@ -671,7 +671,7 @@ namespace WasatchCore {
   //------------------------------------------------------------------------------------------------
   
   void WasatchBCHelper::update_pressure_rhs( SVolField& pressureRHS,
-                                      const Uintah::Patch* patch )
+                                             const Uintah::Patch* patch )
   {
     typedef std::vector<SpatialOps::IntVec> MaskT;
     
@@ -738,7 +738,6 @@ namespace WasatchCore {
     if (!do_nscbc()) return;
     using namespace std;
     string bndName = myBndSpec.name;
-    Expr::ExpressionFactory& factory = *(grafCat_[ADVANCE_SOLUTION]->exprFactory);
     typedef SVolField FieldT;
     
     bool do2=false, do3=false;

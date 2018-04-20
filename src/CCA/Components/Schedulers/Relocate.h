@@ -81,7 +81,7 @@ class Relocate {
     // Insert Documentation Here:
     void scheduleParticleRelocation( Scheduler                                        *,
                                      const ProcessorGroup                             * pg,
-                                     LoadBalancer                                 * lb,
+                                     LoadBalancer                                     * lb,
                                      const LevelP                                     & level,
                                      const VarLabel                                   * old_posLabel,
                                      const std::vector<std::vector<const VarLabel*> > & old_labels,
@@ -146,10 +146,10 @@ class Relocate {
     std::vector<std::vector<const VarLabel*> >   reloc_new_labels;
     const VarLabel                             * particleIDLabel_{   nullptr };
     const MaterialSet                          * reloc_matls{        nullptr };
-    LoadBalancer                           * m_lb{               nullptr };
-    std::vector<char*>                           recvbuffers;
-    std::vector<char*>                           sendbuffers;
-    std::vector<MPI_Request>                     sendrequests;
+    LoadBalancer                               * m_lb{               nullptr };
+    std::vector<char*>                          recvbuffers;
+    std::vector<char*>                          sendbuffers;
+    std::vector<MPI_Request>                    sendrequests;
 
 };
 

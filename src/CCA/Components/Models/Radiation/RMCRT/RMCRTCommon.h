@@ -27,7 +27,6 @@
 
 #include <CCA/Ports/Scheduler.h>
 
-#include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Math/Expon.h>

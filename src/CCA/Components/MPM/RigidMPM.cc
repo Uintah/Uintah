@@ -130,6 +130,7 @@ void RigidMPM::scheduleComputeInternalForce(SchedulerP& sched,
   // require pStress so it will be saved in a checkpoint, 
   // allowing the user to restart using mpmice
   t->requires(Task::OldDW,lb->pStressLabel, Ghost::None);                
+  t->computes(lb->gInternalForceLabel);
   
   sched->addTask(t, patches, matls);
 }
@@ -138,7 +139,7 @@ void RigidMPM::computeInternalForce(const ProcessorGroup*,
                                     const PatchSubset* patches,
                                     const MaterialSubset* ,
                                     DataWarehouse*,
-                                    DataWarehouse*)
+                                    DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -146,6 +147,13 @@ void RigidMPM::computeInternalForce(const ProcessorGroup*,
     if (cout_doing.active()) {
       cout_doing <<"Doing computeInternalForce on patch " << patch->getID()
                  <<"\t\t\t RigidMPM"<< endl;
+    }
+    for(int m = 0; m < m_sharedState->getNumMPMMatls(); m++){
+      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
+      NCVariable<Vector> internal_force;
+      new_dw->allocateAndPut(internal_force, lb->gInternalForceLabel,dwi,patch);
+      internal_force.initialize(Vector(0.));
     }
 
   }

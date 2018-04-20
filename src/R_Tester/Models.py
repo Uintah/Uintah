@@ -1,8 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from sys import argv,exit
 from os import environ
-from helpers.runSusTests import runSusTests, inputs_root, ignorePerformanceTests, generatingGoldStandards
+from helpers.runSusTests import runSusTests, ignorePerformanceTests
 
 #______________________________________________________________________
 #  Test syntax: ( "folder name", "input file", # processors, "OS", ["flags1","flag2"])
@@ -58,7 +58,7 @@ def getTestList(me) :
   elif me == "BUILDBOTTESTS":
     TESTS = ignorePerformanceTests( NIGHTLYTESTS )
   else:
-    print "\nERROR:Models.py  getTestList:  The test list (%s) does not exist!\n\n" % me
+    print("\nERROR:Models.py  getTestList:  The test list (%s) does not exist!\n\n" % me)
     exit(1)
   return TESTS
 #__________________________________

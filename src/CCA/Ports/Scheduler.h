@@ -25,6 +25,8 @@
 #ifndef CCA_PORTS_SCHEDULER_H
 #define CCA_PORTS_SCHEDULER_H
 
+#include <CCA/Ports/ApplicationInterface.h>
+
 #include <CCA/Components/Schedulers/RuntimeStatsEnum.h>
 
 #include <Core/Parallel/UintahParallelPort.h>
@@ -92,6 +94,9 @@ class Scheduler : public UintahParallelPort {
     virtual void getComponents() = 0;
     virtual void releaseComponents() = 0;
 
+    // TEMPORARY
+    virtual ApplicationInterface *getApplication() = 0;
+  
     virtual void problemSetup( const ProblemSpecP     & prob_spec
 			                       , const SimulationStateP & state
 			                       ) = 0;

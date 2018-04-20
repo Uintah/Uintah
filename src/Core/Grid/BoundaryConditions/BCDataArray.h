@@ -25,14 +25,14 @@
 #ifndef UINTAH_GRID_BCDataArray_H
 #define UINTAH_GRID_BCDataArray_H
 
+#include <Core/Geometry/Vector.h>
 #include <Core/Grid/BoundaryConditions/BCData.h>
 #include <Core/Grid/BoundaryConditions/BCGeomBase.h>
 #include <Core/Grid/Patch.h>
-#include <Core/Geometry/Vector.h>
-#include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/Variables/Iterator.h>
-#include <vector>
+
 #include <map>
+#include <vector>
 
 namespace Uintah {
 
@@ -124,10 +124,12 @@ namespace Uintah {
      /// The map is for the mat_id.  -1 is for mat_id = "all", 0, for 
      /// mat_id = "0", etc.
      typedef std::map<int,std::vector<BCGeomBase*> > bcDataArrayType;
+
    private:
-     bcDataArrayType d_BCDataArray;
      friend class Patch;
      friend class BoundCondReader;
+
+     bcDataArrayType d_BCDataArray;
    };
 
 

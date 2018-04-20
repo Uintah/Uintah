@@ -33,6 +33,22 @@ void FaceVelocities::problemSetup( ProblemSpecP& db ){
   m_v_vel_name = parse_ups_for_role( VVELOCITY, db, "vVelocitySPBC" );
   m_w_vel_name = parse_ups_for_role( WVELOCITY, db, "wVelocitySPBC" );
 
+  m_int_scheme = ArchesCore::get_interpolant_from_string( "second" ); //default second order
+  m_ghost_cells = 1; //default for 2nd order
+
+  if ( db->findBlock("KMomentum") ){
+    if (db->findBlock("KMomentum")->findBlock("convection")){
+
+      std::string conv_scheme;
+      db->findBlock("KMomentum")->findBlock("convection")->getAttribute("scheme", conv_scheme);
+
+      if (conv_scheme == "fourth"){
+        m_ghost_cells=2;
+        m_int_scheme = ArchesCore::get_interpolant_from_string( conv_scheme );
+      }
+    }
+  }
+
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -89,9 +105,9 @@ void FaceVelocities::register_timestep_eval( VIVec& variable_registry, const int
   for (auto iter = m_vel_names.begin(); iter != m_vel_names.end(); iter++ ){
     register_variable( *iter, ArchesFieldContainer::COMPUTES, variable_registry, time_substep, _task_name );
   }
-  register_variable( m_u_vel_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::LATEST, variable_registry, time_substep, _task_name );
-  register_variable( m_v_vel_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::LATEST, variable_registry, time_substep, _task_name );
-  register_variable( m_w_vel_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::LATEST, variable_registry, time_substep, _task_name );
+  register_variable( m_u_vel_name, ArchesFieldContainer::REQUIRES,m_ghost_cells , ArchesFieldContainer::LATEST, variable_registry, time_substep, _task_name );
+  register_variable( m_v_vel_name, ArchesFieldContainer::REQUIRES,m_ghost_cells , ArchesFieldContainer::LATEST, variable_registry, time_substep, _task_name );
+  register_variable( m_w_vel_name, ArchesFieldContainer::REQUIRES,m_ghost_cells , ArchesFieldContainer::LATEST, variable_registry, time_substep, _task_name );
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -131,19 +147,39 @@ void FaceVelocities::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
   // bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
   // bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
 
+  ArchesCore::OneDInterpolator my_interpolant_ucellx( ucell_xvel, uVel, -1, 0, 0 );
+  ArchesCore::OneDInterpolator my_interpolant_ucelly( ucell_yvel, vVel, -1, 0, 0 );
+  ArchesCore::OneDInterpolator my_interpolant_ucellz( ucell_zvel, wVel, -1, 0, 0 );
+
+  ArchesCore::OneDInterpolator my_interpolant_vcellx( vcell_xvel, uVel,0,-1, 0 );
+  ArchesCore::OneDInterpolator my_interpolant_vcelly( vcell_yvel, vVel,0,-1, 0 );
+  ArchesCore::OneDInterpolator my_interpolant_vcellz( vcell_zvel, wVel,0,-1, 0 );
+
+  ArchesCore::OneDInterpolator my_interpolant_wcellx( wcell_xvel, uVel,0, 0, -1);
+  ArchesCore::OneDInterpolator my_interpolant_wcelly( wcell_yvel, vVel,0, 0, -1);
+  ArchesCore::OneDInterpolator my_interpolant_wcellz( wcell_zvel, wVel,0, 0, -1);
+
   IntVector low = patch->getCellLowIndex();
   IntVector high = patch->getCellHighIndex();
 
   //x-direction:
   GET_WALL_BUFFERED_PATCH_RANGE(low,high,1,1,0,1,0,1);
   Uintah::BlockRange x_range(low, high);
-  Uintah::parallel_for( x_range, [&](int i, int j, int k){
+    if ( m_int_scheme == ArchesCore::SECONDCENTRAL ) {
 
-    ucell_xvel(i,j,k) = 0.5*(uVel(i,j,k) + uVel(i-1,j,k));
-    ucell_yvel(i,j,k) = 0.5*(vVel(i,j,k) + vVel(i-1,j,k));
-    ucell_zvel(i,j,k) = 0.5*(wVel(i,j,k) + wVel(i-1,j,k));
+      ArchesCore::SecondCentral ci;
+      Uintah::parallel_for( x_range, my_interpolant_ucellx, ci );
+      Uintah::parallel_for( x_range, my_interpolant_ucelly, ci );
+      Uintah::parallel_for( x_range, my_interpolant_ucellz, ci );
 
-  });
+    } else if ( m_int_scheme== ArchesCore::FOURTHCENTRAL ){
+
+      ArchesCore::FourthCentral ci;
+      Uintah::parallel_for( x_range, my_interpolant_ucellx, ci );
+      Uintah::parallel_for( x_range, my_interpolant_ucelly, ci );
+      Uintah::parallel_for( x_range, my_interpolant_ucellz, ci );
+
+  }
 
   //y-direction:
   low = patch->getCellLowIndex();
@@ -152,13 +188,22 @@ void FaceVelocities::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
   GET_WALL_BUFFERED_PATCH_RANGE(low,high,0,1,1,1,0,1);
   Uintah::BlockRange y_range(low, high);
 
-  Uintah::parallel_for( y_range, [&](int i, int j, int k){
+  if ( m_int_scheme == ArchesCore::SECONDCENTRAL ) {
 
-    vcell_xvel(i,j,k) = 0.5*(uVel(i,j,k) + uVel(i,j-1,k));
-    vcell_yvel(i,j,k) = 0.5*(vVel(i,j,k) + vVel(i,j-1,k));
-    vcell_zvel(i,j,k) = 0.5*(wVel(i,j,k) + wVel(i,j-1,k));
+      ArchesCore::SecondCentral ci;
+      Uintah::parallel_for( y_range, my_interpolant_vcellx, ci );
+      Uintah::parallel_for( y_range, my_interpolant_vcelly, ci );
+      Uintah::parallel_for( y_range, my_interpolant_vcellz, ci );
 
-  });
+    } else if ( m_int_scheme== ArchesCore::FOURTHCENTRAL ){
+
+      //std::cout<<"fourth order face"<<std::endl;
+      ArchesCore::FourthCentral ci;
+      Uintah::parallel_for( y_range, my_interpolant_vcellx, ci );
+      Uintah::parallel_for( y_range, my_interpolant_vcelly, ci );
+      Uintah::parallel_for( y_range, my_interpolant_vcellz, ci );
+
+  }
 
   //z-direction:
   low = patch->getCellLowIndex();
@@ -167,12 +212,20 @@ void FaceVelocities::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
   GET_WALL_BUFFERED_PATCH_RANGE(low,high,0,1,0,1,1,1);
   Uintah::BlockRange z_range(low, high);
 
-  Uintah::parallel_for( z_range, [&](int i, int j, int k){
+  if ( m_int_scheme == ArchesCore::SECONDCENTRAL ) {
 
-    wcell_xvel(i,j,k) = 0.5*(uVel(i,j,k) + uVel(i,j,k-1));
-    wcell_yvel(i,j,k) = 0.5*(vVel(i,j,k) + vVel(i,j,k-1));
-    wcell_zvel(i,j,k) = 0.5*(wVel(i,j,k) + wVel(i,j,k-1));
+      ArchesCore::SecondCentral ci;
+      Uintah::parallel_for( z_range, my_interpolant_wcellx, ci );
+      Uintah::parallel_for( z_range, my_interpolant_wcelly, ci );
+      Uintah::parallel_for( z_range, my_interpolant_wcellz, ci );
 
-  });
+    } else if ( m_int_scheme== ArchesCore::FOURTHCENTRAL ){
+
+      ArchesCore::FourthCentral ci;
+      Uintah::parallel_for( z_range, my_interpolant_wcellx, ci );
+      Uintah::parallel_for( z_range, my_interpolant_wcelly, ci );
+      Uintah::parallel_for( z_range, my_interpolant_wcellz, ci );
+
+  }
 
 }

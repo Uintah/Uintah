@@ -185,8 +185,8 @@ class TaskGraph {
   public:
 
     TaskGraph(       SchedulerCommon   * sched
-		     , SimulationStateP& state
-		     , const ProcessorGroup    * proc_group
+		         , SimulationStateP        & state
+		         , const ProcessorGroup    * proc_group
              ,       Scheduler::tgType   tg_type
              ,       int                 index
              );
@@ -209,11 +209,10 @@ class TaskGraph {
     /// DetailedTask for each PatchSubset and MaterialSubset in a Task,
     /// where a Task may have many PatchSubsets and MaterialSubsets.).
     /// Sorts using nullSort.
-    DetailedTasks* createDetailedTasks(       bool            useInternalDeps
-                                      ,       DetailedTasks * first
-                                      , const GridP         & grid
-                                      , const GridP         & oldGrid
-                                      , const bool            hasDistalReqs = false
+    DetailedTasks* createDetailedTasks(       bool    useInternalDeps
+                                      , const GridP & grid
+                                      , const GridP & oldGrid
+                                      , const bool    hasDistalReqs = false
                                       );
 
     inline DetailedTasks* getDetailedTasks()
@@ -321,7 +320,7 @@ class TaskGraph {
                             );
 
     SchedulerCommon      * m_scheduler;
-    LoadBalancer     * m_load_balancer;
+    LoadBalancer         * m_load_balancer;
     const ProcessorGroup * m_proc_group;
     Scheduler::tgType      m_type;
     DetailedTasks        * m_detailed_tasks{nullptr};

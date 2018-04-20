@@ -46,7 +46,8 @@
 using namespace std;
 
 using namespace Uintah;
-static DebugStream dbg("SWITCHER", false);
+
+extern DebugStream switching_dbg;
 
 DDT1Criteria::DDT1Criteria(ProblemSpecP& ps)
 {
@@ -84,7 +85,7 @@ void DDT1Criteria::problemSetup(const ProblemSpecP& ps,
 void DDT1Criteria::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
 {
   
-  printSchedule(level,dbg,"Switching Criteria:DDT1Criteria::scheduleSwitchTest");
+  printSchedule(level,switching_dbg,"Switching Criteria:DDT1Criteria::scheduleSwitchTest");
   Task* t = scinew Task("switchTest", this, &DDT1Criteria::switchTest);
 
   MaterialSubset* one_matl = scinew MaterialSubset();
@@ -128,7 +129,7 @@ void DDT1Criteria::switchTest(const ProcessorGroup* group,
   
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
-      printTask(patches, patch,dbg,"Doing Switching Criteria:DDT1Criteria::switchTest");
+      printTask(patches, patch,switching_dbg,"Doing Switching Criteria:DDT1Criteria::switchTest");
       
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(d_material);
       int d_indx = mpm_matl->getDWIndex();

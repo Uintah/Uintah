@@ -366,6 +366,7 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
     d_filter->applyFilter( pc, iter, wVel, density, filterVolume, vol_fraction, filterRhoW, dim );
 
     d_filter->applyFilter<constCCVariable<double> >(pc, patch, density, filterVolume, vol_fraction, filterRho);
+    //d_filter->applyFilter(pc, patch, density, vol_fraction, filterRho);
 
     // making filterRho nonzero
     int mmWallID = d_boundaryCondition->getMMWallId();
@@ -539,7 +540,7 @@ CompDynamicProcedure::reComputeStrainRateTensors(const ProcessorGroup*,
       funp = ( 0.5 * filterRhoU[cne] /
              ( (filterRho[cn] + filterRho[cne]))
              + 0.5 * filterRhoU[cn] /
-             ( (filterRho[cn] + filterRho[IntVector(cnw)])));
+             ( (filterRho[cn] + filterRho[cnw])));
 
       fusp = ( 0.5 * filterRhoU[cse] /
              ( (filterRho[cs] + filterRho[cse]) )

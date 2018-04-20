@@ -112,39 +112,19 @@ HeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
   if (d_radiation ) {
     
     _radiateAtGasTemp=true; // this flag is arbitrary for no radiation 
-    ProblemSpecP db_prop = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("PropertyModels");
+    ProblemSpecP db_prop = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("PropertyModelsV2");
     for ( ProblemSpecP db_model = db_prop->findBlock("model"); db_model != nullptr; db_model = db_model->findNextBlock("model")){
       db_model->getAttribute( "type", modelName );
-      if ( modelName=="radiation_properties" ) {
-        if ( db_model->findBlock("calculator") == nullptr ) {
-          if( qn == 0 ) {
-            proc0cout <<"\n///-------------------------------------------///\n";
-            proc0cout <<"WARNING: No radiation particle properties computed!\n";
-            proc0cout <<"Particles will not interact with radiation!\n";
-            proc0cout <<"///-------------------------------------------///\n";
-          }
-          d_radiation = false;
-          break;
-        }
-        else if( db_model->findBlock("calculator")->findBlock("particles") == nullptr ){
-          if(qn ==0) {
-            proc0cout <<"\n///-------------------------------------------///\n";
-            proc0cout <<"WARNING: No radiation particle properties computed!\n";
-            proc0cout <<"Particles will not interact with radiation!\n";
-            proc0cout <<"///-------------------------------------------///\n";
-          }
-          d_radiation = false;
-          break;
-        }
-        db_model->findBlock("calculator")->findBlock("particles")->findBlock("abskp")->getAttribute("label",baseNameAbskp);
-        db_model->findBlock("calculator")->findBlock("particles")->getWithDefault( "radiateAtGasTemp", _radiateAtGasTemp, true ); 
+      if ( modelName=="partRadProperties" ) {
+        db_model->getAttribute("label",baseNameAbskp);
+        db_model->getWithDefault( "radiateAtGasTemp", _radiateAtGasTemp, true ); 
         break;
       }
       if ( db_model == nullptr ){
         if( qn == 0 ) {
           proc0cout <<"\n///-------------------------------------------///\n";
           proc0cout <<"WARNING: No radiation particle properties computed!\n";
-          proc0cout <<"Particles will not interact with radiation!\n";
+          proc0cout <<"PARTICLES WILL NOT INTERACT WITH RADIATION!\n";
           proc0cout <<"///-------------------------------------------///\n";
         }
         d_radiation = false;

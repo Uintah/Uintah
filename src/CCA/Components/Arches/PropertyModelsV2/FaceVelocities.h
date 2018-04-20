@@ -61,6 +61,9 @@ public:
 private:
 
     typedef std::vector<ArchesFieldContainer::VariableInformation> AVarInfo;
+    ArchesCore::INTERPOLANT m_int_scheme;
+
+    int m_ghost_cells;
 
     std::string m_u_vel_name;
     std::string m_v_vel_name;

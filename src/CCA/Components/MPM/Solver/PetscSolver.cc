@@ -338,7 +338,8 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
 #else
   PetscTruth exists;
 #endif
-
+  (void) exists; // Removes an unused var warning
+  
 #if 0
   cerr << "me = " << me << endl;
   cerr << "numlrows = " << numlrows << endl;

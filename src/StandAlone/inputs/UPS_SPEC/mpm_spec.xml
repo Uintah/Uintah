@@ -193,7 +193,9 @@
 
 
         <erosion                         spec="OPTIONAL NO_DATA"
-                                            attribute1="algorithm REQUIRED STRING 'none, AllowNoTension, ZeroStress,  AllowNoShear'" />
+                                            attribute1="algorithm REQUIRED STRING 'none, AllowNoTension, ZeroStress,  AllowNoShear'">
+          <char_time                         spec="OPTIONAL DOUBLE" />
+        </erosion>
 
         <specific_heat                   spec="REQUIRED DOUBLE 'positive'" /> 
         <thermal_conductivity            spec="REQUIRED DOUBLE 'positive'" />
@@ -208,10 +210,12 @@
       </material>
       <cohesive_zone                     spec="MULTIPLE NO_DATA"
                                            attribute1="name OPTIONAL STRING" >
-        <delta_n                           spec="OPTIONAL DOUBLE" />
-        <delta_t                           spec="OPTIONAL DOUBLE" />
-        <sig_max                           spec="OPTIONAL DOUBLE" />
-        <tau_max                           spec="OPTIONAL DOUBLE" />
+        <delta_n                           spec="REQUIRED DOUBLE" />
+        <delta_t                           spec="REQUIRED DOUBLE" />
+        <delta_n_fail                      spec="OPTIONAL DOUBLE" />
+        <delta_t_fail                      spec="OPTIONAL DOUBLE" />
+        <sig_max                           spec="REQUIRED DOUBLE" />
+        <tau_max                           spec="REQUIRED DOUBLE" />
         <cz_filename                       spec="REQUIRED STRING" />
         <do_rotation                       spec="OPTIONAL BOOLEAN" />
       </cohesive_zone>

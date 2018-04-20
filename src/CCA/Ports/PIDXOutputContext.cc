@@ -225,7 +225,7 @@ PIDXOutputContext::computeBoxSize( const PatchSubset* patches,
 //
 void
 PIDXOutputContext::initialize( const string       & filename, 
-                                     unsigned int   timeStep,
+                               const unsigned int   timeStep,
                                      MPI_Comm       comm,
                                      PIDX_flags     flags,
                                const PatchSubset  * patches,
@@ -268,24 +268,24 @@ PIDXOutputContext::initialize( const string       & filename,
   PIDX_point new_box_size;
   computeBoxSize( patches, flags, new_box_size );
   
-  PIDX_set_restructuring_box(file, new_box_size);
+  PIDX_set_restructuring_box( file, new_box_size );
   checkReturnCode( rc, desc+" - PIDX_set_restructuring_box", __FILE__, __LINE__);
   
-  PIDX_set_block_size(this->file,  13);
+  PIDX_set_block_size( this->file,  13 );
   checkReturnCode( rc, desc+" - PIDX_set_block_size", __FILE__, __LINE__);
   
-  PIDX_set_block_count(this->file, 256);
+  PIDX_set_block_count( this->file, 256 );
   checkReturnCode( rc, desc+" - PIDX_set_block_count", __FILE__, __LINE__);
-  //PIDX_set_resolution(this->file, 0, 2);
+  //PIDX_set_resolution( this->file, 0, 2 );
   
   //__________________________________
   //  
-  PIDX_set_current_time_step(this->file, timeStep);
+  PIDX_set_current_time_step( this->file, timeStep );
   checkReturnCode( rc, desc+" - PIDX_set_current_time_step", __FILE__, __LINE__);
 
   //__________________________________
   // Set compresssion settings
-  if( typeOutput == CHECKPOINT){
+  if( typeOutput == CHECKPOINT ){
     PIDX_set_compression_type( this->file, PIDX_NO_COMPRESSION );
     checkReturnCode( rc, desc+" - PIDX_set_compression_type", __FILE__, __LINE__);
   }

@@ -1,8 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from sys import argv,exit
 from os import environ
-from helpers.runSusTests import runSusTests, inputs_root, ignorePerformanceTests, generatingGoldStandards
+from helpers.runSusTests import runSusTests, ignorePerformanceTests
 
 #______________________________________________________________________
 #  Test syntax: ( "folder name", "input file", # processors, "OS", ["flags1","flag2",...])
@@ -44,6 +44,8 @@ AMRTESTS   = [
              ]
 
 LOCALTESTS = [   ("massX",                    "massX.ups",                 1,  "ALL", ["exactComparison"]),
+                 ("pistonVal",                "pistonValidation.ups",      2,  "ALL", ["exactComparison"]),
+                 ("pistonVal_mks",            "pistonValidation.SI.Cu.ups",2,  "ALL", ["exactComparison"]),
                  ("guni2dRT",                 "guni2dRT.ups",              4,  "ALL", ["exactComparison"]),
                  ("SteadyBurn_2dRT",          "SteadyBurn_2dRT.ups",       4,  "ALL", ["exactComparison"]),
                  ("TBurner_2dRT",             "TBurner_2dRT.ups",          4,  "ALL", ["exactComparison"]),
@@ -74,7 +76,7 @@ def getTestList(me) :
   elif me == "BUILDBOTTESTS":
     TESTS = ignorePerformanceTests( LOCALTESTS + NIGHTLYTESTS + AMRTESTS )
   else:
-    print "\nERROR:MPMICE.py  getTestList:  The test list (%s) does not exist!\n\n" % me
+    print("\nERROR:MPMICE.py  getTestList:  The test list (%s) does not exist!\n\n" % me)
     exit(1)
   return TESTS
 #__________________________________

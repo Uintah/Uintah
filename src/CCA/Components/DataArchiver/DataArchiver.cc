@@ -91,13 +91,19 @@ static std::mutex pidx_mutex{};
 using namespace Uintah;
 using namespace std;
 
-static DebugStream dbg("DataArchiver", false);
-
+namespace {
+  DebugStream dbg("DataArchiver", "DataArchiver", "Data archiver debug stream", false);
 #ifdef HAVE_PIDX
-  static DebugStream dbgPIDX ("DataArchiverPIDX", false);
+  DebugStream dbgPIDX ("DataArchiverPIDX", "DataArchiver", "Data archiver PIDX debug stream", false);
 #endif
+}
 
+//______________________________________________________________________
+// Initialize class static variables:
 bool DataArchiver::m_wereSavesAndCheckpointsInitialized = false;
+
+//______________________________________________________________________
+//
 
 DataArchiver::DataArchiver(const ProcessorGroup* myworld, int udaSuffix)
   : UintahParallelComponent(myworld),
@@ -245,6 +251,7 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
     m_outputInterval = 0.0; // default
   }
 
+  // Can't use both outputInterval and outpointTimeStepInterval
   if ( m_outputInterval > 0.0 && m_outputTimeStepInterval > 0 ) {
     throw ProblemSetupException("Use <outputInterval> or <outputTimeStepInterval>, not both",__FILE__, __LINE__);
   }
@@ -326,7 +333,8 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
     //__________________________________
     //  bullet proofing: must save p.x 
     //  in addition to other particle variables "p.*"
-    if (saveItem.labelName == m_particlePositionName || saveItem.labelName == "p.xx") {
+    if (saveItem.labelName == m_particlePositionName ||
+	saveItem.labelName == "p.xx") {
       m_saveP_x = true;
     }
 
@@ -405,8 +413,11 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
     }
   }
 
-  // Can't use both checkpointInterval and checkpointTimeStepInterval.
-  if (m_checkpointInterval > 0.0 && m_checkpointTimeStepInterval > 0) {
+  // Can't use both checkpointInterval and checkpointTimeStepInterval and
+  // checkpointWallTimeInterval.
+  if (((int) (m_checkpointInterval > 0.0) +
+       (int) (m_checkpointTimeStepInterval > 0) +
+       (int) (m_checkpointWallTimeInterval > 0)) > 2) {
     throw ProblemSetupException("Use <checkpoint interval=...> or <checkpoint timestepInterval=...>, not both",
                                 __FILE__, __LINE__);
   }
@@ -443,17 +454,26 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
               << m_checkpointWallTimeInterval << " wall clock seconds,"
               << " starting after " << m_checkpointWallTimeStart << " seconds.\n";
   }
-  
+
 #ifdef HAVE_VISIT
   static bool initialized = false;
 
   // Running with VisIt so add in the variables that the user can
   // modify.
   if( m_application->getVisIt() && !initialized ) {
-    m_application->getDebugStreams().push_back( &dbg  );
-#ifdef HAVE_PIDX
-    m_application->getDebugStreams().push_back( &dbgPIDX );
-#endif
+
+    ApplicationInterface::interactiveVar var;
+    var.component  = "DataArchiver";
+    var.name       = "outputDoubleAsFloat";
+    var.type       = Uintah::TypeDescription::bool_type;
+    var.value      = (void *) &m_outputDoubleAsFloat;
+    var.range[0]   = 0;
+    var.range[1]   = 1;
+    var.modifiable = true;
+    var.recompile  = false;
+    var.modified   = false;
+    m_application->getUPSVars().push_back( var );
+
     initialized = true;
   }
 #endif
@@ -1414,7 +1434,8 @@ DataArchiver::findNext_OutputCheckPointTimeStep( const bool restart,
     }
     // Checkpoint based on the wall time.
     else if( m_checkpointWallTimeInterval > 0 ) {
-      m_nextCheckpointWallTime = m_elapsedWallTime + m_checkpointWallTimeInterval;
+      m_nextCheckpointWallTime =
+        ceil( m_elapsedWallTime / m_checkpointWallTimeInterval ) * m_checkpointWallTimeInterval;
     }
   }
   
@@ -1804,6 +1825,8 @@ DataArchiver::writeto_xml_files( const GridP& grid )
         metaElem->appendElement("nBits", (int)sizeof(unsigned long) * 8 );
         metaElem->appendElement("numProcs", d_myworld->nRanks());
 
+        string grid_path = baseDirs[i]->getName() + "/" + tname.str() + "/";
+
         // TimeStep information
         ProblemSpecP timeElem = rootElem->appendChild("Time");
         timeElem->appendElement("timestepNumber", dir_timestep);
@@ -1821,13 +1844,13 @@ DataArchiver::writeto_xml_files( const GridP& grid )
 
 #if XML_TEXTWRITER
 
-        writeGridTextWriter( hasGlobals, grim_path, grid );
+        writeGridTextWriter( hasGlobals, grid_path, grid );
 #else
         // Original version:
         writeGridOriginal( hasGlobals, grid, rootElem );
 
         // Binary Grid version:
-        // writeGridBinary( hasGlobals, grim_path, grid );
+        // writeGridBinary( hasGlobals, grid_path, grid );
 #endif
         // Add the <Materials> section to the timestep.xml
         GeometryPieceFactory::resetGeometryPiecesOutput();
@@ -1928,7 +1951,7 @@ DataArchiver::writeto_xml_files( std::map< std::string,
                                  std::string> > &modifiedVars )
 {
 #ifdef HAVE_VISIT
-//   if( isProc0_macro && m_sharedState->getVisIt() && modifiedVars.size() )
+  if( isProc0_macro && m_application->getVisIt() && modifiedVars.size() )
   {
     dbg << "  writeto_xml_files() begin\n";
 
@@ -1980,7 +2003,7 @@ DataArchiver::writeto_xml_files( std::map< std::string,
 }
 
 void
-DataArchiver::writeGridBinary( const bool hasGlobals, const string & grim_path, const GridP & grid )
+DataArchiver::writeGridBinary( const bool hasGlobals, const string & grid_path, const GridP & grid )
 {
   // Originally the <Grid> was saved in XML.  While this makes it very
   // human readable, for large runs (10K+ patches), the (original)
@@ -2016,7 +2039,7 @@ DataArchiver::writeGridBinary( const bool hasGlobals, const string & grim_path, 
   FILE * fp;
   int marker = DataArchive::GRID_MAGIC_NUMBER;
 
-  string grim_filename = grim_path + "grid.xml";
+  string grim_filename = grid_path + "grid.xml";
 
   fp = fopen( grim_filename.c_str(), "wb" );
   fwrite( &marker, sizeof(int), 1, fp );
@@ -2120,7 +2143,7 @@ DataArchiver::writeGridBinary( const bool hasGlobals, const string & grim_path, 
 
   fclose( fp );
 
-  writeDataTextWriter( hasGlobals, grim_path, grid, procOnLevel );
+  writeDataTextWriter( hasGlobals, grid_path, grid, procOnLevel );
 
 } // end writeGridBinary()
 
@@ -2244,7 +2267,7 @@ DataArchiver::writeGridOriginal( const bool hasGlobals, const GridP & grid, Prob
 
 
 void
-DataArchiver::writeGridTextWriter( const bool hasGlobals, const string & grim_path, const GridP & grid )
+DataArchiver::writeGridTextWriter( const bool hasGlobals, const string & grid_path, const GridP & grid )
 {
   // With AMR, we're not guaranteed that a proc do work on a given
   // level.  Quick check to see that, so we don't create a node that
@@ -2256,7 +2279,7 @@ DataArchiver::writeGridTextWriter( const bool hasGlobals, const string & grim_pa
   // grid.xml and data.xml files using libxml2's TextWriter which is a
   // streaming output format which doesn't use a DOM tree.
 
-  string name_grid = grim_path + "grid.xml";
+  string name_grid = grid_path + "grid.xml";
 
   xmlTextWriterPtr writer_grid;
   /* Create a new XmlWriter for uri, with no compression. */
@@ -2377,7 +2400,7 @@ DataArchiver::writeGridTextWriter( const bool hasGlobals, const string & grim_pa
   xmlTextWriterEndDocument( writer_grid ); // Writes output to the timestep.xml file
   xmlFreeTextWriter( writer_grid );
 
-  writeDataTextWriter( hasGlobals, grim_path, grid, procOnLevel );
+  writeDataTextWriter( hasGlobals, grid_path, grid, procOnLevel );
 
 } // end writeGridTextWriter()
 
@@ -2712,7 +2735,7 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
   // double-check to make sure only called once per level
   //  int levelid = type != CHECKPOINT_REDUCTION ? getLevel( patches )->getIndex() : -1;      put back in when finished debugging
   
-  if (type == OUTPUT) {
+  if( type == OUTPUT ) {
     ASSERT( m_outputCalled[ levelid ] == false );
     m_outputCalled[ levelid ] = true;
   }
@@ -2720,7 +2743,7 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
     ASSERT( m_checkpointCalled[ levelid ] == false );
     m_checkpointCalled[ levelid ] = true;
   }
-  else /* if (type == CHECKPOINT_REDUCTION) */ {
+  else { // type == CHECKPOINT_REDUCTION
     ASSERT( m_checkpointReductionCalled == false );
     m_checkpointReductionCalled = true;
   }
@@ -3245,7 +3268,7 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
     string type_name = "float64";
     int    the_size  = sizeof( double );
 
-    // std::cout << "type for " <<  label->getName() << "is: " << subtype->getType() << std::endl;
+    std::cout << "type for " <<  label->getName() << " is: " << subtype->getType() << std::endl;
 
     switch( subtype->getType( )) {
 
@@ -3377,9 +3400,25 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
             // allocate memory for the grid variables
             arraySize = varSubType_size * patchExts.totalCells_EC;
 
+            cout << "varSubType_size: " << varSubType_size << ", totalCells: " << patchExts.totalCells_EC << "\n";
+
             patch_buffer[vcm][p] = (unsigned char*)malloc( arraySize );
             memset( patch_buffer[vcm][p], 0, arraySize );
 
+
+#if 0
+          IntVector extra_cells = patch->getExtraCells();
+          cout << Uintah::Parallel::getMPIRank() << ": level: " << level->getIndex() << ", patchoffset: " << patchOffset[0] << ", " << patchOffset[1] << ", " << patchOffset[2]
+               << ", patchsize: " << patchSize[0] << ", " << patchSize[1] << ", " << patchSize[2] << ", patch #: " << patch->getID()
+               << ", level size: " << level_size[0] << " - " << level_size[1] << " - " << level_size[2] << "\n";
+
+          cout << Uintah::Parallel::getMPIRank() << ": lo: " << lo.x() << ", " << lo.y() << ", " << lo.z() << ", extracells: "
+               << extra_cells[0] << ", " << extra_cells[1] << ", " << extra_cells[2] << "\n";
+          cout << "double as float: " << pidx.isOutputDoubleAsFloat() << "\n";
+#endif
+
+          cout << "array size is: "  << arraySize << "\n";
+          
             new_dw->emitPIDX( pidx, label, matlIndex, patch, patch_buffer[vcm][p], arraySize );
           }
 
@@ -3405,7 +3444,7 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
           patchOffset[1] = patchOffset[1] - lo.y() - extra_cells[1];
           patchOffset[2] = patchOffset[2] - lo.z() - extra_cells[2];
 
-#if 0
+#if 1
           cout << Uintah::Parallel::getMPIRank() << ": level: " << level->getIndex() << ", patchoffset: " << patchOffset[0] << ", " << patchOffset[1] << ", " << patchOffset[2]
                << ", patchsize: " << patchSize[0] << ", " << patchSize[1] << ", " << patchSize[2] << ", patch #: " << patch->getID()
                << ", level size: " << level_size[0] << " - " << level_size[1] << " - " << level_size[2] << "\n";
@@ -3484,9 +3523,9 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
 
 #endif
 
-//cout << "   totalBytesSaved: " << totalBytesSaved << " nSavedItems: " << nSaveItems << "\n";
-return totalBytesSaved;
-}
+  //cout << "   totalBytesSaved: " << totalBytesSaved << " nSavedItems: " << nSaveItems << "\n";
+  return totalBytesSaved;
+} // end saveLabels_PIDX();
 
 //______________________________________________________________________
 //  Return a vector of saveItems with a common typeDescription
@@ -3533,10 +3572,9 @@ DataArchiver::isVarTypeSupported( const std::vector< SaveItem >            & sav
     }
     
     // throw exception if this type isn't supported
-    if( found == false){
+    if( found == false ){
       ostringstream warn;
-      warn << "DataArchiver::saveLabels_PIDX:: ("<< label->getName() << ",  " 
-           << myType->getName() << " ) has not been implemented";
+      warn << "DataArchiver::saveLabels_PIDX:: ( " << label->getName() << ",  " << myType->getName() << " ) has not been implemented";
       throw InternalError(warn.str(), __FILE__, __LINE__);
     }
   }
@@ -4060,7 +4098,10 @@ DataArchiver::setOutputInterval( double newinv )
   {
     m_outputInterval = newinv;
     m_outputTimeStepInterval = 0;
+
+    // Reset the output so force one to happen.
     m_nextOutputTime = 0.0;
+    m_nextOutputTimeStep = 0;
   }
 }
 
@@ -4071,9 +4112,12 @@ DataArchiver::setOutputTimeStepInterval( int newinv )
 {
   if (m_outputTimeStepInterval != newinv)
   {
-    m_outputTimeStepInterval = newinv;
     m_outputInterval = 0;
+    m_outputTimeStepInterval = newinv;
+
+    // Reset the output so force one to happen.
     m_nextOutputTime = 0.0;
+    m_nextOutputTimeStep = 0;
   }
 }
 
@@ -4086,7 +4130,12 @@ DataArchiver::setCheckpointInterval( double newinv )
   {
     m_checkpointInterval = newinv;
     m_checkpointTimeStepInterval = 0;
+    m_checkpointWallTimeInterval = 0;
+
+    // Reset the check point so force one to happen.
     m_nextCheckpointTime = 0.0;
+    m_nextCheckpointTimeStep = 0.0;
+    m_nextCheckpointWallTime = 0.0;
 
     // If needed create checkpoints/index.xml
     if( !m_checkpointsDir.exists() )
@@ -4109,9 +4158,44 @@ DataArchiver::setCheckpointTimeStepInterval( int newinv )
 {
   if (m_checkpointTimeStepInterval != newinv)
   {
-    m_checkpointTimeStepInterval = newinv;
     m_checkpointInterval = 0;
+    m_checkpointTimeStepInterval = newinv;
+    m_checkpointWallTimeInterval = 0;
+
+    // Reset the check point so force one to happen.
     m_nextCheckpointTime = 0.0;
+    m_nextCheckpointTimeStep = 0.0;
+    m_nextCheckpointWallTime = 0.0;
+
+    // If needed create checkpoints/index.xml
+    if( !m_checkpointsDir.exists())
+    {
+      if( d_myworld->myRank() == 0) {
+        m_checkpointsDir = m_dir.createSubdir("checkpoints");
+        createIndexXML(m_checkpointsDir);
+      }
+    }
+
+    // Sync up before every rank can use the checkpoints dir
+    Uintah::MPI::Barrier(d_myworld->getComm());
+  }
+}
+
+//__________________________________
+// Allow the component to set the checkpoint wall time interval
+void
+DataArchiver::setCheckpointWallTimeInterval( int newinv )
+{
+  if (m_checkpointWallTimeInterval != newinv)
+  {
+    m_checkpointInterval = 0;
+    m_checkpointTimeStepInterval = 0;
+    m_checkpointWallTimeInterval = newinv;
+
+    // Reset the check point so force one to happen.
+    m_nextCheckpointTime = 0.0;
+    m_nextCheckpointTimeStep = 0.0;
+    m_nextCheckpointWallTime = 0.0;
 
     // If needed create checkpoints/index.xml
     if( !m_checkpointsDir.exists())
@@ -4287,7 +4371,7 @@ DataArchiver::checkpointTimeStep( const GridP& grid,
 }
 
 //______________________________________________________________________
-// Called by In-situ VisIt to dump a checkpoint.
+// Called to set the elapsed wall time
 //
 void
 DataArchiver::setElapsedWallTime( double val )
@@ -4297,6 +4381,15 @@ DataArchiver::setElapsedWallTime( double val )
   Uintah::MPI::Bcast( &val, 1, MPI_DOUBLE, 0, d_myworld->getComm() );
   
   m_elapsedWallTime = val;
+};
+
+//______________________________________________________________________
+// Called to set the elapsed wall time
+//
+void
+DataArchiver::setCheckpointCycle( int val )
+{
+  m_checkpointCycle = val;
 };
 
 //______________________________________________________________________

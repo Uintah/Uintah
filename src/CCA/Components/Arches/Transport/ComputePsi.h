@@ -118,9 +118,13 @@ private:
     typedef typename ArchesCore::VariableHelper<T>::XFaceType XFaceT;
     typedef typename ArchesCore::VariableHelper<T>::YFaceType YFaceT;
     typedef typename ArchesCore::VariableHelper<T>::ZFaceType ZFaceT;
-    typedef typename ArchesCore::VariableHelper<T>::ConstXFaceType ConstXFaceT;
-    typedef typename ArchesCore::VariableHelper<T>::ConstYFaceType ConstYFaceT;
-    typedef typename ArchesCore::VariableHelper<T>::ConstZFaceType ConstZFaceT;
+    typedef typename ArchesCore::VariableHelper<CT>::XFaceType ConstXFaceT;
+    typedef typename ArchesCore::VariableHelper<CT>::YFaceType ConstYFaceT;
+    typedef typename ArchesCore::VariableHelper<CT>::ZFaceType ConstZFaceT;
+
+    //typedef typename ArchesCore::VariableHelper<T>::ConstXFaceType ConstXFaceT;
+    //typedef typename ArchesCore::VariableHelper<T>::ConstYFaceType ConstYFaceT;
+    //typedef typename ArchesCore::VariableHelper<T>::ConstZFaceType ConstZFaceT;
 
     template<typename CPhiT, typename PsiT, typename VelT>
     struct PsiHelper{
@@ -255,6 +259,13 @@ private:
     m_u_vel_name = var_map.uvel_name;
     m_v_vel_name = var_map.vvel_name;
     m_w_vel_name = var_map.wvel_name;
+
+    if ( db->findBlock("velocity") ){
+      // can overide the global velocity space with this:
+      db->findBlock("velocity")->getAttribute("xlabel",m_u_vel_name);
+      db->findBlock("velocity")->getAttribute("ylabel",m_v_vel_name);
+      db->findBlock("velocity")->getAttribute("zlabel",m_w_vel_name);
+    }
 
   }
 

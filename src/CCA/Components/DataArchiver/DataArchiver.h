@@ -30,15 +30,15 @@
 
 #include <CCA/Components/Schedulers/RuntimeStatsEnum.h>
 
-#include <Core/Parallel/MasterLock.h>
-#include <Core/Parallel/UintahParallelComponent.h>
+#include <Core/Containers/ConsecutiveRangeSet.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/MaterialSetP.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/SimulationStateP.h>
-#include <Core/Util/Assert.h>
 #include <Core/OS/Dir.h>
-#include <Core/Containers/ConsecutiveRangeSet.h>
+#include <Core/Parallel/MasterLock.h>
+#include <Core/Parallel/UintahParallelComponent.h>
+#include <Core/Util/Assert.h>
 
 namespace Uintah {
 
@@ -188,11 +188,10 @@ class LoadBalancer;
 
     //! Get the time the next output will occur
     virtual double getNextOutputTime() const { return m_nextOutputTime; }
-
     //! Get the time step the next output will occur
     virtual int  getNextOutputTimeStep() const { return m_nextOutputTimeStep; }
     // Pushes output back by one time step.
-    virtual void postponeNextOutputTimeStep() { m_nextOutputTimeStep++; }
+    virtual void postponeNextOutputTimeStep() { ++m_nextOutputTimeStep; }
 
     //! Get the time/time step/wall time of the next checkpoint will occur
     virtual double getNextCheckpointTime()     const { return m_nextCheckpointTime; }
@@ -222,6 +221,7 @@ class LoadBalancer;
     void   setCheckpointTimeStepInterval( int inv );
     int    getCheckpointTimeStepInterval() const { return m_checkpointTimeStepInterval; }
 
+    void   setCheckpointWallTimeInterval( int inv );
     int    getCheckpointWallTimeInterval() const { return m_checkpointWallTimeInterval; }
 
     bool   savingAsPIDX() const { return ( m_outputFileFormat == PIDX ); } 
@@ -245,6 +245,9 @@ class LoadBalancer;
     
     void   setElapsedWallTime( double val );
     double getElapsedWallTime() const { return m_elapsedWallTime; };
+     
+    void   setCheckpointCycle( int val );
+    double getCheckpointCycle() const { return m_checkpointCycle; };
      
     void setUseLocalFileSystems(bool val) { m_useLocalFileSystems = val; };
     bool getUseLocalFileSystems() const { return m_useLocalFileSystems; };
@@ -313,12 +316,12 @@ class LoadBalancer;
     void writeGridOriginal(   const bool hasGlobals, const GridP & grid, ProblemSpecP rootElem );
 
     // Writes out the <Grid> and <Data> sections (respectively) to separate files (that are associated with timestep.xml) using a XML streamer.
-    void writeGridTextWriter( const bool hasGlobals, const std::string & grim_path, const GridP & grid );
+    void writeGridTextWriter( const bool hasGlobals, const std::string & grid_path, const GridP & grid );
     void writeDataTextWriter( const bool hasGlobals, const std::string & data_path, const GridP & grid,
                               const std::vector< std::vector<bool> > & procOnLevel );
 
     // Writes out the <Grid> section (associated with timestep.xml) to a separate binary file.
-    void writeGridBinary(     const bool hasGlobals, const std::string & grim_path, const GridP & grid );
+    void writeGridBinary(     const bool hasGlobals, const std::string & grid_path, const GridP & grid );
 
     //__________________________________
     //! returns a ProblemSpecP reading the xml file xmlName.

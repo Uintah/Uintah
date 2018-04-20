@@ -39,17 +39,19 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/UintahMPI.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Util/DebugStream.h>
+#include <Core/Util/DOUT.hpp>
+#include <Core/Util/Environment.h>
 
 #include <sci_defs/visit_defs.h>
 
 #include <VisIt/uda2vis/uda2vis.h>
 
+#include <fstream>
 #include <dlfcn.h>
 
 #define ALL_LEVELS 99
 
-static Uintah::DebugStream visitdbg( "VisItLibSim", true );
+namespace Uintah {
 
 static std::string simFileName( "Uintah" );
 static std::string simExecName;
@@ -57,7 +59,7 @@ static std::string simArgs;
 static std::string simComment("Uintah Simulation");
 static std::string simUI("uintah.ui");
 
-namespace Uintah {
+Dout visitdbg("VisItLibSim", "VisIt", "VisIt in situ debug stream", true);
 
 //---------------------------------------------------------------------
 // ProcessLibSimArguments
@@ -130,7 +132,7 @@ void visit_InitLibSim( visit_simulation_data *sim )
   // initializing.
   sim->simMode = VISIT_SIMMODE_RUNNING;
 
-  sim->useExtraCells = true;
+  sim->loadExtraElements = CELLS;
   sim->forceMeshReload = true;
   sim->mesh_for_patch_data = "";
 
@@ -156,26 +158,18 @@ void visit_InitLibSim( visit_simulation_data *sim )
   
   if( Parallel::usingMPI() )
   {
-    int par_rank, par_size;
-
-    // Initialize MPI
-    Uintah::MPI::Comm_rank( MPI_COMM_WORLD, &par_rank );
-    Uintah::MPI::Comm_size( MPI_COMM_WORLD, &par_size );
-    
     // Tell libsim if the simulation is running in parallel.
-    VisItSetParallel( par_size > 1 );
-    VisItSetParallelRank( par_rank );
+    VisItSetParallel( sim->myworld->nRanks() > 1 );
+    VisItSetParallelRank( sim->myworld->myRank() );
 
     // Install callback functions for global communication.
     VisItSetBroadcastIntFunction( visit_BroadcastIntCallback );
     VisItSetBroadcastStringFunction( visit_BroadcastStringCallback );
 
-    sim->rank = par_rank;
     sim->isProc0 = isProc0_macro;
   }
   else
   {
-    sim->rank = 0;
     sim->isProc0 = true;
   }
 
@@ -229,6 +223,203 @@ void visit_InitLibSim( visit_simulation_data *sim )
                                         exeCommand.c_str(),
                                         nullptr, simUI.c_str(), nullptr);
   }
+
+  // Add in the machine layout details if present for this machine.
+  sim->hostName.clear();
+  sim->hostNode.clear();
+  sim->switchNodeList.clear();
+  
+  sim->nodeStart.clear();
+  sim->nodeStop.clear();
+  sim->nodeCores.clear();
+  sim->nodeMemory.clear();
+
+  sim->maxCores = 0;
+  sim->maxNodes = 0;
+  sim->xNode = 0;
+  sim->yNode = 0;
+
+  sim->switchIndex = -1;
+  sim->nodeIndex = -1;
+
+  // Possible machine file names.
+  const unsigned int nMachines = 1;
+  std::string hostNames[ nMachines ] = { "ash" };
+  unsigned int hostNodes[ nMachines ] = { 3 }; // Number of digits expected.
+
+  // Check for a machine layout file for this processor and that it is
+  // a compute node (opposed to a head node). Compute nodes will have
+  // three digits whereas a head will be have one digit.
+  for( unsigned int i=0; i<nMachines; ++i )
+  {
+    if( sim->myworld->myProcName().find( hostNames[i] ) == 0 )
+    {
+      sim->hostName = hostNames[i];
+
+      // Remove the hostname leaving only the node number.
+      std::string nodeStr =
+        sim->myworld->myProcName().substr(sim->hostName.size());
+    
+      // Nodes with three digits are compute nodes.
+      // Compute node (i.e. node001) vs head node (i.e. node1)
+      if( nodeStr.size() == hostNodes[i] )
+      {
+        sim->hostNode = nodeStr;
+
+	break;
+      }
+    }
+  }
+
+  // A machine layout file should exist for this machine.
+  if( sim->hostName.size() && sim->hostNode.size() )
+  {
+    // The machine layout files are in the  in-situ source dir
+    std::string path = std::string( sci_getenv("SCIRUN_OBJDIR") ) +
+      std::string("/../src/VisIt/libsim/");
+
+    std::ifstream infile(path + sim->hostName + "_layout.txt");
+
+    if( infile.is_open() )
+    {
+      // Read the text file line by line.
+      std::string line;
+      while (std::getline(infile, line))
+      {
+        // std::cerr << "Reading  " << line << std::endl;
+
+	// Skip empty lines
+	if( line.empty() )
+	{
+	}
+	// This is part of the node table.
+        else if( line.find("Nodes") == 0 )
+        {
+          // Get the node details (number of cores and memory).
+          std::string tmpNode, tmpTo, tmpCores, tmpMemory, tmpGB;
+          unsigned int start, stop, cores, memory;
+
+	  std::istringstream iss(line);
+
+          if (!(iss >> tmpNode >> start >> tmpTo >> stop >> tmpCores >> cores >> tmpMemory >> memory >> tmpGB))
+            break; // error
+
+          sim->nodeStart.push_back( start );
+          sim->nodeStop.push_back( stop );
+          sim->nodeCores.push_back( cores );
+          sim->nodeMemory.push_back( memory );
+
+	  // Get the maximum number of cores.
+	  if( sim->maxCores < cores )
+	    sim->maxCores = cores;
+        }
+	// Skip these lines that are part of the call to ibnetdiscover
+        else if( line.find("--") == 0 ||
+		 line.find("devid") == 0 ||
+		 line.find("sysimgguid") == 0 ||
+		 line.find("switchguid") == 0 ||
+		 line.find("switchguid") == 0 )
+        {
+        }
+        else if(line.find("Switch") == 0 )
+        {
+          // Found a new switch so start a new node group.
+          std::vector< unsigned int > nodes;
+          
+          sim->switchNodeList.push_back( nodes );
+          
+          // std::cerr << std::endl << "Switch " << sim->switchNodeList.size()-1 << " nodes: ";
+        }
+        // A switch connection
+        else if( line.find("[") == 0 )
+        {
+          // Find the hostname which will be quoted.
+          size_t found = line.find( "\"" + sim->hostName );
+          
+          if( found != std::string::npos )
+          {
+            // Remove the hostname leaving only the node number.
+            std::string nodeStr = line.substr(found + sim->hostName.size()+1);
+            found = nodeStr.find(" ");
+            nodeStr = nodeStr.substr(0, found);
+
+            // Nodes with three digits are compute nodes.
+            // Compute node node001 vs head node node1
+            if( nodeStr.size() == sim->hostNode.size() )
+            {
+              std::istringstream iss(nodeStr);
+              unsigned int node;
+
+              iss >> node;
+
+              // Add this node to the list.
+              sim->switchNodeList.back().push_back( node );
+
+              // std::cerr << node << "  ";
+
+	      // Get the maximum number of nodes on a switch.
+	      if( sim->maxNodes < sim->switchNodeList.back().size() )
+		sim->maxNodes = sim->switchNodeList.back().size();
+
+	      // Get the switch and node index for this processor.
+	      if( nodeStr == sim->hostNode )
+	      {
+		sim->switchIndex = sim->switchNodeList.size()-1;
+		sim->nodeIndex = sim->switchNodeList.back().size()-1;
+	      }
+            }
+          }
+        }
+        else
+        {
+          std::stringstream msg;
+          msg << "Visit libsim - "
+            << "Uintah machine parse error \"" << line << "\"  ";
+          
+          VisItUI_setValueS("SIMULATION_MESSAGE_WARNING", msg.str().c_str(), 1);
+        }
+      }
+      
+      // std::cerr << std::endl;
+      
+      // std::cerr << sim->myworld->myProcName() << "  "
+      //        << sim->myworld->myNode_myRank() << "  "
+      //        << node << "  "
+      //        << sim->switchIndex << "  "
+      //        << sim->nodeIndex << "  " << std::endl;
+
+      infile.close();
+
+
+      // Get the greatest common demoninator so to have multiple columns.
+      unsigned int gcd = 2;
+      
+      if( sim->nodeCores.size() == 1 )
+      {
+	gcd = int(ceil( sqrt(sim->nodeCores.size()) ) / 2.0) * 2;
+      }
+      else
+      {
+	for( unsigned int i=2; i<sim->maxCores; ++i )
+	{
+	  unsigned int cc = 0;
+	  
+	  for( unsigned int j=0; j<sim->nodeCores.size(); ++j )
+          {
+	    if( sim->nodeCores[j] % i == 0 )
+	      ++cc;
+	  }
+	  
+	  if( cc == sim->nodeCores.size() )
+	    gcd = i;
+	}
+      }
+  
+      // Size of a node based on the number of cores and GCD.
+      sim->xNode = gcd;
+      sim->yNode = sim->maxCores / gcd;
+    }
+  }
 }
 
 
@@ -257,8 +448,7 @@ void visit_EndLibSim( visit_simulation_data *sim )
       msg << "Visit libsim - "
           << "The simulation has finished, stopping at the last time step.";
       
-      visitdbg << msg.str().c_str() << std::endl;
-      visitdbg.flush();
+      DOUT( visitdbg, msg.str().c_str() );
       
       VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
     }
@@ -298,8 +488,8 @@ bool visit_CheckState( visit_simulation_data *sim )
             << "timestep " << sim->cycle << ",  "
             << "Time = "   << sim->time;
         
-//      visitdbg << msg.str().c_str() << std::endl;
-//      visitdbg.flush();
+	// DOUT( visitdbg, msg.str().c_str() );
+	
         VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
       }
 
@@ -345,26 +535,26 @@ bool visit_CheckState( visit_simulation_data *sim )
 
       if( blocking )
       {
-	// If blocking the run mode is not running so the simulation
-	// will not be running so change the state to allow
-	// asyncronious commands like saving a timestep or a
-	// checkpoint to happen.
-	if( sim->simMode != VISIT_SIMMODE_FINISHED )
+        // If blocking the run mode is not running so the simulation
+        // will not be running so change the state to allow
+        // asyncronious commands like saving a timestep or a
+        // checkpoint to happen.
+        if( sim->simMode != VISIT_SIMMODE_FINISHED )
         {
-	  sim->simMode = VISIT_SIMMODE_STOPPED;
-	  
-	  if(sim->isProc0)
+          sim->simMode = VISIT_SIMMODE_STOPPED;
+          
+          if(sim->isProc0)
           {
-	    VisItUI_setValueS("SIMULATION_MODE", "Stopped", 1);
+            VisItUI_setValueS("SIMULATION_MODE", "Stopped", 1);
               
-	    std::stringstream msg;
-	    msg << "Visit libsim - Stopped the simulation at "
-		<< "timestep " << sim->cycle << ",  "
-		<< "Time = " << sim->time;
+            std::stringstream msg;
+            msg << "Visit libsim - Stopped the simulation at "
+                << "timestep " << sim->cycle << ",  "
+                << "Time = " << sim->time;
             
-	    visitdbg << msg.str().c_str() << std::endl;
-	    visitdbg.flush();
-	    VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
+	    DOUT( visitdbg, msg.str().c_str() );
+ 
+            VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
           }
         }
       }
@@ -386,8 +576,8 @@ bool visit_CheckState( visit_simulation_data *sim )
       msg << "Visit libsim - CheckState cannot recover from error ("
           << visitstate << ") !!";
           
-      visitdbg << msg.str().c_str() << std::endl;
-      visitdbg.flush();
+      DOUT( visitdbg, msg.str().c_str() );
+
       VisItUI_setValueS("SIMULATION_MESSAGE_ERROR", msg.str().c_str(), 1);
 
       err = 1;
@@ -405,8 +595,8 @@ bool visit_CheckState( visit_simulation_data *sim )
           std::stringstream msg;          
           msg << "Visit libsim - No input, continuing the simulation.";
 
-          // visitdbg << msg.str().c_str() << std::endl;
-          // visitdbg.flush();
+	  // DOUT( visitdbg, msg.str().c_str() );
+
           VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
         }
       }
@@ -426,8 +616,8 @@ bool visit_CheckState( visit_simulation_data *sim )
         std::stringstream msg;
         msg << "Visit libsim - Can not connect.";
 
-        // visitdbg << msg.str().c_str() << std::endl;
-        // visitdbg.flush();
+	// DOUT( visitdbg, msg.str().c_str() );
+
         VisItUI_setValueS("SIMULATION_MESSAGE_ERROR", msg.str().c_str(), 1);
       }
     }
@@ -435,13 +625,13 @@ bool visit_CheckState( visit_simulation_data *sim )
     {
       if( !visit_ProcessVisItCommand(sim) )
       {
-	if(sim->isProc0)
-	{
-	  VisItUI_setValueS("SIMULATION_MESSAGE_CLEAR", "NoOp", 1);
-	  VisItUI_setValueS("STRIP_CHART_CLEAR_ALL",    "NoOp", 1);
+        if(sim->isProc0)
+        {
+          VisItUI_setValueS("SIMULATION_MESSAGE_CLEAR", "NoOp", 1);
+          VisItUI_setValueS("STRIP_CHART_CLEAR_ALL",    "NoOp", 1);
 
           VisItUI_setValueS("SIMULATION_MODE", "Unknown", 1);
-	}
+        }
 
         /* Start running again if VisIt closes. */
         sim->runMode = VISIT_SIMMODE_RUNNING;
@@ -461,9 +651,9 @@ bool visit_CheckState( visit_simulation_data *sim )
 
           std::stringstream msg;          
           msg << "Visit libsim - Continuing the simulation for one time step";
-	  
-          // visitdbg << msg.str().c_str() << std::endl;
-          // visitdbg.flush();
+          
+	  // DOUT( visitdbg, msg.str().c_str() );
+
           VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
         }
 
@@ -485,8 +675,8 @@ bool visit_CheckState( visit_simulation_data *sim )
           std::stringstream msg;          
           msg << "Visit libsim - Finished the simulation ";
 
-          // visitdbg << msg.str().c_str() << std::endl;
-          // visitdbg.flush();
+	  // DOUT( visitdbg, msg.str().c_str() );
+
           VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
           VisItUI_setValueS("SIMULATION_MESSAGE", " ", 1);
         }
@@ -507,12 +697,12 @@ bool visit_CheckState( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_UpdateSimData( visit_simulation_data *sim, 
                           GridP currentGrid,
-			  double time,  unsigned int cycle,
-			  double delt, double delt_next,
-			  bool first, bool last )
+                          double time,  unsigned int cycle,
+                          double delt, double delt_next,
+                          bool first, bool last )
 {
-  ApplicationInterface* appInterface =
-    sim->simController->getApplicationInterface();
+  // ApplicationInterface* appInterface =
+  //   sim->simController->getApplicationInterface();
 
   // Update all of the simulation grid and time dependent variables.
   sim->gridP     = currentGrid;
@@ -536,8 +726,7 @@ void visit_UpdateSimData( visit_simulation_data *sim,
       msg << "Visit libsim - "
           << "The simulation has finished, stopping at the last time step.";
       
-      visitdbg << msg.str().c_str() << std::endl;
-      visitdbg.flush();
+      DOUT( visitdbg, msg.str().c_str() );
       
       VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
     }
@@ -554,7 +743,7 @@ void visit_Initialize( visit_simulation_data *sim )
       
   if( Parallel::usingMPI() )
   {
-    msg << "Visit libsim - Processor " << sim->rank << " connected";
+    msg << "Visit libsim - Processor " << sim->myworld->myRank() << " connected";
   }
   else
   {
@@ -566,13 +755,12 @@ void visit_Initialize( visit_simulation_data *sim )
     VisItUI_setValueS("SIMULATION_MESSAGE_CLEAR", "NoOp", 1);
     VisItUI_setValueS("STRIP_CHART_CLEAR_ALL",    "NoOp", 1);
     
-    // visitdbg << msg.str().c_str() << std::endl;
-    // visitdbg.flush();
+    // DOUT( visitdbg, msg.str().c_str() );
+
     VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);    
     VisItUI_setValueS("SIMULATION_MODE", "Connected", 1);
   }
   
-
   if( Parallel::usingMPI() )
     VisItSetSlaveProcessCallback(visit_SlaveProcessCallback);
 
@@ -587,14 +775,17 @@ void visit_Initialize( visit_simulation_data *sim )
 
   /* Register data access callbacks */
   VisItSetGetMetaData(visit_SimGetMetaData, (void*) sim);
-
-  VisItSetGetMesh(visit_SimGetMesh, (void*) sim);
-
+  VisItSetGetMesh(    visit_SimGetMesh,     (void*) sim);
   VisItSetGetVariable(visit_SimGetVariable, (void*) sim);
+
+  /* Register AMR data access callbacks */
+  VisItSetGetDomainBoundaries(visit_SimGetDomainBoundaries, (void*) sim);
+  VisItSetGetDomainNesting   (visit_SimGetDomainNesting,    (void*) sim);
 
   if( Parallel::usingMPI() )
     VisItSetGetDomainList(visit_SimGetDomainList, (void*) sim);
 
+  
   VisItUI_textChanged("MaxTimeStep", visit_MaxTimeStepCallback, (void*) sim);
   VisItUI_textChanged("MaxTime",     visit_MaxTimeCallback,     (void*) sim);
   VisItUI_valueChanged("EndOnMaxTime",
@@ -632,8 +823,8 @@ void visit_Initialize( visit_simulation_data *sim )
   VisItUI_cellChanged("DoutTable",
                       visit_DoutCallback,  (void*) sim);
 
-  VisItUI_valueChanged("LoadExtraCells",
-                       visit_LoadExtraCellsCallback, (void*) sim);        
+  VisItUI_valueChanged("LoadExtraElements",
+                       visit_LoadExtraElementsCallback, (void*) sim);        
 }
   
 } // End namespace Uintah

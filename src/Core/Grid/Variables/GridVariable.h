@@ -170,6 +170,8 @@ WARNING
   
       // read the Array3 variable into tmpStream
       std::ostringstream tmpStream;
+
+      std::cout << "About to call emit normal: " << l << " --- " << h << "\n";
       emitNormal( tmpStream, l, h, dummy, outputDoubleAsFloat );
 
       // Create a string from the ostringstream
@@ -184,6 +186,8 @@ WARNING
         memcpy( pidx_buffer, writebuffer, uda_bufferSize );
       }
       else {
+        std::cout << "uda_bufferSize: " << uda_bufferSize << ", pidx_bufferSize: " << pidx_bufferSize << "\n";
+
         throw InternalError("ERROR: Variable::emitPIDX() error reading in buffer", __FILE__, __LINE__);
       }
     }

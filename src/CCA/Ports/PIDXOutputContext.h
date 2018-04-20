@@ -163,7 +163,7 @@ class PIDXOutputContext {
                                PIDX_point  & newBox );
 
     void initialize( const std::string  & filename,
-                           unsigned int   timeStep,
+                     const unsigned int   timeStep,
                            MPI_Comm       comm,
                            PIDX_flags     flags,
                      const PatchSubset  * patches,

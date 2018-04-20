@@ -51,7 +51,7 @@ FOWYDevol::FOWYDevol( std::string modelName,
 {
   pi = acos(-1.0);
 
-  std::string v_inf_name = ParticleTools::append_env( "v_inf", qn );
+  std::string v_inf_name = ArchesCore::append_env( "v_inf", qn );
   _v_inf_label = VarLabel::create( v_inf_name, CCVariable<double>::getTypeDescription() );
   _rawcoal_birth_label = nullptr;
 
@@ -85,9 +85,9 @@ FOWYDevol::problemSetup(const ProblemSpecP& params, int qn)
     }
 
   // create raw coal mass var label and get scaling constant
-  std::string rcmass_root = ParticleTools::parse_for_role_to_label(db, "raw_coal");
-  std::string rcmass_name = ParticleTools::append_env( rcmass_root, d_quadNode );
-  std::string rcmassqn_name = ParticleTools::append_qn_env( rcmass_root, d_quadNode );
+  std::string rcmass_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_RAWCOAL);
+  std::string rcmass_name = ArchesCore::append_env( rcmass_root, d_quadNode );
+  std::string rcmassqn_name = ArchesCore::append_qn_env( rcmass_root, d_quadNode );
   _rcmass_varlabel = VarLabel::find(rcmass_name);
   _rcmass_weighted_scaled_varlabel = VarLabel::find(rcmassqn_name);
 
@@ -102,27 +102,27 @@ FOWYDevol::problemSetup(const ProblemSpecP& params, int qn)
 
   //RAW COAL get the birth term if any:
   const std::string rawcoal_birth_name = rcmass_eqn.get_model_by_type( "BirthDeath" );
-  std::string rawcoal_birth_qn_name = ParticleTools::append_qn_env(rawcoal_birth_name, d_quadNode);
+  std::string rawcoal_birth_qn_name = ArchesCore::append_qn_env(rawcoal_birth_name, d_quadNode);
   if ( rawcoal_birth_name != "NULLSTRING" ){
     _rawcoal_birth_label = VarLabel::find( rawcoal_birth_qn_name );
   }
 
   // create char mass var label
-  std::string char_root = ParticleTools::parse_for_role_to_label(db, "char");
-  std::string char_name = ParticleTools::append_env( char_root, d_quadNode );
+  std::string char_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_CHAR);
+  std::string char_name = ArchesCore::append_env( char_root, d_quadNode );
   _char_varlabel = VarLabel::find(char_name);
-  std::string char_weighted_scaled_name = ParticleTools::append_qn_env( char_root, d_quadNode );
+  std::string char_weighted_scaled_name = ArchesCore::append_qn_env( char_root, d_quadNode );
   _charmass_weighted_scaled_varlabel = VarLabel::find(char_weighted_scaled_name);
 
   // check for char mass and get scaling constant
-  std::string charqn_name = ParticleTools::append_qn_env( char_root, d_quadNode );
+  std::string charqn_name = ArchesCore::append_qn_env( char_root, d_quadNode );
 
   std::string char_ic_RHS = charqn_name+"_RHS";
   _char_RHS_source_varlabel = VarLabel::find(char_ic_RHS);
 
   // create particle temperature label
-  std::string temperature_root = ParticleTools::parse_for_role_to_label(db, "temperature");
-  std::string temperature_name = ParticleTools::append_env( temperature_root, d_quadNode );
+  std::string temperature_root = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_TEMPERATURE);
+  std::string temperature_name = ArchesCore::append_env( temperature_root, d_quadNode );
   _particle_temperature_varlabel = VarLabel::find(temperature_name);
 
   // Look for required scalars
@@ -180,36 +180,13 @@ FOWYDevol::problemSetup(const ProblemSpecP& params, int qn)
   }
 
   // get weight scaling constant
-  std::string weightqn_name = ParticleTools::append_qn_env("w", d_quadNode);
-  std::string weight_name = ParticleTools::append_env("w", d_quadNode);
+  std::string weightqn_name = ArchesCore::append_qn_env("w", d_quadNode);
+  std::string weight_name = ArchesCore::append_env("w", d_quadNode);
   _weight_varlabel = VarLabel::find(weight_name);
   EqnBase& temp_weight_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(weightqn_name);
   DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(temp_weight_eqn);
   _weight_small = weight_eqn.getSmallClipPlusTol();
   _weight_scaling_constant = weight_eqn.getScalingConstant(d_quadNode);
-
-#ifdef HAVE_VISIT
-  static bool initialized = false;
-
-  // Running with VisIt so add in the variables that the user can
-  // modify.
-//  if( d_sharedState->getVisIt() && !initialized ) {
-    // variable 1 - Must start with the component name and have NO
-    // spaces in the var name.
-//     SimulationState::interactiveVar var;
-//     var.name     = "Arches-Devol-Ultimate-Yield";
-//     var.type     = Uintah::TypeDescription::double_type;
-//     var.value    = (void *) &( _v_hiT);
-//     var.range[0]   = -1.0e9;
-//     var.range[1]   = +1.0e9;
-//     var.modifiable = true;
-//     var.recompile  = false;
-//     var.modified   = false;
-//     d_sharedState->d_UPSVars.push_back( var );
-
-  //   initialized = true;
-  // }
-#endif
 }
 
 //---------------------------------------------------------------------------
@@ -227,6 +204,32 @@ FOWYDevol::sched_initVars( const LevelP& level, SchedulerP& sched )
   tsk->computes(_v_inf_label);
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
+
+#ifdef HAVE_VISIT
+  static bool initialized = false;
+
+  // Running with VisIt so add in the variables that the user can
+  // modify.
+  ApplicationInterface* m_application = sched->getApplication();
+  
+  if( m_application && m_application->getVisIt() && !initialized ) {
+    // variable 1 - Must start with the component name and have NO
+    // spaces in the var name.
+    ApplicationInterface::interactiveVar var;
+    var.component  = "Arches";
+    var.name       = "Devol-Ultimate-Yield";
+    var.type       = Uintah::TypeDescription::double_type;
+    var.value      = (void *) &( _v_hiT);
+    var.range[0]   = -1.0e9;
+    var.range[1]   = +1.0e9;
+    var.modifiable = true;
+    var.recompile  = false;
+    var.modified   = false;
+    m_application->getUPSVars().push_back( var );
+
+    initialized = true;
+  }
+#endif
 }
 
 //-------------------------------------------------------------------------
@@ -234,10 +237,10 @@ FOWYDevol::sched_initVars( const LevelP& level, SchedulerP& sched )
 //-------------------------------------------------------------------------
 void
 FOWYDevol::initVars( const ProcessorGroup * pc,
-                              const PatchSubset    * patches,
-                              const MaterialSubset * matls,
-                              DataWarehouse        * old_dw,
-                              DataWarehouse        * new_dw )
+                     const PatchSubset    * patches,
+                     const MaterialSubset * matls,
+                     DataWarehouse        * old_dw,
+                     DataWarehouse        * new_dw )
 {
   //patch loop
   for (int p=0; p < patches->size(); p++){

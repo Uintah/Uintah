@@ -34,6 +34,8 @@ C***********************************************************************
      &EH2O,TGF,SIG,xxx,yyy,zzz,xxxx,yyyy,zzzz,small,QSRC,M,scatcoef, 
      &phfunc
 
+      double precision C0, C2
+
       double precision AEM(3)
       double precision AEK(3)
 
@@ -43,6 +45,8 @@ C***********************************************************************
 
 
 C
+        C0 = 5.5046 
+        C2 = .014388        
 
         pi = dacos(-1.0D0)
 
@@ -215,9 +219,17 @@ C     I commented out this last part for now until we have
 C     Scattering capabilities implemented in RMCRT.  ILH
                   FV = SFV(I,J,K)
 C                     pressure in atm
-       ABSKG(I,J,K) = PRESSURE*ABSKG(I,J,K) + MIN( 25.0d0,((4.0d0/OPL) 
-     1                 * DLOG(1.0d0 + 350.0d0*FV*TG(I,J,K)*OPL)) ) 
 
+
+
+
+C       ABSKG(I,J,K) = PRESSURE*ABSKG(I,J,K) + MIN( 25.0d0,((4.0d0/OPL) 
+C     1                 * DLOG(1.0d0 + 350.0d0*FV*TG(I,J,K)*OPL)) ) 
+
+
+CCCCCCC DOL: Dalzell Model: See Modest Radiative Heat Transfer 3rd Edition p 424-425
+       ABSKG(I,J,K) = PRESSURE*ABSKG(I,J,K) + 3.72*FV*C0/C2*TG(I,J,K)
+CCCCCCC DOL
 
 c     Anisotropic scattering properties for the interior nodes
 c     (for spherical harmonics only)

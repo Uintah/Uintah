@@ -99,8 +99,7 @@ using std::vector;
 using std::string;
 
 extern Dout g_ray_dbg;
-Dout dbg_BC_ray("RAY_BC", false);
-
+extern Dout g_ray_BC;
 
 //---------------------------------------------------------------------------
 // Class: Constructor.
@@ -173,10 +172,10 @@ Ray::~Ray()
 // Method: Problem setup (access to input file information)
 //---------------------------------------------------------------------------
 void
-Ray::problemSetup( const ProblemSpecP& prob_spec,
-                   const ProblemSpecP& rmcrtps,
-                   const GridP& grid,
-                   SimulationStateP&   sharedState)
+Ray::problemSetup( const ProblemSpecP     & prob_spec
+                 , const ProblemSpecP     & rmcrtps
+                 , const GridP            & grid
+                 )
 {
 
   ProblemSpecP rmcrt_ps = rmcrtps;
@@ -374,45 +373,6 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   #endif
 #endif
   proc0cout << "__________________________________ " << endl;
-  //______________________________________________________________________
-  //
-// #ifdef HAVE_VISIT
-//   static bool initialized = false;
-
-//   // Running with VisIt so add in the variables that the user can
-//   // modify.
-//   if( m_sharedState->getVisIt() && !initialized ) {
-//     // variable 1 - Must start with the component name and have NO
-//     // spaces in the var name
-//     SimulationState::interactiveVar var;
-//     var.name     = "Ray-nDivQRays";
-//     var.type     = Uintah::TypeDescription::int_type;
-//     var.value    = (void *) &d_nDivQRays;
-//     var.range[0]   = 1;
-//     var.range[1]   = 100;
-//     var.modifiable = true;
-//     var.recompile  = false;
-//     var.modified   = false;
-//     m_sharedState->d_UPSVars.push_back( var );
-
-//     // variable 2 - Must start with the component name and have NO
-//     // spaces in the var name
-//     var.name     = "Ray-nFluxRays";
-//     var.type     = Uintah::TypeDescription::int_type;
-//     var.value    = (void *) &d_nFluxRays;
-//     var.range[0]   = 1;
-//     var.range[1]   = 100;
-//     var.modifiable = true;
-//     var.recompile  = false;
-//     var.modified   = false;
-//     m_sharedState->d_UPSVars.push_back( var );
-    
-//     m_sharedState->d_douts.push_back( &g_ray_dbg );
-//     m_sharedState->d_douts.push_back( &dbg_BC_ray );
-
-//     initialized = true;
-//   }
-// #endif
 }
 
 
@@ -467,12 +427,13 @@ Ray::BC_bulletproofing( const ProblemSpecP& rmcrtps )
 // by the radiometerPatchSet.
 //---------------------------------------------------------------------------
 void
-Ray::sched_rayTrace( const LevelP& level,
-                     SchedulerP& sched,
-                     Task::WhichDW notUsed,
-                     Task::WhichDW sigma_dw,
-                     Task::WhichDW celltype_dw,
-                     bool modifies_divQ )
+Ray::sched_rayTrace( const LevelP        & level
+                   ,       SchedulerP    & sched
+                   ,       Task::WhichDW   notUsed
+                   ,       Task::WhichDW   sigma_dw
+                   ,       Task::WhichDW   celltype_dw
+                   ,       bool            modifies_divQ
+                   )
 {
   string taskname = "Ray::rayTrace";
   Task *tsk = nullptr;
@@ -1152,15 +1113,16 @@ struct rayTrace_solveDivQFunctor {
 //---------------------------------------------------------------------------
 template< class T >
 void
-Ray::rayTrace( const ProcessorGroup* pg,
-               const PatchSubset* patches,
-               const MaterialSubset* matls,
-               DataWarehouse* old_dw,
-               DataWarehouse* new_dw,
-               bool modifies_divQ,
-               Task::WhichDW which_abskg_dw,
-               Task::WhichDW which_sigmaT4_dw,
-               Task::WhichDW which_celltype_dw )
+Ray::rayTrace( const ProcessorGroup * pg
+             , const PatchSubset    * patches
+             , const MaterialSubset * matls
+             ,       DataWarehouse  * old_dw
+             ,       DataWarehouse  * new_dw
+             ,       bool             modifies_divQ
+             ,       Task::WhichDW    which_abskg_dw
+             ,       Task::WhichDW    which_sigmaT4_dw
+             ,       Task::WhichDW    which_celltype_dw
+             )
 {
   const Level* level = getLevel(patches);
 
@@ -1321,7 +1283,7 @@ Ray::rayTrace( const ProcessorGroup* pg,
                                                                                               );
 
       // This parallel_reduce replaces the cellIterator loop used to solve DivQ
-      Uintah::parallel_reduce( range, functor, size );
+      Uintah::parallel_reduce_sum( range, functor, size );
 
     }  // end of if(_solveDivQ)
 
@@ -1352,12 +1314,13 @@ Ray::rayTrace( const ProcessorGroup* pg,
 // Ray tracing using the multilevel data onion scheme
 //---------------------------------------------------------------------------
 void
-Ray::sched_rayTrace_dataOnion( const LevelP& level,
-                               SchedulerP& sched,
-                               Task::WhichDW notUsed,
-                               Task::WhichDW sigma_dw,
-                               Task::WhichDW celltype_dw,
-                               bool modifies_divQ )
+Ray::sched_rayTrace_dataOnion( const LevelP        & level
+                             ,       SchedulerP    & sched
+                             ,       Task::WhichDW   notUsed
+                             ,       Task::WhichDW   sigma_dw
+                             ,       Task::WhichDW   celltype_dw
+                             ,       bool            modifies_divQ
+                             )
 {
 
   int maxLevels = level->getGrid()->numLevels() - 1;
@@ -2033,15 +1996,16 @@ struct rayTrace_dataOnion_solveDivQFunctor {
 //---------------------------------------------------------------------------
 template< class T>
 void
-Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
-                         const PatchSubset* finePatches,
-                         const MaterialSubset* matls,
-                         DataWarehouse* old_dw,
-                         DataWarehouse* new_dw,
-                         bool modifies_divQ,
-                         Task::WhichDW notUsed,
-                         Task::WhichDW which_sigmaT4_dw,
-                         Task::WhichDW which_celltype_dw )
+Ray::rayTrace_dataOnion( const ProcessorGroup * pg
+                       , const PatchSubset    * finePatches
+                       , const MaterialSubset * matls
+                       ,       DataWarehouse  * old_dw
+                       ,       DataWarehouse  * new_dw
+                       ,       bool             modifies_divQ
+                       ,       Task::WhichDW    notUsed
+                       ,       Task::WhichDW    which_sigmaT4_dw
+                       ,       Task::WhichDW    which_celltype_dw
+                       )
 {
 
   const Level* fineLevel = getLevel(finePatches);
@@ -2273,7 +2237,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
                                                                                                                      );
 
       // This parallel_reduce replaces the cellIterator loop used to solve DivQ
-      Uintah::parallel_reduce( range, functor, nRaySteps );
+      Uintah::parallel_reduce_sum( range, functor, nRaySteps );
 
     }  // end of if(_solveDivQ)
 
@@ -2304,15 +2268,16 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
 //______________________________________________________________________
 //
 void
-Ray::computeExtents(LevelP level_0,
-                    const Level* fineLevel,
-                    const Patch* patch,
-                    const int maxLevels,
-                    DataWarehouse* new_dw,
-                    IntVector& fineLevel_ROI_Lo,
-                    IntVector& fineLevel_ROI_Hi,
-                    vector<IntVector>& regionLo,
-                    vector<IntVector>& regionHi)
+Ray::computeExtents(       LevelP              level_0
+                   , const Level             * fineLevel
+                   , const Patch             * patch
+                   , const int                 maxLevels
+                   ,       DataWarehouse     * new_dw
+                   ,       IntVector         & fineLevel_ROI_Lo
+                   ,       IntVector         & fineLevel_ROI_Hi
+                   ,       vector<IntVector> & regionLo
+                   ,       vector<IntVector> & regionHi
+                   )
 {
   //__________________________________
   //   fine level region of interest ROI
@@ -2388,9 +2353,10 @@ Ray::computeExtents(LevelP level_0,
 //______________________________________________________________________
 //
 bool
-Ray::has_a_boundary( const IntVector      & c,       
-                     constCCVariable<int> & celltype, 
-                     vector<int>     & boundaryFaces)
+Ray::has_a_boundary( const IntVector            & c
+                   ,       constCCVariable<int> & celltype
+                   ,       vector<int>          & boundaryFaces
+                   )
 {
 
   IntVector adjacentCell = c;
@@ -2447,10 +2413,11 @@ Ray::has_a_boundary( const IntVector      & c,
 
 //______________________________________________________________________
 inline bool
-Ray::containsCell(const IntVector &low,
-                  const IntVector &high,
-                  const IntVector &cell,
-                  const int &dir)
+Ray::containsCell( const IntVector & low
+                 , const IntVector & high
+                 , const IntVector & cell
+                 , const int       & dir
+                 )
 {
   return  low[dir] <= cell[dir] &&
           high[dir] > cell[dir];
@@ -2461,10 +2428,11 @@ Ray::containsCell(const IntVector &low,
 //   Set the the boundary conditions for sigmaT4 & abskg.
 //---------------------------------------------------------------------------
 void
-Ray::sched_setBoundaryConditions( const LevelP& level,
-                                  SchedulerP& sched,
-                                  Task::WhichDW temp_dw,
-                                  const bool backoutTemp )
+Ray::sched_setBoundaryConditions( const LevelP        & level
+                                ,       SchedulerP    & sched
+                                ,       Task::WhichDW   temp_dw
+                                , const bool            backoutTemp
+                                )
 {
 
   string taskname = "Ray::setBoundaryConditions";
@@ -2487,18 +2455,60 @@ Ray::sched_setBoundaryConditions( const LevelP& level,
   tsk->modifies( d_abskgLabel );
 
   sched->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT );
+
+  // ______________________________________________________________________
+  
+#ifdef HAVE_VISIT
+  static bool initialized = false;
+
+  // Running with VisIt so add in the variables that the user can
+  // modify.
+  ApplicationInterface* m_application = sched->getApplication();
+  
+  if( m_application && m_application->getVisIt() && !initialized ) {
+    // variable 1 - Must start with the component name and have NO
+    // spaces in the var name
+    ApplicationInterface::interactiveVar var;
+    var.component  = "RMCRT-Ray";
+    var.name       = "nDivQRays";
+    var.type       = Uintah::TypeDescription::int_type;
+    var.value      = (void *) &d_nDivQRays;
+    var.range[0]   = 1;
+    var.range[1]   = 100;
+    var.modifiable = true;
+    var.recompile  = false;
+    var.modified   = false;
+    m_application->getUPSVars().push_back( var );
+
+    // variable 2 - Must start with the component name and have NO
+    // spaces in the var name
+    var.component  = "RMCRT-Ray";
+    var.name       = "nFluxRays";
+    var.type       = Uintah::TypeDescription::int_type;
+    var.value      = (void *) &d_nFluxRays;
+    var.range[0]   = 1;
+    var.range[1]   = 100;
+    var.modifiable = true;
+    var.recompile  = false;
+    var.modified   = false;
+    m_application->getUPSVars().push_back( var );
+
+    initialized = true;
+  }
+#endif
 }
 
 
 //---------------------------------------------------------------------------
 template<class T>
-void Ray::setBoundaryConditions( const ProcessorGroup*,
-                                 const PatchSubset* patches,
-                                 const MaterialSubset*,
-                                 DataWarehouse*,
-                                 DataWarehouse* new_dw,
-                                 Task::WhichDW temp_dw,
-                                 const bool backoutTemp )
+void Ray::setBoundaryConditions( const ProcessorGroup *
+                               , const PatchSubset    * patches
+                               , const MaterialSubset *
+                               ,       DataWarehouse  *
+                               ,       DataWarehouse  * new_dw
+                               ,       Task::WhichDW    temp_dw
+                               , const bool             backoutTemp
+                               )
 {
   if ( d_onOff_SetBCs == false ) {
     return;
@@ -2582,18 +2592,19 @@ void Ray::setBoundaryConditions( const ProcessorGroup*,
 //  fake it out.
 //______________________________________________________________________
 template<class T, class V>
-void Ray::setBC(CCVariable< T >& Q_CC,
-                const string& desc,
-                const Patch* patch,
-                const int mat_id)
+void Ray::setBC(       CCVariable< T > & Q_CC
+               , const string          & desc
+               , const Patch           * patch
+               , const int               mat_id
+               )
 {
   if(patch->hasBoundaryFaces() == false || d_onOff_SetBCs == false){
     return;
   }
 
-  if( dbg_BC_ray.active() ){
+  if( g_ray_BC.active() ){
     const Level* level = patch->getLevel();
-    DOUT( dbg_BC_ray, "setBC \t"<< desc <<" "
+    DOUT( g_ray_BC, "setBC \t"<< desc <<" "
            << " mat_id = " << mat_id <<  ", Patch: "<< patch->getID() << " L-" <<level->getIndex() );
   }
 
@@ -2641,9 +2652,9 @@ void Ray::setBC(CCVariable< T >& Q_CC,
 
         //__________________________________
         //  debugging
-        if( dbg_BC_ray.active() ) {
+        if( g_ray_BC.active() ) {
           bound_ptr.reset();
-          DOUT( dbg_BC_ray, "Face: "<< patch->getFaceName(face) <<" numCellsTouched " << nCells
+          DOUT( g_ray_BC, "Face: "<< patch->getFaceName(face) <<" numCellsTouched " << nCells
              <<"\t child " << child  <<" NumChildren "<<numChildren
              <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
              <<"\t bound limits = "<< bound_ptr );
@@ -2651,8 +2662,8 @@ void Ray::setBC(CCVariable< T >& Q_CC,
       }  // if iterator found
     }  // child loop
 
-    if( dbg_BC_ray.active() ){
-      DOUT( dbg_BC_ray, "    "<< patch->getFaceName(face) << " \t " << bc_kind << " numChildren: " << numChildren
+    if( g_ray_BC.active() ){
+      DOUT( g_ray_BC, "    "<< patch->getFaceName(face) << " \t " << bc_kind << " numChildren: " << numChildren
              << " nCellsTouched: " << nCells );
     }
     //__________________________________
@@ -2675,9 +2686,10 @@ void Ray::setBC(CCVariable< T >& Q_CC,
 
 //______________________________________________________________________
 //
-void Ray::sched_Refine_Q( SchedulerP& sched,
-                          const PatchSet* patches,
-                          const MaterialSet* matls )
+void Ray::sched_Refine_Q(       SchedulerP  & sched
+                        , const PatchSet    * patches
+                        , const MaterialSet * matls
+                        )
 {
   const Level* fineLevel = getLevel(patches);
   int L_indx = fineLevel->getIndex();
@@ -2709,11 +2721,12 @@ void Ray::sched_Refine_Q( SchedulerP& sched,
 
 //______________________________________________________________________
 //
-void Ray::refine_Q( const ProcessorGroup*,
-                    const PatchSubset* patches,
-                    const MaterialSubset* matls,
-                    DataWarehouse* old_dw,
-                    DataWarehouse* new_dw )
+void Ray::refine_Q( const ProcessorGroup *
+                  , const PatchSubset    * patches
+                  , const MaterialSubset * matls
+                  ,       DataWarehouse  * old_dw
+                  ,       DataWarehouse  * new_dw
+                  )
 {
 
   const Level* fineLevel = getLevel(patches);
@@ -2787,8 +2800,9 @@ void Ray::refine_Q( const ProcessorGroup*,
 
 //______________________________________________________________________
 // This task computes the extents of the fine level region of interest
-void Ray::sched_ROI_Extents ( const LevelP& level,
-                              SchedulerP& scheduler )
+void Ray::sched_ROI_Extents ( const LevelP     & level
+                            ,       SchedulerP & scheduler
+                            )
 {
   int maxLevels = level->getGrid()->numLevels() -1;
   int L_indx = level->getIndex();
@@ -2822,11 +2836,12 @@ void Ray::sched_ROI_Extents ( const LevelP& level,
 //______________________________________________________________________
 //
 template< class T >
-void Ray::ROI_Extents ( const ProcessorGroup*,
-                        const PatchSubset* patches,
-                        const MaterialSubset* matls,
-                        DataWarehouse* old_dw,
-                        DataWarehouse* new_dw)
+void Ray::ROI_Extents ( const ProcessorGroup *
+                      , const PatchSubset    * patches
+                      , const MaterialSubset * matls
+                      ,       DataWarehouse  * old_dw
+                      ,       DataWarehouse  * new_dw
+                      )
 {
   IntVector ROI_hi(-SHRT_MAX,-SHRT_MAX,-SHRT_MAX );
   IntVector ROI_lo(SHRT_MAX,  SHRT_MAX, SHRT_MAX);
@@ -2887,10 +2902,11 @@ void Ray::ROI_Extents ( const ProcessorGroup*,
 
 
 //______________________________________________________________________
-void Ray::sched_CoarsenAll( const LevelP& coarseLevel,
-                            SchedulerP& sched,
-                            const bool modifies_abskg,
-                            const bool modifies_sigmaT4)
+void Ray::sched_CoarsenAll( const LevelP     & coarseLevel
+                          ,       SchedulerP & sched
+                          , const bool         modifies_abskg
+                          , const bool         modifies_sigmaT4
+                          )
 {
   if(coarseLevel->hasFinerLevel()){
     printSchedule(coarseLevel,g_ray_dbg,"Ray::sched_CoarsenAll");
@@ -2905,11 +2921,12 @@ void Ray::sched_CoarsenAll( const LevelP& coarseLevel,
 
 
 //______________________________________________________________________
-void Ray::sched_Coarsen_Q ( const LevelP& coarseLevel,
-                            SchedulerP& sched,
-                            Task::WhichDW fineLevel_Q_dw,
-                            const bool modifies,
-                            const VarLabel* variable )
+void Ray::sched_Coarsen_Q ( const LevelP        & coarseLevel
+                          ,       SchedulerP    & sched
+                          ,       Task::WhichDW   fineLevel_Q_dw
+                          , const bool            modifies
+                          , const VarLabel      * variable
+                          )
 {
   string taskname = "        Coarsen_Q_" + variable->getName();
   printSchedule(coarseLevel,g_ray_dbg,taskname);
@@ -2944,14 +2961,15 @@ void Ray::sched_Coarsen_Q ( const LevelP& coarseLevel,
 //______________________________________________________________________
 //
 template < class T >
-void Ray::coarsen_Q ( const ProcessorGroup*,
-                      const PatchSubset* patches,
-                      const MaterialSubset* matls,
-                      DataWarehouse* old_dw,
-                      DataWarehouse* new_dw,
-                      const VarLabel* variable,
-                      const bool modifies,
-                      Task::WhichDW which_dw )
+void Ray::coarsen_Q ( const ProcessorGroup *
+                    , const PatchSubset    * patches
+                    , const MaterialSubset * matls
+                    ,       DataWarehouse  * old_dw
+                    ,       DataWarehouse  * new_dw
+                    , const VarLabel       * variable
+                    , const bool             modifies
+                    ,       Task::WhichDW    which_dw
+                    )
 {
   const Level* coarseLevel = getLevel(patches);
   const Level* fineLevel   = coarseLevel->getFinerLevel().get_rep();
@@ -3093,9 +3111,10 @@ void Ray::coarsen_Q ( const ProcessorGroup*,
 
 //______________________________________________________________________
 //
-void Ray::sched_computeCellType ( const LevelP& level,
-                                  SchedulerP& sched,
-                                  modifiesComputes which)
+void Ray::sched_computeCellType ( const LevelP           & level
+                                ,       SchedulerP       & sched
+                                ,       modifiesComputes   which
+                                )
 {
   string taskname = "Ray::computeCellType";
   Task* tsk = scinew Task( taskname, this, &Ray::computeCellType, which );
@@ -3114,12 +3133,13 @@ void Ray::sched_computeCellType ( const LevelP& level,
 
 //______________________________________________________________________
 //    Initialize cellType on the coarser Levels
-void Ray::computeCellType( const ProcessorGroup*,
-                           const PatchSubset* patches,
-                           const MaterialSubset* matls,
-                           DataWarehouse* old_dw,
-                           DataWarehouse* new_dw,
-                           const modifiesComputes which )
+void Ray::computeCellType( const ProcessorGroup   *
+                         , const PatchSubset      * patches
+                         , const MaterialSubset   * matls
+                         ,       DataWarehouse    * old_dw
+                         ,       DataWarehouse    * new_dw
+                         , const modifiesComputes   which
+                         )
 {
   const Level* coarseLevel = getLevel(patches);
   const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
@@ -3295,18 +3315,20 @@ template void Ray::setBC<int, int>(       CCVariable<int>&    Q_CC, const string
 template void Ray::setBC<double,double>(  CCVariable<double>& Q_CC, const string& desc, const Patch* patch, const int mat_id);
 template void Ray::setBC<float, double>(  CCVariable<float>&  Q_CC, const string& desc, const Patch* patch, const int mat_id);
 
-template void Ray::setBoundaryConditions< double >( const ProcessorGroup*,
-                                                    const PatchSubset* ,
-                                                    const MaterialSubset*,
-                                                    DataWarehouse*,
-                                                    DataWarehouse* ,
-                                                    Task::WhichDW ,
-                                                    const bool );
+template void Ray::setBoundaryConditions< double >( const ProcessorGroup *
+                                                  , const PatchSubset    *
+                                                  , const MaterialSubset *
+                                                  ,       DataWarehouse  *
+                                                  ,       DataWarehouse  *
+                                                  ,       Task::WhichDW
+                                                  , const bool
+                                                  );
 
-template void Ray::setBoundaryConditions< float >( const ProcessorGroup*,
-                                                   const PatchSubset* ,
-                                                   const MaterialSubset*,
-                                                   DataWarehouse*,
-                                                   DataWarehouse* ,
-                                                   Task::WhichDW ,
-                                                   const bool );
+template void Ray::setBoundaryConditions< float >( const ProcessorGroup *
+                                                 , const PatchSubset    *
+                                                 , const MaterialSubset *
+                                                 ,       DataWarehouse  *
+                                                 ,       DataWarehouse  *
+                                                 ,       Task::WhichDW
+                                                 , const bool
+                                                 );

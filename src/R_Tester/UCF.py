@@ -1,8 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from os import chdir,getcwd,mkdir,system,environ
 from sys import argv,exit,platform
-from helpers.runSusTests import runSusTests, inputs_root, ignorePerformanceTests, generatingGoldStandards
+from helpers.runSusTests import runSusTests, ignorePerformanceTests
 from helpers.modUPS import modUPS
 
 #______________________________________________________________________
@@ -64,7 +64,7 @@ def getTestList(me) :
     TESTS = ignorePerformanceTests( LOCALTESTS + NIGHTLYTESTS )
   else:
     
-    print "\nERROR:UCF.py  getTestList:  The test list (%s) does not exist!\n\n" % me
+    print("\nERROR:UCF.py  getTestList:  The test list (%s) does not exist!\n\n" % me)
     exit(1)
   return TESTS
 #__________________________________

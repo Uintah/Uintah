@@ -280,7 +280,7 @@ void FirstLawThermo::scheduleDoAnalysis(SchedulerP& sched,
   
   t0->requires( Task::OldDW, m_simulationTimeLabel );
   t0->requires( Task::OldDW, FL_lb->lastCompTimeLabel );
-  t0->requires( Task::OldDW, I_lb->delTLabel, level.get_rep() ); 
+  t0->requires( Task::OldDW, m_delTLabel, level.get_rep() ); 
   
   t0->requires( Task::NewDW, I_lb->rho_CCLabel,        ice_ss, gn );
   t0->requires( Task::NewDW, I_lb->temp_CCLabel,       ice_ss, gn );
@@ -344,7 +344,7 @@ void FirstLawThermo::compute_ICE_Contributions(const ProcessorGroup* pg,
   delt_vartype delT;
   
   old_dw->get(analysisTime, FL_lb->lastCompTimeLabel);
-  old_dw->get(delT, getDelTLabel(),level);
+  old_dw->get(delT, m_delTLabel, level);
   
   double lastCompTime = analysisTime;
   double nextCompTime = lastCompTime + 1.0/d_analysisFreq;  

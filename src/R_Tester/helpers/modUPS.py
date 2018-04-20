@@ -1,66 +1,79 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-from os import stat, system, mkdir, path, getcwd, chdir
+from os import system, mkdir, path, getcwd
 from sys import exit
 
-#pass the ups directory and filename, and a list of changes
+#______________________________________________________________________
+def bulletProofInputs(inputsDir, org_filename):
+  try:
+    path.exists(inputsDir)
+  except Exception:
+    print(" ERROR: modUPS: the inputs directory (%s) does not exist" % inputsDir)
+    exit(1)
+
+  try:
+    path.exists(org_filename)
+  except Exception:
+    print(" ERROR: modUPS: the orginal ups file (%s) does not exist" % org_filename)
+    exit(1)
+
+
+#______________________________________________________________________
+# Append a number to the end of the filename.  You need to return a unique filename
+# if the original ups file is modified more than once from multiple modUPS calls.
+def getUniqueFilename(org_filename, inputsDir):
+
+  #__________________________________
+  #  create inputsDir/tmp directory
+  tmpDir = "%s/tmp" % inputsDir
+  
+  if path.exists( tmpDir ) == False:
+    mkdir(tmpDir )
+
+  # copy org_file to tmpDir
+  command = "cp %s %s" % (org_filename, tmpDir)
+  system(command)
+
+  #__________________________________
+  # find unique file name
+  basename = path.basename(org_filename)
+  count = 1
+  mod_filename = "%s/%s.%d" % ( tmpDir, basename, count )
+
+  while path.exists(mod_filename):
+    count = count + 1
+    mod_filename     = "%s/%s.%d" % (tmpDir, basename, count) 
+    
+  #__________________________________
+  # move org_file to unique file name
+  command = "mv %s/%s %s" % (tmpDir, basename, mod_filename)
+  system(command)
+
+  return mod_filename
+
+#______________________________________________________________________
+# pass the ups directory and filename, and a list of changes
 # change will be the entire tag change, i.e.,
-# ["<patches> [2,2,2] </patches>",'<burn type = "null" />'] 
+# ["<patches> [2,2,2] </patches>",'<burn type = "null" />']
 # would be a list of changes
 
-def modUPS(directory, filename, changes):
-    realdir = path.normpath(path.join(getcwd(), directory))
-    
-    org_filename = "%s/%s" % (realdir, filename)
-    mod_filename  = "%s/tmp/%s" % (realdir, filename)
+def modUPS(inputsDir, filename, changes):
+
+    org_filename = "%s/%s" % (inputsDir, filename)
+
+
+    bulletProofInputs(inputsDir, org_filename)
+
+    mod_filename = getUniqueFilename(org_filename, inputsDir)
 
     #__________________________________
-    #  bulletproofing
-    # see if filename exists in directory and create tmp
-    try:
-      stat(realdir)
-    except Exception:
-      print "(%s) does not exist" % realdir
-      exit(1)
-  
-    try:
-      stat(org_filename)
-    except Exception:
-      print "(%s) does not exist" % org_filename
-      exit(1)
-    try:
-      stat("%s/tmp" % realdir)
-    except Exception:
-      mkdir("%s/tmp" % realdir)
-      
-    #__________________________________
-    # append numbers to the end of  filename.  You need to return a unique filename
-    # if a base ups file is modified more than once from multiple modUPS calls.
-    # go through loop until stat fails
-    append = 1
-    try:
-      while 1:
-        appendedFilename = "%s.%d" % (mod_filename,append)
-	stat(appendedFilename)
-	append = append + 1
-    except Exception:
-      mod_filename = "%s.%d" % (mod_filename, append)
-      filename = "%s.%d" % (filename, append)
-    
-    
-    #__________________________________
-    # copy filename to tmp
-    command = "cp %s %s" % (org_filename, mod_filename)
-    system(command)
-    
-    #__________________________________
-
+    #  Apply changes using sed
     for change in changes:
       addToScript = 1
       system("rm -f sedscript")
       sedreplacestring = ""
       sedscript = "s/"
-      
+
       for ch in change:
         if ch == '=' or ch == '>' or ch == ' ':
           addToScript = 0
@@ -70,91 +83,93 @@ def modUPS(directory, filename, changes):
           sedreplacestring = sedreplacestring + "\/"
         else:
           sedreplacestring = sedreplacestring + ch
-          
+
       sedscript = sedscript + ".*>/" + sedreplacestring + "/"
-      
+
       command   = "echo \'%s\' > sedscript" % sedscript
       system(command)
-      
+
       # be careful not all sed options (-i) are portable between OSs
       command = "sed -i.bak -f sedscript %s" % (mod_filename)
       system(command)
-      
+
       command = "rm -f %s.bak" % (mod_filename)
       system(command)
 
-    return "tmp/%s" % filename
-    
-    
-    
-    
+    #return the relative path to the inputsDir
+    relPath = path.relpath(mod_filename, inputsDir)
+
+    return relPath
+
+
 #______________________________________________________________________
-#  This script uses xmlstarlet to modify the ups file and is designed to 
-#  change the same xml tag that is in multiple locations.  Example:
+#  This script uses xmlstarlet to modify the ups file and is designed to
+#  change the same xml tag that is in multiple locations.  It will also delete xml tags.
 #
+#   usage:
+#   mod_ups = modUPS2( inputDirectory, <ups file>, [ (<operation>, "xmlpath : value" )]
 #
+#     where: operation is either "update" or  "delete"
+#
+#   Example:
 #   RMCRT_DO_perf_GPU_ups = modUPS2( the_dir, \
 #                               "RMCRT_DO_perf.ups", \
-#                               ["/Uintah_specification/Grid/Level/Box[@label=0]/resolution :[12,12,12]",
-#                                "/Uintah_specification/Grid/Level/Box[@label=1]/resolution :[24,24,24]",
-#                                "/Uintah_specification/Grid/Level/Box[@label=2]/resolution :[48,48,48]"
+#                               [( "update", "/Uintah_specification/Grid/Level/Box[@label=0]/resolution :[32,32,32]" ),
+#                                ( "update", "/Uintah_specification/Grid/Level/Box[@label=0]/patches    :[2,2,2]"    ),
+#                                ( "update", "/Uintah_specification/Grid/Level/Box[@label=1]/resolution :[64,64,64]" ),
+#                                ( "update", "/Uintah_specification/Grid/Level/Box[@label=1]/patches    :[4,4,4]"    ),
+#                                ( "update", "Uintah_specification/RMCRT/nDivQRays                      : 100"       )
 #                               ] )
-#  The depends on xmlstarlet.  
+#  This script depends on xmlstarlet.
 #  Use:
 #       xmlstarlet el -v <ups>
 #  to see the path to the xml node
 
-def modUPS2(directory, filename, changes):
-    realdir = path.normpath(path.join(getcwd(), directory))
-    
-    org_filename = "%s/%s" % (realdir, filename)
-    mod_filename  = "%s/tmp/%s" % (realdir, filename)
-    tmp_filename  = "%s/tmp/%s.tmp" % (realdir, filename)
+def modUPS2( inputsDir, filename, changes):
+
+    org_filename = "%s/%s" % (inputsDir, filename)
+    tmp_filename  = "%s/tmp/%s.tmp" % (inputsDir, filename)
+
+    bulletProofInputs(inputsDir, org_filename)
+
+    mod_filename = getUniqueFilename(org_filename, inputsDir)
 
     #__________________________________
     #  bulletproofing
-    # see if filename exists in directory and create tmp
     rc = system("which xmlstarlet > /dev/null 2>&1")
-    
-    if rc == 256:
-      print( "__________________________________")
-      print( "ERROR:modUPS.py " )
-      print( "      The command (xmlstarlet) was not found and the file %s was not modified" %filename )
-      print( "__________________________________")
-      return
-    
-    try:
-      stat(realdir)
-    except Exception:
-      print "(%s) does not exist" % realdir
-      exit(1)
-  
-    try:
-      stat(org_filename)
-    except Exception:
-      print "(%s) does not exist" % org_filename
-      exit(1)
-      
-    try:
-      stat("%s/tmp" % realdir)
-    except Exception:
-      mkdir("%s/tmp" % realdir)
 
-    #__________________________________
-    # copy filename to tmp/
-    command = "cp %s %s" % (org_filename, mod_filename)
-    system(command)
-    
+    if rc == 256:
+      print("__________________________________")
+      print("  ERROR:modUPS.py ")
+      print("      The command (xmlstarlet) was not found and the file %s was not modified" % filename)
+      print("__________________________________")
+      return
+
     #__________________________________
     #  Apply changes to ups file
     for change in changes:
-    
-      option = change.split(":")
-     
-      command = "xmlstarlet ed -u %s -v %s  %s > %s" % (option[0], option[1], mod_filename, tmp_filename )
+      operation = change[0].upper()
+
+      option = change[1].split(":")
+
+      if operation == "UPDATE":
+        command = "xmlstarlet edit --update %s --value %s  %s > %s" % (option[0], option[1], mod_filename, tmp_filename )
+
+      elif operation == "DELETE":
+        command = "xmlstarlet edit --delete %s %s > %s "% (option[0], mod_filename, tmp_filename )
+
+      else:
+        print("__________________________________")
+        print("  ERROR:modUPS.py ")
+        print("      The operation (%s) was not found and the file %s was not modified" % (operation, filename ))
+        print("__________________________________")
+        return
       system(command)
-      
+
       command = "mv %s %s" % (tmp_filename, mod_filename)
       system(command)
 
-    return "tmp/%s" % filename    
+    #return the relative path to the inputsDir
+    relPath = path.relpath(mod_filename, inputsDir)
+
+    return relPath

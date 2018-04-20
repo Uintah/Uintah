@@ -517,7 +517,7 @@ private:
   int              NGN;      // Number of ghost nodes     needed.
   double           d_initialDt;
   int              d_numIterations;
-  Vector           d_contact_dirs; // For rigid body contact
+  Vector           d_contact_dirs{}; // For rigid body contact
   std::string      d_con_type;
   double           d_stop_time;     // for rigid contact
   Vector           d_vel_after_stop;     // for rigid contact

@@ -26,7 +26,8 @@
 #ifndef Packages_Uintah_CCA_Components_Models_ZeroOrder_h
 #define Packages_Uintah_CCA_Components_Models_ZeroOrder_h
 
-#include <CCA/Ports/ModelInterface.h>
+#include <CCA/Components/Models/HEChem/HEChemModel.h>
+
 #include <Core/Grid/Variables/ComputeSet.h>
 
 namespace Uintah {
@@ -59,7 +60,7 @@ WARNING
 
 ****************************************/
 
-  class ZeroOrder : public ModelInterface {
+  class ZeroOrder : public HEChemModel {
   public:
     ZeroOrder(const ProcessorGroup* myworld,
 	      const SimulationStateP& sharedState,
@@ -84,21 +85,6 @@ WARNING
     virtual void scheduleComputeModelSources(SchedulerP&,
                                              const LevelP& level);        
                                              
-    virtual void scheduleModifyThermoTransportProperties(SchedulerP&,
-                                               const LevelP&,
-                                               const MaterialSet*);
-                                               
-   virtual void computeSpecificHeat(CCVariable<double>&,
-                                    const Patch*,
-                                    DataWarehouse*,
-                                    const int);
-                                    
-   virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
-                                      SchedulerP& sched);
-                                             
-   virtual void scheduleTestConservation(SchedulerP&,
-                                         const PatchSet* patches);
-
   private:    
     void computeModelSources(const ProcessorGroup*, 
                              const PatchSubset* patches,
@@ -137,9 +123,6 @@ WARNING
     double d_rho0;
     double d_threshold_pressure;
     double d_threshold_volFrac;
-
-    #define d_SMALL_NUM 1e-100
-    #define d_TINY_RHO 1e-12
   };
 }
 

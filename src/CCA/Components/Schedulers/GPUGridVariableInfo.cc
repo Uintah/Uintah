@@ -28,9 +28,11 @@
 #include <Core/Parallel/MasterLock.h>
 #include <Core/Util/DebugStream.h>
 
-extern DebugStream gpu_stats;
-
 extern Uintah::MasterLock cerrLock;
+
+namespace Uintah {
+  extern DebugStream gpu_stats;
+}
 
 using LabelPatchMatlLevelDW  = GpuUtilities::LabelPatchMatlLevelDw;
 using TupleVariableMap       = std::map<LabelPatchMatlLevelDW, DeviceGridVariableInfo>;

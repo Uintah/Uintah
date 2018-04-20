@@ -37,7 +37,7 @@
 
 using namespace Uintah;
 
-Dout dbg("RMCRT", false);
+Dout dbg("RMCRT", "Arches", "RMCRT debug stream", false);
 
 /*______________________________________________________________________
           TO DO:
@@ -172,13 +172,13 @@ RMCRT_Radiation::problemSetup( const ProblemSpecP& inputdb )
       db_model->getAttribute("type", modelName);
 
       if (modelName=="partRadProperties"){
-        bool doing_dqmom = ParticleTools::check_for_particle_method(db,ParticleTools::DQMOM);
-        bool doing_cqmom = ParticleTools::check_for_particle_method(db,ParticleTools::CQMOM);
+        bool doing_dqmom = ArchesCore::check_for_particle_method(db,ArchesCore::DQMOM_METHOD);
+        bool doing_cqmom = ArchesCore::check_for_particle_method(db,ArchesCore::CQMOM_METHOD);
 
         if ( doing_dqmom ){
-          _nQn_part = ParticleTools::get_num_env( db, ParticleTools::DQMOM );
+          _nQn_part = ArchesCore::get_num_env( db, ArchesCore::DQMOM_METHOD );
         } else if ( doing_cqmom ){
-          _nQn_part = ParticleTools::get_num_env( db, ParticleTools::CQMOM );
+          _nQn_part = ArchesCore::get_num_env( db, ArchesCore::CQMOM_METHOD );
         } else {
           throw ProblemSetupException("Error: This method only working for DQMOM/CQMOM.",__FILE__,__LINE__);
         }
@@ -260,7 +260,7 @@ RMCRT_Radiation::extraSetup( GridP& grid,
   // read in RMCRT problem spec
   ProblemSpecP rmcrt_ps = _ps->findBlock("RMCRT");
 
-  _RMCRT->problemSetup(_ps, rmcrt_ps, grid, _sharedState);
+  _RMCRT->problemSetup(_ps, rmcrt_ps, grid);
 
 //  _RMCRT->BC_bulletproofing( rmcrt_ps );
 
@@ -722,7 +722,6 @@ RMCRT_Radiation::sched_setBoundaryConditions( const LevelP& level,
                                               Task::WhichDW temp_dw,
                                               const bool backoutTemp /* = false */ )
 {
-
   std::string taskname = "RMCRT_radiation::setBoundaryConditions";
   Task* tsk = nullptr;
 

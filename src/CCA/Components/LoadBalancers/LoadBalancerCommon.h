@@ -35,6 +35,7 @@
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Util/DebugStream.h>
 #include <Core/Util/InfoMapper.h>
 
 #include <set>
@@ -122,7 +123,7 @@ public:
   //! Returns the MPI rank of the process on which the patch is to be executed.
   virtual int getPatchwiseProcessorAssignment( const Patch * patch );
 
-  //! The implementation in LoadBalancerCommon.cc is for dynamice load balancers.
+  //! The implementation in LoadBalancerCommon.cc is for dynamic load balancers.
   //! The Simple and SingleProcessor override this function with default implementations.
   virtual int getOldProcessorAssignment( const Patch * patch );
 
@@ -270,6 +271,10 @@ protected:
 
   ReductionInfoMapper< RuntimeStatsEnum, double > * d_runtimeStats{nullptr};
 
+  DebugStream stats;
+  DebugStream times;
+  DebugStream lbout;
+  
 private:
 
   // eliminate copy, assignment and move

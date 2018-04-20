@@ -25,14 +25,13 @@
 #ifndef UINTAH_GRID_BCData_H
 #define UINTAH_GRID_BCData_H
 
-#include <map>
+#include <Core/Grid/BoundaryConditions/BoundCondBase.h>
+#include <Core/Util/Handle.h>
+
 #include <string>
 #include <vector>
-#include <Core/Util/Handle.h>
-#include <Core/Grid/BoundaryConditions/BoundCondBase.h>
 
 namespace Uintah {
-
 
 /**************************************
 
@@ -106,8 +105,6 @@ WARNING
     // bc type and then the actual bc data, i.e. 
     // "Velocity", VelocityBoundCond
     std::vector<BoundCondBase*>  d_BCData;
-
-    
   };
 } // End namespace Uintah
 

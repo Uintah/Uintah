@@ -301,6 +301,8 @@ public:
   inline void write(std::ostream& out, const IntVector& l, const IntVector& h, bool /*outputDoubleAsFloat*/ )
   {
     // This could be optimized...
+    std::cout << "Array3::write(), size of type is " << sizeof(T) << "\n";
+
     ssize_t linesize = (ssize_t)(sizeof(T)*(h.x()-l.x()));
     for(int z=l.z();z<h.z();z++){
       for(int y=l.y();y<h.y();y++){

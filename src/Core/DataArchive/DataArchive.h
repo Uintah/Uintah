@@ -435,7 +435,10 @@ private:
 
   DataArchive( const DataArchive& );
   DataArchive& operator=( const DataArchive& );
-      
+
+  // There can be multiple DataArchives so must static.
+  static DebugStream dbg;
+
   //__________________________________
   //  PIDX related
   enum FileFormatType { UDA, PIDX, NOT_SPECIFIED };
@@ -498,9 +501,7 @@ private:
                           const int              levelIndex,
                           const int              index );
 
-  static DebugStream dbg;
-  static bool        d_types_initialized;
-     
+  static bool        d_types_initialized;     
 };
 
   //______________________________________________________________________

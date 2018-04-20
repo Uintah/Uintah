@@ -45,42 +45,24 @@ void PartVel::problemSetup(const ProblemSpecP& inputdb)
   ProblemSpecP db = inputdb;
   ProblemSpecP dqmom_db = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM");
 
-  _uname = ParticleTools::parse_for_role_to_label(db, "uvel");
-  _vname = ParticleTools::parse_for_role_to_label(db, "vvel");
-  _wname = ParticleTools::parse_for_role_to_label(db, "wvel");
+  _uname = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_XVEL);
+  _vname = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_YVEL);
+  _wname = ArchesCore::parse_for_particle_role_to_label(db, ArchesCore::P_ZVEL);
 
-  const int N = ParticleTools::get_num_env( db, ParticleTools::DQMOM );
+  const int N = ArchesCore::get_num_env( db, ArchesCore::DQMOM_METHOD );
   for ( int i = 0; i < N; i++ ){
 
     //x,y,z face velocities
-    std::string name = ParticleTools::append_env("face_pvel_x",i);
+    std::string name = ArchesCore::append_env("face_pvel_x",i);
     const VarLabel* label = VarLabel::create(name, SFCXVariable<double>::getTypeDescription() );
     _face_x_part_vel_labels[i] = label;
-    name = ParticleTools::append_env("face_pvel_y",i);
+    name = ArchesCore::append_env("face_pvel_y",i);
     label = VarLabel::create(name, SFCYVariable<double>::getTypeDescription() );
     _face_y_part_vel_labels[i] = label;
-    name = ParticleTools::append_env("face_pvel_z",i);
+    name = ArchesCore::append_env("face_pvel_z",i);
     label = VarLabel::create(name, SFCZVariable<double>::getTypeDescription() );
     _face_z_part_vel_labels[i] = label;
 
-  }
-
-  std::string which_dqmom;
-  dqmom_db->getAttribute( "type", which_dqmom );
-
-  ProblemSpecP vel_db = db->findBlock("VelModel");
-  if (vel_db) {
-
-    std::string model_type;
-    vel_db->getAttribute("type", model_type);
-
-    if(model_type == "Dragforce") {
-      d_drag = true;
-    } else {
-      throw InvalidValue( "Invalid type for Velocity Model must be Dragforce",__FILE__,__LINE__);
-    }
-  } else {
-    throw InvalidValue( "A <VelModel> section is missing from your input file!",__FILE__,__LINE__);
   }
 
 }
@@ -231,19 +213,19 @@ PartVel::schedComputePartVel( const LevelP& level, SchedulerP& sched, const int 
         tsk->modifies( _face_z_part_vel_labels[i]);
       }
 
-      std::string name = ParticleTools::append_env( _uname, i );
+      std::string name = ArchesCore::append_env( _uname, i );
       const VarLabel* ulabel = VarLabel::find(name);
       tsk->requires( which_dw, ulabel, ga, 1 );
 
-      name = ParticleTools::ParticleTools::append_env( _vname, i );
+      name = ArchesCore::append_env( _vname, i );
       const VarLabel* vlabel = VarLabel::find(name);
       tsk->requires( which_dw, vlabel, ga, 1 );
 
-      name = ParticleTools::append_env( _wname, i );
+      name = ArchesCore::append_env( _wname, i );
       const VarLabel* wlabel = VarLabel::find(name);
       tsk->requires( which_dw, wlabel, ga, 1 );
 
-      name = ParticleTools::append_qn_env( "w", i );
+      name = ArchesCore::append_qn_env( "w", i );
       const VarLabel* weightlabel = VarLabel::find(name);
       tsk->requires( which_dw, weightlabel, ga, 1);
 
@@ -293,22 +275,22 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
 
       //U
       std::string name;
-      name = ParticleTools::append_env( _uname, iqn );
+      name = ArchesCore::append_env( _uname, iqn );
       const VarLabel* ulabel = VarLabel::find(name);
       constCCVariable<double> cc_uvel;
       which_dw->get(cc_uvel, ulabel, matlIndex, patch, ga, 1);
       //V
-      name = ParticleTools::append_env( _vname, iqn );
+      name = ArchesCore::append_env( _vname, iqn );
       const VarLabel* vlabel = VarLabel::find(name);
       constCCVariable<double> cc_vvel;
       which_dw->get(cc_vvel, vlabel, matlIndex, patch, ga, 1);
       //W
-      name = ParticleTools::append_env( _wname, iqn );
+      name = ArchesCore::append_env( _wname, iqn );
       const VarLabel* wlabel = VarLabel::find(name);
       constCCVariable<double> cc_wvel;
       which_dw->get(cc_wvel, wlabel, matlIndex, patch, ga, 1);
 
-      name = ParticleTools::append_qn_env( "w", iqn );
+      name = ArchesCore::append_qn_env( "w", iqn );
       const VarLabel* weightlabel = VarLabel::find(name);
       constCCVariable<double> weight;
       which_dw->get(weight, weightlabel, matlIndex, patch, ga, 1);

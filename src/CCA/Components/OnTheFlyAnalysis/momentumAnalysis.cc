@@ -88,7 +88,6 @@ momentumAnalysis::momentumAnalysis( const ProcessorGroup* myworld,
   labels->convectMom_fluxes  = VarLabel::create( "convectMom_fluxes", sumvec_vartype::getTypeDescription() );
   labels->viscousMom_fluxes  = VarLabel::create( "viscousMom_fluxes", sumvec_vartype::getTypeDescription() );
   labels->pressForces        = VarLabel::create( "pressForces",       sumvec_vartype::getTypeDescription() );
-  labels->delT               = getDelTLabel();
 }
 
 //__________________________________
@@ -330,7 +329,6 @@ void momentumAnalysis::scheduleDoAnalysis(SchedulerP& sched,
 
   t0->requires( Task::OldDW, m_simulationTimeLabel );
   t0->requires( Task::OldDW, labels->lastCompTime );
-  t0->requires( Task::OldDW, labels->delT, level.get_rep() );
 
   t0->requires( Task::NewDW, labels->vel_CC,    matl_SS, gn );
   t0->requires( Task::NewDW, labels->rho_CC,    matl_SS, gn );
@@ -386,11 +384,9 @@ void momentumAnalysis::integrateMomentumField(const ProcessorGroup* pg,
 {
 
   const Level* level = getLevel(patches);
-  max_vartype analysisTime;
-  delt_vartype delT;
 
+  max_vartype analysisTime;
   old_dw->get( analysisTime, labels->lastCompTime );
-  old_dw->get( delT,         labels->delT ,level);
 
   double lastCompTime = analysisTime;
   double nextCompTime = lastCompTime + 1.0/d_analysisFreq;

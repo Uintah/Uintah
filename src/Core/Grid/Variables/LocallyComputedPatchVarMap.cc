@@ -255,8 +255,8 @@ LocallyComputedPatchVarMap::LocallyComputedPatchSet::makeGroups()
 
   PatchRangeQuerier patchRangeQuerier(level, patches);
   connectedPatchGroups_ = SuperPatchSet::makeNearOptimalSuperBoxSet(patches.begin(), patches.end(), patchRangeQuerier);
-  //cerr << "ConnectedPatchGroups: \n";
-  //cerr << *connectedPatchGroups_ << "\n";
+
+//  std::cerr << "ConnectedPatchGroups: \n" << *connectedPatchGroups_ << "\n";
 
   // map each patch to its SuperBox
   const SuperPatchContainer& superBoxes = connectedPatchGroups_->getSuperBoxes();

@@ -21,9 +21,9 @@
     <!--outputInterval>0.1</outputInterval-->
     <outputTimestepInterval>1</outputTimestepInterval>
     <!--outputInitTimestep/-->
-    <save label="phi_x_psi"/>
-    <save label="phi_y_psi"/>
-    <save label="phi_z_psi"/>
+    <!--<save label="phi_x_psi"/>-->
+    <!--<save label="phi_y_psi"/>-->
+    <!--<save label="phi_z_psi"/>-->
     <save label="phi"/>
     <save label="phi_mms"/>
     <save label="gridX"/>

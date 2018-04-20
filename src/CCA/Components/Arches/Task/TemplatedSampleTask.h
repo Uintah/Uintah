@@ -67,9 +67,6 @@ private:
   template <typename T>
   TemplatedSampleTask<T>::~TemplatedSampleTask()
   {
-    const VarLabel* V1 = VarLabel::find("templated_variable");
-    VarLabel::destroy(V1);
-
   }
 
   template <typename T>

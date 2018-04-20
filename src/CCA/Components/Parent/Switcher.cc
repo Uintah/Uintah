@@ -55,7 +55,13 @@
 
 using namespace Uintah;
 
-static DebugStream dbg("SWITCHER", false);
+//______________________________________________________________________
+// Initialize class static variables:
+
+// export SCI_DEBUG="SWITCHER:+"
+DebugStream Switcher::switcher_dbg("SWITCHER", "Switcher", "Switcher debug stream", false);
+//______________________________________________________________________
+//
 
 #define ALL_LEVELS  99
 
@@ -257,7 +263,7 @@ Switcher::Switcher( const ProcessorGroup * myworld,
 //
 Switcher::~Switcher()
 {
-  dbg << d_myworld->myRank() << " Switcher::~Switcher" << std::endl;
+  switcher_dbg << d_myworld->myRank() << " Switcher::~Switcher" << std::endl;
 
   VarLabel::destroy(d_switch_label);
 
@@ -276,7 +282,7 @@ Switcher::problemSetup( const ProblemSpecP     & params,
                         const ProblemSpecP     & restart_prob_spec,
                               GridP            & grid )
 {  
-  dbg << "Doing ProblemSetup \t\t\t\tSwitcher"<< std::endl;
+  switcher_dbg << "Doing ProblemSetup \t\t\t\tSwitcher"<< std::endl;
 
   if (restart_prob_spec){
     readSwitcherState(restart_prob_spec, m_sharedState);
@@ -297,7 +303,7 @@ Switcher::problemSetup( const ProblemSpecP     & params,
     int comp = it->first;
     initVars* vars = it->second;
 
-    dbg << " init Variables:  component: " << comp << std::endl;
+    switcher_dbg << " init Variables:  component: " << comp << std::endl;
     
     // Find the varLabel   
     std::vector<std::string>& varNames = vars->varNames;
@@ -346,7 +352,7 @@ Switcher::problemSetup( const ProblemSpecP     & params,
 void Switcher::scheduleInitialize(const LevelP     & level,
                                         SchedulerP & sched)
 {
-  printSchedule(level,dbg,"Switcher::scheduleInitialize");
+  printSchedule(level,switcher_dbg,"Switcher::scheduleInitialize");
   d_app->scheduleInitialize(level,sched);
 }
 
@@ -355,7 +361,7 @@ void Switcher::scheduleInitialize(const LevelP     & level,
 void Switcher::scheduleRestartInitialize(const LevelP     & level,
                                                SchedulerP & sched)
 {
-  printSchedule(level,dbg,"Switcher::scheduleRestartInitialize");
+  printSchedule(level,switcher_dbg,"Switcher::scheduleRestartInitialize");
   d_app->scheduleRestartInitialize(level,sched);
 }
 //______________________________________________________________________
@@ -363,7 +369,7 @@ void Switcher::scheduleRestartInitialize(const LevelP     & level,
 void Switcher::scheduleComputeStableTimeStep(const LevelP     & level,
                                                    SchedulerP & sched)
 {
-  printSchedule(level,dbg,"Switcher::scheduleComputeStableTimeStep");
+  printSchedule(level,switcher_dbg,"Switcher::scheduleComputeStableTimeStep");
   d_app->scheduleComputeStableTimeStep(level,sched);
 }
 
@@ -373,7 +379,7 @@ void
 Switcher::scheduleTimeAdvance(const LevelP     & level,
                                     SchedulerP & sched)
 {
-  printSchedule(level,dbg,"Switcher::scheduleTimeAdvance");
+  printSchedule(level,switcher_dbg,"Switcher::scheduleTimeAdvance");
   d_app->scheduleTimeAdvance(level,sched);
 }
 
@@ -383,7 +389,7 @@ void
 Switcher::scheduleFinalizeTimestep( const LevelP     & level,
                                           SchedulerP & sched)
 {
-  printSchedule(level,dbg,"Switcher::scheduleFinalizeTimestep");
+  printSchedule(level,switcher_dbg,"Switcher::scheduleFinalizeTimestep");
   
   d_app->scheduleFinalizeTimestep(level, sched); 
   
@@ -405,7 +411,7 @@ void Switcher::scheduleSwitchInitialization(const LevelP     & level,
                                                   SchedulerP & sched)
 {
   if (d_doSwitching[level->getIndex()]) {
-    printSchedule(level,dbg,"Switcher::scheduleSwitchInitialization");
+    printSchedule(level,switcher_dbg,"Switcher::scheduleSwitchInitialization");
     d_app->scheduleSwitchInitialization(level, sched);
   }
 }
@@ -415,7 +421,7 @@ void Switcher::scheduleSwitchInitialization(const LevelP     & level,
 void Switcher::scheduleSwitchTest(const LevelP     & level,
                                         SchedulerP & sched)
 {
-  printSchedule(level,dbg,"Switcher::scheduleSwitchTest");
+  printSchedule(level,switcher_dbg,"Switcher::scheduleSwitchTest");
   
   d_app->scheduleSwitchTest(level,sched); // generates switch test data;
 
@@ -439,7 +445,7 @@ void Switcher::scheduleInitNewVars(const LevelP     & level,
     return;
   }
   
-  printSchedule(level,dbg,"Switcher::scheduleInitNewVars");
+  printSchedule(level,switcher_dbg,"Switcher::scheduleInitNewVars");
   
   Task* t = scinew Task("Switcher::initNewVars",this, & Switcher::initNewVars);
   
@@ -476,8 +482,9 @@ void Switcher::scheduleInitNewVars(const LevelP     & level,
     
     matlSet.push_back(matls);
 
-    dbg << "init Variable  " << initVar->varNames[i] << " \t matls: " 
-	<< nextComp_matls << " levels " << initVar->levels[i] << std::endl;
+    switcher_dbg << "init Variable  " << initVar->varNames[i] << " \t matls: " 
+		 << nextComp_matls << " levels " << initVar->levels[i]
+		 << std::endl;
     
     const MaterialSubset* matl_ss = matls->getUnion();
     
@@ -496,7 +503,7 @@ void Switcher::scheduleInitNewVars(const LevelP     & level,
 void Switcher::scheduleCarryOverVars(const LevelP     & level,
                                            SchedulerP & sched)
 {
-  printSchedule(level,dbg,"Switcher::scheduleCarryOverVars");
+  printSchedule(level,switcher_dbg,"Switcher::scheduleCarryOverVars");
   int L_indx = level->getIndex();
   
   if (d_computedVars.size() == 0) {
@@ -590,8 +597,8 @@ void Switcher::initNewVars(const ProcessorGroup *,
   if (!switch_condition)
     return; 
     
-  dbg << "__________________________________" << std::endl
-      << "initNewVars \t\t\t\tSwitcher" << std::endl;
+  switcher_dbg << "__________________________________" << std::endl
+	       << "initNewVars \t\t\t\tSwitcher" << std::endl;
   //__________________________________
   // loop over the init vars, initialize them and put them in the new_dw
   initVars* initVar  = d_initVars.find(d_componentIndex+1)->second;
@@ -609,9 +616,9 @@ void Switcher::initNewVars(const ProcessorGroup *,
     int relative_indx   = L_indx - numLevels;
     int init_Levels     = initVar->levels[i];
     
-    dbg << "    varName: " << l->getName()
-	<< " \t\t matls " << initVar->matlSetNames[i]
-	<< " level " << init_Levels << std::endl;
+    switcher_dbg << "    varName: " << l->getName()
+		 << " \t\t matls " << initVar->matlSetNames[i]
+		 << " level " << init_Levels << std::endl;
     
     bool onThisLevel = false;
 
@@ -642,8 +649,8 @@ void Switcher::initNewVars(const ProcessorGroup *,
       for (int p = 0; p < patches->size(); p++) {
         const Patch* patch = patches->get(p);
         
-        dbg << "    indx: " << indx << " patch " << *patch << " "
-	    << l->getName() << std::endl;
+        switcher_dbg << "    indx: " << indx << " patch " << *patch << " "
+		     << l->getName() << std::endl;
         
         switch (l->typeDescription()->getType()) {
 
@@ -741,7 +748,7 @@ void Switcher::initNewVars(const ProcessorGroup *,
     }  // matl loop
   }  // varlabel loop
 
-  dbg << "__________________________________" << std::endl;
+  switcher_dbg << "__________________________________" << std::endl;
 }
 //______________________________________________________________________
 //
@@ -789,18 +796,16 @@ void Switcher::carryOverVars(const ProcessorGroup *,
 //______________________________________________________________________
 // 
 void Switcher::switchApplication( const ProblemSpecP     & restart_prob_spec,
-				  const GridP            & grid )
+				                          const GridP            & grid )
 {
   // Get the initial simulation component and initialize the need components
   proc0cout << "\n------------ Switching to application (" << d_componentIndex <<") \n";
   proc0cout << "  Reading input file: " << d_in_file[d_componentIndex] << "\n";
 
   // Read the ups file for the first subcomponent.
-  ProblemSpecP subCompUps =
-    ProblemSpecReader().readInputFile(d_in_file[d_componentIndex]);  
+  ProblemSpecP subCompUps = ProblemSpecReader().readInputFile(d_in_file[d_componentIndex]);
   
-  d_app =
-    dynamic_cast<ApplicationInterface*>( getPort("application", d_componentIndex) );
+  d_app = dynamic_cast<ApplicationInterface*>( getPort("application", d_componentIndex) );
   d_app->setComponents( this );
 
   // Send the subcomponent's UPS file to it's sim interface.
@@ -825,7 +830,7 @@ void Switcher::switchApplication( const ProblemSpecP     & restart_prob_spec,
 bool
 Switcher::needRecompile( const GridP & grid )
 {
-  dbg << "  Doing Switcher::needRecompile " << std::endl;
+  switcher_dbg << "  Doing Switcher::needRecompile " << std::endl;
   
   m_recompile  = false;
 

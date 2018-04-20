@@ -880,13 +880,13 @@ Task::Dependency::Dependency(       DepType              deptype
 //
 Task::Dependency::~Dependency()
 {
-  VarLabel::destroy(m_var); // just remove the ref
+  VarLabel::destroy(m_var);  // just remove the ref
 
-  if(m_patches != nullptr && m_patches->removeReference()){
+  if (m_patches != nullptr && m_patches->removeReference()) {
     delete m_patches;
   }
 
-  if(m_matls != nullptr && m_matls->removeReference()){
+  if (m_matls != nullptr && m_matls->removeReference()) {
     delete m_matls;
   }
 }
@@ -937,7 +937,7 @@ constHandle<PatchSubset> Task::Dependency::getOtherLevelPatchSubset(       Task:
                                                                    ,       int                     ngc
                                                                    )
 {
-  constHandle<PatchSubset> myLevelSubset = PatchSubset::intersection(subset, domainSubset);
+  constHandle<PatchSubset> myLevelPatchSubset = PatchSubset::intersection(subset, domainSubset);
 
   int levelOffset = 0;
   switch (dom) {
@@ -952,8 +952,8 @@ constHandle<PatchSubset> Task::Dependency::getOtherLevelPatchSubset(       Task:
   }
 
   std::set<const Patch*, Patch::Compare> patches;
-  for (int p = 0; p < myLevelSubset->size(); p++) {
-    const Patch* patch = myLevelSubset->get(p);
+  for (int p = 0; p < myLevelPatchSubset->size(); p++) {
+    const Patch* patch = myLevelPatchSubset->get(p);
     Patch::selectType somePatches;
     patch->getOtherLevelPatches(levelOffset, somePatches, ngc);
     patches.insert(somePatches.begin(), somePatches.end());

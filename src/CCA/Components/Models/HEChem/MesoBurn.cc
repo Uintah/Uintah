@@ -60,6 +60,10 @@
 
 using namespace Uintah;
 using namespace std;
+
+#define d_SMALL_NUM 1e-100
+#define d_TINY_RHO  1e-12
+
 //__________________________________   
 //  MODELS_DOING_COUT:   dumps when tasks are scheduled and performed
 static DebugStream cout_doing("MODELS_DOING_COUT", false);
@@ -71,7 +75,7 @@ MesoBurn::MesoBurn(const ProcessorGroup* myworld,
                    const SimulationStateP& sharedState, 
                    const ProblemSpecP& params,
                    const ProblemSpecP& prob_spec)
-  : ModelInterface(myworld, sharedState),
+  : HEChemModel(myworld, sharedState),
     d_params(params), d_prob_spec(prob_spec) { 
   mymatls = 0;
   Ilb  = scinew ICELabel();
@@ -396,22 +400,6 @@ void MesoBurn::scheduleComputeModelSources(SchedulerP& sched,
     delete one_matl;
 }
 
-//__________________________________
-void MesoBurn::scheduleModifyThermoTransportProperties(SchedulerP&, 
-                                                       const LevelP&, 
-                                                       const MaterialSet*){
-  // do nothing      
-}
-
-//__________________________________
-void MesoBurn::computeSpecificHeat(CCVariable<double>&, 
-                                   const Patch*, 
-                                   DataWarehouse*, 
-                                   const int){
-  //do nothing
-}
-
-
 
 /*
  ***************** Private Member Functions:******************************
@@ -705,17 +693,6 @@ void MesoBurn::computeModelSources(const ProcessorGroup*,
                 MesoBurn::totalSurfaceAreaLabel);
  
 }
-
-void MesoBurn::scheduleErrorEstimate(const LevelP&, 
-                                     SchedulerP&){
-  // Not implemented yet
-}
-
-void MesoBurn::scheduleTestConservation(SchedulerP&, 
-                                        const PatchSet*){
-  // Not implemented yet
-}
-
 
 /****************************************************************************/
 /******************* Bisection Newton Solver ********************************/

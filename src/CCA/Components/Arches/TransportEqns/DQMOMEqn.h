@@ -282,6 +282,8 @@ private:
   const VarLabel* d_face_pvel_y;
   const VarLabel* d_face_pvel_z;
 
+  std::string d_sourceName;   ///< The source label string name
+
   std::vector<std::string> d_models;   ///< This is the list of models for this internal coordinate
   std::map<std::string, std::string> d_type_to_model; ///< The list of model types and names
   bool d_weight;                  ///< Boolean: is this equation object for a weight?

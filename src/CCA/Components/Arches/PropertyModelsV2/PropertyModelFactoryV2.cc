@@ -79,7 +79,8 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
 
         if ( grid_type == "CC" ){
 
-          typedef typename ArchesCore::VariableHelper<CCVariable<double> >::Type T;
+          //typedef typename ArchesCore::VariableHelper<CCVariable<double> >::Type T;
+          typedef CCVariable<double> T;
           typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
 
           if (grid_type2 == "FX"){
@@ -102,15 +103,15 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
           }
 
           if ( grid_type == "FX" ){
-            typedef typename ArchesCore::VariableHelper<SFCXVariable<double> >::Type T;
+            typedef SFCXVariable<double> T;
             typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
             tsk = scinew VarInterpolation<CT, CCVariable<double> >::Builder(name, 0);
           } else if ( grid_type == "FY" ){
-            typedef typename ArchesCore::VariableHelper<SFCYVariable<double> >::Type T;
+            typedef SFCYVariable<double> T;
             typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
             tsk = scinew VarInterpolation<CT, CCVariable<double> >::Builder(name, 0);
           } else if ( grid_type == "FZ" ){
-            typedef typename ArchesCore::VariableHelper<SFCZVariable<double> >::Type T;
+            typedef SFCZVariable<double> T;
             typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
             tsk = scinew VarInterpolation<CT, CCVariable<double> >::Builder(name, 0);
           }
@@ -281,27 +282,27 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
 
       if ( grp_class == "null" || grp_class == "density_weighted" ){
 
-        std::string weight_task_name = "weigth_var_"+group_name;
+        std::string weight_task_name = "weight_var_"+group_name;
 
         if ( type == "CC" ){
-          TaskInterface::TaskBuilder* weigth_var_tsk =
+          TaskInterface::TaskBuilder* weight_var_tsk =
           scinew UnweightVariable<CCVariable<double>>::Builder( weight_task_name , 0 );
-          register_task( weight_task_name, weigth_var_tsk );
+          register_task( weight_task_name, weight_var_tsk );
           _phi_from_rho_phi.push_back(weight_task_name);
         } else if ( type == "FX" ){
-          TaskInterface::TaskBuilder* weigth_var_tsk =
+          TaskInterface::TaskBuilder* weight_var_tsk =
           scinew UnweightVariable<SFCXVariable<double>>::Builder( weight_task_name , 0 );
-          register_task( weight_task_name, weigth_var_tsk );
+          register_task( weight_task_name, weight_var_tsk );
           _phi_from_rho_phi.push_back(weight_task_name);
         } else if ( type == "FY" ){
-          TaskInterface::TaskBuilder* weigth_var_tsk =
+          TaskInterface::TaskBuilder* weight_var_tsk =
           scinew UnweightVariable<SFCYVariable<double>>::Builder( weight_task_name , 0 );
-          register_task( weight_task_name, weigth_var_tsk );
+          register_task( weight_task_name, weight_var_tsk );
           _phi_from_rho_phi.push_back(weight_task_name);
         } else if ( type == "FZ" ){
-          TaskInterface::TaskBuilder* weigth_var_tsk =
+          TaskInterface::TaskBuilder* weight_var_tsk =
           scinew UnweightVariable<SFCZVariable<double>>::Builder( weight_task_name , 0 );
-          register_task( weight_task_name, weigth_var_tsk );
+          register_task( weight_task_name, weight_var_tsk );
           _phi_from_rho_phi.push_back(weight_task_name);
         }
 
@@ -430,9 +431,9 @@ if ( db->findBlock("PropertyModelsV2") != nullptr){
     std::string type = "null";
     group_db->getAttribute("label", group_name);
     group_db->getAttribute("type", type );
-    std::string weight_task_name = "weigth_var_"+group_name;
+    std::string weight_task_name = "weight_var_"+group_name;
     TaskInterface* tsk = retrieve_task(weight_task_name);
-    proc0cout << "       Task: " << group_name << "  Type: " << "compute_rho phi" << std::endl;
+    print_task_setup_info( group_name,  "compute_rho phi");
     tsk->problemSetup(group_db);
     tsk->create_local_labels();
 
@@ -599,11 +600,9 @@ void PropertyModelFactoryV2::schedule_initialization( const LevelP& level,
                                                       const MaterialSet* matls,
                                                       bool doing_restart ){
 
-  for ( auto i = m_task_init_order.begin(); i != m_task_init_order.end(); i++ ){
-
-    TaskInterface* tsk = retrieve_task( *i );
-    tsk->schedule_init( level, sched, matls, doing_restart );
-  }
+  const bool pack_tasks = false;
+  schedule_task_group( "Ordered_PV2_initialization", m_task_init_order, TaskInterface::INITIALIZE,
+                       pack_tasks, level, sched, matls );
 
 }
 

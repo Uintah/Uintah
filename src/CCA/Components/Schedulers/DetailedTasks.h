@@ -101,7 +101,6 @@ public:
 
   DetailedTasks(       SchedulerCommon * sc
                , const ProcessorGroup  * pg
-               ,       DetailedTasks   * first
                , const TaskGraph       * taskgraph
                , const std::set<int>   & neighborhood_processors
                ,       bool              mustConsiderInternalDependencies = false
@@ -337,7 +336,6 @@ private:
 
   SchedulerCommon               * m_sched_common { nullptr };
   const ProcessorGroup          * m_proc_group;
-  DetailedTasks                 * m_first { nullptr }; // store the first so we can share the scrubCountTable
 
   KeyDatabase<Patch>              m_var_keyDB;
   KeyDatabase<Level>              m_level_keyDB;

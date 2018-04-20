@@ -47,41 +47,43 @@ using namespace std;
 using namespace Uintah;
 
 
-static std::atomic<int32_t> ids{0};
-static Uintah::MasterLock   ids_init{};
+static std::atomic<int32_t>  ids{0};
+static Uintah::MasterLock    ids_init{};
 
 extern Uintah::MasterLock coutLock; // Used to sync cout when output by multiple ranks
 
-Patch::Patch(const Level* level,
-             const IntVector& lowIndex, const IntVector& highIndex,
-             const IntVector& inLowIndex, const IntVector& inHighIndex, 
-             unsigned int levelIndex,  int id)
-  : d_lowIndex(inLowIndex), d_highIndex(inHighIndex), 
-    d_grid(0), d_id(id) , d_realPatch(0), d_level_index(-1),
-    d_arrayBCS(0), d_interiorBndArrayBCS(0)
+Patch::Patch( const Level        * level
+            , const IntVector    & lowIndex
+            , const IntVector    & highIndex
+            , const IntVector    & inLowIndex
+            , const IntVector    & inHighIndex
+            ,       unsigned int   levelIndex
+            ,       int            id
+            )
+  : d_lowIndex(inLowIndex)
+  , d_highIndex(inHighIndex)
+  , d_id(id)
 {
-  
-  if(d_id == -1){
-    d_id = ids.fetch_add(1, memory_order_relaxed);
 
+  if (d_id == -1) {
+    d_id = ids.fetch_add(1, memory_order_relaxed);
   }
   else {
-    if(d_id >= ids) {
-      ids.store(d_id+1, memory_order_relaxed);
+    if (d_id >= ids) {
+      ids.store(d_id + 1, memory_order_relaxed);
     }
   }
-   
-  // DON'T call setBCType here     
-  d_patchState.xminus=None;
-  d_patchState.yminus=None;
-  d_patchState.zminus=None;
-  d_patchState.xplus=None;
-  d_patchState.yplus=None;
-  d_patchState.zplus=None;
 
-  
+  // DON'T call setBCType here     
+  d_patchState.xminus = None;
+  d_patchState.yminus = None;
+  d_patchState.zminus = None;
+  d_patchState.xplus  = None;
+  d_patchState.yplus  = None;
+  d_patchState.zplus  = None;
+
   //set the level index
-  d_patchState.levelIndex=levelIndex;
+  d_patchState.levelIndex = levelIndex;
 
 }
 
@@ -94,7 +96,6 @@ Patch::Patch(const Patch* realPatch, const IntVector& virtualOffset)
       d_arrayBCS(realPatch->d_arrayBCS),
       d_interiorBndArrayBCS(realPatch->d_interiorBndArrayBCS)
 {
-  //if(!ids){
   // make the id be -1000 * realPatch id - some first come, first serve index
   d_id = -1000 * realPatch->d_id; // temporary
   int index = 1;

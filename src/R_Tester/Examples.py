@@ -1,18 +1,13 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from sys import argv,exit
 from os import environ, system
-from helpers.runSusTests import runSusTests, inputs_root, ignorePerformanceTests, generatingGoldStandards
+from helpers.runSusTests import runSusTests, ignorePerformanceTests, getInputsDir
 from helpers.modUPS import modUPS,modUPS2
 
 from os import system
 
-the_dir = generatingGoldStandards()
-
-if the_dir == "" :
-  the_dir = "%s/Examples" % inputs_root()
-else :
-  the_dir = the_dir + "/Examples"
+the_dir = "%s/%s" % ( getInputsDir(),"Examples" )
 
 # convert RMCRT:double -> RMCRT:float
 system("cd %s ; ./RMCRT_doubleToFloat  RMCRT_bm1_1L.ups  RMCRT_FLT_bm1_1L.ups"   % the_dir )
@@ -34,11 +29,11 @@ RMCRT_1L_perf_GPU_ups = modUPS( the_dir, \
 
 RMCRT_DO_perf_GPU_ups = modUPS2( the_dir, \
                                "RMCRT_DO_perf.ups", \
-                               ["/Uintah_specification/Grid/Level/Box[@label=0]/resolution :[32,32,32]",
-                                "/Uintah_specification/Grid/Level/Box[@label=0]/patches    :[2,2,2]",
-                                "/Uintah_specification/Grid/Level/Box[@label=1]/resolution :[64,64,64]",
-                                "/Uintah_specification/Grid/Level/Box[@label=1]/patches    :[4,4,4]",
-                                "Uintah_specification/RMCRT/nDivQRays                      : 100"
+                               [( "update", "/Uintah_specification/Grid/Level/Box[@label=0]/resolution :[32,32,32]" ),
+                                ( "update", "/Uintah_specification/Grid/Level/Box[@label=0]/patches    :[2,2,2]"    ),
+                                ( "update", "/Uintah_specification/Grid/Level/Box[@label=1]/resolution :[64,64,64]" ),
+                                ( "update", "/Uintah_specification/Grid/Level/Box[@label=1]/patches    :[4,4,4]"    ),
+                                ( "update", "Uintah_specification/RMCRT/nDivQRays                      : 100"       )
                                ] )
 
 #______________________________________________________________________
@@ -151,7 +146,7 @@ def getTestList(me) :
   elif me == "BUILDBOTTESTS":
     TESTS = ignorePerformanceTests( NIGHTLYTESTS )
   else:
-    print "\nERROR:Examples.py  getTestList:  The test list (%s) does not exist!\n\n" % me
+    print("\nERROR:Examples.py  getTestList:  The test list (%s) does not exist!\n\n" % me)
     exit(1)
   return TESTS
 

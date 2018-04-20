@@ -26,13 +26,14 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Grid/Box.h>
 #include <Core/Grid/BoundaryConditions/BoundCondFactory.h>
-#include <Core/Util/DebugStream.h>
 #include <Core/Grid/BoundaryConditions/DifferenceBCData.h>
 #include <Core/Grid/BoundaryConditions/SideBCData.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/NodeIterator.h>
 #include <Core/Grid/Level.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Util/DebugStream.h>
+
 #include <iostream>
 #include <algorithm>
 #include <set>
@@ -42,8 +43,9 @@
 using namespace Uintah;
 using namespace std;
 
-// export SCI_DEBUG="BCDA_DBG:+"
-static DebugStream BCDA_dbg("BCDA_DBG",false);
+namespace {
+  DebugStream BCDA_dbg("BCDA_DBG", "Grid_BoundaryConditions", "", false);
+}
 
 //------------------------------------------------------------------------------------------------
 

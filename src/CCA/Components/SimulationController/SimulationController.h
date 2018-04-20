@@ -186,9 +186,9 @@ public:
   ProblemSpecP          getProblemSpecP() { return m_ups; }
   ProblemSpecP          getGridProblemSpecP() { return m_grid_ps; }
   SchedulerP            getSchedulerP() { return m_scheduler; }
-  LoadBalancer*     getLoadBalancer() { return m_loadBalancer; }
+  LoadBalancer*         getLoadBalancer() { return m_loadBalancer; }
   Output*               getOutput() { return m_output; }
-  ApplicationInterface* getApplicationInterface() { return m_app; }
+  ApplicationInterface* getApplicationInterface() { return m_application; }
   Regridder*            getRegridder() { return m_regridder; }
   WallTimers*           getWallTimers() { return &m_wall_timers; }
 
@@ -202,6 +202,9 @@ public:
                          DataWarehouse*,
                          DataWarehouse*,
                          bool header);
+
+  ReductionInfoMapper< RuntimeStatsEnum, double > & getRuntimeStats()
+  { return m_runtime_stats; };
 
 protected:
 
@@ -219,17 +222,19 @@ protected:
   void getMemoryStats( bool create = false );
   void getPAPIStats  ( );
   
-  ProblemSpecP           m_ups{nullptr};
-  ProblemSpecP           m_grid_ps{nullptr};     // Problem Spec for the Grid
-  ProblemSpecP           m_restart_ps{nullptr};  // Problem Spec for restarting
-  SchedulerP             m_scheduler{nullptr};
-  GridP                  m_current_gridP{nullptr};
+  ProblemSpecP           m_ups           {nullptr};
+  ProblemSpecP           m_grid_ps       {nullptr};
+  ProblemSpecP           m_restart_ps    {nullptr};
+  GridP                  m_current_gridP {nullptr};
 
-  LoadBalancer     * m_loadBalancer{nullptr};
-  Output               * m_output{nullptr};
-  ApplicationInterface * m_app{nullptr};
-  Regridder            * m_regridder{nullptr};
-  DataArchive          * m_restart_archive{nullptr}; // Only used when restarting: Data from checkpoint UDA.
+  ApplicationInterface * m_application     {nullptr};
+  LoadBalancer         * m_loadBalancer    {nullptr};
+  Output               * m_output          {nullptr};
+  Regridder            * m_regridder       {nullptr};
+  SchedulerP             m_scheduler       {nullptr};
+
+  // Only used when restarting: Data from checkpoint UDA.
+  DataArchive          * m_restart_archive {nullptr};
 
   bool m_do_multi_taskgraphing{false};
     
@@ -257,20 +262,20 @@ protected:
   
   // Runtime stat mappers.
   ReductionInfoMapper< RuntimeStatsEnum, double > m_runtime_stats;
-  ReductionInfoMapper< unsigned int,     double > m_other_stats;
 
+  // PAPI Counters
 #ifdef USE_PAPI_COUNTERS
   int         m_papi_event_set;            // PAPI event set
   long long * m_papi_event_values;         // PAPI event set values
 
   struct PapiEvent {
-    bool                           m_is_supported{false};
-    int                            m_event_value_idx{0};
-    std::string                    m_name{""};
-    SimulationState::RuntimeStat   m_sim_stat_name{};
+    bool                   m_is_supported{false};
+    int                    m_event_value_idx{0};
+    std::string            m_name{""};
+    RuntimeStatsEnum       m_sim_stat_name{};
 
-    PapiEvent( const std::string                  & name
-             , const SimulationState::RuntimeStat & sim_stat_name )
+    PapiEvent( const std::string      & name
+             , const RuntimeStatsEnum & sim_stat_name )
       : m_name(name)
       , m_sim_stat_name(sim_stat_name)
     { }
@@ -291,12 +296,6 @@ public:
 #ifdef HAVE_VISIT
   void setVisIt( unsigned int val ) { m_do_visit = val; }
   unsigned int  getVisIt() { return m_do_visit; }
-
-  const ReductionInfoMapper< RuntimeStatsEnum, double > getRuntimeStats() const
-  { return m_runtime_stats; };
-
-  const ReductionInfoMapper< unsigned int,     double > getOtherStats() const
-  { return m_other_stats; };
 
 protected:
   unsigned int m_do_visit;

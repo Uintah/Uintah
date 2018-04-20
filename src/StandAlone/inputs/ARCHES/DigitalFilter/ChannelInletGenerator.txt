@@ -28,7 +28,7 @@ box
 2.0
 #mean velocity
 1.0 0.0 0.0
-#mean Stress (t11 t21 t22 t31 t32 t33)
+#mean Re Stress u'u', u'v', etc.. (t11 t21 t22 t31 t32 t33) 2% of the mean velocity
 0.02 0.0 0.02 0.0 0.0 0.02
 
 #spatial variation (y/n) #variation direction(if planar)

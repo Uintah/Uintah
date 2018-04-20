@@ -54,7 +54,7 @@ using namespace std;
 
 namespace {
 
-  Uintah::Dout g_rmcrt_test_dbg("RMCRT_Test", false);
+  Uintah::Dout g_rmcrt_test_dbg("RMCRT_Test", "Examples", "RMCRT_Test debug stream", false);
 }
 
 
@@ -171,7 +171,7 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
                                  d_cellTypeLabel,
                                  d_divQLabel);
     proc0cout << "__________________________________ Reading in RMCRT section of ups file" << endl;
-    d_RMCRT->problemSetup( prob_spec, rmcrt_ps, grid, m_sharedState );
+    d_RMCRT->problemSetup( prob_spec, rmcrt_ps, grid );
     
     d_RMCRT->BC_bulletproofing( rmcrt_ps );
 

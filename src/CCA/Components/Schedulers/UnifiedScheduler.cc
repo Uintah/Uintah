@@ -40,7 +40,6 @@
 #include <Core/Util/Timers/Timers.hpp>
 
 #include <sci_defs/cuda_defs.h>
-#include <sci_defs/visit_defs.h>
 
 #ifdef HAVE_CUDA
   #include <CCA/Components/Schedulers/GPUDataWarehouse.h>
@@ -60,44 +59,38 @@
 
 using namespace Uintah;
 
-
-extern Dout g_task_dbg;
-extern Dout g_task_order;
-extern Dout g_exec_out;
-
-extern std::map<std::string, double> g_exec_times;
-
 //______________________________________________________________________
 //
+namespace Uintah {
+  extern Dout g_task_dbg;
+  extern Dout g_task_order;
+  extern Dout g_exec_out;
+}
+
 namespace {
+  Dout g_dbg(         "Unified_DBG"        , "UnifiedScheduler", "", false);
+  Dout g_queuelength( "Unified_QueueLength", "UnifiedScheduler", "",  false);
 
-Dout g_dbg(         "Unified_DBG"        , false);
-Dout g_queuelength( "Unified_QueueLength", false);
-
-Uintah::MasterLock g_scheduler_mutex{};           // main scheduler lock for multi-threaded task selection
-Uintah::MasterLock g_mark_task_consumed_mutex{};  // allow only one task at a time to enter the task consumed section
-Uintah::MasterLock g_lb_mutex{};                  // load balancer lock
-
+  Uintah::MasterLock g_scheduler_mutex{};           // main scheduler lock for multi-threaded task selection
+  Uintah::MasterLock g_mark_task_consumed_mutex{};  // allow only one task at a time to enter the task consumed section
+  Uintah::MasterLock g_lb_mutex{};                  // load balancer lock
 } // namespace
-
 
 #ifdef HAVE_CUDA
 
-  DebugStream gpu_stats(              "GPUStats"             , false );
-  DebugStream simulate_multiple_gpus( "GPUSimulateMultiple"  , false );
-  DebugStream gpudbg(                 "GPUDataWarehouse"     , false );
+extern Uintah::MasterLock cerrLock;
 
-  namespace {
+namespace Uintah {
+  DebugStream gpu_stats(              "GPUStats"             , "UnifiedScheduler", "", false );
+  DebugStream simulate_multiple_gpus( "GPUSimulateMultiple"  , "UnifiedScheduler", "", false );
+  DebugStream gpudbg(                 "GPUDataWarehouse"     , "UnifiedScheduler", "", false );
+}
 
+namespace {
   Uintah::MasterLock g_GridVarSuperPatch_mutex{};   // An ugly hack to get superpatches for host levels to work.
-
-  }
-
-  extern Uintah::MasterLock cerrLock;
+}
 
 #endif
-
-
 
 //______________________________________________________________________
 //
@@ -429,25 +422,6 @@ UnifiedScheduler::problemSetup( const ProblemSpecP     & prob_spec
 
   // this spawns threads, sets affinity, etc
   init_threads(this, m_num_threads);
-
-// #ifdef HAVE_VISIT
-//   static bool initialized = false;
-
-//   // Running with VisIt so add in the variables that the user can
-//   // modify.
-//   if( m_sharedState->getVisIt() && !initialized ) {
-//     m_sharedState->d_douts.push_back( &g_dbg  );
-//     m_sharedState->d_douts.push_back( &g_queuelength  );
-
-// #ifdef HAVE_CUDA
-//     m_sharedState->d_debugStreams.push_back( &gpu_stats  );
-//     m_sharedState->d_debugStreams.push_back( &simulate_multiple_gpus  );
-//     m_sharedState->d_debugStreams.push_back( &gpudbg  );
-// #endif
-    
-//     initialized = true;
-//   }
-// #endif
 }
 
 //______________________________________________________________________
@@ -553,7 +527,7 @@ UnifiedScheduler::runTask( DetailedTask*         dtask
 
       double total_task_time = dtask->task_exec_time();
       if (g_exec_out) {
-        g_exec_times[dtask->getTask()->getName()] += total_task_time;
+        m_exec_times[dtask->getTask()->getName()] += total_task_time;
       }
       // if I do not have a sub scheduler
       if (!dtask->getTask()->getHasSubScheduler()) {
@@ -587,8 +561,7 @@ UnifiedScheduler::runTask( DetailedTask*         dtask
     // Add subscheduler timings to the parent scheduler and reset subscheduler timings
     if (m_parent_scheduler != nullptr) {
       for (size_t i = 0; i < mpi_info_.size(); ++i) {
-        MPIScheduler::TimingStat e = (MPIScheduler::TimingStat)i;
-        m_parent_scheduler->mpi_info_[e] += mpi_info_[e];
+        m_parent_scheduler->mpi_info_[i] += mpi_info_[i];
       }
       mpi_info_.reset(0);
     }
@@ -644,6 +617,10 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
   m_detailed_tasks->initTimestep();
 
   m_num_tasks = m_detailed_tasks->numLocalTasks();
+
+  if( d_runtimeStats )
+    (*d_runtimeStats)[NumTasks] += m_num_tasks;
+                   
   for (int i = 0; i < m_num_tasks; i++) {
     m_detailed_tasks->localTask(i)->resetDependencyCounts();
   }

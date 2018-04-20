@@ -386,33 +386,3 @@ void SolidReactionModel::computeModelSources(const ProcessorGroup*,
     }
 }
 
-
-
-void SolidReactionModel::scheduleModifyThermoTransportProperties(SchedulerP&,
-                                                                 const LevelP&,
-                                                                 const MaterialSet*)
-{
-    // Do Nothing 
-}
-
-void SolidReactionModel::computeSpecificHeat(CCVariable<double>&,
-                                             const Patch* patch,
-                                             DataWarehouse* new_dw,
-                                             const int indx)
-{
-    // Do Nothing
-}
-
-void SolidReactionModel::scheduleErrorEstimate(const LevelP& coarseLevel,
-                                               SchedulerP& sched)
-{
-    // Nothing implemented 
-}
-
-void SolidReactionModel::scheduleTestConservation(SchedulerP&,
-                                                  const PatchSet* patches)
-{
-    // Not implemented yet   
-}
-
-

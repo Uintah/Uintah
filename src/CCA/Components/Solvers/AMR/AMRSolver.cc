@@ -43,7 +43,7 @@
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Util/DebugStream.h>
-
+#include <Core/Util/StringUtil.h>
 #include <iomanip>
 
 using std::string;
@@ -81,8 +81,10 @@ AMRSolver::readParameters(ProblemSpecP& params,
       if( param->getAttribute("variable", variable) && variable != varname ) {
         continue;
       }
-      param->getWithDefault("solver", p->solverTitle, "smg");
-      param->getWithDefault("preconditioner", p->precondTitle, "diagonal");
+      string str_solver;
+      string str_precond;
+      param->getWithDefault("solver", str_solver, "smg");
+      param->getWithDefault("preconditioner", str_precond, "diagonal");
       param->getWithDefault("tolerance", p->tolerance, 1.e-10);
       param->getWithDefault("maxiterations", p->maxIterations, 75);
       param->getWithDefault("npre", p->nPre, 1);
@@ -92,6 +94,11 @@ AMRSolver::readParameters(ProblemSpecP& params,
       param->getWithDefault("logging", p->logging, 0);
       param->getWithDefault("outputEquations", p->printSystem,false);
       found=true;
+      
+      // convert to lower case
+      p->solverTitle   = string_tolower( str_solver );
+      p->precondTitle  = string_tolower( str_precond );
+      
     }
   }
 

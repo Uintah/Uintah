@@ -395,8 +395,11 @@ namespace WasatchCore{
     double rho0=1.29985, rho1=0.081889, D=0.0658;
     varDensMMSParams->get("ConservedScalar",solnVarName);
     varDensMMSParams->get("Scalar",primVarName);
-    varDensMMSParams->get("rho1",rho1);
-    varDensMMSParams->get("rho0",rho0);
+    if (wasatchParams->findBlock("TwoStreamMixing")){
+    Uintah::ProblemSpecP varDensityParams = wasatchParams->findBlock("TwoStreamMixing");
+    varDensityParams->getAttribute("rho0",rho0);
+    varDensityParams->getAttribute("rho1",rho1);
+    }
 
     const Expr::Tag fStarTag(primVarName + "*", Expr::STATE_NONE);
     const Expr::Tag drhodfStarTag("drhod" + primVarName + "*", Expr::STATE_NONE);
@@ -409,8 +412,11 @@ namespace WasatchCore{
       if( bcExprParams->findBlock("VarDenMMSMomentum") ){
         double bcRho0=1.29985, bcRho1=0.081889;
         Uintah::ProblemSpecP valParams = bcExprParams->findBlock("VarDenMMSMomentum");
-        valParams->get("rho0",bcRho0);
-        valParams->get("rho1",bcRho1);
+        if (wasatchParams->findBlock("TwoStreamMixing")){
+        Uintah::ProblemSpecP bDensityParams = wasatchParams->findBlock("TwoStreamMixing");
+        bDensityParams->getAttribute("rho0",bcRho0);
+        bDensityParams->getAttribute("rho1",bcRho1);
+        }
         if( rho0!=bcRho0 || rho1!=bcRho1 ){
           std::ostringstream msg;
           msg << "ERROR: the values of rho0 and rho1 should be exactly the same in the \"VariableDensityMMS\" block and the \"VarDen1DMMSMomentum\" BCExpression. In \"VariableDensityMMS\" rho0=" << rho0 << " and rho1=" << rho1 << " while in \"VarDen1DMMSMomentum\" BCExpression rho0=" << bcRho0 << " and rho1=" << bcRho1 << std::endl;
@@ -421,8 +427,11 @@ namespace WasatchCore{
       else if( bcExprParams->findBlock("VarDenMMSDensity") ){
         double bcRho0=1.29985, bcRho1=0.081889;
         Uintah::ProblemSpecP valParams = bcExprParams->findBlock("VarDenMMSDensity");
-        valParams->get("rho0",bcRho0);
-        valParams->get("rho1",bcRho1);
+        if (wasatchParams->findBlock("TwoStreamMixing")){
+        Uintah::ProblemSpecP bDensityParams = wasatchParams->findBlock("TwoStreamMixing");
+        bDensityParams->getAttribute("rho0",bcRho0);
+        bDensityParams->getAttribute("rho1",bcRho1);
+        }
         if( rho0!=bcRho0 || rho1!=bcRho1 ){
           std::ostringstream msg;
           msg << "ERROR: the values of rho0 and rho1 should be exactly the same in the \"VariableDensityMMS\" block and the \"VarDen1DMMSDensity\" BCExpression. In \"VariableDensityMMS\" rho0=" << rho0 << " and rho1=" << rho1 << " while in \"VarDen1DMMSDensity\" BCExpression rho0=" << bcRho0 << " and rho1=" << bcRho1 << std::endl;
@@ -433,8 +442,11 @@ namespace WasatchCore{
       else if( bcExprParams->findBlock("VarDenMMSSolnVar") ){
         double bcRho0=1.29985, bcRho1=0.081889;
         Uintah::ProblemSpecP valParams = bcExprParams->findBlock("VarDenMMSSolnVar");
-        valParams->get("rho0",bcRho0);
-        valParams->get("rho1",bcRho1);
+        if (wasatchParams->findBlock("TwoStreamMixing")){
+        Uintah::ProblemSpecP bDensityParams = wasatchParams->findBlock("TwoStreamMixing");
+        bDensityParams->getAttribute("rho0",bcRho0);
+        bDensityParams->getAttribute("rho1",bcRho1);
+        }
         if( rho0!=bcRho0 || rho1!=bcRho1 ){
           std::ostringstream msg;
           msg << "ERROR: the values of rho0 and rho1 should be exactly the same in the \"VariableDensityMMS\" block and the \"VarDen1DMMSSolnVar\" BCExpression. In \"VariableDensityMMS\" rho0=" << rho0 << " and rho1=" << rho1 << " while in \"VarDen1DMMSSolnVar\" BCExpression rho0=" << bcRho0 << " and rho1=" << bcRho1 << std::endl;

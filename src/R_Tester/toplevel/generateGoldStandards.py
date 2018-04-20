@@ -1,12 +1,12 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 
 import os 
 
 # bulletproofing
-if os.sys.version_info <= (2,7):
+if os.sys.version_info <= (3,0):
   print( "" )
   print( "ERROR: Your python version [" + str( os.sys.version_info ) + "] is too old.\n" + \
-        "       You must use version 2.7 or greater (but NOT version 3.x!). \n" )
+        "       You must use version 3.0 or greater. \n" )
   exit( 1 )
 
 import shutil
@@ -18,10 +18,7 @@ import subprocess # needed to accurately get return codes
 from os import system
 from optparse import OptionParser
 from sys import argv, exit
-from string import upper
-
-from subprocess import check_output # needed to get full pathname response from which command
-from helpers.runSusTests import nameoftest, testOS, input, num_processes, testOS, setGeneratingGoldStandards, userFlags
+from helpers.runSusTests import getTestName, getTestOS, getUpsFile, getMPISize, getTestOS, setInputsDir, getTestFlags
 
 ####################################################################################
 
@@ -140,7 +137,7 @@ def validateArgs( options, args ) :
     if not os.path.isdir( inputs ) :
         error( "'inputs' directory not found here: '" + inputs )
 
-    setGeneratingGoldStandards( inputs )
+    setInputsDir( inputs )
 
 ####################################################################################
 
@@ -175,8 +172,7 @@ def generateGS() :
       MPIRUN = os.environ['MPIRUN']    # first try the environmental variable
     except :
       try:
-        MPIRUN = check_output(["which", "mpirun"])
-        MPIRUN = MPIRUN[:-1] # get rid of carriage return at the end of check_output
+        MPIRUN = shutil.which("mpirun")
       except:
         print( "ERROR:generateGoldStandards.py ")
         print( "      mpirun command was not found and the environmental variable MPIRUN was not set." )
@@ -235,7 +231,7 @@ def generateGS() :
     configVars = options.build_directory + "/configVars.mk"
     for component in components :
 
-      searchString = "BUILD_%s=no" % upper(component)  # search for BUILD_<COMPONENT>=no
+      searchString = "BUILD_%s=no" % component.upper()  # search for BUILD_<COMPONENT>=no
       for line in open(configVars):
         if searchString in line:
           print( "\n ERROR: the component (%s) was not compiled.  You must compile it before you can generate the gold standards\n" % component )
@@ -307,7 +303,7 @@ def generateGS() :
 
         nTestsFinished = 0
         for test in tests :
-            if testOS( test ) != upper( OS ) and testOS( test ) != "ALL":
+            if getTestOS( test ) != OS.upper() and getTestOS( test ) != "ALL":
                 continue
              
             #  Defaults
@@ -318,7 +314,7 @@ def generateGS() :
             # parse user flags for the gpu and sus_options
             # override defaults if the flags have been specified
             if len(test) == 5:
-              flags = userFlags(test)
+              flags = getTestFlags(test)
               print( "User Flags:" )
 
               #  parse the user flags
@@ -347,16 +343,16 @@ def generateGS() :
                 continue
               
             # FIXME: NOT SURE IF THIS IS RIGHT, BUT IT APPEARS TO MATCH WHAT THE RUN TESTS SCRIPT NEEDS:
-            print( "About to run test: " + nameoftest( test ) )
-            os.mkdir( nameoftest( test ) )
-            os.chdir( nameoftest( test ) )
+            print( "About to run test: " + getTestName( test ) )
+            os.mkdir( getTestName( test ) )
+            os.chdir( getTestName( test ) )
 
             # Create (yet) another symbolic link to the 'inputs' directory so some .ups files will be able
             # to find what they need...  (Needed for, at least, methane8patch (ARCHES) test.)
             if not os.path.islink( "inputs" ) :
                 os.symlink( inputs, "inputs" )
 
-            np = float( num_processes( test ) )
+            np = float( getMPISize( test ) )
             mpirun = ""
 
             
@@ -391,7 +387,7 @@ def generateGS() :
             np = int( np )
             my_mpirun = "%s -np %s  " % (MPIHEAD, np)
 
-            command = my_mpirun + sus + " " + SVN_FLAGS + " " + sus_options + " " + inputs + "/" + component + "/" + input( test )  + " > sus_log.txt 2>&1 " 
+            command = my_mpirun + sus + " " + SVN_FLAGS + " " + sus_options + " " + inputs + "/" + component + "/" + getUpsFile( test )  + " > sus_log.txt 2>&1 " 
 
             print( "Running command: " + command )
 

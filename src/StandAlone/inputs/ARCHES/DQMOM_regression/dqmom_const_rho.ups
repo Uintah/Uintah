@@ -84,10 +84,6 @@
       <DQMOM type="weightedAbs">
         <number_quad_nodes>3</number_quad_nodes>
         <save_moments>false</save_moments>
-        <LinearSolver>
-          <tolerance>1e-5</tolerance>
-          <type>Simplest</type>
-        </LinearSolver>
         <VelModel type="Dragforce">
         </VelModel>
         <Models>

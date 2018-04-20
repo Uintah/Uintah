@@ -56,7 +56,7 @@ InitLagrangianParticleSize::create_local_labels(){
 void
 InitLagrangianParticleSize::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){
 
-  register_variable( _size_label, ArchesFieldContainer::COMPUTES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
+  register_variable( _size_label, ArchesFieldContainer::MODIFIES, variable_registry );
 
 }
 

@@ -36,7 +36,6 @@
 #include <Core/Grid/SimulationState.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Util/DebugStream.h>
 #include <Core/Util/DOUT.hpp>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/NotFinished.h>
@@ -52,11 +51,16 @@ using namespace Uintah;
 
 namespace {
 
-Dout g_lb_dbg(                "LoadBalancer"     , false );
-Dout g_neighborhood_dbg(      "Neighborhood"     , false );
-Dout g_neighborhood_size_dbg( "NeighborhoodSize" , false );
-Dout g_patch_assignment(      "LBPatchAssignment", false );
+  Dout g_lb_dbg(                "LoadBalancer"     , "LoadBalancers", "", false );
+  Dout g_neighborhood_dbg(      "Neighborhood"     , "LoadBalancers", "", false );
+  Dout g_neighborhood_size_dbg( "NeighborhoodSize" , "LoadBalancers", "", false );
+  Dout g_patch_assignment(      "LBPatchAssignment", "LoadBalancers", "", false );
 
+}
+
+namespace Uintah {
+  DebugStream g_profile_stats ("ProfileStats",   "LoadBalancers", "", false );
+  DebugStream g_profile_stats2("ProfileStats2",  "LoadBalancers", "", false );
 }
 
 // If defined, the space-filling curve will be computed in parallel,
@@ -70,6 +74,9 @@ Dout g_patch_assignment(      "LBPatchAssignment", false );
 LoadBalancerCommon::LoadBalancerCommon( const ProcessorGroup * myworld )
   : UintahParallelComponent( myworld )
   , m_sfc( myworld )
+  , stats( "LBStats", "LoadBalancers", "", false )
+  , times( "LBTimes", "LoadBalancers", "", false )
+  , lbout( "LBOut",   "LoadBalancers", "", false )
 {
   m_activeDims[0] = m_activeDims[1] = m_activeDims[2] = 0;
 }
@@ -468,8 +475,7 @@ LoadBalancerCommon::possiblyDynamicallyReallocate( const GridP & grid
 {
   if( state != LoadBalancer::CHECK_LB ) {
     // Have it create a new patch set, and have the DLB version call this.
-    // This is a good place to do it, as it is automatically called when the
-    // grid changes.
+    // This is a good place to do it, as it is automatically called when the grid changes.
     m_level_perproc_patchsets.clear();
     m_output_patchsets.clear();
     m_grid_perproc_patchsets = createPerProcessorPatchSet(grid);
@@ -886,18 +892,16 @@ LoadBalancerCommon::problemSetup(       ProblemSpecP     & pspec
   // modify.
   if( m_application->getVisIt() && !initialized ) {
     ApplicationInterface::interactiveVar var;
-    var.name     = "LoadBalancer-DoSpaceCurve";
-    var.type     = Uintah::TypeDescription::bool_type;
-    var.value    = (void *) &m_do_space_curve;
-    var.range[0] = 0;
-    var.range[1] = 1;
+    var.component  = "LoadBalancer";
+    var.name       = "DoSpaceCurve";
+    var.type       = Uintah::TypeDescription::bool_type;
+    var.value      = (void *) &m_do_space_curve;
+    var.range[0]   = 0;
+    var.range[1]   = 1;
     var.modifiable = true;
     var.recompile  = false;
     var.modified   = false;
     m_application->getUPSVars().push_back( var );
-
-    m_application->getDouts().push_back( &g_lb_dbg  );
-    m_application->getDouts().push_back( &g_neighborhood_dbg );
 
     initialized = true;
   }
