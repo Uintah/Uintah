@@ -17,7 +17,7 @@
 #include <expression/ExpressionID.h>
 #include <CCA/Components/Wasatch/Coal/CoalEquation.h>
 
-namespace WasatchCore{class GraphHelper; }
+namespace WasatchCore{ struct GraphHelper; }
 
 namespace DEV{
 
@@ -33,8 +33,7 @@ namespace DEV{
         C2H6 = 6,
         C3H8 = 7,
         CH4  = 8,
-        H    = 9,
-        H2   = 10,
+        H2   = 9,
         INVALID_SPECIES = 99
 
   };

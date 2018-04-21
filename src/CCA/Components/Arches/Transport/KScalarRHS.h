@@ -471,10 +471,7 @@ private:
       y_flux.initialize(0.0);
       z_flux.initialize(0.0);
 
-      //if ( m_premultiplier_name != "none" ){
-      //if ( m_transported_eqn_names[ieqn] != "NA" ) {
       if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ) {
-        //T& rho_phi  = tsk_info->get_uintah_field_add<T>(m_premultiplier_name+m_eqn_names[ieqn]);
         T& rho_phi  = tsk_info->get_uintah_field_add<T>(m_transported_eqn_names[ieqn]);
         rho_phi.initialize(0.0);
       }
@@ -502,12 +499,8 @@ private:
     const int istart = 0;
     const int iend = m_eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
-      //if ( m_premultiplier_name != "none" ){
-      //if ( m_transported_eqn_names[ieqn] != "NA" ) {
-        //register_variable( m_premultiplier_name+m_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry, _task_name  );
       register_variable( m_transported_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry );
       register_variable( m_transported_eqn_names[ieqn], ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::OLDDW , variable_registry, _task_name );
-      //}
       register_variable( m_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry, _task_name  );
       register_variable( m_transported_eqn_names[ieqn]+"_RHS", ArchesFieldContainer::COMPUTES , variable_registry, _task_name  );
       register_variable( m_eqn_names[ieqn], ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::OLDDW , variable_registry, _task_name  );
@@ -560,12 +553,8 @@ private:
     const int iend = m_eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
 
-      register_variable( m_eqn_names[ieqn], ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name );
-      //if ( m_premultiplier_name != "none" )
-      //if ( m_transported_eqn_names[ieqn] != "NA" )
-      //if ( m_transported_eqn_names[i] != m_eqn_names[i] )
-      register_variable( m_transported_eqn_names[ieqn], ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name );
-        //register_variable( m_premultiplier_name+m_eqn_names[ieqn], ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name );
+      register_variable( m_eqn_names[ieqn], ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::LATEST, variable_registry, time_substep, _task_name );
+      register_variable( m_transported_eqn_names[ieqn], ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::LATEST, variable_registry, time_substep, _task_name );
       register_variable( m_transported_eqn_names[ieqn]+"_RHS", ArchesFieldContainer::MODIFIES, variable_registry, time_substep, _task_name );
       register_variable( m_eqn_names[ieqn]+"_x_flux", ArchesFieldContainer::MODIFIES, variable_registry, time_substep, _task_name );
       register_variable( m_eqn_names[ieqn]+"_y_flux", ArchesFieldContainer::MODIFIES, variable_registry, time_substep, _task_name );

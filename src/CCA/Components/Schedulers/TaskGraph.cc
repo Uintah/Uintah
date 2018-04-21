@@ -105,7 +105,7 @@ TaskGraph::initialize()
 void
 TaskGraph::nullSort( std::vector<Task*> & tasks )
 {
-  // No longer going to sort them... let the UnifiedScheduler (threaded) take care of calling the tasks when all
+  // No longer going to sort them... let the scheduler take care of calling the tasks when all
   // dependencies are satisfied. Sorting the tasks causes problem because now tasks (actually task groups) run in
   // different orders on different MPI processes.
   int n = 0;
@@ -138,8 +138,10 @@ TaskGraph::addTask(       std::shared_ptr<Task>   task
                   )
 {
   task->setSets( patchset, matlset );
+
+  // check for empty tasks
   if ( (patchset && patchset->totalsize() == 0) || (matlset && matlset->totalsize() == 0) ) {
-    task.reset();
+    task.reset(); // release ownership of managed std::shared_ptr<Task>
     DOUT(g_detailed_deps_dbg, "Rank-" << m_proc_group->myRank() << " Killing empty task: " << *task);
   }
   else {
@@ -149,13 +151,15 @@ TaskGraph::addTask(       std::shared_ptr<Task>   task
     task->displayAll_DOUT(g_add_task_dbg);
     
 #if 0
-    // This snippet will find all the tasks that require a label
+    // This snippet will find all the tasks that require a label, simply change the value of "search_name"
     for (Task::Dependency* m_req = task->getRequires(); m_req != nullptr; m_req = m_req->m_next) {
       const VarLabel* label = m_req->m_var;
       std::string name = label->getName();
-      if (name == "p.size") {
-        std::cout << "\n" << Parallel::getMPIRank() << "This Task Requires label p.size" << std::endl;
-        task->displayAll_DOUT(std::cout);
+      std::string search_name("abskg");
+      if (name == search_name) {
+        std::cout << "\n" << "Rank-" << std::setw(4) << std::left << Parallel::getMPIRank() << " "
+                  << task->getName() << " requires label " << "\"" << search_name << "\"";
+        task->displayAll_DOUT(g_add_task_dbg);
       }
     }
 #endif
@@ -173,12 +177,12 @@ TaskGraph::createDetailedTask(       Task           * task
 {
   DetailedTask* dt = scinew DetailedTask( task, patches, matls, m_detailed_tasks );
 
+#if SCI_ASSERTION_LEVEL > 0
   if (task->getType() == Task::Reduction) {
-    Task::Dependency* req = task->getModifies();
     // reduction tasks should have exactly 1 require, and it should be a modify
-    ASSERT(req != nullptr);
-    m_reduction_tasks[req->m_var] = dt;
+    ASSERT(task->getModifies() != nullptr);
   }
+#endif
 
   m_detailed_tasks->add(dt);
 }
@@ -196,8 +200,6 @@ TaskGraph::createDetailedTasks(       bool    useInternalDeps
   std::vector<Task*> sorted_tasks;
 
   nullSort(sorted_tasks);
-
-  m_reduction_tasks.clear();
 
   ASSERT(grid != nullptr);
 

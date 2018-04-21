@@ -15,7 +15,7 @@
 #include <CCA/Components/Wasatch/Coal/CoalData.h>
 #include <CCA/Components/Wasatch/Coal/CoalEquation.h>
 
-namespace WasatchCore{class GraphHelper;       }
+namespace WasatchCore{ struct GraphHelper; }
 
 namespace EVAP{
 

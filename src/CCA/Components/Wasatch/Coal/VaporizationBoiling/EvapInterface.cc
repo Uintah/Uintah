@@ -3,8 +3,8 @@
 
 #include <CCA/Components/Wasatch/Coal/StringNames.h>
 
-#include "EvapInterface.h"
-#include "Vaporization_RHS.h"
+#include <CCA/Components/Wasatch/Coal/VaporizationBoiling/EvapInterface.h>
+#include <CCA/Components/Wasatch/Coal/VaporizationBoiling/Vaporization_RHS.h>
 
 #include <spatialops/particles/ParticleFieldTypes.h>
 #include <spatialops/Nebo.h>
@@ -78,7 +78,7 @@ namespace EVAP{
   EvapInterface<FieldT>::
   parse_equations()
   {
-    std::cout<<"\n\nEvapInterface::parse_equations() called. \n\n";
+    proc0cout << "\n\nEvapInterface::parse_equations() called. \n\n";
     const Coal::StringNames& sNames = Coal::StringNames::self();;
     evapEqn_ = new Coal::CoalEquation( sNames.moisture, pMassTag_, coalComp_.get_moisture(), gc_ );
 

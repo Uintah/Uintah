@@ -1,4 +1,4 @@
-#include "KobSarofimInterface.h"
+#include <CCA/Components/Wasatch/Coal/Devolatilization/KobayashiSarofim/KobSarofimInterface.h>
 
 #include <stdexcept>
 #include <sstream>
@@ -11,7 +11,6 @@
 // expressions we build here
 
 using std::vector;
-using std::cout;
 using std::endl;
 using std::ostringstream;
 using std::string;

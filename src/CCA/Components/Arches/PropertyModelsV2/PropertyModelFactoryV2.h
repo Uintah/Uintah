@@ -27,6 +27,10 @@ namespace Uintah{
 
         return _pre_update_property_tasks;
 
+      } else if ( subset == "diffusion_property_models" ){
+
+        return _diffusion_property_tasks;
+
       } else if ( subset == "pre_table_post_iv_update" ){
 
         return _pre_table_post_iv_update;
@@ -75,7 +79,7 @@ namespace Uintah{
     std::vector<std::string> _var_stats_tasks;            ///<All Tasks associated with variable stats
     std::vector<std::string> _phi_from_rho_phi;
     std::vector<std::string> _u_from_rho_u;
-
+    std::vector<std::string> _diffusion_property_tasks;
     std::vector<std::string> _task_order;                 ///<The order in which these tasks should execute
 
     std::string m_vel_name;                               ///<Name of the task that creates all face velocities

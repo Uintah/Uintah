@@ -23,7 +23,7 @@ enum CPDSpecies {
    HCN  = 3,
    NH3  = 4,
    CH4  = 5, 
-   H    = 6,
+   H2   = 6,
    INVALID_SPECIES = 99
    
  };
@@ -97,7 +97,7 @@ enum CPDSpecies {
     std::vector<double> E0_;
     std::vector<double> sigma_;
 
-    GasSpec::SpeciesData speciesData_;
+    const GasSpec::SpeciesData& speciesData_;
   };
 
 

@@ -128,10 +128,10 @@ Task::setSets( const PatchSet* ps, const MaterialSet* ms )
 {
   // NOTE: the outer [patch/matl]Set checks are related to temporal scheduling, e.g. more then 1 regular task graph
   //
-  // This is called from TaskGraph::addTask() in which a single task may be added to >1 Normal
-  // task graph. In this case, first time here, m_path/matl_set will be nullptr and subsequent visits
+  // This is called from TaskGraph::addTask() in which a single task may be added to more than 1 Normal
+  // task graphs. In this case, first time here, m_path/matl_set will be nullptr and subsequent visits
   // will be the same pointer as ps and ms respectively. Without these checks, the refCount gets
-  // artificially inflated and ComputeSubsets (Patch/Matl)) are not deleted - mem leak. APH, 06/08/17
+  // artificially inflated and ComputeSubsets (Patch/Matl)) are not deleted, resulting in a mem leak. APH, 06/08/17
   if (m_patch_set == nullptr) {
     m_patch_set = ps;
     if (m_patch_set) {

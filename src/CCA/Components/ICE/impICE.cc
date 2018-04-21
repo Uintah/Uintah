@@ -46,6 +46,7 @@
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Parallel/Parallel.h>
 #include <sci_defs/hypre_defs.h>
+
 #ifdef HAVE_HYPRE
 #include <CCA/Components/Solvers/HypreSolver.h>
 #endif
@@ -340,21 +341,18 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
   // from implicitPressure solve
   // OldDW = ParentOldDW
   // NewDW = ParentNewDW
-  
 #ifdef HAVE_HYPRE
   if (m_solver->getName() == "hypre") {
-    t->requires(Task::OldDW,hypre_solver_label);
+    t->requires(Task::OldDW, hypre_solver_label);
     t->computes(hypre_solver_label);
-    
-    sched->overrideVariableBehavior(hypre_solver_label->getName(),false,false,
-                                    false,true,true);
+    //(string var, bool treatAsOld, bool copyData, bool noScrub, bool notCopyData, bool noCheckpoint)
+    sched->overrideVariableBehavior(hypre_solver_label->getName(),false,false,false,true,true);
   }
 #endif
 
   //__________________________________
   // common Variables
   t->requires( Task::OldDW, lb->timeStepLabel);
-  t->requires( Task::OldDW, lb->delTLabel,level.get_rep());
   t->requires( Task::NewDW, lb->vol_frac_CCLabel,   gac,2); 
   t->requires( Task::NewDW, lb->sp_vol_CCLabel,     gac,1);
   t->requires( Task::NewDW, lb->rhsLabel,            one_matl,   oims,gn,0);
@@ -970,28 +968,20 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
 
   //__________________________________
   //  Move data from parentOldDW to subSchedNewDW.
-  delt_vartype dt;
-  subNewDW = d_subsched->get_dw(3);
-  ParentOldDW->get(dt, lb->delTLabel,level.get_rep());
-  subNewDW->put(dt, lb->delTLabel,level.get_rep());
-   
   max_vartype max_RHS_old;
   ParentNewDW->get(max_RHS_old, lb->max_RHSLabel);
   subNewDW->put(   max_RHS_old, lb->max_RHSLabel);
 
 #ifdef HAVE_HYPRE
-  SoleVariable<hypre_solver_structP> hypre_solverP_;
   if (m_solver->getName() == "hypre") {
-    if (ParentOldDW->exists(hypre_solver_label)) {
-      ParentOldDW->get(hypre_solverP_, hypre_solver_label);
-      subNewDW->put(   hypre_solverP_, hypre_solver_label);
-    } 
-    timeStep_vartype timeStepVar;
-    if (ParentOldDW->exists(lb->timeStepLabel)) {
-      ParentOldDW->get(timeStepVar, lb->timeStepLabel);
-      subNewDW->put(   timeStepVar, lb->timeStepLabel);
+    if (ParentOldDW->exists( hypre_solver_label ) ) {
+      SoleVariable<hypre_solver_structP> hypre_solverP;
+      ParentOldDW->get( hypre_solverP, hypre_solver_label );
+      subNewDW->put(    hypre_solverP, hypre_solver_label );
     }
+    d_solver_parameters->setWhichOldDW( Task::ParentOldDW );
   }
+
 #endif
 
   subNewDW->transferFrom(ParentNewDW,lb->sum_imp_delPLabel, patch_sub, d_press_matl);
@@ -1152,17 +1142,14 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
 
 #ifdef HAVE_HYPRE
   if (m_solver->getName() == "hypre") {
-    if (subNewDW->exists(hypre_solver_label)) {
-      subNewDW->get(hypre_solverP_,hypre_solver_label);
-      ParentNewDW->put(hypre_solverP_, hypre_solver_label);
-    } 
-    timeStep_vartype timeStepVar;
-    if (subNewDW->exists(lb->timeStepLabel)) {
-      subNewDW->get(timeStepVar,lb->timeStepLabel);
-      ParentNewDW->put(timeStepVar, lb->timeStepLabel);
+    if ( subNewDW->exists(hypre_solver_label) ){
+      SoleVariable<hypre_solver_structP> hypre_solverP;
+      subNewDW->get(    hypre_solverP, hypre_solver_label );
+      ParentNewDW->put( hypre_solverP, hypre_solver_label );
     }
   }
 #endif
+
 
   ParentNewDW->transferFrom(subNewDW,         // press
                     lb->press_CCLabel,       patch_sub,  d_press_matl, replace);

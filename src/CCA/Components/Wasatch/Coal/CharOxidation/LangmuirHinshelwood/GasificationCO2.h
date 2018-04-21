@@ -12,10 +12,9 @@ template< typename FieldT >
 class GasificationCO2
  : public Expr::Expression<FieldT>
 {
-  DECLARE_FIELDS( FieldT, mchar_, prtdim_, tempp_, msfrcco2_, totalmw_, gaspress_ )
+  DECLARE_FIELDS( FieldT, mchar_, tempp_, msfrcco2_, totalmw_, gaspress_ )
 
   GasificationCO2( const Expr::Tag& mchart,
-                   const Expr::Tag& prtdimt,
                    const Expr::Tag& temppt,
                    const Expr::Tag& msfrcco2t,
                    const Expr::Tag& totalmwt,
@@ -25,7 +24,6 @@ class GasificationCO2
     this->set_gpu_runnable(true);
 
     mchar_    = this->template create_field_request<FieldT>( mchart    );
-    prtdim_   = this->template create_field_request<FieldT>( prtdimt   );
     tempp_    = this->template create_field_request<FieldT>( temppt    );
     msfrcco2_ = this->template create_field_request<FieldT>( msfrcco2t );
     totalmw_  = this->template create_field_request<FieldT>( totalmwt  );
@@ -39,14 +37,12 @@ public:
   public:
     Builder(const Expr::Tag& gasifCO2Tag,
             const Expr::Tag& mchart,
-            const Expr::Tag& prtdimt,
             const Expr::Tag& temppt,
             const Expr::Tag& msfrcco2t,
             const Expr::Tag& totalmwt,
             const Expr::Tag& gaspresst)
     : ExpressionBuilder(gasifCO2Tag),
       mchart_   ( mchart   ),
-      prtdimt_  ( prtdimt  ),
       temppt_   ( temppt   ),
       msfrcco2t_( msfrcco2t),
       totalmwt_ ( totalmwt ),
@@ -55,11 +51,11 @@ public:
 
     ~Builder(){}
     Expr::ExpressionBase* build() const{
-      return new GasificationCO2( mchart_, prtdimt_, temppt_, msfrcco2t_, totalmwt_, gaspresst_ );
+      return new GasificationCO2( mchart_, temppt_, msfrcco2t_, totalmwt_, gaspresst_ );
     }
 
   private:
-    const Expr::Tag mchart_, prtdimt_, temppt_, msfrcco2t_, totalmwt_, gaspresst_;
+    const Expr::Tag mchart_, temppt_, msfrcco2t_, totalmwt_, gaspresst_;
   };
 
   void evaluate()
@@ -69,7 +65,6 @@ public:
     FieldT& result = this->value();
 
     const FieldT& mchar    = mchar_   ->field_ref();
-    const FieldT& prtdim   = prtdim_  ->field_ref();
     const FieldT& tempp    = tempp_   ->field_ref();
     const FieldT& msfrcco2 = msfrcco2_->field_ref();
     const FieldT& totalmw  = totalmw_ ->field_ref();

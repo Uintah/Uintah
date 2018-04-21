@@ -113,7 +113,7 @@ namespace CCK{
      // Calculate initial mass fraction of char within coal
      double char0 = cckData_.get_fixed_C()+ cckData_.get_vm()*c0;
 
-    std::cout << std::endl
+    proc0cout << std::endl
               << "Initial char mass fraction in coal volatiles is : "
               << cckData_.get_vm()*c0
               << std::endl
@@ -175,7 +175,6 @@ namespace CCK{
     massFracTags_.push_back( h2oMassFracTag_ );
     massFracTags_.push_back( ch4MassFracTag_ );
 
-    // gas property tags
     gasTags_.clear();
     gasTags_.push_back( gTempTag_       ); // 0
     gasTags_.push_back( gPressTag_      ); // 1
@@ -183,16 +182,12 @@ namespace CCK{
 
     particleTags_.clear();
     particleTags_.push_back( pTempTag_          ); //0
-    particleTags_.push_back( pMass0Tag_         ); //1
-    particleTags_.push_back( pMassTag_          ); //2
-    particleTags_.push_back( charMassTag_       ); //3
-    particleTags_.push_back( charConversionTag_ ); //4
-    particleTags_.push_back( coreDensityTag_    ); //5
-    particleTags_.push_back( coreDiamTag_       ); //6
-    particleTags_.push_back( pDiamTag_          ); //7
-    particleTags_.push_back( ashPorosityTag_    ); //8
-    particleTags_.push_back( ashThicknessTag_   ); //9
-    particleTags_.push_back( thermAnnealTag_    ); //10
+    particleTags_.push_back( charConversionTag_ ); //1
+    particleTags_.push_back( coreDensityTag_    ); //2
+    particleTags_.push_back( coreDiamTag_       ); //3
+    particleTags_.push_back( pDiamTag_          ); //4
+    particleTags_.push_back( ashPorosityTag_    ); //5
+    particleTags_.push_back( thermAnnealTag_    ); //6
 
     // char depletion tags
     charDepletionTags_.clear();
@@ -273,15 +268,15 @@ namespace CCK{
                                          *(1 - cckData_.get_min_ash_porosity()) ) );
 
     factory.register_expression( new typename CCK::LogFrequencyDistributionRHS<FieldT>::
-                                 Builder( logFreqDistRHSTags_, pTempTag_,       pMass0Tag_,
-                                          pMassTag_,          volatilesTag_, cckData_ ));
+                                 Builder( logFreqDistRHSTags_, pTempTag_, pMass0Tag_,
+                                          volatilesTag_,       cckData_ ));
 
     factory.register_expression( new typename CCK::ThermalAnnealing<FieldT>::
                                  Builder( thermAnnealTag_, logFreqDistTags_, cckData_ ));
 
     factory.register_expression( new typename CCK::CCKModel<FieldT>::
-                                 Builder( charDepletionTags_,  massFracTags_, gasTags_, particleTags_,
-                                          cckData_ ) );
+                                 Builder( charDepletionTags_,  massFracTags_, gasTags_,
+                                          particleTags_,       cckData_ ) );
 
     factory.register_expression( new typename CCK::CharConversion<FieldT>::
                                  Builder( charConversionTag_, charMassTag_, pMass0Tag_, cckData_ ));

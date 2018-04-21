@@ -16,10 +16,9 @@ template< typename FieldT >
 class GasificationH2O
  : public Expr::Expression<FieldT>
 {
-  DECLARE_FIELDS( FieldT, mchar_, prtdim_, tempp_, msfrch2o_, totalmw_, gaspress_ )
+  DECLARE_FIELDS( FieldT, mchar_, tempp_, msfrch2o_, totalmw_, gaspress_ )
 
   GasificationH2O( const Expr::Tag& mchart,
-                   const Expr::Tag& prtdimt,
                    const Expr::Tag& temppt,
                    const Expr::Tag& msfrch2ot,
                    const Expr::Tag& totalmwt,
@@ -31,7 +30,6 @@ public:
   public:
     Builder( const Expr::Tag& gasifH2OTag,
              const Expr::Tag& mchart,
-             const Expr::Tag& prtdimt,
              const Expr::Tag& temppt,
              const Expr::Tag& msfrch2ot,
              const Expr::Tag& totalmwt,
@@ -39,7 +37,7 @@ public:
     ~Builder(){}
     Expr::ExpressionBase* build() const;
   private:
-    const Expr::Tag mchart_, prtdimt_, temppt_, msfrch2ot_, totalmwt_, gaspresst_;
+    const Expr::Tag mchart_, temppt_, msfrch2ot_, totalmwt_, gaspresst_;
   };
 
   void evaluate();
@@ -57,7 +55,6 @@ public:
 template< typename FieldT >
 GasificationH2O<FieldT>::
 GasificationH2O( const Expr::Tag& mchart,
-                 const Expr::Tag& prtdimt,
                  const Expr::Tag& temppt,
                  const Expr::Tag& msfrch2ot,
                  const Expr::Tag& totalmwt,
@@ -67,7 +64,6 @@ GasificationH2O( const Expr::Tag& mchart,
   this->set_gpu_runnable(true);
 
   mchar_    = this->template create_field_request<FieldT>( mchart    );
-  prtdim_   = this->template create_field_request<FieldT>( prtdimt   );
   tempp_    = this->template create_field_request<FieldT>( temppt    );
   msfrch2o_ = this->template create_field_request<FieldT>( msfrch2ot );
   totalmw_  = this->template create_field_request<FieldT>( totalmwt  );
@@ -82,7 +78,6 @@ GasificationH2O<FieldT>::evaluate()
   using namespace SpatialOps;
   FieldT& result = this->value();
   const FieldT& mchar    = mchar_   ->field_ref();
-  const FieldT& prtdim   = prtdim_  ->field_ref();
   const FieldT& tempp    = tempp_   ->field_ref();
   const FieldT& msfrch2o = msfrch2o_->field_ref();
   const FieldT& totalmw  = totalmw_ ->field_ref();
@@ -115,14 +110,12 @@ template< typename FieldT >
 GasificationH2O<FieldT>::Builder::
 Builder( const Expr::Tag& gasifH2OTag,
          const Expr::Tag& mchart,
-         const Expr::Tag& prtdimt,
          const Expr::Tag& temppt,
          const Expr::Tag& msfrch2ot,
          const Expr::Tag& totalmwt,
          const Expr::Tag& gaspresst)
 : ExpressionBuilder(gasifH2OTag),
   mchart_   ( mchart   ),
-  prtdimt_  ( prtdimt  ),
   temppt_   ( temppt   ),
   msfrch2ot_( msfrch2ot),
   totalmwt_ ( totalmwt ),
@@ -134,7 +127,7 @@ template< typename FieldT >
 Expr::ExpressionBase*
 GasificationH2O<FieldT>::Builder::build() const
 {
-  return new GasificationH2O( mchart_, prtdimt_, temppt_, msfrch2ot_, totalmwt_, gaspresst_ );
+  return new GasificationH2O( mchart_, temppt_, msfrch2ot_, totalmwt_, gaspresst_ );
 }
 
 }  // namesspace GASIFs
