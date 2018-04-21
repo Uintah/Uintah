@@ -104,6 +104,7 @@ void DOSweep::scheduleInitialize(const LevelP& level,
 void DOSweep::scheduleRestartInitialize(const LevelP& level,
                                         SchedulerP& sched)
 {
+  solver->scheduleRestartInitialize(level,sched,m_sharedState->allMaterials());
 }
 //__________________________________
 // 

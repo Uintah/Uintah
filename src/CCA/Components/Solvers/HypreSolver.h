@@ -68,7 +68,6 @@ namespace Uintah {
     double      tolerance;          // Residual tolerance for solver
     int         maxiterations;      // Maximum # iterations allowed
     int         logging;            // Log Hypre solver (using Hypre options)
-    bool        restart;            // Allow solver to restart if not converged
     int         solveFrequency;     // Frequency for solving the linear system. timestep % solveFrequency
     int         relax_type;         // relaxation type
     
@@ -254,6 +253,10 @@ namespace Uintah {
     virtual void scheduleInitialize( const LevelP      & level,
                                            SchedulerP  & sched,
                                      const MaterialSet * matls );
+                                     
+    virtual void scheduleRestartInitialize( const LevelP      & level,
+                                                  SchedulerP  & sched,
+                                            const MaterialSet * matls);
 
     virtual std::string getName();
 
@@ -265,6 +268,8 @@ namespace Uintah {
                      const MaterialSubset * matls,
                            DataWarehouse  * old_dw,
                            DataWarehouse  * new_dw );
+                           
+    
 
     const VarLabel * m_timeStepLabel;
     const VarLabel * hypre_solver_label;

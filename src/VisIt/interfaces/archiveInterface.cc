@@ -273,8 +273,8 @@ TimeStepInfo* getTimeStepInfo(DataArchive *archive,
       // Get the patch id
       patchInfo.setPatchId(patch->getID());
       
-      // Get the processor rank id
-      patchInfo.setProcRankId(archive->queryPatchwiseProcessor(patch, timestep));
+      // Get the processor id
+      patchInfo.setProcId(archive->queryPatchwiseProcessor(patch, timestep));
     }
   }
 

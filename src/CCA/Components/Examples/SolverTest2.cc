@@ -111,13 +111,14 @@ void SolverTest2::problemSetup(const ProblemSpecP& prob_spec,
 void SolverTest2::scheduleInitialize(const LevelP& level,
                                SchedulerP& sched)
 {
-  //solver->scheduleInitialize(level,sched,m_sharedState->allMaterials());
+//  solver->scheduleInitialize(level,sched,m_sharedState->allMaterials());
 }
 //__________________________________
 //
 void SolverTest2::scheduleRestartInitialize(const LevelP& level,
                                             SchedulerP& sched)
 {
+//  solver->scheduleRestartInitialize(level,sched,m_sharedState->allMaterials())
 }
 //__________________________________
 // 

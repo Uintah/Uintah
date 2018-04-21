@@ -153,15 +153,15 @@ SpeciesTransportEquation( Uintah::ProblemSpecP params,
                           const Expr::Tag temperatureTag,
                           const Expr::Tag mmwTag )
 : TransportEquation( gc, "rho_"+CanteraObjects::species_name(specNum), NODIR, false ),  // jcs should we allow constant density?  possibly...
+  params_     ( params      ),
   wasatchSpec_( wasatchSpec ),
-  params_( params ),
-  turbParams_( turbParams ),
-  specNum_( specNum ),
+  turbParams_ ( turbParams  ),
+  specNum_    ( specNum     ),
   primVarTag_( CanteraObjects::species_name(specNum), Expr::STATE_NONE ),
   densityTag_    ( densityTag     ),
-  velTags_       ( velTags        ),
   temperatureTag_( temperatureTag ),
   mmwTag_        ( mmwTag         ),
+  velTags_       ( velTags        ),
   nspec_( CanteraObjects::number_species() )
 {
   for( int i=0; i<nspec_; ++i ){
