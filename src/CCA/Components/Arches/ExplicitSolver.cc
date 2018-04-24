@@ -1559,11 +1559,11 @@ ExplicitSolver::allocateAndInitializeToC( const VarLabel* label,
     dw->allocateAndPut( var, label, index, patch );
     var.initialize(0.0);
   } else if ( type_desc == SFCYVariable<double>::getTypeDescription() ){
-    SFCXVariable<double> var;
+    SFCYVariable<double> var;
     dw->allocateAndPut( var, label, index, patch );
     var.initialize(0.0);
   } else if ( type_desc == SFCZVariable<double>::getTypeDescription() ){
-    SFCXVariable<double> var;
+    SFCZVariable<double> var;
     dw->allocateAndPut( var, label, index, patch );
     var.initialize(0.0);
   } else {

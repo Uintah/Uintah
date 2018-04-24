@@ -25,19 +25,18 @@
 #ifndef UINTAH_HOMEBREW_GridVARIABLE_H
 #define UINTAH_HOMEBREW_GridVARIABLE_H
 
-#include <Core/Grid/Variables/Array3.h>
-#include <Core/Grid/Variables/GridVariableBase.h>
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Disclosure/TypeUtils.h>
-#include <Core/Grid/Patch.h>
+#include <Core/Exceptions/InternalError.h>
+#include <Core/Exceptions/TypeMismatchException.h>
+#include <Core/Grid/Variables/Array3.h>
+#include <Core/Grid/Variables/GridVariableBase.h>
+#include <Core/IO/SpecializedRunLengthEncoder.h>
+#include <Core/Malloc/Allocator.h>
+
 #include <CCA/Ports/InputContext.h>
 #include <CCA/Ports/OutputContext.h>
-#include <Core/IO/SpecializedRunLengthEncoder.h>
-#include <Core/Exceptions/TypeMismatchException.h>
 
-#include <Core/Exceptions/InternalError.h>
-#include <Core/Geometry/Vector.h>
-#include <Core/Malloc/Allocator.h>
 #include <cstring>
 
 namespace Uintah {
@@ -152,14 +151,16 @@ WARNING
 
     virtual IntVector getHigh() const { return this->getHighIndex(); }
 
-    virtual void emitNormal(std::ostream& out, const IntVector& l, const IntVector& h,
-                            ProblemSpecP /*varnode*/, bool outputDoubleAsFloat)
+    virtual void emitNormal( std::ostream& out, const IntVector& l, const IntVector& h,
+                             ProblemSpecP /*varnode*/, bool outputDoubleAsFloat )
     {
-      const TypeDescription* td = fun_getTypeDescription((T*)0);
-      if(td->isFlat())
+      const TypeDescription* td = fun_getTypeDescription( (T*)nullptr );
+      if( td->isFlat() ) {
         Array3<T>::write(out, l, h, outputDoubleAsFloat);
-      else
+      }
+      else {
         SCI_THROW(InternalError("Cannot yet write non-flat objects!\n", __FILE__, __LINE__));
+      }
     }
 
     virtual bool emitRLE(std::ostream& out, const IntVector& l, const IntVector& h,
@@ -228,17 +229,19 @@ template<class T>
   GridVariable<T>::copyPointer(Variable& copy)
   {
     GridVariable<T>* c = dynamic_cast<GridVariable<T>* >(&copy);
-    if(!c)
-      SCI_THROW(TypeMismatchException("Type mismatch in Grid variable", __FILE__, __LINE__));
-    copyPointer(*c);
+    if( !c ) {
+      SCI_THROW( TypeMismatchException("Type mismatch in Grid variable", __FILE__, __LINE__) );
+    }
+    copyPointer( *c );
   }
 
   template<class T>
   const GridVariable<T>& GridVariable<T>::castFromBase(const GridVariableBase* srcptr)
   {
     const GridVariable<T>* c = dynamic_cast<const GridVariable<T>* >(srcptr);
-    if(!c)
-      SCI_THROW(TypeMismatchException("Type mismatch in CC variable", __FILE__, __LINE__));
+    if( !c ) {
+      SCI_THROW( TypeMismatchException("Type mismatch in CC variable", __FILE__, __LINE__) );
+    }
     return *c;
   }
 
@@ -246,9 +249,9 @@ template<class T>
   void GridVariable<T>::allocate( const IntVector& lowIndex,
                                   const IntVector& highIndex )
   {
-    if(this->getWindow())
-      SCI_THROW(InternalError("Allocating a Gridvariable that "
-                          "is apparently already allocated!", __FILE__, __LINE__));
+    if( this->getWindow() ) {
+      SCI_THROW( InternalError("Allocating a Gridvariable that is apparently already allocated!", __FILE__, __LINE__) );
+    }
     this->resize(lowIndex, highIndex);
   }
 

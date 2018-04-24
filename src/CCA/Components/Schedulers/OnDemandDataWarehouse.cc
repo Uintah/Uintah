@@ -1811,6 +1811,18 @@ OnDemandDataWarehouse::allocateAndPut(       GridVariableBase& var,
                                              Ghost::GhostType  gtype,
                                              int               numGhostCells )
 {
+#if SCI_ASSERTION_LEVEL >= 1
+  const TypeDescription * varType = var.virtualGetTypeDescription();
+  if( label->typeDescription()->getType() != varType->getType() ||
+      label->typeDescription()->getSubType()->getType() != varType->getSubType()->getType() ) {
+      std::cout << "OnDemandDataWarehouse::allocateAndPut():  Error: VarLabel type does not match Variable type!\n";
+      std::cout << "  VarLabel Name: " << label->getName() << "\n";
+      std::cout << "  VarLabel Type: " << label->typeDescription()->getName() << "\n";
+      std::cout << "  Variable Type: " << var.virtualGetTypeDescription()->getName() << "\n";
+      SCI_THROW(InternalError("OnDemandDataWarehouse::allocateAndPut(): Var and Label types do not match!", __FILE__, __LINE__));
+    }
+#endif
+  
 //  if (d_finalized) {
 //    std::cerr << "OnDemandDataWarehouse::allocateAndPut - When trying to allocate " << label->getName() << std::endl;
 //    std::cerr << "  DW " << getID() << " finalized!\n";
