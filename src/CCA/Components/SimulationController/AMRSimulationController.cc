@@ -906,7 +906,8 @@ AMRSimulationController::doRegridding( bool initialTimeStep )
   int lbstate = initialTimeStep ? LoadBalancer::INIT_LB : LoadBalancer::REGRID_LB;
 
   if( m_current_gridP != oldGrid ) {
-    m_application->setRegridTimeStep( true );
+
+    m_application->setRegridTimeStep( true, m_application->getTimeStep() );
      
     m_loadBalancer->possiblyDynamicallyReallocate(m_current_gridP, lbstate);
 

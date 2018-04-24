@@ -589,19 +589,25 @@ RMCRT_Radiation::initialize( const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     printTask(patches, patch, dbg, "Doing RMCRT_Radiation::initialize");
 
-    CCVariable<double> abskg;
+    if( _RMCRT->RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ) {
+      CCVariable<double> sigmaT4Double;
+      new_dw->allocateAndPut( sigmaT4Double, _RMCRT->d_sigmaT4Label, _matl, patch );
+      sigmaT4Double.initialize( 0.0 );
+    }
+    else {
+      CCVariable<float> sigmaT4Float;
+      new_dw->allocateAndPut( sigmaT4Float, _RMCRT->d_sigmaT4Label, _matl, patch );
+      sigmaT4Float.initialize( 0.0 );
+    }
+
     CCVariable<double> radVolq;
-    CCVariable<double> sigmaT4;
     CCVariable<double> src;
     CCVariable<Stencil7> RMCRTboundFlux ;
 
     //__________________________________
     // all levels
     new_dw->allocateAndPut( radVolq, VarLabel::find("radiationVolq"), _matl, patch );
-    radVolq.initialize(0.0);  // needed for coal
-
-    new_dw->allocateAndPut( sigmaT4, _RMCRT->d_sigmaT4Label, _matl, patch );
-    sigmaT4.initialize(0.0);
+    radVolq.initialize( 0.0 );  // needed for coal
 
     new_dw->allocateAndPut( RMCRTboundFlux, VarLabel::find("RMCRTboundFlux"),_matl, patch );
     Uintah::BlockRange range( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
@@ -619,8 +625,17 @@ RMCRT_Radiation::initialize( const ProcessorGroup*,
     //__________________________________
     //  Coarse levels
     if ( L_index != _archesLevelIndex) {
-      new_dw->allocateAndPut( abskg, _RMCRT->d_abskgLabel, _matl, patch );  // could be abskt or abskgRMCRT
-      abskg.initialize(0.0);
+
+      if( _RMCRT->RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ) {
+        CCVariable<double> abskgDouble;
+        new_dw->allocateAndPut( abskgDouble, _RMCRT->d_abskgLabel, _matl, patch );  // could be abskt or abskgRMCRT
+        abskgDouble.initialize( 0.0 );
+      }
+      else {
+        CCVariable<float> abskgFloat;
+        new_dw->allocateAndPut( abskgFloat, _RMCRT->d_abskgLabel, _matl, patch );  // could be abskt or abskgRMCRT
+        abskgFloat.initialize( 0.0 );
+      }
 
       // divQ computed on all levels
       if (_whichAlgo == coarseLevel) {

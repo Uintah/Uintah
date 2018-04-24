@@ -2592,6 +2592,7 @@ OnDemandDataWarehouse::emitPIDX(       PIDXOutputContext & pc,
     // Save with the boundary layer, otherwise restarting from the DataArchive won't work.
     patch->computeVariableExtents( label->typeDescription()->getType(), label->getBoundaryLayer(),
                                    Ghost::None, 0, l, h );
+
     switch ( label->typeDescription()->getType() ) {
     case TypeDescription::NCVariable :
     case TypeDescription::CCVariable :
@@ -2640,6 +2641,8 @@ OnDemandDataWarehouse::emitPIDX(       PIDXOutputContext & pc,
   if( m_var == nullptr ) {
     SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex, "OnDemandDataWarehouse::emit ", __FILE__, __LINE__) );
   }
+
+  // std::cout << "m_var is a " << m_var->virtualGetTypeDescription()->getName() << "\n";
 
   m_var->emitPIDX( pc, buffer, l, h, bufferSize );
 }

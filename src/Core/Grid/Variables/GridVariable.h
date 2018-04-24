@@ -25,19 +25,18 @@
 #ifndef UINTAH_HOMEBREW_GridVARIABLE_H
 #define UINTAH_HOMEBREW_GridVARIABLE_H
 
-#include <Core/Exceptions/InternalError.h>
-#include <Core/Exceptions/TypeMismatchException.h>
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Disclosure/TypeUtils.h>
-#include <Core/Grid/Patch.h>
+#include <Core/Exceptions/InternalError.h>
+#include <Core/Exceptions/TypeMismatchException.h>
 #include <Core/Grid/Variables/Array3.h>
 #include <Core/Grid/Variables/GridVariableBase.h>
 #include <Core/IO/SpecializedRunLengthEncoder.h>
 #include <Core/Malloc/Allocator.h>
 
 #include <CCA/Ports/InputContext.h>
-#include <CCA/Ports/PIDXOutputContext.h>
 #include <CCA/Ports/OutputContext.h>
+#include <CCA/Ports/PIDXOutputContext.h>
 
 #include <sci_defs/pidx_defs.h>
 
@@ -155,7 +154,6 @@ WARNING
 
     virtual IntVector getHigh() const { return this->getHighIndex(); }
 
-    
 #if HAVE_PIDX
     virtual void emitPIDX(       PIDXOutputContext & pc,
                                  unsigned char     * pidx_buffer,
@@ -171,7 +169,6 @@ WARNING
       // read the Array3 variable into tmpStream
       std::ostringstream tmpStream;
 
-      std::cout << "About to call emit normal: " << l << " --- " << h << "\n";
       emitNormal( tmpStream, l, h, dummy, outputDoubleAsFloat );
 
       // Create a string from the ostringstream
@@ -271,17 +268,19 @@ template<class T>
   GridVariable<T>::copyPointer(Variable& copy)
   {
     GridVariable<T>* c = dynamic_cast<GridVariable<T>* >(&copy);
-    if(!c)
-      SCI_THROW(TypeMismatchException("Type mismatch in Grid variable", __FILE__, __LINE__));
-    copyPointer(*c);
+    if( !c ) {
+      SCI_THROW( TypeMismatchException("Type mismatch in Grid variable", __FILE__, __LINE__) );
+    }
+    copyPointer( *c );
   }
 
   template<class T>
   const GridVariable<T>& GridVariable<T>::castFromBase(const GridVariableBase* srcptr)
   {
     const GridVariable<T>* c = dynamic_cast<const GridVariable<T>* >(srcptr);
-    if(!c)
-      SCI_THROW(TypeMismatchException("Type mismatch in CC variable", __FILE__, __LINE__));
+    if( !c ) {
+      SCI_THROW( TypeMismatchException("Type mismatch in CC variable", __FILE__, __LINE__) );
+    }
     return *c;
   }
 
@@ -289,9 +288,9 @@ template<class T>
   void GridVariable<T>::allocate( const IntVector& lowIndex,
                                   const IntVector& highIndex )
   {
-    if(this->getWindow())
-      SCI_THROW(InternalError("Allocating a Gridvariable that "
-                          "is apparently already allocated!", __FILE__, __LINE__));
+    if( this->getWindow() ) {
+      SCI_THROW( InternalError("Allocating a Gridvariable that is apparently already allocated!", __FILE__, __LINE__) );
+    }
     this->resize(lowIndex, highIndex);
   }
 

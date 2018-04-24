@@ -1673,7 +1673,12 @@ DataArchiver::writeto_xml_files( const GridP& grid )
         if( m_outputFileFormat == PIDX ){
 #ifdef HAVE_PIDX
           // When using PIDX, only save "timestep.xml" if the grid had changed... (otherwise we will just point (symlink) to the last one saved.)
-          save_io_timestep_xml_file = (m_lastOutputOfTimeStepXML == -1 || m_application->isRegridTimeStep() );
+          cout << "isRegridTimeStep(): " << m_application->isRegridTimeStep() << "\n";
+          cout << "last regrid: " << m_application->getLastRegridTimeStep() << "\n";
+          cout << "last output of timestep.xml: " << m_lastOutputOfTimeStepXML << "\n";
+          
+          save_io_timestep_xml_file = (m_lastOutputOfTimeStepXML < m_application->getLastRegridTimeStep() );
+          cout << "save timestep.xml: " << save_io_timestep_xml_file << "\n";
 #else
           throw InternalError( "DataArchiver::writeto_xml_files(): PIDX not configured!", __FILE__, __LINE__ );
 #endif          
@@ -3175,12 +3180,12 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
     const MaterialSubset* var_matls = saveIter->getMaterialSubset( level );
 
     // cout << "   Looking at: " << saveIter->label->getName() << "\n"; // DEBUG
-
+    
     if (var_matls == nullptr) {
-      // cout << "      bailing out\n"; // DEBUG
+      //      cout << "      bailing out\n"; // DEBUG
       continue;
     }
-    // cout << "      # matls: " << var_matls->size() << "\n"; // DEBUG
+    //    cout << "      # matls: " << var_matls->size() << "\n"; // DEBUG
 
     nSaveItemMatls[ count ] = var_matls->size();
 
@@ -3218,7 +3223,7 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
   //__________________________________
   // allocate memory for pidx variable descriptor array
 
-  // cout << "Actual_number_of_variables is " << actual_number_of_variables << "\n";
+  //cout << "Actual_number_of_variables is " << actual_number_of_variables << "\n";
   rc = PIDX_set_variable_count( pidx.file, actual_number_of_variables );
   pidx.checkReturnCode( rc, "DataArchiver::saveLabels_PIDX -PIDX_set_variable_count failure",__FILE__, __LINE__);
   
@@ -3268,7 +3273,7 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
     string type_name = "float64";
     int    the_size  = sizeof( double );
 
-    std::cout << "type for " <<  label->getName() << " is: " << subtype->getType() << std::endl;
+    //std::cout << "type for " <<  label->getName() << " is: " << subtype->getName() << std::endl;
 
     switch( subtype->getType( )) {
 
@@ -3289,6 +3294,7 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
         }
         break;
     case Uintah::TypeDescription::float_type:
+      //cout << "this is a float type\n";
       the_size = sizeof( float );
       type_name = "float32";
       break;
@@ -3371,8 +3377,8 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
 
 
             int num_particles = arraySize / ( sample_per_variable * the_size );
-            cout << "num particles is: " << num_particles << ", array size: " << arraySize << ", samples: " << sample_per_variable
-                 << ", size of sample: " << the_size << "\n";
+            //cout << "num particles is: " << num_particles << ", array size: " << arraySize << ", samples: " << sample_per_variable
+            //     << ", size of sample: " << the_size << "\n";
 
             patch_buffer[vcm][p] = (unsigned char*)malloc( arraySize );
 
@@ -3384,6 +3390,7 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
             
             new_dw->emitPIDX( pidx, label, matlIndex, patch, patch_buffer[vcm][p], arraySize );
 
+#if 0            
             if( subtype->getType() == Uintah::TypeDescription::Point ){
               cout << "point values are: ";
               for( int i = 0; i < num_particles; i++ ) {
@@ -3392,6 +3399,7 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
               }
               cout << "\n";
             }
+#endif
             
           }
           else {
@@ -3400,13 +3408,12 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
             // allocate memory for the grid variables
             arraySize = varSubType_size * patchExts.totalCells_EC;
 
-            cout << "varSubType_size: " << varSubType_size << ", totalCells: " << patchExts.totalCells_EC << "\n";
-
             patch_buffer[vcm][p] = (unsigned char*)malloc( arraySize );
             memset( patch_buffer[vcm][p], 0, arraySize );
 
-
 #if 0
+          cout << "varSubType_size: " << varSubType_size << ", totalCells: " << patchExts.totalCells_EC << "\n";
+
           IntVector extra_cells = patch->getExtraCells();
           cout << Uintah::Parallel::getMPIRank() << ": level: " << level->getIndex() << ", patchoffset: " << patchOffset[0] << ", " << patchOffset[1] << ", " << patchOffset[2]
                << ", patchsize: " << patchSize[0] << ", " << patchSize[1] << ", " << patchSize[2] << ", patch #: " << patch->getID()
@@ -3415,10 +3422,9 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
           cout << Uintah::Parallel::getMPIRank() << ": lo: " << lo.x() << ", " << lo.y() << ", " << lo.z() << ", extracells: "
                << extra_cells[0] << ", " << extra_cells[1] << ", " << extra_cells[2] << "\n";
           cout << "double as float: " << pidx.isOutputDoubleAsFloat() << "\n";
-#endif
 
           cout << "array size is: "  << arraySize << "\n";
-          
+#endif
             new_dw->emitPIDX( pidx, label, matlIndex, patch, patch_buffer[vcm][p], arraySize );
           }
 
@@ -3444,7 +3450,7 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
           patchOffset[1] = patchOffset[1] - lo.y() - extra_cells[1];
           patchOffset[2] = patchOffset[2] - lo.z() - extra_cells[2];
 
-#if 1
+#if 0
           cout << Uintah::Parallel::getMPIRank() << ": level: " << level->getIndex() << ", patchoffset: " << patchOffset[0] << ", " << patchOffset[1] << ", " << patchOffset[2]
                << ", patchsize: " << patchSize[0] << ", " << patchSize[1] << ", " << patchSize[2] << ", patch #: " << patch->getID()
                << ", level size: " << level_size[0] << " - " << level_size[1] << " - " << level_size[2] << "\n";
