@@ -478,7 +478,7 @@ psNox::computeSource( const ProcessorGroup* pc,
         }else if(O2_mp>1.1e-2&&O2_mp<0.03){
           n_O2=-0.35-0.1*log(O2_mp);
         }else if(O2_mp>=0.03){
-          n_O2=0.0;
+          n_O2=1e-5;
         }
         //thermal-nox,S1
         //reaction rates from r1~r3:
@@ -496,8 +496,8 @@ psNox::computeSource( const ProcessorGroup* pc,
         //calculate thermal NOx source extended zeldovich mechanism
         //double NO_S1  = 2.0*rate_f1*O_m*N2_m*(1.0-rate_r1*rate_r2*NO_m*NO_m/rate_f1/rate_f2/N2_m/O2_m)/(1.0+rate_r1*NO_m/(rate_f2*O2_m+rate_f3*OH_m));
         double NO_thermal_rate_const=2.0*rate_f1*O_m*N2_m/(1.0+rate_r1*NO_m/(rate_f2*O2_m+rate_f3*OH_m)); // mol of NO / m^3 / s
-        double NO_S1_prod  = rate_f1*rate_f2*N2_m*O2_m*NO_thermal_rate_const;
-        double NO_S1_cons  = rate_r1*rate_r2*NO_m*NO_m*NO_thermal_rate_const;
+        double NO_S1_prod  = NO_thermal_rate_const;
+        double NO_S1_cons  = rate_r1*rate_r2*NO_m*NO_m*NO_thermal_rate_const/(rate_f1*rate_f2*N2_m*O2_m);
 
         rxn_rates[0]=NO_S1_prod;
 
