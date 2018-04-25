@@ -36,6 +36,7 @@
 
 #include <Core/Parallel/Parallel.h>
 #include <Core/Exceptions/InternalError.h>
+#include <cstring>
 #include <cstddef> //What is this doing here?
 
 #include <sci_defs/cuda_defs.h>
@@ -68,111 +69,66 @@ namespace UintahSpaces{
   class HostSpace {};
 }
 
-// What the user specifies into our macro.
-using UINTAH_CPU_TAG = UintahSpaces::CPU;
-using KOKKOS_OPENMP_TAG = Kokkos::OpenMP;
-using KOKKOS_CUDA_TAG = Kokkos::Cuda;
+// Macros don't like passing in data types that contain commas in them,
+// such as two template arguments. This helps fix that.
+#define COMMA ,
 
-#define STRINGIFY(x) #x
-#define TOSTRING(x) STRINGIFY(x)
-#define COMMA ,  //Macros don't like passing in data types that contain commas in them, such as two template arguments. This helps fix that.
-//#if defined(UINTAH_ENABLE_KOKKOS)
+// Helps turn defines into usable strings (even if it has a comma in it)
+#define STRV(...) #__VA_ARGS__
+#define STRVX(...) STRV(__VA_ARGS__)
 
-//#if defined(HAVE_CUDA)
-//#define NUM_EXECUTION_SPACES 2
-//#define EXECUTION_SPACE_0 Kokkos::Cuda
-//#define EXECUTION_SPACE_1 Kokkos::OpenMP
-//#define MEMORY_SPACE_0    Kokkos::CudaSpace
-//#define MEMORY_SPACE_1    Kokkos::HostSpace
-//#else
-//#define NUM_EXECUTION_SPACES 1
-//#define EXECUTION_SPACE_0 Kokkos::OpenMP
-//#define MEMORY_SPACE_0    Kokkos::HostSpace
-//#define EXECUTION_SPACE_1 Kokkos::OpenMP
-//#define MEMORY_SPACE_1    Kokkos::HostSpace
-//#endif //#if defined(HAVE_CUDA)
-//#else //if not UINTAH_ENABLE_KOKKOS
-//#define NUM_EXECUTION_SPACES 1
-//#define EXECUTION_SPACE_0 UintahSpaces::CPU
-//#define MEMORY_SPACE_0    UintahSpaces::HostSpace
-//#define EXECUTION_SPACE_1 UintahSpaces::CPU
-//#define MEMORY_SPACE_1    UintahSpaces::HostSpace
+// Boilerplate alert.  This can be made much cleaner in C++17 with compile time if statements (if constexpr() logic.)
+// We would be able to use the following "using" statements instead of the "#defines", and do compile time comparisons like so:
+// if constexpr  (std::is_same< Kokkos::Cuda,      TAG1 >::value) {
+// For C++11, the process is doable but just requires a muck of boilerplating to get there, instead of the above if
+// statement, I instead opted for a weirder system where I compared the tags as strings
+// if (strcmp(STRVX(ORIGINAL_KOKKOS_CUDA_TAG), STRVX(TAG1)) == 0) {                               \
+// Further, the C++11 way ended up defining a tag as more of a string of code rather than an actual data type.
 
-//#endif //#if defined(UINTAH_ENABLE_KOKKOS)
+//using UINTAH_CPU_TAG = UintahSpaces::CPU;
+//using KOKKOS_OPENMP_TAG = Kokkos::OpenMP;
+//using KOKKOS_CUDA_TAG = Kokkos::Cuda;
 
+// Main concept of tehe below tags: Whatever tags the user supplies is directly compiled into the Uintah binary build.
+// In case of a situation where a user supplies a tag that isn't valid for that build, such as KOKKOS_CUDA_TAG in a non-CUDA build,
+// the tag is "downgraded" to one that is valid.  So in a non-CUDA build, KOKKOS_CUDA_TAG gets associated with
+// Kokkos::OpenMP or UintahSpaces::CPU.  This helps ensure that the compiler never attempts to compile anything with a
+// Kokkos::Cuda data type in a non-GPU build
+#define ORIGINAL_UINTAH_CPU_TAG     UintahSpaces::CPU COMMA UintahSpaces::HostSpace
+#define ORIGINAL_KOKKOS_OPENMP_TAG  Kokkos::OpenMP COMMA Kokkos::HostSpace
+#define ORIGINAL_KOKKOS_CUDA_TAG    Kokkos::Cuda COMMA Kokkos::CudaSpace
+#if defined(UINTAH_ENABLE_KOKKOS) && defined(HAVE_CUDA)
+#define UINTAH_CPU_TAG              UintahSpaces::CPU COMMA UintahSpaces::HostSpace
+#define KOKKOS_OPENMP_TAG           Kokkos::OpenMP COMMA Kokkos::HostSpace
+#define KOKKOS_CUDA_TAG             Kokkos::Cuda COMMA Kokkos::CudaSpace
+#elif defined(UINTAH_ENABLE_KOKKOS) && !defined(HAVE_CUDA)
+#define UINTAH_CPU_TAG              UintahSpaces::CPU COMMA UintahSpaces::HostSpace
+#define KOKKOS_OPENMP_TAG           Kokkos::OpenMP COMMA Kokkos::HostSpace
+#define KOKKOS_CUDA_TAG             Kokkos::OpenMP COMMA Kokkos::HostSpace
+#elif !defined(UINTAH_ENABLE_KOKKOS)
+#define UINTAH_CPU_TAG              UintahSpaces::CPU COMMA UintahSpaces::HostSpace
+#define KOKKOS_OPENMP_TAG           UintahSpaces::CPU COMMA UintahSpaces::HostSpace
+#define KOKKOS_CUDA_TAG             UintahSpaces::CPU COMMA UintahSpaces::HostSpace
+#endif
 
-//This means that this tasks supports any of these execution spaces
-//Depending on the configure/compiler flags determines which of these are actually
-//compiled.
 
 enum TaskAssignedExecutionSpace {
   NONE_SPACE = 0,
   UINTAH_CPU = 1,                          //binary 001
   KOKKOS_OPENMP = 2,                       //binary 010
-  KOKKOS_CUDA = 4,                          //binary 100
+  KOKKOS_CUDA = 4,                         //binary 100
 };
-//
-////An object of this class is used for CALL_ASSIGN_PORTABLE_TASK.
-//class TaskExecutionSpaces {
-//public:
-//  TaskExecutionSpaces() {}
-//  TaskExecutionSpaces(unsigned int firstSpace) {
-//    executionSpaces = firstSpace;
-//  }
-//  TaskExecutionSpaces(unsigned int firstSpace, unsigned int secondSpace) {
-//    executionSpaces = firstSpace | secondSpace;
-//  }
-//  TaskExecutionSpaces(unsigned int firstSpace, unsigned int secondSpace, unsigned int thirdSpace) {
-//    executionSpaces = firstSpace | secondSpace | thirdSpace;
-//  }
-//  void loadSpaces(unsigned int firstSpace) {
-//    executionSpaces = executionSpaces | firstSpace;
-//  }
-//  void loadSpaces(unsigned int firstSpace, unsigned int secondSpace) {
-//    executionSpaces = executionSpaces | firstSpace | secondSpace;
-//  }
-//  void loadSpaces(unsigned int firstSpace, unsigned int secondSpace, unsigned int thirdSpace) {
-//    executionSpaces = executionSpaces | firstSpace | secondSpace | thirdSpace;
-//  }
-//  unsigned int getTaskExecutionSpaces() {
-//    return executionSpaces;
-//  }
-//private:
-//  unsigned int executionSpaces{0};
-//};
 
 
-#define PREPARE_UINTAH_CPU_TASK(EXECUTION_SPACE,                                                   \
-                                TASK, TASK_DEPENDENCIES,                                           \
-                                FUNCTION_NAME, FUNCTION_CODE_NAME,                                 \
-                                PATCHES, MATERIALS, ...) {                                         \
-  TASK = scinew Task(FUNCTION_NAME,                                                                \
-                           this,                                                                   \
-                           &FUNCTION_CODE_NAME<EXECUTION_SPACE, UintahSpaces::HostSpace>,          \
-                           ## __VA_ARGS__);                                                        \
+// Helps turn on runtime specific execution flags
+#define PREPARE_UINTAH_CPU_TASK(TASK) {                                                            \
 }
 
-#define PREPARE_KOKKOS_OPENMP_TASK(EXECUTION_SPACE,                                                \
-                                TASK, TASK_DEPENDENCIES,                                           \
-                                FUNCTION_NAME, FUNCTION_CODE_NAME,                                 \
-                                PATCHES, MATERIALS, ...) {                                         \
-  TASK = scinew Task(FUNCTION_NAME,                                                                \
-                           this,                                                                   \
-                           &FUNCTION_CODE_NAME<EXECUTION_SPACE, Kokkos::HostSpace>,                \
-                           ## __VA_ARGS__);                                                        \
-                                                                                                   \
+#define PREPARE_KOKKOS_OPENMP_TASK(TASK) {                                                         \
   TASK->usesKokkosOpenMP(true);                                                                    \
 }
 
-#define PREPARE_KOKKOS_CUDA_TASK(EXECUTION_SPACE,                                                  \
-                                TASK, TASK_DEPENDENCIES,                                           \
-                                FUNCTION_NAME, FUNCTION_CODE_NAME,                                 \
-                                PATCHES, MATERIALS, ...) {                                         \
-  TASK = scinew Task(FUNCTION_NAME,                                                                \
-                           this,                                                                   \
-                           &FUNCTION_CODE_NAME<EXECUTION_SPACE, Kokkos::CudaSpace>,                \
-                           ## __VA_ARGS__);                                                        \
-                                                                                                   \
+#define PREPARE_KOKKOS_CUDA_TASK(TASK) {                                                           \
   TASK->usesDevice(true);                                                                          \
   TASK->usesKokkosCuda(true);                                                                      \
   TASK->usesSimVarPreloading(true);                                                                \
@@ -190,8 +146,9 @@ enum TaskAssignedExecutionSpace {
 // PATCHES and MATERIALS are normal Task object arguments.
 // ... are additional variatic Task arguments
 
-// Logic note, we don't allow both a Uintah CPU task and a Kokkos CPU task to exist in the same
-// compiled build.  But we do allow a Kokkos CPU and Kokkos GPU task to exist in the same build
+// Logic note, we don't currently allow both a Uintah CPU task and a Kokkos CPU task to exist in the same
+// compiled build (thought it wouldn't be hard to implement it).  But we do allow a Kokkos CPU and
+// Kokkos GPU task to exist in the same build
 #define CALL_ASSIGN_PORTABLE_TASK_3TAGS(TAG1, TAG2, TAG3,                                          \
                                   TASK_DEPENDENCIES,                                               \
                                   FUNCTION_NAME, FUNCTION_CODE_NAME,                               \
@@ -199,40 +156,79 @@ enum TaskAssignedExecutionSpace {
   Task* task{nullptr};                                                                             \
                                                                                                    \
   if (Uintah::Parallel::usingDevice()) {                                                           \
-    if        (std::is_same< Kokkos::Cuda,      TAG1 >::value) {                                   \
-      PREPARE_KOKKOS_CUDA_TASK(TAG1, task, TASK_DEPENDENCIES, FUNCTION_NAME, FUNCTION_CODE_NAME,   \
-                                 PATCHES, MATERIALS, ## __VA_ARGS__);                              \
-    } else if (std::is_same< Kokkos::Cuda,      TAG2 >::value) {                                   \
-      PREPARE_KOKKOS_CUDA_TASK(TAG2, task, TASK_DEPENDENCIES, FUNCTION_NAME, FUNCTION_CODE_NAME,   \
-                                 PATCHES, MATERIALS, ## __VA_ARGS__);                              \
-    } else if (std::is_same< Kokkos::Cuda,      TAG3 >::value) {                                   \
-      PREPARE_KOKKOS_CUDA_TASK(TAG3, task, TASK_DEPENDENCIES, FUNCTION_NAME, FUNCTION_CODE_NAME,   \
-                                 PATCHES, MATERIALS, ## __VA_ARGS__);                              \
-    }                                                                                              \
-    if (task) {                                                                                    \
-      task->usesDevice(true);                                                                      \
+    if (strcmp(STRVX(ORIGINAL_KOKKOS_CUDA_TAG), STRVX(TAG1)) == 0) {                               \
+      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME<TAG1>, ## __VA_ARGS__);          \
+      PREPARE_KOKKOS_CUDA_TASK(task);                                                              \
+    } else if (strcmp(STRVX(ORIGINAL_KOKKOS_CUDA_TAG), STRVX(TAG2)) == 0) {                        \
+      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME<TAG2>, ## __VA_ARGS__);          \
+      PREPARE_KOKKOS_CUDA_TASK(task);                                                              \
+    } else if (strcmp(STRVX(ORIGINAL_KOKKOS_CUDA_TAG), STRVX(TAG3)) == 0) {                        \
+      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME<TAG3>, ## __VA_ARGS__);          \
+      PREPARE_KOKKOS_CUDA_TASK(task);                                                              \
     }                                                                                              \
   }                                                                                                \
                                                                                                    \
   if (!task) {                                                                                     \
-    if      (std::is_same< Kokkos::OpenMP,      TAG1 >::value) {                                   \
-      PREPARE_KOKKOS_OPENMP_TASK(TAG1, task, TASK_DEPENDENCIES, FUNCTION_NAME, FUNCTION_CODE_NAME, \
-                                 PATCHES, MATERIALS, ## __VA_ARGS__);                              \
-    } else if (std::is_same< Kokkos::OpenMP,    TAG2 >::value) {                                   \
-      PREPARE_KOKKOS_OPENMP_TASK(TAG2, task, TASK_DEPENDENCIES, FUNCTION_NAME, FUNCTION_CODE_NAME, \
-                                 PATCHES, MATERIALS, ## __VA_ARGS__);                              \
-    } else if (std::is_same< Kokkos::OpenMP,    TAG3 >::value) {                                   \
-      PREPARE_KOKKOS_OPENMP_TASK(TAG3, task, TASK_DEPENDENCIES, FUNCTION_NAME, FUNCTION_CODE_NAME, \
-                                 PATCHES, MATERIALS, ## __VA_ARGS__);                              \
-    } else if (std::is_same< UintahSpaces::CPU, TAG1 >::value) {                                   \
-      PREPARE_UINTAH_CPU_TASK(   TAG1, task, TASK_DEPENDENCIES, FUNCTION_NAME, FUNCTION_CODE_NAME, \
-                                 PATCHES, MATERIALS, ## __VA_ARGS__);                              \
-    } else if (std::is_same< UintahSpaces::CPU, TAG2 >::value) {                                   \
-      PREPARE_UINTAH_CPU_TASK(   TAG2, task, TASK_DEPENDENCIES, FUNCTION_NAME, FUNCTION_CODE_NAME, \
-                                 PATCHES, MATERIALS, ## __VA_ARGS__);                              \
-    } else if (std::is_same< UintahSpaces::CPU, TAG3 >::value) {                                   \
-      PREPARE_UINTAH_CPU_TASK(   TAG3, task, TASK_DEPENDENCIES, FUNCTION_NAME, FUNCTION_CODE_NAME, \
-                                 PATCHES, MATERIALS, ## __VA_ARGS__);                              \
+    if (strcmp(STRVX(ORIGINAL_KOKKOS_OPENMP_TAG), STRVX(TAG1)) == 0) {                             \
+      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME<TAG1>, ## __VA_ARGS__);          \
+      PREPARE_KOKKOS_OPENMP_TASK(task);                                                            \
+    } else if (strcmp(/home/brad/opt/uintah/trunk-gpu/StandAlone/compare_udaSTRVX(ORIGINAL_KOKKOS_OPENMP_TAG), STRVX(TAG2)) == 0) {                      \
+      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME<TAG2>, ## __VA_ARGS__);          \
+      PREPARE_KOKKOS_OPENMP_TASK(task);                                                            \
+    } else if (strcmp(STRVX(ORIGINAL_KOKKOS_OPENMP_TAG), STRVX(TAG3)) == 0) {                      \
+      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME<TAG3>, ## __VA_ARGS__);          \
+      PREPARE_KOKKOS_OPENMP_TASK(task);                                                            \
+    } else if (strcmp(STRVX(ORIGINAL_UINTAH_CPU_TAG), STRVX(TAG1)) == 0) {                         \
+      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME<TAG1>, ## __VA_ARGS__);          \
+      PREPARE_UINTAH_CPU_TASK(task);                                                               \
+    } else if (strcmp(STRVX(ORIGINAL_UINTAH_CPU_TAG), STRVX(TAG2)) == 0) {                         \
+      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME<TAG2>, ## __VA_ARGS__);          \
+      PREPARE_UINTAH_CPU_TASK(task);                                                               \
+    } else if (strcmp(STRVX(ORIGINAL_UINTAH_CPU_TAG), STRVX(TAG3)) == 0) {                         \
+      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME<TAG3>, ## __VA_ARGS__);          \
+      PREPARE_UINTAH_CPU_TASK(task);                                                               \
+    }                                                                                              \
+  }                                                                                                \
+                                                                                                   \
+  if (task) {                                                                                      \
+    TASK_DEPENDENCIES(task);                                                                       \
+  }                                                                                                \
+                                                                                                   \
+  if (task) {                                                                                      \
+    sched->addTask(task, PATCHES, MATERIALS);                                                      \
+  }                                                                                                \
+}
+
+//If only 2 execution space tags are specified
+#define CALL_ASSIGN_PORTABLE_TASK_2TAGS(TAG1, TAG2,                                                \
+                                  TASK_DEPENDENCIES,                                               \
+                                  FUNCTION_NAME, FUNCTION_CODE_NAME,                               \
+                                  PATCHES, MATERIALS, ...) {                                       \
+  Task* task{nullptr};                                                                             \
+                                                                                                   \
+  if (Uintah::Parallel::usingDevice()) {                                                           \
+    if (strcmp(STRVX(ORIGINAL_KOKKOS_CUDA_TAG), STRVX(TAG1)) == 0) {                               \
+      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME<TAG1>, ## __VA_ARGS__);          \
+      PREPARE_KOKKOS_CUDA_TASK(task);                                                              \
+    } else if (strcmp(STRVX(ORIGINAL_KOKKOS_CUDA_TAG), STRVX(TAG2)) == 0) {                        \
+      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME<TAG2>, ## __VA_ARGS__);          \
+      PREPARE_KOKKOS_CUDA_TASK(task);                                                              \
+    }                                                                                              \
+  }                                                                                                \
+                                                                                                   \
+  if (!task) {                                                                                     \
+    if (strcmp(STRVX(ORIGINAL_KOKKOS_OPENMP_TAG), STRVX(TAG1)) == 0) {                             \
+      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME<TAG1>, ## __VA_ARGS__);          \
+      PREPARE_KOKKOS_OPENMP_TASK(task);                                                            \
+    } else if (strcmp(STRVX(ORIGINAL_KOKKOS_OPENMP_TAG), STRVX(TAG2)) == 0) {                      \
+      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME<TAG2>, ## __VA_ARGS__);          \
+      PREPARE_KOKKOS_OPENMP_TASK(task);                                                            \
+    } else if (strcmp(STRVX(ORIGINAL_UINTAH_CPU_TAG), STRVX(TAG1)) == 0) {                         \
+      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME<TAG1>, ## __VA_ARGS__);          \
+      PREPARE_UINTAH_CPU_TASK(task);                                                               \
+    } else if (strcmp(STRVX(ORIGINAL_UINTAH_CPU_TAG), STRVX(TAG2)) == 0) {                         \
+      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME<TAG2>, ## __VA_ARGS__);          \
+      PREPARE_UINTAH_CPU_TASK(task);                                                               \
     }                                                                                              \
   }                                                                                                \
                                                                                                    \
@@ -246,21 +242,36 @@ enum TaskAssignedExecutionSpace {
 }
 
 //If only 1 execution space tag is specified
-#define CALL_ASSIGN_PORTABLE_TASK_1TAGS(TAG1, TASK_DEPENDENCIES,                                   \
+#define CALL_ASSIGN_PORTABLE_TASK_1TAG(TAG1,                                                       \
+                                  TASK_DEPENDENCIES,                                               \
                                   FUNCTION_NAME, FUNCTION_CODE_NAME,                               \
                                   PATCHES, MATERIALS, ...) {                                       \
-  CALL_ASSIGN_PORTABLE_TASK_3TAGS(TAG1, void, void, TASK_DEPENDENCIES,                             \
-                            FUNCTION_NAME, FUNCTION_CODE_NAME,                                     \
-                            PATCHES, MATERIALS, ## __VA_ARGS__);                                   \
-}
-
-//If only 2 execution space tags are specified
-#define CALL_ASSIGN_PORTABLE_TASK_2TAGS(TAG1, TAG2, TASK_DEPENDENCIES,                             \
-                                  FUNCTION_NAME, FUNCTION_CODE_NAME,                               \
-                                  PATCHES, MATERIALS, ...) {                                       \
-  CALL_ASSIGN_PORTABLE_TASK_3TAGS(TAG1, TAG2, void, TASK_DEPENDENCIES,                             \
-                            FUNCTION_NAME, FUNCTION_CODE_NAME,                                     \
-                            PATCHES, MATERIALS, ## __VA_ARGS__);                                   \
+  Task* task{nullptr};                                                                             \
+                                                                                                   \
+  if (Uintah::Parallel::usingDevice()) {                                                           \
+    if (strcmp(STRVX(ORIGINAL_KOKKOS_CUDA_TAG), STRVX(TAG1)) == 0) {                               \
+      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME<TAG1>, ## __VA_ARGS__);          \
+      PREPARE_KOKKOS_CUDA_TASK(task);                                                              \
+    }                                                                                              \
+  }                                                                                                \
+                                                                                                   \
+  if (!task) {                                                                                     \
+    if (strcmp(STRVX(ORIGINAL_KOKKOS_OPENMP_TAG), STRVX(TAG1)) == 0) {                             \
+      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME<TAG1>, ## __VA_ARGS__);          \
+      PREPARE_KOKKOS_OPENMP_TASK(task);                                                            \
+    } else if (strcmp(STRVX(ORIGINAL_UINTAH_CPU_TAG), STRVX(TAG1)) == 0) {                         \
+      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME<TAG1>, ## __VA_ARGS__);          \
+      PREPARE_UINTAH_CPU_TASK(task);                                                               \
+    }                                                                                              \
+  }                                                                                                \
+                                                                                                   \
+  if (task) {                                                                                      \
+    TASK_DEPENDENCIES(task);                                                                       \
+  }                                                                                                \
+                                                                                                   \
+  if (task) {                                                                                      \
+    sched->addTask(task, PATCHES, MATERIALS);                                                      \
+  }                                                                                                \
 }
 
 namespace Uintah {

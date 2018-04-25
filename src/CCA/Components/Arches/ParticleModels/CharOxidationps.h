@@ -194,7 +194,7 @@ template <typename T> TaskAssignedExecutionSpace
 CharOxidationps<T>::loadTaskFunctionPointers(){
 
   TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_UINTAH_OPENMP_CUDA(assignedTag, CharOxidationps<T>::eval);
+  LOAD_ARCHES_EVAL_TASK_3TAGS( UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, KOKKOS_CUDA_TAG, assignedTag, CharOxidationps<T>::eval);
   return assignedTag;
 
 }
@@ -1112,7 +1112,7 @@ namespace {
         }
 
         const double CO2onCO = 1. / ( 200. * exp( -9000. / ( _R_cal * p_T ) ) * 44.0 / 28.0 ); // [ kg CO / kg CO2] => [kmoles CO / kmoles CO2] => [kmoles CO2 / kmoles CO]
-        printf("(%d,%d,%d), CO2onCO is %g\n", i, j, k, CO2onCO);
+
         for ( int r = 0; r < reactions_count; r++ ) {
 
           if ( _use_co2co_l[r] ) {

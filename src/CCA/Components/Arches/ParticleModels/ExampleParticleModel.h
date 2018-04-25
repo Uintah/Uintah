@@ -116,7 +116,7 @@ private:
     TaskAssignedExecutionSpace assignedTag{};
     // This one is a bit hackier.  Passing in ExampleParticleModel<IT, DT>::eval into the macro caused problems on the comma as it parsed it
     // as two separate arguments.  The approach below did the trick with a #define COMMA ,
-    LOAD_ARCHES_EVAL_TASK_3TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, void, assignedTag, ExampleParticleModel<IT COMMA DT>::eval);
+    LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, ExampleParticleModel<IT COMMA DT>::eval);
     return assignedTag;
 
   }

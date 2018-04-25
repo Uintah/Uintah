@@ -14,7 +14,7 @@ UpdateParticleVelocity::~UpdateParticleVelocity(){
 TaskAssignedExecutionSpace UpdateParticleVelocity::loadTaskFunctionPointers(){
 
   TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_3TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, KOKKOS_CUDA_TAG, assignedTag, UpdateParticleVelocity::eval);
+  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, UpdateParticleVelocity::eval);
   return assignedTag;
 
 }

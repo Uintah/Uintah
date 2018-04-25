@@ -283,8 +283,8 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
   for ( auto i_task = arches_tasks.begin(); i_task != arches_tasks.end(); i_task++ ){
     std::cout << (*i_task)->get_task_name() << " ";
     i++;
-    if ((*i_task)->get_task_name() == "rho_coal") {
-      printf("");
+    if ((*i_task)->get_task_name() == "char_ps_qn0") {
+      printf("Here we go");
     }
 
     cout_archestaskdebug << "   Task: " << (*i_task)->get_task_name() << std::endl;
@@ -391,15 +391,15 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
   // We must know which memory space(s) the Arches task embedded within the Uintah task will execute
   // so Uintah can ensure those simulation variables are prepared in that memory space prior to task execution.
   if (assignedExecutionSpace == TaskAssignedExecutionSpace::KOKKOS_OPENMP) {
-    CALL_ASSIGN_PORTABLE_TASK_1TAGS(KOKKOS_OPENMP_TAG, TaskDependencies, _factory_name+"::"+task_group_name, TaskFactoryBase::do_task,
+    CALL_ASSIGN_PORTABLE_TASK_1TAG(KOKKOS_OPENMP_TAG, TaskDependencies, task_group_name, TaskFactoryBase::do_task,
                               level->eachPatch(), matls,
                               variable_registry, arches_tasks, type, time_substep, pack_tasks);
   } else if (assignedExecutionSpace == TaskAssignedExecutionSpace::KOKKOS_CUDA) {
-    CALL_ASSIGN_PORTABLE_TASK_1TAGS(KOKKOS_CUDA_TAG, TaskDependencies, _factory_name+"::"+task_group_name, TaskFactoryBase::do_task,
+    CALL_ASSIGN_PORTABLE_TASK_1TAG(KOKKOS_CUDA_TAG, TaskDependencies, _factory_name + std::string("::") + task_group_name, TaskFactoryBase::do_task,
                                   level->eachPatch(), matls,
                                   variable_registry, arches_tasks, type, time_substep, pack_tasks);
   } else { //if (assignedExecutionSpace == TaskAssignedExecutionSpace::UINTAH_CPU) {
-    CALL_ASSIGN_PORTABLE_TASK_1TAGS(UINTAH_CPU_TAG, TaskDependencies, _factory_name+"::"+task_group_name, TaskFactoryBase::do_task,
+    CALL_ASSIGN_PORTABLE_TASK_1TAG(UINTAH_CPU_TAG, TaskDependencies, _factory_name + std::string("::") + task_group_name, TaskFactoryBase::do_task,
                                 level->eachPatch(), matls,
                                 variable_registry, arches_tasks, type, time_substep, pack_tasks);
   }
@@ -456,6 +456,10 @@ void TaskFactoryBase::do_task ( DetailedTask* task,
     tsk_info_mngr->set_field_container( field_container );
 
     for ( auto i_task = arches_tasks.begin(); i_task != arches_tasks.end(); i_task++ ){
+
+      if ((*i_task)->get_task_name() == "char_ps_qn0") {
+        printf("Here we go");
+      }
 
       switch( type ){
         case (TaskInterface::INITIALIZE):
