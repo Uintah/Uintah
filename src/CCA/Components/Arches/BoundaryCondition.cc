@@ -163,11 +163,11 @@ BoundaryCondition::problemSetup( const ProblemSpecP& params,
 
   d_newBC = scinew BoundaryCondition_new( d_lab->d_sharedState->getArchesMaterial(0)->getDWIndex() );
 
-  if ( db->findBlock("check_for_inlet_obstructions") ) {
-    d_check_inlet_obstructions = true;
-  }
-
   if ( db != nullptr ) {
+
+    if ( db->findBlock("check_for_inlet_obstructions") ) {
+      d_check_inlet_obstructions = true;
+    }
 
     //setupBCs( db_params );
 
@@ -307,13 +307,16 @@ BoundaryCondition::problemSetup( const ProblemSpecP& params,
     }
   } else {
     //band-aid
-    throw ProblemSetupException("Error: Please insert a <BoundaryConditions/> in your <ARCHES> node of the UPS.", __FILE__, __LINE__);
+    //throw ProblemSetupException("Error: Please insert a <BoundaryConditions/> in your <ARCHES> node of the UPS.", __FILE__, __LINE__);
+    m_has_boundaries = false;
   }
 }
 
 void
 BoundaryCondition::set_bc_information(const LevelP& level){
-  setupBCs(m_arches_spec, level);
+  if ( m_has_boundaries ){
+    setupBCs(m_arches_spec, level);
+  }
 }
 
 //****************************************************************************
