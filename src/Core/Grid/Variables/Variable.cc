@@ -24,23 +24,24 @@
 
 
 #include <Core/Grid/Variables/Variable.h>
-#include <Core/Exceptions/InvalidCompressionMode.h>
+
+
 #include <Core/Disclosure/TypeDescription.h>
-#include <CCA/Ports/InputContext.h>
-#include <CCA/Ports/OutputContext.h>
-#if HAVE_PIDX
-#include <CCA/Ports/PIDXOutputContext.h>
-#endif
-#include <Core/IO/SpecializedRunLengthEncoder.h>
-#include <Core/Grid/Patch.h>
 #include <Core/Exceptions/ErrnoException.h>
+#include <Core/Exceptions/InvalidCompressionMode.h>
+#include <Core/Grid/Patch.h>
+#include <Core/IO/SpecializedRunLengthEncoder.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Util/FancyAssert.h>
 #include <Core/Util/Endian.h>
+#include <Core/Util/FancyAssert.h>
 #include <Core/Util/SizeTypeConvert.h>
 
-#include   <sstream>
-#include   <iostream>
+#include <CCA/Ports/InputContext.h>
+#include <CCA/Ports/OutputContext.h>
+#include <CCA/Ports/PIDXOutputContext.h>
+
+#include <sstream>
+#include <iostream>
 
 #include <zlib.h>
 #include <cmath>
@@ -191,61 +192,39 @@ Variable::emit( OutputContext& oc, const IntVector& l,
   return writebufferSize;
 }
 
+//______________________________________________________________________
+//
+
 #if HAVE_PIDX
-//______________________________________________________________________
-//
 void
-Variable::emitPIDX( PIDXOutputContext& pc,
-                    unsigned char* pidx_buffer,
-                    const IntVector& l,
-                    const IntVector& h,
-                    const size_t pidx_bufferSize )
-{
-  // This seems inefficient  -Todd
-
-  ProblemSpecP dummy;
-  bool outputDoubleAsFloat = pc.isOutputDoubleAsFloat();
-  
-  // read the Array3 variable into tmpStream
-  std::ostringstream tmpStream;
-  emitNormal(tmpStream, l, h, dummy, outputDoubleAsFloat);
-
-  // Create a string from the ostringstream
-  string tmpString   = tmpStream.str();
-  
-  // create a c-string
-  const char* writebuffer = tmpString.c_str();
-  size_t uda_bufferSize   = tmpString.size();
-
-  // copy the write buffer into the pidx_buffer
-  if( uda_bufferSize == pidx_bufferSize) {
-    memcpy(pidx_buffer, writebuffer, uda_bufferSize);
-  } else {
-    throw InternalError("ERROR: Variable::emitPIDX() error reading in buffer", __FILE__, __LINE__);
-  }
-}
-
-//______________________________________________________________________
-//
-void
-Variable::readPIDX( unsigned char* pidx_buffer,
-                    const size_t& pidx_bufferSize,
-                    bool swapBytes )
+Variable::readPIDX( const unsigned char * pidx_buffer,
+                    const size_t        & pidx_bufferSize,
+                    const bool            swapBytes )
 {
   // I don't know if there's a better way to create a istringstream directly from unsigned char*  -Todd
   
-  // create a string from pidx_buffer      
-  std::string strBuffer(pidx_buffer, pidx_buffer + pidx_bufferSize);
+  // Create a string from pidx_buffer:
+  std::string strBuffer( pidx_buffer, pidx_buffer + pidx_bufferSize );
 
-  // create a istringstream from the string 
-  istringstream instream(strBuffer);
+  // Create an istringstream from the string:
+  istringstream instream( strBuffer );
   
-  // push the istringstream into an Array3 variable
-  readNormal(instream, swapBytes);
+  // Push the istringstream into an Array3 variable:
+  readNormal( instream, swapBytes );
 
 } // end readPIDX()
 
+void
+Variable::emitPIDX(       PIDXOutputContext & /* oc */,
+                          unsigned char     * /* buffer */,
+                    const IntVector         & /* l */,
+                    const IntVector         & /* h */,
+                    const size_t              /* pidx_bufferSize */ ) // buffer size used for bullet proofing.
+{
+  SCI_THROW( InternalError( "emitPIDX not implemented for this type of variable", __FILE__, __LINE__ ) );
+}
 #endif
+
 //______________________________________________________________________
 //
 string*
@@ -375,12 +354,13 @@ Variable::read( InputContext& ic, long end, bool swapBytes, int nByteMode,
 
     //__________________________________
     //   rle and uncompressed
-    istringstream instream(*uncompressedData);
+    istringstream instream( *uncompressedData );
 
-    if (use_rle) {
-      readRLE(instream, swapBytes, nByteMode);
-    } else {
-      readNormal(instream, swapBytes);
+    if ( use_rle ) {
+      readRLE( instream, swapBytes, nByteMode );
+    }
+    else {
+      readNormal( instream, swapBytes );
     }
     ASSERT(instream.fail() == 0);
 
@@ -389,12 +369,14 @@ Variable::read( InputContext& ic, long end, bool swapBytes, int nByteMode,
 
 //______________________________________________________________________
 //
+
 bool
 Variable::emitRLE(ostream& /*out*/, const IntVector& /*l*/,
                   const IntVector& /*h*/, ProblemSpecP /*varnode*/)
 {
   return false; // not supported by default
 }
+
 //______________________________________________________________________
 //
 void

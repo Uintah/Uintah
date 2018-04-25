@@ -126,7 +126,7 @@ class LoadBalancer;
     void copySection( Dir & fromDir, Dir & toDir, const std::string & file, const std::string & section );
 
     //! Copy a section from another uda's to our index.xml.
-    void copySection( Dir & fromDir, const std::string & section ) { copySection(fromDir, m_dir, "index.xml", section); }
+    void copySection( Dir & fromDir, const std::string & section ) { copySection( fromDir, m_dir, "index.xml", section ); }
 
     //! Checks to see if this is an output time step. 
     //! If it is, setup directories and xml files that we need to output.
@@ -299,7 +299,7 @@ class LoadBalancer;
                      const std::string         & dirName,     // CCVars, SFC*Vars
                      ProblemSpecP        & doc );
                            
-    //! returns a vector of SaveItems with a common type description
+    //! Searches through "saveLabels" and returns all the SaveItems that are of the same "type".
     std::vector<DataArchiver::SaveItem> 
     findAllVariablesWithType( const std::vector< SaveItem > & saveLabels,
                               const TypeDescription::Type     type );
@@ -308,9 +308,6 @@ class LoadBalancer;
     void isVarTypeSupported( const std::vector< SaveItem >              & saveLabels,
                              const std::vector< TypeDescription::Type > & pidxVarTypes );
            
-    void createPIDX_dirs( std::vector< SaveItem >& saveLabels,
-                          Dir& levelDir );
-
     // Writes out the <Grid> and <Data> sections into the
     // timestep.xml file by creating a DOM and then writing it out.
     void writeGridOriginal(   const bool hasGlobals, const GridP & grid, ProblemSpecP rootElem );
@@ -348,17 +345,24 @@ class LoadBalancer;
     std::vector<MPI_Comm> m_pidxComms; // Array of MPI Communicators for PIDX usage...
        
     //! creates communicator every AMR level required for PIDX
-    void createPIDXCommunicator(      std::vector<SaveItem> & saveLabels,
-                                const GridP                 & grid, 
-                                      SchedulerP            & sched,
-                                      bool                    isThisACheckpoint);
+    void createPIDXCommunicator(       std::vector<SaveItem> & saveLabels,
+                                 const GridP                 & grid, 
+                                       SchedulerP            & sched,
+                                       bool                    isThisACheckpoint );
+
+    // Timestep # of the last time we saved "timestep.xml". -1 == not yet saved...
+    // We only save timestep.xml as needed (ie, when a regrid occurs), otherwise
+    // a given timestep will refer (symlink) to the last time it was saved.
+    // Note, this is in reference to IO timesteps.  We always generate and
+    // save timestep.xml for Checkpoint output.
 #endif
+    int m_lastOutputOfTimeStepXML = -1; 
 
     //! helper for finalizeTimeStep - schedules a task for each var's output
-    void scheduleOutputTimeStep(      std::vector<SaveItem> & saveLabels,
-                                const GridP                 & grid, 
-                                      SchedulerP            & sched,
-                                      bool                    isThisCheckpoint);
+    void scheduleOutputTimeStep(       std::vector<SaveItem> & saveLabels,
+                                 const GridP                 & grid, 
+                                       SchedulerP            & sched,
+                                       bool                    isThisCheckpoint );
 
     //! Helper for finalizeTimeStep - determines if, based on the current
     //! time and time step, this will be an output or checkpoint time step.

@@ -29,6 +29,8 @@ namespace Uintah {
 
   class DataArchive;
 
+  // malt : Material of interest (-1 means all materials).
+  
   void varsummary( DataArchive * da, CommandLineFlags & clf, int matl );
 
 }

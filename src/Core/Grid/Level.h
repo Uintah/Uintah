@@ -109,7 +109,7 @@ public:
   const_patch_iterator patchesEnd() const;
   patch_iterator       patchesEnd();
 
-  const Patch* getPatch( int index ) const { return m_real_patches[index]; }
+  const Patch* getPatch( int index ) const { return m_real_patches[ index ]; }
 
   // go through the virtual ones too
   const_patch_iterator allPatchesBegin() const;

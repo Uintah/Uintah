@@ -1442,8 +1442,9 @@ void Patch::computeVariableExtentsWithBoundaryCheck(Uintah::TypeDescription::Typ
     //  Clamp the a valid extent
     low  = Uintah::Max( ghostLow, levelLow);
     high = Uintah::Min( ghostHigh, levelHigh);
-  } else {
-    //Do it the usual way 
+  }
+  else {
+    // Do it the usual way 
     computeVariableExtents( basis, boundaryLayer, gtype, numGhostCells, low, high);
   } 
 }

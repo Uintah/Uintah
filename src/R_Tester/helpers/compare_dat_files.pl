@@ -1,19 +1,23 @@
-#!/usr/bin/perl
+#! /usr/bin/perl
 
 if (@ARGV <= 4) {
     print "usage: compare_dat_files {abs error allowed} {rel error allowed} {uda directory 1} {uda directory 2} {dat file names}\n";
 }
 
-
-
 $allowable_abs_error = $ARGV[0];
 $allowable_rel_error = $ARGV[1];
+
 $uda_dir1 = $ARGV[2];
 $uda_dir2 = $ARGV[3];
 
-print "Using absolute tolerance:" . $allowable_abs_error . "\n";
-print "Using relative tolerance:" . $allowable_rel_error . "\n";
+# Strip trailing / (if any) from dir name:
 
+$uda_dir1 = $1 if( $uda_dir1 =~ /(.*)\/$/ );
+$uda_dir2 = $1 if( $uda_dir2 =~ /(.*)\/$/ );
+
+print "Using absolute tolerance: " . $allowable_abs_error . "\n";
+print "Using relative tolerance: " . $allowable_rel_error . "\n";
+print "\n";
 
 $greatest_rel_error = 0;
 $greatest_abs_error = 0;
@@ -38,6 +42,7 @@ $first_significant_abs_error_value1 = 0;
 $first_significant_abs_error_value2 = 0;
 $failed = 0;
 $lineno = 0;
+
 foreach $datfile (@ARGV[4 .. @ARGV-1]) {
     $datfilename1 = $uda_dir1 . "/" . $datfile;
     $datfilename2 = $uda_dir2 . "/" . $datfile;
@@ -47,6 +52,7 @@ foreach $datfile (@ARGV[4 .. @ARGV-1]) {
     if (!open(IN2, $datfilename2)) {
 	print "Could not open " . $datfilename2 . "\n";
     }
+
     print "Comparing " . $datfile . "... ";
     $has_significant_rel_error = 0;
     $has_significant_abs_error = 0;
@@ -57,6 +63,7 @@ foreach $datfile (@ARGV[4 .. @ARGV-1]) {
         $lineno = $lineno + 1;
 	($time1, @values1) = getTimeAndValue($line1);
 	($time2, @values2) = getTimeAndValue($line2);
+
 	if (@values1 != @values2) {
 
             print "Values1 " . @values1 . " Values2 " . @values2;
@@ -121,39 +128,35 @@ foreach $datfile (@ARGV[4 .. @ARGV-1]) {
     if ($has_significant_rel_error != 0 || $has_significant_abs_error != 0) {
 	print "*** failed\n";
         if ($has_significant_rel_error != 0) {
-            print "\tgreatest relative error: %" . $greatest_rel_error * 100;
-            print "\n\tat times: " . $greatest_rel_error_time1 . " / ";
-            print $greatest_rel_error_time2 . "\n";
-            print "\tvalues: " . $greatest_rel_error_value1 . " / ";
-            print $greatest_rel_error_value2 . "\n";
+            print "    greatest relative error (%" . $greatest_rel_error * 100 . ") at:\n";
+            print "                    time                   value:\n";
+            print "             UDA1: " . $greatest_rel_error_time1 . " / " . $greatest_rel_error_value1 . "\n";
+            print "             UDA2: " . $greatest_rel_error_time2 . " / " . $greatest_rel_error_value2 . "\n";
 
             if ($greatest_rel_error != $first_significant_rel_error) {
-                print "\tand first signifant relative error: %" . $first_significant_rel_error * 100 . "\n";
-                print "\tat times: " . $first_significant_rel_error_time1 . " / ";
-                print $first_significant_rel_error_time2 . "\n";
-                
-                print "\tvalues: " . $first_significant_rel_error_value1 . " / ";
-                print $first_significant_rel_error_value2 . "\n";
+                print "    and first signifant relative error (%" . $first_significant_rel_error * 100 . ") at:\n";
+                print "                    time                   value:\n";
+                print "             UDA1: " . $first_significant_rel_error_time1 . " / " . $first_significant_rel_error_value1 . "\n";
+                print "             UDA2: " . $first_significant_rel_error_time2 . " / " . $first_significant_rel_error_value2 . "\n";
             }
         }
         if ($has_significant_abs_error != 0) {
-            print "\n\tgreatest absolute error: " . $greatest_abs_error;
-            print "\n\tat times: " . $greatest_abs_error_time1 . " / ";
-            print $greatest_abs_error_time2 . "\n";
-            print "\tvalues: " . $greatest_abs_error_value1 . " / ";
-            print $greatest_abs_error_value2 . "\n";
+            print "\n";
+            print "    greatest absolute error: " . $greatest_abs_error . "\n";
+
+            print "                    time                   value:\n";
+            print "             UDA1: " . $greatest_abs_error_time1 . " / " . $greatest_abs_error_value1 . "\n";
+            print "             UDA2: " . $greatest_abs_error_time2 . " / " . $greatest_abs_error_value2 . "\n";
 
             if ($greatest_abs_error != $first_significant_abs_error) {
-                print "\tand first signifant absolute error: %" . $first_significant_abs_error * 100 . "\n";
-                print "\tat times: " . $first_significant_abs_error_time1 . " / ";
-                print $first_significant_abs_error_time2 . "\n";
-                
-                print "\tvalues: " . $first_significant_abs_error_value1 . " / ";
-                print $first_significant_abs_error_value2 . "\n";
+                print "    and first signifant absolute error: %" . $first_significant_abs_error * 100 . "\n";
+                print "                    time                   value:\n";
+                print "             UDA1: " . $first_significant_abs_error_time1 . " / " . $first_significant_abs_error_value1 . "\n";
+                print "             UDA2: " . $first_significant_abs_error_time2 . " / " . $first_significant_abs_error_value2 . "\n";
             }
         }
-        print "\nThe following is the suggested command to compare these files:\n";
-	print "xxdiff\\\n" . $datfilename1 . "\\\n" . $datfilename2 . "\n\n";
+        print "\nSuggested command to compare these files:\n\n";
+	print "   xxdiff " . $datfilename1 . " \\\n          " . $datfilename2 . "\n\n";
 	$failed = 1;
     }
     else {

@@ -11,9 +11,9 @@
 #           - Comparison failed
 #______________________________________________________________________
 
-
 test_uda=$1
 compare_uda=$2
+
 abs_tol=$3  # Absolute tolerance
 rel_tol=$4  # Relative tolerance
 
@@ -28,9 +28,12 @@ fi
 
 #__________________________________
 # do both uda have dat files?
+
 ls -1 $test_uda/*.dat >/dev/null 2>&1
 retval=$?
+
 echo
+
 if [ $retval != "0" ]; then
   # $test_uda has no dat files
   ls -1 $compare_uda/*.dat >/dev/null 2>&1

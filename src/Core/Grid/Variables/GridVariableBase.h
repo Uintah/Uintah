@@ -26,6 +26,7 @@
 #define UINTAH_HOMEBREW_GRIDVARIABLE_H
 
 #include <Core/Grid/Variables/Variable.h>
+
 #include <Core/Parallel/BufferInfo.h>
 #include <Core/Geometry/IntVector.h>
 

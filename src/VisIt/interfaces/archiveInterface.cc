@@ -148,10 +148,11 @@ TimeStepInfo* getTimeStepInfo(DataArchive *archive,
   stepInfo->levelInfo.resize(numLevels);
 
   // Get the variable information from the archive.
-  std::vector<std::string> vars;
+  std::vector<std::string>                    vars;
   std::vector<const Uintah::TypeDescription*> types;
-  archive->queryVariables(vars, types);
-  stepInfo->varInfo.resize(vars.size());
+  std::vector<int>                            numMatls;
+  archive->queryVariables( vars, numMatls, types );
+  stepInfo->varInfo.resize( vars.size() );
 
   for (unsigned int i=0; i<vars.size(); ++i) {
     VariableInfo &varInfo = stepInfo->varInfo[i];
@@ -609,9 +610,10 @@ GridDataRaw* getGridData(DataArchive *archive,
   printTask( patch, dbgOut, "getGridData ", timestep, material, variable_name );
 
   // Get variable type from the archive.
-  std::vector<std::string> vars;
+  std::vector<std::string>                    vars;
   std::vector<const Uintah::TypeDescription*> types;
-  archive->queryVariables(vars, types);
+  std::vector<int>                            numMatls;
+  archive->queryVariables( vars, numMatls, types );
 
   const Uintah::TypeDescription* maintype = nullptr;
   const Uintah::TypeDescription* subtype = nullptr;
@@ -680,12 +682,13 @@ bool variableExists(DataArchive *archive,
   DOUT(dbgOut, "  variableExists (" << variable_name << ")"  );
   
   // figure out what the type of the variable we're querying is
-  std::vector<std::string> vars;
+  std::vector<std::string>                    vars;
   std::vector<const Uintah::TypeDescription*> types;
-  archive->queryVariables(vars, types);
+  std::vector<int>                            numMatls;
+  archive->queryVariables( vars, numMatls, types );
 
   const Uintah::TypeDescription* maintype = nullptr;
-  const Uintah::TypeDescription* subtype = nullptr;
+  const Uintah::TypeDescription* subtype  = nullptr;
 
   for (unsigned int i=0; i<vars.size(); ++i) {
     if (vars[i] == variable_name) {
@@ -788,12 +791,13 @@ ParticleDataRaw* getParticleData(DataArchive *archive,
   printTask( patch, dbgOut, "getParticleData", timestep, material, variable_name );
   
   // figure out what the type of the variable we're querying is
-  std::vector<std::string> vars;
+  std::vector<std::string>                    vars;
   std::vector<const Uintah::TypeDescription*> types;
-  archive->queryVariables(vars, types);
+  std::vector<int>                            numMatls;
+  archive->queryVariables( vars, numMatls, types );
 
   const Uintah::TypeDescription* maintype = nullptr;
-  const Uintah::TypeDescription* subtype = nullptr;
+  const Uintah::TypeDescription* subtype  = nullptr;
 
   for (unsigned int i=0; i<vars.size(); ++i) {
     if (vars[i] == variable_name) {

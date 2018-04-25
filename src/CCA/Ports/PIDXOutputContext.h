@@ -163,12 +163,12 @@ class PIDXOutputContext {
                                PIDX_point  & newBox );
 
     void initialize( const std::string  & filename,
-                           unsigned int   timeStep,
+                     const unsigned int   timeStep,
                            MPI_Comm       comm,
                            PIDX_flags     flags,
                      const PatchSubset  * patches,
                            PIDX_point     dims,
-                     const int            type);
+                     const int            type );
     
     void setLevelExtents( const std::string & desc, 
                                 IntVector     lo,
@@ -182,12 +182,12 @@ class PIDXOutputContext {
                           const TypeDescription * TD,
                                 patchExtents    & pExtents,
                                 PIDX_point      & patchOffset,
-                                PIDX_point      & nPatchCells );
+                                PIDX_point      & nPatchCells ) const;
 
-    void checkReturnCode( const int           rc,
-                          const std::string   warn,
-                          const char        * file, 
-                          const int           line );
+    static void checkReturnCode( const int           rc,
+                                 const std::string   warn,
+                                 const char        * file, 
+                                 const int           line );
                           
     void hardWireBufferValues(unsigned char* patchBuffer, 
                               const patchExtents patchExts,
