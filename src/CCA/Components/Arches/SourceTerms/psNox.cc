@@ -478,7 +478,7 @@ psNox::computeSource( const ProcessorGroup* pc,
         }else if(O2_mp>1.1e-2&&O2_mp<0.03){
           n_O2=-0.35-0.1*log(O2_mp);
         }else if(O2_mp>=0.03){
-          n_O2=1e-5;
+          n_O2=0.0;
         }
         //thermal-nox,S1
         //reaction rates from r1~r3:
@@ -536,37 +536,57 @@ psNox::computeSource( const ProcessorGroup* pc,
         double CharOxyRate =  _Nit*oxi(i,j,k) /_MW_N;      // mol / m^3 / s of N
         double TarRate     =  _Nit*tar_src(i,j,k) /_MW_N;      // mol / m^3 / s of N
 
-        rxn_rates[8]=devolRate;
-        rxn_rates[9]=CharOxyRate;
-        rxn_rates[10]=TarRate;
-      
-        for (int ispec =0 ; ispec<nSpecies ; ispec++){
-          double num=0.0;
-          double denom=0.0;
-          double instantanousRate=0.0;
-          for (int ix =0 ; ix<nRates ; ix++){
-            num+=  prate_coef[ispec][ix]*rxn_rates[ix];
-            denom+=nrate_coef[ispec][ix]*rxn_rates[ix];
-          }
-          instantanousRate=-denom;
-          denom=denom/Spec_i_m[ispec];
-          double netRate;                                
+        rxn_rates[8]  = devolRate;
+        rxn_rates[9]  = CharOxyRate;
+        rxn_rates[10] = TarRate;
 
-          //double final_species = num/denom*(1.0-std::exp(-delta_t*denom)) + Spec_i_m[ispec]*std::exp(-delta_t*denom); // quasi-analytical approach ( may need a check on denom)
-          double final_species = (num*delta_t + Spec_i_m[ispec])/(1.0 + denom*delta_t); // quasi-implicit approach
-          netRate= (final_species-Spec_i_m[ispec])/delta_t-num;                 //(mol/sm3)                          
-              
-          for (int ispec2 =0 ; ispec2<nSpecies ; ispec2++){
-            for (unsigned int irxn =0 ; irxn<rel_ind[ispec].size() ; irxn++){
-              rate_coef[ispec2][rel_ind[ispec][irxn]]*= min(netRate/instantanousRate,1.000); // linear scaling of rates (negitive rates only).
+      
+        for (int ix =0 ; ix<nRates ; ix++){
+          for (int ispec =0 ; ispec<nSpecies ; ispec++){
+            if (nrate_coef[ispec][ix] != 0.0 ) {
+              rxn_rates[ix]  =  min(rxn_rates[ix], Spec_i_m[ispec]/delta_t/nrate_coef[ispec][ix]);
             }
           }
         }
+        //for (int ispec =0 ; ispec<nSpecies ; ispec++){
+        //  double num=0.0;
+        //  double denom=0.0;
+        //  double instantanousRate=0.0;
+        //  for (int ix =0 ; ix<nRates ; ix++){
+        //    num+=  prate_coef[ispec][ix]*rxn_rates[ix];
+        //    denom+=nrate_coef[ispec][ix]*rxn_rates[ix];
+        //  }
+        //  instantanousRate=-denom;
+        //  denom=denom/Spec_i_m[ispec];
+         // double netRate;                                
+
+        //  double final_species = num/denom*(1.0-std::exp(-delta_t*denom)) + Spec_i_m[ispec]*std::exp(-delta_t*denom); // quasi-analytical approach ( may need a check on denom)
+          //double final_species = (num*delta_t + Spec_i_m[ispec])/(1.0 + denom*delta_t); // quasi-implicit approach
+        //  netRate= (final_species-Spec_i_m[ispec])/delta_t-num;                 //(mol/sm3)                          
+              
+        //  for (int ispec2 =0 ; ispec2<nSpecies ; ispec2++){
+       //     for (unsigned int irxn =0 ; irxn<rel_ind[ispec].size() ; irxn++){
+        //      rate_coef[ispec2][rel_ind[ispec][irxn]]*= min(netRate/instantanousRate,1.000); // linear scaling of rates (negitive rates only).
+       //     }
+        //  }
+       // }
 
        for (int ix =0 ; ix<nRates ; ix++){
          NO_src(i,j,k)  +=rxn_rates[ix]*rate_coef[sNO ][ix]*_MW_NO;
          HCN_src(i,j,k) +=rxn_rates[ix]*rate_coef[sHCN][ix]*_MW_HCN;
          NH3_src(i,j,k) +=rxn_rates[ix]*rate_coef[sNH3][ix]*_MW_NH3;
+       }
+
+       if (NO_src(i,j,k) < 0) { 
+        NO_src(i,j,k)  = - min(-NO_src(i,j,k), Spec_i_m[sNO]/delta_t*_MW_NO);
+       }
+
+       if (HCN_src(i,j,k) < 0 ){
+        HCN_src(i,j,k) = - min(-HCN_src(i,j,k), Spec_i_m[sHCN]/delta_t*_MW_HCN);
+       }
+
+       if (NH3_src(i,j,k) < 0) {
+        NH3_src(i,j,k) = - min(-NH3_src(i,j,k), Spec_i_m[sNH3]/delta_t*_MW_NH3);
        }
 
      } else {  // if volFraction
