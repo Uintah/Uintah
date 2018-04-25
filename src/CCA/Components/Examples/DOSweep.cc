@@ -67,7 +67,7 @@ void DOSweep::problemSetup(const ProblemSpecP& prob_spec,
   }
   
   ProblemSpecP st_ps = prob_spec->findBlock("DOSweep");
-  solver_parameters = solver->readParameters(st_ps, "implicitPressure",m_sharedState);
+  solver_parameters = solver->readParameters(st_ps, "implicitPressure");
   solver_parameters->setSolveOnExtraCells(false);
     
   st_ps->require("delt", delt_);
@@ -104,6 +104,7 @@ void DOSweep::scheduleInitialize(const LevelP& level,
 void DOSweep::scheduleRestartInitialize(const LevelP& level,
                                         SchedulerP& sched)
 {
+  solver->scheduleRestartInitialize(level,sched,m_sharedState->allMaterials());
 }
 //__________________________________
 // 
@@ -131,7 +132,7 @@ DOSweep::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
   solver->scheduleSolve(level, sched, m_sharedState->allMaterials(), 
                         lb_->pressure_matrix, Task::NewDW, lb_->pressure, 
                         false, lb_->pressure_rhs, Task::NewDW, 0, Task::OldDW, 
-                        solver_parameters,false);
+                        solver_parameters,true);
 
 }
 //__________________________________

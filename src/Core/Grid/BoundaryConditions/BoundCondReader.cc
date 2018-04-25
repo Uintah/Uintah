@@ -55,7 +55,7 @@
 using namespace Uintah;
 
 namespace {
-  DebugStream BCR_dbg ("BCR_DBG", "Grid_BoundaryConditions", "", false);
+  DebugStream BCR_dbg ("BCR_DBG", "BoundaryCondReader", "report info regarding the BC setup", false);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -82,7 +82,9 @@ bool is_on_face(const int dir,
 {
   std::vector<Point>::const_iterator iter = points.begin();
   while (iter != points.end()) {
-    if ( p(dir) == (*iter)(dir) ) return true;
+    if ( p(dir) == (*iter)(dir) ) {
+      return true;
+    }
     ++iter;
   }
   return false;

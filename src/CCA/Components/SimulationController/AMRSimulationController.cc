@@ -63,7 +63,7 @@ using namespace Uintah;
 
 namespace {
 
-DebugStream amrout(      "AMR"                    , "AMRSimulationController", "AMR debug stream",false);
+DebugStream amrout(      "AMR"                    , "AMRSimulationController", "AMR - report patch layout",false);
 DebugStream dbg(         "AMRSimulationController", "AMRSimulationController", "Task/Cycle debug stream",false);
 DebugStream dbg_barrier( "MPIBarriers"            , "AMRSimulationController", "MPIBarriers debug stream",false);
 DebugStream dbg_dwmem(   "LogDWMemory"            , "AMRSimulationController", "LogDWMemory debug stream",false);

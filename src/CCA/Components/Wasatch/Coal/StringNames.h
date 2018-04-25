@@ -29,6 +29,17 @@ public:
   const std::string sarofim_tar, sarofim_tar_src;
   const std::string singlerate_tar, singlerate_tar_src;
   const std::string moisture;
+  const std::string coalConsumedGasYi;
+  const std::string coalProducedGasYi;
+  const std::string coalYiConsumptionRate;
+  const std::string coalYiProductionRate;
+  const std::string coalTotalGasConsumptionRate;
+  const std::string coalTotalGasProductionRate;
+  const std::string coalConsumedGasEnthalpy;
+  const std::string coalProducedGasEnthalpy;
+  const std::string coalConsumedGasEnthalpySrc;
+  const std::string coalProducedGasEnthalpySrc;
+  const std::string heatFromCharRxns;
 private:
   StringNames();    ~StringNames();
   StringNames(const StringNames&); 

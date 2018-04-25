@@ -50,7 +50,7 @@
 using namespace Uintah;
 
 namespace {
-  Dout g_dbg("GRID", "Grid", "Grid debug stream", false);
+  Dout g_dbg("GRID", "Grid", "prints out each patch's index space", false);
 }
 
 //______________________________________________________________________

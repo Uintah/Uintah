@@ -10,7 +10,7 @@ namespace Uintah{
 
   public:
 
-    LagrangianParticleFactory();
+    LagrangianParticleFactory( const ApplicationCommon* arches );
     ~LagrangianParticleFactory();
 
     void register_all_tasks( ProblemSpecP& db );
@@ -18,7 +18,7 @@ namespace Uintah{
     void build_all_tasks( ProblemSpecP& db );
 
     std::vector<std::string> retrieve_task_subset(const std::string subset){
-      
+
       if ( subset == _all_tasks_str ){
 
         return _active_tasks;

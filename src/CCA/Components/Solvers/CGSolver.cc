@@ -941,8 +941,7 @@ private:
 //______________________________________________________________________
 //
 SolverParameters* CGSolver::readParameters(ProblemSpecP& params,
-                                           const string& varname,
-					   const SimulationStateP & state)
+                                           const string& varname)
 {
 
   CGSolverParams* p = new CGSolverParams();
@@ -996,7 +995,7 @@ void CGSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
                              const VarLabel* b,    Task::WhichDW which_b_dw,
                              const VarLabel* guess,Task::WhichDW which_guess_dw,
                              const SolverParameters* params,
-                             bool modifies_hypre)
+                             bool isFirstSolve)
 {
   Task* task;
   // The extra handle arg ensures that the stencil7 object will get freed

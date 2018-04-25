@@ -108,7 +108,7 @@ namespace WasatchCore {
                            phiLabel_, true,
                            phirhsLabel_, Uintah::Task::NewDW,
                            isDoingInitialization ? 0 : phiLabel_, RKStage == 1 ? Uintah::Task::OldDW : Uintah::Task::NewDW,
-                           &solverParams_,RKStage == 1 ? false:true );
+                           &solverParams_,RKStage == 1 ? true:false );
   }
 
   //--------------------------------------------------------------------

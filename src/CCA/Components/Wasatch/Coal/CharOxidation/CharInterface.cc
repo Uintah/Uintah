@@ -11,7 +11,6 @@
 
 using std::ostringstream;
 using std::endl;
-using std::cout;
 
 namespace CHAR{
 
@@ -150,7 +149,7 @@ namespace CHAR{
   clip_char_mass()
   {
    Expr::ExpressionFactory& factory = *(gc_[WasatchCore::ADVANCE_SOLUTION]->exprFactory);
-   cout<<std::endl<<"registering char mass clipping expression...     \n";
+   proc0cout << std::endl << "registering char mass clipping expression...     \n";
 
    // Ensure that values of Char do not become negative.
    const Tag charMassTag = charModel_->char_mass_tag();

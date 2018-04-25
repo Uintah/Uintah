@@ -3126,7 +3126,7 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
   }
   else { // type == CHECKPOINT_REDUCTION
     (*m_runtimeStats)[ CheckpointReductionIOTime ] += myTime;
-    (*m_runtimeStats)[ CheckpointReducIORate ] += (double) totalBytes / (byteToMB * myTime);
+    (*m_runtimeStats)[ CheckpointReductionIORate ] += (double) totalBytes / (byteToMB * myTime);
   }
     
   (*m_runtimeStats)[TotalIOTime ] += myTime;

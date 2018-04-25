@@ -55,3 +55,11 @@ endif
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
+
+##############################################3
+# perf matrix3
+
+SRCS    := $(SRCDIR)/perfmatrix3.cc
+PROGRAM := $(SRCDIR)/perfmatrix3
+
+include $(SCIRUN_SCRIPTS)/program.mk

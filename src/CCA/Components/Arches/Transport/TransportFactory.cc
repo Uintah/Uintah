@@ -18,7 +18,7 @@
 
 namespace Uintah{
 
-TransportFactory::TransportFactory()
+TransportFactory::TransportFactory( const ApplicationCommon* arches ) : TaskFactoryBase( arches )
 {
   _factory_name = "TransportFactory";
 }
@@ -369,7 +369,7 @@ void TransportFactory::schedule_initialization( const LevelP& level,
 
   //because this relies on momentum solvers.
   if ( has_task( "build_pressure_system" ) ){
-    schedule_task( "build_pressure_system", TaskInterface::INITIALIZE, level, sched, matls ); 
+    schedule_task( "build_pressure_system", TaskInterface::INITIALIZE, level, sched, matls );
   }
 
 }
@@ -388,36 +388,36 @@ void TransportFactory::register_DQMOM( ProblemSpecP db_dqmom ){
 
       std::stringstream dqmom_eqn_grp_env;
       dqmom_eqn_grp_env << m_dqmom_grp_name << "_" << i;
-  
+
       std::string group_name = dqmom_eqn_grp_env.str()+ "_" + *scalar;
-  
+
       TaskInterface::TaskBuilder* tsk;
       typedef CCVariable<double> C;
       typedef typename ArchesCore::VariableHelper<CCVariable<double> >::ConstType CT;
-  
+
       if ( m_pack_transport_construction_tasks ){
         tsk = scinew KScalarRHS<C, C >::Builder(group_name, 0);
       } else {
         tsk = scinew KScalarRHS<C, CT >::Builder(group_name, 0);
       }
-  
+
       _dqmom_eqns.push_back(group_name);
       register_task( group_name, tsk );
-  
+
       std::string update_task_name = "dqmom_fe_update_"+group_name;
-  
+
       KFEUpdate<CCVariable<double> >::Builder* update_tsk =
       scinew KFEUpdate<CCVariable<double> >::Builder( update_task_name, 0 );
       register_task( update_task_name, update_tsk );
-  
+
       std::string weight_task_name =  "dqmom_ic_from_w_ic_"+group_name;
       TaskInterface::TaskBuilder* weight_var_tsk =
       scinew UnweightVariable<CCVariable<double>>::Builder( weight_task_name , 0  );
       register_task( weight_task_name, weight_var_tsk );
-  
+
       _dqmom_fe_update.push_back( update_task_name );
       _ic_from_w_ic.push_back(weight_task_name);
-  
+
       if ( db_dqmom->findBlock("diffusion") ) {
         std::string diffusion_task_name = "dqmom_diffusion_"+group_name;
         TaskInterface::TaskBuilder* diff_tsk =
@@ -425,7 +425,7 @@ void TransportFactory::register_DQMOM( ProblemSpecP db_dqmom ){
         register_task( diffusion_task_name, diff_tsk );
         _dqmom_compute_diff.push_back( diffusion_task_name );
       }
-  
+
     }
   }
 }
@@ -527,7 +527,7 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
     //eqn_db->setAttribute("label", "w_"+this_qn.str());
     ProblemSpecP do_not_division = eqn_db->appendChild("no_weight_factor");
 
- 
+
     if ( do_convection ){
       ProblemSpecP conv_db = eqn_db->appendChild("convection");
       conv_db->setAttribute("scheme", conv_scheme );
@@ -713,13 +713,13 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
         std::vector<std::string> scaling_constants;
         db_ic->require("scaling_const", scaling_constants);
         db_ic->require("scaling_const", scaling_constants2);
-  
+
         if ( scaling_constants.size() != nQn ){
           throw ProblemSetupException("Error: number of scaling constants != number quadrature nodes.", __FILE__, __LINE__);
         }
-  
+
         eqn_db->appendChild("scaling")->setAttribute("value", scaling_constants[i]);
-  
+
       }
 
       ProblemSpecP db_init = db_ic->findBlock("initialization");
@@ -755,20 +755,20 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
       print_task_setup_info( group_name, "DQMOM rhs construction.");
       tsk->problemSetup(db_eqn_group_ic);
       tsk->create_local_labels();
-      
+
       // Diffusion
       if ( do_diffusion ){
 	TaskInterface* diff_tsk = retrieve_task("dqmom_diffusion_"+group_name);
 	diff_tsk->problemSetup( db_eqn_group_ic );
 	diff_tsk->create_local_labels();
       }
-      
+
       // FE update
       TaskInterface* fe_tsk = retrieve_task("dqmom_fe_update_"+group_name);
       print_task_setup_info( "dqmom_fe_update_"+group_name, "DQMOM FE update.");
       fe_tsk->problemSetup( db_eqn_group_ic );
       fe_tsk->create_local_labels();
-      
+
  //   compute ic from w*ic
       TaskInterface* ic_tsk = retrieve_task("dqmom_ic_from_w_ic_"+group_name);
       print_task_setup_info( "dqmom_ic_from_w*ic_"+group_name, "DQMOM compute ic from w*ic");

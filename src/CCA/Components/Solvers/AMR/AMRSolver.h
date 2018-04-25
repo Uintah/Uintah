@@ -66,8 +66,7 @@ namespace Uintah {
     virtual ~AMRSolver();
 
     virtual SolverParameters* readParameters(       ProblemSpecP     & params,
-                                              const std::string      & name,
-                                              const SimulationStateP & state );
+                                              const std::string      & name );
 
     virtual void scheduleSolve( const LevelP           & level,
                                       SchedulerP       & sched,
@@ -81,7 +80,7 @@ namespace Uintah {
                                 const VarLabel         * guess,
                                       Task::WhichDW      which_guess_dw,
                                 const SolverParameters * params,
-                                      bool               modifies_hypre = false );
+                                      bool               isFirstSolve = true );
                                
     virtual std::string getName();
     
@@ -90,6 +89,10 @@ namespace Uintah {
     virtual void scheduleInitialize( const LevelP      & level,
                                            SchedulerP  & sched,
                                      const MaterialSet * matls ) {}
+
+    virtual void scheduleRestartInitialize( const LevelP      & level,
+                                                  SchedulerP  & sched,
+                                            const MaterialSet * matls){}
   };
 }
 

@@ -54,7 +54,7 @@
 
 namespace Uintah {
 
-  //__________________________________
+  //______________________________________________________________________
   //
   class HypreSolver2Params : public SolverParameters {
   public:
@@ -68,7 +68,6 @@ namespace Uintah {
     double      tolerance;          // Residual tolerance for solver
     int         maxiterations;      // Maximum # iterations allowed
     int         logging;            // Log Hypre solver (using Hypre options)
-    bool        restart;            // Allow solver to restart if not converged
     int         solveFrequency;     // Frequency for solving the linear system. timestep % solveFrequency
     int         relax_type;         // relaxation type
     
@@ -81,19 +80,10 @@ namespace Uintah {
     
     // SparseMSG parameters
     int    jump;               // Hypre Sparse MSG parameter
-    
-    void setSolveFrequency(const int freq) {
-      solveFrequency = freq;
-    }
-    
-    int getSolveFrequency() const {
-      return solveFrequency;
-    }
-
-    SimulationStateP m_sharedState;
   };
 
-
+  //______________________________________________________________________
+  //
   enum SolverType {
     smg,
     pfmg,
@@ -105,7 +95,8 @@ namespace Uintah {
     diagonal
   };
 
-
+  //______________________________________________________________________
+  //
   struct hypre_solver_struct : public RefCounted {
     bool                 created_solver;
     bool                 created_precond_solver;
@@ -117,6 +108,8 @@ namespace Uintah {
     HYPRE_StructVector * HB;
     HYPRE_StructVector * HX;
     
+    //__________________________________
+    //
     hypre_solver_struct() {
       created_solver         = false;
       created_precond_solver = false;
@@ -128,7 +121,9 @@ namespace Uintah {
       HB = 0;
       HX = 0;
     };
-
+    
+    //__________________________________
+    //
     virtual ~hypre_solver_struct() {
       if (created_solver) {
         HYPRE_StructMatrixDestroy( *HA );
@@ -209,15 +204,16 @@ namespace Uintah {
   };
 
   typedef Handle<hypre_solver_struct> hypre_solver_structP;
-
+  
+  //______________________________________________________________________
+  //
   class HypreSolver2 : public SolverCommon {
   public:
     HypreSolver2(const ProcessorGroup* myworld);
     virtual ~HypreSolver2();
 
     virtual SolverParameters* readParameters(       ProblemSpecP & params,
-                                              const std::string  & name,
-                                              const SimulationStateP & state );
+                                              const std::string  & name  );
 
     /**
      *  @brief Schedules the solution of the linear system \[ \mathbf{A} \mathbf{x} = \mathbf{b}\].
@@ -252,11 +248,15 @@ namespace Uintah {
                                 const VarLabel         * guess_in,
                                       Task::WhichDW      which_guess_dw_in,
                                 const SolverParameters * params_in,
-                                      bool               modifies_hypre_in = false );
+                                      bool               isFirstSolve_in = true );
 
     virtual void scheduleInitialize( const LevelP      & level,
                                            SchedulerP  & sched,
                                      const MaterialSet * matls );
+                                     
+    virtual void scheduleRestartInitialize( const LevelP      & level,
+                                                  SchedulerP  & sched,
+                                            const MaterialSet * matls);
 
     virtual std::string getName();
 
@@ -268,6 +268,8 @@ namespace Uintah {
                      const MaterialSubset * matls,
                            DataWarehouse  * old_dw,
                            DataWarehouse  * new_dw );
+                           
+    
 
     const VarLabel * m_timeStepLabel;
     const VarLabel * hypre_solver_label;

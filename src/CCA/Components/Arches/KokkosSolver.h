@@ -47,26 +47,35 @@ namespace Uintah{
   public:
     Builder( SimulationStateP& sharedState,
              const ProcessorGroup* myWorld,
-             SolverInterface* solver ) :
+             SolverInterface* solver,
+             const ApplicationCommon* arches ) :
              m_sharedState(sharedState),
              m_myWorld(myWorld),
-             m_solver(solver)
+             m_solver(solver),
+             m_arches(arches)
     { }
      ~Builder(){}
 
      KokkosSolver* build(){
-       return scinew KokkosSolver( m_sharedState, m_myWorld, m_solver );
+       return scinew KokkosSolver( m_sharedState,
+                                   m_myWorld,
+                                   m_solver,
+                                   m_arches );
      }
 
   private:
+
     SimulationStateP& m_sharedState;
     const ProcessorGroup* m_myWorld;
     SolverInterface* m_solver;
+    const ApplicationCommon* m_arches;
+
   };
 
   KokkosSolver( SimulationStateP& sharedState,
                 const ProcessorGroup* myworld,
-                SolverInterface* solver );
+                SolverInterface* solver,
+                const ApplicationCommon* arches );
 
   virtual ~KokkosSolver();
 
@@ -156,7 +165,7 @@ namespace Uintah{
     const VarLabel* m_wLabel;
     const VarLabel* m_rhoLabel;
     const VarLabel* m_tot_muLabel;
-    const VarLabel* m_simtime_label; 
+    const VarLabel* m_simtime_label;
 
     double m_dt_init;
 

@@ -10,7 +10,7 @@ namespace Uintah{
 
   public:
 
-    BoundaryConditionFactory( );
+    BoundaryConditionFactory( const ApplicationCommon* arches );
     ~BoundaryConditionFactory();
 
     void register_all_tasks( ProblemSpecP& db );

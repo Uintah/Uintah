@@ -308,7 +308,7 @@ namespace WasatchCore{
     bool use3DLaplacian = true;
     poissonEqParams->getWithDefault( "Use3DLaplacian",use3DLaplacian, true );
 
-    Uintah::SolverParameters* sparams = linSolver.readParameters( poissonEqParams, "", sharedState );
+    Uintah::SolverParameters* sparams = linSolver.readParameters( poissonEqParams, "" );
     sparams->setSolveOnExtraCells( false );
     sparams->setUseStencil4( true );
     sparams->setOutputFileName( "WASATCH" );
@@ -358,7 +358,7 @@ namespace WasatchCore{
       }
     }
     else if( params->findBlock("DiscreteOrdinates") ){
-      Uintah::SolverParameters* sparams = linSolver.readParameters( params, "", sharedState );
+      Uintah::SolverParameters* sparams = linSolver.readParameters( params, "" );
 
       int order = 2;
       params->findBlock("DiscreteOrdinates")->getAttribute("order",order);

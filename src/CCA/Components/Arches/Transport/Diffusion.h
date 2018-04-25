@@ -181,7 +181,7 @@ private:
       if ( m_do_diff[ieqn] ){
         //should this be latest?
         register_variable(  m_eqn_names[ieqn], ArchesFieldContainer::REQUIRES, 1,
-                            ArchesFieldContainer::NEWDW, variable_registry,
+                            ArchesFieldContainer::LATEST, variable_registry,
                             time_substep, _task_name );
         register_variable(  m_eqn_names[ieqn]+"_x_dflux", ArchesFieldContainer::COMPUTES , variable_registry, _task_name );
         register_variable(  m_eqn_names[ieqn]+"_y_dflux", ArchesFieldContainer::COMPUTES , variable_registry, _task_name );

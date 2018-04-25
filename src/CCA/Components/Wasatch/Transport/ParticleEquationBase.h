@@ -46,9 +46,9 @@
 
 namespace WasatchCore{
 
-  class ExprDeps;  // forward declaration.
-  class GraphHelper;
-  class BCHelper;
+  class  ExprDeps;  // forward declaration.
+  class  BCHelper;
+  struct GraphHelper;
   /**
    *  \ingroup WasatchCore
    *  \ingroup WasatchParticles

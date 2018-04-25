@@ -68,8 +68,7 @@ AMRSolver::~AMRSolver() {}
  _____________________________________________________________________*/
 SolverParameters*
 AMRSolver::readParameters(ProblemSpecP& params,
-                          const string& varname,
-                          const SimulationStateP& state)
+                          const string& varname)
 {
   HypreSolverParams* p = new HypreSolverParams();
   bool found=false;
@@ -132,7 +131,7 @@ AMRSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
                          const VarLabel* b,       Task::WhichDW which_b_dw,  
                          const VarLabel* guess,   Task::WhichDW which_guess_dw,
                          const SolverParameters* params,
-                         bool modifies_hypre)
+                         bool isFirstSolve)
   
 {
   cout_doing << "AMRSolver::scheduleSolve() BEGIN" << "\n";

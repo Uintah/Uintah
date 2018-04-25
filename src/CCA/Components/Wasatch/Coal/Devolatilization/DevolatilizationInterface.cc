@@ -1,4 +1,4 @@
-#include "DevolatilizationInterface.h"
+#include <CCA/Components/Wasatch/Coal/Devolatilization/DevolatilizationInterface.h>
 #include <stdexcept>
 #include <sstream>
 #include <cstdlib>
@@ -9,7 +9,6 @@
 // expressions we build here
 
 using std::vector;
-using std::cout;
 using std::endl;
 using std::ostringstream;
 using std::string;

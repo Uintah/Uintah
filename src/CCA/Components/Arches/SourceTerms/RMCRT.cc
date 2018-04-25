@@ -37,7 +37,7 @@
 
 using namespace Uintah;
 
-Dout dbg("RMCRT", "Arches", "RMCRT debug stream", false);
+Dout dbg("RMCRT", "Arches", "RMCRT debug info", false);
 
 /*______________________________________________________________________
           TO DO:

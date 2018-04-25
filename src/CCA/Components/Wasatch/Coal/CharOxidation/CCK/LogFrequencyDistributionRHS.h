@@ -44,13 +44,12 @@ template< typename FieldT >
 class LogFrequencyDistributionRHS
  : public Expr::Expression<FieldT>
 {
-  DECLARE_FIELDS( FieldT, prtTemp_, initPrtMass_, prtMass_, vMass_ )
+  DECLARE_FIELDS( FieldT, prtTemp_, initPrtMass_, vMass_ )
   const CCKData& cckData_;
   const double gasConst_;
   
   LogFrequencyDistributionRHS( const Expr::Tag& prtTempTag,
                                const Expr::Tag& initPrtMassTag,
-                               const Expr::Tag& prtMassTag,
                                const Expr::Tag& vMassTag,
                                const CCKData&   cckData )
     : Expr::Expression<FieldT>(),
@@ -60,7 +59,6 @@ class LogFrequencyDistributionRHS
     this->set_gpu_runnable(true);
     prtTemp_     = this->template create_field_request<FieldT>( prtTempTag     );
     initPrtMass_ = this->template create_field_request<FieldT>( initPrtMassTag );
-    prtMass_     = this->template create_field_request<FieldT>( prtMassTag     );
     vMass_       = this->template create_field_request<FieldT>( vMassTag       );
   }
 
@@ -69,7 +67,7 @@ public:
 
   class Builder : public Expr::ExpressionBuilder
   {
-    const Expr::Tag prtTempTag_, initPrtMassTag_, prtMassTag_, vMassTag_;
+    const Expr::Tag prtTempTag_, initPrtMassTag_, vMassTag_;
     const CCKData&   cckData_;
   public:
     /**
@@ -79,20 +77,18 @@ public:
     Builder( const Expr::TagList& resultTags,
              const Expr::Tag& prtTempTag,
              const Expr::Tag& initPrtMassTag,
-             const Expr::Tag& prtMassTag,
              const Expr::Tag& vMassTag,
              const CCKData&   cckData,
              const int nghost = DEFAULT_NUMBER_OF_GHOSTS )
       : ExpressionBuilder( resultTags, nghost ),
         prtTempTag_    ( prtTempTag     ),
         initPrtMassTag_( initPrtMassTag ),
-        prtMassTag_    ( prtMassTag     ),
         vMassTag_      ( vMassTag       ),
         cckData_       ( cckData        )
     {}
 
     Expr::ExpressionBase* build() const{
-      return new LogFrequencyDistributionRHS<FieldT>( prtTempTag_, initPrtMassTag_, prtMassTag_, vMassTag_, cckData_ );
+      return new LogFrequencyDistributionRHS<FieldT>( prtTempTag_, initPrtMassTag_, vMassTag_, cckData_ );
     }
   };
 
@@ -120,7 +116,6 @@ evaluate()
 
   const FieldT& pTemp  = prtTemp_    ->field_ref();
   const FieldT& pMass0 = initPrtMass_->field_ref();
-  const FieldT& pMass  = prtMass_    ->field_ref();
   const FieldT& vMass  = vMass_      ->field_ref();
 
   const CHAR::Vec eDVec = cckData_.get_eD_vec();

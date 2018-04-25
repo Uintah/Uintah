@@ -10,7 +10,7 @@ namespace Uintah{
 
   public:
 
-    ParticleModelFactory();
+    ParticleModelFactory( const ApplicationCommon* arches );
     ~ParticleModelFactory();
 
     void register_all_tasks( ProblemSpecP& db );
@@ -57,8 +57,8 @@ namespace Uintah{
     std::vector<std::string> _post_update_particle_tasks;  ///< Tasks that execute after the timeave
                                                             //  of the particle transport variables
     std::vector<std::string> _pre_update_particle_tasks;   ///< Tasks before update
-    std::vector<std::string> _dqmom_model_task;   ///< 
-    std::vector<std::string> _dqmom_variables;   ///< 
+    std::vector<std::string> _dqmom_model_task;   ///<
+    std::vector<std::string> _dqmom_variables;   ///<
 
   };
 }

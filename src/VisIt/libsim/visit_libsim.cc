@@ -44,7 +44,7 @@
 
 #include <sci_defs/visit_defs.h>
 
-#include <VisIt/uda2vis/uda2vis.h>
+#include <VisIt/interfaces/datatypes.h>
 
 #include <fstream>
 #include <dlfcn.h>
@@ -59,7 +59,7 @@ static std::string simArgs;
 static std::string simComment("Uintah Simulation");
 static std::string simUI("uintah.ui");
 
-Dout visitdbg("VisItLibSim", "VisIt", "VisIt in situ debug stream", true);
+Dout visitdbg("VisItLibSim", "VisIt", "Interface to VisIt's libsim", false);
 
 //---------------------------------------------------------------------
 // ProcessLibSimArguments
@@ -266,7 +266,7 @@ void visit_InitLibSim( visit_simulation_data *sim )
       {
         sim->hostNode = nodeStr;
 
-	break;
+        break;
       }
     }
   }
@@ -288,18 +288,18 @@ void visit_InitLibSim( visit_simulation_data *sim )
       {
         // std::cerr << "Reading  " << line << std::endl;
 
-	// Skip empty lines
-	if( line.empty() )
-	{
-	}
-	// This is part of the node table.
+        // Skip empty lines
+        if( line.empty() )
+        {
+        }
+        // This is part of the node table.
         else if( line.find("Nodes") == 0 )
         {
           // Get the node details (number of cores and memory).
           std::string tmpNode, tmpTo, tmpCores, tmpMemory, tmpGB;
           unsigned int start, stop, cores, memory;
 
-	  std::istringstream iss(line);
+          std::istringstream iss(line);
 
           if (!(iss >> tmpNode >> start >> tmpTo >> stop >> tmpCores >> cores >> tmpMemory >> memory >> tmpGB))
             break; // error
@@ -309,16 +309,16 @@ void visit_InitLibSim( visit_simulation_data *sim )
           sim->nodeCores.push_back( cores );
           sim->nodeMemory.push_back( memory );
 
-	  // Get the maximum number of cores.
-	  if( sim->maxCores < cores )
-	    sim->maxCores = cores;
+          // Get the maximum number of cores.
+          if( sim->maxCores < cores )
+            sim->maxCores = cores;
         }
-	// Skip these lines that are part of the call to ibnetdiscover
+        // Skip these lines that are part of the call to ibnetdiscover
         else if( line.find("--") == 0 ||
-		 line.find("devid") == 0 ||
-		 line.find("sysimgguid") == 0 ||
-		 line.find("switchguid") == 0 ||
-		 line.find("switchguid") == 0 )
+                 line.find("devid") == 0 ||
+                 line.find("sysimgguid") == 0 ||
+                 line.find("switchguid") == 0 ||
+                 line.find("switchguid") == 0 )
         {
         }
         else if(line.find("Switch") == 0 )
@@ -357,16 +357,16 @@ void visit_InitLibSim( visit_simulation_data *sim )
 
               // std::cerr << node << "  ";
 
-	      // Get the maximum number of nodes on a switch.
-	      if( sim->maxNodes < sim->switchNodeList.back().size() )
-		sim->maxNodes = sim->switchNodeList.back().size();
+              // Get the maximum number of nodes on a switch.
+              if( sim->maxNodes < sim->switchNodeList.back().size() )
+                sim->maxNodes = sim->switchNodeList.back().size();
 
-	      // Get the switch and node index for this processor.
-	      if( nodeStr == sim->hostNode )
-	      {
-		sim->switchIndex = sim->switchNodeList.size()-1;
-		sim->nodeIndex = sim->switchNodeList.back().size()-1;
-	      }
+              // Get the switch and node index for this processor.
+              if( nodeStr == sim->hostNode )
+              {
+                sim->switchIndex = sim->switchNodeList.size()-1;
+                sim->nodeIndex = sim->switchNodeList.back().size()-1;
+              }
             }
           }
         }
@@ -396,23 +396,23 @@ void visit_InitLibSim( visit_simulation_data *sim )
       
       if( sim->nodeCores.size() == 1 )
       {
-	gcd = int(ceil( sqrt(sim->nodeCores.size()) ) / 2.0) * 2;
+        gcd = int(ceil( sqrt(sim->nodeCores.size()) ) / 2.0) * 2;
       }
       else
       {
-	for( unsigned int i=2; i<sim->maxCores; ++i )
-	{
-	  unsigned int cc = 0;
-	  
-	  for( unsigned int j=0; j<sim->nodeCores.size(); ++j )
+        for( unsigned int i=2; i<sim->maxCores; ++i )
+        {
+          unsigned int cc = 0;
+          
+          for( unsigned int j=0; j<sim->nodeCores.size(); ++j )
           {
-	    if( sim->nodeCores[j] % i == 0 )
-	      ++cc;
-	  }
-	  
-	  if( cc == sim->nodeCores.size() )
-	    gcd = i;
-	}
+            if( sim->nodeCores[j] % i == 0 )
+              ++cc;
+          }
+          
+          if( cc == sim->nodeCores.size() )
+            gcd = i;
+        }
       }
   
       // Size of a node based on the number of cores and GCD.
@@ -488,8 +488,8 @@ bool visit_CheckState( visit_simulation_data *sim )
             << "timestep " << sim->cycle << ",  "
             << "Time = "   << sim->time;
         
-	// DOUT( visitdbg, msg.str().c_str() );
-	
+        // DOUT( visitdbg, msg.str().c_str() );
+        
         VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
       }
 
@@ -552,7 +552,7 @@ bool visit_CheckState( visit_simulation_data *sim )
                 << "timestep " << sim->cycle << ",  "
                 << "Time = " << sim->time;
             
-	    DOUT( visitdbg, msg.str().c_str() );
+            DOUT( visitdbg, msg.str().c_str() );
  
             VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
           }
@@ -595,7 +595,7 @@ bool visit_CheckState( visit_simulation_data *sim )
           std::stringstream msg;          
           msg << "Visit libsim - No input, continuing the simulation.";
 
-	  // DOUT( visitdbg, msg.str().c_str() );
+          // DOUT( visitdbg, msg.str().c_str() );
 
           VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
         }
@@ -616,7 +616,7 @@ bool visit_CheckState( visit_simulation_data *sim )
         std::stringstream msg;
         msg << "Visit libsim - Can not connect.";
 
-	// DOUT( visitdbg, msg.str().c_str() );
+        // DOUT( visitdbg, msg.str().c_str() );
 
         VisItUI_setValueS("SIMULATION_MESSAGE_ERROR", msg.str().c_str(), 1);
       }
@@ -652,7 +652,7 @@ bool visit_CheckState( visit_simulation_data *sim )
           std::stringstream msg;          
           msg << "Visit libsim - Continuing the simulation for one time step";
           
-	  // DOUT( visitdbg, msg.str().c_str() );
+          // DOUT( visitdbg, msg.str().c_str() );
 
           VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
         }
@@ -675,7 +675,7 @@ bool visit_CheckState( visit_simulation_data *sim )
           std::stringstream msg;          
           msg << "Visit libsim - Finished the simulation ";
 
-	  // DOUT( visitdbg, msg.str().c_str() );
+          // DOUT( visitdbg, msg.str().c_str() );
 
           VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
           VisItUI_setValueS("SIMULATION_MESSAGE", " ", 1);

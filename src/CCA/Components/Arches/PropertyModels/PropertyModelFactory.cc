@@ -26,7 +26,7 @@ PropertyModelFactory::~PropertyModelFactory()
 }
 
 //---------------------------------------------------------------------------
-// Method: Return a reference to itself. 
+// Method: Return a reference to itself.
 //---------------------------------------------------------------------------
 PropertyModelFactory&
 PropertyModelFactory::self()
@@ -55,7 +55,7 @@ PropertyModelFactory::register_property_model( const std::string name,
   }
 }
 //---------------------------------------------------------------------------
-// Method: Retrieve a property model from the map. 
+// Method: Retrieve a property model from the map.
 //---------------------------------------------------------------------------
 PropertyModelBase&
 PropertyModelFactory::retrieve_property_model( const std::string name )
@@ -79,7 +79,7 @@ PropertyModelFactory::retrieve_property_model( const std::string name )
 }
 
 //---------------------------------------------------------------------------
-// Method: Find if a property model is included in the map. 
+// Method: Find if a property model is included in the map.
 //---------------------------------------------------------------------------
 bool
 PropertyModelFactory::find_property_model( const std::string name )
@@ -93,7 +93,6 @@ PropertyModelFactory::find_property_model( const std::string name )
   } else {
     return_value = false;
   }
-    
+
   return return_value;
 }
-

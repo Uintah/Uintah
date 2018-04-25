@@ -49,32 +49,32 @@ namespace FOA{
       pTempTag_      ( pTempTag          ),
       gTempTag_      ( gTempTag          ),
       mixMWTag_      ( mixMWTag          ),
-      pDensTag_    ( pDensTag        ),
-      gPressTag_( gPressTag ),
-      pDiamTag_    ( pDiamTag        ),
-      pMassTag_    ( pMassTag        ),
-      pMass0Tag_( initPrtmassTag    ),
+      pDensTag_      ( pDensTag          ),
+      gPressTag_     ( gPressTag         ),
+      pDiamTag_      ( pDiamTag          ),
+      pMassTag_      ( pMassTag          ),
+      pMass0Tag_     ( initPrtmassTag    ),
       o2MassFracTag_ ( o2MassFracTag     ),
-      h2MassFracTag_ ( h2MassFracTag     ),
       h2oMassFracTag_( h2oMassFracTag    ),
+      h2MassFracTag_ ( h2MassFracTag     ),
       co2MassFracTag_( co2MassFracTag    ),
       coMassFracTag_ ( coMassFracTag     ),
       ch4MassFracTag_( ch4MassFracTag    ),
-      o2_rhsTag_      ( Coal::StringNames::self().char_o2_rhs,  STATE_N ),
-      h2o_rhsTag_     ( Coal::StringNames::self().char_h2o_rhs, STATE_N ),
-      h2_rhsTag_      ( Coal::StringNames::self().char_h2_rhs,  STATE_N ),
-      ch4_rhsTag_     ( Coal::StringNames::self().char_ch4_rhs, STATE_N ),
-      co2_rhsTag_     ( Coal::StringNames::self().char_co2_rhs, STATE_N ),
-      co_rhsTag_      ( Coal::StringNames::self().char_co_rhs,  STATE_N ),
+      o2_rhsTag_      ( Coal::StringNames::self().char_o2_rhs,  STATE_NONE ),
+      h2_rhsTag_      ( Coal::StringNames::self().char_h2_rhs,  STATE_NONE ),
+      h2o_rhsTag_     ( Coal::StringNames::self().char_h2o_rhs, STATE_NONE ),
+      ch4_rhsTag_     ( Coal::StringNames::self().char_ch4_rhs, STATE_NONE ),
+      co2_rhsTag_     ( Coal::StringNames::self().char_co2_rhs, STATE_NONE ),
+      co_rhsTag_      ( Coal::StringNames::self().char_co_rhs,  STATE_NONE ),
       initDevChar_   ( dvmodel == DEV::CPDM ),
       charModel_     ( CHAR::FIRST_ORDER    ),
       charData_      ( coalType ),
       firstOrderData_( coalType ),
       sNames_        ( Coal::StringNames::self() )
   {
-    std::cout<< "Setting up char model: "
-             << CHAR::char_model_name(charModel_)
-             << std::endl;
+    proc0cout << "Setting up char model: "
+              << CHAR::char_model_name(charModel_)
+              << std::endl;
 
     parse_equations();
     set_tags();
@@ -87,7 +87,7 @@ namespace FOA{
   FirstOrderInterface<FieldT>::
   parse_equations()
   {
-    std::cout<<"Parsing equations...\n";
+    proc0cout << "Parsing equations...\n";
 
         // Get initial mass fraction of char within coal volatiles
         double c0 = 0.0;
@@ -98,7 +98,7 @@ namespace FOA{
          // Calculate initial mass fraction of char within coal
          double char0 = charData_.get_fixed_C()+ charData_.get_vm()*c0;
 
-        std::cout << std::endl
+        proc0cout << std::endl
                   << "Initial char mass fraction in coal volatiles is : "
                   << charData_.get_vm()*c0
                   << std::endl
@@ -159,7 +159,7 @@ namespace FOA{
   FirstOrderInterface<FieldT>::
   register_expressions()
   {
-    std::cout<<"Registering expressions...\n";
+    proc0cout << "Registering expressions...\n";
     Expr::ExpressionFactory& factory = *(gc_[WasatchCore::ADVANCE_SOLUTION]->exprFactory);
 
     factory.register_expression( new typename Expr::ConstantExpr<FieldT>::Builder(ch4_rhsTag_, 0));

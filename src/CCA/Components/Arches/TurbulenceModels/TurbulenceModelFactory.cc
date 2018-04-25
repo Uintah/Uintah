@@ -16,7 +16,8 @@
 using namespace Uintah;
 
 //--------------------------------------------------------------------------------------------------
-TurbulenceModelFactory::TurbulenceModelFactory(  )
+TurbulenceModelFactory::TurbulenceModelFactory( const ApplicationCommon* arches ) :
+TaskFactoryBase(arches)
 {}
 
 //--------------------------------------------------------------------------------------------------

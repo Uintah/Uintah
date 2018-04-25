@@ -27,7 +27,6 @@
 #include <CCA/Components/Schedulers/DetailedTasks.h>
 #include <CCA/Components/Schedulers/DependencyException.h>
 #include <CCA/Components/Schedulers/MPIScheduler.h>
-#include <CCA/Components/Schedulers/RuntimeStats.hpp>
 #include <CCA/Components/Schedulers/SchedulerCommon.h>
 #include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Scheduler.h>
@@ -101,17 +100,17 @@ namespace {
   struct data_location_tag{};
   struct task_access_tag{};
   
-  using  varDB_monitor = Uintah::CrowdMonitor<varDB_tag>;
-  using  levelDB_monitor = Uintah::CrowdMonitor<levelDB_tag>;
-  using  psetDB_monitor = Uintah::CrowdMonitor<psetDB_tag>;
-  using  addsetDB_monitor = Uintah::CrowdMonitor<addsetDB_tag>;
-  using  delsetDB_monitor = Uintah::CrowdMonitor<delsetDB_tag>;
+  using  varDB_monitor         = Uintah::CrowdMonitor<varDB_tag>;
+  using  levelDB_monitor       = Uintah::CrowdMonitor<levelDB_tag>;
+  using  psetDB_monitor        = Uintah::CrowdMonitor<psetDB_tag>;
+  using  addsetDB_monitor      = Uintah::CrowdMonitor<addsetDB_tag>;
+  using  delsetDB_monitor      = Uintah::CrowdMonitor<delsetDB_tag>;
   using  data_location_monitor = Uintah::CrowdMonitor<data_location_tag>;
-  using  task_access_monitor = Uintah::CrowdMonitor<task_access_tag>;
+  using  task_access_monitor   = Uintah::CrowdMonitor<task_access_tag>;
 
-  Dout        g_foreign_dbg( "ForeignVariables", "OnDemandDataWarehouse", "foreign variables debug stream", false);
+  Dout        g_foreign_dbg( "ForeignVariables", "OnDemandDataWarehouse", "report when foreign variable is added to DW", false);
 
-  DebugStream dbg(        "OnDemandDataWarehouse",      "OnDemandDataWarehouse", "", false );
+  DebugStream dbg(        "OnDemandDataWarehouse",      "OnDemandDataWarehouse", "report each get/put for DW", false );
   DebugStream warn(       "OnDemandDataWarehouse_warn", "OnDemandDataWarehouse", "", true  );
   DebugStream particles(  "DWParticles",                "OnDemandDataWarehouse", "", false );
   DebugStream particles2( "DWParticles2",               "OnDemandDataWarehouse", "", false );
@@ -1836,6 +1835,18 @@ OnDemandDataWarehouse::allocateAndPut(       GridVariableBase& var,
                                              Ghost::GhostType  gtype,
                                              int               numGhostCells )
 {
+#if SCI_ASSERTION_LEVEL >= 1
+  const TypeDescription * varType = var.virtualGetTypeDescription();
+  if( label->typeDescription()->getType() != varType->getType() ||
+      label->typeDescription()->getSubType()->getType() != varType->getSubType()->getType() ) {
+      std::cout << "OnDemandDataWarehouse::allocateAndPut():  Error: VarLabel type does not match Variable type!\n";
+      std::cout << "  VarLabel Name: " << label->getName() << "\n";
+      std::cout << "  VarLabel Type: " << label->typeDescription()->getName() << "\n";
+      std::cout << "  Variable Type: " << var.virtualGetTypeDescription()->getName() << "\n";
+      SCI_THROW(InternalError("OnDemandDataWarehouse::allocateAndPut(): Var and Label types do not match!", __FILE__, __LINE__));
+    }
+#endif
+  
 //  if (d_finalized) {
 //    std::cerr << "OnDemandDataWarehouse::allocateAndPut - When trying to allocate " << label->getName() << std::endl;
 //    std::cerr << "  DW " << getID() << " finalized!\n";

@@ -36,9 +36,8 @@ namespace Uintah {
     DirectSolve(const ProcessorGroup* myworld);
     virtual ~DirectSolve();
     
-    virtual SolverParameters* readParameters(       ProblemSpecP     & params,
-					      const std::string      & name,
-					      const SimulationStateP & state );
+    virtual SolverParameters* readParameters(  ProblemSpecP & params,
+					      const std::string  & name  );
     
     virtual void scheduleSolve( const LevelP           & level,
 				      SchedulerP       & sched,
@@ -52,15 +51,19 @@ namespace Uintah {
 				const VarLabel         * guess,
 				      Task::WhichDW      which_guess_dw,
 				const SolverParameters * params,
-				      bool               modifies_hypre = false );
+				      bool               isFirstSolve = true );
     
     virtual std::string getName();
     
     // DirectSolve does not require initialization... but we need an empty
     // routine to satisfy inheritance.
     virtual void scheduleInitialize( const LevelP      & level,
-				           SchedulerP  & sched,
-				     const MaterialSet * matls ) {}
+				               SchedulerP  & sched,
+				         const MaterialSet * matls ) {}
+
+    virtual void scheduleRestartInitialize( const LevelP      & level,
+                                                  SchedulerP  & sched,
+                                            const MaterialSet * matls){}
   };
 
 } // end namespace Uintah

@@ -12,7 +12,7 @@ namespace WasatchCore{
 /**
  *  \class ParticleMassIC
  *  \ingroup WasatchParticles
- *  \brief Initial condition for particle mass jtm: This is duplicated from PArticleMassEquation.cc
+ *  \brief Initial condition for particle mass jtm: This is duplicated from ParticleMassEquation.cc
  *  todo: remove duplicated code here
  */
 class ParticleMassIC : public Expr::Expression<ParticleField>
@@ -23,6 +23,7 @@ class ParticleMassIC : public Expr::Expression<ParticleField>
                     const Expr::Tag& pDiameterTag )
       : Expr::Expression<ParticleField>()
     {
+      this->set_gpu_runnable(true);
       pRho_ = create_field_request<ParticleField>(pRhoTag);
       pDiameter_ = create_field_request<ParticleField>(pDiameterTag);
     }

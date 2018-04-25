@@ -36,6 +36,7 @@
 
 #include <CCA/Ports/InputContext.h>
 #include <CCA/Ports/OutputContext.h>
+
 #include <CCA/Ports/PIDXOutputContext.h>
 
 #include <sci_defs/pidx_defs.h>
@@ -159,10 +160,8 @@ WARNING
                                  unsigned char     * pidx_buffer,
                            const IntVector         & l,
                            const IntVector         & h,
-                           const size_t              pidx_bufferSize )
-    {
+                           const size_t              pidx_bufferSize ) {
       // This seems inefficient  -Todd
-
       ProblemSpecP dummy;
       bool outputDoubleAsFloat = pc.isOutputDoubleAsFloat();
   
@@ -191,8 +190,7 @@ WARNING
 #endif
 
     virtual void emitNormal( std::ostream& out, const IntVector& l, const IntVector& h,
-                             ProblemSpecP /*varnode*/, bool outputDoubleAsFloat )
-    {
+                             ProblemSpecP /*varnode*/, bool outputDoubleAsFloat ) {
       const TypeDescription* td = fun_getTypeDescription( (T*)nullptr );
       if( td->isFlat() ) {
         Array3<T>::write(out, l, h, outputDoubleAsFloat);

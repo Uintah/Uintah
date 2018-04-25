@@ -71,7 +71,8 @@ Drhodt::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   CCVariable<double>& drhodt = tsk_info->get_uintah_field_add<CCVariable<double> >( m_label_drhodt );
   drhodt.initialize(0.0);
   const double dt = tsk_info->get_dt();
-  Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+  //Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+  Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
   Uintah::parallel_for( range, [&](int i, int j, int k){
     drhodt(i,j,k)   = (rho(i,j,k) - old_rho(i,j,k))/dt;
   });

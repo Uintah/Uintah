@@ -24,12 +24,14 @@
 #include <CCA/Components/Arches/PropertyModelsV2/sootVolumeFrac.h>
 #include <CCA/Components/Arches/PropertyModelsV2/CO.h>
 #include <CCA/Components/Arches/PropertyModelsV2/UnweightVariable.h>
+#include <CCA/Components/Arches/PropertyModelsV2/ConsScalarDiffusion.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 
 using namespace Uintah;
 
-PropertyModelFactoryV2::PropertyModelFactoryV2( )
+PropertyModelFactoryV2::PropertyModelFactoryV2( const ApplicationCommon* arches ) :
+TaskFactoryBase(arches)
 {
   _factory_name = "PropertyModelFactory";
 }
@@ -124,6 +126,11 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
 
         register_task( name, tsk );
         _pre_update_property_tasks.push_back( name );
+      } else if ( type == "constant_scalar_diffusion_coef" ){
+
+        TaskInterface::TaskBuilder* tsk = scinew ConsScalarDiffusion::Builder(name, 0);
+        register_task(name , tsk);
+        _diffusion_property_tasks.push_back( name );
 
       } else if ( type == "wall_thermal_resistance" ){
 

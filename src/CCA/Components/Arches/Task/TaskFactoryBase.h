@@ -4,6 +4,7 @@
 #include <Core/Grid/SimulationState.h>
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 #include <CCA/Components/Arches/Task/AtomicTaskInterface.h>
+#include <CCA/Components/Application/ApplicationCommon.h>
 #include <CCA/Components/Arches/WBCHelper.h>
 #include <Core/Util/DebugStream.h>
 #include <string>
@@ -20,7 +21,7 @@ namespace Uintah{
 
   public:
 
-    TaskFactoryBase();
+    TaskFactoryBase( const ApplicationCommon* arches );
     virtual ~TaskFactoryBase();
 
     typedef std::map< std::string, TaskInterface*>              TaskMap;
@@ -221,6 +222,7 @@ namespace Uintah{
     std::string _all_tasks_str{"all_tasks"};                    ///< Common name across all factories indicating _active_tasks
     std::string _factory_name;                     ///< Name of the factory
     std::vector<std::string> m_task_init_order;    ///< Allows a factory to set an execution order for the tasks
+    const ApplicationCommon* m_arches;             ///< Reference to the mother ship
 
     WBCHelper* m_bcHelper;
 

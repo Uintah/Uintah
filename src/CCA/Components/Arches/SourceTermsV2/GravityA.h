@@ -58,7 +58,7 @@ private:
     std::string m_gy_label;
     std::string m_gz_label;
     std::string m_density_label;
-
+    double m_ref_density;
   };
 }
 #endif

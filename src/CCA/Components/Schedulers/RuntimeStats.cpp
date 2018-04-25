@@ -43,9 +43,9 @@ namespace Uintah {
 
 namespace {
 
-  Dout  mpi_stats( "MPIStats",  "Schedulers", "Runtime MPI Stats",  false);
-  Dout exec_times( "ExecTimes", "Schedulers", "Runtime Exec Stats", false);
-  Dout wait_times( "WaitTimes", "Schedulers", "Runtime Wait Stats", false);
+  Dout  mpi_stats( "MPIStats",  "Schedulers", "Comprehensive, fine-grained MPI summary each timestep",  false);
+  Dout exec_times( "ExecTimes", "Schedulers", "Execution time for each task", false);
+  Dout wait_times( "WaitTimes", "Schedulers", "Detailed summary of task wait times", false);
   Dout task_stats( "TaskStats", "Schedulers", "Runtime Task Stats", false);
 
   struct ReportValue

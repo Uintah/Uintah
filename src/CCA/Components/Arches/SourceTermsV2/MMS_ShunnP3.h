@@ -305,7 +305,7 @@ void MMS_ShunnP3<T>::compute_source( const Patch* patch, ArchesTaskInfoManager* 
 
   T& f_mms        = tsk_info->get_uintah_field_add<T>(m_MMS_label);
   T& rho_f_mms    = tsk_info->get_uintah_field_add<T>(m_rho_u_label);
-  T& rho_mms      = tsk_info->get_uintah_field_add<T>(m_MMS_rho_label);
+  CCVariable<double>& rho_mms      = tsk_info->get_uintah_field_add<CCVariable<double> >(m_MMS_rho_label);
   T& f_source_mms = tsk_info->get_uintah_field_add<T>(m_MMS_source_label);
   T& drhodt_mms   = tsk_info->get_uintah_field_add<T>(m_MMS_drhodt_label);
   T& continuity_mms   = tsk_info->get_uintah_field_add<T>(m_MMS_continuity_label);
