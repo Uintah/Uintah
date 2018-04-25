@@ -112,6 +112,34 @@ WARNING
       return (retVal == dst) ? true : false;
     }
 
+     virtual void emitNormal(std::ostream& out, const IntVector& l, const IntVector& h,
+			     ProblemSpecP /*varnode*/, bool outputDoubleAsFloat)
+     {
+       ssize_t linesize = (ssize_t)(sizeof(T));
+       
+       out.write((char*) &value, linesize);
+     }
+
+     virtual void readNormal(std::istream& in, bool swapBytes)
+     {
+       ssize_t linesize = (ssize_t)(sizeof(T));
+       
+       T val;
+       
+       in.read((char*) &val, linesize);
+       
+       if (swapBytes)
+       	 Uintah::swapbytes(val);
+       
+       value = val;
+     }
+
+     void print(std::ostream& out) const {
+       out << "Sole variable ";
+       out.width(10);
+       out << value << " " << std::endl;
+     }
+
   private:
     SoleVariable<T>& operator=(const SoleVariable<T>&copy);
     static Variable* maker();

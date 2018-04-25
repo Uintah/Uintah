@@ -23,40 +23,13 @@
  */
 
 
-#ifndef UINTAH_HOMEBREW_CellInformationP_H
-#define UINTAH_HOMEBREW_CellInformationP_H
-
-#include <CCA/Components/Arches/CellInformation.h>
-#include <Core/Exceptions/InternalError.h>
-#include <Core/Grid/Variables/PerPatch.h>
-#include <Core/Util/Handle.h>
+#include <CCA/Components/Arches/CellInformationP.h>
 
 namespace Uintah {
 
-template<class T> class Handle;
-class CellInformation;
-typedef Handle<CellInformation> CellInformationP;
-
-  void swapbytes( Uintah::CellInformationP& );
-  
-  // Note the general template for SoleVariable::readNormal will not
-  // recognize the swapbytes correctly. So specialize it here.
-  // Somewhat moot because the swapbytes for hypre_solver_structP is
-  // not implemented.
-  template<>
-  inline void PerPatch<CellInformationP>::readNormal(std::istream& in, bool swapBytes)
-  {
-    ssize_t linesize = (ssize_t)(sizeof(CellInformationP));
-    
-    CellInformationP val;
-    
-    in.read((char*) &val, linesize);
-    
-    if (swapBytes)
-      Uintah::swapbytes(val);
-    
-    value = std::make_shared<CellInformationP>(val);
+  void swapbytes( Uintah::CellInformationP& ) {
+    SCI_THROW(InternalError("Swap bytes for CellInformationP is not implemented", __FILE__, __LINE__));
   }
+
 } // End namespace Uintah
 
-#endif

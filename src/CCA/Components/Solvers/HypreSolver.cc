@@ -76,6 +76,10 @@ static DebugStream cout_doing("SOLVER_DOING_COUT", false);
 
 namespace Uintah {
 
+  void swapbytes( Uintah::hypre_solver_structP& ) {
+    SCI_THROW(InternalError("Swap bytes for hypre_solver_structP is not implemented", __FILE__, __LINE__));
+  }
+
   //==============================================================================
   //
   // Class HypreStencil7

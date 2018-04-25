@@ -54,6 +54,12 @@ struct FileInfo : public RefCounted {
 
 typedef Handle<FileInfo> FileInfoP;
 
+  void swapbytes( Uintah::FileInfoP& );
+
+  // Note the general template for SoleVariable::readNormal will not
+  // recognize the swapbytes correctly. So specialize it here.
+  // Somewhat moot because the swapbytes for FileInfoP is not
+  // implemented.
   template<>
   inline void PerPatch<FileInfoP>::readNormal(std::istream& in, bool swapBytes)
   {
@@ -64,14 +70,14 @@ typedef Handle<FileInfo> FileInfoP;
 
     ssize_t linesize = (ssize_t)(sizeof(FileInfoP));
     
-    int val;
+    FileInfoP val;
     
     in.read((char*) &val, linesize);
     
-    // if (swapBytes)
-    //   Uintah::swapbytes(val);
+    if (swapBytes)
+      Uintah::swapbytes(val);
     
-    // value = std::make_shared<FileInfoP>(val);
+    value = std::make_shared<FileInfoP>(val);
   }
 
 } // End namespace Uintah

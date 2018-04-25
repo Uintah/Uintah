@@ -107,7 +107,7 @@ namespace Uintah {
     HYPRE_StructMatrix * HA;
     HYPRE_StructVector * HB;
     HYPRE_StructVector * HX;
-    
+
     //__________________________________
     //
     hypre_solver_struct() {
@@ -204,6 +204,27 @@ namespace Uintah {
   };
 
   typedef Handle<hypre_solver_struct> hypre_solver_structP;
+
+  void swapbytes( Uintah::hypre_solver_structP& );
+  
+  // Note the general template for SoleVariable::readNormal will not
+  // recognize the swapbytes correctly. So specialize it here.
+  // Somewhat moot because the swapbytes for hypre_solver_structP is
+  // not implemented.
+  template<>
+  inline void SoleVariable<hypre_solver_structP>::readNormal(std::istream& in, bool swapBytes)
+  {
+    ssize_t linesize = (ssize_t)(sizeof(hypre_solver_structP));
+    
+    hypre_solver_structP val;
+    
+    in.read((char*) &val, linesize);
+    
+    if (swapBytes)
+      Uintah::swapbytes(val);
+    
+    value = val;
+  }
   
   //______________________________________________________________________
   //
