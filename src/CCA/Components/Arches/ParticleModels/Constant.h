@@ -30,7 +30,7 @@ namespace Uintah{
     Constant<T>( std::string task_name, int matl_index, const std::string var_name, const int N );
     ~Constant<T>(){};
 
-    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 
@@ -111,7 +111,7 @@ namespace Uintah{
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
-  TaskAssignedExecutionSpace Constant<T>::loadTaskFunctionPointers(){
+  TaskAssignedExecutionSpace Constant<T>::loadTaskEvalFunctionPointers(){
 
     TaskAssignedExecutionSpace assignedTag{};
     LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, Constant<T>::eval);

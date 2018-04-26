@@ -13,7 +13,7 @@ DSFT::~DSFT(){
 }
 
 //--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace DSFT::loadTaskFunctionPointers(){
+TaskAssignedExecutionSpace DSFT::loadTaskEvalFunctionPointers(){
 
   TaskAssignedExecutionSpace assignedTag{};
   LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, DSFT::eval);

@@ -4,7 +4,7 @@
 namespace Uintah{
 
 //--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace BurnsChriston::loadTaskFunctionPointers(){
+TaskAssignedExecutionSpace BurnsChriston::loadTaskEvalFunctionPointers(){
 
   TaskAssignedExecutionSpace assignedTag{};
   LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, BurnsChriston::eval);

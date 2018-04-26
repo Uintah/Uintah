@@ -13,7 +13,7 @@ MMS_scalar::~MMS_scalar()
 {}
 
 //--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace MMS_scalar::loadTaskFunctionPointers(){
+TaskAssignedExecutionSpace MMS_scalar::loadTaskEvalFunctionPointers(){
 
   TaskAssignedExecutionSpace assignedTag{};
   LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, MMS_scalar::eval);

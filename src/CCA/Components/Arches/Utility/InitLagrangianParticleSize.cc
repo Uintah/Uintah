@@ -9,7 +9,7 @@ TaskInterface( task_name, matl_index ) {
 InitLagrangianParticleSize::~InitLagrangianParticleSize(){
 }
 
-TaskAssignedExecutionSpace InitLagrangianParticleSize::loadTaskFunctionPointers(){
+TaskAssignedExecutionSpace InitLagrangianParticleSize::loadTaskEvalFunctionPointers(){
 
   TaskAssignedExecutionSpace assignedTag{};
   LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, InitLagrangianParticleSize::eval);

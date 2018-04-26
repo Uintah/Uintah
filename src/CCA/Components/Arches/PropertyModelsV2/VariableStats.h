@@ -15,7 +15,7 @@ public:
     VariableStats( std::string task_name, int matl_index );
     ~VariableStats();
 
-    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 

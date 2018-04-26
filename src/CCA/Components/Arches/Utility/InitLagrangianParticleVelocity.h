@@ -12,7 +12,7 @@ public:
     InitLagrangianParticleVelocity( std::string task_name, int matl_index );
     ~InitLagrangianParticleVelocity();
 
-    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 

@@ -38,7 +38,7 @@ if (_particle_calculator_type=="tabulated")
 //---------------------------------------------------------------------------
 //Method: Load task function pointers for portability
 //---------------------------------------------------------------------------
-TaskAssignedExecutionSpace partRadProperties::loadTaskFunctionPointers(){
+TaskAssignedExecutionSpace partRadProperties::loadTaskEvalFunctionPointers(){
 
   TaskAssignedExecutionSpace assignedTag{};
   LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, partRadProperties::eval);

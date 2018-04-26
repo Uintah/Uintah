@@ -9,7 +9,7 @@ TotNumDensity::TotNumDensity( std::string task_name, int matl_index ) :
 TaskInterface( task_name, matl_index ) {
 }
 
-TaskAssignedExecutionSpace TotNumDensity::loadTaskFunctionPointers(){
+TaskAssignedExecutionSpace TotNumDensity::loadTaskEvalFunctionPointers(){
 
   TaskAssignedExecutionSpace assignedTag{};
   LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, TotNumDensity::eval);

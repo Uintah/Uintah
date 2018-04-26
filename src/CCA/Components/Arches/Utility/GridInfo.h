@@ -12,7 +12,7 @@ public:
     GridInfo( std::string task_name, int matl_index ) : TaskInterface(task_name, matl_index ){}
     ~GridInfo(){}
 
-    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db ){}
 

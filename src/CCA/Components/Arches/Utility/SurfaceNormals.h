@@ -12,7 +12,7 @@ public:
     SurfaceNormals( std::string task_name, int matl_index );
     ~SurfaceNormals();
 
-    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 

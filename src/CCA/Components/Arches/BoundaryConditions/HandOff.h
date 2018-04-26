@@ -15,7 +15,7 @@ public:
     HandOff<T>( std::string task_name, int matl_index ) : TaskInterface(task_name, matl_index ){}
     ~HandOff<T>(){}
 
-    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 
@@ -86,7 +86,7 @@ private:
 
   //Load function pointers for portability ---------------------------------------------------------
   template <typename T>
-  TaskAssignedExecutionSpace HandOff<T>::loadTaskFunctionPointers(){
+  TaskAssignedExecutionSpace HandOff<T>::loadTaskEvalFunctionPointers(){
 
     TaskAssignedExecutionSpace assignedTag{};
     LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, HandOff<T>::eval);

@@ -13,7 +13,7 @@ namespace Uintah{
     BoundaryConditionFactory( const ApplicationCommon* arches );
     ~BoundaryConditionFactory();
 
-    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void register_all_tasks( ProblemSpecP& db );
 

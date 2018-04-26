@@ -15,7 +15,7 @@ public:
     StressTensor( std::string task_name, int matl_index );
     ~StressTensor();
 
-    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 

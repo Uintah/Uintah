@@ -13,7 +13,7 @@ DSFTv2::~DSFTv2(){
 }
 
 //--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace DSFTv2::loadTaskFunctionPointers(){
+TaskAssignedExecutionSpace DSFTv2::loadTaskEvalFunctionPointers(){
 
   TaskAssignedExecutionSpace assignedTag{};
   LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, DSFTv2::eval);

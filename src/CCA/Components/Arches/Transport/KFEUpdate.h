@@ -46,7 +46,7 @@ public:
     KFEUpdate<T>( std::string task_name, int matl_index );
     ~KFEUpdate<T>();
 
-    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     /** @brief Input file interface **/
     void problemSetup( ProblemSpecP& db );
@@ -147,7 +147,7 @@ private:
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
-  TaskAssignedExecutionSpace KFEUpdate<T>::loadTaskFunctionPointers(){
+  TaskAssignedExecutionSpace KFEUpdate<T>::loadTaskEvalFunctionPointers(){
 
     TaskAssignedExecutionSpace assignedTag{};
     LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, KFEUpdate<T>::eval);

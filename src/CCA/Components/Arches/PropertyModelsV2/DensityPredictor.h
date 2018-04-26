@@ -12,7 +12,7 @@ public:
     DensityPredictor( std::string task_name, int matl_index );
     ~DensityPredictor();
 
-    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 

@@ -12,7 +12,7 @@ public:
     UpdateParticleSize( std::string task_name, int matl_index );
     ~UpdateParticleSize();
 
-    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 

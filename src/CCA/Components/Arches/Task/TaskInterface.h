@@ -89,46 +89,46 @@ namespace Uintah{
 //  #define SUPPORTED_UINTAH_OPENMP__TRYING_OPENMP_MEMORY           UintahSpaces::HostSpace
 //  #define SUPPORTED_UINTAH_OPENMP__TRYING_OPENMP_TAG              TaskAssignedExecutionSpace::UINTAH_CPU
 //#endif
-//
-//#define LOAD_ARCHES_UINTAH_OPENMP_CUDA(ASSIGNED_TAG, FUNCTION_CODE_NAME) {                          \
-//  if (Uintah::Parallel::usingDevice()) {                                                            \
-//    this->addEvalFunctionPtr(std::type_index(                                                       \
-//                             typeid(SUPPORTED_UINTAH_OPENMP_CUDA__TRYING_CUDA_EXECUTION)),          \
-//      static_cast<evalFunctionPtr>(&FUNCTION_CODE_NAME<                                             \
-//                                   SUPPORTED_UINTAH_OPENMP_CUDA__TRYING_CUDA_EXECUTION,             \
-//                                   SUPPORTED_UINTAH_OPENMP_CUDA__TRYING_CUDA_MEMORY>));             \
-//    ASSIGNED_TAG = SUPPORTED_UINTAH_OPENMP_CUDA__TRYING_CUDA_TAG;                                   \
-//  }                                                                                                 \
-//  if (ASSIGNED_TAG == TaskAssignedExecutionSpace::NONE_SPACE) {                                     \
-//    this->addEvalFunctionPtr(std::type_index(                                                       \
-//                             typeid(SUPPORTED_UINTAH_OPENMP_CUDA__TRYING_OPENMP_EXECUTION)),        \
-//      static_cast<evalFunctionPtr>(&FUNCTION_CODE_NAME<                                             \
-//                                   SUPPORTED_UINTAH_OPENMP_CUDA__TRYING_OPENMP_EXECUTION,           \
-//                                   SUPPORTED_UINTAH_OPENMP_CUDA__TRYING_OPENMP_MEMORY>));           \
-//    ASSIGNED_TAG = SUPPORTED_UINTAH_OPENMP_CUDA__TRYING_OPENMP_TAG;                                 \
-//  }                                                                                                 \
+//  // When uncommenting, put back in the \ characters needed for macros
+//#define LOAD_ARCHES_UINTAH_OPENMP_CUDA(ASSIGNED_TAG, FUNCTION_CODE_NAME) {
+//  if (Uintah::Parallel::usingDevice()) {
+//    this->addEvalFunctionPtr(std::type_index(
+//                             typeid(SUPPORTED_UINTAH_OPENMP_CUDA__TRYING_CUDA_EXECUTION)),
+//      static_cast<evalFunctionPtr>(&FUNCTION_CODE_NAME<
+//                                   SUPPORTED_UINTAH_OPENMP_CUDA__TRYING_CUDA_EXECUTION,
+//                                   SUPPORTED_UINTAH_OPENMP_CUDA__TRYING_CUDA_MEMORY>));
+//    ASSIGNED_TAG = SUPPORTED_UINTAH_OPENMP_CUDA__TRYING_CUDA_TAG;
+//  }
+//  if (ASSIGNED_TAG == TaskAssignedExecutionSpace::NONE_SPACE) {
+//    this->addEvalFunctionPtr(std::type_index(
+//                             typeid(SUPPORTED_UINTAH_OPENMP_CUDA__TRYING_OPENMP_EXECUTION)),
+//      static_cast<evalFunctionPtr>(&FUNCTION_CODE_NAME<
+//                                   SUPPORTED_UINTAH_OPENMP_CUDA__TRYING_OPENMP_EXECUTION,
+//                                   SUPPORTED_UINTAH_OPENMP_CUDA__TRYING_OPENMP_MEMORY>));
+//    ASSIGNED_TAG = SUPPORTED_UINTAH_OPENMP_CUDA__TRYING_OPENMP_TAG;
+//  }
 //}
 //
 ////User specified that CUDA is not an option.
 ////In this mode, we don't allow the regular CPU version to compile.
-//#define LOAD_ARCHES_UINTAH_OPENMP(ASSIGNED_TAG, FUNCTION_CODE_NAME) {                               \
-//  this->addEvalFunctionPtr(std::type_index(                                                         \
-//                           typeid(SUPPORTED_UINTAH_OPENMP__TRYING_OPENMP_EXECUTION)),               \
-//    static_cast<evalFunctionPtr>(&FUNCTION_CODE_NAME<                                               \
-//                                 SUPPORTED_UINTAH_OPENMP__TRYING_OPENMP_EXECUTION,                  \
-//                                 SUPPORTED_UINTAH_OPENMP__TRYING_OPENMP_MEMORY>));                  \
-//  ASSIGNED_TAG = SUPPORTED_UINTAH_OPENMP__TRYING_OPENMP_TAG;                                        \
+//#define LOAD_ARCHES_UINTAH_OPENMP(ASSIGNED_TAG, FUNCTION_CODE_NAME) {
+//  this->addEvalFunctionPtr(std::type_index(
+//                           typeid(SUPPORTED_UINTAH_OPENMP__TRYING_OPENMP_EXECUTION)),
+//    static_cast<evalFunctionPtr>(&FUNCTION_CODE_NAME<
+//                                 SUPPORTED_UINTAH_OPENMP__TRYING_OPENMP_EXECUTION,
+//                                 SUPPORTED_UINTAH_OPENMP__TRYING_OPENMP_MEMORY>));
+//  ASSIGNED_TAG = SUPPORTED_UINTAH_OPENMP__TRYING_OPENMP_TAG;
 //}
 //
 ////User specified that CUDA or OpenMP is not an option.
 ////In this most only the CPU version can compile
-//#define LOAD_ARCHES_UINTAH(ASSIGNED_TAG, FUNCTION_CODE_NAME) {                                      \
-//    this->addEvalFunctionPtr(std::type_index(                                                       \
-//                             typeid(SUPPORTED_UINTAH__TRYING_UINTAH_EXECUTION)),                    \
-//      static_cast<evalFunctionPtr>(&FUNCTION_CODE_NAME<                                             \
-//                                   SUPPORTED_UINTAH__TRYING_UINTAH_EXECUTION,                       \
-//                                   SUPPORTED_UINTAH__TRYING_UINTAH_MEMORY>));                       \
-//    ASSIGNED_TAG = SUPPORTED_UINTAH__TRYING_UINTAH_TAG;                                             \
+//#define LOAD_ARCHES_UINTAH(ASSIGNED_TAG, FUNCTION_CODE_NAME) {
+//    this->addEvalFunctionPtr(std::type_index(
+//                             typeid(SUPPORTED_UINTAH__TRYING_UINTAH_EXECUTION)),
+//      static_cast<evalFunctionPtr>(&FUNCTION_CODE_NAME<
+//                                   SUPPORTED_UINTAH__TRYING_UINTAH_EXECUTION,
+//                                   SUPPORTED_UINTAH__TRYING_UINTAH_MEMORY>));
+//    ASSIGNED_TAG = SUPPORTED_UINTAH__TRYING_UINTAH_TAG;
 //}
 
 
@@ -295,7 +295,7 @@ public:
     //------begin portability support members--------------------------------------------------
 
     /** @brief Tells TaskFactoryBase which execution space this Arches task was assigned to.**/
-    virtual TaskAssignedExecutionSpace loadTaskFunctionPointers() = 0;
+    virtual TaskAssignedExecutionSpace loadTaskEvalFunctionPointers() = 0;
 
     // Hacky code warning.  Before portability was introduced, Arches had its own task execution system
     // that launched the correct method using polymorphism.

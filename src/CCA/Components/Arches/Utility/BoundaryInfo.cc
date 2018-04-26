@@ -9,7 +9,7 @@ TaskInterface( task_name, matl_index ) {
 BoundaryInfo::~BoundaryInfo(){
 }
 
-TaskAssignedExecutionSpace BoundaryInfo::loadTaskFunctionPointers(){
+TaskAssignedExecutionSpace BoundaryInfo::loadTaskEvalFunctionPointers(){
 
   TaskAssignedExecutionSpace assignedTag{};
   LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, BoundaryInfo::eval);

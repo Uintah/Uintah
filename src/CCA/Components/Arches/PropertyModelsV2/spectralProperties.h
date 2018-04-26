@@ -41,7 +41,7 @@ namespace Uintah{
 
     typedef std::vector<ArchesFieldContainer::VariableInformation> VIVec;
 
-    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 

@@ -16,7 +16,7 @@ AddPressGradient::~AddPressGradient()
 }
 
 //--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace AddPressGradient::loadTaskFunctionPointers(){
+TaskAssignedExecutionSpace AddPressGradient::loadTaskEvalFunctionPointers(){
 
   TaskAssignedExecutionSpace assignedTag{};
   LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, AddPressGradient::eval);

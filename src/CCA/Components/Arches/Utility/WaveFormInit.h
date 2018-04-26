@@ -16,7 +16,7 @@ public:
     WaveFormInit<T,CT>( std::string task_name, int matl_index, const std::string var_name );
     ~WaveFormInit<T,CT>();
 
-    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 
@@ -92,7 +92,7 @@ private:
   {}
 
   template <typename T, typename CT>
-  TaskAssignedExecutionSpace WaveFormInit<T, CT>::loadTaskFunctionPointers(){
+  TaskAssignedExecutionSpace WaveFormInit<T, CT>::loadTaskEvalFunctionPointers(){
 
     TaskAssignedExecutionSpace assignedTag{};
     // This one is a bit hackier.  Passing in WaveFormInit<T, CT>::eval into the macro caused problems on the comma as it parsed it

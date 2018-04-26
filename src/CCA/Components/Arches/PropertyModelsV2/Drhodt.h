@@ -12,7 +12,7 @@ public:
     Drhodt( std::string task_name, int matl_index );
     ~Drhodt();
 
-    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 

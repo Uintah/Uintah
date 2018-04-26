@@ -14,7 +14,7 @@ public:
     Diffusion<T>( std::string task_name, int matl_index );
     ~Diffusion<T>();
 
-    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 
@@ -89,7 +89,7 @@ private:
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
-  TaskAssignedExecutionSpace Diffusion<T>::loadTaskFunctionPointers(){
+  TaskAssignedExecutionSpace Diffusion<T>::loadTaskEvalFunctionPointers(){
 
     TaskAssignedExecutionSpace assignedTag{};
     LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, Diffusion<T>::eval);

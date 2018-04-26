@@ -13,7 +13,7 @@ public:
     DSmaMMML( std::string task_name, int matl_index );
     ~DSmaMMML();
 
-    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 
@@ -75,7 +75,7 @@ DSmaMMML<TT>::~DSmaMMML(){}
 
 //--------------------------------------------------------------------------------------------------
 template<typename TT>
-TaskAssignedExecutionSpace DSmaMMML<TT>::loadTaskFunctionPointers(){
+TaskAssignedExecutionSpace DSmaMMML<TT>::loadTaskEvalFunctionPointers(){
 
   TaskAssignedExecutionSpace assignedTag{};
   LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, DSmaMMML<TT>::eval);

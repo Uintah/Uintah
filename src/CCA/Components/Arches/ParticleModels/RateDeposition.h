@@ -13,7 +13,7 @@ namespace Uintah{
     RateDeposition( std::string task_name, int matl_index, const int N );
     ~RateDeposition();
 
-    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 

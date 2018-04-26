@@ -12,7 +12,7 @@ public:
     RandParticleLoc( std::string task_name, int matl_index ):TaskInterface(task_name, matl_index){}
     ~RandParticleLoc(){}
 
-    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 

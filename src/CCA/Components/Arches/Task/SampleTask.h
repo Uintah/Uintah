@@ -12,7 +12,7 @@ public:
     SampleTask( std::string task_name, int matl_index );
     ~SampleTask();
 
-    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 

@@ -15,7 +15,7 @@ public:
     PressureEqn( std::string task_name, int matl_index, SimulationStateP shared_state );
     ~PressureEqn();
 
-    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 

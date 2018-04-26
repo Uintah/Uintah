@@ -13,7 +13,7 @@ ColdFlowProperties::~ColdFlowProperties(){
 }
 
 //--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace ColdFlowProperties::loadTaskFunctionPointers(){
+TaskAssignedExecutionSpace ColdFlowProperties::loadTaskEvalFunctionPointers(){
 
   TaskAssignedExecutionSpace assignedTag{};
   LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, ColdFlowProperties::eval);

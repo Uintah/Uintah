@@ -15,7 +15,7 @@ public:
     ConsScalarDiffusion( std::string task_name, int matl_index );
     ~ConsScalarDiffusion();
 
-    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 

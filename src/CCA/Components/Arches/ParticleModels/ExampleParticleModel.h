@@ -16,7 +16,7 @@ public:
     ExampleParticleModel<IT, DT>( std::string task_name, int matl_index, const std::string var_name, const int N );
     ~ExampleParticleModel<IT, DT>();
 
-    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 
@@ -111,7 +111,7 @@ private:
   {}
 
   template <typename IT, typename DT>
-  TaskAssignedExecutionSpace ExampleParticleModel<IT, DT>::loadTaskFunctionPointers(){
+  TaskAssignedExecutionSpace ExampleParticleModel<IT, DT>::loadTaskEvalFunctionPointers(){
 
     TaskAssignedExecutionSpace assignedTag{};
     // This one is a bit hackier.  Passing in ExampleParticleModel<IT, DT>::eval into the macro caused problems on the comma as it parsed it

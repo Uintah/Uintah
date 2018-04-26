@@ -12,7 +12,7 @@ public:
     TotNumDensity( std::string task_name, int matl_index );
     ~TotNumDensity(){}
 
-    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 

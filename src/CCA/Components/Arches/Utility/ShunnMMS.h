@@ -14,7 +14,7 @@ public:
     ShunnMMS<T>( std::string task_name, int matl_index, const std::string var_name );
     ~ShunnMMS<T>();
 
-    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 
@@ -94,7 +94,7 @@ private:
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
-  TaskAssignedExecutionSpace ShunnMMS<T>::loadTaskFunctionPointers(){
+  TaskAssignedExecutionSpace ShunnMMS<T>::loadTaskEvalFunctionPointers(){
 
     TaskAssignedExecutionSpace assignedTag{};
     LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, ShunnMMS<T>::eval);

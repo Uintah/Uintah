@@ -12,7 +12,7 @@ public:
     PartVariablesDQMOM( std::string task_name, int matl_index );
     ~PartVariablesDQMOM(){}
 
-    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 

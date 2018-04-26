@@ -12,7 +12,7 @@ public:
     InitLagrangianParticleSize( std::string task_name, int matl_index );
     ~InitLagrangianParticleSize();
 
-    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 

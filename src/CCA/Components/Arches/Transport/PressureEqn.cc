@@ -26,7 +26,7 @@ PressureEqn::~PressureEqn(){
 
 }
 
-TaskAssignedExecutionSpace PressureEqn::loadTaskFunctionPointers(){
+TaskAssignedExecutionSpace PressureEqn::loadTaskEvalFunctionPointers(){
 
   TaskAssignedExecutionSpace assignedTag{};
   LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, PressureEqn::eval);

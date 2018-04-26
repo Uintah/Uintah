@@ -82,7 +82,7 @@ namespace UintahSpaces{
 // if constexpr  (std::is_same< Kokkos::Cuda,      TAG1 >::value) {
 // For C++11, the process is doable but just requires a muck of boilerplating to get there, instead of the above if
 // statement, I instead opted for a weirder system where I compared the tags as strings
-// if (strcmp(STRVX(ORIGINAL_KOKKOS_CUDA_TAG), STRVX(TAG1)) == 0) {                               \
+// if (strcmp(STRVX(ORIGINAL_KOKKOS_CUDA_TAG), STRVX(TAG1)) == 0) {
 // Further, the C++11 way ended up defining a tag as more of a string of code rather than an actual data type.
 
 //using UINTAH_CPU_TAG = UintahSpaces::CPU;
@@ -172,7 +172,7 @@ enum TaskAssignedExecutionSpace {
     if (strcmp(STRVX(ORIGINAL_KOKKOS_OPENMP_TAG), STRVX(TAG1)) == 0) {                             \
       task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME<TAG1>, ## __VA_ARGS__);          \
       PREPARE_KOKKOS_OPENMP_TASK(task);                                                            \
-    } else if (strcmp(/home/brad/opt/uintah/trunk-gpu/StandAlone/compare_udaSTRVX(ORIGINAL_KOKKOS_OPENMP_TAG), STRVX(TAG2)) == 0) {                      \
+    } else if (strcmp(STRVX(ORIGINAL_KOKKOS_OPENMP_TAG), STRVX(TAG2)) == 0) {                      \
       task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME<TAG2>, ## __VA_ARGS__);          \
       PREPARE_KOKKOS_OPENMP_TASK(task);                                                            \
     } else if (strcmp(STRVX(ORIGINAL_KOKKOS_OPENMP_TAG), STRVX(TAG3)) == 0) {                      \

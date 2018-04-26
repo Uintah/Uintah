@@ -13,7 +13,7 @@ public:
     DSFT( std::string task_name, int matl_index );
     ~DSFT();
 
-    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 

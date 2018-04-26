@@ -28,7 +28,7 @@ SGSsigma::~SGSsigma(){
 }
 
 //--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace SGSsigma::loadTaskFunctionPointers(){
+TaskAssignedExecutionSpace SGSsigma::loadTaskEvalFunctionPointers(){
 
   TaskAssignedExecutionSpace assignedTag{};
   LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, SGSsigma::eval);

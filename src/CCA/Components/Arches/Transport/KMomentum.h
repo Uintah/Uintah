@@ -49,7 +49,7 @@ public:
 
     typedef std::vector<ArchesFieldContainer::VariableInformation> ArchesVIVector;
 
-    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 
@@ -171,7 +171,7 @@ private:
   }
   //------------------------------------------------------------------------------------------------
   template <typename T>
-  TaskAssignedExecutionSpace KMomentum<T>::loadTaskFunctionPointers(){
+  TaskAssignedExecutionSpace KMomentum<T>::loadTaskEvalFunctionPointers(){
 
     TaskAssignedExecutionSpace assignedTag{};
     LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, KMomentum<T>::eval);

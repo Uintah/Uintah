@@ -13,7 +13,7 @@ public:
     GravityA( std::string task_name, int matl_index );
     ~GravityA();
 
-    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 

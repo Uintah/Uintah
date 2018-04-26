@@ -12,7 +12,7 @@ public:
     OneDWallHT( std::string task_name, int matl_index );
     ~OneDWallHT();
 
-    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 

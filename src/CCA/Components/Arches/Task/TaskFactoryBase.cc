@@ -276,26 +276,14 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
 
   const std::string type_string = TaskInterface::get_task_type_string(type);
   cout_archestaskdebug << " Scheduling the following task group with mode: "<< type_string << std::endl;
-  int i = 0;
   bool archesTasksMixMemorySpaces = false;
   TaskAssignedExecutionSpace assignedExecutionSpace{};
-  std::cout << "Task in group: ";
+
   for ( auto i_task = arches_tasks.begin(); i_task != arches_tasks.end(); i_task++ ){
-    std::cout << (*i_task)->get_task_name() << " ";
-    i++;
-    if ((*i_task)->get_task_name() == "char_ps_qn0") {
-      printf("Here we go");
-    }
 
     cout_archestaskdebug << "   Task: " << (*i_task)->get_task_name() << std::endl;
 
-    TaskAssignedExecutionSpace temp = (*i_task)->loadTaskFunctionPointers();
-
-    if (assignedExecutionSpace != TaskAssignedExecutionSpace::NONE_SPACE && assignedExecutionSpace != temp) {
-      archesTasksMixMemorySpaces = true;
-    } else {
-      assignedExecutionSpace = temp;
-    }
+    TaskAssignedExecutionSpace temp{};
 
     switch( type ){
       case (TaskInterface::INITIALIZE):
@@ -311,6 +299,7 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
         time_substep = 0;
         break;
       case (TaskInterface::TIMESTEP_EVAL):
+        temp = (*i_task)->loadTaskEvalFunctionPointers();
         (*i_task)->register_timestep_eval( variable_registry, time_substep, pack_tasks);
         break;
       case (TaskInterface::BC):
@@ -324,9 +313,13 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
         break;
 
     }
-  }
 
-  std::cout << std::endl;
+    if (assignedExecutionSpace != TaskAssignedExecutionSpace::NONE_SPACE && assignedExecutionSpace != temp) {
+      archesTasksMixMemorySpaces = true;
+    } else {
+      assignedExecutionSpace = temp;
+    }
+  }
 
   auto TaskDependencies = [&](Task *& tsk) {
     int counter = 0;
@@ -383,7 +376,7 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
     } else {
       if (archesTasksMixMemorySpaces) {
         std::cout << std::endl << " WARNING Different execution spaces specified.  All Arches tasks within a single Uintah task must share the same execution space." << std::endl << std::endl;
-        //throw InvalidValue("Error: Different execution spaces specified.  All Arches tasks within a single Uintah task must share the same execution space.",__FILE__,__LINE__);
+        throw InvalidValue("Error: Different execution spaces specified.  All Arches tasks within a single Uintah task must share the same execution space.",__FILE__,__LINE__);
       }
     }
   };
@@ -391,7 +384,7 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
   // We must know which memory space(s) the Arches task embedded within the Uintah task will execute
   // so Uintah can ensure those simulation variables are prepared in that memory space prior to task execution.
   if (assignedExecutionSpace == TaskAssignedExecutionSpace::KOKKOS_OPENMP) {
-    CALL_ASSIGN_PORTABLE_TASK_1TAG(KOKKOS_OPENMP_TAG, TaskDependencies, task_group_name, TaskFactoryBase::do_task,
+    CALL_ASSIGN_PORTABLE_TASK_1TAG(KOKKOS_OPENMP_TAG, TaskDependencies, _factory_name + std::string("::") + task_group_name, TaskFactoryBase::do_task,
                               level->eachPatch(), matls,
                               variable_registry, arches_tasks, type, time_substep, pack_tasks);
   } else if (assignedExecutionSpace == TaskAssignedExecutionSpace::KOKKOS_CUDA) {
@@ -456,10 +449,6 @@ void TaskFactoryBase::do_task ( DetailedTask* task,
     tsk_info_mngr->set_field_container( field_container );
 
     for ( auto i_task = arches_tasks.begin(); i_task != arches_tasks.end(); i_task++ ){
-
-      if ((*i_task)->get_task_name() == "char_ps_qn0") {
-        printf("Here we go");
-      }
 
       switch( type ){
         case (TaskInterface::INITIALIZE):

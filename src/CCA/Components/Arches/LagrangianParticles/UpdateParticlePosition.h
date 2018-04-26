@@ -12,7 +12,7 @@ public:
     UpdateParticlePosition( std::string task_name, int matl_index );
     ~UpdateParticlePosition();
 
-    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 

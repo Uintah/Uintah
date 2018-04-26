@@ -12,7 +12,7 @@ public:
     Smagorinsky( std::string task_name, int matl_index );
     ~Smagorinsky();
 
-    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 

@@ -3,7 +3,7 @@
 namespace Uintah {
 
 //--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace RandParticleLoc::loadTaskFunctionPointers(){
+TaskAssignedExecutionSpace RandParticleLoc::loadTaskEvalFunctionPointers(){
 
   TaskAssignedExecutionSpace assignedTag{};
   LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, RandParticleLoc::eval);

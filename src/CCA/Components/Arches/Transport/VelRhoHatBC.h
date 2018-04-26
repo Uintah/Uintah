@@ -28,7 +28,7 @@ public:
     /** @brief Default destructor **/
     ~VelRhoHatBC();
 
-    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     /** @brief Input file interface **/
     void problemSetup( ProblemSpecP& db );

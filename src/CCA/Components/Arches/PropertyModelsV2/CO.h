@@ -17,7 +17,7 @@ public:
     CO( std::string task_name, int matl_index );
     ~CO();
 
-    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 

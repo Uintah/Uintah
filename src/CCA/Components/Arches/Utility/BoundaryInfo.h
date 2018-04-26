@@ -12,7 +12,7 @@ public:
     BoundaryInfo( std::string task_name, int matl_index );
     ~BoundaryInfo();
 
-    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 

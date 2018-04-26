@@ -39,7 +39,7 @@ namespace Uintah{
                         _base_var_name(var_name), _Nenv(N){}
     ~ShaddixEnthalpy<T>(){}
 
-    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 
@@ -149,7 +149,7 @@ namespace Uintah{
 
 //--------------------------------------------------------------------------------------------------
   template <typename T>
-  TaskAssignedExecutionSpace ShaddixEnthalpy<T>::loadTaskFunctionPointers(){
+  TaskAssignedExecutionSpace ShaddixEnthalpy<T>::loadTaskEvalFunctionPointers(){
 
     TaskAssignedExecutionSpace assignedTag{};
     LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, ShaddixEnthalpy<T>::eval);

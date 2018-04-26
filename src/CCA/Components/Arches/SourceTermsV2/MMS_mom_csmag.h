@@ -13,7 +13,7 @@ public:
     MMS_mom_csmag<T>( std::string task_name, int matl_index, SimulationStateP shared_state  );
     ~MMS_mom_csmag<T>();
 
-    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 
@@ -98,7 +98,7 @@ MMS_mom_csmag<T>::~MMS_mom_csmag()
 
 //--------------------------------------------------------------------------------------------------
 template <typename T>
-TaskAssignedExecutionSpace MMS_mom_csmag<T>::loadTaskFunctionPointers(){
+TaskAssignedExecutionSpace MMS_mom_csmag<T>::loadTaskEvalFunctionPointers(){
 
   TaskAssignedExecutionSpace assignedTag{};
   LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, MMS_mom_csmag<T>::eval);

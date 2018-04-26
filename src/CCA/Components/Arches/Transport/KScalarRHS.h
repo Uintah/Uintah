@@ -76,7 +76,7 @@ public:
 
     typedef std::vector<ArchesFieldContainer::VariableInformation> ArchesVIVector;
 
-    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 
@@ -204,7 +204,7 @@ private:
 
   //------------------------------------------------------------------------------------------------
   template <typename T, typename PT>
-  TaskAssignedExecutionSpace KScalarRHS<T, PT>::loadTaskFunctionPointers(){
+  TaskAssignedExecutionSpace KScalarRHS<T, PT>::loadTaskEvalFunctionPointers(){
 
     TaskAssignedExecutionSpace assignedTag{};
     // This one is a bit hackier.  Passing in KScalarRHS<T, PT>::eval into the macro caused problems on the comma as it parsed it

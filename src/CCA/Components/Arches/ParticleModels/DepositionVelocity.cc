@@ -14,7 +14,7 @@ TaskInterface( task_name, matl_index ), _Nenv(N),_shared_state(shared_state) {
 DepositionVelocity::~DepositionVelocity(){
 }
 
-TaskAssignedExecutionSpace DepositionVelocity::loadTaskFunctionPointers(){
+TaskAssignedExecutionSpace DepositionVelocity::loadTaskEvalFunctionPointers(){
 
   TaskAssignedExecutionSpace assignedTag{};
   LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, DepositionVelocity::eval);

@@ -13,7 +13,7 @@ namespace Uintah{
     ChemMixFactory( const ApplicationCommon* arches );
     ~ChemMixFactory();
 
-    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void register_all_tasks( ProblemSpecP& db );
 

@@ -13,7 +13,7 @@ public:
     WallHFVariable( std::string task_name, int matl_index, SimulationStateP shared_state );
     ~WallHFVariable();
 
-    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 

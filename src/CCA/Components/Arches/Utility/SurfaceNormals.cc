@@ -16,7 +16,7 @@ SurfaceNormals::~SurfaceNormals(){
 }
 
 //--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace SurfaceNormals::loadTaskFunctionPointers(){
+TaskAssignedExecutionSpace SurfaceNormals::loadTaskEvalFunctionPointers(){
 
   TaskAssignedExecutionSpace assignedTag{};
   LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, SurfaceNormals::eval);

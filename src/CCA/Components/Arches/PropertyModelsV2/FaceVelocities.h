@@ -15,7 +15,7 @@ public:
     FaceVelocities( std::string task_name, int matl_index );
     ~FaceVelocities();
 
-    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 

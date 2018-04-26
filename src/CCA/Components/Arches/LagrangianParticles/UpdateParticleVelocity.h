@@ -12,7 +12,7 @@ public:
     UpdateParticleVelocity( std::string task_name, int matl_index );
     ~UpdateParticleVelocity();
 
-    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 

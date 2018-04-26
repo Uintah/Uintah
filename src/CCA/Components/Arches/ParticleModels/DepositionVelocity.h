@@ -14,7 +14,7 @@ public:
     DepositionVelocity( std::string task_name, int matl_index, const int N, SimulationStateP shared_state );
     ~DepositionVelocity();
 
-    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 

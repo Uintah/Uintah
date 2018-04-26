@@ -12,7 +12,7 @@ DQMOMNoInversion::DQMOMNoInversion( std::string task_name, int matl_index, const
 DQMOMNoInversion::~DQMOMNoInversion(){}
 
 //--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace DQMOMNoInversion::loadTaskFunctionPointers(){
+TaskAssignedExecutionSpace DQMOMNoInversion::loadTaskEvalFunctionPointers(){
 
   TaskAssignedExecutionSpace assignedTag{};
   LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, DQMOMNoInversion::eval);

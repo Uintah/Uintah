@@ -15,7 +15,7 @@ public:
     MMS_scalar( std::string task_name, int matl_index, SimulationStateP shared_state  );
     ~MMS_scalar();
 
-    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 

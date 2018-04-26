@@ -27,7 +27,7 @@ gasRadProperties::~gasRadProperties( )
 //---------------------------------------------------------------------------
 //Method: Load task function pointers for portability
 //---------------------------------------------------------------------------
-TaskAssignedExecutionSpace gasRadProperties::loadTaskFunctionPointers(){
+TaskAssignedExecutionSpace gasRadProperties::loadTaskEvalFunctionPointers(){
 
   TaskAssignedExecutionSpace assignedTag{};
   LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, gasRadProperties::eval);

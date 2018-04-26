@@ -12,7 +12,7 @@ public:
     WALE( std::string task_name, int matl_index );
     ~WALE();
 
-    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 

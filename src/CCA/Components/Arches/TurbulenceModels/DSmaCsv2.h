@@ -14,7 +14,7 @@ public:
     DSmaCsv2( std::string task_name, int matl_index );
     ~DSmaCsv2();
 
-    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 
@@ -84,7 +84,7 @@ DSmaCsv2<TT>::~DSmaCsv2(){
 
 //--------------------------------------------------------------------------------------------------
 template<typename TT>
-TaskAssignedExecutionSpace DSmaCsv2<TT>::loadTaskFunctionPointers(){
+TaskAssignedExecutionSpace DSmaCsv2<TT>::loadTaskEvalFunctionPointers(){
 
   TaskAssignedExecutionSpace assignedTag{};
   LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, DSmaCsv2<TT>::eval);

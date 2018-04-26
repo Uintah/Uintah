@@ -15,7 +15,7 @@ public:
     VarInterpolation<T, IT>( std::string task_name, int matl_index );
     ~VarInterpolation<T, IT>();
 
-    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 
@@ -115,7 +115,7 @@ VarInterpolation<T, IT>::~VarInterpolation()
 {}
 
 template <typename T, typename IT>
-TaskAssignedExecutionSpace VarInterpolation<T, IT>::loadTaskFunctionPointers(){
+TaskAssignedExecutionSpace VarInterpolation<T, IT>::loadTaskEvalFunctionPointers(){
 
   TaskAssignedExecutionSpace assignedTag{};
   // This one is a bit hackier.  Passing in VarInterpolation<T, IT>::eval into the macro caused problems on the comma as it parsed it

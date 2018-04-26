@@ -33,7 +33,7 @@ namespace Uintah{
     BodyForce<IT, DT>( std::string task_name, int matl_index, const std::string var_name, const int N );
     ~BodyForce<IT, DT>();
 
-    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 
@@ -119,7 +119,7 @@ namespace Uintah{
   {}
 
   template <typename IT, typename DT>
-  TaskAssignedExecutionSpace BodyForce<IT, DT>::loadTaskFunctionPointers(){
+  TaskAssignedExecutionSpace BodyForce<IT, DT>::loadTaskEvalFunctionPointers(){
 
     TaskAssignedExecutionSpace assignedTag{};
     // This one is a bit hackier.  Passing in BodyForce<IT, DT>::eval into the macro caused problems on the comma as it parsed it

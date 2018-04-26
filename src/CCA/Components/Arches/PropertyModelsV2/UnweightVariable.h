@@ -16,7 +16,7 @@ public:
     UnweightVariable<T>( std::string task_name, int matl_index );
     ~UnweightVariable<T>();
 
-    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 
@@ -109,7 +109,7 @@ UnweightVariable<T>::~UnweightVariable()
 
 //--------------------------------------------------------------------------------------------------
 template <typename T>
-TaskAssignedExecutionSpace UnweightVariable<T>::loadTaskFunctionPointers(){
+TaskAssignedExecutionSpace UnweightVariable<T>::loadTaskEvalFunctionPointers(){
 
   TaskAssignedExecutionSpace assignedTag{};
   LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, UnweightVariable<T>::eval);

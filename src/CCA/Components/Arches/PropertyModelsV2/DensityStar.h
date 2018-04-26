@@ -12,7 +12,7 @@ public:
     DensityStar( std::string task_name, int matl_index );
     ~DensityStar();
 
-    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 

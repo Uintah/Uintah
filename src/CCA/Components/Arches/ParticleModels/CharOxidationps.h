@@ -24,7 +24,7 @@ public:
     CharOxidationps( std::string task_name, int matl_index, int Nenv );
     ~CharOxidationps();
 
-    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 
@@ -191,7 +191,7 @@ CharOxidationps<T>::~CharOxidationps()
 }
 
 template <typename T> TaskAssignedExecutionSpace
-CharOxidationps<T>::loadTaskFunctionPointers(){
+CharOxidationps<T>::loadTaskEvalFunctionPointers(){
 
   TaskAssignedExecutionSpace assignedTag{};
   LOAD_ARCHES_EVAL_TASK_3TAGS( UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, KOKKOS_CUDA_TAG, assignedTag, CharOxidationps<T>::eval);

@@ -14,7 +14,7 @@ public:
     MMS_Shunn<T>( std::string task_name, int matl_index, SimulationStateP shared_state  );
     ~MMS_Shunn<T>();
 
-    TaskAssignedExecutionSpace loadTaskFunctionPointers();
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 
@@ -109,7 +109,7 @@ MMS_Shunn<T>::~MMS_Shunn(){
 
 //--------------------------------------------------------------------------------------------------
 template <typename T>
-TaskAssignedExecutionSpace MMS_Shunn<T>::loadTaskFunctionPointers(){
+TaskAssignedExecutionSpace MMS_Shunn<T>::loadTaskEvalFunctionPointers(){
 
   TaskAssignedExecutionSpace assignedTag{};
   LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, MMS_Shunn<T>::eval);
