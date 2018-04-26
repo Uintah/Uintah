@@ -306,6 +306,7 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
         (*i_task)->register_compute_bcs( variable_registry, time_substep , pack_tasks);
         break;
       case (TaskInterface::ATOMIC):
+        temp = (*i_task)->loadTaskEvalFunctionPointers();
         (*i_task)->register_timestep_eval( variable_registry, time_substep, pack_tasks );
         break;
       default:
