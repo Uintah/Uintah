@@ -289,7 +289,8 @@ CQMOMEqn::sched_cleanUp( const LevelP& level, SchedulerP& sched )
 //---------------------------------------------------------------------------
 void
 CQMOMEqn::sched_evalTransportEqn( const LevelP& level,
-                                 SchedulerP& sched, int timeSubStep )
+                                 SchedulerP& sched, int timeSubStep, 
+                                 EQN_BUILD_PHASE phase )
 {
 
   if (timeSubStep == 0)

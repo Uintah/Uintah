@@ -25,7 +25,7 @@
         <NSbeta2        spec="REQUIRED DOUBLE" need_applies_to="type psNox"/> <!-- parameter for zz model -->
         <NSgamma1       spec="OPTIONAL STRING" need_applies_to="type psNox"/> <!-- parameter for zz model-->
         <NSgamma2       spec="OPTIONAL STRING" need_applies_to="type psNox"/> <!--parameter for zz model -->
-     
+
         <NO_src       spec="REQUIRED NO_DATA"
                       attribute1="label REQUIRED STRING"
                       need_applies_to="type psNox"/> <!-- SourceTerm for NO transport -->
@@ -117,7 +117,7 @@ private:
 
     double tarFrac;
     double m_ash_mass_fraction;
-    int m_num_env; 
+    int m_num_env;
 
   std::string tar_src_name;
   std::string devol_name; ///< string name for the average molecular weight (from table)
@@ -136,12 +136,12 @@ private:
 
   std::string NO_src_name; ///< string name for the average molecular weight (from table)
   std::string HCN_src_name;            ///< string name for tar
-  std::string NH3_src_name;        ///< string name for tar src 
-  std::string m_rcmass_root; 
-  std::string m_coal_temperature_root; 
+  std::string NH3_src_name;        ///< string name for tar src
+  std::string m_rcmass_root;
+  std::string m_coal_temperature_root;
   std::string length_root;
-  std::vector<double> m_rc_scaling_const; 
-  std::vector<double> m_weight_scaling_const; 
+  std::vector<double> m_rc_scaling_const;
+  std::vector<double> m_weight_scaling_const;
 
   const VarLabel* NO_src_label;
   const VarLabel* HCN_src_label;
@@ -160,13 +160,16 @@ private:
   const VarLabel* m_NO_label;
   const VarLabel* m_HCN_label;
   const VarLabel* m_NH3_label;
+  const VarLabel* m_NO_RHS_label;
+  const VarLabel* m_HCN_RHS_label;
+  const VarLabel* m_NH3_RHS_label;
   std::vector<const VarLabel* > m_length_label;
 
 /**
  NO sourceTerm computation
 struct ComputNOSource{
-       ComputNOSource(constCCVariable<double>& _devol, 
-                      constCCVariable<double>& _oxi, 
+       ComputNOSource(constCCVariable<double>& _devol,
+                      constCCVariable<double>& _oxi,
                       CCVariable<double>& _NO_src) :
 #ifdef UINTAH_ENABLE_KOKKOS
                            devol(_devol.getKokkosView()),

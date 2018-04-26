@@ -41,6 +41,7 @@ class EqnBase{
 public:
 
   EqnBase( ArchesLabel* fieldLabels, ExplicitTimeInt* timeIntegrator, std::string eqnName );
+  enum EQN_BUILD_PHASE{ CONVDIFF, ADDSOURCES, UPDATE, DOALL }; 
 
   virtual ~EqnBase();
 
@@ -68,7 +69,7 @@ public:
 
   /** @brief Schedule a transport equation to be built and solved */
   virtual void sched_evalTransportEqn( const LevelP&,
-                                       SchedulerP& sched, int timeSubStep ) = 0;
+                                       SchedulerP& sched, int timeSubStep, EQN_BUILD_PHASE phase ) = 0;
 
   /** @brief Build the terms needed in the transport equation */
   virtual void sched_buildTransportEqn( const LevelP&, SchedulerP& sched, int timeSubStep ) = 0;

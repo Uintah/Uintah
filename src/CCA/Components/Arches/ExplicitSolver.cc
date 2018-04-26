@@ -1725,7 +1725,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
           DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
 
-          dqmom_eqn->sched_evalTransportEqn( level, sched, curr_level );//compute rhs
+          dqmom_eqn->sched_evalTransportEqn( level, sched, curr_level, EqnBase::DOALL );//compute rhs
         }
 
         for ( DQMOMEqnFactory::EqnMap::iterator iEqn = abscissas_eqns.begin();
@@ -1733,7 +1733,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
           DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
 
-          dqmom_eqn->sched_evalTransportEqn( level, sched, curr_level );//compute rhs
+          dqmom_eqn->sched_evalTransportEqn( level, sched, curr_level, EqnBase::DOALL );//compute rhs
         }
 
 
@@ -1873,7 +1873,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
              iEqn != moment_eqns.end(); iEqn++){
 
           CQMOMEqn* cqmom_eqn = dynamic_cast<CQMOMEqn*>(iEqn->second);
-          cqmom_eqn->sched_evalTransportEqn( level, sched, curr_level );
+          cqmom_eqn->sched_evalTransportEqn( level, sched, curr_level, EqnBase::DOALL );
 
         }
         //get new weights and absicissa
@@ -1944,10 +1944,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
 
     // STAGE 0
-
-    SourceTermFactory& src_factory = SourceTermFactory::self();
-
-    src_factory.sched_computeSources( level, sched, curr_level, 0 );
+    //these equations use a density guess
 
     sched_saveTempCopies(sched, patches, matls,d_timeIntegratorLabels[curr_level]);
 
@@ -1963,14 +1960,29 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     sched_checkDensityGuess(sched, patches, matls,
                                       d_timeIntegratorLabels[curr_level]);
 
-    for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
+    for (auto iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
 
       EqnBase* eqn = iter->second;
-      //these equations use a density guess
+
       if ( eqn->get_stage() == 0 )
-        eqn->sched_evalTransportEqn( level, sched, curr_level );
+        eqn->sched_evalTransportEqn( level, sched, curr_level, EqnBase::CONVDIFF );
 
     }
+
+    SourceTermFactory& src_factory = SourceTermFactory::self();
+
+    src_factory.sched_computeSources( level, sched, curr_level, 0 );
+
+    for (auto iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
+
+      EqnBase* eqn = iter->second;
+      if ( eqn->get_stage() == 0 ){
+        eqn->sched_evalTransportEqn( level, sched, curr_level, EqnBase::ADDSOURCES );
+        eqn->sched_evalTransportEqn( level, sched, curr_level, EqnBase::UPDATE );
+      }
+
+    }
+
 
     // Property models needed before table lookup:
     PropertyModelBase* hl_model = 0;
@@ -2019,14 +2031,25 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     }
 
-    // Source terms needed after table lookup:
+    for (auto iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
+
+      EqnBase* eqn = iter->second;
+
+      if ( eqn->get_stage() == 1 )
+        eqn->sched_evalTransportEqn( level, sched, curr_level, EqnBase::CONVDIFF );
+
+    }
+
     src_factory.sched_computeSources( level, sched, curr_level, 1 );
 
-    for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
+    for (auto iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
+
       EqnBase* eqn = iter->second;
-      //these equations do not use a density guess
-      if ( eqn->get_stage() == 1 )
-        eqn->sched_evalTransportEqn( level, sched, curr_level );
+      if ( eqn->get_stage() == 1 ){
+        eqn->sched_evalTransportEqn( level, sched, curr_level, EqnBase::ADDSOURCES );
+        eqn->sched_evalTransportEqn( level, sched, curr_level, EqnBase::UPDATE );
+      }
+
     }
 
     sched_computeDensityLag(sched, patches, matls,
@@ -2102,13 +2125,25 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     //STAGE 2
 
-    // Source terms needed after second table lookup:
+    for (auto iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
+
+      EqnBase* eqn = iter->second;
+
+      if ( eqn->get_stage() == 2 )
+        eqn->sched_evalTransportEqn( level, sched, curr_level, EqnBase::CONVDIFF );
+
+    }
+
     src_factory.sched_computeSources( level, sched, curr_level, 2 );
 
-    for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
+    for (auto iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
+
       EqnBase* eqn = iter->second;
-      if ( eqn->get_stage() == 2 )
-        eqn->sched_evalTransportEqn( level, sched, curr_level );
+      if ( eqn->get_stage() == 2 ){
+        eqn->sched_evalTransportEqn( level, sched, curr_level, EqnBase::ADDSOURCES );
+        eqn->sched_evalTransportEqn( level, sched, curr_level, EqnBase::UPDATE );
+      }
+
     }
 
     for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
