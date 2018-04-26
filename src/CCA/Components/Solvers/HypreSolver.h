@@ -151,7 +151,7 @@ namespace Uintah {
           HYPRE_StructJacobiDestroy(*solver);
           break;
         default:
-          throw InternalError( "HypreSolver given a bad solver type!", 
+          throw InternalError( "HypreSolver given a bad solver type!",
                                __FILE__, __LINE__ );
         }
 
@@ -176,20 +176,20 @@ namespace Uintah {
           HYPRE_StructJacobiDestroy(*precond_solver);
           break;
         default:
-          throw InternalError("HypreSolver given a bad solver type!", 
+          throw InternalError("HypreSolver given a bad solver type!",
                               __FILE__, __LINE__);
       }
 
       if (HA) {
-        delete HA;  
+        delete HA;
         HA = 0;
       }
       if (HB){
-        delete HB;  
+        delete HB;
         HB = 0;
       }
       if (HX) {
-        delete HX;  
+        delete HX;
         HX = 0;
       }
       if (solver) {
@@ -235,16 +235,16 @@ namespace Uintah {
      * @param guess_dw Specifies the datawarehouse of the initial guess.
      * @param params Specifies the solver parameters usually parsed from the input file.
      *
-     */    
+     */
     virtual void scheduleSolve( const LevelP           & level_in,
                                       SchedulerP       & sched_in,
                                 const MaterialSet      * matls_in,
                                 const VarLabel         * A_in,
-                                      Task::WhichDW      which_A_dw_in,  
+                                      Task::WhichDW      which_A_dw_in,
                                 const VarLabel         * x_in,
                                       bool               modifies_x_in,
                                 const VarLabel         * b_in,
-                                      Task::WhichDW      which_b_dw_in,  
+                                      Task::WhichDW      which_b_dw_in,
                                 const VarLabel         * guess_in,
                                       Task::WhichDW      which_guess_dw_in,
                                 const SolverParameters * params_in,
@@ -271,8 +271,9 @@ namespace Uintah {
                            
     
 
-    const VarLabel * m_timeStepLabel;
-    const VarLabel * hypre_solver_label;
+    const VarLabel               * m_timeStepLabel;
+    std::vector<const VarLabel*>   hypre_solver_label;
+    int                            m_num_hypre_threads{1};
   };
 }
 
