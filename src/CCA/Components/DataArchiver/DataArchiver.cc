@@ -123,10 +123,13 @@ DataArchiver::DataArchiver(const ProcessorGroup* myworld, int udaSuffix)
   m_numLevelsInOutput = 0;
 
   m_writeMeta = false;
+
+  m_sync_io_label = VarLabel::create( "sync_io_vl", CCVariable<float>::getTypeDescription() );
 }
 
 DataArchiver::~DataArchiver()
 {
+  VarLabel::destroy( m_sync_io_label );
 }
 
 //______________________________________________________________________
@@ -2449,12 +2452,10 @@ DataArchiver::scheduleOutputTimeStep(       vector<SaveItem> & saveLabels,
 #if 1
     if( isThisCheckpoint ) {
       Ghost::GhostType  gn  = Ghost::None;
-      const VarLabel * tvl = VarLabel::create( "sync_io_vl", CCVariable<float>::getTypeDescription() );
-      task->requires( Task::NewDW, tvl, gn, 0 );
+      task->requires( Task::NewDW, m_sync_io_label, gn, 0 );
     }
     else {
-      const VarLabel * tvl = VarLabel::create( "sync_io_vl", CCVariable<float>::getTypeDescription() );
-      task->computes( tvl );
+      task->computes( m_sync_io_label );
     }
 #endif
 

@@ -544,6 +544,12 @@ class LoadBalancer;
     std::map< int, ProblemSpecP > m_XMLDataDocs;
     std::map< int, ProblemSpecP > m_CheckpointXMLDataDocs;
 
+
+    // Hacky variable to ensure that PIDX checkpoint and IO tasks that happen to fall on the
+    // same time step run in a serialized manner (as it appears that PIDX is not thread safe).
+    // If there was a better way to synchronize tasks, we should do that...
+    VarLabel * m_sync_io_label;
+
     //__________________________________
     //  PostProcessUda related
     //  used for migrating timestep directories
