@@ -34,7 +34,7 @@
       <Utilities                        spec="OPTIONAL NO_DATA">
         <utility                        spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        attribute2="type REQUIRED STRING 'variable_math'">
+                                        attribute2="type REQUIRED STRING 'variable_math, mass_flow_rate'">
 
           <!-- <grid type=...> represents the variable type. -->
           <grid                         spec="OPTIONAL NO_DATA"

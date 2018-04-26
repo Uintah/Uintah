@@ -40,6 +40,7 @@
 #include <Core/Grid/BoundaryConditions/BCGeomBase.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BoundCondBase.h>
+#include <Core/Grid/Variables/ListOfCellsIterator.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Util/DOUT.hpp>
 
@@ -504,7 +505,7 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
     }
   }
 
-  //This will contain all the bc's everywhere. We will cherry pick from it below to only
+  // This will contain all the bc's everywhere. We will cherry pick from it below to only
   // store information here per patch.
 
   if ( db_bc ) {
@@ -605,6 +606,53 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
               Uintah::Iterator bndIter; // allocate iterator
               // get the iterator for the extracells for this child
               thisGeom->getCellFaceIterator(bndIter);
+
+              //
+
+              ListOfCellsIterator list_bndExtraCells;
+              ListOfCellsIterator list_bndFaceCells;
+
+              Uintah::Iterator iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::xminus, Uintah::Patch::ExtraCells );
+              for ( iterLimits.reset(); !iterLimits.done(); iterLimits++ ){
+                list_bndExtraCells.add(*iterLimits);
+              }
+                               iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::xplus, Uintah::Patch::ExtraCells );
+              for ( iterLimits.reset(); !iterLimits.done(); iterLimits++ ){
+                list_bndExtraCells.add(*iterLimits);
+              }
+                               iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::yminus, Uintah::Patch::ExtraCells );
+              for ( iterLimits.reset(); !iterLimits.done(); iterLimits++ ){
+                list_bndExtraCells.add(*iterLimits);
+              }
+                               iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::yplus, Uintah::Patch::ExtraCells );
+              for ( iterLimits.reset(); !iterLimits.done(); iterLimits++ ){
+                list_bndExtraCells.add(*iterLimits);
+              }
+                               iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::zminus, Uintah::Patch::ExtraCells );
+              for ( iterLimits.reset(); !iterLimits.done(); iterLimits++ ){
+                list_bndExtraCells.add(*iterLimits);
+              }
+                               iterLimits = patch->getEdgeCellIterator( face, Uintah::Patch::zplus, Uintah::Patch::ExtraCells );
+              for ( iterLimits.reset(); !iterLimits.done(); iterLimits++ ){
+                list_bndExtraCells.add(*iterLimits);
+              }
+
+              for ( bndIter.reset(); !bndIter.done(); bndIter++){
+                int flag = 0;
+                for ( list_bndExtraCells.reset(); !list_bndExtraCells.done(); list_bndExtraCells++ ){
+                  if( *list_bndExtraCells == *bndIter ){
+                    flag = 1;
+                    break;
+                  }
+                }
+                if ( flag == 0 ){
+                    list_bndFaceCells.add(*bndIter);
+                }
+              }
+
+              bndIter = list_bndFaceCells;
+
+              //
 
               BoundaryIterators myIters;
               DOUT( dbgbc_new, " Size of uintah iterator for boundary: " << bndName << " = " << bndIter.size() << std::endl);

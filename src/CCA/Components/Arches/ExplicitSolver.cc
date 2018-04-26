@@ -1137,8 +1137,9 @@ ExplicitSolver::initialize( const LevelP     & level,
     const bool dont_pack_tasks = false;
     TaskFactoryBase::TaskMap all_tasks;
 
-    //utility factory
-    _task_factory_map["utility_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
+//utility factory
+// _task_factory_map["utility_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
+_task_factory_map["utility_factory"]->schedule_task_group( "base_tasks", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
 
     //transport factory
     //  initialize
@@ -1291,6 +1292,8 @@ ExplicitSolver::initialize( const LevelP     & level,
 
     d_boundaryCondition->sched_create_radiation_temperature( sched, level, matls, false );
 
+    // Utility Factory : Balance Terms computation
+    _task_factory_map["utility_factory"]->schedule_task_group( "mass_flow_rate", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
   }
 
 }
@@ -2185,6 +2188,12 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
   //variable math:
   const std::vector<std::string> math_tasks = i_util->second->retrieve_tasks_by_type("variable_math");
   i_util->second->schedule_task_group("all_math_tasks", math_tasks, TaskInterface::TIMESTEP_EVAL,
+    dont_pack_tasks,
+    level, sched, matls, 0 );
+
+  // massFlowRate
+  const std::vector<std::string> flowRate_tasks = i_util->second->retrieve_tasks_by_type("mass_flow_rate");
+  i_util->second->schedule_task_group("all_flowRate_tasks", flowRate_tasks, TaskInterface::TIMESTEP_EVAL,
     dont_pack_tasks,
     level, sched, matls, 0 );
 
