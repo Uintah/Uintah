@@ -66,7 +66,9 @@ namespace Uintah {
     std::string solvertype;         // String corresponding to solver type
     std::string precondtype;        // String corresponding to preconditioner type
     double      tolerance;          // Residual tolerance for solver
+    double      precond_tolerance;  // Tolerance for preconditioner
     int         maxiterations;      // Maximum # iterations allowed
+    int         precond_maxiters;   // Preconditioner max iterations
     int         logging;            // Log Hypre solver (using Hypre options)
     int         solveFrequency;     // Frequency for solving the linear system. timestep % solveFrequency
     int         relax_type;         // relaxation type
