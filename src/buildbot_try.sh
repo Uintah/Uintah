@@ -50,6 +50,38 @@
 
 #  If no builder is specified all will be used.
 
+
+#__________________________________
+# Have the user choose a try server(s)
+set possibleServers =( "Linux-Optimize-Test-try" "Linux-Debug-Test-try" "Linux-Optimize-GPU-try")
+
+set list = ""
+foreach comp ( $possibleServers[*] )
+  set list="$list $comp - off,"
+end
+set list = "$list All - off"
+
+set selectedServers = `dialog --stdout --separate-output --checklist "Select the buildbot server(s)" 15 40 15 $list`
+
+# remove quotation marks
+set selectedServers = `echo $selectedServers | tr -d '"'`
+
+# bullet proofing
+if ( $#selectedServers == "0" ) then                                                                
+  echo ""
+  echo "Cancel selected... Goodbye."                                                                  
+  echo ""
+  exit                                                                                    
+endif
+
+# define the builders
+set BUILDERS = ""
+foreach server ($selectedServers )
+  set BUILDERS = "$BUILDERS --builder=$server"
+end
+
+#______________________________________________________________________
+#
 # Note this script will automatically create a patch via svn (max 640 Mbytes).
 # It will contain context lines which are superfluous and make the patch
 # bigger than necessary.
@@ -57,7 +89,8 @@
 buildbot --verbose try \
          --connect=pb --master=uintah-build.chpc.utah.edu:8031 \
          --username=buildbot_try --passwd=try_buildbot \
-         --vc=svn --topdir=. --who=`whoami`
+         --vc=svn --topdir=. --who=`whoami` \
+         $BUILDERS
 
 # Use this code if your changes are yuuge to create an svn patch with no
 # context - still has a max 640 Mbytes. 
