@@ -26,11 +26,11 @@
 #define UINTAH_HOMEBREW_PARTICLEDATA_H
 
 #include <Core/Util/RefCounted.h>
+#include <Core/Grid/Variables/ParticleSubset.h> // For particleIndex
 
 namespace Uintah {
 
-template<class T>
-   class ParticleVariable;
+template<class T> class ParticleVariable; // Forward Declaration
 
 /**************************************
 
@@ -61,7 +61,7 @@ WARNING
    template<class T> class ParticleData : public RefCounted {
    public:
       ParticleData();
-      ParticleData(particleIndex size);
+      ParticleData( particleIndex size );
       virtual ~ParticleData();
 
       //////////

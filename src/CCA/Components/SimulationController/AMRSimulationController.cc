@@ -278,10 +278,12 @@ AMRSimulationController::run()
     }
 
     // Regridding
-    if (m_regridder) {
+    if( m_regridder ) {
+
+      m_application->setRegridTimeStep( false );
+
       // If not the first time step or restarting check for regridding
-      if ((!first || m_restarting) &&
-          m_regridder->needsToReGrid(m_current_gridP)) {
+      if( (!first || m_restarting) && m_regridder->needsToReGrid(m_current_gridP) ) {
         
         proc0cout << " Need to regrid." << std::endl;
         doRegridding( false );
@@ -299,7 +301,7 @@ AMRSimulationController::run()
     // refinement ratio for each level.
     int totalFine = 1;
 
-    if (!m_application->isLockstepAMR()) {
+    if( !m_application->isLockstepAMR() ) {
       for (int i = 1; i < m_current_gridP->numLevels(); ++i) {
         totalFine *= m_current_gridP->getLevel(i)->getRefinementRatioMaxDim();
       }
@@ -587,7 +589,7 @@ AMRSimulationController::doInitialTimeStep()
       needNewLevel =
         ( m_regridder && m_regridder->isAdaptive() &&
           m_current_gridP->numLevels() < m_regridder->maxLevels() &&
-          doRegridding(true) );
+          doRegridding( true ) );
 
       if ( needNewLevel ) {
         m_scheduler->initialize( 1, 1 );
@@ -701,11 +703,10 @@ AMRSimulationController::doRegridding( bool initialTimeStep )
     proc0cout << "______________________________________________________________________\n";
   }
     
-  GridP oldGrid = m_current_gridP;
-  m_current_gridP =
-    m_regridder->regrid(oldGrid.get_rep(), m_application->getTimeStep());
+  GridP oldGrid   = m_current_gridP;
+  m_current_gridP = m_regridder->regrid( oldGrid.get_rep(), m_application->getTimeStep() );
   
-  if(dbg_barrier.active()) {
+  if( dbg_barrier.active() ) {
     m_barrier_timer.reset( true );
     Uintah::MPI::Barrier(d_myworld->getComm());
     m_barrier_times[0] += m_barrier_timer().seconds();
@@ -715,17 +716,17 @@ AMRSimulationController::doRegridding( bool initialTimeStep )
 
   m_runtime_stats[ RegriddingTime ] += regriddingTimer().seconds();
   
-  m_application->setRegridTimeStep(false);
+  m_application->setRegridTimeStep( false );
 
-  int lbstate =
-    initialTimeStep ? LoadBalancer::INIT_LB : LoadBalancer::REGRID_LB;
+  int lbstate = initialTimeStep ? LoadBalancer::INIT_LB : LoadBalancer::REGRID_LB;
 
-  if (m_current_gridP != oldGrid) {
-    m_application->setRegridTimeStep(true);
+  if( m_current_gridP != oldGrid ) {
+
+    m_application->setRegridTimeStep( true );
      
     m_loadBalancer->possiblyDynamicallyReallocate(m_current_gridP, lbstate);
 
-    if(dbg_barrier.active()) {
+    if( dbg_barrier.active() ) {
       m_barrier_timer.reset( true );
       Uintah::MPI::Barrier(d_myworld->getComm());
       m_barrier_times[1] += m_barrier_timer().seconds();

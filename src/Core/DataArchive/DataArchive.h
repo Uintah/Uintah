@@ -45,6 +45,10 @@
 #include <Core/Util/Handle.h>
 #include <Core/Util/Timers/Timers.hpp>
 
+#if HAVE_PIDX
+#  include <PIDX.h>
+#endif
+
 #include <list>
 #include <string>
 #include <vector>
@@ -85,6 +89,15 @@ class LoadBalancer;
 
 ****************************************/
 
+#if HAVE_PIDX
+// For PIDX usage:
+struct BufferAndSizeTuple {
+  BufferAndSizeTuple() { buffer = nullptr; size = -1; }
+  unsigned char * buffer;
+  long            size; // not unsigned so I can set to -1 for sanity checking.
+};
+#endif
+  
 //! Container to hold UCF data when read in from disk.
 class DataArchive {
 
@@ -101,6 +114,9 @@ public:
   //////////
   // Destructor
   virtual ~DataArchive();
+
+  // Returns true if this DataArchive is using the PIDX format.
+  bool isPIDXFormat() const { return d_fileFormat == PIDX; }
 
   // Processor Information for Visualization
   int queryPatchwiseProcessor( const Patch* patch, const int index );
@@ -129,17 +145,6 @@ public:
                             DataWarehouse        * dw,
                             LoadBalancer         * lb ); 
 
-  static void queryEndiannessAndBits( ProblemSpecP doc, std::string & endianness, int & numBits );
-
-  // Note, this function rewinds 'fp', and thus starts at the top of the file.
-  static void queryEndiannessAndBits( FILE* fp,  std::string & endianness, int & numBits );
-
-  // Sets d_particlePositionName if found. Note, rewinds 'xml_fp', thus starting at the top of the file.
-  void queryParticlePositionName( FILE * xml_fp ); 
-
-  // Sets d_outputFileFormat
-  void queryOutputFormat( FILE * xml_fp );
-
   // GROUP:  Information Access
   //////////
   // However, we need a means of determining the names of existing
@@ -147,9 +152,12 @@ public:
   // Get a list of scalar or vector variable names and  
   // a list of corresponding data types
   void queryVariables( std::vector<std::string>              & names,
-                       std::vector<const TypeDescription *>  &  );
+                       std::vector<int>                      & num_matls,
+                       std::vector<const TypeDescription *>  & types );
+
   void queryGlobals(   std::vector<std::string>              & names,
                        std::vector<const TypeDescription *>  &  );
+
   void queryTimesteps( std::vector<int>                      & index,
                        std::vector<double>                   & times );
 
@@ -176,25 +184,21 @@ public:
 
   int queryNumMaterials( const Patch* patch, int index );
 
-  // Queries a variable for a material, patch, and index in time.
-  // Optionally pass in DataFileInfo if you're iterating over
-  // entries in the hash table (like restartInitialize does).
-  void query(       Variable     & var,
+  bool query(       Variable     & var,
               const std::string  & name,
               const int            matlIndex, 
               const Patch        * patch,
               const int            timeIndex,
-                    DataFileInfo * dfi = 0 );
+                    DataFileInfo * dfi = nullptr );
 
-  void query(       Variable         & var,
+  bool query(       Variable         & var,
               const std::string      & name,
               const int                matlIndex, 
               const Patch            * patch,
               const int                timeIndex,
-              const Ghost::GhostType   ghost_type,
-              const int                ngc );
+              const Ghost::GhostType   ghostType,
+              const int                numGhostCells );
 
-public:
   void queryRegion(       Variable    & var,
                     const std::string & name,
                     const int           matlIndex, 
@@ -302,6 +306,44 @@ protected:
 
 private:
 
+#if HAVE_PIDX
+  void queryPIDX(       BufferAndSizeTuple * data,
+                  const PIDX_variable      & varDesc,
+                  const TypeDescription    * td ,
+                  const std::string        & name,
+                  const int                  matlIndex, 
+                  const Patch              * patch,
+                  const int                  timeIndex );
+
+  bool setupQueryPIDX(       PIDX_access     & access,
+                             PIDX_file       & idxFile,
+                             PIDX_variable   & varDesc,
+                       const LevelP          & level,
+                       const TypeDescription * td,
+                       const std::string     & name,
+                       const int               matlIndex,
+                       const int               timeIndex );
+
+  bool queryPIDXSerial(       Variable     & var,
+                        const std::string  & name,
+                        const int            matlIndex,
+                        const Patch        * patch,
+                        const int            timeIndex );
+#endif
+
+  // Sets d_particlePositionName if found. Note, rewinds 'xml_fp', thus starting at the top of the file.
+  void queryAndSetParticlePositionName( FILE * xml_fp ); 
+
+  // Sets d_fileFormat
+  void queryAndSetFileFormat( FILE * xml_fp );
+
+  static void queryEndiannessAndBits( ProblemSpecP doc, std::string & endianness, int & numBits );
+
+  // Note, this function rewinds 'fp', and thus starts at the top of the file.
+  static void queryEndiannessAndBits( FILE* fp,  std::string & endianness, int & numBits );
+
+  ////////////////
+
   std::map<std::string, VarLabel*> d_createdVarLabels;
 
   // What we need to store on a per-variable basis, everything else can be retrieved from a higher level.
@@ -399,10 +441,10 @@ private:
 
   //__________________________________
   //  PIDX related
-  enum outputFormat { UDA, PIDX };
-  outputFormat d_outputFileFormat; 
+  enum FileFormatType { UDA, PIDX, NOT_SPECIFIED };
+  FileFormatType d_fileFormat; 
       
-  enum { BLANK, REDUCTION_VAR, PATCH_VAR };
+  enum VarType { BLANK, REDUCTION_VAR, PATCH_VAR };
  
   bool isPIDXEnabled(){
 #if HAVE_PIDX
@@ -411,11 +453,16 @@ private:
     return false;
 #endif
   };
-      
+
+  void createPIDXCommunicator( const GridP & grid, LoadBalancer * lb );
+  std::vector<MPI_Comm> d_pidxComms; // Array of MPI Communicators for PIDX usage...
+
+
   //______________________________________________________________________
   //
   void queryVariables( FILE                                * fp,
                        std::vector<std::string>            & names,
+                       std::vector<int>                    & num_matls,
                        std::vector<const TypeDescription*> & types,
                        bool                                  globals = false );
 
@@ -500,13 +547,15 @@ private:
     queryTimesteps( index, times ); // build timesteps if not already done
 
     // figure out what kind of variable we're looking for
-    std::vector<std::string> type_names;
+    std::vector<std::string>            type_names;
+    std::vector<int>                    num_matls;
     std::vector<const TypeDescription*> type_descriptions;
 
     // README FIXME qwerty ... who calls this?  We are now opening and reading a file
     // every time queryVariables() is called, so if this happens a lot, we might need to rethink it...
 
-    queryVariables( type_names, type_descriptions );
+    queryVariables( type_names, num_matls, type_descriptions );
+
     const TypeDescription* type = nullptr;
     std::vector<std::string>::iterator name_iter = type_names.begin();
     std::vector<const TypeDescription*>::iterator type_iter = type_descriptions.begin();
@@ -571,9 +620,10 @@ private:
     queryTimesteps(index, times); // build timesteps if not already done
 
     // figure out what kind of variable we're looking for
-    std::vector<std::string> type_names;
+    std::vector<std::string>            type_names;
+    std::vector<int>                    num_matls;
     std::vector<const TypeDescription*> type_descriptions;
-    queryVariables(type_names, type_descriptions);
+    queryVariables( type_names, num_matls, type_descriptions );
     const TypeDescription* type = nullptr;
     std::vector<std::string>::iterator name_iter = type_names.begin();
     std::vector<const TypeDescription*>::iterator type_iter = type_descriptions.begin();

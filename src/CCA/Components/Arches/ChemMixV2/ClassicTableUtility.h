@@ -425,6 +425,10 @@ Interp_class* SCINEW_ClassicTable(std::string tableFileName, std::vector<std::st
   gzrewind(gzFp);
   Interp_class * return_pointer =  loadMixingTable(gzFp, tableFileName, requested_depVar_names ,d_constant );
   gzclose(gzFp);
+
+  proc0cout << "Table successfully loaded into memory!" << std::endl;
+  proc0cout << "---------------------------------------------------------------  " << std::endl;
+
   return return_pointer;
 #else
  checkForConstants(table_contents_stream, tableFileName,d_constant );
@@ -434,9 +438,6 @@ Interp_class* SCINEW_ClassicTable(std::string tableFileName, std::vector<std::st
     delete [] table_contents;
   return return_pointer;
 #endif
-
-  proc0cout << "Table successfully loaded into memory!" << std::endl;
-  proc0cout << "---------------------------------------------------------------  " << std::endl;
 
 }
 }

@@ -246,7 +246,11 @@ WARNING
      
     //////////
     virtual bool isRegridTimeStep() const { return m_isRegridTimeStep; }
-    virtual void setRegridTimeStep(bool val) { m_isRegridTimeStep = val; }
+    virtual void setRegridTimeStep( bool isRegridTs ) {
+      m_isRegridTimeStep = isRegridTs;
+      if( isRegridTs ) { m_lastRegridTimestep = m_timeStep; }
+    }
+    virtual int  getLastRegridTimeStep() { return m_lastRegridTimestep; }
 
     // Some applications can adjust the output interval.
     virtual void adjustOutputInterval(bool val) { m_adjustOutputInterval = val; }
@@ -334,6 +338,7 @@ WARNING
     bool m_dynamicRegridding {false};
   
     bool m_isRegridTimeStep {false};
+    int  m_lastRegridTimestep { 0 }; // While it may not have been a "re"-grid, the original grid is created on TS 0.
 
     bool m_haveModifiedVars {false};
 

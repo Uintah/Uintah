@@ -81,6 +81,10 @@ static DebugStream cout_doing("SOLVER_DOING_COUT", false);
 
 namespace Uintah {
 
+void swapbytes( Uintah::hypre_solver_structP& ) {
+  SCI_THROW(InternalError("Swap bytes for hypre_solver_structP is not implemented", __FILE__, __LINE__));
+}
+
   //==============================================================================
   //
   // Class HypreStencil7
@@ -662,9 +666,6 @@ namespace Uintah {
             HYPRE_StructVectorAssemble(*HX);
           }
           hypre_EndTiming(tMatVecSetup_);
-          //__________________________________
-          //  Dynamic tolerances  Arches uses this
-          double precond_tolerance = 0.0;
 
           Timers::Simple solve_timer;
           solve_timer.start();
@@ -812,16 +813,14 @@ namespace Uintah {
             SolverType precond_solver_type;
 
             if ( timeStep == 1 || restart ) {
-              setupPrecond(pg, precond, precond_setup, *precond_solver,
-                           precond_tolerance,precond_solver_type);
+              setupPrecond(pg, precond, precond_setup, *precond_solver,precond_solver_type);
               hypre_solver_s->precond_solver_type = precond_solver_type;
               hypre_solver_s->created_precond_solver = true;
               HYPRE_StructPCGSetPrecond(*solver, precond, precond_setup, *precond_solver);
             }
             else if ( do_setup ) {
               destroyPrecond(*precond_solver);
-              setupPrecond(pg, precond, precond_setup, *precond_solver,
-                           precond_tolerance,precond_solver_type);
+              setupPrecond(pg, precond, precond_setup, *precond_solver, precond_solver_type);
               hypre_solver_s->precond_solver_type = precond_solver_type;
               hypre_solver_s->created_precond_solver = true;
               HYPRE_StructPCGSetPrecond(*solver, precond, precond_setup, *precond_solver);
@@ -871,8 +870,7 @@ namespace Uintah {
             SolverType precond_solver_type;
 
             if ( timeStep == 1 || restart ) {
-              setupPrecond(pg, precond, precond_setup, *precond_solver,
-                           precond_tolerance,precond_solver_type);
+              setupPrecond(pg, precond, precond_setup, *precond_solver, precond_solver_type);
               hypre_solver_s->precond_solver_type = precond_solver_type;
               hypre_solver_s->created_precond_solver = true;
               HYPRE_StructHybridSetPrecond(*solver,
@@ -882,8 +880,7 @@ namespace Uintah {
             }
             else if ( do_setup ) {
               destroyPrecond(*precond_solver);
-              setupPrecond(pg, precond, precond_setup, *precond_solver,
-                           precond_tolerance,precond_solver_type);
+              setupPrecond(pg, precond, precond_setup, *precond_solver, precond_solver_type);
               hypre_solver_s->precond_solver_type = precond_solver_type;
               hypre_solver_s->created_precond_solver = true;
               HYPRE_StructHybridSetPrecond(*solver,
@@ -929,8 +926,7 @@ namespace Uintah {
             SolverType precond_solver_type;
 
             if ( timeStep == 1 || restart ) {
-              setupPrecond(pg, precond, precond_setup, *precond_solver,
-                           precond_tolerance,precond_solver_type);
+              setupPrecond(pg, precond, precond_setup, *precond_solver, precond_solver_type);
               hypre_solver_s->precond_solver_type = precond_solver_type;
               hypre_solver_s->created_precond_solver = true;
               HYPRE_StructGMRESSetPrecond(*solver, precond, precond_setup,
@@ -938,8 +934,7 @@ namespace Uintah {
             }
             else if ( do_setup ) {
               destroyPrecond(*precond_solver);
-              setupPrecond(pg, precond, precond_setup, *precond_solver,
-                           precond_tolerance,precond_solver_type);
+              setupPrecond(pg, precond, precond_setup, *precond_solver, precond_solver_type);
               hypre_solver_s->precond_solver_type = precond_solver_type;
               hypre_solver_s->created_precond_solver = true;
               HYPRE_StructGMRESSetPrecond(*solver, precond, precond_setup,
@@ -1087,7 +1082,6 @@ namespace Uintah {
                      ,       HYPRE_PtrToStructSolverFcn & precond
                      ,       HYPRE_PtrToStructSolverFcn & pcsetup
                      ,       HYPRE_StructSolver         & precond_solver
-                     , const double                       precond_tolerance
                      ,       SolverType                 & precond_solver_type
                      )
     {
@@ -1098,8 +1092,8 @@ namespace Uintah {
         precond_solver_type = smg;
         HYPRE_StructSMGCreate         (pg->getComm(),  &precond_solver);
         HYPRE_StructSMGSetMemoryUse   (precond_solver, 0);
-        HYPRE_StructSMGSetMaxIter     (precond_solver, 1);
-        HYPRE_StructSMGSetTol         (precond_solver, precond_tolerance);
+        HYPRE_StructSMGSetMaxIter     (precond_solver, m_params->precond_maxiters);
+        HYPRE_StructSMGSetTol         (precond_solver, m_params->precond_tolerance);
         HYPRE_StructSMGSetZeroGuess   (precond_solver);
         HYPRE_StructSMGSetNumPreRelax (precond_solver, m_params->npre);
         HYPRE_StructSMGSetNumPostRelax(precond_solver, m_params->npost);
@@ -1114,8 +1108,8 @@ namespace Uintah {
         /* use symmetric PFMG as preconditioner */
         precond_solver_type = pfmg;
         HYPRE_StructPFMGCreate      (pg->getComm(),  &precond_solver);
-        HYPRE_StructPFMGSetMaxIter  (precond_solver, 1);
-        HYPRE_StructPFMGSetTol      (precond_solver, precond_tolerance);
+        HYPRE_StructPFMGSetMaxIter  (precond_solver, m_params->precond_maxiters);
+        HYPRE_StructPFMGSetTol      (precond_solver, m_params->precond_tolerance);
         HYPRE_StructPFMGSetZeroGuess(precond_solver);
 
         /* weighted Jacobi = 1; red-black GS = 2 */
@@ -1134,9 +1128,9 @@ namespace Uintah {
         precond_solver_type = sparsemsg;
         /* use symmetric SparseMSG as preconditioner */
         HYPRE_StructSparseMSGCreate      (pg->getComm(),  &precond_solver);
-        HYPRE_StructSparseMSGSetMaxIter  (precond_solver, 1);
+        HYPRE_StructSparseMSGSetMaxIter  (precond_solver, m_params->precond_maxiters);
         HYPRE_StructSparseMSGSetJump     (precond_solver, m_params->jump);
-        HYPRE_StructSparseMSGSetTol      (precond_solver, precond_tolerance);
+        HYPRE_StructSparseMSGSetTol      (precond_solver, m_params->precond_tolerance);
         HYPRE_StructSparseMSGSetZeroGuess(precond_solver);
 
         /* weighted Jacobi = 1; red-black GS = 2 */
@@ -1154,8 +1148,8 @@ namespace Uintah {
         /* use two-step Jacobi as preconditioner */
         precond_solver_type = jacobi;
         HYPRE_StructJacobiCreate      (pg->getComm(),  &precond_solver);
-        HYPRE_StructJacobiSetMaxIter  (precond_solver, 2);
-        HYPRE_StructJacobiSetTol      (precond_solver, precond_tolerance);
+        HYPRE_StructJacobiSetMaxIter  (precond_solver, m_params->precond_maxiters);
+        HYPRE_StructJacobiSetTol      (precond_solver, m_params->precond_tolerance);
         HYPRE_StructJacobiSetZeroGuess(precond_solver);
         
         precond = HYPRE_StructJacobiSolve;
@@ -1303,19 +1297,21 @@ namespace Uintah {
         string str_solver;
         string str_precond;
 
-        param->getWithDefault ( "solver",              str_solver,                       "smg" );
-        param->getWithDefault ( "preconditioner",      str_precond,                      "diagonal" );
-        param->getWithDefault ( "tolerance",           hypreSolveParams->tolerance,      1.e-10 );
-        param->getWithDefault ( "maxiterations",       hypreSolveParams->maxiterations,  75 );
-        param->getWithDefault ( "npre",                hypreSolveParams->npre,           1 );
-        param->getWithDefault ( "npost",               hypreSolveParams->npost,          1 );
-        param->getWithDefault ( "skip",                hypreSolveParams->skip,           0 );
-        param->getWithDefault ( "jump",                hypreSolveParams->jump,           0 );
-        param->getWithDefault ( "logging",             hypreSolveParams->logging,        0 );
-        param->getWithDefault ( "setupFrequency",      sFreq,                            1 );
-        param->getWithDefault ( "updateCoefFrequency", coefFreq,                         1 );
-        param->getWithDefault ( "solveFrequency",      hypreSolveParams->solveFrequency, 1 );
-        param->getWithDefault ( "relax_type",          hypreSolveParams->relax_type,     1 );
+        param->getWithDefault ( "solver",              str_solver,                          "smg" );
+        param->getWithDefault ( "preconditioner",      str_precond,                         "diagonal" );
+        param->getWithDefault ( "tolerance",           hypreSolveParams->tolerance,         1.e-10 );
+        param->getWithDefault ( "maxiterations",       hypreSolveParams->maxiterations,     75 );
+        param->getWithDefault ( "precond_maxiters",    hypreSolveParams->precond_maxiters,  1 );
+        param->getWithDefault ( "precond_tolerance",   hypreSolveParams->precond_tolerance, 0 );
+        param->getWithDefault ( "npre",                hypreSolveParams->npre,              1 );
+        param->getWithDefault ( "npost",               hypreSolveParams->npost,             1 );
+        param->getWithDefault ( "skip",                hypreSolveParams->skip,              0 );
+        param->getWithDefault ( "jump",                hypreSolveParams->jump,              0 );
+        param->getWithDefault ( "logging",             hypreSolveParams->logging,           0 );
+        param->getWithDefault ( "setupFrequency",      sFreq,                               1 );
+        param->getWithDefault ( "updateCoefFrequency", coefFreq,                            1 );
+        param->getWithDefault ( "solveFrequency",      hypreSolveParams->solveFrequency,    1 );
+        param->getWithDefault ( "relax_type",          hypreSolveParams->relax_type,        1 );
 
         // change to lowercase
         hypreSolveParams->solvertype  = string_tolower( str_solver );

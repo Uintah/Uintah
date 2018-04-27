@@ -156,7 +156,7 @@ def runSusTests(argv, TESTS, application, callback = nullCallback):
 
   #check sus for CUDA capabilities
   has_gpu  = 0
-  print( "Running command to test if sus was compile with CUDA and there is a GPU is active: " + susdir + "/sus -gpucheck" )
+  print( "Running command to test if sus was compiled with CUDA and there is a GPU is active: " + susdir + "/sus -gpucheck" )
   sus = susdir + "/sus"
 
   (stdout,stderr,rc) = cmdline( "%s -gpucheck" % sus)

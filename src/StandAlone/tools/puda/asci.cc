@@ -47,9 +47,10 @@ Uintah::asci( DataArchive *   da,
               unsigned long & time_step_upper )
 {
   vector<string> vars;
+  vector<int> num_matls;
   vector<const Uintah::TypeDescription*> types;
 
-  da->queryVariables(vars, types);
+  da->queryVariables( vars, num_matls, types );
   ASSERTEQ(vars.size(), types.size());
   int freq = 1; int ts=1;
       

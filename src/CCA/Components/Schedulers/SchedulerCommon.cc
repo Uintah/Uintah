@@ -1315,9 +1315,9 @@ SchedulerCommon::logMemoryUse()
 Scheduler::VarLabelMaterialMap*
 SchedulerCommon::makeVarLabelMaterialMap()
 {
-  VarLabelMaterialMap* result = scinew VarLabelMaterialMap;
-  for (unsigned i = 0; i < m_task_graphs.size(); i++) {
-    m_task_graphs[i]->makeVarLabelMaterialMap(result);
+  VarLabelMaterialMap* result = scinew VarLabelMaterialMap();
+  for( unsigned i = 0; i < m_task_graphs.size(); i++ ) {
+    m_task_graphs[ i ]->makeVarLabelMaterialMap( result );
   }
   return result;
 }

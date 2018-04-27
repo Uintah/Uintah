@@ -23,14 +23,13 @@
  */
 
 
-#include <StandAlone/tools/puda/puda.h>
+#include <CCA/Components/Arches/CellInformationP.h>
 
 namespace Uintah {
 
-  class DataArchive;
+  void swapbytes( Uintah::CellInformationP& ) {
+    SCI_THROW(InternalError("Swap bytes for CellInformationP is not implemented", __FILE__, __LINE__));
+  }
 
-  // malt : Material of interest (-1 means all materials).
-  
-  void varsummary( DataArchive * da, CommandLineFlags & clf, int matl );
+} // End namespace Uintah
 
-}

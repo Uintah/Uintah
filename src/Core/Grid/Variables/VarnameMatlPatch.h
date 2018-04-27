@@ -53,8 +53,8 @@ class Patch;
       ****************************************/
 
 struct VarnameMatlPatch {
-  VarnameMatlPatch(const std::string name, int matlIndex, int patchid)
-    : name_(name), matlIndex_(matlIndex), patchid_(patchid)
+  VarnameMatlPatch( const std::string & name, int matlIndex, int patchid )
+    : name_( name ), matlIndex_( matlIndex ), patchid_( patchid )
   {
     hash_ = (unsigned int)(((unsigned int)patchid_<<2)
       ^(string_hash(name_.c_str()))

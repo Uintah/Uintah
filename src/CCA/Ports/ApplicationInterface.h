@@ -246,7 +246,8 @@ WARNING
      
     //////////
     virtual bool isRegridTimeStep() const = 0;
-    virtual void setRegridTimeStep(bool val) = 0;
+    virtual void setRegridTimeStep( bool isRegridTs ) = 0;
+    virtual int  getLastRegridTimeStep() = 0;
     
     // Some applications can adjust the output interval.
     virtual void adjustOutputInterval(bool val) = 0;

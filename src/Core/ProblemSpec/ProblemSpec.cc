@@ -1656,12 +1656,11 @@ ProblemSpec::getTypeDescription()
 ProblemSpecP
 ProblemSpec::createDocument( const string & name ) 
 {
-  xmlDocPtr doc = xmlNewDoc(BAD_CAST "1.0");
-  xmlNodePtr node = xmlNewDocRawNode(doc, 0, BAD_CAST name.c_str(), 0);
+  xmlDocPtr  doc  = xmlNewDoc( BAD_CAST "1.0" );
+  xmlNodePtr node = xmlNewDocRawNode( doc, 0, BAD_CAST name.c_str(), 0 );
+  xmlDocSetRootElement( doc, node );
 
-  xmlDocSetRootElement(doc, node);
-
-  return scinew ProblemSpec(node, true );
+  return scinew ProblemSpec( node, true );
 }
 
 string

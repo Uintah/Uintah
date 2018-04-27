@@ -279,21 +279,21 @@ Arches::scheduleTimeAdvance( const LevelP& level,
 
   printSchedule(level,dbg, "Arches::scheduleTimeAdvance");
 
-  if( isRegridTimeStep() ) { // needed for single level regridding on restarts
-    m_doing_restart = true;                  // this task is called twice on a regrid.
+  if( isRegridTimeStep() ) { // Needed for single level regridding on restarts.
+    m_doing_restart = true;  // Note, this task is called twice on a regrid.
     m_recompile = true;
-    setRegridTimeStep(false);
+    setRegridTimeStep( false );
   }
 
   if ( m_doing_restart ) {
-    if(m_recompile) {
+    if( m_recompile ) {
       m_nlSolver->sched_restartInitializeTimeAdvance(level,sched);
     }
   }
 
   m_nlSolver->nonlinearSolve(level, sched);
 
-  if (m_doing_restart) {
+  if( m_doing_restart ) {
     m_doing_restart = false;
   }
 }

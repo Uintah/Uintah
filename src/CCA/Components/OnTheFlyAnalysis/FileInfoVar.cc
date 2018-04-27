@@ -22,15 +22,12 @@
  * IN THE SOFTWARE.
  */
 
-
-#include <StandAlone/tools/puda/puda.h>
+#include <CCA/Components/OnTheFlyAnalysis/FileInfoVar.h>
 
 namespace Uintah {
 
-  class DataArchive;
+  void swapbytes( Uintah::FileInfoP& ) {
+    SCI_THROW(InternalError("Swap bytes for FileInfoP is not implemented", __FILE__, __LINE__));
+  }
 
-  // malt : Material of interest (-1 means all materials).
-  
-  void varsummary( DataArchive * da, CommandLineFlags & clf, int matl );
-
-}
+} // End namespace Uintah
