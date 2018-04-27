@@ -388,9 +388,7 @@ double PostProcessUda::getInitialTime()
 //  If the number of materials on a level changes or if the grid
 //  has changed then call for a recompile
 bool
-PostProcessUda::needRecompile( const double   /* time */,
-                               const double   /* dt */,
-                               const GridP  & /* grid */ )
+PostProcessUda::needRecompile( const GridP  & /* grid */ )
 {
   bool recompile = d_gridChanged;
   d_gridChanged = false;   // reset flag
