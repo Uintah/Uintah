@@ -99,11 +99,14 @@ namespace UintahSpaces{
 #define ORIGINAL_KOKKOS_CUDA_TAG    Kokkos::Cuda COMMA Kokkos::CudaSpace
 #if defined(UINTAH_ENABLE_KOKKOS) && defined(HAVE_CUDA)
 #define UINTAH_CPU_TAG              UintahSpaces::CPU COMMA UintahSpaces::HostSpace
+//#define KOKKOS_OPENMP_TAG           UintahSpaces::CPU COMMA UintahSpaces::HostSpace
 #define KOKKOS_OPENMP_TAG           Kokkos::OpenMP COMMA Kokkos::HostSpace
 #define KOKKOS_CUDA_TAG             Kokkos::Cuda COMMA Kokkos::CudaSpace
 #elif defined(UINTAH_ENABLE_KOKKOS) && !defined(HAVE_CUDA)
 #define UINTAH_CPU_TAG              UintahSpaces::CPU COMMA UintahSpaces::HostSpace
+//#define KOKKOS_OPENMP_TAG           UintahSpaces::CPU COMMA UintahSpaces::HostSpace
 #define KOKKOS_OPENMP_TAG           Kokkos::OpenMP COMMA Kokkos::HostSpace
+//#define KOKKOS_CUDA_TAG           UintahSpaces::CPU COMMA UintahSpaces::HostSpace
 #define KOKKOS_CUDA_TAG             Kokkos::OpenMP COMMA Kokkos::HostSpace
 #elif !defined(UINTAH_ENABLE_KOKKOS)
 #define UINTAH_CPU_TAG              UintahSpaces::CPU COMMA UintahSpaces::HostSpace
@@ -697,19 +700,6 @@ parallel_reduce_min( BlockRange const & r, const Functor & functor, ReductionTyp
   }}}
   red = tmp;
 }
-
-//For legacy loops where no execution space was specified as a template parameter.
-template < typename Functor, typename ReductionType>
-void
-parallel_reduce_min( BlockRange const & r, const Functor & functor, ReductionType & red )
-{
-#if defined(UINTAH_ENABLE_KOKKOS)
-  parallel_reduce_min<Kokkos::OpenMP>( r, functor, red );
-#else
-  parallel_reduce_min<UintahSpaces::CPU>( r, functor, red );
-#endif
-}
-
 
 // --------------------------------------  Other loops that should get cleaned up ------------------------------
 

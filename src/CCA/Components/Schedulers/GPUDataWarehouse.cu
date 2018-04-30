@@ -1445,6 +1445,7 @@ GPUDataWarehouse::allocateAndPut(GPUReductionVariableBase& var, char const* labe
      bool allocated = false;
      while (!allocated) {
        allocated = checkAllocated(it->second.var->atomicStatusInGpuMemory);
+       addr = it->second.var->device_ptr;
      }
      //Have this var use the existing memory address.
      var.setData(addr);
@@ -1557,6 +1558,7 @@ GPUDataWarehouse::allocateAndPut(GPUPerPatchBase& var, char const* label, int pa
      bool allocated = false;
      while (!allocated) {
        allocated = checkAllocated(it->second.var->atomicStatusInGpuMemory);
+       addr = it->second.var->device_ptr;
      }
      //Have this var use the existing memory address.
      var.setData(addr);

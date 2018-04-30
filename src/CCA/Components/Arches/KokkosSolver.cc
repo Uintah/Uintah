@@ -327,7 +327,7 @@ KokkosSolver::computeStableTimeStep( const ProcessorGroup *
 
     Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
 
-    Uintah::parallel_reduce_min( range, [&]( int i, int j, int k, double & m_dt ) {
+    Uintah::parallel_reduce_min<ExecutionSpace>( range, [&]( int i, int j, int k, double & m_dt ) {
 
       const double small_num = 1.e-10;
 
