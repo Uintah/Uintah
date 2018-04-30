@@ -239,29 +239,31 @@ KokkosSolver::computeTimestep( const LevelP     & level
 
   if ( found_all_vars ){
 
-    Task* tsk = scinew Task( "KokkosSolver::computeStableTimeStep", this,
-                             &KokkosSolver::computeStableTimeStep);
 
-    // Actually compute the dt based on CFD variables.
+    auto TaskDependencies = [&](Task* tsk) {
+      // Actually compute the dt based on CFD variables.
 
-    tsk->computes( m_delTLabel, level.get_rep() );
+      tsk->computes( m_delTLabel, level.get_rep() );
 
-    m_uLabel = VarLabel::find( uname );
-    m_vLabel = VarLabel::find( vname );
-    m_wLabel = VarLabel::find( wname );
-    m_rhoLabel = VarLabel::find( rhoname );
-    m_tot_muLabel = VarLabel::find( muname );
+      m_uLabel = VarLabel::find( uname );
+      m_vLabel = VarLabel::find( vname );
+      m_wLabel = VarLabel::find( wname );
+      m_rhoLabel = VarLabel::find( rhoname );
+      m_tot_muLabel = VarLabel::find( muname );
 
-    tsk->requires( Task::NewDW, m_uLabel, Ghost::None, 0 );
-    tsk->requires( Task::NewDW, m_vLabel, Ghost::None, 0 );
-    tsk->requires( Task::NewDW, m_wLabel, Ghost::None, 0 );
-    tsk->requires( Task::NewDW, m_rhoLabel, Ghost::None, 0 );
-    tsk->requires( Task::NewDW, m_tot_muLabel, Ghost::None, 0 );
+      tsk->requires( Task::NewDW, m_uLabel, Ghost::None, 0 );
+      tsk->requires( Task::NewDW, m_vLabel, Ghost::None, 0 );
+      tsk->requires( Task::NewDW, m_wLabel, Ghost::None, 0 );
+      tsk->requires( Task::NewDW, m_rhoLabel, Ghost::None, 0 );
+      tsk->requires( Task::NewDW, m_tot_muLabel, Ghost::None, 0 );
 
-    m_arches_spec->getRootNode()->findBlock("Time")->getWithDefault( "delt_init", m_dt_init, 1. );
+      m_arches_spec->getRootNode()->findBlock("Time")->getWithDefault( "delt_init", m_dt_init, 1. );
+    };
 
-    sched->addTask( tsk, level->eachPatch(), m_sharedState->allArchesMaterials() );
-
+    CALL_ASSIGN_PORTABLE_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG,
+                              TaskDependencies,
+                              "KokkosSolver::computeStableTimeStep", KokkosSolver::computeStableTimeStep,
+                              level->eachPatch(), m_sharedState->allArchesMaterials());
   } else {
 
     // Just set the dt to the init_dt because the CFD variables weren't found
@@ -276,19 +278,21 @@ KokkosSolver::computeTimestep( const LevelP     & level
     if ( !m_arches_spec->getRootNode()->findBlock("Time")->findBlock( "delt_init") ){
       throw ProblemSetupException("\n Error: Oops... please specify a delt_init in your input file.\n", __FILE__, __LINE__ );
     }
+    auto TaskDependencies = [&](Task* tsk) {
+        tsk->computes( m_delTLabel, level.get_rep() );
+    };
 
-    Task* tsk = scinew Task( "KokkosSolver::setTimeStep", this,
-                             &KokkosSolver::setTimeStep );
-
-    tsk->computes( m_delTLabel, level.get_rep() );
-
-    sched->addTask( tsk, level->eachPatch(), m_sharedState->allArchesMaterials() );
+    CALL_ASSIGN_PORTABLE_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG,
+                              TaskDependencies,
+                              "KokkosSolver::setTimeStep", KokkosSolver::setTimeStep,
+                              level->eachPatch(), m_sharedState->allArchesMaterials());
 
   }
 
 }
 
 //--------------------------------------------------------------------------------------------------
+template <typename ExecutionSpace, typename MemorySpace>
 void
 KokkosSolver::computeStableTimeStep( const ProcessorGroup *
                                    , const PatchSubset    * patches
@@ -351,6 +355,7 @@ KokkosSolver::computeStableTimeStep( const ProcessorGroup *
 }
 
 //--------------------------------------------------------------------------------------------------
+template <typename ExecutionSpace, typename MemorySpace>
 void
 KokkosSolver::setTimeStep( const ProcessorGroup *
                          , const PatchSubset    * patches

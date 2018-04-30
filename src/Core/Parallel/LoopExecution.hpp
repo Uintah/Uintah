@@ -89,7 +89,7 @@ namespace UintahSpaces{
 //using KOKKOS_OPENMP_TAG = Kokkos::OpenMP;
 //using KOKKOS_CUDA_TAG = Kokkos::Cuda;
 
-// Main concept of tehe below tags: Whatever tags the user supplies is directly compiled into the Uintah binary build.
+// Main concept of the below tags: Whatever tags the user supplies is directly compiled into the Uintah binary build.
 // In case of a situation where a user supplies a tag that isn't valid for that build, such as KOKKOS_CUDA_TAG in a non-CUDA build,
 // the tag is "downgraded" to one that is valid.  So in a non-CUDA build, KOKKOS_CUDA_TAG gets associated with
 // Kokkos::OpenMP or UintahSpaces::CPU.  This helps ensure that the compiler never attempts to compile anything with a
@@ -240,7 +240,6 @@ enum TaskAssignedExecutionSpace {
     sched->addTask(task, PATCHES, MATERIALS);                                                      \
   }                                                                                                \
 }
-
 //If only 1 execution space tag is specified
 #define CALL_ASSIGN_PORTABLE_TASK_1TAG(TAG1,                                                       \
                                   TASK_DEPENDENCIES,                                               \

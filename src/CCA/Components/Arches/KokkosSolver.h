@@ -101,12 +101,14 @@ namespace Uintah{
   /** @brief Schedule compute of a stable timestep **/
   void computeTimestep(const LevelP& level, SchedulerP& sched);
 
+  template <typename ExecutionSpace, typename MemorySpace>
   void computeStableTimeStep( const ProcessorGroup*,
                               const PatchSubset* patches,
                               const MaterialSubset*,
                               DataWarehouse* old_dw,
                               DataWarehouse* new_dw );
 
+  template <typename ExecutionSpace, typename MemorySpace>
   void setTimeStep( const ProcessorGroup*,
                     const PatchSubset* patches,
                     const MaterialSubset*,
