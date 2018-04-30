@@ -130,6 +130,24 @@ namespace Uintah {
       VarLabel::destroy(m_hypre_solver_label);
     }
 
+
+    //---------------------------------------------------------------------------------------------
+    void getPatchExtents( const Patch      * patch
+                          ,     IntVector  & lo
+                          ,     IntVector  & hi)
+    {
+      typedef typename Types::sol_type sol_type;
+      Patch::VariableBasis basis = Patch::translateTypeToBasis(sol_type::getTypeDescription()->getType(), true);
+      
+      if( m_params->getSolveOnExtraCells()) {
+        lo  = patch->getExtraLowIndex(  basis, IntVector(0,0,0) );
+        hi  = patch->getExtraHighIndex( basis, IntVector(0,0,0) );
+      } else {
+        lo = patch->getLowIndex(  basis );
+        hi = patch->getHighIndex( basis );
+      }
+    }
+
     //---------------------------------------------------------------------------------------------
 
     void solve( const ProcessorGroup * pg
@@ -140,8 +158,6 @@ namespace Uintah {
               ,       Handle<HypreStencil7<Types>>
               )
     {
-      typedef typename Types::sol_type sol_type;
-      
       tHypreAll_ = hypre_InitializeTiming("Total Hypre time");
       hypre_BeginTiming(tHypreAll_);
       
@@ -242,18 +258,13 @@ namespace Uintah {
           
           for(int p=0;p<patches->size();p++){
             const Patch* patch = patches->get(p);
-            Patch::VariableBasis basis = Patch::translateTypeToBasis(sol_type::getTypeDescription()->getType(), true);
             
-            IntVector l,h;
-            if( m_params->getSolveOnExtraCells()) {
-              l  = patch->getExtraLowIndex(basis, IntVector(0,0,0));
-              h  = patch->getExtraHighIndex(basis, IntVector(0,0,0))-IntVector(1,1,1);
-            } else {
-              l = patch->getLowIndex(basis);
-              h = patch->getHighIndex(basis)-IntVector(1,1,1);
-            }
+            IntVector lo;
+            IntVector hi;
+            getPatchExtents( patch, lo, hi );
+            hi -= IntVector(1,1,1);
             
-            HYPRE_StructGridSetExtents(grid, l.get_pointer(), h.get_pointer());
+            HYPRE_StructGridSetExtents(grid, lo.get_pointer(), hi.get_pointer());
           }
           
           // Periodic boundaries
@@ -342,16 +353,9 @@ namespace Uintah {
               A_dw->get( A, m_A_label, matl, patch, Ghost::None, 0);
             }
             
-            Patch::VariableBasis basis = Patch::translateTypeToBasis(sol_type::getTypeDescription()->getType(), true);
-            
-            IntVector l,h;
-            if( m_params->getSolveOnExtraCells() ){
-              l = patch->getExtraLowIndex(basis, IntVector(0,0,0));
-              h = patch->getExtraHighIndex(basis, IntVector(0,0,0));
-            } else {
-              l = patch->getLowIndex(basis);
-              h = patch->getHighIndex(basis);
-            }
+            IntVector l; 
+            IntVector h;
+            getPatchExtents( patch, l, h );
             
             //__________________________________
             // Feed it to Hypre
@@ -446,7 +450,7 @@ namespace Uintah {
               } // z loop
               delete[] values;
             }
-          }
+          }  // patch loop
           if (timeStep == 1 || restart || do_setup)
             HYPRE_StructMatrixAssemble(*HA);
         }
@@ -474,16 +478,9 @@ namespace Uintah {
           typename Types::const_type B;
           b_dw->get(B, m_b_label, matl, patch, Ghost::None, 0);
 
-          Patch::VariableBasis basis = Patch::translateTypeToBasis(sol_type::getTypeDescription()->getType(), true);
-
-          IntVector l,h;
-          if( m_params->getSolveOnExtraCells()) {
-            l = patch->getExtraLowIndex(basis,  IntVector(0,0,0));
-            h = patch->getExtraHighIndex(basis, IntVector(0,0,0));
-          } else {
-            l = patch->getLowIndex(basis);
-            h = patch->getHighIndex(basis);
-          }
+          IntVector l; 
+          IntVector h;
+          getPatchExtents( patch, l, h );
 
           //__________________________________
           // Feed it to Hypre
@@ -526,18 +523,10 @@ namespace Uintah {
           if( m_guess_label ){
             typename Types::const_type X;
             guess_dw->get(X, m_guess_label, matl, patch, Ghost::None, 0);
-
-            Patch::VariableBasis basis = Patch::translateTypeToBasis(sol_type::getTypeDescription()->getType(), true);
-
-            IntVector l,h;
-            if( m_params->getSolveOnExtraCells()){
-              l = patch->getExtraLowIndex(basis, IntVector(0,0,0));
-              h = patch->getExtraHighIndex(basis, IntVector(0,0,0));
-            }
-            else{
-              l = patch->getLowIndex(basis);
-              h = patch->getHighIndex(basis);
-            }
+            
+            IntVector l; 
+            IntVector h;
+            getPatchExtents( patch, l, h );
 
             //__________________________________
             // Feed it to Hypre
@@ -894,16 +883,11 @@ namespace Uintah {
         for(int p=0;p<patches->size();p++){
           const Patch* patch = patches->get(p);
           printTask( patches, patch, cout_doing, "HypreSolver:solve: copy solution" );
-          Patch::VariableBasis basis = Patch::translateTypeToBasis(sol_type::getTypeDescription()->getType(), true);
 
-          IntVector l,h;
-          if( m_params->getSolveOnExtraCells()){
-            l = patch->getExtraLowIndex(basis,  IntVector(0,0,0));
-            h = patch->getExtraHighIndex(basis, IntVector(0,0,0));
-          }else{
-            l = patch->getLowIndex(basis);
-            h = patch->getHighIndex(basis);
-          }
+          IntVector l;
+          IntVector h;
+          getPatchExtents( patch, l, h );
+            
           CellIterator iter(l, h);
 
           typename Types::sol_type Xnew;
