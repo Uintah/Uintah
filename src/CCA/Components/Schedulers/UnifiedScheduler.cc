@@ -2288,8 +2288,12 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
           // we shouldn't be resizing variables on the GPU, so this event should never happen.
           gpudw->remove(curDependency->m_var->getName().c_str(), patchID, matlID, levelID);
           std::cerr << "Resizing of GPU grid vars not implemented at this time.  "
-                    << "For the GPU, computes need to be declared with scratch computes to have room for ghost cells."
-                    << "Requested var of size (" << host_size.x() << ", " << host_size.y() << ", " << host_size.z() << ") "
+                    << "For the GPU, computes need to be declared with scratch computes to have room for ghost cells.  "
+                    << " for " << curDependency->m_var->getName()
+                    << " patch " << patchID
+                    << " material " << matlID
+                    << " level " << levelID
+                    << ".  Requested var of size (" << host_size.x() << ", " << host_size.y() << ", " << host_size.z() << ") "
                     << "with offset (" << low.x() << ", " << low.y() << ", " << low.z() << ")" << std::endl;
           exit(-1);
 
