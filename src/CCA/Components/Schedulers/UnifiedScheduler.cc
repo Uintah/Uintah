@@ -1892,7 +1892,7 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
           gatherGhostCells = gpudw->compareAndSwapAwaitingGhostDataOnGPU(curDependency->m_var->getName().c_str(), patchID, matlID, levelID);
         }
 
-        if ((allocating || allocated) && correctSize && (copyingIn || validOnGPU)) {
+        if ( allocated && correctSize && ( copyingIn || validOnGPU )) {
           //This variable exists or soon will exist on the destination.  So the non-ghost cell part of this
           //variable doesn't need any more work.
 
@@ -2272,7 +2272,7 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
               }
             } //end neighbors for loop
           } // end if(gatherGhostCells)
-        } else if ((allocated || allocating) && !correctSize) {
+        } else if ( allocated && !correctSize ) {
           // At the moment this isn't allowed. So it does an exit(-1).  There are two reasons for this.
           // First, the current CPU system always needs to "resize" variables when ghost cells are required.
           // Essentially the variables weren't created with room for ghost cells, and so room  needs to be created.
@@ -2287,18 +2287,19 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
           // I believe both issues can be fixed with proper checkpoints.  But in reality
           // we shouldn't be resizing variables on the GPU, so this event should never happen.
           gpudw->remove(curDependency->m_var->getName().c_str(), patchID, matlID, levelID);
-          std::cerr << "Resizing of GPU grid vars not implemented at this time.  "
+          gpu_stats <<  myRankThread() 
+                    << " Resizing of GPU grid vars not implemented at this time.  "
                     << "For the GPU, computes need to be declared with scratch computes to have room for ghost cells.  "
-                    << " for " << curDependency->m_var->getName()
+                    << "For " << curDependency->m_var->getName()
                     << " patch " << patchID
                     << " material " << matlID
                     << " level " << levelID
                     << ".  Requested var of size (" << host_size.x() << ", " << host_size.y() << ", " << host_size.z() << ") "
                     << "with offset (" << low.x() << ", " << low.y() << ", " << low.z() << ")" << std::endl;
-          exit(-1);
+          SCI_THROW(InternalError("ERROR: Resizing of GPU grid vars not implemented at this time",__FILE__, __LINE__));
 
-        } else if ((!allocated && !allocating)
-                   || ((allocated || allocating) && correctSize && !validOnGPU && !copyingIn)) {
+        } else if (( !allocated )
+                   || ( allocated && correctSize && !validOnGPU && !copyingIn )) {
 
           // It's either not on the GPU, or space exists on the GPU for it but it is invalid.
           // Either way, gather all ghost cells host side (if needed), then queue the data to be
@@ -2530,8 +2531,12 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
           // If it's a requires, copy the data on over.  If it's a computes, leave it as allocated but unused space.
           if (it->second.m_dep->m_dep_type == Task::Requires) {
             if (!device_ptr) {
-              std::cerr << "ERROR: GPU variable's device pointer was nullptr" << std::endl;
-              throw ProblemSetupException("ERROR: GPU variable's device pointer was nullptr", __FILE__, __LINE__);
+              gpu_stats << myRankThread() << " ERROR: GPU variable's device pointer was nullptr. "
+                  << "For " << label_cstr
+                  << " patch " << patchID
+                  << " material " << matlIndx
+                  << " level " << levelID << "." << std::endl;
+              SCI_THROW(InternalError("ERROR: GPU variable's device pointer was nullptr",__FILE__, __LINE__));
             }
 
             if (it->second.m_dest == GpuUtilities::sameDeviceSameMpiRank) {
