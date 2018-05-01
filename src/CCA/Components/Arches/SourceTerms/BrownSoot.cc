@@ -123,6 +123,7 @@ BrownSoot::sched_computeSource( const LevelP& level, SchedulerP& sched, int time
   tsk->requires( which_dw, m_h2o_label,                          Ghost::None, 0 );
   tsk->requires( which_dw, m_temperature_label,                  Ghost::None, 0 );
   tsk->requires( which_dw, m_rho_label,                          Ghost::None, 0 );
+  tsk->requires( Task::OldDW, VarLabel::find("volFraction"), Ghost::None, 0 ); 
 
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
   
@@ -172,6 +173,7 @@ BrownSoot::computeSource( const ProcessorGroup* pc,
     constCCVariable<double> H2O;
     constCCVariable<double> rho;
     constCCVariable<double> temperature;
+    constCCVariable<double> volFraction; 
 
     DataWarehouse* which_dw;
     if ( timeSubStep == 0 ){
@@ -202,6 +204,7 @@ BrownSoot::computeSource( const ProcessorGroup* pc,
     which_dw->get( H2O            , m_h2o_label             , matlIndex , patch , gn, 0 );
     which_dw->get( temperature    , m_temperature_label    , matlIndex , patch , gn, 0 );
     which_dw->get( rho            , m_rho_label            , matlIndex , patch , gn, 0 );
+    old_dw->get( volFraction, VarLabel::find("volFraction"), matlIndex, patch, gn, 0 ); 
 
     /// Obtain time-step length
     delt_vartype DT;
@@ -242,82 +245,90 @@ BrownSoot::computeSource( const ProcessorGroup* pc,
 
         IntVector c = *iter;
 
-        const double rhoYO2 = O2[c] * rho[c];
-        const double rhoYt  = Tar[c] * rho[c];
-        const double XO2    = ( mix_mol_weight[c] > 1.0e-10 ) ?
-                              O2[c] * 1.0 / (mix_mol_weight[c] * 32.0)   : 0.0;
-        const double XOH    = ( mix_mol_weight[c] > 1.0e-10 ) ?
-                              OH[c] * 1.0 / (mix_mol_weight[c] * 17.01)  : 0.0;
-        const double XCO2   = ( mix_mol_weight[c] > 1.0e-10 ) ?
-                              CO2[c] * 1.0 / (mix_mol_weight[c] * 44.0)  : 0.0;
-        const double XH2O   = ( mix_mol_weight[c] > 1.0e-10 ) ?
-                              H2O[c] * 1.0 / (mix_mol_weight[c] * 18.02) : 0.0;
-        const double rhoYs  = rho[c] * Ysoot[c];
-        const double nd     = Ns[c] * rho[c];
+        if ( volFraction[c] > 1e-16 ){ 
 
-        const double T = temperature[c];
-        const double P = m_sys_pressure;
-        const double dt = delta_t;
+          const double rhoYO2 = O2[c] * rho[c];
+          const double rhoYt  = Tar[c] * rho[c];
+          const double XO2    = ( mix_mol_weight[c] > 1.0e-10 ) ?
+                                O2[c] * 1.0 / (mix_mol_weight[c] * 32.0)   : 0.0;
+          const double XOH    = ( mix_mol_weight[c] > 1.0e-10 ) ?
+                                OH[c] * 1.0 / (mix_mol_weight[c] * 17.01)  : 0.0;
+          const double XCO2   = ( mix_mol_weight[c] > 1.0e-10 ) ?
+                                CO2[c] * 1.0 / (mix_mol_weight[c] * 44.0)  : 0.0;
+          const double XH2O   = ( mix_mol_weight[c] > 1.0e-10 ) ?
+                                H2O[c] * 1.0 / (mix_mol_weight[c] * 18.02) : 0.0;
+          const double rhoYs  = rho[c] * Ysoot[c];
+          const double nd     = Ns[c] * rho[c];
 
-        double gas_rate_from_soot;
-        double gas_rate_from_tar;
+          const double T = temperature[c];
+          const double P = m_sys_pressure;
+          const double dt = delta_t;
 
-        //---------------- tar
+          double gas_rate_from_soot;
+          double gas_rate_from_tar;
 
-        double kfs = Afs*exp(-Efs/Rgas/abs(T));                    ///< tar to soot form.   (kg/m3*s)/rhoYt
-        double kgt = Agt*exp(-Egt/Rgas/abs(T));                    ///< tar gasification rate (kg/m3*s)/rhoYt
-        double kot = abs(rhoYO2)*Aot*exp(-Eot/Rgas/abs(T));        ///< tar oxidation rate (kg/m3*s)/rhoYt
+          //---------------- tar
 
-        tar_src[c] = abs(rhoYt)/dt*( exp((-kfs-kgt-kot)*dt) - 1.0 );  ///< kg/m3*s
+          double kfs = Afs*exp(-Efs/Rgas/abs(T));                    ///< tar to soot form.   (kg/m3*s)/rhoYt
+          double kgt = Agt*exp(-Egt/Rgas/abs(T));                    ///< tar gasification rate (kg/m3*s)/rhoYt
+          double kot = abs(rhoYO2)*Aot*exp(-Eot/Rgas/abs(T));        ///< tar oxidation rate (kg/m3*s)/rhoYt
 
-        gas_rate_from_tar  = -abs(rhoYt)/dt*( exp((-kgt-kot)*dt) - 1.0 );  ///< kg/m3*s (for balance_src, below)
+          tar_src[c] = abs(rhoYt)/dt*( exp((-kfs-kgt-kot)*dt) - 1.0 );  ///< kg/m3*s
 
-        //---------------- nd
+          gas_rate_from_tar  = -abs(rhoYt)/dt*( exp((-kgt-kot)*dt) - 1.0 );  ///< kg/m3*s (for balance_src, below)
 
-        double rfn = Na/MWc/Cmin * kfs * abs(rhoYt);                  ///< soot nucleation rate (#/m3*s)
-        double ran = 2.0*Ca*pow(6.0*MWc/M_PI/rhos, 1.0/6.0) *         ///< Aggregation rate (#/m3*s)
-                     pow(abs(6.0*kb*T/rhos),1.0/2.0) *
-                     pow(abs(rhoYs/MWc), 1.0/6.0) *
-                     pow(abs(nd),11.0/6.0);
+          //---------------- nd
 
-        num_density_src[c] = rfn - ran;                               ///< #/m3*s
-        num_density_src[c] = ( num_density_src[c] < 0.0 ) ? std::max( -nd/dt, num_density_src[c] ) : num_density_src[c];
-        
-        if(rhoYs/nd < mp_min)                        // if soot mass is below some threshold, then delete the soot.
-            num_density_src[c] = -nd/dt;
+          double rfn = Na/MWc/Cmin * kfs * abs(rhoYt);                  ///< soot nucleation rate (#/m3*s)
+          double ran = 2.0*Ca*pow(6.0*MWc/M_PI/rhos, 1.0/6.0) *         ///< Aggregation rate (#/m3*s)
+                       pow(abs(6.0*kb*T/rhos),1.0/2.0) *
+                       pow(abs(rhoYs/MWc), 1.0/6.0) *
+                       pow(abs(nd),11.0/6.0);
 
-        //---------------- Ys
+          num_density_src[c] = rfn - ran;                               ///< #/m3*s
+          num_density_src[c] = ( num_density_src[c] < 0.0 ) ? std::max( -nd/dt, num_density_src[c] ) : num_density_src[c];
+          
+          if(rhoYs/nd < mp_min)                        // if soot mass is below some threshold, then delete the soot.
+              num_density_src[c] = -nd/dt;
 
-        double SA = M_PI*pow( abs(6./M_PI*rhoYs/rhos), 2./3. )*pow(abs(nd),1./3.);   ///< m2/m3: pi*pow() = SA/part; pi*pow()*nd = SA/part*part/m3 = SA/Vol
+          //---------------- Ys
 
-        double rfs = kfs * abs(rhoYt);                                               ///< soot formation rate (kg/m3*s)
+          double SA = M_PI*pow( abs(6./M_PI*rhoYs/rhos), 2./3. )*pow(abs(nd),1./3.);   ///< m2/m3: pi*pow() = SA/part; pi*pow()*nd = SA/part*part/m3 = SA/Vol
 
-        //double ros = SA*P/101325.0*abs(XO2)/sqrt(abs(T))*Aos*exp(-Eos/Rgas/abs(T));  ///< soot oxidation rate (kg/m3*s)
-        //double rgs = rhos*pow(abs(XCO2),0.54)*Ags*exp(-Egs/Rgas/abs(T));	         ///< soot gasification rate kg/m3*s
+          double rfs = kfs * abs(rhoYt);                                               ///< soot formation rate (kg/m3*s)
 
-        double ros = pow(abs(T), -0.5)*( Ao2*P*XO2*exp(-Eo2/Rgas/T) +           ///< soot oxidation rate (kg/m3/s)
-                                         Aoh*P*XOH ) * SA;
-        double rgs = ( Aco2*pow(P*XCO2,0.5)*T*T*exp(-Eco2/Rgas/T) +             ///< soot gasification rate (kg/m3/s)
-                       Ah2o*pow(P*XH2O,nh2o)*pow(abs(T),-0.5)*exp(-Eh2o/Rgas/T) ) * SA;
+          //double ros = SA*P/101325.0*abs(XO2)/sqrt(abs(T))*Aos*exp(-Eos/Rgas/abs(T));  ///< soot oxidation rate (kg/m3*s)
+          //double rgs = rhos*pow(abs(XCO2),0.54)*Ags*exp(-Egs/Rgas/abs(T));	         ///< soot gasification rate kg/m3*s
 
-        double rns = rfs - ros - rgs;                  // net soot rate
+          double ros = pow(abs(T), -0.5)*( Ao2*P*XO2*exp(-Eo2/Rgas/T) +           ///< soot oxidation rate (kg/m3/s)
+                                           Aoh*P*XOH ) * SA;
+          double rgs = ( Aco2*pow(P*XCO2,0.5)*T*T*exp(-Eco2/Rgas/T) +             ///< soot gasification rate (kg/m3/s)
+                         Ah2o*pow(P*XH2O,nh2o)*pow(abs(T),-0.5)*exp(-Eh2o/Rgas/T) ) * SA;
 
-        if(rhoYs/nd < mp_min) {                        // if low soot mass, destroy all the soot
-            soot_mass_src[c]   = -rhoYs/dt;
-            gas_rate_from_soot = rhoYs/dt + rfs;
+          double rns = rfs - ros - rgs;                  // net soot rate
+
+          if(rhoYs/nd < mp_min) {                        // if low soot mass, destroy all the soot
+              soot_mass_src[c]   = -rhoYs/dt;
+              gas_rate_from_soot = rhoYs/dt + rfs;
+          }
+          else if( (rns < 0.0) && (rns < -rhoYs/dt) ) {  // if soot reactions are too fast (making soot neg.) then step at rate that gives 0 soot at end of step
+              soot_mass_src[c]   = -rhoYs/dt;
+              gas_rate_from_soot = rhoYs/dt + rfs;
+          }
+          else {                                         // the usual case
+              soot_mass_src[c] = rns;
+              gas_rate_from_soot = ros + rgs;
+          }
+
+          //---------------- Gas source
+
+          balance_src[c] = gas_rate_from_tar + gas_rate_from_soot;
+        } else { 
+          balance_src[c] = 0.0; 
+          soot_mass_src[c] = 0.0; 
+          num_density_src[c] = 0.0;  
+          tar_src[c] = 0.0; 
         }
-        else if( (rns < 0.0) && (rns < -rhoYs/dt) ) {  // if soot reactions are too fast (making soot neg.) then step at rate that gives 0 soot at end of step
-            soot_mass_src[c]   = -rhoYs/dt;
-            gas_rate_from_soot = rhoYs/dt + rfs;
-        }
-        else {                                         // the usual case
-            soot_mass_src[c] = rns;
-            gas_rate_from_soot = ros + rgs;
-        }
-
-        //---------------- Gas source
-       
-        balance_src[c] = gas_rate_from_tar + gas_rate_from_soot;
 
     }
   }
