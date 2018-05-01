@@ -104,11 +104,13 @@ namespace Uintah {
     bool                 created_precond_solver;
     SolverType           solver_type;
     SolverType           precond_solver_type;
-    HYPRE_StructSolver * solver;
-    HYPRE_StructSolver * precond_solver;
-    HYPRE_StructMatrix * HA;
-    HYPRE_StructVector * HB;
-    HYPRE_StructVector * HX;
+    
+    //  *_p = pointer
+    HYPRE_StructSolver * solver_p;
+    HYPRE_StructSolver * precond_solver_p;
+    HYPRE_StructMatrix * HA_p;
+    HYPRE_StructVector * HB_p;
+    HYPRE_StructVector * HX_p;
 
     //__________________________________
     //
@@ -117,40 +119,50 @@ namespace Uintah {
       created_precond_solver = false;
       solver_type            = smg;
       precond_solver_type    = diagonal;
-      solver                 = 0;
-      precond_solver         = 0;
-      HA = 0;
-      HB = 0;
-      HX = 0;
+      solver_p              = 0;
+      precond_solver_p      = 0;
+      HA_p = 0;
+      HB_p = 0;
+      HX_p = 0;
+    };
+    //__________________________________
+    //
+    void print()
+    {
+      std::cout << "  Solver:  created: " << created_solver         << " type: " << solver_type         
+                << " solver: " << &solver_p <<  " " << *solver_p << "\n";
+                
+      std::cout << "  Precond: created: " << created_precond_solver << " type: " << precond_solver_type 
+                << " solver: " << &precond_solver_p << " " << *solver_p << "\n";
     };
     
     //__________________________________
     //
     virtual ~hypre_solver_struct() {
       if (created_solver) {
-        HYPRE_StructMatrixDestroy( *HA );
-        HYPRE_StructVectorDestroy( *HB );
-        HYPRE_StructVectorDestroy( *HX );
+        HYPRE_StructMatrixDestroy( *HA_p );
+        HYPRE_StructVectorDestroy( *HB_p );
+        HYPRE_StructVectorDestroy( *HX_p );
       }
       if (created_solver)
         switch (solver_type) {
         case smg:
-          HYPRE_StructSMGDestroy(*solver);
+          HYPRE_StructSMGDestroy(*solver_p);
           break;
         case pfmg:
-          HYPRE_StructPFMGDestroy(*solver);
+          HYPRE_StructPFMGDestroy(*solver_p);
           break;
         case sparsemsg:
-          HYPRE_StructSparseMSGDestroy(*solver);
+          HYPRE_StructSparseMSGDestroy(*solver_p);
           break;
         case pcg:
-          HYPRE_StructPCGDestroy(*solver);
+          HYPRE_StructPCGDestroy(*solver_p);
           break;
         case gmres:
-          HYPRE_StructGMRESDestroy(*solver);
+          HYPRE_StructGMRESDestroy(*solver_p);
           break;
         case jacobi:
-          HYPRE_StructJacobiDestroy(*solver);
+          HYPRE_StructJacobiDestroy(*solver_p);
           break;
         default:
           throw InternalError( "HypreSolver given a bad solver type!", 
@@ -160,47 +172,47 @@ namespace Uintah {
       if (created_precond_solver)
         switch (precond_solver_type) {
         case smg:
-          HYPRE_StructSMGDestroy(*precond_solver);
+          HYPRE_StructSMGDestroy(*precond_solver_p);
           break;
         case pfmg:
-          HYPRE_StructPFMGDestroy(*precond_solver);
+          HYPRE_StructPFMGDestroy(*precond_solver_p);
           break;
         case sparsemsg:
-          HYPRE_StructSparseMSGDestroy(*precond_solver);
+          HYPRE_StructSparseMSGDestroy(*precond_solver_p);
           break;
         case pcg:
-          HYPRE_StructPCGDestroy(*precond_solver);
+          HYPRE_StructPCGDestroy(*precond_solver_p);
           break;
         case gmres:
-          HYPRE_StructGMRESDestroy(*precond_solver);
+          HYPRE_StructGMRESDestroy(*precond_solver_p);
           break;
         case jacobi:
-          HYPRE_StructJacobiDestroy(*precond_solver);
+          HYPRE_StructJacobiDestroy(*precond_solver_p);
           break;
         default:
           throw InternalError("HypreSolver given a bad solver type!", 
                               __FILE__, __LINE__);
       }
 
-      if (HA) {
-        delete HA;  
-        HA = 0;
+      if (HA_p) {
+        delete HA_p;  
+        HA_p = 0;
       }
-      if (HB){
-        delete HB;  
-        HB = 0;
+      if (HB_p){
+        delete HB_p;  
+        HB_p = 0;
       }
-      if (HX) {
-        delete HX;  
-        HX = 0;
+      if (HX_p) {
+        delete HX_p;  
+        HX_p = 0;
       }
-      if (solver) {
-        delete solver;
-        solver = 0;
+      if (solver_p) {
+        delete solver_p;
+        solver_p = 0;
       }
-      if (precond_solver) {
-        delete precond_solver;
-        precond_solver = 0;
+      if (precond_solver_p) {
+        delete precond_solver_p;
+        precond_solver_p = 0;
       }
     };
   };
