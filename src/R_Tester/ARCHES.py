@@ -101,7 +101,7 @@ NIGHTLYTESTS = [
    ("cloudBM80GLC"                      , "cloudBM80GLC.ups"                                        , 8   , "All"   , ["exactComparison"     , "no_restart"]) ,
    ("cloudBM80LS"                       , "cloudBM80LS.ups"                                         , 8   , "All"   , ["exactComparison"     , "no_restart"]) ,
    ("multibox_sweeps_coal"              , "Coal/multibox_sweeps_coal.ups"                           , 46  , "All"   , ["exactComparison"]),
-   ("1GW_MFR"                           , "Coal/1GW_MFR.ups"                                        , 2   , "All"   , ["exactComparison"     , "no_restart"]) ,
+   #("1GW_MFR"                           , "Coal/1GW_MFR.ups"                                        , 2   , "All"   , ["exactComparison"     , "no_restart"]) ,
 #__________________________________
 # Kokkos tests
    ("kokkos-x-scalar"                   , "kokkos_solver_tests/kokkos-x-scalar.ups"                 , 1   , "All"   , ["exactComparison"]),
