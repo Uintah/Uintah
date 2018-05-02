@@ -69,6 +69,9 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
+#include <Core/GeometryPiece/GeometryObject.h>
+#include <Core/GeometryPiece/GeometryPiece.h>
+#include <Core/GeometryPiece/TriGeometryPiece.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Math/Matrix3.h>
 #include <Core/Util/DebugStream.h>
@@ -685,9 +688,7 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   }
   scheduleApplyExternalLoads(             sched, patches, matls);
 
-  if (flags->d_doingDissolution){
-    scheduleFindSurfaceParticles(         sched, patches, matls);
-  }
+  scheduleFindSurfaceParticles(           sched, patches, matls);
   scheduleInterpolateParticlesToGrid(     sched, patches, matls);
   if(flags->d_computeNormals){
     scheduleComputeNormals(               sched, patches, matls);
@@ -1307,9 +1308,7 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pVolumeLabel,                    gnone);
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel,        gnone);
   t->requires(Task::OldDW, lb->pLocalizedMPMLabel,              gnone);
-  if (flags->d_doingDissolution){
-    t->requires(Task::NewDW, lb->pSurfLabel_preReloc,           gnone);
-  }
+  t->requires(Task::NewDW, lb->pSurfLabel_preReloc,             gnone);
 
   t->requires(Task::NewDW, lb->massBurnFractionLabel,    gac,NGN);
   if(flags->d_with_ice){
@@ -1563,8 +1562,13 @@ void SerialMPM::scheduleAddParticles(SchedulerP& sched,
   MaterialSubset* zeroth_matl = scinew MaterialSubset();
   zeroth_matl->add(0);
   zeroth_matl->addReference();
+  Ghost::GhostType  gan   = Ghost::AroundNodes;
 
   t->requires(Task::OldDW, lb->AddedParticlesLabel );
+  t->requires(Task::OldDW, lb->pXLabel,                  gan, NGP);
+  t->requires(Task::OldDW, lb->pColorLabel,              gan, NGP);
+  t->requires(Task::OldDW, lb->pSizeLabel,               gan, NGP);
+  t->requires(Task::OldDW, lb->pDeformationMeasureLabel, gan, NGP);
   t->computes(lb->AddedParticlesLabel);
   t->modifies(lb->pParticleIDLabel_preReloc);
   t->modifies(lb->pModalIDLabel_preReloc);
@@ -3190,6 +3194,7 @@ void SerialMPM::setPrescribedMotion(const ProcessorGroup*,
     int numMPMMatls=m_sharedState->getNumMPMMatls();
 
     for(int m = 0; m < numMPMMatls; m++){
+//     if(m==1){  /* Keeping this for testing */
       MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
       NCVariable<Vector> gvelocity_star, gacceleration;
@@ -3331,10 +3336,10 @@ void SerialMPM::setPrescribedMotion(const ProcessorGroup*,
            displacement[c] = displacementOld[c] + gvelocity_star[c] * delT;
         }
       }  // d_doGridReset
+//     }
     }   // matl loop
   }     // patch loop
 }
-
 
 void SerialMPM::modifyLoadCurves(const ProcessorGroup* ,
                                  const PatchSubset* patches,
@@ -3679,9 +3684,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       if(flags->d_XPIC2){
         new_dw->get(pvelSSPlus, lb->pVelocitySSPlusLabel,            pset);
       }
-      if (flags->d_doingDissolution){
-        new_dw->get(pSurf,        lb->pSurfLabel_preReloc,             pset);
-      }
+      new_dw->get(pSurf,        lb->pSurfLabel_preReloc,             pset);
 
       new_dw->allocateAndPut(pxnew,      lb->pXLabel_preReloc,            pset);
       new_dw->allocateAndPut(pvelnew,    lb->pVelocityLabel_preReloc,     pset);
@@ -4154,6 +4157,7 @@ void SerialMPM::finalParticleUpdate(const ProcessorGroup*,
         // a negative temperature
         if ((pmassNew[idx] <= flags->d_min_part_mass) || pTempNew[idx] < 0. ||
             (pLocalized[idx]==-999)){
+          cout << "Adding to delset" << endl;
           delset->addParticle(idx);
         }
 
@@ -4640,45 +4644,45 @@ void SerialMPM::addParticles(const ProcessorGroup*,
     int numMPMMatls=m_sharedState->getNumMPMMatls();
 
     vector<Point> P;
-    vector<double> color;
+    vector<std::string> filenames;
+    vector<double> color,Fcolor;
+    vector<double> surface;
     for(int m = 0; m < numMPMMatls; m++){
       int numNewPartNeeded=0;
       P.clear();
       color.clear();
+      Fcolor.clear();
 
       stringstream mnum;
       mnum << m;
       string mnums = mnum.str();
-      string filename=flags->d_authigenisisBaseFilename + "Particles." + mnums;
-      std::ifstream is(filename.c_str());
+      string fname=flags->d_authigenisisBaseFilename + mnums;
+       cout << "fname  = " << fname  << endl;
+      std::ifstream is(fname.c_str());
 
       if(is) {
-       double x,y,z,col;
-       while(is >> x >> y >> z >> col){
-        Point testPoint(x,y,z);
-        if(patch->containsPoint(testPoint)){
-          P.push_back(testPoint);
-          color.push_back(col);
-          numNewPartNeeded++;
-        }
+       double col;
+       std::string filename;
+       while(is >> filename >> col){
+         filenames.push_back(filename);
+         Fcolor.push_back(col);
        }
        is.close();
       }
 
-      cout << "numNewPartNeeded = " << numNewPartNeeded << endl;
-
-      double APN = (double) numNewPartNeeded;
-
       MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
-      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+      Ghost::GhostType  gan = Ghost::AroundNodes;
+      ParticleSubset* pset    = old_dw->getParticleSubset(dwi, patch);
+      ParticleSubset* pset_wg = old_dw->getParticleSubset(dwi, patch,
+                                                       gan, NGP, lb->pXLabel);
       ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
 
       ParticleVariable<Point> px;
       ParticleVariable<Matrix3> pF,pSize,pstress,pvelgrad,pscalefac;
       ParticleVariable<long64> pids;
       ParticleVariable<double> pvolume,pmass,ptemp,ptempP,pcolor;
-      ParticleVariable<double> pESF; 
+      ParticleVariable<double> pSurf;
       ParticleVariable<Vector> pvelocity,pextforce,pdisp,ptempgrad;
       ParticleVariable<int> pref,ploc,prefOld,pModID;
       ParticleVariable<IntVector> pLoadCID;
@@ -4687,6 +4691,7 @@ void SerialMPM::addParticles(const ProcessorGroup*,
       new_dw->getModifiable(pModID,   lb->pModalIDLabel_preReloc,      pset);
       new_dw->getModifiable(pmass,    lb->pMassLabel_preReloc,         pset);
       new_dw->getModifiable(pSize,    lb->pSizeLabel_preReloc,         pset);
+      new_dw->getModifiable(pSurf,    lb->pSurfLabel_preReloc,         pset);
       new_dw->getModifiable(pdisp,    lb->pDispLabel_preReloc,         pset);
       new_dw->getModifiable(pstress,  lb->pStressLabel_preReloc,       pset);
       new_dw->getModifiable(pvolume,  lb->pVolumeLabel_preReloc,       pset);
@@ -4709,7 +4714,82 @@ void SerialMPM::addParticles(const ProcessorGroup*,
         new_dw->getModifiable(pLoadCID,lb->pLoadCurveIDLabel_preReloc, pset);
       }
 
-      int fourOrEight=pow(2,flags->d_ndim);
+      // Need these to determine if new particles are inside of old ones
+      constParticleVariable<Point>   px_wg;
+      constParticleVariable<Matrix3> pF_wg,pSize_wg;
+      constParticleVariable<double>  pColor_wg;
+
+      old_dw->get(px_wg,              lb->pXLabel,                  pset_wg);
+      old_dw->get(pF_wg,              lb->pDeformationMeasureLabel, pset_wg);
+      old_dw->get(pSize_wg,           lb->pSizeLabel,               pset_wg);
+      old_dw->get(pColor_wg,          lb->pColorLabel,              pset_wg);
+
+      int PaPeCe = 2;  // This value should perhaps be a run time option
+      vector<GeometryPieceP> newGeomPiece;
+      for(unsigned int ifile = 0; ifile<filenames.size(); ifile++){
+       GeometryPieceP nGP = nullptr;
+       nGP = scinew TriGeometryPiece(filenames[ifile]);
+       newGeomPiece.push_back(nGP);
+ 
+       ParticleCreator *pc;
+       pc = scinew ParticleCreator();
+ 
+       IntVector ppc(PaPeCe,PaPeCe,PaPeCe);
+       Vector dxpp = patch->dCell()/ppc;
+       Vector dcorner = dxpp*0.5;
+ 
+       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+        Point lower = patch->nodePosition(*iter) + dcorner;
+        IntVector c = *iter;
+
+        for(int ix=0; ix < ppc.x(); ix++){
+         for(int iy=0; iy < ppc.y(); iy++){
+          for(int iz=0; iz < ppc.z(); iz++){
+            IntVector idx(ix, iy, iz);
+            Point p = lower + dxpp*idx;
+            if(newGeomPiece[ifile]->inside(p)){
+              // See if new point lies within an existing particle
+              bool inExisting = false;
+              for(ParticleSubset::iterator piter  = pset_wg->begin();
+                                           piter != pset_wg->end(); piter++){
+                particleIndex pidx = *piter;
+                Matrix3 dsize = (pF_wg[pidx]*(Matrix3(dx[0],0,0,
+                                                      0,dx[1],0,
+                                                      0,0,dx[2])
+                                             *pSize_wg[pidx]));
+                if(Fcolor[ifile]==pColor_wg[pidx]){
+                  inExisting = isPointInExistingParticle(dsize, p, px_wg[pidx]);
+                }
+
+                // Once we determine that the current test point is inside
+                // an existing particle, no need to check other particles.
+                if(inExisting){
+                  break;
+                }
+              }  // loop over existing particles in the patch
+              if(!inExisting){
+                 P.push_back(p);
+                 color.push_back(Fcolor[ifile]);
+                 double isurf=((double) pc->checkForSurface(newGeomPiece[ifile],
+                                                            p, dxpp,
+                                                            flags->d_ndim));
+                 surface.push_back(isurf);
+                 numNewPartNeeded++;
+              }
+            } // if inside of new geometry
+          }  // z
+         }  // y
+        }  // x
+       }  // CellIterator
+
+       cout << "numNewPartNeeded = " << numNewPartNeeded << endl;
+
+//       delete newGeomPiece.get_rep();
+      }
+
+      double APN = (double) numNewPartNeeded;
+
+      int fourOrEight=pow(PaPeCe,flags->d_ndim);
       double fourthOrEighth = 1./((double) fourOrEight);
 
       const unsigned int oldNumPar = pset->addParticles(numNewPartNeeded);
@@ -4717,6 +4797,7 @@ void SerialMPM::addParticles(const ProcessorGroup*,
       ParticleVariable<Point> pxtmp;
       ParticleVariable<Matrix3> pFtmp,psizetmp,pstrstmp,pvgradtmp,pSFtmp;
       ParticleVariable<long64> pidstmp;
+      ParticleVariable<double> psurftmp;
       ParticleVariable<double> pvoltmp, pmasstmp,ptemptmp,ptempPtmp,pcolortmp;
       ParticleVariable<Vector> pveltmp,pextFtmp,pdisptmp,ptempgtmp;
       ParticleVariable<int> preftmp,ploctmp,pMIDtmp;
@@ -4726,6 +4807,7 @@ void SerialMPM::addParticles(const ProcessorGroup*,
       new_dw->allocateTemporary(pxtmp,    pset);
       new_dw->allocateTemporary(pvoltmp,  pset);
       new_dw->allocateTemporary(pveltmp,  pset);
+      new_dw->allocateTemporary(psurftmp, pset);
       if(flags->d_computeScaleFactor){
         new_dw->allocateTemporary(pSFtmp, pset);
       }
@@ -4748,10 +4830,61 @@ void SerialMPM::addParticles(const ProcessorGroup*,
       }
 
       // copy data from old variables for particle IDs and the position vector
+      int counter = 0;
       for( unsigned int pp=0; pp<oldNumPar; ++pp ){
         pidstmp[pp]  = pids[pp];
         pMIDtmp[pp]  = pModID[pp];
         pxtmp[pp]    = px[pp];
+        psurftmp[pp] = pSurf[pp];
+
+        for(unsigned int ifile = 0; ifile<filenames.size(); ifile++){
+          if(psurftmp[pp]>0){
+            Vector RNL[8];
+            // Compute R-vectors from particle center to the corners
+            Matrix3 dsize = (pF[pp]*(Matrix3(dx[0],0,0,
+                                             0,dx[1],0,
+                                             0,0,dx[2])
+                                         *pSize[pp]));
+            RNL[0] = Vector(-dsize(0,0)-dsize(0,1)+dsize(0,2),
+                            -dsize(1,0)-dsize(1,1)+dsize(1,2),
+                            -dsize(2,0)-dsize(2,1)+dsize(2,2))*0.5;
+            RNL[1] = Vector( dsize(0,0)-dsize(0,1)+dsize(0,2),
+                             dsize(1,0)-dsize(1,1)+dsize(1,2),
+                             dsize(2,0)-dsize(2,1)+dsize(2,2))*0.5;
+            RNL[2] = Vector( dsize(0,0)+dsize(0,1)+dsize(0,2),
+                             dsize(1,0)+dsize(1,1)+dsize(1,2),
+                             dsize(2,0)+dsize(2,1)+dsize(2,2))*0.5;
+            RNL[3] = Vector(-dsize(0,0)+dsize(0,1)+dsize(0,2),
+                            -dsize(1,0)+dsize(1,1)+dsize(1,2),
+                            -dsize(2,0)+dsize(2,1)+dsize(2,2))*0.5;
+            RNL[4] = Vector(-dsize(0,0)-dsize(0,1)-dsize(0,2),
+                            -dsize(1,0)-dsize(1,1)-dsize(1,2),
+                            -dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
+            RNL[5] = Vector( dsize(0,0)-dsize(0,1)-dsize(0,2),
+                             dsize(1,0)-dsize(1,1)-dsize(1,2),
+                             dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
+            RNL[6] = Vector( dsize(0,0)+dsize(0,1)-dsize(0,2),
+                             dsize(1,0)+dsize(1,1)-dsize(1,2),
+                             dsize(2,0)+dsize(2,1)-dsize(2,2))*0.5;
+            RNL[7] = Vector(-dsize(0,0)+dsize(0,1)-dsize(0,2),
+                            -dsize(1,0)+dsize(1,1)-dsize(1,2),
+                            -dsize(2,0)+dsize(2,1)-dsize(2,2))*0.5;
+            // If any of the corners of the original particles are outside of
+            // the overgrowth geometry, it is a surface, otherwise it is not.
+            for(unsigned int ir = 0; ir<8; ir++){
+              if(!newGeomPiece[ifile]->inside(pxtmp[pp]+RNL[ir])){
+                psurftmp[pp]=2.0;
+                counter++;
+              }
+            }
+            if(psurftmp[pp]==2.0){
+              psurftmp[pp]=1.0;
+            } else {
+              psurftmp[pp]=0.0;
+            }
+          }
+        }
+
         pvoltmp[pp]  = pvolume[pp];
         pveltmp[pp]  = pvelocity[pp];
         pextFtmp[pp] = pextforce[pp];
@@ -4803,10 +4936,15 @@ void SerialMPM::addParticles(const ProcessorGroup*,
           if (flags->d_with_color) {
             pcolortmp[new_index]  = color[i];
           }
-          double zz_size = max(1.0,1./(((double) flags->d_ndim)-1.));
-          psizetmp[new_index] = Matrix3(0.5,0.0,0.0,
-                                        0.0,0.5,0.0,
-                                        0.0,0.0,zz_size);
+          //double zz_size = min(1.0,1./(((double) flags->d_ndim)-1.));
+          //psizetmp[new_index] = Matrix3(0.5,0.0,0.0,
+          //                              0.0,0.5,0.0,
+          //                              0.0,0.0,zz_size);
+          double sz_new = (1.0)/((double) PaPeCe);
+          psizetmp[new_index] = Matrix3(sz_new,0.0,0.0,
+                                        0.0,sz_new,0.0,
+                                        0.0,0.0,sz_new);
+
           if(flags->d_computeScaleFactor){
             pSFtmp[new_index]   = Matrix3(dx.x(),0.0,0.0,
                                           0.0,dx.y(),0.0,
@@ -4820,6 +4958,7 @@ void SerialMPM::addParticles(const ProcessorGroup*,
           ptemptmp[new_index]   = 300.;
           ptempgtmp[new_index]  = Vector(0.0);
           ptempPtmp[new_index]  = 300.;
+          psurftmp[new_index]   = surface[i];
           ploctmp[new_index]    = 0.;
           pvgradtmp[new_index]  = Matrix3(0.0);
           NAPID_new[c_orig]++;
@@ -4844,6 +4983,7 @@ void SerialMPM::addParticles(const ProcessorGroup*,
       new_dw->put(ptempgtmp,lb->pTemperatureGradientLabel_preReloc,  true);
       new_dw->put(ptempPtmp,lb->pTempPreviousLabel_preReloc,         true);
       new_dw->put(psizetmp, lb->pSizeLabel_preReloc,                 true);
+      new_dw->put(psurftmp, lb->pSurfLabel_preReloc,                 true);
       new_dw->put(pdisptmp, lb->pDispLabel_preReloc,                 true);
       new_dw->put(pstrstmp, lb->pStressLabel_preReloc,               true);
       if (flags->d_with_color) {
@@ -5085,7 +5225,6 @@ SerialMPM::initialErrorEstimate(const ProcessorGroup*,
                 0, patch);
 
     PatchFlag* refinePatch = refinePatchFlag.get().get_rep();
-
 
     for(int m = 0; m < m_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
@@ -5507,7 +5646,13 @@ void SerialMPM::findSurfaceParticles(const ProcessorGroup *,
   old_dw->get(timeStep, lb->timeStepLabel);
   int timestep = timeStep;
 
-  int doit=timestep%20;
+  // Should we make this an input file parameter?
+  int interval=INT_MAX;
+  if (flags->d_doingDissolution){
+     interval = 20;
+  }
+
+  int doit=timestep%interval;
 
   for (int p = 0; p<patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -5609,11 +5754,73 @@ void SerialMPM::findSurfaceParticles(const ProcessorGroup *,
             pSurf[idx] = pSurfOld[idx];
           }else{
             pSurf[idx] = 1.0;
-//            cout << "assigned new surface particle at " << px[idx] << endl;
           }
          } // if particle is/is not already a surface particle
         } // outer loop over particles
       }
     }   // matl loop
   }    // patches
+}
+
+bool SerialMPM::isPointInExistingParticle(Matrix3 dsize,Point p, Point px)
+{
+
+  bool inExisting = false;
+
+  // Compute R-vectors from particle center to the corners
+  Vector RNLA = Vector(-dsize(0,0)-dsize(0,1)+dsize(0,2),
+                       -dsize(1,0)-dsize(1,1)+dsize(1,2),
+                       -dsize(2,0)-dsize(2,1)+dsize(2,2))*0.5;
+  Vector RNLB = Vector( dsize(0,0)-dsize(0,1)+dsize(0,2),
+                        dsize(1,0)-dsize(1,1)+dsize(1,2),
+                        dsize(2,0)-dsize(2,1)+dsize(2,2))*0.5;
+  Vector RNLC = Vector( dsize(0,0)+dsize(0,1)+dsize(0,2),
+                        dsize(1,0)+dsize(1,1)+dsize(1,2),
+                        dsize(2,0)+dsize(2,1)+dsize(2,2))*0.5;
+  Vector RNLD = Vector(-dsize(0,0)+dsize(0,1)+dsize(0,2),
+                       -dsize(1,0)+dsize(1,1)+dsize(1,2),
+                       -dsize(2,0)+dsize(2,1)+dsize(2,2))*0.5;
+  Vector RNLE = Vector(-dsize(0,0)-dsize(0,1)-dsize(0,2),
+                       -dsize(1,0)-dsize(1,1)-dsize(1,2),
+                       -dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
+  Vector RNLF = Vector( dsize(0,0)-dsize(0,1)-dsize(0,2),
+                        dsize(1,0)-dsize(1,1)-dsize(1,2),
+                        dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
+//  Vector RNLG = Vector( dsize(0,0)+dsize(0,1)-dsize(0,2),
+//                        dsize(1,0)+dsize(1,1)-dsize(1,2),
+//                        dsize(2,0)+dsize(2,1)-dsize(2,2))*0.5;
+  Vector RNLH = Vector(-dsize(0,0)+dsize(0,1)-dsize(0,2),
+                       -dsize(1,0)+dsize(1,1)-dsize(1,2),
+                       -dsize(2,0)+dsize(2,1)-dsize(2,2))*0.5;
+
+  // Find the outward normals for all 6 faces of a particle
+  Vector normal[6];
+  normal[0]=Cross(RNLB-RNLA,RNLD-RNLA);
+  normal[1]=Cross(RNLH-RNLE,RNLF-RNLE);
+  normal[2]=Cross(RNLE-RNLA,RNLB-RNLA);
+  normal[3]=Cross(RNLC-RNLD,RNLH-RNLD);
+  normal[4]=Cross(RNLD-RNLA,RNLE-RNLA);
+  normal[5]=Cross(RNLF-RNLB,RNLC-RNLB);
+  // Unitize the normal vectors
+  for(int itest = 0; itest<6; itest++){
+    normal[itest]=normal[itest]/normal[itest].length();
+  }
+  // Dot the normal to each particle face with a vector
+  // from the candidate point to a point on that face.
+  // If the dot product is < 0, then it is on the "inside"
+  // of that face.
+
+  // Currently using a "zero" that is slightly positive
+  // so that points that end up on an edge are considered inside.
+  // I would like to find a better way...
+  if( (Dot(p - (px + RNLA), normal[0]) <= 0.001  &&
+       Dot(p - (px + RNLE), normal[1]) <= 0.001  &&
+       Dot(p - (px + RNLA), normal[2]) <= 0.001  &&
+       Dot(p - (px + RNLD), normal[3]) <= 0.001  &&
+       Dot(p - (px + RNLA), normal[4]) <= 0.001  &&
+       Dot(p - (px + RNLB), normal[5]) <= 0.001)){
+    inExisting = true;
+  }
+
+  return inExisting;
 }

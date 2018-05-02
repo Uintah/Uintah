@@ -181,7 +181,6 @@ ParticleCreator::createParticles(MPMMaterial* matl,
     vector<Vector>* pfiberdirs     = 0;
     vector<Vector>* pvelocities    = 0;    // gcd adds and new change name
     vector<Matrix3>* psizes        = 0;
-    vector<Vector>*  pareas        = 0;
 
     if (sgp){
       volumes      = sgp->getVolume();
@@ -193,12 +192,6 @@ ParticleCreator::createParticles(MPMMaterial* matl,
 
       if(d_with_color){
         colors      = sgp->getColors();
-      }
-
-      if(d_doScalarDiffusion){
-        concentrations  = sgp->getConcentration();
-        pareas          = sgp->getArea();
-
       }
 
       if(d_withGaussSolver){
@@ -251,14 +244,6 @@ ParticleCreator::createParticles(MPMMaterial* matl,
         cerr << "geom pieces needs some work when used with AMR" << endl;
       }
     }
-
-#if 0
-    // For getting particle areas (if they exist)
-    vector<Vector>::const_iterator areaiter;
-    if (pareas) {
-      if (!pareas->empty()) areaiter = vars.d_object_area[*obj].begin();
-    }
-#endif
 
     // For getting particles colors (if they exist)
     vector<double>::const_iterator coloriter;
@@ -358,21 +343,6 @@ ParticleCreator::createParticles(MPMMaterial* matl,
           ++sizeiter;
         }
       }
-
-#if 0
-      // JBH -- pareas is defined by default for the particles, which seems
-      //   okay.  However, we don't actually need it unless we're doing
-      //   scalar diffusion, so the memory doesn't get allocated unless
-      //   d_doScalarDiffusion is true.  Therefore, we need a logical and here
-      //   otherwise we reference memory that's not allocated.
-      if (pareas) {// && d_doScalarDiffusion) {
-        // Read parea from file or get from a smooth geometry piece
-        if (!pareas->empty()) {
-          pvars.parea[pidx] = *areaiter;
-          ++areaiter;
-        }
-      }
-#endif
 
       if (colors) {
         if (!colors->empty()) {
@@ -898,7 +868,6 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
     vector<Vector>*   pvelocities     = sgp->getVelocity();
     vector<Matrix3>*  psizes          = sgp->getSize();
     vector<double>*   concentrations  = sgp->getConcentration();
-    vector<Vector>*   pareas          = sgp->getArea();
 
     Point p;
     IntVector cell_idx;
@@ -954,13 +923,6 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
           if (!psizes->empty()) {
             Matrix3 psz = psizes->at(ii); 
             vars.d_object_size[obj].push_back(psz);
-          }
-          // JBH -- Shouldn't have the scalar diffusion flag in here, but it
-          //    makes the right things happen.  Need to work on a more
-          //    elegant solution when there is time for elegance.  FIXME
-          if (!pareas->empty() && d_doScalarDiffusion) {
-            Vector psz = pareas->at(ii); 
-            vars.d_object_area[obj].push_back(psz);
           }
           if (!colors->empty()) {
             double color = colors->at(ii); 
@@ -1123,10 +1085,8 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
     particle_state_preReloc.push_back(d_lb->pScaleFactorLabel_preReloc);
   }
 
-  if (d_flags->d_doingDissolution){
-    particle_state.push_back(d_lb->pSurfLabel);
-    particle_state_preReloc.push_back(d_lb->pSurfLabel_preReloc);
-  }
+  particle_state.push_back(d_lb->pSurfLabel);
+  particle_state_preReloc.push_back(d_lb->pSurfLabel_preReloc);
 
   particle_state.push_back(d_lb->pModalIDLabel);
   particle_state_preReloc.push_back(d_lb->pModalIDLabel_preReloc);

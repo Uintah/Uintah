@@ -177,9 +177,6 @@ ThresholdDamage::addInitialComputesAndRequires(Task* task,
   
   const MaterialSubset* matls = matl->thisMaterial();
   task->computes( pFailureStressOrStrainLabel, matls );
-  
-//  VarLabel* TotalLocalizedParticleLabel  = VarLabel::find( "TotalLocalizedParticle" );
-//  task->computes(TotalLocalizedParticleLabel);
 }
 
 //______________________________________________________________________

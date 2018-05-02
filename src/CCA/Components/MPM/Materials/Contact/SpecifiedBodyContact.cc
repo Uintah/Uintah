@@ -171,7 +171,7 @@ void SpecifiedBodyContact::exMomInterpolated(const ProcessorGroup*,
                                              DataWarehouse* old_dw,
                                              DataWarehouse* new_dw)
 {
-#if 0
+#if 1
   // const double simTime = d_sharedState->getElapsedSimTime();
   
   simTime_vartype simTime;

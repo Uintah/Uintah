@@ -569,6 +569,8 @@ protected:
   
   virtual void scheduleSwitchTest(const LevelP& level, SchedulerP& sched);
 
+  bool isPointInExistingParticle(Matrix3 dsize, Point p, Point particle);
+
   //__________________________________
   // refinement criteria threshold knobs
   struct thresholdVar {
