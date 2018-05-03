@@ -192,9 +192,6 @@ ICE::~ICE()
   if (d_press_matlSet && d_press_matlSet->removeReference()){
     delete d_press_matlSet;
   }
-  if (d_solver_parameters) {
-    delete d_solver_parameters;
-  }
 
   //__________________________________
   // MODELS
@@ -235,8 +232,6 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
   d_press_matlSet = scinew MaterialSet();
   d_press_matlSet->add(0);
   d_press_matlSet->addReference();
-
-  d_solver_parameters = 0;
   
   d_ref_press = 0.0;
 
@@ -293,10 +288,10 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
   ProblemSpecP impSolver = cfd_ice_ps->findBlock("ImplicitSolver");
   if (impSolver) {
     d_delT_knob = 0.5;      // default value when running implicit
-    d_solver_parameters = m_solver->readParameters(impSolver, "implicitPressure");
-    d_solver_parameters->setSolveOnExtraCells(false);
-    d_solver_parameters->setRestartTimestepOnFailure(true);
+    m_solver->readParameters(impSolver, "implicitPressure");
     
+    m_solver->getParameters()->setSolveOnExtraCells(false);
+    m_solver->getParameters()->setRestartTimestepOnFailure(true);
     
     impSolver->require(       "max_outer_iterations",          d_max_iter_implicit);
     impSolver->require(       "outer_iteration_tolerance",     d_outer_iter_tolerance);

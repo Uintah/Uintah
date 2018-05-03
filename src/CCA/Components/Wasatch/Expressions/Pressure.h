@@ -41,7 +41,6 @@
 
 namespace Uintah{
   class SolverInterface;
-  class SolverParameters;
 }
 
 namespace WasatchCore{
@@ -87,7 +86,6 @@ class Pressure
   const bool enforceSolvability_;
   const bool isConstDensity_;
   
-  Uintah::SolverParameters& solverParams_;
   Uintah::SolverInterface& solver_;
   const Uintah::VarLabel* matrixLabel_;
   const Uintah::VarLabel* pressureLabel_;
@@ -144,7 +142,6 @@ class Pressure
             const bool       use3dlaplacian,
             const bool       enforceSolvability,
             const bool       isConstDensity,
-            Uintah::SolverParameters& solverParams,
             Uintah::SolverInterface& solver );
 
 public:
@@ -159,8 +156,7 @@ public:
     const bool use3dlaplacian_;
     const bool enforceSolvability_;
     const bool isConstDensity_;
-    
-    Uintah::SolverParameters& sparams_;
+
     Uintah::SolverInterface& solver_;
   public:
     Builder( const Expr::TagList& result,
@@ -178,7 +174,6 @@ public:
              const bool       use3DLaplacian,
              const bool       enforceSolvability,
              const bool       isConstDensity,
-             Uintah::SolverParameters& sparams,
              Uintah::SolverInterface& solver );
     ~Builder(){}
     Expr::ExpressionBase* build() const;

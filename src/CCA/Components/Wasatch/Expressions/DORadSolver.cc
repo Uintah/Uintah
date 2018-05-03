@@ -141,7 +141,6 @@ namespace WasatchCore {
                             const Expr::Tag& absCoefTag,
                             const Expr::Tag& scatCoefTag,
                             const Expr::Tag& temperatureTag,
-                            const Uintah::SolverParameters& solverParams,
                             Uintah::SolverInterface& solver )
   : Expr::Expression<SVolField>(),
 
@@ -157,7 +156,6 @@ namespace WasatchCore {
 
     materialID_( 0 ),
 
-    solverParams_( solverParams ),
     solver_( solver ),
 
     // note that this does not provide any ghost entries in the matrix...
@@ -201,7 +199,6 @@ namespace WasatchCore {
                            true,
                            rhsLabel_, Uintah::Task::NewDW,
                            intensityLabel_, Uintah::Task::NewDW,
-                           &solverParams_,
                            (rkStage == 1) );
   }
 
@@ -386,14 +383,12 @@ namespace WasatchCore {
                                  const Expr::Tag absCoefTag,
                                  const Expr::Tag scatCoefTag,
                                  const Expr::Tag temperatureTag,
-                                 const Uintah::SolverParameters& sparams,
                                  Uintah::SolverInterface& solver )
   : Expr::ExpressionBuilder( Expr::tag_list( Expr::Tag( intensityName,          Expr::STATE_NONE ),
                                              Expr::Tag( intensityName + "_RHS", Expr::STATE_NONE ) ) ),
     absCoefTag_    ( absCoefTag     ),
     scatCoefTag_   ( scatCoefTag    ),
     temperatureTag_( temperatureTag ),
-    sparams_       ( sparams        ),
     solver_        ( solver         ),
     svec_          ( svec           )
   {
@@ -405,7 +400,7 @@ namespace WasatchCore {
   Expr::ExpressionBase* DORadSolver::Builder::build() const
   {
     const Expr::TagList& tags = this->get_tags();
-    return new DORadSolver( tags[0].name(), tags[1].name(), svec_, absCoefTag_, scatCoefTag_, temperatureTag_, sparams_, solver_ );
+    return new DORadSolver( tags[0].name(), tags[1].name(), svec_, absCoefTag_, scatCoefTag_, temperatureTag_, solver_ );
   }
 
   //============================================================================

@@ -41,7 +41,6 @@
 
 namespace Uintah{
   class SolverInterface;
-  class SolverParameters;
 }
 
 namespace WasatchCore{
@@ -83,8 +82,7 @@ namespace WasatchCore{
     const double refPhiValue_;
     const Uintah::IntVector refPhiLocation_;
     const bool use3DLaplacian_;
-    
-    const Uintah::SolverParameters& solverParams_;
+
     Uintah::SolverInterface& solver_;
     const Uintah::VarLabel* matrixLabel_;
     const Uintah::VarLabel* phiLabel_;
@@ -107,7 +105,6 @@ namespace WasatchCore{
                        const double     refPhiValue,
                        const Uintah::IntVector refPhiLocation,
                        const bool       use3dlaplacian,
-                       const Uintah::SolverParameters& solverParams,
                        Uintah::SolverInterface& solver );
     
   public:  
@@ -119,7 +116,6 @@ namespace WasatchCore{
       const double refphivalue_;
       const Uintah::IntVector refphilocation_;
       const bool use3dlaplacian_;
-      const Uintah::SolverParameters& sparams_;
       Uintah::SolverInterface& solver_;
     public:
       Builder( const Expr::TagList& results,
@@ -128,7 +124,6 @@ namespace WasatchCore{
               const double     refPhiValue,
               const Uintah::IntVector refPhiLocation,
               const bool       use3DLaplacian,            
-              const Uintah::SolverParameters& sparams,
               Uintah::SolverInterface& solver );
       ~Builder(){}
       Expr::ExpressionBase* build() const;

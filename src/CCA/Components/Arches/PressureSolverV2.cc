@@ -73,7 +73,6 @@ PressureSolver::PressureSolver(ArchesLabel* label,
   d_source = 0;
   d_iteration = 0;
   d_indx = -9;
-  d_hypreSolver_parameters = nullptr;
   d_periodic_vector = IntVector(0,0,0);
 }
 
@@ -83,7 +82,6 @@ PressureSolver::PressureSolver(ArchesLabel* label,
 PressureSolver::~PressureSolver()
 {
   delete d_source;
-  delete d_hypreSolver_parameters;
 }
 
 //______________________________________________________________________
@@ -100,12 +98,13 @@ PressureSolver::problemSetup(ProblemSpecP& params,SimulationStateP& state)
   // make source and boundary_condition objects
   d_source = scinew Source(d_physicalConsts);
 
-  d_hypreSolver_parameters = d_hypreSolver->readParameters(db, "pressure" );
-  d_hypreSolver_parameters->setSolveOnExtraCells(false);
+  d_hypreSolver->readParameters(db, "pressure" );
+  
+  d_hypreSolver->getParameters()->setSolveOnExtraCells(false);
 
   //force a zero setup frequency since nothing else
   //makes any sense at the moment.
-  d_hypreSolver_parameters->setSetupFrequency(0.0);
+  d_hypreSolver->getParameters()->setSetupFrequency(0.0);
 
   d_enforceSolvability = false;
   if ( db->findBlock("enforce_solvability")){
@@ -521,7 +520,8 @@ PressureSolver::setGuessForX ( const ProcessorGroup* pg,
 
   ostringstream fname;
   fname << "." << desc.c_str() << "." << timeStep << "." << d_iteration;
-  d_hypreSolver_parameters->setOutputFileName(fname.str());
+  d_hypreSolver->getParameters()->setOutputFileName(fname.str());
+
 }
 
 
@@ -580,7 +580,7 @@ PressureSolver::sched_SolveSystem(SchedulerP& sched,
                                x,      modifies_x,
                                b,      Task::NewDW,
                                guess,  Task::NewDW,
-                               d_hypreSolver_parameters,isFirstSolve);
+                               isFirstSolve);
 
   //add this?
   //if ( d_ref_value != 0. ) {

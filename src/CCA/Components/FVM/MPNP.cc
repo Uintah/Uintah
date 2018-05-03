@@ -56,7 +56,6 @@ MPNP::MPNP(const ProcessorGroup* myworld,
 {
   d_lb = scinew FVMLabel();
 
-  d_solver_parameters = 0;
   d_delt = 0;
   d_solver = 0;
 
@@ -75,7 +74,6 @@ MPNP::MPNP(const ProcessorGroup* myworld,
 MPNP::~MPNP()
 {
   delete d_lb;
-  delete d_solver_parameters;
 
   if (d_mpnp_matl && d_mpnp_matl->removeReference()){
     delete d_mpnp_matl;

@@ -979,7 +979,9 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
       ParentOldDW->get( hypre_solverP, hypre_solver_label );
       subNewDW->put(    hypre_solverP, hypre_solver_label );
     }
-    d_solver_parameters->setWhichOldDW( Task::ParentOldDW );
+
+    m_solver->getParameters()->setWhichOldDW( Task::ParentOldDW );
+
   }
 
 #endif
@@ -1009,7 +1011,8 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
   bool restart    = false;
   Vector dx = level->dCell();
   double vol = dx.x() * dx.y() * dx.z();
-  d_solver_parameters->setResidualNormalizationFactor(vol);
+  
+  m_solver->getParameters()->setResidualNormalizationFactor(vol);
 
   d_subsched->setInitTimestep(false);
   
@@ -1031,7 +1034,7 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
                               lb->imp_delPLabel, modifies_X,
                               lb->rhsLabel,      Task::OldDW,
                               whichInitialGuess, Task::OldDW,
-                              d_solver_parameters,true);
+                              true);
       
       scheduleUpdatePressure( d_subsched,  level, patch_set,  ice_matls,
                               mpm_matls, 
@@ -1090,8 +1093,8 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
     ostringstream fname;
     
     fname << "." << proc <<"." << timeStep << "." << counter;
-    d_solver_parameters->setOutputFileName(fname.str());
-    
+    m_solver->getParameters()->setOutputFileName(fname.str());
+   
     //__________________________________
     // restart timestep
                                           //  too many outer iterations

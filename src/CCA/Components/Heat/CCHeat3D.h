@@ -113,7 +113,6 @@ protected:
 #endif
 
     SolverInterface * solver;
-    SolverParameters * solver_parameters;
 
 public:
     CCHeat3D ( const ProcessorGroup * myworld,

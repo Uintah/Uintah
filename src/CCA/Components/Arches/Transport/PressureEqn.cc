@@ -13,18 +13,13 @@ typedef ArchesTaskInfoManager ATIM;
 PressureEqn::PressureEqn( std::string task_name, int matl_index, SimulationStateP shared_state ) :
 TaskInterface( task_name, matl_index ) {
 
-  m_hypreSolver_parameters = NULL;
   m_sharedState = shared_state;
   m_pressure_name = "pressure";
 
 }
 
 //--------------------------------------------------------------------------------------------------
-PressureEqn::~PressureEqn(){
-
-  delete m_hypreSolver_parameters;
-
-}
+PressureEqn::~PressureEqn(){}
 
 //--------------------------------------------------------------------------------------------------
 void PressureEqn::create_local_labels(){
@@ -65,12 +60,13 @@ PressureEqn::setup_solver( ProblemSpecP& db ){
     throw ProblemSetupException("Error: You must specify a <PressureSolver> block in the UPS file.",__FILE__,__LINE__);
   }
 
-  m_hypreSolver_parameters = m_hypreSolver->readParameters(db_pressure, "pressure" );
-  m_hypreSolver_parameters->setSolveOnExtraCells(false);
+  m_hypreSolver->readParameters(db_pressure, "pressure" );
+
+  m_hypreSolver->getParameters()->setSolveOnExtraCells(false);
 
   //force a zero setup frequency since nothing else
   //makes any sense at the moment.
-  m_hypreSolver_parameters->setSetupFrequency(0.0);
+  m_hypreSolver->getParameters()->setSetupFrequency(0.0);
 
   m_enforceSolvability = false;
   if ( db->findBlock("enforce_solvability")){
@@ -367,7 +363,6 @@ PressureEqn::solve( const LevelP& level, SchedulerP& sched, const int time_subst
                                x,      modifies_x,
                                b,      Task::NewDW,
                                guess,  Task::NewDW,
-                               m_hypreSolver_parameters,
                                isFirstSolve);
 
 }

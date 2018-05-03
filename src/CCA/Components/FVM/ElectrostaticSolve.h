@@ -56,7 +56,6 @@ WARNING
   class FVMLabel;
 
   class SolverInterface;
-  class SolverParameters;
 
   class DataWarehouse;
   class ProcessorGroup;
@@ -146,7 +145,6 @@ WARNING
 
     double d_delt;
     SolverInterface* d_solver;
-    SolverParameters* d_solver_parameters;
     MaterialSet* d_es_matlset;
     MaterialSubset* d_es_matl;
     bool d_with_mpm;

@@ -51,7 +51,6 @@ GaussSolve::GaussSolve(const ProcessorGroup* myworld,
 {
   d_lb = scinew FVMLabel();
 
-  d_solver_parameters = 0;
   d_delt = 0;
   d_solver = 0;
   d_with_mpm = false;
@@ -70,7 +69,6 @@ GaussSolve::GaussSolve(const ProcessorGroup* myworld,
 GaussSolve::~GaussSolve()
 {
   delete d_lb;
-  delete d_solver_parameters;
 
   if (d_es_matl && d_es_matl->removeReference()){
     delete d_es_matl;
@@ -101,8 +99,8 @@ void GaussSolve::problemSetup(const ProblemSpecP& prob_spec,
 
   ProblemSpecP fvm_ps = prob_spec->findBlock("FVM");
 
-  d_solver_parameters = d_solver->readParameters(fvm_ps, "gauss1_solver");
-  d_solver_parameters->setSolveOnExtraCells(false);
+  d_solver->readParameters(fvm_ps, "gauss1_solver");
+  d_solver->getParameters()->setSolveOnExtraCells(false);
     
   fvm_ps->require("delt", d_delt);
   fvm_ps->require("unit_charge", d_elem_charge);
@@ -202,8 +200,7 @@ GaussSolve::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
                           d_lb->ccESPotentialMatrix, Task::NewDW,
                           d_lb->ccESPotential, false,
                           d_lb->ccRHS_ESPotential, Task::NewDW,
-                          0, Task::OldDW,
-                          d_solver_parameters,false);
+                          0, Task::OldDW,false);
 
   scheduleUpdateESPotential( sched, level, d_es_matlset);
 }
@@ -327,8 +324,7 @@ void GaussSolve::scheduleSolve(SchedulerP& sched,
                           d_lb->ccESPotentialMatrix, Task::NewDW,
                           d_lb->ccESPotential, false,
                           d_lb->ccRHS_ESPotential, Task::NewDW,
-                          d_lb->ccESPotential, Task::OldDW,
-                          d_solver_parameters,false);
+                          d_lb->ccESPotential, Task::OldDW,false);
 }
 
 void GaussSolve::scheduleComputeCharge(SchedulerP& sched,

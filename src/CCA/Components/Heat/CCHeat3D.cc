@@ -37,7 +37,6 @@ CCHeat3D::CCHeat3D ( const ProcessorGroup * myworld,
     , dbg_out3 ( "CCHeat3D", verbosity > 2 )
     , dbg_out4 ( "CCHeat3D", verbosity > 3 )
     , solver ( nullptr )
-    , solver_parameters ( nullptr )
 {
     u_label = VarLabel::create ( "u", Variable::getTypeDescription() );
     matrix_label = VarLabel::create ( "A", Matrix::getTypeDescription() );
@@ -91,8 +90,8 @@ void CCHeat3D::problemSetup ( ProblemSpecP const & params, ProblemSpecP const & 
         {
             throw InternalError ( "CCHeat2D:couldn't get solver port", __FILE__, __LINE__ );
         }
-        solver_parameters = solver->readParameters ( solv, "u" );
-        solver_parameters->setSolveOnExtraCells ( false );
+        solver->readParameters ( solv, "u" );
+        solver->getParameters()->setSolveOnExtraCells ( false );
     }
 }
 
@@ -158,8 +157,7 @@ void CCHeat3D::scheduleTimeAdvance_backward_euler_solve ( LevelP const & level, 
                             matrix_label, Task::NewDW, // A
                             u_label, false,            // x
                             rhs_label, Task::NewDW,    // b
-                            u_label, Task::OldDW,      // guess
-                            solver_parameters );
+                            u_label, Task::OldDW);      // guess
 }
 
 void CCHeat3D::task_initialize ( ProcessorGroup const * /*myworld*/, PatchSubset const * patches, MaterialSubset const * /*matls*/, DataWarehouse * /*dw_old*/, DataWarehouse * dw_new )

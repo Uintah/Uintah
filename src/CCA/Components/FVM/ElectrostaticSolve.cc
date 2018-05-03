@@ -55,7 +55,6 @@ ElectrostaticSolve::ElectrostaticSolve(const ProcessorGroup* myworld,
 {
   d_lb = scinew FVMLabel();
 
-  d_solver_parameters = 0;
   d_delt = 0;
   d_solver = 0;
   d_with_mpm = false;
@@ -73,7 +72,6 @@ ElectrostaticSolve::ElectrostaticSolve(const ProcessorGroup* myworld,
 ElectrostaticSolve::~ElectrostaticSolve()
 {
   delete d_lb;
-  delete d_solver_parameters;
 
   if (d_es_matl && d_es_matl->removeReference()){
     delete d_es_matl;
@@ -109,9 +107,9 @@ void ElectrostaticSolve::problemSetup(const ProblemSpecP& prob_spec,
                                 __FILE__, __LINE__);
   }
   
-  d_solver_parameters = d_solver->readParameters(fvm_ps, "electrostatic_solver");
+  d_solver->readParameters(fvm_ps, "electrostatic_solver");
 
-  d_solver_parameters->setSolveOnExtraCells(false);
+  d_solver->getParameters()->setSolveOnExtraCells(false);
     
   fvm_ps->require("delt", d_delt);
 
@@ -194,8 +192,7 @@ ElectrostaticSolve::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
                           d_lb->ccESPotentialMatrix, Task::NewDW,
                           d_lb->ccESPotential, false,
                           d_lb->ccRHS_ESPotential, Task::NewDW,
-                          0, Task::OldDW,
-                          d_solver_parameters,false);
+                          0, Task::OldDW,false);
 
   scheduleUpdateESPotential(sched, level, d_es_matlset);
   scheduleComputeCurrent(sched, level, d_es_matlset);
@@ -448,8 +445,7 @@ void ElectrostaticSolve::scheduleSolve(SchedulerP& sched,
                           d_lb->ccESPotentialMatrix, Task::NewDW,
                           d_lb->ccESPotential, false,
                           d_lb->ccRHS_ESPotential, Task::NewDW,
-                          d_lb->ccESPotential, Task::OldDW,
-                          d_solver_parameters,false);
+                          d_lb->ccESPotential, Task::OldDW,false);
 }
 
 void ElectrostaticSolve::scheduleUpdateESPotential(SchedulerP& sched, const LevelP& level,

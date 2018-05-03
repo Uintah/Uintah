@@ -55,23 +55,8 @@ static DebugStream cout_doing("SOLVER_DOING_COUT", false);
 
 namespace Uintah {
 
-DirectSolve::DirectSolve(const ProcessorGroup* myworld)
-  : SolverCommon(myworld)
-{
-}
-
-DirectSolve::~DirectSolve()
-{
-}
-
-class DirectSolveParams : public SolverParameters {
-public:
-  DirectSolveParams()
-  {
-  }
-  ~DirectSolveParams() {}
-};
-
+//______________________________________________________________________
+//
 template<class Types>
 class DirectStencil7 : public RefCounted {
 public:
@@ -95,9 +80,9 @@ public:
 
   //______________________________________________________________________
   void solve(const ProcessorGroup* pg, const PatchSubset* patches,
-	     const MaterialSubset* matls,
-	     DataWarehouse* old_dw, DataWarehouse* new_dw,
-	     Handle<DirectStencil7<Types> >)
+             const MaterialSubset* matls,
+             DataWarehouse* old_dw, DataWarehouse* new_dw,
+             Handle<DirectStencil7<Types> >)
   {
     cout_doing << "DirectSolve::solve" << endl;
     DataWarehouse* A_dw = new_dw->getOtherDataWarehouse(which_A_dw);
@@ -243,9 +228,9 @@ public:
     double memrate = (double(memrefs)*1.e-9)/dt;
     if(pg->myRank() == 0){
       cout << "Solve of " << X_label->getName() 
-	   << " on level " << level->getIndex()
+           << " on level " << level->getIndex()
            << " completed in " << dt << " seconds (" 
-	   << mflops << " MFLOPS, " << memrate << " GB/sec)\n";
+           << mflops << " MFLOPS, " << memrate << " GB/sec)\n";
     }
   }
     
@@ -260,15 +245,23 @@ private:
   bool modifies_x;
   const DirectSolveParams* params;
 };
+
 //______________________________________________________________________
 //
-SolverParameters *
-DirectSolve::readParameters(       ProblemSpecP & params,
-                             const string       & varname )
+//______________________________________________________________________
+//
+DirectSolve::DirectSolve(const ProcessorGroup* myworld)
+  : SolverCommon(myworld)
 {
-  DirectSolveParams* p = scinew DirectSolveParams();
-  return p;
+  m_params = scinew DirectSolveParams();
 }
+
+DirectSolve::~DirectSolve()
+{
+  delete m_params;
+}
+
+
 //______________________________________________________________________
 //
 void
@@ -283,7 +276,6 @@ DirectSolve::scheduleSolve( const LevelP           & level,
                                   Task::WhichDW      which_b_dw,  
                             const VarLabel         * guess,
                                   Task::WhichDW      /* which_guess_dw */,
-                            const SolverParameters * params,
                                   bool               /* isFirstSolve = true */ )
 {
   if(level->numPatches() != 1) {
@@ -298,42 +290,39 @@ DirectSolve::scheduleSolve( const LevelP           & level,
   TypeDescription::Type domtype = A->typeDescription()->getType();
   ASSERTEQ(domtype, x->typeDescription()->getType());
   ASSERTEQ(domtype, b->typeDescription()->getType());
-  const DirectSolveParams* dparams = dynamic_cast<const DirectSolveParams*>(params);
-  if(!dparams)
-    throw InternalError("Wrong type of params passed to Direct solver!", __FILE__, __LINE__);
 
   switch(domtype){
   case TypeDescription::SFCXVariable:
     {
-      DirectStencil7<SFCXTypes>* that = scinew DirectStencil7<SFCXTypes>(level.get_rep(), matls, A, which_A_dw, x, modifies_x, b, which_b_dw, dparams);
+      DirectStencil7<SFCXTypes>* that = scinew DirectStencil7<SFCXTypes>(level.get_rep(), matls, A, which_A_dw, x, modifies_x, b, which_b_dw, m_params);
       Handle<DirectStencil7<SFCXTypes> > handle = that;
       task = scinew Task("DirectSolve::Matrix solve (SFCX)", that, &DirectStencil7<SFCXTypes>::solve, handle);
     }
     break;
   case TypeDescription::SFCYVariable:
     {
-      DirectStencil7<SFCYTypes>* that = scinew DirectStencil7<SFCYTypes>(level.get_rep(), matls, A, which_A_dw, x, modifies_x, b, which_b_dw, dparams);
+      DirectStencil7<SFCYTypes>* that = scinew DirectStencil7<SFCYTypes>(level.get_rep(), matls, A, which_A_dw, x, modifies_x, b, which_b_dw, m_params);
       Handle<DirectStencil7<SFCYTypes> > handle = that;
       task = scinew Task("DirectSolve::Matrix solve (SFCY)", that, &DirectStencil7<SFCYTypes>::solve, handle);
     }
     break;
   case TypeDescription::SFCZVariable:
     {
-      DirectStencil7<SFCZTypes>* that = scinew DirectStencil7<SFCZTypes>(level.get_rep(), matls, A, which_A_dw, x, modifies_x, b, which_b_dw, dparams);
+      DirectStencil7<SFCZTypes>* that = scinew DirectStencil7<SFCZTypes>(level.get_rep(), matls, A, which_A_dw, x, modifies_x, b, which_b_dw, m_params);
       Handle<DirectStencil7<SFCZTypes> > handle = that;
       task = scinew Task("DirectSolve::Matrix solve (SFCZ)", that, &DirectStencil7<SFCZTypes>::solve, handle);
     }
     break;
   case TypeDescription::CCVariable:
     {
-      DirectStencil7<CCTypes>* that = scinew DirectStencil7<CCTypes>(level.get_rep(), matls, A, which_A_dw, x, modifies_x, b, which_b_dw, dparams);
+      DirectStencil7<CCTypes>* that = scinew DirectStencil7<CCTypes>(level.get_rep(), matls, A, which_A_dw, x, modifies_x, b, which_b_dw, m_params);
       Handle<DirectStencil7<CCTypes> > handle = that;
       task = scinew Task("DirectSolve::Matrix solve (CC)", that, &DirectStencil7<CCTypes>::solve, handle);
     }
     break;
   case TypeDescription::NCVariable:
     {
-      DirectStencil7<NCTypes>* that = scinew DirectStencil7<NCTypes>(level.get_rep(), matls, A, which_A_dw, x, modifies_x, b, which_b_dw, dparams);
+      DirectStencil7<NCTypes>* that = scinew DirectStencil7<NCTypes>(level.get_rep(), matls, A, which_A_dw, x, modifies_x, b, which_b_dw, m_params);
       Handle<DirectStencil7<NCTypes> > handle = that;
       task = scinew Task("DirectSolve::Matrix solve (NC)", that, &DirectStencil7<NCTypes>::solve, handle);
     }
@@ -351,7 +340,8 @@ DirectSolve::scheduleSolve( const LevelP           & level,
   task->requires(which_b_dw, b, Ghost::None, 0);
   sched->addTask(task, level->eachPatch(), matls);
 }
-
+//______________________________________________________________________
+//
 string
 DirectSolve::getName() {
   return "DirectSolve";

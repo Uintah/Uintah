@@ -219,35 +219,9 @@ void ScMult_Add(Array3<double>& r, double s,
 
 namespace Uintah {
 
-CGSolver::CGSolver(const ProcessorGroup* myworld)
-  : SolverCommon(myworld)
-{
-}
 
-CGSolver::~CGSolver()
-{
-}
-
-class CGSolverParams : public SolverParameters {
-public:
-  double tolerance;
-  double initial_tolerance;
-  int maxiterations;
-
-  enum Norm {
-    L1, L2, LInfinity
-  };
-  Norm norm;
-  enum Criteria {
-    Absolute, Relative
-  };
-  Criteria criteria;
-  CGSolverParams()
-    : tolerance(1.e-8), initial_tolerance(1.e-15), norm(L2), criteria(Relative)
-  {
-  }
-  ~CGSolverParams() {}
-};
+//______________________________________________________________________
+//
 
 template<class Types>
 class CGStencil7 : public RefCounted {
@@ -938,41 +912,55 @@ private:
   const CGSolverParams* params;
   bool modifies_x;
 };
+
 //______________________________________________________________________
 //
-SolverParameters* CGSolver::readParameters(ProblemSpecP& params,
-                                           const string& varname)
+//______________________________________________________________________
+//
+CGSolver::CGSolver(const ProcessorGroup* myworld)
+  : SolverCommon(myworld)
 {
+  m_params = scinew CGSolverParams();
+}
 
-  CGSolverParams* p = new CGSolverParams();
-  if(params){
-    for(ProblemSpecP param = params->findBlock("Parameters"); param != nullptr; param = param->findNextBlock("Parameters")) {
+CGSolver::~CGSolver()
+{
+  delete m_params;
+}
+
+//______________________________________________________________________
+//
+void CGSolver::readParameters(ProblemSpecP& params_ps,
+                              const string& varname)
+{
+  if(params_ps){
+    for(ProblemSpecP param_ps = params_ps->findBlock("Parameters"); param_ps != nullptr; param_ps = param_ps->findNextBlock("Parameters")) {
       string variable;
-      if(param->getAttribute("variable", variable) && variable != varname) {
+      if(param_ps->getAttribute("variable", variable) && variable != varname) {
         continue;
       }
-      param->get("initial_tolerance", p->initial_tolerance);
-      param->get("tolerance", p->tolerance);
-      param->getWithDefault ("maxiterations",   p->maxiterations,  75);
+      param_ps->get("initial_tolerance",           m_params->initial_tolerance);
+      param_ps->get("tolerance",                   m_params->tolerance);
+      param_ps->getWithDefault ("maxiterations",   m_params->maxiterations,  75);
 
       string norm;
-      if(param->get("norm", norm)){
+      if(param_ps->get("norm", norm)){
         if(norm == "L1" || norm == "l1") {
-          p->norm = CGSolverParams::L1;
+          m_params->norm = CGSolverParams::L1;
         } else if(norm == "L2" || norm == "l2") {
-          p->norm = CGSolverParams::L2;
+          m_params->norm = CGSolverParams::L2;
         } else if(norm == "LInfinity" || norm == "linfinity") {
-          p->norm = CGSolverParams::LInfinity;
+          m_params->norm = CGSolverParams::LInfinity;
         } else {
           throw ProblemSetupException("Unknown norm type: "+norm, __FILE__, __LINE__);
         }
       }
       string criteria;
-      if(param->get("criteria", criteria)){
+      if(param_ps->get("criteria", criteria)){
         if(criteria == "Absolute" || criteria == "absolute") {
-          p->criteria = CGSolverParams::Absolute;
+          m_params->criteria = CGSolverParams::Absolute;
         } else if(criteria == "Relative" || criteria == "relative") {
-          p->criteria = CGSolverParams::Relative;
+          m_params->criteria = CGSolverParams::Relative;
         } else {
           throw ProblemSetupException("Unknown criteria: "+criteria, __FILE__, __LINE__);
         }
@@ -980,9 +968,9 @@ SolverParameters* CGSolver::readParameters(ProblemSpecP& params,
     }
   }
 
-  if(p->norm == CGSolverParams::L2)
-    p->tolerance *= p->tolerance;
-  return p;
+  if(m_params->norm == CGSolverParams::L2){
+    m_params->tolerance *= m_params->tolerance;
+  }
 }
 
 //______________________________________________________________________
@@ -994,7 +982,6 @@ void CGSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
                              bool modifies_x,
                              const VarLabel* b,    Task::WhichDW which_b_dw,
                              const VarLabel* guess,Task::WhichDW which_guess_dw,
-                             const SolverParameters* params,
                              bool isFirstSolve)
 {
   Task* task;
@@ -1005,17 +992,14 @@ void CGSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
   TypeDescription::Type domtype = A->typeDescription()->getType();
   ASSERTEQ(domtype, x->typeDescription()->getType());
   ASSERTEQ(domtype, b->typeDescription()->getType());
-  const CGSolverParams* cgparams = dynamic_cast<const CGSolverParams*>(params);
-  if(!cgparams)
-    throw InternalError("Wrong type of params passed to cg solver!", __FILE__, __LINE__);
-
+  
   Ghost::GhostType Around;
 
   switch(domtype){
   case TypeDescription::SFCXVariable:
     {
       Around = Ghost::AroundFaces;
-      CGStencil7<SFCXTypes>* that = scinew CGStencil7<SFCXTypes>(sched.get_rep(), d_myworld, level.get_rep(), matls, Around, A, which_A_dw, x, modifies_x, b, which_b_dw, guess, which_guess_dw, cgparams);
+      CGStencil7<SFCXTypes>* that = scinew CGStencil7<SFCXTypes>(sched.get_rep(), d_myworld, level.get_rep(), matls, Around, A, which_A_dw, x, modifies_x, b, which_b_dw, guess, which_guess_dw, m_params);
       Handle<CGStencil7<SFCXTypes> > handle = that;
       task = scinew Task("CGSolver::Matrix solve(SFCX)", that, &CGStencil7<SFCXTypes>::solve, handle);
     }
@@ -1023,7 +1007,7 @@ void CGSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
   case TypeDescription::SFCYVariable:
     {
       Around = Ghost::AroundFaces;
-      CGStencil7<SFCYTypes>* that = scinew CGStencil7<SFCYTypes>(sched.get_rep(), d_myworld, level.get_rep(), matls, Around, A, which_A_dw, x, modifies_x, b, which_b_dw, guess, which_guess_dw, cgparams);
+      CGStencil7<SFCYTypes>* that = scinew CGStencil7<SFCYTypes>(sched.get_rep(), d_myworld, level.get_rep(), matls, Around, A, which_A_dw, x, modifies_x, b, which_b_dw, guess, which_guess_dw, m_params);
       Handle<CGStencil7<SFCYTypes> > handle = that;
       task = scinew Task("CGSolver::Matrix solve(SFCY)", that, &CGStencil7<SFCYTypes>::solve, handle);
     }
@@ -1031,7 +1015,7 @@ void CGSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
   case TypeDescription::SFCZVariable:
     {
       Around = Ghost::AroundFaces;
-      CGStencil7<SFCZTypes>* that = scinew CGStencil7<SFCZTypes>(sched.get_rep(), d_myworld, level.get_rep(), matls, Around, A, which_A_dw, x, modifies_x, b, which_b_dw, guess, which_guess_dw, cgparams);
+      CGStencil7<SFCZTypes>* that = scinew CGStencil7<SFCZTypes>(sched.get_rep(), d_myworld, level.get_rep(), matls, Around, A, which_A_dw, x, modifies_x, b, which_b_dw, guess, which_guess_dw, m_params);
       Handle<CGStencil7<SFCZTypes> > handle = that;
       task = scinew Task("CGSolver::Matrix solve(SFCZ)", that, &CGStencil7<SFCZTypes>::solve, handle);
     }
@@ -1039,7 +1023,7 @@ void CGSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
   case TypeDescription::CCVariable:
     {
       Around = Ghost::AroundCells;
-      CGStencil7<CCTypes>* that = scinew CGStencil7<CCTypes>(sched.get_rep(), d_myworld, level.get_rep(), matls, Around, A, which_A_dw, x, modifies_x, b, which_b_dw, guess, which_guess_dw, cgparams);
+      CGStencil7<CCTypes>* that = scinew CGStencil7<CCTypes>(sched.get_rep(), d_myworld, level.get_rep(), matls, Around, A, which_A_dw, x, modifies_x, b, which_b_dw, guess, which_guess_dw, m_params);
       Handle<CGStencil7<CCTypes> > handle = that;
       task = scinew Task("CGSolver::Matrix solve(CC)", that, &CGStencil7<CCTypes>::solve, handle);
     }
@@ -1047,7 +1031,7 @@ void CGSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
   case TypeDescription::NCVariable:
     {
       Around = Ghost::AroundNodes;
-      CGStencil7<NCTypes>* that = scinew CGStencil7<NCTypes>(sched.get_rep(), d_myworld, level.get_rep(), matls, Around, A, which_A_dw, x, modifies_x, b, which_b_dw, guess, which_guess_dw, cgparams);
+      CGStencil7<NCTypes>* that = scinew CGStencil7<NCTypes>(sched.get_rep(), d_myworld, level.get_rep(), matls, Around, A, which_A_dw, x, modifies_x, b, which_b_dw, guess, which_guess_dw, m_params);
       Handle<CGStencil7<NCTypes> > handle = that;
       task = scinew Task("CGSolver::Matrix solve(NC)", that, &CGStencil7<NCTypes>::solve, handle);
     }

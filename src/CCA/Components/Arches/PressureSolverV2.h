@@ -219,7 +219,6 @@ private:
   bool d_enforceSolvability;
 
   SolverInterface* d_hypreSolver;
-  SolverParameters* d_hypreSolver_parameters;
 
   std::vector<std::string> d_new_sources;
   std::map<std::string, double> d_source_weights;

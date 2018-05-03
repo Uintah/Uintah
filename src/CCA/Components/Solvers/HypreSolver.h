@@ -56,11 +56,11 @@ namespace Uintah {
 
   //______________________________________________________________________
   //
-  class HypreSolver2Params : public SolverParameters {
+  class HypreParams : public SolverParameters {
   public:
-    HypreSolver2Params(){}
+    HypreParams(){}
     
-    ~HypreSolver2Params() {}
+    ~HypreParams() {}
     
     // Parameters common for all Hypre Solvers
     std::string solvertype;         // String corresponding to solver type
@@ -247,8 +247,10 @@ namespace Uintah {
     HypreSolver2(const ProcessorGroup* myworld);
     virtual ~HypreSolver2();
 
-    virtual SolverParameters* readParameters(       ProblemSpecP & params,
-                                              const std::string  & name  );
+    virtual void readParameters(       ProblemSpecP & params,
+                                 const std::string  & name  );
+                                 
+    virtual SolverParameters * getParameters(){ return m_params; }
 
     /**
      *  @brief Schedules the solution of the linear system \[ \mathbf{A} \mathbf{x} = \mathbf{b}\].
@@ -282,7 +284,6 @@ namespace Uintah {
                                       Task::WhichDW      which_b_dw_in,  
                                 const VarLabel         * guess_in,
                                       Task::WhichDW      which_guess_dw_in,
-                                const SolverParameters * params_in,
                                       bool               isFirstSolve_in = true );
 
     virtual void scheduleInitialize( const LevelP      & level,
@@ -308,6 +309,10 @@ namespace Uintah {
 
     const VarLabel * m_timeStepLabel;
     const VarLabel * hypre_solver_label;
+    
+    
+    HypreParams * m_params = nullptr;
+    
   };
 }
 
