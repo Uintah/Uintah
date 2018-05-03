@@ -85,21 +85,21 @@ namespace Uintah {
   // Class HypreStencil7
   //
   //==============================================================================
-  template<class Types>
+  template<class GridVarType>
   class HypreStencil7 : public RefCounted {
   public:
-    HypreStencil7( const Level              * level_in
-                 , const MaterialSet        * matlset_in
-                 , const VarLabel           * A_in
-                 ,       Task::WhichDW        which_A_dw_in
-                 , const VarLabel           * x_in
-                 ,       bool                 modifies_X_in
-                 , const VarLabel           * b_in
-                 ,       Task::WhichDW        which_b_dw_in
-                 , const VarLabel           * guess_in
-                 ,       Task::WhichDW        which_guess_dw_in
-                 , const HypreParams        * params_in
-                 ,       bool                 isFirstSolve_in
+    HypreStencil7( const Level          * level_in
+                 , const MaterialSet    * matlset_in
+                 , const VarLabel       * A_in 
+                 ,       Task::WhichDW    which_A_dw_in
+                 , const VarLabel       * x_in 
+                 ,       bool             modifies_X_in
+                 , const VarLabel       * b_in
+                 ,       Task::WhichDW    which_b_dw_in
+                 , const VarLabel       * guess_in 
+                 ,       Task::WhichDW    which_guess_dw_in
+                 , const HypreParams    * params_in 
+                 ,       bool             isFirstSolve_in
                  )
       : m_level(level_in)
       , m_matlset(matlset_in)
@@ -136,8 +136,8 @@ namespace Uintah {
                           ,     IntVector  & lo
                           ,     IntVector  & hi)
     {
-      typedef typename Types::sol_type sol_type;
-      Patch::VariableBasis basis = Patch::translateTypeToBasis(sol_type::getTypeDescription()->getType(), true);
+      typedef typename GridVarType::double_type double_type;
+      Patch::VariableBasis basis = Patch::translateTypeToBasis(double_type::getTypeDescription()->getType(), true);
       
       if( m_params->getSolveOnExtraCells()) {
         lo  = patch->getExtraLowIndex(  basis, IntVector(0,0,0) );
@@ -184,7 +184,7 @@ namespace Uintah {
           msg<< "HypreSolver:createPopulateHypreVector ("<< Q_label->getName() <<")\n";
           printTask( patches, patch, cout_doing, msg.str() );
 
-          typename Types::const_type Q;
+          typename GridVarType::const_double_type Q;
           Q_dw->get( Q, Q_label, matl, patch, Ghost::None, 0);
 
           // find box range
@@ -224,7 +224,7 @@ namespace Uintah {
               , const MaterialSubset * matls
               ,       DataWarehouse  * old_dw
               ,       DataWarehouse  * new_dw
-              ,       Handle<HypreStencil7<Types>>
+              ,       Handle<HypreStencil7<GridVarType>>
               )
     {
       tHypreAll_ = hypre_InitializeTiming("Total Hypre time");
@@ -413,8 +413,8 @@ namespace Uintah {
         
             //__________________________________
             // Get A matrix from the DW
-            typename Types::symmetric_matrix_type AStencil4;
-            typename Types::matrix_type A;
+            typename GridVarType::symmetric_matrix_type AStencil4;
+            typename GridVarType::matrix_type A;
         
             if ( m_params->getUseStencil4() ){
               A_dw->get( AStencil4, m_A_label, matl, patch, Ghost::None, 0);
@@ -878,7 +878,7 @@ namespace Uintah {
             
           CellIterator iter(l, h);
 
-          typename Types::sol_type Xnew;
+          typename GridVarType::double_type Xnew;
           if( m_modifies_X ){
             new_dw->getModifiable(Xnew, m_X_label, matl, patch);
           }else{

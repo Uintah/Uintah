@@ -223,7 +223,7 @@ namespace Uintah {
 //______________________________________________________________________
 //
 
-template<class Types>
+template<class GridVarType>
 class CGStencil7 : public RefCounted {
 public:
   CGStencil7(Scheduler* sched, const ProcessorGroup* world, const Level* level,
@@ -269,13 +269,13 @@ public:
     default:
       throw ProblemSetupException("Unknown data warehouse for initial guess", __FILE__, __LINE__);
     }
-    typedef typename Types::sol_type sol_type;
-    R_label     = VarLabel::create(A->getName()+" R", sol_type::getTypeDescription());
-    D_label     = VarLabel::create(A->getName()+" D", sol_type::getTypeDescription());
-    Q_label     = VarLabel::create(A->getName()+" Q", sol_type::getTypeDescription());
+    typedef typename GridVarType::double_type double_type;
+    R_label     = VarLabel::create(A->getName()+" R", double_type::getTypeDescription());
+    D_label     = VarLabel::create(A->getName()+" D", double_type::getTypeDescription());
+    Q_label     = VarLabel::create(A->getName()+" Q", double_type::getTypeDescription());
     d_label     = VarLabel::create(A->getName()+" d", sum_vartype::getTypeDescription());
     aden_label = VarLabel::create(A->getName()+" aden", sum_vartype::getTypeDescription());
-    diag_label = VarLabel::create(A->getName()+" inverse diagonal", sol_type::getTypeDescription());
+    diag_label = VarLabel::create(A->getName()+" inverse diagonal", double_type::getTypeDescription());
 
     tolerance_label = VarLabel::create("tolerance", sum_vartype::getTypeDescription());
 
@@ -327,17 +327,17 @@ public:
       for(int m = 0;m<matls->size();m++){
         int matl = matls->get(m);
 
-        typename Types::sol_type Q;
+        typename GridVarType::double_type Q;
         new_dw->allocateAndPut(Q, Q_label, matl, patch);
 
-        typename Types::matrix_type A;
+        typename GridVarType::matrix_type A;
         A_dw->get(A, A_label, matl, patch, Ghost::None, 0);
 
-        typename Types::const_type D;
+        typename GridVarType::const_double_type D;
         old_dw->get(D, D_label, matl, patch, Around, 1);
 
-        typedef typename Types::sol_type sol_type;
-        Patch::VariableBasis basis = Patch::translateTypeToBasis(sol_type::getTypeDescription()->getType(), true);
+        typedef typename GridVarType::double_type double_type;
+        Patch::VariableBasis basis = Patch::translateTypeToBasis(double_type::getTypeDescription()->getType(), true);
 
         IntVector l,h;
         if(params->getSolveOnExtraCells())
@@ -389,8 +389,8 @@ public:
         cout_doing << "CGSolver::step2 on patch" << patch->getID()<<endl;
       for(int m = 0;m<matls->size();m++){
         int matl = matls->get(m);
-        typedef typename Types::sol_type sol_type;
-        Patch::VariableBasis basis = Patch::translateTypeToBasis(sol_type::getTypeDescription()->getType(), true);
+        typedef typename GridVarType::double_type double_type;
+        Patch::VariableBasis basis = Patch::translateTypeToBasis(double_type::getTypeDescription()->getType(), true);
 
         IntVector l,h;
         if(params->getSolveOnExtraCells())
@@ -406,17 +406,17 @@ public:
         CellIterator iter(l, h);
 
         // Step 2 - requires d(old), aden(new) D(old), X(old) R(old)  computes X, R, Q, d
-        typename Types::const_type D;
+        typename GridVarType::const_double_type D;
         old_dw->get(D, D_label, matl, patch, Ghost::None, 0);
 
-        typename Types::const_type X, R, diagonal;
+        typename GridVarType::const_double_type X, R, diagonal;
         old_dw->get(X, X_label, matl, patch, Ghost::None, 0);
         old_dw->get(R, R_label, matl, patch, Ghost::None, 0);
         old_dw->get(diagonal, diag_label, matl, patch, Ghost::None, 0);
-        typename Types::sol_type Xnew, Rnew;
+        typename GridVarType::double_type Xnew, Rnew;
         new_dw->allocateAndPut(Xnew, X_label, matl, patch, Ghost::None, 0);
         new_dw->allocateAndPut(Rnew, R_label, matl, patch, Ghost::None, 0);
-        typename Types::sol_type Q;
+        typename GridVarType::double_type Q;
         new_dw->getModifiable(Q, Q_label, matl, patch);
 
         sum_vartype aden;
@@ -478,8 +478,8 @@ public:
         cout_doing << "CGSolver::step3 on patch" << patch->getID()<<endl;
       for(int m = 0;m<matls->size();m++){
         int matl = matls->get(m);
-        typedef typename Types::sol_type sol_type;
-        Patch::VariableBasis basis = Patch::translateTypeToBasis(sol_type::getTypeDescription()->getType(), true);
+        typedef typename GridVarType::double_type double_type;
+        Patch::VariableBasis basis = Patch::translateTypeToBasis(double_type::getTypeDescription()->getType(), true);
 
         IntVector l,h;
         if(params->getSolveOnExtraCells())
@@ -497,17 +497,17 @@ public:
         sum_vartype dnew, dold;
         old_dw->get(dold, d_label);
         new_dw->get(dnew, d_label);
-        typename Types::const_type Q;
+        typename GridVarType::const_double_type Q;
         new_dw->get(Q, Q_label, matl, patch, Ghost::None, 0);
 
-        typename Types::const_type D;
+        typename GridVarType::const_double_type D;
         old_dw->get(D, D_label, matl, patch, Ghost::None, 0);
 
         // Step 3 - requires D(old), Q(new), d(new), d(old), computes D
         double b=dnew/dold;
 
         // D = b*D+Q
-        typename Types::sol_type Dnew;
+        typename GridVarType::double_type Dnew;
         new_dw->allocateAndPut(Dnew, D_label, matl, patch, Ghost::None, 0);
         long64 flops = 0;
         long64 memrefs = 0;
@@ -532,8 +532,8 @@ public:
 
       for(int m = 0;m<matls->size();m++){
         int matl = matls->get(m);
-        typedef typename Types::sol_type sol_type;
-        Patch::VariableBasis basis = Patch::translateTypeToBasis(sol_type::getTypeDescription()->getType(), true);
+        typedef typename GridVarType::double_type double_type;
+        Patch::VariableBasis basis = Patch::translateTypeToBasis(double_type::getTypeDescription()->getType(), true);
 
         IntVector l,h;
         if(params->getSolveOnExtraCells())
@@ -548,19 +548,19 @@ public:
         }
         CellIterator iter(l, h);
 
-        typename Types::sol_type R, Xnew, diagonal;
+        typename GridVarType::double_type R, Xnew, diagonal;
         new_dw->allocateAndPut(R, R_label, matl, patch);
         new_dw->allocateAndPut(Xnew, X_label, matl, patch);
         new_dw->allocateAndPut(diagonal, diag_label, matl, patch);
-        typename Types::const_type B;
-        typename Types::matrix_type A;
+        typename GridVarType::const_double_type B;
+        typename GridVarType::matrix_type A;
         b_dw->get(B, B_label, matl, patch, Ghost::None, 0);
         A_dw->get(A, A_label, matl, patch, Ghost::None, 0);
 
         long64 flops = 0;
         long64 memrefs = 0;
         if(guess_label){
-          typename Types::const_type X;
+          typename GridVarType::const_double_type X;
           guess_dw->get(X, guess_label, matl, patch, Around, 1);
 
           // R = A*X
@@ -586,7 +586,7 @@ public:
         }
 
         // D = R/Ap
-        typename Types::sol_type D;
+        typename GridVarType::double_type D;
         new_dw->allocateAndPut(D, D_label, matl, patch);
 
         ::InverseDiagonal(diagonal, A, iter, flops, memrefs);
@@ -630,7 +630,7 @@ public:
   void solve(const ProcessorGroup* pg, const PatchSubset* patches,
              const MaterialSubset* matls,
              DataWarehouse* old_dw, DataWarehouse* new_dw,
-             Handle<CGStencil7<Types> >)
+             Handle<CGStencil7<GridVarType> >)
   {
     if(cout_doing.active())
       cout_doing << "CGSolver::solve" << endl;
@@ -661,7 +661,7 @@ public:
     // Schedule the setup
     if(cout_doing.active())
       cout_doing << "CGSolver::schedule setup" << endl;
-    Task* task = scinew Task("CGSolver: schedule setup", this, &CGStencil7<Types>::setup);
+    Task* task = scinew Task("CGSolver: schedule setup", this, &CGStencil7<GridVarType>::setup);
     task->requires(parent_which_b_dw, B_label, Ghost::None, 0);
     task->requires(parent_which_A_dw, A_label, Ghost::None, 0);
     if(guess_label)
@@ -729,7 +729,7 @@ public:
       // Step 1 - requires A(parent), D(old, 1 ghost) computes aden(new)
       if(cout_doing.active())
         cout_doing << "CGSolver::schedule Step 1" << endl;
-      task = scinew Task("CGSolver: schedule step1", this, &CGStencil7<Types>::step1);
+      task = scinew Task("CGSolver: schedule step1", this, &CGStencil7<GridVarType>::step1);
       task->requires(parent_which_A_dw, A_label, Ghost::None, 0);
       task->requires(Task::OldDW,       D_label, Around, 1);
       task->computes(aden_label);
@@ -743,7 +743,7 @@ public:
       // Step 2 - requires d(old), aden(new) D(old), X(old) R(old)  computes X, R, Q, d
       if(cout_doing.active())
         cout_doing << "CGSolver::schedule Step 2" << endl;
-      task = scinew Task("CGSolver: schedule step2", this, &CGStencil7<Types>::step2);
+      task = scinew Task("CGSolver: schedule step2", this, &CGStencil7<GridVarType>::step2);
       task->requires(Task::OldDW, d_label);
       task->requires(Task::NewDW, aden_label);
       task->requires(Task::OldDW, D_label,    Ghost::None, 0);
@@ -768,7 +768,7 @@ public:
       // Step 3 - requires D(old), Q(new), d(new), d(old), computes D
       if(cout_doing.active())
         cout_doing << "CGSolver::schedule Step 3" << endl;
-      task = scinew Task("CGSolver: schedule step3", this, &CGStencil7<Types>::step3);
+      task = scinew Task("CGSolver: schedule step3", this, &CGStencil7<GridVarType>::step3);
       task->requires(Task::OldDW, D_label, Ghost::None, 0);
       task->requires(Task::NewDW, Q_label, Ghost::None, 0);
       task->requires(Task::NewDW, d_label);
@@ -824,8 +824,8 @@ public:
         const Patch* patch = patches->get(p);
         for(int m = 0;m<matls->size();m++){
           int matl = matls->get(m);
-          typedef typename Types::sol_type sol_type;
-          Patch::VariableBasis basis = Patch::translateTypeToBasis(sol_type::getTypeDescription()->getType(), true);
+          typedef typename GridVarType::double_type double_type;
+          Patch::VariableBasis basis = Patch::translateTypeToBasis(double_type::getTypeDescription()->getType(), true);
 
           IntVector l,h;
           if(params->getSolveOnExtraCells())
@@ -840,8 +840,8 @@ public:
           }
           CellIterator iter(l, h);
 
-          typename Types::sol_type Xnew;
-          typename Types::const_type X;
+          typename GridVarType::double_type Xnew;
+          typename GridVarType::const_double_type X;
           new_dw->getModifiable(Xnew, X_label, matl, patch);
 
           subsched->get_dw(3)->get(X, X_label, matl, patch, Ghost::None, 0);

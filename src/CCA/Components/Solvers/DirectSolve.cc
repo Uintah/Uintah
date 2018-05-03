@@ -57,7 +57,7 @@ namespace Uintah {
 
 //______________________________________________________________________
 //
-template<class Types>
+template<class GridVarType>
 class DirectStencil7 : public RefCounted {
 public:
   DirectStencil7(const Level* level,
@@ -79,10 +79,12 @@ public:
   }
 
   //______________________________________________________________________
-  void solve(const ProcessorGroup* pg, const PatchSubset* patches,
+  void solve(const ProcessorGroup* pg, 
+             const PatchSubset* patches,
              const MaterialSubset* matls,
-             DataWarehouse* old_dw, DataWarehouse* new_dw,
-             Handle<DirectStencil7<Types> >)
+             DataWarehouse* old_dw, 
+             DataWarehouse* new_dw,
+             Handle<DirectStencil7<GridVarType> >)
   {
     cout_doing << "DirectSolve::solve" << endl;
     DataWarehouse* A_dw = new_dw->getOtherDataWarehouse(which_A_dw);
@@ -94,22 +96,22 @@ public:
     long64 flops = 0, memrefs = 0;
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
-      typedef typename Types::sol_type sol_type;
+      typedef typename GridVarType::double_type double_type;
       cout_doing << "DirectSolve on matl " << matl << endl;
       ASSERTEQ(patches->size(), 1);
       const Patch* patch = patches->get(0);
-      typename Types::const_type B;
+      typename GridVarType::const_double_type B;
       b_dw->get(B, B_label, matl, patch, Ghost::None, 0);
-      typename Types::matrix_type A;
+      typename GridVarType::matrix_type A;
       A_dw->get(A, A_label, matl, patch, Ghost::None, 0);
 
-      typename Types::sol_type X;
+      typename GridVarType::double_type X;
       if(modifies_x)
         new_dw->getModifiable(X, X_label, matl, patch);
       else
         new_dw->allocateAndPut(X, X_label, matl, patch);
 
-      Patch::VariableBasis basis = Patch::translateTypeToBasis(sol_type::getTypeDescription()->getType(), true);
+      Patch::VariableBasis basis = Patch::translateTypeToBasis(double_type::getTypeDescription()->getType(), true);
 
       IntVector l,h;
       if(params->getSolveOnExtraCells())
