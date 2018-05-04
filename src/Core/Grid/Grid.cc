@@ -1338,12 +1338,12 @@ void Grid::partition2D(std::list<int> primes, int a, int b)
 const Patch *
 Grid::getPatchByID( int patchid, int startingLevel ) const
 {
-  const Patch* patch = nullptr;
+  const Patch * patch = nullptr;
   for( int i = startingLevel; i < numLevels(); i++ ) {
-    LevelP checkLevel = getLevel(i);
-    int levelBaseID = checkLevel->getPatch(0)->getID();
-    if (patchid >= levelBaseID && patchid < levelBaseID+checkLevel->numPatches()) {
-      patch = checkLevel->getPatch(patchid-levelBaseID);
+    LevelP level       = getLevel( i );
+    int    levelBaseID = level->getPatch( 0 )->getID();
+    if( patchid >= levelBaseID && patchid < levelBaseID + level->numPatches() ) {
+      patch = level->getPatch( patchid - levelBaseID );
       break;
     }
   }

@@ -135,7 +135,7 @@ HypreDriverStruct::makeLinearSystem_CC(const int matl)
   // matl=0 (pressure).
   //___________________________________________________________________
 {
-  typedef CCTypes::sol_type sol_type;
+  typedef CCTypes::double_type double_type;
   ASSERTEQ(sizeof(Stencil7), 7*sizeof(double));
 
   //==================================================================
@@ -146,7 +146,7 @@ HypreDriverStruct::makeLinearSystem_CC(const int matl)
   for(int p=0;p<_patches->size();p++){
     const Patch* patch = _patches->get(p);
     Patch::VariableBasis basis =
-      Patch::translateTypeToBasis(sol_type::getTypeDescription()
+      Patch::translateTypeToBasis(double_type::getTypeDescription()
                                   ->getType(), true);
     IntVector ec = _params->getSolveOnExtraCells() ?
       IntVector(0,0,0) : -_level->getExtraCells();
@@ -200,7 +200,7 @@ HypreDriverStruct::makeLinearSystem_CC(const int matl)
     _A_dw->get(A, _A_label, matl, patch, Ghost::None, 0);
 
     Patch::VariableBasis basis =
-      Patch::translateTypeToBasis(sol_type::getTypeDescription()
+      Patch::translateTypeToBasis(double_type::getTypeDescription()
                                   ->getType(), true);
     IntVector ec = _params->getSolveOnExtraCells() ?
       IntVector(0,0,0) : -_level->getExtraCells();
@@ -265,11 +265,11 @@ HypreDriverStruct::makeLinearSystem_CC(const int matl)
     const Patch* patch = _patches->get(p);
 
     // Get the data from Uintah
-    CCTypes::const_type B;
+    CCTypes::const_double_type B;
     _b_dw->get(B, _B_label, matl, patch, Ghost::None, 0);
 
     Patch::VariableBasis basis =
-      Patch::translateTypeToBasis(sol_type::getTypeDescription()
+      Patch::translateTypeToBasis(double_type::getTypeDescription()
                                   ->getType(), true);
     IntVector ec = _params->getSolveOnExtraCells() ?
       IntVector(0,0,0) : -_level->getExtraCells();
@@ -306,12 +306,12 @@ HypreDriverStruct::makeLinearSystem_CC(const int matl)
     const Patch* patch = _patches->get(p);
 
     if (_guess_label) {
-      CCTypes::const_type X;
+      CCTypes::const_double_type X;
       _guess_dw->get(X, _guess_label, matl, patch, Ghost::None, 0);
 
       // Get the initial guess from Uintah
       Patch::VariableBasis basis =
-        Patch::translateTypeToBasis(sol_type::getTypeDescription()
+        Patch::translateTypeToBasis(double_type::getTypeDescription()
                                     ->getType(), true);
       IntVector ec = _params->getSolveOnExtraCells() ?
         IntVector(0,0,0) : -_level->getExtraCells();
@@ -354,12 +354,12 @@ HypreDriverStruct::getSolution_CC(const int matl)
   // the Hypre Struct interface.
   //_____________________________________________________________________*/
 {
-  typedef CCTypes::sol_type sol_type;
+  typedef CCTypes::double_type double_type;
   for(int p=0;p<_patches->size();p++){
     const Patch* patch = _patches->get(p);
 
     Patch::VariableBasis basis =
-      Patch::translateTypeToBasis(sol_type::getTypeDescription()
+      Patch::translateTypeToBasis(double_type::getTypeDescription()
                                   ->getType(), true);
     IntVector ec = _params->getSolveOnExtraCells() ?
       IntVector(0,0,0) : -_level->getExtraCells();
@@ -367,7 +367,7 @@ HypreDriverStruct::getSolution_CC(const int matl)
     IntVector h = patch->getExtraHighIndex(basis, ec);
     CellIterator iter(l, h);
 
-    sol_type Xnew;
+    double_type Xnew;
     if(_modifies_x)
       _new_dw->getModifiable(Xnew, _X_label, matl, patch);
     else

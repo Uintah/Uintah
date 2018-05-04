@@ -138,6 +138,7 @@
             <tolerance>1.0e-10</tolerance>
             <solver>cg</solver>
             <preconditioner>jacobi</preconditioner>
+            <precond_maxiters> 2  </precond_maxiters>
             <maxiterations>250</maxiterations>
           </Parameters>
         </PressureSolver>

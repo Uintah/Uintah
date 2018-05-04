@@ -27,48 +27,55 @@
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Parallel/BufferInfo.h>
 
-
 #include <iostream>
 
-using namespace std;
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
+using namespace std;
 using namespace Uintah;
 
 
 ParticleVariableBase::~ParticleVariableBase()
 {       
-   if(d_pset && d_pset->removeReference())
-      delete d_pset;
+  if( d_pset && d_pset->removeReference() ) {
+    delete d_pset;
+  }
 }
 
-ParticleVariableBase::ParticleVariableBase(ParticleSubset* pset)
+ParticleVariableBase::ParticleVariableBase( ParticleSubset* pset )
    : d_pset(pset)
 {
-   if(d_pset)
-      d_pset->addReference();
+  if( d_pset ) {
+    d_pset->addReference();
+  }
 }
 
-ParticleVariableBase::ParticleVariableBase(const ParticleVariableBase& copy)
+ParticleVariableBase::ParticleVariableBase( const ParticleVariableBase& copy )
    : d_pset(copy.d_pset)
 {
-   if(d_pset)
-      d_pset->addReference();
+  if( d_pset ) {
+    d_pset->addReference();
+  }
 }   
 
-ParticleVariableBase& ParticleVariableBase::operator=(const ParticleVariableBase& copy)
+ParticleVariableBase&
+ParticleVariableBase::operator=( const ParticleVariableBase& copy )
 {
-   if(this != &copy){
-      if(d_pset && d_pset->removeReference())
-         delete d_pset;
-      d_pset = copy.d_pset;
-      if(d_pset)
-         d_pset->addReference();
-   }
-   return *this;
+  if( this != &copy ) {
+    if( d_pset && d_pset->removeReference() ) {
+      delete d_pset;
+    }
+    d_pset = copy.d_pset;
+    if( d_pset ) {
+      d_pset->addReference();
+    }
+  }
+  return *this;
 }
 
-void ParticleVariableBase::getMPIBuffer(BufferInfo& buffer,
-                                        ParticleSubset* sendset)
+void
+ParticleVariableBase::getMPIBuffer( BufferInfo     & buffer,
+                                    ParticleSubset * sendset )
 {
   const TypeDescription* td = virtualGetTypeDescription()->getSubType();
 
@@ -90,9 +97,10 @@ void ParticleVariableBase::getMPIBuffer(BufferInfo& buffer,
   }
   void* buf = getBasePointer();
   int count = sendset->numParticles();
-  if(linear){
+  if( linear ){
     buffer.add(buf, count, td->getMPIType(), false);
-  } else {
+  }
+  else {
     vector<int> blocklens( count, 1);
     MPI_Datatype datatype;
 
@@ -105,11 +113,16 @@ void ParticleVariableBase::getMPIBuffer(BufferInfo& buffer,
   } 
 }
 
-void ParticleVariableBase::setParticleSubset(ParticleSubset* subset)
+void
+ParticleVariableBase::setParticleSubset( ParticleSubset* subset )
 {
-  if(d_pset && d_pset->removeReference())
+  if( d_pset && d_pset->removeReference() ) {
     delete d_pset;
+  }
+
   d_pset = subset;
-  if(d_pset)
+
+  if( d_pset ) {
     d_pset->addReference();
+  }
 }

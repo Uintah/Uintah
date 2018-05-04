@@ -227,7 +227,7 @@ void Ray::rayTraceGPU(DetailedTask* dtask,
 
       if (patch->getGridIndex() == 0) {
         std::cout << "\n";
-        std::cout << " RMCRT REPORT: Patch 0" << "\n";
+        std::cout << " RMCRT (GPU) REPORT: Patch 0" << "\n";
         std::cout << " Used " << (end - start) * 1000 / CLOCKS_PER_SEC << " milliseconds of CPU time. \n" << "\n";  // Convert time to ms
         std::cout << " Size: " << RT_flags.nRaySteps << "\n";
         std::cout << " Efficiency: " << efficiency << " steps per sec" << "\n";

@@ -164,21 +164,6 @@ WARNING
    }; // end class PerPatch
 
   
-  template<>
-  inline void PerPatch<double *>::readNormal(std::istream& in, bool swapBytes)
-  {
-    ssize_t linesize = (ssize_t)(sizeof(double *));
-    
-    double* val;
-    
-    in.read((char*) &val, linesize);
-    
-    // if (swapBytes)
-    //   Uintah::swapbytes(val);
-    
-    value = std::make_shared<double *>(val);
-  }
-
    template<class T>
    TypeDescription* PerPatch<T>::td = 0;
    

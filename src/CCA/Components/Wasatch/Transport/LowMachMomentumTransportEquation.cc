@@ -112,7 +112,6 @@ namespace WasatchCore{
 
     const TagNames& tagNames = TagNames::self();
     
-    solverParams_ = nullptr;
     const bool enablePressureSolve = !(params->findBlock("DisablePressureSolve"));
     const EmbeddedGeometryHelper& embedGeom = EmbeddedGeometryHelper::self();
     //__________________
@@ -179,17 +178,17 @@ namespace WasatchCore{
           //throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
         }
         
-        solverParams_ = linSolver.readParameters( pressureParams, "" );
-        solverParams_->setSolveOnExtraCells( false );
-        solverParams_->setUseStencil4( false );
-        solverParams_->setSymmetric( this->is_constant_density() );
-        solverParams_->setOutputFileName( "WASATCH" );
+        linSolver.readParameters( pressureParams, "" );
+        linSolver.getParameters()->setSolveOnExtraCells( false );
+        linSolver.getParameters()->setUseStencil4( false );
+        linSolver.getParameters()->setSymmetric( this->is_constant_density() );
+        linSolver.getParameters()->setOutputFileName( "WASATCH" );
         
         // matrix update in hypre: If we have a moving geometry, then update every timestep.
         // Otherwise, no update is needed since the coefficient matrix is constant
         const bool updateCoefFreq = ( !isConstDensity || embedGeom.has_moving_geometry() ) ? 1 : 0;
-        solverParams_->setSetupFrequency( 0 ); // matrix Sparsity will never change.
-        solverParams_->setUpdateCoefFrequency( updateCoefFreq ); // coefficients may change if we have variable density or moving geometries
+        linSolver.getParameters()->setSetupFrequency( 0 ); // matrix Sparsity will never change.
+        linSolver.getParameters()->setUpdateCoefFrequency( updateCoefFreq ); // coefficients may change if we have variable density or moving geometries
         // if pressure expression has not be registered, then register it
         Expr::Tag fxt, fyt, fzt;
         if( doMom[0] )  fxt = rhs_part_tag( xmomname );
@@ -206,7 +205,7 @@ namespace WasatchCore{
                                                                             embedGeom.has_moving_geometry(), usePressureRefPoint, refPressureValue,
                                                                             refPressureLocation, use3DLaplacian,
                                                                             enforceSolvability, this->is_constant_density(),
-                                                                            *solverParams_, linSolver);
+                                                                            linSolver);
         this->pressureID_ = factory.register_expression( pbuilder );
         factory.cleave_from_children( this->pressureID_ );
         factory.cleave_from_parents ( this->pressureID_ );
@@ -226,9 +225,7 @@ namespace WasatchCore{
   template< typename FieldT >
   LowMachMomentumTransportEquation<FieldT>::
   ~LowMachMomentumTransportEquation()
-  {
-    delete solverParams_;
-  }
+  {}
 
   //-----------------------------------------------------------------
 

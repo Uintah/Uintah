@@ -56,17 +56,19 @@ namespace Uintah {
 
   //______________________________________________________________________
   //
-  class HypreSolver2Params : public SolverParameters {
+  class HypreParams : public SolverParameters {
   public:
-    HypreSolver2Params(){}
+    HypreParams(){}
     
-    ~HypreSolver2Params() {}
+    ~HypreParams() {}
     
     // Parameters common for all Hypre Solvers
     std::string solvertype;         // String corresponding to solver type
     std::string precondtype;        // String corresponding to preconditioner type
     double      tolerance;          // Residual tolerance for solver
+    double      precond_tolerance;  // Tolerance for preconditioner
     int         maxiterations;      // Maximum # iterations allowed
+    int         precond_maxiters;   // Preconditioner max iterations
     int         logging;            // Log Hypre solver (using Hypre options)
     int         solveFrequency;     // Frequency for solving the linear system. timestep % solveFrequency
     int         relax_type;         // relaxation type
@@ -102,12 +104,14 @@ namespace Uintah {
     bool                 created_precond_solver;
     SolverType           solver_type;
     SolverType           precond_solver_type;
-    HYPRE_StructSolver * solver;
-    HYPRE_StructSolver * precond_solver;
-    HYPRE_StructMatrix * HA;
-    HYPRE_StructVector * HB;
-    HYPRE_StructVector * HX;
     
+    //  *_p = pointer
+    HYPRE_StructSolver * solver_p;
+    HYPRE_StructSolver * precond_solver_p;
+    HYPRE_StructMatrix * HA_p;
+    HYPRE_StructVector * HB_p;
+    HYPRE_StructVector * HX_p;
+
     //__________________________________
     //
     hypre_solver_struct() {
@@ -115,40 +119,50 @@ namespace Uintah {
       created_precond_solver = false;
       solver_type            = smg;
       precond_solver_type    = diagonal;
-      solver                 = 0;
-      precond_solver         = 0;
-      HA = 0;
-      HB = 0;
-      HX = 0;
+      solver_p              = 0;
+      precond_solver_p      = 0;
+      HA_p = 0;
+      HB_p = 0;
+      HX_p = 0;
+    };
+    //__________________________________
+    //
+    void print()
+    {
+      std::cout << "  Solver:  created: " << created_solver         << " type: " << solver_type         
+                << " solver: " << &solver_p <<  " " << *solver_p << "\n";
+                
+      std::cout << "  Precond: created: " << created_precond_solver << " type: " << precond_solver_type 
+                << " solver: " << &precond_solver_p << " " << *solver_p << "\n";
     };
     
     //__________________________________
     //
     virtual ~hypre_solver_struct() {
       if (created_solver) {
-        HYPRE_StructMatrixDestroy( *HA );
-        HYPRE_StructVectorDestroy( *HB );
-        HYPRE_StructVectorDestroy( *HX );
+        HYPRE_StructMatrixDestroy( *HA_p );
+        HYPRE_StructVectorDestroy( *HB_p );
+        HYPRE_StructVectorDestroy( *HX_p );
       }
       if (created_solver)
         switch (solver_type) {
         case smg:
-          HYPRE_StructSMGDestroy(*solver);
+          HYPRE_StructSMGDestroy(*solver_p);
           break;
         case pfmg:
-          HYPRE_StructPFMGDestroy(*solver);
+          HYPRE_StructPFMGDestroy(*solver_p);
           break;
         case sparsemsg:
-          HYPRE_StructSparseMSGDestroy(*solver);
+          HYPRE_StructSparseMSGDestroy(*solver_p);
           break;
         case pcg:
-          HYPRE_StructPCGDestroy(*solver);
+          HYPRE_StructPCGDestroy(*solver_p);
           break;
         case gmres:
-          HYPRE_StructGMRESDestroy(*solver);
+          HYPRE_StructGMRESDestroy(*solver_p);
           break;
         case jacobi:
-          HYPRE_StructJacobiDestroy(*solver);
+          HYPRE_StructJacobiDestroy(*solver_p);
           break;
         default:
           throw InternalError( "HypreSolver given a bad solver type!",
@@ -158,52 +172,73 @@ namespace Uintah {
       if (created_precond_solver)
         switch (precond_solver_type) {
         case smg:
-          HYPRE_StructSMGDestroy(*precond_solver);
+          HYPRE_StructSMGDestroy(*precond_solver_p);
           break;
         case pfmg:
-          HYPRE_StructPFMGDestroy(*precond_solver);
+          HYPRE_StructPFMGDestroy(*precond_solver_p);
           break;
         case sparsemsg:
-          HYPRE_StructSparseMSGDestroy(*precond_solver);
+          HYPRE_StructSparseMSGDestroy(*precond_solver_p);
           break;
         case pcg:
-          HYPRE_StructPCGDestroy(*precond_solver);
+          HYPRE_StructPCGDestroy(*precond_solver_p);
           break;
         case gmres:
-          HYPRE_StructGMRESDestroy(*precond_solver);
+          HYPRE_StructGMRESDestroy(*precond_solver_p);
           break;
         case jacobi:
-          HYPRE_StructJacobiDestroy(*precond_solver);
+          HYPRE_StructJacobiDestroy(*precond_solver_p);
           break;
         default:
           throw InternalError("HypreSolver given a bad solver type!",
                               __FILE__, __LINE__);
       }
 
-      if (HA) {
-        delete HA;
-        HA = 0;
+      if (HA_p) {
+        delete HA_p;  
+        HA_p = 0;
       }
-      if (HB){
-        delete HB;
-        HB = 0;
+      if (HB_p){
+        delete HB_p;  
+        HB_p = 0;
       }
-      if (HX) {
-        delete HX;
-        HX = 0;
+      if (HX_p) {
+        delete HX_p;  
+        HX_p = 0;
       }
-      if (solver) {
-        delete solver;
-        solver = 0;
+      if (solver_p) {
+        delete solver_p;
+        solver_p = 0;
       }
-      if (precond_solver) {
-        delete precond_solver;
-        precond_solver = 0;
+      if (precond_solver_p) {
+        delete precond_solver_p;
+        precond_solver_p = 0;
       }
     };
   };
 
   typedef Handle<hypre_solver_struct> hypre_solver_structP;
+
+  void swapbytes( Uintah::hypre_solver_structP& );
+  
+  // Note the general template for SoleVariable::readNormal will not
+  // recognize the swapbytes correctly. So specialize it here.
+  // Somewhat moot because the swapbytes for hypre_solver_structP is
+  // not implemented.
+  template<>
+  inline void SoleVariable<hypre_solver_structP>::readNormal(std::istream& in, bool swapBytes)
+  {
+    ssize_t linesize = (ssize_t)(sizeof(hypre_solver_structP));
+    
+    hypre_solver_structP val;
+    
+    in.read((char*) &val, linesize);
+    
+    if (swapBytes)
+      Uintah::swapbytes(val);
+    
+    value = val;
+  }
   
   //______________________________________________________________________
   //
@@ -212,8 +247,10 @@ namespace Uintah {
     HypreSolver2(const ProcessorGroup* myworld);
     virtual ~HypreSolver2();
 
-    virtual SolverParameters* readParameters(       ProblemSpecP & params,
-                                              const std::string  & name  );
+    virtual void readParameters(       ProblemSpecP & params,
+                                 const std::string  & name  );
+                                 
+    virtual SolverParameters * getParameters(){ return m_params; }
 
     /**
      *  @brief Schedules the solution of the linear system \[ \mathbf{A} \mathbf{x} = \mathbf{b}\].
@@ -247,7 +284,6 @@ namespace Uintah {
                                       Task::WhichDW      which_b_dw_in,
                                 const VarLabel         * guess_in,
                                       Task::WhichDW      which_guess_dw_in,
-                                const SolverParameters * params_in,
                                       bool               isFirstSolve_in = true );
 
     virtual void scheduleInitialize( const LevelP      & level,
@@ -274,6 +310,10 @@ namespace Uintah {
     const VarLabel               * m_timeStepLabel;
     std::vector<const VarLabel*>   hypre_solver_label;
     int                            m_num_hypre_threads{1};
+    
+    
+    HypreParams * m_params = nullptr;
+    
   };
 }
 

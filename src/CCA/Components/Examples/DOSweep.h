@@ -104,8 +104,7 @@ WARNING
     ExamplesLabel* lb_;
     double delt_;
     SimpleMaterial* mymat_;
-    SolverInterface* solver;
-    SolverParameters* solver_parameters;    
+    SolverInterface* solver;  
     bool x_laplacian, y_laplacian, z_laplacian;
     
     DOSweep(const DOSweep&);

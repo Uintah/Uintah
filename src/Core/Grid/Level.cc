@@ -63,7 +63,6 @@ namespace {
   DebugStream rgtimes{ "RGTimesLevel", "Grid_Level", "Grid regridder debug stream", false };  
 }
 
-
 //______________________________________________________________________
 //
 Level::Level(       Grid      * grid
@@ -312,7 +311,9 @@ Level::findNodeIndexRange( IntVector & lowIndex, IntVector & highIndex ) const
 
 //______________________________________________________________________
 //
-void Level::findCellIndexRange( IntVector & lowIndex, IntVector & highIndex ) const
+
+void
+Level::findCellIndexRange( IntVector & lowIndex, IntVector & highIndex ) const
 {
   Vector l = (m_spatial_range.min() - m_anchor) / m_dcell;
   Vector h = (m_spatial_range.max() - m_anchor) / m_dcell;
@@ -345,16 +346,19 @@ void Level::findInteriorNodeIndexRange( IntVector & lowIndex, IntVector & highIn
 
 //______________________________________________________________________
 //  Compute the variable extents for this variable type
-void Level::computeVariableExtents( const TypeDescription::Type TD
-                                  , IntVector & lo
-                                  , IntVector & hi
-                                  ) const
+void
+Level::computeVariableExtents( const TypeDescription::Type   type
+                               ,     IntVector             & lo
+                               ,     IntVector             & hi ) const
 {
   IntVector CCLo;
   IntVector CCHi;
-  findCellIndexRange(CCLo, CCHi);
+  findCellIndexRange( CCLo, CCHi );
 
-  switch (TD) {
+  // Fix me: better way to calc this var? Or to use it below?
+  IntVector not_periodic( !m_periodic_boundaries[0], !m_periodic_boundaries[1], !m_periodic_boundaries[2] );
+
+  switch( type ) {
     case TypeDescription::CCVariable :
     case TypeDescription::ParticleVariable :
       lo = CCLo;
@@ -362,21 +366,22 @@ void Level::computeVariableExtents( const TypeDescription::Type TD
       break;
     case TypeDescription::SFCXVariable :
       lo = CCLo;
-      hi = CCHi + IntVector(1, 0, 0);
+      hi = CCHi + ( IntVector(1, 0, 0) * not_periodic );
       break;
     case TypeDescription::SFCYVariable :
       lo = CCLo;
-      hi = CCHi + IntVector(0, 1, 0);
+      hi = CCHi + ( IntVector(0, 1, 0) * not_periodic );
       break;
     case TypeDescription::SFCZVariable :
       lo = CCLo;
-      hi = CCHi + IntVector(0, 0, 1);
+      hi = CCHi + ( IntVector(0, 0, 1) * not_periodic );
       break;
     case TypeDescription::NCVariable :
+      // Dav's fix: findInteriorCellIndexRange( lo, hi );
       findNodeIndexRange(lo, hi);
       break;
     default :
-      std::string me = TypeDescription::toString( TD );
+      std::string me = TypeDescription::toString( type );
       throw InternalError("  ERROR: Level::computeVariableExtents type description (" + me + ") not supported", __FILE__, __LINE__);
   }
 }

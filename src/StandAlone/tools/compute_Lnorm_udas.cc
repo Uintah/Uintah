@@ -491,11 +491,13 @@ main(int argc, char** argv)
   DataArchive* da1 = scinew DataArchive(filebase1);
   DataArchive* da2 = scinew DataArchive(filebase2);
 
-  vector<string> vars, vars2;
-  vector<const Uintah::TypeDescription*> types, types2;
+  vector<string>                         vars,      vars2;
+  vector<int>                            num_matls, num_matls2;
+  vector<const Uintah::TypeDescription*> types,     types2;
+
   vector< pair<string, const Uintah::TypeDescription*> > vartypes1,vartypes2;
-  da1->queryVariables(vars,  types);
-  da2->queryVariables(vars2, types2);
+  da1->queryVariables( vars,  num_matls,  types );
+  da2->queryVariables( vars2, num_matls2, types2 );
 
   //__________________________________
   // bulletproofing

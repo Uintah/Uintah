@@ -53,7 +53,6 @@ DOSweep::DOSweep(const ProcessorGroup* myworld,
 DOSweep::~DOSweep()
 {
   delete lb_;
-  delete solver_parameters;
 }
 //__________________________________
 //
@@ -67,8 +66,9 @@ void DOSweep::problemSetup(const ProblemSpecP& prob_spec,
   }
   
   ProblemSpecP st_ps = prob_spec->findBlock("DOSweep");
-  solver_parameters = solver->readParameters(st_ps, "implicitPressure");
-  solver_parameters->setSolveOnExtraCells(false);
+  solver->readParameters(st_ps, "implicitPressure");
+  
+  solver->getParameters()->setSolveOnExtraCells(false);
     
   st_ps->require("delt", delt_);
 
@@ -131,8 +131,7 @@ DOSweep::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 
   solver->scheduleSolve(level, sched, m_sharedState->allMaterials(), 
                         lb_->pressure_matrix, Task::NewDW, lb_->pressure, 
-                        false, lb_->pressure_rhs, Task::NewDW, 0, Task::OldDW, 
-                        solver_parameters,true);
+                        false, lb_->pressure_rhs, Task::NewDW, 0, Task::OldDW,true);
 
 }
 //__________________________________

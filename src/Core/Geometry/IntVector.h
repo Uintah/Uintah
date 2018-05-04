@@ -48,35 +48,36 @@ namespace Uintah {
 
 class IntVector {
 public:
-  inline IntVector() {
-  }
-  inline ~IntVector() {
-  }
-  inline IntVector(const IntVector& copy) {
-    for (int indx = 0; indx < 3; indx ++)
+
+  inline IntVector() {}
+  inline ~IntVector() {}
+
+  inline IntVector( const IntVector & copy ) {
+    for (int indx = 0; indx < 3; indx ++) {
       value_[indx] = copy.value_[indx];
+    }
   }
-  inline IntVector& operator=(const IntVector& copy) {
-    for (int indx = 0; indx < 3; indx ++)
+
+  inline IntVector& operator=( const IntVector & copy ) {
+    for ( int indx = 0; indx < 3; indx ++ ) {
       value_[indx] = copy.value_[indx];
+    }
     return *this;
   }
-  inline explicit IntVector(const Point& p)
-  {
-    value_[0]=static_cast<int>(p.x());
-    value_[1]=static_cast<int>(p.y());
-    value_[2]=static_cast<int>(p.z());
+
+  inline explicit IntVector( const Point & p ) {
+    value_[0] = static_cast<int>( p.x() );
+    value_[1] = static_cast<int>( p.y() );
+    value_[2] = static_cast<int>( p.z() );
   }
 
   // Creates an IntVector from a string that looks like "[1, 2, 3]".
   static IntVector fromString( const std::string & source ); 
 
-  inline bool operator==(const IntVector& a) const {
-    return value_[0] == a.value_[0] && value_[1] == a.value_[1] && value_[2] == a.value_[2];
-  }
+  inline bool operator==( const IntVector & a ) const { return value_[0] == a.value_[0] && value_[1] == a.value_[1] && value_[2] == a.value_[2]; }
   
   // Used to test for equality - if this < a and a < this, they are equal
-  inline bool operator<(const IntVector& a) const {
+  inline bool operator<( const IntVector & a ) const {
     if (value_[2] < a.value_[2]) {
       return true;
     }
@@ -94,129 +95,87 @@ public:
     }
   }
 
-  inline bool operator!=(const IntVector& a) const {
+  inline bool operator!=( const IntVector& a ) const {
     return value_[0] != a.value_[0] || value_[1] != a.value_[1] || value_[2] != a.value_[2];
   }
 
-  inline IntVector(int x, int y, int z) {
+  inline IntVector( int x, int y, int z ) {
     value_[0] = x;
     value_[1] = y;
     value_[2] = z;
   }
 
-  inline IntVector(int v) {
+  inline IntVector( int v ) {
     value_[0] = v;
     value_[1] = v;
     value_[2] = v;
   }
 
-  inline IntVector operator*(const IntVector& v) const {
-    return IntVector(value_[0]*v.value_[0], value_[1]*v.value_[1],
-                     value_[2]*v.value_[2]);
-  }
+  inline IntVector operator*( const IntVector & v ) const { return IntVector( value_[0] * v.value_[0],
+                                                                              value_[1] * v.value_[1],
+                                                                              value_[2] * v.value_[2] ); }
   
-  inline IntVector operator*(const int a) const {
-    return IntVector(a*value_[0], a*value_[1],
-                     a*value_[2]);
-  }
+  inline IntVector operator*( const int a ) const { return IntVector( a * value_[0],
+                                                                      a * value_[1],
+                                                                      a * value_[2] ); }
 
-  inline IntVector operator/(const IntVector& v) const {
-    return IntVector(value_[0]/v.value_[0], value_[1]/v.value_[1],
-                     value_[2]/v.value_[2]);
-  }
-  inline IntVector operator+(const IntVector& v) const {
-    return IntVector(value_[0]+v.value_[0], value_[1]+v.value_[1], 
-                     value_[2]+v.value_[2]);
-  }
-  inline IntVector operator-() const {
-    return IntVector(-value_[0], -value_[1], -value_[2]);
-  }
-  inline IntVector operator-(const IntVector& v) const {
-    return IntVector(value_[0]-v.value_[0], value_[1]-v.value_[1], 
-                     value_[2]-v.value_[2]);
-  }
+  inline IntVector operator/( const IntVector & v ) const { return IntVector( value_[0] / v.value_[0],
+                                                                              value_[1] / v.value_[1],
+                                                                              value_[2] / v.value_[2] ); }
+  inline IntVector operator+( const IntVector & v ) const { return IntVector( value_[0] + v.value_[0],
+                                                                              value_[1] + v.value_[1], 
+                                                                              value_[2] + v.value_[2] ); }
+  inline IntVector operator-() const { return IntVector( -value_[0], -value_[1], -value_[2] ); }
+  inline IntVector operator-( const IntVector & v ) const { return IntVector( value_[0] - v.value_[0],
+                                                                              value_[1] - v.value_[1],
+                                                                              value_[2] - v.value_[2] ); }
 
-  inline IntVector& operator+=(const IntVector& v) {
-    value_[0]+=v.value_[0];
-    value_[1]+=v.value_[1];
-    value_[2]+=v.value_[2];
-    return *this;
-  }
+  inline IntVector& operator+=( const IntVector & v ) { value_[0] += v.value_[0];
+                                                        value_[1] += v.value_[1];
+                                                        value_[2] += v.value_[2];
+                                                        return *this; }
 
-  inline IntVector& operator-=(const IntVector& v) {
-    value_[0]-=v.value_[0];
-    value_[1]-=v.value_[1];
-    value_[2]-=v.value_[2];
-    return *this;
-  }
+  inline IntVector& operator-=( const IntVector & v ) { value_[0] -= v.value_[0];
+                                                        value_[1] -= v.value_[1];
+                                                        value_[2] -= v.value_[2];
+                                                        return *this; }
 
   // IntVector i(0)=i.x()
   //           i(1)=i.y()
   //           i(2)=i.z()
   //   --tan
-  inline int operator()(int i) const {
-    return value_[i];
-  }
+  inline int  operator()( int i ) const { return value_[i]; }
+  inline int& operator()( int i )       { return value_[i]; }
 
-  inline int& operator()(int i) {
-    return value_[i];
-  }
+  inline int  operator[]( int i ) const { return value_[i]; }
+  inline int& operator[]( int i )       { return value_[i]; }
 
-  inline int operator[](int i) const {
-    return value_[i];
-  }
+  inline int x() const { return value_[0]; }
+  inline int y() const { return value_[1]; }
+  inline int z() const { return value_[2]; }
 
-  inline int& operator[](int i) {
-    return value_[i];
-  }
+  inline void x( int x ) { value_[0] = x; }
+  inline void y( int y ) { value_[1] = y; }
+  inline void z( int z ) { value_[2] = z; }
 
-  inline int x() const {
-    return value_[0];
-  }
-  inline int y() const {
-    return value_[1];
-  }
-  inline int z() const {
-    return value_[2];
-  }
-  inline void x(int x) {
-    value_[0]=x;
-  }
-  inline void y(int y) {
-    value_[1]=y;
-  }
-  inline void z(int z) {
-    value_[2]=z;
-  }
-  inline int& modifiable_x() {
-    return value_[0];
-  }
-  inline int& modifiable_y() {
-    return value_[1];
-  }
-  inline int& modifiable_z() {
-    return value_[2];
-  }
-  // get the array pointer
-  inline int* get_pointer() {
-    return value_;
-  }
-  inline Vector asVector() const {
-    return Vector(value_[0], value_[1], value_[2]);
-  }
-  inline Point asPoint() const {
-    return Point(value_[0], value_[1], value_[2]);
-  }
+  inline int & modifiable_x() { return value_[0]; }
+  inline int & modifiable_y() { return value_[1]; }
+  inline int & modifiable_z() { return value_[2]; }
 
-  friend inline Vector operator*(const Vector&, const IntVector&);
-  friend inline Vector operator*(const IntVector&, const Vector&);
-  friend inline IntVector Abs(const IntVector& v);
+  // Get the array pointer:
+  inline int * get_pointer() { return value_; }
+
+  inline Vector asVector() const { return Vector( value_[0], value_[1], value_[2] ); }
+  inline Point  asPoint() const {  return Point(  value_[0], value_[1], value_[2] ); }
+
+  friend inline Vector operator*( const Vector&,    const IntVector& );
+  friend inline Vector operator*( const IntVector&, const Vector& );
+  friend inline IntVector Abs( const IntVector & v );
 
   //! support dynamic compilation
   static const std::string& get_h_file_path();
 
-
-  friend std::ostream& operator<<(std::ostream&, const Uintah::IntVector&);
+  friend std::ostream& operator<<( std::ostream&, const Uintah::IntVector& );
 
 private:
 

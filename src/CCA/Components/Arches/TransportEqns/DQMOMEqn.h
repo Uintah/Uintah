@@ -97,7 +97,8 @@ public:
 
   /** @brief Schedule a transport equation to be built */
   void sched_evalTransportEqn( const LevelP&,
-                               SchedulerP& sched, int timeSubStep );
+                               SchedulerP& sched, int timeSubStep, 
+                               EQN_BUILD_PHASE );
 
   /** @brief Adds the DQMOM source to the RHS and time updates the eqn **/
   void sched_updateTransportEqn( const LevelP&,

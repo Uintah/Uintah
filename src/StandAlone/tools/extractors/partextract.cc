@@ -309,9 +309,10 @@ getParticleStrains(DataArchive* da, int mat, long64 particleID, string flag,
   // Check if all the required variables are there .. for all cases
   // we need p.deformationMeasure and for the volume average we need p.volume
   vector<string> vars;
+  vector<int> num_matls;
   vector<const Uintah::TypeDescription*> types;
-  da->queryVariables(vars, types);
-  ASSERTEQ(vars.size(), types.size());
+  da->queryVariables( vars, num_matls, types );
+  ASSERTEQ( vars.size(), types.size() );
 
   bool gotVolume = false;
   bool gotDeform = false;
@@ -565,8 +566,9 @@ getParticleStresses(DataArchive* da, int mat, long64 particleID, string flag,
   // Check if all the required variables are there .. for all cases
   // we need p.stress and for the volume average we need p.volume
   vector<string> vars;
+  vector<int> num_matls;
   vector<const Uintah::TypeDescription*> types;
-  da->queryVariables(vars, types);
+  da->queryVariables( vars, num_matls, types );
   ASSERTEQ(vars.size(), types.size());
 
   bool gotVolume = false;
@@ -792,8 +794,9 @@ void printParticleVariable(DataArchive* da,
 {
   // Check if the particle variable is available
   vector<string> vars;
+  vector<int> num_matls;
   vector<const Uintah::TypeDescription*> types;
-  da->queryVariables(vars, types);
+  da->queryVariables( vars, num_matls, types );
   ASSERTEQ(vars.size(), types.size());
   bool variableFound = false;
   for(unsigned int v=0;v<vars.size();v++){

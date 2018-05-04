@@ -88,7 +88,8 @@ public:
 
   /** @brief Schedule a transport equation to be built and solved */
   void sched_evalTransportEqn( const LevelP&,
-                               SchedulerP& sched, int timeSubStep);
+                               SchedulerP& sched, int timeSubStep, 
+                               EQN_BUILD_PHASE phase );
 
   /** @brief Schedule the build for the terms needed in the transport equation */
   void sched_buildTransportEqn( const LevelP& level,
@@ -123,6 +124,15 @@ public:
 
   /** @brief Compute all source terms for this scalar eqn */
   void sched_computeSources( const LevelP& level, SchedulerP& sched, int timeSubStep);
+
+  /** @brief Add the source terms to the RHS **/
+  void sched_addSourceTerms( const LevelP& level, SchedulerP& sched, int timeSubStep );
+  void addSourceTerms( const ProcessorGroup* pc,
+                       const PatchSubset* patches,
+                       const MaterialSubset* matls,
+                       DataWarehouse* old_dw,
+                       DataWarehouse* new_dw,
+                       const int timeSubStep );
 
   /** @brief Apply boundary conditions */
   template <class phiType> void computeBCs( const Patch* patch, std::string varName, phiType& phi );
@@ -163,7 +173,7 @@ public:
 
   /** @brief Clip values of phi that are too high or too low (after RK time averaging). */
   template<class phiType>
-  void clipPhi( const Patch* p, 
+  void clipPhi( const Patch* p,
                 phiType& phi );
 
 private:
@@ -190,5 +200,3 @@ private:
 } // namespace Uintah
 
 #endif
-
-

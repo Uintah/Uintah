@@ -176,10 +176,11 @@ main(int argc, char** argv)
     DataArchive* da = scinew DataArchive(filebase);
     
     // load list of possible variables from the data archive
-    vector<string> allvars;
+    vector<string>                         allvars;
+    vector<int>                            num_matls;
     vector<const Uintah::TypeDescription*> alltypes;
-    da->queryVariables(allvars, alltypes);
-    ASSERTEQ(allvars.size(), alltypes.size());
+    da->queryVariables( allvars, num_matls, alltypes );
+    ASSERTEQ( allvars.size(), alltypes.size() );
     
     if(args.getLogical("showfields")) {
       cout << "Valid field names are: " << endl;

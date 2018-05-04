@@ -132,10 +132,12 @@ PIDXOutputContext::getSupportedVariableTypes(){
     
   vector<TypeDescription::Type> GridVarTypes;
   GridVarTypes.empty();
-  GridVarTypes.push_back(TypeDescription::CCVariable );        // This is where you define what types are supported.
-  GridVarTypes.push_back(TypeDescription::SFCXVariable );
-  GridVarTypes.push_back(TypeDescription::SFCYVariable );
-  GridVarTypes.push_back(TypeDescription::SFCZVariable );
+  GridVarTypes.push_back( TypeDescription::CCVariable );        // This is where you define what types are supported.
+  GridVarTypes.push_back( TypeDescription::SFCXVariable );
+  GridVarTypes.push_back( TypeDescription::SFCYVariable );
+  GridVarTypes.push_back( TypeDescription::SFCZVariable );
+  GridVarTypes.push_back( TypeDescription::ParticleVariable );
+  GridVarTypes.push_back( TypeDescription::NCVariable );
   return GridVarTypes;
 }
  
@@ -145,20 +147,14 @@ string
 PIDXOutputContext::getDirectoryName(TypeDescription::Type TD)
 {
   switch ( TD ){
-      case TypeDescription::CCVariable:
-        return "CCVars";  
-        break;
-      case TypeDescription::SFCXVariable:
-        return "SFCXVars";
-        break;
-      case TypeDescription::SFCYVariable:
-        return "SFCYVars";
-        break;
-      case TypeDescription::SFCZVariable:
-        return "SFCZVars";
-        break;
-      default:
-         throw Uintah::InternalError("  PIDXOutputContext::getDirectoryName type description not supported", __FILE__, __LINE__);
+    case TypeDescription::CCVariable:       return "CCVars";           break;
+    case TypeDescription::SFCXVariable:     return "SFCXVars";         break;
+    case TypeDescription::SFCYVariable:     return "SFCYVars";         break;
+    case TypeDescription::SFCZVariable:     return "SFCZVars";         break;
+    case TypeDescription::ParticleVariable: return "ParticleVariable"; break;
+    case TypeDescription::NCVariable:       return "NCVariable";       break;
+    default:
+      throw Uintah::InternalError("  PIDXOutputContext::getDirectoryName type description not supported", __FILE__, __LINE__);
   }
 }
 //______________________________________________________________________
@@ -179,15 +175,18 @@ PIDXOutputContext::computeBoxSize( const PatchSubset* patches,
   IntVector nCells = level->nCellsPatch_max();
   int nPatchCells  = nCells.x() * nCells.y() * nCells.z();
 
+  IntVector box( 64, 64, 64 );    // default value
+
+ #if 0
+
   const int cubed16  = 16*16*16;
   const int cubed32  = 32*32*32;
   const int cubed64  = 64*64*64;
   const int cubed128 = 128*128*128;
   const int cubed256 = 256*256*256;
   
-  //__________________________________
+ //__________________________________
   // logic for adjusting the box
-  IntVector box( 64, 64, 64 );    // default value
   if (nPatchCells <=  cubed16) {
     
   } else if (nPatchCells >  cubed16  && nPatchCells <= cubed32) {
@@ -205,13 +204,19 @@ PIDXOutputContext::computeBoxSize( const PatchSubset* patches,
   if ( flags.d_outputPatchSize != IntVector( -9, -9, -9 ) ) {
     box = flags.d_outputPatchSize;
   }
+#endif
   
   if ( flags.d_debugOutput ) {
     cout << Parallel::getMPIRank() << " PIDX outputPatchSize: Level: "<< level->getIndex() << " box: " << box  
          << " Patchsize: " << nCells << " nPatchCells: " << nPatchCells  << "\n";
   }
   //PIDX_set_point( newBox, box.x(), box.y(), box.z());
-  PIDX_set_point( newBox, 64, 64, 64 );
+  //  PIDX_set_point( newBox, 64, 64, 64 );
+  box = IntVector( (int)pow(2, (int)ceil(log(nCells.x())/log(2))) * 2,
+                   (int)pow(2, (int)ceil(log(nCells.y())/log(2))) * 2,
+                   (int)pow(2, (int)ceil(log(nCells.z())/log(2))) * 2 );
+  PIDX_set_point( newBox, box.x(), box.y(), box.z() );
+
 }
 
 
@@ -220,7 +225,7 @@ PIDXOutputContext::computeBoxSize( const PatchSubset* patches,
 //
 void
 PIDXOutputContext::initialize( const string       & filename, 
-                                     unsigned int   timeStep,
+                               const unsigned int   timeStep,
                                      MPI_Comm       comm,
                                      PIDX_flags     flags,
                                const PatchSubset  * patches,
@@ -253,8 +258,8 @@ PIDXOutputContext::initialize( const string       & filename,
     PIDX_set_io_mode( this->file, PIDX_RAW_IO );
 
     // FIXME: The 1 below represents the 1st timestep... but if we begin output on another timestep, this should be changed...
-    PIDX_set_cache_time_step( this->file, 1 );
-    checkReturnCode( rc, desc + " - PIDX_enable_idx_io", __FILE__, __LINE__ );
+    //PIDX_set_cache_time_step( this->file, 1 );
+    //checkReturnCode( rc, desc + " - PIDX_enable_idx_io", __FILE__, __LINE__ );
   }
   
   
@@ -263,24 +268,24 @@ PIDXOutputContext::initialize( const string       & filename,
   PIDX_point new_box_size;
   computeBoxSize( patches, flags, new_box_size );
   
-  PIDX_set_restructuring_box(file, new_box_size);
+  PIDX_set_restructuring_box( file, new_box_size );
   checkReturnCode( rc, desc+" - PIDX_set_restructuring_box", __FILE__, __LINE__);
   
-  PIDX_set_block_size(this->file,  13);
+  PIDX_set_block_size( this->file,  13 );
   checkReturnCode( rc, desc+" - PIDX_set_block_size", __FILE__, __LINE__);
   
-  PIDX_set_block_count(this->file, 256);
+  PIDX_set_block_count( this->file, 256 );
   checkReturnCode( rc, desc+" - PIDX_set_block_count", __FILE__, __LINE__);
-  //PIDX_set_resolution(this->file, 0, 2);
+  //PIDX_set_resolution( this->file, 0, 2 );
   
   //__________________________________
   //  
-  PIDX_set_current_time_step(this->file, timeStep);
+  PIDX_set_current_time_step( this->file, timeStep );
   checkReturnCode( rc, desc+" - PIDX_set_current_time_step", __FILE__, __LINE__);
 
   //__________________________________
   // Set compresssion settings
-  if( typeOutput == CHECKPOINT){
+  if( typeOutput == CHECKPOINT ){
     PIDX_set_compression_type( this->file, PIDX_NO_COMPRESSION );
     checkReturnCode( rc, desc+" - PIDX_set_compression_type", __FILE__, __LINE__);
   }
@@ -304,13 +309,12 @@ PIDXOutputContext::setPatchExtents( const string          & desc,
                                     const TypeDescription * TD,
                                           patchExtents    & pExtents,
                                           PIDX_point      & patchOffset,
-                                          PIDX_point      & patchSize )
+                                          PIDX_point      & patchSize ) const
 {
-
-   // compute the extents of this variable (CCVariable, SFC(*)Variable...etc)
+   // Compute the extents of this variable (CCVariable, SFC(*)Variable...etc).
    IntVector hi_EC;
    IntVector lo_EC;
-   patch->computeVariableExtents(TD->getType(), boundaryLayer, Ghost::None, 0, lo_EC, hi_EC);
+   patch->computeVariableExtents( TD->getType(), boundaryLayer, Ghost::None, 0, lo_EC, hi_EC );
 
    IntVector nCells_EC    = hi_EC - lo_EC;
    int totalCells_EC      = nCells_EC.x() * nCells_EC.y() * nCells_EC.z();
@@ -355,7 +359,7 @@ void
 PIDXOutputContext::checkReturnCode( const int      rc,
                                     const string   warn,
                                     const char   * file, 
-                                    const int      line)
+                                    const int      line )
 {
   if ( rc != PIDX_success ) {
     throw InternalError( warn, file, line );

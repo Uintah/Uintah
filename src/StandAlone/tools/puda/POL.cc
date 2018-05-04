@@ -55,8 +55,9 @@ Uintah::POL( DataArchive * da, CommandLineFlags & clf, char axis, int ortho1, in
   cout << "Attempting to extract down axis: " << axis << " at point: (" << ortho1 << "," << ortho2 << ") for variable: " << clf.particleVariable << endl;
   // Print out all the variables to console
   vector<string> vars;
+  vector<int> num_matls;
   vector<const Uintah::TypeDescription*> types;
-  da->queryVariables(vars, types);
+  da->queryVariables( vars, num_matls, types );
   ASSERTEQ(vars.size(), types.size());
   cout << "There are " << vars.size() << " variables:\n";
   for(int i=0;i<(int)vars.size();i++)

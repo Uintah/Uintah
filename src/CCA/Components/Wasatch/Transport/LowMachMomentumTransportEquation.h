@@ -122,11 +122,7 @@ namespace WasatchCore{
     void setup_convective_flux( FieldTagInfo& ){}
     void setup_source_terms( FieldTagInfo&, Expr::TagList& ){}
     Expr::ExpressionID setup_rhs( FieldTagInfo&,
-                                  const Expr::TagList& srcTags  );
-
-  private:
-    Uintah::SolverParameters* solverParams_;
-    
+                                  const Expr::TagList& srcTags  );    
 
   };
 

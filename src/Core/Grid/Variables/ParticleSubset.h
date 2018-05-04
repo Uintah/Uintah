@@ -32,9 +32,12 @@
 #include <iostream>
 
 namespace Uintah {
+
   typedef int particleIndex;
   typedef int particleId;
+
   class Patch;
+
 /**************************************
 
 CLASS

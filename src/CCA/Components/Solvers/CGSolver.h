@@ -29,6 +29,40 @@
 
 namespace Uintah {
 
+
+  //______________________________________________________________________
+  //
+  class CGSolverParams : public SolverParameters {
+  public:
+    double tolerance;
+    double initial_tolerance;
+    int     maxiterations;
+
+    enum Norm {
+      L1, L2, LInfinity
+    };
+    
+    Norm norm;
+    
+    enum Criteria {
+      Absolute, Relative
+    };
+    
+    Criteria criteria;
+    
+    CGSolverParams()
+      : tolerance(1.e-8)
+      , initial_tolerance(1.e-15)
+      , norm(L2)
+      , criteria(Relative)
+    {}
+    
+    ~CGSolverParams() {}
+  };
+
+
+  //______________________________________________________________________
+  //
   class CGSolver : public SolverCommon { 
 
   public:
@@ -36,8 +70,10 @@ namespace Uintah {
     CGSolver( const ProcessorGroup * myworld );
     virtual ~CGSolver();
 
-    virtual SolverParameters* readParameters(       ProblemSpecP     & params,
-                                              const std::string      & name );
+    virtual void readParameters(       ProblemSpecP     & params,
+                                 const std::string      & name );
+
+    virtual SolverParameters * getParameters(){ return m_params;}
 
     virtual void scheduleSolve( const LevelP           & level,
                                       SchedulerP       & sched,
@@ -50,7 +86,6 @@ namespace Uintah {
                                       Task::WhichDW      which_b_dw,  
                                 const VarLabel         * guess,
                                       Task::WhichDW      which_guess_dw,
-                                const SolverParameters * params,
                                       bool               isFirstSolve = true );
 
     virtual std::string getName();
@@ -64,6 +99,9 @@ namespace Uintah {
     virtual void scheduleRestartInitialize( const LevelP      & level,
                                                   SchedulerP  & sched,
                                             const MaterialSet * matls) {}
+                                            
+  private:
+    CGSolverParams* m_params = nullptr;
   };
 
 } // end namespace Uintah

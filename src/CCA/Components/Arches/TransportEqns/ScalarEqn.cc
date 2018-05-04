@@ -206,19 +206,32 @@ ScalarEqn::assign_stage_to_sources(){
 //---------------------------------------------------------------------------
 void
 ScalarEqn::sched_evalTransportEqn( const LevelP& level,
-                                   SchedulerP& sched, int timeSubStep )
+                                   SchedulerP& sched, int timeSubStep,
+                                   EQN_BUILD_PHASE phase )
 {
 
   printSchedule(level,dbg,"ScalarEqn::sched_evalTransportEqn");
 
-  sched_buildTransportEqn( level, sched, timeSubStep );
+  if ( phase == CONVDIFF ){
+    //build convection and diff terms
+    sched_buildTransportEqn( level, sched, timeSubStep );
+  } else if ( phase == ADDSOURCES ){
+    //Add sources to rhs
+    sched_addSourceTerms( level, sched, timeSubStep );
+  } else if ( phase == UPDATE ){
+    //Update the equation
+    sched_solveTransportEqn( level, sched, timeSubStep );
 
-  sched_solveTransportEqn( level, sched, timeSubStep );
-
-  if ( clip.my_type == ClipInfo::CONSTRAINED )
-  {
-    sched_advClipping( level, sched, timeSubStep );
+    //clip
+    if ( clip.my_type == ClipInfo::CONSTRAINED )
+    {
+      sched_advClipping( level, sched, timeSubStep );
+    }
+  } else {
+    throw InvalidValue("Error: Phase not valid for ScalarEqn::sched_evalTransportEqn.",
+        __FILE__, __LINE__ );
   }
+
 }
 //---------------------------------------------------------------------------
 // Method: Schedule the intialization of the variables.
@@ -342,7 +355,98 @@ ScalarEqn::sched_computeSources( const LevelP& level, SchedulerP& sched, int tim
 {
 }
 //---------------------------------------------------------------------------
-// Method: Schedule build the transport equation.
+// Method: Add the source terms to the RHS
+//---------------------------------------------------------------------------
+void
+ScalarEqn::sched_addSourceTerms( const LevelP& level, SchedulerP& sched, int timeSubStep )
+{
+  string taskname = "ScalarEqn::addSourceTerms";
+  Task* tsk = scinew Task(taskname, this, &ScalarEqn::addSourceTerms, timeSubStep);
+
+  for (vector<SourceContainer>::iterator iter = d_sources.begin();
+       iter != d_sources.end(); iter++){
+
+    iter->label = VarLabel::find( iter->name );
+
+    if ( iter->label == 0 ){
+      throw InvalidValue("Error: Source Label not found: "+iter->name, __FILE__, __LINE__);
+    }
+
+    tsk->requires( Task::NewDW, iter->label, Ghost::None, 0 );
+
+  }
+
+  //extra sources
+  for ( int i = 0; i < nExtraSources; i++ ) {
+    tsk->requires( Task::NewDW, extraSourceLabels[i], Ghost::None, 0 );
+  }
+
+  tsk->modifies(d_RHSLabel);
+
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+
+}
+//--------------------------------------------------------------------------------------------------
+void
+ScalarEqn::addSourceTerms( const ProcessorGroup* pc,
+                           const PatchSubset* patches,
+                           const MaterialSubset* matls,
+                           DataWarehouse* old_dw,
+                           DataWarehouse* new_dw,
+                           const int timeSubStep )
+{
+  //patch loop
+  for (int p=0; p < patches->size(); p++){
+
+    Ghost::GhostType  gn  = Ghost::None;
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+
+    vector<constCCVarWrapper> sourceVars;
+    for (vector<SourceContainer>::iterator src_iter = d_sources.begin(); src_iter != d_sources.end(); src_iter++){
+      constCCVarWrapper temp_var;  // Outside of this scope src is no longer available
+      new_dw->get(temp_var.data, src_iter->label, matlIndex, patch, gn, 0);
+      temp_var.sign = (*src_iter).weight;
+      sourceVars.push_back(temp_var);
+    }
+
+    //put extra sources into static array
+    std::vector <constCCVariable<double> > extraSources (nExtraSources);
+    for ( int i = 0; i < nExtraSources; i++ ) {
+      const VarLabel* tempLabel = extraSourceLabels[i];
+      new_dw->get( extraSources[i], tempLabel, matlIndex, patch, gn, 0);
+    }
+
+    CCVariable<double> RHS;
+    new_dw->getModifiable(RHS, d_RHSLabel, matlIndex, patch);
+
+    Vector Dx = patch->dCell();
+    const double vol = Dx.x()*Dx.y()*Dx.z();
+
+    //----SUM UP RHS
+    //
+    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+
+      IntVector c = *iter;
+
+      //-----ADD SOURCES
+      for (vector<constCCVarWrapper>::iterator siter = sourceVars.begin(); siter != sourceVars.end(); siter++){
+        RHS[c] += siter->sign * (siter->data)[c] * vol;
+      }
+
+      //-----ADD Extra Sources
+      for ( int i = 0; i< nExtraSources; i++) {
+        RHS[c] += extraSources[i][c] * vol;
+      }
+    }
+  }
+}
+
+
+//---------------------------------------------------------------------------
+// method: schedule build the transport equation.
 //---------------------------------------------------------------------------
 void
 ScalarEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, const int timeSubStep )
@@ -376,25 +480,6 @@ ScalarEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, cons
   tsk->modifies(d_FconvLabel);
   tsk->modifies(d_RHSLabel);
   tsk->requires(Task::NewDW, d_prNo_label, Ghost::None, 0);
-
-  // srcs
-  for (vector<SourceContainer>::iterator iter = d_sources.begin();
-       iter != d_sources.end(); iter++){
-
-    iter->label = VarLabel::find( iter->name );
-
-    if ( iter->label == 0 ){
-      throw InvalidValue("Error: Source Label not found: "+iter->name, __FILE__, __LINE__);
-    }
-
-    tsk->requires( Task::NewDW, iter->label, Ghost::None, 0 );
-
-  }
-
-  //extra sources
-  for ( int i = 0; i < nExtraSources; i++ ) {
-    tsk->requires( Task::NewDW, extraSourceLabels[i], Ghost::None, 0 );
-  }
 
   //-----OLD-----
   tsk->requires(Task::OldDW, d_fieldLabels->d_areaFractionLabel, Ghost::AroundCells, 2);
@@ -467,8 +552,8 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
     }
     new_dw->get(mu_t, d_fieldLabels->d_turbViscosLabel, matlIndex, patch, gac, 1);
     new_dw->get(uVel, d_fieldLabels->d_uVelocitySPBCLabel, matlIndex, patch, gac, 1);
-    new_dw->get(prNo, d_prNo_label, matlIndex, patch, gn, 0);
     old_dw->get(areaFraction, d_fieldLabels->d_areaFractionLabel, matlIndex, patch, gac, 2);
+    new_dw->get(prNo, d_prNo_label, matlIndex, patch, gn, 0);
 
     if ( !d_use_constant_D ){
       if ( timeSubStep == 0 ){
@@ -491,20 +576,6 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
     new_dw->getModifiable(Fdiff, d_FdiffLabel, matlIndex, patch);
     new_dw->getModifiable(Fconv, d_FconvLabel, matlIndex, patch);
     new_dw->getModifiable(RHS, d_RHSLabel, matlIndex, patch);
-    vector<constCCVarWrapper> sourceVars;
-    for (vector<SourceContainer>::iterator src_iter = d_sources.begin(); src_iter != d_sources.end(); src_iter++){
-      constCCVarWrapper temp_var;  // Outside of this scope src is no longer available
-      new_dw->get(temp_var.data, src_iter->label, matlIndex, patch, gn, 0);
-      temp_var.sign = (*src_iter).weight;
-      sourceVars.push_back(temp_var);
-    }
-
-    //put extra sources into static array
-    std::vector <constCCVariable<double> > extraSources (nExtraSources);
-    for ( int i = 0; i < nExtraSources; i++ ) {
-      const VarLabel* tempLabel = extraSourceLabels[i];
-      new_dw->get( extraSources[i], tempLabel, matlIndex, patch, gn, 0);
-    }
 
     RHS.initialize(0.0);
     Fconv.initialize(0.0);
@@ -533,23 +604,13 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
         d_disc->computeDiff( patch, Fdiff, phi, mu_t, D_mol, den, areaFraction, prNo );
     }
 
-    //----SUM UP RHS
-    //
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter;
 
       RHS[c] += Fdiff[c] - Fconv[c];
 
-      //-----ADD SOURCES
-      for (vector<constCCVarWrapper>::iterator siter = sourceVars.begin(); siter != sourceVars.end(); siter++){
-        RHS[c] += siter->sign * (siter->data)[c] * vol;
-      }
-
-      //-----ADD Extra Sources
-      for ( int i = 0; i< nExtraSources; i++) {
-        RHS[c] += extraSources[i][c] * vol;
-      }
     }
+
 #ifdef DO_TIMINGS
     timer.stop("work");
 #endif

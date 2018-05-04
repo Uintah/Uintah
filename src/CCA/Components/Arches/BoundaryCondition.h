@@ -666,6 +666,8 @@ BoundaryCondition_new* getNewBoundaryCondition(){
 
 private:
 
+bool m_has_boundaries{true};
+
 std::map<const std::string, const VarLabel*> m_area_labels;
 std::map<int,WBCHelper*>* m_bcHelper;
 Uintah::ProblemSpecP m_arches_spec;

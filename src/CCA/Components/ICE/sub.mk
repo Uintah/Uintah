@@ -50,6 +50,7 @@ PSELIBS := \
        CCA/Components/Application      \
        CCA/Components/Models           \
        CCA/Components/OnTheFlyAnalysis \
+       CCA/Components/Solvers          \
        CCA/Ports                       \
        Core/Disclosure                 \
        Core/Exceptions                 \
