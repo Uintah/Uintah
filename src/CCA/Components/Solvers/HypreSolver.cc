@@ -527,7 +527,7 @@ namespace Uintah {
 
         //__________________________________
         // Create the RHS
-        HYPRE_StructVector HB;;
+        HYPRE_StructVector HB;
         HB = createPopulateHypreVector(  timeStep, restart, do_setup, pg, grid, patches, matl, m_b_label, b_dw, hypre_solver_s->HB_p);
                                             
         //__________________________________
