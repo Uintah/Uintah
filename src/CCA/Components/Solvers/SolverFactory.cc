@@ -53,7 +53,7 @@ SolverInterface* SolverFactory::create(       ProblemSpecP   & ps,
       solverName = "CGSolver";
   }
 
-  proc0cout << "Implicit Solver: \t" << solverName << std::endl;
+  proc0cout << "Linear Solver: \t" << solverName << std::endl;
 
   SolverInterface* solver = nullptr;
 

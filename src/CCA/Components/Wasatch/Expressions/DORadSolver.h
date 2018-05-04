@@ -39,7 +39,6 @@
 
 namespace Uintah{
   class SolverInterface;
-  class SolverParameters;
 }
 
 //==============================================================================
@@ -133,7 +132,7 @@ namespace WasatchCore{
     int  materialID_;
     int  rkStage_;
     
-    const Uintah::SolverParameters& solverParams_;
+
     Uintah::SolverInterface& solver_;
     const Uintah::VarLabel *matrixLabel_, *intensityLabel_, *rhsLabel_;
     
@@ -152,7 +151,6 @@ namespace WasatchCore{
                  const Expr::Tag& absCoefTag,
                  const Expr::Tag& scatCoefTag,
                  const Expr::Tag& temperatureTag,
-                 const Uintah::SolverParameters& solverParams,
                  Uintah::SolverInterface& solver );
     
   public:
@@ -162,7 +160,6 @@ namespace WasatchCore{
     class Builder : public Expr::ExpressionBuilder
     {
       const Expr::Tag absCoefTag_, scatCoefTag_, temperatureTag_;
-      const Uintah::SolverParameters& sparams_;
       Uintah::SolverInterface& solver_;
       const OrdinateDirections::SVec svec_;
     public:
@@ -171,7 +168,6 @@ namespace WasatchCore{
                const Expr::Tag absCoefTag,
                const Expr::Tag scatCoefTag,
                const Expr::Tag temperatureTag,
-               const Uintah::SolverParameters& sparams,
                Uintah::SolverInterface& solver );
       ~Builder(){}
       Expr::ExpressionBase* build() const;

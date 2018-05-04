@@ -308,15 +308,15 @@ namespace WasatchCore{
     bool use3DLaplacian = true;
     poissonEqParams->getWithDefault( "Use3DLaplacian",use3DLaplacian, true );
 
-    Uintah::SolverParameters* sparams = linSolver.readParameters( poissonEqParams, "" );
-    sparams->setSolveOnExtraCells( false );
-    sparams->setUseStencil4( true );
-    sparams->setOutputFileName( "WASATCH" );
+    linSolver.readParameters( poissonEqParams, "" );
+    linSolver.getParameters()->setSolveOnExtraCells( false );
+    linSolver.getParameters()->setUseStencil4( true );
+    linSolver.getParameters()->setOutputFileName( "WASATCH" );
 
     PoissonExpression::poissonTagList.push_back(poissonVariableTag);
 
-    Expr::ExpressionBuilder* pbuilder  = new PoissonExpression::Builder( poissontags, rhsTag, useRefPoint, refValue, refLocation, use3DLaplacian, *sparams, linSolver);
-    Expr::ExpressionBuilder* pbuilder1 = new PoissonExpression::Builder( poissontags, rhsTag, useRefPoint, refValue, refLocation, use3DLaplacian, *sparams, linSolver);
+    Expr::ExpressionBuilder* pbuilder  = new PoissonExpression::Builder( poissontags, rhsTag, useRefPoint, refValue, refLocation, use3DLaplacian, linSolver);
+    Expr::ExpressionBuilder* pbuilder1 = new PoissonExpression::Builder( poissontags, rhsTag, useRefPoint, refValue, refLocation, use3DLaplacian, linSolver);
 
     GraphHelper* const icgraphHelper  = gc[INITIALIZATION  ];
     GraphHelper* const slngraphHelper = gc[ADVANCE_SOLUTION];
@@ -358,7 +358,7 @@ namespace WasatchCore{
       }
     }
     else if( params->findBlock("DiscreteOrdinates") ){
-      Uintah::SolverParameters* sparams = linSolver.readParameters( params, "" );
+      linSolver.readParameters( params, "" );
 
       int order = 2;
       params->findBlock("DiscreteOrdinates")->getAttribute("order",order);
@@ -372,7 +372,7 @@ namespace WasatchCore{
         const OrdinateDirections::SVec& svec = discOrd.get_ordinate_information(i);
         const std::string intensity( "intensity_" + boost::lexical_cast<std::string>(i) );
         std::cout << "registering expression for " << intensity << std::endl;
-        DORadSolver::Builder* radSolver = new DORadSolver::Builder( intensity, svec, absCoefTag, scatCoef, tempTag, *sparams, linSolver );
+        DORadSolver::Builder* radSolver = new DORadSolver::Builder( intensity, svec, absCoefTag, scatCoef, tempTag, linSolver );
         const Expr::ExpressionID id = gh.exprFactory->register_expression( radSolver );
         gh.exprFactory->cleave_from_children( id );
         gh.exprFactory->cleave_from_parents ( id );

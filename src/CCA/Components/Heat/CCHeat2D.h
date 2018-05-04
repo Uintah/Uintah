@@ -110,7 +110,6 @@ protected:
 #endif
 
     SolverInterface * solver;
-    SolverParameters * solver_parameters;
 
 public:
     CCHeat2D ( const ProcessorGroup * myworld,

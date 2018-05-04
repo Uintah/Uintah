@@ -6,7 +6,6 @@
 namespace Uintah{
 
   class SolverInterface;
-  class SolverParameters;
 
   class PressureEqn : public TaskInterface {
 
@@ -78,7 +77,6 @@ private:
     bool m_use_mms_drhodt;
 
     SolverInterface* m_hypreSolver;
-    SolverParameters* m_hypreSolver_parameters;
 
     SimulationStateP m_sharedState;
 
