@@ -184,6 +184,12 @@ public:
 
 protected:
 
+  // Control runtime stat output
+  int printEvery;
+  int printOffset;
+  bool printOnZero;
+  bool suppressTimestepWarning;
+
   bool isLast( void );
     
   void preGridSetup();

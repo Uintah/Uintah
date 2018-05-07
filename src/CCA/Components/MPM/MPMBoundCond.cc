@@ -30,6 +30,7 @@
 #include <Core/Util/DebugStream.h>
 
 #include <iostream>
+#include <functional>
 
 using namespace Uintah;
 using namespace std;
@@ -47,11 +48,11 @@ MPMBoundCond::~MPMBoundCond()
 //
 void MPMBoundCond::setBoundaryCondition(const Patch* patch,
                                         int dwi,
-                                        const string& type, 
+                                        const string& bc_type, 
                                         NCVariable<Vector>& variable,
                                         string interp_type)
 {
-  dbg_BC << "-------- setBC(NC_Vector)  \t"<< type <<" "
+  dbg_BC << "-------- setBC(NC_Vector)  \t"<< bc_type <<" "
           << " mat_id = " << dwi <<  ", Patch: "<< patch->getID() << endl;
           
   for(Patch::FaceType face = Patch::startFace;
@@ -74,7 +75,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,
         Iterator nbound_ptr;
         Iterator nu;        // not used;
 
-        if (type == "Velocity"){
+        if (bc_type == "Velocity"){
          const  BoundCondBase* bcb = 
             patch->getArrayBCValues(face,dwi,"Velocity",nu,nbound_ptr,child);
           
@@ -114,7 +115,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,
           } else
           delete bcb;
 
-        } else if (type == "Symmetric"){
+        } else if (bc_type == "Symmetric"){
           const BoundCondBase* bcb =
             patch->getArrayBCValues(face,dwi,"Symmetric",nu,nbound_ptr,child);
           if (!bcb) { 
@@ -295,12 +296,12 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,
 //
 void MPMBoundCond::setBoundaryCondition(const Patch* patch,
                                         int dwi,
-                                        const string& type, 
+                                        const string& bc_type, 
                                         NCVariable<double>& variable,
                                         string interp_type)
 {
 
-  dbg_BC << "-------- setBC(NC_double)  \t"<< type << " " 
+  dbg_BC << "-------- setBC(NC_double)  \t"<< bc_type << " " 
             << " mat_id = " << dwi <<  ", Patch: "<< patch->getID() << endl;
             
   for(Patch::FaceType face = Patch::startFace;
@@ -311,10 +312,14 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,
     if (patch->getBCType(face) == Patch::None) {
       int numChildren = patch->getBCDataArray(face)->getNumberChildren(dwi);
       IntVector l(0,0,0),h(0,0,0);
-      
-      if(interp_type=="gimp" || interp_type=="cpdi" ||
-         interp_type=="cpti" || interp_type=="3rdorderBS" ||
-         interp_type=="fast_cpdi"){
+      bool extendedInterp = false;
+      if (interp_type == "gimp" || interp_type == "cpdi" ||
+          interp_type == "cpti" || interp_type == "3rdorderBS" ||
+          interp_type == "fast_cpdi") {
+        extendedInterp = true;
+      }
+
+      if (extendedInterp) {
         patch->getFaceExtraNodes(face,0,l,h);
       }
       
@@ -325,9 +330,95 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,
 
         //__________________________________
         // Used in MPMICE and Scalar diffusion
-        if(type=="Pressure" || type=="Temperature" || type=="SD-Type"){
+        if(bc_type == "MaxTemp") {
+          const BoundCondBase *bcb =
+            patch->getArrayBCValues(face,dwi,bc_type,nu,nbound_ptr, child);
+
+          if (!bcb){
+            continue;
+          }
+          const BoundCond<double>* bc =
+            dynamic_cast<const BoundCond<double>*>(bcb);
+
+          if (bc != nullptr) {
+            //__________________________________
+            //
+            if (bc->getBCType() == "Dirichlet") {
+              double bcv = bc->getValue();
+
+              for (nbound_ptr.reset(); !nbound_ptr.done();nbound_ptr++){
+                IntVector nd = *nbound_ptr;
+                variable[nd] = std::max(variable[nd],bcv);
+              }
+
+              if(extendedInterp){
+                for(NodeIterator it(l,h); !it.done(); it++) {
+                  IntVector nd = *it;
+                  variable[nd] = std::max(variable[nd],bcv);
+                }
+              }
+            }
+
+            //__________________________________
+            //
+            if (bc->getBCType() == "Neumann"){   // There's nothing to do for symmetric BCs - Jim
+              Vector deltax = patch->dCell();
+              double dx = -9;
+              IntVector off(-9,-9,-9);
+              if (face == Patch::xplus){
+                dx = deltax.x();
+                off=IntVector(1,0,0);
+              }
+              else if (face == Patch::xminus){
+                dx = deltax.x();
+                off=IntVector(-1,0,0);
+              }
+              else if (face == Patch::yplus){
+                dx = deltax.y();
+                off=IntVector(0,1,0);
+              }
+              else if (face == Patch::yminus){
+                dx = deltax.y();
+                off=IntVector(0,-1,0);
+              }
+              else if (face == Patch::zplus){
+                dx = deltax.z();
+                off=IntVector(0,0,1);
+              }
+              else if (face == Patch::zminus){
+                dx = deltax.z();
+                off=IntVector(0,0,-1);
+              }
+
+              double gradv = bc->getValue();
+
+              for (nbound_ptr.reset(); !nbound_ptr.done(); nbound_ptr++) {
+                IntVector nd = *nbound_ptr;
+                variable[nd] = variable[nd-off] - gradv*dx;
+              }
+
+              for(NodeIterator it(l,h); !it.done(); it++) {
+                IntVector nd = *it;
+                variable[nd] = variable[nd-off] - gradv*dx;
+              }
+            }
+
+            //__________________________________
+            //  debugging
+            if( dbg_BC.active() ) {
+              nbound_ptr.reset();
+              dbg_BC <<"Face: "<< patch->getFaceName(face) << " interp: " << interp_type
+                     <<"\t child " << child  <<" NumChildren "<<numChildren
+                     <<"\t bound_ptr = "<< nbound_ptr<< endl;
+            }
+
+            delete bc;
+          } else
+          delete bcb;
+        } // MaxTemp
+        if(bc_type=="Pressure" || bc_type=="Temperature" || bc_type=="SD-Type") {
           const BoundCondBase *bcb = 
-            patch->getArrayBCValues(face,dwi,type,nu,nbound_ptr, child);
+            patch->getArrayBCValues(face,dwi,bc_type,nu,nbound_ptr, child);
             
           if (!bcb){
             continue;
@@ -346,16 +437,27 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,
                 variable[nd] = bcv;
               }
               
-              if(interp_type=="gimp" || interp_type=="cpdi" ||
-                 interp_type=="cpti" || interp_type=="3rdorderBS" ||
-                 interp_type=="fast_cpdi"){
+              if(extendedInterp){
                 for(NodeIterator it(l,h); !it.done(); it++) {
                   IntVector nd = *it;
                   variable[nd] = bcv;
                 }
               }
             }
-            
+            if (bc->getBCType() == "minDirichlet") {
+              double bcv = bc->getValue();
+
+              for (nbound_ptr.reset(); !nbound_ptr.done(); ++nbound_ptr) {
+                IntVector nd = *nbound_ptr;
+                variable[nd] = std::max(variable[nd],bcv);
+              }
+              if (extendedInterp) {
+                for (NodeIterator it(l,h); !it.done(); ++it) {
+                  IntVector nd = *it;
+                  variable[nd] = std::max(variable[nd],bcv);
+                }
+              }
+            }
             //__________________________________
             //
             if (bc->getBCType() == "Neumann"){   // There's nothing to do for symmetric BCs - Jim
@@ -416,5 +518,5 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,
       }  // child
     } else
       continue;
-  }
-}
+  }  // For Patch::FaceType
+} // setBoundaryCondition

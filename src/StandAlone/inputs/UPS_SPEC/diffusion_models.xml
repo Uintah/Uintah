@@ -37,6 +37,10 @@
     <gasConstant           spec="REQUIRED DOUBLE" need_applies_to="type activated" />
     <activationEnergy      spec="REQUIRED DOUBLE" need_applies_to="type activated" />
     <!--  Activated diffusion models -->
+    
+    <!-- Ni/Al specific model parameters -->
+    <scaleMultiplier       spec="OPTIONAL DOUBLE"   need_applies_to="type activated2" />
+    <normalized            spec="OPTIONAL BOOLEAN"  need_applies_to="type activated2" />
 
     <!-- Required for constant_rate model -->    
     <constant_rate         spec="REQUIRED DOUBLE" need_applies_to="type constant_rate" />

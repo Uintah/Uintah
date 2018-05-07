@@ -119,6 +119,18 @@ SimulationController::SimulationController( const ProcessorGroup * myworld,
 
   d_sharedState->setSimulationTime( d_timeinfo );
   
+  printEvery = 1;
+  printOffset = 0;
+  printOnZero = true;
+  suppressTimestepWarning = false;
+  ProblemSpecP runtime_ps = pspec->findBlock("RuntimeStats");
+  if (runtime_ps) {
+    runtime_ps->require("outputEvery",printEvery);
+    runtime_ps->require("outputOn",printOffset);
+    runtime_ps->getWithDefault("outputZeroth",printOnZero, true);
+    runtime_ps->getWithDefault("suppressWarnings",suppressTimestepWarning,false);
+  }
+
 #ifdef USE_PAPI_COUNTERS
   /*
    * Setup PAPI events to track.
@@ -551,11 +563,17 @@ SimulationController::getNextDeltaT( void )
   newDW->get( delt_var, d_sharedState->get_delt_label() );
   d_delt = delt_var;
 
+  int topTimestep = d_sharedState->getCurrentTopLevelTimeStep();
+  bool doPrintNow =( suppressTimestepWarning &&
+                     (printEvery == 1) ||
+                     (topTimestep == 0 && printOnZero) ||
+                     (topTimestep%printEvery == printOffset) );
+
   // Adjust the delt
   d_delt *= d_timeinfo->delt_factor;
       
   // Check to see if the new delt is below the delt_min
-  if( d_delt < d_timeinfo->delt_min ) {
+  if( d_delt < d_timeinfo->delt_min && doPrintNow) {
     proc0cout << "WARNING: raising delt from " << d_delt;
     
     d_delt = d_timeinfo->delt_min;
@@ -567,9 +585,10 @@ SimulationController::getNextDeltaT( void )
   // previous delt
   double delt_tmp = (1.0+d_timeinfo->max_delt_increase) * d_prev_delt;
   
+
   if( d_prev_delt > 0.0 &&
       d_timeinfo->max_delt_increase < 1.e90 &&
-      d_delt > delt_tmp ) {
+      d_delt > delt_tmp && doPrintNow) {
     proc0cout << "WARNING (a): lowering delt from " << d_delt;
     
     d_delt = delt_tmp;
@@ -581,7 +600,7 @@ SimulationController::getNextDeltaT( void )
 
   // Check to see if the new delt exceeds the max_initial_delt
   if( d_simTime <= d_timeinfo->initial_delt_range &&
-      d_delt > d_timeinfo->max_initial_delt ) {
+      d_delt > d_timeinfo->max_initial_delt && doPrintNow) {
     proc0cout << "WARNING (b): lowering delt from " << d_delt ;
 
     d_delt = d_timeinfo->max_initial_delt;
@@ -591,7 +610,7 @@ SimulationController::getNextDeltaT( void )
   }
 
   // Check to see if the new delt exceeds the delt_max
-  if( d_delt > d_timeinfo->delt_max ) {
+  if( d_delt > d_timeinfo->delt_max && doPrintNow) {
     proc0cout << "WARNING (c): lowering delt from " << d_delt;
 
     d_delt = d_timeinfo->delt_max;
@@ -604,7 +623,7 @@ SimulationController::getNextDeltaT( void )
 
     // Clamp to the output time
     double nextOutput = d_output->getNextOutputTime();
-    if (nextOutput != 0 && d_simTime + d_delt > nextOutput) {
+    if (nextOutput != 0 && d_simTime + d_delt > nextOutput && doPrintNow) {
       proc0cout << "WARNING (d): lowering delt from " << d_delt;
 
       d_delt = nextOutput - d_simTime;
@@ -615,7 +634,7 @@ SimulationController::getNextDeltaT( void )
 
     // Clamp to the checkpoint time
     double nextCheckpoint = d_output->getNextCheckpointTime();
-    if (nextCheckpoint != 0 && d_simTime + d_delt > nextCheckpoint) {
+    if (nextCheckpoint != 0 && d_simTime + d_delt > nextCheckpoint && doPrintNow) {
       proc0cout << "WARNING (d): lowering delt from " << d_delt;
 
       d_delt = nextCheckpoint - d_simTime;
@@ -762,12 +781,12 @@ SimulationController::ReportStats( bool header /* = false */ )
   Timers::nanoseconds timeStep = walltimers.updateExpMovingAverage();
 
   int topTimestep = d_sharedState->getCurrentTopLevelTimeStep();
-
-  const int printEvery = 1000;
-  const int printOffset = 1;
+  bool doPrintNow =( (printEvery == 1) ||
+                     (topTimestep == 0 && printOnZero) ||
+                     (topTimestep%printEvery == printOffset) );
   if( d_myworld->myrank() == 0 )
   {
-    if ((topTimestep % printEvery) == printOffset) {
+    if (doPrintNow) {
       ostringstream message;
       message << left
           << "Timestep "   << setw(8)

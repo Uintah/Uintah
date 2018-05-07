@@ -106,6 +106,8 @@ namespace Uintah
 
      bool isConcNormalized;
 
+     double d_multiplier;
+
      Matrix3 d_latticeMisfit;
   };
 

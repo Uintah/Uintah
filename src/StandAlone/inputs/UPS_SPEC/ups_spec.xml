@@ -423,7 +423,14 @@
 
         <ParticlePosition spec="OPTIONAL NO_DATA"
                                                                                 attribute1="label REQUIRED STRING"/>
-                                                                                
+  <RuntimeStats           spec="OPTIONAL NO_DATA">
+    <gateRuntimeOutput    spec="REQUIRED BOOLEAN" />  <!-- Whether to turn on output spew gating or not. -->
+    <outputEvery          spec="REQUIRED INTEGER" />  <!-- Only output every n^th timestep -->
+    <outputOn             spec="OPTIONAL INTEGER" />  <!-- Output on timesteps which end with this ordinal (generally 1, outputEvery + 1, 2xoutputEvery +1, etc -->
+    <outputZeroth         spec="OPTIONAL BOOLEAN" />  <!-- Output zeroth timestep even if it wouldn't normally be. -->
+    <suppressWarnings     spec="OPTIONAL BOOLEAN" />  <!-- Suppress timestep lowering/raising warnings except on output timesteps. -->
+  </RuntimeStats>
+                                                                      
   <Time                   spec="REQUIRED NO_DATA">
     <maxTime              spec="REQUIRED DOUBLE  'positive'" />
     <max_Timesteps        spec="OPTIONAL INTEGER 'positive'" />
@@ -577,7 +584,7 @@
                               attribute1="id        OPTIONAL STRING '0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,all'"
                               attribute2="var       REQUIRED STRING 'Neumann, Dirichlet, symmetry, LODI, computeFromDensity, Sine, creep, slip, Custom, 
                                                                      VelocityInlet, StABL, PressureBC, WallBC, OutletBC, NOutletBC, VelocityFileInput, MassFlowInlet, PartMassFlowInlet,
-                                                                     Swirl, FromFile, ForcedDirichlet, TurbulentInlet, Tabulated powerLawProfile logWindProfile'"
+                                                                     Swirl, FromFile, ForcedDirichlet, TurbulentInlet, Tabulated powerLawProfile logWindProfile minDirichlet'"
                               attribute3="label     REQUIRED STRING "
                               attribute4="type      OPTIONAL STRING 'int, velocity, handoff'" 
                               attribute5="value     OPTIONAL STRING" >

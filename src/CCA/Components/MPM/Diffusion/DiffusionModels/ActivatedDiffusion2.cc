@@ -50,7 +50,8 @@ namespace Uintah
                                                                diff_type
                                                               )
   {
-
+    ps->getWithDefault("scaleMultiplier",d_multiplier,1.0);
+    ps->getWithDefault("normalized",isConcNormalized, true);
   }
 
   Activated2::~Activated2()
@@ -106,7 +107,7 @@ namespace Uintah
     for (int pIdx = 0; pIdx < pset->numParticles(); ++pIdx)
     {
       double Temp = pTemperature[pIdx];
-      double D = AlNi::Diffusivity(Temp);
+      double D = AlNi::Diffusivity(Temp)*d_multiplier;
 
       pFluxNew[pIdx] = D * pGradConcentration[pIdx];
       delT_local = std::min(delT_local, computeStableTimeStep(D,dx));
@@ -185,7 +186,8 @@ namespace Uintah
     }
     rdm_ps->appendElement("diffusivity", d_D0);
     rdm_ps->appendElement("max_concentration", d_MaxConcentration);
-
+    rdm_ps->appendElement("scalarMultiplier", d_multiplier);
+    rdm_ps->appendElement("normalized", isConcNormalized);
   }
 
 } // namespace Uintah
