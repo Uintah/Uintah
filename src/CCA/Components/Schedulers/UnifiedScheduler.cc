@@ -377,13 +377,15 @@ UnifiedScheduler::problemSetup( const ProblemSpecP     & prob_spec
     if (Uintah::Parallel::usingDevice()) {
       cudaError_t retVal;
       int availableDevices;
-      CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&availableDevices));
+      retVal = cudaGetDeviceCount(&availableDevices);
+      CUDA_RT_SAFE_CALL(retVal);
       std::cout << "   Using " << m_num_devices << "/" << availableDevices
                 << " available GPU(s)" << std::endl;
 
       for (int device_id = 0; device_id < availableDevices; device_id++) {
         cudaDeviceProp device_prop;
-        CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceProperties(&device_prop, device_id));
+        retVal = cudaGetDeviceProperties(&device_prop, device_id);
+        CUDA_RT_SAFE_CALL(retVal);
         printf("   GPU Device %d: \"%s\" with compute capability %d.%d\n",
                device_id, device_prop.name, device_prop.major, device_prop.minor);
       }
@@ -1549,7 +1551,8 @@ UnifiedScheduler::gpuInitialize( bool reset )
     m_num_devices = 3;
   } else {
     int numDevices = 0;
-    CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&numDevices));
+    retVal = cudaGetDeviceCount(&numDevices);
+    CUDA_RT_SAFE_CALL(retVal);
     m_num_devices = numDevices;
   }
 
@@ -1563,17 +1566,18 @@ UnifiedScheduler::gpuInitialize( bool reset )
   } else {
     for (int i = 0; i < m_num_devices; i++) {
       if (reset) {
-        CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(i));
-        CUDA_RT_SAFE_CALL(retVal = cudaDeviceReset());
+        retVal = cudaSetDevice(i);
+        CUDA_RT_SAFE_CALL(retVal);
+        retVal = cudaDeviceReset();
+        CUDA_RT_SAFE_CALL(retVal);
       }
     }
     // set it back to the 0th device
-    CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(0));
+    retVal = cudaSetDevice(0);
+    CUDA_RT_SAFE_CALL(retVal);
     m_current_device = 0;
   }
-
 }
-
 
 //______________________________________________________________________
 //
@@ -1736,7 +1740,7 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
     }
   }
 
-  unsigned int device_id = -1;
+  int device_id = -1;
   // The task runs on one device.  The first patch we see can be used to tell us
   // which device we should be on.
   std::map<labelPatchMatlDependency, const Task::Dependency*>::iterator varIter;
@@ -2273,7 +2277,7 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
             } //end neighbors for loop
           } // end if(gatherGhostCells)
         } else if ( allocated && !correctSize ) {
-          // At the moment this isn't allowed. So it does an exit(-1).  There are two reasons for this.
+          // At the moment this isn't allowed.  There are two reasons for this.
           // First, the current CPU system always needs to "resize" variables when ghost cells are required.
           // Essentially the variables weren't created with room for ghost cells, and so room  needs to be created.
           // This step can be somewhat costly (I've seen a benchmark where it took 5% of the total computation time).
@@ -2452,7 +2456,7 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
 
       if (it->second.m_staging == isStaging) {
 
-        if (dtask->getDeviceVars().getTotalVars(whichGPU, dwIndex) >= 0) {
+        if (dtask->getDeviceVars().getTotalVars(whichGPU, dwIndex)) {
 
           void* device_ptr = nullptr;  // device base pointer to raw data
 
@@ -4690,7 +4694,7 @@ UnifiedScheduler::copyAllExtGpuDependenciesToHost( DetailedTask * dtask )
                  it->first.m_levelIndx,
                  ghostLow,
                  ghostSize,
-                 (const int)it->first.m_dataWarehouse);
+                 it->first.m_dataWarehouse);
       GridVariableBase* tempGhostVar = (GridVariableBase*)item.m_var;
 
       tempGhostVar->getSizes(host_low, host_high, host_offset, host_size, host_strides);
@@ -4770,7 +4774,7 @@ UnifiedScheduler::copyAllExtGpuDependenciesToHost( DetailedTask * dtask )
       if (it->second.m_dest == GpuUtilities::anotherMpiRank) {
         // TODO: Needs a particle section
         IntVector host_low, host_high, host_offset, host_size, host_strides;
-        OnDemandDataWarehouseP dw = m_dws[(const int)it->first.m_dataWarehouse];
+        OnDemandDataWarehouseP dw = m_dws[it->first.m_dataWarehouse];
 
         //We created a temporary host variable for this earlier,
         //and the deviceVars collection knows about it.
@@ -4779,7 +4783,7 @@ UnifiedScheduler::copyAllExtGpuDependenciesToHost( DetailedTask * dtask )
         IntVector ghostSize(ghostHigh.x() - ghostLow.x(), ghostHigh.y() - ghostLow.y(), ghostHigh.z() - ghostLow.z());
         DeviceGridVariableInfo item = dtask->getDeviceVars().getStagingItem(it->first.m_label, it->second.m_sourcePatchPointer,
                                                                             it->first.m_matlIndx, it->first.m_levelIndx, ghostLow,
-                                                                            ghostSize, (const int)it->first.m_dataWarehouse);
+                                                                            ghostSize, it->first.m_dataWarehouse);
         GridVariableBase* tempGhostVar = (GridVariableBase*)item.m_var;
 
         //Also get the existing host copy

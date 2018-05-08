@@ -540,7 +540,6 @@ GPUDataWarehouse::putUnallocatedIfNotExists(char const* label, int patchID, int 
   if ( it == varPointers->end()) {
     // Do not place size information.  The Data Warehouse should not declare its current size until after the allocation is complete.
     // Further, no scheduler thread should attempt to determine an entry's size until the allocated flag has been marked as true.
-
     allVarPointersInfo vp;
 
     vp.varDB_index = -1;

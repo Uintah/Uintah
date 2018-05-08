@@ -51,6 +51,8 @@ using namespace Uintah;
 
 bool             Parallel::s_initialized             = false;
 bool             Parallel::s_using_device            = false;
+int              Parallel::s_cuda_threads_per_sm     = -1;
+int              Parallel::s_cuda_sms_per_loop       = -1;
 int              Parallel::s_num_threads             = -1;
 int              Parallel::s_num_partitions          = -1;
 int              Parallel::s_threads_per_partition   = -1;
@@ -111,6 +113,38 @@ void
 Parallel::setUsingDevice( bool state )
 {
   s_using_device = state;
+}
+
+//_____________________________________________________________________________
+//
+void
+Parallel::setCudaThreadsPerSM( int num )
+{
+  s_cuda_threads_per_sm = num;
+}
+
+//_____________________________________________________________________________
+//
+void
+Parallel::setCudaSMsPerLoop( int num )
+{
+  s_cuda_sms_per_loop = num;
+}
+
+//_____________________________________________________________________________
+//
+int
+Parallel::getCudaThreadsPerSM()
+{
+  return s_cuda_threads_per_sm;
+}
+
+//_____________________________________________________________________________
+//
+int
+Parallel::getCudaSMsPerLoop()
+{
+  return s_cuda_sms_per_loop;
 }
 
 //_____________________________________________________________________________
@@ -214,6 +248,22 @@ Parallel::initializeManager( int& argc , char**& argv )
 #endif
   }
 #endif // UINTAH_ENABLE_KOKKOS
+
+  // Set CUDA parameters (NOTE: This could be autotuned if we grab knowledge of how many patches are assigned to this MPI rank and
+  // how many SMs are on this particular machine.)
+  // TODO, only display if gpu mode is turned on and if these values weren't set.
+  if ( s_using_device ) {
+    if ( s_cuda_threads_per_sm <= 0 ) {
+      s_cuda_threads_per_sm = 256;
+      std::cout << "Using " << s_cuda_threads_per_sm  << " CUDA threads per Streaming Multiprocessor (SM)." << std::endl;
+      std::cout << "  This value can be adjusted through the -cuda_threads_per_sm command line parameter." << std::endl;
+    }
+    if ( s_cuda_sms_per_loop <= 0 ) {
+      s_cuda_sms_per_loop = 1;
+      std::cout << "Using " << s_cuda_sms_per_loop << " Streaming Multiprocessor(s) per CUDA loop." << std::endl;
+      std::cout << "  This value can be adjusted through the -s_cuda_sms_per_loop command line parameter." << std::endl;
+    }
+  }
 
 #ifdef THREADED_MPI_AVAILABLE
   int provided = -1;
