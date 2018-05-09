@@ -88,8 +88,8 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_prescribeDeformation               =  false;
   d_prescribedDeformationFile          =  "time_defgrad_rotation";
   d_exactDeformation                   =  false;
-  d_doAuthigenisis                     =  false;
-  d_authigenisisBaseFilename           =  "";
+  d_doAuthigenesis                     =  false;
+  d_authigenesisBaseFilename           =  "";
   d_insertParticles                    =  false;
   d_doGridReset                        =  true;
   d_min_part_mass                      =  3.e-15;
@@ -250,8 +250,8 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   mpm_flag_ps->get("KEMaterial",        d_KEMaterial);
   mpm_flag_ps->get("use_tracers",       d_useTracers);
 
-  mpm_flag_ps->get("DoAuthigenisis",     d_doAuthigenisis);
-  mpm_flag_ps->get("AuthigenisisBaseFilename",d_authigenisisBaseFilename);
+  mpm_flag_ps->get("DoAuthigenesis",     d_doAuthigenesis);
+  mpm_flag_ps->get("AuthigenesisBaseFilename",d_authigenesisBaseFilename);
 
   //MMS
   mpm_flag_ps->get("RunMMSProblem",d_mms_type);
@@ -479,8 +479,8 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("containerRadius",   d_containerRadius);
   ps->appendElement("KEMaterial",        d_KEMaterial);
   ps->appendElement("use_tracers",       d_useTracers);
-  ps->appendElement("DoAuthigenisis",    d_doAuthigenisis);
-  ps->appendElement("AuthigenisisBaseFilename",d_authigenisisBaseFilename);
+  ps->appendElement("DoAuthigenesis",    d_doAuthigenesis);
+  ps->appendElement("AuthigenesisBaseFilename",d_authigenesisBaseFilename);
 }
 
 

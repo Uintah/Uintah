@@ -49,8 +49,8 @@
       <UsePrescribedDeformation           spec="OPTIONAL BOOLEAN" /> 
       <PrescribedDeformationFile          spec="OPTIONAL STRING" />
       <exactDeformation                   spec="OPTIONAL BOOLEAN" /> 
-      <DoAuthigenisis                     spec="OPTIONAL BOOLEAN" /> 
-      <AuthigenisisBaseFilename           spec="OPTIONAL STRING" />
+      <DoAuthigenesis                     spec="OPTIONAL BOOLEAN" /> 
+      <AuthigenesisBaseFilename           spec="OPTIONAL STRING" />
       <InsertParticles                    spec="OPTIONAL BOOLEAN" /> 
       <InsertParticlesFile                spec="OPTIONAL STRING" /> 
       <withColor                          spec="OPTIONAL BOOLEAN" />

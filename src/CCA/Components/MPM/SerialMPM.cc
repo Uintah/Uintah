@@ -4637,7 +4637,7 @@ void SerialMPM::addParticles(const ProcessorGroup*,
    new_dw->allocateAndPut(NAPID_new,lb->pCellNAPIDLabel,    0,patch);
    NAPID_new.copyData(NAPID);
 
-   if(flags->d_doAuthigenisis && AddedParticlesOld<1.0){
+   if(flags->d_doAuthigenesis && AddedParticlesOld<1.0){
     cout << "Doing addParticles" << endl;
 
     Vector dx = patch->dCell();
@@ -4656,7 +4656,7 @@ void SerialMPM::addParticles(const ProcessorGroup*,
       stringstream mnum;
       mnum << m;
       string mnums = mnum.str();
-      string fname=flags->d_authigenisisBaseFilename + mnums;
+      string fname=flags->d_authigenesisBaseFilename + mnums;
        cout << "fname  = " << fname  << endl;
       std::ifstream is(fname.c_str());
 
@@ -4999,7 +4999,7 @@ void SerialMPM::addParticles(const ProcessorGroup*,
     }  // for matls
    }    // if doAuth && AddedNewParticles<1.0....
   }   // for patches
-//   flags->d_doAuthigenisis = false;
+//   flags->d_doAuthigenesis = false;
 }
 
 void SerialMPM::addTracers(const ProcessorGroup*,
@@ -5025,7 +5025,7 @@ void SerialMPM::addTracers(const ProcessorGroup*,
    NAPID_new.copyData(NAPID);
 #endif
 
-   if(flags->d_doAuthigenisis && AddedParticlesOld<1.0){
+   if(flags->d_doAuthigenesis && AddedParticlesOld<1.0){
     cout << "Doing addTracers" << endl;
 
     int numTracerMatls = m_sharedState->getNumTracerMatls();
@@ -5042,7 +5042,7 @@ void SerialMPM::addTracers(const ProcessorGroup*,
       stringstream mnum;
       mnum << dwi;
       string mnums = mnum.str();
-      string filename=flags->d_authigenisisBaseFilename + "Tracers." + mnums;
+      string filename=flags->d_authigenesisBaseFilename + "Tracers." + mnums;
       std::ifstream is(filename.c_str());
 
       if(is) {
@@ -5077,10 +5077,13 @@ void SerialMPM::addTracers(const ProcessorGroup*,
       new_dw->allocateTemporary(pxtmp,    pset);
 
       // copy data from old variables
+      long64 pid_max=-1;
       for( unsigned int pp=0; pp<oldNumTr; ++pp ){
         pxtmp[pp]    = px[pp];
         pidstmp[pp]  = pids[pp];
+        pid_max = max(pid_max,pidstmp[pp]);
       }
+      int pid_max_B = pid_max/1000000000;
 
       for(int i = 0;i<numNewTracersNeeded;i++){
 #if 0
@@ -5096,7 +5099,7 @@ void SerialMPM::addTracers(const ProcessorGroup*,
 #endif
         int new_index=oldNumTr+i;
         pxtmp[new_index]      = P[i];
-        pidstmp[new_index]    = lineNum[i];
+        pidstmp[new_index]    = (pid_max_B+1)*1000000000 + lineNum[i];
       }
 
       // put back temporary data
@@ -5105,7 +5108,7 @@ void SerialMPM::addTracers(const ProcessorGroup*,
     }  // for matls
    }    // if doAuth && AddedNewParticles<1.0....
   }   // for patches
-//   flags->d_doAuthigenisis = false;
+//   flags->d_doAuthigenesis = false;
 }
 
 void SerialMPM::computeParticleScaleFactor(const ProcessorGroup*,
