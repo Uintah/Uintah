@@ -27,7 +27,6 @@
 #include <CCA/Components/Solvers/AMR/AMRSolver.h>
 #include <CCA/Components/Solvers/SolverFactory.h>
 #include <CCA/Components/Solvers/CGSolver.h>
-#include <CCA/Components/Solvers/DirectSolve.h>
 
 #ifdef HAVE_HYPRE
 #  include <CCA/Components/Solvers/HypreSolver.h>
@@ -60,9 +59,6 @@ SolverInterface* SolverFactory::create(       ProblemSpecP   & ps,
   if( solverName == "CGSolver" ) {
     solver = scinew CGSolver(world);
   }
-  else if (solverName == "DirectSolver" || solverName == "direct") {
-    solver = scinew DirectSolve(world);
-  }
   else if (solverName == "HypreSolver" || solverName == "hypre") {
 #if HAVE_HYPRE
     solver = scinew HypreSolver2(world);
@@ -84,7 +80,7 @@ SolverInterface* SolverFactory::create(       ProblemSpecP   & ps,
   else {
     std::ostringstream msg;
     msg << "\nERROR<Solver>: Unknown solver (" << solverName
-        << ") Valid Solvers: CGSolver, DirectSolver, HypreSolver, AMRSolver, hypreamr \n";
+        << ") Valid Solvers: CGSolver, HypreSolver, AMRSolver, hypreamr \n";
     throw ProblemSetupException( msg.str(), __FILE__, __LINE__ );
   }
 
