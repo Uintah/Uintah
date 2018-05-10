@@ -68,6 +68,9 @@ SpecifiedBodyContact::SpecifiedBodyContact(const ProcessorGroup* myworld,
   ps->get("volume_constraint",d_vol_const);
   ps->getWithDefault("normal_only", d_NormalOnly, false);
 
+  d_oneOrTwoStep = 2;
+  ps->get("OneOrTwoStep",     d_oneOrTwoStep);
+
   if(d_filename!="") {
     std::ifstream is(d_filename.c_str());
     if (!is ){
@@ -122,6 +125,7 @@ void SpecifiedBodyContact::outputProblemSpec(ProblemSpecP& ps)
   contact_ps->appendElement("stop_time",d_stop_time);
   contact_ps->appendElement("velocity_after_stop",d_vel_after_stop);
   contact_ps->appendElement("volume_constraint",d_vol_const);
+  contact_ps->appendElement("OneOrTwoStep",     d_oneOrTwoStep);
 
   d_matls.outputProblemSpec(contact_ps);
 }
@@ -171,7 +175,7 @@ void SpecifiedBodyContact::exMomInterpolated(const ProcessorGroup*,
                                              DataWarehouse* old_dw,
                                              DataWarehouse* new_dw)
 {
-#if 0
+ if(d_oneOrTwoStep==2){
   // const double simTime = d_sharedState->getElapsedSimTime();
   
   simTime_vartype simTime;
@@ -238,7 +242,7 @@ void SpecifiedBodyContact::exMomInterpolated(const ProcessorGroup*,
       }
     }
   }
-#endif
+ }   // if d_oneOrTwoStep
 }
 
 // apply boundary conditions to the interpolated velocity v^k+1
