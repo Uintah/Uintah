@@ -100,8 +100,7 @@ namespace Uintah {
   //______________________________________________________________________
   //
   struct hypre_solver_struct : public RefCounted {
-    bool                 created_solver;
-    bool                 created_precond_solver;
+    
     SolverType           solver_type;
     SolverType           precond_solver_type;
     
@@ -115,8 +114,6 @@ namespace Uintah {
     //__________________________________
     //
     hypre_solver_struct() {
-      created_solver         = false;
-      created_precond_solver = false;
       solver_type            = smg;
       precond_solver_type    = diagonal;
       solver_p              = 0;
@@ -129,22 +126,16 @@ namespace Uintah {
     //
     void print()
     {
-      std::cout << "  Solver:  created: " << created_solver         << " type: " << solver_type         
-                << " solver: " << &solver_p <<  " " << *solver_p << "\n";
+      std::cout << "  Solver  type: " << solver_type << " solver: " << &solver_p <<  " " << *solver_p << "\n";
                 
-      std::cout << "  Precond: created: " << created_precond_solver << " type: " << precond_solver_type 
-                << " solver: " << &precond_solver_p << " " << *solver_p << "\n";
+      std::cout << "  Precond type: " << precond_solver_type << " solver: " << &precond_solver_p << " " << *solver_p << "\n";
     };
     
     //__________________________________
     //
     virtual ~hypre_solver_struct() {
-      if (created_solver) {
-        HYPRE_StructMatrixDestroy( *HA_p );
-        HYPRE_StructVectorDestroy( *HB_p );
-        HYPRE_StructVectorDestroy( *HX_p );
-      }
-      if (created_solver)
+    
+      if (*solver_p) {
         switch (solver_type) {
         case smg:
           HYPRE_StructSMGDestroy(*solver_p);
@@ -168,8 +159,11 @@ namespace Uintah {
           throw InternalError( "HypreSolver given a bad solver type!", 
                                __FILE__, __LINE__ );
         }
+        delete solver_p;
+        solver_p = 0;
+      }
 
-      if (created_precond_solver)
+      if (*precond_solver_p) {
         switch (precond_solver_type) {
         case smg:
           HYPRE_StructSMGDestroy(*precond_solver_p);
@@ -192,27 +186,25 @@ namespace Uintah {
         default:
           throw InternalError("HypreSolver given a bad solver type!", 
                               __FILE__, __LINE__);
+        }
+        delete precond_solver_p;
+        precond_solver_p = 0;
       }
 
       if (HA_p) {
+        HYPRE_StructMatrixDestroy( *HA_p );
         delete HA_p;  
         HA_p = 0;
       }
       if (HB_p){
+        HYPRE_StructVectorDestroy( *HB_p );
         delete HB_p;  
         HB_p = 0;
       }
       if (HX_p) {
+        HYPRE_StructVectorDestroy( *HX_p );
         delete HX_p;  
         HX_p = 0;
-      }
-      if (solver_p) {
-        delete solver_p;
-        solver_p = 0;
-      }
-      if (precond_solver_p) {
-        delete precond_solver_p;
-        precond_solver_p = 0;
       }
     };
   };

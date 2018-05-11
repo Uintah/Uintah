@@ -554,13 +554,11 @@ namespace Uintah {
           if (timeStep == 1 || restart) {
             HYPRE_StructSMGCreate(pg->getComm(), solver);
             hypre_solver_s->solver_type    = smg;
-            hypre_solver_s->created_solver = true;
           } 
           else if (do_setup) {
             HYPRE_StructSMGDestroy(*solver);
             HYPRE_StructSMGCreate ( pg->getComm(), solver ); 
             hypre_solver_s->solver_type    = smg;
-            hypre_solver_s->created_solver = true;
           }
 
           HYPRE_StructSMGSetMemoryUse   (*solver,  0);                      
@@ -588,12 +586,10 @@ namespace Uintah {
           if (timeStep == 1 || restart) {
             HYPRE_StructPFMGCreate( pg->getComm(), solver ); 
             hypre_solver_s->solver_type    = pfmg;
-            hypre_solver_s->created_solver = true;
           } else if (do_setup) {
             HYPRE_StructPFMGDestroy( *solver );
             HYPRE_StructPFMGCreate( pg->getComm(), solver );       
             hypre_solver_s->solver_type    = pfmg;
-            hypre_solver_s->created_solver = true;
           }
 
           HYPRE_StructPFMGSetMaxIter    (*solver,   m_params->maxiterations);
@@ -624,13 +620,11 @@ namespace Uintah {
           if (timeStep == 1 || restart) {
             HYPRE_StructSparseMSGCreate(pg->getComm(), solver);   
             hypre_solver_s->solver_type    = sparsemsg;
-            hypre_solver_s->created_solver = true;
           } 
           else if (do_setup) {
             HYPRE_StructSparseMSGDestroy(*solver);
             HYPRE_StructSparseMSGCreate(pg->getComm(), solver);      
             hypre_solver_s->solver_type    = sparsemsg;
-            hypre_solver_s->created_solver = true;
           }
 
           HYPRE_StructSparseMSGSetMaxIter  (*solver, m_params->maxiterations); 
@@ -661,13 +655,11 @@ namespace Uintah {
           if (timeStep == 1 || restart) {
             HYPRE_StructPCGCreate(pg->getComm(),solver);  
             hypre_solver_s->solver_type    = pcg;
-            hypre_solver_s->created_solver = true;
           } 
           else if (do_setup) {
             HYPRE_StructPCGDestroy(*solver);
             HYPRE_StructPCGCreate(pg->getComm(), solver);                
             hypre_solver_s->solver_type    = pcg;
-            hypre_solver_s->created_solver = true;
           }
 
           HYPRE_StructPCGSetMaxIter   (*solver, m_params->maxiterations);  
@@ -685,7 +677,6 @@ namespace Uintah {
             setupPrecond(pg, precond, precond_setup, *precond_solver,precond_solver_type);
                          
             hypre_solver_s->precond_solver_type    = precond_solver_type;
-            hypre_solver_s->created_precond_solver = true;
             HYPRE_StructPCGSetPrecond(*solver, precond,precond_setup, 
                                       *precond_solver);
 
@@ -694,7 +685,6 @@ namespace Uintah {
             setupPrecond(pg, precond, precond_setup, *precond_solver, precond_solver_type);
                          
             hypre_solver_s->precond_solver_type    = precond_solver_type;
-            hypre_solver_s->created_precond_solver = true;
           
             HYPRE_StructPCGSetPrecond(*solver, precond,precond_setup, 
                                       *precond_solver);
@@ -719,13 +709,11 @@ namespace Uintah {
           if (timeStep == 1 || restart) {
             HYPRE_StructHybridCreate(pg->getComm(), solver);  
             hypre_solver_s->solver_type    = hybrid;
-            hypre_solver_s->created_solver = true;
           } 
           else if (do_setup) {
             HYPRE_StructHybridDestroy(*solver);
             HYPRE_StructHybridCreate(pg->getComm(), solver);  
             hypre_solver_s->solver_type    = hybrid;
-            hypre_solver_s->created_solver = true;
           }
 
           HYPRE_StructHybridSetDSCGMaxIter    (*solver, 100);         
@@ -745,7 +733,7 @@ namespace Uintah {
             setupPrecond(pg, precond, precond_setup, *precond_solver, precond_solver_type);
           
             hypre_solver_s->precond_solver_type    = precond_solver_type;
-            hypre_solver_s->created_precond_solver = true;
+
             HYPRE_StructHybridSetPrecond(*solver,
                                        (HYPRE_PtrToStructSolverFcn)precond,
                                        (HYPRE_PtrToStructSolverFcn)precond_setup,
@@ -756,7 +744,6 @@ namespace Uintah {
             setupPrecond(pg, precond, precond_setup, *precond_solver, precond_solver_type);
                          
             hypre_solver_s->precond_solver_type    = precond_solver_type;
-            hypre_solver_s->created_precond_solver = true;
 
             HYPRE_StructHybridSetPrecond(*solver,
                                        (HYPRE_PtrToStructSolverFcn)precond,
@@ -782,13 +769,11 @@ namespace Uintah {
           if (timeStep == 1 || restart) {
             HYPRE_StructGMRESCreate(pg->getComm(),solver);                
             hypre_solver_s->solver_type    = gmres;
-            hypre_solver_s->created_solver = true;
           } 
           else if (do_setup) {
             HYPRE_StructGMRESDestroy(*solver);                
             HYPRE_StructGMRESCreate(pg->getComm(),solver);                
             hypre_solver_s->solver_type    = gmres;
-            hypre_solver_s->created_solver = true;
           }
 
           HYPRE_StructGMRESSetMaxIter  (*solver, m_params->maxiterations);  
@@ -805,7 +790,6 @@ namespace Uintah {
             setupPrecond(pg, precond, precond_setup, *precond_solver, precond_solver_type);
                          
             hypre_solver_s->precond_solver_type    = precond_solver_type;
-            hypre_solver_s->created_precond_solver = true;
           
             HYPRE_StructGMRESSetPrecond(*solver, precond, precond_setup,
                                         *precond_solver);
@@ -815,7 +799,6 @@ namespace Uintah {
             setupPrecond(pg, precond, precond_setup, *precond_solver, precond_solver_type);
                          
             hypre_solver_s->precond_solver_type    = precond_solver_type;
-            hypre_solver_s->created_precond_solver = true;
 
             HYPRE_StructGMRESSetPrecond(*solver,precond,precond_setup,
                                         *precond_solver);
