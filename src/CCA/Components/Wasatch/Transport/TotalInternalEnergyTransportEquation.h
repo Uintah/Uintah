@@ -32,6 +32,7 @@
 
 #include <sci_defs/wasatch_defs.h>
 #include <CCA/Components/Wasatch/Transport/ScalarTransportEquation.h>
+#include <CCA/Components/Wasatch/DualTimeMatrixManager.h>
 
 namespace WasatchCore {
 
@@ -66,6 +67,7 @@ namespace WasatchCore {
      *  \param viscTag the tag for the viscosity
      *  \param dilTag the tag for the dilatation
      *  \param turbulenceParams
+     *  \param dualTimeMatrixInfo
      */
     TotalInternalEnergyTransportEquation( const std::string rhoe0Name,
                                           Uintah::ProblemSpecP wasatchSpec,
@@ -78,7 +80,8 @@ namespace WasatchCore {
                                           const Expr::TagList& bodyForceTags,
                                           const Expr::Tag& viscTag,
                                           const Expr::Tag& dilTag,
-                                          const TurbulenceParameters& turbulenceParams );
+                                          const TurbulenceParameters& turbulenceParams,
+                                          WasatchCore::DualTimeMatrixInfo& dualTimeMatrixInfo );
 
     ~TotalInternalEnergyTransportEquation();
     
@@ -95,6 +98,9 @@ namespace WasatchCore {
     Uintah::ProblemSpecP wasatchSpec_;
     const Expr::Tag kineticEnergyTag_, temperatureTag_, pressureTag_;
     const Expr::TagList velTags_, bodyForceTags_;
+
+    WasatchCore::DualTimeMatrixInfo& dualTimeMatrixInfo_;
+
 #   ifdef HAVE_POKITT
     Expr::TagList massFracTags_;
 #   endif

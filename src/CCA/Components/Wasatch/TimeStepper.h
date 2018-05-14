@@ -40,8 +40,12 @@
 #include "FieldTypes.h"
 #include <CCA/Components/Wasatch/TimeIntegratorTools.h>
 #include <expression/dualtime/BDFDualTimeIntegrator.h>
+//#include <CCA/Components/Wasatch/DualTimeMatrixManager.h>
 
 namespace WasatchCore{
+
+  class DualTimeMatrixManager; // forward declare
+  class DualTimeMatrixInfo; // forward declare
 
   class TaskInterface;
   /**
@@ -86,7 +90,9 @@ namespace WasatchCore{
 
   private:
 
-    typedef std::map<int, Expr::DualTime::BDFDualTimeIntegrator*> DTIntegratorMapT;
+//    typedef std::map<int, Expr::DualTime::BDFDualTimeIntegrator*> DTIntegratorMapT;
+//    typedef std::map<int, WasatchCore::DualTimeMatrixManager*> DualTimeMatrixManagerMapT;
+    typedef std::map< int, std::pair<Expr::DualTime::BDFDualTimeIntegrator*, WasatchCore::DualTimeMatrixManager* > > DualTimePatchMapT; //<<< PatchID, Pair<DualTimeIntegrator, DualTimeMatrixManager> >>>
 
     typedef std::set< FieldInfo<SpatialOps::SVolField              > > ScalarFields;
     typedef std::set< FieldInfo<SpatialOps::XVolField              > > XVolFields;
@@ -197,16 +203,18 @@ namespace WasatchCore{
      *  \param materials the materials that this task will be executed on
      *  \param level the level of interest
      *  \param sched the scheduler
-     *  \param dualTimeIntegrators
+     *  \param dualTimePatchMap map of patches to dual time integrators and matrix managers (pairs)
      *  \param ioFieldSet the set of fields that should be locked to maintain persistence
+     *  \param blockImplicit if the block-implicit dual time-stepping method has been specified
      */
     void create_dualtime_tasks( const PatchInfoMap& infoMap,
                                 const Uintah::PatchSet* const localPatches,
                                 const Uintah::MaterialSet* const materials,
                                 const Uintah::LevelP& level,
                                 Uintah::SchedulerP& sched,
-                                DTIntegratorMapT& dualTimeIntegrators,
-                                const std::set<std::string>& ioFieldSet );
+                                DualTimePatchMapT& dualTimePatchMap,
+                                const std::set<std::string>& ioFieldSet,
+                                WasatchCore::DualTimeMatrixInfo& dualTimeMatrixInfo );
 
 
     const std::list< TaskInterface* >&

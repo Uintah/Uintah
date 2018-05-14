@@ -58,9 +58,6 @@ namespace WasatchCore{
     double beta[3];
     double timeCorrection[3];
     bool hasDualTime;
-    int dualTimeIterations;
-    double dualTimeTolerance;
-    double dualTimeds;
 
     TimeIntegrator( const TimeIntegratorEnum theTimeIntEnum )
     : timeIntEnum( theTimeIntEnum )
@@ -101,9 +98,7 @@ namespace WasatchCore{
           alpha[2] = 1.0/3.0; beta[2]  = 2.0/3.0;
           break;
       }
-      hasDualTime        = false;
-      dualTimeIterations = 100;
-      dualTimeTolerance  = 1.0e-8;
+      hasDualTime = false;
       
       timeCorrection[0] = 0.0; // for the first rk stage, the time is t0
       timeCorrection[1] = 1.0; // for the second rk stage, the time is t0 + dt

@@ -110,6 +110,25 @@ evaluate()
 //--------------------------------------------------------------------
 
 template< typename VelT >
+void
+DiffusiveVelocity<VelT>::
+sensitivity( const Expr::Tag& varTag )
+{
+  using namespace SpatialOps;
+  VelT& sens_result = this->sensitivity_result( varTag );
+  if( isTurbulent_ ){
+    if( isConstCoef_ ) sens_result <<= - (*interpOp_)(( coefVal_           + turbDiff_->field_ref() ) * phi_->sens_field_ref( varTag ) );
+    else               sens_result <<= - (*interpOp_)(( coef_->field_ref() + turbDiff_->field_ref() ) * phi_->sens_field_ref( varTag ) );
+  }
+  else{
+    if( isConstCoef_ ) sens_result <<= - (*interpOp_)(( coefVal_                                    ) * phi_->sens_field_ref( varTag ) );
+    else               sens_result <<= - (*interpOp_)(( coef_->field_ref()                          ) * phi_->sens_field_ref( varTag ) );
+  }
+}
+
+//--------------------------------------------------------------------
+
+template< typename VelT >
 Expr::ExpressionBase*
 DiffusiveVelocity<VelT>::Builder::build() const
 {

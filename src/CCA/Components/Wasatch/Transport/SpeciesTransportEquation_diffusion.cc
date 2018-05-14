@@ -157,6 +157,8 @@ SpeciesTransportEquation::setup_diffusive_flux( FieldTagInfo& info )
           typedef pokitt::DiffusionCoeff<FieldT>::Builder DiffCoeff;
           factory.register_expression( scinew DiffCoeff( diffCoeffTags, temperatureTag_, tagNames.pressure, yiTags_, tagNames.mixMW ) );
           isFirstDirection = false;
+
+          dualTimeMatrixInfo_.set_diffusivities( diffCoeffTags );
         }
 
         if( dir == "X" ){

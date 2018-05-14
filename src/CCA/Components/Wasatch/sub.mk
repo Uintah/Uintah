@@ -67,6 +67,7 @@ SRCS +=                                              \
         $(SRCDIR)/TagNames.cc                        \
         $(SRCDIR)/TaskInterface.cc                   \
         $(SRCDIR)/WasatchBCHelper.cc                 \
+        $(SRCDIR)/DualTimeMatrixManager.cc           \
         $(SRCDIR)/WasatchParticlesHelper.cc          
 
 PSELIBS :=                        \

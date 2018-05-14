@@ -78,10 +78,11 @@ namespace WasatchCore{
   //==================================================================
 
   EqnTimestepAdaptorBase* parse_scalar_equation( Uintah::ProblemSpecP params,
-                                                TurbulenceParameters turbParams,
-                                                const Expr::Tag densityTag,
-                                                const bool isConstDensity,
-                                                GraphCategories& gc )
+                                                 TurbulenceParameters turbParams,
+                                                 const Expr::Tag densityTag,
+                                                 const bool isConstDensity,
+                                                 GraphCategories& gc,
+                                                 WasatchCore::DualTimeMatrixInfo& dualTimeMatrixInfo)
   {
     EqnTimestepAdaptorBase* adaptor = nullptr;
     EquationBase* transeqn = nullptr;
@@ -107,6 +108,9 @@ namespace WasatchCore{
                                        isConstDensity,
                                        turbParams );
       adaptor = scinew EqnTimestepAdaptor< SVolField >( transeqn );
+
+      dualTimeMatrixInfo.add_scalar_equation( transeqn->solution_variable_tag(), transeqn->rhs_tag() );
+
     }
     else if( eqnLabel == "enthalpy" ){
       typedef EnthalpyTransportEquation TransEqn;
@@ -155,7 +159,9 @@ namespace WasatchCore{
                            Uintah::ProblemSpecP momentumParams,
                            const TurbulenceParameters& turbParams,
                            const Expr::Tag& densityTag,
-                           GraphCategories& gc )
+                           GraphCategories& gc,
+                           WasatchCore::DualTimeMatrixInfo& dualTimeMatrixInfo,
+                           const bool computeKineticsJacobian )
   {
 #   ifdef HAVE_POKITT
     if( turbParams.turbModelName != TurbulenceParameters::NOTURBULENCE ){
@@ -182,7 +188,9 @@ namespace WasatchCore{
                                     densityTag,
                                     velTags,
                                     TagNames::self().temperature,
-                                    gc );
+                                    gc,
+                                    dualTimeMatrixInfo,
+                                    computeKineticsJacobian );
 #   else
     // nothing to do - return empty equation set.
     std::vector<EqnTimestepAdaptorBase*> eqns;
@@ -577,7 +585,9 @@ namespace WasatchCore{
                             const bool isConstDensity,
                             const Expr::Tag densityTag,
                             GraphCategories& gc,
-                            Uintah::SolverInterface& linSolver, Uintah::SimulationStateP& sharedState )
+                            Uintah::SolverInterface& linSolver,
+                            Uintah::SimulationStateP& sharedState,
+                            WasatchCore::DualTimeMatrixInfo& dualTimeMatrixInfo )
   {
     typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
     EquationAdaptors adaptors;
@@ -673,6 +683,12 @@ namespace WasatchCore{
         e0Tag = Expr::Tag(eTotalName, Expr::STATE_NONE);
       }
 
+      dualTimeMatrixInfo.density = densityTag;
+      dualTimeMatrixInfo.viscosity = viscTag;
+      dualTimeMatrixInfo.temperature = TagNames::self().temperature;
+      dualTimeMatrixInfo.pressure = TagNames::self().pressure;
+      dualTimeMatrixInfo.doCompressible = true;
+
       Expr::Tag xVelTag, yVelTag, zVelTag;
       if( doxvel && doxmom ) {
         proc0cout << "Setting up X momentum transport equation" << std::endl;
@@ -695,6 +711,10 @@ namespace WasatchCore{
         adaptors.push_back( scinew EqnTimestepAdaptor<SVolField>(momtranseq) );
 
         xVelTag = Expr::Tag(xvelname, Expr::STATE_NONE);
+
+        dualTimeMatrixInfo.doX = true;
+        dualTimeMatrixInfo.xVelocity = xVelTag;
+        dualTimeMatrixInfo.xMomentum = Expr::Tag( xmomname, Expr::STATE_DYNAMIC );
       }
 
       if( doyvel && doymom ){
@@ -717,6 +737,10 @@ namespace WasatchCore{
         adaptors.push_back( scinew EqnTimestepAdaptor<SVolField>(momtranseq) );
 
         yVelTag = Expr::Tag(yvelname, Expr::STATE_NONE);
+
+        dualTimeMatrixInfo.doY = true;
+        dualTimeMatrixInfo.yVelocity = yVelTag;
+        dualTimeMatrixInfo.yMomentum = Expr::Tag( ymomname, Expr::STATE_DYNAMIC );
       }
 
       if( dozvel && dozmom ){
@@ -738,6 +762,10 @@ namespace WasatchCore{
         adaptors.push_back( scinew EqnTimestepAdaptor<SVolField>(momtranseq) );
 
         zVelTag = Expr::Tag(zvelname, Expr::STATE_NONE);
+
+        dualTimeMatrixInfo.doZ = true;
+        dualTimeMatrixInfo.zVelocity = zVelTag;
+        dualTimeMatrixInfo.zMomentum = Expr::Tag( zmomname, Expr::STATE_DYNAMIC );
       }
 
 
@@ -767,7 +795,8 @@ namespace WasatchCore{
                                                                             bodyForceTags,
                                                                             viscTag,
                                                                             TagNames::self().dilatation,
-                                                                            turbParams );
+                                                                            turbParams,
+                                                                            dualTimeMatrixInfo );
       adaptors.push_back( scinew EqnTimestepAdaptor<SVolField>(totalEEq) );
 
     } // isCompressible

@@ -480,7 +480,8 @@ namespace WasatchCore {
                                         const Expr::TagList& bodyForceTags,
                                         const Expr::Tag& viscTag,
                                         const Expr::Tag& dilTag,
-                                        const TurbulenceParameters& turbulenceParams )
+                                        const TurbulenceParameters& turbulenceParams,
+                                        WasatchCore::DualTimeMatrixInfo& dualTimeMatrixInfo )
     : ScalarTransportEquation<SVolField>( rhoe0Name,
                                           energyEqnSpec,
                                           gc, densityTag,
@@ -492,7 +493,8 @@ namespace WasatchCore {
       temperatureTag_( temperatureTag ),
       pressureTag_( TagNames::self().pressure ),
       velTags_( velTags ),
-      bodyForceTags_(bodyForceTags)
+      bodyForceTags_(bodyForceTags),
+      dualTimeMatrixInfo_( dualTimeMatrixInfo )
   {
 #   ifdef HAVE_POKITT
     massFracTags_.clear();
@@ -527,6 +529,7 @@ namespace WasatchCore {
       solnFactory.register_expression( new Cp( tags.cp, temperatureTag, massFracTags_ ) );
       typedef pokitt::HeatCapacity_Cv<SVolField>::Builder Cv;
       solnFactory.register_expression( new Cv( tags.cv, temperatureTag, massFracTags_ ) );
+      dualTimeMatrixInfo_.universalGasConstant = CanteraObjects::gas_constant();
     }
     else{
       // calorically perfect gas
@@ -534,6 +537,7 @@ namespace WasatchCore {
       solnFactory.register_expression( scinew SimpleTemperature( temperatureTag, primVarTag_, kineticEnergyTag_, tags.mixMW ) );
 
       const double gasConstant = 8314.459848;  // universal R = J/(kmol K).
+      dualTimeMatrixInfo_.universalGasConstant = gasConstant;
 
       typedef Expr::LinearFunction<MyFieldT>::Builder SimpleEnthalpy;
       solnFactory.register_expression( scinew SimpleEnthalpy( tags.enthalpy, temperatureTag, 7.0/2.0*gasConstant, 0.0 ) );
@@ -556,6 +560,7 @@ namespace WasatchCore {
       solnFactory.register_expression( scinew SimpleTemperature( temperatureTag, primVarTag_, kineticEnergyTag_, tags.mixMW ) );
 
       const double gasConstant = 8314.459848;  // universal R = J/(kmol K).
+      dualTimeMatrixInfo_.universalGasConstant = gasConstant;
       
       typedef Expr::LinearFunction<MyFieldT>::Builder SimpleEnthalpy;
       solnFactory.register_expression( scinew SimpleEnthalpy( tags.enthalpy, temperatureTag, 7.0/2.0*gasConstant, 0.0 ) );
@@ -573,6 +578,11 @@ namespace WasatchCore {
 
     }
 #   endif
+
+    dualTimeMatrixInfo_.totalEnergy    = Expr::Tag( rhoe0Name, Expr::STATE_DYNAMIC );
+    dualTimeMatrixInfo_.cpHeatCapacity = tags.cp;
+    dualTimeMatrixInfo_.cvHeatCapacity = tags.cv;
+
     //----------------------------------------------------------
     // viscous dissipation
     typedef ViscousDissipation<MyFieldT>::Builder ViscDissip;
@@ -681,23 +691,31 @@ namespace WasatchCore {
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
       const TagNames& tagNames = TagNames::self();
-      Expr::TagList specEnthTags, xSpecFluxTags, ySpecFluxTags, zSpecFluxTags;
+      Expr::TagList specEnthTags, specEngyTags, xSpecFluxTags, ySpecFluxTags, zSpecFluxTags;
       for( int i=0; i<CanteraObjects::number_species(); ++i ){
         const std::string specName = CanteraObjects::species_name(i);
         specEnthTags.push_back( Expr::Tag( specName+"_"+tagNames.enthalpy.name(), Expr::STATE_NONE ) );
+        specEngyTags.push_back( Expr::Tag( specName+"_energy"                   , Expr::STATE_NONE ) );
+
         xSpecFluxTags.push_back( Expr::Tag( specName + tagNames.diffusiveflux + "X", Expr::STATE_NONE ) );
         ySpecFluxTags.push_back( Expr::Tag( specName + tagNames.diffusiveflux + "Y", Expr::STATE_NONE ) );
         zSpecFluxTags.push_back( Expr::Tag( specName + tagNames.diffusiveflux + "Z", Expr::STATE_NONE ) );
 
         typedef pokitt::SpeciesEnthalpy<MyFieldT>::Builder SpecEnth;
         factory.register_expression( scinew SpecEnth( specEnthTags[i], temperatureTag_, i ) );
+        typedef pokitt::SpeciesInternalEnergy<MyFieldT>::Builder SpecEngy;
+        factory.register_expression( scinew SpecEngy( specEngyTags[i], temperatureTag_, i ) );
       }
+      dualTimeMatrixInfo_.set_enthalpies( specEnthTags );
+      dualTimeMatrixInfo_.set_energies( specEngyTags );
 
       typedef pokitt::ThermalConductivity<MyFieldT>::Builder ThermCond;
       factory.register_expression( scinew ThermCond( tagNames.thermalConductivity,
                                                      temperatureTag_,
                                                      massFracTags_,
                                                      tagNames.mixMW ) );
+
+      dualTimeMatrixInfo_.conductivity = tagNames.thermalConductivity;
 
       // trigger creation of diffusive flux expression from species diffusive flux spec to determine which directions are active.
       for( Uintah::ProblemSpecP diffFluxParams=speciesParams->findBlock("DiffusiveFlux");
@@ -732,9 +750,21 @@ namespace WasatchCore {
     else
 #   endif
     {
+      const TagNames& tagNames = TagNames::self();
+      dualTimeMatrixInfo_.mmw = tagNames.mixMW;
       for( Uintah::ProblemSpecP diffFluxParams=params_->findBlock("DiffusiveFlux");
           diffFluxParams != nullptr;
           diffFluxParams=diffFluxParams->findNextBlock("DiffusiveFlux") ) {
+        if( diffFluxParams->findAttribute("coefficient") ){
+          double coef;
+          diffFluxParams->getAttribute("coefficient",coef);
+          factory.register_expression( scinew Expr::ConstantExpr<MyFieldT>::Builder( tagNames.thermalConductivity, coef ) );
+          dualTimeMatrixInfo_.conductivity = tagNames.thermalConductivity;
+        }
+        else if( diffFluxParams->findBlock("DiffusionCoefficient") ){
+          const Expr::Tag coef = parse_nametag( diffFluxParams->findBlock("DiffusionCoefficient")->findBlock("NameTag") );
+          dualTimeMatrixInfo_.conductivity = coef;
+        }
         setup_diffusive_velocity_expression<MyFieldT>( diffFluxParams,
                                                        temperatureTag_,
                                                        turbDiffTag_,
@@ -758,6 +788,8 @@ namespace WasatchCore {
     factory.register_expression( scinew ExprAlgebra<MyFieldT>::Builder( combinedVarTag,
                                                                         tag_list(solnVarTag,pressureTag_),
                                                                         ExprAlgebra<MyFieldT>::SUM ) );
+    dualTimeMatrixInfo_.totalEnthalpy = combinedVarTag;
+    dualTimeMatrixInfo_.totalEnergy = solnVarTag;
 
     for( Uintah::ProblemSpecP convFluxParams=params_->findBlock("ConvectiveFlux");
          convFluxParams != nullptr;

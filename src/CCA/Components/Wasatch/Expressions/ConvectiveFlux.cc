@@ -184,6 +184,36 @@ evaluate()
 
 //--------------------------------------------------------------------
 
+template< typename LimiterInterpT, typename PhiInterpLowT,
+          typename PhiInterpHiT, typename VelInterpT >
+void
+ConvectiveFluxLimiter<LimiterInterpT, PhiInterpLowT, PhiInterpHiT, VelInterpT>::
+sensitivity( const Expr::Tag& varTag )
+{
+  using namespace SpatialOps;
+  PhiFaceT& sens_result = this->sensitivity_result( varTag );
+  const VelVolT& vel = vel_->field_ref();
+
+  const PhiVolT& phi     = phi_->field_ref();
+  const PhiVolT& phiSens = phi_->sens_field_ref( varTag );
+  const VelVolT& velSens = vel_->sens_field_ref( varTag );
+
+  SpatialOps::SpatFldPtr<VelFaceT> velInterp     = SpatialOps::SpatialFieldStore::get<VelFaceT>( sens_result );
+  SpatialOps::SpatFldPtr<VelFaceT> velSensInterp = SpatialOps::SpatialFieldStore::get<VelFaceT>( sens_result );
+  *velInterp     <<= (*velInterpOp_)( vel    );
+  *velSensInterp <<= (*velInterpOp_)( velSens );
+
+  SpatialOps::SpatFldPtr<PhiFaceT> phiInterp     = SpatialOps::SpatialFieldStore::get<PhiFaceT>( sens_result );
+  SpatialOps::SpatFldPtr<PhiFaceT> phiSensInterp = SpatialOps::SpatialFieldStore::get<PhiFaceT>( sens_result );
+  *phiInterp     <<= (*phiInterpHiOp_)( phi     );
+  *phiSensInterp <<= (*phiInterpHiOp_)( phiSens );
+
+  sens_result <<= cond( *velInterp < 0.,        ( *velInterp * *phiSensInterp + *phiInterp * *velSensInterp ) )
+                                       ( -1. *  ( *velInterp * *phiSensInterp + *phiInterp * *velSensInterp ) );
+}
+
+//--------------------------------------------------------------------
+
 
 //============================================================================
 // Explicit template instantiation for supported versions of these expressions

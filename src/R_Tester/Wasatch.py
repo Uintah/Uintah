@@ -151,7 +151,31 @@ DUALTIMETESTS=[
   ("dual-time-exponential-decay", "dual-time-exp-dcay.ups",   1,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
   ("dual-time-scalar-example", "dual-time-scalar-example.ups",  4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
   ("dual-time-compressible-flow-test-1d", "dual-time-compressible-flow-test-1d.ups",  2,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
-  ("dual-time-compressible-flow-test-2d", "dual-time-compressible-flow-test-2d.ups",  4,  "All",  ["exactComparison","no_restart","no_memoryTest"] )
+  ("dual-time-compressible-flow-test-2d", "dual-time-compressible-flow-test-2d.ups",  4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
+  ("implicit-1eqn-reaction-x"  , "implicit-1eqn-reaction-x.ups"  , 1, "All", ["exactComparison","no_restart","no_memoryTest"] ),
+  ("implicit-1eqn-reaction-y"  , "implicit-1eqn-reaction-y.ups"  , 1, "All", ["exactComparison","no_restart","no_memoryTest"] ),
+  ("implicit-1eqn-reaction-z"  , "implicit-1eqn-reaction-z.ups"  , 1, "All", ["exactComparison","no_restart","no_memoryTest"] ),
+  ("implicit-1eqn-diffusion-x" , "implicit-1eqn-diffusion-x.ups" , 1, "All", ["exactComparison","no_restart","no_memoryTest","no_dbg"] ),
+  ("implicit-1eqn-diffusion-y" , "implicit-1eqn-diffusion-y.ups" , 1, "All", ["exactComparison","no_restart","no_memoryTest","no_dbg"] ),
+  ("implicit-1eqn-diffusion-z" , "implicit-1eqn-diffusion-z.ups" , 1, "All", ["exactComparison","no_restart","no_memoryTest","no_dbg"] ),
+  ("implicit-1eqn-convection-x", "implicit-1eqn-convection-x.ups", 1, "All", ["exactComparison","no_restart","no_memoryTest","no_dbg"] ),
+  ("implicit-1eqn-convection-y", "implicit-1eqn-convection-y.ups", 1, "All", ["exactComparison","no_restart","no_memoryTest","no_dbg"] ),
+  ("implicit-1eqn-convection-z", "implicit-1eqn-convection-z.ups", 1, "All", ["exactComparison","no_restart","no_memoryTest","no_dbg"] ),
+  ("implicit-2eqn-reaction-x"  , "implicit-2eqn-reaction-x.ups"  , 1, "All", ["exactComparison","no_restart","no_memoryTest"] ),
+  ("implicit-2eqn-reaction-y"  , "implicit-2eqn-reaction-y.ups"  , 1, "All", ["exactComparison","no_restart","no_memoryTest"] ),
+  ("implicit-2eqn-reaction-z"  , "implicit-2eqn-reaction-z.ups"  , 1, "All", ["exactComparison","no_restart","no_memoryTest"] ),
+  ("implicit-2eqn-diffusion-x" , "implicit-2eqn-diffusion-x.ups" , 1, "All", ["exactComparison","no_restart","no_memoryTest","no_dbg"] ),
+  ("implicit-2eqn-diffusion-y" , "implicit-2eqn-diffusion-y.ups" , 1, "All", ["exactComparison","no_restart","no_memoryTest","no_dbg"] ),
+  ("implicit-2eqn-diffusion-z" , "implicit-2eqn-diffusion-z.ups" , 1, "All", ["exactComparison","no_restart","no_memoryTest","no_dbg"] ),
+  ("implicit-2eqn-convection-x", "implicit-2eqn-convection-x.ups", 1, "All", ["exactComparison","no_restart","no_memoryTest","no_dbg"] ),
+  ("implicit-2eqn-convection-y", "implicit-2eqn-convection-y.ups", 1, "All", ["exactComparison","no_restart","no_memoryTest","no_dbg"] ),
+  ("implicit-2eqn-convection-z", "implicit-2eqn-convection-z.ups", 1, "All", ["exactComparison","no_restart","no_memoryTest","no_dbg"] ),
+  ("implicit-cdr-xy"           , "implicit-cdr-xy.ups"           , 1, "All", ["exactComparison","no_restart","no_memoryTest","no_dbg"] ),
+  ("implicit-cdr-xz"           , "implicit-cdr-xz.ups"           , 1, "All", ["exactComparison","no_restart","no_memoryTest","no_dbg"] ),
+  ("implicit-cdr-yz"           , "implicit-cdr-yz.ups"           , 1, "All", ["exactComparison","no_restart","no_memoryTest","no_dbg"] ),
+  ("implicit-cdr-3d"           , "implicit-cdr-3d.ups"           , 2, "All", ["exactComparison","no_restart","no_memoryTest","no_dbg"] ),
+  ("implicit-compressible-purefluid-nonpreconditioned" , "implicit-compressible-purefluid-nonpreconditioned.ups", 1, "All", ["exactComparison","no_restart","no_memoryTest","no_dbg"] ),
+  ("implicit-compressible-purefluid-preconditioned"    , "implicit-compressible-purefluid-preconditioned.ups"   , 1, "All", ["exactComparison","no_restart","no_memoryTest","no_dbg"] )
 ]
 
 
@@ -306,7 +330,9 @@ POKITTTESTS=[
   ("MultispeciesBC-open-premixed-flame-zdir",   "MultispeciesBC-open-premixed-flame-zdir.ups",    1, "All", ["exactComparison","no_restart","no_memoryTest"] ),
   ("MultispeciesBC-premixed-flame-xyplane",     "MultispeciesBC-premixed-flame-xyplane.ups",      1, "All", ["exactComparison","no_restart","no_memoryTest"] ),
   ("MultispeciesBC-premixed-flame-xzplane",     "MultispeciesBC-premixed-flame-xzplane.ups",      1, "All", ["exactComparison","no_restart","no_memoryTest"] ),
-  ("MultispeciesBC-premixed-flame-yzplane",     "MultispeciesBC-premixed-flame-yzplane.ups",      1, "All", ["exactComparison","no_restart","no_memoryTest"] )
+  ("MultispeciesBC-premixed-flame-yzplane",     "MultispeciesBC-premixed-flame-yzplane.ups",      1, "All", ["exactComparison","no_restart","no_memoryTest"] ),
+  ("MultispeciesBC-premixed-flame-yzplane",     "MultispeciesBC-premixed-flame-yzplane.ups",      1, "All", ["exactComparison","no_restart","no_memoryTest"] ),
+  ("implicit-compressible-multispecies-x",      "implicit-compressible-multispecies-x.ups" ,      1, "All", ["exactComparison","no_restart","no_memoryTest","no_dbg"] )
 ]
 
 COALTESTS=[

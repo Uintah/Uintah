@@ -79,7 +79,9 @@ setup_species_equations( Uintah::ProblemSpecP specEqnParams,
                          const Expr::Tag densityTag,
                          const Expr::TagList velTags,
                          const Expr::Tag temperatureTag,
-                         GraphCategories& gc )
+                         GraphCategories& gc,
+                         WasatchCore::DualTimeMatrixInfo& dualTimeMatrixInfo,
+                         bool computeKineticsJacobian )
 {
   std::vector<EqnTimestepAdaptorBase*> specEqns;
 
@@ -106,7 +108,7 @@ setup_species_equations( Uintah::ProblemSpecP specEqnParams,
     if( i == nspec-1 ) continue; // don't build the nth species equation
 
     proc0cout << "Setting up transport equation for species " << specName << std::endl;
-    SpeciesTransportEquation* specEqn = scinew SpeciesTransportEquation( specEqnParams, wasatchSpec, turbParams, i, gc, densityTag, velTags, temperatureTag, tagNames.mixMW );
+    SpeciesTransportEquation* specEqn = scinew SpeciesTransportEquation( specEqnParams, wasatchSpec, turbParams, i, gc, densityTag, velTags, temperatureTag, tagNames.mixMW, dualTimeMatrixInfo, computeKineticsJacobian );
     specEqns.push_back( new EqnTimestepAdaptor<FieldT>(specEqn) );
 
     // default to zero mass fraction for species unless specified otherwise
@@ -134,8 +136,20 @@ setup_species_equations( Uintah::ProblemSpecP specEqnParams,
 
   // the last species mass fraction
   typedef pokitt::SpeciesN<FieldT>::Builder SpecN;
-  factory  .register_expression( scinew SpecN( yiTags[nspec-1], yiTags, pokitt::ERRORSPECN, DEFAULT_NUMBER_OF_GHOSTS ) );
+  factory  .register_expression( scinew SpecN( yiTags[nspec-1], yiTags, pokitt::CLIPSPECN, DEFAULT_NUMBER_OF_GHOSTS ) );
   icFactory.register_expression( scinew SpecN( yiTags[nspec-1], yiTags, pokitt::ERRORSPECN, DEFAULT_NUMBER_OF_GHOSTS ) );
+
+  // register stuff for dual time
+  Expr::TagList rhoYiTags;
+  for( int i=0; i<nspec; ++i ){
+    rhoYiTags.push_back( Expr::Tag( "rho_" + CanteraObjects::species_name(i), Expr::STATE_DYNAMIC ) );
+  }
+
+  dualTimeMatrixInfo.doSpecies = true;
+  dualTimeMatrixInfo.set_mass_fraction_tags( yiTags );
+  dualTimeMatrixInfo.set_species_density_tags( rhoYiTags );
+  dualTimeMatrixInfo.set_molecular_weights( CanteraObjects::molecular_weights() );
+  dualTimeMatrixInfo.mmw = tagNames.mixMW;
 
   return specEqns;
 }
@@ -151,7 +165,9 @@ SpeciesTransportEquation( Uintah::ProblemSpecP params,
                           const Expr::Tag densityTag,
                           const Expr::TagList velTags,
                           const Expr::Tag temperatureTag,
-                          const Expr::Tag mmwTag )
+                          const Expr::Tag mmwTag,
+                          WasatchCore::DualTimeMatrixInfo& dualTimeMatrixInfo,
+                          const bool computeKineticsJacobian )
 : TransportEquation( gc, "rho_"+CanteraObjects::species_name(specNum), NODIR, false ),  // jcs should we allow constant density?  possibly...
   params_     ( params      ),
   wasatchSpec_( wasatchSpec ),
@@ -162,10 +178,16 @@ SpeciesTransportEquation( Uintah::ProblemSpecP params,
   temperatureTag_( temperatureTag ),
   mmwTag_        ( mmwTag         ),
   velTags_       ( velTags        ),
-  nspec_( CanteraObjects::number_species() )
+  nspec_( CanteraObjects::number_species() ),
+  dualTimeMatrixInfo_( dualTimeMatrixInfo )
 {
   for( int i=0; i<nspec_; ++i ){
     yiTags_.push_back( Expr::Tag( CanteraObjects::species_name(i), Expr::STATE_NONE ) );
+  }
+
+  // set the Jacobian
+  if( computeKineticsJacobian ){
+    jacobian_ = boost::make_shared<pokitt::ChemicalSourceJacobian>();
   }
 
   setup();
