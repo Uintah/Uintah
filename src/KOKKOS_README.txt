@@ -14,6 +14,8 @@ Here is how I configure Kokkos for OpenMP
 
 ~/src/kokkos/generate_makefile.bash --kokkos-path=/home/brad/src/kokkos --prefix=/home/brad/opt/kokkos-openmp --with-openmp
 
+Note: You must have nvcc in your path for this to work!
+
 Here is how I configure Kokkos for CUDA
 1) Apply my Kokkos patch for asynchronous, I have placed it in this Uintah branch's src directory. 
 git apply ~/kokkos_brad_dec22.patch (works from anywhere inside the kokkos source tree)
