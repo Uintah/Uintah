@@ -72,6 +72,7 @@ psNox::problemSetup(const ProblemSpecP& inputdb)
 
   db->getWithDefault("PreExpReburn",_A_reburn  ,34830  );
   db->getWithDefault("ExpReburn",   _E_reburn  ,19953.6);
+  db->getWithDefault("PowerReburn", _m_gr      ,2.25);
 
 
   //read concentrations of species in the table
@@ -545,9 +546,8 @@ psNox::computeSource( const ProcessorGroup* pc,
 
         rate_4 = A4 * std::exp(-E4/_R/temperature(i,j,k)) * NH3_mp * NO_mp/ mix_mol_weight_r*density(i,j,k);                       //(mol/m^3 / s-1)
         rxn_rates[5]=rate_4;
-
         //nox reduction in gas phase, reburning
-        rate_gr = Agr * std::exp(-Egr/_R/temperature(i,j,k)) * std::pow(NO_m,2.25) * (CO_m+H2_m);             //(mol/sm3)
+        rate_gr = Agr * std::exp(-Egr/_R/temperature(i,j,k)) * std::pow(NO_m,_m_gr) * (CO_m+H2_m);             //(mol/sm3)
 
         rxn_rates[6]=rate_gr;
 

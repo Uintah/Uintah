@@ -1782,6 +1782,7 @@
            <Tar_to_NH3                   spec="OPTIONAL DOUBLE" need_applies_to="type psNox"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- FRACTION of volatile-N to HCN-->
            <PreExpReburn                 spec="OPTIONAL DOUBLE" need_applies_to="type psNox"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- FRACTION of volatile-N to HCN-->
            <ExpReburn                    spec="OPTIONAL DOUBLE" need_applies_to="type psNox"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- FRACTION of volatile-N to HCN-->
+           <PowerExpReburn                 spec="OPTIONAL DOUBLE" need_applies_to="type psNox"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- FRACTION of volatile-N to HCN-->
            <Tar_src_label                spec="OPTIONAL STRING" need_applies_to="type psNox"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- NH3 label in ZZ NOx model -->
            <Tar_fraction                 spec="OPTIONAL DOUBLE" need_applies_to="type psNox"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- NH3 label in ZZ NOx model -->
 
