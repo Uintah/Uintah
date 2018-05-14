@@ -115,6 +115,7 @@ private:
     double _A_reburn;
     double _E_reburn;
     double _m_gr;
+    double _F1_Desoete;
 
     double tarFrac;
     double m_ash_mass_fraction;

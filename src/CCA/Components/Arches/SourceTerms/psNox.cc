@@ -74,6 +74,8 @@ psNox::problemSetup(const ProblemSpecP& inputdb)
   db->getWithDefault("ExpReburn",   _E_reburn  ,19953.6);
   db->getWithDefault("PowerReburn", _m_gr      ,2.25);
 
+   // Factor for A in first De soete reaction
+  db->getWithDefault("F1_De_soete", _F1_Desoete      ,12);
 
   //read concentrations of species in the table
   db->getWithDefault("o2_label",             m_O2_name,            "O2");
@@ -340,7 +342,7 @@ psNox::computeSource( const ProcessorGroup* pc,
     double rate_f1,rate_r1,rate_f2,rate_r2,rate_f3,rate_r3;
 
     //fuel-nox De soete mechanism parameters
-    const double A1   = 1.0e10*12;         //unit: s-1
+    const double A1   = 1.0e10*_F1_Desoete;         //unit: s-1
     const double E1   = 280451.95;      //unit: j/mol
     const double A2   = 3.0e12;
     const double E2   = 251151;
