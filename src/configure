@@ -10130,7 +10130,7 @@ fi
 
 # Last resort, try one that spits out to stdout
 if test $CC_DEPEND_MODE = unknown; then
-  for flag in -M; do
+  for flag in -MD -M; do
     { $as_echo "$as_me:${as_lineno-$LINENO}: checking 3 - if depend mode flag '$flag' works " >&5
 $as_echo_n "checking 3 - if depend mode flag '$flag' works ... " >&6; }
     rm -f configure-test.o configure-test-dir/configure-test.o

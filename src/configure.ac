@@ -2042,7 +2042,7 @@ fi
 
 # Last resort, try one that spits out to stdout
 if test $CC_DEPEND_MODE = unknown; then
-  for flag in -M; do
+  for flag in -MD -M; do
     AC_MSG_CHECKING( 3 - if depend mode flag '$flag' works )
     rm -f configure-test.o configure-test-dir/configure-test.o
     ac_try="$CXX $CFLAGS -c $flag configure-test-dir/configure-test.cc >configure-test-dir/configure-test.d 2>conftest.out"
