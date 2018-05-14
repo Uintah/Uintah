@@ -373,7 +373,7 @@ private:
                  Task::WhichDW which_celltype_dw );
 
   //__________________________________
-  template<class T>
+  template< typename T, typename ExecutionSpace, typename MemorySpace>
   void rayTrace_dataOnion( DetailedTask* dtask,
                            Task::CallBackEvent event,
                            const ProcessorGroup* pg,

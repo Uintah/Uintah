@@ -56,9 +56,7 @@ Dout g_ray_BC ("Ray_BC",  "Radiation Models", "RMCRT RayBC debug stream", false)
 //______________________________________________________________________
 // Static variable declarations
 // This class is instantiated by ray() and radiometer().
-// You only want 1 instance of each of these variables thus we use>>>>>>> .merge-right.r57993
-
-// static variables
+// You only want 1 instance of each of these variables thus we use static variables
 //______________________________________________________________________
 
 double      RMCRTCommon::d_threshold;

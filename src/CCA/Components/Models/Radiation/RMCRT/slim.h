@@ -260,20 +260,21 @@ struct SlimRayTrace_dataOnion_solveDivQFunctor {
         Combined_RMCRT_Required_Vars curAbskgSigmaT4CellType = abskgSigmaT4CellTypeConst;
         //reinterpret_cast<const Combined_RMCRT_Required_Vars&>(m_abskgSigmaT4CellType[L](cur[0], cur[1], cur[2]));
 
+        printf("In cell (%d, %d, %d). Ray #%d is at (%d,%d,%d) (init 0)\n", i,j,k, iRay, cur[0], cur[1], cur[2]);
         // Move the ray ahead.  We know we can't drop a coarse level yet (halos must be at least 1),
         // The cur/ray can't go out of bounds, because at worst this moves the ray into a wall.
         dir = tMaxV[0] < tMaxV[1] ? (tMaxV[0] < tMaxV[2] ? 0 : 2) : (tMaxV[1] < tMaxV[2] ? 1 : 2);
         cur[dir]  +=  step[dir];
+        printf("In cell (%d, %d, %d). Ray #%d is at (%d,%d,%d) (init 1)\n", i,j,k, iRay, cur[0], cur[1], cur[2]);
         double distanceTraveled = ( tMaxV[dir] - old_length );
         old_length  = tMaxV[dir];
         tMaxV[dir] = tMaxV[dir] + tDelta[L][dir];
 
-        //The ray started in cell 1, and previously confirmed its not in a wall.
+        //Warning - trickiness ahead: The ray started in cell 1, and previously confirmed it is not in a wall.
         //The ray has moved into cell 2, but the no values have been obtained yet for this new cell 2
         //This new cell 2 could be a wall, but it can't be at a point where we would coarsen yet (assuming at least 1 halo cell layer)
         //Start the loop, get the values at cell 2, and move the ray to a position ready to get cell 3.  We may coarsen after cur is moved into cell 3.
         do {
-
           dir = tMaxV[0] < tMaxV[1] ? (tMaxV[0] < tMaxV[2] ? 0 : 2) : (tMaxV[1] < tMaxV[2] ? 1 : 2);
 
           double distanceTraveled = ( tMaxV[dir] - old_length );
@@ -282,7 +283,7 @@ struct SlimRayTrace_dataOnion_solveDivQFunctor {
           expOpticalThick_prev = expOpticalThick;
 
           cur[dir]  += step[dir];
-
+          printf("In cell (%d, %d, %d). Ray #%d is at (%d,%d,%d) (loop)\n", i,j,k, iRay, cur[0], cur[1], cur[2]);
           old_length              = tMaxV[dir];
           //__________________________________
           // When moving to a coarse level tmax will change only in the direction the ray is moving
@@ -290,7 +291,7 @@ struct SlimRayTrace_dataOnion_solveDivQFunctor {
             m_levelParamsML[L].mapCellToCoarser(cur);
             L--;  // move to a coarser level
             m_levelParamsML[L].getCellPosition(cur, CC_pos);
-
+            printf("In cell (%d, %d, %d), Dropped a level to level %d. Ray #%d is at (%d,%d,%d)\n", i,j,k, L, iRay, cur[0], cur[1], cur[2]);
             double rayDx_Level =rayOrigin[dir]+tMaxV[dir]*direction_vector[dir]  - ( CC_pos[dir] - 0.5 * m_levelParamsML[L].Dx[dir] ); // account for dropping levels in middle of cell, could remove if ROIs ensured droping down on fine-grid/coarse-grid interface
             double tMax_tmp    = ( std::max((double) step[dir],0.0) * m_levelParamsML[L].Dx[dir] - rayDx_Level ) * inv_direction[dir];
             tMaxV[dir]         += tMax_tmp;
@@ -298,7 +299,7 @@ struct SlimRayTrace_dataOnion_solveDivQFunctor {
             tMaxV[dir]         = tMaxV[dir] + tDelta[L][dir];
           }
           curAbskgSigmaT4CellType = reinterpret_cast<const Combined_RMCRT_Required_Vars&>(m_abskgSigmaT4CellType[L](cur[0], cur[1], cur[2]));
-
+          printf("In cell (%d, %d, %d). Ray #%d, checking the value of abskg at (%d,%d,%d) to see if we are at a wall: %g\n", i,j,k, iRay, cur[0], cur[1], cur[2], curAbskgSigmaT4CellType.abskg);
         } while ( ! (reinterpret_cast<int&>(curAbskgSigmaT4CellType.abskg) & 0x80000000) );// end domain while loop 
         T wallEmissivity = ( fabs(curAbskgSigmaT4CellType.abskg) > 1.0 ) ? 1.0 : fabs(curAbskgSigmaT4CellType.abskg);  // Ensure wall emissivity doesn't exceed one
         sumI += wallEmissivity * curAbskgSigmaT4CellType.sigmaT4 * expOpticalThick_prev;
