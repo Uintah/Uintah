@@ -46,11 +46,12 @@
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 #include <CCA/Components/Models/Radiation/RMCRT/Ray.h>
 
-//-- SpatialOps includes --//
 #include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
 #include <CCA/Components/Wasatch/Expressions/StableTimestep.h>
 #include <CCA/Components/Wasatch/CoordinateHelper.h>
+#include <CCA/Components/Wasatch/DualTimeMatrixManager.h>
 
+//-- SpatialOps includes --//
 #include <spatialops/structured/FVStaggered.h>
 #ifdef ENABLE_THREADS
 #  include <spatialops/SpatialOpsTools.h>
@@ -154,6 +155,8 @@ namespace WasatchCore{
     graphCategories_[ ADVANCE_SOLUTION   ] = scinew GraphHelper( scinew Expr::ExpressionFactory(log) );
     graphCategories_[ POSTPROCESSING     ] = scinew GraphHelper( scinew Expr::ExpressionFactory(log) );
 
+    dualTimeMatrixInfo_ = scinew DualTimeMatrixInfo();
+
     OldVariable::self().sync_with_wasatch( this );
     ReductionHelper::self().sync_with_wasatch( this );
   }
@@ -202,6 +205,7 @@ namespace WasatchCore{
       delete it->second.second;
     }
 
+    delete dualTimeMatrixInfo_;
 
     if( doRadiation_ ){
       delete rmcrt_;
@@ -569,49 +573,49 @@ namespace WasatchCore{
       timeIntegrator_.has_dual_time(true);
 
       if ( dualTimeSpec->findAttribute("blockimplicit") ){
-        dualTimeSpec->getAttribute( "blockimplicit", dualTimeMatrixInfo_.doBlockImplicit );
+        dualTimeSpec->getAttribute( "blockimplicit", dualTimeMatrixInfo_->doBlockImplicit );
       }
 
       if ( dualTimeSpec->findAttribute("localcflvnn") )
-        dualTimeSpec->getAttribute( "localcflvnn", dualTimeMatrixInfo_.doLocalCflVnn );
+        dualTimeSpec->getAttribute( "localcflvnn", dualTimeMatrixInfo_->doLocalCflVnn );
 
       if ( dualTimeSpec->findAttribute("precondition") )
-        dualTimeSpec->getAttribute( "precondition", dualTimeMatrixInfo_.doPreconditioning );
+        dualTimeSpec->getAttribute( "precondition", dualTimeMatrixInfo_->doPreconditioning );
 
       if ( dualTimeSpec->findAttribute("doImplicitInviscid" ) )
-        dualTimeSpec->getAttribute( "doImplicitInviscid", dualTimeMatrixInfo_.doImplicitInviscid );
+        dualTimeSpec->getAttribute( "doImplicitInviscid", dualTimeMatrixInfo_->doImplicitInviscid );
 
       if ( dualTimeSpec->findAttribute("cfl") )
-        dualTimeSpec->getAttribute( "cfl", dualTimeMatrixInfo_.cfl );
+        dualTimeSpec->getAttribute( "cfl", dualTimeMatrixInfo_->cfl );
 
       if ( dualTimeSpec->findAttribute("vnn") )
-        dualTimeSpec->getAttribute( "vnn", dualTimeMatrixInfo_.vnn );
+        dualTimeSpec->getAttribute( "vnn", dualTimeMatrixInfo_->vnn );
 
       if ( dualTimeSpec->findAttribute("maxvalue") )
-        dualTimeSpec->getAttribute( "maxvalue", dualTimeMatrixInfo_.dsMax );
+        dualTimeSpec->getAttribute( "maxvalue", dualTimeMatrixInfo_->dsMax );
 
       if ( dualTimeSpec->findAttribute("minvalue") )
-        dualTimeSpec->getAttribute( "minvalue", dualTimeMatrixInfo_.dsMin );
+        dualTimeSpec->getAttribute( "minvalue", dualTimeMatrixInfo_->dsMin );
 
       if ( dualTimeSpec->findAttribute("ds") )
-        dualTimeSpec->getAttribute( "ds", dualTimeMatrixInfo_.constantDs );
+        dualTimeSpec->getAttribute( "ds", dualTimeMatrixInfo_->constantDs );
 
       if ( dualTimeSpec->findAttribute("iterations") )
-        dualTimeSpec->getAttribute( "iterations", dualTimeMatrixInfo_.maxIterations );
+        dualTimeSpec->getAttribute( "iterations", dualTimeMatrixInfo_->maxIterations );
 
       if ( dualTimeSpec->findAttribute("tolerance") )
-        dualTimeSpec->getAttribute( "tolerance", dualTimeMatrixInfo_.tolerance );
+        dualTimeSpec->getAttribute( "tolerance", dualTimeMatrixInfo_->tolerance );
 
       if ( dualTimeSpec->findAttribute("lograte") )
-        dualTimeSpec->getAttribute( "lograte", dualTimeMatrixInfo_.logIterationRate );
+        dualTimeSpec->getAttribute( "lograte", dualTimeMatrixInfo_->logIterationRate );
 
       // set a few tags
       const TagNames& tagNames = TagNames::self();
-      dualTimeMatrixInfo_.soundSpeed = tagNames.soundspeed;
-      dualTimeMatrixInfo_.timeStepSize = tagNames.dt;
-      dualTimeMatrixInfo_.xCoord = TagNames::self().xsvolcoord;
-      dualTimeMatrixInfo_.yCoord = TagNames::self().ysvolcoord;
-      dualTimeMatrixInfo_.zCoord = TagNames::self().zsvolcoord;
+      dualTimeMatrixInfo_->soundSpeed = tagNames.soundspeed;
+      dualTimeMatrixInfo_->timeStepSize = tagNames.dt;
+      dualTimeMatrixInfo_->xCoord = TagNames::self().xsvolcoord;
+      dualTimeMatrixInfo_->yCoord = TagNames::self().ysvolcoord;
+      dualTimeMatrixInfo_->zCoord = TagNames::self().zsvolcoord;
 
       has_dual_time(true);
     }
@@ -648,7 +652,7 @@ namespace WasatchCore{
          transEqnParams != nullptr;
          transEqnParams=transEqnParams->findNextBlock("TransportEquation") )
     {
-      adaptors_.push_back( parse_scalar_equation( transEqnParams, turbParams, densityTag, isConstDensity, graphCategories_, dualTimeMatrixInfo_ ) );
+      adaptors_.push_back( parse_scalar_equation( transEqnParams, turbParams, densityTag, isConstDensity, graphCategories_, *dualTimeMatrixInfo_ ) );
     }
 
     //
@@ -657,7 +661,7 @@ namespace WasatchCore{
     Uintah::ProblemSpecP specEqnParams = wasatchSpec_->findBlock("SpeciesTransportEquations");
     Uintah::ProblemSpecP momEqnParams = wasatchSpec_->findBlock("MomentumEquations");
     if( specEqnParams ){
-      EquationAdaptors specEqns = parse_species_equations( specEqnParams, wasatchSpec_, momEqnParams, turbParams, densityTag, graphCategories_, dualTimeMatrixInfo_, dualTimeMatrixInfo_.doBlockImplicit );
+      EquationAdaptors specEqns = parse_species_equations( specEqnParams, wasatchSpec_, momEqnParams, turbParams, densityTag, graphCategories_, *dualTimeMatrixInfo_, dualTimeMatrixInfo_->doBlockImplicit );
       adaptors_.insert( adaptors_.end(), specEqns.begin(), specEqns.end() );
     }
 
@@ -701,7 +705,7 @@ namespace WasatchCore{
                                                                       graphCategories_,
                                                                       *m_solver,
                                                                       m_sharedState,
-                                                                      dualTimeMatrixInfo_ );
+                                                                      *dualTimeMatrixInfo_ );
         adaptors_.insert( adaptors_.end(), adaptors.begin(), adaptors.end() );
       }
       catch( std::runtime_error& err ){
@@ -1558,8 +1562,8 @@ namespace WasatchCore{
       subsched_->advanceDataWarehouse(grid);
       
       c++;
-      if( !(c % dualTimeMatrixInfo_.logIterationRate) ) proc0cout << "    dual time: iteration " << c << "    residual " << residual << std::endl;
-    } while(c <= dualTimeMatrixInfo_.maxIterations && residual >= dualTimeMatrixInfo_.tolerance);
+      if( !(c % dualTimeMatrixInfo_->logIterationRate) ) proc0cout << "    dual time: iteration " << c << "    residual " << residual << std::endl;
+    } while(c <= dualTimeMatrixInfo_->maxIterations && residual >= dualTimeMatrixInfo_->tolerance);
     
     totalDualTimeIterations_ += c - 1;
 
@@ -1794,7 +1798,7 @@ namespace WasatchCore{
     timeStepper_->create_dualtime_tasks( patchInfoMap_, localPatches,
                                          materials, level, sched,
                                          dualTimePatchMap_, persistentFields_,
-                                         dualTimeMatrixInfo_ );
+                                         *dualTimeMatrixInfo_ );
   }
 
   

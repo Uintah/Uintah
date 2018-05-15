@@ -115,15 +115,15 @@
 #include "BCHelper.h"
 #include "WasatchBCHelper.h"
 #include "TimeIntegratorTools.h"
-#include <CCA/Components/Wasatch/DualTimeMatrixManager.h>
 //-- ExprLib Includes --//
 #include <expression/ExpressionFactory.h>
-#include <expression/dualtime/FixedPointBDFDualTimeIntegrator.h>
-#include <expression/dualtime/VariableImplicitBDFDualTimeIntegrator.h>
-#include <expression/dualtime/BlockImplicitBDFDualTimeIntegrator.h>
 
 namespace Expr{
   class ExpressionID;
+
+  namespace DualTime{
+    class BDFDualTimeIntegrator;
+  }
 }
 
 namespace Uintah {
@@ -142,6 +142,8 @@ namespace WasatchCore{
                                       Uintah::IntVector& extraCells,
                                       bool& isPeriodic);
   
+  class DualTimeMatrixInfo;  // forward declaration
+  class DualTimeMatrixManager;  // forward declaration
   class EqnTimestepAdaptorBase;
   class TimeStepper;
   class TaskInterface;
@@ -182,8 +184,6 @@ namespace WasatchCore{
     typedef std::map< int, WasatchBCHelper* > BCHelperMapT; //<<< LevelID, BCHelper >>>
     // we need a dual time integrator per patch since each of the RHS trees will need a dual time integrator for the patch it is working on
     typedef std::map< int, std::pair<Expr::DualTime::BDFDualTimeIntegrator*, WasatchCore::DualTimeMatrixManager* > > DualTimePatchMapT; //<<< PatchID, Pair<DualTimeIntegrator, DualTimeMatrixManager> >>>
-//    typedef std::map< int, Expr::DualTime::BDFDualTimeIntegrator* > DTIntegratorMapT; //<<< PatchID, DualTimeIntegrator >>>
-//    typedef std::map< int, WasatchCore::DualTimeMatrixManager* > DualTimeMatrixManagerMapT;  //<<< PatchID, DualTimeMatrixManager >>>
     
     Wasatch( const Uintah::ProcessorGroup* myworld,
 	     const Uintah::SimulationStateP sharedState );
@@ -333,9 +333,7 @@ namespace WasatchCore{
     
     TimeIntegrator timeIntegrator_;
     
-//    DTIntegratorMapT dualTimeIntegrators_;
-    WasatchCore::DualTimeMatrixInfo dualTimeMatrixInfo_;
-//    DualTimeMatrixManagerMapT dualTimeMatrixManagers_;
+    DualTimeMatrixInfo* dualTimeMatrixInfo_;
     DualTimePatchMapT dualTimePatchMap_;
     
     std::set<std::string> persistentFields_;   ///< prevent the ExpressionTree from reclaiming memory on these fields.

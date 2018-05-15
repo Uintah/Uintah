@@ -39,6 +39,7 @@
 #include <CCA/Components/Wasatch/WasatchBCHelper.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditions.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditionsOneSided.h>
+#include <CCA/Components/Wasatch/DualTimeMatrixManager.h>
 #ifdef HAVE_POKITT
 #include <pokitt/SpeciesN.h>
 #include <pokitt/MixtureMolWeight.h>

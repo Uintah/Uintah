@@ -32,9 +32,10 @@
 
 #include <sci_defs/wasatch_defs.h>
 #include <CCA/Components/Wasatch/Transport/ScalarTransportEquation.h>
-#include <CCA/Components/Wasatch/DualTimeMatrixManager.h>
 
 namespace WasatchCore {
+
+  class DualTimeMatrixInfo;  // forward declaration
 
   /**
    *  \class  WasatchCore::TotalInternalEnergyTransportEquation

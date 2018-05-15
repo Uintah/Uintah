@@ -30,7 +30,6 @@
 
 //-- Wasatch includes --//
 #include <CCA/Components/Wasatch/GraphHelperTools.h>
-#include <CCA/Components/Wasatch/DualTimeMatrixManager.h>
 #include <CCA/Components/Wasatch/Expressions/Turbulence/TurbulenceParameters.h>
 
 /**
@@ -40,6 +39,8 @@
 
 namespace WasatchCore{
   
+  class DualTimeMatrixInfo;  // forward declaration
+
   class EquationBase;
 
   /**

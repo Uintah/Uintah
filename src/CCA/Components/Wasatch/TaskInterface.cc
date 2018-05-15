@@ -35,6 +35,8 @@
 #include <expression/FieldRequest.h>
 #include <expression/ExpressionTree.h>
 #include <expression/matrix-assembly/compressible-reactive-flow/DualTimeStepExpression.h>
+#include <expression/dualtime/FixedPointBDFDualTimeIntegrator.h>
+#include <expression/dualtime/BlockImplicitBDFDualTimeIntegrator.h>
 
 //-- Uintah includes --//
 #include <CCA/Ports/Scheduler.h>

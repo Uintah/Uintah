@@ -90,8 +90,6 @@ namespace WasatchCore{
 
   private:
 
-//    typedef std::map<int, Expr::DualTime::BDFDualTimeIntegrator*> DTIntegratorMapT;
-//    typedef std::map<int, WasatchCore::DualTimeMatrixManager*> DualTimeMatrixManagerMapT;
     typedef std::map< int, std::pair<Expr::DualTime::BDFDualTimeIntegrator*, WasatchCore::DualTimeMatrixManager* > > DualTimePatchMapT; //<<< PatchID, Pair<DualTimeIntegrator, DualTimeMatrixManager> >>>
 
     typedef std::set< FieldInfo<SpatialOps::SVolField              > > ScalarFields;

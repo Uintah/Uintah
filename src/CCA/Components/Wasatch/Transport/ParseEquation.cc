@@ -30,6 +30,7 @@
 #include <CCA/Components/Wasatch/ParseTools.h>
 #include <CCA/Components/Wasatch/Transport/ParseEquation.h>
 #include <CCA/Components/Wasatch/Transport/EquationAdaptors.h>
+#include <CCA/Components/Wasatch/DualTimeMatrixManager.h>
 
 //-- Add headers for individual transport equations here --//
 #include <CCA/Components/Wasatch/Transport/TransportEquation.h>

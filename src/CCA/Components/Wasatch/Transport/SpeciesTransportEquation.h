@@ -40,11 +40,12 @@
 
 #include <pokitt/kinetics/AnalyticalJacobian.h>
 
-#include <CCA/Components/Wasatch/DualTimeMatrixManager.h>
 #include <CCA/Components/Wasatch/Transport/TransportEquation.h>
 #include <CCA/Components/Wasatch/Expressions/Turbulence/TurbulenceParameters.h>
 
 namespace WasatchCore{
+
+class DualTimeMatrixInfo;  // forward declaration
 
 class EqnTimestepAdaptorBase;
 

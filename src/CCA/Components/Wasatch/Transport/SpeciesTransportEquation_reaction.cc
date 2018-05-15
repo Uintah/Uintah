@@ -24,6 +24,7 @@
 
 #include <CCA/Components/Wasatch/Transport/SpeciesTransportEquation.h>
 #include <CCA/Components/Wasatch/Expressions/Turbulence/TurbulenceParameters.h>
+#include <CCA/Components/Wasatch/DualTimeMatrixManager.h>
 
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>

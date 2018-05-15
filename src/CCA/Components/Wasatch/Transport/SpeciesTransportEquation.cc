@@ -38,6 +38,7 @@
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditionsOneSided.h>
 #include <CCA/Components/Wasatch/BCHelper.h>
 #include <CCA/Components/Wasatch/WasatchBCHelper.h>
+#include <CCA/Components/Wasatch/DualTimeMatrixManager.h>
 
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>

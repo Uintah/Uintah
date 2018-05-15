@@ -29,6 +29,7 @@
 #include <CCA/Components/Wasatch/Expressions/LewisNumberSpeciesFlux.h>
 #include <CCA/Components/Wasatch/Expressions/Turbulence/TurbDiffFlux.h>
 #include <CCA/Components/Wasatch/Transport/ParseEquationHelper.h>
+#include <CCA/Components/Wasatch/DualTimeMatrixManager.h>
 
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
