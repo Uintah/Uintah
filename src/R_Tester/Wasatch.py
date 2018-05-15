@@ -174,8 +174,8 @@ DUALTIMETESTS=[
   ("implicit-cdr-xz"           , "implicit-cdr-xz.ups"           , 1, "All", ["exactComparison","no_restart","no_memoryTest","no_dbg"] ),
   ("implicit-cdr-yz"           , "implicit-cdr-yz.ups"           , 1, "All", ["exactComparison","no_restart","no_memoryTest","no_dbg"] ),
   ("implicit-cdr-3d"           , "implicit-cdr-3d.ups"           , 2, "All", ["exactComparison","no_restart","no_memoryTest","no_dbg"] ),
-  ("implicit-compressible-purefluid-nonpreconditioned" , "implicit-compressible-purefluid-nonpreconditioned.ups", 1, "All", ["exactComparison","no_restart","no_memoryTest","no_dbg"] ),
-  ("implicit-compressible-purefluid-preconditioned"    , "implicit-compressible-purefluid-preconditioned.ups"   , 1, "All", ["exactComparison","no_restart","no_memoryTest","no_dbg"] )
+  ("implicit-compressible-purefluid-nonpreconditioned" , "implicit-compressible-purefluid-nonpreconditioned-x.ups", 1, "All", ["exactComparison","no_restart","no_memoryTest","no_dbg"] ),
+  ("implicit-compressible-purefluid-preconditioned"    , "implicit-compressible-purefluid-preconditioned-x.ups"   , 1, "All", ["exactComparison","no_restart","no_memoryTest","no_dbg"] )
 ]
 
 
