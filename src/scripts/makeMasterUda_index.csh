@@ -1,17 +1,17 @@
 #!/bin/csh -f
 
 #__________________________________
-# makeMasterUda:
+# makeMasterUda_index:
 # This script generates an index.xml file from 
 # a series of udas.  
 #_________________________________
 if( $#argv < 1 ) then
-  echo "makeMasterUda < list of uda files >"
+  echo "makeMasterUda_index.csh < list of uda files >"
   echo "   To use:"
   echo ""
   echo "   mkdir <masterUda>"
   echo "   cd <masterUda> "
-  echo "   makeMasterUda ../uda.000 ../uda.001 ../uda.00N"
+  echo "   makeMasterUda_index.csh ../uda.000 ../uda.001 ../uda.00N"
   exit(1)
 endif
 
@@ -30,7 +30,7 @@ set udas = ($argv[*])    # make sure you remove the last / from any entry
 # bulletproofing
 set tmp = (`which makeCombinedIndex.sh` )
 if ( $status ) then
-  echo "ERROR:  makeMasterUda:  couldn't find the script makeCombinedIndex.sh it must be in your path"
+  echo "ERROR:  makeMasterUda_index.csh:  couldn't find the script makeCombinedIndex.sh it must be in your path"
   exit
 endif
 
