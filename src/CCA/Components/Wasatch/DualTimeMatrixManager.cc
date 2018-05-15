@@ -26,6 +26,7 @@
 
 #include <Core/Util/DebugStream.h>
 
+#include <expression/dualtime/BlockImplicitBDFDualTimeIntegrator.h>
 #include <expression/matrix-assembly/MatrixExpression.h> /* for debugging purposes */
 #include <expression/matrix-assembly/SparseMatrix.h>
 

@@ -27,7 +27,6 @@
 
 #include <spatialops/structured/FVStaggered.h>
 
-#include <expression/dualtime/BlockImplicitBDFDualTimeIntegrator.h>
 #include <expression/matrix-assembly/DenseSubMatrix.h>
 #include <expression/matrix-assembly/ScaledIdentityMatrix.h>
 #include <expression/matrix-assembly/compressible-reactive-flow/ViscousFluxAssembler.h>
@@ -36,6 +35,13 @@
 #include <expression/matrix-assembly/compressible-reactive-flow/AcousticPreconditioner.h>
 #include <expression/matrix-assembly/Compounds.h>
 #include <expression/matrix-assembly/MapUtilities.h>
+
+
+namespace Expr{
+  namespace DualTime{
+    template< typename T1, typename T2 > class BlockImplicitBDFDualTimeIntegrator;
+  }
+}
 
 
 namespace WasatchCore{

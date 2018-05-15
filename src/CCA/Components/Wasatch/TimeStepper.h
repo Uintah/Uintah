@@ -39,8 +39,12 @@
 #include "FieldAdaptor.h"
 #include "FieldTypes.h"
 #include <CCA/Components/Wasatch/TimeIntegratorTools.h>
-#include <expression/dualtime/BDFDualTimeIntegrator.h>
-//#include <CCA/Components/Wasatch/DualTimeMatrixManager.h>
+
+namespace Expr{
+  namespace DualTime{
+    class BDFDualTimeIntegrator;
+  }
+}
 
 namespace WasatchCore{
 
