@@ -378,18 +378,18 @@ else
           ifeq ($(SCI_MAKE_BE_QUIET),true)
 	          @echo "Compiling: $<"
 	          @rm -f $(basename $@).$(CC_DEPEND_EXT)
-	          @$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(CC_DEPEND_EXT)
+	          @$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@ | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(CC_DEPEND_EXT)
 
             # Now do the actual compile!
-	          @$(CXX) $(CXXFLAGS) $(INCLUDES) $(call repository,$@) -c $< -o $@
+            #     @$(CXX) $(CXXFLAGS) $(INCLUDES) $(call repository,$@) -c $< -o $@
           else
-	          @echo "CREATING DEPENDENCY INFORMATION:"
+	          @echo "Compiling and Creating dependency information (stdout):"
 	          @rm -f $(basename $@).$(CC_DEPEND_EXT)
-	          $(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(CC_DEPEND_EXT)
+	          $(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@ | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(CC_DEPEND_EXT)
 
             # Now do the actual compile!
-	          @echo "ACTUALLY COMPILING:"
-	          $(CXX) $(CXXFLAGS) $(INCLUDES) $(call repository,$@) -c $< -o $@
+            #     @echo "ACTUALLY COMPILING:"
+            #     $(CXX) $(CXXFLAGS) $(INCLUDES) $(call repository,$@) -c $< -o $@
           endif
         else
 	        @echo ".cc rule: Unknown CC_DEPEND_MODE: $(CC_DEPEND_MODE)"
@@ -467,24 +467,24 @@ else
 	  @rm -f $(basename $@).$(F77_DEPEND_EXT)
           ifeq ($(SCI_MAKE_BE_QUIET),true)
             # This just generates the .d dependency file:
-	    @$(F77) $(FFLAGS) $(FINCLUDES) $(F77_DEPEND_REGEN) -c $< | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(F77_DEPEND_EXT)
+	    @$(F77) $(FFLAGS) $(FINCLUDES) $(F77_DEPEND_REGEN) -c $< -o $@ | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(F77_DEPEND_EXT)
 
             # The following if/grep/sed is necessary to fix the .d file for the PGI compiler on Ranger:
 	    @if `grep -q "^../src/" $(basename $@).$(F77_DEPEND_EXT)`; then sed 's,^../src/,,' $(basename $@).$(F77_DEPEND_EXT) > $(basename $@).$(F77_DEPEND_EXT).tmp; mv $(basename $@).$(F77_DEPEND_EXT).tmp $(basename $@).$(F77_DEPEND_EXT) ; fi
 
             # Now do the actual compile!
-	    @echo "Fortran:   $<"
-	    @$(F77) $(FFLAGS) $(INCLUDES) -c $< -o $@
+            #@echo "Fortran:   $<"
+            #@$(F77) $(FFLAGS) $(INCLUDES) -c $< -o $@
           else
 	    @echo "CREATING DEPENDENCY INFORMATION:"
-	    $(F77) $(FFLAGS) $(FINCLUDES) $(F77_DEPEND_REGEN) -c $< | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(F77_DEPEND_EXT)
+	    $(F77) $(FFLAGS) $(FINCLUDES) $(F77_DEPEND_REGEN) -c $< -o $@ | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(F77_DEPEND_EXT)
 
             # The following if/grep/sed is necessary for PGI compiler on Ranger:
 	    @if `grep -q "^../src/" $(basename $@).$(F77_DEPEND_EXT)`; then sed 's,^../src/,,' $(basename $@).$(F77_DEPEND_EXT) > $(basename $@).$(F77_DEPEND_EXT).tmp; mv $(basename $@).$(F77_DEPEND_EXT).tmp $(basename $@).$(F77_DEPEND_EXT) ; fi
 
             # Now do the actual compile!
-	    @echo "ACTUALLY COMPILING:"
-	    $(F77) $(FFLAGS) $(INCLUDES) -c $< -o $@
+            #@echo "ACTUALLY COMPILING:"
+            #$(F77) $(FFLAGS) $(INCLUDES) -c $< -o $@
           endif
         else
 	  @echo "Unknown F77_DEPEND_MODE: $(F77_DEPEND_MODE) (for $@)"
