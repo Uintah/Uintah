@@ -56,13 +56,26 @@ if( length $gpFile ){
   system("cp -f $gpFile .");
 }
 
-# set exitOnCrash
+#__________________________________
+# set exitOnCrash       OPTIONAL
 if ( length $data->{exitOnCrash}->[0] ){
   $exitOnCrash = $data->{exitOnCrash}->[0];
 }else{
   $exitOnCrash = "true";
 }
 $exitOnCrash = trim(uc($exitOnCrash));
+print "  Exit order of accuracy scripts on crash or timeout ($exitOnCrash)\n";
+
+
+#__________________________________
+# set timeout value       OPTIONAL
+if ( length $data->{susTimeout_minutes}->[0] ){
+  $timeout = $data->{susTimeout_minutes}->[0];
+  $timeout = $timeout*60;                   # minutes-> seconds               
+}else{
+  $timeout = 24*60*60;                       # default 24 hours
+}
+print "  Simulation timeout: $timeout seconds\n";
 
 
 #__________________________________
@@ -80,12 +93,12 @@ my @tests = @{$data->{Test}};
 #print Dumper(@tests);         #debugging
        
 for($i = 0; $i<=$#tests; $i++){
-  my $test            =$tests[$i];
-  $test_title[$i]     =$test->{Title}[0];          # test title
-  $sus_cmd[$i]        =$test->{sus_cmd}[0];        # sus command
+  my $test         = $tests[$i];
+  $test_title[$i]  = $test->{Title}[0];          # test title
+  $sus_cmd[$i]     = $test->{sus_cmd}[0];        # sus command
   
   if( length $test->{postProcess_cmd}[0] ){
-    $postProc_cmd[$i] =$test->{postProcess_cmd}[0];    # comparison utility command
+    $postProc_cmd[$i] = $test->{postProcess_cmd}[0];    # comparison utility command
   }else{
     $postProc_cmd[$i] = "";
   }
@@ -203,7 +216,7 @@ close(tstFile);
 @replacementPatterns = (@global_replaceLines);
 foreach $rp (@global_replaceLines){
   system("replace_XML_line", "$rp", "$upsFile") ==0 ||  die("Error replacing_XML_line $rp in file $upsFile \n $@");
-  print "\t\treplace_XML_line $rp\n";
+  print "\treplace_XML_line $rp\n";
 }
 
 # replace the values globally
@@ -213,7 +226,7 @@ foreach $rv (@global_replaceValues){
   $xmlPath = $tmp[0];       # you must use a : to separate the xmlPath and value
   $value   = $tmp[1];
   system("replace_XML_value", "$xmlPath", "$value", "$upsFile")==0 ||  die("Error: replace_XML_value $xmlPath $value $upsFile \n $@");
-  print "\t\treplace_XML_value $xmlPath $value\n";
+  print "\treplace_XML_value $xmlPath $value\n";
 }
 
 
@@ -252,7 +265,7 @@ for ($i=0;$i<=$num_of_tests;$i++){
   system(" cp $upsFile $test_ups");
   my $fn = "<filebase>".$udaFilename."</filebase>";
   system("replace_XML_line", "$fn", "$test_ups")==0 ||  die("Error replace_XML_line $fn in file $test_ups \n $@");
-  print "\t\treplace_XML_line $fn\n";
+  print "\treplace_XML_line $fn\n";
   
   # replace lines in the ups files
   if( defined $replaceLines[$i] ){
@@ -260,7 +273,7 @@ for ($i=0;$i<=$num_of_tests;$i++){
     foreach $rp (@replacementPatterns){
       chomp($rp);
       system("replace_XML_line", "$rp", "$test_ups")==0 ||  die("Error replacing_XML_line $rp in file $test_ups \n $@");
-      print "\t\treplace_XML_line $rp\n";
+      print "\treplace_XML_line $rp\n";
     }
   }
   
@@ -274,7 +287,7 @@ for ($i=0;$i<=$num_of_tests;$i++){
         $xmlPath = $tmp[0];       # you must use a : to separate the xmlPath and value
         $value   = $tmp[1];
         system("replace_XML_value", "$xmlPath", "$value", "$test_ups")==0 ||  die("Error: replace_XML_value $xmlPath $value $test_ups \n $@");
-        print "\t\treplace_XML_value $xmlPath $value\n";
+        print "\treplace_XML_value $xmlPath $value\n";
       }
     }
   }
@@ -289,26 +302,22 @@ for ($i=0;$i<=$num_of_tests;$i++){
   print statsFile "(uda) :         "."$udaFilename"."\n";
   print statsFile "output:         "."$test_output"."\n";
   print statsFile "postProcessCmd: "."$postProc_cmd[$i]"."\n";
+  print statsFile "Command Used :  "."$sus_cmd[$i] $test_ups"."\n";
   
-  print statsFile "Command Used : "."$sus_cmd[$i] $test_ups"."\n";
-  print "Launching: $sus_cmd[$i] $test_ups\n";
   $now = time();
-   
   @args = ("$sus_cmd[$i]","$test_ups","> $test_output 2>&1");
   
-  if ( $exitOnCrash eq "TRUE" ) {
-    system("@args")==0 or die("ERROR(run_tests.pl): @args failed: $?");
-  }else{
-    system("@args");
-  }
+  my $rc = runSusCmd( $timeout, $exitOnCrash, statsFile, @args );
+  
+   
   
   $fin = time()-$now;
   printf statsFile ("Running Time : %.3f [secs]\n", $fin);
   print statsFile "---------------------------------------------\n";
-  
+
   #__________________________________
   # execute comparison
-  if( length $postProc_cmd[$i] ){
+  if( $rc == 0 && length $postProc_cmd[$i] ){
     print "\nLaunching: analyze_results.pl $tstFile test $i\n";
     @args = ("analyze_results.pl","$tstFile", "$i");
 
@@ -322,4 +331,45 @@ for ($i=0;$i<=$num_of_tests;$i++){
 }  # all tests loop
 
 close(statsFile);
+
+
+#______________________________________________________________________
+#   subroutines
+#______________________________________________________________________
+  #  
+sub runSusCmd {
+  my( $timeout, $exitOnCrash, $statsFile, @args ) = @_;
+
+  print "\tLaunching: @args\n";
+  @cmd = (" timeout --preserve-status $timeout @args ");
+
+  if ( $exitOnCrash eq "TRUE" ) {
+
+    $rc = system("@cmd");
+
+    if ( $rc != 0 || $rc != 36608 ){
+      die("ERROR(run_tests.pl): \t\tFailed running: (@args)\n");
+      return 1
+    }
+
+  }else{
+    $rc = system("@cmd");
+  }
+
+  #__________________________________
+  #  Warn user if sus didn't run successfully 
+  if( $rc == 36608 ) {
+    print "\t\tERROR the simulation has timed out.\n";
+    print $statsFile "\t\tERROR the simulation has timed out.\n";
+  } 
+  elsif ($rc != 0 ){
+    print "\t\tERROR the simulation crashed. (rc = $rc)\n";
+    print $statsFile "\t\tERROR the simulation crashed. (rc = $rc)\n";
+  }
+  
+  
+  
+  return $rc;  
+
+};
 

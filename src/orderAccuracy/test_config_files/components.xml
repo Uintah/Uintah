@@ -5,10 +5,10 @@
  <!--<component>ICE</component> -->
  <!--     <component>Examples</component> -->
  <!--<component>MPM</component> -->
- <!--<component>MPMICE</component>-->
+ <component>MPMICE</component>
  <!--<component>MPMICE/Propagation_burning</component>-->
  <!--<component>MPMICE/Compare_burn_rates</component>-->
- <component>infrastructure</component>
+ <!--<component>infrastructure</component> -->
  <sus_path></sus_path>
  
  <!-- path to any additional scripts that may be needed by all the components-->
