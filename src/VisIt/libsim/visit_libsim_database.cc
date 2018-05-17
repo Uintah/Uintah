@@ -1125,75 +1125,75 @@ visit_handle visit_SimGetMetaData(void *cbdata)
 // ****************************************************************************
 visit_handle visit_SimGetDomainBoundaries(const char *name, void *cbdata)
 {
-    visit_simulation_data *sim = (visit_simulation_data *)cbdata;
+  visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-    // int timestate = sim->cycle;  
-    // LoadExtra loadExtraElements = (LoadExtra) sim->loadExtraElements;
-    // bool &forceMeshReload = sim->forceMeshReload;
-    TimeStepInfo* &stepInfo = sim->stepInfo;
+  // int timestate = sim->cycle;  
+  // LoadExtra loadExtraElements = (LoadExtra) sim->loadExtraElements;
+  // bool &forceMeshReload = sim->forceMeshReload;
+  TimeStepInfo* &stepInfo = sim->stepInfo;
     
-    const std::string meshname(name); 
+  const std::string meshname(name); 
 
-    //
-    // Calculate some info we will need in the rest of the routine.
-    //
-    int numLevels = stepInfo->levelInfo.size();
-    int totalPatches = 0;
+  //
+  // Calculate some info we will need in the rest of the routine.
+  //
+  int numLevels = stepInfo->levelInfo.size();
+  int totalPatches = 0;
 
-    for (int level=0; level<numLevels; ++level)
-      totalPatches += stepInfo->levelInfo[level].patchInfo.size();
+  for (int level=0; level<numLevels; ++level)
+    totalPatches += stepInfo->levelInfo[level].patchInfo.size();
 
-    //
-    // Now set up the data structure for patch boundaries.  The data 
-    // does all the work ... it just needs to know the extents of each patch.
-    //
-    visit_handle rdb;
+  //
+  // Now set up the data structure for patch boundaries.  The data 
+  // does all the work ... it just needs to know the extents of each patch.
+  //
+  visit_handle rdb;
     
-    if(VisIt_DomainBoundaries_alloc(&rdb) == VISIT_OKAY)
+  if(VisIt_DomainBoundaries_alloc(&rdb) == VISIT_OKAY)
+  {
+    VisIt_DomainBoundaries_set_type(rdb, 0); // 0 = Rectilinear
+    VisIt_DomainBoundaries_set_numDomains(rdb, totalPatches );
+    
+    for (int patch=0; patch<totalPatches; ++patch)
     {
-      VisIt_DomainBoundaries_set_type(rdb, 0); // 0 = Rectilinear
-      VisIt_DomainBoundaries_set_numDomains(rdb, totalPatches );
+      int my_level, local_patch;
+      GetLevelAndLocalPatchNumber(stepInfo, patch, my_level, local_patch);
+        
+      PatchInfo &patchInfo =
+	stepInfo->levelInfo[my_level].patchInfo[local_patch];
 
-      for (int patch=0; patch<totalPatches; ++patch)
+      int plow[3], phigh[3];
+      patchInfo.getBounds(plow, phigh, meshname);
+        
+      // For node based meshes add one if there is a neighbor patch.
+      if( meshname.find("NC_") == 0 )
       {
-        int my_level, local_patch;
-        GetLevelAndLocalPatchNumber(stepInfo, patch, my_level, local_patch);
+	int nlow[3], nhigh[3];
+	patchInfo.getBounds(nlow, nhigh, "NEIGHBORS");
         
-        PatchInfo &patchInfo =
-          stepInfo->levelInfo[my_level].patchInfo[local_patch];
-
-        int plow[3], phigh[3];
-        patchInfo.getBounds(plow, phigh, meshname);
-        
-        // For node based meshes add one if there is a neighbor patch.
-        if( meshname.find("NC_") == 0 )
-        {
-          int nlow[3], nhigh[3];
-          patchInfo.getBounds(nlow, nhigh, "NEIGHBORS");
-          
-          for (int i=0; i<3; i++)
-            phigh[i] += nhigh[i];
-        }
-
-        int extents[6] = { plow[0], phigh[0],
-                           plow[1], phigh[1],
-                           plow[2], phigh[2] };
-        
-        // std::cerr << "\trdb->SetIndicesForPatch(" << patch << ","
-        //        << my_level << ", " << local_patch << ", <"
-        //        << extents[0] << "," << extents[2] << "," << extents[4]
-        //        << "> to <"
-        //        << extents[1] << "," << extents[3] << "," << extents[5] << ">)"
-        //        << std::endl;
-
-        VisIt_DomainBoundaries_set_amrIndices(rdb, patch, my_level, extents);
-//      VisIt_DomainBoundaries_finish(rdb, patch);
+	for (int i=0; i<3; i++)
+	  phigh[i] += nhigh[i];
       }
 
-      return rdb;
+      int extents[6] = { plow[0], phigh[0],
+			 plow[1], phigh[1],
+			 plow[2], phigh[2] };
+        
+      // std::cerr << "\trdb->SetIndicesForPatch(" << patch << ","
+      //        << my_level << ", " << local_patch << ", <"
+      //        << extents[0] << "," << extents[2] << "," << extents[4]
+      //        << "> to <"
+      //        << extents[1] << "," << extents[3] << "," << extents[5] << ">)"
+      //        << std::endl;
+
+      VisIt_DomainBoundaries_set_amrIndices(rdb, patch, my_level, extents);
+      //      VisIt_DomainBoundaries_finish(rdb, patch);
     }
-    else
-      return VISIT_INVALID_HANDLE;
+
+    return rdb;
+  }
+  else
+    return VISIT_INVALID_HANDLE;
 }
 
 // ****************************************************************************
