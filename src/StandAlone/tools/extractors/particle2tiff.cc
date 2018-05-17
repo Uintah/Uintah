@@ -887,7 +887,7 @@ void find_CC_ave( DataArchive                   * archive,
     // query all the data and compute the average over all the patches
     vector<CCVariable<double>*> ave(patches.size());
 
-    for (int p = 0; p < patches.size(); p++) {
+    for( unsigned int p = 0; p < patches.size(); p++ ) {
       const Patch* patch = patches[p];
       vector<ParticleVariable<T>*>     pVar(max_matl+1);
       vector<ParticleVariable<Point>*> pos(max_matl+1);
@@ -930,16 +930,17 @@ void find_CC_ave( DataArchive                   * archive,
 
         // find out which patch it's on (to keep the printing in sorted order.
         // alternatively, we could just iterate through the patches)
-        int p = 0;
-        for (; p < patches.size(); p++) {
+        unsigned int p = 0;
+        for( ; p < patches.size(); p++ ) {
           IntVector low  = patches[p]->getExtraCellLowIndex();
           IntVector high = patches[p]->getExtraCellHighIndex();
 
           if (c.x() >= low.x() && c.y() >= low.y() && c.z() >= low.z() && 
-              c.x() < high.x() && c.y() < high.y() && c.z() < high.z())
+              c.x() < high.x() && c.y() < high.y() && c.z() < high.z()) {
             break;
+          }
         }
-        if (p == patches.size()) {
+        if( p == patches.size() ) {
           continue;
         }
         
@@ -953,15 +954,16 @@ void find_CC_ave( DataArchive                   * archive,
       
       for (int i = 0; i<(int) cells.size(); i++) {
         IntVector c = cells[i];
-        int p = 0;
+        unsigned int p = 0;
 
-        for (; p < patches.size(); p++) {
+        for( ; p < patches.size(); p++ ) {
           IntVector low  = patches[p]->getExtraCellLowIndex();
           IntVector high = patches[p]->getExtraCellHighIndex();
 
           if (c.x() >= low.x() && c.y() >= low.y() && c.z() >= low.z() && 
-              c.x() < high.x() && c.y() < high.y() && c.z() < high.z())
+              c.x() < high.x() && c.y() < high.y() && c.z() < high.z()) {
             break;
+          }
         }
 
         if (p == patches.size()) {

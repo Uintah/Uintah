@@ -218,8 +218,10 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
   p->getAttribute("type", type);
   if (type == "pidx" || type == "PIDX") {
     m_outputFileFormat = PIDX;
-    m_PIDX_flags.problemSetup(p);
-    //m_PIDX_flags.print();
+    m_PIDX_flags.problemSetup( p );
+    
+    // Debug:
+    m_PIDX_flags.print();
   }
 
   m_outputDoubleAsFloat = p->findBlock("outputDoubleAsFloat") != nullptr;
@@ -2492,7 +2494,7 @@ DataArchiver::createPIDXCommunicator(       vector<SaveItem> & saveLabels,
   m_pidxComms.clear();
 
   // Create new MPI Comms
-  m_pidxComms.reserve( grid->numLevels() );
+  m_pidxComms.resize( grid->numLevels() );
   
   for( int i = 0; i < grid->numLevels(); i++ ) {
 
@@ -2515,13 +2517,14 @@ DataArchiver::createPIDXCommunicator(       vector<SaveItem> & saveLabels,
     else {
       color = 1;
     }
-    
+
     MPI_Comm_split( d_myworld->getComm(), color, d_myworld->myRank(), &(m_pidxComms[i]) );
-    //if (color == 1) {
-    //  int nsize;
-    //  MPI_Comm_size(pidxComms[i], &nsize);
-    //  cout << "NewComm Size = " <<  nsize << "\n";
-    //}
+    
+    // if (color == 1) {
+    //   int nsize;
+    //   MPI_Comm_size(m_pidxComms[i], &nsize);
+    //   cout << "NewComm Size = " <<  nsize << "\n";
+    // }
   }
 }
 #endif
@@ -3067,6 +3070,8 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
                                const std::string           & dirName,     // CCVars, SFC*Vars
                                ProblemSpecP                & doc )
 {
+
+  cout << "saveLabels_PIDX()\n";
   size_t totalBytesSaved = 0;
 #if HAVE_PIDX
   const int timeStep = m_application->getTimeStep();
@@ -3126,7 +3131,18 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
   pidx.setLevelExtents( "DataArchiver::saveLabels_PIDX",  lo, hi, level_size );
 
   // Can this be run in serial without doing a MPI initialize
+
+  m_PIDX_flags.print();
+
   pidx.initialize( full_idxFilename, timeStep, /*d_myworld->getComm()*/m_pidxComms[ levelid ], m_PIDX_flags, patches, level_size, type );
+
+  PIDX_physical_point physical_global_size;
+  IntVector zlo = { 0, 0, 0 };
+  IntVector ohi = { 1, 1, 1 };
+  BBox b;
+  level->getSpatialRange( b );
+
+  PIDX_set_physical_point( physical_global_size, b.max().x() - b.min().x(), b.max().y() - b.min().y(), b.max().z() - b.min().z() );
 
   //__________________________________
   // allocate memory for pidx variable descriptor array
@@ -3182,11 +3198,12 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
 
     switch( subtype->getType( )) {
 
-    case Uintah::TypeDescription::Stencil7 : sample_per_variable = 7; break;
-    case Uintah::TypeDescription::Stencil4 : sample_per_variable = 4; break;
-    case Uintah::TypeDescription::Vector   : sample_per_variable = 3; break;
-    case Uintah::TypeDescription::Point    : sample_per_variable = 3; break;
-    case Uintah::TypeDescription::Matrix3  : sample_per_variable = 9; break;
+    case Uintah::TypeDescription::long64_type : sample_per_variable = 1; break;
+    case Uintah::TypeDescription::Matrix3     : sample_per_variable = 9; break;
+    case Uintah::TypeDescription::Point       : sample_per_variable = 3; break;
+    case Uintah::TypeDescription::Stencil4    : sample_per_variable = 4; break;
+    case Uintah::TypeDescription::Stencil7    : sample_per_variable = 7; break;
+    case Uintah::TypeDescription::Vector      : sample_per_variable = 3; break;
 
     case Uintah::TypeDescription::int_type :
       the_size = sizeof( int );
@@ -3290,6 +3307,21 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
             //
             
             new_dw->emitPIDX( pidx, label, matlIndex, patch, patch_buffer[vcm][p], arraySize );
+
+            PIDX_physical_point physical_local_offset, physical_local_size;
+            PIDX_set_physical_point( physical_local_size, patch->getBox().upper().x() - patch->getBox().lower().x(),
+                                     patch->getBox().upper().y() - patch->getBox().lower().y(),
+                                     patch->getBox().upper().z() - patch->getBox().lower().z());
+            PIDX_set_physical_point( physical_local_offset, patch->getBox().lower().x(),
+                                     patch->getBox().lower().y(),
+                                     patch->getBox().lower().z());
+
+            rc = PIDX_variable_write_particle_data_physical_layout( pidx.varDesc[ vc ][ m ],
+                                                                    physical_local_offset,
+                                                                    physical_local_size,
+                                                                    patch_buffer[ vcm ][ p ],
+                                                                    num_particles,
+                                                                    PIDX_row_major );
           }
           else {
 
@@ -3301,6 +3333,22 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
             memset( patch_buffer[vcm][p], 0, arraySize );
 
             new_dw->emitPIDX( pidx, label, matlIndex, patch, patch_buffer[vcm][p], arraySize );
+            
+            IntVector extra_cells = patch->getExtraCells();
+
+            patchOffset[0] = patchOffset[0] - lo.x() - extra_cells[0];
+            patchOffset[1] = patchOffset[1] - lo.y() - extra_cells[1];
+            patchOffset[2] = patchOffset[2] - lo.z() - extra_cells[2];
+
+            rc = PIDX_variable_write_data_layout( pidx.varDesc[ vc ][ m ],
+                                                  patchOffset,
+                                                  patchSize,
+                                                  patch_buffer[ vcm ][ p ],
+                                                  PIDX_row_major );
+          
+            pidx.checkReturnCode( rc,
+                                  "DataArchiver::saveLabels_PIDX - PIDX_variable_write_data_layout failure",
+                                  __FILE__, __LINE__);
           }
 
 #if 0           // to hardwire buffer values for debugging.
@@ -3317,25 +3365,10 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
                                    patch_buffer[vcm][p],                          
                                    arraySize );
           }         
-
-          IntVector extra_cells = patch->getExtraCells();
-
-          patchOffset[0] = patchOffset[0] - lo.x() - extra_cells[0];
-          patchOffset[1] = patchOffset[1] - lo.y() - extra_cells[1];
-          patchOffset[2] = patchOffset[2] - lo.z() - extra_cells[2];
-
-          rc = PIDX_variable_write_data_layout( pidx.varDesc[ vc ][ m ],
-                                                patchOffset,
-                                                patchSize,
-                                                patch_buffer[ vcm ][ p ],
-                                                PIDX_row_major );
-          
-          pidx.checkReturnCode( rc,
-                                "DataArchiver::saveLabels_PIDX - PIDX_variable_write_data_layout failure",
-                                __FILE__, __LINE__);
-          
+        
           totalBytesSaved += arraySize;
           
+#if 0
           //__________________________________    
           //  populate the xml dom This layout allows us to highjack
           //  all of the existing data structures in DataArchive
@@ -3351,6 +3384,7 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
           if (label->getBoundaryLayer() != IntVector(0,0,0)) {
             var_ps->appendElement("boundaryLayer", label->getBoundaryLayer());
           }
+#endif          
         }  // is checkpoint?
       }  //  Patches
 
@@ -3393,6 +3427,7 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
   pidx.varDesc=0;
 
 #endif
+  cout << "end saveLabels_PIDX()\n";
 
   return totalBytesSaved;
 } // end saveLabels_PIDX();

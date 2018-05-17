@@ -336,7 +336,7 @@ ProblemSpec::get( const string & name, double & value )
 //______________________________________________________________________
 //
 ProblemSpecP
-ProblemSpec::get(const string& name, unsigned int &value)
+ProblemSpec::get( const string & name, unsigned int & value )
 {
   ProblemSpecP ps;
 
@@ -347,12 +347,20 @@ ProblemSpec::get(const string& name, unsigned int &value)
   }
   else {
     UintahXML::validateType( stringValue, UintahXML::INT_TYPE ); 
-    istringstream ss(stringValue);
-    ss >> value;
+    istringstream ss( stringValue );
+
+    int tempValue;
+    ss >> tempValue;
+    
     if( !ss ) {
       printf( "WARNING: ProblemSpec.cc: get(%s, uint): stringstream failed...\n", name.c_str() );
       ps = nullptr;
     }
+    if( tempValue < 0 ) {
+      string error = name + " cannot be negative.";
+      throw ProblemSetupException( error, __FILE__, __LINE__ );
+    }
+    value = tempValue;
   }
           
   return ps;
@@ -435,7 +443,7 @@ ProblemSpec::get( const string & name, bool & value )
     }
     else {
       string error = name + " Must be either true or false";
-      throw ProblemSetupException(error, __FILE__, __LINE__);
+      throw ProblemSetupException( error, __FILE__, __LINE__ );
     }
   }
   return ps;
@@ -821,8 +829,7 @@ ProblemSpec::get(Vector &value)
 //______________________________________________________________________
 //
 ProblemSpecP
-ProblemSpec::getWithDefault(const string& name, 
-                            double& value, double defaultVal) 
+ProblemSpec::getWithDefault( const string & name, double & value, double defaultVal ) 
 {
   ProblemSpecP ps = get( name, value );
   if ( ps == nullptr ) {
@@ -840,6 +847,7 @@ ProblemSpec::getWithDefault(const string& name,
 
 //______________________________________________________________________
 //
+
 ProblemSpecP
 ProblemSpec::getWithDefault( const string & name, 
                                    int    & value,
@@ -852,8 +860,28 @@ ProblemSpec::getWithDefault( const string & name,
     appendElement( name.c_str(), defaultVal );
 
     // set default values
+    ps    = this;
+    value = defaultVal;
+  }
+
+  return ps;
+}
+
+
+ProblemSpecP
+ProblemSpec::getWithDefault( const string       & name, 
+                                   unsigned int & value,
+                                   unsigned int   defaultVal )
+{
+  ProblemSpecP ps = get( name, value );
+  if( ps == nullptr ) {
+
+    //create xmlNode to add to the tree
+    appendElement( name.c_str(), defaultVal );
+
+    // set default values
     ps = this;
-    value=defaultVal;
+    value = defaultVal;
   }
 
   return ps;
@@ -1176,7 +1204,7 @@ ProblemSpec::require(const string& name, double& value)
 {
   // Check if the prob_spec is nullptr
   if (! this->get(name,value)) {
-    throw ParameterNotFound(name, __FILE__, __LINE__);
+    throw ParameterNotFound( name, __FILE__, __LINE__ );
   }
 }
 
@@ -1187,7 +1215,7 @@ ProblemSpec::require(const string& name, int& value)
 {
   // Check if the prob_spec is nullptr
   if (! this->get( name,value )) {
-    throw ParameterNotFound(name, __FILE__, __LINE__);
+    throw ParameterNotFound( name, __FILE__, __LINE__ );
   }
 }
 
@@ -1198,7 +1226,7 @@ ProblemSpec::require(const string& name, unsigned int& value)
 {
   // Check if the prob_spec is nullptr
   if (! this->get(name,value)) {
-    throw ParameterNotFound(name, __FILE__, __LINE__);
+    throw ParameterNotFound( name, __FILE__, __LINE__ );
   }
 }
 
