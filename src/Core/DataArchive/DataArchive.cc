@@ -1432,7 +1432,7 @@ DataArchive::restartInitialize( const int                timestep_index,
 
       VarLabel* label = varMap[key.name_];
 
-      cout << Uintah::Parallel::getMPIRank() << ": var name is: " << *label << "\n";
+      //cout << Uintah::Parallel::getMPIRank() << ": var name is: " << *label << "\n";
     
       if (label == 0) {
         throw UnknownVariable( key.name_, dw->getID(), patch, matl,
@@ -1663,7 +1663,7 @@ DataArchive::restartInitialize( const int                timestep_index,
 #endif
   } // end else Reading PIDX UDA
 
-  cout << Uintah::Parallel::getMPIRank() << ": done with restartInitialize()\n";
+  //cout << Uintah::Parallel::getMPIRank() << ": done with restartInitialize()\n";
 
 } // end restartInitialize()
 
@@ -2140,7 +2140,7 @@ DataArchive::TimeData::parsePatch( const Patch * patch )
   ASSERT( d_grid != nullptr );
 
   if( !patch ) {
-    proc0cout << "parsePatch called with null patch....\n";
+    //proc0cout << "parsePatch called with null patch....\n";
     return;
   }
 
