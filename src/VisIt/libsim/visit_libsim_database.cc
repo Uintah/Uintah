@@ -1016,7 +1016,7 @@ visit_handle visit_SimGetMetaData(void *cbdata)
 			     "MPI/Comm/Node", "MPI/Comm/Rank",
 			     "MPI/Rank"};
 
-      std::string meshName = "machine_" + sim->hostName + "/local";
+      std::string meshName = "Machine_" + sim->hostName + "/Local";
       
       for( unsigned int i=0; i<5; ++i )
       {
@@ -1404,10 +1404,10 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-  if( std::string(meshname).find("machine_") == 0 )
+  if( std::string(meshname).find("Machine_") == 0 )
   {
-    bool global = (std::string(meshname).find("global") != std::string::npos);
-    bool local  = (std::string(meshname).find("local" ) != std::string::npos);
+    bool global = (std::string(meshname).find("Global") != std::string::npos);
+    bool local  = (std::string(meshname).find("Local" ) != std::string::npos);
 
     // Only rank 0 return the whole of the mesh.
     if( global && sim->myworld->myRank() != 0 )
@@ -2494,9 +2494,9 @@ visit_handle visit_SimGetDomainList(const char *meshname, void *cbdata)
   {
     visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-    if( std::string(meshname).find("machine_") == 0 )
+    if( std::string(meshname).find("Machine_") == 0 )
     {
-      bool global = (std::string(meshname).find("global") != std::string::npos);
+      bool global = (std::string(meshname).find("Global") != std::string::npos);
       
       // Only rank 0 return the whole of the mesh.
       if( global && sim->myworld->myRank() != 0 )
