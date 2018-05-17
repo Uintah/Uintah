@@ -84,7 +84,7 @@ WARNING
 
   public:
     ApplicationCommon(const ProcessorGroup* myworld,
-		      const SimulationStateP sharedState);
+                      const SimulationStateP sharedState);
 
     virtual ~ApplicationCommon();
   
@@ -134,22 +134,22 @@ WARNING
 
     // Schedule the inital switching.
     virtual void scheduleSwitchInitialization( const LevelP     & level,
-					             SchedulerP & sched ) {}
+                                                     SchedulerP & sched ) {}
       
     virtual void scheduleSwitchTest( const LevelP &     level,
                                            SchedulerP & scheduler ) {};
 
     // Schedule the actual time step advencement tasks.
     virtual void scheduleTimeAdvance( const LevelP     & level,
-				            SchedulerP & scheduler );
+                                            SchedulerP & scheduler );
 
     // Optionally schedule tasks that can not be done in scheduleTimeAdvance.
     virtual void scheduleFinalizeTimestep( const LevelP     & level,
-					         SchedulerP & scheduler ) {}
+                                                 SchedulerP & scheduler ) {}
 
     // Optionally schedule analysis tasks.
     virtual void scheduleAnalysis( const LevelP     & level,
-				         SchedulerP & scheduler) {}
+                                         SchedulerP & scheduler) {}
 
     // Optionally schedule a task that determines the next delt T value.
     virtual void scheduleComputeStableTimeStep( const LevelP & level,
@@ -157,40 +157,40 @@ WARNING
       
     // Reduce the system wide values such as the next delta T.
     virtual void scheduleReduceSystemVars(const GridP      & grid,
-					  const PatchSet   * perProcPatchSet,
-					        SchedulerP & scheduler);
+                                          const PatchSet   * perProcPatchSet,
+                                                SchedulerP & scheduler);
 
     void reduceSystemVars( const ProcessorGroup *,
-			   const PatchSubset    * patches,
-			   const MaterialSubset * /*matls*/,
-			         DataWarehouse  * /*old_dw*/,
-			         DataWarehouse  * new_dw );
+                           const PatchSubset    * patches,
+                           const MaterialSubset * /*matls*/,
+                                 DataWarehouse  * /*old_dw*/,
+                                 DataWarehouse  * new_dw );
       
     // Schedule the initialization of system values such at the time step.
     virtual void scheduleInitializeSystemVars(const GridP      & grid,
-					      const PatchSet   * perProcPatchSet,
-					            SchedulerP & scheduler);
+                                              const PatchSet   * perProcPatchSet,
+                                                    SchedulerP & scheduler);
     
     void initializeSystemVars( const ProcessorGroup *,
-			       const PatchSubset    * patches,
-			       const MaterialSubset * /*matls*/,
-			             DataWarehouse  * /*old_dw*/,
-			             DataWarehouse  * new_dw );
+                               const PatchSubset    * patches,
+                               const MaterialSubset * /*matls*/,
+                                     DataWarehouse  * /*old_dw*/,
+                                     DataWarehouse  * new_dw );
     
     // Schedule the updating of system values such at the time step.
     virtual void scheduleUpdateSystemVars(const GridP      & grid,
-					  const PatchSet   * perProcPatchSet,
-					        SchedulerP & scheduler);
+                                          const PatchSet   * perProcPatchSet,
+                                                SchedulerP & scheduler);
     
     virtual void updateSystemVars( const ProcessorGroup *,
-				   const PatchSubset    * patches,
-				   const MaterialSubset * /*matls*/,
-				         DataWarehouse  * /*old_dw*/,
-				         DataWarehouse  * new_dw );
+                                   const PatchSubset    * patches,
+                                   const MaterialSubset * /*matls*/,
+                                         DataWarehouse  * /*old_dw*/,
+                                         DataWarehouse  * new_dw );
     
     // Methods used for scheduling AMR regridding.
     virtual void scheduleRefine( const PatchSet   * patches,
-				       SchedulerP & scheduler );
+                                       SchedulerP & scheduler );
     
     virtual void scheduleRefineInterface( const LevelP     & fineLevel, 
                                                 SchedulerP & scheduler,
@@ -202,7 +202,7 @@ WARNING
 
     // Schedule to mark flags for AMR regridding
     virtual void scheduleErrorEstimate( const LevelP     & coarseLevel,
-					      SchedulerP & scheduler);
+                                              SchedulerP & scheduler);
 
     // Schedule to mark initial flags for AMR regridding
     virtual void scheduleInitialErrorEstimate(const LevelP     & coarseLevel,
@@ -279,8 +279,8 @@ WARNING
     virtual   void setDelT( double delT ) { m_delT = delT; }
     virtual double getDelT() const { return m_delT; }
     virtual   void setDelTForAllLevels( SchedulerP& scheduler,
-					const GridP & grid,
-					const int totalFine );
+                                        const GridP & grid,
+                                        const int totalFine );
 
     virtual   void setNextDelT( double delT );
     virtual double getNextDelT() const { return m_nextDelT; }
@@ -312,14 +312,14 @@ WARNING
     virtual bool maybeLastTimeStep( double walltime ) const;
 
     virtual ReductionInfoMapper< ApplicationStatsEnum,
-				 double > & getApplicationStats()
+                                 double > & getApplicationStats()
     { return m_application_stats; };
 
     virtual void resetApplicationStats( double val )
     { m_application_stats.reset( val ); };
       
     virtual void reduceApplicationStats( bool allReduce,
-					 const ProcessorGroup* myWorld )
+                                         const ProcessorGroup* myWorld )
     { m_application_stats.reduce( allReduce, myWorld ); };      
     
   protected:
@@ -375,7 +375,7 @@ WARNING
     SimulationStateP m_sharedState{nullptr};
 
     ReductionInfoMapper< ApplicationStatsEnum,
-			 double > m_application_stats;    
+                         double > m_application_stats;    
     
   private:
     ApplicationCommon(const ApplicationCommon&);
