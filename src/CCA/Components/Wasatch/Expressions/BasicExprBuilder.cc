@@ -994,7 +994,19 @@ namespace WasatchCore{
       typedef typename PowerLawBC<FieldT>::Builder Builder;
       builders.push_back( scinew Builder( tag, indepVarTag,x0, phic, R, n) );
     }
-    
+
+    else if ( params->findBlock("GaussianFunction") ) {
+      double amplitude, deviation, mean, baseline;
+      Uintah::ProblemSpecP valParams = params->findBlock("GaussianFunction");
+      valParams->getAttribute("amplitude",amplitude);
+      valParams->getAttribute("deviation",deviation);
+      valParams->getAttribute("mean",mean);
+      valParams->getAttribute("baseline",baseline);
+      const Expr::Tag indepVarTag = parse_nametag( valParams->findBlock("NameTag") );
+      typedef typename GaussianBC<FieldT>::Builder Builder;
+      builders.push_back( scinew Builder( tag, indepVarTag, amplitude, deviation, mean, baseline) );
+    }
+
     else if( params->findBlock("VarDenMMSVelocity") ){
       std::string side;
       Uintah::ProblemSpecP valParams = params->findBlock("VarDenMMSVelocity");

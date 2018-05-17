@@ -207,6 +207,7 @@ public:
 
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
+  void sensitivity( const Expr::Tag& varTag );
 };
 
 

@@ -480,10 +480,6 @@ void AMRMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
   t->computes(lb->pCellNAPIDLabel,d_one_matl);
   t->computes(lb->NC_CCweightLabel,d_one_matl);
 
-  if(!flags->d_doGridReset){
-    t->computes(lb->gDisplacementLabel);
-  }
-  
   // Debugging Scalar
   if (flags->d_with_color) {
     t->computes(lb->pColorLabel);
@@ -1253,11 +1249,6 @@ void AMRMPM::scheduleSetGridBoundaryConditions(SchedulerP& sched,
   t->modifies(             lb->gVelocityStarLabel,     mss);
   t->requires(Task::NewDW, lb->gVelocityLabel,   Ghost::None);
 
-  if(!flags->d_doGridReset){
-    t->requires(Task::OldDW, lb->gDisplacementLabel,    Ghost::None);
-    t->computes(lb->gDisplacementLabel);
-  }
-
   sched->addTask(t, patches, matls);
 }
 //______________________________________________________________________
@@ -1824,12 +1815,6 @@ void AMRMPM::actuallyInitialize(const ProcessorGroup*,
     for(int m=0;m<matls->size();m++){
       MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
       int indx = mpm_matl->getDWIndex();
-      
-      if(!flags->d_doGridReset){
-        NCVariable<Vector> gDisplacement;
-        new_dw->allocateAndPut(gDisplacement,lb->gDisplacementLabel,indx,patch);
-        gDisplacement.initialize(Vector(0.));
-      }
       
       particleIndex numParticles = mpm_matl->createParticles(cellNAPID, patch, new_dw);
 
@@ -3400,22 +3385,6 @@ void AMRMPM::setGridBoundaryConditions(const ProcessorGroup*,
           gacceleration[c] = (gvelocity_star[c] - gvelocity[c])/delT;
         }
       } 
-      
-      //__________________________________
-      //
-      if(!flags->d_doGridReset){
-        NCVariable<Vector> displacement;
-        constNCVariable<Vector> displacementOld;
-        new_dw->allocateAndPut(displacement,lb->gDisplacementLabel,dwi,patch);
-        old_dw->get(displacementOld,        lb->gDisplacementLabel,dwi,patch,
-                                                               Ghost::None,0);
-        for(NodeIterator iter = patch->getExtraNodeIterator();
-                        !iter.done();iter++){
-           IntVector c = *iter;
-           displacement[c] = displacementOld[c] + gvelocity_star[c] * delT;
-        }
-      }  // d_doGridReset
-
     } // matl loop
   }  // patch loop
 }

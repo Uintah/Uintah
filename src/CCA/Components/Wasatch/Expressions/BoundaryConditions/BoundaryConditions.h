@@ -219,6 +219,67 @@ namespace WasatchCore{
   };
 
   //-------------------------------------------------------------------------------------------------
+
+  /**
+   *  @class GaussianBC
+   *  @author James C. Sutherland
+   *  @date April, 2009
+   *  @brief Implements a gaussian function of a single independent variable.
+   *
+   * The gaussian function is written as
+   *  \f[
+   *    f(x) = y_0 + a \exp\left( \frac{\left(x-x_0\right)^2 }{2\sigma^2} \right)
+   *  \f]
+   * where
+   *  - \f$x_0\f$ is the mean (center of the gaussian)
+   *  - \f$\sigma\f$ is the standard deviation (width of the gaussian)
+   *  - \f$a\f$ is the amplitude of the gaussian
+   *  - \f$y_0\f$ is the baseline value.
+   */
+  template< typename FieldT >
+  class GaussianBC : public BoundaryConditionBase<FieldT>
+  {
+    DECLARE_FIELD(FieldT, x_)
+    const double a_, sigma_, mean_, yo_;
+
+    GaussianBC( const Expr::Tag& indepVarTag,
+                const double a,
+                const double stddev,
+                const double mean,
+                const double yo )
+      : a_( a ), sigma_( stddev ), mean_( mean ), yo_( yo )
+    {
+      this->set_gpu_runnable(true);
+      x_ = this->template create_field_request<FieldT>(indepVarTag);
+    }
+  public:
+    class Builder : public Expr::ExpressionBuilder
+    {
+      const double a_, sigma_, mean_, yo_;
+      const Expr::Tag ivarTag_;
+    public:
+      Builder( const Expr::Tag& depVarTag,   ///<   dependent variable tag
+               const Expr::Tag& indepVarTag, ///< independent variable tag
+               const double a,         ///< Amplitude of the Gaussian spike
+               const double stddev,    ///< Standard deviation
+               const double mean,      ///< Mean of the function
+               const double yo=0.0    ///< baseline value
+      )
+        : Expr::ExpressionBuilder(depVarTag),
+          a_(a),
+          sigma_(stddev),
+          mean_(mean),
+          yo_(yo),
+          ivarTag_( indepVarTag )
+      {}
+      inline Expr::ExpressionBase* build() const{ return new GaussianBC( ivarTag_, a_, sigma_, mean_, yo_ ); }
+    };
+
+    ~GaussianBC(){}
+    void evaluate();
+  };
+
+  //-------------------------------------------------------------------------------------------------
   /**
    *  \class 	BCCopier
    *  \ingroup 	Expressions

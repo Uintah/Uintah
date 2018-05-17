@@ -72,7 +72,10 @@ psNox::problemSetup(const ProblemSpecP& inputdb)
 
   db->getWithDefault("PreExpReburn",_A_reburn  ,34830  );
   db->getWithDefault("ExpReburn",   _E_reburn  ,19953.6);
+  db->getWithDefault("PowerReburn", _m_gr      ,2.25);
 
+   // Factor for A in first De soete reaction
+  db->getWithDefault("F1_De_soete", _F1_Desoete      ,12);
 
   //read concentrations of species in the table
   db->getWithDefault("o2_label",             m_O2_name,            "O2");
@@ -339,7 +342,7 @@ psNox::computeSource( const ProcessorGroup* pc,
     double rate_f1,rate_r1,rate_f2,rate_r2,rate_f3,rate_r3;
 
     //fuel-nox De soete mechanism parameters
-    const double A1   = 1.0e10*12;         //unit: s-1
+    const double A1   = 1.0e10*_F1_Desoete;         //unit: s-1
     const double E1   = 280451.95;      //unit: j/mol
     const double A2   = 3.0e12;
     const double E2   = 251151;
@@ -545,9 +548,8 @@ psNox::computeSource( const ProcessorGroup* pc,
 
         rate_4 = A4 * std::exp(-E4/_R/temperature(i,j,k)) * NH3_mp * NO_mp/ mix_mol_weight_r*density(i,j,k);                       //(mol/m^3 / s-1)
         rxn_rates[5]=rate_4;
-
         //nox reduction in gas phase, reburning
-        rate_gr = Agr * std::exp(-Egr/_R/temperature(i,j,k)) * std::pow(NO_m,2.25) * (CO_m+H2_m);             //(mol/sm3)
+        rate_gr = Agr * std::exp(-Egr/_R/temperature(i,j,k)) * std::pow(NO_m,_m_gr) * (CO_m+H2_m);             //(mol/sm3)
 
         rxn_rates[6]=rate_gr;
 

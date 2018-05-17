@@ -165,12 +165,13 @@ namespace WasatchCore{
   // jcs this should be done on a single patch, since the PatchInfo is for a single patch.
   void
   TimeStepper::create_dualtime_tasks( const PatchInfoMap& patchInfoMap,
-                            const Uintah::PatchSet* const patches,
-                            const Uintah::MaterialSet* const materials,
-                            const Uintah::LevelP& level,
-                            Uintah::SchedulerP& sched,
-                            DTIntegratorMapT& dualTimeIntegrators_,
-                            const std::set<std::string>& ioFieldSet )
+                                      const Uintah::PatchSet* const patches,
+                                      const Uintah::MaterialSet* const materials,
+                                      const Uintah::LevelP& level,
+                                      Uintah::SchedulerP& sched,
+                                      DualTimePatchMapT& dualTimePatchMap,
+                                      const std::set<std::string>& ioFieldSet,
+                                      WasatchCore::DualTimeMatrixInfo& dualTimeMatrixInfo )
   {
     // need to explicitly make all RHS fields persistent.  This avoids the situation
     // where they may be internal nodes in a graph and could thus turn into "temporary"
@@ -192,14 +193,15 @@ namespace WasatchCore{
     try{
       
       TaskInterface* rhsTask = scinew TaskInterface( solnGraphHelper_->rootIDs,
-                                                    "rhs",
-                                                    *(solnGraphHelper_->exprFactory),
-                                                    level, sched, patches, materials,
-                                                    patchInfoMap,
-                                                    dualTimeIntegrators_,
-                                                    varNames,
-                                                    rhsTags,
-                                                    persistentFields );
+                                                     "rhs",
+                                                     *(solnGraphHelper_->exprFactory),
+                                                     level, sched, patches, materials,
+                                                     patchInfoMap,
+                                                     dualTimePatchMap,
+                                                     varNames,
+                                                     rhsTags,
+                                                     persistentFields,
+                                                     dualTimeMatrixInfo );
 
       taskInterfaceList_.push_back( rhsTask );
       

@@ -3,6 +3,9 @@
 <upsFile>rayleigh.ups</upsFile>
 <gnuplotFile>plotScript.gp</gnuplotFile>
 
+<susTimeout_minutes> 5 </susTimeout_minutes>
+<exitOnCrash> false </exitOnCrash>
+
 <AllTests>
 </AllTests>
 <Test>

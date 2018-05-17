@@ -36,6 +36,8 @@
 //-- Wasatch includes --//
 #include "PatchInfo.h"
 #include "GraphHelperTools.h"
+#include "DualTimeMatrixManager.h"
+#include <CCA/Components/Wasatch/TimeIntegratorTools.h>
 
 // forward declarations
 namespace Uintah{
@@ -90,8 +92,11 @@ namespace WasatchCore{
   {
 
   private:
-    
-    typedef std::map<int, Expr::DualTime::BDFDualTimeIntegrator*> DTIntegratorMapT;
+
+    typedef std::map< int, std::pair<Expr::DualTime::BDFDualTimeIntegrator*, WasatchCore::DualTimeMatrixManager* > > DualTimePatchMapT; //<<< PatchID, Pair<DualTimeIntegrator, DualTimeMatrixManager> >>>
+//    typedef std::map<int, Expr::DualTime::BDFDualTimeIntegrator*> DTIntegratorMapT;
+//    typedef std::map<int, WasatchCore::DualTimeMatrixManager*> DualTimeMatrixManagerMapT;
+
     /**
      *  \brief A vector of TreeTaskExecute pointers that hold each
      *  Uintah::Task to be executed as part of this TaskInterface.
@@ -146,10 +151,11 @@ namespace WasatchCore{
                     const Uintah::PatchSet      * const patches,
                     const Uintah::MaterialSet   * const materials,
                     const PatchInfoMap          & info,
-                    DTIntegratorMapT            & dualTimeIntegrators,
+                    DualTimePatchMapT           & dualTimePatchMap,
                     const std::vector<std::string> & varNames,
                     const std::vector<Expr::Tag>   & rhsTags,
                     const std::set<std::string> & ioFieldSet,
+                    WasatchCore::DualTimeMatrixInfo& dualTimeMatrixInfo,
                     const bool                    lockAllFields = false );
 
     ~TaskInterface();

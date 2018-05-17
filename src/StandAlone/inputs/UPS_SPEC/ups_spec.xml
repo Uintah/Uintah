@@ -1012,7 +1012,7 @@
   <SimulationComponent          spec="REQUIRED" />
 
   <Solver                     spec="OPTIONAL NO_DATA" 
-                              attribute1="type REQUIRED STRING 'CGSolver, direct, hypre, hypreamr'" />
+                              attribute1="type REQUIRED STRING 'CGSolver, hypre, hypreamr'" />
      
   <!--______________________________________________________________________-->
   <!--                 EXAMPLES                                             -->

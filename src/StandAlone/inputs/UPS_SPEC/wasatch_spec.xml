@@ -525,12 +525,12 @@
       </InterpolateExpression>
 
     </PostProcessingExpression>
-    
-    
+
+
     <!-- Spec for boundary condition expression types -->
     <BCExpression  spec="MULTIPLE NO_DATA"
                    attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL"
-                   children1="ONE_OF(CHILD LinearFunction, ParabolicFunction, PowerLawFunction, 
+                   children1="ONE_OF(CHILD LinearFunction, ParabolicFunction, PowerLawFunction, GaussianFunction,
                                            VarDenMMSVelocity, VarDenMMSMomentum, VarDenMMSSolnVar, 
                                            VarDenMMSDensity, VarDenMMSMixtureFraction,
                                            VDCorMMSVelocity, VDCorMMSMixtureFraction, VDCorMMSMomentum,
@@ -568,7 +568,16 @@
                         attribute3="HalfHeight REQUIRED DOUBLE"
                         attribute4="n REQUIRED DOUBLE">
         <NameTag        spec="REQUIRED"/>
-      </PowerLawFunction>  
+      </PowerLawFunction>
+
+      <!-- powerlaw function: phi = phi_0 + a \exp(\frac{(x-x_0)^2 }{2\sigma^2}) !-->
+      <GaussianFunction spec="OPTIONAL NO_DATA"
+                        attribute1="amplitude REQUIRED DOUBLE"
+                        attribute2="deviation REQUIRED DOUBLE"
+                        attribute3="mean REQUIRED DOUBLE"
+                        attribute4="baseline REQUIRED DOUBLE">
+        <NameTag        spec="REQUIRED"/>
+      </GaussianFunction>
 
       <!-- Velocity profile on the boundaries with respect to time for the variable density MMS !-->
       <VarDenMMSVelocity  spec="OPTIONAL NO_DATA"
@@ -633,17 +642,27 @@
          handles the time integration of the Wasatch scalars in this case. It is only necessary to specify
          the Arches time integration scheme !-->
     <TimeIntegrator     spec="OPTIONAL STRING 'RK3SSP, RK2SSP, FE'"/>
-    <DualTime spec="OPTIONAL NO_DATA"
-             attribute1="iterations REQUIRED INTEGER"
-             attribute2="tolerance REQUIRED DOUBLE"
-             attribute3="ds REQUIRED DOUBLE">
-   </DualTime>
 
+    <!-- DUAL TIME STEPPING -->
+    <DualTime spec="MULTIPLE NO_DATA"
+                      attribute1 ="iterations    REQUIRED INTEGER"
+                      attribute2 ="tolerance     REQUIRED DOUBLE"
+                      attribute3 ="ds            OPTIONAL DOUBLE"
+                      attribute4 ="blockimplicit OPTIONAL BOOLEAN"
+                      attribute5 ="lograte       OPTIONAL INTEGER"
+                      attribute6 ="localcflvnn   OPTIONAL BOOLEAN"
+                      attribute7 ="cfl           OPTIONAL DOUBLE"
+                      attribute8 ="vnn           OPTIONAL DOUBLE"
+                      attribute9 ="maxvalue      OPTIONAL DOUBLE"
+                      attribute10="minvalue      OPTIONAL DOUBLE"
+                      attribute11="precondition  OPTIONAL BOOLEAN"
+                      attribute12="doImplicitInviscid OPTIONAL BOOLEAN">
+    </DualTime>
 
     <!-- far field pressure -->
     <NSCBC spec="OPTIONAL NO_DATA"    
            attribute1="pfarfield OPTIONAL DOUBLE">
-   </NSCBC>
+    </NSCBC>
 
     <!-- The CommonGeometry block allows one to define geometries that can be reused in
                             other parts of the input file and the code. For example, when initializing
