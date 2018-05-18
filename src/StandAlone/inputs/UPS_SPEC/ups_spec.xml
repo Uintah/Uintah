@@ -486,10 +486,32 @@
       <outputDoubleAsFloat    spec="OPTIONAL NO_DATA" />
       
       <PIDX                   spec="OPTIONAL NO_DATA">
-        <outputRawIO          spec="OPTIONAL BOOLEAN" />
-        <outputPatchSize      spec="OPTIONAL VECTOR"  />
         <debugOutput          spec="OPTIONAL BOOLEAN" />
-        <compressionType      spec="OPTIONAL STRING 'NONE, none, CHUNKING, chunking, CHUNKING_ZFP, chunking_ZFP'"/>
+        <checkpoint           spec="OPTIONAL NO_DATA"
+                                children1="ONE_OF(CHILD idxIo, rawIo)" >
+          <compressionType    spec="OPTIONAL STRING 'None, Chunking, Chunking_Zfp" />
+          <idxIo              spec="OPTIONAL NO_DATA">      <!-- If provided, then use IDX I/O -->
+            <partitionCount     spec="OPTIONAL VECTOR" />
+            <idxBlockSize       spec="OPTIONAL INTEGER" />
+            <idxBlockCount      spec="OPTIONAL INTEGER" />
+          </idxIo>
+          <rawIo              spec="OPTIONAL NO_DATA">      <!-- If provided, then use RAW I/O -->
+            <restructureBoxSize spec="OPTIONAL VECTOR" />
+            <pipeSize           spec="OPTIONAL INTEGER" />
+          </rawIo>
+        </checkpoint>
+        <visIO                spec="OPTIONAL NO_DATA">
+          <compressionType    spec="OPTIONAL STRING 'None, Chunking, Chunking_Zfp" />
+          <idxIo              spec="OPTIONAL NO_DATA">
+            <partitionCount     spec="OPTIONAL VECTOR" />
+            <idxBlockSize       spec="OPTIONAL INTEGER" />
+            <idxBlockCount      spec="OPTIONAL INTEGER" />
+          </idxIo>
+          <rawIo              spec="OPTIONAL NO_DATA">
+            <restructureBoxSize spec="OPTIONAL VECTOR" />
+            <pipeSize           spec="OPTIONAL INTEGER" />
+          </rawIo>
+        </visIO>
       </PIDX>
   </DataArchiver>
 
