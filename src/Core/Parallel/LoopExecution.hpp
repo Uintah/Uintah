@@ -22,14 +22,15 @@
  * IN THE SOFTWARE.
  */
 
-//The purpose of this file is to provide portability between Kokkos and non-Kokkos builds.
-//For example, if a user calls a parallel_for loop but Kokkos is NOT provided, this will run the
-//functor in a loop and also not use Kokkos views.  If Kokkos is provided, this creates a
-//lambda expression and inside that it contains loops over the functor.  Kokkos Views are also used.
-//At the moment we seek to only support regular CPU code, Kokkos OpenMP, and CUDA execution spaces,
-//though it shouldn't be too difficult to expand it to others.  This doesn't extend it
-//to CUDA kernels (without Kokkos), and that can get trickier (block/dim parameters) especially with
-//regard to a parallel_reduce (many ways to "reduce" a value and return it back to host memory)
+// The purpose of this file is to provide portability between Kokkos and non-Kokkos builds.
+// The user should be able to #include this file, and then obtain all the tools needed.
+// For example, suppose a user calls a parallel_for loop but Kokkos is NOT provided, this will run the
+// functor in a loop and also not use Kokkos views.  If Kokkos is provided, this creates a
+// lambda expression and inside that it contains loops over the functor.  Kokkos Views are also used.
+// At the moment we seek to only support regular CPU code, Kokkos OpenMP, and CUDA execution spaces,
+// though it shouldn't be too difficult to expand it to others.  This doesn't extend it
+// to CUDA kernels (without Kokkos), and that can get trickier (block/dim parameters) especially with
+// regard to a parallel_reduce (many ways to "reduce" a value and return it back to host memory)
 
 #ifndef UINTAH_HOMEBREW_LOOP_EXECUTION_HPP
 #define UINTAH_HOMEBREW_LOOP_EXECUTION_HPP
@@ -37,7 +38,8 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Exceptions/InternalError.h>
 #include <cstring>
-#include <cstddef> //What is this doing here?
+#include <cstddef> // TODO: What is this doing here?
+#include <vector> //  Used to manage multiple streams in a task.
 
 #include <sci_defs/cuda_defs.h>
 #include <sci_defs/kokkos_defs.h>
@@ -331,10 +333,22 @@ public:
       m_dim[i] =   (c0[i] < c1[i] ? c1[i] : c0[i]) - m_offset[i];
     }
 #ifdef HAVE_CUDA
-    m_stream = stream;
-#else
-    m_stream = nullptr;  //Streams are pointless without CUDA
-#endif
+    m_streams.push_back(stream);
+#endif //Ignore the non-CUDA case as those streams are pointless.
+  }
+
+  template <typename ArrayType>
+  void setValues(vector<void*>& streams, ArrayType const & c0, ArrayType const & c1 )
+  {
+    for (int i=0; i<rank; ++i) {
+      m_offset[i] = c0[i] < c1[i] ? c0[i] : c1[i];
+      m_dim[i] =   (c0[i] < c1[i] ? c1[i] : c0[i]) - m_offset[i];
+    }
+#ifdef HAVE_CUDA
+    for (auto& stream : streams) {
+      m_streams.push_back(stream);
+    }
+#endif //Ignore the non-CUDA case as those streams are pointless.
   }
 
   int begin( int r ) const { return m_offset[r]; }
@@ -353,9 +367,22 @@ private:
   int m_offset[rank];
   int m_dim[rank];
 public:
-  void * getStream() const { return m_stream; }
+  void * getStream() const {
+    if ( m_streams.size() == 0 ) {
+      return nullptr;
+    } else {
+      return m_stream[0];
+    }
+  }
+  void * getStream(unsigned int i) const {
+    if ( i >= m_streams.size() ) {
+      SCI_THROW(InternalError("Requested a stream that doesn't exist.", __FILE__, __LINE__));
+    } else {
+      return m_stream[i];
+    }
+  }
 private:
-  void* m_stream {nullptr};
+  std::vector<void*> m_streams;
 };
 
 //----------------------------------------------------------------------------
@@ -562,6 +589,9 @@ template <typename ExecutionSpace, typename Functor, typename ReductionType>
 inline typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::Cuda>::value, void>::type
 parallel_reduce_sum( BlockRange const & r, const Functor & functor, ReductionType & red  )
 {
+  // Overall goal, split a 3D range requested by the user into various SMs on the GPU.  (In essence, this would be a Kokkos MD_Team+Policy, if one existed)
+  // The process requires going from 3D range to a 1D range, partitioning the 1D range into groups that are multiples of 32,
+  // then converting that group of 32 range back into a 3D (i,j,k) index.
   ReductionType tmp = red;
   unsigned int i_size = r.end(0) - r.begin(0);
   unsigned int j_size = r.end(1) - r.begin(1);
@@ -570,40 +600,59 @@ parallel_reduce_sum( BlockRange const & r, const Functor & functor, ReductionTyp
   unsigned int rbegin1 = r.begin(1);
   unsigned int rbegin2 = r.begin(2);
 
+  // The user has two partitions available.  1) One is the total number of streaming multiprocessors.  2) The other is
+  // splitting a task into multiple streams and execution units.
+  const unsigned int streamPartitions = m_streams.size();
+  const unsigned int numItems = (i_size > 0 ? i_size : 1) * (j_size > 0 ? j_size : 1) * (k_size > 0 ? k_size : 1);
 
-  //If 256 threads aren't needed, use less.
-  //But cap at 256 threads total, as this will correspond to 256 threads in a block.
-  //Later the TeamThreadRange will reuse those 256 threads.  For example, if teamThreadRangeSize is 800, then
-  //Cuda thread 0 will be assigned to n = 0, n = 256, n = 512, and n = 768,
-  //Cuda thread 1 will be assigned to n = 1, n = 257, n = 513, and n = 769...
-  
-  int cuda_threads_per_sm = Uintah::Parallel::getCudaThreadsPerSM();
-  int cuda_sms_per_loop   = Uintah::Parallel::getCudaSMsPerLoop();
+  // Get the requested amount of threads per streaming multiprocessor (SM) and number of SMs totals.
+  const unsigned int cuda_threads_per_sm = Uintah::Parallel::getCudaThreadsPerSM();
+  const unsigned cuda_sms_per_loop   = Uintah::Parallel::getCudaSMsPerLoop();
+  // The requested range of data may not have enough work for the requested command line arguments, so shrink them if necessary.
+  const unsigned int actual_threads = (numItems / streamPartitions) > (cuda_threads_per_sm * cuda_sms_per_loop)
+                                    ? (cuda_threads_per_sm * cuda_sms_per_loop) : (numItems / streamPartitions);
+  const unsigned int actual_threads_per_sm = (numItems / streamPartitions) > cuda_threads_per_sm ? cuda_threads_per_sm : (numItems / streamPartitions);
+  const unsigned int actual_cuda_sms_per_loop = (actual_threads - 1) / cuda_threads_per_sm + 1;
+  for (unsigned int i = 0; i < streamPartitions; i++) {
+    void* stream = r.getStream(i);
+    if (!stream) {
+      std::cout << "Error, the CUDA stream must not be nullptr\n" << std::endl;
+      SCI_THROW(InternalError("Error, the CUDA stream must not be nullptr.", __FILE__, __LINE__));
+    }
+    Kokkos::Cuda instanceObject(*(static_cast<cudaStream_t*>(stream)));
 
-  const int teamThreadRangeSize = (i_size > 0 ? i_size : 1) * (j_size > 0 ? j_size : 1) * (k_size > 0 ? k_size : 1);
-  const int actualThreads = teamThreadRangeSize > cuda_threads_per_sm ? cuda_threads_per_sm : teamThreadRangeSize;
+    // Use a Team Policy, this allows us to control how many threads per SM and how many SMs are used.
+    typedef Kokkos::TeamPolicy< Kokkos::Cuda > policy_type;
+    Kokkos::TeamPolicy< Kokkos::Cuda > reduce_tp( instanceObject, actual_cuda_sms_per_loop, actual_threads_per_sm );
+    Kokkos::parallel_reduce ( reduce_tp, KOKKOS_LAMBDA ( typename policy_type::member_type thread, int& inner_sum ) {
 
-  void* stream = r.getStream();
+      // We are within an SM, and all SMs share the same amount of assigned CUDA threads.
+      // Figure out which range of N items this SM should work on (as a multiple of 32).
+      const unsigned int currentPartition = i * actual_cuda_sms_per_loop + thread.league_rank();
+      const unsigned int estimatedThreadAmount = numItems * (currentPartition) / ( actual_cuda_sms_per_loop * streamPartitions );
+      const unsigned int startingN =  estimatedThreadAmount + ((estimatedThreadAmount % 32 == 0) ? 0 : (32-estimatedThreadAmount % 32));
+      unsigned int endingN;
+      // Check if this is the last partition
+      if ( currentPartition + 1 == actual_cuda_sms_per_loop * streamPartitions ) {
+        endingN = numItems;
+      } else {
+        estimatedThreadAmount = numItems * ( currentPartition + 1 ) / ( actual_cuda_sms_per_loop * streamPartitions );
+        endingN = estimatedThreadAmount + ((estimatedThreadAmount % 32 == 0) ? 0 : (32-estimatedThreadAmount % 32));
+      }
+      const unsigned int totalN = endingN - startingN;
+      //printf("league_rank: %d, team_size: %d, team_rank: %d, startingN: %d, endingN: %d, totalN: %d\n", thread.league_rank(), thread.team_size(), thread.team_rank(), startingN, endingN, totalN);
 
-  if (!stream) {
-    std::cout << "Error, the CUDA stream must not be nullptr\n" << std::endl;
-    exit(-1);
+      Kokkos::parallel_for (Kokkos::TeamThreadRange(thread, totalN), [&] (const int& N) {
+        // Craft an i,j,k out of this range
+        //printf("reduce team demo - n is %d, league_rank is %d, true n is %d\n", N, thread.league_rank(), (startingN + N));
+        const int i = (startingN + N) / (j_size * k_size);
+        const int j = ((startingN + N) / k_size) % j_size;
+        const int k = (startingN + N) % k_size;
+        // Actually run the functor.
+        reduce_functor(i,j,k, inner_sum);
+      });
+    }, sum);
   }
-  Kokkos::Cuda instanceObject(*(static_cast<cudaStream_t*>(stream)));
-
-  typedef Kokkos::TeamPolicy< ExecutionSpace > policy_type;
-
-  Kokkos::parallel_reduce (Kokkos::TeamPolicy< ExecutionSpace >(instanceObject, cuda_sms_per_loop, actualThreads ),
-                           KOKKOS_LAMBDA ( typename policy_type::member_type thread, ReductionType& inner_sum ) {
-    Kokkos::parallel_for (Kokkos::TeamThreadRange(thread, teamThreadRangeSize), [&] (const int& n) {
-
-      const int i = n / (j_size * k_size) + rbegin0;
-      const int j = (n / k_size) % j_size + rbegin1;
-      const int k = n % k_size + rbegin2;
-      functor( i, j, k, inner_sum );
-    });
-  }, tmp);
-
 
   //  Manual approach using range policy that shares threads.
 //  const int teamThreadRangeSize = (i_size > 0 ? i_size : 1) * (j_size > 0 ? j_size : 1) * (k_size > 0 ? k_size : 1);
