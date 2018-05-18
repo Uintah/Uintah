@@ -74,6 +74,16 @@ public:
 
 
   //______________________________________________________________________
+  // used to create hypre objects.
+  void scheduleInitialize( const LevelP& level, 
+                           SchedulerP& sched, 
+                           const MaterialSet* matls);
+                           
+  void scheduleRestartInitialize( const LevelP& level, 
+                                  SchedulerP& sched, 
+                                  const MaterialSet* matls);
+
+  //______________________________________________________________________
   //  Task that is called by Arches and constains scheduling of other tasks
   void sched_solve( const LevelP& level, SchedulerP&,
                     const TimeIntegratorLabel* timelabels,

@@ -52,6 +52,20 @@ PressureEqn::problemSetup( ProblemSpecP& db ){
 
 //--------------------------------------------------------------------------------------------------
 void
+PressureEqn::sched_Initialize( const LevelP& level, SchedulerP& sched ){
+  const MaterialSet* matls = m_sharedState->allArchesMaterials();
+  m_hypreSolver->scheduleInitialize( level, sched, matls );
+}
+
+//--------------------------------------------------------------------------------------------------
+void
+PressureEqn::sched_restartInitialize( const LevelP& level, SchedulerP& sched ){
+  const MaterialSet* matls = m_sharedState->allArchesMaterials();
+  m_hypreSolver->scheduleRestartInitialize( level, sched, matls );
+}
+
+//--------------------------------------------------------------------------------------------------
+void
 PressureEqn::setup_solver( ProblemSpecP& db ){
 
   ProblemSpecP db_pressure = db->findBlock("KMomentum")->findBlock("PressureSolver");

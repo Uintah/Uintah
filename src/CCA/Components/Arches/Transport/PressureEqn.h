@@ -59,6 +59,11 @@ public:
     void set_solver( SolverInterface* solver ){ m_hypreSolver = solver; }
 
     void setup_solver( ProblemSpecP& db );
+    
+    
+    void sched_Initialize( const LevelP& level, SchedulerP& sched );
+    
+    void sched_restartInitialize( const LevelP& level, SchedulerP& sched );
 
 private:
 

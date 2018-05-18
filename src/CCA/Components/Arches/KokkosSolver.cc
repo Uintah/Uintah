@@ -102,6 +102,13 @@ KokkosSolver::sched_restartInitialize( const LevelP     & level
   // Setup BCs
   setupBCs( level, sched, matls );
 
+  
+  // initialize hypre objects
+  if ( m_task_factory_map["transport_factory"]->has_task("build_pressure_system")){
+    PressureEqn* press_tsk = dynamic_cast<PressureEqn*>(m_task_factory_map["transport_factory"]->retrieve_task("build_pressure_system"));
+    press_tsk->sched_restartInitialize( level, sched );
+  }
+
   //transport factory
   BFM::iterator i_trans_fac = m_task_factory_map.find("transport_factory");
   i_trans_fac->second->set_bcHelper( m_bcHelper[level->getID()]);
@@ -379,6 +386,12 @@ KokkosSolver::initialize( const LevelP     & level
 
   // Setup BCs
   setupBCs( level, sched, matls );
+
+    // initialize hypre objects
+  if ( m_task_factory_map["transport_factory"]->has_task("build_pressure_system")){
+    PressureEqn* press_tsk = dynamic_cast<PressureEqn*>(m_task_factory_map["transport_factory"]->retrieve_task("build_pressure_system"));
+    press_tsk->sched_Initialize( level, sched);
+  }
 
   // grid spacing etc...
   m_task_factory_map["utility_factory"]->schedule_task( "grid_info", TaskInterface::INITIALIZE, level, sched, matls );

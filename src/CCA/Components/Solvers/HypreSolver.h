@@ -105,7 +105,7 @@ namespace Uintah {
     SolverType           precond_solver_type;
     
     //  *_p = pointer
-    HYPRE_StructSolver * solver_p;
+    HYPRE_StructSolver * solver_p = nullptr;
     HYPRE_StructSolver * precond_solver_p;
     HYPRE_StructMatrix * HA_p;
     HYPRE_StructVector * HB_p;
@@ -134,7 +134,7 @@ namespace Uintah {
     //__________________________________
     //
     virtual ~hypre_solver_struct() {
-    
+
       if (*solver_p) {
         switch (solver_type) {
         case smg:
@@ -297,11 +297,10 @@ namespace Uintah {
                            DataWarehouse  * old_dw,
                            DataWarehouse  * new_dw );
                            
-    
+    SolverType stringToSolverType( std::string str );
 
     const VarLabel * m_timeStepLabel;
     const VarLabel * hypre_solver_label;
-    
     
     HypreParams * m_params = nullptr;
     

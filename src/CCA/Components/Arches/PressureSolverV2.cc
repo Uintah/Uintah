@@ -160,6 +160,23 @@ PressureSolver::problemSetup(ProblemSpecP& params,SimulationStateP& state)
   }
 }
 
+//______________________________________________________________________
+//
+void PressureSolver::scheduleInitialize( const LevelP& level, 
+                                         SchedulerP& sched, 
+                                         const MaterialSet* matls)
+{
+  d_hypreSolver->scheduleInitialize( level, sched, matls );
+}
+//______________________________________________________________________
+//
+void PressureSolver::scheduleRestartInitialize( const LevelP& level, 
+                                                SchedulerP& sched, 
+                                                const MaterialSet* matls)
+{
+  d_hypreSolver->scheduleRestartInitialize( level, sched, matls );
+}
+
 
 //______________________________________________________________________
 // Task that is called by Arches and constains scheduling of other tasks
