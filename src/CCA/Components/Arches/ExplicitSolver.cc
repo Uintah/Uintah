@@ -1104,9 +1104,9 @@ ExplicitSolver::computeStableTimeStep(const ProcessorGroup*,
 }
 
 void
-ExplicitSolver::initialize( const LevelP     & level,
+ExplicitSolver::sched_initialize( const LevelP& level,
                                   SchedulerP & sched,
-                            const bool         doing_restart )
+                                  const bool doing_restart )
 {
 
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
@@ -1119,11 +1119,11 @@ ExplicitSolver::initialize( const LevelP     & level,
 
     //formerly known as paramInit
     sched_initializeVariables( level, sched );
-    
-    
+
+
     // initialize hypre variables
     d_pressSolver->scheduleInitialize( level, sched, matls);
-    
+
 
     //------------------ New Task Interface (start) ------------------------------------------------
 
@@ -1595,8 +1595,8 @@ ExplicitSolver::checkMomBCs( SchedulerP& sched,
 // ****************************************************************************
 // Schedule non linear solve and carry out some actual operations
 // ****************************************************************************
-int ExplicitSolver::nonlinearSolve(const LevelP& level,
-                                   SchedulerP& sched)
+int ExplicitSolver::sched_nonlinearSolve(const LevelP& level,
+                                         SchedulerP& sched)
 {
 
   const PatchSet* patches = level->eachPatch();

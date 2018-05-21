@@ -211,7 +211,7 @@ Arches::scheduleInitialize(const LevelP& level,
   }
 
   //=========== END NEW TASK INTERFACE ==============================
-  m_nlSolver->initialize( level, sched, m_doing_restart );            
+  m_nlSolver->sched_initialize( level, sched, m_doing_restart );
 
   if( level->getIndex() != m_arches_level_index )
     return;
@@ -291,7 +291,7 @@ Arches::scheduleTimeAdvance( const LevelP& level,
     }
   }
 
-  m_nlSolver->nonlinearSolve(level, sched);
+  m_nlSolver->sched_nonlinearSolve(level, sched);
 
   if( m_doing_restart ) {
     m_doing_restart = false;

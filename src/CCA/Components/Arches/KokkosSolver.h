@@ -89,8 +89,8 @@ namespace Uintah{
                      GridP& grid );
 
   /** @brief Solve the nonlinear system. (also does some actual computations) **/
-  int nonlinearSolve( const LevelP& level,
-                      SchedulerP& sched );
+  int sched_nonlinearSolve( const LevelP& level,
+                            SchedulerP& sched );
 
   /** @brief Solve the system with an SSP-RK method, Gottlieb et al, 2001, SIAM Review **/
   void SSPRKSolve( const LevelP& level, SchedulerP& sched );
@@ -119,7 +119,7 @@ namespace Uintah{
     return false;
   }
 
-  void initialize( const LevelP& lvl, SchedulerP& sched, const bool doing_restart );
+  void sched_initialize( const LevelP& lvl, SchedulerP& sched, const bool doing_restart );
 
   private:
 

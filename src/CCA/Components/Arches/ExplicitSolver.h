@@ -156,8 +156,8 @@ public:
                              GridP& grid );
 
   /** @brief Solve the nonlinear system. (also does some actual computations) **/
-  virtual int nonlinearSolve( const LevelP& level,
-                              SchedulerP& sched );
+  virtual int sched_nonlinearSolve( const LevelP& level,
+                                    SchedulerP& sched );
 
   /** @brief Sets the initial guess for several variables **/
   void sched_setInitialGuess(SchedulerP&,
@@ -190,7 +190,7 @@ public:
                         const PatchSet* patches,
                         const MaterialSet* matls );
 
-  void initialize( const LevelP& level, SchedulerP& sched, const bool doing_restart );
+  void sched_initialize( const LevelP& level, SchedulerP& sched, const bool doing_restart );
 
   /** @brief Print the reduced kinetic energy values to the screen output **/
   void sched_printTotalKE( SchedulerP& sched,
