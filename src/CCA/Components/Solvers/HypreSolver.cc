@@ -273,9 +273,8 @@ namespace Uintah {
       }
       bool updateCoefs = ( (timeStep == 1) || !modUpdateCoefs );
       
-      bool restart = false;
-     //std::cout << " m_firstPassThrough: " << m_firstPassThrough <<  " m_isFirstSolve: " << m_isFirstSolve <<" do_setup: " << do_setup << " updateCoefs: " << updateCoefs << std::endl;
       //________________________________________________________
+      // get struct from data warehouse
       struct hypre_solver_struct* hypre_solver_s = 0;
       
       if ( new_dw->exists( m_hypre_solver_label ) ) {
@@ -288,6 +287,9 @@ namespace Uintah {
       
       hypre_solver_s = m_hypre_solverP.get().get_rep();
       
+      bool restart = hypre_solver_s->isRestartTimestep;
+      std::cout << " restart: " << restart << " m_firstPassThrough: " << m_firstPassThrough <<  " m_isFirstSolve: " << m_isFirstSolve <<" do_setup: " << do_setup << " updateCoefs: " << updateCoefs << " mod_setup: " << mod_setup << std::endl;
+
       DataWarehouse* A_dw     = new_dw->getOtherDataWarehouse( m_which_A_dw );
       DataWarehouse* b_dw     = new_dw->getOtherDataWarehouse( m_which_b_dw );
       DataWarehouse* guess_dw = new_dw->getOtherDataWarehouse( m_which_guess_dw );
@@ -829,7 +831,7 @@ namespace Uintah {
         //__________________________________
         // clean up
          m_firstPassThrough  = false;
-         restart  = false;
+         hypre_solver_s->isRestartTimestep  = false;
         
         if ( timeStep == 1 || do_setup || restart) {
           HYPRE_StructStencilDestroy(stencil);
@@ -1149,8 +1151,8 @@ namespace Uintah {
                                        , const MaterialSet * matls
                                        )
   {
-  
-    Task* task = scinew Task("initialize_hypre", this, &HypreSolver2::initialize );
+    const bool isRestart = sched->isRestartInitTimestep();
+    Task* task = scinew Task("HypreSolver2::initialize_hypre", this, &HypreSolver2::initialize, isRestart );
 
     task->computes(hypre_solver_label);
     sched->addTask(task, sched->getLoadBalancer()->getPerProcessorPatchSet(level), matls);
@@ -1163,9 +1165,8 @@ namespace Uintah {
                                               , const MaterialSet * matls
                                               )
   {
-    cout << " HypreSolver2::scheduleRestartInitialize       is a restart: " << sched->isRestartInitTimestep() << endl;
-      
-    Task* task = scinew Task("restartInitialize_hypre", this, &HypreSolver2::initialize);
+    const bool isRestart = sched->isRestartInitTimestep();
+    Task* task = scinew Task("HypreSolver2::restartInitialize_hypre", this, &HypreSolver2::initialize, isRestart);
 
     task->computes(hypre_solver_label);
     sched->addTask(task, sched->getLoadBalancer()->getPerProcessorPatchSet(level), matls);
@@ -1173,7 +1174,8 @@ namespace Uintah {
 
   //---------------------------------------------------------------------------------------------
   
-  void HypreSolver2::allocateHypreMatrices( DataWarehouse * new_dw)
+  void HypreSolver2::allocateHypreMatrices( DataWarehouse * new_dw,
+                                            const bool isRestartTimestep_in )
   {
     SoleVariable<hypre_solver_structP> hypre_solverP;
     hypre_solver_struct* hypre_struct = scinew hypre_solver_struct;
@@ -1185,6 +1187,8 @@ namespace Uintah {
     hypre_struct->HB_p             = scinew HYPRE_StructVector( nullptr );
     hypre_struct->solver_type         = stringToSolverType( m_params->solvertype );
     hypre_struct->precond_solver_type = stringToSolverType( m_params->precondtype );
+    
+    hypre_struct->isRestartTimestep = isRestartTimestep_in;
 
     hypre_solverP.setData( hypre_struct );
     new_dw->put( hypre_solverP, hypre_solver_label );
@@ -1198,9 +1202,10 @@ namespace Uintah {
                           , const MaterialSubset * matls
                           ,       DataWarehouse  *
                           ,       DataWarehouse  * new_dw
+                          , const bool  isRestart
                           )
   {
-    allocateHypreMatrices( new_dw );
+    allocateHypreMatrices( new_dw, isRestart );
   } 
 
   //---------------------------------------------------------------------------------------------

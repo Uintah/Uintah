@@ -103,6 +103,7 @@ namespace Uintah {
     
     SolverType           solver_type;
     SolverType           precond_solver_type;
+    bool                 isRestartTimestep;
     
     //  *_p = pointer
     HYPRE_StructSolver * solver_p = nullptr;
@@ -114,10 +115,11 @@ namespace Uintah {
     //__________________________________
     //
     hypre_solver_struct() {
-      solver_type            = smg;
-      precond_solver_type    = diagonal;
-      solver_p              = 0;
-      precond_solver_p      = 0;
+      isRestartTimestep    = false;
+      solver_type          = smg;
+      precond_solver_type  = diagonal;
+      solver_p             = 0;
+      precond_solver_p     = 0;
       HA_p = 0;
       HB_p = 0;
       HX_p = 0;
@@ -288,14 +290,16 @@ namespace Uintah {
 
     virtual std::string getName();
 
-    void allocateHypreMatrices( DataWarehouse * new_dw );
+    void allocateHypreMatrices(       DataWarehouse * new_dw,
+                                const bool            isRestart );
 
   private:
     void initialize( const ProcessorGroup *,
                      const PatchSubset    * patches,
                      const MaterialSubset * matls,
                            DataWarehouse  * old_dw,
-                           DataWarehouse  * new_dw );
+                           DataWarehouse  * new_dw,
+                     const bool             isRestart);
                            
     SolverType stringToSolverType( std::string str );
 
