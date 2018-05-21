@@ -3133,16 +3133,25 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
   // Can this be run in serial without doing a MPI initialize
 
   m_PIDX_flags.print();
+  
+  if( TD != Uintah::TypeDescription::ParticleVariable ) {
+    
+    pidx.initialize( full_idxFilename, timeStep, /*d_myworld->getComm()*/m_pidxComms[ levelid ], m_PIDX_flags, level_size, type );
 
-  pidx.initialize( full_idxFilename, timeStep, /*d_myworld->getComm()*/m_pidxComms[ levelid ], m_PIDX_flags, patches, level_size, type );
+  }
+  else {
+    pidx.initializeParticles( full_idxFilename, timeStep, m_pidxComms[ levelid ], level_size, type );
 
-  PIDX_physical_point physical_global_size;
-  IntVector zlo = { 0, 0, 0 };
-  IntVector ohi = { 1, 1, 1 };
-  BBox b;
-  level->getSpatialRange( b );
+    PIDX_physical_point physical_global_size;
+    IntVector zlo = { 0, 0, 0 };
+    IntVector ohi = { 1, 1, 1 };
+    BBox b;
+    level->getSpatialRange( b );
 
-  PIDX_set_physical_point( physical_global_size, b.max().x() - b.min().x(), b.max().y() - b.min().y(), b.max().z() - b.min().z() );
+    PIDX_set_physical_point( physical_global_size, b.max().x() - b.min().x(), b.max().y() - b.min().y(), b.max().z() - b.min().z() );
+
+    PIDX_set_physical_dims( pidx.file, physical_global_size );
+  }
 
   //__________________________________
   // allocate memory for pidx variable descriptor array

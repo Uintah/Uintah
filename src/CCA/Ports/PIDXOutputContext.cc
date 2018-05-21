@@ -278,7 +278,6 @@ PIDXOutputContext::initialize( const string       & filename,
                                const unsigned int   timeStep,
                                      MPI_Comm       comm,
                                      PIDX_flags     flags,
-                               const PatchSubset  * patches,
 			             PIDX_point     dim,
                                const int            typeOutput )
 {
@@ -340,11 +339,49 @@ PIDXOutputContext::initialize( const string       & filename,
   //PIDX_set_cache_time_step( this->file, 1 );
   //checkReturnCode( rc, desc + " - PIDX_enable_idx_io", __FILE__, __LINE__ );
   
+  PIDX_set_first_time_step( this->file, timeStep );
+
   PIDX_set_current_time_step( this->file, timeStep );
   checkReturnCode( rc, desc + " - PIDX_set_current_time_step", __FILE__, __LINE__);
 
   d_isInitialized = true;
 }
+
+void
+PIDXOutputContext::initializeParticles( const string       & filename, 
+                                        const unsigned int   timeStep,
+                                              MPI_Comm       comm,
+                                              PIDX_point     dim,
+                                        const int            typeOutput )
+{
+  cout << "PIDXOutputContext::initializeParticles()\n";
+
+  this->filename = filename;
+  this->timestep = timeStep;
+  string desc = "PIDXOutputContext::initialize";
+  //__________________________________
+  //
+  int rc = PIDX_create_access(&(this->access));
+  checkReturnCode( rc, desc + " - PIDX_create_access", __FILE__, __LINE__);
+  
+  if( comm != MPI_COMM_NULL ){
+    PIDX_set_mpi_access( this->access, comm );
+    checkReturnCode( rc, desc + " - PIDX_set_mpi_access", __FILE__, __LINE__);
+  }
+  
+  PIDX_file_create( filename.c_str(), PIDX_MODE_CREATE, access, dim, &(this->file) );
+  checkReturnCode( rc, desc + " - PIDX_file_create", __FILE__, __LINE__);
+  
+  PIDX_set_io_mode( this->file, PIDX_PARTICLE_IO );
+
+  PIDX_set_first_time_step( this->file, timeStep );
+  
+  PIDX_set_current_time_step( this->file, timeStep );
+  checkReturnCode( rc, desc + " - PIDX_set_current_time_step", __FILE__, __LINE__);
+
+  d_isInitialized = true;
+}
+
 
 //______________________________________________________________________
 //  

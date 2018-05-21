@@ -185,9 +185,14 @@ class PIDXOutputContext {
                      const unsigned int   timeStep,
                            MPI_Comm       comm,
                            PIDX_flags     flags,
-                     const PatchSubset  * patches,
                            PIDX_point     dims,
                      const int            type );
+
+  void initializeParticles( const std::string  & filename, 
+                            const unsigned int   timeStep,
+                                  MPI_Comm       comm,
+                                  PIDX_point     dim,
+                            const int            typeOutput );
     
     void setLevelExtents( const std::string & desc, 
                                 IntVector     lo,
