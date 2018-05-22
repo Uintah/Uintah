@@ -240,11 +240,12 @@ conduction is also available in the explicit MPM code, although it may be
 neglected via a run time option in the input file.  Explicit MPM is typically
 used for high rate simulations in which heat conduction is negligible.
 
-\section{Shape functions for MPM and GIMP} \label{gimp_mpm}
+\section{Shape functions for MPM} \label{gimp_mpm}
 
-In both MPM and GIMP, the basic idea is the same: objects are discretized into
+In MPM, the basic idea is that objects are discretized into
 particles, or material points, each of which contains all state data for the
-small region of material that it represents.  In MPM, these particles are spatially
+small region of material that it represents.  In ``traditional" MPM,
+these particles are spatially
 Dirac delta functions, meaning that the material that each represents is
 assumed to exist at a single point in space, namely the position of the
 particle.  Interactions between the particles and the grid take place
@@ -252,7 +253,16 @@ using weighting functions, also known as shape functions or interpolation
 functions.  These are typically, but not necessarily, linear, bilinear or
 trilinear in one, two and three dimensions, respectively.
 
-More recently, Bardenhagen and Kober~\cite{bardgimp} generalized the
+There are several options for shape functions that one can use for MPM,
+or what might be considered variants of MPM.  These include B-splines (for
+which linear shape functions are a special case), GIMP, CPDI and CPTI.  While
+there are higher order B-spline implementations in Uintah, they have not been
+specialized for dealing with boundary conditions, and so won't be described
+here any further.  For simulations that don't include interaction with the
+domain boundaries, they are a viable alternative.  The other three options will
+be described in greater detail below.
+
+Bardenhagen and Kober~\cite{bardgimp} generalized the
 development that gives rise to MPM, and suggested that MPM
 may be thought of as a subset of their ``Generalized Interpolation
 Material Point" (GIMP) method.  In the family of GIMP methods
@@ -385,6 +395,55 @@ a cuboid that circumscribes the deformed particle shape~\cite{jinmaCMES2006}.
 Alternatively, one can assume that the particle size remains constant (insofar
 as it applies to the effective shape function evaluations only).  This is
 the approach currently implemented in Uintah.
+
+An alternative to approximating the deformed GIMP particles was developed by
+Rebecca Brannon's research group, and is known as Convected Particle Domain
+Interpolation, or CPDI~\cite{CPDI_paper}.  There, particles are initially
+pararallepipeds described by a particle centroid and three ``r-vectors",
+which are vectors from the center of one face to the opposite face, through the
+particle centroid.
+These vectors, and thus the shape of the particle is evolved by applying the
+deformation gradient at the particle, according to:
+
+\begin{eqnarray}
+\bfr_1^{n+1} = \bfF_p^{n+1} \bfr_1^0 \\
+\bfr_2^{n+1} = \bfF_p^{n+1} \bfr_2^0 \\
+\bfr_3^{n+1} = \bfF_p^{n+1} \bfr_3^0 \\
+\label{r_vector_evolution}
+\end{eqnarray} 
+
+The effect of this is that as particles deform, the gaps and overlaps that would
+otherwise develop when using GIMP are much less severe.
+Figure~\ref{Fig:CPDI_figures} depicts the evolution of the r-vectors and the
+particle shape.  Note that particles need not be initially cuboid as shown
+in the figure.  The aforementioned
+reference gives a complete description of CPDI.
+
+\begin{figure}
+\centering
+  \includegraphics[scale=.15]{cpdi_rvectors.png}
+  \caption{Initial and evolved r-vectors for a CPDI particle.}
+  \label{Fig:CPDI_figures}
+\end{figure}
+
+Another variant of CPDI available in Uintah is called CPTI, where ``T"
+refers to "Tetrahedron".  Because of the ubiquity of tet meshing software,
+and their ability to mesh conforming surfaces, Brannon's group also implemented
+an analogous method for describing deforming tetrahedra.  Equations~\ref{r_vector_evolution} still apply, but the r-vectors now extend from one corner
+of the particle to the other three corners, as depicted in
+Figure~\ref{Fig:CPTI_figures}.
+
+\begin{figure}
+\centering
+  \includegraphics[scale=.11]{cpti_rvectors.png}
+  \caption{Initial and evolved r-vectors for a CPTI particle.}
+  \label{Fig:CPTI_figures}
+\end{figure}
+
+CPDI can be used with standard particle initialization, but CPTI requires
+the use of a file containing particle locations and r-vectors.  This usage
+will be described elsewhere in this guide.
+
 
 \section{Uintah Implementation} \label{Sec:UintahImp}
 
@@ -848,9 +907,10 @@ set for many, see \tt MPM/MPMFlags.cc \normalfont for more.
       <boundary_traction_faces            spec="OPTIONAL STRING" />
       <DoExplicitHeatConduction           spec="OPTIONAL BOOLEAN" />
       <DoPressureStabilization            spec="OPTIONAL BOOLEAN" />
+      <XPIC2                              spec="OPTIONAL BOOLEAN" />
       <erosion                            spec="OPTIONAL NO_DATA"
             attribute1="algorithm REQUIRED STRING 'none, KeepStress, ZeroStress, RemoveMass'" />
-      <interpolator                       spec="OPTIONAL STRING 'linear, gimp, 3rdorderBS, 4thorderBS'" />
+      <interpolator                       spec="OPTIONAL STRING 'linear, gimp, 3rdorderBS, 4thorderBS, cpdi, fast_cpdi, cpti'" />
       <minimum_particle_mass              spec="OPTIONAL DOUBLE 'positive'"/>
       <minimum_mass_for_acc               spec="OPTIONAL DOUBLE 'positive'"/>
       <maximum_particle_velocity          spec="OPTIONAL DOUBLE 'positive'"/>
@@ -861,13 +921,9 @@ set for many, see \tt MPM/MPMFlags.cc \normalfont for more.
       <withColor                          spec="OPTIONAL BOOLEAN" />
 
      <!-- These are not commonly used options -->
-      <CanAddMPMMaterial                  spec="OPTIONAL BOOLEAN" />
       <create_new_particles               spec="OPTIONAL BOOLEAN" />
       <do_contact_friction_heating        spec="OPTIONAL BOOLEAN" />
-      <do_grid_reset                      spec="OPTIONAL BOOLEAN" />
       <DoThermalExpansion                 spec="OPTIONAL BOOLEAN" />
-      <ForceBC_force_increment_factor     spec="OPTIONAL DOUBLE" />
-      <manual_new_material                spec="OPTIONAL BOOLEAN" />
       <interpolateParticleTempToGridEveryStep spec="OPTIONAL BOOLEAN" />
       <temperature_solve                  spec="OPTIONAL BOOLEAN" />
 
@@ -893,6 +949,187 @@ set for many, see \tt MPM/MPMFlags.cc \normalfont for more.
       <use_volume_integral                spec="OPTIONAL BOOLEAN" />
     </MPM>
 \end{Verbatim}
+
+\subsection{Geometry Description} \label{Sec:geom_desc}
+
+An explanation of how to describe initial geometry using geometric
+primitives or triangulated surfaces is given in
+Section~\ref{Sec:GeometryObjects}.  For MPM, there are additional options
+that can be used to initialize particles, these are described here.
+
+\tt smoothcyl \normalfont is a geomtry object designed for use with
+the cpdi algorithm, which uses a body fit particle spatial
+distribution.  This eliminates ``stair-stepped'' boundaries typical of
+the standard, grid-based, discretization scheme.  Thus {\it it is
+  important to note that this geometry is only designed to work with
+  \tt <interpolator>cpdi</interpolator>\normalfont. \it Other
+  algorithms may give erroneous answers.}
+
+This geometry has the following tags:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+	   <smoothcyl label = "label name">
+	     <discretization_scheme> string </discretization_scheme>
+	     <bottom> vector </bottom>
+	     <top> vector </top>
+	     <outer_radius> float </outer_radius>
+	     <inner_radius> float </inner_radius>
+	     <num_radial> integer </num_radial>
+	     <num_axial> integer </num_axial>
+	     <num_angular> integer </num_angular>
+	     <arc_start_angle> double (in degrees) </arc_start_angle>
+	     <arc_angle> double (in degrees) </arc_angle>
+	   </smoothcyl>
+\end{Verbatim}
+
+The complete or partial annulus or cylinder specified by inner
+(optional, defaulting to zero) and outer radii, cylinder axis bottom
+and top (all required) and start and final angle (both optional,
+defaulting to 0 and 360) will be discretized using planes of
+concentric rings of particles.  Particle density is specified by \tt
+num\_axial \normalfont and \tt num\_radial\normalfont, the number of
+particles in the axial and radial dimensions, respectively
+\normalfont.  Note that these particle density specifications
+supercede those specified in the \tt <geom\_object> <res> \normalfont
+tag, which is ignored.
+
+The required discretization scheme may be either \tt pie\_slices
+\normalfont or \tt constant\_particle\_volumes\normalfont.  For the
+\tt pie\_slices \normalfont discretization, \tt num\_angular
+\normalfont is required to specify the number of particles between \tt
+arc\_start \normalfont and \tt arc\_angle \normalfont.  For the \tt
+constant\_particle\_volumes \normalfont discretization, the number of
+particles between \tt arc\_start \normalfont and \tt arc\_angle
+\normalfont is determined individually for each ring of particles by
+attempting to keep particle spacings approximately equal in the radial
+and angular directions, and thus particle volumes approximately
+constant.
+
+End caps may be added to the smoothcyl using the optional \tt
+<endcap\_thickness> \normalfont tag, which specifies the axial
+dimension of cylinders which are appended to each end of the specified
+\tt smoothcyl\normalfont (the radii are the same as the \tt smoothcyl
+\normalfont).  Presently, the end cap body fit discretization uses a
+legacy scheme.
+
+Note: At the time of writing, multiple \tt smoothcyl \normalfont
+geometries within a \tt <geom\_object> \normalfont tag were not
+discretized using a body fit particle distribution as described here
+(rather the default discretization scheme is used).  This will be
+fixed eventually, at which point it may be possible to create more
+general endcaps using unions of \tt smoothcyl \normalfont.
+
+In addition to the above, it is also possible in MPM simulations to describe
+geometry by providing a file containing a series of particle locations.  These
+can be in either ASCII or binary format.  In addition, it is also possible to
+provide initial data for certain variables on the particles, including
+volume, temperature, external force, fiber direction (used in material models
+with transverse isotropy) and velocity.  The following is an example in which
+external force and fiber direction are specified:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+          <file>
+              <name>LVcoarse.pts</name>
+              <var>p.externalforce</var>
+              <var>p.fiberdir</var>
+          </file>
+\end{Verbatim}
+
+where the text file LVcoarse.pts looks like:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+0.0385 0.0335 0.0015 0 0 0 0.248865 -0.0593421 -0.966718
+0.0395 0.0335 0.0015 0 0 0 0.254892 -0.0220365 -0.966718
+0.0405 0.0335 0.0015 0 0 0 0.267002 0.0197728 -0.963493
+0.0415 0.0335 0.0015 0 0 0 0.261177 0.0588869 -0.963493
+	.
+	.
+	.
+\end{Verbatim}
+
+In addition, when using CPDI or CPTI, one can specify the three r-vectors that
+describe the geometry of those particles.  An example using 5 tetrahedra to
+describe a cube would look like:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+      <file>
+        <name>cube.pts</name>
+        <var>p.rvec1</var>
+        <var>p.rvec2</var>
+        <var>p.rvec3</var>
+      </file>
+\end{Verbatim}
+
+where the text file cube.pts looks like:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+ 0.00  0.00  0.00  1. 1. 0. 0. 1. 1. 1. 0. 1.
+ 0.25 -0.25 -0.25 -1. 0. 0. 0. 0. 1. 0. 1. 0.
+-0.25  0.25 -0.25  1. 0. 0. 0. 0. 1. 0.-1. 0.
+-0.25 -0.25  0.25  1. 0. 0. 0. 0.-1. 0. 1. 0.
+ 0.25  0.25  0.25 -1. 0. 0. 0. 0.-1. 0.-1. 0.
+\end{Verbatim}
+where the first 3 entries are the particle center, and the next 9 are the
+r-vectors.  When using CPTI, the r-vectors given should point from one
+corner of the tetrahedron to each of the other 4.  The resultant cube
+is depicted in Figure~\ref{Fig:cpti_cube}.
+
+\begin{figure}
+\centering
+  \includegraphics[scale=.3]{cpti_cube.png}
+  \caption{Five CPTI particles comprising a cube.}
+  \label{Fig:cpti_cube}
+\end{figure}
+When using CPDI, the
+r-vectors extend from the center of one face to the center of the opposite
+face through the particle centroid.  Both of these are depicted in
+Figures~\ref{Fig:CPTI_figures} and~\ref{Fig:CPDI_figures}.
+
+Because these files can be arbitrarily large, an additional preprocessing step
+must be taken before issuing the \tt sus \normalfont command.
+\tt pfs \normalfont for ``Particle File Splitter" is a utility that splits the
+data in the \tt .pts \normalfont file into a series of files
+(\tt file.pts.0, file.pts.1, \normalfont, etc), one for each
+patch.  By doing this, each processor needs only read in the data for the
+patches that it contains, rather than each processor reading in the entire file,
+which can be hard on the file system.  Note, that this step is required,
+even if only using a single patch, and must be reissued any time the patch
+configuration is changed.  Usage of this utility, which is compiled
+into the \tt StandAlone/tools/pfs \normalfont directory, is:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+   pfs input.ups
+\end{Verbatim}
+
+One final option is available for initializing particle positions in MPM
+simulations, and that is through the use of three dimensional image data,
+such as might be collected via CT scans or confocal microscopy.  The image data are provided as 8-bit raw files, and usage in the input file is given as:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+        <image>
+          <name>spheres.raw</name>
+          <res>[1600, 1600, 1600]</res>
+          <threshold>[1, 25]</threshold>
+        </image>
+        <file>
+          <name>spheres.pts</name>
+          <format>bin</format>
+        </file>
+\end{Verbatim}
+
+The \tt <image> \normalfont section gives the name of the file, the resolution, in pixels,
+in the various coordinate directions, and threshold range.  Particles will be
+generated at voxels within the specified range.  The \tt <file> \normalfont
+section is the same as that described above.  A different preprocessing utility
+is provided when using image data (for the same reasons described previously).
+Usage is as follows:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+   pfs2 -b input.ups
+\end{Verbatim}
+
+The -b indicates that binary \tt spheres.pts.\# \normalfont files will be created, which
+saves considerable disk space when performing large simulations.
 
 
 
