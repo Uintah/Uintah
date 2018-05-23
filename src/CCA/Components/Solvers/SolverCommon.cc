@@ -36,4 +36,30 @@ SolverCommon::~SolverCommon()
 {
 }
 
+void SolverCommon::setComponents( ApplicationInterface *comp )
+{
+  ApplicationInterface * parent = dynamic_cast<ApplicationInterface*>( comp );
+
+  attachPort( "application", parent );
+  
+  getComponents();
+}
+
+void SolverCommon::getComponents()
+{
+  m_application = dynamic_cast<ApplicationInterface*>( getPort("application") );
+
+  if( !m_application ) {
+    throw InternalError("dynamic_cast of 'm_application' failed!", __FILE__, __LINE__);
+  }
+}
+
+void SolverCommon::releaseComponents()
+{
+  releasePort( "application" );
+  m_application  = nullptr;
+}
+
+
+
 } // end namespace Uintah

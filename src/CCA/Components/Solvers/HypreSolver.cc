@@ -287,8 +287,9 @@ namespace Uintah {
       
       hypre_solver_s = m_hypre_solverP.get().get_rep();
       
+      
       bool restart = hypre_solver_s->isRestartTimestep;
-      std::cout << " restart: " << restart << " m_firstPassThrough: " << m_firstPassThrough <<  " m_isFirstSolve: " << m_isFirstSolve <<" do_setup: " << do_setup << " updateCoefs: " << updateCoefs << " mod_setup: " << mod_setup << std::endl;
+      //std::cout << " restart: " << restart << " m_firstPassThrough: " << m_firstPassThrough <<  " m_isFirstSolve: " << m_isFirstSolve <<" do_setup: " << do_setup << " updateCoefs: " << updateCoefs << " mod_setup: " << mod_setup << std::endl;
 
       DataWarehouse* A_dw     = new_dw->getOtherDataWarehouse( m_which_A_dw );
       DataWarehouse* b_dw     = new_dw->getOtherDataWarehouse( m_which_b_dw );
