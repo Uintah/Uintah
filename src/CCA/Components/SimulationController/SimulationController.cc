@@ -572,6 +572,8 @@ SimulationController::applicationSetup( void )
 
   // Finalize the shared state/materials
   m_application->getSimulationStateP()->finalizeMaterials();
+
+  m_application->setRestartTimeStep( m_restarting );
 }
 
 

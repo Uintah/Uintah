@@ -413,6 +413,8 @@ AMRSimulationController::run()
     // Done with the first time step.
     if( first ) {
       m_scheduler->setRestartInitTimestep( false );
+      m_application->setRestartTimeStep( false );
+      
       first = false;
     }
   } // end while main time loop (time is not up, etc)

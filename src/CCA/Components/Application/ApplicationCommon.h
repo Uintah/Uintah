@@ -244,11 +244,17 @@ WARNING
     virtual void haveModifiedVars( bool val ) { m_haveModifiedVars = val; }
     virtual bool haveModifiedVars() const { return m_haveModifiedVars; }
      
-    //////////
+    // For restarting.
+    virtual bool isRestartTimeStep() const { return m_isRestartTimestep; } 
+    virtual void setRestartTimeStep( bool val ){ m_isRestartTimestep = val; }
+
+    // For regridding.
     virtual bool isRegridTimeStep() const { return m_isRegridTimeStep; }
-    virtual void setRegridTimeStep( bool isRegridTs ) {
-      m_isRegridTimeStep = isRegridTs;
-      if( isRegridTs ) { m_lastRegridTimestep = m_timeStep; }
+    virtual void setRegridTimeStep( bool val ) {
+      m_isRegridTimeStep = val;
+      
+      if( m_isRegridTimeStep )
+	m_lastRegridTimestep = m_timeStep;
     }
     virtual int  getLastRegridTimeStep() { return m_lastRegridTimestep; }
 
@@ -266,7 +272,7 @@ WARNING
 
     // Access methods for member classes.
     virtual SimulationTime * getSimulationTime() const { return m_simulationTime; }
-    virtual SimulationStateP getSimulationStateP() const { return m_sharedState; };
+    virtual SimulationStateP getSimulationStateP() const { return m_sharedState; }
   
   private:
     // The classes are private because only the top level application
@@ -337,6 +343,8 @@ WARNING
 
     bool m_dynamicRegridding {false};
   
+    bool m_isRestartTimestep {false};
+    
     bool m_isRegridTimeStep {false};
     int  m_lastRegridTimestep { 0 }; // While it may not have been a "re"-grid, the original grid is created on TS 0.
 
