@@ -739,8 +739,6 @@ int main( int argc, char *argv[], char *env[] )
 
     UintahParallelComponent* solverComp = dynamic_cast<UintahParallelComponent*>(solver);
     
-    solverComp->attachPort( "application", application );
-
     appComp->attachPort( "solver", solver );
     solverComp->attachPort( "application", application );
 
