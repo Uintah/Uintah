@@ -170,8 +170,8 @@ namespace Uintah {
     virtual void getComponents() = 0;
     virtual void releaseComponents() = 0;
   
-    virtual void readParameters(  ProblemSpecP & params,
-				const std::string  & name ) = 0;
+    virtual void readParameters( ProblemSpecP & params,
+                                 const std::string  & name ) = 0;
                             
     virtual SolverParameters * getParameters() = 0;                        
 

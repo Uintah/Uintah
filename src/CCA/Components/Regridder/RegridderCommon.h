@@ -74,8 +74,8 @@ namespace Uintah {
 
     //! Initialize with regridding parameters from ups file
     virtual void problemSetup(const ProblemSpecP& params,
-			      const GridP& grid,
-			      const SimulationStateP& state);
+                              const GridP& grid,
+                              const SimulationStateP& state);
 
     //! On a Switch, basically asks whether to turn off/on the Regridding
     virtual void switchInitialize(const ProblemSpecP& params);
@@ -182,7 +182,7 @@ namespace Uintah {
   protected:
 
     ProblemSpecP           grid_ps_ {nullptr};
-    LoadBalancer     * m_loadBalancer {nullptr};
+    LoadBalancer         * m_loadBalancer {nullptr};
     Scheduler            * m_scheduler    {nullptr};
     ApplicationInterface * m_application  {nullptr};
 
