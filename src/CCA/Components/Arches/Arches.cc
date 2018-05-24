@@ -123,7 +123,7 @@ Arches::problemSetup( const ProblemSpecP     & params,
     assign_unique_boundary_names( bcProbSpec );
   }
 
-  db->getWithDefault("recompileTaskgraph",  m_recompile, false);
+  db->getWithDefault("recompileTaskgraph",  m_recompile, false);       // Is this needed? -Todd
 
   // physical constant
   m_physicalConsts = scinew PhysicalConstants();
@@ -282,7 +282,6 @@ Arches::scheduleTimeAdvance( const LevelP& level,
   if( isRegridTimeStep() ) { // Needed for single level regridding on restarts.
     m_doing_restart = true;  // Note, this task is called twice on a regrid.
     m_recompile = true;
-    setRegridTimeStep( false );
   }
 
   if ( m_doing_restart ) {

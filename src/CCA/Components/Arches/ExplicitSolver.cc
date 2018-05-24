@@ -1385,7 +1385,7 @@ ExplicitSolver::sched_restartInitialize( const LevelP& level, SchedulerP& sched 
   if ( !level->hasFinerLevel() ){
 
     // initialize hypre variables
-    d_pressSolver->scheduleInitialize( level, sched, matls);
+    d_pressSolver->scheduleRestartInitialize( level, sched, matls);
 
     d_boundaryCondition->sched_setupBCInletVelocities( sched, level, matls, doingRestart ,false);
 
