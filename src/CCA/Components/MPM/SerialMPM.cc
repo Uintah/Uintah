@@ -4657,8 +4657,9 @@ void SerialMPM::addParticles(const ProcessorGroup*,
       mnum << m;
       string mnums = mnum.str();
       string fname=flags->d_authigenesisBaseFilename + mnums;
-       cout << "fname  = " << fname  << endl;
+      cout << "fname  = " << fname  << endl;
       std::ifstream is(fname.c_str());
+      filenames.clear();
 
       if(is) {
        double col;
@@ -4668,6 +4669,9 @@ void SerialMPM::addParticles(const ProcessorGroup*,
          Fcolor.push_back(col);
        }
        is.close();
+      } else {
+       cout << "No file named  = " << fname  << " can be found." << endl;
+       cout << "That's OK if there isn't new geometry for matl. " << m << endl;
       }
 
       MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
@@ -4750,6 +4754,8 @@ void SerialMPM::addParticles(const ProcessorGroup*,
             if(newGeomPiece[ifile]->inside(p)){
               // See if new point lies within an existing particle
               bool inExisting = false;
+//              cout << "Point inside of new geometry" << endl;
+//              cout << "Fcolor =  " << Fcolor[ifile] << endl;
               for(ParticleSubset::iterator piter  = pset_wg->begin();
                                            piter != pset_wg->end(); piter++){
                 particleIndex pidx = *piter;
