@@ -1492,7 +1492,9 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP & grid )
       }
 
       for (const Task::Dependency* dep = task->getRequires(); dep != 0; dep = dep->m_next) {
-        bool copyThisVar = dep->m_whichdw == Task::OldDW;
+        
+        bool copyThisVar = (dep->m_whichdw == Task::OldDW);
+        
         // override to manually copy a var
         if (!copyThisVar) {
           if (m_copy_data_vars.find(dep->m_var->getName()) != m_copy_data_vars.end()) {
@@ -1507,8 +1509,11 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP & grid )
         }
 
         if (copyThisVar) {
-          if (dep->m_var->typeDescription()->getType() == TypeDescription::ReductionVariable) {
-            // we will take care of reduction variables in a different section
+        
+          // we will take care of reduction variables in a different section
+          TypeDescription::Type depType = dep->m_var->typeDescription()->getType();
+          if ( depType == TypeDescription::ReductionVariable ||
+               depType == TypeDescription::SoleVariable) {
             continue;
           }
 
@@ -1794,6 +1799,20 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP & grid )
     }
   }
 
+  //__________________________________
+  //  copy Sole Variables to the new_dw
+  for (unsigned int i = 0; i < levelVariableInfo.size(); i++) {
+    VarLabelMatl<Level> Var = levelVariableInfo[i];
+    const VarLabel* label = Var.label_;
+
+    if ( label->typeDescription()->getType() == TypeDescription::SoleVariable ){
+      SoleVariableBase* var = dynamic_cast<SoleVariableBase*>( label->typeDescription()->createInstance() );
+
+      oldDataWarehouse->get( *var, label );
+      newDataWarehouse->put( *var, label );
+    }
+  }
+
   newDataWarehouse->refinalize();
 
   (*d_runtimeStats)[RegriddingCopyDataTime] += timer().seconds();
@@ -1840,6 +1859,7 @@ SchedulerCommon::copyDataToNewGrid( const ProcessorGroup * /* pg */
     LevelP oldLevel = oldDataWarehouse->getGrid()->getLevel(newLevel->getIndex());
 
     //__________________________________
+    //  Grid and particle variables
     //  Loop over Var labels
     for (LabelMatlMap::iterator iter = m_label_matls[oldLevel->getIndex()].begin();
          iter != m_label_matls[oldLevel->getIndex()].end(); iter++) {
@@ -2102,7 +2122,7 @@ SchedulerCommon::overrideVariableBehavior( const std::string & var
     m_treat_as_old_vars.insert(var);
   }
 
-  // manually copy variable between AMR levels
+  // manually copy this variable to the new_dw if regridding occurs
   if (copyData) {
     m_copy_data_vars.insert(var);
     m_no_scrub_vars.insert(var);
@@ -2114,7 +2134,7 @@ SchedulerCommon::overrideVariableBehavior( const std::string & var
     m_no_scrub_vars.insert(var);
   }
 
-  // ignore copying this variable between AMR levels
+  // so not copy this variable to the new_dw if regridding occurs
   if (notCopyData) {
     m_no_copy_data_vars.insert(var);
   }

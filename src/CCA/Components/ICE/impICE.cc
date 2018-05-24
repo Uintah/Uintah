@@ -346,7 +346,7 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
     t->requires(Task::OldDW, hypre_solver_label);
     t->computes(hypre_solver_label);
     //(string var, bool treatAsOld, bool copyData, bool noScrub, bool notCopyData, bool noCheckpoint)
-    sched->overrideVariableBehavior(hypre_solver_label->getName(),false,false,false,true,true);
+    sched->overrideVariableBehavior(hypre_solver_label->getName(),false,true,false,false,true);
   }
 #endif
 

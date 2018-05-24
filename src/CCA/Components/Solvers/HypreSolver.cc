@@ -1199,8 +1199,8 @@ namespace Uintah {
 
   void
   HypreSolver2::initialize( const ProcessorGroup *
-                          , const PatchSubset    * patches
-                          , const MaterialSubset * matls
+                          , const PatchSubset    * 
+                          , const MaterialSubset * 
                           ,       DataWarehouse  *
                           ,       DataWarehouse  * new_dw
                           , const bool  isRestart
@@ -1334,8 +1334,7 @@ namespace Uintah {
       task->requires( Task::NewDW, hypre_solver_label);
     }
     
-    sched->overrideVariableBehavior(hypre_solver_label->getName(),false,false,
-                                    false,true,true);
+    sched->overrideVariableBehavior(hypre_solver_label->getName(),false,true,false,false,true);
 
     task->setType(Task::Hypre);
 
