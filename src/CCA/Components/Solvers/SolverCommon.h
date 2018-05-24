@@ -30,6 +30,8 @@
 
 namespace Uintah {
 
+  class ApplicationInterface;
+
   //______________________________________________________________________
   //
   class SolverCommon : public UintahParallelComponent, public SolverInterface { 
@@ -41,12 +43,11 @@ namespace Uintah {
     
     // Methods for managing the components attached via the ports.
     virtual void setComponents( UintahParallelComponent *comp ) {};
-    virtual void setComponents( ApplicationInterface *comp );
     virtual void getComponents();
     virtual void releaseComponents();
     
-    virtual void readParameters(  ProblemSpecP & params,
-                               const std::string  & name ) = 0;
+    virtual void readParameters( ProblemSpecP & params,
+                                 const std::string  & name ) = 0;
 
     virtual void scheduleSolve( const LevelP           & level,
                                       SchedulerP       & sched,
@@ -72,8 +73,10 @@ namespace Uintah {
     virtual void scheduleRestartInitialize( const LevelP      & level,
                                                   SchedulerP  & sched,
                                             const MaterialSet * matls) = 0;
-    protected:
-      ApplicationInterface*  m_application {nullptr};
+
+  protected:
+    ApplicationInterface * m_application  {nullptr};  
+
   };
   
 } // end namespace Uintah

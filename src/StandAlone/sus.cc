@@ -742,6 +742,7 @@ int main( int argc, char *argv[], char *env[] )
     solverComp->attachPort( "application", application );
 
     appComp->attachPort( "solver", solver );
+    solverComp->attachPort( "application", application );
 
     //__________________________________
     // Load balancer

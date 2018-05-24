@@ -166,7 +166,6 @@ namespace Uintah {
 
     // Methods for managing the components attached via the ports.
     virtual void setComponents( UintahParallelComponent *comp ) = 0;
-    virtual void setComponents( ApplicationInterface *comp ) = 0;
     virtual void getComponents() = 0;
     virtual void releaseComponents() = 0;
   
