@@ -1510,7 +1510,7 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP & grid )
 
         if (copyThisVar) {
         
-          // we will take care of reduction variables in a different section
+          // we will take care of reduction & sole variables in a different section
           TypeDescription::Type depType = dep->m_var->typeDescription()->getType();
           if ( depType == TypeDescription::ReductionVariable ||
                depType == TypeDescription::SoleVariable) {
