@@ -1810,6 +1810,7 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP & grid )
 
       oldDataWarehouse->get( *var, label );
       newDataWarehouse->put( *var, label );
+      delete var;
     }
   }
 
