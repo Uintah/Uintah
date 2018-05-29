@@ -278,9 +278,11 @@ namespace Uintah {
       struct hypre_solver_struct* hypre_solver_s = 0;
       
       if ( new_dw->exists( m_hypre_solver_label ) ) {
+//        std::cout << "//__________________________________ Rank-" << pg->myRank() << " Pulling from newDW " << std::endl;
         new_dw->get( m_hypre_solverP, m_hypre_solver_label );
       }
       else {
+//        std::cout << "//__________________________________ Rank-" << pg->myRank() << " Pulling from oldDW " << std::endl;
         old_dw->get( m_hypre_solverP, m_hypre_solver_label );
         new_dw->put( m_hypre_solverP, m_hypre_solver_label );
       }
@@ -1050,8 +1052,7 @@ namespace Uintah {
   : SolverCommon(myworld)
   {
     // Time Step
-    m_timeStepLabel =
-      VarLabel::create(timeStep_name, timeStep_vartype::getTypeDescription() );
+    m_timeStepLabel = VarLabel::create(timeStep_name, timeStep_vartype::getTypeDescription() );
     
     hypre_solver_label = VarLabel::create("hypre_solver_label",
                                           SoleVariable<hypre_solver_structP>::getTypeDescription());
@@ -1155,8 +1156,12 @@ namespace Uintah {
     const bool isRestart = sched->isRestartInitTimestep();
     Task* task = scinew Task("HypreSolver2::initialize_hypre", this, &HypreSolver2::initialize, isRestart );
 
-    task->computes(hypre_solver_label);
-    sched->addTask(task, sched->getLoadBalancer()->getPerProcessorPatchSet(level), matls);
+    task->setType(Task::OncePerProc);  // must run this task on every proc.  It's possible to have 
+                                       // no patches on this proc when scheduling
+    
+    LoadBalancer * lb = sched->getLoadBalancer();
+    
+    sched->addTask(task, lb->getPerProcessorPatchSet(level), matls);
   }
   
  //---------------------------------------------------------------------------------------------
@@ -1168,9 +1173,15 @@ namespace Uintah {
   {
     const bool isRestart = sched->isRestartInitTimestep();
     Task* task = scinew Task("HypreSolver2::restartInitialize_hypre", this, &HypreSolver2::initialize, isRestart);
-
+    
+    task->setType(Task::OncePerProc);  // must run this task on every proc.  It's possible to have 
+                                       // no patches  on this proc when scheduling restarts with regridding
+    
     task->computes(hypre_solver_label);
-    sched->addTask(task, sched->getLoadBalancer()->getPerProcessorPatchSet(level), matls);
+    
+    LoadBalancer * lb = sched->getLoadBalancer();
+    
+    sched->addTask(task, lb->getPerProcessorPatchSet(level), matls);
   }
 
   //---------------------------------------------------------------------------------------------
@@ -1326,12 +1337,19 @@ namespace Uintah {
     Task::WhichDW old_dw = m_params->getWhichOldDW();
     task->requires( old_dw, m_timeStepLabel );
 
+#if 0
+    std::cout << "//__________________________________ Rank-" << m_myworld->myRank() << " isRegridTimeStep() " 
+            << m_application->isRegridTimeStep() 
+            << "  isFirstSolve " << isFirstSolve << std::endl;
+#endif
     // solve struct
     if (isFirstSolve) {
       task->requires( Task::OldDW, hypre_solver_label);
       task->computes( hypre_solver_label);
+      // std::cout << "//__________________________________ Rank-" << m_myworld->myRank() << " Requiring from oldDW " << std::endl;
     }  else {
       task->requires( Task::NewDW, hypre_solver_label);
+      // std::cout << "//__________________________________ Rank-" << m_myworld->myRank() << " Requiring from newDW " << std::endl;
     }
     
     sched->overrideVariableBehavior(hypre_solver_label->getName(),false,true,false,false,true);
