@@ -1053,6 +1053,7 @@ OnDemandDataWarehouse::put( const ReductionVariableBase& var,
   
   bool init = (d_scheduler->copyTimestep()) || !(d_levelDB.exists( label, matlIndex, level ));
 
+  printDebuggingPutInfo( label, matlIndex, level, __LINE__ );
   d_levelDB.putReduce( label, matlIndex, level, var.clone(), init );
 }
 
@@ -1067,6 +1068,8 @@ OnDemandDataWarehouse::override( const ReductionVariableBase & var,
   checkPutAccess( label, matlIndex, 0, true );
 
   // Put it in the database, replace whatever may already be there
+  printDebuggingPutInfo( label, matlIndex, level, __LINE__ );
+  
   d_levelDB.put( label, matlIndex, level, var.clone(), true, true );
 }
 
@@ -1081,6 +1084,8 @@ OnDemandDataWarehouse::override( const SoleVariableBase & var,
   checkPutAccess(label, matlIndex, 0, true);
 
   // Put it in the database, replace whatever may already be there
+  printDebuggingPutInfo( label, matlIndex, level, __LINE__ );
+  
   d_levelDB.put(label, matlIndex, level, var.clone(), d_scheduler->copyTimestep(), true);
 }
 
@@ -1100,6 +1105,8 @@ OnDemandDataWarehouse::put( const SoleVariableBase& var,
                           task graph */);
   // Put it in the database
   if (!d_levelDB.exists(label, matlIndex, level)) {
+    printDebuggingPutInfo( label, matlIndex, level, __LINE__ );
+  
     d_levelDB.put(label, matlIndex, level, var.clone(), d_scheduler->copyTimestep(), false);
   }
 }
@@ -2124,6 +2131,8 @@ OnDemandDataWarehouse::put(       GridVariableBase& var,
    // error would have been thrown above if the any reallocation would be
    // needed
    ASSERT(no_realloc);
+   printDebuggingPutInfo( label, matlIndex, patch, __LINE__ );
+   
    d_varDB.put(label, matlIndex, patch, var.clone(), d_scheduler->copyTimestep(),true);
 }
 
@@ -2155,6 +2164,7 @@ OnDemandDataWarehouse::put(       PerPatchBase& var,
   checkPutAccess( label, matlIndex, patch, replace );
 
   // Put it in the database
+  printDebuggingPutInfo( label, matlIndex, patch, __LINE__ );
   d_varDB.put( label, matlIndex, patch, var.clone(), d_scheduler->copyTimestep(), true );
 }
 
@@ -2292,6 +2302,8 @@ OnDemandDataWarehouse::putLevelDB(       GridVariableBase* gridVar,
   bool init = (d_scheduler->copyTimestep()) || !(d_levelDB.exists( label, matlIndex, level ));
 
   //GridVariableBase* v = dynamic_cast<GridVariableBase*>( &constGridVar )->clone();
+  printDebuggingPutInfo( label, matlIndex, level, __LINE__ );
+  
   d_levelDB.put( label, matlIndex, level, gridVar, init, true );
 }
 
@@ -3890,6 +3902,29 @@ OnDemandDataWarehouse::printDebuggingPutInfo( const VarLabel* label,
     dbg << std::left;
     dbg.width( 20 );
     dbg << *label << " MI: " << matlIndex << " L-"<< L_indx <<" "<< *patch << " \tinto DW: " << d_generation
+        << "\n";
+    cerrLock.unlock();
+  }
+}
+//______________________________________________________________________
+//  print debugging information
+void
+OnDemandDataWarehouse::printDebuggingPutInfo( const VarLabel* label,
+                                              int             matlIndex,
+                                              const Level*    level,
+                                              int             line)
+{
+  if( dbg.active() ) {
+    cerrLock.lock();
+    int L_indx = 0;
+    if( level ){
+      L_indx = level->getIndex();
+    }
+    
+    dbg << d_myworld->myRank() << " Putting (line: "<<line<< ") ";
+    dbg << std::left;
+    dbg.width( 20 );
+    dbg << *label << " MI: " << matlIndex << " L-"<< L_indx <<" " << " \tinto DW: " << d_generation
         << "\n";
     cerrLock.unlock();
   }

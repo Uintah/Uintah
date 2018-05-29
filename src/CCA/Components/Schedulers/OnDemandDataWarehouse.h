@@ -637,6 +637,11 @@ class OnDemandDataWarehouse : public DataWarehouse {
                                 int matlIndex,
                                 const Patch* patch,
                                 int line);
+                                
+    void printDebuggingPutInfo( const VarLabel* label,
+                                int matlIndex,
+                                const Level* level,
+                                int line);
                        
                        
 
