@@ -75,7 +75,9 @@ namespace Uintah {
                                             const MaterialSet * matls) = 0;
 
   protected:
-    ApplicationInterface * m_application  {nullptr};  
+    ApplicationInterface * m_application  {nullptr};
+    
+    const ProcessorGroup * m_myworld;
 
   };
   

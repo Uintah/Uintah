@@ -30,6 +30,7 @@ namespace Uintah {
 SolverCommon::SolverCommon(const ProcessorGroup* myworld)
   : UintahParallelComponent(myworld)
 {
+  m_myworld = myworld;
 }
 
 SolverCommon::~SolverCommon()
