@@ -55,9 +55,9 @@
 
 
 namespace Uintah {
-#ifdef UINTAH_ENABLE_KOKKOS
-typedef Kokkos::View<double**, Kokkos::LayoutLeft, Kokkos::MemoryTraits<Kokkos::RandomAccess> > tempTableContainer;
-typedef Kokkos::View<const double**, Kokkos::LayoutLeft, Kokkos::MemoryTraits<Kokkos::RandomAccess> > tableContainer ;
+#ifdef UINTAH_ENABLE_KOKKOS  // HARD CODED TO RUN ON CPU ONLY (HOST SPACE)  and optimized for GPU (layoutLeft??)
+typedef Kokkos::View<double**,  Kokkos::LayoutLeft,Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess> > tempTableContainer;
+typedef Kokkos::View<const double**,   Kokkos::LayoutLeft,Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess>  > tableContainer ;
 #else
 typedef std::vector<std::vector<double> > tempTableContainer;
 typedef const std::vector<std::vector<double> > &tableContainer ;
