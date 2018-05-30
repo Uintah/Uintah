@@ -226,11 +226,11 @@ namespace Uintah {
               ,       Handle<HypreStencil7<GridVarType>>
               )
     {
-      tHypreAll_ = hypre_InitializeTiming("Total Hypre time");
-      hypre_BeginTiming(tHypreAll_);
+      m_tHypreAll = hypre_InitializeTiming("Total Hypre time");
+      hypre_BeginTiming(m_tHypreAll);
       
-      tMatVecSetup_ = hypre_InitializeTiming("Matrix + Vector setup");
-      tSolveOnly_   = hypre_InitializeTiming("Solve time");
+      m_tMatVecSetup = hypre_InitializeTiming("Matrix + Vector setup");
+      m_tSolveOnly   = hypre_InitializeTiming("Solve time");
 
       // timestep can come from the old_dw or parentOldDW
       timeStep_vartype timeStep(0);
@@ -305,7 +305,7 @@ namespace Uintah {
       for(int m = 0;m<matls->size();m++){
         int matl = matls->get(m);
 
-        hypre_BeginTiming(tMatVecSetup_);
+        hypre_BeginTiming(m_tMatVecSetup);
         //__________________________________
         // Setup grid
         HYPRE_StructGrid grid;
@@ -522,13 +522,13 @@ namespace Uintah {
         HYPRE_StructVector HX;    
         HX = createPopulateHypreVector(  timeStep, restart, do_setup, pg, grid, patches, matl, m_guess_label, guess_dw, hypre_solver_s->HX_p);
         
-        hypre_EndTiming( tMatVecSetup_ );
+        hypre_EndTiming( m_tMatVecSetup );
         
         //__________________________________
         Timers::Simple solve_timer;
         solve_timer.start();
 
-        hypre_BeginTiming(tSolveOnly_);
+        hypre_BeginTiming(m_tSolveOnly);
         
         int num_iterations;
         double final_res_norm;
@@ -796,7 +796,7 @@ namespace Uintah {
         }
         
         solve_timer.stop();
-        hypre_EndTiming ( tSolveOnly_ );
+        hypre_EndTiming ( m_tSolveOnly );
         
         //__________________________________
         // Push the solution into Uintah data structure
@@ -841,12 +841,12 @@ namespace Uintah {
           HYPRE_StructGridDestroy(grid);
         }
 
-        hypre_EndTiming (tHypreAll_);
+        hypre_EndTiming (m_tHypreAll);
         
         hypre_PrintTiming   ("Hypre Timings:", pg->getComm());
-        hypre_FinalizeTiming( tMatVecSetup_ );
-        hypre_FinalizeTiming( tSolveOnly_ );
-        hypre_FinalizeTiming( tHypreAll_ );
+        hypre_FinalizeTiming( m_tMatVecSetup );
+        hypre_FinalizeTiming( m_tSolveOnly );
+        hypre_FinalizeTiming( m_tHypreAll );
         hypre_ClearTiming();
 
         timer.stop();
@@ -1036,9 +1036,9 @@ namespace Uintah {
     // hypre timers - note that these variables do NOT store timings - rather, each corresponds to
     // a different timer index that is managed by Hypre. To enable the use and reporting of these
     // hypre timings, #define HYPRE_TIMING in HypreSolver.h
-    int tHypreAll_;    // Tracks overall time spent in Hypre = matrix/vector setup & assembly + solve time.
-    int tSolveOnly_;   // Tracks time taken by hypre to solve the system of equations
-    int tMatVecSetup_; // Tracks the time taken by uintah/hypre to allocate and set matrix and vector box vaules
+    int m_tHypreAll;    // Tracks overall time spent in Hypre = matrix/vector setup & assembly + solve time.
+    int m_tSolveOnly;   // Tracks time taken by hypre to solve the system of equations
+    int m_tMatVecSetup; // Tracks the time taken by uintah/hypre to allocate and set matrix and vector box vaules
     
   }; // class HypreStencil7
   
