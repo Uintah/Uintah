@@ -362,6 +362,8 @@ TaskGraph::createDetailedTasks(       bool    useInternalDeps
       }
     }
 
+    task->m_max_ghost_cells[levelID] = 0;      // default
+    
     // Again assuming all vars for a label get the same amount of ghost cells,
 
     // check requires
