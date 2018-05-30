@@ -29,7 +29,7 @@ else
   CXX ?= g++
 endif
 
-Here is how I configure Kokkos for OpenMP and 
+Here is how I configure Kokkos for OpenMP and Cuda 
 ~/src/kokkos/generate_makefile.bash --kokkos-path=/home/brad/src/kokkos --prefix=/home/brad/opt/kokkos-openmp-cuda-9.0-gcc-6.4 --with-openmp --with-cuda=/home/brad/opt/cuda-9.0 --arch=Maxwell52
 -----------------------------------------------------------------------------------------------------------------------------
 

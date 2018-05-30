@@ -55,9 +55,7 @@ class MTRand;
 
 namespace Uintah{
 
-#define COMBINE_ABSKG_SIGMAT4_CELLTYPE
-
-#ifdef COMBINE_ABSKG_SIGMAT4_CELLTYPE
+#ifdef USE_RMCRT_SLIM
       struct Combined_RMCRT_Required_Vars {
         float abskg;    //For now, let negative cellType indicate cellType status
         float sigmaT4;
@@ -113,7 +111,7 @@ namespace Uintah{
                     Task::WhichDW which_temp_dw,
                     const bool includeEC );
 
-#ifdef COMBINE_ABSKG_SIGMAT4_CELLTYPE
+#ifdef USE_RMCRT_SLIM
 
       //__________________________________
       //
@@ -279,7 +277,7 @@ namespace Uintah{
       static const VarLabel* d_divQLabel;
       static const VarLabel* d_boundFluxLabel;
       static const VarLabel* d_radiationVolqLabel;
-#ifdef COMBINE_ABSKG_SIGMAT4_CELLTYPE
+#ifdef USE_RMCRT_SLIM
       static const VarLabel* d_abskgSigmaT4CellTypeLabel;
 #endif
       

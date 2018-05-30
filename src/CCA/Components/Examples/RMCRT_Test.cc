@@ -49,7 +49,6 @@
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#define COMBINE_ABSKG_SIGMAT4_CELLTYPE
 
 using namespace std;
 
@@ -61,7 +60,6 @@ namespace {
 
 namespace Uintah
 {
-#define COMBINE_ABSKG_SIGMAT4_CELLTYPE
 //______________________________________________________________________
 //
 RMCRT_Test::RMCRT_Test ( const ProcessorGroup* myworld,
@@ -420,7 +418,7 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
         d_RMCRT->sched_setBoundaryConditions( level, sched, notUsed, backoutTemp );
       }
     }
-#ifdef COMBINE_ABSKG_SIGMAT4_CELLTYPE
+#ifdef USE_RMCRT_SLIM
     //Combine vars for every level
     for (int l = maxLevels - 1; l >= 0; l--) {
       const LevelP& level = grid->getLevel(l);

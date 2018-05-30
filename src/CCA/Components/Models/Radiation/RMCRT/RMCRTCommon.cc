@@ -46,8 +46,6 @@
 //
 using namespace Uintah;
 
-
-#define COMBINE_ABSKG_SIGMAT4_CELLTYPE
 // These are used externally (e.g. Radiamoter.cc), keep them visible
 // outside this unit
 Dout g_ray_dbg("Ray_dbg", "Radiation Models", "RMCRT Ray general debug stream", false);
@@ -83,7 +81,7 @@ const VarLabel* RMCRTCommon::d_radiationVolqLabel;
 const VarLabel* RMCRTCommon::d_compAbskgLabel;
 const VarLabel* RMCRTCommon::d_compTempLabel;
 const VarLabel* RMCRTCommon::d_cellTypeLabel;
-#ifdef COMBINE_ABSKG_SIGMAT4_CELLTYPE
+#ifdef USE_RMCRT_SLIM
 const VarLabel* RMCRTCommon::d_abskgSigmaT4CellTypeLabel;
 #endif
 
@@ -103,7 +101,7 @@ RMCRTCommon::RMCRTCommon( TypeDescription::Type FLT_DBL )
     proc0cout << "__________________________________ USING FLOAT VERSION OF RMCRT" << std::endl;
   }
 
-#ifdef COMBINE_ABSKG_SIGMAT4_CELLTYPE
+#ifdef USE_RMCRT_SLIM
   d_abskgSigmaT4CellTypeLabel = VarLabel::create( "abskgSigmaT4CellType", CCVariable<double>::getTypeDescription() );
 #endif
 
@@ -133,7 +131,7 @@ RMCRTCommon::~RMCRTCommon()
   if (RMCRTCommon::d_FLT_DBL == TypeDescription::float_type){
     VarLabel::destroy( d_abskgLabel );
   }
-#ifdef COMBINE_ABSKG_SIGMAT4_CELLTYPE
+#ifdef USE_RMCRT_SLIM
   VarLabel::destroy( d_abskgSigmaT4CellTypeLabel );
 #endif
 
@@ -322,7 +320,7 @@ RMCRTCommon::sigmaT4( const ProcessorGroup*,
   }
 }
 
-#ifdef COMBINE_ABSKG_SIGMAT4_CELLTYPE
+#ifdef USE_RMCRT_SLIM
 void
 RMCRTCommon::sched_combineAbskgSigmaT4CellType( const LevelP& level,
                            SchedulerP& sched,

@@ -26,6 +26,12 @@
 #include <CCA/Components/Models/Radiation/RMCRT/RayKokkos.h>
 #include <CCA/Components/Schedulers/DetailedTask.h>
 
+//#define USE_RMCRT_SLIM
+
+#ifdef USE_RMCRT_SLIM
+#include <CCA/Components/Models/Radiation/RMCRT/slim.h>
+#endif
+
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/AMR.h>
@@ -43,6 +49,7 @@
 #include <sci_defs/visit_defs.h>
 
 #include <Kokkos_Random.hpp>
+#include <Kokkos_Core.hpp>
 
 #include <fstream>
 #include <iostream>
@@ -53,7 +60,7 @@
 // To enable comparisons with Ray:CPU, define FIXED_RANDOM_NUM both here and in src/Core/Math/MersenneTwister.h
 // To enable comparisons with Ray:GPU, define FIXED_RANDOM_NUM both here and in src/CCA/Components/Models/Radiation/RMCRT/RayGPUKernel.cu
 
-#define DEBUG -9          // 1: divQ, 2: boundFlux, 3: scattering
+//#define DEBUG 1          // 1: divQ, 2: boundFlux, 3: scattering
 //#define ML_DEBUG
 //#define FIXED_RANDOM_NUM  // Enable comparisons between implementations
 #define FIXED_RAY_DIR -9  // Sets ray direction.  1: (0.7071,0.7071, 0), 2: (0.7071, 0, 0.7071), 3: (0, 0.7071, 0.7071)
@@ -62,7 +69,6 @@
 #define FUZZ 1e-12        // Numerical fuzz
 #define CUDA_PRINTF       // increase the printf buffer
 
-#define COMBINE_ABSKG_SIGMAT4_CELLTYPE
 /*______________________________________________________________________
   TO DO:
   - Add GPU-specific setup for Kokkos::CUDA
@@ -82,6 +88,7 @@ ______________________________________________________________________*/
 
 //______________________________________________________________________
 //
+KOKKOS_FUNCTION
 bool isDbgCell( const int i, const int j, const int k )
 {
   int dbgCell[2][3] = { {0,0,1}, {5,5,5} };
@@ -307,6 +314,18 @@ Ray::problemSetup( const ProblemSpecP     & prob_spec
       } else if ( type == "patch_based" ){
         d_ROI_algo = patch_based;
       }
+    //__________________________________
+    //  Data Onion Slim (
+    } else if (type == "dataOnionSlim" ) {
+
+      isMultilevel = true;
+      algorithm    = dataOnion;
+
+      alg_ps->getWithDefault( "haloCells",   d_haloCells,  IntVector(10,10,10) );
+      alg_ps->get( "haloLength",         d_haloLength );
+      alg_ps->get( "coarsenExtraCells" , d_coarsenExtraCells );
+
+      // Note: The ROI of Slim is hard coded to be cell based.
 
     //__________________________________
     //  rmcrt only on the coarse level
@@ -595,546 +614,10 @@ struct rayTrace_solveDivQFunctor {
 #endif
   }
 
-  // This operator() replaces the cellIterator loop used to solve DivQ
-  KOKKOS_INLINE_FUNCTION
-  void operator() ( const int n, value_type & m_nRaySteps ) const {
-
-#ifndef FIXED_RANDOM_NUM
-    // Each thread needs a unique state
-    rnd_type rand_gen = m_rand_pool.get_state();
-#endif
-    // Generate an i,j,k.  Each thread is assigned a cell, but we want to act as though we're
-    // assignng threads in a 1D fashion.  However, grid vars are build in a 3D way.
-
-    int i, j, k;
-    unsigned int threadID = n + m_RT_flags.startCell;
-    i = (threadID % m_RT_flags.finePatchSize.x) + m_RT_flags.finePatchLow.x;
-    j = ((threadID % (m_RT_flags.finePatchSize.x * m_RT_flags.finePatchSize.y)) / (m_RT_flags.finePatchSize.x)) + m_RT_flags.finePatchLow.y;
-    k = (threadID / (m_RT_flags.finePatchSize.x * m_RT_flags.finePatchSize.y)) + m_RT_flags.finePatchLow.z;
-
-    while ( threadID < m_RT_flags.endCell ) {
-
-      //________________________________________________________________________________________//
-      //==== START for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) ====//
-
-      double sumI = 0;
-
-      double CC_pos[3];
-      int ijk[3] = {i,j,k};
-      m_levelParams.getCellPosition(ijk, CC_pos);
-      //double CC_pos[3] = { m_level->getAnchor().x() + ( m_Dx[0] * i ) + ( 0.5 * m_Dx[0] )
-      //                   , m_level->getAnchor().y() + ( m_Dx[1] * j ) + ( 0.5 * m_Dx[1] )
-      //                   , m_level->getAnchor().z() + ( m_Dx[2] * k ) + ( 0.5 * m_Dx[2] ) };
-
-      // Ray loop
-      for ( int iRay = 0; iRay < m_d_nDivQRays; iRay++ ) {
-
-        // Don't compute in intrusions and walls
-        if ( m_celltype(i,j,k) != -1 ) { // Hard-coded for d_flowCell
-          continue;
-        }
-
-        double direction_vector[3];
-
-        //_________________________________________________________//
-        //==== START findRayDirection(mTwister, origin, iRay ) ====//
-
-      // Random Points On Sphere
-#ifdef FIXED_RANDOM_NUM
-        double plusMinus_one = 2.0 * 0.3 - 1.0 + DBL_EPSILON;   // Add fuzz to avoid inf in 1/dirVector
-        double r = sqrt( 1.0 - plusMinus_one * plusMinus_one ); // Radius of circle at z
-        double theta = 2.0 * M_PI * 0.3;                        // Uniform betwen 0-2Pi
-#else
-        double plusMinus_one = 2.0 * Kokkos::rand<rnd_type, double>::draw(rand_gen) - 1.0 + DBL_EPSILON; // Add fuzz to avoid inf in 1/dirVector
-        double r = sqrt( 1.0 - plusMinus_one * plusMinus_one );                                          // Radius of circle at z
-        double theta = 2.0 * M_PI * Kokkos::rand<rnd_type, double>::draw(rand_gen);                      // Uniform betwen 0-2Pi
-#endif
-
-        direction_vector[0] = r * cos( theta ); // Convert to cartesian
-        direction_vector[1] = r * sin( theta );
-        direction_vector[2] = plusMinus_one;
-
-//`==========DEBUGGING==========//
-#if ( FIXED_RAY_DIR == 1)
-        direction_vector[0] = 0.707106781186548 * SIGN;
-        direction_vector[1] = 0.707106781186548 * SIGN;
-        direction_vector[2] = 0.0               * SIGN;
-#elif ( FIXED_RAY_DIR == 2 )
-        direction_vector[0] = 0.707106781186548 * SIGN;
-        direction_vector[1] = 0.0               * SIGN;
-        direction_vector[2] = 0.707106781186548 * SIGN;
-#elif ( FIXED_RAY_DIR == 3 )
-        direction_vector[0] = 0.0               * SIGN;
-        direction_vector[1] = 0.707106781186548 * SIGN;
-        direction_vector[2] = 0.707106781186548 * SIGN;
-#elif ( FIXED_RAY_DIR == 4 )
-        direction_vector[0] = 0.707106781186548 * SIGN;
-        direction_vector[1] = 0.707106781186548 * SIGN;
-        direction_vector[2] = 0.707106781186548 * SIGN;
-#elif ( FIXED_RAY_DIR == 5 )
-        direction_vector[0] = 1 * SIGN;
-        direction_vector[1] = 0 * SIGN;
-        direction_vector[2] = 0 * SIGN;
-#elif ( FIXED_RAY_DIR == 6 )
-        direction_vector[0] = 0 * SIGN;
-        direction_vector[1] = 1 * SIGN;
-        direction_vector[2] = 0 * SIGN;
-#elif ( FIXED_RAY_DIR == 7 )
-        direction_vector[0] = 0 * SIGN;
-        direction_vector[1] = 0 * SIGN;
-        direction_vector[2] = 1 * SIGN;
-#else
-#endif
-//===========DEBUGGING==========`//
-
-        //_______________________________________________________//
-        //==== END findRayDirection(mTwister, origin, iRay ) ====//
-
-        double rayOrigin[3];
-
-        //______________________________________________________________________//
-        //==== START ray_Origin( mTwister, CC_pos, Dx, d_CCRays, rayOrigin) ====//
-
-        if ( m_d_CCRays == false ) {
-
-#ifdef FIXED_RANDOM_NUM
-          double x = 0.3 * m_levelParams.Dx[0];
-          double y = 0.3 * m_levelParams.Dx[1];
-          double z = 0.3 * m_levelParams.Dx[2];
-#else
-          double x = Kokkos::rand<rnd_type, double>::draw(rand_gen) * m_levelParams.Dx[0];
-          double y = Kokkos::rand<rnd_type, double>::draw(rand_gen) * m_levelParams.Dx[1];
-          double z = Kokkos::rand<rnd_type, double>::draw(rand_gen) * m_levelParams.Dx[2];
-#endif
-
-          double offset[3] = { x, y, z };  // Note you HAVE to compute the components separately to ensure that the
-                                           //  random numbers called in the x,y,z order - Todd
-
-          if ( offset[0] > m_levelParams.Dx[0] ||
-               offset[1] > m_levelParams.Dx[1] ||
-               offset[2] > m_levelParams.Dx[2] ) {
-            printf("  Warning:ray_Origin  The Kokkos random number generator has returned garbage (%g, %g, %g).  Now forcing the ray origin to be located at the cell-center\n", offset[0], offset[1], offset[2]);
-            offset[0] = 0.5 * m_levelParams.Dx[0];
-            offset[1] = 0.5 * m_levelParams.Dx[1];
-            offset[2] = 0.5 * m_levelParams.Dx[2];
-          }
-
-          rayOrigin[0] =  CC_pos[0] - 0.5 * m_levelParams.Dx[0] + offset[0];
-          rayOrigin[1] =  CC_pos[1] - 0.5 * m_levelParams.Dx[1] + offset[1];
-          rayOrigin[2] =  CC_pos[2] - 0.5 * m_levelParams.Dx[2] + offset[2];
-        }
-        else {
-          rayOrigin[0] = CC_pos[0];
-          rayOrigin[1] = CC_pos[1];
-          rayOrigin[2] = CC_pos[2];
-        }
-
-        //____________________________________________________________________//
-        //==== END ray_Origin( mTwister, CC_pos, Dx, d_CCRays, rayOrigin) ====//
-
-        //_______________________________________________________________________________________________________________________________________//
-        //==== START updateSumI< T >( level, direction_vector, rayOrigin, origin, Dx,  sigmaT4OverPi, abskg, celltype, size, sumI, mTwister) ====//
-
-        int cur[3]      = { i, j, k };
-        int prevCell[3] = { cur[0], cur[1], cur[2] };
-
-        // Step and sign for ray marching
-        int    step[3];  // Gives +1 or -1 based on sign
-        double sign[3];
-
-        double inv_ray_direction[3] = { 1.0 / direction_vector[0]
-                                      , 1.0 / direction_vector[1]
-                                      , 1.0 / direction_vector[2] };
-
-//`==========TESTING==========//
-#if DEBUG == 1
-        if ( isDbgCell(i,j,k) ) {
-          printf( "        updateSumI: [%d,%d,%d] ray_dir [%g,%g,%g] ray_loc [%g,%g,%g]\n",
-                  i, j, k, direction_vector[0], direction_vector[1], direction_vector[2], rayOrigin[0], rayOrigin[1], rayOrigin[2] );
-        }
-#endif
-//===========TESTING==========`//
-
-        //______________________________________________________//
-        //==== START raySignStep(sign, step, ray_direction) ====//
-
-        // Get new step and sign
-        for ( int d = 0; d < 3; d++ ) {
-          double me = copysign( (double)1.0, direction_vector[d] ); // +- 1
-          sign[d]   = fmax( 0.0, me ); // 0, 1
-          step[d]   = int( me );
-        }
-
-        //____________________________________________________//
-        //==== END raySignStep(sign, step, ray_direction) ====//
-
-        double CC_pos[3];
-        int ijk[3] = {i,j,k};
-        m_levelParams.getCellPosition(ijk, CC_pos);
-        //double CC_pos[3] = { m_level->getAnchor().x() + ( m_Dx[0] * i ) + ( 0.5 * m_Dx[0] )
-        //                   , m_level->getAnchor().y() + ( m_Dx[1] * j ) + ( 0.5 * m_Dx[1] )
-        //                   , m_level->getAnchor().z() + ( m_Dx[2] * k ) + ( 0.5 * m_Dx[2] ) };
-
-        // rayDx is the distance from bottom, left, back, corner of cell to ray
-        double rayDx[3];
-        rayDx[0] = rayOrigin[0] - ( CC_pos[0] - 0.5 * m_levelParams.Dx[0] );
-        rayDx[1] = rayOrigin[1] - ( CC_pos[1] - 0.5 * m_levelParams.Dx[1] );
-        rayDx[2] = rayOrigin[2] - ( CC_pos[2] - 0.5 * m_levelParams.Dx[2] );
-
-        // tMax is the physical distance from the ray origin to each of the respective planes of intersection
-        double tMax[3];
-        tMax[0] = ( sign[0] * m_levelParams.Dx[0] - rayDx[0] ) * inv_ray_direction[0];
-        tMax[1] = ( sign[1] * m_levelParams.Dx[1] - rayDx[1] ) * inv_ray_direction[1];
-        tMax[2] = ( sign[2] * m_levelParams.Dx[2] - rayDx[2] ) * inv_ray_direction[2];
-
-        // Length of t to traverse one cell
-        double tDelta[3];
-        tDelta[0] = fabs( inv_ray_direction[0] ) * m_levelParams.Dx[0];
-        tDelta[1] = fabs( inv_ray_direction[1] ) * m_levelParams.Dx[1];
-        tDelta[2] = fabs( inv_ray_direction[2] ) * m_levelParams.Dx[2];
-
-        // Initializes the following values for each ray
-        bool   in_domain            = true;
-        double tMax_prev            = 0;
-        double intensity            = 1.0;
-        double fs                   = 1.0;
-        int    nReflect             = 0;      // Number of reflections
-        double optical_thickness    = 0;
-        double expOpticalThick_prev = 1.0;
-        double rayLength_scatter    = 0.0;    // Ray length for each scattering event
-        double rayLength            = 0.0;    // Total length of the ray
-        double ray_location[3]      = { rayOrigin[0], rayOrigin[1], rayOrigin[2] };
-
-#ifdef RAY_SCATTER
-        double scatCoeff = fmax( m_d_sigmaScat, 1e-99 ); // avoid division by zero  [m^-1]
-
-        // Determine the length at which scattering will occur
-        // See CCA/Components/Arches/RMCRT/PaulasAttic/MCRT/ArchesRMCRT/ray.cc
-#ifdef FIXED_RANDOM_NUM
-        double scatLength = -log( 0.3 ) / scatCoeff;
-#else
-        double scatLength = -log( Kokkos::rand<rnd_type, double>::draw(rand_gen) ) / scatCoeff;
-#endif //FIXED_RANDOM_NUM
-#endif //RAY_SCATTER
-
-        //______________________________________________________________________
-        //  Threshold  loop
-        while ( intensity > m_d_threshold && (rayLength < m_d_maxRayLength) ){
-
-          int dir = -9; // Hard-coded for NONE
-
-          while ( in_domain && (rayLength < m_d_maxRayLength) ){
-
-            prevCell[0] = cur[0];
-            prevCell[1] = cur[1];
-            prevCell[2] = cur[2];
-
-            double disMin = -9;          // Represents ray segment length.
-
-            T abskg_prev         = m_abskg(         prevCell[0], prevCell[1], prevCell[2] );  // Optimization
-            T sigmaT4OverPi_prev = m_sigmaT4OverPi( prevCell[0], prevCell[1], prevCell[2] );
-
-            //__________________________________
-            //  Determine which cell the ray will enter next
-            dir = -9; // Hard-coded for NONE
-            if ( tMax[0] < tMax[1] ) {        // X < Y
-              if ( tMax[0] < tMax[2] ) {      // X < Z
-                dir = 0; // Hard-coded for X
-              }
-              else {
-                dir = 2; // Hard-coded for Z
-              }
-            }
-            else {
-              if ( tMax[1] < tMax[2] ) {       // Y < Z
-                dir = 1; // Hard-coded for Y
-              }
-              else {
-                dir = 2; // Hard-coded for Z
-              }
-            }
-
-            //__________________________________
-            // Update marching variables
-            cur[dir]   = cur[dir] + step[dir];
-            disMin     = ( tMax[dir] - tMax_prev );
-            tMax_prev  = tMax[dir];
-            tMax[dir]  = tMax[dir] + tDelta[dir];
-
-            // Occassionally disMin ~ -1e-15ish
-            if( disMin > -FUZZ && disMin < FUZZ ) {
-              disMin += FUZZ;
-            }
-
-            rayLength += disMin;
-            rayLength_scatter += disMin;
-
-            ray_location[0] = ray_location[0] + ( disMin * direction_vector[0] );
-            ray_location[1] = ray_location[1] + ( disMin * direction_vector[1] );
-            ray_location[2] = ray_location[2] + ( disMin * direction_vector[2] );
-
-            in_domain = ( m_celltype( cur[0], cur[1], cur[2] ) == -1 ); // Hard-coded for d_flowCell
-
-            optical_thickness += abskg_prev * disMin;
-
-            m_nRaySteps++;
-
-//`==========TESTING==========//
-#if ( DEBUG >= 1 )
-            if ( isDbgCell(i,j,k) ) {
-              printf( "            cur [%d,%d,%d] prev [%d,%d,%d]", cur[0], cur[1], cur[2], prevCell[0], prevCell[1], prevCell[2] );
-              printf( " dir %d ", dir );
-              printf( "tMax [%g,%g,%g] ", tMax[0], tMax[1], tMax[2] );
-              printf( "rayLoc [%g,%g,%g] ", ray_location[0], ray_location[1], ray_location[2]);
-              printf( "distanceTraveled %g tMax[dir]: %g tMax_prev: %g, Dx[dir]: %g\n", disMin, tMax[dir], tMax_prev, m_levelParams.Dx[dir] );
-              printf( "            tDelta [%g,%g,%g] \n", tDelta[0], tDelta[1], tDelta[2] );
-
-   //         printf( "            abskg[prev] %g  \t sigmaT4OverPi[prev]: %g \n", m_abskg(prevCell[0],prevCell[1],prevCell[2]), m_sigmaT4OverPi(prevCell[0],prevCell[1],prevCell[2]) );
-   //         printf( "            abskg[cur]  %g  \t sigmaT4OverPi[cur]:  %g  \t  cellType: %i\n", m_abskg(cur[0],cur[1],cur[2]), m_sigmaT4OverPi(cur[0],cur[1],cur[2]), m_celltype(cur[0],cur[1],cur[2]) );
-              printf( "            optical_thickkness %g \t rayLength: %g\n", optical_thickness, rayLength );
-            }
-#endif
-//===========TESTING==========`//
-
-            // Eqn 3-15(see below reference) while
-            // Third term inside the parentheses is accounted for in Inet. Chi is accounted for in Inet calc.
-
-            double expOpticalThick = exp( -optical_thickness );
-
-            sumI += sigmaT4OverPi_prev * ( expOpticalThick_prev - expOpticalThick ) * fs;
-
-            expOpticalThick_prev = expOpticalThick;
-
-#ifdef RAY_SCATTER
-            if ( rayLength_scatter > scatLength && in_domain ) {
-
-              // Get new scatLength for each scattering event
-#ifdef FIXED_RANDOM_NUM
-              scatLength = -log( 0.3 ) / scatCoeff;
-#else
-              scatLength = -log( Kokkos::rand<rnd_type, double>::draw(rand_gen) ) / scatCoeff;
-#endif
-
-              //_________________________________________________//
-              //==== START findRayDirection( mTwister, cur ) ====//
-
-              // Random Points On Sphere
-#ifdef FIXED_RANDOM_NUM
-              double plusMinus_one = 2.0 * 0.3 - 1.0 + DBL_EPSILON;   // Add fuzz to avoid inf in 1/dirVector
-              double r = sqrt( 1.0 - plusMinus_one * plusMinus_one ); // Radius of circle at z
-              double theta = 2.0 * M_PI * 0.3;                        // Uniform betwen 0-2Pi
-#else
-              double plusMinus_one = 2.0 * Kokkos::rand<rnd_type, double>::draw(rand_gen) - 1.0 + DBL_EPSILON; // Add fuzz to avoid inf in 1/dirVector
-              double r = sqrt( 1.0 - plusMinus_one * plusMinus_one );                                          // Radius of circle at z
-              double theta = 2.0 * M_PI * Kokkos::rand<rnd_type, double>::draw(rand_gen);                      // Uniform betwen 0-2Pi
-#endif
-
-              direction_vector[0] = r * cos( theta ); // Convert to cartesian
-              direction_vector[1] = r * sin( theta );
-              direction_vector[2] = plusMinus_one;
-
-//`==========DEBUGGING==========//
-#if ( FIXED_RAY_DIR == 1)
-              direction_vector[0] = 0.707106781186548 * SIGN;
-              direction_vector[1] = 0.707106781186548 * SIGN;
-              direction_vector[2] = 0.0               * SIGN;
-#elif ( FIXED_RAY_DIR == 2 )
-              direction_vector[0] = 0.707106781186548 * SIGN;
-              direction_vector[1] = 0.0               * SIGN;
-              direction_vector[2] = 0.707106781186548 * SIGN;
-#elif ( FIXED_RAY_DIR == 3 )
-              direction_vector[0] = 0.0               * SIGN;
-              direction_vector[1] = 0.707106781186548 * SIGN;
-              direction_vector[2] = 0.707106781186548 * SIGN;
-#elif ( FIXED_RAY_DIR == 4 )
-              direction_vector[0] = 0.707106781186548 * SIGN;
-              direction_vector[1] = 0.707106781186548 * SIGN;
-              direction_vector[2] = 0.707106781186548 * SIGN;
-#elif ( FIXED_RAY_DIR == 5 )
-              direction_vector[0] = 1 * SIGN;
-              direction_vector[1] = 0 * SIGN;
-              direction_vector[2] = 0 * SIGN;
-#elif ( FIXED_RAY_DIR == 6 )
-              direction_vector[0] = 0 * SIGN;
-              direction_vector[1] = 1 * SIGN;
-              direction_vector[2] = 0 * SIGN;
-#elif ( FIXED_RAY_DIR == 7 )
-              direction_vector[0] = 0 * SIGN;
-              direction_vector[1] = 0 * SIGN;
-              direction_vector[2] = 1 * SIGN;
-#else
-#endif
-//===========DEBUGGING==========`//
-
-              //_______________________________________________//
-              //==== END findRayDirection( mTwister, cur ) ====//
-
-              inv_ray_direction[0] = 1.0 / direction_vector[0];
-              inv_ray_direction[1] = 1.0 / direction_vector[1];
-              inv_ray_direction[2] = 1.0 / direction_vector[2];
-
-              // Get new step and sign
-              int stepOld = step[dir];
-
-              //______________________________________________________//
-              //==== START raySignStep(sign, step, ray_direction) ====//
-
-              // Get new step and sign
-              for ( int d = 0; d < 3; d++ ) {
-                double me = copysign( (double)1.0, direction_vector[d] ); // +- 1
-                sign[d]   = fmax( 0.0, me ); // 0, 1
-                step[d]   = int( me );
-              }
-
-              //____________________________________________________//
-              //==== END raySignStep(sign, step, ray_direction) ====//
-
-              // If sign[dir] changes sign, put ray back into prevCell (back scattering)
-              // a sign change only occurs when the product of old and new is negative
-              if ( step[dir] * stepOld < 0 ) {
-                cur[0] = prevCell[0];
-                cur[1] = prevCell[1];
-                cur[2] = prevCell[2];
-              }
-              double CC_pos[3];
-              m_levelParams.getCellPosition(cur, CC_pos);
-
-              //double CC_pos[3] = { m_level->getAnchor().x() + ( m_Dx[0] * cur[0] ) + ( 0.5 * m_Dx[0] )
-              //                   , m_level->getAnchor().y() + ( m_Dx[1] * cur[1] ) + ( 0.5 * m_Dx[1] )
-              //                   , m_level->getAnchor().z() + ( m_Dx[2] * cur[2] ) + ( 0.5 * m_Dx[2] ) };
-
-              rayDx[0] = ray_location[0] - ( CC_pos[0] - 0.5 * m_levelParams.Dx[0] );
-              rayDx[1] = ray_location[1] - ( CC_pos[1] - 0.5 * m_levelParams.Dx[1] );
-              rayDx[2] = ray_location[2] - ( CC_pos[2] - 0.5 * m_levelParams.Dx[2] );
-
-              tMax[0] = ( sign[0] * m_levelParams.Dx[0] - rayDx[0]) * inv_ray_direction[0];
-              tMax[1] = ( sign[1] * m_levelParams.Dx[1] - rayDx[1]) * inv_ray_direction[1];
-              tMax[2] = ( sign[2] * m_levelParams.Dx[2] - rayDx[2]) * inv_ray_direction[2];
-
-              // Length of t to traverse one cell
-              tDelta[0] = fabs( inv_ray_direction[0] ) * m_levelParams.Dx[0];
-              tDelta[1] = fabs( inv_ray_direction[1] ) * m_levelParams.Dx[1];
-              tDelta[2] = fabs( inv_ray_direction[2] ) * m_levelParams.Dx[2];
-
-//`==========TESTING==========//
-#if (DEBUG == 3)
-              if ( isDbgCell(i,j,k) ) {
-                double mytDelta[3] = { tDelta[0] / m_levelParams.Dx[0],
-                                       tDelta[1] / m_levelParams.Dx[1],
-                                       tDelta[2] / m_levelParams.Dx[2]  };
-                double myrayLoc[3] = { ray_location[0] / m_levelParams.Dx[0],
-                                       ray_location[1] / m_levelParams.Dx[1],
-                                       ray_location[2] / m_levelParams.Dx[2]  };
-                printf( "            Scatter: [%i, %i, %i], rayLength: %g, tmax: %g, %g, %g  tDelta: %g, %g, %g  ray_dir: %g, %g, %g\n",
-                        cur[0], cur[1], cur[2], rayLength, tMax[0] / m_levelParams.Dx[0], tMax[1] / m_levelParams.Dx[1], tMax[2] / m_levelParams.Dx[2],
-                        mytDelta[0], mytDelta[1], mytDelta[2], ray_direction[0], ray_direction[1], ray_direction[2] );
-                printf( "                    dir: %i sign: [%g, %g, %g], step [%i, %i, %i] cur: [%i, %i, %i], prevCell: [%i, %i, %i]\n",
-                        dir, sign[0], sign[1], sign[2], step[0], step[1], step[2], cur[0], cur[1], cur[2], prevCell[0], prevCell[1], prevCell[2] );
-                printf( "                    ray_location: [%g, %g, %g]\n", myrayLoc[0], myrayLoc[1], myrayLoc[2] );
-    //          printf("                     rayDx         [%g, %g, %g]  CC_pos[%g, %g, %g]\n", rayDx[0], rayDx[1], rayDx[2], CC_pos[0], CC_pos[1], CC_pos[2]);
-              }
-#endif
-//===========TESTING==========`//
-              tMax_prev = 0;
-              rayLength_scatter = 0;  // allow for multiple scattering events per ray
-            }
-#endif
-
-            //if( rayLength < 0 || std::isnan(rayLength) || std::isinf(rayLength) ) {
-            //  std::ostringstream warn;
-            //  warn<< "ERROR:RMCRTCommon::updateSumI   The ray length is non-physical (" << rayLength << ")"
-            //      << " origin: " << origin << " cur: " << cur << "\n";
-            //  throw InternalError( warn.str(), __FILE__, __LINE__ );
-            //}
-          }  // end domain while loop.  ++++++++++++++
-
-          //______________________________________________________________________
-
-          T wallEmissivity = ( m_abskg( cur[0], cur[1], cur[2] ) > 1.0 ) ? 1.0: m_abskg( cur[0], cur[1], cur[2] );  // Ensure wall emissivity doesn't exceed one
-
-          intensity = exp( -optical_thickness );
-
-          sumI += wallEmissivity * m_sigmaT4OverPi( cur[0], cur[1], cur[2] ) * intensity;
-
-          // When a ray reaches the end of the domain, we force it to terminate.
-          intensity = ( !m_d_allowReflect ) ? 0 : ( intensity * fs );
-
-//`==========TESTING==========//
-#if DEBUG  >= 0
-          if ( isDbgCell(i,j,k) ) {
-             printf( "            cur [%d,%d,%d] intensity: %g expOptThick: %g, fs: %g allowReflect: %i\n",
-                     cur[0], cur[1], cur[2], intensity, exp(-optical_thickness), fs, m_d_allowReflect );
-          }
-#endif
-//===========TESTING==========`//
-
-          //__________________________________
-          //  Reflections
-          if ( intensity > m_d_threshold && m_d_allowReflect ) {
-
-            //____________________________________________________________________________________________________________//
-            //==== START reflect( fs, cur, prevCell, abskg[cur], in_domain, step[dir], sign[dir], ray_direction[dir]) ====//
-
-            fs *= ( 1 - m_abskg( cur[0], cur[1], cur[2] ) );
-
-            // Put cur back inside the domain
-            cur[0] = prevCell[0];
-            cur[1] = prevCell[1];
-            cur[2] = prevCell[2];
-            in_domain = true;
-
-            // Apply reflection condition
-            step[dir] *= -1;                // begin stepping in opposite direction
-            sign[dir] *= -1;
-            direction_vector[dir] *= -1;
-
-            ++nReflect;
-          }
-        }  // end threshold while loop
-
-        //______________________________________________________________________________________________________________________________//
-        //==== END updateSumI< T >( direction_vector, rayOrigin, origin, Dx,  sigmaT4OverPi, abskg, celltype, size, sumI, mTwister) ====//
-
-      }  // end ray loop
-
-      //__________________________________
-      //  Compute divQ
-      m_divQ( i, j, k ) = -4.0 * M_PI * m_abskg( i, j, k) * ( m_sigmaT4OverPi( i, j, k ) - ( sumI / m_d_nDivQRays ) );
-
-      // radiationVolq is the incident energy per cell (W/m^3) and is necessary when particle heat transfer models (i.e. Shaddix) are used
-      m_radiationVolq( i, j, k ) = 4.0 * M_PI * ( sumI / m_d_nDivQRays );
-
-//`==========TESTING==========//
-#if DEBUG == 1
-    if ( isDbgCell(i,j,k) ) {
-      printf( "\n      [%d, %d, %d]  sumI: %g  divQ: %g radiationVolq: %g  abskg: %g,    sigmaT4: %g \n",
-              i, j, k, sumI, m_divQ(i,j,k), m_radiationVolq(i,j,k), m_abskg(i,j,k), m_sigmaT4OverPi(i,j,k) );
-    }
-#endif
-/*===========TESTING==========`*/
-      threadID += (m_RT_flags.cellsPerGroup);
-      i = (threadID % m_RT_flags.finePatchSize.x) + m_RT_flags.finePatchLow.x;
-      j = ((threadID % (m_RT_flags.finePatchSize.x * m_RT_flags.finePatchSize.y)) / (m_RT_flags.finePatchSize.x)) + m_RT_flags.finePatchLow.y;
-      k = (threadID / (m_RT_flags.finePatchSize.x * m_RT_flags.finePatchSize.y)) + m_RT_flags.finePatchLow.z;
-    } // end while (threadID < m_RT_flags.endCell) {
-#ifndef FIXED_RANDOM_NUM
-    m_rand_pool.free_state(rand_gen);
-#endif
-
-  } // end operator()
 };  // end rayTrace_solveDivQFunctor
 
 
-#define USE_SLIM
 
-#ifdef USE_SLIM
-#include <CCA/Components/Models/Radiation/RMCRT/slim.h>
-template<typename T,const int dataSize>
-using DO_raytrace =SlimRayTrace_dataOnion_solveDivQFunctor< T, Kokkos::Random_XorShift1024_Pool<Kokkos::OpenMP>, dataSize > ;
-#else
-template<typename T, int dataSize>
-using DO_raytrace =rayTrace_dataOnion_solveDivQFunctor< T, Kokkos::Random_XorShift1024_Pool<Kokkos::OpenMP>, dataSize > ;
-#endif
 
 //---------------------------------------------------------------------------
 // Method: The actual work of the ray tracer
@@ -1473,7 +956,7 @@ Ray::sched_rayTrace_dataOnion( const LevelP        & level
 
 
       int maxElem = Max( d_haloCells.x(), d_haloCells.y(), d_haloCells.z() );
-#ifdef COMBINE_ABSKG_SIGMAT4_CELLTYPE
+#ifdef USE_RMCRT_SLIM
       printf("Needing it\n");
       task->requires( Task::NewDW,     d_abskgSigmaT4CellTypeLabel,     gac, maxElem );
 #else
@@ -1482,8 +965,7 @@ Ray::sched_rayTrace_dataOnion( const LevelP        & level
       task->requires( celltype_dw , d_cellTypeLabel , gac, maxElem );
 #endif
     } else {                                        // we don't know the number of ghostCells so get everything
-#ifdef COMBINE_ABSKG_SIGMAT4_CELLTYPE
-      printf("Needing it all\n");
+#ifdef USE_RMCRT_SLIM
       task->requires( Task::NewDW,     d_abskgSigmaT4CellTypeLabel,     gac, SHRT_MAX );
 #else
       task->requires( abskg_dw,      d_abskgLabel,     gac, SHRT_MAX );
@@ -1533,7 +1015,7 @@ Ray::sched_rayTrace_dataOnion( const LevelP        & level
       Task::WhichDW abskg_dw_CL = get_abskg_whichDW( l, d_abskgLabel );
 
       if(l==0 || d_ROI_algo != patch_based){
-#ifdef COMBINE_ABSKG_SIGMAT4_CELLTYPE
+#ifdef USE_RMCRT_SLIM
         task->requires( Task::NewDW, d_abskgSigmaT4CellTypeLabel,    nullptr, Task::CoarseLevel, offset, nullptr, ND, gac, SHRT_MAX );
 #else
         task->requires( abskg_dw_CL, d_abskgLabel,    nullptr, Task::CoarseLevel, offset, nullptr, ND, gac, SHRT_MAX );
@@ -1545,7 +1027,7 @@ Ray::sched_rayTrace_dataOnion( const LevelP        & level
                   << endl;
       }else{
         proc0cout << " RMCRT requesting " << nGhost[l]  << " ghost cells on level: " << l << "\n";
-#ifdef COMBINE_ABSKG_SIGMAT4_CELLTYPE
+#ifdef USE_RMCRT_SLIM
         task->requires( Task::NewDW, d_abskgSigmaT4CellTypeLabel,    nullptr, Task::CoarseLevel, offset, nullptr, ND, gac, nGhost[l]);
 #else
         task->requires( abskg_dw_CL, d_abskgLabel,    nullptr, Task::CoarseLevel, offset, nullptr, ND, gac, nGhost[l]);
@@ -1599,27 +1081,26 @@ Ray::sched_rayTrace_dataOnion( const LevelP        & level
 
 //______________________________________________________________________
 //
-template <typename T, typename RandomGenerator, int m_maxLevels>
+template <typename T, typename MemorySpace, typename RandomGenerator, int m_maxLevels>
 struct rayTrace_dataOnion_solveDivQFunctor {
 
   typedef unsigned long int value_type;
   typedef typename RandomGenerator::generator_type rnd_type;
 
   LevelParamsML                       m_levelParamsML[m_maxLevels];
-  RMCRT_flags                         m_RT_flags;
   double                              m_domain_BB_Lo[3];
   double                              m_domain_BB_Hi[3];
   int                                 m_fineLevel_ROI_Lo[3];
   int                                 m_fineLevel_ROI_Hi[3];
   //int                                 m_regionLo[m_maxLevels][3];
   //int                                 m_regionHi[m_maxLevels][3];
-  KokkosView3<const T>                m_sigmaT4OverPi[m_maxLevels];
-  KokkosView3<const T>                m_abskg[m_maxLevels];
-  KokkosView3<const int>              m_cellType[m_maxLevels];
-  KokkosView3<double>                 m_divQ_fine;
+  KokkosView3<const T, MemorySpace>   m_sigmaT4OverPi[m_maxLevels];
+  KokkosView3<const T, MemorySpace>   m_abskg[m_maxLevels];
+  KokkosView3<const int, MemorySpace> m_cellType[m_maxLevels];
+  KokkosView3<double, MemorySpace>    m_divQ_fine;
   //KokkosView3<const T>                m_abskg_fine;
   //KokkosView3<const T>                m_sigmaT4OverPi_fine;
-  KokkosView3<double>                 m_radiationVolq_fine;
+  KokkosView3<double, MemorySpace>    m_radiationVolq_fine;
   double                              m_d_threshold;
   bool                                m_d_allowReflect;
   int                                 m_d_nDivQRays;
@@ -1627,27 +1108,25 @@ struct rayTrace_dataOnion_solveDivQFunctor {
   RandomGenerator                     m_rand_pool;
 
   rayTrace_dataOnion_solveDivQFunctor( LevelParamsML                       levelParamsML[m_maxLevels]
-                                     , RMCRT_flags                       & RT_flags
                                      , double                              domain_BB_Lo[3]
                                      , double                              domain_BB_Hi[3]
                                      , int                                 fineLevel_ROI_Lo[3]
                                      , int                                 fineLevel_ROI_Hi[3]
-                                     //, int                                 regionLo[m_maxLevels][3]
-                                     //, int                                 regionHi[m_maxLevels][3]
-                                     , KokkosView3<const T>                sigmaT4OverPi[m_maxLevels]
-                                     , KokkosView3<const T>                abskg[m_maxLevels]
-                                     , KokkosView3<const int>              cellType[m_maxLevels]
-                                     , KokkosView3<double>               & divQ_fine
+                                     //, int                               regionLo[m_maxLevels][3]
+                                     //, int                               regionHi[m_maxLevels][3]
+                                     , KokkosView3<const T, MemorySpace>   sigmaT4OverPi[m_maxLevels]
+                                     , KokkosView3<const T, MemorySpace>   abskg[m_maxLevels]
+                                     , KokkosView3<const int, MemorySpace> cellType[m_maxLevels]
+                                     , KokkosView3<double, MemorySpace>    & divQ_fine
                                      //, KokkosView3<const T>              & abskg_fine
                                      //, KokkosView3<const T>              & sigmaT4OverPi_fine
-                                     , KokkosView3<double>               & radiationVolq_fine
-                                     , double                            & d_threshold
-                                     , bool                              & d_allowReflect
-                                     , int                               & d_nDivQRays
-                                     , bool                              & d_CCRays
+                                     , KokkosView3<double, MemorySpace>    & radiationVolq_fine
+                                     , double                              & d_threshold
+                                     , bool                                & d_allowReflect
+                                     , int                                 & d_nDivQRays
+                                     , bool                                & d_CCRays
                                      )
-    : m_RT_flags           ( RT_flags )
-    , m_divQ_fine          ( divQ_fine )
+    : m_divQ_fine          ( divQ_fine )
     , m_radiationVolq_fine ( radiationVolq_fine )
     , m_d_threshold        ( d_threshold )
     , m_d_allowReflect     ( d_allowReflect )
@@ -1701,381 +1180,369 @@ struct rayTrace_dataOnion_solveDivQFunctor {
 
   // This operator() replaces the cellIterator loop used to solve DivQ
   KOKKOS_INLINE_FUNCTION
-  void operator() ( int n, unsigned long int & m_nRaySteps ) const {
+  void operator() ( const int i, const int j, const int k, value_type & m_nRaySteps ) const {
 
 #ifndef FIXED_RANDOM_NUM
     // Each thread needs a unique state
     rnd_type rand_gen = m_rand_pool.get_state();
 #endif
-
-    //____________________________________________________________________________________________//
-    //==== START for (CellIterator iter = finePatch->getCellIterator(); !iter.done(); iter++) ====//
-
     int L = m_maxLevels - 1;
 
-    int i, j, k;
-    unsigned int threadID = n + m_RT_flags.startCell;
-    i = (threadID % m_RT_flags.finePatchSize.x) + m_RT_flags.finePatchLow.x;
-    j = ((threadID % (m_RT_flags.finePatchSize.x * m_RT_flags.finePatchSize.y)) / (m_RT_flags.finePatchSize.x)) + m_RT_flags.finePatchLow.y;
-    k = (threadID / (m_RT_flags.finePatchSize.x * m_RT_flags.finePatchSize.y)) + m_RT_flags.finePatchLow.z;
+    double sumI = 0;
 
-    while ( threadID < m_RT_flags.endCell ) {
+    double CC_pos[3];
+    int ijk[3] = {i,j,k};
+    m_levelParamsML[L].getCellPosition(ijk, CC_pos);
+    //double CC_pos[3]= { m_fineLevel->getAnchor().x() + ( m_Dx[L][0] * i ) + ( 0.5 * m_Dx[L][0] )
+    //                   , m_fineLevel->getAnchor().y() + ( m_Dx[L][1] * j ) + ( 0.5 * m_Dx[L][1] )
+    //                   , m_fineLevel->getAnchor().z() + ( m_Dx[L][2] * k ) + ( 0.5 * m_Dx[L][2] ) };
 
-      double sumI = 0;
+    //__________________________________
+    //  Ray loop
+    for ( int iRay = 0; iRay < m_d_nDivQRays; iRay++ ) {
 
-      double CC_pos[3];
-      int ijk[3] = {i,j,k};
-      m_levelParamsML[L].getCellPosition(ijk, CC_pos);
-      //double CC_pos[3]= { m_fineLevel->getAnchor().x() + ( m_Dx[L][0] * i ) + ( 0.5 * m_Dx[L][0] )
-      //                   , m_fineLevel->getAnchor().y() + ( m_Dx[L][1] * j ) + ( 0.5 * m_Dx[L][1] )
-      //                   , m_fineLevel->getAnchor().z() + ( m_Dx[L][2] * k ) + ( 0.5 * m_Dx[L][2] ) };
+      int my_L = m_maxLevels - 1;
 
-      //__________________________________
-      //  Ray loop
-      for ( int iRay = 0; iRay < m_d_nDivQRays; iRay++ ) {
+      // Don't compute in intrusions and walls
+      if ( m_cellType[my_L]( i, j, k ) != -1 ) { // Hard-coded for d_flowCell
+        continue;
+      }
 
-        int my_L = m_maxLevels - 1;
+      double direction_vector[3];
 
-        // Don't compute in intrusions and walls
-        if ( m_cellType[my_L]( i, j, k ) != -1 ) { // Hard-coded for d_flowCell
-          continue;
-        }
+      //________________________________________________________//
+      //==== START findRayDirection(mTwister, origin, iRay) ====//
 
-        double direction_vector[3];
-
-        //________________________________________________________//
-        //==== START findRayDirection(mTwister, origin, iRay) ====//
-
-        // Random Points On Sphere
+      // Random Points On Sphere
 #ifdef FIXED_RANDOM_NUM
-        double plusMinus_one = 2.0 * 0.3 - 1.0 + DBL_EPSILON;   // Add fuzz to avoid inf in 1/dirVector
-        double r = sqrt( 1.0 - plusMinus_one * plusMinus_one ); // Radius of circle at z
-        double theta = 2.0 * M_PI * 0.3;                        // Uniform betwen 0-2Pi
+      double plusMinus_one = 2.0 * 0.3 - 1.0 + DBL_EPSILON;   // Add fuzz to avoid inf in 1/dirVector
+      double r = sqrt( 1.0 - plusMinus_one * plusMinus_one ); // Radius of circle at z
+      double theta = 2.0 * M_PI * 0.3;                        // Uniform betwen 0-2Pi
 #else
-        double plusMinus_one = 2.0 * Kokkos::rand<rnd_type, double>::draw(rand_gen) - 1.0 + DBL_EPSILON; // Add fuzz to avoid inf in 1/dirVector
-        double r = sqrt( 1.0 - plusMinus_one * plusMinus_one );                                          // Radius of circle at z
-        double theta = 2.0 * M_PI * Kokkos::rand<rnd_type, double>::draw(rand_gen);                      // Uniform betwen 0-2Pi
+      double plusMinus_one = 2.0 * Kokkos::rand<rnd_type, double>::draw(rand_gen) - 1.0 + DBL_EPSILON; // Add fuzz to avoid inf in 1/dirVector
+      double r = sqrt( 1.0 - plusMinus_one * plusMinus_one );                                          // Radius of circle at z
+      double theta = 2.0 * M_PI * Kokkos::rand<rnd_type, double>::draw(rand_gen);                      // Uniform betwen 0-2Pi
 #endif
 
-        direction_vector[0] = r * cos( theta ); // Convert to cartesian
-        direction_vector[1] = r * sin( theta );
-        direction_vector[2] = plusMinus_one;
+      direction_vector[0] = r * cos( theta ); // Convert to cartesian
+      direction_vector[1] = r * sin( theta );
+      direction_vector[2] = plusMinus_one;
 
 //`==========DEBUGGING==========//
 #if ( FIXED_RAY_DIR == 1)
-        direction_vector[0] = 0.707106781186548 * SIGN;
-        direction_vector[1] = 0.707106781186548 * SIGN;
-        direction_vector[2] = 0.0               * SIGN;
+      direction_vector[0] = 0.707106781186548 * SIGN;
+      direction_vector[1] = 0.707106781186548 * SIGN;
+      direction_vector[2] = 0.0               * SIGN;
 #elif ( FIXED_RAY_DIR == 2 )
-        direction_vector[0] = 0.707106781186548 * SIGN;
-        direction_vector[1] = 0.0               * SIGN;
-        direction_vector[2] = 0.707106781186548 * SIGN;
+      direction_vector[0] = 0.707106781186548 * SIGN;
+      direction_vector[1] = 0.0               * SIGN;
+      direction_vector[2] = 0.707106781186548 * SIGN;
 #elif ( FIXED_RAY_DIR == 3 )
-        direction_vector[0] = 0.0               * SIGN;
-        direction_vector[1] = 0.707106781186548 * SIGN;
-        direction_vector[2] = 0.707106781186548 * SIGN;
+      direction_vector[0] = 0.0               * SIGN;
+      direction_vector[1] = 0.707106781186548 * SIGN;
+      direction_vector[2] = 0.707106781186548 * SIGN;
 #elif ( FIXED_RAY_DIR == 4 )
-        direction_vector[0] = 0.707106781186548 * SIGN;
-        direction_vector[1] = 0.707106781186548 * SIGN;
-        direction_vector[2] = 0.707106781186548 * SIGN;
+      direction_vector[0] = 0.707106781186548 * SIGN;
+      direction_vector[1] = 0.707106781186548 * SIGN;
+      direction_vector[2] = 0.707106781186548 * SIGN;
 #elif ( FIXED_RAY_DIR == 5 )
-        direction_vector[0] = 1 * SIGN;
-        direction_vector[1] = 0 * SIGN;
-        direction_vector[2] = 0 * SIGN;
+      direction_vector[0] = 1 * SIGN;
+      direction_vector[1] = 0 * SIGN;
+      direction_vector[2] = 0 * SIGN;
 #elif ( FIXED_RAY_DIR == 6 )
-        direction_vector[0] = 0 * SIGN;
-        direction_vector[1] = 1 * SIGN;
-        direction_vector[2] = 0 * SIGN;
+      direction_vector[0] = 0 * SIGN;
+      direction_vector[1] = 1 * SIGN;
+      direction_vector[2] = 0 * SIGN;
 #elif ( FIXED_RAY_DIR == 7 )
-        direction_vector[0] = 0 * SIGN;
-        direction_vector[1] = 0 * SIGN;
-        direction_vector[2] = 1 * SIGN;
+      direction_vector[0] = 0 * SIGN;
+      direction_vector[1] = 0 * SIGN;
+      direction_vector[2] = 1 * SIGN;
 #else
 #endif
 //===========DEBUGGING==========`//
 
-        //______________________________________________________//
-        //==== END findRayDirection(mTwister, origin, iRay) ====//
+      //______________________________________________________//
+      //==== END findRayDirection(mTwister, origin, iRay) ====//
 
-        double rayOrigin[3];
+      double rayOrigin[3];
 
-        //___________________________________________________________________________//
-        //==== START ray_Origin(mTwister, CC_pos, Dx[my_L], d_CCRays, rayOrigin) ====//
+      //___________________________________________________________________________//
+      //==== START ray_Origin(mTwister, CC_pos, Dx[my_L], d_CCRays, rayOrigin) ====//
 
-        if ( m_d_CCRays == false ) {
+      if ( m_d_CCRays == false ) {
 
 #ifdef FIXED_RANDOM_NUM
-          double x = 0.3 * m_levelParamsML[my_L].Dx[0];
-          double y = 0.3 * m_levelParamsML[my_L].Dx[1];
-          double z = 0.3 * m_levelParamsML[my_L].Dx[2];
+        double x = 0.3 * m_levelParamsML[my_L].Dx[0];
+        double y = 0.3 * m_levelParamsML[my_L].Dx[1];
+        double z = 0.3 * m_levelParamsML[my_L].Dx[2];
 #else
-          double x = Kokkos::rand<rnd_type, double>::draw(rand_gen) * m_levelParamsML[my_L].Dx[0];
-          double y = Kokkos::rand<rnd_type, double>::draw(rand_gen) * m_levelParamsML[my_L].Dx[1];
-          double z = Kokkos::rand<rnd_type, double>::draw(rand_gen) * m_levelParamsML[my_L].Dx[2];
+        double x = Kokkos::rand<rnd_type, double>::draw(rand_gen) * m_levelParamsML[my_L].Dx[0];
+        double y = Kokkos::rand<rnd_type, double>::draw(rand_gen) * m_levelParamsML[my_L].Dx[1];
+        double z = Kokkos::rand<rnd_type, double>::draw(rand_gen) * m_levelParamsML[my_L].Dx[2];
 #endif
 
-          double offset[3] = { x, y, z };  // Note you HAVE to compute the components separately to ensure that the
-                                           //  random numbers called in the x,y,z order - Todd
+        double offset[3] = { x, y, z };  // Note you HAVE to compute the components separately to ensure that the
+                                         //  random numbers called in the x,y,z order - Todd
 
-          if ( offset[0] > m_levelParamsML[my_L].Dx[0] ||
-               offset[1] > m_levelParamsML[my_L].Dx[1] ||
-               offset[2] > m_levelParamsML[my_L].Dx[2] ) {
-            printf(" Warning:ray_Origin  The Kokkos random number generator has returned garbage (%g, %g, %g) Now forcing the ray origin to be located at the cell-center\n",
-                offset[0], offset[1], offset[2]);
-            offset[0] = 0.5 * m_levelParamsML[my_L].Dx[0];
-            offset[1] = 0.5 * m_levelParamsML[my_L].Dx[1];
-            offset[2] = 0.5 * m_levelParamsML[my_L].Dx[2];
-          }
-
-          rayOrigin[0] =  CC_pos[0] - 0.5 * m_levelParamsML[my_L].Dx[0] + offset[0];
-          rayOrigin[1] =  CC_pos[1] - 0.5 * m_levelParamsML[my_L].Dx[1] + offset[1];
-          rayOrigin[2] =  CC_pos[2] - 0.5 * m_levelParamsML[my_L].Dx[2] + offset[2];
-        }
-        else {
-          rayOrigin[0] = CC_pos[0];
-          rayOrigin[1] = CC_pos[1];
-          rayOrigin[2] = CC_pos[2];
+        if ( offset[0] > m_levelParamsML[my_L].Dx[0] ||
+             offset[1] > m_levelParamsML[my_L].Dx[1] ||
+             offset[2] > m_levelParamsML[my_L].Dx[2] ) {
+          printf(" Warning:ray_Origin  The Kokkos random number generator has returned garbage (%g, %g, %g) Now forcing the ray origin to be located at the cell-center\n",
+              offset[0], offset[1], offset[2]);
+          offset[0] = 0.5 * m_levelParamsML[my_L].Dx[0];
+          offset[1] = 0.5 * m_levelParamsML[my_L].Dx[1];
+          offset[2] = 0.5 * m_levelParamsML[my_L].Dx[2];
         }
 
-        //___________________________________________________________________//
-        //==== END ray_Origin(mTwister, CC_pos, Dx, d_CCRays, rayOrigin) ====//
+        rayOrigin[0] =  CC_pos[0] - 0.5 * m_levelParamsML[my_L].Dx[0] + offset[0];
+        rayOrigin[1] =  CC_pos[1] - 0.5 * m_levelParamsML[my_L].Dx[1] + offset[1];
+        rayOrigin[2] =  CC_pos[2] - 0.5 * m_levelParamsML[my_L].Dx[2] + offset[2];
+      }
+      else {
+        rayOrigin[0] = CC_pos[0];
+        rayOrigin[1] = CC_pos[1];
+        rayOrigin[2] = CC_pos[2];
+      }
 
-        //_______________________________________//
-        //==== START updateSumI_ML< T >(...) ====//
+      //___________________________________________________________________//
+      //==== END ray_Origin(mTwister, CC_pos, Dx, d_CCRays, rayOrigin) ====//
 
-        int L       = m_maxLevels - 1;  // finest level
-        int prevLev = L;
+      //_______________________________________//
+      //==== START updateSumI_ML< T >(...) ====//
 
-        int cur[3]      = { i, j, k };
-        int prevCell[3] = { cur[0], cur[1], cur[2] };
+      int L       = m_maxLevels - 1;  // finest level
+      int prevLev = L;
 
-        // Step and sign for ray marching
-        int    step[3];  // Gives +1 or -1 based on sign
-        double sign[3];
+      int cur[3]      = { i, j, k };
+      int prevCell[3] = { cur[0], cur[1], cur[2] };
 
-        double inv_direction[3] = { 1.0 / direction_vector[0]
-                                  , 1.0 / direction_vector[1]
-                                  , 1.0 / direction_vector[2] };
+      // Step and sign for ray marching
+      int    step[3];  // Gives +1 or -1 based on sign
+      double sign[3];
+
+      double inv_direction[3] = { 1.0 / direction_vector[0]
+                                , 1.0 / direction_vector[1]
+                                , 1.0 / direction_vector[2] };
 
 //`==========TESTING==========//
 #if DEBUG == 1
-        if ( isDbgCell(i,j,k) ) {
-          printf( "        updateSumI_ML: [%d,%d,%d] ray_dir [%g,%g,%g] ray_loc [%g,%g,%g]\n",
-                  i, j, k, direction_vector[0], direction_vector[1], direction_vector[2], rayOrigin[0], rayOrigin[1], rayOrigin[2] );
-        }
+      if ( isDbgCell(i,j,k) ) {
+        printf( "        updateSumI_ML: [%d,%d,%d] ray_dir [%g,%g,%g] ray_loc [%g,%g,%g]\n",
+                i, j, k, direction_vector[0], direction_vector[1], direction_vector[2], rayOrigin[0], rayOrigin[1], rayOrigin[2] );
+      }
 #endif
 //===========TESTING==========`//
 
-        //______________________________________________________//
-        //==== START raySignStep(sign, step, ray_direction) ====//
+      //______________________________________________________//
+      //==== START raySignStep(sign, step, ray_direction) ====//
 
-        // Get new step and sign
-        for ( int d = 0; d < 3; d++ ) {
-          double me = copysign( (double)1.0, direction_vector[d] ); // +- 1
-          sign[d]   = fmax( 0.0, me ); // 0, 1
-          step[d]   = int( me );
-        }
+      // Get new step and sign
+      for ( int d = 0; d < 3; d++ ) {
+        double me = copysign( (double)1.0, direction_vector[d] ); // +- 1
+        sign[d]   = fmax( 0.0, me ); // 0, 1
+        step[d]   = int( me );
+      }
 
-        //____________________________________________________//
-        //==== END raySignStep(sign, step, ray_direction) ====//
+      //____________________________________________________//
+      //==== END raySignStep(sign, step, ray_direction) ====//
 
-        //__________________________________
-        // Define tMax & tDelta on all levels
-        // Go from finest to coarsest level so you can compare
-        // with 1L rayTrace results.
-        double CC_posOrigin[3];
-        m_levelParamsML[L].getCellPosition(ijk, CC_posOrigin);
-        //double CC_posOrigin[3] = { m_fineLevel->getAnchor().x() + ( m_Dx[L][0] * i ) + ( 0.5 * m_Dx[L][0] )
-        //                         , m_fineLevel->getAnchor().y() + ( m_Dx[L][1] * j ) + ( 0.5 * m_Dx[L][1] )
-        //                         , m_fineLevel->getAnchor().z() + ( m_Dx[L][2] * k ) + ( 0.5 * m_Dx[L][2] ) };
+      //__________________________________
+      // Define tMax & tDelta on all levels
+      // Go from finest to coarsest level so you can compare
+      // with 1L rayTrace results.
+      double CC_posOrigin[3];
+      m_levelParamsML[L].getCellPosition(ijk, CC_posOrigin);
+      //double CC_posOrigin[3] = { m_fineLevel->getAnchor().x() + ( m_Dx[L][0] * i ) + ( 0.5 * m_Dx[L][0] )
+      //                         , m_fineLevel->getAnchor().y() + ( m_Dx[L][1] * j ) + ( 0.5 * m_Dx[L][1] )
+      //                         , m_fineLevel->getAnchor().z() + ( m_Dx[L][2] * k ) + ( 0.5 * m_Dx[L][2] ) };
 
-        // rayDx is the distance from bottom, left, back, corner of cell to ray
-        double rayDx[3];
-        rayDx[0] = rayOrigin[0] - ( CC_posOrigin[0] - 0.5 * m_levelParamsML[L].Dx[0] );
-        rayDx[1] = rayOrigin[1] - ( CC_posOrigin[1] - 0.5 * m_levelParamsML[L].Dx[1] );
-        rayDx[2] = rayOrigin[2] - ( CC_posOrigin[2] - 0.5 * m_levelParamsML[L].Dx[2] );
+      // rayDx is the distance from bottom, left, back, corner of cell to ray
+      double rayDx[3];
+      rayDx[0] = rayOrigin[0] - ( CC_posOrigin[0] - 0.5 * m_levelParamsML[L].Dx[0] );
+      rayDx[1] = rayOrigin[1] - ( CC_posOrigin[1] - 0.5 * m_levelParamsML[L].Dx[1] );
+      rayDx[2] = rayOrigin[2] - ( CC_posOrigin[2] - 0.5 * m_levelParamsML[L].Dx[2] );
 
-        // tMax is the physical distance from the ray origin to each of the respective planes of intersection
-        double tMaxV[3];
-        tMaxV[0] = ( sign[0] * m_levelParamsML[L].Dx[0] - rayDx[0] ) * inv_direction[0];
-        tMaxV[1] = ( sign[1] * m_levelParamsML[L].Dx[1] - rayDx[1] ) * inv_direction[1];
-        tMaxV[2] = ( sign[2] * m_levelParamsML[L].Dx[2] - rayDx[2] ) * inv_direction[2];
+      // tMax is the physical distance from the ray origin to each of the respective planes of intersection
+      double tMaxV[3];
+      tMaxV[0] = ( sign[0] * m_levelParamsML[L].Dx[0] - rayDx[0] ) * inv_direction[0];
+      tMaxV[1] = ( sign[1] * m_levelParamsML[L].Dx[1] - rayDx[1] ) * inv_direction[1];
+      tMaxV[2] = ( sign[2] * m_levelParamsML[L].Dx[2] - rayDx[2] ) * inv_direction[2];
 
-        double tDelta[m_maxLevels][3];
-        for ( int Lev = m_maxLevels - 1; Lev > -1; Lev-- ) {
-          //Length of t to traverse one cell
-          tDelta[Lev][0] = fabs( inv_direction[0] ) * m_levelParamsML[Lev].Dx[0];
-          tDelta[Lev][1] = fabs( inv_direction[1] ) * m_levelParamsML[Lev].Dx[1];
-          tDelta[Lev][2] = fabs( inv_direction[2] ) * m_levelParamsML[Lev].Dx[2];
-        }
+      double tDelta[m_maxLevels][3];
+      for ( int Lev = m_maxLevels - 1; Lev > -1; Lev-- ) {
+        //Length of t to traverse one cell
+        tDelta[Lev][0] = fabs( inv_direction[0] ) * m_levelParamsML[Lev].Dx[0];
+        tDelta[Lev][1] = fabs( inv_direction[1] ) * m_levelParamsML[Lev].Dx[1];
+        tDelta[Lev][2] = fabs( inv_direction[2] ) * m_levelParamsML[Lev].Dx[2];
+      }
 
-        //Initializes the following values for each ray
-        bool   in_domain            = true;
-        double tMaxV_prev[3]        = { 0, 0, 0 };
-        double old_length           = 0.0;
-        double intensity            = 1.0;
-        double fs                   = 1.0;
-        int    nReflect             = 0;           // Number of reflections
-        bool   onFineLevel          = true;
-        double optical_thickness    = 0;
-        double expOpticalThick_prev = 1.0;         // exp(-opticalThick_prev)
-        double rayLength            = 0.0;
-        double ray_location[3]      = { rayOrigin[0], rayOrigin[1], rayOrigin[2] };
-        double CC_pos[3]            = { CC_posOrigin[0], CC_posOrigin[1], CC_posOrigin[2] };
+      //Initializes the following values for each ray
+      bool   in_domain            = true;
+      double tMaxV_prev[3]        = { 0, 0, 0 };
+      double old_length           = 0.0;
+      double intensity            = 1.0;
+      double fs                   = 1.0;
+      int    nReflect             = 0;           // Number of reflections
+      bool   onFineLevel          = true;
+      double optical_thickness    = 0;
+      double expOpticalThick_prev = 1.0;         // exp(-opticalThick_prev)
+      double rayLength            = 0.0;
+      double ray_location[3]      = { rayOrigin[0], rayOrigin[1], rayOrigin[2] };
+      double CC_pos[3]            = { CC_posOrigin[0], CC_posOrigin[1], CC_posOrigin[2] };
 
-        //______________________________________________________________________
-        //  Threshold  loop
-        while ( intensity > m_d_threshold ) {
+      //______________________________________________________________________
+      //  Threshold  loop
+      while ( intensity > m_d_threshold ) {
 
-          int dir = -9; // Hard-coded for NONE
+        int dir = -9; // Hard-coded for NONE
 
-          while ( in_domain ) {
+        while ( in_domain ) {
 
-            prevCell[0] = cur[0];
-            prevCell[1] = cur[1];
-            prevCell[2] = cur[2];
-            prevLev     = L;
+          prevCell[0] = cur[0];
+          prevCell[1] = cur[1];
+          prevCell[2] = cur[2];
+          prevLev     = L;
 
-            //__________________________________
-            //  Determine which cell the ray will enter next
-            dir = -9; // Hard-coded for NONE
-            if ( tMaxV[0] < tMaxV[1] ) {    // X < Y
-              if ( tMaxV[0] < tMaxV[2] ) {  // X < Z
-                dir = 0; // Hard-coded for X
-              }
-              else {
-                dir = 2; // Hard-coded for Z
-              }
+          //__________________________________
+          //  Determine which cell the ray will enter next
+          dir = -9; // Hard-coded for NONE
+          if ( tMaxV[0] < tMaxV[1] ) {    // X < Y
+            if ( tMaxV[0] < tMaxV[2] ) {  // X < Z
+              dir = 0; // Hard-coded for X
             }
             else {
-              if ( tMaxV[1] < tMaxV[2] ) {     // Y < Z
-                dir = 1; // Hard-coded for Y
-              }
-              else {
-                dir = 2; // Hard-coded for Z
-              }
+              dir = 2; // Hard-coded for Z
             }
+          }
+          else {
+            if ( tMaxV[1] < tMaxV[2] ) {     // Y < Z
+              dir = 1; // Hard-coded for Y
+            }
+            else {
+              dir = 2; // Hard-coded for Z
+            }
+          }
 
-            // next cell index and position
-            cur[dir]  = cur[dir] + step[dir];
+          // next cell index and position
+          cur[dir]  = cur[dir] + step[dir];
 
-            //__________________________________
-            // Logic for moving between levels
-            // - Currently you can only move from fine to coarse level
-            // - Don't jump levels if ray is at edge of domain
-            m_levelParamsML[L].getCellPosition(cur, CC_pos);
-            //CC_pos[0] = level->getAnchor().x() + ( m_Dx[L][0] * cur[0] ) + ( 0.5 * m_Dx[L][0] );
-            //CC_pos[1] = level->getAnchor().y() + ( m_Dx[L][1] * cur[1] ) + ( 0.5 * m_Dx[L][1] );
-            //CC_pos[2] = level->getAnchor().z() + ( m_Dx[L][2] * cur[2] ) + ( 0.5 * m_Dx[L][2] );
+          //__________________________________
+          // Logic for moving between levels
+          // - Currently you can only move from fine to coarse level
+          // - Don't jump levels if ray is at edge of domain
+          m_levelParamsML[L].getCellPosition(cur, CC_pos);
+          //CC_pos[0] = level->getAnchor().x() + ( m_Dx[L][0] * cur[0] ) + ( 0.5 * m_Dx[L][0] );
+          //CC_pos[1] = level->getAnchor().y() + ( m_Dx[L][1] * cur[1] ) + ( 0.5 * m_Dx[L][1] );
+          //CC_pos[2] = level->getAnchor().z() + ( m_Dx[L][2] * cur[2] ) + ( 0.5 * m_Dx[L][2] );
 
-            //________________________________________//
-            //==== START domain_BB.inside(CC_pos) ====//
+          //________________________________________//
+          //==== START domain_BB.inside(CC_pos) ====//
 
-            in_domain = ( CC_pos[0] >= m_domain_BB_Lo[0] &&
-                          CC_pos[1] >= m_domain_BB_Lo[1] &&
-                          CC_pos[2] >= m_domain_BB_Lo[2] &&
-                          CC_pos[0] <= m_domain_BB_Hi[0] &&
-                          CC_pos[1] <= m_domain_BB_Hi[1] &&
-                          CC_pos[2] <= m_domain_BB_Hi[2]    );
+          in_domain = ( CC_pos[0] >= m_domain_BB_Lo[0] &&
+                        CC_pos[1] >= m_domain_BB_Lo[1] &&
+                        CC_pos[2] >= m_domain_BB_Lo[2] &&
+                        CC_pos[0] <= m_domain_BB_Hi[0] &&
+                        CC_pos[1] <= m_domain_BB_Hi[1] &&
+                        CC_pos[2] <= m_domain_BB_Hi[2]    );
 
-            //______________________________________//
-            //==== END domain_BB.inside(CC_pos) ====//
+          //______________________________________//
+          //==== END domain_BB.inside(CC_pos) ====//
 
-            bool ray_outside_ROI    = ( ( m_fineLevel_ROI_Lo[dir] <= cur[dir] && m_fineLevel_ROI_Hi[dir] > cur[dir] ) == false );
-            bool ray_outside_Region = ( ( m_levelParamsML[L].regionLo[dir] <= cur[dir] && m_levelParamsML[L].regionHi[dir] > cur[dir] ) == false );
+          bool ray_outside_ROI    = ( ( m_fineLevel_ROI_Lo[dir] <= cur[dir] && m_fineLevel_ROI_Hi[dir] > cur[dir] ) == false );
+          bool ray_outside_Region = ( ( m_levelParamsML[L].regionLo[dir] <= cur[dir] && m_levelParamsML[L].regionHi[dir] > cur[dir] ) == false );
 
-            bool jumpFinetoCoarserLevel   = ( onFineLevel &&  ray_outside_ROI && in_domain );
-            bool jumpCoarsetoCoarserLevel = ( ( onFineLevel == false ) && ray_outside_Region && ( L > 0 ) && in_domain );
+          bool jumpFinetoCoarserLevel   = ( onFineLevel &&  ray_outside_ROI && in_domain );
+          bool jumpCoarsetoCoarserLevel = ( ( onFineLevel == false ) && ray_outside_Region && ( L > 0 ) && in_domain );
 
 //#define ML_DEBUG
 #if ( (DEBUG == 1 || DEBUG == 4) && defined(ML_DEBUG) )
-            if ( isDbgCell(i,j,k) ) {
-              printf( "        Ray: [%i,%i,%i] **jumpFinetoCoarserLevel %i jumpCoarsetoCoarserLevel %i containsCell: %i ",
-                      cur[0], cur[1], cur[2], jumpFinetoCoarserLevel, jumpCoarsetoCoarserLevel,
-                      ( m_fineLevel_ROI_Lo[dir] <= cur[dir] && m_fineLevel_ROI_Hi[dir] > cur[dir] ) );
-              printf( " onFineLevel: %i ray_outside_ROI: %i ray_outside_Region: %i in_domain: %i\n",
-                      onFineLevel, ray_outside_ROI, ray_outside_Region, in_domain );
-              printf( " L: %i regionLo: [%i,%i,%i], regionHi: [%i,%i,%i]\n",
-                      L, m_levelParamsML[L].regionLo[0], m_levelParamsML[L].regionLo[1], m_levelParamsML[L].regionLo[2], m_levelParamsML[L].regionHi[0], m_levelParamsML[L].regionHi[0], m_levelParamsML[L].regionHi[0] );
-            }
+          if ( isDbgCell(i,j,k) ) {
+            printf( "        Ray: [%i,%i,%i] **jumpFinetoCoarserLevel %i jumpCoarsetoCoarserLevel %i containsCell: %i ",
+                    cur[0], cur[1], cur[2], jumpFinetoCoarserLevel, jumpCoarsetoCoarserLevel,
+                    ( m_fineLevel_ROI_Lo[dir] <= cur[dir] && m_fineLevel_ROI_Hi[dir] > cur[dir] ) );
+            printf( " onFineLevel: %i ray_outside_ROI: %i ray_outside_Region: %i in_domain: %i\n",
+                    onFineLevel, ray_outside_ROI, ray_outside_Region, in_domain );
+            printf( " L: %i regionLo: [%i,%i,%i], regionHi: [%i,%i,%i]\n",
+                    L, m_levelParamsML[L].regionLo[0], m_levelParamsML[L].regionLo[1], m_levelParamsML[L].regionLo[2], m_levelParamsML[L].regionHi[0], m_levelParamsML[L].regionHi[0], m_levelParamsML[L].regionHi[0] );
+          }
 #endif
 
-            if (jumpFinetoCoarserLevel) {
-              m_levelParamsML[L].mapCellToCoarser(cur);
-              L   = (L > 0) ? L - 1 : 0;
-              onFineLevel = false;
+          if (jumpFinetoCoarserLevel) {
+            m_levelParamsML[L].mapCellToCoarser(cur);
+            L   = (L > 0) ? L - 1 : 0;
+            onFineLevel = false;
 
 #if ( (DEBUG == 1 || DEBUG == 4) && defined(ML_DEBUG) )
-              if( isDbgCell(i,j,k) ) {
-                printf( "        ** Jumping off fine patch switching Levels:  prev L: %i, L: %i, cur: [%i,%i,%i] \n",prevLev, L, cur[0], cur[1], cur[2]);
-              }
+            if( isDbgCell(i,j,k) ) {
+              printf( "        ** Jumping off fine patch switching Levels:  prev L: %i, L: %i, cur: [%i,%i,%i] \n",prevLev, L, cur[0], cur[1], cur[2]);
+            }
 #endif
 
-            }
-            else if (jumpCoarsetoCoarserLevel) {
+          }
+          else if (jumpCoarsetoCoarserLevel) {
 #if ( (DEBUG == 1 || DEBUG == 4) && defined(ML_DEBUG) )
-              int c_old[3] = { cur[0], cur[1], cur[2] };      // needed for debugging
+            int c_old[3] = { cur[0], cur[1], cur[2] };      // needed for debugging
 #endif
-              m_levelParamsML[L].mapCellToCoarser(cur);
-              L   = (L > 0) ? L - 1 : 0;                      // move to a coarser level
+            m_levelParamsML[L].mapCellToCoarser(cur);
+            L   = (L > 0) ? L - 1 : 0;                      // move to a coarser level
 
 #if ( (DEBUG == 1 || DEBUG == 4) && defined(ML_DEBUG) )
-              if( isDbgCell(i,j,k) ) {
-                printf( "        ** Switching Levels:  prev L: %i, L: %i, cur: [%i,%i,%i], c_old: [%i,%i,%i]\n",prevLev, L, cur[0], cur[1], cur[2], c_old[0], c_old[1], c_old[2]);
-              }
+            if( isDbgCell(i,j,k) ) {
+              printf( "        ** Switching Levels:  prev L: %i, L: %i, cur: [%i,%i,%i], c_old: [%i,%i,%i]\n",prevLev, L, cur[0], cur[1], cur[2], c_old[0], c_old[1], c_old[2]);
+            }
 #endif
-            }
+          }
 
-            //__________________________________
-            //  Update marching variables
-            double distanceTraveled = ( tMaxV[dir] - old_length );
-            old_length              = tMaxV[dir];
-            tMaxV_prev[0]           = tMaxV[0];
-            tMaxV_prev[1]           = tMaxV[1];
-            tMaxV_prev[2]           = tMaxV[2];
-            tMaxV[dir]              = tMaxV[dir] + tDelta[L][dir];
+          //__________________________________
+          //  Update marching variables
+          double distanceTraveled = ( tMaxV[dir] - old_length );
+          old_length              = tMaxV[dir];
+          tMaxV_prev[0]           = tMaxV[0];
+          tMaxV_prev[1]           = tMaxV[1];
+          tMaxV_prev[2]           = tMaxV[2];
+          tMaxV[dir]              = tMaxV[dir] + tDelta[L][dir];
 
-            ray_location[0] = ray_location[0] + ( distanceTraveled  * direction_vector[0] );
-            ray_location[1] = ray_location[1] + ( distanceTraveled  * direction_vector[1] );
-            ray_location[2] = ray_location[2] + ( distanceTraveled  * direction_vector[2] );
+          ray_location[0] = ray_location[0] + ( distanceTraveled  * direction_vector[0] );
+          ray_location[1] = ray_location[1] + ( distanceTraveled  * direction_vector[1] );
+          ray_location[2] = ray_location[2] + ( distanceTraveled  * direction_vector[2] );
 
-            //__________________________________
-            // When moving to a coarse level tmax will change only in the direction the ray is moving
-            if ( jumpFinetoCoarserLevel || jumpCoarsetoCoarserLevel ) {
-              double rayDx_Level = ray_location[dir] - ( CC_pos[dir] - 0.5 * m_levelParamsML[L].Dx[dir] );
-              double tMax_tmp    = ( sign[dir] * m_levelParamsML[L].Dx[dir] - rayDx_Level ) * inv_direction[dir];
-              tMaxV[0]           = tMaxV_prev[0];
-              tMaxV[1]           = tMaxV_prev[1];
-              tMaxV[2]           = tMaxV_prev[2];
-              tMaxV[dir]        += tMax_tmp;
-            }
+          //__________________________________
+          // When moving to a coarse level tmax will change only in the direction the ray is moving
+          if ( jumpFinetoCoarserLevel || jumpCoarsetoCoarserLevel ) {
+            double rayDx_Level = ray_location[dir] - ( CC_pos[dir] - 0.5 * m_levelParamsML[L].Dx[dir] );
+            double tMax_tmp    = ( sign[dir] * m_levelParamsML[L].Dx[dir] - rayDx_Level ) * inv_direction[dir];
+            tMaxV[0]           = tMaxV_prev[0];
+            tMaxV[1]           = tMaxV_prev[1];
+            tMaxV[2]           = tMaxV_prev[2];
+            tMaxV[dir]        += tMax_tmp;
+          }
 
-            // If the cell isn't a flow cell then terminate the ray
-            in_domain = in_domain && ( m_cellType[L]( cur[0], cur[1], cur[2] ) == -1 ); // Hard-coded for d_flowCell
+          // If the cell isn't a flow cell then terminate the ray
+          in_domain = in_domain && ( m_cellType[L]( cur[0], cur[1], cur[2] ) == -1 ); // Hard-coded for d_flowCell
 
-            rayLength         += distanceTraveled;
-            optical_thickness += m_abskg[prevLev]( prevCell[0], prevCell[1], prevCell[2] ) * distanceTraveled;
-            m_nRaySteps++;
+          rayLength         += distanceTraveled;
+          optical_thickness += m_abskg[prevLev]( prevCell[0], prevCell[1], prevCell[2] ) * distanceTraveled;
+          m_nRaySteps++;
 
-            double expOpticalThick = exp( -optical_thickness );
+          double expOpticalThick = exp( -optical_thickness );
 
 //`==========TESTING==========//
 #if DEBUG == 1
-            if ( isDbgCell(i,j,k) ) {
-              printf( "            cur [%d,%d,%d] prev [%d,%d,%d]", cur[0], cur[1], cur[2], prevCell[0], prevCell[1], prevCell[2] );
-              printf( " dir %d ", dir );
-              printf( " cellType: %i ", m_cellType[L](cur[0],cur[1],cur[2]) );
-        //    printf( " stepSize [%i,%i,%i] ", step[0], step[1], step[2] );
-              printf( "tMax [%g,%g,%g] ", tMaxV[0],tMaxV[1], tMaxV[2] );
-              printf( "rayLoc [%4.5f,%4.5f,%4.5f] ", ray_location[0], ray_location[1], ray_location[2] );
-              printf( "\tdistanceTraveled %4.5f tMax[dir]: %g tMax_prev[dir]: %g, Dx[dir]: %g\n", distanceTraveled, tMaxV[dir], tMaxV_prev[dir], m_levelParamsML[L].Dx[dir] );
-              printf( "                tDelta [%g,%g,%g] \n", tDelta[L][0], tDelta[L][1], tDelta[L][2] );
-        //    printf( "inv_dir [%g,%g,%g] ",inv_direction.x(),inv_direction.y(), inv_direction.z() );
-        //    printf( "            abskg[prev] %g  \t sigmaT4OverPi[prev]: %g \n", abskg[prevLev][prevCell], sigmaT4OverPi[prevLev][prevCell] );
-        //    printf( "  0          abskg[cur]  %g  \t sigmaT4OverPi[cur]:  %g  \t  cellType: %i \n",abskg[L][cur], sigmaT4OverPi[L][cur], cellType[L][cur] );
-        //    printf( "            Dx[prevLev].x  %g \n", m_levelParamsML[L].Dx[0] );
-              printf( "                optical_thickkness %g \t rayLength: %g\n", optical_thickness, rayLength );
-            }
+          if ( isDbgCell(i,j,k) ) {
+            printf( "            cur [%d,%d,%d] prev [%d,%d,%d]", cur[0], cur[1], cur[2], prevCell[0], prevCell[1], prevCell[2] );
+            printf( " dir %d ", dir );
+            printf( " cellType: %i ", m_cellType[L](cur[0],cur[1],cur[2]) );
+      //    printf( " stepSize [%i,%i,%i] ", step[0], step[1], step[2] );
+            printf( "tMax [%g,%g,%g] ", tMaxV[0],tMaxV[1], tMaxV[2] );
+            printf( "rayLoc [%4.5f,%4.5f,%4.5f] ", ray_location[0], ray_location[1], ray_location[2] );
+            printf( "\tdistanceTraveled %4.5f tMax[dir]: %g tMax_prev[dir]: %g, Dx[dir]: %g\n", distanceTraveled, tMaxV[dir], tMaxV_prev[dir], m_levelParamsML[L].Dx[dir] );
+            printf( "                tDelta [%g,%g,%g] \n", tDelta[L][0], tDelta[L][1], tDelta[L][2] );
+      //    printf( "inv_dir [%g,%g,%g] ",inv_direction.x(),inv_direction.y(), inv_direction.z() );
+      //    printf( "            abskg[prev] %g  \t sigmaT4OverPi[prev]: %g \n", abskg[prevLev][prevCell], sigmaT4OverPi[prevLev][prevCell] );
+      //    printf( "  0          abskg[cur]  %g  \t sigmaT4OverPi[cur]:  %g  \t  cellType: %i \n",abskg[L][cur], sigmaT4OverPi[L][cur], cellType[L][cur] );
+      //    printf( "            Dx[prevLev].x  %g \n", m_levelParamsML[L].Dx[0] );
+            printf( "                optical_thickkness %g \t rayLength: %g\n", optical_thickness, rayLength );
+          }
 #endif
 //===========TESTING==========`//
             //if (rayOrigin[0] == 0 && rayOrigin[1] == 0 && rayOrigin[2] == 0) {
@@ -2084,100 +1551,168 @@ struct rayTrace_dataOnion_solveDivQFunctor {
 //                  m_abskg[prevLev]( prevCell[0], prevCell[1], prevCell[2] ),
 //                  m_sigmaT4OverPi[prevLev]( prevCell[0], prevCell[1], prevCell[2] ),
 //                  m_cellType[L]( cur[0], cur[1], cur[2] ));
-            //}
-            sumI += m_sigmaT4OverPi[prevLev]( prevCell[0], prevCell[1], prevCell[2] ) * ( expOpticalThick_prev - expOpticalThick ) * fs;
-            //sumI += 0.318331f * ( expOpticalThick_prev - expOpticalThick ) * fs;
+          //}
+          sumI += m_sigmaT4OverPi[prevLev]( prevCell[0], prevCell[1], prevCell[2] ) * ( expOpticalThick_prev - expOpticalThick ) * fs;
+          //sumI += 0.318331f * ( expOpticalThick_prev - expOpticalThick ) * fs;
 
-            expOpticalThick_prev = expOpticalThick;
-          } // end domain while loop  ++++++++++++++
+          expOpticalThick_prev = expOpticalThick;
+        } // end domain while loop  ++++++++++++++
 
-          //______________________________________________________________________
+        //______________________________________________________________________
 
-          T wallEmissivity = ( m_abskg[L]( cur[0], cur[1], cur[2] ) > 1.0 ) ? 1.0: m_abskg[L]( cur[0], cur[1], cur[2] );  // Ensure wall emissivity doesn't exceed one
+        T wallEmissivity = ( m_abskg[L]( cur[0], cur[1], cur[2] ) > 1.0 ) ? 1.0: m_abskg[L]( cur[0], cur[1], cur[2] );  // Ensure wall emissivity doesn't exceed one
 
-          intensity = exp( -optical_thickness );
+        intensity = exp( -optical_thickness );
 
-          sumI += wallEmissivity * m_sigmaT4OverPi[L]( cur[0], cur[1], cur[2] ) * intensity;
-          //sumI += wallEmissivity * 0.318331f * intensity;
+        sumI += wallEmissivity * m_sigmaT4OverPi[L]( cur[0], cur[1], cur[2] ) * intensity;
+        //sumI += wallEmissivity * 0.318331f * intensity;
 
-          // When a ray reaches the end of the domain, we force it to terminate
-          intensity = ( !m_d_allowReflect ) ? 0 : ( intensity * fs );
+        // When a ray reaches the end of the domain, we force it to terminate
+        intensity = ( !m_d_allowReflect ) ? 0 : ( intensity * fs );
 
 //`==========TESTING==========//
 #if DEBUG == 1
-          if ( isDbgCell(i,j,k) ) {
-            printf( "        intensity: %g OptThick: %g, fs: %g allowReflect: %i\n", intensity, optical_thickness, fs, m_d_allowReflect );
-          }
+        if ( isDbgCell(i,j,k) ) {
+          printf( "        intensity: %g OptThick: %g, fs: %g allowReflect: %i\n", intensity, optical_thickness, fs, m_d_allowReflect );
+        }
 #endif
 //===========TESTING==========`//
 
-          //__________________________________
-          //  Reflections
-          if ( intensity > m_d_threshold && m_d_allowReflect ) {
-            ++nReflect;
+        //__________________________________
+        //  Reflections
+        if ( intensity > m_d_threshold && m_d_allowReflect ) {
+          ++nReflect;
 
-            //______________________________________________________________________________________________________________//
-            //==== START reflect(fs, cur, prevCell, abskg[L][cur], in_domain, step[dir], sign[dir], ray_direction[dir]) ====//
+          //______________________________________________________________________________________________________________//
+          //==== START reflect(fs, cur, prevCell, abskg[L][cur], in_domain, step[dir], sign[dir], ray_direction[dir]) ====//
 
-            fs *= ( 1 - m_abskg[L]( cur[0], cur[1], cur[2] ) );
+          fs *= ( 1 - m_abskg[L]( cur[0], cur[1], cur[2] ) );
 
-            // Put cur back inside the domain
-            cur[0] = prevCell[0];
-            cur[1] = prevCell[1];
-            cur[2] = prevCell[2];
-            in_domain = true;
+          // Put cur back inside the domain
+          cur[0] = prevCell[0];
+          cur[1] = prevCell[1];
+          cur[2] = prevCell[2];
+          in_domain = true;
 
-            // Apply reflection condition
-            step[dir] *= -1; // Begin stepping in opposite direction
-            sign[dir] *= -1;
-            direction_vector[dir] *= -1;
+          // Apply reflection condition
+          step[dir] *= -1; // Begin stepping in opposite direction
+          sign[dir] *= -1;
+          direction_vector[dir] *= -1;
 
-            //____________________________________________________________________________________________________________//
-            //==== END reflect(fs, cur, prevCell, abskg[L][cur], in_domain, step[dir], sign[dir], ray_direction[dir]) ====//
+          //____________________________________________________________________________________________________________//
+          //==== END reflect(fs, cur, prevCell, abskg[L][cur], in_domain, step[dir], sign[dir], ray_direction[dir]) ====//
+        }
+      }  // end threshold while loop
 
-          }
-        }  // end threshold while loop
+       //_______________________________________//
+      //==== END updateSumI_ML< T >(...) ====//
 
-        //_______________________________________//
-        //==== END updateSumI_ML< T >(...) ====//
+    }  // end ray loop
 
-      }  // end ray loop
+    //__________________________________
+    //  Compute divQ
+    int fine_L = m_maxLevels - 1;
+    m_divQ_fine(i,j,k) = -4.0 * M_PI * m_abskg[fine_L](i,j,k) * ( m_sigmaT4OverPi[fine_L](i,j,k) - ( sumI / m_d_nDivQRays) );
+    //m_divQ_fine(i,j,k) = -4.0 * M_PI * m_abskg[fine_L](i,j,k) * ( 0.318331f - ( sumI / m_d_nDivQRays) );
 
-      //__________________________________
-      //  Compute divQ
-      int fine_L = m_maxLevels - 1;
-      m_divQ_fine(i,j,k) = -4.0 * M_PI * m_abskg[fine_L](i,j,k) * ( m_sigmaT4OverPi[fine_L](i,j,k) - ( sumI / m_d_nDivQRays) );
-      //m_divQ_fine(i,j,k) = -4.0 * M_PI * m_abskg[fine_L](i,j,k) * ( 0.318331f - ( sumI / m_d_nDivQRays) );
-
-      // radiationVolq is the incident energy per cell (W/m^3) and is necessary when particle heat transfer models (i.e. Shaddix) are used
-      m_radiationVolq_fine(i,j,k) = 4.0 * M_PI * ( sumI / m_d_nDivQRays );
+    // radiationVolq is the incident energy per cell (W/m^3) and is necessary when particle heat transfer models (i.e. Shaddix) are used
+    m_radiationVolq_fine(i,j,k) = 4.0 * M_PI * ( sumI / m_d_nDivQRays );
 
 //`==========TESTING==========//
 #if DEBUG == 1
-      if ( isDbgCell(i,j,k) ) {
-        printf( "\n      [%d, %d, %d]  sumI: %g  divQ: %g radiationVolq: %g  abskg: %g,    sigmaT4: %g \n\n",
-                i, j, k, sumI, m_divQ_fine(i,j,k), m_radiationVolq_fine(i,j,k), m_abskg[fine_L](i,j,k), m_sigmaT4OverPi[fine_L](i,j,k) );
-      }
+    if ( isDbgCell(i,j,k) ) {
+      printf( "\n      [%d, %d, %d]  sumI: %g  divQ: %g radiationVolq: %g  abskg: %g,    sigmaT4: %g \n\n",
+              i, j, k, sumI, m_divQ_fine(i,j,k), m_radiationVolq_fine(i,j,k), m_abskg[fine_L](i,j,k), m_sigmaT4OverPi[fine_L](i,j,k) );
+    }
 #endif
 /*===========TESTING==========`*/
-        threadID += (m_RT_flags.cellsPerGroup);
-        i = (threadID % m_RT_flags.finePatchSize.x) + m_RT_flags.finePatchLow.x;
-        j = ((threadID % (m_RT_flags.finePatchSize.x * m_RT_flags.finePatchSize.y)) / (m_RT_flags.finePatchSize.x)) + m_RT_flags.finePatchLow.y;
-        k = (threadID / (m_RT_flags.finePatchSize.x * m_RT_flags.finePatchSize.y)) + m_RT_flags.finePatchLow.z;
-      } // end while (threadID < RT_flags.endCell) {
 #ifndef FIXED_RANDOM_NUM
     m_rand_pool.free_state(rand_gen);
 #endif
-
-  }  // end operator()
+  } // end operator()
 };   // end rayTrace_dataOnion_solveDivQFunctor
 
 //---------------------------------------------------------------------------
 // Ray tracer using the multilevel "data onion" scheme
 //---------------------------------------------------------------------------
 template< typename T, typename ExecutionSpace, typename MemorySpace>
-void
+inline typename std::enable_if<std::is_same<ExecutionSpace, UintahSpaces::CPU>::value, void>::type
 Ray::rayTrace_dataOnion( DetailedTask* dtask,
+                         Task::CallBackEvent event,
+                         const ProcessorGroup* pg,
+                         const PatchSubset* finePatches,
+                         const MaterialSubset* matls,
+                         DataWarehouse* old_dw,
+                         DataWarehouse* new_dw,
+                         void* old_TaskGpuDW,
+                         void* new_TaskGpuDW,
+                         void* stream,
+                         int deviceID,
+                         bool modifies_divQ,
+                         Task::WhichDW notUsed,
+                         Task::WhichDW which_sigmaT4_dw,
+                         Task::WhichDW which_celltype_dw ) {
+#if !defined(UINTAH_ENABLE_KOKKOS)
+  // When we're ready, we can merge the current Ray.cc file in with this one here.
+  printf("The non-Kokkos version\n");
+#endif
+}
+
+//The Kokkos verison (e.g. NOT the same as UintahSpaces::CPU)
+template< typename T, typename ExecutionSpace, typename MemorySpace>
+inline typename std::enable_if<!std::is_same<ExecutionSpace, UintahSpaces::CPU>::value, void>::type
+Ray::rayTrace_dataOnion( DetailedTask* dtask,
+                         Task::CallBackEvent event,
+                         const ProcessorGroup* pg,
+                         const PatchSubset* finePatches,
+                         const MaterialSubset* matls,
+                         DataWarehouse* old_dw,
+                         DataWarehouse* new_dw,
+                         void* old_TaskGpuDW,
+                         void* new_TaskGpuDW,
+                         void* stream,
+                         int deviceID,
+                         bool modifies_divQ,
+                         Task::WhichDW notUsed,
+                         Task::WhichDW which_sigmaT4_dw,
+                         Task::WhichDW which_celltype_dw ) {
+#if defined(UINTAH_ENABLE_KOKKOS)
+
+  const Level* fineLevel = getLevel(finePatches);
+  int maxLevels = fineLevel->getGrid()->numLevels();
+  if (maxLevels == 2) {
+    //Set up the data onion function for multiple levels.
+    this->rayTrace_dataOnionLevels<2, T, ExecutionSpace, MemorySpace>(dtask, event, pg, finePatches, matls, old_dw, new_dw, old_TaskGpuDW, new_TaskGpuDW,
+                                                                       stream, deviceID, modifies_divQ, notUsed, which_sigmaT4_dw, which_celltype_dw);
+  } else if (maxLevels == 3) {
+    //Set up the data onion function for multiple levels.
+    this->rayTrace_dataOnionLevels<3, T, ExecutionSpace, MemorySpace>(dtask, event, pg, finePatches, matls, old_dw, new_dw, old_TaskGpuDW, new_TaskGpuDW,
+                                                                       stream, deviceID, modifies_divQ, notUsed, which_sigmaT4_dw, which_celltype_dw);
+  } else if (maxLevels == 4) {
+    //Set up the data onion function for multiple levels.
+    this->rayTrace_dataOnionLevels<4, T, ExecutionSpace, MemorySpace>(dtask, event, pg, finePatches, matls, old_dw, new_dw, old_TaskGpuDW, new_TaskGpuDW,
+                                                                       stream, deviceID, modifies_divQ, notUsed, which_sigmaT4_dw, which_celltype_dw);
+  } else if (maxLevels == 5) {
+    //Set up the data onion function for multiple levels.
+    this->rayTrace_dataOnionLevels<5, T, ExecutionSpace, MemorySpace>(dtask, event, pg, finePatches, matls, old_dw, new_dw, old_TaskGpuDW, new_TaskGpuDW,
+                                                                       stream, deviceID, modifies_divQ, notUsed, which_sigmaT4_dw, which_celltype_dw);
+  } else if (maxLevels == 6) {
+    //Set up the data onion function for multiple levels.
+    this->rayTrace_dataOnionLevels<7, T, ExecutionSpace, MemorySpace>(dtask, event, pg, finePatches, matls, old_dw, new_dw, old_TaskGpuDW, new_TaskGpuDW,
+                                                                       stream, deviceID, modifies_divQ, notUsed, which_sigmaT4_dw, which_celltype_dw);
+  } else {
+    std::cerr << "Requested RMCRT Data Onion max level amount of " << maxLevels << " not yet supported.  Edit the code file to supply more possible levels." << std::endl;
+    SCI_THROW(InternalError("Requested RMCRT Data Onion max level amount not yet supported.  Edit the code file to supply more possible levels.", __FILE__, __LINE__));
+  }
+#endif
+}
+
+//---------------------------------------------------------------------------
+// Ray tracer using the multilevel "data onion" scheme
+//---------------------------------------------------------------------------
+template< int numLevels, typename T, typename ExecutionSpace, typename MemorySpace>
+void
+Ray::rayTrace_dataOnionLevels( DetailedTask* dtask,
                          Task::CallBackEvent event,
                          const ProcessorGroup* pg,
                          const PatchSubset* finePatches,
@@ -2193,11 +1728,16 @@ Ray::rayTrace_dataOnion( DetailedTask* dtask,
                          Task::WhichDW which_sigmaT4_dw,
                          Task::WhichDW which_celltype_dw )
 {
-
+  // Get level information
   const Level* fineLevel = getLevel(finePatches);
-  int maxLevels    = fineLevel->getGrid()->numLevels();
   int levelPatchID = fineLevel->getPatch(0)->getID();
   LevelP level_0 = new_dw->getGrid()->getLevel(0);
+
+  // Patch loop
+  for (int p = 0; p < finePatches->size(); p++) {
+
+    Timers::Simple timer;
+    timer.start();
 
 #ifdef USE_TIMER
     // No carry forward just reset the time to zero.
@@ -2209,68 +1749,30 @@ Ray::rayTrace_dataOnion( DetailedTask* dtask,
     }
 #endif
 
-
-  //__________________________________
-  //
-  // Declare these simulation vars here so they stay in scope for the OnDemandDataWarehouse
-  // Note that even though boundFlux isn't used here, we still have to allocate it so
-  // an upcoming carry forward task doesn't break
-  std::vector< constCCVariable< T > > abskg(maxLevels);
-  std::vector< constCCVariable< T > > sigmaT4OverPi(maxLevels);
-  std::vector< constCCVariable<int> > cellType(maxLevels);
-  std::vector< constCCVariable<double> > abskgSigmaT4CellType(maxLevels);
-  CCVariable<double>   divQ_fine;
-  CCVariable<Stencil7> boundFlux_fine;
-  CCVariable<double>   radiationVolq_fine;
-
-  // The upcoming Kokkos views
-  //KokkosView3<const T>   abskg_view[maxLevels];
-  //KokkosView3<const T>   sigmaT4OverPi_view[maxLevels];
-  //KokkosView3<const int> cellType_view[maxLevels];
-  KokkosView3<const double> abskgSigmaT4CellType_view[maxLevels];
-  KokkosView3<double> divQ_fine_view;
-  KokkosView3<double> radiationVolq_fine_view;
-
-  //DataWarehouse* sigmaT4_dw  = new_dw->getOtherDataWarehouse(which_sigmaT4_dw);
-  //DataWarehouse* celltype_dw = new_dw->getOtherDataWarehouse(which_celltype_dw);
-  DataWarehouse* abskg_dw = get_abskg_dw(maxLevels - 1, d_abskgLabel, new_dw);
-
-  // Determine the size of the domain.
-  BBox domain_BB;
-  level_0->getInteriorSpatialRange(domain_BB);                 // edge of computational domain
-  double domain_BB_Lo[3] = { domain_BB.min().x(), domain_BB.min().y(), domain_BB.min().z() };
-  double domain_BB_Hi[3] = { domain_BB.max().x(), domain_BB.max().y(), domain_BB.max().z() };
-
-  //  patch loop
-  for (int p = 0; p < finePatches->size(); p++) {
-
-    Timers::Simple timer;
-    timer.start();
-
     const Patch* patch = finePatches->get(p);
     const Patch* finePatch = finePatches->get(p);
     printTask(finePatches, finePatch,g_ray_dbg,"Doing Ray::rayTrace_dataOnion");
 
-    int fine_L = maxLevels - 1;
+    int fine_L = numLevels - 1;
 
     //Load levelParamsML
-    LevelParamsML levelParamsML[maxLevels];
+    LevelParamsML levelParamsML[numLevels];
     IntVector fineLevel_ROI_Lo = IntVector( -9,-9,-9 );
     IntVector fineLevel_ROI_Hi = IntVector( -9,-9,-9 );
-    vector<IntVector> regionLo( maxLevels );
-    vector<IntVector> regionHi( maxLevels );
+    vector<IntVector> regionLo( numLevels );
+    vector<IntVector> regionHi( numLevels );
 
     int fineLevel_ROI_Lo_pod[3] = { -9,-9,-9 };
     int fineLevel_ROI_Hi_pod[3] = { -9,-9,-9 };
     if ( d_ROI_algo == fixed || d_ROI_algo == dynamic ) {
       const Patch* notUsed = 0;
-      computeExtents(level_0, fineLevel, notUsed, maxLevels, new_dw,
+      computeExtents(level_0, fineLevel, notUsed, numLevels, new_dw,
                      fineLevel_ROI_Lo, fineLevel_ROI_Hi, regionLo,  regionHi);
     } else if ( d_ROI_algo == patch_based ) {
-      computeExtents(level_0, fineLevel, finePatch, maxLevels, new_dw,
+      computeExtents(level_0, fineLevel, finePatch, numLevels, new_dw,
                      fineLevel_ROI_Lo, fineLevel_ROI_Hi, regionLo,  regionHi);
     }
-    for ( int L = 0; L < maxLevels; L++ ) {
+    for ( int L = 0; L < numLevels; L++ ) {
       LevelP level = new_dw->getGrid()->getLevel(L);
       levelParamsML[L].Dx[0] = level->dCell().x();
       levelParamsML[L].Dx[1] = level->dCell().y();
@@ -2295,74 +1797,57 @@ Ray::rayTrace_dataOnion( DetailedTask* dtask,
     fineLevel_ROI_Hi_pod[1] = fineLevel_ROI_Hi.y();
     fineLevel_ROI_Hi_pod[2] = fineLevel_ROI_Hi.z();
 
-    //Get the variables from a Data Warehouse
-    //See if its CPU or GPU execution, if so, get the right variables from the right data warehouse.
-    if ( ! Parallel::usingDevice() ) {
+    // Get the vars:
+    // Computes:  (Only on the fine) divQ, radiationVolq.  Is boundaryFlux needed for computes?
+    // Requires:  (One on each level) If it's regular, abskg, sigmaT4, cellType.  If it's slim, the combined abskgSigmaT4CellType.
 
-      //Get the const variables
-      for(int L = 0; L<maxLevels; L++) {
-        LevelP level = new_dw->getGrid()->getLevel(L);
-        if (level->hasFinerLevel() ) {                               // coarse level data
-          DataWarehouse* abskg_dw = get_abskg_dw(L, d_abskgLabel, new_dw);
-          if(level->hasCoarserLevel()){
-            // TODO: Not portable!
-            //abskg_dw->getRegion(   abskg[L]   ,       d_abskgLabel   , d_matl , level.get_rep(), regionLo[L], regionHi[L]);
-            //sigmaT4_dw->getRegion( sigmaT4OverPi[L] , d_sigmaT4Label , d_matl , level.get_rep(), regionLo[L], regionHi[L]);
-            //celltype_dw->getRegion( cellType[L] ,     d_cellTypeLabel, d_matl , level.get_rep(), regionLo[L], regionHi[L]);
-            new_dw->getRegion( abskgSigmaT4CellType[L] , d_abskgSigmaT4CellTypeLabel , d_matl , level.get_rep(), regionLo[L], regionHi[L]);
-          } else{
-            //abskg_dw->getLevel(   abskg[L]   ,       d_abskgLabel ,   d_matl , level.get_rep() );
-            //sigmaT4_dw->getLevel( sigmaT4OverPi[L] , d_sigmaT4Label,  d_matl , level.get_rep() );
-            //celltype_dw->getLevel( cellType[L] ,     d_cellTypeLabel, d_matl , level.get_rep() );
-            new_dw->getLevel( abskgSigmaT4CellType[L] , d_abskgSigmaT4CellTypeLabel , d_matl , level.get_rep() );
-            DOUT( g_ray_dbg, "    RT DataOnion: getting coarse level data L-" << L );
-          }
-        }
-      }
+    //__________________________________
+    //
+    // Declare these simulation vars here so they stay in scope for the OnDemandDataWarehouse
+    // Note that even though boundFlux isn't used here, we still have to allocate it so
+    // an upcoming carry forward task doesn't break
+#ifdef USE_RMCRT_SLIM
+    std::vector< constCCVariable<double> > abskgSigmaT4CellType(numLevels);
+#else
+    std::vector< constCCVariable< T > > abskg(numLevels);
+    std::vector< constCCVariable< T > > sigmaT4OverPi(numLevels);
+    std::vector< constCCVariable<int> > cellType(numLevels);
+#endif
+    CCVariable<double>   divQ_fine;
+    CCVariable<Stencil7> boundFlux_fine;
+    CCVariable<double>   radiationVolq_fine;
+    DataWarehouse* sigmaT4_dw  = new_dw->getOtherDataWarehouse(which_sigmaT4_dw);
+    DataWarehouse* celltype_dw = new_dw->getOtherDataWarehouse(which_celltype_dw);
+    DataWarehouse* abskg_dw = get_abskg_dw(numLevels - 1, d_abskgLabel, new_dw);
 
-      DOUT( g_ray_dbg, "    RT DataOnion:  getting fine level data across L-" << fine_L << " " << fineLevel_ROI_Lo << " " << fineLevel_ROI_Hi );
-      //abskg_dw->getRegion(    abskg[fine_L],         d_abskgLabel ,   d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
-      //sigmaT4_dw->getRegion(  sigmaT4OverPi[fine_L], d_sigmaT4Label,  d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
-      //celltype_dw->getRegion( cellType[fine_L],      d_cellTypeLabel, d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
-      new_dw->getRegion(   abskgSigmaT4CellType[fine_L] , d_abskgSigmaT4CellTypeLabel   , d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
+    // Determine the size of the domain.
+    BBox domain_BB;
+    level_0->getInteriorSpatialRange(domain_BB);                 // edge of computational domain
+    double domain_BB_Lo[3] = { domain_BB.min().x(), domain_BB.min().y(), domain_BB.min().z() };
+    double domain_BB_Hi[3] = { domain_BB.max().x(), domain_BB.max().y(), domain_BB.max().z() };
 
-      //Get the computable variables on the fine level
-      if( modifies_divQ ){
-        old_dw->getModifiable( divQ_fine,          d_divQLabel,          d_matl, finePatch );
-        new_dw->getModifiable( boundFlux_fine,     d_boundFluxLabel,     d_matl, finePatch );
-        old_dw->getModifiable( radiationVolq_fine, d_radiationVolqLabel, d_matl, finePatch );
-      }else{
-        new_dw->allocateAndPut( divQ_fine,          d_divQLabel,          d_matl, finePatch );
-        new_dw->allocateAndPut( boundFlux_fine,     d_boundFluxLabel,     d_matl, finePatch );
-        new_dw->allocateAndPut( radiationVolq_fine, d_radiationVolqLabel, d_matl, finePatch );
-        divQ_fine.initialize( 0.0 );
-        radiationVolq_fine.initialize( 0.0 );
-        for (CellIterator iter = finePatch->getExtraCellIterator(); !iter.done(); iter++){
-          IntVector c = *iter;
-          boundFlux_fine[c].initialize(0.0);
-        }
-      }
+#ifdef HAVE_CUDA
+    // Get the GPU vars
+    if ( std::is_same< Kokkos::Cuda , ExecutionSpace >::value ) {
+      // The upcoming Kokkos views
+#ifdef USE_RMCRT_SLIM
+      KokkosView3<const double, Kokkos::CudaSpace> abskgSigmaT4CellType_view[numLevels];
+#else
+      KokkosView3<const T, Kokkos::CudaSpace>   abskg_view[numLevels];
+      KokkosView3<const T, Kokkos::CudaSpace>   sigmaT4OverPi_view[numLevels];
+      KokkosView3<const int, Kokkos::CudaSpace> cellType_view[numLevels];
+#endif
+      KokkosView3<double, Kokkos::CudaSpace> divQ_fine_view;
+      KokkosView3<double, Kokkos::CudaSpace> radiationVolq_fine_view;
 
-      //Get the Kokkos Views from the simulation variables
-      for ( int L = 0; L < maxLevels; L++ ) {
-        //abskg_view[L]         = abskg[L].getKokkosView();
-        //sigmaT4OverPi_view[L] = sigmaT4OverPi[L].getKokkosView();
-        //cellType_view[L]      = cellType[L].getKokkosView();
-        abskgSigmaT4CellType_view[L] = abskgSigmaT4CellType[L].getKokkosView();
-      }
-      divQ_fine_view          = divQ_fine.getKokkosView();
-      radiationVolq_fine_view = radiationVolq_fine.getKokkosView();
-
-    } else {  //if ( Parallel::usingDevice() )
-#if defined(HAVE_CUDA)
       GPUDataWarehouse* abskg_gdw    = static_cast<GPUDataWarehouse*>(abskg_dw->getGPUDW());
-      //GPUDataWarehouse* sigmaT4_gdw  = static_cast<GPUDataWarehouse*>(which_sigmaT4_dw->getGPUDW());
-      //GPUDataWarehouse* celltype_gdw = static_cast<GPUDataWarehouse*>(which_celltype_dw->getGPUDW());
+      GPUDataWarehouse* sigmaT4_gdw  = static_cast<GPUDataWarehouse*>(celltype_dw->getGPUDW());
+      GPUDataWarehouse* celltype_gdw = static_cast<GPUDataWarehouse*>(celltype_dw->getGPUDW());
 
       //Get the Kokkos Views from the simulation variables
       const Level* curLevel = fineLevel;
       const Patch* curPatch = patch;
-      for ( int L = maxLevels - 1; L >= 0; L-- ) {
+      for ( int L = numLevels - 1; L >= 0; L-- ) {
         // Get vars on this level
         abskg_view[L]         = abskg_gdw->getKokkosView<const T>(         d_abskgLabel->getName().c_str(),         curPatch->getID(), d_matl, L);
         sigmaT4OverPi_view[L] = sigmaT4_gdw->getKokkosView<const T>(       d_sigmaT4Label->getName().c_str(),       curPatch->getID(), d_matl, L);
@@ -2383,197 +1868,166 @@ Ray::rayTrace_dataOnion( DetailedTask* dtask,
       divQ_fine_view          = new_dw->getGPUDW()->getKokkosView<double>( d_divQLabel->getName().c_str(),          patch->getID(), d_matl, fine_L);
       radiationVolq_fine_view = new_dw->getGPUDW()->getKokkosView<double>( d_radiationVolqLabel->getName().c_str(), patch->getID(), d_matl, fine_L);
 
-#endif
-    }
+      unsigned long int size = 0;                   // current size of PathIndex
 
-    unsigned long int size = 0;                   // current size of PathIndex
+      //______________________________________________________________________
+      //         B O U N D A R Y F L U X
+      //______________________________________________________________________
 
-    //______________________________________________________________________
-    //         B O U N D A R Y F L U X
-    //______________________________________________________________________
+      unsigned long int nFluxRaySteps = 0;
 
-    unsigned long int nFluxRaySteps = 0;
+      // TODO: Kokkos-ify the boundary flux calculation
 
-// TODO: Kokkos-ify the boundary flux calculation
-
-    unsigned long int nRaySteps = 0;
-
-    //______________________________________________________________________
-    //         S O L V E   D I V Q
-    //______________________________________________________________________
-
-    if (d_solveDivQ) {
-
-      IntVector lo = patch->getCellLowIndex();
-      IntVector hi = patch->getCellHighIndex();
-
-      RMCRT_flags RT_flags;
-      RT_flags.finePatchLow.x = lo.x();
-      RT_flags.finePatchLow.y = lo.y();
-      RT_flags.finePatchLow.z = lo.z();
-      RT_flags.finePatchSize.x = hi.x()-lo.x();
-      RT_flags.finePatchSize.y = hi.y()-lo.y();
-      RT_flags.finePatchSize.z = hi.z()-lo.z();
-      const unsigned int numCells = RT_flags.finePatchSize.x *
-                                    RT_flags.finePatchSize.y *
-                                    RT_flags.finePatchSize.z;
-      RT_flags.startCell = 0;
-      RT_flags.endCell = numCells;
-
-      Uintah::BlockRange range;
-
-#ifdef HAVE_CUDA
+      // Split up a functor into many separate loops.  Gets better GPU occupancy this way.
       int numKernels = dtask->getTask()->maxStreamsPerTask();
-      IntVector hiRange(256,0,0);
-      // Split up a functor into four loops.  Gets better GPU occupancy this way.
+      std::vector<void*> streams;
       for (int i = 0; i < numKernels; i++) {
+        streams.push_back(dtask->getCudaStreamForThisTask(i));
+      }
+      Uintah::BlockRange range( streams, patch->getCellLowIndex(), patch->getCellHighIndex());
 
-        RT_flags.startCell = (i/static_cast<double>(numKernels)) * numCells;
-        RT_flags.endCell = ((i+1)/static_cast<double>(numKernels)) * numCells;
-        RT_flags.cellsPerGroup = hiRange.x();
-        range.setValues((cudaStream_t*)dtask->getCudaStreamForThisTask(i), IntVector(0,0,0), IntVector(RT_flags.cellsPerGroup,0,0) );
-        if (maxLevels > 2) {
-          std::cout << "Too many levels requested.  Edit the code file to supply more possible levels" << std::endl;
-          exit(-1);
-        }
-        rayTrace_dataOnion_solveDivQFunctor< T, Kokkos::Random_XorShift1024_Pool<Kokkos::Cuda  >, 2 >
-        functor( levelParamsML, RT_flags, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, sigmaT4OverPi_view, abskg_view
-                 , cellType_view , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays);
+      //launch the functor
+#ifdef USE_RMCRT_SLIM
+      SlimRayTrace_dataOnion_solveDivQFunctor< T, Kokkos::CudaSpace, Kokkos::Random_XorShift1024_Pool< Kokkos::Cuda >, numLevels >
+      functor( levelParamsML, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view,
+                   divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays,
+                   Max(d_haloCells[0], d_haloCells[1], d_haloCells[2] ));
 
-      // This parallel_reduce replaces the cellIterator loop used to solve DivQ
-        Uintah::parallel_reduce_1D( range, functor, size );
 #else
-      {
-        IntVector hiRange(256,0,0);
-        range.setValues( IntVector(0,0,0), hiRange );
-        RT_flags.startCell = 0;
-        RT_flags.endCell = numCells;
-        RT_flags.cellsPerGroup = hiRange.x();
+      rayTrace_dataOnion_solveDivQFunctor< T, Kokkos::CudaSpace, Kokkos::Random_XorShift1024_Pool< Kokkos::Cuda >, numLevels >
+      functor( levelParamsML, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, sigmaT4OverPi_view, abskg_view,
+                   cellType_view , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays);
+#endif
+      Uintah::parallel_reduce_sum<Kokkos::Cuda>( range, functor, size );
+#endif //#ifdef HAVE_CUDA
+    } // end if ( std::is_same< Kokkos::Cuda , ExecutionSpace >::value )
 
-        //
-        if (maxLevels==2){
-          DO_raytrace<T,2>
-          functor( levelParamsML, RT_flags, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view
-                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays
-#ifdef USE_SLIM
-,Max(d_haloCells[0],d_haloCells[1],d_haloCells[2])
+    // Get the CPU vars
+    if ( std::is_same< Kokkos::OpenMP , ExecutionSpace >::value ) {
+      // Get all the coarse level variables (e.g. as long as it has a finer level)
+
+#ifdef USE_RMCRT_SLIM
+      KokkosView3<const double> abskgSigmaT4CellType_view[numLevels];
+#else
+      KokkosView3<const T, Kokkos::HostSpace >   abskg_view[numLevels];
+      KokkosView3<const T, Kokkos::HostSpace>   sigmaT4OverPi_view[numLevels];
+      KokkosView3<const int, Kokkos::HostSpace> cellType_view[numLevels];
 #endif
-);
-          Uintah::parallel_reduce_1D( range, functor, size );
-        } else if (maxLevels==3){
-          DO_raytrace<T,3>
-          functor( levelParamsML, RT_flags, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view
-                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays
-#ifdef USE_SLIM
-,Max(d_haloCells[0],d_haloCells[1],d_haloCells[2])
+      KokkosView3<double, Kokkos::HostSpace> divQ_fine_view;
+      KokkosView3<double, Kokkos::HostSpace> radiationVolq_fine_view;
+
+      for(int L = 0; L<numLevels; L++) {
+        LevelP level = new_dw->getGrid()->getLevel(L);
+        if (level->hasFinerLevel() ) {
+          DataWarehouse* abskg_dw = get_abskg_dw(L, d_abskgLabel, new_dw);
+          DOUT( g_ray_dbg, "    RT DataOnion: getting coarse level data L-" << L );
+          if(level->hasCoarserLevel()){
+#ifdef USE_RMCRT_SLIM
+            new_dw->getRegion( abskgSigmaT4CellType[L] , d_abskgSigmaT4CellTypeLabel , d_matl , level.get_rep(), regionLo[L], regionHi[L]);
+#else
+            abskg_dw->getRegion(   abskg[L]   ,       d_abskgLabel   , d_matl , level.get_rep(), regionLo[L], regionHi[L]);
+            sigmaT4_dw->getRegion( sigmaT4OverPi[L] , d_sigmaT4Label , d_matl , level.get_rep(), regionLo[L], regionHi[L]);
+            celltype_dw->getRegion( cellType[L] ,     d_cellTypeLabel, d_matl , level.get_rep(), regionLo[L], regionHi[L]);
 #endif
-);
-          Uintah::parallel_reduce_1D( range, functor, size );
-        } else if (maxLevels==4){
-          DO_raytrace<T,4>
-          functor( levelParamsML, RT_flags, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view
-                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays
-#ifdef USE_SLIM
-,Max(d_haloCells[0],d_haloCells[1],d_haloCells[2])
+          } else{
+#ifdef USE_RMCRT_SLIM
+            new_dw->getLevel( abskgSigmaT4CellType[L] , d_abskgSigmaT4CellTypeLabel , d_matl , level.get_rep() );
+#else
+            abskg_dw->getLevel(   abskg[L]   ,       d_abskgLabel ,   d_matl , level.get_rep() );
+            sigmaT4_dw->getLevel( sigmaT4OverPi[L] , d_sigmaT4Label,  d_matl , level.get_rep() );
+            celltype_dw->getLevel( cellType[L] ,     d_cellTypeLabel, d_matl , level.get_rep() );
 #endif
-);
-          Uintah::parallel_reduce_1D( range, functor, size );
-        } else if (maxLevels==5){
-          DO_raytrace<T,5>
-          functor( levelParamsML, RT_flags, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view
-                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays
-#ifdef USE_SLIM
-,Max(d_haloCells[0],d_haloCells[1],d_haloCells[2])
-#endif
-);
-          Uintah::parallel_reduce_1D( range, functor, size );
-        } else if (maxLevels==6){
-          DO_raytrace<T,6>
-          functor( levelParamsML, RT_flags, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view
-                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays
-#ifdef USE_SLIM
-,Max(d_haloCells[0],d_haloCells[1],d_haloCells[2])
-#endif
-);
-          Uintah::parallel_reduce_1D( range, functor, size );
-        } else if (maxLevels==7){
-          DO_raytrace<T,7>
-          functor( levelParamsML, RT_flags, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view
-                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays
-#ifdef USE_SLIM
-,Max(d_haloCells[0],d_haloCells[1],d_haloCells[2])
-#endif
-);
-          Uintah::parallel_reduce_1D( range, functor, size );
-        } else if (maxLevels==8){
-          DO_raytrace<T,8>
-          functor( levelParamsML, RT_flags, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view
-                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays
-#ifdef USE_SLIM
-,Max(d_haloCells[0],d_haloCells[1],d_haloCells[2])
-#endif
-);
-          Uintah::parallel_reduce_1D( range, functor, size );
-        } else if (maxLevels==9){
-          DO_raytrace<T,9>
-          functor( levelParamsML, RT_flags, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view
-                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays
-#ifdef USE_SLIM
-,Max(d_haloCells[0],d_haloCells[1],d_haloCells[2])
-#endif
-);
-          Uintah::parallel_reduce_1D( range, functor, size );
-        } else if (maxLevels==10){
-          DO_raytrace<T,10>
-          functor( levelParamsML, RT_flags, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view
-                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays
-#ifdef USE_SLIM
-,Max(d_haloCells[0],d_haloCells[1],d_haloCells[2])
-#endif
-);
-          Uintah::parallel_reduce_1D( range, functor, size );
-        } else if (maxLevels==11){
-          DO_raytrace<T,11>
-          functor( levelParamsML, RT_flags, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view
-                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays
-#ifdef USE_SLIM
-,Max(d_haloCells[0],d_haloCells[1],d_haloCells[2])
-#endif
-);
-          Uintah::parallel_reduce_1D( range, functor, size );
-        } else if (maxLevels==12){
-          DO_raytrace<T,12>
-          functor( levelParamsML, RT_flags, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view
-                   , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays
-#ifdef USE_SLIM
-,Max(d_haloCells[0],d_haloCells[1],d_haloCells[2])
-#endif
-);
-          //Uintah::parallel_reduce_sum( range, functor, nRaySteps );
-          Uintah::parallel_reduce_1D( range, functor, nRaySteps );
-        } else {
-          std::cout << "Too many levels requested.  Edit the code file to supply more possible levels" << std::endl;
-          exit(-1);
+          }
         }
+      }
+      // Get all the fine level data.
+      DOUT( g_ray_dbg, "    RT DataOnion:  getting fine level data across L-" << fine_L << " " << fineLevel_ROI_Lo << " " << fineLevel_ROI_Hi );
+#ifdef USE_RMCRT_SLIM
+      new_dw->getRegion(   abskgSigmaT4CellType[fine_L] , d_abskgSigmaT4CellTypeLabel   , d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
+#else
+      abskg_dw->getRegion(    abskg[fine_L],         d_abskgLabel ,   d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
+      sigmaT4_dw->getRegion(  sigmaT4OverPi[fine_L], d_sigmaT4Label,  d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
+      celltype_dw->getRegion( cellType[fine_L],      d_cellTypeLabel, d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
+#endif
+      //Get the computable variables on the fine level
+      if( modifies_divQ ){
+        old_dw->getModifiable( divQ_fine,          d_divQLabel,          d_matl, finePatch );
+        new_dw->getModifiable( boundFlux_fine,     d_boundFluxLabel,     d_matl, finePatch );
+        old_dw->getModifiable( radiationVolq_fine, d_radiationVolqLabel, d_matl, finePatch );
+      }else{
+        new_dw->allocateAndPut( divQ_fine,          d_divQLabel,          d_matl, finePatch );
+        new_dw->allocateAndPut( boundFlux_fine,     d_boundFluxLabel,     d_matl, finePatch );
+        new_dw->allocateAndPut( radiationVolq_fine, d_radiationVolqLabel, d_matl, finePatch );
+        divQ_fine.initialize( 0.0 );
+        radiationVolq_fine.initialize( 0.0 );
+        for (CellIterator iter = finePatch->getExtraCellIterator(); !iter.done(); iter++){
+          IntVector c = *iter;
+          boundFlux_fine[c].initialize(0.0);
+        }
+      }
+
+      //Get the Kokkos Views from the simulation variables (coarse and fine)
+      for ( int L = 0; L < numLevels; L++ ) {
+#ifdef USE_RMCRT_SLIM
+        abskgSigmaT4CellType_view[L] = abskgSigmaT4CellType[L].getKokkosView();
+#else
+        abskg_view[L]         = abskg[L].getKokkosView();
+        sigmaT4OverPi_view[L] = sigmaT4OverPi[L].getKokkosView();
+        cellType_view[L]      = cellType[L].getKokkosView();
 #endif
       }
-    }  // end of if(_solveDivQ)
+      divQ_fine_view          = divQ_fine.getKokkosView();
+      radiationVolq_fine_view = radiationVolq_fine.getKokkosView();
 
-    //__________________________________
-    //
-    timer.stop();
+      unsigned long int size = 0;                   // current size of PathIndex
 
-    if (finePatch->getGridIndex() == levelPatchID) {
-      cout << endl
-           << " RMCRT REPORT: Patch " << levelPatchID << endl
-           << " Used "<< timer().milliseconds()
-           << " milliseconds of CPU time. \n" << endl // Convert time to ms
-           << " nRaySteps: " << nRaySteps
-           << " nFluxRaySteps: " << nFluxRaySteps << endl
-           << " Efficiency: " << nRaySteps / timer().seconds()
-           << " steps per sec" << endl
-           << endl;
-    }
+      //______________________________________________________________________
+      //         B O U N D A R Y F L U X
+      //______________________________________________________________________
+
+      unsigned long int nFluxRaySteps = 0;
+
+      // TODO: Kokkos-ify the boundary flux calculation
+
+      unsigned long int nRaySteps = 0;
+
+      //______________________________________________________________________
+      //         S O L V E   D I V Q
+      //______________________________________________________________________
+
+      if (d_solveDivQ) {
+        Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex());
+
+#ifdef USE_RMCRT_SLIM
+        SlimRayTrace_dataOnion_solveDivQFunctor< T, Kokkos::HostSpace, Kokkos::Random_XorShift1024_Pool< Kokkos::OpenMP >, numLevels >
+        functor( levelParamsML, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view,
+                 divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays,
+                 Max(d_haloCells[0], d_haloCells[1], d_haloCells[2] ));
+#else
+        rayTrace_dataOnion_solveDivQFunctor< T, Kokkos::HostSpace, Kokkos::Random_XorShift1024_Pool< Kokkos::OpenMP >, numLevels >
+        functor( levelParamsML, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, sigmaT4OverPi_view, abskg_view,
+                 cellType_view , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays);
+#endif
+        Uintah::parallel_reduce_sum<Kokkos::OpenMP>( range, functor, size );
+
+      }  // end of if(_solveDivQ)
+
+      //__________________________________
+      //
+      timer.stop();
+
+      if (finePatch->getGridIndex() == levelPatchID) {
+        cout << endl
+             << " RMCRT REPORT: Patch " << levelPatchID << endl
+             << " Used "<< timer().milliseconds()
+             << " milliseconds of CPU time. \n" << endl // Convert time to ms
+             << " nRaySteps: " << nRaySteps
+             << " nFluxRaySteps: " << nFluxRaySteps << endl
+             << " Efficiency: " << nRaySteps / timer().seconds()
+             << " steps per sec" << endl
+             << endl;
+      }
+    } //end of Kokkos OpenMP
 
 #ifdef USE_TIMER
     PerPatch< double > ppTimer = timer().seconds();

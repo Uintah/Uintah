@@ -372,9 +372,81 @@ private:
                  Task::WhichDW which_sigmaT4_dw,
                  Task::WhichDW which_celltype_dw );
 
-  //__________________________________
+//__________________________________
   template< typename T, typename ExecutionSpace, typename MemorySpace>
-  void rayTrace_dataOnion( DetailedTask* dtask,
+  inline typename std::enable_if<std::is_same<ExecutionSpace, UintahSpaces::CPU>::value, void>::type
+  rayTrace_dataOnion( DetailedTask* dtask,
+                           Task::CallBackEvent event,
+                           const ProcessorGroup* pg,
+                           const PatchSubset* patches,
+                           const MaterialSubset* matls,
+                           DataWarehouse* old_dw,
+                           DataWarehouse* new_dw,
+                           void* old_TaskGpuDW,
+                           void* new_TaskGpuDW,
+                           void* stream,
+                           int deviceID,
+                           bool modifies_divQ,
+                           Task::WhichDW which_abskg_dw,
+                           Task::WhichDW which_sigmaT4_dw,
+                           Task::WhichDW which_celltype_dw );
+
+  template< typename T, typename ExecutionSpace, typename MemorySpace>
+  inline typename std::enable_if<!std::is_same<ExecutionSpace, UintahSpaces::CPU>::value, void>::type
+  rayTrace_dataOnion( DetailedTask* dtask,
+                           Task::CallBackEvent event,
+                           const ProcessorGroup* pg,
+                           const PatchSubset* patches,
+                           const MaterialSubset* matls,
+                           DataWarehouse* old_dw,
+                           DataWarehouse* new_dw,
+                           void* old_TaskGpuDW,
+                           void* new_TaskGpuDW,
+                           void* stream,
+                           int deviceID,
+                           bool modifies_divQ,
+                           Task::WhichDW which_abskg_dw,
+                           Task::WhichDW which_sigmaT4_dw,
+                           Task::WhichDW which_celltype_dw );
+
+//  template< typename T, typename ExecutionSpace, typename MemorySpace>
+//  inline typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::Cuda>::value, void>::type
+//  rayTrace_dataOnion( DetailedTask* dtask,
+//                           Task::CallBackEvent event,
+//                           const ProcessorGroup* pg,
+//                           const PatchSubset* patches,
+//                           const MaterialSubset* matls,
+//                           DataWarehouse* old_dw,
+//                           DataWarehouse* new_dw,
+//                           void* old_TaskGpuDW,
+//                           void* new_TaskGpuDW,
+//                           void* stream,
+//                           int deviceID,
+//                           bool modifies_divQ,
+//                           Task::WhichDW which_abskg_dw,
+//                           Task::WhichDW which_sigmaT4_dw,
+//                           Task::WhichDW which_celltype_dw );
+
+//  template< typename T, typename ExecutionSpace, typename MemorySpace>
+//  void rayTrace_dataOnion( DetailedTask* dtask,
+//                           Task::CallBackEvent event,
+//                           const ProcessorGroup* pg,
+//                           const PatchSubset* patches,
+//                           const MaterialSubset* matls,
+//                           DataWarehouse* old_dw,
+//                           DataWarehouse* new_dw,
+//                           void* old_TaskGpuDW,
+//                           void* new_TaskGpuDW,
+//                           void* stream,
+//                           int deviceID,
+//                           bool modifies_divQ,
+//                           Task::WhichDW which_abskg_dw,
+//                           Task::WhichDW which_sigmaT4_dw,
+//                           Task::WhichDW which_celltype_dw );
+
+  //__________________________________
+  template< int numLevels, typename T, typename ExecutionSpace, typename MemorySpace>
+  void rayTrace_dataOnionLevels( DetailedTask* dtask,
                            Task::CallBackEvent event,
                            const ProcessorGroup* pg,
                            const PatchSubset* patches,

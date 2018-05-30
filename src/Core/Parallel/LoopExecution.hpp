@@ -318,6 +318,12 @@ public:
     setValues( stream, c0, c1 );
   }
 
+  template <typename ArrayType>
+  BlockRange(const std::vector<void*>& streams, ArrayType const & c0, ArrayType const & c1 )
+  {
+    setValues( streams, c0, c1 );
+  }
+
   BlockRange( const BlockRange& obj ) {
     for (int i=0; i<rank; ++i) {
       this->m_offset[i] = obj.m_offset[i];
@@ -338,7 +344,7 @@ public:
   }
 
   template <typename ArrayType>
-  void setValues(vector<void*>& streams, ArrayType const & c0, ArrayType const & c1 )
+  void setValues(const std::vector<void*>& streams, ArrayType const & c0, ArrayType const & c1 )
   {
     for (int i=0; i<rank; ++i) {
       m_offset[i] = c0[i] < c1[i] ? c0[i] : c1[i];
@@ -371,16 +377,21 @@ public:
     if ( m_streams.size() == 0 ) {
       return nullptr;
     } else {
-      return m_stream[0];
+      return m_streams[0];
     }
   }
   void * getStream(unsigned int i) const {
     if ( i >= m_streams.size() ) {
       SCI_THROW(InternalError("Requested a stream that doesn't exist.", __FILE__, __LINE__));
     } else {
-      return m_stream[i];
+      return m_streams[i];
     }
   }
+
+  unsigned int getNumStreams() const {
+    return m_streams.size();
+  }
+
 private:
   std::vector<void*> m_streams;
 };
@@ -602,12 +613,13 @@ parallel_reduce_sum( BlockRange const & r, const Functor & functor, ReductionTyp
 
   // The user has two partitions available.  1) One is the total number of streaming multiprocessors.  2) The other is
   // splitting a task into multiple streams and execution units.
-  const unsigned int streamPartitions = m_streams.size();
+  const unsigned int streamPartitions = r.getNumStreams();
   const unsigned int numItems = (i_size > 0 ? i_size : 1) * (j_size > 0 ? j_size : 1) * (k_size > 0 ? k_size : 1);
 
   // Get the requested amount of threads per streaming multiprocessor (SM) and number of SMs totals.
   const unsigned int cuda_threads_per_sm = Uintah::Parallel::getCudaThreadsPerSM();
   const unsigned cuda_sms_per_loop   = Uintah::Parallel::getCudaSMsPerLoop();
+
   // The requested range of data may not have enough work for the requested command line arguments, so shrink them if necessary.
   const unsigned int actual_threads = (numItems / streamPartitions) > (cuda_threads_per_sm * cuda_sms_per_loop)
                                     ? (cuda_threads_per_sm * cuda_sms_per_loop) : (numItems / streamPartitions);
@@ -624,12 +636,12 @@ parallel_reduce_sum( BlockRange const & r, const Functor & functor, ReductionTyp
     // Use a Team Policy, this allows us to control how many threads per SM and how many SMs are used.
     typedef Kokkos::TeamPolicy< Kokkos::Cuda > policy_type;
     Kokkos::TeamPolicy< Kokkos::Cuda > reduce_tp( instanceObject, actual_cuda_sms_per_loop, actual_threads_per_sm );
-    Kokkos::parallel_reduce ( reduce_tp, KOKKOS_LAMBDA ( typename policy_type::member_type thread, int& inner_sum ) {
+    Kokkos::parallel_reduce ( reduce_tp, KOKKOS_LAMBDA ( typename policy_type::member_type thread, ReductionType& inner_sum ) {
 
       // We are within an SM, and all SMs share the same amount of assigned CUDA threads.
       // Figure out which range of N items this SM should work on (as a multiple of 32).
       const unsigned int currentPartition = i * actual_cuda_sms_per_loop + thread.league_rank();
-      const unsigned int estimatedThreadAmount = numItems * (currentPartition) / ( actual_cuda_sms_per_loop * streamPartitions );
+      unsigned int estimatedThreadAmount = numItems * (currentPartition) / ( actual_cuda_sms_per_loop * streamPartitions );
       const unsigned int startingN =  estimatedThreadAmount + ((estimatedThreadAmount % 32 == 0) ? 0 : (32-estimatedThreadAmount % 32));
       unsigned int endingN;
       // Check if this is the last partition
@@ -642,16 +654,18 @@ parallel_reduce_sum( BlockRange const & r, const Functor & functor, ReductionTyp
       const unsigned int totalN = endingN - startingN;
       //printf("league_rank: %d, team_size: %d, team_rank: %d, startingN: %d, endingN: %d, totalN: %d\n", thread.league_rank(), thread.team_size(), thread.team_rank(), startingN, endingN, totalN);
 
-      Kokkos::parallel_for (Kokkos::TeamThreadRange(thread, totalN), [&] (const int& N) {
+      Kokkos::parallel_for (Kokkos::TeamThreadRange(thread, totalN), [&, startingN, i_size, j_size, k_size, rbegin0, rbegin1, rbegin2] (const int& N) {
         // Craft an i,j,k out of this range
         //printf("reduce team demo - n is %d, league_rank is %d, true n is %d\n", N, thread.league_rank(), (startingN + N));
-        const int i = (startingN + N) / (j_size * k_size);
-        const int j = ((startingN + N) / k_size) % j_size;
-        const int k = (startingN + N) % k_size;
+        const int i = (startingN + N) / (j_size * k_size) + rbegin0;
+        const int j = ((startingN + N) / k_size) % j_size + rbegin1;
+        const int k = (startingN + N) % k_size + rbegin2;
         // Actually run the functor.
-        reduce_functor(i,j,k, inner_sum);
+        functor(i,j,k, inner_sum);
       });
-    }, sum);
+    }, tmp);
+
+    red = tmp;
   }
 
   //  Manual approach using range policy that shares threads.

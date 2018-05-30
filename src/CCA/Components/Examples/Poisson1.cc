@@ -244,7 +244,7 @@ void Poisson1::initialize( const ProcessorGroup *
           const BoundCond<double>* bc = dynamic_cast<const BoundCond<double>*>(bcb);
           double value = bc->getValue();
           for (nbound_ptr.reset(); !nbound_ptr.done(); nbound_ptr++) {
-            phi[*nbound_ptr] = 777.0;
+            phi[*nbound_ptr] = 0.0;
 
           }
           delete bcb;
@@ -315,25 +315,25 @@ void Poisson1::timeAdvance(DetailedTask* dtask,
       //Uintah::parallel_for<Kokkos::Cuda>(range, func);
 
       //Replace with boundary condition
-
       Uintah::parallel_for<Kokkos::Cuda>( rangeBoundary, KOKKOS_LAMBDA(int i, int j, int k){
-          printf("At ( %d,%d,%d ) copying %g \n", i,j,k,phi(i,j,k));
+          //printf("At ( %d,%d,%d ) copying %g \n", i,j,k,phi(i,j,k));
           newphi(i, j, k) = phi(i,j,k);
       });
-
 
       Uintah::parallel_reduce_sum<Kokkos::Cuda>( range, KOKKOS_LAMBDA (int i, int j, int k, double& residual){
         newphi(i, j, k) = (1. / 6)
             * (phi(i + 1, j, k) + phi(i - 1, j, k) + phi(i, j + 1, k) +
                 phi(i, j - 1, k) + phi(i, j, k + 1) + phi(i, j, k - 1));
-        printf("In lambda CUDA at (%d,%d,%d), m_phi is at %p %p %g from %g, %g, %g, %g, %g, %g and m_newphi is %g\n", i, j, k,
-            phi.m_view.data(), &(phi(i,j,k)),
-            phi(i,j,k),
-            phi(i + 1, j, k), phi(i - 1, j, k), phi(i, j + 1, k),
-            phi(i, j - 1, k), phi(i, j, k + 1), phi(i, j, k - 1),
-            newphi(i,j,k));
+//        printf("In lambda CUDA at %d,%d,%d), m_phi is at %p %p %g from %g, %g, %g, %g, %g, %g and m_newphi is %g\n", i, j, k,
+//            phi.m_view.data(), &(phi(i,j,k)),
+//            phi(i,j,k),
+//            phi(i + 1, j, k), phi(i - 1, j, k), phi(i, j + 1, k),
+//            phi(i, j - 1, k), phi(i, j, k + 1), phi(i, j, k - 1),
+//            newphi(i,j,k));
+//
         double diff = newphi(i, j, k) - phi(i, j, k);
         residual += diff * diff;
+//        printf("In lambda CUDA at (%d,%d,%d)\n", i, j, k);
       }, residual);
       cudaDeviceSynchronize();
       //parallel_for<Kokkos::Cuda>(range, KOKKOS_LAMBDA (const int i, const int j, const int k) {
@@ -364,11 +364,11 @@ void Poisson1::timeAdvance(DetailedTask* dtask,
         newphi(i, j, k) = (1. / 6)
             * (phi(i + 1, j, k) + phi(i - 1, j, k) + phi(i, j + 1, k) +
                 phi(i, j - 1, k) + phi(i, j, k + 1) + phi(i, j, k - 1));
-        printf("In lambda OpenMP at (%d,%d,%d), m_phi is %g from %g, %g, %g, %g, %g, %g and m_newphi is %g\n", i, j, k,
-            phi(i,j,k),
-            phi(i + 1, j, k), phi(i - 1, j, k), phi(i, j + 1, k),
-            phi(i, j - 1, k), phi(i, j, k + 1), phi(i, j, k - 1),
-            newphi(i,j,k));
+//        printf("In lambda OpenMP at (%d,%d,%d), m_phi is %g from %g, %g, %g, %g, %g, %g and m_newphi is %g\n", i, j, k,
+//            phi(i,j,k),
+//            phi(i + 1, j, k), phi(i - 1, j, k), phi(i, j + 1, k),
+//            phi(i, j - 1, k), phi(i, j, k + 1), phi(i, j, k - 1),
+//            newphi(i,j,k));
         double diff = newphi(i, j, k) - phi(i, j, k);
         residual += diff * diff;
       }, residual);
