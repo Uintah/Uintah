@@ -68,6 +68,7 @@
 
 using namespace Uintah;
 
+
 namespace Uintah {
 
 // These are used externally, keep them visible outside this unit
@@ -75,9 +76,12 @@ namespace Uintah {
   Dout g_task_dbg(   "TaskDBG"  , "MPIScheduler", "output each task name as it begins/ends", false );
   Dout g_mpi_dbg(    "MPIDBG"   , "MPIScheduler", "MPI debug stream", false );
   Dout g_exec_out(   "ExecOut"  , "MPIScheduler", "exec debug stream", false );
+
 }
 
+
 namespace {
+
   Uintah::MasterLock g_lb_mutex{};                // load balancer lock
   Uintah::MasterLock g_recv_mutex{};              // for postMPIRecvs
   
@@ -91,6 +95,7 @@ namespace {
   Dout g_reductions(   "ReductionTasks"         , "MPIScheduler", "rank-0 reports each reduction task", false );
   Dout g_time_out(     "MPIScheduler_TimingsOut", "MPIScheduler", "write MPI timing files: timingstats.avg, timingstats.max", false );
   Dout g_task_level(   "TaskLevel"              , "MPIScheduler", "output task name and each level's beginning patch when done", false );
+
 }
 
 
@@ -797,8 +802,20 @@ MPIScheduler::execute( int tgnum     /* = 0 */
 
     numTasksDone++;
 
-    DOUT(g_task_order, "Rank-" << d_myworld->myRank() << " Running task static order: "
-                               << dtask->getStaticOrder() << " , scheduled order: " << numTasksDone);
+    if (g_task_order && d_myworld->myRank() == d_myworld->nRanks() / 2) {
+      std::ostringstream task_name;
+      task_name << "  Running task: \"" << dtask->getTask()->getName() << "\" ";
+
+      std::ostringstream task_type;
+      task_type << "(" << dtask->getTask()->getType() << ") ";
+
+      // task ordering debug info - please keep this here, APH 05/30/18
+      DOUT(true, "Rank-" << d_myworld->myRank()
+                         << std::setw(60) << std::left << task_name.str()
+                         << std::setw(14) << std::left << task_type.str()
+                         << std::setw(15) << " static order: "    << std::setw(3) << std::left << dtask->getStaticOrder()
+                         << std::setw(18) << " scheduled order: " << std::setw(3) << std::left << numTasksDone);
+    }
 
     DOUT(g_task_dbg, "Rank-" << my_rank << " Initiating task:  " << *dtask);
 
@@ -872,20 +889,17 @@ MPIScheduler::execute( int tgnum     /* = 0 */
   // only do on top-level scheduler
   if ( m_parent_scheduler == nullptr ) {
 
-    // This seems like the best place to collect and save these
-    // runtime stats. They are reported in outputTimingStats.
-    if( d_runtimeStats )
-    {
+    // This seems like the best place to collect and save these runtime stats.
+    // They are reported in outputTimingStats.
+    if( d_runtimeStats ) {
       int numCells = 0, numParticles = 0;
       OnDemandDataWarehouseP dw = m_dws[m_dws.size() - 1];
       const GridP grid(const_cast<Grid*>(dw->getGrid()));
-      const PatchSubset* myPatches =
-	m_loadBalancer->getPerProcessorPatchSet(grid)->getSubset(my_rank);
+      const PatchSubset* myPatches = m_loadBalancer->getPerProcessorPatchSet(grid)->getSubset(my_rank);
       
       for (auto p = 0; p < myPatches->size(); p++) {
         const Patch* patch = myPatches->get(p);
-        IntVector range =
-	  patch->getExtraCellHighIndex() - patch->getExtraCellLowIndex();
+        IntVector range = patch->getExtraCellHighIndex() - patch->getExtraCellLowIndex();
         numCells += range.x() * range.y() * range.z();
         
         // Go through all materials since getting an MPMMaterial
@@ -1084,8 +1098,7 @@ MPIScheduler::outputTimingStats( const char* label )
 //  Take the various timers and compute the net results
 void MPIScheduler::computeNetRuntimeStats()
 {
-  if( d_runtimeStats )
-  {
+  if( d_runtimeStats ) {
     // don't count output time
     (*d_runtimeStats)[TaskExecTime      ] += mpi_info_[TotalTask] - (*d_runtimeStats)[TotalIOTime];
     (*d_runtimeStats)[TaskLocalCommTime ] += mpi_info_[TotalRecv] + mpi_info_[TotalSend];

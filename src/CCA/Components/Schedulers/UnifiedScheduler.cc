@@ -344,7 +344,7 @@ UnifiedScheduler::problemSetup( const ProblemSpecP     & prob_spec
     }
   }
 
-  proc0cout << "   Using \"" << taskQueueAlg << "\" task queue priority algorithm" << std::endl;
+  proc0cout << "Using \"" << taskQueueAlg << "\" task queue priority algorithm" << std::endl;
 
   m_num_threads = Uintah::Parallel::getNumThreads() - 1;
 
@@ -368,10 +368,10 @@ UnifiedScheduler::problemSetup( const ProblemSpecP     & prob_spec
   if (d_myworld->myRank() == 0) {
     std::string plural = (m_num_threads == 1) ? " thread" : " threads";
     std::cout
-        << "   WARNING: Multi-threaded Unified scheduler is EXPERIMENTAL, not all tasks are thread safe yet.\n"
-        << "   Creating " << m_num_threads << " additional "
+        << "\nWARNING: Multi-threaded Unified scheduler is EXPERIMENTAL, not all tasks are thread safe yet.\n"
+        << "Creating " << m_num_threads << " additional "
         << plural + " for task execution (total task execution threads = "
-        << m_num_threads + 1 << ")." << std::endl;
+        << m_num_threads + 1 << ").\n" << std::endl;
 
 #ifdef HAVE_CUDA
     if (Uintah::Parallel::usingDevice()) {
@@ -789,8 +789,20 @@ UnifiedScheduler::markTaskConsumed( int          & numTasksDone
   // Update the count of tasks consumed by the scheduler.
   numTasksDone++;
 
+  // task ordering debug info - please keep this here, APH 05/30/18
   if (g_task_order && d_myworld->myRank() == d_myworld->nRanks() / 2) {
-    DOUT(g_task_dbg, myRankThread() << " Running task static order: " << dtask->getStaticOrder() << ", scheduled order: " << numTasksDone);
+    std::ostringstream task_name;
+    task_name << "  Running task: \"" << dtask->getTask()->getName() << "\" ";
+
+    std::ostringstream task_type;
+    task_type << "(" << dtask->getTask()->getType() << ") ";
+
+    // task ordering debug info - please keep this here, APH 05/30/18
+    DOUT(true, "Rank-" << d_myworld->myRank()
+                       << std::setw(60) << std::left << task_name.str()
+                       << std::setw(14) << std::left << task_type.str()
+                       << std::setw(15) << " static order: "    << std::setw(3) << std::left << dtask->getStaticOrder()
+                       << std::setw(18) << " scheduled order: " << std::setw(3) << std::left << numTasksDone);
   }
 
   // Update the count of this phase consumed.

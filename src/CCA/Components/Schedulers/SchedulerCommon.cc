@@ -343,10 +343,10 @@ SchedulerCommon::problemSetup( const ProblemSpecP     & prob_spec
     params->getWithDefault("small_messages", m_use_small_messages, true);
 
     if (m_use_small_messages) {
-      proc0cout << "   Using small, individual MPI messages (no message combining)\n";
+      proc0cout << "Using small, individual MPI messages (no message combining)\n";
     }
     else {
-      proc0cout << "   Using large, combined MPI messages\n";
+      proc0cout << "Using large, combined MPI messages\n";
     }
 
     ProblemSpecP track = params->findBlock("VarTracker");
@@ -519,13 +519,12 @@ SchedulerCommon::problemSetup( const ProblemSpecP     & prob_spec
     }
   }
 
-  // If small_messages not specified in UPS Scheduler block, still
-  // report what's used
+  // If small_messages not specified in UPS Scheduler block, still report what's used
   if (m_use_small_messages) {
-    proc0cout << "   Using small, individual MPI messages (no message combining)\n";
+    proc0cout << "Using small, individual MPI messages (no message combining)\n";
   }
   else {
-    proc0cout << "   Using large, combined MPI messages\n";
+    proc0cout << "Using large, combined MPI messages\n";
   }
 
   m_no_scrub_vars.insert("refineFlag");
