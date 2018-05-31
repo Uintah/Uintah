@@ -4121,12 +4121,13 @@ DataArchiver::copy_outputProblemSpec( Dir & fromDir, Dir & toDir )
 } 
 
 //______________________________________________________________________
-// If your using PostProcessUda then use its mapping 
+// Return the top level time step.
 int
 DataArchiver::getTimeStepTopLevel()
 {
   const int timeStep = m_application->getTimeStep();
 
+  // If using PostProcessUda then use its mapping for the restart time steps.
   if ( m_doPostProcessUda ) {
     return m_restartTimeStepIndicies[ timeStep ];
   }

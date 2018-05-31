@@ -552,9 +552,9 @@ class LoadBalancer;
 
     //__________________________________
     //  PostProcessUda related
-    //  used for migrating timestep directories
-    std::map< int, int> m_restartTimeStepIndicies;
     bool m_doPostProcessUda {false};
+    //  Used for migrating restart time step directories.
+    std::map< int, int> m_restartTimeStepIndicies;
        
     Dir m_fromDir {""};              // keep track of the original uda
     void copy_outputProblemSpec(Dir& fromDir, Dir& toDir);
