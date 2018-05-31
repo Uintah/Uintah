@@ -1899,8 +1899,8 @@ Ray::rayTrace_dataOnionLevels( DetailedTask* dtask,
                    cellType_view , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays);
 #endif
       Uintah::parallel_reduce_sum<Kokkos::Cuda>( range, functor, size );
-#endif //#ifdef HAVE_CUDA
     } // end if ( std::is_same< Kokkos::Cuda , ExecutionSpace >::value )
+#endif //#ifdef HAVE_CUDA
 
     // Get the CPU vars
     if ( std::is_same< Kokkos::OpenMP , ExecutionSpace >::value ) {
