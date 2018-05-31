@@ -2337,7 +2337,9 @@ OnDemandDataWarehouse::getRegionModifiable(       GridVariableBase& var,
                                         bool              useBoundaryCells)
 {
   var.allocate(reqLow, reqHigh);
-  Patch::VariableBasis basis = Patch::translateTypeToBasis(label->typeDescription()->getType(), false);
+  
+  TypeDescription::Type varType = label->typeDescription()->getType();
+  Patch::VariableBasis basis = Patch::translateTypeToBasis( varType, false );
 
   // Enlarge the requested region, sometimes we only want extra cells.
   // select patches has difficulties with that request.
@@ -2456,7 +2458,7 @@ OnDemandDataWarehouse::getRegionModifiable(       GridVariableBase& var,
   //  BULLETPROOFING  Verify that the correct number of cells were copied
   //
   // compute the number of cells in the region
-  long requestedCells = level->getTotalCellsInRegion(reqLow, reqHigh);
+  long requestedCells = level->getTotalCellsInRegion( varType, label->getBoundaryLayer(), reqLow, reqHigh );
   
   // In non-cubic levels there may be overlapping patches that need to be accounted for.
   std::pair<int, int> overLapCells_range = std::make_pair( 0,0 );
