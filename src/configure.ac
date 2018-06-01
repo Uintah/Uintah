@@ -4284,7 +4284,7 @@ if test "$build_wasatch_3p" != "no"; then
     components=$build_wasatch_3p
   fi
 
-  $path_to_src/build_scripts/build_wasatch_3p.sh `$sci_pwd` $components "$BOOST_LIBRARY_DIR" "$BOOST_INCLUDE_DIR" "$debug" "$IS_STATIC_BUILD" "$sci_required_cuda"
+  $path_to_src/build_scripts/build_wasatch_3p.sh `$sci_pwd` $components "$BOOST_LIBRARY_DIR" "$BOOST_INCLUDE_DIR" "$debug" "$IS_STATIC_BUILD" "$sci_required_cuda" "$with_cuda"
 
   if test $? != 0; then
      AC_MSG_ERROR( Failed to build Wasatch 3p libraries... )

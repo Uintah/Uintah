@@ -11,6 +11,7 @@
 # $5 - whether Uintah is being built in debug mode or not...
 # $6 - whether Uintah is being built with static libraries or not ...
 # $7 - whether Uintah is being built with CUDA
+# $8 - CUDA SDK installation path
 #
 export GIT_SSL_NO_VERIFY=true
 BASE_BUILD_DIR=$1
@@ -75,9 +76,9 @@ if test "$7" = "yes"; then
   # Building with CUDA
   THREADS="-DENABLE_THREADS=OFF -DNTHREADS=1"
   if [[ `hostname` = titan* ]]; then
-    CUDA="-DENABLE_CUDA=ON -DDISABLE_INTROSPECTION=ON -DCUDA_ARCHITECTURE_MINIMUM=\"3.5\" -DCUDA_HOST_COMPILER=/opt/gcc/4.9.0/bin/g++ -DCUDA_TOOLKIT_ROOT-DIR=$CUDATOOLKIT_HOME"
+    CUDA="-DENABLE_CUDA=ON -DDISABLE_INTROSPECTION=ON -DCUDA_ARCHITECTURE_MINIMUM=\"3.5\" -DCUDA_HOST_COMPILER=/opt/gcc/4.9.0/bin/g++ -DCUDA_TOOLKIT_ROOT_DIR=$8"
   else
-    CUDA="-DENABLE_CUDA=ON -DDISABLE_INTROSPECTION=ON"
+    CUDA="-DENABLE_CUDA=ON -DDISABLE_INTROSPECTION=ON -DCUDA_TOOLKIT_ROOT_DIR=$8"
   fi
 else
   # Building without CUDA
