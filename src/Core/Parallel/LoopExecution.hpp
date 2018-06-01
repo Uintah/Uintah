@@ -1004,6 +1004,7 @@ sweeping_parallel_for( BlockRange const & r, const Functor & functor, const bool
 
   }
 }
+#endif  //#if defined(UINTAH_ENABLE_KOKKOS)
 
 
 
