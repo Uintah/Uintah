@@ -905,6 +905,98 @@ void parallel_reduce_1D( BlockRange const & r, const Functor & f, ReductionType 
 
 
 
+#if defined(UINTAH_ENABLE_KOKKOS)
+template <typename ExecutionSpace, typename Functor>
+inline typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::OpenMP>::value, void>::type
+sweeping_parallel_for_dev( BlockRange const & r, const Functor & functor )
+{
+  const int ib = r.begin(0); const int ie = r.end(0);
+  const int jb = r.begin(1); const int je = r.end(1);
+  const int kb = r.begin(2); const int ke = r.end(2);
+
+ ////////////CUBIC BLOCKS SUPPORTED ONLY/////////////////// 
+ // RECTANGLES ARE HARD BUT POSSIBLY MORE EFFICIENT //////
+ // ///////////////////////////////////////////////////////
+const int nPartitionsx=5; // try to break domain into 5x5x5 block
+const int nPartitionsy=5; 
+const int nPartitionsz=5; 
+const int  dx=ie-ib;
+const int  dy=je-jb;
+const int  dz=ke-kb;
+const int  sdx=dx/nPartitionsx;
+const int  sdy=dy/nPartitionsy;
+const int  sdz=dz/nPartitionsz;
+const int  rdx=dx-sdx*nPartitionsx;
+const int  rdy=dy-sdy*nPartitionsy;
+const int  rdz=dz-sdz*nPartitionsz;
+  
+
+
+const int nphase=nPartitionsx+nPartitionsy+nPartitionsz-2;
+int tpp=0; //  Total parallel processes/blocks
+
+int concurrentBlocksArray[nphase/2+1]; // +1 needed for odd values, use symmetry
+
+          for (int iphase=0; iphase <nphase; iphase++ ){
+
+
+              if  ((nphase-iphase -1)>= iphase){
+                  tpp=(iphase+2)*(iphase+1)/2;
+
+                tpp-=max(iphase-nPartitionsx+1,0)*(iphase-nPartitionsx+2)/2;
+                tpp-=max(iphase-nPartitionsy+1,0)*(iphase-nPartitionsy+2)/2;
+                tpp-=max(iphase-nPartitionsz+1,0)*(iphase-nPartitionsz+2)/2;
+
+                concurrentBlocksArray[iphase]=tpp;
+              }else{
+                tpp=concurrentBlocksArray[nphase-iphase-1];
+              }
+
+              Kokkos::View<int*,  Kokkos::HostSpace> xblock("xblock",tpp) ;
+              Kokkos::View<int*,  Kokkos::HostSpace> yblock("yblock",tpp) ;
+              Kokkos::View<int*,  Kokkos::HostSpace> zblock("zblock",tpp) ;
+
+
+
+              int icount = 0 ;
+
+
+
+              for (int k=0;  k< min(iphase+1,nPartitionsz);  k++ ){ // attempts to iterate over k j i , despite  spatial dependencies
+                for (int j=0;  j< min(iphase-k+1,nPartitionsy);  j++ ){
+                  if ((iphase -k-j) <nPartitionsx){
+                      xblock(icount)=iphase-k-j;
+                      yblock(icount)=j;
+                      zblock(icount)=k;
+                      icount++;
+                    }
+                  }
+                }
+
+
+    Kokkos::parallel_for( Kokkos::RangePolicy<Kokkos::OpenMP, int>(0, tpp).set_chunk_size(2), [=](int iblock) {
+
+                      const int blockx_start=ib+ xblock(iblock)*sdx;
+                      const int blocky_start=jb+ yblock(iblock)*sdy;
+                      const int blockz_start=kb+ zblock(iblock)*sdz;
+
+                      const int blockx_end= ib+ (xblock(iblock)+1)*sdx +(xblock(iblock)+1 ==nPartitionsx ?  rdx:0 );
+                      const int blocky_end= jb+ (yblock(iblock)+1)*sdy +(yblock(iblock)+1 ==nPartitionsy ?  rdy:0 );
+                      const int blockz_end= kb+ (zblock(iblock)+1)*sdz +(zblock(iblock)+1 ==nPartitionsz ?  rdz:0 );
+
+
+
+        for (int k=blockz_start; k<blockz_end; ++k) {
+        for (int j=blocky_start; j<blocky_end; ++j) {
+        for (int i=blockx_start; i<blockx_end; ++i) {
+           functor(i,j,k);
+        }}}
+        });
+        
+         
+  }
+}
+#endif  //#if defined(UINTAH_ENABLE_KOKKOS)
 
 
 
