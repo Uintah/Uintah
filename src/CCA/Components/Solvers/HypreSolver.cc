@@ -757,22 +757,6 @@ namespace Uintah {
 #endif
 
         printTask( patches, patches->get(0), cout_doing, "HypreSolver:solve: testConvergence" );
-        //__________________________________
-        // Test for convergence
-        if( final_res_norm > m_params->tolerance || std::isfinite(final_res_norm) == 0 ){
-          if( m_params->getRestartTimestepOnFailure() ){
-            if( pg->myRank() == 0 )
-              cout << "HypreSolver not converged in " << num_iterations
-                   << "iterations, final residual= " << final_res_norm
-                   << ", requesting smaller timestep\n";
-            //new_dw->abortTimestep();
-            //new_dw->restartTimestep();
-          } else {
-            throw ConvergenceFailure("HypreSolver variable: "+ m_X_label->getName()+", solver: "+ m_params->solvertype+", preconditioner: "+ m_params->precondtype,
-                                     num_iterations, final_res_norm,
-                                     m_params->tolerance,__FILE__,__LINE__);
-          }
-        }
 
         solve_timer.stop();
         hypre_EndTiming ( m_tSolveOnly );
@@ -851,6 +835,25 @@ namespace Uintah {
         }
 
         timer.reset( true );
+        
+        //__________________________________
+        // Test for convergence failure
+        
+        if( final_res_norm > m_params->tolerance || std::isfinite(final_res_norm) == 0 ){
+          if( m_params->getRestartTimestepOnFailure() ){
+            if( pg->myRank() == 0 ){
+              cout << "  WARNING:  HypreSolver not converged in " << num_iterations
+                   << " iterations, final residual= " << final_res_norm
+                   << ", requesting the timestep be restarted.\n";
+            }
+         //   new_dw->abortTimestep();
+            new_dw->restartTimestep();
+          } else {
+            throw ConvergenceFailure("HypreSolver variable: "+ m_X_label->getName()+", solver: "+ m_params->solvertype+", preconditioner: "+ m_params->precondtype,
+                                     num_iterations, final_res_norm,
+                                     m_params->tolerance,__FILE__,__LINE__);
+          }
+        }
       }
     }
 

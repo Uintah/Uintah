@@ -838,7 +838,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */
       abort = true;
       abort_point = dtask->getTask()->getSortedOrder();
 
-      DOUT(true, "Aborting timestep after task: " << *dtask->getTask());
+      DOUT(true, "  WARNING:  Aborting timestep after task: " << dtask->getTask()->getName());
     }
 
   } // end while( numTasksDone < ntasks )
