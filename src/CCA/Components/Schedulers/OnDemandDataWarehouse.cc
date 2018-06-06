@@ -2296,7 +2296,7 @@ OnDemandDataWarehouse::getRegion(       constGridVariableBase& constVar,
                                   const IntVector&             high,
                                         bool                   useBoundaryCells /*=true*/ )
 {
-  GridVariableBase* var = constVar.cloneType();
+
   getRegionModifiable( *var, label, matlIndex, level, low, high, useBoundaryCells);
   constVar = *var;
   delete var;
@@ -3879,7 +3879,6 @@ OnDemandDataWarehouse::printDebuggingPutInfo( const VarLabel* label,
     cerrLock.unlock();
   }
 }
-
 
 //----------------------------------------------------------------------
 //These next methods all manage the data warehouse in the context of
@@ -7850,5 +7849,6 @@ OnDemandDataWarehouse::printDebuggingPutInfo( const VarLabel* label,
     cerrLock.unlock();
   }
 }
+
 
 #endif //BRADS_NEW_DWDATABASE

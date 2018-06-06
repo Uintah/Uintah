@@ -81,9 +81,9 @@ const VarLabel* RMCRTCommon::d_radiationVolqLabel;
 const VarLabel* RMCRTCommon::d_compAbskgLabel;
 const VarLabel* RMCRTCommon::d_compTempLabel;
 const VarLabel* RMCRTCommon::d_cellTypeLabel;
-#ifdef USE_RMCRT_SLIM
+
+// For the RMCRT slim version
 const VarLabel* RMCRTCommon::d_abskgSigmaT4CellTypeLabel;
-#endif
 
 //______________________________________________________________________
 // Class: Constructor.
@@ -101,9 +101,8 @@ RMCRTCommon::RMCRTCommon( TypeDescription::Type FLT_DBL )
     proc0cout << "__________________________________ USING FLOAT VERSION OF RMCRT" << std::endl;
   }
 
-#ifdef USE_RMCRT_SLIM
+  // For the RMCRT slim version
   d_abskgSigmaT4CellTypeLabel = VarLabel::create( "abskgSigmaT4CellType", CCVariable<double>::getTypeDescription() );
-#endif
 
   d_boundFluxLabel     = VarLabel::create( "RMCRTboundFlux",   CCVariable<Stencil7>::getTypeDescription() );
   d_radiationVolqLabel = VarLabel::create( "radiationVolq",    CCVariable<double>::getTypeDescription() );
@@ -131,9 +130,8 @@ RMCRTCommon::~RMCRTCommon()
   if (RMCRTCommon::d_FLT_DBL == TypeDescription::float_type){
     VarLabel::destroy( d_abskgLabel );
   }
-#ifdef USE_RMCRT_SLIM
+  // For the RMCRT slim version
   VarLabel::destroy( d_abskgSigmaT4CellTypeLabel );
-#endif
 
   // when the radiometer class is invoked d_matlSet it deleted twice.  This prevents that.
   if( d_matlSet ) {
@@ -320,7 +318,6 @@ RMCRTCommon::sigmaT4( const ProcessorGroup*,
   }
 }
 
-#ifdef USE_RMCRT_SLIM
 void
 RMCRTCommon::sched_combineAbskgSigmaT4CellType( const LevelP& level,
                            SchedulerP& sched,
@@ -404,8 +401,6 @@ RMCRTCommon::combineAbskgSigmaT4CellType( const ProcessorGroup*,
     }
   }
 }
-
-#endif
 
 //______________________________________________________________________
 //

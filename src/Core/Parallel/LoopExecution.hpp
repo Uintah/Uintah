@@ -215,31 +215,33 @@ enum TaskAssignedExecutionSpace {
 #define CALL_ASSIGN_PORTABLE_TASK_2TAGS(TAG1, TAG2,                                                \
                                   TASK_DEPENDENCIES,                                               \
                                   FUNCTION_NAME, FUNCTION_CODE_NAME,                               \
-                                  PATCHES, MATERIALS, ...) {                                       \
+                                  PATCHES, MATERIALS,                                              \
+                                  TASK_GRAPH_ID,                                                   \
+                                  ...) {                                                           \
   Task* task{nullptr};                                                                             \
                                                                                                    \
   if (Uintah::Parallel::usingDevice()) {                                                           \
     if (strcmp(STRVX(ORIGINAL_KOKKOS_CUDA_TAG), STRVX(TAG1)) == 0) {                               \
-      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME<TAG1>, ## __VA_ARGS__);          \
+      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME TAG1>, ## __VA_ARGS__);          \
       PREPARE_KOKKOS_CUDA_TASK(task);                                                              \
     } else if (strcmp(STRVX(ORIGINAL_KOKKOS_CUDA_TAG), STRVX(TAG2)) == 0) {                        \
-      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME<TAG2>, ## __VA_ARGS__);          \
+      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME TAG2>, ## __VA_ARGS__);          \
       PREPARE_KOKKOS_CUDA_TASK(task);                                                              \
     }                                                                                              \
   }                                                                                                \
                                                                                                    \
   if (!task) {                                                                                     \
     if (strcmp(STRVX(ORIGINAL_KOKKOS_OPENMP_TAG), STRVX(TAG1)) == 0) {                             \
-      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME<TAG1>, ## __VA_ARGS__);          \
+      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME TAG1>, ## __VA_ARGS__);          \
       PREPARE_KOKKOS_OPENMP_TASK(task);                                                            \
     } else if (strcmp(STRVX(ORIGINAL_KOKKOS_OPENMP_TAG), STRVX(TAG2)) == 0) {                      \
-      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME<TAG2>, ## __VA_ARGS__);          \
+      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME TAG2>, ## __VA_ARGS__);          \
       PREPARE_KOKKOS_OPENMP_TASK(task);                                                            \
     } else if (strcmp(STRVX(ORIGINAL_UINTAH_CPU_TAG), STRVX(TAG1)) == 0) {                         \
-      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME<TAG1>, ## __VA_ARGS__);          \
+      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME TAG1>, ## __VA_ARGS__);          \
       PREPARE_UINTAH_CPU_TASK(task);                                                               \
     } else if (strcmp(STRVX(ORIGINAL_UINTAH_CPU_TAG), STRVX(TAG2)) == 0) {                         \
-      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME<TAG2>, ## __VA_ARGS__);          \
+      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME TAG2>, ## __VA_ARGS__);          \
       PREPARE_UINTAH_CPU_TASK(task);                                                               \
     }                                                                                              \
   }                                                                                                \
@@ -249,29 +251,31 @@ enum TaskAssignedExecutionSpace {
   }                                                                                                \
                                                                                                    \
   if (task) {                                                                                      \
-    sched->addTask(task, PATCHES, MATERIALS);                                                      \
+    sched->addTask(task, PATCHES, MATERIALS, TASK_GRAPH_ID);                                       \
   }                                                                                                \
 }
 //If only 1 execution space tag is specified
 #define CALL_ASSIGN_PORTABLE_TASK_1TAG(TAG1,                                                       \
                                   TASK_DEPENDENCIES,                                               \
                                   FUNCTION_NAME, FUNCTION_CODE_NAME,                               \
-                                  PATCHES, MATERIALS, ...) {                                       \
+                                  PATCHES, MATERIALS,                                              \
+                                  TASK_GRAPH_ID,                                                   \
+                                  ...) {                                                           \
   Task* task{nullptr};                                                                             \
                                                                                                    \
   if (Uintah::Parallel::usingDevice()) {                                                           \
     if (strcmp(STRVX(ORIGINAL_KOKKOS_CUDA_TAG), STRVX(TAG1)) == 0) {                               \
-      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME<TAG1>, ## __VA_ARGS__);          \
+      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME TAG1>, ## __VA_ARGS__);          \
       PREPARE_KOKKOS_CUDA_TASK(task);                                                              \
     }                                                                                              \
   }                                                                                                \
                                                                                                    \
   if (!task) {                                                                                     \
     if (strcmp(STRVX(ORIGINAL_KOKKOS_OPENMP_TAG), STRVX(TAG1)) == 0) {                             \
-      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME<TAG1>, ## __VA_ARGS__);          \
+      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME TAG1>, ## __VA_ARGS__);          \
       PREPARE_KOKKOS_OPENMP_TASK(task);                                                            \
     } else if (strcmp(STRVX(ORIGINAL_UINTAH_CPU_TAG), STRVX(TAG1)) == 0) {                         \
-      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME<TAG1>, ## __VA_ARGS__);          \
+      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME TAG1>, ## __VA_ARGS__);          \
       PREPARE_UINTAH_CPU_TASK(task);                                                               \
     }                                                                                              \
   }                                                                                                \
@@ -281,7 +285,7 @@ enum TaskAssignedExecutionSpace {
   }                                                                                                \
                                                                                                    \
   if (task) {                                                                                      \
-    sched->addTask(task, PATCHES, MATERIALS);                                                      \
+    sched->addTask(task, PATCHES, MATERIALS, TASK_GRAPH_ID);                                       \
   }                                                                                                \
 }
 

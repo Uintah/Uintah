@@ -211,6 +211,7 @@ private:
   //
 
   enum Algorithm{ dataOnion, 
+                  dataOnionSlim,
                   coarseLevel, 
                   singleLevel};
 

@@ -26,11 +26,7 @@
 #include <CCA/Components/Models/Radiation/RMCRT/RayKokkos.h>
 #include <CCA/Components/Schedulers/DetailedTask.h>
 
-//#define USE_RMCRT_SLIM
-
-#ifdef USE_RMCRT_SLIM
 #include <CCA/Components/Models/Radiation/RMCRT/slim.h>
-#endif
 
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -278,6 +274,8 @@ Ray::problemSetup( const ProblemSpecP     & prob_spec
     //  single level
     if (type == "singleLevel" ) {
 
+      d_algorithm = singleLevel;
+
       ProblemSpecP ROI_ps = alg_ps->findBlock("ROI_extents");
       ROI_ps->getAttribute( "type", type);
       ROI_ps->get( "length", d_maxRayLength );
@@ -288,8 +286,9 @@ Ray::problemSetup( const ProblemSpecP     & prob_spec
     //  Data Onion
     } else if (type == "dataOnion" ) {
 
+      d_algorithm = dataOnion;
+
       isMultilevel = true;
-      algorithm    = dataOnion;
 
       alg_ps->getWithDefault( "haloCells",   d_haloCells,  IntVector(10,10,10) );
       alg_ps->get( "haloLength",         d_haloLength );
@@ -318,20 +317,25 @@ Ray::problemSetup( const ProblemSpecP     & prob_spec
     //  Data Onion Slim (
     } else if (type == "dataOnionSlim" ) {
 
+      d_algorithm = dataOnionSlim;
+
       isMultilevel = true;
-      algorithm    = dataOnion;
 
       alg_ps->getWithDefault( "haloCells",   d_haloCells,  IntVector(10,10,10) );
       alg_ps->get( "haloLength",         d_haloLength );
       alg_ps->get( "coarsenExtraCells" , d_coarsenExtraCells );
 
       // Note: The ROI of Slim is hard coded to be cell based.
+      d_ROI_algo = dynamic;
 
     //__________________________________
     //  rmcrt only on the coarse level
     } else if ( type == "RMCRT_coarseLevel" ) {
+
+      d_algorithm = coarseLevel;
+
       isMultilevel = true;
-      algorithm    = coarseLevel;
+
       d_ROI_algo   = entireDomain;
       alg_ps->require( "orderOfInterpolation", d_orderOfInterpolation );
       alg_ps->get( "coarsenExtraCells" , d_coarsenExtraCells );
@@ -956,22 +960,22 @@ Ray::sched_rayTrace_dataOnion( const LevelP        & level
 
 
       int maxElem = Max( d_haloCells.x(), d_haloCells.y(), d_haloCells.z() );
-#ifdef USE_RMCRT_SLIM
-      printf("Needing it\n");
-      task->requires( Task::NewDW,     d_abskgSigmaT4CellTypeLabel,     gac, maxElem );
-#else
-      task->requires( abskg_dw,     d_abskgLabel,     gac, maxElem );
-      task->requires( sigma_dw,     d_sigmaT4Label,   gac, maxElem );
-      task->requires( celltype_dw , d_cellTypeLabel , gac, maxElem );
-#endif
+      if (d_algorithm == dataOnionSlim) {
+        printf("Needing it\n");
+        task->requires( Task::NewDW,     d_abskgSigmaT4CellTypeLabel,     gac, maxElem );
+      } else {
+        task->requires( abskg_dw,     d_abskgLabel,     gac, maxElem );
+        task->requires( sigma_dw,     d_sigmaT4Label,   gac, maxElem );
+        task->requires( celltype_dw , d_cellTypeLabel , gac, maxElem );
+      }
     } else {                                        // we don't know the number of ghostCells so get everything
-#ifdef USE_RMCRT_SLIM
-      task->requires( Task::NewDW,     d_abskgSigmaT4CellTypeLabel,     gac, SHRT_MAX );
-#else
-      task->requires( abskg_dw,      d_abskgLabel,     gac, SHRT_MAX );
-      task->requires( sigma_dw,      d_sigmaT4Label,   gac, SHRT_MAX );
-      task->requires( celltype_dw ,  d_cellTypeLabel , gac, SHRT_MAX );
-#endif
+      if (d_algorithm == dataOnionSlim) {
+        task->requires( Task::NewDW,     d_abskgSigmaT4CellTypeLabel,     gac, SHRT_MAX );
+      } else {
+        task->requires( abskg_dw,      d_abskgLabel,     gac, SHRT_MAX );
+        task->requires( sigma_dw,      d_sigmaT4Label,   gac, SHRT_MAX );
+        task->requires( celltype_dw ,  d_cellTypeLabel , gac, SHRT_MAX );
+      }
     }
 
     // TODO This is a temporary fix until we can generalize GPU/CPU carry forward functionality.
@@ -1015,27 +1019,26 @@ Ray::sched_rayTrace_dataOnion( const LevelP        & level
       Task::WhichDW abskg_dw_CL = get_abskg_whichDW( l, d_abskgLabel );
 
       if(l==0 || d_ROI_algo != patch_based){
-#ifdef USE_RMCRT_SLIM
-        task->requires( Task::NewDW, d_abskgSigmaT4CellTypeLabel,    nullptr, Task::CoarseLevel, offset, nullptr, ND, gac, SHRT_MAX );
-#else
-        task->requires( abskg_dw_CL, d_abskgLabel,    nullptr, Task::CoarseLevel, offset, nullptr, ND, gac, SHRT_MAX );
-        task->requires( sigma_dw,    d_sigmaT4Label,  nullptr, Task::CoarseLevel, offset, nullptr, ND, gac, SHRT_MAX );
-        task->requires( celltype_dw, d_cellTypeLabel, nullptr, Task::CoarseLevel, offset, nullptr, ND, gac, SHRT_MAX );
-#endif
+        if (d_algorithm == dataOnionSlim) {
+          task->requires( Task::NewDW, d_abskgSigmaT4CellTypeLabel,    nullptr, Task::CoarseLevel, offset, nullptr, ND, gac, SHRT_MAX );
+        } else {
+          task->requires( abskg_dw_CL, d_abskgLabel,    nullptr, Task::CoarseLevel, offset, nullptr, ND, gac, SHRT_MAX );
+          task->requires( sigma_dw,    d_sigmaT4Label,  nullptr, Task::CoarseLevel, offset, nullptr, ND, gac, SHRT_MAX );
+          task->requires( celltype_dw, d_cellTypeLabel, nullptr, Task::CoarseLevel, offset, nullptr, ND, gac, SHRT_MAX );
+        }
         proc0cout << "WARNING: RMCRT High communication costs on level: " << l
                   << ". Radiation variables from every patch on this level are communicated to every patch on this level."
                   << endl;
       }else{
         proc0cout << " RMCRT requesting " << nGhost[l]  << " ghost cells on level: " << l << "\n";
-#ifdef USE_RMCRT_SLIM
-        task->requires( Task::NewDW, d_abskgSigmaT4CellTypeLabel,    nullptr, Task::CoarseLevel, offset, nullptr, ND, gac, nGhost[l]);
-#else
-        task->requires( abskg_dw_CL, d_abskgLabel,    nullptr, Task::CoarseLevel, offset, nullptr, ND, gac, nGhost[l]);
-        task->requires( sigma_dw,    d_sigmaT4Label,  nullptr, Task::CoarseLevel, offset, nullptr, ND, gac, nGhost[l]);
-        task->requires( celltype_dw, d_cellTypeLabel, nullptr, Task::CoarseLevel, offset, nullptr, ND, gac, nGhost[l]);
-#endif
+        if (d_algorithm == dataOnionSlim) {
+          task->requires( Task::NewDW, d_abskgSigmaT4CellTypeLabel,    nullptr, Task::CoarseLevel, offset, nullptr, ND, gac, nGhost[l]);
+        } else {
+          task->requires( abskg_dw_CL, d_abskgLabel,    nullptr, Task::CoarseLevel, offset, nullptr, ND, gac, nGhost[l]);
+          task->requires( sigma_dw,    d_sigmaT4Label,  nullptr, Task::CoarseLevel, offset, nullptr, ND, gac, nGhost[l]);
+          task->requires( celltype_dw, d_cellTypeLabel, nullptr, Task::CoarseLevel, offset, nullptr, ND, gac, nGhost[l]);
+        }
       }
-
     }
 
     if( modifies_divQ ){
@@ -1806,13 +1809,11 @@ Ray::rayTrace_dataOnionLevels( DetailedTask* dtask,
     // Declare these simulation vars here so they stay in scope for the OnDemandDataWarehouse
     // Note that even though boundFlux isn't used here, we still have to allocate it so
     // an upcoming carry forward task doesn't break
-#ifdef USE_RMCRT_SLIM
     std::vector< constCCVariable<double> > abskgSigmaT4CellType(numLevels);
-#else
     std::vector< constCCVariable< T > > abskg(numLevels);
     std::vector< constCCVariable< T > > sigmaT4OverPi(numLevels);
     std::vector< constCCVariable<int> > cellType(numLevels);
-#endif
+
     CCVariable<double>   divQ_fine;
     CCVariable<Stencil7> boundFlux_fine;
     CCVariable<double>   radiationVolq_fine;
@@ -1830,13 +1831,13 @@ Ray::rayTrace_dataOnionLevels( DetailedTask* dtask,
     // Get the GPU vars
     if ( std::is_same< Kokkos::Cuda , ExecutionSpace >::value ) {
       // The upcoming Kokkos views
-#ifdef USE_RMCRT_SLIM
-      KokkosView3<const double, Kokkos::CudaSpace> abskgSigmaT4CellType_view[numLevels];
-#else
-      KokkosView3<const T, Kokkos::CudaSpace>   abskg_view[numLevels];
-      KokkosView3<const T, Kokkos::CudaSpace>   sigmaT4OverPi_view[numLevels];
-      KokkosView3<const int, Kokkos::CudaSpace> cellType_view[numLevels];
-#endif
+      if (algorithm == dataOnionSlim) {
+        KokkosView3<const double, Kokkos::CudaSpace> abskgSigmaT4CellType_view[numLevels];
+      } else {
+        KokkosView3<const T, Kokkos::CudaSpace>   abskg_view[numLevels];
+        KokkosView3<const T, Kokkos::CudaSpace>   sigmaT4OverPi_view[numLevels];
+        KokkosView3<const int, Kokkos::CudaSpace> cellType_view[numLevels];
+      }
       KokkosView3<double, Kokkos::CudaSpace> divQ_fine_view;
       KokkosView3<double, Kokkos::CudaSpace> radiationVolq_fine_view;
 
@@ -1887,18 +1888,19 @@ Ray::rayTrace_dataOnionLevels( DetailedTask* dtask,
       Uintah::BlockRange range( streams, patch->getCellLowIndex(), patch->getCellHighIndex());
 
       //launch the functor
-#ifdef USE_RMCRT_SLIM
-      SlimRayTrace_dataOnion_solveDivQFunctor< T, Kokkos::CudaSpace, Kokkos::Random_XorShift1024_Pool< Kokkos::Cuda >, numLevels >
-      functor( levelParamsML, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view,
-                   divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays,
-                   Max(d_haloCells[0], d_haloCells[1], d_haloCells[2] ));
-
-#else
-      rayTrace_dataOnion_solveDivQFunctor< T, Kokkos::CudaSpace, Kokkos::Random_XorShift1024_Pool< Kokkos::Cuda >, numLevels >
-      functor( levelParamsML, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, sigmaT4OverPi_view, abskg_view,
+      if (d_algorithm == dataOnionSlim) {
+        SlimRayTrace_dataOnion_solveDivQFunctor< T, Kokkos::CudaSpace, Kokkos::Random_XorShift1024_Pool< Kokkos::Cuda >, numLevels >
+        functor( levelParamsML, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view,
+                     divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays,
+                     Max(d_haloCells[0], d_haloCells[1], d_haloCells[2] ));
+        Uintah::parallel_reduce_sum<Kokkos::Cuda>( range, functor, size );
+      } else {
+        rayTrace_dataOnion_solveDivQFunctor< T, Kokkos::CudaSpace, Kokkos::Random_XorShift1024_Pool< Kokkos::Cuda >, numLevels >
+        functor( levelParamsML, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, sigmaT4OverPi_view, abskg_view,
                    cellType_view , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays);
-#endif
-      Uintah::parallel_reduce_sum<Kokkos::Cuda>( range, functor, size );
+        Uintah::parallel_reduce_sum<Kokkos::Cuda>( range, functor, size );
+      }
+
     } // end if ( std::is_same< Kokkos::Cuda , ExecutionSpace >::value )
 #endif //#ifdef HAVE_CUDA
 
@@ -1906,13 +1908,14 @@ Ray::rayTrace_dataOnionLevels( DetailedTask* dtask,
     if ( std::is_same< Kokkos::OpenMP , ExecutionSpace >::value ) {
       // Get all the coarse level variables (e.g. as long as it has a finer level)
 
-#ifdef USE_RMCRT_SLIM
-      KokkosView3<const double> abskgSigmaT4CellType_view[numLevels];
-#else
-      KokkosView3<const T, Kokkos::HostSpace >   abskg_view[numLevels];
+      //if (d_algorithm == dataOnionSlim) {
+      // For use in the DataOnionSlim version
+      KokkosView3<const double, Kokkos::HostSpace> abskgSigmaT4CellType_view[numLevels];
+      // For use in the normal version
+      KokkosView3<const T, Kokkos::HostSpace>   abskg_view[numLevels];
       KokkosView3<const T, Kokkos::HostSpace>   sigmaT4OverPi_view[numLevels];
       KokkosView3<const int, Kokkos::HostSpace> cellType_view[numLevels];
-#endif
+      //}
       KokkosView3<double, Kokkos::HostSpace> divQ_fine_view;
       KokkosView3<double, Kokkos::HostSpace> radiationVolq_fine_view;
 
@@ -1922,33 +1925,33 @@ Ray::rayTrace_dataOnionLevels( DetailedTask* dtask,
           DataWarehouse* abskg_dw = get_abskg_dw(L, d_abskgLabel, new_dw);
           DOUT( g_ray_dbg, "    RT DataOnion: getting coarse level data L-" << L );
           if(level->hasCoarserLevel()){
-#ifdef USE_RMCRT_SLIM
-            new_dw->getRegion( abskgSigmaT4CellType[L] , d_abskgSigmaT4CellTypeLabel , d_matl , level.get_rep(), regionLo[L], regionHi[L]);
-#else
-            abskg_dw->getRegion(   abskg[L]   ,       d_abskgLabel   , d_matl , level.get_rep(), regionLo[L], regionHi[L]);
-            sigmaT4_dw->getRegion( sigmaT4OverPi[L] , d_sigmaT4Label , d_matl , level.get_rep(), regionLo[L], regionHi[L]);
-            celltype_dw->getRegion( cellType[L] ,     d_cellTypeLabel, d_matl , level.get_rep(), regionLo[L], regionHi[L]);
-#endif
+            if (d_algorithm == dataOnionSlim) {
+              new_dw->getRegion( abskgSigmaT4CellType[L] , d_abskgSigmaT4CellTypeLabel , d_matl , level.get_rep(), regionLo[L], regionHi[L]);
+            } else {
+              abskg_dw->getRegion(   abskg[L]   ,       d_abskgLabel   , d_matl , level.get_rep(), regionLo[L], regionHi[L]);
+              sigmaT4_dw->getRegion( sigmaT4OverPi[L] , d_sigmaT4Label , d_matl , level.get_rep(), regionLo[L], regionHi[L]);
+              celltype_dw->getRegion( cellType[L] ,     d_cellTypeLabel, d_matl , level.get_rep(), regionLo[L], regionHi[L]);
+            }
           } else{
-#ifdef USE_RMCRT_SLIM
-            new_dw->getLevel( abskgSigmaT4CellType[L] , d_abskgSigmaT4CellTypeLabel , d_matl , level.get_rep() );
-#else
-            abskg_dw->getLevel(   abskg[L]   ,       d_abskgLabel ,   d_matl , level.get_rep() );
-            sigmaT4_dw->getLevel( sigmaT4OverPi[L] , d_sigmaT4Label,  d_matl , level.get_rep() );
-            celltype_dw->getLevel( cellType[L] ,     d_cellTypeLabel, d_matl , level.get_rep() );
-#endif
+            if (d_algorithm == dataOnionSlim) {
+              new_dw->getLevel( abskgSigmaT4CellType[L] , d_abskgSigmaT4CellTypeLabel , d_matl , level.get_rep() );
+            } else {
+              abskg_dw->getLevel(   abskg[L]   ,       d_abskgLabel ,   d_matl , level.get_rep() );
+              sigmaT4_dw->getLevel( sigmaT4OverPi[L] , d_sigmaT4Label,  d_matl , level.get_rep() );
+             celltype_dw->getLevel( cellType[L] ,     d_cellTypeLabel, d_matl , level.get_rep() );
+            }
           }
         }
       }
       // Get all the fine level data.
       DOUT( g_ray_dbg, "    RT DataOnion:  getting fine level data across L-" << fine_L << " " << fineLevel_ROI_Lo << " " << fineLevel_ROI_Hi );
-#ifdef USE_RMCRT_SLIM
-      new_dw->getRegion(   abskgSigmaT4CellType[fine_L] , d_abskgSigmaT4CellTypeLabel   , d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
-#else
-      abskg_dw->getRegion(    abskg[fine_L],         d_abskgLabel ,   d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
-      sigmaT4_dw->getRegion(  sigmaT4OverPi[fine_L], d_sigmaT4Label,  d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
-      celltype_dw->getRegion( cellType[fine_L],      d_cellTypeLabel, d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
-#endif
+      if (d_algorithm == dataOnionSlim) {
+        new_dw->getRegion(   abskgSigmaT4CellType[fine_L] , d_abskgSigmaT4CellTypeLabel   , d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
+      } else {
+        abskg_dw->getRegion(    abskg[fine_L],         d_abskgLabel ,   d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
+        sigmaT4_dw->getRegion(  sigmaT4OverPi[fine_L], d_sigmaT4Label,  d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
+        celltype_dw->getRegion( cellType[fine_L],      d_cellTypeLabel, d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
+      }
       //Get the computable variables on the fine level
       if( modifies_divQ ){
         old_dw->getModifiable( divQ_fine,          d_divQLabel,          d_matl, finePatch );
@@ -1968,13 +1971,13 @@ Ray::rayTrace_dataOnionLevels( DetailedTask* dtask,
 
       //Get the Kokkos Views from the simulation variables (coarse and fine)
       for ( int L = 0; L < numLevels; L++ ) {
-#ifdef USE_RMCRT_SLIM
-        abskgSigmaT4CellType_view[L] = abskgSigmaT4CellType[L].getKokkosView();
-#else
-        abskg_view[L]         = abskg[L].getKokkosView();
-        sigmaT4OverPi_view[L] = sigmaT4OverPi[L].getKokkosView();
-        cellType_view[L]      = cellType[L].getKokkosView();
-#endif
+        if (d_algorithm == dataOnionSlim) {
+          abskgSigmaT4CellType_view[L] = abskgSigmaT4CellType[L].getKokkosView();
+        } else {
+          abskg_view[L]         = abskg[L].getKokkosView();
+          sigmaT4OverPi_view[L] = sigmaT4OverPi[L].getKokkosView();
+          cellType_view[L]      = cellType[L].getKokkosView();
+        }
       }
       divQ_fine_view          = divQ_fine.getKokkosView();
       radiationVolq_fine_view = radiationVolq_fine.getKokkosView();
@@ -1998,18 +2001,18 @@ Ray::rayTrace_dataOnionLevels( DetailedTask* dtask,
       if (d_solveDivQ) {
         Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex());
 
-#ifdef USE_RMCRT_SLIM
-        SlimRayTrace_dataOnion_solveDivQFunctor< T, Kokkos::HostSpace, Kokkos::Random_XorShift1024_Pool< Kokkos::OpenMP >, numLevels >
-        functor( levelParamsML, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view,
-                 divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays,
-                 Max(d_haloCells[0], d_haloCells[1], d_haloCells[2] ));
-#else
-        rayTrace_dataOnion_solveDivQFunctor< T, Kokkos::HostSpace, Kokkos::Random_XorShift1024_Pool< Kokkos::OpenMP >, numLevels >
-        functor( levelParamsML, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, sigmaT4OverPi_view, abskg_view,
+        if (d_algorithm == dataOnionSlim) {
+          SlimRayTrace_dataOnion_solveDivQFunctor< T, Kokkos::HostSpace, Kokkos::Random_XorShift1024_Pool< Kokkos::OpenMP >, numLevels >
+          functor( levelParamsML, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view,
+                   divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays,
+                   Max(d_haloCells[0], d_haloCells[1], d_haloCells[2] ));
+          Uintah::parallel_reduce_sum<Kokkos::OpenMP>( range, functor, size );
+        } else {
+          rayTrace_dataOnion_solveDivQFunctor< T, Kokkos::HostSpace, Kokkos::Random_XorShift1024_Pool< Kokkos::OpenMP >, numLevels >
+          functor( levelParamsML, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, sigmaT4OverPi_view, abskg_view,
                  cellType_view , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays);
-#endif
-        Uintah::parallel_reduce_sum<Kokkos::OpenMP>( range, functor, size );
-
+          Uintah::parallel_reduce_sum<Kokkos::OpenMP>( range, functor, size );
+        }
       }  // end of if(_solveDivQ)
 
       //__________________________________

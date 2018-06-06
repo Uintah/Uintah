@@ -385,16 +385,16 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
   // We must know which memory space(s) the Arches task embedded within the Uintah task will execute
   // so Uintah can ensure those simulation variables are prepared in that memory space prior to task execution.
   if (assignedExecutionSpace == TaskAssignedExecutionSpace::KOKKOS_OPENMP) {
-    CALL_ASSIGN_PORTABLE_TASK_1TAG(KOKKOS_OPENMP_TAG, TaskDependencies, _factory_name + std::string("::") + task_group_name, TaskFactoryBase::do_task,
-                              level->eachPatch(), matls,
+    CALL_ASSIGN_PORTABLE_TASK_1TAG(KOKKOS_OPENMP_TAG, TaskDependencies, _factory_name + std::string("::") + task_group_name, TaskFactoryBase::do_task<,
+                              level->eachPatch(), matls, TASKGRAPH::DEFAULT,
                               variable_registry, arches_tasks, type, time_substep, pack_tasks);
   } else if (assignedExecutionSpace == TaskAssignedExecutionSpace::KOKKOS_CUDA) {
-    CALL_ASSIGN_PORTABLE_TASK_1TAG(KOKKOS_CUDA_TAG, TaskDependencies, _factory_name + std::string("::") + task_group_name, TaskFactoryBase::do_task,
-                                  level->eachPatch(), matls,
+    CALL_ASSIGN_PORTABLE_TASK_1TAG(KOKKOS_CUDA_TAG, TaskDependencies, _factory_name + std::string("::") + task_group_name, TaskFactoryBase::do_task<,
+                                  level->eachPatch(), matls, TASKGRAPH::DEFAULT,
                                   variable_registry, arches_tasks, type, time_substep, pack_tasks);
   } else { //if (assignedExecutionSpace == TaskAssignedExecutionSpace::UINTAH_CPU) {
-    CALL_ASSIGN_PORTABLE_TASK_1TAG(UINTAH_CPU_TAG, TaskDependencies, _factory_name + std::string("::") + task_group_name, TaskFactoryBase::do_task,
-                                level->eachPatch(), matls,
+    CALL_ASSIGN_PORTABLE_TASK_1TAG(UINTAH_CPU_TAG, TaskDependencies, _factory_name + std::string("::") + task_group_name, TaskFactoryBase::do_task<,
+                                level->eachPatch(), matls, TASKGRAPH::DEFAULT,
                                 variable_registry, arches_tasks, type, time_substep, pack_tasks);
   }
 

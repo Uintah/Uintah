@@ -259,6 +259,7 @@ public:
   virtual void put(PerPatchBase&, const VarLabel*,
 		   int matlIndex, const Patch*, bool replace = false) = 0;
 
+
   // this is so we can get reduction information for regridding
 #ifdef BRADS_NEW_DWDATABASE
   virtual void getVarLabelMatlLevelTriples(std::vector<VarLabelMatlMemspace<Level, MemorySpace> >& vars ) const = 0;

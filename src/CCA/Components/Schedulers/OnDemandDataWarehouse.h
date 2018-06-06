@@ -36,6 +36,7 @@
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Variables/PSPatchMatlGhost.h>
 #include <Core/Grid/Variables/VarLabelMatl.h>
+
 #include <Core/Parallel/MasterLock.h>
 #include <Core/Parallel/UintahMPI.h>
 #include <Core/Parallel/UintahMemorySpaces.h>
@@ -733,6 +734,7 @@ class OnDemandDataWarehouse : public DataWarehouse {
 
 #else // #ifdef BRADS_NEW_DWDATABASE
 
+#include <Core/Grid/Variables/NCVariable.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
 #include <CCA/Components/Schedulers/DWDatabase.h>
 #include <CCA/Components/Schedulers/SendState.h>
@@ -773,6 +775,9 @@ class Patch;
 class ProcessorGroup;
 class SendState;
 class TypeDescription;
+
+template <class T> class constNCVariable;
+
 
 /**************************************
 
@@ -1233,6 +1238,25 @@ class OnDemandDataWarehouse : public DataWarehouse {
 
     // The following is for support of regriding
     virtual void getVarLabelMatlLevelTriples(std::vector<VarLabelMatl<Level> >& vars) const;
+
+    template <typename T, typename MemorySpace>
+    constNCVariable<T> getConstNCVariable( const VarLabel*   label,
+                                           int               matlIndex,
+                                           const Patch*      patch,
+                                           Ghost::GhostType  gtype,
+                                           int               numGhostCells ) {
+
+      constNCVariable<T> constVar;
+      constGridVariableBase& constVarBase = constVar;
+      GridVariableBase* var = constVarBase.cloneType();
+
+      getGridVar( *var, label, matlIndex, patch, gtype, numGhostCells );
+
+      constVarBase = *var;
+      delete var;
+
+      return constVar;
+    }
 
     static bool d_combineMemory;
 

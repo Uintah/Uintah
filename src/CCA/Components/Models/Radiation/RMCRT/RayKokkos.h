@@ -318,6 +318,7 @@ private:
                             };
 
   enum Algorithm{ dataOnion,
+                  dataOnionSlim,       // Derek's experimental fast implementation
                   coarseLevel,
                   singleLevel
                 };
@@ -332,6 +333,8 @@ private:
   int d_cellTypeCoarsenLogic{ ROUNDUP} ;           // how to coarsen a cell type
 
   enum cellTypeCoarsenLogic{ ROUNDUP, ROUNDDOWN};
+
+  Algorithm d_algorithm{dataOnion};
 
   ROI_algo  d_ROI_algo{entireDomain};
   Point d_ROI_minPt;

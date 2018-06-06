@@ -150,6 +150,11 @@ RMCRT_Radiation::problemSetup( const ProblemSpecP& inputdb )
       _whichAlgo = dataOnion;
       _RMCRT->setBC_onOff( true );
 
+    } else  if (type == "dataOnionSlim" ) {       // DATA ONION SLIM
+
+      _whichAlgo = dataOnionSlim;
+      _RMCRT->setBC_onOff( true );
+
     } else if ( type == "RMCRT_coarseLevel" ) {   // 2 LEVEL
 
       _whichAlgo = coarseLevel;
@@ -364,7 +369,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
   Task::WhichDW notUsed = Task::None;
   //______________________________________________________________________
   //   D A T A   O N I O N   A P P R O A C H
-  if (_whichAlgo == dataOnion) {
+  if (_whichAlgo == dataOnion || _whichAlgo == dataOnionSlim) {
 
     Task::WhichDW temp_dw       = Task::OldDW;
     Task::WhichDW sigmaT4_dw    = Task::NewDW;
@@ -407,13 +412,13 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
       }
     }
 
-#ifdef USE_RMCRT_SLIM
-    //Combine vars for every level
-    for (int l = maxLevels - 1; l >= 0; l--) {
-      const LevelP& level = grid->getLevel(l);
-      _RMCRT->sched_combineAbskgSigmaT4CellType(level, sched, temp_dw, includeExtraCells);
+    if (_whichAlgo == dataOnionSlim) {
+      //Combine vars for every level
+      for (int l = maxLevels - 1; l >= 0; l--) {
+        const LevelP& level = grid->getLevel(l);
+        _RMCRT->sched_combineAbskgSigmaT4CellType(level, sched, temp_dw, includeExtraCells);
+      }
     }
-#endif
 
     //__________________________________
     //  compute the extents of the RMCRT region of interest on the finest level

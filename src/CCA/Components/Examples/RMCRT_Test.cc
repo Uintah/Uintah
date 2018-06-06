@@ -182,7 +182,7 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
       string type="nullptr";
       alg_ps->getAttribute("type", type);
 
-      if (type == "dataOnion" ) {
+      if (type == "dataOnion" ) {                   // Data Onion
         d_whichAlgo = dataOnion;
 
         //__________________________________
@@ -194,9 +194,11 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
               << " inside of the <AMR> section. \n";
           throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
         }
+      } else  if (type == "dataOnionSlim" ) {       // Data Onion Slim
+        d_whichAlgo = dataOnionSlim;
       } else if ( type == "RMCRT_coarseLevel" ) {   // 2 Level
         d_whichAlgo = coarseLevel;
-      } else if ( type == "singleLevel" ) {         // 1 LEVEL
+      } else if ( type == "singleLevel" ) {         // 1 Level
         d_whichAlgo = singleLevel;
       } else if ( type == "radiometerOnly" ) {      // Only when radiometer is used
         d_whichAlgo = radiometerOnly;
@@ -375,7 +377,7 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
   Task::WhichDW notUsed = Task::None;
   //______________________________________________________________________
   //   D A T A   O N I O N   A P P R O A C H
-  if( d_whichAlgo == dataOnion ){
+  if( d_whichAlgo == dataOnion || d_whichAlgo == dataOnionSlim ){
   
     Task::WhichDW temp_dw       = Task::NewDW;
     Task::WhichDW sigmaT4_dw    = Task::NewDW;

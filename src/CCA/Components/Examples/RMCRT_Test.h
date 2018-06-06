@@ -165,9 +165,10 @@ WARNING
     int      d_benchmark{0};
     int      d_pDir;             // principle direction used for 1D benchmark tests
 
-    enum Algorithm{ dataOnion,            
-                    coarseLevel, 
-                    singleLevel, 
+    enum Algorithm{ dataOnion,
+                    dataOnionSlim,
+                    coarseLevel,
+                    singleLevel,
                     radiometerOnly       // VRFlux is computed at radiometer locations
                   }; 
     

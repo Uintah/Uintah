@@ -262,8 +262,8 @@ KokkosSolver::computeTimestep( const LevelP     & level
 
     CALL_ASSIGN_PORTABLE_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG,
                               TaskDependencies,
-                              "KokkosSolver::computeStableTimeStep", KokkosSolver::computeStableTimeStep,
-                              level->eachPatch(), m_sharedState->allArchesMaterials());
+                              "KokkosSolver::computeStableTimeStep", KokkosSolver::computeStableTimeStep<,
+                              level->eachPatch(), m_sharedState->allArchesMaterials(), TASKGRAPH::DEFAULT);
   } else {
 
     // Just set the dt to the init_dt because the CFD variables weren't found
@@ -284,8 +284,8 @@ KokkosSolver::computeTimestep( const LevelP     & level
 
     CALL_ASSIGN_PORTABLE_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG,
                               TaskDependencies,
-                              "KokkosSolver::setTimeStep", KokkosSolver::setTimeStep,
-                              level->eachPatch(), m_sharedState->allArchesMaterials());
+                              "KokkosSolver::setTimeStep", KokkosSolver::setTimeStep<,
+                              level->eachPatch(), m_sharedState->allArchesMaterials(), TASKGRAPH::DEFAULT);
 
   }
 

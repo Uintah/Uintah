@@ -24,6 +24,7 @@
 
 #include <CCA/Components/Examples/Poisson1.h>
 #include <CCA/Components/Examples/ExamplesLabel.h>
+#include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <Core/Parallel/LoopExecution.hpp>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/KokkosViews.h>
@@ -255,8 +256,6 @@ void Poisson1::initialize( const ProcessorGroup *
   }
 }
 
-//______________________________________________________________________
-//
 
 //______________________________________________________________________
 //
@@ -298,9 +297,12 @@ void Poisson1::timeAdvance(DetailedTask* dtask,
 //Get the data.
 #if !defined(UINTAH_ENABLE_KOKKOS)
     // The legacy Uintah CPU way
+    //auto phi = static_cast<OnDemandDataWarehouse*>(old_dw)->getConstNCVariable<double, UintahSpaces::HostSpace> (phi_label, matl, patch, Ghost::AroundNodes, 1);
     constNCVariable<double> phi;
-    NCVariable<double> newphi;
     old_dw->get(phi, phi_label, matl, patch, Ghost::AroundNodes, 1);
+
+    NCVariable<double> newphi;
+
     new_dw->allocateAndPut(newphi, phi_label, matl, patch);
     newphi.copyPatch(phi, newphi.getLowIndex(), newphi.getHighIndex());
     TimeAdvanceFunctor<UintahSpaces::HostSpace> func(phi, newphi);
@@ -395,7 +397,7 @@ void Poisson1::timeAdvance(DetailedTask* dtask,
 //template <typename ExecutionSpace, typename MemorySpace>
 //void Poisson1::timeAdvance(/* ... Uintah task parameters ... */) {
 //  auto residual =
-//      new_dw->getKokkosResidual<double, MemorySpace>(residual_label, patch, material);
+//      new_dw->getKokkosResidual<double, MemorySpac3e>(residual_label, patch, material);
 //  auto new_phi  =
 //      new_dw->getKokkosView<double, MemorySpace>(phi_label, patch, material);
 //  auto old_phi  =
