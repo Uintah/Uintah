@@ -1010,7 +1010,64 @@ sweeping_parallel_for( BlockRange const & r, const Functor & functor, const bool
 }
 #endif  //#if defined(UINTAH_ENABLE_KOKKOS)
 
+//Allows the user to specify a vector (or view) of indices that require an operation, often needed for boundary conditions and possibly structured grids
+#if defined(UINTAH_ENABLE_KOKKOS)
+template <typename ExecutionSpace, typename Functor>
+inline typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::OpenMP>::value, void>::type
+parallel_for_dev( Kokkos::View<int*, Kokkos::HostSpace> iterSpace, const Functor & functor)
+{
 
+
+    const int n_tot=iterSpace.size()/3;
+    Kokkos::parallel_for( Kokkos::RangePolicy<Kokkos::OpenMP, int>(0, n_tot).set_chunk_size(2), [=](int iblock) {
+          const int i =  iterSpace[iblock*3];
+          const int j =  iterSpace[iblock*3+1];
+          const int k =  iterSpace[iblock*3+2];
+          functor(i,j,k);
+        });
+
+}
+#endif  //#if defined(UINTAH_ENABLE_KOKKOS)
+
+
+
+//Allows the user to specify a vector (or view) of indices that require an operation, often needed for boundary conditions and possibly structured grids
+//This GPU version is mostly a copy of the original GPU version
+#if defined(UINTAH_ENABLE_KOKKOS)
+#if defined(HAVE_CUDA)
+template <typename ExecutionSpace, typename Functor>
+typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::Cuda>::value, void>::type
+parallel_for_dev2(Kokkos::View<int*, Kokkos::HostSpace> iterSpace , const Functor & functor )
+{
+  const int number_of_indices=3;
+  Kokkos::View< int*, Kokkos::CudaSpace >  iterSpace_gpu("BoundaryCondition_uintah_parallel_for_list",iterSpace.size());
+  Kokkos::deep_copy(iterSpace_gpu,iterSpace);
+  const int n_tot=iterSpace.size()/number_of_indices;
+
+
+
+  int cuda_threads_per_sm = Uintah::Parallel::getCudaThreadsPerSM();
+  int cuda_sms_per_loop   = Uintah::Parallel::getCudaSMsPerLoop();
+
+  const int actualThreads = n_tot > cuda_threads_per_sm ? cuda_threads_per_sm : n_tot;
+
+  typedef Kokkos::TeamPolicy< ExecutionSpace > policy_type;
+
+
+
+  Kokkos::parallel_for (Kokkos::TeamPolicy< ExecutionSpace >( cuda_sms_per_loop, actualThreads ),
+                           KOKKOS_LAMBDA ( typename policy_type::member_type thread ) {
+
+    Kokkos::parallel_for (Kokkos::TeamThreadRange(thread, n_tot), [=] (const int& iblock) {
+          const int i =  iterSpace_gpu[iblock*number_of_indices];
+          const int j =  iterSpace_gpu[iblock*number_of_indices+1];
+          const int k =  iterSpace_gpu[iblock*number_of_indices+2];
+          functor(i,j,k);
+    });
+});
+}
+#endif
+#endif
 
 
 } // namespace Uintah
