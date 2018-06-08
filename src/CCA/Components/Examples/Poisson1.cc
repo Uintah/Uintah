@@ -277,7 +277,7 @@ void Poisson1::timeAdvance(DetailedTask* dtask,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
 
-    //Prepare the range
+    // Prepare the ranges for both boundary conditions and main loop
     double residual = 0;
     IntVector l = patch->getNodeLowIndex();
     IntVector h = patch->getNodeHighIndex();
@@ -296,12 +296,12 @@ void Poisson1::timeAdvance(DetailedTask* dtask,
     auto phi = static_cast<OnDemandDataWarehouse*>(old_dw)->getConstNCVariable<double, MemorySpace> (phi_label, matl, patch, Ghost::AroundNodes, 1);
     auto newphi = static_cast<OnDemandDataWarehouse*>(new_dw)->getNCVariable<double, MemorySpace> (phi_label, matl, patch);
 
-    //Replace with boundary condition
+    // Perform the boundary condition of copying over prior initialized values.  (TODO:  Replace with boundary condition)
     Uintah::parallel_for<ExecutionSpace>( rangeBoundary, KOKKOS_LAMBDA(int i, int j, int k){
-        //printf("At ( %d,%d,%d ) copying %g \n", i,j,k,phi(i,j,k));
         newphi(i, j, k) = phi(i,j,k);
     });
 
+    // Perform the main loop
     Uintah::parallel_reduce_sum<ExecutionSpace>( range, KOKKOS_LAMBDA (int i, int j, int k, double& residual){
       newphi(i, j, k) = (1. / 6)
           * (phi(i + 1, j, k) + phi(i - 1, j, k) + phi(i, j + 1, k) +

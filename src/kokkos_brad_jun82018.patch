@@ -1,5 +1,20 @@
+diff --git a/bin/nvcc_wrapper b/bin/nvcc_wrapper
+index d339da4f..0829dee8 100755
+--- a/bin/nvcc_wrapper
++++ b/bin/nvcc_wrapper
+@@ -12,8 +12,8 @@
+ # or g++ as their back-end compiler.  The defaults can be overwritten
+ # by using the usual arguments (e.g., -arch=sm_30 -ccbin icpc).
+ 
+-default_arch="sm_35"
+-#default_arch="sm_50"
++#default_arch="sm_35"
++default_arch="sm_50"
+ 
+ #
+ # The default C++ compiler.
 diff --git a/core/src/Cuda/Kokkos_CudaExec.hpp b/core/src/Cuda/Kokkos_CudaExec.hpp
-index f55191e9..c02341b0 100644
+index ada3f64f..35cc4d30 100644
 --- a/core/src/Cuda/Kokkos_CudaExec.hpp
 +++ b/core/src/Cuda/Kokkos_CudaExec.hpp
 @@ -47,6 +47,7 @@
@@ -391,7 +406,7 @@ index f55191e9..c02341b0 100644
        CUDA_SAFE_CALL( cudaGetLastError() );
        Kokkos::Cuda::fence();
 diff --git a/core/src/Cuda/Kokkos_CudaSpace.cpp b/core/src/Cuda/Kokkos_CudaSpace.cpp
-index 33f77ea8..4e6f1a0d 100644
+index 302cf13d..8f86db44 100644
 --- a/core/src/Cuda/Kokkos_CudaSpace.cpp
 +++ b/core/src/Cuda/Kokkos_CudaSpace.cpp
 @@ -95,7 +95,11 @@ DeepCopy<CudaSpace,CudaSpace,Cuda>::DeepCopy( const Cuda & instance , void * dst
@@ -407,7 +422,7 @@ index 33f77ea8..4e6f1a0d 100644
  
  DeepCopy<CudaSpace,HostSpace,Cuda>::DeepCopy( const Cuda & instance , void * dst , const void * src , size_t n )
  { CUDA_SAFE_CALL( cudaMemcpyAsync( dst , src , n , cudaMemcpyDefault , instance.cuda_stream() ) ); }
-@@ -209,7 +213,9 @@ void * CudaHostPinnedSpace::allocate( const size_t arg_alloc_size ) const
+@@ -211,7 +215,9 @@ void * CudaHostPinnedSpace::allocate( const size_t arg_alloc_size ) const
  void CudaSpace::deallocate( void * const arg_alloc_ptr , const size_t /* arg_alloc_size */ ) const
  {
    try {
@@ -417,7 +432,7 @@ index 33f77ea8..4e6f1a0d 100644
    } catch(...) {}
  }
  
-@@ -373,7 +379,7 @@ SharedAllocationRecord< Kokkos::CudaSpace , void >::
+@@ -379,7 +385,7 @@ SharedAllocationRecord< Kokkos::CudaSpace , void >::
        data(),size());
    }
    #endif
@@ -426,9 +441,9 @@ index 33f77ea8..4e6f1a0d 100644
    m_space.deallocate( SharedAllocationRecord< void , void >::m_alloc_ptr
                      , SharedAllocationRecord< void , void >::m_alloc_size
                      );
-@@ -648,22 +654,16 @@ SharedAllocationRecord< Kokkos::CudaSpace , void >::get_record( void * alloc_ptr
+@@ -661,18 +667,13 @@ SharedAllocationRecord< Kokkos::CudaSpace , void >::get_record( void * alloc_ptr
+   using RecordCuda = SharedAllocationRecord< Kokkos::CudaSpace , void > ;
  
- #if 0
    using Header     = SharedAllocationHeader ;
 -
    // Copy the header from the allocation
@@ -445,17 +460,13 @@ index 33f77ea8..4e6f1a0d 100644
    if ( ! alloc_ptr || record->m_alloc_ptr != head_cuda ) {
      Kokkos::Impl::throw_runtime_exception( std::string("Kokkos::Impl::SharedAllocationRecord< Kokkos::CudaSpace , void >::get_record ERROR" ) );
    }
--
- #else
- 
-   // Iterate the list to search for the record among all allocations
-@@ -825,4 +825,3 @@ void* cuda_resize_scratch_space(std::int64_t bytes, bool force_shrink) {
+@@ -837,4 +838,3 @@ void* cuda_resize_scratch_space(std::int64_t bytes, bool force_shrink) {
  #else
  void KOKKOS_CORE_SRC_CUDA_CUDASPACE_PREVENT_LINK_ERROR() {}
  #endif // KOKKOS_ENABLE_CUDA
 -
 diff --git a/core/src/Cuda/Kokkos_Cuda_Impl.cpp b/core/src/Cuda/Kokkos_Cuda_Impl.cpp
-index a63fb0cd..c60b1a10 100644
+index 8249da6a..2abc04dd 100644
 --- a/core/src/Cuda/Kokkos_Cuda_Impl.cpp
 +++ b/core/src/Cuda/Kokkos_Cuda_Impl.cpp
 @@ -70,6 +70,7 @@
@@ -478,7 +489,7 @@ index a63fb0cd..c60b1a10 100644
  //----------------------------------------------------------------------------
  // Some significant cuda device properties:
  //
-@@ -573,7 +579,9 @@ void CudaInternal::initialize( int cuda_device_id , int stream_count )
+@@ -564,7 +570,9 @@ void CudaInternal::initialize( int cuda_device_id , int stream_count )
    cudaThreadSetCacheConfig(cudaFuncCachePreferShared);
  
    // Init the array for used for arbitrarily sized atomics
@@ -488,15 +499,15 @@ index a63fb0cd..c60b1a10 100644
  }
  
  //----------------------------------------------------------------------------
-@@ -611,6 +619,7 @@ CudaInternal::scratch_space( const Cuda::size_type size )
+@@ -602,6 +610,7 @@ CudaInternal::scratch_space( const Cuda::size_type size )
  {
    if ( verify_is_initialized("scratch_space") && m_scratchSpaceCount * sizeScratchGrain < size ) {
  
 +    //printf("Initializing scratch_space\n");
      m_scratchSpaceCount = ( size + sizeScratchGrain - 1 ) / sizeScratchGrain ;
  
-      typedef Kokkos::Experimental::Impl::SharedAllocationRecord< Kokkos::CudaSpace , void > Record ;
-@@ -660,6 +669,7 @@ void CudaInternal::finalize()
+      typedef Kokkos::Impl::SharedAllocationRecord< Kokkos::CudaSpace , void > Record ;
+@@ -651,6 +660,7 @@ void CudaInternal::finalize()
  
      if ( m_stream ) {
        for ( size_type i = 1 ; i < m_streamCount ; ++i ) {
@@ -504,15 +515,15 @@ index a63fb0cd..c60b1a10 100644
          cudaStreamDestroy( m_stream[i] );
          m_stream[i] = 0 ;
        }
-@@ -742,6 +752,7 @@ int Cuda::is_initialized()
- 
- void Cuda::initialize( const Cuda::SelectDevice config , size_t num_instances )
+@@ -741,6 +751,7 @@ void Cuda::initialize( const Cuda::SelectDevice config , size_t num_instances )
+ void Cuda::impl_initialize( const Cuda::SelectDevice config , size_t num_instances )
+ #endif
  {
 +  //printf("In Cuda::initialize() calling Impl::CudaInternal::singleton().initialize\n");
    Impl::CudaInternal::singleton().initialize( config.cuda_device_id , num_instances );
  
    #if defined(KOKKOS_ENABLE_PROFILING)
-@@ -788,10 +799,47 @@ void Cuda::finalize()
+@@ -791,10 +802,47 @@ void Cuda::impl_finalize()
    #endif
  }
  
@@ -560,7 +571,7 @@ index a63fb0cd..c60b1a10 100644
    Impl::CudaInternal::singleton().verify_is_initialized( "Cuda instance constructor" );
  }
  
-@@ -801,7 +849,30 @@ Cuda::Cuda( const int instance_id )
+@@ -804,7 +852,30 @@ Cuda::Cuda( const int instance_id )
        Impl::CudaInternal::singleton().verify_is_initialized( "Cuda instance constructor" )
          ? Impl::CudaInternal::singleton().m_stream[ instance_id % Impl::CudaInternal::singleton().m_streamCount ]
          : 0 )
@@ -592,7 +603,7 @@ index a63fb0cd..c60b1a10 100644
  
  void Cuda::print_configuration( std::ostream & s , const bool )
  { Impl::CudaInternal::singleton().print_configuration( s ); }
-@@ -815,6 +886,25 @@ void Cuda::fence()
+@@ -820,6 +891,25 @@ void Cuda::fence()
    Kokkos::Impl::cuda_device_synchronize();
  }
  
@@ -619,12 +630,78 @@ index a63fb0cd..c60b1a10 100644
  
  } // namespace Kokkos
 diff --git a/core/src/Cuda/Kokkos_Cuda_Parallel.hpp b/core/src/Cuda/Kokkos_Cuda_Parallel.hpp
-index 5fd442ff..3bf78517 100644
+index eac4abac..3b02f5f3 100644
 --- a/core/src/Cuda/Kokkos_Cuda_Parallel.hpp
 +++ b/core/src/Cuda/Kokkos_Cuda_Parallel.hpp
-@@ -367,14 +367,15 @@ public:
-       const dim3 block(  1 , CudaTraits::WarpSize * cuda_internal_maximum_warp_count(), 1);
-       const dim3 grid( std::min( ( nwork + block.y - 1 ) / block.y , cuda_internal_maximum_grid_count() ) , 1 , 1);
+@@ -82,12 +82,17 @@ public:
+   //! Tag this class as a kokkos execution policy
+   typedef TeamPolicyInternal      execution_policy ;
+ 
++  //! Execution space of this execution policy
++  typedef Kokkos::Cuda  execution_space ;
++
+   typedef PolicyTraits<Properties ... > traits;
+ 
+ private:
+ 
+   enum { MAX_WARP = 8 };
+ 
++  typename traits::execution_space m_space ;
++
+   int m_league_size ;
+   int m_team_size ;
+   int m_vector_length ;
+@@ -97,9 +102,6 @@ private:
+ 
+ public:
+ 
+-  //! Execution space of this execution policy
+-  typedef Kokkos::Cuda  execution_space ;
+-
+   TeamPolicyInternal& operator = (const TeamPolicyInternal& p) {
+     m_league_size = p.m_league_size;
+     m_team_size = p.m_team_size;
+@@ -150,6 +152,7 @@ public:
+ 
+   //----------------------------------------
+ 
++  const typename traits::execution_space & space() const { return m_space ; }
+   inline int vector_length()   const { return m_vector_length ; }
+   inline int team_size()   const { return m_team_size ; }
+   inline int league_size() const { return m_league_size ; }
+@@ -174,11 +177,12 @@ public:
+    {}
+ 
+   /** \brief  Specify league size, request team size */
+-  TeamPolicyInternal( execution_space &
++  TeamPolicyInternal( execution_space & work_space
+             , int league_size_
+             , int team_size_request
+             , int vector_length_request = 1 )
+-    : m_league_size( league_size_ )
++    : m_space( work_space )
++    , m_league_size( league_size_ )
+     , m_team_size( team_size_request )
+     , m_vector_length( vector_length_request )
+     , m_team_scratch_size {0,0}
+@@ -201,11 +205,12 @@ public:
+     }
+ 
+   /** \brief  Specify league size, request team size */
+-  TeamPolicyInternal( execution_space &
++  TeamPolicyInternal( execution_space & work_space
+             , int league_size_
+             , const Kokkos::AUTO_t & /* team_size_request */
+             , int vector_length_request = 1 )
+-    : m_league_size( league_size_ )
++    : m_space( work_space )
++    , m_league_size( league_size_ )
+     , m_team_size( -1 )
+     , m_vector_length( vector_length_request )
+     , m_team_scratch_size {0,0}
+@@ -423,14 +428,15 @@ public:
+       const dim3 block(  1 , block_size , 1);
+       const dim3 grid( std::min( typename Policy::index_type(( nwork + block.y - 1 ) / block.y) , typename Policy::index_type(cuda_internal_maximum_grid_count()) ) , 1 , 1);
  
 -      CudaParallelLaunch< ParallelFor, LaunchBounds >( *this , grid , block , 0 );
 +      //printf("In ParallelFor::execute(), calling CudaParallelLaunch\n");
@@ -640,16 +717,48 @@ index 5fd442ff..3bf78517 100644
  };
  
  
-@@ -471,7 +472,7 @@ public:
+@@ -570,6 +576,7 @@ private:
+   //
+ 
+   const FunctorType  m_functor ;
++  const Policy       m_policy ;
+   const size_type    m_league_size ;
+   const size_type    m_team_size ;
+   const size_type    m_vector_size ;
+@@ -599,6 +606,7 @@ public:
+     int64_t threadid = 0;
+     if ( m_scratch_size[1]>0 ) {
+       __shared__ int64_t base_thread_id;
++      printf("Warning? Hit Team Policy scratch space stuff!  This has a __syncthreads() in it.\n");
+       if (threadIdx.x==0 && threadIdx.y==0 ) {
+         threadid = (blockIdx.x*blockDim.z + threadIdx.z) %
+           (Kokkos::Impl::g_device_cuda_lock_arrays.n / (blockDim.x * blockDim.y));
+@@ -631,6 +639,7 @@ public:
+                                     , m_league_size ) );
      }
-     else
-     {
--      printf("Kokkos::MDRange Error: Exceeded rank bounds with Cuda\n");
-+      //printf("Kokkos::MDRange Error: Exceeded rank bounds with Cuda\n");
-       Kokkos::abort("Aborting");
+     if ( m_scratch_size[1]>0 ) {
++      printf("Warning? Hit Team Policy scratch space stuff!  This has a __syncthreads() in it 2\n");
+       __syncthreads();
+       if (threadIdx.x==0 && threadIdx.y==0 )
+         Kokkos::Impl::g_device_cuda_lock_arrays.scratch[threadid]=0;
+@@ -644,7 +653,7 @@ public:
+       const dim3 grid( int(m_league_size) , 1 , 1 );
+       const dim3 block( int(m_vector_size) , int(m_team_size) , 1 );
+ 
+-      CudaParallelLaunch< ParallelFor, LaunchBounds >( *this, grid, block, shmem_size_total ); // copy to device and execute
++      CudaParallelLaunch< ParallelFor, LaunchBounds >( *this, grid, block, shmem_size_total, m_policy.space().cuda_stream() ); // copy to device and execute
+ 
      }
  
-@@ -714,13 +715,11 @@ public:
+@@ -652,6 +661,7 @@ public:
+              , const Policy       & arg_policy
+              )
+     : m_functor( arg_functor )
++    , m_policy( arg_policy )
+     , m_league_size( arg_policy.league_size() )
+     , m_team_size( 0 <= arg_policy.team_size() ? arg_policy.team_size() :
+         Kokkos::Impl::cuda_get_opt_block_size< ParallelFor >( arg_functor , arg_policy.vector_length(), arg_policy.team_scratch_size(0),arg_policy.thread_scratch_size(0) ) / arg_policy.vector_length() )
+@@ -771,13 +781,11 @@ public:
        // The accumulation ordering does not match the final pass, but is arithmatically equivalent.
  
        const WorkRange range( m_policy , blockIdx.x , gridDim.x );
@@ -663,7 +772,7 @@ index 5fd442ff..3bf78517 100644
      // Reduce with final value at blockDim.y - 1 location.
      if ( cuda_single_inter_block_reduce_scan<false,ReducerTypeFwd,WorkTagFwd>(
             ReducerConditional::select(m_functor , m_reducer) , blockIdx.x , gridDim.x ,
-@@ -730,7 +729,6 @@ public:
+@@ -787,7 +795,6 @@ public:
  
        size_type * const shared = kokkos_impl_cuda_shared_memory<size_type>() + ( blockDim.y - 1 ) * word_count.value ;
        size_type * const global = m_unified_space ? m_unified_space : m_scratch_space ;
@@ -671,16 +780,16 @@ index 5fd442ff..3bf78517 100644
        if ( threadIdx.y == 0 ) {
          Kokkos::Impl::FunctorFinal< ReducerTypeFwd , WorkTagFwd >::final( ReducerConditional::select(m_functor , m_reducer) , shared );
        }
-@@ -788,34 +786,54 @@ public:
+@@ -845,34 +852,54 @@ public:
  
    inline
    void execute()
 -    {
--      const int nwork = m_policy.end() - m_policy.begin();
+-      const index_type nwork = m_policy.end() - m_policy.begin();
 -      if ( nwork ) {
 -        const int block_size = local_block_size( m_functor );
 +  {
-+    const int nwork = m_policy.end() - m_policy.begin();
++    const index_type nwork = m_policy.end() - m_policy.begin();
 +    if ( nwork ) {
 +      const int block_size = local_block_size( m_functor );
  
@@ -740,8 +849,87 @@ index 5fd442ff..3bf78517 100644
          }
        }
      }
+@@ -903,7 +930,7 @@ public:
+                 , const Policy       & arg_policy
+                 , const ReducerType & reducer)
+   : m_functor( arg_functor )
+-  , m_policy(  arg_policy )
++  , m_policy( arg_policy )
+   , m_reducer( reducer )
+   , m_result_ptr( reducer.view().data() )
+   , m_scratch_space( 0 )
+@@ -1117,7 +1144,7 @@ public:
+                    Kokkos::is_view< HostViewType >::value
+                 ,void*>::type = NULL)
+   : m_functor( arg_functor )
+-  , m_policy(  arg_policy )
++  , m_policy( arg_policy )
+   , m_reducer( InvalidType() )
+   , m_result_ptr( arg_result.data() )
+   , m_scratch_space( 0 )
+@@ -1129,7 +1156,7 @@ public:
+                 , const Policy       & arg_policy
+                 , const ReducerType & reducer)
+   : m_functor( arg_functor )
+-  , m_policy(  arg_policy )
++  , m_policy( arg_policy )
+   , m_reducer( reducer )
+   , m_result_ptr( reducer.view().data() )
+   , m_scratch_space( 0 )
+@@ -1189,6 +1216,7 @@ private:
+   //
+ 
+   const FunctorType   m_functor ;
++  const Policy        m_policy ; 
+   const ReducerType   m_reducer ;
+   const pointer_type  m_result_ptr ;
+   size_type *         m_scratch_space ;
+@@ -1342,9 +1370,11 @@ public:
+         const dim3 grid( block_count , 1 , 1 );
+         const int shmem_size_total = m_team_begin + m_shmem_begin + m_shmem_size ;
+ 
+-        CudaParallelLaunch< ParallelReduce, LaunchBounds >( *this, grid, block, shmem_size_total ); // copy to device and execute
++        CudaParallelLaunch< ParallelReduce, LaunchBounds >( *this, grid, block, shmem_size_total, m_policy.space().cuda_stream() ); // copy to device and execute
+ 
+-        Cuda::fence();
++        if ( ! m_policy.space().cuda_stream() ) {
++          Cuda::fence();
++        }
+ 
+         if ( m_result_ptr ) {
+           if ( m_unified_space ) {
+@@ -1353,7 +1383,12 @@ public:
+           }
+           else {
+             const int size = ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) );
+-            DeepCopy<HostSpace,CudaSpace>( m_result_ptr, m_scratch_space, size );
++            if ( m_policy.space().cuda_stream() ) {
++              DeepCopy<HostSpace,CudaSpace,Cuda>( m_policy.space(), m_result_ptr, m_scratch_space, size );
++            }
++            else {
++              DeepCopy<HostSpace,CudaSpace>( m_result_ptr, m_scratch_space, size );
++            }
+           }
+         }
+       }
+@@ -1372,6 +1407,7 @@ public:
+                                    Kokkos::is_view< HostViewType >::value
+                                 ,void*>::type = NULL)
+   : m_functor( arg_functor )
++  , m_policy( arg_policy )
+   , m_reducer( InvalidType() )
+   , m_result_ptr( arg_result.data() )
+   , m_scratch_space( 0 )
+@@ -1442,6 +1478,7 @@ public:
+                 , const Policy       & arg_policy
+                 , const ReducerType & reducer)
+   : m_functor( arg_functor )
++  , m_policy( arg_policy )
+   , m_reducer( reducer )
+   , m_result_ptr( reducer.view().data() )
+   , m_scratch_space( 0 )
 diff --git a/core/src/Kokkos_Cuda.hpp b/core/src/Kokkos_Cuda.hpp
-index 197831de..7a317ed6 100644
+index 726a5749..15d69a48 100644
 --- a/core/src/Kokkos_Cuda.hpp
 +++ b/core/src/Kokkos_Cuda.hpp
 @@ -61,7 +61,13 @@
@@ -759,7 +947,7 @@ index 197831de..7a317ed6 100644
  /*--------------------------------------------------------------------------*/
  
  namespace Kokkos {
-@@ -171,12 +177,14 @@ public:
+@@ -165,12 +171,14 @@ public:
    //--------------------------------------------------
    //! \name  Cuda space instances
  
@@ -776,7 +964,7 @@ index 197831de..7a317ed6 100644
    Cuda & operator = ( Cuda && ) = default ;
    Cuda & operator = ( const Cuda & ) = default ;
  
-@@ -210,6 +218,15 @@ public:
+@@ -222,6 +230,15 @@ public:
    cudaStream_t cuda_stream() const { return m_stream ; }
    int          cuda_device() const { return m_device ; }
  
@@ -792,7 +980,7 @@ index 197831de..7a317ed6 100644
    //@}
    //--------------------------------------------------------------------------
  
-@@ -219,6 +236,17 @@ private:
+@@ -231,6 +248,17 @@ private:
  
    int          m_device ;
    cudaStream_t m_stream ;
@@ -810,6 +998,26 @@ index 197831de..7a317ed6 100644
  };
  
  } // namespace Kokkos
+diff --git a/core/src/Kokkos_ExecPolicy.hpp b/core/src/Kokkos_ExecPolicy.hpp
+index a33e28fc..f5cfa794 100644
+--- a/core/src/Kokkos_ExecPolicy.hpp
++++ b/core/src/Kokkos_ExecPolicy.hpp
+@@ -523,11 +523,11 @@ public:
+   TeamPolicy& operator = (const TeamPolicy&) = default;
+ 
+   /** \brief  Construct policy with the given instance of the execution space */
+-  TeamPolicy( const typename traits::execution_space & , int league_size_request , int team_size_request , int vector_length_request = 1 )
+-    : internal_policy(typename traits::execution_space(),league_size_request,team_size_request, vector_length_request) {first_arg = false;}
++  TeamPolicy( typename traits::execution_space & work_space , int league_size_request , int team_size_request , int vector_length_request = 1 )
++    : internal_policy(work_space, league_size_request, team_size_request, vector_length_request) {first_arg = false;}
+ 
+-  TeamPolicy( const typename traits::execution_space & , int league_size_request , const Kokkos::AUTO_t & , int vector_length_request = 1 )
+-    : internal_policy(typename traits::execution_space(),league_size_request,Kokkos::AUTO(), vector_length_request) {first_arg = false;}
++  TeamPolicy( typename traits::execution_space & work_space , int league_size_request , const Kokkos::AUTO_t & , int vector_length_request = 1 )
++    : internal_policy(work_space, league_size_request, Kokkos::AUTO(), vector_length_request) {first_arg = false;}
+ 
+   /** \brief  Construct policy with the default instance of the execution space */
+   TeamPolicy( int league_size_request , int team_size_request , int vector_length_request = 1 )
 diff --git a/core/src/Makefile b/core/src/Makefile
 index 6ee5fec7..395ab079 100644
 --- a/core/src/Makefile

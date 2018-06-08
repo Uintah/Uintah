@@ -14,83 +14,77 @@ Here is how I configure Kokkos for OpenMP
 
 ~/src/kokkos/generate_makefile.bash --kokkos-path=/home/brad/src/kokkos --prefix=/home/brad/opt/kokkos-openmp --with-openmp
 
-Note: You must have nvcc in your path for this to work! Specifying the path to the compiler will over-ride use of the nvcc_wrapper which will cause compilation failure.
-
+make install
+-----------------------------------------------------------------------------------------------------------------------------
 Here is how I configure Kokkos for CUDA
+
+And here is how I configured Kokkos for both OpenMP and CUDA
+
+
 1) Apply my Kokkos patch for asynchronous, I have placed it in this Uintah branch's src directory. 
-git apply ~/kokkos_brad_dec22.patch (works from anywhere inside the kokkos source tree)
-2) Edit Kokkos's Makefile script, its bugged: 
+
+git apply /patch/to/patch/kokkos_brad_june82018.patch (works from anywhere inside the kokkos source tree)
+
+2) Double check Kokkos's Makefile script, its bugged: 
+
 vim ~/src/kokkos/core/src/Makefile
 
-Remove the ? on line 11 so it reads:
+Make sure the ? on line 11 is removed so it reads:
 ifneq (,$(findstring Cuda,$(KOKKOS_DEVICES)))
   CXX = $(KOKKOS_PATH)/bin/nvcc_wrapper
 else
   CXX ?= g++
 endif
 
-Here is how I configure Kokkos for OpenMP and Cuda 
-~/src/kokkos/generate_makefile.bash --kokkos-path=/home/brad/src/kokkos --prefix=/home/brad/opt/kokkos-openmp-cuda-9.0-gcc-6.4 --with-openmp --with-cuda=/home/brad/opt/cuda-9.0 --arch=Maxwell52
------------------------------------------------------------------------------------------------------------------------------
+Now the Kokkos configure can proceed:
 
-make
+~/src/kokkos/generate_makefile.bash --kokkos-path=/home/brad/src/kokkos --prefix=/home/brad/opt/kokkos-openmp-cuda --compiler=/home/brad/src/kokkos/bin/nvcc_wrapper --with-openmp --with-cuda=/home/brad/opt/cuda-9.0 --arch=Maxwell50
+
 make install
-
-Your Kokkos should now be built and ready to go.
 -----------------------------------------------------------------------------------------------------------------------------
 
-For a CUDA build, you must edit nvcc_wrapper whereever Kokkos was installed and edit a couple things:
-
-vim ~/opt/kokkos-openmp-cuda-9.0-gcc-6.4/bin/nvcc_wrapper
-
-1) Put in the correct default_arch (e.g. default_arch="sm_50")
-2) Comment out depfile arguments, they're broken right now:
-
-  # Handle depfile arguments.  We map them to a separate call to nvcc.
-#  -MD|-MMD)
-#    depfile_separate=1
-#    host_only_args="$host_only_args $1"
-#    ;;
-#  -MF)
-#    depfile_output_arg="-o $2"
-#    host_only_args="$host_only_args $1 $2"
-#    shift
-#    ;;
-#  -MT)
-#    depfile_target_arg="$1 $2"
-#    host_only_args="$host_only_args $1 $2"
-#    shift
-#    ;;
-
------------------------------------------------------------------------------------------------------------------------------
-
-
-Then in Uintah, just add this line to your configure script:
+Then in Uintah, just add a --with-kokkos line to your Uintah configure pointing to the Kokkos build:  
 
 --with-kokkos=/home/brad/opt/kokkos-openmp
 
-It seems also this is needed: LDFLAGS='-ldl'
+This is also needed in the Uintah configure: 
 
-If you are using CUDA, you must put the nvcc_wrapper for the CXX
-CXX=/home/brad/opt/kokkos-cuda-9.0-gcc-6.4/bin/nvcc_wrapper 
+LDFLAGS='-ldl'
 
-Note that we are requiring OpenMP for all builds, CUDA and non-CUDA.  
+For GPU builds, ensure the CXX is at the nvcc_wrapper path:
 
-For an example of building a single Kokkos test program with both CUDA and OpenMP support:
+CXX=/home/brad/opt/kokkos-openmp-cuda/bin/nvcc_wrapper 
 
-/home/brad/opt/kokkos-cuda-9.0-gcc-6.4/bin/nvcc_wrapper -DKOKKOS_ENABLE_CUDA_LAMBDA --expt-extended-lambda -I./ -I/home/brad/opt/kokkos-openmp-cuda-9.0-gcc-6.4/include -I/opt/cuda-9.0/include -L/home/brad/opt/kokkos-openmp-cuda-9.0-gcc-6.4/lib -L/opt/cuda-9.0/lib64 -fopenmp  -lkokkos -ldl -lcudart -lcuda --std=c++11 -arch=sm_52 -Xcompiler -fopenmp -O3 team_demo.cc -o team_demo.x
+Also, GPU builds need to support lambda expressions:
+
+CXXFLAGS='-DKOKKOS_ENABLE_CUDA_LAMBDA --expt-extended-lambda'
+
+ 
+Below is what I have in my Uintah configure for my GPU build:
+
+    C=gcc \
+    CXX=$homedir/opt/kokkos-openmp-cuda/bin/nvcc_wrapper \
+    CXXFLAGS='-DKOKKOS_ENABLE_CUDA_LAMBDA --expt-extended-lambda' \
+    LDFLAGS='-ldl'
 
 -----------------------------------------------------------------------------------------------------------------------------
-When you build Uintah, make sure you specify sus: "make -j8 sus" and not just "make -j8", the kokkos build fails on all Uintah stuff. 
+When you build Uintah, make sure you specify sus: "make -j8 sus" and not just "make -j8", the Kokkos build fails on other Uintah things not related to building Kokkos with Uintah.
 
 Both the MPI scheduler and the Unified Scheduler work.  As a reminder, -nthreads triggers the scheduler
 
-MPI scheduler: sus RMCRT_bm1_DO.ups
-Unified scheduler: sus -nthreads 1 RMCRT_bm1_DO.ups
+MPI scheduler:                sus poisson1.ups
+Unified scheduler:            sus -nthreads 1 poisson1.ups
+Unified Scheduler with GPU:   sus -nthreads 16 -gpu poission1.ups
+Mixture of CPU and GPU tasks: sus -nthreads 1 -gpu poisson1.ups      (triggers the Unified Scheduler)
 
-For CPU/Xeon Phi tasks, because of how Kokkos+OpenMP runs loops, both schedulers will use all cores on an MPI rank anyway.
-For GPU tasks, you must use the Unified Scheduler and you must use at least 2 threads, and often it's a good idea to use all available threads.
--------------------------------------------
+The mixture requires only 1 thread due to a design flaw we're currently fixing.  OpenMP threads are bounded to a master thread, if more pthreads are used, some OpenMP loops will attempt to run on pthreads that aren't the master thread, and it crashes.  
+
+-----------------------------------------------------------------------------------------------------------------------------
+Side note: for an example of building a single Kokkos test program with both CUDA and OpenMP support:
+
+/home/brad/opt/kokkos-openmp-cuda/bin/nvcc_wrapper -DKOKKOS_ENABLE_CUDA_LAMBDA --expt-extended-lambda -I./ -I/home/brad/opt/kokkos-openmp-cuda/include -I/opt/cuda-9.0/include -L/home/brad/opt/kokkos-openmp-cuda/lib -L/opt/cuda-9.0/lib64 -fopenmp  -lkokkos -ldl -lcudart -lcuda --std=c++11 -arch=sm_50 -Xcompiler -fopenmp -O3 some_code_file.cc -o some_code_file.x
+
+-----------------------------------------------------------------------------------------------------------------------------
 
 
 
