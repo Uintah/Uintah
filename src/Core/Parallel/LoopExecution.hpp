@@ -646,7 +646,7 @@ parallel_reduce_sum( BlockRange const & r, const Functor & functor, ReductionTyp
 
     // Use a Team Policy, this allows us to control how many threads per SM and how many SMs are used.
     typedef Kokkos::TeamPolicy< Kokkos::Cuda > policy_type;
-    Kokkos::TeamPolicy< Kokkos::Cuda > reduce_tp( instanceObject, actual_cuda_sms_per_loop, actual_threads_per_sm );
+    Kokkos::TeamPolicy< Kokkos::Cuda > reduce_tp(/* instanceObject, */actual_cuda_sms_per_loop, actual_threads_per_sm );
     Kokkos::parallel_reduce ( reduce_tp, KOKKOS_LAMBDA ( typename policy_type::member_type thread, ReductionType& inner_sum ) {
 
       // We are within an SM, and all SMs share the same amount of assigned CUDA threads.
@@ -1021,7 +1021,7 @@ sweeping_parallel_for( BlockRange const & r, const Functor & functor, const bool
 #if defined(UINTAH_ENABLE_KOKKOS)
 template <typename ExecutionSpace, typename Functor>
 inline typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::OpenMP>::value, void>::type
-parallel_for_dev( Kokkos::View<int*, Kokkos::HostSpace> iterSpace, const Functor & functor)
+parallel_for( Kokkos::View<int*, Kokkos::HostSpace> iterSpace, const Functor & functor)
 {
 
 
@@ -1044,7 +1044,7 @@ parallel_for_dev( Kokkos::View<int*, Kokkos::HostSpace> iterSpace, const Functor
 #if defined(HAVE_CUDA)
 template <typename ExecutionSpace, typename Functor>
 typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::Cuda>::value, void>::type
-parallel_for_dev2(Kokkos::View<int*, Kokkos::HostSpace> iterSpace , const Functor & functor )
+parallel_for(Kokkos::View<int*, Kokkos::HostSpace> iterSpace , const Functor & functor )
 {
   const int number_of_indices=3;
   Kokkos::View< int*, Kokkos::CudaSpace >  iterSpace_gpu("BoundaryCondition_uintah_parallel_for_list",iterSpace.size());
