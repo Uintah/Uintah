@@ -1308,9 +1308,6 @@ void visit_DebugStreamCallback(char *val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-  ApplicationInterface* simInterface =
-    sim->simController->getApplicationInterface();
-
   unsigned int row, column;
   std::string text;
 

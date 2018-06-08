@@ -397,7 +397,10 @@ Level::totalCells() const
 //______________________________________________________________________
 //
 long
-Level::getTotalCellsInRegion(const IntVector& lowIndex, const IntVector& highIndex) const {
+Level::getTotalCellsInRegion(const TypeDescription::Type varType,
+                             const IntVector& boundaryLayer,
+                             const IntVector& lowIndex, 
+                             const IntVector& highIndex) const {
 
   // Not all simulations are cubic.  Some simulations might be L shaped, or T shaped, or + shaped, etc.
   // It is not enough to simply do a high - low to figure out the amount of simulation cells.  We instead
@@ -411,9 +414,11 @@ Level::getTotalCellsInRegion(const IntVector& lowIndex, const IntVector& highInd
     return cellsInRegion;
   }
 
+  Patch::VariableBasis basis = Patch::translateTypeToBasis(varType, false);
+  
   for( int i = 0; i < (int)m_real_patches.size(); i++ ) {
-    IntVector patchLow  =  m_real_patches[i]->getExtraCellLowIndex();
-    IntVector patchHigh =  m_real_patches[i]->getExtraCellHighIndex();
+    IntVector patchLow  =  m_real_patches[i]->getExtraLowIndex(  basis, boundaryLayer );
+    IntVector patchHigh =  m_real_patches[i]->getExtraHighIndex( basis, boundaryLayer );
 
     if( doesIntersect(lowIndex, highIndex, patchLow, patchHigh) ){
 

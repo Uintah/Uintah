@@ -103,9 +103,10 @@ namespace Uintah {
     
     SolverType           solver_type;
     SolverType           precond_solver_type;
-
+    bool                 isRestartTimestep;
+    
     //  *_p = pointer
-    HYPRE_StructSolver * solver_p;
+    HYPRE_StructSolver * solver_p = nullptr;
     HYPRE_StructSolver * precond_solver_p;
     HYPRE_StructMatrix * HA_p;
     HYPRE_StructVector * HB_p;
@@ -114,10 +115,11 @@ namespace Uintah {
     //__________________________________
     //
     hypre_solver_struct() {
-      solver_type            = smg;
-      precond_solver_type    = diagonal;
-      solver_p              = 0;
-      precond_solver_p      = 0;
+      isRestartTimestep    = false;
+      solver_type          = smg;
+      precond_solver_type  = diagonal;
+      solver_p             = 0;
+      precond_solver_p     = 0;
       HA_p = 0;
       HB_p = 0;
       HX_p = 0;
@@ -134,7 +136,7 @@ namespace Uintah {
     //__________________________________
     //
     virtual ~hypre_solver_struct() {
-    
+
       if (*solver_p) {
         switch (solver_type) {
         case smg:
@@ -156,7 +158,7 @@ namespace Uintah {
           HYPRE_StructJacobiDestroy(*solver_p);
           break;
         default:
-          throw InternalError( "HypreSolver given a bad solver type!",
+          throw InternalError( "HypreSolver given a bad solver type!", 
                                __FILE__, __LINE__ );
         }
         delete solver_p;
@@ -184,7 +186,7 @@ namespace Uintah {
           HYPRE_StructJacobiDestroy(*precond_solver_p);
           break;
         default:
-          throw InternalError("HypreSolver given a bad solver type!",
+          throw InternalError("HypreSolver given a bad solver type!", 
                               __FILE__, __LINE__);
         }
         delete precond_solver_p;
@@ -264,16 +266,16 @@ namespace Uintah {
      * @param guess_dw Specifies the datawarehouse of the initial guess.
      * @param params Specifies the solver parameters usually parsed from the input file.
      *
-     */
+     */    
     virtual void scheduleSolve( const LevelP           & level_in,
                                       SchedulerP       & sched_in,
                                 const MaterialSet      * matls_in,
                                 const VarLabel         * A_in,
-                                      Task::WhichDW      which_A_dw_in,
+                                      Task::WhichDW      which_A_dw_in,  
                                 const VarLabel         * x_in,
                                       bool               modifies_x_in,
                                 const VarLabel         * b_in,
-                                      Task::WhichDW      which_b_dw_in,
+                                      Task::WhichDW      which_b_dw_in,  
                                 const VarLabel         * guess_in,
                                       Task::WhichDW      which_guess_dw_in,
                                       bool               isFirstSolve_in = true );
@@ -288,21 +290,21 @@ namespace Uintah {
 
     virtual std::string getName();
 
-    void allocateHypreMatrices( DataWarehouse * new_dw );
+    void allocateHypreMatrices(       DataWarehouse * new_dw,
+                                const bool            isRestart );
 
   private:
     void initialize( const ProcessorGroup *,
                      const PatchSubset    * patches,
                      const MaterialSubset * matls,
                            DataWarehouse  * old_dw,
-                           DataWarehouse  * new_dw );
+                           DataWarehouse  * new_dw,
+                     const bool             isRestart);
                            
-    
+    SolverType stringToSolverType( std::string str );
 
-    const VarLabel               * m_timeStepLabel;
-    std::vector<const VarLabel*>   hypre_solver_label;
-    int                            m_num_hypre_threads{1};
-    
+    const VarLabel * m_timeStepLabel;
+    const VarLabel * hypre_solver_label;
     
     HypreParams * m_params = nullptr;
     

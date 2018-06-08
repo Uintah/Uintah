@@ -326,7 +326,7 @@
                                                                           scalar_diss'">
 
           <initialization               spec="REQUIRED NO_DATA"
-                                        attribute1="type REQUIRED STRING 'constant, gaussian, physical'">
+                                        attribute1="type REQUIRED STRING 'constant, gaussian, physical, geometry_fill'">
 
             <!-- Constant initialization -->
             <constant                   spec="REQUIRED DOUBLE" need_applies_to="type constant"/>
@@ -340,6 +340,10 @@
             <std                        spec="REQUIRED DOUBLE" need_applies_to="type gaussian"/>               <!-- width of the gaussian -->
             <shift                      spec="OPTIONAL DOUBLE" need_applies_to="type gaussian"/>               <!-- shift the gaussian by a constant -->
 
+            <!-- constant within a geometry piece (geometry_fill) -->
+            <geom_object                spec="OPTIONAL"/>
+            <constant_inside            spec="REQUIRED DOUBLE" need_applies_to="type geometry_fill"/> <!-- fills this value inside the geometry -->
+            <constant_outside           spec="OPTIONAL DOUBLE" need_applies_to="type geometry_fill"/> <!-- fills this value outside the geometry. default = 0.0 -->
           </initialization>
 
 

@@ -102,6 +102,13 @@ KokkosSolver::sched_restartInitialize( const LevelP     & level
   // Setup BCs
   setupBCs( level, sched, matls );
 
+
+  // initialize hypre objects
+  if ( m_task_factory_map["transport_factory"]->has_task("build_pressure_system")){
+    PressureEqn* press_tsk = dynamic_cast<PressureEqn*>(m_task_factory_map["transport_factory"]->retrieve_task("build_pressure_system"));
+    press_tsk->sched_restartInitialize( level, sched );
+  }
+
   //transport factory
   BFM::iterator i_trans_fac = m_task_factory_map.find("transport_factory");
   i_trans_fac->second->set_bcHelper( m_bcHelper[level->getID()]);
@@ -372,10 +379,9 @@ KokkosSolver::setTimeStep( const ProcessorGroup *
 
 //--------------------------------------------------------------------------------------------------
 void
-KokkosSolver::initialize( const LevelP     & level
-                        ,       SchedulerP & sched
-                        , const bool         doing_restart
-                        )
+KokkosSolver::sched_initialize( const LevelP& level,
+                                SchedulerP& sched,
+                                const bool doing_restart )
 {
   const MaterialSet* matls = m_sharedState->allArchesMaterials();
   //bool is_restart = false;
@@ -384,6 +390,12 @@ KokkosSolver::initialize( const LevelP     & level
 
   // Setup BCs
   setupBCs( level, sched, matls );
+
+    // initialize hypre objects
+  if ( m_task_factory_map["transport_factory"]->has_task("build_pressure_system")){
+    PressureEqn* press_tsk = dynamic_cast<PressureEqn*>(m_task_factory_map["transport_factory"]->retrieve_task("build_pressure_system"));
+    press_tsk->sched_Initialize( level, sched);
+  }
 
   // grid spacing etc...
   m_task_factory_map["utility_factory"]->schedule_task( "grid_info", TaskInterface::INITIALIZE, level, sched, matls );
@@ -406,7 +418,7 @@ KokkosSolver::initialize( const LevelP     & level
 
   //Need to apply BC's after everything is initialized
   m_task_factory_map["transport_factory"]->schedule_task_group( "scalar_rhs_builders", TaskInterface::BC, pack_tasks, level, sched, matls );
-  // Need to updated table BC 
+  // Need to updated table BC
   m_task_factory_map["table_factory"]->schedule_task_group( "all_tasks", TaskInterface::BC, pack_tasks, level, sched, matls );
 
   m_task_factory_map["transport_factory"]->schedule_task_group( "dqmom_eqns", TaskInterface::BC, pack_tasks, level, sched, matls );
@@ -471,9 +483,8 @@ KokkosSolver::initialize( const LevelP     & level
 
 //--------------------------------------------------------------------------------------------------
 int
-KokkosSolver::nonlinearSolve( const LevelP     & level
-                            ,       SchedulerP & sched
-                            )
+KokkosSolver::sched_nonlinearSolve( const LevelP & level,
+                                    SchedulerP & sched )
 {
   const bool pack_tasks = true;
   //const bool dont_pack_tasks = false;

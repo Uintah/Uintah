@@ -160,8 +160,7 @@ WARNING
 
   template<class T> Variable*  SoleVariable<T>::maker()
   {
-    //    return scinew SoleVariable<T>();
-    return 0;
+    return scinew SoleVariable<T>();
   }
    
   template<class T> SoleVariable<T>::~SoleVariable()

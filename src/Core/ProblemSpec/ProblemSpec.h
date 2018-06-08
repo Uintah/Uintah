@@ -379,16 +379,17 @@ public:
   // look for the value of tag named name and passes
   // it back into value.  If the value isn't there it will create a 
   // node and insert it based on the default value
-  ProblemSpecP getWithDefault(const std::string& name, double& value, double defaultVal);
-  ProblemSpecP getWithDefault(const std::string& name, int& value, int defaultVal);
-  ProblemSpecP getWithDefault(const std::string& name, bool& value, bool defaultVal);
-  ProblemSpecP getWithDefault(const std::string& name, std::string& value, const std::string& defaultVal);
-  ProblemSpecP getWithDefault(const std::string& name, IntVector& value, const IntVector& defaultVal);
-  ProblemSpecP getWithDefault(const std::string& name, Vector& value, const Vector& defaultVal);
-  ProblemSpecP getWithDefault(const std::string& name, Point& value, const Point& defaultVal);
-  ProblemSpecP getWithDefault(const std::string& name, std::vector<double>& value, const std::vector<double>& defaultVal);   
-  ProblemSpecP getWithDefault(const std::string& name, std::vector<int>& value, const std::vector<int>& defaultVal); 
-  ProblemSpecP getWithDefault(const std::string& name, std::vector<std::string>& value, const std::vector<std::string>& defaultVal); 
+  ProblemSpecP getWithDefault( const std::string & name, double       & value, double              defaultVal );
+  ProblemSpecP getWithDefault( const std::string & name, int          & value, int                 defaultVal );
+  ProblemSpecP getWithDefault( const std::string & name, unsigned int & value, unsigned int        defaultVal );
+  ProblemSpecP getWithDefault( const std::string & name, bool         & value, bool                defaultVal );
+  ProblemSpecP getWithDefault( const std::string & name, std::string  & value, const std::string & defaultVal );
+  ProblemSpecP getWithDefault( const std::string & name, IntVector    & value, const IntVector   & defaultVal );
+  ProblemSpecP getWithDefault( const std::string & name, Vector       & value, const Vector      & defaultVal );
+  ProblemSpecP getWithDefault( const std::string & name, Point        & value, const Point       & defaultVal );
+  ProblemSpecP getWithDefault( const std::string & name, std::vector<double>      & value, const std::vector<double>      & defaultVal );
+  ProblemSpecP getWithDefault( const std::string & name, std::vector<int>         & value, const std::vector<int>         & defaultVal );
+  ProblemSpecP getWithDefault( const std::string & name, std::vector<std::string> & value, const std::vector<std::string> & defaultVal );
 
   //////////
   // Add a stylesheet to this document, to be output at the top of the page

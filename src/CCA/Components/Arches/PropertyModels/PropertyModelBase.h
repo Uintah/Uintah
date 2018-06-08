@@ -12,6 +12,8 @@
 #include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Exceptions/InvalidValue.h>
+#include <Core/Grid/Box.h>
+#include <CCA/Components/Arches/IntrusionBC.h>
 
 #include <typeinfo>
 
@@ -117,6 +119,11 @@ protected:
   // Constant initialization
   double _const_init;                                 ///< Constant for intialization
 
+  // Geometry fill initialization
+  double d_constant_in_init;
+  double d_constant_out_init;
+  std::vector<GeometryPieceP> d_initGeom;
+  
   // Gaussian initialization
   int _dir_gauss;
   double _a_gauss;
@@ -165,6 +172,34 @@ void PropertyModelBase::base_initialize( const Patch* patch, phiT& phi ){
       }
     }
 
+  } else if ( _init_type == "geometry_fill") {
+    
+    //======= Gaussian ========
+    for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++){
+
+      IntVector c = *iter;
+      Box patchInteriorBox = patch->getBox();
+      //======= Fills a geometry piece with the value of d_constant_init ======
+      for (std::vector<GeometryPieceP>::iterator giter = d_initGeom.begin(); giter != d_initGeom.end(); giter++){
+
+        GeometryPieceP g_piece = *giter;
+        Box geomBox = g_piece->getBoundingBox();
+        Box intersectedBox = geomBox.intersect(patchInteriorBox);
+
+        if (!(intersectedBox.degenerate())){
+
+          Point P = patch->cellPosition(*iter);
+
+          if ( g_piece->inside(P) )
+            phi[c] = d_constant_in_init;
+          else
+            phi[c] = d_constant_out_init;
+
+        } else {
+          phi[c] = d_constant_out_init;
+        }
+      }
+    }
   } else if (_init_type == "physical" ){
     _init_type = "physical";
   } else {

@@ -1125,8 +1125,9 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
       } // end for(ProblemSpecP box_ps = level_ps->findBlock("Box");
 
       if (pg->nRanks() > 1 && (level->numPatches() < pg->nRanks()) && !do_amr) {
-        throw ProblemSetupException("Number of patches must >= the number of processes in an mpi run",
-                                    __FILE__, __LINE__);
+        std::ostringstream warn;
+        warn << "Number of patches (" << level->numPatches() << ") must >= the number of processes in an mpi run";
+        throw ProblemSetupException(warn.str(),__FILE__, __LINE__);
       }
       
       IntVector periodicBoundaries;

@@ -1054,6 +1054,8 @@ namespace WasatchCore{
 
     if( doParticles_ ) particlesHelper_->schedule_sync_particle_position( level, sched, true );
     
+    if( needPressureSolve_ ) m_solver->scheduleInitialize(level, sched, materials_);
+    
     proc0cout << "Wasatch: done creating initialization task(s)" << std::endl;
   }
 
@@ -1062,6 +1064,7 @@ namespace WasatchCore{
   void Wasatch::scheduleRestartInitialize( const Uintah::LevelP& level,
                                            Uintah::SchedulerP& sched )
   {
+    if( needPressureSolve_ ) m_solver->scheduleRestartInitialize(level, sched, materials_);
   }
 
   //--------------------------------------------------------------------

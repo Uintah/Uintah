@@ -123,7 +123,7 @@ Arches::problemSetup( const ProblemSpecP     & params,
     assign_unique_boundary_names( bcProbSpec );
   }
 
-  db->getWithDefault("recompileTaskgraph",  m_recompile, false);
+  db->getWithDefault("recompileTaskgraph",  m_recompile, false);       // Is this needed? -Todd
 
   // physical constant
   m_physicalConsts = scinew PhysicalConstants();
@@ -211,7 +211,7 @@ Arches::scheduleInitialize(const LevelP& level,
   }
 
   //=========== END NEW TASK INTERFACE ==============================
-  m_nlSolver->initialize( level, sched, m_doing_restart );
+  m_nlSolver->sched_initialize( level, sched, m_doing_restart );
 
   if( level->getIndex() != m_arches_level_index )
     return;
@@ -282,7 +282,6 @@ Arches::scheduleTimeAdvance( const LevelP& level,
   if( isRegridTimeStep() ) { // Needed for single level regridding on restarts.
     m_doing_restart = true;  // Note, this task is called twice on a regrid.
     m_recompile = true;
-    setRegridTimeStep( false );
   }
 
   if ( m_doing_restart ) {
@@ -291,7 +290,7 @@ Arches::scheduleTimeAdvance( const LevelP& level,
     }
   }
 
-  m_nlSolver->nonlinearSolve(level, sched);
+  m_nlSolver->sched_nonlinearSolve(level, sched);
 
   if( m_doing_restart ) {
     m_doing_restart = false;

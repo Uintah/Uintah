@@ -491,6 +491,11 @@ ApplicationCommon::updateSystemVars( const ProcessorGroup *,
     
     // // Update the simulation time.
     m_simTime += m_delT;
+    
+    // When using the sim time, rank 0 determines the sim time and
+    // sends it to all other ranks.
+    Uintah::MPI::Bcast( &m_simTime, 1, MPI_DOUBLE, 0, d_myworld->getComm() );
+
     new_dw->put(simTime_vartype(m_simTime), m_simulationTimeLabel);
 
     // m_sharedState->setElapsedSimTime( m_simTime );  

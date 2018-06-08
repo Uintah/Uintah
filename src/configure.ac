@@ -4052,7 +4052,7 @@ if test "$build_pidx_lib" != "no"; then
   _sci_inc=`$sci_pwd`/$PIDX_DIR/install/include
   _sci_optional=required
 
-  SCI_TRY_LINK(PIDX,pidx library and headers,PIDX.h,$_sci_inc $INC_MPI_H,$MPI_LIB_FLAG pidx,$MPI_LIB_DIR_FLAG $_sci_lib,-DMPIPP_H,,$_sci_optional)
+  SCI_TRY_LINK(PIDX,pidx library and headers,PIDX.h,$_sci_inc $INC_MPI_H,$MPI_LIB_FLAG pidx zfp,$MPI_LIB_DIR_FLAG $_sci_lib,-DMPIPP_H,,$_sci_optional)
 
 fi
 
@@ -4070,7 +4070,7 @@ if test "$with_pidx" != NOT_SET; then
   BASE_LIB_PATH(_sci_lib,$_sci_lib)
   _sci_optional=required
 
-  SCI_TRY_LINK(PIDX,pidx library and headers,PIDX.h,$_sci_inc $INC_MPI_H,$MPI_LIB_FLAG pidx,$MPI_LIB_DIR_FLAG $_sci_lib,-DMPIPP_H,,$_sci_optional)
+  SCI_TRY_LINK(PIDX,pidx library and headers,PIDX.h,$_sci_inc $INC_MPI_H,$MPI_LIB_FLAG pidx zfp,$MPI_LIB_DIR_FLAG $_sci_lib,-DMPIPP_H,,$_sci_optional)
 
 fi
 
@@ -4284,7 +4284,7 @@ if test "$build_wasatch_3p" != "no"; then
     components=$build_wasatch_3p
   fi
 
-  $path_to_src/build_scripts/build_wasatch_3p.sh `$sci_pwd` $components "$BOOST_LIBRARY_DIR" "$BOOST_INCLUDE_DIR" "$debug" "$IS_STATIC_BUILD" "$sci_required_cuda"
+  $path_to_src/build_scripts/build_wasatch_3p.sh `$sci_pwd` $components "$BOOST_LIBRARY_DIR" "$BOOST_INCLUDE_DIR" "$debug" "$IS_STATIC_BUILD" "$sci_required_cuda" "$with_cuda"
 
   if test $? != 0; then
      AC_MSG_ERROR( Failed to build Wasatch 3p libraries... )

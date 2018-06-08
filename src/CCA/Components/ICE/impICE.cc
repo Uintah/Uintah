@@ -346,7 +346,7 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
     t->requires(Task::OldDW, hypre_solver_label);
     t->computes(hypre_solver_label);
     //(string var, bool treatAsOld, bool copyData, bool noScrub, bool notCopyData, bool noCheckpoint)
-    sched->overrideVariableBehavior(hypre_solver_label->getName(),false,false,false,true,true);
+    sched->overrideVariableBehavior(hypre_solver_label->getName(),false,true,false,false,true);
   }
 #endif
 
@@ -1100,11 +1100,11 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
                                           //  too many outer iterations
     if (counter > d_iters_before_timestep_restart ){
       restart = true;
-      DOUTR0("\nWARNING: max iterations befor timestep restart reached\n" );
+      DOUTR0("\nWARNING:  max iterations before timestep restart reached\n" );
     }
                                           //  solver or advection has requested a restart
-    if (d_subsched->get_dw(1)->timestepRestarted() ) {
-      DOUTR0( "\nWARNING  impICE:implicitPressureSolve timestep restart.\n" );
+    if (subNewDW->timestepRestarted() ) {
+      DOUTR0( "\n  WARNING:  impICE:implicitPressureSolve timestep restart.\n" );
       restart = true;
     }
     

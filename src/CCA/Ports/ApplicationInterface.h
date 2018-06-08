@@ -244,9 +244,13 @@ WARNING
     virtual void haveModifiedVars( bool val ) = 0;
     virtual bool haveModifiedVars() const = 0;
      
-    //////////
+    // For restarting.
+    virtual bool isRestartTimeStep() const = 0;
+    virtual void setRestartTimeStep( bool val ) = 0;
+
+    // For regridding.
     virtual bool isRegridTimeStep() const = 0;
-    virtual void setRegridTimeStep( bool isRegridTs ) = 0;
+    virtual void setRegridTimeStep( bool val ) = 0;
     virtual int  getLastRegridTimeStep() = 0;
     
     // Some applications can adjust the output interval.

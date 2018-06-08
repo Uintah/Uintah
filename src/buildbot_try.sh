@@ -38,20 +38,8 @@
 
 # 2. If you are adding new files they must be checked in first.
 
-# 3. There are some other gotchas regarding svn ...
-
-# 4. There are different try servers
-#   --builder option 
-
-#   where option is one of the following:
-#     Linux-Optimize-Test-try
-#     Linux-Debug-Test-try
-#     Linux-Optimize-GPU-try
-
-#  If no builder is specified all will be used.
-
-
-#__________________________________
+#______________________________________________________________________
+#
 # Have the user choose a try server(s)
 set possibleServers =( "Linux-Optimize-Test-try" "Linux-Debug-Test-try" "Linux-Optimize-GPU-try")
 
@@ -82,20 +70,27 @@ end
 
 #______________________________________________________________________
 #
-# Note this script will automatically create a patch via svn (max 640 Mbytes).
+# Note this will automatically create a patch via svn 
 # It will contain context lines which are superfluous and make the patch
 # bigger than necessary.
 
+/bin/rm -rf buildbot_patch.txt >& /dev/null
+
+svn diff > buildbot_patch.txt                
+#svn diff -x --context=0 > buildbot_patch.txt   This may be necessary -Todd
+
 buildbot --verbose try \
-         --connect=pb --master=uintah-build.chpc.utah.edu:8031 \
-         --username=buildbot_try --passwd=try_buildbot \
-         --vc=svn --topdir=. --who=`whoami` \
+         --connect=pb \
+         --master=uintah-build.chpc.utah.edu:8031 \
+         --username=buildbot_try \
+         --passwd=try_buildbot \
+         --diff=buildbot_patch.txt \
+         --vc=svn \
+         --topdir=. \
+         --who=`whoami` \
          $BUILDERS
 
-# Use this code if your changes are yuuge to create an svn patch with no
-# context - still has a max 640 Mbytes. 
-#rm -rf buildbot_patch.txt
+# cleanup
+/bin/rm -rf buildbot_patch.txt >& /dev/null
 
-#svn diff -x --context=0 > buildbot_patch.txt
-
-#buildbot --verbose try --connect=pb --master=uintah-build.chpc.utah.edu:8031 --username=buildbot_try --passwd=try_buildbot --diff=buildbot_patch.txt --who=`whoami` --repository=https://gforge.sci.utah.edu/svn/uintah/trunk/src
+exit
