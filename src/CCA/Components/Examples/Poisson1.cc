@@ -292,13 +292,10 @@ void Poisson1::timeAdvance(DetailedTask* dtask,
                   patch->getBCType(Patch::zplus) == Patch::Neighbor ? 0 : 1);
 
     Uintah::BlockRange range( stream, l, h );
-#if defined(UINTAH_ENABLE_KOKKOS)
+
     auto phi = static_cast<OnDemandDataWarehouse*>(old_dw)->getConstNCVariable<double, MemorySpace> (phi_label, matl, patch, Ghost::AroundNodes, 1);
     auto newphi = static_cast<OnDemandDataWarehouse*>(new_dw)->getNCVariable<double, MemorySpace> (phi_label, matl, patch);
-#else
-    auto phi = static_cast<OnDemandDataWarehouse*>(old_dw)->getConstNCVariable<double, MemorySpace> (phi_label, matl, patch, Ghost::AroundNodes, 1);
-    auto newphi = static_cast<OnDemandDataWarehouse*>(new_dw)->getNCVariable<double, MemorySpace> (phi_label, matl, patch);
-#endif
+
     //Replace with boundary condition
     Uintah::parallel_for<ExecutionSpace>( rangeBoundary, KOKKOS_LAMBDA(int i, int j, int k){
         //printf("At ( %d,%d,%d ) copying %g \n", i,j,k,phi(i,j,k));
@@ -318,9 +315,7 @@ void Poisson1::timeAdvance(DetailedTask* dtask,
 //
       double diff = newphi(i, j, k) - phi(i, j, k);
       residual += diff * diff;
-//        printf("In lambda CUDA at (%d,%d,%d)\n", i, j, k);
     }, residual);
-//    cudaDeviceSynchronize();
 
 
 ////Get the data.
