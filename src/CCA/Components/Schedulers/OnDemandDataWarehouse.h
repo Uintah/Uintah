@@ -740,6 +740,7 @@ class OnDemandDataWarehouse : public DataWarehouse {
 #else // #ifdef BRADS_NEW_DWDATABASE
 
 #include <Core/Grid/Variables/NCVariable.h>
+#include <Core/Grid/Variables/CCVariable.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
 #include <CCA/Components/Schedulers/DWDatabase.h>
 #include <CCA/Components/Schedulers/SendState.h>
@@ -1278,6 +1279,41 @@ class OnDemandDataWarehouse : public DataWarehouse {
       return constVar;
     }
 
+    template <typename T, typename MemorySpace>
+    inline typename std::enable_if< std::is_same< MemorySpace, UintahSpaces::HostSpace >::value,const CCVariable<T>& >::type
+    getCCVariable( const VarLabel*   label,
+                                           int               matlIndex,
+                                           const Patch*      patch,
+                                           Ghost::GhostType  gtype = Ghost::None,
+                                           int               numGhostCells = 0 ) {
+
+      CCVariable<T> var;
+      this->allocateAndPut(var, label, matlIndex, patch, gtype, numGhostCells);
+
+      return var;
+    }
+
+
+    template <typename T, typename MemorySpace>
+    inline typename std::enable_if< std::is_same< MemorySpace, UintahSpaces::HostSpace >::value, constCCVariable<T> >::type
+    getConstCCVariable( const VarLabel*   label,
+                                           int               matlIndex,
+                                           const Patch*      patch,
+                                           Ghost::GhostType  gtype,
+                                           int               numGhostCells ) {
+
+      constCCVariable<T> constVar;
+      constGridVariableBase& constVarBase = constVar;
+      GridVariableBase* var = constVarBase.cloneType();
+
+      getGridVar( *var, label, matlIndex, patch, gtype, numGhostCells );
+
+      constVarBase = *var;
+      delete var;
+
+      return constVar;
+    }
+
 #if defined(UINTAH_ENABLE_KOKKOS)
     template <typename T, typename MemorySpace>
     inline typename std::enable_if< std::is_same< MemorySpace, Kokkos::HostSpace >::value, KokkosView3<double, Kokkos::HostSpace> >::type
@@ -1311,6 +1347,42 @@ class OnDemandDataWarehouse : public DataWarehouse {
 
       return constVar.getKokkosView();
     }
+
+
+
+    template <typename T, typename MemorySpace>
+    inline typename std::enable_if< std::is_same< MemorySpace, Kokkos::HostSpace >::value, KokkosView3<double, Kokkos::HostSpace> >::type
+    getCCVariable( const VarLabel*   label,
+                                           int               matlIndex,
+                                           const Patch*      patch,
+                                           Ghost::GhostType  gtype = Ghost::None,
+                                           int               numGhostCells = 0 ) {
+
+      CCVariable<T> var;
+      this->allocateAndPut(var, label, matlIndex, patch, gtype, numGhostCells);
+      return var.getKokkosView();
+    }
+
+    template <typename T, typename MemorySpace>
+    inline typename std::enable_if< std::is_same< MemorySpace, Kokkos::HostSpace >::value, KokkosView3<const T, Kokkos::HostSpace> >::type
+    getConstCCVariable( const VarLabel*   label,
+                                           int               matlIndex,
+                                           const Patch*      patch,
+                                           Ghost::GhostType  gtype,
+                                           int               numGhostCells ) {
+
+      constCCVariable<T> constVar;
+      constGridVariableBase& constVarBase = constVar;
+      GridVariableBase* var = constVarBase.cloneType();
+
+      getGridVar( *var, label, matlIndex, patch, gtype, numGhostCells );
+
+      constVarBase = *var;
+      delete var;
+
+      return constVar.getKokkosView();
+    }
+
 #if defined(HAVE_CUDA)
     template <typename T, typename MemorySpace>
     inline typename std::enable_if< std::is_same< MemorySpace, Kokkos::CudaSpace >::value, KokkosView3<T, Kokkos::CudaSpace> >::type
@@ -1334,6 +1406,30 @@ class OnDemandDataWarehouse : public DataWarehouse {
       return this->getGPUDW()->getKokkosView<const T>(label->getName().c_str(), patch->getID(),  matlIndex, 0);
 
     }
+
+    template <typename T, typename MemorySpace>
+    inline typename std::enable_if< std::is_same< MemorySpace, Kokkos::CudaSpace >::value, KokkosView3<T, Kokkos::CudaSpace> >::type
+    getCCVariable( const VarLabel*   label,
+                                           int               matlIndex,
+                                           const Patch*      patch,
+                                           Ghost::GhostType  gtype = Ghost::None,
+                                           int               numGhostCells = 0 , bool allocate=true ) {
+
+      return this->getGPUDW()->getKokkosView<T>(label->getName().c_str(), patch->getID(),  matlIndex, 0);
+    }
+
+    template <typename T, typename MemorySpace>
+    inline typename std::enable_if< std::is_same< MemorySpace, Kokkos::CudaSpace >::value, KokkosView3<const T, Kokkos::CudaSpace> >::type
+    getConstCCVariable( const VarLabel*   label,
+                                           int               matlIndex,
+                                           const Patch*      patch,
+                                           Ghost::GhostType  gtype,
+                                           int               numGhostCells ) {
+
+      return this->getGPUDW()->getKokkosView<const T>(label->getName().c_str(), patch->getID(),  matlIndex, 0);
+
+    }
+
 #endif //HAVE_CUDA
 #endif //UINTAH_ENABLE_KOKKOS
     static bool d_combineMemory;
