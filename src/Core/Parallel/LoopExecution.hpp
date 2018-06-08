@@ -646,7 +646,7 @@ parallel_reduce_sum( BlockRange const & r, const Functor & functor, ReductionTyp
 
     // Use a Team Policy, this allows us to control how many threads per SM and how many SMs are used.
     typedef Kokkos::TeamPolicy< Kokkos::Cuda > policy_type;
-    Kokkos::TeamPolicy< Kokkos::Cuda > reduce_tp(/* instanceObject, */actual_cuda_sms_per_loop, actual_threads_per_sm );
+    Kokkos::TeamPolicy< Kokkos::Cuda > reduce_tp( instanceObject, actual_cuda_sms_per_loop, actual_threads_per_sm );
     Kokkos::parallel_reduce ( reduce_tp, KOKKOS_LAMBDA ( typename policy_type::member_type thread, ReductionType& inner_sum ) {
 
       // We are within an SM, and all SMs share the same amount of assigned CUDA threads.
