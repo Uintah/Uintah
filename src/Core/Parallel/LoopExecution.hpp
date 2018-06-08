@@ -40,9 +40,13 @@
 #include <cstring>
 #include <cstddef> // TODO: What is this doing here?
 #include <vector> //  Used to manage multiple streams in a task.
+#include <algorithm>
 
 #include <sci_defs/cuda_defs.h>
 #include <sci_defs/kokkos_defs.h>
+
+using std::max;
+using std::min;
 
 #if defined(UINTAH_ENABLE_KOKKOS)
 #include <Kokkos_Core.hpp>
@@ -55,6 +59,7 @@
   }
 #endif
 #else
+
   //Kokkos not included in this build.  Create some stub types so these types at least exist.
   namespace Kokkos {
     class OpenMP {};
@@ -63,6 +68,8 @@
     class CudaSpace {};
   }
   const bool HAVE_KOKKOS = false;
+#define KOKKOS_LAMBDA [&]
+
 #endif //UINTAH_ENABLE_KOKKOS
 
 // Create some data types for non-Kokkos CPU runs.

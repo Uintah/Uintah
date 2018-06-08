@@ -234,7 +234,7 @@ public:
   //as CUDA code.  Brad Peterson Nov 23 2017
   //KOKKOS_FORCEINLINE_FUNCTION
   __attribute__((always_inline))
-    const T& operator[](const IntVector& idx) const
+    T& operator[](const IntVector& idx) const
     {
       return m_view(idx[0],idx[1],idx[2]);
     }
@@ -248,7 +248,7 @@ public:
 
   //KOKKOS_FORCEINLINE_FUNCTION
   __attribute__((always_inline))
-    const T& operator()(int i, int j, int k) const
+    T& operator()(int i, int j, int k) const
     {
       return m_view(i,j,k);
     }
@@ -261,7 +261,7 @@ public:
     }
 #else
 
-  inline const T& operator[](const IntVector& idx) const {
+  inline T& operator[](const IntVector& idx) const {
     return d_window->get(idx);
   }
 
@@ -269,8 +269,8 @@ public:
     return d_window->get(idx);
   }
 
-  inline const T& operator()(int i, int j, int k) const {
-    return (*this)[IntVector(i,j,k)];
+  inline T& operator()(int i, int j, int k) const {
+    return d_window->get(i,j,k);
   }
 
   inline T& operator()(int i, int j, int k) {
@@ -369,10 +369,14 @@ protected:
   Array3& operator=(const Array3& copy);
 
 private:
-  Array3Window<T>* d_window{nullptr};
+  // These two data members are marked as mutable due to a need for lambdas.
+  // When Grid Variables are lambda captured with [=], they are captured as *const*.
+  // But we need to let grid variables be modified, and so we set these data members as
+  // mutable, which gets around the const.
+  mutable Array3Window<T>* d_window{nullptr};
 #if defined(UINTAH_ENABLE_KOKKOS)
   //Array3 variables should never go outside of HostSpace.
-  KokkosView3<T, Kokkos::HostSpace> m_view{};
+  mutable KokkosView3<T, Kokkos::HostSpace> m_view{};
 #endif
 };
 

@@ -1808,7 +1808,10 @@ Ray::rayTrace_dataOnionLevels( DetailedTask* dtask,
     //
     // Declare these simulation vars here so they stay in scope for the OnDemandDataWarehouse
     // Note that even though boundFlux isn't used here, we still have to allocate it so
-    // an upcoming carry forward task doesn't break
+    // an upcoming carry forward task doesn't break.  Note that abskgSigmaT4CellType is used in a data onion slim RMCRT scenario
+    // and abskg, sigmaT4OverPi, and cellType are used in the regular RMCRT data onion scenario.  The variables
+    // are all declared here for scope.
+
     std::vector< constCCVariable<double> > abskgSigmaT4CellType(numLevels);
     std::vector< constCCVariable< T > > abskg(numLevels);
     std::vector< constCCVariable< T > > sigmaT4OverPi(numLevels);
@@ -1831,15 +1834,15 @@ Ray::rayTrace_dataOnionLevels( DetailedTask* dtask,
     // Get the GPU vars
     if ( std::is_same< Kokkos::Cuda , ExecutionSpace >::value ) {
       // The upcoming Kokkos views
-      if (algorithm == dataOnionSlim) {
-        KokkosView3<const double, Kokkos::CudaSpace> abskgSigmaT4CellType_view[numLevels];
-      } else {
-        KokkosView3<const T, Kokkos::CudaSpace>   abskg_view[numLevels];
-        KokkosView3<const T, Kokkos::CudaSpace>   sigmaT4OverPi_view[numLevels];
-        KokkosView3<const int, Kokkos::CudaSpace> cellType_view[numLevels];
-      }
+
+      KokkosView3<const double, Kokkos::CudaSpace> abskgSigmaT4CellType_view[numLevels];
+      KokkosView3<const T, Kokkos::CudaSpace>   abskg_view[numLevels];
+      KokkosView3<const T, Kokkos::CudaSpace>   sigmaT4OverPi_view[numLevels];
+      KokkosView3<const int, Kokkos::CudaSpace> cellType_view[numLevels];
+
       KokkosView3<double, Kokkos::CudaSpace> divQ_fine_view;
       KokkosView3<double, Kokkos::CudaSpace> radiationVolq_fine_view;
+
 
       GPUDataWarehouse* abskg_gdw    = static_cast<GPUDataWarehouse*>(abskg_dw->getGPUDW());
       GPUDataWarehouse* sigmaT4_gdw  = static_cast<GPUDataWarehouse*>(celltype_dw->getGPUDW());
@@ -1850,9 +1853,10 @@ Ray::rayTrace_dataOnionLevels( DetailedTask* dtask,
       const Patch* curPatch = patch;
       for ( int L = numLevels - 1; L >= 0; L-- ) {
         // Get vars on this level
-        abskg_view[L]         = abskg_gdw->getKokkosView<const T>(         d_abskgLabel->getName().c_str(),         curPatch->getID(), d_matl, L);
-        sigmaT4OverPi_view[L] = sigmaT4_gdw->getKokkosView<const T>(       d_sigmaT4Label->getName().c_str(),       curPatch->getID(), d_matl, L);
-        cellType_view[L]      = celltype_gdw->getKokkosView<const int>(    d_cellTypeLabel->getName().c_str(),      curPatch->getID(), d_matl, L);
+        abskgSigmaT4CellType_view[L] = abskg_gdw->getKokkosView<const double>(  d_abskgSigmaT4CellTypeLabel->getName().c_str(), curPatch->getID(), d_matl, L);
+        abskg_view[L]         = abskg_gdw->getKokkosView<const T>(      d_abskgLabel->getName().c_str(), curPatch->getID(), d_matl, L);
+        sigmaT4OverPi_view[L] = sigmaT4_gdw->getKokkosView<const T>(    d_sigmaT4Label->getName().c_str(), curPatch->getID(), d_matl, L);
+        cellType_view[L]      = celltype_gdw->getKokkosView<const int>( d_cellTypeLabel->getName().c_str(), curPatch->getID(), d_matl, L);
         // Go down a coarser level, if possible
         if (curLevel->hasCoarserLevel()) {
           //Get the patchID of the patch down a coarser level.

@@ -116,8 +116,8 @@ namespace Uintah {
 
 
     private:
-      T*    d_data;
-      T***  d_data3;
+      mutable T*    d_data;
+      mutable T***  d_data3;
       IntVector d_size;
 
       Array3Data& operator=(const Array3Data&);

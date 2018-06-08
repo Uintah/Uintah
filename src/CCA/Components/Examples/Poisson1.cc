@@ -245,7 +245,7 @@ void Poisson1::initialize( const ProcessorGroup *
           const BoundCond<double>* bc = dynamic_cast<const BoundCond<double>*>(bcb);
           double value = bc->getValue();
           for (nbound_ptr.reset(); !nbound_ptr.done(); nbound_ptr++) {
-            phi[*nbound_ptr] = 0.0;
+            phi[*nbound_ptr] = value;
 
           }
           delete bcb;
@@ -292,40 +292,23 @@ void Poisson1::timeAdvance(DetailedTask* dtask,
                   patch->getBCType(Patch::zplus) == Patch::Neighbor ? 0 : 1);
 
     Uintah::BlockRange range( stream, l, h );
-
-
-//Get the data.
-#if !defined(UINTAH_ENABLE_KOKKOS)
-    // The legacy Uintah CPU way
-    //auto phi = static_cast<OnDemandDataWarehouse*>(old_dw)->getConstNCVariable<double, UintahSpaces::HostSpace> (phi_label, matl, patch, Ghost::AroundNodes, 1);
-    constNCVariable<double> phi;
-    old_dw->get(phi, phi_label, matl, patch, Ghost::AroundNodes, 1);
-
-    NCVariable<double> newphi;
-
-    new_dw->allocateAndPut(newphi, phi_label, matl, patch);
-    newphi.copyPatch(phi, newphi.getLowIndex(), newphi.getHighIndex());
-    TimeAdvanceFunctor<UintahSpaces::HostSpace> func(phi, newphi);
-    Uintah::parallel_reduce_sum<UintahSpaces::CPU>(range, func, residual);
+#if defined(UINTAH_ENABLE_KOKKOS)
+    auto phi = static_cast<OnDemandDataWarehouse*>(old_dw)->getConstNCVariable<double, MemorySpace> (phi_label, matl, patch, Ghost::AroundNodes, 1);
+    auto newphi = static_cast<OnDemandDataWarehouse*>(new_dw)->getNCVariable<double, MemorySpace> (phi_label, matl, patch);
 #else
-#ifdef HAVE_CUDA
-    if ( std::is_same< Kokkos::Cuda , ExecutionSpace >::value ) {
-      KokkosView3<const double, Kokkos::CudaSpace> phi = old_dw->getGPUDW()->getKokkosView<const double>(phi_label->getName().c_str(), patch->getID(),  matl, 0);
-      KokkosView3<double, Kokkos::CudaSpace> newphi    = new_dw->getGPUDW()->getKokkosView<double>(phi_label->getName().c_str(), patch->getID(),  matl, 0);
-      //TimeAdvanceFunctor<Kokkos::CudaSpace> func(phi, newphi);
-      //Uintah::parallel_reduce_sum<Kokkos::Cuda>(range, func, residual);
-      //Uintah::parallel_for<Kokkos::Cuda>(range, func);
+    auto phi = static_cast<OnDemandDataWarehouse*>(old_dw)->getConstNCVariable<double, MemorySpace> (phi_label, matl, patch, Ghost::AroundNodes, 1);
+    auto newphi = static_cast<OnDemandDataWarehouse*>(new_dw)->getNCVariable<double, MemorySpace> (phi_label, matl, patch);
+#endif
+    //Replace with boundary condition
+    Uintah::parallel_for<ExecutionSpace>( rangeBoundary, KOKKOS_LAMBDA(int i, int j, int k){
+        //printf("At ( %d,%d,%d ) copying %g \n", i,j,k,phi(i,j,k));
+        newphi(i, j, k) = phi(i,j,k);
+    });
 
-      //Replace with boundary condition
-      Uintah::parallel_for<Kokkos::Cuda>( rangeBoundary, KOKKOS_LAMBDA(int i, int j, int k){
-          //printf("At ( %d,%d,%d ) copying %g \n", i,j,k,phi(i,j,k));
-          newphi(i, j, k) = phi(i,j,k);
-      });
-
-      Uintah::parallel_reduce_sum<Kokkos::Cuda>( range, KOKKOS_LAMBDA (int i, int j, int k, double& residual){
-        newphi(i, j, k) = (1. / 6)
-            * (phi(i + 1, j, k) + phi(i - 1, j, k) + phi(i, j + 1, k) +
-                phi(i, j - 1, k) + phi(i, j, k + 1) + phi(i, j, k - 1));
+    Uintah::parallel_reduce_sum<ExecutionSpace>( range, KOKKOS_LAMBDA (int i, int j, int k, double& residual){
+      newphi(i, j, k) = (1. / 6)
+          * (phi(i + 1, j, k) + phi(i - 1, j, k) + phi(i, j + 1, k) +
+              phi(i, j - 1, k) + phi(i, j, k + 1) + phi(i, j, k - 1));
 //        printf("In lambda CUDA at %d,%d,%d), m_phi is at %p %p %g from %g, %g, %g, %g, %g, %g and m_newphi is %g\n", i, j, k,
 //            phi.m_view.data(), &(phi(i,j,k)),
 //            phi(i,j,k),
@@ -333,52 +316,103 @@ void Poisson1::timeAdvance(DetailedTask* dtask,
 //            phi(i, j - 1, k), phi(i, j, k + 1), phi(i, j, k - 1),
 //            newphi(i,j,k));
 //
-        double diff = newphi(i, j, k) - phi(i, j, k);
-        residual += diff * diff;
+      double diff = newphi(i, j, k) - phi(i, j, k);
+      residual += diff * diff;
 //        printf("In lambda CUDA at (%d,%d,%d)\n", i, j, k);
-      }, residual);
-      cudaDeviceSynchronize();
-      //parallel_for<Kokkos::Cuda>(range, KOKKOS_LAMBDA (const int i, const int j, const int k) {
-      //  printf("i is %d\n", i);
-      //});
+    }, residual);
+//    cudaDeviceSynchronize();
 
-    } else
-#endif
-    if ( std::is_same< Kokkos::OpenMP , ExecutionSpace >::value ) {
-      // Grab the variables then grab the Kokkos Views
 
-      constNCVariable<double> NC_phi;
-      NCVariable<double> NC_newphi;
-      old_dw->get(NC_phi, phi_label, matl, patch, Ghost::AroundNodes, 1);
-      new_dw->allocateAndPut(NC_newphi, phi_label, matl, patch);
-      KokkosView3<const double, Kokkos::HostSpace> phi = NC_phi.getKokkosView();
-      KokkosView3<double, Kokkos::HostSpace> newphi = NC_newphi.getKokkosView();
-
-      //NC_newphi.copyPatch(NC_phi, NC_newphi.getLowIndex(), NC_newphi.getHighIndex()); //TODO, replace with boundary condition
-      Uintah::parallel_for<Kokkos::OpenMP>( rangeBoundary, [&](int i, int j, int k){
-              newphi(i, j, k) = phi(i,j,k);
-      });
-
-      //Uintah::parallel_boundary_condition(boundaryConditionRange, range, boundaryFunc);
-      TimeAdvanceFunctor<Kokkos::HostSpace> func(phi, newphi);
-      //Uintah::parallel_reduce_sum<Kokkos::OpenMP>(range, func, residual);
-      Uintah::parallel_reduce_sum<Kokkos::OpenMP>( range, [&](int i, int j, int k, double& residual){
-        newphi(i, j, k) = (1. / 6)
-            * (phi(i + 1, j, k) + phi(i - 1, j, k) + phi(i, j + 1, k) +
-                phi(i, j - 1, k) + phi(i, j, k + 1) + phi(i, j, k - 1));
-//        printf("In lambda OpenMP at (%d,%d,%d), m_phi is %g from %g, %g, %g, %g, %g, %g and m_newphi is %g\n", i, j, k,
-//            phi(i,j,k),
-//            phi(i + 1, j, k), phi(i - 1, j, k), phi(i, j + 1, k),
-//            phi(i, j - 1, k), phi(i, j, k + 1), phi(i, j, k - 1),
-//            newphi(i,j,k));
-        double diff = newphi(i, j, k) - phi(i, j, k);
-        residual += diff * diff;
-      }, residual);
-
-    }
-#endif //#if !defined(UINTAH_ENABLE_KOKKOS)
-    printf("The residual is %g\n", residual);
-    //new_dw->put(sum_vartype(residual), residual_label);
+////Get the data.
+//#if !defined(UINTAH_ENABLE_KOKKOS)
+//    // The legacy Uintah CPU way
+//    auto phi = static_cast<OnDemandDataWarehouse*>(old_dw)->getConstNCVariable<double, UintahSpaces::HostSpace> (phi_label, matl, patch, Ghost::AroundNodes, 1);
+//    //constNCVariable<double> phi;
+//    //old_dw->get(phi, phi_label, matl, patch, Ghost::AroundNodes, 1);
+//    auto newphi = static_cast<OnDemandDataWarehouse*>(new_dw)->getNCVariable<double, UintahSpaces::HostSpace> (phi_label, matl, patch);
+//    //NCVariable<double> newphi;
+//    //new_dw->allocateAndPut(newphi, phi_label, matl, patch);
+//    newphi.copyPatch(phi, newphi.getLowIndex(), newphi.getHighIndex());
+//    TimeAdvanceFunctor<UintahSpaces::HostSpace> func(phi, newphi);
+//    Uintah::parallel_reduce_sum<UintahSpaces::CPU>(range, func, residual);
+//#else
+//#ifdef HAVE_CUDA
+//    if ( std::is_same< Kokkos::Cuda , ExecutionSpace >::value ) {
+//      //KokkosView3<const double, Kokkos::CudaSpace> phi = old_dw->getGPUDW()->getKokkosView<const double>(phi_label->getName().c_str(), patch->getID(),  matl, 0);
+//      //KokkosView3<double, Kokkos::CudaSpace> newphi    = new_dw->getGPUDW()->getKokkosView<double>(phi_label->getName().c_str(), patch->getID(),  matl, 0);
+//      auto phi = static_cast<OnDemandDataWarehouse*>(old_dw)->getConstNCVariable<double,  Kokkos::CudaSpace> (phi_label, matl, patch, Ghost::AroundNodes, 1);
+//      auto newphi = static_cast<OnDemandDataWarehouse*>(new_dw)->getNCVariable<double, Kokkos::CudaSpace> (phi_label, matl, patch);
+//
+//      //TimeAdvanceFunctor<Kokkos::CudaSpace> func(phi, newphi);
+//      //Uintah::parallel_reduce_sum<Kokkos::Cuda>(range, func, residual);
+//      //Uintah::parallel_for<Kokkos::Cuda>(range, func);
+//
+//      //Replace with boundary condition
+//      Uintah::parallel_for<Kokkos::Cuda>( rangeBoundary, KOKKOS_LAMBDA(int i, int j, int k){
+//          //printf("At ( %d,%d,%d ) copying %g \n", i,j,k,phi(i,j,k));
+//          newphi(i, j, k) = phi(i,j,k);
+//      });
+//
+//      Uintah::parallel_reduce_sum<Kokkos::Cuda>( range, KOKKOS_LAMBDA (int i, int j, int k, double& residual){
+//        newphi(i, j, k) = (1. / 6)
+//            * (phi(i + 1, j, k) + phi(i - 1, j, k) + phi(i, j + 1, k) +
+//                phi(i, j - 1, k) + phi(i, j, k + 1) + phi(i, j, k - 1));
+////        printf("In lambda CUDA at %d,%d,%d), m_phi is at %p %p %g from %g, %g, %g, %g, %g, %g and m_newphi is %g\n", i, j, k,
+////            phi.m_view.data(), &(phi(i,j,k)),
+////            phi(i,j,k),
+////            phi(i + 1, j, k), phi(i - 1, j, k), phi(i, j + 1, k),
+////            phi(i, j - 1, k), phi(i, j, k + 1), phi(i, j, k - 1),
+////            newphi(i,j,k));
+////
+//        double diff = newphi(i, j, k) - phi(i, j, k);
+//        residual += diff * diff;
+////        printf("In lambda CUDA at (%d,%d,%d)\n", i, j, k);
+//      }, residual);
+//      cudaDeviceSynchronize();
+//      //parallel_for<Kokkos::Cuda>(range, KOKKOS_LAMBDA (const int i, const int j, const int k) {
+//      //  printf("i is %d\n", i);
+//      //});
+//
+//    } else
+//#endif
+//    if ( std::is_same< Kokkos::OpenMP , ExecutionSpace >::value ) {
+//      // Grab the variables then grab the Kokkos Views
+//
+//
+//      //constNCVariable<double> NC_phi;
+//      //NCVariable<double> NC_newphi;
+//      //old_dw->get(NC_phi, phi_label, matl, patch, Ghost::AroundNodes, 1);
+//      //new_dw->allocateAndPut(NC_newphi, phi_label, matl, patch);
+//      //KokkosView3<const double, Kokkos::HostSpace> phi = NC_phi.getKokkosView();
+//      //KokkosView3<double, Kokkos::HostSpace> newphi = NC_newphi.getKokkosView();
+//      auto phi = static_cast<OnDemandDataWarehouse*>(old_dw)->getConstNCVariable<double,  Kokkos::HostSpace> (phi_label, matl, patch, Ghost::AroundNodes, 1);
+//      auto newphi = static_cast<OnDemandDataWarehouse*>(new_dw)->getNCVariable<double, Kokkos::HostSpace> (phi_label, matl, patch);
+//
+//      //NC_newphi.copyPatch(NC_phi, NC_newphi.getLowIndex(), NC_newphi.getHighIndex()); //TODO, replace with boundary condition
+//      Uintah::parallel_for<Kokkos::OpenMP>( rangeBoundary, [&](int i, int j, int k){
+//              newphi(i, j, k) = phi(i,j,k);
+//      });
+//
+//      //Uintah::parallel_boundary_condition(boundaryConditionRange, range, boundaryFunc);
+//      TimeAdvanceFunctor<Kokkos::HostSpace> func(phi, newphi);
+//      //Uintah::parallel_reduce_sum<Kokkos::OpenMP>(range, func, residual);
+//      Uintah::parallel_reduce_sum<Kokkos::OpenMP>( range, [&](int i, int j, int k, double& residual){
+//        newphi(i, j, k) = (1. / 6)
+//            * (phi(i + 1, j, k) + phi(i - 1, j, k) + phi(i, j + 1, k) +
+//                phi(i, j - 1, k) + phi(i, j, k + 1) + phi(i, j, k - 1));
+////        printf("In lambda OpenMP at (%d,%d,%d), m_phi is %g from %g, %g, %g, %g, %g, %g and m_newphi is %g\n", i, j, k,
+////            phi(i,j,k),
+////            phi(i + 1, j, k), phi(i - 1, j, k), phi(i, j + 1, k),
+////            phi(i, j - 1, k), phi(i, j, k + 1), phi(i, j, k - 1),
+////            newphi(i,j,k));
+//        double diff = newphi(i, j, k) - phi(i, j, k);
+//        residual += diff * diff;
+//      }, residual);
+//
+//    }
+//#endif //#if !defined(UINTAH_ENABLE_KOKKOS)
+//    printf("The residual is %g\n", residual);
+//    //new_dw->put(sum_vartype(residual), residual_label);
   }
 }
 

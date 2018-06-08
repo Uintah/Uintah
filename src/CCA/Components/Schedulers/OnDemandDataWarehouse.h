@@ -1240,7 +1240,22 @@ class OnDemandDataWarehouse : public DataWarehouse {
     virtual void getVarLabelMatlLevelTriples(std::vector<VarLabelMatl<Level> >& vars) const;
 
     template <typename T, typename MemorySpace>
-    constNCVariable<T> getConstNCVariable( const VarLabel*   label,
+    inline typename std::enable_if< std::is_same< MemorySpace, UintahSpaces::HostSpace >::value, NCVariable<T> >::type
+    getNCVariable( const VarLabel*   label,
+                                           int               matlIndex,
+                                           const Patch*      patch,
+                                           Ghost::GhostType  gtype = Ghost::None,
+                                           int               numGhostCells = 0 ) {
+
+      NCVariable<T> var;
+      this->allocateAndPut(var, label, matlIndex, patch, gtype, numGhostCells);
+      return var;
+    }
+
+
+    template <typename T, typename MemorySpace>
+    inline typename std::enable_if< std::is_same< MemorySpace, UintahSpaces::HostSpace >::value, constNCVariable<T> >::type
+    getConstNCVariable( const VarLabel*   label,
                                            int               matlIndex,
                                            const Patch*      patch,
                                            Ghost::GhostType  gtype,
@@ -1258,6 +1273,64 @@ class OnDemandDataWarehouse : public DataWarehouse {
       return constVar;
     }
 
+#if defined(UINTAH_ENABLE_KOKKOS)
+    template <typename T, typename MemorySpace>
+    inline typename std::enable_if< std::is_same< MemorySpace, Kokkos::HostSpace >::value, KokkosView3<double, Kokkos::HostSpace> >::type
+    getNCVariable( const VarLabel*   label,
+                                           int               matlIndex,
+                                           const Patch*      patch,
+                                           Ghost::GhostType  gtype = Ghost::None,
+                                           int               numGhostCells = 0 ) {
+
+      NCVariable<T> var;
+      this->allocateAndPut(var, label, matlIndex, patch, gtype, numGhostCells);
+      return var.getKokkosView();
+    }
+
+    template <typename T, typename MemorySpace>
+    inline typename std::enable_if< std::is_same< MemorySpace, Kokkos::HostSpace >::value, KokkosView3<const T, Kokkos::HostSpace> >::type
+    getConstNCVariable( const VarLabel*   label,
+                                           int               matlIndex,
+                                           const Patch*      patch,
+                                           Ghost::GhostType  gtype,
+                                           int               numGhostCells ) {
+
+      constNCVariable<T> constVar;
+      constGridVariableBase& constVarBase = constVar;
+      GridVariableBase* var = constVarBase.cloneType();
+
+      getGridVar( *var, label, matlIndex, patch, gtype, numGhostCells );
+
+      constVarBase = *var;
+      delete var;
+
+      return constVar.getKokkosView();
+    }
+#if defined(HAVE_CUDA)
+    template <typename T, typename MemorySpace>
+    inline typename std::enable_if< std::is_same< MemorySpace, Kokkos::CudaSpace >::value, KokkosView3<T, Kokkos::CudaSpace> >::type
+    getNCVariable( const VarLabel*   label,
+                                           int               matlIndex,
+                                           const Patch*      patch,
+                                           Ghost::GhostType  gtype = Ghost::None,
+                                           int               numGhostCells = 0 ) {
+
+      return this->getGPUDW()->getKokkosView<T>(label->getName().c_str(), patch->getID(),  matlIndex, 0);
+    }
+
+    template <typename T, typename MemorySpace>
+    inline typename std::enable_if< std::is_same< MemorySpace, Kokkos::CudaSpace >::value, KokkosView3<const T, Kokkos::CudaSpace> >::type
+    getConstNCVariable( const VarLabel*   label,
+                                           int               matlIndex,
+                                           const Patch*      patch,
+                                           Ghost::GhostType  gtype,
+                                           int               numGhostCells ) {
+
+      return this->getGPUDW()->getKokkosView<const T>(label->getName().c_str(), patch->getID(),  matlIndex, 0);
+
+    }
+#endif //HAVE_CUDA
+#endif //UINTAH_ENABLE_KOKKOS
     static bool d_combineMemory;
 
     friend class SchedulerCommon;
