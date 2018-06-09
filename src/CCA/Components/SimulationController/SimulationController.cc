@@ -571,14 +571,15 @@ SimulationController::getNextDeltaT( void )
 
   // Adjust the delt
   d_delt *= d_timeinfo->delt_factor;
-      
+  delt_vartype init_delt = d_delt;
+
   // Check to see if the new delt is below the delt_min
-  if( d_delt < d_timeinfo->delt_min && doPrintNow) {
-    proc0cout << "WARNING: raising delt from " << d_delt;
-    
+  if( d_delt < d_timeinfo->delt_min) {
     d_delt = d_timeinfo->delt_min;
-    
-    proc0cout << " to minimum: " << d_delt << '\n';
+    if (doPrintNow) {
+      proc0cout << "WARNING: raising delt from " << init_delt
+                << " to minimum: " << d_delt << "\n";
+    }
   }
 
   // Check to see if the new delt was increased too much over the
@@ -588,34 +589,35 @@ SimulationController::getNextDeltaT( void )
 
   if( d_prev_delt > 0.0 &&
       d_timeinfo->max_delt_increase < 1.e90 &&
-      d_delt > delt_tmp && doPrintNow) {
-    proc0cout << "WARNING (a): lowering delt from " << d_delt;
-    
+      d_delt > delt_tmp) {
     d_delt = delt_tmp;
-    
-    proc0cout << " to maxmimum: " << d_delt
-              << " (maximum increase of " << d_timeinfo->max_delt_increase
-              << ")\n";
+    if (doPrintNow) {
+      proc0cout << "WARNING (a): lowering delt from " << init_delt
+                << " to maximum: " << d_delt
+                << "(maximum increase of " << d_timeinfo->max_delt_increase
+                << ")\n";
+    }
   }
 
   // Check to see if the new delt exceeds the max_initial_delt
   if( d_simTime <= d_timeinfo->initial_delt_range &&
-      d_delt > d_timeinfo->max_initial_delt && doPrintNow) {
-    proc0cout << "WARNING (b): lowering delt from " << d_delt ;
-
+      d_delt > d_timeinfo->max_initial_delt) {
     d_delt = d_timeinfo->max_initial_delt;
-
-    proc0cout<< " to maximum: " << d_delt
-	     << " (for initial timesteps)\n";
+    if (doPrintNow) {
+      proc0cout << "WARNING (b): lowering delt from " << init_delt
+                << "to maximum: " << d_delt
+                << " (for initial timesteps)\n";
+    }
   }
 
   // Check to see if the new delt exceeds the delt_max
-  if( d_delt > d_timeinfo->delt_max && doPrintNow) {
-    proc0cout << "WARNING (c): lowering delt from " << d_delt;
-
+  if( d_delt > d_timeinfo->delt_max) {
     d_delt = d_timeinfo->delt_max;
-    
-    proc0cout << " to maximum: " << d_delt << '\n';
+    if (doPrintNow) {
+      proc0cout << "WARNING (c): lowering delt from " << init_delt
+                << " to maximum: " << d_delt << "\n";
+    }
+
   }
 
   // Clamp delt to match the requested output and/or checkpoint times
@@ -623,24 +625,23 @@ SimulationController::getNextDeltaT( void )
 
     // Clamp to the output time
     double nextOutput = d_output->getNextOutputTime();
-    if (nextOutput != 0 && d_simTime + d_delt > nextOutput && doPrintNow) {
-      proc0cout << "WARNING (d): lowering delt from " << d_delt;
-
+    if (nextOutput != 0 && d_simTime + d_delt > nextOutput) {
       d_delt = nextOutput - d_simTime;
+      if (doPrintNow) {
+        proc0cout << "WARNING (d): lowering delt from " << init_delt
+                  << " to " << d_delt << " to line up with output time\n";
+      }
 
-      proc0cout << " to " << d_delt
-                << " to line up with output time\n";
     }
 
     // Clamp to the checkpoint time
     double nextCheckpoint = d_output->getNextCheckpointTime();
-    if (nextCheckpoint != 0 && d_simTime + d_delt > nextCheckpoint && doPrintNow) {
-      proc0cout << "WARNING (d): lowering delt from " << d_delt;
-
+    if (nextCheckpoint != 0 && d_simTime + d_delt > nextCheckpoint) {
       d_delt = nextCheckpoint - d_simTime;
-
-      proc0cout << " to " << d_delt
-                << " to line up with checkpoint time\n";
+      if (doPrintNow) {
+        proc0cout << "WARNING (d): lowering delt from " << init_delt
+                  << " to " << d_delt << " to line up with checkpoint time\n";
+      }
     }
   }
   

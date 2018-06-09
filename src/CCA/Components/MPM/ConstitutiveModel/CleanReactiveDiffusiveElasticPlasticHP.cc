@@ -1168,15 +1168,16 @@ void CleanReactionDiffusionEP::computeStressTensor(const PatchSubset   * patches
         // From:  Mat Sci & Eng. A 299, 1-15, 2001 (K. Morsi)
         // -152 kJ/mol
         // == -152e6 micrograms mm^2/microsecond^2/mol (consistent units)
-        if (dwi == 1 && timeStep > 2)
+        if (timeStep > 2)
         {
           // TODO FIXME HACK The timestep limiter up top should not be there.
           //double dH_Rxn = -152.0e+6;
           //dH_Rxn = 0.0;
           // pReactionHeat_temp is the amount of heat energy generated presuming
           // 100% conversion of diffusant nickel into NiAl3
-          pReactionHeat_temp[idx] = -d_dHRxn * std::abs(dCdt) *
-                                      pStartingMoles[idx];
+          pReactionHeat_temp[idx] = -d_dHRxn * std::max(0.0,std::abs(dCdt)) * pStartingMoles[idx];
+//          pReactionHeat_temp[idx] = -d_dHRxn * std::abs(dCdt) *
+//                                      pStartingMoles[idx];
           pdTdt[idx] += pReactionHeat_temp[idx] / (Cp * pMass[idx]);
 
           // Output generated heat for specific points.  HACK FIXME TODO
