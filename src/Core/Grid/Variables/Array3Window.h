@@ -156,7 +156,7 @@ template<class T> class Array3Window : public RefCounted {
 
    private:
 
-      mutable Array3Data<T>* data;
+      Array3Data<T>* data;
       IntVector offset;
       IntVector lowIndex;
       IntVector highIndex;

@@ -1268,14 +1268,7 @@ class OnDemandDataWarehouse : public DataWarehouse {
                                            int               numGhostCells ) {
 
       constNCVariable<T> constVar;
-      constGridVariableBase& constVarBase = constVar;
-      GridVariableBase* var = constVarBase.cloneType();
-
-      getGridVar( *var, label, matlIndex, patch, gtype, numGhostCells );
-
-      constVarBase = *var;
-      delete var;
-
+      this->get(constVar, label, matlIndex, patch, gtype, numGhostCells);
       return constVar;
     }
 
@@ -1289,7 +1282,6 @@ class OnDemandDataWarehouse : public DataWarehouse {
 
       CCVariable<T> var;
       this->allocateAndPut(var, label, matlIndex, patch, gtype, numGhostCells);
-
       return var;
     }
 
@@ -1303,13 +1295,7 @@ class OnDemandDataWarehouse : public DataWarehouse {
                                            int               numGhostCells ) {
 
       constCCVariable<T> constVar;
-      constGridVariableBase& constVarBase = constVar;
-      GridVariableBase* var = constVarBase.cloneType();
-
-      getGridVar( *var, label, matlIndex, patch, gtype, numGhostCells );
-
-      constVarBase = *var;
-      delete var;
+      this->get(constVar, label, matlIndex, patch, gtype, numGhostCells);
 
       return constVar;
     }
@@ -1337,14 +1323,7 @@ class OnDemandDataWarehouse : public DataWarehouse {
                                            int               numGhostCells ) {
 
       constNCVariable<T> constVar;
-      constGridVariableBase& constVarBase = constVar;
-      GridVariableBase* var = constVarBase.cloneType();
-
-      getGridVar( *var, label, matlIndex, patch, gtype, numGhostCells );
-
-      constVarBase = *var;
-      delete var;
-
+      this->get(constVar, label, matlIndex, patch, gtype, numGhostCells);
       return constVar.getKokkosView();
     }
 
@@ -1372,14 +1351,7 @@ class OnDemandDataWarehouse : public DataWarehouse {
                                            int               numGhostCells ) {
 
       constCCVariable<T> constVar;
-      constGridVariableBase& constVarBase = constVar;
-      GridVariableBase* var = constVarBase.cloneType();
-
-      getGridVar( *var, label, matlIndex, patch, gtype, numGhostCells );
-
-      constVarBase = *var;
-      delete var;
-
+      this->get(constVar, label, matlIndex, patch, gtype, numGhostCells);
       return constVar.getKokkosView();
     }
 

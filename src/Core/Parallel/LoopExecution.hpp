@@ -464,7 +464,7 @@ parallel_for( BlockRange const & r, const Functor & functor )
   typedef Kokkos::TeamPolicy< ExecutionSpace > policy_type;
 
   Kokkos::parallel_for (Kokkos::TeamPolicy< ExecutionSpace >( cuda_sms_per_loop, actualThreads ),
-                           KOKKOS_LAMBDA ( typename policy_type::member_type thread ) {
+                           [=] __device__ ( typename policy_type::member_type thread ) {
     Kokkos::parallel_for (Kokkos::TeamThreadRange(thread, teamThreadRangeSize), [=] (const int& n) {
 
       const int i = n / (j_size * k_size) + rbegin0;
@@ -647,7 +647,7 @@ parallel_reduce_sum( BlockRange const & r, const Functor & functor, ReductionTyp
     // Use a Team Policy, this allows us to control how many threads per SM and how many SMs are used.
     typedef Kokkos::TeamPolicy< Kokkos::Cuda > policy_type;
     Kokkos::TeamPolicy< Kokkos::Cuda > reduce_tp( instanceObject, actual_cuda_sms_per_loop, actual_threads_per_sm );
-    Kokkos::parallel_reduce ( reduce_tp, KOKKOS_LAMBDA ( typename policy_type::member_type thread, ReductionType& inner_sum ) {
+    Kokkos::parallel_reduce ( reduce_tp, [=] __device__ ( typename policy_type::member_type thread, ReductionType& inner_sum ) {
 
       // We are within an SM, and all SMs share the same amount of assigned CUDA threads.
       // Figure out which range of N items this SM should work on (as a multiple of 32).
@@ -1063,7 +1063,7 @@ parallel_for(Kokkos::View<int*, Kokkos::HostSpace> iterSpace , const Functor & f
 
 
   Kokkos::parallel_for (Kokkos::TeamPolicy< ExecutionSpace >( cuda_sms_per_loop, actualThreads ),
-                           KOKKOS_LAMBDA ( typename policy_type::member_type thread ) {
+                           [=] __device__ ( typename policy_type::member_type thread ) {
 
     Kokkos::parallel_for (Kokkos::TeamThreadRange(thread, n_tot), [=] (const int& iblock) {
           const int i =  iterSpace_gpu[iblock*number_of_indices];
