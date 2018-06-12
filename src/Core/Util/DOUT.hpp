@@ -47,6 +47,15 @@
   }
 
 
+#define TOUTALL( ... )                       \
+  std::ostringstream tout_msg;               \
+  tout_msg << __VA_ARGS__;                   \
+  printf("%d:%d   %s\n"                      \
+        , MPI::Impl::prank( MPI_COMM_WORLD ) \
+        , MPI::Impl::tid()                   \
+        , tout_msg.str().c_str());           \
+
+
 #define POUT( ... )                        \
   {                                        \
     std::ostringstream dout_msg;           \
