@@ -153,6 +153,7 @@ public:
     else
       return IntVector(0,0,0);
   }
+  template<typename ExecutionSpace = Kokkos::OpenMP>
   void initialize(const T& value) {
     d_window->initialize(value);
   }

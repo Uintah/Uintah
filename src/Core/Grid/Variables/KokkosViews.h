@@ -59,6 +59,17 @@ struct KokkosView3
   int       m_i{0};
   int       m_j{0};
   int       m_k{0};
+
+template <typename ExecutionSpace=Kokkos::OpenMP>
+inline  void
+  initialize( double init_val){
+
+    Kokkos::parallel_for( Kokkos::RangePolicy<ExecutionSpace, int>(0,m_view.size() ).set_chunk_size(2), [=](int i) {
+        m_view(i,0,0)=init_val;
+        });
+
+}
+
 };
 
 } // End namespace Uintah

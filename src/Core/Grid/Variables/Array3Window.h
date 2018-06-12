@@ -92,7 +92,9 @@ template<class T> class Array3Window : public RefCounted {
 
       void copy(const Array3Window<T>*);
       void copy(const Array3Window<T>*, const IntVector& low, const IntVector& high);
+      
       void initialize(const T&);
+
       void initialize(const T&, const IntVector& s, const IntVector& e);
       inline IntVector getLowIndex() const {
          return lowIndex;

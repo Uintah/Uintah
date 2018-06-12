@@ -1273,15 +1273,16 @@ class OnDemandDataWarehouse : public DataWarehouse {
     }
 
     template <typename T, typename MemorySpace>
-    inline typename std::enable_if< std::is_same< MemorySpace, UintahSpaces::HostSpace >::value,const CCVariable<T>& >::type
+    inline typename std::enable_if< std::is_same< MemorySpace, UintahSpaces::HostSpace >::value, CCVariable<T> >::type
     getCCVariable( const VarLabel*   label,
                                            int               matlIndex,
                                            const Patch*      patch,
                                            Ghost::GhostType  gtype = Ghost::None,
                                            int               numGhostCells = 0 ) {
-
+       
       CCVariable<T> var;
-      this->allocateAndPut(var, label, matlIndex, patch, gtype, numGhostCells);
+      if (matlIndex!=-999)
+        this->allocateAndPut(var, label, matlIndex, patch, gtype, numGhostCells);
       return var;
     }
 
@@ -1330,7 +1331,7 @@ class OnDemandDataWarehouse : public DataWarehouse {
 
 
     template <typename T, typename MemorySpace>
-    inline typename std::enable_if< std::is_same< MemorySpace, Kokkos::HostSpace >::value, KokkosView3<double, Kokkos::HostSpace> >::type
+    inline typename std::enable_if< std::is_same< MemorySpace, Kokkos::HostSpace >::value, KokkosView3<T, Kokkos::HostSpace> >::type
     getCCVariable( const VarLabel*   label,
                                            int               matlIndex,
                                            const Patch*      patch,
@@ -1338,7 +1339,8 @@ class OnDemandDataWarehouse : public DataWarehouse {
                                            int               numGhostCells = 0 ) {
 
       CCVariable<T> var;
-      this->allocateAndPut(var, label, matlIndex, patch, gtype, numGhostCells);
+      if (matlIndex!=-999)
+        this->allocateAndPut(var, label, matlIndex, patch, gtype, numGhostCells);
       return var.getKokkosView();
     }
 
