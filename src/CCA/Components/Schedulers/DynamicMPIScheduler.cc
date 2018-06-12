@@ -378,22 +378,6 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/
   ASSERT(m_sends.size() == 0u);
   ASSERT(m_recvs.size() == 0u);
 
-
-  // Copy the restart flag to all processors
-  if (m_restartable && tgnum == static_cast<int>(m_task_graphs.size()) - 1) {
-    int myrestart = m_dws[m_dws.size() - 1]->timestepRestarted();
-    int netrestart;
-
-    Uintah::MPI::Allreduce(&myrestart, &netrestart, 1, MPI_INT, MPI_LOR, d_myworld->getComm());
-
-    if (netrestart) {
-      m_dws[m_dws.size() - 1]->restartTimestep();
-      if (m_dws[0]) {
-        m_dws[0]->setRestarted();
-      }
-    }
-  }
-
   finalizeTimestep();
   
   m_exec_timer.stop();

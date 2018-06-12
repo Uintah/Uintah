@@ -271,7 +271,7 @@ void
 ApplicationCommon::reduceSystemVars( const ProcessorGroup *,
                                      const PatchSubset    * patches,
                                      const MaterialSubset * /*matls*/,
-                                           DataWarehouse  * /*old_dw*/,
+                                           DataWarehouse  * old_dw,
                                            DataWarehouse  * new_dw )
 {
   // The goal of this task is to line up the delT across all levels.
@@ -335,6 +335,8 @@ ApplicationCommon::reduceSystemVars( const ProcessorGroup *,
     }
   }
 
+  //__________________________________
+  //
   if (m_adjustCheckpointInterval) {
     if (patches->size() != 0 && !new_dw->exists(m_checkpointIntervalLabel, -1, patch)) {
       min_vartype inv;
@@ -353,7 +355,8 @@ ApplicationCommon::reduceSystemVars( const ProcessorGroup *,
       m_output->setCheckpointInterval( checkInv_var );
     }
   }
-
+  
+  //__________________________________
   // An application may request that the simulation end early.
   if (m_mayEndSimulation) {
     if (patches->size() != 0 && !new_dw->exists(m_endSimulationLabel, -1, patch)) {
@@ -373,6 +376,22 @@ ApplicationCommon::reduceSystemVars( const ProcessorGroup *,
       m_endSimulation = endSim_var;
     }
   }
+  
+  //__________________________________
+  //
+  // An application may request that a timestep be recomputed/restarted
+  // Inform all ranks that this timestep is being recomputed
+  if( restartableTimeSteps() ){
+
+    int myRestart = new_dw->timestepRestarted();
+    int allRanksRestart;
+    
+    Uintah::MPI::Allreduce(&myRestart, &allRanksRestart, 1, MPI_INT, MPI_LOR, d_myworld->getComm());
+    if (allRanksRestart) {
+      new_dw->restartTimestep();
+      old_dw->restartTimestep();      //  This is needed since OnDemandDataWarehouse::exchangeParticleQuantities 
+    }                                 // checks the flag in the old_dw
+  } 
 }  // end reduceSysVar()
 
 
@@ -473,36 +492,19 @@ ApplicationCommon::updateSystemVars( const ProcessorGroup *,
                                      const MaterialSubset * /*matls*/,
                                            DataWarehouse  * /*old_dw*/,
                                            DataWarehouse  * new_dw )
-{
-  // std::cerr << "**********  " << __FUNCTION__ << "  " << __LINE__ << "  "
-  //        << new_dw << std::endl;  
-
-  // If the time step is being restarted do not update the simulation
-  // time. The time step does not get up dated here but is stored so
-  // it can be at the top of the simcontroller loop.
+{  
+  // Not all ranks know that a timestep is being restarted.  Don't update simTime on all ranks
   
-  if (!new_dw->timestepRestarted())
-  {
+  if ( !new_dw->timestepRestarted() ){
     // Store the time step so it can be incremented at the top of the
     // time step where it is over written.
     new_dw->put(timeStep_vartype(m_timeStep), m_timeStepLabel);
-
-    // m_sharedState->setCurrentTopLevelTimeStep( m_timeStep );  
     
-    // // Update the simulation time.
+    // Update the simulation time.
     m_simTime += m_delT;
-    
-    // When using the sim time, rank 0 determines the sim time and
-    // sends it to all other ranks.
-    Uintah::MPI::Bcast( &m_simTime, 1, MPI_DOUBLE, 0, d_myworld->getComm() );
 
     new_dw->put(simTime_vartype(m_simTime), m_simulationTimeLabel);
-
-    // m_sharedState->setElapsedSimTime( m_simTime );  
   }
-
-  // std::cerr << "**********  " << __FUNCTION__ << "  " << __LINE__ << "  "
-  //        << new_dw << std::endl;  
 }
 
 //______________________________________________________________________

@@ -690,7 +690,7 @@ OnDemandDataWarehouse::exchangeParticleQuantities(       DetailedTasks    * dts,
                                                    const VarLabel         * pos_var,
                                                          int                iteration )
 {
-  if( d_hasRestarted ) {
+  if( timestepRestarted() ){
     // If this DW is being used for a timestep restart, then it has already done this...
     return;
   }

@@ -486,8 +486,6 @@ class OnDemandDataWarehouse : public DataWarehouse {
 
     virtual void restartTimestep();
 
-    virtual void setRestarted() { d_hasRestarted = true; }
-
    struct ValidNeighbors {
      GridVariableBase* validNeighbor;
      const Patch* neighborPatch;
