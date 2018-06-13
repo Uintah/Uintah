@@ -1076,6 +1076,44 @@ parallel_for(Kokkos::View<int*, Kokkos::HostSpace> iterSpace , const Functor & f
 #endif
 #endif
 
+#if defined(UINTAH_ENABLE_KOKKOS)
+
+template <typename ExecutionSpace, typename T2, typename T3>
+typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::OpenMP>::value, void>::type
+    parallel_for(T2 KV3,const T3 init_val ){
+
+    Kokkos::parallel_for( Kokkos::RangePolicy<ExecutionSpace, int>(0,KV3.m_view.size() ).set_chunk_size(2), [=](int i) {
+        KV3(i,0,0)=init_val;
+        });
+}
+
+
+#if defined(HAVE_CUDA)
+template <typename ExecutionSpace, typename T2, typename T3>
+typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::Cuda>::value, void>::type
+parallel_for_dev2(T2 KV3,const T3 init_val)
+{
+
+
+  int cuda_threads_per_sm = Uintah::Parallel::getCudaThreadsPerSM();
+  int cuda_sms_per_loop   = Uintah::Parallel::getCudaSMsPerLoop();
+
+  const int actualThreads = KV3.m_view.size() > cuda_threads_per_sm ? cuda_threads_per_sm : KV3.m_view.size();
+
+  typedef Kokkos::TeamPolicy< ExecutionSpace > policy_type;
+
+
+
+  Kokkos::parallel_for (Kokkos::TeamPolicy< ExecutionSpace >( cuda_sms_per_loop, actualThreads ),
+      KOKKOS_LAMBDA ( typename policy_type::member_type thread ) {
+
+      Kokkos::parallel_for (Kokkos::TeamThreadRange(thread, KV3.m_view.size()), [=] (const int& i) {
+          KV3(i,0,0)=init_val;
+          });
+      });
+}
+#endif
+#endif
 
 } // namespace Uintah
 

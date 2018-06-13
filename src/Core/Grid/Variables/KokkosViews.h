@@ -60,15 +60,11 @@ struct KokkosView3
   int       m_j{0};
   int       m_k{0};
 
-template <typename ExecutionSpace=Kokkos::OpenMP>
-inline  void
-  initialize( double init_val){
-
-    Kokkos::parallel_for( Kokkos::RangePolicy<ExecutionSpace, int>(0,m_view.size() ).set_chunk_size(2), [=](int i) {
-        m_view(i,0,0)=init_val;
-        });
-
-}
+    template <typename ExecutionSpace=Kokkos::OpenMP>
+    inline  void
+    initialize( T init_val){
+      Uintah::parallel_for<ExecutionSpace>(*this,init_val );
+    }
 
 };
 
