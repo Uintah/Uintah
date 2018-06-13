@@ -1098,7 +1098,8 @@ parallel_for(T2 KV3,const T3 init_val)
   int cuda_threads_per_sm = Uintah::Parallel::getCudaThreadsPerSM();
   int cuda_sms_per_loop   = Uintah::Parallel::getCudaSMsPerLoop();
 
-  const int actualThreads = KV3.m_view.size() > cuda_threads_per_sm ? cuda_threads_per_sm : KV3.m_view.size();
+  const int num_cells=KV3.m_view.size();
+  const int actualThreads = num_cells > cuda_threads_per_sm ? cuda_threads_per_sm : num_cells;
 
   typedef Kokkos::TeamPolicy< ExecutionSpace > policy_type;
 
@@ -1107,7 +1108,7 @@ parallel_for(T2 KV3,const T3 init_val)
   Kokkos::parallel_for (Kokkos::TeamPolicy< ExecutionSpace >( cuda_sms_per_loop, actualThreads ),
       KOKKOS_LAMBDA ( typename policy_type::member_type thread ) {
 
-            Kokkos::parallel_for (Kokkos::TeamThreadRange(thread, KV3.m_view.size()), [=] (const int& i) {
+            Kokkos::parallel_for (Kokkos::TeamThreadRange(thread, num_cells), [=] (const int& i) {
                KV3(i)=init_val;
             });
         });
