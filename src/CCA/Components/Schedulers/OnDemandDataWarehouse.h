@@ -1296,7 +1296,8 @@ class OnDemandDataWarehouse : public DataWarehouse {
                                            int               numGhostCells ) {
 
       constCCVariable<T> constVar;
-      this->get(constVar, label, matlIndex, patch, gtype, numGhostCells);
+      if (matlIndex!=-999)
+        this->get(constVar, label, matlIndex, patch, gtype, numGhostCells);
 
       return constVar;
     }
@@ -1353,7 +1354,8 @@ class OnDemandDataWarehouse : public DataWarehouse {
                                            int               numGhostCells ) {
 
       constCCVariable<T> constVar;
-      this->get(constVar, label, matlIndex, patch, gtype, numGhostCells);
+      if (matlIndex!=-999)
+        this->get(constVar, label, matlIndex, patch, gtype, numGhostCells);
       return constVar.getKokkosView();
     }
 
@@ -1389,7 +1391,10 @@ class OnDemandDataWarehouse : public DataWarehouse {
                                            Ghost::GhostType  gtype = Ghost::None,
                                            int               numGhostCells = 0 , bool allocate=true ) {
 
-      return this->getGPUDW()->getKokkosView<T>(label->getName().c_str(), patch->getID(),  matlIndex, 0);
+      if (matlIndex!=-999)
+        return this->getGPUDW()->getKokkosView<T>(label->getName().c_str(), patch->getID(),  matlIndex, 0);
+      else
+        return KokkosView3<T, Kokkos::CudaSpace>();
     }
 
     template <typename T, typename MemorySpace>
@@ -1400,7 +1405,10 @@ class OnDemandDataWarehouse : public DataWarehouse {
                                            Ghost::GhostType  gtype,
                                            int               numGhostCells ) {
 
+      if (matlIndex!=-999)
       return this->getGPUDW()->getKokkosView<const T>(label->getName().c_str(), patch->getID(),  matlIndex, 0);
+      else
+        return KokkosView3<const T, Kokkos::CudaSpace>();
 
     }
 
