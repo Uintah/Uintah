@@ -1083,7 +1083,7 @@ typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::OpenMP>::value, voi
     parallel_for(T2 KV3,const T3 init_val ){
 
     Kokkos::parallel_for( Kokkos::RangePolicy<ExecutionSpace, int>(0,KV3.m_view.size() ).set_chunk_size(2), [=](int i) {
-        KV3(i,0,0)=init_val;
+        KV3(i)=init_val;
         });
 }
 
@@ -1107,10 +1107,10 @@ parallel_for_dev2(T2 KV3,const T3 init_val)
   Kokkos::parallel_for (Kokkos::TeamPolicy< ExecutionSpace >( cuda_sms_per_loop, actualThreads ),
       KOKKOS_LAMBDA ( typename policy_type::member_type thread ) {
 
-      Kokkos::parallel_for (Kokkos::TeamThreadRange(thread, KV3.m_view.size()), [=] (const int& i) {
-          KV3(i,0,0)=init_val;
-          });
-      });
+            Kokkos::parallel_for (Kokkos::TeamThreadRange(thread, KV3.m_view.size()), [=] (const int& i) {
+               KV3(i)=init_val;
+            });
+        });
 }
 #endif
 #endif

@@ -24,6 +24,11 @@ struct KokkosView3
   reference_type operator()(const IType & i, const JType & j, const KType & k ) const
   { return m_view( i - m_i, j - m_j, k - m_k ); }
 
+  template< typename IType >
+  KOKKOS_FORCEINLINE_FUNCTION
+  reference_type operator()(const IType & i ) const
+  { return m_view( i, 0, 0 ); }
+
   KokkosView3( const view_type & v, int i, int j, int k )
     : m_view(v)
     , m_i(i)
