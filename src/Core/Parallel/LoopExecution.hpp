@@ -1091,7 +1091,7 @@ typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::OpenMP>::value, voi
 #if defined(HAVE_CUDA)
 template <typename ExecutionSpace, typename T2, typename T3>
 typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::Cuda>::value, void>::type
-parallel_for_dev2(T2 KV3,const T3 init_val)
+parallel_for(T2 KV3,const T3 init_val)
 {
 
 
