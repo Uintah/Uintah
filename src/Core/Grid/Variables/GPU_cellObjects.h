@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_GPUSTENCIL7_H
-#define UINTAH_GPUSTENCIL7_H
+#ifndef UINTAH_GPU_CELLOBJECTS_H
+#define UINTAH_GPU_CELLOBJECTS_H
 
 #include <sci_defs/cuda_defs.h>
 
@@ -58,6 +58,61 @@ namespace Uintah {
       p = a;
     }
   };
+
+
+  struct GPUVector {
+
+    // The order of this is designed to match the order of faces in Patch
+    // Do not change it!
+    double  x_, y_, z_;
+
+
+    HOST_DEVICE double& operator[](int index) {
+      CHECK_RANGE(index, 0, 3);
+      return (&x_)[index];
+    }
+    HOST_DEVICE const double& operator[](int index) const {
+      CHECK_RANGE(index, 0, 3);
+      return (&x_)[index];
+    }
+    HOST_DEVICE void initialize(double a){
+      x_ = a;
+      y_ = a;
+      z_ = a;
+    }
+
+   HOST_DEVICE void x(double d)
+   {
+       x_=d;
+   }
+   
+   HOST_DEVICE double x() const
+   {
+       return x_;
+   }
+   
+    HOST_DEVICE void y(double d)
+   {
+       y_=d;
+   }
+   
+   HOST_DEVICE double y() const
+   {
+       return y_;
+   }
+   
+   HOST_DEVICE void z(double d)
+   {
+       z_=d;
+   }
+   
+   HOST_DEVICE double z() const
+   {
+       return z_;
+   }
+
+  };
+
 
 }
 
