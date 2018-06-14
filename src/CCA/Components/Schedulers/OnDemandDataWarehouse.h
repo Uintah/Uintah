@@ -1304,7 +1304,7 @@ class OnDemandDataWarehouse : public DataWarehouse {
 
 #if defined(UINTAH_ENABLE_KOKKOS)
     template <typename T, typename MemorySpace>
-    inline typename std::enable_if< std::is_same< MemorySpace, Kokkos::HostSpace >::value, KokkosView3<double, Kokkos::HostSpace> >::type
+    inline typename std::enable_if< std::is_same< MemorySpace, Kokkos::HostSpace >::value, KokkosView3<T, Kokkos::HostSpace> >::type
     getNCVariable( const VarLabel*   label,
                                            int               matlIndex,
                                            const Patch*      patch,

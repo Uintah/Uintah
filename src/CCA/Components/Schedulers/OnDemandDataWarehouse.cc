@@ -65,7 +65,7 @@
 
 #ifdef HAVE_CUDA
   #include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
-  #include <Core/Grid/Variables/GPUStencil7.h>
+  #include <Core/Grid/Variables/GPU_cellObjects.h>
 #endif
 
 #include <climits>
@@ -455,6 +455,10 @@ OnDemandDataWarehouse::getTypeDescriptionSize(const TypeDescription::Type& type)
       return sizeof(Stencil7);
       break;
     }
+    case TypeDescription::Vector : {
+      return sizeof(Vector);
+      break;
+    }
     default : {
       SCI_THROW(InternalError("OnDemandDataWarehouse::getTypeDescriptionSize unsupported GPU Variable base type: " + type, __FILE__, __LINE__));
     }
@@ -513,6 +517,10 @@ OnDemandDataWarehouse::createGPUGridVariable(const TypeDescription::Type& type)
       device_var = new GPUGridVariable<GPUStencil7>();
       break;
     }
+    case TypeDescription::Vector : {
+      device_var = new GPUGridVariable<GPUVector>();
+      break;
+    }
     default : {
       SCI_THROW(InternalError("createGPUGridVariable, unsupported GPUGridVariable type: ", __FILE__, __LINE__));
     }
@@ -543,6 +551,10 @@ OnDemandDataWarehouse::createGPUPerPatch(const TypeDescription::Type& type)
        device_var = new GPUPerPatch<GPUStencil7>();
        break;
      }
+     case TypeDescription::Vector : {
+       device_var = new GPUPerPatch<GPUVector>();
+       break;
+     }
      default : {
        SCI_THROW(InternalError("createGPUPerPatch, unsupported GPUPerPatch type: ", __FILE__, __LINE__));
      }
@@ -571,6 +583,10 @@ OnDemandDataWarehouse::createGPUReductionVariable(const TypeDescription::Type& t
     }
     case TypeDescription::Stencil7 : {
      device_var = new GPUReductionVariable<GPUStencil7>();
+     break;
+    }
+    case TypeDescription::Vector : {
+     device_var = new GPUReductionVariable<GPUVector>();
      break;
     }
     default : {
@@ -4055,7 +4071,7 @@ void OnDemandDataWarehouse::allocateAndPutIfPossible(const VarLabel*          la
 
 #ifdef HAVE_CUDA
   #include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
-  #include <Core/Grid/Variables/GPUStencil7.h>
+  #include <Core/Grid/Variables/GPU_cellObjects.h>
 #endif
 
 #include <climits>
@@ -4473,6 +4489,10 @@ OnDemandDataWarehouse::getTypeDescriptionSize(const TypeDescription::Type& type)
       return sizeof(Stencil7);
       break;
     }
+    case TypeDescription::Vector : {
+      return sizeof(Vector);
+      break;
+    }
     default : {
       SCI_THROW(InternalError("OnDemandDataWarehouse::getTypeDescriptionSize unsupported GPU Variable base type: " + type, __FILE__, __LINE__));
     }
@@ -4500,6 +4520,10 @@ OnDemandDataWarehouse::createGPUGridVariable(const TypeDescription::Type& type)
     }
     case TypeDescription::Stencil7 : {
       device_var = new GPUGridVariable<GPUStencil7>();
+      break;
+    }
+    case TypeDescription::Vector : {
+      device_var = new GPUGridVariable<GPUVector>();
       break;
     }
     default : {
@@ -4532,6 +4556,10 @@ OnDemandDataWarehouse::createGPUPerPatch(const TypeDescription::Type& type)
        device_var = new GPUPerPatch<GPUStencil7>();
        break;
      }
+     case TypeDescription::Vector : {
+       device_var = new GPUPerPatch<GPUVector>();
+       break;
+     }
      default : {
        SCI_THROW(InternalError("createGPUPerPatch, unsupported GPUPerPatch type: ", __FILE__, __LINE__));
      }
@@ -4560,6 +4588,10 @@ OnDemandDataWarehouse::createGPUReductionVariable(const TypeDescription::Type& t
     }
     case TypeDescription::Stencil7 : {
      device_var = new GPUReductionVariable<GPUStencil7>();
+     break;
+    }
+    case TypeDescription::Vector : {
+     device_var = new GPUReductionVariable<GPUVector>();
      break;
     }
     default : {
