@@ -1853,10 +1853,13 @@ Ray::rayTrace_dataOnionLevels( DetailedTask* dtask,
       const Patch* curPatch = patch;
       for ( int L = numLevels - 1; L >= 0; L-- ) {
         // Get vars on this level
-        abskgSigmaT4CellType_view[L] = abskg_gdw->getKokkosView<const double>(  d_abskgSigmaT4CellTypeLabel->getName().c_str(), curPatch->getID(), d_matl, L);
-        abskg_view[L]         = abskg_gdw->getKokkosView<const T>(      d_abskgLabel->getName().c_str(), curPatch->getID(), d_matl, L);
-        sigmaT4OverPi_view[L] = sigmaT4_gdw->getKokkosView<const T>(    d_sigmaT4Label->getName().c_str(), curPatch->getID(), d_matl, L);
-        cellType_view[L]      = celltype_gdw->getKokkosView<const int>( d_cellTypeLabel->getName().c_str(), curPatch->getID(), d_matl, L);
+        if (d_algorithm == dataOnionSlim) {
+          abskgSigmaT4CellType_view[L] = abskg_gdw->getKokkosView<const double>(  d_abskgSigmaT4CellTypeLabel->getName().c_str(), curPatch->getID(), d_matl, L);
+        } else {
+          abskg_view[L]         = abskg_gdw->getKokkosView<const T>(      d_abskgLabel->getName().c_str(), curPatch->getID(), d_matl, L);
+          sigmaT4OverPi_view[L] = sigmaT4_gdw->getKokkosView<const T>(    d_sigmaT4Label->getName().c_str(), curPatch->getID(), d_matl, L);
+          cellType_view[L]      = celltype_gdw->getKokkosView<const int>( d_cellTypeLabel->getName().c_str(), curPatch->getID(), d_matl, L);
+        }
         // Go down a coarser level, if possible
         if (curLevel->hasCoarserLevel()) {
           //Get the patchID of the patch down a coarser level.

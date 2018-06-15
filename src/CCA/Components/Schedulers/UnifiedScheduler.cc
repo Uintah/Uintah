@@ -3742,6 +3742,8 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
     cudaStream_t* stream = dtask->getCudaStreamForThisTask(deviceNum);
 
     const std::string varName = dependantVar->m_var->getName();
+
+    bool hack_foundAComputes{false};
     //TODO: Titan production hack.  A clean hack, but should be fixed. Brad P Dec 1 2016
     //There currently exists a race condition.  Suppose cellType is in both host and GPU 
     //memory.  Currently the GPU data warehouse knows it is in GPU memory, but it doesn't
@@ -3757,20 +3759,30 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
     // and requires other variables.  So the logic is "If it wasn't one of the computes", then we
     // don't need to copy it back D2H"
     // RMCRT hack:
-    // if (varName != "divQ" && varName != "RMCRTboundFlux" && varName != "radiationVolq" ) {
-    //   continue;
-    // }
+    if (varName == "divQ" ||
+        varName == "RMCRTboundFlux" ||
+        varName == "radiationVolq") {
+          hack_foundAComputes = true;
+     }
 
     // Arches hack:
     // All the computes are char_ps_qn4, char_ps_qn4_gasSource, char_ps_qn4_particletempSource, char_ps_qn4_particleSizeSource
     // char_ps_qn4_surfacerate, char_gas_reaction0_qn4, char_gas_reaction1_qn4, char_gas_reaction2_qn4.  Note that the qn# goes
     // from qn0 to qn4.  Also, the char_gas_reaction0_qn4 variable is both a computes in the newDW and a requires in the oldDW
-    if ( !
-         ((varName.substr(0,10) == "char_ps_qn") || (varName.substr(0,17) == "char_gas_reaction" && dwIndex == Task::NewDW)
-          || (varName == "residual")
-          || (varName == "phi"))
-       ){
-      continue; //Go start the loop over and get the next potential variable.
+    if ( (varName.substr(0,10) == "char_ps_qn") ||
+         (varName.substr(0,17) == "char_gas_reaction" && dwIndex == Task::NewDW) ){
+      hack_foundAComputes = true;
+    }
+
+    // Poisson hack:
+    if (varName == "phi" ||
+        varName == "residual") {
+      hack_foundAComputes = true;
+    }
+
+    if (!hack_foundAComputes) {
+      continue; // This variable wasn't a computes, we shouldn't do a device-to-host transfer
+                // Go start the loop over and get the next potential variable.
     }
     if (gpudw != nullptr) {
       // It's not valid on the CPU but it is on the GPU.  Copy it on over.
