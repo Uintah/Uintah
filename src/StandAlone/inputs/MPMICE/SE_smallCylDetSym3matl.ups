@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- @version: -->
 <Uintah_specification>
-    <!-- First try at 2D Array of stacked explosive cylinders  -->
-
    <Meta>
        <title>Cylinder exploding</title>
    </Meta>
@@ -35,20 +33,7 @@
     <Grid>
     <BoundaryConditions>
       <Face side = "x-">
-        <BCType id = "0"    label = "Pressure"    var = "Neumann">
-                              <value> 0.0   </value>
-        </BCType>
-        <BCType id = "all"  label = "Velocity"    var = "Dirichlet">
-                              <value> [0.,0.,0.] </value>
-        </BCType>
-        <BCType id = "all"  label = "Temperature" var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
-        <BCType id = "all"  label = "Density"     var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
-        <BCType id = "all"  label = "SpecificVol" var = "computeFromDensity">
-                              <value> 0.0  </value>
+        <BCType id = "all"  label = "Symmetric"   var = "symmetry">
         </BCType>
       </Face>
       <Face side = "x+">
@@ -69,20 +54,7 @@
         </BCType>
       </Face>
       <Face side = "y-">
-        <BCType id = "0"    label = "Pressure"    var = "Neumann">
-                              <value> 0.0   </value>
-        </BCType>
-        <BCType id = "all"  label = "Velocity"    var = "Dirichlet">
-                              <value> [0.,0.,0.] </value>
-        </BCType>
-        <BCType id = "all"  label = "Temperature" var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
-        <BCType id = "all"  label = "Density"     var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
-        <BCType id = "all"  label = "SpecificVol" var = "computeFromDensity">
-                              <value> 0.0  </value>
+        <BCType id = "all"  label = "Symmetric"   var = "symmetry">
         </BCType>
       </Face>
       <Face side = "y+">
@@ -114,11 +86,11 @@
        <Level>
            <Box label = "1">
           <!--    <lower>        [-0.02,-0.02, 0.0000] </lower> -->
-              <lower>        [ -0.14, -0.14, 0.0000] </lower>
-              <upper>        [  0.14,  0.14, 0.00100] </upper>
-              <extraCells>   [1,1,1]                 </extraCells>
-              <patches>      [4,4,1]               </patches>
-              <resolution>   [400,400,1]             </resolution>
+              <lower>        [  0.00,  0.00, 0.00]    </lower>
+              <upper>        [  0.14,  0.14, 0.001]   </upper>
+              <extraCells>   [1,1,1]                  </extraCells>
+              <patches>      [4,4,1]                  </patches>
+              <resolution>   [200,200,1]              </resolution>
            </Box>
        </Level>
     </Grid>
@@ -145,6 +117,10 @@
       <save label="totalHeatReleased"/>
       
       <save label="detonating"/>
+      <save label="BurningCriteria"/>
+      <save label="SteadyBurn.numPPC"/>
+      <save label="detLocalTo"/>
+      <save label="onSurface"/>
       <save label="delF"/>
       <save label="F"/>
 
@@ -192,10 +168,6 @@
       <do_contact_friction_heating>    false       </do_contact_friction_heating>
       <DoExplicitHeatConduction>       false       </DoExplicitHeatConduction>
       <axisymmetric>                   false        </axisymmetric>
-  <!--
-      <erosion algorithm = "none"/>
-      <erosion algorithm = "RemoveMass"/>
-  -->
     </MPM>
 
     <!--____________________________________________________________________-->

@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- @version: -->
 <Uintah_specification>
-    <!-- First try at 2D Array of stacked explosive cylinders  -->
-
    <Meta>
        <title>Cylinder exploding</title>
    </Meta>
@@ -35,20 +33,7 @@
     <Grid>
     <BoundaryConditions>
       <Face side = "x-">
-        <BCType id = "0"    label = "Pressure"    var = "Neumann">
-                              <value> 0.0   </value>
-        </BCType>
-        <BCType id = "all"  label = "Velocity"    var = "Dirichlet">
-                              <value> [0.,0.,0.] </value>
-        </BCType>
-        <BCType id = "all"  label = "Temperature" var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
-        <BCType id = "all"  label = "Density"     var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
-        <BCType id = "all"  label = "SpecificVol" var = "computeFromDensity">
-                              <value> 0.0  </value>
+        <BCType id = "all"  label = "Symmetric"   var = "symmetry">
         </BCType>
       </Face>
       <Face side = "x+">
@@ -69,20 +54,7 @@
         </BCType>
       </Face>
       <Face side = "y-">
-        <BCType id = "0"    label = "Pressure"    var = "Neumann">
-                              <value> 0.0   </value>
-        </BCType>
-        <BCType id = "all"  label = "Velocity"    var = "Dirichlet">
-                              <value> [0.,0.,0.] </value>
-        </BCType>
-        <BCType id = "all"  label = "Temperature" var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
-        <BCType id = "all"  label = "Density"     var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
-        <BCType id = "all"  label = "SpecificVol" var = "computeFromDensity">
-                              <value> 0.0  </value>
+        <BCType id = "all"  label = "Symmetric"   var = "symmetry">
         </BCType>
       </Face>
       <Face side = "y+">
@@ -114,11 +86,11 @@
        <Level>
            <Box label = "1">
           <!--    <lower>        [-0.02,-0.02, 0.0000] </lower> -->
-              <lower>        [ -0.14, -0.14, 0.0000] </lower>
-              <upper>        [  0.14,  0.14, 0.00100] </upper>
-              <extraCells>   [1,1,1]                 </extraCells>
-              <patches>      [4,4,1]               </patches>
-              <resolution>   [400,400,1]             </resolution>
+              <lower>        [  0.00,  0.00, 0.00]    </lower>
+              <upper>        [  0.14,  0.14, 0.001]   </upper>
+              <extraCells>   [1,1,1]                  </extraCells>
+              <patches>      [4,4,1]                  </patches>
+              <resolution>   [200,200,1]              </resolution>
            </Box>
        </Level>
     </Grid>
@@ -127,7 +99,7 @@
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <filebase>smallCylDetSym3matl.ups</filebase>
+      <filebase>largeCyl_Det_sym</filebase>
       <outputInterval> 1e-07 </outputInterval>
       <outputInitTimestep/> 
 
@@ -145,6 +117,10 @@
       <save label="totalHeatReleased"/>
       
       <save label="detonating"/>
+      <save label="BurningCriteria"/>
+      <save label="SteadyBurn.numPPC"/>
+      <save label="detLocalTo"/>
+      <save label="onSurface"/>
       <save label="delF"/>
       <save label="F"/>
 
@@ -156,7 +132,7 @@
       <save label="p.mass"/>
       <save label="p.stress"/>
       <save label="p.epsf"/>
-      <checkpoint cycle = "2" timestepInterval = "1000"/>
+      <checkpoint cycle = "2" timestepInterval = "100"/>
     </DataArchiver>
 
 
@@ -192,10 +168,6 @@
       <do_contact_friction_heating>    false       </do_contact_friction_heating>
       <DoExplicitHeatConduction>       false       </DoExplicitHeatConduction>
       <axisymmetric>                   false        </axisymmetric>
-  <!--
-      <erosion algorithm = "none"/>
-      <erosion algorithm = "RemoveMass"/>
-  -->
     </MPM>
 
     <!--____________________________________________________________________-->
@@ -205,13 +177,22 @@
       <MPM>
 
         <material name="cylinder">
-          <!-- <include href="MaterialData/Al.xml"/> -->
-          <include href="MaterialDataSE/Al_SE.xml"/>
-      
+          <include href="MaterialData/Al.xml"/>
+ <!--         <include href="MaterialDataSE/Al_SE.xml"/> -->
+<!--       
+          <include href="MaterialData/MatConst6061T6Al.xml"/>
+          <constitutive_model type="UCNH">
+             <shear_modulus>      26.0e9    </shear_modulus>
+             <bulk_modulus>       66.4e9    </bulk_modulus>
+             <yield_stress>       324.0e6   </yield_stress>
+             <hardening_modulus>  114.0e6   </hardening_modulus>
+             <alpha> 0.0 </alpha>
+          </constitutive_model>
+-->          
           <damage_model type="Threshold">
              <failure_criteria>MaximumPrincipalStress</failure_criteria>
-             <failure_mean>       7.5e8     </failure_mean>
-             <failure_std>        10        </failure_std>
+             <failure_mean>       7.5e8      </failure_mean>
+             <failure_std>        10         </failure_std>
              <failure_distrib>    weibull   </failure_distrib>
           </damage_model>
           
@@ -222,12 +203,12 @@
               <cylinder label="outerCylinder">
                 <bottom> [0.00,  0.00,  0.000000] </bottom>
                 <top>    [0.00,  0.00,  0.010000] </top>
-                <radius>           0.005           </radius>
+                <radius>           0.0762           </radius>         <!-- 3" -->
               </cylinder>
               <cylinder label="innerCylinder">
                 <bottom> [0.00,  0.00,  0.000000] </bottom>
                 <top>    [0.00,  0.00,  0.010000] </top>
-                <radius>           0.004           </radius>
+                <radius>           0.067691           </radius>      <!-- 2.665" -->
               </cylinder>
             </difference>
             <res>                 [2,2,1]         </res>
@@ -258,12 +239,12 @@
                <cylinder label = "0">
                   <bottom>  [0.000000, 0.000000, 0.000000]  </bottom>
                   <top>     [0.000000, 0.000000, 0.010000]  </top>
-                  <radius>       0.00390       </radius>
+                  <radius>       0.067       </radius>
                </cylinder>
                <cylinder label = "hole">
                   <bottom>  [0.000000, 0.000000, 0.000000]  </bottom>
                   <top>     [0.000000, 0.000000, 0.010000]  </top>
-                  <radius>       0.0034       </radius>
+                  <radius>       0.062       </radius>
                </cylinder>
             </difference>             
             <res>                 [2,2,1]         </res>
@@ -271,20 +252,13 @@
             <temperature>         550.0           </temperature>
           </geom_object>
         </material>
-
-<!--
-        <contact>
-         <type>approach</type>
-         <materials>              [0,1]         </materials>
-         <mu> 0.0 </mu>
-        </contact>
--->
       </MPM>
 <!--__________________________________-->
       <ICE>
         <material name = "product">
+          <!-- Urtiew's fit parameters -->
+          <!--
           <EOS type="JWLC">
-            <!-- Urtiew's fit parameters -->
             <A>    1668.9e9 </A>
             <B>    5.969e9  </B>
             <C>    6.43e8   </C>
@@ -297,7 +271,14 @@
           <thermal_conductivity>   0.0             </thermal_conductivity>    
           <specific_heat>          544.96          </specific_heat>           
           <gamma>                  1.4             </gamma> 
-                             
+           -->  
+           
+           <EOS type = "ideal_gas">                     </EOS>
+           <dynamic_viscosity>          0.0             </dynamic_viscosity>
+           <thermal_conductivity>       0.0             </thermal_conductivity>
+           <specific_heat>              716.0           </specific_heat>
+           <gamma>                      1.4             </gamma> 
+                           
           <geom_object>
             <difference>
               <box>
@@ -335,7 +316,7 @@
           <exchange_coefficients>
             <!--  Al->PBX,   Al->Air    PBX-Air  -->
             <momentum>  [ 1e15, 1e15, 1e15 ]   </momentum>
-            <heat>      [  1e10, 1e10,  1e10  ]   </heat>
+            <heat>      [  1e5, 1e5, 1e5 ]   </heat>
           </exchange_coefficients>
         </exchange_properties>
     </MaterialProperties>
