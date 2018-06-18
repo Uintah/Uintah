@@ -50,6 +50,7 @@ LOCALTESTS = [   ("massX",                    "massX.ups",                 1,  "
                  ("SteadyBurn_2dRT",          "SteadyBurn_2dRT.ups",       4,  "ALL", ["exactComparison"]),
                  ("TBurner_2dRT",             "TBurner_2dRT.ups",          4,  "ALL", ["exactComparison"]),
                  ("TRWnoz",                   "TRWnoz.ups",                4,  "ALL", ["exactComparison"]),
+                 ("JWLppCuRS2d",              "JWLppCuRS2d.ups",           10, "ALL", ["exactComparison"])
                  ("DDT",                      "DDT.ups",                   1,  "ALL", ["exactComparison","no_dbg"]),
                  ("InductionTime",            "InductionTime.ups",         1  ,"ALL", ["exactComparison","no_dbg"]),
                  ("InductionPropagation",     "InductionPropagation.ups",  1  ,"ALL", ["exactComparison","no_dbg"]),
