@@ -1116,6 +1116,259 @@ parallel_for(T2 KV3,const T3 init_val)
 #endif
 #endif
 
+
+#if defined(UINTAH_ENABLE_KOKKOS)
+template <typename ExecutionSpace, typename T2, typename T3>
+typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::OpenMP>::value, void>::type
+    parallel_initialize_grouped(T2 KKV3,const T3 init_val ){
+        int n_cells=0;
+        for (unsigned int j=0; j < KKV3.size(); j++){
+          n_cells+=KKV3(j).m_view.size();
+        }
+    
+    Kokkos::parallel_for( Kokkos::RangePolicy<ExecutionSpace, int>(0,n_cells ).set_chunk_size(2), [=](int i_tot) {
+        // THis seems like a really bad idea.......
+        // Do search to find which index the thread is releavant to.......... yuck, this might be faster on the GPU
+        int i=i_tot ;
+        int j=0;
+        while(i-(int) KKV3(j).m_view.size()>-1){
+        i-=KKV3(j).m_view.size();
+        j++;
+        }
+        KKV3(j)(i)=init_val;
+        });
+}
+
+template <typename ExecutionSpace, typename T2, typename T3>
+typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::OpenMP>::value, void>::type
+    parallel_initialize_single(T2 KKV3,const T3 init_val ){
+        for (unsigned int j=0; j < KKV3.size(); j++){
+          Kokkos::parallel_for( Kokkos::RangePolicy<ExecutionSpace, int>(0,KKV3(j).m_view.size() ).set_chunk_size(2), [=](int i) {
+              KKV3(j)(i)=init_val;
+              });
+        }
+}
+
+#endif
+
+
+
+template <class TTT> // Needed for the casting inside of the Variadic template, also allows for nested templating
+using Alias = TTT;
+
+template <  typename T, typename MemorySpace>
+typename std::enable_if<std::is_same<MemorySpace,UintahSpaces::HostSpace>::value, std::vector<Alias<T> >  >::type
+    createContainer(int num_field){
+   return std::vector<Alias<T> >(num_field); // perform deep copy   (should be ok since it is an empty CCVariable?)
+}
+
+template <  typename T, typename MemorySpace>
+typename std::enable_if<std::is_same<MemorySpace,UintahSpaces::HostSpace>::value, std::vector<Alias<T> >  >::type
+    createConstContainer(int num_field){
+   return std::vector<Alias<T> >(num_field); // perform deep copy (should be ok since it is an empty CCVariable?)
+}
+
+
+
+#if defined(UINTAH_ENABLE_KOKKOS)
+  template<typename T, typename MemorySpace>   //Forward Declaration of KokkosView3
+  class KokkosView3; 
+
+template <  typename T, typename MemorySpace>
+typename std::enable_if<std::is_same<MemorySpace, Kokkos::HostSpace>::value, Kokkos::View<KokkosView3<T,MemorySpace>* , Kokkos::HostSpace > >::type
+    createContainer(int num_field ){
+      return Kokkos::View<KokkosView3<T,MemorySpace>* , Kokkos::HostSpace >("a_view_of_KokkosView3s",num_field);
+}
+
+template <  typename T, typename MemorySpace>
+typename std::enable_if<std::is_same<MemorySpace, Kokkos::HostSpace>::value, Kokkos::View<KokkosView3<const T,MemorySpace>* , Kokkos::HostSpace > >::type
+    createConstContainer(int num_field  ){
+      return Kokkos::View<KokkosView3<const T,MemorySpace>* , Kokkos::HostSpace >("a_view_of_KokkosView3s_with_const",num_field);
+}
+
+#if defined(HAVE_CUDA)
+template <  typename T, typename MemorySpace>
+typename std::enable_if<std::is_same<MemorySpace, Kokkos::CudaSpace>::value, Kokkos::View<KokkosView3<T,MemorySpace>* , Kokkos::HostSpace > >::type
+    createContainer(int num_field ){
+      return Kokkos::View<KokkosView3<T,MemorySpace>* , Kokkos::HostSpace >("a_view_of_gpu_KokkosView3s",num_field);
+}
+
+template <  typename T, typename MemorySpace>
+typename std::enable_if<std::is_same<MemorySpace, Kokkos::CudaSpace>::value, Kokkos::View<KokkosView3<const T,MemorySpace>* , Kokkos::HostSpace > >::type
+    createConstContainer(int num_field ){
+      return Kokkos::View<KokkosView3<const T,MemorySpace>* , Kokkos::HostSpace >("a_view_of_gpu_KokkosView3s_with_const",num_field);
+}
+
+
+
+
+template <typename ExecutionSpace, typename T2, typename T3>
+typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::Cuda>::value, void>::type
+    parallel_initialize_single(T2 KKV3,const T3 init_val ){
+
+  Kokkos::View< KokkosView3<T3,Kokkos::CudaSpace>* , Kokkos::CudaSpace >  KKV3_gpu("parallel_init_single_gpu",KKV3.size());
+  Kokkos::deep_copy(KKV3_gpu,KKV3);
+
+    int cuda_threads_per_sm = Uintah::Parallel::getCudaThreadsPerSM();
+    int cuda_sms_per_loop   = Uintah::Parallel::getCudaSMsPerLoop();
+  for (unsigned int jx=0; jx < KKV3.size(); jx++){
+
+    const int n_cells=KKV3(jx).m_view.size();
+
+
+    const int actualThreads = n_cells > cuda_threads_per_sm ? cuda_threads_per_sm : n_cells;
+    typedef Kokkos::TeamPolicy< ExecutionSpace > policy_type;
+
+
+
+    Kokkos::parallel_for (Kokkos::TeamPolicy< ExecutionSpace >( cuda_sms_per_loop, actualThreads ),
+        KOKKOS_LAMBDA ( typename policy_type::member_type thread ) {
+
+        Kokkos::parallel_for (Kokkos::TeamThreadRange(thread, n_cells), [=] (const int& i) {
+              KKV3_gpu(jx)(i)=init_val;
+          });
+        });
+
+  }
+}
+
+
+
+template <typename ExecutionSpace, typename T2, typename T3>
+typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::Cuda>::value, void>::type
+    parallel_initialize_grouped(T2 KKV3,const T3 init_val ){
+        int n_cells=0;
+        for (unsigned int j=0; j < KKV3.size(); j++){
+          n_cells+=KKV3(j).m_view.size();
+        }
+
+    Kokkos::View< KokkosView3<T3,Kokkos::CudaSpace>* , Kokkos::CudaSpace >  KKV3_gpu("parallel_init_grouped_gpu",KKV3.size());
+    Kokkos::deep_copy(KKV3_gpu,KKV3);
+
+
+    int cuda_threads_per_sm = Uintah::Parallel::getCudaThreadsPerSM();
+    int cuda_sms_per_loop   = Uintah::Parallel::getCudaSMsPerLoop();
+
+    const int actualThreads = n_cells > cuda_threads_per_sm ? cuda_threads_per_sm : n_cells;
+    typedef Kokkos::TeamPolicy< ExecutionSpace > policy_type;
+
+
+
+    Kokkos::parallel_for (Kokkos::TeamPolicy< ExecutionSpace >( cuda_sms_per_loop, actualThreads ),
+        KOKKOS_LAMBDA ( typename policy_type::member_type thread ) {
+
+        Kokkos::parallel_for (Kokkos::TeamThreadRange(thread, n_cells), [=] (const int& i_tot) {
+        int i=i_tot ;
+        int j=0;
+        while(i-(int) KKV3_gpu(j).m_view.size()>-1){ // warp divergence problem????
+        i-=KKV3_gpu(j).m_view.size();
+        j++;
+        }
+        KKV3_gpu(j)(i)=init_val;
+          });
+        });
+}
+#endif
+
+
+
+template<typename T, typename MemorySpace>
+inline void setValueAndReturnView(Kokkos::View<T*, MemorySpace>& V,T x, int &index){
+  V(index)=x ;
+ index++;
+ return ;
+}
+
+template<typename T, typename MemorySpace>
+inline void setValueAndReturnView(Kokkos::View<T*, MemorySpace>& V,Kokkos::View<T*, MemorySpace> small_v, int &index){
+int extra_i= small_v.size();
+for(int i=0; i<extra_i; i++){
+  V(index+i)=small_v(i);
+}
+index+=extra_i;
+  return ;
+}
+
+
+template<typename T, typename MemorySpace>
+inline void sumViewSize(T x, int &index){
+ index++;
+ return ;
+}
+
+template<typename T, typename MemorySpace>
+inline void sumViewSize(Kokkos::View<T*, MemorySpace> small_v, int &index){
+index+=small_v.size(); 
+  return ;
+}
+
+
+// Initialization API that takes both KokkosView3 arguments and View<KokkosView3> arguments. 
+// If compiling w/o kokkos it takes CC NC SFCX SFCY SFCZ arguments and std::vector<T> arguments 
+   template<typename MemorySpace, typename ExecutionSpace, typename T, class ...Ts>  // Could this be modified to accept grid variables AND containters of grid variables?
+   typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::OpenMP>::value, void>::type
+   parallel_initialize(T inside_value,  Ts... inputs) { //SFINAE might be appropriate
+   int n= 0 ; // Get number of variadic arguments
+            Alias<int[]>{( //first part of magic unpacker
+              sumViewSize< KokkosView3<T,MemorySpace>, Kokkos::HostSpace>(inputs,n)
+             ,0)...,0}; //second part of magic unpacker
+
+        Kokkos::View<KokkosView3<T,MemorySpace>*, Kokkos::HostSpace> inputs_("Parallel_initialize_cpu",n) ;
+        int i=0; //iterator counter
+            Alias<int[]>{( //first part of magic unpacker
+              setValueAndReturnView< KokkosView3<T,MemorySpace>, Kokkos::HostSpace>(inputs_ ,inputs,i)
+             ,0)...,0}; //second part of magic unpacker
+    parallel_initialize_grouped<ExecutionSpace>(inputs_, inside_value );
+    //parallel_initialize_single<ExecutionSpace>(inputs_, inside_value ); // safer version, less ambitious
+}
+
+
+////This function is the same as above,but appears to be necessary due to CCVariable support.....
+   template<typename MemorySpace, typename ExecutionSpace, typename T, class ...Ts>  // Could this be modified to accept grid variables AND containters of grid variables?
+   typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::Cuda>::value, void>::type
+   parallel_initialize(T inside_value,  Ts... inputs) { //SFINAE might be appropriate
+   int n= 0; // Get number of variadic arguments
+            Alias<int[]>{( //first part of magic unpacker
+              sumViewSize< KokkosView3<T,MemorySpace>, Kokkos::HostSpace>(inputs,n)
+             ,0)...,0}; //second part of magic unpacker
+
+        Kokkos::View<KokkosView3<T,MemorySpace>*, Kokkos::HostSpace> inputs_("Parallel_initialize_gpu",n) ;
+        int i=0; //iterator counter
+            Alias<int[]>{( //first part of magic unpacker
+              setValueAndReturnView< KokkosView3<T,MemorySpace>, Kokkos::HostSpace>(inputs_ ,inputs,i)
+             ,0)...,0}; //second part of magic unpacker
+    parallel_initialize_grouped<ExecutionSpace>(inputs_, inside_value );
+    //parallel_initialize_single<ExecutionSpace>(inputs_, inside_value ); // safer version, less ambitious
+}
+
+#endif
+
+template< typename T, typename T2>
+void legacy_initialize(T inside_value, std::vector<T2>& data_fields) {  // for vectors
+int nfields=data_fields.size();
+for(int i=0;  i< nfields; i++){
+data_fields[i].initialize(inside_value);
+}
+return;
+}
+
+template< typename T, typename T2>
+void legacy_initialize(T inside_value, T2& data_fields) {  // for stand aloen data fields 
+data_fields.initialize(inside_value);
+return;
+}
+
+
+template<typename MemorySpace, typename ExecutionSpace, typename T, class ...Ts>
+typename std::enable_if<std::is_same<ExecutionSpace, UintahSpaces::CPU>::value, void>::type
+parallel_initialize(T inside_value,  Ts... inputs) { //SFINAE might be appropriate
+         Alias<int[]>{( //first part of magic unpacker
+             //inputs.initialize (inside_value)
+             legacy_initialize(inside_value,inputs)
+             ,0)...,0}; //second part of magic unpacker
+}
+
+
 } // namespace Uintah
 
 #endif // UINTAH_HOMEBREW_LOOP_EXECUTION_HPP
