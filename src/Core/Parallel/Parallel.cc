@@ -49,6 +49,9 @@ using namespace Uintah;
 #  undef THREADED_MPI_AVAILABLE
 #endif
 
+// Default to pthreads unless specified otherwise.
+Parallel::CpuThreadEnvironment Parallel::s_cpu_thread_environment = Parallel::CpuThreadEnvironment::PTHREADS;
+
 bool             Parallel::s_initialized             = false;
 bool             Parallel::s_using_device            = false;
 int              Parallel::s_cuda_threads_per_sm     = -1;
@@ -87,6 +90,22 @@ MpiError( char * what, int errorcode )
   std::cerr << "MPI Error in " << what << ": " << string_name << '\n';
 
   std::exit(1);
+}
+
+
+//_____________________________________________________________________________
+//
+void
+Parallel::setCpuThreadEnvironment( CpuThreadEnvironment threadType )
+{
+  s_cpu_thread_environment = threadType;
+}
+
+//_____________________________________________________________________________
+//
+Parallel::CpuThreadEnvironment
+Parallel::getCpuThreadEnvironment() {
+  return s_cpu_thread_environment;
 }
 
 //_____________________________________________________________________________

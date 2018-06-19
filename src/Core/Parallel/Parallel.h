@@ -79,6 +79,11 @@ class Parallel {
           , Abort
       };
 
+      enum CpuThreadEnvironment {
+        PTHREADS = 0,
+        OPEN_MP_THREADS = 1
+      };
+
       //////////
       // Initializes MPI if necessary. 
       static void initializeManager( int& argc, char**& arg );
@@ -104,6 +109,14 @@ class Parallel {
       // Returns the size of MPI_Comm
       static int getMPISize();
       
+      //////////
+      // Sets the type of CPU scheduler threads
+      static void setCpuThreadEnvironment( CpuThreadEnvironment threadType );
+
+      //////////
+      // Returns the type of CPU scheduler threads
+      static CpuThreadEnvironment getCpuThreadEnvironment();
+
       //////////
       // Returns true if this process is using MPI
       static bool usingMPI();
@@ -175,6 +188,8 @@ class Parallel {
       Parallel& operator=( const Parallel & ) = delete;
       Parallel( Parallel && )                 = delete;
       Parallel& operator=( Parallel && )      = delete;
+
+      static CpuThreadEnvironment s_cpu_thread_environment;
 
       static bool              s_initialized;
       static bool              s_using_device;

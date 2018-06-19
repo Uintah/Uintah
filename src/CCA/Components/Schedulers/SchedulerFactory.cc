@@ -76,18 +76,22 @@ SchedulerFactory::create( const ProblemSpecP   & ps
 
   if (scheduler == "MPI") {
     sch = scinew MPIScheduler(world, nullptr);
+    Parallel::setCpuThreadEnvironment(Parallel::CpuThreadEnvironment::PTHREADS);
   }
 
   else if (scheduler == "DynamicMPI") {
     sch = scinew DynamicMPIScheduler(world, nullptr);
+    Parallel::setCpuThreadEnvironment(Parallel::CpuThreadEnvironment::PTHREADS);
   }
 
   else if (scheduler == "Unified") {
     sch = scinew UnifiedScheduler(world, nullptr);
+    Parallel::setCpuThreadEnvironment(Parallel::CpuThreadEnvironment::PTHREADS);
   }
 
   else if (scheduler == "KokkosOpenMP") {
     sch = scinew KokkosOpenMPScheduler(world, nullptr);
+    Parallel::setCpuThreadEnvironment(Parallel::CpuThreadEnvironment::OPEN_MP_THREADS);
   }
 
   else {
