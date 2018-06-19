@@ -30,48 +30,51 @@
 
 #include <string>
 #include <CCA/Components/MPM/Materials/Diffusion/DiffusionInterfaces/CommonIFConcDiff.h>
+#include <CCA/Components/MPM/Materials/Diffusion/DiffusionInterfaces/SimpleDiffusionContact.h>
 #include <CCA/Components/MPM/Materials/Diffusion/DiffusionInterfaces/SDInterfaceModel.h>
 
 using namespace std;
 using namespace Uintah;
 
-SDInterfaceModel* SDInterfaceModelFactory::create(ProblemSpecP& ps,
-                                                  SimulationStateP& ss,
-                                                  MPMFlags* flags,
-                                                  MPMLabel* mpm_lb)
+SDInterfaceModel* SDInterfaceModelFactory::create(ProblemSpecP      & ps      ,
+                                                  SimulationStateP  & ss      ,
+                                                  MPMFlags          * flags   ,
+                                                  MPMLabel          * mpm_lb  )
 {
   ProblemSpecP mpm_ps = 
      ps->findBlockWithOutAttribute("MaterialProperties")->findBlock("MPM");
 	if(!mpm_ps)
-    throw ProblemSetupException("Cannot find scalar_diffuion_model tag", __FILE__, __LINE__);
+    throw ProblemSetupException("Cannot MPM material subsection.",
+                                __FILE__, __LINE__);
 
-  ProblemSpecP child = mpm_ps->findBlock("diffusion_interface");
+  ProblemSpecP child = mpm_ps->findBlock("diffusion_interface");  // Default to a null interface model
+  // If we don't specify a diffusion interface, assume null.
+  string diff_interface_type = "null";
 
-  if(!child)
-    throw ProblemSetupException("Cannot find diffusion_interface tag", __FILE__, __LINE__);
-	
-  string diff_interface_type;
-  if(!child->getWithDefault("type",diff_interface_type, "null"))
-    throw ProblemSetupException("No type for diffusion_interface", __FILE__, __LINE__);
-
-  if (flags->d_integrator_type != "implicit" &&
-      flags->d_integrator_type != "explicit"){
-    string txt="MPM: time integrator [explicit or implicit] hasn't been set.";
-    throw ProblemSetupException(txt, __FILE__, __LINE__);
+  if (child) {
+    child->getWithDefault("type", diff_interface_type, "null");
   }
+	
+//  if (flags->d_integrator_type != "implicit" &&
+//      flags->d_integrator_type != "explicit"){
+//    string txt="MPM: time integrator [explicit or implicit] hasn't been set.";
+//    throw ProblemSetupException(txt, __FILE__, __LINE__);
+//  }
 
   if(flags->d_integrator_type == "implicit"){
     string txt="MPM:  Implicit Scalar Diffusion is not working yet!";
     throw ProblemSetupException(txt, __FILE__, __LINE__);
   }
 
-  if (diff_interface_type == "common"){
+  if (diff_interface_type == "common")
     return(scinew CommonIFConcDiff(child, ss, flags, mpm_lb));
-  }else if (diff_interface_type == "null"){
-    return(scinew SDInterfaceModel(child, ss, flags, mpm_lb));
-  }else{
-    throw ProblemSetupException("Unknown Scalar Interface Type ("+diff_interface_type+")", __FILE__, __LINE__);
-  }
 
-  return 0;
+  if (diff_interface_type == "null")
+    return(scinew SDInterfaceModel(child, ss, flags, mpm_lb));
+
+  if (diff_interface_type == "simple")
+    return(scinew SimpleSDInterface(child, ss, flags, mpm_lb));
+
+  throw ProblemSetupException("Unknown Scalar Interface Type ("+diff_interface_type+")", __FILE__, __LINE__);
+  return nullptr;
 }

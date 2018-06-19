@@ -238,7 +238,7 @@ class RFElasticPlastic : public ConstitutiveModel {
                                              ParticleVariable<int> &prefOld,
                                              ParticleVariable<int> &prefNew,
                                              const unsigned int oldNumPar,
-                                             const int numNewPartNeeded,
+                                             const unsigned int numNewPartNeeded,
                                              DataWarehouse* old_dw,
                                              DataWarehouse* new_dw);
 

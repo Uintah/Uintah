@@ -65,6 +65,7 @@
 //#include <CCA/Components/MPM/Materials/ConstitutiveModel/Biswajit/CamClay.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/RFElasticPlastic.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/PortableTongeRamesh/TongeRameshPTR.h>
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/ArrudaBoyce8Chain.h>
 #include <CCA/Components/MPM/Core/MPMFlags.h>
 
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -281,6 +282,11 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
           << " the fracture or implicit intergrator \n";
       throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
     }
+  }
+
+  else if (cm_type == "ArrudaBoyce8") {
+    computes_pLocalizedMPM = false;
+    return(scinew ArrudaBoyce8Chain(child,flags));
   }
 
   else

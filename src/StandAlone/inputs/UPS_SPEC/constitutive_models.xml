@@ -38,7 +38,8 @@
                                                                              ArenaSoil, 
                                                                              camclay, 
                                                                              TongeRameshPTR, 
-                                                                             rf_elastic_plastic'">
+                                                                             rf_elastic_plastic,
+                                                                             ArrudaBoyce8'">
     <A                             spec="OPTIONAL DOUBLE" />
     <allow_no_tension              spec="OPTIONAL BOOLEAN" />
     <alpha                         spec="OPTIONAL DOUBLE" />
@@ -53,6 +54,7 @@
     <To                            spec="OPTIONAL DOUBLE" />
     <vo                            spec="OPTIONAL DOUBLE" />
     <L                             spec="OPTIONAL DOUBLE" />
+    <beta                          spec="OPTIONAL DOUBLE" />
     <Beta                          spec="OPTIONAL DOUBLE" />
     <bulk_modulus                  spec="OPTIONAL DOUBLE" />
     <bulkPrime                     spec="OPTIONAL DOUBLE" />

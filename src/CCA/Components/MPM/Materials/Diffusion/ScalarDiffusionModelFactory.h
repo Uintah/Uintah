@@ -32,19 +32,17 @@
 namespace Uintah {
 
   class ScalarDiffusionModel;
-  class MPMLabel;
   class MPMFlags;
 
   class ScalarDiffusionModelFactory
   {
-  public:
-    // this function has a switch for all known mat_types
-    
-    static ScalarDiffusionModel* create(ProblemSpecP& ps,
-                                        SimulationStateP& ss,
-                                        MPMFlags* flags);
+    public:
+      // Dispatch based on diffusion model.
+      static ScalarDiffusionModel* create(ProblemSpecP      & ps    ,
+                                          SimulationStateP  & ss    ,
+                                          MPMFlags          * flags );
 
   };
 } // End namespace Uintah
       
-#endif /* _CONSTITUTIVEMODELFACTORY_H_ */
+#endif /* _SCALARDIFFUSIONMODELFACTORY_H_ */

@@ -52,6 +52,9 @@ namespace Uintah {
 class ThermalContact;
 class HeatConduction;
 class AnalysisModule;
+class SDInterfaceModel;
+class FluxBCModel;
+
 
 /**************************************
 
@@ -91,7 +94,7 @@ public:
   Contact*         contactModel;
   ThermalContact*  thermalContactModel;
   HeatConduction* heatConductionModel;
- 
+  SDInterfaceModel* d_sdInterfaceModel;
   //////////
   // Insert Documentation Here:
   virtual void problemSetup(const ProblemSpecP& params, 
@@ -160,6 +163,8 @@ protected:
   // Insert Documentation Here:
   friend class MPMICE;
   friend class MPMArches;
+
+  FluxBCModel*  d_fluxBC;
  
   virtual void actuallyInitialize(const ProcessorGroup*,
                                   const PatchSubset* patches,
@@ -293,6 +298,13 @@ protected:
                               DataWarehouse* old_dw,
                               DataWarehouse* new_dw);
 
+  //////////
+  // Calculates the grid-based rate of species diffusion
+  virtual void computeAndIntegrateDiffusion(const ProcessorGroup*
+                                           ,const PatchSubset     * patches
+                                           ,const MaterialSubset  * matls
+                                           ,      DataWarehouse   * old_dw
+                                           ,      DataWarehouse   * new_dw);
   //////////
   // Insert Documentation Here:
   virtual void computeAndIntegrateAcceleration(const ProcessorGroup*,
@@ -461,6 +473,10 @@ protected:
   virtual void scheduleSolveHeatEquations(SchedulerP&, const PatchSet*,
                                           const MaterialSet*);
 
+  virtual void scheduleComputeAndIntegrateDiffusion(SchedulerP&,
+                                                    const PatchSet*,
+                                                    const MaterialSet*);
+
   virtual void scheduleComputeAndIntegrateAcceleration(SchedulerP&,
                                                        const PatchSet*,
                                                        const MaterialSet*);
@@ -510,6 +526,39 @@ protected:
   virtual void scheduleComputeParticleScaleFactor(SchedulerP&, 
                                                   const PatchSet*,
                                                   const MaterialSet*);
+
+  // JBH -- Scalar Diffusion Related
+  virtual void scheduleConcInterpolated(        SchedulerP  &
+                                       ,  const PatchSet    *
+                                       ,  const MaterialSet *);
+
+  virtual void scheduleComputeFlux(        SchedulerP  &
+                                  ,  const PatchSet    *
+                                  ,  const MaterialSet *);
+
+  virtual void computeFlux( const ProcessorGroup *
+                          , const PatchSubset    *
+                          , const MaterialSubset *
+                          ,       DataWarehouse  *
+                          ,       DataWarehouse  *  );
+
+
+  virtual void scheduleComputeDivergence(        SchedulerP  &
+                                        ,  const PatchSet    *
+                                        ,  const MaterialSet *);
+
+  virtual void computeDivergence( const ProcessorGroup  *
+                                , const PatchSubset     *
+                                , const MaterialSubset  *
+                                ,       DataWarehouse   *
+                                ,       DataWarehouse   * );
+
+
+  virtual void scheduleDiffusionInterfaceDiv(        SchedulerP  &
+                                            ,  const PatchSet    *
+                                            ,  const MaterialSet *);
+
+
 
   void readPrescribedDeformations(std::string filename);
 

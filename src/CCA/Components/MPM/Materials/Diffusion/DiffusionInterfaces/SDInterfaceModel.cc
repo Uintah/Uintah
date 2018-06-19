@@ -29,16 +29,25 @@
 
 using namespace Uintah;
 
-SDInterfaceModel::SDInterfaceModel(ProblemSpecP& ps, SimulationStateP& sS,
-                                   MPMFlags* Mflag, MPMLabel* mpm_lb)
+SDInterfaceModel::SDInterfaceModel(ProblemSpecP         & ps      ,
+                                   SimulationStateP     & sS      ,
+                                   MPMFlags             * Mflag   ,
+                                   MPMLabel             * mpm_lb  )
                                   : d_materials_list(ps)
 {
   d_mpm_lb = mpm_lb;
   d_shared_state = sS;
   d_mpm_flags = Mflag;
+
+  sdInterfaceRate = VarLabel::create("g.dCdt_interface",
+                                     NCVariable<double>::getTypeDescription());
+  sdInterfaceFlag = VarLabel::create("g.interfaceFlag",
+                                     NCVariable<int>::getTypeDescription());
 }
 
-SDInterfaceModel::~SDInterfaceModel(){
+SDInterfaceModel::~SDInterfaceModel() {
+  VarLabel::destroy(sdInterfaceRate);
+  VarLabel::destroy(sdInterfaceFlag);
 }
 
 void SDInterfaceModel::addComputesAndRequiresInterpolated(      SchedulerP  & sched   ,
@@ -62,32 +71,62 @@ void SDInterfaceModel::addComputesAndRequiresDivergence(      SchedulerP  & sche
                                                         const PatchSet    * patches ,
                                                         const MaterialSet * matls   )
 {
+  Task* task = scinew Task("SDInterfaceModel::sdInterfaceDivergence", this,
+                           &SDInterfaceModel::sdInterfaceDivergence);
+  // By default for the null model, set the interface concentration rate to zero.
+  setBaseComputesAndRequiresDivergence(task, matls->getUnion());
+  sched->addTask(task, patches, matls);
+
 }
 
-void SDInterfaceModel::sdInterfaceDivergence(const ProcessorGroup*,
-                                           const PatchSubset* patches,
-                                           const MaterialSubset* matls,
-                                           DataWarehouse* old_dw,
-                                           DataWarehouse* new_dw)
+void SDInterfaceModel::setBaseComputesAndRequiresDivergence(        Task            * task
+                                                           ,  const MaterialSubset  * matls )
 {
+  task->computes(sdInterfaceRate, matls);
+  task->computes(sdInterfaceRate, d_shared_state->getAllInOneMatl(),
+                 Task::OutOfDomain);
+
+  task->computes(sdInterfaceFlag, matls);
+  task->computes(sdInterfaceFlag, d_shared_state->getAllInOneMatl(),
+                 Task::OutOfDomain);
 }
 
-void SDInterfaceModel::addComputesAndRequiresFlux(
-                                                        SchedulerP  & sched   ,
-                                                  const PatchSet    * patches ,
-                                                  const MaterialSet * matls
-                                                 )
+void SDInterfaceModel::sdInterfaceDivergence( const ProcessorGroup  *
+                                            , const PatchSubset     * patches
+                                            , const MaterialSubset  * matls
+                                            ,       DataWarehouse   * old_dw
+                                            ,       DataWarehouse   * new_dw  )
 {
-}
+  // Set the interfacial flux rate to zero for the (default) null model.
+  Ghost::GhostType  typeGhost;
+  int               numGhost;
+  d_shared_state->getParticleGhostLayer(typeGhost, numGhost);
+  for (int patchIdx = 0; patchIdx < patches->size(); ++patchIdx) {
+    const Patch*  patch     = patches->get(patchIdx);
+    int           numMatls  = matls->size();
 
-void SDInterfaceModel::sdInterfaceFlux(
-                                       const ProcessorGroup *         ,
-                                       const PatchSubset    * patches ,
-                                       const MaterialSubset * matls   ,
-                                             DataWarehouse  * oldDW   ,
-                                             DataWarehouse  * newDW
-                                      )
-{
+    NCVariable<double>  gdCdt_interface_Total;
+    NCVariable<int>     gInterfaceFlag_Total;
+    // Initialize global references to interface flux and interface presence
+    new_dw->allocateAndPut(gdCdt_interface_Total, sdInterfaceRate,
+                           d_shared_state->getAllInOneMatl()->get(0), patch);
+    gdCdt_interface_Total.initialize(0.0);
+    new_dw->allocateAndPut(gInterfaceFlag_Total, sdInterfaceFlag,
+                           d_shared_state->getAllInOneMatl()->get(0), patch);
+    gInterfaceFlag_Total.initialize(false);
+
+    std::vector<NCVariable<double> >  gdCdt_interface(numMatls);
+    std::vector<NCVariable<int>    >  gInterfaceFlag(numMatls);
+    for (int matlIdx = 0; matlIdx < numMatls; ++matlIdx) {
+      int dwi = matls->get(matlIdx);
+      new_dw->allocateAndPut(gdCdt_interface[matlIdx],  sdInterfaceRate,  dwi,
+                             patch);
+      gdCdt_interface[matlIdx].initialize(0.0);
+      new_dw->allocateAndPut(gInterfaceFlag[matlIdx],   sdInterfaceFlag,  dwi,
+                             patch);
+      gInterfaceFlag[matlIdx].initialize(false);
+    }
+  }
 }
 
 void SDInterfaceModel::outputProblemSpec(ProblemSpecP& ps)
@@ -95,4 +134,12 @@ void SDInterfaceModel::outputProblemSpec(ProblemSpecP& ps)
   ProblemSpecP sdim_ps = ps;
   sdim_ps = ps->appendChild("diffusion_interface");
   sdim_ps->appendElement("type","null");
+}
+
+const VarLabel* SDInterfaceModel::getInterfaceFluxLabel() const {
+  return sdInterfaceRate;
+}
+
+const VarLabel* SDInterfaceModel::getInterfaceFlagLabel() const {
+  return sdInterfaceFlag;
 }

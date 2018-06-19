@@ -41,53 +41,53 @@ namespace Uintah {
   class SDInterfaceModel {
   public:
     
-    SDInterfaceModel(ProblemSpecP& ps, SimulationStateP& sS,
-                     MPMFlags* mpm_flags, MPMLabel* mpm_lb);
+    SDInterfaceModel(       ProblemSpecP      & ps
+                    ,       SimulationStateP  & sS
+                    ,       MPMFlags          * mpm_flags
+                    ,       MPMLabel          * mpm_lb    );
 
     virtual ~SDInterfaceModel();
 
-    virtual void addComputesAndRequiresInterpolated(SchedulerP & sched,
-                                          const PatchSet* patches,
-                                          const MaterialSet* matls);
+    virtual void addComputesAndRequiresInterpolated(        SchedulerP  & sched
+                                                   ,  const PatchSet    * patches
+                                                   ,  const MaterialSet * matls   );
 
-    virtual void sdInterfaceInterpolated(const ProcessorGroup*,
-                                         const PatchSubset* patches,
-                                         const MaterialSubset* matls,
-                                         DataWarehouse* old_dw,
-                                         DataWarehouse* new_dw);
+    virtual void sdInterfaceInterpolated( const ProcessorGroup  *
+                                        , const PatchSubset     * patches
+                                        , const MaterialSubset  * matls
+                                        ,       DataWarehouse   * old_dw
+                                        ,       DataWarehouse   * new_dw    );
 
-    virtual void addComputesAndRequiresDivergence(SchedulerP & sched,
-                                                  const PatchSet* patches,
-                                                  const MaterialSet* matls);
+    virtual void addComputesAndRequiresDivergence(        SchedulerP  & sched
+                                                 ,  const PatchSet    * patches
+                                                 ,  const MaterialSet * matls   );
 
-    virtual void sdInterfaceDivergence(const ProcessorGroup*,
-                                       const PatchSubset* patches,
-                                       const MaterialSubset* matls,
-                                       DataWarehouse* old_dw,
-                                       DataWarehouse* new_dw);
-
-    virtual void addComputesAndRequiresFlux(
-                                                  SchedulerP  & sched   ,
-                                            const PatchSet    * patches ,
-                                            const MaterialSet * matls
-                                           );
-
-    virtual void sdInterfaceFlux(
-                                 const ProcessorGroup *         ,
-                                 const PatchSubset    * patches ,
-                                 const MaterialSubset * matls   ,
-                                       DataWarehouse  * oldDW   ,
-                                       DataWarehouse  * newDW
-                                );
+    virtual void sdInterfaceDivergence( const ProcessorGroup  *
+                                      , const PatchSubset     * patches
+                                      , const MaterialSubset  * matls
+                                      ,       DataWarehouse   * old_dw
+                                      ,       DataWarehouse   * new_dw    );
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
 
+    const VarLabel* getInterfaceFluxLabel() const;
+
+    const VarLabel* getInterfaceFlagLabel() const;
+
   protected:
+
+    void setBaseComputesAndRequiresDivergence(        Task            * task
+                                             ,  const MaterialSubset  * matls);
 
     MPMLabel* d_mpm_lb;
     SimulationStateP d_shared_state;
     ContactMaterialSpec d_materials_list;
     MPMFlags* d_mpm_flags;
+
+    // Stores dC/dt at the interface points.
+    VarLabel* sdInterfaceRate;
+    VarLabel* sdInterfaceFlag; // True means interface at point
+
     SDInterfaceModel(const SDInterfaceModel&);
     SDInterfaceModel& operator=(const SDInterfaceModel&);
     

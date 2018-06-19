@@ -57,7 +57,6 @@ namespace Uintah {
 #include <CCA/Ports/DataWarehouseP.h>
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Math/Matrix3.h>
-#include <Core/ProblemSpec/ProblemSpecP.h>
 #include <cmath>
 #include <vector>
 
@@ -237,7 +236,7 @@ namespace Uintah {
                                              ParticleVariable<int> &prefOld,
                                              ParticleVariable<int> &prefNew,
                                              const unsigned int oldNumPar,
-                                             const int numNewPartNeeded,
+                                             const unsigned int numNewPartNeeded,
                                              DataWarehouse* old_dw,
                                              DataWarehouse* new_dw);
 
