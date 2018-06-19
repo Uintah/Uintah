@@ -153,7 +153,7 @@ def modUPS2( inputsDir, filename, changes):
       option = change[1].split(":")
 
       if operation == "UPDATE":
-        command = "xmlstarlet edit --update %s --value %s  %s > %s" % (option[0], option[1], mod_filename, tmp_filename )
+        command = "xmlstarlet edit --update %s --value \"%s\"  %s > %s" % (option[0], option[1], mod_filename, tmp_filename )
 
       elif operation == "DELETE":
         command = "xmlstarlet edit --delete %s %s > %s "% (option[0], mod_filename, tmp_filename )
