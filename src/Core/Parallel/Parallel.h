@@ -134,16 +134,24 @@ class Parallel {
       static void setCudaThreadsPerSM( int num );
 
       //////////
-      // Sets the number of SMs that shoudl be used for each loop
+      // Sets the number of SMs that should be used for each loop
       static void setCudaSMsPerLoop( int num );
+
+      //////////
+      // Sets the number of CUDA streams per task
+      static void setCudaStreamsPerTask( int num );
 
       //////////
       // Sets the number of CUDA threads to use within an SM for a loop
       static int getCudaThreadsPerSM();
 
       //////////
-      // Sets the number of SMs that shoudl be used for each loop
+      // Sets the number of SMs that should be used for each loop
       static int getCudaSMsPerLoop();
+
+      //////////
+      // Returns the number of CUDA streams per task
+      static int getCudaStreamsPerTask();
 
       //////////
       // Returns the number of threads that a processing element is allowed to use to compute its tasks.
@@ -195,6 +203,7 @@ class Parallel {
       static bool              s_using_device;
       static int               s_cuda_threads_per_sm;
       static int               s_cuda_sms_per_loop;
+      static int               s_cuda_streams_per_task;
       static int               s_num_threads;
       static int               s_num_partitions;
       static int               s_threads_per_partition;

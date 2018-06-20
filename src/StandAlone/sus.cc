@@ -156,40 +156,41 @@ static void usage( const std::string& message,
     std::cerr << "\n";
     std::cerr << "Usage: " << progname << " [options] <input_file_name>\n\n";
     std::cerr << "Valid options are:\n";
-    std::cerr << "-h[elp]                  : This usage information\n";
-    std::cerr << "-d[ebug]                 : List the debug streams\n";
+    std::cerr << "-h[elp]                    : This usage information\n";
+    std::cerr << "-d[ebug]                   : List the debug streams\n";
 #ifdef HAVE_CUDA
-    std::cerr << "-gpu                     : Use available GPU devices, requires multi-threaded Unified scheduler \n";
-    std::cerr << "-cuda_threads_per_sm <#> : Number of threads per streaming multiprocessor (SM) \n";
-    std::cerr << "-cuda_sms_per_loop <#>   : Number of streaming multiprocessors (SMs) per loop \n";
+    std::cerr << "-gpu                       : Use available GPU devices, requires multi-threaded Unified scheduler \n";
+    std::cerr << "-cuda_threads_per_sm <#>   : Number of threads per streaming multiprocessor (SM) \n";
+    std::cerr << "-cuda_sms_per_loop <#>     : Number of streaming multiprocessors (SMs) per loop \n";
+    std::cerr << "-cuda_streams_per_task <#> : Number of CUDA streams per task \n";
 
 #endif
-    std::cerr << "-gpucheck                : Returns 1 if sus was compiled with CUDA and there is a GPU available. \n";
-    std::cerr << "                         : Returns 2 if sus was not compiled with CUDA or there are no GPUs available. \n";
-    std::cerr << "-nthreads <#>            : Number of threads per MPI process, requires multi-threaded Unified scheduler\n";
-    std::cerr << "-layout NxMxO            : Eg: 2x1x1.  MxNxO must equal number tof boxes you are using.\n";
-    std::cerr << "-local_filesystem        : If using MPI, use this flag if each node has a local disk.\n";
-    std::cerr << "-emit_taskgraphs         : Output taskgraph information\n";
-    std::cerr << "-restart                 : Give the checkpointed uda directory as the input file\n";
-    std::cerr << "-postProcessUda          : Passes variables in an uda through post processing tasks, computing new variables and creating a new uda.\n";
-    std::cerr << "-uda_suffix <number>     : Make a new uda dir with <number> as the default suffix\n";
-    std::cerr << "-t <timestep>            : Restart timestep (last checkpoint is default, you can use -t 0 for the first checkpoint)\n";
-    std::cerr << "-svnDiff                 : runs svn diff <src/...../Packages/Uintah \n";
-    std::cerr << "-svnStat                 : runs svn stat -u & svn info <src/...../Packages/Uintah \n";
-    std::cerr << "-copy                    : Copy from old uda when restarting\n";
-    std::cerr << "-move                    : Move from old uda when restarting\n";
-    std::cerr << "-nocopy                  : Default: Don't copy or move old uda timestep when restarting\n";
-    std::cerr << "-validate                : Verifies the .ups file is valid and quits!\n";
-    std::cerr << "-do_not_validate         : Skips .ups file validation! Please avoid this flag if at all possible.\n";
+    std::cerr << "-gpucheck                  : Returns 1 if sus was compiled with CUDA and there is a GPU available. \n";
+    std::cerr << "                           : Returns 2 if sus was not compiled with CUDA or there are no GPUs available. \n";
+    std::cerr << "-nthreads <#>              : Number of threads per MPI process, requires multi-threaded Unified scheduler\n";
+    std::cerr << "-layout NxMxO              : Eg: 2x1x1.  MxNxO must equal number tof boxes you are using.\n";
+    std::cerr << "-local_filesystem          : If using MPI, use this flag if each node has a local disk.\n";
+    std::cerr << "-emit_taskgraphs           : Output taskgraph information\n";
+    std::cerr << "-restart                   : Give the checkpointed uda directory as the input file\n";
+    std::cerr << "-postProcessUda            : Passes variables in an uda through post processing tasks, computing new variables and creating a new uda.\n";
+    std::cerr << "-uda_suffix <number>       : Make a new uda dir with <number> as the default suffix\n";
+    std::cerr << "-t <timestep>              : Restart timestep (last checkpoint is default, you can use -t 0 for the first checkpoint)\n";
+    std::cerr << "-svnDiff                   : runs svn diff <src/...../Packages/Uintah \n";
+    std::cerr << "-svnStat                   : runs svn stat -u & svn info <src/...../Packages/Uintah \n";
+    std::cerr << "-copy                      : Copy from old uda when restarting\n";
+    std::cerr << "-move                      : Move from old uda when restarting\n";
+    std::cerr << "-nocopy                    : Default: Don't copy or move old uda timestep when restarting\n";
+    std::cerr << "-validate                  : Verifies the .ups file is valid and quits!\n";
+    std::cerr << "-do_not_validate           : Skips .ups file validation! Please avoid this flag if at all possible.\n";
 #ifdef HAVE_VISIT
     std::cerr << "\n";
-    std::cerr << "-visit <filename>        : Create a VisIt .sim2 file and perform VisIt in-situ checks\n";
-    std::cerr << "-visit_connect           : Wait for a visit connection before executing the simulation\n";
-    std::cerr << "-visit_comment <comment> : A comment about the simulation\n";
-    std::cerr << "-visit_dir <directory>   : Top level directory for the VisIt installation\n";
-    std::cerr << "-visit_options <string>  : Optional args for the VisIt launch script\n";
-    std::cerr << "-visit_trace <file>      : Trace file for VisIt's Sim V2 function calls\n";
-    std::cerr << "-visit_ui <file>         : Use the named Qt GUI file instead of the default\n";
+    std::cerr << "-visit <filename>          : Create a VisIt .sim2 file and perform VisIt in-situ checks\n";
+    std::cerr << "-visit_connect             : Wait for a visit connection before executing the simulation\n";
+    std::cerr << "-visit_comment <comment>   : A comment about the simulation\n";
+    std::cerr << "-visit_dir <directory>     : Top level directory for the VisIt installation\n";
+    std::cerr << "-visit_options <string>    : Optional args for the VisIt launch script\n";
+    std::cerr << "-visit_trace <file>        : Trace file for VisIt's Sim V2 function calls\n";
+    std::cerr << "-visit_ui <file>           : Use the named Qt GUI file instead of the default\n";
 #endif
     std::cerr << "\n\n";
   }
@@ -429,6 +430,23 @@ int main( int argc, char *argv[], char *env[] )
         Parallel::exitAll(2);
       }
       Uintah::Parallel::setCudaSMsPerLoop(cuda_sms_per_loop);
+#else
+      std::cout << "Not compiled for GPU support" << std::endl;
+      Parallel::exitAll(2);
+#endif
+    }
+    else if (arg == "-cuda_streams_per_task") {
+#ifdef HAVE_CUDA
+      int cuda_streams_per_task = 0;
+      if (++i == argc) {
+        usage("You must provide a number of CUDA streams per task for -cuda_streams_per_task", arg, argv[0]);
+      }
+      cuda_streams_per_task = atoi(argv[i]);
+      if( cuda_streams_per_task < 1 ) {
+        usage("Number of CUDA streams per task is too small", arg, argv[0]);
+        Parallel::exitAll(2);
+      }
+      Uintah::Parallel::setCudaStreamsPerTask(cuda_streams_per_task);
 #else
       std::cout << "Not compiled for GPU support" << std::endl;
       Parallel::exitAll(2);

@@ -56,6 +56,7 @@ bool             Parallel::s_initialized             = false;
 bool             Parallel::s_using_device            = false;
 int              Parallel::s_cuda_threads_per_sm     = -1;
 int              Parallel::s_cuda_sms_per_loop       = -1;
+int              Parallel::s_cuda_streams_per_task   = -1;
 int              Parallel::s_num_threads             = -1;
 int              Parallel::s_num_partitions          = -1;
 int              Parallel::s_threads_per_partition   = -1;
@@ -152,6 +153,14 @@ Parallel::setCudaSMsPerLoop( int num )
 
 //_____________________________________________________________________________
 //
+void
+Parallel::setCudaStreamsPerTask( int num )
+{
+  s_cuda_streams_per_task = num;
+}
+
+//_____________________________________________________________________________
+//
 int
 Parallel::getCudaThreadsPerSM()
 {
@@ -164,6 +173,14 @@ int
 Parallel::getCudaSMsPerLoop()
 {
   return s_cuda_sms_per_loop;
+}
+
+//_____________________________________________________________________________
+//
+int
+Parallel::getCudaStreamsPerTask()
+{
+  return s_cuda_streams_per_task;
 }
 
 //_____________________________________________________________________________
