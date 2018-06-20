@@ -34,7 +34,23 @@
 # ## FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # ## IN THE SOFTWARE.
 # ##
-#
+
+##
+## IMPORTANT!!!  Configure developers, PLEASE READ:
+##
+## The following BULLET PROOFING needs to be placed manually into
+## configure every time after autoconf is run, and before configure is
+## checked in:
+##
+## To avoid allowing invalid arguments to configure, we have to manually
+## hack the 'configure' script after it has been 'autoconf'd, and add the
+## line "enable_option_checking=fatal".  There apparently is no way to do
+## this through autoconf macros... sigh.  Manually find this entire text
+## block (comment and all) in configure, MOVE IT ALL TO THE TOP OF THE FILE
+## (just after the MIT license), and uncomment the following line:
+##
+enable_option_checking=fatal
+
 ## -------------------- ##
 ## M4sh Initialization. ##
 ## -------------------- ##
@@ -3013,22 +3029,6 @@ fi
 
   sci_arg_var_list="$sci_arg_var_list NVCC_LDFLAGS"
 
-
-##
-## IMPORTANT!!!  Configure developers, PLEASE READ:
-##
-## The following BULLET PROOFING needs to be placed manually into
-## configure every time after autoconf is run, and before configure is
-## checked in:
-##
-## To avoid allowing invalid arguments to configure, we have to manually
-## hack the 'configure' script after it has been 'autoconf'd, and add the
-## line "enable_option_checking=fatal".  There apparently is no way to do
-## this through autoconf macros... sigh.  Manually find this entire text
-## block (comment and all) in configure, MOVE IT ALL TO THE TOP OF THE FILE
-## (just after the MIT license), and uncomment the following line:
-##
-# enable_option_checking=fatal
 
 # Make sure we can run config.sub.
 $SHELL "$ac_aux_dir/config.sub" sun4 >/dev/null 2>&1 ||
@@ -8924,6 +8924,40 @@ $as_echo "$as_me: WARNING: -----------------------------------------------------
 esac
 
 
+#########################################################################
+##
+##  Add the -fopenmp flag
+##
+
+cat > conftest-openmp.cc <<EOF
+
+#include <iostream>
+
+int main()
+{
+  double a=1;
+  double b=.01;
+}
+EOF
+
+# Verify that the compiler accepts the -fopenmp flag:
+$CXX $CXXFLAGS -fopenmp conftest-openmp.cc -o conftest-openmp 2>&5
+
+if test $? = 0; then
+   if test "$IS_OSX" = "no"; then
+      add_important_warning "Automatically added -fopenmp compiler option to C/CXXFLAGS."
+      CFLAGS="$CFLAGS -fopenmp"
+      CXXFLAGS="$CXXFLAGS -fopenmp"
+   else
+      add_important_warning "On Mac: Not adding the openmp compiler option (-fopenmp) to C/CXXFLAGS."
+   fi
+else
+   rm -f conftest-openmp conftest-openmp.cc
+   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Tried to add the -fopenmp flag but the compiler ($CXX) failed to accept it...\n " >&5
+$as_echo "$as_me: WARNING: Tried to add the -fopenmp flag but the compiler ($CXX) failed to accept it...\n " >&2;}
+fi
+
+rm -f conftest-openmp conftest-openmp.cc
 
 #########################################################################
 ##
@@ -36828,44 +36862,6 @@ fi
 
 
 sci_defs_files="$sci_defs_files include/sci_defs/kokkos_testdefs.h"
-
-#########################################################################
-##
-##  Add the -fopenmp flag if we have Kokkos
-##
-
-if test "$HAVE_KOKKOS" = "yes"; then
-
-	cat > conftest-openmp.cc <<EOF
-
-	#include <iostream>
-
-	int main()
-	{
-  		double a=1;
-  		double b=.01;
-	}
-	EOF
-
-	# Verify that the compiler accepts the -fopenmp flag:
-	$CXX $CXXFLAGS -fopenmp conftest-openmp.cc -o conftest-openmp 2>&5
-
-	if test $? = 0; then
-   		if test "$IS_OSX" = "no"; then
-      			add_important_warning "Automatically added -fopenmp compiler option to C/CXXFLAGS."
-      			CFLAGS="$CFLAGS -fopenmp"
-      			CXXFLAGS="$CXXFLAGS -fopenmp"
-   		else
-      			add_important_warning "On Mac: Not adding the openmp compiler option (-fopenmp) to C/CXXFLAGS."
-   		fi
-	else
-   		rm -f conftest-openmp conftest-openmp.cc
-   		{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Tried to add the -fopenmp flag but the compiler ($CXX) failed to accept it...\n " >&5
-$as_echo "$as_me: WARNING: Tried to add the -fopenmp flag but the compiler ($CXX) failed to accept it...\n " >&2;}
-	fi
-
-	rm -f conftest-openmp conftest-openmp.cc
-fi
 
 ##  --  search for ipm stuff  -------------------------------------------
 _sci_lib=

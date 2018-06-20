@@ -22,8 +22,6 @@
 ## IN THE SOFTWARE.
 ##
 
-enable_option_checking=fatal
-
 ##  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ##
 ##  This configure.ac file has some specialized sections for doing certain
@@ -170,6 +168,7 @@ SCI_ARG_VAR(NVCC_LDFLAGS, CUDA linker flags)
 ## block (comment and all) in configure, MOVE IT ALL TO THE TOP OF THE FILE
 ## (just after the MIT license), and uncomment the following line:
 ##
+# enable_option_checking=fatal
 
 AC_CANONICAL_HOST
 
@@ -1588,6 +1587,39 @@ EOF
 esac
 
 
+#########################################################################
+##
+##  Add the -fopenmp flag
+##
+
+cat > conftest-openmp.cc <<EOF
+
+#include <iostream>
+
+int main()
+{
+  double a=1;
+  double b=.01;
+}
+EOF
+
+# Verify that the compiler accepts the -fopenmp flag:
+$CXX $CXXFLAGS -fopenmp conftest-openmp.cc -o conftest-openmp 2>&5
+
+if test $? = 0; then
+   if test "$IS_OSX" = "no"; then
+      add_important_warning "Automatically added -fopenmp compiler option to C/CXXFLAGS."
+      CFLAGS="$CFLAGS -fopenmp"
+      CXXFLAGS="$CXXFLAGS -fopenmp"
+   else
+      add_important_warning "On Mac: Not adding the openmp compiler option (-fopenmp) to C/CXXFLAGS."
+   fi
+else
+   rm -f conftest-openmp conftest-openmp.cc
+   AC_MSG_WARN( Tried to add the -fopenmp flag but the compiler ($CXX) failed to accept it...\n )
+fi
+
+rm -f conftest-openmp conftest-openmp.cc
 
 #########################################################################
 ##
@@ -3761,43 +3793,6 @@ AC_SUBST(KOKKOS_LIB_DIR_FLAG)
 AC_SUBST(KOKKOS_LIB_FLAG)
 
 sci_defs_files="$sci_defs_files include/sci_defs/kokkos_testdefs.h"
-
-#########################################################################
-##
-##  Add the -fopenmp flag if we have Kokkos
-##
-
-if test "$HAVE_KOKKOS" = "yes"; then
-
-	cat > conftest-openmp.cc <<EOF
-
-	#include <iostream>
-
-	int main()
-	{
-  		double a=1;
-  		double b=.01;
-	}
-	EOF
-
-	# Verify that the compiler accepts the -fopenmp flag:
-	$CXX $CXXFLAGS -fopenmp conftest-openmp.cc -o conftest-openmp 2>&5
-
-	if test $? = 0; then
-   		if test "$IS_OSX" = "no"; then
-      			add_important_warning "Automatically added -fopenmp compiler option to C/CXXFLAGS."
-      			CFLAGS="$CFLAGS -fopenmp"
-      			CXXFLAGS="$CXXFLAGS -fopenmp"
-   		else
-      			add_important_warning "On Mac: Not adding the openmp compiler option (-fopenmp) to C/CXXFLAGS."
-   		fi
-	else
-   		rm -f conftest-openmp conftest-openmp.cc
-   		AC_MSG_WARN( Tried to add the -fopenmp flag but the compiler ($CXX) failed to accept it...\n )
-	fi
-
-	rm -f conftest-openmp conftest-openmp.cc
-fi
 
 ##  --  search for ipm stuff  -------------------------------------------
 _sci_lib=
