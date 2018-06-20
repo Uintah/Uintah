@@ -54,7 +54,8 @@ else
   LIBS := $(MPI_LIBRARY) $(BLAS_LIBRARY) $(XML2_LIBRARY)     \
           $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY)           \
           $(TABPROPS_LIBRARY) $(RADPROPS_LIBRARY)            \
-          $(CUDA_LIBRARY) $(BOOST_LIBRARY) $(PIDX_LIBRARY)
+          $(CUDA_LIBRARY) $(BOOST_LIBRARY) $(PIDX_LIBRARY)   \
+          $(KOKKOS_LIBRARY)
 endif
 
 SRCS := $(SRCDIR)/compute_Lnorm_udas.cc 

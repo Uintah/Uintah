@@ -33,7 +33,7 @@
 
 #include <sci_defs/kokkos_defs.h>
 
-#ifdef UINTAH_ENABLE_KOKKOS
+#if defined( UINTAH_ENABLE_KOKKOS )
 #include <Kokkos_Core.hpp>
 #include <Core/Grid/Variables/KokkosViews.h>
 
@@ -108,7 +108,7 @@ namespace Uintah {
         return d_data;
       }
 
-#ifdef UINTAH_ENABLE_KOKKOS
+#if defined( UINTAH_ENABLE_KOKKOS ) && defined( KOKKOS_ENABLE_OPENMP )
       inline KokkosData<T, Kokkos::HostSpace> getKokkosData() const {
         return KokkosData<T, Kokkos::HostSpace>(d_data, d_size.x(), d_size.y(), d_size.z());
       }

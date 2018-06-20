@@ -41,9 +41,9 @@
 
 #include <sci_defs/kokkos_defs.h>
 
-#ifdef UINTAH_ENABLE_KOKKOS
+#if defined( KOKKOS_ENABLE_OPENMP )
   #include <Kokkos_Core.hpp>
-#endif //UINTAH_ENABLE_KOKKOS
+#endif //KOKKOS_ENABLE_OPENMP
 
 #include <atomic>
 #include <cstring>
@@ -232,7 +232,7 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
 
   while ( g_num_tasks_done < m_num_tasks ) {
 
-#ifdef UINTAH_ENABLE_KOKKOS
+#if defined( KOKKOS_ENABLE_OPENMP )
 
     auto task_worker = [&] ( int partition_id, int num_partitions ) {
 
@@ -249,7 +249,7 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
                                     , m_num_partitions
                                     , m_threads_per_partition );
 
-#else // UINTAH_ENABLE_KOKKOS
+#else //KOKKOS_ENABLE_OPENMP
 
     this->runTasks();
 

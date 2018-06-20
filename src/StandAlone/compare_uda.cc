@@ -1114,7 +1114,7 @@ SpecificFieldComparator<Field, Iterator>::compareFields( DataArchive            
     typename map<const Patch*, Field*>::iterator findIter;
 
     for( Iterator iter = d_begin ; !iter.done(); iter++ ) {
-      const Patch* patch2 = patch2Map[*iter];
+      const Patch* patch2 = patch2Map.get(*iter);
 
       findIter = patch2FieldMap.find( patch2 );
 
@@ -1203,7 +1203,7 @@ buildPatchMap( LevelP                 level,
                       patch->getExtraHighIndex(basis,bl));
 
     serial_for( patchMap.range(), [&](int i, int j, int k) {
-      if (patchMap(i,j,k) != nullptr) {
+      if (patchMap.get(i,j,k) != nullptr) {
         static ProgressiveWarning pw("Two patches on the same grid overlap", 10);
         if (pw.invoke())
           cerr << "Patches " << patch->getID() << " and "
@@ -1222,12 +1222,12 @@ buildPatchMap( LevelP                 level,
 
         if (i >= in_low.x() && j >= in_low.y() && k >= in_low.z() &&
             i < in_high.x() && j < in_high.y() && k < in_high.z()) {
-          patchMap(i,j,k) = patch;
+          patchMap.get(i,j,k) = patch;
         }
       }
       else
       {
-        patchMap(i,j,k) = patch;
+        patchMap.get(i,j,k) = patch;
       }
     });
   }
@@ -1825,13 +1825,13 @@ main( int argc, char** argv )
 
           serial_for( patchMap.range(), [&](int i, int j, int k) {
             // bulletproofing
-            if ((patchMap(i,j,k)  == nullptr && patch2Map(i,j,k) != nullptr) ||
-                (patch2Map(i,j,k) == nullptr && patchMap(i,j,k) != nullptr)) {
+            if ((patchMap.get(i,j,k)  == nullptr && patch2Map.get(i,j,k) != nullptr) ||
+                (patch2Map.get(i,j,k) == nullptr && patchMap.get(i,j,k) != nullptr)) {
               ostringstream warn;
               warn << "    Inconsistent patch coverage on level " << l1
                    << " at time " << time1 << ".\n";
 
-              if (patchMap(i,j,k) != nullptr) {
+              if (patchMap.get(i,j,k) != nullptr) {
                 warn << "    " << IntVector(i,j,k) << " is covered by " << d_filebase1 << endl
                      << " and not " << d_filebase2 << ".\n";
               }

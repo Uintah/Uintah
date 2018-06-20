@@ -48,17 +48,24 @@
 using std::max;
 using std::min;
 
-#if defined(UINTAH_ENABLE_KOKKOS)
+#if defined( UINTAH_ENABLE_KOKKOS )
 #include <Kokkos_Core.hpp>
   const bool HAVE_KOKKOS = true;
-#if !defined( KOKKOS_ENABLE_CUDA )
+#if !defined( KOKKOS_ENABLE_CUDA )  //This define comes from Kokkos itself.
   //Kokkos GPU is not included in this build.  Create some stub types so these types at least exist.
   namespace Kokkos {
     class Cuda {};
     class CudaSpace {};
   }
+#elif !defined( KOKKOS_ENABLE_OPENMP )
+  // For the Unified Scheduler + Kokkos GPU but not Kokkos OpenMP.
+  // This logic may be temporary if all GPU functionality is merged into the Kokkos scheduler
+  // and the Unified Scheduler is no longer used for GPU logic.  Brad P Jun 2018
+  namespace Kokkos {
+    class OpenMP {};
+  }
 #endif
-#else
+#else //if defined( UINTAH_ENABLE_KOKKOS )
 
   //Kokkos not included in this build.  Create some stub types so these types at least exist.
   namespace Kokkos {
@@ -109,21 +116,28 @@ enum TASKGRAPH {
 #define ORIGINAL_UINTAH_CPU_TAG     UintahSpaces::CPU COMMA UintahSpaces::HostSpace
 #define ORIGINAL_KOKKOS_OPENMP_TAG  Kokkos::OpenMP COMMA Kokkos::HostSpace
 #define ORIGINAL_KOKKOS_CUDA_TAG    Kokkos::Cuda COMMA Kokkos::CudaSpace
+
 #if defined(UINTAH_ENABLE_KOKKOS) && defined(HAVE_CUDA)
-#define UINTAH_CPU_TAG              UintahSpaces::CPU COMMA UintahSpaces::HostSpace
-//#define KOKKOS_OPENMP_TAG           UintahSpaces::CPU COMMA UintahSpaces::HostSpace
-#define KOKKOS_OPENMP_TAG           Kokkos::OpenMP COMMA Kokkos::HostSpace
-#define KOKKOS_CUDA_TAG             Kokkos::Cuda COMMA Kokkos::CudaSpace
+  #define UINTAH_CPU_TAG              UintahSpaces::CPU COMMA UintahSpaces::HostSpace
+  #if defined(KOKKOS_ENABLE_OPENMP)
+    #define KOKKOS_OPENMP_TAG         Kokkos::OpenMP COMMA Kokkos::HostSpace
+  #else
+    #define KOKKOS_OPENMP_TAG         UintahSpaces::CPU COMMA UintahSpaces::HostSpace
+  #endif
+  #define KOKKOS_CUDA_TAG             Kokkos::Cuda COMMA Kokkos::CudaSpace
 #elif defined(UINTAH_ENABLE_KOKKOS) && !defined(HAVE_CUDA)
-#define UINTAH_CPU_TAG              UintahSpaces::CPU COMMA UintahSpaces::HostSpace
-//#define KOKKOS_OPENMP_TAG           UintahSpaces::CPU COMMA UintahSpaces::HostSpace
-#define KOKKOS_OPENMP_TAG           Kokkos::OpenMP COMMA Kokkos::HostSpace
-//#define KOKKOS_CUDA_TAG           UintahSpaces::CPU COMMA UintahSpaces::HostSpace
-#define KOKKOS_CUDA_TAG             Kokkos::OpenMP COMMA Kokkos::HostSpace
+  #define UINTAH_CPU_TAG              UintahSpaces::CPU COMMA UintahSpaces::HostSpace
+  #if defined(KOKKOS_ENABLE_OPENMP)
+    #define KOKKOS_OPENMP_TAG         Kokkos::OpenMP COMMA Kokkos::HostSpace
+    #define KOKKOS_CUDA_TAG           Kokkos::OpenMP COMMA Kokkos::HostSpace
+  #else
+    #define KOKKOS_OPENMP_TAG         UintahSpaces::CPU COMMA UintahSpaces::HostSpace
+    #define KOKKOS_CUDA_TAG           UintahSpaces::CPU COMMA UintahSpaces::HostSpace
+  #endif
 #elif !defined(UINTAH_ENABLE_KOKKOS)
-#define UINTAH_CPU_TAG              UintahSpaces::CPU COMMA UintahSpaces::HostSpace
-#define KOKKOS_OPENMP_TAG           UintahSpaces::CPU COMMA UintahSpaces::HostSpace
-#define KOKKOS_CUDA_TAG             UintahSpaces::CPU COMMA UintahSpaces::HostSpace
+  #define UINTAH_CPU_TAG              UintahSpaces::CPU COMMA UintahSpaces::HostSpace
+  #define KOKKOS_OPENMP_TAG           UintahSpaces::CPU COMMA UintahSpaces::HostSpace
+  #define KOKKOS_CUDA_TAG             UintahSpaces::CPU COMMA UintahSpaces::HostSpace
 #endif
 
 

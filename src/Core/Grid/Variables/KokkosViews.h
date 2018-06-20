@@ -1,15 +1,16 @@
 #ifndef UINTAH_GRID_VARIABLES_KOKKOSVIEWS_H
 #define UINTAH_GRID_VARIABLES_KOKKOSVIEWS_H
 
-#if defined(UINTAH_ENABLE_KOKKOS)
+#if defined( UINTAH_ENABLE_KOKKOS )
 #include <Kokkos_Core.hpp>
 #include <Core/Parallel/LoopExecution.hpp>
-
+#include <Core/Grid/Patch.h>
 namespace Uintah {
 
 
 template <typename T, typename MemorySpace = Kokkos::OpenMP>
 using KokkosData = Kokkos::View<T***, Kokkos::LayoutLeft, MemorySpace , Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+
 
 //For the default memory space
 template <typename T, typename MemorySpace = Kokkos::OpenMP>
@@ -70,6 +71,12 @@ struct KokkosView3
     initialize( T init_val){
       Uintah::parallel_for<ExecutionSpace>(*this,init_val );
     }
+
+};
+
+template <typename T>
+struct KokkosView3<const Uintah::Patch *, T>
+{
 
 };
 

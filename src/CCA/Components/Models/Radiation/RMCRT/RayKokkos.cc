@@ -44,8 +44,10 @@
 #include <sci_defs/kokkos_defs.h>
 #include <sci_defs/visit_defs.h>
 
+#if defined( UINTAH_ENABLE_KOKKOS )
 #include <Kokkos_Random.hpp>
 #include <Kokkos_Core.hpp>
+#endif
 
 #include <fstream>
 #include <iostream>
@@ -559,43 +561,43 @@ Ray::sched_rayTrace( const LevelP        & level
 
 //______________________________________________________________________
 //
-template <typename T, typename RandomGenerator>
+template <typename T, typename MemorySpace, typename RandomGenerator>
 struct rayTrace_solveDivQFunctor {
 
   typedef unsigned long int value_type;
   typedef typename RandomGenerator::generator_type rnd_type;
 
-  const LevelParams        m_levelParams;
-  RMCRT_flags              m_RT_flags;
-  bool                     m_latinHyperCube;
-  int                      m_d_nDivQRays;
-  bool                     m_d_CCRays;
-  double                   m_d_sigmaScat;
-  double                   m_d_threshold;
-  double                   m_d_maxRayLength;
-  KokkosView3<const T>     m_abskg;
-  KokkosView3<const T>     m_sigmaT4OverPi;
-  KokkosView3<const int>   m_celltype;
-  bool                     m_d_allowReflect;
-  KokkosView3<double>      m_divQ;
-  KokkosView3<double>      m_radiationVolq;
-  RandomGenerator          m_rand_pool;
+  const LevelParams                   m_levelParams;
+  RMCRT_flags                         m_RT_flags;
+  bool                                m_latinHyperCube;
+  int                                 m_d_nDivQRays;
+  bool                                m_d_CCRays;
+  double                              m_d_sigmaScat;
+  double                              m_d_threshold;
+  double                              m_d_maxRayLength;
+  KokkosView3<const T, MemorySpace>   m_abskg;
+  KokkosView3<const T, MemorySpace>   m_sigmaT4OverPi;
+  KokkosView3<const int, MemorySpace> m_celltype;
+  bool                                m_d_allowReflect;
+  KokkosView3<double, MemorySpace>    m_divQ;
+  KokkosView3<double, MemorySpace>    m_radiationVolq;
+  RandomGenerator                     m_rand_pool;
 
 
-  rayTrace_solveDivQFunctor( const LevelParams      & levelParams
-                           , RMCRT_flags            & RT_flags
-                           , bool                   & latinHyperCube
-                           , int                    & d_nDivQRays
-                           , bool                   & d_CCRays
-                           , double                 & d_sigmaScat
-                           , double                 & d_threshold
-                           , double                 & d_maxRayLength
-                           , KokkosView3<const T>   & abskg
-                           , KokkosView3<const T>   & sigmaT4OverPi
-                           , KokkosView3<const int> & celltype
-                           , bool                   & d_allowReflect
-                           , KokkosView3<double>    & divQ
-                           , KokkosView3<double>    & radiationVolq
+  rayTrace_solveDivQFunctor( const LevelParams                   & levelParams
+                           , RMCRT_flags                         & RT_flags
+                           , bool                                & latinHyperCube
+                           , int                                 & d_nDivQRays
+                           , bool                                & d_CCRays
+                           , double                              & d_sigmaScat
+                           , double                              & d_threshold
+                           , double                              & d_maxRayLength
+                           , KokkosView3<const T, MemorySpace>   & abskg
+                           , KokkosView3<const T, MemorySpace>   & sigmaT4OverPi
+                           , KokkosView3<const int, MemorySpace> & celltype
+                           , bool                                & d_allowReflect
+                           , KokkosView3<double, MemorySpace>    & divQ
+                           , KokkosView3<double, MemorySpace>    & radiationVolq
                            )
     : m_levelParams    ( levelParams )
     , m_RT_flags       ( RT_flags )
@@ -1830,7 +1832,7 @@ Ray::rayTrace_dataOnionLevels( DetailedTask* dtask,
     double domain_BB_Lo[3] = { domain_BB.min().x(), domain_BB.min().y(), domain_BB.min().z() };
     double domain_BB_Hi[3] = { domain_BB.max().x(), domain_BB.max().y(), domain_BB.max().z() };
 
-#ifdef HAVE_CUDA
+#if defined(HAVE_CUDA)
     // Get the GPU vars
     if ( std::is_same< Kokkos::Cuda , ExecutionSpace >::value ) {
       // The upcoming Kokkos views
@@ -1909,8 +1911,8 @@ Ray::rayTrace_dataOnionLevels( DetailedTask* dtask,
       }
 
     } // end if ( std::is_same< Kokkos::Cuda , ExecutionSpace >::value )
-#endif //#ifdef HAVE_CUDA
-
+#endif //#if defined(HAVE_CUDA)
+#if defined (KOKKOS_ENABLE_OPENMP)
     // Get the CPU vars
     if ( std::is_same< Kokkos::OpenMP , ExecutionSpace >::value ) {
       // Get all the coarse level variables (e.g. as long as it has a finer level)
@@ -2038,6 +2040,7 @@ Ray::rayTrace_dataOnionLevels( DetailedTask* dtask,
              << endl;
       }
     } //end of Kokkos OpenMP
+#endif //if defined(KOKKOS_ENABLE_OPENMP)
 
 #ifdef USE_TIMER
     PerPatch< double > ppTimer = timer().seconds();

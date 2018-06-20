@@ -31,7 +31,7 @@
 #include <Core/Geometry/IntVector.h>
 
 #include <sci_defs/kokkos_defs.h>
-#ifdef UINTAH_ENABLE_KOKKOS
+#if defined( UINTAH_ENABLE_KOKKOS ) && defined( KOKKOS_ENABLE_OPENMP )
 #include <Core/Grid/Variables/KokkosViews.h>
 #endif
 
@@ -128,10 +128,13 @@ template<class T> class Array3Window : public RefCounted {
         return data->get(i-offset.x(), j-offset.y(), k-offset.z());
       }
 
-#ifdef UINTAH_ENABLE_KOKKOS
-      inline KokkosView3<T, Kokkos::HostSpace> getKokkosView() const
+#if defined( UINTAH_ENABLE_KOKKOS ) && defined( KOKKOS_ENABLE_OPENMP )
+
+      template< typename U = T >
+      inline typename std::enable_if<!std::is_same<U, const Uintah::Patch*>::value, KokkosView3<U, Kokkos::HostSpace>>::type
+      getKokkosView() const
       {
-        return KokkosView3<T, Kokkos::HostSpace>(  Kokkos::subview(   data->getKokkosData()
+        return KokkosView3<U, Kokkos::HostSpace>(  Kokkos::subview(   data->getKokkosData()
                                  , Kokkos::pair<int,int>( lowIndex.x() - offset.x(), highIndex.x() - offset.x())
                                  , Kokkos::pair<int,int>( lowIndex.y() - offset.y(), highIndex.y() - offset.y())
                                  , Kokkos::pair<int,int>( lowIndex.z() - offset.z(), highIndex.z() - offset.z()) )
@@ -139,6 +142,13 @@ template<class T> class Array3Window : public RefCounted {
                               ,offset.y()
                               ,offset.z()
                             );
+      }
+
+      template< typename U = T >
+      inline typename std::enable_if<std::is_same<U, const Uintah::Patch*>::value, KokkosView3<U, Kokkos::HostSpace>>::type
+      getKokkosView() const
+      {
+        return KokkosView3<U, Kokkos::HostSpace>();
       }
 #endif //UINTAH_ENABLE_KOKKOS
 
