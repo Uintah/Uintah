@@ -141,7 +141,7 @@ struct sumHeatGasDestSource{
                            double& _enthalpy_scaling_constant,
                            double& _Ha0,
                            double& _mass_ash ) :
-#ifdef UINTAH_ENABLE_KOKKOS
+#if defined( KOKKOS_ENABLE_OPENMP )
                            qn_gas_dest(_qn_gas_dest.getKokkosView()),
                            pT(_pT.getKokkosView()),
                            pE(_pE.getKokkosView()),
@@ -170,11 +170,11 @@ struct sumHeatGasDestSource{
   }
 
   private:
-#ifdef UINTAH_ENABLE_KOKKOS
-   KokkosView3<const double> qn_gas_dest;
-   KokkosView3<const double> pT;
-   KokkosView3<const double> pE;
-   KokkosView3<double>  enthalpySrc;
+#if defined( KOKKOS_ENABLE_OPENMP )
+   KokkosView3<const double, Kokkos::HostSpace> qn_gas_dest;
+   KokkosView3<const double, Kokkos::HostSpace> pT;
+   KokkosView3<const double, Kokkos::HostSpace> pE;
+   KokkosView3<double, Kokkos::HostSpace>  enthalpySrc;
 #else
    constCCVariable<double>& qn_gas_dest;
    constCCVariable<double>& pT;
@@ -189,7 +189,7 @@ struct sumHeatGasDestSource{
 struct sumEnthalpyGasSource{
        sumEnthalpyGasSource(constCCVariable<double>& _qn_gas_enthalpy,
                            CCVariable<double>& _enthalpySrc) :
-#ifdef UINTAH_ENABLE_KOKKOS
+#if defined( KOKKOS_ENABLE_OPENMP )
                            qn_gas_enthalpy(_qn_gas_enthalpy.getKokkosView()),
                            enthalpySrc(_enthalpySrc.getKokkosView())
 #else
@@ -203,9 +203,9 @@ struct sumEnthalpyGasSource{
   }
 
   private:
-#ifdef UINTAH_ENABLE_KOKKOS
-   KokkosView3<const double> qn_gas_enthalpy;
-   KokkosView3<double>  enthalpySrc;
+#if defined( KOKKOS_ENABLE_OPENMP )
+   KokkosView3<const double, Kokkos::HostSpace> qn_gas_enthalpy;
+   KokkosView3<double, Kokkos::HostSpace>  enthalpySrc;
 #else
    constCCVariable<double>& qn_gas_enthalpy;
    CCVariable<double>& enthalpySrc;

@@ -106,7 +106,7 @@ struct sumCharOxyGasDestSource{
                            CCVariable<double>& _oxiSrc,
                            double& _w_scaling_constant,
                            double& _char_scaling_constant ) :
-#ifdef UINTAH_ENABLE_KOKKOS
+#if defined( KOKKOS_ENABLE_OPENMP)
                            qn_gas_dest(_qn_gas_dest.getKokkosView()),
                            oxiSrc(_oxiSrc.getKokkosView()),
                            char_scaling_constant(_char_scaling_constant),
@@ -124,9 +124,9 @@ struct sumCharOxyGasDestSource{
   }
 
   private:
-#ifdef UINTAH_ENABLE_KOKKOS
-   KokkosView3<const double> qn_gas_dest;
-   KokkosView3<double>  oxiSrc;
+#if defined( KOKKOS_ENABLE_OPENMP)
+   KokkosView3<const double, Kokkos::HostSpace> qn_gas_dest;
+   KokkosView3<double, Kokkos::HostSpace>  oxiSrc;
 #else
    constCCVariable<double>& qn_gas_dest;
    CCVariable<double>& oxiSrc;
@@ -137,7 +137,7 @@ struct sumCharOxyGasDestSource{
 struct sumCharOxyGasSource{
        sumCharOxyGasSource(constCCVariable<double>& _qn_gas_oxi,
                            CCVariable<double>& _oxiSrc) :
-#ifdef UINTAH_ENABLE_KOKKOS
+#if defined( KOKKOS_ENABLE_OPENMP)
                            qn_gas_oxi(_qn_gas_oxi.getKokkosView()),
                            oxiSrc(_oxiSrc.getKokkosView())
 #else
@@ -151,9 +151,9 @@ struct sumCharOxyGasSource{
   }
 
   private:
-#ifdef UINTAH_ENABLE_KOKKOS
-   KokkosView3<const double> qn_gas_oxi;
-   KokkosView3<double>  oxiSrc;
+#if defined( KOKKOS_ENABLE_OPENMP)
+   KokkosView3<const double, Kokkos::HostSpace> qn_gas_oxi;
+   KokkosView3<double, Kokkos::HostSpace>  oxiSrc;
 #else
    constCCVariable<double>& qn_gas_oxi;
    CCVariable<double>& oxiSrc;

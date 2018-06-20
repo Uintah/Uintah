@@ -66,7 +66,7 @@ namespace Uintah {
     IntegrateFlux(T& rhs, CFXT& flux_x,
                   CFYT& flux_y, CFZT& flux_z,
                   const Vector& Dx) :
-#ifdef UINTAH_ENABLE_KOKKOS
+#if defined ( KOKKOS_ENABLE_OPENMP )
     rhs(rhs.getKokkosView()), flux_x(flux_x.getKokkosView()), flux_y(flux_y.getKokkosView()),
     flux_z(flux_z.getKokkosView()),
 #else
@@ -88,11 +88,11 @@ namespace Uintah {
 
     private:
 
-#ifdef UINTAH_ENABLE_KOKKOS
-    KokkosView3<double> rhs;
-    KokkosView3<const double> flux_x;
-    KokkosView3<const double> flux_y;
-    KokkosView3<const double> flux_z;
+#if defined ( KOKKOS_ENABLE_OPENMP )
+    KokkosView3<double, Kokkos::HostSpace> rhs;
+    KokkosView3<const double, Kokkos::HostSpace> flux_x;
+    KokkosView3<const double, Kokkos::HostSpace> flux_y;
+    KokkosView3<const double, Kokkos::HostSpace> flux_z;
 #else
     T& rhs;
     CFXT& flux_x;

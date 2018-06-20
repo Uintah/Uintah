@@ -539,7 +539,7 @@ struct computeAMatrix{
                        areaTB(_areaTB),
                        vol(_vol),
                        intFlow(_intFlow),
-#ifdef UINTAH_ENABLE_KOKKOS
+#if defined( KOKKOS_ENABLE_OPENMP )
                        cellType(_cellType.getKokkosView()),
                        wallTemp(_wallTemp.getKokkosView()),
                        abskt(_abskt.getKokkosView()),
@@ -623,21 +623,21 @@ struct computeAMatrix{
 
 
 
-#ifdef UINTAH_ENABLE_KOKKOS
-       KokkosView3<const int> cellType;
-       KokkosView3<const double> wallTemp;
-       KokkosView3<const double> abskt;
+#if defined( KOKKOS_ENABLE_OPENMP )
+       KokkosView3<const int, Kokkos::HostSpace> cellType;
+       KokkosView3<const double, Kokkos::HostSpace> wallTemp;
+       KokkosView3<const double, Kokkos::HostSpace> abskt;
 
-       KokkosView3<double> srcIntensity;
-       KokkosView3<double> matrixB;
-       KokkosView3<double> west;
-       KokkosView3<double> south;
-       KokkosView3<double> bottom;
-       KokkosView3<double> center;
-       KokkosView3<double> scatSource;
-       KokkosView3<double> fluxX;
-       KokkosView3<double> fluxY;
-       KokkosView3<double> fluxZ;
+       KokkosView3<double, Kokkos::HostSpace> srcIntensity;
+       KokkosView3<double, Kokkos::HostSpace> matrixB;
+       KokkosView3<double, Kokkos::HostSpace> west;
+       KokkosView3<double, Kokkos::HostSpace> south;
+       KokkosView3<double, Kokkos::HostSpace> bottom;
+       KokkosView3<double, Kokkos::HostSpace> center;
+       KokkosView3<double, Kokkos::HostSpace> scatSource;
+       KokkosView3<double, Kokkos::HostSpace> fluxX;
+       KokkosView3<double, Kokkos::HostSpace> fluxY;
+       KokkosView3<double, Kokkos::HostSpace> fluxZ;
 #else
        constCCVariable<int>      &cellType;
        constCCVariable<double>   &wallTemp;
@@ -679,7 +679,7 @@ struct compute4Flux{
                    oeta(_oeta),  ///< absolute value of solid angle weighted y-component
                    oxi(_oxi),    ///< absolute value of solid angle weighted z-component
                    wt(_wt),
-#ifdef UINTAH_ENABLE_KOKKOS
+#if defined( KOKKOS_ENABLE_OPENMP )
                    intensity(_intensity.getKokkosView()),
                    fluxX(_fluxX.getKokkosView()) ,
                    fluxY(_fluxY.getKokkosView()) ,
@@ -712,12 +712,12 @@ struct compute4Flux{
        double  oxi;    ///< z-directional component
        double  wt;     ///< ordinate weight
 
-#ifdef UINTAH_ENABLE_KOKKOS
-       KokkosView3<constDouble_or_double> intensity; ///< intensity solution from linear solve
-       KokkosView3<double> fluxX;   ///< x-directional flux ( positive or negative direction)
-       KokkosView3<double> fluxY;   ///< y-directional flux ( positive or negative direction)
-       KokkosView3<double> fluxZ;   ///< z-directional flux ( positive or negative direction)
-       KokkosView3<double> volQ;    ///< Incident radiation
+#if defined( KOKKOS_ENABLE_OPENMP )
+       KokkosView3<constDouble_or_double, Kokkos::HostSpace> intensity; ///< intensity solution from linear solve
+       KokkosView3<double, Kokkos::HostSpace> fluxX;   ///< x-directional flux ( positive or negative direction)
+       KokkosView3<double, Kokkos::HostSpace> fluxY;   ///< y-directional flux ( positive or negative direction)
+       KokkosView3<double, Kokkos::HostSpace> fluxZ;   ///< z-directional flux ( positive or negative direction)
+       KokkosView3<double, Kokkos::HostSpace> volQ;    ///< Incident radiation
 #else
        constCCVar_or_CCVar& intensity; ///< intensity solution from linear solve
        CCVariable<double>& fluxX;  ///< x-directional flux ( positive or negative direction)
@@ -1517,7 +1517,7 @@ DORadiationModel::intensitysolveSweepOptimized( const Patch* patch,
     const int jEnd=_plusY[cdirecn] ? idxHi.y() : -idxLo.y();
     const int iEnd=_plusX[cdirecn] ? idxHi.x() : -idxLo.x();
 
-#ifdef UINTAH_ENABLE_KOKKOS
+#if defined ( KOKKOS_ENABLE_OPENMP )
     KokkosView3<const int, Kokkos::HostSpace>    kv_cellType    = cellType.getKokkosView() ;
     KokkosView3<const double, Kokkos::HostSpace> kv_emissSrc    = emissSrc.getKokkosView();
     KokkosView3<const double, Kokkos::HostSpace> kv_abskt       = abskt.getKokkosView() ;

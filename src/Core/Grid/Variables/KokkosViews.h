@@ -8,12 +8,12 @@
 namespace Uintah {
 
 
-template <typename T, typename MemorySpace = Kokkos::OpenMP>
+template <typename T, typename MemorySpace>
 using KokkosData = Kokkos::View<T***, Kokkos::LayoutLeft, MemorySpace , Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
 
 
 //For the default memory space
-template <typename T, typename MemorySpace = Kokkos::OpenMP>
+template <typename T, typename MemorySpace>
 struct KokkosView3
 {
   using view_type = Kokkos::View<T***, Kokkos::LayoutStride, MemorySpace, Kokkos::MemoryTraits<Kokkos::Unmanaged> >;
@@ -66,7 +66,7 @@ struct KokkosView3
   int       m_j{0};
   int       m_k{0};
 
-    template <typename ExecutionSpace=Kokkos::OpenMP>
+    template <typename ExecutionSpace>
     inline  void
     initialize( T init_val){
       Uintah::parallel_for<ExecutionSpace>(*this,init_val );
