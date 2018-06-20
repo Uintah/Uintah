@@ -24,6 +24,7 @@
 
 #include <CCA/Components/Examples/Poisson1.h>
 #include <CCA/Components/Examples/ExamplesLabel.h>
+#include <CCA/Components/Schedulers/DetailedTask.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <Core/Parallel/LoopExecution.hpp>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -45,6 +46,8 @@
 
 using namespace std;
 using namespace Uintah;
+
+class DetailedTask;
 
 //A sample supporting three modes of execution:
 //Kokkos CPU (UINTAH_ENABLE_KOKKOS is defined, but HAVE_CUDA is not defined)
@@ -282,7 +285,13 @@ void Poisson1::timeAdvance(DetailedTask* dtask,
     IntVector l = patch->getNodeLowIndex();
     IntVector h = patch->getNodeHighIndex();
 
-    Uintah::BlockRange rangeBoundary( stream, l, h);
+    int numKernels = dtask->getTask()->maxStreamsPerTask();
+    std::vector<void*> streams;
+    for (int i = 0; i < numKernels; i++) {
+      streams.push_back(dtask->getCudaStreamForThisTask(i));
+    }
+
+    Uintah::BlockRange rangeBoundary( streams, l, h);
 
     l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor ? 0 : 1,
                   patch->getBCType(Patch::yminus) == Patch::Neighbor ? 0 : 1,
@@ -291,7 +300,7 @@ void Poisson1::timeAdvance(DetailedTask* dtask,
                   patch->getBCType(Patch::yplus) == Patch::Neighbor ? 0 : 1,
                   patch->getBCType(Patch::zplus) == Patch::Neighbor ? 0 : 1);
 
-    Uintah::BlockRange range( stream, l, h );
+    Uintah::BlockRange range( streams, l, h );
 
     auto phi = static_cast<OnDemandDataWarehouse*>(old_dw)->getConstNCVariable<double, MemorySpace> (phi_label, matl, patch, Ghost::AroundNodes, 1);
     auto newphi = static_cast<OnDemandDataWarehouse*>(new_dw)->getNCVariable<double, MemorySpace> (phi_label, matl, patch);

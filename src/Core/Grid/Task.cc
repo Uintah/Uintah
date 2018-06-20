@@ -194,10 +194,17 @@ Task::usesThreads(bool state)
 //______________________________________________________________________
 //
 void
-Task::usesDevice(bool state, int maxStreamsPerTask /* = 1 */ )
+Task::usesDevice(bool state, int maxStreamsPerTask /* = -1 */ )
 {
   m_uses_device = state;
-  m_max_streams_per_task = maxStreamsPerTask;
+  if (maxStreamsPerTask == -1) {
+    // The default case, get it from a command line argument
+    m_max_streams_per_task = Uintah::Parallel::getCudaStreamsPerTask();
+  } else {
+    // Let the user override it
+    m_max_streams_per_task = maxStreamsPerTask;
+  }
+
 }
 
 //______________________________________________________________________

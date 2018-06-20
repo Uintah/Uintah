@@ -1362,7 +1362,7 @@ public: // class Task
          void usesThreads(bool state);
   inline bool usesThreads() const { return m_uses_threads; }
 
-         void usesDevice(bool state, int maxStreamsPerTask = 1);
+         void usesDevice(bool state, int maxStreamsPerTask = -1);
   inline bool usesDevice() const { return m_uses_device; }
   inline int  maxStreamsPerTask() const { return  m_max_streams_per_task; }
 

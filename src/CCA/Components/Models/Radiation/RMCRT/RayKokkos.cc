@@ -930,10 +930,8 @@ Ray::sched_rayTrace_dataOnion( const LevelP        & level
 
   auto TaskDependencies = [&](Task* task) {
 
-
-    // Allow use of up to 4 GPU streams per patch
     if (Parallel::usingDevice()) {
-      task->usesDevice(true, 4);
+      task->usesDevice(true);
     }
 
     printSchedule(level, g_ray_dbg, taskname);
