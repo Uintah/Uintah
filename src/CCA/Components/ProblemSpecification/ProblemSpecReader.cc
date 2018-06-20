@@ -2049,7 +2049,12 @@ ProblemSpecReader::readInputFile( const std::string & filename, const std::vecto
   } // end else
 
   if (doc == 0) {
-    throw ProblemSetupException( "Error parsing .ups file: " + full_filename , __FILE__, __LINE__ );
+    std::ostringstream msg;
+    msg<< "  Error parsing the .ups file ("<< full_filename << ").\n"
+       << "  You can identify the problem by using the command line XML tool xmllint: \n"
+       << "      xmllint validate " << full_filename <<" \n";
+  
+    throw ProblemSetupException( msg.str() , __FILE__, __LINE__ );
   }
 
   ProblemSpecP prob_spec = scinew ProblemSpec( xmlDocGetRootElement(doc), true );
