@@ -54,15 +54,17 @@ class MasterLock
 #if defined(_OPENMP)
       if (Parallel::getCpuThreadEnvironment() == Parallel::CpuThreadEnvironment::OPEN_MP_THREADS) {
         omp_set_lock( &m_lock );
+        mutex_locked_used = false;
         return;
       }
+      mutex_locked_used = true;
 #endif
       m_mutex.lock();
     }
 
     void unlock()   {
 #if defined(_OPENMP)
-      if (Parallel::getCpuThreadEnvironment() == Parallel::CpuThreadEnvironment::OPEN_MP_THREADS) {
+      if (!mutex_locked_used) {
         omp_unset_lock( &m_lock );
         return;
       }
@@ -71,20 +73,15 @@ class MasterLock
     }
 
     MasterLock()  {
+    // Initialize the locks (mutexes initialize themselves)
 #if defined(_OPENMP)
-      if (Parallel::getCpuThreadEnvironment() == Parallel::CpuThreadEnvironment::OPEN_MP_THREADS) {
-        omp_init_lock( &m_lock );
-        return;
-      }
+      omp_init_lock( &m_lock );
 #endif
     }
 
     ~MasterLock()  {
 #if defined(_OPENMP)
-      if (Parallel::getCpuThreadEnvironment() == Parallel::CpuThreadEnvironment::OPEN_MP_THREADS) {
-        omp_destroy_lock( &m_lock );
-        return;
-      }
+      omp_destroy_lock( &m_lock );
 #endif
     }
 
@@ -100,6 +97,7 @@ class MasterLock
     omp_lock_t m_lock;
 #endif
     std::mutex m_mutex;
+    bool mutex_locked_used{true};
 };
 } // end namespace Uintah
 
