@@ -41,7 +41,7 @@ class MasterLock
 {
 
   // Specific to OpenMP- and std::thread-based implementations
-  // To avoid mixing thread environment types (e.g. using mutexes in an OpenMP threaded environment,
+  // To avoid mixing thread environment types (e.g. using mutexes in an OpenMP threaded environment),
   // this class determines which kind of locking to use dependent on the parallel thread environment.
 
   // This lock should be used with a scoped lock guard
@@ -75,7 +75,7 @@ class MasterLock
     MasterLock()  {
     // Initialize the locks (mutexes initialize themselves)
 #if defined(_OPENMP)
-      omp_init_lock( &m_lock );Parallel::CpuThreadEnvironment::OPEN_MP_THREADS
+      omp_init_lock( &m_lock );
 #endif
     }
 
