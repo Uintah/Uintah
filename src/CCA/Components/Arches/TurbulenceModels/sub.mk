@@ -36,6 +36,10 @@ SRCS += \
 				$(SRCDIR)/DSFTv2.cc \
 				$(SRCDIR)/DSmaMMMLv2.cc \
 				$(SRCDIR)/WALE.cc \
+				$(SRCDIR)/FractalUD.cc \
+				$(SRCDIR)/FilterStress.cc \
+				$(SRCDIR)/MultifractalSGS.cc \
+				$(SRCDIR)/SGSforTransport.cc \
 				$(SRCDIR)/TurbulenceModelFactory.cc
 
 ########################################################################

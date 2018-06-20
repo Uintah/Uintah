@@ -111,6 +111,64 @@ namespace Uintah {
   struct RoeConvection{};
   struct SuperBeeConvection{};
 
+  template <typename PSIX_T, typename PSIY_T, typename PSIZ_T>
+  struct ComputeConvectiveFlux4{
+
+    ComputeConvectiveFlux4( const Array3<double>& i_phi,
+                           const Array3<double>& i_u, const Array3<double>& i_v,
+                           const Array3<double>& i_w,
+                           PSIX_T& i_psi_x, PSIY_T& i_psi_y,
+                           PSIZ_T& i_psi_z,
+                           Array3<double>& i_flux_x, Array3<double>& i_flux_y,
+                           Array3<double>& i_flux_z,
+                           const Array3<double>& i_eps ) :
+      phi(i_phi), u(i_u), v(i_v), w(i_w), psi_x(i_psi_x), psi_y(i_psi_y), psi_z(i_psi_z),
+      flux_x(i_flux_x), flux_y(i_flux_y), flux_z(i_flux_z), eps(i_eps)
+      {}
+
+    void
+    operator()(int i, int j, int k ) const {
+      double c1 = 7./12.; 
+      double c2 = -1./12.; 
+      
+      //std::cout<<"fourth convection"<< std::endl;
+
+      //X-dir
+      {
+        STENCIL5_1D(0);
+        const double afc = ( eps(IJK_) + eps(IJK_M_) ) / 2. < 0.51 ? 0.0 : 1.0;
+        flux_x(IJK_) = afc * u(IJK_) * ( c1*(phi(IJK_) + phi(IJK_M_)) + c2*(phi(IJK_MM_) + phi(IJK_P_)) ) ;
+      }
+      //Y-dir
+      {
+        STENCIL5_1D(1);
+        const double afc = ( eps(IJK_) + eps(IJK_M_) ) / 2. < 0.51 ? 0.0 : 1.0;
+        flux_y(IJK_) = afc * v(IJK_) * ( c1*(phi(IJK_) + phi(IJK_M_)) + c2*(phi(IJK_MM_) + phi(IJK_P_)) );
+      }
+      //Z-dir
+      {
+        STENCIL5_1D(2);
+        const double afc = ( eps(IJK_) + eps(IJK_M_) ) / 2. < 0.51 ? 0.0 : 1.0;
+        flux_z(IJK_) = afc * w(IJK_) * ( c1*(phi(IJK_) + phi(IJK_M_)) + c2*(phi(IJK_MM_) + phi(IJK_P_)) );
+      }
+    }
+
+  private:
+
+    const Array3<double>& phi;
+    const Array3<double>& u;
+    const Array3<double>& v;
+    const Array3<double>& w;
+    PSIX_T& psi_x;
+    PSIY_T& psi_y;
+    PSIZ_T& psi_z;
+    Array3<double>& flux_x;
+    Array3<double>& flux_y;
+    Array3<double>& flux_z;
+    const Array3<double>& eps;
+
+  };
+
   /**
       @struct ComputeConvectiveFlux
       @brief Compute a convective flux given psi (flux limiter) with this functor.

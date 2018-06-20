@@ -106,6 +106,8 @@ private:
 
     int m_ghost_cells;
 
+    ArchesCore::INTERPOLANT m_int_scheme;
+
     std::string m_x_velocity_name;
     std::string m_y_velocity_name;
     std::string m_z_velocity_name;

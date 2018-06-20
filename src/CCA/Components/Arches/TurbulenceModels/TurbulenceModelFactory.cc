@@ -12,6 +12,10 @@
 #include <CCA/Components/Arches/TurbulenceModels/DSFTv2.h>
 #include <CCA/Components/Arches/TurbulenceModels/DSmaCsv2.h>
 #include <CCA/Components/Arches/TurbulenceModels/DSmaMMMLv2.h>
+#include <CCA/Components/Arches/TurbulenceModels/FractalUD.h>
+#include <CCA/Components/Arches/TurbulenceModels/FilterStress.h>
+#include <CCA/Components/Arches/TurbulenceModels/MultifractalSGS.h>
+#include <CCA/Components/Arches/TurbulenceModels/SGSforTransport.h>
 
 using namespace Uintah;
 
@@ -109,6 +113,58 @@ TurbulenceModelFactory::register_all_tasks( ProblemSpecP& db )
           register_task( name, tsk_builder3 );
           m_momentum_closure_tasks.push_back(name);
         }
+      
+      } else if (type == "multifractal"){
+        
+        TaskController& tsk_controller = TaskController::self();
+        const TaskController::Packing& packed_tasks = tsk_controller.get_packing_info();
+
+        if ( packed_tasks.turbulence ){
+        
+         name="fractal_UD";
+        TaskInterface::TaskBuilder* tsk_builder = scinew FractalUD::Builder( name, 0 );
+        register_task( name, tsk_builder );
+        m_momentum_closure_tasks.push_back(name);
+        
+        name="MultifractalSGS";
+        TaskInterface::TaskBuilder* tsk_builder2 = scinew MultifractalSGS::Builder( name, 0 );
+        register_task( name, tsk_builder2 );
+        m_momentum_closure_tasks.push_back(name);
+        
+        name="FilterOperatorStress";
+        TaskInterface::TaskBuilder* tsk_builder4 = scinew FilterStress::Builder( name, 0 );
+        register_task( name, tsk_builder4 );
+        m_momentum_closure_tasks.push_back(name);
+        
+        name="TransportCouple";
+        TaskInterface::TaskBuilder* tsk_builder3 = scinew SGSforTransport::Builder( name, 0 );
+        register_task( name, tsk_builder3 );
+        m_momentum_closure_tasks.push_back(name);
+        
+        } else {
+        
+        name="fractal_UD";
+        TaskInterface::TaskBuilder* tsk_builder = scinew FractalUD::Builder( name, 0 );
+        register_task( name, tsk_builder );
+        m_momentum_closure_tasks.push_back(name);
+        
+        name="MultifractalSGS";
+        TaskInterface::TaskBuilder* tsk_builder2 = scinew MultifractalSGS::Builder( name, 0 );
+        register_task( name, tsk_builder2 );
+        m_momentum_closure_tasks.push_back(name);
+        
+        name="FilterOperatorStress";
+        TaskInterface::TaskBuilder* tsk_builder4 = scinew FilterStress::Builder( name, 0 );
+        register_task( name, tsk_builder4 );
+        m_momentum_closure_tasks.push_back(name);
+        
+        name="TransportCouple";
+        TaskInterface::TaskBuilder* tsk_builder3 = scinew SGSforTransport::Builder( name, 0 );
+        register_task( name, tsk_builder3 );
+        m_momentum_closure_tasks.push_back(name);
+        
+        }
+
       } else if (type == "dynamic_smagorinsky_v2"){
 
         TaskController& tsk_controller = TaskController::self();
@@ -208,6 +264,28 @@ TurbulenceModelFactory::build_all_tasks( ProblemSpecP& db )
         TaskInterface* tsk3 = retrieve_task(name);
         tsk3->problemSetup(db_model);
         tsk3->create_local_labels();
+      }else if (type == "multifractal" ) {
+
+         name="fractal_UD";
+        TaskInterface* tsk = retrieve_task(name);
+        tsk->problemSetup(db_model);
+        tsk->create_local_labels();
+        
+        name="MultifractalSGS";
+        TaskInterface* tsk2 = retrieve_task(name);
+        tsk2->problemSetup(db_model);
+        tsk2->create_local_labels();
+        
+        name="FilterOperatorStress";
+        TaskInterface* tsk4 = retrieve_task(name);
+        tsk4->problemSetup(db_model);
+        tsk4->create_local_labels();
+        
+        name="TransportCouple";
+        TaskInterface* tsk3 = retrieve_task(name);
+        tsk3->problemSetup(db_model);
+        tsk3->create_local_labels();
+      
       } else {
 
         TaskInterface* tsk = retrieve_task(name);
