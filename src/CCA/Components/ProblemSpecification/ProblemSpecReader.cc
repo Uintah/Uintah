@@ -2051,7 +2051,7 @@ ProblemSpecReader::readInputFile( const std::string & filename, const std::vecto
   if (doc == 0) {
     std::ostringstream msg;
     msg<< "  Error parsing the .ups file ("<< full_filename << ").\n"
-       << "  You can identify the problem by using the command line XML tool xmllint: \n"
+       << "  The command line XML tool \"xmllint\" _may_ help identify the problem: \n"
        << "      xmllint validate " << full_filename <<" \n";
   
     throw ProblemSetupException( msg.str() , __FILE__, __LINE__ );
