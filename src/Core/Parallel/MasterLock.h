@@ -75,7 +75,7 @@ class MasterLock
     MasterLock()  {
     // Initialize the locks (mutexes initialize themselves)
 #if defined(_OPENMP)
-      omp_init_lock( &m_lock );
+      omp_init_lock( &m_lock );Parallel::CpuThreadEnvironment::OPEN_MP_THREADS
 #endif
     }
 
