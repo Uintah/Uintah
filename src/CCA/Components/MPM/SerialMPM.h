@@ -108,6 +108,10 @@ public:
                                   
   virtual void scheduleRestartInitialize(const LevelP& level,
                                          SchedulerP& sched);
+                                         
+  virtual bool restartableTimesteps();
+
+  virtual double recomputeTimestep(double current_dt);
 
   virtual void restartInitialize();
 

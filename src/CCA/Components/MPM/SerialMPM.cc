@@ -149,6 +149,8 @@ SerialMPM::~SerialMPM()
   }
 }
 
+
+
 void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
                              const ProblemSpecP& restart_prob_spec,
                              GridP& grid,
@@ -1480,6 +1482,7 @@ void SerialMPM::scheduleFinalParticleUpdate(SchedulerP& sched,
   t->requires(Task::NewDW, lb->pdTdtLabel,                      gnone);
   t->requires(Task::NewDW, lb->pLocalizedMPMLabel_preReloc,     gnone);
   t->requires(Task::NewDW, lb->pMassLabel_preReloc,             gnone);
+  t->requires(Task::NewDW, lb->pParticleIDLabel_preReloc,       gnone);
 
   t->modifies(lb->pTemperatureLabel_preReloc);
 
@@ -4172,26 +4175,30 @@ void SerialMPM::finalParticleUpdate(const ProcessorGroup*,
     old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
 
     int numMPMMatls=d_sharedState->getNumMPMMatls();
+    
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
       // Get the arrays of particle values to be changed
-      constParticleVariable<int> pLocalized;
-      constParticleVariable<double> pdTdt,pmassNew;
+      constParticleVariable<int>    pLocalized;
+      constParticleVariable<double> pdTdt;
+      constParticleVariable<double> pmassNew;
+      constParticleVariable<long64> pids;
       ParticleVariable<double> pTempNew;
+      
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
       ParticleSubset* delset = scinew ParticleSubset(0, dwi, patch);
 
-      new_dw->get(pdTdt,        lb->pdTdtLabel,                      pset);
-      new_dw->get(pmassNew,     lb->pMassLabel_preReloc,             pset);
-      new_dw->get(pLocalized,   lb->pLocalizedMPMLabel_preReloc,     pset);
+      new_dw->get(pdTdt,        lb->pdTdtLabel,                  pset);
+      new_dw->get(pmassNew,     lb->pMassLabel_preReloc,         pset);
+      new_dw->get(pLocalized,   lb->pLocalizedMPMLabel_preReloc, pset);
+      new_dw->get(pids,         lb->pParticleIDLabel_preReloc,   pset);
 
       new_dw->getModifiable(pTempNew, lb->pTemperatureLabel_preReloc,pset);
-
+      
       // Loop over particles
-      for(ParticleSubset::iterator iter = pset->begin();
-          iter != pset->end(); iter++){
+      for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++){
         particleIndex idx = *iter;
         pTempNew[idx] += pdTdt[idx]*delT;
 
@@ -4199,14 +4206,28 @@ void SerialMPM::finalParticleUpdate(const ProcessorGroup*,
         // whose pLocalized flag has been set to -999 or who have a negative temperature
         if ((pmassNew[idx] <= flags->d_min_part_mass) || pTempNew[idx] < 0. ||
              (pLocalized[idx]==-999)){
-          std::cout << "Deleting particle: " << idx << " of type " << dwi << " with "
+          std::cout << "Deleting particle ID: " << pids[idx] << " matl: " << dwi << " with "
                     << " mass: " << pmassNew[idx] << " Temp: " << pTempNew[idx]
-                    << " Localized: " << pLocalized[idx] << std::endl;
+                    << " Localized: " << pLocalized[idx] << "\n";
           delset->addParticle(idx);
         }
-
       } // particles
+       
+      //__________________________________
+      //  request timestep restart
+      if( delset->numParticles() > flags->d_restartTimestepVars->maxDeletedParticles ){
+        std::cout << "  WARNING a large number of particles ("<< delset->numParticles() 
+                  <<") will be deleted.  Requesting that this timestep be recomputed using a lower delT"  "\n";
+        new_dw->abortTimestep();
+        new_dw->restartTimestep();
+       
+        // zero out the delete particle set;
+        ParticleSubset* empty = scinew ParticleSubset(0, dwi, patch);
+        delset = empty;
+      }
+      
       new_dw->deleteParticles(delset);
+    
     } // materials
   } // patches
 }
@@ -5346,8 +5367,9 @@ SerialMPM::refine(const ProcessorGroup*,
 
 } // end refine()
 
-bool
-SerialMPM::needRecompile( double, double, const GridP& )
+//______________________________________________________________________
+//
+bool SerialMPM::needRecompile( double, double, const GridP& )
 {
   if( d_recompile ){
     d_recompile = false;
@@ -5357,6 +5379,20 @@ SerialMPM::needRecompile( double, double, const GridP& )
     return false;
   }
 }
+//______________________________________________________________________
+//
+bool SerialMPM::restartableTimesteps()
+{
+  return true;
+}
+//______________________________________________________________________
+//
+double SerialMPM::recomputeTimestep(double current_dt)
+{
+  return current_dt * 0.1;
+}
+
+
 
 void SerialMPM::scheduleConcInterpolated(      SchedulerP  & sched   ,
                                          const PatchSet    * patches ,

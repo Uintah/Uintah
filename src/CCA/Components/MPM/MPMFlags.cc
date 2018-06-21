@@ -104,6 +104,10 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_reductionVars->volDeformed      = false;
   d_reductionVars->centerOfMass     = false;
 
+  d_restartTimestepVars = scinew restartTimestep();
+  d_restartTimestepVars->maxDeletedParticles = INT_MAX;
+
+
   //******* Reactive Flow Component
   d_doScalarDiffusion   =  false;  // for diffusion component found  in ReactiveFlow
   d_doAutoCycleBC       =  false;  // for scalar flux boundary conditions
@@ -226,6 +230,10 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   mpm_flag_ps->get("minimum_subcycles_for_F",           d_min_subcycles_for_F);
   mpm_flag_ps->get("minimum_mass_for_acc",              d_min_mass_for_acceleration);
   mpm_flag_ps->get("maximum_particle_velocity",         d_max_vel);
+  
+  // Flags for restarting a timestep (TSR: TimeStep Restart)
+  mpm_flag_ps->get("TSR_max_particles_deleted",        d_restartTimestepVars->maxDeletedParticles);
+  
   mpm_flag_ps->get("UsePrescribedDeformation",          d_prescribeDeformation);
 
   if(d_prescribeDeformation){

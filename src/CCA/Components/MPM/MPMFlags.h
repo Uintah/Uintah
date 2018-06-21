@@ -132,6 +132,12 @@ namespace Uintah {
     };
     reductionVars* d_reductionVars;
     
+    // Flags for deciding when to restart a timestep
+    struct restartTimestep{
+      unsigned int  maxDeletedParticles;               // Restart a timestep if large number of particles are deleted on a patch
+    };
+    restartTimestep* d_restartTimestepVars;
+    
     
     const ProcessorGroup* d_myworld;
 
