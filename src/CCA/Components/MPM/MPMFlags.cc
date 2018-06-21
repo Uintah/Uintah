@@ -434,6 +434,8 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("minimum_subcycles_for_F",            d_min_subcycles_for_F);
   ps->appendElement("minimum_mass_for_acc",               d_min_mass_for_acceleration);
   ps->appendElement("maximum_particle_velocity",          d_max_vel);
+  ps->appendElement("TSR_max_particles_deleted",          d_restartTimestepVars->maxDeletedParticles);
+
   ps->appendElement("UsePrescribedDeformation",           d_prescribeDeformation);
 
   if(d_prescribeDeformation){
