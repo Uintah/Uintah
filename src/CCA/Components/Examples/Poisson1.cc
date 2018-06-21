@@ -285,11 +285,17 @@ void Poisson1::timeAdvance(DetailedTask* dtask,
     IntVector l = patch->getNodeLowIndex();
     IntVector h = patch->getNodeHighIndex();
 
-    int numKernels = dtask->getTask()->maxStreamsPerTask();
     std::vector<void*> streams;
+
+#ifdef HAVE_CUDA
+
+    int numKernels = dtask->getTask()->maxStreamsPerTask();
+
     for (int i = 0; i < numKernels; i++) {
       streams.push_back(dtask->getCudaStreamForThisTask(i));
     }
+
+#endif
 
     Uintah::BlockRange rangeBoundary( streams, l, h);
 
