@@ -2032,13 +2032,13 @@ CharOxidationps<T>::eval( const Patch                 * patch
       _MW_species_pod[ns] = _MW_species[ns];
     }
 
-    int numKernels = dtask->getTask()->maxStreamsPerTask();
-    std::vector<void*> streams;
-    for (int i = 0; i < numKernels; i++) {
-      streams.push_back(dtask->getCudaStreamForThisTask(i));
-    }
+    //int numKernels = dtask->getTask()->maxStreamsPerTask();
+    //std::vector<void*> streams;
+    //for (int i = 0; i < numKernels; i++) {
+    //  streams.push_back(dtask->getCudaStreamForThisTask(i));
+    //}
 
-    Uintah::BlockRange range_E( streams, patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+    Uintah::BlockRange range_E( stream, patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
 
     initializeDataFunctor< Kokkos::CudaSpace, T, CT > initFunc ( char_rate
                                                                , gas_char_rate
@@ -2050,7 +2050,7 @@ CharOxidationps<T>::eval( const Patch                 * patch
 
     Uintah::parallel_for< Kokkos::Cuda >( range_E, initFunc );
 
-    Uintah::BlockRange range( streams, patch->getCellLowIndex(), patch->getCellHighIndex() );
+    Uintah::BlockRange range( stream, patch->getCellLowIndex(), patch->getCellHighIndex() );
 
     solveFunctor< Kokkos::CudaSpace, T, CT > func( volFraction
                                                  ,  weight
