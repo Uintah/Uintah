@@ -2012,9 +2012,9 @@ DataArchiver::writeGridBinary( const bool hasGlobals, const string & grid_path, 
   FILE * fp;
   int marker = DataArchive::GRID_MAGIC_NUMBER;
 
-  string grim_filename = grid_path + "grid.xml";
+  string grid_filename = grid_path + "grid.xml";
 
-  fp = fopen( grim_filename.c_str(), "wb" );
+  fp = fopen( grid_filename.c_str(), "wb" );
   fwrite( &marker, sizeof(int), 1, fp );
 
   // NUmber of Levels
