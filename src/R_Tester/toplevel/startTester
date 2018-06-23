@@ -43,7 +43,9 @@ if [ "$MACHINE" == "uintah-build" ]; then
   
   # Where the webpage will be, and init webpage
   # Note you need the following directory structure:
-  #     public_html/          
+  #     public_html/ 
+  #       opt/
+  #       dbg/         
   #       Plots/
   #          Memory/
   #          simRunTime/

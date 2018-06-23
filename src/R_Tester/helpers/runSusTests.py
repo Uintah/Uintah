@@ -185,7 +185,7 @@ def runSusTests(argv, TESTS, application, callback = nullCallback):
     do_plots = 1
     try:
       outputpath    = "%s-%s" % (environ['HTMLLOG'], dbg_opt)
-      weboutputpath = "%s-%s" % (environ['WEBLOG'],  dbg_opt)
+      weboutputpath = "%s/%s" % (environ['WEBLOG'],  dbg_opt)
     except Exception:
       pass
 
