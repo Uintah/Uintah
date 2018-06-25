@@ -38,8 +38,8 @@
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/InfoMapper.h>
 
-#include <set>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 namespace Uintah {
@@ -137,9 +137,9 @@ public:
   /// receive data from.
   virtual void createNeighborhoods( const GridP& grid, const GridP& oldGrid,  const bool hasDistalReqs = false);
 
-  virtual const std::set<int>& getNeighborhoodProcessors() { return m_neighborhood_processors; }
+  virtual const std::unordered_set<int>& getNeighborhoodProcessors() { return m_neighborhood_processors; }
 
-  virtual const std::set<int>& getDistalNeighborhoodProcessors() { return m_distal_neighborhood_processors; }
+  virtual const std::unordered_set<int>& getDistalNeighborhoodProcessors() { return m_distal_neighborhood_processors; }
 
   /// Asks the load balancer if a patch in the patch subset is in the neighborhood.
   virtual bool inNeighborhood( const PatchSubset * pss, const bool hasDistalReqs = false );
@@ -248,11 +248,11 @@ protected:
 
   SimulationStateP          m_sharedState;            ///< to keep track of timesteps
   Scheduler               * m_scheduler {nullptr};     ///< store the scheduler to not have to keep passing it in
-  std::set<const Patch*>    m_neighbors;               ///< the neighborhood.  See createNeighborhood
-  std::set<int>             m_neighborhood_processors; ///< a list of processors that are in this processors neighborhood
+  std::unordered_set<const Patch*>    m_neighbors;               ///< the neighborhood.  See createNeighborhood
+  std::unordered_set<int>             m_neighborhood_processors; ///< a list of processors that are in this processors neighborhood
   
-  std::set<const Patch*>    m_distal_neighbors;               ///< the wide-area, or global neighborhood.  See createNeighborhood
-  std::set<int>             m_distal_neighborhood_processors; ///< a list of wider-area processors that are in this processors neighborhood
+  std::unordered_set<const Patch*>    m_distal_neighbors;               ///< the wide-area, or global neighborhood.  See createNeighborhood
+  std::unordered_set<int>             m_distal_neighborhood_processors; ///< a list of wider-area processors that are in this processors neighborhood
 
   //! output on every nth processor.  This variable needs to be shared 
   //! with the DataArchiver as well, but we keep it here because the lb
@@ -283,11 +283,11 @@ private:
   LoadBalancerCommon( LoadBalancerCommon && )                 = delete;
   LoadBalancerCommon& operator=( LoadBalancerCommon && )      = delete;
 
-  void addPatchesAndProcsToNeighborhood( const Level * const level,
-                                         const IntVector& low,
-                                         const IntVector& high,
-                                         std::set<const Patch*>& neighbors,
-                                         std::set<int>& processors);
+  void addPatchesAndProcsToNeighborhood( const Level                      * const level
+                                       , const IntVector                  & low
+                                       , const IntVector                  & high
+                                       , std::unordered_set<const Patch*> & neighbors
+                                       , std::unordered_set<int>          & processors);
 };
 
 } // namespace Uintah

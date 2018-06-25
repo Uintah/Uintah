@@ -46,7 +46,6 @@
 #include <iostream>
 #include <map>
 #include <memory>
-#include <set>
 
 
 using namespace Uintah;
@@ -227,8 +226,8 @@ TaskGraph::createDetailedTasks(       bool    useInternalDeps
 
   m_load_balancer->createNeighborhoods(grid, oldGrid, hasDistalReqs);
 
-  const std::set<int> local_procs  = m_load_balancer->getNeighborhoodProcessors();
-  const std::set<int> distal_procs = m_load_balancer->getDistalNeighborhoodProcessors();
+  const std::unordered_set<int> local_procs  = m_load_balancer->getNeighborhoodProcessors();
+  const std::unordered_set<int> distal_procs = m_load_balancer->getDistalNeighborhoodProcessors();
 
   m_detailed_tasks = scinew DetailedTasks(m_scheduler, m_proc_group, this, (hasDistalReqs ? distal_procs : local_procs), useInternalDeps );
  
@@ -478,7 +477,7 @@ TaskGraph::createDetailedTasks(       bool    useInternalDeps
       // only create OncePerProc tasks and output tasks once on each processor.
       if (task->getType() == Task::OncePerProc || task->getType() == Task::Hypre) {
         // only schedule this task on processors in the neighborhood
-        const std::set<int> neighborhood_procs = (task->m_max_ghost_cells.at(levelID) >= MAX_HALO_DEPTH) ? distal_procs : local_procs;
+        const std::unordered_set<int> neighborhood_procs = (task->m_max_ghost_cells.at(levelID) >= MAX_HALO_DEPTH) ? distal_procs : local_procs;
         for (auto p = neighborhood_procs.begin(); p != neighborhood_procs.end(); ++p) {
           const PatchSubset* pss = ps->getSubset(*p);
           for (int m = 0; m < ms->size(); m++) {

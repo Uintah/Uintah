@@ -46,6 +46,7 @@
 #include <climits>
 #include <iomanip>
 #include <sstream>
+#include <unordered_set>
 
 using namespace Uintah;
 
@@ -179,7 +180,7 @@ LoadBalancerCommon::assignResources( DetailedTasks & graph )
         // patch-less task, not execute-once, set to run on all procs
         // once per patch subset (empty or not)
         // at least one example is the multi-level (impAMRICE) pressureSolve
-        for (std::set<int>::iterator p = m_neighborhood_processors.begin(); p != m_neighborhood_processors.end(); p++) {
+        for (std::unordered_set<int>::iterator p = m_neighborhood_processors.begin(); p != m_neighborhood_processors.end(); p++) {
           int i = (*p);
           if (patches == task->getTask()->getPatchSet()->getSubset(i)) {
             task->assignResource(i);
@@ -504,6 +505,7 @@ LoadBalancerCommon::createPerProcessorPatchSet( const LevelP & level )
     PatchSubset* subset = patches->getSubset(proc);
     subset->add(patch);
   }
+
   patches->sortSubsets();
   return patches;
 }
@@ -526,8 +528,16 @@ LoadBalancerCommon::createPerProcessorPatchSet( const GridP & grid )
       ASSERTRANGE(proc, 0, d_myworld->nRanks());
       PatchSubset* subset = patches->getSubset(proc);
       subset->add(patch);
+
+      // DEBUG: report patch level assignment
+      if (g_patch_assignment) {
+        std::ostringstream mesg;
+        mesg << "Patch: " << patch->getID() << " is on level:" << patch->getLevel()->getIndex();
+        DOUTP0(true, mesg.str());
+      }
     }
   }
+
   patches->sortSubsets();
 
   // DEBUG: report per-proc patch assignment
@@ -803,11 +813,11 @@ LoadBalancerCommon::createNeighborhoods( const GridP & grid
 //______________________________________________________________________
 //
 void
-LoadBalancerCommon::addPatchesAndProcsToNeighborhood( const Level                  * const level
-                                                    , const IntVector              & low
-                                                    , const IntVector              & high
-                                                    ,       std::set<const Patch*> & neighbors
-                                                    ,       std::set<int>          & processors
+LoadBalancerCommon::addPatchesAndProcsToNeighborhood( const Level                            * const level
+                                                    , const IntVector                        & low
+                                                    , const IntVector                        & high
+                                                    ,       std::unordered_set<const Patch*> & neighbors
+                                                    ,       std::unordered_set<int>          & processors
                                                     )
 {
   Patch::selectType neighborPatches;
