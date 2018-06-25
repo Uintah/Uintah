@@ -32,14 +32,18 @@ if [ "$OS" = "Linux" ]; then
   #  machine specific variables
   if [ "$MACHINE" == "uintah-build" ]; then
 
-    COMMON="      --with-mpi=built-in\\
+    COMMON="      --with-mpi=/usr/lib/x86_64-linux-gnu/openmpi\\
+     --with-hypre-lib=/usr/lib/x86_64-linux-gnu \\
+     --with-hypre-include=/usr/include/hypre \\
      --with-boost=/usr/ \\
      --enable-all-components \\
      --enable-wasatch_3p \\
      --enable-ray-scatter \\"
 
     if [ "$LOGNAME" == "gpu_rt" ]; then
-      COMMON="      --with-mpi=built-in \\
+      COMMON="      --with-mpi=/usr/lib/x86_64-linux-gnu/openmpi\\
+      --with-hypre-lib=/usr/lib/x86_64-linux-gnu \\
+      --with-hypre-include=/usr/include/hypre \\
       --with-cuda=/usr/lib/nvidia-cuda-toolkit \\
       --with-boost=/usr/ \\
       --enable-gencode=52 \\
