@@ -1609,7 +1609,7 @@ CharOxidationps<T>::eval( const Patch                 * patch
 
   Uintah::parallel_for< UintahSpaces::CPU >( range, func );
 
-#elif defined( KOKKOS_ENABLE_OPENMP )
+#elif defined(KOKKOS_ENABLE_OPENMP) && !defined(KOKKOS_ENABLE_CUDA) 
   if ( std::is_same< Kokkos::OpenMP , ExecutionSpace >::value ) {
 
     //The KOKKOS OPENMP version
