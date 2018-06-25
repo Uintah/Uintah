@@ -1609,7 +1609,7 @@ CharOxidationps<T>::eval( const Patch                 * patch
 
   Uintah::parallel_for< UintahSpaces::CPU >( range, func );
 
-#elif defined(KOKKOS_ENABLE_OPENMP) && !defined(KOKKOS_ENABLE_CUDA) 
+#elif defined(KOKKOS_ENABLE_OPENMP) 
   if ( std::is_same< Kokkos::OpenMP , ExecutionSpace >::value ) {
 
     //The KOKKOS OPENMP version
@@ -1818,7 +1818,7 @@ CharOxidationps<T>::eval( const Patch                 * patch
     Uintah::parallel_for< Kokkos::OpenMP >( range, func );
 
   }
-#elif defined ( KOKKOS_ENABLE_CUDA )
+#if defined ( KOKKOS_ENABLE_CUDA )
   if ( std::is_same< Kokkos::Cuda , ExecutionSpace >::value ) {
 
     const int _time_substep = tsk_info->get_time_substep();
@@ -2127,6 +2127,8 @@ CharOxidationps<T>::eval( const Patch                 * patch
     Uintah::parallel_for< Kokkos::Cuda >( range, func );
 
   }
+
+#endif // if !defined(UINTAH_ENABLE_CUDA)
 #endif // if !defined(UINTAH_ENABLE_KOKKOS)
 }
 //--------------------------------------------------------------------------------------------------
