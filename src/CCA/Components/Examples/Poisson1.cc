@@ -312,6 +312,7 @@ void Poisson1::timeAdvance(DetailedTask* dtask,
     auto newphi = static_cast<OnDemandDataWarehouse*>(new_dw)->getNCVariable<double, MemorySpace> (phi_label, matl, patch);
 
     // Perform the boundary condition of copying over prior initialized values.  (TODO:  Replace with boundary condition)
+    //Uintah::parallel_for<ExecutionSpace, LaunchBounds< 640,1 > >( executionObject, rangeBoundary, KOKKOS_LAMBDA(int i, int j, int k){
     Uintah::parallel_for<ExecutionSpace>( rangeBoundary, KOKKOS_LAMBDA(int i, int j, int k){
         newphi(i, j, k) = phi(i,j,k);
     });
