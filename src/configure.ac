@@ -4068,15 +4068,6 @@ if test "$with_boost" != NOT_SET; then
    elif test "$with_boost" != "/usr"; then
       # Do not put /usr in the path, it is automatically there.
 
-      if test "$USING_GCC" = "yes" -o "$USING_ICC" = "yes"; then
-         # If configure specifies a boost dir, then ignore the system dirs to avoid 
-         # finding the wrong version of boost.  I know that "--sysroot" works with gcc and icc...
-
-	if test "$IS_OSX" = "no"; then
-         ignore_sys_libs="--sysroot=/junk"
-	fi
-      fi
-
       BOOST_INCLUDE_DIR=$with_boost/include
       BOOST_LIBRARY_DIR=$with_boost/lib
    fi
@@ -4095,7 +4086,21 @@ if test "$with_boost_library" != NOT_SET -o "$with_boost_include" != NOT_SET; th
    BOOST_LIBRARY_DIR=$with_boost_library
 fi
 
+
 if test "$with_boost" != NOT_SET -o "$with_boost_library" != NOT_SET; then
+
+  # If configure specifies a boost dir, then ignore the system dirs to avoid 
+  # finding the wrong version of boost.  I know that "--sysroot" works with gcc and icc...
+  # but does not work on osx...
+  # Note: [[[ (in configure.ac) is necessary because autoconf strips out one "["
+
+  if [[[ "$IS_OSX" = "no" ]]]; then
+      # The outdated gcc environment that we are forced to use on ALCF's mira (BGQ) machine
+      # does not support the "sysroot" flag.
+      if [[[ "$USING_ICC" = "yes" ]]] || ( [[[ "$USING_GCC" = "yes" ]]] && [[[ `hostname` != mira* ]]] ); then
+          ignore_sys_libs="--sysroot=/junk"
+      fi
+  fi
 
   _boost_incl="boost/signal.hpp boost/shared_ptr.hpp boost/bind.hpp boost/signal.hpp boost/ref.hpp boost/graph/adjacency_list.hpp boost/graph/graph_traits.hpp boost/graph/topological_sort.hpp boost/graph/graphviz.hpp boost/graph/breadth_first_search.hpp boost/graph/visitors.hpp boost/graph/transpose_graph.hpp boost/any.hpp boost/filesystem.hpp"
 
