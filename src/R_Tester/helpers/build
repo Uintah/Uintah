@@ -32,10 +32,14 @@ if [ "$OS" = "Linux" ]; then
   #  machine specific variables
   if [ "$MACHINE" == "uintah-build" ]; then
 
+    DBG_CONFIGURE="    --enable-debug \\
+      --enable-64bit \\
+      --enable-scinew-line-numbers \\"
+
     COMMON="      --with-mpi=/usr/lib/x86_64-linux-gnu/openmpi\\
      --with-hypre-lib=/usr/lib/x86_64-linux-gnu \\
      --with-hypre-include=/usr/include/hypre \\
-     --with-boost=/usr/ \\
+     --with-boost=/usr/local \\
      --enable-all-components \\
      --enable-wasatch_3p \\
      --enable-ray-scatter \\"
@@ -45,12 +49,11 @@ if [ "$OS" = "Linux" ]; then
       --with-hypre-lib=/usr/lib/x86_64-linux-gnu \\
       --with-hypre-include=/usr/include/hypre \\
       --with-cuda=/usr/lib/nvidia-cuda-toolkit \\
-      --with-boost=/usr/ \\
+      --with-boost=/usr/local \\
       --enable-gencode=52 \\
       --enable-ray-scatter \\
       --enable-examples \\
-      --enable-arches \\
-      --enable-wasatch_3p='radprops,tabprops' \\"
+      --enable-arches"
       # execute a script (R_tester/modifySrc) that modifies src files
       MODIFY_SRC="true"
     fi
