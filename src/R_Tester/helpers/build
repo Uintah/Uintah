@@ -53,7 +53,7 @@ if [ "$OS" = "Linux" ]; then
       --enable-gencode=52 \\
       --enable-ray-scatter \\
       --enable-examples \\
-      --enable-arches"
+      --enable-arches \\"
       # execute a script (R_tester/modifySrc) that modifies src files
       MODIFY_SRC="true"
     fi
