@@ -1325,26 +1325,26 @@ parallel_initialize_grouped(T2 KKV3,const T3 init_val ){
   Kokkos::parallel_for (Kokkos::TeamPolicy< ExecutionSpace >( 1, actualThreads ),
                         KOKKOS_LAMBDA ( typename policy_type::member_type thread ) {
 
-    //Kokkos::parallel_for (Kokkos::TeamThreadRange(thread, n_cells), [&, n_cells, actualThreads] (const int& i_tot) {
-    Kokkos::parallel_for (Kokkos::TeamThreadRange(thread, actualThreads), [&, n_cells, actualThreads] (const int& i_tot) {
-
-      // TODO: Rewrite this.  Strategy should be:
       // i_tot will come in as a number between 0 and actualThreads.  Suppose actualThreads is 256.
       // Thread 0 should work on cell 0, thread 1 should work on cell 1, ... thread 255 should work on cell 255
       // then they all advanced forward by actualThreads.
       // Thread 0 works on cell 256, thread 1 works on cell 257... thread 511 works on cell 511.
       // This should continue until all cells are completed.
-      // The tricky part will be a transition from one kokkos view to another.  Here it is likely that
-      // some threads will need to work on one kokkos view, while another must work on another kokkos view.
-
-      int i=i_tot ;
-      int j=0;
-      while(i-(int) KKV3_gpu(j).m_view.size()>-1){ // warp divergence problem????
-        i-=KKV3_gpu(j).m_view.size();
-        j++;
+    Kokkos::parallel_for (Kokkos::TeamThreadRange(thread, actualThreads), [&, n_cells, actualThreads] (const int& i_tot) {
+      const int n_iter=n_cells/actualThreads  + (n_cells%actualThreads > 0 ? 1 : 0); // round up (more efficient to compute this outside parallel_for?)
+      unsigned int  j=0;
+      int  old_i=0;
+      for (int i=0; i<n_iter; i++) { 
+         while (i*actualThreads+i_tot - old_i >= KKV3_gpu(j).m_view.size()){ // using a while for small data sets or massive streaming multiprocessors
+           old_i+=KKV3_gpu(j).m_view.size();
+           j++;
+           if ( KKV3_gpu.size() <= j){ 
+             return; // do nothing
+           }
+         }
+         KKV3_gpu(j)(i*actualThreads+i_tot-old_i)=init_val;
       }
-      KKV3_gpu(j)(i)=init_val;
-      });
+    });
   });
 }
 #endif //HAVE_CUDA
