@@ -4301,67 +4301,6 @@ UnifiedScheduler::findIntAndExtGpuDependencies( DetailedTask * dtask
 
   // Prepare internal dependencies.  Only makes sense if we have GPUs that we are using.
   if (Uintah::Parallel::usingDevice()) {
-    // If we have ghost cells coming from a GPU to another GPU on the same node
-    // This does not cover going to another node (the loop below handles external
-    // dependencies) That is handled in initiateH2D()
-    // This does not handle preparing from a CPU to a same node GPU.  That is handled in initiateH2D()
-    for (DependencyBatch* batch = dtask->getInternalComputes(); batch != 0; batch = batch->m_comp_next) {
-      for (DetailedDep* req = batch->m_head; req != 0; req = req->m_next) {
-        if ((req->m_comm_condition == DetailedDep::FirstIteration && iteration > 0)
-            || (req->m_comm_condition == DetailedDep::SubsequentIterations
-                && iteration == 0)
-            || (m_no_copy_data_vars.count(req->m_req->m_var->getName()) > 0)) {
-          // See comment in DetailedDep about CommCondition
-          if (gpu_stats.active()) {
-            cerrLock.lock();
-            {
-              gpu_stats << myRankThread()
-                        << "   Preparing GPU dependencies, ignoring conditional send for requries " << *req
-                        << std::endl;
-            }
-            cerrLock.unlock();
-          }
-          continue;
-        }
-        // if we send/recv to an output task, don't send/recv if not an output timestep
-        if (req->m_to_tasks.front()->getTask()->getType() == Task::Output
-            && !m_output->isOutputTimeStep() && !m_output->isCheckpointTimeStep()) {
-          if (gpu_stats.active()) {
-            cerrLock.lock();
-            gpu_stats << myRankThread()
-                << "   Preparing GPU dependencies, ignoring non-output-timestep send for "
-                << *req << std::endl;
-            cerrLock.unlock();
-          }
-          continue;
-        }
-        OnDemandDataWarehouse* dw = m_dws[req->m_req->mapDataWarehouse()].get_rep();
-        const VarLabel* posLabel;
-        OnDemandDataWarehouse* posDW;
-
-        // the load balancer is used to determine where data was in
-        // the old dw on the prev timestep - pass it in if the
-        // particle data is on the old dw
-
-        if (!m_reloc_new_pos_label && m_parent_scheduler) {
-          posDW = m_dws[req->m_req->m_task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
-          posLabel = m_parent_scheduler->m_reloc_new_pos_label;
-        }
-        else {
-          // on an output task (and only on one) we require particle variables from the NewDW
-          if (req->m_to_tasks.front()->getTask()->getType() == Task::Output) {
-            posDW = m_dws[req->m_req->m_task->mapDataWarehouse(Task::NewDW)].get_rep();
-          }
-          else {
-            posDW = m_dws[req->m_req->m_task->mapDataWarehouse(Task::OldDW)].get_rep();
-          }
-          posLabel = m_reloc_new_pos_label;
-        }
-        // Load information which will be used to later invoke a
-        // kernel to copy this range out of the GPU.
-        prepareGpuDependencies(dtask, batch, posLabel, dw, posDW, req, GpuUtilities::anotherDeviceSameMpiRank);
-      }
-    }  // end for (DependencyBatch * batch = task->getInteranlComputes() )
 
     // Prepare external dependencies.  The only thing that needs to be
     // prepared is getting ghost cell data from a GPU into a flat

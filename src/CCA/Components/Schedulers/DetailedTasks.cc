@@ -592,13 +592,7 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask     * from
   // if the dependency is on the same processor then add an internal dependency
   if (fromresource == my_rank && fromresource == toresource) {
     to->addInternalDependency(from, req->m_var);
-
-    // In case of multiple GPUs per node, we don't return.  Multiple GPUs
-    // need internal dependencies to communicate data.
-    if ( ! Uintah::Parallel::usingDevice()) {
-      return;
-    }
-
+    return;
   }
 
   // this should have been pruned out earlier
@@ -607,18 +601,6 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask     * from
   if (req->m_var->typeDescription()->getType() == TypeDescription::SoleVariable) {
     return;
   }
-
-#ifdef HAVE_CUDA
-  if (Uintah::Parallel::usingDevice()) {
-    if (fromresource == my_rank && fromresource == toresource) {
-      if (fromPatch != toPatch) {
-        //printf("In DetailedTasks::createInternalDependencyBatch creating internal dependency from patch %d to patch %d, from task %p to task %p\n", fromPatch->getID(), toPatch->getID(), from, to);
-        createInternalDependencyBatch(from, comp, fromPatch, to, req, toPatch, matl, low, high, cond);
-      }
-      return; //We've got all internal dependency information for the GPU, now we can return.
-    }
-  }
-#endif
 
   // make keys for MPI messages
   if (fromPatch) {
