@@ -161,7 +161,7 @@ void sumRadiation::register_timestep_eval( VIVec& variable_registry, const int t
 }
 
 template<typename ExecutionSpace, typename MemorySpace> void
-sumRadiation::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, void* stream ){
+sumRadiation::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
   initialize( patch,tsk_info);
 }
 

@@ -93,7 +93,7 @@ protected:
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
     template <typename EXECUTION_SPACE, typename MEMORY_SPACE>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, void* stream );
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject );
 
     void create_local_labels();
 
@@ -417,7 +417,7 @@ private:
 
   template <typename T>
   template<typename ExecutionSpace, typename MemorySpace>
-  void TaskAlgebra<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, void* stream ){
+  void TaskAlgebra<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
     T temp_var;
     IntVector domlo = patch->getCellLowIndex();

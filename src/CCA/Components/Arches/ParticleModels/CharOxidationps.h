@@ -44,7 +44,7 @@ public:
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
     template <typename ExecutionSpace, typename HostSpace>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, void* stream );
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject );
 
     void create_local_labels();
 
@@ -1397,8 +1397,7 @@ template <typename ExecutionSpace, typename MemorySpace>
 void
 CharOxidationps<T>::eval( const Patch                 * patch
                         ,       ArchesTaskInfoManager * tsk_info
-                        , void                        * stream
-                        )
+                        ,       ExecutionObject& executionObject)
 {
 
 #if !defined(UINTAH_ENABLE_KOKKOS)
@@ -1531,7 +1530,7 @@ CharOxidationps<T>::eval( const Patch                 * patch
                                                                   , reaction_rate
                                                                   );
 
-  Uintah::parallel_for< UintahSpaces::CPU >( range_E, initFunc );
+  Uintah::parallel_for< UintahSpaces::CPU >( executionObject, range_E, initFunc );
 
   Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
 
@@ -1607,7 +1606,7 @@ CharOxidationps<T>::eval( const Patch                 * patch
                                                      , _Nenv
                                                      );
 
-  Uintah::parallel_for< UintahSpaces::CPU >( range, func );
+  Uintah::parallel_for< UintahSpaces::CPU >( executionObject, range, func );
 #else 
 
 #if defined(KOKKOS_ENABLE_OPENMP) 
@@ -1740,7 +1739,7 @@ CharOxidationps<T>::eval( const Patch                 * patch
                                                                , reaction_rate
                                                                );
 
-    Uintah::parallel_for< Kokkos::OpenMP >( range_E, initFunc );
+    Uintah::parallel_for< Kokkos::OpenMP >( executionObject, range_E, initFunc );
 
     Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
 
@@ -1816,7 +1815,7 @@ CharOxidationps<T>::eval( const Patch                 * patch
                                                  , _Nenv
                                                  );
 
-    Uintah::parallel_for< Kokkos::OpenMP >( range, func );
+    Uintah::parallel_for< Kokkos::OpenMP >( executionObject, range, func );
 
   }
 
@@ -2036,13 +2035,7 @@ CharOxidationps<T>::eval( const Patch                 * patch
       _MW_species_pod[ns] = _MW_species[ns];
     }
 
-    //int numKernels = dtask->getTask()->maxStreamsPerTask();
-    //std::vector<void*> streams;
-    //for (int i = 0; i < numKernels; i++) {
-    //  streams.push_back(dtask->getCudaStreamForThisTask(i));
-    //}
-
-    Uintah::BlockRange range_E( stream, patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+    Uintah::BlockRange range_E( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
 
     initializeDataFunctor< Kokkos::CudaSpace, T, CT > initFunc ( char_rate
                                                                , gas_char_rate
@@ -2052,9 +2045,9 @@ CharOxidationps<T>::eval( const Patch                 * patch
                                                                , reaction_rate
                                                                );
 
-    Uintah::parallel_for< Kokkos::Cuda >( range_E, initFunc );
+    Uintah::parallel_for< Kokkos::Cuda >( executionObject, range_E, initFunc );
 
-    Uintah::BlockRange range( stream, patch->getCellLowIndex(), patch->getCellHighIndex() );
+    Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
 
     solveFunctor< Kokkos::CudaSpace, T, CT > func( volFraction
                                                  ,  weight
@@ -2128,7 +2121,7 @@ CharOxidationps<T>::eval( const Patch                 * patch
                                                  , _Nenv
                                                  );
 
-    Uintah::parallel_for< Kokkos::Cuda >( range, func );
+    Uintah::parallel_for< Kokkos::Cuda >( executionObject, range, func );
 
   }
 

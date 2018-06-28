@@ -156,7 +156,7 @@ DensityStar::register_timestep_eval( std::vector<ArchesFieldContainer::VariableI
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemorySpace> void
-DensityStar::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, void* stream ){
+DensityStar::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
   constSFCXVariable<double>& xmom = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >("x-mom");
   constSFCYVariable<double>& ymom = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >("y-mom");

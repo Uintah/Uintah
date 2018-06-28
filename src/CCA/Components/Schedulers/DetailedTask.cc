@@ -33,9 +33,11 @@
 #endif
 
 #include <Core/Containers/ConsecutiveRangeSet.h>
+#include <Core/Parallel/ExecutionObject.h>
 #include <Core/Parallel/MasterLock.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Parallel/UintahParams.h>
 #include <Core/Util/DOUT.hpp>
 
 #include <sci_defs/config_defs.h>
@@ -147,6 +149,7 @@ DetailedTask::doit( const ProcessorGroup                      * pg
     // we want to design tasks so each task runs on only once device, instead of a one to many relationship.
     for (std::set<unsigned int>::const_iterator deviceNums_it = deviceNums_.begin(); deviceNums_it != deviceNums_.end(); ++deviceNums_it) {
       const unsigned int currentDevice = *deviceNums_it;
+
       OnDemandDataWarehouse::uintahSetCudaDevice(currentDevice);
       GPUDataWarehouse* host_oldtaskdw = getTaskGpuDataWarehouse(currentDevice, Task::OldDW);
       GPUDataWarehouse* device_oldtaskdw = nullptr;
@@ -158,16 +161,25 @@ DetailedTask::doit( const ProcessorGroup                      * pg
       if (host_newtaskdw) {
         device_newtaskdw = host_newtaskdw->getdevice_ptr();
       }
-      m_task->doit( this, event, pg, m_patches, m_matls, dws,
-                    device_oldtaskdw,
-                    device_newtaskdw,
-                    getCudaStreamForThisTask(currentDevice), currentDevice );
+
+      UintahParams uintahParams(device_oldtaskdw, device_newtaskdw);
+
+      ExecutionObject executionObject;
+      int numKernels = this->getTask()->maxStreamsPerTask();
+      for (int i = 0; i < numKernels; i++) {
+        executionObject.setStream(this->getCudaStreamForThisTask(i), currentDevice);
+      }
+
+      m_task->doit( event, pg, m_patches, m_matls, dws,
+                    uintahParams, executionObject);
     }
 #else
     SCI_THROW(InternalError("A task was marked as GPU enabled, but Uintah was not compiled for CUDA support", __FILE__, __LINE__));
 #endif
   } else {
-    m_task->doit( this, event, pg, m_patches, m_matls, dws, nullptr, nullptr, nullptr, -1 );
+    UintahParams uintahParams;
+    ExecutionObject executionObject;
+    m_task->doit( event, pg, m_patches, m_matls, dws, uintahParams, executionObject );
   }
   for (auto i = 0u; i < dws.size(); i++) {
     if ( oddws[i] != nullptr ) {

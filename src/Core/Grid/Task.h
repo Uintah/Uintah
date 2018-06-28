@@ -30,8 +30,10 @@
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Parallel/ExecutionObject.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/UintahMemorySpaces.h>
+#include <Core/Parallel/UintahParams.h>
 #include <CCA/Ports/DataWarehouseP.h>
 #include <Core/Util/constHandle.h>
 #include <Core/Util/DOUT.hpp>
@@ -93,18 +95,14 @@ protected: // class Task
 
       virtual ~ActionBase(){};
 
-      virtual void doit(       DetailedTask   * task
-                       ,       CallBackEvent    event
+      virtual void doit( CallBackEvent event
                        , const ProcessorGroup * pg
                        , const PatchSubset    * patches
                        , const MaterialSubset * matls
                        ,       DataWarehouse  * fromDW
                        ,       DataWarehouse  * toDW
-                       ,       void           * oldTaskGpuDW
-                       ,       void           * newTaskGpuDW
-                       ,       void           * stream
-                       ,       int              deviceID
-                       ) = 0;
+                       ,       UintahParams   & uintahParams
+                       ,       ExecutionObject& executionObject ) = 0;
   };
 
 // Nvidia's nvcc compiler version 8 and 9 have a bug where it can't compile std::tuples with more than 2 template parameters
@@ -149,20 +147,16 @@ protected: // class Task
 
     //////////
     //
-    virtual void doit(       DetailedTask   * task
-                     ,       CallBackEvent    event
+    virtual void doit( CallBackEvent event
                      , const ProcessorGroup * pg
                      , const PatchSubset    * patches
                      , const MaterialSubset * matls
                      ,       DataWarehouse  * fromDW
                      ,       DataWarehouse  * toDW
-                     ,       void           * oldTaskGpuDW
-                     ,       void           * newTaskGpuDW
-                     ,       void           * stream
-                     ,       int              deviceID
-                     )
+                     ,       UintahParams   & uintahParams
+                     ,       ExecutionObject& executionObject)
     {
-      doit_impl(pg, patches, matls, fromDW, toDW, typename Tuple::gens<sizeof...(Args)>::type());
+      doit_impl(event, pg, patches, matls, fromDW, toDW, uintahParams, executionObject, typename Tuple::gens<sizeof...(Args)>::type());
     }
 
 
@@ -189,17 +183,14 @@ protected: // class Task
   class ActionDevice : public ActionBase {
 
     T * ptr;
-    void (T::*pmf)(       DetailedTask   * dtask
-                  ,       CallBackEvent    event
+    void (T::*pmf)( CallBackEvent event
                   , const ProcessorGroup * pg
                   , const PatchSubset    * patches
                   , const MaterialSubset * m_matls
                   ,       DataWarehouse  * fromDW
                   ,       DataWarehouse  * toDW
-                  ,       void           * oldTaskGpuDW
-                  ,       void           * newTaskGpuDW
-                  ,       void           * stream
-                  ,       int              deviceID
+                  ,       UintahParams   & uintahParams
+                  ,       ExecutionObject& executionObject
                   ,       Args...          args
                   );
     std::tuple<Args...> m_args;
@@ -208,17 +199,14 @@ protected: // class Task
   public: // class ActionDevice
 
     ActionDevice( T * ptr
-                , void (T::*pmf)(       DetailedTask   * dtask
-                                ,       CallBackEvent    event
+                , void (T::*pmf)( CallBackEvent event
                                 , const ProcessorGroup * pg
                                 , const PatchSubset    * patches
                                 , const MaterialSubset * m_matls
                                 ,       DataWarehouse  * fromDW
                                 ,       DataWarehouse  * toDW
-                                ,       void           * oldTaskGpuDW
-                                ,       void           * newTaskGpuDW
-                                ,       void           * stream
-                                ,       int              deviceID
+                                ,       UintahParams   & uintahParams
+                                ,       ExecutionObject& executionObject
                                 ,       Args...          args
                                 )
                , Args... args
@@ -230,40 +218,34 @@ protected: // class Task
 
     virtual ~ActionDevice() {}
 
-    virtual void doit(       DetailedTask   * dtask
-                     ,       CallBackEvent    event
+    virtual void doit( CallBackEvent event
                      , const ProcessorGroup * pg
                      , const PatchSubset    * patches
                      , const MaterialSubset * matls
                      ,       DataWarehouse  * fromDW
                      ,       DataWarehouse  * toDW
-                     ,       void           * oldTaskGpuDW
-                     ,       void           * newTaskGpuDW
-                     ,       void           * stream
-                     ,       int              deviceID
+                     ,       UintahParams   & uintahParams
+                     ,       ExecutionObject& executionObject
                      )
     {
-      doit_impl(dtask, event, pg, patches, matls, fromDW, toDW, oldTaskGpuDW, newTaskGpuDW, stream, deviceID, typename Tuple::gens<sizeof...(Args)>::type());
+      doit_impl(event, pg, patches, matls, fromDW, toDW, uintahParams, executionObject, typename Tuple::gens<sizeof...(Args)>::type());
     }
 
   private : // class ActionDevice
 
     template<int... S>
-    void doit_impl(       DetailedTask   * dtask
-                  ,       CallBackEvent    event
+    void doit_impl( CallBackEvent event
                   , const ProcessorGroup * pg
                   , const PatchSubset    * patches
                   , const MaterialSubset * matls
                   ,       DataWarehouse  * fromDW
                   ,       DataWarehouse  * toDW
-                  ,       void           * oldTaskGpuDW
-                  ,       void           * newTaskGpuDW
-                  ,       void           * stream
-                  ,       int              deviceID
+                  ,       UintahParams   & uintahParams
+                  ,       ExecutionObject& executionObject
                   ,       Tuple::seq<S...>
                   )
       {
-        (ptr->*pmf)(dtask, event, pg, patches, matls, fromDW, toDW, oldTaskGpuDW, newTaskGpuDW, stream, deviceID, std::get<S>(m_args)...);
+        (ptr->*pmf)(event, pg, patches, matls, fromDW, toDW, uintahParams, executionObject,  std::get<S>(m_args)...);
       }
 
   };  // end GPU (device) Action constructor
@@ -298,17 +280,14 @@ private:
 
       //////////
       // Insert Documentation Here:
-      virtual void doit(DetailedTask* task,
-                        CallBackEvent event,
+      virtual void doit(CallBackEvent event,
                         const ProcessorGroup* pg,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW,
-                        void* oldTaskGpuDW,
-                        void* newTaskGpuDW,
-                        void* stream,
-                        int deviceID)
+                        UintahParams& uintahParams,
+                        ExecutionObject& executionObject)
       {
         (ptr->*pmf)(pg, patches, matls, fromDW, toDW);
       }
@@ -344,17 +323,14 @@ private:
 
       //////////
       // Insert Documentation Here:
-      virtual void doit(DetailedTask* task,
-                        CallBackEvent event,
+      virtual void doit(CallBackEvent event,
                         const ProcessorGroup* pg,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW,
-                        void* oldTaskGpuDW,
-                        void* newTaskGpuDW,
-                        void* stream,
-                        int deviceID)
+                        UintahParams& uintahParams,
+                        ExecutionObject& executionObject)
       {
         (ptr->*pmf)(pg, patches, matls, fromDW, toDW, arg1);
       }
@@ -394,17 +370,14 @@ private:
 
       //////////
       // Insert Documentation Here:
-      virtual void doit(DetailedTask* task,
-                        CallBackEvent event,
+      virtual void doit(CallBackEvent event,
                         const ProcessorGroup* pg,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW,
-                        void* oldTaskGpuDW,
-                        void* newTaskGpuDW,
-                        void* stream,
-                        int deviceID)
+                        UintahParams& uintahParams,
+                        ExecutionObject& executionObject)
       {
         (ptr->*pmf)(pg, patches, matls, fromDW, toDW, arg1, arg2);
       }
@@ -448,17 +421,14 @@ private:
 
       //////////
       // Insert Documentation Here:
-      virtual void doit(DetailedTask* task,
-                        CallBackEvent event,
+      virtual void doit(CallBackEvent event,
                         const ProcessorGroup* pg,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW,
-                        void* oldTaskGpuDW,
-                        void* newTaskGpuDW,
-                        void* stream,
-                        int deviceID)
+                        UintahParams& uintahParams,
+                        ExecutionObject& executionObject)
       {
         (ptr->*pmf)(pg, patches, matls, fromDW, toDW, arg1, arg2, arg3);
       }
@@ -506,17 +476,14 @@ private:
 
       //////////
       // Insert Documentation Here:
-      virtual void doit(DetailedTask* task,
-                        CallBackEvent event,
+      virtual void doit(CallBackEvent event,
                         const ProcessorGroup* pg,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW,
-                        void* oldTaskGpuDW,
-                        void* newTaskGpuDW,
-                        void* stream,
-                        int deviceID)
+                        UintahParams& uintahParams,
+                        ExecutionObject& executionObject)
       {
         (ptr->*pmf)(pg, patches, matls, fromDW, toDW, arg1, arg2, arg3, arg4);
       }
@@ -568,17 +535,14 @@ private:
 
       //////////
       // Insert Documentation Here:
-      virtual void doit(DetailedTask* task,
-                        CallBackEvent event,
+      virtual void doit(CallBackEvent event,
                         const ProcessorGroup* pg,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW,
-                        void* oldTaskGpuDW,
-                        void* newTaskGpuDW,
-                        void* stream,
-                        int deviceID)
+                        UintahParams& uintahParams,
+                        ExecutionObject& executionObject)
       {
         (ptr->*pmf)(pg, patches, matls, fromDW, toDW, arg1, arg2, arg3, arg4, arg5);
       }
@@ -591,31 +555,25 @@ private:
   template<class T>
   class ActionDevice : public ActionBase {
       T* ptr;
-      void (T::*pmf)(DetailedTask* task,
-                     CallBackEvent event,
+      void (T::*pmf)(CallBackEvent event,
                      const ProcessorGroup* pg,
                      const PatchSubset* patches,
                      const MaterialSubset* matls,
                      DataWarehouse* fromDW,
                      DataWarehouse* toDW,
-                     void* oldTaskGpuDW,
-                     void* newTaskGpuDW,
-                     void* stream,
-                     int deviceID);
+                     UintahParams& uintahParams,
+                     ExecutionObject& executionObject);
     public:
       // class ActionDevice
       ActionDevice( T * ptr,
-                    void (T::*pmf)(DetailedTask* task,
-                                   CallBackEvent event,
+                    void (T::*pmf)(CallBackEvent event,
                                    const ProcessorGroup* pg,
                                    const PatchSubset* patches,
                                    const MaterialSubset* matls,
                                    DataWarehouse* fromDW,
                                    DataWarehouse* toDW,
-                                   void* oldTaskGpuDW,
-                                   void* newTaskGpuDW,
-                                   void* stream,
-                                   int deviceID) ) :
+                                   UintahParams& uintahParams,
+                                   ExecutionObject& executionObject) ) :
         ptr(ptr), pmf(pmf)
       {
       }
@@ -625,52 +583,43 @@ private:
 
       //////////
       // Insert Documentation Here:
-      virtual void doit(DetailedTask* task,
-                        CallBackEvent event,
+      virtual void doit(CallBackEvent event,
                         const ProcessorGroup* pg,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW,
-                        void* oldTaskGpuDW,
-                        void* newTaskGpuDW,
-                        void* stream,
-                        int deviceID)
+                        UintahParams& uintahParams,
+                        ExecutionObject& executionObject)
       {
-        (ptr->*pmf)(task, event, pg, patches, matls, fromDW, toDW, oldTaskGpuDW, newTaskGpuDW, stream, deviceID);
+        (ptr->*pmf)(event, pg, patches, matls, fromDW, toDW, uintahParams, executionObject);
       }
   };  // end class ActionDevice
 
   template<class T, class Arg1>
   class ActionDevice1 : public ActionBase {
       T* ptr;
-      void (T::*pmf)(DetailedTask* task,
-                      CallBackEvent event,
+      void (T::*pmf)( CallBackEvent event,
                       const ProcessorGroup* pg,
                       const PatchSubset* patches,
                       const MaterialSubset* matls,
                             DataWarehouse* fromDW,
                             DataWarehouse* toDW,
-                            void* oldTaskGpuDW,
-                            void* newTaskGpuDW,
-                            void* stream,
-                            int deviceID,
+                            UintahParams& uintahParams,
+                            ExecutionObject& executionObject,
                             Arg1 arg1);
       Arg1 arg1;
     public:
       // class ActionDevice1
       ActionDevice1(T* ptr,
-                    void (T::*pmf)(DetailedTask* task,
-                                   CallBackEvent event,
+                    void (T::*pmf)(CallBackEvent event,
                                    const ProcessorGroup* pg,
                                    const PatchSubset* patches,
                                    const MaterialSubset* matls,
                                    DataWarehouse* fromDW,
                                    DataWarehouse* toDW,
-                                   void* oldTaskGpuDW,
-                                   void* newTaskGpuDW,
-                                   void* stream,
-                                   int deviceID,
+                                   UintahParams& uintahParams,
+                                   ExecutionObject& executionObject,
                                    Arg1 arg1),
                     Arg1 arg1)
           : ptr(ptr), pmf(pmf), arg1(arg1)
@@ -682,36 +631,30 @@ private:
 
       //////////
       // Insert Documentation Here:
-      virtual void doit(DetailedTask* task,
-                        CallBackEvent event,
+      virtual void doit(CallBackEvent event,
                         const ProcessorGroup* pg,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW,
-                        void* oldTaskGpuDW,
-                        void* newTaskGpuDW,
-                        void* stream,
-                        int deviceID)
+                        UintahParams& uintahParams,
+                        ExecutionObject& executionObject)
       {
-        (ptr->*pmf)(task, event, pg, patches, matls, fromDW, toDW, oldTaskGpuDW, newTaskGpuDW, stream, deviceID, arg1);
+        (ptr->*pmf)(event, pg, patches, matls, fromDW, toDW, uintahParams, executionObject, arg1);
       }
   };  // end class ActionDevice1
 
   template<class T, class Arg1, class Arg2>
   class ActionDevice2 : public ActionBase {
       T* ptr;
-      void (T::*pmf)(DetailedTask* task,
-                     CallBackEvent event,
+      void (T::*pmf)(CallBackEvent event,
                      const ProcessorGroup* pg,
                      const PatchSubset* patches,
                      const MaterialSubset* matls,
                      DataWarehouse* fromDW,
                      DataWarehouse* toDW,
-                     void* oldTaskGpuDW,
-                     void* newTaskGpuDW,
-                     void* stream,
-                     int deviceID,
+                     UintahParams& uintahParams,
+                     ExecutionObject& executionObject,
                      Arg1 arg1,
                      Arg2 arg2);
       Arg1 arg1;
@@ -719,17 +662,14 @@ private:
     public:
       // class ActionDevice2
       ActionDevice2(T* ptr,
-                    void (T::*pmf)(DetailedTask* task,
-                                   CallBackEvent event,
+                    void (T::*pmf)(CallBackEvent event,
                                    const ProcessorGroup* pg,
                                    const PatchSubset* patches,
                                    const MaterialSubset* matls,
                                    DataWarehouse* fromDW,
                                    DataWarehouse* toDW,
-                                   void* oldTaskGpuDW,
-                                   void* newTaskGpuDW,
-                                   void* stream,
-                                   int deviceID,
+                                   UintahParams& uintahParams,
+                                   ExecutionObject& executionObject,
                                    Arg1 arg1,
                                    Arg2 arg2),
                     Arg1 arg1,
@@ -743,36 +683,30 @@ private:
 
       //////////
       // Insert Documentation Here:
-      virtual void doit(DetailedTask* task,
-                        CallBackEvent event,
+      virtual void doit(CallBackEvent event,
                         const ProcessorGroup* pg,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW,
-                        void* oldTaskGpuDW,
-                        void* newTaskGpuDW,
-                        void* stream,
-                        int deviceID)
+                        UintahParams& uintahParams,
+                        ExecutionObject& executionObject)
       {
-        (ptr->*pmf)(task, event, pg, patches, matls, fromDW, toDW, oldTaskGpuDW, newTaskGpuDW, stream, deviceID, arg1, arg2);
+        (ptr->*pmf)(event, pg, patches, matls, fromDW, toDW, uintahParams, executionObject, arg1, arg2);
       }
   };  // end class ActionDevice2
 
   template<class T, class Arg1, class Arg2, class Arg3>
   class ActionDevice3 : public ActionBase {
       T* ptr;
-      void (T::*pmf)(DetailedTask* task,
-                     CallBackEvent event,
+      void (T::*pmf)(CallBackEvent event,
                      const ProcessorGroup* pg,
                      const PatchSubset* patches,
                      const MaterialSubset* matls,
                      DataWarehouse* fromDW,
                      DataWarehouse* toDW,
-                     void* oldTaskGpuDW,
-                     void* newTaskGpuDW,
-                     void* stream,
-                     int deviceID,
+                     UintahParams& uintahParams,
+                     ExecutionObject& executionObject,
                      Arg1 arg1,
                      Arg2 arg2,
                      Arg3 arg3);
@@ -783,17 +717,14 @@ private:
     public:
       // class ActionDevice3
       ActionDevice3(T* ptr,
-                    void (T::*pmf)(DetailedTask* task,
-                                   CallBackEvent event,
+                    void (T::*pmf)(CallBackEvent event,
                                    const ProcessorGroup* pg,
                                    const PatchSubset* patches,
                                    const MaterialSubset* matls,
                                    DataWarehouse* fromDW,
                                    DataWarehouse* toDW,
-                                   void* oldTaskGpuDW,
-                                   void* newTaskGpuDW,
-                                   void* stream,
-                                   int deviceID,
+                                   UintahParams& uintahParams,
+                                   ExecutionObject& executionObject,
                                    Arg1 arg1,
                                    Arg2 arg2,
                                    Arg3 arg3),
@@ -809,36 +740,30 @@ private:
 
       //////////
       // Insert Documentation Here:
-      virtual void doit(       Task *task,
-                               CallBackEvent    event,
+      virtual void doit(       CallBackEvent    event,
                          const ProcessorGroup * pg,
                          const PatchSubset    * patches,
                          const MaterialSubset * matls,
                                DataWarehouse  * fromDW,
                                DataWarehouse  * toDW,
-                               void* oldTaskGpuDW,
-                               void* newTaskGpuDW,
-                               void           * stream,
-                               int              deviceID)
+                               UintahParams& uintahParams,
+                               ExecutionObject& executionObject)
       {
-        (ptr->*pmf)(task, event, pg, patches, matls, fromDW, toDW, oldTaskGpuDW, newTaskGpuDW, stream, deviceID, arg1, arg2, arg3);
+        (ptr->*pmf)(event, pg, patches, matls, fromDW, toDW, uintahParams, executionObject, arg1, arg2, arg3);
       }
   };  // end class ActionDevice3
 
   template<class T, class Arg1, class Arg2, class Arg3, class Arg4>
   class ActionDevice4 : public ActionBase {
       T* ptr;
-      void (T::*pmf)(DetailedTask* task,
-                     CallBackEvent event,
+      void (T::*pmf)(CallBackEvent event,
                      const ProcessorGroup* pg,
                      const PatchSubset* patches,
                      const MaterialSubset* matls,
                      DataWarehouse* fromDW,
                      DataWarehouse* toDW,
-                     void* oldTaskGpuDW,
-                     void* newTaskGpuDW,
-                     void* stream,
-                     int deviceID,
+                     UintahParams& uintahParams,
+                     ExecutionObject& executionObject,
                      Arg1 arg1,
                      Arg2 arg2,
                      Arg3 arg3,
@@ -850,17 +775,14 @@ private:
     public:
       // class ActionDevice4
       ActionDevice4(T* ptr,
-                    void (T::*pmf)(DetailedTask* task,
-                                   CallBackEvent event,
+                    void (T::*pmf)(CallBackEvent event,
                                    const ProcessorGroup* pg,
                                    const PatchSubset* patches,
                                    const MaterialSubset* matls,
                                    DataWarehouse* fromDW,
                                    DataWarehouse* toDW,
-                                   void* oldTaskGpuDW,
-                                   void* newTaskGpuDW,
-                                   void * stream,
-                                   int deviceID,
+                                   UintahParams& uintahParams,
+                                   ExecutionObject& executionObject,
                                    Arg1 arg1,
                                    Arg2 arg2,
                                    Arg3 arg3,
@@ -878,36 +800,30 @@ private:
 
       //////////
       // Insert Documentation Here:
-      virtual void doit(DetailedTask* task,
-                        CallBackEvent event,
+      virtual void doit(CallBackEvent event,
                         const ProcessorGroup* pg,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW,
-                        void* oldTaskGpuDW,
-                        void* newTaskGpuDW,
-                        void* stream,
-                        int deviceID)
+                        UintahParams& uintahParams,
+                        ExecutionObject& executionObject)
       {
-        (ptr->*pmf)(task, event, pg, patches, matls, fromDW, toDW, oldTaskGpuDW, newTaskGpuDW, stream, deviceID, arg1, arg2, arg3, arg4);
+        (ptr->*pmf)(event, pg, patches, matls, fromDW, toDW, uintahParams, executionObject, arg1, arg2, arg3, arg4);
       }
   };  // end class ActionDevice4
 
   template<class T, class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
   class ActionDevice5 : public ActionBase {
       T* ptr;
-      void (T::*pmf)(DetailedTask* task,
-                     CallBackEvent event,
+      void (T::*pmf)(CallBackEvent event,
                      const ProcessorGroup* pg,
                      const PatchSubset* patches,
                      const MaterialSubset* matls,
                      DataWarehouse* fromDW,
                      DataWarehouse* toDW,
-                     void* oldTaskGpuDW,
-                     void* newTaskGpuDW,
-                     void* stream,
-                     int deviceID,
+                     UintahParams& uintahParams,
+                     ExecutionObject& executionObject,
                      Arg1 arg1,
                      Arg2 arg2,
                      Arg3 arg3,
@@ -921,17 +837,14 @@ private:
     public:
       // class ActionDevice5
       ActionDevice5( T* ptr,
-                     void (T::*pmf)(DetailedTask* task,
-                                    CallBackEvent event,
+                     void (T::*pmf)(CallBackEvent event,
                                     const ProcessorGroup* pg,
                                     const PatchSubset* patches,
                                     const MaterialSubset* matls,
                                     DataWarehouse * fromDW,
                                     DataWarehouse * toDW,
-                                    void* oldTaskGpuDW,
-                                    void* newTaskGpuDW,
-                                    void* stream,
-                                    int deviceID,
+                                    UintahParams& uintahParams,
+                                    ExecutionObject& executionObject,
                                     Arg1 arg1,
                                     Arg2 arg2,
                                     Arg3 arg3,
@@ -951,19 +864,16 @@ private:
 
       //////////
       // Insert Documentation Here:
-      virtual void doit(DetailedTask* task,
-                        CallBackEvent event,
+      virtual void doit(CallBackEvent event,
                         const ProcessorGroup* pg,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW,
-                        void* oldTaskGpuDW,
-                        void* newTaskGpuDW,
-                        void* stream,
-                        int deviceID)
+                        UintahParams& uintahParams,
+                        ExecutionObject& executionObject)
       {
-        (ptr->*pmf)(task, event, pg, patches, matls, fromDW, toDW, oldTaskGpuDW, newTaskGpuDW, stream, deviceID, arg1, arg2, arg3, arg4, arg5);
+        (ptr->*pmf)(event, pg, patches, matls, fromDW, toDW, uintahParams, executionObject, arg1, arg2, arg3, arg4, arg5);
       }
   };  // end class ActionDevice5
 #endif
@@ -1035,17 +945,14 @@ public: // class Task
   template<typename T, typename... Args>
   Task( const std::string & taskName
       , T * ptr
-      , void (T::*pmf)(       DetailedTask   * m_task
-                      ,       CallBackEvent    event
+      , void (T::*pmf)(       CallBackEvent    event
                       , const ProcessorGroup * pg
                       , const PatchSubset    * patches
                       , const MaterialSubset * m_matls
                       ,       DataWarehouse  * fromDW
                       ,       DataWarehouse  * toDW
-                      ,       void           * old_TaskGpuDW
-                      ,       void           * new_TaskGpuDW
-                      ,       void           * stream
-                      ,       int              deviceID
+                      ,       UintahParams& uintahParams
+                      ,       ExecutionObject& executionObject
                       ,       Args...          args
                       )
       , Args... args
@@ -1188,17 +1095,14 @@ public: // class Task
   Task(
        const std::string& taskName,
        T* ptr,
-       void (T::*pmf)(DetailedTask* task,
-                      CallBackEvent event,
+       void (T::*pmf)(CallBackEvent event,
                       const ProcessorGroup* pg,
                       const PatchSubset* patches,
                       const MaterialSubset* matls,
                       DataWarehouse* fromDW,
                       DataWarehouse* toDW,
-                      void* old_TaskGpuDW,
-                      void* new_TaskGpuDW,
-                      void* stream,
-                      int deviceID))
+                      UintahParams& uintahParams,
+                      ExecutionObject& executionObject))
       :
         m_task_name(taskName),
           m_action(scinew ActionDevice<T>(ptr, pmf))
@@ -1211,17 +1115,14 @@ public: // class Task
   Task(
        const std::string& taskName,
        T* ptr,
-       void (T::*pmf)(DetailedTask* task,
-                      CallBackEvent event,
+       void (T::*pmf)(CallBackEvent event,
                       const ProcessorGroup* pg,
                       const PatchSubset* patches,
                       const MaterialSubset* matls,
                       DataWarehouse* fromDW,
                       DataWarehouse* toDW,
-                      void* oldTaskGpuDW,
-                      void* newTaskGpuDW,
-                      void* stream,
-                      int deviceID,
+                      UintahParams& uintahParams,
+                      ExecutionObject& executionObject,
                       Arg1 arg1),
        Arg1 arg1)
       :
@@ -1235,17 +1136,14 @@ public: // class Task
   template<class T, class Arg1, class Arg2>
   Task(const std::string& taskName,
        T* ptr,
-       void (T::*pmf)(DetailedTask* task,
-                      CallBackEvent event,
+       void (T::*pmf)(CallBackEvent event,
                       const ProcessorGroup* pg,
                       const PatchSubset* patches,
                       const MaterialSubset* matls,
                       DataWarehouse* fromDW,
                       DataWarehouse* toDW,
-                      void* oldTaskGpuDW,
-                      void* newTaskGpuDW,
-                      void* stream,
-                      int deviceID,
+                      UintahParams& uintahParams,
+                      ExecutionObject& executionObject,
                       Arg1 arg1,
                       Arg2 arg2),
        Arg1 arg1,
@@ -1261,17 +1159,14 @@ public: // class Task
   template<class T, class Arg1, class Arg2, class Arg3>
   Task(const std::string& taskName,
        T* ptr,
-       void (T::*pmf)(DetailedTask* task,
-                      CallBackEvent event,
+       void (T::*pmf)(CallBackEvent event,
                       const ProcessorGroup* pg,
                       const PatchSubset* patches,
                       const MaterialSubset* matls,
                       DataWarehouse* fromDW,
                       DataWarehouse* toDW,
-                      void* oldTaskGpuDW,
-                      void* newTaskGpuDW,
-                      void* stream,
-                      int deviceID,
+                      UintahParams& uintahParams,
+                      ExecutionObject& executionObject,
                       Arg1 arg1,
                       Arg2 arg2,
                       Arg3 arg3),
@@ -1289,17 +1184,14 @@ public: // class Task
   template<class T, class Arg1, class Arg2, class Arg3, class Arg4>
   Task(const std::string& taskName,
        T* ptr,
-       void (T::*pmf)(DetailedTask* task,
-                      CallBackEvent event,
+       void (T::*pmf)(CallBackEvent event,
                       const ProcessorGroup* pg,
                       const PatchSubset* patches,
                       const MaterialSubset* matls,
                       DataWarehouse* fromDW,
                       DataWarehouse* toDW,
-                      void* oldTaskGpuDW,
-                      void* newTaskGpuDW,
-                      void* stream,
-                      int deviceID,
+                      UintahParams& uintahParams,
+                      ExecutionObject& executionObject,
                       Arg1 arg1,
                       Arg2 arg2,
                       Arg3 arg3,
@@ -1319,17 +1211,14 @@ public: // class Task
   template<class T, class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
   Task(const std::string& taskName,
        T* ptr,
-       void (T::*pmf)(DetailedTask* task,
-                      CallBackEvent event,
+       void (T::*pmf)(CallBackEvent event,
                       const ProcessorGroup* pg,
                       const PatchSubset* patches,
                       const MaterialSubset* matls,
                       DataWarehouse* fromDW,
                       DataWarehouse* toDW,
-                      void* oldTaskGpuDW,
-                      void* newTaskGpuDW,
-                      void* stream,
-                      int deviceID,
+                      UintahParams& uintahParams,
+                      ExecutionObject& executionObject,
                       Arg1 arg1,
                       Arg2 arg2,
                       Arg3 arg3,
@@ -1622,16 +1511,13 @@ public: // class Task
 
   //////////
   // Tells the task to actually execute the function assigned to it.
-  virtual void doit(       DetailedTask                * task
-                   ,       CallBackEvent                 event
+  virtual void doit(       CallBackEvent                 event
                    , const ProcessorGroup              * pg
                    , const PatchSubset                 *
                    , const MaterialSubset              *
                    ,       std::vector<DataWarehouseP> & dws
-                   ,       void                        * oldTaskGpuDW
-                   ,       void                        * newTaskGpuDW
-                   ,       void                        * stream
-                   ,       int                           deviceID
+                   ,       UintahParams& uintahParams
+                   ,       ExecutionObject& executionObject
                    );
 
   inline const std::string & getName() const { return m_task_name; }

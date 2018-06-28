@@ -190,10 +190,8 @@ void UnifiedSchedulerTest::timeAdvanceUnified(DetailedTask* task,
                                               const MaterialSubset* matls,
                                               DataWarehouse* old_dw,
                                               DataWarehouse* new_dw,
-                                              void* old_TaskGpuDW,
-                                              void* new_TaskGpuDW,
-                                              void* stream,
-                                              int deviceID)
+                                              UintahParams& uintahParams,
+                                              ExecutionObject& executionObject)
 {
   // When Task is scheduled to CPU
   if (event == Task::CPU) {
@@ -297,14 +295,14 @@ void UnifiedSchedulerTest::timeAdvanceUnified(DetailedTask* task,
 
       launchUnifiedSchedulerTestKernel(dimGrid,
                                        dimBlock,
-                                       (cudaStream_t*) stream,
+                                       (cudaStream_t*) executionObject.getStream(),
                                        patch->getID(),
                                        patchNodeLowIndex,
                                        patchNodeHighIndex,
                                        domainLow,
                                        domainHigh,
-                                       (GPUDataWarehouse*)old_TaskGpuDW,
-                                       (GPUDataWarehouse*)new_TaskGpuDW);
+                                       (GPUDataWarehouse*)uintahParams.old_TaskGpuDW,
+                                       (GPUDataWarehouse*)uintahParams.new_TaskGpuDW);
 
       // residual is automatically "put" with the D2H copy of the GPUReductionVariable
       // new_dw->put(sum_vartype(residual), residual_label);

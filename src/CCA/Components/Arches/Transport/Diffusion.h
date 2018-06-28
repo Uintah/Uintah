@@ -53,7 +53,7 @@ protected:
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
     template <typename EXECUTION_SPACE, typename MEMORY_SPACE>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, void* stream );
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject );
 
     void create_local_labels();
 
@@ -210,7 +210,7 @@ private:
   //------------------------------------------------------------------------------------------------
   template <typename T>
   template<typename ExecutionSpace, typename MemorySpace>
-  void Diffusion<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, void* stream ){
+  void Diffusion<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
     CT& eps = tsk_info->get_const_uintah_field_add<CT>(m_eps_name);
 

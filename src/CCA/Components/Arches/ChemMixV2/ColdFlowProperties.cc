@@ -131,7 +131,7 @@ void ColdFlowProperties::register_timestep_eval( VIVec& variable_registry, const
 }
 
 template<typename ExecutionSpace, typename MemorySpace>
-void ColdFlowProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, void* stream ){
+void ColdFlowProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
   get_properties( patch, tsk_info );
 

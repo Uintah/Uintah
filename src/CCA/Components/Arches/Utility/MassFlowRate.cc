@@ -127,7 +127,7 @@ void MassFlowRate::register_timestep_eval( std::vector<ArchesFieldContainer::Var
 }
 
 template<typename ExecutionSpace, typename MemorySpace>
-void MassFlowRate::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, void* stream ){
+void MassFlowRate::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
   eval_massFlowRate( patch, tsk_info );
 }

@@ -195,7 +195,7 @@ DepositionVelocity::register_timestep_eval(
 }
 
 template<typename ExecutionSpace, typename MemorySpace> void
-DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, void* stream ){
+DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
   const int FLOW = -1;
   Vector Dx = patch->dCell(); // cell spacing

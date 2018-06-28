@@ -201,17 +201,14 @@ namespace Uintah{
 
     /** @brief Task callback **/
     template <typename EXECUTION_SPACE, typename MEMORY_SPACE>
-    void do_task ( DetailedTask* task,
-                   Task::CallBackEvent event,
+    void do_task ( Task::CallBackEvent event,
                    const ProcessorGroup* pc,
                    const PatchSubset* patches,
                    const MaterialSubset* matls,
                    DataWarehouse* old_dw,
                    DataWarehouse* new_dw,
-                   void* old_TaskGpuDW,
-                   void* new_TaskGpuDW,
-                   void* stream,
-                   int deviceID,
+                   UintahParams& uintahParams,
+                   ExecutionObject& executionObject,
                    std::vector<ArchesFieldContainer::VariableInformation>  variable_registry,
                    std::vector<TaskInterface*> arches_task,
                    TaskInterface::TASK_TYPE type,

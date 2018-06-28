@@ -107,17 +107,14 @@ namespace Uintah {
                                  DataWarehouse* old_dw,
                                  DataWarehouse* new_dw);
 
-      void timeAdvanceUnified(DetailedTask* task,
-                              Task::CallBackEvent event,
+      void timeAdvanceUnified(Task::CallBackEvent event,
                               const ProcessorGroup* pg,
                               const PatchSubset* patches,
                               const MaterialSubset* matls,
                               DataWarehouse* old_dw,
                               DataWarehouse* new_dw,
-                              void* old_TaskGpuDW,
-                              void* new_TaskGpuDW,
-                              void* stream,
-                              int deviceID);
+                              UintahParams& uintahParams,
+                              ExecutionObject& executionObject);
 
       void timeAdvance1DP(const ProcessorGroup*,
                           const PatchSubset* patches,

@@ -858,25 +858,22 @@ RMCRTCommon::sched_CarryForward_FineLevelLabels ( const LevelP& level,
 //______________________________________________________________________
 //
 void
-RMCRTCommon::carryForward_FineLevelLabels(DetailedTask* dtask,
-                                    Task::CallBackEvent event,
-                                    const ProcessorGroup*,
-                                    const PatchSubset* patches,
-                                    const MaterialSubset* matls,
-                                    DataWarehouse* old_dw,
-                                    DataWarehouse* new_dw,
-                                    void* old_TaskGpuDW,
-                                    void* new_TaskGpuDW,
-                                    void* stream,
-                                    int deviceID)
+RMCRTCommon::carryForward_FineLevelLabels( Task::CallBackEvent event,
+                                           const ProcessorGroup*,
+                                           const PatchSubset* patches,
+                                           const MaterialSubset* matls,
+                                           DataWarehouse* old_dw,
+                                           DataWarehouse* new_dw,
+                                           UintahParams& uintahParams,
+                                           ExecutionObject& executionObject)
 {
   printTask( patches, patches->get(0), g_ray_dbg, "Doing RMCRTCommon::carryForward_FineLevelLabels" );
 
   bool replaceVar = true;
-  new_dw->transferFrom(old_dw, d_divQLabel,          patches, matls, dtask, replaceVar, nullptr );
-  new_dw->transferFrom(old_dw, d_boundFluxLabel,     patches, matls, dtask, replaceVar, nullptr );
-  new_dw->transferFrom(old_dw, d_radiationVolqLabel, patches, matls, dtask, replaceVar, nullptr );
-  new_dw->transferFrom(old_dw, d_sigmaT4Label,       patches, matls, dtask, replaceVar, nullptr );
+  new_dw->transferFrom(old_dw, d_divQLabel,          patches, matls, executionObject, replaceVar, nullptr );
+  new_dw->transferFrom(old_dw, d_boundFluxLabel,     patches, matls, executionObject, replaceVar, nullptr );
+  new_dw->transferFrom(old_dw, d_radiationVolqLabel, patches, matls, executionObject, replaceVar, nullptr );
+  new_dw->transferFrom(old_dw, d_sigmaT4Label,       patches, matls, executionObject, replaceVar, nullptr );
 }
 
 //______________________________________________________________________
@@ -901,20 +898,17 @@ RMCRTCommon::sched_CarryForward_Var ( const LevelP& level,
 
 //______________________________________________________________________
 void
-RMCRTCommon::carryForward_Var ( DetailedTask* dtask,
-                                Task::CallBackEvent event,
+RMCRTCommon::carryForward_Var ( Task::CallBackEvent event,
                                 const ProcessorGroup*,
                                 const PatchSubset* patches,
                                 const MaterialSubset* matls,
                                 DataWarehouse* old_dw,
                                 DataWarehouse* new_dw,
-                                void* old_TaskGpuDW,
-                                void* new_TaskGpuDW,
-                                void* stream,
-                                int deviceID,
+                                UintahParams& uintahParams,
+                                ExecutionObject& executionObject,
                                 const VarLabel* variable )
 {
-  new_dw->transferFrom(old_dw, variable, patches, matls, dtask, true, nullptr);
+  new_dw->transferFrom(old_dw, variable, patches, matls, executionObject, true, nullptr);
 }
 
 //______________________________________________________________________

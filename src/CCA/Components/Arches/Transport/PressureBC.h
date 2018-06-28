@@ -45,7 +45,7 @@ public:
       const int time_substep, const bool pack_tasks );
 
     template <typename EXECUTION_SPACE, typename MEMORY_SPACE>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, void* stream );
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject );
 
     /** @brief Builder class containing instructions on how to build the task **/
     class Builder : public AtomicTaskInterface::AtomicTaskBuilder {

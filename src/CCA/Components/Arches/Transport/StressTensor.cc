@@ -94,7 +94,7 @@ void StressTensor::register_timestep_eval( VIVec& variable_registry, const int t
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemorySpace>
-void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, void* stream ){
+void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
   constSFCXVariable<double>& uVel = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >(m_u_vel_name);
   constSFCYVariable<double>& vVel = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >(m_v_vel_name);

@@ -403,17 +403,14 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
 
 //--------------------------------------------------------------------------------------------------
 template <typename ExecutionSpace, typename MemorySpace>
-void TaskFactoryBase::do_task ( DetailedTask* task,
-                                Task::CallBackEvent event,
+void TaskFactoryBase::do_task ( Task::CallBackEvent event,
                                 const ProcessorGroup* pc,
                                 const PatchSubset* patches,
                                 const MaterialSubset* matls,
                                 DataWarehouse* old_dw,
                                 DataWarehouse* new_dw,
-                                void* old_TaskGpuDW,
-                                void* new_TaskGpuDW,
-                                void* stream,
-                                int deviceID,
+                                UintahParams& uintahParams,
+                                ExecutionObject& executionObject,
                                 std::vector<ArchesFieldContainer::VariableInformation> variable_registry,
                                 std::vector<TaskInterface*> arches_tasks,
                                 TaskInterface::TASK_TYPE type,
@@ -463,13 +460,13 @@ void TaskFactoryBase::do_task ( DetailedTask* task,
           time_substep = 0;
           break;
         case (TaskInterface::TIMESTEP_EVAL):
-          (*i_task)->eval<ExecutionSpace, MemorySpace>( patch, tsk_info_mngr, stream );
+          (*i_task)->eval<ExecutionSpace, MemorySpace>( patch, tsk_info_mngr, executionObject );
           break;
         case (TaskInterface::BC):
           (*i_task)->compute_bcs( patch, tsk_info_mngr );
           break;
         case (TaskInterface::ATOMIC):
-          (*i_task)->eval<ExecutionSpace, MemorySpace>( patch, tsk_info_mngr, stream );
+          (*i_task)->eval<ExecutionSpace, MemorySpace>( patch, tsk_info_mngr, executionObject );
           break;
         default:
           throw InvalidValue("Error: TASK_TYPE not recognized.",__FILE__,__LINE__);

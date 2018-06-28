@@ -271,6 +271,7 @@ KokkosSolver::computeTimestep( const LevelP     & level
                               TaskDependencies,
                               "KokkosSolver::computeStableTimeStep", KokkosSolver::computeStableTimeStep<,
                               level->eachPatch(), m_sharedState->allArchesMaterials(), TASKGRAPH::DEFAULT);
+
   } else {
 
     // Just set the dt to the init_dt because the CFD variables weren't found
@@ -301,12 +302,14 @@ KokkosSolver::computeTimestep( const LevelP     & level
 //--------------------------------------------------------------------------------------------------
 template <typename ExecutionSpace, typename MemorySpace>
 void
-KokkosSolver::computeStableTimeStep( const ProcessorGroup *
-                                   , const PatchSubset    * patches
-                                   , const MaterialSubset *
-                                   ,       DataWarehouse  * old_dw
-                                   ,       DataWarehouse  * new_dw
-                                   )
+KokkosSolver::computeStableTimeStep(Task::CallBackEvent event,
+                                    const ProcessorGroup* pg,
+                                    const PatchSubset* patches,
+                                    const MaterialSubset* matls,
+                                    DataWarehouse* old_dw,
+                                    DataWarehouse* new_dw,
+                                    UintahParams& uintahParams,
+                                    ExecutionObject& executionObject)
 {
 
   const Level* level = getLevel(patches);
@@ -334,7 +337,7 @@ KokkosSolver::computeStableTimeStep( const ProcessorGroup *
 
     Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
 
-    Uintah::parallel_reduce_min<ExecutionSpace>( range, [&]( int i, int j, int k, double & m_dt ) {
+    Uintah::parallel_reduce_min<ExecutionSpace>( executionObject, range, KOKKOS_LAMBDA ( int i, int j, int k, double & m_dt ) {
 
       const double small_num = 1.e-10;
 
@@ -364,12 +367,14 @@ KokkosSolver::computeStableTimeStep( const ProcessorGroup *
 //--------------------------------------------------------------------------------------------------
 template <typename ExecutionSpace, typename MemorySpace>
 void
-KokkosSolver::setTimeStep( const ProcessorGroup *
-                         , const PatchSubset    * patches
-                         , const MaterialSubset *
-                         ,       DataWarehouse  * old_dw
-                         ,       DataWarehouse  * new_dw
-                         )
+KokkosSolver::setTimeStep(Task::CallBackEvent event,
+                          const ProcessorGroup* pg,
+                          const PatchSubset* patches,
+                          const MaterialSubset* matls,
+                          DataWarehouse* old_dw,
+                          DataWarehouse* new_dw,
+                          UintahParams& uintahParams,
+                          ExecutionObject& executionObject)
 {
   const Level* level = getLevel(patches);
   for (int p = 0; p < patches->size(); p++) {

@@ -630,17 +630,14 @@ struct rayTrace_solveDivQFunctor {
 //---------------------------------------------------------------------------
 template< class T >
 void
-Ray::rayTrace( DetailedTask* dtask,
-               Task::CallBackEvent event,
+Ray::rayTrace( Task::CallBackEvent event,
                const ProcessorGroup* pg,
                const PatchSubset* patches,
                const MaterialSubset* matls,
                DataWarehouse* old_dw,
                DataWarehouse* new_dw,
-               void* old_TaskGpuDW,
-               void* new_TaskGpuDW,
-               void* stream,
-               int deviceID,
+               UintahParams& uintahParams,
+               ExecutionObject& executionObject,
                bool modifies_divQ,
                Task::WhichDW which_abskg_dw,
                Task::WhichDW which_sigmaT4_dw,
@@ -1640,17 +1637,14 @@ struct rayTrace_dataOnion_solveDivQFunctor {
 //---------------------------------------------------------------------------
 template< typename T, typename ExecutionSpace, typename MemorySpace>
 inline typename std::enable_if<std::is_same<ExecutionSpace, UintahSpaces::CPU>::value, void>::type
-Ray::rayTrace_dataOnion( DetailedTask* dtask,
-                         Task::CallBackEvent event,
+Ray::rayTrace_dataOnion( Task::CallBackEvent event,
                          const ProcessorGroup* pg,
                          const PatchSubset* finePatches,
                          const MaterialSubset* matls,
                          DataWarehouse* old_dw,
                          DataWarehouse* new_dw,
-                         void* old_TaskGpuDW,
-                         void* new_TaskGpuDW,
-                         void* stream,
-                         int deviceID,
+                         UintahParams& uintahParams,
+                         ExecutionObject& executionObject,
                          bool modifies_divQ,
                          Task::WhichDW notUsed,
                          Task::WhichDW which_sigmaT4_dw,
@@ -1664,17 +1658,14 @@ Ray::rayTrace_dataOnion( DetailedTask* dtask,
 //The Kokkos verison (e.g. NOT the same as UintahSpaces::CPU)
 template< typename T, typename ExecutionSpace, typename MemorySpace>
 inline typename std::enable_if<!std::is_same<ExecutionSpace, UintahSpaces::CPU>::value, void>::type
-Ray::rayTrace_dataOnion( DetailedTask* dtask,
-                         Task::CallBackEvent event,
+Ray::rayTrace_dataOnion( Task::CallBackEvent event,
                          const ProcessorGroup* pg,
                          const PatchSubset* finePatches,
                          const MaterialSubset* matls,
                          DataWarehouse* old_dw,
                          DataWarehouse* new_dw,
-                         void* old_TaskGpuDW,
-                         void* new_TaskGpuDW,
-                         void* stream,
-                         int deviceID,
+                         UintahParams& uintahParams,
+                         ExecutionObject& executionObject,
                          bool modifies_divQ,
                          Task::WhichDW notUsed,
                          Task::WhichDW which_sigmaT4_dw,
@@ -1685,24 +1676,24 @@ Ray::rayTrace_dataOnion( DetailedTask* dtask,
   int maxLevels = fineLevel->getGrid()->numLevels();
   if (maxLevels == 2) {
     //Set up the data onion function for multiple levels.
-    this->rayTrace_dataOnionLevels<2, T, ExecutionSpace, MemorySpace>(dtask, event, pg, finePatches, matls, old_dw, new_dw, old_TaskGpuDW, new_TaskGpuDW,
-                                                                       stream, deviceID, modifies_divQ, notUsed, which_sigmaT4_dw, which_celltype_dw);
+    this->rayTrace_dataOnionLevels<2, T, ExecutionSpace, MemorySpace>( event, pg, finePatches, matls, old_dw, new_dw, uintahParams, executionObject,
+                                                                       modifies_divQ, notUsed, which_sigmaT4_dw, which_celltype_dw );
   } else if (maxLevels == 3) {
     //Set up the data onion function for multiple levels.
-    this->rayTrace_dataOnionLevels<3, T, ExecutionSpace, MemorySpace>(dtask, event, pg, finePatches, matls, old_dw, new_dw, old_TaskGpuDW, new_TaskGpuDW,
-                                                                       stream, deviceID, modifies_divQ, notUsed, which_sigmaT4_dw, which_celltype_dw);
+    this->rayTrace_dataOnionLevels<3, T, ExecutionSpace, MemorySpace>( event, pg, finePatches, matls, old_dw, new_dw, uintahParams, executionObject,
+                                                                       modifies_divQ, notUsed, which_sigmaT4_dw, which_celltype_dw );
   } else if (maxLevels == 4) {
     //Set up the data onion function for multiple levels.
-    this->rayTrace_dataOnionLevels<4, T, ExecutionSpace, MemorySpace>(dtask, event, pg, finePatches, matls, old_dw, new_dw, old_TaskGpuDW, new_TaskGpuDW,
-                                                                       stream, deviceID, modifies_divQ, notUsed, which_sigmaT4_dw, which_celltype_dw);
+    this->rayTrace_dataOnionLevels<4, T, ExecutionSpace, MemorySpace>( event, pg, finePatches, matls, old_dw, new_dw, uintahParams, executionObject,
+                                                                       modifies_divQ, notUsed, which_sigmaT4_dw, which_celltype_dw );
   } else if (maxLevels == 5) {
     //Set up the data onion function for multiple levels.
-    this->rayTrace_dataOnionLevels<5, T, ExecutionSpace, MemorySpace>(dtask, event, pg, finePatches, matls, old_dw, new_dw, old_TaskGpuDW, new_TaskGpuDW,
-                                                                       stream, deviceID, modifies_divQ, notUsed, which_sigmaT4_dw, which_celltype_dw);
+    this->rayTrace_dataOnionLevels<5, T, ExecutionSpace, MemorySpace>( event, pg, finePatches, matls, old_dw, new_dw, uintahParams, executionObject,
+                                                                       modifies_divQ, notUsed, which_sigmaT4_dw, which_celltype_dw );
   } else if (maxLevels == 6) {
     //Set up the data onion function for multiple levels.
-    this->rayTrace_dataOnionLevels<7, T, ExecutionSpace, MemorySpace>(dtask, event, pg, finePatches, matls, old_dw, new_dw, old_TaskGpuDW, new_TaskGpuDW,
-                                                                       stream, deviceID, modifies_divQ, notUsed, which_sigmaT4_dw, which_celltype_dw);
+    this->rayTrace_dataOnionLevels<7, T, ExecutionSpace, MemorySpace>( event, pg, finePatches, matls, old_dw, new_dw, uintahParams, executionObject,
+                                                                       modifies_divQ, notUsed, which_sigmaT4_dw, which_celltype_dw );
   } else {
     std::cerr << "Requested RMCRT Data Onion max level amount of " << maxLevels << " not yet supported.  Edit the code file to supply more possible levels." << std::endl;
     SCI_THROW(InternalError("Requested RMCRT Data Onion max level amount not yet supported.  Edit the code file to supply more possible levels.", __FILE__, __LINE__));
@@ -1715,21 +1706,18 @@ Ray::rayTrace_dataOnion( DetailedTask* dtask,
 //---------------------------------------------------------------------------
 template< int numLevels, typename T, typename ExecutionSpace, typename MemorySpace>
 void
-Ray::rayTrace_dataOnionLevels( DetailedTask* dtask,
-                         Task::CallBackEvent event,
-                         const ProcessorGroup* pg,
-                         const PatchSubset* finePatches,
-                         const MaterialSubset* matls,
-                         DataWarehouse* old_dw,
-                         DataWarehouse* new_dw,
-                         void* old_TaskGpuDW,
-                         void* new_TaskGpuDW,
-                         void* stream,
-                         int deviceID,
-                         bool modifies_divQ,
-                         Task::WhichDW notUsed,
-                         Task::WhichDW which_sigmaT4_dw,
-                         Task::WhichDW which_celltype_dw )
+Ray::rayTrace_dataOnionLevels( Task::CallBackEvent event,
+                               const ProcessorGroup* pg,
+                               const PatchSubset* finePatches,
+                               const MaterialSubset* matls,
+                               DataWarehouse* old_dw,
+                               DataWarehouse* new_dw,
+                               UintahParams& uintahParams,
+                               ExecutionObject& executionObject,
+                               bool modifies_divQ,
+                               Task::WhichDW notUsed,
+                               Task::WhichDW which_sigmaT4_dw,
+                               Task::WhichDW which_celltype_dw )
 {
   // Get level information
   const Level* fineLevel = getLevel(finePatches);
@@ -1886,13 +1874,7 @@ Ray::rayTrace_dataOnionLevels( DetailedTask* dtask,
 
       // TODO: Kokkos-ify the boundary flux calculation
 
-      // Split up a functor into many separate loops.  Gets better GPU occupancy this way.
-      int numKernels = dtask->getTask()->maxStreamsPerTask();
-      std::vector<void*> streams;
-      for (int i = 0; i < numKernels; i++) {
-        streams.push_back(dtask->getCudaStreamForThisTask(i));
-      }
-      Uintah::BlockRange range( streams, patch->getCellLowIndex(), patch->getCellHighIndex());
+      Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex());
 
       //launch the functor
       if (d_algorithm == dataOnionSlim) {
@@ -1900,12 +1882,12 @@ Ray::rayTrace_dataOnionLevels( DetailedTask* dtask,
         functor( levelParamsML, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view,
                      divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays,
                      Max(d_haloCells[0], d_haloCells[1], d_haloCells[2] ));
-        Uintah::parallel_reduce_sum<Kokkos::Cuda>( range, functor, size );
+        Uintah::parallel_reduce_sum<Kokkos::Cuda>( executionObject, range, functor, size );
       } else {
         rayTrace_dataOnion_solveDivQFunctor< T, Kokkos::CudaSpace, Kokkos::Random_XorShift1024_Pool< Kokkos::Cuda >, numLevels >
         functor( levelParamsML, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, sigmaT4OverPi_view, abskg_view,
                    cellType_view , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays);
-        Uintah::parallel_reduce_sum<Kokkos::Cuda>( range, functor, size );
+        Uintah::parallel_reduce_sum<Kokkos::Cuda>( executionObject, range, functor, size );
       }
 
     } // end if ( std::is_same< Kokkos::Cuda , ExecutionSpace >::value )
@@ -2013,12 +1995,12 @@ Ray::rayTrace_dataOnionLevels( DetailedTask* dtask,
           functor( levelParamsML, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view,
                    divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays,
                    Max(d_haloCells[0], d_haloCells[1], d_haloCells[2] ));
-          Uintah::parallel_reduce_sum<Kokkos::OpenMP>( range, functor, size );
+          Uintah::parallel_reduce_sum<Kokkos::OpenMP>( executionObject, range, functor, size );
         } else {
           rayTrace_dataOnion_solveDivQFunctor< T, Kokkos::HostSpace, Kokkos::Random_XorShift1024_Pool< Kokkos::OpenMP >, numLevels >
           functor( levelParamsML, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, sigmaT4OverPi_view, abskg_view,
                  cellType_view , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays);
-          Uintah::parallel_reduce_sum<Kokkos::OpenMP>( range, functor, size );
+          Uintah::parallel_reduce_sum<Kokkos::OpenMP>( executionObject, range, functor, size );
         }
       }  // end of if(_solveDivQ)
 

@@ -167,7 +167,7 @@ gasRadProperties::register_timestep_eval( std::vector<ArchesFieldContainer::Vari
 
 
 template<typename ExecutionSpace, typename MemorySpace> void
-gasRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, void* stream ){
+gasRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
   Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
   CCVariable<double>& abskg = *(tsk_info->get_uintah_field<CCVariable<double> >(_abskg_name));

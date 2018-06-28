@@ -69,7 +69,7 @@ namespace Uintah{
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
     template <typename EXECUTION_SPACE, typename MEMORY_SPACE>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, void* stream );
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject );
 
   private:
 

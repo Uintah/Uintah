@@ -157,11 +157,10 @@ OnDemandDataWarehouse::OnDemandDataWarehouse( const ProcessorGroup* myworld,
 #ifdef HAVE_CUDA
   if (Uintah::Parallel::usingDevice()) {
     int numDevices;
-    cudaError_t retVal;
     if (simulate_multiple_gpus.active()) {
       numDevices = 3;
     } else {
-      CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&numDevices));
+      CUDA_RT_SAFE_CALL( cudaGetDeviceCount(&numDevices) );
     }
 
     for (int i = 0; i < numDevices; i++) {
@@ -441,23 +440,18 @@ OnDemandDataWarehouse::getTypeDescriptionSize(const TypeDescription::Type& type)
   switch(type){
     case TypeDescription::double_type : {
       return sizeof(double);
-      break;
     }
     case TypeDescription::float_type : {
-          return sizeof(float);
-          break;
+      return sizeof(float);
     }
     case TypeDescription::int_type : {
       return sizeof(int);
-      break;
     }
     case TypeDescription::Stencil7 : {
       return sizeof(Stencil7);
-      break;
     }
     case TypeDescription::Vector : {
       return sizeof(Vector);
-      break;
     }
     default : {
       SCI_THROW(InternalError("OnDemandDataWarehouse::getTypeDescriptionSize unsupported GPU Variable base type: " + type, __FILE__, __LINE__));
@@ -490,7 +484,7 @@ OnDemandDataWarehouse::getNumDevices() {
   }
 
   //if multiple devices are desired, use this:
-  CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&numDevices));
+  CUDA_RT_SAFE_CALL( cudaGetDeviceCount(&numDevices) );
 
   return numDevices;
 }
@@ -3146,7 +3140,8 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse*  from,
                                      const VarLabel*       var,
                                      const PatchSubset*    patches,
                                      const MaterialSubset* matls) {
-    this->transferFrom(from, var, patches, matls, nullptr, false, nullptr);
+  ExecutionObject executionObject;
+  this->transferFrom(from, var, patches, matls, executionObject, false, nullptr);
 }
 
 //______________________________________________________________________
@@ -3157,7 +3152,8 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse*  from,
                                      const PatchSubset*    patches,
                                      const MaterialSubset* matls,
                                            bool            replace) {
-    this->transferFrom(from, var, patches, matls, nullptr, replace, nullptr);
+  ExecutionObject executionObject;
+  this->transferFrom(from, var, patches, matls, executionObject, replace, nullptr);
 }
 
 //______________________________________________________________________
@@ -3169,7 +3165,8 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse*  from,
                                      const MaterialSubset* matls,
                                            bool            replace,
                                      const PatchSubset*    newPatches) {
-    this->transferFrom(from, var, patches, matls, nullptr, replace, newPatches);
+  ExecutionObject executionObject;
+  this->transferFrom(from, var, patches, matls, executionObject, replace, newPatches);
 }
 
 //______________________________________________________________________
@@ -3182,13 +3179,13 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse*  from,
 //GPU transferFrom is not yet supported for GPU PerPatch variables.
 //See the GPU's transferFrom() method for many more more details.
 void
-OnDemandDataWarehouse::transferFrom(       DataWarehouse*  from,
-                                     const VarLabel*       var,
-                                     const PatchSubset*    patches,
-                                     const MaterialSubset* matls,
-                                           void *  dTask,
-                                           bool            replace,
-                                     const PatchSubset*    newPatches)
+OnDemandDataWarehouse::transferFrom(       DataWarehouse*   from,
+                                     const VarLabel*        var,
+                                     const PatchSubset*     patches,
+                                     const MaterialSubset*  matls,
+                                           ExecutionObject& executionObject,
+                                           bool             replace,
+                                     const PatchSubset*     newPatches)
 {
   OnDemandDataWarehouse* fromDW = dynamic_cast<OnDemandDataWarehouse*>( from );
   ASSERT( fromDW != 0 );
@@ -3226,15 +3223,13 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse*  from,
             const int patchID = patch->getID();
             GPUGridVariableBase* device_var_source = OnDemandDataWarehouse::createGPUGridVariable(var->typeDescription()->getSubType()->getType());
             GPUGridVariableBase* device_var_dest = OnDemandDataWarehouse::createGPUGridVariable(var->typeDescription()->getSubType()->getType());
-            if(!dTask) {
+            if(!executionObject.getStream()) {
               std::cout << "ERROR! transferFrom() does not have access to the task and its associated CUDA stream."  
-                        << " You need to update the task's callback function to include more parameters which supplies this information."
-                        << " Then you need to pass that detailed task pointer into the transferFrom method." 
-                        << " As an example, please see the parameters for UnifiedSchedulerTest::timeAdvanceUnified."   << std::endl;
+                        << " As an example, please see the parameters for Poisson1::timeAdvanceUnified."   << std::endl;
               throw InternalError("transferFrom() needs access to the task's pointer and its associated CUDA stream.\n", __FILE__, __LINE__); 
             }
             //The GPU assigns streams per task.  For transferFrom to work, it *must* know which correct stream to use
-            bool foundGPU = getGPUDW(0)->transferFrom(((DetailedTask*)dTask)->getCudaStreamForThisTask(0),
+            bool foundGPU = getGPUDW(0)->transferFrom((cudaStream_t*)executionObject.getStream(),
                                                       *device_var_source, *device_var_dest,
                                                       from->getGPUDW(0),
                                                       var->getName().c_str(), patchID, matl, levelID);
@@ -3285,10 +3280,12 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse*  from,
           break;
         case TypeDescription::ReductionVariable :
           SCI_THROW(InternalError("transferFrom doesn't work for reduction variable: "+var->getName(), __FILE__, __LINE__) );
-          break;
+          //No need to break, above throw takes care of that
+          //break;
         case TypeDescription::SoleVariable :
           SCI_THROW(InternalError("transferFrom doesn't work for sole variable: "+var->getName(), __FILE__, __LINE__) );
-          break;
+          //No need to break, above throw takes care of that
+          //break;
         default :
           SCI_THROW(InternalError("Unknown variable type in transferFrom: "+var->getName(), __FILE__, __LINE__) );
       }
@@ -4163,11 +4160,10 @@ OnDemandDataWarehouse::OnDemandDataWarehouse( const ProcessorGroup* myworld,
 #ifdef HAVE_CUDA
   if (Uintah::Parallel::usingDevice()) {
     int numDevices;
-    cudaError_t retVal;
     if (simulate_multiple_gpus.active()) {
       numDevices = 3;
     } else {
-      CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&numDevices));
+      CUDA_RT_SAFE_CALL( cudaGetDeviceCount(&numDevices) );
     }
 
     for (int i = 0; i < numDevices; i++) {
@@ -4454,7 +4450,6 @@ OnDemandDataWarehouse::uintahSetCudaDevice(int deviceNum) {
 int
 OnDemandDataWarehouse::getNumDevices() {
   int numDevices = 0;
-  cudaError_t retVal;
 
   if (Uintah::Parallel::usingDevice()) {
     if (simulate_multiple_gpus.active()) {
@@ -4465,7 +4460,7 @@ OnDemandDataWarehouse::getNumDevices() {
   }
 
   //if multiple devices are desired, use this:
-  CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&numDevices));
+  CUDA_RT_SAFE_CALL( cudaGetDeviceCount(&numDevices) );
 
   return numDevices;
 }
@@ -4475,23 +4470,18 @@ OnDemandDataWarehouse::getTypeDescriptionSize(const TypeDescription::Type& type)
   switch(type){
     case TypeDescription::double_type : {
       return sizeof(double);
-      break;
     }
     case TypeDescription::float_type : {
-          return sizeof(float);
-          break;
+      return sizeof(float);
     }
     case TypeDescription::int_type : {
       return sizeof(int);
-      break;
     }
     case TypeDescription::Stencil7 : {
       return sizeof(Stencil7);
-      break;
     }
     case TypeDescription::Vector : {
       return sizeof(Vector);
-      break;
     }
     default : {
       SCI_THROW(InternalError("OnDemandDataWarehouse::getTypeDescriptionSize unsupported GPU Variable base type: " + type, __FILE__, __LINE__));
@@ -7169,7 +7159,8 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse*  from,
                                      const VarLabel*       var,
                                      const PatchSubset*    patches,
                                      const MaterialSubset* matls) {
-    this->transferFrom(from, var, patches, matls, nullptr, false, nullptr);
+    ExecutionObject executionObject;
+    this->transferFrom(from, var, patches, matls, executionObject, false, nullptr);
 }
 
 //______________________________________________________________________
@@ -7180,7 +7171,8 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse*  from,
                                      const PatchSubset*    patches,
                                      const MaterialSubset* matls,
                                            bool            replace) {
-    this->transferFrom(from, var, patches, matls, nullptr, replace, nullptr);
+    ExecutionObject executionObject;
+    this->transferFrom(from, var, patches, matls, executionObject, replace, nullptr);
 }
 
 //______________________________________________________________________
@@ -7192,7 +7184,8 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse*  from,
                                      const MaterialSubset* matls,
                                            bool            replace,
                                      const PatchSubset*    newPatches) {
-    this->transferFrom(from, var, patches, matls, nullptr, replace, newPatches);
+    ExecutionObject executionObject;
+    this->transferFrom(from, var, patches, matls, executionObject, replace, newPatches);
 }
 
 //______________________________________________________________________
@@ -7205,13 +7198,13 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse*  from,
 //GPU transferFrom is not yet supported for GPU PerPatch variables.
 //See the GPU's transferFrom() method for many more more details.
 void
-OnDemandDataWarehouse::transferFrom(       DataWarehouse*  from,
-                                     const VarLabel*       var,
-                                     const PatchSubset*    patches,
-                                     const MaterialSubset* matls,
-                                           void *  dTask,
-                                           bool            replace,
-                                     const PatchSubset*    newPatches)
+OnDemandDataWarehouse::transferFrom(       DataWarehouse*   from,
+                                     const VarLabel*        var,
+                                     const PatchSubset*     patches,
+                                     const MaterialSubset*  matls,
+                                           ExecutionObject& executionObject,
+                                           bool             replace,
+                                     const PatchSubset*     newPatches)
 {
   OnDemandDataWarehouse* fromDW = dynamic_cast<OnDemandDataWarehouse*>( from );
   ASSERT( fromDW != 0 );
@@ -7249,15 +7242,13 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse*  from,
             const int patchID = patch->getID();
             GPUGridVariableBase* device_var_source = OnDemandDataWarehouse::createGPUGridVariable(var->typeDescription()->getSubType()->getType());
             GPUGridVariableBase* device_var_dest = OnDemandDataWarehouse::createGPUGridVariable(var->typeDescription()->getSubType()->getType());
-            if(!dTask) {
+            if(!executionObject.getStream()) {
               std::cout << "ERROR! transferFrom() does not have access to the task and its associated CUDA stream."
-                        << " You need to update the task's callback function to include more parameters which supplies this information."
-                        << " Then you need to pass that detailed task pointer into the transferFrom method."
-                        << " As an example, please see the parameters for UnifiedSchedulerTest::timeAdvanceUnified."   << std::endl;
+                        << " As an example, please see the parameters for Poisson1::timeAdvanceUnified."   << std::endl;
               throw InternalError("transferFrom() needs access to the task's pointer and its associated CUDA stream.\n", __FILE__, __LINE__);
             }
             //The GPU assigns streams per task.  For transferFrom to work, it *must* know which correct stream to use
-            bool foundGPU = getGPUDW(0)->transferFrom(((DetailedTask*)dTask)->getCudaStreamForThisTask(0),
+            bool foundGPU = getGPUDW(0)->transferFrom((cudaStream_t*)executionObject.getStream(),
                                                       *device_var_source, *device_var_dest,
                                                       from->getGPUDW(0),
                                                       var->getName().c_str(), patchID, matl, levelID);
@@ -7308,10 +7299,12 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse*  from,
           break;
         case TypeDescription::ReductionVariable :
           SCI_THROW(InternalError("transferFrom doesn't work for reduction variable: "+var->getName(), __FILE__, __LINE__) );
-          break;
+          //No need to break, above throw takes care of that
+          //break;
         case TypeDescription::SoleVariable :
           SCI_THROW(InternalError("transferFrom doesn't work for sole variable: "+var->getName(), __FILE__, __LINE__) );
-          break;
+          //No need to break, above throw takes care of that
+          //break;
         default :
           SCI_THROW(InternalError("Unknown variable type in transferFrom: "+var->getName(), __FILE__, __LINE__) );
       }

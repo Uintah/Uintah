@@ -85,4 +85,4 @@ BoundaryInfo::register_timestep_eval( VarInfoVecT& variable_registry,
 }
 
 template<typename ExecutionSpace, typename MemorySpace> void
-BoundaryInfo::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, void* stream ){}
+BoundaryInfo::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){}

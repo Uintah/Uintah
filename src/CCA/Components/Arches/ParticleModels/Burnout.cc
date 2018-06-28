@@ -105,7 +105,7 @@ Burnout::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInfor
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemorySpace> void
-Burnout::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, void* stream ){
+Burnout::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
   Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
   CCVariable<double>& numerator_sum = tsk_info->get_uintah_field_add< CCVariable<double> >("numerator_sum", 0);

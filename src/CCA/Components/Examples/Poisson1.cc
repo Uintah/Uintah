@@ -263,17 +263,14 @@ void Poisson1::initialize( const ProcessorGroup *
 //______________________________________________________________________
 //
 template <typename ExecutionSpace, typename MemorySpace>
-void Poisson1::timeAdvance(DetailedTask* dtask,
-                            Task::CallBackEvent event,
+void Poisson1::timeAdvance(Task::CallBackEvent event,
                             const ProcessorGroup* pg,
                             const PatchSubset* patches,
                             const MaterialSubset* matls,
                             DataWarehouse* old_dw,
                             DataWarehouse* new_dw,
-                            void* old_TaskGpuDW,
-                            void* new_TaskGpuDW,
-                            void* stream,
-                            int deviceID)
+                            UintahParams& uintahParams,
+                            ExecutionObject& executionObject)
 {
 
   int matl = 0;
@@ -285,19 +282,7 @@ void Poisson1::timeAdvance(DetailedTask* dtask,
     IntVector l = patch->getNodeLowIndex();
     IntVector h = patch->getNodeHighIndex();
 
-    std::vector<void*> streams;
-
-#ifdef HAVE_CUDA
-
-    int numKernels = dtask->getTask()->maxStreamsPerTask();
-
-    for (int i = 0; i < numKernels; i++) {
-      streams.push_back(dtask->getCudaStreamForThisTask(i));
-    }
-
-#endif
-
-    Uintah::BlockRange rangeBoundary( streams, l, h);
+    Uintah::BlockRange rangeBoundary( l, h);
 
     l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor ? 0 : 1,
                   patch->getBCType(Patch::yminus) == Patch::Neighbor ? 0 : 1,
@@ -306,19 +291,19 @@ void Poisson1::timeAdvance(DetailedTask* dtask,
                   patch->getBCType(Patch::yplus) == Patch::Neighbor ? 0 : 1,
                   patch->getBCType(Patch::zplus) == Patch::Neighbor ? 0 : 1);
 
-    Uintah::BlockRange range( streams, l, h );
+    Uintah::BlockRange range( l, h );
 
     auto phi = static_cast<OnDemandDataWarehouse*>(old_dw)->getConstNCVariable<double, MemorySpace> (phi_label, matl, patch, Ghost::AroundNodes, 1);
     auto newphi = static_cast<OnDemandDataWarehouse*>(new_dw)->getNCVariable<double, MemorySpace> (phi_label, matl, patch);
 
     // Perform the boundary condition of copying over prior initialized values.  (TODO:  Replace with boundary condition)
     //Uintah::parallel_for<ExecutionSpace, LaunchBounds< 640,1 > >( executionObject, rangeBoundary, KOKKOS_LAMBDA(int i, int j, int k){
-    Uintah::parallel_for<ExecutionSpace>( rangeBoundary, KOKKOS_LAMBDA(int i, int j, int k){
+    Uintah::parallel_for<ExecutionSpace>(executionObject, rangeBoundary, KOKKOS_LAMBDA(int i, int j, int k){
         newphi(i, j, k) = phi(i,j,k);
     });
 
     // Perform the main loop
-    Uintah::parallel_reduce_sum<ExecutionSpace>( range, KOKKOS_LAMBDA (int i, int j, int k, double& residual){
+    Uintah::parallel_reduce_sum<ExecutionSpace>(executionObject, range, KOKKOS_LAMBDA (int i, int j, int k, double& residual){
       newphi(i, j, k) = (1. / 6)
           * (phi(i + 1, j, k) + phi(i - 1, j, k) + phi(i, j + 1, k) +
               phi(i, j - 1, k) + phi(i, j, k + 1) + phi(i, j, k - 1));

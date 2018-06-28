@@ -56,7 +56,7 @@ protected:
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
     template <typename EXECUTION_SPACE, typename MEMORY_SPACE>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, void* stream );
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject );
 
     void create_local_labels();
 
@@ -248,7 +248,7 @@ private:
 
   template <typename T>
   template<typename ExecutionSpace, typename MemorySpace>
-  void WDragModel<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, void* stream ){
+  void WDragModel<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
   const double dt = tsk_info->get_dt();
   Vector Dx = patch->dCell();

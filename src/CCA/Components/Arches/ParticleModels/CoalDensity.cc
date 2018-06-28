@@ -213,7 +213,7 @@ CoalDensity::register_timestep_eval(
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemorySpace> void
-CoalDensity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, void* stream ){
+CoalDensity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
   for ( int ienv = 0; ienv < _Nenv; ienv++ ){
 

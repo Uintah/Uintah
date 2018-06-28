@@ -37,6 +37,7 @@
 #include <Core/Grid/Variables/PSPatchMatlGhost.h>
 #include <Core/Grid/Variables/VarLabelMatl.h>
 
+#include <Core/Parallel/ExecutionObject.h>
 #include <Core/Parallel/MasterLock.h>
 #include <Core/Parallel/UintahMPI.h>
 #include <Core/Parallel/UintahMemorySpaces.h>
@@ -404,7 +405,7 @@ class OnDemandDataWarehouse : public DataWarehouse {
                               const VarLabel*,
                               const PatchSubset* patches,
                               const MaterialSubset*,
-                              void * dtask,
+                              ExecutionObject& executionObject,
                               bool replace,
                               const PatchSubset* newPatches);
 
@@ -1119,7 +1120,7 @@ class OnDemandDataWarehouse : public DataWarehouse {
                               const VarLabel*,
                               const PatchSubset* patches,
                               const MaterialSubset*,
-                              void * dtask,
+                              ExecutionObject& executionObject,
                               bool replace,
                               const PatchSubset* newPatches);
 

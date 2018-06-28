@@ -35,6 +35,7 @@
 #ifndef UINTAH_HOMEBREW_LOOP_EXECUTION_HPP
 #define UINTAH_HOMEBREW_LOOP_EXECUTION_HPP
 
+#include <Core/Parallel/ExecutionObject.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Exceptions/InternalError.h>
 #include <cstring>
@@ -312,7 +313,6 @@ enum TaskAssignedExecutionSpace {
 
 namespace Uintah {
 
-
 class BlockRange;
 
 class BlockRange
@@ -338,49 +338,11 @@ public:
     setValues( c0, c1 );
   }
 
-  template <typename ArrayType>
-  BlockRange(void* stream, ArrayType const & c0, ArrayType const & c1 )
-  {
-    setValues( stream, c0, c1 );
-  }
-
-  template <typename ArrayType>
-  BlockRange(const std::vector<void*>& streams, ArrayType const & c0, ArrayType const & c1 )
-  {
-    setValues( streams, c0, c1 );
-  }
-
   BlockRange( const BlockRange& obj ) {
     for (int i=0; i<rank; ++i) {
       this->m_offset[i] = obj.m_offset[i];
       this->m_dim[i] = obj.m_dim[i];
     }
-  }
-
-  template <typename ArrayType>
-  void setValues(void* stream, ArrayType const & c0, ArrayType const & c1 )
-  {
-    for (int i=0; i<rank; ++i) {
-      m_offset[i] = c0[i] < c1[i] ? c0[i] : c1[i];
-      m_dim[i] =   (c0[i] < c1[i] ? c1[i] : c0[i]) - m_offset[i];
-    }
-#ifdef HAVE_CUDA
-    m_streams.push_back(stream);
-#endif //Ignore the non-CUDA case as those streams are pointless.
-  }
-
-  template <typename ArrayType>
-  void setValues(const std::vector<void*>& streams, ArrayType const & c0, ArrayType const & c1 )
-  {
-    for (int i=0; i<rank; ++i) {
-      m_offset[i] = c0[i] < c1[i] ? c0[i] : c1[i];
-      m_dim[i] =   (c0[i] < c1[i] ? c1[i] : c0[i]) - m_offset[i];
-    }
-#ifdef HAVE_CUDA
-    for (auto& stream : streams) {
-      m_streams.push_back(stream);
-    }
-#endif //Ignore the non-CUDA case as those streams are pointless.
   }
 
   int begin( int r ) const { return m_offset[r]; }
@@ -398,28 +360,6 @@ public:
 private:
   int m_offset[rank];
   int m_dim[rank];
-public:
-  void * getStream() const {
-    if ( m_streams.size() == 0 ) {
-      return nullptr;
-    } else {
-      return m_streams[0];
-    }
-  }
-  void * getStream(unsigned int i) const {
-    if ( i >= m_streams.size() ) {
-      SCI_THROW(InternalError("Requested a stream that doesn't exist.", __FILE__, __LINE__));
-    } else {
-      return m_streams[i];
-    }
-  }
-
-  unsigned int getNumStreams() const {
-    return m_streams.size();
-  }
-
-private:
-  std::vector<void*> m_streams;
 };
 
 //----------------------------------------------------------------------------
@@ -431,7 +371,7 @@ private:
 #if defined(UINTAH_ENABLE_KOKKOS)
 template <typename ExecutionSpace, typename Functor>
 inline typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::OpenMP>::value, void>::type
-parallel_for( BlockRange const & r, const Functor & functor )
+parallel_for( ExecutionObject& executionObject,  BlockRange const & r, const Functor & functor )
 {
   const int ib = r.begin(0); const int ie = r.end(0);
   const int jb = r.begin(1); const int je = r.end(1);
@@ -453,7 +393,7 @@ parallel_for( BlockRange const & r, const Functor & functor )
 
 template <typename ExecutionSpace, typename Functor>
 inline typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::Cuda>::value, void>::type
-parallel_for( BlockRange const & r, const Functor & functor )
+parallel_for( ExecutionObject& executionObject, BlockRange const & r, const Functor & functor )
 {
 
   // Team policy approach (reuses CUDA threads)
@@ -476,7 +416,7 @@ parallel_for( BlockRange const & r, const Functor & functor )
   // Get the requested amount of threads per streaming multiprocessor (SM) and number of SMs totals.
   const unsigned int cuda_threads_per_sm   = Uintah::Parallel::getCudaThreadsPerSM();
   const unsigned int cuda_sms_per_loop     = Uintah::Parallel::getCudaSMsPerLoop();
-  const unsigned int streamPartitions = r.getNumStreams();
+  const unsigned int streamPartitions = executionObject.getNumStreams();
 
   // The requested range of data may not have enough work for the requested command line arguments, so shrink them if necessary.
   const unsigned int actual_threads = (numItems / streamPartitions) > (cuda_threads_per_sm * cuda_sms_per_loop)
@@ -485,7 +425,7 @@ parallel_for( BlockRange const & r, const Functor & functor )
   const unsigned int actual_cuda_sms_per_loop = (actual_threads - 1) / cuda_threads_per_sm + 1;
 
   for (unsigned int i = 0; i < streamPartitions; i++) {
-    void* stream = r.getStream(i);
+    void* stream = executionObject.getStream(i);
     if (!stream) {
       std::cout << "Error, the CUDA stream must not be nullptr\n" << std::endl;
       SCI_THROW(InternalError("Error, the CUDA stream must not be nullptr.", __FILE__, __LINE__));
@@ -591,7 +531,7 @@ parallel_for( BlockRange const & r, const Functor & functor )
 
 template <typename ExecutionSpace, typename Functor>
 inline typename std::enable_if<std::is_same<ExecutionSpace, UintahSpaces::CPU>::value, void>::type
-parallel_for( BlockRange const & r, const Functor & functor )
+parallel_for(ExecutionObject& executionObject, BlockRange const & r, const Functor & functor )
 {
   const int ib = r.begin(0); const int ie = r.end(0);
   const int jb = r.begin(1); const int je = r.end(1);
@@ -610,7 +550,8 @@ void
 parallel_for( BlockRange const & r, const Functor & functor )
 {
   //Force users into using a single CPU thread if they didn't specify OpenMP
-  parallel_for<UintahSpaces::CPU>( r, functor );
+  ExecutionObject executionObject; // Make an empty object
+  parallel_for<UintahSpaces::CPU>( executionObject, r, functor );
 }
 
 // -------------------------------------  parallel_reduce_sum loops  ---------------------------------------------
@@ -618,7 +559,7 @@ parallel_for( BlockRange const & r, const Functor & functor )
 #if defined(UINTAH_ENABLE_KOKKOS)
 template <typename ExecutionSpace, typename Functor, typename ReductionType>
 inline typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::OpenMP>::value, void>::type
-parallel_reduce_sum( BlockRange const & r, const Functor & functor, ReductionType & red  )
+parallel_reduce_sum(ExecutionObject& executionObject, BlockRange const & r, const Functor & functor, ReductionType & red  )
 {
   ReductionType tmp = red;
   unsigned int i_size = r.end(0) - r.begin(0);
@@ -696,7 +637,7 @@ parallel_reduce_sum( BlockRange const & r, const Functor & functor, ReductionTyp
 #if defined(HAVE_CUDA)
 template <typename ExecutionSpace, typename Functor, typename ReductionType>
 inline typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::Cuda>::value, void>::type
-parallel_reduce_sum( BlockRange const & r, const Functor & functor, ReductionType & red  )
+parallel_reduce_sum( ExecutionObject& executionObject, BlockRange const & r, const Functor & functor, ReductionType & red )
 {
   // Overall goal, split a 3D range requested by the user into various SMs on the GPU.  (In essence, this would be a Kokkos MD_Team+Policy, if one existed)
   // The process requires going from 3D range to a 1D range, partitioning the 1D range into groups that are multiples of 32,
@@ -717,7 +658,7 @@ parallel_reduce_sum( BlockRange const & r, const Functor & functor, ReductionTyp
   // Get the requested amount of threads per streaming multiprocessor (SM) and number of SMs totals.
   const unsigned int cuda_threads_per_sm = Uintah::Parallel::getCudaThreadsPerSM();
   const unsigned int cuda_sms_per_loop     = Uintah::Parallel::getCudaSMsPerLoop();
-  const unsigned int streamPartitions = r.getNumStreams();
+  const unsigned int streamPartitions = executionObject.getNumStreams();
 
   // The requested range of data may not have enough work for the requested command line arguments, so shrink them if necessary.
   const unsigned int actual_threads = (numItems / streamPartitions) > (cuda_threads_per_sm * cuda_sms_per_loop)
@@ -725,7 +666,7 @@ parallel_reduce_sum( BlockRange const & r, const Functor & functor, ReductionTyp
   const unsigned int actual_threads_per_sm = (numItems / streamPartitions) > cuda_threads_per_sm ? cuda_threads_per_sm : (numItems / streamPartitions);
   const unsigned int actual_cuda_sms_per_loop = (actual_threads - 1) / cuda_threads_per_sm + 1;
   for (unsigned int i = 0; i < streamPartitions; i++) {
-    void* stream = r.getStream(i);
+    void* stream = executionObject.getStream(i);
     if (!stream) {
       std::cout << "Error, the CUDA stream must not be nullptr\n" << std::endl;
       SCI_THROW(InternalError("Error, the CUDA stream must not be nullptr.", __FILE__, __LINE__));
@@ -801,7 +742,7 @@ parallel_reduce_sum( BlockRange const & r, const Functor & functor, ReductionTyp
 
 template <typename ExecutionSpace, typename Functor, typename ReductionType>
 inline typename std::enable_if<std::is_same<ExecutionSpace, UintahSpaces::CPU>::value, void>::type
-parallel_reduce_sum( BlockRange const & r, const Functor & functor, ReductionType & red  )
+parallel_reduce_sum( ExecutionObject& executionObject, BlockRange const & r, const Functor & functor, ReductionType & red  )
 {
   const int ib = r.begin(0); const int ie = r.end(0);
   const int jb = r.begin(1); const int je = r.end(1);
@@ -822,7 +763,8 @@ void
 parallel_reduce_sum( BlockRange const & r, const Functor & functor, ReductionType & red )
 {
   //Force users into using a single CPU thread if they didn't specify OpenMP
-  parallel_reduce_sum<UintahSpaces::CPU>( r, functor, red );
+  ExecutionObject executionObject;
+  parallel_reduce_sum<UintahSpaces::CPU>( executionObject, r, functor, red );
 }
 
 // -------------------------------------  parallel_reduce_min loops  ---------------------------------------------
@@ -831,7 +773,7 @@ parallel_reduce_sum( BlockRange const & r, const Functor & functor, ReductionTyp
 #if defined(UINTAH_ENABLE_KOKKOS)
 template <typename ExecutionSpace, typename Functor, typename ReductionType>
 inline typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::OpenMP>::value, void>::type
-parallel_reduce_min( BlockRange const & r, const Functor & functor, ReductionType & red  )
+parallel_reduce_min( ExecutionObject& executionObject, BlockRange const & r, const Functor & functor, ReductionType & red  )
 {
   ReductionType tmp = red;
 
@@ -856,7 +798,7 @@ parallel_reduce_min( BlockRange const & r, const Functor & functor, ReductionTyp
 #if defined(HAVE_CUDA)
 template <typename ExecutionSpace, typename Functor, typename ReductionType>
 inline typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::Cuda>::value, void>::type
-parallel_reduce_min( BlockRange const & r, const Functor & functor, ReductionType & red  )
+parallel_reduce_min( ExecutionObject& executionObject, BlockRange const & r, const Functor & functor, ReductionType & red  )
 {
 
   printf("CUDA version of parallel_reduce_min not yet implemented\n");
@@ -869,7 +811,7 @@ parallel_reduce_min( BlockRange const & r, const Functor & functor, ReductionTyp
 //TODO: This appears to not do any "min" on the reduction.
 template <typename ExecutionSpace, typename Functor, typename ReductionType>
 inline typename std::enable_if<std::is_same<ExecutionSpace, UintahSpaces::CPU>::value, void>::type
-parallel_reduce_min( BlockRange const & r, const Functor & functor, ReductionType & red  )
+parallel_reduce_min( ExecutionObject& executionObject, BlockRange const & r, const Functor & functor, ReductionType & red  )
 {
   const int ib = r.begin(0); const int ie = r.end(0);
   const int jb = r.begin(1); const int je = r.end(1);
@@ -966,43 +908,7 @@ struct FunctorBuilderReduce {
   }
 };
 #endif //defined(HAVE_CUDA)
-
-template <typename Functor, typename ReductionType>
-void parallel_reduce_1D( BlockRange const & r, const Functor & f, ReductionType & red  ) {
-#if !defined( HAVE_CUDA )
-  if ( ! Uintah::Parallel::usingDevice() ) {
-    ReductionType tmp = red;
-    Kokkos::RangePolicy<Kokkos::OpenMP> rangepolicy(r.begin(0), r.end(0));
-    Kokkos::parallel_reduce( rangepolicy, f, tmp );
-    red = tmp;
-  }
-#elif defined( HAVE_CUDA )
-  //else {
-    //This must be a single dimensional range policy, so use Kokkos::RangePolicy
-    ReductionType *tmp;
-    cudaMallocHost( (void**)&tmp, sizeof(ReductionType) );
-
-    //No streaming, no launch bounds
-    //Kokkos::RangePolicy<Kokkos::Cuda> rangepolicy(r.begin(0), r.end(0));
-    //No streaming, launch bounds (512 gave 128 registers, 640 gave 96 registers)
-    //Kokkos::RangePolicy<Kokkos::Cuda, Kokkos::LaunchBounds<512,1>> rangepolicy(r.begin(0), r.end(0));
-
-    //Streaming
-    Kokkos::Cuda instanceObject = Kokkos::Cuda( *(static_cast<cudaStream_t>(r.getStream())) );
- 
-    //Streaming, no launch bounds
-    //Kokkos::RangePolicy<Kokkos::Cuda> rangepolicy(instanceObject, r.begin(0), r.end(0));
-    //Streaming, launch bounds   
-    Kokkos::RangePolicy<Kokkos::Cuda, Kokkos::LaunchBounds<512,1>> rangepolicy(instanceObject,  r.begin(0), r.end(0));
-
-    Kokkos::parallel_reduce( rangepolicy, f, *tmp );  //TODO: Don't forget about these reduction values.
-  //}
-#endif
-}
-
-
 #endif //if defined( UINTAH_ENABLE_KOKKOS )
-
 
 
 #if defined(UINTAH_ENABLE_KOKKOS)

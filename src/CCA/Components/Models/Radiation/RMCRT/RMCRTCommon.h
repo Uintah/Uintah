@@ -178,34 +178,28 @@ namespace Uintah{
       void sched_CarryForward_FineLevelLabels ( const LevelP& level,
                                                 SchedulerP& sched );
                                           
-      void carryForward_FineLevelLabels ( DetailedTask* dtask,
-                                          Task::CallBackEvent event,
+      void carryForward_FineLevelLabels ( Task::CallBackEvent event,
                                           const ProcessorGroup*,
                                           const PatchSubset* patches,
                                           const MaterialSubset* matls,
                                           DataWarehouse* old_dw,
                                           DataWarehouse* new_dw,
-                                          void* old_TaskGpuDW,
-                                          void* new_TaskGpuDW,
-                                          void* stream,
-                                          int deviceID );
+                                          UintahParams& uintahParams,
+                                          ExecutionObject& executionObject );
        
       void sched_CarryForward_Var ( const LevelP& level,
                                     SchedulerP& scheduler,
                                     const VarLabel* variable,
                                     const int tg_num  = -1 );
 
-      void carryForward_Var( DetailedTask* dtask,
-                             Task::CallBackEvent event,
+      void carryForward_Var( Task::CallBackEvent event,
                              const ProcessorGroup*,
                              const PatchSubset*,
                              const MaterialSubset*,
                              DataWarehouse*,
                              DataWarehouse*,
-                             void* old_TaskGpuDW,
-                             void* new_TaskGpuDW,
-                             void* stream,
-                             int deviceID,
+                             UintahParams& uintahParams,
+                             ExecutionObject& executionObject,
                              const VarLabel* variable );
 
       //__________________________________

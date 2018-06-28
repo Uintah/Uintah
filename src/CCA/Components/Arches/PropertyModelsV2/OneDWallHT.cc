@@ -112,7 +112,7 @@ OneDWallHT::register_timestep_eval( std::vector<ArchesFieldContainer::VariableIn
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemorySpace> void
-OneDWallHT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, void* stream ){
+OneDWallHT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
   CCVariable<double>& Twall = *(tsk_info->get_uintah_field<CCVariable<double> >( "Twall"));
   constCCVariable<double>& rad_q = *(tsk_info->get_const_uintah_field<constCCVariable<double > >( _incident_hf_label ));

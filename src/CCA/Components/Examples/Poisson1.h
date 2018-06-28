@@ -86,18 +86,15 @@ WARNING
     virtual void scheduleTimeAdvance( const LevelP& level, 
                                           SchedulerP&);
 
-    template <typename EXECUTION_SPACE, typename MEMORY_SPACE>
-    void timeAdvance( DetailedTask* task,
-                      Task::CallBackEvent event,
+    template <typename ExecutionSpace, typename MemorySpace>
+    void timeAdvance( Task::CallBackEvent event,
                       const ProcessorGroup* pg,
                       const PatchSubset* patches,
                       const MaterialSubset* matls,
                       DataWarehouse* old_dw,
                       DataWarehouse* new_dw,
-                      void* old_TaskGpuDW,
-                      void* new_TaskGpuDW,
-                      void* stream,
-                      int deviceID );
+                      UintahParams& uintahParams,
+                      ExecutionObject& executionObject );
 
   private:
     void initialize(const ProcessorGroup*,

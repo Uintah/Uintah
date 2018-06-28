@@ -102,18 +102,24 @@ namespace Uintah{
   void computeTimestep(const LevelP& level, SchedulerP& sched);
 
   template <typename ExecutionSpace, typename MemorySpace>
-  void computeStableTimeStep( const ProcessorGroup*,
+  void computeStableTimeStep( Task::CallBackEvent event,
+                              const ProcessorGroup* pg,
                               const PatchSubset* patches,
-                              const MaterialSubset*,
+                              const MaterialSubset* matls,
                               DataWarehouse* old_dw,
-                              DataWarehouse* new_dw );
+                              DataWarehouse* new_dw,
+                              UintahParams& uintahParams,
+                              ExecutionObject& executionObject);
 
   template <typename ExecutionSpace, typename MemorySpace>
-  void setTimeStep( const ProcessorGroup*,
+  void setTimeStep( Task::CallBackEvent event,
+                    const ProcessorGroup* pg,
                     const PatchSubset* patches,
-                    const MaterialSubset*,
+                    const MaterialSubset* matls,
                     DataWarehouse* old_dw,
-                    DataWarehouse* new_dw );
+                    DataWarehouse* new_dw,
+                    UintahParams& uintahParams,
+                    ExecutionObject& executionObject );
 
   double recomputeDelT(const double delT) { return delT/2.0; };
 

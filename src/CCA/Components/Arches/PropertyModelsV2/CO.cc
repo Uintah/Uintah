@@ -195,7 +195,7 @@ CO::register_timestep_eval( std::vector<AFC::VariableInformation>& variable_regi
 }
 
 template<typename ExecutionSpace, typename MemorySpace> void
-CO::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, void* stream ){
+CO::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
 
   /* This model computes carbon monoxide as a sum of the equilibrum CO and a defect CO.

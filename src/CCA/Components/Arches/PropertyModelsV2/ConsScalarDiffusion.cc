@@ -90,7 +90,7 @@ void ConsScalarDiffusion::register_timestep_eval( VIVec& variable_registry, cons
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemorySpace>
-void ConsScalarDiffusion::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, void* stream ){
+void ConsScalarDiffusion::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
   CCVariable<double>& gamma = tsk_info->get_uintah_field_add<CCVariable<double> >(m_gamma_name);
   constCCVariable<double>& mu_t    = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_turb_viscosity_name);

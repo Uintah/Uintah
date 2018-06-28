@@ -151,7 +151,7 @@ WALE::register_timestep_eval( std::vector<AFC::VariableInformation>&
 
 //---------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemorySpace> void
-WALE::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, void* stream ){
+WALE::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
   constSFCXVariable<double>& uVel = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >(m_u_vel_name);
   constSFCYVariable<double>& vVel = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >(m_v_vel_name);

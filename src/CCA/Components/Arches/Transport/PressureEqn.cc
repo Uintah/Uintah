@@ -211,7 +211,7 @@ PressureEqn::register_timestep_eval(
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemorySpace> void
-PressureEqn::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, void* stream ){
+PressureEqn::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
   Vector DX = patch->dCell();
   const double area_EW = DX.y()*DX.z();

@@ -96,7 +96,7 @@ ContinuityPredictor::register_timestep_eval( std::vector<ArchesFieldContainer::V
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemorySpace> void
-ContinuityPredictor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, void* stream ){
+ContinuityPredictor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
   constSFCXVariable<double>& xmom = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >("x-mom");
   constSFCYVariable<double>& ymom = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >("y-mom");
