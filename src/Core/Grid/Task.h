@@ -156,7 +156,7 @@ protected: // class Task
                      ,       UintahParams   & uintahParams
                      ,       ExecutionObject& executionObject)
     {
-      doit_impl(event, pg, patches, matls, fromDW, toDW, uintahParams, executionObject, typename Tuple::gens<sizeof...(Args)>::type());
+      doit_impl(pg, patches, matls, fromDW, toDW, typename Tuple::gens<sizeof...(Args)>::type());
     }
 
 
@@ -178,7 +178,7 @@ protected: // class Task
 
 
 
-  // GPU (device) Action constructor
+  // Kokkos enabled task Action constructor
   template<typename T, typename... Args>
   class ActionDevice : public ActionBase {
 
@@ -245,10 +245,10 @@ protected: // class Task
                   ,       Tuple::seq<S...>
                   )
       {
-        (ptr->*pmf)(event, pg, patches, matls, fromDW, toDW, uintahParams, executionObject,  std::get<S>(m_args)...);
+        (ptr->*pmf)(event, pg, patches, matls, fromDW, toDW, uintahParams, executionObject, std::get<S>(m_args)...);
       }
 
-  };  // end GPU (device) Action constructor
+  };  // end Kokkos enabled task Action constructor
 #else
 
 private:
