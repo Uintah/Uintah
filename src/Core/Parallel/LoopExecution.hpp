@@ -414,15 +414,15 @@ parallel_for( ExecutionObject& executionObject, BlockRange const & r, const Func
   const unsigned int numItems = (i_size > 0 ? i_size : 1) * (j_size > 0 ? j_size : 1) * (k_size > 0 ? k_size : 1);
 
   // Get the requested amount of threads per streaming multiprocessor (SM) and number of SMs totals.
-  const unsigned int cuda_threads_per_sm   = Uintah::Parallel::getCudaThreadsPerSM();
-  const unsigned int cuda_sms_per_loop     = Uintah::Parallel::getCudaSMsPerLoop();
+  const unsigned int cuda_threads_per_block   = executionObject.getCudaThreadsPerBlock();
+  const unsigned int cuda_blocks_per_loop     = executionObject.getCudaBlocksPerLoop();
   const unsigned int streamPartitions = executionObject.getNumStreams();
 
   // The requested range of data may not have enough work for the requested command line arguments, so shrink them if necessary.
-  const unsigned int actual_threads = (numItems / streamPartitions) > (cuda_threads_per_sm * cuda_sms_per_loop)
-                                    ? (cuda_threads_per_sm * cuda_sms_per_loop) : (numItems / streamPartitions);
-  const unsigned int actual_threads_per_sm = (numItems / streamPartitions) > cuda_threads_per_sm ? cuda_threads_per_sm : (numItems / streamPartitions);
-  const unsigned int actual_cuda_sms_per_loop = (actual_threads - 1) / cuda_threads_per_sm + 1;
+  const unsigned int actual_threads = (numItems / streamPartitions) > (cuda_threads_per_block * cuda_blocks_per_loop)
+                                    ? (cuda_threads_per_block * cuda_blocks_per_loop) : (numItems / streamPartitions);
+  const unsigned int actual_threads_per_block = (numItems / streamPartitions) > cuda_threads_per_block ? cuda_threads_per_block : (numItems / streamPartitions);
+  const unsigned int actual_cuda_blocks_per_loop = (actual_threads - 1) / cuda_threads_per_block + 1;
 
   for (unsigned int i = 0; i < streamPartitions; i++) {
     void* stream = executionObject.getStream(i);
@@ -434,21 +434,21 @@ parallel_for( ExecutionObject& executionObject, BlockRange const & r, const Func
 
     // Use a Team Policy, this allows us to control how many threads per SM and how many SMs are used.
     typedef Kokkos::TeamPolicy< Kokkos::Cuda > policy_type;
-    //Kokkos::TeamPolicy< Kokkos::Cuda, Kokkos::LaunchBounds<640,1> > tp( instanceObject, actual_cuda_sms_per_loop, actual_threads_per_sm );
-    Kokkos::TeamPolicy< Kokkos::Cuda > tp( instanceObject, actual_cuda_sms_per_loop, actual_threads_per_sm );
+    //Kokkos::TeamPolicy< Kokkos::Cuda, Kokkos::LaunchBounds<640,1> > tp( instanceObject, actual_cuda_blocks_per_loop, actual_threads_per_block );
+    Kokkos::TeamPolicy< Kokkos::Cuda > tp( instanceObject, actual_cuda_blocks_per_loop, actual_threads_per_block );
     Kokkos::parallel_for ( tp, [=] __device__ ( typename policy_type::member_type thread ) {
 
       // We are within an SM, and all SMs share the same amount of assigned CUDA threads.
       // Figure out which range of N items this SM should work on (as a multiple of 32).
-      const unsigned int currentPartition = i * actual_cuda_sms_per_loop + thread.league_rank();
-      unsigned int estimatedThreadAmount = numItems * (currentPartition) / ( actual_cuda_sms_per_loop * streamPartitions );
+      const unsigned int currentPartition = i * actual_cuda_blocks_per_loop + thread.league_rank();
+      unsigned int estimatedThreadAmount = numItems * (currentPartition) / ( actual_cuda_blocks_per_loop * streamPartitions );
       const unsigned int startingN =  estimatedThreadAmount + ((estimatedThreadAmount % 32 == 0) ? 0 : (32-estimatedThreadAmount % 32));
       unsigned int endingN;
       // Check if this is the last partition
-      if ( currentPartition + 1 == actual_cuda_sms_per_loop * streamPartitions ) {
+      if ( currentPartition + 1 == actual_cuda_blocks_per_loop * streamPartitions ) {
         endingN = numItems;
       } else {
-        estimatedThreadAmount = numItems * ( currentPartition + 1 ) / ( actual_cuda_sms_per_loop * streamPartitions );
+        estimatedThreadAmount = numItems * ( currentPartition + 1 ) / ( actual_cuda_blocks_per_loop * streamPartitions );
         endingN = estimatedThreadAmount + ((estimatedThreadAmount % 32 == 0) ? 0 : (32-estimatedThreadAmount % 32));
       }
       const unsigned int totalN = endingN - startingN;
@@ -476,8 +476,8 @@ parallel_for( ExecutionObject& executionObject, BlockRange const & r, const Func
 //  unsigned int rbegin2 = r.begin(2);
 //
 //
-//  int cuda_threads_per_sm = Uintah::Parallel::getCudaThreadsPerSM();
-//  int cuda_sms_per_loop   = Uintah::Parallel::getCudaSMsPerLoop();
+//  int cuda_threads_per_block = executionObject.getCudaThreadsPerBlock();
+//  int cuda_blocks_per_loop   = executionObject.getCudaBlocksPerLoop();
 //
 //  //If 256 threads aren't needed, use less.
 //  //But cap at 256 threads total, as this will correspond to 256 threads in a block.
@@ -486,11 +486,11 @@ parallel_for( ExecutionObject& executionObject, BlockRange const & r, const Func
 //  //Cuda thread 1 will be assigned to n = 1, n = 257, n = 513, and n = 769...
 //
 //  const int teamThreadRangeSize = (i_size > 0 ? i_size : 1) * (j_size > 0 ? j_size : 1) * (k_size > 0 ? k_size : 1);
-//  const int actualThreads = teamThreadRangeSize > cuda_threads_per_sm ? cuda_threads_per_sm : teamThreadRangeSize;
+//  const int actualThreads = teamThreadRangeSize > cuda_threads_per_block ? cuda_threads_per_block : teamThreadRangeSize;
 //
 //  typedef Kokkos::TeamPolicy< ExecutionSpace > policy_type;
 //
-//  Kokkos::parallel_for (Kokkos::TeamPolicy< ExecutionSpace >( cuda_sms_per_loop, actualThreads ),
+//  Kokkos::parallel_for (Kokkos::TeamPolicy< ExecutionSpace >( cuda_blocks_per_loop, actualThreads ),
 //                           [=] __device__ ( typename policy_type::member_type thread ) {
 //    Kokkos::parallel_for (Kokkos::TeamThreadRange(thread, teamThreadRangeSize), [=] (const int& n) {
 //
@@ -656,15 +656,15 @@ parallel_reduce_sum( ExecutionObject& executionObject, BlockRange const & r, con
   const unsigned int numItems = (i_size > 0 ? i_size : 1) * (j_size > 0 ? j_size : 1) * (k_size > 0 ? k_size : 1);
 
   // Get the requested amount of threads per streaming multiprocessor (SM) and number of SMs totals.
-  const unsigned int cuda_threads_per_sm = Uintah::Parallel::getCudaThreadsPerSM();
-  const unsigned int cuda_sms_per_loop     = Uintah::Parallel::getCudaSMsPerLoop();
+  const unsigned int cuda_threads_per_block = executionObject.getCudaThreadsPerBlock();
+  const unsigned int cuda_blocks_per_loop     = executionObject.getCudaBlocksPerLoop();
   const unsigned int streamPartitions = executionObject.getNumStreams();
 
   // The requested range of data may not have enough work for the requested command line arguments, so shrink them if necessary.
-  const unsigned int actual_threads = (numItems / streamPartitions) > (cuda_threads_per_sm * cuda_sms_per_loop)
-                                    ? (cuda_threads_per_sm * cuda_sms_per_loop) : (numItems / streamPartitions);
-  const unsigned int actual_threads_per_sm = (numItems / streamPartitions) > cuda_threads_per_sm ? cuda_threads_per_sm : (numItems / streamPartitions);
-  const unsigned int actual_cuda_sms_per_loop = (actual_threads - 1) / cuda_threads_per_sm + 1;
+  const unsigned int actual_threads = (numItems / streamPartitions) > (cuda_threads_per_block * cuda_blocks_per_loop)
+                                    ? (cuda_threads_per_block * cuda_blocks_per_loop) : (numItems / streamPartitions);
+  const unsigned int actual_threads_per_block = (numItems / streamPartitions) > cuda_threads_per_block ? cuda_threads_per_block : (numItems / streamPartitions);
+  const unsigned int actual_cuda_blocks_per_loop = (actual_threads - 1) / cuda_threads_per_block + 1;
   for (unsigned int i = 0; i < streamPartitions; i++) {
     void* stream = executionObject.getStream(i);
     if (!stream) {
@@ -675,21 +675,21 @@ parallel_reduce_sum( ExecutionObject& executionObject, BlockRange const & r, con
 
     // Use a Team Policy, this allows us to control how many threads per SM and how many SMs are used.
     typedef Kokkos::TeamPolicy< Kokkos::Cuda > policy_type;
-    //Kokkos::TeamPolicy< Kokkos::Cuda, Kokkos::LaunchBounds<640,1>  > reduce_tp( instanceObject, actual_cuda_sms_per_loop, actual_threads_per_sm );
-    Kokkos::TeamPolicy< Kokkos::Cuda > reduce_tp( instanceObject, actual_cuda_sms_per_loop, actual_threads_per_sm );
+    //Kokkos::TeamPolicy< Kokkos::Cuda, Kokkos::LaunchBounds<640,1>  > reduce_tp( instanceObject, actual_cuda_blocks_per_loop, actual_threads_per_block );
+    Kokkos::TeamPolicy< Kokkos::Cuda > reduce_tp( instanceObject, actual_cuda_blocks_per_loop, actual_threads_per_block );
     Kokkos::parallel_reduce ( reduce_tp, [=] __device__ ( typename policy_type::member_type thread, ReductionType& inner_sum ) {
 
       // We are within an SM, and all SMs share the same amount of assigned CUDA threads.
       // Figure out which range of N items this SM should work on (as a multiple of 32).
-      const unsigned int currentPartition = i * actual_cuda_sms_per_loop + thread.league_rank();
-      unsigned int estimatedThreadAmount = numItems * (currentPartition) / ( actual_cuda_sms_per_loop * streamPartitions );
+      const unsigned int currentPartition = i * actual_cuda_blocks_per_loop + thread.league_rank();
+      unsigned int estimatedThreadAmount = numItems * (currentPartition) / ( actual_cuda_blocks_per_loop * streamPartitions );
       const unsigned int startingN =  estimatedThreadAmount + ((estimatedThreadAmount % 32 == 0) ? 0 : (32-estimatedThreadAmount % 32));
       unsigned int endingN;
       // Check if this is the last partition
-      if ( currentPartition + 1 == actual_cuda_sms_per_loop * streamPartitions ) {
+      if ( currentPartition + 1 == actual_cuda_blocks_per_loop * streamPartitions ) {
         endingN = numItems;
       } else {
-        estimatedThreadAmount = numItems * ( currentPartition + 1 ) / ( actual_cuda_sms_per_loop * streamPartitions );
+        estimatedThreadAmount = numItems * ( currentPartition + 1 ) / ( actual_cuda_blocks_per_loop * streamPartitions );
         endingN = estimatedThreadAmount + ((estimatedThreadAmount % 32 == 0) ? 0 : (32-estimatedThreadAmount % 32));
       }
       const unsigned int totalN = endingN - startingN;
@@ -1031,25 +1031,26 @@ parallel_for( Kokkos::View<int*, Kokkos::HostSpace> iterSpace, const Functor & f
 //Allows the user to specify a vector (or view) of indices that require an operation, often needed for boundary conditions and possibly structured grids
 //This GPU version is mostly a copy of the original GPU version
 // TODO: Can this be called parallel_for_unstructured?
+// TODO: Make streamable.
 #if defined(UINTAH_ENABLE_KOKKOS)
 #if defined(HAVE_CUDA)
 template <typename ExecutionSpace, typename Functor>
 typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::Cuda>::value, void>::type
-parallel_for(Kokkos::View<int*, Kokkos::HostSpace> iterSpace , const Functor & functor )
+parallel_for(ExecutionObject& executionObject, Kokkos::View<int*, Kokkos::HostSpace> iterSpace , const Functor & functor )
 {
   const int number_of_indices=3;
   Kokkos::View< int*, Kokkos::CudaSpace >  iterSpace_gpu("BoundaryCondition_uintah_parallel_for_list",iterSpace.size());
   Kokkos::deep_copy(iterSpace_gpu,iterSpace);
   const int n_tot=iterSpace.size()/number_of_indices;
 
-  int cuda_threads_per_sm = Uintah::Parallel::getCudaThreadsPerSM();
-  int cuda_sms_per_loop   = Uintah::Parallel::getCudaSMsPerLoop();
+  int cuda_threads_per_block = executionObject.getCudaThreadsPerBlock();
+  int cuda_blocks_per_loop   = executionObject.getCudaBlocksPerLoop();
 
-  const int actualThreads = n_tot > cuda_threads_per_sm ? cuda_threads_per_sm : n_tot;
+  const int actualThreads = n_tot > cuda_threads_per_block ? cuda_threads_per_block : n_tot;
 
   typedef Kokkos::TeamPolicy< ExecutionSpace > policy_type;
 
-  Kokkos::parallel_for (Kokkos::TeamPolicy< ExecutionSpace >( cuda_sms_per_loop, actualThreads ),
+  Kokkos::parallel_for (Kokkos::TeamPolicy< ExecutionSpace >( cuda_blocks_per_loop, actualThreads ),
                         [=] __device__ ( typename policy_type::member_type thread ) {
 
     Kokkos::parallel_for (Kokkos::TeamThreadRange(thread, n_tot), [=] (const int& iblock) {
@@ -1064,31 +1065,32 @@ parallel_for(Kokkos::View<int*, Kokkos::HostSpace> iterSpace , const Functor & f
 #endif
 
 #if defined(UINTAH_ENABLE_KOKKOS)
-
+// TODO: Rename to something more descriptive beyond parallel_for.  I suggest parallel_initialize
 template <typename ExecutionSpace, typename T2, typename T3>
 typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::OpenMP>::value, void>::type
-  parallel_for(T2 KV3,const T3 init_val ){
+  parallel_for(ExecutionObject& executionObject, T2 KV3, const T3 init_val ){
 
   Kokkos::parallel_for( Kokkos::RangePolicy<ExecutionSpace, int>(0,KV3.m_view.size() ).set_chunk_size(2), [=](int i) {
     KV3(i)=init_val;
   });
 }
 
-//TODO: Rename this function to be more descriptive.  Is it an internal function?  Public API?
+
 #if defined(HAVE_CUDA)
+// TODO: Rename to something more descriptive beyond parallel_for.  I suggest parallel_initialize
 template <typename ExecutionSpace, typename T2, typename T3>
 typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::Cuda>::value, void>::type
-parallel_for(T2 KV3,const T3 init_val)
+parallel_for(ExecutionObject& executionObject, T2 KV3, const T3 init_val)
 {
-  int cuda_threads_per_sm = Uintah::Parallel::getCudaThreadsPerSM();
-  int cuda_sms_per_loop   = Uintah::Parallel::getCudaSMsPerLoop();
+  int cuda_threads_per_block = executionObject.getCudaThreadsPerBlock();
+  int cuda_blocks_per_loop   = executionObject.getCudaBlocksPerLoop();
 
   const int num_cells=KV3.m_view.size();
-  const int actualThreads = num_cells > cuda_threads_per_sm ? cuda_threads_per_sm : num_cells;
+  const int actualThreads = num_cells > cuda_threads_per_block ? cuda_threads_per_block : num_cells;
 
   typedef Kokkos::TeamPolicy< ExecutionSpace > policy_type;
 
-  Kokkos::parallel_for (Kokkos::TeamPolicy< ExecutionSpace >( cuda_sms_per_loop, actualThreads ),
+  Kokkos::parallel_for (Kokkos::TeamPolicy< ExecutionSpace >( cuda_blocks_per_loop, actualThreads ),
                         KOKKOS_LAMBDA ( typename policy_type::member_type thread ) {
     Kokkos::parallel_for (Kokkos::TeamThreadRange(thread, num_cells), [=] (const int& i) {
        KV3(i)=init_val;
@@ -1101,7 +1103,7 @@ parallel_for(T2 KV3,const T3 init_val)
 #if defined(UINTAH_ENABLE_KOKKOS)
 template <typename ExecutionSpace, typename T2, typename T3>
 typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::OpenMP>::value, void>::type
-parallel_initialize_grouped(T2 KKV3,const T3 init_val ){
+parallel_initialize_grouped(ExecutionObject& executionObject, T2 KKV3, const T3 init_val ){
 
   //TODO: This should probably be seralized and not use a Kokkos::parallel_for?
 
@@ -1125,7 +1127,7 @@ parallel_initialize_grouped(T2 KKV3,const T3 init_val ){
 
 template <typename ExecutionSpace, typename T2, typename T3>
 typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::OpenMP>::value, void>::type
-parallel_initialize_single(T2 KKV3,const T3 init_val ){
+parallel_initialize_single(ExecutionObject& executionObject, T2 KKV3, const T3 init_val ){
   for (unsigned int j=0; j < KKV3.size(); j++){
     Kokkos::parallel_for( Kokkos::RangePolicy<ExecutionSpace, int>(0,KKV3(j).m_view.size() ).set_chunk_size(2), [=](int i) {
       KKV3(j)(i)=init_val;
@@ -1140,13 +1142,13 @@ using Alias = TTT;
 
 template <  typename T, typename MemorySpace>
 typename std::enable_if<std::is_same<MemorySpace,UintahSpaces::HostSpace>::value, std::vector<Alias<T> >  >::type
-  createContainer(int num_field){
+createContainer(int num_field){
   return std::vector<Alias<T> >(num_field); // perform deep copy   (should be ok since it is an empty CCVariable?)
 }
 
 template <  typename T, typename MemorySpace>
 typename std::enable_if<std::is_same<MemorySpace,UintahSpaces::HostSpace>::value, std::vector<Alias<T> >  >::type
-  createConstContainer(int num_field){
+createConstContainer(int num_field){
   return std::vector<Alias<T> >(num_field); // perform deep copy (should be ok since it is an empty CCVariable?)
 }
 
@@ -1157,46 +1159,46 @@ class KokkosView3;
 
 template <  typename T, typename MemorySpace>
 typename std::enable_if<std::is_same<MemorySpace, Kokkos::HostSpace>::value, Kokkos::View<KokkosView3<T,MemorySpace>* , Kokkos::HostSpace > >::type
-  createContainer(int num_field ){
+createContainer(int num_field ){
   return Kokkos::View<KokkosView3<T,MemorySpace>* , Kokkos::HostSpace >("a_view_of_KokkosView3s",num_field);
 }
 
 template <  typename T, typename MemorySpace>
 typename std::enable_if<std::is_same<MemorySpace, Kokkos::HostSpace>::value, Kokkos::View<KokkosView3<const T,MemorySpace>* , Kokkos::HostSpace > >::type
-  createConstContainer(int num_field  ){
+createConstContainer(int num_field  ){
   return Kokkos::View<KokkosView3<const T,MemorySpace>* , Kokkos::HostSpace >("a_view_of_KokkosView3s_with_const",num_field);
 }
 
 #if defined(HAVE_CUDA)
 template <  typename T, typename MemorySpace>
 typename std::enable_if<std::is_same<MemorySpace, Kokkos::CudaSpace>::value, Kokkos::View<KokkosView3<T,MemorySpace>* , Kokkos::HostSpace > >::type
-  createContainer(int num_field ){
+createContainer(int num_field ){
   return Kokkos::View<KokkosView3<T,MemorySpace>* , Kokkos::HostSpace >("a_view_of_gpu_KokkosView3s",num_field);
 }
 
 template <  typename T, typename MemorySpace>
 typename std::enable_if<std::is_same<MemorySpace, Kokkos::CudaSpace>::value, Kokkos::View<KokkosView3<const T,MemorySpace>* , Kokkos::HostSpace > >::type
-  createConstContainer(int num_field ){
+createConstContainer(int num_field ){
   return Kokkos::View<KokkosView3<const T,MemorySpace>* , Kokkos::HostSpace >("a_view_of_gpu_KokkosView3s_with_const",num_field);
 }
 
 template <typename ExecutionSpace, typename T2, typename T3>
 typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::Cuda>::value, void>::type
-  parallel_initialize_single(T2 KKV3,const T3 init_val ){
+parallel_initialize_single(ExecutionObject& executionObject, T2 KKV3, const T3 init_val ){
 
   Kokkos::View< KokkosView3<T3,Kokkos::CudaSpace>* , Kokkos::CudaSpace >  KKV3_gpu("parallel_init_single_gpu",KKV3.size());
   Kokkos::deep_copy(KKV3_gpu,KKV3);
 
-  int cuda_threads_per_sm = Uintah::Parallel::getCudaThreadsPerSM();
-  int cuda_sms_per_loop   = Uintah::Parallel::getCudaSMsPerLoop();
+  int cuda_threads_per_block = executionObject.getCudaThreadsPerBlock();
+  int cuda_blocks_per_loop   = executionObject.getCudaBlocksPerLoop();
   for (unsigned int jx=0; jx < KKV3.size(); jx++){
 
   const int n_cells=KKV3(jx).m_view.size();
 
-  const int actualThreads = n_cells > cuda_threads_per_sm ? cuda_threads_per_sm : n_cells;
+  const int actualThreads = n_cells > cuda_threads_per_block ? cuda_threads_per_block : n_cells;
   typedef Kokkos::TeamPolicy< ExecutionSpace > policy_type;
 
-  Kokkos::parallel_for (Kokkos::TeamPolicy< ExecutionSpace >( cuda_sms_per_loop, actualThreads ),
+  Kokkos::parallel_for (Kokkos::TeamPolicy< ExecutionSpace >( cuda_blocks_per_loop, actualThreads ),
                         KOKKOS_LAMBDA ( typename policy_type::member_type thread ) {
     Kokkos::parallel_for (Kokkos::TeamThreadRange(thread, n_cells), [=] (const int& i) {
           KKV3_gpu(jx)(i)=init_val;
@@ -1207,7 +1209,7 @@ typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::Cuda>::value, void>
 
 template <typename ExecutionSpace, typename T2, typename T3>
 typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::Cuda>::value, void>::type
-parallel_initialize_grouped(T2 KKV3,const T3 init_val ){
+parallel_initialize_grouped(ExecutionObject& executionObject, T2 KKV3, const T3 init_val ){
 
   // n_cells is the amount of cells total to process among collection of vars (the view of Kokkos views)
   // For example, if this were being used to  if one var had 4096 cells and another var had 5832 cells, n_cells would become 4096+5832=
@@ -1221,13 +1223,13 @@ parallel_initialize_grouped(T2 KKV3,const T3 init_val ){
   Kokkos::View< KokkosView3<T3,Kokkos::CudaSpace>* , Kokkos::CudaSpace >  KKV3_gpu("parallel_init_grouped_gpu",KKV3.size());
   Kokkos::deep_copy(KKV3_gpu,KKV3);
 
-  int cuda_threads_per_sm = Uintah::Parallel::getCudaThreadsPerSM();
-  int cuda_sms_per_loop   = Uintah::Parallel::getCudaSMsPerLoop();
+  int cuda_threads_per_block = executionObject.getCudaThreadsPerBlock();
+  int cuda_blocks_per_loop   = executionObject.getCudaBlocksPerLoop();
 
-  const int actualThreads = n_cells > cuda_threads_per_sm ? cuda_threads_per_sm : n_cells;
+  const int actualThreads = n_cells > cuda_threads_per_block ? cuda_threads_per_block : n_cells;
   typedef Kokkos::TeamPolicy< ExecutionSpace > policy_type;
 
-  // TODO: Get this working for only 1 SM per loop (the 1 in the parameter below).  When that is working, try to get cuda_sms_per_loop per loop working.
+  // TODO: Get this working for only 1 SM per loop (the 1 in the parameter below).  When that is working, try to get cuda_blocks_per_loop per loop working.
   Kokkos::parallel_for (Kokkos::TeamPolicy< ExecutionSpace >( 1, actualThreads ),
                         KOKKOS_LAMBDA ( typename policy_type::member_type thread ) {
 
@@ -1289,7 +1291,7 @@ inline void sumViewSize(Kokkos::View<T*, MemorySpace> small_v, int &index){
 // If compiling w/o kokkos it takes CC NC SFCX SFCY SFCZ arguments and std::vector<T> arguments 
 template<typename MemorySpace, typename ExecutionSpace, typename T, class ...Ts>  // Could this be modified to accept grid variables AND containters of grid variables?
 typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::OpenMP>::value, void>::type
-  parallel_initialize(T inside_value,  Ts... inputs) { //SFINAE might be appropriate
+parallel_initialize(ExecutionObject& executionObject, T inside_value,  Ts... inputs) { //SFINAE might be appropriate
   int n= 0 ; // Get number of variadic arguments
   Alias<int[]>{( //first part of magic unpacker
       sumViewSize< KokkosView3<T,MemorySpace>, Kokkos::HostSpace>(inputs,n)
@@ -1300,14 +1302,14 @@ typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::OpenMP>::value, voi
   Alias<int[]>{( //first part of magic unpacker
       setValueAndReturnView< KokkosView3<T,MemorySpace>, Kokkos::HostSpace>(inputs_ ,inputs,i)
       ,0)...,0}; //second part of magic unpacker
-  parallel_initialize_grouped<ExecutionSpace>(inputs_, inside_value );
-  //parallel_initialize_single<ExecutionSpace>(inputs_, inside_value ); // safer version, less ambitious
+  parallel_initialize_grouped<ExecutionSpace>(executionObject, inputs_, inside_value );
+  //parallel_initialize_single<ExecutionSpace>(executionObject, inputs_, inside_value ); // safer version, less ambitious
 }
 
 ////This function is the same as above,but appears to be necessary due to CCVariable support.....
 template<typename MemorySpace, typename ExecutionSpace, typename T, class ...Ts>  // Could this be modified to accept grid variables AND containters of grid variables?
 typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::Cuda>::value, void>::type
-parallel_initialize(T inside_value,  Ts... inputs) { //SFINAE might be appropriate
+parallel_initialize(ExecutionObject& executionObject, T inside_value,  Ts... inputs) { //SFINAE might be appropriate
   int n= 0; // Get number of variadic arguments
   Alias<int[]>{( //first part of magic unpacker
       sumViewSize< KokkosView3<T,MemorySpace>, Kokkos::HostSpace>(inputs,n)
@@ -1318,8 +1320,8 @@ parallel_initialize(T inside_value,  Ts... inputs) { //SFINAE might be appropria
   Alias<int[]>{( //first part of magic unpacker
       setValueAndReturnView< KokkosView3<T,MemorySpace>, Kokkos::HostSpace>(inputs_ ,inputs,i)
       ,0)...,0}; //second part of magic unpacker
-  parallel_initialize_grouped<ExecutionSpace>(inputs_, inside_value );
-  //parallel_initialize_single<ExecutionSpace>(inputs_, inside_value ); // safer version, less ambitious
+  parallel_initialize_grouped<ExecutionSpace>(executionObject, inputs_, inside_value );
+  //parallel_initialize_single<ExecutionSpace>(executionObject, inputs_, inside_value ); // safer version, less ambitious
 }
 
 #endif // defined(UINTAH_ENABLE_KOKKOS)
@@ -1341,7 +1343,7 @@ void legacy_initialize(T inside_value, T2& data_fields) {  // for stand aloen da
 
 template<typename MemorySpace, typename ExecutionSpace, typename T, class ...Ts>
 typename std::enable_if<std::is_same<ExecutionSpace, UintahSpaces::CPU>::value, void>::type
-parallel_initialize(T inside_value,  Ts... inputs) { //SFINAE might be appropriate
+parallel_initialize(ExecutionObject& executionObject, T inside_value,  Ts... inputs) { //SFINAE might be appropriate
   Alias<int[]>{( //first part of magic unpacker
              //inputs.initialize (inside_value)
       legacy_initialize(inside_value,inputs)

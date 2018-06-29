@@ -53,6 +53,9 @@ namespace Uintah {
 
 class ExecutionObject {
 public:
+
+  // Streams should be created, supplied, and managed by the scheduler itself.
+  // The application developer probably shouldn't be managing his or her own streams.
   void setStream(void* stream, int deviceID) {
 
 #if defined(HAVE_CUDA)
@@ -90,9 +93,27 @@ public:
     return m_streams.size();
   }
 
+  int getCudaThreadsPerBlock() const {
+    return cuda_threads_per_block;
+  }
+
+  void setCudaThreadsPerBlock(int CudaThreadsPerBlock) {
+    this->cuda_threads_per_block = CudaThreadsPerBlock;
+  }
+
+  int getCudaBlocksPerLoop() const {
+    return cuda_blocks_per_loop;
+  }
+
+  void setCudaBlocksPerLoop(int CudaBlocksPerLoop) {
+    this->cuda_blocks_per_loop = CudaBlocksPerLoop;
+  }
+
 private:
   std::vector<void*> m_streams;
-  int deviceID;
+  int deviceID{0};
+  int cuda_threads_per_block{-1};
+  int cuda_blocks_per_loop{-1};
 };
 
 } // end namespace Uintah

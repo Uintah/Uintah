@@ -54,8 +54,8 @@ Parallel::CpuThreadEnvironment Parallel::s_cpu_thread_environment = Parallel::Cp
 
 bool             Parallel::s_initialized             = false;
 bool             Parallel::s_using_device            = false;
-int              Parallel::s_cuda_threads_per_sm     = -1;
-int              Parallel::s_cuda_sms_per_loop       = -1;
+int              Parallel::s_cuda_threads_per_block     = -1;
+int              Parallel::s_cuda_blocks_per_loop       = -1;
 int              Parallel::s_cuda_streams_per_task   = 1;
 int              Parallel::s_num_threads             = -1;
 int              Parallel::s_num_partitions          = -1;
@@ -138,17 +138,17 @@ Parallel::setUsingDevice( bool state )
 //_____________________________________________________________________________
 //
 void
-Parallel::setCudaThreadsPerSM( unsigned int num )
+Parallel::setCudaThreadsPerBlock( unsigned int num )
 {
-  s_cuda_threads_per_sm = num;
+  s_cuda_threads_per_block = num;
 }
 
 //_____________________________________________________________________________
 //
 void
-Parallel::setCudaSMsPerLoop( unsigned int num )
+Parallel::setCudaBlocksPerLoop( unsigned int num )
 {
-  s_cuda_sms_per_loop = num;
+  s_cuda_blocks_per_loop = num;
 }
 
 //_____________________________________________________________________________
@@ -162,17 +162,17 @@ Parallel::setCudaStreamsPerTask( unsigned int num )
 //_____________________________________________________________________________
 //
 unsigned int
-Parallel::getCudaThreadsPerSM()
+Parallel::getCudaThreadsPerBlock()
 {
-  return s_cuda_threads_per_sm;
+  return s_cuda_threads_per_block;
 }
 
 //_____________________________________________________________________________
 //
 unsigned int
-Parallel::getCudaSMsPerLoop()
+Parallel::getCudaBlocksPerLoop()
 {
-  return s_cuda_sms_per_loop;
+  return s_cuda_blocks_per_loop;
 }
 
 //_____________________________________________________________________________
@@ -289,15 +289,15 @@ Parallel::initializeManager( int& argc , char**& argv )
   // how many SMs are on this particular machine.)
   // TODO, only display if gpu mode is turned on and if these values weren't set.
   if ( s_using_device ) {
-    if ( s_cuda_threads_per_sm <= 0 ) {
-      s_cuda_threads_per_sm = 256;
-      std::cout << "Using " << s_cuda_threads_per_sm  << " CUDA threads per Streaming Multiprocessor (SM)." << std::endl;
-      std::cout << "  This value can be adjusted through the -cuda_threads_per_sm command line parameter." << std::endl;
+    if ( s_cuda_threads_per_block <= 0 ) {
+      s_cuda_threads_per_block = 256;
+      std::cout << "Using " << s_cuda_threads_per_block  << " CUDA threads per Streaming Multiprocessor (SM)." << std::endl;
+      std::cout << "  This value can be adjusted through the -cuda_threads_per_block command line parameter." << std::endl;
     }
-    if ( s_cuda_sms_per_loop <= 0 ) {
-      s_cuda_sms_per_loop = 1;
-      std::cout << "Using " << s_cuda_sms_per_loop << " Streaming Multiprocessor(s) per CUDA loop." << std::endl;
-      std::cout << "  This value can be adjusted through the -s_cuda_sms_per_loop command line parameter." << std::endl;
+    if ( s_cuda_blocks_per_loop <= 0 ) {
+      s_cuda_blocks_per_loop = 1;
+      std::cout << "Using " << s_cuda_blocks_per_loop << " Streaming Multiprocessor(s) per CUDA loop." << std::endl;
+      std::cout << "  This value can be adjusted through the -s_cuda_blocks_per_loop command line parameter." << std::endl;
     }
   }
 

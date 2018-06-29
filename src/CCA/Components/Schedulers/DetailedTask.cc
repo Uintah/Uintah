@@ -169,6 +169,8 @@ DetailedTask::doit( const ProcessorGroup                      * pg
       for (int i = 0; i < numKernels; i++) {
         executionObject.setStream(this->getCudaStreamForThisTask(i), currentDevice);
       }
+      executionObject.setCudaThreadsPerBlock(Uintah::Parallel::getCudaThreadsPerBlock());
+      executionObject.setCudaBlocksPerLoop(Uintah::Parallel::getCudaBlocksPerLoop());
 
       m_task->doit( event, pg, m_patches, m_matls, dws,
                     uintahParams, executionObject);
