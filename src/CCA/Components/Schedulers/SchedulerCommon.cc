@@ -1352,6 +1352,7 @@ SchedulerCommon::compile()
       }
 
       Timers::Simple tg_compile_timer;
+      tg_compile_timer.start();
 
       // do we have tasks with halo requirements > MAX_HALO_DEPTH? Determined in SchedulerCommon::addTask
       const bool has_distal_reqs = ( (m_task_graphs[i]->getIndex() > 0) && (m_max_distal_ghost_cells != 0) );
