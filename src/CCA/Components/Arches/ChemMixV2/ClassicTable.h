@@ -709,163 +709,119 @@ struct ClassicTableInfo {
     InterpN( const std::vector<int>& indepVarNo, tableContainer  table,
              const std::vector< std::vector <double> >& indep_headers, const std::vector< std::vector <double > >& i1, const ClassicTableInfo &cti)
       : Interp_class( table, indepVarNo, indep_headers, i1, cti ){
-      int d_indepvarscount=indepVarNo.size();
-      multiples = std::vector<int>(d_indepvarscount);
-      multtemp = 0;
-      for (int i = 0; i < d_indepvarscount; i++) {
-        multtemp = 1;
-        for (int j = 0; j<i; j++) {
-          multtemp = multtemp * indepVarNo[j];
-        }
-        multiples[i] = multtemp;
-      }
-
-      int npts = (int)std::pow(2.0,d_indepvarscount);
-      value_pop = std::vector< std::vector <bool> > (npts);
-
-      for (int i =0; i < npts; i++) {
-        value_pop[i] = std::vector<bool>(d_indepvarscount );
-      }
-
-      //bool matrix for use in lookup
-      int temp_pts;
-      double temp_pts_d;
-      for (int i=0; i < npts; i++) {
-        for (int j = d_indepvarscount-1; j >= 0; j--) {
-          temp_pts_d = std::pow(2.0, j);
-          temp_pts = (int)floor((i/temp_pts_d));
-          if ((temp_pts % 2) == 0) {
-            value_pop[i][j] = true;
-          } else {
-            value_pop[i][j] = false;
-          }
-        }
-      }
-
-      ivcount = d_indepvarscount;
-      vals_size = npts;
     }
+
+    enum HighLow { iLow, iHigh};
+
 
     inline std::vector<double> find_val( const std::vector<double>& iv, const std::vector<int>& var_index) {
 
-      int mid = 0;
-      double var_value = 0.0;
-      int lo_ind;
-      int hi_ind;
-      double iv_val;
-      std::vector<double> table_vals = std::vector<double>(vals_size);
-      std::vector<int> lo_index = std::vector<int>(ivcount);
-      std::vector<int> hi_index = std::vector<int>(ivcount);
-      std::vector<double> var_values (var_index.size(), 0.0 );
+      const int nDim = d_allIndepVarNo.size();   // Number of dimensions
+      const int npts = std::exp2(nDim); // double to int (danerous?)?
+      double table_vals[npts];   // container for table valus needed to compute the interpolent
+      double table_indices[npts];   // container for table indices 
+      const int oneD_switch= nDim == 1 ? 1 : 2;
+      const int nDim_withSwitch=std::max(nDim-1,1);
+      int index[2][nDim_withSwitch]; // high and low indexes
+      int iv_val[2][nDim_withSwitch]; // high and low indexes
 
-      //d_interpLock.lock();
+      double distal_val[nDim-1+oneD_switch]; //  delta_x / DX
+      int theSpecial[oneD_switch][2]; // high and low indexes of the special IV (independent variable)
+      
 
-      {
+      int dliniate[nDim]; // This should only be once instead of for each I J K (Conversion factors for each dimension, for transforming from N-D to 1D)
 
-        // binary search loop 2-> N
-        for (int i = 1; i < ivcount; i++) {
-          lo_ind = 0;
-          hi_ind = d_allIndepVarNo[i] - 1;
-          iv_val = iv[i];
+      std::vector<double> var_values (var_index.size(), 0.0 ); // This needs to be removed for portability and replaced with a view;
 
-          if (indep[i-1][lo_ind] != iv_val &&  indep[i-1][hi_ind] != iv_val) {
-          while ((hi_ind-lo_ind) > 1) {
-            mid = (lo_ind+hi_ind)/2;
-            if (indep[i-1][mid] > iv_val ) {
-              hi_ind = mid;
-            } else if (indep[i-1][mid] < iv_val ){
-              lo_ind = mid;
-            }  else {
-            // if (indep_headers[i-1][mid] ==  iv[i])
-              lo_ind = mid;
-              hi_ind = mid;
-            }
+      dliniate[0]=1; 
+      for( int  i=1 ; i<nDim; i++){
+        dliniate[i]=dliniate[i-1]*d_allIndepVarNo[i-1]; // compute effective 1-D index
+      }
+
+      index[0][iLow]=0; // initialized for 1-D case
+      index[0][iHigh]=0; // initialized for for 1-D case
+
+       // ----------------perform search ------------//
+       //  LINEAR search
+      for (int j=0;  j< nDim-1 ; j++){
+        if (iv[j+1] <  indep[j][d_allIndepVarNo[j+1]-1]){
+          int i=1;
+          while ( iv[j+1]  >indep[j][i]  ){
+            i++;
           }
-         } else if (indep[i-1][lo_ind] == iv_val) {
-           hi_ind = 1;
-         } else {
-           lo_ind = hi_ind-1;
-         }
-          lo_index[i] = lo_ind;
-          hi_index[i] = hi_ind;
+            index[iHigh][j]=i;
+            index[iLow][j]=i-1;
+            distal_val[j+2]=(iv[j+1]-indep[j][i-1])/(indep[j][i]-indep[j][i-1]);
+        }else{
+            index[iHigh][j]=d_allIndepVarNo[j+1]-1;
+            index[iLow][j]=d_allIndepVarNo[j+1]-2;
+            distal_val[j+2]=(iv[j+1]-indep[j][d_allIndepVarNo[j+1]-2])/(indep[j][d_allIndepVarNo[j+1]-1]-indep[j][d_allIndepVarNo[j+1]-2]);
+        }
+      }
 
-          if (iv_val < indep[i-1][0]) {
-            lo_index[i] = 0;
-            hi_index[i] = 0;
+
+       // ----------------perform search AGAIN for special IV  (indepednent variable-------//
+       // LINEAR search
+      for (int iSp=0;  iSp< oneD_switch; iSp++){ 
+          const int cur_index=index[iSp][nDim_withSwitch-1];
+        if (iv[0] <  ind_1[cur_index][d_allIndepVarNo[0]-1]){
+          int i=1;
+          while ( iv[0]  >ind_1[cur_index][i]  ){
+            i++;
           }
-         }
+            theSpecial[iSp][iHigh]=i;
+            theSpecial[iSp][iLow]=i-1;
+            distal_val[iSp]=(iv[0]-ind_1[cur_index][i-1])/(ind_1[cur_index][i]-ind_1[cur_index][i-1]);
+        }else{
+            theSpecial[iSp][iHigh]=d_allIndepVarNo[0]-1;
+            theSpecial[iSp][iLow]=d_allIndepVarNo[0]-2;
+            distal_val[iSp]=(iv[0]-ind_1[cur_index][d_allIndepVarNo[0]-2])/(ind_1[cur_index][d_allIndepVarNo[0]-1]-ind_1[cur_index][d_allIndepVarNo[0]-2]);
+        }
+      }
 
-         // binary search for i1
-        int i1dep_ind = lo_index[ivcount-1];     // assume i1 is dep on last var
-        lo_ind = 0;
-        hi_ind = d_allIndepVarNo[0] - 1;
-        iv_val = iv[0];
 
-        if (ind_1[i1dep_ind][lo_ind] != iv_val && ind_1[i1dep_ind][hi_ind] != iv_val) {
-          while ((hi_ind-lo_ind) > 1) {
-            mid = (lo_ind+hi_ind)/2;
-            if (ind_1[i1dep_ind][mid] > iv_val ) {
-              hi_ind = mid;
-            } else if (ind_1[i1dep_ind][mid] < iv_val) {
-              lo_ind = mid;
-            } else {
-            // if (i1[i1dep_ind][mid] == iv[0])
-              lo_ind = mid;
-              hi_ind = mid;
-            }
+          // compute table indices 
+        for (int j=0; j<npts/2; j++){
+          int table_index=0;  
+          int base2=npts/4;
+          int high_or_low=false;
+          for (int i=1; i<nDim; i++){
+            high_or_low=j / base2 % 2;
+            table_index+=dliniate[i]*index[high_or_low][i-1];
+            base2/=2;
           }
-
-        } else if (ind_1[i1dep_ind][lo_ind] == iv_val) {
-          hi_ind = 1;
-        } else {
-          lo_ind = hi_ind-1;
+          table_indices[j]=table_index+theSpecial[high_or_low][iLow];
+          table_indices[npts/2+j]=table_index+theSpecial[high_or_low][iHigh];
         }
 
-        lo_index[0] = lo_ind;
-        hi_index[0] = hi_ind;
-
-        if (iv_val < ind_1[i1dep_ind][0]) {
-          hi_index[0] = 0;
-          lo_index[0] = 0;
-        }
-
-        int npts = 0;
-
-        npts = (int)std::pow(2.0,ivcount);
-        int tab_index;
-
-        for (unsigned int ii = 0; ii < var_index.size(); ii++) {
-          // interpolant loop - 2parts read-in & calc
-          for (int i=0; i < npts; i++) {
-            tab_index = 0;
-            for (int j = ivcount-1; j >= 0; j--) {
-              if (value_pop[i][j]) { //determines hi/lo on bool
-                tab_index = tab_index + multiples[j]*lo_index[j];
-              } else {
-                tab_index = tab_index + multiples[j]*hi_index[j];
-              }
-            }
+  
+        for (unsigned int k = 0; k < var_index.size(); k++) {
+ /////      get values from table
+        for (int j=0; j<npts; j++){
 #ifdef UINTAH_ENABLE_KOKKOS
-            table_vals[i] = table2(var_index[ii], tab_index);
+            table_vals[j]=table2(var_index[k],table_indices[j]);
 #else
-            table_vals[i] = table2[var_index[ii]][tab_index];
+            table_vals[j]=table2[var_index[k]][table_indices[j]];
 #endif
           }
 
-          for (int i = ivcount-1; i > 0; i--) {
-            npts = (int)std::pow(2.0,i);
-            for (int k=0; k < npts; k++) {
-              table_vals[k] = (table_vals[k+npts]-table_vals[k])/(indep[i-1][lo_index[i]+1]-indep[i-1][lo_index[i]])*(iv[i]-indep[i-1][lo_index[i]])+table_vals[k];
+
+ /////     do special interpolation for the first IV 
+            int remaining_points=npts/2;
+              for (int i=0; i < remaining_points; i++) {    
+                table_vals[i]=table_vals[i]*(1. - distal_val[i % 2]) + table_vals[i+remaining_points]*distal_val[i % 2];
+              }
+
+ /////     do interpolation for all other IVs 
+            for (int j = 0; j < nDim-1; j++) { 
+              remaining_points /= 2;
+              const double distl=distal_val[j+2];
+              for (int i=0; i < remaining_points; i++) {
+                table_vals[i]=table_vals[i]*(1. - distl) + table_vals[i+remaining_points]*distl;
+              }
             }
-          }
-
-          table_vals[0] = (table_vals[1]-table_vals[0])/(ind_1[i1dep_ind][lo_index[0]+1]-ind_1[i1dep_ind][lo_index[0]])*(iv[0]-ind_1[i1dep_ind][lo_index[0]])+table_vals[0];
-          var_value = table_vals[0];
-          var_values[ii] = var_value;
-
-        }
-      }
-      //d_interpLock.unlock();
+            var_values[k] =table_vals[0];
+        } // end K
 
       return var_values;
 
@@ -873,11 +829,6 @@ struct ClassicTableInfo {
 
     protected:
 
-    int ivcount;
-    std::vector<int> multiples;
-    std::vector <std::vector <bool> > value_pop;
-    int multtemp;
-    int vals_size;
   };
 }
 #endif
