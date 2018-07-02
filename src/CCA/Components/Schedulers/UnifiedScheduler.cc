@@ -44,7 +44,7 @@
 #ifdef HAVE_CUDA
   #include <CCA/Components/Schedulers/GPUDataWarehouse.h>
   #include <Core/Grid/Variables/GPUGridVariable.h>
-  #include <Core/Grid/Variables/GPU_cellObjects.h>
+  #include <Core/Grid/Variables/GPUStencil7.h>
   #include <Core/Util/DebugStream.h>
 #endif
 

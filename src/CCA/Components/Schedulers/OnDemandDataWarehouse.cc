@@ -65,7 +65,8 @@
 
 #ifdef HAVE_CUDA
   #include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
-  #include <Core/Grid/Variables/GPU_cellObjects.h>
+  #include <Core/Grid/Variables/GPUStencil7.h>
+  #include <Core/Geometry/GPUVector.h>
 #endif
 
 #include <climits>
@@ -512,7 +513,7 @@ OnDemandDataWarehouse::createGPUGridVariable(const TypeDescription::Type& type)
       break;
     }
     case TypeDescription::Vector : {
-      device_var = new GPUGridVariable<GPUVector>();
+      device_var = new GPUGridVariable<gpuVector>();
       break;
     }
     default : {
@@ -546,7 +547,7 @@ OnDemandDataWarehouse::createGPUPerPatch(const TypeDescription::Type& type)
        break;
      }
      case TypeDescription::Vector : {
-       device_var = new GPUPerPatch<GPUVector>();
+       device_var = new GPUPerPatch<gpuVector>();
        break;
      }
      default : {
@@ -580,7 +581,7 @@ OnDemandDataWarehouse::createGPUReductionVariable(const TypeDescription::Type& t
      break;
     }
     case TypeDescription::Vector : {
-     device_var = new GPUReductionVariable<GPUVector>();
+     device_var = new GPUReductionVariable<gpuVector>();
      break;
     }
     default : {
@@ -4068,7 +4069,8 @@ void OnDemandDataWarehouse::allocateAndPutIfPossible(const VarLabel*          la
 
 #ifdef HAVE_CUDA
   #include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
-  #include <Core/Grid/Variables/GPU_cellObjects.h>
+  #include <Core/Grid/Variables/GPUStencil7.h>
+  #include <Core/Geometry/GPUVector.h>
 #endif
 
 #include <climits>
@@ -4513,7 +4515,7 @@ OnDemandDataWarehouse::createGPUGridVariable(const TypeDescription::Type& type)
       break;
     }
     case TypeDescription::Vector : {
-      device_var = new GPUGridVariable<GPUVector>();
+      device_var = new GPUGridVariable<gpuVector>();
       break;
     }
     default : {
@@ -4547,7 +4549,7 @@ OnDemandDataWarehouse::createGPUPerPatch(const TypeDescription::Type& type)
        break;
      }
      case TypeDescription::Vector : {
-       device_var = new GPUPerPatch<GPUVector>();
+       device_var = new GPUPerPatch<gpuVector>();
        break;
      }
      default : {
@@ -4581,7 +4583,7 @@ OnDemandDataWarehouse::createGPUReductionVariable(const TypeDescription::Type& t
      break;
     }
     case TypeDescription::Vector : {
-     device_var = new GPUReductionVariable<GPUVector>();
+     device_var = new GPUReductionVariable<gpuVector>();
      break;
     }
     default : {

@@ -28,7 +28,7 @@
 #include <CCA/Components/Schedulers/DetailedTasks.h>
 
 #include <Core/Grid/Variables/GPUGridVariable.h>
-#include <Core/Grid/Variables/GPU_cellObjects.h>
+#include <Core/Grid/Variables/GPUStencil7.h>
 #include <Core/Grid/Variables/Stencil7.h>
 #include <Core/Util/GPU.h>
 
