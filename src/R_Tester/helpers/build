@@ -37,7 +37,7 @@ if [ "$OS" = "Linux" ]; then
       --enable-scinew-line-numbers \\"
 
     COMMON="      --with-mpi=/usr/lib/mpich\\
-     --with-hypre=/usr/local/hypre-2.11.2 \\
+     --with-hypre=/usr/local/hypre-2.8.0b \\
      --with-boost=/usr/local/boost-1.65.1 \\
      --with-petsc=/usr/local/petsc-3.8.4 \\
      --enable-all-components \\
@@ -46,7 +46,7 @@ if [ "$OS" = "Linux" ]; then
 
     if [ "$LOGNAME" == "gpu_rt" ]; then
       COMMON="      --with-mpi=/usr/lib/mpich\\
-      --with-hypre=/usr/local/hypre-2.11.2 \\
+      --with-hypre=/usr/local/hypre-2.8.0b \\
       --with-boost=/usr/local/boost-1.65.1 \\
       --with-petsc=/usr/local/petsc-3.8.4 \
       --with-cuda=/usr/lib/nvidia-cuda-toolkit \\
