@@ -102,9 +102,7 @@ namespace Uintah{
   void computeTimestep(const LevelP& level, SchedulerP& sched);
 
   template <typename ExecutionSpace, typename MemorySpace>
-  void computeStableTimeStep( Task::CallBackEvent event,
-                              const ProcessorGroup* pg,
-                              const PatchSubset* patches,
+  void computeStableTimeStep( const PatchSubset* patches,
                               const MaterialSubset* matls,
                               DataWarehouse* old_dw,
                               DataWarehouse* new_dw,
@@ -112,9 +110,7 @@ namespace Uintah{
                               ExecutionObject& executionObject);
 
   template <typename ExecutionSpace, typename MemorySpace>
-  void setTimeStep( Task::CallBackEvent event,
-                    const ProcessorGroup* pg,
-                    const PatchSubset* patches,
+  void setTimeStep( const PatchSubset* patches,
                     const MaterialSubset* matls,
                     DataWarehouse* old_dw,
                     DataWarehouse* new_dw,

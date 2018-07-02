@@ -302,9 +302,7 @@ KokkosSolver::computeTimestep( const LevelP     & level
 //--------------------------------------------------------------------------------------------------
 template <typename ExecutionSpace, typename MemorySpace>
 void
-KokkosSolver::computeStableTimeStep(Task::CallBackEvent event,
-                                    const ProcessorGroup* pg,
-                                    const PatchSubset* patches,
+KokkosSolver::computeStableTimeStep(const PatchSubset* patches,
                                     const MaterialSubset* matls,
                                     DataWarehouse* old_dw,
                                     DataWarehouse* new_dw,
@@ -367,9 +365,7 @@ KokkosSolver::computeStableTimeStep(Task::CallBackEvent event,
 //--------------------------------------------------------------------------------------------------
 template <typename ExecutionSpace, typename MemorySpace>
 void
-KokkosSolver::setTimeStep(Task::CallBackEvent event,
-                          const ProcessorGroup* pg,
-                          const PatchSubset* patches,
+KokkosSolver::setTimeStep(const PatchSubset* patches,
                           const MaterialSubset* matls,
                           DataWarehouse* old_dw,
                           DataWarehouse* new_dw,

@@ -630,9 +630,7 @@ struct rayTrace_solveDivQFunctor {
 //---------------------------------------------------------------------------
 template< class T >
 void
-Ray::rayTrace( Task::CallBackEvent event,
-               const ProcessorGroup* pg,
-               const PatchSubset* patches,
+Ray::rayTrace( const PatchSubset* patches,
                const MaterialSubset* matls,
                DataWarehouse* old_dw,
                DataWarehouse* new_dw,
@@ -1637,9 +1635,7 @@ struct rayTrace_dataOnion_solveDivQFunctor {
 //---------------------------------------------------------------------------
 template< typename T, typename ExecutionSpace, typename MemorySpace>
 inline typename std::enable_if<std::is_same<ExecutionSpace, UintahSpaces::CPU>::value, void>::type
-Ray::rayTrace_dataOnion( Task::CallBackEvent event,
-                         const ProcessorGroup* pg,
-                         const PatchSubset* finePatches,
+Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
                          const MaterialSubset* matls,
                          DataWarehouse* old_dw,
                          DataWarehouse* new_dw,
@@ -1649,18 +1645,14 @@ Ray::rayTrace_dataOnion( Task::CallBackEvent event,
                          Task::WhichDW notUsed,
                          Task::WhichDW which_sigmaT4_dw,
                          Task::WhichDW which_celltype_dw ) {
-#if !defined(UINTAH_ENABLE_KOKKOS)
   // When we're ready, we can merge the current Ray.cc file in with this one here.
   printf("The non-Kokkos version\n");
-#endif
 }
 
 //The Kokkos verison (e.g. NOT the same as UintahSpaces::CPU)
 template< typename T, typename ExecutionSpace, typename MemorySpace>
 inline typename std::enable_if<!std::is_same<ExecutionSpace, UintahSpaces::CPU>::value, void>::type
-Ray::rayTrace_dataOnion( Task::CallBackEvent event,
-                         const ProcessorGroup* pg,
-                         const PatchSubset* finePatches,
+Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
                          const MaterialSubset* matls,
                          DataWarehouse* old_dw,
                          DataWarehouse* new_dw,
@@ -1676,23 +1668,23 @@ Ray::rayTrace_dataOnion( Task::CallBackEvent event,
   int maxLevels = fineLevel->getGrid()->numLevels();
   if (maxLevels == 2) {
     //Set up the data onion function for multiple levels.
-    this->rayTrace_dataOnionLevels<2, T, ExecutionSpace, MemorySpace>( event, pg, finePatches, matls, old_dw, new_dw, uintahParams, executionObject,
+    this->rayTrace_dataOnionLevels<2, T, ExecutionSpace, MemorySpace>( finePatches, matls, old_dw, new_dw, uintahParams, executionObject,
                                                                        modifies_divQ, notUsed, which_sigmaT4_dw, which_celltype_dw );
   } else if (maxLevels == 3) {
     //Set up the data onion function for multiple levels.
-    this->rayTrace_dataOnionLevels<3, T, ExecutionSpace, MemorySpace>( event, pg, finePatches, matls, old_dw, new_dw, uintahParams, executionObject,
+    this->rayTrace_dataOnionLevels<3, T, ExecutionSpace, MemorySpace>( finePatches, matls, old_dw, new_dw, uintahParams, executionObject,
                                                                        modifies_divQ, notUsed, which_sigmaT4_dw, which_celltype_dw );
   } else if (maxLevels == 4) {
     //Set up the data onion function for multiple levels.
-    this->rayTrace_dataOnionLevels<4, T, ExecutionSpace, MemorySpace>( event, pg, finePatches, matls, old_dw, new_dw, uintahParams, executionObject,
+    this->rayTrace_dataOnionLevels<4, T, ExecutionSpace, MemorySpace>( finePatches, matls, old_dw, new_dw, uintahParams, executionObject,
                                                                        modifies_divQ, notUsed, which_sigmaT4_dw, which_celltype_dw );
   } else if (maxLevels == 5) {
     //Set up the data onion function for multiple levels.
-    this->rayTrace_dataOnionLevels<5, T, ExecutionSpace, MemorySpace>( event, pg, finePatches, matls, old_dw, new_dw, uintahParams, executionObject,
+    this->rayTrace_dataOnionLevels<5, T, ExecutionSpace, MemorySpace>( finePatches, matls, old_dw, new_dw, uintahParams, executionObject,
                                                                        modifies_divQ, notUsed, which_sigmaT4_dw, which_celltype_dw );
   } else if (maxLevels == 6) {
     //Set up the data onion function for multiple levels.
-    this->rayTrace_dataOnionLevels<7, T, ExecutionSpace, MemorySpace>( event, pg, finePatches, matls, old_dw, new_dw, uintahParams, executionObject,
+    this->rayTrace_dataOnionLevels<7, T, ExecutionSpace, MemorySpace>( finePatches, matls, old_dw, new_dw, uintahParams, executionObject,
                                                                        modifies_divQ, notUsed, which_sigmaT4_dw, which_celltype_dw );
   } else {
     std::cerr << "Requested RMCRT Data Onion max level amount of " << maxLevels << " not yet supported.  Edit the code file to supply more possible levels." << std::endl;
@@ -1706,9 +1698,7 @@ Ray::rayTrace_dataOnion( Task::CallBackEvent event,
 //---------------------------------------------------------------------------
 template< int numLevels, typename T, typename ExecutionSpace, typename MemorySpace>
 void
-Ray::rayTrace_dataOnionLevels( Task::CallBackEvent event,
-                               const ProcessorGroup* pg,
-                               const PatchSubset* finePatches,
+Ray::rayTrace_dataOnionLevels( const PatchSubset* finePatches,
                                const MaterialSubset* matls,
                                DataWarehouse* old_dw,
                                DataWarehouse* new_dw,

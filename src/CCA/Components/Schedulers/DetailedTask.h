@@ -129,7 +129,7 @@ public:
   void doit( const ProcessorGroup                      * pg
            ,       std::vector<OnDemandDataWarehouseP> & oddws
            ,       std::vector<DataWarehouseP>         & dws
-           ,       Task::CallBackEvent                   event = Task::CPU
+           ,       CallBackEvent                         event = CallBackEvent::CPU
            );
 
   // Called after doit and MPI data sent (packed in buffers) finishes.

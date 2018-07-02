@@ -27,6 +27,7 @@
 
 #include <Core/Geometry/IntVector.h>
 #include <Core/Grid/Ghost.h>
+#include <Core/Grid/TaskStatus.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Malloc/Allocator.h>
@@ -51,7 +52,7 @@ class DataWarehouse;
 class ProcessorGroup;
 class Task;
 class DetailedTask;
-
+class TaskStatus;
 /**************************************
 
  CLASS
@@ -77,14 +78,6 @@ class Task {
  
 public: // class Task
 
-  enum CallBackEvent
-  {
-      CPU      // <- normal CPU task, happens when a GPU enabled task runs on CPU
-    , preGPU   // <- pre GPU kernel callback, happens before CPU->GPU copy (reserved, not implemented yet... )
-    , GPU      // <- GPU kernel callback, happens after dw: CPU->GPU copy, kernel launch should be queued in this callback
-    , postGPU  // <- post GPU kernel callback, happens after dw: GPU->CPU copy but before MPI sends.
-  };
- 
 
 protected: // class Task
 
@@ -95,9 +88,7 @@ protected: // class Task
 
       virtual ~ActionBase(){};
 
-      virtual void doit( CallBackEvent event
-                       , const ProcessorGroup * pg
-                       , const PatchSubset    * patches
+      virtual void doit( const PatchSubset    * patches
                        , const MaterialSubset * matls
                        ,       DataWarehouse  * fromDW
                        ,       DataWarehouse  * toDW
@@ -147,16 +138,14 @@ protected: // class Task
 
     //////////
     //
-    virtual void doit( CallBackEvent event
-                     , const ProcessorGroup * pg
-                     , const PatchSubset    * patches
+    virtual void doit( const PatchSubset    * patches
                      , const MaterialSubset * matls
                      ,       DataWarehouse  * fromDW
                      ,       DataWarehouse  * toDW
                      ,       UintahParams   & uintahParams
                      ,       ExecutionObject& executionObject)
     {
-      doit_impl(pg, patches, matls, fromDW, toDW, typename Tuple::gens<sizeof...(Args)>::type());
+      doit_impl(uintahParams.getProcessorGroup(), patches, matls, fromDW, toDW, typename Tuple::gens<sizeof...(Args)>::type());
     }
 
 
@@ -183,9 +172,7 @@ protected: // class Task
   class ActionDevice : public ActionBase {
 
     T * ptr;
-    void (T::*pmf)( CallBackEvent event
-                  , const ProcessorGroup * pg
-                  , const PatchSubset    * patches
+    void (T::*pmf)( const PatchSubset    * patches
                   , const MaterialSubset * m_matls
                   ,       DataWarehouse  * fromDW
                   ,       DataWarehouse  * toDW
@@ -199,9 +186,7 @@ protected: // class Task
   public: // class ActionDevice
 
     ActionDevice( T * ptr
-                , void (T::*pmf)( CallBackEvent event
-                                , const ProcessorGroup * pg
-                                , const PatchSubset    * patches
+                , void (T::*pmf)( const PatchSubset    * patches
                                 , const MaterialSubset * m_matls
                                 ,       DataWarehouse  * fromDW
                                 ,       DataWarehouse  * toDW
@@ -218,9 +203,7 @@ protected: // class Task
 
     virtual ~ActionDevice() {}
 
-    virtual void doit( CallBackEvent event
-                     , const ProcessorGroup * pg
-                     , const PatchSubset    * patches
+    virtual void doit( const PatchSubset    * patches
                      , const MaterialSubset * matls
                      ,       DataWarehouse  * fromDW
                      ,       DataWarehouse  * toDW
@@ -228,15 +211,13 @@ protected: // class Task
                      ,       ExecutionObject& executionObject
                      )
     {
-      doit_impl(event, pg, patches, matls, fromDW, toDW, uintahParams, executionObject, typename Tuple::gens<sizeof...(Args)>::type());
+      doit_impl(patches, matls, fromDW, toDW, uintahParams, executionObject, typename Tuple::gens<sizeof...(Args)>::type());
     }
 
   private : // class ActionDevice
 
     template<int... S>
-    void doit_impl( CallBackEvent event
-                  , const ProcessorGroup * pg
-                  , const PatchSubset    * patches
+    void doit_impl( const PatchSubset    * patches
                   , const MaterialSubset * matls
                   ,       DataWarehouse  * fromDW
                   ,       DataWarehouse  * toDW
@@ -245,7 +226,7 @@ protected: // class Task
                   ,       Tuple::seq<S...>
                   )
       {
-        (ptr->*pmf)(event, pg, patches, matls, fromDW, toDW, uintahParams, executionObject, std::get<S>(m_args)...);
+        (ptr->*pmf)(patches, matls, fromDW, toDW, uintahParams, executionObject, std::get<S>(m_args)...);
       }
 
   };  // end Kokkos enabled task Action constructor
@@ -280,16 +261,14 @@ private:
 
       //////////
       // Insert Documentation Here:
-      virtual void doit(CallBackEvent event,
-                        const ProcessorGroup* pg,
-                        const PatchSubset* patches,
+      virtual void doit(const PatchSubset* patches,
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW,
                         UintahParams& uintahParams,
                         ExecutionObject& executionObject)
       {
-        (ptr->*pmf)(pg, patches, matls, fromDW, toDW);
+        (ptr->*pmf)(uintahParams.getProcessorGroup(), patches, matls, fromDW, toDW);
       }
   };  // end class Action
 
@@ -323,16 +302,14 @@ private:
 
       //////////
       // Insert Documentation Here:
-      virtual void doit(CallBackEvent event,
-                        const ProcessorGroup* pg,
-                        const PatchSubset* patches,
+      virtual void doit(const PatchSubset* patches,
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW,
                         UintahParams& uintahParams,
                         ExecutionObject& executionObject)
       {
-        (ptr->*pmf)(pg, patches, matls, fromDW, toDW, arg1);
+        (ptr->*pmf)(uintahParams.getProcessorGroup(), patches, matls, fromDW, toDW, arg1);
       }
   };  // end class Action1
 
@@ -370,16 +347,14 @@ private:
 
       //////////
       // Insert Documentation Here:
-      virtual void doit(CallBackEvent event,
-                        const ProcessorGroup* pg,
-                        const PatchSubset* patches,
+      virtual void doit(const PatchSubset* patches,
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW,
                         UintahParams& uintahParams,
                         ExecutionObject& executionObject)
       {
-        (ptr->*pmf)(pg, patches, matls, fromDW, toDW, arg1, arg2);
+        (ptr->*pmf)(uintahParams.getProcessorGroup(), patches, matls, fromDW, toDW, arg1, arg2);
       }
   };  // end class Action2
 
@@ -421,16 +396,14 @@ private:
 
       //////////
       // Insert Documentation Here:
-      virtual void doit(CallBackEvent event,
-                        const ProcessorGroup* pg,
-                        const PatchSubset* patches,
+      virtual void doit(const PatchSubset* patches,
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW,
                         UintahParams& uintahParams,
                         ExecutionObject& executionObject)
       {
-        (ptr->*pmf)(pg, patches, matls, fromDW, toDW, arg1, arg2, arg3);
+        (ptr->*pmf)(uintahParams.getProcessorGroup(), patches, matls, fromDW, toDW, arg1, arg2, arg3);
       }
   };  // end Action3
 
@@ -476,16 +449,14 @@ private:
 
       //////////
       // Insert Documentation Here:
-      virtual void doit(CallBackEvent event,
-                        const ProcessorGroup* pg,
-                        const PatchSubset* patches,
+      virtual void doit(const PatchSubset* patches,
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW,
                         UintahParams& uintahParams,
                         ExecutionObject& executionObject)
       {
-        (ptr->*pmf)(pg, patches, matls, fromDW, toDW, arg1, arg2, arg3, arg4);
+        (ptr->*pmf)(uintahParams.getProcessorGroup(), patches, matls, fromDW, toDW, arg1, arg2, arg3, arg4);
       }
   };  // end Action4
 
@@ -535,16 +506,14 @@ private:
 
       //////////
       // Insert Documentation Here:
-      virtual void doit(CallBackEvent event,
-                        const ProcessorGroup* pg,
-                        const PatchSubset* patches,
+      virtual void doit(const PatchSubset* patches,
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW,
                         UintahParams& uintahParams,
                         ExecutionObject& executionObject)
       {
-        (ptr->*pmf)(pg, patches, matls, fromDW, toDW, arg1, arg2, arg3, arg4, arg5);
+        (ptr->*pmf)(uintahParams.getProcessorGroup(), patches, matls, fromDW, toDW, arg1, arg2, arg3, arg4, arg5);
       }
   };  // end Action5
   // end old CPU only Action constructors
@@ -555,9 +524,7 @@ private:
   template<class T>
   class ActionDevice : public ActionBase {
       T* ptr;
-      void (T::*pmf)(CallBackEvent event,
-                     const ProcessorGroup* pg,
-                     const PatchSubset* patches,
+      void (T::*pmf)(const PatchSubset* patches,
                      const MaterialSubset* matls,
                      DataWarehouse* fromDW,
                      DataWarehouse* toDW,
@@ -566,9 +533,7 @@ private:
     public:
       // class ActionDevice
       ActionDevice( T * ptr,
-                    void (T::*pmf)(CallBackEvent event,
-                                   const ProcessorGroup* pg,
-                                   const PatchSubset* patches,
+                    void (T::*pmf)(const PatchSubset* patches,
                                    const MaterialSubset* matls,
                                    DataWarehouse* fromDW,
                                    DataWarehouse* toDW,
@@ -583,25 +548,21 @@ private:
 
       //////////
       // Insert Documentation Here:
-      virtual void doit(CallBackEvent event,
-                        const ProcessorGroup* pg,
-                        const PatchSubset* patches,
+      virtual void doit(const PatchSubset* patches,
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW,
                         UintahParams& uintahParams,
                         ExecutionObject& executionObject)
       {
-        (ptr->*pmf)(event, pg, patches, matls, fromDW, toDW, uintahParams, executionObject);
+        (ptr->*pmf)(patches, matls, fromDW, toDW, uintahParams, executionObject);
       }
   };  // end class ActionDevice
 
   template<class T, class Arg1>
   class ActionDevice1 : public ActionBase {
       T* ptr;
-      void (T::*pmf)( CallBackEvent event,
-                      const ProcessorGroup* pg,
-                      const PatchSubset* patches,
+      void (T::*pmf)( const PatchSubset* patches,
                       const MaterialSubset* matls,
                             DataWarehouse* fromDW,
                             DataWarehouse* toDW,
@@ -612,9 +573,7 @@ private:
     public:
       // class ActionDevice1
       ActionDevice1(T* ptr,
-                    void (T::*pmf)(CallBackEvent event,
-                                   const ProcessorGroup* pg,
-                                   const PatchSubset* patches,
+                    void (T::*pmf)(const PatchSubset* patches,
                                    const MaterialSubset* matls,
                                    DataWarehouse* fromDW,
                                    DataWarehouse* toDW,
@@ -631,25 +590,21 @@ private:
 
       //////////
       // Insert Documentation Here:
-      virtual void doit(CallBackEvent event,
-                        const ProcessorGroup* pg,
-                        const PatchSubset* patches,
+      virtual void doit(const PatchSubset* patches,
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW,
                         UintahParams& uintahParams,
                         ExecutionObject& executionObject)
       {
-        (ptr->*pmf)(event, pg, patches, matls, fromDW, toDW, uintahParams, executionObject, arg1);
+        (ptr->*pmf)(patches, matls, fromDW, toDW, uintahParams, executionObject, arg1);
       }
   };  // end class ActionDevice1
 
   template<class T, class Arg1, class Arg2>
   class ActionDevice2 : public ActionBase {
       T* ptr;
-      void (T::*pmf)(CallBackEvent event,
-                     const ProcessorGroup* pg,
-                     const PatchSubset* patches,
+      void (T::*pmf)(const PatchSubset* patches,
                      const MaterialSubset* matls,
                      DataWarehouse* fromDW,
                      DataWarehouse* toDW,
@@ -662,9 +617,7 @@ private:
     public:
       // class ActionDevice2
       ActionDevice2(T* ptr,
-                    void (T::*pmf)(CallBackEvent event,
-                                   const ProcessorGroup* pg,
-                                   const PatchSubset* patches,
+                    void (T::*pmf)(const PatchSubset* patches,
                                    const MaterialSubset* matls,
                                    DataWarehouse* fromDW,
                                    DataWarehouse* toDW,
@@ -683,25 +636,21 @@ private:
 
       //////////
       // Insert Documentation Here:
-      virtual void doit(CallBackEvent event,
-                        const ProcessorGroup* pg,
-                        const PatchSubset* patches,
+      virtual void doit(const PatchSubset* patches,
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW,
                         UintahParams& uintahParams,
                         ExecutionObject& executionObject)
       {
-        (ptr->*pmf)(event, pg, patches, matls, fromDW, toDW, uintahParams, executionObject, arg1, arg2);
+        (ptr->*pmf)(patches, matls, fromDW, toDW, uintahParams, executionObject, arg1, arg2);
       }
   };  // end class ActionDevice2
 
   template<class T, class Arg1, class Arg2, class Arg3>
   class ActionDevice3 : public ActionBase {
       T* ptr;
-      void (T::*pmf)(CallBackEvent event,
-                     const ProcessorGroup* pg,
-                     const PatchSubset* patches,
+      void (T::*pmf)(const PatchSubset* patches,
                      const MaterialSubset* matls,
                      DataWarehouse* fromDW,
                      DataWarehouse* toDW,
@@ -717,9 +666,7 @@ private:
     public:
       // class ActionDevice3
       ActionDevice3(T* ptr,
-                    void (T::*pmf)(CallBackEvent event,
-                                   const ProcessorGroup* pg,
-                                   const PatchSubset* patches,
+                    void (T::*pmf)(const PatchSubset* patches,
                                    const MaterialSubset* matls,
                                    DataWarehouse* fromDW,
                                    DataWarehouse* toDW,
@@ -740,25 +687,21 @@ private:
 
       //////////
       // Insert Documentation Here:
-      virtual void doit(       CallBackEvent    event,
-                         const ProcessorGroup * pg,
-                         const PatchSubset    * patches,
+      virtual void doit( const PatchSubset    * patches,
                          const MaterialSubset * matls,
                                DataWarehouse  * fromDW,
                                DataWarehouse  * toDW,
                                UintahParams& uintahParams,
                                ExecutionObject& executionObject)
       {
-        (ptr->*pmf)(event, pg, patches, matls, fromDW, toDW, uintahParams, executionObject, arg1, arg2, arg3);
+        (ptr->*pmf)(patches, matls, fromDW, toDW, uintahParams, executionObject, arg1, arg2, arg3);
       }
   };  // end class ActionDevice3
 
   template<class T, class Arg1, class Arg2, class Arg3, class Arg4>
   class ActionDevice4 : public ActionBase {
       T* ptr;
-      void (T::*pmf)(CallBackEvent event,
-                     const ProcessorGroup* pg,
-                     const PatchSubset* patches,
+      void (T::*pmf)(const PatchSubset* patches,
                      const MaterialSubset* matls,
                      DataWarehouse* fromDW,
                      DataWarehouse* toDW,
@@ -775,9 +718,7 @@ private:
     public:
       // class ActionDevice4
       ActionDevice4(T* ptr,
-                    void (T::*pmf)(CallBackEvent event,
-                                   const ProcessorGroup* pg,
-                                   const PatchSubset* patches,
+                    void (T::*pmf)(const PatchSubset* patches,
                                    const MaterialSubset* matls,
                                    DataWarehouse* fromDW,
                                    DataWarehouse* toDW,
@@ -800,25 +741,21 @@ private:
 
       //////////
       // Insert Documentation Here:
-      virtual void doit(CallBackEvent event,
-                        const ProcessorGroup* pg,
-                        const PatchSubset* patches,
+      virtual void doit(const PatchSubset* patches,
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW,
                         UintahParams& uintahParams,
                         ExecutionObject& executionObject)
       {
-        (ptr->*pmf)(event, pg, patches, matls, fromDW, toDW, uintahParams, executionObject, arg1, arg2, arg3, arg4);
+        (ptr->*pmf)(patches, matls, fromDW, toDW, uintahParams, executionObject, arg1, arg2, arg3, arg4);
       }
   };  // end class ActionDevice4
 
   template<class T, class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
   class ActionDevice5 : public ActionBase {
       T* ptr;
-      void (T::*pmf)(CallBackEvent event,
-                     const ProcessorGroup* pg,
-                     const PatchSubset* patches,
+      void (T::*pmf)(const PatchSubset* patches,
                      const MaterialSubset* matls,
                      DataWarehouse* fromDW,
                      DataWarehouse* toDW,
@@ -837,9 +774,7 @@ private:
     public:
       // class ActionDevice5
       ActionDevice5( T* ptr,
-                     void (T::*pmf)(CallBackEvent event,
-                                    const ProcessorGroup* pg,
-                                    const PatchSubset* patches,
+                     void (T::*pmf)(const PatchSubset* patches,
                                     const MaterialSubset* matls,
                                     DataWarehouse * fromDW,
                                     DataWarehouse * toDW,
@@ -864,16 +799,14 @@ private:
 
       //////////
       // Insert Documentation Here:
-      virtual void doit(CallBackEvent event,
-                        const ProcessorGroup* pg,
-                        const PatchSubset* patches,
+      virtual void doit(const PatchSubset* patches,
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW,
                         UintahParams& uintahParams,
                         ExecutionObject& executionObject)
       {
-        (ptr->*pmf)(event, pg, patches, matls, fromDW, toDW, uintahParams, executionObject, arg1, arg2, arg3, arg4, arg5);
+        (ptr->*pmf)(patches, matls, fromDW, toDW, uintahParams, executionObject, arg1, arg2, arg3, arg4, arg5);
       }
   };  // end class ActionDevice5
 #endif
@@ -945,9 +878,7 @@ public: // class Task
   template<typename T, typename... Args>
   Task( const std::string & taskName
       , T * ptr
-      , void (T::*pmf)(       CallBackEvent    event
-                      , const ProcessorGroup * pg
-                      , const PatchSubset    * patches
+      , void (T::*pmf)( const PatchSubset    * patches
                       , const MaterialSubset * m_matls
                       ,       DataWarehouse  * fromDW
                       ,       DataWarehouse  * toDW
@@ -1095,9 +1026,7 @@ public: // class Task
   Task(
        const std::string& taskName,
        T* ptr,
-       void (T::*pmf)(CallBackEvent event,
-                      const ProcessorGroup* pg,
-                      const PatchSubset* patches,
+       void (T::*pmf)(const PatchSubset* patches,
                       const MaterialSubset* matls,
                       DataWarehouse* fromDW,
                       DataWarehouse* toDW,
@@ -1115,9 +1044,7 @@ public: // class Task
   Task(
        const std::string& taskName,
        T* ptr,
-       void (T::*pmf)(CallBackEvent event,
-                      const ProcessorGroup* pg,
-                      const PatchSubset* patches,
+       void (T::*pmf)(const PatchSubset* patches,
                       const MaterialSubset* matls,
                       DataWarehouse* fromDW,
                       DataWarehouse* toDW,
@@ -1136,9 +1063,7 @@ public: // class Task
   template<class T, class Arg1, class Arg2>
   Task(const std::string& taskName,
        T* ptr,
-       void (T::*pmf)(CallBackEvent event,
-                      const ProcessorGroup* pg,
-                      const PatchSubset* patches,
+       void (T::*pmf)(const PatchSubset* patches,
                       const MaterialSubset* matls,
                       DataWarehouse* fromDW,
                       DataWarehouse* toDW,
@@ -1159,9 +1084,7 @@ public: // class Task
   template<class T, class Arg1, class Arg2, class Arg3>
   Task(const std::string& taskName,
        T* ptr,
-       void (T::*pmf)(CallBackEvent event,
-                      const ProcessorGroup* pg,
-                      const PatchSubset* patches,
+       void (T::*pmf)(const PatchSubset* patches,
                       const MaterialSubset* matls,
                       DataWarehouse* fromDW,
                       DataWarehouse* toDW,
@@ -1184,9 +1107,7 @@ public: // class Task
   template<class T, class Arg1, class Arg2, class Arg3, class Arg4>
   Task(const std::string& taskName,
        T* ptr,
-       void (T::*pmf)(CallBackEvent event,
-                      const ProcessorGroup* pg,
-                      const PatchSubset* patches,
+       void (T::*pmf)(const PatchSubset* patches,
                       const MaterialSubset* matls,
                       DataWarehouse* fromDW,
                       DataWarehouse* toDW,
@@ -1211,9 +1132,7 @@ public: // class Task
   template<class T, class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
   Task(const std::string& taskName,
        T* ptr,
-       void (T::*pmf)(CallBackEvent event,
-                      const ProcessorGroup* pg,
-                      const PatchSubset* patches,
+       void (T::*pmf)(const PatchSubset* patches,
                       const MaterialSubset* matls,
                       DataWarehouse* fromDW,
                       DataWarehouse* toDW,
@@ -1511,9 +1430,7 @@ public: // class Task
 
   //////////
   // Tells the task to actually execute the function assigned to it.
-  virtual void doit(       CallBackEvent                 event
-                   , const ProcessorGroup              * pg
-                   , const PatchSubset                 *
+  virtual void doit( const PatchSubset                 *
                    , const MaterialSubset              *
                    ,       std::vector<DataWarehouseP> & dws
                    ,       UintahParams& uintahParams

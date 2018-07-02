@@ -359,9 +359,7 @@ private:
 
   //__________________________________
   template<class T>
-  void rayTrace( Task::CallBackEvent event,
-                 const ProcessorGroup* pg,
-                 const PatchSubset* patches,
+  void rayTrace( const PatchSubset* patches,
                  const MaterialSubset* matls,
                  DataWarehouse* old_dw,
                  DataWarehouse* new_dw,
@@ -375,9 +373,7 @@ private:
 //__________________________________
   template< typename T, typename ExecutionSpace, typename MemorySpace>
   inline typename std::enable_if<std::is_same<ExecutionSpace, UintahSpaces::CPU>::value, void>::type
-  rayTrace_dataOnion( Task::CallBackEvent event,
-                      const ProcessorGroup* pg,
-                      const PatchSubset* patches,
+  rayTrace_dataOnion( const PatchSubset* patches,
                       const MaterialSubset* matls,
                       DataWarehouse* old_dw,
                       DataWarehouse* new_dw,
@@ -390,9 +386,7 @@ private:
 
   template< typename T, typename ExecutionSpace, typename MemorySpace>
   inline typename std::enable_if<!std::is_same<ExecutionSpace, UintahSpaces::CPU>::value, void>::type
-rayTrace_dataOnion( Task::CallBackEvent event,
-                    const ProcessorGroup* pg,
-                    const PatchSubset* patches,
+rayTrace_dataOnion( const PatchSubset* patches,
                     const MaterialSubset* matls,
                     DataWarehouse* old_dw,
                     DataWarehouse* new_dw,
@@ -405,9 +399,7 @@ rayTrace_dataOnion( Task::CallBackEvent event,
 
   //__________________________________
   template< int numLevels, typename T, typename ExecutionSpace, typename MemorySpace>
-  void rayTrace_dataOnionLevels( Task::CallBackEvent event,
-                                 const ProcessorGroup* pg,
-                                 const PatchSubset* patches,
+  void rayTrace_dataOnionLevels( const PatchSubset* patches,
                                  const MaterialSubset* matls,
                                  DataWarehouse* old_dw,
                                  DataWarehouse* new_dw,

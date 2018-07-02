@@ -263,14 +263,12 @@ void Poisson1::initialize( const ProcessorGroup *
 //______________________________________________________________________
 //
 template <typename ExecutionSpace, typename MemorySpace>
-void Poisson1::timeAdvance(Task::CallBackEvent event,
-                            const ProcessorGroup* pg,
-                            const PatchSubset* patches,
+void Poisson1::timeAdvance( const PatchSubset* patches,
                             const MaterialSubset* matls,
                             DataWarehouse* old_dw,
                             DataWarehouse* new_dw,
                             UintahParams& uintahParams,
-                            ExecutionObject& executionObject)
+                            ExecutionObject& executionObject )
 {
 
   int matl = 0;

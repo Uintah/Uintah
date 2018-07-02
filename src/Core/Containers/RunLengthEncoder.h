@@ -722,11 +722,13 @@ readSizeType(int fd, bool needConversion, bool swapBytes, int nByteMode,
 {
   if (needConversion) {
     uint64_t s64;
-    ::read(fd, (char*)&s64, nByteMode);
+    int ignoreReturnVar = ::read(fd, (char*)&s64, nByteMode);
+    static_cast<void>(ignoreReturnVar);  // This gets the compire to not display a warning message
     s = (SIZE_T)convertSizeType(&s64, swapBytes, nByteMode);
   }
   else {
-    ::read(fd, (char*)&s, nByteMode);
+    int ignoreReturnVar = ::read(fd, (char*)&s, nByteMode);
+    static_cast<void>(ignoreReturnVar);  // This gets the compire to not display a warning message
   }
 }
 

@@ -3224,9 +3224,9 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse*   from,
             GPUGridVariableBase* device_var_source = OnDemandDataWarehouse::createGPUGridVariable(var->typeDescription()->getSubType()->getType());
             GPUGridVariableBase* device_var_dest = OnDemandDataWarehouse::createGPUGridVariable(var->typeDescription()->getSubType()->getType());
             if(!executionObject.getStream()) {
-              std::cout << "ERROR! transferFrom() does not have access to the task and its associated CUDA stream."  
+              std::cout << "ERROR! transferFrom() does not have access to the task's CUDA stream."
                         << " As an example, please see the parameters for Poisson1::timeAdvanceUnified."   << std::endl;
-              throw InternalError("transferFrom() needs access to the task's pointer and its associated CUDA stream.\n", __FILE__, __LINE__); 
+              throw InternalError("transferFrom() needs access to the task's CUDA stream.\n", __FILE__, __LINE__);
             }
             //The GPU assigns streams per task.  For transferFrom to work, it *must* know which correct stream to use
             bool foundGPU = getGPUDW(0)->transferFrom((cudaStream_t*)executionObject.getStream(),

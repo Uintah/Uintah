@@ -1014,9 +1014,7 @@ constHandle<PatchSubset> Task::Dependency::getOtherLevelPatchSubset(       Task:
 //
 //TODO: Provide an overloaded legacy CPU/non-portable version that doesn't use UintahParams or ExecutionObject
 void
-Task::doit( CallBackEvent                 event
-          , const ProcessorGroup        * pg
-          , const PatchSubset           * patches
+Task::doit( const PatchSubset           * patches
           , const MaterialSubset        * matls
           , std::vector<DataWarehouseP> & dws
           , UintahParams                & uintahParams
@@ -1027,7 +1025,7 @@ Task::doit( CallBackEvent                 event
   DataWarehouse* toDW   = mapDataWarehouse(Task::NewDW, dws);
 
   if (m_action) {
-    m_action->doit(event, pg, patches, matls, fromDW, toDW, uintahParams, executionObject);
+    m_action->doit(patches, matls, fromDW, toDW, uintahParams, executionObject);
   }
 }
 

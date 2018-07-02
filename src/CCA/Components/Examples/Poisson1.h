@@ -87,9 +87,7 @@ WARNING
                                           SchedulerP&);
 
     template <typename ExecutionSpace, typename MemorySpace>
-    void timeAdvance( Task::CallBackEvent event,
-                      const ProcessorGroup* pg,
-                      const PatchSubset* patches,
+    void timeAdvance( const PatchSubset* patches,
                       const MaterialSubset* matls,
                       DataWarehouse* old_dw,
                       DataWarehouse* new_dw,

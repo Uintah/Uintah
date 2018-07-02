@@ -111,7 +111,7 @@ void
 DetailedTask::doit( const ProcessorGroup                      * pg
                   ,       std::vector<OnDemandDataWarehouseP> & oddws
                   ,       std::vector<DataWarehouseP>         & dws
-                  ,       Task::CallBackEvent                   event /* = Task::CPU */
+                  ,       CallBackEvent                         event /* = Task::CPU */
                   )
 {
   // stop timing the task wait
@@ -141,15 +141,32 @@ DetailedTask::doit( const ProcessorGroup                      * pg
     }
   }
 
+  // Start loading up the executionObject
+  ExecutionObject executionObject;
+#ifdef HAVE_CUDA
+  // Load in streams whether this is a CPU task or GPU task.
+  // GPU tasks need streams.  CPU tasks can also use streams (for D2H copies or transferFrom calls)
+  const unsigned int currentDevice = 0;
+  int numKernels = this->getTask()->maxStreamsPerTask();
+  for (int i = 0; i < numKernels; i++) {
+    executionObject.setStream(this->getCudaStreamForThisTask(i), currentDevice);
+  }
+#endif
+
+  // Start loading up the UintahParams object
+  UintahParams uintahParams;
+  uintahParams.setProcessorGroup(pg);
+  uintahParams.setCallBackEvent(event);
+
   // Determine if task will be executed on CPU or GPU
   if ( m_task->usesDevice() ) {
 #ifdef HAVE_CUDA
     // Run the GPU task.  Technically the engine has structure to run one task on multiple devices if
     // that task had patches on multiple devices.  So run the task once per device.  As often as possible,
     // we want to design tasks so each task runs on only once device, instead of a one to many relationship.
-    for (std::set<unsigned int>::const_iterator deviceNums_it = deviceNums_.begin(); deviceNums_it != deviceNums_.end(); ++deviceNums_it) {
-      const unsigned int currentDevice = *deviceNums_it;
-
+    //for (std::set<unsigned int>::const_iterator deviceNums_it = deviceNums_.begin(); deviceNums_it != deviceNums_.end(); ++deviceNums_it) {
+    //  const unsigned int currentDevice = *deviceNums_it;
+    //const unsigned int currentDevice = *deviceNums_it;
       OnDemandDataWarehouse::uintahSetCudaDevice(currentDevice);
       GPUDataWarehouse* host_oldtaskdw = getTaskGpuDataWarehouse(currentDevice, Task::OldDW);
       GPUDataWarehouse* device_oldtaskdw = nullptr;
@@ -162,26 +179,20 @@ DetailedTask::doit( const ProcessorGroup                      * pg
         device_newtaskdw = host_newtaskdw->getdevice_ptr();
       }
 
-      UintahParams uintahParams(device_oldtaskdw, device_newtaskdw);
+      // Load up the uintahParams object with task data warehouses (if they are needed)
+      uintahParams.setTaskDWs(device_oldtaskdw, device_newtaskdw);
 
-      ExecutionObject executionObject;
-      int numKernels = this->getTask()->maxStreamsPerTask();
-      for (int i = 0; i < numKernels; i++) {
-        executionObject.setStream(this->getCudaStreamForThisTask(i), currentDevice);
-      }
+      // Load up the execution object with CUDA specific parameters.
       executionObject.setCudaThreadsPerBlock(Uintah::Parallel::getCudaThreadsPerBlock());
       executionObject.setCudaBlocksPerLoop(Uintah::Parallel::getCudaBlocksPerLoop());
 
-      m_task->doit( event, pg, m_patches, m_matls, dws,
-                    uintahParams, executionObject);
-    }
+      m_task->doit( m_patches, m_matls, dws, uintahParams, executionObject );
+   //}
 #else
     SCI_THROW(InternalError("A task was marked as GPU enabled, but Uintah was not compiled for CUDA support", __FILE__, __LINE__));
 #endif
   } else {
-    UintahParams uintahParams;
-    ExecutionObject executionObject;
-    m_task->doit( event, pg, m_patches, m_matls, dws, uintahParams, executionObject );
+    m_task->doit( m_patches, m_matls, dws, uintahParams, executionObject );
   }
   for (auto i = 0u; i < dws.size(); i++) {
     if ( oddws[i] != nullptr ) {
@@ -763,12 +774,10 @@ DetailedTask::checkCudaStreamDoneForThisTask( unsigned int device_id ) const
   if (it == d_cudaStreams.end()) {
     printf("ERROR! - DetailedTask::checkCudaStreamDoneForThisTask() - Request for stream information for device %d, but this task wasn't assigned any streams for this device.  For task %s\n", device_id,  getName().c_str());
     SCI_THROW(InternalError("Request for stream information for a device, but it wasn't assigned any streams for that device.  For task: " + getName() , __FILE__, __LINE__));
-    return false;
   }
   if (it->second == nullptr) {
     printf("ERROR! - DetailedTask::checkCudaStreamDoneForThisTask() - Stream pointer with nullptr address for task %s\n", getName().c_str());
     SCI_THROW(InternalError("Stream pointer with nullptr address for task: " + getName() , __FILE__, __LINE__));
-    return false;
   }
 
   retVal = cudaStreamQuery(*(it->second));
@@ -781,7 +790,6 @@ DetailedTask::checkCudaStreamDoneForThisTask( unsigned int device_id ) const
   else if (retVal ==  cudaErrorLaunchFailure) {
     printf("ERROR! - DetailedTask::checkCudaStreamDoneForThisTask(%d) - CUDA kernel execution failure on Task: %s\n", device_id, getName().c_str());
     SCI_THROW(InternalError("Detected CUDA kernel execution failure on Task: " + getName() , __FILE__, __LINE__));
-    return false;
   } else { //other error
     printf("\nAn CUDA error occurred with error code %d.\n\nWaiting for 60 seconds\n", retVal);
 

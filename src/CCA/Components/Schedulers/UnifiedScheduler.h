@@ -101,7 +101,7 @@ class UnifiedScheduler : public MPIScheduler  {
     
     virtual bool useInternalDeps() { return !m_is_copy_data_timestep; }
     
-    void runTask( DetailedTask * dtask , int iteration , int thread_id , Task::CallBackEvent event );
+    void runTask( DetailedTask * dtask , int iteration , int thread_id , CallBackEvent event );
 
     void runTasks( int thread_id );
 

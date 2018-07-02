@@ -858,9 +858,7 @@ RMCRTCommon::sched_CarryForward_FineLevelLabels ( const LevelP& level,
 //______________________________________________________________________
 //
 void
-RMCRTCommon::carryForward_FineLevelLabels( Task::CallBackEvent event,
-                                           const ProcessorGroup*,
-                                           const PatchSubset* patches,
+RMCRTCommon::carryForward_FineLevelLabels( const PatchSubset* patches,
                                            const MaterialSubset* matls,
                                            DataWarehouse* old_dw,
                                            DataWarehouse* new_dw,
@@ -898,9 +896,7 @@ RMCRTCommon::sched_CarryForward_Var ( const LevelP& level,
 
 //______________________________________________________________________
 void
-RMCRTCommon::carryForward_Var ( Task::CallBackEvent event,
-                                const ProcessorGroup*,
-                                const PatchSubset* patches,
+RMCRTCommon::carryForward_Var ( const PatchSubset* patches,
                                 const MaterialSubset* matls,
                                 DataWarehouse* old_dw,
                                 DataWarehouse* new_dw,

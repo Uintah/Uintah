@@ -633,13 +633,16 @@ int main( int argc, char *argv[], char *env[] )
         std::string sdir = std::string(sci_getenv("SCIRUN_SRCDIR"));
         if (do_svnDiff) {
           std::string cmd = "svn diff --username anonymous --password \"\" " + sdir;
-          std::system(cmd.c_str());
+          int ignoreReturnVar = std::system(cmd.c_str());
+          static_cast<void>(ignoreReturnVar);  // This gets the compire to not display a warning message
         }
         if (do_svnStat) {
           std::string cmd = "svn info  --username anonymous --password \"\" " + sdir;
-          std::system(cmd.c_str());
+          int ignoreReturnVar = std::system(cmd.c_str());
+          static_cast<void>(ignoreReturnVar);  // This gets the compire to not display a warning message
           cmd = "svn stat -u  --username anonymous --password \"\" " + sdir;
-          std::system(cmd.c_str());
+          ignoreReturnVar = std::system(cmd.c_str());
+          static_cast<void>(ignoreReturnVar);  // This gets the compire to not display a warning message
         }
         std::cout << "____SVN_______________________________________________________________\n";
       }

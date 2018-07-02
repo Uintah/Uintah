@@ -403,9 +403,7 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
 
 //--------------------------------------------------------------------------------------------------
 template <typename ExecutionSpace, typename MemorySpace>
-void TaskFactoryBase::do_task ( Task::CallBackEvent event,
-                                const ProcessorGroup* pc,
-                                const PatchSubset* patches,
+void TaskFactoryBase::do_task ( const PatchSubset* patches,
                                 const MaterialSubset* matls,
                                 DataWarehouse* old_dw,
                                 DataWarehouse* new_dw,

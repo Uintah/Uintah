@@ -23,22 +23,24 @@
  */
 
 // This class acts as an additional Task parameter object to easy add or remove additional parameters with ease.
-// At the time of this class's creation, the Task consisted of 5 or 8 parameters (legacy and Kokkos tasks)
+// At the time of this class's creation, the Task consisted of 5 or 6 parameters (legacy and Kokkos tasks)
 // For Kokkos tasks, the parameters are as follows:
-//                        CallBackEvent event,
-//                        const ProcessorGroup* pg,
 //                        const PatchSubset* patches,
 //                        const MaterialSubset* matls,
 //                        DataWarehouse* fromDW,
 //                        DataWarehouse* toDW,
 //                        UintahParams & uintahParams,
 //                        ExecutionObject & executionObject
-// The first 6 parameters are rather important parameters that help a task execute.
+// The first 4 parameters are rather important parameters that help a task execute.
 // uintahParams may contain a collection of additional helpful items inside.
 
 
 #ifndef UINTAH_HOMEBREW_UINTAH_PARAMS_HPP
 #define UINTAH_HOMEBREW_UINTAH_PARAMS_HPP
+
+#include <Core/Grid/TaskStatus.h>
+
+namespace Uintah {
 //----------------------------------------------------------------------------
 // Class UintahParams
 //----------------------------------------------------------------------------
@@ -54,13 +56,37 @@ public:
   UintahParams& operator=(const UintahParams& obj) = delete;
   UintahParams& operator=(UintahParams&& obj) = delete;
 
-  UintahParams(void * oldTaskGpuDW, void * newTaskGpuDW) {
+  void setTaskDWs(void * oldTaskGpuDW, void * newTaskGpuDW) {
     this->oldTaskGpuDW = oldTaskGpuDW;
     this->newTaskGpuDW = newTaskGpuDW;
   }
 
+  void setCallBackEvent(CallBackEvent callBackEvent) {
+    this->callBackEvent = callBackEvent;
+  }
+
+  CallBackEvent getCallBackEvent() const {
+    return callBackEvent;
+  }
+
+  const ProcessorGroup* getProcessorGroup() const {
+    return processorGroup;
+  }
+
+  void setProcessorGroup(const ProcessorGroup* processorGroup) {
+    this->processorGroup = processorGroup;
+  }
+
+
+
+private:
+
   void * oldTaskGpuDW{nullptr};
   void * newTaskGpuDW{nullptr};
+
+  CallBackEvent callBackEvent;
+  const ProcessorGroup* processorGroup {nullptr};
 };
 
+} //namespace Uintah
 #endif //UINTAH_HOMEBREW_UINTAH_PARAMS_HPP

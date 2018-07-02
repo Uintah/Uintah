@@ -441,7 +441,7 @@ void
 UnifiedScheduler::runTask( DetailedTask*         dtask
                          , int                   iteration
                          , int                   thread_id /* = 0 */
-                         , Task::CallBackEvent   event
+                         , CallBackEvent         event
                          )
 {
   // end of per-thread wait time - how long has a thread waited before executing another task
@@ -450,7 +450,7 @@ UnifiedScheduler::runTask( DetailedTask*         dtask
   }
 
   // Only execute CPU or GPU tasks.  Don't execute postGPU tasks a second time.
-  if ( event == Task::CPU || event == Task::GPU) {
+  if ( event == CallBackEvent::CPU || event == CallBackEvent::GPU) {
     
     if (m_tracking_vars_print_location & SchedulerCommon::PRINT_BEFORE_EXEC) {
       printTrackedVars(dtask, SchedulerCommon::PRINT_BEFORE_EXEC);
@@ -469,7 +469,7 @@ UnifiedScheduler::runTask( DetailedTask*         dtask
   }
 
   // For CPU and postGPU task runs, post MPI sends and call task->done;
-  if (event == Task::CPU || event == Task::postGPU) {
+  if (event == CallBackEvent::CPU || event == CallBackEvent::postGPU) {
 
 #ifdef HAVE_CUDA
     if (Uintah::Parallel::usingDevice()) {
@@ -1175,7 +1175,7 @@ UnifiedScheduler::runTasks( int thread_id )
       } else if (gpuRunReady) {
 
         // Run the task on the GPU!
-        runTask(readyTask, m_curr_iteration, thread_id, Task::GPU);
+        runTask(readyTask, m_curr_iteration, thread_id, CallBackEvent::GPU);
 
         // See if we're dealing with 32768 ghost cells per patch.  If so,
         // it's easier to manage them on the host for now than on the GPU.  We can issue
@@ -1199,7 +1199,7 @@ UnifiedScheduler::runTasks( int thread_id )
         // Run post GPU part of task.  It won't actually rerun the task
         // But it will run post computation management logic, which includes
         // marking the task as done.
-        runTask(readyTask, m_curr_iteration, thread_id, Task::postGPU);
+        runTask(readyTask, m_curr_iteration, thread_id, CallBackEvent::postGPU);
 
         // recycle this task's stream
         GPUMemoryPool::reclaimCudaStreamsIntoPool(readyTask);
@@ -1266,7 +1266,7 @@ UnifiedScheduler::runTasks( int thread_id )
         } else if (cpuRunReady) {
 #endif
           // run CPU task.
-          runTask(readyTask, m_curr_iteration, thread_id, Task::CPU);
+          runTask(readyTask, m_curr_iteration, thread_id, CallBackEvent::CPU);
 #ifdef HAVE_CUDA
           //See note above near cpuInitReady.  Some CPU tasks may internally interact
           //with GPUs without modifying the structure of the data warehouse.

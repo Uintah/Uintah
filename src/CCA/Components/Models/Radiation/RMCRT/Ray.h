@@ -241,7 +241,7 @@ namespace Uintah{
       //__________________________________
       template<class T>
       void rayTraceGPU( DetailedTask* dtask,
-                        Task::CallBackEvent event,
+                        CallBackEvent event,
                         const ProcessorGroup* pg,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
@@ -272,7 +272,7 @@ namespace Uintah{
       //__________________________________
       template<class T>
       void rayTraceDataOnionGPU( DetailedTask* dtask,
-                                 Task::CallBackEvent event,
+                                 CallBackEvent event,
                                  const ProcessorGroup* pg,
                                  const PatchSubset* patches,
                                  const MaterialSubset* matls,
@@ -283,7 +283,7 @@ namespace Uintah{
                                  void* stream,
                                  int deviceID,
                                  bool modifies_divQ,
-				 int timeStep,
+				                         int timeStep,
                                  Task::WhichDW which_abskg_dw,
                                  Task::WhichDW whichd_sigmaT4_dw,
                                  Task::WhichDW which_celltype_dw );

@@ -178,9 +178,7 @@ namespace Uintah{
       void sched_CarryForward_FineLevelLabels ( const LevelP& level,
                                                 SchedulerP& sched );
                                           
-      void carryForward_FineLevelLabels ( Task::CallBackEvent event,
-                                          const ProcessorGroup*,
-                                          const PatchSubset* patches,
+      void carryForward_FineLevelLabels ( const PatchSubset* patches,
                                           const MaterialSubset* matls,
                                           DataWarehouse* old_dw,
                                           DataWarehouse* new_dw,
@@ -192,9 +190,7 @@ namespace Uintah{
                                     const VarLabel* variable,
                                     const int tg_num  = -1 );
 
-      void carryForward_Var( Task::CallBackEvent event,
-                             const ProcessorGroup*,
-                             const PatchSubset*,
+      void carryForward_Var( const PatchSubset*,
                              const MaterialSubset*,
                              DataWarehouse*,
                              DataWarehouse*,
