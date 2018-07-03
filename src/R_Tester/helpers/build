@@ -32,10 +32,6 @@ if [ "$OS" = "Linux" ]; then
   #  machine specific variables
   if [ "$MACHINE" == "uintah-build" ]; then
 
-    DBG_CONFIGURE="    --enable-debug \\
-      --enable-64bit \\
-      --enable-scinew-line-numbers \\"
-
     COMMON="      --with-mpi=/usr/lib/mpich\\
      --with-hypre=/usr/local/hypre-2.8.0b \\
      --with-boost=/usr/local/boost-1.65.1 \\
