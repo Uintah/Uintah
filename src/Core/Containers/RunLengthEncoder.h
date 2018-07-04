@@ -722,13 +722,17 @@ readSizeType(int fd, bool needConversion, bool swapBytes, int nByteMode,
 {
   if (needConversion) {
     uint64_t s64;
-    int ignoreReturnVar = ::read(fd, (char*)&s64, nByteMode);
-    static_cast<void>(ignoreReturnVar);  // This gets the compire to not display a warning message
+    int returnVar = ::read(fd, (char*)&s64, nByteMode);
+    if (returnVar == -1) {
+      SCI_THROW("A read() error occurred in RunLengthEncoder.h");
+    }
     s = (SIZE_T)convertSizeType(&s64, swapBytes, nByteMode);
   }
   else {
-    int ignoreReturnVar = ::read(fd, (char*)&s, nByteMode);
-    static_cast<void>(ignoreReturnVar);  // This gets the compire to not display a warning message
+    int returnVar = ::read(fd, (char*)&s, nByteMode);
+    if (returnVar == -1) {
+      SCI_THROW("A read() error occurred in RunLengthEncoder.h");
+    }
   }
 }
 
