@@ -682,10 +682,10 @@ LoadBalancerCommon::createNeighborhoods( const GridP & grid
             ghost = ghost * coarseLevel->getRefinementRatio();
             coarseLevel = coarseLevel->getCoarserLevel();
             addPatchesAndProcsToNeighborhood(coarseLevel.get_rep(),
-                                           level->mapCellToCoarser(low - ghost, offset),
-                                           level->mapCellToCoarser(high + ghost, offset),
-                                           m_neighbors,
-                                           m_neighborhood_processors);
+                                             level->mapCellToCoarser(low - ghost, offset),
+                                             level->mapCellToCoarser(high + ghost, offset),
+                                             m_neighbors,
+                                             m_neighborhood_processors);
 
             // add owning processors (distal)
             if (hasDistalReqs) {
@@ -693,13 +693,14 @@ LoadBalancerCommon::createNeighborhoods( const GridP & grid
               IntVector distalGhost(maxDistalGhost, maxDistalGhost, maxDistalGhost);
               distalGhost = distalGhost * coarseLevel->getRefinementRatio();
               addPatchesAndProcsToNeighborhood(coarseLevel.get_rep(),
-                                             level->mapCellToCoarser(low - distalGhost, offset),
-                                             level->mapCellToCoarser(high + distalGhost, offset),
-                                             m_distal_neighbors,
-                                             m_distal_neighborhood_processors);
+                                               level->mapCellToCoarser(low - distalGhost, offset),
+                                               level->mapCellToCoarser(high + distalGhost, offset),
+                                               m_distal_neighbors,
+                                               m_distal_neighborhood_processors);
             }
           }
         }
+
         // Second look up a single level (finer)
         if (l < grid->numLevels() - 1 && (proc == my_rank || (oldproc == my_rank && !m_scheduler->isCopyDataTimestep()))) {
 
@@ -725,9 +726,8 @@ LoadBalancerCommon::createNeighborhoods( const GridP & grid
   }
 
   if (m_scheduler->isCopyDataTimestep()) {
-    // Regrid timestep postprocess 
-    // 1)- go through the old grid and 
-    //     find which patches used to be on this proc 
+    // Regrid timestep postprocess:
+    //   go through the old grid and find which patches used to be on this proc
     for (int l = 0; l < oldGrid->numLevels(); l++) {
 
       if (grid->numLevels() <= l) {

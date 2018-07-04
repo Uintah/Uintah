@@ -270,6 +270,8 @@ TaskGraph::createDetailedTasks(       bool    useInternalDeps
       }
     }
 
+
+    // look through requires
     for (Task::Dependency* req = task->getRequires(); req != nullptr; req = req->m_next) {
       std::string key = req->m_var->getName();
 
@@ -453,10 +455,16 @@ TaskGraph::createDetailedTasks(       bool    useInternalDeps
   //------------------------------------------------------------------------------------------------
 
   // Now proceed looking within the appropriate neighborhood defined by the max ghost cells a task needs to know about.
-  size_t num_normal_tasks = 0u;
+  size_t tot_detailed_tasks  = 0u;
+  size_t tot_normal_tasks    = 0u;
+  size_t tot_output_tasks    = 0u;
+  size_t tot_opp_tasks       = 0u;
+  size_t tot_reduction_tasks = 0u;
 
   for (auto i = 0u; i < number_of_tasks; i++) {
     Task* task = sorted_tasks[i];
+
+    size_t num_detailed_tasks  = 0u;
 
     DOUT(g_proc_neighborhood_dbg, "Looking for max ghost vars for task: " << task->getName());
 
@@ -472,9 +480,10 @@ TaskGraph::createDetailedTasks(       bool    useInternalDeps
       }
     }
 
-    // OncePerProc tasks
+    // valid patch and matl sets
     if (ps && ms) {
-      // only create OncePerProc tasks and output tasks once on each processor.
+
+      // OncePerProc tasks - only create OncePerProc tasks and output tasks once on each processor.
       if (task->getType() == Task::OncePerProc || task->getType() == Task::Hypre) {
         // only schedule this task on processors in the neighborhood
         const std::unordered_set<int> neighborhood_procs = (task->m_max_ghost_cells.at(levelID) >= MAX_HALO_DEPTH) ? distal_procs : local_procs;
@@ -483,6 +492,8 @@ TaskGraph::createDetailedTasks(       bool    useInternalDeps
           for (int m = 0; m < ms->size(); m++) {
             const MaterialSubset* mss = ms->getSubset(m);
             createDetailedTask(task, pss, mss);
+            ++num_detailed_tasks;
+            ++tot_opp_tasks;
           }
         }
       }
@@ -498,13 +509,14 @@ TaskGraph::createDetailedTasks(       bool    useInternalDeps
           for (auto m = 0; m < ms->size(); m++) {
             const MaterialSubset* mss = ms->getSubset(m);
             createDetailedTask(task, pss, mss);
+            ++num_detailed_tasks;
+            ++tot_output_tasks;
           }
         }
       }
 
       // Normal tasks
       else {
-        size_t num_dts = 0;
         const int ps_size = ps->size();
         for (int ps_index = 0; ps_index < ps_size; ps_index++) {
           const PatchSubset* pss = ps->getSubset(ps_index);
@@ -534,18 +546,20 @@ TaskGraph::createDetailedTasks(       bool    useInternalDeps
             for (int m = 0; m < ms->size(); m++) {
               const MaterialSubset* mss = ms->getSubset(m);
               createDetailedTask(task, pss, mss);
-              ++num_dts;
-              ++num_normal_tasks;
+              ++num_detailed_tasks;
+              ++tot_normal_tasks;
             }
           }
         }
-        DOUT( g_proc_neighborhood_dbg, "Rank-" << m_proc_group->myRank() << " created: " << num_dts << " tasks for: " << task->getName() << " on level: " << levelID);
+        DOUT( g_detailed_task_dbg, "Rank-" << m_proc_group->myRank() << " created: " << num_detailed_tasks << " (" << task->getType()  << ") DetailedTasks for: " << task->getName() << " on level: " << levelID);
       }
     } // end valid patch and matl sets
 
     // these tasks would be, e.g. DataArchiver::outputReductionVars or DataArchiver::outputVariables (CheckpointReduction)
     else if (!ps && !ms) {
       createDetailedTask(task, nullptr, nullptr);
+      ++num_detailed_tasks;
+      ++tot_output_tasks;
     }
 
     // reduction tasks
@@ -554,6 +568,8 @@ TaskGraph::createDetailedTasks(       bool    useInternalDeps
         for (int m = 0; m < ms->size(); m++) {
           const MaterialSubset* mss = ms->getSubset(m);
           createDetailedTask(task, nullptr, mss);
+          ++num_detailed_tasks;
+          ++tot_reduction_tasks;
         }
       }
       else
@@ -562,9 +578,14 @@ TaskGraph::createDetailedTasks(       bool    useInternalDeps
     else {
       SCI_THROW(InternalError("Task has PatchSet, but no MaterialSet", __FILE__, __LINE__));
     }
+    tot_detailed_tasks += num_detailed_tasks;
   }
   
-  DOUT(g_proc_neighborhood_dbg, "Rank-" << m_proc_group->myRank() << " created: " << num_normal_tasks << " detailed tasks in TG: " << m_index);
+  DOUT(g_detailed_task_dbg, "\nRank-" << m_proc_group->myRank()       << " created: " << tot_detailed_tasks << "  total DetailedTasks in TG: " << m_index << " with:\n"
+                                      << "\t" << tot_normal_tasks     << " total      Normal tasks\n"
+                                      << "\t" << tot_opp_tasks        << " total OncePerProc tasks\n"
+                                      << "\t" << tot_output_tasks     << " total      Output tasks\n"
+                                      << "\t" << tot_reduction_tasks  << " total   Reduction tasks\n");
 
   m_load_balancer->assignResources(*m_detailed_tasks);
 

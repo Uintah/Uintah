@@ -72,7 +72,7 @@ using namespace Uintah;
 
 namespace {
   Dout g_schedulercommon_dbg( "SchedulerCommon_DBG", "SchedulerCommon", "general debug information"  , false );
-  Dout g_task_graph_compile(  "SchedulerCommon_TG" , "SchedulerCommon", "task graph compilation info", false );
+  Dout g_task_graph_compile(  "TaskGraphCompile"   , "SchedulerCommon", "task graph compilation info", false );
 }
 
 
