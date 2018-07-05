@@ -168,6 +168,8 @@ static void usage( const std::string& message,
     std::cerr << "-gpucheck                   : Returns 1 if sus was compiled with CUDA and there is a GPU available. \n";
     std::cerr << "                            : Returns 2 if sus was not compiled with CUDA or there are no GPUs available. \n";
     std::cerr << "-nthreads <#>               : Number of threads per MPI process, requires multi-threaded Unified scheduler\n";
+    std::cerr << "-npartitions <#>            : Number of OpenMP thread partitions per MPI process, requires multi-threaded Kokkos scheduler\n";
+    std::cerr << "-nthreadsperpartition <#>   : Number of OpenMP threads per thread partition, requires multi-threaded Kokkos scheduler\n";
     std::cerr << "-layout NxMxO               : Eg: 2x1x1.  MxNxO must equal number tof boxes you are using.\n";
     std::cerr << "-local_filesystem           : If using MPI, use this flag if each node has a local disk.\n";
     std::cerr << "-emit_taskgraphs            : Output taskgraph information\n";
