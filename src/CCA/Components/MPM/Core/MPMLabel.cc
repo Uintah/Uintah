@@ -168,6 +168,9 @@ MPMLabel::MPMLabel()
   pSurfLabel = VarLabel::create( "p.surface",
 			ParticleVariable<int>::getTypeDescription() );
 
+  pSurfGradLabel = VarLabel::create( "p.surfgrad",
+			ParticleVariable<Vector>::getTypeDescription() );
+
   pLastLevelLabel = VarLabel::create( "p.lastlevel",
 			ParticleVariable<int>::getTypeDescription() );
 
@@ -318,7 +321,46 @@ MPMLabel::MPMLabel()
   gMassAllLabel = VarLabel::create( "g.massall",
 			NCVariable<double>::getTypeDescription() );
   
+  gMassF0Label = VarLabel::create( "g.massF0",
+			NCVariable<double>::getTypeDescription() );
+
+  gMassF1Label = VarLabel::create( "g.massF1",
+			NCVariable<double>::getTypeDescription() );
+
   gVelocityLabel = VarLabel::create( "g.velocity",
+			NCVariable<Vector>::getTypeDescription() );
+  
+  gVelocityF0Label = VarLabel::create( "g.velocityF0",
+			NCVariable<Vector>::getTypeDescription() );
+  
+  gVelocityF1Label = VarLabel::create( "g.velocityF1",
+			NCVariable<Vector>::getTypeDescription() );
+  
+  gVelocityStarF0Label = VarLabel::create( "g.velocity_starF0",
+			NCVariable<Vector>::getTypeDescription() );
+  
+  gVelocityStarF1Label = VarLabel::create( "g.velocity_starF1",
+			NCVariable<Vector>::getTypeDescription() );
+  
+  gAccelerationF0Label = VarLabel::create( "g.accelerationF0",
+			NCVariable<Vector>::getTypeDescription() );
+  
+  gAccelerationF1Label = VarLabel::create( "g.accelerationF1",
+			NCVariable<Vector>::getTypeDescription() );
+  
+  gInternalForceF0Label = VarLabel::create( "g.internalforceF0",
+			NCVariable<Vector>::getTypeDescription() );
+  
+  gInternalForceF1Label = VarLabel::create( "g.internalforceF1",
+			NCVariable<Vector>::getTypeDescription() );
+  
+  gExternalForceF0Label = VarLabel::create( "g.externalforceF0",
+			NCVariable<Vector>::getTypeDescription() );
+  
+  gExternalForceF1Label = VarLabel::create( "g.externalforceF1",
+			NCVariable<Vector>::getTypeDescription() );
+  
+  gVelocityBCLabel = VarLabel::create( "g.velocityBC",
 			NCVariable<Vector>::getTypeDescription() );
   
   gVelocityBCLabel = VarLabel::create( "g.velocityBC",
@@ -328,6 +370,12 @@ MPMLabel::MPMLabel()
 			NCVariable<Vector>::getTypeDescription() );
   
   gPositionLabel = VarLabel::create( "g.position",
+			NCVariable<Point>::getTypeDescription() );
+  
+  gPositionF0Label = VarLabel::create( "g.positionF0",
+			NCVariable<Point>::getTypeDescription() );
+  
+  gPositionF1Label = VarLabel::create( "g.positionF1",
 			NCVariable<Point>::getTypeDescription() );
   
   gExternalForceLabel = VarLabel::create( "g.externalforce",
@@ -376,16 +424,46 @@ MPMLabel::MPMLabel()
   gNormTractionLabel = VarLabel::create( "g.normtraction",
                    NCVariable<double>::getTypeDescription() );
 
+  gNormTractionF0Label = VarLabel::create( "g.normtractionF0",
+                   NCVariable<double>::getTypeDescription() );
+
+  gNormTractionF1Label = VarLabel::create( "g.normtractionF1",
+                   NCVariable<double>::getTypeDescription() );
+
   gSurfNormLabel = VarLabel::create( "g.surfnorm",
                    NCVariable<Vector>::getTypeDescription() );
 
+  gSurfNormF0Label = VarLabel::create( "g.surfnormF0",
+                   NCVariable<Vector>::getTypeDescription() );
+
+  gSurfNormF1Label = VarLabel::create( "g.surfnormF1",
+                   NCVariable<Vector>::getTypeDescription() );
+
+  gSurfLabel     = VarLabel::create( "g.surf",
+                   NCVariable<double>::getTypeDescription() );
+
+  gSurfGradLabel = VarLabel::create( "g.surfgrad",
+                   NCVariable<Vector>::getTypeDescription() );
+
   gStressLabel   = VarLabel::create( "g.stress",
+                   NCVariable<Matrix3>::getTypeDescription() );
+
+  gStressF0Label   = VarLabel::create( "g.stressF0",
+                   NCVariable<Matrix3>::getTypeDescription() );
+
+  gStressF1Label   = VarLabel::create( "g.stressF1",
                    NCVariable<Matrix3>::getTypeDescription() );
 
   gStressForSavingLabel   = VarLabel::create( "g.stressFS",
                    NCVariable<Matrix3>::getTypeDescription() );
 
   gVolumeLabel     = VarLabel::create("g.volume",
+			NCVariable<double>::getTypeDescription());
+
+  gVolumeF0Label   = VarLabel::create("g.volumeF0",
+			NCVariable<double>::getTypeDescription());
+
+  gVolumeF1Label   = VarLabel::create("g.volumeF1",
 			NCVariable<double>::getTypeDescription());
 
   gZOILabel     = VarLabel::create("g.zoi",
@@ -823,6 +901,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pExternalHeatFluxLabel_preReloc);
   VarLabel::destroy(pSurfLabel);
   VarLabel::destroy(pSurfLabel_preReloc);
+  VarLabel::destroy(pSurfGradLabel);
   VarLabel::destroy(pLastLevelLabel);
   VarLabel::destroy(pLastLevelLabel_preReloc);
   VarLabel::destroy(pParticleIDLabel);
@@ -868,17 +947,39 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(gColorLabel);
   VarLabel::destroy(gMassLabel);
   VarLabel::destroy(gMassAllLabel);
+  VarLabel::destroy(gMassF0Label);
+  VarLabel::destroy(gMassF1Label);
+  VarLabel::destroy(gVelocityF0Label);
+  VarLabel::destroy(gVelocityF1Label);
+  VarLabel::destroy(gVelocityStarF0Label);
+  VarLabel::destroy(gVelocityStarF1Label);
+  VarLabel::destroy(gInternalForceF0Label);
+  VarLabel::destroy(gInternalForceF1Label);
+  VarLabel::destroy(gExternalForceF0Label);
+  VarLabel::destroy(gExternalForceF1Label);
+  VarLabel::destroy(gAccelerationF0Label);
+  VarLabel::destroy(gAccelerationF1Label);
   VarLabel::destroy(gVelocityLabel);
   VarLabel::destroy(gVelocityBCLabel);
   VarLabel::destroy(gVelSPSSPLabel);
   VarLabel::destroy(gPositionLabel);
+  VarLabel::destroy(gPositionF0Label);
+  VarLabel::destroy(gPositionF1Label);
   VarLabel::destroy(gExternalForceLabel);
   VarLabel::destroy(gInternalForceLabel);
   VarLabel::destroy(gContactLabel);
   VarLabel::destroy(gVelocityStarLabel);
   VarLabel::destroy(gNormTractionLabel);
+  VarLabel::destroy(gNormTractionF0Label);
+  VarLabel::destroy(gNormTractionF1Label);
   VarLabel::destroy(gStressLabel);
+  VarLabel::destroy(gStressF0Label);
+  VarLabel::destroy(gStressF1Label);
   VarLabel::destroy(gSurfNormLabel);
+  VarLabel::destroy(gSurfNormF0Label);
+  VarLabel::destroy(gSurfNormF1Label);
+  VarLabel::destroy(gSurfLabel);
+  VarLabel::destroy(gSurfGradLabel);
   VarLabel::destroy(gTemperatureLabel);
   VarLabel::destroy(gSp_volLabel); 
   VarLabel::destroy(gSp_vol_srcLabel); 
@@ -893,6 +994,8 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(gThermalContactTemperatureRateLabel);
   VarLabel::destroy(gStressForSavingLabel);
   VarLabel::destroy(gVolumeLabel);
+  VarLabel::destroy(gVolumeF0Label);
+  VarLabel::destroy(gVolumeF1Label);
   VarLabel::destroy(gZOILabel);
   VarLabel::destroy(MPMRefineCellLabel);
   VarLabel::destroy(cVolumeLabel);
