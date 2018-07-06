@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_HOMEBREW_SERIALMPM_H
-#define UINTAH_HOMEBREW_SERIALMPM_H
+#ifndef UINTAH_HOMEBREW_SINGLEFIELDMPM_H
+#define UINTAH_HOMEBREW_SINGLEFIELDMPM_H
 
 #include <CCA/Ports/DataWarehouseP.h>
 #include <CCA/Ports/Output.h>
@@ -52,30 +52,24 @@ namespace Uintah {
 class ThermalContact;
 class HeatConduction;
 class AnalysisModule;
-class SDInterfaceModel;
-class FluxBCModel;
-
 
 /**************************************
 
 CLASS
-   SerialMPM
+   SingleFieldMPM
    
    Short description...
 
 GENERAL INFORMATION
 
-   SerialMPM.h
+   SingleFieldMPM.h
 
-   Steven G. Parker
-   Department of Computer Science
+   James Guilkey
+   Mechanical Engineering
    University of Utah
 
-   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-  
-   
 KEYWORDS
-   SerialMPM
+   SingleFieldMPM
 
 DESCRIPTION
    Long description...
@@ -84,17 +78,17 @@ WARNING
   
 ****************************************/
 
-  class SerialMPM : public MPMCommon {
+  class SingleFieldMPM : public MPMCommon {
 public:
-    SerialMPM(const ProcessorGroup* myworld,
+    SingleFieldMPM(const ProcessorGroup* myworld,
 	      const SimulationStateP sharedState);
 
-  virtual ~SerialMPM();
+  virtual ~SingleFieldMPM();
 
   Contact*         contactModel;
   ThermalContact*  thermalContactModel;
   HeatConduction* heatConductionModel;
-  SDInterfaceModel* d_sdInterfaceModel;
+ 
   //////////
   // Insert Documentation Here:
   virtual void problemSetup(const ProblemSpecP& params, 
@@ -162,12 +156,9 @@ protected:
   //////////
   // Insert Documentation Here:
   friend class MPMICE;
-  friend class MPMArches;
-
+ 
   MaterialSubset* d_one_matl;         // matlsubset for zone of influence
 
-  FluxBCModel*  d_fluxBC;
- 
   virtual void actuallyInitialize(const ProcessorGroup*,
                                   const PatchSubset* patches,
                                   const MaterialSubset* matls,
@@ -228,27 +219,47 @@ protected:
                             DataWarehouse* old_dw,
                             DataWarehouse* new_dw);
 
-  //////////
-  // Insert Documentation Here:
   void actuallyComputeStableTimestep(const ProcessorGroup*,
                                      const PatchSubset* patches,
                                      const MaterialSubset* matls,
                                      DataWarehouse* old_dw,
                                      DataWarehouse* new_dw);
 
-  //////////
-  // Insert Documentation Here:
   virtual void interpolateParticlesToGrid(const ProcessorGroup*,
                                           const PatchSubset* patches,
                                           const MaterialSubset* matls,
                                           DataWarehouse* old_dw,
                                           DataWarehouse* new_dw);
 
+  virtual void interpolateSurfaceToGrid(const ProcessorGroup*,
+                                        const PatchSubset* patches,
+                                        const MaterialSubset* matls,
+                                        DataWarehouse* old_dw,
+                                        DataWarehouse* new_dw);
+
   virtual void computeNormals(const ProcessorGroup  *,
                               const PatchSubset     * patches,
                               const MaterialSubset  * ,
                                     DataWarehouse   * old_dw,
                                     DataWarehouse   * new_dw );
+
+  virtual void computeParticleSurfaceGradient(const ProcessorGroup  *,
+                                              const PatchSubset     * patches,
+                                              const MaterialSubset  * ,
+                                                    DataWarehouse   * old_dw,
+                                                    DataWarehouse   * new_dw );
+
+  virtual void computeGridSurfaceGradient(const ProcessorGroup  *,
+                                          const PatchSubset     * patches,
+                                          const MaterialSubset  * ,
+                                                DataWarehouse   * old_dw,
+                                                DataWarehouse   * new_dw );
+
+  virtual void computeSingleFieldContact(const ProcessorGroup  *,
+                                         const PatchSubset     * patches,
+                                         const MaterialSubset  * ,
+                                               DataWarehouse   * old_dw,
+                                               DataWarehouse   * new_dw );
 
   virtual void computeSSPlusVp(const ProcessorGroup*,
                                const PatchSubset* patches,
@@ -300,13 +311,6 @@ protected:
                               DataWarehouse* old_dw,
                               DataWarehouse* new_dw);
 
-  //////////
-  // Calculates the grid-based rate of species diffusion
-  virtual void computeAndIntegrateDiffusion(const ProcessorGroup*
-                                           ,const PatchSubset     * patches
-                                           ,const MaterialSubset  * matls
-                                           ,      DataWarehouse   * old_dw
-                                           ,      DataWarehouse   * new_dw);
   //////////
   // Insert Documentation Here:
   virtual void computeAndIntegrateAcceleration(const ProcessorGroup*,
@@ -433,7 +437,22 @@ protected:
                                       const PatchSet    * patches,
                                       const MaterialSet * matls );
 
+  virtual void scheduleComputeParticleSurfaceGradient(SchedulerP    & sched,
+                                                      const PatchSet * patches,
+                                                      const MaterialSet* matls);
+
+  virtual void scheduleComputeGridSurfaceGradient(SchedulerP    & sched,
+                                                  const PatchSet * patches,
+                                                  const MaterialSet* matls);
+
+  virtual void scheduleSingleFieldContact(SchedulerP    & sched,
+                                          const PatchSet * patches,
+                                          const MaterialSet* matls);
+
   virtual void scheduleInterpolateParticlesToGrid(SchedulerP&, const PatchSet*,
+                                                  const MaterialSet*);
+
+  virtual void scheduleInterpolateSurfaceToGrid(SchedulerP&, const PatchSet*,
                                                   const MaterialSet*);
 
   virtual void scheduleComputeSSPlusVp(SchedulerP&, const PatchSet*,
@@ -474,10 +493,6 @@ protected:
 
   virtual void scheduleSolveHeatEquations(SchedulerP&, const PatchSet*,
                                           const MaterialSet*);
-
-  virtual void scheduleComputeAndIntegrateDiffusion(SchedulerP&,
-                                                    const PatchSet*,
-                                                    const MaterialSet*);
 
   virtual void scheduleComputeAndIntegrateAcceleration(SchedulerP&,
                                                        const PatchSet*,
@@ -528,39 +543,6 @@ protected:
   virtual void scheduleComputeParticleScaleFactor(SchedulerP&, 
                                                   const PatchSet*,
                                                   const MaterialSet*);
-
-  // JBH -- Scalar Diffusion Related
-  virtual void scheduleConcInterpolated(        SchedulerP  &
-                                       ,  const PatchSet    *
-                                       ,  const MaterialSet *);
-
-  virtual void scheduleComputeFlux(        SchedulerP  &
-                                  ,  const PatchSet    *
-                                  ,  const MaterialSet *);
-
-  virtual void computeFlux( const ProcessorGroup *
-                          , const PatchSubset    *
-                          , const MaterialSubset *
-                          ,       DataWarehouse  *
-                          ,       DataWarehouse  *  );
-
-
-  virtual void scheduleComputeDivergence(        SchedulerP  &
-                                        ,  const PatchSet    *
-                                        ,  const MaterialSet *);
-
-  virtual void computeDivergence( const ProcessorGroup  *
-                                , const PatchSubset     *
-                                , const MaterialSubset  *
-                                ,       DataWarehouse   *
-                                ,       DataWarehouse   * );
-
-
-  virtual void scheduleDiffusionInterfaceDiv(        SchedulerP  &
-                                            ,  const PatchSet    *
-                                            ,  const MaterialSet *);
-
-
 
   void readPrescribedDeformations(std::string filename);
 
@@ -647,8 +629,8 @@ protected:
   
 private:
 
-  SerialMPM(const SerialMPM&);
-  SerialMPM& operator=(const SerialMPM&);
+  SingleFieldMPM(const SingleFieldMPM&);
+  SingleFieldMPM& operator=(const SingleFieldMPM&);
 };
       
 } // end namespace Uintah
