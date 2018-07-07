@@ -548,6 +548,8 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
   new_dw->allocateAndPut(pvars.pfiberdir,     d_lb->pFiberDirLabel,     subset);
   new_dw->allocateAndPut(pvars.ptempPrevious, d_lb->pTempPreviousLabel, subset);
   new_dw->allocateAndPut(pvars.pdisp,         d_lb->pDispLabel,         subset);
+  new_dw->allocateAndPut(pvars.psurface,      d_lb->pSurfLabel,         subset);
+
   if(d_flags->d_integrator_type=="explicit"){
     new_dw->allocateAndPut(pvars.pvelGrad,    d_lb->pVelGradLabel,      subset);
   }
@@ -816,6 +818,8 @@ ParticleCreator::initializeParticle(const Patch* patch,
   }
   
   pvars.ptempPrevious[i]  = pvars.ptemperature[i];
+  GeometryPieceP piece = (*obj)->getPiece();
+  pvars.psurface[i] = checkForSurface2(piece,p,dxpp);
 
   Vector pExtForce(0,0,0);
   applyForceBC(dxpp, p, pvars.pmass[i], pExtForce);
@@ -1089,6 +1093,11 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
   particle_state.push_back(d_lb->pLocalizedMPMLabel);
   particle_state_preReloc.push_back(d_lb->pLocalizedMPMLabel_preReloc);
 
+  if(d_flags->d_SingleFieldMPM){
+    particle_state.push_back(d_lb->pSurfLabel);
+    particle_state_preReloc.push_back(d_lb->pSurfLabel_preReloc);
+  }
+
   if (d_artificial_viscosity) {
     particle_state.push_back(d_lb->p_qLabel);
     particle_state_preReloc.push_back(d_lb->p_qLabel_preReloc);
@@ -1149,5 +1158,91 @@ ParticleCreator::checkForSurface( const GeometryPieceP piece, const Point p,
   }
   else {
     return 0;
+  }
+}
+
+double
+ParticleCreator::checkForSurface2(const GeometryPieceP piece, const Point p,
+                                  const Vector dxpp )
+{
+
+  //  Check the candidate points which surround the point just passed
+  //   in.  If any of those points are not also inside the object
+  //  the current point is on the surface
+  
+  int ss = 0;
+  // Check to the left (-x)
+  if(!piece->inside(p-Vector(dxpp.x(),0.,0.)))
+    ss++;
+  // Check to the right (+x)
+  if(!piece->inside(p+Vector(dxpp.x(),0.,0.)))
+    ss++;
+  // Check behind (-y)
+  if(!piece->inside(p-Vector(0.,dxpp.y(),0.)))
+    ss++;
+  // Check in front (+y)
+  if(!piece->inside(p+Vector(0.,dxpp.y(),0.)))
+    ss++;
+  // Check below (-z)
+  if(!piece->inside(p-Vector(0.,0.,dxpp.z())))
+    ss++;
+  // Check above (+z)
+  if(!piece->inside(p+Vector(0.,0.,dxpp.z())))
+    ss++;
+#if 1
+#endif
+
+  if(ss>0){
+    return 1.0;
+  }
+  else {
+    // Check to the left (-x)
+    if(!piece->inside(p-Vector(2.0*dxpp.x(),0.,0.)))
+      ss++;
+    // Check to the right (+x)
+    if(!piece->inside(p+Vector(2.0*dxpp.x(),0.,0.)))
+      ss++;
+    // Check behind (-y)
+    if(!piece->inside(p-Vector(0.,2.0*dxpp.y(),0.)))
+      ss++;
+    // Check in front (+y)
+    if(!piece->inside(p+Vector(0.,2.0*dxpp.y(),0.)))
+      ss++;
+    // Check below (-z)
+    if(!piece->inside(p-Vector(0.,0.,2.0*dxpp.z())))
+      ss++;
+    // Check above (+z)
+    if(!piece->inside(p+Vector(0.,0.,2.0*dxpp.z())))
+      ss++;
+    // Check to the lower-left (-x,-y)
+    if(!piece->inside(p-Vector(dxpp.x(),dxpp.y(),0.)))
+      ss++;
+    // Check to the upper-right (+x,+y)
+    if(!piece->inside(p+Vector(dxpp.x(),dxpp.y(),0.)))
+      ss++;
+    // Check to the upper-left (-x,+z)
+    if(!piece->inside(p+Vector(-dxpp.x(),dxpp.y(),0.)))
+      ss++;
+    // Check to the lower-right (x,-z)
+    if(!piece->inside(p+Vector(dxpp.x(),-dxpp.y(),0.)))
+      ss++;
+    // Check to the lower-left (-x,-z)
+    if(!piece->inside(p-Vector(dxpp.x(),0.,dxpp.z())))
+      ss++;
+    // Check to the upper-right (+x,+z)
+    if(!piece->inside(p+Vector(dxpp.x(),0.,dxpp.z())))
+      ss++;
+    // Check to the upper-left (-x,+z)
+    if(!piece->inside(p+Vector(-dxpp.x(),0.,dxpp.z())))
+      ss++;
+    // Check to the lower-right (x,-z)
+    if(!piece->inside(p+Vector(dxpp.x(),0.,-dxpp.z())))
+      ss++;
+
+  }
+  if(ss>0){
+    return 0.5;
+  } else {
+    return 0.0;
   }
 }

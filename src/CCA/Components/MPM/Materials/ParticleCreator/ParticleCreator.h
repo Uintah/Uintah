@@ -96,6 +96,7 @@ namespace Uintah {
     ParticleVariable<Matrix3> psize,pvelGrad;
     ParticleVariable<double> pmass, pvolume, ptemperature, psp_vol,perosion;
     ParticleVariable<double> pcolor,ptempPrevious,p_q;
+    ParticleVariable<double> psurface;
     ParticleVariable<long64> pparticleID;
     ParticleVariable<Vector> pdisp,pTempGrad,parea;
     ParticleVariable<Vector> pfiberdir; 
@@ -163,7 +164,9 @@ namespace Uintah {
     
     int checkForSurface(const GeometryPieceP piece, const Point p,
                         const Vector dxpp);
-    
+
+    double checkForSurface2(const GeometryPieceP piece, const Point p,
+                            const Vector dxpp);
 
     MPMLabel* d_lb;
     MPMFlags* d_flags;
