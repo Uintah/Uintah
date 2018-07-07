@@ -25,12 +25,10 @@
 // This class is crucial for Uintah portability.   It contains additional task parameters to help
 // aid execution of this task on different architectures.  At the time of this file's creation a
 // Detailed Task supporting portabiltiy consisted of the following:
-//                        CallBackEvent event,
-//                        const ProcessorGroup* pg,
 //                        const PatchSubset* patches,
 //                        const MaterialSubset* matls,
 //                        DataWarehouse* fromDW,
-//                        DataWarehouse* toDW,
+//                        DataWarehouse* toDW,<UintahSpaces::HostSpace>
 //                        UintahParams & uintahParams,
 //                        ExecutionObject & executionObject
 // For Cuda related tasks in particular, this object wraps a Cuda Stream.  Further, this task
@@ -44,10 +42,7 @@
 #ifndef EXECUTIONOBJECT_H_
 #define EXECUTIONOBJECT_H_
 
-#include <Core/Exceptions/InternalError.h>
-
-#include <sci_defs/cuda_defs.h>
-#include <sci_defs/kokkos_defs.h>
+#include <vector>
 
 namespace Uintah {
 
@@ -56,59 +51,25 @@ public:
 
   // Streams should be created, supplied, and managed by the scheduler itself.
   // The application developer probably shouldn't be managing his or her own streams.
-  void setStream(void* stream, int deviceID) {
+  void setStream(void* stream, int deviceID);
 
-#if defined(HAVE_CUDA)
-    //Ignore the non-CUDA case as those streams are pointless.
-    m_streams.push_back(stream);
-    this->deviceID = deviceID;
-#endif
-  }
+  void setStreams(const std::vector<void*>& streams, int deviceID);
 
-  void setStreams(const std::vector<void*>& streams, int deviceID) {
-#if defined(HAVE_CUDA)
-    for (auto& stream : streams) {
-      m_streams.push_back(stream);
-    }
-    this->deviceID = deviceID;
-#endif //Ignore the non-CUDA case as those streams are pointless.
-  }
+  void * getStream() const;
+  void * getStream(unsigned int i) const;
 
-  void * getStream() const {
-    if ( m_streams.size() == 0 ) {
-      return nullptr;
-    } else {
-      return m_streams[0];
-    }
-  }
-  void * getStream(unsigned int i) const {
-    if ( i >= m_streams.size() ) {
-      SCI_THROW(InternalError("Requested a stream that doesn't exist.", __FILE__, __LINE__));
-    } else {
-      return m_streams[i];
-    }
-  }
+  unsigned int getNumStreams() const;
 
-  unsigned int getNumStreams() const {
-    return m_streams.size();
-  }
+  int getCudaThreadsPerBlock() const;
 
-  int getCudaThreadsPerBlock() const {
-    return cuda_threads_per_block;
-  }
+  void setCudaThreadsPerBlock(int CudaThreadsPerBlock);
 
-  void setCudaThreadsPerBlock(int CudaThreadsPerBlock) {
-    this->cuda_threads_per_block = CudaThreadsPerBlock;
-  }
+  int getCudaBlocksPerLoop() const;
 
-  int getCudaBlocksPerLoop() const {
-    return cuda_blocks_per_loop;
-  }
+  void setCudaBlocksPerLoop(int CudaBlocksPerLoop);
 
-  void setCudaBlocksPerLoop(int CudaBlocksPerLoop) {
-    this->cuda_blocks_per_loop = CudaBlocksPerLoop;
-  }
 
+  void getTempTaskSpaceFromPool(void** ptr, unsigned int size) const;
 private:
   std::vector<void*> m_streams;
   int deviceID{0};

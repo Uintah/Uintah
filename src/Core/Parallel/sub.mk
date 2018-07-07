@@ -34,6 +34,7 @@ SRCDIR   := Core/Parallel
 
 SRCS     += \
 	$(SRCDIR)/BufferInfo.cc              \
+	$(SRCDIR)/ExecutionObject.cc         \
 	$(SRCDIR)/PackBufferInfo.cc          \
 	$(SRCDIR)/Parallel.cc                \
 	$(SRCDIR)/ProcessorGroup.cc          \

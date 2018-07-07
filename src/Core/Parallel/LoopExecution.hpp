@@ -83,8 +83,12 @@ using std::min;
 
 // Create some data types for non-Kokkos CPU runs.
 namespace UintahSpaces{
-  class CPU {};
-  class HostSpace {};
+  class CPU {};          // These are used for legacy Uintah tasks (e.g. no Kokkos)
+  class HostSpace {};    // And also to refer to any data in host memory
+#if defined( HAVE_CUDA )
+  class GPU {};          // At the moment, this is only used to describe data in Cuda Memory
+  class CudaSpace {};    // and not to manage non-Kokkos GPU tasks.
+#endif //HAVE_CUDA
 }
 
 enum TASKGRAPH {
@@ -1024,40 +1028,46 @@ parallel_for(ExecutionObject& executionObject, T2 KV3, const T3 init_val)
 // If compiling w/o kokkos it takes CC NC SFCX SFCY SFCZ arguments and std::vector<T> arguments
 // ------------------------------------------------------------------------------------------------------------------
 
+template <typename T>
+struct structArrayOfViews {
+  T arrayOfViews[16];
+};
+
 #if defined(UINTAH_ENABLE_KOKKOS)
-template <typename ExecutionSpace, typename MemorySpace, typename T2, typename T3>
+
+template <typename ExecutionSpace, typename MemorySpace, typename T, typename ValueType>
 typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::OpenMP>::value, void>::type
-parallel_initialize_grouped(ExecutionObject& executionObject, T2 KKV3, const T3 init_val ){
+parallel_initialize_grouped(ExecutionObject& executionObject, const structArrayOfViews<T>& KKV3, const int numViews, const ValueType& init_val ){
 
   //TODO: This should probably be seralized and not use a Kokkos::parallel_for?
 
-  int n_cells=0;
-  for (unsigned int j=0; j < KKV3.size(); j++){
-    n_cells+=KKV3(j).m_view.size();
+  int n_cells = 0;
+  for (unsigned int j = 0; j < numViews; j++){
+    n_cells += KKV3.arrayOfViews[j].m_view.size();
   }
 
-  Kokkos::parallel_for( Kokkos::RangePolicy<ExecutionSpace, int>(0,n_cells ).set_chunk_size(2), [=](int i_tot) {
-      // THis seems like a really bad idea.......
-      // Do search to find which index the thread is releavant to.......... yuck, this might be faster on the GPU
-    int i=i_tot ;
-    int j=0;
-    while(i-(int) KKV3(j).m_view.size()>-1){
-      i-=KKV3(j).m_view.size();
+  Kokkos::parallel_for( Kokkos::RangePolicy<ExecutionSpace, int>(0, n_cells).set_chunk_size(2), [=](int i_tot) {
+    // TODO: Find a more efficient way of doing this.
+    int i = i_tot;
+    int j = 0;
+    while ( i-(int) KKV3.arrayOfViews[j].m_view.size() > -1 ){
+      i -= KKV3.arrayOfViews[j].m_view.size();
       j++;
     }
-    KKV3(j)(i)=init_val;
+    KKV3.arrayOfViews[j](i)=init_val;
   });
 }
 
-template <typename ExecutionSpace, typename MemorySpace, typename T2, typename T3>
-typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::OpenMP>::value, void>::type
-parallel_initialize_single(ExecutionObject& executionObject, T2 KKV3, const T3 init_val ){
-  for (unsigned int j=0; j < KKV3.size(); j++){
-    Kokkos::parallel_for( Kokkos::RangePolicy<ExecutionSpace, int>(0,KKV3(j).m_view.size() ).set_chunk_size(2), [=](int i) {
-      KKV3(j)(i)=init_val;
-    });
-  }
-}
+
+//template <typename ExecutionSpace, typename MemorySpace, typename T2, typename T3>
+//typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::OpenMP>::value, void>::type
+//parallel_initialize_single(ExecutionObject& executionObject, T2 KKV3, const T3 init_val ){
+//  for (unsigned int j=0; j < KKV3.size(); j++){
+//    Kokkos::parallel_for( Kokkos::RangePolicy<ExecutionSpace, int>(0,KKV3(j).m_view.size() ).set_chunk_size(2), [=](int i) {
+//      KKV3(j)(i)=init_val;
+//    });
+//  }
+//}
 
 #endif //UINTAH_ENABLE_KOKKOS
 
@@ -1095,69 +1105,77 @@ createConstContainer(int num_field  ){
 
 #if defined(HAVE_CUDA)
 template <  typename T, typename MemorySpace>
-typename std::enable_if<std::is_same<MemorySpace, Kokkos::CudaSpace>::value, Kokkos::View<KokkosView3<T,MemorySpace>* , Kokkos::HostSpace > >::type
+typename std::enable_if<std::is_same<MemorySpace, Kokkos::CudaSpace>::value, Kokkos::View<KokkosView3<T, MemorySpace>* , Kokkos::HostSpace > >::type
 createContainer(int num_field ){
   return Kokkos::View<KokkosView3<T,MemorySpace>* , Kokkos::HostSpace >("a_view_of_gpu_KokkosView3s",num_field);
 }
 
 template <  typename T, typename MemorySpace>
-typename std::enable_if<std::is_same<MemorySpace, Kokkos::CudaSpace>::value, Kokkos::View<KokkosView3<const T,MemorySpace>* , Kokkos::HostSpace > >::type
+typename std::enable_if<std::is_same<MemorySpace, Kokkos::CudaSpace>::value, Kokkos::View<KokkosView3<const T, MemorySpace>* , Kokkos::HostSpace > >::type
 createConstContainer(int num_field ){
   return Kokkos::View<KokkosView3<const T,MemorySpace>* , Kokkos::HostSpace >("a_view_of_gpu_KokkosView3s_with_const",num_field);
 }
 
-template <typename ExecutionSpace, typename MemorySpace, typename T2, typename T3>
+//template <typename ExecutionSpace, typename MemorySpace, typename T2, typename T3>
+//typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::Cuda>::value, void>::type
+//parallel_initialize_single(ExecutionObject& executionObject, T2 KKV3, const T3 init_val ){
+//
+//  Kokkos::View< KokkosView3<T3,Kokkos::CudaSpace>* , Kokkos::CudaSpace >  KKV3_gpu("parallel_init_single_gpu",KKV3.size());
+//  Kokkos::deep_copy(KKV3_gpu,KKV3);
+//
+//  int cuda_threads_per_block = executionObject.getCudaThreadsPerBlock();
+//  int cuda_blocks_per_loop   = executionObject.getCudaBlocksPerLoop();
+//  for (unsigned int jx=0; jx < KKV3.size(); jx++){
+//
+//  const int n_cells=KKV3(jx).m_view.size();
+//
+//  const int actualThreads = n_cells > cuda_threads_per_block ? cuda_threads_per_block : n_cells;
+//  typedef Kokkos::TeamPolicy< ExecutionSpace > policy_type;
+//
+//  Kokkos::parallel_for (Kokkos::TeamPolicy< ExecutionSpace >( cuda_blocks_per_loop, actualThreads ),
+//                        KOKKOS_LAMBDA ( typename policy_type::member_type thread ) {
+//    Kokkos::parallel_for (Kokkos::TeamThreadRange(thread, n_cells), [=] (const int& i) {
+//          KKV3_gpu(jx)(i)=init_val;
+//      });
+//    });
+//  }
+//}
+
+template < typename ExecutionSpace, typename MemorySpace, typename T, typename ValueType>
 typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::Cuda>::value, void>::type
-parallel_initialize_single(ExecutionObject& executionObject, T2 KKV3, const T3 init_val ){
-
-  Kokkos::View< KokkosView3<T3,Kokkos::CudaSpace>* , Kokkos::CudaSpace >  KKV3_gpu("parallel_init_single_gpu",KKV3.size());
-  Kokkos::deep_copy(KKV3_gpu,KKV3);
-
-  int cuda_threads_per_block = executionObject.getCudaThreadsPerBlock();
-  int cuda_blocks_per_loop   = executionObject.getCudaBlocksPerLoop();
-  for (unsigned int jx=0; jx < KKV3.size(); jx++){
-
-  const int n_cells=KKV3(jx).m_view.size();
-
-  const int actualThreads = n_cells > cuda_threads_per_block ? cuda_threads_per_block : n_cells;
-  typedef Kokkos::TeamPolicy< ExecutionSpace > policy_type;
-
-  Kokkos::parallel_for (Kokkos::TeamPolicy< ExecutionSpace >( cuda_blocks_per_loop, actualThreads ),
-                        KOKKOS_LAMBDA ( typename policy_type::member_type thread ) {
-    Kokkos::parallel_for (Kokkos::TeamThreadRange(thread, n_cells), [=] (const int& i) {
-          KKV3_gpu(jx)(i)=init_val;
-      });
-    });
-  }
-}
-
-template < typename ExecutionSpace, typename MemorySpace, typename T2, typename T3>
-typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::Cuda>::value, void>::type
-parallel_initialize_grouped(ExecutionObject& executionObject, T2 KKV3, const T3 init_val ){
+parallel_initialize_grouped(ExecutionObject& executionObject, const structArrayOfViews<T>& KKV3, const int numViews, const ValueType& init_val ){
 
   // n_cells is the amount of cells total to process among collection of vars (the view of Kokkos views)
   // For example, if this were being used to  if one var had 4096 cells and another var had 5832 cells, n_cells would become 4096+5832=
 
-  int n_cells=0;
-  for (unsigned int j=0; j < KKV3.size(); j++){
-    n_cells+=KKV3(j).m_view.size();
+  int n_cells = 0;
+  for (unsigned int j = 0; j < numViews; j++){
+    n_cells += KKV3.arrayOfViews[j].m_view.size();
   }
 
   // Allocate space on the GPU for an array of pointers to other arrays.
   // executionObject.getTempTaskSpaceFromPool< MemorySpace >( KKV3.size() );
   // space should be freed at the end of a timestep.
 
-  Kokkos::View< KokkosView3<T3, MemorySpace>* , MemorySpace >  KKV3_gpu("parallel_init_grouped_gpu", KKV3.size());
-  Kokkos::deep_copy( KKV3_gpu, KKV3 );
+  //Kokkos::View< KokkosView3<T3, MemorySpace>* , MemorySpace >  KKV3_gpu("parallel_init_grouped_gpu", KKV3.size());
+  //Kokkos::deep_copy( KKV3_gpu, KKV3 );
 
   int cuda_threads_per_block = executionObject.getCudaThreadsPerBlock();
   int cuda_blocks_per_loop   = executionObject.getCudaBlocksPerLoop();
 
   const int actualThreads = n_cells > cuda_threads_per_block ? cuda_threads_per_block : n_cells;
-  typedef Kokkos::TeamPolicy< ExecutionSpace > policy_type;
+
+  void* stream = executionObject.getStream();
+  if (!stream) {
+    std::cout << "Error, the CUDA stream must not be nullptr\n" << std::endl;
+    SCI_THROW(InternalError("Error, the CUDA stream must not be nullptr.", __FILE__, __LINE__));
+  }
+  Kokkos::Cuda instanceObject(*(static_cast<cudaStream_t*>(stream)));
+
+  typedef Kokkos::TeamPolicy< Kokkos::Cuda > policy_type;
 
   // TODO: Get this working for only 1 SM per loop (the 1 in the parameter below).  When that is working, try to get cuda_blocks_per_loop per loop working.
-  Kokkos::parallel_for (Kokkos::TeamPolicy< ExecutionSpace >( 1, actualThreads ),
+  Kokkos::parallel_for (Kokkos::TeamPolicy< ExecutionSpace >( instanceObject, 1, actualThreads ),
                         KOKKOS_LAMBDA ( typename policy_type::member_type thread ) {
 
       // i_tot will come in as a number between 0 and actualThreads.  Suppose actualThreads is 256.
@@ -1165,19 +1183,19 @@ parallel_initialize_grouped(ExecutionObject& executionObject, T2 KKV3, const T3 
       // then they all advanced forward by actualThreads.
       // Thread 0 works on cell 256, thread 1 works on cell 257... thread 511 works on cell 511.
       // This should continue until all cells are completed.
-    Kokkos::parallel_for (Kokkos::TeamThreadRange(thread, actualThreads), [&, n_cells, actualThreads] (const int& i_tot) {
-      const int n_iter=n_cells/actualThreads  + (n_cells%actualThreads > 0 ? 1 : 0); // round up (more efficient to compute this outside parallel_for?)
-      unsigned int  j=0;
-      int  old_i=0;
-      for (int i=0; i<n_iter; i++) { 
-         while (i*actualThreads+i_tot - old_i >= KKV3_gpu(j).m_view.size()){ // using a while for small data sets or massive streaming multiprocessors
-           old_i += KKV3_gpu(j).m_view.size();
+    Kokkos::parallel_for (Kokkos::TeamThreadRange(thread, actualThreads), [&, n_cells, actualThreads, KKV3, numViews] (const int& i_tot) {
+      const int n_iter = n_cells / actualThreads  + (n_cells % actualThreads > 0 ? 1 : 0); // round up (more efficient to compute this outside parallel_for?)
+      unsigned int  j = 0;
+      int old_i = 0;
+      for (int i = 0; i < n_iter; i++) {
+         while ( i * actualThreads + i_tot - old_i >= KKV3.arrayOfViews[j].m_view.size() ) { // using a while for small data sets or massive streaming multiprocessors
+           old_i += KKV3.arrayOfViews[j].m_view.size();
            j++;
-           if ( KKV3_gpu.size() <= j ){
+           if ( numViews <= j ){
              return; // do nothing
            }
          }
-         KKV3_gpu(j)( i * actualThreads + i_tot - old_i ) = init_val;
+         KKV3.arrayOfViews[j]( i * actualThreads + i_tot - old_i ) = init_val;
       }
     });
   });
@@ -1185,23 +1203,43 @@ parallel_initialize_grouped(ExecutionObject& executionObject, T2 KKV3, const T3 
 #endif //HAVE_CUDA
 
 
+//template<typename T, typename MemorySpace>
+//inline void setValueAndReturnView(Kokkos::View<T*, MemorySpace>& V, const T& x, int &index){
+//  V(index) = x;
+//  index++;
+//  return;
+//}
+//
+////For Views of Views
+//template<typename T, typename MemorySpace>
+//inline void setValueAndReturnView(Kokkos::View<T*, MemorySpace>& V, const Kokkos::View<T*, MemorySpace>& small_v, int &index){
+//  int extra_i = small_v.size();
+//  for(int i=0; i<extra_i; i++){
+//    V(index+i) = small_v(i);
+//  }
+//  index += extra_i;
+//  return;
+//}
+
+//For array of Views
 template<typename T, typename MemorySpace>
-inline void setValueAndReturnView(Kokkos::View<T*, MemorySpace>& V, const T& x, int &index){
-  V(index) = x;
+inline void setValueAndReturnView(structArrayOfViews<T>& V, const T& x, int &index){
+  V.arrayOfViews[index] = x;
   index++;
   return;
 }
-
-//For Views of Views
+//For array of Views
 template<typename T, typename MemorySpace>
-inline void setValueAndReturnView(Kokkos::View<T*, MemorySpace>& V, const Kokkos::View<T*, MemorySpace>& small_v, int &index){
+inline void setValueAndReturnView(structArrayOfViews<T>& V, const Kokkos::View<T*, MemorySpace>& small_v, int &index){
   int extra_i = small_v.size();
-  for(int i=0; i<extra_i; i++){
-    V(index+i) = small_v(i);
+  for(int i = 0; i < extra_i; i++){
+    V.arrayOfViews[index+i] = small_v(i);
   }
   index += extra_i;
   return;
 }
+
+
 
 template<typename T, typename MemorySpace>
 inline void sumViewSize(const T& x, int &index){
@@ -1217,7 +1255,7 @@ inline void sumViewSize(const Kokkos::View<T*, MemorySpace>& small_v, int &index
 
 template<typename ExecutionSpace, typename MemorySpace, typename T, class ...Ts>  // Could this be modified to accept grid variables AND containers of grid variables?
 typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::OpenMP>::value, void>::type
-parallel_initialize(ExecutionObject& executionObject, T initializationValue,  Ts... inputs) {
+parallel_initialize(ExecutionObject& executionObject, const T& initializationValue,  Ts & ... inputs) {
 
   // Count the number of views used (sometimes they may be views of views)
   int n = 0 ; // Get number of variadic arguments
@@ -1225,40 +1263,28 @@ parallel_initialize(ExecutionObject& executionObject, T initializationValue,  Ts
       sumViewSize<KokkosView3< T, MemorySpace >, MemorySpace>(inputs, n)
       ,0)...,0}; //second part of magic unpacker
 
-  executionObject.getTempTaskSpaceFromPool<Kokkos::HostSpace>(sizeof(KokkosView3< T, MemorySpace >) * n);
-
-  // Upcoming plan
-  // Allocate host space that will be reclaimed back to the pool when the task ends.
-//  KokkosView3< T, MemorySpace >* hostArrayOfViews = executionObject.getTempTaskSpaceFromPool<Kokkos::HostSpace>(n * sizeof(void*));
-  // Copy over the views one by one into this view of views.
-//  int i=0; //iterator counter
-//  Alias<int[]>{( //first part of magic unpacker
-//      setValueAndReturnView< KokkosView3< T, MemorySpace >, Kokkos::HostSpace >(hostArrayOfViews , inputs, i)
-//      ,0)...,0}; //second part of magic unpacker
-
-  // Copy over the views one by one into this view of views.
-  //int i=0; //iterator counter
-  // Alias<int[]>{( //first part of magic unpacker
-  //    setValueAndReturnView< KokkosView3< T, MemorySpace >, Kokkos::HostSpace >(ArrayOfViews, inputs, i)
-  //    ,0)...,0}; //second part of magic unpacker
-
   // Allocate space in host memory to track n total views.
-  Kokkos::View< KokkosView3< T, MemorySpace >*, Kokkos::HostSpace > viewOfViews("Parallel_initialize", n);
+  if (n > 16) {
+    std::cout << "parallel_initialize only supports initializing up to 16 simulation variables at a time.  Please split the work and use another parallel_initialize\n" << std::endl;
+    SCI_THROW(InternalError("parallel_initialize only supports initializing up to 16 simulation variables at a time.  Please split the work and use another parallel_initialize", __FILE__, __LINE__));
+  }
+
+  structArrayOfViews< KokkosView3< T, MemorySpace > >hostArrayOfViews;
 
   // Copy over the views one by one into this view of views.
-  int i=0; //iterator counter
+  int i = 0; //iterator counter
   Alias<int[]>{( //first part of magic unpacker
-      setValueAndReturnView< KokkosView3< T, MemorySpace >, Kokkos::HostSpace >(viewOfViews , inputs, i)
+      setValueAndReturnView< KokkosView3< T, MemorySpace >, MemorySpace >(hostArrayOfViews, inputs, i)
       ,0)...,0}; //second part of magic unpacker
 
-  parallel_initialize_grouped< ExecutionSpace, MemorySpace >(executionObject, viewOfViews, initializationValue );
+  parallel_initialize_grouped< ExecutionSpace, MemorySpace, KokkosView3< T, MemorySpace > >(executionObject, hostArrayOfViews, n, initializationValue );
   //parallel_initialize_single<ExecutionSpace>(executionObject, inputs_, inside_value ); // safer version, less ambitious
 }
 
 ////This function is the same as above,but appears to be necessary due to CCVariable support.....
 template<typename ExecutionSpace, typename MemorySpace, typename T, class ...Ts>  // Could this be modified to accept grid variables AND containers of grid variables?
 typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::Cuda>::value, void>::type
-parallel_initialize(ExecutionObject& executionObject, T initializationValue,  Ts... inputs) {
+parallel_initialize(ExecutionObject& executionObject, const T & initializationValue,  Ts & ... inputs) {
 
   // Count the number of views used (sometimes they may be views of views)
   int n = 0 ; // Get number of variadic arguments
@@ -1266,25 +1292,23 @@ parallel_initialize(ExecutionObject& executionObject, T initializationValue,  Ts
       sumViewSize< KokkosView3< T, MemorySpace >, Kokkos::HostSpace >(inputs, n)
       ,0)...,0}; //second part of magic unpacker
 
-  // Upcoming plan
-  // Allocate host space that will be reclaimed back to the pool when the task ends.
-//  KokkosView3< T, MemorySpace >* hostArrayOfViews = executionObject.getTempTaskSpaceFromPool<Kokkos::HostSpace>(n * sizeof(void*));
-  // Copy over the views one by one into this view of views.
-//  int i=0; //iterator counter
-//  Alias<int[]>{( //first part of magic unpacker
-//      setValueAndReturnView< KokkosView3< T, MemorySpace >, Kokkos::HostSpace >(hostArrayOfViews , inputs, i)
-//      ,0)...,0}; //second part of magic unpacker
-
-  // Allocate space in host memory to track n total views.
-  Kokkos::View< KokkosView3< T, MemorySpace >*, Kokkos::HostSpace > viewOfViews("Parallel_initialize", n) ;
+  //TODO: Allow alternate approach if there are more than 16 vars.  This approach will require an implemented memory pool;
+  //unsigned int pointerArrayByteSize = sizeof(KokkosView3< T, MemorySpace >) * n;
+  //KokkosView3< T, MemorySpace >* hostArrayOfViews{nullptr};
+  //executionObject.getTempTaskSpaceFromPool<UintahSpaces::HostSpace>((void**)&hostArrayOfViews, pointerArrayByteSize);
+  if (n > 16) {
+    std::cout << "parallel_initialize only supports initializing up to 16 simulation variables at a time.  Please split the work and use another parallel_initialize\n" << std::endl;
+    SCI_THROW(InternalError("parallel_initialize only supports initializing up to 16 simulation variables at a time.  Please split the work and use another parallel_initialize", __FILE__, __LINE__));
+  }
+  structArrayOfViews< KokkosView3< T, MemorySpace > >hostArrayOfViews;
 
   // Copy over the views one by one into this view of views.
   int i=0; //iterator counter
   Alias<int[]>{( //first part of magic unpacker
-      setValueAndReturnView< KokkosView3< T, MemorySpace >, Kokkos::HostSpace >(viewOfViews , inputs, i)
+      setValueAndReturnView< KokkosView3< T, MemorySpace >, Kokkos::HostSpace >(hostArrayOfViews, inputs, i)
       ,0)...,0}; //second part of magic unpacker
 
-  parallel_initialize_grouped< ExecutionSpace, MemorySpace >(executionObject, viewOfViews, initializationValue );
+  parallel_initialize_grouped< ExecutionSpace, MemorySpace, KokkosView3< T, MemorySpace > >( executionObject, hostArrayOfViews, n, initializationValue );
   //parallel_initialize_single<ExecutionSpace>(executionObject, inputs_, inside_value ); // safer version, less ambitious
 }
 
@@ -1307,10 +1331,10 @@ void legacy_initialize(T inside_value, T2& data_fields) {  // for stand alone da
 
 template<typename ExecutionSpace, typename MemorySpace, typename T, class ...Ts>
 typename std::enable_if<std::is_same<ExecutionSpace, UintahSpaces::CPU>::value, void>::type
-parallel_initialize(ExecutionObject& executionObject, T inside_value,  Ts... inputs) { //SFINAE might be appropriate
+parallel_initialize(ExecutionObject& executionObject, const T& initializationValue,  Ts & ... inputs) {
   Alias<int[]>{( //first part of magic unpacker
              //inputs.initialize (inside_value)
-      legacy_initialize(inside_value,inputs)
+      legacy_initialize(initializationValue, inputs)
       ,0)...,0}; //second part of magic unpacker
 }
 
