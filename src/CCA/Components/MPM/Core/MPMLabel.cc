@@ -166,7 +166,7 @@ MPMLabel::MPMLabel()
 			ParticleVariable<double>::getTypeDescription() );
   
   pSurfLabel = VarLabel::create( "p.surface",
-			ParticleVariable<int>::getTypeDescription() );
+                        ParticleVariable<double>::getTypeDescription() );
 
   pSurfGradLabel = VarLabel::create( "p.surfgrad",
 			ParticleVariable<Vector>::getTypeDescription() );
@@ -251,7 +251,7 @@ MPMLabel::MPMLabel()
 			ParticleVariable<double>::getTypeDescription() );
   
   pSurfLabel_preReloc = VarLabel::create( "p.surface+",
-			ParticleVariable<int>::getTypeDescription() );
+			ParticleVariable<double>::getTypeDescription() );
 
   pLastLevelLabel_preReloc = VarLabel::create( "p.lastlevel+",
 			ParticleVariable<int>::getTypeDescription() );
