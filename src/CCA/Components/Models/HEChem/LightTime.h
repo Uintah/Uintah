@@ -56,6 +56,17 @@ KEYWORDS
 
 DESCRIPTION
 
+This model was constructed based on a collection of notes provided
+to Jim Guilkey by Peter Vitello at LLNL.  These are excerpts from national
+lab code manuals such as HEMP and Kovec, but don't contain enough information
+to pull actual references.
+
+The model is pretty straightforward, on specifies the reactant material
+and the product material, indicates an origin of the detonation and a detonation
+velocity.  Cells start to burn once the distance from the origin to the cell
+center, divided by the detonation velocity, meets or exceeds the elapsed
+simulation time.  One can also specify an origin as a plane rather than a point.
+
 WARNING
 
 ****************************************/
