@@ -665,7 +665,7 @@ SingleFieldMPM::scheduleTimeAdvance(const LevelP & level,
 //  if(d_bndy_traction_faces.size()>0) {
 //    scheduleComputeContactArea(           sched, patches, matls);
 //  }
-//  scheduleComputeInternalForce(           sched, patches, matls);
+  scheduleComputeInternalForce(           sched, patches, matls);
 
   scheduleComputeAndIntegrateAcceleration(sched, patches, matls);
   scheduleSingleFieldContact(             sched, patches, matls);
@@ -697,14 +697,14 @@ SingleFieldMPM::scheduleTimeAdvance(const LevelP & level,
 //    scheduleAddParticles(                 sched, patches, matls);
 //  }
 
-//  if(d_analysisModules.size() != 0){
-//    vector<AnalysisModule*>::iterator iter;
-//    for( iter  = d_analysisModules.begin();
-//         iter != d_analysisModules.end(); iter++){
-//      AnalysisModule* am = *iter;
-//      am->scheduleDoAnalysis_preReloc( sched, level);
-//    }
-//  }
+  if(d_analysisModules.size() != 0){
+    vector<AnalysisModule*>::iterator iter;
+    for( iter  = d_analysisModules.begin();
+         iter != d_analysisModules.end(); iter++){
+      AnalysisModule* am = *iter;
+      am->scheduleDoAnalysis_preReloc( sched, level);
+    }
+  }
 
   sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc,
                                     m_sharedState->d_particleState_preReloc,
@@ -721,6 +721,7 @@ SingleFieldMPM::scheduleTimeAdvance(const LevelP & level,
                                     lb->czIDLabel, cz_matls,2);
   }
 
+#endif
   //__________________________________
   //  on the fly analysis
   if(d_analysisModules.size() != 0){
@@ -731,7 +732,6 @@ SingleFieldMPM::scheduleTimeAdvance(const LevelP & level,
       am->scheduleDoAnalysis( sched, level);
     }
   }
-#endif
 }
 
 void SingleFieldMPM::scheduleApplyExternalLoads(SchedulerP& sched,
@@ -1192,7 +1192,7 @@ void SingleFieldMPM::scheduleComputeInternalForce(SchedulerP& sched,
   for(std::list<Patch::FaceType>::const_iterator ftit(d_bndy_traction_faces.begin());
       ftit!=d_bndy_traction_faces.end();ftit++) {
     int iface = (int)(*ftit);
-    t->requires(Task::NewDW, lb->BndyContactCellAreaLabel[iface]);
+//    t->requires(Task::NewDW, lb->BndyContactCellAreaLabel[iface]);
     t->computes(lb->BndyForceLabel[iface]);
     t->computes(lb->BndyContactAreaLabel[iface]);
     t->computes(lb->BndyTractionLabel[iface]);
@@ -3037,6 +3037,7 @@ void SingleFieldMPM::computeInternalForce(const ProcessorGroup*,
     delete interpolator;
   }
 
+#if 0
   // be careful only to put the fields that we have built
   // that way if the user asks to output a field that has not been built
   // it will fail early rather than just giving zeros.
@@ -3064,6 +3065,7 @@ void SingleFieldMPM::computeInternalForce(const ProcessorGroup*,
     new_dw->put(sum_vartype(bndyContactArea_iface),
                             lb->BndyContactAreaLabel[iface]);
   }
+#endif
 }
 
 void SingleFieldMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
