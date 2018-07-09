@@ -866,7 +866,6 @@ void SingleFieldMPM::interpolateSurfaceToGrid(const ProcessorGroup*,
                                          DataWarehouse* old_dw,
                                          DataWarehouse* new_dw)
 {
-  cout << "iSTG " << endl;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
@@ -3442,8 +3441,6 @@ void SingleFieldMPM::applyExternalLoads(const ProcessorGroup* ,
     }
   }
 
-  cout << "HERE 1" << endl;
-
   // Loop thru patches to update external force vector
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -3560,7 +3557,6 @@ void SingleFieldMPM::applyExternalLoads(const ProcessorGroup* ,
       }
     } // matl loop
   }  // patch loop
-  cout << "HERE 2" << endl;
 }
 
 void SingleFieldMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
