@@ -47,6 +47,8 @@
 #include <sci_defs/cuda_defs.h>
 #include <sci_defs/kokkos_defs.h>
 
+#define ARRAY_SIZE 16
+
 using std::max;
 using std::min;
 
@@ -374,16 +376,18 @@ private:
 // and as of yet hasn't been implemented (Brad P.)
 template <typename T, unsigned int CAPACITY>
 struct struct1DArray {
-  struct1DArray(){ capacity = CAPACITY; }
+  T arr[CAPACITY];
   inline T& operator[](unsigned int index) {
     return arr[index];
   }
   inline const T& operator[](unsigned int index) const {
     return arr[index];
   }
-  T arr[CAPACITY];
 
-  unsigned int capacity{0};
+  int mySize(){
+    return CAPACITY;
+  }
+
 };
 
 template <typename T, unsigned int CAPACITY_FIRST_DIMENSION, unsigned int CAPACITY_SECOND_DIMENSION>
@@ -1057,12 +1061,12 @@ parallel_for(ExecutionObject& executionObject, T2 KV3, const T3 init_val)
 
 template <typename ExecutionSpace, typename MemorySpace, typename T, typename ValueType>
 typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::OpenMP>::value, void>::type
-parallel_initialize_grouped(ExecutionObject& executionObject, const struct1DArray<T, 16>& KKV3, const int numViews, const ValueType& init_val ){
+parallel_initialize_grouped(ExecutionObject& executionObject, const struct1DArray<T, ARRAY_SIZE>& KKV3, const int numViews, const ValueType& init_val ){
 
   //TODO: This should probably be seralized and not use a Kokkos::parallel_for?
 
   int n_cells = 0;
-  for (unsigned int j = 0; j < numViews; j++){
+  for (int j = 0; j < numViews; j++){
     n_cells += KKV3[j].m_view.size();
   }
 
@@ -1163,13 +1167,13 @@ createConstContainer(int num_field ){
 
 template < typename ExecutionSpace, typename MemorySpace, typename T, typename ValueType>
 typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::Cuda>::value, void>::type
-parallel_initialize_grouped(ExecutionObject& executionObject, const struct1DArray<T, 16>& KKV3, const int numViews, const ValueType& init_val ){
+parallel_initialize_grouped(ExecutionObject& executionObject, const struct1DArray<T, ARRAY_SIZE>& KKV3, const int numViews, const ValueType& init_val ){
 
   // n_cells is the amount of cells total to process among collection of vars (the view of Kokkos views)
   // For example, if this were being used to  if one var had 4096 cells and another var had 5832 cells, n_cells would become 4096+5832=
 
   int n_cells = 0;
-  for (unsigned int j = 0; j < numViews; j++){
+  for (int j = 0; j < numViews; j++){
     n_cells += KKV3[j].m_view.size();
   }
 
@@ -1223,42 +1227,23 @@ parallel_initialize_grouped(ExecutionObject& executionObject, const struct1DArra
 #endif //HAVE_CUDA
 
 
-//template<typename T, typename MemorySpace>
-//inline void setValueAndReturnView(Kokkos::View<T*, MemorySpace>& V, const T& x, int &index){
-//  V(index) = x;
-//  index++;
-//  return;
-//}
-//
-////For Views of Views
-//template<typename T, typename MemorySpace>
-//inline void setValueAndReturnView(Kokkos::View<T*, MemorySpace>& V, const Kokkos::View<T*, MemorySpace>& small_v, int &index){
-//  int extra_i = small_v.size();
-//  for(int i=0; i<extra_i; i++){
-//    V(index+i) = small_v(i);
-//  }
-//  index += extra_i;
-//  return;
-//}
-
 //For array of Views
 template<typename T, typename MemorySpace>
-inline void setValueAndReturnView(struct1DArray<T, 16>& V, const T& x, int &index){
-  V[index] = x;
+inline void setValueAndReturnView(struct1DArray<T, ARRAY_SIZE>* V, const T& x, int &index){
+  V[index/ARRAY_SIZE][index%ARRAY_SIZE] = x;
   index++;
   return;
 }
 //For array of Views
 template<typename T, typename MemorySpace>
-inline void setValueAndReturnView(struct1DArray<T, 16>& V, const Kokkos::View<T*, MemorySpace>& small_v, int &index){
+inline void setValueAndReturnView(struct1DArray<T, ARRAY_SIZE>* V, const Kokkos::View<T*, MemorySpace>& small_v, int &index){
   int extra_i = small_v.size();
   for(int i = 0; i < extra_i; i++){
-    V[index+i] = small_v(i);
+    V[(index+i)/ARRAY_SIZE][(index+i)%ARRAY_SIZE] = small_v(i);
   }
   index += extra_i;
   return;
 }
-
 
 
 template<typename T, typename MemorySpace>
@@ -1284,12 +1269,8 @@ parallel_initialize(ExecutionObject& executionObject, const T& initializationVal
       ,0)...,0}; //second part of magic unpacker
 
   // Allocate space in host memory to track n total views.
-  if (n > 16) {
-    std::cout << "parallel_initialize only supports initializing up to 16 simulation variables at a time.  Please split the work and use another parallel_initialize\n" << std::endl;
-    SCI_THROW(InternalError("parallel_initialize only supports initializing up to 16 simulation variables at a time.  Please split the work and use another parallel_initialize", __FILE__, __LINE__));
-  }
-
-  struct1DArray< KokkosView3< T, MemorySpace >, 16 >hostArrayOfViews;
+  const int n_init_groups=(n-1)/ARRAY_SIZE+1;
+  struct1DArray< KokkosView3< T, MemorySpace >, ARRAY_SIZE > hostArrayOfViews[n_init_groups];
 
   // Copy over the views one by one into this view of views.
   int i = 0; //iterator counter
@@ -1297,8 +1278,11 @@ parallel_initialize(ExecutionObject& executionObject, const T& initializationVal
       setValueAndReturnView< KokkosView3< T, MemorySpace >, MemorySpace >(hostArrayOfViews, inputs, i)
       ,0)...,0}; //second part of magic unpacker
 
-  parallel_initialize_grouped< ExecutionSpace, MemorySpace, KokkosView3< T, MemorySpace > >(executionObject, hostArrayOfViews, n, initializationValue );
-  //parallel_initialize_single<ExecutionSpace>(executionObject, inputs_, inside_value ); // safer version, less ambitious
+  for (int j=0; j<n_init_groups; j++){
+    int n_elements_in_group=n >ARRAY_SIZE * (j+1) ? ARRAY_SIZE : n%ARRAY_SIZE+1;
+    parallel_initialize_grouped< ExecutionSpace, MemorySpace, KokkosView3< T, MemorySpace > >(executionObject, hostArrayOfViews[j], n_elements_in_group, initializationValue );
+    //parallel_initialize_single<ExecutionSpace>(executionObject, inputs_, inside_value ); // safer version, less ambitious
+  }
 }
 
 ////This function is the same as above,but appears to be necessary due to CCVariable support.....
@@ -1316,11 +1300,9 @@ parallel_initialize(ExecutionObject& executionObject, const T & initializationVa
   //unsigned int pointerArrayByteSize = sizeof(KokkosView3< T, MemorySpace >) * n;
   //KokkosView3< T, MemorySpace >* hostArrayOfViews{nullptr};
   //executionObject.getTempTaskSpaceFromPool<UintahSpaces::HostSpace>((void**)&hostArrayOfViews, pointerArrayByteSize);
-  if (n > 16) {
-    std::cout << "parallel_initialize only supports initializing up to 16 simulation variables at a time.  Please split the work and use another parallel_initialize\n" << std::endl;
-    SCI_THROW(InternalError("parallel_initialize only supports initializing up to 16 simulation variables at a time.  Please split the work and use another parallel_initialize", __FILE__, __LINE__));
-  }
-  struct1DArray< KokkosView3< T, MemorySpace >, 16 > hostArrayOfViews;
+  //
+  const int n_init_groups=(n-1)/ARRAY_SIZE+1;
+  struct1DArray< KokkosView3< T, MemorySpace >, ARRAY_SIZE > hostArrayOfViews[n_init_groups];
 
   // Copy over the views one by one into this view of views.
   int i=0; //iterator counter
@@ -1328,8 +1310,11 @@ parallel_initialize(ExecutionObject& executionObject, const T & initializationVa
       setValueAndReturnView< KokkosView3< T, MemorySpace >, Kokkos::HostSpace >(hostArrayOfViews, inputs, i)
       ,0)...,0}; //second part of magic unpacker
 
-  parallel_initialize_grouped< ExecutionSpace, MemorySpace, KokkosView3< T, MemorySpace > >( executionObject, hostArrayOfViews, n, initializationValue );
-  //parallel_initialize_single<ExecutionSpace>(executionObject, inputs_, inside_value ); // safer version, less ambitious
+  for (int j=0; j<n_init_groups; j++){
+    int n_elements_in_group=n >ARRAY_SIZE * (j+1) ? ARRAY_SIZE : n%ARRAY_SIZE+1;
+    parallel_initialize_grouped< ExecutionSpace, MemorySpace, KokkosView3< T, MemorySpace > >( executionObject, hostArrayOfViews[j], n_elements_in_group, initializationValue );
+    //parallel_initialize_single<ExecutionSpace>(executionObject, inputs_, inside_value ); // safer version, less ambitious
+  }
 }
 
 #endif // defined(UINTAH_ENABLE_KOKKOS)
