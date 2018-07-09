@@ -1,0 +1,484 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- @version: -->
+<Uintah_specification>
+
+<!--______________________________________________________________________-->
+<!--  Notes:                                                              -->
+<!--  Version 0                                                           -->
+<!--  Steel properties:      4340                                     -->
+<!--  Structural reacting matl:  ???                                      -->
+<!--  Burn model: program burned.  Ref 1                                  -->
+<!--  Reactant EOS:  JWLC one of Joseph's input files, looks like HMX or  -->
+<!--  Product EOS:   JWLC Reference 1, table 3, line 2                    -->
+<!--                                                                      -->
+<!--  Reference 1:  "Evaluation of Detonation Energy from XPLO5 computer  -->
+<!--                 Code Results, Propellants, Explosives, Pyrotechnics, -->
+<!--                 24, 280-285 (1999)                                   -->
+<!--______________________________________________________________________-->
+
+   <Meta>
+       <title>Cylinder exploding</title>
+   </Meta>
+   <SimulationComponent type="mpmice" />
+
+<!--
+   <LoadBalancer type="DLB">
+     <dynamicAlgorithm> patchFactor </dynamicAlgorithm>
+     <levelIndependent> true        </levelIndependent>
+     <doSpaceCurve>     true        </doSpaceCurve>
+     <timestepInterval> 200         </timestepInterval>
+   </LoadBalancer>
+-->
+    <!--____________________________________________________________________-->
+    <!--   T  I  M  E     V  A  R  I  A  B  L  E  S                         -->
+    <!--____________________________________________________________________-->
+   <Time>
+       <maxTime>            2e-6     </maxTime>
+   <!--    <max_Timesteps>      1      </max_Timesteps> -->
+       <initTime>           0.0       </initTime>
+       <delt_min>           1e-17    </delt_min>
+       <delt_max>           1.0      </delt_max>
+       <delt_init>          1e-10    </delt_init>
+       <timestep_multiplier>0.1       </timestep_multiplier>
+       <max_delt_increase>  2      </max_delt_increase>
+   </Time>
+    <!--____________________________________________________________________-->
+    <!--   G  R  I  D     V  A  R  I  A  B  L  E  S                         -->
+    <!--____________________________________________________________________-->
+    <Grid>
+    <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "all"  label = "Symmetric"   var = "symmetry">
+        </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "0"    label = "Pressure"    var = "Neumann">
+                              <value>  0.0 </value>
+        </BCType>
+        <BCType id = "all"  label = "Velocity"    var = "Dirichlet">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all"  label = "Temperature" var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all"  label = "Density"     var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all"  label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "all"  label = "Symmetric"   var = "symmetry">
+        </BCType>
+      </Face>
+      <Face side = "y+">
+        <BCType id = "0"    label = "Pressure"    var = "Neumann">
+                              <value> 0.0   </value>
+        </BCType>
+        <BCType id = "all"  label = "Velocity"    var = "Dirichlet">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all"  label = "Temperature" var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all"  label = "Density"     var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all"  label = "SpecificVol" var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "all"  label = "Symmetric"   var = "symmetry">
+        </BCType>
+      </Face>
+      <Face side = "z+">
+        <BCType id = "all"  label = "Symmetric"   var = "symmetry">
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+       <Level>
+           <Box label = "1">
+          <!--    <lower>        [-0.02,-0.02, 0.0000] </lower> -->
+              <lower>        [  0.00,  0.00, 0.00]    </lower>
+              <upper>        [  0.01,  0.01, 0.001]   </upper>
+              <extraCells>   [1,1,1]                  </extraCells>
+              <patches>      [6,6,1]                  </patches>
+              <resolution>   [100,100,1]              </resolution>
+           </Box>
+       </Level>
+    </Grid>
+
+    <!--____________________________________________________________________-->
+    <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+   <DataArchiver>
+      <filebase>smallCylDetSym-Steel-SRM-HMX.uda</filebase>
+      <outputInterval> 1e-08 </outputInterval>
+  <!--    <outputInterval> 1e-10 </outputInterval> -->
+  <!--    <outputTimestepInterval> 1 </outputTimestepInterval> -->
+      <outputInitTimestep/>
+
+      <save label="press_CC"/>
+      <save label="temp_CC"/>
+      <save label="rho_CC"/>
+      <save label="vel_CC"/>
+      <save label="vol_frac_CC"/>
+      <save label="sp_vol_L_CC"/>
+      <save label="sp_vol_CC"/>
+      <save label="sp_vol_src_CC"/>
+
+      <save label="modelMass_src"/>
+      <save label="modelEng_src"/>
+      <save label="modelVol_src"/>
+      <save label="modelMom_src"/>
+      <save label="delF"/>
+      <save label="F"/>
+
+ <!--
+      <save label="totalMassBurned"/>
+      <save label="totalHeatReleased"/>
+      <save label="detonating"/>
+      <save label="BurningCriteria"/>
+      <save label="SteadyBurn.numPPC"/>
+      <save label="detLocalTo"/>
+      <save label="onSurface"/>
+  -->
+<!--
+      <save label="dTdt_CC"/>
+      <save label="dTdt_NC"/>
+      <save label="massBurnFraction"/>
+      <save label="dVdt_CC"/>
+-->
+      <save label="g.velocity"/>
+      <save label="g.mass"/>
+      <save label="p.x"/>
+      <save label="p.localizedMPM"/>
+      <save label="p.temperature"/>
+      <save label="p.particleID"/>
+      <save label="p.velocity"/>
+      <save label="p.mass"/>
+      <save label="p.stress"/>
+      <save label="p.epsf"/>
+      <save label="p.dTdt"/>
+      <checkpoint cycle = "2" timestepInterval = "1000"/>
+    </DataArchiver>
+
+
+
+    <!--____________________________________________________________________-->
+    <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
+    <!--____________________________________________________________________-->
+    <CFD>
+       <cfl>0.1</cfl>
+       <ICE>
+        <advection type = "SecondOrder"/>
+        <ClampSpecificVolume>true</ClampSpecificVolume>
+       </ICE>
+    </CFD>
+
+    <!--____________________________________________________________________-->
+    <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
+    <!--____________________________________________________________________-->
+    <PhysicalConstants>
+       <gravity>            [0,0,0]   </gravity>
+       <reference_pressure> 101325.0  </reference_pressure>
+    </PhysicalConstants>
+
+    <MPM>
+      <time_integrator>                explicit    </time_integrator>
+      <interpolator>                   gimp        </interpolator>
+      <maximum_particle_velocity>      6.0e10      </maximum_particle_velocity>
+      <minimum_mass_for_acc>           1.e-15      </minimum_mass_for_acc>
+      <artificial_damping_coeff>       0.0         </artificial_damping_coeff>
+      <artificial_viscosity>           true        </artificial_viscosity>
+      <use_load_curves>                false       </use_load_curves>
+      <ForceBC_force_increment_factor> 1.0         </ForceBC_force_increment_factor>
+      <do_contact_friction_heating>    false       </do_contact_friction_heating>
+      <DoExplicitHeatConduction>       false       </DoExplicitHeatConduction>
+      <axisymmetric>                   false        </axisymmetric>
+      <TSR_max_particles_deleted>           5       </TSR_max_particles_deleted>
+    </MPM>
+
+    <!--____________________________________________________________________-->
+    <!--    MATERISRM PROPERTIES INITISRM CONDITIONS                          -->
+    <!--____________________________________________________________________-->
+    <MaterialProperties>
+      <MPM>
+
+        <material name="steel_cylinder">
+          <include href="MaterialData/MaterialConst4340Steel.xml"/>
+          
+          <constitutive_model type="elastic_plastic">
+            <include href="MaterialData/IsotropicElastic4340Steel.xml"/>
+            <include href="MaterialData/VonMisesYield.xml"/>
+            <include href="MaterialData/NoStabilityCheck.xml"/>
+            <include href="MaterialData/JohnsonCookPlastic4340Steel.xml"/>
+            <include href="MaterialData/MieGruneisenEOS4340Steel.xml"/>
+          </constitutive_model>
+
+          <damage_model type="Threshold">
+             <failure_criteria>MaximumPrincipalStress</failure_criteria>
+             <failure_mean>       7.5e9     </failure_mean>
+             <failure_std>        10        </failure_std>
+             <failure_distrib>    weibull   </failure_distrib>
+          </damage_model>
+
+          <erosion algorithm = "ZeroStress"/>
+
+          <geom_object>
+            <difference>
+              <cylinder label="steel_outerCyl">
+                <bottom> [0.00,  0.00,  0.000000] </bottom>
+                <top>    [0.00,  0.00,  0.010000] </top>
+                <radius>           0.006          </radius>
+              </cylinder>
+              <cylinder label="steel_innerCyl">
+                <bottom> [0.00,  0.00,  0.000000] </bottom>
+                <top>    [0.00,  0.00,  0.010000] </top>
+                <radius>           0.005          </radius>
+              </cylinder>
+            </difference>
+            <res>                 [2,2,1]         </res>
+            <velocity>            [0.0,0.0,0.0]   </velocity>
+            <temperature>         300             </temperature>
+          </geom_object>
+        </material>
+
+        <material name="SRM_cylinder">
+          <!--<include href="MaterialData/Al.xml"/> -->
+          <include href="MaterialDataSE/Al_SE.xml"/>
+
+          <damage_model type="Threshold">
+             <failure_criteria>MaximumPrincipalStress</failure_criteria>
+             <failure_mean>       7.5e8     </failure_mean>
+             <failure_std>        10        </failure_std>
+             <failure_distrib>    weibull   </failure_distrib>
+          </damage_model>
+
+          <erosion algorithm = "ZeroStress"/>
+
+          <geom_object>
+            <difference>
+              <cylinder label="SRM_outerCyl">
+                <bottom> [0.00,  0.00,  0.000000] </bottom>
+                <top>    [0.00,  0.00,  0.010000] </top>
+                <radius>           0.005          </radius>
+              </cylinder>
+              <cylinder label="SRM_innerCyl">
+                <bottom> [0.00,  0.00,  0.000000] </bottom>
+                <top>    [0.00,  0.00,  0.010000] </top>
+                <radius>           0.004          </radius>
+              </cylinder>
+            </difference>
+            <res>                 [2,2,1]         </res>
+            <velocity>            [0.0,0.0,0.0]   </velocity>
+            <temperature>         300             </temperature>
+          </geom_object>
+        </material>
+        <!--__________________________________-->
+
+
+      </MPM>
+
+
+      <!--__________________________________-->
+      <ICE>
+        <material name = "reactant">
+        <!--   See header for comments on these parameters        -->
+
+        <EOS type="JWLC">       <!-- Joseph-s values ./20100825/JWLICETarver/JWLTarverorig.ups -->
+          <A>     732000.e9  </A>
+          <B>     -5.2654e9  </B>
+          <C>     0.826e9    </C>
+          <R1>    14.1       </R1>
+          <R2>    1.41       </R2>
+          <om>    0.8867     </om>
+          <rho0>  1840.0     </rho0>
+        </EOS>
+        <includeFlowWork>       false   </includeFlowWork>     <!--  ?????? -->
+        <dynamic_viscosity>     0.0     </dynamic_viscosity>
+        <thermal_conductivity>  0.0     </thermal_conductivity>
+        <specific_heat>         2786.0  </specific_heat>
+        <gamma>                 1.4     </gamma>
+
+
+<!--      Vandersall 2010
+          <EOS type="JWL">
+            <A>     732000e9    </A>
+            <B>     -5.2645e9   </B>
+            <R1>    14.1        </R1>
+            <R2>    1.41        </R2>
+            <om>    0.8867      </om>
+            <rho0>  1832.0        </rho0>
+          </EOS>
+
+          <dynamic_viscosity>     0.0      </dynamic_viscosity>
+          <thermal_conductivity>  0.0      </thermal_conductivity>
+          <specific_heat>         2.780236e6  </specific_heat>
+          <specific_heat>       1517.59607       </specific_heat>
+          <gamma>                1.4        </gamma>
+-->
+          <geom_object>
+            <difference>
+              <cylinder label = "SRM_innerCyl"/>
+              <cylinder label = "HotPBXCore">
+                <bottom> [0.00,  0.00,  0.000000] </bottom>
+                <top>    [0.00,  0.00,  0.010000] </top>
+                <radius>           0.000001       </radius>
+              </cylinder>
+            </difference>
+            <res>          [2,2,1]        </res>
+            <velocity>     [0.0,0.0,0.0]  </velocity>
+            <temperature>  300            </temperature>
+            <pressure>     101325.0       </pressure>
+            <density>      1832           </density>
+          </geom_object>
+
+          <geom_object>
+            <cylinder label = "HotPBXCore"/>
+            <res>          [2,2,1]        </res>
+            <velocity>     [0.0,0.0,0.0]  </velocity>
+            <temperature>  300            </temperature>
+            <pressure>     101325.0       </pressure>
+            <density>      1832           </density>
+
+          </geom_object>
+        </material>
+
+        <!--__________________________________-->
+        <!--   See header for comments        -->
+        <material name = "product">
+<!--
+          <EOS type="JWL">
+            <A>     1668.9e9  </A>
+            <B>     59.69e9   </B>
+            <R1>    5.9       </R1>
+            <R2>    2.1       </R2>
+            <om>    0.45      </om>
+            <rho0>  1832      </rho0>
+          </EOS>
+
+          <dynamic_viscosity>      0.0      </dynamic_viscosity>
+          <thermal_conductivity>   0.0      </thermal_conductivity>
+          <specific_heat>          544.96   </specific_heat>
+          <gamma>                  1.4      </gamma>
+-->
+
+          <EOS type = "JWLC">
+            <A>     8.580805e11  </A>
+            <B>     7.546531e9   </B>
+            <C>     7.81274e8    </C>
+            <R1>    4.306        </R1>
+            <R2>    0.80         </R2>
+            <om>    0.30         </om>
+            <rho0>  1894.0       </rho0>
+          </EOS>
+          <includeFlowWork>      false    </includeFlowWork>   <!-- ?????? -->
+          <dynamic_viscosity>     0.0     </dynamic_viscosity>
+          <thermal_conductivity>  0.0     </thermal_conductivity>
+          <specific_heat>         544.96  </specific_heat>
+          <gamma>                 1.4     </gamma>
+
+          <geom_object>
+            <difference>
+              <box label="Domain">
+                <min>          [-1.0, -1.0, -1.0] </min>
+                <max>          [ 1.0,  1.0,  1.0] </max>
+              </box>
+              <cylinder label="steel_outerCyl"/>
+            </difference>
+
+           <res>          [2,2,1]         </res>
+           <velocity>     [0.0,0.0,0.0]   </velocity>
+           <temperature>  298             </temperature>
+           <density>      1.38934929e+00  </density>
+           <pressure>     101325.0        </pressure>
+
+          </geom_object>
+
+        </material>
+      </ICE>
+
+        <exchange_properties>
+          <exchange_coefficients>
+
+            <!-- steel-srm,  steel- react,  steel-prod -->
+            <!--             srm-react,     srm-prod,  -->
+            <!--                            react-prod -->
+
+            <momentum>  [1e15,  1e15, 1e15,
+                                1e15, 1e15,
+                                      1e15]    </momentum>
+
+           <heat>       [1e15,  1e15, 1e15,
+                                1e15, 1e15,
+                                      1e15]    </heat>
+          </exchange_coefficients>
+        </exchange_properties>
+    </MaterialProperties>
+
+
+    <!--__________________________________-->
+     <Models>
+      <Model type = "LightTime">
+       <LightTime>
+        <fromMaterial> reactant   </fromMaterial>
+        <toMaterial>   product    </toMaterial>
+        <D>       9.1e3   </D>         <!-- Ref 1, table 1 -->
+        <E0>      11.0e6  </E0>        <!-- Ref 1, table 2 -->
+        <starting_location>      [0.0,0.0,0.]    </starting_location>
+        <direction_if_plane>     [0.0,0.0,0.]    </direction_if_plane>
+        <react_mixed_cells>      true            </react_mixed_cells>
+       </LightTime>
+      </Model>
+    </Models>
+
+
+    <!-- PBX9501 constants taken from Jacqueline Beckvermit's input files -->
+<!--
+    <Models>
+
+      <Model type="JWLpp">
+        <JWLpp>
+          <fromMaterial>       PBX9501  </fromMaterial>
+          <toMaterial>         product  </toMaterial>
+          <G>                  2.33e-6  </G>
+          <b>                  1.2      </b>
+          <rho0>               1832.0   </rho0>
+          <E0>                 5.0e6    </E0>
+          <ThresholdPressure>  1.5e9    </ThresholdPressure>
+        </JWLpp>
+      </Model>
+    </Models>
+-->
+
+<!--  From Joseph's input files
+      <Model type="JWLpp">
+        <fromMaterial> reactant   </fromMaterial>
+        <toMaterial>   product    </toMaterial>
+        <G>    5.5e-7     </G>
+        <b>       1.2     </b>
+        <rho0> 1832.0     </rho0>
+        <E0>      5.796e6 </E0>
+        <ThresholdPressure>      5.3e9      </ThresholdPressure>
+      </Model>
+
+    <Model type="JWLpp">
+      <fromMaterial> reactant   </fromMaterial>
+      <toMaterial>   product    </toMaterial>
+      <G>      4.7e-7</G>
+      <b>       1.3    </b>
+      <rho0> 1840.0     </rho0>
+      <E0>      5.796e6 </E0>
+      <ThresholdPressure>    500.3e9      </ThresholdPressure>
+    </Model>
+-->
+
+    <PhysicalBC>
+       <MPM>
+      </MPM>
+    </PhysicalBC>
+
+</Uintah_specification>
