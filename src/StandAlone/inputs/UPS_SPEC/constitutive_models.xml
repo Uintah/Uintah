@@ -91,7 +91,6 @@
     <CrackPowerValue               spec="OPTIONAL DOUBLE" />
     <critical_porosity             spec="OPTIONAL DOUBLE" />
     <critical_stress               spec="OPTIONAL DOUBLE" />
-    <damage_cutoff                 spec="OPTIONAL DOUBLE" />
     
     <deviatoric_stress_model       spec="OPTIONAL NO_DATA"
                                         attribute1="type REQUIRED STRING 'hypoElastic, hypoViscoElastic'"

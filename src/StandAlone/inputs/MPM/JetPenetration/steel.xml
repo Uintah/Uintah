@@ -3,7 +3,6 @@
 <!-- 4340 Steel -->
 		<density>7830.0</density>
                 <constitutive_model type="elastic_plastic">
-                  <damage_cutoff>0.7</damage_cutoff>
                   <shear_modulus>80.0e9</shear_modulus>
                   <bulk_modulus>173.33e9</bulk_modulus>
                   <yield_condition type="vonMises">

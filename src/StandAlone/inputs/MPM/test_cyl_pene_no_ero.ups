@@ -115,7 +115,6 @@
         <include href="inputs/MPM/MaterialData/MaterialConstS7ToolSteel.xml"/>
         <constitutive_model type="elastic_plastic_hp">
           <tolerance>5.0e-10</tolerance>
-          <damage_cutoff>0.7</damage_cutoff>
           <include href="inputs/MPM/MaterialData/IsotropicElasticS7ToolSteel.xml"/>
           <include href="inputs/MPM/MaterialData/VonMisesYield.xml"/>
           <include href="inputs/MPM/MaterialData/DruckerStabilityCheck.xml"/>
