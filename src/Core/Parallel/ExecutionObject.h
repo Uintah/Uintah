@@ -28,7 +28,7 @@
 //                        const PatchSubset* patches,
 //                        const MaterialSubset* matls,
 //                        DataWarehouse* fromDW,
-//                        DataWarehouse* toDW,<UintahSpaces::HostSpace>
+//                        DataWarehouse* toDW,
 //                        UintahParams & uintahParams,
 //                        ExecutionObject & executionObject
 // For Cuda related tasks in particular, this object wraps a Cuda Stream.  Further, this task
