@@ -378,6 +378,9 @@ struct struct1DArray {
   inline T& operator[](unsigned int index) {
     return arr[index];
   }
+  inline const T& operator[](unsigned int index) const {
+    return arr[index];
+  }
   T arr[CAPACITY];
 
   unsigned int capacity{0};
