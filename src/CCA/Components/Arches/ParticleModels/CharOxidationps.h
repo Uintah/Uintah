@@ -9,6 +9,7 @@
 #include <CCA/Components/Arches/ParticleModels/CoalHelper.h>
 #include <CCA/Components/Schedulers/DetailedTask.h>
 
+#include <Core/Parallel/LoopExecution.hpp>
 #define SQUARE(x) x*x
 #define CUBE(x)   x*x*x
 
@@ -17,8 +18,8 @@
 
 namespace Uintah {
 
-  template <typename T>
-  class CharOxidationps : public TaskInterface {
+template <typename T>
+class CharOxidationps : public TaskInterface {
 
 public:
 
@@ -673,7 +674,7 @@ namespace {
     T & particle_temp_rate;
     T & particle_Size_rate;
     T & surface_rate;
-    T * reaction_rate[reactions_count];
+    T reaction_rate[reactions_count];
 #endif
 
     initializeDataFunctor(
@@ -691,7 +692,7 @@ namespace {
                          , T & particle_temp_rate
                          , T & particle_Size_rate
                          , T & surface_rate
-                         , T * reaction_rate[reactions_count]
+                         , T  reaction_rate[reactions_count]
 #endif
 
     ) :
@@ -718,12 +719,7 @@ namespace {
       surface_rate(i,j,k)       = 0.0;
 
       for ( int r = 0; r < reactions_count; r++ ) {
-
-#ifdef UINTAH_ENABLE_KOKKOS
         reaction_rate[r](i,j,k) = 0.0;
-#else
-        (*reaction_rate[r])(i,j,k) = 0.0;
-#endif
       }
     }
   };
@@ -740,7 +736,7 @@ namespace {
     KokkosView3<      double, MemorySpace>   particle_temp_rate;
     KokkosView3<      double, MemorySpace>   particle_Size_rate;
     KokkosView3<      double, MemorySpace>   surface_rate;
-    KokkosView3<      double, MemorySpace>   reaction_rate[reactions_count];
+    struct1DArray<KokkosView3<double, MemorySpace>, reactions_count> reaction_rate;
     KokkosView3<const double, MemorySpace>   old_reaction_rate[reactions_count];
     KokkosView3<const double, MemorySpace>   den;
     KokkosView3<const double, MemorySpace>   temperature;
@@ -775,7 +771,7 @@ namespace {
     T                       & particle_temp_rate;
     T                       & particle_Size_rate;
     T                       & surface_rate;
-    T                       * reaction_rate[reactions_count];
+    std::vector<T>          & reaction_rate;
     CT                      * old_reaction_rate[reactions_count];
     constCCVariable<double> & den;
     constCCVariable<double> & temperature;
@@ -850,7 +846,7 @@ namespace {
                 , KokkosView3<      double, MemorySpace> & particle_temp_rate
                 , KokkosView3<      double, MemorySpace> & particle_Size_rate
                 , KokkosView3<      double, MemorySpace> & surface_rate
-                , KokkosView3<      double, MemorySpace>   reaction_rate[reactions_count]
+                , struct1DArray<KokkosView3<double, MemorySpace>, reactions_count> & reaction_rate
                 , KokkosView3<const double, MemorySpace>   old_reaction_rate[reactions_count]
                 , KokkosView3<const double, MemorySpace> & den
                 , KokkosView3<const double, MemorySpace> & temperature
@@ -885,7 +881,7 @@ namespace {
                 , T                       & particle_temp_rate
                 , T                       & particle_Size_rate
                 , T                       & surface_rate
-                , T                       * reaction_rate[reactions_count]
+                , std::vector<T>          &reaction_rate
                 , CT                      * old_reaction_rate[reactions_count]
                 , constCCVariable<double> & den
                 , constCCVariable<double> & temperature
@@ -957,6 +953,7 @@ namespace {
     , particle_temp_rate        ( particle_temp_rate )
     , particle_Size_rate        ( particle_Size_rate )
     , surface_rate              ( surface_rate )
+    , reaction_rate             ( reaction_rate)
     , den                       ( den )
     , temperature               ( temperature )
     , particle_temperature      ( particle_temperature )
@@ -1011,7 +1008,6 @@ namespace {
   {
     for ( int nr = 0; nr < reactions_count; nr++ ) {
 
-      this->reaction_rate[nr]     = reaction_rate[nr];
       this->old_reaction_rate[nr] = old_reaction_rate[nr];
       this->_use_co2co_l[nr]      = _use_co2co_l[nr];
       this->_phi_l[nr]            = _phi_l[nr];
@@ -1321,11 +1317,7 @@ namespace {
 
         for ( int r = 0; r < reactions_count; r++ ) {
 
-#ifdef UINTAH_ENABLE_KOKKOS
           reaction_rate[r](i,j,k) = rh_l_new[r]; // [kg/m^2/s] this is for the intial guess during the next time-step
-#else
-          (*reaction_rate[r])(i,j,k) = rh_l_new[r]; // [kg/m^2/s] this is for the intial guess during the next time-step
-#endif
 
           // check to see if reaction rate is oxidizer limited.
           const double oxi_lim = ( oxid_mass_frac[r] * gas_rho * surfaceAreaFraction ) / ( dt * w );   // [kg/s/#] // here the surfaceAreaFraction parameter is allowing us to only consume the oxidizer multiplied by the weighted area fraction for the current particle.
@@ -1400,13 +1392,17 @@ CharOxidationps<T>::eval( const Patch                 * patch
                         ,       ExecutionObject& executionObject)
 {
 
+  const int _time_substep = tsk_info->get_time_substep();
+  const int _patch        = tsk_info->get_patch_id();
+
 #if !defined(UINTAH_ENABLE_KOKKOS)
 
   //The CPU version
   //std::cout << "Hello from CPU version!" << std::endl;
 
   // gas variables
-  constCCVariable<double>& CCuVel      = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( m_cc_u_vel_name );
+  auto CCuVel                          = tsk_info->get_const_uintah_field_CCVariable<double, UintahSpaces::HostSpace>(m_cc_u_vel_name, _patch, _matl_index, _time_substep);
+  //constCCVariable<double>& CCuVel      = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( m_cc_u_vel_name );
   constCCVariable<double>& CCvVel      = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( m_cc_v_vel_name );
   constCCVariable<double>& CCwVel      = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( m_cc_w_vel_name );
   constCCVariable<double>& volFraction = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( m_volFraction_name );
@@ -1430,11 +1426,17 @@ CharOxidationps<T>::eval( const Patch                 * patch
 
   CT& number_density = tsk_info->get_const_uintah_field_add< CT >( number_density_name ); // total number density
 
-  T*  reaction_rate[reactions_count];
+  //T*  reaction_rate[reactions_count];
+    //tsk_info->get_unmanaged_uintah_field<CCVariable<double> >(_abswg_name_vector[i],abswg[i]);
+  auto reaction_rate = createContainer<T, reactions_count, UintahSpaces::HostSpace>();
+  //std::vector<CCVariable<double> > reaction_rate(reactions_count);
+  //struct1DArray<CCVariable<double>, reactions_count> reaction_rate;
+
   CT* old_reaction_rate[reactions_count];
 
     // model variables
-  T& char_rate          = tsk_info->get_uintah_field_add< T >( m_modelLabel );
+  auto char_rate        = tsk_info->get_uintah_field_CCVariable<double, UintahSpaces::HostSpace>(m_modelLabel, _patch, _matl_index, _time_substep);
+  //T& char_rate          = tsk_info->get_uintah_field_add< T >( m_modelLabel );
   T& gas_char_rate      = tsk_info->get_uintah_field_add< T >( m_gasLabel );
   T& particle_temp_rate = tsk_info->get_uintah_field_add< T >( m_particletemp );
   T& particle_Size_rate = tsk_info->get_uintah_field_add< T >( m_particleSize );
@@ -1443,7 +1445,8 @@ CharOxidationps<T>::eval( const Patch                 * patch
     // reaction rate
   for ( int r = 0; r < _NUM_reactions; r++ ) {
 
-    reaction_rate[r]     = tsk_info->get_uintah_field< T >       ( m_reaction_rate_names[r] );
+    tsk_info->get_unmanaged_uintah_field< T, double, UintahSpaces::HostSpace>(reaction_rate[r], m_reaction_rate_names[r], _patch, _matl_index, _time_substep);
+    //reaction_rate.arr[r] = tsk_info->get_uintah_field_CCVariable<double, MemorySpace>(m_reaction_rate_names[r]);
     old_reaction_rate[r] = tsk_info->get_const_uintah_field< CT >( m_reaction_rate_names[r] );
   }
 
@@ -1520,17 +1523,19 @@ CharOxidationps<T>::eval( const Patch                 * patch
     _MW_species_pod[ns] = _MW_species[ns];
   }
 
-  Uintah::BlockRange range_E( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+  //Uintah::BlockRange range_E( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
 
-  initializeDataFunctor< UintahSpaces::HostSpace, T, CT > initFunc( char_rate
-                                                                  , gas_char_rate
-                                                                  , particle_temp_rate
-                                                                  , particle_Size_rate
-                                                                  , surface_rate
-                                                                  , reaction_rate
-                                                                  );
+  //initializeDataFunctor< UintahSpaces::HostSpace, T, CT > initFunc( char_rate
+                                                                  //, gas_char_rate
+                                                                  //, particle_temp_rate
+                                                                  //, particle_Size_rate
+                                                                  //, surface_rate
+                                                                  //, reaction_rate
+                                                                  //);
 
-  Uintah::parallel_for< UintahSpaces::CPU >( executionObject, range_E, initFunc );
+  //Uintah::parallel_for< UintahSpaces::CPU >( executionObject, range_E, initFunc );
+  
+  parallel_initialize< UintahSpaces::CPU, UintahSpaces::HostSpace >(executionObject,0.0,char_rate,gas_char_rate,particle_temp_rate,particle_Size_rate,surface_rate,reaction_rate);
 
   Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
 
@@ -1619,7 +1624,8 @@ CharOxidationps<T>::eval( const Patch                 * patch
     //}
 
     // gas variables
-    KokkosView3<const double, Kokkos::HostSpace> CCuVel      = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( m_cc_u_vel_name ).getKokkosView();
+    auto CCuVel                          = tsk_info->get_const_uintah_field_CCVariable<double, Kokkos::HostSpace>(m_cc_u_vel_name, _patch, _matl_index, _time_substep);
+    //KokkosView3<const double, Kokkos::HostSpace> CCuVel      = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( m_cc_u_vel_name ).getKokkosView();
     KokkosView3<const double, Kokkos::HostSpace> CCvVel      = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( m_cc_v_vel_name ).getKokkosView();
     KokkosView3<const double, Kokkos::HostSpace> CCwVel      = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( m_cc_w_vel_name ).getKokkosView();
     KokkosView3<const double, Kokkos::HostSpace> volFraction = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( m_volFraction_name ).getKokkosView();
@@ -1643,7 +1649,8 @@ CharOxidationps<T>::eval( const Patch                 * patch
 
     KokkosView3<const double, Kokkos::HostSpace> number_density = tsk_info->get_const_uintah_field_add< CT >( number_density_name ).getKokkosView(); // total number density
 
-    KokkosView3<      double, Kokkos::HostSpace> reaction_rate[reactions_count];
+    //KokkosView3<      double, Kokkos::HostSpace> reaction_rate[reactions_count];
+    auto reaction_rate = createContainer<double, reactions_count, Kokkos::HostSpace>();
     KokkosView3<const double, Kokkos::HostSpace> old_reaction_rate[reactions_count];
 
     // model variables
@@ -1655,8 +1662,8 @@ CharOxidationps<T>::eval( const Patch                 * patch
 
       // reaction rate
     for ( int r = 0; r < _NUM_reactions; r++ ) {
-
-      reaction_rate[r]     = tsk_info->get_uintah_field_add< T >       ( m_reaction_rate_names[r] ).getKokkosView();
+      tsk_info->get_unmanaged_uintah_field< T, double, Kokkos::HostSpace >(reaction_rate[r], m_reaction_rate_names[r], _patch, _matl_index, _time_substep);
+      //reaction_rate[r]     = tsk_info->get_uintah_field_add< T >       ( m_reaction_rate_names[r] ).getKokkosView();
       old_reaction_rate[r] = tsk_info->get_const_uintah_field_add< CT >( m_reaction_rate_names[r] ).getKokkosView();
     }
 
@@ -1729,17 +1736,19 @@ CharOxidationps<T>::eval( const Patch                 * patch
       _MW_species_pod[ns] = _MW_species[ns];
     }
 
-    Uintah::BlockRange range_E( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+    //Uintah::BlockRange range_E( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
 
-    initializeDataFunctor< Kokkos::HostSpace, T, CT > initFunc ( char_rate
-                                                               , gas_char_rate
-                                                               , particle_temp_rate
-                                                               , particle_Size_rate
-                                                               , surface_rate
-                                                               , reaction_rate
-                                                               );
+    //initializeDataFunctor< Kokkos::HostSpace, T, CT > initFunc ( char_rate
+                                                               //, gas_char_rate
+                                                               //, particle_temp_rate
+                                                               //, particle_Size_rate
+                                                               //, surface_rate
+                                                               //, reaction_rate
+                                                               //);
 
-    Uintah::parallel_for< Kokkos::OpenMP >( executionObject, range_E, initFunc );
+    //Uintah::parallel_for< Kokkos::OpenMP >( executionObject, range_E, initFunc );
+
+    parallel_initialize< Kokkos::OpenMP, Kokkos::HostSpace >(executionObject,0.0, char_rate, gas_char_rate, particle_temp_rate, particle_Size_rate, surface_rate, reaction_rate);
 
     Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
 
@@ -1819,16 +1828,16 @@ CharOxidationps<T>::eval( const Patch                 * patch
 
   }
 
+
 #endif // if defined(KOKKOS_ENABLE_OPENMP) 
 
 #if defined ( KOKKOS_ENABLE_CUDA )
   if ( std::is_same< Kokkos::Cuda , ExecutionSpace >::value ) {
 
-    const int _time_substep = tsk_info->get_time_substep();
-    const int _patch        = tsk_info->get_patch_id();
-
     // gas variables
-    KokkosView3<const double, Kokkos::CudaSpace> CCuVel;
+    auto CCuVel = tsk_info->get_const_uintah_field_CCVariable<double, Kokkos::CudaSpace>(m_cc_u_vel_name, _patch, _matl_index, _time_substep);
+
+    //KokkosView3<const double, Kokkos::CudaSpace> CCuVel;
     KokkosView3<const double, Kokkos::CudaSpace> CCvVel;
     KokkosView3<const double, Kokkos::CudaSpace> CCwVel;
     KokkosView3<const double, Kokkos::CudaSpace> volFraction;
@@ -1837,9 +1846,10 @@ CharOxidationps<T>::eval( const Patch                 * patch
     KokkosView3<const double, Kokkos::CudaSpace> temperature;
     KokkosView3<const double, Kokkos::CudaSpace> MWmix;
 
+
     if ( _time_substep == 0 ) {
 
-      CCuVel      = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_cc_u_vel_name.c_str(),    _patch, _matl_index, 0 );
+    //  CCuVel      = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_cc_u_vel_name.c_str(),    _patch, _matl_index, 0 );
       CCvVel      = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_cc_v_vel_name.c_str(),    _patch, _matl_index, 0 );
       CCwVel      = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_cc_w_vel_name.c_str(),    _patch, _matl_index, 0 );
       volFraction = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_volFraction_name.c_str(), _patch, _matl_index, 0 );
@@ -1850,7 +1860,7 @@ CharOxidationps<T>::eval( const Patch                 * patch
     }
     else {
 
-      CCuVel      = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_cc_u_vel_name.c_str(),    _patch, _matl_index, 0 );
+      //CCuVel      = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_cc_u_vel_name.c_str(),    _patch, _matl_index, 0 );
       CCvVel      = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_cc_v_vel_name.c_str(),    _patch, _matl_index, 0 );
       CCwVel      = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_cc_w_vel_name.c_str(),    _patch, _matl_index, 0 );
       volFraction = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_volFraction_name.c_str(), _patch, _matl_index, 0 );
@@ -1888,7 +1898,8 @@ CharOxidationps<T>::eval( const Patch                 * patch
       number_density = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( number_density_name.c_str(), _patch, _matl_index, 0 );
     }
 
-    KokkosView3<      double, Kokkos::CudaSpace> reaction_rate[reactions_count];
+    auto reaction_rate = createContainer<double, reactions_count, Kokkos::CudaSpace>();
+    //KokkosView3<      double, Kokkos::CudaSpace> reaction_rate[reactions_count];
     KokkosView3<const double, Kokkos::CudaSpace> old_reaction_rate[reactions_count];
 
     // model variables
@@ -1901,7 +1912,8 @@ CharOxidationps<T>::eval( const Patch                 * patch
       // reaction rate
     for ( int r = 0; r < _NUM_reactions; r++ ) {
 
-      reaction_rate[r] = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<double>( m_reaction_rate_names[r].c_str(), _patch, _matl_index, 0 );
+      //reaction_rate[r] = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<double>( m_reaction_rate_names[r].c_str(), _patch, _matl_index, 0 );
+      tsk_info->get_unmanaged_uintah_field< T, double, Kokkos::CudaSpace>(reaction_rate[r], m_reaction_rate_names[r], _patch, _matl_index, _time_substep);
 
       if ( _time_substep == 0 ) {
         old_reaction_rate[r] = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_reaction_rate_names[r].c_str(), _patch, _matl_index, 0 );
@@ -2035,19 +2047,24 @@ CharOxidationps<T>::eval( const Patch                 * patch
       _MW_species_pod[ns] = _MW_species[ns];
     }
 
-    Uintah::BlockRange range_E( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+    //Uintah::BlockRange range_E( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
 
-    initializeDataFunctor< Kokkos::CudaSpace, T, CT > initFunc ( char_rate
-                                                               , gas_char_rate
-                                                               , particle_temp_rate
-                                                               , particle_Size_rate
-                                                               , surface_rate
-                                                               , reaction_rate
-                                                               );
+    //initializeDataFunctor< Kokkos::CudaSpace, T, CT > initFunc ( char_rate
+                                                               //, gas_char_rate
+                                                               //, particle_temp_rate
+                                                               //, particle_Size_rate
+                                                               //, surface_rate
+                                                               //, reaction_rate
+                                                               //);
 
-    Uintah::parallel_for< Kokkos::Cuda >( executionObject, range_E, initFunc );
-
+    //Uintah::parallel_for< Kokkos::Cuda >( executionObject, range_E, initFunc );
+    
+    parallel_initialize< Kokkos::Cuda, Kokkos::CudaSpace >(executionObject,0.0,char_rate,gas_char_rate,particle_temp_rate,particle_Size_rate,surface_rate,reaction_rate);
     Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
+
+    //
+    //Kokkos::View< KokkosView3<double,Kokkos::CudaSpace>* , Kokkos::CudaSpace >  gpu_reaction_rate("charOxy_reactionrate", reactions_count);
+    //Kokkos::deep_copy(gpu_reaction_rate, reaction_rate);
 
     solveFunctor< Kokkos::CudaSpace, T, CT > func( volFraction
                                                  ,  weight

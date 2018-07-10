@@ -1098,16 +1098,16 @@ parallel_initialize_grouped(ExecutionObject& executionObject, const struct1DArra
 template <class TTT> // Needed for the casting inside of the Variadic template, also allows for nested templating
 using Alias = TTT;
 
-template <  typename T, typename MemorySpace>
-typename std::enable_if<std::is_same<MemorySpace,UintahSpaces::HostSpace>::value, std::vector<T> >::type
-createContainer(int num_field){
-  return std::vector<T>(num_field); // perform deep copy   (should be ok since it is an empty CCVariable?)
+template < typename T, unsigned int Capacity, typename MemorySpace >
+typename std::enable_if<std::is_same<MemorySpace, UintahSpaces::HostSpace>::value, std::vector<T> >::type
+createContainer(){
+  return std::vector<T>(Capacity); // perform deep copy   (should be ok since it is an empty CCVariable?)
 }
 
-template <  typename T, typename MemorySpace>
-typename std::enable_if<std::is_same<MemorySpace,UintahSpaces::HostSpace>::value, std::vector<T> >::type
-createConstContainer(int num_field){
-  return std::vector<T>(num_field); // perform deep copy (should be ok since it is an empty CCVariable?)
+template < typename T, unsigned int Capacity, typename MemorySpace >
+typename std::enable_if<std::is_same<MemorySpace, UintahSpaces::HostSpace>::value, std::vector<T> >::type
+createConstContainer(){
+  return std::vector<T>(Capacity); // perform deep copy (should be ok since it is an empty CCVariable?)
 }
 
 #if defined(UINTAH_ENABLE_KOKKOS)
@@ -1115,29 +1115,35 @@ createConstContainer(int num_field){
 template<typename T, typename MemorySpace>   //Forward Declaration of KokkosView3
 class KokkosView3;
 
-template <  typename T, typename MemorySpace>
-typename std::enable_if<std::is_same<MemorySpace, Kokkos::HostSpace>::value, Kokkos::View<KokkosView3<T,MemorySpace>* , Kokkos::HostSpace > >::type
-createContainer(int num_field ){
-  return Kokkos::View<KokkosView3<T,MemorySpace>* , Kokkos::HostSpace >("a_view_of_KokkosView3s",num_field);
+template < typename T, unsigned int Capacity, typename MemorySpace >
+typename std::enable_if<std::is_same<MemorySpace, Kokkos::HostSpace>::value, struct1DArray<KokkosView3<T, MemorySpace>, Capacity> >::type
+createContainer(){
+  return struct1DArray<KokkosView3<T, MemorySpace>, Capacity>();
 }
+//
+//template < typename T, typename MemorySpace>
+//typename std::enable_if<std::is_same<MemorySpace, Kokkos::HostSpace>::value, struct1DArray<KokkosView3<const T, MemorySpace>, 16> >::type
+//createContainer(int num_field ){
+//  return struct1DArray<const KokkosView3<const T, MemorySpace>, 16>();
+//}
 
-template <  typename T, typename MemorySpace>
-typename std::enable_if<std::is_same<MemorySpace, Kokkos::HostSpace>::value, Kokkos::View<KokkosView3<const T,MemorySpace>* , Kokkos::HostSpace > >::type
-createConstContainer(int num_field  ){
-  return Kokkos::View<KokkosView3<const T,MemorySpace>* , Kokkos::HostSpace >("a_view_of_KokkosView3s_with_const",num_field);
-}
+//template <  typename T, typename MemorySpace>
+//typename std::enable_if<std::is_same<MemorySpace, Kokkos::HostSpace>::value, Kokkos::View<KokkosView3<T,MemorySpace>* , Kokkos::HostSpace > >::type
+//createContainer(int num_field ){
+//  return Kokkos::View<KokkosView3<T,MemorySpace>* , Kokkos::HostSpace >("a_view_of_KokkosView3s",num_field);
+//}
+//
+//template <  typename T, typename MemorySpace>
+//typename std::enable_if<std::is_same<MemorySpace, Kokkos::HostSpace>::value, Kokkos::View<KokkosView3<const T,MemorySpace>* , Kokkos::HostSpace > >::type
+//createConstContainer(int num_field  ){
+//  return Kokkos::View<KokkosView3<const T,MemorySpace>* , Kokkos::HostSpace >("a_view_of_KokkosView3s_with_const",num_field);
+//}
 
 #if defined(HAVE_CUDA)
-template <  typename T, typename MemorySpace>
-typename std::enable_if<std::is_same<MemorySpace, Kokkos::CudaSpace>::value, Kokkos::View<KokkosView3<T, MemorySpace>* , Kokkos::HostSpace > >::type
-createContainer(int num_field ){
-  return Kokkos::View<KokkosView3<T,MemorySpace>* , Kokkos::HostSpace >("a_view_of_gpu_KokkosView3s",num_field);
-}
-
-template <  typename T, typename MemorySpace>
-typename std::enable_if<std::is_same<MemorySpace, Kokkos::CudaSpace>::value, Kokkos::View<KokkosView3<const T, MemorySpace>* , Kokkos::HostSpace > >::type
-createConstContainer(int num_field ){
-  return Kokkos::View<KokkosView3<const T,MemorySpace>* , Kokkos::HostSpace >("a_view_of_gpu_KokkosView3s_with_const",num_field);
+template < typename T, unsigned int Capacity, typename MemorySpace >
+typename std::enable_if<std::is_same<MemorySpace, Kokkos::CudaSpace>::value, struct1DArray<KokkosView3<T, MemorySpace>, Capacity> >::type
+createContainer(){
+  return struct1DArray<KokkosView3<T, MemorySpace>, Capacity>();
 }
 
 //template <typename ExecutionSpace, typename MemorySpace, typename T2, typename T3>
@@ -1228,18 +1234,19 @@ parallel_initialize_grouped(ExecutionObject& executionObject, const struct1DArra
 
 
 //For array of Views
-template<typename T, typename MemorySpace>
-inline void setValueAndReturnView(struct1DArray<T, ARRAY_SIZE>* V, const T& x, int &index){
-  V[index/ARRAY_SIZE][index%ARRAY_SIZE] = x;
+template<typename T, typename MemorySpace, unsigned int Capacity>
+inline void setValueAndReturnView(struct1DArray<T, Capacity>* V, const T& x, int &index){
+  V[index / ARRAY_SIZE][index % ARRAY_SIZE] = x;
   index++;
   return;
 }
+
 //For array of Views
-template<typename T, typename MemorySpace>
-inline void setValueAndReturnView(struct1DArray<T, ARRAY_SIZE>* V, const Kokkos::View<T*, MemorySpace>& small_v, int &index){
-  int extra_i = small_v.size();
+template<typename T, typename MemorySpace, unsigned int Capacity1, unsigned int Capacity2>
+inline void setValueAndReturnView(struct1DArray<T, Capacity1>* V,  const struct1DArray<T, Capacity2>& small_v, int &index){
+  int extra_i = Capacity2;
   for(int i = 0; i < extra_i; i++){
-    V[(index+i)/ARRAY_SIZE][(index+i)%ARRAY_SIZE] = small_v(i);
+    V[(index+i) / ARRAY_SIZE][(index+i) % ARRAY_SIZE] = small_v[i];
   }
   index += extra_i;
   return;
@@ -1258,6 +1265,12 @@ inline void sumViewSize(const Kokkos::View<T*, MemorySpace>& small_v, int &index
   return ;
 }
 
+template<typename T, typename MemorySpace, unsigned int Capacity>
+inline void sumViewSize(const struct1DArray< T, Capacity> & small_v, int &index){
+  index += Capacity;
+  return ;
+}
+
 template<typename ExecutionSpace, typename MemorySpace, typename T, class ...Ts>  // Could this be modified to accept grid variables AND containers of grid variables?
 typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::OpenMP>::value, void>::type
 parallel_initialize(ExecutionObject& executionObject, const T& initializationValue,  Ts & ... inputs) {
@@ -1269,7 +1282,7 @@ parallel_initialize(ExecutionObject& executionObject, const T& initializationVal
       ,0)...,0}; //second part of magic unpacker
 
   // Allocate space in host memory to track n total views.
-  const int n_init_groups=(n-1)/ARRAY_SIZE+1;
+  const int n_init_groups = ((n-1) / ARRAY_SIZE) + 1;
   struct1DArray< KokkosView3< T, MemorySpace >, ARRAY_SIZE > hostArrayOfViews[n_init_groups];
 
   // Copy over the views one by one into this view of views.
@@ -1279,7 +1292,7 @@ parallel_initialize(ExecutionObject& executionObject, const T& initializationVal
       ,0)...,0}; //second part of magic unpacker
 
   for (int j=0; j<n_init_groups; j++){
-    int n_elements_in_group=n >ARRAY_SIZE * (j+1) ? ARRAY_SIZE : n%ARRAY_SIZE+1;
+    int n_elements_in_group=n >ARRAY_SIZE * (j+1) ? ARRAY_SIZE : n % ARRAY_SIZE+1;
     parallel_initialize_grouped< ExecutionSpace, MemorySpace, KokkosView3< T, MemorySpace > >(executionObject, hostArrayOfViews[j], n_elements_in_group, initializationValue );
     //parallel_initialize_single<ExecutionSpace>(executionObject, inputs_, inside_value ); // safer version, less ambitious
   }
@@ -1296,12 +1309,7 @@ parallel_initialize(ExecutionObject& executionObject, const T & initializationVa
       sumViewSize< KokkosView3< T, MemorySpace >, Kokkos::HostSpace >(inputs, n)
       ,0)...,0}; //second part of magic unpacker
 
-  //TODO: Allow alternate approach if there are more than 16 vars.  This approach will require an implemented memory pool;
-  //unsigned int pointerArrayByteSize = sizeof(KokkosView3< T, MemorySpace >) * n;
-  //KokkosView3< T, MemorySpace >* hostArrayOfViews{nullptr};
-  //executionObject.getTempTaskSpaceFromPool<UintahSpaces::HostSpace>((void**)&hostArrayOfViews, pointerArrayByteSize);
-  //
-  const int n_init_groups=(n-1)/ARRAY_SIZE+1;
+  const int n_init_groups = ((n-1)/ARRAY_SIZE) + 1;
   struct1DArray< KokkosView3< T, MemorySpace >, ARRAY_SIZE > hostArrayOfViews[n_init_groups];
 
   // Copy over the views one by one into this view of views.

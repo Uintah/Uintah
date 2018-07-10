@@ -90,6 +90,62 @@ namespace Uintah{
         //====================================================================================
         // GRID VARIABLE ACCESS
         //====================================================================================
+
+        template <typename T, typename MemorySpace>
+        inline typename std::enable_if< std::is_same< MemorySpace, UintahSpaces::HostSpace >::value, constCCVariable<T> >::type
+        get_const_uintah_field_CCVariable( const std::string& name, const int patch, const int matl_indx, const int time_substep ){
+          return get_const_uintah_field_add<constCCVariable<T>>(name);
+        }
+
+#if defined(KOKKOS_ENABLE_OPENMP)
+        template <typename T, typename MemorySpace>
+        inline typename std::enable_if< std::is_same< MemorySpace, Kokkos::HostSpace >::value, KokkosView3<const T, Kokkos::HostSpace> >::type
+        get_const_uintah_field_CCVariable( const std::string& name, const int patch, const int matl_indx, const int time_substep ){
+          return get_const_uintah_field_add<constCCVariable<T>>( name ).getKokkosView();
+        }
+#endif
+#if defined(KOKKOS_ENABLE_CUDA)
+        template <typename T, typename MemorySpace>
+        inline typename std::enable_if< std::is_same< MemorySpace, Kokkos::CudaSpace >::value, KokkosView3<const T, Kokkos::CudaSpace> >::type
+        get_const_uintah_field_CCVariable( const std::string& name, const int patch, const int matl_indx, const int time_substep ){
+          if (time_substep == 0) {
+            return getOldDW()->getGPUDW(0)->getKokkosView<const T>( name.c_str(), patch, matl_indx, 0 );
+          } else {
+            return getNewDW()->getGPUDW(0)->getKokkosView<const T>( name.c_str(), patch, matl_indx, 0 );
+          }
+        }
+#endif
+
+        template <typename T, typename MemorySpace>
+        inline typename std::enable_if< std::is_same< MemorySpace, UintahSpaces::HostSpace >::value, CCVariable<T> >::type
+        get_uintah_field_CCVariable( const std::string& name, const int patch, const int matl_indx, const int time_substep ){
+          return get_uintah_field_add<CCVariable<T>>(name);
+        }
+
+        template < typename T, typename elemType, typename MemorySpace, typename FIELD_TYPE>
+        inline typename std::enable_if< std::is_same< MemorySpace, UintahSpaces::HostSpace >::value, void >::type
+        get_unmanaged_uintah_field( FIELD_TYPE& field, const std::string name, const int patch, const int matl_indx, const int time_substep ){
+          _field_container->get_unmanaged_field<T>( name, field );
+        }
+
+#if defined(KOKKOS_ENABLE_OPENMP)
+        template < typename T, typename elemType, typename MemorySpace, typename FIELD_TYPE>
+        inline typename std::enable_if< std::is_same< MemorySpace, Kokkos::HostSpace >::value, void >::type
+        get_unmanaged_uintah_field( FIELD_TYPE& field, const std::string name, const int patch, const int matl_indx, const int time_substep ){
+          field = get_uintah_field_add< T >( name ).getKokkosView();
+        }
+#endif
+#if defined(KOKKOS_ENABLE_CUDA)
+        template < typename T, typename elemType, typename MemorySpace, typename FIELD_TYPE>
+        inline typename std::enable_if< std::is_same< MemorySpace, Kokkos::CudaSpace >::value, void >::type
+        get_unmanaged_uintah_field( FIELD_TYPE& field, const std::string name, const int patch, const int matl_indx, const int time_substep ){
+          if (time_substep == 0) {
+            field = getOldDW()->getGPUDW(0)->getKokkosView<elemType>( name.c_str(), patch, matl_indx, 0 );
+          } else {
+            field = getNewDW()->getGPUDW(0)->getKokkosView<elemType>( name.c_str(), patch, matl_indx, 0 );
+          }
+        }
+#endif
         /** @brief Return a CONST UINTAH field **/
         template <typename T>
         inline T* get_const_uintah_field( const std::string name ){
