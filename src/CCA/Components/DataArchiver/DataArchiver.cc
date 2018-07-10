@@ -3207,13 +3207,22 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
 
     switch( subtype->getType( )) {
 
-    case Uintah::TypeDescription::long64_type : sample_per_variable = 1; break;
+    case Uintah::TypeDescription::long64_type :
+      sample_per_variable = 1;
+      the_size = sizeof( double ); // FIXME: what is the Uintah version of a 64 bit integer?
+      type_name = "int64";
+      break;
     case Uintah::TypeDescription::Matrix3     : sample_per_variable = 9; break;
     case Uintah::TypeDescription::Point       : sample_per_variable = 3; break;
     case Uintah::TypeDescription::Stencil4    : sample_per_variable = 4; break;
     case Uintah::TypeDescription::Stencil7    : sample_per_variable = 7; break;
     case Uintah::TypeDescription::Vector      : sample_per_variable = 3; break;
 
+    case Uintah::TypeDescription::IntVector :
+      sample_per_variable = 3;
+      the_size = sizeof( int );
+      type_name = "int32";
+      break;
     case Uintah::TypeDescription::int_type :
       the_size = sizeof( int );
       type_name = "int32";
@@ -3259,7 +3268,6 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
                             "DataArchiver::saveLabels_PIDX - PIDX_variable_create failure",
                             __FILE__, __LINE__);
       
-
       patch_buffer[vcm] =
         (unsigned char**) malloc(sizeof(unsigned char*) * patches->size());
 
@@ -3298,6 +3306,13 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
           //  Read in Array3 data to t-buffer
           size_t arraySize;
           if( td->getType() == Uintah::TypeDescription::ParticleVariable ) {
+
+
+            if( label->getName() == m_particlePositionName ) {
+              int var_index;
+              PIDX_get_current_variable_index( pidx.file, &var_index );
+              PIDX_set_particles_position_variable_index( pidx.file, var_index );
+            }
 
             ParticleVariableBase * pv = new_dw->getParticleVariable( label, matlIndex, patch );
             void * ptr; // Pointer to data? but we don't use it so not digging into what it is for.

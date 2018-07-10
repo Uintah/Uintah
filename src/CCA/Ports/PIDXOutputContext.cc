@@ -37,9 +37,9 @@ using namespace Uintah;
 //
 PIDXOutputContext::PIDX_flags::PIDX_flags()
 {
-  compressMap[ "NONE" ]              = PIDX_NO_COMPRESSION;
-  compressMap[ "CHUNKING" ]          = PIDX_CHUNKING_ONLY;
-  compressMap[ "PIDX_CHUNKING_ZFP" ] = PIDX_CHUNKING_ZFP;
+  compressMap[ "NONE" ]         = PIDX_NO_COMPRESSION;
+  compressMap[ "CHUNKING" ]     = PIDX_CHUNKING_ONLY;
+  compressMap[ "CHUNKING_ZFP" ] = PIDX_CHUNKING_ZFP;
 
   // Set Defaults
   d_debugOutput = false;
@@ -143,8 +143,8 @@ PIDXOutputContext::PIDX_flags::problemSetup( const ProblemSpecP& DA_ps )
         flagData->ioType = PIDX_RAW_IO;
 
         string type;
-        rawIoPS->get( "compressType", type );
-        flagData->compressionType = str2CompressType( type );
+        //rawIoPS->get( "compressType", type );
+        //flagData->compressionType = str2CompressType( type );
 
         rawIoPS->get( "restructureBoxSize", flagData->restructureBoxSize );
         rawIoPS->get( "pipeSize",           flagData->pipeSize );
@@ -201,8 +201,8 @@ PIDXOutputContext::getDirectoryName(TypeDescription::Type TD)
     case TypeDescription::SFCXVariable:     return "SFCXVars";         break;
     case TypeDescription::SFCYVariable:     return "SFCYVars";         break;
     case TypeDescription::SFCZVariable:     return "SFCZVars";         break;
-    case TypeDescription::ParticleVariable: return "ParticleVariable"; break;
-    case TypeDescription::NCVariable:       return "NCVariable";       break;
+    case TypeDescription::ParticleVariable: return "ParticleVars";     break;
+    case TypeDescription::NCVariable:       return "NCVars";           break;
     default:
       throw Uintah::InternalError("  PIDXOutputContext::getDirectoryName type description not supported", __FILE__, __LINE__);
   }
