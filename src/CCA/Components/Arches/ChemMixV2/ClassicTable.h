@@ -55,9 +55,9 @@
 
 
 namespace Uintah {
-#ifdef UINTAH_ENABLE_KOKKOS
-typedef Kokkos::View<double**, Kokkos::LayoutLeft, Kokkos::MemoryTraits<Kokkos::RandomAccess> > tempTableContainer;
-typedef Kokkos::View<const double**, Kokkos::LayoutLeft, Kokkos::MemoryTraits<Kokkos::RandomAccess> > tableContainer ;
+#ifdef UINTAH_ENABLE_KOKKOS  // HARD CODED TO RUN ON CPU ONLY (HOST SPACE)  and optimized for GPU (layoutLeft??)
+typedef Kokkos::View<double**,  Kokkos::LayoutLeft,Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess> > tempTableContainer;
+typedef Kokkos::View<const double**,   Kokkos::LayoutLeft,Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess>  > tableContainer ;
 #else
 typedef std::vector<std::vector<double> > tempTableContainer;
 typedef const std::vector<std::vector<double> > &tableContainer ;
@@ -176,15 +176,14 @@ struct ClassicTableInfo {
       const int oneD_switch= nDim == 1 ? 1 : 2;       // if/then switch for switching between 1-D and n-D tables
       const int nDim_withSwitch=nDim+1-oneD_switch;   //  nDim-1 except for 1D
       int index[2][nDim_withSwitch]; // high and low indexes
-      int iv_val[2][nDim_withSwitch]; // high and low indexes
       int dliniate[nDim]; // This should only be once instead of for each I J K (Conversion factors for each dimension, for transforming from N-D to 1D)
      //////////////-------------------------------------------------------------------//////
 
 
 
       double table_vals[npts];   // container for values read from the table needed to compute the interpolent
-      double table_indices[npts];   // container for table indices 
       double distal_val[nDim-1+oneD_switch]; //  delta_x / DX   (nDim + 1  except for 1D)
+      int table_indices[npts];   // container for table indices 
       int theSpecial[2][oneD_switch]; // high and low indexes of the special IV (first independent variable)
       
 
