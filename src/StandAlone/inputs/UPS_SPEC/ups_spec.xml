@@ -371,7 +371,7 @@
                                                 'arches,
                                                 burger,dosweep, ice,
                                                 impm, mpm,
-                                                mpmarches, 
+                                                mpmarches, sfmpm, 
                                                 mpmf, mpmice, amrmpm, wasatch, postProcessUda,
                                                 electrostatic_solver,
                                                 gauss_solver,
