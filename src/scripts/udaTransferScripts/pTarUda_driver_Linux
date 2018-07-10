@@ -33,7 +33,7 @@ $(STAMP_DIR)/stamp:
 $(STAMP_DIR)/stamp/checkpoints/% :
 	@mkdir -p $(STAMP_DIR)/stamp/checkpoints
 	if test -a checkpoints/$(@F); then                                     \
-	  echo "  Working on checkpoints $(@F)"                                \
+	  echo "  Working on: checkpoints/$(@F)"                               \
 #                                                                             \
 #        __________________________________                                   \
 	  if test ${createExtract} == "create"; then                           \
@@ -49,7 +49,7 @@ $(STAMP_DIR)/stamp/checkpoints/% :
 	  if test ${createExtract} == "extract"; then                          \
 	    ${TAR} checkpoints/$(@F);	                                    \
 	  fi;					                                    \
-	  echo "  Finished ${createExtract} checkpoints/$(@F)";                \
+	  echo "  Finished ${createExtract}: checkpoints/$(@F)";               \
 	  touch $(STAMP_DIR)/stamp/checkpoints/$(@F);                          \
 	else                                                                   \
 	 echo "   checkpoints/$(@F) Does not exist!";                          \
@@ -63,7 +63,7 @@ $(STAMP_DIR)/stamp/checkpoints/% :
 
 $(STAMP_DIR)/stamp/% :
 	if test -a $(@F); then                                                 \
-	   echo "  Working on $(@F)";                                          \
+	   echo "  Working on: $(@F)";                                         \
 #                                                                             \
 #        __________________________________                                   \
 	  if test ${createExtract} == "create"; then                           \
@@ -79,7 +79,7 @@ $(STAMP_DIR)/stamp/% :
 	  if test ${createExtract} == "extract"; then                          \
 	    ${TAR} $(@F);                                                      \
 	  fi;                                                                  \
-	  echo "  Finished ${createExtract} $(@F)";                            \
+	  echo "  Finished ${createExtract}: $(@F)";                           \
 	  touch $(STAMP_DIR)/stamp/$(@F);                                      \
 	else                                                                   \
 	 echo "   $(@F) Does not exist!";                                      \
