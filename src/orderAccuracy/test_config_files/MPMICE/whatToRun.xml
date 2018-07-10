@@ -1,13 +1,18 @@
 <config>
 <postProcessCmd_path>orderAccuracy/comparisonUtils</postProcessCmd_path>
 
-<symbolicLinks> /ssd2/builds/structuralEnergetics.1/src/StandAlone/inputs/MPM/MaterialData</symbolicLinks>
-
+<symbolicLinks> /raid/Work/Contracts/StructuralEnergetics/structuralEnergetics.1/src/StandAlone/inputs/MPM/StructuralEnergetics/MaterialDataSE  /raid/Work/Contracts/StructuralEnergetics/structuralEnergetics.1/src/StandAlone/inputs/MPM/MaterialData</symbolicLinks>
 
 <test>
-  <name>cylinderDet_damage</name>
-  <ups>SE_cylinderDet.ups</ups>
-  <tst>explodeCylinder_damage.tst</tst>
+  <name>SRM-Steel-HMX</name>
+  <ups>SE_smallCylDetSym-SRM-Steel-HMX.ups</ups>
+  <tst>SRM-Steel-HMX.tst</tst>
+</test>
+
+<test>
+  <name>Steel-SRM-HMX</name>
+  <ups>SE_smallCylDetSym-Steel-SRM-HMX.ups</ups>
+  <tst>Steel-SRM-HMX.tst</tst>
 </test>
 
 <!--
