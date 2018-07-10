@@ -1098,53 +1098,15 @@ parallel_initialize_grouped(ExecutionObject& executionObject, const struct1DArra
 template <class TTT> // Needed for the casting inside of the Variadic template, also allows for nested templating
 using Alias = TTT;
 
-template < typename T, unsigned int Capacity, typename MemorySpace >
-typename std::enable_if<std::is_same<MemorySpace, UintahSpaces::HostSpace>::value, std::vector<T> >::type
-createContainer(){
-  return std::vector<T>(Capacity); // perform deep copy   (should be ok since it is an empty CCVariable?)
-}
-
-template < typename T, unsigned int Capacity, typename MemorySpace >
-typename std::enable_if<std::is_same<MemorySpace, UintahSpaces::HostSpace>::value, std::vector<T> >::type
-createConstContainer(){
-  return std::vector<T>(Capacity); // perform deep copy (should be ok since it is an empty CCVariable?)
-}
 
 #if defined(UINTAH_ENABLE_KOKKOS)
 
 template<typename T, typename MemorySpace>   //Forward Declaration of KokkosView3
 class KokkosView3;
 
-template < typename T, unsigned int Capacity, typename MemorySpace >
-typename std::enable_if<std::is_same<MemorySpace, Kokkos::HostSpace>::value, struct1DArray<KokkosView3<T, MemorySpace>, Capacity> >::type
-createContainer(){
-  return struct1DArray<KokkosView3<T, MemorySpace>, Capacity>();
-}
-//
-//template < typename T, typename MemorySpace>
-//typename std::enable_if<std::is_same<MemorySpace, Kokkos::HostSpace>::value, struct1DArray<KokkosView3<const T, MemorySpace>, 16> >::type
-//createContainer(int num_field ){
-//  return struct1DArray<const KokkosView3<const T, MemorySpace>, 16>();
-//}
-
-//template <  typename T, typename MemorySpace>
-//typename std::enable_if<std::is_same<MemorySpace, Kokkos::HostSpace>::value, Kokkos::View<KokkosView3<T,MemorySpace>* , Kokkos::HostSpace > >::type
-//createContainer(int num_field ){
-//  return Kokkos::View<KokkosView3<T,MemorySpace>* , Kokkos::HostSpace >("a_view_of_KokkosView3s",num_field);
-//}
-//
-//template <  typename T, typename MemorySpace>
-//typename std::enable_if<std::is_same<MemorySpace, Kokkos::HostSpace>::value, Kokkos::View<KokkosView3<const T,MemorySpace>* , Kokkos::HostSpace > >::type
-//createConstContainer(int num_field  ){
-//  return Kokkos::View<KokkosView3<const T,MemorySpace>* , Kokkos::HostSpace >("a_view_of_KokkosView3s_with_const",num_field);
-//}
 
 #if defined(HAVE_CUDA)
-template < typename T, unsigned int Capacity, typename MemorySpace >
-typename std::enable_if<std::is_same<MemorySpace, Kokkos::CudaSpace>::value, struct1DArray<KokkosView3<T, MemorySpace>, Capacity> >::type
-createContainer(){
-  return struct1DArray<KokkosView3<T, MemorySpace>, Capacity>();
-}
+
 
 //template <typename ExecutionSpace, typename MemorySpace, typename T2, typename T3>
 //typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::Cuda>::value, void>::type
