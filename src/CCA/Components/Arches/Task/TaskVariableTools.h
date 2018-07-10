@@ -115,6 +115,7 @@ namespace Uintah{
           }
         }
 #endif
+
         //--- get_const_uintah_field_add ---
         template <typename T, typename ElemType, typename MemorySpace>
         inline typename std::enable_if< std::is_same< MemorySpace, UintahSpaces::HostSpace >::value, T >::type
@@ -137,6 +138,29 @@ namespace Uintah{
           } else {
             return getNewDW()->getGPUDW(0)->getKokkosView<const ElemType>( name.c_str(), patch, matl_indx, 0 );
           }
+        }
+#endif
+
+        //--- get_empty_const_uintah_field_add ---
+        template <typename T, typename ElemType, typename MemorySpace>
+        inline typename std::enable_if< std::is_same< MemorySpace, UintahSpaces::HostSpace >::value, T >::type
+        get_empty_const_uintah_field_add( ){
+          return T();
+        }
+#if defined(KOKKOS_ENABLE_OPENMP)
+        template <typename T, typename ElemType, typename MemorySpace>
+        inline typename std::enable_if< std::is_same< MemorySpace, Kokkos::HostSpace >::value, KokkosView3<const ElemType, Kokkos::HostSpace> >::type
+        get_empty_const_uintah_field_add( ){
+          KokkosView3<const ElemType, Kokkos::HostSpace> temp;
+          return temp;
+        }
+#endif
+#if defined(KOKKOS_ENABLE_CUDA)
+        template <typename T, typename ElemType, typename MemorySpace>
+        inline typename std::enable_if< std::is_same< MemorySpace, Kokkos::CudaSpace >::value, KokkosView3<const ElemType, Kokkos::CudaSpace> >::type
+        get_empty_const_uintah_field_add( ){
+          KokkosView3<const ElemType, Kokkos::CudaSpace> temp;
+          return temp;
         }
 #endif
 

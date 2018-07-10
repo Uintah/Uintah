@@ -51,24 +51,23 @@ public:
 
     //Build instructions for this (CharOxidationps) class.
     class Builder : public TaskInterface::TaskBuilder {
+    private:
 
-      public:
+      std::string _task_name{""};
+      int _Nenv;
 
-      Builder( std::string task_name, int matl_index , int Nenv ) : _task_name(task_name), _matl_index(matl_index), _Nenv(Nenv){}
+    protected:
+
+      int _matl_index;
+
+    public:
+
+      Builder( std::string task_name, int matl_index , int Nenv ) : _task_name(task_name), _Nenv(Nenv), _matl_index(matl_index){}
       ~Builder(){}
 
       CharOxidationps* build()
       { return scinew CharOxidationps<T>( _task_name, _matl_index, _Nenv ); }
 
-      protected:
-
-      int _matl_index;
-
-      private:
-
-      std::string _task_name{""};
-      //int         _matl_index;
-      int _Nenv;
     };
 
 private:
@@ -795,16 +794,13 @@ namespace {
     CT                      & length_birth;
     CT                      & weight_p_diam;
     CT                      & RC_RHS_source;
-    CT                      &  RHS_source;
+    CT                      & RHS_source;
     CT                      & RHS_weight;
     CT                      & RHS_length;
 #endif
     const double m_weight_scaling_constant;
     const double m_RC_scaling_constant;
     double       _R_cal;
-    bool         _use_co2co_l[reactions_count];
-    double       _phi_l[reactions_count];
-    double       _hrxn_l[reactions_count];
     double       _HF_CO2;
     double       _HF_CO;
     double       _dynamic_visc;
@@ -816,14 +812,8 @@ namespace {
     double       _p_void0;
     double       _init_particle_density;
     double       _Sg0;
-    double       _MW_species[species_count];
-    double       _D_mat[reactions_count][species_count];
-    int          _oxidizer_indices[reactions_count];
     double       _T0;
     double       _tau;
-    double       _MW_l[reactions_count];
-    double       _a_l[reactions_count];
-    double       _e_l[reactions_count];
     const double dt;
     const double vol;
     double       _Mh;
@@ -835,7 +825,15 @@ namespace {
     bool         m_add_length_birth;
     bool         m_add_char_birth;
     int          _Nenv;
-
+    struct1DArray<bool,   reactions_count> _use_co2co_l;
+    struct1DArray<double, reactions_count> _phi_l;
+    struct1DArray<double, reactions_count> _hrxn_l;
+    struct1DArray<int,    reactions_count> _oxidizer_indices;
+    struct1DArray<double, reactions_count> _MW_l;
+    struct1DArray<double, reactions_count> _a_l;
+    struct1DArray<double, reactions_count> _e_l;
+    struct1DArray<double, species_count>   _MW_species;
+    struct2DArray<double, reactions_count, species_count> _D_mat;
     solveFunctor(
 
 #ifdef UINTAH_ENABLE_KOKKOS
@@ -912,9 +910,9 @@ namespace {
                 , const double & m_weight_scaling_constant
                 , const double & m_RC_scaling_constant
                 , double         _R_cal
-                , bool           _use_co2co_l[reactions_count]
-                , double         _phi_l[reactions_count]
-                , double         _hrxn_l[reactions_count]
+                , struct1DArray<bool,   reactions_count> _use_co2co_l
+                , struct1DArray<double, reactions_count> _phi_l
+                , struct1DArray<double, reactions_count> _hrxn_l
                 , double         _HF_CO2
                 , double         _HF_CO
                 , double         _dynamic_visc
@@ -926,14 +924,14 @@ namespace {
                 , double         _p_void0
                 , double         _init_particle_density
                 , double         _Sg0
-                , double         _MW_species[species_count]
-                , double         _D_mat[reactions_count][species_count]
-                , int            _oxidizer_indices[reactions_count]
+                , struct1DArray<double, species_count> _MW_species
+                , struct2DArray<double, reactions_count, species_count> _D_mat
+                , struct1DArray<int,    reactions_count> _oxidizer_indices
                 , double         _T0
                 , double         _tau
-                , double         _MW_l[reactions_count]
-                , double         _a_l[reactions_count]
-                , double         _e_l[reactions_count]
+                , struct1DArray<double, reactions_count> _MW_l
+                , struct1DArray<double, reactions_count> _a_l
+                , struct1DArray<double, reactions_count> _e_l
                 , const double   dt
                 , const double   vol
                 , double         _Mh
@@ -1007,26 +1005,35 @@ namespace {
     , m_add_length_birth        ( m_add_length_birth )
     , m_add_char_birth          ( m_add_char_birth )
     , _Nenv                     ( _Nenv )
+    , _use_co2co_l              ( _use_co2co_l )
+    , _phi_l                    ( _phi_l )
+    , _hrxn_l                   ( _hrxn_l )
+    , _oxidizer_indices         ( _oxidizer_indices )
+    , _MW_l                     ( _MW_l )
+    , _a_l                      ( _a_l )
+    , _e_l                      ( _e_l )
+    , _MW_species               ( _MW_species )
+    , _D_mat                    ( _D_mat )
   {
-    for ( int nr = 0; nr < reactions_count; nr++ ) {
+//    for ( int nr = 0; nr < reactions_count; nr++ ) {
 
-      this->_use_co2co_l[nr]      = _use_co2co_l[nr];
-      this->_phi_l[nr]            = _phi_l[nr];
-      this->_hrxn_l[nr]           = _hrxn_l[nr];
-      this->_oxidizer_indices[nr] = _oxidizer_indices[nr];
-      this->_MW_l[nr]             = _MW_l[nr];
-      this->_a_l[nr]              = _a_l[nr];
-      this->_e_l[nr]              = _e_l[nr];
+//      this->_use_co2co_l[nr]      = _use_co2co_l[nr];
+//      this->_phi_l[nr]            = _phi_l[nr];
+//      this->_hrxn_l[nr]           = _hrxn_l[nr];
+//      this->_oxidizer_indices[nr] = _oxidizer_indices[nr];
+//      this->_MW_l[nr]             = _MW_l[nr];
+//      this->_a_l[nr]              = _a_l[nr];
+//      this->_e_l[nr]              = _e_l[nr];
 
-      for ( int ns = 0; ns < species_count; ns++ ) {
-        this->_D_mat[nr][ns] = _D_mat[nr][ns];
-      }
-    }
+//      for ( int ns = 0; ns < species_count; ns++ ) {
+//        this->_D_mat[nr][ns] = _D_mat[nr][ns];
+//      }
+//    }
 
-    for ( int ns = 0; ns < species_count; ns++ ) {
-
-      this->_MW_species[ns] = _MW_species[ns];
-    }
+//    for ( int ns = 0; ns < species_count; ns++ ) {
+//
+//      this->_MW_species[ns] = _MW_species[ns];
+//    }
   }
 
 #ifdef UINTAH_ENABLE_KOKKOS
@@ -1179,6 +1186,7 @@ namespace {
             Sfactor = 1 + effectivenessF[l] * p_diam * p_rho * _Sg0 * Sj / ( 6. * ( 1. - p_void ) );
             F[l]    = rh_l[l] - ( _Mh * MW * phi_l[l] * k_r[l] * mtc_r * Sfactor * co_r[l] * cg ) /
                       ( ( MW * cg * ( k_r[l] * x_org * ( 1. - p_void ) * Sfactor + mtc_r ) ) + rtot ); // [kg-char/m^3/s]
+
           }
 
           for ( int j = 0; j < reactions_count; j++ ) {
@@ -1406,7 +1414,7 @@ CharOxidationps<T>::eval( const Patch                 * patch
   Vector Dx = patch->dCell();
   const double vol = Dx.x()* Dx.y()* Dx.z();
 
-  //CT* species[species_count];
+  //TODO: Make a createConstContainer
   auto species = createContainer<CT, const double, species_count, UintahSpaces::HostSpace>();
   for ( int ns = 0; ns < _NUM_species; ns++ ) {
     tsk_info->get_const_uintah_field< CT, double, UintahSpaces::HostSpace>(species[ns], _species_names[ns], _patch, _matl_index, _time_substep);
@@ -1414,7 +1422,6 @@ CharOxidationps<T>::eval( const Patch                 * patch
 
   // number_density is unused.
   //CT& number_density = tsk_info->get_const_uintah_field_add< CT >( number_density_name ); // total number density
-  //tsk_info->get_unmanaged_uintah_field<CCVariable<double> >(_abswg_name_vector[i],abswg[i]);
 
   // model variables (CCVariables)
   auto char_rate           = tsk_info->get_uintah_field_add<T, double, UintahSpaces::HostSpace>(m_modelLabel, _patch, _matl_index, _new_dw_time_substep);
@@ -1429,7 +1436,6 @@ CharOxidationps<T>::eval( const Patch                 * patch
   auto old_reaction_rate = createContainer<CT, const double, reactions_count, UintahSpaces::HostSpace>();
 
   for ( int r = 0; r < _NUM_reactions; r++ ) {
-
     tsk_info->get_unmanaged_uintah_field< T, double, UintahSpaces::HostSpace>(
                            reaction_rate[r], m_reaction_rate_names[r], _patch, _matl_index, _new_dw_time_substep);
     tsk_info->get_const_uintah_field< CT, double, UintahSpaces::HostSpace>(
@@ -1451,25 +1457,21 @@ CharOxidationps<T>::eval( const Patch                 * patch
   auto wp                   = tsk_info->get_const_uintah_field_add<CT, double, UintahSpaces::HostSpace>(m_wp_name, _patch, _matl_index, _time_substep);
 
   // birth terms
-  CT* rawcoal_birth_ptr = nullptr;
-  CT* char_birth_ptr    = nullptr;
-  CT* length_birth_ptr  = nullptr;
-
+  auto rawcoal_birth        = tsk_info->get_empty_const_uintah_field_add<CT, double, UintahSpaces::HostSpace>();
+  auto char_birth           = tsk_info->get_empty_const_uintah_field_add<CT, double, UintahSpaces::HostSpace>();
+  auto length_birth         = tsk_info->get_empty_const_uintah_field_add<CT, double, UintahSpaces::HostSpace>();
   if (m_add_rawcoal_birth) {
-    rawcoal_birth_ptr = tsk_info->get_const_uintah_field< CT >(m_rawcoal_birth_qn_name);
+    tsk_info->get_const_uintah_field< CT, double, UintahSpaces::HostSpace>(
+                           rawcoal_birth, m_rawcoal_birth_qn_name, _patch, _matl_index, _time_substep);
   }
-
   if (m_add_char_birth) {
-    char_birth_ptr   = tsk_info->get_const_uintah_field< CT >(m_char_birth_qn_name);
+    tsk_info->get_const_uintah_field< CT, double, UintahSpaces::HostSpace>(
+                           char_birth, m_char_birth_qn_name, _patch, _matl_index, _time_substep);
   }
-
   if (m_add_length_birth) {
-    length_birth_ptr = tsk_info->get_const_uintah_field< CT >(m_length_birth_qn_name);
+    tsk_info->get_const_uintah_field< CT, double, UintahSpaces::HostSpace>(
+                           length_birth, m_length_birth_qn_name, _patch, _matl_index, _time_substep);
   }
-
-  CT& rawcoal_birth = *rawcoal_birth_ptr;
-  CT& char_birth    = *char_birth_ptr;
-  CT& length_birth  = *length_birth_ptr;
 
   auto weight_p_diam       = tsk_info->get_const_uintah_field_add<CT, double, UintahSpaces::HostSpace>(m_particle_length_qn, _patch, _matl_index, _time_substep);
 
@@ -1480,49 +1482,18 @@ CharOxidationps<T>::eval( const Patch                 * patch
 
   auto surfAreaF           = tsk_info->get_const_uintah_field_add<CT, double, UintahSpaces::HostSpace>(m_surfAreaF_name, _patch, _matl_index, _time_substep);
 
-  //auto
-  bool   _use_co2co_l_pod     [ reactions_count ];
-  double _phi_l_pod           [ reactions_count ];
-  double _hrxn_l_pod          [ reactions_count ];
-  int    _oxidizer_indices_pod[ reactions_count ];
-  double _MW_l_pod            [ reactions_count ];
-  double _a_l_pod             [ reactions_count ];
-  double _e_l_pod             [ reactions_count ];
-  double _D_mat_pod           [ reactions_count ][ species_count ];
+  struct1DArray<bool,   reactions_count> _use_co2co_l_pod(_use_co2co_l);
+  struct1DArray<double, reactions_count> _phi_l_pod(_phi_l);
+  struct1DArray<double, reactions_count> _hrxn_l_pod(_hrxn_l);
+  struct1DArray<int,    reactions_count> _oxidizer_indices_pod(_oxidizer_indices);
+  struct1DArray<double, reactions_count> _MW_l_pod(_MW_l);
+  struct1DArray<double, reactions_count> _a_l_pod(_a_l);
+  struct1DArray<double, reactions_count> _e_l_pod(_e_l);
 
-  for ( int nr = 0; nr < reactions_count; nr++ ) {
+  struct2DArray<double, reactions_count, species_count> _D_mat_pod(_D_mat);
 
-    _use_co2co_l_pod[nr]      = _use_co2co_l[nr];
-    _phi_l_pod[nr]            = _phi_l[nr];
-    _hrxn_l_pod[nr]           = _hrxn_l[nr];
-    _oxidizer_indices_pod[nr] = _oxidizer_indices[nr];
-    _MW_l_pod[nr]             = _MW_l[nr];
-    _a_l_pod[nr]              = _a_l[nr];
-    _e_l_pod[nr]              = _e_l[nr];
+  struct1DArray<double, species_count> _MW_species_pod(_MW_species);
 
-    for ( int ns = 0; ns < species_count; ns++ ) {
-      _D_mat_pod[nr][ns] = _D_mat[nr][ns];
-    }
-  }
-
-  double _MW_species_pod[ species_count ];
-
-  for ( int ns = 0; ns < species_count; ns++ ) {
-    _MW_species_pod[ns] = _MW_species[ns];
-  }
-
-  //Uintah::BlockRange range_E( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
-
-  //initializeDataFunctor< UintahSpaces::HostSpace, T, CT > initFunc( char_rate
-                                                                  //, gas_char_rate
-                                                                  //, particle_temp_rate
-                                                                  //, particle_Size_rate
-                                                                  //, surface_rate
-                                                                  //, reaction_rate
-                                                                  //);
-
-  //Uintah::parallel_for< UintahSpaces::CPU >( executionObject, range_E, initFunc );
-  
   parallel_initialize< UintahSpaces::CPU, UintahSpaces::HostSpace >(executionObject, 0.0,
       char_rate, gas_char_rate, particle_temp_rate, particle_Size_rate, surface_rate, reaction_rate);
 
@@ -1672,20 +1643,20 @@ CharOxidationps<T>::eval( const Patch                 * patch
     auto wp                   = tsk_info->get_const_uintah_field_add<CT, double, Kokkos::HostSpace>(m_wp_name, _patch, _matl_index, _time_substep);
 
     // birth terms
-    KokkosView3<const double, Kokkos::HostSpace> rawcoal_birth;
-    KokkosView3<const double, Kokkos::HostSpace> char_birth;
-    KokkosView3<const double, Kokkos::HostSpace> length_birth;
-
-    if ( m_add_rawcoal_birth ) {
-      rawcoal_birth = tsk_info->get_const_uintah_field_add< CT >(m_rawcoal_birth_qn_name).getKokkosView();
+    auto rawcoal_birth        = tsk_info->get_empty_const_uintah_field_add<CT, double, Kokkos::HostSpace>();
+    auto char_birth           = tsk_info->get_empty_const_uintah_field_add<CT, double, Kokkos::HostSpace>();
+    auto length_birth         = tsk_info->get_empty_const_uintah_field_add<CT, double, Kokkos::HostSpace>();
+    if (m_add_rawcoal_birth) {
+      tsk_info->get_const_uintah_field< CT, double, Kokkos::HostSpace>(
+                             rawcoal_birth, m_rawcoal_birth_qn_name, _patch, _matl_index, _time_substep);
     }
-
-    if ( m_add_char_birth ) {
-      char_birth = tsk_info->get_const_uintah_field_add< CT >(m_char_birth_qn_name).getKokkosView();
+    if (m_add_char_birth) {
+      tsk_info->get_const_uintah_field< CT, double, Kokkos::HostSpace>(
+                             char_birth, m_char_birth_qn_name, _patch, _matl_index, _time_substep);
     }
-
-    if ( m_add_length_birth ) {
-      length_birth = tsk_info->get_const_uintah_field_add< CT >(m_length_birth_qn_name).getKokkosView();
+    if (m_add_length_birth) {
+      tsk_info->get_const_uintah_field< CT, double, Kokkos::HostSpace>(
+                             length_birth, m_length_birth_qn_name, _patch, _matl_index, _time_substep);
     }
 
     auto weight_p_diam       = tsk_info->get_const_uintah_field_add<CT, double, Kokkos::HostSpace>(m_particle_length_qn, _patch, _matl_index, _time_substep);
@@ -1697,47 +1668,17 @@ CharOxidationps<T>::eval( const Patch                 * patch
 
     auto surfAreaF           = tsk_info->get_const_uintah_field_add<CT, double, Kokkos::HostSpace>(m_surfAreaF_name, _patch, _matl_index, _time_substep);
 
-    bool   _use_co2co_l_pod     [ reactions_count ];
-    double _phi_l_pod           [ reactions_count ];
-    double _hrxn_l_pod          [ reactions_count ];
-    int    _oxidizer_indices_pod[ reactions_count ];
-    double _MW_l_pod            [ reactions_count ];
-    double _a_l_pod             [ reactions_count ];
-    double _e_l_pod             [ reactions_count ];
-    double _D_mat_pod           [ reactions_count ][ species_count ];
+    struct1DArray<bool,   reactions_count> _use_co2co_l_pod(_use_co2co_l);
+    struct1DArray<double, reactions_count> _phi_l_pod(_phi_l);
+    struct1DArray<double, reactions_count> _hrxn_l_pod(_hrxn_l);
+    struct1DArray<int,    reactions_count> _oxidizer_indices_pod(_oxidizer_indices);
+    struct1DArray<double, reactions_count> _MW_l_pod(_MW_l);
+    struct1DArray<double, reactions_count> _a_l_pod(_a_l);
+    struct1DArray<double, reactions_count> _e_l_pod(_e_l);
 
-    for ( int nr = 0; nr < reactions_count; nr++ ) {
+    struct2DArray<double, reactions_count, species_count> _D_mat_pod(_D_mat);
 
-      _use_co2co_l_pod[nr]      = _use_co2co_l[nr];
-      _phi_l_pod[nr]            = _phi_l[nr];
-      _hrxn_l_pod[nr]           = _hrxn_l[nr];
-      _oxidizer_indices_pod[nr] = _oxidizer_indices[nr];
-      _MW_l_pod[nr]             = _MW_l[nr];
-      _a_l_pod[nr]              = _a_l[nr];
-      _e_l_pod[nr]              = _e_l[nr];
-
-      for ( int ns = 0; ns < species_count; ns++ ) {
-        _D_mat_pod[nr][ns] = _D_mat[nr][ns];
-      }
-    }
-
-    double _MW_species_pod[ species_count ];
-
-    for ( int ns = 0; ns < species_count; ns++ ) {
-      _MW_species_pod[ns] = _MW_species[ns];
-    }
-
-    //Uintah::BlockRange range_E( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
-
-    //initializeDataFunctor< Kokkos::HostSpace, T, CT > initFunc ( char_rate
-                                                               //, gas_char_rate
-                                                               //, particle_temp_rate
-                                                               //, particle_Size_rate
-                                                               //, surface_rate
-                                                               //, reaction_rate
-                                                               //);
-
-    //Uintah::parallel_for< Kokkos::OpenMP >( executionObject, range_E, initFunc );
+    struct1DArray<double, species_count> _MW_species_pod(_MW_species);
 
     parallel_initialize< Kokkos::OpenMP, Kokkos::HostSpace >(executionObject, 0.0,
         char_rate, gas_char_rate, particle_temp_rate, particle_Size_rate, surface_rate, reaction_rate);
@@ -1862,12 +1803,11 @@ CharOxidationps<T>::eval( const Patch                 * patch
     auto particle_Size_rate  = tsk_info->get_uintah_field_add<T, double, Kokkos::CudaSpace>(m_particleSize, _patch, _matl_index, _new_dw_time_substep);
     auto surface_rate        = tsk_info->get_uintah_field_add<T, double, Kokkos::CudaSpace>(m_surfacerate, _patch, _matl_index, _new_dw_time_substep);
 
-
+    // reaction rate
     auto reaction_rate = createContainer<T, double, reactions_count, Kokkos::CudaSpace>();
     //KokkosView3<      double, Kokkos::CudaSpace> reaction_rate[reactions_count];
     auto old_reaction_rate = createContainer<CT, const double, reactions_count, Kokkos::CudaSpace>();
 
-      // reaction rate
     for ( int r = 0; r < _NUM_reactions; r++ ) {
       //reaction_rate[r] = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<double>( m_reaction_rate_names[r].c_str(), _patch, _matl_index, 0 );
       tsk_info->get_unmanaged_uintah_field< T, double, Kokkos::CudaSpace>(
@@ -1891,110 +1831,47 @@ CharOxidationps<T>::eval( const Patch                 * patch
     auto wp                   = tsk_info->get_const_uintah_field_add<CT, double, Kokkos::CudaSpace>(m_wp_name, _patch, _matl_index, _time_substep);
 
     // birth terms
-    KokkosView3<const double, Kokkos::CudaSpace> rawcoal_birth;
-    KokkosView3<const double, Kokkos::CudaSpace> char_birth;
-    KokkosView3<const double, Kokkos::CudaSpace> length_birth;
-
-    if ( m_add_rawcoal_birth ) {
-      if ( _time_substep == 0 ) {
-        rawcoal_birth = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_rawcoal_birth_qn_name.c_str(), _patch, _matl_index, 0 );
-      }
-      else {
-        rawcoal_birth = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_rawcoal_birth_qn_name.c_str(), _patch, _matl_index, 0 );
-      }
+    auto rawcoal_birth        = tsk_info->get_empty_const_uintah_field_add<CT, double, Kokkos::CudaSpace>();
+    auto char_birth           = tsk_info->get_empty_const_uintah_field_add<CT, double, Kokkos::CudaSpace>();
+    auto length_birth         = tsk_info->get_empty_const_uintah_field_add<CT, double, Kokkos::CudaSpace>();
+    if (m_add_rawcoal_birth) {
+      tsk_info->get_const_uintah_field< CT, double, Kokkos::CudaSpace>(
+                             rawcoal_birth, m_rawcoal_birth_qn_name, _patch, _matl_index, _time_substep);
+    }
+    if (m_add_char_birth) {
+      tsk_info->get_const_uintah_field< CT, double, Kokkos::CudaSpace>(
+                             char_birth, m_char_birth_qn_name, _patch, _matl_index, _time_substep);
+    }
+    if (m_add_length_birth) {
+      tsk_info->get_const_uintah_field< CT, double, Kokkos::CudaSpace>(
+                             length_birth, m_length_birth_qn_name, _patch, _matl_index, _time_substep);
     }
 
-    if ( m_add_char_birth ) {
-      if ( _time_substep == 0 ) {
-        char_birth = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_char_birth_qn_name.c_str(), _patch, _matl_index, 0 );
-      }
-      else {
-        char_birth = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_char_birth_qn_name.c_str(), _patch, _matl_index, 0 );
-      }
-    }
+    auto weight_p_diam       = tsk_info->get_const_uintah_field_add<CT, double, Kokkos::CudaSpace>(m_particle_length_qn, _patch, _matl_index, _time_substep);
 
-    if ( m_add_length_birth ) {
-      if ( _time_substep == 0 ) {
-        length_birth = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_length_birth_qn_name.c_str(), _patch, _matl_index, 0 );
-      }
-      else {
-        length_birth = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_length_birth_qn_name.c_str(), _patch, _matl_index, 0 );
-      }
-    }
+    auto RC_RHS_source       = tsk_info->get_const_uintah_field_add<CT, double, Kokkos::CudaSpace>(m_RC_RHS, _patch, _matl_index, _new_dw_time_substep);
+    auto RHS_source          = tsk_info->get_const_uintah_field_add<CT, double, Kokkos::CudaSpace>(m_ic_RHS, _patch, _matl_index, _new_dw_time_substep);
+    auto RHS_weight          = tsk_info->get_const_uintah_field_add<CT, double, Kokkos::CudaSpace>(m_w_RHS, _patch, _matl_index, _new_dw_time_substep);
+    auto RHS_length          = tsk_info->get_const_uintah_field_add<CT, double, Kokkos::CudaSpace>(m_length_RHS, _patch, _matl_index, _new_dw_time_substep);
 
-    KokkosView3<const double, Kokkos::CudaSpace> weight_p_diam;
+    auto surfAreaF           = tsk_info->get_const_uintah_field_add<CT, double, Kokkos::CudaSpace>(m_surfAreaF_name, _patch, _matl_index, _time_substep);
 
-    if ( _time_substep == 0 ) {
-      weight_p_diam = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_particle_length_qn.c_str(), _patch, _matl_index, 0 );
-    }
-    else {
-      weight_p_diam = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_particle_length_qn.c_str(), _patch, _matl_index, 0 );
-    }
+    struct1DArray<bool,   reactions_count> _use_co2co_l_pod(_use_co2co_l);
+    struct1DArray<double, reactions_count> _phi_l_pod(_phi_l);
+    struct1DArray<double, reactions_count> _hrxn_l_pod(_hrxn_l);
+    struct1DArray<int,    reactions_count> _oxidizer_indices_pod(_oxidizer_indices);
+    struct1DArray<double, reactions_count> _MW_l_pod(_MW_l);
+    struct1DArray<double, reactions_count> _a_l_pod(_a_l);
+    struct1DArray<double, reactions_count> _e_l_pod(_e_l);
 
-    KokkosView3<const double, Kokkos::CudaSpace> RC_RHS_source = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_RC_RHS.c_str(),     _patch, _matl_index, 0 );
-    KokkosView3<const double, Kokkos::CudaSpace> RHS_source    = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_ic_RHS.c_str(),     _patch, _matl_index, 0 );
-    KokkosView3<const double, Kokkos::CudaSpace> RHS_weight    = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_w_RHS.c_str(),      _patch, _matl_index, 0 );
-    KokkosView3<const double, Kokkos::CudaSpace> RHS_length    = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_length_RHS.c_str(), _patch, _matl_index, 0 );
+    struct2DArray<double, reactions_count, species_count> _D_mat_pod(_D_mat);
 
-    KokkosView3<const double, Kokkos::CudaSpace> surfAreaF;
-
-    if ( _time_substep == 0 ) {
-      surfAreaF = tsk_info->getOldDW()->getGPUDW(0)->getKokkosView<const double>( m_surfAreaF_name.c_str(), _patch, _matl_index, 0 );
-    }
-    else {
-      surfAreaF = tsk_info->getNewDW()->getGPUDW(0)->getKokkosView<const double>( m_surfAreaF_name.c_str(), _patch, _matl_index, 0 );
-    }
-
-    bool   _use_co2co_l_pod     [ reactions_count ];
-    double _phi_l_pod           [ reactions_count ];
-    double _hrxn_l_pod          [ reactions_count ];
-    int    _oxidizer_indices_pod[ reactions_count ];
-    double _MW_l_pod            [ reactions_count ];
-    double _a_l_pod             [ reactions_count ];
-    double _e_l_pod             [ reactions_count ];
-    double _D_mat_pod           [ reactions_count ][ species_count ];
-
-    for ( int nr = 0; nr < reactions_count; nr++ ) {
-
-      _use_co2co_l_pod[nr]      = _use_co2co_l[nr];
-      _phi_l_pod[nr]            = _phi_l[nr];
-      _hrxn_l_pod[nr]           = _hrxn_l[nr];
-      _oxidizer_indices_pod[nr] = _oxidizer_indices[nr];
-      _MW_l_pod[nr]             = _MW_l[nr];
-      _a_l_pod[nr]              = _a_l[nr];
-      _e_l_pod[nr]              = _e_l[nr];
-
-      for ( int ns = 0; ns < species_count; ns++ ) {
-        _D_mat_pod[nr][ns] = _D_mat[nr][ns];
-      }
-    }
-
-    double _MW_species_pod[ species_count ];
-
-    for ( int ns = 0; ns < species_count; ns++ ) {
-      _MW_species_pod[ns] = _MW_species[ns];
-    }
-
-    //Uintah::BlockRange range_E( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
-
-    //initializeDataFunctor< Kokkos::CudaSpace, T, CT > initFunc ( char_rate
-                                                               //, gas_char_rate
-                                                               //, particle_temp_rate
-                                                               //, particle_Size_rate
-                                                               //, surface_rate
-                                                               //, reaction_rate
-                                                               //);
-
-    //Uintah::parallel_for< Kokkos::Cuda >( executionObject, range_E, initFunc );
+    struct1DArray<double, species_count> _MW_species_pod(_MW_species);
     
     parallel_initialize< Kokkos::Cuda, Kokkos::CudaSpace >(executionObject, 0.0,
         char_rate, gas_char_rate, particle_temp_rate, particle_Size_rate, surface_rate, reaction_rate);
 
     Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
-
-    //
-    //Kokkos::View< KokkosView3<double,Kokkos::CudaSpace>* , Kokkos::CudaSpace >  gpu_reaction_rate("charOxy_reactionrate", reactions_count);
-    //Kokkos::deep_copy(gpu_reaction_rate, reaction_rate);
 
     solveFunctor< Kokkos::CudaSpace, T, CT > func( volFraction
                                                  ,  weight

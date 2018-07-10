@@ -377,6 +377,17 @@ private:
 template <typename T, unsigned int CAPACITY>
 struct struct1DArray {
   T arr[CAPACITY];
+
+  struct1DArray(){}
+
+  // This constructor copies elements from one container into here.
+  template <typename Container>
+  struct1DArray(const Container& container) {
+    for (unsigned int i = 0; i < CAPACITY; i++) {
+      arr[i] = container[i];
+    }
+  }
+
   inline T& operator[](unsigned int index) {
     return arr[index];
   }
@@ -392,7 +403,27 @@ struct struct1DArray {
 
 template <typename T, unsigned int CAPACITY_FIRST_DIMENSION, unsigned int CAPACITY_SECOND_DIMENSION>
 struct struct2DArray {
-  T arr[CAPACITY_FIRST_DIMENSION][CAPACITY_SECOND_DIMENSION];
+  struct1DArray<T, CAPACITY_SECOND_DIMENSION> arr[CAPACITY_FIRST_DIMENSION];
+
+  struct2DArray(){}
+
+  // This constructor copies elements from one container into here.
+  template <typename Container>
+  struct2DArray(const Container& container) {
+    for (unsigned int i = 0; i < CAPACITY_FIRST_DIMENSION; i++) {
+      for (unsigned int j = 0; j < CAPACITY_SECOND_DIMENSION; j++) {
+        arr[i][j] = container[i][j];
+      }
+    }
+  }
+
+  inline struct1DArray<T, CAPACITY_SECOND_DIMENSION>& operator[](unsigned int index) {
+    return arr[index];
+  }
+  inline const struct1DArray<T, CAPACITY_SECOND_DIMENSION>& operator[](unsigned int index) const {
+    return arr[index];
+  }
+
 };
 
 
@@ -1061,16 +1092,16 @@ parallel_for(ExecutionObject& executionObject, T2 KV3, const T3 init_val)
 
 template <typename ExecutionSpace, typename MemorySpace, typename T, typename ValueType>
 typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::OpenMP>::value, void>::type
-parallel_initialize_grouped(ExecutionObject& executionObject, const struct1DArray<T, ARRAY_SIZE>& KKV3, const int numViews, const ValueType& init_val ){
+parallel_initialize_grouped(ExecutionObject& executionObject, const struct1DArray<T, ARRAY_SIZE>& KKV3, const unsigned int numViews, const ValueType& init_val ){
 
   //TODO: This should probably be seralized and not use a Kokkos::parallel_for?
 
-  int n_cells = 0;
+  unsigned int n_cells = 0;
   for (int j = 0; j < numViews; j++){
     n_cells += KKV3[j].m_view.size();
   }
 
-  Kokkos::parallel_for( Kokkos::RangePolicy<ExecutionSpace, int>(0, n_cells).set_chunk_size(2), [=](int i_tot) {
+  Kokkos::parallel_for( Kokkos::RangePolicy<ExecutionSpace, int>(0, n_cells).set_chunk_size(2), [=](unsigned int i_tot) {
     // TODO: Find a more efficient way of doing this.
     int i = i_tot;
     int j = 0;
@@ -1135,7 +1166,7 @@ class KokkosView3;
 
 template < typename ExecutionSpace, typename MemorySpace, typename T, typename ValueType>
 typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::Cuda>::value, void>::type
-parallel_initialize_grouped(ExecutionObject& executionObject, const struct1DArray<T, ARRAY_SIZE>& KKV3, const int numViews, const ValueType& init_val ){
+parallel_initialize_grouped(ExecutionObject& executionObject, const struct1DArray<T, ARRAY_SIZE>& KKV3, const unsigned int numViews, const ValueType& init_val ){
 
   // n_cells is the amount of cells total to process among collection of vars (the view of Kokkos views)
   // For example, if this were being used to  if one var had 4096 cells and another var had 5832 cells, n_cells would become 4096+5832=
@@ -1155,7 +1186,7 @@ parallel_initialize_grouped(ExecutionObject& executionObject, const struct1DArra
   int cuda_threads_per_block = executionObject.getCudaThreadsPerBlock();
   int cuda_blocks_per_loop   = executionObject.getCudaBlocksPerLoop();
 
-  const int actualThreads = n_cells > cuda_threads_per_block ? cuda_threads_per_block : n_cells;
+  const unsigned int actualThreads = n_cells > cuda_threads_per_block ? cuda_threads_per_block : n_cells;
 
   void* stream = executionObject.getStream();
   if (!stream) {
@@ -1175,11 +1206,11 @@ parallel_initialize_grouped(ExecutionObject& executionObject, const struct1DArra
       // then they all advanced forward by actualThreads.
       // Thread 0 works on cell 256, thread 1 works on cell 257... thread 511 works on cell 511.
       // This should continue until all cells are completed.
-    Kokkos::parallel_for (Kokkos::TeamThreadRange(thread, actualThreads), [&, n_cells, actualThreads, KKV3, numViews] (const int& i_tot) {
-      const int n_iter = n_cells / actualThreads  + (n_cells % actualThreads > 0 ? 1 : 0); // round up (more efficient to compute this outside parallel_for?)
+    Kokkos::parallel_for (Kokkos::TeamThreadRange(thread, actualThreads), [&, n_cells, actualThreads, KKV3, numViews] (const unsigned int& i_tot) {
+      const unsigned int n_iter = n_cells / actualThreads  + (n_cells % actualThreads > 0 ? 1 : 0); // round up (more efficient to compute this outside parallel_for?)
       unsigned int  j = 0;
-      int old_i = 0;
-      for (int i = 0; i < n_iter; i++) {
+      unsigned int old_i = 0;
+      for (unsigned int i = 0; i < n_iter; i++) {
          while ( i * actualThreads + i_tot - old_i >= KKV3[j].m_view.size() ) { // using a while for small data sets or massive streaming multiprocessors
            old_i += KKV3[j].m_view.size();
            j++;
