@@ -376,16 +376,33 @@ private:
 // and as of yet hasn't been implemented (Brad P.)
 template <typename T, unsigned int CAPACITY>
 struct struct1DArray {
+  unsigned short int runTime_size;
   T arr[CAPACITY];
-
   struct1DArray(){}
 
   // This constructor copies elements from one container into here.
   template <typename Container>
-  struct1DArray(const Container& container) {
-    for (unsigned int i = 0; i < CAPACITY; i++) {
+  struct1DArray(const Container& container,unsigned int runTimeSize=CAPACITY) : runTime_size(runTimeSize)  {
+#ifdef DEBUG
+      assert(runTime_size > CAPACITY, "ERROR. struct1DArray is not being used properly. The run-time size exceeds the compile time size");
+#endif      
+    for (unsigned int i = 0; i < runTime_size; i++) {
       arr[i] = container[i];
     }
+  }
+// This constructor supports the initialization list interface
+  struct1DArray(  std::initializer_list<T> const myList) : runTime_size(myList.size()) {
+#ifdef DEBUG
+    assert(runTime_size > CAPACITY, "ERROR. struct1DArray is not being used properly. The run-time size exceeds the compile time size");
+#endif      
+    std::copy(myList.begin(), myList.begin()+runTime_size,arr);
+  }
+
+// This constructor allows for only the runtime_size to be specified
+  struct1DArray(int  runTimeSize) : runTime_size(runTimeSize) {
+#ifdef DEBUG
+      assert(runTime_size > CAPACITY, "ERROR. struct1DArray is not being used properly. The run-time size exceeds the compile time size");
+#endif      
   }
 
   inline T& operator[](unsigned int index) {
@@ -406,14 +423,16 @@ struct struct2DArray {
   struct1DArray<T, CAPACITY_SECOND_DIMENSION> arr[CAPACITY_FIRST_DIMENSION];
 
   struct2DArray(){}
-
+  unsigned short int i_runTime_size;
+  unsigned short int j_runTime_size;
   // This constructor copies elements from one container into here.
   template <typename Container>
-  struct2DArray(const Container& container) {
-    for (unsigned int i = 0; i < CAPACITY_FIRST_DIMENSION; i++) {
-      for (unsigned int j = 0; j < CAPACITY_SECOND_DIMENSION; j++) {
+  struct2DArray(const Container& container, int first_dim_runtimeSize=CAPACITY_FIRST_DIMENSION, int second_dim_runtimeSize=CAPACITY_SECOND_DIMENSION) : i_runTime_size(first_dim_runtimeSize) ,  j_runTime_size(second_dim_runtimeSize) {
+    for (unsigned int i = 0; i < i_runTime_size; i++) {
+      for (unsigned int j = 0; j < j_runTime_size; j++) {
         arr[i][j] = container[i][j];
       }
+      arr[i].runTime_size=i_runTime_size;
     }
   }
 
@@ -1092,12 +1111,12 @@ parallel_for(ExecutionObject& executionObject, T2 KV3, const T3 init_val)
 
 template <typename ExecutionSpace, typename MemorySpace, typename T, typename ValueType>
 typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::OpenMP>::value, void>::type
-parallel_initialize_grouped(ExecutionObject& executionObject, const struct1DArray<T, ARRAY_SIZE>& KKV3, const unsigned int numViews, const ValueType& init_val ){
+parallel_initialize_grouped(ExecutionObject& executionObject, const struct1DArray<T, ARRAY_SIZE>& KKV3,  const ValueType& init_val ){
 
   //TODO: This should probably be seralized and not use a Kokkos::parallel_for?
 
   unsigned int n_cells = 0;
-  for (unsigned int j = 0; j < numViews; j++){
+  for (unsigned int j = 0; j < KKV3.runTime_size; j++){
     n_cells += KKV3[j].m_view.size();
   }
 
@@ -1166,13 +1185,13 @@ class KokkosView3;
 
 template < typename ExecutionSpace, typename MemorySpace, typename T, typename ValueType>
 typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::Cuda>::value, void>::type
-parallel_initialize_grouped(ExecutionObject& executionObject, const struct1DArray<T, ARRAY_SIZE>& KKV3, const unsigned int numViews, const ValueType& init_val ){
+parallel_initialize_grouped(ExecutionObject& executionObject, const struct1DArray<T, ARRAY_SIZE>& KKV3, const ValueType& init_val ){
 
   // n_cells is the amount of cells total to process among collection of vars (the view of Kokkos views)
   // For example, if this were being used to  if one var had 4096 cells and another var had 5832 cells, n_cells would become 4096+5832=
 
   unsigned int n_cells = 0;
-  for (unsigned int j = 0; j < numViews; j++){
+  for (unsigned int j = 0; j < KKV3.runTime_size; j++){
     n_cells += KKV3[j].m_view.size();
   }
 
@@ -1206,7 +1225,7 @@ parallel_initialize_grouped(ExecutionObject& executionObject, const struct1DArra
       // then they all advanced forward by actualThreads.
       // Thread 0 works on cell 256, thread 1 works on cell 257... thread 511 works on cell 511.
       // This should continue until all cells are completed.
-    Kokkos::parallel_for (Kokkos::TeamThreadRange(thread, actualThreads), [&, n_cells, actualThreads, KKV3, numViews] (const unsigned int& i_tot) {
+    Kokkos::parallel_for (Kokkos::TeamThreadRange(thread, actualThreads), [&, n_cells, actualThreads, KKV3] (const unsigned int& i_tot) {
       const unsigned int n_iter = n_cells / actualThreads  + (n_cells % actualThreads > 0 ? 1 : 0); // round up (more efficient to compute this outside parallel_for?)
       unsigned int  j = 0;
       unsigned int old_i = 0;
@@ -1214,7 +1233,7 @@ parallel_initialize_grouped(ExecutionObject& executionObject, const struct1DArra
          while ( i * actualThreads + i_tot - old_i >= KKV3[j].m_view.size() ) { // using a while for small data sets or massive streaming multiprocessors
            old_i += KKV3[j].m_view.size();
            j++;
-           if ( numViews <= j ){
+           if ( KKV3.runTime_size <= j ){
              return; // do nothing
            }
          }
@@ -1285,8 +1304,8 @@ parallel_initialize(ExecutionObject& executionObject, const T& initializationVal
       ,0)...,0}; //second part of magic unpacker
 
   for (int j=0; j<n_init_groups; j++){
-    int n_elements_in_group=n >ARRAY_SIZE * (j+1) ? ARRAY_SIZE : n % ARRAY_SIZE+1;
-    parallel_initialize_grouped< ExecutionSpace, MemorySpace, KokkosView3< T, MemorySpace > >(executionObject, hostArrayOfViews[j], n_elements_in_group, initializationValue );
+    hostArrayOfViews[j].runTime_size=n >ARRAY_SIZE * (j+1) ? ARRAY_SIZE : n % ARRAY_SIZE+1;
+    parallel_initialize_grouped< ExecutionSpace, MemorySpace, KokkosView3< T, MemorySpace > >(executionObject, hostArrayOfViews[j], initializationValue );
     //parallel_initialize_single<ExecutionSpace>(executionObject, inputs_, inside_value ); // safer version, less ambitious
   }
 }
@@ -1312,8 +1331,8 @@ parallel_initialize(ExecutionObject& executionObject, const T & initializationVa
       ,0)...,0}; //second part of magic unpacker
 
   for (int j=0; j<n_init_groups; j++){
-    int n_elements_in_group=n >ARRAY_SIZE * (j+1) ? ARRAY_SIZE : n%ARRAY_SIZE+1;
-    parallel_initialize_grouped< ExecutionSpace, MemorySpace, KokkosView3< T, MemorySpace > >( executionObject, hostArrayOfViews[j], n_elements_in_group, initializationValue );
+    hostArrayOfViews[j].runTime_size=n >ARRAY_SIZE * (j+1) ? ARRAY_SIZE : n % ARRAY_SIZE+1;
+    parallel_initialize_grouped< ExecutionSpace, MemorySpace, KokkosView3< T, MemorySpace > >( executionObject, hostArrayOfViews[j], initializationValue );
     //parallel_initialize_single<ExecutionSpace>(executionObject, inputs_, inside_value ); // safer version, less ambitious
   }
 }

@@ -13,6 +13,8 @@
 #define SQUARE(x) x*x
 #define CUBE(x)   x*x*x
 
+#define max_reactions_count 4
+#define max_species_count 4
 #define reactions_count 3
 #define species_count   4
 
@@ -687,7 +689,7 @@ CharOxidationps<T>::eval( const Patch                 * patch
   const double vol = Dx.x()* Dx.y()* Dx.z();
 
   //TODO: Make a createConstContainer
-  auto species = createContainer<CT, const double, species_count, MemorySpace>();
+  auto species = createContainer<CT, const double, max_species_count, MemorySpace>(species_count);
   for ( int ns = 0; ns < _NUM_species; ns++ ) {
     tsk_info->get_const_uintah_field< CT, double, MemorySpace>(species[ns], _species_names[ns], _patch, _matl_index, _time_substep);
   }
@@ -703,9 +705,9 @@ CharOxidationps<T>::eval( const Patch                 * patch
   auto surface_rate        = tsk_info->get_uintah_field_add<T, double, MemorySpace>(m_surfacerate, _patch, _matl_index, _new_dw_time_substep);
 
   // reaction rate
-  auto reaction_rate     = createContainer<T, double, reactions_count, MemorySpace>();
+  auto reaction_rate     = createContainer<T, double, max_reactions_count, MemorySpace>(reactions_count);
   //TODO: Make a createConstContainer
-  auto old_reaction_rate = createContainer<CT, const double, reactions_count, MemorySpace>();
+  auto old_reaction_rate = createContainer<CT, const double, max_reactions_count, MemorySpace>(reactions_count);
 
   for ( int r = 0; r < _NUM_reactions; r++ ) {
     tsk_info->get_unmanaged_uintah_field< T, double, MemorySpace>(
@@ -758,17 +760,17 @@ CharOxidationps<T>::eval( const Patch                 * patch
   // 1) local in scope so they can be captured by value (for CUDA)
   // 2) arrays need to be part of a plain old data type so the entire array can be captured (again for CUDA).
 
-  struct1DArray<bool,   reactions_count> local_use_co2co_l(this->_use_co2co_l);
-  struct1DArray<double, reactions_count> local_phi_l(this->_phi_l);
-  struct1DArray<double, reactions_count> local__hrxn_l(this->_hrxn_l);
-  struct1DArray<int,    reactions_count> local_oxidizer_indices(this->_oxidizer_indices);
-  struct1DArray<double, reactions_count> local_MW_l(this->_MW_l);
-  struct1DArray<double, reactions_count> local_a_l(this->_a_l);
-  struct1DArray<double, reactions_count> local_e_l(this->_e_l);
+  struct1DArray<bool,   max_reactions_count> local_use_co2co_l(this->_use_co2co_l,reactions_count);
+  struct1DArray<double, max_reactions_count> local_phi_l(this->_phi_l,reactions_count);
+  struct1DArray<double, max_reactions_count> local__hrxn_l(this->_hrxn_l,reactions_count);
+  struct1DArray<int,    max_reactions_count> local_oxidizer_indices(this->_oxidizer_indices,reactions_count);
+  struct1DArray<double, max_reactions_count> local_MW_l(this->_MW_l,reactions_count);
+  struct1DArray<double, max_reactions_count> local_a_l(this->_a_l,reactions_count);
+  struct1DArray<double, max_reactions_count> local_e_l(this->_e_l,reactions_count);
 
-  struct2DArray<double, reactions_count, species_count> local_D_mat(this->_D_mat);
+  struct2DArray<double, max_reactions_count, max_species_count> local_D_mat(this->_D_mat,reactions_count,species_count);
 
-  struct1DArray<double, species_count> local_MW_species(this->_MW_species);
+  struct1DArray<double, max_species_count> local_MW_species(this->_MW_species,species_count);
 
   int    local_Nenv                    = this->_Nenv;
   double local_HF_CO2                  = this->_HF_CO2;
