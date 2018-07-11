@@ -1097,7 +1097,7 @@ parallel_initialize_grouped(ExecutionObject& executionObject, const struct1DArra
   //TODO: This should probably be seralized and not use a Kokkos::parallel_for?
 
   unsigned int n_cells = 0;
-  for (int j = 0; j < numViews; j++){
+  for (unsigned int j = 0; j < numViews; j++){
     n_cells += KKV3[j].m_view.size();
   }
 
@@ -1171,8 +1171,8 @@ parallel_initialize_grouped(ExecutionObject& executionObject, const struct1DArra
   // n_cells is the amount of cells total to process among collection of vars (the view of Kokkos views)
   // For example, if this were being used to  if one var had 4096 cells and another var had 5832 cells, n_cells would become 4096+5832=
 
-  int n_cells = 0;
-  for (int j = 0; j < numViews; j++){
+  unsigned int n_cells = 0;
+  for (unsigned int j = 0; j < numViews; j++){
     n_cells += KKV3[j].m_view.size();
   }
 
@@ -1183,8 +1183,8 @@ parallel_initialize_grouped(ExecutionObject& executionObject, const struct1DArra
   //Kokkos::View< KokkosView3<T3, MemorySpace>* , MemorySpace >  KKV3_gpu("parallel_init_grouped_gpu", KKV3.size());
   //Kokkos::deep_copy( KKV3_gpu, KKV3 );
 
-  int cuda_threads_per_block = executionObject.getCudaThreadsPerBlock();
-  int cuda_blocks_per_loop   = executionObject.getCudaBlocksPerLoop();
+  unsigned int cuda_threads_per_block = executionObject.getCudaThreadsPerBlock();
+  unsigned int cuda_blocks_per_loop   = executionObject.getCudaBlocksPerLoop();
 
   const unsigned int actualThreads = n_cells > cuda_threads_per_block ? cuda_threads_per_block : n_cells;
 
