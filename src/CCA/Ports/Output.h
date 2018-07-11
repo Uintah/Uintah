@@ -89,57 +89,60 @@ WARNING
 
     //////////
     // Insert Documentation Here:
-    virtual void problemSetup(const ProblemSpecP& params,
-                              const ProblemSpecP& restart_prob_spec,
-                              const SimulationStateP& sharedState) = 0;
+    virtual void problemSetup( const ProblemSpecP     & params,
+                               const ProblemSpecP     & restart_prob_spec,
+                               const SimulationStateP & sharedState ) = 0;
 
-    virtual void initializeOutput(const ProblemSpecP& params,
-                                  const GridP& grid) = 0;
+    virtual void initializeOutput( const ProblemSpecP & params,
+                                   const GridP        & grid ) = 0;
     
     //////////
     // Call this when restarting from a checkpoint after calling
     // problemSetup.
-    virtual void restartSetup(Dir& restartFromDir, int startTimeStep,
-                              int timeStep, double simTime, bool fromScratch,
-                              bool removeOldDir) = 0;
+    virtual void restartSetup( const Dir  & restartFromDir,
+                               const int    startTimeStep,
+                               const int    timeStep,
+                               const double simTime,
+                               const bool   fromScratch,
+                               const bool   removeOldDir) = 0;
     //////////
     // set timeinfoFlags and 
-    virtual void postProcessUdaSetup(Dir& fromDir) = 0;
+    virtual void postProcessUdaSetup( Dir & fromDir ) = 0;
 
-    virtual bool needRecompile(const GridP& grid) = 0;
+    virtual bool needRecompile( const GridP & grid ) = 0;
 
-    virtual void recompile(const GridP& grid) = 0;
+    virtual void recompile( const GridP & grid ) = 0;
 
     //////////
     // Call this after all other tasks have been added to the scheduler
-    virtual void finalizeTimeStep(const GridP      & /* grid */,
-                                        SchedulerP & /* scheduler */,
-                                        bool recompile = false ) = 0;
+    virtual void finalizeTimeStep(const GridP      & grid,
+                                        SchedulerP & scheduler,
+                                        bool         recompile = false ) = 0;
 
     // schedule all output tasks
-    virtual void sched_allOutputTasks( const GridP      & /* grid */,
-                                             SchedulerP & /* scheduler */,
-                                             bool recompile = false ) = 0;
+    virtual void sched_allOutputTasks( const GridP      & grid,
+                                             SchedulerP & scheduler,
+                                             bool         recompile = false ) = 0;
 
     //////////
     // Call this after a time step restart where delt is adjusted to
     // make sure there still will be output and/or checkpoint time step
-    virtual void reevaluate_OutputCheckPointTimeStep(const double simTime,
-                                                     const double delT) = 0;
+    virtual void reevaluate_OutputCheckPointTimeStep( const double simTime,
+                                                      const double delT ) = 0;
 
     //////////
     // Call this after the time step has been executed to find the
     // next time step to output
-    virtual void findNext_OutputCheckPointTimeStep(const bool restart,
-                                                   const GridP& grid) = 0;
+    virtual void findNext_OutputCheckPointTimeStep( const bool    restart,
+                                                    const GridP & grid ) = 0;
     
     //////////
     // update or write to the xml files
-    virtual void writeto_xml_files( const GridP& grid) = 0;
+    virtual void writeto_xml_files( const GridP& grid ) = 0;
     
     virtual void writeto_xml_files( std::map< std::string,
-                                    std::pair<std::string,
-                                    std::string> > &modifiedVars ) = 0;
+                                              std::pair< std::string,
+                                                         std::string > > & modifiedVars ) = 0;
      
     //////////
     // Insert Documentation Here:

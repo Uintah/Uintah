@@ -111,19 +111,19 @@ class LoadBalancer;
     //! appropriately to continue smoothly from that time step.
     //! If time step is negative, then all time steps will get copied
     //! if they are to be copied at all (fromScratch is false).
-    virtual void restartSetup( Dir    & restartFromDir,
-                               int      startTimeStep,
-                               int      timeStep,
-                               double   simTime,
-                               bool     fromScratch,
-                               bool     removeOldDir );
+    virtual void restartSetup( const Dir    & restartFromDir,
+                               const int      startTimeStep,
+                               const int      timeStep,
+                               const double   simTime,
+                               const bool     fromScratch,
+                               const bool     removeOldDir );
 
     //! Call this after problemSetup it will copy the data and
     //! checkpoint files ignore dumping reduction variables.
     virtual void postProcessUdaSetup( Dir& fromDir );
 
     //! Copy a section between udas .
-    void copySection( Dir & fromDir, Dir & toDir, const std::string & file, const std::string & section );
+    void copySection( const Dir & fromDir, const Dir & toDir, const std::string & file, const std::string & section );
 
     //! Copy a section from another uda's to our index.xml.
     void copySection( Dir & fromDir, const std::string & section ) { copySection( fromDir, m_dir, "index.xml", section ); }
@@ -373,26 +373,26 @@ class LoadBalancer;
     void createIndexXML(Dir& dir);
 
     //! helper for restartSetup - adds the restart field to index.xml
-    void addRestartStamp( ProblemSpecP   indexDoc,
-                          Dir          & fromDir,
-                          int            timestep );
+    void addRestartStamp(       ProblemSpecP   indexDoc,
+                          const Dir          & fromDir,
+                          const int            timestep );
 
     //! helper for restartSetup - copies the time step directories AND
     //! time step entries in index.xml
-    void copyTimeSteps( Dir  & fromDir,
-                        Dir  & toDir,
-                        int    startTimeStep,
-                        int    maxTimeStep,
-                        bool   removeOld,
-                        bool   areCheckpoints = false );
+    void copyTimeSteps( const Dir  & fromDir,
+                        const Dir  & toDir,
+                        const int    startTimeStep,
+                        const int    maxTimeStep,
+                        const bool   removeOld,
+                        const bool   areCheckpoints = false );
 
     //! helper for restartSetup - copies the reduction dat files to 
     //! new uda dir (from startTimeStep to maxTimeStep)
-    void copyDatFiles( Dir & fromDir,
-                       Dir & toDir,
-                       int   startTimeStep,
-                       int   maxTimeStep,
-                       bool  removeOld );
+    void copyDatFiles( const Dir & fromDir,
+                       const Dir & toDir,
+                       const int   startTimeStep,
+                       const int   maxTimeStep,
+                       const bool  removeOld );
 
     //! add saved global (reduction) variables to index.xml
     void indexAddGlobals();

@@ -121,27 +121,33 @@ Dir::removeDir( const char * dirName )
     if (strcmp(file->d_name, ".") != 0 && strcmp(file->d_name, "..") !=0) {
       string fullpath = string(dirName) + "/" + file->d_name;
       bool   isDir = false;
-#if defined(_AIX)
-      // Have to use 'stat' under AIX
-      struct stat entryInfo;
-      if( lstat( fullpath.c_str(), &entryInfo ) == 0 ) {
-        if( S_ISDIR( entryInfo.st_mode ) ) {
-          isDir = true;
+
+      if( file->d_type == DT_UNKNOWN ) {
+        // We are using a FUBAR'd file system (used to only do this for AIX, but this is the bettter/generic solution)...
+        // Drop down to using stat... 
+ 
+        // FIXME: put in a progressive warning to let the user know that the file system is acting strangely... 
+
+        struct stat entryInfo;
+        if( lstat( fullpath.c_str(), &entryInfo ) == 0 ) {
+          if( S_ISDIR( entryInfo.st_mode ) ) {
+            isDir = true;
+          }
+        } else {
+          printf( "Error statting %s: %s\n", fullpath, strerror( errno ) );
         }
-      } else {
-        printf( "Error statting %s: %s\n", fullpath, strerror( errno ) );
       }
-#else
       if( file->d_type & DT_DIR ) {
         isDir = true;
       }
 #endif
       if( isDir ) {
         removeDir( fullpath.c_str() );
-      } else {
+      }
+      else {
         int rc = ::remove( fullpath.c_str() );
-        if (rc != 0) {
-          cout << "WARNING: remove() failed for '" << fullpath.c_str() 
+        if( rc != 0 ) {
+          cout << "WARNING: Dir.cc::remove() failed for '" << fullpath.c_str() 
                << "'.  Return code is: " << rc << ", errno: " << errno << ": " << strerror(errno) << "\n";
           return false;
         }
@@ -263,11 +269,11 @@ Dir::copy( const Dir & destDir ) const
 //______________________________________________________________________
 //
 void
-Dir::move( Dir & destDir )
+Dir::move( const Dir & destDir )
 {
-  int code = system((string("mv ") + name_ + " " + destDir.name_).c_str());
+  int code = system( ( string("mv ") + name_ + " " + destDir.name_ ).c_str() );
   if( code != 0 ) {
-    throw InternalError(string("Dir::move failed to move: ") + name_, __FILE__, __LINE__);
+    throw InternalError( string("Dir::move failed to move: ") + name_, __FILE__, __LINE__ );
   }
   return;
 }

@@ -561,7 +561,7 @@ DataArchiver::initializeOutput( const ProblemSpecP & params, const GridP& grid )
   }
 
   // Sync up before every rank can use the base dir.
-  Uintah::MPI::Barrier(d_myworld->getComm());
+  Uintah::MPI::Barrier( d_myworld->getComm() );
 
 #ifdef HAVE_PIDX
   // StandAlone/restart_merger calls initializeOutput but has no grid.  
@@ -592,12 +592,12 @@ DataArchiver::initializeOutput( const ProblemSpecP & params, const GridP& grid )
 //______________________________________________________________________
 // to be called after problemSetup and initializeOutput get called
 void
-DataArchiver::restartSetup( Dir    & restartFromDir,
-                            int      startTimeStep,
-                            int      timestep,
-                            double   time,
-                            bool     fromScratch,
-                            bool     removeOldDir )
+DataArchiver::restartSetup( const Dir    & restartFromDir,
+                            const int      startTimeStep,
+                            const int      timestep,
+                            const double   time,
+                            const bool     fromScratch,
+                            const bool     removeOldDir )
 {
   m_outputInitTimeStep = false;
 
@@ -611,7 +611,7 @@ DataArchiver::restartSetup( Dir    & restartFromDir,
 
     // partial copy of index.xml and timestep directories and
     // similarly for checkpoints
-    copyTimeSteps(restartFromDir, m_dir, startTimeStep, timestep, removeOldDir);
+    copyTimeSteps( restartFromDir, m_dir, startTimeStep, timestep, removeOldDir );
 
     Dir checkpointsFromDir = restartFromDir.getSubdir("checkpoints");
     bool areCheckpoints = true;
@@ -625,9 +625,12 @@ DataArchiver::restartSetup( Dir    & restartFromDir,
       copySection( checkpointsFromDir, m_checkpointsDir, "index.xml", "globals" );
     }
 
-    if (removeOldDir) {
+    if( removeOldDir ) {
       // Try to remove the old dir...
       if( !Dir::removeDir( restartFromDir.getName().c_str() ) ) {
+
+        cout << "WARNING! In DataArchiver.cc::restartSetup(), removeDir() failed to remove an old checkpoint directory... Running file system check now.\n"; 
+
         // Something strange happened... let's test the filesystem...
         stringstream error_stream;          
         if( !testFilesystem( restartFromDir.getName(), error_stream, Parallel::getMPIRank() ) ) {
@@ -636,7 +639,7 @@ DataArchiver::restartSetup( Dir    & restartFromDir,
           cout.flush();
 
           // The file system just gave us some problems...
-          printf( "WARNING: Filesystem check failed on processor %d\n", Parallel::getMPIRank() );
+          printf( "WARNING: Filesystem check failed on rank %d\n", Parallel::getMPIRank() );
         }
         // Verify that "system works"
         int code = system( "echo how_are_you" );
@@ -773,8 +776,10 @@ DataArchiver::postProcessUdaSetup( Dir & fromDir )
 //______________________________________________________________________
 //
 void
-DataArchiver::copySection( Dir& fromDir, Dir& toDir,
-                           const string & filename, const string & section )
+DataArchiver::copySection( const Dir    & fromDir,
+                           const Dir    & toDir,
+                           const string & filename,
+                           const string & section )
 {
   // copy chunk labeled section between index.xml files
   string iname = fromDir.getName() + "/" +filename;
@@ -806,8 +811,9 @@ DataArchiver::copySection( Dir& fromDir, Dir& toDir,
 //______________________________________________________________________
 //
 void
-DataArchiver::addRestartStamp(ProblemSpecP indexDoc, Dir& fromDir,
-                              int timestep)
+DataArchiver::addRestartStamp(       ProblemSpecP   indexDoc,
+                               const Dir          & fromDir,
+                               const int            timestep )
 {
    // add restart history to restarts section
    ProblemSpecP restarts = indexDoc->findBlock("restarts");
@@ -829,12 +835,12 @@ DataArchiver::addRestartStamp(ProblemSpecP indexDoc, Dir& fromDir,
 //
 
 void
-DataArchiver::copyTimeSteps( Dir & fromDir,
-                             Dir & toDir,
-                             int   startTimeStep,
-                             int   maxTimeStep,
-                             bool  removeOld,
-                             bool  areCheckpoints /* = false */ )
+DataArchiver::copyTimeSteps( const Dir & fromDir,
+                             const Dir & toDir,
+                             const int   startTimeStep,
+                             const int   maxTimeStep,
+                             const bool  removeOld,
+                             const bool  areCheckpoints /* = false */ )
 {
    string       old_iname = fromDir.getName() + "/index.xml";
    ProblemSpecP oldIndexDoc = loadDocument( old_iname );
@@ -920,8 +926,11 @@ DataArchiver::copyTimeSteps( Dir & fromDir,
 //______________________________________________________________________
 //
 void
-DataArchiver::copyDatFiles(Dir& fromDir, Dir& toDir, int startTimeStep,
-                           int maxTimeStep, bool removeOld)
+DataArchiver::copyDatFiles( const Dir & fromDir,
+                            const Dir & toDir,
+                            const int   startTimeStep,
+                            const int   maxTimeStep,
+                            const bool  removeOld )
 {
    char buffer[1000];
 
@@ -1283,6 +1292,7 @@ DataArchiver::beginOutputTimeStep( const GridP& grid )
         // Try to remove the expired checkpoint directory...
         if( !Dir::removeDir( expiredDir.getName().c_str() ) ) {
           // Something strange happened... let's test the filesystem...
+          cout << "\nWarning! removeDir() Failed for '" << expiredDir.getName() << "' in DataArchiver.cc::beginOutputTimeStep()\n\n"; 
           stringstream error_stream;          
           if( !testFilesystem( expiredDir.getName(), error_stream, Parallel::getMPIRank() ) ) {
             cout << error_stream.str();
