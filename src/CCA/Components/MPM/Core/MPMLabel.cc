@@ -363,9 +363,6 @@ MPMLabel::MPMLabel()
   gVelocityBCLabel = VarLabel::create( "g.velocityBC",
 			NCVariable<Vector>::getTypeDescription() );
   
-  gVelocityBCLabel = VarLabel::create( "g.velocityBC",
-			NCVariable<Vector>::getTypeDescription() );
-  
   gVelSPSSPLabel = VarLabel::create( "g.velocitySPLusSSPlus",
 			NCVariable<Vector>::getTypeDescription() );
   
