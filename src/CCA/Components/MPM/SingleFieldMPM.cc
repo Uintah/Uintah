@@ -647,9 +647,9 @@ SingleFieldMPM::scheduleTimeAdvance(const LevelP & level,
   scheduleComputeParticleSurfaceGradient( sched, patches, matls);
   scheduleComputeGridSurfaceGradient(     sched, patches, matls);
 
-#ifdef RIGID
+//#ifdef RIGID
   scheduleInterpolateParticlesToGrid(     sched, patches, matls);
-#endif
+//#endif
 //  if(flags->d_computeNormals){
 //    scheduleComputeNormals(               sched, patches, matls);
 //  }
@@ -3037,7 +3037,6 @@ void SingleFieldMPM::computeInternalForce(const ProcessorGroup*,
     delete interpolator;
   }
 
-#if 0
   // be careful only to put the fields that we have built
   // that way if the user asks to output a field that has not been built
   // it will fail early rather than just giving zeros.
@@ -3046,6 +3045,7 @@ void SingleFieldMPM::computeInternalForce(const ProcessorGroup*,
     int iface = (int)(*ftit);
     new_dw->put(sumvec_vartype(bndyForce[iface]),lb->BndyForceLabel[iface]);
 
+#if 0
     sum_vartype bndyContactCellArea_iface;
     new_dw->get(bndyContactCellArea_iface, lb->BndyContactCellAreaLabel[iface]);
 
@@ -3064,8 +3064,8 @@ void SingleFieldMPM::computeInternalForce(const ProcessorGroup*,
 
     new_dw->put(sum_vartype(bndyContactArea_iface),
                             lb->BndyContactAreaLabel[iface]);
-  }
 #endif
+  }
 }
 
 void SingleFieldMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
@@ -5838,7 +5838,7 @@ void SingleFieldMPM::computeSingleFieldContact(const ProcessorGroup *,
     new_dw->getModifiable(gvelstar0, lb->gVelocityStarF0Label, 0, patch);
     new_dw->getModifiable(gvelstar1, lb->gVelocityStarF1Label, 0, patch);
 
-    double d_mu     = 0.5; double d_sepFac = 0.9; double d_vol_const = 0.0;
+    double d_mu     = 0.0; double d_sepFac = 0.9; double d_vol_const = 0.0;
     double sepDis = d_sepFac*cbrt(cell_vol);
 
 //    cout << "cell_vol = " << cell_vol << endl;
