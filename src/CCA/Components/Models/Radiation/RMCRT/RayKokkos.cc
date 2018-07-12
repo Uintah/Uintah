@@ -36,6 +36,7 @@
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Variables/KokkosViews.h>
 #include <Core/Grid/Variables/PerPatch.h>
+#include <Core/Parallel/Portability.h>
 #include <Core/Util/DOUT.hpp>
 #include <Core/Util/Timers/Timers.hpp>
 
@@ -632,8 +633,8 @@ template< class T >
 void
 Ray::rayTrace( const PatchSubset* patches,
                const MaterialSubset* matls,
-               DataWarehouse* old_dw,
-               DataWarehouse* new_dw,
+               OnDemandDataWarehouse* old_dw,
+               OnDemandDataWarehouse* new_dw,
                UintahParams& uintahParams,
                ExecutionObject& executionObject,
                bool modifies_divQ,
@@ -1637,8 +1638,8 @@ template< typename T, typename ExecutionSpace, typename MemorySpace>
 inline typename std::enable_if<std::is_same<ExecutionSpace, UintahSpaces::CPU>::value, void>::type
 Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
                          const MaterialSubset* matls,
-                         DataWarehouse* old_dw,
-                         DataWarehouse* new_dw,
+                         OnDemandDataWarehouse* old_dw,
+                         OnDemandDataWarehouse* new_dw,
                          UintahParams& uintahParams,
                          ExecutionObject& executionObject,
                          bool modifies_divQ,
@@ -1654,8 +1655,8 @@ template< typename T, typename ExecutionSpace, typename MemorySpace>
 inline typename std::enable_if<!std::is_same<ExecutionSpace, UintahSpaces::CPU>::value, void>::type
 Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
                          const MaterialSubset* matls,
-                         DataWarehouse* old_dw,
-                         DataWarehouse* new_dw,
+                         OnDemandDataWarehouse* old_dw,
+                         OnDemandDataWarehouse* new_dw,
                          UintahParams& uintahParams,
                          ExecutionObject& executionObject,
                          bool modifies_divQ,
@@ -1700,8 +1701,8 @@ template< int numLevels, typename T, typename ExecutionSpace, typename MemorySpa
 void
 Ray::rayTrace_dataOnionLevels( const PatchSubset* finePatches,
                                const MaterialSubset* matls,
-                               DataWarehouse* old_dw,
-                               DataWarehouse* new_dw,
+                               OnDemandDataWarehouse* old_dw,
+                               OnDemandDataWarehouse* new_dw,
                                UintahParams& uintahParams,
                                ExecutionObject& executionObject,
                                bool modifies_divQ,

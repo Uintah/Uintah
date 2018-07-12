@@ -203,8 +203,8 @@ namespace Uintah{
     template <typename EXECUTION_SPACE, typename MEMORY_SPACE>
     void do_task ( const PatchSubset* patches,
                    const MaterialSubset* matls,
-                   DataWarehouse* old_dw,
-                   DataWarehouse* new_dw,
+                   OnDemandDataWarehouse* old_dw,
+                   OnDemandDataWarehouse* new_dw,
                    UintahParams& uintahParams,
                    ExecutionObject& executionObject,
                    std::vector<ArchesFieldContainer::VariableInformation>  variable_registry,

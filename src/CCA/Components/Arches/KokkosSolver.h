@@ -30,6 +30,7 @@
 #include <CCA/Components/Arches/NonlinearSolver.h>
 #include <CCA/Ports/SolverInterface.h>
 #include <Core/Exceptions/InvalidValue.h>
+#include <Core/Parallel/Portability.h>
 
 namespace Uintah{
 
@@ -104,16 +105,16 @@ namespace Uintah{
   template <typename ExecutionSpace, typename MemorySpace>
   void computeStableTimeStep( const PatchSubset* patches,
                               const MaterialSubset* matls,
-                              DataWarehouse* old_dw,
-                              DataWarehouse* new_dw,
+                              OnDemandDataWarehouse* old_dw,
+                              OnDemandDataWarehouse* new_dw,
                               UintahParams& uintahParams,
                               ExecutionObject& executionObject);
 
   template <typename ExecutionSpace, typename MemorySpace>
   void setTimeStep( const PatchSubset* patches,
                     const MaterialSubset* matls,
-                    DataWarehouse* old_dw,
-                    DataWarehouse* new_dw,
+                    OnDemandDataWarehouse* old_dw,
+                    OnDemandDataWarehouse* new_dw,
                     UintahParams& uintahParams,
                     ExecutionObject& executionObject );
 

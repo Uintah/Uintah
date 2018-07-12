@@ -265,8 +265,8 @@ void Poisson1::initialize( const ProcessorGroup *
 template <typename ExecutionSpace, typename MemorySpace>
 void Poisson1::timeAdvance( const PatchSubset* patches,
                             const MaterialSubset* matls,
-                            DataWarehouse* old_dw,
-                            DataWarehouse* new_dw,
+                            OnDemandDataWarehouse* old_dw,
+                            OnDemandDataWarehouse* new_dw,
                             UintahParams& uintahParams,
                             ExecutionObject& executionObject )
 {
@@ -291,8 +291,8 @@ void Poisson1::timeAdvance( const PatchSubset* patches,
 
     Uintah::BlockRange range( l, h );
 
-    auto phi = static_cast<OnDemandDataWarehouse*>(old_dw)->getConstNCVariable<double, MemorySpace> (phi_label, matl, patch, Ghost::AroundNodes, 1);
-    auto newphi = static_cast<OnDemandDataWarehouse*>(new_dw)->getNCVariable<double, MemorySpace> (phi_label, matl, patch);
+    auto phi = old_dw->getConstNCVariable<double, MemorySpace> (phi_label, matl, patch, Ghost::AroundNodes, 1);
+    auto newphi = new_dw->getNCVariable<double, MemorySpace> (phi_label, matl, patch);
 
     // Perform the boundary condition of copying over prior initialized values.  (TODO:  Replace with boundary condition)
     //Uintah::parallel_for<ExecutionSpace, LaunchBounds< 640,1 > >( executionObject, rangeBoundary, KOKKOS_LAMBDA(int i, int j, int k){

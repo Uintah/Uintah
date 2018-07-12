@@ -1,7 +1,7 @@
 #include <CCA/Components/Arches/Task/TaskFactoryBase.h>
 #include <CCA/Components/Arches/ArchesParticlesHelper.h>
 #include <CCA/Components/Arches/Task/FieldContainer.h>
-#include <Core/Parallel/LoopExecution.hpp>
+#include <Core/Parallel/Portability.h>
 
 using namespace Uintah;
 
@@ -311,7 +311,6 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
         break;
       default:
         throw InvalidValue("Error: TASK_TYPE not recognized.",__FILE__,__LINE__);
-        break;
 
     }
 
@@ -359,7 +358,6 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
         msg << "Arches Task Error: Cannot schedule task because "
             << "of incomplete variable dependency. \n";
         throw InvalidValue(msg.str(), __FILE__, __LINE__);
-        break;
 
       }
     }
@@ -405,8 +403,8 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
 template <typename ExecutionSpace, typename MemorySpace>
 void TaskFactoryBase::do_task ( const PatchSubset* patches,
                                 const MaterialSubset* matls,
-                                DataWarehouse* old_dw,
-                                DataWarehouse* new_dw,
+                                OnDemandDataWarehouse* old_dw,
+                                OnDemandDataWarehouse* new_dw,
                                 UintahParams& uintahParams,
                                 ExecutionObject& executionObject,
                                 std::vector<ArchesFieldContainer::VariableInformation> variable_registry,
@@ -468,7 +466,6 @@ void TaskFactoryBase::do_task ( const PatchSubset* patches,
           break;
         default:
           throw InvalidValue("Error: TASK_TYPE not recognized.",__FILE__,__LINE__);
-          break;
       }
     }
 

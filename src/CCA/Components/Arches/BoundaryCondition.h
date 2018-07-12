@@ -946,7 +946,6 @@ inline int getNormal( Patch::FaceType face ) {          // This routine can be r
     break;
   default:
     throw InvalidValue("In BoundaryCondition::getNormal, face not recognized.", __FILE__, __LINE__);
-    break;
   }
   return the_norm;
 };

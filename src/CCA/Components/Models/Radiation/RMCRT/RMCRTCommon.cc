@@ -25,7 +25,7 @@
 //______________________________________________________________________
 //
 #include <CCA/Components/Models/Radiation/RMCRT/RMCRTCommon.h>
-
+#include <Core/Parallel/Portability.h>
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Math/MersenneTwister.h>
@@ -860,8 +860,8 @@ RMCRTCommon::sched_CarryForward_FineLevelLabels ( const LevelP& level,
 void
 RMCRTCommon::carryForward_FineLevelLabels( const PatchSubset* patches,
                                            const MaterialSubset* matls,
-                                           DataWarehouse* old_dw,
-                                           DataWarehouse* new_dw,
+                                           OnDemandDataWarehouse* old_dw,
+                                           OnDemandDataWarehouse* new_dw,
                                            UintahParams& uintahParams,
                                            ExecutionObject& executionObject)
 {
@@ -898,8 +898,8 @@ RMCRTCommon::sched_CarryForward_Var ( const LevelP& level,
 void
 RMCRTCommon::carryForward_Var ( const PatchSubset* patches,
                                 const MaterialSubset* matls,
-                                DataWarehouse* old_dw,
-                                DataWarehouse* new_dw,
+                                OnDemandDataWarehouse* old_dw,
+                                OnDemandDataWarehouse* new_dw,
                                 UintahParams& uintahParams,
                                 ExecutionObject& executionObject,
                                 const VarLabel* variable )

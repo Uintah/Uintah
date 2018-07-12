@@ -304,8 +304,8 @@ template <typename ExecutionSpace, typename MemorySpace>
 void
 KokkosSolver::computeStableTimeStep(const PatchSubset* patches,
                                     const MaterialSubset* matls,
-                                    DataWarehouse* old_dw,
-                                    DataWarehouse* new_dw,
+                                    OnDemandDataWarehouse* old_dw,
+                                    OnDemandDataWarehouse* new_dw,
                                     UintahParams& uintahParams,
                                     ExecutionObject& executionObject)
 {
@@ -367,8 +367,8 @@ template <typename ExecutionSpace, typename MemorySpace>
 void
 KokkosSolver::setTimeStep(const PatchSubset* patches,
                           const MaterialSubset* matls,
-                          DataWarehouse* old_dw,
-                          DataWarehouse* new_dw,
+                          OnDemandDataWarehouse* old_dw,
+                          OnDemandDataWarehouse* new_dw,
                           UintahParams& uintahParams,
                           ExecutionObject& executionObject)
 {

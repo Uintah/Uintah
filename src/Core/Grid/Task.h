@@ -49,6 +49,7 @@ namespace Uintah {
 
 class Level;
 class DataWarehouse;
+class OnDemandDataWarehouse;
 class ProcessorGroup;
 class Task;
 class DetailedTask;
@@ -167,29 +168,29 @@ protected: // class Task
 
 
 
-  // Kokkos enabled task Action constructor
+  // Kokkos enabled task portable Action constructor
   template<typename T, typename... Args>
-  class ActionDevice : public ActionBase {
+  class ActionPortable : public ActionBase {
 
     T * ptr;
-    void (T::*pmf)( const PatchSubset    * patches
-                  , const MaterialSubset * m_matls
-                  ,       DataWarehouse  * fromDW
-                  ,       DataWarehouse  * toDW
-                  ,       UintahParams   & uintahParams
-                  ,       ExecutionObject& executionObject
-                  ,       Args...          args
+    void (T::*pmf)( const PatchSubset           * patches
+                  , const MaterialSubset        * m_matls
+                  ,       OnDemandDataWarehouse * fromDW
+                  ,       OnDemandDataWarehouse * toDW
+                  ,       UintahParams          & uintahParams
+                  ,       ExecutionObject       & executionObject
+                  ,       Args...               args
                   );
     std::tuple<Args...> m_args;
 
 
-  public: // class ActionDevice
+  public: // class ActionPortable
 
-    ActionDevice( T * ptr
+    ActionPortable( T * ptr
                 , void (T::*pmf)( const PatchSubset    * patches
                                 , const MaterialSubset * m_matls
-                                ,       DataWarehouse  * fromDW
-                                ,       DataWarehouse  * toDW
+                                ,       OnDemandDataWarehouse  * fromDW
+                                ,       OnDemandDataWarehouse  * toDW
                                 ,       UintahParams   & uintahParams
                                 ,       ExecutionObject& executionObject
                                 ,       Args...          args
@@ -201,7 +202,7 @@ protected: // class Task
       , m_args(std::forward<Args>(args)...)
     {}
 
-    virtual ~ActionDevice() {}
+    virtual ~ActionPortable() {}
 
     virtual void doit( const PatchSubset    * patches
                      , const MaterialSubset * matls
@@ -214,7 +215,7 @@ protected: // class Task
       doit_impl(patches, matls, fromDW, toDW, uintahParams, executionObject, typename Tuple::gens<sizeof...(Args)>::type());
     }
 
-  private : // class ActionDevice
+  private : // class ActionPortable
 
     template<int... S>
     void doit_impl( const PatchSubset    * patches
@@ -226,11 +227,12 @@ protected: // class Task
                   ,       Tuple::seq<S...>
                   )
       {
-        (ptr->*pmf)(patches, matls, fromDW, toDW, uintahParams, executionObject, std::get<S>(m_args)...);
+        (ptr->*pmf)(patches, matls, static_cast<OnDemandDataWarehouse*>(fromDW), static_cast<OnDemandDataWarehouse*>(toDW),
+                    uintahParams, executionObject, std::get<S>(m_args)...);
       }
 
   };  // end Kokkos enabled task Action constructor
-#else
+#else  //If using nvcc compiler which can't use Tuple<>
 
 private:
 
@@ -520,29 +522,29 @@ private:
 
   // ------------------------------------------------------------------------
 
-  // begin Device Action constructors
+  // begin Portable Action constructors
   template<class T>
-  class ActionDevice : public ActionBase {
+  class ActionPortable : public ActionBase {
       T* ptr;
       void (T::*pmf)(const PatchSubset* patches,
                      const MaterialSubset* matls,
-                     DataWarehouse* fromDW,
-                     DataWarehouse* toDW,
+                     OnDemandDataWarehouse* fromDW,
+                     OnDemandDataWarehouse* toDW,
                      UintahParams& uintahParams,
                      ExecutionObject& executionObject);
     public:
-      // class ActionDevice
-      ActionDevice( T * ptr,
+      // class ActionPortable
+      ActionPortable( T * ptr,
                     void (T::*pmf)(const PatchSubset* patches,
                                    const MaterialSubset* matls,
-                                   DataWarehouse* fromDW,
-                                   DataWarehouse* toDW,
+                                   OnDemandDataWarehouse* fromDW,
+                                   OnDemandDataWarehouse* toDW,
                                    UintahParams& uintahParams,
                                    ExecutionObject& executionObject) ) :
         ptr(ptr), pmf(pmf)
       {
       }
-      virtual ~ActionDevice()
+      virtual ~ActionPortable()
       {
       }
 
@@ -555,28 +557,28 @@ private:
                         UintahParams& uintahParams,
                         ExecutionObject& executionObject)
       {
-        (ptr->*pmf)(patches, matls, fromDW, toDW, uintahParams, executionObject);
+        (ptr->*pmf)(patches, matls, reinterpret_cast<OnDemandDataWarehouse*>(fromDW), reinterpret_cast<OnDemandDataWarehouse*>(toDW), uintahParams, executionObject);
       }
-  };  // end class ActionDevice
+  };  // end class ActionPortable
 
   template<class T, class Arg1>
-  class ActionDevice1 : public ActionBase {
+  class ActionPortable1 : public ActionBase {
       T* ptr;
       void (T::*pmf)( const PatchSubset* patches,
                       const MaterialSubset* matls,
-                            DataWarehouse* fromDW,
-                            DataWarehouse* toDW,
+                            OnDemandDataWarehouse* fromDW,
+                            OnDemandDataWarehouse* toDW,
                             UintahParams& uintahParams,
                             ExecutionObject& executionObject,
                             Arg1 arg1);
       Arg1 arg1;
     public:
-      // class ActionDevice1
-      ActionDevice1(T* ptr,
+      // class ActionPortable1
+      ActionPortable1(T* ptr,
                     void (T::*pmf)(const PatchSubset* patches,
                                    const MaterialSubset* matls,
-                                   DataWarehouse* fromDW,
-                                   DataWarehouse* toDW,
+                                   OnDemandDataWarehouse* fromDW,
+                                   OnDemandDataWarehouse* toDW,
                                    UintahParams& uintahParams,
                                    ExecutionObject& executionObject,
                                    Arg1 arg1),
@@ -584,7 +586,7 @@ private:
           : ptr(ptr), pmf(pmf), arg1(arg1)
       {
       }
-      virtual ~ActionDevice1()
+      virtual ~ActionPortable1()
       {
       }
 
@@ -597,40 +599,40 @@ private:
                         UintahParams& uintahParams,
                         ExecutionObject& executionObject)
       {
-        (ptr->*pmf)(patches, matls, fromDW, toDW, uintahParams, executionObject, arg1);
+        (ptr->*pmf)(patches, matls, reinterpret_cast<OnDemandDataWarehouse*>(fromDW), reinterpret_cast<OnDemandDataWarehouse*>(toDW), uintahParams, executionObject, arg1);
       }
-  };  // end class ActionDevice1
+  };  // end class ActionPortable1
 
   template<class T, class Arg1, class Arg2>
-  class ActionDevice2 : public ActionBase {
+  class ActionPortable2 : public ActionBase {
       T* ptr;
       void (T::*pmf)(const PatchSubset* patches,
                      const MaterialSubset* matls,
-                     DataWarehouse* fromDW,
-                     DataWarehouse* toDW,
-                     UintahParams& uintahParams,
-                     ExecutionObject& executionObject,
-                     Arg1 arg1,
-                     Arg2 arg2);
+                           OnDemandDataWarehouse* fromDW,
+                           OnDemandDataWarehouse* toDW,
+                           UintahParams& uintahParams,
+                           ExecutionObject& executionObject,
+                           Arg1 arg1,
+                           Arg2 arg2);
       Arg1 arg1;
       Arg2 arg2;
     public:
-      // class ActionDevice2
-      ActionDevice2(T* ptr,
+      // class ActionPortable2
+      ActionPortable2(T* ptr,
                     void (T::*pmf)(const PatchSubset* patches,
                                    const MaterialSubset* matls,
-                                   DataWarehouse* fromDW,
-                                   DataWarehouse* toDW,
-                                   UintahParams& uintahParams,
-                                   ExecutionObject& executionObject,
-                                   Arg1 arg1,
-                                   Arg2 arg2),
+                                         OnDemandDataWarehouse* fromDW,
+                                         OnDemandDataWarehouse* toDW,
+                                         UintahParams& uintahParams,
+                                         ExecutionObject& executionObject,
+                                         Arg1 arg1,
+                                         Arg2 arg2),
                     Arg1 arg1,
                     Arg2 arg2)
           : ptr(ptr), pmf(pmf), arg1(arg1), arg2(arg2)
       {
       }
-      virtual ~ActionDevice2()
+      virtual ~ActionPortable2()
       {
       }
 
@@ -643,17 +645,17 @@ private:
                         UintahParams& uintahParams,
                         ExecutionObject& executionObject)
       {
-        (ptr->*pmf)(patches, matls, fromDW, toDW, uintahParams, executionObject, arg1, arg2);
+        (ptr->*pmf)(patches, matls, reinterpret_cast<OnDemandDataWarehouse*>(fromDW), reinterpret_cast<OnDemandDataWarehouse*>(toDW), uintahParams, executionObject, arg1, arg2);
       }
-  };  // end class ActionDevice2
+  };  // end class ActionPortable2
 
   template<class T, class Arg1, class Arg2, class Arg3>
-  class ActionDevice3 : public ActionBase {
+  class ActionPortable3 : public ActionBase {
       T* ptr;
       void (T::*pmf)(const PatchSubset* patches,
                      const MaterialSubset* matls,
-                     DataWarehouse* fromDW,
-                     DataWarehouse* toDW,
+                     OnDemandDataWarehouse* fromDW,
+                     OnDemandDataWarehouse* toDW,
                      UintahParams& uintahParams,
                      ExecutionObject& executionObject,
                      Arg1 arg1,
@@ -664,12 +666,12 @@ private:
       Arg3 arg3;
 
     public:
-      // class ActionDevice3
-      ActionDevice3(T* ptr,
+      // class ActionPortable3
+      ActionPortable3(T* ptr,
                     void (T::*pmf)(const PatchSubset* patches,
                                    const MaterialSubset* matls,
-                                   DataWarehouse* fromDW,
-                                   DataWarehouse* toDW,
+                                   OnDemandDataWarehouse* fromDW,
+                                   OnDemandDataWarehouse* toDW,
                                    UintahParams& uintahParams,
                                    ExecutionObject& executionObject,
                                    Arg1 arg1,
@@ -681,7 +683,7 @@ private:
           : ptr(ptr), pmf(pmf), arg1(arg1), arg2(arg2), arg3(arg3)
       {
       }
-      virtual ~ActionDevice3()
+      virtual ~ActionPortable3()
       {
       }
 
@@ -694,17 +696,17 @@ private:
                                UintahParams& uintahParams,
                                ExecutionObject& executionObject)
       {
-        (ptr->*pmf)(patches, matls, fromDW, toDW, uintahParams, executionObject, arg1, arg2, arg3);
+        (ptr->*pmf)(patches, matls, reinterpret_cast<OnDemandDataWarehouse*>(fromDW), reinterpret_cast<OnDemandDataWarehouse*>(toDW), uintahParams, executionObject, arg1, arg2, arg3);
       }
-  };  // end class ActionDevice3
+  };  // end class ActionPortable3
 
   template<class T, class Arg1, class Arg2, class Arg3, class Arg4>
-  class ActionDevice4 : public ActionBase {
+  class ActionPortable4 : public ActionBase {
       T* ptr;
       void (T::*pmf)(const PatchSubset* patches,
                      const MaterialSubset* matls,
-                     DataWarehouse* fromDW,
-                     DataWarehouse* toDW,
+                     OnDemandDataWarehouse* fromDW,
+                     OnDemandDataWarehouse* toDW,
                      UintahParams& uintahParams,
                      ExecutionObject& executionObject,
                      Arg1 arg1,
@@ -716,12 +718,12 @@ private:
       Arg3 arg3;
       Arg4 arg4;
     public:
-      // class ActionDevice4
-      ActionDevice4(T* ptr,
+      // class ActionPortable4
+      ActionPortable4(T* ptr,
                     void (T::*pmf)(const PatchSubset* patches,
                                    const MaterialSubset* matls,
-                                   DataWarehouse* fromDW,
-                                   DataWarehouse* toDW,
+                                   OnDemandDataWarehouse* fromDW,
+                                   OnDemandDataWarehouse* toDW,
                                    UintahParams& uintahParams,
                                    ExecutionObject& executionObject,
                                    Arg1 arg1,
@@ -735,7 +737,7 @@ private:
           : ptr(ptr), pmf(pmf), arg1(arg1), arg2(arg2), arg3(arg3), arg4(arg4)
       {
       }
-      virtual ~ActionDevice4()
+      virtual ~ActionPortable4()
       {
       }
 
@@ -743,22 +745,22 @@ private:
       // Insert Documentation Here:
       virtual void doit(const PatchSubset* patches,
                         const MaterialSubset* matls,
-                        DataWarehouse* fromDW,
-                        DataWarehouse* toDW,
-                        UintahParams& uintahParams,
-                        ExecutionObject& executionObject)
+                              DataWarehouse* fromDW,
+                              DataWarehouse* toDW,
+                              UintahParams& uintahParams,
+                              ExecutionObject& executionObject)
       {
-        (ptr->*pmf)(patches, matls, fromDW, toDW, uintahParams, executionObject, arg1, arg2, arg3, arg4);
+        (ptr->*pmf)(patches, matls, reinterpret_cast<OnDemandDataWarehouse*>(fromDW), reinterpret_cast<OnDemandDataWarehouse*>(toDW), uintahParams, executionObject, arg1, arg2, arg3, arg4);
       }
-  };  // end class ActionDevice4
+  };  // end class ActionPortable4
 
   template<class T, class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
-  class ActionDevice5 : public ActionBase {
+  class ActionPortable5 : public ActionBase {
       T* ptr;
       void (T::*pmf)(const PatchSubset* patches,
                      const MaterialSubset* matls,
-                     DataWarehouse* fromDW,
-                     DataWarehouse* toDW,
+                     OnDemandDataWarehouse* fromDW,
+                     OnDemandDataWarehouse* toDW,
                      UintahParams& uintahParams,
                      ExecutionObject& executionObject,
                      Arg1 arg1,
@@ -772,12 +774,12 @@ private:
       Arg4 arg4;
       Arg5 arg5;
     public:
-      // class ActionDevice5
-      ActionDevice5( T* ptr,
+      // class ActionPortable5
+      ActionPortable5( T* ptr,
                      void (T::*pmf)(const PatchSubset* patches,
                                     const MaterialSubset* matls,
-                                    DataWarehouse * fromDW,
-                                    DataWarehouse * toDW,
+                                    OnDemandDataWarehouse * fromDW,
+                                    OnDemandDataWarehouse * toDW,
                                     UintahParams& uintahParams,
                                     ExecutionObject& executionObject,
                                     Arg1 arg1,
@@ -793,7 +795,7 @@ private:
           : ptr(ptr), pmf(pmf), arg1(arg1), arg2(arg2), arg3(arg3), arg4(arg4), arg5(arg5)
       {
       }
-      virtual ~ActionDevice5()
+      virtual ~ActionPortable5()
       {
       }
 
@@ -803,12 +805,12 @@ private:
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW,
-                        UintahParams& uintahParams,
-                        ExecutionObject& executionObject)
+                              UintahParams& uintahParams,
+                              ExecutionObject& executionObject)
       {
-        (ptr->*pmf)(patches, matls, fromDW, toDW, uintahParams, executionObject, arg1, arg2, arg3, arg4, arg5);
+        (ptr->*pmf)(patches, matls, reinterpret_cast<OnDemandDataWarehouse*>(fromDW), reinterpret_cast<OnDemandDataWarehouse*>(toDW), uintahParams, executionObject, arg1, arg2, arg3, arg4, arg5);
       }
-  };  // end class ActionDevice5
+  };  // end class ActionPortable5
 #endif
 
 
@@ -874,14 +876,14 @@ public: // class Task
     initialize();
   }
 
-  // Device (GPU) Task constructor
+  // Portable Task constructor
   template<typename T, typename... Args>
   Task( const std::string & taskName
       , T * ptr
       , void (T::*pmf)( const PatchSubset    * patches
                       , const MaterialSubset * m_matls
-                      ,       DataWarehouse  * fromDW
-                      ,       DataWarehouse  * toDW
+                      ,       OnDemandDataWarehouse  * fromDW
+                      ,       OnDemandDataWarehouse  * toDW
                       ,       UintahParams& uintahParams
                       ,       ExecutionObject& executionObject
                       ,       Args...          args
@@ -889,7 +891,7 @@ public: // class Task
       , Args... args
       )
       : m_task_name(taskName)
-      , m_action(scinew ActionDevice<T, Args...>(ptr, pmf, std::forward<Args>(args)...))
+      , m_action(scinew ActionPortable<T, Args...>(ptr, pmf, std::forward<Args>(args)...))
   {
     initialize();
     d_tasktype = Normal;
@@ -1021,20 +1023,20 @@ public: // class Task
 
 
 
-  // begin Device Task constructors
+  // begin Portable Task constructors
   template<class T>
   Task(
        const std::string& taskName,
        T* ptr,
        void (T::*pmf)(const PatchSubset* patches,
                       const MaterialSubset* matls,
-                      DataWarehouse* fromDW,
-                      DataWarehouse* toDW,
+                      OnDemandDataWarehouse* fromDW,
+                      OnDemandDataWarehouse* toDW,
                       UintahParams& uintahParams,
                       ExecutionObject& executionObject))
       :
         m_task_name(taskName),
-          m_action(scinew ActionDevice<T>(ptr, pmf))
+          m_action(scinew ActionPortable<T>(ptr, pmf))
   {
     initialize();
     d_tasktype = Normal;
@@ -1046,15 +1048,15 @@ public: // class Task
        T* ptr,
        void (T::*pmf)(const PatchSubset* patches,
                       const MaterialSubset* matls,
-                      DataWarehouse* fromDW,
-                      DataWarehouse* toDW,
+                      OnDemandDataWarehouse* fromDW,
+                      OnDemandDataWarehouse* toDW,
                       UintahParams& uintahParams,
                       ExecutionObject& executionObject,
                       Arg1 arg1),
        Arg1 arg1)
       :
         m_task_name(taskName),
-          m_action(scinew ActionDevice1<T, Arg1>(ptr, pmf, arg1))
+          m_action(scinew ActionPortable1<T, Arg1>(ptr, pmf, arg1))
   {
     initialize();
     d_tasktype = Normal;
@@ -1065,8 +1067,8 @@ public: // class Task
        T* ptr,
        void (T::*pmf)(const PatchSubset* patches,
                       const MaterialSubset* matls,
-                      DataWarehouse* fromDW,
-                      DataWarehouse* toDW,
+                      OnDemandDataWarehouse* fromDW,
+                      OnDemandDataWarehouse* toDW,
                       UintahParams& uintahParams,
                       ExecutionObject& executionObject,
                       Arg1 arg1,
@@ -1075,7 +1077,7 @@ public: // class Task
        Arg2 arg2)
       :
         m_task_name(taskName),
-          m_action(scinew ActionDevice2<T, Arg1, Arg2>(ptr, pmf, arg1, arg2))
+          m_action(scinew ActionPortable2<T, Arg1, Arg2>(ptr, pmf, arg1, arg2))
   {
     initialize();
     d_tasktype = Normal;
@@ -1086,8 +1088,8 @@ public: // class Task
        T* ptr,
        void (T::*pmf)(const PatchSubset* patches,
                       const MaterialSubset* matls,
-                      DataWarehouse* fromDW,
-                      DataWarehouse* toDW,
+                      OnDemandDataWarehouse* fromDW,
+                      OnDemandDataWarehouse* toDW,
                       UintahParams& uintahParams,
                       ExecutionObject& executionObject,
                       Arg1 arg1,
@@ -1098,7 +1100,7 @@ public: // class Task
        Arg3 arg3)
       :
         m_task_name(taskName),
-          m_action(scinew ActionDevice3<T, Arg1, Arg2, Arg3>(ptr, pmf, arg1, arg2, arg3))
+          m_action(scinew ActionPortable3<T, Arg1, Arg2, Arg3>(ptr, pmf, arg1, arg2, arg3))
   {
     initialize();
     d_tasktype = Normal;
@@ -1109,8 +1111,8 @@ public: // class Task
        T* ptr,
        void (T::*pmf)(const PatchSubset* patches,
                       const MaterialSubset* matls,
-                      DataWarehouse* fromDW,
-                      DataWarehouse* toDW,
+                      OnDemandDataWarehouse* fromDW,
+                      OnDemandDataWarehouse* toDW,
                       UintahParams& uintahParams,
                       ExecutionObject& executionObject,
                       Arg1 arg1,
@@ -1123,7 +1125,7 @@ public: // class Task
        Arg4 arg4)
       :
         m_task_name(taskName),
-          m_action(scinew ActionDevice4<T, Arg1, Arg2, Arg3, Arg4>(ptr, pmf, arg1, arg2, arg3, arg4))
+          m_action(scinew ActionPortable4<T, Arg1, Arg2, Arg3, Arg4>(ptr, pmf, arg1, arg2, arg3, arg4))
   {
     initialize();
     d_tasktype = Normal;
@@ -1134,8 +1136,8 @@ public: // class Task
        T* ptr,
        void (T::*pmf)(const PatchSubset* patches,
                       const MaterialSubset* matls,
-                      DataWarehouse* fromDW,
-                      DataWarehouse* toDW,
+                      OnDemandDataWarehouse* fromDW,
+                      OnDemandDataWarehouse* toDW,
                       UintahParams& uintahParams,
                       ExecutionObject& executionObject,
                       Arg1 arg1,
@@ -1150,7 +1152,7 @@ public: // class Task
        Arg5 arg5)
       :
         m_task_name(taskName),
-          m_action(scinew ActionDevice5<T, Arg1, Arg2, Arg3, Arg4, Arg5>(ptr, pmf, arg1, arg2, arg3, arg4, arg5))
+          m_action(scinew ActionPortable5<T, Arg1, Arg2, Arg3, Arg4, Arg5>(ptr, pmf, arg1, arg2, arg3, arg4, arg5))
   {
     initialize();
     d_tasktype = Normal;

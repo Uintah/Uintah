@@ -109,8 +109,8 @@ namespace Uintah {
 
       void timeAdvanceUnified(const PatchSubset* patches,
                               const MaterialSubset* matls,
-                              DataWarehouse* old_dw,
-                              DataWarehouse* new_dw,
+                              OnDemandDataWarehouse* old_dw,
+                              OnDemandDataWarehouse* new_dw,
                               UintahParams& uintahParams,
                               ExecutionObject& executionObject);
 

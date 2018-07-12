@@ -180,8 +180,8 @@ namespace Uintah{
                                           
       void carryForward_FineLevelLabels ( const PatchSubset* patches,
                                           const MaterialSubset* matls,
-                                          DataWarehouse* old_dw,
-                                          DataWarehouse* new_dw,
+                                          OnDemandDataWarehouse* old_dw,
+                                          OnDemandDataWarehouse* new_dw,
                                           UintahParams& uintahParams,
                                           ExecutionObject& executionObject );
        
@@ -192,8 +192,8 @@ namespace Uintah{
 
       void carryForward_Var( const PatchSubset*,
                              const MaterialSubset*,
-                             DataWarehouse*,
-                             DataWarehouse*,
+                             OnDemandDataWarehouse*,
+                             OnDemandDataWarehouse*,
                              UintahParams& uintahParams,
                              ExecutionObject& executionObject,
                              const VarLabel* variable );
