@@ -118,7 +118,7 @@ Dir::removeDir( const char * dirName )
 
   file = readdir(dir);
   while( file ) {
-    if (strcmp(file->d_name, ".") != 0 && strcmp(file->d_name, "..") !=0) {
+    if( strcmp( file->d_name, "." ) != 0 && strcmp( file->d_name, ".." ) !=0 ) {
       string fullpath = string(dirName) + "/" + file->d_name;
       bool   isDir = false;
 
@@ -126,21 +126,20 @@ Dir::removeDir( const char * dirName )
         // We are using a FUBAR'd file system (used to only do this for AIX, but this is the bettter/generic solution)...
         // Drop down to using stat... 
  
-        // FIXME: put in a progressive warning to let the user know that the file system is acting strangely... 
-
         struct stat entryInfo;
         if( lstat( fullpath.c_str(), &entryInfo ) == 0 ) {
           if( S_ISDIR( entryInfo.st_mode ) ) {
             isDir = true;
           }
-        } else {
-          printf( "Error statting %s: %s\n", fullpath, strerror( errno ) );
+        } 
+        else {
+          printf( "Error statting %s: %s.\n", fullpath.c_str(), strerror( errno ) );
         }
       }
-      if( file->d_type & DT_DIR ) {
+      else if( file->d_type & DT_DIR ) {
         isDir = true;
       }
-#endif
+
       if( isDir ) {
         removeDir( fullpath.c_str() );
       }
@@ -153,13 +152,13 @@ Dir::removeDir( const char * dirName )
         }
       }
     }
-    file = readdir(dir);
+    file = readdir( dir );
   }
 
-  closedir(dir);
+  closedir( dir );
   int code = rmdir( dirName );
 
-  if (code != 0) {
+  if( code != 0 ) {
     cerr << "Error, rmdir failed for '" << dirName << "'\n";
     cerr << "  errno is " << errno << "\n";
     return false;
