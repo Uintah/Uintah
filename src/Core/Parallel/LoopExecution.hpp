@@ -377,7 +377,7 @@ private:
 // and as of yet hasn't been implemented (Brad P.)
 template <typename T, unsigned int CAPACITY>
 struct struct1DArray {
-  unsigned short int runTime_size;
+  unsigned short int runTime_size{CAPACITY};
   T arr[CAPACITY];
   struct1DArray(){}
 
@@ -385,7 +385,7 @@ struct struct1DArray {
   template <typename Container>
   struct1DArray(const Container& container,unsigned int runTimeSize=CAPACITY) : runTime_size(runTimeSize)  {
 #ifdef DEBUG
-      assert(runTime_size > CAPACITY, "ERROR. struct1DArray is not being used properly. The run-time size exceeds the compile time size");
+    assert(runTime_size > CAPACITY, "ERROR. struct1DArray is not being used properly. The run-time size exceeds the compile time size");
 #endif      
     for (unsigned int i = 0; i < runTime_size; i++) {
       arr[i] = container[i];
@@ -402,7 +402,7 @@ struct struct1DArray {
 // This constructor allows for only the runtime_size to be specified
   struct1DArray(int  runTimeSize) : runTime_size(runTimeSize) {
 #ifdef DEBUG
-      assert(runTime_size > CAPACITY, "ERROR. struct1DArray is not being used properly. The run-time size exceeds the compile time size");
+    assert(runTime_size > CAPACITY, "ERROR. struct1DArray is not being used properly. The run-time size exceeds the compile time size");
 #endif      
   }
 
@@ -424,8 +424,8 @@ struct struct2DArray {
   struct1DArray<T, CAPACITY_SECOND_DIMENSION> arr[CAPACITY_FIRST_DIMENSION];
 
   struct2DArray(){}
-  unsigned short int i_runTime_size;
-  unsigned short int j_runTime_size;
+  unsigned short int i_runTime_size{CAPACITY_FIRST_DIMENSION};
+  unsigned short int j_runTime_size{CAPACITY_SECOND_DIMENSION};
   // This constructor copies elements from one container into here.
   template <typename Container>
   struct2DArray(const Container& container, int first_dim_runtimeSize=CAPACITY_FIRST_DIMENSION, int second_dim_runtimeSize=CAPACITY_SECOND_DIMENSION) : i_runTime_size(first_dim_runtimeSize) ,  j_runTime_size(second_dim_runtimeSize) {
