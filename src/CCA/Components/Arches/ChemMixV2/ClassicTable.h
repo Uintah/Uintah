@@ -105,9 +105,7 @@ struct ClassicTableInfo {
     {}
 
            ~Interp_class() {
-            if (d_allIndepVarNo.size()>1){
-              delete &ind_1; 
-            }
+            delete &ind_1; 
             delete &d_allIndepVarNo; 
             delete &indep; 
 #ifdef UINTAH_ENABLE_KOKKOS
