@@ -812,7 +812,7 @@ for i in $CXXFLAGS; do
     NVCC_CXXFLAGS="$NVCC_CXXFLAGS $i"
   elif test "$i" = "-maxrregcount"; then
     NVCC_CXXFLAGS="$NVCC_CXXFLAGS $i"
-  elif [ "$i" -eq "$i" ]; then
+  elif [[ "$i" == [0-9]* ]]; then
     # This is an integer.  Assume it was a value of a prior parameter (like -maxrregcount 128)
     NVCC_CXXFLAGS="$NVCC_CXXFLAGS $i"
   elif test "$i" = "--expt-extended-lambda"; then
