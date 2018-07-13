@@ -55,7 +55,7 @@ UpdateParticleSize::register_initialize(
 
 //--------------------------------------------------------------------------------------------------
 void
-UpdateParticleSize::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+UpdateParticleSize::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
   ParticleTuple pd_t = tsk_info->get_uintah_particle_field( _size_name );
   ParticleVariable<double>& pd = *(std::get<0>(pd_t));

@@ -69,7 +69,7 @@ InitLagrangianParticleSize::register_initialize( std::vector<ArchesFieldContaine
 }
 
 void
-InitLagrangianParticleSize::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+InitLagrangianParticleSize::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
   ParticleTuple dp_t = tsk_info->get_uintah_particle_field(_size_label);
   ParticleVariable<double>& dp = *(std::get<0>(dp_t));

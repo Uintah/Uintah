@@ -446,7 +446,7 @@ void TaskFactoryBase::do_task ( const PatchSubset* patches,
 
       switch( type ){
         case (TaskInterface::INITIALIZE):
-          (*i_task)->initialize( patch, tsk_info_mngr );
+          (*i_task)->initialize( patch, tsk_info_mngr, executionObject );
           break;
         case (TaskInterface::RESTART_INITIALIZE):
           (*i_task)->restart_initialize( patch, tsk_info_mngr );

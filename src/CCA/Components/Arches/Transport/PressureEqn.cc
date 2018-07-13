@@ -113,7 +113,7 @@ PressureEqn::register_initialize(
 
 //--------------------------------------------------------------------------------------------------
 void
-PressureEqn::initialize( const Patch* patch, ATIM* tsk_info ){
+PressureEqn::initialize( const Patch* patch, ATIM* tsk_info, ExecutionObject& executionObject ){
 
   Vector DX = patch->dCell();
   const double area_EW = DX.y()*DX.z();

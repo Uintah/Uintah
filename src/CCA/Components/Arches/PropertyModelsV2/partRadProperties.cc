@@ -278,7 +278,7 @@ partRadProperties::register_initialize( VIVec& variable_registry , const bool pa
 }
 
 void
-partRadProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+partRadProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
 
   CCVariable<double>& abskp = *(tsk_info->get_uintah_field<CCVariable<double> >(_abskp_name));

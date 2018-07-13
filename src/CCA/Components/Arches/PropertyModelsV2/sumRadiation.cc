@@ -112,7 +112,7 @@ sumRadiation::register_initialize( VIVec& variable_registry , const bool pack_ta
 }
 
 void
-sumRadiation::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+sumRadiation::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info , ExecutionObject& executionObject ){
 
   CCVariable<double>& abskt = *(tsk_info->get_uintah_field<CCVariable<double> >(m_abskt_name));
   constCCVariable<double>&  volFrac = tsk_info->get_const_uintah_field_add<constCCVariable<double> >("volFraction");
@@ -162,7 +162,7 @@ void sumRadiation::register_timestep_eval( VIVec& variable_registry, const int t
 
 template<typename ExecutionSpace, typename MemorySpace> void
 sumRadiation::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
-  initialize( patch,tsk_info);
+  initialize( patch,tsk_info,executionObject);
 }
 
 } //namespace Uintah

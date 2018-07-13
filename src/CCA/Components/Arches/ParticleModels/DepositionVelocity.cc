@@ -140,7 +140,7 @@ DepositionVelocity::register_initialize( std::vector<ArchesFieldContainer::Varia
 }
 
 void
-DepositionVelocity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+DepositionVelocity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
   CCVariable<double>& deposit_velocity = tsk_info->get_uintah_field_add<CCVariable<double> >(_task_name);
   CCVariable<double>& ash_mass_src = tsk_info->get_uintah_field_add<CCVariable<double> >(_ash_mass_src);

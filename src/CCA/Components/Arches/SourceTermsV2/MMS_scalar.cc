@@ -113,7 +113,7 @@ MMS_scalar::register_initialize( std::vector<ArchesFieldContainer::VariableInfor
 
 //--------------------------------------------------------------------------------------------------
 void
-MMS_scalar::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+MMS_scalar::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
   CCVariable<double>& f_mms = *(tsk_info->get_uintah_field<CCVariable<double> >(m_MMS_label));
   CCVariable<double>& s_mms = *(tsk_info->get_uintah_field<CCVariable<double> >(m_MMS_source_label));

@@ -82,7 +82,7 @@ InitLagrangianParticleVelocity::register_initialize( std::vector<ArchesFieldCont
 }
 
 void
-InitLagrangianParticleVelocity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+InitLagrangianParticleVelocity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
   ParticleTuple pu_tup = tsk_info->get_uintah_particle_field(_pu_label);
   ParticleTuple pv_tup = tsk_info->get_uintah_particle_field(_pv_label);

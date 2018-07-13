@@ -55,7 +55,7 @@ UpdateParticleVelocity::register_initialize(
 
 //--------------------------------------------------------------------------------------------------
 void
-UpdateParticleVelocity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+UpdateParticleVelocity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
   ParticleTuple pu_t = tsk_info->get_uintah_particle_field( _u_name );
   ParticleTuple pv_t = tsk_info->get_uintah_particle_field( _v_name );

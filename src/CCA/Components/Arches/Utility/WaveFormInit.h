@@ -52,7 +52,7 @@ protected:
 
     void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject );
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
@@ -144,7 +144,7 @@ private:
   }
 
   template <typename T, typename CT>
-  void WaveFormInit<T, CT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  void WaveFormInit<T, CT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
     T& dep_field = *(tsk_info->get_uintah_field<T>( _var_name ));
     CT& ind_field = *(tsk_info->get_const_uintah_field<CT>( _ind_var_name ));

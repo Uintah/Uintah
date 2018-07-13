@@ -69,7 +69,7 @@ OneDWallHT::register_initialize( std::vector<ArchesFieldContainer::VariableInfor
 
 //--------------------------------------------------------------------------------------------------
 void
-OneDWallHT::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+OneDWallHT::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info , ExecutionObject& executionObject ){
 
 
   CCVariable<double>& Twall = *(tsk_info->get_uintah_field<CCVariable<double> >("Twall"));

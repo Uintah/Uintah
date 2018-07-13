@@ -55,7 +55,7 @@ cloudBenchmark::register_initialize( VIVec& variable_registry , const bool pack_
 }
 
 void
-cloudBenchmark::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+cloudBenchmark::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
   BBox domain(m_min,m_max);
   if( m_min == m_notSetMin  ||  m_max == m_notSetMax ){
@@ -104,7 +104,44 @@ void cloudBenchmark::register_restart_initialize( VIVec& variable_registry , con
 }
 
 void cloudBenchmark::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
-  initialize( patch,tsk_info);
+  BBox domain(m_min,m_max); // when restart_init gets executionObject then remove this function and call initialize
+  if( m_min == m_notSetMin  ||  m_max == m_notSetMax ){
+    const Level* level = patch->getLevel();
+    GridP grid  = level->getGrid();
+    grid->getInteriorSpatialRange(domain);
+    m_min = domain.min();
+    m_max = domain.max();
+  }
+
+  Point midPt( (m_max - m_min)/2. + m_min);
+
+  CCVariable<double>& abskg = *(tsk_info->get_uintah_field<CCVariable<double> >(m_abskg_name));
+  CCVariable<double>& radT  = *(tsk_info->get_uintah_field<CCVariable<double> >("temperature"));
+  constCCVariable<double>& x = *(tsk_info->get_const_uintah_field<constCCVariable<double> >("gridX"));
+  constCCVariable<double>& y = *(tsk_info->get_const_uintah_field<constCCVariable<double> >("gridY"));
+  constCCVariable<double>& z = *(tsk_info->get_const_uintah_field<constCCVariable<double> >("gridZ"));
+
+  abskg.initialize(1.0);
+  Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex());
+  Uintah::parallel_for( range, [&](int i, int j, int k){
+
+  double xL=std::fabs( x(i,j,k));
+  double yL=std::fabs( y(i,j,k));
+  double zL=std::fabs( z(i,j,k));
+  double kabsg_base=5.0;
+
+  abskg(i,j,k)=(std::max(std::sin(xL*5.0*M_PI)*std::abs((std::sin(zL*3.0*M_PI+M_PI)) + (std::sin(yL *3.0*M_PI))),0.0)+std::max(std::sin(xL*5.0*M_PI+M_PI),0.0)*std::max(std::sin(zL*3.0*M_PI+M_PI) + std::sin(yL*3.0*M_PI+M_PI),0.0))*kabsg_base;
+
+  });
+
+  radT.initialize(0.0);
+  Uintah::parallel_for( range, [&](int i, int j, int k){
+  double xL=std::fabs( x(i,j,k) );
+  double yL=std::fabs( y(i,j,k) );
+  double zL=std::fabs( z(i,j,k) );
+  double tempBase=1000;
+  radT(i,j,k)= (std::max(sin(xL*5.0*M_PI)*std::max(sin((zL)*3.0*M_PI) + sin((yL) *3.0*M_PI),0.0),0.0)+std::max(sin(xL*5.0*M_PI),0.0)*std::max(sin(zL*3.0*M_PI+M_PI) + sin(yL*3.0*M_PI+M_PI),0.0))*tempBase;
+  });
 }
 
 //--------------------------------------------------------------------------------------------------

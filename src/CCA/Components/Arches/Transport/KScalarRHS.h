@@ -92,7 +92,7 @@ public:
 
     void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject );
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
@@ -460,7 +460,7 @@ private:
 
   //------------------------------------------------------------------------------------------------
   template <typename T, typename PT> void
-  KScalarRHS<T, PT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  KScalarRHS<T, PT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
     constCCVariable<double>& vol_fraction =
     tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_volFraction_name);

@@ -84,7 +84,7 @@ void FaceVelocities::register_initialize( AVarInfo& variable_registry , const bo
 }
 
 //--------------------------------------------------------------------------------------------------
-void FaceVelocities::initialize( const Patch*, ArchesTaskInfoManager* tsk_info ){
+void FaceVelocities::initialize( const Patch*, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject  ){
 
   SFCXVariable<double>& ucell_xvel = *(tsk_info->get_uintah_field<SFCXVariable<double> >("ucell_xvel"));
   SFCXVariable<double>& ucell_yvel = *(tsk_info->get_uintah_field<SFCXVariable<double> >("ucell_yvel"));

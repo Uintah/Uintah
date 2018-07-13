@@ -95,7 +95,7 @@ DepositionEnthalpy::register_initialize( std::vector<ArchesFieldContainer::Varia
 }
 
 void
-DepositionEnthalpy::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+DepositionEnthalpy::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
   CCVariable<double>& ash_enthalpy_flux = tsk_info->get_uintah_field_add<CCVariable<double> >(_task_name);
   CCVariable<double>& ash_enthalpy_src = tsk_info->get_uintah_field_add<CCVariable<double> >(_ash_enthalpy_src);

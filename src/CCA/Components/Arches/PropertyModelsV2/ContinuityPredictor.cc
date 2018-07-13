@@ -58,7 +58,7 @@ ContinuityPredictor::register_initialize( std::vector<ArchesFieldContainer::Vari
 
 //--------------------------------------------------------------------------------------------------
 void
-ContinuityPredictor::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+ContinuityPredictor::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info , ExecutionObject& executionObject ){
 
   CCVariable<double>& Balance = *(tsk_info->get_uintah_field<CCVariable<double> >( m_label_balance ));
   Balance.initialize(0.0);

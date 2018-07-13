@@ -60,7 +60,7 @@ void ConstantStateProperties::register_initialize( VIVec& variable_registry , co
 }
 
 //--------------------------------------------------------------------------------------------------
-void ConstantStateProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+void ConstantStateProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
   for ( auto i = m_name_to_value.begin(); i != m_name_to_value.end(); i++ ){
     CCVariable<double>& var = tsk_info->get_uintah_field_add<CCVariable<double> >( i->first );

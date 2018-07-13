@@ -35,7 +35,7 @@ RandParticleLoc::register_initialize( std::vector<ArchesFieldContainer::Variable
 
 //--------------------------------------------------------------------------------------------------
 void
-RandParticleLoc::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+RandParticleLoc::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
   typedef std::tuple<ParticleVariable<double>*, ParticleSubset*> PVarTuple;
 

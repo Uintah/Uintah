@@ -48,7 +48,7 @@ public:
 
     void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject );
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
@@ -163,7 +163,7 @@ void VarInterpolation<T,IT>::register_initialize(
 
 //--------------------------------------------------------------------------------------------------
 template <typename T, typename IT>
-void VarInterpolation<T,IT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+void VarInterpolation<T,IT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject  ){
 
   IT& int_var = tsk_info->get_uintah_field_add<IT>(m_inter_var_name);
   T& var = tsk_info->get_const_uintah_field_add<T>(m_var_name);

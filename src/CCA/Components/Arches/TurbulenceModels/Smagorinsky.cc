@@ -85,7 +85,7 @@ Smagorinsky::register_initialize(
 
 //--------------------------------------------------------------------------------------------------
 void
-Smagorinsky::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+Smagorinsky::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
   CCVariable<double>& mu_sgc = tsk_info->get_uintah_field_add<CCVariable<double> >(m_t_vis_name);
   mu_sgc.initialize(0.0);

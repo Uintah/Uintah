@@ -101,7 +101,7 @@ spectralProperties::register_initialize( VIVec& variable_registry , const bool p
 }
 
 void
-spectralProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+spectralProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
   for (int i=0; i< _nbands  ; i++){
     CCVariable<double>& abskg     = tsk_info->get_uintah_field_add<CCVariable<double> >( _abskg_name_vector[i]);
@@ -180,8 +180,8 @@ spectralProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, E
   std::vector< CCVariable<double> > abswg(_nbands  ); 
   for (int i=0; i< _nbands  ; i++){
 
-    tsk_info->get_unmanaged_uintah_field<CCVariable<double> >(_abskg_name_vector[i],abskg[i]);
-    tsk_info->get_unmanaged_uintah_field<CCVariable<double> >(_abswg_name_vector[i],abswg[i]);
+    tsk_info->get_unmanaged_uintah_field<CCVariable<double>,double , UintahSpaces::HostSpace  >(abskg[i],_abskg_name_vector[i],patch->getID(),_matl_index,tsk_info->get_time_substep() );
+    tsk_info->get_unmanaged_uintah_field<CCVariable<double>,double , UintahSpaces::HostSpace  >(abswg[i],_abswg_name_vector[i],patch->getID(),_matl_index,tsk_info->get_time_substep() );
 
     abskg[i].initialize(0.0); 
     abswg[i].initialize(0.0); 
@@ -243,7 +243,8 @@ spectralProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, E
    if (_LsootOn){
      
      CCVariable<double>  absksoot; 
-     tsk_info->get_unmanaged_uintah_field<CCVariable<double> >("absksoot",absksoot);
+     //tsk_info->get_unmanaged_uintah_field<CCVariable<double>,double , UintahSpaces::HostSpace  >("absksoot",absksoot);
+     tsk_info->get_unmanaged_uintah_field<CCVariable<double>,double , UintahSpaces::HostSpace  >(absksoot,"absksoot",patch->getID(),_matl_index,tsk_info->get_time_substep() );
 
      constCCVariable<double>& soot_vf = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(_soot_name));
      Uintah::parallel_for( range,  [&](int i, int j, int k){

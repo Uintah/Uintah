@@ -52,7 +52,7 @@ protected:
 
     void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject );
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
@@ -130,7 +130,7 @@ private:
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
-  void TaylorGreen3D<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  void TaylorGreen3D<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
     T& var = tsk_info->get_uintah_field_add<T>( m_var_name );
     constCCVariable<double>& x = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_x_name);

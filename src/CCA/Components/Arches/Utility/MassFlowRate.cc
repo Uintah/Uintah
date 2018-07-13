@@ -114,7 +114,7 @@ void MassFlowRate::register_initialize( std::vector<ArchesFieldContainer::Variab
   register_massFlowRate( variable_registry, packed_tasks );
 }
 
-void MassFlowRate::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+void MassFlowRate::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
   eval_massFlowRate( patch, tsk_info );
 }

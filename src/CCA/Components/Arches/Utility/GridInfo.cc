@@ -42,7 +42,7 @@ GridInfo::register_initialize( std::vector<AFC::VariableInformation>& variable_r
 
 //--------------------------------------------------------------------------------------------------
 void
-GridInfo::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+GridInfo::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
   CCVariable<double>& gridX = tsk_info->get_uintah_field_add<CCVariable<double> >( "gridX" );
   CCVariable<double>& gridY = tsk_info->get_uintah_field_add<CCVariable<double> >( "gridY" );

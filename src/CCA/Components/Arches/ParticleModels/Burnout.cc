@@ -60,7 +60,7 @@ Burnout::register_initialize( std::vector<ArchesFieldContainer::VariableInformat
 
 //--------------------------------------------------------------------------------------------------
 void
-Burnout::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+Burnout::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
   CCVariable<double>& burnout = *(tsk_info->get_uintah_field<CCVariable<double> >( _task_name ));
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );

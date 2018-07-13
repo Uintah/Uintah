@@ -70,7 +70,7 @@ SurfaceVolumeFractionCalc::register_initialize( ArchesVIVector& variable_registr
 
 //--------------------------------------------------------------------------------------------------
 void
-SurfaceVolumeFractionCalc::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+SurfaceVolumeFractionCalc::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
   typedef CCVariable<double> T;
 

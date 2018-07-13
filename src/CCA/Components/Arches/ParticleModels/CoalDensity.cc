@@ -118,7 +118,7 @@ CoalDensity::register_initialize( std::vector<ArchesFieldContainer::VariableInfo
 
 //--------------------------------------------------------------------------------------------------
 void
-CoalDensity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+CoalDensity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
   for ( int ienv = 0; ienv < _Nenv; ienv++ ){
 

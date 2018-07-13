@@ -38,7 +38,7 @@ public:
 
     void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject  );
 
     void restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
@@ -152,7 +152,7 @@ private:
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
-  void ConstantProperty<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  void ConstantProperty<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject  ){
 
     T& property = tsk_info->get_uintah_field_add<T>( _task_name );
     property.initialize(0.0);

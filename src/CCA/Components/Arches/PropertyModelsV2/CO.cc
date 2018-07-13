@@ -106,7 +106,7 @@ CO::register_initialize( VIVec& variable_registry , const bool pack_tasks){
 
 //--------------------------------------------------------------------------------------------------
 void
-CO::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+CO::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info , ExecutionObject& executionObject){
 
   CCVariable<double>& CO      = tsk_info->get_uintah_field_add<CCVariable<double> >( m_CO_model_name );
   CCVariable<double>& CO_diff = tsk_info->get_uintah_field_add<CCVariable<double> >( m_CO_diff_name );

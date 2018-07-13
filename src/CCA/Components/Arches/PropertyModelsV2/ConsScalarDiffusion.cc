@@ -50,7 +50,7 @@ void ConsScalarDiffusion::register_initialize( AVarInfo& variable_registry , con
 }
 
 //--------------------------------------------------------------------------------------------------
-void ConsScalarDiffusion::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+void ConsScalarDiffusion::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject  ){
 
 
   CCVariable<double>& gamma = tsk_info->get_uintah_field_add<CCVariable<double> >(m_gamma_name);

@@ -52,7 +52,7 @@ protected:
 
     void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject );
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
@@ -147,7 +147,7 @@ private:
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
-  void ShunnMMS<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  void ShunnMMS<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
     
     T& f_mms = *(tsk_info->get_uintah_field<T>(m_var_name));
     constCCVariable<double>& x = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_x_name);

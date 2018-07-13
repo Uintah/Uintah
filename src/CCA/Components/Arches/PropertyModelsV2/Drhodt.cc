@@ -51,7 +51,7 @@ Drhodt::register_initialize( std::vector<ArchesFieldContainer::VariableInformati
 
 //--------------------------------------------------------------------------------------------------
 void
-Drhodt::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+Drhodt::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
   CCVariable<double>& drhodt = tsk_info->get_uintah_field_add<CCVariable<double> >( m_label_drhodt );
   drhodt.initialize(0.0);

@@ -47,7 +47,7 @@ UpdateParticlePosition::register_initialize(
 
 //--------------------------------------------------------------------------------------------------
 void
-UpdateParticlePosition::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+UpdateParticlePosition::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
   ParticleTuple px_tup = tsk_info->get_uintah_particle_field( _px_name );
   ParticleTuple py_tup = tsk_info->get_uintah_particle_field( _py_name );

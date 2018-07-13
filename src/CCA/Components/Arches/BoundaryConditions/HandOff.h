@@ -29,7 +29,7 @@ public:
 
     void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject );
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
@@ -140,7 +140,7 @@ private:
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
-  void HandOff<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  void HandOff<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
     T& var = *(tsk_info->get_uintah_field<T>( _task_name ));
     var.initialize(0.0);

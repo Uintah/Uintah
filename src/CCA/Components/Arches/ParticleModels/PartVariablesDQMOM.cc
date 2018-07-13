@@ -69,7 +69,7 @@ PartVariablesDQMOM::register_initialize(
 
 //--------------------------------------------------------------------------------------------------
 void
-PartVariablesDQMOM::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+PartVariablesDQMOM::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
   CCVariable<double>& num_den  = tsk_info->get_uintah_field_add<CCVariable<double> >( m_number_density_name );
   CCVariable<double>& AreaSumF = tsk_info->get_uintah_field_add< CCVariable<double> >("AreaSum",0);// temporal variable

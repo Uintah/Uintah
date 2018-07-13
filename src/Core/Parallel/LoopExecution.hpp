@@ -1257,7 +1257,7 @@ inline void setValueAndReturnView(struct1DArray<T, Capacity>* V, const T& x, int
 //For array of Views
 template<typename T, typename MemorySpace, unsigned int Capacity1, unsigned int Capacity2>
 inline void setValueAndReturnView(struct1DArray<T, Capacity1>* V,  const struct1DArray<T, Capacity2>& small_v, int &index){
-  int extra_i = Capacity2;
+  int extra_i = small_v.runTime_size;
   for(int i = 0; i < extra_i; i++){
     V[(index+i) / ARRAY_SIZE][(index+i) % ARRAY_SIZE] = small_v[i];
   }

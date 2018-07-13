@@ -67,7 +67,7 @@ DensityPredictor::register_initialize( std::vector<ArchesFieldContainer::Variabl
 
 //--------------------------------------------------------------------------------------------------
 void
-DensityPredictor::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+DensityPredictor::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
 
   CCVariable<double>& rho = *(tsk_info->get_uintah_field<CCVariable<double> >("new_densityGuess"));

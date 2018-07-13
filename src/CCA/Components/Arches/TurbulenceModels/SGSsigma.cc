@@ -127,7 +127,7 @@ SGSsigma::register_initialize(
 
 //--------------------------------------------------------------------------------------------------
 void
-SGSsigma::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info){
+SGSsigma::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject){
 
   CCVariable<double>& mu_sgc = *(tsk_info->get_uintah_field<CCVariable<double> >(m_t_vis_name));
   CCVariable<double>& mu_turb = *(tsk_info->get_uintah_field<CCVariable<double> >(m_turb_viscosity_name));

@@ -50,7 +50,7 @@ BoundaryInfo::register_initialize( VarInfoVecT& variable_registry , const bool p
 }
 
 void
-BoundaryInfo::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
+BoundaryInfo::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){}
 
 //
 //------------------------------------------------

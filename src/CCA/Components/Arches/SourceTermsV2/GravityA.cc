@@ -78,7 +78,7 @@ GravityA::register_initialize( std::vector<ArchesFieldContainer::VariableInforma
 
 //--------------------------------------------------------------------------------------------------
 void
-GravityA::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+GravityA::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
   constCCVariable<double>& density  = tsk_info->get_const_uintah_field_add<constCCVariable<double > >( m_density_label );
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );

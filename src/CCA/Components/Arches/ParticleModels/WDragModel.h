@@ -51,7 +51,7 @@ protected:
 
     void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject );
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
@@ -201,7 +201,7 @@ private:
   }
 
   template <typename T>
-  void WDragModel<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  void WDragModel<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info , ExecutionObject& executionObject){
 
   T& model      = tsk_info->get_uintah_field_add<T>(m_model_name);
   T& gas_source = tsk_info->get_uintah_field_add<T>(m_gasSource_name);

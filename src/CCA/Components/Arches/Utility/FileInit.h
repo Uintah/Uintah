@@ -30,7 +30,7 @@ public:
 
     void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject );
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
@@ -125,7 +125,7 @@ private:
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
-  void FileInit<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  void FileInit<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
     T& phi = tsk_info->get_uintah_field_add<T>(m_var_name);
 

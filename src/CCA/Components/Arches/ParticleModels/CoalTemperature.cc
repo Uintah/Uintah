@@ -157,7 +157,7 @@ CoalTemperature::register_initialize( std::vector<ArchesFieldContainer::Variable
 
 //--------------------------------------------------------------------------------------------------
 void
-CoalTemperature::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+CoalTemperature::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info , ExecutionObject& executionObject){
 
   for ( int ienv = 0; ienv < _Nenv; ienv++ ){
 

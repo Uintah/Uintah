@@ -75,7 +75,7 @@ void CCVel::register_initialize( AVarInfo& variable_registry , const bool pack_t
 }
 
 //--------------------------------------------------------------------------------------------------
-void CCVel::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+void CCVel::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info , ExecutionObject& executionObject ){
 
   compute_velocities( patch, tsk_info );
 

@@ -70,7 +70,7 @@ WallHFVariable::register_initialize( std::vector<ArchesFieldContainer::VariableI
 }
 
 void
-WallHFVariable::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+WallHFVariable::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
   CCVariable<double>& flux_x = *(tsk_info->get_uintah_field<CCVariable<double> >(_flux_x));
   CCVariable<double>& flux_y = *(tsk_info->get_uintah_field<CCVariable<double> >(_flux_y));

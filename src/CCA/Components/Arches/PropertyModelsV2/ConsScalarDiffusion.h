@@ -33,9 +33,9 @@ public:
 
     void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject );
 
-    void restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
+    void restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info){}
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 

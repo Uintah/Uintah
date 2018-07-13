@@ -61,7 +61,7 @@ sootVolumeFrac::register_initialize( VIVec& variable_registry , const bool pack_
 }
 
 void
-sootVolumeFrac::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+sootVolumeFrac::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info , ExecutionObject& executionObject ){
   CCVariable<double>& fvSoot     = tsk_info->get_uintah_field_add<CCVariable<double> >( _fvSoot);
   fvSoot.initialize(0.0);
 }

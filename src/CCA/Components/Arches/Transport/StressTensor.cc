@@ -62,7 +62,7 @@ void StressTensor::register_initialize( AVarInfo& variable_registry , const bool
 }
 
 //--------------------------------------------------------------------------------------------------
-void StressTensor::initialize( const Patch*, ArchesTaskInfoManager* tsk_info ){
+void StressTensor::initialize( const Patch*, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
 
   CCVariable<double>& sigma11 = *(tsk_info->get_uintah_field<CCVariable<double> >(m_sigma_t_names[0]));

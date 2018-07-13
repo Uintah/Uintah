@@ -88,7 +88,7 @@ protected:
 
     void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject  );
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
@@ -317,7 +317,7 @@ private:
   }
 
   template <typename T>
-  void TaskAlgebra<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  void TaskAlgebra<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject  ){
 
     for ( typename OPMAP::iterator iter = all_operations.begin(); iter != all_operations.end(); iter++ ){
       if ( iter->second.create_new_variable ){

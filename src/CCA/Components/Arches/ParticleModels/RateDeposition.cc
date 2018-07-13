@@ -168,7 +168,7 @@ RateDeposition::register_initialize( std::vector<AFC_VI>& variable_registry , co
 
 //--------------------------------------------------------------------------------------------------
 void
-RateDeposition::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+RateDeposition::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
   for ( int e=0; e< _Nenv;e++){
     const std::string ProbParticleX_name = get_env_name(e, _ProbParticleX_base_name);

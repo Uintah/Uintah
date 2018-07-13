@@ -382,7 +382,7 @@ public:
     }
 
     /** @brief The actual work done within the derived class **/
-    virtual void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr ) = 0;
+    virtual void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr , ExecutionObject& executionObject ) = 0;
 
     /** @brief The actual work done within the derived class **/
     virtual void restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr ){}

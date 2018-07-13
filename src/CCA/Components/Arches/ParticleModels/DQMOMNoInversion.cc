@@ -94,7 +94,7 @@ void DQMOMNoInversion::register_initialize(
 }
 
 //--------------------------------------------------------------------------------------------------
-void DQMOMNoInversion::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+void DQMOMNoInversion::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
   for  ( auto i = m_ic_qn_srcnames.begin(); i != m_ic_qn_srcnames.end(); i++ ){
     CCVariable<double>& var = tsk_info->get_uintah_field_add<CCVariable<double> >( *i );

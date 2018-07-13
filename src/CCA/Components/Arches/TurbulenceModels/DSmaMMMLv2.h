@@ -27,7 +27,7 @@ public:
 
     void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject );
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
@@ -149,7 +149,7 @@ DSmaMMMLv2<TT>::register_initialize( std::vector<ArchesFieldContainer::VariableI
 //--------------------------------------------------------------------------------------------------
 
 template<typename TT> void
-DSmaMMMLv2<TT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+DSmaMMMLv2<TT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
 }
 //--------------------------------------------------------------------------------------------------

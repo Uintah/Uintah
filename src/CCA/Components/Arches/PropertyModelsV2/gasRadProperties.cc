@@ -115,7 +115,7 @@ gasRadProperties::register_initialize( VIVec& variable_registry , const bool pac
 }
 
 void
-gasRadProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+gasRadProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info , ExecutionObject& executionObject ){
 
   CCVariable<double>& abskg     = tsk_info->get_uintah_field_add<CCVariable<double> >( _abskg_name);
 

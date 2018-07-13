@@ -290,12 +290,11 @@ namespace Uintah{
 
         /** @brief Return a UINTAH field allowing the user to manage
                    the memory. **/
-        template <typename T>
-        inline
-        void
+        template <typename FIELD_TYPE>
+        inline void
         get_unmanaged_uintah_field( const std::string name,
-                                          T&          field ){
-          _field_container->get_unmanaged_field<T>( name, field );
+                                          FIELD_TYPE&          field ){
+          _field_container->get_unmanaged_field( name, field );
         }
 
         /** @brief Return a CONST UINTAH field allowing the user to manage

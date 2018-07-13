@@ -87,7 +87,7 @@ public:
       std::vector<AFC::VariableInformation>& variable_registry, const bool packed_tasks ){}
     void register_timestep_init( std::vector<AFC::VariableInformation>& variable_registry,
                                          const bool pack_tasks ){}
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr ){}
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr, ExecutionObject& executionObject ){}
     void restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr ){}
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr ){}
     void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr ){}

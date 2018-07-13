@@ -69,7 +69,7 @@ SurfaceNormals::register_initialize( VIVec& variable_registry , const bool packe
 }
 
 void
-SurfaceNormals::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+SurfaceNormals::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
   GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE(0,1)
   GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE(0,1)

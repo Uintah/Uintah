@@ -102,7 +102,7 @@ DSFTv2::register_initialize( std::vector<ArchesFieldContainer::VariableInformati
 
 //--------------------------------------------------------------------------------------------------
 void
-DSFTv2::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+DSFTv2::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
   CCVariable<double>& filterRho = tsk_info->get_uintah_field_add< CCVariable<double> >("Filterrho");
   SFCXVariable<double>& filterRhoU = tsk_info->get_uintah_field_add< SFCXVariable<double> >("Filterrho");

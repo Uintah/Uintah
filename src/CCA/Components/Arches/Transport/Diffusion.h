@@ -48,7 +48,7 @@ protected:
 
     void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject );
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
@@ -166,7 +166,7 @@ private:
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
-  void Diffusion<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  void Diffusion<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
     for (int ieqn = 0; ieqn < int(m_eqn_names.size()); ieqn++ ){
 

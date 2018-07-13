@@ -56,7 +56,7 @@ BurnsChriston::register_initialize( VIVec& variable_registry , const bool pack_t
 }
 
 void
-BurnsChriston::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+BurnsChriston::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
 
   BBox domain(m_min,m_max);
   if( m_min == m_notSetMin  ||  m_max == m_notSetMax ){

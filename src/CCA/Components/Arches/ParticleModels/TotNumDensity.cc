@@ -61,7 +61,7 @@ TotNumDensity::register_initialize(
 
 //--------------------------------------------------------------------------------------------------
 void
-TotNumDensity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+TotNumDensity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info , ExecutionObject& executionObject){
 
   CCVariable<double>& num_den = *(tsk_info->get_uintah_field<CCVariable<double> >( _task_name ));
   num_den.initialize(0.0);
