@@ -37615,6 +37615,11 @@ NVCC_CXXFLAGS="$NVCC_CXXFLAGS -arch=sm_$cuda_gencode"
 for i in $CXXFLAGS; do
   if test "$i" = "-std=c++11"; then
     NVCC_CXXFLAGS="$NVCC_CXXFLAGS $i"
+  elif test "$i" = "-maxrregcount"; then
+    NVCC_CXXFLAGS="$NVCC_CXXFLAGS $i"
+  elif [ "$i" -eq "$i" ]; then
+    # This is an integer.  Assume it was a value of a prior parameter (like -maxrregcount 128)
+    NVCC_CXXFLAGS="$NVCC_CXXFLAGS $i"
   elif test "$i" = "--expt-extended-lambda"; then
     NVCC_CXXFLAGS="$NVCC_CXXFLAGS $i"
   else
