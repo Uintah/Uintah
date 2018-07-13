@@ -45,7 +45,7 @@ if [ "$OS" = "Linux" ]; then
       --with-hypre=/usr/local/hypre-2.8.0b \\
       --with-boost=/usr/local/boost-1.65.1 \\
       --with-petsc=/usr/local/petsc-3.8.4 \
-      --with-cuda=/usr/lib/nvidia-cuda-toolkit \\
+      --with-cuda=/usr/local/cuda \\
       --enable-gencode=52 \\
       --enable-ray-scatter \\
       --enable-examples \\
