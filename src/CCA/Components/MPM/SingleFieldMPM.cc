@@ -5449,12 +5449,14 @@ void SingleFieldMPM::computeParticleSurfaceGradient(const ProcessorGroup *,
     double rho2=rho*rho;
     double rho3=rho2*rho;
     double invrho2 = 1./rho2;
+    double invrho3 = 1./rho3;
 
     printTask(patches,patch,cout_doing,"Doing computeParticleSurfaceGradient");
 
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
+      cout << "Material = " << m << endl;
 
       // This particle set includes ghost particles
       ParticleSubset* pset   = old_dw->getParticleSubset(dwi, patch,
@@ -5474,32 +5476,43 @@ void SingleFieldMPM::computeParticleSurfaceGradient(const ProcessorGroup *,
       old_dw->get(pxOP,           lb->pXLabel,             psetOP);
       new_dw->allocateAndPut(pSurfGrad,lb->pSurfGradLabel, psetOP);
 
+#if 1
+      vector<double> psurfv;
+      vector<Point>  pxv;
+      for(ParticleSubset::iterator it=pset->begin();it!=pset->end();it++){
+        psurfv.push_back(psurf[*it]);
+        pxv.push_back(px[*it]);
+      }
+      int vecl = psurfv.size();
+#endif
+
       for(ParticleSubset::iterator itop=psetOP->begin();
                                    itop!=psetOP->end();
                                    itop++){
         particleIndex idxOP = *itop;
-        pSurfGrad[idxOP] = Vector(0.0,0.0,0.0);
         Vector gradD(0.,0.,0.);
         Vector gradS(0.,0.,0.);
         double S = 0;
         double D = 0;
-        for(ParticleSubset::iterator it=pset->begin();it!=pset->end();it++){
-          particleIndex idx = *it;
-          Vector xminusxp = px[idx]-pxOP[idxOP];
+//        for(ParticleSubset::iterator it=pset->begin();it!=pset->end();it++){
+//          particleIndex idx = *it;
+        for(int ip=0;ip<vecl;ip++){
+//          Vector xminusxp = px[idx]-pxOP[idxOP];
+          Vector xminusxp = pxv[ip]-pxOP[idxOP];
           double r2 = xminusxp.length2();
           if(r2<rho2){
             double r = sqrt(r2);
-            Vector gradw  = (r/rho3 - invrho2)*xminusxp;
-            gradD += psurf[idx]*gradw;
+            Vector gradw  = (r*invrho3 - invrho2)*xminusxp;
+            gradD += psurfv[ip]*gradw;
+//          gradD += psurf[*it]*gradw;
             gradS +=            gradw;
-            double w = 1. - 3.*r2/rho2 + 2.*r2*r/rho3;
+            double w = 1. - 3.*r2*invrho2 + 2.*r2*r*invrho3;
             S     +=            w;
-            D     += psurf[idx]*w;
+            D     += psurfv[ip]*w;
+//            D     += psurf[*it]*w;
           }
         }
-        gradD*=6.0;
-        gradS*=6.0;
-        pSurfGrad[idxOP] = -(gradD/S - D*gradS/(S*S));
+        pSurfGrad[idxOP] = -6.0*(gradD/S - D*gradS/(S*S));
       }
     }   // matl loop
   }    // patches
