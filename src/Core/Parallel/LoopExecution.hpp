@@ -543,9 +543,9 @@ parallel_for( ExecutionObject& executionObject, BlockRange const & r, const Func
         // Craft an i,j,k out of this range
         // This approach works with row-major layout so that consecutive Cuda threads work along consecutive slots in memory.
         //printf("parallel_for team demo - n is %d, league_rank is %d, true n is %d\n", N, thread.league_rank(), (startingN + N));
-        const int k = (startingN + N) / (j_size * k_size) + rbegin0;
-        const int j = ((startingN + N) / k_size) % j_size + rbegin1;
-        const int i = (startingN + N) % k_size + rbegin2;
+        const int k = (startingN + N) / (j_size * i_size) + rbegin2;
+        const int j = ((startingN + N) / i_size) % j_size + rbegin1;
+        const int i = (startingN + N) % i_size + rbegin0;
         // Actually run the functor.
         functor( i, j, k );
       });
@@ -785,9 +785,9 @@ parallel_reduce_sum( ExecutionObject& executionObject, BlockRange const & r, con
         // Craft an i,j,k out of this range. 
         // This approach works with row-major layout so that consecutive Cuda threads work along consecutive slots in memory.
         //printf("reduce team demo - n is %d, league_rank is %d, true n is %d\n", N, thread.league_rank(), (startingN + N));
-        const int k = (startingN + N) / (j_size * k_size) + rbegin0;
-        const int j = ((startingN + N) / k_size) % j_size + rbegin1;
-        const int i = (startingN + N) % k_size + rbegin2;
+        const int k = (startingN + N) / (j_size * i_size) + rbegin2;
+        const int j = ((startingN + N) / i_size) % j_size + rbegin1;
+        const int i = (startingN + N) % i_size + rbegin0;
         // Actually run the functor.
         functor(i,j,k, inner_sum);
       });
