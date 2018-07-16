@@ -5456,7 +5456,6 @@ void SingleFieldMPM::computeParticleSurfaceGradient(const ProcessorGroup *,
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
-      cout << "Material = " << m << endl;
 
       // This particle set includes ghost particles
       ParticleSubset* pset   = old_dw->getParticleSubset(dwi, patch,
