@@ -541,10 +541,11 @@ parallel_for( ExecutionObject& executionObject, BlockRange const & r, const Func
 
       Kokkos::parallel_for (Kokkos::TeamThreadRange(thread, totalN), [&, startingN, i_size, j_size, k_size, rbegin0, rbegin1, rbegin2] (const int& N) {
         // Craft an i,j,k out of this range
+        // This approach works with row-major layout so that consecutive Cuda threads work along consecutive slots in memory.
         //printf("parallel_for team demo - n is %d, league_rank is %d, true n is %d\n", N, thread.league_rank(), (startingN + N));
-        const int i = (startingN + N) / (j_size * k_size) + rbegin0;
+        const int k = (startingN + N) / (j_size * k_size) + rbegin0;
         const int j = ((startingN + N) / k_size) % j_size + rbegin1;
-        const int k = (startingN + N) % k_size + rbegin2;
+        const int i = (startingN + N) % k_size + rbegin2;
         // Actually run the functor.
         functor( i, j, k );
       });
@@ -781,11 +782,12 @@ parallel_reduce_sum( ExecutionObject& executionObject, BlockRange const & r, con
       //printf("league_rank: %d, team_size: %d, team_rank: %d, startingN: %d, endingN: %d, totalN: %d\n", thread.league_rank(), thread.team_size(), thread.team_rank(), startingN, endingN, totalN);
 
       Kokkos::parallel_for (Kokkos::TeamThreadRange(thread, totalN), [&, startingN, i_size, j_size, k_size, rbegin0, rbegin1, rbegin2] (const int& N) {
-        // Craft an i,j,k out of this range
+        // Craft an i,j,k out of this range. 
+        // This approach works with row-major layout so that consecutive Cuda threads work along consecutive slots in memory.
         //printf("reduce team demo - n is %d, league_rank is %d, true n is %d\n", N, thread.league_rank(), (startingN + N));
-        const int i = (startingN + N) / (j_size * k_size) + rbegin0;
+        const int k = (startingN + N) / (j_size * k_size) + rbegin0;
         const int j = ((startingN + N) / k_size) % j_size + rbegin1;
-        const int k = (startingN + N) % k_size + rbegin2;
+        const int i = (startingN + N) % k_size + rbegin2;
         // Actually run the functor.
         functor(i,j,k, inner_sum);
       });
