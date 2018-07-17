@@ -163,7 +163,8 @@ WARNING
   }
 
   template<class T>
-  NCVariable<T>::NCVariable(NCVariable<T>&& other)
+  NCVariable<T>::NCVariable(NCVariable<T>&& other) 
+    : GridVariable<T>(other)
   {
     // Implementing this somehow turned on and properly supported Return Value Optimization (RVO).  I'm not entirely sure why -- Brad P June 2018
   }

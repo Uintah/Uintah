@@ -163,6 +163,7 @@ WARNING
 
   template<class T>
   CCVariable<T>::CCVariable(CCVariable<T>&& other)
+    : GridVariable<T>(other)
   {
     // Implementing this somehow turned on and properly supported Return Value Optimization (RVO).  I'm not entirely sure why -- Brad P June 2018
   }
