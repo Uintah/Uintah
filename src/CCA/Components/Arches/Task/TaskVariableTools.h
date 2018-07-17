@@ -378,15 +378,15 @@ namespace Uintah{
     // an internal data type.  For portability, both kinds of types are passed in, and only one of the two is used
     // depending on the portability mode.
     template < typename T, typename elemType, unsigned int MaxCapacity, typename MemorySpace >
-    typename std::enable_if<std::is_same<MemorySpace, UintahSpaces::HostSpace>::value, std::vector<T> >::type
+    typename std::enable_if<std::is_same<MemorySpace, UintahSpaces::HostSpace>::value, struct1DArray<T,MaxCapacity> >::type
     createContainer(int num=MaxCapacity){
-      return std::vector<T>(num); // perform deep copy   (should be ok since it is an empty CCVariable?)
+      return struct1DArray<T,MaxCapacity>(num); // perform deep copy   (should be ok since it is an empty CCVariable?)
     }
 
     template < typename T, typename elemType, unsigned int MaxCapacity, typename MemorySpace >
-    typename std::enable_if<std::is_same<MemorySpace, UintahSpaces::HostSpace>::value, std::vector<T> >::type
+    typename std::enable_if<std::is_same<MemorySpace, UintahSpaces::HostSpace>::value, struct1DArray<T,MaxCapacity> >::type
     createConstContainer(int num=MaxCapacity){
-      return std::vector<T>(num); // perform deep copy (should be ok since it is an empty CCVariable?)
+      return struct1DArray<T,MaxCapacity>(num); // perform deep copy   (should be ok since it is an empty CCVariable?)
     }
 #if defined(KOKKOS_ENABLE_OPENMP)
     template < typename T, typename elemType, unsigned int MaxCapacity, typename MemorySpace >

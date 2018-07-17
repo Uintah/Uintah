@@ -1069,19 +1069,9 @@ parallel_for(ExecutionObject& executionObject, Kokkos::View<int*, Kokkos::HostSp
 #endif //UINTAH_ENABLE_KOKKOS
 
 #if defined(UINTAH_ENABLE_KOKKOS)
-// TODO: Rename to something more descriptive beyond parallel_for.  I suggest parallel_initialize
-//template <typename ExecutionSpace, typename T2, typename T3>
-//typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::OpenMP>::value, void>::type
-//  parallel_for(ExecutionObject& executionObject, T2 KV3, const T3 init_val ){
-//
-//  Kokkos::parallel_for( Kokkos::RangePolicy<ExecutionSpace, int>(0,KV3.m_view.size() ).set_chunk_size(2), [=](int i) {
-//    KV3(i)=init_val;
-//  });
-//}
 
 
 #if defined(HAVE_CUDA)
-// TODO: Rename to something more descriptive beyond parallel_for.  I suggest parallel_initialize
 template <typename ExecutionSpace, typename T2, typename T3>
 typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::Cuda>::value, void>::type
 parallel_for(ExecutionObject& executionObject, T2 KV3, const T3 init_val)
@@ -1274,15 +1264,15 @@ inline void sumViewSize(const T& x, int &index){
   return;
 }
 
-template<typename T, typename MemorySpace>
-inline void sumViewSize(const Kokkos::View<T*, MemorySpace>& small_v, int &index){
-  index += small_v.size();
-  return ;
-}
+//template<typename T, typename MemorySpace>
+//inline void sumViewSize(const Kokkos::View<T*, MemorySpace>& small_v, int &index){
+  //index += small_v.runTime_size;
+  //return ;
+//}
 
 template<typename T, typename MemorySpace, unsigned int Capacity>
 inline void sumViewSize(const struct1DArray< T, Capacity> & small_v, int &index){
-  index += Capacity;
+  index += small_v.runTime_size;
   return ;
 }
 
@@ -1342,9 +1332,9 @@ parallel_initialize(ExecutionObject& executionObject, const T & initializationVa
 
 #endif // defined(UINTAH_ENABLE_KOKKOS)
 
-template< typename T, typename T2>
-void legacy_initialize(T inside_value, std::vector<T2>& data_fields) {  // for vectors
-  int nfields=data_fields.size();
+template< typename T, typename T2, const unsigned int T3>
+void legacy_initialize(T inside_value, struct1DArray<T2,T3>& data_fields) {  // for vectors
+  int nfields=data_fields.runTime_size;
   for(int i=0;  i< nfields; i++){
     data_fields[i].initialize(inside_value);
   }
