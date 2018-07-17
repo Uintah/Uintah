@@ -13,7 +13,6 @@
 #include <CCA/Components/Arches/TurbulenceModels/DSmaCsv2.h>
 #include <CCA/Components/Arches/TurbulenceModels/DSmaMMMLv2.h>
 #include <CCA/Components/Arches/TurbulenceModels/FractalUD.h>
-#include <CCA/Components/Arches/TurbulenceModels/FilterStress.h>
 #include <CCA/Components/Arches/TurbulenceModels/MultifractalSGS.h>
 #include <CCA/Components/Arches/TurbulenceModels/SGSforTransport.h>
 
@@ -131,11 +130,6 @@ TurbulenceModelFactory::register_all_tasks( ProblemSpecP& db )
         register_task( name, tsk_builder2 );
         m_momentum_closure_tasks.push_back(name);
         
-        name="FilterOperatorStress";
-        TaskInterface::TaskBuilder* tsk_builder4 = scinew FilterStress::Builder( name, 0 );
-        register_task( name, tsk_builder4 );
-        m_momentum_closure_tasks.push_back(name);
-        
         name="TransportCouple";
         TaskInterface::TaskBuilder* tsk_builder3 = scinew SGSforTransport::Builder( name, 0 );
         register_task( name, tsk_builder3 );
@@ -151,11 +145,6 @@ TurbulenceModelFactory::register_all_tasks( ProblemSpecP& db )
         name="MultifractalSGS";
         TaskInterface::TaskBuilder* tsk_builder2 = scinew MultifractalSGS::Builder( name, 0 );
         register_task( name, tsk_builder2 );
-        m_momentum_closure_tasks.push_back(name);
-        
-        name="FilterOperatorStress";
-        TaskInterface::TaskBuilder* tsk_builder4 = scinew FilterStress::Builder( name, 0 );
-        register_task( name, tsk_builder4 );
         m_momentum_closure_tasks.push_back(name);
         
         name="TransportCouple";

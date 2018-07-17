@@ -60,7 +60,6 @@ namespace Uintah{
       std::string m_cc_v_vel_name;
       std::string m_cc_w_vel_name;
       std::vector<std::string> m_SgsStress_names;
-      std::vector<std::string> m_FilterStress_names;
       std::vector<std::string> m_fmom_source_names;
 
       std::string m_rhou_vel_name;

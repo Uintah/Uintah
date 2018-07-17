@@ -21,18 +21,6 @@ namespace Uintah{
       m_fmom_source_names[0]="FractalXSrc";
       m_fmom_source_names[1]="FractalYSrc";
       m_fmom_source_names[2]="FractalZSrc";
-      // Filter SGS stress 
-      m_FilterStress_names.resize(9);
-      m_FilterStress_names[0] = "ucell_xFilterStress";
-      m_FilterStress_names[1] = "ucell_yFilterStress";
-      m_FilterStress_names[2] = "ucell_zFilterStress";
-      m_FilterStress_names[3] = "vcell_xFilterStress";
-      m_FilterStress_names[4] = "vcell_yFilterStress";
-      m_FilterStress_names[5] = "vcell_zFilterStress";
-      m_FilterStress_names[6] = "wcell_xFilterStress";
-      m_FilterStress_names[7] = "wcell_yFilterStress";
-      m_FilterStress_names[8] = "wcell_zFilterStress";
-
 
     }
 
@@ -83,9 +71,6 @@ namespace Uintah{
         register_variable( *iter, ArchesFieldContainer::COMPUTES, variable_registry, _task_name );
       }
 
-      //register_variable( "FractalXSrc", ArchesFieldContainer::COMPUTES ,  variable_registry,  _task_name, packed_tasks);
-      //register_variable( "FractalYSrc", ArchesFieldContainer::COMPUTES ,  variable_registry,  _task_name, packed_tasks);
-      //register_variable( "FractalZSrc", ArchesFieldContainer::COMPUTES ,  variable_registry,  _task_name, packed_tasks);
     }
 
   //--------------------------------------------------------------------------------------------------
@@ -106,26 +91,17 @@ namespace Uintah{
       for (auto iter = m_fmom_source_names.begin(); iter != m_fmom_source_names.end(); iter++ ){
         register_variable( *iter, ArchesFieldContainer::COMPUTES, variable_registry, _task_name );
       }
-      //register_variable( "FractalXSrc", ArchesFieldContainer::COMPUTES ,  variable_registry,  _task_name, packed_tasks);
-      //register_variable( "FractalYSrc", ArchesFieldContainer::COMPUTES ,  variable_registry,  _task_name, packed_tasks);
-      //register_variable( "FractalZSrc", ArchesFieldContainer::COMPUTES ,  variable_registry,  _task_name, packed_tasks);
 
     }
 
   //--------------------------------------------------------------------------------------------------
   void
     SGSforTransport::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+    
       SFCXVariable<double>&  FractalXSrc= tsk_info->get_uintah_field_add<SFCXVariable<double> >("FractalXSrc");
       SFCYVariable<double>&  FractalYSrc= tsk_info->get_uintah_field_add<SFCYVariable<double> >("FractalYSrc");
       SFCZVariable<double>&  FractalZSrc= tsk_info->get_uintah_field_add<SFCZVariable<double> >("FractalZSrc");
-      //SFCXVariable<double>&  srcx= tsk_info->get_uintah_field_add<SFCXVariable<double> >("FractalXSrc");
-      //SFCYVariable<double>&  srcy= tsk_info->get_uintah_field_add<SFCYVariable<double> >("FractalYSrc");
-      //SFCZVariable<double>&  srcz= tsk_info->get_uintah_field_add<SFCZVariable<double> >("FractalZSrc");
-
-      //srcx.initialize(0.0);
-      //srcy.initialize(0.0);
-      //srcz.initialize(0.0);
-
+    
     }
 
   //--------------------------------------------------------------------------------------------------
@@ -133,21 +109,12 @@ namespace Uintah{
     SGSforTransport::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>&
         variable_registry, const int time_substep , const bool packed_tasks){
 
-      for (auto iter = m_FilterStress_names.begin(); iter != m_FilterStress_names.end(); iter++ ){
-        register_variable( *iter, ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::NEWDW, variable_registry, _task_name );
-      }
-
       for (auto iter = m_SgsStress_names.begin(); iter != m_SgsStress_names.end(); iter++ ){
         register_variable( *iter, ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::NEWDW, variable_registry, _task_name );
       }
       for (auto iter = m_fmom_source_names.begin(); iter != m_fmom_source_names.end(); iter++ ){
         register_variable( *iter, ArchesFieldContainer::MODIFIES, variable_registry, _task_name );
       }
-
-      //register_variable( "FractalXSrc", ArchesFieldContainer::COMPUTES ,  variable_registry,  _task_name, packed_tasks);
-      //register_variable( "FractalYSrc", ArchesFieldContainer::COMPUTES ,  variable_registry,  _task_name, packed_tasks);
-      //register_variable( "FractalZSrc", ArchesFieldContainer::COMPUTES ,  variable_registry,  _task_name, packed_tasks);
-
 
     }
 
@@ -161,7 +128,7 @@ namespace Uintah{
       double Area_EW =Dx.y()*Dx.z(); 
       double Area_TB =Dx.x()*Dx.y();
       double densitygas=1.0;//kg/m3
-      double cellvol=1.0/(Dx.x()*Dx.y()*Dx.z());
+      double cellvol=Dx.x()*Dx.y()*Dx.z();
       // Subgrid stress
       constSFCXVariable<double>& ucell_xSgsStress = *(tsk_info->get_const_uintah_field<constSFCXVariable<double> >("ucell_xSgsStress"));
       constSFCXVariable<double>& ucell_ySgsStress = *(tsk_info->get_const_uintah_field<constSFCXVariable<double> >("ucell_ySgsStress"));
@@ -172,79 +139,23 @@ namespace Uintah{
       constSFCZVariable<double>& wcell_xSgsStress = *(tsk_info->get_const_uintah_field<constSFCZVariable<double> >("wcell_xSgsStress"));
       constSFCZVariable<double>& wcell_ySgsStress = *(tsk_info->get_const_uintah_field<constSFCZVariable<double> >("wcell_ySgsStress"));
       constSFCZVariable<double>& wcell_zSgsStress = *(tsk_info->get_const_uintah_field<constSFCZVariable<double> >("wcell_zSgsStress"));
-      // Subgrid stress
-      constSFCXVariable<double>& ucell_xFilterStress = *(tsk_info->get_const_uintah_field<constSFCXVariable<double> >("ucell_xFilterStress"));
-      constSFCXVariable<double>& ucell_yFilterStress = *(tsk_info->get_const_uintah_field<constSFCXVariable<double> >("ucell_yFilterStress"));
-      constSFCXVariable<double>& ucell_zFilterStress = *(tsk_info->get_const_uintah_field<constSFCXVariable<double> >("ucell_zFilterStress"));
-      constSFCYVariable<double>& vcell_xFilterStress = *(tsk_info->get_const_uintah_field<constSFCYVariable<double> >("vcell_xFilterStress"));
-      constSFCYVariable<double>& vcell_yFilterStress = *(tsk_info->get_const_uintah_field<constSFCYVariable<double> >("vcell_yFilterStress"));
-      constSFCYVariable<double>& vcell_zFilterStress = *(tsk_info->get_const_uintah_field<constSFCYVariable<double> >("vcell_zFilterStress"));
-      constSFCZVariable<double>& wcell_xFilterStress = *(tsk_info->get_const_uintah_field<constSFCZVariable<double> >("wcell_xFilterStress"));
-      constSFCZVariable<double>& wcell_yFilterStress = *(tsk_info->get_const_uintah_field<constSFCZVariable<double> >("wcell_yFilterStress"));
-      constSFCZVariable<double>& wcell_zFilterStress = *(tsk_info->get_const_uintah_field<constSFCZVariable<double> >("wcell_zFilterStress"));
-      //SFCXVariable<double>&  srcx= tsk_info->get_uintah_field_add<SFCXVariable<double> >("FractalXSrc");
-      //SFCYVariable<double>&  srcy= tsk_info->get_uintah_field_add<SFCYVariable<double> >("FractalYSrc");
-      //SFCZVariable<double>&  srcz= tsk_info->get_uintah_field_add<SFCZVariable<double> >("FractalZSrc");
       SFCXVariable<double>&  FractalXSrc= tsk_info->get_uintah_field_add<SFCXVariable<double> >("FractalXSrc");
       SFCYVariable<double>&  FractalYSrc= tsk_info->get_uintah_field_add<SFCYVariable<double> >("FractalYSrc");
       SFCZVariable<double>&  FractalZSrc= tsk_info->get_uintah_field_add<SFCZVariable<double> >("FractalZSrc");
-
-      //FractalXSrc.initialize(0.0);
-      //FractalYSrc.initialize(0.0);
-      //FractalZSrc.initialize(0.0);
-
 
       Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
 
       Uintah::parallel_for( range, [&](int i, int j, int k){
 
-          //         X-momentum
-          //FractalXSrc(i,j,k)=-cellvol*((ucell_xFilterStress(i+1,j,k)-ucell_xFilterStress(i,j,k))*Area_EW+(ucell_yFilterStress(i,j+1,k) -ucell_yFilterStress(i,j,k))*Area_NS+(ucell_zFilterStress(i,j,k+1)-ucell_zFilterStress(i,j,k))*Area_TB);
-          //// Y-momentum
-          //FractalYSrc(i,j,k)=-cellvol*((vcell_xFilterStress(i+1,j,k)-vcell_xFilterStress(i,j,k))*Area_EW+(vcell_yFilterStress(i,j+1,k) -vcell_yFilterStress(i,j,k))*Area_NS+(vcell_zFilterStress(i,j,k+1)-vcell_zFilterStress(i,j,k))*Area_TB);
-          //// Z-momentum
-          //FractalZSrc(i,j,k)=-cellvol*((wcell_xFilterStress(i+1,j,k)-wcell_xFilterStress(i,j,k))*Area_EW+(wcell_yFilterStress(i,j+1,k) -wcell_yFilterStress(i,j,k))*Area_NS+(wcell_zFilterStress(i,j,k+1)-wcell_zFilterStress(i,j,k))*Area_TB);
-
-          // compute the source term for the finite volume method, not using the overbar filter again.
+          // compute the source term for the finite volume method.
           //   X-momentum
-          FractalXSrc(i,j,k)=-densitygas*cellvol*((ucell_xSgsStress(i+1,j,k)-ucell_xSgsStress(i,j,k))*Area_EW+(ucell_ySgsStress(i,j+1,k) -ucell_ySgsStress(i,j,k))*Area_NS+(ucell_zSgsStress(i,j,k+1)-ucell_zSgsStress(i,j,k))*Area_TB);
+          FractalXSrc(i,j,k)=-densitygas/cellvol*((ucell_xSgsStress(i+1,j,k)-ucell_xSgsStress(i,j,k))*Area_EW+(ucell_ySgsStress(i,j+1,k) -ucell_ySgsStress(i,j,k))*Area_NS+(ucell_zSgsStress(i,j,k+1)-ucell_zSgsStress(i,j,k))*Area_TB);
           //// Y-momentum
-          FractalYSrc(i,j,k)=-densitygas*cellvol*((vcell_xSgsStress(i+1,j,k)-vcell_xSgsStress(i,j,k))*Area_EW+(vcell_ySgsStress(i,j+1,k) -vcell_ySgsStress(i,j,k))*Area_NS+(vcell_zSgsStress(i,j,k+1)-vcell_zSgsStress(i,j,k))*Area_TB);
+          FractalYSrc(i,j,k)=-densitygas/cellvol*((vcell_xSgsStress(i+1,j,k)-vcell_xSgsStress(i,j,k))*Area_EW+(vcell_ySgsStress(i,j+1,k) -vcell_ySgsStress(i,j,k))*Area_NS+(vcell_zSgsStress(i,j,k+1)-vcell_zSgsStress(i,j,k))*Area_TB);
           //// Z-momentum
-          FractalZSrc(i,j,k)=-densitygas*cellvol*((wcell_xSgsStress(i+1,j,k)-wcell_xSgsStress(i,j,k))*Area_EW+(wcell_ySgsStress(i,j+1,k) -wcell_ySgsStress(i,j,k))*Area_NS+(wcell_zSgsStress(i,j,k+1)-wcell_zSgsStress(i,j,k))*Area_TB);
+          FractalZSrc(i,j,k)=-densitygas/cellvol*((wcell_xSgsStress(i+1,j,k)-wcell_xSgsStress(i,j,k))*Area_EW+(wcell_ySgsStress(i,j+1,k) -wcell_ySgsStress(i,j,k))*Area_NS+(wcell_zSgsStress(i,j,k+1)-wcell_zSgsStress(i,j,k))*Area_TB);
 
-          //if(i==32&&j==32&&k==32)
-          //{std::cout<<" unfilter stress="<<" i= "<<i<<" j= "<<j<<" k="<<k<<"\n"; 
-          //std::cout<<"\n ucell_xSgsStress(i,j,k) After="<<ucell_xSgsStress(i,j,k) <<"\n";
-          //std::cout<<"\n ucell_ySgsStress(i,j,k) After="<<ucell_ySgsStress(i,j,k) <<"\n";
-          //std::cout<<"\n ucell_zSgsStress(i,j,k) After="<<ucell_zSgsStress(i,j,k) <<"\n";
-          //std::cout<<"\n vcell_ySgsStress(i,j,k) After="<<vcell_ySgsStress(i,j,k)  <<"\n";
-          //std::cout<<"\n vcell_xSgsStress(i,j,k) After="<<vcell_xSgsStress(i,j,k) <<"\n";
-          //std::cout<<"\n vcell_zSgsStress(i,j,k) After="<<vcell_zSgsStress(i,j,k) <<"\n";
-          //std::cout<<"\n wcell_zSgsStress(i,j,k) After="<<wcell_zSgsStress(i,j,k) <<"\n";
-          //std::cout<<"\n wcell_xSgsStress(i,j,k) After="<<wcell_xSgsStress(i,j,k) <<"\n";
-          //std::cout<<"\n wcell_ySgsStress(i,j,k) After="<<wcell_ySgsStress(i,j,k) <<"\n";
-          //}
-          //if(i==2&&j==2&&k==2)
-          //{std::cout<<"  filter stress="<<" i= "<<i<<" j= "<<j<<" k="<<k<<"\n"; 
-          //std::cout<<"\n ucell_xFilterStress(i,j,k) After="<<ucell_xFilterStress(i,j,k) <<"\n";
-          //std::cout<<"\n ucell_yFilterStress(i,j,k) After="<<ucell_yFilterStress(i,j,k) <<"\n";
-          //std::cout<<"\n ucell_zFilterStress(i,j,k) After="<<ucell_zFilterStress(i,j,k) <<"\n";
-          //std::cout<<"\n vcell_yFilterStress(i,j,k) After="<<vcell_yFilterStress(i,j,k)  <<"\n";
-          //std::cout<<"\n vcell_xFilterStress(i,j,k) After="<<vcell_xFilterStress(i,j,k) <<"\n";
-          //std::cout<<"\n vcell_zFilterStress(i,j,k) After="<<vcell_zFilterStress(i,j,k) <<"\n";
-          //std::cout<<"\n wcell_zFilterStress(i,j,k) After="<<wcell_zFilterStress(i,j,k) <<"\n";
-          //std::cout<<"\n wcell_xFilterStress(i,j,k) After="<<wcell_xFilterStress(i,j,k) <<"\n";
-          //std::cout<<"\n wcell_yFilterStress(i,j,k) After="<<wcell_yFilterStress(i,j,k) <<"\n";
-          //}
-
-          //if (i==3&& j==2 && k==2)
-          //{ std::cout<<"src:"<<"\n";
-          //std::cout<<"src(i,j,k)[0]= "<<FractalXSrc(i,j,k)/cellvol<<" src(i,j,k)[1]="<<FractalYSrc(i,j,k)/cellvol<<" Src(i,j,k)[2]="<<FractalZSrc(i,j,k)/cellvol <<"\n";
-          //}
-
-      });
-
+          });
 
     }
 

@@ -48,16 +48,6 @@ namespace Uintah{
         StrainOut[1]=(c1*(V(i,j,k)-V(i,j-1,k))-c2*(V(i,j+1,k)-V(i,j-2,k)))/dy;
         StrainOut[2]=(c1*(W(i,j,k)-W(i,j,k-1))-c2*(W(i,j,k+1)-W(i,j,k-2)))/dz;
 
-        //dudy=        (U(i,j,k)-U(i,j-1,k))/dy;
-        //dvdx=        (V(i,j,k)-V(i-1,j,k))/dx;
-        //dvdz=        (V(i,j,k)-V(i,j,k-1))/dz;
-        //dwdy=        (W(i,j,k)-W(i,j-1,k))/dy;
-        //dwdx=        (W(i,j,k)-W(i-1,j,k))/dx;
-        //dudz=        (U(i,j,k)-U(i,j,k-1))/dz;
-        //StrainOut[0]=(U(i,j,k)-U(i-1,j,k))/dx;
-        //StrainOut[1]=(V(i,j,k)-V(i,j-1,k))/dx;
-        //StrainOut[2]=(W(i,j,k)-W(i,j,k-1))/dx;
-
         StrainOut[3]=0.5*(dudy+dvdx);
         StrainOut[4]=0.5*(dvdz+dwdy) ;
         StrainOut[5]=0.5*(dudz+dwdx);
@@ -115,8 +105,6 @@ namespace Uintah{
             for(int kk:{-1,0,1}){
               index_cv=index_cv+1;
               cell_index[ii+1][jj+1][kk+1]=index_cv;
-              //LegData[ii+1][jj+1][kk+1]=dum[index];
-              //std::cout<<index_cv<<"\n"<<"i="<<ii <<" j="<<jj <<" k="<<kk<<"Legdata="<<LegData[ii+1][jj+1][kk+1]<<"\n";
             } // end kk
           } // end jj
         } // end ii
@@ -126,7 +114,6 @@ namespace Uintah{
             for(int kk:{-1,0,1}){
               index=cell_index[ii+1][jj+1][kk+1];
               LegData[ii+1][jj+1][kk+1]=dum[index];
-              //     std::cout<<index<<"\n"<<"i="<<ii <<" j="<<jj <<" k="<<kk<<"Legdata="<<LegData[ii+1][jj+1][kk+1]<<"\n";
             } // end kk
           } // end jj
         } // end ii
@@ -135,29 +122,12 @@ namespace Uintah{
         double w[3][3][3];
         double wt;
         F_var=0.0;
-        //for ( int m = -1; m <= 1; m++ ){
-        //for ( int n = -1; n <= 1; n++ ){
-        //for ( int l = -1; l <= 1; l++ ){
-        ////double my_value = abs(m) + abs(n) + abs(l)+3.0;
-        ////w[m+1][n+1][l+1]= (1.0/std::pow(2.0,my_value));
-
-        //double my_value = -abs(m) - abs(n) - abs(l)+3.0;
-        //w[m+1][n+1][l+1] = std::pow(4.0,my_value);
-
-        ////w[m+1][n+1][l+1] = 1.0;
-
-        //}
-        //}
-        //}
         wt = 1.;
         //   F_var = 0.0;
         for ( int m = -1; m <= 1; m++ ){
           for ( int n = -1; n <= 1; n++ ){
             for ( int l = -1; l <= 1; l++ ){
-              //F_var += w[m+1][n+1][l+1]* var(i+m,j+n,k+l);
               F_var += LegData[m+1][n+1][l+1]* var(i+m,j+n,k+l);
-              //if(i== 32 && j==32 && k==32)
-              //std::cout<< "filter resolved scale= "<< F_var<<"i,j,k="<<LegData[m+1][n+1][l+1] << std::endl;
             }
           }
         }

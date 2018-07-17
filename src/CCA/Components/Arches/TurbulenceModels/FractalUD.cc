@@ -223,46 +223,17 @@ namespace Uintah{
   void
     FractalUD::register_timestep_init( std::vector<AFC::VariableInformation>&
         variable_registry , const bool packed_tasks){
-      //  for (auto iter = m_VelDelta_names.begin(); iter != m_VelDelta_names.end(); iter++ ){
-      //    register_variable( *iter, ArchesFieldContainer::COMPUTES, variable_registry, _task_name );
-      //  }
-
-      // register_variable( m_t_vis_name, AFC::COMPUTES, variable_registry );
-
     }
 
   //---------------------------------------------------------------------------------
   void
     FractalUD::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
-      // UD
-      //  SFCXVariable<double>& uD_ctr          = tsk_info->get_uintah_field_add<SFCXVariable<double> >("uD_ctr");
-      //  SFCXVariable<double>& ucell_XvelD     = tsk_info->get_uintah_field_add<SFCXVariable<double> >("ucell_XvelD");
-      //  SFCXVariable<double>& ucell_YvelD     = tsk_info->get_uintah_field_add<SFCXVariable<double> >("ucell_YvelD");
-      //  SFCXVariable<double>& ucell_ZvelD     = tsk_info->get_uintah_field_add<SFCXVariable<double> >("ucell_ZvelD");
-
-      //  SFCYVariable<double>& vD_ctr          = tsk_info->get_uintah_field_add<SFCYVariable<double> >("vD_ctr");
-      // SFCYVariable<double>& vcell_XvelD     = tsk_info->get_uintah_field_add<SFCYVariable<double> >("vcell_XvelD");
-      // SFCYVariable<double>& vcell_YvelD     = tsk_info->get_uintah_field_add<SFCYVariable<double> >("vcell_YvelD");
-      // SFCYVariable<double>& vcell_ZvelD     = tsk_info->get_uintah_field_add<SFCYVariable<double> >("vcell_ZvelD");
-
-      //  SFCZVariable<double>& wD_ctr          = tsk_info->get_uintah_field_add<SFCZVariable<double> >("wD_ctr");
-      //  SFCZVariable<double>& wcell_XvelD     = tsk_info->get_uintah_field_add<SFCZVariable<double> >("wcell_XvelD");
-      //  SFCZVariable<double>& wcell_YvelD     = tsk_info->get_uintah_field_add<SFCZVariable<double> >("wcell_YvelD");
-      //  SFCZVariable<double>& wcell_ZvelD     = tsk_info->get_uintah_field_add<SFCZVariable<double> >("wcell_ZvelD");
-      //U2D
-      // SFCXVariable<double>& u2D_ctr         = tsk_info->get_uintah_field_add<SFCXVariable<double> >("u2D_ctr");
-      // SFCYVariable<double>& v2D_ctr         = tsk_info->get_uintah_field_add<SFCYVariable<double> >("v2D_ctr");
-      // SFCZVariable<double>& w2D_ctr         = tsk_info->get_uintah_field_add<SFCZVariable<double> >("w2D_ctr");
-
-      //CCVariable<double>& mu_sgc = *(tsk_info->get_uintah_field<CCVariable<double> >(m_t_vis_name));
-      // uD_ctr.initialize(0.0);
     }
 
   //---------------------------------------------------------------------------------
   void
     FractalUD::register_timestep_eval( std::vector<AFC::VariableInformation>&
         variable_registry, const int time_substep , const bool packed_tasks){
-      //register_variable( Ux_face_name,    ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::LATEST, variable_registry,time_substep);
       register_variable( Ux_face_name,    ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::NEWDW, variable_registry,time_substep);
       register_variable( Uy_face_name,    ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::NEWDW, variable_registry,time_substep);
       register_variable( Uz_face_name,    ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::NEWDW, variable_registry,time_substep);
@@ -275,24 +246,11 @@ namespace Uintah{
       register_variable( m_u_vel_name,    ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::NEWDW, variable_registry,time_substep);
       register_variable( m_v_vel_name,    ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::NEWDW, variable_registry,time_substep);
       register_variable( m_w_vel_name,    ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::NEWDW, variable_registry,time_substep);
-      //register_variable( "density",       ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::OLDDW, variable_registry,time_substep );
-      //register_variable( "volFraction",   ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::OLDDW, variable_registry,time_substep );
       // UPDATE USER DEFINE VARIABLES
       // register Velocity Delta
       for (auto iter = m_VelDelta_names.begin(); iter != m_VelDelta_names.end(); iter++ ){
         register_variable( *iter, ArchesFieldContainer::COMPUTES, variable_registry, time_substep,_task_name );
-        //   register_variable( *iter, ArchesFieldContainer::MODIFIES, variable_registry, _task_name,time_substep );
       }
-
-      //register_variable( m_u_vel_name, AFC::REQUIRES, Nghost_cells, AFC::LATEST, variable_registry, time_substep);
-      //register_variable( m_v_vel_name, AFC::REQUIRES, Nghost_cells, AFC::LATEST, variable_registry, time_substep);
-      //register_variable( m_w_vel_name, AFC::REQUIRES, Nghost_cells, AFC::LATEST, variable_registry, time_substep);
-
-      //register_variable( m_cc_u_vel_name, AFC::REQUIRES, Nghost_cells, AFC::LATEST, variable_registry, time_substep);
-      //register_variable( m_cc_v_vel_name, AFC::REQUIRES, Nghost_cells, AFC::LATEST, variable_registry, time_substep);
-      //register_variable( m_cc_w_vel_name, AFC::REQUIRES, Nghost_cells, AFC::LATEST, variable_registry, time_substep);
-
-      //register_variable( m_t_vis_name, AFC::MODIFIES ,  variable_registry, time_substep );
 
     }
 

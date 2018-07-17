@@ -42,24 +42,6 @@ namespace Uintah{
     m_VelDelta_names[13] = "v2D_ctr";
     m_VelDelta_names[14] = "w2D_ctr";
 
-    // Create SGS stress
-    //m_StrainRateUD_names.resize(6);
-    //m_StrainRateUD_names[0] = "uuStrainUD";
-    //m_StrainRateUD_names[1] = "uvStrainUD";
-    //m_StrainRateUD_names[2] = "vvStrainUD";
-    //m_StrainRateUD_names[3] = "vwStrainUD";
-    //m_StrainRateUD_names[4] = "wwStrainUD";
-    //m_StrainRateUD_names[5] = "wuStrainUD";
-
-    //m_StrainRateU2D_names.resize(6);
-    //m_StrainRateU2D_names[0] = "uuStrainU2D";
-    //m_StrainRateU2D_names[1] = "uvStrainU2D";
-    //m_StrainRateU2D_names[2] = "vvStrainU2D";
-    //m_StrainRateU2D_names[3] = "vwStrainU2D";
-    //m_StrainRateU2D_names[4] = "wwStrainU2D";
-    //m_StrainRateU2D_names[5] = "wuStrainU2D";
-
-    //// Create new label
     //// Create SGS stress
     m_SgsStress_names.resize(9);
     m_SgsStress_names[0] = "ucell_xSgsStress";
@@ -136,23 +118,6 @@ namespace Uintah{
       register_new_variable<SFCZVariable<double> >("wcell_xSgsStress");
       register_new_variable<SFCZVariable<double> >("wcell_ySgsStress");
       register_new_variable<SFCZVariable<double> >("wcell_zSgsStress");
-
-      //std::vector names{32};
-      //names[0] = "var1";
-      ////..
-      //names[31] = "var32";
-
-      //for ( auto i = names.begin(); i != names.end(); i++ ){
-      //register_new_variable<CCVariable<double> >(*i);
-      //}
-
-      //for (auto iter = m_StrainRateUD_names.begin(); iter != m_StrainRateUD_names.end(); iter++ ){
-      //register_new_variable<CCVariable<double> >(*iter);
-      //}
-      //for (auto iter = m_StrainRateUD_names.begin(); iter != m_StrainRateUD_names.end(); iter++ ){
-      //register_new_variable<CCVariable<double> >(*iter);
-      //}
-
     }
 
   //---------------------------------------------------------------------------------
@@ -163,9 +128,6 @@ namespace Uintah{
       for (auto iter = m_SgsStress_names.begin(); iter != m_SgsStress_names.end(); iter++ ){
         register_variable( *iter, ArchesFieldContainer::COMPUTES, variable_registry, _task_name );
       }
-      //  register_variable( m_t_vis_name, AFC::COMPUTES, variable_registry );
-
-      // register Velocity Delta
     }
 
   //---------------------------------------------------------------------------------
@@ -205,12 +167,6 @@ namespace Uintah{
         register_variable( *iter, ArchesFieldContainer::COMPUTES, variable_registry, _task_name );
       }
 
-      //for (auto iter = m_VelDelta_names.begin(); iter != m_VelDelta_names.end(); iter++ ){
-      //register_variable( *iter, ArchesFieldContainer::COMPUTES, variable_registry, _task_name );
-      //}
-
-      // register_variable( m_t_vis_name, AFC::COMPUTES, variable_registry );
-
     }
 
   //---------------------------------------------------------------------------------
@@ -228,8 +184,6 @@ namespace Uintah{
       SFCZVariable<double>& wcell_xSgsStress = *(tsk_info->get_uintah_field<SFCZVariable<double> >("wcell_xSgsStress"));
       SFCZVariable<double>& wcell_ySgsStress = *(tsk_info->get_uintah_field<SFCZVariable<double> >("wcell_ySgsStress"));
       SFCZVariable<double>& wcell_zSgsStress = *(tsk_info->get_uintah_field<SFCZVariable<double> >("wcell_zSgsStress"));
-
-      //CCVariable<double>& mu_sgc = *(tsk_info->get_uintah_field<CCVariable<double> >(m_t_vis_name));
 
     }
 
@@ -261,7 +215,6 @@ namespace Uintah{
       register_variable( "wvstress",    ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::NEWDW, variable_registry,time_substep);
       register_variable( "wwstress",    ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::NEWDW, variable_registry,time_substep);
       register_variable( "density",     ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::OLDDW, variable_registry,time_substep );
-      //register_variable( "volFraction",   ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::OLDDW, variable_registry,time_substep );
       // UPDATE USER DEFINE VARIABLES
       // register Velocity Delta
       for (auto iter = m_VelDelta_names.begin(); iter != m_VelDelta_names.end(); iter++ ){
@@ -272,15 +225,6 @@ namespace Uintah{
       for (auto iter = m_SgsStress_names.begin(); iter != m_SgsStress_names.end(); iter++ ){
         register_variable( *iter, ArchesFieldContainer::MODIFIES, variable_registry, _task_name );
       }
-      //register_variable( m_u_vel_name, AFC::REQUIRES, Nghost_cells, AFC::LATEST, variable_registry, time_substep);
-      //register_variable( m_v_vel_name, AFC::REQUIRES, Nghost_cells, AFC::LATEST, variable_registry, time_substep);
-      //register_variable( m_w_vel_name, AFC::REQUIRES, Nghost_cells, AFC::LATEST, variable_registry, time_substep);
-
-      //register_variable( m_cc_u_vel_name, AFC::REQUIRES, Nghost_cells, AFC::LATEST, variable_registry, time_substep);
-      //register_variable( m_cc_v_vel_name, AFC::REQUIRES, Nghost_cells, AFC::LATEST, variable_registry, time_substep);
-      //register_variable( m_cc_w_vel_name, AFC::REQUIRES, Nghost_cells, AFC::LATEST, variable_registry, time_substep);
-
-      //register_variable( m_t_vis_name, AFC::MODIFIES ,  variable_registry, time_substep );
 
     }
 
@@ -354,13 +298,6 @@ namespace Uintah{
 
       constCCVariable<double>& density = tsk_info->get_const_uintah_field_add<constCCVariable<double> >("density");
 
-      //constSFCXVariable<double>& uVel = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >(m_u_vel_name);
-      //std::vector<CCVariable<double>* > var_ref;
-      //int ii = 0;
-      //for ( auto i = m_stressNames.begin(); i != m_stressNames.end(); i++){
-      //var_ref[ii] = task_info->get_uintah_field_add<CCVariable<double> >(*i);
-      //}
-
       Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
 
       Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -409,37 +346,22 @@ namespace Uintah{
 
           // paper 2004(ii), eq.15 to calculate the coefficient, which is in the header file
           double C_sgs_G= sgsVelCoeff(mu,LegthScales,strainR_magn,dx, dy, dz, sgs_scales,factorN, value,Re_g);
-          //double C_sgs_G= sgsVelCoeff(mu,LegthScales,velmagn,dx, dy, dz, sgs_scales,factorN, value,Re_g);
-          //if (i==2&&j==2&&k==2)
-          //{ std::cout<<"\n StrainUD"<<strainUD_magn<<"Re_g="<<Re_g<<"C_sgs_G="<< C_sgs_G<<"mu="<<mu<<"LegthScale="<<LegthScales <<"dx="<<dx<<"factorN="<<factorN<<"sgs_scales="<<sgs_scales<<"value="<<value<<"\n";
-          //}
 
-          // at u-cell xface
-          // 1:i=1 j=1
-          //velmagn= std::abs(ucell_XvelD(i,j,k) );
-          //velmagn=std::sqrt(uD_ctr(i,j,k)*uD_ctr(i,j,k) + 0.25*(vD_ctr(i-1,j,k)+vD_ctr(i-1,j+1,k))*(vD_ctr(i-1,j,k)+vD_ctr(i-1,j+1,k)) + 0.25*(wD_ctr(i-1,j,k)+wD_ctr(i-1,j,k+1) )*(wD_ctr(i-1,j,k)+ wD_ctr(i-1,j,k+1) ) );
-          //C_sgs_G= sgsVelCoeff(mu,LegthScales,velmagn,dx, dy, dz, sgs_scales,factorN, value,Re_g);
           // paper 2004(II)-eq.14
+          
+          // at u-cell xface
           tau[0]= ucell_xvel_face(i,j,k)*ucell_xvel_face(i,j,k);
           tau[1]= ucell_xvel_face(i,j,k)*ucell_XvelD(i,j,k)*C_sgs_G;
           tau[2]= ucell_XvelD(i,j,k)*C_sgs_G*ucell_xvel_face(i,j,k);
           tau[3]= ucell_XvelD(i,j,k)*C_sgs_G*ucell_XvelD(i,j,k)*C_sgs_G;
 
           // at v-cell yface
-          // 2:i=2 j=2
-          //velmagn=std::sqrt(0.25*(uD_ctr(i,j-1,k)+uD_ctr(i+1,j-1,k))*(uD_ctr(i,j-1,k)+uD_ctr(i+1,j-1,k)) + vD_ctr(i,j,k)*vD_ctr(i,j,k)+ 0.25*(wD_ctr(i,j-1,k)+wD_ctr(i,j-1,k+1) )*(wD_ctr(i,j-1,k)+ wD_ctr(i,j-1,k+1) ) );
-          //velmagn= std::abs(vcell_YvelD(i,j,k));
-          //C_sgs_G= sgsVelCoeff(mu,LegthScales,velmagn,dx, dy, dz, sgs_scales,factorN, value,Re_g);
           tau[4]= vcell_yvel_face(i,j,k)*vcell_yvel_face(i,j,k);
           tau[5]= vcell_yvel_face(i,j,k)*vcell_YvelD(i,j,k)*C_sgs_G;
           tau[6]= vcell_YvelD(i,j,k)*C_sgs_G*vcell_yvel_face(i,j,k);
           tau[7]= vcell_YvelD(i,j,k)*C_sgs_G*vcell_YvelD(i,j,k)*C_sgs_G;
 
           // at w-cell wface
-          // 3:i=3 j=3
-          //velmagn=std::sqrt(0.25*(uD_ctr(i,j,k-1)+uD_ctr(i+1,j,k-1))*(uD_ctr(i,j,k-1)+uD_ctr(i+1,j,k-1)) + 0.25*(vD_ctr(i,j,k-1)+vD_ctr(i,j+1,k-1))*(vD_ctr(i,j,k-1)+vD_ctr(i,j+1,k-1))+ wD_ctr(i,j,k)*wD_ctr(i,j,k)  );
-          //velmagn= std::abs(wcell_ZvelD(i,j,k));
-          //C_sgs_G= sgsVelCoeff(mu,LegthScales,velmagn,dx, dy, dz, sgs_scales,factorN, value,Re_g);
           tau[8]=  wcell_zvel_face(i,j,k)*wcell_zvel_face(i,j,k);
           tau[9]=  wcell_zvel_face(i,j,k)*wcell_ZvelD(i,j,k)*C_sgs_G;
           tau[10]= wcell_ZvelD(i,j,k)*C_sgs_G*wcell_zvel_face(i,j,k);
@@ -447,20 +369,12 @@ namespace Uintah{
 
 
           // 4:rhoU*V at uv-node: TauUV
-          // i=1 j=2
-          //velmagn=std::sqrt( vcell_XvelD(i,j,k)*vcell_XvelD(i,j,k) +ucell_YvelD(i,j,k)*ucell_YvelD(i,j,k)+0.25*0.25*(ucell_ZvelD(i,j,k)+ ucell_ZvelD(i,j-1,k)  + ucell_ZvelD(i,j,k+1) + ucell_ZvelD(i,j-1,k+1) )*(ucell_ZvelD(i,j,k)+ ucell_ZvelD(i,j-1,k)+ ucell_ZvelD(i,j,k+1) + ucell_ZvelD(i,j-1,k+1) ));
-          //velmagn= std::abs(vcell_XvelD(i,j,k)+ucell_YvelD(i,j,k))*0.5;
-          //C_sgs_G= sgsVelCoeff(mu,LegthScales,velmagn,dx, dy, dz, sgs_scales,factorN, value,Re_g);
           tau[12]= vcell_xvel_face(i,j,k)*ucell_yvel_face(i,j,k);
           tau[13]= vcell_xvel_face(i,j,k)*ucell_YvelD(i,j,k)*C_sgs_G;
           tau[14]= vcell_XvelD(i,j,k)*ucell_yvel_face(i,j,k)*C_sgs_G;
           tau[15]= vcell_XvelD(i,j,k)*C_sgs_G*ucell_YvelD(i,j,k)*C_sgs_G;
 
           // 5:rhoU*W at vw-node: TauUW
-          // i=1 j=3
-          //velmagn=std::sqrt( wcell_XvelD(i,j,k)*wcell_XvelD(i,j,k) + 0.25*0.25*(ucell_YvelD(i,j,k)+ ucell_YvelD(i,j+1,k)  + ucell_YvelD(i,j,k-1) + ucell_YvelD(i,j+1,k-1) )*(ucell_YvelD(i,j,k)+ ucell_YvelD(i,j+1,k)  + ucell_YvelD(i,j,k-1) + ucell_YvelD(i,j+1,k-1) )+ ucell_ZvelD(i,j,k)*ucell_ZvelD(i,j,k) );
-          //velmagn= std::abs( ucell_ZvelD(i,j,k) + wcell_XvelD(i,j,k) )*0.5;
-          //C_sgs_G= sgsVelCoeff(mu,LegthScales,velmagn,dx, dy, dz, sgs_scales,factorN, value,Re_g);
           tau[16]= wcell_xvel_face(i,j,k)*ucell_zvel_face(i,j,k);
           tau[17]= wcell_xvel_face(i,j,k)*ucell_ZvelD(i,j,k)*C_sgs_G;
           tau[18]= wcell_XvelD(i,j,k)*C_sgs_G*ucell_zvel_face(i,j,k);
@@ -468,10 +382,6 @@ namespace Uintah{
 
 
           // 6:rhoV*U at vu-node: TauVU
-          // i=2 j=1
-          //velmagn= std::abs( ucell_YvelD(i,j,k) + vcell_XvelD(i,j,k) )*0.5;
-          //velmagn=std::sqrt( vcell_XvelD(i,j,k)*vcell_XvelD(i,j,k) +ucell_YvelD(i,j,k)*ucell_YvelD(i,j,k)+0.25*0.25*(vcell_ZvelD(i,j,k)+ vcell_ZvelD(i-1,j,k)  + vcell_ZvelD(i-1,j,k+1) + vcell_ZvelD(i,j,k+1) )*(vcell_ZvelD(i,j,k)+ vcell_ZvelD(i-1,j,k)  + vcell_ZvelD(i-1,j,k+1) + vcell_ZvelD(i,j,k+1) ));
-          //C_sgs_G= sgsVelCoeff(mu,LegthScales,velmagn,dx, dy, dz, sgs_scales,factorN, value,Re_g);
           tau[20]= ucell_yvel_face(i,j,k)*vcell_xvel_face(i,j,k);
           tau[21]= ucell_yvel_face(i,j,k)*vcell_XvelD(i,j,k)*C_sgs_G;
           tau[22]= ucell_YvelD(i,j,k)*vcell_xvel_face(i,j,k)*C_sgs_G;
@@ -479,41 +389,22 @@ namespace Uintah{
 
 
           // 7:rhoV*W at vw-node: TauVW
-          // i=2 j=3
-          //velmagn= std::abs( wcell_YvelD(i,j,k) + vcell_ZvelD(i,j,k) )*0.5;
-          //velmagn=std::sqrt( 0.25*0.25*(vcell_XvelD(i,j,k)+ vcell_XvelD(i,j,k-1) +vcell_XvelD(i+1,j,k)+ vcell_XvelD(i+1,j,k-1) )*(vcell_XvelD(i,j,k)+ vcell_XvelD(i,j,k-1) +vcell_XvelD(i+1,j,k)+ vcell_XvelD(i+1,j,k-1) )+wcell_YvelD(i,j,k)*wcell_YvelD(i,j,k) +vcell_ZvelD(i,j,k)*vcell_ZvelD(i,j,k));
-          //C_sgs_G= sgsVelCoeff(mu,LegthScales,velmagn,dx, dy, dz, sgs_scales,factorN, value,Re_g);
           tau[24]= wcell_yvel_face(i,j,k)*vcell_zvel_face(i,j,k);
           tau[25]= wcell_yvel_face(i,j,k)*vcell_ZvelD(i,j,k)*C_sgs_G;
           tau[26]= wcell_YvelD(i,j,k)*C_sgs_G*vcell_zvel_face(i,j,k);
           tau[27]= wcell_YvelD(i,j,k)*C_sgs_G*vcell_ZvelD(i,j,k)*C_sgs_G;
 
           // 8:rhoW*U at vw-node: TauWU
-          // i=1 j=3
-          //velmagn=std::sqrt( wcell_XvelD(i,j,k)*wcell_XvelD(i,j,k) + 0.25*0.25*(wcell_YvelD(i,j,k)+ wcell_YvelD(i,j+1,k)+ wcell_YvelD(i-1,j,k) + wcell_YvelD(i-1,j+1,k) )*(wcell_YvelD(i,j,k)+ wcell_YvelD(i,j+1,k)+ wcell_YvelD(i-1,j,k) + wcell_YvelD(i-1,j+1,k) )+ ucell_ZvelD(i,j,k)*ucell_ZvelD(i,j,k) );
-          //velmagn= std::abs( ucell_ZvelD(i,j,k) + wcell_XvelD(i,j,k) )*0.5;
-          //C_sgs_G= sgsVelCoeff(mu,LegthScales,velmagn,dx, dy, dz, sgs_scales,factorN, value,Re_g);
           tau[28]= ucell_zvel_face(i,j,k)*wcell_xvel_face(i,j,k);
           tau[29]= ucell_zvel_face(i,j,k)*wcell_XvelD(i,j,k)*C_sgs_G;
           tau[30]= ucell_ZvelD(i,j,k)*C_sgs_G*wcell_xvel_face(i,j,k);
           tau[31]= ucell_ZvelD(i,j,k)*C_sgs_G*wcell_XvelD(i,j,k)*C_sgs_G;
 
           // 9:rhoW*V at vw-node: TauWV
-          // i=3 j=2
-          //velmagn= std::abs( vcell_ZvelD(i,j,k) + wcell_YvelD(i,j,k) )*0.5;
-          //velmagn=std::sqrt( 0.25*0.25*(wcell_XvelD(i,j,k)+ wcell_XvelD(i+1,j,k) +wcell_XvelD(i,j-1,k)+ wcell_XvelD(i+1,j-1,k) )*(wcell_XvelD(i,j,k)+ wcell_XvelD(i+1,j,k) +wcell_XvelD(i,j-1,k)+ wcell_XvelD(i+1,j-1,k) )+wcell_YvelD(i,j,k)*wcell_YvelD(i,j,k) +vcell_ZvelD(i,j,k)*vcell_ZvelD(i,j,k));
-          //C_sgs_G= sgsVelCoeff(mu,LegthScales,velmagn,dx, dy, dz, sgs_scales,factorN, value,Re_g);
           tau[32]= vcell_zvel_face(i,j,k)*wcell_yvel_face(i,j,k);
           tau[33]= vcell_zvel_face(i,j,k)*wcell_YvelD(i,j,k)*C_sgs_G;
           tau[34]= vcell_ZvelD(i,j,k)*C_sgs_G*wcell_yvel_face(i,j,k);
           tau[35]= vcell_ZvelD(i,j,k)*C_sgs_G*wcell_YvelD(i,j,k)*C_sgs_G;
-          // final Stress with limitors
-          // remove trace term by term
-          //if (i==3&&j==2&&k==2)
-          //{ std::cout<<"\n uuFaceX="<< tau[0] <<" uvFaceX="<< tau[12]<<" uwFaceX="<< tau[16]<<"\n";
-          //std::cout<<"\n vuFaceY="<< tau[20] <<"vvFaceY="<< tau[4]<<"  vwFaceY="<< tau[24]<<"\n";
-          //std::cout<<"\n wuFaceZ="<< tau[28] <<"wvFaceZ="<< tau[32]<<" wwFaceZ="<< tau[8]<<"\n";
-          //}
 
           double trace =0;
           for (unsigned int iter=0 ;iter < tau.size(); iter++)
@@ -589,23 +480,6 @@ namespace Uintah{
           Sum[11-1]= (strain_ratio[3-1]<ratio_threshold && StrainUR[3-1]*Sum[11-1]>0  )  ?  Lij*Sum[11-1]  : Sum[11-1] ;
           Sum[12-1]= (strain_ratio[3-1]<ratio_threshold && StrainUR[3-1]*Sum[12-1]>0  )  ?  Lij*Sum[12-1]  : Sum[12-1] ;
 
-          //// Return the trace to diagonal components
-          ////trace=1.0/3.0*(tau[2-1]+tau[6-1]+tau[10-1]);
-          ////Sum[2-1]= Sum[2-1]+trace;
-          ////Sum[6-1]= Sum[6-1]+trace;
-          ////Sum[10-1]=Sum[10-1]+trace;
-
-          ////trace=1.0/3.0*(tau[3-1]+tau[7-1]+tau[11-1]);
-          ////Sum[3-1]= Sum[3-1]+trace;
-          ////Sum[7-1]= Sum[7-1]+trace;
-          ////Sum[11-1]=Sum[11-1]+trace;
-
-          ////trace=1.0/3.0*(tau[4-1]+tau[8-1]+tau[12-1]);
-          ////Sum[4-1]= Sum[4-1]+trace;
-          ////Sum[8-1]= Sum[8-1]+trace;
-          ////Sum[12-1]=Sum[12-1]+trace;
-
-
           //// divotical elements
           //// TauUV& TauVU
           Lij=strain_ratio[4-1]/ratio_threshold;
@@ -642,145 +516,6 @@ namespace Uintah{
           Sum[29]= (strain_ratio[6-1]<ratio_threshold && StrainUR[6-1]*Sum[29]>0  )  ? Lij*Sum[29]  : Sum[29] ;
           Sum[30]= (strain_ratio[6-1]<ratio_threshold && StrainUR[6-1]*Sum[30]>0  )  ? Lij*Sum[30]  : Sum[30] ;
           Sum[31]= (strain_ratio[6-1]<ratio_threshold && StrainUR[6-1]*Sum[31]>0  )  ? Lij*Sum[31]  : Sum[31] ;
-
-          // test more filter;
-          //Sum[1-1]= ( StrainUR[1-1]*Sum[1-1]>0  )  ?  limDevotic*Sum[1-1]  : Sum[2-1] ;
-          //Sum[5-1]= ( StrainUR[2-1]*Sum[5-1]>0  )  ?  limDevotic*Sum[5-1]  : Sum[5-1] ;
-          //Sum[9-1]= ( StrainUR[3-1]*Sum[9-1]>0  )  ?  limDevotic*Sum[9-1]  : Sum[9-1] ;
-
-          //direct diagonial limiter
-          // direct limiter paper 2004(ii),eq28
-          //Sum[1-1]= ( StrainUR[1-1]*Sum[1-1]>0  )  ? limDevotic*Sum[1-1]  : Sum[2-1] ;
-          // // determining the backscatter paper2004(ii.), eq.24
-          // Sum[2-1]= ( StrainUR[1-1]*Sum[2-1]>0  )  ? limDevotic*Sum[2-1]  : Sum[2-1] ;
-          // Sum[3-1]= ( StrainUR[1-1]*Sum[3-1]>0  )  ? limDevotic*Sum[3-1]  : Sum[3-1] ;
-          // //Sum[4-1]= ( StrainUR[1-1]*Sum[4-1]>0  )  ? (limDevotic+0.1)*Sum[4-1]  : Sum[4-1] ;
-          // Sum[4-1]= ( StrainUR[1-1]*Sum[4-1]>0  )  ? (limDevotic)*Sum[4-1]  : Sum[4-1] ;
-          //
-          // // at v-cell yface
-          // Lij=strain_ratio[2-1]/ratio_threshold;
-          // //Sum[5-1]= ( StrainUR[2-1]*Sum[5-1]>0  )  ? limDevotic*Sum[5-1]  : Sum[5-1] ;
-          // Sum[6-1]= ( StrainUR[2-1]*Sum[6-1]>0  )  ? limDevotic*Sum[6-1]  : Sum[6-1] ;
-          // Sum[7-1]= ( StrainUR[2-1]*Sum[7-1]>0  )  ? limDevotic*Sum[7-1]  : Sum[7-1] ;
-          // //Sum[8-1]= ( StrainUR[2-1]*Sum[8-1]>0  )  ? (limDevotic+0.1)*Sum[8-1]  : Sum[8-1] ;
-          // Sum[8-1]= ( StrainUR[2-1]*Sum[8-1]>0  )  ? (limDevotic)*Sum[8-1]  : Sum[8-1] ;
-          //
-          // // at w-cell zface
-          // Lij=strain_ratio[3-1]/ratio_threshold;
-          // //Sum[9-1]=  ( StrainUR[3-1]*Sum[9-1]>0  ) ? limDevotic*Sum[9-1]  :  Sum[9-1] ;
-          // Sum[10-1]= ( StrainUR[3-1]*Sum[10-1]>0 ) ? limDevotic*Sum[10-1]  : Sum[10-1] ;
-          // Sum[11-1]= ( StrainUR[3-1]*Sum[11-1]>0 ) ? limDevotic*Sum[11-1]  : Sum[11-1] ;
-          // //Sum[12-1]= ( StrainUR[3-1]*Sum[12-1]>0 ) ? (limDevotic+0.1)*Sum[12-1]  : Sum[12-1] ;
-          // Sum[12-1]= ( StrainUR[3-1]*Sum[12-1]>0 ) ? (limDevotic)*Sum[12-1]  : Sum[12-1] ;
-          //
-          // ////  direct divogetic limiter
-          // Sum[12]= ( StrainUR[4-1]*Sum[12]>0  )  ?  limDevotic*Sum[12]  : Sum[12] ;
-          // Sum[13]= ( StrainUR[4-1]*Sum[13]>0  )  ?  limDevotic*Sum[13]  : Sum[13] ;
-          // Sum[14]= ( StrainUR[4-1]*Sum[14]>0  )  ?  limDevotic*Sum[14]  : Sum[14] ;
-          // Sum[15]= ( StrainUR[4-1]*Sum[15]>0  )  ?  (limDevotic)*Sum[15]  : Sum[15] ;
-          // //Sum[15]= ( StrainUR[4-1]*Sum[15]>0  )  ?  (limDevotic+0.1)*Sum[15]  : Sum[15] ;
-          //
-          // Sum[20]= ( StrainUR[4-1]*Sum[20]>0  )  ?  limDevotic*Sum[20]  : Sum[20] ;
-          // Sum[21]= ( StrainUR[4-1]*Sum[21]>0  )  ?  limDevotic*Sum[21]  : Sum[21] ;
-          // Sum[22]= ( StrainUR[4-1]*Sum[22]>0  )  ?  limDevotic*Sum[22]  : Sum[22] ;
-          // //Sum[23]= ( StrainUR[4-1]*Sum[23]>0  )  ?  (limDevotic+0.1)*Sum[23]  : Sum[23] ;
-          // Sum[23]= ( StrainUR[4-1]*Sum[23]>0  )  ?  (limDevotic)*Sum[23]  : Sum[23] ;
-          //
-          //   //TauWV&
-          // Sum[24]= ( StrainUR[5-1]*Sum[24]>0  )  ?  limDevotic*Sum[24]  : Sum[24] ;
-          // Sum[25]= ( StrainUR[5-1]*Sum[25]>0  )  ?  limDevotic*Sum[25]  : Sum[25] ;
-          // Sum[26]= ( StrainUR[5-1]*Sum[26]>0  )  ?  limDevotic*Sum[26]  : Sum[26] ;
-          // Sum[27]= ( StrainUR[5-1]*Sum[27]>0  )  ?  (limDevotic)*Sum[27]  : Sum[27] ;
-          // //Sum[27]= ( StrainUR[5-1]*Sum[27]>0  )  ?  (limDevotic+0.1)*Sum[27]  : Sum[27] ;
-          //
-          // Sum[32]= ( StrainUR[5-1]*Sum[32]>0  )  ?  limDevotic*Sum[32]  : Sum[32] ;
-          // Sum[33]= ( StrainUR[5-1]*Sum[33]>0  )  ?  limDevotic*Sum[33]  : Sum[33] ;
-          // Sum[34]= ( StrainUR[5-1]*Sum[34]>0  )  ?  limDevotic*Sum[34]  : Sum[34] ;
-          // //Sum[35]= ( StrainUR[5-1]*Sum[35]>0  )  ?  (limDevotic+0.1)*Sum[35]  : Sum[35] ;
-          // Sum[35]= ( StrainUR[5-1]*Sum[35]>0  )  ?  (limDevotic)*Sum[35]  : Sum[35] ;
-          //
-          //  //TauUW &
-          // Sum[16]= ( StrainUR[6-1]*Sum[16]>0  )  ?  limDevotic*Sum[16]  : Sum[16] ;
-          // Sum[17]= ( StrainUR[6-1]*Sum[17]>0  )  ?  limDevotic*Sum[17]  : Sum[17] ;
-          // Sum[18]= ( StrainUR[6-1]*Sum[18]>0  )  ?  limDevotic*Sum[18]  : Sum[18] ;
-          // //Sum[19]= ( StrainUR[6-1]*Sum[19]>0  )  ?  (limDevotic+0.1)*Sum[19]  : Sum[19] ;
-          // Sum[19]= ( StrainUR[6-1]*Sum[19]>0  )  ?  (limDevotic)*Sum[19]  : Sum[19] ;
-          //
-          // Sum[28]= ( StrainUR[6-1]*Sum[28]>0  )  ?  limDevotic*Sum[28]  : Sum[28] ;
-          // Sum[29]= ( StrainUR[6-1]*Sum[29]>0  )  ?  limDevotic*Sum[29]  : Sum[29] ;
-          // Sum[30]= ( StrainUR[6-1]*Sum[30]>0  )  ?  limDevotic*Sum[30]  : Sum[30] ;
-          // //Sum[31]= ( StrainUR[6-1]*Sum[31]>0  )  ?  (limDevotic+0.1)*Sum[31]  : Sum[31] ;
-          // Sum[31]= ( StrainUR[6-1]*Sum[31]>0  )  ?  (limDevotic)*Sum[31]  : Sum[31] ;
-
-
-          // remove the trace for the diagonal term after the limiter
-          //trace=1.0/3.0*(Sum[1-1]+Sum[5-1]+Sum[9-1]);
-          //Sum[1-1]=Sum[1-1]-trace;
-          //Sum[5-1]=Sum[5-1]-trace;
-          //Sum[9-1]=Sum[9-1]-trace;
-
-          //trace=1.0/3.0*(Sum[2-1]+Sum[6-1]+Sum[10-1]);
-          //Sum[2-1]= Sum[2-1]-trace;
-          //Sum[6-1]= Sum[6-1]-trace;
-          //Sum[10-1]=Sum[10-1]-trace;
-
-          //trace=1.0/3.0*(Sum[3-1]+Sum[7-1]+Sum[11-1]);
-          //Sum[3-1]= Sum[3-1]-trace;
-          //Sum[7-1]= Sum[7-1]-trace;
-          //Sum[11-1]=Sum[11-1]-trace;
-
-          //trace=1.0/3.0*(Sum[4-1]+Sum[8-1]+Sum[12-1]);
-          //Sum[4-1]= Sum[4-1]-trace;
-          //Sum[8-1]= Sum[8-1]-trace;
-          //Sum[12-1]=Sum[12-1]-trace;
-
-          //if(i==2&&j==2&&k==2)
-          //{std::cout<<" Stress="<<" i= "<<i<<" j= "<<j<<" k="<<k<<"\n";
-          //std::cout<<"\n After limiter Sum(2,2,2) output="<<std::scientific<<Sum[0]<<","<<Sum[1]<<","<<Sum[2]<<","<<Sum[3]<<","<<Sum[4]<<","<<Sum[5]<<","<<Sum[6]<<","<<Sum[7]<<","<<Sum[8]<<","<<Sum[9]<<","<<Sum[10]<<","<<Sum[11]<<"\n";
-          //std::cout<<" Sum12="<<Sum[12]<<","<<Sum[13]<<","<<Sum[14]<<","<<Sum[15]<<","<<Sum[16]<<","<<Sum[17]<<","<<Sum[18]<<","<<Sum[19]<<","<<Sum[20]<<","<<Sum[21]<<","<<Sum[22]<<","<<Sum[23]<<","<<"\n";
-          //}
-
-          // without uu resolved
-          //ucell_xSgsStress(i,j,k) =Sum[2-1] +Sum[3-1] +Sum[4-1] ; //  TauUU
-          //vcell_ySgsStress(i,j,k) =Sum[6-1] +Sum[7-1] +Sum[8-1] ;//TauVV
-          //wcell_zSgsStress(i,j,k) =Sum[10-1]+Sum[11-1]+Sum[12-1]; //TauWW
-          ////at U-V nodes
-          ////TauRhoUV at u-v node
-          //ucell_ySgsStress(i,j,k) = Sum[13]+Sum[14]+Sum[15];
-          ////TauRhoUW at u-w node
-          //ucell_zSgsStress(i,j,k) = Sum[17]+Sum[18]+Sum[19];
-
-          //// TauRhoVU at v-u nodes
-          //vcell_xSgsStress(i,j,k) = Sum[21]+Sum[22]+Sum[23];
-          ////TauRhoVW at v-w node
-          //vcell_zSgsStress(i,j,k) = Sum[25]+Sum[26]+Sum[27];
-
-          ////TauRhoWU at w-u node
-          //wcell_xSgsStress(i,j,k) = Sum[29]+Sum[30]+Sum[31];
-
-          ////TauRhoWV at w-v node
-          //wcell_ySgsStress(i,j,k) = Sum[33]+Sum[34]+Sum[35];
-
-          // with uu resolved not removal diagonal
-          //ucell_xSgsStress(i,j,k) =Sum[1-1]+Sum[2-1] +Sum[3-1] +Sum[4-1]  ; //  TauUU
-          //vcell_ySgsStress(i,j,k) =Sum[5-1]+Sum[6-1] +Sum[7-1] +Sum[8-1]  ;//TauVV
-          //wcell_zSgsStress(i,j,k) =Sum[9-1]+Sum[10-1]+Sum[11-1]+Sum[12-1] ; //TauWW
-          ////at U-V nodes
-          ////TauRhoUV at u-v node
-          //ucell_ySgsStress(i,j,k) = Sum[12]+Sum[13]+Sum[14]+Sum[15];
-          ////TauRhoUW at u-w node
-          //ucell_zSgsStress(i,j,k) = Sum[16]+Sum[17]+Sum[18]+Sum[19];
-
-          //// TauRhoVU at v-u nodes
-          //vcell_xSgsStress(i,j,k) = Sum[20]+Sum[21]+Sum[22]+Sum[23];
-          ////TauRhoVW at v-w node
-          //vcell_zSgsStress(i,j,k) = Sum[24]+Sum[25]+Sum[26]+Sum[27];
-
-          ////TauRhoWU at w-u node
-          //wcell_xSgsStress(i,j,k) = Sum[28]+Sum[29]+Sum[30]+Sum[31];
-
-          ////TauRhoWV at w-v node
-          //wcell_ySgsStress(i,j,k) = Sum[32]+Sum[33]+Sum[34]+Sum[35];
 
           // with uu resolved couple convection
           // compute the subgrid stress from the paper 2004(ii),eq8
