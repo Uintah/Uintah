@@ -454,6 +454,20 @@ int main( int argc, char *argv[], char *env[] )
       Parallel::exitAll(2);
 #endif
     }
+    else if (arg == "-taskname_to_time") {
+      // A hidden command line option useful for timing GPU tasks by forcing this task name to 
+      // wait until they can all be launched as a big group.  This helps time by avoiding 
+      // any interleaving of other tasks in the way.  
+      // This command line option must be paired with two additional arguments.  
+      // The first being the name of the task
+      // The second being the amount of times that task is expected to run in a timestep.
+      i++;
+      std::string taskName = argv[i];
+      i++;
+      unsigned int amountTaskNameExpectedToRun = atoi(argv[i]);
+      Uintah::Parallel::setTaskNameToTime(taskName);
+      Uintah::Parallel::setAmountTaskNameExpectedToRun(amountTaskNameExpectedToRun);
+    }
     else if (arg == "-t") {
       if (i < argc - 1) {
         restartTimestep = atoi(argv[++i]);

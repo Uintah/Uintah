@@ -1156,20 +1156,34 @@ DetailedTasks::getDeviceCheckIfExecutableTask(DetailedTask *& dtask)
 bool
 DetailedTasks::getDeviceReadyToExecuteTask(DetailedTask *& dtask)
 {
+  
   //This function should ONLY be called within runTasks() part 1.
   //This is all done as one atomic unit as we're seeing if we should get an item and then we get it.
-  bool retVal = false;
+  bool retVal{false};
   dtask = nullptr;
-
+        
   auto ready_request = [](DetailedTask *& dtask)->bool { return dtask->checkAllCudaStreamsDoneForThisTask(); };
   TaskPool::iterator device_readyToExecute_pool_iter = device_readyToExecute_pool.find_any(ready_request);
   if (device_readyToExecute_pool_iter) {
+   
     dtask = *device_readyToExecute_pool_iter;
-    device_readyToExecute_pool.erase(device_readyToExecute_pool_iter);
-    //printf("device_readyToExecute_pool - Erased %s size of pool %lu\n", dtask->getName().c_str(), device_readyToExecute_pool.size());
-    retVal = true;
-  }
+    int task_to_debug_threshold = Uintah::Parallel::getAmountTaskNameExpectedToRun();
 
+    bool proceed{true};
+    if (task_to_debug_threshold > 0) {
+      std::string task_to_debug_name = Uintah::Parallel::getTaskNameToTime();
+      int task_to_debug_count = atomic_task_to_debug_size.load(std::memory_order_relaxed);
+      if ( dtask->getTask()->getName() == task_to_debug_name ) {
+        if ( task_to_debug_count % task_to_debug_threshold != 0 ) {
+          proceed = false;
+        }
+      }
+    }
+    if (proceed) {
+      device_readyToExecute_pool.erase(device_readyToExecute_pool_iter);
+      retVal = true;
+    }
+  }
   return retVal;
 }
 

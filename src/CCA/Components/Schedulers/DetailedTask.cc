@@ -447,6 +447,14 @@ DetailedTask::checkExternalDepCount()
     DOUT(g_external_deps_dbg, "Rank-" << Parallel::getMPIRank() << " Task " << this->getTask()->getName()
                                       << " MPI requirements satisfied, placing into external ready queue");
 
+
+    unsigned int amountTaskNameExpectedToRun = Uintah::Parallel::getAmountTaskNameExpectedToRun();
+    if (amountTaskNameExpectedToRun > 0) {
+      std::string task_to_debug_name = Uintah::Parallel::getTaskNameToTime();
+      if ( this->getTask() && this->getTask()->getName() == task_to_debug_name ) {
+        m_task_group->atomic_task_to_debug_size.fetch_add(1);
+      }
+    }
     if (m_externally_ready.load(std::memory_order_seq_cst) == false) {
       m_task_group->m_mpi_completed_tasks.push(this);
       m_task_group->m_atomic_mpi_completed_tasks_size.fetch_add(1);

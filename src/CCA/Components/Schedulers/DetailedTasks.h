@@ -365,6 +365,7 @@ private:
   TaskQueue  m_initial_ready_tasks;
   TaskPQueue m_mpi_completed_tasks;
   std::atomic<int> atomic_readyTasks_size { 0 };
+  std::atomic<int> atomic_task_to_debug_size { 0 };
   std::atomic<int> m_atomic_mpi_completed_tasks_size { 0 };
 
   // This "generation" number is to keep track of which InternalDependency

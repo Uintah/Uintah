@@ -35,6 +35,7 @@
 #include <iostream>
 #include <sstream>
 #include <thread>
+#include <string>
 
 #ifdef _OPENMP
   #include <omp.h>
@@ -54,9 +55,11 @@ Parallel::CpuThreadEnvironment Parallel::s_cpu_thread_environment = Parallel::Cp
 
 bool             Parallel::s_initialized             = false;
 bool             Parallel::s_using_device            = false;
-int              Parallel::s_cuda_threads_per_block     = -1;
-int              Parallel::s_cuda_blocks_per_loop       = -1;
+int              Parallel::s_cuda_threads_per_block  = -1;
+int              Parallel::s_cuda_blocks_per_loop    = -1;
 int              Parallel::s_cuda_streams_per_task   = 1;
+std::string      Parallel::s_task_name_to_time       = "";
+int              Parallel::s_amount_task_name_expected_to_run = -1;
 int              Parallel::s_num_threads             = -1;
 int              Parallel::s_num_partitions          = -1;
 int              Parallel::s_threads_per_partition   = -1;
@@ -161,6 +164,22 @@ Parallel::setCudaStreamsPerTask( unsigned int num )
 
 //_____________________________________________________________________________
 //
+void
+Parallel::setTaskNameToTime( const std::string& taskNameToTime )
+{
+  s_task_name_to_time = taskNameToTime;
+}
+
+//_____________________________________________________________________________
+//
+void
+Parallel::setAmountTaskNameExpectedToRun( unsigned int amountTaskNameExpectedToRun )
+{
+  s_amount_task_name_expected_to_run = amountTaskNameExpectedToRun;
+}
+
+//_____________________________________________________________________________
+//
 unsigned int
 Parallel::getCudaThreadsPerBlock()
 {
@@ -181,6 +200,22 @@ unsigned int
 Parallel::getCudaStreamsPerTask()
 {
   return s_cuda_streams_per_task;
+}
+
+//_____________________________________________________________________________
+//
+std::string
+Parallel::getTaskNameToTime()
+{
+  return s_task_name_to_time;
+}
+
+//_____________________________________________________________________________
+//
+unsigned int
+Parallel::getAmountTaskNameExpectedToRun()
+{
+  return s_amount_task_name_expected_to_run;
 }
 
 //_____________________________________________________________________________

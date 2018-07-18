@@ -26,7 +26,7 @@
 #define CORE_PARALLEL_PARALLEL_H
 
 #include <thread>
-
+#include <string>
 
 // Macros used to eliminate excess output on large parallel runs
 //
@@ -140,6 +140,14 @@ class Parallel {
       //////////
       // Sets the number of CUDA streams per task
       static void setCudaStreamsPerTask( unsigned int num );
+      
+      //////////
+      // Sets the name of the task name to time
+      static void setTaskNameToTime( const std::string& taskNameToTime );
+
+      //////////
+      // Sets the number of times the task name to time is expected to run
+      static void setAmountTaskNameExpectedToRun( unsigned int num );
 
       //////////
       // Sets the number of CUDA threads to use within an SM for a loop
@@ -152,6 +160,14 @@ class Parallel {
       //////////
       // Returns the number of CUDA streams per task
       static unsigned int getCudaStreamsPerTask();
+
+      //////////
+      // Returns the name of the task name to time
+      static std::string getTaskNameToTime();
+
+      //////////
+      // Returns the number of times the task name to time is expected to run
+      static unsigned int getAmountTaskNameExpectedToRun();
 
       //////////
       // Returns the number of threads that a processing element is allowed to use to compute its tasks.
@@ -204,6 +220,8 @@ class Parallel {
       static int               s_cuda_threads_per_block;
       static int               s_cuda_blocks_per_loop;
       static int               s_cuda_streams_per_task;
+      static std::string       s_task_name_to_time;
+      static int               s_amount_task_name_expected_to_run;
       static int               s_num_threads;
       static int               s_num_partitions;
       static int               s_threads_per_partition;
