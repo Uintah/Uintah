@@ -58,32 +58,6 @@ if [ "$OS" = "Linux" ]; then
      CXX=mpic++ \\
      F77=gfortran"
   fi
-
-  #_________________
-  if [ "$MACHINE" == "cyrus.mech.utah.edu" ]; then
-
-    COMMON="       --with-mpi=/usr/installed/openmpi \\
-      --with-cuda=/usr/local/cuda-7.5 \\
-      --with-boost=/usr \\
-      --enable-gencode=35 \\
-      --enable-ray-scatter \\
-      --enable-examples \\
-      --enable-arches \\
-      --enable-ice \\
-      --enable-mpm \\
-      --enable-wasatch_3p='radprops,tabprops' \\"
-
-    DBG_CONFIGURE="    --enable-debug \\
-      --enable-64bit \\
-      --enable-scinew-line-numbers \\"
-
-    ENV="       CC=mpicc \\
-       CXX=mpic++ \\
-       F77=gfortran-4.8"
-
-    # execute a script (R_tester/modifySrc) that modifies src files
-    MODIFY_SRC="true"
-  fi
 fi
 
 #__________________________________

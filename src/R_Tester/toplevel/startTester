@@ -25,6 +25,7 @@ COMMON_GROUP=""
 CHECKPOINTS=""
 MPIRUN_PATH=""
 SVN_trunk="https://gforge.sci.utah.edu/svn/uintah/trunk/src"
+OUTPUT_HTML="yes"
 
 ID=`date +%m%d%y`
 
@@ -50,8 +51,9 @@ if [ "$MACHINE" == "uintah-build" ]; then
   #          Memory/
   #          simRunTime/
   
-  HTMLLOG=/home/${LOGNAME}/public_html/Uintah.html
-  WEBLOG=http://155.101.15.100/~${LOGNAME}
+  PUBLIC_HTML=/home/${LOGNAME}/public_html
+  HTMLLOG=${PUBLIC_HTML}/Uintah.html
+  RT_URL=http://uintah-build.chpc.utah.edu/~$LOGNAME
   
   if [ "$LOGNAME" == "gpu_rt" ]; then
     names=(\
@@ -69,27 +71,6 @@ if [ "$MACHINE" == "uintah-build" ]; then
   fi
 fi
 
-if test "$MACHINE" = "cyrus.mech.utah.edu" ; then
-  DEFAULT_MAIL_TO="ahumphrey@sci.utah.edu,t.harman@utah.edu,bradpeterson@gmail.com,jthornock@gmail.com,derkhar@gmail.com,bisaac2@gmail.com"
-  REPLY_TO="t.harman@utah.edu"
-  COMMON_GROUP="users"
-  BUILD_DIR=/raid/home/rt/"$OS"
-  TEST_DATA_DIR=/raid/home/rt/"$OS"/TestData
-  TEMP_DIR=/raid/home/rt/"$OS"
-  SCRIPT_DIR=/raid/home/rt/scripts
-  CHECKPOINTS=/raid/home/rt/CheckPoints
-  MPIRUN_PATH=/usr/installed/openmpi/bin/
-  export TEST_COMPONENTS="Examples ICE ARCHES"
-  #export TEST_COMPONENTS="Examples ICE MPM MPMICE"
-  #export TEST_COMPONENTS="ARCHES"    
-
-
-  # Where the webpage will be, and init webpage.  (SEE above notes)
-  HTMLLOG=/raid/home/rt/public_html/Uintah.html
-  WEBLOG=http://cyrus.mech.utah.edu:8050/~rt/public_html
-fi
-
-
 #______________________________________________________________________
 
 
@@ -100,7 +81,6 @@ if [ "$OS" != "Linux" ]; then
 fi
 
 export OS
-#unset SHELL
 umask 002
 
 show_help=0
@@ -182,7 +162,7 @@ done
 if [ $show_help != "0" ]; then
     cat <<EOF
     Usage: startTester should only be run by at(1) or cron(1)
-        To run immediately, use "at now" with the path to this script as stdin.
+
         Options:
             -sendmail:              Send error messages to the default people
             -sendmailto "emails":   Send error messages to these people
@@ -213,7 +193,7 @@ else
 fi
 
 # use /usr/var/tmp on machines that have it, with the assumption that it will
-# have more space than /tmp (true for burn at least)
+# have more space than /tmp
 if [ -d /usr/var/tmp ]; then
   TMPDIR=/usr/var/tmp
   export TMPDIR
@@ -350,9 +330,8 @@ echo "Using build: ${BUILDROOT}" >> $HTMLLOG
 echo "LOG: $HTMLLOG" >> $HTMLLOG
 
 
-#PATH="$BUILDROOT"/src/Packages/Uintah/R_Tester/helpers:"$PATH"
 PATH="$BUILDROOT"/src/R_Tester/helpers:"$PATH"
-export PATH DO_DBG DO_OPT HTMLLOG WEBLOG VERBOSE
+export PATH DO_DBG DO_OPT HTMLLOG PUBLIC_HTML RT_URL OUTPUT_HTML VERBOSE
 
 if [ $VERBOSE = "yes" ]; then
    echo "Running Tests"

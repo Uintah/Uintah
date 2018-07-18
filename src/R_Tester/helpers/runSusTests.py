@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from os         import getenv,environ,unsetenv,rmdir,mkdir,path,system,chdir,stat,getcwd,pathsep,symlink,stat,access,getuid,W_OK
+from os         import makedirs
 from time       import strftime,time,gmtime,asctime,localtime
 from sys        import argv,exit,stdout
 from .modUPS     import modUPS
@@ -114,7 +115,8 @@ def cmdline(command):
         args=command,
         stdout=PIPE,
         stderr=PIPE,
-        shell=True
+        shell=True,
+        universal_newlines=True     # needed to 
     )
     out, err = process.communicate()
     return (out, err, process.returncode)
@@ -170,32 +172,19 @@ def runSusTests(argv, TESTS, application, callback = nullCallback):
   environ['PATH']              = "%s%s%s%s%s" % (helperspath, pathsep, toolspath, pathsep, environ['PATH'])
   environ['SCI_EXCEPTIONMODE'] = 'abort'
   environ['MPI_TYPE_MAX']      = '10000'
-  environ['outputlinks']       = "0"  #display html links on output
 
   solotest = ""
   if len(argv) == 7:
     solotest = argv[6]
 
   outputpath    = startpath
-  weboutputpath = startpath
+  
   # If running Nightly RT, output logs in web dir
   # otherwise, save it in the build.  Also turn on plotting
   do_plots = 0
   if environ['LOCAL_OR_NIGHTLY_TEST'] == "nightly" :
     do_plots = 1
-    try:
-      outputpath    = "%s-%s" % (environ['HTMLLOG'], dbg_opt)
-      weboutputpath = "%s/%s" % (environ['WEBLOG'],  dbg_opt)
-    except Exception:
-      pass
 
-    try:
-      # make outputpath/dbg or opt dirs
-      environ['outputlinks'] ="1"
-      mkdir(outputpath)
-      system("chmod -R 775 %s" % outputpath)
-    except Exception:
-      pass
 
   #__________________________________
   # bulletproofing
@@ -244,20 +233,17 @@ def runSusTests(argv, TESTS, application, callback = nullCallback):
       mkdir(application)
       system("chmod -R 775 %s" % application)
 
-  resultsdir = "%s/%s-results" % (startpath, application)
+  results_dir = "%s/%s-results" % (startpath, application)
   chdir(startpath)
 
   try:
-    mkdir(resultsdir)
+    mkdir(results_dir)
   except Exception:
     if solotest == "":
-      print( "Remove %s before running this test\n" % resultsdir )
+      print( "Remove %s before running this test\n" % results_dir )
       exit(1)
 
-  chdir(resultsdir)
-
-  if outputpath != startpath and path.exists("%s/%s-results" % (outputpath, application)) != 1:
-    mkdir("%s/%s-results" % (outputpath, application))
+  chdir(results_dir)
 
   print( "" )
   if solotest == "":
@@ -449,12 +435,12 @@ def runSusTests(argv, TESTS, application, callback = nullCallback):
       print( " ERROR: runSusTests: the path to the inputs directory (%s) is not valid" % (inputsdir) ) 
       exit(1)
 
-    chdir(resultsdir)
+    chdir(results_dir)
 
     try:
       mkdir(testname)
     except Exception:
-      print( "Remove %s/%s before running this test" % (resultsdir, testname) )
+      print( "Remove %s/%s before running this test" % (results_dir, testname) )
       exit(1)
 
     system("echo '%s/replace_gold_standard %s %s/%s-results %s' > %s/replace_gold_standard" % (helperspath, compare_root, startpath, application, testname, testname))
@@ -477,17 +463,11 @@ def runSusTests(argv, TESTS, application, callback = nullCallback):
         
     #__________________________________
     # Run test and perform comparisons on the uda
-    environ['WEBLOG'] = "%s/%s-results/%s" % (weboutputpath, application, testname)
+
     create_gs = "%s-%s" % (create_gs0, startFrom)
     
     rc = runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_parallelism, tests_to_do, tolerances, startFrom, varBucket, create_gs)
     system("rm inputs")
-
-    # copy results to web server
-    if outputpath != startpath:
-      if path.exists("%s/%s-results/%s" % (outputpath, application, testname)) != 1:
-        mkdir("%s/%s-results/%s" % (outputpath, application, testname))
-      system("rsync -a --exclude '*uda*' *.* %s/%s-results/%s/ > /dev/null 2>&1" % (outputpath, application, testname))
       
     # Return Code (rc) of 2 means it failed comparison or memory test, so try to run restart
     if rc == 0 or rc == 2:
@@ -505,7 +485,7 @@ def runSusTests(argv, TESTS, application, callback = nullCallback):
       # Run restart test
       if do_restart == 1:
         symlink(inputpath, "inputs")
-        environ['WEBLOG'] = "%s/%s-results/%s/restart" % (weboutputpath, application, testname)
+
         startFrom = "restart"
         create_gs = "%s-%s" % (create_gs0, startFrom)
         
@@ -514,12 +494,6 @@ def runSusTests(argv, TESTS, application, callback = nullCallback):
         if rc > 0:
           failcode = 1
         system("rm inputs")
-
-        # copy results to web server
-        if outputpath != startpath:
-          if path.exists("%s/%s-results/%s/restart" % (outputpath, application, testname)) != 1:
-            mkdir("%s/%s-results/%s/restart" % (outputpath, application, testname))
-          system("rsync -a --exclude '*uda*' *.* %s/%s-results/%s/ > /dev/null 2>&1" % (outputpath, application, testname))
 
       chdir("..")
     elif rc == 1: # negative one means skipping -- not a failure
@@ -530,6 +504,7 @@ def runSusTests(argv, TESTS, application, callback = nullCallback):
     test_timer = time() - test_time0
     print( "Test Timer: %s" % strftime("%H:%M:%S",gmtime(test_timer)) )
 
+    #__________________________________
     # If the test passed put an svn revision stamp in the goldstandard
     # Only do this if the nightly RT cronjob is running
     if failcode == 0 and getenv('AUTO_UPDATE_SVN_STAMP') == "yes":
@@ -540,25 +515,41 @@ def runSusTests(argv, TESTS, application, callback = nullCallback):
     # end of test loop
 
   #______________________________________________________________________
-  # change the group on the results directory to a common group name
+  # change the group and permissons on the results directory to a common group name
   chdir("..")
   try:
     common_group = "%s" % (environ['COMMON_GROUP'])
-    system("chgrp -R %s %s > /dev/null 2>&1" % (common_group, resultsdir) )
+    system("chgrp -R %s %s > /dev/null 2>&1" % (common_group, results_dir) )
   except:
     pass
 
-  system("chmod -R g+rwX %s > /dev/null 2>&1" % resultsdir)
+  system("chmod -R g+rwX %s > /dev/null 2>&1" % results_dir)
 
-  # copied results - permissions
-  if outputpath != startpath:
-    system("chmod -R gu+rwX,a+rX %s/%s-results > /dev/null 2>&1" % (outputpath, application))
 
+  #______________________________________________________________________
+  #  copy component tests results to web page
+  if  environ['OUTPUT_HTML'] == "yes":
+    web_result_dir = "%s/%s/%s-results" % (environ['PUBLIC_HTML'], dbg_opt, application)
+    
+    if path.exists( web_result_dir ) == False:
+      makedirs( web_result_dir )
+    
+    print( "__________________________________" )
+    print( "\nNow copying %s results to: %s" % (application, web_result_dir))
+
+    (stdout,stderr,rc) = cmdline("rsync -avp --delete --exclude  '*uda*' --exclude 'replace*' %s/ %s/ " % (results_dir, web_result_dir))
+
+    if rc != 0:
+      print( "There was a problem copying the component results.  Error:" );
+      print(stderr)
+    
+  #__________________________________
   if solotest != "" and solotest_found == 0:
     print( "unknown test: %s" % solotest )
-    system("rm -rf %s" % (resultsdir))
+    system("rm -rf %s" % (results_dir))
     exit(1)
 
+  #__________________________________
   # no tests ran
   if ran_any_tests == 0:
     print( "\nERROR: Zero regression tests ran to completion.  Hint: is the OS you're using appropriate for the component's tests?\n" )
@@ -628,11 +619,15 @@ def runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_p
 
   resource.setrlimit(resource.RLIMIT_CPU, (maxAllowRunTime,maxAllowRunTime) )
 
-  output_to_browser=1
-  try:
-    blah = environ['HTMLLOG']
-  except Exception:
-    output_to_browser=0
+  #__________________________________
+  #  turn on malloc_stats
+  if not do_memory_test :
+      unsetenv('MALLOC_STATS')
+
+  if getenv('MALLOC_STATS') == None:
+    MALLOCSTATS = ""
+  else:
+    MALLOCSTATS = "-x MALLOC_STATS"
 
   #__________________________________
   # Does mpirun command exist or has the environmental variable been set?
@@ -646,14 +641,6 @@ def runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_p
       print( "      mpirun command was not found and the environmental variable MPIRUN was not set." )
       print( "      You must either add mpirun to your path, or set the 'MPIRUN' environment variable." )
       exit (1)
-
-  if not do_memory_test :
-      unsetenv('MALLOC_STATS')
-
-  if getenv('MALLOC_STATS') == None:
-    MALLOCSTATS = ""
-  else:
-    MALLOCSTATS = "-x MALLOC_STATS"
 
   MPIHEAD="%s -np" % MPIRUN       #default
   
@@ -671,9 +658,6 @@ def runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_p
   if rc == 0:
     MPIHEAD="%s -genvlist MALLOC_STATS -np" % MPIRUN
 
-
-  # set where to view the log files
-  logpath = environ['WEBLOG']
 
   # if running performance tests, strip the output and checkpoints portions
   # use the the input file local
@@ -721,7 +705,7 @@ def runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_p
   if do_memory_test == 1:
     environ['MALLOC_STRICT'] = "set"
     env = "%s,%s" % (environ['SCI_DEBUG'], "VarLabel:+") # append to the existing SCI_DEBUG
-    environ['SCI_DEBUG']      = env
+    environ['SCI_DEBUG'] = env
 
     if startFrom == "restart":
       malloc_stats_file = "restart_malloc_stats"
@@ -729,18 +713,22 @@ def runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_p
       malloc_stats_file = "malloc_stats"
     environ['MALLOC_STATS'] = malloc_stats_file
 
-  # messages to print
-  if environ['outputlinks'] == "1":
+  #__________________________________
+  #  define failure messages
+  if environ['OUTPUT_HTML'] == "yes":
+    logpath     =  "%s/%s/%s-results/%s" % (environ['RT_URL'],  dbg_opt, application, testname )
     sus_log_msg = '\t<A href=\"%s/sus.log.txt\">See sus.log</a> for details' % (logpath)
     compare_msg = '\t<A href=\"%s/compare_sus_runs.log.txt\">See compare_sus_runs.log</A> for more comparison information.' % (logpath)
     memory_msg  = '\t<A href=\"%s/mem_leak_check.log.txt\">See mem_leak_check.log</a> for more comparison information.' % (logpath)
     perf_msg    = '\t<A href=\"%s/performance_check.log.txt\">See performance_check.log</a> for more comparison information.' % (logpath)
   else:
+    logpath     = "%s/%s-results/%s"  %  (startpath,application,testname)
     sus_log_msg = '\tSee %s/sus.log.txt for details' % (logpath)
     compare_msg = '\tSee %s/compare_sus_runs.log.txt for more comparison information.' % (logpath)
     memory_msg  = '\tSee %s/mem_leak_check.log.txt for more comparison information.' % (logpath)
     perf_msg    = '\tSee %s/performance_check.log.txt for more performance information.' % (logpath)
-
+  
+  #__________________________________
   # actually run the test!
   short_cmd = command.replace(susdir+'/','')
 
@@ -798,7 +786,7 @@ def runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_p
     return_code = 1
     return return_code
   else:
-    # Sus completed successfully - now run memory,compar_uda and performance tests
+    # Sus completed successfully - now run memory, compare_uda and performance tests
     # get the time from sus.log
     # /usr/bin/time outputs 3 lines, the one called 'real' is what we want
     # it is the third line from the bottom
@@ -912,7 +900,7 @@ def runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_p
             (out,err,rc) = cmdline("tail -10 compare_sus_runs.log.txt | \
                                     sed --silent /ERROR/,/ERROR/p |     \
                                     sed /'^$'/d | sed /'may not be compared'/,+1d")   # clean out blank lines and cruft from the eror section
-            print( "%s" % out )
+            print( "\n\n%s\n" % out )
             #print( "%s" % replace_msg )
 
         elif compUda_RC == 65280: # (-1 return code)
