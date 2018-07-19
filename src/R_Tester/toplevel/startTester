@@ -323,6 +323,7 @@ fi
 rm -f $HTMLLOG
 TITLE=`date`
 echo "<HTML><HEAD><TITLE> $OS tests on $TITLE</TITLE></HEAD><BODY><pre>" >> $HTMLLOG 
+echo "`date +'%r %D'`" >> $HTMLLOG
 echo "Regression Tester results from `hostname`" >> $HTMLLOG
 echo "Architecture: ${OS}" >> $HTMLLOG
 echo "" >> $HTMLLOG
