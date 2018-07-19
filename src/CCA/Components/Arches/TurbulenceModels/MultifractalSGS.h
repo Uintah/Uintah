@@ -36,7 +36,7 @@ namespace Uintah{
       void Strain_calc( const Array3<double> &U,  const Array3<double>  &V, const Array3<double>  & W,
           int i, int j, int k ,      std::vector<double> &StrainOut , double &dx, double &dy, double dz)
       { //double c1=0.0; double c2=1.0;
-        double c1=15.0/12.0; double c2=1.0/12.0;
+        double c1=27.0/24.0; double c2=1.0/24.0;
         double dudy=0.0; double dvdx=0.0; double dvdz=0.0; double dwdy=0.0; double dwdx=0.0; double dudz=0.0;
         dudy=        (c1*(U(i,j,k)-U(i,j-1,k))-c2*(U(i,j+1,k)-U(i,j-2,k)))/dy;
         dvdx=        (c1*(V(i,j,k)-V(i-1,j,k))-c2*(V(i+1,j,k)-V(i-2,j,k)))/dx;
@@ -47,7 +47,6 @@ namespace Uintah{
         StrainOut[0]=(c1*(U(i,j,k)-U(i-1,j,k))-c2*(U(i+1,j,k)-U(i-2,j,k)))/dx;
         StrainOut[1]=(c1*(V(i,j,k)-V(i,j-1,k))-c2*(V(i,j+1,k)-V(i,j-2,k)))/dy;
         StrainOut[2]=(c1*(W(i,j,k)-W(i,j,k-1))-c2*(W(i,j,k+1)-W(i,j,k-2)))/dz;
-
         StrainOut[3]=0.5*(dudy+dvdx);
         StrainOut[4]=0.5*(dvdz+dwdy) ;
         StrainOut[5]=0.5*(dudz+dwdx);
