@@ -56,7 +56,7 @@
 using namespace Uintah;
 
 namespace {
-  Dout  dbgOut("VisItWarehouseInterface", "VisIt", "Data warehoue interface to VisIt", false);
+  // Dout  dbgOut("VisItWarehouseInterface", "VisIt", "Data warehoue interface to VisIt", false);
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -639,7 +639,7 @@ GridDataRaw* getPatchDataMainType(DataWarehouse *dw,
                                   int material,
                                   const TypeDescription *subtype)
 {
-  printTask( patch, dbgOut, "getPatchDataMainType" );
+  // printTask( patch, dbgOut, "getPatchDataMainType" );
   
   switch (subtype->getType())
   {
@@ -907,7 +907,7 @@ ParticleDataRaw* getParticleData(SchedulerP schedulerP,
   LevelP level = gridP->getLevel(level_i);
   const Patch *patch = level->getPatch(patch_i);
 
-  printTask( patch, dbgOut, "getParticleData variable: " + variable_name );
+  // printTask( patch, dbgOut, "getParticleData variable: " + variable_name );
   
   // get the variable information
   const VarLabel* varLabel                = nullptr;
