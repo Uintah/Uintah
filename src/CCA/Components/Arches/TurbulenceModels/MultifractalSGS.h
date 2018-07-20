@@ -50,8 +50,6 @@ namespace Uintah{
         StrainOut[3]=0.5*(dudy+dvdx);
         StrainOut[4]=0.5*(dvdz+dwdy) ;
         StrainOut[5]=0.5*(dudz+dwdx);
-        // dudx=(f(-2)-8f(-1)+8f(1)-f(2))/12
-        // dudx=(f(1)-f(-1))/2
 
       };// end for calcuting Strain for ud u2d u_ctr
 
@@ -61,26 +59,13 @@ namespace Uintah{
       { //double base_scale=0.5;
         double cascade_iters= 0.0;
         //double factorN=0.0;
-        double am=0.4;   double bm=0.92; double cm=1.0; double dm=2.5;
-        //Re_g=StrainD*MeshSize*MeshSize/Visc;
-        //USE THE REAL STRAIN D
-        //Re_g=StrainD*MeshSize/Visc;
         Re_g=StrainD*MeshSize*MeshSize/Visc;
         Re_g=Re_g*Re_g*Re_g;
         Re_g=sqrt(sqrt(Re_g));
-        // proportionality constant = 1/11.2
         sgs_scales=0.089285714285714*Re_g;
-        //std::cout<<"\n sgs_scales="<<sgs_scales<<"\n";
         cascade_iters= sgs_scales >1.0 ? std::log2(sgs_scales) : 0.0 ;
         factorN= (cascade_iters>0) ? exp2(-2.0/3.0 * cascade_iters)*sqrt(exp2(4.0/3.0*cascade_iters)-1) : 0.0;
-        double logRe= log10(Re_g);
-        value= am*(tanh(bm*(logRe-dm) )+cm);
-        value =0.55;
-        // value doesn't work cell by cell...perhaps look at taking an average cell re number
-        // over an "isotropic range" to get
-        // Greg recommends choosing a constant value for "value". This is kind of a tunable constant.
-        // Greg looking for perhaps some insight on this value.
-        //value =0.35;
+        value =0.75;
         double C_sgs_A=value*factorN;
         return C_sgs_A;
       };// end for calculating the velocity coeffficient
@@ -118,11 +103,7 @@ namespace Uintah{
         } // end ii
 
 
-        double w[3][3][3];
-        double wt;
         F_var=0.0;
-        wt = 1.;
-        //   F_var = 0.0;
         for ( int m = -1; m <= 1; m++ ){
           for ( int n = -1; n <= 1; n++ ){
             for ( int l = -1; l <= 1; l++ ){
@@ -130,7 +111,6 @@ namespace Uintah{
             }
           }
         }
-        //F_var /= wt;
       }; // end for filter
 
       class Builder : public TaskInterface::TaskBuilder {

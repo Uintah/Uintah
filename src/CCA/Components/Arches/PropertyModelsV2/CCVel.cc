@@ -39,6 +39,26 @@ void CCVel::problemSetup( ProblemSpecP& db ){
       }
     }
   }
+  if ( db->findBlock("TurbulenceModels")){
+    if ( db->findBlock("TurbulenceModels")->findBlock("model")){
+      std::string turb_closure_model;
+      std::string conv_scheme;
+      db->findBlock("TurbulenceModels")->findBlock("model")->getAttribute("type", turb_closure_model);
+      if ( turb_closure_model == "multifractal" ){ 
+        if (db->findBlock("KMomentum")->findBlock("convection")){
+          std::stringstream msg;
+          msg << "ERROR: Cannot use KMomentum->convection if you are using the multifracal nles closure." << std::endl;
+          throw InvalidValue(msg.str(),__FILE__,__LINE__);
+        } else {
+          if (conv_scheme == "fourth"){
+            m_ghost_cells=2;
+            conv_scheme="fourth";
+            m_int_scheme = ArchesCore::get_interpolant_from_string( conv_scheme );
+          }
+        }
+      }
+    }
+  }
 
 }
 

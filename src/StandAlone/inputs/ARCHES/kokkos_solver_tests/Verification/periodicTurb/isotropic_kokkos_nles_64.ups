@@ -11,23 +11,14 @@
     <maxTime>     0.67   </maxTime>
     <!--maxTime>     0.2   </maxTime-->
     <initTime>    0.0     </initTime>
-    <delt_min>    1e-2 </delt_min>
-    <delt_max>    1e-2     </delt_max>
+    <delt_min>    1e-3 </delt_min>
+    <delt_max>    1e-3     </delt_max>
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
   <DataArchiver>
-    <filebase>K_iso_32_nles.uda</filebase>
-    <outputTimestepInterval>2</outputTimestepInterval>
+    <filebase>K_iso_64_nles.uda</filebase>
+    <outputTimestepInterval>10</outputTimestepInterval>
     <outputInitTimestep/>
-    <save label="ucell_xFilterStress"/>
-    <save label="ucell_yFilterStress"/>
-    <save label="ucell_zFilterStress"/>
-    <save label="vcell_xFilterStress"/>
-    <save label="vcell_yFilterStress"/>
-    <save label="vcell_zFilterStress"/>
-    <save label="wcell_xFilterStress"/>
-    <save label="wcell_yFilterStress"/>
-    <save label="wcell_zFilterStress"/>
     <save label="ucell_xSgsStress"/>
     <save label="ucell_ySgsStress"/>
     <save label="ucell_zSgsStress"/>
@@ -57,9 +48,9 @@
       <Box label="1">
         <lower>[0,0,0]</lower>
         <upper>[0.56548668,0.56548668,0.56548668]</upper>
-        <resolution>[32,32,32]</resolution>
+        <resolution>[64,64,64]</resolution>
         <extraCells>[0,0,0]</extraCells>
-        <patches>[2,2,2]</patches>
+        <patches>[4,4,4]</patches>
       </Box>
       <periodic>[1,1,1]</periodic>
     </Level>
@@ -102,6 +93,7 @@
         <src_x label="FractalXSrc"/>
         <src_y label="FractalYSrc"/>
         <src_z label="FractalZSrc"/>
+        <!--convection scheme="fourth"/-->
         <PressureSolver>
           <Parameters>
             <solver>           cg     </solver>
@@ -124,17 +116,17 @@
       </TurbulenceModels>
       <Initialization>
         <task task_label="uVel-init" variable_label="uVel"  type="input_file">
-          <filename>inputs/ARCHES/periodicTurb/cbc32_uvw_arches-indexed.gz</filename>
+          <filename>inputs/ARCHES/periodicTurb/cbc64_uvw_arches-indexed.gz</filename>
           <vector index="0"/>
           <variable type="FX"/>
         </task>
         <task task_label="vVel-init" variable_label="vVel"  type="input_file">
-          <filename>inputs/ARCHES/periodicTurb/cbc32_uvw_arches-indexed.gz</filename>
+          <filename>inputs/ARCHES/periodicTurb/cbc64_uvw_arches-indexed.gz</filename>
           <vector index="1"/>
           <variable type="FY"/>
         </task>
         <task task_label="wVel-init" variable_label="wVel"  type="input_file">
-          <filename>inputs/ARCHES/periodicTurb/cbc32_uvw_arches-indexed.gz</filename>
+          <filename>inputs/ARCHES/periodicTurb/cbc64_uvw_arches-indexed.gz</filename>
           <vector index="2"/>
           <variable type="FZ"/>
         </task>

@@ -41,7 +41,6 @@ namespace Uintah{
     m_VelDelta_names[12] = "u2D_ctr";
     m_VelDelta_names[13] = "v2D_ctr";
     m_VelDelta_names[14] = "w2D_ctr";
-
     //// Create SGS stress
     m_SgsStress_names.resize(9);
     m_SgsStress_names[0] = "ucell_xSgsStress";
@@ -128,6 +127,7 @@ namespace Uintah{
       for (auto iter = m_SgsStress_names.begin(); iter != m_SgsStress_names.end(); iter++ ){
         register_variable( *iter, ArchesFieldContainer::COMPUTES, variable_registry, _task_name );
       }
+
     }
 
   //---------------------------------------------------------------------------------
@@ -172,15 +172,13 @@ namespace Uintah{
   //---------------------------------------------------------------------------------
   void
     MultifractalSGS::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
-      // Subgrid stress
+
       SFCXVariable<double>& ucell_xSgsStress = *(tsk_info->get_uintah_field<SFCXVariable<double> >("ucell_xSgsStress"));
       SFCXVariable<double>& ucell_ySgsStress = *(tsk_info->get_uintah_field<SFCXVariable<double> >("ucell_ySgsStress"));
       SFCXVariable<double>& ucell_zSgsStress = *(tsk_info->get_uintah_field<SFCXVariable<double> >("ucell_zSgsStress"));
-
       SFCYVariable<double>& vcell_xSgsStress = *(tsk_info->get_uintah_field<SFCYVariable<double> >("vcell_xSgsStress"));
       SFCYVariable<double>& vcell_ySgsStress = *(tsk_info->get_uintah_field<SFCYVariable<double> >("vcell_ySgsStress"));
       SFCYVariable<double>& vcell_zSgsStress = *(tsk_info->get_uintah_field<SFCYVariable<double> >("vcell_zSgsStress"));
-
       SFCZVariable<double>& wcell_xSgsStress = *(tsk_info->get_uintah_field<SFCZVariable<double> >("wcell_xSgsStress"));
       SFCZVariable<double>& wcell_ySgsStress = *(tsk_info->get_uintah_field<SFCZVariable<double> >("wcell_ySgsStress"));
       SFCZVariable<double>& wcell_zSgsStress = *(tsk_info->get_uintah_field<SFCZVariable<double> >("wcell_zSgsStress"));
@@ -203,17 +201,6 @@ namespace Uintah{
       register_variable( m_u_vel_name,    ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::NEWDW, variable_registry,time_substep);
       register_variable( m_v_vel_name,    ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::NEWDW, variable_registry,time_substep);
       register_variable( m_w_vel_name,    ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::NEWDW, variable_registry,time_substep);
-
-
-      register_variable( "uustress",    ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::NEWDW, variable_registry,time_substep);
-      register_variable( "uvstress",    ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::NEWDW, variable_registry,time_substep);
-      register_variable( "uwstress",    ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::NEWDW, variable_registry,time_substep);
-      register_variable( "vustress",    ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::NEWDW, variable_registry,time_substep);
-      register_variable( "vvstress",    ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::NEWDW, variable_registry,time_substep);
-      register_variable( "vwstress",    ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::NEWDW, variable_registry,time_substep);
-      register_variable( "wustress",    ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::NEWDW, variable_registry,time_substep);
-      register_variable( "wvstress",    ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::NEWDW, variable_registry,time_substep);
-      register_variable( "wwstress",    ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::NEWDW, variable_registry,time_substep);
       register_variable( "density",     ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::OLDDW, variable_registry,time_substep );
       // UPDATE USER DEFINE VARIABLES
       // register Velocity Delta
@@ -235,9 +222,7 @@ namespace Uintah{
       double dx=Dx.x(); double dy=Dx.y(); double dz=Dx.z();
 
       double LegthScales=pow(Dx.x()*Dx.y()*Dx.z(),1.0/3.0);
-      double filter = pow(Dx.x()*Dx.y()*Dx.z(),1.0/3.0);
-      double ratio_threshold= 3.0;
-      double limDevotic=.3; //1.e-5; //0.65;
+      double ratio_threshold = 2.0;
 
       constSFCXVariable<double>& ucell_xvel_face = *(tsk_info->get_const_uintah_field<constSFCXVariable<double> >(Ux_face_name));
       constSFCXVariable<double>& ucell_yvel_face = *(tsk_info->get_const_uintah_field<constSFCXVariable<double> >(Uy_face_name));
@@ -251,18 +236,6 @@ namespace Uintah{
       constSFCXVariable<double>& U_ctr =  *(tsk_info->get_const_uintah_field<constSFCXVariable<double> > (m_u_vel_name));
       constSFCYVariable<double>& V_ctr =  *(tsk_info->get_const_uintah_field<constSFCYVariable<double> > (m_v_vel_name));
       constSFCZVariable<double>& W_ctr =  *(tsk_info->get_const_uintah_field<constSFCZVariable<double> > (m_w_vel_name));
-      //
-      constSFCXVariable<double>& uustress = *(tsk_info->get_const_uintah_field<constSFCXVariable<double> >("uustress"));
-      constSFCXVariable<double>& uvstress = *(tsk_info->get_const_uintah_field<constSFCXVariable<double> >("uvstress"));
-      constSFCXVariable<double>& uwstress = *(tsk_info->get_const_uintah_field<constSFCXVariable<double> >("uwstress"));
-      //
-      constSFCYVariable<double>& vustress = *(tsk_info->get_const_uintah_field<constSFCYVariable<double> >("vustress"));
-      constSFCYVariable<double>& vvstress = *(tsk_info->get_const_uintah_field<constSFCYVariable<double> >("vvstress"));
-      constSFCYVariable<double>& vwstress = *(tsk_info->get_const_uintah_field<constSFCYVariable<double> >("vwstress"));
-      //
-      constSFCZVariable<double>& wustress = *(tsk_info->get_const_uintah_field<constSFCZVariable<double> >("wustress"));
-      constSFCZVariable<double>& wvstress = *(tsk_info->get_const_uintah_field<constSFCZVariable<double> >("wvstress"));
-      constSFCZVariable<double>& wwstress = *(tsk_info->get_const_uintah_field<constSFCZVariable<double> >("wwstress"));
 
       // UD
       constSFCXVariable<double>& uD_ctr             = *(tsk_info->get_const_uintah_field<constSFCXVariable<double> >("uD_ctr"));
@@ -322,15 +295,9 @@ namespace Uintah{
           // 2DELTA strain components on the faces of the u-cell
           Strain_calc( u2D_ctr, v2D_ctr, w2D_ctr, i, j, k,  StrainU2D,dx,dy,dz  );
 
-          //      end for calculting ud and u2d
-          double strainR_magn=       sqrt(StrainUR[1-1]*StrainUR[1-1]+StrainUR[2-1]*StrainUR[2-1]+StrainUR[3-1]*StrainUR[3-1]
-              +2.0*(StrainUR[4-1]*StrainUR[4-1]+StrainUR[5-1]*StrainUR[5-1]+StrainUR[6-1]*StrainUR[6-1]));
-          //
-          // double strainUD_magn=       sqrt(StrainUD[1-1]*StrainUD[1-1]+StrainUD[2-1]*StrainUD[2-1]+StrainUD[3-1]*StrainUD[3-1]
-          //                           +2.0*(StrainUD[4-1]*StrainUD[4-1]+StrainUD[5-1]*StrainUD[5-1]+StrainUD[6-1]*StrainUD[6-1]));
-          //
-          // double strainU2D_magn=     sqrt(StrainU2D[1-1]*StrainU2D[1-1]+StrainU2D[2-1]*StrainU2D[2-1]+StrainU2D[3-1]*StrainU2D[3-1]
-          //                           +2.0*(StrainU2D[4-1]*StrainU2D[4-1]+StrainU2D[5-1]*StrainU2D[5-1]+StrainU2D[6-1]*StrainU2D[6-1]));
+          double strainUD_magn = sqrt(StrainUD[1-1]*StrainUD[1-1]+StrainUD[2-1]*StrainUD[2-1]+StrainUD[3-1]*StrainUD[3-1]
+                                 + 2.0*(StrainUD[4-1]*StrainUD[4-1]+StrainUD[5-1]*StrainUD[5-1]+StrainUD[6-1]*StrainUD[6-1]));
+          
 
           // calcuting strain ratio
           for (unsigned int iter=0 ;iter < StrainUD.size(); iter++)
@@ -341,11 +308,8 @@ namespace Uintah{
           // calcuting C_sgs_G and U_sgs/rhoUsgs
           double sgs_scales=0; double factorN=0; double value=0; double Re_g=0.0;
 
-          // JEREMY: These velocities aren't at the same location. Does this matter???
-          double velmagn=std::sqrt((uD_ctr(i,j,k)*uD_ctr(i,j,k) + vD_ctr(i,j,k)*vD_ctr(i,j,k)+wD_ctr(i,j,k)*wD_ctr(i,j,k)  ));
-
           // paper 2004(ii), eq.15 to calculate the coefficient, which is in the header file
-          double C_sgs_G= sgsVelCoeff(mu,LegthScales,strainR_magn,dx, dy, dz, sgs_scales,factorN, value,Re_g);
+          double C_sgs_G = sgsVelCoeff(mu,LegthScales,strainUD_magn,dx, dy, dz, sgs_scales,factorN, value,Re_g);
 
           // paper 2004(II)-eq.14
           
@@ -367,7 +331,6 @@ namespace Uintah{
           tau[10]= wcell_ZvelD(i,j,k)*C_sgs_G*wcell_zvel_face(i,j,k);
           tau[11]= wcell_ZvelD(i,j,k)*C_sgs_G*wcell_ZvelD(i,j,k)*C_sgs_G;
 
-
           // 4:rhoU*V at uv-node: TauUV
           tau[12]= vcell_xvel_face(i,j,k)*ucell_yvel_face(i,j,k);
           tau[13]= vcell_xvel_face(i,j,k)*ucell_YvelD(i,j,k)*C_sgs_G;
@@ -380,13 +343,11 @@ namespace Uintah{
           tau[18]= wcell_XvelD(i,j,k)*C_sgs_G*ucell_zvel_face(i,j,k);
           tau[19]= wcell_XvelD(i,j,k)*C_sgs_G*ucell_ZvelD(i,j,k)*C_sgs_G;
 
-
           // 6:rhoV*U at vu-node: TauVU
           tau[20]= ucell_yvel_face(i,j,k)*vcell_xvel_face(i,j,k);
           tau[21]= ucell_yvel_face(i,j,k)*vcell_XvelD(i,j,k)*C_sgs_G;
           tau[22]= ucell_YvelD(i,j,k)*vcell_xvel_face(i,j,k)*C_sgs_G;
           tau[23]= ucell_YvelD(i,j,k)*C_sgs_G*vcell_XvelD(i,j,k)*C_sgs_G;
-
 
           // 7:rhoV*W at vw-node: TauVW
           tau[24]= wcell_yvel_face(i,j,k)*vcell_zvel_face(i,j,k);
@@ -406,140 +367,70 @@ namespace Uintah{
           tau[34]= vcell_ZvelD(i,j,k)*C_sgs_G*wcell_yvel_face(i,j,k);
           tau[35]= vcell_ZvelD(i,j,k)*C_sgs_G*wcell_YvelD(i,j,k)*C_sgs_G;
 
-          double trace =0;
           for (unsigned int iter=0 ;iter < tau.size(); iter++)
           { Sum[iter]=tau[iter];   }
 
-          //if(i==2&&j==2&&k==2)
-          //{std::cout<<" Stress="<<" i= "<<i<<" j= "<<j<<" k="<<k<<"\n";
-          //std::cout<<"\n before limiter Sum(2,2,2) output="<<std::scientific<<Sum[0]<<","<<Sum[1]<<","<<Sum[2]<<","<<Sum[3]<<","<<Sum[4]<<","<<Sum[5]<<","<<Sum[6]<<","<<Sum[7]<<","<<Sum[8]<<","<<Sum[9]<<","<<Sum[10]<<","<<Sum[11]<<"\n";
-          //std::cout<<" Sum12="<<Sum[12]<<","<<Sum[13]<<","<<Sum[14]<<","<<Sum[15]<<","<<Sum[16]<<","<<Sum[17]<<","<<Sum[18]<<","<<Sum[19]<<","<<Sum[20]<<","<<Sum[21]<<","<<Sum[22]<<","<<Sum[23]<<","<<"\n";
-          //}
-
-          //if(i==3&&j==2&&k==2)
-          //{std::cout<<" Stress="<<" i= "<<i<<" j= "<<j<<" k="<<k<<"\n";
-          //std::cout<<"\n before limiter Sum(3,2,2) output="<<std::scientific<<Sum[0]<<","<<Sum[1]<<","<<Sum[2]<<","<<Sum[3]<<","<<Sum[4]<<","<<Sum[5]<<","<<Sum[6]<<","<<Sum[7]<<","<<Sum[8]<<","<<Sum[9]<<","<<Sum[10]<<","<<Sum[11]<<"\n";
-          //std::cout<<" Sum12="<<Sum[12]<<","<<Sum[13]<<","<<Sum[14]<<","<<Sum[15]<<","<<Sum[16]<<","<<Sum[17]<<","<<Sum[18]<<","<<Sum[19]<<","<<Sum[20]<<","<<Sum[21]<<","<<Sum[22]<<","<<Sum[23]<<","<<"\n";
-          //}
-          trace=1.0/3.0*(Sum[1-1]+Sum[5-1]+Sum[9-1]);
-          Sum[1-1]=Sum[1-1]-trace;
-          Sum[5-1]=Sum[5-1]-trace;
-          Sum[9-1]=Sum[9-1]-trace;
-
-          trace=1.0/3.0*(Sum[2-1]+Sum[6-1]+Sum[10-1]);
-          Sum[2-1]= Sum[2-1]-trace;
-          Sum[6-1]= Sum[6-1]-trace;
-          Sum[10-1]=Sum[10-1]-trace;
-
-          trace=1.0/3.0*(Sum[3-1]+Sum[7-1]+Sum[11-1]);
-          Sum[3-1]= Sum[3-1]-trace;
-          Sum[7-1]= Sum[7-1]-trace;
-          Sum[11-1]=Sum[11-1]-trace;
-
-          trace=1.0/3.0*(Sum[4-1]+Sum[8-1]+Sum[12-1]);
-          Sum[4-1]= Sum[4-1]-trace;
-          Sum[8-1]= Sum[8-1]-trace;
-          Sum[12-1]=Sum[12-1]-trace;
-
-          //filter resolved-resolved scale
-          filterOperator(uustress, i, j, k,Sum[0] );
-          filterOperator(uvstress, i, j, k,Sum[12] );
-          filterOperator(uwstress, i, j, k,Sum[16] );
-          if((uvstress(i,j,k)!= tau[12]) || (uwstress(i,j,k)!= tau[16]) )
-          { std::cout<< "uu resoved stress is not right "<< "\n";
-          }
-
-          filterOperator(vustress, i, j, k,Sum[20] );
-          filterOperator(vvstress, i, j, k,Sum[4] );
-          filterOperator(vwstress, i, j, k,Sum[24] );
-
-          filterOperator(wustress, i, j, k,Sum[28] );
-          filterOperator(wvstress, i, j, k,Sum[32] );
-          filterOperator(wwstress, i, j, k,Sum[8] );
-
-          //filter begin with this one
           double Lij=0.0;
           // at u-cell xface
           Lij=strain_ratio[1-1]/ratio_threshold;
-          ////    Sum[1-1]= (strain_ratio[1-1]<ratio_threshold && StrainUR[1-1]*Sum[1-1]>0  )  ?  Lij*Sum[1-1]  : Sum[2-1] ;
           Sum[2-1]= (strain_ratio[1-1]<ratio_threshold && StrainUR[1-1]*Sum[2-1]>0  )  ?  Lij*Sum[2-1]  : Sum[2-1] ;
           Sum[3-1]= (strain_ratio[1-1]<ratio_threshold && StrainUR[1-1]*Sum[3-1]>0  )  ?  Lij*Sum[3-1]  : Sum[3-1] ;
           Sum[4-1]= (strain_ratio[1-1]<ratio_threshold && StrainUR[1-1]*Sum[4-1]>0  )  ?  Lij*Sum[4-1]  : Sum[4-1] ;
 
           //// at v-cell yface
           Lij=strain_ratio[2-1]/ratio_threshold;
-          ////Sum[5-1]= (strain_ratio[2-1]<ratio_threshold && StrainUR[2-1]*Sum[5-1]>0  )  ?  Lij*Sum[5-1]  : Sum[5-1] ;
           Sum[6-1]= (strain_ratio[2-1]<ratio_threshold && StrainUR[2-1]*Sum[6-1]>0  )  ?  Lij*Sum[6-1]  : Sum[6-1] ;
           Sum[7-1]= (strain_ratio[2-1]<ratio_threshold && StrainUR[2-1]*Sum[7-1]>0  )  ?  Lij*Sum[7-1]  : Sum[7-1] ;
           Sum[8-1]= (strain_ratio[2-1]<ratio_threshold && StrainUR[2-1]*Sum[8-1]>0  )  ?  Lij*Sum[8-1]  : Sum[8-1] ;
 
           //// at w-cell zface
           Lij=strain_ratio[3-1]/ratio_threshold;
-          ////Sum[9-1]=  (strain_ratio[9-1]<ratio_threshold && StrainUR[3-1]*Sum[9-1]>0  )  ?   Lij*Sum[9-1]  :  Sum[9-1] ;
           Sum[10-1]= (strain_ratio[3-1]<ratio_threshold && StrainUR[3-1]*Sum[10-1]>0  )  ?  Lij*Sum[10-1]  : Sum[10-1] ;
           Sum[11-1]= (strain_ratio[3-1]<ratio_threshold && StrainUR[3-1]*Sum[11-1]>0  )  ?  Lij*Sum[11-1]  : Sum[11-1] ;
           Sum[12-1]= (strain_ratio[3-1]<ratio_threshold && StrainUR[3-1]*Sum[12-1]>0  )  ?  Lij*Sum[12-1]  : Sum[12-1] ;
 
-          //// divotical elements
           //// TauUV& TauVU
           Lij=strain_ratio[4-1]/ratio_threshold;
-          // Sum[12]= (strain_ratio[4-1]<ratio_threshold && StrainUR[4-1]*Sum[12]>0  )  ?  Lij*Sum[12]  : Sum[20] ;
           Sum[13]= (strain_ratio[4-1]<ratio_threshold && StrainUR[4-1]*Sum[13]>0  )  ?  Lij*Sum[13]  : Sum[13] ;
           Sum[14]= (strain_ratio[4-1]<ratio_threshold && StrainUR[4-1]*Sum[14]>0  )  ?  Lij*Sum[14]  : Sum[14] ;
           Sum[15]= (strain_ratio[4-1]<ratio_threshold && StrainUR[4-1]*Sum[15]>0  )  ?  Lij*Sum[15]  : Sum[15] ;
-
-          // Sum[20]= (strain_ratio[4-1]<ratio_threshold && StrainUR[4-1]*Sum[20]>0  )  ?  Lij*Sum[20]  : Sum[20] ;
           Sum[21]= (strain_ratio[4-1]<ratio_threshold && StrainUR[4-1]*Sum[21]>0  )  ?  Lij*Sum[21]  : Sum[21] ;
           Sum[22]= (strain_ratio[4-1]<ratio_threshold && StrainUR[4-1]*Sum[22]>0  )  ?  Lij*Sum[22]  : Sum[22] ;
           Sum[23]= (strain_ratio[4-1]<ratio_threshold && StrainUR[4-1]*Sum[23]>0  )  ?  Lij*Sum[23]  : Sum[23] ;
 
           //// TauWV& TauVW
           Lij=strain_ratio[5-1]/ratio_threshold;
-          // Sum[24]= (strain_ratio[5-1]<ratio_threshold && StrainUR[5-1]*Sum[24]>0  )  ? Lij*Sum[24]  : Sum[24] ;
           Sum[25]= (strain_ratio[5-1]<ratio_threshold && StrainUR[5-1]*Sum[25]>0  )  ? Lij*Sum[25]  : Sum[25] ;
           Sum[26]= (strain_ratio[5-1]<ratio_threshold && StrainUR[5-1]*Sum[26]>0  )  ? Lij*Sum[26]  : Sum[26] ;
           Sum[27]= (strain_ratio[5-1]<ratio_threshold && StrainUR[5-1]*Sum[27]>0  )  ? Lij*Sum[27]  : Sum[27] ;
-
-          // Sum[32]= (strain_ratio[5-1]<ratio_threshold && StrainUR[5-1]*Sum[32]>0  )  ? Lij*Sum[32]  : Sum[32] ;
           Sum[33]= (strain_ratio[5-1]<ratio_threshold && StrainUR[5-1]*Sum[33]>0  )  ? Lij*Sum[33]  : Sum[33] ;
           Sum[34]= (strain_ratio[5-1]<ratio_threshold && StrainUR[5-1]*Sum[34]>0  )  ? Lij*Sum[34]  : Sum[34] ;
           Sum[35]= (strain_ratio[5-1]<ratio_threshold && StrainUR[5-1]*Sum[35]>0  )  ? Lij*Sum[35]  : Sum[35] ;
 
           ////TauUW & TauWU
           Lij=strain_ratio[6-1]/ratio_threshold;
-          // Sum[16]= (strain_ratio[6-1]<ratio_threshold && StrainUR[6-1]*Sum[16]>0  )  ? Lij*Sum[16]  : Sum[16] ;
           Sum[17]= (strain_ratio[6-1]<ratio_threshold && StrainUR[6-1]*Sum[17]>0  )  ? Lij*Sum[17]  : Sum[17] ;
           Sum[18]= (strain_ratio[6-1]<ratio_threshold && StrainUR[6-1]*Sum[18]>0  )  ? Lij*Sum[18]  : Sum[18] ;
           Sum[19]= (strain_ratio[6-1]<ratio_threshold && StrainUR[6-1]*Sum[19]>0  )  ? Lij*Sum[19]  : Sum[19] ;
-
-          // Sum[28]= (strain_ratio[6-1]<ratio_threshold && StrainUR[6-1]*Sum[28]>0  )  ? Lij*Sum[28]  : Sum[28] ;
           Sum[29]= (strain_ratio[6-1]<ratio_threshold && StrainUR[6-1]*Sum[29]>0  )  ? Lij*Sum[29]  : Sum[29] ;
           Sum[30]= (strain_ratio[6-1]<ratio_threshold && StrainUR[6-1]*Sum[30]>0  )  ? Lij*Sum[30]  : Sum[30] ;
           Sum[31]= (strain_ratio[6-1]<ratio_threshold && StrainUR[6-1]*Sum[31]>0  )  ? Lij*Sum[31]  : Sum[31] ;
 
-          // with uu resolved couple convection
-          // compute the subgrid stress from the paper 2004(ii),eq8
-          ucell_xSgsStress(i,j,k) =Sum[1-1]+Sum[2-1] +Sum[3-1] +Sum[4-1] -tau[0] ; //  TauUU
-          vcell_ySgsStress(i,j,k) =Sum[5-1]+Sum[6-1] +Sum[7-1] +Sum[8-1] -tau[4] ;//TauVV
-          wcell_zSgsStress(i,j,k) =Sum[9-1]+Sum[10-1]+Sum[11-1]+Sum[12-1]-tau[8] ; //TauWW
-          //at U-V nodes
-          //TauRhoUV at u-v node
-          ucell_ySgsStress(i,j,k) = Sum[12]+Sum[13]+Sum[14]+Sum[15]-tau[12];
-          //TauRhoUW at u-w node
-          ucell_zSgsStress(i,j,k) = Sum[16]+Sum[17]+Sum[18]+Sum[19]-tau[16];
-
-          // TauRhoVU at v-u nodes
-          vcell_xSgsStress(i,j,k) = Sum[20]+Sum[21]+Sum[22]+Sum[23]-tau[20];
-          //TauRhoVW at v-w node
-          vcell_zSgsStress(i,j,k) = Sum[24]+Sum[25]+Sum[26]+Sum[27]-tau[24];
-
-          //TauRhoWU at w-u node
-          wcell_xSgsStress(i,j,k) = Sum[28]+Sum[29]+Sum[30]+Sum[31]-tau[28];
-
-          //TauRhoWV at w-v node
-          wcell_ySgsStress(i,j,k) = Sum[32]+Sum[33]+Sum[34]+Sum[35]-tau[32];
-
-
+          // TauUU
+          ucell_xSgsStress(i,j,k) =Sum[1-1]+Sum[2-1] +Sum[3-1] +Sum[4-1];
+          // TauVV
+          vcell_ySgsStress(i,j,k) =Sum[5-1]+Sum[6-1] +Sum[7-1] +Sum[8-1];
+          // TauWW
+          wcell_zSgsStress(i,j,k) =Sum[9-1]+Sum[10-1]+Sum[11-1]+Sum[12-1];
+          // TauUV TauVU
+          ucell_ySgsStress(i,j,k) = Sum[12]+Sum[13]+Sum[14]+Sum[15];
+          vcell_xSgsStress(i,j,k) = Sum[20]+Sum[21]+Sum[22]+Sum[23];
+          // TauUW TauWU
+          ucell_zSgsStress(i,j,k) = Sum[16]+Sum[17]+Sum[18]+Sum[19];
+          wcell_xSgsStress(i,j,k) = Sum[28]+Sum[29]+Sum[30]+Sum[31];
+          // TauVW TauWV
+          vcell_zSgsStress(i,j,k) = Sum[24]+Sum[25]+Sum[26]+Sum[27];
+          wcell_ySgsStress(i,j,k) = Sum[32]+Sum[33]+Sum[34]+Sum[35];
       });
 
     }

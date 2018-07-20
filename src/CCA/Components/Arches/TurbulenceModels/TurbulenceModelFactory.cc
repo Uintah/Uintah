@@ -265,11 +265,6 @@ TurbulenceModelFactory::build_all_tasks( ProblemSpecP& db )
         tsk2->problemSetup(db_model);
         tsk2->create_local_labels();
         
-        name="FilterOperatorStress";
-        TaskInterface* tsk4 = retrieve_task(name);
-        tsk4->problemSetup(db_model);
-        tsk4->create_local_labels();
-        
         name="TransportCouple";
         TaskInterface* tsk3 = retrieve_task(name);
         tsk3->problemSetup(db_model);
