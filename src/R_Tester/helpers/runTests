@@ -2,7 +2,7 @@
 
 # should have the environmental variables:
 # PATH, OS, PARALLELISM, TMPDIR, BUILD_DIR, VERBOSE,
-# BUILDROOT, TEST_DATA_DIR,HTMLLOG,WEBLOG, SEND_MAIL_TO, REPLY_TO  DO_OPT DO_DBG all set
+# BUILDROOT, TEST_DATA_DIR,HTMLLOG, PUBLIC_HTML, SEND_MAIL_TO, REPLY_TO  DO_OPT DO_DBG all set
 
 PATH="$BUILDROOT"/src/R_Tester/helpers:"$PATH":/usr/sbin
 export PATH OS MAKE_PARALLELISM PARALLELISM TMPDIR BUILD_DIR BUILDROOT TEST_DATA_DIR COMMON_GROUP
@@ -82,7 +82,7 @@ if [ "$DO_OPT" = "1" ]; then
   fi
 fi
 #__________________________________
-# Build the log that will be sent out in the email
+# create the log that will be sent out in the email
 echo "" >> "$BUILDROOT"/log
 
 if [ "$DO_DBG" = "1" ]; then
@@ -130,14 +130,21 @@ EOF
   cat "$BUILDROOT"/log >> "$BUILDROOT"/mail.msg
 
   if [ $use_html = "1" ]; then
-    echo "Build and run logs:"  >> "$BUILDROOT"/mail.msg
-    echo -e "$WEBLOG/Uintah.html\n"  >> "$BUILDROOT"/mail.msg
+    echo "Detailed report:"                 >> "$BUILDROOT"/mail.msg
+    echo -e "\t $RT_URL/Uintah.html \n"     >> "$BUILDROOT"/mail.msg
     
-    echo "Historical memory usage plots:"  >> "$BUILDROOT"/mail.msg
-    echo -e "$WEBLOG/Plots/Memory\n"      >> "$BUILDROOT"/mail.msg
+    echo "Historical memory usage plots:"    >> "$BUILDROOT"/mail.msg
+    echo -e "\t $RT_URL/Plots/Memory \n"     >> "$BUILDROOT"/mail.msg
     
     echo "Historical simulation run time plots:"  >> "$BUILDROOT"/mail.msg
-    echo -e "$WEBLOG/Plots/simRunTime\n"  >> "$BUILDROOT"/mail.msg
+    echo -e "\t $RT_URL/Plots/simRunTime \n"      >> "$BUILDROOT"/mail.msg
+    
+    echo "Optimized results:"   >> "$BUILDROOT"/mail.msg
+    echo -e "\t $RT_URL/opt \n" >> "$BUILDROOT"/mail.msg
+ 
+     echo "Debug results:"      >> "$BUILDROOT"/mail.msg
+    echo -e "\t $RT_URL/dbg \n" >> "$BUILDROOT"/mail.msg   
+
   fi
   sendmail "$SEND_MAIL_TO" < "$BUILDROOT"/mail.msg
 #   rm -f "$BUILDROOT"/mail.msg

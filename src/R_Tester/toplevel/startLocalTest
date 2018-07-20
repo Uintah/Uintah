@@ -6,16 +6,19 @@
 
 #__________________________________
 # define environmental variables and export them
-HTMLLOG=""
+
 LOCAL_OR_NIGHTLY_TEST="local"
-WHICH_TESTS=${WHICH_TESTS:="LOCALTESTS"}  # default value is local tests, it can be set by the buildbot
+WHICH_TESTS=${WHICH_TESTS:="LOCALTESTS"}          # default value is "local tests", it can be set by the buildbot
 OS=`uname -s`
 PARALLELISM=8
-WEBLOG=""
 BUILD_DIR=/dev/null
-AUTO_UPDATE_PERF_GS="no"                  # Variable for automatically update performance GS if they improve
+AUTO_UPDATE_PERF_GS="no"                          # Variable for automatically update performance GS if they improve
 
-export BUILD_DIR  HTMLLOG WEBLOG LOCAL_OR_NIGHTLY_TEST WHICH_TESTS OS AUTO_UPDATE_PERF_GS
+OUTPUT_HTML=${OUTPUT_HTML:="no"}
+HTMLLOG=""
+PUBLIC_HTML=${PUBLIC_HTML:="$HOME/public_html"}   # default value is "~/public_html", it can be set by user
+
+export BUILD_DIR HTMLLOG PUBLIC_HTML OUTPUT_HTML LOCAL_OR_NIGHTLY_TEST WHICH_TESTS OS AUTO_UPDATE_PERF_GS
 
 #__________________________________
 unset SHELL

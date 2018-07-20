@@ -272,6 +272,7 @@ if [ -d "$test_uda_dir" ]; then
 
     #______________________________________________________________________
     #  now run the comparison function
+    echo "`date +'%r %D'`"
     echo "Testing $test"
     compareUda_function $test_uda_dir $gs_uda_dir $sus_dir $abs_tol $rel_tol
     exit $?

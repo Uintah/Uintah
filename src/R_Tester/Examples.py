@@ -109,6 +109,13 @@ DOMAINTESTS   =[   ("RMCRT_+Domain",         "RMCRT_+Domain.ups",        8, "ALL
                    ("RMCRT_+Domain_ML",      "RMCRT_+Domain_ML.ups",     8, "ALL", ["exactComparison"]),
                    ("RMCRT_+Domain_DO",      "RMCRT_+Domain_DO.ups",     8, "ALL", ["exactComparison"])
               ]
+
+KOKKOSTESTS   = [  ("RMCRT_test_1L",    "RMCRT_bm1_1L.ups",            1, "ALL", ["exactComparison"]),
+                   ("RMCRT_1L_bounded",  "RMCRT_bm1_1L_bounded.ups",   8, "ALL", ["exactComparison"]),
+                   ("RMCRT_bm1_DO",     "RMCRT_bm1_DO.ups",            1, "ALL", ["exactComparison"]),
+                   ("RMCRT_isoScat",    "RMCRT_isoScat.ups",           1, "ALL", ["exactComparison"]),
+                   ("RMCRT_ML",         "RMCRT_ML.ups",                8, "ALL", ["exactComparison"])
+                ]
               
 POISSON3TESTS = [ #("poisson3_2L",         "poisson3_2L.ups",             2, "All", ["exactComparison"] ),       
                   #("poisson3_3L",         "poisson3_3L.ups",             2, "All", ["exactComparison"] ),       
@@ -119,7 +126,7 @@ DEBUGTESTS   =[]
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: BASETESTS FLOATTESTS GPUTESTS DEBUGTESTS NIGHTLYTESTS THREADEDTESTS DOMAINTESTS Poisson3_Tests BUILDBOTTESTS
+#LIST: BASETESTS FLOATTESTS GPUTESTS DEBUGTESTS NIGHTLYTESTS THREADEDTESTS DOMAINTESTS KOKKOSTESTS Poisson3_Tests BUILDBOTTESTS
 #__________________________________
 
 
@@ -137,6 +144,8 @@ def getTestList(me) :
     TESTS = DEBUGTESTS
   elif me == "DOMAINTESTS":
     TESTS = DOMAINTESTS
+  elif me == "KOKKOSTESTS":
+    TESTS = KOKKOSTESTS
   elif me == "NIGHTLYTESTS":
     TESTS = NIGHTLYTESTS
   elif me == "THREADEDTESTS":
