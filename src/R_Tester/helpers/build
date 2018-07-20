@@ -54,6 +54,16 @@ if [ "$OS" = "Linux" ]; then
       MODIFY_SRC="true"
     fi
 
+    if [ "$LOGNAME" == "kokkos_rt" ]; then
+      COMMON="      --with-mpi=/usr/lib/mpich\\
+      --with-hypre=/usr/local/hypre-2.8.0b \\
+      --with-boost=/usr/local/boost-1.65.1 \\
+      --without-petsc \\
+      --enable-kokkos \\
+      --enable-examples \\
+      --enable-arches \\"
+    fi
+
     ENV="     CC=mpicc \\
      CXX=mpic++ \\
      F77=gfortran"
