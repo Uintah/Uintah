@@ -50,16 +50,13 @@ void CCVel::problemSetup( ProblemSpecP& db ){
           msg << "ERROR: Cannot use KMomentum->convection if you are using the multifracal nles closure." << std::endl;
           throw InvalidValue(msg.str(),__FILE__,__LINE__);
         } else {
-          if (conv_scheme == "fourth"){
             m_ghost_cells=2;
             conv_scheme="fourth";
             m_int_scheme = ArchesCore::get_interpolant_from_string( conv_scheme );
-          }
         }
       }
     }
   }
-
 }
 
 //--------------------------------------------------------------------------------------------------
