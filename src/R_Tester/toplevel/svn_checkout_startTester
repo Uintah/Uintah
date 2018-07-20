@@ -1,0 +1,19 @@
+#!/bin/csh -f
+#______________________________________________________________________
+#  This script downloads a copy of the startTester script.
+#  Crontab should call this script before the nightly RT script
+#  starts so the latest startTester is used.
+#______________________________________________________________________
+
+set scriptsDir = $argv
+set svn_path   = https://gforge.sci.utah.edu/svn/uintah/trunk/src/R_Tester/toplevel/startTester
+
+if( ! -d $scriptsDir ) then
+  echo " The directory $scriptsDir does not exist."  
+  echo "  Now exiting....."
+  exit (1)
+endif
+
+svn export  $svn_path $scriptsDir --username=anonymous --password=""
+
+exit(0)
