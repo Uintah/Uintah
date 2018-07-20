@@ -14,6 +14,6 @@ if( ! -d $scriptsDir ) then
   exit (1)
 endif
 
-svn export  $svn_path $scriptsDir --username=anonymous --password=""
+svn export  --force $svn_path $scriptsDir --username=anonymous --password=""
 
 exit(0)
