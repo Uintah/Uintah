@@ -61,7 +61,8 @@ if [ "$OS" = "Linux" ]; then
       --without-petsc \\
       --enable-kokkos \\
       --enable-examples \\
-      --enable-arches \\"
+      --enable-arches \\
+      LDFLAGS='-ldl'\\"
     fi
 
     ENV="     CC=mpicc \\
