@@ -75,7 +75,7 @@ if [ "$MACHINE" == "uintah-build" ]; then
     IFS=""    # used to elimnate spaces between array elements
     DEFAULT_MAIL_TO=${names[*]}
     
-    SVN_trunk="https://gforge.sci.utah.edu/svn/uintah/branches/kokkos_dev"
+    SVN_trunk="https://gforge.sci.utah.edu/svn/uintah/branches/kokkos_dev/src"
     export TEST_COMPONENTS="Examples ARCHES"
     WHICH_TESTS="KOKKOSTESTS"
     IFS=" "
