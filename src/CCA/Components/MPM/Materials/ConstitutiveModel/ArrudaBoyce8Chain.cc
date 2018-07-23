@@ -107,6 +107,7 @@ namespace Uintah {
       addSharedCRForExplicit(task, matlset, patches);
     }
 
+    task->requires(Task::OldDW, lb->pParticleIDLabel, matlset, Ghost::None);
     if (flag->d_with_color) {
       task->requires(Task::OldDW, lb->pColorLabel, Ghost::None);
     }
@@ -274,7 +275,7 @@ namespace Uintah {
         particleIndex pIdx = *pIter;
         pdTdt[pIdx] = 0.0;
 
-        F_New= pF_New[pIdx];
+        F_New = pF_New[pIdx];
         F_Inc = F_New*pF_Old[pIdx].Inverse();
         J_Inc = F_Inc.Determinant();
         J_New = F_New.Determinant();
@@ -310,7 +311,7 @@ namespace Uintah {
 
         // Calculate Cauchy stress tensor and assign
         pStress[pIdx] = m_shearIn*LangInv*(B-oneThird*B_kk*Identity)/(JPow23*J_New) +  // Shear contribution
-                        m_bulkIn*(J_New-1.0)*Identity;                          // Bulk contribution
+                        0.5*m_bulkIn*(J_New-1.0/J_New)*Identity;                       // Bulk contribution
 
         // 1.0/rho_cur = J_New/rho0;
         double c_dil = sqrt((m_bulkIn + 4.0*m_shearIn*oneThird)*J_New*rho0Inv);
