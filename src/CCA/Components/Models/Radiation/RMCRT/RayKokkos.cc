@@ -26,8 +26,6 @@
 #include <CCA/Components/Models/Radiation/RMCRT/RayKokkos.h>
 #include <CCA/Components/Schedulers/DetailedTask.h>
 
-#include <CCA/Components/Models/Radiation/RMCRT/slim.h>
-
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/AMR.h>
@@ -36,9 +34,13 @@
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Variables/KokkosViews.h>
 #include <Core/Grid/Variables/PerPatch.h>
+#include <Core/Parallel/KokkosTools.h>
 #include <Core/Parallel/Portability.h>
 #include <Core/Util/DOUT.hpp>
 #include <Core/Util/Timers/Timers.hpp>
+
+
+#include <CCA/Components/Models/Radiation/RMCRT/slim.h>
 
 #include <include/sci_defs/uintah_testdefs.h.in>
 
@@ -46,7 +48,6 @@
 #include <sci_defs/visit_defs.h>
 
 #if defined( UINTAH_ENABLE_KOKKOS )
-#include <Kokkos_Random.hpp>
 #include <Kokkos_Core.hpp>
 #endif
 
@@ -1086,6 +1087,7 @@ struct rayTrace_dataOnion_solveDivQFunctor {
   typedef unsigned long int value_type;
   typedef typename RandomGenerator::generator_type rnd_type;
 
+  RandomGenerator                     m_rand_pool;
   LevelParamsML                       m_levelParamsML[m_maxLevels];
   double                              m_domain_BB_Lo[3];
   double                              m_domain_BB_Hi[3];
@@ -1104,9 +1106,9 @@ struct rayTrace_dataOnion_solveDivQFunctor {
   bool                                m_d_allowReflect;
   int                                 m_d_nDivQRays;
   bool                                m_d_CCRays;
-  RandomGenerator                     m_rand_pool;
 
-  rayTrace_dataOnion_solveDivQFunctor( LevelParamsML                       levelParamsML[m_maxLevels]
+  rayTrace_dataOnion_solveDivQFunctor( RandomGenerator                     rand_pool 
+                                     , LevelParamsML                       levelParamsML[m_maxLevels]
                                      , double                              domain_BB_Lo[3]
                                      , double                              domain_BB_Hi[3]
                                      , int                                 fineLevel_ROI_Lo[3]
@@ -1125,7 +1127,8 @@ struct rayTrace_dataOnion_solveDivQFunctor {
                                      , int                                 & d_nDivQRays
                                      , bool                                & d_CCRays
                                      )
-    : m_divQ_fine          ( divQ_fine )
+    : m_rand_pool          ( rand_pool )
+    , m_divQ_fine         ( divQ_fine )
     , m_radiationVolq_fine ( radiationVolq_fine )
     , m_d_threshold        ( d_threshold )
     , m_d_allowReflect     ( d_allowReflect )
@@ -1171,20 +1174,16 @@ struct rayTrace_dataOnion_solveDivQFunctor {
     m_fineLevel_ROI_Hi[1] = fineLevel_ROI_Hi[1];
     m_fineLevel_ROI_Hi[2] = fineLevel_ROI_Hi[2];
 
-#ifndef FIXED_RANDOM_NUM
-    KokkosRandom<RandomGenerator> kokkosRand( true );
-    m_rand_pool = kokkosRand.getRandPool();
-#endif
   }
 
   // This operator() replaces the cellIterator loop used to solve DivQ
   KOKKOS_INLINE_FUNCTION
   void operator() ( const int i, const int j, const int k, value_type & m_nRaySteps ) const {
-
 #ifndef FIXED_RANDOM_NUM
     // Each thread needs a unique state
     rnd_type rand_gen = m_rand_pool.get_state();
 #endif
+
     int L = m_maxLevels - 1;
 
     double sumI = 0;
@@ -1624,7 +1623,8 @@ struct rayTrace_dataOnion_solveDivQFunctor {
               i, j, k, sumI, m_divQ_fine(i,j,k), m_radiationVolq_fine(i,j,k), m_abskg[fine_L](i,j,k), m_sigmaT4OverPi[fine_L](i,j,k) );
     }
 #endif
-/*===========TESTING==========`*/
+
+//`===========TESTING==========//
 #ifndef FIXED_RANDOM_NUM
     m_rand_pool.free_state(rand_gen);
 #endif
@@ -1866,20 +1866,23 @@ Ray::rayTrace_dataOnionLevels( const PatchSubset* finePatches,
       // TODO: Kokkos-ify the boundary flux calculation
 
       Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex());
+      auto random_pool = Uintah::GetKokkosRandom1024Pool< Kokkos::Cuda >( );
 
+      printf("Got here\n");
       //launch the functor
       if (d_algorithm == dataOnionSlim) {
-        SlimRayTrace_dataOnion_solveDivQFunctor< T, Kokkos::CudaSpace, Kokkos::Random_XorShift1024_Pool< Kokkos::Cuda >, numLevels >
-        functor( levelParamsML, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view,
-                     divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays,
-                     Max(d_haloCells[0], d_haloCells[1], d_haloCells[2] ));
-        Uintah::parallel_reduce_sum<Kokkos::Cuda>( executionObject, range, functor, size );
+        //SlimRayTrace_dataOnion_solveDivQFunctor< T, Kokkos::CudaSpace, Kokkos::Random_XorShift1024_Pool< Kokkos::Cuda >, numLevels >
+        //functor( levelParamsML, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view,
+        //             divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays,
+        //             Max(d_haloCells[0], d_haloCells[1], d_haloCells[2] ));
+        //Uintah::parallel_reduce_sum<Kokkos::Cuda>( executionObject, range, functor, size );
       } else {
-        rayTrace_dataOnion_solveDivQFunctor< T, Kokkos::CudaSpace, Kokkos::Random_XorShift1024_Pool< Kokkos::Cuda >, numLevels >
-        functor( levelParamsML, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, sigmaT4OverPi_view, abskg_view,
+        rayTrace_dataOnion_solveDivQFunctor< T, Kokkos::CudaSpace, decltype(random_pool), numLevels>
+        functor( random_pool, levelParamsML, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, sigmaT4OverPi_view, abskg_view,
                    cellType_view , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays);
         Uintah::parallel_reduce_sum<Kokkos::Cuda>( executionObject, range, functor, size );
       }
+      printf("Got here 2\n");
 
     } // end if ( std::is_same< Kokkos::Cuda , ExecutionSpace >::value )
 #endif //#if defined(HAVE_CUDA)
@@ -1980,16 +1983,17 @@ Ray::rayTrace_dataOnionLevels( const PatchSubset* finePatches,
 
       if (d_solveDivQ) {
         Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex());
+        auto random_pool = Uintah::GetKokkosRandom1024Pool< Kokkos::OpenMP >( );
 
         if (d_algorithm == dataOnionSlim) {
-          SlimRayTrace_dataOnion_solveDivQFunctor< T, Kokkos::HostSpace, Kokkos::Random_XorShift1024_Pool< Kokkos::OpenMP >, numLevels >
-          functor( levelParamsML, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view,
-                   divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays,
-                   Max(d_haloCells[0], d_haloCells[1], d_haloCells[2] ));
-          Uintah::parallel_reduce_sum<Kokkos::OpenMP>( executionObject, range, functor, size );
+          //SlimRayTrace_dataOnion_solveDivQFunctor< T, Kokkos::HostSpace, Kokkos::Random_XorShift1024_Pool< Kokkos::OpenMP >, numLevels >
+          //functor( levelParamsML, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view,
+          //         divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays,
+          //         Max(d_haloCells[0], d_haloCells[1], d_haloCells[2] ));
+          //Uintah::parallel_reduce_sum<Kokkos::OpenMP>( executionObject, range, functor, size );
         } else {
-          rayTrace_dataOnion_solveDivQFunctor< T, Kokkos::HostSpace, Kokkos::Random_XorShift1024_Pool< Kokkos::OpenMP >, numLevels >
-          functor( levelParamsML, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, sigmaT4OverPi_view, abskg_view,
+          rayTrace_dataOnion_solveDivQFunctor< T, Kokkos::HostSpace, decltype(random_pool), numLevels >
+          functor( random_pool, levelParamsML, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, sigmaT4OverPi_view, abskg_view,
                  cellType_view , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays);
           Uintah::parallel_reduce_sum<Kokkos::OpenMP>( executionObject, range, functor, size );
         }

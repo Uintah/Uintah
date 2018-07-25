@@ -35,7 +35,6 @@
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
-#include <Core/Parallel/MasterLock.h>
 
 #include <sci_defs/uintah_defs.h>
 #include <sci_defs/cuda_defs.h>
@@ -46,14 +45,10 @@
   #include <curand_kernel.h>
 #endif
 
-#include <Kokkos_Random.hpp>
-
 #include <cmath>
 #include <iostream>
 #include <string>
 #include <vector>
-
-Uintah::MasterLock rand_init_mutex{};
 
 namespace Uintah {
 
@@ -509,47 +504,6 @@ rayTrace_dataOnion( const PatchSubset* patches,
     return ( a.x() > b.x() && a.y() > b.y() && a.z() > b.z() );
   }
 }; // end class Ray
-
-
-template < typename RandomGenerator>
-class KokkosRandom {
-
-public:
-
-  // Initialize once within host code (synchronizes streams on GPU)
-  KokkosRandom( bool seedWithTime ) {
-    {
-      std::lock_guard<Uintah::MasterLock> rand_init_mutex_guard(rand_init_mutex);
-
-      if (!seeded) {
-
-        // Seed using time
-        uint64_t ticks{0};
-
-        if (seedWithTime) {
-          ticks = std::chrono::high_resolution_clock::now().time_since_epoch().count();
-        }
-
-        m_rand_pool = RandomGenerator(ticks);
-        seeded      = true;
-      }
-    } // end std::lock_guard
-  }
-
-  RandomGenerator& getRandPool() { return m_rand_pool; }
-
-private:
-
-  static bool seeded;
-  static RandomGenerator m_rand_pool;
-
-};  // end class KokkosRandom
-
-template <typename RandomGenerator>
-bool KokkosRandom<RandomGenerator>::seeded = false;
-
-template <typename RandomGenerator>
-RandomGenerator KokkosRandom<RandomGenerator>::m_rand_pool;
 
 } // namespace Uintah
 

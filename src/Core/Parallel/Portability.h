@@ -31,6 +31,8 @@
 
 // All portable loops need the OnDemandDataWarehouse, so it is included
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
+
+// Logic for Uintah parallell loops is found here.
 #include <Core/Parallel/LoopExecution.hpp>
 
 #endif

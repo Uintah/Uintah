@@ -38,6 +38,7 @@
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Parallel/CommunicationList.hpp>
+#include <Core/Parallel/KokkosTools.h>
 #include <Core/Parallel/MasterLock.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/UintahMPI.h>
@@ -109,6 +110,7 @@ MPIScheduler::MPIScheduler( const ProcessorGroup * myworld
 {
 #ifdef UINTAH_ENABLE_KOKKOS
   Kokkos::initialize();
+  Uintah::createKokkosTools();
 #endif //UINTAH_ENABLE_KOKKOS
 
   if (g_time_out) {
@@ -141,6 +143,7 @@ MPIScheduler::~MPIScheduler()
   }
 
 #ifdef UINTAH_ENABLE_KOKKOS
+  Uintah::cleanupKokkosTools();
   Kokkos::finalize();
 #endif //UINTAH_ENABLE_KOKKOS
 
