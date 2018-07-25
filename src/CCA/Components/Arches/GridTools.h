@@ -424,8 +424,8 @@ namespace Uintah{ namespace ArchesCore{
 
     void operator()(const FourthCentral& op, int i, int j, int k) const {
 
-      u_i(i,j,k) = (7./12.)*(u(i,j,k) + u(i+ioff,j+joff,k+koff))
-                 - (1./12.)*(u(i+2*ioff,j+2*joff,k+2*koff) + u(i-ioff,j-joff,k-koff)) ;
+      u_i(i,j,k) = (9./16.)*(u(i,j,k) + u(i+ioff,j+joff,k+koff))
+                 - (1./16.)*(u(i+2*ioff,j+2*joff,k+2*koff) + u(i-ioff,j-joff,k-koff)) ;
 
     }
 

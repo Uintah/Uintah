@@ -105,7 +105,6 @@ WARNING
     double delt_;
     SimpleMaterial* mymat_;
     SolverInterface* solver;
-    SolverParameters* solver_parameters;    
     bool x_laplacian, y_laplacian, z_laplacian;
     
     SolverTest1(const SolverTest1&);

@@ -312,13 +312,12 @@ echo | tee -a $PTAR_RECORD
 for X in $PTAR_FILES.*; do
   PTAR_FILES_N="$X"
   export PTAR_FILES_N
-  /usr/bin/time -p $MAKE  -s -f $pTardir/pTarUda_driver_$OS -j $nproc | tee -a $PTAR_RECORD
-  
-  # remove the .tarred/stamp directory
-  $MAKE  -s -f $pTardir/pTarUda_driver_$OS clean | tee -a $PTAR_RECORD
-  
+  $MAKE  -s -f $pTardir/pTarUda_driver_$OS -j $nproc | tee -a $PTAR_RECORD 
 done
 
+# remove the .tarred/stamp directory
+$MAKE  -s -f $pTardir/pTarUda_driver_$OS clean | tee -a $PTAR_RECORD
+ 
 echo | tee -a $PTAR_RECORD
 echo -n "Ending at: " | tee -a $PTAR_RECORD
 date |tee -a $PTAR_RECORD

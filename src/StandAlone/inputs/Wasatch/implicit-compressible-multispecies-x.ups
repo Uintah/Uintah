@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Uintah_specification>
+  <Meta>
+    <title>multispecies compressible flow in 1D, with the block-implicit method</title>
+  </Meta>
+  <SimulationComponent type="wasatch"/>
+  <Wasatch>
+    <Density method="COMPRESSIBLE">
+      <NameTag name="rho"/>
+    </Density>
+    <TimeIntegrator>FE</TimeIntegrator>
+    <DualTime iterations="3000"
+              tolerance="1e-2"
+              blockimplicit="true"
+              lograte="100" 
+              localcflvnn="true" 
+              cfl="0.2" 
+              vnn="0.1" 
+              maxvalue="1.e6" 
+              minvalue="1.e-9" 
+              precondition="false"
+              doImplicitInviscid="true"/>
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="O2"/>
+      <Constant>0.2272626304934854</Constant>
+    </BasicExpression>
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="H2"/>
+      <Constant>0.0286344607647291</Constant>
+    </BasicExpression>
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="basetemp"/>
+      <Constant>600.</Constant>
+    </BasicExpression>
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="tempspike"/>
+      <GaussianFunction amplitude="1000.0" deviation="0.0003" mean="0.0002" baseline="0.0">
+        <NameTag name="XSVOL"/>
+      </GaussianFunction>
+    </BasicExpression>
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="Temperature"/>
+      <ExprAlgebra algebraicOperation="SUM">
+        <NameTag name="basetemp"/>
+        <NameTag name="tempspike"/>
+      </ExprAlgebra>
+    </BasicExpression>
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="u"/>
+      <Constant>0.</Constant>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="pressure"/>
+      <Constant>101325.0</Constant>
+    </BasicExpression>
+    <MomentumEquations>
+      <X-Velocity>u</X-Velocity>
+      <X-Momentum>x-mom</X-Momentum>
+      <Viscosity>
+        <NameTag name="viscosity"/>
+        <FromPoKiTT/>
+      </Viscosity>
+    </MomentumEquations>
+    <EnergyEquation>
+      <SolutionVariable>rhoet</SolutionVariable>
+      <PrimitiveVariable>et</PrimitiveVariable>
+      <ConvectiveFlux direction="X" method="SUPERBEE">
+        <AdvectiveVelocity>
+          <NameTag name="u"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+    </EnergyEquation>
+    <SpeciesTransportEquations>
+      <CanteraInputFile>inputs/Wasatch/h2-burke-no-he-ar.xml</CanteraInputFile>
+      <CanteraGroup>h2-burke</CanteraGroup>
+      <DiffusiveFlux direction="X">
+        <MixtureAveraged/>
+      </DiffusiveFlux>
+      <ConvectiveFlux direction="X" method="SUPERBEE">
+        <AdvectiveVelocity>
+          <NameTag name="u"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+      <DetailedKinetics/>
+    </SpeciesTransportEquations>
+  </Wasatch>
+  <Time>
+    <maxTime>1.e-6</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>1.e-7</delt_min>
+    <delt_max>1.e-7</delt_max>
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+  <DataArchiver>
+    <filebase>implicit-compressible-multispecies-x.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <compression>gzip</compression>
+    <save label="rho"/>
+    <save label="u"/>
+    <save label="pressure"/>
+    <save label="Temperature"/>
+    <save label="HO2"/>
+    <save label="H2"/>
+    <save label="O2"/>
+  </DataArchiver>
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>[-1.e-3,-1.e-3,-1.e-3]</lower>
+        <upper>[+1.e-3,+1.e-3,+1.e-3]</upper>
+        <resolution>[32,1,1]</resolution>
+        <patches>[1,1,1]</patches>
+        <extraCells>[0, 0, 0]</extraCells>
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+  </Grid>
+</Uintah_specification>

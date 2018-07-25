@@ -2034,12 +2034,15 @@ void UCNH::addSplitParticlesComputesAndRequires(Task* task,
 }
 //______________________________________________________________________
 //
-void UCNH::addCMSpecificParticleData(const Patch* patch,
-                                     const int dwi,
-                                     const unsigned int oldNumPar,
-                                     const int numNewPartNeeded,
-                                     DataWarehouse* old_dw,
-                                     DataWarehouse* new_dw)
+void UCNH::splitCMSpecificParticleData(const Patch* patch,
+                                       const int dwi,
+                                       const int fourOrEight,
+                                       ParticleVariable<int> &prefOld,
+                                       ParticleVariable<int> &prefNew,
+                                       const unsigned int oldNumPar,
+                                       const unsigned int numNewPartNeeded,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw)
 {
   // THIS IS NOT DONE, MORE WORK NEEDED FOR INELASTIC CASES!!!
   ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);

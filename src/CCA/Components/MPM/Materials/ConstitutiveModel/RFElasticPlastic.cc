@@ -1305,3 +1305,65 @@ RFElasticPlastic::addSplitParticlesComputesAndRequires(Task* task,
   task->modifies(pPlasticStrainRateLabel_preReloc,  matlset);
   task->modifies(pEnergyLabel_preReloc,             matlset);
 }
+
+void 
+RFElasticPlastic::splitCMSpecificParticleData(const Patch* patch,
+                                              const int dwi,
+                                              const int fourOrEight,
+                                              ParticleVariable<int> &prefOld,
+                                              ParticleVariable<int> &prefNew,
+                                              const unsigned int oldNumPar,
+                                              const unsigned int numNewPartNeeded,
+                                              DataWarehouse* old_dw,
+                                              DataWarehouse* new_dw)
+{
+  ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+
+  ParticleVariable<double>  PlasStrain, PlasStrainRate,Energy;
+  ParticleVariable<int> pLocalized;
+
+  new_dw->getModifiable(PlasStrain,    pPlasticStrainLabel_preReloc,     pset);
+  new_dw->getModifiable(PlasStrainRate,pPlasticStrainRateLabel_preReloc, pset);
+  new_dw->getModifiable(pLocalized,    lb->pLocalizedMPMLabel_preReloc,  pset);
+  new_dw->getModifiable(Energy,        pEnergyLabel_preReloc,            pset);
+
+  ParticleVariable<double> PlasStrainTmp, PlasStrainRateTmp, EnergyTmp;
+  ParticleVariable<int> pLocalizedTmp;
+
+  new_dw->allocateTemporary(PlasStrainTmp,        pset);
+  new_dw->allocateTemporary(PlasStrainRateTmp,    pset);
+  new_dw->allocateTemporary(pLocalizedTmp,        pset);
+  new_dw->allocateTemporary(EnergyTmp,            pset);
+  //new_dw->allocateTemporary(pEquivStressTmp,      pset);
+  // copy data from old variables for particle IDs and the position vector
+  for(unsigned int pp=0; pp<oldNumPar; ++pp ){
+    PlasStrainTmp[pp]     = PlasStrain[pp];
+    PlasStrainRateTmp[pp] = PlasStrainRate[pp];
+    pLocalizedTmp[pp]     = pLocalized[pp];
+    EnergyTmp[pp]         = Energy[pp];
+  }
+
+  int numRefPar=0;
+  for(unsigned int idx=0; idx<oldNumPar; ++idx ){
+    if(prefNew[idx]!=prefOld[idx]){  // do refinement!
+      for(int i = 0;i<fourOrEight;i++){
+        int new_index;
+        if(i==0){
+          new_index=idx;
+        } else {
+          new_index=oldNumPar+(fourOrEight-1)*numRefPar+i;
+        }
+        PlasStrainTmp[new_index]     = PlasStrain[idx];
+        PlasStrainRateTmp[new_index] = PlasStrainRate[idx];
+        pLocalizedTmp[new_index]     = pLocalized[idx];
+        EnergyTmp[new_index]         = Energy[idx];
+      }
+      numRefPar++;
+    }
+  }
+
+  new_dw->put(PlasStrainTmp,      pPlasticStrainLabel_preReloc,       true);
+  new_dw->put(PlasStrainRateTmp,  pPlasticStrainRateLabel_preReloc,   true);
+  new_dw->put(pLocalizedTmp,      lb->pLocalizedMPMLabel_preReloc,    true);
+  new_dw->put(EnergyTmp,          pEnergyLabel_preReloc,              true);
+}

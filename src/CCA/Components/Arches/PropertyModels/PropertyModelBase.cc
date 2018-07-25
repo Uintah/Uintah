@@ -2,6 +2,9 @@
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Grid/SimulationState.h>
+#include <Core/GeometryPiece/GeometryPiece.h>
+#include <Core/GeometryPiece/GeometryPieceFactory.h>
+#include <Core/GeometryPiece/UnionGeometryPiece.h>
 
 using namespace std;
 using namespace Uintah; 
@@ -36,6 +39,18 @@ PropertyModelBase::commonProblemSetup( const ProblemSpecP& inputdb )
     db_init->require("constant",_const_init); 
     _init_type = "constant"; 
 
+  } else if (type == "geometry_fill") {
+
+    db_init->require("constant_inside", d_constant_in_init);              //fill inside geometry
+    db_init->getWithDefault( "constant_outside",d_constant_out_init,0.0); //fill outside geometry
+
+    ProblemSpecP the_geometry = db_init->findBlock("geom_object");
+    if (the_geometry) {
+      GeometryPieceFactory::create(the_geometry, d_initGeom);
+    } else {
+      throw ProblemSetupException("You are missing the geometry specification (<geom_object>) for the transport eqn. initialization!", __FILE__, __LINE__);
+    }
+    _init_type = "geometry_fill";
   } else if ( type == "gaussian" ){ 
 
     db_init->require( "amplitude", _a_gauss ); 

@@ -1,4 +1,5 @@
 #!/bin/csh
+
 #__________________________________
 #  This script pulls out data from sus 
 #   output and plots a sequence of timesteps with gnuplot
@@ -33,39 +34,55 @@ endif
 unalias rm
 #__________________________________
 # find the timestep to plot
-set ts = (`puda -timesteps $uda | grep : | cut -f 2 -d":"`)
+set TMP = "/tmp/movie_lineExtract"
+rm  $TMP
+mkdir $TMP
+puda -timesteps $uda | grep : | cut -f 2 -d":" > $TMP/ts
+
+#__________________________________
+# Some uda have _hundreds_ of timesteps.
+# You must break up the list of timesteps into smaller files
+set nLines=20
+
+split --lines=$nLines --suffix-length=3 --numeric-suffixes $TMP/ts $TMP/ts.
+
 
 @ timestep = 0
-foreach X ( $ts[*]:q) 
-
-  echo "______________________________________________________________________"
-  echo "$timestep) $X"
+foreach Y ( $TMP/ts.* )
+  set ts = `cat $Y`
   
-  set fname = `printf 'movie.%04d.png\n' $timestep`
-  echo $fname
-  /bin/rm -f $fname
-  #__________________________________
-  # ExtractData from the data file
-  lineextract -v delP_Dilatate -o delP.dat  -l 0 -cellCoords -timestep $timestep -istart -1 50 0 -iend 1000 50 0  -m 0 -uda $uda >& /dev/null
-  lineextract -v vel_CC        -o vel.dat   -l 0 -cellCoords -timestep $timestep -istart -1 50 0 -iend 1000 50 0  -m 0 -uda $uda >& /dev/null
-  lineextract -v press_CC      -o press.dat -l 0 -cellCoords -timestep $timestep -istart -1 50 0 -iend 1000 50 0  -m 0 -uda $uda >& /dev/null
-  lineextract -v rho_CC        -o rho.dat   -l 0 -cellCoords -timestep $timestep -istart -1 50 0 -iend 1000 50 0  -m 0 -uda $uda >& /dev/null
-  lineextract -v temp_CC       -o temp.dat  -l 0 -cellCoords -timestep $timestep -istart -1 50 0 -iend 1000 50 0  -m 0 -uda $uda >& /dev/null
-  
-  lineextract -v mass_L_CC     -o mass_L.dat -l 0 -cellCoords -timestep $timestep -istart -1 50 0 -iend 1000 50 0  -m 0 -uda $uda >& /dev/null
-  lineextract -v mom_L_ME_CC   -o mom_L.dat  -l 0 -cellCoords -timestep $timestep -istart -1 50 0 -iend 1000 50 0  -m 0 -uda $uda >& /dev/null
-  lineextract -v eng_L_ME_CC   -o eng_L.dat  -l 0 -cellCoords -timestep $timestep -istart -1 50 0 -iend 1000 50 0  -m 0 -uda $uda >& /dev/null
+  foreach X ( $ts[*]:q) 
 
-  #scripts/ICE/gradient.m -dat delP.dat  -pDir 1 > /dev/null
-  #scripts/ICE/gradient.m -dat vel.dat   -pDir 1 > /dev/null
-  #scripts/ICE/gradient.m -dat press.dat -pDir 1 > /dev/null
-  #scripts/ICE/gradient.m -dat rho.dat   -pDir 1 > /dev/null
-  #scripts/ICE/gradient.m -dat temp.dat  -pDir 1 > /dev/null
+    echo "______________________________________________________________________"
+    echo "$timestep) $X"
 
-  mv *.dat $uda/.
+    set fname = `printf 'movie.%04d.png\n' $timestep`
+    echo $fname
+    /bin/rm -f $fname
+    #__________________________________
+    # ExtractData from the data file
+    lineextract -v delP_Dilatate -o delP.dat  -l 0 -cellCoords -timestep $timestep -istart -1 50 0 -iend 1000 50 0  -m 0 -uda $uda >& /dev/null
+    lineextract -v vel_CC        -o vel.dat   -l 0 -cellCoords -timestep $timestep -istart -1 50 0 -iend 1000 50 0  -m 0 -uda $uda >& /dev/null
+    lineextract -v press_CC      -o press.dat -l 0 -cellCoords -timestep $timestep -istart -1 50 0 -iend 1000 50 0  -m 0 -uda $uda >& /dev/null
+    lineextract -v rho_CC        -o rho.dat   -l 0 -cellCoords -timestep $timestep -istart -1 50 0 -iend 1000 50 0  -m 0 -uda $uda >& /dev/null
+    lineextract -v temp_CC       -o temp.dat  -l 0 -cellCoords -timestep $timestep -istart -1 50 0 -iend 1000 50 0  -m 0 -uda $uda >& /dev/null
 
-  rm -f gp
+    lineextract -v mass_L_CC     -o mass_L.dat -l 0 -cellCoords -timestep $timestep -istart -1 50 0 -iend 1000 50 0  -m 0 -uda $uda >& /dev/null
+    lineextract -v mom_L_ME_CC   -o mom_L.dat  -l 0 -cellCoords -timestep $timestep -istart -1 50 0 -iend 1000 50 0  -m 0 -uda $uda >& /dev/null
+    lineextract -v eng_L_ME_CC   -o eng_L.dat  -l 0 -cellCoords -timestep $timestep -istart -1 50 0 -iend 1000 50 0  -m 0 -uda $uda >& /dev/null
 
+    #scripts/ICE/gradient.m -dat delP.dat  -pDir 1 > /dev/null
+    #scripts/ICE/gradient.m -dat vel.dat   -pDir 1 > /dev/null
+    #scripts/ICE/gradient.m -dat press.dat -pDir 1 > /dev/null
+    #scripts/ICE/gradient.m -dat rho.dat   -pDir 1 > /dev/null
+    #scripts/ICE/gradient.m -dat temp.dat  -pDir 1 > /dev/null
+
+    mv *.dat $uda/.
+
+    rm -f gp
+
+#__________________________________
+# create gnuplot script  
 cat > gp << fin
 #set terminal x11 1
 #set terminal postscript color solid "Times-Roman" 12
@@ -99,8 +116,6 @@ c2 = 101325 - 101325 * 0.001
 plot  '$uda/press.dat'  using 1:4            t 'p' with linespoints,\
        c1 t '',\
        c2 t ''
-
-
 #__________________________________
 #   Temperature
 #__________________________________
@@ -131,17 +146,20 @@ plot  '$uda/rho.dat'    using 1:4            t 'rho' with linespoints,\
 
 set nomultiplot 
 fin
-  #__________________________________
-  # plot it up
-  gnuplot gp
-  
-  #convert plot.ps $fname
-  #mogrify -rotate 90 $fname
- # mogrify -geometry 700x500 $fname
 
-  @ timestep = $timestep + 1
+
+    #__________________________________
+    # plot it up
+    gnuplot gp
+
+    #convert plot.ps $fname
+    #mogrify -rotate 90 $fname
+   # mogrify -geometry 700x500 $fname
+
+    @ timestep = $timestep + 1
+  end
 end
 
 #__________________________________
 # clean up
-rm -f gp 
+rm -f gp $TMP

@@ -36,6 +36,7 @@
 #include <Core/Grid/LinearInterpolator.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Math/FastMatrix.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 #include <CCA/Components/MPM/Core/MPMFlags.h>
 
 
@@ -223,12 +224,15 @@ namespace Uintah {
                                                       const MPMMaterial* matl,
                                                       const PatchSet* patches);
 
-    virtual void addCMSpecificParticleData(const Patch* patch,
-                                           const int dwi,
-                                           const unsigned int oldNumPar,
-                                           const int numNewPartNeeded,
-                                           DataWarehouse* old_dw,
-                                           DataWarehouse* new_dw);
+    virtual void splitCMSpecificParticleData(const Patch* patch,
+                                             const int dwi,
+                                             const int nDims,
+                                             ParticleVariable<int> &prefOld,
+                                             ParticleVariable<int> &pref,
+                                             const unsigned int oldNumPar,
+                                             const unsigned int numNewPartNeeded,
+                                             DataWarehouse* old_dw,
+                                             DataWarehouse* new_dw);
 
   protected:
 
@@ -437,6 +441,8 @@ namespace Uintah {
     int NGP;
     int NGN;
     const ProcessorGroup* d_world;
+
+    static const double LargeTimestep;
 
     // don't store SimulationStateP or it will add a reference 
     // that will never be removed

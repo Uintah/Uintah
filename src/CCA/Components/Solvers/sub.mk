@@ -35,7 +35,6 @@ SRCDIR := CCA/Components/Solvers
 SRCS += \
 	$(SRCDIR)/SolverCommon.cc  \
 	$(SRCDIR)/CGSolver.cc      \
-	$(SRCDIR)/DirectSolve.cc   \
 	$(SRCDIR)/SolverFactory.cc
 
 PSELIBS := \

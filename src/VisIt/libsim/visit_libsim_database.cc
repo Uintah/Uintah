@@ -277,7 +277,12 @@ visit_handle visit_SimGetMetaData(void *cbdata)
         }
         else if (vartype.find("PerPatch") != std::string::npos)
         {
-          mesh_for_this_var.assign("Patch_Mesh");
+	  if (varname.find("FileInfo") == 0 ||
+	      varname.find("CellInformation") == 0 ||
+	      varname.find("CutCellInfo") == 0)
+	    continue;
+	  
+	  mesh_for_this_var.assign("Patch_Mesh");
           cent = VISIT_VARCENTERING_ZONE;
 
           isPerPatchVar = true;
@@ -375,7 +380,7 @@ visit_handle visit_SimGetMetaData(void *cbdata)
           std::string newVarname = varname;
 
           if( isPerPatchVar )
-            newVarname = "patch/" + newVarname;
+            newVarname = "Patch/" + newVarname;
 	  else
 	    newVarname.append("/0");
 
@@ -445,7 +450,7 @@ visit_handle visit_SimGetMetaData(void *cbdata)
             std::string newVarname = varname;
 
             if( isPerPatchVar )
-              newVarname = "patch/" + newVarname;
+              newVarname = "Patch/" + newVarname;
 	    else
 	    {
 	      char buffer[128];
@@ -524,7 +529,7 @@ visit_handle visit_SimGetMetaData(void *cbdata)
 
       if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
       {
-	std::string varname = "patch/nodes";
+	std::string varname = "Patch/Nodes";
 
 	VisIt_VariableMetaData_setName(vmd, varname.c_str() );
 	VisIt_VariableMetaData_setMeshName(vmd, "NC_Mesh");
@@ -602,7 +607,7 @@ visit_handle visit_SimGetMetaData(void *cbdata)
       int cent = VISIT_VARCENTERING_ZONE;
 
       const char *patch_names[3] =
-        { "patch/id", "patch/proc_rank", "patch/proc_node" };
+        { "Patch/Id", "Patch/ProcRank", "Patch/ProcNode" };
 
       for( unsigned int i=0; i<3; ++i )
       {
@@ -630,7 +635,7 @@ visit_handle visit_SimGetMetaData(void *cbdata)
 	{
 	  if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
 	  {
-	    std::string varname = "patch/bounds/low/" + *it;
+	    std::string varname = "Patch/Bounds/Low/" + *it;
 
 	    VisIt_VariableMetaData_setName(vmd, varname.c_str() );
 	    VisIt_VariableMetaData_setMeshName(vmd, mesh_for_this_var.c_str());
@@ -647,7 +652,7 @@ visit_handle visit_SimGetMetaData(void *cbdata)
 	  
 	  if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
 	  {
-	    std::string varname = "patch/bounds/high/" + *it;
+	    std::string varname = "Patch/Bounds/High/" + *it;
 	    
 	    VisIt_VariableMetaData_setName(vmd, varname.c_str() );
 	    VisIt_VariableMetaData_setMeshName(vmd, mesh_for_this_var.c_str());
@@ -665,11 +670,11 @@ visit_handle visit_SimGetMetaData(void *cbdata)
       }
       
       std::string mesh_name[2] = {mesh_for_this_var,
-                                  ("machine_" + sim->hostName + "/local") };
+                                  ("Machine_" + sim->hostName + "/Local") };
 
-      std::string proc_level[2] = {"/rank", "/node"};
+      std::string proc_level[2] = {"/Rank", "/Node"};
 
-      std::string mesh[2] = {"/sim", "/"+sim->hostName};
+      std::string mesh[2] = {"/Sim", "/"+sim->hostName};
 
       // If there is a machine layout then the performance data can be
       // placed on the simulation and machine mesh.
@@ -687,7 +692,7 @@ visit_handle visit_SimGetMetaData(void *cbdata)
             
             if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
             {
-              std::string stat = std::string("processor/runtime/") +
+              std::string stat = std::string("Processor/Runtime/") +
                 sim->simController->getRuntimeStats().getName( i ) +
                 proc_level[j];
               
@@ -726,7 +731,7 @@ visit_handle visit_SimGetMetaData(void *cbdata)
               
               if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
               {
-                std::string stat = std::string("processor/mpi/") + 
+                std::string stat = std::string("Processor/MPI/") + 
                   mpiScheduler->mpi_info_.getName( i ) + proc_level[j];
                 
                 if( addMachineData )
@@ -761,7 +766,7 @@ visit_handle visit_SimGetMetaData(void *cbdata)
             
             if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
             {
-              std::string stat = std::string("processor/application/") +
+              std::string stat = std::string("Processor/Application/") +
                 appInterface->getApplicationStats().getName( i ) +
                 proc_level[j];
               
@@ -949,14 +954,14 @@ visit_handle visit_SimGetMetaData(void *cbdata)
         if(VisIt_MeshMetaData_alloc(&mmd) == VISIT_OKAY)
         {
           /* Set the mesh’s properties.*/
-          std::string meshName = "machine_" + sim->hostName;
+          std::string meshName = "Machine_" + sim->hostName;
 
           // Global mesh
           if( i == 0 )
-            VisIt_MeshMetaData_setName(mmd, (meshName + "/global").c_str());
+            VisIt_MeshMetaData_setName(mmd, (meshName + "/Global").c_str());
           // Local mesh
           else 
-            VisIt_MeshMetaData_setName(mmd, (meshName + "/local").c_str());
+            VisIt_MeshMetaData_setName(mmd, (meshName + "/Local").c_str());
 
           VisIt_MeshMetaData_setMeshType(mmd, VISIT_MESHTYPE_UNSTRUCTURED);
           VisIt_MeshMetaData_setTopologicalDimension(mmd, 2);
@@ -1008,10 +1013,10 @@ visit_handle visit_SimGetMetaData(void *cbdata)
       }
 
       std::string vars[5] = {"Node/Number", "Node/Memory",
-			     "MPI/Comm/node", "MPI/Comm/rank",
-			     "MPI/rank"};
+			     "MPI/Comm/Node", "MPI/Comm/Rank",
+			     "MPI/Rank"};
 
-      std::string meshName = "machine_" + sim->hostName + "/local";
+      std::string meshName = "Machine_" + sim->hostName + "/Local";
       
       for( unsigned int i=0; i<5; ++i )
       {
@@ -1019,7 +1024,7 @@ visit_handle visit_SimGetMetaData(void *cbdata)
 
 	if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
 	{
-	  std::string var = std::string("processor/machine/") + vars[i];
+	  std::string var = std::string("Processor/Machine/") + vars[i];
 	  
 	  VisIt_VariableMetaData_setName(vmd, var.c_str());
 	  VisIt_VariableMetaData_setMeshName(vmd, meshName.c_str());
@@ -1120,75 +1125,75 @@ visit_handle visit_SimGetMetaData(void *cbdata)
 // ****************************************************************************
 visit_handle visit_SimGetDomainBoundaries(const char *name, void *cbdata)
 {
-    visit_simulation_data *sim = (visit_simulation_data *)cbdata;
+  visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-    // int timestate = sim->cycle;  
-    // LoadExtra loadExtraElements = (LoadExtra) sim->loadExtraElements;
-    // bool &forceMeshReload = sim->forceMeshReload;
-    TimeStepInfo* &stepInfo = sim->stepInfo;
+  // int timestate = sim->cycle;  
+  // LoadExtra loadExtraElements = (LoadExtra) sim->loadExtraElements;
+  // bool &forceMeshReload = sim->forceMeshReload;
+  TimeStepInfo* &stepInfo = sim->stepInfo;
     
-    const std::string meshname(name); 
+  const std::string meshname(name); 
 
-    //
-    // Calculate some info we will need in the rest of the routine.
-    //
-    int numLevels = stepInfo->levelInfo.size();
-    int totalPatches = 0;
+  //
+  // Calculate some info we will need in the rest of the routine.
+  //
+  int numLevels = stepInfo->levelInfo.size();
+  int totalPatches = 0;
 
-    for (int level=0; level<numLevels; ++level)
-      totalPatches += stepInfo->levelInfo[level].patchInfo.size();
+  for (int level=0; level<numLevels; ++level)
+    totalPatches += stepInfo->levelInfo[level].patchInfo.size();
 
-    //
-    // Now set up the data structure for patch boundaries.  The data 
-    // does all the work ... it just needs to know the extents of each patch.
-    //
-    visit_handle rdb;
+  //
+  // Now set up the data structure for patch boundaries.  The data 
+  // does all the work ... it just needs to know the extents of each patch.
+  //
+  visit_handle rdb;
     
-    if(VisIt_DomainBoundaries_alloc(&rdb) == VISIT_OKAY)
+  if(VisIt_DomainBoundaries_alloc(&rdb) == VISIT_OKAY)
+  {
+    VisIt_DomainBoundaries_set_type(rdb, 0); // 0 = Rectilinear
+    VisIt_DomainBoundaries_set_numDomains(rdb, totalPatches );
+    
+    for (int patch=0; patch<totalPatches; ++patch)
     {
-      VisIt_DomainBoundaries_set_type(rdb, 0); // 0 = Rectilinear
-      VisIt_DomainBoundaries_set_numDomains(rdb, totalPatches );
+      int my_level, local_patch;
+      GetLevelAndLocalPatchNumber(stepInfo, patch, my_level, local_patch);
+        
+      PatchInfo &patchInfo =
+	stepInfo->levelInfo[my_level].patchInfo[local_patch];
 
-      for (int patch=0; patch<totalPatches; ++patch)
+      int plow[3], phigh[3];
+      patchInfo.getBounds(plow, phigh, meshname);
+        
+      // For node based meshes add one if there is a neighbor patch.
+      if( meshname.find("NC_") == 0 )
       {
-        int my_level, local_patch;
-        GetLevelAndLocalPatchNumber(stepInfo, patch, my_level, local_patch);
+	int nlow[3], nhigh[3];
+	patchInfo.getBounds(nlow, nhigh, "NEIGHBORS");
         
-        PatchInfo &patchInfo =
-          stepInfo->levelInfo[my_level].patchInfo[local_patch];
-
-        int plow[3], phigh[3];
-        patchInfo.getBounds(plow, phigh, meshname);
-        
-        // For node based meshes add one if there is a neighbor patch.
-        if( meshname.find("NC_") == 0 )
-        {
-          int nlow[3], nhigh[3];
-          patchInfo.getBounds(nlow, nhigh, "NEIGHBORS");
-          
-          for (int i=0; i<3; i++)
-            phigh[i] += nhigh[i];
-        }
-
-        int extents[6] = { plow[0], phigh[0],
-                           plow[1], phigh[1],
-                           plow[2], phigh[2] };
-        
-        // std::cerr << "\trdb->SetIndicesForPatch(" << patch << ","
-        //        << my_level << ", " << local_patch << ", <"
-        //        << extents[0] << "," << extents[2] << "," << extents[4]
-        //        << "> to <"
-        //        << extents[1] << "," << extents[3] << "," << extents[5] << ">)"
-        //        << std::endl;
-
-        VisIt_DomainBoundaries_set_amrIndices(rdb, patch, my_level, extents);
-//      VisIt_DomainBoundaries_finish(rdb, patch);
+	for (int i=0; i<3; i++)
+	  phigh[i] += nhigh[i];
       }
 
-      return rdb;
+      int extents[6] = { plow[0], phigh[0],
+			 plow[1], phigh[1],
+			 plow[2], phigh[2] };
+        
+      // std::cerr << "\trdb->SetIndicesForPatch(" << patch << ","
+      //        << my_level << ", " << local_patch << ", <"
+      //        << extents[0] << "," << extents[2] << "," << extents[4]
+      //        << "> to <"
+      //        << extents[1] << "," << extents[3] << "," << extents[5] << ">)"
+      //        << std::endl;
+
+      VisIt_DomainBoundaries_set_amrIndices(rdb, patch, my_level, extents);
+      //      VisIt_DomainBoundaries_finish(rdb, patch);
     }
-    else
-      return VISIT_INVALID_HANDLE;
+
+    return rdb;
+  }
+  else
+    return VISIT_INVALID_HANDLE;
 }
 
 // ****************************************************************************
@@ -1399,10 +1404,10 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-  if( std::string(meshname).find("machine_") == 0 )
+  if( std::string(meshname).find("Machine_") == 0 )
   {
-    bool global = (std::string(meshname).find("global") != std::string::npos);
-    bool local  = (std::string(meshname).find("local" ) != std::string::npos);
+    bool global = (std::string(meshname).find("Global") != std::string::npos);
+    bool local  = (std::string(meshname).find("Local" ) != std::string::npos);
 
     // Only rank 0 return the whole of the mesh.
     if( global && sim->myworld->myRank() != 0 )
@@ -1875,7 +1880,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
 
   std::string varName(varname);
 
-  if( varName.find("processor/machine/") == 0 )
+  if( varName.find("Processor/Machine/") == 0 )
   {
     // bool global = (varName.find("global") != std::string::npos);
     // bool local  = (varName.find("local" ) != std::string::npos);
@@ -1923,15 +1928,15 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
               (local && s == sim->switchIndex && n == sim->nodeIndex &&
                (int) i == sim->myworld->myNode_myRank()) )
           {
-	    if( varName.find("processor/machine/Node/Number") == 0 )
+	    if( varName.find("Processor/Machine/Node/Number") == 0 )
 	      values[nValues++] = atoi(sim->hostNode.c_str());
-	    else if( varName.find("processor/machine/Node/Memory") == 0 )
+	    else if( varName.find("Processor/Machine/Node/Memory") == 0 )
 	      values[nValues++] = nMemory;
-	    else if( varName.find("processor/machine/MPI/Comm/node") == 0 )
+	    else if( varName.find("Processor/Machine/MPI/Comm/Node") == 0 )
 	      values[nValues++] = sim->myworld->myNode();
-	    else if( varName.find("processor/machine/MPI/Comm/rank") == 0 )
+	    else if( varName.find("Processor/Machine/MPI/Comm/Rank") == 0 )
 	      values[nValues++] = sim->myworld->myNode_myRank();
-	    else if( varName.find("processor/machine/MPI/rank") == 0 )
+	    else if( varName.find("Processor/Machine/MPI/Rank") == 0 )
 	      values[nValues++] = sim->myworld->myRank();
           }
         }
@@ -1973,7 +1978,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
   bool isMachineMeshVar = false;
 
   // Get the var name sans the material. If a patch or processor
-  // variable then the var name will be either "patch" or "processor".
+  // variable then the var name will be either "Patch" or "Processor".
   size_t found = varName.find("/");
   std::string matl = varName.substr(found + 1);
   varName = varName.substr(0, found);
@@ -1983,13 +1988,13 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
   // structures.
   std::string varType("");
 
-  if( strncmp(varname, "patch/nodes", 11) == 0 )
+  if( strncmp(varname, "Patch/Nodes", 11) == 0 )
   {
     isInternalVar = true;
 
     varType = "NC_Mesh";
   }
-  else if( varName == "processor" )
+  else if( varName == "Processor" )
   {
     isInternalVar = true;
 
@@ -2005,12 +2010,12 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       isMachineMeshVar = (hostName == sim->hostName);
     }
   }
-  else if( strcmp(varname, "patch/id") == 0 ||
-           strcmp(varname, "patch/proc_rank") == 0 ||
-           strcmp(varname, "patch/proc_node") == 0 ||
+  else if( strcmp(varname, "Patch/Id") == 0 ||
+           strcmp(varname, "Patch/ProcRank") == 0 ||
+           strcmp(varname, "Patch/ProcNode") == 0 ||
 
-           strncmp(varname, "patch/bounds/low",  16) == 0 ||
-           strncmp(varname, "patch/bounds/high", 17) == 0 )
+           strncmp(varname, "Patch/Bounds/Low",  16) == 0 ||
+           strncmp(varname, "Patch/Bounds/High", 17) == 0 )
   {
     isInternalVar = true;
 
@@ -2018,11 +2023,11 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
   }
   else
   {
-    // For PerPatch data remove the patch/ prefix and get the var
+    // For PerPatch data remove the Patch/ prefix and get the var
     // name and set the material to zero.
-    if( varName == "patch" )
+    if( varName == "Patch" )
     {
-      // Get the var name and material sans "patch/".
+      // Get the var name and material sans "Patch/".
       varName = std::string(varname);
       found = varName.find("/");  
       varName = varName.substr(found + 1);
@@ -2078,9 +2083,9 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
 
     std::string procLevelName;
       
-    // Strip off the "processor/runtime/" or "processor/mpi/" prefix
+    // Strip off the "Processor/Runtime/" or "Processor/MPI/" prefix
     // and the rank or node postfix.
-    if( varName == "processor" )
+    if( varName == "Processor" )
     {
       varName = std::string(varname);
 
@@ -2098,12 +2103,12 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
     }
 
     // Simulation Runtime stats
-    if( strncmp( varname, "processor/runtime/", 18 ) == 0 &&
+    if( strncmp( varname, "Processor/Runtime/", 18 ) == 0 &&
         sim->simController->getRuntimeStats().exists( varName ) )
     {
       double val;
       
-      if( procLevelName == "node" )
+      if( procLevelName == "Node" )
         val = sim->simController->getRuntimeStats().getNodeSum( varName );
       else // if( procLevelName == "rank" )
         val = sim->simController->getRuntimeStats().getValue( varName );
@@ -2113,14 +2118,14 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
     }
 
     // MPI Scheduler Timing stats
-    else if( strncmp( varname, "processor/mpi/", 14 ) == 0 &&
+    else if( strncmp( varname, "Processor/MPI/", 14 ) == 0 &&
              mpiScheduler && mpiScheduler->mpi_info_.exists(varName) )
     {
       double val;
       
-      if( procLevelName == "node" )
+      if( procLevelName == "Node" )
         val = mpiScheduler->mpi_info_.getNodeSum( varName );
-      else // if( procLevelName == "rank" )
+      else // if( procLevelName == "Rank" )
         val = mpiScheduler->mpi_info_.getValue( varName );
       
       for (int i=0; i<gd->num*gd->components; ++i)
@@ -2128,14 +2133,14 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
     }
 
     // Application stats
-    else if( strncmp( varname, "processor/application/", 16 ) == 0 &&
+    else if( strncmp( varname, "Processor/Application/", 16 ) == 0 &&
         sim->simController->getApplicationInterface()->getApplicationStats().exists( varName ) )
     {
       double val;
       
-      if( procLevelName == "node" )
+      if( procLevelName == "Node" )
         val = sim->simController->getApplicationInterface()->getApplicationStats().getNodeSum( varName );
-      else // if( procLevelName == "rank" )
+      else // if( procLevelName == "Rank" )
         val = sim->simController->getApplicationInterface()->getApplicationStats().getValue( varName );
       
       for (int i=0; i<gd->num*gd->components; ++i)
@@ -2243,7 +2248,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       gd = new GridDataRaw;
 
       // Using the node mesh
-      if (strncmp(varname, "patch/nodes", 11) == 0 )
+      if (strncmp(varname, "Patch/Nodes", 11) == 0 )
         gd->num = ((phigh[0] - plow[0]) *
                    (phigh[1] - plow[1]) *
                    (phigh[2] - plow[2]));
@@ -2253,23 +2258,23 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       
       // The runtime processor data and patch id and processor are
       // scalar values while the bounds are vector values.
-      if( varName == "processor" ||
-          strcmp(varname, "patch/id") == 0 ||
-          strcmp(varname, "patch/proc_rank") == 0 ||
-          strcmp(varname, "patch/proc_node") == 0 )
+      if( varName == "Processor" ||
+          strcmp(varname, "Patch/Id") == 0 ||
+          strcmp(varname, "Patch/ProcRank") == 0 ||
+          strcmp(varname, "Patch/ProcNode") == 0 )
         gd->components = 1;
-      else // if( strncmp(varname, "patch/nodes",  11) == 0 ||
-           //     strncmp(varname, "patch/bounds/low",  16) == 0 ||
-           //     strncmp(varname, "patch/bounds/high", 17) == 0)
+      else // if( strncmp(varname, "Patch/Nodes",  11) == 0 ||
+           //     strncmp(varname, "Patch/Bounds/Low",  16) == 0 ||
+           //     strncmp(varname, "Patch/Bounds/High", 17) == 0)
         gd->components = 3;
 
       gd->data = new double[gd->num * gd->components];
 
       std::string procLevelName;
       
-      // Strip off the "processor/runtime/" or "processor/mpi/" prefix
+      // Strip off the "Processor/Runtime/" or "Processor/MPI/" prefix
       // and the rank or node postfix.
-      if( varName == "processor" )
+      if( varName == "Processor" )
       {
         varName = std::string(varname);
 
@@ -2290,14 +2295,14 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       }
 
       // Simulation State Runtime stats
-      if( strncmp( varname, "processor/runtime/", 18 ) == 0 &&
+      if( strncmp( varname, "Processor/Runtime/", 18 ) == 0 &&
           runtimeStats.exists( varName ) )
       {
         double val;
 
-        if( procLevelName == "node" )
+        if( procLevelName == "Node" )
           val = runtimeStats.getNodeSum( varName );
-        else // if( procLevelName == "rank" )
+        else // if( procLevelName == "Rank" )
           val = runtimeStats.getValue( varName );
 
         for (int i=0; i<gd->num*gd->components; ++i)
@@ -2305,14 +2310,14 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       }
 
       // MPI Scheduler Timing stats
-      else if( strncmp( varname, "processor/mpi/", 14 ) == 0 &&
+      else if( strncmp( varname, "Processor/MPI/", 14 ) == 0 &&
                mpiScheduler && mpiScheduler->mpi_info_.exists(varName) )
       {
         double val;
 
-        if( procLevelName == "node" )
+        if( procLevelName == "Node" )
           val = mpiScheduler->mpi_info_.getNodeSum( varName );
-        else // if( procLevelName == "rank" )
+        else // if( procLevelName == "Rank" )
           val = mpiScheduler->mpi_info_.getValue( varName );
 
         for (int i=0; i<gd->num*gd->components; ++i)
@@ -2320,7 +2325,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       }
 
       // Patch Id
-      else if( strcmp(varname, "patch/id") == 0 )
+      else if( strcmp(varname, "Patch/Id") == 0 )
       {
         double val = patchInfo.getPatchId();
 
@@ -2328,23 +2333,23 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
           gd->data[i] = val;
       }
       // Patch processor rank
-      else if( strcmp(varname, "patch/proc_rank") == 0 )
+      else if( strcmp(varname, "Patch/ProcRank") == 0 )
       {
-        double val = patchInfo.getProcRankId();
+        double val = sim->myworld->myRank();
 
         for (int i=0; i<gd->num*gd->components; ++i)
           gd->data[i] = val;
       }
       // Patch processor node
-      else if( strcmp(varname, "patch/proc_node") == 0 )
+      else if( strcmp(varname, "Patch/ProcNode") == 0 )
       { 
-        double val = patchInfo.getProcNodeId();
+        double val = sim->myworld->myNode();
 
         for (int i=0; i<gd->num*gd->components; ++i)
           gd->data[i] = val;
       }
       // Patch node ids
-      else if (strncmp(varname, "patch/nodes", 11) == 0 )
+      else if (strncmp(varname, "Patch/Nodes", 11) == 0 )
       {
         int cc = 0;
         
@@ -2362,8 +2367,8 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
         }
       }
       // Patch bounds
-      else if( strncmp(varname, "patch/bounds/low",  16) == 0 ||
-               strncmp(varname, "patch/bounds/high", 17) == 0 )
+      else if( strncmp(varname, "Patch/Bounds/Low",  16) == 0 ||
+               strncmp(varname, "Patch/Bounds/High", 17) == 0 )
       {
         // Get the bounds for this mesh as a variable (not for the grid).
         std::string meshname = std::string(varname);
@@ -2374,9 +2379,9 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
         
         int *value;
         
-        if (strncmp(varname, "patch/bounds/low", 16) == 0 )
+        if (strncmp(varname, "Patch/Bounds/Low", 16) == 0 )
           value = &plow[0];
-        else // if( strncmp(varname, "patch/bounds/high", 17) == 0)
+        else // if( strncmp(varname, "Patch/Bounds/High", 17) == 0)
           value = &phigh[0];
 
         for (int i=0; i<gd->num; i++)
@@ -2489,9 +2494,9 @@ visit_handle visit_SimGetDomainList(const char *meshname, void *cbdata)
   {
     visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-    if( std::string(meshname).find("machine_") == 0 )
+    if( std::string(meshname).find("Machine_") == 0 )
     {
-      bool global = (std::string(meshname).find("global") != std::string::npos);
+      bool global = (std::string(meshname).find("Global") != std::string::npos);
       
       // Only rank 0 return the whole of the mesh.
       if( global && sim->myworld->myRank() != 0 )

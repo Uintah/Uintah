@@ -449,7 +449,7 @@ void impAMRICE::multiLevelPressureSolve(const ProcessorGroup* pg,
                               lb->imp_delPLabel, modifies_X,
                               lb->rhsLabel,      Task::OldDW,
                               whichInitialGuess, Task::NewDW,
-                              d_solver_parameters,false);
+                              false);
       
 #else
       const PatchSet* perProcPatches = 

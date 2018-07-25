@@ -338,14 +338,13 @@ OnDemandDataWarehouse::get(       ReductionVariableBase& var,
                                   int                    matlIndex /*= -1*/ )
 {
   checkGetAccess( label, matlIndex, 0 );
+
   if( !d_levelDB.exists( label, matlIndex, level ) ) {
-    // std::vector<int> junk;
-    // std::cerr << junk[99999999999] << std::endl;
+    proc0cout << "get() failed in dw: " << this << ", level: " << level << "\n";
     SCI_THROW( UnknownVariable(label->getName(), getID(), level, matlIndex, "on reduction", __FILE__, __LINE__) );
   }
 
   d_levelDB.get( label, matlIndex, level, var );
-
 }
 
 //______________________________________________________________________
@@ -691,7 +690,7 @@ OnDemandDataWarehouse::exchangeParticleQuantities(       DetailedTasks    * dts,
                                                    const VarLabel         * pos_var,
                                                          int                iteration )
 {
-  if( d_hasRestarted ) {
+  if( timestepRestarted() ){
     // If this DW is being used for a timestep restart, then it has already done this...
     return;
   }
@@ -1044,15 +1043,18 @@ OnDemandDataWarehouse::put( const ReductionVariableBase& var,
                                   int                    matlIndex /* = -1 */ )
 {
   ASSERT( !d_finalized );
-  checkPutAccess(label, matlIndex, 0,
-                 false /* it actually may be replaced, but it doesn't need
-                          to explicitly modify with multiple reduces in the
-                          task graph */);
+  checkPutAccess( label, matlIndex, 0,
+                  false /* it actually may be replaced, but it doesn't need
+                           to explicitly modify with multiple reduces in the
+                           task graph */);
 
-  // Put it in the database
+  // Put it in the database:
+
+  
   bool init = (d_scheduler->copyTimestep()) || !(d_levelDB.exists( label, matlIndex, level ));
-  d_levelDB.putReduce( label, matlIndex, level, var.clone(), init );
 
+  printDebuggingPutInfo( label, matlIndex, level, __LINE__ );
+  d_levelDB.putReduce( label, matlIndex, level, var.clone(), init );
 }
 
 //______________________________________________________________________
@@ -1066,6 +1068,8 @@ OnDemandDataWarehouse::override( const ReductionVariableBase & var,
   checkPutAccess( label, matlIndex, 0, true );
 
   // Put it in the database, replace whatever may already be there
+  printDebuggingPutInfo( label, matlIndex, level, __LINE__ );
+  
   d_levelDB.put( label, matlIndex, level, var.clone(), true, true );
 }
 
@@ -1080,6 +1084,8 @@ OnDemandDataWarehouse::override( const SoleVariableBase & var,
   checkPutAccess(label, matlIndex, 0, true);
 
   // Put it in the database, replace whatever may already be there
+  printDebuggingPutInfo( label, matlIndex, level, __LINE__ );
+  
   d_levelDB.put(label, matlIndex, level, var.clone(), d_scheduler->copyTimestep(), true);
 }
 
@@ -1099,6 +1105,8 @@ OnDemandDataWarehouse::put( const SoleVariableBase& var,
                           task graph */);
   // Put it in the database
   if (!d_levelDB.exists(label, matlIndex, level)) {
+    printDebuggingPutInfo( label, matlIndex, level, __LINE__ );
+  
     d_levelDB.put(label, matlIndex, level, var.clone(), d_scheduler->copyTimestep(), false);
   }
 }
@@ -1124,8 +1132,8 @@ OnDemandDataWarehouse::createParticleSubset(       particleIndex numParticles,
 
   ASSERT(!patch->isVirtual());
 
-  ParticleSubset* psubset = scinew ParticleSubset(numParticles, matlIndex, patch, low, high);
-  insertPSetRecord(d_psetDB, patch, low, high, matlIndex, psubset);
+  ParticleSubset* psubset = scinew ParticleSubset( numParticles, matlIndex, patch, low, high );
+  insertPSetRecord( d_psetDB, patch, low, high, matlIndex, psubset );
 
   return psubset;
 }
@@ -1309,7 +1317,7 @@ OnDemandDataWarehouse::getParticleSubset(       int       matlIndex,
   const Patch* realPatch = (patch != 0) ? patch->getRealPatch() : 0;
   ParticleSubset* subset = 0;
 
-  subset=queryPSetDB(d_psetDB,realPatch,matlIndex,low,high,0);
+  subset = queryPSetDB( d_psetDB, realPatch, matlIndex, low, high, 0 );
 
   // bulletproofing
   if( !subset ) {
@@ -1534,8 +1542,7 @@ OnDemandDataWarehouse::get(       constParticleVariableBase& constVar,
 
   if( !d_varDB.exists( label, matlIndex, patch ) ) {
     print();
-    SCI_THROW(
-        UnknownVariable(label->getName(), getID(), patch, matlIndex, "", __FILE__, __LINE__) );
+    SCI_THROW( UnknownVariable(label->getName(), getID(), patch, matlIndex, "", __FILE__, __LINE__) );
   }
   constVar = *dynamic_cast<ParticleVariableBase*>( d_varDB.get( label, matlIndex, patch ) );
 }
@@ -1811,6 +1818,18 @@ OnDemandDataWarehouse::allocateAndPut(       GridVariableBase& var,
                                              Ghost::GhostType  gtype,
                                              int               numGhostCells )
 {
+#if SCI_ASSERTION_LEVEL >= 1
+  const TypeDescription * varType = var.virtualGetTypeDescription();
+  if( label->typeDescription()->getType() != varType->getType() ||
+      label->typeDescription()->getSubType()->getType() != varType->getSubType()->getType() ) {
+      std::cout << "OnDemandDataWarehouse::allocateAndPut():  Error: VarLabel type does not match Variable type!\n";
+      std::cout << "  VarLabel Name: " << label->getName() << "\n";
+      std::cout << "  VarLabel Type: " << label->typeDescription()->getName() << "\n";
+      std::cout << "  Variable Type: " << var.virtualGetTypeDescription()->getName() << "\n";
+      SCI_THROW(InternalError("OnDemandDataWarehouse::allocateAndPut(): Var and Label types do not match!", __FILE__, __LINE__));
+    }
+#endif
+  
 //  if (d_finalized) {
 //    std::cerr << "OnDemandDataWarehouse::allocateAndPut - When trying to allocate " << label->getName() << std::endl;
 //    std::cerr << "  DW " << getID() << " finalized!\n";
@@ -2112,6 +2131,8 @@ OnDemandDataWarehouse::put(       GridVariableBase& var,
    // error would have been thrown above if the any reallocation would be
    // needed
    ASSERT(no_realloc);
+   printDebuggingPutInfo( label, matlIndex, patch, __LINE__ );
+   
    d_varDB.put(label, matlIndex, patch, var.clone(), d_scheduler->copyTimestep(),true);
 }
 
@@ -2143,6 +2164,7 @@ OnDemandDataWarehouse::put(       PerPatchBase& var,
   checkPutAccess( label, matlIndex, patch, replace );
 
   // Put it in the database
+  printDebuggingPutInfo( label, matlIndex, patch, __LINE__ );
   d_varDB.put( label, matlIndex, patch, var.clone(), d_scheduler->copyTimestep(), true );
 }
 
@@ -2280,6 +2302,8 @@ OnDemandDataWarehouse::putLevelDB(       GridVariableBase* gridVar,
   bool init = (d_scheduler->copyTimestep()) || !(d_levelDB.exists( label, matlIndex, level ));
 
   //GridVariableBase* v = dynamic_cast<GridVariableBase*>( &constGridVar )->clone();
+  printDebuggingPutInfo( label, matlIndex, level, __LINE__ );
+  
   d_levelDB.put( label, matlIndex, level, gridVar, init, true );
 }
 
@@ -2313,7 +2337,9 @@ OnDemandDataWarehouse::getRegionModifiable(       GridVariableBase& var,
                                         bool              useBoundaryCells)
 {
   var.allocate(reqLow, reqHigh);
-  Patch::VariableBasis basis = Patch::translateTypeToBasis(label->typeDescription()->getType(), false);
+  
+  TypeDescription::Type varType = label->typeDescription()->getType();
+  Patch::VariableBasis basis = Patch::translateTypeToBasis( varType, false );
 
   // Enlarge the requested region, sometimes we only want extra cells.
   // select patches has difficulties with that request.
@@ -2432,7 +2458,7 @@ OnDemandDataWarehouse::getRegionModifiable(       GridVariableBase& var,
   //  BULLETPROOFING  Verify that the correct number of cells were copied
   //
   // compute the number of cells in the region
-  long requestedCells = level->getTotalCellsInRegion(reqLow, reqHigh);
+  long requestedCells = level->getTotalCellsInRegion( varType, label->getBoundaryLayer(), reqLow, reqHigh );
   
   // In non-cubic levels there may be overlapping patches that need to be accounted for.
   std::pair<int, int> overLapCells_range = std::make_pair( 0,0 );
@@ -2508,23 +2534,23 @@ OnDemandDataWarehouse::emit(       OutputContext& oc,
       case TypeDescription::SFCYVariable :
       case TypeDescription::SFCZVariable :
         //get list
-      {
-        std::vector<Variable*> varlist;
-        d_varDB.getlist(label, matlIndex, patch, varlist);
-
-        GridVariableBase* v = nullptr;
-        for (std::vector<Variable*>::iterator rit = varlist.begin();; ++rit) {
-          if (rit == varlist.end()) {
-            v = nullptr;
-            break;
+        {
+          std::vector<Variable*> varlist;
+          d_varDB.getlist(label, matlIndex, patch, varlist);
+          
+          GridVariableBase* v = nullptr;
+          for (std::vector<Variable*>::iterator rit = varlist.begin();; ++rit) {
+            if (rit == varlist.end()) {
+              v = nullptr;
+              break;
+            }
+            v = dynamic_cast<GridVariableBase*>(*rit);
+            //verify that the variable is valid and matches the dependencies requirements.
+            if (v && v->isValid() && Min(l, v->getLow()) == v->getLow() && Max(h, v->getHigh()) == v->getHigh())  //find a completed region
+              break;
           }
-          v = dynamic_cast<GridVariableBase*>(*rit);
-          //verify that the variable is valid and matches the dependencies requirements.
-          if (v && v->isValid() && Min(l, v->getLow()) == v->getLow() && Max(h, v->getHigh()) == v->getHigh())  //find a completed region
-            break;
+          var = v;
         }
-        var = v;
-      }
         break;
       case TypeDescription::ParticleVariable :
         var = d_varDB.get(label, matlIndex, patch);
@@ -2545,18 +2571,18 @@ OnDemandDataWarehouse::emit(       OutputContext& oc,
     SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex, "on emit", __FILE__, __LINE__));
   }
   size_t bytes;
-  bytes = var->emit(oc, l, h, label->getCompressionMode());
+  bytes = var->emit( oc, l, h, label->getCompressionMode() );
   return bytes;
 }
 
 #if HAVE_PIDX
 void
-OnDemandDataWarehouse::emitPIDX(PIDXOutputContext& pc,
-                                 const VarLabel* label,
-                                 int matlIndex,
-                                 const Patch* patch,
-                                 unsigned char* buffer,
-                                 const size_t bufferSize)
+OnDemandDataWarehouse::emitPIDX(       PIDXOutputContext & pc,
+                                 const VarLabel          * label,
+                                       int                 matlIndex,
+                                 const Patch             * patch,
+                                       unsigned char     * buffer,
+                                 const size_t              bufferSize )
 {
   checkGetAccess( label, matlIndex, patch );
 
@@ -2567,6 +2593,7 @@ OnDemandDataWarehouse::emitPIDX(PIDXOutputContext& pc,
     // Save with the boundary layer, otherwise restarting from the DataArchive won't work.
     patch->computeVariableExtents( label->typeDescription()->getType(), label->getBoundaryLayer(),
                                    Ghost::None, 0, l, h );
+
     switch ( label->typeDescription()->getType() ) {
     case TypeDescription::NCVariable :
     case TypeDescription::CCVariable :
@@ -2616,7 +2643,7 @@ OnDemandDataWarehouse::emitPIDX(PIDXOutputContext& pc,
     SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex, "OnDemandDataWarehouse::emit ", __FILE__, __LINE__) );
   }
 
-  m_var->emitPIDX( pc, buffer, l, h, bufferSize);
+  m_var->emitPIDX( pc, buffer, l, h, bufferSize );
 }
 
 #endif
@@ -3294,8 +3321,8 @@ inline void
 OnDemandDataWarehouse::checkGetAccess( const VarLabel*        label,
                                              int              matlIndex,
                                        const Patch*           patch,
-                                             Ghost::GhostType gtype,
-                                             int              numGhostCells )
+                                             Ghost::GhostType gtype /* = Ghost::None */,
+                                             int              numGhostCells /* = 0 */ )
 {
 #if 0
 #if SCI_ASSERTION_LEVEL >= 1
@@ -3877,6 +3904,29 @@ OnDemandDataWarehouse::printDebuggingPutInfo( const VarLabel* label,
     dbg << std::left;
     dbg.width( 20 );
     dbg << *label << " MI: " << matlIndex << " L-"<< L_indx <<" "<< *patch << " \tinto DW: " << d_generation
+        << "\n";
+    cerrLock.unlock();
+  }
+}
+//______________________________________________________________________
+//  print debugging information
+void
+OnDemandDataWarehouse::printDebuggingPutInfo( const VarLabel* label,
+                                              int             matlIndex,
+                                              const Level*    level,
+                                              int             line)
+{
+  if( dbg.active() ) {
+    cerrLock.lock();
+    int L_indx = 0;
+    if( level ){
+      L_indx = level->getIndex();
+    }
+    
+    dbg << d_myworld->myRank() << " Putting (line: "<<line<< ") ";
+    dbg << std::left;
+    dbg.width( 20 );
+    dbg << *label << " MI: " << matlIndex << " L-"<< L_indx <<" " << " \tinto DW: " << d_generation
         << "\n";
     cerrLock.unlock();
   }

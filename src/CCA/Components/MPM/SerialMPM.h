@@ -54,6 +54,7 @@ class Dissolution;
 class ThermalContact;
 class HeatConduction;
 class AnalysisModule;
+class SDInterfaceModel;
 
 /**************************************
 
@@ -94,12 +95,12 @@ public:
   Dissolution*     dissolutionModel;
   ThermalContact*  thermalContactModel;
   HeatConduction*  heatConductionModel;
- 
+  SDInterfaceModel* d_sdInterfaceModel;
   //////////
   // Insert Documentation Here:
   virtual void problemSetup(const ProblemSpecP& params, 
                             const ProblemSpecP& restart_prob_spec,
-			    GridP&);
+                            GridP&);
 
   virtual void outputProblemSpec(ProblemSpecP& ps);
 
@@ -163,7 +164,9 @@ protected:
   // Insert Documentation Here:
   friend class MPMICE;
   friend class MPMArches;
- 
+
+  MaterialSubset* d_one_matl;         // matlsubset for zone of influence
+
   virtual void actuallyInitialize(const ProcessorGroup*,
                                   const PatchSubset* patches,
                                   const MaterialSubset* matls,
@@ -631,8 +634,8 @@ protected:
   std::list<Patch::FaceType>  d_bndy_traction_faces; // list of xminus, xplus, yminus, ...
   std::vector<MPMPhysicalBC*> d_physicalBCs;
 
-  std::vector<double>   d_prescribedTimes;    // These three are used only if
-  std::vector<double>  d_prescribedAngle;  // d_prescribeDeformation
+  std::vector<double>  d_prescribedTimes;    // These three are used only if
+  std::vector<double>  d_prescribedAngle;    // d_prescribeDeformation
   std::vector<Vector>  d_prescribedRotationAxis; // is "true".  It is "false" by default.
   std::vector<Matrix3>  d_prescribedF;
 
@@ -643,7 +646,6 @@ protected:
   std::vector<Vector> d_IPVelNew;
 
   bool             d_fracture;
-
   MaterialSubset*  d_loadCurveIndex;
   
   std::vector<AnalysisModule*> d_analysisModules;

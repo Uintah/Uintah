@@ -44,10 +44,10 @@ using namespace std;
 void
 Uintah::PIC( DataArchive * da, CommandLineFlags & clf, int cx, int cy, int cz )
 {
-
   vector<string> vars;
+  vector<int> num_matls;
   vector<const Uintah::TypeDescription*> types;
-  da->queryVariables(vars, types);
+  da->queryVariables( vars, num_matls, types );
   ASSERTEQ(vars.size(), types.size());
   cout << "There are " << vars.size() << " variables:\n";
   for(int i=0;i<(int)vars.size();i++)

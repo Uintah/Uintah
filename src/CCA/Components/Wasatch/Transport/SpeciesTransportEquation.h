@@ -38,10 +38,14 @@
 #error Species transport requires PoKiTT.
 #endif
 
+#include <pokitt/kinetics/AnalyticalJacobian.h>
+
 #include <CCA/Components/Wasatch/Transport/TransportEquation.h>
 #include <CCA/Components/Wasatch/Expressions/Turbulence/TurbulenceParameters.h>
 
 namespace WasatchCore{
+
+class DualTimeMatrixInfo;  // forward declaration
 
 class EqnTimestepAdaptorBase;
 
@@ -52,7 +56,9 @@ setup_species_equations( Uintah::ProblemSpecP params,
                          const Expr::Tag densityTag,
                          const Expr::TagList velTags,
                          const Expr::Tag temperatureTag,
-                         GraphCategories& gc );
+                         GraphCategories& gc,
+                         WasatchCore::DualTimeMatrixInfo& dualTimeMatrixInfo,
+                         const bool computeKineticsJacobian );
 
 /**
  * \class SpeciesTransportEquation
@@ -72,6 +78,8 @@ class SpeciesTransportEquation : public TransportEquation
   const Expr::TagList velTags_;
   const int nspec_;
   Expr::TagList yiTags_;
+  WasatchCore::DualTimeMatrixInfo& dualTimeMatrixInfo_;
+  boost::shared_ptr<pokitt::ChemicalSourceJacobian> jacobian_;
 
 
 public:
@@ -84,7 +92,9 @@ public:
                             const Expr::Tag densityTag,
                             const Expr::TagList velTags,
                             const Expr::Tag temperatureTag,
-                            const Expr::Tag mmwTag );
+                            const Expr::Tag mmwTag,
+                            WasatchCore::DualTimeMatrixInfo& dualTimeMatrixInfo,
+                            const bool computeKineticsJacobian );
 
   ~SpeciesTransportEquation();
 

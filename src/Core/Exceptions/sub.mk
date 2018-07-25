@@ -46,6 +46,7 @@ SRCS   += \
           $(SRCDIR)/ProblemSetupException.cc   \
           $(SRCDIR)/TypeMismatchException.cc   \
           $(SRCDIR)/UintahPetscError.cc        \
+          $(SRCDIR)/NotYetImplemented.cc       \
           $(SRCDIR)/VariableNotFoundInGrid.cc  
           
 ifeq ($(HAVE_PAPI),yes)

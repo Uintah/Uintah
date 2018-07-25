@@ -572,6 +572,8 @@ SimulationController::applicationSetup( void )
 
   // Finalize the shared state/materials
   m_application->getSimulationStateP()->finalizeMaterials();
+
+  m_application->setRestartTimeStep( m_restarting );
 }
 
 
@@ -634,7 +636,7 @@ SimulationController::finalSetup()
   // This step is done after the call to m_application->problemSetup to get
   // the defaults set by the simulation interface into the input.xml,
   // which the output writes along with index.xml
-  m_output->initializeOutput(m_ups, m_current_gridP );
+  m_output->initializeOutput( m_ups, m_current_gridP );
 
   // This step is done after the output is initialized so that global
   // reduction output vars are copied to the new uda. Further, it must

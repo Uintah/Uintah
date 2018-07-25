@@ -29,8 +29,11 @@ GravityA::problemSetup( ProblemSpecP& db ){
   m_gy_label             = _task_name+"_y";
   m_gz_label             = _task_name+"_z";
 
+  db->findBlock("reference_density")->getAttribute("value", m_ref_density);
   using namespace ArchesCore;
   m_density_label = parse_ups_for_role( DENSITY, db, "density" );
+  
+ 
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -71,25 +74,29 @@ GravityA::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   constCCVariable<double>& density  = tsk_info->get_const_uintah_field_add<constCCVariable<double > >( m_density_label );
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
 
+
   if (m_gravity[0] != 0.0) {
     SFCXVariable<double>& gx = tsk_info->get_uintah_field_add<SFCXVariable<double> >(m_gx_label);
+    gx.initialize(0.0);
 
     Uintah::parallel_for( range, [&](int i, int j, int k){
-      gx(i,j,k) = 0.5*(density(i,j,k) + density(i-1,j,k))*m_gravity[0];    
+      gx(i,j,k) = (0.5*(density(i,j,k) + density(i-1,j,k)) - m_ref_density )*m_gravity[0];    
     });
 
   } else if (m_gravity[1] != 0.0) {
     SFCYVariable<double>& gy = tsk_info->get_uintah_field_add<SFCYVariable<double> >(m_gy_label);
+    gy.initialize(0.0);
 
     Uintah::parallel_for( range, [&](int i, int j, int k){
-      gy(i,j,k) = 0.5*(density(i,j,k) + density(i,j-1,k))*m_gravity[1];    
+      gy(i,j,k) = (0.5*(density(i,j,k) + density(i,j-1,k)) - m_ref_density )*m_gravity[1];    
     });
 
   } else if (m_gravity[2] != 0.0) {
     SFCZVariable<double>& gz = tsk_info->get_uintah_field_add<SFCZVariable<double> >(m_gz_label);
+    gz.initialize(0.0);
 
     Uintah::parallel_for( range, [&](int i, int j, int k){
-      gz(i,j,k) = 0.5*(density(i,j,k) + density(i,j,k-1))*m_gravity[2];    
+      gz(i,j,k) = (0.5*(density(i,j,k) + density(i,j,k-1)) - m_ref_density )*m_gravity[2];    
     });
 
   }
@@ -134,25 +141,29 @@ GravityA::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   constCCVariable<double>& density  = tsk_info->get_const_uintah_field_add<constCCVariable<double > >( m_density_label );
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
 
+
   if (m_gravity[0] != 0.0) {
     SFCXVariable<double>& gx = tsk_info->get_uintah_field_add<SFCXVariable<double> >(m_gx_label);
+    gx.initialize(0.0);
 
     Uintah::parallel_for( range, [&](int i, int j, int k){
-      gx(i,j,k) = 0.5*(density(i,j,k) + density(i-1,j,k))*m_gravity[0];    
+      gx(i,j,k) = (0.5*(density(i,j,k) + density(i-1,j,k)) - m_ref_density )*m_gravity[0];    
     });
 
   } else if (m_gravity[1] != 0.0) {
     SFCYVariable<double>& gy = tsk_info->get_uintah_field_add<SFCYVariable<double> >(m_gy_label);
+    gy.initialize(0.0);
 
     Uintah::parallel_for( range, [&](int i, int j, int k){
-      gy(i,j,k) = 0.5*(density(i,j,k) + density(i,j-1,k))*m_gravity[1];    
+      gy(i,j,k) = (0.5*(density(i,j,k) + density(i,j-1,k)) - m_ref_density )*m_gravity[1];    
     });
 
   } else if (m_gravity[2] != 0.0) {
     SFCZVariable<double>& gz = tsk_info->get_uintah_field_add<SFCZVariable<double> >(m_gz_label);
+    gz.initialize(0.0);
 
     Uintah::parallel_for( range, [&](int i, int j, int k){
-      gz(i,j,k) = 0.5*(density(i,j,k) + density(i,j,k-1))*m_gravity[2];    
+      gz(i,j,k) = (0.5*(density(i,j,k) + density(i,j,k-1)) - m_ref_density )*m_gravity[2];    
     });
 
   }

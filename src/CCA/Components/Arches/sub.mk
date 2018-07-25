@@ -71,6 +71,7 @@ SRCS += $(SRCDIR)/Arches.cc                    \
         $(SRCDIR)/BoundaryCond_new.cc          \
         $(SRCDIR)/BoundaryCondition.cc         \
         $(SRCDIR)/CellInformation.cc           \
+        $(SRCDIR)/CellInformationP.cc          \
         $(SRCDIR)/CompDynamicProcedure.cc      \
         $(SRCDIR)/CQMOM.cc                     \
         $(SRCDIR)/Discretization.cc            \
@@ -95,11 +96,6 @@ SRCS += $(SRCDIR)/Arches.cc                    \
         $(SRCDIR)/GridTools.cc                 \
         $(SRCDIR)/HandoffHelper.cc             \
         $(SRCDIR)/TurbulenceModelPlaceholder.cc
-
-ifeq ($(HAVE_CUDA),yes)
-  SRCS += $(SRCDIR)/constructLinearSystemKernel.cu
-  DLINK_FILES := $(DLINK_FILES) $(SRCDIR)/constructLinearSystemKernel.o
-endif
 
 PSELIBS := \
 	CCA/Components/Application      \

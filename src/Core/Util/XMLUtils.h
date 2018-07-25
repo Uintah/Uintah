@@ -50,7 +50,7 @@
 namespace Uintah {
 namespace UintahXML {
 
-enum CheckType { INT_TYPE, FLOAT_TYPE };
+enum CheckType { UINT_TYPE, INT_TYPE, FLOAT_TYPE };
 
 // 'validateType()' determines if the input string is a valid int or float (based on 'type').
 //  If the string is not valid, a ProblemSetupException is thrown.

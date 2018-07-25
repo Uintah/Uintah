@@ -2,7 +2,6 @@
 <Uintah_Include>
 		<density>2700.0</density>
                 <constitutive_model type="elastic_plastic">
-                  <damage_cutoff>0.7</damage_cutoff>
                   <shear_modulus>26.0e9</shear_modulus>
                   <bulk_modulus>66.4e9</bulk_modulus>
                   <yield_condition type="vonMises">

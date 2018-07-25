@@ -11,6 +11,7 @@
 # $5 - whether Uintah is being built in debug mode or not...
 # $6 - whether Uintah is being built with static libraries or not ...
 # $7 - whether Uintah is being built with CUDA
+# $8 - CUDA SDK installation path
 #
 export GIT_SSL_NO_VERIFY=true
 BASE_BUILD_DIR=$1
@@ -75,9 +76,9 @@ if test "$7" = "yes"; then
   # Building with CUDA
   THREADS="-DENABLE_THREADS=OFF -DNTHREADS=1"
   if [[ `hostname` = titan* ]]; then
-    CUDA="-DENABLE_CUDA=ON -DDISABLE_INTROSPECTION=ON -DCUDA_ARCHITECTURE_MINIMUM=\"3.5\" -DCUDA_HOST_COMPILER=/opt/gcc/4.9.0/bin/g++ -DCUDA_TOOLKIT_ROOT-DIR=$CUDATOOLKIT_HOME"
+    CUDA="-DENABLE_CUDA=ON -DDISABLE_INTROSPECTION=ON -DCUDA_ARCHITECTURE_MINIMUM=\"3.5\" -DCUDA_HOST_COMPILER=/opt/gcc/4.9.0/bin/g++ -DCUDA_TOOLKIT_ROOT_DIR=$8"
   else
-    CUDA="-DENABLE_CUDA=ON -DDISABLE_INTROSPECTION=ON"
+    CUDA="-DENABLE_CUDA=ON -DDISABLE_INTROSPECTION=ON -DCUDA_TOOLKIT_ROOT_DIR=$8"
   fi
 else
   # Building without CUDA
@@ -91,7 +92,7 @@ fi
 SPATIAL_OPS_TAG=4e99f30af27c904ae6373ea40e867806a5bffeba
 TAB_PROPS_TAG=0a671fcdaf53cb517666ba760513a7ce141ecb6e
 RAD_PROPS_TAG=a2626cdccfbb97ccb7d68d43bfe085194cccf4d5
-EXPR_LIB_TAG=d1cd057368da434a72ffdcba39a21abe9140abf0
+EXPR_LIB_TAG=05ebb5ac8dfa847f38417ad158abf1e127d4211c
 NSCBC_TAG=e50c2e3fb79687dc26745fe2dea6e4252d2757cd
 
 ############################################################################

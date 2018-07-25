@@ -59,7 +59,7 @@ ScalarDiffusionModel::ScalarDiffusionModel(
   ps->require("diffusivity", d_D0);
   ps->require("max_concentration", d_MaxConcentration);
   ps->getWithDefault("min_concentration", d_MinConcentration, 0.0);
-  ps->getWithDefault("conc_tolerance", d_concTolerance, 1e-10);
+  ps->getWithDefault("conc_tolerance", d_concTolerance, 1.0e-100);
   ps->getWithDefault("initial_concentration", d_InitialConcentration, 0.0);
 
   d_InverseMaxConcentration = 1.0/d_MaxConcentration;

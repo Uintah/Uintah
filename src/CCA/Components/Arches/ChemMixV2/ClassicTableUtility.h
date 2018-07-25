@@ -200,33 +200,9 @@ loadMixingTable(fileTYPE &fp, const std::string & inputfile,  std::vector<std::s
   ClassicTableInfo infoStruct(*indep_headers, *d_allIndepVarNum, d_allIndepVarNames,d_savedDep_var, d_allDepVarUnits,d_constants); 
 
 #ifdef UINTAH_ENABLE_KOKKOS
-  if (d_indepvarscount == 1) {
-    delete indep_headers;
-    return   scinew Interp1(*d_allIndepVarNum, table, *i1,infoStruct);
-  } else if (d_indepvarscount == 2) {
-    return   scinew Interp2(*d_allIndepVarNum, table, *indep_headers, *i1,infoStruct);
-  } else if (d_indepvarscount == 3) {
-    return   scinew Interp3(*d_allIndepVarNum, table, *indep_headers, *i1,infoStruct);
-  } else if (d_indepvarscount == 4) {
-    return   scinew Interp4(*d_allIndepVarNum, table, *indep_headers, *i1,infoStruct);
-  } else {  //IV > 4
-    return   scinew InterpN(*d_allIndepVarNum, table, *indep_headers, *i1, infoStruct);
-  }
+    return   scinew Interp_class( table,*d_allIndepVarNum, *indep_headers, *i1, infoStruct);
 #else
-  if (d_indepvarscount == 1) {
-    delete indep_headers;
-    return   scinew Interp1(*d_allIndepVarNum, *table, *i1,infoStruct);
-  } else if (d_indepvarscount == 2) {
-    return   scinew Interp2(*d_allIndepVarNum, *table, *indep_headers, *i1,infoStruct);
-  } else if (d_indepvarscount == 3) {
-    return   scinew Interp3(*d_allIndepVarNum, *table, *indep_headers, *i1,infoStruct);
-  } else if (d_indepvarscount == 4) {
-    return   scinew Interp4(*d_allIndepVarNum, *table, *indep_headers, *i1,infoStruct);
-  } else {  //IV > 4
-    return   scinew InterpN(*d_allIndepVarNum, *table, *indep_headers, *i1, infoStruct);
-  }
-
-
+    return   scinew Interp_class( *table,*d_allIndepVarNum, *indep_headers, *i1, infoStruct);
 #endif
 
 }
@@ -425,6 +401,10 @@ Interp_class* SCINEW_ClassicTable(std::string tableFileName, std::vector<std::st
   gzrewind(gzFp);
   Interp_class * return_pointer =  loadMixingTable(gzFp, tableFileName, requested_depVar_names ,d_constant );
   gzclose(gzFp);
+
+  proc0cout << "Table successfully loaded into memory!" << std::endl;
+  proc0cout << "---------------------------------------------------------------  " << std::endl;
+
   return return_pointer;
 #else
  checkForConstants(table_contents_stream, tableFileName,d_constant );
@@ -434,9 +414,6 @@ Interp_class* SCINEW_ClassicTable(std::string tableFileName, std::vector<std::st
     delete [] table_contents;
   return return_pointer;
 #endif
-
-  proc0cout << "Table successfully loaded into memory!" << std::endl;
-  proc0cout << "---------------------------------------------------------------  " << std::endl;
 
 }
 }

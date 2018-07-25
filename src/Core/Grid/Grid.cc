@@ -1125,8 +1125,9 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
       } // end for(ProblemSpecP box_ps = level_ps->findBlock("Box");
 
       if (pg->nRanks() > 1 && (level->numPatches() < pg->nRanks()) && !do_amr) {
-        throw ProblemSetupException("Number of patches must >= the number of processes in an mpi run",
-                                    __FILE__, __LINE__);
+        std::ostringstream warn;
+        warn << "Number of patches (" << level->numPatches() << ") must >= the number of processes in an mpi run";
+        throw ProblemSetupException(warn.str(),__FILE__, __LINE__);
       }
       
       IntVector periodicBoundaries;
@@ -1338,12 +1339,12 @@ void Grid::partition2D(std::list<int> primes, int a, int b)
 const Patch *
 Grid::getPatchByID( int patchid, int startingLevel ) const
 {
-  const Patch* patch = nullptr;
+  const Patch * patch = nullptr;
   for( int i = startingLevel; i < numLevels(); i++ ) {
-    LevelP checkLevel = getLevel(i);
-    int levelBaseID = checkLevel->getPatch(0)->getID();
-    if (patchid >= levelBaseID && patchid < levelBaseID+checkLevel->numPatches()) {
-      patch = checkLevel->getPatch(patchid-levelBaseID);
+    LevelP level       = getLevel( i );
+    int    levelBaseID = level->getPatch( 0 )->getID();
+    if( patchid >= levelBaseID && patchid < levelBaseID + level->numPatches() ) {
+      patch = level->getPatch( patchid - levelBaseID );
       break;
     }
   }

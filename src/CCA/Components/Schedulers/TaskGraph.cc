@@ -46,7 +46,6 @@
 #include <iostream>
 #include <map>
 #include <memory>
-#include <set>
 
 
 using namespace Uintah;
@@ -105,7 +104,7 @@ TaskGraph::initialize()
 void
 TaskGraph::nullSort( std::vector<Task*> & tasks )
 {
-  // No longer going to sort them... let the UnifiedScheduler (threaded) take care of calling the tasks when all
+  // No longer going to sort them... let the scheduler take care of calling the tasks when all
   // dependencies are satisfied. Sorting the tasks causes problem because now tasks (actually task groups) run in
   // different orders on different MPI processes.
   int n = 0;
@@ -138,8 +137,10 @@ TaskGraph::addTask(       std::shared_ptr<Task>   task
                   )
 {
   task->setSets( patchset, matlset );
+
+  // check for empty tasks
   if ( (patchset && patchset->totalsize() == 0) || (matlset && matlset->totalsize() == 0) ) {
-    task.reset();
+    task.reset(); // release ownership of managed std::shared_ptr<Task>
     DOUT(g_detailed_deps_dbg, "Rank-" << m_proc_group->myRank() << " Killing empty task: " << *task);
   }
   else {
@@ -149,13 +150,15 @@ TaskGraph::addTask(       std::shared_ptr<Task>   task
     task->displayAll_DOUT(g_add_task_dbg);
     
 #if 0
-    // This snippet will find all the tasks that require a label
+    // This snippet will find all the tasks that require a label, simply change the value of "search_name"
     for (Task::Dependency* m_req = task->getRequires(); m_req != nullptr; m_req = m_req->m_next) {
       const VarLabel* label = m_req->m_var;
       std::string name = label->getName();
-      if (name == "p.size") {
-        std::cout << "\n" << Parallel::getMPIRank() << "This Task Requires label p.size" << std::endl;
-        task->displayAll_DOUT(std::cout);
+      std::string search_name("abskg");
+      if (name == search_name) {
+        std::cout << "\n" << "Rank-" << std::setw(4) << std::left << Parallel::getMPIRank() << " "
+                  << task->getName() << " requires label " << "\"" << search_name << "\"";
+        task->displayAll_DOUT(g_add_task_dbg);
       }
     }
 #endif
@@ -173,12 +176,12 @@ TaskGraph::createDetailedTask(       Task           * task
 {
   DetailedTask* dt = scinew DetailedTask( task, patches, matls, m_detailed_tasks );
 
+#if SCI_ASSERTION_LEVEL > 0
   if (task->getType() == Task::Reduction) {
-    Task::Dependency* req = task->getModifies();
     // reduction tasks should have exactly 1 require, and it should be a modify
-    ASSERT(req != nullptr);
-    m_reduction_tasks[req->m_var] = dt;
+    ASSERT(task->getModifies() != nullptr);
   }
+#endif
 
   m_detailed_tasks->add(dt);
 }
@@ -196,8 +199,6 @@ TaskGraph::createDetailedTasks(       bool    useInternalDeps
   std::vector<Task*> sorted_tasks;
 
   nullSort(sorted_tasks);
-
-  m_reduction_tasks.clear();
 
   ASSERT(grid != nullptr);
 
@@ -225,8 +226,8 @@ TaskGraph::createDetailedTasks(       bool    useInternalDeps
 
   m_load_balancer->createNeighborhoods(grid, oldGrid, hasDistalReqs);
 
-  const std::set<int> local_procs  = m_load_balancer->getNeighborhoodProcessors();
-  const std::set<int> distal_procs = m_load_balancer->getDistalNeighborhoodProcessors();
+  const std::unordered_set<int> local_procs  = m_load_balancer->getNeighborhoodProcessors();
+  const std::unordered_set<int> distal_procs = m_load_balancer->getDistalNeighborhoodProcessors();
 
   m_detailed_tasks = scinew DetailedTasks(m_scheduler, m_proc_group, this, (hasDistalReqs ? distal_procs : local_procs), useInternalDeps );
  
@@ -269,6 +270,8 @@ TaskGraph::createDetailedTasks(       bool    useInternalDeps
       }
     }
 
+
+    // look through requires
     for (Task::Dependency* req = task->getRequires(); req != nullptr; req = req->m_next) {
       std::string key = req->m_var->getName();
 
@@ -360,6 +363,8 @@ TaskGraph::createDetailedTasks(       bool    useInternalDeps
       }
     }
 
+    task->m_max_ghost_cells[levelID] = 0;      // default
+    
     // Again assuming all vars for a label get the same amount of ghost cells,
 
     // check requires
@@ -450,10 +455,16 @@ TaskGraph::createDetailedTasks(       bool    useInternalDeps
   //------------------------------------------------------------------------------------------------
 
   // Now proceed looking within the appropriate neighborhood defined by the max ghost cells a task needs to know about.
-  size_t num_normal_tasks = 0u;
+  size_t tot_detailed_tasks  = 0u;
+  size_t tot_normal_tasks    = 0u;
+  size_t tot_output_tasks    = 0u;
+  size_t tot_opp_tasks       = 0u;
+  size_t tot_reduction_tasks = 0u;
 
   for (auto i = 0u; i < number_of_tasks; i++) {
     Task* task = sorted_tasks[i];
+
+    size_t num_detailed_tasks  = 0u;
 
     DOUT(g_proc_neighborhood_dbg, "Looking for max ghost vars for task: " << task->getName());
 
@@ -469,17 +480,20 @@ TaskGraph::createDetailedTasks(       bool    useInternalDeps
       }
     }
 
-    // OncePerProc tasks
+    // valid patch and matl sets
     if (ps && ms) {
-      // only create OncePerProc tasks and output tasks once on each processor.
+
+      // OncePerProc tasks - only create OncePerProc tasks and output tasks once on each processor.
       if (task->getType() == Task::OncePerProc || task->getType() == Task::Hypre) {
         // only schedule this task on processors in the neighborhood
-        const std::set<int> neighborhood_procs = (task->m_max_ghost_cells.at(levelID) >= MAX_HALO_DEPTH) ? distal_procs : local_procs;
+        const std::unordered_set<int> neighborhood_procs = (task->m_max_ghost_cells.at(levelID) >= MAX_HALO_DEPTH) ? distal_procs : local_procs;
         for (auto p = neighborhood_procs.begin(); p != neighborhood_procs.end(); ++p) {
           const PatchSubset* pss = ps->getSubset(*p);
           for (int m = 0; m < ms->size(); m++) {
             const MaterialSubset* mss = ms->getSubset(m);
             createDetailedTask(task, pss, mss);
+            ++num_detailed_tasks;
+            ++tot_opp_tasks;
           }
         }
       }
@@ -495,13 +509,14 @@ TaskGraph::createDetailedTasks(       bool    useInternalDeps
           for (auto m = 0; m < ms->size(); m++) {
             const MaterialSubset* mss = ms->getSubset(m);
             createDetailedTask(task, pss, mss);
+            ++num_detailed_tasks;
+            ++tot_output_tasks;
           }
         }
       }
 
       // Normal tasks
       else {
-        size_t num_dts = 0;
         const int ps_size = ps->size();
         for (int ps_index = 0; ps_index < ps_size; ps_index++) {
           const PatchSubset* pss = ps->getSubset(ps_index);
@@ -531,18 +546,20 @@ TaskGraph::createDetailedTasks(       bool    useInternalDeps
             for (int m = 0; m < ms->size(); m++) {
               const MaterialSubset* mss = ms->getSubset(m);
               createDetailedTask(task, pss, mss);
-              ++num_dts;
-              ++num_normal_tasks;
+              ++num_detailed_tasks;
+              ++tot_normal_tasks;
             }
           }
         }
-        DOUT( g_proc_neighborhood_dbg, "Rank-" << m_proc_group->myRank() << " created: " << num_dts << " tasks for: " << task->getName() << " on level: " << levelID);
+        DOUT( g_detailed_task_dbg, "Rank-" << m_proc_group->myRank() << " created: " << num_detailed_tasks << " (" << task->getType()  << ") DetailedTasks for: " << task->getName() << " on level: " << levelID);
       }
     } // end valid patch and matl sets
 
     // these tasks would be, e.g. DataArchiver::outputReductionVars or DataArchiver::outputVariables (CheckpointReduction)
     else if (!ps && !ms) {
       createDetailedTask(task, nullptr, nullptr);
+      ++num_detailed_tasks;
+      ++tot_output_tasks;
     }
 
     // reduction tasks
@@ -551,6 +568,8 @@ TaskGraph::createDetailedTasks(       bool    useInternalDeps
         for (int m = 0; m < ms->size(); m++) {
           const MaterialSubset* mss = ms->getSubset(m);
           createDetailedTask(task, nullptr, mss);
+          ++num_detailed_tasks;
+          ++tot_reduction_tasks;
         }
       }
       else
@@ -559,9 +578,14 @@ TaskGraph::createDetailedTasks(       bool    useInternalDeps
     else {
       SCI_THROW(InternalError("Task has PatchSet, but no MaterialSet", __FILE__, __LINE__));
     }
+    tot_detailed_tasks += num_detailed_tasks;
   }
   
-  DOUT(g_proc_neighborhood_dbg, "Rank-" << m_proc_group->myRank() << " created: " << num_normal_tasks << " detailed tasks in TG: " << m_index);
+  DOUT(g_detailed_task_dbg, "\nRank-" << m_proc_group->myRank()       << " created: " << tot_detailed_tasks << "  total DetailedTasks in TG: " << m_index << " with:\n"
+                                      << "\t" << tot_normal_tasks     << " total      Normal tasks\n"
+                                      << "\t" << tot_opp_tasks        << " total OncePerProc tasks\n"
+                                      << "\t" << tot_output_tasks     << " total      Output tasks\n"
+                                      << "\t" << tot_reduction_tasks  << " total   Reduction tasks\n");
 
   m_load_balancer->assignResources(*m_detailed_tasks);
 

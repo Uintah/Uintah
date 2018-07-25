@@ -106,6 +106,17 @@ class PIDXOutputContext {
   public:  
     PIDXOutputContext();
     ~PIDXOutputContext();
+
+    struct PIDX_IoFlags {
+      PIDX_io_type ioType;          // eg: PIDX_RAW_IO (see .../pidx/PIDX_define.h)
+      unsigned int compressionType; // eg: PIDX_NO_META_DATA_DUMP (see .../pidx/PIDX_define.h)
+      IntVector    restructureBoxSize;
+      unsigned int pipeSize;
+
+      IntVector    partitionCount;
+      unsigned int blockSize;
+      unsigned int blockCount;
+    };
     
     //______________________________________________________________________
     // Various flags and options
@@ -114,18 +125,26 @@ class PIDXOutputContext {
         PIDX_flags();
         ~PIDX_flags() {}
 
-        unsigned int d_compressionType;
-        bool         d_outputRawIO;
-        bool         d_debugOutput;
-        IntVector    d_outputPatchSize;
+        PIDX_IoFlags d_checkpointFlags;
+        PIDX_IoFlags d_visIoFlags;
+
+        bool d_debugOutput;
 
         //__________________________________
         // debugging
         void print(){
-          std::cout << Parallel::getMPIRank()
-                    << "PIDXFlags: " << std::setw(26) <<"outputRawIO: " <<  d_outputRawIO 
-                    << ", compressionType: "<< getCompressTypeName( d_compressionType )
-                    << ", outputPatchSize: " << d_outputPatchSize << "\n";
+          std::cout << Parallel::getMPIRank() 
+                    << "PIDXFlags: " << std::setw(26) << "\n"
+                    << "   checkpoint IO type: " <<  d_checkpointFlags.ioType << "\n"
+                    << "   checkpoint compressionType: "<< getCompressTypeName( d_checkpointFlags.compressionType ) << "\n"
+                    << "   checkpoint restructure box size: " << d_checkpointFlags.restructureBoxSize << "\n"
+                    << "   checkpoint pipe size: " << d_checkpointFlags.pipeSize << "\n"
+                    << "   visIo IO type: " <<  d_visIoFlags.ioType << "\n"
+                    << "   visIo compressionType: "<< getCompressTypeName( d_visIoFlags.compressionType ) << "\n"
+                    << "   visIo restructure box size: " << d_visIoFlags.restructureBoxSize << "\n"
+                    << "   visIo partition count: " << d_visIoFlags.partitionCount << "\n"
+                    << "   visIo block size: " << d_visIoFlags.blockSize << "\n"
+                    << "   visIo block count: " << d_visIoFlags.blockCount << "\n";
         }  
 
         void problemSetup( const ProblemSpecP& params );
@@ -163,12 +182,17 @@ class PIDXOutputContext {
                                PIDX_point  & newBox );
 
     void initialize( const std::string  & filename,
-                           unsigned int   timeStep,
+                     const unsigned int   timeStep,
                            MPI_Comm       comm,
                            PIDX_flags     flags,
-                     const PatchSubset  * patches,
                            PIDX_point     dims,
-                     const int            type);
+                     const int            type );
+
+  void initializeParticles( const std::string  & filename, 
+                            const unsigned int   timeStep,
+                                  MPI_Comm       comm,
+                                  PIDX_point     dim,
+                            const int            typeOutput );
     
     void setLevelExtents( const std::string & desc, 
                                 IntVector     lo,
@@ -182,12 +206,12 @@ class PIDXOutputContext {
                           const TypeDescription * TD,
                                 patchExtents    & pExtents,
                                 PIDX_point      & patchOffset,
-                                PIDX_point      & nPatchCells );
+                                PIDX_point      & nPatchCells ) const;
 
-    void checkReturnCode( const int           rc,
-                          const std::string   warn,
-                          const char        * file, 
-                          const int           line );
+    static void checkReturnCode( const int           rc,
+                                 const std::string   warn,
+                                 const char        * file, 
+                                 const int           line );
                           
     void hardWireBufferValues(unsigned char* patchBuffer, 
                               const patchExtents patchExts,

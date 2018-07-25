@@ -46,9 +46,9 @@
 #include <CCA/Components/Wasatch/Transport/EquationBase.h>
 
 namespace WasatchCore{
-  class ExprDeps;  // forward declaration.
-  class GraphHelper;
-  class BCHelper;
+  class  ExprDeps;  // forward declaration.
+  class  BCHelper;
+  struct GraphHelper;
 }
 
 namespace Coal{

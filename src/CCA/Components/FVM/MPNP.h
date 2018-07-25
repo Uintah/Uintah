@@ -94,7 +94,6 @@ WARNING
     FVMLabel* d_lb;
     double d_delt;
     SolverInterface* d_solver;
-    SolverParameters* d_solver_parameters;
     MaterialSet* d_mpnp_matlset;
     MaterialSubset* d_mpnp_matl;
     

@@ -73,8 +73,8 @@
       <KMomentum>
         <convection scheme="central"/>
         <PressureSolver>
-          <Parameters>
-            <normalize_pressure>true    </normalize_pressure>
+          <normalize_pressure>true    </normalize_pressure>
+          <Parameters>  
             <solver>           cg     </solver>
             <preconditioner>  pfmg    </preconditioner>
             <tolerance>      1.0e-12  </tolerance>

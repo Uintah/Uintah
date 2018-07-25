@@ -30,10 +30,32 @@ namespace Uintah {
 SolverCommon::SolverCommon(const ProcessorGroup* myworld)
   : UintahParallelComponent(myworld)
 {
+  m_myworld = myworld;
 }
 
 SolverCommon::~SolverCommon()
 {
 }
+
+  //______________________________________________________________________
+//
+void SolverCommon::getComponents()
+{
+  m_application = dynamic_cast<ApplicationInterface*>( getPort("application") );
+
+  if( !m_application ) {
+    throw InternalError("dynamic_cast of 'm_application' failed!", __FILE__, __LINE__);
+  }
+}
+
+//______________________________________________________________________
+//
+void SolverCommon::releaseComponents()
+{
+  releasePort( "application" );
+
+  m_application  = nullptr;
+}
+
 
 } // end namespace Uintah

@@ -1240,16 +1240,16 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
                 dy_dep_sb_l = 0.0;
                 R_tot = R_wall + R_en + dy_dep_sb_s/k_sb_s;
                 newton_solve( TW_new, wi.T_inner, T_old, R_tot, rad_q, Emiss, extra_src_sum );
-              } else if (rad_q>=rad_q_melt && rad_q<=rad_q_max){
+              } else if (rad_q>=rad_q_melt && rad_q<rad_q_max){
                 // regime 2
-                dy_dep_sb_l = (dsb_l_max/(rad_q_max-rad_q_melt))*(rad_q-rad_q_melt);
+                dy_dep_sb_l = std::max(0.0,std::min(dsb_l_max,(dsb_l_max/(rad_q_max-rad_q_melt+1e-20))*(rad_q-rad_q_melt))); // 0.0 <= dy_dep_sb_l <= dsb_l_max (if radqmax-radqmelt is small) 
                 R_tot = dy_dep_sb_l/k_sb_l;
                 newton_solve( TW_new, wi.T_slag, T_old, R_tot, rad_q, Emiss, extra_src_sum );
                 // now we can solve for the solid layer thickness given the new surface temperature.
                 double qnet = Emiss*(rad_q - _sigma_constant * std::pow( TW_new, 4.0 )) + extra_src_sum;
                 qnet = std::abs(qnet) > 1e-12 ? qnet : 1e-12; // to avoid div by zero and preserve the sign.
                 dy_dep_sb_s = k_sb_s*((TW_new-wi.T_inner)/qnet - R_wall - R_en - dy_dep_sb_l/k_sb_l);
-              } else { // rad_q > rad_q_max
+              } else { // rad_q >= rad_q_max
                 // regime 3
                 dy_dep_sb_s = 0.0;
                 dy_dep_sb_l = dsb_l_max;
@@ -1264,6 +1264,7 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
                   urbain_viscosity(visc, T_i, wi.x_ash);
                   kin_visc = visc/wi.deposit_density;
                   dy_dep_sb_l = a_p*std::pow(kin_visc*kin_visc/9.8,1./3.)*std::pow(4.*(mdot/cell_width)/visc,b_p);
+                  dy_dep_sb_l = std::max(0.0,std::min(dsb_l_max,dy_dep_sb_l)); // 0.0 <= dy_dep_sb_l <= dsb_l_max(@ Tfluid) 
                   residual = std::abs(dy_dep_sb_l_old - dy_dep_sb_l)/(dy_dep_sb_l+1e-100);
                   if (residual < 1e-4){
                     break;

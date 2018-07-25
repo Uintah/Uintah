@@ -37,14 +37,30 @@ using namespace Uintah;
 //
 PIDXOutputContext::PIDX_flags::PIDX_flags()
 {
-  compressMap["NONE"]              = PIDX_NO_COMPRESSION;
-  compressMap["CHUNKING"]          = PIDX_CHUNKING_ONLY;
-  compressMap["PIDX_CHUNKING_ZFP"] = PIDX_CHUNKING_ZFP;
-  
-  d_outputRawIO    = false;
-  d_debugOutput    = false;
-  d_outputPatchSize = IntVector( -9, -9, -9 );
-  d_compressionType = PIDX_NO_COMPRESSION;
+  compressMap[ "NONE" ]         = PIDX_NO_COMPRESSION;
+  compressMap[ "CHUNKING" ]     = PIDX_CHUNKING_ONLY;
+  compressMap[ "CHUNKING_ZFP" ] = PIDX_CHUNKING_ZFP;
+
+  // Set Defaults
+  d_debugOutput = false;
+
+  // Checkpoint Defaults
+  d_checkpointFlags.ioType             = PIDX_RAW_IO;
+  d_checkpointFlags.compressionType    = PIDX_NO_COMPRESSION;
+  d_checkpointFlags.restructureBoxSize = IntVector( 64, 64, 64 );
+  d_checkpointFlags.pipeSize           =  64;
+  d_checkpointFlags.partitionCount     = IntVector( 1, 1, 1 );
+  d_checkpointFlags.blockSize          =  15;
+  d_checkpointFlags.blockCount         = 256;
+
+  // VisIo Defaults
+  d_visIoFlags.ioType             = PIDX_RAW_IO;
+  d_visIoFlags.compressionType    = PIDX_NO_COMPRESSION;
+  d_visIoFlags.restructureBoxSize = IntVector( 64, 64, 64 );
+  d_visIoFlags.pipeSize           =  64;
+  d_visIoFlags.partitionCount     = IntVector( 1, 1, 1 );
+  d_visIoFlags.blockSize          =  15;
+  d_visIoFlags.blockCount         = 256;
 }
 
 //______________________________________________________________________
@@ -54,9 +70,10 @@ unsigned int
 PIDXOutputContext::PIDX_flags::str2CompressType( const std::string & type )
 {
   string TYPE = string_toupper( type );  // convert to upper case  
-  if ( compressMap.count( TYPE ) == 0) {
+
+  if( compressMap.find( TYPE ) == compressMap.end() ) {
     ostringstream warn;
-    warn << "ERROR:PIDXOutput:: the compression type (" << TYPE << ") is not supported."
+    warn << "ERROR:PIDXOutputContext: The compression type (" << TYPE << ") is not supported."
          << " Valid options are: NONE, CHUNKING, CHUNKING_ZFP";
     throw Uintah::InternalError( warn.str(), __FILE__, __LINE__ );
   }
@@ -88,21 +105,54 @@ PIDXOutputContext::PIDX_flags::problemSetup( const ProblemSpecP& DA_ps )
 
   if( pidx_ps != nullptr ) {
   
-    string type;
-    pidx_ps->getWithDefault( "compressionType",  type, "NONE" );
-    
-    d_compressionType = str2CompressType( type );
-    pidx_ps->get( "debugOutput",     d_debugOutput );
-    pidx_ps->get( "outputRawIO",     d_outputRawIO );
-    pidx_ps->get( "outputPatchSize", d_outputPatchSize );
+    pidx_ps->getWithDefault( "debugOutput", d_debugOutput, false );
+
+    PIDX_IoFlags * flags[2];
+    flags[0] = &d_checkpointFlags;
+    flags[1] = &d_visIoFlags;
+
+    for( int i = 0; i <= 1; i++ ) {
+      ProblemSpecP flagPs;
+
+      PIDX_IoFlags * flagData = flags[ i ];
+      if( i == 0 ) {
+        flagPs = pidx_ps->findBlock( "checkpoint" );
+      }
+      else {
+        flagPs = pidx_ps->findBlock( "visIO" );
+      }
+
+      if( flagPs == nullptr ) { continue; }
+
+      string type;
+      flagPs->get( "compressionType", type );
+      flagData->compressionType = str2CompressType( type );
+
+      ProblemSpecP idxIoPS = flagPs->findBlock( "idxIo" );
+      ProblemSpecP rawIoPS = flagPs->findBlock( "rawIo" );
+
+      if( idxIoPS != nullptr ) {
+        flagData->ioType = PIDX_LOCAL_PARTITION_IDX_IO;
+
+        idxIoPS->get( "partitionCount", flagData->partitionCount );
+        idxIoPS->get( "idxBlockSize",   flagData->blockSize );
+        idxIoPS->get( "idxBlockCount",  flagData->blockCount );
+      }
+      else { // Raw IO
+
+        flagData->ioType = PIDX_RAW_IO;
+
+        string type;
+        //rawIoPS->get( "compressType", type );
+        //flagData->compressionType = str2CompressType( type );
+
+        rawIoPS->get( "restructureBoxSize", flagData->restructureBoxSize );
+        rawIoPS->get( "pipeSize",           flagData->pipeSize );
+      }
+    }
   }
   else {
-    proc0cout << "Warning: In input .ups file, the <PIDX> tag was not found in tag <DataArchiver type=\"PIDX\">. Using defaults...\n";
-
-    d_compressionType = PIDX_NO_COMPRESSION;
-    d_debugOutput = false;
-    d_outputRawIO = true;
-    d_outputPatchSize = IntVector( 64, 64, 64 );
+    proc0cout << "Warning: Input .ups file does not have the <DataArchiver->PIDX> settings tag... Using defaults...\n";
   }
 }
 
@@ -132,10 +182,12 @@ PIDXOutputContext::getSupportedVariableTypes(){
     
   vector<TypeDescription::Type> GridVarTypes;
   GridVarTypes.empty();
-  GridVarTypes.push_back(TypeDescription::CCVariable );        // This is where you define what types are supported.
-  GridVarTypes.push_back(TypeDescription::SFCXVariable );
-  GridVarTypes.push_back(TypeDescription::SFCYVariable );
-  GridVarTypes.push_back(TypeDescription::SFCZVariable );
+  GridVarTypes.push_back( TypeDescription::CCVariable );        // This is where you define what types are supported.
+  GridVarTypes.push_back( TypeDescription::SFCXVariable );
+  GridVarTypes.push_back( TypeDescription::SFCYVariable );
+  GridVarTypes.push_back( TypeDescription::SFCZVariable );
+  GridVarTypes.push_back( TypeDescription::ParticleVariable );
+  GridVarTypes.push_back( TypeDescription::NCVariable );
   return GridVarTypes;
 }
  
@@ -145,20 +197,14 @@ string
 PIDXOutputContext::getDirectoryName(TypeDescription::Type TD)
 {
   switch ( TD ){
-      case TypeDescription::CCVariable:
-        return "CCVars";  
-        break;
-      case TypeDescription::SFCXVariable:
-        return "SFCXVars";
-        break;
-      case TypeDescription::SFCYVariable:
-        return "SFCYVars";
-        break;
-      case TypeDescription::SFCZVariable:
-        return "SFCZVars";
-        break;
-      default:
-         throw Uintah::InternalError("  PIDXOutputContext::getDirectoryName type description not supported", __FILE__, __LINE__);
+    case TypeDescription::CCVariable:       return "CCVars";           break;
+    case TypeDescription::SFCXVariable:     return "SFCXVars";         break;
+    case TypeDescription::SFCYVariable:     return "SFCYVars";         break;
+    case TypeDescription::SFCZVariable:     return "SFCZVars";         break;
+    case TypeDescription::ParticleVariable: return "ParticleVars";     break;
+    case TypeDescription::NCVariable:       return "NCVars";           break;
+    default:
+      throw Uintah::InternalError("  PIDXOutputContext::getDirectoryName type description not supported", __FILE__, __LINE__);
   }
 }
 //______________________________________________________________________
@@ -179,15 +225,18 @@ PIDXOutputContext::computeBoxSize( const PatchSubset* patches,
   IntVector nCells = level->nCellsPatch_max();
   int nPatchCells  = nCells.x() * nCells.y() * nCells.z();
 
+  IntVector box( 64, 64, 64 );    // default value
+
+ #if 0
+
   const int cubed16  = 16*16*16;
   const int cubed32  = 32*32*32;
   const int cubed64  = 64*64*64;
   const int cubed128 = 128*128*128;
   const int cubed256 = 256*256*256;
   
-  //__________________________________
+ //__________________________________
   // logic for adjusting the box
-  IntVector box( 64, 64, 64 );    // default value
   if (nPatchCells <=  cubed16) {
     
   } else if (nPatchCells >  cubed16  && nPatchCells <= cubed32) {
@@ -205,13 +254,19 @@ PIDXOutputContext::computeBoxSize( const PatchSubset* patches,
   if ( flags.d_outputPatchSize != IntVector( -9, -9, -9 ) ) {
     box = flags.d_outputPatchSize;
   }
+#endif
   
   if ( flags.d_debugOutput ) {
     cout << Parallel::getMPIRank() << " PIDX outputPatchSize: Level: "<< level->getIndex() << " box: " << box  
          << " Patchsize: " << nCells << " nPatchCells: " << nPatchCells  << "\n";
   }
   //PIDX_set_point( newBox, box.x(), box.y(), box.z());
-  PIDX_set_point( newBox, 64, 64, 64 );
+  //  PIDX_set_point( newBox, 64, 64, 64 );
+  box = IntVector( (int)pow(2, (int)ceil(log(nCells.x())/log(2))) * 2,
+                   (int)pow(2, (int)ceil(log(nCells.y())/log(2))) * 2,
+                   (int)pow(2, (int)ceil(log(nCells.z())/log(2))) * 2 );
+  PIDX_set_point( newBox, box.x(), box.y(), box.z() );
+
 }
 
 
@@ -220,79 +275,113 @@ PIDXOutputContext::computeBoxSize( const PatchSubset* patches,
 //
 void
 PIDXOutputContext::initialize( const string       & filename, 
-                                     unsigned int   timeStep,
+                               const unsigned int   timeStep,
                                      MPI_Comm       comm,
                                      PIDX_flags     flags,
-                               const PatchSubset  * patches,
 			             PIDX_point     dim,
                                const int            typeOutput )
 {
+  cout << "PIDXOutputContext::initialize()\n";
+
   this->filename = filename;
   this->timestep = timeStep;
   string desc = "PIDXOutputContext::initialize";
   //__________________________________
   //
   int rc = PIDX_create_access(&(this->access));
-  checkReturnCode( rc, desc+" - PIDX_create_access", __FILE__, __LINE__);
+  checkReturnCode( rc, desc + " - PIDX_create_access", __FILE__, __LINE__);
   
-  if(comm != MPI_COMM_NULL){
+  if( comm != MPI_COMM_NULL ){
     PIDX_set_mpi_access( this->access, comm );
-    checkReturnCode( rc, desc+" - PIDX_set_mpi_access", __FILE__, __LINE__);
+    checkReturnCode( rc, desc + " - PIDX_set_mpi_access", __FILE__, __LINE__);
   }
   
   PIDX_file_create( filename.c_str(), PIDX_MODE_CREATE, access, dim, &(this->file) );
-  checkReturnCode( rc, desc+" - PIDX_file_create", __FILE__, __LINE__);
+  checkReturnCode( rc, desc + " - PIDX_file_create", __FILE__, __LINE__);
   
-  //__________________________________
-  if ( flags.d_debugOutput ){
-    //PIDX_debug_output( (this->file) );
+  PIDX_IoFlags & ioFlags = flags.d_visIoFlags;
+  if( typeOutput == CHECKPOINT ){
+    ioFlags = flags.d_checkpointFlags;
   }
 
-  //__________________________________
-  if ( flags.d_outputRawIO ){
-    PIDX_set_io_mode( this->file, PIDX_RAW_IO );
+  PIDX_set_io_mode( this->file, ioFlags.ioType );
 
-    // FIXME: The 1 below represents the 1st timestep... but if we begin output on another timestep, this should be changed...
-    PIDX_set_cache_time_step( this->file, 1 );
-    checkReturnCode( rc, desc + " - PIDX_enable_idx_io", __FILE__, __LINE__ );
-  }
-  
-  
-  //__________________________________
-  //
-  PIDX_point new_box_size;
-  computeBoxSize( patches, flags, new_box_size );
-  
-  PIDX_set_restructuring_box(file, new_box_size);
-  checkReturnCode( rc, desc+" - PIDX_set_restructuring_box", __FILE__, __LINE__);
-  
-  PIDX_set_block_size(this->file,  13);
-  checkReturnCode( rc, desc+" - PIDX_set_block_size", __FILE__, __LINE__);
-  
-  PIDX_set_block_count(this->file, 256);
-  checkReturnCode( rc, desc+" - PIDX_set_block_count", __FILE__, __LINE__);
-  //PIDX_set_resolution(this->file, 0, 2);
-  
-  //__________________________________
-  //  
-  PIDX_set_current_time_step(this->file, timeStep);
-  checkReturnCode( rc, desc+" - PIDX_set_current_time_step", __FILE__, __LINE__);
+  PIDX_set_compression_type( this->file, ioFlags.compressionType );
+  checkReturnCode( rc, desc + " - PIDX_set_compression_type", __FILE__, __LINE__);
 
-  //__________________________________
-  // Set compresssion settings
-  if( typeOutput == CHECKPOINT){
-    PIDX_set_compression_type( this->file, PIDX_NO_COMPRESSION );
-    checkReturnCode( rc, desc+" - PIDX_set_compression_type", __FILE__, __LINE__);
-  }
-  else {
-    PIDX_set_compression_type( this->file, flags.d_compressionType );
-    checkReturnCode( rc, desc+" - PIDX_set_compression_type", __FILE__, __LINE__);
-    //  PIDX_set_lossy_compression_bit_rate(this->file, 8);                // What to do here?
+  if( ioFlags.ioType == PIDX_RAW_IO ) {
+    PIDX_point rbox;
+    int ret = PIDX_set_point( rbox,
+                              ioFlags.restructureBoxSize[ 0 ],
+                              ioFlags.restructureBoxSize[ 1 ],
+                              ioFlags.restructureBoxSize[ 2 ] );
+    checkReturnCode( ret,desc + " - PIDX_set_point restructure box failure", __FILE__, __LINE__ );
+    PIDX_set_restructuring_box( file, rbox );
+    checkReturnCode( rc, desc + " - checkpoint PIDX_set_restructuring_box", __FILE__, __LINE__);
   }
 
+  PIDX_set_variable_pile_length( file, ioFlags.pipeSize );
+  checkReturnCode( rc, desc + " - checkpoint PIDX_set_variable_pile_length", __FILE__, __LINE__);
+
+  if( ioFlags.ioType == PIDX_LOCAL_PARTITION_IDX_IO ) {
+
+    PIDX_set_block_size( this->file,  ioFlags.blockSize );
+    checkReturnCode( rc, desc + " - PIDX_set_block_size", __FILE__, __LINE__);
+  
+    PIDX_set_block_count( this->file, ioFlags.blockCount );
+    checkReturnCode( rc, desc + " - PIDX_set_block_count", __FILE__, __LINE__);
+
+    PIDX_set_partition_count( this->file, ioFlags.partitionCount[0], ioFlags.partitionCount[1], ioFlags.partitionCount[2] );
+  }
+
+
+  // FIXME: The 1 below represents the 1st timestep... but if we begin output on another timestep, this should be changed...
+  //PIDX_set_cache_time_step( this->file, 1 );
+  //checkReturnCode( rc, desc + " - PIDX_enable_idx_io", __FILE__, __LINE__ );
+  
+  PIDX_set_first_time_step( this->file, timeStep );
+
+  PIDX_set_current_time_step( this->file, timeStep );
+  checkReturnCode( rc, desc + " - PIDX_set_current_time_step", __FILE__, __LINE__);
 
   d_isInitialized = true;
 }
+
+void
+PIDXOutputContext::initializeParticles( const string       & filename, 
+                                        const unsigned int   timeStep,
+                                              MPI_Comm       comm,
+                                              PIDX_point     dim,
+                                        const int            typeOutput )
+{
+  cout << "PIDXOutputContext::initializeParticles()\n";
+
+  this->filename = filename;
+  this->timestep = timeStep;
+  string desc = "PIDXOutputContext::initialize";
+  //__________________________________
+  //
+  int rc = PIDX_create_access(&(this->access));
+  checkReturnCode( rc, desc + " - PIDX_create_access", __FILE__, __LINE__);
+  
+  if( comm != MPI_COMM_NULL ){
+    PIDX_set_mpi_access( this->access, comm );
+    checkReturnCode( rc, desc + " - PIDX_set_mpi_access", __FILE__, __LINE__);
+  }
+  
+  PIDX_file_create( filename.c_str(), PIDX_MODE_CREATE, access, dim, &(this->file) );
+  checkReturnCode( rc, desc + " - PIDX_file_create", __FILE__, __LINE__);
+  
+  PIDX_set_io_mode( this->file, PIDX_PARTICLE_IO );
+
+  PIDX_set_first_time_step( this->file, timeStep );
+  
+  PIDX_set_current_time_step( this->file, timeStep );
+  checkReturnCode( rc, desc + " - PIDX_set_current_time_step", __FILE__, __LINE__);
+
+  d_isInitialized = true;
+}
+
 
 //______________________________________________________________________
 //  
@@ -304,13 +393,12 @@ PIDXOutputContext::setPatchExtents( const string          & desc,
                                     const TypeDescription * TD,
                                           patchExtents    & pExtents,
                                           PIDX_point      & patchOffset,
-                                          PIDX_point      & patchSize )
+                                          PIDX_point      & patchSize ) const
 {
-
-   // compute the extents of this variable (CCVariable, SFC(*)Variable...etc)
+   // Compute the extents of this variable (CCVariable, SFC(*)Variable...etc).
    IntVector hi_EC;
    IntVector lo_EC;
-   patch->computeVariableExtents(TD->getType(), boundaryLayer, Ghost::None, 0, lo_EC, hi_EC);
+   patch->computeVariableExtents( TD->getType(), boundaryLayer, Ghost::None, 0, lo_EC, hi_EC );
 
    IntVector nCells_EC    = hi_EC - lo_EC;
    int totalCells_EC      = nCells_EC.x() * nCells_EC.y() * nCells_EC.z();
@@ -355,7 +443,7 @@ void
 PIDXOutputContext::checkReturnCode( const int      rc,
                                     const string   warn,
                                     const char   * file, 
-                                    const int      line)
+                                    const int      line )
 {
   if ( rc != PIDX_success ) {
     throw InternalError( warn, file, line );

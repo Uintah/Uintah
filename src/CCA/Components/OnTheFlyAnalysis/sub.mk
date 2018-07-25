@@ -41,7 +41,8 @@ SRCS += \
         $(SRCDIR)/MinMax.cc                \
         $(SRCDIR)/momentumAnalysis.cc      \
         $(SRCDIR)/planeExtract.cc          \
-        $(SRCDIR)/statistics.cc
+        $(SRCDIR)/statistics.cc            \
+        $(SRCDIR)/FileInfoVar.cc
 
 PSELIBS := \
 	CCA/Ports               \

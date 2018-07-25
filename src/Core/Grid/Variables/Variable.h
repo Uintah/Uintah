@@ -25,22 +25,18 @@
 #ifndef UINTAH_HOMEBREW_Variable_H
 #define UINTAH_HOMEBREW_Variable_H
 
-#include <string>
-#include <iosfwd>
-
 #include <Core/ProblemSpec/ProblemSpec.h>
+
 #include <sci_defs/pidx_defs.h>
 
+#include <string>
+#include <iosfwd>
 
 namespace Uintah {
 
   class TypeDescription;
   class InputContext;
   class OutputContext;
-#if HAVE_PIDX
-  class PIDXOutputContext;
-#endif
-  class PIDXOutputContext;
   class Patch;
   class RefCounted;
   class VarLabel;
@@ -73,6 +69,8 @@ namespace Uintah {
       
   ****************************************/
     
+class PIDXOutputContext; // Forward Declaration
+
 class Variable {
 
 public:
@@ -101,21 +99,24 @@ public:
             const std::string& compressionMode);
 
 #if HAVE_PIDX
-  void emitPIDX(PIDXOutputContext& oc,
-                unsigned char* buffer,
-                const IntVector& l,
-                const IntVector& h,
-                const size_t pidx_bufferSize);
+  virtual void emitPIDX(       PIDXOutputContext & oc,
+                               unsigned char     * buffer,
+                         const IntVector         & l,
+                         const IntVector         & h,
+                         const size_t              pidx_bufferSize ); // buffer size used for bullet proofing.
                 
-  void readPIDX( unsigned char* pidx_buffer,
-                 const size_t& pidx_bufferSize,
-                 bool swapBytes );
+  void readPIDX( const unsigned char * pidx_buffer,
+                 const size_t        & pidx_bufferSize,
+                 const bool            swapBytes );
 #endif
 
-  virtual void emitNormal(std::ostream& out, const IntVector& l,
-                          const IntVector& h, ProblemSpecP varnode, bool outputDoubleAsFloat ) = 0;
+  virtual void emitNormal(       std::ostream & out,
+                           const IntVector    & l,
+                           const IntVector    & h,
+                                 ProblemSpecP   varnode,
+                                 bool           outputDoubleAsFloat ) = 0;
 
-  virtual void readNormal(std::istream& in, bool swapbytes) = 0;
+  virtual void readNormal( std::istream& in, bool swapbytes ) = 0;
 
   virtual bool emitRLE(std::ostream& /*out*/, const IntVector& l,
                        const IntVector& h, ProblemSpecP /*varnode*/);

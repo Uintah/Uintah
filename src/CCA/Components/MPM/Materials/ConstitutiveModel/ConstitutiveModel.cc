@@ -42,6 +42,8 @@ using namespace std;
 # define M_PI           3.14159265358979323846  /* pi */
 #endif
 
+const double ConstitutiveModel::LargeTimestep = 1.0e+10;
+
 ConstitutiveModel::ConstitutiveModel(MPMFlags* Mflag)
 {
   lb = scinew MPMLabel();
@@ -457,11 +459,14 @@ ConstitutiveModel::addSplitParticlesComputesAndRequires(Task*,
 
 
 void
-ConstitutiveModel::addCMSpecificParticleData(const Patch* patch,
-                                             const int dwi,
-                                             const unsigned int oldNumPar,
-                                             const int numNewPartNeeded,
-                                             DataWarehouse* old_dw,
-                                             DataWarehouse* new_dw)
+ConstitutiveModel::splitCMSpecificParticleData(const Patch* patch,
+                                               const int dwi,
+                                               const int nDims,
+                                               ParticleVariable<int> &prefOld,
+                                               ParticleVariable<int> &prefNew,
+                                               const unsigned int oldNumPar,
+                                               const unsigned int numNewPartNeeded,
+                                               DataWarehouse* old_dw,
+                                               DataWarehouse* new_dw)
 {
 }

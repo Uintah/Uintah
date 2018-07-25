@@ -6,15 +6,12 @@ namespace Uintah {
 
   enum FILTER { THREEPOINTS, SIMPSON, BOX };
 
-  static FILTER get_filter_from_string(std::string value){
+  static FILTER get_filter_from_string( const std::string & value ){
 
-    if ( value == "simpson" ){
-      return SIMPSON;
-    } else if ( value == "three_points" ){
-      return THREEPOINTS;
-    } else if ( value == "box" ){
-      return BOX;
-    } else {
+    if (      value == "simpson" ){      return SIMPSON; }
+    else if ( value == "three_points" ){ return THREEPOINTS; }
+    else if ( value == "box" ){          return BOX; }
+    else {
       throw InvalidValue("Error: Filter type not recognized: "+value, __FILE__, __LINE__);
     }
 

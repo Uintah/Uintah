@@ -30,6 +30,7 @@
 #include <CCA/Components/Wasatch/ParseTools.h>
 #include <CCA/Components/Wasatch/Transport/ParseEquation.h>
 #include <CCA/Components/Wasatch/Transport/EquationAdaptors.h>
+#include <CCA/Components/Wasatch/DualTimeMatrixManager.h>
 
 //-- Add headers for individual transport equations here --//
 #include <CCA/Components/Wasatch/Transport/TransportEquation.h>
@@ -78,10 +79,11 @@ namespace WasatchCore{
   //==================================================================
 
   EqnTimestepAdaptorBase* parse_scalar_equation( Uintah::ProblemSpecP params,
-                                                TurbulenceParameters turbParams,
-                                                const Expr::Tag densityTag,
-                                                const bool isConstDensity,
-                                                GraphCategories& gc )
+                                                 TurbulenceParameters turbParams,
+                                                 const Expr::Tag densityTag,
+                                                 const bool isConstDensity,
+                                                 GraphCategories& gc,
+                                                 WasatchCore::DualTimeMatrixInfo& dualTimeMatrixInfo)
   {
     EqnTimestepAdaptorBase* adaptor = nullptr;
     EquationBase* transeqn = nullptr;
@@ -107,6 +109,9 @@ namespace WasatchCore{
                                        isConstDensity,
                                        turbParams );
       adaptor = scinew EqnTimestepAdaptor< SVolField >( transeqn );
+
+      dualTimeMatrixInfo.add_scalar_equation( transeqn->solution_variable_tag(), transeqn->rhs_tag() );
+
     }
     else if( eqnLabel == "enthalpy" ){
       typedef EnthalpyTransportEquation TransEqn;
@@ -155,7 +160,9 @@ namespace WasatchCore{
                            Uintah::ProblemSpecP momentumParams,
                            const TurbulenceParameters& turbParams,
                            const Expr::Tag& densityTag,
-                           GraphCategories& gc )
+                           GraphCategories& gc,
+                           WasatchCore::DualTimeMatrixInfo& dualTimeMatrixInfo,
+                           const bool computeKineticsJacobian )
   {
 #   ifdef HAVE_POKITT
     if( turbParams.turbModelName != TurbulenceParameters::NOTURBULENCE ){
@@ -182,7 +189,9 @@ namespace WasatchCore{
                                     densityTag,
                                     velTags,
                                     TagNames::self().temperature,
-                                    gc );
+                                    gc,
+                                    dualTimeMatrixInfo,
+                                    computeKineticsJacobian );
 #   else
     // nothing to do - return empty equation set.
     std::vector<EqnTimestepAdaptorBase*> eqns;
@@ -308,15 +317,15 @@ namespace WasatchCore{
     bool use3DLaplacian = true;
     poissonEqParams->getWithDefault( "Use3DLaplacian",use3DLaplacian, true );
 
-    Uintah::SolverParameters* sparams = linSolver.readParameters( poissonEqParams, "" );
-    sparams->setSolveOnExtraCells( false );
-    sparams->setUseStencil4( true );
-    sparams->setOutputFileName( "WASATCH" );
+    linSolver.readParameters( poissonEqParams, "" );
+    linSolver.getParameters()->setSolveOnExtraCells( false );
+    linSolver.getParameters()->setUseStencil4( true );
+    linSolver.getParameters()->setOutputFileName( "WASATCH" );
 
     PoissonExpression::poissonTagList.push_back(poissonVariableTag);
 
-    Expr::ExpressionBuilder* pbuilder  = new PoissonExpression::Builder( poissontags, rhsTag, useRefPoint, refValue, refLocation, use3DLaplacian, *sparams, linSolver);
-    Expr::ExpressionBuilder* pbuilder1 = new PoissonExpression::Builder( poissontags, rhsTag, useRefPoint, refValue, refLocation, use3DLaplacian, *sparams, linSolver);
+    Expr::ExpressionBuilder* pbuilder  = new PoissonExpression::Builder( poissontags, rhsTag, useRefPoint, refValue, refLocation, use3DLaplacian, linSolver);
+    Expr::ExpressionBuilder* pbuilder1 = new PoissonExpression::Builder( poissontags, rhsTag, useRefPoint, refValue, refLocation, use3DLaplacian, linSolver);
 
     GraphHelper* const icgraphHelper  = gc[INITIALIZATION  ];
     GraphHelper* const slngraphHelper = gc[ADVANCE_SOLUTION];
@@ -358,7 +367,7 @@ namespace WasatchCore{
       }
     }
     else if( params->findBlock("DiscreteOrdinates") ){
-      Uintah::SolverParameters* sparams = linSolver.readParameters( params, "" );
+      linSolver.readParameters( params, "" );
 
       int order = 2;
       params->findBlock("DiscreteOrdinates")->getAttribute("order",order);
@@ -372,7 +381,7 @@ namespace WasatchCore{
         const OrdinateDirections::SVec& svec = discOrd.get_ordinate_information(i);
         const std::string intensity( "intensity_" + boost::lexical_cast<std::string>(i) );
         std::cout << "registering expression for " << intensity << std::endl;
-        DORadSolver::Builder* radSolver = new DORadSolver::Builder( intensity, svec, absCoefTag, scatCoef, tempTag, *sparams, linSolver );
+        DORadSolver::Builder* radSolver = new DORadSolver::Builder( intensity, svec, absCoefTag, scatCoef, tempTag, linSolver );
         const Expr::ExpressionID id = gh.exprFactory->register_expression( radSolver );
         gh.exprFactory->cleave_from_children( id );
         gh.exprFactory->cleave_from_parents ( id );
@@ -577,7 +586,9 @@ namespace WasatchCore{
                             const bool isConstDensity,
                             const Expr::Tag densityTag,
                             GraphCategories& gc,
-                            Uintah::SolverInterface& linSolver, Uintah::SimulationStateP& sharedState )
+                            Uintah::SolverInterface& linSolver,
+                            Uintah::SimulationStateP& sharedState,
+                            WasatchCore::DualTimeMatrixInfo& dualTimeMatrixInfo )
   {
     typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
     EquationAdaptors adaptors;
@@ -673,6 +684,12 @@ namespace WasatchCore{
         e0Tag = Expr::Tag(eTotalName, Expr::STATE_NONE);
       }
 
+      dualTimeMatrixInfo.density = densityTag;
+      dualTimeMatrixInfo.viscosity = viscTag;
+      dualTimeMatrixInfo.temperature = TagNames::self().temperature;
+      dualTimeMatrixInfo.pressure = TagNames::self().pressure;
+      dualTimeMatrixInfo.doCompressible = true;
+
       Expr::Tag xVelTag, yVelTag, zVelTag;
       if( doxvel && doxmom ) {
         proc0cout << "Setting up X momentum transport equation" << std::endl;
@@ -695,6 +712,10 @@ namespace WasatchCore{
         adaptors.push_back( scinew EqnTimestepAdaptor<SVolField>(momtranseq) );
 
         xVelTag = Expr::Tag(xvelname, Expr::STATE_NONE);
+
+        dualTimeMatrixInfo.doX = true;
+        dualTimeMatrixInfo.xVelocity = xVelTag;
+        dualTimeMatrixInfo.xMomentum = Expr::Tag( xmomname, Expr::STATE_DYNAMIC );
       }
 
       if( doyvel && doymom ){
@@ -717,6 +738,10 @@ namespace WasatchCore{
         adaptors.push_back( scinew EqnTimestepAdaptor<SVolField>(momtranseq) );
 
         yVelTag = Expr::Tag(yvelname, Expr::STATE_NONE);
+
+        dualTimeMatrixInfo.doY = true;
+        dualTimeMatrixInfo.yVelocity = yVelTag;
+        dualTimeMatrixInfo.yMomentum = Expr::Tag( ymomname, Expr::STATE_DYNAMIC );
       }
 
       if( dozvel && dozmom ){
@@ -738,6 +763,10 @@ namespace WasatchCore{
         adaptors.push_back( scinew EqnTimestepAdaptor<SVolField>(momtranseq) );
 
         zVelTag = Expr::Tag(zvelname, Expr::STATE_NONE);
+
+        dualTimeMatrixInfo.doZ = true;
+        dualTimeMatrixInfo.zVelocity = zVelTag;
+        dualTimeMatrixInfo.zMomentum = Expr::Tag( zmomname, Expr::STATE_DYNAMIC );
       }
 
 
@@ -767,7 +796,8 @@ namespace WasatchCore{
                                                                             bodyForceTags,
                                                                             viscTag,
                                                                             TagNames::self().dilatation,
-                                                                            turbParams );
+                                                                            turbParams,
+                                                                            dualTimeMatrixInfo );
       adaptors.push_back( scinew EqnTimestepAdaptor<SVolField>(totalEEq) );
 
     } // isCompressible

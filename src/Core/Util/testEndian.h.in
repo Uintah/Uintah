@@ -85,6 +85,7 @@ void swapbytes(Point &i);
 void swapbytes(Vector &i);
 void swapbytes(IntVector &i);
 void swapbytes(FILE* &i);
+void swapbytes(double* &i);
 
 bool isBigEndian();
 

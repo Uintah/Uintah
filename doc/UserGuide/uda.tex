@@ -96,13 +96,13 @@ The following example shows the usage of pscp2 for transferring 1.uda.000 from t
 
 %______________________________________________________________________
 \section{Make Master Uda}
-Make master UDA is a tool used to combine multiple UDAs. This will be useful when a simulation must be restarted multiple times and post processing is required. Instead of having to do post processing on each individual UDA, make master UDA will combine all of the UDAs to allow for continuous analysis of the simulation start to finish. In order for this to work the UDAs must be in sequential order, it does not mater what the UDA number is as long as they go in order.  This tool is found in /src/scripts/makeMasterUda.csh. When using this script it must be able to see /src/scripts/makeCombinedIndex.sh. This tool uses links to combine all of the UDAs, once the script is complete the original UDAs must stay were they are so the new master UDA can find the data. No changes will be made to the original UDAs.
+makeMasterUda\_index.csh is a script used to combine multiple udas. This is useful when a simulation must be restarted multiple times and post processing is required. Instead of having to do post processing on each individual uda, makeMasterUda\_index.csh will combine all of the udas to allow for continuous analysis of the simulation start to finish.  The script is located at: src/scripts/makeMasterUda\_index.csh and it depends on the helper script: src/scripts/makeCombinedIndex.sh. The original udas must not be moved or the  masterUda will not find the udas. No changes will be made to the original udas.
 \\
 The usage is 
 \begin{enumerate}
-  \item mkdir $<$masterUda$>$ This is where all of the UDAs will be linked together
-  \item cd $<$masterUda$>$
-  \item makeMasterUda.csh ../uda.000 ../uda.001 ../uda.00N
+\item mkdir $<$masterUda$>$ This is where all of the udas will be linked together
+\item cd $<$masterUda$>$
+\item makeMasterUda\_index.csh ../uda.000 ../uda.001 ../uda.00N
 \end{enumerate}
 
 %______________________________________________________________________

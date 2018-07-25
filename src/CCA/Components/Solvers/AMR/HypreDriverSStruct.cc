@@ -701,7 +701,7 @@ HypreDriverSStruct::HyprePatch_CC::makeInteriorVector(HYPRE_SStructVector& HV,
                                                       DataWarehouse* V_dw,
                                                       const VarLabel* V_label)
 {
-  CCTypes::const_type V;
+  CCTypes::const_double_type V;
   V_dw->get(V, V_label, _matl, _patch, Ghost::None, 0);
   
   for(int z = _low.z(); z <= _high.z(); z++) {
@@ -933,8 +933,8 @@ HypreDriverSStruct::HyprePatch_CC::getSolution(HYPRE_SStructVector& HX,
                                                const VarLabel* X_label,
                                                const bool modifies_x)
 {
-  typedef CCTypes::sol_type sol_type;
-  sol_type Xnew;
+  typedef CCTypes::double_type double_type;
+  double_type Xnew;
   if (modifies_x) {
     new_dw->getModifiable(Xnew, X_label, _matl, _patch);
   } else {

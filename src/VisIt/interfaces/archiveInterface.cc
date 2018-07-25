@@ -55,7 +55,7 @@
 using namespace Uintah;
 
 namespace {
-  Dout  dbgOut("VisItArchiveInterface", "VisIt", "Data archive interface to VisIt", false);
+  // Dout  dbgOut("VisItArchiveInterface", "VisIt", "Data archive interface to VisIt", false);
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -63,7 +63,7 @@ namespace {
 extern "C"
 DataArchive* openDataArchive(const std::string& input_uda_name)
 {
-  DOUT(dbgOut, "openDataArchive" );
+  // DOUT(dbgOut, "openDataArchive" );
   
   DataArchive *archive = scinew DataArchive(input_uda_name);
 
@@ -77,7 +77,7 @@ DataArchive* openDataArchive(const std::string& input_uda_name)
 extern "C"
 void closeDataArchive(DataArchive *archive)
 {
-  DOUT(dbgOut, "closeDataArchive" );
+  // DOUT(dbgOut, "closeDataArchive" );
 
   delete archive;
 }
@@ -93,7 +93,7 @@ GridP* getGrid(DataArchive *archive, int timeStepNo)
 {
   std::ostringstream msg;
   msg << std::left<< std::setw(50) << "getGrid "<< std::right <<" timestep: " << timeStepNo;
-  DOUT(dbgOut, msg.str() );
+  // DOUT(dbgOut, msg.str() );
   
   GridP *grid = new GridP(archive->queryGrid(timeStepNo));
   return grid;
@@ -105,7 +105,7 @@ GridP* getGrid(DataArchive *archive, int timeStepNo)
 extern "C"
 void releaseGrid(GridP *grid)
 {
-  DOUT(dbgOut, "releaseGrid" );
+  // DOUT(dbgOut, "releaseGrid" );
 
   delete grid;
 }
@@ -116,7 +116,7 @@ void releaseGrid(GridP *grid)
 extern "C"
 std::vector<double> getCycleTimes(DataArchive *archive)
 {
-  DOUT(dbgOut, "getCycleTimes" );
+  // DOUT(dbgOut, "getCycleTimes" );
 
   // Get the times and indices.
   std::vector<int> index;
@@ -141,17 +141,18 @@ TimeStepInfo* getTimeStepInfo(DataArchive *archive,
 {
   std::ostringstream msg;
   msg << std::left<< std::setw(50) << "getTimeStepInfo "<< std::right <<" timestep: " << timestep;
-  DOUT(dbgOut, msg.str() );
+  // DOUT(dbgOut, msg.str() );
   
   int numLevels = (*grid)->numLevels();
   TimeStepInfo *stepInfo = new TimeStepInfo();
   stepInfo->levelInfo.resize(numLevels);
 
   // Get the variable information from the archive.
-  std::vector<std::string> vars;
+  std::vector<std::string>                    vars;
   std::vector<const Uintah::TypeDescription*> types;
-  archive->queryVariables(vars, types);
-  stepInfo->varInfo.resize(vars.size());
+  std::vector<int>                            numMatls;
+  archive->queryVariables( vars, numMatls, types );
+  stepInfo->varInfo.resize( vars.size() );
 
   for (unsigned int i=0; i<vars.size(); ++i) {
     VariableInfo &varInfo = stepInfo->varInfo[i];
@@ -273,8 +274,8 @@ TimeStepInfo* getTimeStepInfo(DataArchive *archive,
       // Get the patch id
       patchInfo.setPatchId(patch->getID());
       
-      // Get the processor rank id
-      patchInfo.setProcRankId(archive->queryPatchwiseProcessor(patch, timestep));
+      // Get the processor id
+      patchInfo.setProcId(archive->queryPatchwiseProcessor(patch, timestep));
     }
   }
 
@@ -298,7 +299,7 @@ static GridDataRaw* readGridData(DataArchive *archive,
 {
   if( archive->exists( variable_name, patch, timestep ) )
   {
-    printTask( patch, dbgOut, "    readGridData", timestep, material, variable_name );
+    // printTask( patch, dbgOut, "    readGridData", timestep, material, variable_name );
    
     GridDataRaw *gd = new GridDataRaw;
     gd->components = numComponents<T>();
@@ -434,7 +435,7 @@ static GridDataRaw* readPatchData(DataArchive *archive,
 {
   if( archive->exists( variable_name, patch, timestep ) )
   {
-    printTask( patch, dbgOut, "    readPatchData ", timestep, material, variable_name );
+    // printTask( patch, dbgOut, "    readPatchData ", timestep, material, variable_name );
     
     GridDataRaw *gd = new GridDataRaw;
     gd->components = numComponents<T>();
@@ -499,8 +500,7 @@ GridDataRaw* getGridDataMainType(DataArchive *archive,
                                  LoadExtra loadExtraElements,
                                  const Uintah::TypeDescription *subtype)
 {
-  printTask( patch, dbgOut, "  getGridDataMainType", timestep, material, variable_name );
-
+  // printTask( patch, dbgOut, "  getGridDataMainType", timestep, material, variable_name );
 
   switch (subtype->getType()) {
   case Uintah::TypeDescription::double_type:
@@ -554,7 +554,7 @@ GridDataRaw* getPatchDataMainType(DataArchive *archive,
                                   const Uintah::TypeDescription *subtype)
 {
 
-  printTask( patch, dbgOut, "    getPatchDataMainType ", timestep, material, variable_name );
+  // printTask( patch, dbgOut, "    getPatchDataMainType ", timestep, material, variable_name );
   
   switch (subtype->getType())
   {
@@ -606,12 +606,13 @@ GridDataRaw* getGridData(DataArchive *archive,
   LevelP level = (*grid)->getLevel(level_i);
   const Patch *patch = level->getPatch(patch_i);
   
-  printTask( patch, dbgOut, "getGridData ", timestep, material, variable_name );
+  // printTask( patch, dbgOut, "getGridData ", timestep, material, variable_name );
 
   // Get variable type from the archive.
-  std::vector<std::string> vars;
+  std::vector<std::string>                    vars;
   std::vector<const Uintah::TypeDescription*> types;
-  archive->queryVariables(vars, types);
+  std::vector<int>                            numMatls;
+  archive->queryVariables( vars, numMatls, types );
 
   const Uintah::TypeDescription* maintype = nullptr;
   const Uintah::TypeDescription* subtype = nullptr;
@@ -677,15 +678,16 @@ extern "C"
 bool variableExists(DataArchive *archive,
                     std::string variable_name)
 {
-  DOUT(dbgOut, "  variableExists (" << variable_name << ")"  );
+  // DOUT(dbgOut, "  variableExists (" << variable_name << ")"  );
   
   // figure out what the type of the variable we're querying is
-  std::vector<std::string> vars;
+  std::vector<std::string>                    vars;
   std::vector<const Uintah::TypeDescription*> types;
-  archive->queryVariables(vars, types);
+  std::vector<int>                            numMatls;
+  archive->queryVariables( vars, numMatls, types );
 
   const Uintah::TypeDescription* maintype = nullptr;
-  const Uintah::TypeDescription* subtype = nullptr;
+  const Uintah::TypeDescription* subtype  = nullptr;
 
   for (unsigned int i=0; i<vars.size(); ++i) {
     if (vars[i] == variable_name) {
@@ -709,7 +711,8 @@ ParticleDataRaw* readParticleData(DataArchive *archive,
                                   int timestep)
 {
 
-  printTask( patch, dbgOut, "  readParticleData", timestep, material, variable_name );
+  // printTask( patch, dbgOut, "  readParticleData", timestep, material, variable_name );
+
   ParticleDataRaw *pd = new ParticleDataRaw;
   pd->components = numComponents<T>();
   pd->num = 0;
@@ -785,15 +788,16 @@ ParticleDataRaw* getParticleData(DataArchive *archive,
   LevelP level = (*grid)->getLevel(level_i);
   const Patch *patch = level->getPatch(patch_i);
 
-  printTask( patch, dbgOut, "getParticleData", timestep, material, variable_name );
+  // printTask( patch, dbgOut, "getParticleData", timestep, material, variable_name );
   
   // figure out what the type of the variable we're querying is
-  std::vector<std::string> vars;
+  std::vector<std::string>                    vars;
   std::vector<const Uintah::TypeDescription*> types;
-  archive->queryVariables(vars, types);
+  std::vector<int>                            numMatls;
+  archive->queryVariables( vars, numMatls, types );
 
   const Uintah::TypeDescription* maintype = nullptr;
-  const Uintah::TypeDescription* subtype = nullptr;
+  const Uintah::TypeDescription* subtype  = nullptr;
 
   for (unsigned int i=0; i<vars.size(); ++i) {
     if (vars[i] == variable_name) {
@@ -937,10 +941,11 @@ void setFineLevelPatchExtraCells(const Patch* finePatch,
     fl = Uintah::Max(fl, fL_l);
     fh = Uintah::Min(fh, fL_h); 
     
-    DOUT(dbgOut, " face " << face << " refineRatio "<< refineRatio
-        << " BC type " << finePatch->getBCType(face)
-        << " FineLevel iterator" << fl << " " << fh 
-        << " \t coarseLevel iterator " << cl << " " << ch << "\n" );
+    // DOUT(dbgOut, " face " << face << " refineRatio "<< refineRatio
+    //     << " BC type " << finePatch->getBCType(face)
+    //     << " FineLevel iterator" << fl << " " << fh 
+    //     << " \t coarseLevel iterator " << cl << " " << ch << "\n" );
+
     //__________________________________
     // Pull coarse level data from archive
     VAR<T> Q_CL;

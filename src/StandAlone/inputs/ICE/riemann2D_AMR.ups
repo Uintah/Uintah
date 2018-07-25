@@ -143,6 +143,7 @@
   <save label="mag_grad_temp_CC"/>
   <save label="mag_div_vel_CC"/>
   <save label="refineFlag"/>
+  <checkpoint timestepInterval="10" cycle="2"/>
 </DataArchiver>
 
 

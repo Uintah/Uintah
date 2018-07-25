@@ -159,6 +159,7 @@ WALE::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   constCCVariable<double>& vol_fraction = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_volFraction_name);
 
   IsI.initialize(0.0);
+  mu_sgc.initialize(0.0);
   const Vector Dx = patch->dCell();
   const double delta = pow(Dx.x()*Dx.y()*Dx.z(),1./3.);
 

@@ -738,8 +738,9 @@ int main( int argc, char *argv[], char *env[] )
     SolverInterface * solver = SolverFactory::create( ups, world, solverName );
 
     UintahParallelComponent* solverComp = dynamic_cast<UintahParallelComponent*>(solver);
-
+    
     appComp->attachPort( "solver", solver );
+    solverComp->attachPort( "application", application );
 
     //__________________________________
     // Load balancer

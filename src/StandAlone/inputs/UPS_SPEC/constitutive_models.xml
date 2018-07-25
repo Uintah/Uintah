@@ -38,7 +38,8 @@
                                                                              ArenaSoil, 
                                                                              camclay, 
                                                                              TongeRameshPTR, 
-                                                                             rf_elastic_plastic'">
+                                                                             rf_elastic_plastic,
+                                                                             ArrudaBoyce8'">
     <A                             spec="OPTIONAL DOUBLE" />
     <allow_no_tension              spec="OPTIONAL BOOLEAN" />
     <alpha                         spec="OPTIONAL DOUBLE" />
@@ -53,6 +54,7 @@
     <To                            spec="OPTIONAL DOUBLE" />
     <vo                            spec="OPTIONAL DOUBLE" />
     <L                             spec="OPTIONAL DOUBLE" />
+    <beta                          spec="OPTIONAL DOUBLE" />
     <Beta                          spec="OPTIONAL DOUBLE" />
     <bulk_modulus                  spec="OPTIONAL DOUBLE" />
     <bulkPrime                     spec="OPTIONAL DOUBLE" />
@@ -89,7 +91,6 @@
     <CrackPowerValue               spec="OPTIONAL DOUBLE" />
     <critical_porosity             spec="OPTIONAL DOUBLE" />
     <critical_stress               spec="OPTIONAL DOUBLE" />
-    <damage_cutoff                 spec="OPTIONAL DOUBLE" />
     
     <deviatoric_stress_model       spec="OPTIONAL NO_DATA"
                                         attribute1="type REQUIRED STRING 'hypoElastic, hypoViscoElastic'"

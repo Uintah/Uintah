@@ -405,7 +405,8 @@ DQMOMEqn::problemSetup( const ProblemSpecP& inputdb )
 //---------------------------------------------------------------------------
 void
 DQMOMEqn::sched_evalTransportEqn( const LevelP& level,
-                                  SchedulerP& sched, int timeSubStep )
+                                  SchedulerP& sched, int timeSubStep, 
+                                  EQN_BUILD_PHASE phase )
 {
 
   if (timeSubStep == 0) {

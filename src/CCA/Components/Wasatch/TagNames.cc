@@ -33,10 +33,11 @@ namespace WasatchCore{
   
   time          ( "time"    , Expr::STATE_NONE ),
   dt            ( "dt"      , Expr::STATE_NONE ),  // physical timestep size
-  ds            ( "ds"      , Expr::STATE_NONE ),  // dual timestep size
   timestep      ( "timestep", Expr::STATE_NONE ),  // timestep counter
   rkstage       ( "rkstage" , Expr::STATE_NONE ),
   stableTimestep( "StableDT", Expr::STATE_NONE ),
+
+  dualTimeStepSize( "dualTimeStepSize", Expr::STATE_NONE ),  // dual timestep size
   
   celltype("CellType", Expr::STATE_NONE),
   

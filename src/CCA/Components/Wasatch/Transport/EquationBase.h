@@ -45,9 +45,9 @@
 
 namespace WasatchCore{
 
-  class ExprDeps;  // forward declaration.
-  class GraphHelper;
-  class WasatchBCHelper;
+  class  ExprDeps;  // forward declaration.
+  class  WasatchBCHelper;
+  struct GraphHelper;
   /**
    *  \ingroup WasatchCore
    *  \class  EquationBase

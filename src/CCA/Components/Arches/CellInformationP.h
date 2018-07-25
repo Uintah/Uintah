@@ -37,22 +37,23 @@ template<class T> class Handle;
 class CellInformation;
 typedef Handle<CellInformation> CellInformationP;
 
+  void swapbytes( Uintah::CellInformationP& );
+  
+  // Note the general template for SoleVariable::readNormal will not
+  // recognize the swapbytes correctly. So specialize it here.
+  // Somewhat moot because the swapbytes for hypre_solver_structP is
+  // not implemented.
   template<>
   inline void PerPatch<CellInformationP>::readNormal(std::istream& in, bool swapBytes)
   {
-    // Note if swap bytes for CellInformationP is implemente then this
-    // template specialization can be deleted as the general template
-    // will work.
-    SCI_THROW(InternalError("Swap bytes for CellInformationP is not implemented", __FILE__, __LINE__));
-
     ssize_t linesize = (ssize_t)(sizeof(CellInformationP));
     
     CellInformationP val;
     
     in.read((char*) &val, linesize);
     
-    // if (swapBytes)
-    //   Uintah::swapbytes(val);
+    if (swapBytes)
+      Uintah::swapbytes(val);
     
     value = std::make_shared<CellInformationP>(val);
   }

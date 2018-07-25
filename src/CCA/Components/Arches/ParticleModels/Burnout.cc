@@ -126,7 +126,7 @@ Burnout::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   } // environment loop
   Uintah::parallel_for( range, [&](int i, int j, int k){
 
-    burnout(i,j,k) = 1.0 - vol_frac(i,j,k)*(numerator_sum(i,j,k) / (denominator_sum(i,j,k) + 1e-100)); 
+    burnout(i,j,k) = vol_frac(i,j,k)*(numerator_sum(i,j,k) / (denominator_sum(i,j,k) + 1e-100)); 
   
   });
 }

@@ -1104,9 +1104,9 @@ ExplicitSolver::computeStableTimeStep(const ProcessorGroup*,
 }
 
 void
-ExplicitSolver::initialize( const LevelP     & level,
+ExplicitSolver::sched_initialize( const LevelP& level,
                                   SchedulerP & sched,
-                            const bool         doing_restart )
+                                  const bool doing_restart )
 {
 
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
@@ -1119,6 +1119,11 @@ ExplicitSolver::initialize( const LevelP     & level,
 
     //formerly known as paramInit
     sched_initializeVariables( level, sched );
+
+
+    // initialize hypre variables
+    d_pressSolver->scheduleInitialize( level, sched, matls);
+
 
     //------------------ New Task Interface (start) ------------------------------------------------
 
@@ -1137,8 +1142,9 @@ ExplicitSolver::initialize( const LevelP     & level,
     const bool dont_pack_tasks = false;
     TaskFactoryBase::TaskMap all_tasks;
 
-    //utility factory
-    _task_factory_map["utility_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
+//utility factory
+// _task_factory_map["utility_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
+_task_factory_map["utility_factory"]->schedule_task_group( "base_tasks", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
 
     //transport factory
     //  initialize
@@ -1291,6 +1297,8 @@ ExplicitSolver::initialize( const LevelP     & level,
 
     d_boundaryCondition->sched_create_radiation_temperature( sched, level, matls, false );
 
+    // Utility Factory : Balance Terms computation
+    _task_factory_map["utility_factory"]->schedule_task_group( "mass_flow_rate", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
   }
 
 }
@@ -1375,6 +1383,9 @@ ExplicitSolver::sched_restartInitialize( const LevelP& level, SchedulerP& sched 
 
   //Arches only currently solves on the finest level
   if ( !level->hasFinerLevel() ){
+
+    // initialize hypre variables
+    d_pressSolver->scheduleRestartInitialize( level, sched, matls);
 
     d_boundaryCondition->sched_setupBCInletVelocities( sched, level, matls, doingRestart ,false);
 
@@ -1559,11 +1570,11 @@ ExplicitSolver::allocateAndInitializeToC( const VarLabel* label,
     dw->allocateAndPut( var, label, index, patch );
     var.initialize(0.0);
   } else if ( type_desc == SFCYVariable<double>::getTypeDescription() ){
-    SFCXVariable<double> var;
+    SFCYVariable<double> var;
     dw->allocateAndPut( var, label, index, patch );
     var.initialize(0.0);
   } else if ( type_desc == SFCZVariable<double>::getTypeDescription() ){
-    SFCXVariable<double> var;
+    SFCZVariable<double> var;
     dw->allocateAndPut( var, label, index, patch );
     var.initialize(0.0);
   } else {
@@ -1584,8 +1595,8 @@ ExplicitSolver::checkMomBCs( SchedulerP& sched,
 // ****************************************************************************
 // Schedule non linear solve and carry out some actual operations
 // ****************************************************************************
-int ExplicitSolver::nonlinearSolve(const LevelP& level,
-                                   SchedulerP& sched)
+int ExplicitSolver::sched_nonlinearSolve(const LevelP& level,
+                                         SchedulerP& sched)
 {
 
   const PatchSet* patches = level->eachPatch();
@@ -1722,7 +1733,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
           DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
 
-          dqmom_eqn->sched_evalTransportEqn( level, sched, curr_level );//compute rhs
+          dqmom_eqn->sched_evalTransportEqn( level, sched, curr_level, EqnBase::DOALL );//compute rhs
         }
 
         for ( DQMOMEqnFactory::EqnMap::iterator iEqn = abscissas_eqns.begin();
@@ -1730,7 +1741,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
           DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
 
-          dqmom_eqn->sched_evalTransportEqn( level, sched, curr_level );//compute rhs
+          dqmom_eqn->sched_evalTransportEqn( level, sched, curr_level, EqnBase::DOALL );//compute rhs
         }
 
 
@@ -1870,7 +1881,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
              iEqn != moment_eqns.end(); iEqn++){
 
           CQMOMEqn* cqmom_eqn = dynamic_cast<CQMOMEqn*>(iEqn->second);
-          cqmom_eqn->sched_evalTransportEqn( level, sched, curr_level );
+          cqmom_eqn->sched_evalTransportEqn( level, sched, curr_level, EqnBase::DOALL );
 
         }
         //get new weights and absicissa
@@ -1941,10 +1952,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
 
     // STAGE 0
-
-    SourceTermFactory& src_factory = SourceTermFactory::self();
-
-    src_factory.sched_computeSources( level, sched, curr_level, 0 );
+    //these equations use a density guess
 
     sched_saveTempCopies(sched, patches, matls,d_timeIntegratorLabels[curr_level]);
 
@@ -1960,14 +1968,29 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     sched_checkDensityGuess(sched, patches, matls,
                                       d_timeIntegratorLabels[curr_level]);
 
-    for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
+    for (auto iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
 
       EqnBase* eqn = iter->second;
-      //these equations use a density guess
+
       if ( eqn->get_stage() == 0 )
-        eqn->sched_evalTransportEqn( level, sched, curr_level );
+        eqn->sched_evalTransportEqn( level, sched, curr_level, EqnBase::CONVDIFF );
 
     }
+
+    SourceTermFactory& src_factory = SourceTermFactory::self();
+
+    src_factory.sched_computeSources( level, sched, curr_level, 0 );
+
+    for (auto iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
+
+      EqnBase* eqn = iter->second;
+      if ( eqn->get_stage() == 0 ){
+        eqn->sched_evalTransportEqn( level, sched, curr_level, EqnBase::ADDSOURCES );
+        eqn->sched_evalTransportEqn( level, sched, curr_level, EqnBase::UPDATE );
+      }
+
+    }
+
 
     // Property models needed before table lookup:
     PropertyModelBase* hl_model = 0;
@@ -2016,14 +2039,25 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     }
 
-    // Source terms needed after table lookup:
+    for (auto iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
+
+      EqnBase* eqn = iter->second;
+
+      if ( eqn->get_stage() == 1 )
+        eqn->sched_evalTransportEqn( level, sched, curr_level, EqnBase::CONVDIFF );
+
+    }
+
     src_factory.sched_computeSources( level, sched, curr_level, 1 );
 
-    for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
+    for (auto iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
+
       EqnBase* eqn = iter->second;
-      //these equations do not use a density guess
-      if ( eqn->get_stage() == 1 )
-        eqn->sched_evalTransportEqn( level, sched, curr_level );
+      if ( eqn->get_stage() == 1 ){
+        eqn->sched_evalTransportEqn( level, sched, curr_level, EqnBase::ADDSOURCES );
+        eqn->sched_evalTransportEqn( level, sched, curr_level, EqnBase::UPDATE );
+      }
+
     }
 
     sched_computeDensityLag(sched, patches, matls,
@@ -2099,13 +2133,25 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     //STAGE 2
 
-    // Source terms needed after second table lookup:
+    for (auto iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
+
+      EqnBase* eqn = iter->second;
+
+      if ( eqn->get_stage() == 2 )
+        eqn->sched_evalTransportEqn( level, sched, curr_level, EqnBase::CONVDIFF );
+
+    }
+
     src_factory.sched_computeSources( level, sched, curr_level, 2 );
 
-    for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
+    for (auto iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
+
       EqnBase* eqn = iter->second;
-      if ( eqn->get_stage() == 2 )
-        eqn->sched_evalTransportEqn( level, sched, curr_level );
+      if ( eqn->get_stage() == 2 ){
+        eqn->sched_evalTransportEqn( level, sched, curr_level, EqnBase::ADDSOURCES );
+        eqn->sched_evalTransportEqn( level, sched, curr_level, EqnBase::UPDATE );
+      }
+
     }
 
     for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
@@ -2185,6 +2231,12 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
   //variable math:
   const std::vector<std::string> math_tasks = i_util->second->retrieve_tasks_by_type("variable_math");
   i_util->second->schedule_task_group("all_math_tasks", math_tasks, TaskInterface::TIMESTEP_EVAL,
+    dont_pack_tasks,
+    level, sched, matls, 0 );
+
+  // massFlowRate
+  const std::vector<std::string> flowRate_tasks = i_util->second->retrieve_tasks_by_type("mass_flow_rate");
+  i_util->second->schedule_task_group("all_flowRate_tasks", flowRate_tasks, TaskInterface::TIMESTEP_EVAL,
     dont_pack_tasks,
     level, sched, matls, 0 );
 

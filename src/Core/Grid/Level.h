@@ -109,7 +109,7 @@ public:
   const_patch_iterator patchesEnd() const;
   patch_iterator       patchesEnd();
 
-  const Patch* getPatch( int index ) const { return m_real_patches[index]; }
+  const Patch* getPatch( int index ) const { return m_real_patches[ index ]; }
 
   // go through the virtual ones too
   const_patch_iterator allPatchesBegin() const;
@@ -158,7 +158,12 @@ public:
       
   int numPatches() const;
   long totalCells() const;
-  long getTotalCellsInRegion(const IntVector& lowIndex, const IntVector& highIndex) const;
+  
+  long getTotalCellsInRegion(const TypeDescription::Type varType,
+                             const IntVector& boundaryLayer,
+                             const IntVector& lowIndex, 
+                             const IntVector& highIndex) const;
+                             
   IntVector nCellsPatch_max() const;
 
   void getSpatialRange( BBox & b ) const { b.extend(m_spatial_range); };

@@ -39,6 +39,18 @@ Uintah::UintahXML::validateType( const string & stringValue, CheckType type )
   //__________________________________
   //  Make sure stringValue only contains valid characters
   switch( type ) {
+  case UINT_TYPE :
+    {
+      string validChars(" 0123456789");
+      string::size_type  pos = stringValue.find_first_not_of(validChars);
+      if( pos != string::npos ){
+        ostringstream warn;
+        warn << "Bad Integer string: Found '"<< stringValue[pos]
+             << "' in the string \""<< stringValue<< "\" at position " << pos << ".\n";
+        throw ProblemSetupException(warn.str(), __FILE__, __LINE__,true);
+      }
+    }
+    break;
   case INT_TYPE :
     {
       string validChars(" -0123456789");

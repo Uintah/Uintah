@@ -275,17 +275,19 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
     areGridsEqual(uda_grid.get_rep(), grid.get_rep());
 
 
-    // do the variables exist
+    // Do the variables exist?
     vector<string> vars;
+    vector<int> num_matls;
     vector<const Uintah::TypeDescription*> types;
 
-    archive->queryVariables(vars, types);
+    archive->queryVariables( vars, num_matls, types );
     int vars_found = 0;
 
     for (unsigned int i = 0; i < vars.size(); i++) {
       if (d_old_uda->abskgName == vars[i]) {
         vars_found +=1;
-      } else if (d_old_uda->temperatureName == vars[i]){
+      }
+      else if (d_old_uda->temperatureName == vars[i]){
         vars_found +=1;
       }
     }
@@ -847,10 +849,11 @@ void RMCRT_Test::initializeWithUda (const ProcessorGroup*,
   // must take that into account.
   // Determine what type (float/double) the variables were saved as
   vector<string> vars;
+  vector<int> num_matls;
   vector<const Uintah::TypeDescription*> types;
   const Uintah::TypeDescription* subType = nullptr;
 
-  archive->queryVariables(vars, types);
+  archive->queryVariables( vars, num_matls, types );
 
   for (unsigned int i = 0; i < vars.size(); i++) {
     if (d_old_uda->abskgName == vars[i]) {

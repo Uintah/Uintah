@@ -74,6 +74,16 @@ public:
 
 
   //______________________________________________________________________
+  // used to create hypre objects.
+  void scheduleInitialize( const LevelP& level, 
+                           SchedulerP& sched, 
+                           const MaterialSet* matls);
+                           
+  void scheduleRestartInitialize( const LevelP& level, 
+                                  SchedulerP& sched, 
+                                  const MaterialSet* matls);
+
+  //______________________________________________________________________
   //  Task that is called by Arches and constains scheduling of other tasks
   void sched_solve( const LevelP& level, SchedulerP&,
                     const TimeIntegratorLabel* timelabels,
@@ -219,7 +229,6 @@ private:
   bool d_enforceSolvability;
 
   SolverInterface* d_hypreSolver;
-  SolverParameters* d_hypreSolver_parameters;
 
   std::vector<std::string> d_new_sources;
   std::map<std::string, double> d_source_weights;

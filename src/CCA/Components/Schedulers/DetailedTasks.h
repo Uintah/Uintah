@@ -99,11 +99,11 @@ class DetailedTasks {
 
 public:
 
-  DetailedTasks(       SchedulerCommon * sc
-               , const ProcessorGroup  * pg
-               , const TaskGraph       * taskgraph
-               , const std::set<int>   & neighborhood_processors
-               ,       bool              mustConsiderInternalDependencies = false
+  DetailedTasks(       SchedulerCommon         * sc
+               , const ProcessorGroup          * pg
+               , const TaskGraph               * taskgraph
+               , const std::unordered_set<int> & neighborhood_processors
+               ,       bool                      mustConsiderInternalDependencies = false
                );
 
   ~DetailedTasks();

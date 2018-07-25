@@ -221,8 +221,6 @@ namespace Coal{
     const Expr::Tag     co2CoRatioTag = char_->co2coratio_tag();
     const Expr::Tag     o2RHSTag      = char_->gas_species_src_tag(CHAR::O2);
 
-    const double mwChar = gas_->atomicWeight( gas_->elementIndex("C") );
-
     const StringNames& sNames = StringNames::self();
 
     typedef typename Expr::LinearFunction  <FieldT>::Builder LinFunBuilder;

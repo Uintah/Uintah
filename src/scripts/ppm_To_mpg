@@ -7,19 +7,45 @@
 #   The user can resize the movie and/or add labels to the header/footer.
 #
 #__________________________________
-# bulletproofinG
-set tmp = (`which display` `which convert` `which composite` `which ffmpeg`)
+
+unalias rm
+unalias cp
+unalias mv
+
+#  Does ffmpeg or avconv exist?
+set FFMPEG = "none"
+which ffmpeg >& /dev/null
+set rc = $status
+which avconv >& /dev/null
+set rc1 = $status
+
+if ( $rc == "0"  ) then
+  set FFMPEG = 'ffmpeg'
+else if ( $rc1 == "0" ) then
+  set FFMPEG = 'avconv'
+endif
+
+if ( $FFMPEG == "none" ) then
+  echo " ERROR: Could not find one of the commands"
+  echo "    ffmpeg  or avconv"
+  echo "  ... now exiting"
+  exit(0)
+endif
+
+
+#__________________________________
+#  Do the other commands exist
+set tmp = (`which display` `which convert` `which composite`)
 
 if ( $status ) then
   echo " ERROR: Could not find one of the following image processing commands"
   echo "    display"
   echo "    convert"
   echo "    composite"
-  echo "    ffmpeg"
   exit(0)
 endif
 
-# check if there was a file basename  specified
+# check if there was a file basename specified
 set imageName = movie
 if ( $#argv > 0 ) then
   set imageName = $1
@@ -29,9 +55,6 @@ endif
 set firstFrame = "$imageName.0000.*"
 set orgExt  = `echo $firstFrame | awk -F. '{print $3 }'`
 
-unalias rm
-unalias cp
-unalias mv
 set ans = "n"
 
 #__________________________________
@@ -230,12 +253,12 @@ endif
 # make the movies
 echo "___________________________________"
 echo "Now making the movie"
-echo "ffmpeg  -r $playBackSpeed -i %d.$EXT -r 30 -qscale 1 $imageName.$movieFormat"
+echo "$FFMPEG  -r $playBackSpeed -i %d.$EXT -r 30 -qscale 1 $imageName.$movieFormat"
 
 rm movie.mpeg
-ffmpeg -r $playBackSpeed -i %d.$EXT -r 30 -qscale 1 $imageName.$movieFormat
+$FFMPEG -r $playBackSpeed -i %d.$EXT -r 30 -qscale 1 $imageName.$movieFormat
 
-#ffmpeg -mbd rd -flags +trell -cmp 2 -subcmp 2 -g 100 -pass 1/2 -s $size -r $playBackSpeed -i %d.a.$EXT -r 30 movie.mpeg
+#$FFMPEG -mbd rd -flags +trell -cmp 2 -subcmp 2 -g 100 -pass 1/2 -s $size -r $playBackSpeed -i %d.a.$EXT -r 30 movie.mpeg
 
 
 #__________________________________

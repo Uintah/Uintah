@@ -52,7 +52,6 @@ namespace WasatchCore {
                                         const double     refPhiValue,
                                         const Uintah::IntVector refPhiLocation,
                                         const bool       use3DLaplacian,
-                                        const Uintah::SolverParameters& solverParams,
                                         Uintah::SolverInterface& solver )
   : Expr::Expression<SVolField>(),
     phit_   (phiTag),
@@ -73,7 +72,6 @@ namespace WasatchCore {
 
     use3DLaplacian_( use3DLaplacian ),
 
-    solverParams_( solverParams ),
     solver_( solver ),
 
     // note that this does not provide any ghost entries in the matrix...
@@ -108,7 +106,7 @@ namespace WasatchCore {
                            phiLabel_, true,
                            phirhsLabel_, Uintah::Task::NewDW,
                            isDoingInitialization ? 0 : phiLabel_, RKStage == 1 ? Uintah::Task::OldDW : Uintah::Task::NewDW,
-                           &solverParams_,RKStage == 1 ? true:false );
+                           RKStage == 1 ? true:false );
   }
 
   //--------------------------------------------------------------------
@@ -281,7 +279,6 @@ namespace WasatchCore {
                                        const double     refPhiValue,
                                        const Uintah::IntVector refPhiLocation,
                                        const bool       use3dlaplacian,
-                                       const Uintah::SolverParameters& sparams,
                                        Uintah::SolverInterface& solver )
   : ExpressionBuilder(results),
     phirhst_( phiRHSTag ),
@@ -289,7 +286,6 @@ namespace WasatchCore {
     refphivalue_ ( refPhiValue ),
     refphilocation_ ( refPhiLocation ),
     use3dlaplacian_( use3dlaplacian ),
-    sparams_( sparams ),
     solver_( solver )
   {}
 
@@ -302,7 +298,7 @@ namespace WasatchCore {
 
     return new PoissonExpression( phitags[0], phitags[1], phirhst_, userefphi_,
                         refphivalue_, refphilocation_, use3dlaplacian_,
-                        sparams_, solver_ );
+                        solver_ );
   }
 
   Expr::TagList PoissonExpression::poissonTagList = Expr::TagList();

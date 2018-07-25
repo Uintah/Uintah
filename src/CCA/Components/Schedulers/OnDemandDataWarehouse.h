@@ -428,17 +428,17 @@ class OnDemandDataWarehouse : public DataWarehouse {
                         int matlIndex,
                         const Patch* patch);
 #if HAVE_PIDX
-     void emitPIDX(PIDXOutputContext&, 
-                      const VarLabel* label, 
-                      int matlIndex,
-                      const Patch* patch, 
-                      unsigned char *pidx_buffer,
-                      size_t pidx_bufferSize);
+     void emitPIDX(       PIDXOutputContext & context, 
+                    const VarLabel          * label, 
+                          int                 matlIndex,
+                    const Patch             * patch, 
+                          unsigned char     * pidx_buffer,
+                          size_t              pidx_bufferSize );
 #endif
-    void exchangeParticleQuantities( DetailedTasks    * dts,
-                                     LoadBalancer * lb,
-                                     const VarLabel   * pos_var,
-                                     int              iteration );
+    void exchangeParticleQuantities(       DetailedTasks * dts,
+                                           LoadBalancer  * lb,
+                                     const VarLabel      * pos_var,
+                                           int             iteration );
 
     void sendMPI( DependencyBatch       * batch,
                   const VarLabel        * pos_var,
@@ -485,8 +485,6 @@ class OnDemandDataWarehouse : public DataWarehouse {
     virtual void abortTimestep();
 
     virtual void restartTimestep();
-
-    virtual void setRestarted() { d_hasRestarted = true; }
 
    struct ValidNeighbors {
      GridVariableBase* validNeighbor;
@@ -636,6 +634,11 @@ class OnDemandDataWarehouse : public DataWarehouse {
     void printDebuggingPutInfo( const VarLabel* label,
                                 int matlIndex,
                                 const Patch* patch,
+                                int line);
+                                
+    void printDebuggingPutInfo( const VarLabel* label,
+                                int matlIndex,
+                                const Level* level,
                                 int line);
                        
                        

@@ -166,8 +166,8 @@ public:
       specEnums_ ( get_produced_species( devModel )                   ),
       gas_       ( CanteraObjects::get_gasmix()                       ),
       mwChar_    ( gas_->atomicWeight   ( gas_->elementIndex("C"  ) ) ),
-      mwCO2_     ( gas_->molecularWeight( gas_->speciesIndex("CO2") ) ),
       mwH2O_     ( gas_->molecularWeight( gas_->speciesIndex("H2O") ) ),
+      mwCO2_     ( gas_->molecularWeight( gas_->speciesIndex("CO2") ) ),
       mwCO_      ( gas_->molecularWeight( gas_->speciesIndex("CO" ) ) ),
       mwH2_      ( gas_->molecularWeight( gas_->speciesIndex("H2" ) ) ),
       nSpec_     ( specTagMap_.size()                                 )

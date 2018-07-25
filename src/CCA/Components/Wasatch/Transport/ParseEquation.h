@@ -39,6 +39,8 @@
 
 namespace WasatchCore{
   
+  class DualTimeMatrixInfo;  // forward declaration
+
   class EquationBase;
 
   /**
@@ -52,6 +54,7 @@ namespace WasatchCore{
    *         otherwise it will be an empty tag.
    *  \param isConstDensity true if density is constant
    *  \param gc the GraphCategories.
+   *  \param dualTimeMatrixInfo stores dual time matrix information (tags).
    *
    *  \return an EqnTimestepAdaptorBase object that can be used to
    *          plug this transport equation into a TimeStepper.
@@ -61,7 +64,8 @@ namespace WasatchCore{
                          TurbulenceParameters turbParams,
                          const Expr::Tag densityTag,
                          const bool isConstDensity,
-                         GraphCategories& gc );
+                         GraphCategories& gc,
+                         WasatchCore::DualTimeMatrixInfo& dualTimeMatrixInfo );
 
   /**
    *  \brief Build the momentum equation specified by "params"
@@ -90,6 +94,7 @@ namespace WasatchCore{
    *  \param gc The GraphCategories.
    *  \param linSolver
    *  \param sharedState
+   *  \param dualTimeMatrixInfo stores dual time matrix information (tags).
    *
    *  \return an EqnTimestepAdaptorBase object that can be used to
    *          plug this transport equation into a TimeStepper.
@@ -103,7 +108,8 @@ namespace WasatchCore{
                             const Expr::Tag densityTag,
                             GraphCategories& gc,
                             Uintah::SolverInterface& linSolver,
-                            Uintah::SimulationStateP& sharedState );
+                            Uintah::SimulationStateP& sharedState,
+                            WasatchCore::DualTimeMatrixInfo& dualTimeMatrixInfo );
 
   void parse_poisson_equation( Uintah::ProblemSpecP params,
                                GraphCategories& gc,
@@ -122,7 +128,9 @@ namespace WasatchCore{
                            Uintah::ProblemSpecP momentumParams,
                            const TurbulenceParameters& turbParams,
                            const Expr::Tag& densityTag,
-                           GraphCategories& gc );
+                           GraphCategories& gc,
+                           WasatchCore::DualTimeMatrixInfo& dualTimeMatrixInfo,
+                           bool computeKineticsJacobian );
 
   std::vector<EqnTimestepAdaptorBase*>
   parse_tar_and_soot_equations( Uintah::ProblemSpecP params,

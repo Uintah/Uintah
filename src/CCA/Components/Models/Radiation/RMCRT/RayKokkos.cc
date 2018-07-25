@@ -52,7 +52,7 @@
 // To enable comparisons with Ray:GPU, define FIXED_RANDOM_NUM both here and in src/CCA/Components/Models/Radiation/RMCRT/RayGPUKernel.cu
 
 #define DEBUG -9          // 1: divQ, 2: boundFlux, 3: scattering
-#define FIXED_RANDOM_NUM  // Enable comparisons between implementations
+//#define FIXED_RANDOM_NUM  // Enable comparisons between implementations
 #define FIXED_RAY_DIR -9  // Sets ray direction.  1: (0.7071,0.7071, 0), 2: (0.7071, 0, 0.7071), 3: (0, 0.7071, 0.7071)
                           //                      4: (0.7071, 0.7071, 7071), 5: (1,0,0)  6: (0, 1, 0),   7: (0,0,1)
 #define SIGN 1            // Multiply the FIXED_RAY_DIRs by value

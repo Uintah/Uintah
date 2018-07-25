@@ -471,9 +471,17 @@ endif
        #
 	rm -f $(patsubst %,%/*~, $(ALLOBJSUBDIRS))
        #
-       # this catches anything that slipped through
-	@( find CCA/Components -name "*.o" -exec rm -f {} \;)
-	@( find CCA/Components -name "*.d" -exec rm -f {} \;)
+       # This catches anything that slipped through
+	@( find CCA/           -name "*.o" -exec rm -f {} \;)
+	@( find CCA/           -name "*.d" -exec rm -f {} \;)
+	@( find testprograms   -name "*.o" -exec rm -f {} \;)
+	@( find testprograms   -name "*.d" -exec rm -f {} \;)
+	@( find Core           -name "*.o" -exec rm -f {} \;)
+	@( find Core           -name "*.d" -exec rm -f {} \;)
+	@( find StandAlone     -name "*.o" -exec rm -f {} \;)
+	@( find StandAlone     -name "*.d" -exec rm -f {} \;) 
+	@( find VisIt          -name "*.o" -exec rm -f {} \;)
+	@( find VisIt          -name "*.d" -exec rm -f {} \;)
        #
        # Remove all libraries and executables
 	rm -f $(CLEANLIBS)

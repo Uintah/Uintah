@@ -32,13 +32,15 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Util/DOUT.hpp>
 
+#include <iomanip>
+#include <sstream>
+
 using namespace Uintah;
 
 
 namespace Uintah {
   extern Dout g_task_dbg;
   extern Dout g_task_order;
-  extern Dout g_exec_out;
 }
 
 namespace {
@@ -259,8 +261,20 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/
       numTasksDone++;
 
       if (g_task_order && d_myworld->myRank() == d_myworld->nRanks() / 2) {
-        DOUT(true, d_myworld->myRank() << " Running task static order: " << task->getStaticOrder() << " , scheduled order: " << numTasksDone);
+        std::ostringstream task_name;
+        task_name << "  Running task: \"" << task->getTask()->getName() << "\" ";
+
+        std::ostringstream task_type;
+        task_type << "(" << task->getTask()->getType() << ") ";
+
+        // task ordering debug info - please keep this here, APH 05/30/18
+        DOUT(true, "Rank-" << d_myworld->myRank()
+                           << std::setw(60) << std::left << task_name.str()
+                           << std::setw(14) << std::left << task_type.str()
+                           << std::setw(15) << " static order: "    << std::setw(3) << std::left << task->getStaticOrder()
+                           << std::setw(18) << " scheduled order: " << std::setw(3) << std::left << numTasksDone);
       }
+
       phaseTasksDone[task->getTask()->m_phase]++;
     } 
 
@@ -291,9 +305,22 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/
       ASSERT(reducetask->getTask()->m_phase == currphase);
 
       numTasksDone++;
+
+      // task ordering debug info - please keep this here, APH 05/30/18
       if (g_task_order && d_myworld->myRank() == d_myworld->nRanks() / 2) {
-        DOUT(true, d_myworld->myRank() << " Running task static order: " << reducetask->getStaticOrder() << " , scheduled order: " << numTasksDone);
+        std::ostringstream task_name;
+        task_name << "  Running task: \"" << reducetask->getTask()->getName() << "\" ";
+
+        std::ostringstream task_type;
+        task_type << "(" << reducetask->getTask()->getType() << ") ";
+
+        DOUT(true, "Rank-" << d_myworld->myRank()
+                           << std::setw(60) << std::left << task_name.str()
+                           << std::setw(14) << std::left << task_type.str()
+                           << std::setw(15) << " static order: "    << std::setw(3) << std::left << reducetask->getStaticOrder()
+                           << std::setw(18) << " scheduled order: " << std::setw(3) << std::left << numTasksDone);
       }
+
       phaseTasksDone[reducetask->getTask()->m_phase]++;
     }
 
@@ -350,22 +377,6 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/
 
   ASSERT(m_sends.size() == 0u);
   ASSERT(m_recvs.size() == 0u);
-
-
-  // Copy the restart flag to all processors
-  if (m_restartable && tgnum == static_cast<int>(m_task_graphs.size()) - 1) {
-    int myrestart = m_dws[m_dws.size() - 1]->timestepRestarted();
-    int netrestart;
-
-    Uintah::MPI::Allreduce(&myrestart, &netrestart, 1, MPI_INT, MPI_LOR, d_myworld->getComm());
-
-    if (netrestart) {
-      m_dws[m_dws.size() - 1]->restartTimestep();
-      if (m_dws[0]) {
-        m_dws[0]->setRestarted();
-      }
-    }
-  }
 
   finalizeTimestep();
   

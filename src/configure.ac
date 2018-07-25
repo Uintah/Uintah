@@ -1586,41 +1586,6 @@ EOF
     ;;
 esac
 
-
-#########################################################################
-##
-##  Add the -fopenmp flag
-##
-
-cat > conftest-openmp.cc <<EOF
-
-#include <iostream>
-
-int main()
-{
-  double a=1;
-  double b=.01;
-}
-EOF
-
-# Verify that the compiler accepts the -fopenmp flag:
-$CXX $CXXFLAGS -fopenmp conftest-openmp.cc -o conftest-openmp 2>&5
-
-if test $? = 0; then
-   if test "$IS_OSX" = "no"; then
-      add_important_warning "Automatically added -fopenmp compiler option to C/CXXFLAGS."
-      CFLAGS="$CFLAGS -fopenmp"
-      CXXFLAGS="$CXXFLAGS -fopenmp"
-   else
-      add_important_warning "On Mac: Not adding the openmp compiler option (-fopenmp) to C/CXXFLAGS."
-   fi
-else
-   rm -f conftest-openmp conftest-openmp.cc
-   AC_MSG_WARN( Tried to add the -fopenmp flag but the compiler ($CXX) failed to accept it...\n )
-fi
-
-rm -f conftest-openmp conftest-openmp.cc
-
 #########################################################################
 ##
 ## search for Zoltan
@@ -4052,7 +4017,7 @@ if test "$build_pidx_lib" != "no"; then
   _sci_inc=`$sci_pwd`/$PIDX_DIR/install/include
   _sci_optional=required
 
-  SCI_TRY_LINK(PIDX,pidx library and headers,PIDX.h,$_sci_inc $INC_MPI_H,$MPI_LIB_FLAG pidx,$MPI_LIB_DIR_FLAG $_sci_lib,-DMPIPP_H,,$_sci_optional)
+  SCI_TRY_LINK(PIDX,pidx library and headers,PIDX.h,$_sci_inc $INC_MPI_H,$MPI_LIB_FLAG pidx zfp,$MPI_LIB_DIR_FLAG $_sci_lib,-DMPIPP_H,,$_sci_optional)
 
 fi
 
@@ -4070,7 +4035,7 @@ if test "$with_pidx" != NOT_SET; then
   BASE_LIB_PATH(_sci_lib,$_sci_lib)
   _sci_optional=required
 
-  SCI_TRY_LINK(PIDX,pidx library and headers,PIDX.h,$_sci_inc $INC_MPI_H,$MPI_LIB_FLAG pidx,$MPI_LIB_DIR_FLAG $_sci_lib,-DMPIPP_H,,$_sci_optional)
+  SCI_TRY_LINK(PIDX,pidx library and headers,PIDX.h,$_sci_inc $INC_MPI_H,$MPI_LIB_FLAG pidx zfp,$MPI_LIB_DIR_FLAG $_sci_lib,-DMPIPP_H,,$_sci_optional)
 
 fi
 
@@ -4103,15 +4068,6 @@ if test "$with_boost" != NOT_SET; then
    elif test "$with_boost" != "/usr"; then
       # Do not put /usr in the path, it is automatically there.
 
-      if test "$USING_GCC" = "yes" -o "$USING_ICC" = "yes"; then
-         # If configure specifies a boost dir, then ignore the system dirs to avoid 
-         # finding the wrong version of boost.  I know that "--sysroot" works with gcc and icc...
-
-	if test "$IS_OSX" = "no"; then
-         ignore_sys_libs="--sysroot=/junk"
-	fi
-      fi
-
       BOOST_INCLUDE_DIR=$with_boost/include
       BOOST_LIBRARY_DIR=$with_boost/lib
    fi
@@ -4130,7 +4086,21 @@ if test "$with_boost_library" != NOT_SET -o "$with_boost_include" != NOT_SET; th
    BOOST_LIBRARY_DIR=$with_boost_library
 fi
 
+
 if test "$with_boost" != NOT_SET -o "$with_boost_library" != NOT_SET; then
+
+  # If configure specifies a boost dir, then ignore the system dirs to avoid 
+  # finding the wrong version of boost.  I know that "--sysroot" works with gcc and icc...
+  # but does not work on osx...
+  # Note: [[[ (in configure.ac) is necessary because autoconf strips out one "["
+
+  if [[[ "$IS_OSX" = "no" ]]]; then
+      # The outdated gcc environment that we are forced to use on ALCF's mira (BGQ) machine
+      # does not support the "sysroot" flag.
+      if [[[ "$USING_ICC" = "yes" ]]] || ( [[[ "$USING_GCC" = "yes" ]]] && [[[ `hostname` != mira* ]]] ); then
+          ignore_sys_libs="--sysroot=/junk"
+      fi
+  fi
 
   _boost_incl="boost/signal.hpp boost/shared_ptr.hpp boost/bind.hpp boost/signal.hpp boost/ref.hpp boost/graph/adjacency_list.hpp boost/graph/graph_traits.hpp boost/graph/topological_sort.hpp boost/graph/graphviz.hpp boost/graph/breadth_first_search.hpp boost/graph/visitors.hpp boost/graph/transpose_graph.hpp boost/any.hpp boost/filesystem.hpp"
 
@@ -4284,7 +4254,7 @@ if test "$build_wasatch_3p" != "no"; then
     components=$build_wasatch_3p
   fi
 
-  $path_to_src/build_scripts/build_wasatch_3p.sh `$sci_pwd` $components "$BOOST_LIBRARY_DIR" "$BOOST_INCLUDE_DIR" "$debug" "$IS_STATIC_BUILD" "$sci_required_cuda"
+  $path_to_src/build_scripts/build_wasatch_3p.sh `$sci_pwd` $components "$BOOST_LIBRARY_DIR" "$BOOST_INCLUDE_DIR" "$debug" "$IS_STATIC_BUILD" "$sci_required_cuda" "$with_cuda"
 
   if test $? != 0; then
      AC_MSG_ERROR( Failed to build Wasatch 3p libraries... )

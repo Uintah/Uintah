@@ -63,7 +63,6 @@ namespace {
   DebugStream rgtimes{ "RGTimesLevel", "Grid_Level", "Grid regridder debug stream", false };  
 }
 
-
 //______________________________________________________________________
 //
 Level::Level(       Grid      * grid
@@ -312,7 +311,9 @@ Level::findNodeIndexRange( IntVector & lowIndex, IntVector & highIndex ) const
 
 //______________________________________________________________________
 //
-void Level::findCellIndexRange( IntVector & lowIndex, IntVector & highIndex ) const
+
+void
+Level::findCellIndexRange( IntVector & lowIndex, IntVector & highIndex ) const
 {
   Vector l = (m_spatial_range.min() - m_anchor) / m_dcell;
   Vector h = (m_spatial_range.max() - m_anchor) / m_dcell;
@@ -345,16 +346,19 @@ void Level::findInteriorNodeIndexRange( IntVector & lowIndex, IntVector & highIn
 
 //______________________________________________________________________
 //  Compute the variable extents for this variable type
-void Level::computeVariableExtents( const TypeDescription::Type TD
-                                  , IntVector & lo
-                                  , IntVector & hi
-                                  ) const
+void
+Level::computeVariableExtents( const TypeDescription::Type   type
+                               ,     IntVector             & lo
+                               ,     IntVector             & hi ) const
 {
   IntVector CCLo;
   IntVector CCHi;
-  findCellIndexRange(CCLo, CCHi);
+  findCellIndexRange( CCLo, CCHi );
 
-  switch (TD) {
+  // Fix me: better way to calc this var? Or to use it below?
+  IntVector not_periodic( !m_periodic_boundaries[0], !m_periodic_boundaries[1], !m_periodic_boundaries[2] );
+
+  switch( type ) {
     case TypeDescription::CCVariable :
     case TypeDescription::ParticleVariable :
       lo = CCLo;
@@ -362,21 +366,22 @@ void Level::computeVariableExtents( const TypeDescription::Type TD
       break;
     case TypeDescription::SFCXVariable :
       lo = CCLo;
-      hi = CCHi + IntVector(1, 0, 0);
+      hi = CCHi + ( IntVector(1, 0, 0) * not_periodic );
       break;
     case TypeDescription::SFCYVariable :
       lo = CCLo;
-      hi = CCHi + IntVector(0, 1, 0);
+      hi = CCHi + ( IntVector(0, 1, 0) * not_periodic );
       break;
     case TypeDescription::SFCZVariable :
       lo = CCLo;
-      hi = CCHi + IntVector(0, 0, 1);
+      hi = CCHi + ( IntVector(0, 0, 1) * not_periodic );
       break;
     case TypeDescription::NCVariable :
+      // Dav's fix: findInteriorCellIndexRange( lo, hi );
       findNodeIndexRange(lo, hi);
       break;
     default :
-      std::string me = TypeDescription::toString( TD );
+      std::string me = TypeDescription::toString( type );
       throw InternalError("  ERROR: Level::computeVariableExtents type description (" + me + ") not supported", __FILE__, __LINE__);
   }
 }
@@ -392,7 +397,10 @@ Level::totalCells() const
 //______________________________________________________________________
 //
 long
-Level::getTotalCellsInRegion(const IntVector& lowIndex, const IntVector& highIndex) const {
+Level::getTotalCellsInRegion(const TypeDescription::Type varType,
+                             const IntVector& boundaryLayer,
+                             const IntVector& lowIndex, 
+                             const IntVector& highIndex) const {
 
   // Not all simulations are cubic.  Some simulations might be L shaped, or T shaped, or + shaped, etc.
   // It is not enough to simply do a high - low to figure out the amount of simulation cells.  We instead
@@ -406,9 +414,11 @@ Level::getTotalCellsInRegion(const IntVector& lowIndex, const IntVector& highInd
     return cellsInRegion;
   }
 
+  Patch::VariableBasis basis = Patch::translateTypeToBasis(varType, false);
+  
   for( int i = 0; i < (int)m_real_patches.size(); i++ ) {
-    IntVector patchLow  =  m_real_patches[i]->getExtraCellLowIndex();
-    IntVector patchHigh =  m_real_patches[i]->getExtraCellHighIndex();
+    IntVector patchLow  =  m_real_patches[i]->getExtraLowIndex(  basis, boundaryLayer );
+    IntVector patchHigh =  m_real_patches[i]->getExtraHighIndex( basis, boundaryLayer );
 
     if( doesIntersect(lowIndex, highIndex, patchLow, patchHigh) ){
 

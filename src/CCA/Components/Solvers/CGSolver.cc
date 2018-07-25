@@ -219,37 +219,11 @@ void ScMult_Add(Array3<double>& r, double s,
 
 namespace Uintah {
 
-CGSolver::CGSolver(const ProcessorGroup* myworld)
-  : SolverCommon(myworld)
-{
-}
 
-CGSolver::~CGSolver()
-{
-}
+//______________________________________________________________________
+//
 
-class CGSolverParams : public SolverParameters {
-public:
-  double tolerance;
-  double initial_tolerance;
-  int maxiterations;
-
-  enum Norm {
-    L1, L2, LInfinity
-  };
-  Norm norm;
-  enum Criteria {
-    Absolute, Relative
-  };
-  Criteria criteria;
-  CGSolverParams()
-    : tolerance(1.e-8), initial_tolerance(1.e-15), norm(L2), criteria(Relative)
-  {
-  }
-  ~CGSolverParams() {}
-};
-
-template<class Types>
+template<class GridVarType>
 class CGStencil7 : public RefCounted {
 public:
   CGStencil7(Scheduler* sched, const ProcessorGroup* world, const Level* level,
@@ -295,13 +269,13 @@ public:
     default:
       throw ProblemSetupException("Unknown data warehouse for initial guess", __FILE__, __LINE__);
     }
-    typedef typename Types::sol_type sol_type;
-    R_label     = VarLabel::create(A->getName()+" R", sol_type::getTypeDescription());
-    D_label     = VarLabel::create(A->getName()+" D", sol_type::getTypeDescription());
-    Q_label     = VarLabel::create(A->getName()+" Q", sol_type::getTypeDescription());
+    typedef typename GridVarType::double_type double_type;
+    R_label     = VarLabel::create(A->getName()+" R", double_type::getTypeDescription());
+    D_label     = VarLabel::create(A->getName()+" D", double_type::getTypeDescription());
+    Q_label     = VarLabel::create(A->getName()+" Q", double_type::getTypeDescription());
     d_label     = VarLabel::create(A->getName()+" d", sum_vartype::getTypeDescription());
     aden_label = VarLabel::create(A->getName()+" aden", sum_vartype::getTypeDescription());
-    diag_label = VarLabel::create(A->getName()+" inverse diagonal", sol_type::getTypeDescription());
+    diag_label = VarLabel::create(A->getName()+" inverse diagonal", double_type::getTypeDescription());
 
     tolerance_label = VarLabel::create("tolerance", sum_vartype::getTypeDescription());
 
@@ -353,17 +327,17 @@ public:
       for(int m = 0;m<matls->size();m++){
         int matl = matls->get(m);
 
-        typename Types::sol_type Q;
+        typename GridVarType::double_type Q;
         new_dw->allocateAndPut(Q, Q_label, matl, patch);
 
-        typename Types::matrix_type A;
+        typename GridVarType::matrix_type A;
         A_dw->get(A, A_label, matl, patch, Ghost::None, 0);
 
-        typename Types::const_type D;
+        typename GridVarType::const_double_type D;
         old_dw->get(D, D_label, matl, patch, Around, 1);
 
-        typedef typename Types::sol_type sol_type;
-        Patch::VariableBasis basis = Patch::translateTypeToBasis(sol_type::getTypeDescription()->getType(), true);
+        typedef typename GridVarType::double_type double_type;
+        Patch::VariableBasis basis = Patch::translateTypeToBasis(double_type::getTypeDescription()->getType(), true);
 
         IntVector l,h;
         if(params->getSolveOnExtraCells())
@@ -415,8 +389,8 @@ public:
         cout_doing << "CGSolver::step2 on patch" << patch->getID()<<endl;
       for(int m = 0;m<matls->size();m++){
         int matl = matls->get(m);
-        typedef typename Types::sol_type sol_type;
-        Patch::VariableBasis basis = Patch::translateTypeToBasis(sol_type::getTypeDescription()->getType(), true);
+        typedef typename GridVarType::double_type double_type;
+        Patch::VariableBasis basis = Patch::translateTypeToBasis(double_type::getTypeDescription()->getType(), true);
 
         IntVector l,h;
         if(params->getSolveOnExtraCells())
@@ -432,17 +406,17 @@ public:
         CellIterator iter(l, h);
 
         // Step 2 - requires d(old), aden(new) D(old), X(old) R(old)  computes X, R, Q, d
-        typename Types::const_type D;
+        typename GridVarType::const_double_type D;
         old_dw->get(D, D_label, matl, patch, Ghost::None, 0);
 
-        typename Types::const_type X, R, diagonal;
+        typename GridVarType::const_double_type X, R, diagonal;
         old_dw->get(X, X_label, matl, patch, Ghost::None, 0);
         old_dw->get(R, R_label, matl, patch, Ghost::None, 0);
         old_dw->get(diagonal, diag_label, matl, patch, Ghost::None, 0);
-        typename Types::sol_type Xnew, Rnew;
+        typename GridVarType::double_type Xnew, Rnew;
         new_dw->allocateAndPut(Xnew, X_label, matl, patch, Ghost::None, 0);
         new_dw->allocateAndPut(Rnew, R_label, matl, patch, Ghost::None, 0);
-        typename Types::sol_type Q;
+        typename GridVarType::double_type Q;
         new_dw->getModifiable(Q, Q_label, matl, patch);
 
         sum_vartype aden;
@@ -504,8 +478,8 @@ public:
         cout_doing << "CGSolver::step3 on patch" << patch->getID()<<endl;
       for(int m = 0;m<matls->size();m++){
         int matl = matls->get(m);
-        typedef typename Types::sol_type sol_type;
-        Patch::VariableBasis basis = Patch::translateTypeToBasis(sol_type::getTypeDescription()->getType(), true);
+        typedef typename GridVarType::double_type double_type;
+        Patch::VariableBasis basis = Patch::translateTypeToBasis(double_type::getTypeDescription()->getType(), true);
 
         IntVector l,h;
         if(params->getSolveOnExtraCells())
@@ -523,17 +497,17 @@ public:
         sum_vartype dnew, dold;
         old_dw->get(dold, d_label);
         new_dw->get(dnew, d_label);
-        typename Types::const_type Q;
+        typename GridVarType::const_double_type Q;
         new_dw->get(Q, Q_label, matl, patch, Ghost::None, 0);
 
-        typename Types::const_type D;
+        typename GridVarType::const_double_type D;
         old_dw->get(D, D_label, matl, patch, Ghost::None, 0);
 
         // Step 3 - requires D(old), Q(new), d(new), d(old), computes D
         double b=dnew/dold;
 
         // D = b*D+Q
-        typename Types::sol_type Dnew;
+        typename GridVarType::double_type Dnew;
         new_dw->allocateAndPut(Dnew, D_label, matl, patch, Ghost::None, 0);
         long64 flops = 0;
         long64 memrefs = 0;
@@ -558,8 +532,8 @@ public:
 
       for(int m = 0;m<matls->size();m++){
         int matl = matls->get(m);
-        typedef typename Types::sol_type sol_type;
-        Patch::VariableBasis basis = Patch::translateTypeToBasis(sol_type::getTypeDescription()->getType(), true);
+        typedef typename GridVarType::double_type double_type;
+        Patch::VariableBasis basis = Patch::translateTypeToBasis(double_type::getTypeDescription()->getType(), true);
 
         IntVector l,h;
         if(params->getSolveOnExtraCells())
@@ -574,19 +548,19 @@ public:
         }
         CellIterator iter(l, h);
 
-        typename Types::sol_type R, Xnew, diagonal;
+        typename GridVarType::double_type R, Xnew, diagonal;
         new_dw->allocateAndPut(R, R_label, matl, patch);
         new_dw->allocateAndPut(Xnew, X_label, matl, patch);
         new_dw->allocateAndPut(diagonal, diag_label, matl, patch);
-        typename Types::const_type B;
-        typename Types::matrix_type A;
+        typename GridVarType::const_double_type B;
+        typename GridVarType::matrix_type A;
         b_dw->get(B, B_label, matl, patch, Ghost::None, 0);
         A_dw->get(A, A_label, matl, patch, Ghost::None, 0);
 
         long64 flops = 0;
         long64 memrefs = 0;
         if(guess_label){
-          typename Types::const_type X;
+          typename GridVarType::const_double_type X;
           guess_dw->get(X, guess_label, matl, patch, Around, 1);
 
           // R = A*X
@@ -612,7 +586,7 @@ public:
         }
 
         // D = R/Ap
-        typename Types::sol_type D;
+        typename GridVarType::double_type D;
         new_dw->allocateAndPut(D, D_label, matl, patch);
 
         ::InverseDiagonal(diagonal, A, iter, flops, memrefs);
@@ -656,7 +630,7 @@ public:
   void solve(const ProcessorGroup* pg, const PatchSubset* patches,
              const MaterialSubset* matls,
              DataWarehouse* old_dw, DataWarehouse* new_dw,
-             Handle<CGStencil7<Types> >)
+             Handle<CGStencil7<GridVarType> >)
   {
     if(cout_doing.active())
       cout_doing << "CGSolver::solve" << endl;
@@ -687,7 +661,7 @@ public:
     // Schedule the setup
     if(cout_doing.active())
       cout_doing << "CGSolver::schedule setup" << endl;
-    Task* task = scinew Task("CGSolver: schedule setup", this, &CGStencil7<Types>::setup);
+    Task* task = scinew Task("CGSolver: schedule setup", this, &CGStencil7<GridVarType>::setup);
     task->requires(parent_which_b_dw, B_label, Ghost::None, 0);
     task->requires(parent_which_A_dw, A_label, Ghost::None, 0);
     if(guess_label)
@@ -755,7 +729,7 @@ public:
       // Step 1 - requires A(parent), D(old, 1 ghost) computes aden(new)
       if(cout_doing.active())
         cout_doing << "CGSolver::schedule Step 1" << endl;
-      task = scinew Task("CGSolver: schedule step1", this, &CGStencil7<Types>::step1);
+      task = scinew Task("CGSolver: schedule step1", this, &CGStencil7<GridVarType>::step1);
       task->requires(parent_which_A_dw, A_label, Ghost::None, 0);
       task->requires(Task::OldDW,       D_label, Around, 1);
       task->computes(aden_label);
@@ -769,7 +743,7 @@ public:
       // Step 2 - requires d(old), aden(new) D(old), X(old) R(old)  computes X, R, Q, d
       if(cout_doing.active())
         cout_doing << "CGSolver::schedule Step 2" << endl;
-      task = scinew Task("CGSolver: schedule step2", this, &CGStencil7<Types>::step2);
+      task = scinew Task("CGSolver: schedule step2", this, &CGStencil7<GridVarType>::step2);
       task->requires(Task::OldDW, d_label);
       task->requires(Task::NewDW, aden_label);
       task->requires(Task::OldDW, D_label,    Ghost::None, 0);
@@ -794,7 +768,7 @@ public:
       // Step 3 - requires D(old), Q(new), d(new), d(old), computes D
       if(cout_doing.active())
         cout_doing << "CGSolver::schedule Step 3" << endl;
-      task = scinew Task("CGSolver: schedule step3", this, &CGStencil7<Types>::step3);
+      task = scinew Task("CGSolver: schedule step3", this, &CGStencil7<GridVarType>::step3);
       task->requires(Task::OldDW, D_label, Ghost::None, 0);
       task->requires(Task::NewDW, Q_label, Ghost::None, 0);
       task->requires(Task::NewDW, d_label);
@@ -850,8 +824,8 @@ public:
         const Patch* patch = patches->get(p);
         for(int m = 0;m<matls->size();m++){
           int matl = matls->get(m);
-          typedef typename Types::sol_type sol_type;
-          Patch::VariableBasis basis = Patch::translateTypeToBasis(sol_type::getTypeDescription()->getType(), true);
+          typedef typename GridVarType::double_type double_type;
+          Patch::VariableBasis basis = Patch::translateTypeToBasis(double_type::getTypeDescription()->getType(), true);
 
           IntVector l,h;
           if(params->getSolveOnExtraCells())
@@ -866,8 +840,8 @@ public:
           }
           CellIterator iter(l, h);
 
-          typename Types::sol_type Xnew;
-          typename Types::const_type X;
+          typename GridVarType::double_type Xnew;
+          typename GridVarType::const_double_type X;
           new_dw->getModifiable(Xnew, X_label, matl, patch);
 
           subsched->get_dw(3)->get(X, X_label, matl, patch, Ghost::None, 0);
@@ -938,41 +912,55 @@ private:
   const CGSolverParams* params;
   bool modifies_x;
 };
+
 //______________________________________________________________________
 //
-SolverParameters* CGSolver::readParameters(ProblemSpecP& params,
-                                           const string& varname)
+//______________________________________________________________________
+//
+CGSolver::CGSolver(const ProcessorGroup* myworld)
+  : SolverCommon(myworld)
 {
+  m_params = scinew CGSolverParams();
+}
 
-  CGSolverParams* p = new CGSolverParams();
-  if(params){
-    for(ProblemSpecP param = params->findBlock("Parameters"); param != nullptr; param = param->findNextBlock("Parameters")) {
+CGSolver::~CGSolver()
+{
+  delete m_params;
+}
+
+//______________________________________________________________________
+//
+void CGSolver::readParameters(ProblemSpecP& params_ps,
+                              const string& varname)
+{
+  if(params_ps){
+    for(ProblemSpecP param_ps = params_ps->findBlock("Parameters"); param_ps != nullptr; param_ps = param_ps->findNextBlock("Parameters")) {
       string variable;
-      if(param->getAttribute("variable", variable) && variable != varname) {
+      if(param_ps->getAttribute("variable", variable) && variable != varname) {
         continue;
       }
-      param->get("initial_tolerance", p->initial_tolerance);
-      param->get("tolerance", p->tolerance);
-      param->getWithDefault ("maxiterations",   p->maxiterations,  75);
+      param_ps->get("initial_tolerance",           m_params->initial_tolerance);
+      param_ps->get("tolerance",                   m_params->tolerance);
+      param_ps->getWithDefault ("maxiterations",   m_params->maxiterations,  75);
 
       string norm;
-      if(param->get("norm", norm)){
+      if(param_ps->get("norm", norm)){
         if(norm == "L1" || norm == "l1") {
-          p->norm = CGSolverParams::L1;
+          m_params->norm = CGSolverParams::L1;
         } else if(norm == "L2" || norm == "l2") {
-          p->norm = CGSolverParams::L2;
+          m_params->norm = CGSolverParams::L2;
         } else if(norm == "LInfinity" || norm == "linfinity") {
-          p->norm = CGSolverParams::LInfinity;
+          m_params->norm = CGSolverParams::LInfinity;
         } else {
           throw ProblemSetupException("Unknown norm type: "+norm, __FILE__, __LINE__);
         }
       }
       string criteria;
-      if(param->get("criteria", criteria)){
+      if(param_ps->get("criteria", criteria)){
         if(criteria == "Absolute" || criteria == "absolute") {
-          p->criteria = CGSolverParams::Absolute;
+          m_params->criteria = CGSolverParams::Absolute;
         } else if(criteria == "Relative" || criteria == "relative") {
-          p->criteria = CGSolverParams::Relative;
+          m_params->criteria = CGSolverParams::Relative;
         } else {
           throw ProblemSetupException("Unknown criteria: "+criteria, __FILE__, __LINE__);
         }
@@ -980,9 +968,9 @@ SolverParameters* CGSolver::readParameters(ProblemSpecP& params,
     }
   }
 
-  if(p->norm == CGSolverParams::L2)
-    p->tolerance *= p->tolerance;
-  return p;
+  if(m_params->norm == CGSolverParams::L2){
+    m_params->tolerance *= m_params->tolerance;
+  }
 }
 
 //______________________________________________________________________
@@ -994,7 +982,6 @@ void CGSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
                              bool modifies_x,
                              const VarLabel* b,    Task::WhichDW which_b_dw,
                              const VarLabel* guess,Task::WhichDW which_guess_dw,
-                             const SolverParameters* params,
                              bool isFirstSolve)
 {
   Task* task;
@@ -1005,17 +992,14 @@ void CGSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
   TypeDescription::Type domtype = A->typeDescription()->getType();
   ASSERTEQ(domtype, x->typeDescription()->getType());
   ASSERTEQ(domtype, b->typeDescription()->getType());
-  const CGSolverParams* cgparams = dynamic_cast<const CGSolverParams*>(params);
-  if(!cgparams)
-    throw InternalError("Wrong type of params passed to cg solver!", __FILE__, __LINE__);
-
+  
   Ghost::GhostType Around;
 
   switch(domtype){
   case TypeDescription::SFCXVariable:
     {
       Around = Ghost::AroundFaces;
-      CGStencil7<SFCXTypes>* that = scinew CGStencil7<SFCXTypes>(sched.get_rep(), d_myworld, level.get_rep(), matls, Around, A, which_A_dw, x, modifies_x, b, which_b_dw, guess, which_guess_dw, cgparams);
+      CGStencil7<SFCXTypes>* that = scinew CGStencil7<SFCXTypes>(sched.get_rep(), d_myworld, level.get_rep(), matls, Around, A, which_A_dw, x, modifies_x, b, which_b_dw, guess, which_guess_dw, m_params);
       Handle<CGStencil7<SFCXTypes> > handle = that;
       task = scinew Task("CGSolver::Matrix solve(SFCX)", that, &CGStencil7<SFCXTypes>::solve, handle);
     }
@@ -1023,7 +1007,7 @@ void CGSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
   case TypeDescription::SFCYVariable:
     {
       Around = Ghost::AroundFaces;
-      CGStencil7<SFCYTypes>* that = scinew CGStencil7<SFCYTypes>(sched.get_rep(), d_myworld, level.get_rep(), matls, Around, A, which_A_dw, x, modifies_x, b, which_b_dw, guess, which_guess_dw, cgparams);
+      CGStencil7<SFCYTypes>* that = scinew CGStencil7<SFCYTypes>(sched.get_rep(), d_myworld, level.get_rep(), matls, Around, A, which_A_dw, x, modifies_x, b, which_b_dw, guess, which_guess_dw, m_params);
       Handle<CGStencil7<SFCYTypes> > handle = that;
       task = scinew Task("CGSolver::Matrix solve(SFCY)", that, &CGStencil7<SFCYTypes>::solve, handle);
     }
@@ -1031,7 +1015,7 @@ void CGSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
   case TypeDescription::SFCZVariable:
     {
       Around = Ghost::AroundFaces;
-      CGStencil7<SFCZTypes>* that = scinew CGStencil7<SFCZTypes>(sched.get_rep(), d_myworld, level.get_rep(), matls, Around, A, which_A_dw, x, modifies_x, b, which_b_dw, guess, which_guess_dw, cgparams);
+      CGStencil7<SFCZTypes>* that = scinew CGStencil7<SFCZTypes>(sched.get_rep(), d_myworld, level.get_rep(), matls, Around, A, which_A_dw, x, modifies_x, b, which_b_dw, guess, which_guess_dw, m_params);
       Handle<CGStencil7<SFCZTypes> > handle = that;
       task = scinew Task("CGSolver::Matrix solve(SFCZ)", that, &CGStencil7<SFCZTypes>::solve, handle);
     }
@@ -1039,7 +1023,7 @@ void CGSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
   case TypeDescription::CCVariable:
     {
       Around = Ghost::AroundCells;
-      CGStencil7<CCTypes>* that = scinew CGStencil7<CCTypes>(sched.get_rep(), d_myworld, level.get_rep(), matls, Around, A, which_A_dw, x, modifies_x, b, which_b_dw, guess, which_guess_dw, cgparams);
+      CGStencil7<CCTypes>* that = scinew CGStencil7<CCTypes>(sched.get_rep(), d_myworld, level.get_rep(), matls, Around, A, which_A_dw, x, modifies_x, b, which_b_dw, guess, which_guess_dw, m_params);
       Handle<CGStencil7<CCTypes> > handle = that;
       task = scinew Task("CGSolver::Matrix solve(CC)", that, &CGStencil7<CCTypes>::solve, handle);
     }
@@ -1047,7 +1031,7 @@ void CGSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
   case TypeDescription::NCVariable:
     {
       Around = Ghost::AroundNodes;
-      CGStencil7<NCTypes>* that = scinew CGStencil7<NCTypes>(sched.get_rep(), d_myworld, level.get_rep(), matls, Around, A, which_A_dw, x, modifies_x, b, which_b_dw, guess, which_guess_dw, cgparams);
+      CGStencil7<NCTypes>* that = scinew CGStencil7<NCTypes>(sched.get_rep(), d_myworld, level.get_rep(), matls, Around, A, which_A_dw, x, modifies_x, b, which_b_dw, guess, which_guess_dw, m_params);
       Handle<CGStencil7<NCTypes> > handle = that;
       task = scinew Task("CGSolver::Matrix solve(NC)", that, &CGStencil7<NCTypes>::solve, handle);
     }

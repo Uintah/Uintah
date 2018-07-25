@@ -64,7 +64,6 @@ Pressure::Pressure( const std::string& pressureName,
                     const bool       use3DLaplacian,
                     const bool       enforceSolvability,
                     const bool isConstDensity,
-                    Uintah::SolverParameters& solverParams,
                     Uintah::SolverInterface& solver)
   : Expr::Expression<SVolField>(),
     volFracTag_(volfractag),
@@ -89,7 +88,6 @@ Pressure::Pressure( const std::string& pressureName,
     enforceSolvability_(enforceSolvability),
     isConstDensity_(isConstDensity),
 
-    solverParams_( solverParams ),
     solver_( solver ),
 
     // note that this does not provide any ghost entries in the matrix...
@@ -135,7 +133,7 @@ Pressure::schedule_solver( const Uintah::LevelP& level,
                          pressureLabel_, true,
                          prhsLabel_, Uintah::Task::NewDW,
                          pressureLabel_, RKStage == 1 ? Uintah::Task::OldDW : Uintah::Task::NewDW,
-                         &solverParams_, RKStage == 1 ? true:false);
+                          RKStage == 1 ? true:false);
   if(useRefPressure_) {
     solver_.scheduleSetReferenceValue<WasatchCore::SelectUintahFieldType<SVolField>::type >(level, sched, materials, pressureLabel_, RKStage, refPressureLocation_, refPressureValue_);
   }
@@ -421,7 +419,7 @@ Pressure::evaluate()
   std::ostringstream strs;
   strs << "_timestep_"<< (int) tstep[0] << "_rkstage_"<< rkStage_ << "_patch";
 
-  solverParams_.setOutputFileName( "_WASATCH" + strs.str() );
+  solver_.getParameters()->setOutputFileName( "_WASATCH" + strs.str() );
 
   // NOTE THE NEGATIVE SIGN! SINCE WE ARE USING CG SOLVER, WE MUST SOLVE FOR
   // - Laplacian(p) = - p_rhs
@@ -606,7 +604,6 @@ Pressure::Builder::Builder( const Expr::TagList& result,
                             const bool       use3dlaplacian,
                             const bool       enforceSolvability,
                             const bool       isConstDensity,
-                            Uintah::SolverParameters& sparams,
                             Uintah::SolverInterface& solver )
  : ExpressionBuilder(result),
    fxt_( fxtag ),
@@ -623,7 +620,6 @@ Pressure::Builder::Builder( const Expr::TagList& result,
    use3dlaplacian_( use3dlaplacian ),
    enforceSolvability_(enforceSolvability),
    isConstDensity_(isConstDensity),
-   sparams_( sparams ),
    solver_( solver )
 {}
 
@@ -636,7 +632,7 @@ Pressure::Builder::build() const
   return new Pressure( ptags[0].name(), ptags[1].name(), fxt_, fyt_, fzt_,
                        psrct_, dtt_,volfract_, rhoStarTag_, hasMovingGeometry_, userefpressure_,
                        refpressurevalue_, refpressurelocation_, use3dlaplacian_,
-                       enforceSolvability_, isConstDensity_, sparams_, solver_ );
+                       enforceSolvability_, isConstDensity_, solver_ );
 }
 
 } // namespace WasatchCore

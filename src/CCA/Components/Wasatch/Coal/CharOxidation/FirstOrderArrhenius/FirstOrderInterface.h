@@ -36,7 +36,7 @@ namespace FOA{
 
     //mass fractions and species RHSs
     const Tag o2MassFracTag_,  h2oMassFracTag_, h2MassFracTag_, co2MassFracTag_, coMassFracTag_,
-              ch4MassFracTag_, o2_rhsTag_,       h2_rhsTag_,   h2o_rhsTag_,      ch4_rhsTag_,
+              ch4MassFracTag_, o2_rhsTag_,      h2_rhsTag_,     h2o_rhsTag_,     ch4_rhsTag_,
               co2_rhsTag_,     co_rhsTag_;
 
     const bool initDevChar_;  ///< Initial char in volatile matter (Only with CPD Model)
@@ -82,7 +82,7 @@ namespace FOA{
      *  \param h2MassFracTag  gas-phase H2 mass fraction at the particle surface
      *  \param h2oMassFracTag gas-phase H2O mass fraction at the particle surface
      *  \param ch4MassFracTag gas-phase CH4 mass fraction at the particle surface
-     *  \param totalMWTag     gas-phase mixture molectular weight at the particle surface
+     *  \param totalMWTag     gas-phase mixture molecular weight at the particle surface
      *  \param pDensTag       gas-phase mixture mass density at the particle surface
      *  \param gPressTag      gas phase pressure
      *  \param pMassTag       particle mass

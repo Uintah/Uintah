@@ -52,7 +52,7 @@ WARNING
 
    --------------------------------------------------------------------------*/
 
-#include <CCA/Ports/SolverInterface.h>
+#include <CCA/Components/Solvers/SolverCommon.h>
 
 namespace Uintah {
 

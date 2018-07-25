@@ -344,7 +344,7 @@ UnifiedScheduler::problemSetup( const ProblemSpecP     & prob_spec
     }
   }
 
-  proc0cout << "   Using \"" << taskQueueAlg << "\" task queue priority algorithm" << std::endl;
+  proc0cout << "Using \"" << taskQueueAlg << "\" task queue priority algorithm" << std::endl;
 
   m_num_threads = Uintah::Parallel::getNumThreads() - 1;
 
@@ -368,10 +368,10 @@ UnifiedScheduler::problemSetup( const ProblemSpecP     & prob_spec
   if (d_myworld->myRank() == 0) {
     std::string plural = (m_num_threads == 1) ? " thread" : " threads";
     std::cout
-        << "   WARNING: Multi-threaded Unified scheduler is EXPERIMENTAL, not all tasks are thread safe yet.\n"
-        << "   Creating " << m_num_threads << " additional "
+        << "\nWARNING: Multi-threaded Unified scheduler is EXPERIMENTAL, not all tasks are thread safe yet.\n"
+        << "Creating " << m_num_threads << " additional "
         << plural + " for task execution (total task execution threads = "
-        << m_num_threads + 1 << ")." << std::endl;
+        << m_num_threads + 1 << ").\n" << std::endl;
 
 #ifdef HAVE_CUDA
     if (Uintah::Parallel::usingDevice()) {
@@ -735,21 +735,6 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
     proc0cout << "average queue length:" << allqueuelength / d_myworld->nRanks() << std::endl;
   }
 
-  if( m_restartable && tgnum == static_cast<int>(m_task_graphs.size()) - 1 ) {
-    // Copy the restart flag to all processors
-    int myrestart = m_dws[m_dws.size() - 1]->timestepRestarted();
-    int netrestart;
-
-    Uintah::MPI::Allreduce( &myrestart, &netrestart, 1, MPI_INT, MPI_LOR, d_myworld->getComm() );
-
-    if( netrestart ) {
-      m_dws[m_dws.size() - 1]->restartTimestep();
-      if( m_dws[0] ) {
-        m_dws[0]->setRestarted();
-      }
-    }
-  }
-
   finalizeTimestep();
 
   m_exec_timer.stop();
@@ -789,8 +774,20 @@ UnifiedScheduler::markTaskConsumed( int          & numTasksDone
   // Update the count of tasks consumed by the scheduler.
   numTasksDone++;
 
+  // task ordering debug info - please keep this here, APH 05/30/18
   if (g_task_order && d_myworld->myRank() == d_myworld->nRanks() / 2) {
-    DOUT(g_task_dbg, myRankThread() << " Running task static order: " << dtask->getStaticOrder() << ", scheduled order: " << numTasksDone);
+    std::ostringstream task_name;
+    task_name << "  Running task: \"" << dtask->getTask()->getName() << "\" ";
+
+    std::ostringstream task_type;
+    task_type << "(" << dtask->getTask()->getType() << ") ";
+
+    // task ordering debug info - please keep this here, APH 05/30/18
+    DOUT(true, "Rank-" << d_myworld->myRank()
+                       << std::setw(60) << std::left << task_name.str()
+                       << std::setw(14) << std::left << task_type.str()
+                       << std::setw(15) << " static order: "    << std::setw(3) << std::left << dtask->getStaticOrder()
+                       << std::setw(18) << " scheduled order: " << std::setw(3) << std::left << numTasksDone);
   }
 
   // Update the count of this phase consumed.
@@ -4304,67 +4301,6 @@ UnifiedScheduler::findIntAndExtGpuDependencies( DetailedTask * dtask
 
   // Prepare internal dependencies.  Only makes sense if we have GPUs that we are using.
   if (Uintah::Parallel::usingDevice()) {
-    // If we have ghost cells coming from a GPU to another GPU on the same node
-    // This does not cover going to another node (the loop below handles external
-    // dependencies) That is handled in initiateH2D()
-    // This does not handle preparing from a CPU to a same node GPU.  That is handled in initiateH2D()
-    for (DependencyBatch* batch = dtask->getInternalComputes(); batch != 0; batch = batch->m_comp_next) {
-      for (DetailedDep* req = batch->m_head; req != 0; req = req->m_next) {
-        if ((req->m_comm_condition == DetailedDep::FirstIteration && iteration > 0)
-            || (req->m_comm_condition == DetailedDep::SubsequentIterations
-                && iteration == 0)
-            || (m_no_copy_data_vars.count(req->m_req->m_var->getName()) > 0)) {
-          // See comment in DetailedDep about CommCondition
-          if (gpu_stats.active()) {
-            cerrLock.lock();
-            {
-              gpu_stats << myRankThread()
-                        << "   Preparing GPU dependencies, ignoring conditional send for requries " << *req
-                        << std::endl;
-            }
-            cerrLock.unlock();
-          }
-          continue;
-        }
-        // if we send/recv to an output task, don't send/recv if not an output timestep
-        if (req->m_to_tasks.front()->getTask()->getType() == Task::Output
-            && !m_output->isOutputTimeStep() && !m_output->isCheckpointTimeStep()) {
-          if (gpu_stats.active()) {
-            cerrLock.lock();
-            gpu_stats << myRankThread()
-                << "   Preparing GPU dependencies, ignoring non-output-timestep send for "
-                << *req << std::endl;
-            cerrLock.unlock();
-          }
-          continue;
-        }
-        OnDemandDataWarehouse* dw = m_dws[req->m_req->mapDataWarehouse()].get_rep();
-        const VarLabel* posLabel;
-        OnDemandDataWarehouse* posDW;
-
-        // the load balancer is used to determine where data was in
-        // the old dw on the prev timestep - pass it in if the
-        // particle data is on the old dw
-
-        if (!m_reloc_new_pos_label && m_parent_scheduler) {
-          posDW = m_dws[req->m_req->m_task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
-          posLabel = m_parent_scheduler->m_reloc_new_pos_label;
-        }
-        else {
-          // on an output task (and only on one) we require particle variables from the NewDW
-          if (req->m_to_tasks.front()->getTask()->getType() == Task::Output) {
-            posDW = m_dws[req->m_req->m_task->mapDataWarehouse(Task::NewDW)].get_rep();
-          }
-          else {
-            posDW = m_dws[req->m_req->m_task->mapDataWarehouse(Task::OldDW)].get_rep();
-          }
-          posLabel = m_reloc_new_pos_label;
-        }
-        // Load information which will be used to later invoke a
-        // kernel to copy this range out of the GPU.
-        prepareGpuDependencies(dtask, batch, posLabel, dw, posDW, req, GpuUtilities::anotherDeviceSameMpiRank);
-      }
-    }  // end for (DependencyBatch * batch = task->getInteranlComputes() )
 
     // Prepare external dependencies.  The only thing that needs to be
     // prepared is getting ghost cell data from a GPU into a flat

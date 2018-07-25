@@ -30,6 +30,10 @@
 
 namespace Uintah {
 
+  class ApplicationInterface;
+
+  //______________________________________________________________________
+  //
   class SolverCommon : public UintahParallelComponent, public SolverInterface { 
 
   public:
@@ -39,34 +43,44 @@ namespace Uintah {
     
     // Methods for managing the components attached via the ports.
     virtual void setComponents( UintahParallelComponent *comp ) {};
-    virtual void getComponents() {};
-    virtual void releaseComponents() {};
+    virtual void getComponents();
+    virtual void releaseComponents();
     
-    virtual SolverParameters* readParameters(  ProblemSpecP & params,
-					      const std::string  & name ) = 0;
+    virtual void readParameters( ProblemSpecP & params,
+                                 const std::string  & name ) = 0;
 
     virtual void scheduleSolve( const LevelP           & level,
-				      SchedulerP       & sched,
-				const MaterialSet      * matls,
-				const VarLabel         * A,    
-				      Task::WhichDW      which_A_dw,  
-				const VarLabel         * x,
-				      bool               modifies_x,
-				const VarLabel         * b,    
-				      Task::WhichDW      which_b_dw,  
-				const VarLabel         * guess,
-				      Task::WhichDW      which_guess_dw,
-				const SolverParameters * params,
-				      bool               isFirstSolve = true ) = 0;
+                                      SchedulerP       & sched,
+                                const MaterialSet      * matls,
+                                const VarLabel         * A,    
+                                      Task::WhichDW      which_A_dw,  
+                                const VarLabel         * x,
+                                      bool               modifies_x,
+                                const VarLabel         * b,    
+                                      Task::WhichDW      which_b_dw,  
+                                const VarLabel         * guess,
+                                      Task::WhichDW      which_guess_dw,
+                                      bool               isFirstSolve = true ) = 0;
                                
     virtual std::string getName() = 0;
 
     // SolverCommon does not require initialization... but we need an empty
-    // routine to satisfy inheritance.
+    // routine to satisfy inheritance. 
     virtual void scheduleInitialize( const LevelP      & level,
-				               SchedulerP  & sched,
-				         const MaterialSet * matls ) = 0;
+                                               SchedulerP  & sched,
+                                         const MaterialSet * matls ) = 0;
+
+    virtual void scheduleRestartInitialize( const LevelP      & level,
+                                                  SchedulerP  & sched,
+                                            const MaterialSet * matls) = 0;
+
+  protected:
+    ApplicationInterface * m_application  {nullptr};
+    
+    const ProcessorGroup * m_myworld;
+
   };
+  
 } // end namespace Uintah
 
 #endif // Packages_Uintah_CCA_Components_Solvers_SolverCommon_h

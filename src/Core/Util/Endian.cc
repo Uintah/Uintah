@@ -41,6 +41,7 @@ void swapbytes( long long& i ) { LONG_LONG_SWAP(i); }
 void swapbytes( bool& )       { }
 void swapbytes( int8_t& )     { }
 void swapbytes( uint8_t& )    { }
+void swapbytes( double* & )     { }
 void swapbytes( FILE* & )     { }
 void swapbytes( int16_t& i )  { SWAP_2(i); }
 void swapbytes( uint16_t& i ) { SWAP_2(i); }

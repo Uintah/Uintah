@@ -764,8 +764,6 @@ using namespace ExchangeModels;
       ICE(const ICE&);
       ICE& operator=(const ICE&);
 
-      SolverParameters* d_solver_parameters;
-
       //______________________________________________________________________
       //        models
       std::vector<ModelInterface*> d_models;

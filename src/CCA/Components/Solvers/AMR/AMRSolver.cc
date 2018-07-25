@@ -26,7 +26,6 @@
 
 #include <CCA/Components/Solvers/AMR/AMRSolver.h>
 #include <CCA/Components/Solvers/AMR/HypreDriver.h>
-#include <CCA/Components/Solvers/AMR/HypreSolverParams.h>
 #include <CCA/Components/Solvers/MatrixUtil.h>
 #include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Scheduler.h>
@@ -57,68 +56,72 @@ static DebugStream cout_doing("SOLVER_DOING_COUT", false);
 static DebugStream cout_dbg("SOLVER_DBG", false);
 
 
+//______________________________________________________________________
+//
 AMRSolver::AMRSolver(const ProcessorGroup* myworld)
-  : SolverCommon(myworld) {}
+  : SolverCommon(myworld) 
+{
+  m_params = scinew HypreSolverParams();
+}
   
-AMRSolver::~AMRSolver() {}
+AMRSolver::~AMRSolver() 
+{
+  delete m_params;
+}
 
 
 /*_____________________________________________________________________
  Function AMRSolver::readParameters 
  _____________________________________________________________________*/
-SolverParameters*
-AMRSolver::readParameters(ProblemSpecP& params,
+void
+AMRSolver::readParameters(ProblemSpecP& params_ps,
                           const string& varname)
 {
-  HypreSolverParams* p = new HypreSolverParams();
   bool found=false;
 
   /* Scan and set parameters */
-  if(params){
-    for( ProblemSpecP param = params->findBlock("Parameters"); param != nullptr; param = param->findNextBlock("Parameters") ) {
+  if(params_ps){
+    for( ProblemSpecP param_ps = params_ps->findBlock("Parameters"); param_ps != nullptr; param_ps = param_ps->findNextBlock("Parameters") ) {
       string variable;
-      if( param->getAttribute("variable", variable) && variable != varname ) {
+      if( param_ps->getAttribute("variable", variable) && variable != varname ) {
         continue;
       }
       string str_solver;
       string str_precond;
-      param->getWithDefault("solver", str_solver, "smg");
-      param->getWithDefault("preconditioner", str_precond, "diagonal");
-      param->getWithDefault("tolerance", p->tolerance, 1.e-10);
-      param->getWithDefault("maxiterations", p->maxIterations, 75);
-      param->getWithDefault("npre", p->nPre, 1);
-      param->getWithDefault("npost", p->nPost, 1);
-      param->getWithDefault("skip", p->skip, 0);
-      param->getWithDefault("jump", p->jump, 0);
-      param->getWithDefault("logging", p->logging, 0);
-      param->getWithDefault("outputEquations", p->printSystem,false);
+      param_ps->getWithDefault("solver",          str_solver, "smg");
+      param_ps->getWithDefault("preconditioner",  str_precond, "diagonal");
+      param_ps->getWithDefault("tolerance",       m_params->tolerance, 1.e-10);
+      param_ps->getWithDefault("maxiterations",   m_params->maxIterations, 75);
+      param_ps->getWithDefault("npre",            m_params->nPre, 1);
+      param_ps->getWithDefault("npost",           m_params->nPost, 1);
+      param_ps->getWithDefault("skip",            m_params->skip, 0);
+      param_ps->getWithDefault("jump",            m_params->jump, 0);
+      param_ps->getWithDefault("logging",         m_params->logging, 0);
+      param_ps->getWithDefault("outputEquations", m_params->printSystem,false);
       found=true;
       
       // convert to lower case
-      p->solverTitle   = string_tolower( str_solver );
-      p->precondTitle  = string_tolower( str_precond );
-      
+      m_params->solverTitle   = string_tolower( str_solver );
+      m_params->precondTitle  = string_tolower( str_precond );
     }
   }
 
   /* Default parameter values */
   if( !found ){
-    p->solverTitle = "smg";
-    p->precondTitle = "diagonal";
-    p->tolerance = 1.e-10;
-    p->maxIterations = 75;
-    p->nPre = 1;
-    p->nPost = 1;
-    p->skip = 0;
-    p->jump = 0;
-    p->logging = 0;
+    m_params->solverTitle = "smg";
+    m_params->precondTitle = "diagonal";
+    m_params->tolerance = 1.e-10;
+    m_params->maxIterations = 75;
+    m_params->nPre = 1;
+    m_params->nPost = 1;
+    m_params->skip = 0;
+    m_params->jump = 0;
+    m_params->logging = 0;
   }
-  p->symmetric = false;
-  //  p->symmetric=true;
-  p->restart=false;
-  //  p->restart=true;
-
-  return p;
+  m_params->symmetric = false;
+  //  m_params->symmetric=true;
+  m_params->restart=false;
+  //  m_params->restart=true;
 }
 
 //______________________________________________________________________
@@ -130,7 +133,6 @@ AMRSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
                          const VarLabel* x,       bool modifies_x,
                          const VarLabel* b,       Task::WhichDW which_b_dw,  
                          const VarLabel* guess,   Task::WhichDW which_guess_dw,
-                         const SolverParameters* params,
                          bool isFirstSolve)
   
 {
@@ -139,10 +141,6 @@ AMRSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
 
   ASSERTEQ(A->typeDescription()->getType(), x->typeDescription()->getType());
   ASSERTEQ(A->typeDescription()->getType(), b->typeDescription()->getType());
-  const HypreSolverParams* dparams = dynamic_cast<const HypreSolverParams*>(params);
-  if(!dparams)
-    throw InternalError("Wrong type of params passed to hypre solver!",
-                        __FILE__, __LINE__);
 
   /* Decide which Hypre interface to use */
   HypreInterface interface;
@@ -156,12 +154,14 @@ AMRSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
   LoadBalancer * lb             = sched->getLoadBalancer();
   const PatchSet   * perProcPatches = lb->getPerProcessorPatchSet(level->getGrid());
   
-  HypreDriver* that = newHypreDriver(interface,level.get_rep(), matls, A, which_A_dw,x, modifies_x, b, which_b_dw, guess, which_guess_dw, dparams, perProcPatches);
+  HypreDriver* that = newHypreDriver(interface,level.get_rep(), matls, A, which_A_dw,x, modifies_x, b, which_b_dw, guess, which_guess_dw, m_params, perProcPatches);
   Handle<HypreDriver > handle = that;
 
-  void (HypreDriver::*func)(const ProcessorGroup*, const PatchSubset*,
+  void (HypreDriver::*func)(const ProcessorGroup*, 
+                            const PatchSubset*,
                             const MaterialSubset*,
-                            DataWarehouse*, DataWarehouse*,
+                            DataWarehouse*, 
+                            DataWarehouse*,
                             Handle<HypreDriver>);
                             
   func = &HypreDriver::solve<CCTypes>;

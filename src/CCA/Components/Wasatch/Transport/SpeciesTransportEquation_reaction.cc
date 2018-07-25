@@ -24,6 +24,7 @@
 
 #include <CCA/Components/Wasatch/Transport/SpeciesTransportEquation.h>
 #include <CCA/Components/Wasatch/Expressions/Turbulence/TurbulenceParameters.h>
+#include <CCA/Components/Wasatch/DualTimeMatrixManager.h>
 
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -54,7 +55,8 @@ SpeciesTransportEquation::setup_source_terms( FieldTagInfo& info, Expr::TagList&
     }
     Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
     typedef pokitt::ReactionRates<FieldT>::Builder RxnRates;
-    factory.register_expression( scinew RxnRates( srcTags, temperatureTag_, densityTag_, yiTags_, mmwTag_ ) );
+    factory.register_expression( scinew RxnRates( srcTags, temperatureTag_, densityTag_, yiTags_, mmwTag_, jacobian_ ) );
+    dualTimeMatrixInfo_.set_production_rates( srcTags );
   }
 
   info[SOURCE_TERM] = Expr::Tag( "rr_"+primVarTag_.name(), Expr::STATE_NONE );

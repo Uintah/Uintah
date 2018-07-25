@@ -71,8 +71,8 @@ public:
 
   virtual void problemSetup( const ProblemSpecP& db, SimulationStateP&, GridP& ) = 0;
 
-  virtual int nonlinearSolve( const LevelP& level,
-                              SchedulerP& sched ) = 0;
+  virtual int sched_nonlinearSolve( const LevelP& level,
+                                    SchedulerP& sched ) = 0;
 
   virtual void computeTimestep( const LevelP& level, SchedulerP& sched ) = 0;
 
@@ -80,7 +80,7 @@ public:
 
   virtual bool restartableTimeSteps() = 0;
 
-  virtual void initialize( const LevelP& lvl, SchedulerP& sched, const bool doing_restart ) = 0;
+  virtual void sched_initialize( const LevelP& lvl, SchedulerP& sched, const bool doing_restart ) = 0;
 
   virtual void sched_restartInitialize( const LevelP& level, SchedulerP& sched ) = 0;
 

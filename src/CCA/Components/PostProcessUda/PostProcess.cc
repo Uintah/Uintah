@@ -116,8 +116,9 @@ void PostProcessUda::problemSetup(const ProblemSpecP& prob_spec,
   //__________________________________
   //  define the varLabels that will be saved
   vector<string> varNames;
+  vector<int>    numMatls;
   vector< const TypeDescription *> typeDescriptions;
-  d_dataArchive->queryVariables( varNames, typeDescriptions );
+  d_dataArchive->queryVariables( varNames, numMatls, typeDescriptions );
 
   proc0cout << "\nLabels discovered in the original uda\n";
   for (unsigned int i = 0; i < varNames.size(); i++) {
@@ -387,9 +388,7 @@ double PostProcessUda::getInitialTime()
 //  If the number of materials on a level changes or if the grid
 //  has changed then call for a recompile
 bool
-PostProcessUda::needRecompile( const double   /* time */,
-                               const double   /* dt */,
-                               const GridP  & /* grid */ )
+PostProcessUda::needRecompile( const GridP  & /* grid */ )
 {
   bool recompile = d_gridChanged;
   d_gridChanged = false;   // reset flag

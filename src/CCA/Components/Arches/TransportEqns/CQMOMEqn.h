@@ -70,7 +70,8 @@ namespace Uintah{
     
     /** @brief Schedule a transport equation to be built and solved */
     void sched_evalTransportEqn( const LevelP&,
-                                SchedulerP& sched, int timeSubStep );
+                                SchedulerP& sched, int timeSubStep, 
+                                EQN_BUILD_PHASE phase);
     
     /** @brief Schedule the build for the terms needed in the transport equation */
     void sched_buildTransportEqn( const LevelP& level,

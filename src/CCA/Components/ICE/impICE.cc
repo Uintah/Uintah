@@ -346,7 +346,7 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
     t->requires(Task::OldDW, hypre_solver_label);
     t->computes(hypre_solver_label);
     //(string var, bool treatAsOld, bool copyData, bool noScrub, bool notCopyData, bool noCheckpoint)
-    sched->overrideVariableBehavior(hypre_solver_label->getName(),false,false,false,true,true);
+    sched->overrideVariableBehavior(hypre_solver_label->getName(),false,true,false,false,true);
   }
 #endif
 
@@ -979,7 +979,9 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
       ParentOldDW->get( hypre_solverP, hypre_solver_label );
       subNewDW->put(    hypre_solverP, hypre_solver_label );
     }
-    d_solver_parameters->setWhichOldDW( Task::ParentOldDW );
+
+    m_solver->getParameters()->setWhichOldDW( Task::ParentOldDW );
+
   }
 
 #endif
@@ -1009,7 +1011,8 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
   bool restart    = false;
   Vector dx = level->dCell();
   double vol = dx.x() * dx.y() * dx.z();
-  d_solver_parameters->setResidualNormalizationFactor(vol);
+  
+  m_solver->getParameters()->setResidualNormalizationFactor(vol);
 
   d_subsched->setInitTimestep(false);
   
@@ -1031,7 +1034,7 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
                               lb->imp_delPLabel, modifies_X,
                               lb->rhsLabel,      Task::OldDW,
                               whichInitialGuess, Task::OldDW,
-                              d_solver_parameters,true);
+                              true);
       
       scheduleUpdatePressure( d_subsched,  level, patch_set,  ice_matls,
                               mpm_matls, 
@@ -1090,18 +1093,18 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
     ostringstream fname;
     
     fname << "." << proc <<"." << timeStep << "." << counter;
-    d_solver_parameters->setOutputFileName(fname.str());
-    
+    m_solver->getParameters()->setOutputFileName(fname.str());
+   
     //__________________________________
     // restart timestep
                                           //  too many outer iterations
     if (counter > d_iters_before_timestep_restart ){
       restart = true;
-      DOUTR0("\nWARNING: max iterations befor timestep restart reached\n" );
+      DOUTR0("\nWARNING:  max iterations before timestep restart reached\n" );
     }
                                           //  solver or advection has requested a restart
-    if (d_subsched->get_dw(1)->timestepRestarted() ) {
-      DOUTR0( "\nWARNING  impICE:implicitPressureSolve timestep restart.\n" );
+    if (subNewDW->timestepRestarted() ) {
+      DOUTR0( "\n  WARNING:  impICE:implicitPressureSolve timestep restart.\n" );
       restart = true;
     }
     
