@@ -78,7 +78,6 @@ SRCS += $(SRCDIR)/Arches.cc                    \
         $(SRCDIR)/DQMOM.cc                     \
         $(SRCDIR)/ExplicitSolver.cc            \
         $(SRCDIR)/ExplicitTimeInt.cc           \
-        $(SRCDIR)/IncDynamicProcedure.cc       \
         $(SRCDIR)/IntrusionBC.cc               \
         $(SRCDIR)/KokkosSolver.cc              \
         $(SRCDIR)/LU.cc                        \

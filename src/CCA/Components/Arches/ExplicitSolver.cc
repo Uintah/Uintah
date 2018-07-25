@@ -47,7 +47,6 @@
 #include <CCA/Components/Arches/ExplicitTimeInt.h>
 #include <CCA/Components/Arches/TurbulenceModelPlaceholder.h>
 #include <CCA/Components/Arches/ScaleSimilarityModel.h>
-#include <CCA/Components/Arches/IncDynamicProcedure.h>
 #include <CCA/Components/Arches/CompDynamicProcedure.h>
 #include <CCA/Components/Arches/SmagorinskyModel.h>
 #include <CCA/Components/Arches/WBCHelper.h>
@@ -492,9 +491,6 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
   if ( whichTurbModel == "smagorinsky") {
     d_turbModel = scinew SmagorinskyModel(d_lab, d_MAlab, d_physicalConsts,
                                           d_boundaryCondition);
-  }else if ( whichTurbModel == "dynamicprocedure") {
-    d_turbModel = scinew IncDynamicProcedure(d_lab, d_MAlab, d_physicalConsts,
-                                             d_boundaryCondition);
   }else if ( whichTurbModel == "compdynamicprocedure") {
     d_turbModel = scinew CompDynamicProcedure(d_lab, d_MAlab, d_physicalConsts,
                                               d_boundaryCondition);
