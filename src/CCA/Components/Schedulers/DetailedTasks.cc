@@ -1172,11 +1172,13 @@ DetailedTasks::getDeviceReadyToExecuteTask(DetailedTask *& dtask)
     bool proceed{true};
     if (task_to_debug_threshold > 0) {
       std::string task_to_debug_name = Uintah::Parallel::getTaskNameToTime();
+      std::string current_task = dtask->getTask()->getName();
       int task_to_debug_count = atomic_task_to_debug_size.load(std::memory_order_relaxed);
-      if ( dtask->getTask()->getName() == task_to_debug_name ) {
+      if ( current_task.size() >= task_to_debug_name.size() 
+           && dtask->getTask()->getName().substr(0, task_to_debug_name.size()) == task_to_debug_name ) {
         if ( task_to_debug_count % task_to_debug_threshold != 0 ) {
           proceed = false;
-        }
+        } 
       }
     }
     if (proceed) {

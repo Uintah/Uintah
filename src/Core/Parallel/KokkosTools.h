@@ -100,7 +100,7 @@ void createKokkosTools() {
 #endif
 #if defined(KOKKOS_ENABLE_CUDA)
     if (!cudaRandomPool) {
-      std::unique_ptr<KokkosRandom< Kokkos::Random_XorShift1024_Pool< Kokkos::Cuda >>> temp( new KokkosRandom< Kokkos::Random_XorShift1024_Pool< Kokkos::OpenMP >>(true) );
+      std::unique_ptr<KokkosRandom< Kokkos::Random_XorShift1024_Pool< Kokkos::Cuda >>> temp( new KokkosRandom< Kokkos::Random_XorShift1024_Pool< Kokkos::Cuda >>(true) );
       cudaRandomPool = std::move(temp);
     }
 #endif
@@ -132,7 +132,7 @@ GetKokkosRandom1024Pool() {
 #endif
 #if defined(KOKKOS_ENABLE_CUDA)
 template <typename ExecutionSpace>
-inline typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::OpenMP>::value, Kokkos::Random_XorShift1024_Pool< Kokkos::Cuda >>::type
+inline typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::Cuda>::value, Kokkos::Random_XorShift1024_Pool< Kokkos::Cuda >>::type
 GetKokkosRandom1024Pool() {
   return cudaRandomPool->getRandPool();
 }

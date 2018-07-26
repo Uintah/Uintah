@@ -451,7 +451,9 @@ DetailedTask::checkExternalDepCount()
     unsigned int amountTaskNameExpectedToRun = Uintah::Parallel::getAmountTaskNameExpectedToRun();
     if (amountTaskNameExpectedToRun > 0) {
       std::string task_to_debug_name = Uintah::Parallel::getTaskNameToTime();
-      if ( this->getTask() && this->getTask()->getName() == task_to_debug_name ) {
+      std::string current_task = this->getTask()->getName();
+      if ( current_task.size() >= task_to_debug_name.size()
+           && this->getTask() && this->getTask()->getName().substr(0, task_to_debug_name.size()) == task_to_debug_name ) {
         m_task_group->atomic_task_to_debug_size.fetch_add(1);
       }
     }
