@@ -3007,7 +3007,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
         gstress[c] /= gvolume[c];
       }
 
-     if(m!=numMPMMatls-1){
+//     if(m!=numMPMMatls-1){
 
       // save boundary forces before apply symmetry boundary condition.
       for(list<Patch::FaceType>::const_iterator fit(d_bndy_traction_faces.begin());
@@ -3048,7 +3048,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
           }
         }
       } // faces
-     }  // endif not piston material
+//     }  // endif not piston material
 
       MPMBoundCond bc;
       bc.setBoundaryCondition(patch,dwi,"Symmetric",internalforce,interp_type);
