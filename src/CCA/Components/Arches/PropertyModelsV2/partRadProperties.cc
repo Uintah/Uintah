@@ -4,8 +4,11 @@
 #include <CCA/Components/Arches/ChemMix/ChemHelper.h>
 #include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
 #include <CCA/Components/Arches/ChemMixV2/ClassicTableUtility.h>
-// includes for Arches
 
+#include <Core/Parallel/Portability.h>
+#include <Core/Parallel/LoopExecution.hpp>
+// includes for Arches
+#define MAX_DQMOM_ENV 3
 using namespace Uintah;
 
 //---------------------------------------------------------------------------
@@ -31,7 +34,7 @@ if (_particle_calculator_type == "coal"){
   delete _3Dpart_radprops;
 }
 #endif
-if (_particle_calculator_type=="tabulated")
+
  delete myTable;
 }
 
@@ -41,7 +44,9 @@ if (_particle_calculator_type=="tabulated")
 TaskAssignedExecutionSpace partRadProperties::loadTaskEvalFunctionPointers(){
 
   TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, partRadProperties::eval);
+  LOAD_ARCHES_EVAL_TASK_3TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG,KOKKOS_CUDA_TAG, assignedTag, partRadProperties::eval);
+  //LOAD_ARCHES_EVAL_TASK_1TAG(UINTAH_CPU_TAG , assignedTag, partRadProperties::eval);
+  //LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, partRadProperties::eval);
   return assignedTag;
 
 }
@@ -105,7 +110,7 @@ void partRadProperties::problemSetup(  Uintah::ProblemSpecP& db )
         dep_vars.push_back(prefix+"_scat");
       }
 
-      myTable = SCINEW_ClassicTable(table_directory,dep_vars);
+      myTable = SCINEW_ClassicTable<DEP_VAR_SIZE>(table_directory,dep_vars);
 
     }else if(_particle_calculator_type == "basic"){
       if (_scatteringOn){
@@ -217,6 +222,9 @@ void partRadProperties::problemSetup(  Uintah::ProblemSpecP& db )
       throw ProblemSetupException("Error: This particle radiation property method only supports DQMOM/CQMOM.",__FILE__,__LINE__);
     }
 
+    if (_nQn_part > MAX_DQMOM_ENV){
+      throw ProblemSetupException("Portability Error:Number of DQMOM environments exceeds compile time limits.",__FILE__,__LINE__);
+    }
     std::string base_temperature_name = ArchesCore::parse_for_particle_role_to_label( db, ArchesCore::P_TEMPERATURE);
     std::string base_size_name        = ArchesCore::parse_for_particle_role_to_label( db, ArchesCore::P_SIZE );
     std::string base_weight_name      = "w"; //hard coded as w
@@ -259,6 +267,11 @@ partRadProperties::create_local_labels(){
     register_new_variable<CCVariable<double> >(_scatkt_name);
     register_new_variable<CCVariable<double> >(_asymmetryParam_name);
   }
+
+  for (int i=0; i<_nDVs; i++){
+    register_new_variable<CCVariable<double> >("partRadProps_temporary_"+std::to_string(i));
+  } 
+
 }
 
 
@@ -315,10 +328,8 @@ void partRadProperties::timestep_init( const Patch* patch, ArchesTaskInfoManager
 void
 partRadProperties::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){
 
-
-
-
   register_variable( _abskp_name , Uintah::ArchesFieldContainer::COMPUTES, variable_registry, time_substep);
+
   for (int i=0; i< _nQn_part ; i++){
     register_variable( _abskp_name_vector[i] , Uintah::ArchesFieldContainer::COMPUTES, variable_registry, time_substep);
 
@@ -337,6 +348,10 @@ partRadProperties::register_timestep_eval( std::vector<ArchesFieldContainer::Var
     register_variable( _asymmetryParam_name , Uintah::ArchesFieldContainer::COMPUTES , variable_registry, time_substep);
   }
 
+    for (int i=0; i<_nDVs; i++){
+    register_variable( "partRadProps_temporary_"+std::to_string(i) , Uintah::ArchesFieldContainer::COMPUTES, variable_registry, time_substep);
+    } 
+
   register_variable("volFraction" , ArchesFieldContainer::REQUIRES,0,ArchesFieldContainer::NEWDW,variable_registry, time_substep );
 
 }
@@ -345,112 +360,104 @@ partRadProperties::register_timestep_eval( std::vector<ArchesFieldContainer::Var
 
 template<typename ExecutionSpace, typename MemorySpace> void
 partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
-
-
-  CCVariable<double>& abskp = tsk_info->get_uintah_field_add<CCVariable<double> >(_abskp_name);
-  abskp.initialize(0.0);
-
+  auto abskp = createContainer<CCVariable<double>, double, 1 , MemorySpace>(1);
+  auto scatkt =  createContainer<CCVariable<double>, double, 1 , MemorySpace>(_scatteringOn ? 1 :0);
+  auto asymm   =  createContainer<CCVariable<double>, double, 1 , MemorySpace>(_scatteringOn ? 1 :0);
+  const int TSS = tsk_info->get_time_substep();
+  //auto abskp           = tsk_info->get_uintah_field_add<T, double, MemorySpace>(_abskp_name, abskp, _matl_index, _new_dw_time_substep);
+  tsk_info->get_unmanaged_uintah_field<CCVariable<double>, double , MemorySpace >(abskp[0] ,_abskp_name,patch->getID(),_matl_index,1);
   if (_scatteringOn){
-    CCVariable<double>& scatkt  = tsk_info->get_uintah_field_add<CCVariable<double> >(_scatkt_name);
-    CCVariable<double>& asymm   = tsk_info->get_uintah_field_add<CCVariable<double> >(_asymmetryParam_name);
-    scatkt.initialize(0.0);
-    asymm.initialize(0.0);
+    tsk_info->get_unmanaged_uintah_field<CCVariable<double>, double , MemorySpace >(scatkt[0],_scatkt_name,patch->getID(),_matl_index,TSS);
+    tsk_info->get_unmanaged_uintah_field<CCVariable<double>, double , MemorySpace >(asymm[0],_asymmetryParam_name,patch->getID(),_matl_index,TSS);
   }
 
-  constCCVariable<double>& vol_fraction = *(tsk_info->get_const_uintah_field<constCCVariable<double> >("volFraction"));
+  auto vol_fraction   = tsk_info->get_const_uintah_field_add<constCCVariable<double>,const double, MemorySpace>("volFraction",patch->getID() , _matl_index, 1);
 
-  std::vector<constCCVariable<double> > RC_mass(_nQn_part);
-  std::vector<constCCVariable<double> > Char_mass(_nQn_part);
-  std::vector<constCCVariable<double> > weightQuad (_nQn_part);
-  std::vector<constCCVariable<double> > temperatureQuad(_nQn_part);
-  std::vector<constCCVariable<double> > sizeQuad(_nQn_part);
+  auto RC_mass =  createContainer<constCCVariable<double>, const double, MAX_DQMOM_ENV , MemorySpace>(_nQn_part);
+  auto Char_mass =  createContainer<constCCVariable<double>, const double, MAX_DQMOM_ENV , MemorySpace>(_nQn_part);
+  auto weightQuad =  createContainer<constCCVariable<double>, const double, MAX_DQMOM_ENV , MemorySpace>(_nQn_part);
+  auto sizeQuad =  createContainer<constCCVariable<double>, const double, MAX_DQMOM_ENV , MemorySpace>(_nQn_part);
+  auto temperatureQuad =  createContainer<constCCVariable<double>, const double, MAX_DQMOM_ENV , MemorySpace>(_nQn_part);
 
   for (int ix=0; ix< _nQn_part ; ix++){
     if (_isCoal){
-      RC_mass[ix]  =tsk_info->get_const_uintah_field_add<constCCVariable<double> >(_RC_name_v[ix]);
-      Char_mass[ix]=tsk_info->get_const_uintah_field_add<constCCVariable<double> >(_Char_name_v[ix]);
+      RC_mass[ix]  =tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemorySpace >(_RC_name_v[ix]  ,patch->getID(),_matl_index,TSS);
+      Char_mass[ix]=tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemorySpace >(_Char_name_v[ix],patch->getID(),_matl_index,TSS);
     }
-      weightQuad[ix]  = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(_weight_name_v[ix]);
-      temperatureQuad[ix] = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(_temperature_name_v[ix]);
-      sizeQuad[ix] = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(_size_name_v[ix]);
+      weightQuad[ix]  = tsk_info->get_const_uintah_field_add<constCCVariable<double> , const double, MemorySpace>(_weight_name_v[ix],patch->getID(),_matl_index,1);
+      temperatureQuad[ix] = tsk_info->get_const_uintah_field_add<constCCVariable<double> , const double, MemorySpace>(_temperature_name_v[ix],patch->getID(),_matl_index,1);
+      sizeQuad[ix] = tsk_info->get_const_uintah_field_add<constCCVariable<double> , const double, MemorySpace>(_size_name_v[ix],patch->getID(),_matl_index,1);
   }
 
 
   Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
+  auto abskpQuad =  createContainer<CCVariable<double>, double, MAX_DQMOM_ENV , MemorySpace>(_nQn_part);
+  for (int i=0; i< _nQn_part ; i++){
+    tsk_info->get_unmanaged_uintah_field<CCVariable<double>, double , MemorySpace >(abskpQuad[i],_abskp_name_vector[i],patch->getID(),_matl_index,1);
+  }
+
+
+  parallel_initialize<ExecutionSpace,MemorySpace>(executionObject,0.0,abskp[0],scatkt,asymm,abskpQuad);
+  auto abs_scat_coeff =  createContainer<CCVariable<double>, double,DEP_VAR_SIZE, MemorySpace>(_nDVs); // no need to initialize;
+  for (int i=0; i<_nDVs; i++){
+    tsk_info->get_unmanaged_uintah_field<CCVariable<double>, double , MemorySpace >(abs_scat_coeff[i],"partRadProps_temporary_"+std::to_string(i),patch->getID(),_matl_index,1);
+  } 
+
   for (int ix=0; ix< _nQn_part ; ix++){
-    CCVariable<double>& abskpQuad = tsk_info->get_uintah_field_add           <CCVariable<double> >(_abskp_name_vector[ix]);  // ConstCC and CC behave differently
-    abskpQuad.initialize(0.0);
-
-
-
     if(_particle_calculator_type == "basic"){
       const double geomFactor=M_PI/4.0*_Qabs;
-      Uintah::parallel_for( range,  [&](int i, int j, int k) {
+      Uintah::parallel_for<ExecutionSpace>(executionObject, range, KOKKOS_LAMBDA (int i, int j, int k) {
         double particle_absorption=geomFactor*weightQuad[ix](i,j,k)*sizeQuad[ix](i,j,k)*sizeQuad[ix](i,j,k)*_absorption_modifier;
-        abskpQuad(i,j,k)= (vol_fraction(i,j,k) > 1e-16) ? particle_absorption : 0.0;
-        abskp(i,j,k)+= abskpQuad(i,j,k);
+        abskpQuad[ix](i,j,k)= (vol_fraction(i,j,k) > 1e-16) ? particle_absorption : 0.0;
+        abskp[0](i,j,k)+= abskpQuad[ix](i,j,k);
       });
 #ifdef HAVE_RADPROPS
     }else if(_particle_calculator_type == "constantCIF" &&  _p_planck_abskp ){
-        Uintah::parallel_for( range,  [&](int i, int j, int k) {
+        Uintah::parallel_for<ExecutionSpace>( executionObject,range,  KOKKOS_LAMBDA(int i, int j, int k) {
           double particle_absorption=_part_radprops->planck_abs_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k))*weightQuad[ix](i,j,k)*_absorption_modifier;
-          abskpQuad(i,j,k)= (vol_fraction(i,j,k) > 1e-16) ? particle_absorption : 0.0;
-          abskp(i,j,k)+= abskpQuad(i,j,k);
+          abskpQuad[ix](i,j,k)= (vol_fraction(i,j,k) > 1e-16) ? particle_absorption : 0.0;
+          abskp[0](i,j,k)+= abskpQuad[ix](i,j,k);
         });
       if (_scatteringOn){
-        CCVariable<double>& scatkt  = tsk_info->get_uintah_field_add<CCVariable<double> >(_scatkt_name);
-        CCVariable<double>& asymm   = tsk_info->get_uintah_field_add<CCVariable<double> >(_asymmetryParam_name);
-        Uintah::parallel_for( range,  [&](int i, int j, int k) {
+        Uintah::parallel_for<ExecutionSpace>(executionObject, range,  KOKKOS_LAMBDA(int i, int j, int k) {
           double particle_scattering=_part_radprops->planck_sca_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k))*weightQuad[ix](i,j,k);
-          scatkt(i,j,k)+= (vol_fraction(i,j,k) > 1e-16) ? particle_scattering : 0.0;
-          asymm(i,j,k) =_constAsymmFact;
+          scatkt[0](i,j,k)+= (vol_fraction(i,j,k) > 1e-16) ? particle_scattering : 0.0;
+          asymm[0](i,j,k) =_constAsymmFact;
         });
       }
     }else if(_particle_calculator_type == "constantCIF" &&  _p_ros_abskp ){
-        Uintah::parallel_for( range,  [&](int i, int j, int k) {
+        Uintah::parallel_for<ExecutionSpace>( executionObject,range,  KOKKOS_LAMBDA(int i, int j, int k) {
           double particle_absorption=_part_radprops->ross_abs_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k))*weightQuad[ix](i,j,k)*_absorption_modifier;
-          abskpQuad(i,j,k)= (vol_fraction(i,j,k) > 1e-16) ? particle_absorption : 0.0;
-          abskp(i,j,k)+= abskpQuad(i,j,k);
+          abskpQuad[ix](i,j,k)= (vol_fraction(i,j,k) > 1e-16) ? particle_absorption : 0.0;
+          abskp[0](i,j,k)+= abskpQuad[ix](i,j,k);
         });
       if (_scatteringOn){
-        CCVariable<double>& scatkt  = tsk_info->get_uintah_field_add<CCVariable<double> >(_scatkt_name);
-        CCVariable<double>& asymm   = tsk_info->get_uintah_field_add<CCVariable<double> >(_asymmetryParam_name);
-        Uintah::parallel_for( range,  [&](int i, int j, int k) {
+        Uintah::parallel_for<ExecutionSpace>( executionObject,range,  KOKKOS_LAMBDA(int i, int j, int k) {
           double particle_scattering=_part_radprops->ross_sca_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k))*weightQuad[ix](i,j,k);
-          scatkt(i,j,k)+= (vol_fraction(i,j,k) > 1e-16) ? particle_scattering : 0.0;
-          asymm(i,j,k) =_constAsymmFact;
+          scatkt[0](i,j,k)+= (vol_fraction(i,j,k) > 1e-16) ? particle_scattering : 0.0;
+          asymm[0](i,j,k) =_constAsymmFact;
         });
       }
 #endif
     }else if(_particle_calculator_type == "tabulated"  ){
         enum independentVariables{ en_size, en_temp};
         enum DependentVariables{ abs_coef, sca_coef};
-        std::vector<constCCVariable<double> > IV(_nIVs);
-        IV[en_size]=  tsk_info->get_const_uintah_field_add<constCCVariable<double> >(_size_name_v[ix]);
-        IV[en_temp]=  tsk_info->get_const_uintah_field_add<constCCVariable<double> >(_temperature_name_v[ix]);
-
-        std::vector<CCVariable<double> > abs_scat_coeff(_nDVs);
-        IntVector domLo = patch->getCellLowIndex();
-        IntVector domHi = patch->getCellHighIndex();
-        for (int iy=0; iy< _nDVs; iy++){
-          abs_scat_coeff[iy].allocate(domLo,domHi);
-          abs_scat_coeff[iy].initialize(0.0);
-        }
-
-        myTable->getState(IV, abs_scat_coeff, {"diameter","temperature"}, patch);
-
-        Uintah::parallel_for( range,  [&](int i, int j, int k) {
-          double particle_absorption=abs_scat_coeff[abs_coef](i,j,k)*weightQuad[ix](i,j,k)*_absorption_modifier;
-          abskpQuad(i,j,k)= (vol_fraction(i,j,k) > 1e-16) ? particle_absorption : 0.0;
-          abskp(i,j,k)+= abskpQuad(i,j,k);
+        auto IV =  createContainer<constCCVariable<double>, const double, IND_VAR_SIZE , MemorySpace>(_nIVs);
+        IV[en_size]=  tsk_info->get_const_uintah_field_add<constCCVariable<double>,const double, MemorySpace >(_size_name_v[ix],patch->getID(),_matl_index,1);
+        IV[en_temp]=  tsk_info->get_const_uintah_field_add<constCCVariable<double>,const double, MemorySpace >(_temperature_name_v[ix],patch->getID(),_matl_index,1);
+        parallel_initialize<ExecutionSpace,MemorySpace>(executionObject,0.0,abs_scat_coeff);
+        myTable->getState<ExecutionSpace, MemorySpace>(executionObject,IV, abs_scat_coeff, patch); // indepvar)names diameter, size
+        const double     portable_absorption_modifier =_absorption_modifier;
+        Uintah::parallel_for<ExecutionSpace>( executionObject,range,  KOKKOS_LAMBDA(int i, int j, int k) {
+          double particle_absorption=abs_scat_coeff[abs_coef](i,j,k)*weightQuad[ix](i,j,k)*portable_absorption_modifier;
+          abskpQuad[ix](i,j,k)= (vol_fraction(i,j,k) > 1e-16) ? particle_absorption : 0.0;
+          abskp[0](i,j,k)+= abskpQuad[ix](i,j,k);
         });
       if (_scatteringOn){
-        CCVariable<double>& scatkt  = tsk_info->get_uintah_field_add<CCVariable<double> >(_scatkt_name);
-        CCVariable<double>& asymm   = tsk_info->get_uintah_field_add<CCVariable<double> >(_asymmetryParam_name);
-        Uintah::parallel_for( range,  [&](int i, int j, int k) {
+        Uintah::parallel_for<ExecutionSpace>( executionObject,range,  KOKKOS_LAMBDA(int i, int j, int k) {
           double particle_scattering=abs_scat_coeff[sca_coef](i,j,k)*weightQuad[ix](i,j,k);
-          scatkt(i,j,k)+= (vol_fraction(i,j,k) > 1e-16) ? particle_scattering : 0.0;
-          asymm(i,j,k) =_constAsymmFact;
+          scatkt[0](i,j,k)+= (vol_fraction(i,j,k) > 1e-16) ? particle_scattering : 0.0;
+          asymm[0](i,j,k) =_constAsymmFact;
         });
       }
     } // End calc_type if
@@ -461,30 +468,28 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
 #ifdef HAVE_RADPROPS
   if(_particle_calculator_type == "coal" &&  _p_planck_abskp ){
       for (int ix=0; ix<_nQn_part; ix++){
-        CCVariable<double>& abskpQuad = tsk_info->get_uintah_field_add           <CCVariable<double> >(_abskp_name_vector[ix]);  // ConstCC and CC behave differently
+        auto abskpQuad = tsk_info->get_uintah_field_add           <CCVariable<double> >(_abskp_name_vector[ix]);  // ConstCC and CC behave differently
         abskpQuad.initialize(0.0);
-        Uintah::parallel_for( range,  [&](int i, int j, int k) {
+        Uintah::parallel_for<ExecutionSpace>( executionObject,range,  KOKKOS_LAMBDA(int i, int j, int k) {
             double total_mass = RC_mass[ix](i,j,k)+Char_mass[ix](i,j,k)+_ash_mass_v[ix];
             double complexReal =  (Char_mass[ix](i,j,k)*_charReal+RC_mass[ix](i,j,k)*_rawCoalReal+_ash_mass_v[ix]*_ashReal)/total_mass;
             double particle_absorption=_3Dpart_radprops->planck_abs_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k),complexReal)*weightQuad[ix](i,j,k)*_absorption_modifier;
             abskpQuad(i,j,k)= (vol_fraction(i,j,k) > 1e-16) ? particle_absorption : 0.0;
-            abskp(i,j,k)+= abskpQuad(i,j,k);
+            abskp[0](i,j,k)+= abskpQuad(i,j,k);
          });
       }
       if (_scatteringOn){
-        CCVariable<double>& scatkt  = tsk_info->get_uintah_field_add<CCVariable<double> >(_scatkt_name);
-        CCVariable<double>& asymm   = tsk_info->get_uintah_field_add<CCVariable<double> >(_asymmetryParam_name);
-        Uintah::parallel_for( range,  [&](int i, int j, int k) {
+        Uintah::parallel_for<ExecutionSpace>( executionObject,range,  KOKKOS_LAMBDA(int i, int j, int k) {
              std::vector<double> total_mass(_nQn_part);
              std::vector<double> scatQuad(_nQn_part);
             for (int ix=0; ix<_nQn_part; ix++){
               total_mass[ix] = RC_mass[ix](i,j,k)+Char_mass[ix](i,j,k)+_ash_mass_v[ix];
               double complexReal =  (Char_mass[ix](i,j,k)*_charReal+RC_mass[ix](i,j,k)*_rawCoalReal+_ash_mass_v[ix]*_ashReal)/total_mass[ix];
               scatQuad[ix]=_3Dpart_radprops->planck_sca_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k),complexReal)*weightQuad[ix](i,j,k);
-              scatkt(i,j,k)= (vol_fraction(i,j,k) > 1e-16) ? scatkt(i,j,k)+scatQuad[ix] : 0.0;
+              scatkt[0](i,j,k)= (vol_fraction(i,j,k) > 1e-16) ? scatkt[0](i,j,k)+scatQuad[ix] : 0.0;
             }
             for (int ix=0; ix<_nQn_part; ix++){
-              asymm(i,j,k) += (scatkt(i,j,k) < 1e-8) ? 0.0 :  (Char_mass[ix](i,j,k)*_charAsymm+RC_mass[ix](i,j,k)*_rawCoalAsymm+_ash_mass_v[ix]*_ashAsymm)/(total_mass[ix]*scatkt(i,j,k))*scatQuad[ix] ;
+              asymm[0](i,j,k) += (scatkt[0](i,j,k) < 1e-8) ? 0.0 :  (Char_mass[ix](i,j,k)*_charAsymm+RC_mass[ix](i,j,k)*_rawCoalAsymm+_ash_mass_v[ix]*_ashAsymm)/(total_mass[ix]*scatkt[0](i,j,k))*scatQuad[ix] ;
             }
         });
       }
@@ -492,28 +497,26 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
       for (int ix=0; ix<_nQn_part; ix++){
         CCVariable<double>& abskpQuad = tsk_info->get_uintah_field_add           <CCVariable<double> >(_abskp_name_vector[ix]);  // ConstCC and CC behave differently
         abskpQuad.initialize(0.0);
-        Uintah::parallel_for( range,  [&](int i, int j, int k) {
+        Uintah::parallel_for<ExecutionSpace>( executionObject,range,  KOKKOS_LAMBDA(int i, int j, int k) {
             double total_mass = RC_mass[ix](i,j,k)+Char_mass[ix](i,j,k)+_ash_mass_v[ix];
             double complexReal =  (Char_mass[ix](i,j,k)*_charReal+RC_mass[ix](i,j,k)*_rawCoalReal+_ash_mass_v[ix]*_ashReal)/total_mass;
             double particle_absorption=_3Dpart_radprops->ross_abs_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k),complexReal)*weightQuad[ix](i,j,k)*_absorption_modifier;
             abskpQuad(i,j,k)= (vol_fraction(i,j,k) > 1e-16) ? particle_absorption : 0.0;
-            abskp(i,j,k)+= abskpQuad(i,j,k);
+            abskp[0](i,j,k)+= abskpQuad(i,j,k);
          });
       }
       if (_scatteringOn){
-        CCVariable<double>& scatkt  = tsk_info->get_uintah_field_add<CCVariable<double> >(_scatkt_name);
-        CCVariable<double>& asymm   = tsk_info->get_uintah_field_add<CCVariable<double> >(_asymmetryParam_name);
-        Uintah::parallel_for( range,  [&](int i, int j, int k) {
+        Uintah::parallel_for<ExecutionSpace>( executionObject,range,  KOKKOS_LAMBDA(int i, int j, int k) {
              std::vector<double> total_mass(_nQn_part);
              std::vector<double> scatQuad(_nQn_part);
             for (int ix=0; ix<_nQn_part; ix++){
               total_mass[ix] = RC_mass[ix](i,j,k)+Char_mass[ix](i,j,k)+_ash_mass_v[ix];
               double complexReal =  (Char_mass[ix](i,j,k)*_charReal+RC_mass[ix](i,j,k)*_rawCoalReal+_ash_mass_v[ix]*_ashReal)/total_mass[ix];
               scatQuad[ix]=_3Dpart_radprops->ross_sca_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k),complexReal)*weightQuad[ix](i,j,k);
-              scatkt(i,j,k)= (vol_fraction(i,j,k) > 1e-16) ? scatkt(i,j,k)+scatQuad[ix] : 0.0;
+              scatkt[0](i,j,k)= (vol_fraction(i,j,k) > 1e-16) ? scatkt[0](i,j,k)+scatQuad[ix] : 0.0;
             }
             for (int ix=0; ix<_nQn_part; ix++){
-              asymm(i,j,k) += (scatkt(i,j,k) < 1e-8) ? 0.0 :  (Char_mass[ix](i,j,k)*_charAsymm+RC_mass[ix](i,j,k)*_rawCoalAsymm+_ash_mass_v[ix]*_ashAsymm)/(total_mass[ix]*scatkt(i,j,k))*scatQuad[ix] ;
+              asymm(i,j,k) += (scatkt[0](i,j,k) < 1e-8) ? 0.0 :  (Char_mass[ix](i,j,k)*_charAsymm+RC_mass[ix](i,j,k)*_rawCoalAsymm+_ash_mass_v[ix]*_ashAsymm)/(total_mass[ix]*scatkt[0](i,j,k))*scatQuad[ix] ;
             }
         });
       }

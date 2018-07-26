@@ -10,6 +10,8 @@
 #endif
 #include <CCA/Components/Arches/ChemMixV2/ClassicTable.h>
 
+#define DEP_VAR_SIZE 2
+#define IND_VAR_SIZE 2
 // SEE PROPTEMPLATE.CC FOR INSTRUCTIONS
 //
 // /** 
@@ -151,7 +153,11 @@ namespace Uintah{
       double _constAsymmFact;
       double _Qabs;
 
-      Interp_class*  myTable;
+      //Interp_class_port<Kokkos::HostSpace>*  myTable;
+      Interp_class<DEP_VAR_SIZE>*  myTable;
+//#if defined( HAVE_CUDA )
+      //Interp_class_port<Kokkos::CudaSpace>  myGPUTable;
+//#endif
 
        // coal optics data members
       double _rawCoalReal;
@@ -163,7 +169,7 @@ namespace Uintah{
       int _ncomp;
       
      int _nIVs;  /// number of independent variables for table lookup
-     int _nDVs;  /// number of dependent variables for table lookup
+     int _nDVs{0};  /// number of dependent variables for table lookup
 
       double _absorption_modifier;
       double  _charAsymm;

@@ -927,10 +927,10 @@ int main( int argc, char *argv[], char *env[] )
     }
 
     delete dataArchiver;
-    delete scheduler;
     delete loadBalancer;
     delete solver;   
     delete application;
+    delete scheduler;
     delete simController;
   }
   

@@ -383,7 +383,7 @@ struct struct1DArray {
 
   // This constructor copies elements from one container into here.
   template <typename Container>
-  struct1DArray(const Container& container,unsigned int runTimeSize=CAPACITY) : runTime_size(runTimeSize)  {
+  struct1DArray(const Container& container,unsigned int runTimeSize) : runTime_size(runTimeSize)  {
 #ifdef DEBUG
     assert(runTime_size > CAPACITY, "ERROR. struct1DArray is not being used properly. The run-time size exceeds the compile time size");
 #endif      
