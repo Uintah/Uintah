@@ -458,17 +458,20 @@ template <typename ExecutionSpace, typename Functor>
 inline typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::OpenMP>::value, void>::type
 parallel_for( ExecutionObject& executionObject,  BlockRange const & r, const Functor & functor )
 {
-  const int ib = r.begin(0); const int ie = r.end(0);
-  const int jb = r.begin(1); const int je = r.end(1);
-  const int kb = r.begin(2); const int ke = r.end(2);
 
-  // Note, capturing with [&] generated a compiler bug when also using the nvcc_wrapper.
-  // But capturing with [=] worked fine, no compiler bugs.
-  Kokkos::parallel_for( Kokkos::RangePolicy<Kokkos::OpenMP, int>(kb, ke).set_chunk_size(2), [=](int k) {
-    for (int j=jb; j<je; ++j) {
-    for (int i=ib; i<ie; ++i) {
-      functor(i,j,k);
-    }}
+  const unsigned int i_size = r.end(0) - r.begin(0);
+  const unsigned int j_size = r.end(1) - r.begin(1);
+  const unsigned int k_size = r.end(2) - r.begin(2);
+  const unsigned int rbegin0 = r.begin(0);
+  const unsigned int rbegin1 = r.begin(1);
+  const unsigned int rbegin2 = r.begin(2);
+  const unsigned int numItems = (i_size > 0 ? i_size : 1) * (j_size > 0 ? j_size : 1) * (k_size > 0 ? k_size : 1);
+
+  Kokkos::parallel_for( Kokkos::RangePolicy<Kokkos::OpenMP, int>(0, numItems).set_chunk_size(1), [&, i_size, j_size, k_size, rbegin0, rbegin1, rbegin2](int n) {
+    const int k = n / (j_size * i_size) + rbegin2;
+    const int j = (n / i_size) % j_size + rbegin1;
+    const int i = n % i_size + rbegin0;
+    functor( i, j, k );
   });
 }
 #endif  //#if defined(UINTAH_ENABLE_KOKKOS)
@@ -656,12 +659,12 @@ inline typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::OpenMP>::val
 parallel_reduce_sum(ExecutionObject& executionObject, BlockRange const & r, const Functor & functor, ReductionType & red  )
 {
   ReductionType tmp = red;
-  unsigned int i_size = r.end(0) - r.begin(0);
-  unsigned int j_size = r.end(1) - r.begin(1);
-  unsigned int k_size = r.end(2) - r.begin(2);
-  unsigned int rbegin0 = r.begin(0);
-  unsigned int rbegin1 = r.begin(1);
-  unsigned int rbegin2 = r.begin(2);
+  const unsigned int i_size = r.end(0) - r.begin(0);
+  const unsigned int j_size = r.end(1) - r.begin(1);
+  const unsigned int k_size = r.end(2) - r.begin(2);
+  const unsigned int rbegin0 = r.begin(0);
+  const unsigned int rbegin1 = r.begin(1);
+  const unsigned int rbegin2 = r.begin(2);
 
   // MDRange approach
   //    typedef typename Kokkos::MDRangePolicy<ExecutionSpace, Kokkos::Rank<3,
@@ -706,20 +709,14 @@ parallel_reduce_sum(ExecutionObject& executionObject, BlockRange const & r, cons
 //  }, tmp);
 
   //Range policy manual approach:
-  const int teamThreadRangeSize = (i_size > 0 ? i_size : 1) * (j_size > 0 ? j_size : 1) * (k_size > 0 ? k_size : 1);
-  const int actualThreads = teamThreadRangeSize > 256 ? 256 : teamThreadRangeSize;
+  
+  const unsigned int numItems = (i_size > 0 ? i_size : 1) * (j_size > 0 ? j_size : 1) * (k_size > 0 ? k_size : 1);
 
-  Kokkos::RangePolicy<ExecutionSpace> rangepolicy(0, actualThreads);
-
-  Kokkos::parallel_reduce( rangepolicy, [&, teamThreadRangeSize, j_size, k_size, rbegin0, rbegin1, rbegin2](const int& n, ReductionType & tmp) {
-    int threadNum = n;
-    while ( threadNum < teamThreadRangeSize ) {
-      const int i = threadNum / (j_size * k_size) + rbegin0;
-      const int j = (threadNum / k_size) % j_size + rbegin1;
-      const int k = threadNum % k_size + rbegin2;
-      functor( i, j, k, tmp );
-      threadNum += 256;
-    }
+  Kokkos::parallel_reduce( Kokkos::RangePolicy<Kokkos::OpenMP, int>(0, numItems).set_chunk_size(1), [&, i_size, j_size, k_size, rbegin0, rbegin1, rbegin2](const int& n, ReductionType & tmp) {
+    const int k = n / (j_size * i_size) + rbegin2;
+    const int j = (n / i_size) % j_size + rbegin1;
+    const int i = n % i_size + rbegin0;
+    functor( i, j, k, tmp );
   }, tmp);
 
   red = tmp;
