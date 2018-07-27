@@ -42,7 +42,7 @@
 */
 
 
-#include <CCA/Components/Arches/ChemMixV2/ClassicTable2.h>
+#include <CCA/Components/Arches/ChemMixV2/ClassicTable.h>
 #include <Core/IO/UintahZlibUtil.h>
 #include <sci_defs/kokkos_defs.h>
 
