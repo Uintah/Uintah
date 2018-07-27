@@ -110,7 +110,6 @@ MPIScheduler::MPIScheduler( const ProcessorGroup * myworld
 {
 #ifdef UINTAH_ENABLE_KOKKOS
   Kokkos::initialize();
-  Uintah::createKokkosTools();
 #endif //UINTAH_ENABLE_KOKKOS
 
   if (g_time_out) {
