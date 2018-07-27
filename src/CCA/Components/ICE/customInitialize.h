@@ -80,15 +80,30 @@ namespace Uintah {
     ~powerLaw() {};
   };
 
+  // velocity profile according to Moser
+  // "Direct Numerical Simulation of turbulent channel Flow up to Re_tau=590
+  // Physics of Fluids, pp:943-945, Vol 11, Number 4, 1999
+  struct DNS_Moser{
+    double dpdx;                  // streamwise pressure gradient
+    int    verticalDir;           // vertical direction
+    Point  gridFloor;             // domain floor
+    Point  gridCeil;              // domain ceiling
+    ~DNS_Moser() {};
+  };
+
   struct customInitialize_basket{
-    vortices     vortex_inputs;
-    mms          mms_inputs;
-    gaussTemp    gaussTemp_inputs;
-    counterflow  counterflow_inputs;
-    powerLaw     powerLaw_inputs;
+    vortices     vortex_vars;
+    mms          mms_vars;
+    gaussTemp    gaussTemp_vars;
+    counterflow  counterflow_vars;
+    powerLaw     powerLaw_vars;
+    DNS_Moser    DNS_Moser_vars;
     bool         doesComputePressure;
     std::string  which;
   };
+  
+
+  
   
   void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
                                         customInitialize_basket* cib,
