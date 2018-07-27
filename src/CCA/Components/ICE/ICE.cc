@@ -474,7 +474,7 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
         
   //__________________________________
   //  boundary condition warnings
-  BC_bulletproofing(prob_spec,m_sharedState);
+  BC_bulletproofing(prob_spec, m_sharedState, grid);
   
   //__________________________________
   //  Load Model info.
