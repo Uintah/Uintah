@@ -233,7 +233,7 @@ AMRSimulationController::run()
     // longer than the simulation calculation.
     if( m_application->getSimulationTime()->m_max_wall_time > 0 )
       predictedWalltime = walltime +
-	1.5 * m_wall_timers.ExpMovingAverage().seconds();
+        1.5 * m_wall_timers.ExpMovingAverage().seconds();
     else
       predictedWalltime = 0;
 
@@ -296,12 +296,18 @@ AMRSimulationController::run()
       // If not the first time step or restarting check for regridding
       if( (!first || m_restarting) && m_regridder->needsToReGrid(m_current_gridP) ) {
         
-        proc0cout << " Need to regrid." << std::endl;
+        proc0cout << " Need to regrid for next time step "
+                  << m_application->getTimeStep() << " "
+                  << "at current sim time " << m_application->getSimTime()
+                  << std::endl;
         doRegridding( false );
       }
       // Covers single-level regridder case (w/ restarts)
       else if (m_regridder->doRegridOnce() && m_regridder->isAdaptive()) {
-        proc0cout << " Regridding once." << std::endl;
+        proc0cout << " Regridding once for next time step "
+                  << m_application->getTimeStep() << " "
+                  << "at current sim time " << m_application->getSimTime()
+                  << std::endl;
         m_scheduler->setRestartInitTimestep( false );
         doRegridding( false );
         m_regridder->setAdaptivity( false );
@@ -503,7 +509,11 @@ AMRSimulationController::doInitialTimeStep()
 
     m_runtime_stats[ CompilationTime ] += taskGraphTimer().seconds();
 
-    proc0cout << "Done with taskgraph compile (" << taskGraphTimer().seconds() << " seconds)\n";
+    proc0cout << "Done with taskgraph compile for next time step "
+              << m_application->getTimeStep() << " "
+              << "at current sim time " << m_application->getSimTime() << ", "
+              << "compiling took " << taskGraphTimer().seconds() << " seconds."
+              << std::endl;
 
     // No scrubbing for initial step
     m_scheduler->get_dw( 1 )->setScrubbing( DataWarehouse::ScrubNone );
@@ -536,8 +546,8 @@ AMRSimulationController::doInitialTimeStep()
     bool needNewLevel = false;
 
     do {
-      proc0cout << "\nCompiling initialization taskgraph...\n";
-
+      proc0cout << "Compiling initialization taskgraph." << std::endl;
+      
       // Initialize the system var (time step and simulation
       // time). Must be done before all other application tasks as
       // they may need these values.
@@ -596,7 +606,11 @@ AMRSimulationController::doInitialTimeStep()
 
       m_runtime_stats[ CompilationTime ] += taskGraphTimer().seconds();
 
-      proc0cout << "Done with taskgraph compile (" << taskGraphTimer().seconds() << " seconds)\n";
+      proc0cout << "Done with taskgraph compile for next time step "
+                << m_application->getTimeStep() << " "
+                << "at current sim time " << m_application->getSimTime() << ", "
+                << "compiling took " << taskGraphTimer().seconds() << " seconds."
+                << std::endl;
 
       // No scrubbing for initial step
       m_scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNone);
@@ -762,7 +776,7 @@ AMRSimulationController::doRegridding( bool initialTimeStep )
         proc0cout << " Level " << i
                   << " has " << m_current_gridP->getLevel(i)->numPatches() << " patch(es).";
       }
-      proc0cout << "\n";
+      proc0cout << std::endl;
 
       if (amrout.active()) {
         amrout << "---------- NEW GRID ----------\n"
@@ -795,18 +809,21 @@ AMRSimulationController::doRegridding( bool initialTimeStep )
       schedulerTimer.stop();
     }
     
-    proc0cout << "done regridding ("
+    proc0cout << "Done regridding for next time step "
+              << m_application->getTimeStep() << " "
+              << "at current sim time " << m_application->getSimTime() << ", "
+              << "total time took "
               << regriddingTimer().seconds() + schedulerTimer().seconds()
               << " seconds, "
               << "regridding took " << regriddingTimer().seconds()
               << " seconds";
       
     if (!initialTimeStep) {
-      proc0cout << ", scheduling and copying took " << schedulerTimer().seconds() << " seconds)\n";
+      proc0cout << ", scheduling and copying took "
+                << schedulerTimer().seconds() << " seconds";
     }
-    else {
-      proc0cout << ")\n";
-    }
+
+    proc0cout << "." << std::endl;
     
     retVal = true;
   } // grid != oldGrid
@@ -826,7 +843,7 @@ AMRSimulationController::compileTaskGraph( int totalFine )
 
   taskGraphTimer.start();
 
-  proc0cout << "Compiling taskgraph...\n";
+  proc0cout << "Compiling taskgraph..." << std::endl;
 
   m_output->recompile( m_current_gridP );
   
@@ -948,7 +965,12 @@ AMRSimulationController::compileTaskGraph( int totalFine )
 
   m_runtime_stats[ CompilationTime ] += taskGraphTimer().seconds();
 
-  proc0cout << "Done with taskgraph re-compile (" << taskGraphTimer().seconds() << " seconds)\n";
+  proc0cout << "Done with taskgraph compile for next time step "
+            << m_application->getTimeStep() << " "
+            << "at current sim time " << m_application->getSimTime() << ", "
+            << "compiling took " << taskGraphTimer().seconds() << " seconds."
+            << std::endl;
+  
 } // end compileTaskGraph()
 
 //______________________________________________________________________
