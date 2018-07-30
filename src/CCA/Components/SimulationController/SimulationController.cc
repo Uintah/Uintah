@@ -101,6 +101,35 @@ SimulationController::SimulationController( const ProcessorGroup * myworld
   
   m_grid_ps = m_ups->findBlock( "Grid" );
 
+  ProblemSpecP simController_ps = m_ups->findBlock( "SimulationController" );
+
+  if( simController_ps )
+  {
+    ProblemSpecP runtimeStats_ps = simController_ps->findBlock( "RuntimeStats" );
+
+    if( runtimeStats_ps )
+    {
+      runtimeStats_ps->get("frequency", m_reportStatsFrequency);
+      runtimeStats_ps->get("onTImeStep", m_reportStatsOnTimeStep);
+
+      if( m_reportStatsOnTimeStep >= m_reportStatsFrequency )
+      {
+	proc0cout << "Error: the frequency of reporting the run time stats "
+		  << m_reportStatsFrequency << " "
+		  << "is less than or equal to the time step ordinality "
+		  << m_reportStatsOnTimeStep << " "
+		  << ". Resetting the ordinality to ";
+
+	if( m_reportStatsFrequency > 1 )
+	  m_reportStatsOnTimeStep = 1;
+	else
+	  m_reportStatsOnTimeStep = 0;
+
+	proc0cout << m_reportStatsOnTimeStep << std::endl;
+      }
+    }
+  }
+  
 #ifdef USE_PAPI_COUNTERS
   /*
    * Setup PAPI events to track.
@@ -694,6 +723,10 @@ SimulationController::ReportStats(const ProcessorGroup*,
                                         DataWarehouse*,
                                         bool header )
 {
+  bool reportStats = header ||
+    m_application->isLastTimeStep(m_wall_timers.GetWallTime()) ||
+    (m_application->getTimeStep()%m_reportStatsFrequency == m_reportStatsOnTimeStep);
+
   // Get and reduce the performance runtime stats
   getMemoryStats();
   getPAPIStats();
@@ -791,7 +824,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
       message << " (on rank 0 only)";
     }
 
-    DOUT(true, message.str());
+    DOUT(reportStats, message.str());
     std::cout.flush();
   }
   
@@ -849,31 +882,36 @@ SimulationController::ReportStats(const ProcessorGroup*,
       message << realSecondsAvg / SECONDS_PER_YEAR << " years (avg) ";
     }
 
-    DOUT(true, message.str());
+    DOUT(reportStats, message.str());
     std::cout.flush();
   }
 
-  // Sum up the average time for overhead related components. These
-  // same values are used in SimulationState::getOverheadTime.
-  double overhead_time =
-    (m_runtime_stats.getAverage(CompilationTime)           +
-     m_runtime_stats.getAverage(RegriddingTime)            +
-     m_runtime_stats.getAverage(RegriddingCompilationTime) +
-     m_runtime_stats.getAverage(RegriddingCopyDataTime)    +
-     m_runtime_stats.getAverage(LoadBalancerTime));
-
-  // Sum up the average times for simulation components. These
-  // same values are used in SimulationState::getTotalTime.
-  double total_time =
-    (overhead_time +
-     m_runtime_stats.getAverage(TaskExecTime)       +
-     m_runtime_stats.getAverage(TaskLocalCommTime)  +
-     m_runtime_stats.getAverage(TaskWaitCommTime)   +
-     m_runtime_stats.getAverage(TaskReduceCommTime) +
-     m_runtime_stats.getAverage(TaskWaitThreadTime));
+  // Variable for calculating the percentage of time spent in overhead.
+  double percent_overhead = 0;
   
+  if( (m_regridder && m_regridder->useDynamicDilation()) ||
+      g_comp_timings ) {
+
+    // Sum up the average time for overhead related components.
+    double overhead_time =
+      (m_runtime_stats.getAverage(CompilationTime)           +
+       m_runtime_stats.getAverage(RegriddingTime)            +
+       m_runtime_stats.getAverage(RegriddingCompilationTime) +
+       m_runtime_stats.getAverage(RegriddingCopyDataTime)    +
+       m_runtime_stats.getAverage(LoadBalancerTime));
+    
+    // Sum up the average times for simulation components.
+    double total_time =
+      (overhead_time +
+       m_runtime_stats.getAverage(TaskExecTime)       +
+       m_runtime_stats.getAverage(TaskLocalCommTime)  +
+       m_runtime_stats.getAverage(TaskWaitCommTime)   +
+       m_runtime_stats.getAverage(TaskReduceCommTime) +
+       m_runtime_stats.getAverage(TaskWaitThreadTime));
+    
     // Calculate percentage of time spent in overhead.
-  double percent_overhead = overhead_time / total_time;
+    percent_overhead = overhead_time / total_time;
+  }
   
   double overheadAverage = 0;
 
@@ -921,7 +959,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
         }
       }
 
-      DOUT(true, message.str());
+      DOUT(reportStats, message.str());
     }
 
     // Application per proc runtime performance stats    
@@ -938,7 +976,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
         }
       }
       
-      DOUT(true, message.str());
+      DOUT(reportStats, message.str());
     }
   } 
 
@@ -1010,7 +1048,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
       message << std::endl;
     }
 
-    DOUT(true, message.str());
+    DOUT(reportStats, message.str());
   }
   
   ++m_num_samples;
