@@ -114,18 +114,18 @@ SimulationController::SimulationController( const ProcessorGroup * myworld
 
       if( m_reportStatsOnTimeStep >= m_reportStatsFrequency )
       {
-	proc0cout << "Error: the frequency of reporting the run time stats "
-		  << m_reportStatsFrequency << " "
-		  << "is less than or equal to the time step ordinality "
-		  << m_reportStatsOnTimeStep << " "
-		  << ". Resetting the ordinality to ";
+        proc0cout << "Error: the frequency of reporting the run time stats "
+                  << m_reportStatsFrequency << " "
+                  << "is less than or equal to the time step ordinality "
+                  << m_reportStatsOnTimeStep << " "
+                  << ". Resetting the ordinality to ";
 
-	if( m_reportStatsFrequency > 1 )
-	  m_reportStatsOnTimeStep = 1;
-	else
-	  m_reportStatsOnTimeStep = 0;
+        if( m_reportStatsFrequency > 1 )
+          m_reportStatsOnTimeStep = 1;
+        else
+          m_reportStatsOnTimeStep = 0;
 
-	proc0cout << m_reportStatsOnTimeStep << std::endl;
+        proc0cout << m_reportStatsOnTimeStep << std::endl;
       }
     }
   }
@@ -723,10 +723,35 @@ SimulationController::ReportStats(const ProcessorGroup*,
                                         DataWarehouse*,
                                         bool header )
 {
-  bool reportStats = header ||
-    m_application->isLastTimeStep(m_wall_timers.GetWallTime()) ||
-    (m_application->getTimeStep()%m_reportStatsFrequency == m_reportStatsOnTimeStep);
+  bool reportStats;
 
+  // If the reporting frequency is greater than 1 check to see if
+  // output is needed.
+  if( m_reportStatsFrequency == 1 )
+    reportStats = true;
+  // Note: this check is split up so to be assured that the call to
+  // isLastTimeStep is last and called only when needed. Unfortuantely,
+  // the greater the frequency the more often it will be called.
+  else
+  {
+    if( header )
+      reportStats = true;
+    else if( m_application->getTimeStep()%m_reportStatsFrequency == m_reportStatsOnTimeStep )
+      reportStats = true;
+    else
+    {
+      // Get the wall time if is needed, otherwise ignore it.
+      double walltime;
+      
+      if( m_application->getSimulationTime()->m_max_wall_time > 0 )
+        walltime = m_wall_timers.GetWallTime();
+      else
+        walltime = 0;
+      
+      reportStats = m_application->isLastTimeStep( walltime );
+    }
+  }
+  
   // Get and reduce the performance runtime stats
   getMemoryStats();
   getPAPIStats();
@@ -1209,6 +1234,14 @@ SimulationController::CheckInSitu(const ProcessorGroup*,
 
     m_wall_timers.InSitu.start();
 
+    // Get the wall time if is needed, otherwise ignore it.
+    double walltime;
+    
+    if( m_application->getSimulationTime()->m_max_wall_time > 0 )
+      walltime = m_wall_timers.GetWallTime();
+    else
+      walltime = 0;
+    
     // Update all of the simulation grid and time dependent variables.
     visit_UpdateSimData( m_visitSimData, m_current_gridP,
                          m_application->getSimTime(),
@@ -1216,7 +1249,7 @@ SimulationController::CheckInSitu(const ProcessorGroup*,
                          m_application->getDelT(),
                          m_application->getNextDelT(),
                          first,
-                         m_application->isLastTimeStep(m_wall_timers.GetWallTime()) );
+                         m_application->isLastTimeStep(walltime) );
 
     // Check the state - if the return value is true the user issued
     // a termination.

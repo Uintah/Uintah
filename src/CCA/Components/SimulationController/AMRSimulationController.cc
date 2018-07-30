@@ -209,8 +209,10 @@ AMRSimulationController::run()
   // simulation time to get a measurement of the simulation to wall time.
   m_wall_timers.TimeStep.reset( true );
     
+  double walltime = m_wall_timers.GetWallTime();
+  
   // The main loop where the specified application problem is solved.
-  while( !m_application->isLastTimeStep( m_wall_timers.GetWallTime() ) ) {
+  while( !m_application->isLastTimeStep( walltime ) ) {
 
     // Perform a bunch of housekeeping operations at the top of the
     // loop. Performing them here asures that everything is ready
@@ -222,28 +224,37 @@ AMRSimulationController::run()
     // checkpoint the last time step. Maybelast uses the wall time and
     // is sync'd across all ranks.
 
+    // Get the wall time if is needed, otherwise ignore it.
+    double predictedWalltime;
+  
     // The predicted time is a best guess at what the wall time will be
     // when the time step is finished. It is currently used only for
     // outputing and checkpointing. Both of which typically take much
     // longer than the simulation calculation.
-    double walltime = m_wall_timers.GetWallTime() +
-      1.5 * m_wall_timers.ExpMovingAverage().seconds();
+    if( m_application->getSimulationTime()->m_max_wall_time > 0 )
+      predictedWalltime = walltime +
+	1.5 * m_wall_timers.ExpMovingAverage().seconds();
+    else
+      predictedWalltime = 0;
 
-    m_output->maybeLastTimeStep( m_application->maybeLastTimeStep( walltime ) );
+    if( m_application->maybeLastTimeStep( predictedWalltime ) )
+      m_output->maybeLastTimeStep( true );
+    else
+      m_output->maybeLastTimeStep( false );
     
     // Set the current wall time for this rank (i.e. this value is
     // sync'd across all ranks). The Data Archive uses it for
     // determining when to output or checkpoint.
-    m_output->setElapsedWallTime( m_wall_timers.GetWallTime() );
+    m_output->setElapsedWallTime( walltime );
     
     // Get the next output checkpoint time step. This step is not done
     // in m_output->beginOutputTimeStep because the original values
     // are needed to compare with if there is a timestep restart so it
     // is performed here.
 
-    // NOTE: It is called BEFORE m_application->prepareForNextTimeStep because
-    // at this point the delT, nextDelT, time step, sim time, and all
-    // wall times are all in sync.
+    // NOTE: It is called BEFORE m_application->prepareForNextTimeStep
+    // because at this point the delT, nextDelT, time step, sim time,
+    // and all wall times are all in sync.
     m_output->findNext_OutputCheckPointTimeStep( first && m_restarting,
                                                  m_current_gridP );
 
@@ -417,6 +428,9 @@ AMRSimulationController::run()
       
       first = false;
     }
+
+    walltime = m_wall_timers.GetWallTime();
+    
   } // end while main time loop (time is not up, etc)
   
   // m_ups->releaseDocument();
