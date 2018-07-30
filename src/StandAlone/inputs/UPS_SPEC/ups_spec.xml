@@ -429,7 +429,7 @@
   <SimulationController spec="OPTIONAL NO_DATA">
     <RuntimeStats       spec="OPTIONAL NO_DATA">
       <frequency        spec="OPTIONAL INTEGER 'positive'" /> <!-- Only output on every n^th timestep -->
-      <onTImeStep       spec="OPTIONAL INTEGER 'positive'" /> <!-- Output on time steps which end with this ordinal -->
+      <onTimeStep       spec="OPTIONAL INTEGER 'positive'" /> <!-- Output on time steps which end with this ordinal -->
     </RuntimeStats>
   </SimulationController>
   <!-- End Simulation Controller Block -->
