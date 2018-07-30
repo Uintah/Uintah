@@ -1896,7 +1896,7 @@ Ray::rayTrace_dataOnionLevels( const PatchSubset* finePatches,
         rayTrace_dataOnion_solveDivQFunctor< T, Kokkos::CudaSpace, decltype(random_pool), numLevels>
         functor( random_pool, levelParamsML, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, sigmaT4OverPi_view, abskg_view,
                    cellType_view , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays);
-        Uintah::parallel_reduce_sum<Kokkos::Cuda>( executionObject, range, functor, size );
+        Uintah::parallel_reduce_sum( executionObject, range, functor, size );
       }
 
     } // end if ( std::is_same< Kokkos::Cuda , ExecutionSpace >::value )
@@ -2010,7 +2010,7 @@ Ray::rayTrace_dataOnionLevels( const PatchSubset* finePatches,
           rayTrace_dataOnion_solveDivQFunctor< T, Kokkos::HostSpace, decltype(random_pool), numLevels >
           functor( random_pool, levelParamsML, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, sigmaT4OverPi_view, abskg_view,
                  cellType_view , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays);
-          Uintah::parallel_reduce_sum<Kokkos::OpenMP>( executionObject, range, functor, size );
+          Uintah::parallel_reduce_sum( executionObject, range, functor, size );
         }
       }  // end of if(_solveDivQ)
 
