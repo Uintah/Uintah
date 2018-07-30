@@ -1248,7 +1248,7 @@ DataArchiver::beginOutputTimeStep( const GridP& grid )
       // Checkpoint based on the being the last timestep.
       (m_checkpointLastTimeStep && m_maybeLastTimeStep) );    
 
-  // Checkpoint based on the being the wall time.
+  // Checkpoint based on the wall time.
   if( m_checkpointWallTimeInterval > 0 ) {
 
     if( m_elapsedWallTime >= m_nextCheckpointWallTime ) {
@@ -1536,7 +1536,7 @@ DataArchiver::findNext_OutputCheckPointTimeStep( const bool restart,
         // Checkpoint based on the being the last timestep.
         (m_checkpointLastTimeStep && m_maybeLastTimeStep) );    
     
-    // Checkpoint based on the being the wall time.
+    // Checkpoint based on the wall time.
     if( m_checkpointWallTimeInterval > 0 ) {
       
       if( m_elapsedWallTime >= m_nextCheckpointWallTime )
@@ -4274,12 +4274,16 @@ DataArchiver::checkpointTimeStep( const GridP& grid,
 void
 DataArchiver::setElapsedWallTime( double val )
 {
-  // When using the wall time, rank 0 determines the wall time and
-  // sends it to all other ranks.
-  Uintah::MPI::Bcast( &val, 1, MPI_DOUBLE, 0, d_myworld->getComm() );
+  // Set the elasped wall time if the checkpoint is based on the wall time.
+  if( m_checkpointWallTimeInterval > 0 ) {
+
+    // When using the wall time, rank 0 determines the wall time and
+    // sends it to all other ranks.
+    Uintah::MPI::Bcast( &val, 1, MPI_DOUBLE, 0, d_myworld->getComm() );
   
-  m_elapsedWallTime = val;
-};
+    m_elapsedWallTime = val;
+  }
+}
 
 //______________________________________________________________________
 // Called to set the elapsed wall time
@@ -4288,7 +4292,7 @@ void
 DataArchiver::setCheckpointCycle( int val )
 {
   m_checkpointCycle = val;
-};
+}
 
 //______________________________________________________________________
 //
