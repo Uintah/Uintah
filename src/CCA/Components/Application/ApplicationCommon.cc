@@ -38,6 +38,10 @@
 
 using namespace Uintah;
 
+Uintah::Dout g_deltaT_minor_warnings( "DeltaTMinorWarnings", "ApplicationCommon", "Report minor warnings when validating the next delta T", true );
+
+Uintah::Dout g_deltaT_major_warnings( "DeltaTMajorWarnings", "ApplicationCommon", "Report major warnings when validating the next delta T", true );
+
 ApplicationCommon::ApplicationCommon( const ProcessorGroup   * myworld,
                                       const SimulationStateP   sharedState )
     : UintahParallelComponent(myworld), m_sharedState(sharedState)
@@ -760,11 +764,17 @@ ApplicationCommon::validateNextDelT( DataWarehouse* newDW )
       
   // Check to see if the next delT is below the delt_min
   if( m_nextDelT < m_simulationTime->m_delt_min ) {
-    proc0cout << "WARNING: raising delT from " << m_nextDelT;
+    std::ostringstream message;
+
+    message << "WARNING (a) at time step " << m_timeStep << " "
+	    << "and sim time " << m_simulationTime << " "
+	    << ": raising the next delT from " << m_nextDelT;
     
     m_nextDelT = m_simulationTime->m_delt_min;
     
-    proc0cout << " to minimum: " << m_nextDelT << '\n';
+    message << " to minimum: " << m_nextDelT;
+
+    DOUT( g_deltaT_major_warnings, message.str() );
   }
 
   // Check to see if the next delT was increased too much over the
@@ -774,34 +784,52 @@ ApplicationCommon::validateNextDelT( DataWarehouse* newDW )
   if( m_delT > 0.0 &&
       m_simulationTime->m_max_delt_increase > 0 &&
       m_nextDelT > delt_tmp ) {
-    proc0cout << "WARNING (a): lowering delT from " << m_nextDelT;
+    std::ostringstream message;
+
+    message << "WARNING (b) at time step " << m_timeStep << " "
+	    << "and sim time " << m_simulationTime << " "
+	    << ": lowering the next delT from " << m_nextDelT;
     
     m_nextDelT = delt_tmp;
     
-    proc0cout << " to maxmimum: " << m_nextDelT
+    message << " to maxmimum: " << m_nextDelT
               << " (maximum increase of " << m_simulationTime->m_max_delt_increase
-              << ")\n";
+              << ")";
+
+    DOUT( g_deltaT_major_warnings, message.str() );
   }
 
   // Check to see if the next delT exceeds the max_initial_delt
   if( m_simulationTime->m_max_initial_delt > 0 &&
       m_simTime+m_delT <= m_simulationTime->m_initial_delt_range &&
       m_nextDelT > m_simulationTime->m_max_initial_delt ) {
-    proc0cout << "WARNING (b): lowering delT from " << m_nextDelT ;
+    std::ostringstream message;
+
+    message << "WARNING (c) at time step " << m_timeStep << " "
+	    << "and sim time " << m_simulationTime << " "
+	    << ": lowering the next delT from " << m_nextDelT ;
 
     m_nextDelT = m_simulationTime->m_max_initial_delt;
 
-    proc0cout<< " to maximum: " << m_nextDelT
-             << " (for initial timesteps)\n";
+    message<< " to maximum: " << m_nextDelT
+             << " (for initial timesteps)";
+
+    DOUT( g_deltaT_major_warnings, message.str() );
   }
 
   // Check to see if the next delT exceeds the delt_max
   if( m_nextDelT > m_simulationTime->m_delt_max ) {
-    proc0cout << "WARNING (c): lowering delT from " << m_nextDelT;
+    std::ostringstream message;
+
+    message << "WARNING (d) at time step " << m_timeStep << " "
+	    << "and sim time " << m_simulationTime << " "
+	    << ": lowering the next delT from " << m_nextDelT;
 
     m_nextDelT = m_simulationTime->m_delt_max;
     
-    proc0cout << " to maximum: " << m_nextDelT << '\n';
+    message << " to maximum: " << m_nextDelT;
+
+    DOUT( g_deltaT_minor_warnings, message.str() );
   }
 
   // Clamp the next delT to match the requested output and/or
@@ -811,23 +839,35 @@ ApplicationCommon::validateNextDelT( DataWarehouse* newDW )
     // Clamp to the output time
     double nextOutput = m_output->getNextOutputTime();
     if (nextOutput != 0 && m_simTime + m_delT + m_nextDelT > nextOutput) {
-      proc0cout << "WARNING (d): lowering delT from " << m_nextDelT;
+      std::ostringstream message;
+
+      message << "WARNING (e) at time step " << m_timeStep << " "
+	    << "and sim time " << m_simulationTime << " "
+	    << ": lowering the next delT from " << m_nextDelT;
 
       m_nextDelT = nextOutput - (m_simTime+m_delT);
 
-      proc0cout << " to " << m_nextDelT
-                << " to line up with output time\n";
+      message << " to " << m_nextDelT
+                << " to line up with output time";
+
+      DOUT( g_deltaT_minor_warnings, message.str() );
     }
 
     // Clamp to the checkpoint time
     double nextCheckpoint = m_output->getNextCheckpointTime();
     if (nextCheckpoint != 0 && m_simTime + m_delT + m_nextDelT > nextCheckpoint) {
-      proc0cout << "WARNING (d): lowering delT from " << m_nextDelT;
+      std::ostringstream message;
+      
+      message << "WARNING (f) at time step " << m_timeStep << " "
+	    << "and sim time " << m_simulationTime << " "
+	    << ": lowering the next delT from " << m_nextDelT;
 
       m_nextDelT = nextCheckpoint - (m_simTime+m_delT);
 
-      proc0cout << " to " << m_nextDelT
-                << " to line up with checkpoint time\n";
+      message << " to " << m_nextDelT
+                << " to line up with checkpoint time";
+
+      DOUT( g_deltaT_minor_warnings, message.str() );
     }
   }
   
