@@ -767,14 +767,14 @@ ApplicationCommon::validateNextDelT( DataWarehouse* newDW )
     std::ostringstream message;
 
     message << "WARNING (a) at time step " << m_timeStep << " "
-	    << "and sim time " << m_simulationTime << " "
+	    << "and sim time " << m_simTime << " "
 	    << ": raising the next delT from " << m_nextDelT;
     
     m_nextDelT = m_simulationTime->m_delt_min;
     
     message << " to minimum: " << m_nextDelT;
 
-    DOUT( g_deltaT_major_warnings, message.str() );
+    DOUT( d_myworld->myRank() == 0 && g_deltaT_major_warnings, message.str() );
   }
 
   // Check to see if the next delT was increased too much over the
@@ -787,7 +787,7 @@ ApplicationCommon::validateNextDelT( DataWarehouse* newDW )
     std::ostringstream message;
 
     message << "WARNING (b) at time step " << m_timeStep << " "
-	    << "and sim time " << m_simulationTime << " "
+	    << "and sim time " << m_simTime << " "
 	    << ": lowering the next delT from " << m_nextDelT;
     
     m_nextDelT = delt_tmp;
@@ -796,7 +796,7 @@ ApplicationCommon::validateNextDelT( DataWarehouse* newDW )
               << " (maximum increase of " << m_simulationTime->m_max_delt_increase
               << ")";
 
-    DOUT( g_deltaT_major_warnings, message.str() );
+    DOUT( d_myworld->myRank() == 0 && g_deltaT_major_warnings, message.str() );
   }
 
   // Check to see if the next delT exceeds the max_initial_delt
@@ -806,7 +806,7 @@ ApplicationCommon::validateNextDelT( DataWarehouse* newDW )
     std::ostringstream message;
 
     message << "WARNING (c) at time step " << m_timeStep << " "
-	    << "and sim time " << m_simulationTime << " "
+	    << "and sim time " << m_simTime << " "
 	    << ": lowering the next delT from " << m_nextDelT ;
 
     m_nextDelT = m_simulationTime->m_max_initial_delt;
@@ -814,7 +814,7 @@ ApplicationCommon::validateNextDelT( DataWarehouse* newDW )
     message<< " to maximum: " << m_nextDelT
              << " (for initial timesteps)";
 
-    DOUT( g_deltaT_major_warnings, message.str() );
+    DOUT( d_myworld->myRank() == 0 && g_deltaT_major_warnings, message.str() );
   }
 
   // Check to see if the next delT exceeds the delt_max
@@ -822,14 +822,14 @@ ApplicationCommon::validateNextDelT( DataWarehouse* newDW )
     std::ostringstream message;
 
     message << "WARNING (d) at time step " << m_timeStep << " "
-	    << "and sim time " << m_simulationTime << " "
+	    << "and sim time " << m_simTime << " "
 	    << ": lowering the next delT from " << m_nextDelT;
 
     m_nextDelT = m_simulationTime->m_delt_max;
     
     message << " to maximum: " << m_nextDelT;
 
-    DOUT( g_deltaT_minor_warnings, message.str() );
+    DOUT( d_myworld->myRank() == 0 && g_deltaT_minor_warnings, message.str() );
   }
 
   // Clamp the next delT to match the requested output and/or
@@ -842,7 +842,7 @@ ApplicationCommon::validateNextDelT( DataWarehouse* newDW )
       std::ostringstream message;
 
       message << "WARNING (e) at time step " << m_timeStep << " "
-	    << "and sim time " << m_simulationTime << " "
+	    << "and sim time " << m_simTime << " "
 	    << ": lowering the next delT from " << m_nextDelT;
 
       m_nextDelT = nextOutput - (m_simTime+m_delT);
@@ -850,7 +850,7 @@ ApplicationCommon::validateNextDelT( DataWarehouse* newDW )
       message << " to " << m_nextDelT
                 << " to line up with output time";
 
-      DOUT( g_deltaT_minor_warnings, message.str() );
+      DOUT( d_myworld->myRank() == 0 && g_deltaT_minor_warnings, message.str() );
     }
 
     // Clamp to the checkpoint time
@@ -859,7 +859,7 @@ ApplicationCommon::validateNextDelT( DataWarehouse* newDW )
       std::ostringstream message;
       
       message << "WARNING (f) at time step " << m_timeStep << " "
-	    << "and sim time " << m_simulationTime << " "
+	    << "and sim time " << m_simTime << " "
 	    << ": lowering the next delT from " << m_nextDelT;
 
       m_nextDelT = nextCheckpoint - (m_simTime+m_delT);
@@ -867,7 +867,7 @@ ApplicationCommon::validateNextDelT( DataWarehouse* newDW )
       message << " to " << m_nextDelT
                 << " to line up with checkpoint time";
 
-      DOUT( g_deltaT_minor_warnings, message.str() );
+      DOUT( d_myworld->myRank() == 0 && g_deltaT_minor_warnings, message.str() );
     }
   }
   
