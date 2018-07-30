@@ -199,7 +199,10 @@ void create_portable_tasks(TaskFunctor taskFunctor,
 
       task->setExecutionAndMemorySpace( TaskAssignedExecutionSpace::KOKKOS_CUDA, TaskAssignedMemorySpace::KOKKOS_CUDASPACE );
     }
-  } else {
+  }
+
+  //If a GPU task didn't get loaded, then check for CPU task options.
+  if (!task) {
     if ( std::is_same< Kokkos::OpenMP , ES1 >::value
         || std::is_same< Kokkos::OpenMP , ES2 >::value) {
       if (std::is_same< Kokkos::OpenMP , ES1 >::value) {

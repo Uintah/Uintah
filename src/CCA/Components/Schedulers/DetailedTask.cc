@@ -149,7 +149,7 @@ DetailedTask::doit( const ProcessorGroup                      * pg
 #ifdef HAVE_CUDA
   // Load in streams whether this is a CPU task or GPU task.
   // GPU tasks need streams.  CPU tasks can also use streams (for D2H copies or transferFrom calls)
-  int numStreams = this->getTask()->maxStreamsPerTask();
+  int numStreams = m_task->maxStreamsPerTask();
   for (int i = 0; i < numStreams; i++) {
     uintahParams.setStream(this->getCudaStreamForThisTask(i));
   }
