@@ -110,7 +110,7 @@ SimulationController::SimulationController( const ProcessorGroup * myworld
     if( runtimeStats_ps )
     {
       runtimeStats_ps->get("frequency", m_reportStatsFrequency);
-      runtimeStats_ps->get("onTImeStep", m_reportStatsOnTimeStep);
+      runtimeStats_ps->get("onTimeStep", m_reportStatsOnTimeStep);
 
       if( m_reportStatsOnTimeStep >= m_reportStatsFrequency )
       {
