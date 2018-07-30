@@ -254,7 +254,7 @@ WARNING
       m_isRegridTimeStep = val;
       
       if( m_isRegridTimeStep )
-	m_lastRegridTimestep = m_timeStep;
+        m_lastRegridTimestep = m_timeStep;
     }
     virtual int  getLastRegridTimeStep() { return m_lastRegridTimestep; }
 
