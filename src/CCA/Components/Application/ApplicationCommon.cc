@@ -887,19 +887,27 @@ ApplicationCommon::validateNextDelT( DataWarehouse* newDW )
 bool
 ApplicationCommon::isLastTimeStep( double walltime ) const
 {
-  // When using the wall clock time, rank 0 determines the time and
-  // sends it to all other ranks.
-  Uintah::MPI::Bcast( &walltime, 1, MPI_DOUBLE, 0, d_myworld->getComm() );
+  if( m_endSimulation )
+    return true;
 
-  return ( m_endSimulation ||
+  if( m_simTime >= m_simulationTime->m_max_time )
+    return true;
 
-           ( m_simTime >= m_simulationTime->m_max_time ) ||
+  if( m_simulationTime->m_max_time_steps > 0 &&
+      m_timeStep >= m_simulationTime->m_max_time_steps )
+    return true;
 
-           ( m_simulationTime->m_max_time_steps > 0 &&
-             m_timeStep >= m_simulationTime->m_max_time_steps ) ||
+  if( m_simulationTime->m_max_wall_time > 0 )
+  {
+    // When using the wall clock time, rank 0 determines the time and
+    // sends it to all other ranks.
+    Uintah::MPI::Bcast( &walltime, 1, MPI_DOUBLE, 0, d_myworld->getComm() );
 
-           ( m_simulationTime->m_max_wall_time > 0 &&
-             walltime >= m_simulationTime->m_max_wall_time ) );
+    if(walltime >= m_simulationTime->m_max_wall_time )
+      return true;
+  }
+
+  return false;
 }
 
 //______________________________________________________________________
@@ -914,17 +922,24 @@ ApplicationCommon::isLastTimeStep( double walltime ) const
 bool
 ApplicationCommon::maybeLastTimeStep( double walltime ) const
 {  
-  // When using the wall clock time, rank 0 determines the time and
-  // sends it to all other ranks.
-  Uintah::MPI::Bcast( &walltime, 1, MPI_DOUBLE, 0, d_myworld->getComm() );
+  if( m_simTime + m_delT >= m_simulationTime->m_max_time )
+    return true;
+           
+  if( m_simulationTime->m_max_time_steps > 0 &&
+      m_timeStep + 1 >= m_simulationTime->m_max_time_steps )
+    return true;
+           
+  if( m_simulationTime->m_max_wall_time > 0 )
+  {
+    // When using the wall clock time, rank 0 determines the time and
+    // sends it to all other ranks.
+    Uintah::MPI::Bcast( &walltime, 1, MPI_DOUBLE, 0, d_myworld->getComm() );
   
-  return ( (m_simTime + m_delT >= m_simulationTime->m_max_time) ||
-           
-           (m_simulationTime->m_max_time_steps > 0 &&
-            m_timeStep + 1 >= m_simulationTime->m_max_time_steps) ||
-           
-           (m_simulationTime->m_max_wall_time > 0 &&
-            walltime >= m_simulationTime->m_max_wall_time) );
+    if( walltime >= m_simulationTime->m_max_wall_time )
+      return true;
+  }
+
+  return false;  
 }
 
 //______________________________________________________________________
