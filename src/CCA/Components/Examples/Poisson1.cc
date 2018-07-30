@@ -252,12 +252,12 @@ void Poisson1::timeAdvance( const PatchSubset* patches,
 
     // Perform the boundary condition of copying over prior initialized values.  (TODO:  Replace with boundary condition)
     //Uintah::parallel_for<ExecutionSpace, LaunchBounds< 640,1 > >( executionObject, rangeBoundary, KOKKOS_LAMBDA(int i, int j, int k){
-    Uintah::parallel_for(executionObject, rangeBoundary, UINTAH_LAMBDA(int i, int j, int k){
+    Uintah::parallel_for(executionObject, rangeBoundary, KOKKOS_LAMBDA(int i, int j, int k){
         newphi(i, j, k) = phi(i,j,k);
     });
 
     // Perform the main loop
-    Uintah::parallel_reduce_sum(executionObject, range, UINTAH_LAMBDA (int i, int j, int k, double& residual){
+    Uintah::parallel_reduce_sum(executionObject, range, KOKKOS_LAMBDA (int i, int j, int k, double& residual){
       newphi(i, j, k) = (1. / 6)
           * (phi(i + 1, j, k) + phi(i - 1, j, k) + phi(i, j + 1, k) +
               phi(i, j - 1, k) + phi(i, j, k + 1) + phi(i, j, k - 1));
