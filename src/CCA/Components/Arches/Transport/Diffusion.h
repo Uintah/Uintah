@@ -48,12 +48,12 @@ protected:
 
     void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject );
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    template <typename EXECUTION_SPACE, typename MEMORY_SPACE>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject );
+    template <typename ExecutionSpace, typename MemorySpace>
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
 
     void create_local_labels();
 
@@ -91,9 +91,9 @@ private:
   template <typename T>
   TaskAssignedExecutionSpace Diffusion<T>::loadTaskEvalFunctionPointers(){
 
-    TaskAssignedExecutionSpace assignedTag{};
-    LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, Diffusion<T>::eval);
-    return assignedTag;
+    return create_portable_arches_tasks( this,
+                                         &Diffusion<T>::eval<UINTAH_CPU_TAG>,
+                                         &Diffusion<T>::eval<KOKKOS_OPENMP_TAG> );
 
   }
 
@@ -166,7 +166,7 @@ private:
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
-  void Diffusion<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+  void Diffusion<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     for (int ieqn = 0; ieqn < int(m_eqn_names.size()); ieqn++ ){
 
@@ -210,7 +210,7 @@ private:
   //------------------------------------------------------------------------------------------------
   template <typename T>
   template<typename ExecutionSpace, typename MemorySpace>
-  void Diffusion<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+  void Diffusion<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
     CT& eps = tsk_info->get_const_uintah_field_add<CT>(m_eps_name);
 

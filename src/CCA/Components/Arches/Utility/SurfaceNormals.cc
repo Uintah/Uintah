@@ -18,9 +18,9 @@ SurfaceNormals::~SurfaceNormals(){
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace SurfaceNormals::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, SurfaceNormals::eval);
-  return assignedTag;
+  return create_portable_arches_tasks( this,
+                                       &SurfaceNormals::eval<UINTAH_CPU_TAG>,
+                                       &SurfaceNormals::eval<KOKKOS_OPENMP_TAG> );
 
 }
 
@@ -69,7 +69,7 @@ SurfaceNormals::register_initialize( VIVec& variable_registry , const bool packe
 }
 
 void
-SurfaceNormals::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+SurfaceNormals::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE(0,1)
   GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE(0,1)

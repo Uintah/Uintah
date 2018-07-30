@@ -16,9 +16,9 @@ GravityA::~GravityA()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace GravityA::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, GravityA::eval);
-  return assignedTag;
+  return create_portable_arches_tasks( this,
+                                       &GravityA::eval<UINTAH_CPU_TAG>,
+                                       &GravityA::eval<KOKKOS_OPENMP_TAG> );
 
 }
 
@@ -78,7 +78,7 @@ GravityA::register_initialize( std::vector<ArchesFieldContainer::VariableInforma
 
 //--------------------------------------------------------------------------------------------------
 void
-GravityA::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+GravityA::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   constCCVariable<double>& density  = tsk_info->get_const_uintah_field_add<constCCVariable<double > >( m_density_label );
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
@@ -145,7 +145,7 @@ GravityA::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInfo
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemorySpace> void
-GravityA::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+GravityA::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   constCCVariable<double>& density  = tsk_info->get_const_uintah_field_add<constCCVariable<double > >( m_density_label );
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );

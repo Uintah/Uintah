@@ -15,9 +15,9 @@ DSFTv2::~DSFTv2(){
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace DSFTv2::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, DSFTv2::eval);
-  return assignedTag;
+  return create_portable_arches_tasks( this,
+                                       &DSFTv2::eval<UINTAH_CPU_TAG>,
+                                       &DSFTv2::eval<KOKKOS_OPENMP_TAG> );
 
 }
 
@@ -102,7 +102,7 @@ DSFTv2::register_initialize( std::vector<ArchesFieldContainer::VariableInformati
 
 //--------------------------------------------------------------------------------------------------
 void
-DSFTv2::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+DSFTv2::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& filterRho = tsk_info->get_uintah_field_add< CCVariable<double> >("Filterrho");
   SFCXVariable<double>& filterRhoU = tsk_info->get_uintah_field_add< SFCXVariable<double> >("Filterrho");
@@ -179,7 +179,7 @@ DSFTv2::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInform
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemorySpace> void
-DSFTv2::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+DSFTv2::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   constSFCXVariable<double>& uVel = *(tsk_info->get_const_uintah_field<constSFCXVariable<double> >(m_u_vel_name));
   constSFCYVariable<double>& vVel = *(tsk_info->get_const_uintah_field<constSFCYVariable<double> >(m_v_vel_name));

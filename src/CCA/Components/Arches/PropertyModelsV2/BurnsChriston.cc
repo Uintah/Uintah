@@ -6,9 +6,9 @@ namespace Uintah{
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace BurnsChriston::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, BurnsChriston::eval);
-  return assignedTag;
+  return create_portable_arches_tasks( this,
+                                       &BurnsChriston::eval<UINTAH_CPU_TAG>,
+                                       &BurnsChriston::eval<KOKKOS_OPENMP_TAG> );
 
 }
 
@@ -56,7 +56,7 @@ BurnsChriston::register_initialize( VIVec& variable_registry , const bool pack_t
 }
 
 void
-BurnsChriston::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+BurnsChriston::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   BBox domain(m_min,m_max);
   if( m_min == m_notSetMin  ||  m_max == m_notSetMax ){

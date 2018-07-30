@@ -46,9 +46,9 @@ MassFlowRate::~MassFlowRate(){
 //---------------------------------------------------------------------------
 TaskAssignedExecutionSpace MassFlowRate::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, MassFlowRate::eval);
-  return assignedTag;
+  return create_portable_arches_tasks( this,
+                                       &MassFlowRate::eval<UINTAH_CPU_TAG>,
+                                       &MassFlowRate::eval<KOKKOS_OPENMP_TAG> );
 
 }
 
@@ -114,7 +114,7 @@ void MassFlowRate::register_initialize( std::vector<ArchesFieldContainer::Variab
   register_massFlowRate( variable_registry, packed_tasks );
 }
 
-void MassFlowRate::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+void MassFlowRate::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   eval_massFlowRate( patch, tsk_info );
 }
@@ -127,7 +127,7 @@ void MassFlowRate::register_timestep_eval( std::vector<ArchesFieldContainer::Var
 }
 
 template<typename ExecutionSpace, typename MemorySpace>
-void MassFlowRate::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+void MassFlowRate::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   eval_massFlowRate( patch, tsk_info );
 }

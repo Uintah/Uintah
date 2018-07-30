@@ -16,10 +16,9 @@ DepositionVelocity::~DepositionVelocity(){
 
 TaskAssignedExecutionSpace DepositionVelocity::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, DepositionVelocity::eval);
-  return assignedTag;
-
+  return create_portable_arches_tasks( this,
+                                       &DepositionVelocity::eval<UINTAH_CPU_TAG>,
+                                       &DepositionVelocity::eval<KOKKOS_OPENMP_TAG> );
 }
 
 void
@@ -140,7 +139,7 @@ DepositionVelocity::register_initialize( std::vector<ArchesFieldContainer::Varia
 }
 
 void
-DepositionVelocity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+DepositionVelocity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& deposit_velocity = tsk_info->get_uintah_field_add<CCVariable<double> >(_task_name);
   CCVariable<double>& ash_mass_src = tsk_info->get_uintah_field_add<CCVariable<double> >(_ash_mass_src);
@@ -195,7 +194,7 @@ DepositionVelocity::register_timestep_eval(
 }
 
 template<typename ExecutionSpace, typename MemorySpace> void
-DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   const int FLOW = -1;
   Vector Dx = patch->dCell(); // cell spacing

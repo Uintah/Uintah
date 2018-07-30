@@ -26,7 +26,7 @@
 #ifndef UINTAH_HOMEBREW_UintahMemorySpaces_H
 #define UINTAH_HOMEBREW_UintahMemorySpaces_H
 namespace Uintah {
-
+//TODO, REMOVE THIS FILE
 enum MemorySpace { HostSpace, CudaSpace };
 
 }  //End Namespace Uintah

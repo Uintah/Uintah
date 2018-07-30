@@ -17,9 +17,9 @@ DepositionEnthalpy::~DepositionEnthalpy(){
 
 TaskAssignedExecutionSpace DepositionEnthalpy::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, DepositionEnthalpy::eval);
-  return assignedTag;
+  return create_portable_arches_tasks( this,
+                                       &DepositionEnthalpy::eval<UINTAH_CPU_TAG>,
+                                       &DepositionEnthalpy::eval<KOKKOS_OPENMP_TAG> );
 
 }
 
@@ -95,7 +95,7 @@ DepositionEnthalpy::register_initialize( std::vector<ArchesFieldContainer::Varia
 }
 
 void
-DepositionEnthalpy::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+DepositionEnthalpy::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& ash_enthalpy_flux = tsk_info->get_uintah_field_add<CCVariable<double> >(_task_name);
   CCVariable<double>& ash_enthalpy_src = tsk_info->get_uintah_field_add<CCVariable<double> >(_ash_enthalpy_src);
@@ -137,7 +137,7 @@ DepositionEnthalpy::register_timestep_eval(
 }
 
 template<typename ExecutionSpace, typename MemorySpace> void
-DepositionEnthalpy::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+DepositionEnthalpy::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   const int FLOW = -1;
   Vector Dx = patch->dCell(); // cell spacing

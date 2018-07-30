@@ -7,7 +7,6 @@
 using namespace Uintah;
 
 typedef ArchesFieldContainer AFC;
-typedef ArchesTaskInfoManager ATIM;
 
 //--------------------------------------------------------------------------------------------------
 PressureEqn::PressureEqn( std::string task_name, int matl_index, SimulationStateP shared_state ) :
@@ -23,9 +22,9 @@ PressureEqn::~PressureEqn(){}
 
 TaskAssignedExecutionSpace PressureEqn::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, PressureEqn::eval);
-  return assignedTag;
+  return create_portable_arches_tasks( this,
+                                       &PressureEqn::eval<UINTAH_CPU_TAG>,
+                                       &PressureEqn::eval<KOKKOS_OPENMP_TAG> );
 
 }
 
@@ -113,7 +112,7 @@ PressureEqn::register_initialize(
 
 //--------------------------------------------------------------------------------------------------
 void
-PressureEqn::initialize( const Patch* patch, ATIM* tsk_info, ExecutionObject& executionObject ){
+PressureEqn::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   Vector DX = patch->dCell();
   const double area_EW = DX.y()*DX.z();
@@ -178,7 +177,7 @@ PressureEqn::register_timestep_init(
 
 //--------------------------------------------------------------------------------------------------
 void
-PressureEqn::timestep_init( const Patch* patch, ATIM* tsk_info ){
+PressureEqn::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<Stencil7>& Apress = tsk_info->get_uintah_field_add<CCVariable<Stencil7> >("A_press");
   constCCVariable<Stencil7>& old_Apress = tsk_info->get_const_uintah_field_add<constCCVariable<Stencil7> >("A_press");
@@ -211,7 +210,7 @@ PressureEqn::register_timestep_eval(
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemorySpace> void
-PressureEqn::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+PressureEqn::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   Vector DX = patch->dCell();
   const double area_EW = DX.y()*DX.z();

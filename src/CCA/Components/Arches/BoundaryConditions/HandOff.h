@@ -29,12 +29,12 @@ public:
 
     void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject );
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    template <typename EXECUTION_SPACE, typename MEMORY_SPACE>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){}
+    template <typename ExecutionSpace, typename MemorySpace>
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){}
 
     void create_local_labels();
 
@@ -88,9 +88,9 @@ private:
   template <typename T>
   TaskAssignedExecutionSpace HandOff<T>::loadTaskEvalFunctionPointers(){
 
-    TaskAssignedExecutionSpace assignedTag{};
-    LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, HandOff<T>::eval);
-    return assignedTag;
+    return create_portable_arches_tasks( this,
+                                         &HandOff<T>::eval<UINTAH_CPU_TAG>,
+                                         &HandOff<T>::eval<KOKKOS_OPENMP_TAG> );
 
   }
 
@@ -140,7 +140,7 @@ private:
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
-  void HandOff<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+  void HandOff<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     T& var = *(tsk_info->get_uintah_field<T>( _task_name ));
     var.initialize(0.0);

@@ -51,12 +51,12 @@ protected:
 
     void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject );
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    template <typename EXECUTION_SPACE, typename MEMORY_SPACE>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject );
+    template <typename ExecutionSpace, typename MemorySpace>
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
 
     void create_local_labels();
 
@@ -114,9 +114,9 @@ private:
   template <typename T>
   TaskAssignedExecutionSpace WDragModel<T>::loadTaskEvalFunctionPointers(){
 
-    TaskAssignedExecutionSpace assignedTag{};
-    LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, WDragModel<T>::eval);
-    return assignedTag;
+    return create_portable_arches_tasks( this,
+                                         &WDragModel<T>::eval<UINTAH_CPU_TAG>,
+                                         &WDragModel<T>::eval<KOKKOS_OPENMP_TAG> );
 
   }
 
@@ -201,7 +201,7 @@ private:
   }
 
   template <typename T>
-  void WDragModel<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info , ExecutionObject& executionObject){
+  void WDragModel<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   T& model      = tsk_info->get_uintah_field_add<T>(m_model_name);
   T& gas_source = tsk_info->get_uintah_field_add<T>(m_gasSource_name);
@@ -248,7 +248,7 @@ private:
 
   template <typename T>
   template<typename ExecutionSpace, typename MemorySpace>
-  void WDragModel<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+  void WDragModel<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   const double dt = tsk_info->get_dt();
   Vector Dx = patch->dCell();

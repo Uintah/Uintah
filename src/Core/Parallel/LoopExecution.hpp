@@ -149,176 +149,6 @@ enum TASKGRAPH {
   #define KOKKOS_CUDA_TAG             UintahSpaces::CPU COMMA UintahSpaces::HostSpace
 #endif
 
-
-enum TaskAssignedExecutionSpace {
-  NONE_SPACE = 0,
-  UINTAH_CPU = 1,                          //binary 001
-  KOKKOS_OPENMP = 2,                       //binary 010
-  KOKKOS_CUDA = 4,                         //binary 100
-};
-
-
-// Helps turn on runtime specific execution flags
-#define PREPARE_UINTAH_CPU_TASK(TASK) {                                                            \
-}
-
-#define PREPARE_KOKKOS_OPENMP_TASK(TASK) {                                                         \
-  TASK->usesKokkosOpenMP(true);                                                                    \
-}
-
-#define PREPARE_KOKKOS_CUDA_TASK(TASK) {                                                           \
-  TASK->usesDevice(true);                                                                          \
-  TASK->usesKokkosCuda(true);                                                                      \
-  TASK->usesSimVarPreloading(true);                                                                \
-}
-// This macro gives a mechanism to allow the user to do two things.
-// 1) Specify all execution spaces allowed by this task
-// 2) Generate task objects and task object options.
-//    At compile time, the compiler will compile the task for all specified execution spaces.
-//    At run time, the appropriate if statement logic will determine which task to use.
-// TAG1, TAG2, and TAG3 are possible execution spaces this task supports.
-// TASK_DEPENDENCIES are a functor which performs all additional task specific options the user desires
-// FUNCTION_NAME is the string name of the task.
-// FUNCTION_CODE_NAME is the function pointer without the template arguments, and this macro
-// tacks on the appropriate template arguments.  (This is the major reason why a macro is used.)
-// PATCHES and MATERIALS are normal Task object arguments.
-// ... are additional variatic Task arguments
-
-// Logic note, we don't currently allow both a Uintah CPU task and a Kokkos CPU task to exist in the same
-// compiled build (thought it wouldn't be hard to implement it).  But we do allow a Kokkos CPU and
-// Kokkos GPU task to exist in the same build
-#define CALL_ASSIGN_PORTABLE_TASK_3TAGS(TAG1, TAG2, TAG3,                                          \
-                                  TASK_DEPENDENCIES,                                               \
-                                  FUNCTION_NAME, FUNCTION_CODE_NAME,                               \
-                                  PATCHES, MATERIALS,                                              \
-                                  TASK_GRAPH_ID,                                                   \
-                                  ...) {                                                           \
-  Task* task{nullptr};                                                                             \
-                                                                                                   \
-  if (Uintah::Parallel::usingDevice()) {                                                           \
-    if (strcmp(STRVX(ORIGINAL_KOKKOS_CUDA_TAG), STRVX(TAG1)) == 0) {                               \
-      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME TAG1>, ## __VA_ARGS__);          \
-      PREPARE_KOKKOS_CUDA_TASK(task);                                                              \
-    } else if (strcmp(STRVX(ORIGINAL_KOKKOS_CUDA_TAG), STRVX(TAG2)) == 0) {                        \
-      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME TAG2>, ## __VA_ARGS__);          \
-      PREPARE_KOKKOS_CUDA_TASK(task);                                                              \
-    } else if (strcmp(STRVX(ORIGINAL_KOKKOS_CUDA_TAG), STRVX(TAG3)) == 0) {                        \
-      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME TAG3>, ## __VA_ARGS__);          \
-      PREPARE_KOKKOS_CUDA_TASK(task);                                                              \
-    }                                                                                              \
-  }                                                                                                \
-                                                                                                   \
-  if (!task) {                                                                                     \
-    if (strcmp(STRVX(ORIGINAL_KOKKOS_OPENMP_TAG), STRVX(TAG1)) == 0) {                             \
-      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME TAG1>, ## __VA_ARGS__);          \
-      PREPARE_KOKKOS_OPENMP_TASK(task);                                                            \
-    } else if (strcmp(STRVX(ORIGINAL_KOKKOS_OPENMP_TAG), STRVX(TAG2)) == 0) {                      \
-      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME TAG2>, ## __VA_ARGS__);          \
-      PREPARE_KOKKOS_OPENMP_TASK(task);                                                            \
-    } else if (strcmp(STRVX(ORIGINAL_KOKKOS_OPENMP_TAG), STRVX(TAG3)) == 0) {                      \
-      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME TAG3>, ## __VA_ARGS__);          \
-      PREPARE_KOKKOS_OPENMP_TASK(task);                                                            \
-    } else if (strcmp(STRVX(ORIGINAL_UINTAH_CPU_TAG), STRVX(TAG1)) == 0) {                         \
-      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME TAG1>, ## __VA_ARGS__);          \
-      PREPARE_UINTAH_CPU_TASK(task);                                                               \
-    } else if (strcmp(STRVX(ORIGINAL_UINTAH_CPU_TAG), STRVX(TAG2)) == 0) {                         \
-      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME TAG2>, ## __VA_ARGS__);          \
-      PREPARE_UINTAH_CPU_TASK(task);                                                               \
-    } else if (strcmp(STRVX(ORIGINAL_UINTAH_CPU_TAG), STRVX(TAG3)) == 0) {                         \
-      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME TAG3>, ## __VA_ARGS__);          \
-      PREPARE_UINTAH_CPU_TASK(task);                                                               \
-    }                                                                                              \
-  }                                                                                                \
-                                                                                                   \
-  if (task) {                                                                                      \
-    TASK_DEPENDENCIES(task);                                                                       \
-  }                                                                                                \
-                                                                                                   \
-  if (task) {                                                                                      \
-    sched->addTask(task, PATCHES, MATERIALS, TASK_GRAPH_ID);                                       \
-  }                                                                                                \
-}
-
-
-
-//If only 2 execution space tags are specified
-#define CALL_ASSIGN_PORTABLE_TASK_2TAGS(TAG1, TAG2,                                                \
-                                  TASK_DEPENDENCIES,                                               \
-                                  FUNCTION_NAME, FUNCTION_CODE_NAME,                               \
-                                  PATCHES, MATERIALS,                                              \
-                                  TASK_GRAPH_ID,                                                   \
-                                  ...) {                                                           \
-  Task* task{nullptr};                                                                             \
-                                                                                                   \
-  if (Uintah::Parallel::usingDevice()) {                                                           \
-    if (strcmp(STRVX(ORIGINAL_KOKKOS_CUDA_TAG), STRVX(TAG1)) == 0) {                               \
-      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME TAG1>, ## __VA_ARGS__);          \
-      PREPARE_KOKKOS_CUDA_TASK(task);                                                              \
-    } else if (strcmp(STRVX(ORIGINAL_KOKKOS_CUDA_TAG), STRVX(TAG2)) == 0) {                        \
-      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME TAG2>, ## __VA_ARGS__);          \
-      PREPARE_KOKKOS_CUDA_TASK(task);                                                              \
-    }                                                                                              \
-  }                                                                                                \
-                                                                                                   \
-  if (!task) {                                                                                     \
-    if (strcmp(STRVX(ORIGINAL_KOKKOS_OPENMP_TAG), STRVX(TAG1)) == 0) {                             \
-      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME TAG1>, ## __VA_ARGS__);          \
-      PREPARE_KOKKOS_OPENMP_TASK(task);                                                            \
-    } else if (strcmp(STRVX(ORIGINAL_KOKKOS_OPENMP_TAG), STRVX(TAG2)) == 0) {                      \
-      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME TAG2>, ## __VA_ARGS__);          \
-      PREPARE_KOKKOS_OPENMP_TASK(task);                                                            \
-    } else if (strcmp(STRVX(ORIGINAL_UINTAH_CPU_TAG), STRVX(TAG1)) == 0) {                         \
-      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME TAG1>, ## __VA_ARGS__);          \
-      PREPARE_UINTAH_CPU_TASK(task);                                                               \
-    } else if (strcmp(STRVX(ORIGINAL_UINTAH_CPU_TAG), STRVX(TAG2)) == 0) {                         \
-      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME TAG2>, ## __VA_ARGS__);          \
-      PREPARE_UINTAH_CPU_TASK(task);                                                               \
-    }                                                                                              \
-  }                                                                                                \
-                                                                                                   \
-  if (task) {                                                                                      \
-    TASK_DEPENDENCIES(task);                                                                       \
-  }                                                                                                \
-                                                                                                   \
-  if (task) {                                                                                      \
-    sched->addTask(task, PATCHES, MATERIALS, TASK_GRAPH_ID);                                       \
-  }                                                                                                \
-}
-//If only 1 execution space tag is specified
-#define CALL_ASSIGN_PORTABLE_TASK_1TAG(TAG1,                                                       \
-                                  TASK_DEPENDENCIES,                                               \
-                                  FUNCTION_NAME, FUNCTION_CODE_NAME,                               \
-                                  PATCHES, MATERIALS,                                              \
-                                  TASK_GRAPH_ID,                                                   \
-                                  ...) {                                                           \
-  Task* task{nullptr};                                                                             \
-                                                                                                   \
-  if (Uintah::Parallel::usingDevice()) {                                                           \
-    if (strcmp(STRVX(ORIGINAL_KOKKOS_CUDA_TAG), STRVX(TAG1)) == 0) {                               \
-      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME TAG1>, ## __VA_ARGS__);          \
-      PREPARE_KOKKOS_CUDA_TASK(task);                                                              \
-    }                                                                                              \
-  }                                                                                                \
-                                                                                                   \
-  if (!task) {                                                                                     \
-    if (strcmp(STRVX(ORIGINAL_KOKKOS_OPENMP_TAG), STRVX(TAG1)) == 0) {                             \
-      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME TAG1>, ## __VA_ARGS__);          \
-      PREPARE_KOKKOS_OPENMP_TASK(task);                                                            \
-    } else if (strcmp(STRVX(ORIGINAL_UINTAH_CPU_TAG), STRVX(TAG1)) == 0) {                         \
-      task = scinew Task(FUNCTION_NAME, this, &FUNCTION_CODE_NAME TAG1>, ## __VA_ARGS__);          \
-      PREPARE_UINTAH_CPU_TASK(task);                                                               \
-    }                                                                                              \
-  }                                                                                                \
-                                                                                                   \
-  if (task) {                                                                                      \
-    TASK_DEPENDENCIES(task);                                                                       \
-  }                                                                                                \
-                                                                                                   \
-  if (task) {                                                                                      \
-    sched->addTask(task, PATCHES, MATERIALS, TASK_GRAPH_ID);                                       \
-  }                                                                                                \
-}
-
 namespace Uintah {
 
 class BlockRange;
@@ -454,9 +284,10 @@ struct struct2DArray {
 
 // -------------------------------------  parallel_for loops  ---------------------------------------------
 #if defined(UINTAH_ENABLE_KOKKOS)
-template <typename ExecutionSpace, typename Functor>
+
+template <typename ExecutionSpace, typename MemorySpace, typename Functor>
 inline typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::OpenMP>::value, void>::type
-parallel_for( ExecutionObject& executionObject,  BlockRange const & r, const Functor & functor )
+parallel_for( ExecutionObject<ExecutionSpace, MemorySpace>& executionObject, BlockRange const & r, const Functor & functor )
 {
 
   const unsigned int i_size = r.end(0) - r.begin(0);
@@ -474,14 +305,15 @@ parallel_for( ExecutionObject& executionObject,  BlockRange const & r, const Fun
     functor( i, j, k );
   });
 }
+
 #endif  //#if defined(UINTAH_ENABLE_KOKKOS)
 
 #if defined(UINTAH_ENABLE_KOKKOS)
 #if defined(HAVE_CUDA)
 
-template <typename ExecutionSpace, typename Functor>
+template <typename ExecutionSpace, typename MemorySpace, typename Functor>
 inline typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::Cuda>::value, void>::type
-parallel_for( ExecutionObject& executionObject, BlockRange const & r, const Functor & functor )
+parallel_for( ExecutionObject<ExecutionSpace, MemorySpace>& executionObject, BlockRange const & r, const Functor & functor )
 {
 
   // Team policy approach (reuses CUDA threads)
@@ -626,9 +458,9 @@ parallel_for( ExecutionObject& executionObject, BlockRange const & r, const Func
 #endif  //#if defined(HAVE_CUDA)
 #endif  //#if defined(UINTAH_ENABLE_KOKKOS)
 
-template <typename ExecutionSpace, typename Functor>
+template <typename ExecutionSpace, typename MemorySpace, typename Functor>
 inline typename std::enable_if<std::is_same<ExecutionSpace, UintahSpaces::CPU>::value, void>::type
-parallel_for(ExecutionObject& executionObject, BlockRange const & r, const Functor & functor )
+parallel_for(ExecutionObject<ExecutionSpace, MemorySpace>& executionObject, BlockRange const & r, const Functor & functor )
 {
   const int ib = r.begin(0); const int ie = r.end(0);
   const int jb = r.begin(1); const int je = r.end(1);
@@ -647,16 +479,17 @@ void
 parallel_for( BlockRange const & r, const Functor & functor )
 {
   //Force users into using a single CPU thread if they didn't specify OpenMP
-  ExecutionObject executionObject; // Make an empty object
+  ExecutionObject<UintahSpaces::CPU, UintahSpaces::HostSpace> executionObject; // Make an empty object
   parallel_for<UintahSpaces::CPU>( executionObject, r, functor );
 }
 
 // -------------------------------------  parallel_reduce_sum loops  ---------------------------------------------
 
 #if defined(UINTAH_ENABLE_KOKKOS)
-template <typename ExecutionSpace, typename Functor, typename ReductionType>
+
+template <typename ExecutionSpace, typename MemorySpace, typename Functor, typename ReductionType>
 inline typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::OpenMP>::value, void>::type
-parallel_reduce_sum(ExecutionObject& executionObject, BlockRange const & r, const Functor & functor, ReductionType & red  )
+parallel_reduce_sum(ExecutionObject<ExecutionSpace, MemorySpace>& executionObject, BlockRange const & r, const Functor & functor, ReductionType & red  )
 {
   ReductionType tmp = red;
   const unsigned int i_size = r.end(0) - r.begin(0);
@@ -709,7 +542,7 @@ parallel_reduce_sum(ExecutionObject& executionObject, BlockRange const & r, cons
 //  }, tmp);
 
   //Range policy manual approach:
-  
+
   const unsigned int numItems = (i_size > 0 ? i_size : 1) * (j_size > 0 ? j_size : 1) * (k_size > 0 ? k_size : 1);
 
   Kokkos::parallel_reduce( Kokkos::RangePolicy<Kokkos::OpenMP, int>(0, numItems).set_chunk_size(1), [&, i_size, j_size, k_size, rbegin0, rbegin1, rbegin2](const int& n, ReductionType & tmp) {
@@ -722,13 +555,14 @@ parallel_reduce_sum(ExecutionObject& executionObject, BlockRange const & r, cons
   red = tmp;
 
 }
+
 #endif  //#if defined(UINTAH_ENABLE_KOKKOS)
 
 #if defined(UINTAH_ENABLE_KOKKOS)
 #if defined(HAVE_CUDA)
-template <typename ExecutionSpace, typename Functor, typename ReductionType>
+template <typename ExecutionSpace, typename MemorySpace, typename Functor, typename ReductionType>
 inline typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::Cuda>::value, void>::type
-parallel_reduce_sum( ExecutionObject& executionObject, BlockRange const & r, const Functor & functor, ReductionType & red )
+parallel_reduce_sum( ExecutionObject<ExecutionSpace, MemorySpace>& executionObject, BlockRange const & r, const Functor & functor, ReductionType & red )
 {
   // Overall goal, split a 3D range requested by the user into various SMs on the GPU.  (In essence, this would be a Kokkos MD_Team+Policy, if one existed)
   // The process requires going from 3D range to a 1D range, partitioning the 1D range into groups that are multiples of 32,
@@ -840,9 +674,9 @@ parallel_reduce_sum( ExecutionObject& executionObject, BlockRange const & r, con
 #endif  //#if defined(HAVE_CUDA)
 #endif  //#if defined(UINTAH_ENABLE_KOKKOS)
 
-template <typename ExecutionSpace, typename Functor, typename ReductionType>
+template <typename ExecutionSpace, typename MemorySpace, typename Functor, typename ReductionType>
 inline typename std::enable_if<std::is_same<ExecutionSpace, UintahSpaces::CPU>::value, void>::type
-parallel_reduce_sum( ExecutionObject& executionObject, BlockRange const & r, const Functor & functor, ReductionType & red  )
+parallel_reduce_sum( ExecutionObject<ExecutionSpace, MemorySpace>& executionObject, BlockRange const & r, const Functor & functor, ReductionType & red  )
 {
   const int ib = r.begin(0); const int ie = r.end(0);
   const int jb = r.begin(1); const int je = r.end(1);
@@ -863,7 +697,7 @@ void
 parallel_reduce_sum( BlockRange const & r, const Functor & functor, ReductionType & red )
 {
   //Force users into using a single CPU thread if they didn't specify OpenMP
-  ExecutionObject executionObject;
+  ExecutionObject<UintahSpaces::CPU, UintahSpaces::HostSpace> executionObject; // Make an empty object
   parallel_reduce_sum<UintahSpaces::CPU>( executionObject, r, functor, red );
 }
 
@@ -871,9 +705,10 @@ parallel_reduce_sum( BlockRange const & r, const Functor & functor, ReductionTyp
 
 
 #if defined(UINTAH_ENABLE_KOKKOS)
-template <typename ExecutionSpace, typename Functor, typename ReductionType>
+template <typename ExecutionSpace, typename MemorySpace, typename Functor, typename ReductionType>
 inline typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::OpenMP>::value, void>::type
-parallel_reduce_min( ExecutionObject& executionObject, BlockRange const & r, const Functor & functor, ReductionType & red  )
+parallel_reduce_min( ExecutionObject<ExecutionSpace, MemorySpace>& executionObject,
+                     BlockRange const & r, const Functor & functor, ReductionType & red  )
 {
   ReductionType tmp = red;
 
@@ -896,9 +731,10 @@ parallel_reduce_min( ExecutionObject& executionObject, BlockRange const & r, con
 
 #if defined(UINTAH_ENABLE_KOKKOS)
 #if defined(HAVE_CUDA)
-template <typename ExecutionSpace, typename Functor, typename ReductionType>
+template <typename ExecutionSpace, typename MemorySpace, typename Functor, typename ReductionType>
 inline typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::Cuda>::value, void>::type
-parallel_reduce_min( ExecutionObject& executionObject, BlockRange const & r, const Functor & functor, ReductionType & red  )
+parallel_reduce_min( ExecutionObject<ExecutionSpace, MemorySpace>& executionObject,
+                     BlockRange const & r, const Functor & functor, ReductionType & red  )
 {
 
   printf("CUDA version of parallel_reduce_min not yet implemented\n");
@@ -909,9 +745,10 @@ parallel_reduce_min( ExecutionObject& executionObject, BlockRange const & r, con
 #endif  //#if defined(UINTAH_ENABLE_KOKKOS)
 
 //TODO: This appears to not do any "min" on the reduction.
-template <typename ExecutionSpace, typename Functor, typename ReductionType>
+template <typename ExecutionSpace, typename MemorySpace, typename Functor, typename ReductionType>
 inline typename std::enable_if<std::is_same<ExecutionSpace, UintahSpaces::CPU>::value, void>::type
-parallel_reduce_min( ExecutionObject& executionObject, BlockRange const & r, const Functor & functor, ReductionType & red  )
+parallel_reduce_min( ExecutionObject<ExecutionSpace, MemorySpace>& executionObject,
+                     BlockRange const & r, const Functor & functor, ReductionType & red  )
 {
   const int ib = r.begin(0); const int ie = r.end(0);
   const int jb = r.begin(1); const int je = r.end(1);
@@ -1051,9 +888,10 @@ parallel_for( Kokkos::View<int*, Kokkos::HostSpace> iterSpace, const Functor & f
 // TODO: Make streamable.
 #if defined(UINTAH_ENABLE_KOKKOS)
 #if defined(HAVE_CUDA)
-template <typename ExecutionSpace, typename Functor>
+template <typename ExecutionSpace, typename MemorySpace, typename Functor>
 typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::Cuda>::value, void>::type
-parallel_for(ExecutionObject& executionObject, Kokkos::View<int*, Kokkos::HostSpace> iterSpace , const Functor & functor )
+parallel_for(ExecutionObject<ExecutionSpace, MemorySpace>& executionObject,
+             Kokkos::View<int*, Kokkos::HostSpace> iterSpace , const Functor & functor )
 {
   const int number_of_indices=3;
   Kokkos::View< int*, Kokkos::CudaSpace >  iterSpace_gpu("BoundaryCondition_uintah_parallel_for_list",iterSpace.size());
@@ -1085,9 +923,10 @@ parallel_for(ExecutionObject& executionObject, Kokkos::View<int*, Kokkos::HostSp
 
 
 #if defined(HAVE_CUDA)
-template <typename ExecutionSpace, typename T2, typename T3>
+// TODO: What is this?  It needs a better name
+template <typename ExecutionSpace, typename MemorySpace, typename T2, typename T3>
 typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::Cuda>::value, void>::type
-parallel_for(ExecutionObject& executionObject, T2 KV3, const T3 init_val)
+parallel_for(ExecutionObject<ExecutionSpace, MemorySpace>& executionObject, T2 KV3, const T3 init_val)
 {
   int cuda_threads_per_block = executionObject.getCudaThreadsPerBlock();
   int cuda_blocks_per_loop   = executionObject.getCudaBlocksPerLoop();
@@ -1117,9 +956,10 @@ parallel_for(ExecutionObject& executionObject, T2 KV3, const T3 init_val)
 
 template <typename ExecutionSpace, typename MemorySpace, typename T, typename ValueType>
 typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::OpenMP>::value, void>::type
-parallel_initialize_grouped(ExecutionObject& executionObject, const struct1DArray<T, ARRAY_SIZE>& KKV3,  const ValueType& init_val ){
+parallel_initialize_grouped(ExecutionObject<ExecutionSpace, MemorySpace>& executionObject,
+                            const struct1DArray<T, ARRAY_SIZE>& KKV3,  const ValueType& init_val ){
 
-  //TODO: This should probably be seralized and not use a Kokkos::parallel_for?
+  //TODO: This should probably be serialized and not use a Kokkos::parallel_for?
 
   unsigned int n_cells = 0;
   for (unsigned int j = 0; j < KKV3.runTime_size; j++){
@@ -1164,34 +1004,10 @@ class KokkosView3;
 #if defined(HAVE_CUDA)
 
 
-//template <typename ExecutionSpace, typename MemorySpace, typename T2, typename T3>
-//typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::Cuda>::value, void>::type
-//parallel_initialize_single(ExecutionObject& executionObject, T2 KKV3, const T3 init_val ){
-//
-//  Kokkos::View< KokkosView3<T3,Kokkos::CudaSpace>* , Kokkos::CudaSpace >  KKV3_gpu("parallel_init_single_gpu",KKV3.size());
-//  Kokkos::deep_copy(KKV3_gpu,KKV3);
-//
-//  int cuda_threads_per_block = executionObject.getCudaThreadsPerBlock();
-//  int cuda_blocks_per_loop   = executionObject.getCudaBlocksPerLoop();
-//  for (unsigned int jx=0; jx < KKV3.size(); jx++){
-//
-//  const int n_cells=KKV3(jx).m_view.size();
-//
-//  const int actualThreads = n_cells > cuda_threads_per_block ? cuda_threads_per_block : n_cells;
-//  typedef Kokkos::TeamPolicy< ExecutionSpace > policy_type;
-//
-//  Kokkos::parallel_for (Kokkos::TeamPolicy< ExecutionSpace >( cuda_blocks_per_loop, actualThreads ),
-//                        KOKKOS_LAMBDA ( typename policy_type::member_type thread ) {
-//    Kokkos::parallel_for (Kokkos::TeamThreadRange(thread, n_cells), [=] (const int& i) {
-//          KKV3_gpu(jx)(i)=init_val;
-//      });
-//    });
-//  }
-//}
-
 template < typename ExecutionSpace, typename MemorySpace, typename T, typename ValueType>
 typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::Cuda>::value, void>::type
-parallel_initialize_grouped(ExecutionObject& executionObject, const struct1DArray<T, ARRAY_SIZE>& KKV3, const ValueType& init_val ){
+parallel_initialize_grouped(ExecutionObject<ExecutionSpace, MemorySpace>& executionObject,
+                            const struct1DArray<T, ARRAY_SIZE>& KKV3, const ValueType& init_val ){
 
   // n_cells is the amount of cells total to process among collection of vars (the view of Kokkos views)
   // For example, if this were being used to  if one var had 4096 cells and another var had 5832 cells, n_cells would become 4096+5832=
@@ -1291,7 +1107,7 @@ inline void sumViewSize(const struct1DArray< T, Capacity> & small_v, int &index)
 
 template<typename ExecutionSpace, typename MemorySpace, typename T, class ...Ts>  // Could this be modified to accept grid variables AND containers of grid variables?
 typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::OpenMP>::value, void>::type
-parallel_initialize(ExecutionObject& executionObject, const T& initializationValue,  Ts & ... inputs) {
+parallel_initialize(ExecutionObject<ExecutionSpace, MemorySpace>& executionObject, const T& initializationValue,  Ts & ... inputs) {
 
   // Count the number of views used (sometimes they may be views of views)
   int n = 0 ; // Get number of variadic arguments
@@ -1319,7 +1135,8 @@ parallel_initialize(ExecutionObject& executionObject, const T& initializationVal
 ////This function is the same as above,but appears to be necessary due to CCVariable support.....
 template<typename ExecutionSpace, typename MemorySpace, typename T, class ...Ts>  // Could this be modified to accept grid variables AND containers of grid variables?
 typename std::enable_if<std::is_same<ExecutionSpace, Kokkos::Cuda>::value, void>::type
-parallel_initialize(ExecutionObject& executionObject, const T & initializationValue,  Ts & ... inputs) {
+parallel_initialize(ExecutionObject<ExecutionSpace, MemorySpace>& executionObject,
+                    const T & initializationValue,  Ts & ... inputs) {
 
   // Count the number of views used (sometimes they may be views of views)
   int n = 0 ; // Get number of variadic arguments
@@ -1338,7 +1155,7 @@ parallel_initialize(ExecutionObject& executionObject, const T & initializationVa
 
   for (int j=0; j<n_init_groups; j++){
     hostArrayOfViews[j].runTime_size=n >ARRAY_SIZE * (j+1) ? ARRAY_SIZE : n % ARRAY_SIZE+1;
-    parallel_initialize_grouped< ExecutionSpace, MemorySpace, KokkosView3< T, MemorySpace > >( executionObject, hostArrayOfViews[j], initializationValue );
+    parallel_initialize_grouped<ExecutionSpace, MemorySpace, KokkosView3< T, MemorySpace > >( executionObject, hostArrayOfViews[j], initializationValue );
     //parallel_initialize_single<ExecutionSpace>(executionObject, inputs_, inside_value ); // safer version, less ambitious
   }
 }
@@ -1362,7 +1179,8 @@ void legacy_initialize(T inside_value, T2& data_fields) {  // for stand alone da
 
 template<typename ExecutionSpace, typename MemorySpace, typename T, class ...Ts>
 typename std::enable_if<std::is_same<ExecutionSpace, UintahSpaces::CPU>::value, void>::type
-parallel_initialize(ExecutionObject& executionObject, const T& initializationValue,  Ts & ... inputs) {
+parallel_initialize(ExecutionObject<ExecutionSpace, MemorySpace>& executionObject,
+                    const T& initializationValue,  Ts & ... inputs) {
   Alias<int[]>{( //first part of magic unpacker
              //inputs.initialize (inside_value)
       legacy_initialize(initializationValue, inputs)

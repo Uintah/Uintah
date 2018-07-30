@@ -27,9 +27,9 @@ FaceVelocities::~FaceVelocities(){}
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace FaceVelocities::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, FaceVelocities::eval);
-  return assignedTag;
+  return create_portable_arches_tasks( this,
+                                       &FaceVelocities::eval<UINTAH_CPU_TAG>,
+                                       &FaceVelocities::eval<KOKKOS_OPENMP_TAG> );
 
 }
 
@@ -84,7 +84,7 @@ void FaceVelocities::register_initialize( AVarInfo& variable_registry , const bo
 }
 
 //--------------------------------------------------------------------------------------------------
-void FaceVelocities::initialize( const Patch*, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject  ){
+void FaceVelocities::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   SFCXVariable<double>& ucell_xvel = *(tsk_info->get_uintah_field<SFCXVariable<double> >("ucell_xvel"));
   SFCXVariable<double>& ucell_yvel = *(tsk_info->get_uintah_field<SFCXVariable<double> >("ucell_yvel"));
@@ -121,7 +121,7 @@ void FaceVelocities::register_timestep_eval( VIVec& variable_registry, const int
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemorySpace>
-void FaceVelocities::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+void FaceVelocities::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   constSFCXVariable<double>& uVel = *(tsk_info->get_const_uintah_field<constSFCXVariable<double> >(m_u_vel_name));
   constSFCYVariable<double>& vVel = *(tsk_info->get_const_uintah_field<constSFCYVariable<double> >(m_v_vel_name));

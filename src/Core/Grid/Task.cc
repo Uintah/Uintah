@@ -193,6 +193,14 @@ Task::usesThreads(bool state)
 
 //______________________________________________________________________
 //
+void Task::setExecutionAndMemorySpace( const TaskAssignedExecutionSpace& executionSpaceTypeName,
+                                       const TaskAssignedMemorySpace& memorySpaceTypeName ) {
+  m_execution_space = executionSpaceTypeName;
+  m_memory_space = memorySpaceTypeName;
+}
+
+//______________________________________________________________________
+//
 void
 Task::usesDevice(bool state, int maxStreamsPerTask /* = -1 */ )
 {
@@ -233,14 +241,18 @@ Task::usesKokkosCuda(bool state)
 
 //______________________________________________________________________
 //
-MemorySpace
+TaskAssignedExecutionSpace
+Task::getExecutionSpace() const
+{
+  return m_execution_space;
+}
+
+//______________________________________________________________________
+//
+TaskAssignedMemorySpace
 Task::getMemorySpace() const
 {
-  if (usesDevice()) {
-    return Uintah::CudaSpace;
-  } else {
-    return Uintah::HostSpace;
-  }
+  return m_memory_space;
 }
 
 //______________________________________________________________________
@@ -1018,14 +1030,14 @@ Task::doit( const PatchSubset           * patches
           , const MaterialSubset        * matls
           , std::vector<DataWarehouseP> & dws
           , UintahParams                & uintahParams
-          , ExecutionObject             & executionObject
           )
 {
   DataWarehouse* fromDW = mapDataWarehouse(Task::OldDW, dws);
   DataWarehouse* toDW   = mapDataWarehouse(Task::NewDW, dws);
 
   if (m_action) {
-    m_action->doit(patches, matls, fromDW, toDW, uintahParams, executionObject);
+    //m_action->doit(patches, matls, fromDW, toDW, uintahParams, executionObject);
+    m_action->doit(patches, matls, fromDW, toDW, uintahParams);
   }
 }
 

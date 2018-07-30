@@ -8,9 +8,9 @@ typedef ArchesFieldContainer AFC;
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace GridInfo::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, GridInfo::eval);
-  return assignedTag;
+  return create_portable_arches_tasks( this,
+                                       &GridInfo::eval<UINTAH_CPU_TAG>,
+                                       &GridInfo::eval<KOKKOS_OPENMP_TAG> );
 
 }
 
@@ -42,7 +42,7 @@ GridInfo::register_initialize( std::vector<AFC::VariableInformation>& variable_r
 
 //--------------------------------------------------------------------------------------------------
 void
-GridInfo::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+GridInfo::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& gridX = tsk_info->get_uintah_field_add<CCVariable<double> >( "gridX" );
   CCVariable<double>& gridY = tsk_info->get_uintah_field_add<CCVariable<double> >( "gridY" );

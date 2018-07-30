@@ -15,10 +15,9 @@ ContinuityPredictor::~ContinuityPredictor(){
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace ContinuityPredictor::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, ContinuityPredictor::eval);
-  return assignedTag;
-
+  return create_portable_arches_tasks( this,
+                                       &ContinuityPredictor::eval<UINTAH_CPU_TAG>,
+                                       &ContinuityPredictor::eval<KOKKOS_OPENMP_TAG> );
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -58,7 +57,7 @@ ContinuityPredictor::register_initialize( std::vector<ArchesFieldContainer::Vari
 
 //--------------------------------------------------------------------------------------------------
 void
-ContinuityPredictor::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info , ExecutionObject& executionObject ){
+ContinuityPredictor::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& Balance = *(tsk_info->get_uintah_field<CCVariable<double> >( m_label_balance ));
   Balance.initialize(0.0);
@@ -96,7 +95,7 @@ ContinuityPredictor::register_timestep_eval( std::vector<ArchesFieldContainer::V
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemorySpace> void
-ContinuityPredictor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+ContinuityPredictor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   constSFCXVariable<double>& xmom = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >("x-mom");
   constSFCYVariable<double>& ymom = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >("y-mom");

@@ -20,9 +20,9 @@ WallHFVariable::~WallHFVariable(){
 
 TaskAssignedExecutionSpace WallHFVariable::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, WallHFVariable::eval);
-  return assignedTag;
+  return create_portable_arches_tasks( this,
+                                       &WallHFVariable::eval<UINTAH_CPU_TAG>,
+                                       &WallHFVariable::eval<KOKKOS_OPENMP_TAG> );
 
 }
 
@@ -70,7 +70,7 @@ WallHFVariable::register_initialize( std::vector<ArchesFieldContainer::VariableI
 }
 
 void
-WallHFVariable::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+WallHFVariable::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& flux_x = *(tsk_info->get_uintah_field<CCVariable<double> >(_flux_x));
   CCVariable<double>& flux_y = *(tsk_info->get_uintah_field<CCVariable<double> >(_flux_y));
@@ -162,7 +162,7 @@ WallHFVariable::register_timestep_eval( std::vector<ArchesFieldContainer::Variab
 }
 
 template<typename ExecutionSpace, typename MemorySpace> void
-WallHFVariable::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+WallHFVariable::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   double sigma=5.67e-8;  //  w / m^2 k^4
 

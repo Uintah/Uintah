@@ -11,9 +11,9 @@ BoundaryInfo::~BoundaryInfo(){
 
 TaskAssignedExecutionSpace BoundaryInfo::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, BoundaryInfo::eval);
-  return assignedTag;
+  return create_portable_arches_tasks( this,
+                                       &BoundaryInfo::eval<UINTAH_CPU_TAG>,
+                                       &BoundaryInfo::eval<KOKKOS_OPENMP_TAG> );
 
 }
 
@@ -50,7 +50,7 @@ BoundaryInfo::register_initialize( VarInfoVecT& variable_registry , const bool p
 }
 
 void
-BoundaryInfo::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){}
+BoundaryInfo::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
 //
 //------------------------------------------------
@@ -85,4 +85,4 @@ BoundaryInfo::register_timestep_eval( VarInfoVecT& variable_registry,
 }
 
 template<typename ExecutionSpace, typename MemorySpace> void
-BoundaryInfo::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){}
+BoundaryInfo::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){}

@@ -17,9 +17,9 @@ PressureBC::~PressureBC()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace PressureBC::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, PressureBC::eval);
-  return assignedTag;
+  return create_portable_arches_tasks( this,
+                                       &PressureBC::eval<UINTAH_CPU_TAG>,
+                                       &PressureBC::eval<KOKKOS_OPENMP_TAG> );
 
 }
 
@@ -42,7 +42,7 @@ void PressureBC::register_timestep_eval( std::vector<AFC::VariableInformation>& 
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemorySpace>
-void PressureBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+void PressureBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   CCVariable<double>& p = tsk_info->get_uintah_field_add<CCVariable<double> >( m_press );
 

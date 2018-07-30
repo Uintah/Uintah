@@ -52,12 +52,12 @@ protected:
 
     void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject );
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    template <typename EXECUTION_SPACE, typename MEMORY_SPACE>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){}
+    template <typename ExecutionSpace, typename MemorySpace>
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){}
 
     void create_local_labels(){};
 
@@ -94,11 +94,9 @@ private:
   template <typename T, typename CT>
   TaskAssignedExecutionSpace WaveFormInit<T, CT>::loadTaskEvalFunctionPointers(){
 
-    TaskAssignedExecutionSpace assignedTag{};
-    // This one is a bit hackier.  Passing in WaveFormInit<T, CT>::eval into the macro caused problems on the comma as it parsed it
-    // as two separate arguments.  The approach below did the trick with a #define COMMA ,
-    LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, WaveFormInit<T COMMA CT>::eval);
-    return assignedTag;
+    return create_portable_arches_tasks( this,
+                                         &WaveFormInit<T, CT>::eval<UINTAH_CPU_TAG>,
+                                         &WaveFormInit<T, CT>::eval<KOKKOS_OPENMP_TAG> );
 
   }
 
@@ -144,7 +142,7 @@ private:
   }
 
   template <typename T, typename CT>
-  void WaveFormInit<T, CT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+  void WaveFormInit<T, CT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     T& dep_field = *(tsk_info->get_uintah_field<T>( _var_name ));
     CT& ind_field = *(tsk_info->get_const_uintah_field<CT>( _ind_var_name ));

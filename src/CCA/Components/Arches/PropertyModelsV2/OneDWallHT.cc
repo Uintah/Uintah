@@ -21,9 +21,9 @@ OneDWallHT::~OneDWallHT(){
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace OneDWallHT::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, OneDWallHT::eval);
-  return assignedTag;
+  return create_portable_arches_tasks( this,
+                                       &OneDWallHT::eval<UINTAH_CPU_TAG>,
+                                       &OneDWallHT::eval<KOKKOS_OPENMP_TAG> );
 
 }
 
@@ -69,7 +69,7 @@ OneDWallHT::register_initialize( std::vector<ArchesFieldContainer::VariableInfor
 
 //--------------------------------------------------------------------------------------------------
 void
-OneDWallHT::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info , ExecutionObject& executionObject ){
+OneDWallHT::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
 
   CCVariable<double>& Twall = *(tsk_info->get_uintah_field<CCVariable<double> >("Twall"));
@@ -112,7 +112,7 @@ OneDWallHT::register_timestep_eval( std::vector<ArchesFieldContainer::VariableIn
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemorySpace> void
-OneDWallHT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+OneDWallHT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   CCVariable<double>& Twall = *(tsk_info->get_uintah_field<CCVariable<double> >( "Twall"));
   constCCVariable<double>& rad_q = *(tsk_info->get_const_uintah_field<constCCVariable<double > >( _incident_hf_label ));

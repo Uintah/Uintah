@@ -14,9 +14,9 @@ SampleTask::~SampleTask(){
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace SampleTask::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, SampleTask::eval);
-  return assignedTag;
+  return create_portable_arches_tasks( this,
+                                       &SampleTask::eval<UINTAH_CPU_TAG>,
+                                       &SampleTask::eval<KOKKOS_OPENMP_TAG> );
 
 }
 
@@ -56,7 +56,7 @@ SampleTask::register_initialize(
 
 //--------------------------------------------------------------------------------------------------
 void
-SampleTask::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+SampleTask::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   //CCVariable<double>& field  = *(tsk_info->get_uintah_field<CCVariable<double> >( "a_sample_field" ));
   //CCVariable<double>& result = *(tsk_info->get_uintah_field<CCVariable<double> >( "a_result_field" ));
@@ -115,7 +115,7 @@ SampleTask::register_timestep_eval(
 //--------------------------------------------------------------------------------------------------
 //This is the work for the task.  First, get the variables. Second, do the work!
 template<typename ExecutionSpace, typename MemorySpace> void
-SampleTask::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+SampleTask::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   CCVariable<double>& field   = tsk_info->get_uintah_field_add<CCVariable<double> >( "a_sample_field" );
   CCVariable<double>& result  = tsk_info->get_uintah_field_add<CCVariable<double> >( "a_result_field" );

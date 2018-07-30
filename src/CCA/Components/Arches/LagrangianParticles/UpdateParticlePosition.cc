@@ -13,9 +13,9 @@ UpdateParticlePosition::~UpdateParticlePosition(){
 
 TaskAssignedExecutionSpace UpdateParticlePosition::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, UpdateParticlePosition::eval);
-  return assignedTag;
+  return create_portable_arches_tasks( this,
+                                       &UpdateParticlePosition::eval<UINTAH_CPU_TAG>,
+                                       &UpdateParticlePosition::eval<KOKKOS_OPENMP_TAG> );
 
 }
 //--------------------------------------------------------------------------------------------------
@@ -47,7 +47,7 @@ UpdateParticlePosition::register_initialize(
 
 //--------------------------------------------------------------------------------------------------
 void
-UpdateParticlePosition::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+UpdateParticlePosition::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   ParticleTuple px_tup = tsk_info->get_uintah_particle_field( _px_name );
   ParticleTuple py_tup = tsk_info->get_uintah_particle_field( _py_name );
@@ -99,7 +99,7 @@ UpdateParticlePosition::register_timestep_eval(
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemorySpace> void
-UpdateParticlePosition::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+UpdateParticlePosition::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   ParticleTuple px_tup = tsk_info->get_uintah_particle_field( _px_name );
   ParticleTuple py_tup = tsk_info->get_uintah_particle_field( _py_name );

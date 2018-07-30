@@ -17,9 +17,9 @@ VariableStats::~VariableStats()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace VariableStats::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, VariableStats::eval);
-  return assignedTag;
+  return create_portable_arches_tasks( this,
+                                       &VariableStats::eval<UINTAH_CPU_TAG>,
+                                       &VariableStats::eval<KOKKOS_OPENMP_TAG> );
 
 }
 
@@ -256,7 +256,7 @@ void VariableStats::register_initialize( VIVec& variable_registry , const bool p
 }
 
 //--------------------------------------------------------------------------------------------------
-void VariableStats::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+void VariableStats::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   auto i = _ave_sum_names.begin();
   for (;i!=_ave_sum_names.end();i++){
@@ -595,7 +595,7 @@ void VariableStats::register_timestep_eval( VIVec& variable_registry, const int 
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemorySpace>
-void VariableStats::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject )
+void VariableStats::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject )
 {
 
   const double dt = tsk_info->get_dt();

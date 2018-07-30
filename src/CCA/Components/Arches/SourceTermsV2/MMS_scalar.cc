@@ -15,9 +15,9 @@ MMS_scalar::~MMS_scalar()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace MMS_scalar::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, MMS_scalar::eval);
-  return assignedTag;
+  return create_portable_arches_tasks( this,
+                                       &MMS_scalar::eval<UINTAH_CPU_TAG>,
+                                       &MMS_scalar::eval<KOKKOS_OPENMP_TAG> );
 
 }
 
@@ -113,7 +113,7 @@ MMS_scalar::register_initialize( std::vector<ArchesFieldContainer::VariableInfor
 
 //--------------------------------------------------------------------------------------------------
 void
-MMS_scalar::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+MMS_scalar::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& f_mms = *(tsk_info->get_uintah_field<CCVariable<double> >(m_MMS_label));
   CCVariable<double>& s_mms = *(tsk_info->get_uintah_field<CCVariable<double> >(m_MMS_source_label));
@@ -204,7 +204,7 @@ MMS_scalar::register_timestep_eval( std::vector<ArchesFieldContainer::VariableIn
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemorySpace> void
-MMS_scalar::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+MMS_scalar::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   CCVariable<double>& f_mms = *(tsk_info->get_uintah_field<CCVariable<double> >(m_MMS_label));
   CCVariable<double>& s_mms = *(tsk_info->get_uintah_field<CCVariable<double> >(m_MMS_source_label));

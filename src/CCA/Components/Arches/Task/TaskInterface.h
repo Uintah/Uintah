@@ -43,204 +43,122 @@ namespace Uintah{
   class WBCHelper;
   class TaskInterface;
 
-  using evalFunctionPtr  = void (TaskInterface::*)( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr, ExecutionObject& executionObject );
+  template <typename ES, typename MS>
+  using evalFunctionPtr  = void (TaskInterface::*)( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr, ExecutionObject<ES, MS>& executionObject );
 
-// This is the older mechanism for trying to manage the boilerplate of Arches tasks.
-// Leaving it in as it may be useful one day.
-//#define SUPPORTED_UINTAH__TRYING_UINTAH_EXECUTION                 UintahSpaces::CPU
-//#define SUPPORTED_UINTAH__TRYING_UINTAH_MEMORY                    UintahSpaces::HostSpace
-//#define SUPPORTED_UINTAH__TRYING_UINTAH_TAG                       TaskAssignedExecutionSpace::UINTAH_CPU
-//
-////Note that we don't support both OPENMP and CPU in the same build.
-//#if defined(UINTAH_ENABLE_KOKKOS) && defined(HAVE_CUDA)
-//  #define SUPPORTED_UINTAH_OPENMP_CUDA__TRYING_CUDA_EXECUTION     Kokkos::Cuda
-//  #define SUPPORTED_UINTAH_OPENMP_CUDA__TRYING_CUDA_MEMORY        Kokkos::CudaSpace
-//  #define SUPPORTED_UINTAH_OPENMP_CUDA__TRYING_CUDA_TAG           TaskAssignedExecutionSpace::KOKKOS_CUDA
-//
-//  #define SUPPORTED_UINTAH_OPENMP_CUDA__TRYING_OPENMP_EXECUTION   Kokkos::OpenMP
-//  #define SUPPORTED_UINTAH_OPENMP_CUDA__TRYING_OPENMP_MEMORY      Kokkos::HostSpace
-//  #define SUPPORTED_UINTAH_OPENMP_CUDA__TRYING_OPENMP_TAG         TaskAssignedExecutionSpace::KOKKOS_OPENMP
-//
-//  #define SUPPORTED_UINTAH_OPENMP__TRYING_OPENMP_EXECUTION        Kokkos::OpenMP
-//  #define SUPPORTED_UINTAH_OPENMP__TRYING_OPENMP_MEMORY           Kokkos::HostSpace
-//  #define SUPPORTED_UINTAH_OPENMP__TRYING_OPENMP_TAG              TaskAssignedExecutionSpace::KOKKOS_OPENMP
-//#elif defined(UINTAH_ENABLE_KOKKOS) && !defined(HAVE_CUDA)
-//  #define SUPPORTED_UINTAH_OPENMP_CUDA__TRYING_CUDA_EXECUTION     Kokkos::OpenMP
-//  #define SUPPORTED_UINTAH_OPENMP_CUDA__TRYING_CUDA_MEMORY        Kokkos::HostSpace
-//  #define SUPPORTED_UINTAH_OPENMP_CUDA__TRYING_CUDA_TAG           TaskAssignedExecutionSpace::KOKKOS_OPENMP
-//
-//  #define SUPPORTED_UINTAH_OPENMP_CUDA__TRYING_OPENMP_EXECUTION   Kokkos::OpenMP
-//  #define SUPPORTED_UINTAH_OPENMP_CUDA__TRYING_OPENMP_MEMORY      Kokkos::HostSpace
-//  #define SUPPORTED_UINTAH_OPENMP_CUDA__TRYING_OPENMP_TAG         TaskAssignedExecutionSpace::KOKKOS_OPENMP
-//
-//  #define SUPPORTED_UINTAH_OPENMP__TRYING_OPENMP_EXECUTION        Kokkos::OpenMP
-//  #define SUPPORTED_UINTAH_OPENMP__TRYING_OPENMP_MEMORY           Kokkos::HostSpace
-//  #define SUPPORTED_UINTAH_OPENMP__TRYING_OPENMP_TAG              TaskAssignedExecutionSpace::KOKKOS_OPENMP
-//#elif !defined(UINTAH_ENABLE_KOKKOS)
-//  #define SUPPORTED_UINTAH_OPENMP_CUDA__TRYING_CUDA_EXECUTION     UintahSpaces::CPU
-//  #define SUPPORTED_UINTAH_OPENMP_CUDA__TRYING_CUDA_MEMORY        UintahSpaces::HostSpace
-//  #define SUPPORTED_UINTAH_OPENMP_CUDA__TRYING_CUDA_TAG           TaskAssignedExecutionSpace::UINTAH_CPU
-//
-//  #define SUPPORTED_UINTAH_OPENMP_CUDA__TRYING_OPENMP_EXECUTION   UintahSpaces::CPU
-//  #define SUPPORTED_UINTAH_OPENMP_CUDA__TRYING_OPENMP_MEMORY      UintahSpaces::HostSpace
-//  #define SUPPORTED_UINTAH_OPENMP_CUDA__TRYING_OPENMP_TAG         TaskAssignedExecutionSpace::UINTAH_CPU
-//
-//  #define SUPPORTED_UINTAH_OPENMP__TRYING_OPENMP_EXECUTION        UintahSpaces::CPU
-//  #define SUPPORTED_UINTAH_OPENMP__TRYING_OPENMP_MEMORY           UintahSpaces::HostSpace
-//  #define SUPPORTED_UINTAH_OPENMP__TRYING_OPENMP_TAG              TaskAssignedExecutionSpace::UINTAH_CPU
-//#endif
-//  // When uncommenting, put back in the \ characters needed for macros
-//#define LOAD_ARCHES_UINTAH_OPENMP_CUDA(ASSIGNED_TAG, FUNCTION_CODE_NAME) {
-//  if (Uintah::Parallel::usingDevice()) {
-//    this->addEvalFunctionPtr(std::type_index(
-//                             typeid(SUPPORTED_UINTAH_OPENMP_CUDA__TRYING_CUDA_EXECUTION)),
-//      static_cast<evalFunctionPtr>(&FUNCTION_CODE_NAME<
-//                                   SUPPORTED_UINTAH_OPENMP_CUDA__TRYING_CUDA_EXECUTION,
-//                                   SUPPORTED_UINTAH_OPENMP_CUDA__TRYING_CUDA_MEMORY>));
-//    ASSIGNED_TAG = SUPPORTED_UINTAH_OPENMP_CUDA__TRYING_CUDA_TAG;
-//  }
-//  if (ASSIGNED_TAG == TaskAssignedExecutionSpace::NONE_SPACE) {
-//    this->addEvalFunctionPtr(std::type_index(
-//                             typeid(SUPPORTED_UINTAH_OPENMP_CUDA__TRYING_OPENMP_EXECUTION)),
-//      static_cast<evalFunctionPtr>(&FUNCTION_CODE_NAME<
-//                                   SUPPORTED_UINTAH_OPENMP_CUDA__TRYING_OPENMP_EXECUTION,
-//                                   SUPPORTED_UINTAH_OPENMP_CUDA__TRYING_OPENMP_MEMORY>));
-//    ASSIGNED_TAG = SUPPORTED_UINTAH_OPENMP_CUDA__TRYING_OPENMP_TAG;
-//  }
-//}
-//
-////User specified that CUDA is not an option.
-////In this mode, we don't allow the regular CPU version to compile.
-//#define LOAD_ARCHES_UINTAH_OPENMP(ASSIGNED_TAG, FUNCTION_CODE_NAME) {
-//  this->addEvalFunctionPtr(std::type_index(
-//                           typeid(SUPPORTED_UINTAH_OPENMP__TRYING_OPENMP_EXECUTION)),
-//    static_cast<evalFunctionPtr>(&FUNCTION_CODE_NAME<
-//                                 SUPPORTED_UINTAH_OPENMP__TRYING_OPENMP_EXECUTION,
-//                                 SUPPORTED_UINTAH_OPENMP__TRYING_OPENMP_MEMORY>));
-//  ASSIGNED_TAG = SUPPORTED_UINTAH_OPENMP__TRYING_OPENMP_TAG;
-//}
-//
-////User specified that CUDA or OpenMP is not an option.
-////In this most only the CPU version can compile
-//#define LOAD_ARCHES_UINTAH(ASSIGNED_TAG, FUNCTION_CODE_NAME) {
-//    this->addEvalFunctionPtr(std::type_index(
-//                             typeid(SUPPORTED_UINTAH__TRYING_UINTAH_EXECUTION)),
-//      static_cast<evalFunctionPtr>(&FUNCTION_CODE_NAME<
-//                                   SUPPORTED_UINTAH__TRYING_UINTAH_EXECUTION,
-//                                   SUPPORTED_UINTAH__TRYING_UINTAH_MEMORY>));
-//    ASSIGNED_TAG = SUPPORTED_UINTAH__TRYING_UINTAH_TAG;
-//}
+  template < typename ArchesTaskObject,
+            typename ES1, typename MS1,
+            typename ES2, typename MS2,
+            typename ES3, typename MS3>
+  TaskAssignedExecutionSpace
+  create_portable_arches_tasks(
+                    ArchesTaskObject* taskPtr,
+                    void (ArchesTaskObject::*afp1)(const Patch* patch,
+                                                  ArchesTaskInfoManager* tsk_info_mngr,
+                                                  ExecutionObject<ES1, MS1>& executionObject),
+                    void (ArchesTaskObject::*afp2)(const Patch* patch,
+                                                  ArchesTaskInfoManager* tsk_info_mngr,
+                                                  ExecutionObject<ES2, MS2>& executionObject),
+                    void (ArchesTaskObject::*afp3)(const Patch* patch,
+                                                  ArchesTaskInfoManager* tsk_info_mngr,
+                                                  ExecutionObject<ES3, MS3>& executionObject))
+  {
 
+    TaskAssignedExecutionSpace assignedTag{};
+    //See if there are any Cuda Tasks
+    if (Uintah::Parallel::usingDevice()) {
+      // GPU tasks take top priority
+      if ( std::is_same< Kokkos::Cuda , ES1 >::value
+          || std::is_same< Kokkos::Cuda , ES2 >::value
+          || std::is_same< Kokkos::Cuda , ES3 >::value ) {
+        if (std::is_same< Kokkos::Cuda , ES1 >::value) {
+          taskPtr->addEvalFunctionPtr(std::type_index(typeid(Kokkos::Cuda)), static_cast< evalFunctionPtr<ES1, MS1> >(afp1));
+        } else if (std::is_same< Kokkos::Cuda , ES2 >::value) {
+          taskPtr->addEvalFunctionPtr(std::type_index(typeid(Kokkos::Cuda)), static_cast< evalFunctionPtr<ES2, MS2> >(afp2));
+        } else if (std::is_same< Kokkos::Cuda , ES3 >::value) {
+          taskPtr->addEvalFunctionPtr(std::type_index(typeid(Kokkos::Cuda)), static_cast< evalFunctionPtr<ES3, MS3> >(afp3));
+        }
+        assignedTag = KOKKOS_CUDA;
+      }
+    } else {
+      if ( std::is_same< Kokkos::OpenMP , ES1 >::value
+          || std::is_same< Kokkos::OpenMP , ES2 >::value
+          || std::is_same< Kokkos::OpenMP , ES3 >::value ) {
+        if (std::is_same< Kokkos::OpenMP , ES1 >::value) {
+          taskPtr->addEvalFunctionPtr(std::type_index(typeid(Kokkos::OpenMP)), static_cast< evalFunctionPtr<ES1, MS1> >(afp1));
+        } else if (std::is_same< Kokkos::OpenMP , ES2 >::value) {
+          taskPtr->addEvalFunctionPtr(std::type_index(typeid(Kokkos::OpenMP)), static_cast< evalFunctionPtr<ES2, MS2> >(afp2));
+        } else if (std::is_same< Kokkos::OpenMP , ES3 >::value) {
+          taskPtr->addEvalFunctionPtr(std::type_index(typeid(Kokkos::OpenMP)), static_cast< evalFunctionPtr<ES3, MS3> >(afp3));
+        }
+        assignedTag = KOKKOS_OPENMP;
+      } else if ( std::is_same< UintahSpaces::CPU , ES1 >::value
+          || std::is_same< UintahSpaces::CPU , ES2 >::value
+          || std::is_same< UintahSpaces::CPU , ES3 >::value ) {
+        if (std::is_same< UintahSpaces::CPU , ES1 >::value) {
+          taskPtr->addEvalFunctionPtr(std::type_index(typeid(UintahSpaces::CPU)), static_cast< evalFunctionPtr<ES1, MS1> >(afp1));
+        } else if (std::is_same< UintahSpaces::CPU , ES2 >::value) {
+          taskPtr->addEvalFunctionPtr(std::type_index(typeid(UintahSpaces::CPU)), static_cast< evalFunctionPtr<ES2, MS2> >(afp2));
+        } else if (std::is_same< UintahSpaces::CPU , ES3 >::value) {
+          taskPtr->addEvalFunctionPtr(std::type_index(typeid(UintahSpaces::CPU)), static_cast< evalFunctionPtr<ES3, MS3> >(afp3));
+        }
+        assignedTag = UINTAH_CPU;
+      }
+    }
+    return assignedTag;
+  }
 
+  // The two tag overloaded version of create_portable_arches_tasks()
+  template < typename ArchesTaskObject,
+            typename ES1, typename MS1,
+            typename ES2, typename MS2>
+  TaskAssignedExecutionSpace
+  create_portable_arches_tasks(
+                    ArchesTaskObject* taskPtr,
+                    void (ArchesTaskObject::*afp1)(const Patch* patch,
+                                                  ArchesTaskInfoManager* tsk_info_mngr,
+                                                  ExecutionObject<ES1, MS1>& executionObject),
+                    void (ArchesTaskObject::*afp2)(const Patch* patch,
+                                                  ArchesTaskInfoManager* tsk_info_mngr,
+                                                  ExecutionObject<ES2, MS2>& executionObject))
+  {
 
-  //See Core/Parallel/LoopExecution.h for the purpose behind these macros, as that file uses a similar pattern
-#define LOAD_ARCHES_EVAL_TASK_3TAGS(TAG1, TAG2, TAG3, ASSIGNED_TAG, FUNCTION_CODE_NAME) {           \
-                                                                                                    \
-  if (Uintah::Parallel::usingDevice()) {                                                            \
-    if        (strcmp(STRVX(ORIGINAL_KOKKOS_CUDA_TAG), STRVX(TAG1)) == 0) {                         \
-      this->addEvalFunctionPtr(std::type_index(typeid(Kokkos::Cuda)),                               \
-            static_cast<evalFunctionPtr>(&FUNCTION_CODE_NAME<TAG1>));                               \
-      ASSIGNED_TAG = KOKKOS_CUDA;                                                                   \
-    } else if (strcmp(STRVX(ORIGINAL_KOKKOS_CUDA_TAG), STRVX(TAG2)) == 0) {                         \
-      this->addEvalFunctionPtr(std::type_index(typeid(Kokkos::Cuda)),                               \
-            static_cast<evalFunctionPtr>(&FUNCTION_CODE_NAME<TAG2>));                               \
-      ASSIGNED_TAG = KOKKOS_CUDA;                                                                   \
-    } else if (strcmp(STRVX(ORIGINAL_KOKKOS_CUDA_TAG), STRVX(TAG3)) == 0) {                         \
-      this->addEvalFunctionPtr(std::type_index(typeid(Kokkos::Cuda)),                               \
-            static_cast<evalFunctionPtr>(&FUNCTION_CODE_NAME<TAG3>));                               \
-      ASSIGNED_TAG = KOKKOS_CUDA;                                                                   \
-    }                                                                                               \
-  }                                                                                                 \
-                                                                                                    \
-  if (ASSIGNED_TAG == TaskAssignedExecutionSpace::NONE_SPACE) {                                     \
-    if        (strcmp(STRVX(ORIGINAL_KOKKOS_OPENMP_TAG), STRVX(TAG1)) == 0) {                       \
-        this->addEvalFunctionPtr(std::type_index(typeid(Kokkos::OpenMP)),                           \
-              static_cast<evalFunctionPtr>(&FUNCTION_CODE_NAME<TAG1>));                             \
-        ASSIGNED_TAG = KOKKOS_OPENMP;                                                               \
-    } else if (strcmp(STRVX(ORIGINAL_KOKKOS_OPENMP_TAG), STRVX(TAG2)) == 0) {                       \
-        this->addEvalFunctionPtr(std::type_index(typeid(Kokkos::OpenMP)),                           \
-              static_cast<evalFunctionPtr>(&FUNCTION_CODE_NAME<TAG2>));                             \
-        ASSIGNED_TAG = KOKKOS_OPENMP;                                                               \
-    } else if (strcmp(STRVX(ORIGINAL_KOKKOS_OPENMP_TAG), STRVX(TAG3)) == 0) {                       \
-        this->addEvalFunctionPtr(std::type_index(typeid(Kokkos::OpenMP)),                           \
-              static_cast<evalFunctionPtr>(&FUNCTION_CODE_NAME<TAG3>));                             \
-        ASSIGNED_TAG = KOKKOS_OPENMP;                                                               \
-    } else if (strcmp(STRVX(ORIGINAL_UINTAH_CPU_TAG), STRVX(TAG1)) == 0) {                          \
-        this->addEvalFunctionPtr(std::type_index(typeid(UintahSpaces::CPU)),                        \
-              static_cast<evalFunctionPtr>(&FUNCTION_CODE_NAME<TAG1>));                             \
-        ASSIGNED_TAG = UINTAH_CPU;                                                                  \
-    } else if (strcmp(STRVX(ORIGINAL_UINTAH_CPU_TAG), STRVX(TAG2)) == 0) {                          \
-        this->addEvalFunctionPtr(std::type_index(typeid(UintahSpaces::CPU)),                        \
-              static_cast<evalFunctionPtr>(&FUNCTION_CODE_NAME<TAG2>));                             \
-        ASSIGNED_TAG = UINTAH_CPU;                                                                  \
-    } else if (strcmp(STRVX(ORIGINAL_UINTAH_CPU_TAG), STRVX(TAG3)) == 0) {                          \
-        this->addEvalFunctionPtr(std::type_index(typeid(UintahSpaces::CPU)),                        \
-              static_cast<evalFunctionPtr>(&FUNCTION_CODE_NAME<TAG3>));                             \
-        ASSIGNED_TAG = UINTAH_CPU;                                                                  \
-    }                                                                                               \
-  }                                                                                                 \
-}
+    TaskAssignedExecutionSpace assignedTag{};
+    //See if there are any Cuda Tasks
+    if (Uintah::Parallel::usingDevice()) {
+      // GPU tasks take top priority
+      if ( std::is_same< Kokkos::Cuda , ES1 >::value
+          || std::is_same< Kokkos::Cuda , ES2 >::value) {
+        if (std::is_same< Kokkos::Cuda , ES1 >::value) {
+          taskPtr->addEvalFunctionPtr(std::type_index(typeid(Kokkos::Cuda)), static_cast< evalFunctionPtr<ES1, MS1> >(afp1));
+        } else if (std::is_same< Kokkos::Cuda , ES2 >::value) {
+          taskPtr->addEvalFunctionPtr(std::type_index(typeid(Kokkos::Cuda)), static_cast< evalFunctionPtr<ES2, MS2> >(afp2));
+        }
+        assignedTag = KOKKOS_CUDA;
+      }
+    } else {
+      if ( std::is_same< Kokkos::OpenMP , ES1 >::value
+          || std::is_same< Kokkos::OpenMP , ES2 >::value) {
+        if (std::is_same< Kokkos::OpenMP , ES1 >::value) {
+          taskPtr->addEvalFunctionPtr(std::type_index(typeid(Kokkos::OpenMP)), static_cast< evalFunctionPtr<ES1, MS1> >(afp1));
+        } else if (std::is_same< Kokkos::OpenMP , ES2 >::value) {
+          taskPtr->addEvalFunctionPtr(std::type_index(typeid(Kokkos::OpenMP)), static_cast< evalFunctionPtr<ES2, MS2> >(afp2));
+        }
+        assignedTag = KOKKOS_OPENMP;
+      } else if ( std::is_same< UintahSpaces::CPU , ES1 >::value
+          || std::is_same< UintahSpaces::CPU , ES2 >::value ) {
+        if (std::is_same< UintahSpaces::CPU , ES1 >::value) {
+          taskPtr->addEvalFunctionPtr(std::type_index(typeid(UintahSpaces::CPU)), static_cast< evalFunctionPtr<ES1, MS1> >(afp1));
+        } else if (std::is_same< UintahSpaces::CPU , ES2 >::value) {
+          taskPtr->addEvalFunctionPtr(std::type_index(typeid(UintahSpaces::CPU)), static_cast< evalFunctionPtr<ES2, MS2> >(afp2));
+        }
+        assignedTag = UINTAH_CPU;
+      }
+    }
+    return assignedTag;
+  }
 
-//If only 2 execution space tags are specified
-#define LOAD_ARCHES_EVAL_TASK_2TAGS(TAG1, TAG2, ASSIGNED_TAG, FUNCTION_CODE_NAME) {                 \
-                                                                                                    \
-  if (Uintah::Parallel::usingDevice()) {                                                            \
-    if        (strcmp(STRVX(ORIGINAL_KOKKOS_CUDA_TAG), STRVX(TAG1)) == 0) {                         \
-      this->addEvalFunctionPtr(std::type_index(typeid(Kokkos::Cuda)),                               \
-            static_cast<evalFunctionPtr>(&FUNCTION_CODE_NAME<TAG1>));                               \
-      ASSIGNED_TAG = KOKKOS_CUDA;                                                                   \
-    } else if (strcmp(STRVX(ORIGINAL_KOKKOS_CUDA_TAG), STRVX(TAG2)) == 0) {                         \
-      this->addEvalFunctionPtr(std::type_index(typeid(Kokkos::Cuda)),                               \
-            static_cast<evalFunctionPtr>(&FUNCTION_CODE_NAME<TAG2>));                               \
-      ASSIGNED_TAG = KOKKOS_CUDA;                                                                   \
-    }                                                                                               \
-  }                                                                                                 \
-                                                                                                    \
-  if (ASSIGNED_TAG == TaskAssignedExecutionSpace::NONE_SPACE) {                                     \
-    if        (strcmp(STRVX(ORIGINAL_KOKKOS_OPENMP_TAG), STRVX(TAG1)) == 0) {                       \
-        this->addEvalFunctionPtr(std::type_index(typeid(Kokkos::OpenMP)),                           \
-              static_cast<evalFunctionPtr>(&FUNCTION_CODE_NAME<TAG1>));                             \
-        ASSIGNED_TAG = KOKKOS_OPENMP;                                                               \
-    } else if (strcmp(STRVX(ORIGINAL_KOKKOS_OPENMP_TAG), STRVX(TAG2)) == 0) {                       \
-        this->addEvalFunctionPtr(std::type_index(typeid(Kokkos::OpenMP)),                           \
-              static_cast<evalFunctionPtr>(&FUNCTION_CODE_NAME<TAG2>));                             \
-        ASSIGNED_TAG = KOKKOS_OPENMP;                                                               \
-    } else if (strcmp(STRVX(ORIGINAL_UINTAH_CPU_TAG), STRVX(TAG1)) == 0) {                          \
-        this->addEvalFunctionPtr(std::type_index(typeid(UintahSpaces::CPU)),                        \
-              static_cast<evalFunctionPtr>(&FUNCTION_CODE_NAME<TAG1>));                             \
-        ASSIGNED_TAG = UINTAH_CPU;                                                                  \
-    } else if (strcmp(STRVX(ORIGINAL_UINTAH_CPU_TAG), STRVX(TAG2)) == 0) {                          \
-        this->addEvalFunctionPtr(std::type_index(typeid(UintahSpaces::CPU)),                        \
-              static_cast<evalFunctionPtr>(&FUNCTION_CODE_NAME<TAG2>));                             \
-        ASSIGNED_TAG = UINTAH_CPU;                                                                  \
-    }                                                                                               \
-  }                                                                                                 \
-}
-
-
-//If only 1 execution space tag is specified
-#define LOAD_ARCHES_EVAL_TASK_1TAG(TAG1, ASSIGNED_TAG, FUNCTION_CODE_NAME) {                        \
-                                                                                                    \
-  if (Uintah::Parallel::usingDevice()) {                                                            \
-    if        (strcmp(STRVX(ORIGINAL_KOKKOS_CUDA_TAG), STRVX(TAG1)) == 0) {                         \
-      this->addEvalFunctionPtr(std::type_index(typeid(Kokkos::Cuda)),                               \
-            static_cast<evalFunctionPtr>(&FUNCTION_CODE_NAME<TAG1>));                               \
-      ASSIGNED_TAG = KOKKOS_CUDA;                                                                   \
-    }                                                                                               \
-  }                                                                                                 \
-                                                                                                    \
-  if (ASSIGNED_TAG == TaskAssignedExecutionSpace::NONE_SPACE) {                                     \
-    if        (strcmp(STRVX(ORIGINAL_KOKKOS_OPENMP_TAG), STRVX(TAG1)) == 0) {                       \
-        this->addEvalFunctionPtr(std::type_index(typeid(Kokkos::OpenMP)),                           \
-              static_cast<evalFunctionPtr>(&FUNCTION_CODE_NAME<TAG1>));                             \
-        ASSIGNED_TAG = KOKKOS_OPENMP;                                                               \
-    } else if (strcmp(STRVX(ORIGINAL_UINTAH_CPU_TAG), STRVX(TAG1)) == 0) {                          \
-       this->addEvalFunctionPtr(std::type_index(typeid(UintahSpaces::CPU)),                         \
-              static_cast<evalFunctionPtr>(&FUNCTION_CODE_NAME<TAG1>));                             \
-        ASSIGNED_TAG = UINTAH_CPU;                                                                  \
-    }                                                                                               \
-  }                                                                                                 \
-}
+  // TODO: The one tag overloaded version of create_portable_arches_tasks()
 
   class TaskInterface{
 
@@ -311,29 +229,35 @@ public:
     // Kokkos::Cuda, even if it's not desired, it may still compile and just won't generate compiler errors.
     // Yes, it's ugly.  But it's the best least ugly solution I could find.  -- Brad Peterson
     template<typename ExecutionSpace, typename MemorySpace>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr, ExecutionObject& executionObject ) {
-      evalFunctionPtr handler_ptr{nullptr};
+    void eval( const Patch* patch,
+               ArchesTaskInfoManager* tsk_info_mngr,
+               ExecutionObject< ExecutionSpace, MemorySpace>& executionObject ) {
+      evalFunctionPtr< UintahSpaces::CPU, UintahSpaces::HostSpace > function_ptr{nullptr};
+
       auto index = std::type_index(typeid(ExecutionSpace));
       auto handler = this->evalFunctionPtrs.find(index);
       if(handler != this->evalFunctionPtrs.end()) {
-        handler_ptr = handler->second;
+        function_ptr = handler->second;
       } else {
         throw InternalError("Derived class version of Arches task eval() not found!", __FILE__, __LINE__);
       }
 
       // Found the eval() function pointer associated with the execution space.  Run it.
+      evalFunctionPtr<ExecutionSpace, MemorySpace> handler_ptr =
+          reinterpret_cast< evalFunctionPtr< ExecutionSpace, MemorySpace > >(function_ptr);
+
       if (handler_ptr) {
         (this->*handler_ptr)( patch, tsk_info_mngr, executionObject );
       }
 
     }
-protected:
 
-    void addEvalFunctionPtr( std::type_index ti, evalFunctionPtr ep ) {
-      evalFunctionPtrs.emplace( ti, ep );
+    template<typename ExecutionSpace, typename MemorySpace>
+    void addEvalFunctionPtr( std::type_index ti, evalFunctionPtr<ExecutionSpace, MemorySpace> ep ) {
+      evalFunctionPtrs.emplace( ti, reinterpret_cast< evalFunctionPtr< UintahSpaces::CPU, UintahSpaces::HostSpace > >(ep) );
     }
 private:
-    std::map<std::type_index, evalFunctionPtr> evalFunctionPtrs;
+    std::map<std::type_index, evalFunctionPtr< UintahSpaces::CPU, UintahSpaces::HostSpace > > evalFunctionPtrs;
 
 public:
     //------end portability support members----------------------------------------------------
@@ -382,7 +306,7 @@ public:
     }
 
     /** @brief The actual work done within the derived class **/
-    virtual void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr , ExecutionObject& executionObject ) = 0;
+    virtual void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr ) = 0;
 
     /** @brief The actual work done within the derived class **/
     virtual void restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr ){}

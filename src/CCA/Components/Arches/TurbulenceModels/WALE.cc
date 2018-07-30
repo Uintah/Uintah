@@ -18,9 +18,9 @@ WALE::~WALE()
 //---------------------------------------------------------------------------------
 TaskAssignedExecutionSpace WALE::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, WALE::eval);
-  return assignedTag;
+  return create_portable_arches_tasks( this,
+                                       &WALE::eval<UINTAH_CPU_TAG>,
+                                       &WALE::eval<KOKKOS_OPENMP_TAG> );
 
 }
 
@@ -98,7 +98,7 @@ WALE::register_initialize( std::vector<AFC::VariableInformation>&
 
 //---------------------------------------------------------------------------------
 void
-WALE::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+WALE::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& mu_sgc = *(tsk_info->get_uintah_field<CCVariable<double> >(m_t_vis_name));
   CCVariable<double>& mu_turb = *(tsk_info->get_uintah_field<CCVariable<double> >(m_turb_viscosity_name));
@@ -151,7 +151,7 @@ WALE::register_timestep_eval( std::vector<AFC::VariableInformation>&
 
 //---------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemorySpace> void
-WALE::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+WALE::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   constSFCXVariable<double>& uVel = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >(m_u_vel_name);
   constSFCYVariable<double>& vVel = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >(m_v_vel_name);

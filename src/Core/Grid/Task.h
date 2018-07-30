@@ -33,7 +33,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Parallel/ExecutionObject.h>
 #include <Core/Parallel/Parallel.h>
-#include <Core/Parallel/UintahMemorySpaces.h>
+#include <Core/Parallel/SpaceTypes.h>
 #include <Core/Parallel/UintahParams.h>
 #include <CCA/Ports/DataWarehouseP.h>
 #include <Core/Util/constHandle.h>
@@ -93,8 +93,7 @@ protected: // class Task
                        , const MaterialSubset * matls
                        ,       DataWarehouse  * fromDW
                        ,       DataWarehouse  * toDW
-                       ,       UintahParams   & uintahParams
-                       ,       ExecutionObject& executionObject ) = 0;
+                       ,       UintahParams   & uintahParams ) = 0;
   };
 
 // Nvidia's nvcc compiler version 8 and 9 have a bug where it can't compile std::tuples with more than 2 template parameters
@@ -143,8 +142,7 @@ protected: // class Task
                      , const MaterialSubset * matls
                      ,       DataWarehouse  * fromDW
                      ,       DataWarehouse  * toDW
-                     ,       UintahParams   & uintahParams
-                     ,       ExecutionObject& executionObject)
+                     ,       UintahParams   & uintahParams )
     {
       doit_impl(uintahParams.getProcessorGroup(), patches, matls, fromDW, toDW, typename Tuple::gens<sizeof...(Args)>::type());
     }
@@ -166,10 +164,8 @@ protected: // class Task
 
   };  // end CPU Action class
 
-
-
   // Kokkos enabled task portable Action constructor
-  template<typename T, typename... Args>
+  template<typename T, typename ES, typename MS, typename... Args>
   class ActionPortable : public ActionBase {
 
     T * ptr;
@@ -178,7 +174,7 @@ protected: // class Task
                   ,       OnDemandDataWarehouse * fromDW
                   ,       OnDemandDataWarehouse * toDW
                   ,       UintahParams          & uintahParams
-                  ,       ExecutionObject       & executionObject
+                  ,       ExecutionObject<ES, MS> & executionObject
                   ,       Args...               args
                   );
     std::tuple<Args...> m_args;
@@ -192,7 +188,7 @@ protected: // class Task
                                 ,       OnDemandDataWarehouse  * fromDW
                                 ,       OnDemandDataWarehouse  * toDW
                                 ,       UintahParams   & uintahParams
-                                ,       ExecutionObject& executionObject
+                                ,       ExecutionObject<ES, MS>& executionObject
                                 ,       Args...          args
                                 )
                , Args... args
@@ -204,14 +200,20 @@ protected: // class Task
 
     virtual ~ActionPortable() {}
 
-    virtual void doit( const PatchSubset    * patches
+    void doit( const PatchSubset    * patches
                      , const MaterialSubset * matls
                      ,       DataWarehouse  * fromDW
                      ,       DataWarehouse  * toDW
                      ,       UintahParams   & uintahParams
-                     ,       ExecutionObject& executionObject
                      )
     {
+      ExecutionObject<ES, MS> executionObject;
+      executionObject.setCudaThreadsPerBlock(Uintah::Parallel::getCudaThreadsPerBlock());
+      executionObject.setCudaBlocksPerLoop(Uintah::Parallel::getCudaBlocksPerLoop());
+      const int numStreams = uintahParams.getNumStreams();
+      for (int i = 0; i < numStreams; i++) {
+        executionObject.setStream(uintahParams.getStream(i), 0);
+      }
       doit_impl(patches, matls, fromDW, toDW, uintahParams, executionObject, typename Tuple::gens<sizeof...(Args)>::type());
     }
 
@@ -223,7 +225,7 @@ protected: // class Task
                   ,       DataWarehouse  * fromDW
                   ,       DataWarehouse  * toDW
                   ,       UintahParams   & uintahParams
-                  ,       ExecutionObject& executionObject
+                  ,       ExecutionObject<ES, MS>& executionObject
                   ,       Tuple::seq<S...>
                   )
       {
@@ -232,6 +234,7 @@ protected: // class Task
       }
 
   };  // end Kokkos enabled task Action constructor
+
 #else  //If using nvcc compiler which can't use Tuple<>
 
 private:
@@ -267,8 +270,7 @@ private:
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW,
-                        UintahParams& uintahParams,
-                        ExecutionObject& executionObject)
+                        UintahParams& uintahParams)
       {
         (ptr->*pmf)(uintahParams.getProcessorGroup(), patches, matls, fromDW, toDW);
       }
@@ -308,8 +310,7 @@ private:
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW,
-                        UintahParams& uintahParams,
-                        ExecutionObject& executionObject)
+                        UintahParams& uintahParams)
       {
         (ptr->*pmf)(uintahParams.getProcessorGroup(), patches, matls, fromDW, toDW, arg1);
       }
@@ -353,8 +354,7 @@ private:
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW,
-                        UintahParams& uintahParams,
-                        ExecutionObject& executionObject)
+                        UintahParams& uintahParams)
       {
         (ptr->*pmf)(uintahParams.getProcessorGroup(), patches, matls, fromDW, toDW, arg1, arg2);
       }
@@ -402,8 +402,7 @@ private:
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW,
-                        UintahParams& uintahParams,
-                        ExecutionObject& executionObject)
+                        UintahParams& uintahParams)
       {
         (ptr->*pmf)(uintahParams.getProcessorGroup(), patches, matls, fromDW, toDW, arg1, arg2, arg3);
       }
@@ -455,8 +454,7 @@ private:
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW,
-                        UintahParams& uintahParams,
-                        ExecutionObject& executionObject)
+                        UintahParams& uintahParams)
       {
         (ptr->*pmf)(uintahParams.getProcessorGroup(), patches, matls, fromDW, toDW, arg1, arg2, arg3, arg4);
       }
@@ -512,8 +510,7 @@ private:
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW,
-                        UintahParams& uintahParams,
-                        ExecutionObject& executionObject)
+                        UintahParams& uintahParams)
       {
         (ptr->*pmf)(uintahParams.getProcessorGroup(), patches, matls, fromDW, toDW, arg1, arg2, arg3, arg4, arg5);
       }
@@ -523,7 +520,7 @@ private:
   // ------------------------------------------------------------------------
 
   // begin Portable Action constructors
-  template<class T>
+  template<class T, typename ES, typename MS>
   class ActionPortable : public ActionBase {
       T* ptr;
       void (T::*pmf)(const PatchSubset* patches,
@@ -531,7 +528,7 @@ private:
                      OnDemandDataWarehouse* fromDW,
                      OnDemandDataWarehouse* toDW,
                      UintahParams& uintahParams,
-                     ExecutionObject& executionObject);
+                     ExecutionObject<ES, MS> & executionObject);
     public:
       // class ActionPortable
       ActionPortable( T * ptr,
@@ -540,7 +537,7 @@ private:
                                    OnDemandDataWarehouse* fromDW,
                                    OnDemandDataWarehouse* toDW,
                                    UintahParams& uintahParams,
-                                   ExecutionObject& executionObject) ) :
+                                   ExecutionObject<ES, MS> & executionObject) ) :
         ptr(ptr), pmf(pmf)
       {
       }
@@ -554,14 +551,20 @@ private:
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW,
-                        UintahParams& uintahParams,
-                        ExecutionObject& executionObject)
+                        UintahParams& uintahParams)
       {
+        ExecutionObject<ES, MS> executionObject;
+        executionObject.setCudaThreadsPerBlock(Uintah::Parallel::getCudaThreadsPerBlock());
+        executionObject.setCudaBlocksPerLoop(Uintah::Parallel::getCudaBlocksPerLoop());
+        const int numStreams = uintahParams.getNumStreams();
+        for (int i = 0; i < numStreams; i++) {
+          executionObject.setStream(uintahParams.getStream(i), 0);
+        }
         (ptr->*pmf)(patches, matls, reinterpret_cast<OnDemandDataWarehouse*>(fromDW), reinterpret_cast<OnDemandDataWarehouse*>(toDW), uintahParams, executionObject);
       }
   };  // end class ActionPortable
 
-  template<class T, class Arg1>
+  template<class T, typename ES, typename MS, class Arg1>
   class ActionPortable1 : public ActionBase {
       T* ptr;
       void (T::*pmf)( const PatchSubset* patches,
@@ -569,7 +572,7 @@ private:
                             OnDemandDataWarehouse* fromDW,
                             OnDemandDataWarehouse* toDW,
                             UintahParams& uintahParams,
-                            ExecutionObject& executionObject,
+                            ExecutionObject<ES, MS> & executionObject,
                             Arg1 arg1);
       Arg1 arg1;
     public:
@@ -580,7 +583,7 @@ private:
                                    OnDemandDataWarehouse* fromDW,
                                    OnDemandDataWarehouse* toDW,
                                    UintahParams& uintahParams,
-                                   ExecutionObject& executionObject,
+                                   ExecutionObject<ES, MS> & executionObject,
                                    Arg1 arg1),
                     Arg1 arg1)
           : ptr(ptr), pmf(pmf), arg1(arg1)
@@ -596,14 +599,20 @@ private:
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW,
-                        UintahParams& uintahParams,
-                        ExecutionObject& executionObject)
+                        UintahParams& uintahParams)
       {
+        ExecutionObject<ES, MS> executionObject;
+        executionObject.setCudaThreadsPerBlock(Uintah::Parallel::getCudaThreadsPerBlock());
+        executionObject.setCudaBlocksPerLoop(Uintah::Parallel::getCudaBlocksPerLoop());
+        const int numStreams = uintahParams.getNumStreams();
+        for (int i = 0; i < numStreams; i++) {
+          executionObject.setStream(uintahParams.getStream(i), 0);
+        }
         (ptr->*pmf)(patches, matls, reinterpret_cast<OnDemandDataWarehouse*>(fromDW), reinterpret_cast<OnDemandDataWarehouse*>(toDW), uintahParams, executionObject, arg1);
       }
   };  // end class ActionPortable1
 
-  template<class T, class Arg1, class Arg2>
+  template<class T, typename ES, typename MS, class Arg1, class Arg2>
   class ActionPortable2 : public ActionBase {
       T* ptr;
       void (T::*pmf)(const PatchSubset* patches,
@@ -611,7 +620,7 @@ private:
                            OnDemandDataWarehouse* fromDW,
                            OnDemandDataWarehouse* toDW,
                            UintahParams& uintahParams,
-                           ExecutionObject& executionObject,
+                           ExecutionObject<ES, MS> & executionObject,
                            Arg1 arg1,
                            Arg2 arg2);
       Arg1 arg1;
@@ -624,7 +633,7 @@ private:
                                          OnDemandDataWarehouse* fromDW,
                                          OnDemandDataWarehouse* toDW,
                                          UintahParams& uintahParams,
-                                         ExecutionObject& executionObject,
+                                         ExecutionObject<ES, MS> & executionObject,
                                          Arg1 arg1,
                                          Arg2 arg2),
                     Arg1 arg1,
@@ -642,14 +651,20 @@ private:
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW,
-                        UintahParams& uintahParams,
-                        ExecutionObject& executionObject)
+                        UintahParams& uintahParams)
       {
+        ExecutionObject<ES, MS> executionObject;
+        executionObject.setCudaThreadsPerBlock(Uintah::Parallel::getCudaThreadsPerBlock());
+        executionObject.setCudaBlocksPerLoop(Uintah::Parallel::getCudaBlocksPerLoop());
+        const int numStreams = uintahParams.getNumStreams();
+        for (int i = 0; i < numStreams; i++) {
+          executionObject.setStream(uintahParams.getStream(i), 0);
+        }
         (ptr->*pmf)(patches, matls, reinterpret_cast<OnDemandDataWarehouse*>(fromDW), reinterpret_cast<OnDemandDataWarehouse*>(toDW), uintahParams, executionObject, arg1, arg2);
       }
   };  // end class ActionPortable2
 
-  template<class T, class Arg1, class Arg2, class Arg3>
+  template<class T, typename ES, typename MS, class Arg1, class Arg2, class Arg3>
   class ActionPortable3 : public ActionBase {
       T* ptr;
       void (T::*pmf)(const PatchSubset* patches,
@@ -657,7 +672,7 @@ private:
                      OnDemandDataWarehouse* fromDW,
                      OnDemandDataWarehouse* toDW,
                      UintahParams& uintahParams,
-                     ExecutionObject& executionObject,
+                     ExecutionObject<ES, MS> & executionObject,
                      Arg1 arg1,
                      Arg2 arg2,
                      Arg3 arg3);
@@ -673,7 +688,7 @@ private:
                                    OnDemandDataWarehouse* fromDW,
                                    OnDemandDataWarehouse* toDW,
                                    UintahParams& uintahParams,
-                                   ExecutionObject& executionObject,
+                                   ExecutionObject<ES, MS> & executionObject,
                                    Arg1 arg1,
                                    Arg2 arg2,
                                    Arg3 arg3),
@@ -693,14 +708,20 @@ private:
                          const MaterialSubset * matls,
                                DataWarehouse  * fromDW,
                                DataWarehouse  * toDW,
-                               UintahParams& uintahParams,
-                               ExecutionObject& executionObject)
+                               UintahParams& uintahParams)
       {
+        ExecutionObject<ES, MS> executionObject;
+        executionObject.setCudaThreadsPerBlock(Uintah::Parallel::getCudaThreadsPerBlock());
+        executionObject.setCudaBlocksPerLoop(Uintah::Parallel::getCudaBlocksPerLoop());
+        const int numStreams = uintahParams.getNumStreams();
+        for (int i = 0; i < numStreams; i++) {
+          executionObject.setStream(uintahParams.getStream(i), 0);
+        }
         (ptr->*pmf)(patches, matls, reinterpret_cast<OnDemandDataWarehouse*>(fromDW), reinterpret_cast<OnDemandDataWarehouse*>(toDW), uintahParams, executionObject, arg1, arg2, arg3);
       }
   };  // end class ActionPortable3
 
-  template<class T, class Arg1, class Arg2, class Arg3, class Arg4>
+  template<class T, typename ES, typename MS, class Arg1, class Arg2, class Arg3, class Arg4>
   class ActionPortable4 : public ActionBase {
       T* ptr;
       void (T::*pmf)(const PatchSubset* patches,
@@ -708,7 +729,7 @@ private:
                      OnDemandDataWarehouse* fromDW,
                      OnDemandDataWarehouse* toDW,
                      UintahParams& uintahParams,
-                     ExecutionObject& executionObject,
+                     ExecutionObject<ES, MS> & executionObject,
                      Arg1 arg1,
                      Arg2 arg2,
                      Arg3 arg3,
@@ -725,7 +746,7 @@ private:
                                    OnDemandDataWarehouse* fromDW,
                                    OnDemandDataWarehouse* toDW,
                                    UintahParams& uintahParams,
-                                   ExecutionObject& executionObject,
+                                   ExecutionObject<ES, MS> & executionObject,
                                    Arg1 arg1,
                                    Arg2 arg2,
                                    Arg3 arg3,
@@ -747,14 +768,20 @@ private:
                         const MaterialSubset* matls,
                               DataWarehouse* fromDW,
                               DataWarehouse* toDW,
-                              UintahParams& uintahParams,
-                              ExecutionObject& executionObject)
+                              UintahParams& uintahParams)
       {
+        ExecutionObject<ES, MS> executionObject;
+        executionObject.setCudaThreadsPerBlock(Uintah::Parallel::getCudaThreadsPerBlock());
+        executionObject.setCudaBlocksPerLoop(Uintah::Parallel::getCudaBlocksPerLoop());
+        const int numStreams = uintahParams.getNumStreams();
+        for (int i = 0; i < numStreams; i++) {
+          executionObject.setStream(uintahParams.getStream(i), 0);
+        }
         (ptr->*pmf)(patches, matls, reinterpret_cast<OnDemandDataWarehouse*>(fromDW), reinterpret_cast<OnDemandDataWarehouse*>(toDW), uintahParams, executionObject, arg1, arg2, arg3, arg4);
       }
   };  // end class ActionPortable4
 
-  template<class T, class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
+  template<class T, typename ES, typename MS, class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
   class ActionPortable5 : public ActionBase {
       T* ptr;
       void (T::*pmf)(const PatchSubset* patches,
@@ -762,7 +789,7 @@ private:
                      OnDemandDataWarehouse* fromDW,
                      OnDemandDataWarehouse* toDW,
                      UintahParams& uintahParams,
-                     ExecutionObject& executionObject,
+                     ExecutionObject<ES, MS> & executionObject,
                      Arg1 arg1,
                      Arg2 arg2,
                      Arg3 arg3,
@@ -781,7 +808,7 @@ private:
                                     OnDemandDataWarehouse * fromDW,
                                     OnDemandDataWarehouse * toDW,
                                     UintahParams& uintahParams,
-                                    ExecutionObject& executionObject,
+                                    ExecutionObject<ES, MS> & executionObject,
                                     Arg1 arg1,
                                     Arg2 arg2,
                                     Arg3 arg3,
@@ -805,9 +832,15 @@ private:
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW,
-                              UintahParams& uintahParams,
-                              ExecutionObject& executionObject)
+                        UintahParams& uintahParams)
       {
+        ExecutionObject<ES, MS> executionObject;
+        executionObject.setCudaThreadsPerBlock(Uintah::Parallel::getCudaThreadsPerBlock());
+        executionObject.setCudaBlocksPerLoop(Uintah::Parallel::getCudaBlocksPerLoop());
+        const int numStreams = uintahParams.getNumStreams();
+        for (int i = 0; i < numStreams; i++) {
+          executionObject.setStream(uintahParams.getStream(i), 0);
+        }
         (ptr->*pmf)(patches, matls, reinterpret_cast<OnDemandDataWarehouse*>(fromDW), reinterpret_cast<OnDemandDataWarehouse*>(toDW), uintahParams, executionObject, arg1, arg2, arg3, arg4, arg5);
       }
   };  // end class ActionPortable5
@@ -877,7 +910,7 @@ public: // class Task
   }
 
   // Portable Task constructor
-  template<typename T, typename... Args>
+  template<typename T, typename ES, typename MS, typename... Args>
   Task( const std::string & taskName
       , T * ptr
       , void (T::*pmf)( const PatchSubset    * patches
@@ -885,13 +918,13 @@ public: // class Task
                       ,       OnDemandDataWarehouse  * fromDW
                       ,       OnDemandDataWarehouse  * toDW
                       ,       UintahParams& uintahParams
-                      ,       ExecutionObject& executionObject
+                      ,       ExecutionObject<ES, MS>& executionObject
                       ,       Args...          args
                       )
       , Args... args
       )
       : m_task_name(taskName)
-      , m_action(scinew ActionPortable<T, Args...>(ptr, pmf, std::forward<Args>(args)...))
+      , m_action(scinew ActionPortable<T, ES, MS, Args...>(ptr, pmf, std::forward<Args>(args)...))
   {
     initialize();
     d_tasktype = Normal;
@@ -1024,7 +1057,7 @@ public: // class Task
 
 
   // begin Portable Task constructors
-  template<class T>
+  template<class T, typename ES, typename MS>
   Task(
        const std::string& taskName,
        T* ptr,
@@ -1033,16 +1066,16 @@ public: // class Task
                       OnDemandDataWarehouse* fromDW,
                       OnDemandDataWarehouse* toDW,
                       UintahParams& uintahParams,
-                      ExecutionObject& executionObject))
+                      ExecutionObject<ES, MS> & executionObject))
       :
         m_task_name(taskName),
-          m_action(scinew ActionPortable<T>(ptr, pmf))
+          m_action(scinew ActionPortable<T, ES, MS>(ptr, pmf))
   {
     initialize();
     d_tasktype = Normal;
   }
 
-  template<class T, class Arg1>
+  template<class T, typename ES, typename MS, class Arg1>
   Task(
        const std::string& taskName,
        T* ptr,
@@ -1051,18 +1084,18 @@ public: // class Task
                       OnDemandDataWarehouse* fromDW,
                       OnDemandDataWarehouse* toDW,
                       UintahParams& uintahParams,
-                      ExecutionObject& executionObject,
+                      ExecutionObject<ES, MS> & executionObject,
                       Arg1 arg1),
        Arg1 arg1)
       :
         m_task_name(taskName),
-          m_action(scinew ActionPortable1<T, Arg1>(ptr, pmf, arg1))
+          m_action(scinew ActionPortable1<T, ES, MS, Arg1>(ptr, pmf, arg1))
   {
     initialize();
     d_tasktype = Normal;
   }
 
-  template<class T, class Arg1, class Arg2>
+  template<class T, typename ES, typename MS, class Arg1, class Arg2>
   Task(const std::string& taskName,
        T* ptr,
        void (T::*pmf)(const PatchSubset* patches,
@@ -1070,20 +1103,20 @@ public: // class Task
                       OnDemandDataWarehouse* fromDW,
                       OnDemandDataWarehouse* toDW,
                       UintahParams& uintahParams,
-                      ExecutionObject& executionObject,
+                      ExecutionObject<ES, MS> & executionObject,
                       Arg1 arg1,
                       Arg2 arg2),
        Arg1 arg1,
        Arg2 arg2)
       :
         m_task_name(taskName),
-          m_action(scinew ActionPortable2<T, Arg1, Arg2>(ptr, pmf, arg1, arg2))
+          m_action(scinew ActionPortable2<T, ES, MS, Arg1, Arg2>(ptr, pmf, arg1, arg2))
   {
     initialize();
     d_tasktype = Normal;
   }
 
-  template<class T, class Arg1, class Arg2, class Arg3>
+  template<class T, typename ES, typename MS, class Arg1, class Arg2, class Arg3>
   Task(const std::string& taskName,
        T* ptr,
        void (T::*pmf)(const PatchSubset* patches,
@@ -1091,7 +1124,7 @@ public: // class Task
                       OnDemandDataWarehouse* fromDW,
                       OnDemandDataWarehouse* toDW,
                       UintahParams& uintahParams,
-                      ExecutionObject& executionObject,
+                      ExecutionObject<ES, MS> & executionObject,
                       Arg1 arg1,
                       Arg2 arg2,
                       Arg3 arg3),
@@ -1100,13 +1133,13 @@ public: // class Task
        Arg3 arg3)
       :
         m_task_name(taskName),
-          m_action(scinew ActionPortable3<T, Arg1, Arg2, Arg3>(ptr, pmf, arg1, arg2, arg3))
+          m_action(scinew ActionPortable3<T, ES, MS, Arg1, Arg2, Arg3>(ptr, pmf, arg1, arg2, arg3))
   {
     initialize();
     d_tasktype = Normal;
   }
 
-  template<class T, class Arg1, class Arg2, class Arg3, class Arg4>
+  template<class T, typename ES, typename MS, class Arg1, class Arg2, class Arg3, class Arg4>
   Task(const std::string& taskName,
        T* ptr,
        void (T::*pmf)(const PatchSubset* patches,
@@ -1114,7 +1147,7 @@ public: // class Task
                       OnDemandDataWarehouse* fromDW,
                       OnDemandDataWarehouse* toDW,
                       UintahParams& uintahParams,
-                      ExecutionObject& executionObject,
+                      ExecutionObject<ES, MS> & executionObject,
                       Arg1 arg1,
                       Arg2 arg2,
                       Arg3 arg3,
@@ -1125,13 +1158,13 @@ public: // class Task
        Arg4 arg4)
       :
         m_task_name(taskName),
-          m_action(scinew ActionPortable4<T, Arg1, Arg2, Arg3, Arg4>(ptr, pmf, arg1, arg2, arg3, arg4))
+          m_action(scinew ActionPortable4<T, ES, MS, Arg1, Arg2, Arg3, Arg4>(ptr, pmf, arg1, arg2, arg3, arg4))
   {
     initialize();
     d_tasktype = Normal;
   }
 
-  template<class T, class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
+  template<class T, typename ES, typename MS, class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
   Task(const std::string& taskName,
        T* ptr,
        void (T::*pmf)(const PatchSubset* patches,
@@ -1139,7 +1172,7 @@ public: // class Task
                       OnDemandDataWarehouse* fromDW,
                       OnDemandDataWarehouse* toDW,
                       UintahParams& uintahParams,
-                      ExecutionObject& executionObject,
+                      ExecutionObject<ES, MS> & executionObject,
                       Arg1 arg1,
                       Arg2 arg2,
                       Arg3 arg3,
@@ -1152,7 +1185,7 @@ public: // class Task
        Arg5 arg5)
       :
         m_task_name(taskName),
-          m_action(scinew ActionPortable5<T, Arg1, Arg2, Arg3, Arg4, Arg5>(ptr, pmf, arg1, arg2, arg3, arg4, arg5))
+          m_action(scinew ActionPortable5<T, ES, MS, Arg1, Arg2, Arg3, Arg4, Arg5>(ptr, pmf, arg1, arg2, arg3, arg4, arg5))
   {
     initialize();
     d_tasktype = Normal;
@@ -1172,6 +1205,12 @@ public: // class Task
          void usesThreads(bool state);
   inline bool usesThreads() const { return m_uses_threads; }
 
+
+         void setExecutionAndMemorySpace( const TaskAssignedExecutionSpace& executionSpaceTypeName,
+                                          const TaskAssignedMemorySpace& memorySpaceTypeName);
+         TaskAssignedExecutionSpace getExecutionSpace() const;
+         TaskAssignedMemorySpace    getMemorySpace() const;
+
          void usesDevice(bool state, int maxStreamsPerTask = -1);
   inline bool usesDevice() const { return m_uses_device; }
   inline int  maxStreamsPerTask() const { return  m_max_streams_per_task; }
@@ -1185,7 +1224,7 @@ public: // class Task
          void usesKokkosCuda(bool state);
   inline bool usesKokkosCuda() const { return m_uses_kokkos_cuda; }
 
-  MemorySpace getMemorySpace() const;
+
 
   enum MaterialDomainSpec {
       NormalDomain  // <- Normal/default setting
@@ -1436,7 +1475,6 @@ public: // class Task
                    , const MaterialSubset              *
                    ,       std::vector<DataWarehouseP> & dws
                    ,       UintahParams& uintahParams
-                   ,       ExecutionObject& executionObject
                    );
 
   inline const std::string & getName() const { return m_task_name; }
@@ -1639,6 +1677,8 @@ protected: // class Task
 
   bool m_uses_mpi{false};
   bool m_uses_threads{false};
+  TaskAssignedExecutionSpace m_execution_space{};
+  TaskAssignedMemorySpace m_memory_space{};
   bool m_uses_device{false};
   bool m_preload_sim_vars{false};
   bool m_uses_kokkos_openmp{false};

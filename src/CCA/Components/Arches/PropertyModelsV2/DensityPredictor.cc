@@ -16,9 +16,9 @@ DensityPredictor::~DensityPredictor(){
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace DensityPredictor::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, DensityPredictor::eval);
-  return assignedTag;
+  return create_portable_arches_tasks( this,
+                                       &DensityPredictor::eval<UINTAH_CPU_TAG>,
+                                       &DensityPredictor::eval<KOKKOS_OPENMP_TAG> );
 
 }
 
@@ -67,7 +67,7 @@ DensityPredictor::register_initialize( std::vector<ArchesFieldContainer::Variabl
 
 //--------------------------------------------------------------------------------------------------
 void
-DensityPredictor::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+DensityPredictor::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
 
   CCVariable<double>& rho = *(tsk_info->get_uintah_field<CCVariable<double> >("new_densityGuess"));
@@ -120,7 +120,7 @@ DensityPredictor::register_timestep_eval( std::vector<ArchesFieldContainer::Vari
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemorySpace> void
-DensityPredictor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+DensityPredictor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   CCVariable<double>& rho_guess = *(tsk_info->get_uintah_field<CCVariable<double> >( "new_densityGuess"));
   CCVariable<double>& rho_guess_a = *(tsk_info->get_uintah_field<CCVariable<double> >( "densityGuess"));

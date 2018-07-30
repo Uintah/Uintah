@@ -38,14 +38,14 @@ public:
 
     void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject  );
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
     void restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    template <typename EXECUTION_SPACE, typename MEMORY_SPACE>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){}
+    template <typename ExecutionSpace, typename MemorySpace>
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){}
 
     //Build instructions for this (ConstantProperty) class.
     class Builder : public TaskInterface::TaskBuilder {
@@ -97,9 +97,9 @@ private:
   template <typename T>
   TaskAssignedExecutionSpace ConstantProperty<T>::loadTaskEvalFunctionPointers(){
 
-    TaskAssignedExecutionSpace assignedTag{};
-    LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, ConstantProperty<T>::eval);
-    return assignedTag;
+    return create_portable_arches_tasks( this,
+                                         &ConstantProperty::eval<UINTAH_CPU_TAG>,
+                                         &ConstantProperty::eval<KOKKOS_OPENMP_TAG> );
 
   }
 
@@ -152,7 +152,7 @@ private:
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
-  void ConstantProperty<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject  ){
+  void ConstantProperty<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     T& property = tsk_info->get_uintah_field_add<T>( _task_name );
     property.initialize(0.0);

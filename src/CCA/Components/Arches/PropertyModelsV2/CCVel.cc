@@ -14,9 +14,9 @@ CCVel::~CCVel(){}
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace CCVel::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, CCVel::eval);
-  return assignedTag;
+  return create_portable_arches_tasks( this,
+                                       &CCVel::eval<UINTAH_CPU_TAG>,
+                                       &CCVel::eval<KOKKOS_OPENMP_TAG> );
 
 }
 
@@ -75,7 +75,7 @@ void CCVel::register_initialize( AVarInfo& variable_registry , const bool pack_t
 }
 
 //--------------------------------------------------------------------------------------------------
-void CCVel::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info , ExecutionObject& executionObject ){
+void CCVel::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   compute_velocities( patch, tsk_info );
 
@@ -130,7 +130,7 @@ void CCVel::register_timestep_eval( VIVec& variable_registry, const int time_sub
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemorySpace>
-void CCVel::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+void CCVel::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   compute_velocities( patch, tsk_info );
 

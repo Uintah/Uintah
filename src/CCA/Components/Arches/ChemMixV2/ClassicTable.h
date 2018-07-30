@@ -162,7 +162,7 @@ struct ClassicTableInfo {
 
 // WORKING!!!!!!!!!!!!!!!!!!!
   template<typename ExecutionSpace,typename MemorySpace ,class TYPE_1 , class TYPE_2  >
-  void getState(ExecutionObject& executionObject, TYPE_1 &indep_storage,        
+  void getState(ExecutionObject<ExecutionSpace, MemorySpace>& executionObject, TYPE_1 &indep_storage,
               TYPE_2 &dep_storage,
               const Patch* patch, const struct1DArray<int, max_dep_var>  depVar_indices=struct1DArray<int,max_dep_var>(0) ){
 

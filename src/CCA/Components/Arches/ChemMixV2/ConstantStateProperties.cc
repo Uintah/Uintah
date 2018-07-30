@@ -16,7 +16,9 @@ ConstantStateProperties::~ConstantStateProperties(){
 TaskAssignedExecutionSpace ConstantStateProperties::loadTaskEvalFunctionPointers(){
 
   TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, ConstantStateProperties::eval);
+  return create_portable_arches_tasks( this,
+                                       &ConstantStateProperties::eval<UINTAH_CPU_TAG>,
+                                       &ConstantStateProperties::eval<KOKKOS_OPENMP_TAG> );
   return assignedTag;
 
 }
@@ -60,7 +62,7 @@ void ConstantStateProperties::register_initialize( VIVec& variable_registry , co
 }
 
 //--------------------------------------------------------------------------------------------------
-void ConstantStateProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+void ConstantStateProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   for ( auto i = m_name_to_value.begin(); i != m_name_to_value.end(); i++ ){
     CCVariable<double>& var = tsk_info->get_uintah_field_add<CCVariable<double> >( i->first );
@@ -114,4 +116,4 @@ void ConstantStateProperties::register_timestep_eval( VIVec& variable_registry, 
 void ConstantStateProperties::register_compute_bcs( VIVec& variable_registry, const int time_substep , const bool packed_tasks){}
 void ConstantStateProperties::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 template<typename ExecutionSpace, typename MemorySpace>
-void ConstantStateProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){}
+void ConstantStateProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){}

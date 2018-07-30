@@ -47,12 +47,12 @@ protected:
 
     void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject );
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    template <typename EXECUTION_SPACE, typename MEMORY_SPACE>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject );
+    template <typename ExecutionSpace, typename MemorySpace>
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
 
     void create_local_labels();
 
@@ -75,9 +75,9 @@ private:
   template <typename T>
   TaskAssignedExecutionSpace TemplatedSampleTask<T>::loadTaskEvalFunctionPointers(){
 
-    TaskAssignedExecutionSpace assignedTag{};
-    LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, TemplatedSampleTask<T>::eval);
-    return assignedTag;
+    return create_portable_arches_tasks( this,
+                                         &TemplatedSampleTask<T>::eval<UINTAH_CPU_TAG>,
+                                         &TemplatedSampleTask<T>::eval<KOKKOS_OPENMP_TAG> );
 
   }
 
@@ -104,7 +104,7 @@ private:
 
   //This is the work for the task.  First, get the variables. Second, do the work!
   template <typename T>
-  void TemplatedSampleTask<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+  void TemplatedSampleTask<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     T& field = *(tsk_info->get_uintah_field<T>( "templated_variable" ));
     Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
@@ -125,7 +125,7 @@ private:
 
   template <typename T>
   template<typename ExecutionSpace, typename MemorySpace>
-  void TemplatedSampleTask<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+  void TemplatedSampleTask<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
     T& field = *(tsk_info->get_uintah_field<T>( "templated_variable" ));
     Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );

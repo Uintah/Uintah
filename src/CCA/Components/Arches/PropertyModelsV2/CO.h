@@ -33,7 +33,7 @@ public:
 
     void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject );
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
     void restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
@@ -89,8 +89,8 @@ public:
       Step 4: update d to time t+1
       Step 5: update y to time t+1
     **/
-    template <typename EXECUTION_SPACE, typename MEMORY_SPACE>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject );
+    template <typename ExecutionSpace, typename MemorySpace>
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
 
     void create_local_labels();
 

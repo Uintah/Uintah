@@ -177,25 +177,27 @@ namespace Uintah{
       
       void sched_CarryForward_FineLevelLabels ( const LevelP& level,
                                                 SchedulerP& sched );
-                                          
+
+      template <typename ES, typename MS>
       void carryForward_FineLevelLabels ( const PatchSubset* patches,
                                           const MaterialSubset* matls,
                                           OnDemandDataWarehouse* old_dw,
                                           OnDemandDataWarehouse* new_dw,
                                           UintahParams& uintahParams,
-                                          ExecutionObject& executionObject );
+                                          ExecutionObject<ES, MS>& executionObject );
        
       void sched_CarryForward_Var ( const LevelP& level,
                                     SchedulerP& scheduler,
                                     const VarLabel* variable,
                                     const int tg_num  = -1 );
 
+      template <typename ES, typename MS>
       void carryForward_Var( const PatchSubset*,
                              const MaterialSubset*,
                              OnDemandDataWarehouse*,
                              OnDemandDataWarehouse*,
                              UintahParams& uintahParams,
-                             ExecutionObject& executionObject,
+                             ExecutionObject<ES, MS>& executionObject,
                              const VarLabel* variable );
 
       //__________________________________

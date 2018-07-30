@@ -17,9 +17,9 @@ VelRhoHatBC::~VelRhoHatBC()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace VelRhoHatBC::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, VelRhoHatBC::eval);
-  return assignedTag;
+  return create_portable_arches_tasks( this,
+                                       &VelRhoHatBC::eval<UINTAH_CPU_TAG>,
+                                       &VelRhoHatBC::eval<KOKKOS_OPENMP_TAG> );
 
 }
 
@@ -43,7 +43,7 @@ void VelRhoHatBC::register_timestep_eval( std::vector<AFC::VariableInformation>&
 }
 
 template<typename ExecutionSpace, typename MemorySpace>
-void VelRhoHatBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+void VelRhoHatBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   SFCXVariable<double>* xmom = tsk_info->get_uintah_field<SFCXVariable<double> >( m_xmom );
   SFCYVariable<double>* ymom = tsk_info->get_uintah_field<SFCYVariable<double> >( m_ymom );

@@ -840,7 +840,7 @@ RMCRTCommon::sched_CarryForward_FineLevelLabels ( const LevelP& level,
   std::string taskname = "RMCRTCommon::sched_CarryForward_FineLevelLabels";
   printSchedule( level, g_ray_dbg, taskname );
 
-  Task* tsk = scinew Task( taskname, this, &RMCRTCommon::carryForward_FineLevelLabels );
+  Task* tsk = scinew Task( taskname, this, &RMCRTCommon::carryForward_FineLevelLabels<UintahSpaces::CPU, UintahSpaces::HostSpace> );
 
   tsk->requires( Task::OldDW, d_divQLabel,          d_gn, 0 );
   tsk->requires( Task::OldDW, d_boundFluxLabel,     d_gn, 0 );
@@ -857,13 +857,14 @@ RMCRTCommon::sched_CarryForward_FineLevelLabels ( const LevelP& level,
 
 //______________________________________________________________________
 //
+template <typename ES, typename MS>
 void
 RMCRTCommon::carryForward_FineLevelLabels( const PatchSubset* patches,
                                            const MaterialSubset* matls,
                                            OnDemandDataWarehouse* old_dw,
                                            OnDemandDataWarehouse* new_dw,
                                            UintahParams& uintahParams,
-                                           ExecutionObject& executionObject)
+                                           ExecutionObject<ES, MS>& executionObject)
 {
   printTask( patches, patches->get(0), g_ray_dbg, "Doing RMCRTCommon::carryForward_FineLevelLabels" );
 
@@ -886,7 +887,7 @@ RMCRTCommon::sched_CarryForward_Var ( const LevelP& level,
   std::string taskname = "        carryForward_Var: " + variable->getName();
   printSchedule(level, g_ray_dbg, taskname);
 
-  Task* task = scinew Task( taskname, this, &RMCRTCommon::carryForward_Var, variable );
+  Task* task = scinew Task( taskname, this, &RMCRTCommon::carryForward_Var<UintahSpaces::CPU, UintahSpaces::HostSpace>, variable );
 
   task->requires(Task::OldDW, variable,   d_gn, 0);
   task->computes(variable);
@@ -895,13 +896,14 @@ RMCRTCommon::sched_CarryForward_Var ( const LevelP& level,
 }
 
 //______________________________________________________________________
+template <typename ES, typename MS>
 void
 RMCRTCommon::carryForward_Var ( const PatchSubset* patches,
                                 const MaterialSubset* matls,
                                 OnDemandDataWarehouse* old_dw,
                                 OnDemandDataWarehouse* new_dw,
                                 UintahParams& uintahParams,
-                                ExecutionObject& executionObject,
+                                ExecutionObject<ES, MS>& executionObject,
                                 const VarLabel* variable )
 {
   new_dw->transferFrom(old_dw, variable, patches, matls, executionObject, true, nullptr);

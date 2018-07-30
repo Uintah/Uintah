@@ -518,8 +518,7 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
 
     });
 
-    ExecutionObject tempObjectReplaceForPortability; 
-
+    ExecutionObject<UintahSpaces::CPU,UintahSpaces::HostSpace> tempObjectReplaceForPortability;
     ND_interp->getState<UintahSpaces::CPU,UintahSpaces::HostSpace>( tempObjectReplaceForPortability, IVs_transformed, CCVar_vec_lookup   ,patch,depVarIndexes);
                              //need a getState where the 
    //ND_interp->getState( IVs_transformed, CCVar_vec_lookup   ,patch,depVarIndexes);

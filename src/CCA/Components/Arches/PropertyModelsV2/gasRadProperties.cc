@@ -29,9 +29,9 @@ gasRadProperties::~gasRadProperties( )
 //---------------------------------------------------------------------------
 TaskAssignedExecutionSpace gasRadProperties::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, gasRadProperties::eval);
-  return assignedTag;
+  return create_portable_arches_tasks( this,
+                                       &gasRadProperties::eval<UINTAH_CPU_TAG>,
+                                       &gasRadProperties::eval<KOKKOS_OPENMP_TAG> );
 
 }
 
@@ -115,7 +115,7 @@ gasRadProperties::register_initialize( VIVec& variable_registry , const bool pac
 }
 
 void
-gasRadProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info , ExecutionObject& executionObject ){
+gasRadProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& abskg     = tsk_info->get_uintah_field_add<CCVariable<double> >( _abskg_name);
 
@@ -167,7 +167,7 @@ gasRadProperties::register_timestep_eval( std::vector<ArchesFieldContainer::Vari
 
 
 template<typename ExecutionSpace, typename MemorySpace> void
-gasRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+gasRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
   CCVariable<double>& abskg = *(tsk_info->get_uintah_field<CCVariable<double> >(_abskg_name));

@@ -247,7 +247,7 @@ KokkosSolver::computeTimestep( const LevelP     & level
   if ( found_all_vars ){
 
 
-    auto TaskDependencies = [&](Task* tsk) {
+    auto taskDependencies = [&](Task* tsk) {
       // Actually compute the dt based on CFD variables.
 
       tsk->computes( m_delTLabel, level.get_rep() );
@@ -267,10 +267,11 @@ KokkosSolver::computeTimestep( const LevelP     & level
       m_arches_spec->getRootNode()->findBlock("Time")->getWithDefault( "delt_init", m_dt_init, 1. );
     };
 
-    CALL_ASSIGN_PORTABLE_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG,
-                              TaskDependencies,
-                              "KokkosSolver::computeStableTimeStep", KokkosSolver::computeStableTimeStep<,
-                              level->eachPatch(), m_sharedState->allArchesMaterials(), TASKGRAPH::DEFAULT);
+    create_portable_tasks(taskDependencies, this,
+                          "KokkosSolver::computeStableTimeStep",
+                          &KokkosSolver::computeStableTimeStep<UINTAH_CPU_TAG>,
+                          &KokkosSolver::computeStableTimeStep<KOKKOS_OPENMP_TAG>,
+                          sched, level->eachPatch(), m_sharedState->allMaterials(), TASKGRAPH::DEFAULT);
 
   } else {
 
@@ -286,14 +287,15 @@ KokkosSolver::computeTimestep( const LevelP     & level
     if ( !m_arches_spec->getRootNode()->findBlock("Time")->findBlock( "delt_init") ){
       throw ProblemSetupException("\n Error: Oops... please specify a delt_init in your input file.\n", __FILE__, __LINE__ );
     }
-    auto TaskDependencies = [&](Task* tsk) {
+    auto taskDependencies = [&](Task* tsk) {
         tsk->computes( m_delTLabel, level.get_rep() );
     };
 
-    CALL_ASSIGN_PORTABLE_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG,
-                              TaskDependencies,
-                              "KokkosSolver::setTimeStep", KokkosSolver::setTimeStep<,
-                              level->eachPatch(), m_sharedState->allArchesMaterials(), TASKGRAPH::DEFAULT);
+    create_portable_tasks(taskDependencies, this,
+                          "KokkosSolver::setTimeStep",
+                          &KokkosSolver::setTimeStep<UINTAH_CPU_TAG>,
+                          &KokkosSolver::setTimeStep<KOKKOS_OPENMP_TAG>,
+                          sched, level->eachPatch(), m_sharedState->allMaterials(), TASKGRAPH::DEFAULT);
 
   }
 
@@ -307,7 +309,7 @@ KokkosSolver::computeStableTimeStep(const PatchSubset* patches,
                                     OnDemandDataWarehouse* old_dw,
                                     OnDemandDataWarehouse* new_dw,
                                     UintahParams& uintahParams,
-                                    ExecutionObject& executionObject)
+                                    ExecutionObject<ExecutionSpace, MemorySpace>& executionObject)
 {
 
   const Level* level = getLevel(patches);
@@ -335,7 +337,7 @@ KokkosSolver::computeStableTimeStep(const PatchSubset* patches,
 
     Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
 
-    Uintah::parallel_reduce_min<ExecutionSpace>( executionObject, range, KOKKOS_LAMBDA ( int i, int j, int k, double & m_dt ) {
+    Uintah::parallel_reduce_min( executionObject, range, KOKKOS_LAMBDA ( int i, int j, int k, double & m_dt ) {
 
       const double small_num = 1.e-10;
 
@@ -370,7 +372,7 @@ KokkosSolver::setTimeStep(const PatchSubset* patches,
                           OnDemandDataWarehouse* old_dw,
                           OnDemandDataWarehouse* new_dw,
                           UintahParams& uintahParams,
-                          ExecutionObject& executionObject)
+                          ExecutionObject<ExecutionSpace, MemorySpace>& executionObject)
 {
   const Level* level = getLevel(patches);
   for (int p = 0; p < patches->size(); p++) {

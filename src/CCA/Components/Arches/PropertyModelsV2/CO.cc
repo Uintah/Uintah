@@ -27,9 +27,9 @@ CO::~CO(){
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace CO::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, CO::eval);
-  return assignedTag;
+  return create_portable_arches_tasks( this,
+                                       &CO::eval<UINTAH_CPU_TAG>,
+                                       &CO::eval<KOKKOS_OPENMP_TAG> );
 
 }
 
@@ -106,7 +106,7 @@ CO::register_initialize( VIVec& variable_registry , const bool pack_tasks){
 
 //--------------------------------------------------------------------------------------------------
 void
-CO::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info , ExecutionObject& executionObject){
+CO::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info){
 
   CCVariable<double>& CO      = tsk_info->get_uintah_field_add<CCVariable<double> >( m_CO_model_name );
   CCVariable<double>& CO_diff = tsk_info->get_uintah_field_add<CCVariable<double> >( m_CO_diff_name );
@@ -195,7 +195,7 @@ CO::register_timestep_eval( std::vector<AFC::VariableInformation>& variable_regi
 }
 
 template<typename ExecutionSpace, typename MemorySpace> void
-CO::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+CO::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
 
   /* This model computes carbon monoxide as a sum of the equilibrum CO and a defect CO.

@@ -23,9 +23,9 @@ spectralProperties::~spectralProperties( )
 //---------------------------------------------------------------------------
 TaskAssignedExecutionSpace spectralProperties::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, spectralProperties::eval);
-  return assignedTag;
+  return create_portable_arches_tasks( this,
+                                       &spectralProperties::eval<UINTAH_CPU_TAG>,
+                                       &spectralProperties::eval<KOKKOS_OPENMP_TAG> );
 
 }
 
@@ -101,7 +101,7 @@ spectralProperties::register_initialize( VIVec& variable_registry , const bool p
 }
 
 void
-spectralProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+spectralProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   for (int i=0; i< _nbands  ; i++){
     CCVariable<double>& abskg     = tsk_info->get_uintah_field_add<CCVariable<double> >( _abskg_name_vector[i]);
@@ -172,7 +172,7 @@ spectralProperties::register_timestep_eval( std::vector<ArchesFieldContainer::Va
 
 
 template<typename ExecutionSpace, typename MemorySpace> void
-spectralProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+spectralProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
 

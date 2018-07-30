@@ -7,9 +7,9 @@ namespace Uintah{
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace CoalDensity::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, CoalDensity::eval);
-  return assignedTag;
+  return create_portable_arches_tasks( this,
+                                       &CoalDensity::eval<UINTAH_CPU_TAG>,
+                                       &CoalDensity::eval<KOKKOS_OPENMP_TAG> );
 
 }
 
@@ -118,7 +118,7 @@ CoalDensity::register_initialize( std::vector<ArchesFieldContainer::VariableInfo
 
 //--------------------------------------------------------------------------------------------------
 void
-CoalDensity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+CoalDensity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   for ( int ienv = 0; ienv < _Nenv; ienv++ ){
 
@@ -213,7 +213,7 @@ CoalDensity::register_timestep_eval(
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemorySpace> void
-CoalDensity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+CoalDensity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   for ( int ienv = 0; ienv < _Nenv; ienv++ ){
 

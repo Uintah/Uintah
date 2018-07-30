@@ -13,9 +13,10 @@ UpdateParticleVelocity::~UpdateParticleVelocity(){
 
 TaskAssignedExecutionSpace UpdateParticleVelocity::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, UpdateParticleVelocity::eval);
-  return assignedTag;
+
+  return create_portable_arches_tasks( this,
+                                       &UpdateParticleVelocity::eval<UINTAH_CPU_TAG>,
+                                       &UpdateParticleVelocity::eval<KOKKOS_OPENMP_TAG> );
 
 }
 
@@ -55,7 +56,7 @@ UpdateParticleVelocity::register_initialize(
 
 //--------------------------------------------------------------------------------------------------
 void
-UpdateParticleVelocity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+UpdateParticleVelocity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   ParticleTuple pu_t = tsk_info->get_uintah_particle_field( _u_name );
   ParticleTuple pv_t = tsk_info->get_uintah_particle_field( _v_name );
@@ -93,7 +94,7 @@ UpdateParticleVelocity::register_timestep_eval(
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemorySpace> void
-UpdateParticleVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+UpdateParticleVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   ParticleTuple pu_t = tsk_info->get_uintah_particle_field( _u_name );
   ParticleTuple pv_t = tsk_info->get_uintah_particle_field( _v_name );

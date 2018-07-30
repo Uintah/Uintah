@@ -639,7 +639,9 @@ KokkosOpenMPScheduler::allocateTaskComputesVariables( DetailedTask * dtask )
           const int dwIndex = computesVar->mapDataWarehouse();
           OnDemandDataWarehouseP dw = m_dws[dwIndex];
 
-          MemorySpace ms = dtask->getTask()->getMemorySpace();
+          //TODO: Get the memory space
+          //MemorySpace ms = dtask->getTask()->getMemorySpace();
+
           dw->allocateAndPutIfPossible(computesVar->m_var, matlID, patch, low, high, ms);
 
         } else {

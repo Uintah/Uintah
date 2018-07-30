@@ -3141,7 +3141,7 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse*  from,
                                      const VarLabel*       var,
                                      const PatchSubset*    patches,
                                      const MaterialSubset* matls) {
-  ExecutionObject executionObject;
+  ExecutionObject<UintahSpaces::CPU, UintahSpaces::HostSpace> executionObject;
   this->transferFrom(from, var, patches, matls, executionObject, false, nullptr);
 }
 
@@ -3153,7 +3153,7 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse*  from,
                                      const PatchSubset*    patches,
                                      const MaterialSubset* matls,
                                            bool            replace) {
-  ExecutionObject executionObject;
+  ExecutionObject<UintahSpaces::CPU, UintahSpaces::HostSpace> executionObject;
   this->transferFrom(from, var, patches, matls, executionObject, replace, nullptr);
 }
 
@@ -3166,7 +3166,7 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse*  from,
                                      const MaterialSubset* matls,
                                            bool            replace,
                                      const PatchSubset*    newPatches) {
-  ExecutionObject executionObject;
+  ExecutionObject<UintahSpaces::CPU, UintahSpaces::HostSpace> executionObject;
   this->transferFrom(from, var, patches, matls, executionObject, replace, newPatches);
 }
 
@@ -3179,12 +3179,13 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse*  from,
 //transferFrom() will perform a deep copy on the data if it's in the CPU or GPU.
 //GPU transferFrom is not yet supported for GPU PerPatch variables.
 //See the GPU's transferFrom() method for many more more details.
+template <typename ES, MS>
 void
 OnDemandDataWarehouse::transferFrom(       DataWarehouse*   from,
                                      const VarLabel*        var,
                                      const PatchSubset*     patches,
                                      const MaterialSubset*  matls,
-                                           ExecutionObject& executionObject,
+                                           ExecutionObject<ES, MS>& executionObject,
                                            bool             replace,
                                      const PatchSubset*     newPatches)
 {
@@ -7161,8 +7162,8 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse*  from,
                                      const VarLabel*       var,
                                      const PatchSubset*    patches,
                                      const MaterialSubset* matls) {
-    ExecutionObject executionObject;
-    this->transferFrom(from, var, patches, matls, executionObject, false, nullptr);
+  ExecutionObject<UintahSpaces::CPU, UintahSpaces::HostSpace> executionObject;
+  this->transferFrom(from, var, patches, matls, executionObject, false, nullptr);
 }
 
 //______________________________________________________________________
@@ -7173,8 +7174,8 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse*  from,
                                      const PatchSubset*    patches,
                                      const MaterialSubset* matls,
                                            bool            replace) {
-    ExecutionObject executionObject;
-    this->transferFrom(from, var, patches, matls, executionObject, replace, nullptr);
+  ExecutionObject<UintahSpaces::CPU, UintahSpaces::HostSpace> executionObject;
+  this->transferFrom(from, var, patches, matls, executionObject, replace, nullptr);
 }
 
 //______________________________________________________________________
@@ -7186,8 +7187,8 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse*  from,
                                      const MaterialSubset* matls,
                                            bool            replace,
                                      const PatchSubset*    newPatches) {
-    ExecutionObject executionObject;
-    this->transferFrom(from, var, patches, matls, executionObject, replace, newPatches);
+  ExecutionObject<UintahSpaces::CPU, UintahSpaces::HostSpace> executionObject;
+  this->transferFrom(from, var, patches, matls, executionObject, replace, newPatches);
 }
 
 //______________________________________________________________________
@@ -7199,12 +7200,13 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse*  from,
 //transferFrom() will perform a deep copy on the data if it's in the CPU or GPU.
 //GPU transferFrom is not yet supported for GPU PerPatch variables.
 //See the GPU's transferFrom() method for many more more details.
+template <typename ES, typename MS>
 void
 OnDemandDataWarehouse::transferFrom(       DataWarehouse*   from,
                                      const VarLabel*        var,
                                      const PatchSubset*     patches,
                                      const MaterialSubset*  matls,
-                                           ExecutionObject& executionObject,
+                                           ExecutionObject<ES, MS>& executionObject,
                                            bool             replace,
                                      const PatchSubset*     newPatches)
 {

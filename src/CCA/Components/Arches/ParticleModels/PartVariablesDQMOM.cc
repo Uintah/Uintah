@@ -12,9 +12,9 @@ TaskInterface( task_name, matl_index ) {
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace PartVariablesDQMOM::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, PartVariablesDQMOM::eval);
-  return assignedTag;
+  return create_portable_arches_tasks( this,
+                                       &PartVariablesDQMOM::eval<UINTAH_CPU_TAG>,
+                                       &PartVariablesDQMOM::eval<KOKKOS_OPENMP_TAG> );
 
 }
 
@@ -69,7 +69,7 @@ PartVariablesDQMOM::register_initialize(
 
 //--------------------------------------------------------------------------------------------------
 void
-PartVariablesDQMOM::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+PartVariablesDQMOM::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& num_den  = tsk_info->get_uintah_field_add<CCVariable<double> >( m_number_density_name );
   CCVariable<double>& AreaSumF = tsk_info->get_uintah_field_add< CCVariable<double> >("AreaSum",0);// temporal variable
@@ -142,7 +142,7 @@ PartVariablesDQMOM::register_timestep_eval(
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemorySpace> void
-PartVariablesDQMOM::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+PartVariablesDQMOM::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   CCVariable<double>& num_den  = tsk_info->get_uintah_field_add<CCVariable<double> >( m_number_density_name );
   CCVariable<double>& AreaSumF = tsk_info->get_uintah_field_add< CCVariable<double> >("AreaSum",0);// temporal variable

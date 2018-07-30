@@ -49,12 +49,12 @@ public:
 
     void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject );
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    template <typename EXECUTION_SPACE, typename MEMORY_SPACE>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject );
+    template <typename ExecutionSpace, typename MemorySpace>
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
 
     void create_local_labels();
 
@@ -111,9 +111,9 @@ UnweightVariable<T>::~UnweightVariable()
 template <typename T>
 TaskAssignedExecutionSpace UnweightVariable<T>::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, UnweightVariable<T>::eval);
-  return assignedTag;
+  return create_portable_arches_tasks( this,
+                                       &UnweightVariable::eval<UINTAH_CPU_TAG>,
+                                       &UnweightVariable::eval<KOKKOS_OPENMP_TAG> );
 
 }
 
@@ -240,7 +240,7 @@ void UnweightVariable<T>::register_initialize(
 
 //--------------------------------------------------------------------------------------------------
 template <typename T>
-void UnweightVariable<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+void UnweightVariable<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   ArchesCore::VariableHelper<T> helper;
   typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
   constCCVariable<double>& rho = tsk_info->get_const_uintah_field_add<constCCVariable<double>>(m_rho_name);
@@ -469,7 +469,7 @@ void UnweightVariable<T>::register_timestep_eval(
 //--------------------------------------------------------------------------------------------------
 template <typename T>
 template<typename ExecutionSpace, typename MemorySpace>
-void UnweightVariable<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+void UnweightVariable<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   ArchesCore::VariableHelper<T> helper;
 

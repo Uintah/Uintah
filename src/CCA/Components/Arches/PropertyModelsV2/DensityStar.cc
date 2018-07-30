@@ -17,9 +17,9 @@ DensityStar::~DensityStar(){
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace DensityStar::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, DensityStar::eval);
-  return assignedTag;
+  return create_portable_arches_tasks( this,
+                                       &DensityStar::eval<UINTAH_CPU_TAG>,
+                                       &DensityStar::eval<KOKKOS_OPENMP_TAG> );
 
 }
 
@@ -105,7 +105,7 @@ DensityStar::register_initialize( std::vector<ArchesFieldContainer::VariableInfo
 
 //--------------------------------------------------------------------------------------------------
 void
-DensityStar::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject  ){
+DensityStar::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info  ){
 
   CCVariable<double>& rhoStar = tsk_info->get_uintah_field_add<CCVariable<double> >( m_label_densityStar );
   constCCVariable<double>& rho = tsk_info->get_const_uintah_field_add<constCCVariable<double> >( m_label_density );
@@ -156,7 +156,7 @@ DensityStar::register_timestep_eval( std::vector<ArchesFieldContainer::VariableI
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemorySpace> void
-DensityStar::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+DensityStar::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   constSFCXVariable<double>& xmom = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >("x-mom");
   constSFCYVariable<double>& ymom = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >("y-mom");

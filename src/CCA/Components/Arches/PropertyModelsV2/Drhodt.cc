@@ -17,9 +17,9 @@ Drhodt::~Drhodt(){
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace Drhodt::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, Drhodt::eval);
-  return assignedTag;
+  return create_portable_arches_tasks( this,
+                                       &Drhodt::eval<UINTAH_CPU_TAG>,
+                                       &Drhodt::eval<KOKKOS_OPENMP_TAG> );
 
 }
 //--------------------------------------------------------------------------------------------------
@@ -51,7 +51,7 @@ Drhodt::register_initialize( std::vector<ArchesFieldContainer::VariableInformati
 
 //--------------------------------------------------------------------------------------------------
 void
-Drhodt::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+Drhodt::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& drhodt = tsk_info->get_uintah_field_add<CCVariable<double> >( m_label_drhodt );
   drhodt.initialize(0.0);
@@ -71,7 +71,7 @@ Drhodt::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInform
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemorySpace> void
-Drhodt::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+Drhodt::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   constCCVariable<double>& rho = tsk_info->get_const_uintah_field_add<constCCVariable<double> >( m_label_density );
   constCCVariable<double>& old_rho = tsk_info->get_const_uintah_field_add<constCCVariable<double> >( m_label_density, ArchesFieldContainer::OLDDW);

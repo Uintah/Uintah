@@ -14,9 +14,9 @@ DQMOMNoInversion::~DQMOMNoInversion(){}
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace DQMOMNoInversion::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, DQMOMNoInversion::eval);
-  return assignedTag;
+  return create_portable_arches_tasks( this,
+                                       &DQMOMNoInversion::eval<UINTAH_CPU_TAG>,
+                                       &DQMOMNoInversion::eval<KOKKOS_OPENMP_TAG> );
 
 }
 
@@ -94,7 +94,7 @@ void DQMOMNoInversion::register_initialize(
 }
 
 //--------------------------------------------------------------------------------------------------
-void DQMOMNoInversion::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+void DQMOMNoInversion::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   for  ( auto i = m_ic_qn_srcnames.begin(); i != m_ic_qn_srcnames.end(); i++ ){
     CCVariable<double>& var = tsk_info->get_uintah_field_add<CCVariable<double> >( *i );
@@ -150,7 +150,7 @@ void DQMOMNoInversion::register_timestep_eval(
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemorySpace>
-void DQMOMNoInversion::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+void DQMOMNoInversion::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   for  ( auto i = m_ic_qn_srcnames.begin(); i != m_ic_qn_srcnames.end(); i++ ){
 

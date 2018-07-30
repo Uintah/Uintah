@@ -26,7 +26,7 @@
 #include <CCA/Components/Examples/ExamplesLabel.h>
 #include <CCA/Components/Schedulers/DetailedTask.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
-#include <Core/Parallel/LoopExecution.hpp>
+#include <Core/Parallel/Portability.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/KokkosViews.h>
 #include <Core/Grid/Variables/NCVariable.h>
@@ -41,8 +41,6 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
-
-#include <sci_defs/kokkos_defs.h>
 
 using namespace std;
 using namespace Uintah;
@@ -134,10 +132,32 @@ void Poisson1::scheduleTimeAdvance( const LevelP     & level
     task->computes(residual_label);
   };
 
-  CALL_ASSIGN_PORTABLE_TASK_3TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, KOKKOS_CUDA_TAG,
-                            TaskDependencies,
-                            "Poisson1::timeAdvance", Poisson1::timeAdvance<,
-                            level->eachPatch(), m_sharedState->allMaterials(), TASKGRAPH::DEFAULT);
+  create_portable_tasks(TaskDependencies, this,
+                        "Poisson1::timeAdvance",
+                        &Poisson1::timeAdvance<UINTAH_CPU_TAG>,
+                        &Poisson1::timeAdvance<KOKKOS_OPENMP_TAG>,
+                        &Poisson1::timeAdvance<KOKKOS_CUDA_TAG>,
+                        sched, level->eachPatch(), m_sharedState->allMaterials(), TASKGRAPH::DEFAULT);
+
+
+//  CALL_ASSIGN_PORTABLE_TASK_3TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, KOKKOS_CUDA_TAG,
+//                            TaskDependencies,
+//                            "Poisson1::timeAdvance", Poisson1::timeAdvance<,
+//                            level->eachPatch(), m_sharedState->allMaterials(), TASKGRAPH::DEFAULT);
+
+
+  //Task* task = scinew Task("Poisson1::timeAdvance", this, &Poisson1::timeAdvance);
+
+  //#if defined(HAVE_CUDA) && defined(UINTAH_ENABLE_KOKKOS)
+  //  if (Uintah::Parallel::usingDevice()) {
+  //    task->usesDevice(true);
+  //  }
+  //#endif
+  //task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
+  //task->computesWithScratchGhost(phi_label, nullptr, Uintah::Task::NormalDomain, Ghost::AroundNodes, 1);
+  //task->computes(residual_label);
+
+  //sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
 
 }
 
@@ -167,6 +187,7 @@ void Poisson1::initialize( const ProcessorGroup *
                          )
 {
   int matl = 0;
+  printf("In initialize\n");
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
 
@@ -196,17 +217,15 @@ void Poisson1::initialize( const ProcessorGroup *
     new_dw->put(sum_vartype(-1), residual_label);
   }
 }
-
-
 //______________________________________________________________________
 //
-template <typename ExecutionSpace, typename MemorySpace>
+template <typename ES, typename MS>
 void Poisson1::timeAdvance( const PatchSubset* patches,
                             const MaterialSubset* matls,
                             OnDemandDataWarehouse* old_dw,
                             OnDemandDataWarehouse* new_dw,
                             UintahParams& uintahParams,
-                            ExecutionObject& executionObject )
+                            ExecutionObject<ES, MS>& executionObject )
 {
 
   int matl = 0;
@@ -228,17 +247,17 @@ void Poisson1::timeAdvance( const PatchSubset* patches,
                   patch->getBCType(Patch::zplus) == Patch::Neighbor ? 0 : 1);
 
     Uintah::BlockRange range( l, h );
-
-    auto phi = old_dw->getConstNCVariable<double, MemorySpace> (phi_label, matl, patch, Ghost::AroundNodes, 1);
-    auto newphi = new_dw->getNCVariable<double, MemorySpace> (phi_label, matl, patch);
+    auto phi = old_dw->getConstNCVariable<double, MS> (phi_label, matl, patch, Ghost::AroundNodes, 1);
+    auto newphi = new_dw->getNCVariable<double, MS> (phi_label, matl, patch);
 
     // Perform the boundary condition of copying over prior initialized values.  (TODO:  Replace with boundary condition)
-    Uintah::parallel_for<ExecutionSpace>(executionObject, rangeBoundary, KOKKOS_LAMBDA(int i, int j, int k){
+    //Uintah::parallel_for<ExecutionSpace, LaunchBounds< 640,1 > >( executionObject, rangeBoundary, KOKKOS_LAMBDA(int i, int j, int k){
+    Uintah::parallel_for(executionObject, rangeBoundary, UINTAH_LAMBDA(int i, int j, int k){
         newphi(i, j, k) = phi(i,j,k);
     });
 
     // Perform the main loop
-    Uintah::parallel_reduce_sum<ExecutionSpace>(executionObject, range, KOKKOS_LAMBDA (int i, int j, int k, double& residual){
+    Uintah::parallel_reduce_sum(executionObject, range, UINTAH_LAMBDA (int i, int j, int k, double& residual){
       newphi(i, j, k) = (1. / 6)
           * (phi(i + 1, j, k) + phi(i - 1, j, k) + phi(i, j + 1, k) +
               phi(i, j - 1, k) + phi(i, j, k + 1) + phi(i, j, k - 1));
@@ -254,4 +273,3 @@ void Poisson1::timeAdvance( const PatchSubset* patches,
     }, residual);
   }
 }
-

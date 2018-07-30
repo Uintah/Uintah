@@ -18,9 +18,9 @@ AddPressGradient::~AddPressGradient()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace AddPressGradient::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, AddPressGradient::eval);
-  return assignedTag;
+  return create_portable_arches_tasks( this,
+                                       &AddPressGradient::eval<UINTAH_CPU_TAG>,
+                                       &AddPressGradient::eval<KOKKOS_OPENMP_TAG> );
 
 }
 
@@ -49,7 +49,7 @@ void AddPressGradient::register_timestep_eval( std::vector<AFC::VariableInformat
 }
 
 template<typename ExecutionSpace, typename MemorySpace>
-void AddPressGradient::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+void AddPressGradient::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   const double dt = tsk_info->get_dt();
   Vector DX = patch->dCell();

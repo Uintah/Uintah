@@ -32,7 +32,13 @@
 // All portable loops need the OnDemandDataWarehouse, so it is included
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 
-// Logic for Uintah parallell loops is found here.
+// Logic for Uintah parallel loops is found here.
 #include <Core/Parallel/LoopExecution.hpp>
+
+// Data types for runtime knowledge of which spaces a task is assigned to is here.
+#include <Core/Parallel/SpaceTypes.h>
+
+// The entry point for a user to declare a task portably.
+#include <Core/Parallel/TaskDeclaration.h>
 
 #endif

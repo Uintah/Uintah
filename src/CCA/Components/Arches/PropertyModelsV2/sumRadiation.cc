@@ -7,9 +7,9 @@ namespace Uintah{
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace sumRadiation::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, sumRadiation::eval);
-  return assignedTag;
+  return create_portable_arches_tasks( this,
+                                       &sumRadiation::eval<UINTAH_CPU_TAG>,
+                                       &sumRadiation::eval<KOKKOS_OPENMP_TAG> );
 
 }
 
@@ -112,8 +112,7 @@ sumRadiation::register_initialize( VIVec& variable_registry , const bool pack_ta
 }
 
 void
-sumRadiation::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info , ExecutionObject& executionObject ){
-
+sumRadiation::shared_initialize_code( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   CCVariable<double>& abskt = *(tsk_info->get_uintah_field<CCVariable<double> >(m_abskt_name));
   constCCVariable<double>&  volFrac = tsk_info->get_const_uintah_field_add<constCCVariable<double> >("volFraction");
 
@@ -130,10 +129,16 @@ sumRadiation::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info , 
   }
   if (_gas_part_name.size()==0){
   Uintah::parallel_for( range, [&](int i, int j, int k){
-  abskt(i,j,k)=(volFrac(i,j,k) > 1e-16) ? 0.0  : 1.0;
+    abskt(i,j,k)=(volFrac(i,j,k) > 1e-16) ? 0.0  : 1.0;
   });
   }
 
+}
+
+void
+sumRadiation::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+
+  shared_initialize_code( patch, tsk_info );
 
 }
 
@@ -161,8 +166,8 @@ void sumRadiation::register_timestep_eval( VIVec& variable_registry, const int t
 }
 
 template<typename ExecutionSpace, typename MemorySpace> void
-sumRadiation::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
-  initialize( patch,tsk_info,executionObject);
+sumRadiation::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
+  shared_initialize_code( patch, tsk_info );
 }
 
 } //namespace Uintah

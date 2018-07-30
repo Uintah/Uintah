@@ -30,9 +30,9 @@ SGSsigma::~SGSsigma(){
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace SGSsigma::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, SGSsigma::eval);
-  return assignedTag;
+  return create_portable_arches_tasks( this,
+                                       &SGSsigma::eval<UINTAH_CPU_TAG>,
+                                       &SGSsigma::eval<KOKKOS_OPENMP_TAG> );
 
 }
 
@@ -127,7 +127,7 @@ SGSsigma::register_initialize(
 
 //--------------------------------------------------------------------------------------------------
 void
-SGSsigma::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject){
+SGSsigma::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info){
 
   CCVariable<double>& mu_sgc = *(tsk_info->get_uintah_field<CCVariable<double> >(m_t_vis_name));
   CCVariable<double>& mu_turb = *(tsk_info->get_uintah_field<CCVariable<double> >(m_turb_viscosity_name));
@@ -201,7 +201,7 @@ SGSsigma::register_timestep_eval(
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemorySpace> void
-SGSsigma::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+SGSsigma::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   Vector Dx=patch->dCell();
   double dx=Dx.x(); double dy=Dx.y(); double dz=Dx.z();

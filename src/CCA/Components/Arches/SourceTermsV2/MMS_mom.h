@@ -53,12 +53,12 @@ public:
 
     void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject );
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    template <typename EXECUTION_SPACE, typename MEMORY_SPACE>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject );
+    template <typename ExecutionSpace, typename MemorySpace>
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
 
     void create_local_labels();
 
@@ -99,9 +99,9 @@ MMS_mom<T>::~MMS_mom(){
 template <typename T>
 TaskAssignedExecutionSpace MMS_mom<T>::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, MMS_mom<T>::eval);
-  return assignedTag;
+  return create_portable_arches_tasks( this,
+                                       &MMS_mom<T>::eval<UINTAH_CPU_TAG>,
+                                       &MMS_mom<T>::eval<KOKKOS_OPENMP_TAG> );
 
 }
 
@@ -157,7 +157,7 @@ void MMS_mom<T>::register_initialize( std::vector<VarInfo>&
 
 //--------------------------------------------------------------------------------------------------
 template <typename T>
-void MMS_mom<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+void MMS_mom<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   compute_source(patch, tsk_info);
 
@@ -192,7 +192,7 @@ void MMS_mom<T>::register_timestep_eval( std::vector<VarInfo>&
 //--------------------------------------------------------------------------------------------------
 template <typename T>
 template<typename ExecutionSpace, typename MemorySpace>
-void MMS_mom<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+void MMS_mom<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   compute_source( patch, tsk_info );
 

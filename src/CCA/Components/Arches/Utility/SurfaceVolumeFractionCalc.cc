@@ -7,9 +7,9 @@ using namespace Uintah;
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace SurfaceVolumeFractionCalc::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, SurfaceVolumeFractionCalc::eval);
-  return assignedTag;
+  return create_portable_arches_tasks( this,
+                                       &SurfaceVolumeFractionCalc::eval<UINTAH_CPU_TAG>,
+                                       &SurfaceVolumeFractionCalc::eval<KOKKOS_OPENMP_TAG> );
 
 }
 
@@ -70,7 +70,7 @@ SurfaceVolumeFractionCalc::register_initialize( ArchesVIVector& variable_registr
 
 //--------------------------------------------------------------------------------------------------
 void
-SurfaceVolumeFractionCalc::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+SurfaceVolumeFractionCalc::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   typedef CCVariable<double> T;
 

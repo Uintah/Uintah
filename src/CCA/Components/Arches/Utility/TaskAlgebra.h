@@ -88,12 +88,12 @@ protected:
 
     void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject  );
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info  );
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    template <typename EXECUTION_SPACE, typename MEMORY_SPACE>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject );
+    template <typename ExecutionSpace, typename MemorySpace>
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
 
     void create_local_labels();
 
@@ -149,9 +149,9 @@ private:
   template <typename T>
   TaskAssignedExecutionSpace TaskAlgebra<T>::loadTaskEvalFunctionPointers(){
 
-    TaskAssignedExecutionSpace assignedTag{};
-    LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, TaskAlgebra<T>::eval);
-    return assignedTag;
+    return create_portable_arches_tasks( this,
+                                         &TaskAlgebra<T>::eval<UINTAH_CPU_TAG>,
+                                         &TaskAlgebra<T>::eval<KOKKOS_OPENMP_TAG> );
 
   }
 
@@ -317,7 +317,7 @@ private:
   }
 
   template <typename T>
-  void TaskAlgebra<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject  ){
+  void TaskAlgebra<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info  ){
 
     for ( typename OPMAP::iterator iter = all_operations.begin(); iter != all_operations.end(); iter++ ){
       if ( iter->second.create_new_variable ){
@@ -417,7 +417,7 @@ private:
 
   template <typename T>
   template<typename ExecutionSpace, typename MemorySpace>
-  void TaskAlgebra<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+  void TaskAlgebra<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
     T temp_var;
     IntVector domlo = patch->getCellLowIndex();

@@ -27,12 +27,12 @@ public:
 
     void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject );
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    template <typename EXECUTION_SPACE, typename MEMORY_SPACE>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject );
+    template <typename ExecutionSpace, typename MemorySpace>
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
 
     void create_local_labels();
 
@@ -77,9 +77,9 @@ DSmaMMML<TT>::~DSmaMMML(){}
 template<typename TT>
 TaskAssignedExecutionSpace DSmaMMML<TT>::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, DSmaMMML<TT>::eval);
-  return assignedTag;
+  return create_portable_arches_tasks( this,
+                                       &DSmaMMML<TT>::eval<UINTAH_CPU_TAG>,
+                                       &DSmaMMML<TT>::eval<KOKKOS_OPENMP_TAG> );
 
 }
 
@@ -150,7 +150,7 @@ DSmaMMML<TT>::register_initialize( std::vector<ArchesFieldContainer::VariableInf
 //--------------------------------------------------------------------------------------------------
 
 template<typename TT> void
-DSmaMMML<TT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+DSmaMMML<TT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
 }
 //--------------------------------------------------------------------------------------------------
@@ -250,7 +250,7 @@ DSmaMMML<TT>::register_timestep_eval( std::vector<ArchesFieldContainer::Variable
 //--------------------------------------------------------------------------------------------------
 template<typename TT>
 template<typename ExecutionSpace, typename MemorySpace> void
-DSmaMMML<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+DSmaMMML<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   const Vector Dx = patch->dCell(); //
   double filter   = pow(Dx.x()*Dx.y()*Dx.z(),1.0/3.0);

@@ -473,10 +473,12 @@ Ray::sched_rayTrace( const LevelP        & level
   Task::WhichDW abskg_dw = get_abskg_whichDW( L, d_abskgLabel );
 
   if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ) {
-    tsk = scinew Task( taskname, this, &Ray::rayTrace<double>, modifies_divQ, abskg_dw, sigma_dw, celltype_dw );
+    tsk = scinew Task( taskname, this, &Ray::rayTrace<double, UintahSpaces::CPU, UintahSpaces::HostSpace>,
+        modifies_divQ, abskg_dw, sigma_dw, celltype_dw );
   }
   else {
-    tsk = scinew Task( taskname, this, &Ray::rayTrace<float>, modifies_divQ, abskg_dw, sigma_dw, celltype_dw );
+    tsk = scinew Task( taskname, this, &Ray::rayTrace<float,  UintahSpaces::CPU, UintahSpaces::HostSpace>,
+        modifies_divQ, abskg_dw, sigma_dw, celltype_dw );
   }
 
   // Allow use of up to 4 GPU streams per patch
@@ -630,14 +632,14 @@ struct rayTrace_solveDivQFunctor {
 //---------------------------------------------------------------------------
 // Method: The actual work of the ray tracer
 //---------------------------------------------------------------------------
-template< class T >
+template< class T , typename ExecutionSpace, typename MemorySpace>
 void
 Ray::rayTrace( const PatchSubset* patches,
                const MaterialSubset* matls,
                OnDemandDataWarehouse* old_dw,
                OnDemandDataWarehouse* new_dw,
                UintahParams& uintahParams,
-               ExecutionObject& executionObject,
+               ExecutionObject<ExecutionSpace, MemorySpace>& executionObject,
                bool modifies_divQ,
                Task::WhichDW which_abskg_dw,
                Task::WhichDW which_sigmaT4_dw,
@@ -925,7 +927,7 @@ Ray::sched_rayTrace_dataOnion( const LevelP        & level
 
   Task::WhichDW NotUsed = Task::None;
 
-  auto TaskDependencies = [&](Task* task) {
+  auto taskDependencies = [&](Task* task) {
 
     if (Parallel::usingDevice()) {
       task->usesDevice(true);
@@ -1060,17 +1062,32 @@ Ray::sched_rayTrace_dataOnion( const LevelP        & level
   };
 
   if (RMCRTCommon::d_FLT_DBL == TypeDescription::double_type) {
-    CALL_ASSIGN_PORTABLE_TASK_3TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, KOKKOS_CUDA_TAG,
-                              TaskDependencies,
-                              "Ray::rayTrace_dataOnion", Ray::rayTrace_dataOnion<double COMMA,
-                              level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT,
-                              modifies_divQ, NotUsed, sigma_dw, celltype_dw);
+    create_portable_tasks(taskDependencies, this,
+                          "Ray::rayTrace_dataOnion",
+                          &Ray::rayTrace_dataOnion<double, UINTAH_CPU_TAG>,
+                          &Ray::rayTrace_dataOnion<double, KOKKOS_OPENMP_TAG>,
+                          &Ray::rayTrace_dataOnion<double, KOKKOS_CUDA_TAG>,
+                          sched, level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT,
+                          modifies_divQ, NotUsed, sigma_dw, celltype_dw);
+//
+//    CALL_ASSIGN_PORTABLE_TASK_3TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, KOKKOS_CUDA_TAG,
+//                              TaskDependencies,
+//                              "Ray::rayTrace_dataOnion", Ray::rayTrace_dataOnion<double COMMA,
+//                              level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT,
+//                              modifies_divQ, NotUsed, sigma_dw, celltype_dw);
   } else {
-    CALL_ASSIGN_PORTABLE_TASK_3TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, KOKKOS_CUDA_TAG,
-                              TaskDependencies,
-                              "Ray::rayTrace_dataOnion", Ray::rayTrace_dataOnion<float COMMA,
-                              level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT,
-                              modifies_divQ, NotUsed, sigma_dw, celltype_dw);
+    create_portable_tasks(taskDependencies, this,
+                          "Ray::rayTrace_dataOnion",
+                          &Ray::rayTrace_dataOnion<float, UINTAH_CPU_TAG>,
+                          &Ray::rayTrace_dataOnion<float, KOKKOS_OPENMP_TAG>,
+                          &Ray::rayTrace_dataOnion<float, KOKKOS_CUDA_TAG>,
+                          sched, level->eachPatch(), d_matlSet,  RMCRTCommon::TG_RMCRT,
+                          modifies_divQ, NotUsed, sigma_dw, celltype_dw);
+//    CALL_ASSIGN_PORTABLE_TASK_3TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, KOKKOS_CUDA_TAG,
+//                              TaskDependencies,
+//                              "Ray::rayTrace_dataOnion", Ray::rayTrace_dataOnion<float COMMA,
+//                              level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT,
+//                              modifies_divQ, NotUsed, sigma_dw, celltype_dw);
   }
   //tsk = scinew Task(taskname, this, &Ray::rayTrace_dataOnion<double>, modifies_divQ, NotUsed, sigma_dw, celltype_dw);
 
@@ -1641,7 +1658,7 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
                          OnDemandDataWarehouse* old_dw,
                          OnDemandDataWarehouse* new_dw,
                          UintahParams& uintahParams,
-                         ExecutionObject& executionObject,
+                         ExecutionObject<ExecutionSpace, MemorySpace>& executionObject,
                          bool modifies_divQ,
                          Task::WhichDW notUsed,
                          Task::WhichDW which_sigmaT4_dw,
@@ -1658,7 +1675,7 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
                          OnDemandDataWarehouse* old_dw,
                          OnDemandDataWarehouse* new_dw,
                          UintahParams& uintahParams,
-                         ExecutionObject& executionObject,
+                         ExecutionObject<ExecutionSpace, MemorySpace>& executionObject,
                          bool modifies_divQ,
                          Task::WhichDW notUsed,
                          Task::WhichDW which_sigmaT4_dw,
@@ -1704,7 +1721,7 @@ Ray::rayTrace_dataOnionLevels( const PatchSubset* finePatches,
                                OnDemandDataWarehouse* old_dw,
                                OnDemandDataWarehouse* new_dw,
                                UintahParams& uintahParams,
-                               ExecutionObject& executionObject,
+                               ExecutionObject<ExecutionSpace, MemorySpace>& executionObject,
                                bool modifies_divQ,
                                Task::WhichDW notUsed,
                                Task::WhichDW which_sigmaT4_dw,
@@ -1868,7 +1885,6 @@ Ray::rayTrace_dataOnionLevels( const PatchSubset* finePatches,
       Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex());
       auto random_pool = Uintah::GetKokkosRandom1024Pool< Kokkos::Cuda >( );
 
-      printf("Got here\n");
       //launch the functor
       if (d_algorithm == dataOnionSlim) {
         //SlimRayTrace_dataOnion_solveDivQFunctor< T, Kokkos::CudaSpace, Kokkos::Random_XorShift1024_Pool< Kokkos::Cuda >, numLevels >
@@ -1882,7 +1898,6 @@ Ray::rayTrace_dataOnionLevels( const PatchSubset* finePatches,
                    cellType_view , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays);
         Uintah::parallel_reduce_sum<Kokkos::Cuda>( executionObject, range, functor, size );
       }
-      printf("Got here 2\n");
 
     } // end if ( std::is_same< Kokkos::Cuda , ExecutionSpace >::value )
 #endif //#if defined(HAVE_CUDA)

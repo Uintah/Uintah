@@ -200,13 +200,13 @@ namespace Uintah{
                                 const bool pack_tasks );
 
     /** @brief Task callback **/
-    template <typename EXECUTION_SPACE, typename MEMORY_SPACE>
+    template <typename ExecutionSpace, typename MemorySpace>
     void do_task ( const PatchSubset* patches,
                    const MaterialSubset* matls,
                    OnDemandDataWarehouse* old_dw,
                    OnDemandDataWarehouse* new_dw,
                    UintahParams& uintahParams,
-                   ExecutionObject& executionObject,
+                   ExecutionObject<ExecutionSpace, MemorySpace>& executionObject,
                    std::vector<ArchesFieldContainer::VariableInformation>  variable_registry,
                    std::vector<TaskInterface*> arches_task,
                    TaskInterface::TASK_TYPE type,

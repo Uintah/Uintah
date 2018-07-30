@@ -11,9 +11,9 @@ InitLagrangianParticleSize::~InitLagrangianParticleSize(){
 
 TaskAssignedExecutionSpace InitLagrangianParticleSize::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, InitLagrangianParticleSize::eval);
-  return assignedTag;
+  return create_portable_arches_tasks( this,
+                                       &InitLagrangianParticleSize::eval<UINTAH_CPU_TAG>,
+                                       &InitLagrangianParticleSize::eval<KOKKOS_OPENMP_TAG> );
 
 }
 
@@ -69,7 +69,7 @@ InitLagrangianParticleSize::register_initialize( std::vector<ArchesFieldContaine
 }
 
 void
-InitLagrangianParticleSize::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+InitLagrangianParticleSize::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   ParticleTuple dp_t = tsk_info->get_uintah_particle_field(_size_label);
   ParticleVariable<double>& dp = *(std::get<0>(dp_t));
@@ -115,6 +115,6 @@ InitLagrangianParticleSize::register_timestep_eval( std::vector<ArchesFieldConta
 
 //This is the work for the task.  First, get the variables. Second, do the work!
 template<typename ExecutionSpace, typename MemorySpace> void
-InitLagrangianParticleSize::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){}
+InitLagrangianParticleSize::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){}
 
 } //namespace Uintah

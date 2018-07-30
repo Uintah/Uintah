@@ -48,12 +48,12 @@ public:
 
     void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject );
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    template <typename EXECUTION_SPACE, typename MEMORY_SPACE>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject );
+    template <typename ExecutionSpace, typename MemorySpace>
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
 
     void create_local_labels();
 
@@ -117,11 +117,9 @@ VarInterpolation<T, IT>::~VarInterpolation()
 template <typename T, typename IT>
 TaskAssignedExecutionSpace VarInterpolation<T, IT>::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  // This one is a bit hackier.  Passing in VarInterpolation<T, IT>::eval into the macro caused problems on the comma as it parsed it
-  // as two separate arguments.  The approach below did the trick with a #define COMMA ,
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, VarInterpolation<T COMMA IT>::eval);
-  return assignedTag;
+  return create_portable_arches_tasks( this,
+                                       &VarInterpolation<T, IT>::eval<UINTAH_CPU_TAG>,
+                                       &VarInterpolation<T, IT>::eval<KOKKOS_OPENMP_TAG> );
 
 }
 
@@ -163,7 +161,7 @@ void VarInterpolation<T,IT>::register_initialize(
 
 //--------------------------------------------------------------------------------------------------
 template <typename T, typename IT>
-void VarInterpolation<T,IT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject  ){
+void VarInterpolation<T,IT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info  ){
 
   IT& int_var = tsk_info->get_uintah_field_add<IT>(m_inter_var_name);
   T& var = tsk_info->get_const_uintah_field_add<T>(m_var_name);
@@ -186,7 +184,7 @@ void VarInterpolation<T,IT>::register_timestep_eval(
 //--------------------------------------------------------------------------------------------------
 template <typename T, typename IT>
 template<typename ExecutionSpace, typename MemorySpace>
-void VarInterpolation<T,IT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+void VarInterpolation<T,IT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   IT& int_var = tsk_info->get_uintah_field_add<IT>(m_inter_var_name);
   T& var = tsk_info->get_const_uintah_field_add<T >(m_var_name);

@@ -7,9 +7,9 @@ namespace Uintah{
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace CoalTemperature::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, CoalTemperature::eval);
-  return assignedTag;
+  return create_portable_arches_tasks( this,
+                                       &CoalTemperature::eval<UINTAH_CPU_TAG>,
+                                       &CoalTemperature::eval<KOKKOS_OPENMP_TAG> );
 
 }
 
@@ -157,7 +157,7 @@ CoalTemperature::register_initialize( std::vector<ArchesFieldContainer::Variable
 
 //--------------------------------------------------------------------------------------------------
 void
-CoalTemperature::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info , ExecutionObject& executionObject){
+CoalTemperature::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   for ( int ienv = 0; ienv < _Nenv; ienv++ ){
 
@@ -242,7 +242,7 @@ CoalTemperature::register_timestep_eval( std::vector<ArchesFieldContainer::Varia
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemorySpace> void
-CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   const std::string gas_temperature_name   = _gas_temperature_name;
   constCCVariable<double>& gas_temperature = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(gas_temperature_name));

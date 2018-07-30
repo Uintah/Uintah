@@ -14,9 +14,9 @@ UFromRhoU::~UFromRhoU(){}
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace UFromRhoU::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, UFromRhoU::eval);
-  return assignedTag;
+  return create_portable_arches_tasks( this,
+                                       &UFromRhoU::eval<UINTAH_CPU_TAG>,
+                                       &UFromRhoU::eval<KOKKOS_OPENMP_TAG> );
 
 }
 
@@ -63,7 +63,7 @@ void UFromRhoU::register_initialize( AVarInfo& variable_registry , const bool pa
 }
 
 //--------------------------------------------------------------------------------------------------
-void UFromRhoU::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+void UFromRhoU::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   compute_velocities( patch, tsk_info );
 
@@ -119,7 +119,7 @@ void UFromRhoU::register_timestep_eval( VIVec& variable_registry, const int time
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemorySpace>
-void UFromRhoU::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+void UFromRhoU::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   compute_velocities( patch, tsk_info );
 

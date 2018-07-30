@@ -40,10 +40,15 @@
 
 #include <Core/Grid/TaskStatus.h>
 
+#include <sci_defs/cuda_defs.h>
+
 namespace Uintah {
 //----------------------------------------------------------------------------
 // Class UintahParams
 //----------------------------------------------------------------------------
+
+class DetailedTask;
+class ProcessorGroup;
 
 class UintahParams {
 
@@ -77,7 +82,24 @@ public:
     this->processorGroup = processorGroup;
   }
 
+  void setStream(void* stream){
+#if defined(HAVE_CUDA)
+    //Ignore the non-CUDA case as those streams are pointless.
+    m_streams.push_back(stream);
+#endif
+  }
 
+  void * getStream(unsigned int i) const {
+    if ( i >= m_streams.size() ) {
+      SCI_THROW(InternalError("Requested a stream that doesn't exist.", __FILE__, __LINE__));
+    } else {
+      return m_streams[i];
+    }
+  }
+
+  unsigned int getNumStreams() const {
+    return m_streams.size();
+  }
 
 private:
 
@@ -86,6 +108,9 @@ private:
 
   CallBackEvent callBackEvent;
   const ProcessorGroup* processorGroup {nullptr};
+
+  std::vector<void*> m_streams;
+
 };
 
 } //namespace Uintah

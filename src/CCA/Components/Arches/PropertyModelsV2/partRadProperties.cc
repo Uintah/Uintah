@@ -43,11 +43,10 @@ if (_particle_calculator_type == "coal"){
 //---------------------------------------------------------------------------
 TaskAssignedExecutionSpace partRadProperties::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_3TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG,KOKKOS_CUDA_TAG, assignedTag, partRadProperties::eval);
-  //LOAD_ARCHES_EVAL_TASK_1TAG(UINTAH_CPU_TAG , assignedTag, partRadProperties::eval);
-  //LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, partRadProperties::eval);
-  return assignedTag;
+  return create_portable_arches_tasks( this,
+                                       &partRadProperties::eval<UINTAH_CPU_TAG>,
+                                       &partRadProperties::eval<KOKKOS_OPENMP_TAG>,
+                                       &partRadProperties::eval<KOKKOS_CUDA_TAG>);
 
 }
 
@@ -291,7 +290,7 @@ partRadProperties::register_initialize( VIVec& variable_registry , const bool pa
 }
 
 void
-partRadProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+partRadProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
 
   CCVariable<double>& abskp = *(tsk_info->get_uintah_field<CCVariable<double> >(_abskp_name));
@@ -359,7 +358,7 @@ partRadProperties::register_timestep_eval( std::vector<ArchesFieldContainer::Var
 
 
 template<typename ExecutionSpace, typename MemorySpace> void
-partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
   auto abskp = createContainer<CCVariable<double>, double, 1 , MemorySpace>(1);
   auto scatkt =  createContainer<CCVariable<double>, double, 1 , MemorySpace>(_scatteringOn ? 1 :0);
   auto asymm   =  createContainer<CCVariable<double>, double, 1 , MemorySpace>(_scatteringOn ? 1 :0);

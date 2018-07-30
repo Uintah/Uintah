@@ -6,9 +6,9 @@ namespace Uintah{
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace cloudBenchmark::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, cloudBenchmark::eval);
-  return assignedTag;
+  return create_portable_arches_tasks( this,
+                                       &cloudBenchmark::eval<UINTAH_CPU_TAG>,
+                                       &cloudBenchmark::eval<KOKKOS_OPENMP_TAG> );
 
 }
 
@@ -55,7 +55,7 @@ cloudBenchmark::register_initialize( VIVec& variable_registry , const bool pack_
 }
 
 void
-cloudBenchmark::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+cloudBenchmark::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   BBox domain(m_min,m_max);
   if( m_min == m_notSetMin  ||  m_max == m_notSetMax ){

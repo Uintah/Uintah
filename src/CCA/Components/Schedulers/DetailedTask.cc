@@ -141,22 +141,19 @@ DetailedTask::doit( const ProcessorGroup                      * pg
     }
   }
 
-  // Start loading up the executionObject
-  ExecutionObject executionObject;
-#ifdef HAVE_CUDA
-  // Load in streams whether this is a CPU task or GPU task.
-  // GPU tasks need streams.  CPU tasks can also use streams (for D2H copies or transferFrom calls)
-  const unsigned int currentDevice = 0;
-  int numKernels = this->getTask()->maxStreamsPerTask();
-  for (int i = 0; i < numKernels; i++) {
-    executionObject.setStream(this->getCudaStreamForThisTask(i), currentDevice);
-  }
-#endif
 
   // Start loading up the UintahParams object
   UintahParams uintahParams;
   uintahParams.setProcessorGroup(pg);
   uintahParams.setCallBackEvent(event);
+#ifdef HAVE_CUDA
+  // Load in streams whether this is a CPU task or GPU task.
+  // GPU tasks need streams.  CPU tasks can also use streams (for D2H copies or transferFrom calls)
+  int numStreams = this->getTask()->maxStreamsPerTask();
+  for (int i = 0; i < numStreams; i++) {
+    uintahParams.setStream(this->getCudaStreamForThisTask(i));
+  }
+#endif
 
   // Determine if task will be executed on CPU or GPU
   if ( m_task->usesDevice() ) {
@@ -167,6 +164,7 @@ DetailedTask::doit( const ProcessorGroup                      * pg
     //for (std::set<unsigned int>::const_iterator deviceNums_it = deviceNums_.begin(); deviceNums_it != deviceNums_.end(); ++deviceNums_it) {
     //  const unsigned int currentDevice = *deviceNums_it;
     //const unsigned int currentDevice = *deviceNums_it;
+      int currentDevice = 0;
       OnDemandDataWarehouse::uintahSetCudaDevice(currentDevice);
       GPUDataWarehouse* host_oldtaskdw = getTaskGpuDataWarehouse(currentDevice, Task::OldDW);
       GPUDataWarehouse* device_oldtaskdw = nullptr;
@@ -182,17 +180,13 @@ DetailedTask::doit( const ProcessorGroup                      * pg
       // Load up the uintahParams object with task data warehouses (if they are needed)
       uintahParams.setTaskDWs(device_oldtaskdw, device_newtaskdw);
 
-      // Load up the execution object with CUDA specific parameters.
-      executionObject.setCudaThreadsPerBlock(Uintah::Parallel::getCudaThreadsPerBlock());
-      executionObject.setCudaBlocksPerLoop(Uintah::Parallel::getCudaBlocksPerLoop());
-
-      m_task->doit( m_patches, m_matls, dws, uintahParams, executionObject );
+      m_task->doit( m_patches, m_matls, dws, uintahParams );
    //}
 #else
     SCI_THROW(InternalError("A task was marked as GPU enabled, but Uintah was not compiled for CUDA support", __FILE__, __LINE__));
 #endif
   } else {
-    m_task->doit( m_patches, m_matls, dws, uintahParams, executionObject );
+    m_task->doit( m_patches, m_matls, dws, uintahParams );
   }
   for (auto i = 0u; i < dws.size(); i++) {
     if ( oddws[i] != nullptr ) {

@@ -12,9 +12,9 @@ UpdateParticleSize::~UpdateParticleSize(){
 
 TaskAssignedExecutionSpace UpdateParticleSize::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, UpdateParticleSize::eval);
-  return assignedTag;
+  return create_portable_arches_tasks( this,
+                                       &UpdateParticleSize::eval<UINTAH_CPU_TAG>,
+                                       &UpdateParticleSize::eval<KOKKOS_OPENMP_TAG> );
 
 }
 
@@ -55,7 +55,7 @@ UpdateParticleSize::register_initialize(
 
 //--------------------------------------------------------------------------------------------------
 void
-UpdateParticleSize::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+UpdateParticleSize::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   ParticleTuple pd_t = tsk_info->get_uintah_particle_field( _size_name );
   ParticleVariable<double>& pd = *(std::get<0>(pd_t));
@@ -83,7 +83,7 @@ UpdateParticleSize::register_timestep_eval(
 
 //This is the work for the task.  First, get the variables. Second, do the work!
 template<typename ExecutionSpace, typename MemorySpace> void
-UpdateParticleSize::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+UpdateParticleSize::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   ParticleTuple pd_t = tsk_info->get_uintah_particle_field( _size_name );
   ParticleVariable<double>& pd = *(std::get<0>(pd_t));

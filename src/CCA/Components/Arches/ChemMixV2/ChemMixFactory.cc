@@ -18,7 +18,6 @@ TaskAssignedExecutionSpace ChemMixFactory::loadTaskEvalFunctionPointers(){
 
   TaskAssignedExecutionSpace assignedTag{};
   // This task doesn't have an eval method.
-  // LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, ChemMixFactory::eval);
   return assignedTag;
 
 }

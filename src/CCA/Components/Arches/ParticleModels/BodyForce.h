@@ -71,12 +71,12 @@ namespace Uintah{
 
     void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject   );
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info   );
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    template <typename EXECUTION_SPACE, typename MEMORY_SPACE>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject );
+    template <typename ExecutionSpace, typename MemorySpace>
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
 
   private:
 
@@ -121,11 +121,9 @@ namespace Uintah{
   template <typename IT, typename DT>
   TaskAssignedExecutionSpace BodyForce<IT, DT>::loadTaskEvalFunctionPointers(){
 
-    TaskAssignedExecutionSpace assignedTag{};
-    // This one is a bit hackier.  Passing in BodyForce<IT, DT>::eval into the macro caused problems on the comma as it parsed it
-    // as two separate arguments.  The approach below did the trick with a #define COMMA ,
-    LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, BodyForce<IT COMMA DT>::eval);
-    return assignedTag;
+    return create_portable_arches_tasks( this,
+                                         &BodyForce<IT, DT>::eval<UINTAH_CPU_TAG>,
+                                         &BodyForce<IT, DT>::eval<KOKKOS_OPENMP_TAG> );
 
   }
 
@@ -165,7 +163,7 @@ namespace Uintah{
   }
 
   template <typename IT, typename DT>
-  void BodyForce<IT,DT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject   ){
+  void BodyForce<IT,DT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info   ){
 
     for ( int ienv = 0; ienv < m_N; ienv++ ){
       const std::string name = get_name(ienv, m_base_var_name);
@@ -206,7 +204,7 @@ namespace Uintah{
 
   template <typename IT, typename DT>
   template<typename ExecutionSpace, typename MemorySpace>
-  void BodyForce<IT,DT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+  void BodyForce<IT,DT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
     typedef typename ArchesCore::VariableHelper<IT>::ConstType CIT;
     typedef typename ArchesCore::VariableHelper<DT>::ConstType CDT;

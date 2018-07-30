@@ -15,9 +15,9 @@ ColdFlowProperties::~ColdFlowProperties(){
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace ColdFlowProperties::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, ColdFlowProperties::eval);
-  return assignedTag;
+  return create_portable_arches_tasks( this,
+                                       &ColdFlowProperties::eval<UINTAH_CPU_TAG>,
+                                       &ColdFlowProperties::eval<KOKKOS_OPENMP_TAG> );
 
 }
 
@@ -70,7 +70,7 @@ void ColdFlowProperties::register_initialize( VIVec& variable_registry , const b
 }
 
 //--------------------------------------------------------------------------------------------------
-void ColdFlowProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+void ColdFlowProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   for ( auto i = m_name_to_value.begin(); i != m_name_to_value.end(); i++ ){
     CCVariable<double>& var = tsk_info->get_uintah_field_add<CCVariable<double> >( i->first );
@@ -131,7 +131,7 @@ void ColdFlowProperties::register_timestep_eval( VIVec& variable_registry, const
 }
 
 template<typename ExecutionSpace, typename MemorySpace>
-void ColdFlowProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+void ColdFlowProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   get_properties( patch, tsk_info );
 

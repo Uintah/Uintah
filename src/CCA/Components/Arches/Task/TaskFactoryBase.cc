@@ -314,7 +314,7 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
 
     }
 
-    if (assignedExecutionSpace != TaskAssignedExecutionSpace::NONE_SPACE && assignedExecutionSpace != temp) {
+    if (assignedExecutionSpace != TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE && assignedExecutionSpace != temp) {
       archesTasksMixMemorySpaces = true;
     } else {
       assignedExecutionSpace = temp;
@@ -380,20 +380,27 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
     }
   };
 
+  bool non_const_pack_tasks = pack_tasks;
   // We must know which memory space(s) the Arches task embedded within the Uintah task will execute
   // so Uintah can ensure those simulation variables are prepared in that memory space prior to task execution.
   if (assignedExecutionSpace == TaskAssignedExecutionSpace::KOKKOS_OPENMP) {
-    CALL_ASSIGN_PORTABLE_TASK_1TAG(KOKKOS_OPENMP_TAG, TaskDependencies, _factory_name + std::string("::") + task_group_name, TaskFactoryBase::do_task<,
-                              level->eachPatch(), matls, TASKGRAPH::DEFAULT,
-                              variable_registry, arches_tasks, type, time_substep, pack_tasks);
+    create_portable_tasks( TaskDependencies, this,
+                          _factory_name + std::string("::") + task_group_name,
+                          &TaskFactoryBase::do_task<KOKKOS_OPENMP_TAG>,
+                          sched, level->eachPatch(), matls, TASKGRAPH::DEFAULT,
+                          variable_registry, arches_tasks, type, time_substep, non_const_pack_tasks);
   } else if (assignedExecutionSpace == TaskAssignedExecutionSpace::KOKKOS_CUDA) {
-    CALL_ASSIGN_PORTABLE_TASK_1TAG(KOKKOS_CUDA_TAG, TaskDependencies, _factory_name + std::string("::") + task_group_name, TaskFactoryBase::do_task<,
-                                  level->eachPatch(), matls, TASKGRAPH::DEFAULT,
-                                  variable_registry, arches_tasks, type, time_substep, pack_tasks);
+    create_portable_tasks( TaskDependencies, this,
+                          _factory_name + std::string("::") + task_group_name,
+                          &TaskFactoryBase::do_task<KOKKOS_CUDA_TAG>,
+                          sched, level->eachPatch(), matls, TASKGRAPH::DEFAULT,
+                          variable_registry, arches_tasks, type, time_substep, non_const_pack_tasks);
   } else { //if (assignedExecutionSpace == TaskAssignedExecutionSpace::UINTAH_CPU) {
-    CALL_ASSIGN_PORTABLE_TASK_1TAG(UINTAH_CPU_TAG, TaskDependencies, _factory_name + std::string("::") + task_group_name, TaskFactoryBase::do_task<,
-                                level->eachPatch(), matls, TASKGRAPH::DEFAULT,
-                                variable_registry, arches_tasks, type, time_substep, pack_tasks);
+    create_portable_tasks( TaskDependencies, this,
+                          _factory_name + std::string("::") + task_group_name,
+                          &TaskFactoryBase::do_task<UINTAH_CPU_TAG>,
+                          sched, level->eachPatch(), matls, TASKGRAPH::DEFAULT,
+                          variable_registry, arches_tasks, type, time_substep, non_const_pack_tasks);
   }
 
 
@@ -406,7 +413,7 @@ void TaskFactoryBase::do_task ( const PatchSubset* patches,
                                 OnDemandDataWarehouse* old_dw,
                                 OnDemandDataWarehouse* new_dw,
                                 UintahParams& uintahParams,
-                                ExecutionObject& executionObject,
+                                ExecutionObject<ExecutionSpace, MemorySpace>& executionObject,
                                 std::vector<ArchesFieldContainer::VariableInformation> variable_registry,
                                 std::vector<TaskInterface*> arches_tasks,
                                 TaskInterface::TASK_TYPE type,
@@ -446,7 +453,7 @@ void TaskFactoryBase::do_task ( const PatchSubset* patches,
 
       switch( type ){
         case (TaskInterface::INITIALIZE):
-          (*i_task)->initialize( patch, tsk_info_mngr, executionObject );
+          (*i_task)->initialize( patch, tsk_info_mngr );
           break;
         case (TaskInterface::RESTART_INITIALIZE):
           (*i_task)->restart_initialize( patch, tsk_info_mngr );

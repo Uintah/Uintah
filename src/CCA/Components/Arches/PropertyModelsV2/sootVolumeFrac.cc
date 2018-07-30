@@ -26,9 +26,9 @@ sootVolumeFrac::~sootVolumeFrac( )
 //---------------------------------------------------------------------------
 TaskAssignedExecutionSpace sootVolumeFrac::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, sootVolumeFrac::eval);
-  return assignedTag;
+  return create_portable_arches_tasks( this,
+                                       &sootVolumeFrac::eval<UINTAH_CPU_TAG>,
+                                       &sootVolumeFrac::eval<KOKKOS_OPENMP_TAG> );
 
 }
 
@@ -61,7 +61,7 @@ sootVolumeFrac::register_initialize( VIVec& variable_registry , const bool pack_
 }
 
 void
-sootVolumeFrac::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info , ExecutionObject& executionObject ){
+sootVolumeFrac::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   CCVariable<double>& fvSoot     = tsk_info->get_uintah_field_add<CCVariable<double> >( _fvSoot);
   fvSoot.initialize(0.0);
 }
@@ -92,7 +92,7 @@ sootVolumeFrac::register_timestep_eval( std::vector<ArchesFieldContainer::Variab
 
 
 template<typename ExecutionSpace, typename MemorySpace> void
-sootVolumeFrac::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+sootVolumeFrac::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   CCVariable<double>& fvSoot     = tsk_info->get_uintah_field_add<CCVariable<double> >( _fvSoot);
   fvSoot.initialize(0.0);

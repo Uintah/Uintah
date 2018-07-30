@@ -15,9 +15,9 @@ Smagorinsky::~Smagorinsky()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace Smagorinsky::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, Smagorinsky::eval);
-  return assignedTag;
+  return create_portable_arches_tasks( this,
+                                       &Smagorinsky::eval<UINTAH_CPU_TAG>,
+                                       &Smagorinsky::eval<KOKKOS_OPENMP_TAG> );
 
 }
 
@@ -85,7 +85,7 @@ Smagorinsky::register_initialize(
 
 //--------------------------------------------------------------------------------------------------
 void
-Smagorinsky::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+Smagorinsky::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& mu_sgc = tsk_info->get_uintah_field_add<CCVariable<double> >(m_t_vis_name);
   mu_sgc.initialize(0.0);
@@ -131,7 +131,7 @@ Smagorinsky::register_timestep_eval( std::vector<ArchesFieldContainer::VariableI
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemorySpace> void
-Smagorinsky::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+Smagorinsky::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   constSFCXVariable<double>& uVel = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >(m_u_vel_name);
   constSFCYVariable<double>& vVel = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >(m_v_vel_name);

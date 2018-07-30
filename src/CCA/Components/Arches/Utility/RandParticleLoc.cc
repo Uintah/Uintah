@@ -5,9 +5,9 @@ namespace Uintah {
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace RandParticleLoc::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, RandParticleLoc::eval);
-  return assignedTag;
+  return create_portable_arches_tasks( this,
+                                       &RandParticleLoc::eval<UINTAH_CPU_TAG>,
+                                       &RandParticleLoc::eval<KOKKOS_OPENMP_TAG> );
 
 }
 
@@ -35,7 +35,7 @@ RandParticleLoc::register_initialize( std::vector<ArchesFieldContainer::Variable
 
 //--------------------------------------------------------------------------------------------------
 void
-RandParticleLoc::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+RandParticleLoc::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   typedef std::tuple<ParticleVariable<double>*, ParticleSubset*> PVarTuple;
 

@@ -7,10 +7,9 @@ namespace Uintah{
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace Burnout::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, Burnout::eval);
-  return assignedTag;
-
+  return create_portable_arches_tasks( this,
+                                       &Burnout::eval<UINTAH_CPU_TAG>,
+                                       &Burnout::eval<KOKKOS_OPENMP_TAG> );
 }
 
 
@@ -60,7 +59,7 @@ Burnout::register_initialize( std::vector<ArchesFieldContainer::VariableInformat
 
 //--------------------------------------------------------------------------------------------------
 void
-Burnout::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+Burnout::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& burnout = *(tsk_info->get_uintah_field<CCVariable<double> >( _task_name ));
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
@@ -105,7 +104,7 @@ Burnout::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInfor
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemorySpace> void
-Burnout::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+Burnout::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
   CCVariable<double>& numerator_sum = tsk_info->get_uintah_field_add< CCVariable<double> >("numerator_sum", 0);

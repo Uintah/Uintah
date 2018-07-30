@@ -65,12 +65,12 @@ public:
 
     void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject );
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    template <typename EXECUTION_SPACE, typename MEMORY_SPACE>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject );
+    template <typename ExecutionSpace, typename MemorySpace>
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject );
 
     void create_local_labels();
 
@@ -173,9 +173,9 @@ private:
   template <typename T>
   TaskAssignedExecutionSpace KMomentum<T>::loadTaskEvalFunctionPointers(){
 
-    TaskAssignedExecutionSpace assignedTag{};
-    LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, KMomentum<T>::eval);
-    return assignedTag;
+    return create_portable_arches_tasks( this,
+                                         &KMomentum<T>::eval<UINTAH_CPU_TAG>,
+                                         &KMomentum<T>::eval<KOKKOS_OPENMP_TAG> );
 
   }
 
@@ -376,7 +376,7 @@ private:
 
   //------------------------------------------------------------------------------------------------
   template <typename T> void
-  KMomentum<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+  KMomentum<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     const int istart = 0;
     const int iend = m_eqn_names.size();
@@ -482,7 +482,7 @@ private:
   //------------------------------------------------------------------------------------------------
   template <typename T>
   template<typename ExecutionSpace, typename MemorySpace> void
-  KMomentum<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+  KMomentum<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
     Vector Dx = patch->dCell();
     double V = Dx.x()*Dx.y()*Dx.z();

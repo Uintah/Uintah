@@ -11,9 +11,9 @@ TaskInterface( task_name, matl_index ) {
 
 TaskAssignedExecutionSpace TotNumDensity::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, TotNumDensity::eval);
-  return assignedTag;
+  return create_portable_arches_tasks( this,
+                                       &TotNumDensity::eval<UINTAH_CPU_TAG>,
+                                       &TotNumDensity::eval<KOKKOS_OPENMP_TAG> );
 
 }
 
@@ -61,7 +61,7 @@ TotNumDensity::register_initialize(
 
 //--------------------------------------------------------------------------------------------------
 void
-TotNumDensity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info , ExecutionObject& executionObject){
+TotNumDensity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info){
 
   CCVariable<double>& num_den = *(tsk_info->get_uintah_field<CCVariable<double> >( _task_name ));
   num_den.initialize(0.0);
@@ -100,7 +100,7 @@ TotNumDensity::register_timestep_eval(
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemorySpace> void
-TotNumDensity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+TotNumDensity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   CCVariable<double>& num_den = *(tsk_info->get_uintah_field<CCVariable<double> >( _task_name ));
   num_den.initialize(0.0);

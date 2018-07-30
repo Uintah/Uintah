@@ -25,9 +25,9 @@ StressTensor::~StressTensor(){
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace StressTensor::loadTaskEvalFunctionPointers(){
 
-  TaskAssignedExecutionSpace assignedTag{};
-  LOAD_ARCHES_EVAL_TASK_2TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, assignedTag, StressTensor::eval);
-  return assignedTag;
+  return create_portable_arches_tasks( this,
+                                       &StressTensor::eval<UINTAH_CPU_TAG>,
+                                       &StressTensor::eval<KOKKOS_OPENMP_TAG> );
 
 }
 
@@ -62,7 +62,7 @@ void StressTensor::register_initialize( AVarInfo& variable_registry , const bool
 }
 
 //--------------------------------------------------------------------------------------------------
-void StressTensor::initialize( const Patch*, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+void StressTensor::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
 
   CCVariable<double>& sigma11 = *(tsk_info->get_uintah_field<CCVariable<double> >(m_sigma_t_names[0]));
@@ -94,7 +94,7 @@ void StressTensor::register_timestep_eval( VIVec& variable_registry, const int t
 
 //--------------------------------------------------------------------------------------------------
 template<typename ExecutionSpace, typename MemorySpace>
-void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject& executionObject ){
+void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecutionSpace, MemorySpace>& executionObject ){
 
   constSFCXVariable<double>& uVel = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >(m_u_vel_name);
   constSFCYVariable<double>& vVel = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >(m_v_vel_name);
