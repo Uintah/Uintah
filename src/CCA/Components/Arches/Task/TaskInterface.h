@@ -80,7 +80,8 @@ namespace Uintah{
         }
         assignedTag = KOKKOS_CUDA;
       }
-    } else {
+    }
+    if (assignedTag == TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE) {
       if ( std::is_same< Kokkos::OpenMP , ES1 >::value
           || std::is_same< Kokkos::OpenMP , ES2 >::value
           || std::is_same< Kokkos::OpenMP , ES3 >::value ) {
@@ -136,7 +137,8 @@ namespace Uintah{
         }
         assignedTag = KOKKOS_CUDA;
       }
-    } else {
+    }
+    if (assignedTag == TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE) {
       if ( std::is_same< Kokkos::OpenMP , ES1 >::value
           || std::is_same< Kokkos::OpenMP , ES2 >::value) {
         if (std::is_same< Kokkos::OpenMP , ES1 >::value) {
