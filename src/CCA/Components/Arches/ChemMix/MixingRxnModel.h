@@ -261,7 +261,7 @@ namespace Uintah {
         virtual const std::vector<double> get_hl_bounds( std::vector<std::vector<double> > const iv_grids, std::vector<int> size ) = 0;
 
 #ifdef UINTAH_ENABLE_KOKKOS  // HARD CODED TO RUN ON CPU ONLY (HOST SPACE)  and optimized for GPU (layoutLeft??)
-        virtual const std::vector<double> get_hl_bounds( Kokkos::View<double**,  Kokkos::LayoutLeft,Kokkos::HostSpace,Kokkos::MemoryTraits<Kokkos::RandomAccess> >  const iv_grids,Kokkos::View<int*,  Kokkos::LayoutLeft,Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess> >  const  size ) { };
+        virtual const std::vector<double> get_hl_bounds( Kokkos::View<double**,  Kokkos::LayoutLeft,Kokkos::HostSpace,Kokkos::MemoryTraits<Kokkos::RandomAccess> >  const iv_grids,Kokkos::View<int*,  Kokkos::LayoutLeft,Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess> >  const  size )=0;
 #endif
         /** @brief Check to see if this table deals with heat loss **/
         virtual bool has_heat_loss() = 0;
@@ -1029,6 +1029,11 @@ namespace Uintah {
         {
           throw InvalidValue("Error: No ability to return heat loss bounds for the acid base transform",__FILE__,__LINE__);
         };
+#ifdef UINTAH_ENABLE_KOKKOS  // HARD CODED TO RUN ON CPU ONLY (HOST SPACE)  and optimized for GPU (layoutLeft??)
+         const std::vector<double> get_hl_bounds( Kokkos::View<double**,  Kokkos::LayoutLeft,Kokkos::HostSpace,Kokkos::MemoryTraits<Kokkos::RandomAccess> >  const iv_grids,Kokkos::View<int*,  Kokkos::LayoutLeft,Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess> >  const  size ){
+           throw InvalidValue("Error: No ability to return heat loss bounds for the acid base transform",__FILE__,__LINE__);
+         };
+#endif
 
        struct1DArray<double,ALMOST_A_MAGIC_NUMBER> get_reference_iv(){
           std::vector<double> iv(2);
