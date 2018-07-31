@@ -97,6 +97,7 @@ namespace Uintah {
     ParticleVariable<double> pmass, pvolume, ptemperature, psp_vol,perosion;
     ParticleVariable<double> pcolor,ptempPrevious,p_q;
     ParticleVariable<double> psurface;
+    ParticleVariable<Vector> psurfgrad;
     ParticleVariable<long64> pparticleID;
     ParticleVariable<Vector> pdisp,pTempGrad,parea;
     ParticleVariable<Vector> pfiberdir; 

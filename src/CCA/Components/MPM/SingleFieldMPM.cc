@@ -400,6 +400,7 @@ void SingleFieldMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->pCellNAPIDLabel,zeroth_matl);
   t->computes(lb->NC_CCweightLabel,zeroth_matl);
   t->computes(lb->pSurfLabel);
+  t->computes(lb->pSurfGradLabel);
 
   // Debugging Scalar
   if (flags->d_with_color) {
@@ -1388,7 +1389,7 @@ void SingleFieldMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pVolumeLabel,                    gnone);
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel,        gnone);
   t->requires(Task::OldDW, lb->pSurfLabel,                      gnone);
-  t->requires(Task::NewDW, lb->pSurfGradLabel,                  gnone);
+  t->requires(Task::NewDW, lb->pSurfGradLabel_preReloc,         gnone);
 
 //  if(flags->d_with_ice){
 //    t->requires(Task::NewDW, lb->dTdt_NCLabel,         gac,NGN);
@@ -1473,7 +1474,7 @@ void SingleFieldMPM::scheduleComputeParticleGradients(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pVolumeLabel,                    gnone);
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel,        gnone);
   t->requires(Task::OldDW, lb->pLocalizedMPMLabel,              gnone);
-  t->requires(Task::NewDW, lb->pSurfGradLabel,                  gnone);
+  t->requires(Task::NewDW, lb->pSurfGradLabel_preReloc,         gnone);
 
   t->computes(lb->pVolumeLabel_preReloc);
   t->computes(lb->pVelGradLabel_preReloc);
@@ -3697,7 +3698,7 @@ void SingleFieldMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       old_dw->get(pTemperature, lb->pTemperatureLabel,               pset);
       old_dw->get(pFOld,        lb->pDeformationMeasureLabel,        pset);
       old_dw->get(pVolumeOld,   lb->pVolumeLabel,                    pset);
-      new_dw->get(pSurfGrad,    lb->pSurfGradLabel,                  pset);
+      new_dw->get(pSurfGrad,    lb->pSurfGradLabel_preReloc,         pset);
 
       if(flags->d_XPIC2){
         new_dw->get(pvelSSPlus, lb->pVelocitySSPlusLabel,            pset);
@@ -3979,7 +3980,7 @@ void SingleFieldMPM::computeParticleGradients(const ProcessorGroup*,
       old_dw->get(pFOld,        lb->pDeformationMeasureLabel,        pset);
       old_dw->get(pVolumeOld,   lb->pVolumeLabel,                    pset);
       old_dw->get(pLocalized,   lb->pLocalizedMPMLabel,              pset);
-      new_dw->get(pSurfGrad,    lb->pSurfGradLabel,                  pset);
+      new_dw->get(pSurfGrad,    lb->pSurfGradLabel_preReloc,         pset);
 
       new_dw->allocateAndPut(pvolume,    lb->pVolumeLabel_preReloc,       pset);
       new_dw->allocateAndPut(pVelGrad,   lb->pVelGradLabel_preReloc,      pset);
@@ -5420,15 +5421,18 @@ void SingleFieldMPM::scheduleComputeParticleSurfaceGradient(SchedulerP   & sched
                         &SingleFieldMPM::computeParticleSurfaceGradient);
 
   Ghost::GhostType  gan = Ghost::AroundNodes;
+  Ghost::GhostType gnone = Ghost::None;
 
+  t->requires(Task::OldDW, lb->timeStepLabel);
   t->requires(Task::OldDW, lb->pXLabel,                  gan, NGP);
   t->requires(Task::OldDW, lb->pMassLabel,               gan, NGP);
   t->requires(Task::OldDW, lb->pSurfLabel,               gan, NGP);
   t->requires(Task::OldDW, lb->pSizeLabel,               gan, NGP);
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel, gan, NGP);
+  t->requires(Task::OldDW, lb->pSurfGradLabel,           gnone);
 //t->requires(Task::NewDW, lb->gSurfLabel, d_one_matl, Ghost::AroundCells, NGN);
 
-  t->computes(lb->pSurfGradLabel);
+  t->computes(lb->pSurfGradLabel_preReloc);
 
   sched->addTask(t, patches, matls);
 }
@@ -5441,6 +5445,14 @@ void SingleFieldMPM::computeParticleSurfaceGradient(const ProcessorGroup *,
 {
   int numMPMMatls = m_sharedState->getNumMPMMatls();
   Ghost::GhostType  gan = Ghost::AroundNodes;
+
+  timeStep_vartype timeStep;
+  old_dw->get(timeStep, lb->timeStepLabel);
+  int timestep = timeStep;
+
+  // Should we make this an input file parameter?
+  int interval = 10;
+  int doit=timestep%interval;
 
   for (int p = 0; p<patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -5468,52 +5480,64 @@ void SingleFieldMPM::computeParticleSurfaceGradient(const ProcessorGroup *,
       constParticleVariable<Point>   px,pxOP;
       constParticleVariable<double>  psurf;
       ParticleVariable<Vector>       pSurfGrad;
+      constParticleVariable<Vector>  pSurfGradOld;
 
       old_dw->get(px,             lb->pXLabel,             pset);
       old_dw->get(psurf,          lb->pSurfLabel,          pset);
 
       old_dw->get(pxOP,           lb->pXLabel,             psetOP);
-      new_dw->allocateAndPut(pSurfGrad,lb->pSurfGradLabel, psetOP);
+      old_dw->get(pSurfGradOld,   lb->pSurfGradLabel,      psetOP);
 
-#if 1
+      new_dw->allocateAndPut(pSurfGrad,lb->pSurfGradLabel_preReloc, psetOP);
+
       vector<double> psurfv;
       vector<Point>  pxv;
-      for(ParticleSubset::iterator it=pset->begin();it!=pset->end();it++){
-        psurfv.push_back(psurf[*it]);
-        pxv.push_back(px[*it]);
+      bool carryForward=true;
+      if(timestep==1 || doit==0){
+        carryForward=false;
+        for(ParticleSubset::iterator it=pset->begin();it!=pset->end();it++){
+          psurfv.push_back(psurf[*it]);
+          pxv.push_back(px[*it]);
+        }
       }
       int vecl = psurfv.size();
-#endif
 
-      for(ParticleSubset::iterator itop=psetOP->begin();
-                                   itop!=psetOP->end();
-                                   itop++){
+      // Either carry forward the particle surface data, or recompute it every
+      // N timesteps.
+      if(carryForward){
+       // Carry forward particle surface information
+       for (ParticleSubset::iterator iter = psetOP->begin();
+                                     iter != psetOP->end();
+                                     iter++){
+         particleIndex idx = *iter;
+         pSurfGrad[idx]=pSurfGradOld[idx];
+       }
+      } else {
+       for(ParticleSubset::iterator itop=psetOP->begin();
+                                    itop!=psetOP->end();
+                                    itop++){
         particleIndex idxOP = *itop;
         Vector gradD(0.,0.,0.);
         Vector gradS(0.,0.,0.);
         double S = 0;
         double D = 0;
-//        for(ParticleSubset::iterator it=pset->begin();it!=pset->end();it++){
-//          particleIndex idx = *it;
         for(int ip=0;ip<vecl;ip++){
-//          Vector xminusxp = px[idx]-pxOP[idxOP];
           Vector xminusxp = pxv[ip]-pxOP[idxOP];
           double r2 = xminusxp.length2();
           if(r2<rho2){
             double r = sqrt(r2);
             Vector gradw  = (r*invrho3 - invrho2)*xminusxp;
             gradD += psurfv[ip]*gradw;
-//          gradD += psurf[*it]*gradw;
             gradS +=            gradw;
             double w = 1. - 3.*r2*invrho2 + 2.*r2*r*invrho3;
             S     +=            w;
             D     += psurfv[ip]*w;
-//            D     += psurf[*it]*w;
           }
         }
         pSurfGrad[idxOP] = -6.0*(gradD/S - D*gradS/(S*S));
       }
-    }   // matl loop
+     }   // matl loop
+    }   // endif
   }    // patches
 }
 
@@ -5540,7 +5564,7 @@ void SingleFieldMPM::scheduleComputeGridSurfaceGradient(SchedulerP   & sched,
   t->requires(Task::OldDW, lb->pVelocityLabel,           gp, ngc_p);
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel, gp, ngc_p);
   t->requires(Task::OldDW, lb->pExternalForceLabel,      gp, ngc_p);
-  t->requires(Task::NewDW, lb->pSurfGradLabel,           gp, ngc_p);
+  t->requires(Task::NewDW, lb->pSurfGradLabel_preReloc,  gp, ngc_p);
 
   t->computes(lb->gSurfGradLabel,          d_one_matl);
   t->computes(lb->gSurfNormF0Label,        d_one_matl);
@@ -5653,7 +5677,7 @@ void SingleFieldMPM::computeGridSurfaceGradient(const ProcessorGroup *,
       old_dw->get(psize,               lb->pSizeLabel,               pset);
       old_dw->get(psurf,               lb->pSurfLabel,               pset);
       old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
-      new_dw->get(pSurfGrad,           lb->pSurfGradLabel,           pset);
+      new_dw->get(pSurfGrad,           lb->pSurfGradLabel_preReloc,  pset);
 
       for(ParticleSubset::iterator it=pset->begin();it!=pset->end();it++){
         particleIndex idx = *it;
@@ -5697,7 +5721,7 @@ void SingleFieldMPM::computeGridSurfaceGradient(const ProcessorGroup *,
       old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
       old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
       old_dw->get(pextforce,           lb->pExternalForceLabel,      pset);
-      new_dw->get(pSurfGrad,           lb->pSurfGradLabel,           pset);
+      new_dw->get(pSurfGrad,           lb->pSurfGradLabel_preReloc,  pset);
 
       for(ParticleSubset::iterator it=pset->begin();it!=pset->end();it++){
         particleIndex idx = *it;
@@ -5745,23 +5769,25 @@ void SingleFieldMPM::computeGridSurfaceGradient(const ProcessorGroup *,
       gVelF1[c]      /= gMassF1[c];
       gPositionF0[c] /= gMassF0[c];
       gPositionF1[c] /= gMassF1[c];
-//      Vector normDiff = 0.5*(gSurfNormF0[c] - gSurfNormF1[c]);
-//      gSurfNormF0[c] = normDiff;
-//      gSurfNormF1[c] = -1.0*normDiff;
+
+      Vector normDiff = 0.5*(gSurfNormF0[c] - gSurfNormF1[c]);
+      gSurfNormF0[c] = normDiff;
+      gSurfNormF1[c] = -1.0*normDiff;
+
       double length0 = gSurfNormF0[c].length();
       double length1 = gSurfNormF1[c].length();
-//      if(length0>length1){
-//        gSurfNormF1[c] = -1.0*gSurfNormF0[c];
-//      }else{
-//        gSurfNormF0[c] = -1.0*gSurfNormF1[c];
-//      }
-
       if(length0>1.0e-15){
          gSurfNormF0[c]/=length0;
       }
       if(length1>1.0e-15){
          gSurfNormF1[c]/=length1;
       }
+//      if(length0>length1){
+//        gSurfNormF1[c] = -1.0*gSurfNormF0[c];
+//      }else{
+//        gSurfNormF0[c] = -1.0*gSurfNormF1[c];
+//      }
+
       gNormTracF0[c]= Dot((gSurfNormF0[c]*gStressF0[c]),gSurfNormF0[c]);
       gNormTracF1[c]= Dot((gSurfNormF1[c]*gStressF1[c]),gSurfNormF1[c]);
     }
@@ -5850,11 +5876,9 @@ void SingleFieldMPM::computeSingleFieldContact(const ProcessorGroup *,
     new_dw->getModifiable(gvelstar0, lb->gVelocityStarF0Label, 0, patch);
     new_dw->getModifiable(gvelstar1, lb->gVelocityStarF1Label, 0, patch);
 
-    double d_mu     = 0.0; double d_sepFac = 0.9; double d_vol_const = 0.0;
+    double d_mu     = 0.5; double d_sepFac = 0.9; double d_vol_const = 0.0;
     double sepDis = d_sepFac*cbrt(cell_vol);
 
-//    cout << "cell_vol = " << cell_vol << endl;
-//    cout << "sepFac = " << d_sepFac << endl;
     for(NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
       IntVector c = *iter;
 
@@ -5862,7 +5886,7 @@ void SingleFieldMPM::computeSingleFieldContact(const ProcessorGroup *,
       Vector mean_vel = (gmass0[c]*gvelstar0[c] + gmass1[c]*gvelstar1[c])/
                          sumMass;
 
-      if(gSurf[c] > 0.5){  // if node is a surface node
+      if(gSurf[c] > 0.49){  // if node is a surface node
        Vector Dv0(0.,0.,0.); Vector Dv1(0.,0.,0.);
        if(fabs(gmass0[c] - sumMass)>1.e-15 &&
           fabs(gmass1[c] - sumMass)>1.e-15){  // if node has mass from 2 fields
@@ -5870,7 +5894,6 @@ void SingleFieldMPM::computeSingleFieldContact(const ProcessorGroup *,
         double totalNodalVol = (gvol0[c] + gvol1[c])*8.0*NC_CCweight[c];
 
         if((totalNodalVol/cell_vol) > d_vol_const){
-//          cout << "totalNodalVol = " << totalNodalVol << endl;
           Vector centerOfMassPos = (gmass0[c]*gpos0[c].asVector()
                                  +  gmass1[c]*gpos1[c].asVector())/
                                     sumMass;
@@ -5891,7 +5914,8 @@ void SingleFieldMPM::computeSingleFieldContact(const ProcessorGroup *,
           double Tn0 = gNormTrac0[c];
           double Tn1 = gNormTrac1[c];
 
-          if(sepscal0 < sepDis && (normalDeltaVel0 > 0.0 || Tn0 < -1.e-12)){
+          if(sepscal0 < sepDis){
+           if((normalDeltaVel0 > 0.0 || Tn0 < -1.e-12)){
             Vector normal_normaldV0 = normal0*normalDeltaVel0;
             Vector dV_normaldV0     = deltaVelocity0 - normal_normaldV0;
 
@@ -5907,15 +5931,11 @@ void SingleFieldMPM::computeSingleFieldContact(const ProcessorGroup *,
               Dv0 = -normal_normaldV0
                     -surfaceTangent*frictionCoefficient*fabs(normalDeltaVel0);
             }
+           }
           }
 
-          if(sepscal1 < sepDis && (normalDeltaVel1 > 0.0 || Tn1 < -1.e-12)){
-//            cout << "Node = " << c << endl;
-//            cout << "sepscal1 = " << sepscal1 << endl;
-//            cout << "sepvec1 = "  << sepvec1   << endl;
-//            cout << "gmass1 = " << gmass1[c] << endl;
-//            cout << "gpos0 = "    << gpos0[c] << endl;
-//            cout << "centerOfMassPos = "    << centerOfMassPos << endl;
+          if(sepscal1 < sepDis){
+           if((normalDeltaVel1 > 0.0 || Tn1 < -1.e-12)){
             Vector normal_normaldV1 = normal1*normalDeltaVel1;
             Vector dV_normaldV1     = deltaVelocity1 - normal_normaldV1;
             if(dV_normaldV1.length2() < 1.e-15){
@@ -5930,12 +5950,13 @@ void SingleFieldMPM::computeSingleFieldContact(const ProcessorGroup *,
               Dv1 = -normal_normaldV1
                     -surfaceTangent*frictionCoefficient*fabs(normalDeltaVel1);
             }
+           }
           }
-        }
+         }
        }// Node has mass from both fields
        gvelstar0[c] += Dv0;
        gvelstar1[c] += Dv1;
-      } else {  // Node is (above) or is not (below) a surface node
+      } else {  // Node is (code above) or is not (code below) a surface node
         gvelstar0[c] = mean_vel;
         gvelstar1[c] = mean_vel;
       }
