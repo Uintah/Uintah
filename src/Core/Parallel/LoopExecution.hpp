@@ -346,24 +346,22 @@ parallel_for( ExecutionObject<ExecutionSpace, MemorySpace>& executionObject, Blo
 
   for (unsigned int i = 0; i < streamPartitions; i++) {
     
-    typedef Kokkos::TeamPolicy< Kokkos::Cuda > policy_type;
-    
+#if defined(NO_STREAM)
+    Kokkos::Cuda instanceObject();
+    Kokkos::TeamPolicy< Kokkos::Cuda > tp( actual_cuda_blocks_per_loop, actual_threads_per_block );
+#else
     void* stream = executionObject.getStream(i);
     if (!stream) {
       std::cout << "Error, the CUDA stream must not be nullptr\n" << std::endl;
       SCI_THROW(InternalError("Error, the CUDA stream must not be nullptr.", __FILE__, __LINE__));
     }
-
-#if defined(NO_STREAM)
-    Kokkos::Cuda instanceObject();
-    Kokkos::TeamPolicy< Kokkos::Cuda > tp( actual_cuda_blocks_per_loop, actual_threads_per_block );
-#else
     Kokkos::Cuda instanceObject(*(static_cast<cudaStream_t*>(stream)));
     //Kokkos::TeamPolicy< Kokkos::Cuda, Kokkos::LaunchBounds<640,1> > tp( instanceObject, actual_cuda_blocks_per_loop, actual_threads_per_block );
     Kokkos::TeamPolicy< Kokkos::Cuda > tp( instanceObject, actual_cuda_blocks_per_loop, actual_threads_per_block );
 #endif
     
-    // Use a Team Policy, this allows us to control how many threads per SM and how many SMs are used.
+    // Use a Team Policy, this allows us to control how many threads per block and how many blocks are used.
+    typedef Kokkos::TeamPolicy< Kokkos::Cuda > policy_type;
     Kokkos::parallel_for ( tp, [=] __device__ ( typename policy_type::member_type thread ) {
 
       // We are within an SM, and all SMs share the same amount of assigned CUDA threads.
@@ -395,6 +393,9 @@ parallel_for( ExecutionObject<ExecutionSpace, MemorySpace>& executionObject, Blo
     });
   }
 
+#if defined(NO_STREAM)
+  cudaDeviceSynchronize();
+#endif
 
 // ----------------- Team policy but with one stream -----------------
 //  unsigned int i_size = r.end(0) - r.begin(0);
@@ -591,25 +592,23 @@ parallel_reduce_sum( ExecutionObject<ExecutionSpace, MemorySpace>& executionObje
   const unsigned int actual_threads_per_block = (numItems / streamPartitions) > cuda_threads_per_block ? cuda_threads_per_block : (numItems / streamPartitions);
   const unsigned int actual_cuda_blocks_per_loop = (actual_threads - 1) / cuda_threads_per_block + 1;
   for (unsigned int i = 0; i < streamPartitions; i++) {
-    
-    typedef Kokkos::TeamPolicy< Kokkos::Cuda > policy_type;
-
-    void* stream = executionObject.getStream(i);
-    if (!stream) {
-      std::cout << "Error, the CUDA stream must not be nullptr\n" << std::endl;
-      SCI_THROW(InternalError("Error, the CUDA stream must not be nullptr.", __FILE__, __LINE__));
-    }
 
 #if defined(NO_STREAM)
     Kokkos::Cuda instanceObject();
     Kokkos::TeamPolicy< Kokkos::Cuda > reduce_tp( actual_cuda_blocks_per_loop, actual_threads_per_block );
 #else
+    void* stream = executionObject.getStream(i);
+    if (!stream) {
+      std::cout << "Error, the CUDA stream must not be nullptr\n" << std::endl;
+      SCI_THROW(InternalError("Error, the CUDA stream must not be nullptr.", __FILE__, __LINE__));
+    }
     Kokkos::Cuda instanceObject(*(static_cast<cudaStream_t*>(stream)));
     //Kokkos::TeamPolicy< Kokkos::Cuda, Kokkos::LaunchBounds<640,1>  > reduce_tp( instanceObject, actual_cuda_blocks_per_loop, actual_threads_per_block );
     Kokkos::TeamPolicy< Kokkos::Cuda > reduce_tp( instanceObject, actual_cuda_blocks_per_loop, actual_threads_per_block );
 #endif
     
-    // Use a Team Policy, this allows us to control how many threads per SM and how many SMs are used.
+    // Use a Team Policy, this allows us to control how many threads per block and how many blocks are used.
+    typedef Kokkos::TeamPolicy< Kokkos::Cuda > policy_type;
     Kokkos::parallel_reduce ( reduce_tp, [=] __device__ ( typename policy_type::member_type thread, ReductionType& inner_sum ) {
 
       // We are within an SM, and all SMs share the same amount of assigned CUDA threads.
@@ -642,6 +641,10 @@ parallel_reduce_sum( ExecutionObject<ExecutionSpace, MemorySpace>& executionObje
 
     red = tmp;
   }
+
+#if defined(NO_STREAM)
+  cudaDeviceSynchronize();
+#endif
 
   //  Manual approach using range policy that shares threads.
 //  const int teamThreadRangeSize = (i_size > 0 ? i_size : 1) * (j_size > 0 ? j_size : 1) * (k_size > 0 ? k_size : 1);
@@ -1022,17 +1025,22 @@ parallel_initialize_grouped(ExecutionObject<ExecutionSpace, MemorySpace>& execut
 
   const unsigned int actualThreads = n_cells > cudaThreadsPerBlock ? cudaThreadsPerBlock : n_cells;
 
+#if defined(NO_STREAM)
+  Kokkos::Cuda instanceObject();
+  Kokkos::TeamPolicy< Kokkos::Cuda > teamPolicy( cudaBlocksPerLoop, actualThreads );
+#else
   void* stream = executionObject.getStream();
   if (!stream) {
     std::cout << "Error, the CUDA stream must not be nullptr\n" << std::endl;
     SCI_THROW(InternalError("Error, the CUDA stream must not be nullptr.", __FILE__, __LINE__));
   }
   Kokkos::Cuda instanceObject(*(static_cast<cudaStream_t*>(stream)));
+  Kokkos::TeamPolicy< Kokkos::Cuda > teamPolicy( instanceObject, cudaBlocksPerLoop, actualThreads );
+#endif
 
   typedef Kokkos::TeamPolicy< Kokkos::Cuda > policy_type;
 
-  Kokkos::parallel_for (Kokkos::TeamPolicy< ExecutionSpace >( instanceObject, cudaBlocksPerLoop, actualThreads ),
-                        KOKKOS_LAMBDA ( typename policy_type::member_type thread ) {
+  Kokkos::parallel_for (teamPolicy, KOKKOS_LAMBDA ( typename policy_type::member_type thread ) {
 
     const unsigned int currentBlock = thread.league_rank();
       // i_tot will come in as a number between 0 and actualThreads.  Suppose actualThreads is 256.
@@ -1070,6 +1078,9 @@ parallel_initialize_grouped(ExecutionObject<ExecutionSpace, MemorySpace>& execut
 
     });
   });
+#if defined(NO_STREAM)
+  cudaDeviceSynchronize();
+#endif
 }
 #endif //HAVE_CUDA
 
