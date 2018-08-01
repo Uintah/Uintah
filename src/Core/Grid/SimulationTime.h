@@ -70,22 +70,22 @@ public:
   // ever comes first. If the "max_Timestep" is not specified in the .ups
   // file, then it is set to zero.
   
-  int    m_max_time_steps;           // Maximum number of time steps to run.
-  double m_max_time;                 // Maximum simulation time
-  double m_init_time;                // Initial simulation time
+  int    m_max_time_steps{0};         // Maximum number of time steps to run.
+  double m_max_time{0};               // Maximum simulation time
+  double m_init_time{0};              // Initial simulation time
   
-  double m_max_initial_delt;        // Maximum initial delta T
-  double m_initial_delt_range;      // Simulation time to use the initial delta T
-  double m_delt_min;                // Minimum delta T
-  double m_delt_max;                // Maximum delta T
-  double m_delt_factor;             // Factor for increasing delta T
-  double m_max_delt_increase;       // Maximum delta T increase.
-  double m_override_restart_delt;   // Override the restart delta T value
+  double m_max_initial_delt{0};       // Maximum initial delta T
+  double m_initial_delt_range{0};     // Simulation time range for the initial delta T
+  double m_delt_min{0};               // Minimum delta T
+  double m_delt_max{1};               // Maximum delta T
+  double m_delt_factor{1};            // Factor for increasing delta T
+  double m_max_delt_increase{0};      // Maximum delta T increase.
+  double m_override_restart_delt{0};  // Override the restart delta T value
 
-  double m_max_wall_time;           // Maximum wall time.
+  double m_max_wall_time{0};          // Maximum wall time.
   
-  bool m_clamp_time_to_output;      // Clamp the time to the next output or checkpoint
-  bool m_end_at_max_time;           // End the simulation at exactly this time.
+  bool m_clamp_time_to_output{false}; // Clamp the time to the next output or checkpoint
+  bool m_end_at_max_time{false};      // End the simulation at exactly this time.
   
 private:
   
