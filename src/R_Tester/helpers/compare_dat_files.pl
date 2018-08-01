@@ -1,7 +1,9 @@
 #! /usr/bin/perl
 
 if (@ARGV <= 4) {
-    print "usage: compare_dat_files {abs error allowed} {rel error allowed} {uda directory 1} {uda directory 2} {dat file names}\n";
+  print "Usage: compare_dat_files {abs error allowed} {rel error allowed} {uda directory 1} {uda directory 2} {dat file names}\n";
+  print "  Now exiting...\n";
+  exit(1);
 }
 
 $allowable_abs_error = $ARGV[0];
@@ -16,33 +18,32 @@ $uda_dir1 = $1 if( $uda_dir1 =~ /(.*)\/$/ );
 $uda_dir2 = $1 if( $uda_dir2 =~ /(.*)\/$/ );
 
 print "Using absolute tolerance: " . $allowable_abs_error . "\n";
-print "Using relative tolerance: " . $allowable_rel_error . "\n";
-print "\n";
+print "Using relative tolerance: " . $allowable_rel_error . "\n \n";
 
-$greatest_rel_error = 0;
-$greatest_abs_error = 0;
-$first_significant_rel_error = 0;
-$first_significant_abs_error = 0;
+$max_rel_error = 0;
+$max_abs_error = 0;
+$first_rel_error = 0;
+$first_abs_error = 0;
 
-$greatest_rel_error_time1 = 0;
-$greatest_rel_error_time2 = 0;
-$greatest_abs_error_time1 = 0;
-$greatest_abs_error_time2 = 0;
+$max_rel_error_time1 = 0;
+$max_rel_error_time2 = 0;
+$max_abs_error_time1 = 0;
+$max_abs_error_time2 = 0;
 
-$first_significant_rel_error_time1 = 0;
-$first_significant_rel_error_time2 = 0;
-$first_significant_abs_error_time1 = 0;
-$first_significant_abs_error_time2 = 0;
+$first_rel_error_time1 = 0;
+$first_rel_error_time2 = 0;
+$first_abs_error_time1 = 0;
+$first_abs_error_time2 = 0;
 
-$greatest_rel_error_value1 = 0;
-$greatest_rel_error_value2 = 0;
-$greatest_abs_error_value1 = 0;
-$greatest_abs_error_value2 = 0;
+$max_rel_error_value1 = 0;
+$max_rel_error_value2 = 0;
+$max_abs_error_value1 = 0;
+$max_abs_error_value2 = 0;
 
-$first_significant_rel_error_value1 = 0;
-$first_significant_rel_error_value2 = 0;
-$first_significant_abs_error_value1 = 0;
-$first_significant_abs_error_value2 = 0;
+$first_rel_error_value1 = 0;
+$first_rel_error_value2 = 0;
+$first_abs_error_value1 = 0;
+$first_abs_error_value2 = 0;
 
 $failed = 0;
 $lineno = 0;
@@ -61,11 +62,11 @@ foreach $datfile (@ARGV[4 .. @ARGV-1]) {
     print "Could not open " . $datfilename2 . "\n";
   }
 
-  print "Comparing " . $datfile . "... ";
-  $has_significant_rel_error = 0;
-  $has_significant_abs_error = 0;
-  $greatest_rel_error = 0;
-  $greatest_abs_error = 0;
+  print "Comparing " . $datfile . "...\n";
+  $detected_rel_error = 0;
+  $detected_abs_error = 0;
+  $max_rel_error = 0;
+  $max_abs_error = 0;
 
   #__________________________________
 
@@ -87,6 +88,9 @@ foreach $datfile (@ARGV[4 .. @ARGV-1]) {
     unshift(@values1, $time1);
     unshift(@values2, $time2);
 
+    #__________________________________
+    # loop over each value and check them
+    
     foreach $value1 (@values1) {
       $value2  = shift(@values2);
       $max_abs = abs($value1);
@@ -101,20 +105,20 @@ foreach $datfile (@ARGV[4 .. @ARGV-1]) {
         $abs_error = abs($value1 - $value2);
         if ($abs_error > $allowable_abs_error) {
 
-          if ($has_significant_abs_error == 0) {
-            $first_significant_abs_error = $abs_error;
-            $first_significant_abs_error_time1 = $time1;
-            $first_significant_abs_error_time2 = $time2;
-            $first_significant_abs_error_value1 = $value1;
-            $first_significant_abs_error_value2 = $value2;
-            $has_significant_abs_error = 1;
+          if ($detected_abs_error == 0) {
+            $first_abs_error = $abs_error;
+            $first_abs_error_time1 = $time1;
+            $first_abs_error_time2 = $time2;
+            $first_abs_error_value1 = $value1;
+            $first_abs_error_value2 = $value2;
+            $detected_abs_error = 1;
           }
-          if ($abs_error > $greatest_abs_error) {
-            $greatest_abs_error = $abs_error;
-            $greatest_abs_error_time1 = $time1;
-            $greatest_abs_error_time2 = $time2;
-            $greatest_abs_error_value1 = $value1;
-            $greatest_abs_error_value2 = $value2;
+          if ($abs_error > $max_abs_error) {
+            $max_abs_error = $abs_error;
+            $max_abs_error_time1 = $time1;
+            $max_abs_error_time2 = $time2;
+            $max_abs_error_value1 = $value1;
+            $max_abs_error_value2 = $value2;
           }
         }
 
@@ -122,21 +126,21 @@ foreach $datfile (@ARGV[4 .. @ARGV-1]) {
         # do relative comparisons
         $rel_error = abs($value1 - $value2) / $max_abs;
         if ($rel_error > $allowable_rel_error) {
-          if ($has_significant_rel_error == 0) {
-            $first_significant_rel_error = $rel_error;
-            $first_significant_rel_error_time1 = $time1;
-            $first_significant_rel_error_time2 = $time2;
-            $first_significant_rel_error_value1 = $value1;
-            $first_significant_rel_error_value2 = $value2;
-            $has_significant_rel_error = 1;
+        
+          if ($detected_rel_error == 0) {
+            $first_rel_error = $rel_error;
+            $first_rel_error_time1 = $time1;
+            $first_rel_error_time2 = $time2;
+            $first_rel_error_value1 = $value1;
+            $first_rel_error_value2 = $value2;
+            $detected_rel_error = 1;
           }
-
-          if ($rel_error > $greatest_rel_error) {
-            $greatest_rel_error = $rel_error;
-            $greatest_rel_error_time1 = $time1;
-            $greatest_rel_error_time2 = $time2;
-            $greatest_rel_error_value1 = $value1;
-            $greatest_rel_error_value2 = $value2;
+          if ($rel_error > $max_rel_error) {
+            $max_rel_error = $rel_error;
+            $max_rel_error_time1 = $time1;
+            $max_rel_error_time2 = $time2;
+            $max_rel_error_value1 = $value1;
+            $max_rel_error_value2 = $value2;
           }
         }
       }
@@ -144,41 +148,40 @@ foreach $datfile (@ARGV[4 .. @ARGV-1]) {
   }  # while loop
 
   #__________________________________
-  if ($has_significant_rel_error != 0 || $has_significant_abs_error != 0) {
-      print "*** failed\n";
+  if ($detected_rel_error != 0 || $detected_abs_error != 0) {
+    print "*** failed\n";
 
-      if ($has_significant_rel_error != 0) {
-        print "    greatest relative error (%" . $greatest_rel_error * 100 . ") at:\n";
+    if ($detected_rel_error != 0) {
+      print "    greatest relative error (%" . $max_rel_error * 100 . ") at:\n";
+      print "                    time                   value:\n";
+      print "             UDA1: " . $max_rel_error_time1 . " / " . $max_rel_error_value1 . "\n";
+      print "             UDA2: " . $max_rel_error_time2 . " / " . $max_rel_error_value2 . "\n";
+
+      if ($max_rel_error != $first_rel_error) {
+        print "    and first significant relative error (%" . $first_rel_error * 100 . ") at:\n";
         print "                    time                   value:\n";
-        print "             UDA1: " . $greatest_rel_error_time1 . " / " . $greatest_rel_error_value1 . "\n";
-        print "             UDA2: " . $greatest_rel_error_time2 . " / " . $greatest_rel_error_value2 . "\n";
-
-        if ($greatest_rel_error != $first_significant_rel_error) {
-          print "    and first signifant relative error (%" . $first_significant_rel_error * 100 . ") at:\n";
-          print "                    time                   value:\n";
-          print "             UDA1: " . $first_significant_rel_error_time1 . " / " . $first_significant_rel_error_value1 . "\n";
-          print "             UDA2: " . $first_significant_rel_error_time2 . " / " . $first_significant_rel_error_value2 . "\n";
-        }
+        print "             UDA1: " . $first_rel_error_time1 . " / " . $first_rel_error_value1 . "\n";
+        print "             UDA2: " . $first_rel_error_time2 . " / " . $first_rel_error_value2 . "\n";
       }
+    }
 
-      if ($has_significant_abs_error != 0) {
-        print "\n";
-        print "    greatest absolute error: " . $greatest_abs_error . "\n";
+    if ($detected_abs_error != 0) {
+      print "\n";
+      print "    greatest absolute error: " . $max_abs_error . "\n";
+      print "                    time                   value:\n";
+      print "             UDA1: " . $max_abs_error_time1 . " / " . $max_abs_error_value1 . "\n";
+      print "             UDA2: " . $max_abs_error_time2 . " / " . $max_abs_error_value2 . "\n";
 
+      if ($max_abs_error != $first_abs_error) {
+        print "    and first significant absolute error: %" . $first_abs_error * 100 . "\n";
         print "                    time                   value:\n";
-        print "             UDA1: " . $greatest_abs_error_time1 . " / " . $greatest_abs_error_value1 . "\n";
-        print "             UDA2: " . $greatest_abs_error_time2 . " / " . $greatest_abs_error_value2 . "\n";
-
-        if ($greatest_abs_error != $first_significant_abs_error) {
-          print "    and first signifant absolute error: %" . $first_significant_abs_error * 100 . "\n";
-          print "                    time                   value:\n";
-          print "             UDA1: " . $first_significant_abs_error_time1 . " / " . $first_significant_abs_error_value1 . "\n";
-          print "             UDA2: " . $first_significant_abs_error_time2 . " / " . $first_significant_abs_error_value2 . "\n";
-        }
+        print "             UDA1: " . $first_abs_error_time1 . " / " . $first_abs_error_value1 . "\n";
+        print "             UDA2: " . $first_abs_error_time2 . " / " . $first_abs_error_value2 . "\n";
       }
-      print "\nSuggested command to compare these files:\n\n";
-      print "   xxdiff " . $datfilename1 . " \\\n          " . $datfilename2 . "\n\n";
-      $failed = 1;
+    }
+    print "\nSuggested command to compare these files:\n\n";
+    print "   xxdiff " . $datfilename1 . " \\\n          " . $datfilename2 . "\n\n";
+    $failed = 1;
   }
   else {
     print "good\n";
@@ -202,7 +205,17 @@ else {
 sub getTimeAndValue {
   my($line) = @_;
   my(@vals) = ();
-  $number_reg_exp = "(-?\\d+(?:\\.\\d+)?(?:e-?\\d+(?:\\.\\d+)?)?)";
+  
+  #  This is fragile and may not work for all possible number formats   -Todd
+  $number_reg_exp = "(-?\\d+(?:\\.\\d+)?(?:[Ee][+-]?\\d+(?:\\.\\d+)?)?)";
+  
+  #__________________________________
+  # ignore header lines. return 0 0
+  if ($line =~'[:alpha:]') {
+    $time = 0;
+    push(@vals,0);
+    return ($time, @vals);
+  }
 
   if ( $line =~ "$number_reg_exp" ) {
     $time = $1;
