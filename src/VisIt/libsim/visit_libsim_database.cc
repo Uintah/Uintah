@@ -672,7 +672,8 @@ visit_handle visit_SimGetMetaData(void *cbdata)
       std::string mesh_name[2] = {mesh_for_this_var,
                                   ("Machine_" + sim->hostName + "/Local") };
 
-      std::string proc_level[2] = {"/Rank", "/Node"};
+      const unsigned int nProcLevels = 3;
+      std::string proc_level[nProcLevels] = {"/Rank", "/Node/Average", "/Node/Sum"};
 
       std::string mesh[2] = {"/Sim", "/"+sim->hostName};
 
@@ -681,7 +682,7 @@ visit_handle visit_SimGetMetaData(void *cbdata)
       for( unsigned k=0; k<1+addMachineData; ++k )
       {
         // There is performance on a per node and per core basis.
-        for( unsigned j=0; j<2; ++j )
+        for( unsigned j=0; j<nProcLevels; ++j )
         {
           unsigned int nStats = sim->simController->getRuntimeStats().size();
           
@@ -1012,13 +1013,18 @@ visit_handle visit_SimGetMetaData(void *cbdata)
         }
       }
 
-      std::string vars[5] = {"Node/Number", "Node/Memory",
-			     "MPI/Comm/Node", "MPI/Comm/Rank",
-			     "MPI/Rank"};
+      const int nVars = 6;
+      
+      std::string vars[nVars] = {"Node/Number",
+				 "Node/Memory",
+				 "MPI/Comm/Node/Average",
+				 "MPI/Comm/Node/Sum",
+				 "MPI/Comm/Rank",
+				 "MPI/Rank"};
 
       std::string meshName = "Machine_" + sim->hostName + "/Local";
       
-      for( unsigned int i=0; i<5; ++i )
+      for( unsigned int i=0; i<nVars; ++i )
       {
         visit_handle vmd = VISIT_INVALID_HANDLE;
 
@@ -1882,8 +1888,8 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
 
   if( varName.find("Processor/Machine/") == 0 )
   {
-    // bool global = (varName.find("global") != std::string::npos);
-    // bool local  = (varName.find("local" ) != std::string::npos);
+    // bool global = (varName.find("Global") != std::string::npos);
+    // bool local  = (varName.find("Local" ) != std::string::npos);
 
     bool global = false;
     bool local  = true;
@@ -2083,23 +2089,38 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
 
     std::string procLevelName;
       
-    // Strip off the "Processor/Runtime/" or "Processor/MPI/" prefix
-    // and the rank or node postfix.
     if( varName == "Processor" )
     {
-      varName = std::string(varname);
+      std::string tmp = std::string(varname);
 
-      // If the machine profile is available strip off to the sim or
-      // host name.
-      found = varName.find_last_of("/");
-      varName = varName.substr(0, found);
+      // Strip off the "Processor/Application/", "Processor/MPI/" or
+      // "Processor/Runtime/" prefix
+      found = tmp.find_first_of("/");
+      tmp.erase(0, found + 1);
+      found = tmp.find_first_of("/");
+      tmp.erase(0, found + 1);
+      
+      // Get the actual var name and strip it off
+      found = tmp.find_first_of("/");
+      varName = tmp.substr(0, found);
+      tmp.erase(0, found + 1);
 
-      found = varName.find_last_of("/");
-      procLevelName = varName.substr(found + 1);
+      // Get the procLevelName and strip it off
+      found = tmp.find_first_of("/");
+      procLevelName = tmp.substr(0, found);
+      tmp.erase(0, found + 1);
 
-      varName = varName.substr(0, found);
-      found = varName.find_last_of("/");
-      varName = varName.substr(found + 1);
+      if( procLevelName == "Node" )
+      {
+	// Get the operation and strip it off
+	found = tmp.find_first_of("/");
+	procLevelName += "/" + tmp.substr(0, found);
+	tmp.erase(0, found + 1);
+      }
+
+      // All that is left is profile which is really the mesh and that
+      // is already known.
+      // std::string profileName = tmp;
     }
 
     // Simulation Runtime stats
@@ -2108,10 +2129,12 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
     {
       double val;
       
-      if( procLevelName == "Node" )
+      if( procLevelName == "Node/Average" )
+        val = sim->simController->getRuntimeStats().getNodeAverage( varName );
+      else if( procLevelName == "Node/Sum" )
         val = sim->simController->getRuntimeStats().getNodeSum( varName );
-      else // if( procLevelName == "rank" )
-        val = sim->simController->getRuntimeStats().getValue( varName );
+      else // if( procLevelName == "Rank" )
+        val = sim->simController->getRuntimeStats().getRankValue( varName );
       
       for (int i=0; i<gd->num*gd->components; ++i)
         gd->data[i] = val;
@@ -2123,10 +2146,12 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
     {
       double val;
       
-      if( procLevelName == "Node" )
+      if( procLevelName == "Node/Average" )
+        val = mpiScheduler->mpi_info_.getNodeAverage( varName );
+      else if( procLevelName == "Node/Sum" )
         val = mpiScheduler->mpi_info_.getNodeSum( varName );
       else // if( procLevelName == "Rank" )
-        val = mpiScheduler->mpi_info_.getValue( varName );
+        val = mpiScheduler->mpi_info_.getRankValue( varName );
       
       for (int i=0; i<gd->num*gd->components; ++i)
         gd->data[i] = val;
@@ -2138,10 +2163,12 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
     {
       double val;
       
-      if( procLevelName == "Node" )
+      if( procLevelName == "Node/Average" )
+        val = sim->simController->getApplicationInterface()->getApplicationStats().getNodeAverage( varName );
+      else if( procLevelName == "Node/Sum" )
         val = sim->simController->getApplicationInterface()->getApplicationStats().getNodeSum( varName );
       else // if( procLevelName == "Rank" )
-        val = sim->simController->getApplicationInterface()->getApplicationStats().getValue( varName );
+        val = sim->simController->getApplicationInterface()->getApplicationStats().getRankValue( varName );
       
       for (int i=0; i<gd->num*gd->components; ++i)
         gd->data[i] = val;
@@ -2276,22 +2303,36 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       // and the rank or node postfix.
       if( varName == "Processor" )
       {
-        varName = std::string(varname);
+	std::string tmp = std::string(varname);
 
-        // If the machine profile is available strip off to the sim or
-        // host name.
-        if( sim->switchNodeList.size() )
-        {
-          found = varName.find_last_of("/");
-          varName = varName.substr(0, found);
-        }
+	// Strip off the "Processor/Application/", "Processor/MPI/" or
+	// "Processor/Runtime/" prefix
+	found = tmp.find_first_of("/");
+	tmp.erase(0, found + 1);
+	found = tmp.find_first_of("/");
+	tmp.erase(0, found + 1);
+      
+	// Get the actual var name and strip it off
+	found = tmp.find_first_of("/");
+	varName = tmp.substr(0, found);
+	tmp.erase(0, found + 1);
 
-        found = varName.find_last_of("/");
-        procLevelName = varName.substr(found + 1);
+	// Get the procLevelName and strip it off
+	found = tmp.find_first_of("/");
+	procLevelName = tmp.substr(0, found);
+	tmp.erase(0, found + 1);
 
-        varName = varName.substr(0, found);
-        found = varName.find_last_of("/");
-        varName = varName.substr(found + 1);
+	if( procLevelName == "Node" )
+	{
+	  // Get the operation and strip it off
+	  found = tmp.find_first_of("/");
+	  procLevelName += "/" + tmp.substr(0, found);
+	  tmp.erase(0, found + 1);
+	}
+
+	// All that is left is profile which is really the mesh and
+	// that is already known.
+	// std::string profileName = tmp;
       }
 
       // Simulation State Runtime stats
@@ -2300,10 +2341,12 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       {
         double val;
 
-        if( procLevelName == "Node" )
+        if( procLevelName == "Node/Average" )
+          val = runtimeStats.getNodeAverage( varName );
+        else if( procLevelName == "Node/Sum" )
           val = runtimeStats.getNodeSum( varName );
         else // if( procLevelName == "Rank" )
-          val = runtimeStats.getValue( varName );
+          val = runtimeStats.getRankValue( varName );
 
         for (int i=0; i<gd->num*gd->components; ++i)
           gd->data[i] = val;
@@ -2315,10 +2358,12 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       {
         double val;
 
-        if( procLevelName == "Node" )
+        if( procLevelName == "Node/Average" )
+          val = mpiScheduler->mpi_info_.getNodeAverage( varName );
+        else if( procLevelName == "Node/Sum" )
           val = mpiScheduler->mpi_info_.getNodeSum( varName );
         else // if( procLevelName == "Rank" )
-          val = mpiScheduler->mpi_info_.getValue( varName );
+          val = mpiScheduler->mpi_info_.getRankValue( varName );
 
         for (int i=0; i<gd->num*gd->components; ++i)
           gd->data[i] = val;
@@ -2394,7 +2439,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
         std::stringstream msg;
         msg << "Visit libsim - "
             << "Uintah internal variable \"" << varname << "\"  "
-            << "could not be processed.";
+	    << "could not be processed.";
             
         VisItUI_setValueS("SIMULATION_MESSAGE_WARNING", msg.str().c_str(), 1);
 

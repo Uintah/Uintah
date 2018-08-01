@@ -674,9 +674,9 @@ void visit_SetRuntimeStats( visit_simulation_data *sim )
     std::string name  = runtimeStats.getName(i);
     std::string units = runtimeStats.getUnits(i);
 
-    double  average = runtimeStats.getAverage(i);
-    double  maximum = runtimeStats.getMaximum(i);
-    int     rank    = runtimeStats.getRank(i);
+    double  average = runtimeStats.getRankAverage(i);
+    double  maximum = runtimeStats.getRankMaximum(i);
+    int     rank    = runtimeStats.getRankForMaximum(i);
 
     if( average > 0 && units == std::string("MBytes"))
     {
@@ -740,9 +740,9 @@ void visit_SetMPIStats( visit_simulation_data *sim )
       std::string name  = mpiStats.getName(i);
       std::string units = mpiStats.getUnits(i);
       
-      double  average = mpiStats.getAverage(i);
-      double  maximum = mpiStats.getMaximum(i);
-      int     rank    = mpiStats.getRank(i);
+      double  average = mpiStats.getRankAverage(i);
+      double  maximum = mpiStats.getRankMaximum(i);
+      int     rank    = mpiStats.getRankForMaximum(i);
       
       VisItUI_setTableValueS("MPIStatsTable", i, 0, name.c_str(), 0);
       VisItUI_setTableValueS("MPIStatsTable", i, 1, units.c_str(), 0);
@@ -787,9 +787,9 @@ void visit_SetApplicationStats( visit_simulation_data *sim )
       std::string name  = appInterface->getApplicationStats().getName(i);
       std::string units = appInterface->getApplicationStats().getUnits(i);
       
-      double  average = appInterface->getApplicationStats().getAverage(i);
-      double  maximum = appInterface->getApplicationStats().getMaximum(i);
-      int     rank    = appInterface->getApplicationStats().getRank(i);
+      double  average = appInterface->getApplicationStats().getRankAverage(i);
+      double  maximum = appInterface->getApplicationStats().getRankMaximum(i);
+      int     rank    = appInterface->getApplicationStats().getRankForMaximum(i);
       
       VisItUI_setTableValueS("ApplicationStatsTable", i, 0, name.c_str(), 0);
       VisItUI_setTableValueS("ApplicationStatsTable", i, 1, units.c_str(), 0);

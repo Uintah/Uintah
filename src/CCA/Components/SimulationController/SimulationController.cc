@@ -804,13 +804,13 @@ SimulationController::ReportStats(const ProcessorGroup*,
     if( g_sim_mem_stats ) {
       // With the sum reduces, use double, since with memory it is possible that
       // it will overflow
-      double        avg_memused      = m_runtime_stats.getAverage( SCIMemoryUsed );
-      unsigned long max_memused      = m_runtime_stats.getMaximum( SCIMemoryUsed );
-      int           max_memused_rank = m_runtime_stats.getRank(    SCIMemoryUsed );
+      double        avg_memused      = m_runtime_stats.getRankAverage( SCIMemoryUsed );
+      unsigned long max_memused      = m_runtime_stats.getRankMaximum( SCIMemoryUsed );
+      int           max_memused_rank = m_runtime_stats.getRankForMaximum(    SCIMemoryUsed );
       
-      double        avg_highwater      = m_runtime_stats.getAverage( SCIMemoryHighwater );
-      unsigned long max_highwater      = m_runtime_stats.getMaximum( SCIMemoryHighwater );
-      int           max_highwater_rank = m_runtime_stats.getRank(    SCIMemoryHighwater );
+      double        avg_highwater      = m_runtime_stats.getRankAverage( SCIMemoryHighwater );
+      unsigned long max_highwater      = m_runtime_stats.getRankMaximum( SCIMemoryHighwater );
+      int           max_highwater_rank = m_runtime_stats.getRankForMaximum(    SCIMemoryHighwater );
       
       if (avg_memused == max_memused && avg_highwater == max_highwater) {
         message << "Memory Use=" << std::setw(8)
@@ -919,20 +919,20 @@ SimulationController::ReportStats(const ProcessorGroup*,
 
     // Sum up the average time for overhead related components.
     double overhead_time =
-      (m_runtime_stats.getAverage(CompilationTime)           +
-       m_runtime_stats.getAverage(RegriddingTime)            +
-       m_runtime_stats.getAverage(RegriddingCompilationTime) +
-       m_runtime_stats.getAverage(RegriddingCopyDataTime)    +
-       m_runtime_stats.getAverage(LoadBalancerTime));
+      (m_runtime_stats.getRankAverage(CompilationTime)           +
+       m_runtime_stats.getRankAverage(RegriddingTime)            +
+       m_runtime_stats.getRankAverage(RegriddingCompilationTime) +
+       m_runtime_stats.getRankAverage(RegriddingCopyDataTime)    +
+       m_runtime_stats.getRankAverage(LoadBalancerTime));
     
     // Sum up the average times for simulation components.
     double total_time =
       (overhead_time +
-       m_runtime_stats.getAverage(TaskExecTime)       +
-       m_runtime_stats.getAverage(TaskLocalCommTime)  +
-       m_runtime_stats.getAverage(TaskWaitCommTime)   +
-       m_runtime_stats.getAverage(TaskReduceCommTime) +
-       m_runtime_stats.getAverage(TaskWaitThreadTime));
+       m_runtime_stats.getRankAverage(TaskExecTime)       +
+       m_runtime_stats.getRankAverage(TaskLocalCommTime)  +
+       m_runtime_stats.getRankAverage(TaskWaitCommTime)   +
+       m_runtime_stats.getRankAverage(TaskReduceCommTime) +
+       m_runtime_stats.getRankAverage(TaskWaitThreadTime));
     
     // Calculate percentage of time spent in overhead.
     percent_overhead = overhead_time / total_time;
@@ -1024,15 +1024,15 @@ SimulationController::ReportStats(const ProcessorGroup*,
               << std::endl;
         
       for (unsigned int i=0; i<m_runtime_stats.size(); ++i) {
-        if( m_runtime_stats.getMaximum(i) != 0.0 )
+        if( m_runtime_stats.getRankMaximum(i) != 0.0 )
           message << "  " << std::left
                   << std::setw(21) << m_runtime_stats.getName(i)
                   << "[" << std::setw(10) << m_runtime_stats.getUnits(i) << "]"
-                  << " : " << std::setw(12) << m_runtime_stats.getAverage(i)
-                  << " : " << std::setw(12) << m_runtime_stats.getMaximum(i)
-                  << " : " << std::setw(10) << m_runtime_stats.getRank(i)
+                  << " : " << std::setw(12) << m_runtime_stats.getRankAverage(i)
+                  << " : " << std::setw(12) << m_runtime_stats.getRankMaximum(i)
+                  << " : " << std::setw(10) << m_runtime_stats.getRankForMaximum(i)
                   << " : " << std::setw(10)
-                  << (m_runtime_stats.getMaximum(i) != 0.0 ? (100.0 * (1.0 - (m_runtime_stats.getAverage(i) / m_runtime_stats.getMaximum(i)))) : 0)
+                  << (m_runtime_stats.getRankMaximum(i) != 0.0 ? (100.0 * (1.0 - (m_runtime_stats.getRankAverage(i) / m_runtime_stats.getRankMaximum(i)))) : 0)
                   << std::endl;
       }
     }
@@ -1058,15 +1058,15 @@ SimulationController::ReportStats(const ProcessorGroup*,
               << std::endl;
 
       for (unsigned int i=0; i<m_application->getApplicationStats().size(); ++i) {
-        if( m_application->getApplicationStats().getMaximum(i) != 0.0 )
+        if( m_application->getApplicationStats().getRankMaximum(i) != 0.0 )
           message << "  " << std::left
                   << std::setw(21) << m_application->getApplicationStats().getName(i)
                   << "["   << std::setw(10) << m_application->getApplicationStats().getUnits(i) << "]"
-                  << " : " << std::setw(12) << m_application->getApplicationStats().getAverage(i)
-                  << " : " << std::setw(12) << m_application->getApplicationStats().getMaximum(i)
-                  << " : " << std::setw(10) << m_application->getApplicationStats().getRank(i)
+                  << " : " << std::setw(12) << m_application->getApplicationStats().getRankAverage(i)
+                  << " : " << std::setw(12) << m_application->getApplicationStats().getRankMaximum(i)
+                  << " : " << std::setw(10) << m_application->getApplicationStats().getRankForMaximum(i)
                   << " : " << std::setw(10)
-                  << (m_application->getApplicationStats().getMaximum(i) != 0.0 ? (100.0 * (1.0 - (m_application->getApplicationStats().getAverage(i) / m_application->getApplicationStats().getMaximum(i)))) : 0)
+                  << (m_application->getApplicationStats().getRankMaximum(i) != 0.0 ? (100.0 * (1.0 - (m_application->getApplicationStats().getRankAverage(i) / m_application->getApplicationStats().getRankMaximum(i)))) : 0)
                   << std::endl;
       }
 
