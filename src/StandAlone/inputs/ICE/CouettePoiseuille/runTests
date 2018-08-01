@@ -8,10 +8,10 @@ if (! -e $SUS )then
   exit(1)
 endif
 
-mpirun -np 1 $SUS -mpi CouettePoiseuille.XY.ups >& out.XY&
+mpirun -np 1 $SUS -mpi XY.ups >& out.XY&
 
-mpirun -np 1 $SUS -mpi CouettePoiseuille.YZ.ups >& out.YZ&
+mpirun -np 1 $SUS -mpi YZ.ups >& out.YZ&
 
-mpirun -np 1 $SUS -mpi CouettePoiseuille.XZ.ups >& out.XZ&
+mpirun -np 1 $SUS -mpi XZ.ups >& out.XZ&
 
 exit

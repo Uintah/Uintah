@@ -20,7 +20,7 @@
        <delt_min>           0.0     </delt_min>
        <delt_max>           1.0     </delt_max>
        <delt_init>          1.0e-9  </delt_init>
-       <max_Timesteps>       500    </max_Timesteps>    <!-- RT -->
+       <max_Timesteps>      250    </max_Timesteps>    <!-- RT -->
        <timestep_multiplier>1.0     </timestep_multiplier>
    </Time>
 
@@ -58,7 +58,7 @@
                               <value> 0.0 </value>
         </BCType>
       </Face>
-      <Face side = "z-">
+      <Face side = "y-">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0. </value>
         </BCType>
@@ -72,7 +72,7 @@
                               <value> 0.0 </value>
         </BCType>
       </Face>
-      <Face side = "z+">
+      <Face side = "y+">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0. </value>
         </BCType>
@@ -90,30 +90,30 @@
                               <value> 0.0 </value>
         </BCType>
       </Face>
-      <Face side = "y+">
+      <Face side = "z+">
         <BCType id = "0"   label = "Symmetric" var = "symmetry">
         </BCType>
       </Face>
-      <Face side = "y-">
+      <Face side = "z-">
         <BCType id = "0"   label = "Symmetric" var = "symmetry">
         </BCType>
       </Face>
     </BoundaryConditions>
        <Level>
            <Box label="1">
-              <lower>        [0, 0.0, -0.05]     </lower>
-              <upper>        [1, 0.01, 0.05]     </upper>
+              <lower>        [0,-0.05,0]         </lower>
+              <upper>        [1, 0.05,0.01]     </upper>
               <extraCells>   [1,1,1]             </extraCells>
               <patches>      [1,1,1]             </patches>
            </Box>
-           <spacing>         [0.02,0.01,0.002]  </spacing>
+           <spacing>         [0.02,0.002,0.01]  </spacing>
        </Level>
     </Grid>
     <!--____________________________________________________________________-->
     <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <filebase>CouettePoiseuille-XZ.uda</filebase>
+      <filebase>CouettePoiseuille-XY.uda</filebase>
       <outputInterval>0.1</outputInterval>
       <save label = "vel_CC"/>
       <save label = "press_CC"/>
@@ -133,7 +133,8 @@
       <save label = "tau_Y_FC"/>
       <save label = "tau_Z_FC"/>
 
-      <checkpoint interval="0.75" cycle="2"/>
+      <!--<checkpoint interval="0.75" cycle="2"/> -->
+      <checkpoint timestepInterval="100" cycle="1"/>
    </DataArchiver>
 
 
@@ -202,12 +203,13 @@
       </ICE>
     </MaterialProperties>
 
+<!--
     <DataAnalysis>
       <Module name = "momentumAnalysis">
         <materialIndex> 0 </materialIndex>
 
         <samplingFrequency> 1e2 </samplingFrequency>
-        <timeStart>          0   </timeStart>
+        <timeStart>          1   </timeStart>
         <timeStop>          100  </timeStop>
         <controlVolume>
           <Face side = "x+"  extents = "entireFace"/>
@@ -220,5 +222,5 @@
 
       </Module>
     </DataAnalysis>
-
+-->
 </Uintah_specification>
