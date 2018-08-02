@@ -113,13 +113,13 @@ namespace Uintah {
   }; 
   
   //__________________________________
-  void  warning_restartTimestep( std::vector<IntVector> badCells,
-                                 std::vector<fflux> badOutFlux,
-                                 const double vol,
-                                 const int indx,
-                                 const Patch* patch,
-                                 DataWarehouse* new_dw);
-				 
+  void  warning_recomputeTimeStep( std::vector<IntVector> badCells,
+                                   std::vector<fflux> badOutFlux,
+                                   const double vol,
+                                   const int indx,
+                                   const Patch* patch,
+                                   DataWarehouse* new_dw);
+                                 
   inline double equalZero(double d1, double d2, double d3)
   {
     return d1 == 0.0 ? d2:d3;

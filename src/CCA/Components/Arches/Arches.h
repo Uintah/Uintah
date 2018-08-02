@@ -115,7 +115,7 @@ public:
 
   virtual double recomputeDelT(const double delT);
 
-  virtual bool restartableTimeSteps();
+  virtual bool recomputableTimeSteps();
 
   void setWithMPMARCHES() {
     m_with_mpmarches = true;

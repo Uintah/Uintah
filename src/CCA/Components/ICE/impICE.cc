@@ -850,9 +850,9 @@ void ICE::updatePressure(const ProcessorGroup*,
     delete_CustomBCs(d_BC_globalVars, BC_localVars);
 
     //____ B U L L E T   P R O O F I N G----
-    // ignore BP if a timestep restart has already been requested
+    // ignore BP if a time step recompute has already been requested
     IntVector neg_cell;
-    bool tsr = new_dw->timestepRestarted();
+    bool tsr = new_dw->timeStepRecomputed();
     
     if(!areAllValuesPositive(press_CC, neg_cell) && !tsr) {
       ostringstream warn;
@@ -1008,7 +1008,7 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
   max_vartype max_RHS = 1/d_SMALL_NUM;
   double smallest_max_RHS_sofar = max_RHS; 
   int counter = 0;
-  bool restart    = false;
+  bool recompute = false;
   Vector dx = level->dCell();
   double vol = dx.x() * dx.y() * dx.z();
   
@@ -1016,7 +1016,7 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
 
   d_subsched->setInitTimestep(false);
   
-  while( counter < d_max_iter_implicit && max_RHS > d_outer_iter_tolerance && !restart) {
+  while( counter < d_max_iter_implicit && max_RHS > d_outer_iter_tolerance && !recompute) {
   //__________________________________
   // recompile the subscheduler
     if (counter == 0 && d_recompileSubsched) {
@@ -1096,32 +1096,32 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
     m_solver->getParameters()->setOutputFileName(fname.str());
    
     //__________________________________
-    // restart timestep
+    // recompute timestep
                                           //  too many outer iterations
-    if (counter > d_iters_before_timestep_restart ){
-      restart = true;
-      DOUTR0("\nWARNING:  max iterations before timestep restart reached\n" );
+    if (counter > d_iters_before_timestep_recompute ){
+      recompute = true;
+      DOUTR0("\nWARNING:  max iterations before time step recompute reached\n" );
     }
-                                          //  solver or advection has requested a restart
-    if (subNewDW->timestepRestarted() ) {
-      DOUTR0( "\n  WARNING:  impICE:implicitPressureSolve timestep restart.\n" );
-      restart = true;
+    //  solver or advection has requested a recompute
+    if (subNewDW->timeStepRecomputed() ) {
+      DOUTR0( "\n  WARNING:  impICE:implicitPressureSolve time step recompute.\n" );
+      recompute = true;
     }
     
-                                           //  solution is diverging
+    //  solution is diverging
     if(max_RHS < smallest_max_RHS_sofar){
       smallest_max_RHS_sofar = max_RHS;
     }
     if(((max_RHS - smallest_max_RHS_sofar) > 100.0*smallest_max_RHS_sofar) ){
       DOUTR0( "\nWARNING: outer iteration is diverging now "
-                << "restarting the timestep"
+                << "recomputing the timestep"
                 << " Max_RHS " << max_RHS 
                 << " smallest_max_RHS_sofar "<< smallest_max_RHS_sofar << "\n");
-      restart = true;
+      recompute = true;
     }
-    if( restart ) {
-      ParentNewDW->abortTimestep();
-      ParentNewDW->restartTimestep();
+    if( recompute ) {
+      ParentNewDW->abortTimeStep();
+      ParentNewDW->recomputeTimeStep();
     }
   }  // outer iteration loop
   

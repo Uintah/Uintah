@@ -126,7 +126,7 @@ public:
   void scheduleInitialErrorEstimate(const LevelP& coarseLevel,
                                     SchedulerP& sched);
 
-  virtual bool restartableTimeSteps();
+  virtual bool   recomputableTimeSteps();
   virtual double recomputeDelT(const double delT);
 
   void scheduleSwitchTest(const LevelP& level, SchedulerP& sched);

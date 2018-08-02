@@ -869,12 +869,12 @@ public:
              << e << " residual, "
               << mflops<< " MFLOPS, " << memrate << " GB/sec)\n";
       }else{
-        if(params->getRestartTimestepOnFailure()){
-           cout << "CGSolver not converging, requesting smaller timestep\n";
+        if(params->getRecomputeTimeStepOnFailure()) {
+           cout << "CGSolver not converging, requesting smaller time step\n";
            cout << "    niters:   " << niter << "\n"
                 << "    residual: " << e << endl;
-          new_dw->abortTimestep();
-          new_dw->restartTimestep();
+          new_dw->abortTimeStep();
+          new_dw->recomputeTimeStep();
         }else {
         throw ConvergenceFailure("CGSolve variable: "+X_label->getName(),
                           niter, e, tolerance,__FILE__,__LINE__);

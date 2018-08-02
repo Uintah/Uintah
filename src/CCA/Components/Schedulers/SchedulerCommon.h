@@ -168,8 +168,6 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
                                      , bool initialization = false
                                      );
 
-    virtual void setRestartable( bool restartable );
-
     // Get the SuperPatch (set of connected patches making a larger rectangle)
     // for the given label and patch and find the largest extents encompassing
     // the expected ghost cells (requiredLow, requiredHigh) and the requested
@@ -326,7 +324,6 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
       , PRINT_AFTER_EXEC  = 4
     };
 
-    bool                                m_restartable{false};
     // Some places need to know if this is a copy data timestep or
     // a normal timestep.  (A copy data timestep is AMR's current 
     // method of getting data from an old to a new grid).

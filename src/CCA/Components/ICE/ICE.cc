@@ -205,7 +205,7 @@ ICE::~ICE()
 
 //______________________________________________________________________
 //
-bool ICE::restartableTimeSteps()
+bool ICE::recomputableTimeSteps()
 {
   return true;
 }
@@ -291,16 +291,15 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
     m_solver->readParameters(impSolver, "implicitPressure");
     
     m_solver->getParameters()->setSolveOnExtraCells(false);
-    m_solver->getParameters()->setRestartTimestepOnFailure(true);
+    m_solver->getParameters()->setRecomputeTimeStepOnFailure(true);
     
     impSolver->require(       "max_outer_iterations",          d_max_iter_implicit);
     impSolver->require(       "outer_iteration_tolerance",     d_outer_iter_tolerance);
-    impSolver->getWithDefault("iters_before_timestep_restart", d_iters_before_timestep_restart, 5);
+    impSolver->getWithDefault("iters_before_timestep_restart", d_iters_before_timestep_recompute, 5);
     d_impICE = true;
 
     d_subsched = m_scheduler->createSubScheduler();
     d_subsched->initialize(3,1);
-    d_subsched->setRestartable(true); 
     d_subsched->clearMappings();
     d_subsched->mapDataWarehouse(Task::ParentOldDW, 0);
     d_subsched->mapDataWarehouse(Task::ParentNewDW, 1);
@@ -1376,7 +1375,6 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
   task->computes(lb->vol_fracY_FCLabel);
   task->computes(lb->vol_fracZ_FCLabel);
   
-  sched->setRestartable(true);
   sched->addTask(task, patches, matls);
 }
 
@@ -1645,7 +1643,6 @@ void ICE::scheduleComputeLagrangianSpecificVolume(SchedulerP& sched,
   t->computes(lb->sp_vol_L_CCLabel);                             
   t->computes(lb->sp_vol_src_CCLabel);                        
 
-  sched->setRestartable(true);
   sched->addTask(t, patches, matls);
 }
 
@@ -1851,7 +1848,7 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
       }
     }
   }
-  sched->setRestartable(true);
+
   sched->addTask(task, patch_set, ice_matls);
 }
 /* _____________________________________________________________________
@@ -2710,8 +2707,8 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
 
       //__________________________________
       //      BULLET PROOFING
-      // ignore BP if a timestep restart has already been requested
-      bool tsr = new_dw->timestepRestarted();
+      // ignore BP if a time step recompute has already been requested
+      bool tsr = new_dw->timeStepRecomputed();
 
       string message;
       bool allTestsPassed = true;
@@ -4303,9 +4300,9 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
 
         //____ B U L L E T   P R O O F I N G----
         // catch negative internal energies
-        // ignore BP if timestep restart has already been requested
+        // ignore BP if time step recompute has already been requested
         IntVector neg_cell;
-        bool tsr = new_dw->timestepRestarted();
+        bool tsr = new_dw->timeStepRecomputed();
         
         if (!areAllValuesPositive(int_eng_L, neg_cell) && !tsr ) {
          ostringstream warn;
@@ -4484,9 +4481,9 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
       
 
       //____ B U L L E T   P R O O F I N G----
-      // ignore BP if timestep restart has already been requested
+      // ignore BP if time step recompute has already been requested
       IntVector neg_cell;
-      bool tsr = new_dw->timestepRestarted();
+      bool tsr = new_dw->timeStepRecomputed();
       
       if (!areAllValuesPositive(sp_vol_L, neg_cell) && !tsr) {
         cout << "\nICE:WARNING......Negative specific Volume"<< endl;
@@ -4503,8 +4500,8 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
 //        warn<<"ERROR ICE:("<<L<<"):computeLagrangianSpecificVolumeRF, mat "<<indx
 //            << " cell " <<neg_cell << " sp_vol_L is negative\n";
 //        throw InvalidValue(warn.str(), __FILE__, __LINE__);
-        new_dw->abortTimestep();
-        new_dw->restartTimestep();
+        new_dw->abortTimeStep();
+        new_dw->recomputeTimeStep();
      }
     }  // end numALLMatl loop
   }  // patch loop
@@ -4990,9 +4987,9 @@ void ICE::conservedtoPrimitive_Vars(const ProcessorGroup* /*pg*/,
       }
 
       //____ B U L L E T   P R O O F I N G----
-      // ignore BP if timestep restart has already been requested
+      // ignore BP if time step recompute has already been requested
       IntVector neg_cell;
-      bool tsr = new_dw->timestepRestarted();
+      bool tsr = new_dw->timeStepRecomputed();
       
       ostringstream base, warn;
       base <<"ERROR ICE:(L-"<<L_indx<<"):conservedtoPrimitive_Vars, mat "<< indx <<" cell ";

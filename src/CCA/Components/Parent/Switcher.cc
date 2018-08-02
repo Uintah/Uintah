@@ -938,9 +938,9 @@ void Switcher::restartInitialize()
 
 //______________________________________________________________________
 //
-bool Switcher::restartableTimeSteps()
+bool Switcher::recomputableTimeSteps()
 {
-  return d_app->restartableTimeSteps();
+  return d_app->recomputableTimeSteps();
 }
 
 //______________________________________________________________________

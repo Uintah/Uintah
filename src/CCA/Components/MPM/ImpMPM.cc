@@ -114,7 +114,7 @@ ImpMPM::ImpMPM(const ProcessorGroup* myworld,
   d_loadCurveIndex=0;
 }
 
-bool ImpMPM::restartableTimeSteps()
+bool ImpMPM::recomputableTimeSteps()
 {
   return true;
 }
@@ -263,8 +263,6 @@ ImpMPM::problemSetup( const ProblemSpecP     & prob_spec,
   d_solver->initialize();
 
   // setup sub scheduler
-  m_scheduler->setRestartable(true);
-
   d_subsched = m_scheduler->createSubScheduler();
   d_subsched->initialize(3,1);
   d_subsched->clearMappings();
@@ -1766,30 +1764,30 @@ void ImpMPM::iterate(const ProcessorGroup*,
       dispIncQ = true;
     }
     
-    // Check to see if the residual is likely a nan, if so, we'll restart.
-    bool restart_nan=false;
-    bool restart_neg_residual=false;
-    bool restart_num_iters=false;
+    // Check to see if the residual is likely a nan, if so, we'll recompute.
+    bool recompute_nan=false;
+    bool recompute_neg_residual=false;
+    bool recompute_num_iters=false;
 
     if ((std::isnan(dispIncQNorm/dispIncQNorm0)||std::isnan(dispIncNorm/dispIncNormMax))
         && dispIncQNorm0!=0.){
-      restart_nan=true;
+      recompute_nan=true;
       if(d_myworld->myRank()==0)
-        cerr << "Restarting due to a nan residual" << endl;
+        cerr << "Recomputing due to a nan residual" << endl;
     }
     if (dispIncQNorm/(dispIncQNorm0 + 1e-100) < 0. ||dispIncNorm/(dispIncNormMax+1e-100) < 0.){
-      restart_neg_residual=true;
+      recompute_neg_residual=true;
       if(d_myworld->myRank()==0)
-        cerr << "Restarting due to a negative residual" << endl;
+        cerr << "Recomputing due to a negative residual" << endl;
     }
     if (count > flags->d_max_num_iterations){
-      restart_num_iters=true;
+      recompute_num_iters=true;
       if(d_myworld->myRank()==0)
-        cerr << "Restarting due to exceeding max number of iterations" << endl;
+        cerr << "Recomputing due to exceeding max number of iterations" << endl;
     }
-    if (restart_nan || restart_neg_residual || restart_num_iters) {
-      new_dw->abortTimestep();
-      new_dw->restartTimestep();
+    if (recompute_nan || recompute_neg_residual || recompute_num_iters) {
+      new_dw->abortTimeStep();
+      new_dw->recomputeTimeStep();
       return;
     }
 
@@ -3170,9 +3168,9 @@ void ImpMPM::formQ(const ProcessorGroup*, const PatchSubset* patches,
         Q += v[0]*v[0] + v[1]*v[1] + v[2]*v[2];
       }
       if(std::isnan(Q)){
-        cout << "RHS contains a nan, restarting timestep" << endl;
-        new_dw->abortTimestep();
-        new_dw->restartTimestep();
+        cout << "RHS contains a nan, recomputing the time step" << endl;
+        new_dw->abortTimeStep();
+        new_dw->recomputeTimeStep();
         return;
       }
      } // first time through non-rigid
@@ -3196,7 +3194,7 @@ void ImpMPM::solveForDuCG(const ProcessorGroup* /*pg*/,
   }
 
   DataWarehouse* parent_new_dw=new_dw->getOtherDataWarehouse(Task::ParentNewDW);
-  bool tsr = parent_new_dw->timestepRestarted();
+  bool tsr = parent_new_dw->timeStepRecomputed();
 
   if(!tsr){  // if a tsr has already been called for don't do the solve
     d_solver->assembleVector();
@@ -3205,7 +3203,7 @@ void ImpMPM::solveForDuCG(const ProcessorGroup* /*pg*/,
     d_solver->solve(guess);   
   }
   else{
-    cout << "skipping solve, timestep has already called for a restart" << endl;
+    cout << "skipping solve, time step has already called for a recompute" << endl;
   }
 }
 

@@ -834,11 +834,11 @@ MPIScheduler::execute( int tgnum     /* = 0 */
       printTaskLevels( d_myworld, g_task_level, dtask );
     }
 
-    if(!abort && m_dws[m_dws.size()-1] && m_dws[m_dws.size()-1]->timestepAborted()){
+    if(!abort && m_dws[m_dws.size()-1] && m_dws[m_dws.size()-1]->timeStepAborted()){
       abort = true;
       abort_point = dtask->getTask()->getSortedOrder();
 
-      DOUT(true, "  WARNING:  Aborting timestep after task: " << dtask->getTask()->getName());
+      DOUT(true, "  WARNING: Aborting time step after task: " << dtask->getTask()->getName());
     }
 
   } // end while( numTasksDone < ntasks )

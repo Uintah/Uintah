@@ -360,7 +360,6 @@ ApplicationCommon::reduceSystemVars( const ProcessorGroup *,
     }
   }
   
-  //__________________________________
   // An application may request that the simulation end early.
   if (m_mayEndSimulation) {
     if (patches->size() != 0 && !new_dw->exists(m_endSimulationLabel, -1, patch)) {
@@ -381,20 +380,20 @@ ApplicationCommon::reduceSystemVars( const ProcessorGroup *,
     }
   }
   
-  //__________________________________
-  //
-  // An application may request that a timestep be recomputed/restarted
-  // Inform all ranks that this timestep is being recomputed
-  if( restartableTimeSteps() ){
+  // An application may request that a time step be recomputed.
+  // Inform all ranks that this time step is being recomputed.
+  if( recomputableTimeSteps() ) {
 
-    int myRestart = new_dw->timestepRestarted();
-    int allRanksRestart;
+    int myRecompute = new_dw->timeStepRecomputed();
+    int allRanksRecompute;
     
-    Uintah::MPI::Allreduce(&myRestart, &allRanksRestart, 1, MPI_INT, MPI_LOR, d_myworld->getComm());
-    if (allRanksRestart) {
-      new_dw->restartTimestep();
-      old_dw->restartTimestep();      //  This is needed since OnDemandDataWarehouse::exchangeParticleQuantities 
-    }                                 // checks the flag in the old_dw
+    Uintah::MPI::Allreduce(&myRecompute, &allRanksRecompute, 1, MPI_INT, MPI_LOR, d_myworld->getComm());
+    
+    if (allRanksRecompute) {
+      new_dw->recomputeTimeStep();
+      old_dw->recomputeTimeStep(); // This is needed because
+                                   // OnDemandDataWarehouse::exchangeParticleQuantities
+    }                              // checks the flag in the old_dw
   } 
 }  // end reduceSysVar()
 
@@ -497,9 +496,9 @@ ApplicationCommon::updateSystemVars( const ProcessorGroup *,
                                            DataWarehouse  * /*old_dw*/,
                                            DataWarehouse  * new_dw )
 {  
-  // Not all ranks know that a timestep is being restarted.  Don't update simTime on all ranks
-  
-  if ( !new_dw->timestepRestarted() ){
+  // Not all ranks know that a timestep is being recomputed.  Don't
+  // update simTime on all ranks
+  if ( !new_dw->timeStepRecomputed() ) {
     // Store the time step so it can be incremented at the top of the
     // time step where it is over written.
     new_dw->put(timeStep_vartype(m_timeStep), m_timeStepLabel);
@@ -597,7 +596,7 @@ ApplicationCommon::recomputeDelT()
   // virtual default method for the delta T
   double new_delT = recomputeDelT(m_delT);
 
-  proc0cout << "Restarting time step at " << m_simTime
+  proc0cout << "Recomputing time step at " << m_simTime
             << ", changing delT from " << m_delT
             << " to " << new_delT
             << std::endl;
@@ -609,7 +608,11 @@ ApplicationCommon::recomputeDelT()
          << "delT_min (" << m_simulationTime->m_delt_min << ") or equal to 0";
     throw InternalError(warn.str(), __FILE__, __LINE__);
   }
-  
+
+  // When recomputing the delT, rank 0 determines the value and
+  // sends it to all other ranks.
+  Uintah::MPI::Bcast( &new_delT, 1, MPI_DOUBLE, 0, d_myworld->getComm() );
+    
   m_delT = new_delT;
 }
 

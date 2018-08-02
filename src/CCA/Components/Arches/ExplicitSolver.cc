@@ -851,7 +851,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
   db_es->getWithDefault("turbModelCalcForAllRKSteps",d_turbModelRKsteps,true);
 
   db_es->getWithDefault("restartOnNegativeDensityGuess",
-                     d_restart_on_negative_density_guess,false);
+                     d_recompute_on_negative_density_guess,false);
   db_es->getWithDefault("NoisyDensityGuess",
                      d_noisyDensityGuess, false);
   db_es->getWithDefault("kineticEnergy_fromFC",d_KE_fromFC,false);
@@ -3331,10 +3331,10 @@ ExplicitSolver::checkDensityGuess(const ProcessorGroup* pc,
 
     new_dw->getModifiable(densityGuess, d_lab->d_densityGuessLabel, indx, patch);
     if (negativeDensityGuess > 0.0) {
-      if (d_restart_on_negative_density_guess) {
-        proc0cout << "NOTICE: Negative density guess(es) occurred. Timestep restart has been requested under this condition by the user. Restarting timestep." << endl;
-        new_dw->abortTimestep();
-        new_dw->restartTimestep();
+      if (d_recompute_on_negative_density_guess) {
+        proc0cout << "NOTICE: Negative density guess(es) occurred. Timestep restart has been requested under this condition by the user. Recomputing timestep." << endl;
+        new_dw->abortTimeStep();
+        new_dw->recomputeTimeStep();
       }
       else {
         proc0cout << "NOTICE: Negative density guess(es) occurred. Reverting to old density." << endl;
@@ -3529,9 +3529,9 @@ ExplicitSolver::checkDensityLag(const ProcessorGroup* pc,
         if (pc->myRank() == 0)
           proc0cout << "WARNING: density lag " << densityLag
                << " exceeding maximium "<< d_maxDensityLag
-               << " specified. Restarting timestep." << endl;
-        new_dw->abortTimestep();
-        new_dw->restartTimestep();
+               << " specified. Recomputing timestep." << endl;
+        new_dw->abortTimeStep();
+        new_dw->recomputeTimeStep();
     }
   }
 }

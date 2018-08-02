@@ -655,17 +655,17 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
      
   if (norm/(init_norm+1.0e-10) > 1) {
     if(pg->myRank() == 0){
-       cout << "WARNING! Iterations diverge! Restarting timestep." << endl;
-      new_dw->abortTimestep();
-      new_dw->restartTimestep();
+       cout << "WARNING! Iterations diverge! Recomputing timestep." << endl;
+      new_dw->abortTimeStep();
+      new_dw->recomputeTimeStep();
     }
   }
   
   if ((scalar_clipped > 0.0)||(reactscalar_clipped > 0.0)) {
     if(pg->myRank() == 0){
-       cout << "WARNING! Scalars got clipped! Restarting timestep." << endl;
-      new_dw->abortTimestep();
-      new_dw->restartTimestep();
+       cout << "WARNING! Scalars got clipped! Recomputing timestep." << endl;
+      new_dw->abortTimeStep();
+      new_dw->recomputeTimeStep();
     }
   }
 

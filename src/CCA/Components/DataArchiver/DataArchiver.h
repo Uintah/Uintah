@@ -141,7 +141,7 @@ class LoadBalancer;
                                        SchedulerP & /* scheduler */,
                                        bool         recompile = false );
                                       
-    //! Call this after a time step restart where delt is adjusted to
+    //! Call this after a time step recompute where delt is adjusted to
     //! make sure there still will be output and/or checkpoint time step
     virtual void reevaluate_OutputCheckPointTimeStep(const double simTime,
                                                      const double delT);

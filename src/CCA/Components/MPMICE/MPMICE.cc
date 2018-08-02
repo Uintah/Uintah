@@ -147,8 +147,8 @@ MPMICE::~MPMICE()
 }
 
 //__________________________________
-//    For restarting timesteps
-bool MPMICE::restartableTimeSteps()
+//    For recomputing timesteps
+bool MPMICE::recomputableTimeSteps()
 {
   return true;
 }
@@ -1394,10 +1394,10 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       setBC(sp_vol_CC,"set_if_sym_BC",patch, m_sharedState, indx, new_dw, isNotInitialTimeStep); 
 
       //---- B U L L E T   P R O O F I N G------
-      // ignore BP if timestep restart has already been requested
+      // ignore BP if time step recompute has already been requested
       IntVector neg_cell;
       ostringstream warn;
-      bool tsr = new_dw->timestepRestarted();
+      bool tsr = new_dw->timeStepRecomputed();
       
       int L = getLevel(patches)->getIndex();
       if(d_testForNegTemps_mpm){
@@ -1571,10 +1571,10 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
        setBC(int_eng_L, "set_if_sym_BC",patch, m_sharedState, indx, new_dw, isNotInitialTimeStep);
       
       //---- B U L L E T   P R O O F I N G------
-      // ignore BP if timestep restart has already been requested
+      // ignore BP if time step recompute has already been requested
       IntVector neg_cell;
       ostringstream warn;
-      bool tsr = new_dw->timestepRestarted();
+      bool tsr = new_dw->timeStepRecomputed();
       
       if(d_testForNegTemps_mpm){
         if (!areAllValuesPositive(int_eng_L, neg_cell) && !tsr) {
@@ -2054,8 +2054,8 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
 
       //__________________________________
       //      BULLET PROOFING
-      // ignore BP if timestep restart has already been requested
-      bool tsr = new_dw->timestepRestarted();
+      // ignore BP if time step recompute has already been requested
+      bool tsr = new_dw->timeStepRecomputed();
       
       string message;
       bool allTestsPassed = true;

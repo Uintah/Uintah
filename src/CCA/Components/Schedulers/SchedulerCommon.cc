@@ -1192,14 +1192,6 @@ SchedulerCommon::replaceDataWarehouse(       int     index
 
 //______________________________________________________________________
 //
-void 
-SchedulerCommon::setRestartable( bool restartable )
-{
-  m_restartable = restartable;
-}
-
-//______________________________________________________________________
-//
 const std::vector<const Patch*>*
 SchedulerCommon::getSuperPatchExtents( const VarLabel         * label
                                      ,       int                matlIndex

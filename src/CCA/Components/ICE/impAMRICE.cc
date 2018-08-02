@@ -415,7 +415,7 @@ void impAMRICE::multiLevelPressureSolve(const ProcessorGroup* pg,
   max_vartype max_RHS = 1/d_SMALL_NUM;
   double smallest_max_RHS_sofar = max_RHS; 
   int counter = 0;
-  bool restart   = false;
+  bool recompute = false;
   bool recursion = true;
   //bool firstIter = true;
   bool modifies_X = true;
@@ -531,35 +531,35 @@ void impAMRICE::multiLevelPressureSolve(const ProcessorGroup* pg,
     }
     
     //__________________________________
-    // restart timestep
-                                          //  too many outer iterations
-    if (counter > d_iters_before_timestep_restart ){
-      restart = true;
+    // recompute time step
+    //  too many outer iterations
+    if (counter > d_iters_before_timestep_recompute ){
+      recompute = true;
       if(pg->myRank() == 0)
-        cout <<"\nWARNING: max iterations befor timestep restart reached\n"<<endl;
+        cout <<"\nWARNING: max iterations befor time step recompute reached\n"<<endl;
     }
-                                          //  solver has requested a restart
-    if (d_subsched->get_dw(3)->timestepRestarted() ) {
+    //  solver has requested a recompute
+    if (d_subsched->get_dw(3)->timeStepRecomputed() ) {
       if(pg->myRank() == 0)
-        cout << "\nWARNING: Solver had requested a restart\n" <<endl;
-      restart = true;
+        cout << "\nWARNING: Solver had requested a recompute\n" <<endl;
+      recompute = true;
     }
     
-                                           //  solution is diverging
+    //  solution is diverging
     if(max_RHS < smallest_max_RHS_sofar){
       smallest_max_RHS_sofar = max_RHS;
     }
     if(((max_RHS - smallest_max_RHS_sofar) > 100.0*smallest_max_RHS_sofar) ){
       if(pg->myRank() == 0)
         cout << "\nWARNING: outer iteration is diverging now "
-             << "restarting the timestep"
+             << "recomputing the time step"
              << " Max_RHS " << max_RHS 
              << " smallest_max_RHS_sofar "<< smallest_max_RHS_sofar<< endl;
-      restart = true;
+      recompute = true;
     }
-    if(restart){
-      ParentNewDW->abortTimestep();
-      ParentNewDW->restartTimestep();
+    if(recompute){
+      ParentNewDW->abortTimeStep();
+      ParentNewDW->recomputeTimeStep();
       //return; - don't return - just break, some operations may require the transfers below to complete
       break;
     }

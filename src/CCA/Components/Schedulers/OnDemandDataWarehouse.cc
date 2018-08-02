@@ -147,9 +147,9 @@ OnDemandDataWarehouse::OnDemandDataWarehouse( const ProcessorGroup* myworld,
       d_isInitializationDW( isInitializationDW ),
       d_scrubMode( DataWarehouse::ScrubNone )
 {
-  d_restart      = false;
-  d_hasRestarted = false;
-  d_aborted      = false;
+  d_recompute     = false;
+  d_hasRecomputed = false;
+  d_aborted       = false;
   doReserve();
 
 #ifdef HAVE_CUDA
@@ -690,8 +690,8 @@ OnDemandDataWarehouse::exchangeParticleQuantities(       DetailedTasks    * dts,
                                                    const VarLabel         * pos_var,
                                                          int                iteration )
 {
-  if( timestepRestarted() ){
-    // If this DW is being used for a timestep restart, then it has already done this...
+  if( timeStepRecomputed() ){
+    // If this DW is being used for a time step recompute, then it has already done this...
     return;
   }
 
@@ -3835,9 +3835,9 @@ OnDemandDataWarehouse::checkAccesses(       RunningTaskInfo*  currentTaskInfo,
 
 //______________________________________________________________________
 //
-// For timestep abort/restart
+// For timestep abort/recomute
 bool
-OnDemandDataWarehouse::timestepAborted()
+OnDemandDataWarehouse::timeStepAborted()
 {
   return d_aborted;
 }
@@ -3845,15 +3845,15 @@ OnDemandDataWarehouse::timestepAborted()
 //__________________________________
 //
 bool
-OnDemandDataWarehouse::timestepRestarted()
+OnDemandDataWarehouse::timeStepRecomputed()
 {
-  return d_restart;
+  return d_recompute;
 }
 
 //______________________________________________________________________
 //
 void
-OnDemandDataWarehouse::abortTimestep()
+OnDemandDataWarehouse::abortTimeStep()
 {
   // BJW - timestep aborting does not work in MPI - disabling until we get fixed.
   if( d_myworld->nRanks() == 0 ) {
@@ -3864,9 +3864,9 @@ OnDemandDataWarehouse::abortTimestep()
 //______________________________________________________________________
 //
 void
-OnDemandDataWarehouse::restartTimestep()
+OnDemandDataWarehouse::recomputeTimeStep()
 {
-  d_restart = true;
+  d_recompute = true;
 }
 
 //______________________________________________________________________

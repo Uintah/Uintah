@@ -217,7 +217,7 @@ WARNING
     virtual void   recomputeDelT();
     virtual double recomputeDelT( const double delT );
 
-    virtual bool restartableTimeSteps() { return false; }
+    virtual bool recomputableTimeSteps() { return false; }
 
     // Updates the time step and the delta T.
     virtual void prepareForNextTimeStep();

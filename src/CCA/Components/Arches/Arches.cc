@@ -67,7 +67,7 @@ Arches::Arches(const ProcessorGroup* myworld,
   m_MAlab               = 0;
   m_nlSolver            = 0;
   m_physicalConsts      = 0;
-  m_doing_restart        = false;
+  m_doing_restart       = false;
   m_with_mpmarches      = false;
 
   //lagrangian particles:
@@ -333,8 +333,8 @@ double Arches::recomputeDelT(const double delT ) {
 }
 
 //--------------------------------------------------------------------------------------------------
-bool Arches::restartableTimeSteps() {
-  return m_nlSolver->restartableTimeSteps();
+bool Arches::recomputableTimeSteps() {
+  return m_nlSolver->recomputableTimeSteps();
 }
 
 //-------------------------------------------------------------------------------------------------

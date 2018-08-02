@@ -234,7 +234,7 @@ public:
   ///////////////////////////////////////////////////////////////////////
   virtual double recomputeDelT(const double delT);
       
-  virtual bool restartableTimeSteps();
+  virtual bool recomputableTimeSteps();
 
  protected:
 

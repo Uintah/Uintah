@@ -854,7 +854,7 @@ DataArchiver::copyTimeSteps( const Dir & fromDir,
      ts = oldTimeSteps->findBlock( "timestep" );
    }
 
-   // while we're at it, add restart information to index.xml
+   // Add restart information to index.xml
    if( maxTimeStep >= 0 ) {
      addRestartStamp(indexDoc, fromDir, maxTimeStep);
    }
@@ -1213,7 +1213,7 @@ DataArchiver::beginOutputTimeStep( const GridP& grid )
   }
 
   // Do *not* update the next values here as the original values are
-  // needed to compare with if there is a timestep restart.  See
+  // needed to compare with if there is a time step recompute.  See
   // reEvaluateOutputTimeStep
 
   // Check for an output.
@@ -1370,7 +1370,7 @@ DataArchiver::reevaluate_OutputCheckPointTimeStep( const double simTime,
     dbg << "  reevaluate_OutputCheckPointTimeStep() begin\n";
   }
 
-  // Call this on a timestep restart. If lowering the delt goes
+  // Call this on a time step recompute. If lowering the delt goes
   // beneath the threshold, cancel the output and/or checkpoint
   // timestep
 
@@ -1449,11 +1449,11 @@ DataArchiver::findNext_OutputCheckPointTimeStep( const bool restart,
     }
   }
   
-  // If this timestep was an output/checkpoint timestep, determine
+  // If this time step was an output/checkpoint time step, determine
   // when the next one will be.
 
   // Do *not* do this step in beginOutputTimeStep because the original
-  // values are needed to compare with if there is a timestep restart.
+  // values are needed to compare with if there is a time step recompute.
   // See reEvaluateOutputTimeStep
 
   // When outputing/checkpointing using the simulation or wall time
@@ -1792,8 +1792,8 @@ DataArchiver::writeto_xml_files( const GridP& grid )
 
       //indexDoc->releaseDocument();
 
-      // make a timestep.xml file for this timestep we need to do it
-      // here in case there is a timestesp restart Break out the
+      // Make a timestep.xml file for this time step we need to do it
+      // here in case there is a time stes rescompute. Break out the
       // <Grid> and <Data> section of the DOM tree into a separate
       // grid.xml file which can be created quickly and use less
       // memory using the xmlTextWriter functions (streaming output)
@@ -1854,8 +1854,8 @@ DataArchiver::writeto_xml_files( const GridP& grid )
         //__________________________________
         // output input.xml & input.xml.orig
 
-        // a small convenience to the user who wants to change things
-        // when he restarts let him know that some information to change
+        // A small convenience to the user who wants to change things
+        // when they restart let them know that some information to change
         // will need to be done in the timestep.xml file instead of the
         // input.xml file.  Only do this once, though.
       
@@ -2611,7 +2611,7 @@ DataArchiver::outputReductionVars( const ProcessorGroup *,
                                    DataWarehouse        * old_dw,
                                    DataWarehouse        * new_dw )
 {
-  if( new_dw->timestepRestarted() || m_saveReductionLabels.empty() ) {
+  if( new_dw->timeStepRecomputed() || m_saveReductionLabels.empty() ) {
     return;
   }
 
@@ -3037,8 +3037,10 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
 
     // write the xml
 
-    // The following line was commented out... but with it on, we can restart with PIDX.  However, we need to be able to restart without this.
-    // Uncomment the following line to make progress on restart of PIDX - see line above.
+    // The following line was commented out... but with it on, we can
+    // restart with PIDX.  However, we need to be able to restart
+    // without this.  Uncomment the following line to make progress on
+    // restart of PIDX - see line above. 
     //doc->output( xmlFilename.c_str() );
   }
 #endif

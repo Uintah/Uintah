@@ -643,14 +643,13 @@ AMRSimulationController::doInitialTimeStep()
 void
 AMRSimulationController::executeTimeStep( int totalFine )
 {
-  // If the time step needs to be restarted, this loop will execute
+  // If the time step needs to be recomputed, this loop will execute
   // multiple times.
   bool success = false;
 
   int tg_index = m_application->computeTaskGraphIndex();
 
-  bool restartable = m_application->restartableTimeSteps();
-  m_scheduler->setRestartable(restartable);
+  bool recomputable = m_application->recomputableTimeSteps();
 
   // Execute at least once.
   while (!success) {
@@ -658,7 +657,7 @@ AMRSimulationController::executeTimeStep( int totalFine )
 
     // Standard data warehouse scrubbing.
     if (m_scrub_datawarehouse && m_loadBalancer->getNthRank() == 1) {
-      if (restartable) {
+      if (recomputable) {
         m_scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubNonPermanent);
       }
       else {
@@ -690,9 +689,9 @@ AMRSimulationController::executeTimeStep( int totalFine )
       m_scheduler->execute(tg_index, iteration);
     }
 
-    //  If time step has been restarted adjust the delta T and restart.
-    if (m_scheduler->get_dw(totalFine)->timestepRestarted()) {
-      ASSERT(restartable);
+    //  If time step is to be recomputed adjust the delta T and recompute.
+    if (m_scheduler->get_dw(totalFine)->timeStepRecomputed()) {
+      ASSERT(recomputable);
 
       for (int i = 1; i <= totalFine; ++i) {
         m_scheduler->replaceDataWarehouse(i, m_current_gridP);
@@ -708,8 +707,8 @@ AMRSimulationController::executeTimeStep( int totalFine )
       success = false;
     }
     else {
-      if (m_scheduler->get_dw(1)->timestepAborted()) {
-        throw InternalError("Execution aborted, cannot restart time step\n",
+      if (m_scheduler->get_dw(1)->timeStepAborted()) {
+        throw InternalError("Execution aborted, cannot recompute time step\n",
                             __FILE__, __LINE__);
       }
 
@@ -1089,7 +1088,7 @@ AMRSimulationController::subCycleExecute( int startDW,
   
   int newDWStride = dwStride/numSteps;
 
-  DataWarehouse::ScrubMode oldScrubbing = (/*m_loadBalancer->isDynamic() ||*/ m_application->restartableTimeSteps()) ?
+  DataWarehouse::ScrubMode oldScrubbing = (/*m_loadBalancer->isDynamic() ||*/ m_application->recomputableTimeSteps()) ?
     DataWarehouse::ScrubNonPermanent : DataWarehouse::ScrubComplete;
 
   int curDW = startDW;

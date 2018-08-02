@@ -4681,8 +4681,8 @@ double MPMArches::recomputeDelT(const double delT) {
   return d_arches->recomputeDelT( delT );
 }
 
-bool MPMArches::restartableTimeSteps() {
-  return d_arches->restartableTimeSteps();
+bool MPMArches::recomputableTimeSteps() {
+  return d_arches->recomputableTimeSteps();
 }
 
 namespace Uintah {

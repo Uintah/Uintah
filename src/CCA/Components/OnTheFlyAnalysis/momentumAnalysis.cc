@@ -397,9 +397,10 @@ void momentumAnalysis::integrateMomentumField(const ProcessorGroup* pg,
   old_dw->get(simTimeVar, m_simulationTimeLabel);
   double now = simTimeVar;
 
-  bool tsr = new_dw->timestepRestarted();  // ignore if a timestep restart has been requested.
+  // Ignore the task if a time step recompute has been requested upstream
+  bool tsr = new_dw->timeStepRecomputed();
 
-  if( now < nextCompTime  || tsr ){
+  if( now < nextCompTime  || tsr ) {
     return;
   }
 
@@ -553,9 +554,10 @@ void momentumAnalysis::doAnalysis(const ProcessorGroup* pg,
                                   DataWarehouse* new_dw)
 {
 
-  // ignore task if a timestep restart has been requested upstream
-  bool tsr = new_dw->timestepRestarted();
-  if( tsr ){
+  // Ignore the task if a time step recompute has been requested upstream
+  bool tsr = new_dw->timeStepRecomputed();
+
+  if( tsr ) {
     return;
   }
 

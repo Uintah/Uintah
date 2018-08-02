@@ -217,7 +217,7 @@ WARNING
     // converging.  The returned time is the new delta T.
     virtual void   recomputeDelT() = 0;
     virtual double recomputeDelT( const double delT ) = 0;
-    virtual bool restartableTimeSteps() = 0;
+    virtual bool recomputableTimeSteps() = 0;
 
     // Updates the tiem step and the delta T.
     virtual void prepareForNextTimeStep() = 0;

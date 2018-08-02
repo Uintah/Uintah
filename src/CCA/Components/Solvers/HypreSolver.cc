@@ -153,7 +153,7 @@ namespace Uintah {
     //   Create and populate a Hypre struct vector,
     HYPRE_StructVector
     createPopulateHypreVector(   const timeStep_vartype   timeStep
-                               , const bool               restart
+                               , const bool               recompute
                                , const bool               do_setup
                                , const ProcessorGroup   * pg
                                , const HYPRE_StructGrid & grid
@@ -169,7 +169,7 @@ namespace Uintah {
         HYPRE_StructVectorDestroy( *HQ );
       }
 
-      if (timeStep == 1 || restart || do_setup ) {
+      if (timeStep == 1 || recompute || do_setup ) {
         HYPRE_StructVectorCreate( pg->getComm(), grid, HQ );
         HYPRE_StructVectorInitialize( *HQ );
       }
@@ -210,7 +210,7 @@ namespace Uintah {
         }  // label exist?
       }  // patch loop
 
-      if (timeStep == 1 || restart || do_setup){
+      if (timeStep == 1 || recompute || do_setup){
         HYPRE_StructVectorAssemble( *HQ );
       }
 
@@ -249,7 +249,7 @@ namespace Uintah {
       }
 
       hypre_solver_s = m_hypre_solverP.get().get_rep();
-      bool restart = hypre_solver_s->isRestartTimestep;
+      bool recompute = hypre_solver_s->isRecomputeTimeStep;
 
       //__________________________________
       // timestep can come from the old_dw or parentOldDW
@@ -289,12 +289,12 @@ namespace Uintah {
       }
 
       // if it the first pass through ignore the flags
-      if(timeStep == 1 || restart){
+      if(timeStep == 1 || recompute){
         updateCoefs = false;
         do_setup    = false;
       }
 
-      //std::cout << "      HypreSolve  timestep: " << timeStep << " restart: " << restart << " m_firstPassThrough: " << m_firstPassThrough <<  " m_isFirstSolve: " << m_isFirstSolve <<" do_setup: " << do_setup << " updateCoefs: " << updateCoefs << std::endl;
+      //std::cout << "      HypreSolve  timestep: " << timeStep << " recompute: " << recompute << " m_firstPassThrough: " << m_firstPassThrough <<  " m_isFirstSolve: " << m_isFirstSolve <<" do_setup: " << do_setup << " updateCoefs: " << updateCoefs << std::endl;
 
       DataWarehouse* A_dw     = new_dw->getOtherDataWarehouse( m_which_A_dw );
       DataWarehouse* b_dw     = new_dw->getOtherDataWarehouse( m_which_b_dw );
@@ -312,7 +312,7 @@ namespace Uintah {
         //__________________________________
         // Setup grid
         HYPRE_StructGrid grid;
-        if (timeStep == 1 || do_setup || restart) {
+        if (timeStep == 1 || do_setup || recompute) {
           HYPRE_StructGridCreate(pg->getComm(), 3, &grid);
 
           for(int p=0;p<patches->size();p++){
@@ -347,7 +347,7 @@ namespace Uintah {
         //__________________________________
         // Create the stencil
         HYPRE_StructStencil stencil;
-        if ( timeStep == 1 || do_setup || restart) {
+        if ( timeStep == 1 || do_setup || recompute) {
           if( m_params->getSymmetric()){
 
             HYPRE_StructStencilCreate(3, 4, &stencil);
@@ -381,7 +381,7 @@ namespace Uintah {
           HYPRE_StructMatrixDestroy( *HA );
         }
 
-        if (timeStep == 1 || restart || do_setup) {
+        if (timeStep == 1 || recompute || do_setup) {
           HYPRE_StructMatrixCreate( pg->getComm(), grid, stencil, HA );
           HYPRE_StructMatrixSetSymmetric( *HA, m_params->getSymmetric() );
           int ghost[] = {1,1,1,1,1,1};
@@ -390,9 +390,9 @@ namespace Uintah {
         }
 
         // setup the coefficient matrix ONLY on the first timeStep, if
-        // we are doing a restart, or if we set setupFrequency != 0,
+        // we are doing a recompute, or if we set setupFrequency != 0,
         // or if UpdateCoefFrequency != 0
-        if (timeStep == 1 || restart || do_setup || updateCoefs) {
+        if (timeStep == 1 || recompute || do_setup || updateCoefs) {
           for(int p=0;p<patches->size();p++) {
             const Patch* patch = patches->get(p);
             printTask( patches, patch, cout_doing, "HypreSolver:solve: Create Matrix" );
@@ -506,7 +506,7 @@ namespace Uintah {
               delete[] values;
             }
           }
-          if (timeStep == 1 || restart || do_setup){
+          if (timeStep == 1 || recompute || do_setup){
             HYPRE_StructMatrixAssemble(*HA);
           }
         }
@@ -514,12 +514,12 @@ namespace Uintah {
         //__________________________________
         // Create the RHS
         HYPRE_StructVector HB;
-        HB = createPopulateHypreVector(  timeStep, restart, do_setup, pg, grid, patches, matl, m_b_label, b_dw, hypre_solver_s->HB_p);
+        HB = createPopulateHypreVector(  timeStep, recompute, do_setup, pg, grid, patches, matl, m_b_label, b_dw, hypre_solver_s->HB_p);
 
         //__________________________________
         // Create the solution vector
         HYPRE_StructVector HX;
-        HX = createPopulateHypreVector(  timeStep, restart, do_setup, pg, grid, patches, matl, m_guess_label, guess_dw, hypre_solver_s->HX_p);
+        HX = createPopulateHypreVector(  timeStep, recompute, do_setup, pg, grid, patches, matl, m_guess_label, guess_dw, hypre_solver_s->HX_p);
 
         hypre_EndTiming( m_tMatVecSetup );
 
@@ -544,7 +544,7 @@ namespace Uintah {
             HYPRE_StructSMGDestroy( *solver );
           }
 
-          if (timeStep == 1 || restart || do_setup) {
+          if (timeStep == 1 || recompute || do_setup) {
 
             HYPRE_StructSMGCreate         (pg->getComm(), solver);
             HYPRE_StructSMGSetMemoryUse   (*solver,  0);
@@ -574,7 +574,7 @@ namespace Uintah {
             HYPRE_StructPFMGDestroy( *solver );
           }
 
-          if ( timeStep == 1 || restart || do_setup ) {
+          if ( timeStep == 1 || recompute || do_setup ) {
 
             HYPRE_StructPFMGCreate        ( pg->getComm(), solver );
             HYPRE_StructPFMGSetMaxIter    (*solver,   m_params->maxiterations);
@@ -607,7 +607,7 @@ namespace Uintah {
             HYPRE_StructSparseMSGDestroy(*solver);
           }
 
-          if ( timeStep == 1 || restart || do_setup ) {
+          if ( timeStep == 1 || recompute || do_setup ) {
 
             HYPRE_StructSparseMSGCreate      (pg->getComm(), solver);
             HYPRE_StructSparseMSGSetMaxIter  (*solver, m_params->maxiterations);
@@ -643,7 +643,7 @@ namespace Uintah {
             HYPRE_StructPCGDestroy(*solver);
           }
 
-          if (timeStep == 1 || restart || do_setup) {
+          if (timeStep == 1 || recompute || do_setup) {
             HYPRE_StructPCGCreate(pg->getComm(),solver);
 
             HYPRE_PtrToStructSolverFcn precond;
@@ -680,7 +680,7 @@ namespace Uintah {
             HYPRE_StructHybridDestroy( *solver );
           }
 
-          if ( timeStep == 1 || restart || do_setup ) {
+          if ( timeStep == 1 || recompute || do_setup ) {
             HYPRE_StructHybridCreate(pg->getComm(), solver);
 
             HYPRE_PtrToStructSolverFcn precond;
@@ -717,7 +717,7 @@ namespace Uintah {
             destroyPrecond( hypre_solver_s, *precond_solver );
             HYPRE_StructGMRESDestroy(*solver);
           }
-          if (timeStep == 1 || restart || do_setup ) {
+          if (timeStep == 1 || recompute || do_setup ) {
             HYPRE_StructGMRESCreate(pg->getComm(),solver);
 
             HYPRE_PtrToStructSolverFcn precond;
@@ -797,9 +797,9 @@ namespace Uintah {
         //__________________________________
         // clean up
          m_firstPassThrough  = false;
-         hypre_solver_s->isRestartTimestep  = false;
+         hypre_solver_s->isRecomputeTimeStep  = false;
 
-        if ( timeStep == 1 || do_setup || restart) {
+        if ( timeStep == 1 || do_setup || recompute ) {
           HYPRE_StructStencilDestroy(stencil);
           HYPRE_StructGridDestroy(grid);
         }
@@ -840,14 +840,14 @@ namespace Uintah {
         // Test for convergence failure
         
         if( final_res_norm > m_params->tolerance || std::isfinite(final_res_norm) == 0 ){
-          if( m_params->getRestartTimestepOnFailure() ){
+          if( m_params->getRecomputeTimeStepOnFailure() ){
             if( pg->myRank() == 0 ){
               cout << "  WARNING:  HypreSolver not converged in " << num_iterations
                    << " iterations, final residual= " << final_res_norm
-                   << ", requesting the timestep be restarted.\n";
+                   << ", requesting the time step be recomputed.\n";
             }
-         //   new_dw->abortTimestep();
-            new_dw->restartTimestep();
+            // new_dw->abortTimeStep();
+            new_dw->recomputeTimeStep();
           } else {
             throw ConvergenceFailure("HypreSolver variable: "+ m_X_label->getName()+", solver: "+ m_params->solvertype+", preconditioner: "+ m_params->precondtype,
                                      num_iterations, final_res_norm,
@@ -1169,7 +1169,7 @@ namespace Uintah {
   //---------------------------------------------------------------------------------------------
 
   void HypreSolver2::allocateHypreMatrices( DataWarehouse * new_dw,
-                                            const bool isRestartTimestep_in )
+                                            const bool isRecomputeTimeStep_in )
   {
     SoleVariable<hypre_solver_structP> hypre_solverP;
     hypre_solver_struct* hypre_struct = scinew hypre_solver_struct;
@@ -1182,7 +1182,7 @@ namespace Uintah {
     hypre_struct->solver_type         = stringToSolverType( m_params->solvertype );
     hypre_struct->precond_solver_type = stringToSolverType( m_params->precondtype );
 
-    hypre_struct->isRestartTimestep = isRestartTimestep_in;
+    hypre_struct->isRecomputeTimeStep = isRecomputeTimeStep_in;
 
     hypre_solverP.setData( hypre_struct );
     new_dw->put( hypre_solverP, hypre_solver_label );

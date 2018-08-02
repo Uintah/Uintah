@@ -320,13 +320,13 @@ namespace Uintah {
         int numIterations = results.numIterations;
         
         if ((finalResNorm > _params->tolerance) ||(std::isfinite(finalResNorm) == 0)) {
-          if (_params->restart){
+          if (_params->recompute){
             if(pg->myRank() == 0)
               std::cout << "AMRSolver not converged in " << numIterations 
                         << " iterations, final residual= " << finalResNorm
                         << ", requesting smaller timestep\n";
-            //new_dw->abortTimestep();
-            //new_dw->restartTimestep();
+            //new_dw->abortTimeStep();
+            //new_dw->recomputeTimeStep();
           } else {
             throw ConvergenceFailure("AMRSolver variable: "
                                      +_X_label->getName()+", solver: "

@@ -303,11 +303,11 @@ public:
   int  getID() const { return d_generation; }
   void setID( int id ) { d_generation = id; }
 
-  // For timestep abort/restart
-  virtual bool timestepAborted() = 0;
-  virtual bool timestepRestarted() = 0;
-  virtual void abortTimestep() = 0;
-  virtual void restartTimestep() = 0;
+  // For timestep abort/recompute
+  virtual bool timeStepAborted() = 0;
+  virtual bool timeStepRecomputed() = 0;
+  virtual void abortTimeStep() = 0;
+  virtual void recomputeTimeStep() = 0;
 
   virtual void reduceMPI(const VarLabel* label, const Level* level,
 	  const MaterialSubset* matls, int nComm) = 0;

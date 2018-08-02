@@ -120,8 +120,8 @@ AMRSolver::readParameters(ProblemSpecP& params_ps,
   }
   m_params->symmetric = false;
   //  m_params->symmetric=true;
-  m_params->restart=false;
-  //  m_params->restart=true;
+  m_params->recompute=false;
+  //  m_params->recompute=true;
 }
 
 //______________________________________________________________________

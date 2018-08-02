@@ -89,8 +89,7 @@ public:
   
   virtual ~MPMICE();
   
-  virtual bool restartableTimeSteps();
-
+  virtual bool   recomputableTimeSteps();
   virtual double recomputeDelT(const double delT); 
           
   virtual void problemSetup(const ProblemSpecP& params, 

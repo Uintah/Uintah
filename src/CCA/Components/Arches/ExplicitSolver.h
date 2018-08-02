@@ -283,7 +283,7 @@ public:
     return delT / 2.0;
   }
 
-  inline bool restartableTimeSteps() {
+  inline bool recomputableTimeSteps() {
     return true;
   }
 
@@ -462,7 +462,7 @@ public:
   int d_turbModelCalcFreq;
   bool d_turbModelRKsteps;
   int d_turbCounter;
-  bool d_restart_on_negative_density_guess;
+  bool d_recompute_on_negative_density_guess;
   bool d_noisyDensityGuess;
   std::string d_mms;
   std::string d_mmsErrorType;

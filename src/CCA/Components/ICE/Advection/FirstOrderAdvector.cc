@@ -146,9 +146,9 @@ void FirstOrderAdvector::inFluxOutFluxVolume(
   // if total_fluxout > vol then 
   // -find the cell, 
   // -set the outflux slab vol in all cells = 0.0,
-  // -request that the timestep be restarted.
-  // -ignore if a timestep restart has already been requested
-  bool tsr = new_dw->timestepRestarted();
+  // -request that the time step be recomputed.
+  // -ignore if a time step recompute has already been requested
+  bool tsr = new_dw->timeStepRecomputed();
   
   if (error && bulletProof_test && !tsr) {
     vector<IntVector> badCells;
@@ -169,7 +169,7 @@ void FirstOrderAdvector::inFluxOutFluxVolume(
         badOutflux.push_back(ofs);
       }
     }  // cell iter
-    warning_restartTimestep( badCells,badOutflux, vol, indx, patch, new_dw);
+    warning_recomputeTimeStep( badCells,badOutflux, vol, indx, patch, new_dw);
   }  // if total_fluxout > vol
   
   if (error && !bulletProof_test) {
