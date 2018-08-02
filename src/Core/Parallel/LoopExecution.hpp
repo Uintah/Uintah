@@ -214,8 +214,10 @@ struct struct1DArray {
   // This constructor copies elements from one container into here.
   template <typename Container>
   struct1DArray(const Container& container,unsigned int runTimeSize) : runTime_size(runTimeSize)  {
-#ifdef DEBUG
-    assert(runTime_size > CAPACITY, "ERROR. struct1DArray is not being used properly. The run-time size exceeds the compile time size");
+#ifndef NDEBUG
+    if(runTime_size > CAPACITY){
+      throw InternalError("ERROR. struct1DArray is not being used properly. The run-time size exceeds the compile time size (std::vector constructor).", __FILE__, __LINE__);
+    }
 #endif      
     for (unsigned int i = 0; i < runTime_size; i++) {
       arr[i] = container[i];
@@ -223,16 +225,20 @@ struct struct1DArray {
   }
 // This constructor supports the initialization list interface
   struct1DArray(  std::initializer_list<T> const myList) : runTime_size(myList.size()) {
-#ifdef DEBUG
-    assert(runTime_size > CAPACITY, "ERROR. struct1DArray is not being used properly. The run-time size exceeds the compile time size");
+#ifndef NDEBUG
+    if(runTime_size > CAPACITY){
+      throw InternalError("ERROR. struct1DArray is not being used properly. The run-time size exceeds the compile time size (initializer_list constructor).", __FILE__, __LINE__);
+    }
 #endif      
     std::copy(myList.begin(), myList.begin()+runTime_size,arr);
   }
 
 // This constructor allows for only the runtime_size to be specified
   struct1DArray(int  runTimeSize) : runTime_size(runTimeSize) {
-#ifdef DEBUG
-    assert(runTime_size > CAPACITY, "ERROR. struct1DArray is not being used properly. The run-time size exceeds the compile time size");
+#ifndef NDEBUG
+    if(runTime_size > CAPACITY){
+      throw InternalError("ERROR. struct1DArray is not being used properly. The run-time size exceeds the compile time size (int constructor).", __FILE__, __LINE__);
+    }
 #endif      
   }
 
