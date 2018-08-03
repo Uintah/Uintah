@@ -2198,7 +2198,7 @@ GPUDataWarehouse::copyGpuGhostCellsToGpuVarsInvoker(cudaStream_t* stream)
 
     dim3 dimBlock(32, 16, 1);
     dim3 dimGrid(1, 1, 1);  //Give each ghost copying kernel 32 * 16 = 512 threads to copy
-                            //(32x32 was too much for a smaller laptop GPU, but was fine for the Titan X on Albion)
+                            //(32x32 was too much for a smaller laptop GPU and the Uintah build server in debug mode)
     if (gpu_stats.active()) {
      cerrLock.lock();
      {
