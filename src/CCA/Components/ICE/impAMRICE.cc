@@ -51,7 +51,7 @@ static DebugStream cout_doing("ICE_DOING_COUT", false);
 static DebugStream cout_dbg("impAMRICE_DBG", false);
 
 impAMRICE::impAMRICE(const ProcessorGroup* myworld,
-		     const SimulationStateP sharedState) :
+                     const SimulationStateP sharedState) :
   AMRICE(myworld, sharedState)
 {
 }   
@@ -338,6 +338,10 @@ void impAMRICE::scheduleMultiLevelPressureSolve(  SchedulerP& sched,
     t->modifies(lb->vol_frac_Y_FC_fluxLabel, patches, all_matls_sub);
     t->modifies(lb->vol_frac_Z_FC_fluxLabel, patches, all_matls_sub); 
   }
+  
+  t->computes( VarLabel::find(abortTimeStep_name) );
+  t->computes( VarLabel::find(recomputeTimeStep_name) );
+
   t->setType(Task::OncePerProc);
 
   const PatchSet * perprocPatches = m_loadBalancer->getPerProcessorPatchSet( grid );
@@ -453,7 +457,7 @@ void impAMRICE::multiLevelPressureSolve(const ProcessorGroup* pg,
       
 #else
       const PatchSet* perProcPatches = 
-	m_loadBalancer->getPerProcessorPatchSet(grid);
+        m_loadBalancer->getPerProcessorPatchSet(grid);
       schedule_bogus_imp_delP(d_subsched,  perProcPatches,        d_press_matl,
                               all_matls);   
 #endif
@@ -536,12 +540,12 @@ void impAMRICE::multiLevelPressureSolve(const ProcessorGroup* pg,
     if (counter > d_iters_before_timestep_recompute ){
       recompute = true;
       if(pg->myRank() == 0)
-        cout <<"\nWARNING: max iterations befor time step recompute reached\n"<<endl;
+        cout <<"\nWARNING: The max iterations occured before a time step recompute was reached\n"<<endl;
     }
-    //  solver has requested a recompute
-    if (d_subsched->get_dw(3)->timeStepRecomputed() ) {
+    //  Solver has requested to recompute the time step
+    if (d_subsched->get_dw(3)->recomputeTimeStep() ) {
       if(pg->myRank() == 0)
-        cout << "\nWARNING: Solver had requested a recompute\n" <<endl;
+        cout << "\nWARNING: The solver has requested to recompute the time step\n" <<endl;
       recompute = true;
     }
     
@@ -558,8 +562,8 @@ void impAMRICE::multiLevelPressureSolve(const ProcessorGroup* pg,
       recompute = true;
     }
     if(recompute){
-      ParentNewDW->abortTimeStep();
-      ParentNewDW->recomputeTimeStep();
+      ParentNewDW->put( bool_or_vartype(true), VarLabel::find(abortTimeStep_name));
+      ParentNewDW->put( bool_or_vartype(true), VarLabel::find(recomputeTimeStep_name));
       //return; - don't return - just break, some operations may require the transfers below to complete
       break;
     }

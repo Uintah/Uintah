@@ -841,13 +841,12 @@ namespace Uintah {
         
         if( final_res_norm > m_params->tolerance || std::isfinite(final_res_norm) == 0 ){
           if( m_params->getRecomputeTimeStepOnFailure() ){
-            if( pg->myRank() == 0 ){
-              cout << "  WARNING:  HypreSolver not converged in " << num_iterations
-                   << " iterations, final residual= " << final_res_norm
-                   << ", requesting the time step be recomputed.\n";
-            }
-            // new_dw->abortTimeStep();
-            new_dw->recomputeTimeStep();
+            proc0cout << "  WARNING:  HypreSolver not converged in " << num_iterations
+                      << " iterations, final residual= " << final_res_norm
+                      << ", requesting the time step be recomputed.\n";
+
+	    new_dw->put( bool_or_vartype(true), VarLabel::find(abortTimeStep_name));
+            new_dw->put( bool_or_vartype(true), VarLabel::find(recomputeTimeStep_name));
           } else {
             throw ConvergenceFailure("HypreSolver variable: "+ m_X_label->getName()+", solver: "+ m_params->solvertype+", preconditioner: "+ m_params->precondtype,
                                      num_iterations, final_res_norm,
@@ -1331,7 +1330,11 @@ namespace Uintah {
 
     task->setType(Task::Hypre);
 
+    task->computes( VarLabel::find(abortTimeStep_name) );
+    task->computes( VarLabel::find(recomputeTimeStep_name) );
+    
     LoadBalancer * lb = sched->getLoadBalancer();
+
     sched->addTask(task, lb->getPerProcessorPatchSet(level), matls);
   }
 

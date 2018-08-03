@@ -1810,10 +1810,10 @@ void AMRICE::reflux_BP_check_CFI_cells(const ProcessorGroup*,
               int n_CFI_cells     =  getFaceMark(1, finePatch, patchFace);
               //__________________________________
               // If the number of "marked" cells/numICEMatls != n_CFI_cells
-              // ignore if a time step recompute has already been requested.
-              bool tsr = new_dw->timeStepRecomputed();
-              
-              if ( n_touched_cells != n_CFI_cells && !tsr){
+	      // ignore if a recompute time step has already been requested
+	      bool rts = new_dw->recomputeTimeStep();
+
+              if ( n_touched_cells != n_CFI_cells && !rts){
                 ostringstream warn;
                 warn << d_myworld->myRank() << " AMRICE:refluxing_" << description
                      << " \n CFI face: "

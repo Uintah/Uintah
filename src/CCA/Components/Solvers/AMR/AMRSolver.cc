@@ -190,6 +190,9 @@ AMRSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
   }// numLevels
   
   
+  // task->computes( VarLabel::find(abortTimeStep_name) );
+  // task->computes( VarLabel::find(recomputeTimeStep_name) );
+  
   task->setType(Task::OncePerProc);
 
   sched->addTask(task, perProcPatches, matls);

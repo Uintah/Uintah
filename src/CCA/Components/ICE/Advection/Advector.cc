@@ -65,8 +65,7 @@ namespace Uintah {
                                    vector<fflux> badOutFlux,
                                    const double vol,
                                    const int indx,
-                                   const Patch* patch,
-                                   DataWarehouse* new_dw)
+                                   const Patch* patch)
   {
     cout << Parallel::getMPIRank() << " ERROR: ICE Advection operator: "
          << " Influx_outflux error detected, "
@@ -86,11 +85,6 @@ namespace Uintah {
         cout << " \t face: " << f << " (" << flux << ") ";
       }
       cout << " total_outflux: " << total_fluxout << endl;
-    }
-    
-    if (new_dw->timeStepRecomputed() == false){
-      cout << "\nA time step recompute has been requested \n " << endl;
-      new_dw->recomputeTimeStep();
     }
   }
   

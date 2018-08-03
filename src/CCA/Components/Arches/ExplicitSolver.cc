@@ -3290,6 +3290,9 @@ ExplicitSolver::sched_checkDensityGuess(SchedulerP& sched,
 
   tsk->modifies(d_lab->d_densityGuessLabel);
 
+  tsk->computes( VarLabel::find(abortTimeStep_name) );
+  tsk->computes( VarLabel::find(recomputeTimeStep_name) );
+
   sched->addTask(tsk, patches, matls);
 }
 //****************************************************************************
@@ -3333,8 +3336,8 @@ ExplicitSolver::checkDensityGuess(const ProcessorGroup* pc,
     if (negativeDensityGuess > 0.0) {
       if (d_recompute_on_negative_density_guess) {
         proc0cout << "NOTICE: Negative density guess(es) occurred. Timestep restart has been requested under this condition by the user. Recomputing timestep." << endl;
-        new_dw->abortTimeStep();
-        new_dw->recomputeTimeStep();
+        new_dw->put( bool_or_vartype(true), VarLabel::find(abortTimeStep_name));
+        new_dw->put( bool_or_vartype(true), VarLabel::find(recomputeTimeStep_name) );
       }
       else {
         proc0cout << "NOTICE: Negative density guess(es) occurred. Reverting to old density." << endl;
@@ -3495,6 +3498,9 @@ ExplicitSolver::sched_checkDensityLag(SchedulerP& sched,
     tsk->requires(Task::NewDW, timelabels->densityLag);
   }
 
+  tsk->computes( VarLabel::find(abortTimeStep_name) );
+  tsk->computes( VarLabel::find(recomputeTimeStep_name) );
+
   sched->addTask(tsk, patches, matls);
 }
 //****************************************************************************
@@ -3530,8 +3536,8 @@ ExplicitSolver::checkDensityLag(const ProcessorGroup* pc,
           proc0cout << "WARNING: density lag " << densityLag
                << " exceeding maximium "<< d_maxDensityLag
                << " specified. Recomputing timestep." << endl;
-        new_dw->abortTimeStep();
-        new_dw->recomputeTimeStep();
+        new_dw->put( bool_or_vartype(true), VarLabel::find(abortTimeStep_name));
+        new_dw->put( bool_or_vartype(true), VarLabel::find(recomputeTimeStep_name) );
     }
   }
 }

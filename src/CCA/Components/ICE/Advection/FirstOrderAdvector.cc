@@ -25,6 +25,7 @@
 #include <CCA/Components/ICE/Advection/FirstOrderAdvector.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/VarLabel.h>
+#include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Patch.h>
 
 #include <Core/Geometry/IntVector.h>
@@ -147,10 +148,10 @@ void FirstOrderAdvector::inFluxOutFluxVolume(
   // -find the cell, 
   // -set the outflux slab vol in all cells = 0.0,
   // -request that the time step be recomputed.
-  // -ignore if a time step recompute has already been requested
-  bool tsr = new_dw->timeStepRecomputed();
-  
-  if (error && bulletProof_test && !tsr) {
+  // -ignore if a recompute time step has already been requested
+  bool rts = new_dw->recomputeTimeStep();
+
+  if (error && bulletProof_test && !rts) {
     vector<IntVector> badCells;
     vector<fflux>  badOutflux;
     
@@ -169,13 +170,19 @@ void FirstOrderAdvector::inFluxOutFluxVolume(
         badOutflux.push_back(ofs);
       }
     }  // cell iter
-    warning_recomputeTimeStep( badCells,badOutflux, vol, indx, patch, new_dw);
+    warning_recomputeTimeStep( badCells,badOutflux, vol, indx, patch);
+    cout << "\nA time step recompute has been requested \n " << endl;
   }  // if total_fluxout > vol
   
+  if (error && bulletProof_test) {
+    new_dw->put( bool_or_vartype(true), VarLabel::find(abortTimeStep_name));
+    new_dw->put( bool_or_vartype(true), VarLabel::find(recomputeTimeStep_name));
+  }
+
   if (error && !bulletProof_test) {
     std::ostringstream mesg;
     std::cout << " WARNING: ICE Advection operator Influx/Outflux volume error:"
-         << " Patch " << patch->getID()
+              << " Patch " << patch->getID()
               << ", Level " << patch->getLevel()->getIndex()<< std::endl;
   }
 }

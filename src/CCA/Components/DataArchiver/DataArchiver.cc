@@ -336,7 +336,7 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
     //  bullet proofing: must save p.x 
     //  in addition to other particle variables "p.*"
     if (saveItem.labelName == m_particlePositionName ||
-	saveItem.labelName == "p.xx") {
+        saveItem.labelName == "p.xx") {
       m_saveP_x = true;
     }
 
@@ -2611,7 +2611,7 @@ DataArchiver::outputReductionVars( const ProcessorGroup *,
                                    DataWarehouse        * old_dw,
                                    DataWarehouse        * new_dw )
 {
-  if( new_dw->timeStepRecomputed() || m_saveReductionLabels.empty() ) {
+  if( m_application->recomputeTimeStep() || m_saveReductionLabels.empty() ) {
     return;
   }
 

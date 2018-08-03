@@ -100,6 +100,16 @@ ApplicationCommon::ApplicationCommon( const ProcessorGroup   * myworld,
   nonconstEndSimulation->allowMultipleComputes();
   m_endSimulationLabel = nonconstEndSimulation;
 
+  // Abort Time Step
+  VarLabel* nonconstAbortTimeStep = VarLabel::create(abortTimeStep_name, bool_or_vartype::getTypeDescription());
+  nonconstAbortTimeStep->allowMultipleComputes();
+  m_abortTimeStepLabel = nonconstAbortTimeStep;
+
+  // Recompute Time Step
+  VarLabel* nonconstRecomputeTimeStep = VarLabel::create(recomputeTimeStep_name, bool_or_vartype::getTypeDescription());
+  nonconstRecomputeTimeStep->allowMultipleComputes();
+  m_recomputeTimeStepLabel = nonconstRecomputeTimeStep;
+
   m_application_stats.insert( CarcassCount, std::string("CarcassCount"), "Carcasses", 0 );
 }
 
@@ -117,6 +127,8 @@ ApplicationCommon::~ApplicationCommon()
   VarLabel::destroy(m_checkpointTimeStepIntervalLabel);
 
   VarLabel::destroy(m_endSimulationLabel);
+  VarLabel::destroy(m_abortTimeStepLabel);
+  VarLabel::destroy(m_recomputeTimeStepLabel);
   
   if( m_simulationTime )
     delete m_simulationTime;
@@ -134,7 +146,7 @@ void ApplicationCommon::setComponents( UintahParallelComponent *comp )
   attachPort( "solver",        parent->m_solver );
   attachPort( "regridder",     parent->m_regridder );
   attachPort( "output",        parent->m_output );
-
+  
   getComponents();
 }
 
@@ -169,6 +181,26 @@ void ApplicationCommon::getComponents()
   if( !m_output ) {
     throw InternalError("dynamic_cast of 'm_output' failed!", __FILE__, __LINE__);
   }
+}
+
+void ApplicationCommon::setFlags( UintahParallelComponent *comp )
+{
+  ApplicationCommon * child = dynamic_cast<ApplicationCommon*>( comp );
+
+  // Get some flags from the child;
+  m_adjustCheckpointInterval = child->m_adjustCheckpointInterval;
+  m_adjustOutputInterval     = child->m_adjustOutputInterval;
+  
+  m_mayEndSimulation     = child->m_mayEndSimulation;
+  m_mayAbortTimeStep     = child->m_mayAbortTimeStep;
+  m_mayRecomputeTimeStep = child->m_mayRecomputeTimeStep;
+}
+
+void ApplicationCommon::clearFlags()
+{
+  m_endSimulation     = false;
+  m_abortTimeStep     = false;
+  m_recomputeTimeStep = false;
 }
 
 void ApplicationCommon::releaseComponents()
@@ -264,6 +296,16 @@ ApplicationCommon::scheduleReduceSystemVars(const GridP& grid,
     task->requires(Task::NewDW, m_endSimulationLabel);
   }
 
+  // An application may request that a time step abort.
+  if (m_mayAbortTimeStep) {
+    task->requires(Task::NewDW, m_abortTimeStepLabel);
+  }
+
+  // An application may request that a time step be recomputed.
+  if (m_mayRecomputeTimeStep) {
+    task->requires(Task::NewDW, m_recomputeTimeStepLabel);
+  }
+
   // The above three tasks are on a per proc basis any rank can make
   // the request because it is a either benign or a set value.
   scheduler->addTask(task, perProcPatchSet, m_sharedState->allMaterials());
@@ -316,85 +358,37 @@ ApplicationCommon::reduceSystemVars( const ProcessorGroup *,
   // benign value, that means no MPI rank wants to change the interval
   // and the value will be ignored.
 
-
   // An application may adjust the output interval or the checkpoint
   // interval during a simulation.  For example in deflagration ->
-  // detonation simulations
-  if (m_adjustOutputInterval) {
-    if (patches->size() != 0 && !new_dw->exists(m_outputIntervalLabel, -1, patch)) {
-      min_vartype inv;
-      inv.setBenignValue();
-      new_dw->put(inv, m_outputIntervalLabel);
-    }
+  // detonation simulations (Models/HEChem/DDT1.cc
 
-    if (d_myworld->nRanks() > 1) {
-      new_dw->reduceMPI(m_outputIntervalLabel, 0, 0, -1);
-    }
+  min_vartype outputInv_var;
+  reduceSystemVar( new_dw, m_adjustOutputInterval, m_outputIntervalLabel, outputInv_var);
+  if( !outputInv_var.isBenignValue() )
+    m_output->setOutputInterval( outputInv_var );
 
-    min_vartype outputInv_var;
-    new_dw->get( outputInv_var, m_outputIntervalLabel );
-      
-    if( !outputInv_var.isBenignValue() ) {
-      m_output->setOutputInterval( outputInv_var );
-    }
-  }
+  min_vartype checkInv_var;
+  reduceSystemVar( new_dw, m_adjustCheckpointInterval, m_checkpointIntervalLabel, checkInv_var);
 
-  //__________________________________
-  //
-  if (m_adjustCheckpointInterval) {
-    if (patches->size() != 0 && !new_dw->exists(m_checkpointIntervalLabel, -1, patch)) {
-      min_vartype inv;
-      inv.setBenignValue();
-      new_dw->put(inv, m_checkpointIntervalLabel);
-    }
-
-    if (d_myworld->nRanks() > 1) {
-      new_dw->reduceMPI(m_checkpointIntervalLabel, 0, 0, -1);
-    }
-
-    min_vartype checkInv_var;
-    new_dw->get( checkInv_var, m_checkpointIntervalLabel );
-    
-    if ( !checkInv_var.isBenignValue() ) {
-      m_output->setCheckpointInterval( checkInv_var );
-    }
+  if ( !checkInv_var.isBenignValue() ) {
+    m_output->setCheckpointInterval( checkInv_var );
   }
   
   // An application may request that the simulation end early.
-  if (m_mayEndSimulation) {
-    if (patches->size() != 0 && !new_dw->exists(m_endSimulationLabel, -1, patch)) {
-      bool_or_vartype endSim;
-      endSim.setBenignValue();
-      new_dw->put(endSim, m_endSimulationLabel);
-    }
-
-    if (d_myworld->nRanks() > 1) {
-      new_dw->reduceMPI(m_endSimulationLabel, 0, 0, -1);
-    }
-
-    bool_or_vartype endSim_var;
-    new_dw->get( endSim_var, m_endSimulationLabel );
-    
-    if ( !endSim_var.isBenignValue() ) {
-      m_endSimulation = endSim_var;
-    }
-  }
+  bool_or_vartype endSim_var;
+  reduceSystemVar( new_dw, m_mayEndSimulation, m_endSimulationLabel, endSim_var);
+  m_endSimulation = endSim_var;
   
-  // An application may request that a time step be recomputed.
-  // Inform all ranks that this time step is being recomputed.
-  if( recomputableTimeSteps() ) {
+  // An application may request that the time step be aborted.
+  bool_or_vartype abortTimeStep_var;
+  reduceSystemVar( new_dw, m_mayAbortTimeStep, m_abortTimeStepLabel, abortTimeStep_var);
+  m_abortTimeStep = abortTimeStep_var;
+  
+  // An application may request that the time step be recomputed.
+  bool_or_vartype recomputeTimeStep_var;
+  reduceSystemVar( new_dw, m_mayRecomputeTimeStep, m_recomputeTimeStepLabel, recomputeTimeStep_var);
+  m_recomputeTimeStep = recomputeTimeStep_var;
 
-    int myRecompute = new_dw->timeStepRecomputed();
-    int allRanksRecompute;
-    
-    Uintah::MPI::Allreduce(&myRecompute, &allRanksRecompute, 1, MPI_INT, MPI_LOR, d_myworld->getComm());
-    
-    if (allRanksRecompute) {
-      new_dw->recomputeTimeStep();
-      old_dw->recomputeTimeStep(); // This is needed because
-                                   // OnDemandDataWarehouse::exchangeParticleQuantities
-    }                              // checks the flag in the old_dw
-  } 
 }  // end reduceSysVar()
 
 
@@ -498,7 +492,7 @@ ApplicationCommon::updateSystemVars( const ProcessorGroup *,
 {  
   // Not all ranks know that a timestep is being recomputed.  Don't
   // update simTime on all ranks
-  if ( !new_dw->timeStepRecomputed() ) {
+  if ( !m_recomputeTimeStep ) {
     // Store the time step so it can be incremented at the top of the
     // time step where it is over written.
     new_dw->put(timeStep_vartype(m_timeStep), m_timeStepLabel);
@@ -596,7 +590,8 @@ ApplicationCommon::recomputeDelT()
   // virtual default method for the delta T
   double new_delT = recomputeDelT(m_delT);
 
-  proc0cout << "Recomputing time step at " << m_simTime
+  proc0cout << "WARNING Recomputng time step " << m_timeStep << " "
+            << "and sim time " << m_simTime << " "
             << ", changing delT from " << m_delT
             << " to " << new_delT
             << std::endl;
@@ -667,6 +662,9 @@ ApplicationCommon::prepareForNextTimeStep()
   delt_vartype delt_var;
   m_scheduler->getLastDW()->get( delt_var, m_delTLabel );
   m_delT = delt_var;
+
+  // Clear any time step based flags.
+  clearFlags();
 }
 
 //______________________________________________________________________

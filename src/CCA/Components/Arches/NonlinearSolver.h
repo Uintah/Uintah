@@ -78,7 +78,7 @@ public:
 
   virtual double recomputeDelT(const double delT) = 0;
 
-  virtual bool recomputableTimeSteps() = 0;
+  virtual bool mayRecomputeTimeStep() = 0;
 
   virtual void sched_initialize( const LevelP& lvl, SchedulerP& sched, const bool doing_restart ) = 0;
 

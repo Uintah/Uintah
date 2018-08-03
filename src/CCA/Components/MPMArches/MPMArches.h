@@ -234,8 +234,6 @@ public:
   ///////////////////////////////////////////////////////////////////////
   virtual double recomputeDelT(const double delT);
       
-  virtual bool recomputableTimeSteps();
-
  protected:
 
     void initializeKStability(const ProcessorGroup*,

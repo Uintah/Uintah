@@ -112,11 +112,9 @@ ImpMPM::ImpMPM(const ProcessorGroup* myworld,
   NGP     = 1;
   NGN     = 1;
   d_loadCurveIndex=0;
-}
 
-bool ImpMPM::recomputableTimeSteps()
-{
-  return true;
+  mayAbortTimeStep(true);
+  mayRecomputeTimeStep(true);
 }
 
 ImpMPM::~ImpMPM()
@@ -1242,6 +1240,9 @@ void ImpMPM::scheduleFormQ(SchedulerP& sched,const PatchSet* patches,
   t->requires(Task::ParentNewDW,lb->gAccelerationLabel, gnone,0);
   t->requires(Task::ParentNewDW,lb->gMassAllLabel,      gnone,0);
 
+  t->computes( VarLabel::find(abortTimeStep_name) );
+  t->computes( VarLabel::find(recomputeTimeStep_name) );
+
   t->setType(Task::OncePerProc);
   sched->addTask(t, patches, matls);
 }
@@ -1390,6 +1391,9 @@ void ImpMPM::scheduleIterate(SchedulerP& sched,const LevelP& level,
 
   task->requires(Task::OldDW,lb->delTLabel);
 
+  task->computes( VarLabel::find(abortTimeStep_name) );
+  task->computes( VarLabel::find(recomputeTimeStep_name) );
+  
   task->setType(Task::OncePerProc);
   sched->addTask(task,patches,m_sharedState->allMaterials());
 }
@@ -1786,8 +1790,8 @@ void ImpMPM::iterate(const ProcessorGroup*,
         cerr << "Recomputing due to exceeding max number of iterations" << endl;
     }
     if (recompute_nan || recompute_neg_residual || recompute_num_iters) {
-      new_dw->abortTimeStep();
-      new_dw->recomputeTimeStep();
+      new_dw->put( bool_or_vartype(true), VarLabel::find(abortTimeStep_name));
+      new_dw->put( bool_or_vartype(true), VarLabel::find(recomputeTimeStep_name));
       return;
     }
 
@@ -3115,65 +3119,65 @@ void ImpMPM::formQ(const ProcessorGroup*, const PatchSubset* patches,
     bool firstTimeThrough=true;
     int numMatls = m_sharedState->getNumMPMMatls();
     for(int m = 0; m < numMatls; m++){
-     MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
-     if(!mpm_matl->getIsRigid() && firstTimeThrough){
-      firstTimeThrough=false;
-      int dwi = mpm_matl->getDWIndex();
+      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
+      if(!mpm_matl->getIsRigid() && firstTimeThrough){
+        firstTimeThrough=false;
+        int dwi = mpm_matl->getDWIndex();
 
-      delt_vartype dt;
-      Ghost::GhostType  gnone = Ghost::None;
+        delt_vartype dt;
+        Ghost::GhostType  gnone = Ghost::None;
 
-      constNCVariable<Vector> extForce, intForce;
-      constNCVariable<Vector> dispNew,velocity,accel;
-      constNCVariable<double> mass;
-      DataWarehouse* parent_new_dw = 
-        new_dw->getOtherDataWarehouse(Task::ParentNewDW);
-      DataWarehouse* parent_old_dw = 
-        new_dw->getOtherDataWarehouse(Task::ParentOldDW);
+        constNCVariable<Vector> extForce, intForce;
+        constNCVariable<Vector> dispNew,velocity,accel;
+        constNCVariable<double> mass;
+        DataWarehouse* parent_new_dw = 
+          new_dw->getOtherDataWarehouse(Task::ParentNewDW);
+        DataWarehouse* parent_old_dw = 
+          new_dw->getOtherDataWarehouse(Task::ParentOldDW);
 
-      parent_old_dw->get(dt,lb->delTLabel, patch->getLevel());
-      new_dw->get(       intForce, lb->gInternalForceLabel,dwi,patch,gnone,0);
-      old_dw->get(       dispNew,  lb->dispNewLabel,       dwi,patch,gnone,0);
-      parent_new_dw->get(extForce, lb->gExternalForceLabel,dwi,patch,gnone,0);
-      parent_new_dw->get(velocity, lb->gVelocityOldLabel,  dwi,patch,gnone,0);
-      parent_new_dw->get(accel,    lb->gAccelerationLabel, dwi,patch,gnone,0);
-      parent_new_dw->get(mass,     lb->gMassAllLabel,      dwi,patch,gnone,0);
+        parent_old_dw->get(dt,lb->delTLabel, patch->getLevel());
+        new_dw->get(       intForce, lb->gInternalForceLabel,dwi,patch,gnone,0);
+        old_dw->get(       dispNew,  lb->dispNewLabel,       dwi,patch,gnone,0);
+        parent_new_dw->get(extForce, lb->gExternalForceLabel,dwi,patch,gnone,0);
+        parent_new_dw->get(velocity, lb->gVelocityOldLabel,  dwi,patch,gnone,0);
+        parent_new_dw->get(accel,    lb->gAccelerationLabel, dwi,patch,gnone,0);
+        parent_new_dw->get(mass,     lb->gMassAllLabel,      dwi,patch,gnone,0);
 
-      double fodts = 4./(dt*dt);
-      double fodt = 4./dt;
+        double fodts = 4./(dt*dt);
+        double fodt = 4./dt;
 
-      double Q=0.;
+        double Q=0.;
 
-      for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
-        IntVector n = *iter;
-        int l2g_node_num = l2g[n];
+        for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+          IntVector n = *iter;
+          int l2g_node_num = l2g[n];
 
-        double v[3];
-        v[0] = extForce[n].x() + intForce[n].x();
-        v[1] = extForce[n].y() + intForce[n].y();
-        v[2] = extForce[n].z() + intForce[n].z();
+          double v[3];
+          v[0] = extForce[n].x() + intForce[n].x();
+          v[1] = extForce[n].y() + intForce[n].y();
+          v[2] = extForce[n].z() + intForce[n].z();
 
-        // temp2 = M*a^(k-1)(t+dt)
-        if (flags->d_dynamic) {
-          v[0] -= (dispNew[n].x()*fodts - velocity[n].x()*fodt -
-                   accel[n].x())*mass[n];
-          v[1] -= (dispNew[n].y()*fodts - velocity[n].y()*fodt -
-                   accel[n].y())*mass[n];
-          v[2] -= (dispNew[n].z()*fodts - velocity[n].z()*fodt -
-                   accel[n].z())*mass[n];
+          // temp2 = M*a^(k-1)(t+dt)
+          if (flags->d_dynamic) {
+            v[0] -= (dispNew[n].x()*fodts - velocity[n].x()*fodt -
+                     accel[n].x())*mass[n];
+            v[1] -= (dispNew[n].y()*fodts - velocity[n].y()*fodt -
+                     accel[n].y())*mass[n];
+            v[2] -= (dispNew[n].z()*fodts - velocity[n].z()*fodt -
+                     accel[n].z())*mass[n];
+          }
+          d_solver->fillVector(l2g_node_num,double(v[0]));
+          d_solver->fillVector(l2g_node_num+1,double(v[1]));
+          d_solver->fillVector(l2g_node_num+2,double(v[2]));
+          Q += v[0]*v[0] + v[1]*v[1] + v[2]*v[2];
         }
-        d_solver->fillVector(l2g_node_num,double(v[0]));
-        d_solver->fillVector(l2g_node_num+1,double(v[1]));
-        d_solver->fillVector(l2g_node_num+2,double(v[2]));
-        Q += v[0]*v[0] + v[1]*v[1] + v[2]*v[2];
-      }
-      if(std::isnan(Q)){
-        cout << "RHS contains a nan, recomputing the time step" << endl;
-        new_dw->abortTimeStep();
-        new_dw->recomputeTimeStep();
-        return;
-      }
-     } // first time through non-rigid
+        if(std::isnan(Q)){
+          cout << "RHS contains a nan, recomputing the time step" << endl;
+          new_dw->put( bool_or_vartype(true), VarLabel::find(abortTimeStep_name));
+          new_dw->put( bool_or_vartype(true), VarLabel::find(recomputeTimeStep_name));
+          return;
+        }
+      } // first time through non-rigid
     }  // matls
   }    // patches
 }
@@ -3194,16 +3198,18 @@ void ImpMPM::solveForDuCG(const ProcessorGroup* /*pg*/,
   }
 
   DataWarehouse* parent_new_dw=new_dw->getOtherDataWarehouse(Task::ParentNewDW);
-  bool tsr = parent_new_dw->timeStepRecomputed();
 
-  if(!tsr){  // if a tsr has already been called for don't do the solve
+  // if a recompute time step has already been called for don't do the solve
+  bool rts = new_dw->recomputeTimeStep();
+
+  if(!rts){ 
     d_solver->assembleVector();
     d_solver->removeFixedDOF();
     vector<double> guess;
     d_solver->solve(guess);   
   }
   else{
-    cout << "skipping solve, time step has already called for a recompute" << endl;
+    cout << "skipping solve, a recompute time step has already called" << endl;
   }
 }
 

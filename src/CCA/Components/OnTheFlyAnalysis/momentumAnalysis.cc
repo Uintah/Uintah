@@ -397,10 +397,10 @@ void momentumAnalysis::integrateMomentumField(const ProcessorGroup* pg,
   old_dw->get(simTimeVar, m_simulationTimeLabel);
   double now = simTimeVar;
 
-  // Ignore the task if a time step recompute has been requested upstream
-  bool tsr = new_dw->timeStepRecomputed();
+  // Ignore the task if a recompute time step has been requested upstream
+  bool rts = new_dw->recomputeTimeStep();
 
-  if( now < nextCompTime  || tsr ) {
+  if( now < nextCompTime  || rts ) {
     return;
   }
 
@@ -554,10 +554,10 @@ void momentumAnalysis::doAnalysis(const ProcessorGroup* pg,
                                   DataWarehouse* new_dw)
 {
 
-  // Ignore the task if a time step recompute has been requested upstream
-  bool tsr = new_dw->timeStepRecomputed();
+  // Ignore the task if a recompute time step has been requested upstream
+  bool rts = new_dw->recomputeTimeStep();
 
-  if( tsr ) {
+  if( rts ) {
     return;
   }
 

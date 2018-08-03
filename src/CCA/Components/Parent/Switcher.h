@@ -68,7 +68,6 @@ namespace Uintah {
     virtual bool needRecompile( const GridP& grid );
     virtual void restartInitialize();
 
-    virtual bool   recomputableTimeSteps();
     virtual double recomputeDelT( const double delT );
 
     // AMR

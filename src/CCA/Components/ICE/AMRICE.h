@@ -597,12 +597,12 @@ void AMRICE::CoarseToFineOperator(CCVariable<T>& q_CC,
   
   //____ B U L L E T   P R O O F I N G_______ 
   // All fine patch interior values must be initialized at this point
-  // ignore BP if a time step recompute has already been requested
-  bool tsr = new_dw->timeStepRecomputed();
+  // ignore BP if a recompute time step has already been requested
+  bool rts = new_dw->recomputeTimeStep();
   
   IntVector badCell;
   CellIterator iter=finePatch->getCellIterator();
-  if( isEqual<T>(T(d_EVIL_NUM),iter,q_CC, badCell) && !tsr ){
+  if( isEqual<T>(T(d_EVIL_NUM),iter,q_CC, badCell) && !rts ){
     std::ostringstream warn;
     warn <<"ERROR AMRICE::Refine Task:CoarseToFineOperator "
          << "detected an uninitialized variable "<< varLabel->getName()

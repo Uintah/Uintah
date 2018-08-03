@@ -1173,17 +1173,7 @@ void DDT1::computeBurnLogic(const ProcessorGroup*,
         new_dw->put( min_vartype( newOUT ),  Ilb->outputIntervalLabel );
         new_dw->put( min_vartype( newCKPT ), Ilb->checkpointIntervalLabel );
       }
-      else {        
-      //__________________________________
-      //  DEFAULT
-        min_vartype oldOUT;
-        min_vartype oldCKPT;
-        oldOUT.setBenignValue();
-        oldCKPT.setBenignValue();
 
-        new_dw->put( oldOUT,  Ilb->outputIntervalLabel );
-        new_dw->put( oldCKPT, Ilb->checkpointIntervalLabel );
-      }
       new_dw->put( max_vartype(hasSwitched), adjOutIntervalsLabel );
     }
   }//End for{Patches}

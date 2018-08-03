@@ -883,27 +883,25 @@ public:
     double mflops = (double(flops)*1.e-6)/dt;
     double memrate = (double(memrefs)*1.e-9)/dt;
     
-    if(pg->myRank() == 0){
-      if(niter < params->maxiterations) {
-        cout << "Solve of " << X_label->getName()
-              << " on level " << level->getIndex()
-             << " completed in "
-             << dt << " seconds ("
-             << niter << " iterations, "
-             << e << " residual, "
-              << mflops<< " MFLOPS, " << memrate << " GB/sec)\n";
-      }else{
-        if(params->getRecomputeTimeStepOnFailure()) {
-           cout << "CGSolver not converging, requesting smaller time step\n";
-           cout << "    niters:   " << niter << "\n"
+    if(niter < params->maxiterations) {
+      proc0cout << "Solve of " << X_label->getName()
+                << " on level " << level->getIndex()
+                << " completed in "
+                << dt << " seconds ("
+                << niter << " iterations, "
+                << e << " residual, "
+                << mflops<< " MFLOPS, " << memrate << " GB/sec)\n";
+    } else if(params->getRecomputeTimeStepOnFailure()) {
+      proc0cout << "CGSolver not converging, requesting smaller time step\n";
+      proc0cout << "    niters:   " << niter << "\n"
                 << "    residual: " << e << endl;
-          new_dw->abortTimeStep();
-          new_dw->recomputeTimeStep();
-        }else {
-        throw ConvergenceFailure("CGSolve variable: "+X_label->getName(),
-                          niter, e, tolerance,__FILE__,__LINE__);
-        }
-      }
+      
+      new_dw->put( bool_or_vartype(true), VarLabel::find(abortTimeStep_name));
+      new_dw->put( bool_or_vartype(true), VarLabel::find(recomputeTimeStep_name));
+    }
+    else {
+      throw ConvergenceFailure("CGSolve variable: "+X_label->getName(),
+                               niter, e, tolerance,__FILE__,__LINE__);
     }
   }
 //______________________________________________________________________
@@ -1082,8 +1080,11 @@ void CGSolver::scheduleSolve(const LevelP       & level,
   task->requires(which_b_dw, b, Ghost::None, 0);
   task->hasSubScheduler();
 
+  task->computes( VarLabel::find(abortTimeStep_name) );
+  task->computes( VarLabel::find(recomputeTimeStep_name) );
+  
   LoadBalancer * lb = sched->getLoadBalancer();
-  const PatchSet  * perproc_patches = lb->getPerProcessorPatchSet( level );
+  const PatchSet * perproc_patches = lb->getPerProcessorPatchSet( level );
 
   sched->addTask(task, perproc_patches, matls);
 }

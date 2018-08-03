@@ -162,6 +162,9 @@ void ICE::scheduleSetupRHS(  SchedulerP& sched,
     t->modifies(lb->rhsLabel,          one_matl,oims);
   }
   
+  t->computes( VarLabel::find(abortTimeStep_name) );
+  t->computes( VarLabel::find(recomputeTimeStep_name) );
+
   sched->addTask(t, patches, all_matls);                     
 }
 
@@ -413,6 +416,9 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
   t->modifies(lb->vol_fracY_FCLabel);
   t->modifies(lb->vol_fracZ_FCLabel);  
   
+  t->computes( VarLabel::find(abortTimeStep_name) );
+  t->computes( VarLabel::find(recomputeTimeStep_name) );
+
   const PatchSet * perproc_patches = m_loadBalancer->getPerProcessorPatchSet(level);
 
   sched->addTask( t, perproc_patches, all_matls );
@@ -850,11 +856,11 @@ void ICE::updatePressure(const ProcessorGroup*,
     delete_CustomBCs(d_BC_globalVars, BC_localVars);
 
     //____ B U L L E T   P R O O F I N G----
-    // ignore BP if a time step recompute has already been requested
+    // ignore BP if a recompute time step has already been requested
     IntVector neg_cell;
-    bool tsr = new_dw->timeStepRecomputed();
+    bool rts = new_dw->recomputeTimeStep();
     
-    if(!areAllValuesPositive(press_CC, neg_cell) && !tsr) {
+    if(!areAllValuesPositive(press_CC, neg_cell) && !rts) {
       ostringstream warn;
       warn <<"ERROR ICE::updatePressure cell "
            << neg_cell << " negative pressure\n ";        
@@ -1097,13 +1103,13 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
    
     //__________________________________
     // recompute timestep
-                                          //  too many outer iterations
+    //  too many outer iterations
     if (counter > d_iters_before_timestep_recompute ){
       recompute = true;
-      DOUTR0("\nWARNING:  max iterations before time step recompute reached\n" );
+      DOUTR0( "\nWARNING: The max iterations occured before a time step recompute was reached\n" );
     }
-    //  solver or advection has requested a recompute
-    if (subNewDW->timeStepRecomputed() ) {
+    //  The solver or advection has requested to recompute the time step
+    if (subNewDW->recomputeTimeStep() ) {
       DOUTR0( "\n  WARNING:  impICE:implicitPressureSolve time step recompute.\n" );
       recompute = true;
     }
@@ -1120,8 +1126,8 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
       recompute = true;
     }
     if( recompute ) {
-      ParentNewDW->abortTimeStep();
-      ParentNewDW->recomputeTimeStep();
+      ParentNewDW->put( bool_or_vartype(true), VarLabel::find(abortTimeStep_name));
+      ParentNewDW->put( bool_or_vartype(true), VarLabel::find(recomputeTimeStep_name));
     }
   }  // outer iteration loop
   

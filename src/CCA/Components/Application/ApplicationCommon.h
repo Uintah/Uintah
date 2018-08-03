@@ -96,6 +96,9 @@ WARNING
     virtual Scheduler *getScheduler() { return m_scheduler; }
     virtual Regridder *getRegridder() { return m_regridder; }
     virtual Output    *getOutput()    { return m_output; }
+
+    virtual void setFlags( UintahParallelComponent *comp );
+    virtual void clearFlags();
     
     // Top level problem set up called by sus.
     virtual void problemSetup( const ProblemSpecP &prob_spec );
@@ -217,8 +220,6 @@ WARNING
     virtual void   recomputeDelT();
     virtual double recomputeDelT( const double delT );
 
-    virtual bool recomputableTimeSteps() { return false; }
-
     // Updates the time step and the delta T.
     virtual void prepareForNextTimeStep();
 
@@ -266,9 +267,17 @@ WARNING
     virtual void adjustCheckpointInterval(bool val) { m_adjustCheckpointInterval = val; }
     virtual bool adjustCheckpointInterval() const { return m_adjustCheckpointInterval; }
 
-    // Some applications can end the simulation early.
+    // Some applications may end the simulation early.
     virtual void mayEndSimulation(bool val) { m_mayEndSimulation = val; }
     virtual bool mayEndSimulation() const { return m_mayEndSimulation; }
+
+    // Some applications may about a time step.
+    virtual void mayAbortTimeStep(bool val) { m_mayAbortTimeStep = val; }
+    virtual bool mayAbortTimeStep() const { return m_mayAbortTimeStep; }
+
+    // Some applications may recompute a time step.
+    virtual void mayRecomputeTimeStep(bool val) { m_mayRecomputeTimeStep = val; }
+    virtual bool mayRecomputeTimeStep() const { return m_mayRecomputeTimeStep; }
 
     // Access methods for member classes.
     virtual SimulationTime * getSimulationTime() const { return m_simulationTime; }
@@ -281,6 +290,14 @@ WARNING
     // applications will not have valid values. They should ALWAYS get
     // the values via the data warehouse.
     
+    // Some applications may end the simulation early.
+    virtual void endSimulation( bool val ) { m_endSimulation = val; }
+    virtual bool endSimulation() const { return m_endSimulation; }
+    // Some applications may about a time step.
+    virtual bool abortTimeStep() const { return m_abortTimeStep; }
+    // Some applications may recompute a time step.
+    virtual bool recomputeTimeStep() const { return m_recomputeTimeStep; }
+
     //////////
     virtual   void setDelT( double delT ) { m_delT = delT; }
     virtual double getDelT() const { return m_delT; }
@@ -328,6 +345,30 @@ WARNING
                                          const ProcessorGroup* myWorld )
     { m_application_stats.reduce( allReduce, myWorld ); };      
     
+    template< class T > void
+    reduceSystemVar(       DataWarehouse * new_dw,
+                     const bool            varFlag,
+                     const VarLabel      * varLabel,
+                           T             & var )
+    {
+      Patch* patch = nullptr;
+      
+      var.setBenignValue();
+
+      if (varFlag) {
+
+        if (!new_dw->exists(varLabel, -1, patch)) {
+          new_dw->put(var, varLabel);
+        }
+        
+        if (d_myworld->nRanks() > 1) {
+          new_dw->reduceMPI(varLabel, 0, 0, -1);
+        }
+
+        new_dw->get( var, varLabel );
+      }
+    };
+
   protected:
     Scheduler       * m_scheduler    {nullptr};
     LoadBalancer    * m_loadBalancer {nullptr};
@@ -336,7 +377,7 @@ WARNING
     Output          * m_output       {nullptr};
 
     bool m_recompile {false};
-    
+
   private:
     bool m_AMR {false};
     bool m_lockstepAMR {false};
@@ -354,7 +395,13 @@ WARNING
     bool m_adjustOutputInterval {false};
 
     bool m_mayEndSimulation {false};
+    bool m_mayAbortTimeStep {false};
+    bool m_mayRecomputeTimeStep {false};
   
+    bool m_endSimulation{false};
+    bool m_abortTimeStep{false};
+    bool m_recomputeTimeStep{false};
+
     const VarLabel* m_timeStepLabel;
     const VarLabel* m_simulationTimeLabel;
     const VarLabel* m_delTLabel;
@@ -365,6 +412,8 @@ WARNING
     const VarLabel* m_checkpointTimeStepIntervalLabel;
 
     const VarLabel* m_endSimulationLabel;
+    const VarLabel* m_abortTimeStepLabel;
+    const VarLabel* m_recomputeTimeStepLabel;
 
     SimulationTime* m_simulationTime {nullptr};
   
@@ -376,8 +425,6 @@ WARNING
 
     // The time step that the simulation is at.
     int    m_timeStep{0};
-
-    bool   m_endSimulation{false};
 
   protected:    
     SimulationStateP m_sharedState{nullptr};

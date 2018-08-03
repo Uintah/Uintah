@@ -123,6 +123,9 @@ MPMICE::MPMICE(const ProcessorGroup* myworld,
                          // unlike the situation for ice materials
 
   d_switchCriteria = 0;
+
+  mayAbortTimeStep(true);
+  mayRecomputeTimeStep(true);
 }
 //______________________________________________________________________
 //
@@ -148,11 +151,6 @@ MPMICE::~MPMICE()
 
 //__________________________________
 //    For recomputing timesteps
-bool MPMICE::recomputableTimeSteps()
-{
-  return true;
-}
-
 double MPMICE::recomputeDelT(const double delT)
 {
   return delT / 2.0;
@@ -1394,26 +1392,26 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       setBC(sp_vol_CC,"set_if_sym_BC",patch, m_sharedState, indx, new_dw, isNotInitialTimeStep); 
 
       //---- B U L L E T   P R O O F I N G------
-      // ignore BP if time step recompute has already been requested
+      // ignore BP if recompute time step has already been requested
       IntVector neg_cell;
       ostringstream warn;
-      bool tsr = new_dw->timeStepRecomputed();
+      bool rts = new_dw->recomputeTimeStep();
       
       int L = getLevel(patches)->getIndex();
       if(d_testForNegTemps_mpm){
-        if (!areAllValuesPositive(Temp_CC, neg_cell) && !tsr) {
+        if (!areAllValuesPositive(Temp_CC, neg_cell) && !rts) {
           warn <<"ERROR MPMICE:("<< L<<"):interpolateNCToCC_0, mat "<< indx 
                <<" cell "
                << neg_cell << " Temp_CC " << Temp_CC[neg_cell] << "\n ";
           throw InvalidValue(warn.str(), __FILE__, __LINE__);
         }
       }
-      if (!areAllValuesPositive(rho_CC, neg_cell) && !tsr) {
+      if (!areAllValuesPositive(rho_CC, neg_cell) && !rts) {
         warn <<"ERROR MPMICE:("<< L<<"):interpolateNCToCC_0, mat "<< indx 
              <<" cell " << neg_cell << " rho_CC " << rho_CC[neg_cell]<< "\n ";
         throw InvalidValue(warn.str(), __FILE__, __LINE__);
       }
-      if (!areAllValuesPositive(sp_vol_CC, neg_cell) && !tsr) {
+      if (!areAllValuesPositive(sp_vol_CC, neg_cell) && !rts) {
         warn <<"ERROR MPMICE:("<< L<<"):interpolateNCToCC_0, mat "<< indx 
              <<" cell "
              << neg_cell << " sp_vol_CC " << sp_vol_CC[neg_cell]<<"\n ";
@@ -1571,13 +1569,13 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
        setBC(int_eng_L, "set_if_sym_BC",patch, m_sharedState, indx, new_dw, isNotInitialTimeStep);
       
       //---- B U L L E T   P R O O F I N G------
-      // ignore BP if time step recompute has already been requested
+      // ignore BP if recompute time step has already been requested
       IntVector neg_cell;
       ostringstream warn;
-      bool tsr = new_dw->timeStepRecomputed();
+      bool rts = new_dw->recomputeTimeStep();
       
       if(d_testForNegTemps_mpm){
-        if (!areAllValuesPositive(int_eng_L, neg_cell) && !tsr) {
+        if (!areAllValuesPositive(int_eng_L, neg_cell) && !rts) {
           int L = getLevel(patches)->getIndex();
           warn <<"ERROR MPMICE:("<< L<<"):computeLagrangianValuesMPM, mat "
                << indx<<" cell "
@@ -2055,11 +2053,11 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
       //__________________________________
       //      BULLET PROOFING
       // ignore BP if time step recompute has already been requested
-      bool tsr = new_dw->timeStepRecomputed();
+      bool rts = new_dw->recomputeTimeStep();
       
       string message;
       bool allTestsPassed = true;
-      if(test_max_iter == d_ice->d_max_iter_equilibration && !tsr){
+      if(test_max_iter == d_ice->d_max_iter_equilibration && !rts){
         allTestsPassed = false;
         message += "Max. iterations reached ";
       }
@@ -2068,18 +2066,18 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         ASSERT(( vol_frac[m][c] > 0.0 ) ||( vol_frac[m][c] < 1.0));
       }
       
-      if ( fabs(sum - 1.0) > convergence_crit && !tsr) {  
+      if ( fabs(sum - 1.0) > convergence_crit && !rts) {  
         allTestsPassed = false;
         message += " sum (volumeFractions) != 1 ";
       }
       
-      if ( press_new[c] < 0.0 && !tsr) {
+      if ( press_new[c] < 0.0 && !rts) {
         allTestsPassed = false;
         message += " Computed pressure is < 0 ";
       }
       
       for (int m = 0; m < numALLMatls; m++){
-        if ((rho_micro[m][c] < 0.0 || vol_frac[m][c] < 0.0) && !tsr) {
+        if ((rho_micro[m][c] < 0.0 || vol_frac[m][c] < 0.0) && !rts) {
           allTestsPassed = false;
           message += " rho_micro < 0 || vol_frac < 0";
         }

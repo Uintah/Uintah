@@ -649,15 +649,13 @@ AMRSimulationController::executeTimeStep( int totalFine )
 
   int tg_index = m_application->computeTaskGraphIndex();
 
-  bool recomputable = m_application->recomputableTimeSteps();
-
   // Execute at least once.
   while (!success) {
     m_application->setDelTForAllLevels( m_scheduler, m_current_gridP, totalFine );
 
     // Standard data warehouse scrubbing.
     if (m_scrub_datawarehouse && m_loadBalancer->getNthRank() == 1) {
-      if (recomputable) {
+      if (m_application->mayRecomputeTimeStep()) {
         m_scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubNonPermanent);
       }
       else {
@@ -690,8 +688,7 @@ AMRSimulationController::executeTimeStep( int totalFine )
     }
 
     //  If time step is to be recomputed adjust the delta T and recompute.
-    if (m_scheduler->get_dw(totalFine)->timeStepRecomputed()) {
-      ASSERT(recomputable);
+    if (m_application->recomputeTimeStep()) {
 
       for (int i = 1; i <= totalFine; ++i) {
         m_scheduler->replaceDataWarehouse(i, m_current_gridP);
@@ -700,20 +697,22 @@ AMRSimulationController::executeTimeStep( int totalFine )
       // Recompute the delta T.
       m_application->recomputeDelT();
 
-      // Re-evaluate the outputting and checkpointing.
+      // As the delta T, re-evaluate the outputting and checkpointing.
       m_output->reevaluate_OutputCheckPointTimeStep(m_application->getSimTime(),
                                                     m_application->getDelT());
 
       success = false;
     }
-    else {
-      if (m_scheduler->get_dw(1)->timeStepAborted()) {
-        throw InternalError("Execution aborted, cannot recompute time step\n",
-                            __FILE__, __LINE__);
-      }
-
+    else if (m_application->abortTimeStep()) {
+      proc0cout << "Time step aborted and cannot recompute it. "
+		<< "Ending the simulation." << std::endl;
+      
+      m_application->endSimulation(true);
+      
       success = true;
     }
+    else
+      success = true;
   } 
 }
 
@@ -946,7 +945,7 @@ AMRSimulationController::compileTaskGraph( int totalFine )
   m_output->sched_allOutputTasks( m_current_gridP, m_scheduler, true );
 
   // Update the system var (time step and simulation time). Must be
-  // done after the output.
+  // done after the output and after scheduleComputeStableTimeStep.
   m_application->scheduleUpdateSystemVars( m_current_gridP,
                                    m_loadBalancer->getPerProcessorPatchSet(m_current_gridP),
                                    m_scheduler );
@@ -1088,7 +1087,8 @@ AMRSimulationController::subCycleExecute( int startDW,
   
   int newDWStride = dwStride/numSteps;
 
-  DataWarehouse::ScrubMode oldScrubbing = (/*m_loadBalancer->isDynamic() ||*/ m_application->recomputableTimeSteps()) ?
+  DataWarehouse::ScrubMode oldScrubbing =
+    (/*m_loadBalancer->isDynamic() ||*/ m_application->mayRecomputeTimeStep()) ?
     DataWarehouse::ScrubNonPermanent : DataWarehouse::ScrubComplete;
 
   int curDW = startDW;

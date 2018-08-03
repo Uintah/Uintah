@@ -834,11 +834,16 @@ MPIScheduler::execute( int tgnum     /* = 0 */
       printTaskLevels( d_myworld, g_task_level, dtask );
     }
 
-    if(!abort && m_dws[m_dws.size()-1] && m_dws[m_dws.size()-1]->timeStepAborted()){
+    // ARS - FIXME CHECK THE WAREHOUSE
+    OnDemandDataWarehouseP dw = m_dws[m_dws.size() - 1];
+    if (!abort && dw && dw->abortTimeStep()) {
+      // TODO - abort might not work with external queue...
       abort = true;
       abort_point = dtask->getTask()->getSortedOrder();
 
-      DOUT(true, "  WARNING: Aborting time step after task: " << dtask->getTask()->getName());
+      DOUT(true,  "Rank-" << d_myworld->myRank()
+                          << "  WARNING: Aborting time step after task: "
+                          << dtask->getTask()->getName());
     }
 
   } // end while( numTasksDone < ntasks )

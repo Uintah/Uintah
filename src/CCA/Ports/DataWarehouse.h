@@ -61,31 +61,31 @@ class VarLabel;
 class Task;
 
 /**************************************
-	
+        
 CLASS
    DataWarehouse
-	
+        
    Short description...
-	
+        
 GENERAL INFORMATION
-	
+        
    DataWarehouse.h
-	
+        
    Steven G. Parker
    Department of Computer Science
    University of Utah
-	
+        
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-	
-   	
+        
+        
 KEYWORDS
    DataWarehouse
-	
+        
 DESCRIPTION
    Long description...
-	
+        
 WARNING
-	
+        
 ****************************************/
       
 class DataWarehouse : public RefCounted {
@@ -97,8 +97,8 @@ public:
   virtual bool exists(const VarLabel*, int matlIndex, const Level*) const = 0;
 
   virtual ReductionVariableBase* getReductionVariable( const VarLabel*,
-						       int matlIndex,
-						       const Level* ) const = 0;
+                                                       int matlIndex,
+                                                       const Level* ) const = 0;
   
   // Returns a (const) pointer to the grid.  This pointer can then be
   // used to (for example) get the number of levels in the grid.
@@ -107,28 +107,28 @@ public:
   // Generic put and allocate, passing Variable as a pointer rather than
   // by reference to avoid ambiguity with other put overloaded methods.
   virtual void put(Variable*, const VarLabel*, int matlIndex,
-		   const Patch*) = 0;
+                   const Patch*) = 0;
 
   // Reduction Variables
   virtual void get(ReductionVariableBase&, const VarLabel*,
-		   const Level* level = 0, int matlIndex = -1) = 0;
+                   const Level* level = 0, int matlIndex = -1) = 0;
   virtual void put(const ReductionVariableBase&, const VarLabel*,
-		   const Level* level = 0, int matlIndex = -1) = 0;
+                   const Level* level = 0, int matlIndex = -1) = 0;
 
   virtual void override(const ReductionVariableBase&, const VarLabel*,
-			const Level* level = 0, int matlIndex = -1) = 0;
+                        const Level* level = 0, int matlIndex = -1) = 0;
   virtual void print(std::ostream& intout, const VarLabel* label,
-		     const Level* level, int matlIndex = -1) = 0;
+                     const Level* level, int matlIndex = -1) = 0;
 
   // Sole Variables
   virtual bool exists(const VarLabel*) const = 0;
   virtual void get(SoleVariableBase&, const VarLabel*,
-		   const Level* level = 0, int matlIndex = -1) = 0;
+                   const Level* level = 0, int matlIndex = -1) = 0;
   virtual void put(const SoleVariableBase&, const VarLabel*,
-		   const Level* level = 0, int matlIndex = -1) = 0;
+                   const Level* level = 0, int matlIndex = -1) = 0;
 
   virtual void override(const SoleVariableBase&, const VarLabel*,
-			const Level* level = 0, int matlIndex = -1) = 0;
+                        const Level* level = 0, int matlIndex = -1) = 0;
 
   virtual void doReserve() = 0; 
 
@@ -153,24 +153,24 @@ public:
   virtual ParticleSubset* getDeleteSubset(int matlIndex, const Patch*) = 0;
   virtual std::map<const VarLabel*, ParticleVariableBase*>* getNewParticleState(int matlIndex, const Patch*) = 0;
   virtual ParticleSubset* getParticleSubset(int matlIndex, const Patch*,
-					    Ghost::GhostType,
-					    int numGhostCells,
-					    const VarLabel* posvar) = 0;
+                                            Ghost::GhostType,
+                                            int numGhostCells,
+                                            const VarLabel* posvar) = 0;
   virtual ParticleSubset* getParticleSubset(int matlIndex, IntVector low, IntVector high,
                                             const Patch* relPatch,
                                             const VarLabel* posvar, const Level* level=0) = 0;
   virtual void allocateTemporary(ParticleVariableBase&,
-				 ParticleSubset*) = 0;
+                                 ParticleSubset*) = 0;
   virtual void allocateAndPut(ParticleVariableBase&, const VarLabel*,
-			      ParticleSubset*) = 0;
+                              ParticleSubset*) = 0;
   virtual void get(constParticleVariableBase&, const VarLabel*,
-		   ParticleSubset*) = 0;
+                   ParticleSubset*) = 0;
   virtual void get(constParticleVariableBase&, const VarLabel*,
-		   int matlIndex, const Patch* patch) = 0;
+                   int matlIndex, const Patch* patch) = 0;
   virtual void getModifiable(ParticleVariableBase&, const VarLabel*,
-			     ParticleSubset*) = 0;
+                             ParticleSubset*) = 0;
   virtual void put(ParticleVariableBase&, const VarLabel*,
-		   bool replace = false) = 0;
+                   bool replace = false) = 0;
 
 
   virtual void getCopy(ParticleVariableBase&, const VarLabel*, ParticleSubset*) = 0;
@@ -181,7 +181,7 @@ public:
 
 
   virtual ParticleVariableBase* getParticleVariable(const VarLabel*,
-						    ParticleSubset*) = 0;
+                                                    ParticleSubset*) = 0;
   virtual ParticleVariableBase*
   getParticleVariable(const VarLabel*, int matlIndex, const Patch*) = 0;
 
@@ -220,21 +220,21 @@ public:
 
   // Copy out of the warehouse into an allocated variable.
   virtual void copyOut(GridVariableBase& var, const VarLabel* label, int matlIndex,
-	       const Patch* patch, Ghost::GhostType gtype = Ghost::None,
-	       int numGhostCells = 0) = 0;
+               const Patch* patch, Ghost::GhostType gtype = Ghost::None,
+               int numGhostCells = 0) = 0;
 
   // Makes var a copy of the specified warehouse data, allocating it
   // to the appropriate size first.
   virtual void getCopy(GridVariableBase& var, const VarLabel* label, int matlIndex,
-	       const Patch* patch, Ghost::GhostType gtype = Ghost::None,
-	       int numGhostCells = 0) = 0;
+               const Patch* patch, Ghost::GhostType gtype = Ghost::None,
+               int numGhostCells = 0) = 0;
       
 
   // PerPatch Variables
   virtual void get(PerPatchBase&, const VarLabel*,
-		   int matlIndex, const Patch*) = 0;
+                   int matlIndex, const Patch*) = 0;
   virtual void put(PerPatchBase&, const VarLabel*,
-		   int matlIndex, const Patch*, bool replace = false) = 0;
+                   int matlIndex, const Patch*, bool replace = false) = 0;
      
   // this is so we can get reduction information for regridding
   virtual void getVarLabelMatlLevelTriples(std::vector<VarLabelMatl<Level> >& vars ) const = 0;
@@ -244,7 +244,7 @@ public:
 
   // Add particles
   virtual void addParticles(const Patch* patch, int matlIndex,
-			    std::map<const VarLabel*, ParticleVariableBase*>* addedstate) = 0;
+                            std::map<const VarLabel*, ParticleVariableBase*>* addedstate) = 0;
 
   // Move stuff to a different data Warehouse
   virtual void transferFrom(DataWarehouse*, const VarLabel*,
@@ -255,7 +255,7 @@ public:
                             bool replace) = 0;
 
   virtual void transferFrom(DataWarehouse*, const VarLabel*,
-			    const PatchSubset*, const MaterialSubset*,
+                            const PatchSubset*, const MaterialSubset*,
                             bool replace, const PatchSubset*) = 0;
 
   //An overloaded version of transferFrom.  GPU transfers need a stream, and a
@@ -265,7 +265,7 @@ public:
                             bool replace, const PatchSubset*) = 0;
 
   virtual size_t emit(OutputContext&, const VarLabel* label,
-		    int matlIndex, const Patch* patch) = 0;
+                    int matlIndex, const Patch* patch) = 0;
 
 #if HAVE_PIDX
   virtual void emitPIDX(PIDXOutputContext&, 
@@ -304,13 +304,11 @@ public:
   void setID( int id ) { d_generation = id; }
 
   // For timestep abort/recompute
-  virtual bool timeStepAborted() = 0;
-  virtual bool timeStepRecomputed() = 0;
-  virtual void abortTimeStep() = 0;
-  virtual void recomputeTimeStep() = 0;
+  virtual bool abortTimeStep() = 0;
+  virtual bool recomputeTimeStep() = 0;
 
   virtual void reduceMPI(const VarLabel* label, const Level* level,
-	  const MaterialSubset* matls, int nComm) = 0;
+          const MaterialSubset* matls, int nComm) = 0;
 
 #ifdef HAVE_CUDA
   GPUDataWarehouse* getGPUDW(int i) const { return d_gpuDWs[i]; }
@@ -322,8 +320,8 @@ public:
 #endif
 protected:
   DataWarehouse( const ProcessorGroup* myworld,
-		 Scheduler* scheduler, 
-		 int generation );
+                 Scheduler* scheduler, 
+                 int generation );
   // These two things should be removed from here if possible - Steve
   const ProcessorGroup* d_myworld;
   Scheduler* d_scheduler;

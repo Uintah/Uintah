@@ -115,7 +115,7 @@ namespace Uintah{
 
   double recomputeDelT(const double delT) { return delT/2.0; };
 
-  inline bool recomputableTimeSteps() {
+  inline bool mayRecomputeTimeStep() {
     return false;
   }
 

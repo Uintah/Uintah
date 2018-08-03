@@ -293,12 +293,12 @@ namespace Uintah {
       
         cout_dbg << mpiRank << " Solving the linear system" << "\n";
 
-	Timers::Simple solve_timer;
-	solve_timer.start();
+        Timers::Simple solve_timer;
+        solve_timer.start();
 
         // Setup & solve phases
         int timeSolve = hypre_InitializeTiming("Solver Setup");
-	(void) timeSolve;  // Removes an unused var warning
+        (void) timeSolve;  // Removes an unused var warning
 
         hypre_BeginTiming(timeSolve);
         
@@ -311,7 +311,7 @@ namespace Uintah {
         hypre_ClearTiming();
         timeSolve = 0; 
         
-	solve_timer.stop();
+        solve_timer.stop();
         
         //__________________________________
         // Check if converged,
@@ -325,8 +325,8 @@ namespace Uintah {
               std::cout << "AMRSolver not converged in " << numIterations 
                         << " iterations, final residual= " << finalResNorm
                         << ", requesting smaller timestep\n";
-            //new_dw->abortTimeStep();
-            //new_dw->recomputeTimeStep();
+            // new_dw->put( bool_or_vartype(true), VarLabel::find(abortTimeStep_name));
+            // new_dw->put( bool_or_vartype(true), VarLabel::find(recomputeTimeStep_name));
           } else {
             throw ConvergenceFailure("AMRSolver variable: "
                                      +_X_label->getName()+", solver: "
@@ -342,13 +342,13 @@ namespace Uintah {
         getSolution_CC(matl);
         printSolution("Solution");
 
-	timer.stop();
-	  
+        timer.stop();
+          
         if(pg->myRank() == 0) {
           std::cerr << "Solve of " << _X_label->getName()
                     << " on level " << _level->getIndex()
                     << " completed in " << timer().seconds()
-		    << " seconds (solve only: " << solve_timer().seconds()
+                    << " seconds (solve only: " << solve_timer().seconds()
                     << " seconds, " << numIterations
                     << " iterations, residual=" << finalResNorm << ")\n";
         }
@@ -356,7 +356,7 @@ namespace Uintah {
         delete solver;
         delete precond;
 
-	timer.reset( true );
+        timer.reset( true );
       } // for m (matls loop)
       
       cout_doing << mpiRank<<" HypreDriver::solve() END" << "\n";

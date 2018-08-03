@@ -100,7 +100,6 @@ using namespace ExchangeModels;
       
       virtual ~ICE();
 
-      virtual bool   recomputableTimeSteps();
       virtual double recomputeDelT(const double delT);
 
       virtual void problemSetup(const ProblemSpecP& params,

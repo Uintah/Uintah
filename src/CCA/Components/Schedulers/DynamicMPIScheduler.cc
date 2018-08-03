@@ -339,11 +339,16 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/
       }
     }
 
-    if (!abort && m_dws[m_dws.size() - 1] && m_dws[m_dws.size() - 1]->timeStepAborted()) {
+    // ARS - FIXME CHECK THE WAREHOUSE
+    OnDemandDataWarehouseP dw = m_dws[m_dws.size() - 1];
+    if (!abort && dw && dw->abortTimeStep()) {
       // TODO - abort might not work with external queue...
       abort = true;
       abort_point = task->getTask()->getSortedOrder();
-      DOUT(g_dbg, "   WARNING: Aborting time step after task: " << task->getTask()->getName());
+
+      DOUT(g_dbg,  "Rank-" << d_myworld->myRank()
+	                   << "  WARNING: Aborting time step after task: "
+                           << task->getTask()->getName());
     }
   } // end while( numTasksDone < ntasks )
 

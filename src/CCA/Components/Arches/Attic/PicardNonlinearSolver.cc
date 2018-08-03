@@ -376,6 +376,9 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
     tsk->computes(d_lab->d_stressTensorCompLabel,d_lab->d_tensorMatl, oams);
   }
 
+  tsk->computes( VarLabel::find(abortTimeStep_name) );
+  tsk->computes( VarLabel::find(recomputeTimeStep_name) );
+  
   sched->addTask(tsk, d_perproc_patches, d_lab->d_sharedState->allArchesMaterials());
 
   const PatchSet* patches = level->eachPatch();
@@ -655,17 +658,17 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
      
   if (norm/(init_norm+1.0e-10) > 1) {
     if(pg->myRank() == 0){
-       cout << "WARNING! Iterations diverge! Recomputing timestep." << endl;
-      new_dw->abortTimeStep();
-      new_dw->recomputeTimeStep();
+      cout << "WARNING! Iterations diverge! Recomputing timestep." << endl;
+      new_dw->put( bool_or_vartype(true), VarLabel::find(abortTimeStep_name));
+      new_dw->put( bool_or_vartype(true), VarLabel::find(recomputeTimeStep_name) );
     }
   }
   
   if ((scalar_clipped > 0.0)||(reactscalar_clipped > 0.0)) {
     if(pg->myRank() == 0){
        cout << "WARNING! Scalars got clipped! Recomputing timestep." << endl;
-      new_dw->abortTimeStep();
-      new_dw->recomputeTimeStep();
+      new_dw->put( bool_or_vartype(true), VarLabel::find(abortTimeStep_name));
+      new_dw->put( bool_or_vartype(true), VarLabel::find(recomputeTimeStep_name) );
     }
   }
 

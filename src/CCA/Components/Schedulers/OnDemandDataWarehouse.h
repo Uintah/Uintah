@@ -478,11 +478,8 @@ class OnDemandDataWarehouse : public DataWarehouse {
                                  bool                       add );
 
     // For time step abort/recompute
-    virtual bool timeStepAborted();
-    virtual bool timeStepRecomputed();
-
-    virtual void abortTimeStep();
-    virtual void recomputeTimeStep();
+    virtual bool abortTimeStep();
+    virtual bool recomputeTimeStep();
 
    struct ValidNeighbors {
      GridVariableBase* validNeighbor;
@@ -711,13 +708,7 @@ class OnDemandDataWarehouse : public DataWarehouse {
 
     ScrubMode d_scrubMode;
 
-    bool d_aborted;
-    bool d_recompute;
-
-    // Whether this (Old) DW is being used for a recompute time step
-    // (the new DWs are cleared out)
-    bool d_hasRecomputed;
-
+    bool m_exchangeParticleQuantities {true};
 }; // end class OnDemandDataWarehouse
 
 }  // end namespace Uintah

@@ -804,8 +804,10 @@ void Switcher::switchApplication( const ProblemSpecP     & restart_prob_spec,
 
   // Read the ups file for the first subcomponent.
   ProblemSpecP subCompUps = ProblemSpecReader().readInputFile(d_in_file[d_componentIndex]);
+
+  UintahParallelComponent* appComp = dynamic_cast<UintahParallelComponent*>( getPort("application", d_componentIndex) );
   
-  d_app = dynamic_cast<ApplicationInterface*>( getPort("application", d_componentIndex) );
+  d_app = dynamic_cast<ApplicationInterface*>( appComp );
   d_app->setComponents( this );
 
   // Send the subcomponent's UPS file to it's sim interface.
@@ -823,6 +825,11 @@ void Switcher::switchApplication( const ProblemSpecP     & restart_prob_spec,
   // Send the subcomponent's UPS file to the switcher's simulation
   // time.  Note this goes into the switcher not the subcomponent.
   getSimulationTime()->problemSetup( subCompUps );
+
+  // Set flags for checking reduction vars - done after the
+  // subcomponent problem spec is read because the values may be based
+  // on the solver being requested in the problem setup.
+  setFlags( appComp );
 }
 
 //______________________________________________________________________
@@ -934,13 +941,6 @@ void Switcher::restartInitialize()
 {
   d_restarting = true;
   d_app->restartInitialize();
-}
-
-//______________________________________________________________________
-//
-bool Switcher::recomputableTimeSteps()
-{
-  return d_app->recomputableTimeSteps();
 }
 
 //______________________________________________________________________

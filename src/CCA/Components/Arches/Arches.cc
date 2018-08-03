@@ -160,6 +160,11 @@ Arches::problemSetup( const ProblemSpecP     & params,
 
   m_nlSolver->problemSetup( db, m_sharedState, grid );
 
+  // Must be set here rather than the constructor because the value
+  // is based on the solver being requested in the problem setup.
+  mayAbortTimeStep(     m_nlSolver->mayRecomputeTimeStep() );
+  mayRecomputeTimeStep( m_nlSolver->mayRecomputeTimeStep() );
+
   // tell the infrastructure how many tasksgraphs are needed.
   int num_task_graphs=m_nlSolver->taskGraphsRequested();
   m_scheduler->setNumTaskGraphs(num_task_graphs);
@@ -330,11 +335,6 @@ int Arches::computeTaskGraphIndex( const int timeStep )
 //--------------------------------------------------------------------------------------------------
 double Arches::recomputeDelT(const double delT ) {
   return m_nlSolver->recomputeDelT( delT );
-}
-
-//--------------------------------------------------------------------------------------------------
-bool Arches::recomputableTimeSteps() {
-  return m_nlSolver->recomputableTimeSteps();
 }
 
 //-------------------------------------------------------------------------------------------------

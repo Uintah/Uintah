@@ -117,8 +117,7 @@ namespace Uintah {
                                    std::vector<fflux> badOutFlux,
                                    const double vol,
                                    const int indx,
-                                   const Patch* patch,
-                                   DataWarehouse* new_dw);
+                                   const Patch* patch);
                                  
   inline double equalZero(double d1, double d2, double d3)
   {
