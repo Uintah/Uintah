@@ -310,8 +310,9 @@ public:
     VarLabel::destroy(memref_label);
     VarLabel::destroy(tolerance_label);
 
-    if(err_label != d_label)
+    if(err_label != d_label){
       VarLabel::destroy(err_label);
+    }
     VarLabel::destroy(aden_label);
   }
 //______________________________________________________________________
@@ -379,9 +380,11 @@ public:
   }
 //______________________________________________________________________
 //
-  void step2(const ProcessorGroup*, const PatchSubset* patches,
-             const MaterialSubset* matls,
-             DataWarehouse* old_dw, DataWarehouse* new_dw)
+  void step2(const ProcessorGroup   *, 
+             const PatchSubset      * patches,
+             const MaterialSubset   * matls,
+             DataWarehouse          * old_dw, 
+             DataWarehouse          * new_dw)
   {
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
@@ -413,9 +416,11 @@ public:
         old_dw->get(X, X_label, matl, patch, Ghost::None, 0);
         old_dw->get(R, R_label, matl, patch, Ghost::None, 0);
         old_dw->get(diagonal, diag_label, matl, patch, Ghost::None, 0);
+        
         typename GridVarType::double_type Xnew, Rnew;
         new_dw->allocateAndPut(Xnew, X_label, matl, patch, Ghost::None, 0);
         new_dw->allocateAndPut(Rnew, R_label, matl, patch, Ghost::None, 0);
+        
         typename GridVarType::double_type Q;
         new_dw->getModifiable(Q, Q_label, matl, patch);
 
@@ -468,9 +473,11 @@ public:
   }
 //______________________________________________________________________
 //
-  void step3(const ProcessorGroup*, const PatchSubset* patches,
-             const MaterialSubset* matls,
-             DataWarehouse* old_dw, DataWarehouse* new_dw)
+  void step3(const ProcessorGroup *, 
+             const PatchSubset    * patches,
+             const MaterialSubset * matls,
+             DataWarehouse        * old_dw, 
+             DataWarehouse        * new_dw)
   {
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
@@ -518,9 +525,11 @@ public:
     }
   }
 //______________________________________________________________________
-  void setup(const ProcessorGroup*, const PatchSubset* patches,
-             const MaterialSubset* matls,
-             DataWarehouse*, DataWarehouse* new_dw)
+  void setup(const ProcessorGroup *, 
+             const PatchSubset    * patches,
+             const MaterialSubset * matls,
+             DataWarehouse        *, 
+             DataWarehouse        * new_dw)
   {
     DataWarehouse* A_dw = new_dw->getOtherDataWarehouse(parent_which_A_dw);
     DataWarehouse* b_dw = new_dw->getOtherDataWarehouse(parent_which_b_dw);
@@ -627,9 +636,11 @@ public:
   }
 
   //______________________________________________________________________
-  void solve(const ProcessorGroup* pg, const PatchSubset* patches,
-             const MaterialSubset* matls,
-             DataWarehouse* old_dw, DataWarehouse* new_dw,
+  void solve(const ProcessorGroup * pg, 
+             const PatchSubset    * patches,
+             const MaterialSubset * matls,
+             DataWarehouse        * old_dw, 
+             DataWarehouse        * new_dw,
              Handle<CGStencil7<GridVarType> >)
   {
     if(cout_doing.active())
@@ -661,12 +672,14 @@ public:
     // Schedule the setup
     if(cout_doing.active())
       cout_doing << "CGSolver::schedule setup" << endl;
-    Task* task = scinew Task("CGSolver: schedule setup", this, &CGStencil7<GridVarType>::setup);
+    Task* task = scinew Task("CGSolver:setup", this, &CGStencil7<GridVarType>::setup);
     task->requires(parent_which_b_dw, B_label, Ghost::None, 0);
     task->requires(parent_which_A_dw, A_label, Ghost::None, 0);
-    if(guess_label)
+    
+    if(guess_label){
       task->requires(parent_which_guess_dw, guess_label, Around, 1);
-
+    }
+    
     task->computes(memref_label);
     task->computes(R_label);
     task->computes(X_label);
@@ -681,38 +694,43 @@ public:
     subsched->addTask(task, level->eachPatch(), matlset);
 
     subsched->compile();
-    subsched->get_dw(3)->setScrubbing(DataWarehouse::ScrubNone);
-    subsched->execute();
+    
+    DataWarehouse* subNewDW = subsched->get_dw(3);
+    subNewDW->setScrubbing(DataWarehouse::ScrubNone);
+    subsched->execute();              // execute CGSolver:setup and the reduction tasks
 
     //__________________________________
+    // At this point the tolerance_label and err_label have
+    // been computed by CGSolver:setup and they have been reduced
     double tolerance=0;
     sum_vartype tol;
-    subsched->get_dw(3)->get(tol, tolerance_label);
+    subNewDW->get(tol, tolerance_label);
     tolerance=tol;
-
     double e=0;
+    
     switch(params->norm){
     case CGSolverParams::L1:
     case CGSolverParams::L2:
       {
         sum_vartype err;
-        subsched->get_dw(3)->get(err, err_label);
+        subNewDW->get(err, err_label);
         e=err;
       }
       break;
     case CGSolverParams::LInfinity:
       {
         max_vartype err;
-        subsched->get_dw(3)->get(err, err_label);
+        subNewDW->get(err, err_label);
         e=err;
       }
       break;
     }
     double err0=e;
     sumlong_vartype f;
-    subsched->get_dw(3)->get(f, flop_label);
+    subNewDW->get(f, flop_label);
+    
     long64 flops = f;
-    subsched->get_dw(3)->get(f, memref_label);
+    subNewDW->get(f, memref_label);
     long64 memrefs = f;
 
     //__________________________________
@@ -729,7 +747,7 @@ public:
       // Step 1 - requires A(parent), D(old, 1 ghost) computes aden(new)
       if(cout_doing.active())
         cout_doing << "CGSolver::schedule Step 1" << endl;
-      task = scinew Task("CGSolver: schedule step1", this, &CGStencil7<GridVarType>::step1);
+      task = scinew Task("CGSolver:step1", this, &CGStencil7<GridVarType>::step1);
       task->requires(parent_which_A_dw, A_label, Ghost::None, 0);
       task->requires(Task::OldDW,       D_label, Around, 1);
       task->computes(aden_label);
@@ -743,7 +761,7 @@ public:
       // Step 2 - requires d(old), aden(new) D(old), X(old) R(old)  computes X, R, Q, d
       if(cout_doing.active())
         cout_doing << "CGSolver::schedule Step 2" << endl;
-      task = scinew Task("CGSolver: schedule step2", this, &CGStencil7<GridVarType>::step2);
+      task = scinew Task("CGSolver:step2", this, &CGStencil7<GridVarType>::step2);
       task->requires(Task::OldDW, d_label);
       task->requires(Task::NewDW, aden_label);
       task->requires(Task::OldDW, D_label,    Ghost::None, 0);
@@ -757,7 +775,8 @@ public:
       task->computes(diag_label);
       task->computes(flop_label);
       task->modifies(memref_label);
-      if(params->norm != CGSolverParams::L1) {
+      
+      if(params->norm != CGSolverParams::L2) {
         task->computes(err_label);
       }
       subsched->addTask(task, level->eachPatch(), matlset);
@@ -768,7 +787,7 @@ public:
       // Step 3 - requires D(old), Q(new), d(new), d(old), computes D
       if(cout_doing.active())
         cout_doing << "CGSolver::schedule Step 3" << endl;
-      task = scinew Task("CGSolver: schedule step3", this, &CGStencil7<GridVarType>::step3);
+      task = scinew Task("CGSolver:step3", this, &CGStencil7<GridVarType>::step3);
       task->requires(Task::OldDW, D_label, Ghost::None, 0);
       task->requires(Task::NewDW, Q_label, Ghost::None, 0);
       task->requires(Task::NewDW, d_label);
@@ -784,8 +803,12 @@ public:
       while(niter < params->maxiterations && !(e < tolerance)){
         niter++;
         subsched->advanceDataWarehouse(grid);
-        subsched->get_dw(2)->setScrubbing(DataWarehouse::ScrubComplete);
-        subsched->get_dw(3)->setScrubbing(DataWarehouse::ScrubNonPermanent);
+        DataWarehouse* subOldDW = subsched->get_dw(2);
+        DataWarehouse* subNewDW = subsched->get_dw(3);
+        
+        subOldDW->setScrubbing(DataWarehouse::ScrubComplete);
+        subNewDW->setScrubbing(DataWarehouse::ScrubNonPermanent);
+
         subsched->execute();
 
         //__________________________________
@@ -794,14 +817,14 @@ public:
         case CGSolverParams::L2:
           {
             sum_vartype err;
-            subsched->get_dw(3)->get(err, err_label);
+            subNewDW->get(err, err_label);
             e=err;
           }
           break;
         case CGSolverParams::LInfinity:
           {
             max_vartype err;
-            subsched->get_dw(3)->get(err, err_label);
+            subNewDW->get(err, err_label);
             e=err;
           }
           break;
@@ -810,9 +833,9 @@ public:
           e/=err0;
         }
         sumlong_vartype f;
-        subsched->get_dw(3)->get(f, flop_label);
+        subNewDW->get(f, flop_label);
         flops += f;
-        subsched->get_dw(3)->get(f, memref_label);
+        subNewDW->get(f, memref_label);
         memrefs += f;
       }
     }
@@ -859,6 +882,7 @@ public:
     double dt = timer().seconds();
     double mflops = (double(flops)*1.e-6)/dt;
     double memrate = (double(memrefs)*1.e-9)/dt;
+    
     if(pg->myRank() == 0){
       if(niter < params->maxiterations) {
         cout << "Solve of " << X_label->getName()
@@ -975,14 +999,18 @@ void CGSolver::readParameters(ProblemSpecP& params_ps,
 
 //______________________________________________________________________
 //
-void CGSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
-                             const MaterialSet* matls,
-                             const VarLabel* A,    Task::WhichDW which_A_dw,
-                             const VarLabel* x,
-                             bool modifies_x,
-                             const VarLabel* b,    Task::WhichDW which_b_dw,
-                             const VarLabel* guess,Task::WhichDW which_guess_dw,
-                             bool isFirstSolve)
+void CGSolver::scheduleSolve(const LevelP       & level, 
+                             SchedulerP         & sched,
+                             const MaterialSet  * matls,
+                             const VarLabel     * A,    
+                             Task::WhichDW        which_A_dw,
+                             const VarLabel     * x,
+                             bool                 modifies_x,
+                             const VarLabel     * b,    
+                             Task::WhichDW        which_b_dw,
+                             const VarLabel     * guess,
+                             Task::WhichDW        which_guess_dw,
+                             bool                 isFirstSolve)
 {
   Task* task;
   // The extra handle arg ensures that the stencil7 object will get freed
@@ -1041,18 +1069,21 @@ void CGSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
   }
 
   task->requires(which_A_dw, A, Ghost::None, 0);
-  if(guess)
+  if(guess){
     task->requires(which_guess_dw, guess, Around, 1);
-  if(modifies_x)
+  }
+  if(modifies_x) {
     task->modifies(x);
-  else
-    task->computes(x);
-
+  }
+  else{
+    task->computes(x);  
+  }
+  
   task->requires(which_b_dw, b, Ghost::None, 0);
   task->hasSubScheduler();
 
-  LoadBalancer * lb              = sched->getLoadBalancer();
-  const PatchSet   * perproc_patches = lb->getPerProcessorPatchSet( level );
+  LoadBalancer * lb = sched->getLoadBalancer();
+  const PatchSet  * perproc_patches = lb->getPerProcessorPatchSet( level );
 
   sched->addTask(task, perproc_patches, matls);
 }
