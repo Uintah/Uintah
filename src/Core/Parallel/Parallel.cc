@@ -332,7 +332,7 @@ Parallel::initializeManager( int& argc , char**& argv )
     if ( s_cuda_blocks_per_loop <= 0 ) {
       s_cuda_blocks_per_loop = 1;
       std::cout << "Using " << s_cuda_blocks_per_loop << " Streaming Multiprocessor(s) per CUDA loop." << std::endl;
-      std::cout << "  This value can be adjusted through the -s_cuda_blocks_per_loop command line parameter." << std::endl;
+      std::cout << "  This value can be adjusted through the -cuda_blocks_per_loop command line parameter." << std::endl;
     }
   }
 
