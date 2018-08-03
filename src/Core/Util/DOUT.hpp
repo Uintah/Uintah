@@ -75,6 +75,17 @@
       )
 
 
+#define DOUTP( cond, ... )                                  \
+  if (cond) {                                               \
+    std::ostringstream dout_msg;                            \
+    dout_msg << "(Proc ";                                   \
+    dout_msg << MPI::Impl::prank( MPI_COMM_WORLD ) << ") "; \
+    dout_msg << __FILE__ << ":";                            \
+    dout_msg << __LINE__ << " : ";                          \
+    dout_msg << __VA_ARGS__;                                \
+    printf("%s\n",dout_msg.str().c_str());                  \
+  }
+
 #define DOUTP0( cond, ... )                                 \
   if ( MPI::Impl::prank( MPI_COMM_WORLD ) == 0 && cond) {   \
     std::ostringstream dout_msg;                            \
