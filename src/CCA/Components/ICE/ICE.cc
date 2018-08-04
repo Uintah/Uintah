@@ -146,6 +146,9 @@ ICE::ICE(const ProcessorGroup* myworld,
   d_BC_globalVars->inletVel =  scinew inletVel_globalVars();           
   d_press_matl    = 0;
   d_press_matlSet = 0;
+
+  mayAbortTimeStep(true);
+  mayRecomputeTimeStep(true);
 }
 
 //______________________________________________________________________
@@ -203,12 +206,6 @@ ICE::~ICE()
   }
 }
 
-//______________________________________________________________________
-//
-bool ICE::restartableTimeSteps()
-{
-  return true;
-}
 //______________________________________________________________________
 //
 double ICE::recomputeDelT( const double delT )
@@ -291,16 +288,15 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
     m_solver->readParameters(impSolver, "implicitPressure");
     
     m_solver->getParameters()->setSolveOnExtraCells(false);
-    m_solver->getParameters()->setRestartTimestepOnFailure(true);
+    m_solver->getParameters()->setRecomputeTimeStepOnFailure(true);
     
     impSolver->require(       "max_outer_iterations",          d_max_iter_implicit);
     impSolver->require(       "outer_iteration_tolerance",     d_outer_iter_tolerance);
-    impSolver->getWithDefault("iters_before_timestep_restart", d_iters_before_timestep_restart, 5);
+    impSolver->getWithDefault("iters_before_timestep_restart", d_iters_before_timestep_recompute, 5);
     d_impICE = true;
 
     d_subsched = m_scheduler->createSubScheduler();
     d_subsched->initialize(3,1);
-    d_subsched->setRestartable(true); 
     d_subsched->clearMappings();
     d_subsched->mapDataWarehouse(Task::ParentOldDW, 0);
     d_subsched->mapDataWarehouse(Task::ParentNewDW, 1);
@@ -474,7 +470,7 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
         
   //__________________________________
   //  boundary condition warnings
-  BC_bulletproofing(prob_spec,m_sharedState);
+  BC_bulletproofing(prob_spec, m_sharedState, grid);
   
   //__________________________________
   //  Load Model info.
@@ -1100,9 +1096,9 @@ void ICE::scheduleComputeThermoTransportProperties(SchedulerP& sched,
                                           m_iter != d_models.end(); m_iter++){
 
       FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( *m_iter );
-	  
+          
       if( fb_model && fb_model->computesThermoTransportProps() ) {
-	fb_model->scheduleModifyThermoTransportProperties(sched,level,ice_matls);
+        fb_model->scheduleModifyThermoTransportProperties(sched,level,ice_matls);
       } 
     }
   }
@@ -1287,15 +1283,15 @@ void ICE::scheduleComputeModelSources(SchedulerP& sched,
 
       FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( *m_iter );
       if( fb_model )
-	fb_model->scheduleComputeModelSources(sched, level);
+        fb_model->scheduleComputeModelSources(sched, level);
       
       HEChemModel* hec_model = dynamic_cast<HEChemModel*>( *m_iter );
       if( hec_model )
-	hec_model->scheduleComputeModelSources(sched, level);
+        hec_model->scheduleComputeModelSources(sched, level);
       
       SolidReactionModel* sr_model = dynamic_cast<SolidReactionModel*>( *m_iter );
       if( sr_model )
-	sr_model->scheduleComputeModelSources(sched, level);
+        sr_model->scheduleComputeModelSources(sched, level);
     }
   }
 }
@@ -1376,7 +1372,9 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
   task->computes(lb->vol_fracY_FCLabel);
   task->computes(lb->vol_fracZ_FCLabel);
   
-  sched->setRestartable(true);
+  task->computes( VarLabel::find(abortTimeStep_name) );
+  task->computes( VarLabel::find(recomputeTimeStep_name) );
+
   sched->addTask(task, patches, matls);
 }
 
@@ -1645,7 +1643,9 @@ void ICE::scheduleComputeLagrangianSpecificVolume(SchedulerP& sched,
   t->computes(lb->sp_vol_L_CCLabel);                             
   t->computes(lb->sp_vol_src_CCLabel);                        
 
-  sched->setRestartable(true);
+  t->computes( VarLabel::find(abortTimeStep_name) );
+  t->computes( VarLabel::find(recomputeTimeStep_name) );
+
   sched->addTask(t, patches, matls);
 }
 
@@ -1851,7 +1851,10 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
       }
     }
   }
-  sched->setRestartable(true);
+
+  task->computes( VarLabel::find(abortTimeStep_name) );
+  task->computes( VarLabel::find(recomputeTimeStep_name) );
+  
   sched->addTask(task, patch_set, ice_matls);
 }
 /* _____________________________________________________________________
@@ -2004,7 +2007,7 @@ void ICE::scheduleTestConservation(SchedulerP& sched,
 
       FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( *m_iter );
       if( fb_model )
-	fb_model->scheduleTestConservation(sched,patches);
+        fb_model->scheduleTestConservation(sched,patches);
     }
   }
 }
@@ -2710,12 +2713,12 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
 
       //__________________________________
       //      BULLET PROOFING
-      // ignore BP if a timestep restart has already been requested
-      bool tsr = new_dw->timestepRestarted();
+      // ignore BP if a recompute time step has already been requested
+      bool rts = new_dw->recomputeTimeStep();
 
       string message;
       bool allTestsPassed = true;
-      if(test_max_iter == d_max_iter_equilibration && !tsr){
+      if(test_max_iter == d_max_iter_equilibration && !rts){
         allTestsPassed = false;
         message += "Max. iterations reached ";
       }
@@ -2726,18 +2729,18 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
         }
       }
 
-      if ( fabs(sum - 1.0) > convergence_crit && !tsr) {
+      if ( fabs(sum - 1.0) > convergence_crit && !rts) {
         allTestsPassed = false;
         message += " sum (volumeFractions) != 1 ";
       }
 
-      if ( press_new[c] < 0.0 && !tsr) {
+      if ( press_new[c] < 0.0 && !rts) {
         allTestsPassed = false;
         message += " Computed pressure is < 0 ";
       }
 
       for( int m = 0; m < numMatls; m++ ) {
-        if( (rho_micro[m][c] < 0.0 || vol_frac[m][c] < 0.0) && !tsr ) {
+        if( (rho_micro[m][c] < 0.0 || vol_frac[m][c] < 0.0) && !rts ) {
           allTestsPassed = false;
           message += " rho_micro < 0 || vol_frac < 0";
         }
@@ -4303,11 +4306,11 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
 
         //____ B U L L E T   P R O O F I N G----
         // catch negative internal energies
-        // ignore BP if timestep restart has already been requested
+        // ignore BP if recompute time step has already been requested
         IntVector neg_cell;
-        bool tsr = new_dw->timestepRestarted();
+        bool rts = new_dw->recomputeTimeStep();
         
-        if (!areAllValuesPositive(int_eng_L, neg_cell) && !tsr ) {
+        if (!areAllValuesPositive(int_eng_L, neg_cell) && !rts ) {
          ostringstream warn;
          int idx = level->getIndex();
          warn<<"ICE:(L-"<<idx<<"):computeLagrangianValues, mat "<<indx<<" cell "
@@ -4484,11 +4487,11 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
       
 
       //____ B U L L E T   P R O O F I N G----
-      // ignore BP if timestep restart has already been requested
+      // ignore BP if recompute time step has already been requested
       IntVector neg_cell;
-      bool tsr = new_dw->timestepRestarted();
+      bool rts = new_dw->recomputeTimeStep();
       
-      if (!areAllValuesPositive(sp_vol_L, neg_cell) && !tsr) {
+      if (!areAllValuesPositive(sp_vol_L, neg_cell) && !rts) {
         cout << "\nICE:WARNING......Negative specific Volume"<< endl;
         cout << "cell              "<< neg_cell << " level " <<  level->getIndex() << endl;
         cout << "matl              "<< indx << endl;
@@ -4503,9 +4506,10 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
 //        warn<<"ERROR ICE:("<<L<<"):computeLagrangianSpecificVolumeRF, mat "<<indx
 //            << " cell " <<neg_cell << " sp_vol_L is negative\n";
 //        throw InvalidValue(warn.str(), __FILE__, __LINE__);
-        new_dw->abortTimestep();
-        new_dw->restartTimestep();
-     }
+
+        new_dw->put( bool_or_vartype(true), VarLabel::find(abortTimeStep_name));
+        new_dw->put( bool_or_vartype(true), VarLabel::find(recomputeTimeStep_name));
+      }
     }  // end numALLMatl loop
   }  // patch loop
 
@@ -4948,9 +4952,9 @@ void ICE::conservedtoPrimitive_Vars(const ProcessorGroup* /*pg*/,
       if(d_models.size() != 0){
         for(vector<ModelInterface*>::iterator m_iter  = d_models.begin();
                                               m_iter != d_models.end(); m_iter++){ 
-	  FluidsBasedModel* fb_model =
-	    dynamic_cast<FluidsBasedModel*>( *m_iter );
-	  
+          FluidsBasedModel* fb_model =
+            dynamic_cast<FluidsBasedModel*>( *m_iter );
+          
           if(fb_model && fb_model->computesThermoTransportProps() ) {
             fb_model->computeSpecificHeat(cv_new, patch, new_dw, indx);
           }
@@ -4990,21 +4994,21 @@ void ICE::conservedtoPrimitive_Vars(const ProcessorGroup* /*pg*/,
       }
 
       //____ B U L L E T   P R O O F I N G----
-      // ignore BP if timestep restart has already been requested
+      // ignore BP if recompute time step has already been requested
       IntVector neg_cell;
-      bool tsr = new_dw->timestepRestarted();
+      bool rts = new_dw->recomputeTimeStep();
       
       ostringstream base, warn;
       base <<"ERROR ICE:(L-"<<L_indx<<"):conservedtoPrimitive_Vars, mat "<< indx <<" cell ";
-      if (!areAllValuesPositive(rho_CC, neg_cell) && !tsr) {
+      if (!areAllValuesPositive(rho_CC, neg_cell) && !rts) {
         warn << base.str() << neg_cell << " negative rho_CC\n ";
         throw InvalidValue(warn.str(), __FILE__, __LINE__);
       }
-      if (!areAllValuesPositive(temp_CC, neg_cell) && !tsr) {
+      if (!areAllValuesPositive(temp_CC, neg_cell) && !rts) {
         warn << base.str() << neg_cell << " negative temp_CC\n ";
         throw InvalidValue(warn.str(), __FILE__, __LINE__);
       }
-      if (!areAllValuesPositive(sp_vol_CC, neg_cell) && !tsr) {
+      if (!areAllValuesPositive(sp_vol_CC, neg_cell) && !rts) {
        warn << base.str() << neg_cell << " negative sp_vol_CC\n ";        
        throw InvalidValue(warn.str(), __FILE__, __LINE__);
       } 
@@ -5381,4 +5385,3 @@ ICE::refineBoundaries(const Patch*, SFCZVariable<double>&,
        x0            xright              delX_left         delX_right
                          
 ______________________________________________________________________*/ 
-

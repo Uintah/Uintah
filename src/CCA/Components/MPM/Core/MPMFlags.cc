@@ -51,6 +51,7 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_integrator_type               =  "explicit";
   d_integrator                    =  Explicit;
   d_AMR                           =  false;
+  d_SingleFieldMPM                =  false;
   d_axisymmetric                  =  false;
   d_artificial_viscosity          =  false;
   d_artificial_viscosity_heating  =  false;
@@ -398,6 +399,7 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("interpolator",                       d_interpolator_type);
   ps->appendElement("cpdi_lcrit",                         d_cpdi_lcrit);
   ps->appendElement("AMR",                                d_AMR);
+  ps->appendElement("SingleFieldMPM",                     d_SingleFieldMPM);
   ps->appendElement("axisymmetric",                       d_axisymmetric);
   ps->appendElement("withColor",                          d_with_color);
   ps->appendElement("artificial_damping_coeff",           d_artificialDampCoeff);

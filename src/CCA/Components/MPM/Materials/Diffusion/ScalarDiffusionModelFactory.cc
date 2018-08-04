@@ -37,34 +37,37 @@
 using namespace std;
 using namespace Uintah;
 
-ScalarDiffusionModel* ScalarDiffusionModelFactory::create(ProblemSpecP& ps,
-                                                          SimulationStateP& ss,
-                                                          MPMFlags* flags)
+ScalarDiffusionModel* ScalarDiffusionModelFactory::create(ProblemSpecP      & ps    ,
+                                                          SimulationStateP  & ss    ,
+                                                          MPMFlags          * flags )
 {
   ProblemSpecP child = ps->findBlock("diffusion_model");
   if(!child)
-    throw ProblemSetupException("Cannot find scalar_diffusion_model tag", __FILE__, __LINE__);
+    throw ProblemSetupException("Cannot find scalar_diffusion_model tag",
+                                __FILE__, __LINE__);
   string diffusion_type;
   if(!child->getAttribute("type", diffusion_type))
-    throw ProblemSetupException("No type for scalar_diffusion_model", __FILE__, __LINE__);
+    throw ProblemSetupException("No type for scalar_diffusion_model",
+                                __FILE__, __LINE__);
+
+  if (diffusion_type == "constant_rate")
+    return(scinew ConstantRate(child, ss, flags, diffusion_type));
 
   if (diffusion_type == "jg")
     return(scinew JGConcentrationDiffusion(child, ss, flags, diffusion_type));
 
-  else if (diffusion_type == "rf1")
-    return(scinew RFConcDiffusion1MPM(child, ss, flags, diffusion_type));
-
-  else if (diffusion_type == "non_linear1")
+  if (diffusion_type == "non_linear1")
     return(scinew NonLinearDiff1(child, ss, flags, diffusion_type));
 
-  else if (diffusion_type == "non_linear2")
+  if (diffusion_type == "non_linear2")
     return(scinew NonLinearDiff2(child, ss, flags, diffusion_type));
 
-  else if (diffusion_type == "constant_rate")
-    return(scinew ConstantRate(child, ss, flags, diffusion_type));
+  if (diffusion_type == "rf1")
+    return(scinew RFConcDiffusion1MPM(child, ss, flags, diffusion_type));
 
-  else
-    throw ProblemSetupException("Unknown Scalar Diffusion Type ("+diffusion_type+")", __FILE__, __LINE__);
+  // No suitable diffusion model found, throw an error and return a null ptr.
+  std::string errorMsg = "Unknown Scalar Diffusion Type (" +diffusion_type +")";
+  throw ProblemSetupException(errorMsg, __FILE__, __LINE__);
 
-  return 0;
+  return nullptr;
 }

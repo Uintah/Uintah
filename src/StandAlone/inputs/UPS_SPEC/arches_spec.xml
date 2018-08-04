@@ -78,11 +78,14 @@
       <TurbulenceModels                 spec="OPTIONAL NO_DATA">
          <model                         spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        attribute2="type REQUIRED STRING 'sigma, wale, constant_smagorinsky,
-                                                                          dynamic_smagorinsky'">
+                                        attribute2="type REQUIRED STRING 'sigma, 
+                                                                          wale, 
+                                                                          constant_smagorinsky,
+                                                                          dynamic_smagorinsky, 
+                                                                          multifractal'">
 
            <Cs                          spec="OPTIONAL DOUBLE"
-                                        need_applies_to="type sigma, wale, constant_smagorinsky"/> <!-- default for sigma is 1.35
+                                        need_applies_to="type sigma, wale, constant_smagorinsky, multifractal"/> <!-- default for sigma is 1.35
                                                                                                         default for wale is 0.5 -->
          <filter                        spec="OPTIONAL NO_DATA"
                                         attribute1="type REQUIRED STRING 'three_points, simpson, box'"
@@ -1303,7 +1306,7 @@
       <KMomentum                        spec="OPTIONAL NO_DATA">
 
         <convection                     spec="OPTIONAL NO_DATA"
-                                        attribute1="scheme REQUIRED STRING 'central, upwind, superbee, roe, vanleer,fourth'"/>
+                                        attribute1="scheme REQUIRED STRING 'central, upwind, superbee, roe, vanleer, fourth'"/>
         <inviscid                       spec="OPTIONAL NO_DATA"/> <!-- Turn off diffusion -->
         <initialize                     spec="OPTIONAL NO_DATA"
                                         attribute1="u REQUIRED DOUBLE"

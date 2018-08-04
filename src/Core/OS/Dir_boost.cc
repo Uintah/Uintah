@@ -312,15 +312,16 @@ Dir::copy( const Dir & destDir ) const
 //______________________________________________________________________
 //
 void
-Dir::move(Dir& destDir)
+Dir::move( const Dir & destDir )
 {
-   bfs::path from(name_);  
-   bfs::path to(destDir.name_);
+   bfs::path from( name_ );
+   bfs::path to( destDir.name_ );
    bsys::error_code ec;
    
-   bfs::rename(from,to,ec);
-   if (ec != 0)
-      throw InternalError(string("Dir::move failed to move: ") + name_, __FILE__, __LINE__);
+   bfs::rename( from, to, ec );
+   if( ec != 0 ) {
+      throw InternalError( string( "Dir::move failed to move: " ) + name_, __FILE__, __LINE__ );
+   }
    return;
 }
 //______________________________________________________________________

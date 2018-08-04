@@ -36,6 +36,7 @@
 #include <Core/Grid/LinearInterpolator.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Math/FastMatrix.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 #include <CCA/Components/MPM/Core/MPMFlags.h>
 
 
@@ -229,7 +230,7 @@ namespace Uintah {
                                              ParticleVariable<int> &prefOld,
                                              ParticleVariable<int> &pref,
                                              const unsigned int oldNumPar,
-                                             const int numNewPartNeeded,
+                                             const unsigned int numNewPartNeeded,
                                              DataWarehouse* old_dw,
                                              DataWarehouse* new_dw);
 
@@ -440,6 +441,8 @@ namespace Uintah {
     int NGP;
     int NGN;
     const ProcessorGroup* d_world;
+
+    static const double LargeTimestep;
 
     // don't store SimulationStateP or it will add a reference 
     // that will never be removed

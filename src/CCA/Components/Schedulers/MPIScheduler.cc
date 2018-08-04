@@ -836,11 +836,16 @@ MPIScheduler::execute( int tgnum     /* = 0 */
       printTaskLevels( d_myworld, g_task_level, dtask );
     }
 
-    if(!abort && m_dws[m_dws.size()-1] && m_dws[m_dws.size()-1]->timestepAborted()){
+    // ARS - FIXME CHECK THE WAREHOUSE
+    OnDemandDataWarehouseP dw = m_dws[m_dws.size() - 1];
+    if (!abort && dw && dw->abortTimeStep()) {
+      // TODO - abort might not work with external queue...
       abort = true;
       abort_point = dtask->getTask()->getSortedOrder();
 
-      DOUT(true, "  WARNING:  Aborting timestep after task: " << dtask->getTask()->getName());
+      DOUT(true,  "Rank-" << d_myworld->myRank()
+                          << "  WARNING: Aborting time step after task: "
+                          << dtask->getTask()->getName());
     }
 
   } // end while( numTasksDone < ntasks )
@@ -866,20 +871,6 @@ MPIScheduler::execute( int tgnum     /* = 0 */
 
   ASSERT(m_sends.size() == 0u);
   ASSERT(m_recvs.size() == 0u);
-
-
-  if (m_restartable && tgnum == static_cast<int>(m_task_graphs.size()) - 1) {
-    // Copy the restart flag to all processors
-    int myrestart = m_dws[m_dws.size() - 1]->timestepRestarted();
-    int netrestart;
-    Uintah::MPI::Allreduce(&myrestart, &netrestart, 1, MPI_INT, MPI_LOR, d_myworld->getComm());
-    if (netrestart) {
-      m_dws[m_dws.size() - 1]->restartTimestep();
-      if (m_dws[0]) {
-        m_dws[0]->setRestarted();
-      }
-    }
-  }
 
   finalizeTimestep();
 

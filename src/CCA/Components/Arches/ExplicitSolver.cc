@@ -47,7 +47,6 @@
 #include <CCA/Components/Arches/ExplicitTimeInt.h>
 #include <CCA/Components/Arches/TurbulenceModelPlaceholder.h>
 #include <CCA/Components/Arches/ScaleSimilarityModel.h>
-#include <CCA/Components/Arches/IncDynamicProcedure.h>
 #include <CCA/Components/Arches/CompDynamicProcedure.h>
 #include <CCA/Components/Arches/SmagorinskyModel.h>
 #include <CCA/Components/Arches/WBCHelper.h>
@@ -492,9 +491,6 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
   if ( whichTurbModel == "smagorinsky") {
     d_turbModel = scinew SmagorinskyModel(d_lab, d_MAlab, d_physicalConsts,
                                           d_boundaryCondition);
-  }else if ( whichTurbModel == "dynamicprocedure") {
-    d_turbModel = scinew IncDynamicProcedure(d_lab, d_MAlab, d_physicalConsts,
-                                             d_boundaryCondition);
   }else if ( whichTurbModel == "compdynamicprocedure") {
     d_turbModel = scinew CompDynamicProcedure(d_lab, d_MAlab, d_physicalConsts,
                                               d_boundaryCondition);
@@ -855,7 +851,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
   db_es->getWithDefault("turbModelCalcForAllRKSteps",d_turbModelRKsteps,true);
 
   db_es->getWithDefault("restartOnNegativeDensityGuess",
-                     d_restart_on_negative_density_guess,false);
+                     d_recompute_on_negative_density_guess,false);
   db_es->getWithDefault("NoisyDensityGuess",
                      d_noisyDensityGuess, false);
   db_es->getWithDefault("kineticEnergy_fromFC",d_KE_fromFC,false);
@@ -3294,6 +3290,9 @@ ExplicitSolver::sched_checkDensityGuess(SchedulerP& sched,
 
   tsk->modifies(d_lab->d_densityGuessLabel);
 
+  tsk->computes( VarLabel::find(abortTimeStep_name) );
+  tsk->computes( VarLabel::find(recomputeTimeStep_name) );
+
   sched->addTask(tsk, patches, matls);
 }
 //****************************************************************************
@@ -3335,10 +3334,10 @@ ExplicitSolver::checkDensityGuess(const ProcessorGroup* pc,
 
     new_dw->getModifiable(densityGuess, d_lab->d_densityGuessLabel, indx, patch);
     if (negativeDensityGuess > 0.0) {
-      if (d_restart_on_negative_density_guess) {
-        proc0cout << "NOTICE: Negative density guess(es) occurred. Timestep restart has been requested under this condition by the user. Restarting timestep." << endl;
-        new_dw->abortTimestep();
-        new_dw->restartTimestep();
+      if (d_recompute_on_negative_density_guess) {
+        proc0cout << "NOTICE: Negative density guess(es) occurred. Timestep restart has been requested under this condition by the user. Recomputing timestep." << endl;
+        new_dw->put( bool_or_vartype(true), VarLabel::find(abortTimeStep_name));
+        new_dw->put( bool_or_vartype(true), VarLabel::find(recomputeTimeStep_name) );
       }
       else {
         proc0cout << "NOTICE: Negative density guess(es) occurred. Reverting to old density." << endl;
@@ -3499,6 +3498,9 @@ ExplicitSolver::sched_checkDensityLag(SchedulerP& sched,
     tsk->requires(Task::NewDW, timelabels->densityLag);
   }
 
+  tsk->computes( VarLabel::find(abortTimeStep_name) );
+  tsk->computes( VarLabel::find(recomputeTimeStep_name) );
+
   sched->addTask(tsk, patches, matls);
 }
 //****************************************************************************
@@ -3533,9 +3535,9 @@ ExplicitSolver::checkDensityLag(const ProcessorGroup* pc,
         if (pc->myRank() == 0)
           proc0cout << "WARNING: density lag " << densityLag
                << " exceeding maximium "<< d_maxDensityLag
-               << " specified. Restarting timestep." << endl;
-        new_dw->abortTimestep();
-        new_dw->restartTimestep();
+               << " specified. Recomputing timestep." << endl;
+        new_dw->put( bool_or_vartype(true), VarLabel::find(abortTimeStep_name));
+        new_dw->put( bool_or_vartype(true), VarLabel::find(recomputeTimeStep_name) );
     }
   }
 }

@@ -100,8 +100,6 @@ using namespace ExchangeModels;
       
       virtual ~ICE();
 
-      virtual bool restartableTimeSteps();
-
       virtual double recomputeDelT(const double delT);
 
       virtual void problemSetup(const ProblemSpecP& params,
@@ -664,7 +662,7 @@ using namespace ExchangeModels;
 
       int d_max_iter_equilibration;
       int d_max_iter_implicit;
-      int d_iters_before_timestep_restart;
+      int d_iters_before_timestep_recompute;
       double d_outer_iter_tolerance;
 
       // ADD HEAT VARIABLES

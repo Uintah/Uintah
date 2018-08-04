@@ -75,7 +75,7 @@ namespace Uintah {
     int    maxIterations;      // Maximum # iterations allowed
     int    logging;            // Log Hypre solver (using Hypre options)
     bool   symmetric;          // Is LHS matrix symmetric
-    bool   restart;            // Allow solver to restart if not converged
+    bool   recompute;          // Allow solver to recompute if not converged
 
     // SMG parameters
     int    nPre;               // # pre relaxations for Hypre SMG solver

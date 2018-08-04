@@ -63,7 +63,6 @@
         <include href="../MaterialData/MaterialConstArmcoIron.xml"/>
         <constitutive_model type="elastic_plastic_hp">
           <tolerance>5.0e-10</tolerance>
-          <damage_cutoff>0.7</damage_cutoff>
           <include href="../MaterialData/IsotropicElasticArmcoIron.xml"/>
           <include href="../MaterialData/VonMisesYield.xml"/>
           <include href="../MaterialData/NoStabilityCheck.xml"/>
@@ -91,7 +90,6 @@
         <include href="../MaterialData/MaterialConstAnnCopper.xml"/>
         <constitutive_model type="elastic_plastic_hp">
           <tolerance>5.0e-10</tolerance>
-          <damage_cutoff>0.7</damage_cutoff>
           <include href="../MaterialData/IsotropicElasticAnnCopper.xml"/>
           <include href="../MaterialData/VonMisesYield.xml"/>
           <include href="../MaterialData/JohnsonCookPlasticAnnCopper.xml"/>
@@ -138,7 +136,6 @@
         <include href="../MaterialData/MaterialConstS7ToolSteel.xml"/>
         <constitutive_model type="elastic_plastic_hp">
           <tolerance>5.0e-10</tolerance>
-          <damage_cutoff>0.7</damage_cutoff>
           <include href="../MaterialData/IsotropicElasticS7ToolSteel.xml"/>
           <include href="../MaterialData/VonMisesYield.xml"/>
           <include href="../MaterialData/JohnsonCookPlasticS7ToolSteel.xml"/>

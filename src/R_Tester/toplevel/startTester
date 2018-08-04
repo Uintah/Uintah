@@ -71,7 +71,7 @@ if [ "$MACHINE" == "uintah-build" ]; then
   fi
   
   if [ "$LOGNAME" == "kokkos_rt" ]; then
-    names=( "bradpeterson@gmail.com," "jholmen@sci.utah.edu," "derkhar@gmail.com" )
+    names=( "bradpeterson@gmail.com," "jholmen@sci.utah.edu," "derkhar@gmail.com", "t.harman@utah.edu" )
     IFS=""    # used to elimnate spaces between array elements
     DEFAULT_MAIL_TO=${names[*]}
     

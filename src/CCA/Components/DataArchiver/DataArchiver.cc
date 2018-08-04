@@ -336,7 +336,7 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
     //  bullet proofing: must save p.x 
     //  in addition to other particle variables "p.*"
     if (saveItem.labelName == m_particlePositionName ||
-	saveItem.labelName == "p.xx") {
+        saveItem.labelName == "p.xx") {
       m_saveP_x = true;
     }
 
@@ -561,7 +561,7 @@ DataArchiver::initializeOutput( const ProblemSpecP & params, const GridP& grid )
   }
 
   // Sync up before every rank can use the base dir.
-  Uintah::MPI::Barrier(d_myworld->getComm());
+  Uintah::MPI::Barrier( d_myworld->getComm() );
 
 #ifdef HAVE_PIDX
   // StandAlone/restart_merger calls initializeOutput but has no grid.  
@@ -592,12 +592,12 @@ DataArchiver::initializeOutput( const ProblemSpecP & params, const GridP& grid )
 //______________________________________________________________________
 // to be called after problemSetup and initializeOutput get called
 void
-DataArchiver::restartSetup( Dir    & restartFromDir,
-                            int      startTimeStep,
-                            int      timestep,
-                            double   time,
-                            bool     fromScratch,
-                            bool     removeOldDir )
+DataArchiver::restartSetup( const Dir    & restartFromDir,
+                            const int      startTimeStep,
+                            const int      timestep,
+                            const double   time,
+                            const bool     fromScratch,
+                            const bool     removeOldDir )
 {
   m_outputInitTimeStep = false;
 
@@ -611,7 +611,7 @@ DataArchiver::restartSetup( Dir    & restartFromDir,
 
     // partial copy of index.xml and timestep directories and
     // similarly for checkpoints
-    copyTimeSteps(restartFromDir, m_dir, startTimeStep, timestep, removeOldDir);
+    copyTimeSteps( restartFromDir, m_dir, startTimeStep, timestep, removeOldDir );
 
     Dir checkpointsFromDir = restartFromDir.getSubdir("checkpoints");
     bool areCheckpoints = true;
@@ -625,9 +625,12 @@ DataArchiver::restartSetup( Dir    & restartFromDir,
       copySection( checkpointsFromDir, m_checkpointsDir, "index.xml", "globals" );
     }
 
-    if (removeOldDir) {
+    if( removeOldDir ) {
       // Try to remove the old dir...
       if( !Dir::removeDir( restartFromDir.getName().c_str() ) ) {
+
+        cout << "WARNING! In DataArchiver.cc::restartSetup(), removeDir() failed to remove an old checkpoint directory... Running file system check now.\n"; 
+
         // Something strange happened... let's test the filesystem...
         stringstream error_stream;          
         if( !testFilesystem( restartFromDir.getName(), error_stream, Parallel::getMPIRank() ) ) {
@@ -636,7 +639,7 @@ DataArchiver::restartSetup( Dir    & restartFromDir,
           cout.flush();
 
           // The file system just gave us some problems...
-          printf( "WARNING: Filesystem check failed on processor %d\n", Parallel::getMPIRank() );
+          printf( "WARNING: Filesystem check failed on rank %d\n", Parallel::getMPIRank() );
         }
         // Verify that "system works"
         int code = system( "echo how_are_you" );
@@ -773,8 +776,10 @@ DataArchiver::postProcessUdaSetup( Dir & fromDir )
 //______________________________________________________________________
 //
 void
-DataArchiver::copySection( Dir& fromDir, Dir& toDir,
-                           const string & filename, const string & section )
+DataArchiver::copySection( const Dir    & fromDir,
+                           const Dir    & toDir,
+                           const string & filename,
+                           const string & section )
 {
   // copy chunk labeled section between index.xml files
   string iname = fromDir.getName() + "/" +filename;
@@ -806,8 +811,9 @@ DataArchiver::copySection( Dir& fromDir, Dir& toDir,
 //______________________________________________________________________
 //
 void
-DataArchiver::addRestartStamp(ProblemSpecP indexDoc, Dir& fromDir,
-                              int timestep)
+DataArchiver::addRestartStamp(       ProblemSpecP   indexDoc,
+                               const Dir          & fromDir,
+                               const int            timestep )
 {
    // add restart history to restarts section
    ProblemSpecP restarts = indexDoc->findBlock("restarts");
@@ -829,12 +835,12 @@ DataArchiver::addRestartStamp(ProblemSpecP indexDoc, Dir& fromDir,
 //
 
 void
-DataArchiver::copyTimeSteps( Dir & fromDir,
-                             Dir & toDir,
-                             int   startTimeStep,
-                             int   maxTimeStep,
-                             bool  removeOld,
-                             bool  areCheckpoints /* = false */ )
+DataArchiver::copyTimeSteps( const Dir & fromDir,
+                             const Dir & toDir,
+                             const int   startTimeStep,
+                             const int   maxTimeStep,
+                             const bool  removeOld,
+                             const bool  areCheckpoints /* = false */ )
 {
    string       old_iname = fromDir.getName() + "/index.xml";
    ProblemSpecP oldIndexDoc = loadDocument( old_iname );
@@ -848,7 +854,7 @@ DataArchiver::copyTimeSteps( Dir & fromDir,
      ts = oldTimeSteps->findBlock( "timestep" );
    }
 
-   // while we're at it, add restart information to index.xml
+   // Add restart information to index.xml
    if( maxTimeStep >= 0 ) {
      addRestartStamp(indexDoc, fromDir, maxTimeStep);
    }
@@ -920,8 +926,11 @@ DataArchiver::copyTimeSteps( Dir & fromDir,
 //______________________________________________________________________
 //
 void
-DataArchiver::copyDatFiles(Dir& fromDir, Dir& toDir, int startTimeStep,
-                           int maxTimeStep, bool removeOld)
+DataArchiver::copyDatFiles( const Dir & fromDir,
+                            const Dir & toDir,
+                            const int   startTimeStep,
+                            const int   maxTimeStep,
+                            const bool  removeOld )
 {
    char buffer[1000];
 
@@ -1204,7 +1213,7 @@ DataArchiver::beginOutputTimeStep( const GridP& grid )
   }
 
   // Do *not* update the next values here as the original values are
-  // needed to compare with if there is a timestep restart.  See
+  // needed to compare with if there is a time step recompute.  See
   // reEvaluateOutputTimeStep
 
   // Check for an output.
@@ -1239,7 +1248,7 @@ DataArchiver::beginOutputTimeStep( const GridP& grid )
       // Checkpoint based on the being the last timestep.
       (m_checkpointLastTimeStep && m_maybeLastTimeStep) );    
 
-  // Checkpoint based on the being the wall time.
+  // Checkpoint based on the wall time.
   if( m_checkpointWallTimeInterval > 0 ) {
 
     if( m_elapsedWallTime >= m_nextCheckpointWallTime ) {
@@ -1283,6 +1292,7 @@ DataArchiver::beginOutputTimeStep( const GridP& grid )
         // Try to remove the expired checkpoint directory...
         if( !Dir::removeDir( expiredDir.getName().c_str() ) ) {
           // Something strange happened... let's test the filesystem...
+          cout << "\nWarning! removeDir() Failed for '" << expiredDir.getName() << "' in DataArchiver.cc::beginOutputTimeStep()\n\n"; 
           stringstream error_stream;          
           if( !testFilesystem( expiredDir.getName(), error_stream, Parallel::getMPIRank() ) ) {
             cout << error_stream.str();
@@ -1360,7 +1370,7 @@ DataArchiver::reevaluate_OutputCheckPointTimeStep( const double simTime,
     dbg << "  reevaluate_OutputCheckPointTimeStep() begin\n";
   }
 
-  // Call this on a timestep restart. If lowering the delt goes
+  // Call this on a time step recompute. If lowering the delt goes
   // beneath the threshold, cancel the output and/or checkpoint
   // timestep
 
@@ -1439,11 +1449,11 @@ DataArchiver::findNext_OutputCheckPointTimeStep( const bool restart,
     }
   }
   
-  // If this timestep was an output/checkpoint timestep, determine
+  // If this time step was an output/checkpoint time step, determine
   // when the next one will be.
 
   // Do *not* do this step in beginOutputTimeStep because the original
-  // values are needed to compare with if there is a timestep restart.
+  // values are needed to compare with if there is a time step recompute.
   // See reEvaluateOutputTimeStep
 
   // When outputing/checkpointing using the simulation or wall time
@@ -1526,7 +1536,7 @@ DataArchiver::findNext_OutputCheckPointTimeStep( const bool restart,
         // Checkpoint based on the being the last timestep.
         (m_checkpointLastTimeStep && m_maybeLastTimeStep) );    
     
-    // Checkpoint based on the being the wall time.
+    // Checkpoint based on the wall time.
     if( m_checkpointWallTimeInterval > 0 ) {
       
       if( m_elapsedWallTime >= m_nextCheckpointWallTime )
@@ -1782,8 +1792,8 @@ DataArchiver::writeto_xml_files( const GridP& grid )
 
       //indexDoc->releaseDocument();
 
-      // make a timestep.xml file for this timestep we need to do it
-      // here in case there is a timestesp restart Break out the
+      // Make a timestep.xml file for this time step we need to do it
+      // here in case there is a time stes rescompute. Break out the
       // <Grid> and <Data> section of the DOM tree into a separate
       // grid.xml file which can be created quickly and use less
       // memory using the xmlTextWriter functions (streaming output)
@@ -1844,8 +1854,8 @@ DataArchiver::writeto_xml_files( const GridP& grid )
         //__________________________________
         // output input.xml & input.xml.orig
 
-        // a small convenience to the user who wants to change things
-        // when he restarts let him know that some information to change
+        // A small convenience to the user who wants to change things
+        // when they restart let them know that some information to change
         // will need to be done in the timestep.xml file instead of the
         // input.xml file.  Only do this once, though.
       
@@ -2012,9 +2022,9 @@ DataArchiver::writeGridBinary( const bool hasGlobals, const string & grid_path, 
   FILE * fp;
   int marker = DataArchive::GRID_MAGIC_NUMBER;
 
-  string grim_filename = grid_path + "grid.xml";
+  string grid_filename = grid_path + "grid.xml";
 
-  fp = fopen( grim_filename.c_str(), "wb" );
+  fp = fopen( grid_filename.c_str(), "wb" );
   fwrite( &marker, sizeof(int), 1, fp );
 
   // NUmber of Levels
@@ -2601,7 +2611,7 @@ DataArchiver::outputReductionVars( const ProcessorGroup *,
                                    DataWarehouse        * old_dw,
                                    DataWarehouse        * new_dw )
 {
-  if( new_dw->timestepRestarted() || m_saveReductionLabels.empty() ) {
+  if( m_application->recomputeTimeStep() || m_saveReductionLabels.empty() ) {
     return;
   }
 
@@ -3027,8 +3037,10 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
 
     // write the xml
 
-    // The following line was commented out... but with it on, we can restart with PIDX.  However, we need to be able to restart without this.
-    // Uncomment the following line to make progress on restart of PIDX - see line above.
+    // The following line was commented out... but with it on, we can
+    // restart with PIDX.  However, we need to be able to restart
+    // without this.  Uncomment the following line to make progress on
+    // restart of PIDX - see line above. 
     //doc->output( xmlFilename.c_str() );
   }
 #endif
@@ -3207,13 +3219,22 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
 
     switch( subtype->getType( )) {
 
-    case Uintah::TypeDescription::long64_type : sample_per_variable = 1; break;
+    case Uintah::TypeDescription::long64_type :
+      sample_per_variable = 1;
+      the_size = sizeof( double ); // FIXME: what is the Uintah version of a 64 bit integer?
+      type_name = "int64";
+      break;
     case Uintah::TypeDescription::Matrix3     : sample_per_variable = 9; break;
     case Uintah::TypeDescription::Point       : sample_per_variable = 3; break;
     case Uintah::TypeDescription::Stencil4    : sample_per_variable = 4; break;
     case Uintah::TypeDescription::Stencil7    : sample_per_variable = 7; break;
     case Uintah::TypeDescription::Vector      : sample_per_variable = 3; break;
 
+    case Uintah::TypeDescription::IntVector :
+      sample_per_variable = 3;
+      the_size = sizeof( int );
+      type_name = "int32";
+      break;
     case Uintah::TypeDescription::int_type :
       the_size = sizeof( int );
       type_name = "int32";
@@ -3259,7 +3280,6 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
                             "DataArchiver::saveLabels_PIDX - PIDX_variable_create failure",
                             __FILE__, __LINE__);
       
-
       patch_buffer[vcm] =
         (unsigned char**) malloc(sizeof(unsigned char*) * patches->size());
 
@@ -3298,6 +3318,13 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
           //  Read in Array3 data to t-buffer
           size_t arraySize;
           if( td->getType() == Uintah::TypeDescription::ParticleVariable ) {
+
+
+            if( label->getName() == m_particlePositionName ) {
+              int var_index;
+              PIDX_get_current_variable_index( pidx.file, &var_index );
+              PIDX_set_particles_position_variable_index( pidx.file, var_index );
+            }
 
             ParticleVariableBase * pv = new_dw->getParticleVariable( label, matlIndex, patch );
             void * ptr; // Pointer to data? but we don't use it so not digging into what it is for.
@@ -4249,12 +4276,16 @@ DataArchiver::checkpointTimeStep( const GridP& grid,
 void
 DataArchiver::setElapsedWallTime( double val )
 {
-  // When using the wall time, rank 0 determines the wall time and
-  // sends it to all other ranks.
-  Uintah::MPI::Bcast( &val, 1, MPI_DOUBLE, 0, d_myworld->getComm() );
+  // Set the elasped wall time if the checkpoint is based on the wall time.
+  if( m_checkpointWallTimeInterval > 0 ) {
+
+    // When using the wall time, rank 0 determines the wall time and
+    // sends it to all other ranks.
+    Uintah::MPI::Bcast( &val, 1, MPI_DOUBLE, 0, d_myworld->getComm() );
   
-  m_elapsedWallTime = val;
-};
+    m_elapsedWallTime = val;
+  }
+}
 
 //______________________________________________________________________
 // Called to set the elapsed wall time
@@ -4263,7 +4294,7 @@ void
 DataArchiver::setCheckpointCycle( int val )
 {
   m_checkpointCycle = val;
-};
+}
 
 //______________________________________________________________________
 //

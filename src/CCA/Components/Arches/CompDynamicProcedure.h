@@ -39,7 +39,7 @@ GENERAL INFORMATION
    CompDynamicProcedure.h - declaration of the class
 
    Author: Stanislav Borodai (borodai@crsim.utah.edu), developed based on
-   IncDynamicProcedure
+   CompDynamicProcedure
 
    Creation Date:   Mar 1, 2000
 

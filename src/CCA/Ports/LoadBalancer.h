@@ -38,8 +38,8 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Util/InfoMapper.h>
 
-#include <set>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 namespace Uintah {
@@ -128,10 +128,10 @@ public:
   virtual bool isDynamic() { return false; }
 
   //! returns all processors in this processors local neighborhood
-  virtual const std::set<int>& getNeighborhoodProcessors() = 0;
+  virtual const std::unordered_set<int>& getNeighborhoodProcessors() = 0;
 
   //! returns all processors in this processors global neighborhood
-  virtual const std::set<int>& getDistalNeighborhoodProcessors() = 0;
+  virtual const std::unordered_set<int>& getDistalNeighborhoodProcessors() = 0;
 
   //! Asks if a patch in the patch subset is in the neighborhood.
   virtual bool inNeighborhood( const PatchSubset* pss, const bool hasDistalReqs = false ) = 0;

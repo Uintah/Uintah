@@ -209,8 +209,10 @@ AMRSimulationController::run()
   // simulation time to get a measurement of the simulation to wall time.
   m_wall_timers.TimeStep.reset( true );
     
+  double walltime = m_wall_timers.GetWallTime();
+  
   // The main loop where the specified application problem is solved.
-  while( !m_application->isLastTimeStep( m_wall_timers.GetWallTime() ) ) {
+  while( !m_application->isLastTimeStep( walltime ) ) {
 
     // Perform a bunch of housekeeping operations at the top of the
     // loop. Performing them here asures that everything is ready
@@ -222,28 +224,37 @@ AMRSimulationController::run()
     // checkpoint the last time step. Maybelast uses the wall time and
     // is sync'd across all ranks.
 
+    // Get the wall time if is needed, otherwise ignore it.
+    double predictedWalltime;
+  
     // The predicted time is a best guess at what the wall time will be
     // when the time step is finished. It is currently used only for
     // outputing and checkpointing. Both of which typically take much
     // longer than the simulation calculation.
-    double walltime = m_wall_timers.GetWallTime() +
-      1.5 * m_wall_timers.ExpMovingAverage().seconds();
+    if( m_application->getSimulationTime()->m_max_wall_time > 0 )
+      predictedWalltime = walltime +
+        1.5 * m_wall_timers.ExpMovingAverage().seconds();
+    else
+      predictedWalltime = 0;
 
-    m_output->maybeLastTimeStep( m_application->maybeLastTimeStep( walltime ) );
+    if( m_application->maybeLastTimeStep( predictedWalltime ) )
+      m_output->maybeLastTimeStep( true );
+    else
+      m_output->maybeLastTimeStep( false );
     
     // Set the current wall time for this rank (i.e. this value is
     // sync'd across all ranks). The Data Archive uses it for
     // determining when to output or checkpoint.
-    m_output->setElapsedWallTime( m_wall_timers.GetWallTime() );
+    m_output->setElapsedWallTime( walltime );
     
     // Get the next output checkpoint time step. This step is not done
     // in m_output->beginOutputTimeStep because the original values
     // are needed to compare with if there is a timestep restart so it
     // is performed here.
 
-    // NOTE: It is called BEFORE m_application->prepareForNextTimeStep because
-    // at this point the delT, nextDelT, time step, sim time, and all
-    // wall times are all in sync.
+    // NOTE: It is called BEFORE m_application->prepareForNextTimeStep
+    // because at this point the delT, nextDelT, time step, sim time,
+    // and all wall times are all in sync.
     m_output->findNext_OutputCheckPointTimeStep( first && m_restarting,
                                                  m_current_gridP );
 
@@ -285,12 +296,18 @@ AMRSimulationController::run()
       // If not the first time step or restarting check for regridding
       if( (!first || m_restarting) && m_regridder->needsToReGrid(m_current_gridP) ) {
         
-        proc0cout << " Need to regrid." << std::endl;
+        proc0cout << " Need to regrid for next time step "
+                  << m_application->getTimeStep() << " "
+                  << "at current sim time " << m_application->getSimTime()
+                  << std::endl;
         doRegridding( false );
       }
       // Covers single-level regridder case (w/ restarts)
       else if (m_regridder->doRegridOnce() && m_regridder->isAdaptive()) {
-        proc0cout << " Regridding once." << std::endl;
+        proc0cout << " Regridding once for next time step "
+                  << m_application->getTimeStep() << " "
+                  << "at current sim time " << m_application->getSimTime()
+                  << std::endl;
         m_scheduler->setRestartInitTimestep( false );
         doRegridding( false );
         m_regridder->setAdaptivity( false );
@@ -417,6 +434,9 @@ AMRSimulationController::run()
       
       first = false;
     }
+
+    walltime = m_wall_timers.GetWallTime();
+    
   } // end while main time loop (time is not up, etc)
   
   // m_ups->releaseDocument();
@@ -489,7 +509,11 @@ AMRSimulationController::doInitialTimeStep()
 
     m_runtime_stats[ CompilationTime ] += taskGraphTimer().seconds();
 
-    proc0cout << "Done with taskgraph compile (" << taskGraphTimer().seconds() << " seconds)\n";
+    proc0cout << "Done with taskgraph compile for next time step "
+              << m_application->getTimeStep() << " "
+              << "at current sim time " << m_application->getSimTime() << ", "
+              << "compiling took " << taskGraphTimer().seconds() << " seconds."
+              << std::endl;
 
     // No scrubbing for initial step
     m_scheduler->get_dw( 1 )->setScrubbing( DataWarehouse::ScrubNone );
@@ -522,8 +546,8 @@ AMRSimulationController::doInitialTimeStep()
     bool needNewLevel = false;
 
     do {
-      proc0cout << "\nCompiling initialization taskgraph...\n";
-
+      proc0cout << "Compiling initialization taskgraph." << std::endl;
+      
       // Initialize the system var (time step and simulation
       // time). Must be done before all other application tasks as
       // they may need these values.
@@ -582,7 +606,11 @@ AMRSimulationController::doInitialTimeStep()
 
       m_runtime_stats[ CompilationTime ] += taskGraphTimer().seconds();
 
-      proc0cout << "Done with taskgraph compile (" << taskGraphTimer().seconds() << " seconds)\n";
+      proc0cout << "Done with taskgraph compile for next time step "
+                << m_application->getTimeStep() << " "
+                << "at current sim time " << m_application->getSimTime() << ", "
+                << "compiling took " << taskGraphTimer().seconds() << " seconds."
+                << std::endl;
 
       // No scrubbing for initial step
       m_scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNone);
@@ -615,14 +643,11 @@ AMRSimulationController::doInitialTimeStep()
 void
 AMRSimulationController::executeTimeStep( int totalFine )
 {
-  // If the time step needs to be restarted, this loop will execute
+  // If the time step needs to be recomputed, this loop will execute
   // multiple times.
   bool success = false;
 
   int tg_index = m_application->computeTaskGraphIndex();
-
-  bool restartable = m_application->restartableTimeSteps();
-  m_scheduler->setRestartable(restartable);
 
   // Execute at least once.
   while (!success) {
@@ -630,7 +655,7 @@ AMRSimulationController::executeTimeStep( int totalFine )
 
     // Standard data warehouse scrubbing.
     if (m_scrub_datawarehouse && m_loadBalancer->getNthRank() == 1) {
-      if (restartable) {
+      if (m_application->mayRecomputeTimeStep()) {
         m_scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubNonPermanent);
       }
       else {
@@ -662,9 +687,8 @@ AMRSimulationController::executeTimeStep( int totalFine )
       m_scheduler->execute(tg_index, iteration);
     }
 
-    //  If time step has been restarted adjust the delta T and restart.
-    if (m_scheduler->get_dw(totalFine)->timestepRestarted()) {
-      ASSERT(restartable);
+    //  If time step is to be recomputed adjust the delta T and recompute.
+    if (m_application->recomputeTimeStep()) {
 
       for (int i = 1; i <= totalFine; ++i) {
         m_scheduler->replaceDataWarehouse(i, m_current_gridP);
@@ -673,20 +697,22 @@ AMRSimulationController::executeTimeStep( int totalFine )
       // Recompute the delta T.
       m_application->recomputeDelT();
 
-      // Re-evaluate the outputting and checkpointing.
+      // As the delta T, re-evaluate the outputting and checkpointing.
       m_output->reevaluate_OutputCheckPointTimeStep(m_application->getSimTime(),
                                                     m_application->getDelT());
 
       success = false;
     }
-    else {
-      if (m_scheduler->get_dw(1)->timestepAborted()) {
-        throw InternalError("Execution aborted, cannot restart time step\n",
-                            __FILE__, __LINE__);
-      }
-
+    else if (m_application->abortTimeStep()) {
+      proc0cout << "Time step aborted and cannot recompute it. "
+		<< "Ending the simulation." << std::endl;
+      
+      m_application->endSimulation(true);
+      
       success = true;
     }
+    else
+      success = true;
   } 
 }
 
@@ -748,7 +774,7 @@ AMRSimulationController::doRegridding( bool initialTimeStep )
         proc0cout << " Level " << i
                   << " has " << m_current_gridP->getLevel(i)->numPatches() << " patch(es).";
       }
-      proc0cout << "\n";
+      proc0cout << std::endl;
 
       if (amrout.active()) {
         amrout << "---------- NEW GRID ----------\n"
@@ -781,18 +807,21 @@ AMRSimulationController::doRegridding( bool initialTimeStep )
       schedulerTimer.stop();
     }
     
-    proc0cout << "done regridding ("
+    proc0cout << "Done regridding for next time step "
+              << m_application->getTimeStep() << " "
+              << "at current sim time " << m_application->getSimTime() << ", "
+              << "total time took "
               << regriddingTimer().seconds() + schedulerTimer().seconds()
               << " seconds, "
               << "regridding took " << regriddingTimer().seconds()
               << " seconds";
       
     if (!initialTimeStep) {
-      proc0cout << ", scheduling and copying took " << schedulerTimer().seconds() << " seconds)\n";
+      proc0cout << ", scheduling and copying took "
+                << schedulerTimer().seconds() << " seconds";
     }
-    else {
-      proc0cout << ")\n";
-    }
+
+    proc0cout << "." << std::endl;
     
     retVal = true;
   } // grid != oldGrid
@@ -812,7 +841,7 @@ AMRSimulationController::compileTaskGraph( int totalFine )
 
   taskGraphTimer.start();
 
-  proc0cout << "Compiling taskgraph...\n";
+  proc0cout << "Compiling taskgraph..." << std::endl;
 
   m_output->recompile( m_current_gridP );
   
@@ -916,7 +945,7 @@ AMRSimulationController::compileTaskGraph( int totalFine )
   m_output->sched_allOutputTasks( m_current_gridP, m_scheduler, true );
 
   // Update the system var (time step and simulation time). Must be
-  // done after the output.
+  // done after the output and after scheduleComputeStableTimeStep.
   m_application->scheduleUpdateSystemVars( m_current_gridP,
                                    m_loadBalancer->getPerProcessorPatchSet(m_current_gridP),
                                    m_scheduler );
@@ -934,7 +963,12 @@ AMRSimulationController::compileTaskGraph( int totalFine )
 
   m_runtime_stats[ CompilationTime ] += taskGraphTimer().seconds();
 
-  proc0cout << "Done with taskgraph re-compile (" << taskGraphTimer().seconds() << " seconds)\n";
+  proc0cout << "Done with taskgraph compile for next time step "
+            << m_application->getTimeStep() << " "
+            << "at current sim time " << m_application->getSimTime() << ", "
+            << "compiling took " << taskGraphTimer().seconds() << " seconds."
+            << std::endl;
+  
 } // end compileTaskGraph()
 
 //______________________________________________________________________
@@ -1053,7 +1087,8 @@ AMRSimulationController::subCycleExecute( int startDW,
   
   int newDWStride = dwStride/numSteps;
 
-  DataWarehouse::ScrubMode oldScrubbing = (/*m_loadBalancer->isDynamic() ||*/ m_application->restartableTimeSteps()) ?
+  DataWarehouse::ScrubMode oldScrubbing =
+    (/*m_loadBalancer->isDynamic() ||*/ m_application->mayRecomputeTimeStep()) ?
     DataWarehouse::ScrubNonPermanent : DataWarehouse::ScrubComplete;
 
   int curDW = startDW;

@@ -72,7 +72,7 @@ using namespace Uintah;
 
 namespace {
   Dout g_schedulercommon_dbg( "SchedulerCommon_DBG", "SchedulerCommon", "general debug information"  , false );
-  Dout g_task_graph_compile(  "SchedulerCommon_TG" , "SchedulerCommon", "task graph compilation info", false );
+  Dout g_task_graph_compile(  "TaskGraphCompile"   , "SchedulerCommon", "task graph compilation info", false );
 }
 
 
@@ -1193,14 +1193,6 @@ SchedulerCommon::replaceDataWarehouse(       int     index
 
 //______________________________________________________________________
 //
-void 
-SchedulerCommon::setRestartable( bool restartable )
-{
-  m_restartable = restartable;
-}
-
-//______________________________________________________________________
-//
 const std::vector<const Patch*>*
 SchedulerCommon::getSuperPatchExtents( const VarLabel         * label
                                      ,       int                matlIndex
@@ -1353,6 +1345,7 @@ SchedulerCommon::compile()
       }
 
       Timers::Simple tg_compile_timer;
+      tg_compile_timer.start();
 
       // do we have tasks with halo requirements > MAX_HALO_DEPTH? Determined in SchedulerCommon::addTask
       const bool has_distal_reqs = ( (m_task_graphs[i]->getIndex() > 0) && (m_max_distal_ghost_cells != 0) );

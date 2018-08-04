@@ -120,8 +120,8 @@ AMRSolver::readParameters(ProblemSpecP& params_ps,
   }
   m_params->symmetric = false;
   //  m_params->symmetric=true;
-  m_params->restart=false;
-  //  m_params->restart=true;
+  m_params->recompute=false;
+  //  m_params->recompute=true;
 }
 
 //______________________________________________________________________
@@ -189,6 +189,9 @@ AMRSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
     task->requires(which_b_dw, b, subset, Ghost::None, 0);
   }// numLevels
   
+  
+  // task->computes( VarLabel::find(abortTimeStep_name) );
+  // task->computes( VarLabel::find(recomputeTimeStep_name) );
   
   task->setType(Task::OncePerProc);
 

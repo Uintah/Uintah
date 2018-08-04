@@ -150,9 +150,6 @@ OnDemandDataWarehouse::OnDemandDataWarehouse( const ProcessorGroup* myworld,
       d_isInitializationDW( isInitializationDW ),
       d_scrubMode( DataWarehouse::ScrubNone )
 {
-  d_restart      = false;
-  d_hasRestarted = false;
-  d_aborted      = false;
   doReserve();
 
 #ifdef HAVE_CUDA
@@ -177,7 +174,6 @@ OnDemandDataWarehouse::OnDemandDataWarehouse( const ProcessorGroup* myworld,
       gpuDW->setDebug(gpudbg.active());
       d_gpuDWs.push_back(gpuDW);
     }
-
   }
 #endif
 }
@@ -704,10 +700,13 @@ OnDemandDataWarehouse::exchangeParticleQuantities(       DetailedTasks    * dts,
                                                    const VarLabel         * pos_var,
                                                          int                iteration )
 {
-  if( d_hasRestarted ) {
-    // If this DW is being used for a timestep restart, then it has already done this...
+  // If this DW is being used for a time step recompute, then this
+  // step has already been performed.
+  if( m_exchangeParticleQuantities == false ) {
     return;
   }
+
+  m_exchangeParticleQuantities = false;
 
   ParticleExchangeVar& recvs = dts->getParticleRecvs();
   ParticleExchangeVar& sends = dts->getParticleSends();
@@ -1144,8 +1143,8 @@ OnDemandDataWarehouse::createParticleSubset(       particleIndex numParticles,
 
   ASSERT(!patch->isVirtual());
 
-  ParticleSubset* psubset = scinew ParticleSubset(numParticles, matlIndex, patch, low, high);
-  insertPSetRecord(d_psetDB, patch, low, high, matlIndex, psubset);
+  ParticleSubset* psubset = scinew ParticleSubset( numParticles, matlIndex, patch, low, high );
+  insertPSetRecord( d_psetDB, patch, low, high, matlIndex, psubset );
 
   return psubset;
 }
@@ -1329,7 +1328,7 @@ OnDemandDataWarehouse::getParticleSubset(       int       matlIndex,
   const Patch* realPatch = (patch != 0) ? patch->getRealPatch() : 0;
   ParticleSubset* subset = 0;
 
-  subset=queryPSetDB(d_psetDB,realPatch,matlIndex,low,high,0);
+  subset = queryPSetDB( d_psetDB, realPatch, matlIndex, low, high, 0 );
 
   // bulletproofing
   if( !subset ) {
@@ -2602,7 +2601,7 @@ OnDemandDataWarehouse::emitPIDX(PIDXOutputContext& pc,
     case TypeDescription::SFCZVariable :
       //get list
       {
-	 std::vector<Variable*> varlist;
+        std::vector<Variable*> varlist;
         d_varDB.getlist( label, matlIndex, patch, varlist );
 
         GridVariableBase* v = nullptr;
@@ -3835,38 +3834,40 @@ OnDemandDataWarehouse::getOtherDataWarehouse( Task::WhichDW dw )
 
 //______________________________________________________________________
 //
-// For timestep abort/restart
+// For timestep abort/recomute
 bool
-OnDemandDataWarehouse::timestepAborted()
+OnDemandDataWarehouse::abortTimeStep()
 {
-  return d_aborted;
+  // BJW - time step aborting does not work with MPI - disabling.
+  if( d_myworld->nRanks() == 0 ) {
+    Patch * patch = nullptr;
+
+    if (exists(VarLabel::find(abortTimeStep_name), -1, patch)) {
+      bool_or_vartype ats_var;
+      get( ats_var, VarLabel::find(abortTimeStep_name) );
+      return bool(ats_var);
+    }
+    else
+      return false;
+  }
+  else
+    return false;
 }
 
 //__________________________________
 //
 bool
-OnDemandDataWarehouse::timestepRestarted()
+OnDemandDataWarehouse::recomputeTimeStep()
 {
-  return d_restart;
-}
+  Patch * patch = nullptr;
 
-//______________________________________________________________________
-//
-void
-OnDemandDataWarehouse::abortTimestep()
-{
-  // BJW - timestep aborting does not work in MPI - disabling until we get fixed.
-  if( d_myworld->nRanks() == 0 ) {
-    d_aborted = true;
+  if (exists(VarLabel::find(recomputeTimeStep_name), -1, patch)) {
+    bool_or_vartype rts_var;
+    get( rts_var, VarLabel::find(recomputeTimeStep_name) );
+    return bool(rts_var);
   }
-}
-
-//______________________________________________________________________
-//
-void
-OnDemandDataWarehouse::restartTimestep()
-{
-  d_restart = true;
+  else
+    return false;
 }
 
 //______________________________________________________________________
@@ -4155,9 +4156,6 @@ OnDemandDataWarehouse::OnDemandDataWarehouse( const ProcessorGroup* myworld,
       d_isInitializationDW( isInitializationDW ),
       d_scrubMode( DataWarehouse::ScrubNone )
 {
-  d_restart      = false;
-  d_hasRestarted = false;
-  d_aborted      = false;
   doReserve();
 
 #ifdef HAVE_CUDA
@@ -4182,7 +4180,6 @@ OnDemandDataWarehouse::OnDemandDataWarehouse( const ProcessorGroup* myworld,
       gpuDW->setDebug(gpudbg.active());
       d_gpuDWs.push_back(gpuDW);
     }
-
   }
 #endif
 }
@@ -4707,10 +4704,13 @@ OnDemandDataWarehouse::exchangeParticleQuantities(       DetailedTasks    * dts,
                                                    const VarLabel         * pos_var,
                                                          int                iteration )
 {
-  if( d_hasRestarted ) {
-    // If this DW is being used for a timestep restart, then it has already done this...
+  // If this DW is being used for a time step recompute, then this
+  // step has already been performed.
+  if( m_exchangeParticleQuantities == false ) {
     return;
   }
+
+  m_exchangeParticleQuantities = false;
 
   ParticleExchangeVar& recvs = dts->getParticleRecvs();
   ParticleExchangeVar& sends = dts->getParticleSends();
@@ -5149,8 +5149,8 @@ OnDemandDataWarehouse::createParticleSubset(       particleIndex numParticles,
 
   ASSERT(!patch->isVirtual());
 
-  ParticleSubset* psubset = scinew ParticleSubset(numParticles, matlIndex, patch, low, high);
-  insertPSetRecord(d_psetDB, patch, low, high, matlIndex, psubset);
+  ParticleSubset* psubset = scinew ParticleSubset( numParticles, matlIndex, patch, low, high );
+  insertPSetRecord( d_psetDB, patch, low, high, matlIndex, psubset );
 
   return psubset;
 }
@@ -5334,7 +5334,7 @@ OnDemandDataWarehouse::getParticleSubset(       int       matlIndex,
   const Patch* realPatch = (patch != 0) ? patch->getRealPatch() : 0;
   ParticleSubset* subset = 0;
 
-  subset=queryPSetDB(d_psetDB,realPatch,matlIndex,low,high,0);
+  subset = queryPSetDB( d_psetDB, realPatch, matlIndex, low, high, 0 );
 
   // bulletproofing
   if( !subset ) {
@@ -6619,7 +6619,7 @@ OnDemandDataWarehouse::emitPIDX(       PIDXOutputContext & pc,
     case TypeDescription::SFCZVariable :
       //get list
       {
-   std::vector<Variable*> varlist;
+        std::vector<Variable*> varlist;
         d_varDB.getlist( label, matlIndex, patch, varlist );
 
         GridVariableBase* v = nullptr;
@@ -7856,38 +7856,40 @@ OnDemandDataWarehouse::checkAccesses(       RunningTaskInfo*  currentTaskInfo,
 
 //______________________________________________________________________
 //
-// For timestep abort/restart
+// For timestep abort/recomute
 bool
-OnDemandDataWarehouse::timestepAborted()
+OnDemandDataWarehouse::abortTimeStep()
 {
-  return d_aborted;
+  // BJW - time step aborting does not work with MPI - disabling.
+  if( d_myworld->nRanks() == 0 ) {
+    Patch * patch = nullptr;
+
+    if (exists(VarLabel::find(abortTimeStep_name), -1, patch)) {
+      bool_or_vartype ats_var;
+      get( ats_var, VarLabel::find(abortTimeStep_name) );
+      return bool(ats_var);
+    }
+    else
+      return false;
+  }
+  else
+    return false;
 }
 
 //__________________________________
 //
 bool
-OnDemandDataWarehouse::timestepRestarted()
+OnDemandDataWarehouse::recomputeTimeStep()
 {
-  return d_restart;
-}
+  Patch * patch = nullptr;
 
-//______________________________________________________________________
-//
-void
-OnDemandDataWarehouse::abortTimestep()
-{
-  // BJW - timestep aborting does not work in MPI - disabling until we get fixed.
-  if( d_myworld->nRanks() == 0 ) {
-    d_aborted = true;
+  if (exists(VarLabel::find(recomputeTimeStep_name), -1, patch)) {
+    bool_or_vartype rts_var;
+    get( rts_var, VarLabel::find(recomputeTimeStep_name) );
+    return bool(rts_var);
   }
-}
-
-//______________________________________________________________________
-//
-void
-OnDemandDataWarehouse::restartTimestep()
-{
-  d_restart = true;
+  else
+    return false;
 }
 
 //______________________________________________________________________

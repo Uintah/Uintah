@@ -100,7 +100,7 @@ const TypeDescription* fun_getTypeDescription(FILE**)
 //     static TypeDescription* td;
 //     if(!td){
 //        td = scinew TypeDescription(TypeDescription::long_type,
-//  				  "long", true,
+//                                "long", true,
 //  #ifdef SCI_64BITS
 //        MPI_LONG_LONG_INT
 //  #else
@@ -116,7 +116,7 @@ const TypeDescription* fun_getTypeDescription(long64*)
    static TypeDescription* td;
    if(!td){
       td = scinew TypeDescription(TypeDescription::long64_type,
-				  "long64", true, MPI_LONG_LONG_INT);
+                                  "long64", true, MPI_LONG_LONG_INT);
    }
    return td;
 }
@@ -128,7 +128,7 @@ const TypeDescription* fun_getTypeDescription(long long*)
    static TypeDescription* td;
    if(!td){
       td = scinew TypeDescription(TypeDescription::long64_type,
-				  "long64", true, MPI_LONG_LONG_INT);
+                                  "long64", true, MPI_LONG_LONG_INT);
    }
    return td;
 }
@@ -139,7 +139,7 @@ const TypeDescription* fun_getTypeDescription(bool*)
    static TypeDescription* td;
    if(!td){
       td = scinew TypeDescription(TypeDescription::bool_type,
-				  "bool", true, MPI_UB);
+                                  "bool", true, MPI_UB);
    }
    return td;
 }
@@ -149,7 +149,7 @@ const TypeDescription* fun_getTypeDescription(unsigned char*)
    static TypeDescription* td;
    if(!td){
       td = scinew TypeDescription(TypeDescription::bool_type,
-				  "uchar", true, MPI_UB);
+                                  "uchar", true, MPI_UB);
    }
    return td;
 }
@@ -168,7 +168,7 @@ const TypeDescription* fun_getTypeDescription(Point*)
    static TypeDescription* td;
    if(!td){
       td = scinew TypeDescription(TypeDescription::Point,
-				  "Point", true, &makeMPI_Point);
+                                  "Point", true, &makeMPI_Point);
    }
    return td;
 }
@@ -187,7 +187,7 @@ const TypeDescription* fun_getTypeDescription(Vector*)
    static TypeDescription* td;
    if(!td){
       td = scinew TypeDescription(TypeDescription::Vector,
-				  "Vector", true, &makeMPI_Vector);
+                                  "Vector", true, &makeMPI_Vector);
    }
    return td;
 }
@@ -206,41 +206,30 @@ const TypeDescription* fun_getTypeDescription(IntVector*)
    static TypeDescription* td;
    if(!td){
       td = scinew TypeDescription(TypeDescription::IntVector,
-				  "IntVector", true, &makeMPI_IntVector);
+                                  "IntVector", true, &makeMPI_IntVector);
    }
    return td;
 }
 
-void fun_getLargeValue(bool* val)
-{
-  // this should never get called.  It doesn't make sense for a bool
-  // to get used in a min or max op
-  *val = true;
-}
-
-void fun_getSmallValue(bool* val)
-{
-  // this should never get called.  It doesn't make sense for a bool
-  // to get used in a min or max op
-  *val = false;
-}
-void fun_getZeroValue(  double  * val ) { *val = 0; }
 #if !defined( SCI_32BITS ) && !defined( OSX_SNOW_LEOPARD_OR_LATER )
 void fun_getZeroValue(  long long * val ) { *val = 0; }
 #endif
 void fun_getZeroValue(  bool    * val ) { *val = false; }
+void fun_getZeroValue(  double  * val ) { *val = 0; }
 void fun_getZeroValue(  long64  * val ) { *val = 0; }
 void fun_getZeroValue(  Vector  * val ) { *val = Vector(0,0,0); }
 void fun_getZeroValue(  IntVector  * val ) { *val = IntVector(0,0,0); }
 
+void fun_getLargeValue( bool    * val ) { *val = true; }
+void fun_getLargeValue( double  * val ) { *val = DBL_MAX; }
 void fun_getLargeValue( long64  * val ) { *val = LONG_MAX; }
 void fun_getLargeValue( Vector  * val ) { *val = Vector(DBL_MAX,DBL_MAX,DBL_MAX); }
 void fun_getLargeValue( IntVector  * val ) { *val = IntVector(INT_MAX,INT_MAX,INT_MAX); }
-void fun_getLargeValue( double  * val ) { *val = DBL_MAX; }
 
+void fun_getSmallValue( bool    * val ) { *val = false; }
+void fun_getSmallValue( double  * val ) { *val = -DBL_MAX; }
 void fun_getSmallValue( long64  * val ) { *val = LONG_MIN; }
 void fun_getSmallValue( Vector  * val ) { *val = Vector(-DBL_MAX,-DBL_MAX,-DBL_MAX); }
 void fun_getSmallValue( IntVector  * val ) { *val = IntVector(-INT_MAX,-INT_MAX,-INT_MAX); }
-void fun_getSmallValue( double  * val ) { *val = -DBL_MAX; }
 
 } // End namespace Uintah

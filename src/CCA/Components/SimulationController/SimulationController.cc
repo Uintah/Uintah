@@ -101,6 +101,35 @@ SimulationController::SimulationController( const ProcessorGroup * myworld
   
   m_grid_ps = m_ups->findBlock( "Grid" );
 
+  ProblemSpecP simController_ps = m_ups->findBlock( "SimulationController" );
+
+  if( simController_ps )
+  {
+    ProblemSpecP runtimeStats_ps = simController_ps->findBlock( "RuntimeStats" );
+
+    if( runtimeStats_ps )
+    {
+      runtimeStats_ps->get("frequency", m_reportStatsFrequency);
+      runtimeStats_ps->get("onTimeStep", m_reportStatsOnTimeStep);
+
+      if( m_reportStatsOnTimeStep >= m_reportStatsFrequency )
+      {
+        proc0cout << "Error: the frequency of reporting the run time stats "
+                  << m_reportStatsFrequency << " "
+                  << "is less than or equal to the time step ordinality "
+                  << m_reportStatsOnTimeStep << " "
+                  << ". Resetting the ordinality to ";
+
+        if( m_reportStatsFrequency > 1 )
+          m_reportStatsOnTimeStep = 1;
+        else
+          m_reportStatsOnTimeStep = 0;
+
+        proc0cout << m_reportStatsOnTimeStep << std::endl;
+      }
+    }
+  }
+  
 #ifdef USE_PAPI_COUNTERS
   /*
    * Setup PAPI events to track.
@@ -636,7 +665,7 @@ SimulationController::finalSetup()
   // This step is done after the call to m_application->problemSetup to get
   // the defaults set by the simulation interface into the input.xml,
   // which the output writes along with index.xml
-  m_output->initializeOutput(m_ups, m_current_gridP );
+  m_output->initializeOutput( m_ups, m_current_gridP );
 
   // This step is done after the output is initialized so that global
   // reduction output vars are copied to the new uda. Further, it must
@@ -694,6 +723,35 @@ SimulationController::ReportStats(const ProcessorGroup*,
                                         DataWarehouse*,
                                         bool header )
 {
+  bool reportStats;
+
+  // If the reporting frequency is greater than 1 check to see if
+  // output is needed.
+  if( m_reportStatsFrequency == 1 )
+    reportStats = true;
+  // Note: this check is split up so to be assured that the call to
+  // isLastTimeStep is last and called only when needed. Unfortuantely,
+  // the greater the frequency the more often it will be called.
+  else
+  {
+    if( header )
+      reportStats = true;
+    else if( m_application->getTimeStep()%m_reportStatsFrequency == m_reportStatsOnTimeStep )
+      reportStats = true;
+    else
+    {
+      // Get the wall time if is needed, otherwise ignore it.
+      double walltime;
+      
+      if( m_application->getSimulationTime()->m_max_wall_time > 0 )
+        walltime = m_wall_timers.GetWallTime();
+      else
+        walltime = 0;
+      
+      reportStats = m_application->isLastTimeStep( walltime );
+    }
+  }
+  
   // Get and reduce the performance runtime stats
   getMemoryStats();
   getPAPIStats();
@@ -746,13 +804,13 @@ SimulationController::ReportStats(const ProcessorGroup*,
     if( g_sim_mem_stats ) {
       // With the sum reduces, use double, since with memory it is possible that
       // it will overflow
-      double        avg_memused      = m_runtime_stats.getAverage( SCIMemoryUsed );
-      unsigned long max_memused      = m_runtime_stats.getMaximum( SCIMemoryUsed );
-      int           max_memused_rank = m_runtime_stats.getRank(    SCIMemoryUsed );
+      double        avg_memused      = m_runtime_stats.getRankAverage( SCIMemoryUsed );
+      unsigned long max_memused      = m_runtime_stats.getRankMaximum( SCIMemoryUsed );
+      int           max_memused_rank = m_runtime_stats.getRankForMaximum(    SCIMemoryUsed );
       
-      double        avg_highwater      = m_runtime_stats.getAverage( SCIMemoryHighwater );
-      unsigned long max_highwater      = m_runtime_stats.getMaximum( SCIMemoryHighwater );
-      int           max_highwater_rank = m_runtime_stats.getRank(    SCIMemoryHighwater );
+      double        avg_highwater      = m_runtime_stats.getRankAverage( SCIMemoryHighwater );
+      unsigned long max_highwater      = m_runtime_stats.getRankMaximum( SCIMemoryHighwater );
+      int           max_highwater_rank = m_runtime_stats.getRankForMaximum(    SCIMemoryHighwater );
       
       if (avg_memused == max_memused && avg_highwater == max_highwater) {
         message << "Memory Use=" << std::setw(8)
@@ -791,7 +849,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
       message << " (on rank 0 only)";
     }
 
-    DOUT(true, message.str());
+    DOUT(reportStats, message.str());
     std::cout.flush();
   }
   
@@ -849,31 +907,36 @@ SimulationController::ReportStats(const ProcessorGroup*,
       message << realSecondsAvg / SECONDS_PER_YEAR << " years (avg) ";
     }
 
-    DOUT(true, message.str());
+    DOUT(reportStats, message.str());
     std::cout.flush();
   }
 
-  // Sum up the average time for overhead related components. These
-  // same values are used in SimulationState::getOverheadTime.
-  double overhead_time =
-    (m_runtime_stats.getAverage(CompilationTime)           +
-     m_runtime_stats.getAverage(RegriddingTime)            +
-     m_runtime_stats.getAverage(RegriddingCompilationTime) +
-     m_runtime_stats.getAverage(RegriddingCopyDataTime)    +
-     m_runtime_stats.getAverage(LoadBalancerTime));
-
-  // Sum up the average times for simulation components. These
-  // same values are used in SimulationState::getTotalTime.
-  double total_time =
-    (overhead_time +
-     m_runtime_stats.getAverage(TaskExecTime)       +
-     m_runtime_stats.getAverage(TaskLocalCommTime)  +
-     m_runtime_stats.getAverage(TaskWaitCommTime)   +
-     m_runtime_stats.getAverage(TaskReduceCommTime) +
-     m_runtime_stats.getAverage(TaskWaitThreadTime));
+  // Variable for calculating the percentage of time spent in overhead.
+  double percent_overhead = 0;
   
+  if( (m_regridder && m_regridder->useDynamicDilation()) ||
+      g_comp_timings ) {
+
+    // Sum up the average time for overhead related components.
+    double overhead_time =
+      (m_runtime_stats.getRankAverage(CompilationTime)           +
+       m_runtime_stats.getRankAverage(RegriddingTime)            +
+       m_runtime_stats.getRankAverage(RegriddingCompilationTime) +
+       m_runtime_stats.getRankAverage(RegriddingCopyDataTime)    +
+       m_runtime_stats.getRankAverage(LoadBalancerTime));
+    
+    // Sum up the average times for simulation components.
+    double total_time =
+      (overhead_time +
+       m_runtime_stats.getRankAverage(TaskExecTime)       +
+       m_runtime_stats.getRankAverage(TaskLocalCommTime)  +
+       m_runtime_stats.getRankAverage(TaskWaitCommTime)   +
+       m_runtime_stats.getRankAverage(TaskReduceCommTime) +
+       m_runtime_stats.getRankAverage(TaskWaitThreadTime));
+    
     // Calculate percentage of time spent in overhead.
-  double percent_overhead = overhead_time / total_time;
+    percent_overhead = overhead_time / total_time;
+  }
   
   double overheadAverage = 0;
 
@@ -921,7 +984,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
         }
       }
 
-      DOUT(true, message.str());
+      DOUT(reportStats, message.str());
     }
 
     // Application per proc runtime performance stats    
@@ -938,7 +1001,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
         }
       }
       
-      DOUT(true, message.str());
+      DOUT(reportStats, message.str());
     }
   } 
 
@@ -961,15 +1024,15 @@ SimulationController::ReportStats(const ProcessorGroup*,
               << std::endl;
         
       for (unsigned int i=0; i<m_runtime_stats.size(); ++i) {
-        if( m_runtime_stats.getMaximum(i) != 0.0 )
+        if( m_runtime_stats.getRankMaximum(i) != 0.0 )
           message << "  " << std::left
                   << std::setw(21) << m_runtime_stats.getName(i)
                   << "[" << std::setw(10) << m_runtime_stats.getUnits(i) << "]"
-                  << " : " << std::setw(12) << m_runtime_stats.getAverage(i)
-                  << " : " << std::setw(12) << m_runtime_stats.getMaximum(i)
-                  << " : " << std::setw(10) << m_runtime_stats.getRank(i)
+                  << " : " << std::setw(12) << m_runtime_stats.getRankAverage(i)
+                  << " : " << std::setw(12) << m_runtime_stats.getRankMaximum(i)
+                  << " : " << std::setw(10) << m_runtime_stats.getRankForMaximum(i)
                   << " : " << std::setw(10)
-                  << (m_runtime_stats.getMaximum(i) != 0.0 ? (100.0 * (1.0 - (m_runtime_stats.getAverage(i) / m_runtime_stats.getMaximum(i)))) : 0)
+                  << (m_runtime_stats.getRankMaximum(i) != 0.0 ? (100.0 * (1.0 - (m_runtime_stats.getRankAverage(i) / m_runtime_stats.getRankMaximum(i)))) : 0)
                   << std::endl;
       }
     }
@@ -995,22 +1058,22 @@ SimulationController::ReportStats(const ProcessorGroup*,
               << std::endl;
 
       for (unsigned int i=0; i<m_application->getApplicationStats().size(); ++i) {
-        if( m_application->getApplicationStats().getMaximum(i) != 0.0 )
+        if( m_application->getApplicationStats().getRankMaximum(i) != 0.0 )
           message << "  " << std::left
                   << std::setw(21) << m_application->getApplicationStats().getName(i)
                   << "["   << std::setw(10) << m_application->getApplicationStats().getUnits(i) << "]"
-                  << " : " << std::setw(12) << m_application->getApplicationStats().getAverage(i)
-                  << " : " << std::setw(12) << m_application->getApplicationStats().getMaximum(i)
-                  << " : " << std::setw(10) << m_application->getApplicationStats().getRank(i)
+                  << " : " << std::setw(12) << m_application->getApplicationStats().getRankAverage(i)
+                  << " : " << std::setw(12) << m_application->getApplicationStats().getRankMaximum(i)
+                  << " : " << std::setw(10) << m_application->getApplicationStats().getRankForMaximum(i)
                   << " : " << std::setw(10)
-                  << (m_application->getApplicationStats().getMaximum(i) != 0.0 ? (100.0 * (1.0 - (m_application->getApplicationStats().getAverage(i) / m_application->getApplicationStats().getMaximum(i)))) : 0)
+                  << (m_application->getApplicationStats().getRankMaximum(i) != 0.0 ? (100.0 * (1.0 - (m_application->getApplicationStats().getRankAverage(i) / m_application->getApplicationStats().getRankMaximum(i)))) : 0)
                   << std::endl;
       }
 
       message << std::endl;
     }
 
-    DOUT(true, message.str());
+    DOUT(reportStats, message.str());
   }
   
   ++m_num_samples;
@@ -1171,6 +1234,14 @@ SimulationController::CheckInSitu(const ProcessorGroup*,
 
     m_wall_timers.InSitu.start();
 
+    // Get the wall time if is needed, otherwise ignore it.
+    double walltime;
+    
+    if( m_application->getSimulationTime()->m_max_wall_time > 0 )
+      walltime = m_wall_timers.GetWallTime();
+    else
+      walltime = 0;
+    
     // Update all of the simulation grid and time dependent variables.
     visit_UpdateSimData( m_visitSimData, m_current_gridP,
                          m_application->getSimTime(),
@@ -1178,12 +1249,12 @@ SimulationController::CheckInSitu(const ProcessorGroup*,
                          m_application->getDelT(),
                          m_application->getNextDelT(),
                          first,
-                         m_application->isLastTimeStep(m_wall_timers.GetWallTime()) );
+                         m_application->isLastTimeStep(walltime) );
 
     // Check the state - if the return value is true the user issued
     // a termination.
     if( visit_CheckState( m_visitSimData ) ) {
-      m_application->mayEndSimulation(true);
+      m_application->endSimulation(true);
     }
 
     // std::cerr << "*************" << __FUNCTION__ << "  " << __LINE__ << "  "

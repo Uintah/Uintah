@@ -78,7 +78,7 @@ public:
 
   // Copy this directory to under the destination directory.
   void copy( const Dir & destDir ) const;
-  void move(       Dir & destDir );
+  void move( const Dir & destDir );
 
   // Copy a file in this directory to the destination directory.
   void copy( const std::string & filename, const Dir & destDir ) const;

@@ -37,6 +37,7 @@
 #include <Core/Containers/OffsetArray1.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Grid/Box.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/UnknownVariable.h>
@@ -693,6 +694,9 @@ DataArchive::setupQueryPIDX(       PIDX_access     & access,
   else if( type->getType() == TypeDescription::NCVariable ) {
     typeStr = "NCVars";
   }
+  else if( type->getType() == TypeDescription::ParticleVariable ) {
+    typeStr = "ParticleVars";
+  }
   else {
     typeStr = "NOT_IMPLEMENTED";
   }
@@ -841,19 +845,6 @@ DataArchive::queryPIDX(       BufferAndSizeTuple * data,
     patchExts.print( cout );
   }
 
-  //__________________________________
-  // Allocate memory and read in data from PIDX file  Need to use patch_buffer !!!
-
-  int values_per_sample = varDesc->vps;
-  int bits_per_sample = 0;
-  int ret = PIDX_default_bits_per_datatype( varDesc->type_name, &bits_per_sample );
-  PIDXOutputContext::checkReturnCode( ret, "DataArchive::queryPIDX() - PIDX_default_bits_per_datatype failure", __FILE__, __LINE__ );
-
-  size_t arraySize = ( bits_per_sample / 8 ) * patchExts.totalCells_EC * values_per_sample;
-  data->buffer = (unsigned char*)malloc( arraySize );
-  data->size = arraySize;
-  memset( data->buffer, 0, arraySize );
-
   // debugging
     //  if (dbg.active()||true ){
     //    cout << Uintah::Parallel::getMPIRank() << ": Query:  file: " << idxFilename
@@ -871,29 +862,60 @@ DataArchive::queryPIDX(       BufferAndSizeTuple * data,
     //  }
 
 
-  IntVector extra_cells = patch->getExtraCells();
+  int ret;
 
-  patchOffset[0] = patchOffset[0] - lo.x() - extra_cells[0];
-  patchOffset[1] = patchOffset[1] - lo.y() - extra_cells[1];
-  patchOffset[2] = patchOffset[2] - lo.z() - extra_cells[2];
+  if( type->getType() == Uintah::TypeDescription::ParticleVariable ) {
 
-  // cout << Uintah::Parallel::getMPIRank() << ": level: " << level->getIndex() << ", patchoffset: " << patchOffset[0] << ", " << patchOffset[1] << ", " << patchOffset[2]
-  //      << ", patchsize: " << patchSize[0] << ", " << patchSize[1] << ", " << patchSize[2] << "\n";
+    PIDX_physical_point physical_local_offset, physical_local_size;
+    PIDX_set_physical_point( physical_local_size, patch->getBox().upper().x() - patch->getBox().lower().x(),
+                             patch->getBox().upper().y() - patch->getBox().lower().y(),
+                             patch->getBox().upper().z() - patch->getBox().lower().z());
+    PIDX_set_physical_point( physical_local_offset, patch->getBox().lower().x(),
+                             patch->getBox().lower().y(),
+                             patch->getBox().lower().z());
 
-  ret = PIDX_variable_read_data_layout( varDesc, patchOffset, patchSize, data->buffer, PIDX_row_major );
-  PIDXOutputContext::checkReturnCode( ret, "DataArchive::queryPIDX() - PIDX_variable_read_data_layout failure", __FILE__, __LINE__ );
-
-  //__________________________________
-  // debugging
-  if( dbg.active() ){
-    pidx.printBufferWrap( "DataArchive::query    AFTER  close",
-                          type->getSubType()->getType(),
-                          varDesc->vps,
-                          patchExts.lo_EC, patchExts.hi_EC,
-                          data->buffer,
-                          arraySize );
+    ret = PIDX_variable_read_particle_data_layout( varDesc, physical_local_offset, physical_local_size, (void**)&(data->buffer), &(data->size), PIDX_row_major );
+    PIDXOutputContext::checkReturnCode( ret, "DataArchive::queryPIDX() - PIDX_variable_read_particle_data_layout failure", __FILE__, __LINE__ );
   }
+  else {
 
+    //__________________________________
+    // Allocate memory and read in data from PIDX file  Need to use patch_buffer !!!
+
+    int values_per_sample = varDesc->vps;
+    int bits_per_sample = 0;
+    int ret = PIDX_default_bits_per_datatype( varDesc->type_name, &bits_per_sample );
+    PIDXOutputContext::checkReturnCode( ret, "DataArchive::queryPIDX() - PIDX_default_bits_per_datatype failure", __FILE__, __LINE__ );
+
+    size_t arraySize = ( bits_per_sample / 8 ) * patchExts.totalCells_EC * values_per_sample;
+    data->buffer = (unsigned char*)malloc( arraySize );
+    data->size = arraySize;
+    memset( data->buffer, 0, arraySize );
+
+    IntVector extra_cells = patch->getExtraCells();
+
+    patchOffset[0] = patchOffset[0] - lo.x() - extra_cells[0];
+    patchOffset[1] = patchOffset[1] - lo.y() - extra_cells[1];
+    patchOffset[2] = patchOffset[2] - lo.z() - extra_cells[2];
+
+    // cout << Uintah::Parallel::getMPIRank() << ": level: " << level->getIndex() << ", patchoffset: " << patchOffset[0] << ", " << patchOffset[1] << ", " << patchOffset[2]
+    //      << ", patchsize: " << patchSize[0] << ", " << patchSize[1] << ", " << patchSize[2] << "\n";
+    
+    ret = PIDX_variable_read_data_layout( varDesc, patchOffset, patchSize, data->buffer, PIDX_row_major );
+
+    PIDXOutputContext::checkReturnCode( ret, "DataArchive::queryPIDX() - PIDX_variable_read_data_layout failure", __FILE__, __LINE__ );
+
+    //__________________________________
+    // debugging
+    if( dbg.active() ){
+      pidx.printBufferWrap( "DataArchive::query    AFTER  close",
+                            type->getSubType()->getType(),
+                            varDesc->vps,
+                            patchExts.lo_EC, patchExts.hi_EC,
+                            data->buffer,
+                            arraySize );
+    }
+  }
   // cout << Uintah::Parallel::getMPIRank() << ": ENDING pidx portion of query()\n";
 
 } // end queryPIDX()
@@ -945,8 +967,43 @@ DataArchive::queryPIDXSerial(       Variable     & var,
   ret = PIDX_close_access( access );
   PIDXOutputContext::checkReturnCode( ret, "DataArchive::queryPIDXSerial() - PIDX_close_access failure", __FILE__, __LINE__ );
 
-  const IntVector bl( 0, 0, 0 );
-  var.allocate( patch, bl );
+  //__________________________________
+  // Allocate memory for grid or particle variables
+  if (td->getType() == TypeDescription::ParticleVariable) {
+
+    int numParticles = data->size;
+
+    if( patch->isVirtual() ) {
+      throw InternalError( "DataArchive::query: Particle query on virtual patches "
+                           "not finished.  We need to adjust the particle positions to virtual space...", __FILE__, __LINE__ );
+    }
+
+    psetDBType::key_type   key( matlIndex, patch );
+    ParticleSubset       * psubset  = 0;
+    psetDBType::iterator   psetIter = d_psetDB.find( key );
+
+    if( psetIter != d_psetDB.end() ) {
+      psubset = (*psetIter).second.get_rep();
+    }
+
+    if( psubset == 0 || (int)psubset->numParticles() != data->size ) {
+      psubset = scinew ParticleSubset( numParticles, matlIndex, patch );
+            cout << "numParticles: " << numParticles << "\n";
+
+            cout << "d_pset size: " << d_psetDB.size() << "\n";
+            cout << "1. key is: " << key.first << "\n";
+            cout << "2. key is: " << key.second << "\n";
+      d_psetDB[ key ] = psubset;
+    }
+    (static_cast<ParticleVariableBase*>(&var))->allocate( psubset );
+//      (dynamic_cast<ParticleVariableBase*>(&var))->allocate(psubset);
+  }
+  else if (td->getType() == TypeDescription::PerPatch) {
+  }
+  else if (td->getType() != TypeDescription::ReductionVariable) {
+    const IntVector bl( 0, 0, 0 );
+    var.allocate( patch, bl );
+  }
 
   bool swap_bytes = false; // FIX ME this should not be hard coded!
 
@@ -1072,7 +1129,7 @@ DataArchive::query(       Variable     & var,
 
     psetDBType::key_type   key( matlIndex, patch );
     ParticleSubset       * psubset  = 0;
-    psetDBType::iterator   psetIter = d_psetDB.find(key);
+    psetDBType::iterator   psetIter = d_psetDB.find( key );
 
     if(psetIter != d_psetDB.end()) {
       psubset = (*psetIter).second.get_rep();
@@ -1624,14 +1681,40 @@ DataArchive::restartInitialize( const int                timestep_index,
 
               Variable * var = label->typeDescription()->createInstance();
               const IntVector bl( 0, 0, 0 );
-              var->allocate( patch, bl );
+
+              if( label->typeDescription()->getType() == TypeDescription::ParticleVariable ) {
+
+                int matlIndex = vmp.matlIndex_;
+
+                psetDBType::key_type   key( matlIndex, patch );
+                ParticleSubset       * psubset  = 0;
+                psetDBType::iterator   psetIter = d_psetDB.find( key );
+
+                if(psetIter != d_psetDB.end()) {
+                  psubset = (*psetIter).second.get_rep();
+                }
+
+                if( psubset == 0 || (int)psubset->numParticles() != data->size ) {
+                  psubset = scinew ParticleSubset( data->size, matlIndex, patch );
+                  //      cout << "numParticles: " << dfi->numParticles << "\n";
+                  //      cout << "d_pset size: " << d_psetDB.size() << "\n";
+                  //      cout << "1. key is: " << key.first << "\n";
+                  //      cout << "2. key is: " << key.second << "\n";
+                  d_psetDB[ key ] = psubset;
+                }
+                (static_cast<ParticleVariableBase*>(var))->allocate( psubset );
+
+              }
+              else { // Non particle var
+
+                var->allocate( patch, bl );
+              }
 
               //__________________________________
               // Now move the dataPIDX buffer into the array3 variable
 
               // cout << Uintah::Parallel::getMPIRank() << ": c) var: " << vmp.name_ 
               //      << ", data->buffer is " << (data->buffer == nullptr ? "nullptr" : (void*)(data->buffer)) << " and size: " << data->size << "\n";
-
 
               var->readPIDX( data->buffer, data->size, timedata.d_swapBytes );
 

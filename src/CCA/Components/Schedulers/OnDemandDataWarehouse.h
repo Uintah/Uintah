@@ -484,16 +484,9 @@ class OnDemandDataWarehouse : public DataWarehouse {
                            const FastHashTable<ScrubItem> * scrubcounts,
                                  bool                       add );
 
-    // For timestep abort/restart
-    virtual bool timestepAborted();
-
-    virtual bool timestepRestarted();
-
-    virtual void abortTimestep();
-
-    virtual void restartTimestep();
-
-    virtual void setRestarted() { d_hasRestarted = true; }
+    // For time step abort/recompute
+    virtual bool abortTimeStep();
+    virtual bool recomputeTimeStep();
 
    struct ValidNeighbors {
      GridVariableBase* validNeighbor;
@@ -702,15 +695,15 @@ class OnDemandDataWarehouse : public DataWarehouse {
     // Keep track of when this DW sent some (and which) particle information to another processor
     SendState ss_;
 
-    /*
-     // On a timestep restart, sometimes (when an entire patch is sent) on the
-     // first try of the timestep the receiving DW creates and stores ParticleSubset
-     // which throws off the sending on the next iteration.  This will compensate.
-     SendState                         d_timestepRestartPsets;
-     */
+    // On a time step restart, sometimes (when an entire patch is
+    // sent) on the first try of the time step the receiving DW creates
+    // and stores ParticleSubset which throws off the sending on the
+    // next iteration. This will compensate.
+
+    // SendState d_timestepRestartPsets;
 
     // Record of which DataWarehouse has the data for each variable...
-    //  Allows us to look up the DW to which we will send a data request.
+    // Allows us to look up the DW to which we will send a data request.
     dataLocationDBtype d_dataLocation;
 
     bool                 d_finalized;
@@ -729,12 +722,7 @@ class OnDemandDataWarehouse : public DataWarehouse {
 
     ScrubMode d_scrubMode;
 
-    bool d_aborted;
-    bool d_restart;
-
-    // Whether this (Old) DW is being used for a restarted timestep (the new DWs are cleared out)
-    bool d_hasRestarted;
-
+    bool m_exchangeParticleQuantities {true};
 }; // end class OnDemandDataWarehouse
 
 }  // end namespace Uintah
@@ -1198,16 +1186,9 @@ class OnDemandDataWarehouse : public DataWarehouse {
                            const FastHashTable<ScrubItem> * scrubcounts,
                                  bool                       add );
 
-    // For timestep abort/restart
-    virtual bool timestepAborted();
-
-    virtual bool timestepRestarted();
-
-    virtual void abortTimestep();
-
-    virtual void restartTimestep();
-
-    virtual void setRestarted() { d_hasRestarted = true; }
+    // For time step abort/recompute
+    virtual bool abortTimeStep();
+    virtual bool recomputeTimeStep();
 
    struct ValidNeighbors {
      GridVariableBase* validNeighbor;
@@ -1573,15 +1554,15 @@ class OnDemandDataWarehouse : public DataWarehouse {
     // Keep track of when this DW sent some (and which) particle information to another processor
     SendState ss_;
 
-    /*
-     // On a timestep restart, sometimes (when an entire patch is sent) on the
-     // first try of the timestep the receiving DW creates and stores ParticleSubset
-     // which throws off the sending on the next iteration.  This will compensate.
-     SendState                         d_timestepRestartPsets;
-     */
+    // On a time step restart, sometimes (when an entire patch is
+    // sent) on the first try of the time step the receiving DW creates
+    // and stores ParticleSubset which throws off the sending on the
+    // next iteration. This will compensate.
+
+    // SendState d_timestepRestartPsets;
 
     // Record of which DataWarehouse has the data for each variable...
-    //  Allows us to look up the DW to which we will send a data request.
+    // Allows us to look up the DW to which we will send a data request.
     dataLocationDBtype d_dataLocation;
 
     bool                 d_finalized;
@@ -1600,12 +1581,7 @@ class OnDemandDataWarehouse : public DataWarehouse {
 
     ScrubMode d_scrubMode;
 
-    bool d_aborted;
-    bool d_restart;
-
-    // Whether this (Old) DW is being used for a restarted timestep (the new DWs are cleared out)
-    bool d_hasRestarted;
-
+    bool m_exchangeParticleQuantities {true};
 }; // end class OnDemandDataWarehouse
 
 }  // end namespace Uintah

@@ -93,16 +93,16 @@ namespace {
 
 //_____________________________________________________________________________
 //
-DetailedTasks::DetailedTasks(       SchedulerCommon * sc
-                            , const ProcessorGroup  * pg
-                            , const TaskGraph       * taskgraph
-                            , const std::set<int>   & neighborhood_processors
-                            ,       bool              mustConsiderInternalDependencies /* = false */
+DetailedTasks::DetailedTasks(       SchedulerCommon         * sc
+                            , const ProcessorGroup          * pg
+                            , const TaskGraph               * taskgraph
+                            , const std::unordered_set<int> & neighborhood_processors
+                            ,       bool                      mustConsiderInternalDependencies /* = false */
                             )
-  : m_sched_common(sc)
-  , m_proc_group(pg)
-  , m_task_graph(taskgraph)
-  , m_must_consider_internal_deps(mustConsiderInternalDependencies)
+  : m_sched_common{sc}
+  , m_proc_group{pg}
+  , m_task_graph{taskgraph}
+  , m_must_consider_internal_deps{mustConsiderInternalDependencies}
 {
   // Set up mappings for the initial send tasks
   int dwmap[Task::TotalDWs];

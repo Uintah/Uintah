@@ -102,6 +102,7 @@ void flameSheet_rxn::problemSetup(GridP&, const bool isRestart)
 {
   cout_doing << "Doing problemSetup \t\t\t\tFLAMESHEET" << endl;
 
+  ProblemSpecP base_ps = d_params->findBlock("flameSheet_rxn");
   d_matl = m_sharedState->parseAndLookupMaterial(d_params, "material");
 
   vector<int> m(1);
@@ -122,9 +123,9 @@ void flameSheet_rxn::problemSetup(GridP&, const bool isRestart)
   d_scalar->name  = "f";
   
   const TypeDescription* td_CCdouble = CCVariable<double>::getTypeDescription();
-  d_scalar->scalar_CCLabel =        VarLabel::create("scalar-f",    td_CCdouble);
+  d_scalar->scalar_CCLabel        = VarLabel::create("scalar-f",    td_CCdouble);
   d_scalar->scalar_source_CCLabel = VarLabel::create("scalar_f_src",td_CCdouble);
-  d_scalar->sum_scalar_fLabel     =  VarLabel::create("sum_scalar_f", 
+  d_scalar->sum_scalar_fLabel     = VarLabel::create("sum_scalar_f", 
                                             sum_vartype::getTypeDescription());
                                             
   registerTransportedVariable(d_matl_set,
@@ -133,7 +134,7 @@ void flameSheet_rxn::problemSetup(GridP&, const bool isRestart)
 
   //__________________________________
   // Read in the constants for the scalar 
-  ProblemSpecP child = d_params->findBlock("scalar");
+  ProblemSpecP child = base_ps->findBlock("scalar");
   if (!child){
     throw ProblemSetupException("flameSheet: Couldn't find scalar tag", __FILE__, __LINE__);    
   }

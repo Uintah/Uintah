@@ -53,7 +53,9 @@ namespace Uintah {
 
   class DataWarehouse;
 
-  void BC_bulletproofing(const ProblemSpecP& prob_spec,SimulationStateP& sharedState );
+  void BC_bulletproofing(const ProblemSpecP & prob_spec,
+                        SimulationStateP    & sharedState,
+                        GridP               & grid );
   
   //__________________________________
   //  Temperature, pressure and other CCVariables

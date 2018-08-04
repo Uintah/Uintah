@@ -67,7 +67,7 @@ Arches::Arches(const ProcessorGroup* myworld,
   m_MAlab               = 0;
   m_nlSolver            = 0;
   m_physicalConsts      = 0;
-  m_doing_restart        = false;
+  m_doing_restart       = false;
   m_with_mpmarches      = false;
 
   //lagrangian particles:
@@ -159,6 +159,11 @@ Arches::problemSetup( const ProblemSpecP     & params,
   delete builder;
 
   m_nlSolver->problemSetup( db, m_sharedState, grid );
+
+  // Must be set here rather than the constructor because the value
+  // is based on the solver being requested in the problem setup.
+  mayAbortTimeStep(     m_nlSolver->mayRecomputeTimeStep() );
+  mayRecomputeTimeStep( m_nlSolver->mayRecomputeTimeStep() );
 
   // tell the infrastructure how many tasksgraphs are needed.
   int num_task_graphs=m_nlSolver->taskGraphsRequested();
@@ -330,11 +335,6 @@ int Arches::computeTaskGraphIndex( const int timeStep )
 //--------------------------------------------------------------------------------------------------
 double Arches::recomputeDelT(const double delT ) {
   return m_nlSolver->recomputeDelT( delT );
-}
-
-//--------------------------------------------------------------------------------------------------
-bool Arches::restartableTimeSteps() {
-  return m_nlSolver->restartableTimeSteps();
 }
 
 //-------------------------------------------------------------------------------------------------

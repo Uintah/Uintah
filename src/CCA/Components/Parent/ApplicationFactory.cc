@@ -89,6 +89,7 @@
 #include <CCA/Components/MPM/RigidMPM.h>
 #include <CCA/Components/MPM/SerialMPM.h>
 #include <CCA/Components/MPM/ShellMPM.h>
+#include <CCA/Components/MPM/SingleFieldMPM.h>
 #endif
 
 #if !defined(NO_MPM) && !defined(NO_ARCHES)
@@ -275,6 +276,12 @@ ApplicationFactory::create( ProblemSpecP& prob_spec,
   } 
   else
     turned_on_options += "amrmpm ";
+
+  if (sim_comp == "sfmpm" || sim_comp == "SFmpm" || sim_comp == "SFMPM") {
+    return scinew SingleFieldMPM(myworld, sharedState);
+  } 
+  else
+    turned_on_options += "sfmpm ";
 
   if (sim_comp == "smpm" || sim_comp == "shellmpm" || sim_comp == "SHELLMPM") {
     return scinew ShellMPM(myworld, sharedState);

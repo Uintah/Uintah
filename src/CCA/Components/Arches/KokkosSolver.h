@@ -120,7 +120,7 @@ namespace Uintah{
 
   double recomputeDelT(const double delT) { return delT/2.0; };
 
-  inline bool restartableTimeSteps() {
+  inline bool mayRecomputeTimeStep() {
     return false;
   }
 

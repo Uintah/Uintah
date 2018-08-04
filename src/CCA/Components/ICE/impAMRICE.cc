@@ -51,7 +51,7 @@ static DebugStream cout_doing("ICE_DOING_COUT", false);
 static DebugStream cout_dbg("impAMRICE_DBG", false);
 
 impAMRICE::impAMRICE(const ProcessorGroup* myworld,
-		     const SimulationStateP sharedState) :
+                     const SimulationStateP sharedState) :
   AMRICE(myworld, sharedState)
 {
 }   
@@ -338,6 +338,10 @@ void impAMRICE::scheduleMultiLevelPressureSolve(  SchedulerP& sched,
     t->modifies(lb->vol_frac_Y_FC_fluxLabel, patches, all_matls_sub);
     t->modifies(lb->vol_frac_Z_FC_fluxLabel, patches, all_matls_sub); 
   }
+  
+  t->computes( VarLabel::find(abortTimeStep_name) );
+  t->computes( VarLabel::find(recomputeTimeStep_name) );
+
   t->setType(Task::OncePerProc);
 
   const PatchSet * perprocPatches = m_loadBalancer->getPerProcessorPatchSet( grid );
@@ -415,7 +419,7 @@ void impAMRICE::multiLevelPressureSolve(const ProcessorGroup* pg,
   max_vartype max_RHS = 1/d_SMALL_NUM;
   double smallest_max_RHS_sofar = max_RHS; 
   int counter = 0;
-  bool restart   = false;
+  bool recompute = false;
   bool recursion = true;
   //bool firstIter = true;
   bool modifies_X = true;
@@ -453,7 +457,7 @@ void impAMRICE::multiLevelPressureSolve(const ProcessorGroup* pg,
       
 #else
       const PatchSet* perProcPatches = 
-	m_loadBalancer->getPerProcessorPatchSet(grid);
+        m_loadBalancer->getPerProcessorPatchSet(grid);
       schedule_bogus_imp_delP(d_subsched,  perProcPatches,        d_press_matl,
                               all_matls);   
 #endif
@@ -531,35 +535,35 @@ void impAMRICE::multiLevelPressureSolve(const ProcessorGroup* pg,
     }
     
     //__________________________________
-    // restart timestep
-                                          //  too many outer iterations
-    if (counter > d_iters_before_timestep_restart ){
-      restart = true;
+    // recompute time step
+    //  too many outer iterations
+    if (counter > d_iters_before_timestep_recompute ){
+      recompute = true;
       if(pg->myRank() == 0)
-        cout <<"\nWARNING: max iterations befor timestep restart reached\n"<<endl;
+        cout <<"\nWARNING: The max iterations occured before a time step recompute was reached\n"<<endl;
     }
-                                          //  solver has requested a restart
-    if (d_subsched->get_dw(3)->timestepRestarted() ) {
+    //  Solver has requested to recompute the time step
+    if (d_subsched->get_dw(3)->recomputeTimeStep() ) {
       if(pg->myRank() == 0)
-        cout << "\nWARNING: Solver had requested a restart\n" <<endl;
-      restart = true;
+        cout << "\nWARNING: The solver has requested to recompute the time step\n" <<endl;
+      recompute = true;
     }
     
-                                           //  solution is diverging
+    //  solution is diverging
     if(max_RHS < smallest_max_RHS_sofar){
       smallest_max_RHS_sofar = max_RHS;
     }
     if(((max_RHS - smallest_max_RHS_sofar) > 100.0*smallest_max_RHS_sofar) ){
       if(pg->myRank() == 0)
         cout << "\nWARNING: outer iteration is diverging now "
-             << "restarting the timestep"
+             << "recomputing the time step"
              << " Max_RHS " << max_RHS 
              << " smallest_max_RHS_sofar "<< smallest_max_RHS_sofar<< endl;
-      restart = true;
+      recompute = true;
     }
-    if(restart){
-      ParentNewDW->abortTimestep();
-      ParentNewDW->restartTimestep();
+    if(recompute){
+      ParentNewDW->put( bool_or_vartype(true), VarLabel::find(abortTimeStep_name));
+      ParentNewDW->put( bool_or_vartype(true), VarLabel::find(recomputeTimeStep_name));
       //return; - don't return - just break, some operations may require the transfers below to complete
       break;
     }

@@ -38,6 +38,10 @@
 
 using namespace Uintah;
 
+Uintah::Dout g_deltaT_minor_warnings( "DeltaTMinorWarnings", "ApplicationCommon", "Report minor warnings when validating the next delta T", true );
+
+Uintah::Dout g_deltaT_major_warnings( "DeltaTMajorWarnings", "ApplicationCommon", "Report major warnings when validating the next delta T", true );
+
 ApplicationCommon::ApplicationCommon( const ProcessorGroup   * myworld,
                                       const SimulationStateP   sharedState )
     : UintahParallelComponent(myworld), m_sharedState(sharedState)
@@ -96,6 +100,16 @@ ApplicationCommon::ApplicationCommon( const ProcessorGroup   * myworld,
   nonconstEndSimulation->allowMultipleComputes();
   m_endSimulationLabel = nonconstEndSimulation;
 
+  // Abort Time Step
+  VarLabel* nonconstAbortTimeStep = VarLabel::create(abortTimeStep_name, bool_or_vartype::getTypeDescription());
+  nonconstAbortTimeStep->allowMultipleComputes();
+  m_abortTimeStepLabel = nonconstAbortTimeStep;
+
+  // Recompute Time Step
+  VarLabel* nonconstRecomputeTimeStep = VarLabel::create(recomputeTimeStep_name, bool_or_vartype::getTypeDescription());
+  nonconstRecomputeTimeStep->allowMultipleComputes();
+  m_recomputeTimeStepLabel = nonconstRecomputeTimeStep;
+
   m_application_stats.insert( CarcassCount, std::string("CarcassCount"), "Carcasses", 0 );
 }
 
@@ -113,6 +127,8 @@ ApplicationCommon::~ApplicationCommon()
   VarLabel::destroy(m_checkpointTimeStepIntervalLabel);
 
   VarLabel::destroy(m_endSimulationLabel);
+  VarLabel::destroy(m_abortTimeStepLabel);
+  VarLabel::destroy(m_recomputeTimeStepLabel);
   
   if( m_simulationTime )
     delete m_simulationTime;
@@ -130,7 +146,7 @@ void ApplicationCommon::setComponents( UintahParallelComponent *comp )
   attachPort( "solver",        parent->m_solver );
   attachPort( "regridder",     parent->m_regridder );
   attachPort( "output",        parent->m_output );
-
+  
   getComponents();
 }
 
@@ -165,6 +181,26 @@ void ApplicationCommon::getComponents()
   if( !m_output ) {
     throw InternalError("dynamic_cast of 'm_output' failed!", __FILE__, __LINE__);
   }
+}
+
+void ApplicationCommon::setFlags( UintahParallelComponent *comp )
+{
+  ApplicationCommon * child = dynamic_cast<ApplicationCommon*>( comp );
+
+  // Get some flags from the child;
+  m_adjustCheckpointInterval = child->m_adjustCheckpointInterval;
+  m_adjustOutputInterval     = child->m_adjustOutputInterval;
+  
+  m_mayEndSimulation     = child->m_mayEndSimulation;
+  m_mayAbortTimeStep     = child->m_mayAbortTimeStep;
+  m_mayRecomputeTimeStep = child->m_mayRecomputeTimeStep;
+}
+
+void ApplicationCommon::clearFlags()
+{
+  m_endSimulation     = false;
+  m_abortTimeStep     = false;
+  m_recomputeTimeStep = false;
 }
 
 void ApplicationCommon::releaseComponents()
@@ -260,6 +296,16 @@ ApplicationCommon::scheduleReduceSystemVars(const GridP& grid,
     task->requires(Task::NewDW, m_endSimulationLabel);
   }
 
+  // An application may request that a time step abort.
+  if (m_mayAbortTimeStep) {
+    task->requires(Task::NewDW, m_abortTimeStepLabel);
+  }
+
+  // An application may request that a time step be recomputed.
+  if (m_mayRecomputeTimeStep) {
+    task->requires(Task::NewDW, m_recomputeTimeStepLabel);
+  }
+
   // The above three tasks are on a per proc basis any rank can make
   // the request because it is a either benign or a set value.
   scheduler->addTask(task, perProcPatchSet, m_sharedState->allMaterials());
@@ -271,7 +317,7 @@ void
 ApplicationCommon::reduceSystemVars( const ProcessorGroup *,
                                      const PatchSubset    * patches,
                                      const MaterialSubset * /*matls*/,
-                                           DataWarehouse  * /*old_dw*/,
+                                           DataWarehouse  * old_dw,
                                            DataWarehouse  * new_dw )
 {
   // The goal of this task is to line up the delT across all levels.
@@ -312,67 +358,37 @@ ApplicationCommon::reduceSystemVars( const ProcessorGroup *,
   // benign value, that means no MPI rank wants to change the interval
   // and the value will be ignored.
 
-
   // An application may adjust the output interval or the checkpoint
   // interval during a simulation.  For example in deflagration ->
-  // detonation simulations
-  if (m_adjustOutputInterval) {
-    if (patches->size() != 0 && !new_dw->exists(m_outputIntervalLabel, -1, patch)) {
-      min_vartype inv;
-      inv.setBenignValue();
-      new_dw->put(inv, m_outputIntervalLabel);
-    }
+  // detonation simulations (Models/HEChem/DDT1.cc
 
-    if (d_myworld->nRanks() > 1) {
-      new_dw->reduceMPI(m_outputIntervalLabel, 0, 0, -1);
-    }
+  min_vartype outputInv_var;
+  reduceSystemVar( new_dw, m_adjustOutputInterval, m_outputIntervalLabel, outputInv_var);
+  if( !outputInv_var.isBenignValue() )
+    m_output->setOutputInterval( outputInv_var );
 
-    min_vartype outputInv_var;
-    new_dw->get( outputInv_var, m_outputIntervalLabel );
-      
-    if( !outputInv_var.isBenignValue() ) {
-      m_output->setOutputInterval( outputInv_var );
-    }
+  min_vartype checkInv_var;
+  reduceSystemVar( new_dw, m_adjustCheckpointInterval, m_checkpointIntervalLabel, checkInv_var);
+
+  if ( !checkInv_var.isBenignValue() ) {
+    m_output->setCheckpointInterval( checkInv_var );
   }
-
-  if (m_adjustCheckpointInterval) {
-    if (patches->size() != 0 && !new_dw->exists(m_checkpointIntervalLabel, -1, patch)) {
-      min_vartype inv;
-      inv.setBenignValue();
-      new_dw->put(inv, m_checkpointIntervalLabel);
-    }
-
-    if (d_myworld->nRanks() > 1) {
-      new_dw->reduceMPI(m_checkpointIntervalLabel, 0, 0, -1);
-    }
-
-    min_vartype checkInv_var;
-    new_dw->get( checkInv_var, m_checkpointIntervalLabel );
-    
-    if ( !checkInv_var.isBenignValue() ) {
-      m_output->setCheckpointInterval( checkInv_var );
-    }
-  }
-
+  
   // An application may request that the simulation end early.
-  if (m_mayEndSimulation) {
-    if (patches->size() != 0 && !new_dw->exists(m_endSimulationLabel, -1, patch)) {
-      bool_or_vartype endSim;
-      endSim.setBenignValue();
-      new_dw->put(endSim, m_endSimulationLabel);
-    }
+  bool_or_vartype endSim_var;
+  reduceSystemVar( new_dw, m_mayEndSimulation, m_endSimulationLabel, endSim_var);
+  m_endSimulation = endSim_var;
+  
+  // An application may request that the time step be aborted.
+  bool_or_vartype abortTimeStep_var;
+  reduceSystemVar( new_dw, m_mayAbortTimeStep, m_abortTimeStepLabel, abortTimeStep_var);
+  m_abortTimeStep = abortTimeStep_var;
+  
+  // An application may request that the time step be recomputed.
+  bool_or_vartype recomputeTimeStep_var;
+  reduceSystemVar( new_dw, m_mayRecomputeTimeStep, m_recomputeTimeStepLabel, recomputeTimeStep_var);
+  m_recomputeTimeStep = recomputeTimeStep_var;
 
-    if (d_myworld->nRanks() > 1) {
-      new_dw->reduceMPI(m_endSimulationLabel, 0, 0, -1);
-    }
-
-    bool_or_vartype endSim_var;
-    new_dw->get( endSim_var, m_endSimulationLabel );
-    
-    if ( !endSim_var.isBenignValue() ) {
-      m_endSimulation = endSim_var;
-    }
-  }
 }  // end reduceSysVar()
 
 
@@ -473,36 +489,19 @@ ApplicationCommon::updateSystemVars( const ProcessorGroup *,
                                      const MaterialSubset * /*matls*/,
                                            DataWarehouse  * /*old_dw*/,
                                            DataWarehouse  * new_dw )
-{
-  // std::cerr << "**********  " << __FUNCTION__ << "  " << __LINE__ << "  "
-  //        << new_dw << std::endl;  
-
-  // If the time step is being restarted do not update the simulation
-  // time. The time step does not get up dated here but is stored so
-  // it can be at the top of the simcontroller loop.
-  
-  if (!new_dw->timestepRestarted())
-  {
+{  
+  // Not all ranks know that a timestep is being recomputed.  Don't
+  // update simTime on all ranks
+  if ( !m_recomputeTimeStep ) {
     // Store the time step so it can be incremented at the top of the
     // time step where it is over written.
     new_dw->put(timeStep_vartype(m_timeStep), m_timeStepLabel);
-
-    // m_sharedState->setCurrentTopLevelTimeStep( m_timeStep );  
     
-    // // Update the simulation time.
+    // Update the simulation time.
     m_simTime += m_delT;
-    
-    // When using the sim time, rank 0 determines the sim time and
-    // sends it to all other ranks.
-    Uintah::MPI::Bcast( &m_simTime, 1, MPI_DOUBLE, 0, d_myworld->getComm() );
 
     new_dw->put(simTime_vartype(m_simTime), m_simulationTimeLabel);
-
-    // m_sharedState->setElapsedSimTime( m_simTime );  
   }
-
-  // std::cerr << "**********  " << __FUNCTION__ << "  " << __LINE__ << "  "
-  //        << new_dw << std::endl;  
 }
 
 //______________________________________________________________________
@@ -591,7 +590,8 @@ ApplicationCommon::recomputeDelT()
   // virtual default method for the delta T
   double new_delT = recomputeDelT(m_delT);
 
-  proc0cout << "Restarting time step at " << m_simTime
+  proc0cout << "WARNING Recomputng time step " << m_timeStep << " "
+            << "and sim time " << m_simTime << " "
             << ", changing delT from " << m_delT
             << " to " << new_delT
             << std::endl;
@@ -603,7 +603,11 @@ ApplicationCommon::recomputeDelT()
          << "delT_min (" << m_simulationTime->m_delt_min << ") or equal to 0";
     throw InternalError(warn.str(), __FILE__, __LINE__);
   }
-  
+
+  // When recomputing the delT, rank 0 determines the value and
+  // sends it to all other ranks.
+  Uintah::MPI::Bcast( &new_delT, 1, MPI_DOUBLE, 0, d_myworld->getComm() );
+    
   m_delT = new_delT;
 }
 
@@ -658,6 +662,9 @@ ApplicationCommon::prepareForNextTimeStep()
   delt_vartype delt_var;
   m_scheduler->getLastDW()->get( delt_var, m_delTLabel );
   m_delT = delt_var;
+
+  // Clear any time step based flags.
+  clearFlags();
 }
 
 //______________________________________________________________________
@@ -758,11 +765,17 @@ ApplicationCommon::validateNextDelT( DataWarehouse* newDW )
       
   // Check to see if the next delT is below the delt_min
   if( m_nextDelT < m_simulationTime->m_delt_min ) {
-    proc0cout << "WARNING: raising delT from " << m_nextDelT;
+    std::ostringstream message;
+
+    message << "WARNING (a) at time step " << m_timeStep << " "
+            << "and sim time " << m_simTime << " "
+            << ": raising the next delT from " << m_nextDelT;
     
     m_nextDelT = m_simulationTime->m_delt_min;
     
-    proc0cout << " to minimum: " << m_nextDelT << '\n';
+    message << " to minimum: " << m_nextDelT;
+
+    DOUT( d_myworld->myRank() == 0 && g_deltaT_major_warnings, message.str() );
   }
 
   // Check to see if the next delT was increased too much over the
@@ -772,34 +785,52 @@ ApplicationCommon::validateNextDelT( DataWarehouse* newDW )
   if( m_delT > 0.0 &&
       m_simulationTime->m_max_delt_increase > 0 &&
       m_nextDelT > delt_tmp ) {
-    proc0cout << "WARNING (a): lowering delT from " << m_nextDelT;
+    std::ostringstream message;
+
+    message << "WARNING (b) at time step " << m_timeStep << " "
+            << "and sim time " << m_simTime << " "
+            << ": lowering the next delT from " << m_nextDelT;
     
     m_nextDelT = delt_tmp;
     
-    proc0cout << " to maxmimum: " << m_nextDelT
+    message << " to maxmimum: " << m_nextDelT
               << " (maximum increase of " << m_simulationTime->m_max_delt_increase
-              << ")\n";
+              << ")";
+
+    DOUT( d_myworld->myRank() == 0 && g_deltaT_major_warnings, message.str() );
   }
 
   // Check to see if the next delT exceeds the max_initial_delt
   if( m_simulationTime->m_max_initial_delt > 0 &&
       m_simTime+m_delT <= m_simulationTime->m_initial_delt_range &&
       m_nextDelT > m_simulationTime->m_max_initial_delt ) {
-    proc0cout << "WARNING (b): lowering delT from " << m_nextDelT ;
+    std::ostringstream message;
+
+    message << "WARNING (c) at time step " << m_timeStep << " "
+            << "and sim time " << m_simTime << " "
+            << ": lowering the next delT from " << m_nextDelT ;
 
     m_nextDelT = m_simulationTime->m_max_initial_delt;
 
-    proc0cout<< " to maximum: " << m_nextDelT
-             << " (for initial timesteps)\n";
+    message<< " to maximum: " << m_nextDelT
+             << " (for initial timesteps)";
+
+    DOUT( d_myworld->myRank() == 0 && g_deltaT_major_warnings, message.str() );
   }
 
   // Check to see if the next delT exceeds the delt_max
   if( m_nextDelT > m_simulationTime->m_delt_max ) {
-    proc0cout << "WARNING (c): lowering delT from " << m_nextDelT;
+    std::ostringstream message;
+
+    message << "WARNING (d) at time step " << m_timeStep << " "
+            << "and sim time " << m_simTime << " "
+            << ": lowering the next delT from " << m_nextDelT;
 
     m_nextDelT = m_simulationTime->m_delt_max;
     
-    proc0cout << " to maximum: " << m_nextDelT << '\n';
+    message << " to maximum: " << m_nextDelT;
+
+    DOUT( d_myworld->myRank() == 0 && g_deltaT_minor_warnings, message.str() );
   }
 
   // Clamp the next delT to match the requested output and/or
@@ -809,23 +840,35 @@ ApplicationCommon::validateNextDelT( DataWarehouse* newDW )
     // Clamp to the output time
     double nextOutput = m_output->getNextOutputTime();
     if (nextOutput != 0 && m_simTime + m_delT + m_nextDelT > nextOutput) {
-      proc0cout << "WARNING (d): lowering delT from " << m_nextDelT;
+      std::ostringstream message;
+
+      message << "WARNING (e) at time step " << m_timeStep << " "
+            << "and sim time " << m_simTime << " "
+            << ": lowering the next delT from " << m_nextDelT;
 
       m_nextDelT = nextOutput - (m_simTime+m_delT);
 
-      proc0cout << " to " << m_nextDelT
-                << " to line up with output time\n";
+      message << " to " << m_nextDelT
+                << " to line up with output time";
+
+      DOUT( d_myworld->myRank() == 0 && g_deltaT_minor_warnings, message.str() );
     }
 
     // Clamp to the checkpoint time
     double nextCheckpoint = m_output->getNextCheckpointTime();
     if (nextCheckpoint != 0 && m_simTime + m_delT + m_nextDelT > nextCheckpoint) {
-      proc0cout << "WARNING (d): lowering delT from " << m_nextDelT;
+      std::ostringstream message;
+      
+      message << "WARNING (f) at time step " << m_timeStep << " "
+            << "and sim time " << m_simTime << " "
+            << ": lowering the next delT from " << m_nextDelT;
 
       m_nextDelT = nextCheckpoint - (m_simTime+m_delT);
 
-      proc0cout << " to " << m_nextDelT
-                << " to line up with checkpoint time\n";
+      message << " to " << m_nextDelT
+                << " to line up with checkpoint time";
+
+      DOUT( d_myworld->myRank() == 0 && g_deltaT_minor_warnings, message.str() );
     }
   }
   
@@ -845,19 +888,27 @@ ApplicationCommon::validateNextDelT( DataWarehouse* newDW )
 bool
 ApplicationCommon::isLastTimeStep( double walltime ) const
 {
-  // When using the wall clock time, rank 0 determines the time and
-  // sends it to all other ranks.
-  Uintah::MPI::Bcast( &walltime, 1, MPI_DOUBLE, 0, d_myworld->getComm() );
+  if( m_endSimulation )
+    return true;
 
-  return ( m_endSimulation ||
+  if( m_simTime >= m_simulationTime->m_max_time )
+    return true;
 
-           ( m_simTime >= m_simulationTime->m_max_time ) ||
+  if( m_simulationTime->m_max_time_steps > 0 &&
+      m_timeStep >= m_simulationTime->m_max_time_steps )
+    return true;
 
-           ( m_simulationTime->m_max_time_steps > 0 &&
-             m_timeStep >= m_simulationTime->m_max_time_steps ) ||
+  if( m_simulationTime->m_max_wall_time > 0 )
+  {
+    // When using the wall clock time, rank 0 determines the time and
+    // sends it to all other ranks.
+    Uintah::MPI::Bcast( &walltime, 1, MPI_DOUBLE, 0, d_myworld->getComm() );
 
-           ( m_simulationTime->m_max_wall_time > 0 &&
-             walltime >= m_simulationTime->m_max_wall_time ) );
+    if(walltime >= m_simulationTime->m_max_wall_time )
+      return true;
+  }
+
+  return false;
 }
 
 //______________________________________________________________________
@@ -872,17 +923,24 @@ ApplicationCommon::isLastTimeStep( double walltime ) const
 bool
 ApplicationCommon::maybeLastTimeStep( double walltime ) const
 {  
-  // When using the wall clock time, rank 0 determines the time and
-  // sends it to all other ranks.
-  Uintah::MPI::Bcast( &walltime, 1, MPI_DOUBLE, 0, d_myworld->getComm() );
+  if( m_simTime + m_delT >= m_simulationTime->m_max_time )
+    return true;
+           
+  if( m_simulationTime->m_max_time_steps > 0 &&
+      m_timeStep + 1 >= m_simulationTime->m_max_time_steps )
+    return true;
+           
+  if( m_simulationTime->m_max_wall_time > 0 )
+  {
+    // When using the wall clock time, rank 0 determines the time and
+    // sends it to all other ranks.
+    Uintah::MPI::Bcast( &walltime, 1, MPI_DOUBLE, 0, d_myworld->getComm() );
   
-  return ( (m_simTime + m_delT >= m_simulationTime->m_max_time) ||
-           
-           (m_simulationTime->m_max_time_steps > 0 &&
-            m_timeStep + 1 >= m_simulationTime->m_max_time_steps) ||
-           
-           (m_simulationTime->m_max_wall_time > 0 &&
-            walltime >= m_simulationTime->m_max_wall_time) );
+    if( walltime >= m_simulationTime->m_max_wall_time )
+      return true;
+  }
+
+  return false;  
 }
 
 //______________________________________________________________________

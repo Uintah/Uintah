@@ -1571,7 +1571,7 @@ DWDatabase<DomainType>::put( const VarLabel   * label
   // lookup is lock_guard protected
   int idx = m_keyDB->lookup(label, matlIndex, dom);
   if (idx == -1) {
-    SCI_THROW(UnknownVariable(label->getName(), -1, dom, matlIndex, "check task computes", __FILE__, __LINE__));
+    SCI_THROW(UnknownVariable(label->getName(), -1, dom, matlIndex, "check task computes - put", __FILE__, __LINE__));
   }
 
   if (m_vars[idx]) {
@@ -1613,7 +1613,7 @@ DWDatabase<DomainType>::putReduce( const VarLabel              * label
   // lookup is lock_guard protected
   int idx = m_keyDB->lookup(label, matlIndex, dom);
   if (idx == -1) {
-    SCI_THROW(UnknownVariable(label->getName(), -1, dom, matlIndex, "check task computes", __FILE__, __LINE__));
+    SCI_THROW(UnknownVariable(label->getName(), -1, dom, matlIndex, "check task computes - putReduce", __FILE__, __LINE__));
   }
 
   DataItem* newdi = new DataItem();
@@ -1658,7 +1658,7 @@ DWDatabase<DomainType>::putForeign( const VarLabel   * label
   // lookup is lock_guard protected
   int idx = m_keyDB->lookup(label, matlIndex, dom);
   if (idx == -1) {
-    SCI_THROW(UnknownVariable(label->getName(), -1, dom, matlIndex, "check task computes", __FILE__, __LINE__));
+    SCI_THROW(UnknownVariable(label->getName(), -1, dom, matlIndex, "check task computes - putForeign", __FILE__, __LINE__));
   }
 
   DataItem* newdi = new DataItem();

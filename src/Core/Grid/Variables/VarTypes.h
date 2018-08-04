@@ -70,6 +70,8 @@ namespace Uintah {
    const std::string checkpointInterval_name( "checkpointInterval" );
    const std::string checkpointTimeStepInterval_name( "checkpointTimeStepInterval" );
    const std::string endSimulation_name( "endSimulation" );
+   const std::string abortTimeStep_name( "abortTimeStep" );
+   const std::string recomputeTimeStep_name( "recomputeTimeStep" );
   
    typedef SoleVariable<unsigned int > timeStep_vartype;
    typedef SoleVariable<double       >  simTime_vartype;
