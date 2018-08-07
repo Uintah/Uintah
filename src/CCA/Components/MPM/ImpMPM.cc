@@ -3197,7 +3197,7 @@ void ImpMPM::solveForDuCG(const ProcessorGroup* /*pg*/,
     }
   }
 
-  DataWarehouse* parent_new_dw=new_dw->getOtherDataWarehouse(Task::ParentNewDW);
+//DataWarehouse* parent_new_dw=new_dw->getOtherDataWarehouse(Task::ParentNewDW);
 
   // if a recompute time step has already been called for don't do the solve
   bool rts = new_dw->recomputeTimeStep();

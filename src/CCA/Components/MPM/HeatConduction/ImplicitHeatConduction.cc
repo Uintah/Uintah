@@ -260,10 +260,11 @@ void ImplicitHeatConduction::destroyHCMatrix(const ProcessorGroup*,
                                              DataWarehouse* old_dw,
                                              DataWarehouse* new_dw)
 {
-  if (cout_doing.active())
+  if (cout_doing.active()){
     cout_doing <<"Doing destroyHCMatrix " <<"\t\t\t\t\t IMPM" << "\n" << "\n";
+  }
 
-    d_HC_solver->destroyMatrix(false);
+  d_HC_solver->destroyMatrix(false);
 }
 
 void ImplicitHeatConduction::createHCMatrix(const ProcessorGroup* pg,
