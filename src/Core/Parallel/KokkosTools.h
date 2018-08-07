@@ -35,7 +35,9 @@
 #include <Kokkos_Random.hpp>
 #include <memory>
 
-Uintah::MasterLock rand_init_mutex{};
+namespace {
+  Uintah::MasterLock rand_init_mutex{};
+}
 
 namespace Uintah {
 
