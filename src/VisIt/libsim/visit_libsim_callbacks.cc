@@ -343,6 +343,13 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
     sim->runMode = VISIT_SIMMODE_RUNNING;
     sim->simMode = VISIT_SIMMODE_TERMINATED;
 
+    SimulationTime* simTime =
+      sim->simController->getApplicationInterface()->getSimulationTime();
+
+    // Set the max time steps to the current time step so that the
+    // simulation controller will exit gracefully.
+    simTime->m_max_time_steps = sim->cycle;
+
     if(sim->isProc0)
     {
       std::stringstream msg;      
@@ -353,6 +360,16 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
       DOUT( visitdbg, msg.str().c_str() );
 
       VisItUI_setValueS("STRIP_CHART_CLEAR_ALL", "NoOp", 1);
+    }
+
+    // A hack because m_max_time_steps is checked only if it is
+    // greater than zero. So just abort as a nothing will have been
+    // computed.
+    if( sim->cycle == 0 )
+    {
+      VisItDisconnect();
+      
+      exit( 0 );
     }
   }
   else if(strcmp(cmd, "Abort") == 0)
