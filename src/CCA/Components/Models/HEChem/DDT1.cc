@@ -244,8 +244,6 @@ void DDT1::problemSetup(GridP&,
   if(adj_ps){
     ProblemSpecP PS_ps = adj_ps->findBlockWithOutAttribute( "PressureSwitch" );
     if( PS_ps ){
-      m_application->adjustOutputInterval( true );
-      m_application->adjustCheckpointInterval( true );
       
       d_adj_IO_Press->onOff     = true;
       PS_ps->require("PressureThreshold",     d_adj_IO_Press->pressThreshold );
@@ -255,14 +253,14 @@ void DDT1::problemSetup(GridP&,
   
     ProblemSpecP DS_ps = adj_ps->findBlockWithOutAttribute( "DetonationDetected" );
     if( DS_ps ){
-      m_application->adjustOutputInterval( true );
-      m_application->adjustCheckpointInterval( true );
-      
       d_adj_IO_Det->onOff     = true;
       DS_ps->require("remainingTimesteps",    d_adj_IO_Det->timestepsLeft );
       DS_ps->require("newOutputInterval",     d_adj_IO_Det->output_interval );  
       DS_ps->require("newCheckPointInterval", d_adj_IO_Det->chkPt_interval );
     }
+
+    m_application->activateReductionVariable(     outputInterval_name, d_adj_IO_Press->onOff || d_adj_IO_Det->onOff );
+    m_application->activateReductionVariable( checkpointInterval_name, d_adj_IO_Press->onOff || d_adj_IO_Det->onOff );
   }
     
   /* initialize constants */
@@ -623,8 +621,8 @@ void DDT1::scheduleComputeModelSources(SchedulerP& sched,
     t1->requires( Task::OldDW, adjOutIntervalsLabel );
     t1->computes( adjOutIntervalsLabel );
     
-    t1->computes( Ilb->outputIntervalLabel );
-    t1->computes( Ilb->checkpointIntervalLabel );
+    t1->computes( VarLabel::find( outputInterval_name ) );
+    t1->computes( VarLabel::find( checkpointInterval_name ) );
   } 
   
   sched->addTask(t1, level->eachPatch(), d_mymatls);    
@@ -1155,8 +1153,8 @@ void DDT1::computeBurnLogic(const ProcessorGroup*,
         cout << *patch << endl;
         cout << "    new outputInterval: " << newOUT << " new checkpoint Interval: " << newCKPT << "\n\n"<<  endl;
 
-        new_dw->put( min_vartype( newOUT ),  Ilb->outputIntervalLabel );
-        new_dw->put( min_vartype( newCKPT ), Ilb->checkpointIntervalLabel );
+        new_dw->put( min_vartype( newOUT ),  VarLabel::find( outputInterval_name )  );
+        new_dw->put( min_vartype( newCKPT ), VarLabel::find( checkpointInterval_name ) );
       }             
       //__________________________________
       //  DETONATON
@@ -1170,8 +1168,8 @@ void DDT1::computeBurnLogic(const ProcessorGroup*,
         cout << *patch << endl;
         cout << "    new outputInterval: " << newOUT << " new checkpoint Interval: " << newCKPT << "\n\n"<< endl;
 
-        new_dw->put( min_vartype( newOUT ),  Ilb->outputIntervalLabel );
-        new_dw->put( min_vartype( newCKPT ), Ilb->checkpointIntervalLabel );
+        new_dw->put( min_vartype( newOUT ),  VarLabel::find( outputInterval_name )  );
+        new_dw->put( min_vartype( newCKPT ), VarLabel::find( checkpointInterval_name ) );
       }
 
       new_dw->put( max_vartype(hasSwitched), adjOutIntervalsLabel );

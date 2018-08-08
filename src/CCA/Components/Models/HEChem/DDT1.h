@@ -71,20 +71,20 @@ WARNING
   class DDT1 : public HEChemModel {
   public:
     DDT1(const ProcessorGroup* myworld,
-	 const SimulationStateP& sharedState,
-	 const ProblemSpecP& params,
-	 const ProblemSpecP& prob_spec);
+         const SimulationStateP& sharedState,
+         const ProblemSpecP& params,
+         const ProblemSpecP& prob_spec);
 
     virtual ~DDT1();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
 
     virtual void problemSetup(GridP& grid,
-			       const bool isRestart);
+                               const bool isRestart);
 
       
     virtual void scheduleInitialize(SchedulerP&,
-				    const LevelP& level);
+                                    const LevelP& level);
 
     virtual void initialize(const ProcessorGroup*,
                             const PatchSubset*,
@@ -95,18 +95,15 @@ WARNING
     virtual void restartInitialize() {}
       
     virtual void scheduleComputeStableTimeStep(SchedulerP&,
-					       const LevelP& level);
+                                               const LevelP& level);
       
  
     virtual void scheduleComputeModelSources(SchedulerP&,
-						   const LevelP& level);
+                                                   const LevelP& level);
                                              
    virtual void scheduleRefine( const PatchSet* patches,
                                 SchedulerP& sched );
                                              
-  virtual bool adjustOutputInterval()     const { return d_adj_IO_Press->onOff || d_adj_IO_Det->onOff; };
-  virtual bool adjustCheckpointInterval() const { return d_adj_IO_Press->onOff || d_adj_IO_Det->onOff; };
-
   private:    
   
     bool isDoubleEqual(double a, double b);

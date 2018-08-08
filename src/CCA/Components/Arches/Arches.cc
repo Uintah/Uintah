@@ -162,8 +162,9 @@ Arches::problemSetup( const ProblemSpecP     & params,
 
   // Must be set here rather than the constructor because the value
   // is based on the solver being requested in the problem setup.
-  mayAbortTimeStep(     m_nlSolver->mayRecomputeTimeStep() );
-  mayRecomputeTimeStep( m_nlSolver->mayRecomputeTimeStep() );
+  bool mayRecompute = m_nlSolver->mayRecomputeTimeStep();
+  activateReductionVariable( recomputeTimeStep_name, mayRecompute );
+  activateReductionVariable(     abortTimeStep_name, mayRecompute );
 
   // tell the infrastructure how many tasksgraphs are needed.
   int num_task_graphs=m_nlSolver->taskGraphsRequested();

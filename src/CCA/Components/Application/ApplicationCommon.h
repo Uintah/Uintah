@@ -76,7 +76,89 @@ DESCRIPTION
 WARNING
   
 ****************************************/
+  class ApplicationReductionVariable
+  {
+  public:
+    ApplicationReductionVariable( std::string name,
+                                  const TypeDescription *varType,
+                                  bool varActive = false )
+    {
+      // Construct the label.
+      VarLabel* nonconstVar = VarLabel::create(name, varType);
+      nonconstVar->allowMultipleComputes();
+      label = nonconstVar;
 
+      active = varActive;      
+
+      setBenignValue();
+    };
+
+    virtual ~ApplicationReductionVariable()
+    {
+      VarLabel::destroy(label);
+    }
+    
+    const VarLabel *label{nullptr};
+
+    bool active{false};
+
+    // Because this class gets put into a map it can not be a
+    // template. As such, there are two storage variables. The user
+    // need to know which one to use. Which they should given the type
+    // description.
+    bool_or_vartype bool_var;
+    min_vartype min_var;
+
+    void setBenignValue()
+    {
+      bool_var.setBenignValue();
+      min_var.setBenignValue();
+    }
+    
+    void reduce( DataWarehouse * new_dw )
+    {
+      Patch* patch = nullptr;
+
+      bool_var.setBenignValue();
+      min_var.setBenignValue();
+
+      // Reduce only if active.
+      if (active) {
+
+        if( label->typeDescription() == bool_or_vartype::getTypeDescription() )
+        {
+          // If it does not exists put a benign value into the warehouse.
+          if (!new_dw->exists(label, -1, patch)) {
+            new_dw->put(bool_var, label);
+          }
+
+          // Only reduce if on more than one rank
+          if( Parallel::getMPISize() > 1 ) {
+            new_dw->reduceMPI(label, 0, 0, -1);
+          }
+
+          // Get the reduced value.
+          new_dw->get( bool_var, label );
+        }
+        else if( label->typeDescription() == min_vartype::getTypeDescription() )
+        {
+          // If it does not exists put a benign value into the warehouse.
+          if (!new_dw->exists(label, -1, patch)) {
+            new_dw->put(min_var, label);
+          }
+
+          // Only reduce if on more than one rank
+          if( Parallel::getMPISize() > 1 ) {
+            new_dw->reduceMPI(label, 0, 0, -1);
+          }
+
+          // Get the reduced value.
+          new_dw->get( min_var, label );
+        }
+      }      
+    }
+  };
+  
   class ApplicationCommon : public UintahParallelComponent,
                             public ApplicationInterface {
 
@@ -97,8 +179,8 @@ WARNING
     virtual Regridder *getRegridder() { return m_regridder; }
     virtual Output    *getOutput()    { return m_output; }
 
-    virtual void setFlags( UintahParallelComponent *comp );
-    virtual void clearFlags();
+    virtual void setReductionVariables( UintahParallelComponent *comp );
+    virtual void clearReductionVariables();
     
     // Top level problem set up called by sus.
     virtual void problemSetup( const ProblemSpecP &prob_spec );
@@ -259,25 +341,9 @@ WARNING
     }
     virtual int  getLastRegridTimeStep() { return m_lastRegridTimestep; }
 
-    // Some applications can adjust the output interval.
-    virtual void adjustOutputInterval(bool val) { m_adjustOutputInterval = val; }
-    virtual bool adjustOutputInterval() const { return m_adjustOutputInterval; }
-     
-    // Some applications can adjust the checkpoint interval.
-    virtual void adjustCheckpointInterval(bool val) { m_adjustCheckpointInterval = val; }
-    virtual bool adjustCheckpointInterval() const { return m_adjustCheckpointInterval; }
-
-    // Some applications may end the simulation early.
-    virtual void mayEndSimulation(bool val) { m_mayEndSimulation = val; }
-    virtual bool mayEndSimulation() const { return m_mayEndSimulation; }
-
-    // Some applications may about a time step.
-    virtual void mayAbortTimeStep(bool val) { m_mayAbortTimeStep = val; }
-    virtual bool mayAbortTimeStep() const { return m_mayAbortTimeStep; }
-
-    // Some applications may recompute a time step.
-    virtual void mayRecomputeTimeStep(bool val) { m_mayRecomputeTimeStep = val; }
-    virtual bool mayRecomputeTimeStep() const { return m_mayRecomputeTimeStep; }
+    // Some applications can set reduction variables
+    virtual void activateReductionVariable(std::string name, bool val) { m_appReductionVars[name]->active = val; }
+    virtual bool activeReductionVariable(std::string name) { return m_appReductionVars[name]->active; }
 
     // Access methods for member classes.
     virtual SimulationTime * getSimulationTime() const { return m_simulationTime; }
@@ -285,18 +351,17 @@ WARNING
   
   private:
     // The classes are private because only the top level application
-    // should be changing them. This only really matter when there are
-    // application built upon multiple application. The children
+    // should be changing them. This only really matters when there are
+    // applications built upon multiple applications. The children
     // applications will not have valid values. They should ALWAYS get
     // the values via the data warehouse.
     
-    // Some applications may end the simulation early.
-    virtual void endSimulation( bool val ) { m_endSimulation = val; }
-    virtual bool endSimulation() const { return m_endSimulation; }
-    // Some applications may about a time step.
-    virtual bool abortTimeStep() const { return m_abortTimeStep; }
-    // Some applications may recompute a time step.
-    virtual bool recomputeTimeStep() const { return m_recomputeTimeStep; }
+    // get application specific reduction values
+    virtual bool_or_vartype getReductionVariable(std::string name, bool   &val ) { val = m_appReductionVars[name]->bool_var; return m_appReductionVars[name]->bool_var; }
+    virtual min_vartype     getReductionVariable(std::string name, double &val ) { val = m_appReductionVars[name]->min_var;  return m_appReductionVars[name]->min_var; }
+
+    // virtual void setReductionVariable(std::string name, bool   &val ) { m_appReductionVars[name]->bool_var = val; }
+    // virtual void setReductionVariable(std::string name, double &val ) { m_appReductionVars[name]->min_var  = val; }
 
     //////////
     virtual   void setDelT( double delT ) { m_delT = delT; }
@@ -331,7 +396,7 @@ WARNING
     virtual void incrementTimeStep();
     virtual int  getTimeStep() const { return m_timeStep; }
 
-    virtual bool isLastTimeStep( double walltime ) const;
+    virtual bool isLastTimeStep( double walltime );
     virtual bool maybeLastTimeStep( double walltime ) const;
 
     virtual ReductionInfoMapper< ApplicationStatsEnum,
@@ -344,31 +409,7 @@ WARNING
     virtual void reduceApplicationStats( bool allReduce,
                                          const ProcessorGroup* myWorld )
     { m_application_stats.reduce( allReduce, myWorld ); };      
-    
-    template< class T > void
-    reduceSystemVar(       DataWarehouse * new_dw,
-                     const bool            varFlag,
-                     const VarLabel      * varLabel,
-                           T             & var )
-    {
-      Patch* patch = nullptr;
-      
-      var.setBenignValue();
-
-      if (varFlag) {
-
-        if (!new_dw->exists(varLabel, -1, patch)) {
-          new_dw->put(var, varLabel);
-        }
-        
-        if (d_myworld->nRanks() > 1) {
-          new_dw->reduceMPI(varLabel, 0, 0, -1);
-        }
-
-        new_dw->get( var, varLabel );
-      }
-    };
-
+ 
   protected:
     Scheduler       * m_scheduler    {nullptr};
     LoadBalancer    * m_loadBalancer {nullptr};
@@ -378,6 +419,9 @@ WARNING
 
     bool m_recompile {false};
 
+    // Use a map to store the reduction variables. 
+    std::map< std::string, ApplicationReductionVariable* > m_appReductionVars;
+    
   private:
     bool m_AMR {false};
     bool m_lockstepAMR {false};
@@ -391,30 +435,10 @@ WARNING
 
     bool m_haveModifiedVars {false};
 
-    bool m_adjustCheckpointInterval {false};
-    bool m_adjustOutputInterval {false};
-
-    bool m_mayEndSimulation {false};
-    bool m_mayAbortTimeStep {false};
-    bool m_mayRecomputeTimeStep {false};
-  
-    bool m_endSimulation{false};
-    bool m_abortTimeStep{false};
-    bool m_recomputeTimeStep{false};
-
     const VarLabel* m_timeStepLabel;
     const VarLabel* m_simulationTimeLabel;
     const VarLabel* m_delTLabel;
   
-    const VarLabel* m_outputIntervalLabel;
-    const VarLabel* m_outputTimeStepIntervalLabel;
-    const VarLabel* m_checkpointIntervalLabel;
-    const VarLabel* m_checkpointTimeStepIntervalLabel;
-
-    const VarLabel* m_endSimulationLabel;
-    const VarLabel* m_abortTimeStepLabel;
-    const VarLabel* m_recomputeTimeStepLabel;
-
     SimulationTime* m_simulationTime {nullptr};
   
     double m_delT{0.0};

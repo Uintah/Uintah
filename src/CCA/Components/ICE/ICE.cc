@@ -147,8 +147,8 @@ ICE::ICE(const ProcessorGroup* myworld,
   d_press_matl    = 0;
   d_press_matlSet = 0;
 
-  mayAbortTimeStep(true);
-  mayRecomputeTimeStep(true);
+  activateReductionVariable( recomputeTimeStep_name, true);
+  activateReductionVariable(     abortTimeStep_name, true);
 }
 
 //______________________________________________________________________

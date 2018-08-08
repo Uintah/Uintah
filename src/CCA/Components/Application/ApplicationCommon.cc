@@ -75,41 +75,33 @@ ApplicationCommon::ApplicationCommon( const ProcessorGroup   * myworld,
   nonconstDelT->allowMultipleComputes();
   m_delTLabel = nonconstDelT;
 
+  // An application may adjust the output interval or the checkpoint
+  // interval during a simulation.  For example in deflagration ->
+  // detonation simulations (Models/HEChem/DDT1.cc
+
   // output interval
-  VarLabel* nonconstOutputInv = VarLabel::create(outputInterval_name, min_vartype::getTypeDescription());
-  nonconstOutputInv->allowMultipleComputes();
-  m_outputIntervalLabel = nonconstOutputInv;
+  m_appReductionVars[ outputInterval_name ] = new
+    ApplicationReductionVariable( outputInterval_name, min_vartype::getTypeDescription() );
 
-  // output time step interval
-  VarLabel* nonconstOutputTimeStepInv = VarLabel::create(outputTimeStepInterval_name, min_vartype::getTypeDescription());
-  nonconstOutputTimeStepInv->allowMultipleComputes();
-  m_outputTimeStepIntervalLabel = nonconstOutputTimeStepInv;
+  // checkpoint interval
+  m_appReductionVars[ checkpointInterval_name ] = new
+    ApplicationReductionVariable( checkpointInterval_name, min_vartype::getTypeDescription() );
 
-  // check point interval
-  VarLabel* nonconstCheckpointInv = VarLabel::create(checkpointInterval_name, min_vartype::getTypeDescription());
-  nonconstCheckpointInv->allowMultipleComputes();
-  m_checkpointIntervalLabel = nonconstCheckpointInv;
+  // An application may also request that the time step be recomputed,
+  // aborted or the simulation end early.
 
-  // check point time step interval
-  VarLabel* nonconstCheckpointTimeStepInv = VarLabel::create(checkpointTimeStepInterval_name, min_vartype::getTypeDescription());
-  nonconstCheckpointTimeStepInv->allowMultipleComputes();
-  m_checkpointTimeStepIntervalLabel = nonconstCheckpointTimeStepInv;
+  // Recompute the time step
+  m_appReductionVars[ recomputeTimeStep_name ] = new
+    ApplicationReductionVariable( recomputeTimeStep_name, bool_or_vartype::getTypeDescription() );
 
-  // End Simulation  
-  VarLabel* nonconstEndSimulation = VarLabel::create(endSimulation_name, bool_or_vartype::getTypeDescription());
-  nonconstEndSimulation->allowMultipleComputes();
-  m_endSimulationLabel = nonconstEndSimulation;
-
-  // Abort Time Step
-  VarLabel* nonconstAbortTimeStep = VarLabel::create(abortTimeStep_name, bool_or_vartype::getTypeDescription());
-  nonconstAbortTimeStep->allowMultipleComputes();
-  m_abortTimeStepLabel = nonconstAbortTimeStep;
-
-  // Recompute Time Step
-  VarLabel* nonconstRecomputeTimeStep = VarLabel::create(recomputeTimeStep_name, bool_or_vartype::getTypeDescription());
-  nonconstRecomputeTimeStep->allowMultipleComputes();
-  m_recomputeTimeStepLabel = nonconstRecomputeTimeStep;
-
+  // Abort the time step
+  m_appReductionVars[ abortTimeStep_name ] = new
+    ApplicationReductionVariable( abortTimeStep_name, bool_or_vartype::getTypeDescription() );
+ 
+  // End the simulation
+  m_appReductionVars[ endSimulation_name ] = new
+    ApplicationReductionVariable( endSimulation_name, bool_or_vartype::getTypeDescription() );
+ 
   m_application_stats.insert( CarcassCount, std::string("CarcassCount"), "Carcasses", 0 );
 }
 
@@ -121,18 +113,14 @@ ApplicationCommon::~ApplicationCommon()
   VarLabel::destroy(m_simulationTimeLabel);
   VarLabel::destroy(m_delTLabel);
 
-  VarLabel::destroy(m_outputIntervalLabel);
-  VarLabel::destroy(m_outputTimeStepIntervalLabel);
-  VarLabel::destroy(m_checkpointIntervalLabel);
-  VarLabel::destroy(m_checkpointTimeStepIntervalLabel);
-
-  VarLabel::destroy(m_endSimulationLabel);
-  VarLabel::destroy(m_abortTimeStepLabel);
-  VarLabel::destroy(m_recomputeTimeStepLabel);
-  
   if( m_simulationTime )
     delete m_simulationTime;
 
+  for ( auto & var : m_appReductionVars )
+    delete var.second;
+  
+  m_appReductionVars.clear();
+  
   // No need to delete the shared state as it is refcounted
   m_sharedState = nullptr;
 }
@@ -183,24 +171,19 @@ void ApplicationCommon::getComponents()
   }
 }
 
-void ApplicationCommon::setFlags( UintahParallelComponent *comp )
+void ApplicationCommon::setReductionVariables( UintahParallelComponent *comp )
 {
   ApplicationCommon * child = dynamic_cast<ApplicationCommon*>( comp );
 
-  // Get some flags from the child;
-  m_adjustCheckpointInterval = child->m_adjustCheckpointInterval;
-  m_adjustOutputInterval     = child->m_adjustOutputInterval;
-  
-  m_mayEndSimulation     = child->m_mayEndSimulation;
-  m_mayAbortTimeStep     = child->m_mayAbortTimeStep;
-  m_mayRecomputeTimeStep = child->m_mayRecomputeTimeStep;
+  // Get the reduction active flags from the child;
+  for ( auto & var : m_appReductionVars )
+    var.second->active = child->m_appReductionVars[ var.first ]->active;
 }
 
-void ApplicationCommon::clearFlags()
+void ApplicationCommon::clearReductionVariables()
 {
-  m_endSimulation     = false;
-  m_abortTimeStep     = false;
-  m_recomputeTimeStep = false;
+  for ( auto & var : m_appReductionVars )
+    var.second->setBenignValue();
 }
 
 void ApplicationCommon::releaseComponents()
@@ -283,27 +266,13 @@ ApplicationCommon::scheduleReduceSystemVars(const GridP& grid,
   // An application may adjust the output interval or the checkpoint
   // interval during a simulation.  For example in deflagration ->
   // detonation simulations
-  if (m_adjustOutputInterval) {
-    task->requires(Task::NewDW, m_outputIntervalLabel);
-  }
 
-  if (m_adjustCheckpointInterval) {
-    task->requires(Task::NewDW, m_checkpointIntervalLabel);
-  }
-
-  // An application may request that the simulation end early.
-  if (m_mayEndSimulation) {
-    task->requires(Task::NewDW, m_endSimulationLabel);
-  }
-
-  // An application may request that a time step abort.
-  if (m_mayAbortTimeStep) {
-    task->requires(Task::NewDW, m_abortTimeStepLabel);
-  }
-
-  // An application may request that a time step be recomputed.
-  if (m_mayRecomputeTimeStep) {
-    task->requires(Task::NewDW, m_recomputeTimeStepLabel);
+  // An application may also request that the time step be recomputed
+  // or aborted or the simulation end early.
+  for ( auto & var : m_appReductionVars )
+  {
+    if( var.second->active )
+      task->requires(Task::NewDW, var.second->label);
   }
 
   // The above three tasks are on a per proc basis any rank can make
@@ -352,43 +321,26 @@ ApplicationCommon::reduceSystemVars( const ProcessorGroup *,
   // Validate the next delta T
   validateNextDelT( new_dw );
 
-  // Reduce the output interval, checkpoint interval, and end
-  // simulation variables. If no value was computed on an MPI rank, a
-  // benign value will be set. If the reduction result is also a
-  // benign value, that means no MPI rank wants to change the interval
-  // and the value will be ignored.
+  // Reduce the application specific reduction variables. If no value
+  // was computed on an MPI rank, a benign value will be set. If the
+  // reduction result is also a benign value, that means no MPI rank
+  // wants to change the value and it will be ignored (if a double).
+  for ( auto & var : m_appReductionVars )
+    var.second->reduce( new_dw );
 
-  // An application may adjust the output interval or the checkpoint
-  // interval during a simulation.  For example in deflagration ->
-  // detonation simulations (Models/HEChem/DDT1.cc
+  // Specific handling for double reduction vars.
+  if( m_appReductionVars[outputInterval_name]->active )
+  {
+    if( !m_appReductionVars[outputInterval_name]->min_var.isBenignValue() )
+      m_output->setOutputInterval( m_appReductionVars[outputInterval_name]->min_var );
+  }
 
-  min_vartype outputInv_var;
-  reduceSystemVar( new_dw, m_adjustOutputInterval, m_outputIntervalLabel, outputInv_var);
-  if( !outputInv_var.isBenignValue() )
-    m_output->setOutputInterval( outputInv_var );
-
-  min_vartype checkInv_var;
-  reduceSystemVar( new_dw, m_adjustCheckpointInterval, m_checkpointIntervalLabel, checkInv_var);
-
-  if ( !checkInv_var.isBenignValue() ) {
-    m_output->setCheckpointInterval( checkInv_var );
+  if( m_appReductionVars[checkpointInterval_name]->active )
+  {
+    if( !m_appReductionVars[checkpointInterval_name]->min_var.isBenignValue() )
+      m_output->setCheckpointInterval( m_appReductionVars[checkpointInterval_name]->min_var );
   }
   
-  // An application may request that the simulation end early.
-  bool_or_vartype endSim_var;
-  reduceSystemVar( new_dw, m_mayEndSimulation, m_endSimulationLabel, endSim_var);
-  m_endSimulation = endSim_var;
-  
-  // An application may request that the time step be aborted.
-  bool_or_vartype abortTimeStep_var;
-  reduceSystemVar( new_dw, m_mayAbortTimeStep, m_abortTimeStepLabel, abortTimeStep_var);
-  m_abortTimeStep = abortTimeStep_var;
-  
-  // An application may request that the time step be recomputed.
-  bool_or_vartype recomputeTimeStep_var;
-  reduceSystemVar( new_dw, m_mayRecomputeTimeStep, m_recomputeTimeStepLabel, recomputeTimeStep_var);
-  m_recomputeTimeStep = recomputeTimeStep_var;
-
 }  // end reduceSysVar()
 
 
@@ -490,9 +442,10 @@ ApplicationCommon::updateSystemVars( const ProcessorGroup *,
                                            DataWarehouse  * /*old_dw*/,
                                            DataWarehouse  * new_dw )
 {  
-  // Not all ranks know that a timestep is being recomputed.  Don't
-  // update simTime on all ranks
-  if ( !m_recomputeTimeStep ) {
+  // If recomuting a time step do not update the time step or the
+  // simulation time.
+  bool val;
+  if ( !getReductionVariable( recomputeTimeStep_name, val ) ) {
     // Store the time step so it can be incremented at the top of the
     // time step where it is over written.
     new_dw->put(timeStep_vartype(m_timeStep), m_timeStepLabel);
@@ -663,8 +616,8 @@ ApplicationCommon::prepareForNextTimeStep()
   m_scheduler->getLastDW()->get( delt_var, m_delTLabel );
   m_delT = delt_var;
 
-  // Clear any time step based flags.
-  clearFlags();
+  // Clear the time step based reduction variables.
+  clearReductionVariables();
 }
 
 //______________________________________________________________________
@@ -886,9 +839,14 @@ ApplicationCommon::validateNextDelT( DataWarehouse* newDW )
 //
 // Determines if the time step is the last one. 
 bool
-ApplicationCommon::isLastTimeStep( double walltime ) const
+ApplicationCommon::isLastTimeStep( double walltime )
 {
-  if( m_endSimulation )
+  bool val;
+
+  if( getReductionVariable( endSimulation_name, val ) )
+    return true;
+  
+  if( getReductionVariable( abortTimeStep_name, val ) )
     return true;
 
   if( m_simTime >= m_simulationTime->m_max_time )

@@ -645,7 +645,7 @@ AMRSimulationController::executeTimeStep( int totalFine )
 {
   // If the time step needs to be recomputed, this loop will execute
   // multiple times.
-  bool success = false;
+  bool val, success = false;
 
   int tg_index = m_application->computeTaskGraphIndex();
 
@@ -655,7 +655,7 @@ AMRSimulationController::executeTimeStep( int totalFine )
 
     // Standard data warehouse scrubbing.
     if (m_scrub_datawarehouse && m_loadBalancer->getNthRank() == 1) {
-      if (m_application->mayRecomputeTimeStep()) {
+      if (m_application->activeReductionVariable( recomputeTimeStep_name )) {
         m_scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubNonPermanent);
       }
       else {
@@ -688,7 +688,7 @@ AMRSimulationController::executeTimeStep( int totalFine )
     }
 
     //  If time step is to be recomputed adjust the delta T and recompute.
-    if (m_application->recomputeTimeStep()) {
+    if ( m_application->getReductionVariable( recomputeTimeStep_name, val ) ) {
 
       for (int i = 1; i <= totalFine; ++i) {
         m_scheduler->replaceDataWarehouse(i, m_current_gridP);
@@ -703,11 +703,9 @@ AMRSimulationController::executeTimeStep( int totalFine )
 
       success = false;
     }
-    else if (m_application->abortTimeStep()) {
+    else if (m_application->getReductionVariable( abortTimeStep_name, val ) ) {
       proc0cout << "Time step aborted and cannot recompute it. "
-		<< "Ending the simulation." << std::endl;
-      
-      m_application->endSimulation(true);
+                << "Ending the simulation." << std::endl;
       
       success = true;
     }
@@ -1088,7 +1086,7 @@ AMRSimulationController::subCycleExecute( int startDW,
   int newDWStride = dwStride/numSteps;
 
   DataWarehouse::ScrubMode oldScrubbing =
-    (/*m_loadBalancer->isDynamic() ||*/ m_application->mayRecomputeTimeStep()) ?
+    (m_application->activeReductionVariable(recomputeTimeStep_name) /*|| m_loadBalancer->isDynamic()*/) ?
     DataWarehouse::ScrubNonPermanent : DataWarehouse::ScrubComplete;
 
   int curDW = startDW;

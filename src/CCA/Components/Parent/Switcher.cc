@@ -78,7 +78,7 @@ DebugStream Switcher::switcher_dbg("SWITCHER", "Switcher", "Switcher debug strea
 // For each subcomponent in the ups file:
 //     - 
 Switcher::Switcher( const ProcessorGroup * myworld,
-		    const SimulationStateP sharedState,
+                    const SimulationStateP sharedState,
                           ProblemSpecP   & d_master_ups,
                     const std::string    & uda )
   : ApplicationCommon(myworld, sharedState)
@@ -316,7 +316,7 @@ Switcher::problemSetup( const ProblemSpecP     & params,
 
       if (!label) {
         std::string error =
-	  "ERROR: Switcher: Cannot find init VarLabel" + varName;
+          "ERROR: Switcher: Cannot find init VarLabel" + varName;
         throw ProblemSetupException(error, __FILE__, __LINE__);
       }
 
@@ -341,7 +341,7 @@ Switcher::problemSetup( const ProblemSpecP     & params,
     }
     else {
       std::string error =
-	"ERROR: Switcher: Cannot find carry_over VarLabel" + d_carryOverVars[i];
+        "ERROR: Switcher: Cannot find carry_over VarLabel" + d_carryOverVars[i];
       throw ProblemSetupException(error, __FILE__, __LINE__);
     }
   }
@@ -483,8 +483,8 @@ void Switcher::scheduleInitNewVars(const LevelP     & level,
     matlSet.push_back(matls);
 
     switcher_dbg << "init Variable  " << initVar->varNames[i] << " \t matls: " 
-		 << nextComp_matls << " levels " << initVar->levels[i]
-		 << std::endl;
+                 << nextComp_matls << " levels " << initVar->levels[i]
+                 << std::endl;
     
     const MaterialSubset* matl_ss = matls->getUnion();
     
@@ -598,7 +598,7 @@ void Switcher::initNewVars(const ProcessorGroup *,
     return; 
     
   switcher_dbg << "__________________________________" << std::endl
-	       << "initNewVars \t\t\t\tSwitcher" << std::endl;
+               << "initNewVars \t\t\t\tSwitcher" << std::endl;
   //__________________________________
   // loop over the init vars, initialize them and put them in the new_dw
   initVars* initVar  = d_initVars.find(d_componentIndex+1)->second;
@@ -617,8 +617,8 @@ void Switcher::initNewVars(const ProcessorGroup *,
     int init_Levels     = initVar->levels[i];
     
     switcher_dbg << "    varName: " << l->getName()
-		 << " \t\t matls " << initVar->matlSetNames[i]
-		 << " level " << init_Levels << std::endl;
+                 << " \t\t matls " << initVar->matlSetNames[i]
+                 << " level " << init_Levels << std::endl;
     
     bool onThisLevel = false;
 
@@ -650,7 +650,7 @@ void Switcher::initNewVars(const ProcessorGroup *,
         const Patch* patch = patches->get(p);
         
         switcher_dbg << "    indx: " << indx << " patch " << *patch << " "
-		     << l->getName() << std::endl;
+                     << l->getName() << std::endl;
         
         switch (l->typeDescription()->getType()) {
 
@@ -796,7 +796,7 @@ void Switcher::carryOverVars(const ProcessorGroup *,
 //______________________________________________________________________
 // 
 void Switcher::switchApplication( const ProblemSpecP     & restart_prob_spec,
-				                          const GridP            & grid )
+                                                          const GridP            & grid )
 {
   // Get the initial simulation component and initialize the need components
   proc0cout << "\n------------ Switching to application (" << d_componentIndex <<") \n";
@@ -829,7 +829,7 @@ void Switcher::switchApplication( const ProblemSpecP     & restart_prob_spec,
   // Set flags for checking reduction vars - done after the
   // subcomponent problem spec is read because the values may be based
   // on the solver being requested in the problem setup.
-  setFlags( appComp );
+  setReductionVariables( appComp );
 }
 
 //______________________________________________________________________
@@ -869,8 +869,8 @@ Switcher::needRecompile( const GridP & grid )
     double new_delT = getSimulationTime()->m_max_initial_delt;
 
     proc0cout << "Switching the Next delT from " << m_delT
-	      << " to " << new_delT
-	      << std::endl;
+              << " to " << new_delT
+              << std::endl;
     
     setDelT( new_delT );
 

@@ -113,8 +113,8 @@ ImpMPM::ImpMPM(const ProcessorGroup* myworld,
   NGN     = 1;
   d_loadCurveIndex=0;
 
-  mayAbortTimeStep(true);
-  mayRecomputeTimeStep(true);
+  activateReductionVariable( recomputeTimeStep_name, true);
+  activateReductionVariable(     abortTimeStep_name, true);
 }
 
 ImpMPM::~ImpMPM()

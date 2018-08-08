@@ -1254,7 +1254,7 @@ SimulationController::CheckInSitu(const ProcessorGroup*,
     // Check the state - if the return value is true the user issued
     // a termination.
     if( visit_CheckState( m_visitSimData ) ) {
-      m_application->endSimulation(true);
+      // nothing to do ...
     }
 
     // std::cerr << "*************" << __FUNCTION__ << "  " << __LINE__ << "  "

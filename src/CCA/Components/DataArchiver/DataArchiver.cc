@@ -2611,7 +2611,9 @@ DataArchiver::outputReductionVars( const ProcessorGroup *,
                                    DataWarehouse        * old_dw,
                                    DataWarehouse        * new_dw )
 {
-  if( m_application->recomputeTimeStep() || m_saveReductionLabels.empty() ) {
+  bool val;
+  if( m_application->getReductionVariable( recomputeTimeStep_name, val ) ||
+      m_saveReductionLabels.empty() ) {
     return;
   }
 

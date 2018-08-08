@@ -83,8 +83,8 @@ static DebugStream cout_doing("MPMICE_DOING_COUT", false);
 static DebugStream ds_EqPress("DBG_EqPress",false);
 
 MPMICE::MPMICE(const ProcessorGroup* myworld,
-	       const SimulationStateP sharedState,
-	       MPMType mpmtype, const bool doAMR)
+               const SimulationStateP sharedState,
+               MPMType mpmtype, const bool doAMR)
   : ApplicationCommon(myworld, sharedState)
 {
   MIlb = scinew MPMICELabel();
@@ -124,8 +124,8 @@ MPMICE::MPMICE(const ProcessorGroup* myworld,
 
   d_switchCriteria = 0;
 
-  mayAbortTimeStep(true);
-  mayRecomputeTimeStep(true);
+  activateReductionVariable( recomputeTimeStep_name, true);
+  activateReductionVariable(     abortTimeStep_name, true);
 }
 //______________________________________________________________________
 //
@@ -200,8 +200,10 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
   // An ice model may adjust the output interval or the checkpoint
   // interval during a simulation.  For example in deflagration ->
   // detonation simulations
-  adjustOutputInterval( d_ice->adjustOutputInterval() );      
-  adjustCheckpointInterval( d_ice->adjustCheckpointInterval() );
+  activateReductionVariable( outputInterval_name,
+                             d_ice->activeReductionVariable( outputInterval_name ) );      
+  activateReductionVariable( checkpointInterval_name,
+                             d_ice->activeReductionVariable( checkpointInterval_name ) );
   
   ProblemSpecP mpm_ps = 0;
   mpm_ps = prob_spec->findBlock("MPM");
@@ -229,8 +231,8 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
   //__________________________________
   //  Set up data analysis modules
   d_analysisModules = AnalysisModuleFactory::create(d_myworld,
-						    m_sharedState,
-						    prob_spec);
+                                                    m_sharedState,
+                                                    prob_spec);
 
   if(d_analysisModules.size() != 0){
     vector<AnalysisModule*>::iterator iter;
@@ -2514,7 +2516,7 @@ void MPMICE::scheduleCoarsen(const LevelP& coarseLevel, SchedulerP& sched)
 
 //______________________________________________________________________
 void MPMICE::scheduleInitialErrorEstimate(const LevelP& coarseLevel,
-					  SchedulerP& sched)
+                                          SchedulerP& sched)
 {
   d_ice->scheduleInitialErrorEstimate(coarseLevel, sched);
   d_mpm->scheduleInitialErrorEstimate(coarseLevel, sched);

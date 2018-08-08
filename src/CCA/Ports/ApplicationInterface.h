@@ -116,7 +116,7 @@ WARNING
     virtual Regridder *getRegridder() = 0;
     virtual Output    *getOutput()    = 0;
     
-    virtual void setFlags( UintahParallelComponent *comp ) = 0;
+    virtual void setReductionVariables( UintahParallelComponent *comp ) = 0;
 
     // Top level problem set up called by sus.
     virtual void problemSetup( const ProblemSpecP &prob_spec ) = 0;
@@ -254,26 +254,10 @@ WARNING
     virtual void setRegridTimeStep( bool val ) = 0;
     virtual int  getLastRegridTimeStep() = 0;
     
-    // Some applications can adjust the output interval.
-    virtual void adjustOutputInterval(bool val) = 0;
-    virtual bool adjustOutputInterval() const = 0;
-     
-    // Some applications can adjust the checkpoint interval.
-    virtual void adjustCheckpointInterval(bool val) = 0;
-    virtual bool adjustCheckpointInterval() const = 0;
-
-    // Some applications can end the simulation early.
-    virtual void mayEndSimulation(bool val) = 0;
-    virtual bool mayEndSimulation() const = 0;
-
-    // Some applications may about a time step.
-    virtual void mayAbortTimeStep(bool val) = 0;
-    virtual bool mayAbortTimeStep() const = 0;
-
-    // Some applications may recompute a time step.
-    virtual void mayRecomputeTimeStep(bool val) = 0;
-    virtual bool mayRecomputeTimeStep() const = 0;
-
+    // Some applications can set reduction variables
+    virtual void activateReductionVariable(std::string name, bool val) = 0;
+    virtual bool activeReductionVariable(std::string name) = 0;
+    
     // Access methods for member classes.
     virtual SimulationTime * getSimulationTime() const = 0;
     virtual SimulationStateP getSimulationStateP() const = 0;
@@ -296,16 +280,12 @@ WARNING
     // The member methods are private as the child application should
     // ONLY get/set these values via the data warehouse.
   private:
-    // Some applications can end the simulation early.
-    virtual void endSimulation( bool val ) = 0;
-    virtual bool endSimulation() const = 0;
 
-    // Some applications may about a time step.
-    virtual bool abortTimeStep() const = 0;
+    // get application specific reduction values
+    virtual bool_or_vartype getReductionVariable(std::string name, bool   &val ) = 0;
+    virtual min_vartype     getReductionVariable(std::string name, double &val ) = 0;
 
-    // Some applications may recompute a time step.
-    virtual bool recomputeTimeStep() const = 0;
-
+    // Delta T methods
     virtual   void setDelT( double delT ) = 0;
     virtual double getDelT() const = 0;
     virtual   void setDelTForAllLevels( SchedulerP& scheduler,
@@ -333,7 +313,7 @@ WARNING
     virtual void incrementTimeStep() = 0;
     virtual int  getTimeStep() const = 0;
 
-    virtual bool isLastTimeStep( double walltime ) const = 0;
+    virtual bool isLastTimeStep( double walltime ) = 0;
     virtual bool maybeLastTimeStep( double walltime ) const = 0;
 
     ApplicationInterface(const ApplicationInterface&);
