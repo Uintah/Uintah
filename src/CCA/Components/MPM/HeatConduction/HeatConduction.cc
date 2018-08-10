@@ -184,7 +184,7 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
     oodx[2] = 1.0/dx.z();
 
     Ghost::GhostType  gnone = Ghost::None;
-    for(int m = 0; m < d_materialManager->getNumMatls( "MPM" ); m++){
+    for(unsigned int m = 0; m < d_materialManager->getNumMatls( "MPM" ); m++){
       MPMMaterial* mpm_matl = (MPMMaterial*) d_materialManager->getMaterial( "MPM",  m );
 
       if (cout_heat.active())
@@ -287,7 +287,7 @@ void HeatConduction::computeNodalHeatFlux(const ProcessorGroup*,
     Ghost::GhostType  gac   = Ghost::AroundCells;
     Ghost::GhostType  gnone = Ghost::None;
     
-    for(int m = 0; m < d_materialManager->getNumMatls( "MPM" ); m++){
+    for(unsigned int m = 0; m < d_materialManager->getNumMatls( "MPM" ); m++){
       MPMMaterial* mpm_matl = (MPMMaterial*) d_materialManager->getMaterial( "MPM",  m );
 
       if (cout_heat.active())
@@ -387,7 +387,7 @@ void HeatConduction::solveHeatEquations(const ProcessorGroup*,
 
 
     string interp_type = d_flag->d_interpolator_type;
-    for(int m = 0; m < d_materialManager->getNumMatls( "MPM" ); m++){
+    for(unsigned int m = 0; m < d_materialManager->getNumMatls( "MPM" ); m++){
       MPMMaterial* mpm_matl = (MPMMaterial*) d_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
       double Cv = mpm_matl->getSpecificHeat();
@@ -435,7 +435,7 @@ void HeatConduction::integrateTemperatureRate(const ProcessorGroup*,
 
     Ghost::GhostType  gnone = Ghost::None;
     string interp_type = d_flag->d_interpolator_type;
-    for(int m = 0; m < d_materialManager->getNumMatls( "MPM" ); m++){
+    for(unsigned int m = 0; m < d_materialManager->getNumMatls( "MPM" ); m++){
       MPMMaterial* mpm_matl = (MPMMaterial*) d_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
 

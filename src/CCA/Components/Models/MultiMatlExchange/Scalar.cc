@@ -90,6 +90,7 @@ void ScalarExch::outputProblemSpec(ProblemSpecP & matl_ps )
 void ScalarExch::sched_AddExch_VelFC( SchedulerP            & sched,
                                       const PatchSet        * patches,
                                       const MaterialSubset  * ice_matls,
+				      const MaterialSubset  * mpm_matls,
                                       const MaterialSet     * all_matls,
                                       customBC_globalVars   * BC_globalVars,
                                       const bool recursion )
@@ -419,7 +420,8 @@ void ScalarExch::sched_AddExch_Vel_Temp_CC( SchedulerP           & sched,
   t->requires(Task::OldDW, Ilb->delTLabel,getLevel(patches));
 
   if(d_exchCoeff->convective()){
-    t->requires(Task::NewDW, Mlb->gMassLabel,       mpm_matls,   gac, 1);
+    if( mpm_matls )
+      t->requires(Task::NewDW, Mlb->gMassLabel,       mpm_matls,   gac, 1);
     t->requires(Task::OldDW, Mlb->NC_CCweightLabel, d_zero_matl, gac, 1);
   }
                                 // I C E
@@ -439,7 +441,7 @@ void ScalarExch::sched_AddExch_Vel_Temp_CC( SchedulerP           & sched,
   t->computes(Ilb->mom_L_ME_CCLabel);
   t->computes(Ilb->eng_L_ME_CCLabel);
 
-  if (mpm_matls->size() > 0){
+  if (mpm_matls && mpm_matls->size() > 0){
     t->modifies(Ilb->temp_CCLabel, mpm_matls);
     t->modifies(Ilb->vel_CCLabel,  mpm_matls);
   }

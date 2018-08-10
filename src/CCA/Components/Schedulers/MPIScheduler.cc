@@ -895,7 +895,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */
         
         // Go through all materials since getting an MPMMaterial
         // correctly would depend on MPM
-        for (int m = 0; m < m_materialManager->getNumMatls(); m++) {
+        for (unsigned int m = 0; m < m_materialManager->getNumMatls(); m++) {
           if (dw->haveParticleSubset(m, patch)) {
             numParticles += dw->getParticleSubset(m, patch)->numParticles();
           }

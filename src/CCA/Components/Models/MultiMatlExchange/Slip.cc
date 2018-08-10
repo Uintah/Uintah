@@ -142,7 +142,8 @@ void SlipExch::addExchangeModelRequires ( Task* t,
 {
   Ghost::GhostType  gac = Ghost::AroundCells;
   t->requires( Task::NewDW, d_meanFreePathLabel,   ice_matls, gac, 1);
-  t->requires( Task::NewDW, d_surfaceNormLabel,    mpm_matls, gac, 1);
+  if( mpm_matls )
+    t->requires( Task::NewDW, d_surfaceNormLabel,    mpm_matls, gac, 1);
   t->requires( Task::NewDW, d_isSurfaceCellLabel,  zeroMatl,  gac, 1);
 }
 
@@ -152,6 +153,7 @@ void SlipExch::addExchangeModelRequires ( Task* t,
 void SlipExch::sched_AddExch_VelFC(SchedulerP           & sched,
                                    const PatchSet       * patches,
                                    const MaterialSubset * ice_matls,
+                                   const MaterialSubset * mpm_matls,
                                    const MaterialSet    * all_matls,
                                    customBC_globalVars  * BC_globalVars,
                                    const bool recursion)
@@ -172,8 +174,6 @@ void SlipExch::sched_AddExch_VelFC(SchedulerP           & sched,
   }
 
   Ghost::GhostType  gac = Ghost::AroundCells;
-  const MaterialSet* mpm_ms       = d_materialManager->allMaterials( "MPM" );
-  const MaterialSubset* mpm_matls = mpm_ms->getUnion();
 
   //__________________________________
   // define parent data warehouse
@@ -194,11 +194,13 @@ void SlipExch::sched_AddExch_VelFC(SchedulerP           & sched,
   t->requires( Task::NewDW, Ilb->vvel_FCLabel,    gac, 2);
   t->requires( Task::NewDW, Ilb->wvel_FCLabel,    gac, 2);
   t->requires( pNewDW,      d_meanFreePathLabel,   ice_matls,  gac, 1);
-  t->requires( pNewDW,      d_surfaceNormLabel,    mpm_matls,  gac, 1);
+  if( mpm_matls )
+    t->requires( pNewDW,      d_surfaceNormLabel,    mpm_matls,  gac, 1);
   t->requires( pNewDW,      d_isSurfaceCellLabel,  d_zero_matl,gac, 1);
 
   t->requires( pOldDW,      Ilb->vel_CCLabel,      ice_matls,  gac, 1);
-  t->requires( pNewDW,      Ilb->vel_CCLabel,      mpm_matls,  gac, 1);
+  if( mpm_matls )
+    t->requires( pNewDW,      Ilb->vel_CCLabel,      mpm_matls,  gac, 1);
 
 
   computesRequires_CustomBCs(t, "velFC_Exchange", Ilb, ice_matls,
@@ -604,7 +606,8 @@ void SlipExch::sched_AddExch_Vel_Temp_CC(SchedulerP           & sched,
   Ghost::GhostType  gn  = Ghost::None;
 
   t->requires( Task::OldDW,  Ilb->delTLabel,getLevel(patches));
-  t->requires( Task::NewDW,  d_surfaceNormLabel,    mpm_matls,   gn, 0 );
+  if( mpm_matls )
+    t->requires( Task::NewDW,  d_surfaceNormLabel,    mpm_matls,   gn, 0 );
   t->requires( Task::NewDW,  d_isSurfaceCellLabel,  d_zero_matl, gn, 0 );
                                 // I C E
   t->requires( Task::OldDW,  Ilb->temp_CCLabel,       ice_matls, gn );
@@ -626,9 +629,11 @@ void SlipExch::sched_AddExch_Vel_Temp_CC(SchedulerP           & sched,
   t->computes( Ilb->eng_L_ME_CCLabel );
   t->computes( d_vel_CCTransLabel );
 
-  t->modifies( Ilb->temp_CCLabel, mpm_matls );
-  t->modifies( Ilb->vel_CCLabel,  mpm_matls );
-
+  if (mpm_matls && mpm_matls->size() > 0){
+    t->modifies( Ilb->temp_CCLabel, mpm_matls );
+    t->modifies( Ilb->vel_CCLabel,  mpm_matls );
+  }
+  
   sched->addTask(t, patches, all_matls);
 }
 

@@ -65,6 +65,7 @@ namespace ExchangeModels{
     virtual void sched_AddExch_VelFC(SchedulerP           & sched,
                                      const PatchSet       * patches,
                                      const MaterialSubset * iceMatls,
+                                     const MaterialSubset * mpmMatls,
                                      const MaterialSet    * allMatls,
                                      customBC_globalVars  * BC_globalVars,
                                      const bool recursion);

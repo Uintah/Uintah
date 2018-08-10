@@ -479,6 +479,7 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
                                                                   all_matls);
 
     d_ice->d_exchModel->sched_AddExch_VelFC(  sched, ice_patches, ice_matls_sub,
+                                                                  mpm_matls_sub,
                                                                   all_matls,
                                                                   d_ice->d_BC_globalVars,
                                                                   false);
@@ -1083,8 +1084,8 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
            << "ICE["<< *(m_materialManager->allMaterials( "ICE" )) << "]" << endl;
 
       cout << "Material Names:";
-      int numAllMatls = m_materialManager->getNumMatls();
-      for (int m = 0; m < numAllMatls; m++) {
+      unsigned int numAllMatls = m_materialManager->getNumMatls();
+      for (unsigned int m = 0; m < numAllMatls; m++) {
         Material* matl = m_materialManager->getMaterial( m );
         cout <<" " << matl->getDWIndex() << ") " << matl->getName();
       }
@@ -1101,9 +1102,9 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
     //  Even if mass = 0 in a cell you still need
     //  CC Variables defined.
     double junk=-9, tmp;
-    int numMPM_matls = m_materialManager->getNumMatls( "MPM" );
+    unsigned int numMPM_matls = m_materialManager->getNumMatls( "MPM" );
     double p_ref = d_ice->getRefPress();
-    for (int m = 0; m < numMPM_matls; m++ ) {
+    for (unsigned int m = 0; m < numMPM_matls; m++ ) {
       CCVariable<double> rho_micro, sp_vol_CC, rho_CC, Temp_CC, speedSound, vol_frac_CC;
       CCVariable<Vector> vel_CC;
       MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM", m);
@@ -1175,8 +1176,8 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
     //   B U L L E T  P R O O F I N G
     // Verify volume fractions sum to 1.0
     // Loop through ICE materials to get their contribution to volume fraction
-    int numICE_matls = m_materialManager->getNumMatls( "ICE" );
-    for (int m = 0; m < numICE_matls; m++ ) {
+    unsigned int numICE_matls = m_materialManager->getNumMatls( "ICE" );
+    for (unsigned int m = 0; m < numICE_matls; m++ ) {
       constCCVariable<double> vol_frac;
       ICEMaterial* ice_matl = (ICEMaterial*) m_materialManager->getMaterial( "ICE", m);
       int indx= ice_matl->getDWIndex();
@@ -1265,7 +1266,7 @@ void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
     Ghost::GhostType  gac = Ghost::AroundCells;
     new_dw->get(pressNC, MIlb->press_NCLabel,  0, patch, gac, NGN);
 
-    for(int m = 0; m < m_materialManager->getNumMatls( "MPM" ); m++){
+    for(unsigned int m = 0; m < m_materialManager->getNumMatls( "MPM" ); m++){
       MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int indx = mpm_matl->getDWIndex();
 
@@ -1317,7 +1318,7 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     printTask(patches,patch,cout_doing,"Doing interpolateNCToCC_0");
 
-    int numMatls = m_materialManager->getNumMatls( "MPM" );
+    unsigned int numMatls = m_materialManager->getNumMatls( "MPM" );
     Vector dx = patch->dCell();
     double cell_vol = dx.x()*dx.y()*dx.z(); 
     Ghost::GhostType  gac = Ghost::AroundCells;
@@ -1326,7 +1327,7 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
     constNCVariable<double> NC_CCweight;
     old_dw->get(NC_CCweight, Mlb->NC_CCweightLabel,  0, patch, gac, 1);
 
-    for(int m = 0; m < numMatls; m++){
+    for(unsigned int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int indx = mpm_matl->getDWIndex();
       // Create arrays for the grid data
@@ -1451,7 +1452,7 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     printTask(patches,patch,cout_doing,"Doing computeLagrangianValuesMPM");
 
-    int numMatls = m_materialManager->getNumMatls( "MPM" );
+    unsigned int numMatls = m_materialManager->getNumMatls( "MPM" );
     Vector dx = patch->dCell();
     double cellVol = dx.x()*dx.y()*dx.z();
     double very_small_mass = d_TINY_RHO * cellVol; 
@@ -1460,7 +1461,7 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
          
     constNCVariable<double> NC_CCweight;
     old_dw->get(NC_CCweight,       Mlb->NC_CCweightLabel, 0,patch, gac, 1);
-    for(int m = 0; m < numMatls; m++){
+    for(unsigned int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int indx = mpm_matl->getDWIndex();
 
@@ -1620,12 +1621,12 @@ void MPMICE::computeCCVelAndTempRates(const ProcessorGroup*,
     //__________________________________
     // This is where I interpolate the CC 
     // changes to NCs for the MPMMatls
-    int numMPMMatls = m_materialManager->getNumMatls( "MPM" );
+    unsigned int numMPMMatls = m_materialManager->getNumMatls( "MPM" );
 
     delt_vartype delT;
     old_dw->get(delT, Ilb->delTLabel);
 
-    for (int m = 0; m < numMPMMatls; m++) {
+    for (unsigned int m = 0; m < numMPMMatls; m++) {
       MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int indx = mpm_matl->getDWIndex();
       CCVariable<double> dTdt_CC,heatRate;
@@ -1686,12 +1687,12 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
     //__________________________________
     // This is where I interpolate the CC 
     // changes to NCs for the MPMMatls
-    int numMPMMatls = m_materialManager->getNumMatls( "MPM" );
+    unsigned int numMPMMatls = m_materialManager->getNumMatls( "MPM" );
 
     delt_vartype delT;
     old_dw->get(delT, Ilb->delTLabel);
 
-    for (int m = 0; m < numMPMMatls; m++) {
+    for (unsigned int m = 0; m < numMPMMatls; m++) {
       MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int indx = mpm_matl->getDWIndex();
       NCVariable<Vector> gacceleration, gvelocity;
@@ -1793,9 +1794,9 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     double    convergence_crit = converg_coeff * DBL_EPSILON;
     double    c_2;
     double press_ref= d_ice->getRefPress();
-    int numICEMatls = m_materialManager->getNumMatls( "ICE" );
-    int numMPMMatls = m_materialManager->getNumMatls( "MPM" );
-    int numALLMatls = numICEMatls + numMPMMatls;
+    unsigned int numICEMatls = m_materialManager->getNumMatls( "ICE" );
+    unsigned int numMPMMatls = m_materialManager->getNumMatls( "MPM" );
+    unsigned int numALLMatls = numICEMatls + numMPMMatls;
 
     Vector dx       = patch->dCell(); 
     double cell_vol = dx.x()*dx.y()*dx.z();
@@ -1841,13 +1842,13 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
 
     std::vector<MPMMaterial*> mpm_matl(numALLMatls);
     std::vector<ICEMaterial*> ice_matl(numALLMatls);
-    for (int m = 0; m < numALLMatls; m++) {
+    for (unsigned int m = 0; m < numALLMatls; m++) {
       Material* matl = m_materialManager->getMaterial( m );
       ice_matl[m] = dynamic_cast<ICEMaterial*>(matl);
       mpm_matl[m] = dynamic_cast<MPMMaterial*>(matl);
     }
 
-    for (int m = 0; m < numALLMatls; m++) {
+    for (unsigned int m = 0; m < numALLMatls; m++) {
       Material* matl = m_materialManager->getMaterial( m );
       int indx = matl->getDWIndex();
       if(ice_matl[m]){                    // I C E
@@ -1885,7 +1886,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
 
       const IntVector& c = *iter;
       double total_mat_vol = 0.0;
-      for (int m = 0; m < numALLMatls; m++) {
+      for (unsigned int m = 0; m < numALLMatls; m++) {
         if(ice_matl[m]){                // I C E
          rho_micro[m][c] = 1.0/sp_vol_CC[m][c];
         } else if(mpm_matl[m]){                //  M P M
@@ -1898,7 +1899,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
 
       TMV_CC[c] = total_mat_vol;
 
-      for (int m = 0; m < numALLMatls; m++) {
+      for (unsigned int m = 0; m < numALLMatls; m++) {
         vol_frac[m][c]   = mat_volume[m]/total_mat_vol;
         rho_CC_new[m][c] = vol_frac[m][c]*rho_micro[m][c];
       }
@@ -1920,7 +1921,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         count++;
         //__________________________________
         // evaluate press_eos at cell i,j,k
-        for (int m = 0; m < numALLMatls; m++)  {
+        for (unsigned int m = 0; m < numALLMatls; m++)  {
           if(ice_matl[m]){    // ICE
             ice_matl[m]->getEOS()->computePressEOS( rho_micro[m][c], gamma[m][c],
                                                    cv[m][c], Temp[m][c],
@@ -1938,7 +1939,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         // - update press_CC     
         double A = 0., B = 0., C = 0.;
 
-        for (int m = 0; m < numALLMatls; m++)   {
+        for (unsigned int m = 0; m < numALLMatls; m++)   {
           double Q =  press_new[c] - press_eos[m];
           double inv_y =  (vol_frac[m][c] * vol_frac[m][c])
                         / (dp_drho[m] * rho_CC_new[m][c] + d_SMALL_NUM);
@@ -1960,7 +1961,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
        // backout rho_micro_CC at this new pressure
        // - compute the updated volume fractions
        sum = 0;
-       for (int m = 0; m < numALLMatls; m++) {
+       for (unsigned int m = 0; m < numALLMatls; m++) {
          if(ice_matl[m]){
            rho_micro[m][c] = 
              ice_matl[m]->getEOS()->computeRhoMicro(press_new[c],gamma[m][c],
@@ -1983,7 +1984,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
          //__________________________________
          // Find the speed of sound based on the converged solution
          //feclearexcept(FE_ALL_EXCEPT);
-         for (int m = 0; m < numALLMatls; m++)  {
+         for (unsigned int m = 0; m < numALLMatls; m++)  {
            if(ice_matl[m]){
              ice_matl[m]->getEOS()->computePressEOS(rho_micro[m][c],gamma[m][c],
                                               cv[m][c],Temp[m][c],press_eos[m],
@@ -2022,7 +2023,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
          dbg.sumVolFrac   = sum;
          dbg.count        = count;
 
-         for (int m = 0; m < numALLMatls; m++) {
+         for (unsigned int m = 0; m < numALLMatls; m++) {
            EqPress_dbgMatl dmatl;
            dmatl.press_eos   = press_eos[m];
            dmatl.volFrac     = vol_frac[m][c];
@@ -2075,7 +2076,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         message += "Max. iterations reached ";
       }
       
-      for (int m = 0; m < numALLMatls; m++) {
+      for (unsigned int m = 0; m < numALLMatls; m++) {
         ASSERT(( vol_frac[m][c] > 0.0 ) ||( vol_frac[m][c] < 1.0));
       }
       
@@ -2089,7 +2090,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         message += " Computed pressure is < 0 ";
       }
       
-      for (int m = 0; m < numALLMatls; m++){
+      for (unsigned int m = 0; m < numALLMatls; m++){
         if ((rho_micro[m][c] < 0.0 || vol_frac[m][c] < 0.0) && !rts) {
           allTestsPassed = false;
           message += " rho_micro < 0 || vol_frac < 0";
@@ -2105,7 +2106,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
              << "   SCI_DEBUG DBG_EqPress:+\n\n";
              
         warn << "INPUTS: \n"; 
-        for (int m = 0; m < numALLMatls; m++){
+        for (unsigned int m = 0; m < numALLMatls; m++){
           warn<< "\n matl: " << m << "\n"
                << "   rho_CC:     " << rho_CC_new[m][c] << "\n"
                << "   Temperature:   "<< Temp[m][c] << "\n";
@@ -2119,7 +2120,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
                  << "  press_new:   " << d.press_new
                  << "  sumVolFrac:  " << d.sumVolFrac
                  << "  delPress:    " << d.delPress << "\n";
-            for (int m = 0; m < numALLMatls; m++){
+            for (unsigned int m = 0; m < numALLMatls; m++){
               warn << "  matl: " << d.matl[m].mat
                    << "  press_eos:  " << d.matl[m].press_eos
                    << "  volFrac:    " << d.matl[m].volFrac
@@ -2137,7 +2138,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     //__________________________________
     // Now change how rho_CC is defined to 
     // rho_CC = mass/cell_volume  NOT mass/mat_volume 
-    for (int m = 0; m < numALLMatls; m++) {
+    for (unsigned int m = 0; m < numALLMatls; m++) {
       if(ice_matl[m]){
         rho_CC_new[m].copyData(rho_CC_old[m]);
       }
@@ -2161,7 +2162,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
      
     //__________________________________
     // compute sp_vol_CC
-    for (int m = 0; m < numALLMatls; m++)   {  
+    for (unsigned int m = 0; m < numALLMatls; m++)   {  
       for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
         const IntVector& c = *iter;
         sp_vol_new[m][c] = 1.0/rho_micro[m][c];
@@ -2177,17 +2178,17 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
       const IntVector& c = *iter;
       sumKappa[c] = 0.0;
-      for (int m = 0; m < numALLMatls; m++) {
+      for (unsigned int m = 0; m < numALLMatls; m++) {
         kappa[m][c] = sp_vol_new[m][c]/(speedSound[m][c]*speedSound[m][c]);
         sumKappa[c] += vol_frac[m][c]*kappa[m][c];
       }
-      for (int m = 0; m < numALLMatls; m++) {
+      for (unsigned int m = 0; m < numALLMatls; m++) {
         f_theta[m][c] = vol_frac[m][c]*kappa[m][c]/sumKappa[c];
       }
     }
 
     //____ BB : B U L L E T   P R O O F I N G----
-    //for (int m = 0; m < numALLMatls; m++) {
+    //for (unsigned int m = 0; m < numALLMatls; m++) {
     //  Material* matl = m_materialManager->getMaterial( m );
     //  int indx = matl->getDWIndex();
     //  for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
@@ -2209,7 +2210,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
       const IntVector& c = *iter;
       sumKappa[c] = 0.0;
-      for (int m = 0; m < numALLMatls; m++) {
+      for (unsigned int m = 0; m < numALLMatls; m++) {
         if(ice_matl[m]){
           kappa[m][c] = sp_vol_new[m][c]/(speedSound[m][c]*speedSound[m][c]);
         }
@@ -2218,7 +2219,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         }
         sumKappa[c] += vol_frac[m][c]*kappa[m][c];
       }
-      for (int m = 0; m < numALLMatls; m++) {
+      for (unsigned int m = 0; m < numALLMatls; m++) {
         f_theta[m][c] = vol_frac[m][c]*kappa[m][c]/sumKappa[c];
       }
     }
@@ -2233,24 +2234,24 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
             craps out then try this method.
  Reference:  Se Numerical Methods by Robert W. Hornbeck.
 _____________________________________________________________________*/ 
-void MPMICE::binaryPressureSearch(  std::vector<constCCVariable<double> >& Temp,
-                            std::vector<CCVariable<double> >& rho_micro, 
-                            std::vector<CCVariable<double> >& vol_frac, 
-                            std::vector<CCVariable<double> >& rho_CC_new,
-                            std::vector<CCVariable<double> >& speedSound,
-                            std::vector<double> & dp_drho, 
-                            std::vector<double> & dp_de, 
-                            std::vector<double> & press_eos,
-                            constCCVariable<double> & press,
-                            CCVariable<double> & press_new, 
-                            double press_ref,
-                            std::vector<constCCVariable<double> > & cv,
-                            std::vector<constCCVariable<double> > & gamma,
-                            double convergence_crit,
-                            int numALLMatls,
-                            int & count,
-                            double & sum,
-                            IntVector c )
+void MPMICE::binaryPressureSearch( std::vector<constCCVariable<double> >& Temp,
+				   std::vector<CCVariable<double> >& rho_micro, 
+				   std::vector<CCVariable<double> >& vol_frac, 
+				   std::vector<CCVariable<double> >& rho_CC_new,
+				   std::vector<CCVariable<double> >& speedSound,
+				   std::vector<double> & dp_drho, 
+				   std::vector<double> & dp_de, 
+				   std::vector<double> & press_eos,
+				   constCCVariable<double> & press,
+				   CCVariable<double> & press_new, 
+				   double press_ref,
+				   std::vector<constCCVariable<double> > & cv,
+				   std::vector<constCCVariable<double> > & gamma,
+				   double convergence_crit,
+				   unsigned int numALLMatls,
+				   int & count,
+				   double & sum,
+				   IntVector c )
 {
   // Start over for this cell using a binary search
 //  cout << " cell " << c << " Starting binary pressure search "<< endl;
@@ -2267,7 +2268,7 @@ void MPMICE::binaryPressureSearch(  std::vector<constCCVariable<double> >& Temp,
   while ( count < d_ice->d_max_iter_equilibration && converged == false) {
     count++;
     sum = 0.;
-    for (int m = 0; m < numALLMatls; m++) {
+    for (unsigned int m = 0; m < numALLMatls; m++) {
       Material* matl = m_materialManager->getMaterial( m );
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
@@ -2295,7 +2296,7 @@ void MPMICE::binaryPressureSearch(  std::vector<constCCVariable<double> >& Temp,
       // needed by eos and the the explicit
       // del pressure function
       //feclearexcept(FE_ALL_EXCEPT);
-      for (int m = 0; m < numALLMatls; m++)  {
+      for (unsigned int m = 0; m < numALLMatls; m++)  {
         Material* matl = m_materialManager->getMaterial( m );
         ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
         MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
@@ -2336,7 +2337,7 @@ void MPMICE::binaryPressureSearch(  std::vector<constCCVariable<double> >& Temp,
     }
 
     double sumR=0., sumL=0.;
-    for (int m = 0; m < numALLMatls; m++) {
+    for (unsigned int m = 0; m < numALLMatls; m++) {
       Material* matl = m_materialManager->getMaterial( m );
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
@@ -2401,7 +2402,7 @@ void MPMICE::binaryPressureSearch(  std::vector<constCCVariable<double> >& Temp,
     // Find the speed of sound at ijk
     // needed by eos and the the explicit
     // del pressure function
-    for (int m = 0; m < numALLMatls; m++)  {
+    for (unsigned int m = 0; m < numALLMatls; m++)  {
       Material* matl = m_materialManager->getMaterial( m );
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
@@ -2680,9 +2681,9 @@ MPMICE::refine(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     printTask(patches,patch,cout_doing,"Doing refine");
      
-    int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
+    unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
     
-    for(int m = 0; m < numMPMMatls; m++){
+    for(unsigned int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
 

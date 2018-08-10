@@ -103,7 +103,7 @@ void RigidMPM::computeStressTensor(const ProcessorGroup*,
   if (cout_doing.active())
     cout_doing <<"Doing computeStressTensor " <<"\t\t\t\t RigidMPM"<< endl;
 
-  for(int m = 0; m < m_materialManager->getNumMatls( "MPM" ); m++){
+  for(unsigned int m = 0; m < m_materialManager->getNumMatls( "MPM" ); m++){
     MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM", m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     cm->carryForward(patches, mpm_matl, old_dw, new_dw);
@@ -148,7 +148,7 @@ void RigidMPM::computeInternalForce(const ProcessorGroup*,
       cout_doing <<"Doing computeInternalForce on patch " << patch->getID()
                  <<"\t\t\t RigidMPM"<< endl;
     }
-    for(int m = 0; m < m_materialManager->getNumMatls( "MPM" ); m++){
+    for(unsigned int m = 0; m < m_materialManager->getNumMatls( "MPM" ); m++){
       MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
       NCVariable<Vector> internal_force;
@@ -193,7 +193,7 @@ void RigidMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
     printTask(patches, patch,cout_doing,"Doing computeAndIntegrateAcceleration");
 
     Ghost::GhostType  gnone = Ghost::None;
-    for(int m = 0; m < m_materialManager->getNumMatls( "MPM" ); m++){
+    for(unsigned int m = 0; m < m_materialManager->getNumMatls( "MPM" ); m++){
       MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
 
@@ -277,8 +277,8 @@ void RigidMPM::computeParticleGradients(const ProcessorGroup*,
 
     double partvoldef = 0.;
 
-    int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
-    for(int m = 0; m < numMPMMatls; m++){
+    unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
+    for(unsigned int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
       Ghost::GhostType  gac = Ghost::AroundCells;
@@ -464,11 +464,11 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     Vector CMX(0.0,0.0,0.0);
     Vector total_mom(0.0,0.0,0.0);
     double ke=0;
-    int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
+    unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches) );
 
-    for(int m = 0; m < numMPMMatls; m++){
+    for(unsigned int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
       // Get the arrays of particle values to be changed

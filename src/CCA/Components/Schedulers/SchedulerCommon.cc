@@ -722,7 +722,7 @@ SchedulerCommon::printTrackedVars( DetailedTask * dtask
       IntVector end   = Min(patch->getExtraHighIndex(basis, IntVector(0, 0, 0)), m_tracking_end_index);
 
       // Loop over matls too...
-      for (int m = 0; m < m_materialManager->getNumMatls(); m++) {
+      for (unsigned int m = 0; m < m_materialManager->getNumMatls(); m++) {
 
         if (!dw->exists(label, m, patch)) {
           std::ostringstream mesg;

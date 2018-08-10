@@ -158,7 +158,7 @@ DynamicLoadBalancer::collectParticlesForRegrid( const Grid                     *
           if (dw) {
             //loop through the materials and add up the particles
             //   go through all materials since getting an MPMMaterial correctly would depend on MPM
-            for (int m = 0; m < m_materialManager->getNumMatls(); m++) {
+            for (unsigned int m = 0; m < m_materialManager->getNumMatls(); m++) {
               ParticleSubset* psubset = 0;
               if (dw->haveParticleSubset(m, oldPatch, low, high))
                 psubset = dw->getParticleSubset(m, oldPatch, low, high);
@@ -283,7 +283,7 @@ DynamicLoadBalancer::collectParticles( const Grid                  * grid,
       if (dw) {
         //loop through the materials and add up the particles
         //   go through all materials since getting an MPMMaterial correctly would depend on MPM
-        for (int m = 0; m < m_materialManager->getNumMatls(); m++) {
+        for (unsigned int m = 0; m < m_materialManager->getNumMatls(); m++) {
           if (dw->haveParticleSubset(m, patch))
             thisPatchParticles += dw->getParticleSubset(m, patch)->numParticles();
         }

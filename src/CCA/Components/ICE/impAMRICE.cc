@@ -77,8 +77,8 @@ impAMRICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
   const MaterialSet* all_matls = m_materialManager->allMaterials();  
 
   MaterialSubset* one_matl = d_press_matl;
-  const MaterialSubset* ice_matls_sub = ice_matls->getUnion();
-  const MaterialSubset* mpm_matls_sub = mpm_matls->getUnion();
+  const MaterialSubset* ice_matls_sub = (ice_matls ? ice_matls->getUnion() : nullptr);
+  const MaterialSubset* mpm_matls_sub = (mpm_matls ? mpm_matls->getUnion() : nullptr);
   
   cout_doing << "--------------------------------------------------------"<< endl;
   cout_doing << "impAMRICE::scheduleLockstepTimeAdvance"<< endl;  
@@ -119,6 +119,7 @@ impAMRICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
                                                             all_matls);        
                           
     d_exchModel->sched_AddExch_VelFC(       sched, patches, ice_matls_sub,
+					                    mpm_matls_sub,
                                                             all_matls,
                                                             d_BC_globalVars,
                                                             false);
@@ -312,8 +313,9 @@ void impAMRICE::scheduleMultiLevelPressureSolve(  SchedulerP& sched,
     
     //__________________________________
     // ImplicitVel_FC
-    t->requires(Task::OldDW,lb->vel_CCLabel, patches, ice_matls,  gac,1);    
-    t->requires(Task::NewDW,lb->vel_CCLabel, patches, mpm_matls,  gac,1);
+    t->requires(Task::OldDW,lb->vel_CCLabel, patches, ice_matls,  gac,1);
+    if( mpm_matls)
+      t->requires(Task::NewDW,lb->vel_CCLabel, patches, mpm_matls,  gac,1);
     
     //__________________________________
     //  what's produced from this task
@@ -354,13 +356,13 @@ void impAMRICE::scheduleMultiLevelPressureSolve(  SchedulerP& sched,
  Function~  impAMRICE::multiLevelPressureSolve-- 
 _____________________________________________________________________*/
 void impAMRICE::multiLevelPressureSolve(const ProcessorGroup* pg,
-                                  const PatchSubset* patches, 
-                                  const MaterialSubset*,       
-                                  DataWarehouse* ParentOldDW,    
-                                  DataWarehouse* ParentNewDW,    
-                                  GridP grid,
-                                  const MaterialSubset* ice_matls,
-                                  const MaterialSubset* mpm_matls)
+					const PatchSubset* patches,
+					const MaterialSubset*,
+					DataWarehouse* ParentOldDW,
+					DataWarehouse* ParentNewDW,
+					GridP grid,
+					const MaterialSubset* ice_matls,
+					const MaterialSubset* mpm_matls)
 {
   // this function will be called exactly once per processor, regardless of the number of patches assigned
   // get the patches our processor is responsible for

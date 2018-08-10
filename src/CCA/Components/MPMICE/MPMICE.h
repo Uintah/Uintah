@@ -287,7 +287,7 @@ public:
                             std::vector<constCCVariable<double> > & cv,
                             std::vector<constCCVariable<double> > & gamma,
                             double convergence_crit,
-                            int numALLMatls,
+                            unsigned int numALLMatls,
                             int & count,
                             double & sum,
                             IntVector c );                   

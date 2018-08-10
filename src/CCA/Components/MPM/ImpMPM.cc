@@ -307,7 +307,7 @@ ImpMPM::outputProblemSpec( ProblemSpecP & root_ps )
   }
     
   ProblemSpecP mpm_ps = mat_ps->appendChild( "MPM" );
-  for (int i = 0; i < m_materialManager->getNumMatls( "MPM" ); i++ ) {
+  for (unsigned int i = 0; i < m_materialManager->getNumMatls( "MPM" ); i++ ) {
     MPMMaterial  * mat   = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  i );
     ProblemSpecP   cm_ps = mat->outputProblemSpec( mpm_ps );
   }
@@ -375,9 +375,9 @@ void ImpMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
     d_switchCriteria->scheduleInitialize(level,sched);
   }
 
-  int numMPM = m_materialManager->getNumMatls( "MPM" );
+  unsigned int numMPM = m_materialManager->getNumMatls( "MPM" );
 
-  for(int m = 0; m < numMPM; m++){
+  for(unsigned int m = 0; m < numMPM; m++){
     MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM", m);
     
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
@@ -472,9 +472,9 @@ void ImpMPM::countMaterialPointsPerLoadCurve(const ProcessorGroup*,
       // Loop through the patches and count
       for(int p=0;p<patches->size();p++){
         const Patch* patch = patches->get(p);
-        int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
+        unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
         int numPts = 0;
-        for(int m = 0; m < numMPMMatls; m++){
+        for(unsigned int m = 0; m < numMPMMatls; m++){
           MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
           int dwi = mpm_matl->getDWIndex();
 
@@ -500,9 +500,9 @@ void ImpMPM::countMaterialPointsPerLoadCurve(const ProcessorGroup*,
       // Loop through the patches and count
       for(int p=0;p<patches->size();p++){
         const Patch* patch = patches->get(p);
-        int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
+        unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
         int numPts = 0;
-        for(int m = 0; m < numMPMMatls; m++){
+        for(unsigned int m = 0; m < numMPMMatls; m++){
           MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
           int dwi = mpm_matl->getDWIndex();
 
@@ -581,8 +581,8 @@ void ImpMPM::initializeHeatFluxBC(const ProcessorGroup*,
       // at each particle
       for(int p=0;p<patches->size();p++){
         const Patch* patch = patches->get(p);
-        int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
-        for(int m = 0; m < numMPMMatls; m++){
+        unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
+        for(unsigned int m = 0; m < numMPMMatls; m++){
           MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
           int dwi = mpm_matl->getDWIndex();
 
@@ -658,8 +658,8 @@ void ImpMPM::initializePressureBC(const ProcessorGroup*,
       // at each particle
       for(int p=0;p<patches->size();p++){
         const Patch* patch = patches->get(p);
-        int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
-        for(int m = 0; m < numMPMMatls; m++){
+        unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
+        for(unsigned int m = 0; m < numMPMMatls; m++){
           MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
           int dwi = mpm_matl->getDWIndex();
 
@@ -1160,12 +1160,12 @@ void ImpMPM::scheduleComputeStressTensor(SchedulerP& sched,
                                          bool recursion)
 {
   printSchedule(patches,cout_doing,"IMPM::scheduleComputeStressTensor");
-  int numMatls = m_materialManager->getNumMatls( "MPM" );
+  unsigned int numMatls = m_materialManager->getNumMatls( "MPM" );
   Task* t = scinew Task("ImpMPM::computeStressTensorImplicit",
                     this, &ImpMPM::computeStressTensorImplicit,recursion);
 
   t->requires(Task::ParentOldDW,lb->delTLabel);
-  for(int m = 0; m < numMatls; m++){
+  for(unsigned int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM", m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     cm->addComputesAndRequires(t, mpm_matl, patches, recursion, true);
@@ -1380,8 +1380,8 @@ void ImpMPM::scheduleIterate(SchedulerP& sched,const LevelP& level,
   task->requires(Task::NewDW,lb->gContactLabel,        Ghost::None,0);
 
   if (flags->d_doMechanics) {
-    int numMatls = m_materialManager->getNumMatls( "MPM" );
-    for(int m = 0; m < numMatls; m++){
+    unsigned int numMatls = m_materialManager->getNumMatls( "MPM" );
+    for(unsigned int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM", m);
       ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
       cm->addComputesAndRequires(task, mpm_matl, patches, true, false);
@@ -1401,12 +1401,12 @@ void ImpMPM::scheduleComputeStressTensorImplicit(SchedulerP& sched,
                                                  const PatchSet* patches,
                                                  const MaterialSet* matls)
 {
-  int numMatls = m_materialManager->getNumMatls( "MPM" );
+  unsigned int numMatls = m_materialManager->getNumMatls( "MPM" );
   printSchedule(patches,cout_doing,"IMPM::scheduleComputeStressTensorImplicit");
   Task* t = scinew Task("ImpMPM::computeStressTensorImplicit",
                   this, &ImpMPM::computeStressTensorImplicit);
 
-  for(int m = 0; m < numMatls; m++){
+  for(unsigned int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM", m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     cm->addComputesAndRequires(t, mpm_matl, patches);
@@ -1701,7 +1701,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,"Doing ImpMPM::iterate-----------------------");
 
-    for(int m = 0; m < m_materialManager->getNumMatls( "MPM" ); m++){
+    for(unsigned int m = 0; m < m_materialManager->getNumMatls( "MPM" ); m++){
       MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int matl = mpm_matl->getDWIndex();
       ParticleSubset* pset = 
@@ -1807,7 +1807,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
     }
 
     Ghost::GhostType  gn = Ghost::None;
-    for(int m = 0; m < m_materialManager->getNumMatls( "MPM" ); m++){
+    for(unsigned int m = 0; m < m_materialManager->getNumMatls( "MPM" ); m++){
       MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int matl = mpm_matl->getDWIndex();
 
@@ -1920,9 +1920,9 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
     // Place for user defined loading scenarios to be defined,
     // otherwise pExternalForce is just set to zero
     
-    int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
+    unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
     
-    for(int m = 0; m < numMPMMatls; m++){
+    for(unsigned int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
@@ -2051,9 +2051,9 @@ void ImpMPM::projectCCHeatSourceToNodes(const ProcessorGroup*,
     constNCVariable<double> NC_CCweight;
     old_dw->get(NC_CCweight,     lb->NC_CCweightLabel,       0, patch,gac,1);
 
-    int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
+    unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
 
-    for(int m = 0; m < numMPMMatls; m++){
+    for(unsigned int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
 
@@ -2102,9 +2102,9 @@ void ImpMPM::computeCCVolume(const ProcessorGroup*,
     constNCVariable<double> NC_CCweight;
     old_dw->get(NC_CCweight,     lb->NC_CCweightLabel,       0, patch,gac,1);
 
-    int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
+    unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
 
-    for(int m = 0; m < numMPMMatls; m++){
+    for(unsigned int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
 
@@ -2151,7 +2151,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     gmassglobal.initialize(d_SMALL_NUM_MPM);
     gvolumeglobal.initialize(d_SMALL_NUM_MPM);
 
-    int numMatls = m_materialManager->getNumMatls( "MPM" );
+    unsigned int numMatls = m_materialManager->getNumMatls( "MPM" );
     // Create arrays for the grid data
     constNCVariable<double> gTemperatureOld;
     NCVariable<double> gTemperature;
@@ -2195,7 +2195,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     IntVector hi  = patch->getExtraNodeHighIndex();
     NC_CCweight_copy.copyPatch(NC_CCweight, low,hi);
 
-    for(int m = 0; m < numMatls; m++){
+    for(unsigned int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int matl = mpm_matl->getDWIndex();
       // Create arrays for the particle data
@@ -2343,7 +2343,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 
       multimap<IntVector, particleTempShape> cell_map;
       vector<multimap<IntVector,particleTempShape> > sparse_cell_map(7);
-      for (int m = 0; m < numMatls; m++) {
+      for (unsigned int m = 0; m < numMatls; m++) {
 
         MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM", m);
         int matl = mpm_matl->getDWIndex();
@@ -2548,7 +2548,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       }
     }
 
-    for(int m = 0; m < numMatls; m++){
+    for(unsigned int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       if(!mpm_matl->getIsRigid()){
         for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
@@ -2589,7 +2589,7 @@ void ImpMPM::createMatrix(const ProcessorGroup*,
   map<int,int> dof_diag;
   d_solver->createLocalToGlobalMapping(d_myworld,d_perproc_patches,patches,3,flags->d_8or27);
   int global_offset=0;
-  int numMatls = m_materialManager->getNumMatls( "MPM" );
+  unsigned int numMatls = m_materialManager->getNumMatls( "MPM" );
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
     printTask(patches, patch,cout_doing,"Doing ImpMPM::createMatrix");
@@ -2615,7 +2615,7 @@ void ImpMPM::createMatrix(const ProcessorGroup*,
 
     int n8or27 = flags->d_8or27;
 
-    for (int m = 0; m < numMatls; m++){
+    for (unsigned int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();    
       constParticleVariable<Point> px;
@@ -2680,7 +2680,7 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
 
     // Apply grid boundary conditions to the velocity before storing the data
     IntVector offset =  IntVector(0,0,0);
-    for (int m = 0; m < m_materialManager->getNumMatls( "MPM" ); m++ ) {
+    for (unsigned int m = 0; m < m_materialManager->getNumMatls( "MPM" ); m++ ) {
       MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int matl = mpm_matl->getDWIndex();
       
@@ -2803,9 +2803,9 @@ void ImpMPM::computeContact(const ProcessorGroup*,
 
     delt_vartype dt;
 
-    int numMatls = m_materialManager->getNumMatls( "MPM" );
+    unsigned int numMatls = m_materialManager->getNumMatls( "MPM" );
     std::vector<NCVariable<int> >  contact(numMatls);
-    for(int n = 0; n < numMatls; n++){
+    for(unsigned int n = 0; n < numMatls; n++){
       MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  n );
       int dwi = mpm_matl->getDWIndex();
       new_dw->allocateAndPut(contact[n], lb->gContactLabel,       dwi,patch);
@@ -2815,8 +2815,8 @@ void ImpMPM::computeContact(const ProcessorGroup*,
     if(d_rigid_body){
      constNCVariable<Vector> vel_rigid;
      constNCVariable<double> mass_rigid;
-     int numMatls = m_materialManager->getNumMatls( "MPM" );
-     for(int n = 0; n < numMatls; n++){
+     unsigned int numMatls = m_materialManager->getNumMatls( "MPM" );
+     for(unsigned int n = 0; n < numMatls; n++){
       MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  n );
       if(mpm_matl->getIsRigid()){
         int RM = mpm_matl->getDWIndex();
@@ -2826,7 +2826,7 @@ void ImpMPM::computeContact(const ProcessorGroup*,
      }
 
      // Get and modify non-rigid data
-     for(int n = 0; n < numMatls; n++){
+     for(unsigned int n = 0; n < numMatls; n++){
       MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  n );
       int matl = mpm_matl->getDWIndex();
         NCVariable<Vector> dispNew;                     
@@ -2882,8 +2882,8 @@ void ImpMPM::findFixedDOF(const ProcessorGroup*,
     d_solver->copyL2G(l2g,patch);
 
     bool firstTimeThrough=true;
-    int numMatls = m_materialManager->getNumMatls( "MPM" );
-    for(int m = 0; m < numMatls; m++){
+    unsigned int numMatls = m_materialManager->getNumMatls( "MPM" );
+    for(unsigned int m = 0; m < numMatls; m++){
      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
      if(!mpm_matl->getIsRigid() && firstTimeThrough){ 
       firstTimeThrough=false;
@@ -2926,7 +2926,7 @@ void ImpMPM::computeStressTensorImplicit(const ProcessorGroup*,
   if (cout_doing.active())
     cout_doing <<"Doing computeStressTensor (wrapper) " <<"\t\t\t IMPM"<< "\n";
 
-  for(int m = 0; m < m_materialManager->getNumMatls( "MPM" ); m++) {
+  for(unsigned int m = 0; m < m_materialManager->getNumMatls( "MPM" ); m++) {
     MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM", m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     ImplicitCM* cmi = dynamic_cast<ImplicitCM*>(cm);
@@ -2961,8 +2961,8 @@ void ImpMPM::formStiffnessMatrix(const ProcessorGroup*,
     Array3<int> l2g(lowIndex,highIndex);
 
     bool firstTimeThrough=true;
-    int numMatls = m_materialManager->getNumMatls( "MPM" );
-    for(int m = 0; m < numMatls; m++){
+    unsigned int numMatls = m_materialManager->getNumMatls( "MPM" );
+    for(unsigned int m = 0; m < numMatls; m++){
      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
      if(!mpm_matl->getIsRigid() && firstTimeThrough){ 
       firstTimeThrough=false;
@@ -3020,7 +3020,7 @@ void ImpMPM::computeInternalForce(const ProcessorGroup*,
     oodx[1] = 1.0/dx.y();
     oodx[2] = 1.0/dx.z();
     
-    int numMPMMatls = m_materialManager->getNumMatls( "MPM" );
+    unsigned int numMPMMatls = m_materialManager->getNumMatls( "MPM" );
     int n8or27 = flags->d_8or27;
 
     std::vector<NCVariable<Vector> > int_force(numMPMMatls);
@@ -3028,7 +3028,7 @@ void ImpMPM::computeInternalForce(const ProcessorGroup*,
     new_dw->allocateTemporary(INT_FORCE,     patch,Ghost::None,0);
     INT_FORCE.initialize(Vector(0,0,0));
 
-    for(int m = 0; m < numMPMMatls; m++){
+    for(unsigned int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
 
@@ -3083,7 +3083,7 @@ void ImpMPM::computeInternalForce(const ProcessorGroup*,
       }  // if matl isn't rigid
     }  // matls
 
-    for(int m = 0; m < numMPMMatls; m++){
+    for(unsigned int m = 0; m < numMPMMatls; m++){
      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
      if(!mpm_matl->getIsRigid()){
       for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
@@ -3116,8 +3116,8 @@ void ImpMPM::formQ(const ProcessorGroup*, const PatchSubset* patches,
     d_solver->copyL2G(l2g,patch);
 
     bool firstTimeThrough=true;
-    int numMatls = m_materialManager->getNumMatls( "MPM" );
-    for(int m = 0; m < numMatls; m++){
+    unsigned int numMatls = m_materialManager->getNumMatls( "MPM" );
+    for(unsigned int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       if(!mpm_matl->getIsRigid() && firstTimeThrough){
         firstTimeThrough=false;
@@ -3237,8 +3237,8 @@ void ImpMPM::getDisplacementIncrement(const ProcessorGroup* /*pg*/,
     vector<double> x;
     int begin = d_solver->getSolution(x);
   
-    int numMatls = m_materialManager->getNumMatls( "MPM" );
-    for(int m = 0; m < numMatls; m++){
+    unsigned int numMatls = m_materialManager->getNumMatls( "MPM" );
+    for(unsigned int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int matlindex = mpm_matl->getDWIndex();
 
@@ -3269,8 +3269,8 @@ void ImpMPM::updateGridKinematics(const ProcessorGroup*,
     Ghost::GhostType  gnone = Ghost::None;
 
     int rig_index=-99;
-    int numMatls = m_materialManager->getNumMatls( "MPM" );
-    for(int m = 0; m < numMatls; m++){
+    unsigned int numMatls = m_materialManager->getNumMatls( "MPM" );
+    for(unsigned int m = 0; m < numMatls; m++){
        MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
        if(mpm_matl->getIsRigid()){
          rig_index = mpm_matl->getDWIndex();
@@ -3285,7 +3285,7 @@ void ImpMPM::updateGridKinematics(const ProcessorGroup*,
                                  lb->gVelocityOldLabel,rig_index,patch,gnone,0);
     }
 
-    for(int m = 0; m < numMatls; m++){
+    for(unsigned int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
 
@@ -3444,7 +3444,7 @@ void ImpMPM::computeStressTensorImplicit(const ProcessorGroup*,
   if (cout_doing.active()) 
     cout_doing <<"Doing computeStressTensorImplicit (wrapper)" <<"\t\t IMPM"<< "\n";
 
-  for(int m = 0; m < m_materialManager->getNumMatls( "MPM" ); m++) {
+  for(unsigned int m = 0; m < m_materialManager->getNumMatls( "MPM" ); m++) {
     MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM", m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     cm->computeStressTensorImplicit(patches, mpm_matl, old_dw, new_dw);
@@ -3462,7 +3462,7 @@ void ImpMPM::updateTotalDisplacement(const ProcessorGroup*,
     printTask(patches, patch,cout_doing,"Doing ImpMPM::updateTotalDisplacement");
 
     Ghost::GhostType  gnone = Ghost::None;
-    for(int m = 0; m < m_materialManager->getNumMatls( "MPM" ); m++){
+    for(unsigned int m = 0; m < m_materialManager->getNumMatls( "MPM" ); m++){
       MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
 
@@ -3493,7 +3493,7 @@ void ImpMPM::computeAcceleration(const ProcessorGroup*,
     printTask(patches, patch,cout_doing,"Doing ImpMPM::computeAcceleration");
 
     Ghost::GhostType  gnone = Ghost::None;
-    for(int m = 0; m < m_materialManager->getNumMatls( "MPM" ); m++){
+    for(unsigned int m = 0; m < m_materialManager->getNumMatls( "MPM" ); m++){
       MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
 
@@ -3547,7 +3547,7 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     double ke=0;
     double thermal_energy = 0.0;
     //double thermal_energy2 = 0.0;
-    int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
+    unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
     int n8or27 = flags->d_8or27;
 
     double move_particles=1.;
@@ -3559,7 +3559,7 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     
     new_dw->get(gTemperatureRate,lb->gTemperatureRateLabel,0, patch,gac, 1);
 
-    for(int m = 0; m < numMPMMatls; m++){
+    for(unsigned int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwindex = mpm_matl->getDWIndex();
       // Get the arrays of particle values to be changed
@@ -3731,7 +3731,7 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
 
  
     // This task is done for visualization only
-    int numMatls = m_materialManager->getNumMatls( "MPM" );
+    unsigned int numMatls = m_materialManager->getNumMatls( "MPM" );
     int n8or27 = flags->d_8or27;
 
     constNCVariable<double>   GVOLUME;
@@ -3754,7 +3754,7 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
     oodx[1] = 1.0/dx.y();
     oodx[2] = 1.0/dx.z();
 
-    for(int m = 0; m < numMatls; m++){
+    for(unsigned int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
 
@@ -3810,7 +3810,7 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
     }  // Loop over matls
 
     // gstress will be normalized by gvolume (same for all matls)
-    for(int m = 0; m < numMatls; m++){
+    for(unsigned int m = 0; m < numMatls; m++){
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
         IntVector c = *iter;
         gstress[m][c] = GSTRESS[c]/(gvolume[m][c]+1.e-200);
@@ -3833,7 +3833,7 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
 
     // save boundary forces before apply symmetry boundary condition.
     bool did_it_already=false;
-    for(int m = 0; m < numMatls; m++){
+    for(unsigned int m = 0; m < numMatls; m++){
      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
      if(!did_it_already && !mpm_matl->getIsRigid()){
       did_it_already=true;
@@ -3957,8 +3957,8 @@ void ImpMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
       delt_vartype old_delT;
       old_dw->get(old_delT, lb->delTLabel, patch->getLevel());
 
-      int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
-      for(int m = 0; m < numMPMMatls; m++){
+      unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
+      for(unsigned int m = 0; m < numMPMMatls; m++){
         MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
         int dwindex = mpm_matl->getDWIndex();
 
@@ -4018,7 +4018,7 @@ void ImpMPM::initialErrorEstimate(const ProcessorGroup*,
     PatchFlag* refinePatch = refinePatchFlag.get().get_rep();
                                                                                 
                                                                                 
-    for(int m = 0; m < m_materialManager->getNumMatls( "MPM" ); m++){
+    for(unsigned int m = 0; m < m_materialManager->getNumMatls( "MPM" ); m++){
       MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
       // Loop over particles
@@ -4114,8 +4114,8 @@ void ImpMPM::refine(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,"Doing refine");
                                                                                 
-    int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
-    for(int m = 0; m < numMPMMatls; m++){
+    unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
+    for(unsigned int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
                                                                                 
